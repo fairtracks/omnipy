@@ -5,12 +5,20 @@ HEADERS = {'accept': 'application/json'}
 ENCODE_BASE_URL = 'https://www.encodeproject.org/search/'
 
 
-def search_encode(search_term, object_type, basedir='.'):
-    response = requests.get(ENCODE_BASE_URL + '?searchTerm=' + search_term + '&type=' + object_type, headers=HEADERS)
+def search_encode(search_term=None, object_type=None, limit=None, format='json', out_file_path=None):
+    response = requests.get(ENCODE_BASE_URL + '?' +
+                            ('searchTerm=' + search_term if search_term else '') +
+                            ('&type=' + object_type if object_type else '') +
+                            ('&limit=' + limit if limit else '') +
+                            ('&format=' + format if format else ''), headers=HEADERS)
     if response.status_code == 200:
-        biosample = response.json()
-        if (biosample['notification'] == 'Success'):
-            graph = biosample['@graph']
-            print(json.dumps(graph, indent=4))
+        results = response.json()
+        if results['notification'] == 'Success':
+            graph = results['@graph']
+            if out_file_path:
+                with open(out_file_path, 'w') as out_file:
+                    json.dump(graph, out_file, indent=4)
+            else:
+                print(json.dumps(graph, indent=4))
     else:
         print('No result found')
