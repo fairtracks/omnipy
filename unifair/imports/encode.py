@@ -5,9 +5,9 @@ HEADERS = {'accept': 'application/json'}
 ENCODE_BASE_URL = 'https://www.encodeproject.org/search/'
 
 
-def search_encode(search_term=None, object_type=None, limit=None, format='json', out_file_path=None):
+def search_encode(search_terms, object_type=None, limit=None, format='json', out_file_path=None):
     response = requests.get(ENCODE_BASE_URL + '?' +
-                            ('searchTerm=' + search_term if search_term else '') +
+                            ('&'.join(search_terms) if search_terms else '') +
                             ('&type=' + object_type if object_type else '') +
                             ('&limit=' + limit if limit else '') +
                             ('&format=' + format if format else ''), headers=HEADERS)
@@ -20,5 +20,7 @@ def search_encode(search_term=None, object_type=None, limit=None, format='json',
                     json.dump(graph, out_file, indent=4)
             else:
                 print(json.dumps(graph, indent=4))
+            return graph
     else:
         print('No result found')
+
