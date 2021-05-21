@@ -24,7 +24,7 @@ class ImportEncodeMetadataFromApi(WorkflowStep):
     def _run(self, input_data):
         output = PandasDataFrames()
         json_output = self.encode_api('experiments', limit='25')
-        output.add_data_frame('experiments', pd.json_normalize(json_output))
+        output.add_dataframe('experiments', pd.json_normalize(json_output))
         return output
 
     @classmethod
