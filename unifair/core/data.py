@@ -22,7 +22,7 @@ class PandasDataFrames(Data):
     def __init__(self):
         self._dataframe_dict = {}
 
-    def add_data_frame(self, name: str, dataframe: pd.DataFrame):
+    def add_dataframe(self, name: str, dataframe: pd.DataFrame):
         self._dataframe_dict[name] = dataframe
 
     def validate(self):
@@ -40,14 +40,3 @@ class PandasDataFrames(Data):
             text += 'DataFrame "{}"'.format(name) + os.linesep
             text += df.to_string() + os.linesep
         return text
-# class PandasDataFramesWithReferences(DataType):
-#     def __init__(self):
-#         self._dataframe_dict = {}
-#         self._references_dict = {}
-#
-#     def add_data_frame(self, name: str, dataframe: pandas.DataFrame):
-#         pass
-#
-#     def _validate_dataframe(self, dataframe):
-#         pass
-
