@@ -1,7 +1,7 @@
 import os
 from abc import ABC, abstractmethod
 
-import pandas
+import pandas as pd
 
 
 class Data(ABC):
@@ -22,7 +22,7 @@ class PandasDataFrames(Data):
     def __init__(self):
         self._dataframe_dict = {}
 
-    def add_data_frame(self, name: str, dataframe: pandas.DataFrame):
+    def add_data_frame(self, name: str, dataframe: pd.DataFrame):
         self._dataframe_dict[name] = dataframe
 
     def validate(self):
