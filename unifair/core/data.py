@@ -8,8 +8,7 @@ class Data(ABC):
     @abstractmethod
     def validate(self):
         """
-
-        :return: True if contents follows requirments for data type
+        Should raise an exception if data contents does not follow the requirements for the data class
         """
         pass
 
