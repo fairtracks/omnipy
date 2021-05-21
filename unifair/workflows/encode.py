@@ -1,6 +1,6 @@
 from unifair.core.data import NoData
 from unifair.core.workflow import Workflow
-from unifair.imports.encode import ImportEncodeMetadataFromApi
+from unifair.steps.imports.encode import ImportEncodeMetadataFromApi
 
 
 def create_encode_workflow():
