@@ -11,16 +11,16 @@ class WorkflowStep(ABC):
         pass
 
     def run(self, input_data):
-        self._validate_data_object(input_data, self._get_input_data_cls(), input=True)
+        self._validate_data_object(input_data, self._get_input_data_cls(), input_data=True)
         output_data = self._run(input_data)
-        self._validate_data_object(output_data, self._get_output_data_cls(), input=False)
+        self._validate_data_object(output_data, self._get_output_data_cls(), input_data=False)
         return output_data
 
     @staticmethod
-    def _validate_data_object(data_obj, data_cls, input):
+    def _validate_data_object(data_obj, data_cls, input_data):
         assert isinstance(data_obj, data_cls), \
             '{} data object is not a subclass of {}, as required.'.format(
-                'Input' if input else 'Output', data_cls
+                'Input' if input_data else 'Output', data_cls
             )
         data_obj.validate()
 
@@ -37,8 +37,8 @@ class Workflow:
         assert isinstance(step, WorkflowStep)
         self._steps.append(step)
 
-    def run(self, input):
-        cur_data = input
+    def run(self, input_data):
+        cur_data = input_data
         for step in self._steps:
             cur_data = step.run(cur_data)
         return cur_data
