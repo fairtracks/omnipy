@@ -1,4 +1,5 @@
-from unifair.core.data import NoData
+import os
+import sys
 from unifair.core.workflow import Workflow
 from unifair.steps.imports.encode import ImportEncodeMetadataFromApi
 
@@ -12,5 +13,6 @@ def create_encode_workflow():
 
 if __name__ == "__main__":
     workflow = create_encode_workflow()
-    output = workflow.run(NoData())
+    print(os.path.abspath(sys.argv[1]))
+    output = workflow.run(sys.argv[1])
     print(output)
