@@ -1,4 +1,5 @@
 import json
+import time
 import pandas as pd
 from abc import ABC
 
@@ -30,6 +31,7 @@ class ImportEncodeMetadataFromApi(WorkflowStep):
         for table_name in ['experiments', 'biosample']:
             json_output = self.encode_api(table_name, limit='25')
             output.add_dataframe(table_name, pd.json_normalize(json_output))
+            time.sleep(1)  # Sleep to not overload ENCODE servers
         return output
 
     @classmethod
