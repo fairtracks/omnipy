@@ -15,6 +15,10 @@ class ImportEncodeMetadataFromApi(WorkflowStep):
     def __init__(self):
         pass
 
+    @staticmethod
+    def _get_name():
+        return "1_import_encode_metadata_from_api"
+
     def _get_input_data_cls(self):
         return NoData
 
@@ -23,8 +27,9 @@ class ImportEncodeMetadataFromApi(WorkflowStep):
 
     def _run(self, input_data):
         output = PandasDataFrames()
-        json_output = self.encode_api('experiments', limit='25')
-        output.add_dataframe('experiments', pd.json_normalize(json_output))
+        for table_name in ['experiments', 'biosample']:
+            json_output = self.encode_api(table_name, limit='25')
+            output.add_dataframe(table_name, pd.json_normalize(json_output))
         return output
 
     @classmethod
