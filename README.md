@@ -15,7 +15,7 @@ As initial use cases, we will consider the following two scenarios:
 * ### Step 1: Import data from original source:
   * #### 1A: From API endpoints
     * _Input:_ API endpoint producing JSON data
-    * _Output:_ Pandas DataFrames (possibly with embedded JSON objects/lists)
+    * _Output:_ Pandas DataFrames (possibly with embedded JSON objects/lists [as strings])
     * _Description:_ General interface to support various API endpoints. Import all data by crawling API endpoints providing JSON content
     * _Generalizable:_ Partly (at least reuse of utility functions)
     * _Manual/automatic:_ Automatic
