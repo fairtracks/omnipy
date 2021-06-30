@@ -58,9 +58,10 @@ As initial use cases, we will consider the following two scenarios:
           * Record the reference metadata `(table_from, attr_from) -> (table_to, attr_to)` for joins:
             * Example: `(table: "experiment", column: "replicates") -> (table: "replicate", column: "@id")`
         * If the original table of the embedded objects are not directly available from an API, one needs to fill out the other table with the content that is embedded in the current object, creating the table if needed.
-      * If there are lists of identifiers:
+      * For all fields with identifiers that reference other tables:
         * Record the reference metadata `(table_from, attr_from) -> (table_to, attr_to)` for joins.
-        * Convert into Pandas Series
+        * If the field contains a list of identifiers
+          * Convert into Pandas Series
 * ### Step 3: Create reference tables to satisfy 1NF
     * _Input:_ Pandas DataFrames (possibly containing lists of identifiers as Pandas Series) + reference metadata
     * _Output:_ Pandas DataFrames (original tables without reference column) [1NF] + reference tables + reference metadata
