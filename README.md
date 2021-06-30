@@ -53,7 +53,7 @@ As initial use cases, we will consider the following two scenarios:
     * _Details:_
       * If there are embedded objects from other tables:
         * ENCODE update: 
-          * By using the `frame=object` parameter, we will not get any embedded objects from the APIs.
+          * By using the `frame=object` parameter, we will not get any embedded objects from the APIs for the main tables. There is, however, some "auditing" fields that contain JSON objects. We can ignore these in the first iteration.
         * If the original table of the embedded objects can be retrieved directly from an API, replace such embedded objects with unique identifiers to the object in another table (maintaining a reference to the name of the table, if needed)
           * Record the reference metadata `(table_from, attr_from) -> (table_to, attr_to)` for joins:
             * Example: `(table: "experiment", column: "replicates") -> (table: "replicate", column: "@id")`
