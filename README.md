@@ -86,7 +86,7 @@ As initial use cases, we will consider the following two scenarios:
 * ### Step 5: Satisfy 3NF
     * _Input:_ Pandas DataFrames (original tables without reference column) [2NF] + reference tables
     * _Output:_ Pandas DataFrames (original tables without reference column) [3NF] + reference tables
-    * _Description:_ Automatic transformation of original tables into second normal form ([3NF](https://en.wikipedia.org/wiki/Database_normalization#Satisfying_3NF)):
+    * _Description:_ Automatic transformation of original tables into third normal form ([3NF](https://en.wikipedia.org/wiki/Database_normalization#Satisfying_3NF)):
     * _Generalizable:_ Fully (if not, we skip it)
     * _Manual/automatic:_ Automatic
     * _Details:_
