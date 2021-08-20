@@ -5,7 +5,7 @@ from abc import ABC
 
 import requests
 
-from unifair.core.data import NoData, PandasDataFrames
+from unifair.core.data import NoData, JsonDocumentCollection
 from unifair.core.workflow import WorkflowStep
 
 
@@ -23,13 +23,14 @@ class ImportGDCMetadataFromApi(WorkflowStep):
         return NoData
 
     def _get_output_data_cls(self):
-        return PandasDataFrames
+        return JsonDocumentCollection
 
     def _run(self, input_data):
-        output = PandasDataFrames()
+        output = JsonDocumentCollection()
         for table_name in ['projects','cases','files','annotations']:
             json_output = self.gdc_api(object_type=table_name, starting_point='0', size='25')
-            output.add_dataframe(table_name, pd.json_normalize(json_output))
+            # output.add_object(table_name, pd.json_normalize(json_output))
+            output.add_object(table_name, json_output)
             time.sleep(1)  # Sleep to not overload servers
         return output
 
@@ -46,7 +47,7 @@ class ImportGDCMetadataFromApi(WorkflowStep):
                 hits = (results['data']['hits'])
                 return hits
             else:
-                print("The following warnings have been enocunterted:")
+                print("The following warnings have been encountered:")
                 print(results['warnings'])
         else:
             print('No result found')
