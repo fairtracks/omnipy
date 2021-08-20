@@ -1,3 +1,4 @@
+import json
 import os
 from abc import ABC, abstractmethod
 
@@ -5,6 +6,9 @@ import pandas as pd
 
 
 class Data(ABC):
+    def __init__(self):
+        super().__init__()
+
     @abstractmethod
     def validate(self):
         """
@@ -12,18 +16,12 @@ class Data(ABC):
         """
         pass
 
-    def read_from_file(self, in_path):
-        self._read(in_path)
-
     @abstractmethod
-    def _read(self, in_path):
+    def read_from_dir(self, in_path):
         pass
 
-    def write_to_file(self, out_path):
-        self._write(out_path)
-
     @abstractmethod
-    def _write(self, out_path):
+    def write_to_dir(self, out_path):
         pass
 
 
@@ -31,48 +29,111 @@ class NoData(Data):
     def validate(self):
         pass
 
-    def _read(self, in_path):
+    def read_from_dir(self, in_path):
         pass
 
-    def _write(self, out_path):
+    def write_to_dir(self, out_path):
         pass
 
 
-class PandasDataFrames(Data):
+class ObjectCollection(Data):
+    OBJECT_TYPE = ''
+    FILE_SUFFIX = ''
+
     def __init__(self):
-        self._dataframe_dict = {}
+        self._object_dict = {}
+        super().__init__()
 
-    def all_dataframe_names(self):
-        return list(self._dataframe_dict.keys())
+    def all_object_names(self):
+        return list(self._object_dict.keys())
 
-    def add_dataframe(self, name: str, dataframe: pd.DataFrame):
-        self._dataframe_dict[name] = dataframe
+    def add_object(self, name: str, obj):
+        self._object_dict[name] = obj
 
-    def get_dataframe(self, name: str):
-        return self._dataframe_dict[name]
+    def get_object(self, name: str):
+        return self._object_dict[name]
 
     def validate(self):
-        assert len(self._dataframe_dict) > 0
+        assert len(self._object_dict) > 0
 
-        for df in self._dataframe_dict.values():
-            self._validate_dataframe(df)
+        for obj in self._object_dict.values():
+            self._validate_object(obj)
 
-    def _validate_dataframe(self, dataframe):
+    @classmethod
+    @abstractmethod
+    def _validate_object(cls, obj):
         pass
 
-    def _read(self, in_path):
-        for csv_filename in os.listdir(in_path):
-            assert csv_filename.endswith('.csv')
-            self._dataframe_dict[csv_filename[:-4]] = pd.read_csv(os.path.join(in_path, csv_filename))
+    def read_from_dir(self, in_path):
+        for filename in os.listdir(in_path):
+            assert filename.endswith(self.FILE_SUFFIX)
+            self._object_dict[:-len(self.FILE_SUFFIX)] = self._read_object_from_file(os.path.join(in_path, filename))
 
-    def _write(self, out_path):
+    @classmethod
+    @abstractmethod
+    def _read_object_from_file(cls, filepath):
+        pass
+
+    def write_to_dir(self, out_path):
         os.makedirs(out_path)
-        for name, df in self._dataframe_dict.items():
-            df.to_csv(os.path.join(out_path, name + '.csv'))
+        for name, obj in self._object_dict.items():
+            self._write_object_to_file(obj, os.path.join(out_path, name + self.FILE_SUFFIX))
+
+    @classmethod
+    @abstractmethod
+    def _write_object_to_file(cls, obj, filepath):
+        pass
 
     def __str__(self):
         text = ''
-        for name, df in self._dataframe_dict.items():
-            text += 'DataFrame "{}"'.format(name) + os.linesep
-            text += df.to_string() + os.linesep
+        for name, obj in self._object_dict.items():
+            text += '{} "{}"'.format(self.OBJECT_TYPE, name) + os.linesep
+            text += self._object_to_string(obj) + os.linesep
         return text
+
+    @classmethod
+    @abstractmethod
+    def _object_to_string(cls, obj):
+        pass
+
+
+class JsonDocumentCollection(ObjectCollection):
+    OBJECT_TYPE = 'JSON document'
+    FILE_SUFFIX = '.json'
+
+    @classmethod
+    def _read_object_from_file(cls, file_path):
+        return json.load(open(file_path))
+
+    @classmethod
+    def _write_object_to_file(self, obj, file_path):
+        json.dump(obj, open(file_path, 'w'), indent=4)
+
+    @classmethod
+    def _validate_object(cls, obj):
+        pass
+
+    @classmethod
+    def _object_to_string(cls, obj):
+        return json.dumps(obj, indent=4)
+
+
+class PandasDataFrameCollection(ObjectCollection):
+    OBJECT_TYPE = 'DataFrame'
+    FILE_SUFFIX = '.csv'
+
+    @classmethod
+    def _read_object_from_file(self, file_path):
+        pd.read_csv(file_path)
+
+    @classmethod
+    def _write_object_to_file(self, obj, file_path):
+        obj.to_csv(file_path)
+
+    @classmethod
+    def _validate_object(cls, obj):
+        pass
+
+    @classmethod
+    def _object_to_string(cls, obj):
+        return obj.to_string()

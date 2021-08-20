@@ -25,7 +25,7 @@ class WorkflowStep(ABC):
 
         if in_data_dirname:
             in_path = os.path.join(invocation_dir, in_data_dirname)
-            input_data = input_data_cls.read_from_file(in_path)
+            input_data = input_data_cls.read_from_dir(in_path)
         else:
             input_data = NoData()
 
@@ -34,7 +34,7 @@ class WorkflowStep(ABC):
         self._validate_data_object(input_data, input_data_cls, input_data=True)
         output_data = self._run(input_data)
         self._validate_data_object(output_data, output_data_cls, input_data=False)
-        output_data.write_to_file(out_path)
+        output_data.write_to_dir(out_path)
 
         return out_data_dirname
 

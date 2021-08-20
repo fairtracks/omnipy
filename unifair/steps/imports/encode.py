@@ -5,7 +5,7 @@ from abc import ABC
 
 import requests
 
-from unifair.core.data import NoData, PandasDataFrames
+from unifair.core.data import NoData, PandasDataFrameCollection
 from unifair.core.workflow import WorkflowStep
 
 
@@ -24,13 +24,13 @@ class ImportEncodeMetadataFromApi(WorkflowStep):
         return NoData
 
     def _get_output_data_cls(self):
-        return PandasDataFrames
+        return PandasDataFrameCollection
 
     def _run(self, input_data):
-        output = PandasDataFrames()
+        output = PandasDataFrameCollection()
         for table_name in ['experiments', 'biosample']:
             json_output = self.encode_api(table_name, limit='25')
-            output.add_dataframe(table_name, pd.json_normalize(json_output))
+            output.add_object(table_name, pd.json_normalize(json_output))
             time.sleep(1)  # Sleep to not overload ENCODE servers
         return output
 
