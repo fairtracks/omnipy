@@ -47,10 +47,10 @@ class ObjectCollection(Data):
     def all_object_names(self):
         return list(self._object_dict.keys())
 
-    def add_object(self, name: str, obj):
+    def __setitem__(self, name: str, obj):
         self._object_dict[name] = obj
 
-    def get_object(self, name: str):
+    def __getitem__(self, name: str):
         return self._object_dict[name]
 
     def validate(self):
@@ -67,7 +67,8 @@ class ObjectCollection(Data):
     def read_from_dir(self, in_path):
         for filename in os.listdir(in_path):
             assert filename.endswith(self.FILE_SUFFIX)
-            self._object_dict[:-len(self.FILE_SUFFIX)] = self._read_object_from_file(os.path.join(in_path, filename))
+            basename = filename[:-len(self.FILE_SUFFIX)]
+            self._object_dict[basename] = self._read_object_from_file(os.path.join(in_path, filename))
 
     @classmethod
     @abstractmethod
@@ -75,7 +76,8 @@ class ObjectCollection(Data):
         pass
 
     def write_to_dir(self, out_path):
-        os.makedirs(out_path)
+        if not os.path.exists(out_path):
+            os.makedirs(out_path)
         for name, obj in self._object_dict.items():
             self._write_object_to_file(obj, os.path.join(out_path, name + self.FILE_SUFFIX))
 
@@ -103,11 +105,14 @@ class JsonDocumentCollection(ObjectCollection):
 
     @classmethod
     def _read_object_from_file(cls, file_path):
-        return json.load(open(file_path))
+        with open(file_path) as infile:
+            return json.load(infile)
 
     @classmethod
     def _write_object_to_file(self, obj, file_path):
-        json.dump(obj, open(file_path, 'w'), indent=4)
+        with open(file_path, 'w') as outfile:
+            json.dump(obj, outfile, indent=4)
+            outfile.write(os.linesep)
 
     @classmethod
     def _validate_object(cls, obj):
@@ -124,7 +129,7 @@ class PandasDataFrameCollection(ObjectCollection):
 
     @classmethod
     def _read_object_from_file(self, file_path):
-        pd.read_csv(file_path)
+        return pd.read_csv(file_path, index_col=0)
 
     @classmethod
     def _write_object_to_file(self, obj, file_path):

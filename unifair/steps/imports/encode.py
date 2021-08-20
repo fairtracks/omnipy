@@ -28,9 +28,9 @@ class ImportEncodeMetadataFromApi(WorkflowStep):
 
     def _run(self, input_data):
         output = PandasDataFrameCollection()
-        for table_name in ['experiments', 'biosample']:
-            json_output = self.encode_api(table_name, limit='25')
-            output.add_object(table_name, pd.json_normalize(json_output))
+        for obj_type in ['experiments', 'biosample']:
+            json_output = self.encode_api(obj_type, limit='25')
+            output[obj_type] = pd.json_normalize(json_output)
             time.sleep(1)  # Sleep to not overload ENCODE servers
         return output
 
