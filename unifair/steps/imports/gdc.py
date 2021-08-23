@@ -37,8 +37,11 @@ class ImportGDCMetadataFromApi(WorkflowStep):
     @classmethod
     def gdc_api(cls, object_type='projects', starting_point=None, size=None):
         api_url = cls.GDC_BASE_URL + object_type + '/' + '?' + \
-            '&'.join((['from=' + starting_point] if starting_point else []) + \
-                     (['size=' + size] if size else [])) 
+            '&'.join(
+                (['from=' + starting_point] if starting_point else []) + \
+                (['size=' + size] if size else []) + \
+                (['expand=' + "project"] if object_type=="cases" else [])
+            ) 
         print(api_url)
         response = requests.get(api_url)
         if response.status_code == 200:
