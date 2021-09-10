@@ -15,13 +15,58 @@ As initial use cases, we will consider the following two scenarios:
 * ### Step 1: Import data from original source:
   * #### 1A: From API endpoints
     * _Input:_ API endpoint producing JSON data
-    * _Output:_ Pandas DataFrames (possibly with embedded JSON objects/lists [as strings])
+    * _Output:_ JSON files (possibly with embedded JSON objects/lists [as strings])
     * _Description:_ General interface to support various API endpoints. Import all data by crawling API endpoints providing JSON content
     * _Generalizable:_ Partly (at least reuse of utility functions)
     * _Manual/automatic:_ Automatic
     * _Details:_
-      * TCGA:
-        * More details to come...
+      * GDC/TCGA substeps (implemented as Step objects with file input/output)
+        * 1A. Filtering step:
+          * Input: parameters defining how to filter, e.g.:
+            * For all endpoints (projects, cases, files, annotations), support:
+              * Filter on list of IDs
+              * Specific number of items
+              * All
+            * Example config:
+              * projects: 2 items
+              * cases: 2 items
+              * files: all
+              * annotations: all
+            *  Define standard configurations, e.g.:
+                * Default: limited extraction (3 projects * 3 cases * 5 files? (+ annotations?))
+                * All TCGA
+                * List of projects
+            * Hierarchical for loop through endpoints to create filter definitions
+          * Output: Filter definitions as four files, e.g. as JSON, 
+            as they should be input to the filter parameter to the API:
+             ```
+            projects_filter.json:
+                "op": "in",
+                "content": {
+                    "field": "project_id",
+                    "value": ['TCGA_ABCD', 'TCGA_BCDE']
+                }
+            
+            cases_filter.json:
+                "op": "in",
+                "content": {
+                    "field": "case_id",
+                    "value": ['1234556', '234567', '3456789', '4567890']
+                }
+            
+            files_filter.json:
+                "op": "in",
+                "content": {
+                    "field": "case.case_id",
+                    "value": ['1234556', '234567', '3456789', '4567890']
+                }
+            
+            annotations.json
+                # unclear how this relates to the others...
+            ```
+            
+        * 1B. Download from all endpoints using the filters
+        * 1C. Extract identifiers from nested objects (when present) and insert into parents objects
       * ENCODE:
         * Identify where to start (Cart? Experiment?)
         * To get all data for a table (double-check this): `https://www.encodeproject.org/experiments/@@listing?format=json&frame=object`
