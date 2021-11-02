@@ -41,32 +41,67 @@ As initial use cases, we will consider the following two scenarios:
             as they should be input to the filter parameter to the API:
              ```
             projects_filter.json:
+            {
                 "op": "in",
                 "content": {
                     "field": "project_id",
                     "value": ['TCGA_ABCD', 'TCGA_BCDE']
                 }
+            }
             
             cases_filter.json:
+            {
                 "op": "in",
                 "content": {
                     "field": "case_id",
                     "value": ['1234556', '234567', '3456789', '4567890']
                 }
+            }
             
             files_filter.json:
+            {
                 "op": "in",
                 "content": {
-                    "field": "case.case_id",
+                    "field": "file_id",
                     "value": ['1234556', '234567', '3456789', '4567890']
                 }
+            }
             
             annotations.json
-                # unclear how this relates to the others...
+            {
+                "op": "in",
+                "content": {
+                    "field": "annotation_id",
+                    "value": ['1234556', '234567', '3456789', '4567890']
+                }
+            }
             ```
             
-        * 1B. Download from all endpoints using the filters
-        * 1C. Extract identifiers from nested objects (when present) and insert into parents objects
+        * 1B. Fetch and divide all fields step:
+          * Input: None
+          * Output: JSON files specifying all the fields of an endpoint fetched from the `mapping` API. 
+              The fields should be divided into chunks of a size that is small enough for the endpoints to 
+              handle. The JSON output should also specify the primary_key field, that needs to be added to 
+              all the API calls in order for the results to be joinable.
+              
+              Example JSON files:
+             ```
+            projects_fields.json:
+            {
+                "primary_key": "project_id",
+                "fields_divided": [
+                    ["field_a", "field_b"],
+                    ["field_c.subfield_a", "field_c.subfield_b", "field_d"]      
+                ]
+            }
+            
+            (...) # For all endpoints
+            ```
+        * 1C. Download from all endpoints according to the filters and the field divisions.
+              If there is a limitation on the number of hits that the endpoint is able to return, divide into smaller
+              API calls for a certain number of hits and concatenate the results. Make sure that proper waiting time
+              (1 second?) is added between the calls (to not overload the endpoint).
+        * 1D. Extract identifiers from nested objects (when present) and insert into parents objects
       * ENCODE:
         * Identify where to start (Cart? Experiment?)
         * To get all data for a table (double-check this): `https://www.encodeproject.org/experiments/@@listing?format=json&frame=object`
