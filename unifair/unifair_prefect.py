@@ -104,7 +104,7 @@ encode_flow.run(executor=LocalExecutor())
 bytes_io = BytesIO()
 bytes_io_file = BytesIO(b'Contents')
 bytes_io_file.seek(0)
-ti = TarInfo(name='myfile')
+ti = TarInfo(name='mydir/myfile')
 ti.size = len(bytes_io_file.getbuffer())
 
 tf = TarFile(fileobj=bytes_io, mode='w')
