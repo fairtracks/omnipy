@@ -6,8 +6,10 @@ from tarfile import TarFile, TarInfo
 from typing import Dict
 
 import prefect
+import pandas as pd
+from prefect.executors import LocalExecutor
+from pydantic import BaseModel
 from prefect import task, Flow
-import json
 
 
 # Extract from ENCODE and TCGA APIs
