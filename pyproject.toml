@@ -10,6 +10,8 @@ pandas = "^1.2.4"
 dpath = "^2.0.1"
 requests = "^2.25.1"
 pytest-pycharm = "^0.7.0"
+prefect = "^1.1.0"
+pydantic = "^1.9.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
