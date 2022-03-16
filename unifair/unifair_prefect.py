@@ -1,24 +1,23 @@
 import os
 import time
 import json
-from io import BytesIO
-from tarfile import TarFile, TarInfo
-from typing import Dict
-
 import prefect
 import pandas as pd
+from io import BytesIO
+from tarfile import TarFile, TarInfo
+from typing import Dict, List
 from prefect.executors import LocalExecutor
 from pydantic import BaseModel
 from prefect import task, Flow
-
-
-# Extract from ENCODE and TCGA APIs
 from prefect.engine.results import LocalResult
 from unifair.steps.imports.encode import ImportEncodeMetadataFromApi
 
 
 class JsonObjects(BaseModel):
-    objects: Dict[str, str] = {}
+    objects: Dict[str, pd.DataFrame]
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class JsonObjectsSerializer(prefect.engine.serializers.Serializer):
@@ -34,16 +33,20 @@ class JsonObjectsSerializer(prefect.engine.serializers.Serializer):
         pass
 
 
-PREFECT_RESULTS=LocalResult(dir="../data_prefect", serializer=JsonObjectsSerializer())
+# PREFECT_RESULTS=LocalResult(dir="../data_prefect", serializer=JsonObjectsSerializer())
 
 
-@task(target="testing.txt", checkpoint=True, result=PREFECT_RESULTS)
-def extract_encode_api() -> JsonObjects:
-    output = JsonObjects()
+@task(target="extract_encode_api_results.txt", checkpoint=True, result=LocalResult(dir="../data_prefect"))
+def extract_encode_api() -> List[JsonObjects]:
+    output = []
     for obj_type in ['experiments', 'biosample']:
-        output.objects[obj_type] = ImportEncodeMetadataFromApi.encode_api(obj_type, limit='25')
+        json_output = ImportEncodeMetadataFromApi.encode_api(obj_type, limit='25')
+        output.append(JsonObjects(
+            objects={obj_type: pd.json_normalize(json_output)}
+        ))
         time.sleep(1)  # Sleep to not overload ENCODE servers
     # PREFECT_RESULTS.write(output)
+    print(output)
     return output
 
 
