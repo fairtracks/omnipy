@@ -1,26 +1,52 @@
+from io import BytesIO
+from typing import Dict, Union, IO
+from pydantic import validator
+
 import pandas as pd
-from collections import UserDict
-from pydantic import BaseModel, validator
-from typing import Dict
-from unifair.data.common import validate
+
+from unifair.data.dataset import (
+    Dataset,
+    validate,
+    create_tarfile_from_dataset,
+    create_dataset_from_tarfile,
+)
 
 
-class PandasDataset(UserDict, BaseModel):
+class PandasDataset(Dataset):
     data: Dict[str, pd.DataFrame] = {}
 
     class Config:
         arbitrary_types_allowed = True
 
-    def __init__(self):
-        BaseModel.__init__(self)
-        UserDict.__init__(self)
-
-    def __setitem__(self, key: str, data: str) -> None:
-        self.data[key] = pd.DataFrame(data)
+    def __setitem__(self, obj_type: str, data_obj: list) -> None:
+        self.data[obj_type] = self._convert_ints_to_nullable_ints(
+            pd.DataFrame(data_obj)
+        )
         validate(self)
 
-    @validator('data')
-    def validate_data(cls, data):
+    @staticmethod
+    def _convert_ints_to_nullable_ints(dataframe: pd.DataFrame) -> pd.DataFrame:
+        for key, col in dataframe.items():
+            try:
+                if col.dtype in ["int64", "float64"]:
+                    dataframe[key] = col.astype(float).astype("Int64")
+            except TypeError:
+                pass
+        return dataframe
+
+    def __eq__(self, other):
+        sorted_keys = sorted(self.keys())
+        sorted_other_keys = sorted(other.keys())
+        keys_are_equal = sorted_keys == sorted_other_keys
+        if keys_are_equal:
+            dataframes_are_equal = all(
+                self[key].equals(other[key]) for key in sorted_keys
+            )
+            return dataframes_are_equal
+        return False
+
+    @validator("data")
+    def validate_data(cls, data):  # pylint: disable=no-self-argument
         cls._data_column_names_are_strings(data)
         cls._data_not_empty_object(data)
 
@@ -36,3 +62,30 @@ class PandasDataset(UserDict, BaseModel):
             assert not any(obj_type_df.isna().all(axis=1))
 
 
+class PandasDatasetToTarFileSerializer:
+    @staticmethod
+    def serialize(pandas_dataset: PandasDataset) -> Union[bytes, memoryview]:
+        def pandas_encode_func(pandas_data: pd.DataFrame) -> memoryview:
+            csv_bytes = BytesIO()
+            pandas_data.to_csv(csv_bytes, encoding="utf8", mode="b")
+            return csv_bytes.getbuffer()
+
+        return create_tarfile_from_dataset(
+            pandas_dataset, file_suffix="csv", data_encode_func=pandas_encode_func
+        )
+
+    @staticmethod
+    def deserialize(tarfile_bytes: bytes) -> PandasDataset:
+        pandas_dataset = PandasDataset()
+
+        def csv_decode_func(file_stream: IO[bytes]) -> pd.DataFrame:
+            return pd.read_csv(file_stream, index_col=0, encoding="utf8")
+
+        create_dataset_from_tarfile(
+            pandas_dataset,
+            tarfile_bytes,
+            file_suffix="csv",
+            data_decode_func=csv_decode_func,
+        )
+
+        return pandas_dataset
