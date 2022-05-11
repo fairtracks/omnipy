@@ -34,17 +34,6 @@ class PandasDataset(Dataset):
                 pass
         return dataframe
 
-    def __eq__(self, other):
-        sorted_keys = sorted(self.keys())
-        sorted_other_keys = sorted(other.keys())
-        keys_are_equal = sorted_keys == sorted_other_keys
-        if keys_are_equal:
-            dataframes_are_equal = all(
-                self[key].equals(other[key]) for key in sorted_keys
-            )
-            return dataframes_are_equal
-        return False
-
     @validator("data")
     def validate_data(cls, data):  # pylint: disable=no-self-argument
         cls._data_column_names_are_strings(data)

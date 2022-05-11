@@ -1,4 +1,4 @@
-from tests.data.test_common import _assert_tar_file_contents
+from tests.data.test_common import _assert_tar_file_contents, _assert_pandas_dataset_equals
 from unifair.data.pandas import PandasDataset, PandasDatasetToTarFileSerializer
 
 
@@ -21,7 +21,7 @@ def test_pandas_dataset_to_tar_file_serializer_single_obj_type():
 
     deserialized_pandas_data = serializer.deserialize(tarfile_bytes)
 
-    assert deserialized_pandas_data == pandas_data
+    _assert_pandas_dataset_equals(deserialized_pandas_data, pandas_data)
 
 
 def test_pandas_dataset_serializer_to_tar_file_multiple_obj_types():
@@ -51,4 +51,4 @@ def test_pandas_dataset_serializer_to_tar_file_multiple_obj_types():
 
     deserialized_pandas_data = serializer.deserialize(tarfile_bytes)
 
-    assert deserialized_pandas_data == pandas_data
+    _assert_pandas_dataset_equals(deserialized_pandas_data, pandas_data)
