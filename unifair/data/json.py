@@ -1,28 +1,25 @@
 import json
-import tarfile
 
-from io import BytesIO
-from tarfile import TarInfo
-from typing import Dict, List, Union
-from collections import UserDict
-from pydantic import BaseModel, validator
+from typing import Dict, List, Union, IO
+from pydantic import validator
 
-from unifair.data.common import validate
+from unifair.data.dataset import (
+    Dataset,
+    validate,
+    create_tarfile_from_dataset,
+    create_dataset_from_tarfile,
+)
 
 
-class JsonDataset(UserDict, BaseModel):
+class JsonDataset(Dataset):
     data: Dict[str, List[Dict[str, Union[str, int, float, List, Dict]]]]
 
-    def __init__(self):
-        BaseModel.__init__(self, data={})
-        UserDict.__init__(self, {})
-
-    def __setitem__(self, key: str, json_str: str) -> None:
-        self.data[key] = json.loads(json_str)
+    def __setitem__(self, obj_type: str, data_obj: str) -> None:
+        self.data[obj_type] = json.loads(data_obj)
         validate(self)
 
-    @validator('data')
-    def validate_data(cls, data):
+    @validator("data")
+    def validate_data(cls, data):  # pylint: disable=no-self-argument
         cls._data_not_empty_object(data)
 
     @staticmethod
@@ -35,27 +32,25 @@ class JsonDataset(UserDict, BaseModel):
 class JsonDatasetToTarFileSerializer:
     @staticmethod
     def serialize(json_dataset: JsonDataset) -> Union[bytes, memoryview]:
-        bytes_io = BytesIO()
+        def json_encode_func(json_data: list) -> bytes:
+            return json.dumps(json_data).encode("utf8")
 
-        with tarfile.open(fileobj=bytes_io, mode='w:gz') as tf:
-            for obj_type, json_data in json_dataset.items():
-                json_data_bytestream = BytesIO(json.dumps(json_data).encode('utf8'))
-                json_data_bytestream.seek(0)
-                ti = TarInfo(name=f'{obj_type}.json')
-                ti.size = len(json_data_bytestream.getbuffer())
-                tf.addfile(ti, json_data_bytestream)
-
-        return bytes_io.getbuffer().tobytes()
+        return create_tarfile_from_dataset(
+            json_dataset, file_suffix="json", data_encode_func=json_encode_func
+        )
 
     @staticmethod
     def deserialize(tarfile_bytes: bytes) -> JsonDataset:
         json_dataset = JsonDataset()
 
-        with tarfile.open(fileobj=BytesIO(tarfile_bytes), mode='r:gz') as tf:
-            for filename in tf.getnames():
-                json_file = tf.extractfile(filename)
-                assert filename.endswith(".json")
-                obj_type = filename[:-5]
-                json_dataset[obj_type] = json_file.read().decode('utf8')
+        def json_decode_func(file_stream: IO[bytes]) -> str:
+            return file_stream.read().decode("utf8")
+
+        create_dataset_from_tarfile(
+            json_dataset,
+            tarfile_bytes,
+            file_suffix="json",
+            data_decode_func=json_decode_func,
+        )
 
         return json_dataset
