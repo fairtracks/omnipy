@@ -1,7 +1,4 @@
-import json
 import time
-import pandas as pd
-from abc import ABC
 
 import requests
 
@@ -38,20 +35,22 @@ class ImportGDCMetadataFromApi(WorkflowStep):
     def gdc_api(cls, object_type='projects', starting_point=None, size=None):
         api_url = cls.GDC_BASE_URL + object_type + '/' + '?' + \
             '&'.join(
-                (['from=' + starting_point] if starting_point else []) + \
+                (['from=' + starting_point] if starting_point else []) +
                 (['size=' + size] if size else []) + \
                 (['expand=' + "project"] if object_type=="cases" else [])
-            ) 
+            )
         print(api_url)
         response = requests.get(api_url)
-        if response.status_code == 200:
-            results = response.json()
-            if len(results['warnings'])==0:
-                hits = (results['data']['hits'])
-                return hits
-            else:
-                print("The following warnings have been encountered:")
-                print(results['warnings'])
-        else:
+        if response.status_code != 200:
             print('No result found')
+            return None
 
+        results = response.json()
+
+        if len(results['warnings']) > 0:
+            print("The following warnings have been encountered:")
+            print(results['warnings'])
+            return None
+
+        hits = (results['data']['hits'])
+        return hits
