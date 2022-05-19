@@ -19,9 +19,7 @@ class PandasDataset(Dataset):
         arbitrary_types_allowed = True
 
     def __setitem__(self, obj_type: str, data_obj: list) -> None:
-        self.data[obj_type] = self._convert_ints_to_nullable_ints(
-            pd.DataFrame(data_obj)
-        )
+        self.data[obj_type] = self._convert_ints_to_nullable_ints(pd.DataFrame(data_obj))
         validate(self)
 
     @staticmethod
@@ -60,8 +58,7 @@ class PandasDatasetToTarFileSerializer:
             return csv_bytes.getbuffer()
 
         return create_tarfile_from_dataset(
-            pandas_dataset, file_suffix="csv", data_encode_func=pandas_encode_func
-        )
+            pandas_dataset, file_suffix="csv", data_encode_func=pandas_encode_func)
 
     @staticmethod
     def deserialize(tarfile_bytes: bytes) -> PandasDataset:

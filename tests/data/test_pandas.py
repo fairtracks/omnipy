@@ -10,7 +10,11 @@ def test_pandas_dataset_list_of_objects_same_keys():
     pandas_data["obj_type"] = [{"a": "abc", "b": 12}, {"a": "bcd", "b": 23}]
     pd.testing.assert_frame_equal(
         pandas_data["obj_type"],
-        pd.DataFrame([{"a": "abc", "b": 12}, {"a": "bcd", "b": 23}]),
+        pd.DataFrame([{
+            "a": "abc", "b": 12
+        }, {
+            "a": "bcd", "b": 23
+        }]),
         check_dtype=False,
     )
 
@@ -20,23 +24,28 @@ def test_pandas_dataset_list_of_objects_different_keys():
     pandas_data["obj_type"] = [{"a": "abc", "b": 12}, {"c": "bcd"}]
     pd.testing.assert_frame_equal(
         pandas_data["obj_type"],
-        pd.DataFrame(
-            [{"a": "abc", "b": 12, "c": None}, {"a": None, "b": None, "c": "bcd"}]
-        ),
+        pd.DataFrame([{
+            "a": "abc", "b": 12, "c": None
+        }, {
+            "a": None, "b": None, "c": "bcd"
+        }]),
         check_dtype=False,
     )
 
 
 @pytest.mark.skip(
     reason="Postponed the implementation of nullable int inference that does not also convert "
-    "floats unnecessarily"
-)
+    "floats unnecessarily")
 def test_pandas_dataset_list_of_objects_float_numbers():
     pandas_data = PandasDataset()
     pandas_data["obj_type"] = [{"a": 12.0, "b": 12.1}, {"a": 3.0}]
     pd.testing.assert_frame_equal(
         pandas_data["obj_type"],
-        pd.DataFrame([{"a": 12.0, "b": 12.1}, {"a": 3.0, "b": None}]),
+        pd.DataFrame([{
+            "a": 12.0, "b": 12.1
+        }, {
+            "a": 3.0, "b": None
+        }]),
         check_dtype=True,
     )
 
@@ -44,9 +53,7 @@ def test_pandas_dataset_list_of_objects_float_numbers():
 def test_pandas_dataset_list_of_nested_objects():
     pandas_data = PandasDataset()
     pandas_data["obj_type"] = [{"a": "abc", "b": {"c": [1, 3]}}]
-    assert pandas_data["obj_type"].equals(
-        pd.DataFrame([{"a": "abc", "b": {"c": [1, 3]}}])
-    )
+    assert pandas_data["obj_type"].equals(pd.DataFrame([{"a": "abc", "b": {"c": [1, 3]}}]))
     assert pandas_data["obj_type"].loc[0, "b"] == {"c": [1, 3]}
 
 

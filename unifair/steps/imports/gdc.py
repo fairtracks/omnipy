@@ -24,7 +24,7 @@ class ImportGDCMetadataFromApi(WorkflowStep):
 
     def _run(self, input_data):
         output = JsonDocumentCollection()
-        for obj_type in ['projects','cases','files','annotations']:
+        for obj_type in ['projects', 'cases', 'files', 'annotations']:
             json_output = self.gdc_api(object_type=obj_type, starting_point='0', size='25')
             # output.add_object(table_name, pd.json_normalize(json_output))
             output[obj_type] = json_output

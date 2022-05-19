@@ -65,7 +65,8 @@ class ObjectCollection(Data):
         for filename in os.listdir(in_path):
             assert filename.endswith(self.FILE_SUFFIX)
             basename = filename[:-len(self.FILE_SUFFIX)]
-            self._object_dict[basename] = self._read_object_from_file(os.path.join(in_path, filename))
+            self._object_dict[basename] = self._read_object_from_file(
+                os.path.join(in_path, filename))
 
     @classmethod
     @abstractmethod
