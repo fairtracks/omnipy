@@ -1,10 +1,11 @@
 import os
+from tempfile import TemporaryDirectory
 
 import pandas as pd
-
 from pandas.testing import assert_frame_equal
-from tempfile import TemporaryDirectory
-from unifair.core.data import PandasDataFrameCollection, JsonDocumentCollection
+
+from unifair.core.data import JsonDocumentCollection
+from unifair.core.data import PandasDataFrameCollection
 
 
 def test_pandas_dataframe_add():

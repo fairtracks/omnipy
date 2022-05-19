@@ -17,6 +17,7 @@ pytest = "^7.1.0"
 pytest-pycharm = "^0.7.0"
 yapf = "^0.32.0"
 flake8 = "^4.0.1"
+isort = "^5.10.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -33,3 +34,8 @@ split_all_comma_separated_values = false
 split_all_top_level_comma_separated_values = true
 split_before_expression_after_opening_paren = true
 split_before_arithmetic_operator = true
+
+[tool.isort]
+profile = "google"
+src_paths = ["unifair", "tests"]
+line_length = 100

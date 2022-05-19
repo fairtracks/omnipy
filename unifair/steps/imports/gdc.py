@@ -2,7 +2,8 @@ import time
 
 import requests
 
-from unifair.core.data import NoData, JsonDocumentCollection
+from unifair.core.data import JsonDocumentCollection
+from unifair.core.data import NoData
 from unifair.core.workflow import WorkflowStep
 
 

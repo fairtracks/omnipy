@@ -1,14 +1,16 @@
+import json
 import os
 import time
-import json
 from typing import Dict, List
 
-import prefect
 import pandas as pd
-from prefect import task, Flow
+import prefect
+from prefect import Flow
+from prefect import task
 from prefect.engine.results import LocalResult
 from prefect.executors import LocalExecutor
 from pydantic import BaseModel
+
 from unifair.steps.imports.encode import ImportEncodeMetadataFromApi
 
 

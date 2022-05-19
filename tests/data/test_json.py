@@ -1,7 +1,7 @@
-import pytest
-
 from json import JSONDecodeError
+
 from pydantic import ValidationError
+import pytest
 
 from unifair.data.json import JsonDataset
 
