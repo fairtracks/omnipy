@@ -15,9 +15,8 @@ pydantic = "^1.9.0"
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.0"
 pytest-pycharm = "^0.7.0"
-pylint = "^2.13.8"
-pylint-pydantic = "^0.1.4"
 yapf = "^0.32.0"
+flake8 = "^4.0.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -33,3 +32,4 @@ join_multiple_lines = true
 split_all_comma_separated_values = false
 split_all_top_level_comma_separated_values = true
 split_before_expression_after_opening_paren = true
+split_before_arithmetic_operator = true
