@@ -1,7 +1,5 @@
-import json
 import time
 import pandas as pd
-from abc import ABC
 
 import requests
 
@@ -41,11 +39,10 @@ class ImportEncodeMetadataFromApi(WorkflowStep):
                    limit=None,
                    format='json',
                    frame='object'):
-        api_url = cls.ENCODE_BASE_URL + object_type + '/' + \
-                                (id if id else '@@listing') + '?' + \
-                                '&'.join((['limit=' + limit] if limit else []) +
-                                         (['format=' + format] if format else []) +
-                                         (['frame=' + frame] if frame else []))
+        api_url = cls.ENCODE_BASE_URL + object_type + '/' + (
+            id if id else '@@listing') + '?' + '&'.join((['limit=' + limit] if limit else [])
+                                                        + (['format=' + format] if format else [])
+                                                        + (['frame=' + frame] if frame else []))
         print(api_url)
         response = requests.get(api_url, headers=cls.HEADERS)
         if response.status_code == 200:

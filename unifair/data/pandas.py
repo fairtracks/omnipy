@@ -33,7 +33,7 @@ class PandasDataset(Dataset):
         return dataframe
 
     @validator("data")
-    def validate_data(cls, data):  # pylint: disable=no-self-argument
+    def validate_data(cls, data):
         cls._data_column_names_are_strings(data)
         cls._data_not_empty_object(data)
 

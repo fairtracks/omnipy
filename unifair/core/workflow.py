@@ -43,7 +43,7 @@ class WorkflowStep(ABC):
         assert isinstance(data_obj, data_cls), \
             '{} data object is not a subclass of {}, as required.'.format(
                 'Input' if input_data else 'Output', data_cls
-            )
+        )
         data_obj.validate()
 
     @abstractmethod

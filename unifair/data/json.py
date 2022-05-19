@@ -19,7 +19,7 @@ class JsonDataset(Dataset):
         validate(self)
 
     @validator("data")
-    def validate_data(cls, data):  # pylint: disable=no-self-argument
+    def validate_data(cls, data):
         cls._data_not_empty_object(data)
 
     @staticmethod
