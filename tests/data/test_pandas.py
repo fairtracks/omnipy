@@ -1,6 +1,6 @@
 import pandas as pd
-import pytest
 from pydantic import ValidationError
+import pytest
 
 from unifair.data.pandas import PandasDataset
 

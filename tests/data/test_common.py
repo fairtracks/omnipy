@@ -1,5 +1,5 @@
-import tarfile
 from io import BytesIO
+import tarfile
 from typing import Any
 
 import pandas as pd

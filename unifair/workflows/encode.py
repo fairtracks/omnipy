@@ -1,5 +1,6 @@
 import os
 import sys
+
 from unifair.core.workflow import Workflow
 from unifair.steps.imports.encode import ImportEncodeMetadataFromApi
 

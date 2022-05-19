@@ -1,6 +1,7 @@
+from abc import ABC
+from abc import abstractmethod
 import json
 import os
-from abc import ABC, abstractmethod
 
 import pandas as pd
 
