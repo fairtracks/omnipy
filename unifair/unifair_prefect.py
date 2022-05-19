@@ -1,15 +1,14 @@
 import os
 import time
 import json
+from typing import Dict, List
+
 import prefect
 import pandas as pd
-from io import BytesIO
-from tarfile import TarFile, TarInfo
-from typing import Dict, List
-from prefect.executors import LocalExecutor
-from pydantic import BaseModel
 from prefect import task, Flow
 from prefect.engine.results import LocalResult
+from prefect.executors import LocalExecutor
+from pydantic import BaseModel
 from unifair.steps.imports.encode import ImportEncodeMetadataFromApi
 
 
@@ -24,7 +23,7 @@ class JsonObjectsSerializer(prefect.engine.serializers.Serializer):
     def serialize(self, value: JsonObjects) -> bytes:
         # transform a Python object into bytes
         output = ''
-        for key, obj in value.objects.items():
+        for obj in value.objects.values():
             output += json.dumps(obj, indent=4) + os.linesep
         return output.encode('utf8')
 
@@ -62,34 +61,33 @@ def extract_sq() -> pd.DataFrame:
 
 # Transform data -> cleanup and reduce redundancy
 @task
-def json_cleanup(data: pd.DataFrame) -> pd.DataFrame:
+def json_cleanup(_: pd.DataFrame) -> pd.DataFrame:
     pass
 
 
 @task
 def transform_first_normal(data: pd.DataFrame) -> pd.DataFrame:
     data.validate()
+
+
+@task
+def transform_second_normal(_: pd.DataFrame) -> pd.DataFrame:
     pass
 
 
 @task
-def transform_second_normal(data: pd.DataFrame) -> pd.DataFrame:
+def transform_third_normal(_: pd.DataFrame) -> pd.DataFrame:
     pass
 
 
 @task
-def transform_third_normal(data: pd.DataFrame) -> pd.DataFrame:
-    pass
-
-
-@task
-def transform_fair(data: pd.DataFrame) -> pd.DataFrame:
+def transform_fair(_: pd.DataFrame) -> pd.DataFrame:
     pass
 
 
 # Load data -> save normalised data into files/ databases
 @task
-def save_fair_data(data: pd.DataFrame) -> None:
+def save_fair_data(_: pd.DataFrame) -> None:
     pass
 
 
@@ -103,16 +101,3 @@ with Flow("Unifair - ENCODE") as encode_flow:
 encode_flow.run(executor=LocalExecutor())
 
 # with Flow("Unifair - Gsuit") as gsuit_flow:
-
-bytes_io = BytesIO()
-bytes_io_file = BytesIO(b'Contents')
-bytes_io_file.seek(0)
-ti = TarInfo(name='mydir/myfile')
-ti.size = len(bytes_io_file.getbuffer())
-
-tf = TarFile(fileobj=bytes_io, mode='w')
-tf.addfile(ti, bytes_io_file)
-tf.close()
-
-with open('testfile.tar', 'wb') as outfile:
-    outfile.write(bytes_io.getbuffer())
