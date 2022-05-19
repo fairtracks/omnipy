@@ -6,15 +6,12 @@ import pandas as pd
 
 
 class Data(ABC):
-    def __init__(self):
-        super().__init__()
-
     @abstractmethod
     def validate(self):
         """
-        Should raise an exception if data contents does not follow the requirements for the data class
+        Should raise an exception if data contents does not follow the requirements for the data
+        class
         """
-        pass
 
     @abstractmethod
     def read_from_dir(self, in_path):
@@ -72,7 +69,7 @@ class ObjectCollection(Data):
 
     @classmethod
     @abstractmethod
-    def _read_object_from_file(cls, filepath):
+    def _read_object_from_file(cls, file_path):
         pass
 
     def write_to_dir(self, out_path):
@@ -83,13 +80,13 @@ class ObjectCollection(Data):
 
     @classmethod
     @abstractmethod
-    def _write_object_to_file(cls, obj, filepath):
+    def _write_object_to_file(cls, obj, file_path):
         pass
 
     def __str__(self):
         text = ''
         for name, obj in self._object_dict.items():
-            text += '{} "{}"'.format(self.OBJECT_TYPE, name) + os.linesep
+            text += f'{self.OBJECT_TYPE} "{name}"' + os.linesep
             text += self._object_to_string(obj) + os.linesep
         return text
 
@@ -105,12 +102,12 @@ class JsonDocumentCollection(ObjectCollection):
 
     @classmethod
     def _read_object_from_file(cls, file_path):
-        with open(file_path) as infile:
+        with open(file_path, encoding='utf8') as infile:
             return json.load(infile)
 
     @classmethod
-    def _write_object_to_file(self, obj, file_path):
-        with open(file_path, 'w') as outfile:
+    def _write_object_to_file(cls, obj, file_path):
+        with open(file_path, 'w', encoding='utf8') as outfile:
             json.dump(obj, outfile, indent=4)
             outfile.write(os.linesep)
 
@@ -128,11 +125,11 @@ class PandasDataFrameCollection(ObjectCollection):
     FILE_SUFFIX = '.csv'
 
     @classmethod
-    def _read_object_from_file(self, file_path):
+    def _read_object_from_file(cls, file_path):
         return pd.read_csv(file_path, index_col=0)
 
     @classmethod
-    def _write_object_to_file(self, obj, file_path):
+    def _write_object_to_file(cls, obj, file_path):
         obj.to_csv(file_path)
 
     @classmethod
