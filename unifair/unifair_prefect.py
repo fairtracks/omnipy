@@ -35,14 +35,15 @@ class JsonObjectsSerializer(prefect.engine.serializers.Serializer):
 # PREFECT_RESULTS=LocalResult(dir="../data_prefect", serializer=JsonObjectsSerializer())
 
 
-@task(target="extract_encode_api_results.txt", checkpoint=True, result=LocalResult(dir="../data_prefect"))
+@task(
+    target="extract_encode_api_results.txt",
+    checkpoint=True,
+    result=LocalResult(dir="../data_prefect"))
 def extract_encode_api() -> List[JsonObjects]:
     output = []
     for obj_type in ['experiments', 'biosample']:
         json_output = ImportEncodeMetadataFromApi.encode_api(obj_type, limit='25')
-        output.append(JsonObjects(
-            objects={obj_type: pd.json_normalize(json_output)}
-        ))
+        output.append(JsonObjects(objects={obj_type: pd.json_normalize(json_output)}))
         time.sleep(1)  # Sleep to not overload ENCODE servers
     # PREFECT_RESULTS.write(output)
     print(output)

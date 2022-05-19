@@ -25,8 +25,11 @@ def select_from_labels(df, labels, axis, level, invert=False):
     return formatted_idx
 
 
-def extract_subtable_by_labels(df, row_labels=None, col_labels=None,
-                               row_level=None, col_level=None):
+def extract_subtable_by_labels(df,
+                               row_labels=None,
+                               col_labels=None,
+                               row_level=None,
+                               col_level=None):
     if row_labels:
         rows = [df.xs(row, axis=0, level=row_level, drop_level=False) for row in row_labels]
         df = pd.concat(rows)

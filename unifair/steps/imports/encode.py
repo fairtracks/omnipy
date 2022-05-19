@@ -35,7 +35,12 @@ class ImportEncodeMetadataFromApi(WorkflowStep):
         return output
 
     @classmethod
-    def encode_api(cls, object_type='experiments', id=None, limit=None, format='json', frame='object'):
+    def encode_api(cls,
+                   object_type='experiments',
+                   id=None,
+                   limit=None,
+                   format='json',
+                   frame='object'):
         api_url = cls.ENCODE_BASE_URL + object_type + '/' + \
                                 (id if id else '@@listing') + '?' + \
                                 '&'.join((['limit=' + limit] if limit else []) +
@@ -50,4 +55,3 @@ class ImportEncodeMetadataFromApi(WorkflowStep):
                 return graph
         else:
             print('No result found')
-

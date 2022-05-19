@@ -24,7 +24,8 @@ def validate(model: BaseModel):
         raise validation_error
 
 
-def create_tarfile_from_dataset(dataset: Dataset, file_suffix: str,
+def create_tarfile_from_dataset(dataset: Dataset,
+                                file_suffix: str,
                                 data_encode_func: Callable[[Any], Union[bytes, memoryview]]):
     bytes_io = BytesIO()
     with tarfile.open(fileobj=bytes_io, mode='w:gz') as tarfile_stream:
@@ -37,7 +38,9 @@ def create_tarfile_from_dataset(dataset: Dataset, file_suffix: str,
     return bytes_io.getbuffer().tobytes()
 
 
-def create_dataset_from_tarfile(dataset: Dataset, tarfile_bytes: bytes, file_suffix: str,
+def create_dataset_from_tarfile(dataset: Dataset,
+                                tarfile_bytes: bytes,
+                                file_suffix: str,
                                 data_decode_func: Callable[[IO[bytes]], Any]):
     with tarfile.open(fileobj=BytesIO(tarfile_bytes), mode='r:gz') as tarfile_stream:
         for filename in tarfile_stream.getnames():
