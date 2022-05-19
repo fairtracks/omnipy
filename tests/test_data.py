@@ -22,7 +22,9 @@ def test_pandas_dataframe_readwrite():
     df_coll_2 = PandasDataFrameCollection()
 
     name = 'data1'
-    df = pd.DataFrame.from_dict({'A': [1, 2, 3], 'B': ["{'a': [1, 2, 3]}", "{'b': [2, 4, 6]}", "{'c': [3, 6, 9]}"]})
+    df = pd.DataFrame.from_dict({
+        'A': [1, 2, 3], 'B': ["{'a': [1, 2, 3]}", "{'b': [2, 4, 6]}", "{'c': [3, 6, 9]}"]
+    })
     df_coll_1[name] = df
 
     with TemporaryDirectory() as tmpdirname:

@@ -36,8 +36,7 @@ class JsonDatasetToTarFileSerializer:
             return json.dumps(json_data).encode("utf8")
 
         return create_tarfile_from_dataset(
-            json_dataset, file_suffix="json", data_encode_func=json_encode_func
-        )
+            json_dataset, file_suffix="json", data_encode_func=json_encode_func)
 
     @staticmethod
     def deserialize(tarfile_bytes: bytes) -> JsonDataset:
