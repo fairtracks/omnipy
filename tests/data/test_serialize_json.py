@@ -1,5 +1,6 @@
 from tests.data.test_common import _assert_tar_file_contents
-from unifair.data.json import JsonDataset, JsonDatasetToTarFileSerializer
+from unifair.data.json import JsonDataset
+from unifair.data.json import JsonDatasetToTarFileSerializer
 
 
 def test_json_dataset_to_tar_file_serializer_single_obj_type():

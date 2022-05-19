@@ -1,15 +1,13 @@
 from io import BytesIO
-from typing import Dict, Union, IO
-from pydantic import validator
+from typing import Dict, IO, Union
 
 import pandas as pd
+from pydantic import validator
 
-from unifair.data.dataset import (
-    Dataset,
-    validate,
-    create_tarfile_from_dataset,
-    create_dataset_from_tarfile,
-)
+from unifair.data.dataset import create_dataset_from_tarfile
+from unifair.data.dataset import create_tarfile_from_dataset
+from unifair.data.dataset import Dataset
+from unifair.data.dataset import validate
 
 
 class PandasDataset(Dataset):
