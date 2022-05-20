@@ -15,7 +15,7 @@ class ImportGDCMetadataFromApi(WorkflowStep):
 
     @staticmethod
     def _get_name():
-        return "1_import_GDC_metadata_from_api"
+        return '1_import_GDC_metadata_from_api'
 
     def _get_input_data_cls(self):
         return NoData
@@ -38,7 +38,7 @@ class ImportGDCMetadataFromApi(WorkflowStep):
             '&'.join(
                 (['from=' + starting_point] if starting_point else [])
                 + (['size=' + size] if size else [])
-                + (['expand=' + "project"] if object_type == "cases" else [])
+                + (['expand=' + 'project'] if object_type == 'cases' else [])
             )
         print(api_url)
         response = requests.get(api_url)
@@ -49,7 +49,7 @@ class ImportGDCMetadataFromApi(WorkflowStep):
         results = response.json()
 
         if len(results['warnings']) > 0:
-            print("The following warnings have been encountered:")
+            print('The following warnings have been encountered:')
             print(results['warnings'])
             return None
 

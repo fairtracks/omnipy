@@ -12,7 +12,7 @@ def create_gdc_workflow():
     return encode_workflow
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     workflow = create_gdc_workflow()
     print(os.path.abspath(sys.argv[1]))
     output = workflow.run(sys.argv[1])
