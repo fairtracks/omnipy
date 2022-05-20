@@ -23,11 +23,11 @@ class PandasDataset(Dataset):
     @staticmethod
     def _convert_ints_to_nullable_ints(dataframe: pd.DataFrame) -> pd.DataFrame:
         for key, col in dataframe.items():
-            try:
-                if col.dtype in ["int64", "float64"]:
+            if col.dtype == 'int64' or (col.dtype == 'float64' and col.isna().any()):
+                try:
                     dataframe[key] = col.astype(float).astype("Int64")
-            except TypeError:
-                pass
+                except TypeError:
+                    pass
         return dataframe
 
     @validator("data")
