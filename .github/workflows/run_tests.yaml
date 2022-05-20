@@ -22,4 +22,5 @@ jobs:
           $HOME/.local/bin/poetry install
       - name: Test with pytest
         run: |
+          source $(poetry env info --path)/bin/activate
           pytest
