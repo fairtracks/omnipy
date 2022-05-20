@@ -5,7 +5,7 @@ description = ""
 authors = ["Sveinung Gundersen <sveinugu@gmail.com>", "Federico Bianchini <fredebi@uio.no>", "Ahmed Ghanem <ahmedg@uio.no>"]
 
 [tool.poetry.dependencies]
-python = "^3.7.1"
+python = "^3.8"
 pandas = "^1.2.4"
 dpath = "^2.0.1"
 requests = "^2.25.1"
