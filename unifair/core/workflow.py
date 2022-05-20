@@ -61,7 +61,7 @@ class Workflow:
         self._steps.append(step)
 
     def run(self, data_path):
-        invocation_dir = os.path.join(data_path, datetime.now().strftime("%d_%m_%Y_%H_%M_%S"))
+        invocation_dir = os.path.join(data_path, datetime.now().strftime('%d_%m_%Y_%H_%M_%S'))
         os.makedirs(invocation_dir)
         cur_data_dirname = ''
 

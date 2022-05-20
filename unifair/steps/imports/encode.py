@@ -17,7 +17,7 @@ class ImportEncodeMetadataFromApi(WorkflowStep):
 
     @staticmethod
     def _get_name():
-        return "1_import_encode_metadata_from_api"
+        return '1_import_encode_metadata_from_api'
 
     def _get_input_data_cls(self):
         return NoData

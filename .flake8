@@ -1,5 +1,6 @@
 [flake8]
 ignore = D203, W503
+select = Q0
 exclude =
     # No need to traverse our git directory
     .git,

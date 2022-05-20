@@ -34,13 +34,13 @@ class JsonObjectsSerializer(prefect.engine.serializers.Serializer):
         pass
 
 
-# PREFECT_RESULTS=LocalResult(dir="../data_prefect", serializer=JsonObjectsSerializer())
+# PREFECT_RESULTS=LocalResult(dir='../data_prefect', serializer=JsonObjectsSerializer())
 
 
 @task(
-    target="extract_encode_api_results.txt",
+    target='extract_encode_api_results.txt',
     checkpoint=True,
-    result=LocalResult(dir="../data_prefect"))
+    result=LocalResult(dir='../data_prefect'))
 def extract_encode_api() -> List[JsonObjects]:
     output = []
     for obj_type in ['experiments', 'biosample']:
@@ -95,7 +95,7 @@ def save_fair_data(_: pd.DataFrame) -> None:
 
 
 # The workflow
-with Flow("Unifair - ENCODE") as encode_flow:
+with Flow('Unifair - ENCODE') as encode_flow:
     encode_data_api = extract_encode_api()
     # encode_data_clean = json_cleanup(encode_data_api)
     # encode_data_normalised = transform_first_normal(encode_data_clean)
@@ -103,4 +103,4 @@ with Flow("Unifair - ENCODE") as encode_flow:
 
 encode_flow.run(executor=LocalExecutor())
 
-# with Flow("Unifair - Gsuit") as gsuit_flow:
+# with Flow('Unifair - Gsuit') as gsuit_flow:
