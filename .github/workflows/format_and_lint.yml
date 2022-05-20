@@ -1,52 +1,35 @@
-name: format_and_lint
+name: Python package
 
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+on: [push, pull_request]
 
 jobs:
-  format_and_lint:
-    runs-on: ${{ matrix.os }}
+  build:
 
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        node: [16]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: weibullguy/python-lint-plus@master
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
         with:
-          python-root-list: "unifair tests"
-          use-black: false
-          use-yapf: true
-          use-isort: true
-          use-docformatter: false
-          use-pycodestyle: false
-          use-pydocstyle: false
-          use-mypy: false
-          use-pylint: false
-          use-flake8: true
-          use-mccabe: false
-          use-radon: false
-          use-rstcheck: false
-          use-check-manifest: false
-          use-pyroma: false
-          extra-black-options: ""
-          extra-yapf-options: ""
-          extra-isort-options: ""
-          extra-docformatter-options: ""
-          extra-pycodestyle-options: ""
-          extra-pydocstyle-options: ""
-          extra-mypy-options: ""
-          extra-pylint-options: ""
-          extra-flake8-options: ""
-          extra-mccabe-options: ""
-          extra-radon-options: ""
-          extra-rstcheck-options: ""
-          extra-manifest-options: ""
-          extra-pyroma-options: ""
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          $HOME/.local/bin/poetry install
+      - name: Check input line sorting with isort
+        run: |
+          source $(poetry env info --path)/bin/activate
+          isort -c .
+
+      - name: Check standarized formatting with yapf
+        run: |
+          source $(poetry env info --path)/bin/activate
+          yapf -r --diff .
+
+      - name: Lint with flake8
+        run: |
+          flake8 . --count --show-source --statistics
