@@ -31,11 +31,12 @@ def test_pandas_dataframe_readwrite():
         df_coll_1.write_to_dir(tmpdirname)
 
         with open(os.path.join(tmpdirname, name + '.csv')) as out_file:
-            assert out_file.read() == \
-                   (""",A,B"""
-                    """0,1,'{"a": [1, 2, 3]}'"""
-                    """1,2,'{"b": [2, 4, 6]}'"""
-                    """2,3,'{"c": [3, 6, 9]}'""")
+            assert out_file.read() == """
+,A,B
+0,1,"{'a': [1, 2, 3]}"
+1,2,"{'b': [2, 4, 6]}"
+2,3,"{'c': [3, 6, 9]}"
+"""[1:]
 
         df_coll_2.read_from_dir(tmpdirname)
         assert_frame_equal(df_coll_1[name], df_coll_2[name])
