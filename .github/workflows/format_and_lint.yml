@@ -32,4 +32,5 @@ jobs:
 
       - name: Lint with flake8
         run: |
+          source $(poetry env info --path)/bin/activate
           flake8 . --count --show-source --statistics
