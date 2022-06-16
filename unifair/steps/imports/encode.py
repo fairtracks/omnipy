@@ -3,8 +3,7 @@ import time
 import pandas as pd
 import requests
 
-from unifair.core.data import NoData
-from unifair.core.data import PandasDataFrameCollection
+from unifair.core.data import NoData, PandasDataFrameCollection
 from unifair.core.workflow import WorkflowStep
 
 

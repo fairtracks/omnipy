@@ -4,8 +4,7 @@ from tempfile import TemporaryDirectory
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
-from unifair.core.data import JsonDocumentCollection
-from unifair.core.data import PandasDataFrameCollection
+from unifair.core.data import JsonDocumentCollection, PandasDataFrameCollection
 
 
 def test_pandas_dataframe_add():
