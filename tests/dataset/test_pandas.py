@@ -2,7 +2,7 @@ import pandas as pd
 from pydantic import ValidationError
 import pytest
 
-from unifair.data.pandas import PandasDataset
+from unifair.dataset.pandas import PandasDataset
 
 
 def test_pandas_dataset_list_of_objects_same_keys():
