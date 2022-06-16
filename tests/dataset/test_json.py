@@ -3,7 +3,7 @@ from json import JSONDecodeError
 from pydantic import ValidationError
 import pytest
 
-from unifair.data.json import JsonDataset
+from unifair.dataset.json import JsonDataset
 
 
 def test_json_dataset_array_of_objects_same_keys():

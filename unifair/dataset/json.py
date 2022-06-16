@@ -3,10 +3,10 @@ from typing import Dict, IO, List, Union
 
 from pydantic import validator
 
-from unifair.data import (create_dataset_from_tarfile,
-                          create_tarfile_from_dataset,
-                          Dataset,
-                          validate)
+from unifair.dataset import (create_dataset_from_tarfile,
+                             create_tarfile_from_dataset,
+                             Dataset,
+                             validate)
 
 
 class JsonDataset(Dataset):

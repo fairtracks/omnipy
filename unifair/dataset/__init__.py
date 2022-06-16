@@ -7,8 +7,8 @@ from typing import Any, Callable, IO, Union
 
 from pydantic import BaseModel, validate_model
 
-from data.json import JsonDatasetToTarFileSerializer
-from data.pandas import PandasDatasetToTarFileSerializer
+from unifair.dataset.json import JsonDatasetToTarFileSerializer
+from unifair.dataset.pandas import PandasDatasetToTarFileSerializer
 
 
 class Dataset(ABC, UserDict, BaseModel):
