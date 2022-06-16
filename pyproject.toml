@@ -38,8 +38,9 @@ split_before_arithmetic_operator = true
 
 [tool.isort]
 profile = "google"
+force_single_line = false
+multi_line_output = 1
 src_paths = ["unifair", "tests"]
-line_length = 100
 
 [flows]
 checkpointing = true

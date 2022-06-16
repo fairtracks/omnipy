@@ -1,5 +1,4 @@
-from prefect import Flow
-from prefect import task
+from prefect import Flow, task
 from prefect.engine.results import LocalResult
 
 
