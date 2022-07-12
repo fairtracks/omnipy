@@ -1,6 +1,6 @@
 from collections import UserDict
 import json
-from typing import Any, Dict, Generic, Type, TypeVar, Union
+from typing import Any, Dict, Generic, Iterator, Tuple, Type, TypeVar, Union
 
 from pydantic import Field
 from pydantic.generics import GenericModel
@@ -56,7 +56,9 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
                             'Model class.')
         return super().__class_getitem__(model)
 
-    def __init__(self, value: Dict[str, Any] = Undefined, **input_data: Any) -> None:
+    def __init__(self,
+                 value: Union[Dict[str, Any], Iterator[Tuple[str, Any]]] = Undefined,
+                 **input_data: Any) -> None:
         if value != Undefined:
             input_data[DATA_KEY] = value
 
@@ -64,12 +66,12 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             self._raise_no_model_exception()
 
         GenericModel.__init__(self, **input_data)
-        UserDict.__init__(self, self.data)
+        UserDict.__init__(self, self.data)  # noqa
         if not self.__doc__:
             self._set_standard_field_description()
 
     @staticmethod
-    def _raise_no_model_exception():
+    def _raise_no_model_exception() -> None:
         raise TypeError(
             'Note: The Dataset class requires a concrete model to be specified as '
             'a type hierarchy within brackets either directly, e.g.:\n\n'
@@ -86,11 +88,11 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             '"poor man\'s exception" due to complex technicalities in that class. Please '
             'explicitly specify types in both cases. ')
 
-    def _set_standard_field_description(self):
+    def _set_standard_field_description(self) -> None:
         self.__fields__[DATA_KEY].field_info.description = self._get_standard_field_description()
 
     @classmethod
-    def _get_standard_field_description(cls):
+    def _get_standard_field_description(cls) -> str:
         return ('This class represents a dataset in the `uniFAIR` Python package and contains '
                 'a set of named data items that follows the same data model. '
                 'It is a statically typed specialization of the Dataset class according to a '
@@ -111,14 +113,14 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         else:
             return self.data[obj_type]
 
-    def _validate(self):
+    def _validate(self) -> None:
         self.data = self.data  # Triggers pydantic validation, as validate_assignment=True
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         return UserDict.__iter__(self)
 
-    def __setattr__(self, attr, value):
-        if attr in self.__dict__ or attr == DATA_KEY or attr.strartswith('__'):
+    def __setattr__(self, attr: str, value: Any) -> None:
+        if attr in self.__dict__ or attr == DATA_KEY or attr.startswith('__'):
             super().__setattr__(attr, value)
         else:
             raise RuntimeError('Model does not allow setting of extra attributes')
@@ -126,7 +128,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     def to_data(self) -> Dict[str, Any]:
         return GenericModel.dict(self).get(DATA_KEY)
 
-    def from_data(self, data: Dict[str, Any]) -> None:
+    def from_data(self, data: Union[Dict[str, Any], Iterator[Tuple[str, Any]]]) -> None:
         if isinstance(self, dict):
             self.update(data)
         else:
@@ -141,18 +143,19 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             result[key] = self._pretty_print_json(val) if pretty else json.dumps(val)
         return result
 
-    def to_json_schema(self, pretty=False) -> Union[str, Dict[str, Any]]:
+    @classmethod
+    def to_json_schema(cls, pretty=False) -> Union[str, Dict[str, str]]:
         result = {}
-        schema = self.schema()
+        schema = cls.schema()
         for key, val in schema['properties']['data'].items():
             result[key] = val
         result['title'] = schema['title']
         result['definitions'] = schema['definitions']
         if pretty:
-            return self._pretty_print_json(result)
+            return cls._pretty_print_json(result)
         else:
             return json.dumps(result)
 
-    @classmethod
-    def _pretty_print_json(cls, json_content: Union[str, Any]) -> str:
+    @staticmethod
+    def _pretty_print_json(json_content: Any) -> str:
         return json.dumps(json_content, indent=4)
