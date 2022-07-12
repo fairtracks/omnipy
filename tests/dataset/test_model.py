@@ -166,7 +166,7 @@ def test_export_methods():
     assert Model[List]([2, 4, 'b']).to_json() == '[2, 4, "b"]'
 
     std_description = Model._get_standard_field_description()
-    assert Model[int](12).to_json_schema(pretty=True) == '''
+    assert Model[int].to_json_schema(pretty=True) == '''
 {
     "title": "Model[int]",
     "description": "'''[1:] + std_description + '''",
@@ -174,7 +174,7 @@ def test_export_methods():
     "type": "integer"
 }'''  # noqa:Q001
 
-    assert Model[str]('test').to_json_schema(pretty=True) == '''
+    assert Model[str].to_json_schema(pretty=True) == '''
 {
     "title": "Model[str]",
     "description": "'''[1:] + std_description + '''",
@@ -182,7 +182,7 @@ def test_export_methods():
     "type": "string"
 }'''  # noqa:Q001
 
-    assert Model[Dict]({'a': 2}).to_json_schema(pretty=True) == '''
+    assert Model[Dict].to_json_schema(pretty=True) == '''
 {
     "title": "Model[Dict]",
     "description": "'''[1:] + std_description + '''",
@@ -190,7 +190,7 @@ def test_export_methods():
     "type": "object"
 }'''  # noqa:Q001
 
-    assert Model[List]([2, 4, 'b']).to_json_schema(pretty=True) == '''
+    assert Model[List].to_json_schema(pretty=True) == '''
 {
     "title": "Model[List]",
     "description": "'''[1:] + std_description + '''",

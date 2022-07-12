@@ -69,7 +69,6 @@ class Model(GenericModel, Generic[RootT]):
 
     def __new__(cls, value=Undefined, **kwargs):
         model_not_specified = ROOT_KEY not in cls.__fields__
-        print(model_not_specified)
         if model_not_specified:
             cls._populate_root_field(str)
             cls._print_warning_message()
@@ -81,11 +80,11 @@ class Model(GenericModel, Generic[RootT]):
 
         super().__init__(**data)
 
-        if not self.__doc__:
+        if not self.__class__.__doc__:
             self._set_standard_field_description()
 
     @staticmethod
-    def _print_warning_message():
+    def _print_warning_message() -> None:
         # This should have been a TypeError in the __init__ method or similar, like in the
         # Database class, but due to complex interactions with pydantic and the state of the
         # Model class, a solution for raising an exception consistently for the cases where
@@ -103,11 +102,11 @@ class Model(GenericModel, Generic[RootT]):
               'in a unstable and unsupported state, and is highly discouraged.\n\n'
               'This is the current mode; please fix your code!')
 
-    def _set_standard_field_description(self):
+    def _set_standard_field_description(self) -> None:
         self.__fields__[ROOT_KEY].field_info.description = self._get_standard_field_description()
 
     @classmethod
-    def _get_standard_field_description(cls):
+    def _get_standard_field_description(cls) -> str:
         return ('This class represents a concrete model for dataset items in the `uniFAIR` Python '
                 'package. It is a statically typed specialization of the Model class, '
                 'which is itself wrapping the excellent Python package named `pydantic`.')
@@ -133,6 +132,7 @@ class Model(GenericModel, Generic[RootT]):
         else:
             return json_content
 
+    @classmethod
     def to_json_schema(self, pretty=False) -> Union[str, Dict[str, Any]]:
         schema = self.schema()
         if pretty:
@@ -140,14 +140,14 @@ class Model(GenericModel, Generic[RootT]):
         else:
             return json.dumps(schema)
 
-    @classmethod
-    def _pretty_print_json(cls, json_content: Union[str, Any]) -> str:
+    @staticmethod
+    def _pretty_print_json(json_content: Any) -> str:
         return json.dumps(json_content, indent=4)
 
     def from_data(self, value: Any) -> None:
         super().__setattr__(ROOT_KEY, value)
 
-    def _check_for_root_key(self):
+    def _check_for_root_key(self) -> None:
         if ROOT_KEY not in self.__dict__:
             raise TypeError('The Model class requires the specific model to be specified in as '
                             'a type hierarchy within brackets either directly, e.g.:\n'
@@ -155,7 +155,7 @@ class Model(GenericModel, Generic[RootT]):
                             'or indirectly in a subclass definition, e.g.:\n'
                             '\t"class MyNumberList(Model[List[int]]): ..."')
 
-    def __setattr__(self, attr, value):
+    def __setattr__(self, attr: str, value: Any) -> None:
         if attr in self.__dict__ and attr != ROOT_KEY:
             super().__setattr__(attr, value)
         else:
