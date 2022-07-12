@@ -1,5 +1,4 @@
-import json
-from typing import Any, ClassVar, Dict, Generic, List, Tuple, Type, TypeVar
+from typing import Dict, List, Tuple
 
 from pydantic import PositiveInt, StrictInt, ValidationError
 import pytest
@@ -335,42 +334,10 @@ def test_complex_nested_models():
     roman_tuple_model = ListOfProductFactorsTuplesRoman(unloaded_data)
     roman_dict_model = ProductFactorDictInRomanNumerals(roman_tuple_model.to_data())
 
-    assert roman_dict_model.to_json(pretty=True) == """
-{
-    "II": [
-        "II"
-    ],
-    "III": [
-        "III"
-    ],
-    "IV": [
-        "II",
-        "II"
-    ],
-    "V": [
-        "V"
-    ],
-    "VI": [
-        "II",
-        "III"
-    ],
-    "VII": [
-        "VII"
-    ],
-    "VIII": [
-        "II",
-        "II",
-        "II"
-    ],
-    "IX": [
-        "III",
-        "III"
-    ],
-    "X": [
-        "II",
-        "V"
-    ]
-}"""[1:]
+    assert roman_dict_model.to_json() == (
+        '{"II": ["II"], "III": ["III"], "IV": ["II", "II"], "V": ["V"], '
+        '"VI": ["II", "III"], "VII": ["VII"], "VIII": ["II", "II", "II"], '
+        '"IX": ["III", "III"], "X": ["II", "V"]}')
 
     assert roman_dict_model.to_json_schema(pretty=True) == """
 {

@@ -1,30 +1,17 @@
 from copy import copy
 import json
-from typing import (Any,
-                    Dict,
-                    Generic,
-                    get_origin,
-                    Iterable,
-                    List,
-                    Optional,
-                    Tuple,
-                    Type,
-                    TypeVar,
-                    Union)
+from typing import Any, Dict, Generic, get_origin, Type, TypeVar, Union
 
 from pydantic import root_validator
-from pydantic.fields import ModelField, PrivateAttr
-from pydantic.generics import _generic_types_cache, GenericModel
+from pydantic.fields import ModelField
+from pydantic.generics import GenericModel
 
-# from unifair.dataset.util import OnlyTypedMixin
-
-_ModelT = TypeVar('_ModelT', bound='Model')
-_RootT = TypeVar('_RootT')
-Undefined = object()
+RootT = TypeVar('RootT')
 ROOT_KEY = '__root__'
+Undefined = object()
 
 
-class Model(GenericModel, Generic[_RootT]):
+class Model(GenericModel, Generic[RootT]):
     """
     Model is a generic class. Subclasses of Model need to specify the type of
     contents that is accepted according to its model. Example:
@@ -35,7 +22,7 @@ class Model(GenericModel, Generic[_RootT]):
     See also docs of the Dataset class for more usage examples.
     """
 
-    __root__: _RootT
+    __root__: RootT
 
     class Config:
         validate_all = True
@@ -91,16 +78,11 @@ class Model(GenericModel, Generic[_RootT]):
     def __init__(self, value=Undefined, /, **data: Any) -> None:
         if value != Undefined:
             data[ROOT_KEY] = value
-        # self._check_for_root_key()
+
         super().__init__(**data)
+
         if not self.__doc__:
             self._set_standard_field_description()
-        # if value != Undefined:
-        #     self.load(value)  # To trigger exception if type has not been specified
-        # self._check_for_root_key()
-        # if ROOT_KEY not in self.__dict__:
-        #     assert ROOT_KEY in self.__fields__
-        #     self.load(
 
     @staticmethod
     def _print_warning_message():
@@ -164,20 +146,6 @@ class Model(GenericModel, Generic[_RootT]):
 
     def from_data(self, value: Any) -> None:
         super().__setattr__(ROOT_KEY, value)
-        # self._check_for_root_key()
-        # try:
-        #     super().__setattr__(ROOT_KEY, value)
-        # except ValueError as exc:
-        #     # Yes, it is a hack, but found no better way of doing it after tons of time trying
-        #     if str(exc).endswith('object has no field "{}"'.format(ROOT_KEY)):
-        #         raise ValueError(
-        #             'The Model class requires the specific model to be specified in as '
-        #             'a type hierarchy within brackets either directly, e.g.:\n'
-        #             '\t"model = Model[List[int]]([1,2,3])"\n'
-        #             'or indirectly in a subclass definition, e.g.:\n'
-        #             '\t"class MyNumberList(Model[List[int]]): ..."') from exc
-        #     else:
-        #         raise
 
     def _check_for_root_key(self):
         if ROOT_KEY not in self.__dict__:
