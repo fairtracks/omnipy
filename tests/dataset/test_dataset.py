@@ -120,7 +120,7 @@ def test_basic_validation():
         dataset_1['obj_type_2'] = -234
 
     with pytest.raises(ValueError):
-        Dataset[Model[List[StrictInt]]]([12.4, 11])
+        Dataset[Model[List[StrictInt]]]([12.4, 11])  # noqa
 
 
 def test_import_and_export():
@@ -193,17 +193,14 @@ def test_import_and_export():
 
 
 def test_complex_models():
-    listT = TypeVar('listT', bound=List)
-
-    class MyReversedListModel(Model[listT], Generic[listT]):
-        @classmethod
-        def _parse_data(cls, data: List) -> List:
-            print(data)
-            if isinstance(data, Model):
-                data = data.to_data()
-            return list(reversed(data))
+    #
+    # Model subclass
+    #
 
     class MyRangeList(Model[List[PositiveInt]]):
+        """
+        Transforms a pair of min and max integers to the corresponding range.
+        """
         @classmethod
         def _parse_data(cls, data: List[PositiveInt]) -> Any:
             if not data:
@@ -212,10 +209,37 @@ def test_complex_models():
                 assert len(data) == 2
                 return list(range(data[0], data[1]))
 
-    class MyDictOfStringsDataset(Dataset[MyReversedListModel[MyRangeList]]):
+    #
+    # Generic model subclass
+    #
+
+    ListT = TypeVar('ListT', bound=List)  # noqa
+
+    # Note that the TypeVars need to be bound to a type who in itself, or whose origin_type
+    # produces a default value when called without parameters. Here, `listT` is bound to List,
+    # and `typing.get_origin(List)() == []`.
+
+    class MyReversedListModel(Model[ListT], Generic[ListT]):
+        # Commented out, due to test_json_schema_generic_models_known_issue_1 in test_model
+        # in order to make this test independent on that issue.
+        #
+        # """
+        # Generic model that parses the reverse of any list.
+        # """
+        @classmethod
+        def _parse_data(cls, data: List) -> List:
+            if isinstance(data, Model):
+                data = data.to_data()
+            return list(reversed(data))
+
+    #
+    # Nested complex model
+    #
+
+    class MyReversedRangeList(Dataset[MyReversedListModel[MyRangeList]]):
         ...
 
-    dataset = MyDictOfStringsDataset()
+    dataset = MyReversedRangeList()
 
     with pytest.raises(ValidationError):
         dataset.from_data([(i, [0, i]) for i in range(0, 5)])  # noqa
@@ -229,4 +253,37 @@ def test_complex_models():
         '1': '[1]', '2': '[2, 1]', '3': '[3, 2, 1]', '4': '[4, 3, 2, 1]'
     }
 
-    print(dataset.to_json_schema(pretty=True))
+    assert dataset.to_json_schema(pretty=True) == '''
+{
+    "title": "MyReversedRangeList",
+    "description": "'''[1:] + Dataset._get_standard_field_description() + '''",
+    "default": {},
+    "type": "object",
+    "additionalProperties": {
+        "$ref": "#/definitions/MyReversedListModel_MyRangeList_"
+    },
+    "definitions": {
+        "MyRangeList": {
+            "title": "MyRangeList",
+            "description": "Transforms a pair of min and max integers to the corresponding range.",
+            "default": [],
+            "type": "array",
+            "items": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+            }
+        },
+        "MyReversedListModel_MyRangeList_": {
+            "title": "MyReversedListModel[MyRangeList]",
+            "description": "''' + Model._get_standard_field_description() + '''",
+            "default": {
+                "__root__": []
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/MyRangeList"
+                }
+            ]
+        }
+    }
+}'''  # noqa

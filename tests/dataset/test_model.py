@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, Generic, List, Tuple, TypeVar
 
 from pydantic import PositiveInt, StrictInt, ValidationError
 import pytest
@@ -6,10 +6,11 @@ import pytest
 from unifair.dataset.model import Model
 
 
-@pytest.mark.skip(reason="""This test needs to be run as the first test in the test suite in order
-                  not to fail. This is cumbersome. More importantly, it implies that the
-                  functionality is not working correctly. However, it is not meant to work.
-                  Thus, this test is here for documentation purposes only. """)
+@pytest.mark.skip(reason="""
+This test needs to be run as the first test in the test suite in order
+not to fail. This is cumbersome. More importantly, it implies that the
+functionality is not working correctly. However, it is not meant to work.
+Thus, this test is here for documentation purposes only. """)
 def test_no_model():
     # Note:
     #
@@ -198,6 +199,108 @@ def test_export_methods():
     "type": "array",
     "items": {}
 }'''  # noqa:Q001
+
+
+def test_json_schema_generic_models():
+    ListT = TypeVar('ListT', bound=List)
+
+    class MyList(Model[ListT], Generic[ListT]):
+        """My very interesting list model!"""
+
+    assert MyList.to_json_schema(pretty=True) == """
+{
+    "title": "MyList",
+    "description": "My very interesting list model!",
+    "default": [],
+    "type": "array",
+    "items": {}
+}"""[1:]
+
+    assert MyList[List].to_json_schema(pretty=True) == """
+{
+    "title": "MyList[List]",
+    "description": "My very interesting list model!",
+    "default": [],
+    "type": "array",
+    "items": {}
+}"""[1:]
+
+
+@pytest.mark.skip(reason="""
+Known issue due to shortcomings of the typing standard library.
+Class variables of generic classes are not all available in
+in runtime (see: https://github.com/python/typing/issues/629)
+Any workarounds should best be implemented in pydantic,
+possibly in uniFAIR if this becomes a real issue.
+""")
+def test_json_schema_generic_models_known_issue_1():
+    listT = TypeVar('listT', bound=List)
+
+    class MyList(Model[listT], Generic[listT]):
+        """My very interesting list model!"""
+
+    class MyListOfStrings(Model[MyList[List[str]]]):
+        """MyList. What more can you ask for?"""
+
+    assert MyListOfStrings.to_json_schema(pretty=True) == """
+{
+    "title": "MyListOfStrings",
+    "description": "MyList. What more can you ask for?",
+    "default": {
+        "__root__": []
+    },
+    "allOf": [
+        {
+            "$ref": "#/definitions/MyList_List_str__"
+        }
+    ],
+    "definitions": {
+        "MyList_List_str__": {
+            "title": "MyList[List[str]]",
+            "description": "My very interesting list model!.",
+            "default": [],
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    }
+}"""[1:]
+
+
+@pytest.mark.skip(reason="""
+StrT seems to be replaced with the RootT TypeVar from Model, 
+removing one level of the nested type tree in the process.
+Possibly just a matter of figuring out the correct syntax
+from the pydantic manual.
+""")
+def test_json_schema_generic_models_known_issue_2():
+    StrT = TypeVar('StrT', bound=str)
+
+    class MyListOfStrings(Model[List[StrT]], Generic[StrT]):
+        """My very own list of strings!"""
+
+    assert MyListOfStrings.to_json_schema(pretty=True) == """
+{
+    "title": "MyListOfStrings",
+    "description": "My very own list of strings!",
+    "default": [],
+    "type": "array",
+    "items": {
+        "type": "string"
+    }
+}"""[1:]
+
+    assert MyListOfStrings[str].to_json_schema(pretty=True) == """
+{
+    "title": "MyList",
+    "description": "My very own list of strings!",
+    "default": [],
+    "type": "array",
+    "items": {
+        "type": "string",
+    }
+}"""[1:]
 
 
 def test_custom_parser():
