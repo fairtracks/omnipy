@@ -5,11 +5,11 @@ from pydantic import validator
 
 from unifair.dataset import (create_dataset_from_tarfile,
                              create_tarfile_from_dataset,
-                             Dataset,
+                             OldDataset,
                              validate)
 
 
-class JsonDataset(Dataset):
+class JsonDataset(OldDataset):
     data: Dict[str, List[Dict[str, Union[str, int, float, List, Dict]]]]
 
     def __setitem__(self, obj_type: str, data_obj: str) -> None:

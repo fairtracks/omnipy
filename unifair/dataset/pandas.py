@@ -6,11 +6,11 @@ from pydantic import validator
 
 from unifair.dataset import (create_dataset_from_tarfile,
                              create_tarfile_from_dataset,
-                             Dataset,
+                             OldDataset,
                              validate)
 
 
-class PandasDataset(Dataset):
+class PandasDataset(OldDataset):
     data: Dict[str, pd.DataFrame] = {}
 
     class Config:
