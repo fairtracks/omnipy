@@ -1,29 +1,30 @@
 import json
 from typing import Dict, IO, List, Union
 
-from pydantic import validator
+from unifair.dataset.dataset import Dataset
+from unifair.dataset.model import Model
+from unifair.dataset.serializer import (create_dataset_from_tarfile,
+                                        create_tarfile_from_dataset,
+                                        Serializer)
 
-from unifair.dataset import (OldDataset, validate)
-from unifair.dataset.serializer import Serializer, create_tarfile_from_dataset, \
-    create_dataset_from_tarfile
+
+class JsonDatasetModel(Model[List[Dict[str, Union[int, float, Dict, List, str]]]]):
+    ...
+
+    @classmethod
+    def _parse_data(cls, data: List) -> List:
+        data = cls._data_not_empty_object(data)
+        return data
+
+    @classmethod
+    def _data_not_empty_object(cls, data: List):
+        for obj in data:
+            assert len(obj) > 0
+        return data
 
 
-class JsonDataset(OldDataset):
-    data: Dict[str, List[Dict[str, Union[str, int, float, List, Dict]]]]
-
-    def __setitem__(self, obj_type: str, data_obj: str) -> None:
-        self.data[obj_type] = json.loads(data_obj)
-        validate(self)
-
-    @validator('data')
-    def validate_data(cls, data):
-        cls._data_not_empty_object(data)
-
-    @staticmethod
-    def _data_not_empty_object(data):
-        for obj_list in data.values():
-            for obj in obj_list:
-                assert len(obj) > 0
+class JsonDataset(Dataset[JsonDatasetModel]):
+    ...
 
 
 class JsonDatasetToTarFileSerializer(Serializer):

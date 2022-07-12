@@ -156,6 +156,44 @@ def test_import_and_export():
 }"""[1:]
     }
 
+    data = {'obj_type_1': {'a': 333, 'b': 555, 'c': 777}, 'obj_type_3': {'a': '99', 'b': '98'}}
+    dataset.from_data(data)
+
+    assert dataset.to_data() == {
+        'obj_type_1': {
+            'a': '333', 'b': '555', 'c': '777'
+        },
+        'obj_type_2': {
+            'c': '456'
+        },
+        'obj_type_3': {
+            'a': '99', 'b': '98'
+        }
+    }
+
+    data = {'obj_type_1': {'a': 167, 'b': 761}}
+    dataset.from_data(data, update=False)
+
+    assert dataset.to_data() == {
+        'obj_type_1': {
+            'a': '167', 'b': '761'
+        },
+    }
+
+    json_import = {'obj_type_2': '{"a": 987, "b": 654}'}
+
+    dataset.from_json(json_import)
+    assert dataset.to_data() == {
+        'obj_type_1': {
+            'a': '167', 'b': '761'
+        }, 'obj_type_2': {
+            'a': '987', 'b': '654'
+        }
+    }
+
+    dataset.from_json(json_import, update=False)
+    assert dataset.to_data() == {'obj_type_2': {'a': '987', 'b': '654'}}
+
     assert dataset.to_json_schema(pretty=False) == (  # noqa
         '{"title": "Dataset[Model[Dict[str, str]]]", "description": "'
         + Dataset._get_standard_field_description()

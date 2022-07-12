@@ -166,6 +166,22 @@ def test_export_methods():
     assert Model[Dict]({'a': 2}).to_json() == '{"a": 2}'
     assert Model[List]([2, 4, 'b']).to_json() == '[2, 4, "b"]'
 
+    model_int = Model[int]()
+    model_int.from_json('12')
+    assert model_int.to_data() == 12
+
+    model_str = Model[str]()
+    model_str.from_json('"test"')
+    assert model_str.to_data() == 'test'
+
+    model_dict = Model[Dict]()
+    model_dict.from_json('{"a": 2}')
+    assert model_dict.to_data() == {'a': 2}
+
+    model_list = Model[List]()
+    model_list.from_json('[2, 4, "b"]')
+    assert model_list.to_data() == [2, 4, 'b']
+
     std_description = Model._get_standard_field_description()
     assert Model[int].to_json_schema(pretty=True) == '''
 {
@@ -343,29 +359,36 @@ def test_nested_model():
     class DictToListOfPositiveInts(Model[Dict[PositiveInt, List[PositiveInt]]]):
         """This model is perfect for a mapping product numbers to factor lists"""
 
-    model = DictToListOfPositiveInts()
-    assert model.to_data() == {}
+    model_1 = DictToListOfPositiveInts()
+    assert model_1.to_data() == {}
 
     product_factors = {
         2: [2], 3: [3], 4: [2, 2], 5: [5], 6: [2, 3], 7: [7], 8: [2, 2, 2], 9: [3, 3]
     }
-    model.from_data(product_factors)
-    assert model.to_data() == product_factors
+    model_1.from_data(product_factors)
+    assert model_1.to_data() == product_factors
 
-    unloaded_data = model.to_data()
+    unloaded_data = model_1.to_data()
     unloaded_data[10] = [-2, -5]
 
     with pytest.raises(ValidationError):
-        model.from_data(unloaded_data)
+        model_1.from_data(unloaded_data)
 
     unloaded_data[10] = [2, 5]
-    model.from_data(unloaded_data)
-    assert model.to_data() == unloaded_data
+    model_1.from_data(unloaded_data)
+    assert model_1.to_data() == unloaded_data
 
-    assert model.to_json() == ('{"2": [2], "3": [3], "4": [2, 2], "5": [5], "6": [2, 3], '
-                               '"7": [7], "8": [2, 2, 2], "9": [3, 3], "10": [2, 5]}')
+    assert model_1.to_json() == ('{"2": [2], "3": [3], "4": [2, 2], "5": [5], "6": [2, 3], '
+                                 '"7": [7], "8": [2, 2, 2], "9": [3, 3], "10": [2, 5]}')
 
-    assert model.to_json_schema(pretty=True) == """
+    model_2 = DictToListOfPositiveInts()
+    model_2.from_json('{"2": [2], "3": [3], "4": [2, 2], "5": [5], "6": [2, 3], '
+                      '"7": [7], "8": [2, 2, 2], "9": [3, 3], "10": [2, 5]}')
+    assert sorted(model_2.to_data()) == sorted({
+        2: [2], 3: [3], 4: [2, 2], 5: [5], 6: [2, 3], 7: [7], 8: [2, 2, 2], 9: [3, 3], 10: [2, 5]
+    })
+
+    assert model_1.to_json_schema(pretty=True) == """
 {
     "title": "DictToListOfPositiveInts",
     "description": "This model is perfect for a mapping product numbers to factor lists",
@@ -435,14 +458,30 @@ def test_complex_nested_models():
         """Extremely useful model"""
 
     roman_tuple_model = ListOfProductFactorsTuplesRoman(unloaded_data)
-    roman_dict_model = ProductFactorDictInRomanNumerals(roman_tuple_model.to_data())
+    roman_dict_model_1 = ProductFactorDictInRomanNumerals(roman_tuple_model.to_data())
 
-    assert roman_dict_model.to_json() == (
+    assert roman_dict_model_1.to_json() == (
         '{"II": ["II"], "III": ["III"], "IV": ["II", "II"], "V": ["V"], '
         '"VI": ["II", "III"], "VII": ["VII"], "VIII": ["II", "II", "II"], '
         '"IX": ["III", "III"], "X": ["II", "V"]}')
 
-    assert roman_dict_model.to_json_schema(pretty=True) == """
+    roman_dict_model_2 = ProductFactorDictInRomanNumerals()
+    roman_dict_model_2.from_json('{"II": ["II"], "III": ["III"], "IV": ["II", "II"], "V": ["V"], '
+                                 '"VI": ["II", "III"], "VII": ["VII"], "VIII": ["II", "II", "II"], '
+                                 '"IX": ["III", "III"], "X": ["II", "V"]}')
+    assert roman_dict_model_2.to_data() == {
+        'II': ['II'],
+        'III': ['III'],
+        'IV': ['II', 'II'],
+        'V': ['V'],
+        'VI': ['II', 'III'],
+        'VII': ['VII'],
+        'VIII': ['II', 'II', 'II'],
+        'IX': ['III', 'III'],
+        'X': ['II', 'V']
+    }
+
+    assert roman_dict_model_1.to_json_schema(pretty=True) == """
 {
     "title": "ProductFactorDictInRomanNumerals",
     "description": "Extremely useful model",

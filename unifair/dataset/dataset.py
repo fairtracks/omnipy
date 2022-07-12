@@ -2,7 +2,7 @@ from collections import UserDict
 import json
 from typing import Any, Dict, Generic, Iterator, Tuple, Type, TypeVar, Union
 
-from pydantic import Field
+from pydantic import Field, Protocol
 from pydantic.generics import GenericModel
 
 from unifair.dataset.model import Model
@@ -62,13 +62,16 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if value != Undefined:
             input_data[DATA_KEY] = value
 
-        if self.__fields__.get(DATA_KEY).type_ == ModelT:
+        if self._get_model_class() == ModelT:
             self._raise_no_model_exception()
 
         GenericModel.__init__(self, **input_data)
         UserDict.__init__(self, self.data)  # noqa
         if not self.__doc__:
             self._set_standard_field_description()
+
+    def _get_model_class(self) -> ModelT:
+        return self.__fields__.get(DATA_KEY).type_
 
     @staticmethod
     def _raise_no_model_exception() -> None:
@@ -128,8 +131,10 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     def to_data(self) -> Dict[str, Any]:
         return GenericModel.dict(self).get(DATA_KEY)
 
-    def from_data(self, data: Union[Dict[str, Any], Iterator[Tuple[str, Any]]]) -> None:
-        if isinstance(self, dict):
+    def from_data(self,
+                  data: Union[Dict[str, Any], Iterator[Tuple[str, Any]]],
+                  update: bool = True) -> None:
+        if update:
             self.update(data)
         else:
             self.data = data
@@ -142,6 +147,17 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         for key, val in contents[DATA_KEY].items():
             result[key] = self._pretty_print_json(val) if pretty else json.dumps(val)
         return result
+
+    def from_json(self,
+                  data: Union[Dict[str, str], Iterator[Tuple[str, str]]],
+                  update: bool = True) -> None:
+        parsed_data = {}
+        for key, json_contents in dict(data).items():
+            print(self.__fields__)
+            new_model = self._get_model_class().parse_raw(json_contents, proto=Protocol.json)
+            parsed_data[key] = new_model.to_data()
+
+        self.from_data(parsed_data, update=update)
 
     @classmethod
     def to_json_schema(cls, pretty=False) -> Union[str, Dict[str, str]]:

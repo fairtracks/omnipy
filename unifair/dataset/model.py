@@ -2,7 +2,7 @@ from copy import copy
 import json
 from typing import Any, Dict, Generic, get_origin, Type, TypeVar, Union
 
-from pydantic import root_validator
+from pydantic import Protocol, root_validator
 from pydantic.fields import ModelField
 from pydantic.generics import GenericModel
 
@@ -125,12 +125,19 @@ class Model(GenericModel, Generic[RootT]):
     def to_data(self) -> Any:
         return self.dict()[ROOT_KEY]
 
+    def from_data(self, value: Any) -> None:
+        super().__setattr__(ROOT_KEY, value)
+
     def to_json(self, pretty=False) -> str:
         json_content = self.json()
         if pretty:
             return self._pretty_print_json(json.loads(json_content))
         else:
             return json_content
+
+    def from_json(self, json_contents: str) -> None:
+        new_model = self.parse_raw(json_contents, proto=Protocol.json)
+        self.from_data(new_model.to_data())
 
     @classmethod
     def to_json_schema(self, pretty=False) -> Union[str, Dict[str, Any]]:
@@ -143,9 +150,6 @@ class Model(GenericModel, Generic[RootT]):
     @staticmethod
     def _pretty_print_json(json_content: Any) -> str:
         return json.dumps(json_content, indent=4)
-
-    def from_data(self, value: Any) -> None:
-        super().__setattr__(ROOT_KEY, value)
 
     def _check_for_root_key(self) -> None:
         if ROOT_KEY not in self.__dict__:

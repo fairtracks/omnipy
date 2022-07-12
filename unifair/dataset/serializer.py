@@ -42,4 +42,4 @@ def create_dataset_from_tarfile(dataset: Dataset,
             obj_type_file = tarfile_stream.extractfile(filename)
             assert filename.endswith(f'.{file_suffix}')
             obj_type = '.'.join(filename.split('.')[:-1])
-            dataset[obj_type] = data_decode_func(obj_type_file)
+            dataset.from_json({obj_type: data_decode_func(obj_type_file)})

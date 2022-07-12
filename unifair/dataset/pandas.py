@@ -4,8 +4,11 @@ from typing import Dict, IO, Union
 import pandas as pd
 from pydantic import validator
 
-from unifair.dataset import (OldDataset, validate)
-from unifair.dataset.serializer import create_tarfile_from_dataset, create_dataset_from_tarfile
+from unifair.dataset import OldDataset
+from unifair.dataset.dataset import Dataset
+from unifair.dataset.serializer import (create_dataset_from_tarfile,
+                                        create_tarfile_from_dataset)
+from unifair.dataset.util import validate
 
 
 class PandasDataset(OldDataset):
