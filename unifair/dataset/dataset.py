@@ -1,18 +1,18 @@
 from collections import UserDict
 import json
-from typing import Any, Callable, Dict, Generic, Type, TypeVar, Union
+from typing import Any, Dict, Generic, Type, TypeVar, Union
 
 from pydantic import Field
 from pydantic.generics import GenericModel
 
 from unifair.dataset.model import Model
 
-_ContentsT = TypeVar('_ContentsT')
+ModelT = TypeVar('ModelT', bound=Model)
 Undefined = object()
 DATA_KEY = 'data'
 
 
-class Dataset(GenericModel, Generic[_ContentsT], UserDict):
+class Dataset(GenericModel, Generic[ModelT], UserDict):
     """
     Dataset is a generic class. Subclasses of Dataset need to specify the type of the contents
     that is accepted according to its model.
@@ -47,7 +47,7 @@ class Dataset(GenericModel, Generic[_ContentsT], UserDict):
     class Config:
         validate_assignment = True
 
-    data: Dict[str, _ContentsT] = Field(default={})
+    data: Dict[str, ModelT] = Field(default={})
 
     def __class_getitem__(cls, model: Type[Any]) -> Type[Any]:
         if not issubclass(model, Model):
@@ -60,7 +60,7 @@ class Dataset(GenericModel, Generic[_ContentsT], UserDict):
         if value != Undefined:
             input_data[DATA_KEY] = value
 
-        if self.__fields__.get(DATA_KEY).type_ == _ContentsT:
+        if self.__fields__.get(DATA_KEY).type_ == ModelT:
             self._raise_no_model_exception()
 
         GenericModel.__init__(self, **input_data)

@@ -1,12 +1,10 @@
-from typing import Any, ClassVar, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, Dict, Generic, List, TypeVar
 
-from pydantic import Field, main, PositiveInt, StrictInt, ValidationError
-from pydantic.generics import GenericModel
-from pydantic.validators import dict_validator
+from pydantic import PositiveInt, StrictInt, ValidationError
 import pytest
 
 from unifair.dataset.dataset import Dataset
-from unifair.dataset.model import _RootT, Model
+from unifair.dataset.model import Model
 
 
 def test_no_model():
