@@ -1,7 +1,5 @@
-from tests.dataset.test_common import (_assert_pandas_dataset_equals,
-                                       _assert_tar_file_contents)
-from unifair.dataset.pandas import (PandasDataset,
-                                    PandasDatasetToTarFileSerializer)
+from tests.dataset.test_common import (_assert_pandas_dataset_equals, _assert_tar_file_contents)
+from unifair.dataset.pandas import (PandasDataset, PandasDatasetToTarFileSerializer)
 
 
 def test_pandas_dataset_to_tar_file_serializer_single_obj_type():

@@ -7,11 +7,8 @@ from typing import Any, Callable, IO, Union
 
 from pydantic import BaseModel, validate_model
 
-from unifair.dataset.json import JsonDatasetToTarFileSerializer
-from unifair.dataset.pandas import PandasDatasetToTarFileSerializer
 
-
-class Dataset(ABC, UserDict, BaseModel):
+class OldDataset(ABC, UserDict, BaseModel):
     def __init__(self):
         BaseModel.__init__(self, data={})
         UserDict.__init__(self, {})
@@ -27,7 +24,7 @@ def validate(model: BaseModel):
         raise validation_error
 
 
-def create_tarfile_from_dataset(dataset: Dataset,
+def create_tarfile_from_dataset(dataset: OldDataset,
                                 file_suffix: str,
                                 data_encode_func: Callable[[Any], Union[bytes, memoryview]]):
     bytes_io = BytesIO()
@@ -41,7 +38,7 @@ def create_tarfile_from_dataset(dataset: Dataset,
     return bytes_io.getbuffer().tobytes()
 
 
-def create_dataset_from_tarfile(dataset: Dataset,
+def create_dataset_from_tarfile(dataset: OldDataset,
                                 tarfile_bytes: bytes,
                                 file_suffix: str,
                                 data_decode_func: Callable[[IO[bytes]], Any]):
@@ -53,7 +50,10 @@ def create_dataset_from_tarfile(dataset: Dataset,
             dataset[obj_type] = data_decode_func(obj_type_file)
 
 
-DEFAULT_RESULT_TYPE_TO_SERIALIZER_MAP = {
-    'JsonDataset': JsonDatasetToTarFileSerializer,
-    'PandasDataset': PandasDatasetToTarFileSerializer
-}
+# from unifair.dataset.json import JsonDatasetToTarFileSerializer
+# from unifair.dataset.pandas import PandasDatasetToTarFileSerializer
+#
+# DEFAULT_RESULT_TYPE_TO_SERIALIZER_MAP = {
+#     'JsonDataset': JsonDatasetToTarFileSerializer,
+#     'PandasDataset': PandasDatasetToTarFileSerializer
+# }
