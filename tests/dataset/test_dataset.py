@@ -201,8 +201,7 @@ def test_import_and_export():
         '{"$ref": "#/definitions/Model_Dict_str__str__"}, "definitions": '
         '{"Model_Dict_str__str__": {"title": "Model[Dict[str, str]]", '
         '"description": "' + Model._get_standard_field_description()
-        + '", "default": {}, "type": "object", "additionalProperties": '
-        '{"type": "string"}}}}')
+        + '", "type": "object", "additionalProperties": {"type": "string"}}}}')
 
     assert dataset.to_json_schema(pretty=True) == '''
 {
@@ -217,7 +216,6 @@ def test_import_and_export():
         "Model_Dict_str__str__": {
             "title": "Model[Dict[str, str]]",
             "description": "''' + Model._get_standard_field_description() + '''",
-            "default": {},
             "type": "object",
             "additionalProperties": {
                 "type": "string"
@@ -314,9 +312,6 @@ def test_complex_models():
         "MyReversedListModel_MyRangeList_": {
             "title": "MyReversedListModel[MyRangeList]",
             "description": "''' + Model._get_standard_field_description() + '''",
-            "default": {
-                "__root__": []
-            },
             "allOf": [
                 {
                     "$ref": "#/definitions/MyRangeList"

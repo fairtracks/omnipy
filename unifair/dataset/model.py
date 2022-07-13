@@ -3,12 +3,11 @@ import json
 from typing import Any, Dict, Generic, get_origin, Type, TypeVar, Union
 
 from pydantic import Protocol, root_validator
-from pydantic.fields import ModelField
+from pydantic.fields import ModelField, Undefined
 from pydantic.generics import GenericModel
 
 RootT = TypeVar('RootT')
 ROOT_KEY = '__root__'
-Undefined = object()
 
 
 class Model(GenericModel, Generic[RootT]):
@@ -25,6 +24,7 @@ class Model(GenericModel, Generic[RootT]):
     __root__: RootT
 
     class Config:
+        arbitrary_types_allowed = True
         validate_all = True
         validate_assignment = True
 
@@ -44,9 +44,19 @@ class Model(GenericModel, Generic[RootT]):
 
     @classmethod
     def _populate_root_field(cls, model: Type[Any]) -> None:
+        default_val = cls._get_default_value_from_model(model)
+
+        def get_default_val():
+            return default_val
+
+        if ROOT_KEY in cls.__config__.fields:
+            cls.__config__.fields[ROOT_KEY]['default_factory'] = get_default_val
+        else:
+            cls.__config__.fields[ROOT_KEY] = {'default_factory': get_default_val}
+
         data_field = ModelField.infer(
             name=ROOT_KEY,
-            value=cls._get_default_value_from_model(model),
+            value=Undefined,
             annotation=copy(model),
             class_validators=None,
             config=cls.__config__)
@@ -75,7 +85,7 @@ class Model(GenericModel, Generic[RootT]):
         return super().__new__(cls)
 
     def __init__(self, value=Undefined, /, **data: Any) -> None:
-        if value != Undefined:
+        if value is not Undefined:
             data[ROOT_KEY] = value
 
         super().__init__(**data)
@@ -122,11 +132,19 @@ class Model(GenericModel, Generic[RootT]):
         else:
             return {ROOT_KEY: cls._parse_data(root_obj[ROOT_KEY])}
 
+    @property
+    def contents(self) -> Any:
+        return self.__dict__.get(ROOT_KEY)
+
+    @contents.setter
+    def contents(self, value: Any) -> None:
+        super().__setattr__(ROOT_KEY, value)
+
     def to_data(self) -> Any:
         return self.dict()[ROOT_KEY]
 
     def from_data(self, value: Any) -> None:
-        super().__setattr__(ROOT_KEY, value)
+        self.contents = value
 
     def to_json(self, pretty=False) -> str:
         json_content = self.json()
@@ -160,8 +178,11 @@ class Model(GenericModel, Generic[RootT]):
                             '\t"class MyNumberList(Model[List[int]]): ..."')
 
     def __setattr__(self, attr: str, value: Any) -> None:
-        if attr in self.__dict__ and attr != ROOT_KEY:
+        if attr in self.__dict__ and attr not in [ROOT_KEY]:
             super().__setattr__(attr, value)
         else:
-            raise RuntimeError('Model does not allow setting of extra attributes')
-        super().__setattr__(attr, value)
+            if attr in ['contents']:
+                contents_prop = getattr(self.__class__, attr)
+                contents_prop.__set__(self, value)
+            else:
+                raise RuntimeError('Model does not allow setting of extra attributes')
