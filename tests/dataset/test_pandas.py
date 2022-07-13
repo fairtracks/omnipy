@@ -1,13 +1,17 @@
+from deepdiff import DeepDiff
+import numpy as np
 import pandas as pd
 from pydantic import ValidationError
 import pytest
 
+from dataset.test_common import _assert_pandas_frame_dtypes
 from unifair.dataset.pandas import PandasDataset
 
 
 def test_pandas_dataset_list_of_objects_same_keys():
     pandas_data = PandasDataset()
-    pandas_data['obj_type'] = [{'a': 'abc', 'b': 12}, {'a': 'bcd', 'b': 23}]
+    data = {'obj_type': [{'a': 'abc', 'b': 12}, {'a': 'bcd', 'b': 23}]}
+    pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
         pandas_data['obj_type'],
         pd.DataFrame([{
@@ -17,11 +21,14 @@ def test_pandas_dataset_list_of_objects_same_keys():
         }]),
         check_dtype=False,
     )
+    _assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'Int64'))
+    assert pandas_data.to_data() == data
 
 
 def test_pandas_dataset_list_of_objects_different_keys():
     pandas_data = PandasDataset()
-    pandas_data['obj_type'] = [{'a': 'abc', 'b': 12}, {'c': 'bcd'}]
+    data = {'obj_type': [{'a': 'abc', 'b': 12}, {'c': 'bcd'}]}
+    pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
         pandas_data['obj_type'],
         pd.DataFrame([{
@@ -31,11 +38,20 @@ def test_pandas_dataset_list_of_objects_different_keys():
         }]),
         check_dtype=False,
     )
+    _assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'Int64', 'object'))
+    assert pandas_data.to_data() == {
+        'obj_type': [{
+            'a': 'abc', 'b': 12, 'c': np.nan
+        }, {
+            'a': np.nan, 'b': pd.NA, 'c': 'bcd'
+        }]
+    }
 
 
 def test_pandas_dataset_list_of_objects_float_numbers():
     pandas_data = PandasDataset()
-    pandas_data['obj_type'] = [{'a': 12.0, 'b': 12.1}, {'a': 3.0}]
+    data = {'obj_type': [{'a': 12.0, 'b': 12.1}, {'a': 3.0}]}
+    pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
         pandas_data['obj_type'],
         pd.DataFrame([{
@@ -43,21 +59,41 @@ def test_pandas_dataset_list_of_objects_float_numbers():
         }, {
             'a': 3.0, 'b': None
         }]),
-        check_dtype=True,
     )
+    _assert_pandas_frame_dtypes(pandas_data['obj_type'], ('float64', 'float64'))
+    assert not DeepDiff(
+        pandas_data.to_data(), {'obj_type': [{
+            'a': 12.0, 'b': 12.1
+        }, {
+            'a': 3.0, 'b': np.nan
+        }]},
+        significant_digits=3)
 
 
 def test_pandas_dataset_list_of_nested_objects():
     pandas_data = PandasDataset()
-    pandas_data['obj_type'] = [{'a': 'abc', 'b': {'c': [1, 3]}}]
-    assert pandas_data['obj_type'].equals(pd.DataFrame([{'a': 'abc', 'b': {'c': [1, 3]}}]))
+    data = {'obj_type': [{'a': 'abc', 'b': {'c': [1, 3]}}]}
+    pandas_data.from_data(data)
+    pd.testing.assert_frame_equal(
+        pandas_data['obj_type'],
+        pd.DataFrame([{
+            'a': 'abc', 'b': {
+                'c': [1, 3]
+            }
+        }]),
+    )
+    _assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'object'))
+    assert pandas_data.to_data() == data
     assert pandas_data['obj_type'].loc[0, 'b'] == {'c': [1, 3]}
 
 
 def test_pandas_dataset_empty_list():
     pandas_data = PandasDataset()
-    pandas_data['obj_type'] = []
-    assert pandas_data['obj_type'].equals(pd.DataFrame())
+    assert pandas_data.to_data() == {}
+
+    pandas_data.from_data({'obj_type': []})
+    assert isinstance(pandas_data['obj_type'], pd.DataFrame) and pandas_data['obj_type'].empty
+    assert pandas_data.to_data() == {'obj_type': []}
 
 
 def test_pandas_dataset_error_not_list():

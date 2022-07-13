@@ -1,28 +1,37 @@
 from io import BytesIO
-from typing import Dict, IO, Union
+from typing import Any, Dict, IO, Iterable, Union
 
 import pandas as pd
-from pydantic import validator
 
-from unifair.dataset import OldDataset
 from unifair.dataset.dataset import Dataset
-from unifair.dataset.serializer import (create_dataset_from_tarfile,
-                                        create_tarfile_from_dataset)
-from unifair.dataset.util import validate
+from unifair.dataset.model import Model, ROOT_KEY
+from unifair.dataset.serializer import (create_dataset_from_tarfile, create_tarfile_from_dataset)
 
 
-class PandasDataset(OldDataset):
-    data: Dict[str, pd.DataFrame] = {}
-
-    class Config:
-        arbitrary_types_allowed = True
-
-    def __setitem__(self, obj_type: str, data_obj: list) -> None:
-        self.data[obj_type] = self._convert_ints_to_nullable_ints(pd.DataFrame(data_obj))
-        validate(self)
+class PandasModel(Model[pd.DataFrame]):
+    @classmethod
+    def _parse_data(cls, data: pd.DataFrame) -> pd.DataFrame:
+        cls._data_column_names_are_strings(data)
+        cls._data_not_empty_object(data)
+        return data
 
     @staticmethod
-    def _convert_ints_to_nullable_ints(dataframe: pd.DataFrame) -> pd.DataFrame:
+    def _data_column_names_are_strings(data: pd.DataFrame) -> None:
+        for column in data.columns:
+            assert isinstance(column, str)
+
+    @staticmethod
+    def _data_not_empty_object(data: pd.DataFrame) -> None:
+        assert not any(data.isna().all(axis=1))
+
+    def dict(self, *args, **kwargs) -> Dict[Any, Any]:
+        return super().dict(*args, **kwargs)[ROOT_KEY].to_dict(orient='records')  # noqa
+
+    def from_data(self, value: Iterable[Any]) -> None:
+        self.contents = self._convert_ints_to_nullable_ints(pd.DataFrame(value))
+
+    @classmethod
+    def _convert_ints_to_nullable_ints(cls, dataframe: pd.DataFrame) -> pd.DataFrame:
         for key, col in dataframe.items():
             if col.dtype == 'int64' or (col.dtype == 'float64' and col.isna().any()):
                 try:
@@ -31,21 +40,9 @@ class PandasDataset(OldDataset):
                     pass
         return dataframe
 
-    @validator('data')
-    def validate_data(cls, data):
-        cls._data_column_names_are_strings(data)
-        cls._data_not_empty_object(data)
 
-    @staticmethod
-    def _data_column_names_are_strings(data):
-        for obj_type_df in data.values():
-            for column in obj_type_df.columns:
-                assert isinstance(column, str)
-
-    @staticmethod
-    def _data_not_empty_object(data):
-        for obj_type_df in data.values():
-            assert not any(obj_type_df.isna().all(axis=1))
+class PandasDataset(Dataset[PandasModel]):
+    ...
 
 
 class PandasDatasetToTarFileSerializer:

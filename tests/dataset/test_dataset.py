@@ -235,15 +235,20 @@ def test_complex_models():
 
     class MyRangeList(Model[List[PositiveInt]]):
         """
-        Transforms a pair of min and max integers to the corresponding range.
+        Transforms a pair of min and max ints to an inclusive range
         """
         @classmethod
         def _parse_data(cls, data: List[PositiveInt]) -> Any:
             if not data:
                 return []
             else:
-                assert len(data) == 2
-                return list(range(data[0], data[1]))
+                # Parsers/validators must always allow to be called twice
+                # If already run, any pair of numbers will be consecutive and calling range again
+                # will not change anything
+                if len(data) == 2:
+                    return list(range(min(data), max(data) + 1))
+                else:
+                    return data
 
     #
     # Generic model subclass
@@ -260,13 +265,13 @@ def test_complex_models():
         # in order to make this test independent on that issue.
         #
         # """
-        # Generic model that parses the reverse of any list.
+        # Generic model that sorts any list in reverse order.
         # """
         @classmethod
         def _parse_data(cls, data: List) -> List:
             if isinstance(data, Model):
                 data = data.to_data()
-            return list(reversed(data))
+            return list(reversed(sorted(data)))
 
     #
     # Nested complex model
@@ -280,7 +285,7 @@ def test_complex_models():
     with pytest.raises(ValidationError):
         dataset.from_data([(i, [0, i]) for i in range(0, 5)])  # noqa
 
-    dataset.from_data([(i, [1, i + 1]) for i in range(1, 5)])  # noqa
+    dataset.from_data([(i, [1, i]) for i in range(1, 5)])  # noqa
     assert dataset['4'] == [4, 3, 2, 1]
 
     assert dataset.to_data() == {'1': [1], '2': [2, 1], '3': [3, 2, 1], '4': [4, 3, 2, 1]}
@@ -301,8 +306,7 @@ def test_complex_models():
     "definitions": {
         "MyRangeList": {
             "title": "MyRangeList",
-            "description": "Transforms a pair of min and max integers to the corresponding range.",
-            "default": [],
+            "description": "Transforms a pair of min and max ints to an inclusive range",
             "type": "array",
             "items": {
                 "type": "integer",

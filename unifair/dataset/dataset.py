@@ -70,7 +70,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if not self.__doc__:
             self._set_standard_field_description()
 
-    def _get_model_class(self) -> ModelT:
+    def _get_model_class(self) -> Model:
         return self.__fields__.get(DATA_KEY).type_
 
     @staticmethod
@@ -134,10 +134,20 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     def from_data(self,
                   data: Union[Dict[str, Any], Iterator[Tuple[str, Any]]],
                   update: bool = True) -> None:
-        if update:
-            self.update(data)
-        else:
-            self.data = data
+        if not isinstance(data, dict):
+            data = dict(data)
+
+        if not update:
+            self.clear()
+
+        for key, val in data.items():
+            new_model = self._get_model_class()()
+            new_model.from_data(val)
+
+            # Note: this will call validation once more, possibly failing validators that cannot
+            # be rerun.
+            # TODO: Fix to only validate once
+            self[key] = new_model.contents
 
     def to_json(self, pretty=False) -> Dict[str, str]:
         result = {}
@@ -151,13 +161,17 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     def from_json(self,
                   data: Union[Dict[str, str], Iterator[Tuple[str, str]]],
                   update: bool = True) -> None:
-        parsed_data = {}
-        for key, json_contents in dict(data).items():
-            print(self.__fields__)
-            new_model = self._get_model_class().parse_raw(json_contents, proto=Protocol.json)
-            parsed_data[key] = new_model.to_data()
 
-        self.from_data(parsed_data, update=update)
+        if not update:
+            self.clear()
+
+        for key, json_contents in dict(data).items():
+            new_model = self._get_model_class().parse_raw(json_contents, proto=Protocol.json)
+
+            # Note: this will call validation once more, possibly failing validators that cannot
+            # be rerun
+            # TODO: Fix to only validate once
+            self[key] = new_model.contents
 
     @classmethod
     def to_json_schema(cls, pretty=False) -> Union[str, Dict[str, str]]:
