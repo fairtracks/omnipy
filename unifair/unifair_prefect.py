@@ -10,6 +10,7 @@ from prefect.engine.results import LocalResult
 from prefect.executors import LocalExecutor
 from pydantic import BaseModel
 
+import unifair.dataset.serializer
 from unifair.steps.imports.encode import ImportEncodeMetadataFromApi
 
 
@@ -20,7 +21,7 @@ class JsonObjects(BaseModel):
         arbitrary_types_allowed = True
 
 
-class JsonObjectsSerializer(prefect.engine.serializers.Serializer):
+class JsonObjectsSerializer(unifair.dataset.serializer.Serializer):
     def serialize(self, value: JsonObjects) -> bytes:
         # transform a Python object into bytes
         output = ''

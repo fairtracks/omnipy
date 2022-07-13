@@ -3,10 +3,9 @@ from typing import Dict, IO, List, Union
 
 from pydantic import validator
 
-from unifair.dataset import (create_dataset_from_tarfile,
-                             create_tarfile_from_dataset,
-                             OldDataset,
-                             validate)
+from unifair.dataset import (OldDataset, validate)
+from unifair.dataset.serializer import Serializer, create_tarfile_from_dataset, \
+    create_dataset_from_tarfile
 
 
 class JsonDataset(OldDataset):
@@ -27,7 +26,7 @@ class JsonDataset(OldDataset):
                 assert len(obj) > 0
 
 
-class JsonDatasetToTarFileSerializer:
+class JsonDatasetToTarFileSerializer(Serializer):
     @staticmethod
     def serialize(json_dataset: JsonDataset) -> Union[bytes, memoryview]:
         def json_encode_func(json_data: list) -> bytes:
