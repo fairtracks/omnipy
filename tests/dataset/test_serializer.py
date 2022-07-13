@@ -3,13 +3,14 @@ from typing import Dict, IO, Union
 
 from tests.dataset.test_common import _assert_tar_file_contents
 from unifair.dataset.dataset import Dataset
+from unifair.dataset.model import Model
 from unifair.dataset.serializer import (create_dataset_from_tarfile,
                                         create_tarfile_from_dataset,
                                         Serializer)
 
 
-class NumberDataset(Dataset):
-    data: Dict[str, int]
+class NumberDataset(Dataset[Model[int]]):
+    ...
 
 
 class MockNumberSerializer(Serializer):
@@ -52,7 +53,7 @@ class MockNumberToTarFileSerializer(Serializer):
 
 
 def test_number_dataset_serializer():
-    number_data = NumberDataset()
+    number_data = Dataset[Model[int]]()
 
     number_data['obj_type1'] = 35
     number_data['obj_type2'] = 12

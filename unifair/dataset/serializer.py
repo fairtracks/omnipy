@@ -36,10 +36,11 @@ def create_tarfile_from_dataset(dataset: Dataset,
 def create_dataset_from_tarfile(dataset: Dataset,
                                 tarfile_bytes: bytes,
                                 file_suffix: str,
-                                data_decode_func: Callable[[IO[bytes]], Any]):
+                                data_decode_func: Callable[[IO[bytes]], Any],
+                                import_method='from_data'):
     with tarfile.open(fileobj=BytesIO(tarfile_bytes), mode='r:gz') as tarfile_stream:
         for filename in tarfile_stream.getnames():
             obj_type_file = tarfile_stream.extractfile(filename)
             assert filename.endswith(f'.{file_suffix}')
             obj_type = '.'.join(filename.split('.')[:-1])
-            dataset.from_json({obj_type: data_decode_func(obj_type_file)})
+            getattr(dataset, import_method)({obj_type: data_decode_func(obj_type_file)})

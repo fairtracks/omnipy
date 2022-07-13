@@ -68,6 +68,6 @@ class PandasDatasetToTarFileSerializer:
             tarfile_bytes,
             file_suffix='csv',
             data_decode_func=csv_decode_func,
-        )
+            import_method='from_data')  # noqa
 
         return pandas_dataset

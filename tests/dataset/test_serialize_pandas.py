@@ -4,9 +4,8 @@ from unifair.dataset.pandas import (PandasDataset, PandasDatasetToTarFileSeriali
 
 def test_pandas_dataset_serializer_to_tar_file():
     pandas_data = PandasDataset()
-    pandas_data['obj_type_1'] = [{'a': 'abc', 'b': 12}, {'a': 'bcd', 'b': 23}]
-    pandas_data['obj_type_2'] = [{'a': 'abc', 'b': 12}, {'c': 'bcd'}]
-
+    pandas_data.from_data({'obj_type_1': [{'a': 'abc', 'b': 12}, {'a': 'bcd', 'b': 23}]})
+    pandas_data.from_data({'obj_type_2': [{'a': 'abc', 'b': 12}, {'c': 'bcd'}]})
     # fmt: off
     obj_type_1_csv = """
 ,a,b
