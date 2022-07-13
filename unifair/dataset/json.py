@@ -48,6 +48,6 @@ class JsonDatasetToTarFileSerializer(Serializer):
             tarfile_bytes,
             file_suffix='json',
             data_decode_func=json_decode_func,
-        )
+            import_method='from_json')
 
         return json_dataset
