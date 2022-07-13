@@ -112,7 +112,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     def __getitem__(self, obj_type: str) -> Any:
         if obj_type in self.data:
-            return self.data[obj_type].to_data()
+            return self.data[obj_type].contents
         else:
             return self.data[obj_type]
 

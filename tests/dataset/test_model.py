@@ -155,11 +155,16 @@ def test_invalid_models():
             ...
 
 
-def test_export_methods():
+def test_import_export_methods():
     assert Model[int](12).to_data() == 12
     assert Model[str]('test').to_data() == 'test'
     assert Model[Dict]({'a': 2}).to_data() == {'a': 2}
     assert Model[List]([2, 4, 'b']).to_data() == [2, 4, 'b']
+
+    assert Model[int](12).contents == 12
+    assert Model[str]('test').contents == 'test'
+    assert Model[Dict]({'a': 2}).contents == {'a': 2}
+    assert Model[List]([2, 4, 'b']).contents == [2, 4, 'b']
 
     assert Model[int](12).to_json() == '12'
     assert Model[str]('test').to_json() == '"test"'
@@ -170,24 +175,39 @@ def test_export_methods():
     model_int.from_json('12')
     assert model_int.to_data() == 12
 
+    model_int.contents = '13'
+    assert model_int.contents == 13
+    assert model_int.to_data() == 13
+
     model_str = Model[str]()
     model_str.from_json('"test"')
     assert model_str.to_data() == 'test'
+
+    model_str.contents = 13
+    assert model_str.contents == '13'
+    assert model_str.to_data() == '13'
 
     model_dict = Model[Dict]()
     model_dict.from_json('{"a": 2}')
     assert model_dict.to_data() == {'a': 2}
 
+    model_dict.contents = {'b': 3}
+    assert model_dict.contents == {'b': 3}
+    assert model_dict.to_data() == {'b': 3}
+
     model_list = Model[List]()
     model_list.from_json('[2, 4, "b"]')
     assert model_list.to_data() == [2, 4, 'b']
+
+    model_list.contents = [True, 'text', -47.9]
+    assert model_list.contents == [True, 'text', -47.9]
+    assert model_list.to_data() == [True, 'text', -47.9]
 
     std_description = Model._get_standard_field_description()
     assert Model[int].to_json_schema(pretty=True) == '''
 {
     "title": "Model[int]",
     "description": "'''[1:] + std_description + '''",
-    "default": 0,
     "type": "integer"
 }'''  # noqa:Q001
 
@@ -195,7 +215,6 @@ def test_export_methods():
 {
     "title": "Model[str]",
     "description": "'''[1:] + std_description + '''",
-    "default": "",
     "type": "string"
 }'''  # noqa:Q001
 
@@ -203,7 +222,6 @@ def test_export_methods():
 {
     "title": "Model[Dict]",
     "description": "'''[1:] + std_description + '''",
-    "default": {},
     "type": "object"
 }'''  # noqa:Q001
 
@@ -211,7 +229,6 @@ def test_export_methods():
 {
     "title": "Model[List]",
     "description": "'''[1:] + std_description + '''",
-    "default": [],
     "type": "array",
     "items": {}
 }'''  # noqa:Q001
@@ -227,7 +244,6 @@ def test_json_schema_generic_models():
 {
     "title": "MyList",
     "description": "My very interesting list model!",
-    "default": [],
     "type": "array",
     "items": {}
 }"""[1:]
@@ -236,7 +252,6 @@ def test_json_schema_generic_models():
 {
     "title": "MyList[List]",
     "description": "My very interesting list model!",
-    "default": [],
     "type": "array",
     "items": {}
 }"""[1:]
@@ -392,7 +407,6 @@ def test_nested_model():
 {
     "title": "DictToListOfPositiveInts",
     "description": "This model is perfect for a mapping product numbers to factor lists",
-    "default": {},
     "type": "object",
     "additionalProperties": {
         "type": "array",
@@ -485,7 +499,6 @@ def test_complex_nested_models():
 {
     "title": "ProductFactorDictInRomanNumerals",
     "description": "Extremely useful model",
-    "default": {},
     "type": "object",
     "additionalProperties": {
         "type": "array",
@@ -494,3 +507,32 @@ def test_complex_nested_models():
         }
     }
 }"""[1:]
+
+
+def test_pandas_dataframe_builtin_direct():
+    import pandas as pd
+
+    class PandasDataFrameModel(Model[pd.DataFrame]):
+        ...
+
+    dataframe = pd.DataFrame([[1, 2, 3], [4, 5, 6]])
+
+    model_1 = PandasDataFrameModel()
+    assert isinstance(model_1.contents, pd.DataFrame) and model_1.contents.empty
+
+    model_1.contents = dataframe
+
+    pd.testing.assert_frame_equal(
+        model_1.contents,
+        dataframe,
+    )
+
+    with pytest.raises(ValidationError):
+        PandasDataFrameModel([[1, 2, 3], [4, 5, 6]])
+
+    model_2 = PandasDataFrameModel(dataframe)
+
+    pd.testing.assert_frame_equal(
+        model_2.contents,
+        dataframe,
+    )
