@@ -2,8 +2,7 @@ import os.path
 from tempfile import TemporaryDirectory
 
 from unifair.dataset.json import JsonDataset, JsonDatasetToTarFileSerializer
-from unifair.engine.prefect import (get_executable_task_decorator,
-                                    result_persisting_task_decorator)
+from unifair.engine.prefect import (get_executable_task_decorator, result_persisting_task_decorator)
 
 
 def mock_task() -> JsonDataset:
