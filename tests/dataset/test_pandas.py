@@ -70,6 +70,50 @@ def test_pandas_dataset_list_of_objects_float_numbers():
         significant_digits=3)
 
 
+@pytest.mark.skip(reason="""
+Currently, columns of dtype=float64 are currently changed into the 'nullable integer' dtype `Int64`
+if all values in the column are either whole numbers or nan. This might be incorrect in relation
+to the data model imported from. Prior knowledge of the imported data model (before pandas import)
+is required to do better. This should be handled in the planned refactoring of imports/exports. """)
+def test_pandas_dataset_list_of_objects_float_numbers():
+    pandas_data = PandasDataset()
+    data = {
+        'obj_type': [
+            {
+                'a': 12.0, 'b': 12.1
+            },
+            {
+                'a': 3.0
+            },
+            {
+                'b': 14.3
+            },
+        ]
+    }
+    pandas_data.from_data(data)
+    pd.testing.assert_frame_equal(
+        pandas_data['obj_type'],
+        pd.DataFrame([{
+            'a': 12.0, 'b': 12.1
+        }, {
+            'a': 3.0, 'b': None
+        }, {
+            'a': None, 'b': 14.3
+        }]),
+    )
+    _assert_pandas_frame_dtypes(pandas_data['obj_type'], ('float64', 'float64'))
+    assert not DeepDiff(
+        pandas_data.to_data(),
+        {'obj_type': [{
+            'a': 12.0, 'b': 12.1
+        }, {
+            'a': 3.0, 'b': np.nan
+        }, {
+            'a': np.nan, 'b': 14.3
+        }]},
+        significant_digits=3)
+
+
 def test_pandas_dataset_list_of_nested_objects():
     pandas_data = PandasDataset()
     data = {'obj_type': [{'a': 'abc', 'b': {'c': [1, 3]}}]}
