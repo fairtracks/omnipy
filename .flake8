@@ -8,3 +8,4 @@ exclude =
     __pycache__,
 max-complexity = 10
 max-line-length = 100
+avoid-escape = True
