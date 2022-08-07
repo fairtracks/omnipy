@@ -1,5 +1,5 @@
 import sys
-from typing import Dict, IO, Union
+from typing import IO, Union
 
 from tests.dataset.test_common import _assert_tar_file_contents
 from unifair.dataset.dataset import Dataset

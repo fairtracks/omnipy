@@ -1,5 +1,3 @@
-from json import JSONDecodeError
-
 from pydantic import ValidationError
 import pytest
 
