@@ -4,7 +4,7 @@ import pandas as pd
 from pydantic import ValidationError
 import pytest
 
-from tests.dataset.test_common import _assert_pandas_frame_dtypes
+from tests.dataset.util import _assert_pandas_frame_dtypes
 from unifair.dataset.pandas import PandasDataset
 
 

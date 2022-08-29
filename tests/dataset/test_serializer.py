@@ -1,7 +1,7 @@
 import sys
 from typing import Any, Dict, IO, Union
 
-from tests.dataset.test_common import _assert_tar_file_contents
+from tests.dataset.util import _assert_tar_file_contents
 from unifair.dataset.dataset import Dataset
 from unifair.dataset.model import Model
 from unifair.dataset.serializer import (create_dataset_from_tarfile,
