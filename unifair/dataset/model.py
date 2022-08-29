@@ -1,6 +1,5 @@
-from copy import copy
 import json
-from typing import Any, Dict, Generic, get_origin, Type, TypeVar, Union
+from typing import Any, Generic, get_origin, Type, TypeVar
 
 from pydantic import Protocol, root_validator
 from pydantic.fields import ModelField, Undefined

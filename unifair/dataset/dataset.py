@@ -2,7 +2,7 @@ from collections import UserDict
 import json
 from typing import Any, Dict, Generic, Iterator, Tuple, Type, TypeVar, Union
 
-from pydantic import Field, PrivateAttr, Protocol, ValidationError
+from pydantic import Field, PrivateAttr, ValidationError
 from pydantic.generics import GenericModel
 
 from unifair.dataset.model import Model
