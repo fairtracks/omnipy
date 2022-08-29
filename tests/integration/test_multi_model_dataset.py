@@ -115,6 +115,27 @@ def test_dataset_with_multiple_table_models(
     assert my_dataset.get_model('a') == TableTemplate[MyRecordSchema]
 
 
+@pytest.mark.skip(reason="""
+TODO: Requires refactoring of Dataset class to use member variables instead of 'data' dict to 
+store objects. Idea: Add a '_data' private member with 'data' as alias to keep UserDict working, 
+however with no values to not duplicate content. Keep difference between Dataset and 
+MultiModelDataset as having two classes is useful for task typing, see e.g. the function 
+definition of 'specialize_record_models' below.
+""")
+def test_dataset_with_multiple_table_models_json_schema(
+        GeneralTable,  # noqa
+        TableTemplate,  # noqa
+        MyRecordSchema,  # noqa
+        MyOtherRecordSchema):  # noqa
+    my_dataset = MultiModelDataset[GeneralTable]()
+
+    my_dataset.set_model('a', TableTemplate[MyRecordSchema])
+    my_dataset.set_model('b', TableTemplate[MyRecordSchema])
+
+    assert 'MyRecordSchema' in my_dataset.to_json_schema(pretty=True)
+    assert 'MyOtherRecordSchema' in my_dataset.data['b'].to_json_schema(pretty=True)
+
+
 @pytest.fixture
 def runtime():
     return RuntimeConfig()
