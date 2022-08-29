@@ -1,4 +1,4 @@
-from tests.dataset.test_common import _assert_tar_file_contents
+from tests.dataset.util import _assert_tar_file_contents
 from unifair.dataset.json import JsonDataset, JsonDatasetToTarFileSerializer
 
 
