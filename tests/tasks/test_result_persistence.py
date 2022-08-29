@@ -1,8 +1,9 @@
 import os.path
 from tempfile import TemporaryDirectory
 
+import pytest
+
 from unifair.dataset.json import JsonDataset, JsonDatasetToTarFileSerializer
-from unifair.engine.prefect import (get_executable_task_decorator, result_persisting_task_decorator)
 
 
 def mock_task() -> JsonDataset:
@@ -11,7 +12,11 @@ def mock_task() -> JsonDataset:
     return json_dataset
 
 
+@pytest.mark.skip(reason='Outdated')
 def test_result_persistence():
+    from unifair.engine.prefect import (get_executable_task_decorator,
+                                        result_persisting_task_decorator)
+
     result_type_to_serializer_map = {'JsonDataset': JsonDatasetToTarFileSerializer}
 
     with TemporaryDirectory() as tmp_dir:
