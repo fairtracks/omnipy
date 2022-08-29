@@ -74,7 +74,8 @@ class Model(GenericModel, Generic[RootT]):
         # is needed due to the inability of typing/pydantic to provide a dynamic default based on
         # the actual type. The following issue in mypy seems relevant:
         # https://github.com/python/mypy/issues/3737 (as well as linked issues)
-        cls._populate_root_field(model)
+        if cls == Model:  # Only for the base Model class
+            cls._populate_root_field(model)
         return super().__class_getitem__(model)
 
     def __new__(cls, value=Undefined, **kwargs):
