@@ -234,7 +234,7 @@ def test_import_export_methods():
 }'''  # noqa:Q001
 
 
-def test_json_schema_generic_models():
+def test_json_schema_generic_model_one_level():
     ListT = TypeVar('ListT', bound=List)
 
     class MyList(Model[ListT], Generic[ListT]):
@@ -254,6 +254,33 @@ def test_json_schema_generic_models():
     "description": "My very interesting list model!",
     "type": "array",
     "items": {}
+}"""[1:]
+
+
+def test_json_schema_generic_model_two_levels():
+    StrT = TypeVar('StrT', bound=str)
+
+    class MyListOfStrings(Model[List[StrT]], Generic[StrT]):
+        """My very own list of strings!"""
+
+    assert MyListOfStrings.to_json_schema(pretty=True) == """
+{
+    "title": "MyListOfStrings",
+    "description": "My very own list of strings!",
+    "type": "array",
+    "items": {
+        "type": "string"
+    }
+}"""[1:]
+
+    assert MyListOfStrings[str].to_json_schema(pretty=True) == """
+{
+    "title": "MyListOfStrings[str]",
+    "description": "My very own list of strings!",
+    "type": "array",
+    "items": {
+        "type": "string"
+    }
 }"""[1:]
 
 
@@ -295,41 +322,6 @@ def test_json_schema_generic_models_known_issue_1():
                 "type": "string"
             }
         }
-    }
-}"""[1:]
-
-
-@pytest.mark.skip(reason="""
-StrT seems to be replaced with the RootT TypeVar from Model, 
-removing one level of the nested type tree in the process.
-Possibly just a matter of figuring out the correct syntax
-from the pydantic manual.
-""")
-def test_json_schema_generic_models_known_issue_2():
-    StrT = TypeVar('StrT', bound=str)
-
-    class MyListOfStrings(Model[List[StrT]], Generic[StrT]):
-        """My very own list of strings!"""
-
-    assert MyListOfStrings.to_json_schema(pretty=True) == """
-{
-    "title": "MyListOfStrings",
-    "description": "My very own list of strings!",
-    "default": [],
-    "type": "array",
-    "items": {
-        "type": "string"
-    }
-}"""[1:]
-
-    assert MyListOfStrings[str].to_json_schema(pretty=True) == """
-{
-    "title": "MyList",
-    "description": "My very own list of strings!",
-    "default": [],
-    "type": "array",
-    "items": {
-        "type": "string",
     }
 }"""[1:]
 
