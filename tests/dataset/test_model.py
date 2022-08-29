@@ -288,13 +288,15 @@ def test_json_schema_generic_model_two_levels():
 Known issue due to shortcomings of the typing standard library.
 Class variables of generic classes are not all available in
 in runtime (see: https://github.com/python/typing/issues/629)
+In this case, the description of the generic class MyList
+is not available from MyListOfStrings to_json_schema method.
 Any workarounds should best be implemented in pydantic,
 possibly in uniFAIR if this becomes a real issue.
 """)
 def test_json_schema_generic_models_known_issue_1():
-    listT = TypeVar('listT', bound=List)
+    ListT = TypeVar('ListT', bound=List)
 
-    class MyList(Model[listT], Generic[listT]):
+    class MyList(Model[ListT], Generic[ListT]):
         """My very interesting list model!"""
 
     class MyListOfStrings(Model[MyList[List[str]]]):
@@ -304,19 +306,11 @@ def test_json_schema_generic_models_known_issue_1():
 {
     "title": "MyListOfStrings",
     "description": "MyList. What more can you ask for?",
-    "default": {
-        "__root__": []
-    },
-    "allOf": [
-        {
-            "$ref": "#/definitions/MyList_List_str__"
-        }
-    ],
+    "$ref": "#/definitions/MyList_List_str__",
     "definitions": {
         "MyList_List_str__": {
             "title": "MyList[List[str]]",
             "description": "My very interesting list model!.",
-            "default": [],
             "type": "array",
             "items": {
                 "type": "string"

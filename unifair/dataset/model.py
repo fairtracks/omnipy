@@ -30,16 +30,15 @@ class Model(GenericModel, Generic[RootT]):
 
     @classmethod
     def _get_default_value_from_model(cls, model: Type[Any]) -> Any:
-        cur_model = model
-        if isinstance(cur_model, TypeVar):
+        if isinstance(model, TypeVar):
             if model.__bound__ is None:  # noqa
                 raise TypeError('The TypeVar "{}" needs to be bound to a '.format(model.__name__)
                                 + 'type that provides a default value when called')
             else:
-                cur_model = model.__bound__  # noqa
-        origin_type = get_origin(cur_model)
+                model = model.__bound__  # noqa
+        origin_type = get_origin(model)
         if origin_type is None:
-            origin_type = cur_model
+            origin_type = model
         return origin_type()
 
     @classmethod
@@ -57,7 +56,7 @@ class Model(GenericModel, Generic[RootT]):
         data_field = ModelField.infer(
             name=ROOT_KEY,
             value=Undefined,
-            annotation=copy(model),
+            annotation=model,
             class_validators=None,
             config=cls.__config__)
 
@@ -65,8 +64,12 @@ class Model(GenericModel, Generic[RootT]):
         cls.__annotations__[ROOT_KEY] = model
 
     def __class_getitem__(cls, model: Type[Any]) -> Type[Any]:
-        # Fix of a bug somewhere in pydantic, possibly?
-        # test_complex_models in test_database fails without these lines.
+        # TODO: change model type to params: Union[Type[Any], Tuple[Type[Any], ...]]
+        #       as in GenericModel
+
+        # For now, only singular model types are allowed. These lines are needed for
+        # interoperability with pydantic GenericModel, which internally stores the model
+        # as a tuple:
         if isinstance(model, tuple) and len(model) == 1:
             model = model[0]
 
@@ -187,3 +190,7 @@ class Model(GenericModel, Generic[RootT]):
                 contents_prop.__set__(self, value)
             else:
                 raise RuntimeError('Model does not allow setting of extra attributes')
+
+
+# TODO: Add tests and code for determine default values for generics in types package
+#       (e.g. Tuple, Union, None, Any, Optional,...)
