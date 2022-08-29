@@ -2,7 +2,7 @@ from collections import UserDict
 import json
 from typing import Any, Dict, Generic, Iterator, Tuple, Type, TypeVar, Union
 
-from pydantic import Field, Protocol
+from pydantic import Field, PrivateAttr, Protocol, ValidationError
 from pydantic.generics import GenericModel
 
 from unifair.dataset.model import Model
@@ -49,8 +49,17 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     data: Dict[str, ModelT] = Field(default={})
 
-    def __class_getitem__(cls, model: Type[Any]) -> Type[Any]:
-        if not issubclass(model, Model):
+    def __class_getitem__(cls, model: Union[Type[Any], Model]) -> Union[Type[Any], Model]:
+        # TODO: change model type to params: Union[Type[Any], Tuple[Type[Any], ...]]
+        #       as in GenericModel
+
+        # For now, only singular model types are allowed. These lines are needed for
+        # interoperability with pydantic GenericModel, which internally stores the model
+        # as a tuple:
+        if isinstance(model, tuple) and len(model) == 1:
+            model = model[0]
+
+        if model != ModelT and not issubclass(model, Model):
             raise TypeError('Invalid model: {}! '.format(model)
                             + 'uniFAIR Dataset models must be a specialization of the uniFAIR '
                             'Model class.')
@@ -103,11 +112,17 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
                 'the excellent Python package named `pydantic`.')
 
     def __setitem__(self, obj_type: str, data_obj: Any) -> None:
+        had_prev_value = obj_type in self.data
+        prev_value = self.data.get(obj_type)
+
         try:
             self.data[obj_type] = data_obj
-            self._validate()
+            self._validate(obj_type)
         except:  # noqa
-            del self.data[obj_type]
+            if had_prev_value:
+                self.data[obj_type] = prev_value
+            else:
+                del self.data[obj_type]
             raise
 
     def __getitem__(self, obj_type: str) -> Any:
@@ -116,7 +131,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         else:
             return self.data[obj_type]
 
-    def _validate(self) -> None:
+    def _validate(self, _obj_type: str) -> None:
         self.data = self.data  # Triggers pydantic validation, as validate_assignment=True
 
     def __iter__(self) -> Iterator:
@@ -181,3 +196,50 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     @staticmethod
     def _pretty_print_json(json_content: Any) -> str:
         return json.dumps(json_content, indent=4)
+
+
+# TODO: Use json serializer package from the pydantic config instead of 'json'
+
+
+class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
+
+    _custom_field_models: Dict[str, Union[Type[Any], Model]] = PrivateAttr(default={})
+
+    def set_model(self, obj_type: str, model: Union[Type[Any], Model]) -> None:
+        try:
+            self._custom_field_models[obj_type] = model
+            if obj_type in self.data:
+                self._validate(obj_type)
+            else:
+                self.data[obj_type] = model()
+        except ValidationError:
+            del self._custom_field_models[obj_type]
+            raise
+
+    def get_model(self, obj_type: str) -> Union[Type[Any], Model]:
+        if obj_type in self._custom_field_models:
+            return self._custom_field_models[obj_type]
+        else:
+            return self._get_model_class()
+
+    def __setitem__(self, obj_type: str, data_obj: Any) -> None:
+        super().__setitem__(obj_type, data_obj)
+
+    def __delitem__(self, obj_type: str) -> None:
+        super().__delitem__(obj_type)
+
+    def _validate(self, obj_type: str) -> None:
+        if obj_type in self._custom_field_models:
+            model = self._custom_field_models[obj_type]
+            if not isinstance(model, Model):
+                model = Model[model]
+            obj_data = self._to_data_if_model(self.data[obj_type])
+            parsed_data = self._to_data_if_model(model(obj_data))
+            self.data[obj_type] = parsed_data
+        super()._validate(obj_type)  # validates all data according to ModelT
+
+    @staticmethod
+    def _to_data_if_model(obj_data):
+        if isinstance(obj_data, Model):
+            obj_data = obj_data.to_data()
+        return obj_data
