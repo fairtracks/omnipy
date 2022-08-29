@@ -140,38 +140,30 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if not update:
             self.clear()
 
-        for key, val in data.items():
-            new_model = self._get_model_class()()
-            new_model.from_data(val)
+        for obj_type, obj_val in data.items():
+            new_model = self._get_model_class()()  # noqa
+            new_model.from_data(obj_val)
+            self[obj_type] = new_model
 
-            # Note: this will call validation once more, possibly failing validators that cannot
-            # be rerun.
-            # TODO: Fix to only validate once
-            self[key] = new_model.contents
-
-    def to_json(self, pretty=False) -> Dict[str, str]:
-        result = {}
+    def to_json(self, pretty=False) -> str:
         json_content = self.json()
         contents = json.loads(json_content)
         assert len(contents.keys()) == 1 and next(iter(contents.keys())) == DATA_KEY
-        for key, val in contents[DATA_KEY].items():
-            result[key] = self._pretty_print_json(val) if pretty else json.dumps(val)
-        return result
 
-    def from_json(self,
-                  data: Union[Dict[str, str], Iterator[Tuple[str, str]]],
-                  update: bool = True) -> None:
+        return self._pretty_print_json(contents[DATA_KEY]) if pretty else json.dumps(
+            contents[DATA_KEY])
 
+    def from_json(self, data: str, update: bool = True) -> None:
         if not update:
             self.clear()
 
-        for key, json_contents in dict(data).items():
-            new_model = self._get_model_class().parse_raw(json_contents, proto=Protocol.json)
+        raw_parsed_json = json.loads(data)
+        assert type(raw_parsed_json) == dict
 
-            # Note: this will call validation once more, possibly failing validators that cannot
-            # be rerun
-            # TODO: Fix to only validate once
-            self[key] = new_model.contents
+        for obj_type, obj_val in raw_parsed_json.items():
+            new_model = self._get_model_class()()  # noqa
+            new_model.from_json(json.dumps(obj_val))
+            self[obj_type] = new_model
 
     @classmethod
     def to_json_schema(cls, pretty=False) -> Union[str, Dict[str, str]]:

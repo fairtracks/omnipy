@@ -159,13 +159,20 @@ class Model(GenericModel, Generic[RootT]):
 
     def from_json(self, json_contents: str) -> None:
         new_model = self.parse_raw(json_contents, proto=Protocol.json)
-        self.from_data(new_model.to_data())
+        self._set_contents_without_validation(new_model)
+
+    def _set_contents_without_validation(self, contents: Any) -> None:
+        validate_assignment = self.__config__.validate_assignment
+        self.__config__.validate_assignment = False
+        self.contents = contents.contents
+        self.__config__.validate_assignment = validate_assignment
 
     @classmethod
-    def to_json_schema(self, pretty=False) -> Union[str, Dict[str, Any]]:
-        schema = self.schema()
+    def to_json_schema(cls, pretty=False) -> str:
+        schema = cls.schema()
+
         if pretty:
-            return self._pretty_print_json(schema)
+            return cls._pretty_print_json(schema)
         else:
             return json.dumps(schema)
 

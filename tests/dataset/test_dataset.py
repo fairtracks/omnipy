@@ -1,4 +1,4 @@
-from typing import Any, Dict, Generic, List, TypeVar
+from typing import Any, Dict, Generic, List, Tuple, TypeVar
 
 from pydantic import PositiveInt, StrictInt, ValidationError
 import pytest
@@ -140,21 +140,20 @@ def test_import_and_export():
         }
     }
 
-    assert dataset.to_json(pretty=False) == {  # noqa
-        'obj_type_1': '{"a": "123", "b": "234", "c": "345"}', 'obj_type_2': '{"c": "456"}'
-    }  # noqa
-    assert dataset.to_json(pretty=True) == {
-        'obj_type_1': """
+    assert dataset.to_json(
+        pretty=False  # noqa
+    ) == '{"obj_type_1": {"a": "123", "b": "234", "c": "345"}, "obj_type_2": {"c": "456"}}'
+    assert dataset.to_json(pretty=True) == '''
 {
-    "a": "123",
-    "b": "234",
-    "c": "345"
-}"""[1:],
-        'obj_type_2': """
-{
-    "c": "456"
-}"""[1:]
+    "obj_type_1": {
+        "a": "123",
+        "b": "234",
+        "c": "345"
+    },
+    "obj_type_2": {
+        "c": "456"
     }
+}'''[1:]  # noqa
 
     data = {'obj_type_1': {'a': 333, 'b': 555, 'c': 777}, 'obj_type_3': {'a': '99', 'b': '98'}}
     dataset.from_data(data)
@@ -180,7 +179,7 @@ def test_import_and_export():
         },
     }
 
-    json_import = {'obj_type_2': '{"a": 987, "b": 654}'}
+    json_import = '{"obj_type_2": {"a": 987, "b": 654}}'
 
     dataset.from_json(json_import)
     assert dataset.to_data() == {
@@ -228,6 +227,41 @@ def test_import_and_export():
     assert dataset.to_json_schema() == dataset.to_json_schema(pretty=False)  # noqa
 
 
+def test_import_export_custom_parser_to_other_type(StringToLength):  # noqa
+    dataset = Dataset[StringToLength]()
+
+    dataset['obj_type_1'] = 'And we lived beneath the waves'
+    assert dataset['obj_type_1'] == 30
+
+    dataset.from_data({'obj_type_2': 'In our yellow submarine'}, update=True)  # noqa
+    assert dataset['obj_type_1'] == 30
+    assert dataset['obj_type_2'] == 23
+    assert dataset.to_data() == {'obj_type_1': 30, 'obj_type_2': 23}
+
+    dataset.from_json('{"obj_type_2": "In our yellow submarine!"}', update=True)  # noqa
+    assert dataset['obj_type_1'] == 30
+    assert dataset['obj_type_2'] == 24
+    assert dataset.to_json() == '{"obj_type_1": 30, "obj_type_2": 24}'
+
+    assert dataset.to_json_schema(pretty=True) == '''
+{
+    "title": "Dataset[StringToLength]",
+    "description": "'''[1:] + Dataset._get_standard_field_description() + '''",
+    "default": {},
+    "type": "object",
+    "additionalProperties": {
+        "$ref": "#/definitions/StringToLength"
+    },
+    "definitions": {
+        "StringToLength": {
+            "title": "StringToLength",
+            "description": "''' + Model._get_standard_field_description() + '''",
+            "type": "string"
+        }
+    }
+}'''  # noqa
+
+
 def test_complex_models():
     #
     # Model subclass
@@ -238,17 +272,12 @@ def test_complex_models():
         Transforms a pair of min and max ints to an inclusive range
         """
         @classmethod
-        def _parse_data(cls, data: List[PositiveInt]) -> Any:
+        def _parse_data(cls, data: List[PositiveInt]) -> List[PositiveInt]:
             if not data:
                 return []
             else:
-                # Parsers/validators must always allow to be called twice
-                # If already run, any pair of numbers will be consecutive and calling range again
-                # will not change anything
-                if len(data) == 2:
-                    return list(range(min(data), max(data) + 1))
-                else:
-                    return data
+                assert len(data) == 2
+                return list(range(data[0], data[1] + 1))
 
     #
     # Generic model subclass
@@ -290,9 +319,30 @@ def test_complex_models():
 
     assert dataset.to_data() == {'1': [1], '2': [2, 1], '3': [3, 2, 1], '4': [4, 3, 2, 1]}
 
-    assert dataset.to_json(pretty=False) == {
-        '1': '[1]', '2': '[2, 1]', '3': '[3, 2, 1]', '4': '[4, 3, 2, 1]'
-    }
+    assert dataset.to_json(
+        pretty=False) == '{"1": [1], "2": [2, 1], "3": [3, 2, 1], "4": [4, 3, 2, 1]}'
+
+    assert dataset.to_json(pretty=True) == '''
+{
+    "1": [
+        1
+    ],
+    "2": [
+        2,
+        1
+    ],
+    "3": [
+        3,
+        2,
+        1
+    ],
+    "4": [
+        4,
+        3,
+        2,
+        1
+    ]
+}'''[1:]  # noqa
 
     assert dataset.to_json_schema(pretty=True) == '''
 {

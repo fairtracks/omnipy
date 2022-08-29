@@ -1,5 +1,5 @@
 import sys
-from typing import IO, Union
+from typing import Any, Dict, IO, Union
 
 from tests.dataset.test_common import _assert_tar_file_contents
 from unifair.dataset.dataset import Dataset
@@ -42,11 +42,15 @@ class MockNumberToTarFileSerializer(Serializer):
         def number_decode_func(file_stream: IO[bytes]) -> int:
             return int.from_bytes(file_stream.read(), byteorder=sys.byteorder)
 
+        def python_dictify_object(obj_type: str, obj_val: Any) -> Dict:
+            return {obj_type: obj_val}
+
         create_dataset_from_tarfile(
             number_dataset,
             tarfile_bytes,
             file_suffix='num',
             data_decode_func=number_decode_func,
+            dictify_object_func=python_dictify_object,
         )
 
         return number_dataset
