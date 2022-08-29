@@ -130,3 +130,6 @@ dmypy.json
 
 # PyCharm docs
 .idea
+
+# uniFAIR specific
+data
