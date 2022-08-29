@@ -42,6 +42,7 @@ profile = "google"
 force_single_line = false
 multi_line_output = 1
 src_paths = ["src/unifair", "tests"]
+line_length = 100
 
 [flows]
 checkpointing = true
