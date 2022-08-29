@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from io import BytesIO
 import tarfile
 from tarfile import TarInfo
-from typing import Any, Callable, Dict, IO, Tuple, Union
+from typing import Any, Callable, Dict, IO, Union
 
 from unifair.dataset.dataset import Dataset
 
