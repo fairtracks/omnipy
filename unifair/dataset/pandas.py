@@ -5,7 +5,8 @@ import pandas as pd
 
 from unifair.dataset.dataset import Dataset
 from unifair.dataset.model import Model, ROOT_KEY
-from unifair.dataset.serializer import (create_dataset_from_tarfile, create_tarfile_from_dataset)
+from unifair.dataset.serializer import (create_dataset_from_tarfile,
+                                        create_tarfile_from_dataset)
 
 
 class PandasModel(Model[pd.DataFrame]):
@@ -29,6 +30,9 @@ class PandasModel(Model[pd.DataFrame]):
 
     def from_data(self, value: Iterable[Any]) -> None:
         self.contents = self._convert_ints_to_nullable_ints(pd.DataFrame(value))
+
+    def from_json(self, value: str) -> None:
+        self.contents = self._convert_ints_to_nullable_ints(pd.read_json(value))
 
     @classmethod
     def _convert_ints_to_nullable_ints(cls, dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -63,11 +67,15 @@ class PandasDatasetToTarFileSerializer:
         def csv_decode_func(file_stream: IO[bytes]) -> pd.DataFrame:
             return pd.read_csv(file_stream, index_col=0, encoding='utf8')
 
+        def python_dictify_object(obj_type: str, obj_val: Any) -> Dict:
+            return {obj_type: obj_val}
+
         create_dataset_from_tarfile(
             pandas_dataset,
             tarfile_bytes,
             file_suffix='csv',
             data_decode_func=csv_decode_func,
+            dictify_object_func=python_dictify_object,
             import_method='from_data')  # noqa
 
         return pandas_dataset

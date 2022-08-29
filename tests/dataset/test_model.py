@@ -356,6 +356,13 @@ def test_custom_parser_and_validation():
         model.from_data('Not just anybody! Call 911!!')
 
 
+def test_custom_parser_to_other_type(StringToLength):  # noqa
+    assert StringToLength('So we sailed up to the sun').to_data() == 26
+    string_to_length = StringToLength()
+    string_to_length.from_data('Till we found the sea of green')
+    assert string_to_length.to_data() == 30
+
+
 def test_nested_model():
     class DictToListOfPositiveInts(Model[Dict[PositiveInt, List[PositiveInt]]]):
         """This model is perfect for a mapping product numbers to factor lists"""

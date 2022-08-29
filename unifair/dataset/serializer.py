@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from io import BytesIO
 import tarfile
 from tarfile import TarInfo
-from typing import Any, Callable, IO, Union
+from typing import Any, Callable, Dict, IO, Tuple, Union
 
 from unifair.dataset.dataset import Dataset
 
@@ -37,10 +37,12 @@ def create_dataset_from_tarfile(dataset: Dataset,
                                 tarfile_bytes: bytes,
                                 file_suffix: str,
                                 data_decode_func: Callable[[IO[bytes]], Any],
+                                dictify_object_func: Callable[[str, Any], Union[Dict, str]],
                                 import_method='from_data'):
     with tarfile.open(fileobj=BytesIO(tarfile_bytes), mode='r:gz') as tarfile_stream:
         for filename in tarfile_stream.getnames():
             obj_type_file = tarfile_stream.extractfile(filename)
             assert filename.endswith(f'.{file_suffix}')
             obj_type = '.'.join(filename.split('.')[:-1])
-            getattr(dataset, import_method)({obj_type: data_decode_func(obj_type_file)})
+            getattr(dataset, import_method)(
+                dictify_object_func(obj_type, data_decode_func(obj_type_file)))

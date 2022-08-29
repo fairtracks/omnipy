@@ -25,6 +25,23 @@ def test_pandas_dataset_list_of_objects_same_keys():
     assert pandas_data.to_data() == data
 
 
+def test_pandas_dataset_json_list_of_objects_same_keys():
+    pandas_data = PandasDataset()
+    json_data = '{"obj_type": [{"a": "abc", "b": 12}, {"a": "bcd", "b": 23}]}'
+    pandas_data.from_json(json_data)
+    pd.testing.assert_frame_equal(
+        pandas_data['obj_type'],
+        pd.DataFrame([{
+            'a': 'abc', 'b': 12
+        }, {
+            'a': 'bcd', 'b': 23
+        }]),
+        check_dtype=False,
+    )
+    _assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'Int64'))
+    assert pandas_data.to_json() == json_data
+
+
 def test_pandas_dataset_list_of_objects_different_keys():
     pandas_data = PandasDataset()
     data = {'obj_type': [{'a': 'abc', 'b': 12}, {'c': 'bcd'}]}
