@@ -41,7 +41,7 @@ split_before_arithmetic_operator = true
 profile = "google"
 force_single_line = false
 multi_line_output = 1
-src_paths = ["unifair", "tests"]
+src_paths = ["src/unifair", "tests"]
 
 [flows]
 checkpointing = true

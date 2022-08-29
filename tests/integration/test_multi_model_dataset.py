@@ -1,6 +1,6 @@
 from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, Union
 
-from pydantic import (BaseModel, create_model, Extra, root_validator, ValidationError, validator)
+from pydantic import create_model, Extra, ValidationError
 import pytest
 
 from unifair.compute.flow import FlowTemplate
