@@ -1,11 +1,6 @@
 from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, Union
 
-from pydantic import (BaseModel,
-                      create_model,
-                      Extra,
-                      root_validator,
-                      ValidationError,
-                      validator)
+from pydantic import (BaseModel, create_model, Extra, root_validator, ValidationError, validator)
 import pytest
 
 from unifair.compute.flow import FlowTemplate
@@ -118,3 +113,116 @@ def test_dataset_with_multiple_table_models(
         my_dataset.update({'a': [{'a': 444, 'd': True}]})
     my_dataset.update({'a': [{'a': 444, 'b': 'fae'}]})
     assert my_dataset.get_model('a') == TableTemplate[MyRecordSchema]
+
+
+@pytest.fixture
+def runtime():
+    return RuntimeConfig()
+
+
+@pytest.fixture
+def runtime_local_runner(runtime):
+    runtime.engine = LocalRunner()
+    return runtime
+
+
+@pytest.fixture
+def extract_record_model(runtime, RecordSchema, TableSchemaSerializer, GeneralTable):  # noqa
+    @runtime.task_template(serializer=PythonSerializer)
+    def extract_record_model(table: GeneralTable) -> RecordSchema:
+        record_model = {}
+        for record in table:
+            for field_key, field_val in record.items():
+                if field_key not in record_model:
+                    record_model[field_key] = type(field_val)
+                else:
+                    assert record_model[field_key] == type(field_val)
+
+        return record_model
+
+
+@pytest.fixture
+def apply_models_to_dataset(runtime, RecordSchema, GeneralTable, TableTemplate):  # noqa
+    def first_dataset_keys_in_all_datasets(*datasets: Dataset[Any]):
+        assert all(all(key in dataset for dataset in datasets) for key in datasets[0])
+
+    @runtime.task_template(
+        serializer=CsvSerializer, extra_validators=(first_dataset_keys_in_all_datasets,))
+    def apply_models_to_dataset(dataset: Dataset[GeneralTable],
+                                models: Dataset[RecordSchema]) -> MultiModelDataset[GeneralTable]:
+        for obj_type in dataset:
+            dataset.set_model(obj_type, models[obj_type])
+        return dataset
+
+    return apply_models_to_dataset
+
+
+@pytest.fixture
+def specialize_record_models_dag_flow(
+        runtime,
+        GeneralTable,  # noqa
+        extract_record_model,
+        apply_models_to_dataset):
+    @runtime.dag_flow_template(
+        extract_record_model.refine(
+            param_key_map={'dataset', 'tables'},
+            result_key='models',
+            iterate_over_dataset=True,
+        ),
+        apply_models_to_dataset,
+    )
+    def specialize_record_models(tables: Dataset[GeneralTable]) -> MultiModelDataset[GeneralTable]:
+        ...
+
+    return specialize_record_models
+
+
+@pytest.fixture
+def specialize_record_models_func_flow(
+        runtime,
+        GeneralTable,  # noqa
+        RecordSchema,  # noqa
+        extract_record_model,
+        apply_models_to_dataset):
+    @runtime.func_flow_template()
+    def specialize_record_models(tables: Dataset[GeneralTable]) -> MultiModelDataset[GeneralTable]:
+        record_models = Dataset[RecordSchema]([
+            (table_name, extract_record_model(table)) for table_name, table in tables
+        ])
+        return apply_models_to_dataset(tables, record_models)
+
+    return specialize_record_models
+
+
+def _common_test_run_dataset_flow(specialize_record_models: FlowTemplate,
+                                  GeneralTable: Model):  # noqa
+    f_specialize_record_models = specialize_record_models.apply()
+
+    old_dataset = Dataset[GeneralTable]()
+    old_dataset['a'] = [{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}]
+    old_dataset['b'] = [{'b': 'df', 'c': True}, {'b': False, 'c': 'sg'}]  # inconsistent types
+
+    with pytest.raises(AssertionError):
+        _new_dataset = f_specialize_record_models(old_dataset)
+
+    old_dataset['b'] = [{'b': 'df', 'c': True}, {'b': 'sg', 'c': False}]  # consistent types
+
+    new_dataset = f_specialize_record_models(old_dataset)
+
+    # general model allows the tables to be switched
+    old_dataset['a'], old_dataset['b'] = old_dataset['b'], old_dataset['a']
+
+    with pytest.raises(ValidationError):
+        # per-table specialized models do not allow the tables to be switched
+        new_dataset['a'], new_dataset['b'] = new_dataset['b'], new_dataset['a']
+
+
+def test_run_dataset_dag_flow(runtime_local_runner, specialize_record_models_dag_flow,
+                              GeneralTable):  # noqa
+    _common_test_run_dataset_flow(specialize_record_models_dag_flow, GeneralTable)
+
+
+def test_run_dataset_func_flow(runtime_local_runner,
+                               specialize_record_models_func_flow,
+                               GeneralTable):  # noqa
+    _common_test_run_dataset_flow(specialize_record_models_func_flow, GeneralTable)

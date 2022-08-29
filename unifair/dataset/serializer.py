@@ -46,3 +46,11 @@ def create_dataset_from_tarfile(dataset: Dataset,
             obj_type = '.'.join(filename.split('.')[:-1])
             getattr(dataset, import_method)(
                 dictify_object_func(obj_type, data_decode_func(obj_type_file)))
+
+
+class CsvSerializer:
+    pass
+
+
+class PythonSerializer:
+    pass
