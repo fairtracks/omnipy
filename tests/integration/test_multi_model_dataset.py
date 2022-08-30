@@ -176,7 +176,7 @@ def apply_models_to_dataset(runtime, RecordSchema, GeneralTable, TableTemplate):
         serializer=CsvSerializer, extra_validators=(first_dataset_keys_in_all_datasets,))
     def apply_models_to_dataset(dataset: Dataset[GeneralTable],
                                 models: Dataset[RecordSchema]) -> MultiModelDataset[GeneralTable]:
-        multi_model_dataset = dataset.refine()
+        multi_model_dataset = dataset.as_multi_model_dataset()
         for obj_type in multi_model_dataset.keys():
             multi_model_dataset.set_model(obj_type, models[obj_type])
         return multi_model_dataset
