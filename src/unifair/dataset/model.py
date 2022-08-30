@@ -1,5 +1,5 @@
 import json
-from typing import Any, Generic, get_origin, Type, TypeVar
+from typing import Any, Generic, get_origin, Type, TypeVar, Union
 
 from pydantic import Protocol, root_validator
 from pydantic.fields import ModelField, Undefined
@@ -28,7 +28,7 @@ class Model(GenericModel, Generic[RootT]):
         validate_assignment = True
 
     @classmethod
-    def _get_default_value_from_model(cls, model: Type[Any]) -> Any:
+    def _get_default_value_from_model(cls, model: Type[RootT]) -> RootT:
         if isinstance(model, TypeVar):
             if model.__bound__ is None:  # noqa
                 raise TypeError('The TypeVar "{}" needs to be bound to a '.format(model.__name__)
@@ -41,10 +41,10 @@ class Model(GenericModel, Generic[RootT]):
         return origin_type()
 
     @classmethod
-    def _populate_root_field(cls, model: Type[Any]) -> None:
+    def _populate_root_field(cls, model: Type[RootT]) -> None:
         default_val = cls._get_default_value_from_model(model)
 
-        def get_default_val():
+        def get_default_val() -> RootT:
             return default_val
 
         if ROOT_KEY in cls.__config__.fields:
@@ -62,7 +62,7 @@ class Model(GenericModel, Generic[RootT]):
         cls.__fields__[ROOT_KEY] = data_field
         cls.__annotations__[ROOT_KEY] = model
 
-    def __class_getitem__(cls, model: Type[Any]) -> Type[Any]:
+    def __class_getitem__(cls, model: Union[Type[RootT], TypeVar]) -> Union[Type[RootT], TypeVar]:
         # TODO: change model type to params: Union[Type[Any], Tuple[Type[Any], ...]]
         #       as in GenericModel
 
@@ -87,7 +87,7 @@ class Model(GenericModel, Generic[RootT]):
             cls._print_warning_message()
         return super().__new__(cls)
 
-    def __init__(self, value=Undefined, /, **data: Any) -> None:
+    def __init__(self, value=Undefined, /, **data: RootT) -> None:
         if value is not Undefined:
             data[ROOT_KEY] = value
 
@@ -125,11 +125,11 @@ class Model(GenericModel, Generic[RootT]):
                 'which is itself wrapping the excellent Python package named `pydantic`.')
 
     @classmethod
-    def _parse_data(cls, data: Any) -> Any:
+    def _parse_data(cls, data: RootT) -> Any:
         return data
 
     @root_validator
-    def _parse_root_object(cls, root_obj: Any) -> Any:
+    def _parse_root_object(cls, root_obj: RootT) -> Any:  # noqa
         if ROOT_KEY not in root_obj:
             return root_obj
         else:
@@ -140,7 +140,7 @@ class Model(GenericModel, Generic[RootT]):
         return self.__dict__.get(ROOT_KEY)
 
     @contents.setter
-    def contents(self, value: Any) -> None:
+    def contents(self, value: RootT) -> None:
         super().__setattr__(ROOT_KEY, value)
 
     def to_data(self) -> Any:
@@ -160,7 +160,7 @@ class Model(GenericModel, Generic[RootT]):
         new_model = self.parse_raw(json_contents, proto=Protocol.json)
         self._set_contents_without_validation(new_model)
 
-    def _set_contents_without_validation(self, contents: Any) -> None:
+    def _set_contents_without_validation(self, contents: RootT) -> None:
         validate_assignment = self.__config__.validate_assignment
         self.__config__.validate_assignment = False
         self.contents = contents.contents
