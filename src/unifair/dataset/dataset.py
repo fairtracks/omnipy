@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import UserDict
 import json
 from typing import Any, Dict, Generic, Iterator, Tuple, Type, TypeVar, Union
@@ -196,6 +198,12 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     @staticmethod
     def _pretty_print_json(json_content: Any) -> str:
         return json.dumps(json_content, indent=4)
+
+    def refine(self) -> MultiModelDataset[ModelT]:
+        multi_model_dataset = MultiModelDataset[ModelT]()
+        for obj_type in self:
+            multi_model_dataset.data[obj_type] = self.data[obj_type]
+        return multi_model_dataset
 
 
 # TODO: Use json serializer package from the pydantic config instead of 'json'

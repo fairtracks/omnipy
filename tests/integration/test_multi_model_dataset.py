@@ -1,6 +1,6 @@
 from typing import Any, Dict, Generic, List, Tuple, Type, TypeVar, Union
 
-from pydantic import create_model, Extra, ValidationError
+from pydantic import BaseConfig, create_model, Extra, ValidationError
 import pytest
 
 from unifair.compute.flow import FlowTemplate
@@ -12,13 +12,18 @@ from unifair.engine.local import LocalRunner
 
 
 @pytest.fixture
-def RecordSchemaFactory():  # noqa
-    class RecordSchemaFactory(Model[Tuple[str, Dict[str, Type]]]):
+def RecordSchema():  # noqa
+    return Dict[str, Type]
+
+
+@pytest.fixture
+def RecordSchemaFactory(RecordSchema):  # noqa
+    class RecordSchemaFactory(Model[Tuple[str, RecordSchema]]):
         @classmethod
-        def _parse_data(cls, data: Tuple[str, Dict[str, Type]]) -> Type[Model]:
+        def _parse_data(cls, data: Tuple[str, RecordSchema]) -> Type[Model[RecordSchema]]:
             name, contents = data
 
-            class Config:
+            class Config(BaseConfig):
                 extra = Extra.forbid
 
             return Model[create_model(
@@ -148,7 +153,7 @@ def runtime_local_runner(runtime):
 
 
 @pytest.fixture
-def extract_record_model(runtime, RecordSchema, TableSchemaSerializer, GeneralTable):  # noqa
+def extract_record_model(runtime, RecordSchema, GeneralTable):  # noqa
     @runtime.task_template(serializer=PythonSerializer)
     def extract_record_model(table: GeneralTable) -> RecordSchema:
         record_model = {}
@@ -171,9 +176,10 @@ def apply_models_to_dataset(runtime, RecordSchema, GeneralTable, TableTemplate):
         serializer=CsvSerializer, extra_validators=(first_dataset_keys_in_all_datasets,))
     def apply_models_to_dataset(dataset: Dataset[GeneralTable],
                                 models: Dataset[RecordSchema]) -> MultiModelDataset[GeneralTable]:
-        for obj_type in dataset:
-            dataset.set_model(obj_type, models[obj_type])
-        return dataset
+        multi_model_dataset = dataset.refine()
+        for obj_type in multi_model_dataset.keys():
+            multi_model_dataset.set_model(obj_type, models[obj_type])
+        return multi_model_dataset
 
     return apply_models_to_dataset
 
