@@ -3,8 +3,8 @@ from typing import Dict, Generic, List, TypeVar
 from pydantic import PositiveInt, StrictInt, ValidationError
 import pytest
 
-from unifair.dataset.dataset import Dataset
-from unifair.dataset.model import Model
+from unifair.data.dataset import Dataset
+from unifair.data.model import Model
 
 
 def test_no_model():

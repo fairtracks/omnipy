@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
 
-from unifair.dataset.json import JsonDataset
-from unifair.dataset.pandas import PandasDataset
+from unifair.data.json import JsonDataset
+from unifair.data.pandas import PandasDataset
 from unifair.tasks.transform import convert_json_to_pandas
 
 

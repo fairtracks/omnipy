@@ -4,7 +4,7 @@ import tarfile
 from tarfile import TarInfo
 from typing import Any, Callable, Dict, IO, Union
 
-from unifair.dataset.dataset import Dataset
+from unifair.data.dataset import Dataset
 
 
 class Serializer(ABC):

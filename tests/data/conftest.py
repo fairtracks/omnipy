@@ -1,6 +1,6 @@
 import pytest
 
-from unifair.dataset.model import Model
+from unifair.data.model import Model
 
 
 @pytest.fixture

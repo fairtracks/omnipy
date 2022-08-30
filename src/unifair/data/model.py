@@ -120,7 +120,7 @@ class Model(GenericModel, Generic[RootT]):
 
     @classmethod
     def _get_standard_field_description(cls) -> str:
-        return ('This class represents a concrete model for dataset items in the `uniFAIR` Python '
+        return ('This class represents a concrete model for data items in the `uniFAIR` Python '
                 'package. It is a statically typed specialization of the Model class, '
                 'which is itself wrapping the excellent Python package named `pydantic`.')
 

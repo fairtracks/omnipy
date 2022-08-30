@@ -3,7 +3,7 @@ from typing import Dict, Generic, List, Tuple, TypeVar
 from pydantic import PositiveInt, StrictInt, ValidationError
 import pytest
 
-from unifair.dataset.model import Model
+from unifair.data.model import Model
 
 
 @pytest.mark.skip(reason="""
