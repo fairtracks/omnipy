@@ -192,7 +192,8 @@ def specialize_record_models_dag_flow(
         ),
         apply_models_to_dataset,
     )
-    def specialize_record_models(tables: Dataset[GeneralTable]) -> MultiModelDataset[GeneralTable]:
+    def specialize_record_models(
+            tables: Dataset[GeneralTable]) -> MultiModelDataset[GeneralTable]:  # noqa
         ...
 
     return specialize_record_models
