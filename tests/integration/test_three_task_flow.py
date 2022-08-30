@@ -95,9 +95,9 @@ def _common_test_run_three_task_flow(runtime: RuntimeConfig, pos_square_root: Fl
     if isinstance(f_pos_square_root, DagFlow):
         tasks = pos_square_root_new.tasks
         f_pos_square_root = f_pos_square_root.revise().refine(
-            tasks[0],
-            tasks[1],
-            tasks[2].refine(result_key='Positive square root'),
+            {
+                2: tasks[2].refine(result_key='Positive square root')
+            },
             fixed_params={
                 'text': 'answer'
             },
