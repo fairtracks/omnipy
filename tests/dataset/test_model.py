@@ -145,11 +145,9 @@ def test_load_data_no_conversion():
     assert model == StrictNumberModel(123)
 
 
-def test_invalid_models():
-    with pytest.raises(TypeError):
+def test_invalid_model():
 
-        class NoTypesModel(Model):
-            ...
+    with pytest.raises(TypeError):
 
         class DoubleTypesModel(Model[int, str]):  # noqa
             ...
@@ -235,7 +233,7 @@ def test_import_export_methods():
 
 
 def test_json_schema_generic_model_one_level():
-    ListT = TypeVar('ListT', bound=List)
+    ListT = TypeVar('ListT', bound=List)  # noqa
 
     class MyList(Model[ListT], Generic[ListT]):
         """My very interesting list model!"""
@@ -258,7 +256,7 @@ def test_json_schema_generic_model_one_level():
 
 
 def test_json_schema_generic_model_two_levels():
-    StrT = TypeVar('StrT', bound=str)
+    StrT = TypeVar('StrT', bound=str)  # noqa
 
     class MyListOfStrings(Model[List[StrT]], Generic[StrT]):
         """My very own list of strings!"""
@@ -294,7 +292,7 @@ Any workarounds should best be implemented in pydantic,
 possibly in uniFAIR if this becomes a real issue.
 """)
 def test_json_schema_generic_models_known_issue_1():
-    ListT = TypeVar('ListT', bound=List)
+    ListT = TypeVar('ListT', bound=List)  # noqa
 
     class MyList(Model[ListT], Generic[ListT]):
         """My very interesting list model!"""
