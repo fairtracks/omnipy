@@ -199,7 +199,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     def _pretty_print_json(json_content: Any) -> str:
         return json.dumps(json_content, indent=4)
 
-    def refine(self) -> MultiModelDataset[ModelT]:
+    def as_multi_model_dataset(self) -> MultiModelDataset[ModelT]:
         multi_model_dataset = MultiModelDataset[ModelT]()
         for obj_type in self:
             multi_model_dataset.data[obj_type] = self.data[obj_type]
