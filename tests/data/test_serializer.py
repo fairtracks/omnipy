@@ -1,12 +1,12 @@
 import sys
 from typing import Any, Dict, IO, Union
 
-from tests.dataset.util import _assert_tar_file_contents
-from unifair.dataset.dataset import Dataset
-from unifair.dataset.model import Model
-from unifair.dataset.serializer import (create_dataset_from_tarfile,
-                                        create_tarfile_from_dataset,
-                                        Serializer)
+from tests.data.util import _assert_tar_file_contents
+from unifair.data.dataset import Dataset
+from unifair.data.model import Model
+from unifair.data.serializer import (create_dataset_from_tarfile,
+                                     create_tarfile_from_dataset,
+                                     Serializer)
 
 
 class NumberDataset(Dataset[Model[int]]):

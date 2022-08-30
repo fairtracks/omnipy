@@ -3,7 +3,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from unifair.dataset.json import JsonDataset, JsonDatasetToTarFileSerializer
+from unifair.data.json import JsonDataset, JsonDatasetToTarFileSerializer
 
 
 def mock_task() -> JsonDataset:

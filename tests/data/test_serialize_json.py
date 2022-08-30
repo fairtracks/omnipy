@@ -1,5 +1,5 @@
-from tests.dataset.util import _assert_tar_file_contents
-from unifair.dataset.json import JsonDataset, JsonDatasetToTarFileSerializer
+from tests.data.util import _assert_tar_file_contents
+from unifair.data.json import JsonDataset, JsonDatasetToTarFileSerializer
 
 
 def test_json_dataset_serializer_to_tar_file():

@@ -3,9 +3,9 @@ from typing import Any, Dict, IO, Iterable, Union
 
 import pandas as pd
 
-from unifair.dataset.dataset import Dataset
-from unifair.dataset.model import Model, ROOT_KEY
-from unifair.dataset.serializer import create_dataset_from_tarfile, create_tarfile_from_dataset
+from unifair.data.dataset import Dataset
+from unifair.data.model import Model, ROOT_KEY
+from unifair.data.serializer import create_dataset_from_tarfile, create_tarfile_from_dataset
 
 
 class PandasModel(Model[pd.DataFrame]):

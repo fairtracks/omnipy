@@ -5,9 +5,9 @@ import pytest
 
 from unifair.compute.flow import FlowTemplate
 from unifair.config.runtime import RuntimeConfig
-from unifair.dataset.dataset import Dataset, MultiModelDataset
-from unifair.dataset.model import Model
-from unifair.dataset.serializer import CsvSerializer, PythonSerializer
+from unifair.data.dataset import Dataset, MultiModelDataset
+from unifair.data.model import Model
+from unifair.data.serializer import CsvSerializer, PythonSerializer
 from unifair.engine.local import LocalRunner
 
 
@@ -192,7 +192,7 @@ def specialize_record_models_dag_flow(
         apply_models_to_dataset):
     @runtime.dag_flow_template(
         extract_record_model.refine(
-            param_key_map={'dataset', 'tables'},
+            param_key_map={'data', 'tables'},
             result_key='models',
             iterate_over_dataset=True,
         ),

@@ -1,11 +1,11 @@
 import json
 from typing import Dict, IO, List, Union
 
-from unifair.dataset.dataset import Dataset
-from unifair.dataset.model import Model
-from unifair.dataset.serializer import (create_dataset_from_tarfile,
-                                        create_tarfile_from_dataset,
-                                        Serializer)
+from unifair.data.dataset import Dataset
+from unifair.data.model import Model
+from unifair.data.serializer import (create_dataset_from_tarfile,
+                                     create_tarfile_from_dataset,
+                                     Serializer)
 
 
 class JsonDatasetModel(Model[List[Dict[str, Union[int, float, Dict, List, str]]]]):

@@ -7,7 +7,7 @@ from typing import Any, Dict, Generic, Iterator, Tuple, Type, TypeVar, Union
 from pydantic import Field, PrivateAttr, ValidationError
 from pydantic.generics import GenericModel
 
-from unifair.dataset.model import Model
+from unifair.data.model import Model
 
 ModelT = TypeVar('ModelT')
 Undefined = object()
@@ -107,7 +107,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     @classmethod
     def _get_standard_field_description(cls) -> str:
-        return ('This class represents a dataset in the `uniFAIR` Python package and contains '
+        return ('This class represents a data in the `uniFAIR` Python package and contains '
                 'a set of named data items that follows the same data model. '
                 'It is a statically typed specialization of the Dataset class according to a '
                 'particular specialization of the Model class. Both main classes are wrapping '

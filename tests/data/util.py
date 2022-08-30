@@ -4,7 +4,7 @@ from typing import Any, Callable
 
 import pandas as pd
 
-from unifair.dataset.pandas import PandasDataset
+from unifair.data.pandas import PandasDataset
 
 
 def _assert_tar_file_contents(tarfile_bytes: bytes,
