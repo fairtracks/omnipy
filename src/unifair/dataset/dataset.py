@@ -222,24 +222,18 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
         else:
             return self._get_model_class()
 
-    def __setitem__(self, obj_type: str, data_obj: Any) -> None:
-        super().__setitem__(obj_type, data_obj)
-
-    def __delitem__(self, obj_type: str) -> None:
-        super().__delitem__(obj_type)
-
     def _validate(self, obj_type: str) -> None:
         if obj_type in self._custom_field_models:
             model = self._custom_field_models[obj_type]
             if not isinstance(model, Model):
                 model = Model[model]
-            obj_data = self._to_data_if_model(self.data[obj_type])
-            parsed_data = self._to_data_if_model(model(obj_data))
+            data_obj = self._to_data_if_model(self.data[obj_type])
+            parsed_data = self._to_data_if_model(model(data_obj))
             self.data[obj_type] = parsed_data
         super()._validate(obj_type)  # validates all data according to ModelT
 
     @staticmethod
-    def _to_data_if_model(obj_data):
-        if isinstance(obj_data, Model):
-            obj_data = obj_data.to_data()
-        return obj_data
+    def _to_data_if_model(data_obj: Any):
+        if isinstance(data_obj, Model):
+            data_obj = data_obj.to_data()
+        return data_obj
