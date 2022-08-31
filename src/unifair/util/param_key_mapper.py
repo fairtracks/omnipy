@@ -3,8 +3,8 @@ from typing import Any, Dict
 
 class ParamKeyMapper:
     def __init__(self, key_map: Dict[str, str]):
-        self.key_map = key_map
-        self._inverse_key_map = {val: key for key, val in key_map.items()}
+        self.key_map = dict(key_map)
+        self._inverse_key_map = {val: key for key, val in self.key_map.items()}
 
         if len(self.key_map) != len(self._inverse_key_map):
             raise ValueError('Some values were dropped when translating to the inverse key_map!')

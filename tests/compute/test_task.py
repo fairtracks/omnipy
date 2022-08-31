@@ -96,11 +96,8 @@ def test_name(power_func):
     with pytest.raises(ValueError):
         TaskTemplate(power_func, name='')
 
-    power_template = TaskTemplate(power_func, name=123)
-    assert power_template.name == '123'
-
-    power = power_template.apply()
-    assert power.name == '123'
+    with pytest.raises(TypeError):
+        TaskTemplate(power_func, name=123)  # noqa
 
 
 def test_task_result_key(power_func):
@@ -121,12 +118,8 @@ def test_task_result_key(power_func):
     with pytest.raises(ValueError):
         TaskTemplate(power_func, result_key='')
 
-    power_template = TaskTemplate(power_func, result_key=123)
-    assert power_template.result_key == '123'
-
-    power = power_template.apply()
-    assert power.result_key == '123'
-    assert power(4, 2) == {'123': 15}
+    with pytest.raises(TypeError):
+        power_template = TaskTemplate(power_func, result_key=123)  # noqa
 
 
 def test_task_param_key_map(power_func):
