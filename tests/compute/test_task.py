@@ -51,7 +51,7 @@ def power_func():
 def test_runtime_task_parameters(power_func):
     power_template = TaskTemplate(power_func)
     with pytest.raises(TypeError):
-        power_template()
+        power_template()  # noqa
 
     power = power_template.apply()
 
@@ -228,7 +228,7 @@ def _assert_config_properties_immutable(task_obj: Union[TaskTemplate, Task]):
         task_obj.param_signatures = {}  # noqa
 
     with pytest.raises(TypeError):
-        task_obj.param_signatures['new'] = Parameter(
+        task_obj.param_signatures['new'] = Parameter(  # noqa
             'new', Parameter.POSITIONAL_OR_KEYWORD, annotation=bool)
 
     with pytest.raises(AttributeError):
@@ -241,7 +241,7 @@ def _assert_config_properties_immutable(task_obj: Union[TaskTemplate, Task]):
         task_obj.param_key_map = {'text': 'title'}
 
     with pytest.raises(TypeError):
-        task_obj.param_key_map['text'] = 'title'
+        task_obj.param_key_map['text'] = 'title'  # noqa
 
     with pytest.raises(AttributeError):
         task_obj.result_key = 'cool_func'
@@ -250,7 +250,7 @@ def _assert_config_properties_immutable(task_obj: Union[TaskTemplate, Task]):
         task_obj.fixed_params = {'title': 'Integer'}
 
     with pytest.raises(TypeError):
-        task_obj.fixed_params['title'] = 'Integer'
+        task_obj.fixed_params['title'] = 'Integer'  # noqa
 
 
 def test_task_properties_immutable(simple_func):
@@ -403,7 +403,6 @@ def test_revise_refine_task_template_with_fixed_params_and_config_change(power_f
     assert power_reset.fixed_params == {}
 
 
-# TODO: test that different TaskTemplates and Tasks do not edit same dicts
 def test_no_shared_dicts(power_func):
     square_template = TaskTemplate(
         power_func,
