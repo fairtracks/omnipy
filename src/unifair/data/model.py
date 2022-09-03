@@ -1,5 +1,6 @@
 import json
-from typing import Any, Generic, get_origin, Type, TypeVar, Union
+from types import NoneType
+from typing import Any, Generic, get_args, get_origin, Type, TypeVar, Union
 
 from pydantic import Protocol, root_validator
 from pydantic.fields import ModelField, Undefined
@@ -36,8 +37,21 @@ class Model(GenericModel, Generic[RootT]):
             else:
                 model = model.__bound__  # noqa
         origin_type = get_origin(model)
-        if origin_type is None:
+        args = get_args(model)
+
+        if origin_type in (None, ()):
             origin_type = model
+
+        if origin_type is Union:
+            if NoneType in args:
+                return None
+            for arg in args:
+                if callable(arg):
+                    return cls._get_default_value_from_model(arg)
+        elif origin_type is tuple:
+            if args and Ellipsis not in args:
+                return tuple(cls._get_default_value_from_model(arg) for arg in args)
+
         return origin_type()
 
     @classmethod
@@ -196,7 +210,3 @@ class Model(GenericModel, Generic[RootT]):
                 contents_prop.__set__(self, value)
             else:
                 raise RuntimeError('Model does not allow setting of extra attributes')
-
-
-# TODO: Add tests and code for determine default values for generics in types package
-#       (e.g. Tuple, Union, None, Any, Optional,...)
