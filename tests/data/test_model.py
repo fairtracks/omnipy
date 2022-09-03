@@ -1,4 +1,5 @@
-from typing import Dict, Generic, List, Tuple, TypeVar
+from types import NoneType
+from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
 from pydantic import PositiveInt, StrictInt, ValidationError
 import pytest
@@ -151,6 +152,168 @@ def test_invalid_model():
 
         class DoubleTypesModel(Model[int, str]):  # noqa
             ...
+
+
+def test_tuple_of_anything():
+    class TupleModel(Model[Tuple]):
+        ...
+
+    assert TupleModel().to_data() == ()
+    assert TupleModel((1, 's', True)).to_data() == (1, 's', True)
+    with pytest.raises(ValidationError):
+        TupleModel(1)
+
+
+def test_tuple_of_single_type():
+    class TupleModel(Model[Tuple[int]]):
+        ...
+
+    assert TupleModel().to_data() == (0,)
+    with pytest.raises(ValidationError):
+        TupleModel(1)
+
+    with pytest.raises(ValidationError):
+        TupleModel((1, 2, 3))
+
+    with pytest.raises(ValidationError):
+        TupleModel((1, 's', True))
+
+
+def test_tuple_of_single_type_repeated():
+    class TupleModel(Model[Tuple[int, ...]]):
+        ...
+
+    assert TupleModel().to_data() == ()
+    assert TupleModel((1, 2, 3)).to_data() == (1, 2, 3)
+    with pytest.raises(ValidationError):
+        TupleModel(1)
+
+    with pytest.raises(ValidationError):
+        TupleModel((1, 's', True))
+
+
+def test_fixed_tuple_of_different_types():
+    class TupleModel(Model[Tuple[int, str]]):
+        ...
+
+    assert TupleModel().to_data() == (0, '')
+    assert TupleModel((123, 'abc')).to_data() == (123, 'abc')
+    assert TupleModel(('123', 123)).to_data() == (123, '123')
+
+    with pytest.raises(ValidationError):
+        TupleModel(1)
+
+    with pytest.raises(ValidationError):
+        TupleModel((1, 2, 3))
+
+    with pytest.raises(ValidationError):
+        TupleModel((1, 's', True))
+
+
+def test_basic_union():
+    # Note: Python 3.10 introduced a shorthand form for Union[TypeA, TypeB]:
+    #
+    #   TypeA | TypeB
+    #
+    # The requirements for unifair is currently Python 3.8, so the shorthand should
+    # currently be avoided.
+    #
+    # TODO: Consider whether uniFAIR should require Python 3.9 or 3.10 as type-related
+    #       notation and functionality is undergoing large changes. Another example is
+    #       the move towards lowercase int, list, dict instead of Int, List, Dict in
+    #       Python 3.9. Another possibility is to use
+    #       "from __future__ import annotations", which is already used a few places.
+    #       Consider also versions requirements for pydantic and mypy (as well as
+    #       prefect)
+    class UnionModel(Model[Union[int, str, List]]):
+        ...
+
+    assert UnionModel(15).to_data() == 15
+    assert UnionModel('abc').to_data() == 'abc'
+    assert UnionModel([]).to_data() == []
+
+
+@pytest.mark.skip(reason="""
+Known issue due to bug in pydantic (https://github.com/pydantic/pydantic/issues/4474). 
+The main functionality tested is working, but the test revealed a bug in pydantic
+where the first initiation of Model with a Union of float and int is cached by 
+pydantic and defines the order of the second initiation (even though the order of
+int and float is the opposite. Works when split into individual tests.
+""")
+def test_union_default_value_from_first_type_known_issue():
+    class IntFirstUnionModel(Model[Union[int, str]]):
+        ...
+
+    assert IntFirstUnionModel().to_data() == 0
+
+    class StrFirstUnionModel(Model[Union[str, int]]):
+        ...
+
+    assert StrFirstUnionModel().to_data() == ''
+
+    with pytest.raises(TypeError):
+
+        class FirstTypeNotCallableUnionModel(Model[Union[Any, str]]):
+            ...
+
+
+def test_union_default_value_if_any_none():
+    class NoneFirstUnionModel(Model[Union[None, str]]):
+        ...
+
+    assert NoneFirstUnionModel().to_data() is None
+
+    class NoneSecondUnionModel(Model[Union[str, None]]):
+        ...
+
+    assert NoneFirstUnionModel().to_data() is None
+
+
+def test_optional():
+    class OptionalIntModel(Model[Optional[int]]):
+        ...
+
+    assert OptionalIntModel().to_data() is None
+    assert OptionalIntModel(None).to_data() is None
+    assert OptionalIntModel(13).to_data() == 13
+    assert OptionalIntModel('12').to_data() == 12
+
+    with pytest.raises(ValidationError):
+        OptionalIntModel([None])
+
+    with pytest.raises(ValidationError):
+        OptionalIntModel('None')
+
+
+def test_nested_union_default_value():
+    class NestedUnion(Model[Union[Union[str, int], float]]):
+        ...
+
+    assert NestedUnion().to_data() == ''
+
+    class NestedUnionWithOptional(Model[Union[Union[Optional[str], int], float]]):
+        ...
+
+    assert NestedUnionWithOptional().to_data() is None
+
+    class NestedUnionWithSingleTypeTuple(Model[Union[Union[Tuple[str], int], float]]):
+        ...
+
+    assert NestedUnionWithSingleTypeTuple().to_data() == ('',)
+
+
+def test_nonetype():
+    class NoneModel(Model[NoneType]):
+        ...
+
+    assert NoneModel().to_data() is None
+    assert NoneModel(None).to_data() is None
+
+    with pytest.raises(ValidationError):
+        NoneModel(13)
+
+    with pytest.raises(ValidationError):
+        NoneModel('None')
 
 
 def test_import_export_methods():
