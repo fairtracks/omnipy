@@ -257,6 +257,57 @@ def test_union_default_value_from_first_type_known_issue():
             ...
 
 
+@pytest.mark.skip(reason="""
+Fails due to the same pydantic bug as in 'test_union_default_value_from_first_type'
+(https://github.com/pydantic/pydantic/issues/4474). Works when split into individual tests.
+""")
+def test_parsing_independent_on_union_type_order_known_issue():
+    class FloatIntUnionModel(Model[Union[float, int]]):
+        ...
+
+    assert FloatIntUnionModel(2.0).to_data() == 2.0
+    assert type(FloatIntUnionModel(2.0).to_data()) == float
+
+    assert FloatIntUnionModel(15).to_data() == 15
+    assert type(FloatIntUnionModel(15).to_data()) == int
+
+    assert FloatIntUnionModel('2.0').to_data() == 2.0
+    assert type(FloatIntUnionModel('2.0').to_data()) == float
+
+    assert FloatIntUnionModel('15').to_data() == 15.0
+    assert type(FloatIntUnionModel('15').to_data()) == float
+
+    class IntFloatUnionModel(Model[Union[int, float]]):
+        ...
+
+    assert IntFloatUnionModel(2.0).to_data() == 2.0
+    assert type(IntFloatUnionModel(2.0).to_data()) == float
+
+    assert IntFloatUnionModel(15).to_data() == 15
+    assert type(IntFloatUnionModel(15).to_data()) == int
+
+    assert IntFloatUnionModel('2.0').to_data() == 2.0
+    assert type(IntFloatUnionModel('2.0').to_data()) == float
+
+    assert IntFloatUnionModel('15').to_data() == 15
+    assert type(IntFloatUnionModel('15').to_data()) == int
+
+    class FloatIntStrUnionModel(Model[Union[float, int, str]]):
+        ...
+
+    assert FloatIntStrUnionModel(2.0).to_data() == 2.0
+    assert type(FloatIntStrUnionModel(2.0).to_data()) == float
+
+    assert FloatIntStrUnionModel(15).to_data() == 15
+    assert type(FloatIntStrUnionModel(15).to_data()) == int
+
+    assert FloatIntStrUnionModel('2.0').to_data() == '2.0'
+    assert type(FloatIntStrUnionModel('2.0').to_data()) == str
+
+    assert FloatIntStrUnionModel('15').to_data() == '15'
+    assert type(FloatIntStrUnionModel('15').to_data()) == str
+
+
 def test_union_default_value_if_any_none():
     class NoneFirstUnionModel(Model[Union[None, str]]):
         ...

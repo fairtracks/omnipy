@@ -27,6 +27,7 @@ class Model(GenericModel, Generic[RootT]):
         arbitrary_types_allowed = True
         validate_all = True
         validate_assignment = True
+        smart_union = True
 
     @classmethod
     def _get_default_value_from_model(cls, model: Type[RootT]) -> RootT:

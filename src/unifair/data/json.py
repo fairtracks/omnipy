@@ -8,7 +8,7 @@ from unifair.data.serializer import (create_dataset_from_tarfile,
                                      Serializer)
 
 
-class JsonDatasetModel(Model[List[Dict[str, Union[int, float, Dict, List, str]]]]):
+class JsonDatasetModel(Model[List[Dict[str, Union[int, float, List, Dict, str]]]]):
     ...
 
     @classmethod
