@@ -12,7 +12,7 @@ This test needs to be run as the first test in the test suite in order
 not to fail. This is cumbersome. More importantly, it implies that the
 functionality is not working correctly. However, it is not meant to work.
 Thus, this test is here for documentation purposes only. """)
-def test_no_model():
+def test_no_model_known_issue():
     # Note:
     #
     # No model specified defaults to Model[str], but in a highly unstable state that only
@@ -43,10 +43,10 @@ def test_init_and_data():
     class StrModel(Model[str]):
         ...
 
-    number_model = StrModel()
-    assert (isinstance(number_model, StrModel))
-    assert (isinstance(number_model, Model))
-    assert (number_model.__class__.__name__ == StrModel.__name__)
+    str_model = StrModel()
+    assert (isinstance(str_model, StrModel))
+    assert (isinstance(str_model, Model))
+    assert (str_model.__class__.__name__ == StrModel.__name__)
 
     assert Model[int]().to_data() == 0
     assert Model[str]().to_data() == ''
@@ -56,7 +56,7 @@ def test_init_and_data():
     assert Model[int](12).to_data() == 12
     assert Model[str]('test').to_data() == 'test'
     assert Model[Dict]({'a': 2}).to_data() == {'a': 2}
-    assert Model[List]([2, 4, 'b']).to_data() == [2, 4, 'b']
+    assert Model[List]([2, 4, 'b', {}]).to_data() == [2, 4, 'b', {}]
 
 
 def test_load():
@@ -146,7 +146,7 @@ def test_load_data_no_conversion():
     assert model == StrictNumberModel(123)
 
 
-def test_invalid_model():
+def test_error_invalid_model():
 
     with pytest.raises(TypeError):
 
@@ -505,7 +505,7 @@ is not available from MyListOfStrings to_json_schema method.
 Any workarounds should best be implemented in pydantic,
 possibly in uniFAIR if this becomes a real issue.
 """)
-def test_json_schema_generic_models_known_issue_1():
+def test_json_schema_generic_models_known_issue():
     ListT = TypeVar('ListT', bound=List)  # noqa
 
     class MyList(Model[ListT], Generic[ListT]):
