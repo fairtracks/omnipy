@@ -41,137 +41,137 @@ def test_simple_task_run_in_default_state(simple_func):
 
 
 @pytest.fixture
-def power_func():
-    def power_func(number: int, exponent: int, minus_one: bool = True) -> int:
+def power_m1_func():
+    def power_m1_func(number: int, exponent: int, minus_one: bool = True) -> int:
         return number**exponent - (1 if minus_one else 0)
 
-    return power_func
+    return power_m1_func
 
 
-def test_runtime_task_parameters(power_func):
-    power_template = TaskTemplate(power_func)
+def test_runtime_task_parameters(power_m1_func):
+    power_m1_template = TaskTemplate(power_m1_func)
     with pytest.raises(TypeError):
-        power_template()  # noqa
+        power_m1_template()  # noqa
 
-    power = power_template.apply()
+    power_m1 = power_m1_template.apply()
 
-    assert power(4, 3) == 63
-    assert 'exponent' not in power.fixed_params
-    assert 'minus_one' not in power.fixed_params
+    assert power_m1(4, 3) == 63
+    assert 'exponent' not in power_m1.fixed_params
+    assert 'minus_one' not in power_m1.fixed_params
 
-    assert power(4, 3, False) == 64
-    assert 'minus_one' not in power.fixed_params
+    assert power_m1(4, 3, False) == 64
+    assert 'minus_one' not in power_m1.fixed_params
 
-    assert power(number=5, exponent=2) == 24
-    assert 'number' not in power.fixed_params
-    assert 'exponent' not in power.fixed_params
+    assert power_m1(number=5, exponent=2) == 24
+    assert 'number' not in power_m1.fixed_params
+    assert 'exponent' not in power_m1.fixed_params
 
 
-def test_error_missing_runtime_task_parameters(power_func):
-    power = TaskTemplate(power_func).apply()
-
-    with pytest.raises(TypeError):
-        power()
+def test_error_missing_runtime_task_parameters(power_m1_func):
+    power_m1 = TaskTemplate(power_m1_func).apply()
 
     with pytest.raises(TypeError):
-        power(5)
+        power_m1()
 
     with pytest.raises(TypeError):
-        power(4, minus_one=False)
+        power_m1(5)
+
+    with pytest.raises(TypeError):
+        power_m1(4, minus_one=False)
 
 
-def test_name(power_func):
-    power_template = TaskTemplate(power_func, name=None)
-    assert power_template.name == 'power_func'
+def test_name(power_m1_func):
+    power_m1_template = TaskTemplate(power_m1_func, name=None)
+    assert power_m1_template.name == 'power_m1_func'
 
-    power = power_template.apply()
-    assert power.name == 'power_func'
+    power_m1 = power_m1_template.apply()
+    assert power_m1.name == 'power_m1_func'
 
-    power_template = TaskTemplate(power_func, name='power')
-    assert power_template.name == 'power'
+    power_m1_template = TaskTemplate(power_m1_func, name='power_m1')
+    assert power_m1_template.name == 'power_m1'
 
-    power = power_template.apply()
-    assert power.name == 'power'
+    power_m1 = power_m1_template.apply()
+    assert power_m1.name == 'power_m1'
 
     with pytest.raises(ValueError):
-        TaskTemplate(power_func, name='')
+        TaskTemplate(power_m1_func, name='')
 
     with pytest.raises(TypeError):
-        TaskTemplate(power_func, name=123)  # noqa
+        TaskTemplate(power_m1_func, name=123)  # noqa
 
 
-def test_task_result_key(power_func):
-    power_template = TaskTemplate(power_func, result_key=None)
-    assert power_template.result_key is None
+def test_task_result_key(power_m1_func):
+    power_m1_template = TaskTemplate(power_m1_func, result_key=None)
+    assert power_m1_template.result_key is None
 
-    power = power_template.apply()
-    assert power.result_key is None
-    assert power(4, 2) == 15
+    power_m1 = power_m1_template.apply()
+    assert power_m1.result_key is None
+    assert power_m1(4, 2) == 15
 
-    power_template = TaskTemplate(power_func, result_key='power')
-    assert power_template.result_key == 'power'
+    power_m1_template = TaskTemplate(power_m1_func, result_key='power_m1')
+    assert power_m1_template.result_key == 'power_m1'
 
-    power = power_template.apply()
-    assert power.result_key == 'power'
-    assert power(4, 2) == {'power': 15}
+    power_m1 = power_m1_template.apply()
+    assert power_m1.result_key == 'power_m1'
+    assert power_m1(4, 2) == {'power_m1': 15}
 
     with pytest.raises(ValueError):
-        TaskTemplate(power_func, result_key='')
+        TaskTemplate(power_m1_func, result_key='')
 
     with pytest.raises(TypeError):
-        power_template = TaskTemplate(power_func, result_key=123)  # noqa
+        power_m1_template = TaskTemplate(power_m1_func, result_key=123)  # noqa
 
 
-def test_task_param_key_map(power_func):
-    power_template = TaskTemplate(
-        power_func, param_key_map=dict(
+def test_task_param_key_map(power_m1_func):
+    power_m1_template = TaskTemplate(
+        power_m1_func, param_key_map=dict(
             number='n',
             exponent='e',
             minus_one='m',
         ))
 
-    assert power_template.param_key_map == {'number': 'n', 'exponent': 'e', 'minus_one': 'm'}
+    assert power_m1_template.param_key_map == {'number': 'n', 'exponent': 'e', 'minus_one': 'm'}
 
-    power = power_template.apply()
-    assert power.param_key_map == dict(number='n', exponent='e', minus_one='m')
+    power_m1 = power_m1_template.apply()
+    assert power_m1.param_key_map == dict(number='n', exponent='e', minus_one='m')
 
-    assert power(n=4, e=2) == 15
+    assert power_m1(n=4, e=2) == 15
 
     with pytest.raises(TypeError):
-        power(number=4, exponent=2)
+        power_m1(number=4, exponent=2)
 
-    power_template = TaskTemplate(
-        power_func, param_key_map=[('number', 'n'), ('exponent', 'e')])  # noqa
-    assert power_template.param_key_map == {'number': 'n', 'exponent': 'e'}
+    power_m1_template = TaskTemplate(
+        power_m1_func, param_key_map=[('number', 'n'), ('exponent', 'e')])  # noqa
+    assert power_m1_template.param_key_map == {'number': 'n', 'exponent': 'e'}
 
     with pytest.raises(ValueError):
-        TaskTemplate(power_func, param_key_map={'number': 'n', 'exponent': 'n'})
+        TaskTemplate(power_m1_func, param_key_map={'number': 'n', 'exponent': 'n'})
 
-    power_template = TaskTemplate(power_func, param_key_map={'number': 'n'})  # noqa
-    assert power_template.param_key_map == {'number': 'n'}
+    power_m1_template = TaskTemplate(power_m1_func, param_key_map={'number': 'n'})  # noqa
+    assert power_m1_template.param_key_map == {'number': 'n'}
 
-    power = power_template.apply()
-    assert power.param_key_map == {'number': 'n'}
+    power_m1 = power_m1_template.apply()
+    assert power_m1.param_key_map == {'number': 'n'}
 
-    assert power(n=3, exponent=2) == 8
+    assert power_m1(n=3, exponent=2) == 8
 
-    power_template = TaskTemplate(power_func, param_key_map=None)  # noqa
-    assert power_template.param_key_map == {}
+    power_m1_template = TaskTemplate(power_m1_func, param_key_map=None)  # noqa
+    assert power_m1_template.param_key_map == {}
 
-    power_template = TaskTemplate(power_func, param_key_map={})  # noqa
-    assert power_template.param_key_map == {}
+    power_m1_template = TaskTemplate(power_m1_func, param_key_map={})  # noqa
+    assert power_m1_template.param_key_map == {}
 
-    power_template = TaskTemplate(power_func, param_key_map=[])  # noqa
-    assert power_template.param_key_map == {}
+    power_m1_template = TaskTemplate(power_m1_func, param_key_map=[])  # noqa
+    assert power_m1_template.param_key_map == {}
 
-    power = power_template.apply()
-    assert power.param_key_map == {}
+    power_m1 = power_m1_template.apply()
+    assert power_m1.param_key_map == {}
 
-    assert power(number=3, exponent=2) == 8
+    assert power_m1(number=3, exponent=2) == 8
 
 
-def test_fixed_task_parameters(power_func):
-    square_template = TaskTemplate(power_func, fixed_params=dict(exponent=2, minus_one=False))
+def test_fixed_task_parameters(power_m1_func):
+    square_template = TaskTemplate(power_m1_func, fixed_params=dict(exponent=2, minus_one=False))
     square = square_template.apply()
     assert square(4) == 16
     assert square.fixed_params['exponent'] == 2
@@ -179,30 +179,31 @@ def test_fixed_task_parameters(power_func):
 
     assert square(number=5) == 25
 
-    seven_template = TaskTemplate(power_func, fixed_params=[('number', 2), ('exponent', 3)])  # noqa
+    seven_template = TaskTemplate(
+        power_m1_func, fixed_params=[('number', 2), ('exponent', 3)])  # noqa
     seven = seven_template.apply()
 
     assert seven() == 7
     assert seven_template.fixed_params == {'number': 2, 'exponent': 3}
     assert seven.fixed_params == {'number': 2, 'exponent': 3}
 
-    power_template = TaskTemplate(power_func, fixed_params=None)  # noqa
-    assert power_template.fixed_params == {}
+    power_m1_template = TaskTemplate(power_m1_func, fixed_params=None)  # noqa
+    assert power_m1_template.fixed_params == {}
 
-    power_template = TaskTemplate(power_func, fixed_params={})
-    assert power_template.fixed_params == {}
+    power_m1_template = TaskTemplate(power_m1_func, fixed_params={})
+    assert power_m1_template.fixed_params == {}
 
-    power_template = TaskTemplate(power_func, fixed_params=[])  # noqa
-    assert power_template.fixed_params == {}
+    power_m1_template = TaskTemplate(power_m1_func, fixed_params=[])  # noqa
+    assert power_m1_template.fixed_params == {}
 
-    power = power_template.apply()
-    assert power.param_key_map == {}
+    power_m1 = power_m1_template.apply()
+    assert power_m1.param_key_map == {}
 
-    assert power(number=2, exponent=3) == 7
+    assert power_m1(number=2, exponent=3) == 7
 
 
-def test_error_missing_or_duplicate_runtime_task_params_with_fixed(power_func):
-    square = TaskTemplate(power_func, fixed_params=dict(exponent=2, minus_one=False)).apply()
+def test_error_missing_or_duplicate_runtime_task_params_with_fixed(power_m1_func):
+    square = TaskTemplate(power_m1_func, fixed_params=dict(exponent=2, minus_one=False)).apply()
 
     with pytest.raises(TypeError):
         square()
@@ -214,11 +215,11 @@ def test_error_missing_or_duplicate_runtime_task_params_with_fixed(power_func):
         square(4, minus_one=False)
 
 
-def test_error_fixed_param_not_in_func_signature(power_func):
+def test_error_fixed_param_not_in_func_signature(power_m1_func):
     with pytest.raises(KeyError):
-        TaskTemplate(power_func, fixed_params=dict(engine='hyperdrive'))
+        TaskTemplate(power_m1_func, fixed_params=dict(engine='hyperdrive'))
 
-    task_template = TaskTemplate(power_func)
+    task_template = TaskTemplate(power_m1_func)
 
     assert 'engine' not in task_template.fixed_params
 
@@ -261,13 +262,13 @@ def test_task_properties_immutable(simple_func):
     _assert_config_properties_immutable(task)
 
 
-def test_refine_task_template_with_fixed_params(power_func):
-    power_template = TaskTemplate(power_func)
-    power = power_template.apply()
+def test_refine_task_template_with_fixed_params(power_m1_func):
+    power_m1_template = TaskTemplate(power_m1_func)
+    power_m1 = power_m1_template.apply()
 
-    assert power(4, 2) == 15
+    assert power_m1(4, 2) == 15
 
-    square_template = power_template.refine(fixed_params=dict(exponent=2, minus_one=False))
+    square_template = power_m1_template.refine(fixed_params=dict(exponent=2, minus_one=False))
     assert square_template.fixed_params == dict(exponent=2, minus_one=False)
 
     square = square_template.apply()
@@ -291,80 +292,80 @@ def test_refine_task_template_with_fixed_params(power_func):
     assert hypercube.fixed_params.get('minus_one') is None
     assert hypercube(3) == 80
 
-    reset_power_template = hypercube_template.refine(fixed_params={})
-    assert reset_power_template.fixed_params == dict(exponent=4)
+    reset_power_m1_template = hypercube_template.refine(fixed_params={})
+    assert reset_power_m1_template.fixed_params == dict(exponent=4)
 
-    reset_power_template = hypercube_template.refine(fixed_params={}, update=False)
-    assert reset_power_template.fixed_params == {}
+    reset_power_m1_template = hypercube_template.refine(fixed_params={}, update=False)
+    assert reset_power_m1_template.fixed_params == {}
 
-    reset_power_template = hypercube_template.refine(fixed_params=[], update=False)  # noqa
-    assert reset_power_template.fixed_params == {}
+    reset_power_m1_template = hypercube_template.refine(fixed_params=[], update=False)  # noqa
+    assert reset_power_m1_template.fixed_params == {}
 
-    reset_power_template = hypercube_template.refine(fixed_params=None, update=False)  # noqa
-    assert reset_power_template.fixed_params == {}
+    reset_power_m1_template = hypercube_template.refine(fixed_params=None, update=False)  # noqa
+    assert reset_power_m1_template.fixed_params == {}
 
-    reset_power = reset_power_template.apply()
+    reset_power = reset_power_m1_template.apply()
 
     assert reset_power.fixed_params.get('minus_one') is None
     assert reset_power(4, 2) == 15
 
 
-def test_refine_task_template_with_config_change(power_func):
-    power_template = TaskTemplate(power_func)
-    power = power_template.apply()
+def test_refine_task_template_with_config_change(power_m1_func):
+    power_m1_template = TaskTemplate(power_m1_func)
+    power_m1 = power_m1_template.apply()
 
-    assert power(4, 2) == 15
+    assert power_m1(4, 2) == 15
 
-    my_power_template = power_template.refine(
-        name='my_power',
+    my_power_m1_template = power_m1_template.refine(
+        name='my_power_m1',
         param_key_map=dict(number='num', exponent='exp'),
         result_key='my_power_result',
     )
-    my_power = my_power_template.apply()
+    my_power_m1 = my_power_m1_template.apply()
 
-    assert my_power(num=3, exp=3) == {'my_power_result': 26}
-    assert my_power.name == 'my_power'
-    assert my_power.param_key_map == dict(number='num', exponent='exp')
-    assert my_power.result_key == 'my_power_result'
+    assert my_power_m1(num=3, exp=3) == {'my_power_result': 26}
+    assert my_power_m1.name == 'my_power_m1'
+    assert my_power_m1.param_key_map == dict(number='num', exponent='exp')
+    assert my_power_m1.result_key == 'my_power_result'
 
-    my_power_template = my_power_template.refine(
+    my_power_m1_template = my_power_m1_template.refine(
         param_key_map=[('exponent', 'expo'), ('minus_one', 'min')],)  # noqa
-    my_power = my_power_template.apply()
+    my_power_m1 = my_power_m1_template.apply()
 
-    assert my_power(num=3, expo=3, min=False) == {'my_power_result': 27}
-    assert my_power.name == 'my_power'
-    assert my_power.param_key_map == dict(number='num', exponent='expo', minus_one='min')
-    assert my_power.result_key == 'my_power_result'
+    assert my_power_m1(num=3, expo=3, min=False) == {'my_power_result': 27}
+    assert my_power_m1.name == 'my_power_m1'
+    assert my_power_m1.param_key_map == dict(number='num', exponent='expo', minus_one='min')
+    assert my_power_m1.result_key == 'my_power_result'
 
-    my_power_template = power_template.refine(
+    my_power_m1_template = power_m1_template.refine(
         param_key_map=dict(exponent='expo', minus_one='min'), update=False)
-    my_power = my_power_template.apply()
+    my_power_m1 = my_power_m1_template.apply()
 
-    assert my_power(number=3, expo=3, min=False) == 27
-    assert my_power.name == 'power_func'
-    assert my_power.param_key_map == dict(exponent='expo', minus_one='min')
-    assert my_power.result_key is None
+    assert my_power_m1(number=3, expo=3, min=False) == 27
+    assert my_power_m1.name == 'power_m1_func'
+    assert my_power_m1.param_key_map == dict(exponent='expo', minus_one='min')
+    assert my_power_m1.result_key is None
 
-    my_new_power_template = my_power_template.refine(param_key_map={})
-    assert my_new_power_template.param_key_map == dict(exponent='expo', minus_one='min')
+    my_new_power_m1_template = my_power_m1_template.refine(param_key_map={})
+    assert my_new_power_m1_template.param_key_map == dict(exponent='expo', minus_one='min')
 
-    my_new_power_template = my_power_template.refine(param_key_map={}, update=False)
-    assert my_new_power_template.param_key_map == {}
+    my_new_power_m1_template = my_power_m1_template.refine(param_key_map={}, update=False)
+    assert my_new_power_m1_template.param_key_map == {}
 
-    my_new_power_template = my_power_template.refine(param_key_map=[], update=False)  # noqa
-    assert my_new_power_template.param_key_map == {}
+    my_new_power_m1_template = my_power_m1_template.refine(param_key_map=[], update=False)  # noqa
+    assert my_new_power_m1_template.param_key_map == {}
 
-    my_new_power_template = my_power_template.refine(param_key_map=None, update=False)  # noqa
-    assert my_new_power_template.param_key_map == {}
+    my_new_power_m1_template = my_power_m1_template.refine(param_key_map=None, update=False)  # noqa
+    assert my_new_power_m1_template.param_key_map == {}
 
-    my_new_power = my_new_power_template.apply()
+    my_new_power = my_new_power_m1_template.apply()
 
     assert my_new_power(number=3, exponent=3, minus_one=False) == 27
     assert my_new_power.param_key_map == {}
 
 
-def test_revise_refine_task_template_with_fixed_params_and_config_change(power_func):
-    square = TaskTemplate(power_func).refine(
+def test_revise_refine_task_template_with_fixed_params_and_config_change(power_m1_func):
+    square = TaskTemplate(power_m1_func).refine(
         name='square',
         param_key_map=dict(number='num', exponent='exp'),
         fixed_params=dict(exponent=2, minus_one=False),
@@ -397,15 +398,15 @@ def test_revise_refine_task_template_with_fixed_params_and_config_change(power_f
 
     power_reset = square_refined.revise().refine(update=False).apply()
 
-    assert power_reset.name == 'power_func'
+    assert power_reset.name == 'power_m1_func'
     assert power_reset.param_key_map == {}
     assert power_reset.result_key is None
     assert power_reset.fixed_params == {}
 
 
-def test_no_shared_dicts(power_func):
+def test_no_shared_dicts(power_m1_func):
     square_template = TaskTemplate(
-        power_func,
+        power_m1_func,
         name='square',
         param_key_map=dict(number='num'),
         fixed_params=dict(exponent=2),
@@ -438,17 +439,17 @@ def test_no_shared_dicts(power_func):
     assert len(square.fixed_params) == 1
 
 
-def test_error_refine_task_unmatched_params(power_func):
-    power_template = TaskTemplate(power_func)
+def test_error_refine_task_unmatched_params(power_m1_func):
+    power_m1_template = TaskTemplate(power_m1_func)
 
     with pytest.raises(KeyError):
-        _power_template = TaskTemplate(power_func, param_key_map={'engine': 'motor'})
+        _power_m1_template = TaskTemplate(power_m1_func, param_key_map={'engine': 'motor'})
 
     with pytest.raises(KeyError):
-        _power_template = TaskTemplate(power_func, fixed_params={'engine': 'volkswagen'})
+        _power_m1_template = TaskTemplate(power_m1_func, fixed_params={'engine': 'volkswagen'})
 
     with pytest.raises(KeyError):
-        _cube = power_template.refine(param_key_map={'engine': 'horsepower'})
+        _cube = power_m1_template.refine(param_key_map={'engine': 'horsepower'})
 
     with pytest.raises(KeyError):
-        _cube = power_template.refine(fixed_params={'engine': 'toyota'})
+        _cube = power_m1_template.refine(fixed_params={'engine': 'toyota'})
