@@ -4,8 +4,8 @@ import pandas as pd
 from pydantic import ValidationError
 import pytest
 
-from tests.data.util import _assert_pandas_frame_dtypes
-from unifair.data.pandas import PandasDataset
+from modules.pandas.util import assert_pandas_frame_dtypes
+from unifair.modules.pandas.models import PandasDataset
 
 
 def test_pandas_dataset_list_of_objects_same_keys():
@@ -21,7 +21,7 @@ def test_pandas_dataset_list_of_objects_same_keys():
         }]),
         check_dtype=False,
     )
-    _assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'Int64'))
+    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'Int64'))
     assert pandas_data.to_data() == data
 
 
@@ -38,7 +38,7 @@ def test_pandas_dataset_json_list_of_objects_same_keys():
         }]),
         check_dtype=False,
     )
-    _assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'Int64'))
+    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'Int64'))
     assert pandas_data.to_json() == json_data
 
 
@@ -55,7 +55,7 @@ def test_pandas_dataset_list_of_objects_different_keys():
         }]),
         check_dtype=False,
     )
-    _assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'Int64', 'object'))
+    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'Int64', 'object'))
     assert pandas_data.to_data() == {
         'obj_type': [{
             'a': 'abc', 'b': 12, 'c': np.nan
@@ -77,7 +77,7 @@ def test_pandas_dataset_list_of_objects_float_numbers():
             'a': 3.0, 'b': None
         }]),
     )
-    _assert_pandas_frame_dtypes(pandas_data['obj_type'], ('float64', 'float64'))
+    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('float64', 'float64'))
     assert not DeepDiff(
         pandas_data.to_data(), {'obj_type': [{
             'a': 12.0, 'b': 12.1
@@ -118,7 +118,7 @@ def test_pandas_dataset_list_of_objects_float_numbers():
             'a': None, 'b': 14.3
         }]),
     )
-    _assert_pandas_frame_dtypes(pandas_data['obj_type'], ('float64', 'float64'))
+    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('float64', 'float64'))
     assert not DeepDiff(
         pandas_data.to_data(),
         {'obj_type': [{
@@ -143,7 +143,7 @@ def test_pandas_dataset_list_of_nested_objects():
             }
         }]),
     )
-    _assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'object'))
+    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'object'))
     assert pandas_data.to_data() == data
     assert pandas_data['obj_type'].loc[0, 'b'] == {'c': [1, 3]}
 

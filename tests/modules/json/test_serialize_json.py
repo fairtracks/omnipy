@@ -1,5 +1,6 @@
-from tests.data.util import _assert_tar_file_contents
-from unifair.data.json import JsonDataset, JsonDatasetToTarFileSerializer
+from tests.data.util import assert_tar_file_contents
+from unifair.modules.json.models import JsonDataset
+from unifair.modules.json.serializers import JsonDatasetToTarFileSerializer
 
 
 def test_json_dataset_serializer_to_tar_file():
@@ -13,8 +14,8 @@ def test_json_dataset_serializer_to_tar_file():
     tarfile_bytes = serializer.serialize(json_data)
     decode_func = lambda x: x.decode('utf8')  # noqa
 
-    _assert_tar_file_contents(tarfile_bytes, 'obj_type.1', 'json', decode_func, obj_type_1_json)
-    _assert_tar_file_contents(tarfile_bytes, 'obj_type.2', 'json', decode_func, obj_type_2_json)
+    assert_tar_file_contents(tarfile_bytes, 'obj_type.1', 'json', decode_func, obj_type_1_json)
+    assert_tar_file_contents(tarfile_bytes, 'obj_type.2', 'json', decode_func, obj_type_2_json)
 
     deserialized_json_data = serializer.deserialize(tarfile_bytes)
 

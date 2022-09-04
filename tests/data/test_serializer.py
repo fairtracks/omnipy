@@ -1,7 +1,7 @@
 import sys
 from typing import Any, Dict, IO, Union
 
-from tests.data.util import _assert_tar_file_contents
+from tests.data.util import assert_tar_file_contents
 from unifair.data.dataset import Dataset
 from unifair.data.model import Model
 from unifair.data.serializer import (create_dataset_from_tarfile,
@@ -79,8 +79,8 @@ def test_number_dataset_to_tar_file_serializer():
     tarfile_bytes = serializer.serialize(number_data)
     decode_func = lambda x: int.from_bytes(x, byteorder=sys.byteorder)  # noqa
 
-    _assert_tar_file_contents(tarfile_bytes, 'obj_type1', 'num', decode_func, 35)
-    _assert_tar_file_contents(tarfile_bytes, 'obj_type2', 'num', decode_func, 12)
+    assert_tar_file_contents(tarfile_bytes, 'obj_type1', 'num', decode_func, 35)
+    assert_tar_file_contents(tarfile_bytes, 'obj_type2', 'num', decode_func, 12)
 
     deserialized_json_data = serializer.deserialize(tarfile_bytes)
 
