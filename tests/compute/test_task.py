@@ -358,7 +358,16 @@ def test_property_param_key_map_change(power_m1_func: Callable) -> None:
         power_m1(number=5, exponent=3)
 
     with pytest.raises(TypeError):
+        power_m1(n=5, number=5, exponent=3)
+
+    with pytest.raises(TypeError):
         power_m1(n=5, exponent=3, minus_one=False)
+
+    with pytest.raises(TypeError):
+        power_m1(n=5, exponent=3, m=False, minus_one=False)
+
+    with pytest.raises(TypeError):
+        power_m1(5, 3, extra_attr=123)
 
 
 def test_property_param_key_map_validation(power_m1_func: Callable) -> None:
