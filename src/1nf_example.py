@@ -14,8 +14,10 @@ from unifair.modules.tables.tasks import convert_to_1nf, remove_columns
 # The data import task is imported from the FAIRtracks module and is 'refined' here into a new
 # TaskTemplate which only downloads 25 items for each endpoint (max_data_item_count is fixed to 25).
 
-t_import_some_data_from_encode = \
-    import_dataset_from_encode.refine(fixed_params=dict(max_data_item_count=25)).apply()
+t_import_some_data_from_encode = import_dataset_from_encode.refine(
+    name='t_import_some_data_from_encode',
+    fixed_params=dict(max_data_item_count=25),
+).apply()
 
 # Also, the TaskTemplate objects are converted to Task objects by applying the TaskTemplate to a
 # specific runtime environment. Currently, there are no runtimes or engines to be applied, so
