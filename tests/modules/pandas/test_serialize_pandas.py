@@ -1,5 +1,7 @@
-from tests.data.util import _assert_pandas_dataset_equals, _assert_tar_file_contents
-from unifair.data.pandas import PandasDataset, PandasDatasetToTarFileSerializer
+from modules.pandas.util import assert_pandas_dataset_equals
+from tests.data.util import assert_tar_file_contents
+from unifair.modules.pandas.models import PandasDataset
+from unifair.modules.pandas.serializers import PandasDatasetToTarFileSerializer
 
 
 def test_pandas_dataset_serializer_to_tar_file():
@@ -23,9 +25,9 @@ def test_pandas_dataset_serializer_to_tar_file():
     tarfile_bytes = serializer.serialize(pandas_data)
     decode_func = lambda x: x.decode('utf8')  # noqa
 
-    _assert_tar_file_contents(tarfile_bytes, 'obj_type_1', 'csv', decode_func, obj_type_1_csv)
-    _assert_tar_file_contents(tarfile_bytes, 'obj_type_2', 'csv', decode_func, obj_type_2_csv)
+    assert_tar_file_contents(tarfile_bytes, 'obj_type_1', 'csv', decode_func, obj_type_1_csv)
+    assert_tar_file_contents(tarfile_bytes, 'obj_type_2', 'csv', decode_func, obj_type_2_csv)
 
     deserialized_pandas_data = serializer.deserialize(tarfile_bytes)
 
-    _assert_pandas_dataset_equals(deserialized_pandas_data, pandas_data)
+    assert_pandas_dataset_equals(deserialized_pandas_data, pandas_data)

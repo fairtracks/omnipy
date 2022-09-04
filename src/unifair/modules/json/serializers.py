@@ -1,30 +1,11 @@
 import json
-from typing import Dict, IO, List, Union
+from typing import IO, Union
 
-from unifair.data.dataset import Dataset
-from unifair.data.model import Model
 from unifair.data.serializer import (create_dataset_from_tarfile,
                                      create_tarfile_from_dataset,
                                      Serializer)
 
-
-class JsonDatasetModel(Model[List[Dict[str, Union[int, float, List, Dict, str]]]]):
-    ...
-
-    @classmethod
-    def _parse_data(cls, data: List) -> List:
-        data = cls._data_not_empty_object(data)
-        return data
-
-    @classmethod
-    def _data_not_empty_object(cls, data: List):
-        for obj in data:
-            assert len(obj) > 0
-        return data
-
-
-class JsonDataset(Dataset[JsonDatasetModel]):
-    ...
+from .models import JsonDataset
 
 
 class JsonDatasetToTarFileSerializer(Serializer):

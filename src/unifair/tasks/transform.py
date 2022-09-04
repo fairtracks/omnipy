@@ -1,7 +1,7 @@
 import pandas as pd
 
-from unifair.data.json import JsonDataset
-from unifair.data.pandas import PandasDataset
+from unifair.modules.json.models import JsonDataset
+from unifair.modules.pandas.models import PandasDataset
 
 
 def convert_json_to_pandas(json_data: JsonDataset) -> PandasDataset:

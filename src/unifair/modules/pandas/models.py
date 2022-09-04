@@ -1,11 +1,9 @@
-from io import BytesIO
-from typing import Any, Dict, IO, Iterable, Union
+from typing import Any, Dict, Iterable
 
 import pandas as pd
 
 from unifair.data.dataset import Dataset
 from unifair.data.model import Model, ROOT_KEY
-from unifair.data.serializer import create_dataset_from_tarfile, create_tarfile_from_dataset
 
 
 class PandasModel(Model[pd.DataFrame]):
@@ -46,35 +44,3 @@ class PandasModel(Model[pd.DataFrame]):
 
 class PandasDataset(Dataset[PandasModel]):
     ...
-
-
-class PandasDatasetToTarFileSerializer:
-    @staticmethod
-    def serialize(pandas_dataset: PandasDataset) -> Union[bytes, memoryview]:
-        def pandas_encode_func(pandas_data: pd.DataFrame) -> memoryview:
-            csv_bytes = BytesIO()
-            pandas_data.to_csv(csv_bytes, encoding='utf8', mode='b')
-            return csv_bytes.getbuffer()
-
-        return create_tarfile_from_dataset(
-            pandas_dataset, file_suffix='csv', data_encode_func=pandas_encode_func)
-
-    @staticmethod
-    def deserialize(tarfile_bytes: bytes) -> PandasDataset:
-        pandas_dataset = PandasDataset()
-
-        def csv_decode_func(file_stream: IO[bytes]) -> pd.DataFrame:
-            return pd.read_csv(file_stream, index_col=0, encoding='utf8')
-
-        def python_dictify_object(obj_type: str, obj_val: Any) -> Dict:
-            return {obj_type: obj_val}
-
-        create_dataset_from_tarfile(
-            pandas_dataset,
-            tarfile_bytes,
-            file_suffix='csv',
-            data_decode_func=csv_decode_func,
-            dictify_object_func=python_dictify_object,
-            import_method='from_data')  # noqa
-
-        return pandas_dataset
