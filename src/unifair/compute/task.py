@@ -75,6 +75,10 @@ class TaskConfig:
     def result_key(self) -> Optional[str]:
         return self._result_key
 
+    def __eq__(self: TaskConfig, other: TaskConfig):
+        return self.get_init_args() == other.get_init_args() \
+               and self.get_init_kwargs() == other.get_init_kwargs()
+
 
 class TaskTemplate(TaskConfig):
     def apply(self, **engine_kwargs: Any) -> Task:
