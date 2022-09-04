@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Iterable, Optional, Type, Union
+from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Tuple, Type, Union
 
 from unifair.util.helpers import create_merged_dict
 from unifair.util.param_key_mapper import ParamKeyMapper
@@ -11,9 +11,10 @@ from unifair.util.param_key_mapper import ParamKeyMapper
 class TaskConfig:
     def __init__(self,
                  task_func: Callable,
+                 *,
                  name: Optional[str] = None,
-                 fixed_params: Optional[Dict[str, Any]] = None,
-                 param_key_map: Optional[Dict[str, str]] = None,
+                 fixed_params: Optional[Mapping[str, Any]] = None,
+                 param_key_map: Optional[Mapping[str, str]] = None,
                  result_key: Optional[str] = None) -> None:
         self._task_func = task_func
         self._task_func_signature = inspect.signature(self._task_func)
@@ -41,13 +42,13 @@ class TaskConfig:
         if len(param) == 0:
             raise ValueError('Empty strings not allowed for parameter "{}"'.format(param_name))
 
-    def _get_init_params(self) -> Dict[str, Any]:
+    def get_init_args(self) -> Tuple[Callable]:
+        return self._task_func,
+
+    def get_init_kwargs(self) -> Dict[str, Any]:
         return {
-            'task_func': self._task_func,
-            'name': self.name,
-            'param_key_map': self.param_key_map,
-            'result_key': self.result_key,
-            'fixed_params': self.fixed_params,
+            key: getattr(self, key)
+            for key in ('name', 'fixed_params', 'param_key_map', 'result_key')
         }
 
     @property
@@ -77,31 +78,33 @@ class TaskConfig:
 
 class TaskTemplate(TaskConfig):
     def apply(self, **engine_kwargs: Any) -> Task:
-        return Task(**self._get_init_params())
+        return Task.from_task_template(self)
 
-    def refine(self,
-               name: Optional[str] = None,
-               fixed_params: Optional[Union[Dict[str, Any], MappingProxyType[str, Any]]] = None,
-               param_key_map: Optional[Union[Dict[str, str], MappingProxyType[str, str]]] = None,
-               result_key: Optional[str] = None,
-               update: bool = True) -> TaskTemplate:
-        param_key_map = {} if param_key_map is None else param_key_map
-        fixed_params = {} if fixed_params is None else fixed_params
+    def refine(self, update: bool = True, **kwargs: Any) -> TaskTemplate:
         if update:
-            name = self.name if name is None else name
-            fixed_params = create_merged_dict(self.fixed_params, fixed_params)
-            param_key_map = create_merged_dict(self.param_key_map, param_key_map)
-            result_key = self.result_key if result_key is None else result_key
+            for key, cur_val in self.get_init_kwargs().items():
+                if key in kwargs:
+                    new_val = create_merged_dict(cur_val, kwargs[key]) \
+                        if isinstance(cur_val, Mapping) else kwargs[key]
+                else:
+                    new_val = cur_val
+                kwargs[key] = new_val
 
-        return TaskTemplate(
-            self._task_func,
-            name=name,
-            fixed_params=fixed_params,
-            param_key_map=param_key_map,
-            result_key=result_key)
+        return TaskTemplate(self._task_func, **kwargs)
 
 
 class Task(TaskConfig):
+    def __init__(self, *args: Any, **kwargs: Any):  # noqa
+        raise RuntimeError('Tasks should only be instantiated using TaskTemplate.apply()')
+
+    @classmethod
+    def from_task_template(cls, task_template: TaskTemplate):
+        init_args = task_template.get_init_args()
+        init_kwargs = task_template.get_init_kwargs()
+        task_obj = object.__new__(Task)
+        super(Task, task_obj).__init__(*init_args, **init_kwargs)
+        return task_obj
+
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         mapped_fixed_params = self._param_key_mapper.delete_matching_keys(
             self._fixed_params, inverse=True)
@@ -124,4 +127,7 @@ class Task(TaskConfig):
         return {key_map[key] if key in key_map else key: params[key] for key in params}
 
     def revise(self) -> TaskTemplate:
-        return TaskTemplate(**self._get_init_params())
+        return TaskTemplate(*self.get_init_args(), **self.get_init_kwargs())
+
+
+# TODO: Would we need the possibility to refine task templates by adding new task parameters?
