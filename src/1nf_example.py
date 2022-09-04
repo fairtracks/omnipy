@@ -20,10 +20,10 @@ t_import_some_data_from_encode = import_dataset_from_encode.refine(
 ).apply()
 
 # Also, the TaskTemplate objects are converted to Task objects by applying the TaskTemplate to a
-# specific runtime environment. Currently, there are no runtimes or engines to be applied, so
+# specific runtime environment. Currently, there are no runtimes or engines to be applied to, so
 # there are no parameters specified for the 'apply()' method. This will come later. Calling apply()
 # needs to be done manually for each task now, but will later only need to be done one time
-# for each flow, and possibly even not that.
+# for each flow, and possibly not even that.
 
 t_remove_columns = remove_columns.apply()
 t_convert_to_1nf = convert_to_1nf.apply()
