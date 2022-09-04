@@ -3,8 +3,8 @@ import time
 import pandas as pd
 import requests
 
-from unifair.core.data import NoData, PandasDataFrameCollection
-from unifair.core.workflow import WorkflowStep
+from unifair.old.core.data import NoData, PandasDataFrameCollection
+from unifair.old.core.workflow import WorkflowStep
 
 
 class ImportEncodeMetadataFromApi(WorkflowStep):

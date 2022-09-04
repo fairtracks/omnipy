@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 import os
 
-from unifair.core.data import NoData
+from unifair.old.core.data import NoData
 
 
 class WorkflowStep(ABC):

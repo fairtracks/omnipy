@@ -4,14 +4,13 @@ import time
 from typing import Dict, List
 
 import pandas as pd
-import prefect
 from prefect import Flow, task
 from prefect.engine.results import LocalResult
 from prefect.executors import LocalExecutor
 from pydantic import BaseModel
 
 import unifair.data.serializer
-from unifair.steps.imports.encode import ImportEncodeMetadataFromApi
+from unifair.old.steps.imports.encode import ImportEncodeMetadataFromApi
 
 
 class JsonObjects(BaseModel):

@@ -2,8 +2,8 @@ import time
 
 import requests
 
-from unifair.core.data import JsonDocumentCollection, NoData
-from unifair.core.workflow import WorkflowStep
+from unifair.old.core.data import JsonDocumentCollection, NoData
+from unifair.old.core.workflow import WorkflowStep
 
 
 class ImportGDCMetadataFromApi(WorkflowStep):

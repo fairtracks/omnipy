@@ -3,7 +3,7 @@ from typing import Iterable
 from pydantic import constr, PositiveInt
 
 from unifair.compute.task import TaskTemplate
-from unifair.steps.imports.encode import ImportEncodeMetadataFromApi
+from unifair.old.steps.imports.encode import ImportEncodeMetadataFromApi
 
 from ..json.models import JsonDataset
 
