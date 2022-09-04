@@ -110,8 +110,11 @@ class Task(TaskConfig):
             self._fixed_params, inverse=True)
         mapped_kwargs = self._param_key_mapper.map_matching_keys_delete_inverse_matches_keep_rest(
             kwargs, inverse=True)
-
         try:
+            if len(mapped_kwargs) < len(kwargs):
+                raise TypeError('Keyword arguments {} matches parameter key map inversely.'.format(
+                    tuple(set(kwargs.keys()) - set(mapped_kwargs.keys()))))
+
             result = self._task_func(*args, **mapped_fixed_params, **mapped_kwargs)
         except TypeError as e:
             raise TypeError(
