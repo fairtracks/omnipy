@@ -3,7 +3,7 @@ import pytest
 
 from unifair.modules.json.models import JsonDataset
 from unifair.modules.pandas.models import PandasDataset
-from unifair.tasks.transform import convert_json_to_pandas
+from unifair.old.tasks.transform import convert_json_to_pandas
 
 
 @pytest.mark.skip(reason='Outdated')
