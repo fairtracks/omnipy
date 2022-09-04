@@ -680,57 +680,48 @@ def test_error_properties_param_key_map_and_fixed_params_unmatched_params(
         power_m1_template.refine(fixed_params=dict(engine='antigravity'))
 
 
-#
-# def test_task_template_as_decorator():
-#     @TaskTemplate
-#     def plus_one(number: int) -> int:
-#         return number + 1
-#
-#     assert isinstance(plus_one, TaskTemplate)
-#
-#     plus_one = plus_one.apply()
-#     assert isinstance(plus_one, Task)
-#
-#     assert plus_one(3) == 4
-#
-#
-# def test_error_task_template_decorator_with_arguments(
-#         mock_task_runner_engine_cls: Callable) -> None:
-#
-#     with pytest.raises(TypeError):
-#
-#         @TaskTemplate('something')
-#         def plus_one(number: int) -> int:
-#             return number + 1
-#
-#
-# def test_unifair_task_template_decorator_with_keyword_arguments():
-#     @unifair_task_template(
-#         name='plus_one',
-#         param_key_map=dict(number_a='number'),
-#         fixed_params=dict(number_b=1),
-#         result_key='plus_one',
-#     )
-#     def plus_func(number_a: int, number_b: int) -> int:
-#         return number_a + number_b
-#
-#     assert isinstance(plus_func, TaskTemplate)
-#
-#     plus_one = plus_one.apply()
-#     assert isinstance(plus_one, Task)
-#
-#     assert plus_one(3) == 4
-#
-#
-# @pytest.fixture
-# def power_func() -> Callable:
-#     def _power_func(number: int, exponent: int) -> int:
-#         return number**exponent
-#
-#     return _power_func
-#
-#
-# @pytest.fixture
-# def power(power_func):
-#
-#     return my_engine.task_decorator()(power_func)
+def test_task_template_as_decorator() -> None:
+    @TaskTemplate
+    def plus_one(number: int) -> int:
+        return number + 1
+
+    assert isinstance(plus_one, TaskTemplate)
+
+    plus_one = plus_one.apply()
+    assert isinstance(plus_one, Task)
+
+    assert plus_one(3) == 4
+
+
+def test_task_template_as_decorator_with_keyword_arguments() -> None:
+    @TaskTemplate(
+        name='plus_one',
+        param_key_map=dict(number_a='number'),
+        fixed_params=dict(number_b=1),
+        result_key='plus_one',
+    )
+    def plus_func(number_a: int, number_b: int) -> int:
+        return number_a + number_b
+
+    plus_one_template = plus_func
+
+    assert isinstance(plus_one_template, TaskTemplate)
+
+    plus_one = plus_one_template.apply()
+    assert isinstance(plus_one, Task)
+
+    assert plus_one(3) == {'plus_one': 4}
+
+
+def test_error_task_template_decorator_with_func_argument() -> None:
+
+    with pytest.raises(TypeError):
+
+        def myfunc(a: Callable) -> Callable:
+            return a
+
+        @TaskTemplate(myfunc)
+        def plus_one(number: int) -> int:
+            return number + 1
+
+        assert isinstance(plus_one, TaskTemplate)

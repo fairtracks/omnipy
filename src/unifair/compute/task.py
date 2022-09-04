@@ -5,6 +5,7 @@ from types import MappingProxyType
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Tuple, Type, Union
 
 from unifair.util.helpers import create_merged_dict
+from unifair.util.mixins import DynamicClassDecoratorMixin
 from unifair.util.param_key_mapper import ParamKeyMapper
 
 
@@ -80,7 +81,7 @@ class TaskConfig:
                and self.get_init_kwargs() == other.get_init_kwargs()
 
 
-class TaskTemplate(TaskConfig):
+class TaskTemplate(DynamicClassDecoratorMixin, TaskConfig):
     def apply(self, **engine_kwargs: Any) -> Task:
         return Task.from_task_template(self)
 
