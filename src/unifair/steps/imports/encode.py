@@ -33,13 +33,8 @@ class ImportEncodeMetadataFromApi(WorkflowStep):
         return output
 
     @classmethod
-    def encode_api(cls,
-                   object_type='experiments',
-                   id=None,
-                   limit=None,
-                   format='json',
-                   frame='object'):
-        api_url = cls.ENCODE_BASE_URL + object_type + '/' + (
+    def encode_api(cls, endpoint='experiments', id=None, limit=None, format='json', frame='object'):
+        api_url = cls.ENCODE_BASE_URL + endpoint + '/' + (
             id if id else '@@listing') + '?' + '&'.join((['limit=' + limit] if limit else [])
                                                         + (['format=' + format] if format else [])
                                                         + (['frame=' + frame] if frame else []))
