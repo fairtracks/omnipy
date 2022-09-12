@@ -5,7 +5,7 @@ Born out of the needs of the FAIRtracks project (Webpage: https://fairtracks.git
 ## Libraries
 uniFAIR builds heavily on two popular and powerful Open Source libraries:
 
-- [Pydantic](https://pydantic-docs.helpmanual.io/) to clearly define input and output conditions for data transformation tasks using static typing
+- [Pydantic](https://pydantic-docs.helpmanual.io/) to clearly define input and output conditions for data transformation tasks using static typing, as well as automatic parsing according to data models ranging from very generic to highly specialized
 - [Prefect](https://prefect.io) to automatically generate ETL workflows from more-or-less plain Python code, with orchestration and flow control on various underlying platforms
 
 ## Scenarios
