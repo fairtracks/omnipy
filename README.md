@@ -2,6 +2,12 @@
 
 Born out of the needs of the FAIRtracks project (Webpage: https://fairtracks.github.io/. Publication: https://doi.org/10.12688/f1000research.28449.1), uniFAIR (the Universal FAIRification Engine) is a general data and metadata processing framework with reusable modules (e.g., import/export, identifier matching, ontology mapping, batch string error correction, model conversion, validation) that allows users to create pipelines customized to their specific FAIRification process.
 
+## Libraries
+uniFAIR builds heavily on two popular and powerful Open Source libraries:
+
+- [Pydantic](https://pydantic-docs.helpmanual.io/) to clearly define input and output conditions for data transformation tasks using static typing
+- [Prefect](https://prefect.io) to automatically generate ETL workflows from more-or-less plain Python code, with orchestration and flow control on various underlying platforms
+
 ## Scenarios
 As initial use cases, we will consider the following two scenarios:
 * Transforming ENCODE metadata into FAIRtracks format
