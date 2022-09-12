@@ -1,5 +1,5 @@
-from tests.modules.pandas.util import assert_pandas_dataset_equals
 from tests.data.util import assert_tar_file_contents
+from tests.modules.pandas.util import assert_pandas_dataset_equals
 from unifair.modules.pandas.models import PandasDataset
 from unifair.modules.pandas.serializers import PandasDatasetToTarFileSerializer
 
