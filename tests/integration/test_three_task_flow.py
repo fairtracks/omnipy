@@ -1,74 +1,7 @@
-from typing import Any, Dict
-
 import pytest
 
 from unifair.compute.flow import DagFlow, FlowTemplate, FuncFlow
 from unifair.config.runtime import RuntimeConfig
-from unifair.engine.local import LocalRunner
-
-
-@pytest.fixture
-def runtime():
-    return RuntimeConfig()
-
-
-@pytest.fixture
-def runtime_local_runner(runtime):
-    runtime.engine = LocalRunner()
-    return runtime
-
-
-@pytest.fixture
-def uppercase(runtime):
-    @runtime.task_template()
-    def uppercase(text: str) -> str:
-        return text.upper()
-
-    return uppercase
-
-
-@pytest.fixture
-def square_root(runtime):
-    @runtime.task_template()
-    def square_root(number: int) -> Dict[str, float]:
-        return {'neg_root': -number**1 / 2, 'pos_root': number**1 / 2}
-
-    return square_root
-
-
-@pytest.fixture
-def merge_key_value_into_str(runtime):
-    @runtime.task_template()
-    def merge_key_value_into_str(key: Any, val: Any) -> str:
-        return '{}: {}'.format(key, val)
-
-    return merge_key_value_into_str
-
-
-@pytest.fixture
-def pos_square_root_dag_flow(runtime, uppercase, square_root, merge_key_value_into_str):
-    @runtime.dag_flow_template(
-        uppercase.refine(result_key='upper'),
-        square_root,
-        merge_key_value_into_str.refine(
-            param_key_map={
-                'key': 'upper', 'val': 'pos_root'
-            }, result_key='pos_square_root'))
-    def pos_square_root(number: int, text: str) -> str:
-        ...
-
-    return pos_square_root
-
-
-@pytest.fixture
-def pos_square_root_func_flow(runtime, uppercase, square_root, merge_key_value_into_str):
-    @runtime.func_flow_template(result_key='pos_square_root')
-    def pos_square_root(number: int, text: str, result_key: str) -> Dict[str, int]:
-        upper = uppercase(text)
-        _neg_root, pos_root = square_root(number)
-        return {result_key: merge_key_value_into_str(upper, pos_root)}
-
-    return pos_square_root
 
 
 def _common_test_run_three_task_flow(runtime: RuntimeConfig, pos_square_root: FlowTemplate):

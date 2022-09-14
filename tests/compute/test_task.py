@@ -7,16 +7,7 @@ import pytest
 from unifair.compute.task import Task, TaskTemplate
 
 
-@pytest.fixture
-def action_func_no_params() -> Callable:
-    def action_func_no_params() -> None:
-        # backend.do_something()
-        return
-
-    return action_func_no_params
-
-
-def test_init(format_to_string_func: Callable) -> None:
+def test_init(format_to_string_func: Callable[[str, int], str]) -> None:
     task_template = TaskTemplate(format_to_string_func)
     assert isinstance(task_template, TaskTemplate)
 
@@ -30,32 +21,7 @@ def test_init(format_to_string_func: Callable) -> None:
     assert isinstance(task, Task)
 
 
-@pytest.fixture
-def action_func_with_params() -> Callable:
-    def action_func_with_params(command: str, *, verbose: bool = False) -> None:  # noqa
-        # backend.run(command, verbose=verbose)
-        return
-
-    return action_func_with_params
-
-
-@pytest.fixture
-def data_import_func() -> Callable:
-    def data_import_func() -> str:
-        return '{"my_data": [123,234,345,456]}'
-
-    return data_import_func
-
-
-@pytest.fixture
-def format_to_string_func() -> Callable:
-    def format_to_string_func(text: str, number: int) -> str:
-        return '{}: {}'.format(text, number)
-
-    return format_to_string_func
-
-
-def test_task_run_action_func_no_params(action_func_no_params: Callable) -> None:
+def test_task_run_action_func_no_params(action_func_no_params: Callable[[], None]) -> None:
     task_template = TaskTemplate(action_func_no_params)
     with pytest.raises(TypeError):
         task_template()  # noqa
@@ -64,7 +30,8 @@ def test_task_run_action_func_no_params(action_func_no_params: Callable) -> None
     assert task() is None
 
 
-def test_task_run_action_func_with_params(action_func_with_params: Callable) -> None:
+def test_task_run_action_func_with_params(
+        action_func_with_params: Callable[[str, bool], None]) -> None:
     task_template = TaskTemplate(action_func_with_params)
     with pytest.raises(TypeError):
         task_template('rm -rf *', verbose=True)  # noqa
@@ -73,7 +40,7 @@ def test_task_run_action_func_with_params(action_func_with_params: Callable) -> 
     assert task('rm -rf *', verbose=True) is None
 
 
-def test_task_run_data_import_func(data_import_func: Callable) -> None:
+def test_task_run_data_import_func(data_import_func: Callable[[], str]) -> None:
     task_template = TaskTemplate(data_import_func)
     with pytest.raises(TypeError):
         task_template()  # noqa
@@ -84,7 +51,7 @@ def test_task_run_data_import_func(data_import_func: Callable) -> None:
     assert json.loads(json_data) == dict(my_data=[123, 234, 345, 456])
 
 
-def test_task_run_format_to_string_func(format_to_string_func: Callable) -> None:
+def test_task_run_format_to_string_func(format_to_string_func: Callable[[str, int], str]) -> None:
     task_template = TaskTemplate(format_to_string_func)
     with pytest.raises(TypeError):
         task_template('Number', 12)  # noqa
@@ -93,15 +60,7 @@ def test_task_run_format_to_string_func(format_to_string_func: Callable) -> None
     assert task('Number', 12) == 'Number: 12'
 
 
-@pytest.fixture
-def power_m1_func() -> Callable:
-    def power_m1_func(number: int, exponent: int, minus_one: bool = True) -> int:
-        return number**exponent - (1 if minus_one else 0)
-
-    return power_m1_func
-
-
-def test_task_run_parameter_variants(power_m1_func: Callable) -> None:
+def test_task_run_parameter_variants(power_m1_func: Callable[[int, int, bool], int]) -> None:
     power_m1 = TaskTemplate(power_m1_func).apply()
 
     assert power_m1(4, 3) == 63
@@ -113,7 +72,7 @@ def test_task_run_parameter_variants(power_m1_func: Callable) -> None:
     assert power_m1(number=4, exponent=3, minus_one=False) == 64
 
 
-def test_error_missing_task_run_parameters(power_m1_func: Callable) -> None:
+def test_error_missing_task_run_parameters(power_m1_func: Callable[[int, int, bool], int]) -> None:
     power_m1 = TaskTemplate(power_m1_func).apply()
 
     with pytest.raises(TypeError):
@@ -127,7 +86,7 @@ def test_error_missing_task_run_parameters(power_m1_func: Callable) -> None:
 
 
 def test_property_param_signature_and_return_type_action_func_no_params(
-        action_func_no_params: Callable) -> None:
+        action_func_no_params: Callable[[], None]) -> None:
     task_template = TaskTemplate(action_func_no_params)
     for task_obj in task_template, task_template.apply():
         assert task_obj.param_signatures == {}
@@ -135,7 +94,7 @@ def test_property_param_signature_and_return_type_action_func_no_params(
 
 
 def test_property_param_signature_and_return_type_data_import_func(
-        data_import_func: Callable) -> None:
+        data_import_func: Callable[[], str]) -> None:
     task_template = TaskTemplate(data_import_func)
     for task_obj in task_template, task_template.apply():
         assert task_obj.param_signatures == {}
@@ -143,7 +102,7 @@ def test_property_param_signature_and_return_type_data_import_func(
 
 
 def test_property_param_signature_and_return_type_format_to_string_funcs(
-        format_to_string_func: Callable) -> None:
+        format_to_string_func: Callable[[str, int], str]) -> None:
     task_template = TaskTemplate(format_to_string_func)
     for task_obj in task_template, task_template.apply():
         assert task_obj.param_signatures == {
@@ -154,7 +113,7 @@ def test_property_param_signature_and_return_type_format_to_string_funcs(
 
 
 def test_property_param_signature_and_return_type_immutable(
-        format_to_string_func: Callable) -> None:
+        format_to_string_func: Callable[[str, int], str]) -> None:
     task_template = TaskTemplate(format_to_string_func)
     for task_obj in task_template, task_template.apply():
         with pytest.raises(AttributeError):
@@ -168,7 +127,7 @@ def test_property_param_signature_and_return_type_immutable(
             task_obj.return_type = int
 
 
-def test_property_name_default(power_m1_func: Callable) -> None:
+def test_property_name_default(power_m1_func: Callable[[int, int, bool], int]) -> None:
     power_m1_template = TaskTemplate(power_m1_func)
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.name == 'power_m1_func'
@@ -177,7 +136,7 @@ def test_property_name_default(power_m1_func: Callable) -> None:
             power_m1_obj.name = 'cool_func'
 
 
-def test_property_name_change(power_m1_func: Callable) -> None:
+def test_property_name_change(power_m1_func: Callable[[int, int, bool], int]) -> None:
     power_m1_template = TaskTemplate(power_m1_func, name='power_m1')
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.name == 'power_m1'
@@ -186,7 +145,7 @@ def test_property_name_change(power_m1_func: Callable) -> None:
             power_m1_obj.name = 'cool_func'
 
 
-def test_property_name_validation(power_m1_func: Callable) -> None:
+def test_property_name_validation(power_m1_func: Callable[[int, int, bool], int]) -> None:
     power_m1_template = TaskTemplate(power_m1_func, name=None)
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.name == 'power_m1_func'
@@ -198,7 +157,7 @@ def test_property_name_validation(power_m1_func: Callable) -> None:
         TaskTemplate(power_m1_func, name=123)  # noqa
 
 
-def test_property_fixed_params_default(power_m1_func: Callable) -> None:
+def test_property_fixed_params_default(power_m1_func: Callable[[int, int, bool], int]) -> None:
     power_m1_template = TaskTemplate(power_m1_func)
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.fixed_params == {}
@@ -213,7 +172,7 @@ def test_property_fixed_params_default(power_m1_func: Callable) -> None:
     assert power_m1(number=4, exponent=3) == 63
 
 
-def test_property_fixed_params_last_args(power_m1_func: Callable) -> None:
+def test_property_fixed_params_last_args(power_m1_func: Callable[[int, int, bool], int]) -> None:
     square_template = TaskTemplate(power_m1_func, fixed_params=dict(exponent=2, minus_one=False))
     for square_obj in square_template, square_template.apply():
         assert square_obj.fixed_params == {'exponent': 2, 'minus_one': False}
@@ -248,7 +207,7 @@ def test_property_fixed_params_last_args(power_m1_func: Callable) -> None:
             square(4, minus_one=True)
 
 
-def test_property_fixed_params_first_arg(power_m1_func: Callable) -> None:
+def test_property_fixed_params_first_arg(power_m1_func: Callable[[int, int, bool], int]) -> None:
     two_power_m1_template = TaskTemplate(power_m1_func, fixed_params=dict(number=2))  # noqa
     for two_power_m1_obj in two_power_m1_template, two_power_m1_template.apply():
         assert two_power_m1_obj.fixed_params == {'number': 2}
@@ -273,7 +232,7 @@ def test_property_fixed_params_first_arg(power_m1_func: Callable) -> None:
         two_power_m1(minus_one=False)
 
 
-def test_property_fixed_params_all_args(power_m1_func: Callable) -> None:
+def test_property_fixed_params_all_args(power_m1_func: Callable[[int, int, bool], int]) -> None:
     seven_template = TaskTemplate(power_m1_func, fixed_params=dict(number=2, exponent=3))  # noqa
     for seven_obj in seven_template, seven_template.apply():
         assert seven_obj.fixed_params == {'number': 2, 'exponent': 3}
@@ -301,7 +260,7 @@ def test_property_fixed_params_all_args(power_m1_func: Callable) -> None:
         seven(number=3, exponent=4, minus_one=False)
 
 
-def test_property_fixed_params_validation(power_m1_func: Callable) -> None:
+def test_property_fixed_params_validation(power_m1_func: Callable[[int, int, bool], int]) -> None:
     seven_template = TaskTemplate(
         power_m1_func, fixed_params=[('number', 4), ('exponent', 2)])  # noqa
     for seven_obj in seven_template, seven_template.apply():
@@ -313,7 +272,7 @@ def test_property_fixed_params_validation(power_m1_func: Callable) -> None:
             assert power_m1_obj.fixed_params == {}
 
 
-def test_property_param_key_map_default(power_m1_func: Callable) -> None:
+def test_property_param_key_map_default(power_m1_func: Callable[[int, int, bool], int]) -> None:
     power_m1_template = TaskTemplate(power_m1_func)
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.param_key_map == {}
@@ -329,7 +288,7 @@ def test_property_param_key_map_default(power_m1_func: Callable) -> None:
     assert power_m1(number=4, exponent=3) == 63
 
 
-def test_property_param_key_map_change(power_m1_func: Callable) -> None:
+def test_property_param_key_map_change(power_m1_func: Callable[[int, int, bool], int]) -> None:
     power_m1_template = TaskTemplate(power_m1_func, param_key_map=dict(number='n', minus_one='m'))
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.param_key_map == {'number': 'n', 'minus_one': 'm'}
@@ -370,7 +329,7 @@ def test_property_param_key_map_change(power_m1_func: Callable) -> None:
         power_m1(5, 3, extra_attr=123)
 
 
-def test_property_param_key_map_validation(power_m1_func: Callable) -> None:
+def test_property_param_key_map_validation(power_m1_func: Callable[[int, int, bool], int]) -> None:
     power_m1_template = TaskTemplate(
         power_m1_func, param_key_map=[('number', 'n'), ('exponent', 'e')])  # noqa
     for power_m1_obj in power_m1_template, power_m1_template.apply():
@@ -385,7 +344,7 @@ def test_property_param_key_map_validation(power_m1_func: Callable) -> None:
         TaskTemplate(power_m1_func, param_key_map={'number': 'same', 'exponent': 'same'})
 
 
-def test_property_result_key_default(power_m1_func: Callable) -> None:
+def test_property_result_key_default(power_m1_func: Callable[[int, int, bool], int]) -> None:
     power_m1_template = TaskTemplate(power_m1_func)
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.result_key is None
@@ -397,7 +356,7 @@ def test_property_result_key_default(power_m1_func: Callable) -> None:
     assert power_m1(4, 2) == 15
 
 
-def test_property_result_key_change(power_m1_func: Callable) -> None:
+def test_property_result_key_change(power_m1_func: Callable[[int, int, bool], int]) -> None:
     power_m1_template = TaskTemplate(power_m1_func, result_key='i_have_the_power')
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.result_key == 'i_have_the_power'
@@ -409,7 +368,7 @@ def test_property_result_key_change(power_m1_func: Callable) -> None:
     assert power_m1(4, 2) == {'i_have_the_power': 15}
 
 
-def test_property_result_key_validation(power_m1_func: Callable) -> None:
+def test_property_result_key_validation(power_m1_func: Callable[[int, int, bool], int]) -> None:
     power_m1_template = TaskTemplate(power_m1_func, result_key=None)
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.result_key is None
@@ -421,7 +380,8 @@ def test_property_result_key_validation(power_m1_func: Callable) -> None:
         TaskTemplate(power_m1_func, result_key=123)  # noqa
 
 
-def test_equal(format_to_string_func: Callable, power_m1_func: Callable) -> None:
+def test_equal(format_to_string_func: Callable[[str, int], str],
+               power_m1_func: Callable[[int, int, bool], int]) -> None:
     fts_tmpl = TaskTemplate(format_to_string_func)
     fts_tmpl_2 = TaskTemplate(format_to_string_func)
     for (fts_obj, fts_obj_2) in [(fts_tmpl, fts_tmpl_2), (fts_tmpl.apply(), fts_tmpl_2.apply())]:
@@ -448,7 +408,8 @@ def test_equal(format_to_string_func: Callable, power_m1_func: Callable) -> None
         assert pm1_obj != pm1_obj_5
 
 
-def test_refine_task_template_with_fixed_params(power_m1_func: Callable) -> None:
+def test_refine_task_template_with_fixed_params(
+        power_m1_func: Callable[[int, int, bool], int]) -> None:
     # Plain task template
     power_m1_template = TaskTemplate(power_m1_func)
     power_m1 = power_m1_template.apply()
@@ -505,7 +466,8 @@ def test_refine_task_template_with_fixed_params(power_m1_func: Callable) -> None
     assert reset_power_m1(3, 2) == 8
 
 
-def test_refine_task_template_with_other_properties(power_m1_func: Callable) -> None:
+def test_refine_task_template_with_other_properties(
+        power_m1_func: Callable[[int, int, bool], int]) -> None:
     # Plain task template
     power_m1_template = TaskTemplate(power_m1_func)
     power_m1 = power_m1_template.apply()
@@ -572,7 +534,7 @@ def test_refine_task_template_with_other_properties(power_m1_func: Callable) -> 
 
 
 def test_revise_refine_task_template_with_fixed_params_and_other_properties(
-        power_m1_func: Callable) -> None:
+        power_m1_func: Callable[[int, int, bool], int]) -> None:
     # New task template with fixed params and other properties set
     square_template = TaskTemplate(power_m1_func).refine(
         name='square',
@@ -621,7 +583,7 @@ def test_revise_refine_task_template_with_fixed_params_and_other_properties(
     assert power_reset.fixed_params == {}
 
 
-def test_revise_refine_dicts_are_copied(power_m1_func: Callable) -> None:
+def test_revise_refine_dicts_are_copied(power_m1_func: Callable[[int, int, bool], int]) -> None:
     square_template = TaskTemplate(
         power_m1_func,
         name='square',
@@ -663,7 +625,7 @@ def test_revise_refine_dicts_are_copied(power_m1_func: Callable) -> None:
 
 
 def test_error_properties_param_key_map_and_fixed_params_unmatched_params(
-        power_m1_func: Callable) -> None:
+        power_m1_func: Callable[[int, int, bool], int]) -> None:
     power_m1_template = TaskTemplate(power_m1_func)
     assert 'engine' not in power_m1_template.param_signatures
 

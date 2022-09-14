@@ -6,6 +6,8 @@ import pytest
 from unifair.data.dataset import Dataset
 from unifair.data.model import Model
 
+from .helpers.models import StringToLength
+
 
 def test_no_model():
     with pytest.raises(TypeError):
@@ -227,7 +229,7 @@ def test_import_and_export():
     assert dataset.to_json_schema() == dataset.to_json_schema(pretty=False)  # noqa
 
 
-def test_import_export_custom_parser_to_other_type(StringToLength):  # noqa
+def test_import_export_custom_parser_to_other_type():
     dataset = Dataset[StringToLength]()
 
     dataset['obj_type_1'] = 'And we lived beneath the waves'

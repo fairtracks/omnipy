@@ -76,9 +76,11 @@ class TaskConfig:
     def result_key(self) -> Optional[str]:
         return self._result_key
 
-    def __eq__(self: TaskConfig, other: TaskConfig):
+    def __eq__(self, other: object):
+        if not isinstance(other, TaskConfig):
+            return NotImplemented
         return self.get_init_args() == other.get_init_args() \
-               and self.get_init_kwargs() == other.get_init_kwargs()
+            and self.get_init_kwargs() == other.get_init_kwargs()
 
 
 class TaskTemplate(DynamicClassDecoratorMixin, TaskConfig):
