@@ -235,14 +235,7 @@ def test_basic_union():
     assert UnionModel([]).to_data() == []
 
 
-@pytest.mark.skip(reason="""
-Known issue due to bug in pydantic (https://github.com/pydantic/pydantic/issues/4474). 
-The main functionality tested is working, but the test revealed a bug in pydantic
-where the first initiation of Model with a Union of float and int is cached by 
-pydantic and defines the order of the second initiation (even though the order of
-int and float is the opposite. Works when split into individual tests.
-""")
-def test_union_default_value_from_first_type_known_issue():
+def test_union_default_value_from_first_type():
     class IntFirstUnionModel(Model[Union[int, str]]):
         ...
 
@@ -259,11 +252,7 @@ def test_union_default_value_from_first_type_known_issue():
             ...
 
 
-@pytest.mark.skip(reason="""
-Fails due to the same pydantic bug as in 'test_union_default_value_from_first_type'
-(https://github.com/pydantic/pydantic/issues/4474). Works when split into individual tests.
-""")
-def test_parsing_independent_on_union_type_order_known_issue():
+def test_parsing_independent_on_union_type_order():
     class FloatIntUnionModel(Model[Union[float, int]]):
         ...
 
@@ -308,6 +297,24 @@ def test_parsing_independent_on_union_type_order_known_issue():
 
     assert FloatIntStrUnionModel('15').to_data() == '15'
     assert type(FloatIntStrUnionModel('15').to_data()) == str
+
+
+@pytest.mark.skip(reason="""
+Known issue due to bug in pydantic (https://github.com/pydantic/pydantic/issues/4519).
+The first initiation of Model with a nested Union of float and str is cached by
+pydantic and defines the order of the second initiation (even though the order of
+int and str is the opposite). Works when split into individual tests.
+""")
+def test_nested_union_parsing_defined_by_first_type_known_issue():
+    class IntFirstUnionModel(Model[List[Union[int, str]]]):
+        ...
+
+    assert IntFirstUnionModel([0]).to_data() == [0]
+
+    class StrFirstUnionModel(Model[Union[str, int]]):
+        ...
+
+    assert StrFirstUnionModel([0]).to_data() == ['0']
 
 
 def test_union_default_value_if_any_none():
