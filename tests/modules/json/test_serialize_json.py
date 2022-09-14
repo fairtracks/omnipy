@@ -1,4 +1,4 @@
-from tests.data.util import assert_tar_file_contents
+from tests.data.helpers.functions import assert_tar_file_contents
 from unifair.modules.json.models import JsonDataset
 from unifair.modules.json.serializers import JsonDatasetToTarFileSerializer
 

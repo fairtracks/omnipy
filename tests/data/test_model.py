@@ -6,6 +6,8 @@ import pytest
 
 from unifair.data.model import Model
 
+from .helpers.models import StringToLength
+
 
 @pytest.mark.skip(reason="""
 This test needs to be run as the first test in the test suite in order
@@ -568,7 +570,7 @@ def test_custom_parser_and_validation():
         model.from_data('Not just anybody! Call 911!!')
 
 
-def test_custom_parser_to_other_type(StringToLength):  # noqa
+def test_custom_parser_to_other_type():
     assert StringToLength('So we sailed up to the sun').to_data() == 26
     string_to_length = StringToLength()
     string_to_length.from_data('Till we found the sea of green')
