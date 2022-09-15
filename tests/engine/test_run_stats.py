@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from time import sleep
 from typing import Annotated
 
 import pytest
@@ -97,15 +98,18 @@ def test_datetime_of_state_change_event(task_a: Annotated[TaskProtocol, pytest.f
     run_stats = RunStats()
     cur_time = datetime.now()
 
+    sleep(0.001)
     run_stats.set_task_state(task_a, State.INITIALIZED)
     init_time = run_stats.get_task_state_datetime(task_a, State.INITIALIZED)
     assert timedelta() < init_time - cur_time < timedelta(seconds=1)
 
+    sleep(0.001)
     run_stats.set_task_state(task_a, State.RUNNING)
     assert run_stats.get_task_state_datetime(task_a, State.INITIALIZED) == init_time
     run_time = run_stats.get_task_state_datetime(task_a, State.RUNNING)
     assert timedelta() < run_time - init_time < timedelta(seconds=1)
 
+    sleep(0.001)
     run_stats.set_task_state(task_a, State.FINISHED)
     assert run_stats.get_task_state_datetime(task_a, State.INITIALIZED) == init_time
     assert run_stats.get_task_state_datetime(task_a, State.RUNNING) == run_time
