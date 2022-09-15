@@ -1,12 +1,15 @@
+from io import StringIO
+import logging
+
 import pytest
 
 from unifair.engine.protocols import RuntimeConfigProtocol
 
 from .helpers.mocks import (MockEngineConfig,
                             MockRuntimeConfig,
+                            MockTask,
                             MockTaskRunnerEngine,
-                            MockTaskTemplate,
-                            MockTask)
+                            MockTaskTemplate)
 
 
 @pytest.fixture(scope='module')
@@ -37,3 +40,15 @@ def power_task_template() -> MockTaskTemplate:
         return number**exponent
 
     return MockTaskTemplate('power', power)
+
+
+@pytest.fixture(scope='class')
+def str_stream() -> StringIO:
+    return StringIO()
+
+
+@pytest.fixture(scope='class')
+def simple_logger() -> logging.Logger:
+    logger = logging.getLogger('test')
+    logger.setLevel(logging.INFO)
+    return logger
