@@ -23,28 +23,37 @@ class RunStats:
         cur_datetime = datetime.now()
 
         if task.name in self._tasks:
-            if id(self._tasks[task.name]) != id(task):
-                self._raise_task_error(
-                    task,
-                    f'Another task with the same name has already been registered',
-                )
-            prev_state = self._task_states[task.name]
-            if state == prev_state + 1:
-                self._state_tasks[prev_state].remove(task.name)
-            else:
-                self._raise_task_error(
-                    task,
-                    f'Transitioning from state {prev_state.name} '
-                    f'to state {state.name} is not allowed',
-                )
+            self._update_task_registration(task, state)
         else:
-            if state != State.INITIALIZED:
-                self._raise_task_error(
-                    task,
-                    f'Initial state of must be "INITIALIZED", not "{state.name}"',
-                )
-            self._tasks[task.name] = task
+            self._register_new_task(task, state)
 
+        self._update_task_stats(task, state, cur_datetime)
+
+    def _update_task_registration(self, task: TaskProtocol, state: State):
+        if id(self._tasks[task.name]) != id(task):
+            self._raise_task_error(
+                task,
+                f'Another task with the same name has already been registered',
+            )
+        prev_state = self._task_states[task.name]
+        if state == prev_state + 1:
+            self._state_tasks[prev_state].remove(task.name)
+        else:
+            self._raise_task_error(
+                task,
+                f'Transitioning from state {prev_state.name} '
+                f'to state {state.name} is not allowed',
+            )
+
+    def _register_new_task(self, task, state):
+        if state != State.INITIALIZED:
+            self._raise_task_error(
+                task,
+                f'Initial state of must be "INITIALIZED", not "{state.name}"',
+            )
+        self._tasks[task.name] = task
+
+    def _update_task_stats(self, task, state, cur_datetime):
         self._task_states[task.name] = state
         self._state_tasks[state].append(task.name)
         self._task_state_datetime[(task.name, state)] = cur_datetime
