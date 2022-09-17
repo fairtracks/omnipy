@@ -11,14 +11,14 @@ from unifair.engine.protocols import TaskProtocol
 
 class TaskRunnerEngine(Engine):
     def task_decorator(self, task: TaskProtocol) -> TaskProtocol:
-        self._run_stats.set_task_state(task, RunState.INITIALIZED)
+        self._registry.set_task_state(task, RunState.INITIALIZED)
         self._init_task(task)
 
         prev_call_func = task._call_func  # noqa
 
         def _call_func(*args: Any, **kwargs: Any) -> Any:
             setattr(task, '_call_func', prev_call_func)
-            self._run_stats.set_task_state(task, RunState.RUNNING)
+            self._registry.set_task_state(task, RunState.RUNNING)
             task_result = self._run_task(*args, **kwargs)
 
             if isinstance(task_result, GeneratorType):
@@ -29,7 +29,7 @@ class TaskRunnerEngine(Engine):
                         while True:
                             value = yield task_result.send(value)
                     except StopIteration:
-                        self._run_stats.set_task_state(task, RunState.FINISHED)
+                        self._registry.set_task_state(task, RunState.FINISHED)
 
                 return detect_finished_generator_decorator()
             elif isinstance(task_result, AsyncGeneratorType):
@@ -43,7 +43,7 @@ class TaskRunnerEngine(Engine):
                         while True:
                             value = yield await task_result.asend(value)
                     except StopAsyncIteration:
-                        self._run_stats.set_task_state(task, RunState.FINISHED)
+                        self._registry.set_task_state(task, RunState.FINISHED)
 
                 return detect_finished_async_generator_decorator()
 
@@ -51,12 +51,12 @@ class TaskRunnerEngine(Engine):
 
                 async def detect_finished_coroutine():
                     result = await task_result
-                    self._run_stats.set_task_state(task, RunState.FINISHED)
+                    self._registry.set_task_state(task, RunState.FINISHED)
                     return result
 
                 return detect_finished_coroutine()
             else:
-                self._run_stats.set_task_state(task, RunState.FINISHED)
+                self._registry.set_task_state(task, RunState.FINISHED)
                 return task_result
 
         setattr(task, '_call_func', _call_func)

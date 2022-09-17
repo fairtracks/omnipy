@@ -23,7 +23,7 @@ def read_log_line_from_stream(str_stream: StringIO) -> str:
 
 
 def extract_run_state(task: MockTask):
-    return task.runtime.run_stats.get_task_state(task)
+    return task.runtime.registry.get_task_state(task)
 
 
 def assert_task_state(task: MockTask, state: RunState):

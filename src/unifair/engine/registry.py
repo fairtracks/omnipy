@@ -8,7 +8,7 @@ from unifair.engine.protocols import TaskProtocol
 from unifair.util.helpers import get_datetime_format
 
 
-class RunStats:
+class RunStateRegistry:
     def __init__(self) -> None:
         self._datetime_format: Optional[str] = None
         self._logger: Optional[logging.Logger] = None
@@ -41,10 +41,8 @@ class RunStats:
 
         if set_unifair_formatter_on_handlers:
             formatter = logging.Formatter(UNIFAIR_LOG_FORMAT_STR)
-
             for handler in self._logger.handlers:
-                if set_unifair_formatter_on_handlers:
-                    handler.setFormatter(formatter)
+                handler.setFormatter(formatter)
 
     def set_task_state(self, task: TaskProtocol, state: RunState) -> None:
         cur_datetime = datetime.now()

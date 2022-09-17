@@ -9,7 +9,7 @@ import pytest
 from unifair.engine.protocols import RuntimeConfigProtocol
 
 from .helpers.mocks import (MockEngineConfig,
-                            MockRunStats,
+                            MockRunStateRegistry,
                             MockRuntimeConfig,
                             MockTask,
                             MockTaskRunnerEngine,
@@ -47,10 +47,10 @@ def task_b() -> MockTask:
 @pytest.fixture(scope='function')
 def runtime_mock_task_runner_no_verbose() -> RuntimeConfigProtocol:
     config = MockEngineConfig(verbose=False)
-    run_stats = MockRunStats()
+    registry = MockRunStateRegistry()
     return MockRuntimeConfig(  # noqa
-        engine=MockTaskRunnerEngine(config, run_stats),
-        run_stats=run_stats,
+        engine=MockTaskRunnerEngine(config, registry),
+        registry=registry,
     )
 
 

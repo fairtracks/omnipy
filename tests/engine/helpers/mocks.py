@@ -5,7 +5,7 @@ from typing import Any, Callable, ClassVar, Dict, Optional, Tuple, Type
 from unifair.engine.constants import RunState
 from unifair.engine.protocols import (EngineConfigProtocol,
                                       EngineProtocol,
-                                      RunStatsProtocol,
+                                      RunStateRegistryProtocol,
                                       RuntimeConfigProtocol,
                                       TaskProtocol)
 from unifair.engine.task_runner import TaskRunnerEngine
@@ -14,7 +14,7 @@ from unifair.engine.task_runner import TaskRunnerEngine
 @dataclass
 class MockRuntimeConfig:
     engine: EngineProtocol
-    run_stats: Optional[RunStatsProtocol] = None
+    registry: Optional[RunStateRegistryProtocol] = None
 
 
 @dataclass
@@ -85,7 +85,7 @@ class MockBackendTask:
         return result
 
 
-class MockRunStats(RunStatsProtocol):
+class MockRunStateRegistry(RunStateRegistryProtocol):
     def __init__(self):
         self._tasks: Dict[str, TaskProtocol] = {}
         self._task_state: Dict[str, RunState] = {}
