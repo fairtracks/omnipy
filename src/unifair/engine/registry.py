@@ -4,12 +4,13 @@ import logging
 from typing import DefaultDict, Dict, List, Optional, Tuple, Union
 
 from unifair.engine.constants import RunState, RunStateLogMessages, UNIFAIR_LOG_FORMAT_STR
-from unifair.engine.protocols import TaskProtocol
+from unifair.engine.protocols import RuntimeConfigProtocol, TaskProtocol
 from unifair.util.helpers import get_datetime_format
 
 
 class RunStateRegistry:
     def __init__(self) -> None:
+        self._runtime: Optional[RuntimeConfigProtocol] = None
         self._datetime_format: Optional[str] = None
         self._logger: Optional[logging.Logger] = None
 
@@ -30,6 +31,9 @@ class RunStateRegistry:
             return tuple(self._tasks[name] for name in task_names)
         else:
             return tuple(self._tasks.values())
+
+    def set_runtime(self, runtime: RuntimeConfigProtocol) -> None:
+        self._runtime = runtime
 
     def set_logger(self,
                    logger: logging.Logger,

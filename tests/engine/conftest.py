@@ -46,11 +46,11 @@ def task_b() -> MockTask:
 
 @pytest.fixture(scope='function')
 def runtime_mock_task_runner_no_verbose() -> RuntimeConfigProtocol:
-    config = MockEngineConfig(verbose=False)
+    config = MockEngineConfig(backend_verbose=False)
     registry = MockRunStateRegistry()
     return MockRuntimeConfig(  # noqa
-        engine=MockTaskRunnerEngine(config, registry),
-        registry=registry,
+        engine=MockTaskRunnerEngine(config),  # noqa
+        registry=registry,  # noqa
     )
 
 
