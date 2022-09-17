@@ -17,13 +17,13 @@ from .helpers.mocks import MockEngineConfig, MockTask, MockTaskRunnerEngine, Moc
 
 def test_engine_init() -> None:
     engine = MockTaskRunnerEngine()
-    assert engine.verbose is True
+    assert engine.backend_verbose is True
 
-    engine = MockTaskRunnerEngine(config=MockEngineConfig(verbose=True))
-    assert engine.verbose is True
+    engine = MockTaskRunnerEngine(config=MockEngineConfig(backend_verbose=True))
+    assert engine.backend_verbose is True
 
-    engine = MockTaskRunnerEngine(config=MockEngineConfig(verbose=False))
-    assert engine.verbose is False
+    engine = MockTaskRunnerEngine(config=MockEngineConfig(backend_verbose=False))
+    assert engine.backend_verbose is False
 
 
 def test_mock_task_run(
@@ -36,7 +36,7 @@ def test_mock_task_run(
 
     assert power(4, 2) == 16
     assert power.name == 'power'
-    assert power.runtime.engine.backend_task.verbose is False
+    assert power.runtime.engine.backend_task.backend_verbose is False
     assert power.runtime.engine.backend_task.finished
 
 
