@@ -12,18 +12,18 @@ class EngineProtocol(Protocol):
     def __init__(
             self,
             config: Optional[EngineConfigProtocol] = None,  # noqa
-            run_stats: Optional['RunStatsProtocol'] = None):  # noqa
+            registry: Optional['RunStateRegistryProtocol'] = None):  # noqa
         ...
 
 
 class RuntimeConfigProtocol(Protocol):
     engine: EngineProtocol
-    run_stats: Optional['RunStatsProtocol'] = None
+    registry: Optional['RunStateRegistryProtocol'] = None
 
     def __init__(
             self,
             engine: EngineProtocol,  # noqa
-            run_stats: Optional['RunStatsProtocol'],  # noqa
+            registry: Optional['RunStateRegistryProtocol'],  # noqa
             *args: Any,
             **kwargs: Any) -> None:
         ...
@@ -48,7 +48,7 @@ class TaskTemplateProtocol(TaskProtocol):
         ...
 
 
-class RunStatsProtocol:
+class RunStateRegistryProtocol:
     def get_task_state(self, task: TaskProtocol) -> RunState:
         ...
 

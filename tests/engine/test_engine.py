@@ -40,7 +40,7 @@ def test_mock_task_run(
     assert power.runtime.engine.backend_task.finished
 
 
-def test_mock_task_run_stats_sync_function(
+def test_mock_task_run_states_sync_function(
     runtime_mock_task_runner_no_verbose: Annotated[RuntimeConfigProtocol, pytest.fixture],
     sync_power_task_template: Annotated[MockTaskTemplate, pytest.fixture],
 ) -> None:
@@ -53,7 +53,7 @@ def test_mock_task_run_stats_sync_function(
     assert_task_state(power, RunState.FINISHED)
 
 
-def test_mock_task_run_stats_sync_function_multithreaded_threading(
+def test_mock_task_run_states_sync_function_multithreaded_threading(
     sync_wait_a_bit: Annotated[MockTask, pytest.fixture],
     sync_assert_results_wait_a_bit: Annotated[Callable[[float], None], pytest.fixture],
 ) -> None:
@@ -68,7 +68,7 @@ def test_mock_task_run_stats_sync_function_multithreaded_threading(
     assert_task_state(sync_wait_a_bit, RunState.FINISHED)
 
 
-def test_mock_task_run_stats_sync_function_multithreaded_futures(
+def test_mock_task_run_states_sync_function_multithreaded_futures(
         sync_wait_a_bit: Annotated[MockTask, pytest.fixture]) -> None:
 
     assert_task_state(sync_wait_a_bit, RunState.INITIALIZED)
@@ -82,7 +82,7 @@ def test_mock_task_run_stats_sync_function_multithreaded_futures(
         assert_task_state(sync_wait_a_bit, RunState.FINISHED)
 
 
-def test_fail_mock_task_run_stats_sync_function_multiprocessing_futures(
+def test_fail_mock_task_run_states_sync_function_multiprocessing_futures(
         sync_wait_a_bit: Annotated[MockTask, pytest.fixture]) -> None:
 
     with ProcessPoolExecutor(max_workers=1) as executor:
@@ -91,7 +91,7 @@ def test_fail_mock_task_run_stats_sync_function_multiprocessing_futures(
             future.result()
 
 
-def test_mock_task_run_stats_sync_generator_coroutine(
+def test_mock_task_run_states_sync_generator_coroutine(
         sync_wait_for_send_twice: Annotated[MockTask, pytest.fixture]) -> None:
     assert_task_state(sync_wait_for_send_twice, RunState.INITIALIZED)
 
@@ -108,7 +108,7 @@ def test_mock_task_run_stats_sync_generator_coroutine(
 
 
 @pytest.mark.asyncio
-async def test_mock_task_run_stats_async_coroutine(
+async def test_mock_task_run_states_async_coroutine(
     async_wait_a_bit: Annotated[MockTask, pytest.fixture],
     async_assert_results_wait_a_bit: Annotated[Callable[[float], Awaitable[None]], pytest.fixture],
 ) -> None:
@@ -122,7 +122,7 @@ async def test_mock_task_run_stats_async_coroutine(
 
 
 @pytest.mark.asyncio
-async def test_mock_task_run_stats_async_coroutine_multithreaded_threading(
+async def test_mock_task_run_states_async_coroutine_multithreaded_threading(
     async_wait_a_bit: Annotated[MockTask, pytest.fixture],
     async_run_assert_results_wait_a_bit: Annotated[Callable[[float], Awaitable[None]],
                                                    pytest.fixture],
@@ -139,7 +139,7 @@ async def test_mock_task_run_stats_async_coroutine_multithreaded_threading(
 
 
 @pytest.mark.asyncio
-async def test_mock_task_run_stats_async_coroutine_multithreaded_futures(
+async def test_mock_task_run_states_async_coroutine_multithreaded_futures(
     async_wait_a_bit: Annotated[MockTask, pytest.fixture],
     async_assert_results_wait_a_bit: Annotated[Callable[[float], Awaitable[None]], pytest.fixture],
 ) -> None:
@@ -153,7 +153,7 @@ async def test_mock_task_run_stats_async_coroutine_multithreaded_futures(
 
 
 @pytest.mark.asyncio
-async def test_fail_mock_task_run_stats_async_coroutine_multiprocessing_futures(
+async def test_fail_mock_task_run_states_async_coroutine_multiprocessing_futures(
     async_wait_a_bit: Annotated[MockTask, pytest.fixture],
     async_assert_results_wait_a_bit: Annotated[Callable[[float], Awaitable[None]], pytest.fixture],
 ) -> None:
@@ -167,7 +167,7 @@ async def test_fail_mock_task_run_stats_async_coroutine_multiprocessing_futures(
 
 
 @pytest.mark.asyncio
-async def test_mock_task_run_stats_async_generator_coroutine(
+async def test_mock_task_run_states_async_generator_coroutine(
         async_wait_for_send_twice: Annotated[MockTask, pytest.fixture]) -> None:
     assert_task_state(async_wait_for_send_twice, RunState.INITIALIZED)
 
