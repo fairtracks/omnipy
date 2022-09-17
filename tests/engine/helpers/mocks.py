@@ -1,18 +1,24 @@
 from dataclasses import dataclass
-from typing import Any, Callable, ClassVar, Optional, Type
+from datetime import datetime
+from typing import Any, Callable, ClassVar, Dict, Optional, Tuple, Type
 
-from unifair.engine.base import Engine, EngineConfig
-from unifair.engine.protocols import RuntimeConfigProtocol, TaskProtocol
+from unifair.engine.constants import RunState
+from unifair.engine.protocols import (EngineConfigProtocol,
+                                      EngineProtocol,
+                                      RunStatsProtocol,
+                                      RuntimeConfigProtocol,
+                                      TaskProtocol)
 from unifair.engine.task_runner import TaskRunnerEngine
 
 
 @dataclass
 class MockRuntimeConfig:
-    engine: Engine
+    engine: EngineProtocol
+    run_stats: Optional[RunStatsProtocol] = None
 
 
 @dataclass
-class MockEngineConfig(EngineConfig):
+class MockEngineConfig:
     verbose: bool = True
 
 
@@ -44,6 +50,24 @@ class MockTaskTemplate(MockTask):
         return self.runtime.engine.task_decorator(task)
 
 
+class MockTaskRunnerEngine(TaskRunnerEngine):
+    def _init_engine(self) -> None:
+        self.backend_task: Optional[MockBackendTask] = None
+        assert isinstance(self._config, MockEngineConfig)  # to help type checkers
+        self.verbose: bool = self._config.verbose
+
+    def _init_task(self, task) -> None:
+        assert isinstance(self._config, MockEngineConfig)  # to help type checkers
+        self.backend_task = MockBackendTask(task, self._config)
+
+    def _run_task(self, *args, **kwargs) -> Any:
+        assert self.backend_task is not None
+        return self.backend_task.run(*args, **kwargs)
+
+    def _get_default_config(self) -> EngineConfigProtocol:
+        return MockEngineConfig()
+
+
 class MockBackendTask:
     def __init__(self, task: Type[TaskProtocol], engine_config: MockEngineConfig):
         self.task = task
@@ -61,16 +85,22 @@ class MockBackendTask:
         return result
 
 
-class MockTaskRunnerEngine(TaskRunnerEngine):
-    def _init_engine(self) -> None:
-        self.backend_task: Optional[MockBackendTask] = None
-        assert isinstance(self._config, MockEngineConfig)  # to help type checkers
-        self.verbose: bool = self._config.verbose
+class MockRunStats(RunStatsProtocol):
+    def __init__(self):
+        self._tasks: Dict[str, TaskProtocol] = {}
+        self._task_state: Dict[str, RunState] = {}
+        self._task_state_datetime: Dict[Tuple[str, RunState], datetime] = {}
 
-    def _init_task(self, task) -> None:
-        assert isinstance(self._config, MockEngineConfig)  # to help type checkers
-        self.backend_task = MockBackendTask(task, self._config)
+    def get_task_state(self, task: TaskProtocol) -> RunState:
+        return self._task_state[task.name]
 
-    def _run_task(self, *args, **kwargs) -> Any:
-        assert self.backend_task is not None
-        return self.backend_task.run(*args, **kwargs)
+    def get_task_state_datetime(self, task: TaskProtocol, state: RunState) -> datetime:
+        return self._task_state_datetime[(task.name, state)]
+
+    def all_tasks(self, state: Optional[RunState] = None) -> Tuple[TaskProtocol, ...]:  # noqa
+        return tuple(self._tasks.values())
+
+    def set_task_state(self, task: TaskProtocol, state: RunState) -> None:
+        self._tasks[task.name] = task
+        self._task_state[task.name] = state
+        self._task_state_datetime[(task.name, state)] = datetime.now()
