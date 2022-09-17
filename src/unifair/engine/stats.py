@@ -1,26 +1,11 @@
 from collections import defaultdict
 from datetime import datetime
-from enum import Enum, IntEnum
 import logging
 from typing import DefaultDict, Dict, List, Optional, Tuple, Union
 
+from unifair.engine.constants import RunState, RunStateLogMessages, UNIFAIR_LOG_FORMAT_STR
 from unifair.engine.protocols import TaskProtocol
 from unifair.util.helpers import get_datetime_format
-
-
-class State(IntEnum):
-    INITIALIZED = 1
-    RUNNING = 2
-    FINISHED = 3
-
-
-class StateLogMessages(Enum):
-    INITIALIZED: str = 'Initialized task "{}"'
-    RUNNING: str = 'Started running task "{}"...'
-    FINISHED: str = 'Task "{}" finished!'
-
-
-UNIFAIR_LOG_FORMAT_STR: str = '%(levelname)s (%(name)s) - %(message)s'
 
 
 class RunStats:
@@ -29,17 +14,17 @@ class RunStats:
         self._logger: Optional[logging.Logger] = None
 
         self._tasks: Dict[str, TaskProtocol] = {}
-        self._task_states: Dict[str, State] = {}
-        self._state_tasks: DefaultDict[State, List[str]] = defaultdict(list)
-        self._task_state_datetime: Dict[Tuple[str, State], datetime] = {}
+        self._task_states: Dict[str, RunState] = {}
+        self._state_tasks: DefaultDict[RunState, List[str]] = defaultdict(list)
+        self._task_state_datetime: Dict[Tuple[str, RunState], datetime] = {}
 
-    def get_task_state(self, task: TaskProtocol) -> State:
+    def get_task_state(self, task: TaskProtocol) -> RunState:
         return self._task_states[task.name]
 
-    def get_task_state_datetime(self, task: TaskProtocol, state: State) -> datetime:
+    def get_task_state_datetime(self, task: TaskProtocol, state: RunState) -> datetime:
         return self._task_state_datetime[(task.name, state)]
 
-    def all_tasks(self, state: Optional[State] = None) -> Tuple[TaskProtocol, ...]:
+    def all_tasks(self, state: Optional[RunState] = None) -> Tuple[TaskProtocol, ...]:
         if state is not None:
             task_names = self._state_tasks[state]
             return tuple(self._tasks[name] for name in task_names)
@@ -61,7 +46,7 @@ class RunStats:
                 if set_unifair_formatter_on_handlers:
                     handler.setFormatter(formatter)
 
-    def set_task_state(self, task: TaskProtocol, state: State) -> None:
+    def set_task_state(self, task: TaskProtocol, state: RunState) -> None:
         cur_datetime = datetime.now()
 
         if task.name in self._tasks:
@@ -72,7 +57,7 @@ class RunStats:
         self._update_task_stats(task, state, cur_datetime)
         self._log_state_change(task, state)
 
-    def _update_task_registration(self, task: TaskProtocol, state: State) -> None:
+    def _update_task_registration(self, task: TaskProtocol, state: RunState) -> None:
         if id(self._tasks[task.name]) != id(task):
             self._raise_task_error(
                 task,
@@ -89,7 +74,7 @@ class RunStats:
             )
 
     def _register_new_task(self, task, state) -> None:
-        if state != State.INITIALIZED:
+        if state != RunState.INITIALIZED:
             self._raise_task_error(
                 task,
                 f'Initial state of must be "INITIALIZED", not "{state.name}"',
@@ -101,10 +86,10 @@ class RunStats:
         self._state_tasks[state].append(task.name)
         self._task_state_datetime[(task.name, state)] = cur_datetime
 
-    def _log_state_change(self, task: TaskProtocol, state: State) -> None:
+    def _log_state_change(self, task: TaskProtocol, state: RunState) -> None:
         if self._logger is not None:
             datetime_str = self.get_task_state_datetime(task, state).strftime(self._datetime_format)
-            log_msg = StateLogMessages[state.name].value.format(task.name)
+            log_msg = RunStateLogMessages[state.name].value.format(task.name)
             self._logger.info(f'{datetime_str}: {log_msg}')
 
     def _raise_task_error(self, task: TaskProtocol, msg: str) -> None:
