@@ -213,6 +213,30 @@ def test_state_change_logging(
                            f'Task "b" finished!'
 
 
+def test_state_change_logging_unset(
+    str_stream: Annotated[StringIO, pytest.fixture],
+    simple_logger: Annotated[logging.Logger, pytest.fixture],
+    task_a: Annotated[TaskProtocol, pytest.fixture],
+):
+    registry = RunStateRegistry()
+    simple_logger.addHandler(logging.StreamHandler(str_stream))
+    registry.set_logger(simple_logger)
+
+    registry.set_task_state(task_a, RunState.INITIALIZED)
+    log_line = read_log_line_from_stream(str_stream)
+    assert 'INFO (test)' in log_line
+
+    registry.set_logger(None)
+    registry.set_task_state(task_a, RunState.RUNNING)
+    log_line = read_log_line_from_stream(str_stream)
+    assert log_line == ''
+
+    registry.set_logger(simple_logger)
+    registry.set_task_state(task_a, RunState.FINISHED)
+    log_line = read_log_line_from_stream(str_stream)
+    assert 'INFO (test)' in log_line
+
+
 def test_state_change_logging_handler_formatting_variants(
     str_stream: Annotated[StringIO, pytest.fixture],
     simple_logger: Annotated[logging.Logger, pytest.fixture],
@@ -246,15 +270,13 @@ def test_state_change_logging_handler_formatting_variants(
 
 def test_state_change_logging_date_localization(
     str_stream: Annotated[StringIO, pytest.fixture],
-    simple_logger: Annotated[logging.Logger, pytest.fixture],
+    stream_logger: Annotated[logging.Logger, pytest.fixture],
     task_a: Annotated[TaskProtocol, pytest.fixture],
 ):
     registry = RunStateRegistry()
 
-    simple_logger.addHandler(logging.StreamHandler(str_stream))
-
     locale = ('no_NO', 'UTF-8')
-    registry.set_logger(simple_logger, locale=locale)
+    registry.set_logger(stream_logger, locale=locale)
 
     registry.set_task_state(task_a, RunState.INITIALIZED)
     init_datetime = registry.get_task_state_datetime(task_a, RunState.INITIALIZED)

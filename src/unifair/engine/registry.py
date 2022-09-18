@@ -36,17 +36,18 @@ class RunStateRegistry:
         self._runtime = runtime
 
     def set_logger(self,
-                   logger: logging.Logger,
+                   logger: Optional[logging.Logger],
                    set_unifair_formatter_on_handlers=True,
                    locale: Union[str, Tuple[str, str]] = '') -> None:
 
         self._logger = logger
-        self._datetime_format = get_datetime_format(locale)
+        if self._logger is not None:
+            self._datetime_format = get_datetime_format(locale)
 
-        if set_unifair_formatter_on_handlers:
-            formatter = logging.Formatter(UNIFAIR_LOG_FORMAT_STR)
-            for handler in self._logger.handlers:
-                handler.setFormatter(formatter)
+            if set_unifair_formatter_on_handlers:
+                formatter = logging.Formatter(UNIFAIR_LOG_FORMAT_STR)
+                for handler in self._logger.handlers:
+                    handler.setFormatter(formatter)
 
     def set_task_state(self, task: TaskProtocol, state: RunState) -> None:
         cur_datetime = datetime.now()

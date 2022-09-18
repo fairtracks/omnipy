@@ -28,6 +28,16 @@ def simple_logger() -> logging.Logger:
     return logger
 
 
+@pytest.fixture(scope='function')
+def stream_logger(
+    str_stream: Annotated[StringIO, pytest.fixture],
+    simple_logger: Annotated[logging.Logger, pytest.fixture],
+) -> logging.Logger:
+
+    simple_logger.addHandler(logging.StreamHandler(str_stream))
+    return simple_logger
+
+
 @pytest.fixture(scope='module')
 def task_a() -> MockTask:
     def concat_a(s: str) -> str:
