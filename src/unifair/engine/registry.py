@@ -3,37 +3,35 @@ from datetime import datetime
 import logging
 from typing import DefaultDict, Dict, List, Optional, Tuple, Union
 
+from unifair.config.registry import RunStateRegistryConfig
 from unifair.engine.constants import RunState, RunStateLogMessages, UNIFAIR_LOG_FORMAT_STR
-from unifair.engine.protocols import RuntimeConfigProtocol, TaskProtocol
+from unifair.engine.protocols import IsRunStateRegistryConfig, IsRuntime, IsTask
 from unifair.util.helpers import get_datetime_format
 
 
 class RunStateRegistry:
     def __init__(self) -> None:
-        self._runtime: Optional[RuntimeConfigProtocol] = None
         self._datetime_format: Optional[str] = None
         self._logger: Optional[logging.Logger] = None
+        self._config: IsRunStateRegistryConfig = RunStateRegistryConfig()
 
-        self._tasks: Dict[str, TaskProtocol] = {}
+        self._tasks: Dict[str, IsTask] = {}
         self._task_states: Dict[str, RunState] = {}
         self._state_tasks: DefaultDict[RunState, List[str]] = defaultdict(list)
         self._task_state_datetime: Dict[Tuple[str, RunState], datetime] = {}
 
-    def get_task_state(self, task: TaskProtocol) -> RunState:
+    def get_task_state(self, task: IsTask) -> RunState:
         return self._task_states[task.name]
 
-    def get_task_state_datetime(self, task: TaskProtocol, state: RunState) -> datetime:
+    def get_task_state_datetime(self, task: IsTask, state: RunState) -> datetime:
         return self._task_state_datetime[(task.name, state)]
 
-    def all_tasks(self, state: Optional[RunState] = None) -> Tuple[TaskProtocol, ...]:
+    def all_tasks(self, state: Optional[RunState] = None) -> Tuple[IsTask, ...]:
         if state is not None:
             task_names = self._state_tasks[state]
             return tuple(self._tasks[name] for name in task_names)
         else:
             return tuple(self._tasks.values())
-
-    def set_runtime(self, runtime: RuntimeConfigProtocol) -> None:
-        self._runtime = runtime
 
     def set_logger(self,
                    logger: Optional[logging.Logger],
@@ -49,7 +47,10 @@ class RunStateRegistry:
                 for handler in self._logger.handlers:
                     handler.setFormatter(formatter)
 
-    def set_task_state(self, task: TaskProtocol, state: RunState) -> None:
+    def set_config(self, config: IsRunStateRegistryConfig) -> None:
+        self._config = config
+
+    def set_task_state(self, task: IsTask, state: RunState) -> None:
         cur_datetime = datetime.now()
 
         if task.name in self._tasks:
@@ -60,7 +61,7 @@ class RunStateRegistry:
         self._update_task_stats(task, state, cur_datetime)
         self._log_state_change(task, state)
 
-    def _update_task_registration(self, task: TaskProtocol, state: RunState) -> None:
+    def _update_task_registration(self, task: IsTask, state: RunState) -> None:
         if id(self._tasks[task.name]) != id(task):
             self._raise_task_error(
                 task,
@@ -89,11 +90,11 @@ class RunStateRegistry:
         self._state_tasks[state].append(task.name)
         self._task_state_datetime[(task.name, state)] = cur_datetime
 
-    def _log_state_change(self, task: TaskProtocol, state: RunState) -> None:
+    def _log_state_change(self, task: IsTask, state: RunState) -> None:
         if self._logger is not None:
             datetime_str = self.get_task_state_datetime(task, state).strftime(self._datetime_format)
             log_msg = RunStateLogMessages[state.name].value.format(task.name)
             self._logger.info(f'{datetime_str}: {log_msg}')
 
-    def _raise_task_error(self, task: TaskProtocol, msg: str) -> None:
+    def _raise_task_error(self, task: IsTask, msg: str) -> None:
         raise ValueError(f'Error in task "{task.name}": {msg}')

@@ -1,10 +1,10 @@
 import pytest
 
 from unifair.compute.flow import DagFlow, FlowTemplate, FuncFlow
-from unifair.config.runtime import RuntimeConfig
+from unifair.config.runtime import Runtime
 
 
-def _common_test_run_three_task_flow(runtime: RuntimeConfig, pos_square_root: FlowTemplate):
+def _common_test_run_three_task_flow(runtime: Runtime, pos_square_root: FlowTemplate):
     f_pos_square_root = pos_square_root.refine(
         name='f_pos_square_root', text='result').apply(verbose=True)
 

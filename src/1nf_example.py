@@ -30,7 +30,7 @@ t_convert_to_1nf = convert_to_1nf.apply()
 
 # # This will change to e.g.:
 #
-# runtime = RuntimeConfig(engine=PrefectEngine(...), ...)
+# runtime = Runtime(engine=PrefectEngine(...), ...)
 # remove_columns = remove_columns.apply(runtime)
 
 # As flows are not fully implemented, we will call the tasks directly in the code.

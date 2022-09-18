@@ -6,15 +6,15 @@ from typing import Any
 
 from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
-from unifair.engine.protocols import TaskProtocol
+from unifair.engine.protocols import IsTask
 
 
 class TaskRunnerEngine(Engine):
-    def _register_task_state(self, task: TaskProtocol, state: RunState) -> None:
-        if self._runtime and self._runtime.registry:
-            self._runtime.registry.set_task_state(task, state)
+    def _register_task_state(self, task: IsTask, state: RunState) -> None:
+        if self._registry:
+            self._registry.set_task_state(task, state)
 
-    def task_decorator(self, task: TaskProtocol) -> TaskProtocol:
+    def task_decorator(self, task: IsTask) -> IsTask:
         self._register_task_state(task, RunState.INITIALIZED)
         self._init_task(task)
 
@@ -68,7 +68,7 @@ class TaskRunnerEngine(Engine):
         return task
 
     @abstractmethod
-    def _init_task(self, task: TaskProtocol) -> None:
+    def _init_task(self, task: IsTask) -> None:
         ...
 
     @abstractmethod

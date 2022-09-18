@@ -1,36 +1,25 @@
 from dataclasses import dataclass
 from datetime import datetime
+import logging
 from typing import Any, Callable, ClassVar, Dict, Optional, Tuple, Type
 
-from unifair.engine.base import Engine
+from unifair.config.engine import LocalRunnerConfig, PrefectEngineConfig
+from unifair.config.registry import RunStateRegistryConfig
 from unifair.engine.constants import RunState
-from unifair.engine.protocols import (EngineConfigProtocol,
-                                      EngineProtocol,
-                                      RunStateRegistryProtocol,
-                                      RuntimeConfigProtocol,
-                                      TaskProtocol)
+from unifair.engine.local import LocalRunner
+from unifair.engine.prefect import PrefectEngine
+from unifair.engine.protocols import (IsEngine,
+                                      IsEngineConfig,
+                                      IsLocalRunnerConfig,
+                                      IsPrefectEngineConfig,
+                                      IsRunStateRegistry,
+                                      IsRunStateRegistryConfig,
+                                      IsTask)
 from unifair.engine.task_runner import TaskRunnerEngine
 
 
-@dataclass
-class MockRuntimeConfig:
-    engine: EngineProtocol
-    registry: Optional[RunStateRegistryProtocol] = None
-    verbose: bool = False
-
-    def __post_init__(self):
-        self.engine.set_runtime(self)
-        if self.registry is not None:
-            self.registry.set_runtime(self)
-
-
-@dataclass
-class MockEngineConfig:
-    backend_verbose: bool = True
-
-
 class MockTask:
-    runtime: ClassVar[Optional[MockRuntimeConfig]] = None
+    engine: ClassVar[Optional[IsEngine]] = None
 
     def __init__(self, name: str, func: Callable) -> None:
         self.name = name
@@ -43,35 +32,73 @@ class MockTask:
         return self._func(*args, **kwargs)
 
     @classmethod
-    def set_runtime(cls, runtime: RuntimeConfigProtocol) -> None:
-        assert isinstance(runtime, MockRuntimeConfig)
-        cls.runtime = runtime
+    def set_engine(cls, engine: IsEngine) -> None:
+        cls.engine = engine
+
+    @classmethod
+    def set_registry(cls, registry: IsRunStateRegistry) -> None:
+        cls.registry = registry
 
 
 class MockTaskTemplate(MockTask):
-    def apply(self) -> TaskProtocol:
+    def apply(self) -> IsTask:
         task = MockTask(self.name, self._func)
-        assert self.runtime is not None
-        task.set_runtime(self.runtime)
-        assert isinstance(self.runtime.engine, TaskRunnerEngine)
-        return self.runtime.engine.task_decorator(task)
+        assert self.engine is not None
+        task.set_engine(self.engine)
+        task.set_registry(self.registry)
+        assert isinstance(self.engine, TaskRunnerEngine)
+        return self.engine.task_decorator(task)
 
 
-class MockEngine(Engine):
-    def _init_engine(self) -> None:
-        ...
+@dataclass
+class MockLocalRunnerConfig(LocalRunnerConfig):
+    backend_verbose: bool = True
 
-    def _get_default_config(self) -> EngineConfigProtocol:
-        return MockEngineConfig()
+
+class MockLocalRunner(LocalRunner):
+    @classmethod
+    def get_config_cls(cls) -> Type[IsEngineConfig]:
+        return MockLocalRunnerConfig
 
     @property
-    def runtime(self) -> Optional[RuntimeConfigProtocol]:
-        return self._runtime
+    def config(self) -> Optional[IsLocalRunnerConfig]:
+        return self._config
+
+    @property
+    def registry(self) -> Optional[IsRunStateRegistry]:
+        return self._registry
+
+
+@dataclass
+class MockPrefectEngineConfig(PrefectEngineConfig):
+    server_url: str = ''
+
+
+class MockPrefectEngine(PrefectEngine):
+    @classmethod
+    def get_config_cls(cls) -> Type[IsEngineConfig]:
+        return MockPrefectEngineConfig
+
+    @property
+    def config(self) -> Optional[IsPrefectEngineConfig]:
+        return self._config
+
+    @property
+    def registry(self) -> Optional[IsRunStateRegistry]:
+        return self._registry
+
+
+@dataclass
+class MockEngineConfig:
+    backend_verbose: bool = True
 
 
 class MockTaskRunnerEngine(TaskRunnerEngine):
     def _init_engine(self) -> None:
         self.backend_task: Optional[MockBackendTask] = None
+        self._update_from_config()
+
+    def _update_from_config(self) -> None:
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
         self.backend_verbose: bool = self._config.backend_verbose
 
@@ -83,12 +110,13 @@ class MockTaskRunnerEngine(TaskRunnerEngine):
         assert self.backend_task is not None
         return self.backend_task.run(*args, **kwargs)
 
-    def _get_default_config(self) -> EngineConfigProtocol:
-        return MockEngineConfig()
+    @classmethod
+    def get_config_cls(cls) -> Type[IsEngineConfig]:
+        return MockEngineConfig
 
 
 class MockBackendTask:
-    def __init__(self, task: Type[TaskProtocol], engine_config: MockEngineConfig):
+    def __init__(self, task: Type[IsTask], engine_config: MockEngineConfig):
         self.task = task
         self.engine_config = engine_config
         self.backend_verbose = engine_config.backend_verbose
@@ -105,29 +133,30 @@ class MockBackendTask:
 
 
 class MockRunStateRegistry:
-    def __init__(self):
-        self._runtime: Optional[RuntimeConfigProtocol] = None
-        self._tasks: Dict[str, TaskProtocol] = {}
+    def __init__(self) -> None:
+        self.logger: Optional[logging.Logger] = None
+        self.config: IsRunStateRegistryConfig = RunStateRegistryConfig()
+
+        self._tasks: Dict[str, IsTask] = {}
         self._task_state: Dict[str, RunState] = {}
         self._task_state_datetime: Dict[Tuple[str, RunState], datetime] = {}
 
-    def get_task_state(self, task: TaskProtocol) -> RunState:
+    def get_task_state(self, task: IsTask) -> RunState:
         return self._task_state[task.name]
 
-    def get_task_state_datetime(self, task: TaskProtocol, state: RunState) -> datetime:
+    def get_task_state_datetime(self, task: IsTask, state: RunState) -> datetime:
         return self._task_state_datetime[(task.name, state)]
 
-    def all_tasks(self, state: Optional[RunState] = None) -> Tuple[TaskProtocol, ...]:  # noqa
+    def all_tasks(self, state: Optional[RunState] = None) -> Tuple[IsTask, ...]:  # noqa
         return tuple(self._tasks.values())
 
-    def set_task_state(self, task: TaskProtocol, state: RunState) -> None:
+    def set_logger(self, logger: Optional[logging.Logger]) -> None:
+        self.logger = logger
+
+    def set_config(self, config: IsRunStateRegistryConfig) -> None:
+        self.config = config
+
+    def set_task_state(self, task: IsTask, state: RunState) -> None:
         self._tasks[task.name] = task
         self._task_state[task.name] = state
         self._task_state_datetime[(task.name, state)] = datetime.now()
-
-    def set_runtime(self, runtime: RuntimeConfigProtocol) -> None:
-        self._runtime = runtime
-
-    @property
-    def runtime(self) -> Optional[RuntimeConfigProtocol]:
-        return self._runtime

@@ -4,6 +4,7 @@ import inspect
 from types import MappingProxyType
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Tuple, Type, Union
 
+from unifair.engine.protocols import IsEngine
 from unifair.util.helpers import create_merged_dict
 from unifair.util.mixins import DynamicClassDecoratorMixin
 from unifair.util.param_key_mapper import ParamKeyMapper
@@ -98,6 +99,10 @@ class TaskTemplate(DynamicClassDecoratorMixin, TaskConfig):
                 kwargs[key] = new_val
 
         return TaskTemplate(self._task_func, **kwargs)
+
+    @classmethod
+    def set_engine(cls, engine: IsEngine) -> None:
+        ...
 
 
 class Task(TaskConfig):

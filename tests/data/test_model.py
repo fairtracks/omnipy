@@ -77,7 +77,7 @@ def test_load():
         Model[int](5).__root__ = 12  # noqa
 
     with pytest.raises(RuntimeError):
-        Model[int](5).something = True  # noqa
+        Model[int](5).foo = True  # noqa
 
 
 def test_equality():

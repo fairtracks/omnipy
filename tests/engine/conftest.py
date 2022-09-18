@@ -6,11 +6,10 @@ from typing import Annotated, Awaitable, Callable
 
 import pytest
 
-from unifair.engine.protocols import RuntimeConfigProtocol
+from unifair.engine.protocols import IsEngine
 
 from .helpers.mocks import (MockEngineConfig,
                             MockRunStateRegistry,
-                            MockRuntimeConfig,
                             MockTask,
                             MockTaskRunnerEngine,
                             MockTaskTemplate)
@@ -55,13 +54,15 @@ def task_b() -> MockTask:
 
 
 @pytest.fixture(scope='function')
-def runtime_mock_task_runner_no_verbose() -> RuntimeConfigProtocol:
-    config = MockEngineConfig(backend_verbose=False)
+def mock_task_runner_engine_no_verbose() -> IsEngine:
+    engine = MockTaskRunnerEngine()
+    engine.set_config(MockEngineConfig(backend_verbose=False))
+    MockTaskTemplate.set_engine(engine)
+
     registry = MockRunStateRegistry()
-    return MockRuntimeConfig(  # noqa
-        engine=MockTaskRunnerEngine(config),  # noqa
-        registry=registry,  # noqa
-    )
+    engine.set_registry(registry)
+    MockTaskTemplate.set_registry(registry)
+    return engine
 
 
 @pytest.fixture(scope='module')
@@ -83,10 +84,10 @@ def sync_wait_a_bit_task_template() -> MockTaskTemplate:
 
 @pytest.fixture(scope='function')
 def sync_wait_a_bit(
-    runtime_mock_task_runner_no_verbose: Annotated[RuntimeConfigProtocol, pytest.fixture],
+    mock_task_runner_engine_no_verbose,
     sync_wait_a_bit_task_template: Annotated[MockTaskTemplate, pytest.fixture],
 ) -> MockTask:
-    MockTaskTemplate.set_runtime(runtime_mock_task_runner_no_verbose)
+
     return sync_wait_a_bit_task_template.apply()
 
 
@@ -110,10 +111,10 @@ def async_wait_a_bit_task_template() -> MockTaskTemplate:
 
 @pytest.fixture(scope='function')
 def async_wait_a_bit(
-    runtime_mock_task_runner_no_verbose: Annotated[RuntimeConfigProtocol, pytest.fixture],
+    mock_task_runner_engine_no_verbose,
     async_wait_a_bit_task_template: Annotated[MockTaskTemplate, pytest.fixture],
 ) -> MockTask:
-    MockTaskTemplate.set_runtime(runtime_mock_task_runner_no_verbose)
+
     return async_wait_a_bit_task_template.apply()
 
 
@@ -149,10 +150,10 @@ def sync_wait_for_send_twice_task_template() -> MockTaskTemplate:
 
 @pytest.fixture(scope='function')
 def sync_wait_for_send_twice(
-    runtime_mock_task_runner_no_verbose: Annotated[RuntimeConfigProtocol, pytest.fixture],
+    mock_task_runner_engine_no_verbose,
     sync_wait_for_send_twice_task_template: Annotated[MockTaskTemplate, pytest.fixture],
 ) -> MockTask:
-    MockTaskTemplate.set_runtime(runtime_mock_task_runner_no_verbose)
+
     return sync_wait_for_send_twice_task_template.apply()
 
 
@@ -168,8 +169,8 @@ def async_wait_for_send_twice_task_template() -> MockTaskTemplate:
 
 @pytest.fixture(scope='function')
 def async_wait_for_send_twice(
-    runtime_mock_task_runner_no_verbose: Annotated[RuntimeConfigProtocol, pytest.fixture],
+    mock_task_runner_engine_no_verbose,
     async_wait_for_send_twice_task_template: Annotated[MockTaskTemplate, pytest.fixture],
 ) -> MockTask:
-    MockTaskTemplate.set_runtime(runtime_mock_task_runner_no_verbose)
+
     return async_wait_for_send_twice_task_template.apply()
