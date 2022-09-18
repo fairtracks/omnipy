@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 import pytest
 
-from unifair.config.runtime import RuntimeConfig
+from unifair.config.runtime import Runtime
 from unifair.data.dataset import Dataset, MultiModelDataset
 from unifair.data.serializer import CsvSerializer, PythonSerializer
 from unifair.engine.local import LocalRunner
@@ -10,7 +10,7 @@ from unifair.engine.local import LocalRunner
 
 @pytest.fixture
 def runtime():
-    return RuntimeConfig()
+    return Runtime()
 
 
 @pytest.fixture

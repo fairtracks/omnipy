@@ -9,13 +9,13 @@ import pytest
 
 from engine.helpers.functions import read_log_line_from_stream, read_log_lines_from_stream
 from unifair.engine.constants import RunState
-from unifair.engine.protocols import TaskProtocol
+from unifair.engine.protocols import IsTask
 from unifair.engine.registry import RunStateRegistry
 from unifair.util.helpers import get_datetime_format
 
 
-def test_task_state_transitions(task_a: Annotated[TaskProtocol, pytest.fixture],
-                                task_b: Annotated[TaskProtocol, pytest.fixture]):
+def test_task_state_transitions(task_a: Annotated[IsTask, pytest.fixture],
+                                task_b: Annotated[IsTask, pytest.fixture]):
     registry = RunStateRegistry()
 
     registry.set_task_state(task_a, RunState.INITIALIZED)
@@ -61,8 +61,8 @@ def test_task_state_transitions(task_a: Annotated[TaskProtocol, pytest.fixture],
     assert registry.all_tasks(RunState.FINISHED) == (task_b, task_a)
 
 
-def test_fail_task_state_transitions(task_a: Annotated[TaskProtocol, pytest.fixture],
-                                     task_b: Annotated[TaskProtocol, pytest.fixture]):
+def test_fail_task_state_transitions(task_a: Annotated[IsTask, pytest.fixture],
+                                     task_b: Annotated[IsTask, pytest.fixture]):
     registry = RunStateRegistry()
 
     with pytest.raises(ValueError):
@@ -99,8 +99,8 @@ def test_fail_task_state_transitions(task_a: Annotated[TaskProtocol, pytest.fixt
         registry.set_task_state(task_a, RunState.FINISHED)
 
 
-def test_datetime_of_state_change_event(task_a: Annotated[TaskProtocol, pytest.fixture],
-                                        task_b: Annotated[TaskProtocol, pytest.fixture]):
+def test_datetime_of_state_change_event(task_a: Annotated[IsTask, pytest.fixture],
+                                        task_b: Annotated[IsTask, pytest.fixture]):
     registry = RunStateRegistry()
     cur_time = datetime.now()
 
@@ -125,8 +125,8 @@ def test_datetime_of_state_change_event(task_a: Annotated[TaskProtocol, pytest.f
     assert cur_time < init_time < run_time < finish_time
 
 
-def test_fail_task_key_error(task_a: Annotated[TaskProtocol, pytest.fixture],
-                             task_b: Annotated[TaskProtocol, pytest.fixture]):
+def test_fail_task_key_error(task_a: Annotated[IsTask, pytest.fixture],
+                             task_b: Annotated[IsTask, pytest.fixture]):
     registry = RunStateRegistry()
 
     with pytest.raises(KeyError):
@@ -149,8 +149,8 @@ def test_fail_task_key_error(task_a: Annotated[TaskProtocol, pytest.fixture],
         registry.get_task_state_datetime(task_b, RunState.INITIALIZED)
 
 
-def test_fail_task_same_name_different_task(task_a: Annotated[TaskProtocol, pytest.fixture],
-                                            task_b: Annotated[TaskProtocol, pytest.fixture]):
+def test_fail_task_same_name_different_task(task_a: Annotated[IsTask, pytest.fixture],
+                                            task_b: Annotated[IsTask, pytest.fixture]):
     task_b = copy(task_b)
     task_b.name = task_a.name
 
@@ -167,8 +167,8 @@ def test_fail_task_same_name_different_task(task_a: Annotated[TaskProtocol, pyte
 def test_state_change_logging(
     str_stream: Annotated[StringIO, pytest.fixture],
     simple_logger: Annotated[logging.Logger, pytest.fixture],
-    task_a: Annotated[TaskProtocol, pytest.fixture],
-    task_b: Annotated[TaskProtocol, pytest.fixture],
+    task_a: Annotated[IsTask, pytest.fixture],
+    task_b: Annotated[IsTask, pytest.fixture],
 ):
     registry = RunStateRegistry()
 
@@ -216,7 +216,7 @@ def test_state_change_logging(
 def test_state_change_logging_unset(
     str_stream: Annotated[StringIO, pytest.fixture],
     simple_logger: Annotated[logging.Logger, pytest.fixture],
-    task_a: Annotated[TaskProtocol, pytest.fixture],
+    task_a: Annotated[IsTask, pytest.fixture],
 ):
     registry = RunStateRegistry()
     simple_logger.addHandler(logging.StreamHandler(str_stream))
@@ -240,7 +240,7 @@ def test_state_change_logging_unset(
 def test_state_change_logging_handler_formatting_variants(
     str_stream: Annotated[StringIO, pytest.fixture],
     simple_logger: Annotated[logging.Logger, pytest.fixture],
-    task_a: Annotated[TaskProtocol, pytest.fixture],
+    task_a: Annotated[IsTask, pytest.fixture],
 ):
     registry = RunStateRegistry()
 
@@ -271,7 +271,7 @@ def test_state_change_logging_handler_formatting_variants(
 def test_state_change_logging_date_localization(
     str_stream: Annotated[StringIO, pytest.fixture],
     stream_logger: Annotated[logging.Logger, pytest.fixture],
-    task_a: Annotated[TaskProtocol, pytest.fixture],
+    task_a: Annotated[IsTask, pytest.fixture],
 ):
     registry = RunStateRegistry()
 

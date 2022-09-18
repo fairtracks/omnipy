@@ -1,39 +1,102 @@
 from datetime import datetime
-from typing import Any, Optional, Protocol, Tuple
+import logging
+from typing import Any, Callable, Optional, Protocol, Tuple, Type
 
-from unifair.engine.constants import RunState
+from unifair.engine.constants import EngineChoice, RunState
 
 
-class RuntimeConfigProtocol(Protocol):
-    engine: 'EngineProtocol'
-    registry: Optional['RunStateRegistryProtocol'] = None
-    verbose: bool = False
+class IsEngineConfig(Protocol):
+    ...
+
+
+class IsLocalRunnerConfig(IsEngineConfig, Protocol):
+    ...
+
+
+class IsPrefectEngineConfig(IsEngineConfig, Protocol):
+    ...
+
+
+class IsRunStateRegistryConfig(Protocol):
+    verbose: bool = True
 
     def __init__(
             self,
-            engine: 'EngineProtocol',  # noqa
-            registry: Optional['RunStateRegistryProtocol'] = None,  # noqa
-            verbose: bool = False,  # noqa
+            verbose: bool = True,  # noqa
             *args: Any,
             **kwargs: Any) -> None:
         ...
 
 
-class RuntimeDependentClsProtocol(Protocol):
-    def set_runtime(self, runtime: RuntimeConfigProtocol) -> None:
+class IsConfigPublisher(Protocol):
+    def subscribe(self, config_item: str, callback_fun: Callable[[Any], None]):
+        ...
+
+    def unsubscribe_all(self) -> None:
         ...
 
 
-class EngineConfigProtocol(Protocol):
-    ...
+class IsRuntimeConfig(IsConfigPublisher, Protocol):
+    engine: EngineChoice
+    local: IsLocalRunnerConfig
+    prefect: IsPrefectEngineConfig
+    registry: IsRunStateRegistryConfig
 
-
-class EngineProtocol(RuntimeDependentClsProtocol):
-    def __init__(self, config: Optional[EngineConfigProtocol] = None):  # noqa
+    def __init__(
+            self,
+            engine: EngineChoice = EngineChoice.LOCAL,  # noqas
+            local_config: Optional[IsLocalRunnerConfig] = None,  # noqa
+            prefect_config: Optional[IsPrefectEngineConfig] = None,  # noqa
+            registry_config: Optional[IsRunStateRegistryConfig] = None,  # noqa
+            *args: Any,
+            **kwargs: Any) -> None:
         ...
 
 
-class TaskProtocol(RuntimeDependentClsProtocol):
+class IsRuntimeObjects(IsConfigPublisher, Protocol):
+    logger: logging.Logger
+    registry: 'IsRunStateRegistry'
+    local: 'IsEngine'
+    prefect: 'IsEngine'
+
+    def __init__(
+            self,
+            logger: Optional[logging.Logger] = None,  # noqa
+            registry: Optional['IsRunStateRegistry'] = None,  # noqa
+            local: Optional['IsEngine'] = None,  # noqa
+            prefect: Optional['IsEngine'] = None,  # noqa
+            *args: Any,
+            **kwargs: Any) -> None:
+        ...
+
+
+class IsRuntimeClasses(IsConfigPublisher, Protocol):
+    task_template: Type['IsTaskTemplate']
+
+    def __init__(
+            self,
+            task: Type['IsTaskTemplate'] = None,  # noqa
+            *args: Any,
+            **kwargs: Any) -> None:
+        ...
+
+
+class IsRuntime(IsConfigPublisher, Protocol):
+    object: IsRuntimeObjects
+    classes: IsRuntimeClasses
+    config: IsRuntimeConfig
+
+    def __init__(
+            self,
+            object: Optional[IsRuntimeObjects] = None,  # noqa
+            classes: Optional[IsRuntimeClasses] = None,  # noqa
+            config: Optional[IsRuntimeConfig] = None,  # noqa
+            *args: Any,
+            **kwargs: Any) -> None:
+        ...
+
+
+class IsTask(Protocol):
     name: str
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
@@ -42,31 +105,49 @@ class TaskProtocol(RuntimeDependentClsProtocol):
     def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         ...
 
-    # Will currently fail in mypy, until this PR has been released:
-    # https://github.com/python/mypy/pull/13501
-    # TODO: add mypy exception if not supported yet, or remove comment if supported
     @classmethod
-    def set_runtime(cls, runtime: RuntimeConfigProtocol) -> None:
+    def set_engine(cls, engine: 'IsEngine') -> None:
         ...
 
 
-class TaskTemplateProtocol(TaskProtocol):
-    def apply(self) -> TaskProtocol:
+class IsTaskTemplate(IsTask, Protocol):
+    def apply(self) -> IsTask:
         ...
 
 
-class RunStateRegistryProtocol(RuntimeDependentClsProtocol):
+class IsRunStateRegistry(Protocol):
     def __init__(self) -> None:
         ...
 
-    def get_task_state(self, task: TaskProtocol) -> RunState:
+    def get_task_state(self, task: IsTask) -> RunState:
         ...
 
-    def get_task_state_datetime(self, task: TaskProtocol, state: RunState) -> datetime:
+    def get_task_state_datetime(self, task: IsTask, state: RunState) -> datetime:
         ...
 
-    def all_tasks(self, state: Optional[RunState] = None) -> Tuple[TaskProtocol, ...]:  # noqa
+    def all_tasks(self, state: Optional[RunState] = None) -> Tuple[IsTask, ...]:  # noqa
         ...
 
-    def set_task_state(self, task: TaskProtocol, state: RunState) -> None:
+    def set_task_state(self, task: IsTask, state: RunState) -> None:
+        ...
+
+    def set_logger(self, logger: Optional[logging.Logger]) -> None:
+        ...
+
+    def set_config(self, config: IsRunStateRegistryConfig) -> None:
+        ...
+
+
+class IsEngine(Protocol):
+    def __init__(self) -> None:
+        ...
+
+    @classmethod
+    def get_config_cls(cls) -> Type[IsEngineConfig]:
+        ...
+
+    def set_config(self, config: IsEngineConfig) -> None:
+        ...
+
+    def set_registry(self, registry: Optional[IsRunStateRegistry]) -> None:
         ...

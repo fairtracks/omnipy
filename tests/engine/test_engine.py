@@ -7,7 +7,7 @@ from aiostream.stream import enumerate as aenumerate
 import pytest
 
 from unifair.engine.constants import RunState
-from unifair.engine.protocols import RuntimeConfigProtocol
+from unifair.engine.protocols import IsEngine
 
 from .helpers.functions import (assert_task_state,
                                 async_wait_for_task_state,
@@ -19,32 +19,32 @@ def test_engine_init() -> None:
     engine = MockTaskRunnerEngine()
     assert engine.backend_verbose is True
 
-    engine = MockTaskRunnerEngine(config=MockEngineConfig(backend_verbose=True))
+    engine = MockTaskRunnerEngine()
+    engine.set_config(MockEngineConfig(backend_verbose=True))
     assert engine.backend_verbose is True
 
-    engine = MockTaskRunnerEngine(config=MockEngineConfig(backend_verbose=False))
+    engine = MockTaskRunnerEngine()
+    engine.set_config(MockEngineConfig(backend_verbose=False))
     assert engine.backend_verbose is False
 
 
 def test_mock_task_run(
-    runtime_mock_task_runner_no_verbose: Annotated[RuntimeConfigProtocol, pytest.fixture],
+    mock_task_runner_engine_no_verbose: Annotated[IsEngine, pytest.fixture],
     sync_power_task_template: Annotated[MockTaskTemplate, pytest.fixture],
 ) -> None:
-    MockTaskTemplate.set_runtime(runtime_mock_task_runner_no_verbose)
 
     power = sync_power_task_template.apply()
 
     assert power(4, 2) == 16
     assert power.name == 'power'
-    assert power.runtime.engine.backend_task.backend_verbose is False
-    assert power.runtime.engine.backend_task.finished
+    assert power.engine.backend_task.backend_verbose is False
+    assert power.engine.backend_task.finished
 
 
 def test_mock_task_run_states_sync_function(
-    runtime_mock_task_runner_no_verbose: Annotated[RuntimeConfigProtocol, pytest.fixture],
+    mock_task_runner_engine_no_verbose: Annotated[IsEngine, pytest.fixture],
     sync_power_task_template: Annotated[MockTaskTemplate, pytest.fixture],
 ) -> None:
-    MockTaskTemplate.set_runtime(runtime_mock_task_runner_no_verbose)
 
     power = sync_power_task_template.apply()
     assert_task_state(power, RunState.INITIALIZED)
