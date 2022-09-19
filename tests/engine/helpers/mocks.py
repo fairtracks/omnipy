@@ -160,3 +160,15 @@ class MockRunStateRegistry:
         self._tasks[task.name] = task
         self._task_state[task.name] = state
         self._task_state_datetime[(task.name, state)] = datetime.now()
+
+
+class AssertLocalRunner(LocalRunner):
+    def _init_task(self, task: IsTask) -> None:
+        from engine.helpers.functions import assert_task_state
+        assert_task_state(task, RunState.INITIALIZED)
+        super()._init_task(task)
+
+    def _run_task(self, task: IsTask, *args, **kwargs) -> Any:
+        from engine.helpers.functions import assert_task_state
+        assert_task_state(task, RunState.RUNNING)
+        return super()._run_task(task, *args, **kwargs)
