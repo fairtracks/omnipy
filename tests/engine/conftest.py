@@ -8,7 +8,8 @@ import pytest
 
 from unifair.engine.protocols import IsEngine
 
-from .helpers.mocks import (MockEngineConfig,
+from .helpers.mocks import (AssertLocalRunner,
+                            MockEngineConfig,
                             MockRunStateRegistry,
                             MockTask,
                             MockTaskRunnerEngine,
@@ -54,15 +55,27 @@ def task_b() -> MockTask:
 
 
 @pytest.fixture(scope='function')
-def mock_task_runner_engine_no_verbose() -> IsEngine:
+def mock_run_state_registry() -> MockRunStateRegistry:
+    return MockRunStateRegistry()
+
+
+@pytest.fixture(scope='function')
+def mock_task_runner_engine_no_verbose(
+        mock_run_state_registry: Annotated[MockRunStateRegistry, pytest.fixture]) -> IsEngine:
     engine = MockTaskRunnerEngine()
     engine.set_config(MockEngineConfig(backend_verbose=False))
     MockTaskTemplate.set_engine(engine)
-
-    registry = MockRunStateRegistry()
-    engine.set_registry(registry)
-    MockTaskTemplate.set_registry(registry)
+    engine.set_registry(mock_run_state_registry)
+    MockTaskTemplate.set_registry(mock_run_state_registry)
     return engine
+
+
+@pytest.fixture(scope='function')
+def assert_local_runner_with_mock_registry(
+        mock_run_state_registry: Annotated[MockRunStateRegistry, pytest.fixture]) -> IsEngine:
+    local_runner = AssertLocalRunner()
+    local_runner.set_registry(mock_run_state_registry)
+    return local_runner
 
 
 @pytest.fixture(scope='module')
