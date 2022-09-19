@@ -23,7 +23,7 @@ class TaskRunnerEngine(Engine):
         def _call_func(*args: Any, **kwargs: Any) -> Any:
             setattr(task, '_call_func', prev_call_func)
             self._register_task_state(task, RunState.RUNNING)
-            task_result = self._run_task(*args, **kwargs)
+            task_result = self._run_task(task, *args, **kwargs)
 
             if isinstance(task_result, GeneratorType):
 
@@ -72,5 +72,5 @@ class TaskRunnerEngine(Engine):
         ...
 
     @abstractmethod
-    def _run_task(self, *args, **kwargs) -> Any:
+    def _run_task(self, task: IsTask, *args, **kwargs) -> Any:
         ...
