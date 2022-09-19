@@ -102,11 +102,11 @@ class MockTaskRunnerEngine(TaskRunnerEngine):
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
         self.backend_verbose: bool = self._config.backend_verbose
 
-    def _init_task(self, task) -> None:
+    def _init_task(self, task: IsTask) -> None:
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
         self.backend_task = MockBackendTask(task, self._config)
 
-    def _run_task(self, *args, **kwargs) -> Any:
+    def _run_task(self, task: IsTask, *args: Any, **kwargs: Any) -> Any:
         assert self.backend_task is not None
         return self.backend_task.run(*args, **kwargs)
 
