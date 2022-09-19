@@ -47,7 +47,7 @@ def test_local_runner_sync_generator_coroutine(
 
 
 @pytest.mark.asyncio
-async def test_mock_task_run_states_async_coroutine(
+async def test_local_runner_async_coroutine(
     mock_run_state_registry: Annotated[MockRunStateRegistry, pytest.fixture],
     assert_local_runner_with_mock_registry: Annotated[AssertLocalRunner, pytest.fixture],
     async_wait_a_bit_task_template: Annotated[MockTaskTemplate, pytest.fixture],
@@ -69,7 +69,7 @@ async def test_mock_task_run_states_async_coroutine(
 
 
 @pytest.mark.asyncio
-async def test_mock_task_run_states_async_generator_coroutine(
+async def test_local_runner_async_generator_coroutine(
         mock_run_state_registry: Annotated[MockRunStateRegistry, pytest.fixture],
         assert_local_runner_with_mock_registry: Annotated[AssertLocalRunner, pytest.fixture],
         async_wait_for_send_twice_task_template: Annotated[MockTaskTemplate,
