@@ -9,32 +9,22 @@ from unifair.data.model import Model
 from .helpers.models import StringToLength
 
 
-@pytest.mark.skip(reason="""
-This test needs to be run as the first test in the test suite in order
-not to fail. This is cumbersome. More importantly, it implies that the
-functionality is not working correctly. However, it is not meant to work.
-Thus, this test is here for documentation purposes only. """)
 def test_no_model_known_issue():
-    # Note:
-    #
-    # No model specified defaults to Model[str], but in a highly unstable state that only
-    # seem to work until the first typed model is run, after which at least type conversion breaks
-    # down. This is due to the fact that typed models interfere through the class variables of
-    # the Model class.
+    # Correctly instantiating a model in the beginning of the test implicitly tests whether
+    # creating a model sets the field-related class members of Model, such that a later object
+    # instantiation without a specified model reuses the previous fields. This which would have
+    # happened if `_depopulate_root_field()` were not called in `Model.__class_getitem__()`.
+    Model[int]()
+
     with pytest.raises(TypeError):
-        assert Model(12).to_data() == '12'
+        Model()
 
     with pytest.raises(TypeError):
 
         class ModelSubclass(Model):
             ...
 
-        assert ModelSubclass(True).to_data() == 'True'
-
-    with pytest.raises(TypeError):
-        model = Model()
-        model.from_data(12)
-        assert model.to_data() == '12'
+        ModelSubclass()
 
 
 def test_init_and_data():
