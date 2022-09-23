@@ -77,6 +77,12 @@ class Model(GenericModel, Generic[RootT]):
         cls.__fields__[ROOT_KEY] = data_field
         cls.__annotations__[ROOT_KEY] = model
 
+    @classmethod
+    def _depopulate_root_field(cls):
+        del cls.__config__.fields[ROOT_KEY]
+        del cls.__fields__[ROOT_KEY]
+        del cls.__annotations__[ROOT_KEY]
+
     def __class_getitem__(cls, model: Union[Type[RootT], TypeVar]) -> Union[Type[RootT], TypeVar]:
         # TODO: change model type to params: Union[Type[Any], Tuple[Type[Any], ...]]
         #       as in GenericModel
@@ -93,13 +99,22 @@ class Model(GenericModel, Generic[RootT]):
         # https://github.com/python/mypy/issues/3737 (as well as linked issues)
         if cls == Model:  # Only for the base Model class
             cls._populate_root_field(model)
-        return super().__class_getitem__(model)
+
+        created_model = super().__class_getitem__(model)
+
+        # As long as models are not created concurrently, setting the class members temporarily
+        # should not have averse effects
+        # TODO: Check if we can move to explicit definition of __root__ field at the object
+        #       level in pydantic 2.0 (when it is released)
+        if cls == Model:
+            cls._depopulate_root_field()
+
+        return created_model
 
     def __new__(cls, value=Undefined, **kwargs):
         model_not_specified = ROOT_KEY not in cls.__fields__
         if model_not_specified:
-            cls._populate_root_field(str)
-            cls._print_warning_message()
+            cls._raise_no_model_exception()
         return super().__new__(cls)
 
     def __init__(self, value=Undefined, /, **data: RootT) -> None:
@@ -112,23 +127,12 @@ class Model(GenericModel, Generic[RootT]):
             self._set_standard_field_description()
 
     @staticmethod
-    def _print_warning_message() -> None:
-        # This should have been a TypeError in the __init__ method or similar, like in the
-        # Database class, but due to complex interactions with pydantic and the state of the
-        # Model class, a solution for raising an exception consistently for the cases where
-        # __class_getitem__ has not been touched and which also leaves Model in a consistent
-        # state for later code (e.g. in test runs) , has proved to be out of grasp.
-        #
-        # As a compromise, the following text is printed the first time a user tries to use
-        # Model without specializing it with specific types.
-        print('Note: The Model class requires a concrete model to be specified as '
-              'a type hierarchy within brackets either directly, e.g.:\n\n'
-              '\tmodel = Model[List[int]]([1,2,3])\n\n'
-              'or indirectly in a subclass definition, e.g.:\n\n'
-              '\tclass MyNumberList(Model[List[int]]): ...\n\n'
-              'Usage without the specification of a concrete model defaults to Model[str], '
-              'in a unstable and unsupported state, and is highly discouraged.\n\n'
-              'This is the current mode; please fix your code!')
+    def _raise_no_model_exception() -> None:
+        raise TypeError('Note: The Model class requires a concrete model to be specified as '
+                        'a type hierarchy within brackets either directly, e.g.:\n\n'
+                        '\tmodel = Model[List[int]]([1,2,3])\n\n'
+                        'or indirectly in a subclass definition, e.g.:\n\n'
+                        '\tclass MyNumberList(Model[List[int]]): ...\n\n')
 
     def _set_standard_field_description(self) -> None:
         self.__fields__[ROOT_KEY].field_info.description = self._get_standard_field_description()
