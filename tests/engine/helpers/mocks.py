@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 import logging
@@ -34,6 +35,9 @@ class MockTask:
     @classmethod
     def set_engine(cls, engine: IsEngine) -> None:
         cls.engine = engine
+
+    def has_coroutine_task_func(self) -> bool:
+        return asyncio.iscoroutinefunction(self._func)
 
     @classmethod
     def extrack_registry(cls) -> IsRunStateRegistry:
@@ -181,10 +185,10 @@ class TaskRunnerStateChecker(TaskRunnerEngine):
 
     def _init_task(self, task: IsTask) -> None:
         from .functions import assert_task_state
-        assert_task_state(task, RunState.INITIALIZED)
+        assert_task_state(task, [RunState.INITIALIZED])
         self._engine._init_task(task)  # noqa
 
     def _run_task(self, task: IsTask, *args: Any, **kwargs: Any) -> Any:
         from .functions import assert_task_state
-        assert_task_state(task, RunState.RUNNING)
+        assert_task_state(task, [RunState.RUNNING])
         return self._engine._run_task(task, *args, **kwargs)  # noqa

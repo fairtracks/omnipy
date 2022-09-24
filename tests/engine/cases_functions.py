@@ -24,6 +24,22 @@ async def async_wait_a_bit(seconds: float) -> float:
     return seconds
 
 
+# Synchronous generator: range()
+
+
+def sync_range(num: int):
+    for i in range(num):
+        yield i
+
+
+# Asynchronous generator: range()
+
+
+async def async_range(num: int):
+    for i in range(num):
+        yield i
+
+
 # Synchronous generator coroutine: sync_wait_for_send_twice()
 
 

@@ -2,7 +2,7 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import threading
 from types import NoneType
-from typing import Awaitable, Callable, Generator
+from typing import Awaitable, Callable
 
 from aiostream.stream import enumerate as aenumerate
 import pytest
@@ -11,15 +11,19 @@ import pytest_cases as pc
 from unifair.engine.constants import RunState
 from unifair.engine.protocols import IsTask
 
-from .cases_functions import (async_wait_a_bit,
+from .cases_functions import (async_range,
+                              async_wait_a_bit,
                               async_wait_for_send_twice,
                               sync_power,
+                              sync_range,
                               sync_wait_a_bit,
                               sync_wait_for_send_twice)
 from .helpers.functions import (assert_task_state,
                                 async_wait_for_task_state,
+                                check_engine_cls,
                                 get_async_assert_results_wait_a_bit_func,
                                 get_sync_assert_results_wait_a_bit_func,
+                                resolve,
                                 sync_wait_for_task_state)
 
 #
@@ -36,7 +40,7 @@ from .helpers.functions import (assert_task_state,
 def case_sync_power_args():
     def run_and_assert_results(task: IsTask):
         assert task(4, 2) == 16
-        assert_task_state(task, RunState.FINISHED)
+        assert_task_state(task, [RunState.FINISHED])
 
     return 'power', sync_power, run_and_assert_results
 
@@ -48,9 +52,50 @@ def case_sync_power_args():
 def case_sync_power_kwargs():
     def run_and_assert_results(task: IsTask):
         assert task(number=3, exponent=5) == 243
-        assert_task_state(task, RunState.FINISHED)
+        assert_task_state(task, [RunState.FINISHED])
 
     return 'power', sync_power, run_and_assert_results
+
+
+# Synchronous/Asynchronous generator: range()
+
+
+@pc.case(
+    id='sync-generator-range',
+    tags=['sync', 'generator', 'singlethread', 'success'],
+)
+def case_sync_range():
+    def run_and_assert_results(task: IsTask):
+        generator = task(5)
+        assert_task_state(task, [RunState.RUNNING, RunState.FINISHED])
+
+        assert tuple(_ for _ in generator) == (0, 1, 2, 3, 4)
+        assert_task_state(task, [RunState.FINISHED])
+
+    return 'range', sync_range, run_and_assert_results
+
+
+@pc.case(
+    id='async-generator-range',
+    tags=['async', 'generator', 'singlethread', 'localsuccess'],
+)
+def case_async_range():
+    async def run_and_assert_results(task: IsTask):
+        from unifair.engine.prefect import PrefectEngine
+        if check_engine_cls(task, PrefectEngine):
+            pytest.xfail("TypeError: cannot pickle 'async_generator' object")
+
+        generator = task(5)
+        assert_task_state(task, [RunState.RUNNING, RunState.FINISHED])
+
+        li = []
+        async for i in generator:
+            li.append(i)
+        assert li == [0, 1, 2, 3, 4]
+
+        assert_task_state(task, [RunState.FINISHED])
+
+    return 'range', async_range, run_and_assert_results
 
 
 # Synchronous/Asynchronous generator coroutine: wait_for_send_twice()
@@ -58,12 +103,16 @@ def case_sync_power_kwargs():
 
 @pc.case(
     id='sync-generator-coroutine-wait_for_send_twice()',
-    tags=['sync', 'generator-coroutine', 'singlethread', 'success'],
+    tags=['sync', 'generator-coroutine', 'singlethread', 'localsuccess'],
 )
 def case_sync_wait_for_send_twice():
     def run_and_assert_results(task: IsTask):
+        from unifair.engine.prefect import PrefectEngine
+        if check_engine_cls(task, PrefectEngine):
+            pytest.xfail("AttributeError: 'list' object has no attribute 'send'")
+
         generator_obj = task()
-        assert_task_state(task, RunState.RUNNING)
+        assert_task_state(task, [RunState.RUNNING, RunState.FINISHED])
 
         i = 0
         for i, result in enumerate(generator_obj):
@@ -71,19 +120,23 @@ def case_sync_wait_for_send_twice():
             assert generator_obj.send('content') == (i, 'content')
         assert i == 1
 
-        assert_task_state(task, RunState.FINISHED)
+        assert_task_state(task, [RunState.FINISHED])
 
     return 'wait_for_send_twice', sync_wait_for_send_twice, run_and_assert_results
 
 
 @pc.case(
     id='async-generator-coroutine-wait_for_send_twice()',
-    tags=['async', 'generator-coroutine', 'singlethread', 'success'],
+    tags=['async', 'generator-coroutine', 'singlethread', 'localsuccess'],
 )
 def case_async_wait_for_send_twice():
     async def run_and_assert_results(task: IsTask):
+        from unifair.engine.prefect import PrefectEngine
+        if check_engine_cls(task, PrefectEngine):
+            pytest.xfail("TypeError: cannot pickle 'async_generator' object")
+
         generator_obj = task()
-        assert_task_state(task, RunState.RUNNING)
+        assert_task_state(task, [RunState.RUNNING])
 
         i = 0
         async for i, aresult in aenumerate(generator_obj):
@@ -91,7 +144,7 @@ def case_async_wait_for_send_twice():
             assert await generator_obj.asend('content') == (i, 'content')
         assert i == 1
 
-        assert_task_state(task, RunState.FINISHED)
+        assert_task_state(task, [RunState.FINISHED])
 
     return 'wait_for_send_twice', async_wait_for_send_twice, run_and_assert_results
 
@@ -109,11 +162,11 @@ def case_async_wait_a_bit():
             get_async_assert_results_wait_a_bit_func(task)
 
         await asyncio.gather(
-            async_assert_results_wait_a_bit(0.005),
-            async_wait_for_task_state(task, RunState.RUNNING),
+            async_assert_results_wait_a_bit(0.05),
+            async_wait_for_task_state(task, [RunState.RUNNING, RunState.FINISHED]),
         )
 
-        assert_task_state(task, RunState.FINISHED)
+        assert_task_state(task, [RunState.FINISHED])
 
     return 'wait_a_bit', async_wait_a_bit, run_and_assert_results
 
@@ -136,10 +189,10 @@ def case_sync_wait_a_bit_multithreaded_threading():
         thread = threading.Thread(target=sync_assert_results_wait_a_bit, args=(0.005,))
 
         thread.start()
-        sync_wait_for_task_state(task, RunState.RUNNING)
+        sync_wait_for_task_state(task, [RunState.RUNNING])
 
         thread.join()
-        assert_task_state(task, RunState.FINISHED)
+        assert_task_state(task, [RunState.FINISHED])
 
     return 'wait_a_bit', sync_wait_a_bit, run_and_assert_results
 
@@ -152,10 +205,10 @@ def case_sync_wait_a_bit_multithreaded_futures():
     def run_and_assert_results(task: IsTask):
         with ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(task, 0.005)
-            sync_wait_for_task_state(task, RunState.RUNNING)
+            sync_wait_for_task_state(task, [RunState.RUNNING])
 
             assert future.result() == 0.005
-            assert_task_state(task, RunState.FINISHED)
+            assert_task_state(task, [RunState.FINISHED])
 
     return 'wait_a_bit', sync_wait_a_bit, run_and_assert_results
 
@@ -178,10 +231,10 @@ def case_async_wait_a_bit_multithreaded_threading():
         thread = threading.Thread(target=async_run_assert_results_wait_a_bit, args=(0.005,))
 
         thread.start()
-        sync_wait_for_task_state(task, RunState.RUNNING)
+        sync_wait_for_task_state(task, [RunState.RUNNING])
 
         thread.join()
-        assert_task_state(task, RunState.FINISHED)
+        assert_task_state(task, [RunState.FINISHED])
 
     return 'wait_a_bit', async_wait_a_bit, run_and_assert_results
 
@@ -192,11 +245,12 @@ def case_async_wait_a_bit_multithreaded_threading():
 )
 def case_async_wait_a_bit_multithreaded_futures():
     async def run_and_assert_results(task: IsTask):
-        future = await asyncio.get_event_loop().run_in_executor(None, task, 0.005)
-        sync_wait_for_task_state(task, RunState.RUNNING)
 
-        assert await future == 0.005
-        assert_task_state(task, RunState.FINISHED)
+        future = await asyncio.get_event_loop().run_in_executor(None, task, 0.005)
+        sync_wait_for_task_state(task, [RunState.RUNNING, RunState.FINISHED])
+
+        assert await resolve(future) == 0.005
+        assert_task_state(task, [RunState.FINISHED])
 
     return 'wait_a_bit', async_wait_a_bit, run_and_assert_results
 
@@ -212,11 +266,12 @@ def case_async_wait_a_bit_multithreaded_futures():
     id='fail-sync-function-futures-wait_a_bit(0.005)==0.005',
     tags=['sync', 'function', 'multiprocess', 'fail'])
 def case_sync_wait_a_bit_multiprocessing_futures():
+    pytest.xfail("Can't pickle function")
+
     def run_and_assert_results(task: IsTask):
         with ProcessPoolExecutor(max_workers=1) as executor:
             future = executor.submit(task, 0.005)
-            with pytest.raises(AttributeError):  # Can't pickle decorated function
-                future.result()
+            assert future.result() == 0.005
 
     return 'wait_a_bit', sync_wait_a_bit, run_and_assert_results
 
@@ -229,18 +284,19 @@ def case_sync_wait_a_bit_multiprocessing_futures():
     tags=['async', 'coroutine', 'multiprocess', 'fail'],
 )
 def case_async_wait_a_bit_multiprocessing():
+    pytest.xfail("Can't pickle function")
+
     async def run_and_assert_results(task: IsTask):
         async_assert_results_wait_a_bit: Callable[[float], Awaitable] = \
             get_async_assert_results_wait_a_bit_func(task)
 
         with ProcessPoolExecutor(max_workers=1) as executor:
             loop = asyncio.get_event_loop()
-            with pytest.raises(AttributeError):  # Can't pickle decorated function
-                future = await loop.run_in_executor(
-                    executor,
-                    async_assert_results_wait_a_bit,
-                    0.005,
-                )
-                await future
+            future = await loop.run_in_executor(
+                executor,
+                async_assert_results_wait_a_bit,
+                0.005,
+            )
+            await future
 
     return 'wait_a_bit', async_wait_a_bit, run_and_assert_results

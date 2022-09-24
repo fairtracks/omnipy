@@ -105,6 +105,9 @@ class IsTask(Protocol):
     def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         ...
 
+    def has_coroutine_task_func(self) -> bool:
+        ...
+
     @classmethod
     def set_engine(cls, engine: 'IsEngine') -> None:
         ...
