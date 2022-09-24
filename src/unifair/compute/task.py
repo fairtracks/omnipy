@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import inspect
 from types import MappingProxyType
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Tuple, Type, Union
@@ -11,6 +12,8 @@ from unifair.util.param_key_mapper import ParamKeyMapper
 
 
 class TaskConfig:
+    _engine: IsEngine = None
+
     def __init__(self,
                  task_func: Callable,
                  *,
@@ -52,6 +55,9 @@ class TaskConfig:
             key: getattr(self, key)
             for key in ('name', 'fixed_params', 'param_key_map', 'result_key')
         }
+
+    def has_coroutine_task_func(self) -> bool:
+        return asyncio.iscoroutinefunction(self._task_func)
 
     @property
     def param_signatures(self) -> MappingProxyType:
@@ -102,7 +108,7 @@ class TaskTemplate(DynamicClassDecoratorMixin, TaskConfig):
 
     @classmethod
     def set_engine(cls, engine: IsEngine) -> None:
-        ...
+        cls._engine = engine
 
 
 class Task(TaskConfig):

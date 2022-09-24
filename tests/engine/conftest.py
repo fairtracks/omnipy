@@ -7,6 +7,7 @@ import pytest
 import pytest_cases as pc
 
 from unifair.engine.local import LocalRunner
+from unifair.engine.prefect import PrefectEngine
 
 from .helpers.functions import add_logger_to_registry, convert_func_to_task
 from .helpers.mocks import (MockEngineConfig,
@@ -57,9 +58,11 @@ def mock_task_runner_subclass_no_verbose(engine):
 @pc.parametrize(
     engine=[
         LocalRunner(),
+        PrefectEngine(),
     ],
     ids=[
         'assertinitrun[local]',
+        'assertinitrun[prefect]',
     ],
 )
 def all_engines_with_assert(engine):

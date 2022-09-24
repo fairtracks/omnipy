@@ -7,6 +7,7 @@ import os
 from time import sleep
 from typing import Awaitable, Callable, List, Optional
 
+from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
 from unifair.engine.protocols import IsRunStateRegistry, IsTask, IsTaskRunnerEngine, IsTaskTemplate
 
@@ -37,31 +38,39 @@ def extract_run_state(task: IsTask):
         assert False, 'TODO: Fix for Task objects'
 
 
-def assert_task_state(task: IsTask, state: RunState):
+def assert_task_state(task: IsTask, states: List[RunState]):
     task_state = extract_run_state(task)
     if task_state:
-        assert extract_run_state(task) == state, state
+        assert task_state in states, task_state
 
 
-def _check_timeout(start_time: datetime, timeout_secs: float, task: IsTask, state: RunState):
+def _check_timeout(start_time: datetime, timeout_secs: float, task: IsTask, states: List[RunState]):
     if datetime.now() - start_time >= timedelta(seconds=timeout_secs):
-        raise TimeoutError(f'Run state of "{task.name}" not set to {state.name} '
-                           f'until timeout: {timeout_secs} sec(s). '
-                           f'Current state: {extract_run_state(task).name}')
+        raise TimeoutError(
+            f'Run state of "{task.name}" not set to {[state.name for state in states]} '
+            f'until timeout: {timeout_secs} sec(s). '
+            f'Current state: {extract_run_state(task).name}')
 
 
-def sync_wait_for_task_state(task: IsTask, state: RunState, timeout_secs: float = 1):
+def sync_wait_for_task_state(task: IsTask, states: List[RunState], timeout_secs: float = 1):
     start_time = datetime.now()
-    while extract_run_state(task) != state:
+    while extract_run_state(task) not in states:
         sleep(0.001)
-        _check_timeout(start_time, timeout_secs, task, state)
+        _check_timeout(start_time, timeout_secs, task, states)
 
 
-async def async_wait_for_task_state(task: IsTask, state: RunState, timeout_secs: float = 1):
+async def async_wait_for_task_state(task: IsTask, states: List[RunState], timeout_secs: float = 1):
     start_time = datetime.now()
-    while extract_run_state(task) != state:
+    while extract_run_state(task) not in states:
         await asyncio.sleep(0.001)
-        _check_timeout(start_time, timeout_secs, task, state)
+        _check_timeout(start_time, timeout_secs, task, states)
+
+
+async def resolve(val):
+    if isawaitable(val):
+        return await val
+    else:
+        return val
 
 
 def get_sync_assert_results_wait_a_bit_func(task: IsTask):
@@ -73,9 +82,20 @@ def get_sync_assert_results_wait_a_bit_func(task: IsTask):
 
 def get_async_assert_results_wait_a_bit_func(task: IsTask):
     async def async_assert_results_wait_a_bit(seconds: float) -> Awaitable:
-        assert await task(seconds) == seconds
+        assert await resolve(task(seconds)) == seconds
 
     return async_assert_results_wait_a_bit
+
+
+def check_engine_cls(task: IsTask, engine_cls: type[Engine]):
+    engine = getattr(task, 'engine')
+    if not engine:
+        engine = getattr(task, '_engine')
+
+    if hasattr(engine, '_engine'):  # TaskRunnerStateChecker
+        engine = engine._engine  # noqa
+
+    return isinstance(engine, engine_cls)
 
 
 def add_logger_to_registry(registry: IsRunStateRegistry) -> IsRunStateRegistry:
