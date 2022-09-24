@@ -7,7 +7,7 @@ from aiostream.stream import enumerate as aenumerate
 import pytest
 
 from unifair.engine.constants import RunState
-from unifair.engine.protocols import IsEngine
+from unifair.engine.protocols import IsTaskRunnerEngine
 
 from .helpers.functions import (assert_task_state,
                                 async_wait_for_task_state,
@@ -29,7 +29,7 @@ def test_engine_init() -> None:
 
 
 def test_mock_task_run(
-    mock_task_runner_engine_no_verbose: Annotated[IsEngine, pytest.fixture],
+    mock_task_runner_engine_no_verbose: Annotated[IsTaskRunnerEngine, pytest.fixture],
     sync_power_task_template: Annotated[MockTaskTemplate, pytest.fixture],
 ) -> None:
 
@@ -42,7 +42,7 @@ def test_mock_task_run(
 
 
 def test_mock_task_run_states_sync_function(
-    mock_task_runner_engine_no_verbose: Annotated[IsEngine, pytest.fixture],
+    mock_task_runner_engine_no_verbose: Annotated[IsTaskRunnerEngine, pytest.fixture],
     sync_power_task_template: Annotated[MockTaskTemplate, pytest.fixture],
 ) -> None:
 

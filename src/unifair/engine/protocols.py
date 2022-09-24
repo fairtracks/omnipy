@@ -151,3 +151,8 @@ class IsEngine(Protocol):
 
     def set_registry(self, registry: Optional[IsRunStateRegistry]) -> None:
         ...
+
+
+class IsTaskRunnerEngine(IsEngine, Protocol):
+    def task_decorator(self, task: IsTask) -> IsTask:
+        ...
