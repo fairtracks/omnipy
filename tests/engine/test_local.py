@@ -1,84 +1,34 @@
-import asyncio
-from typing import Annotated
-
-from aiostream.stream import enumerate as aenumerate
 import pytest
+import pytest_cases as pc
 
-from engine.helpers.functions import assert_task_state, async_wait_for_task_state
-from engine.helpers.mocks import MockTaskTemplate, TaskRunnerStateChecker
+from engine.helpers.functions import assert_task_state
 from unifair.engine.constants import RunState
 
 
-def test_local_runner_sync_function(
-        assert_local_runner_with_mock_registry: Annotated[TaskRunnerStateChecker, pytest.fixture],
-        sync_power_task_template: Annotated[MockTaskTemplate, pytest.fixture]) -> None:
-
-    sync_power_task_template.set_engine(assert_local_runner_with_mock_registry)
-
-    power = sync_power_task_template.apply()
-    assert power(number=3, exponent=5) == 243
-
-    assert_task_state(power, RunState.FINISHED)
-
-
-def test_local_runner_sync_generator_coroutine(
-        assert_local_runner_with_mock_registry: Annotated[TaskRunnerStateChecker, pytest.fixture],
-        sync_wait_for_send_twice_task_template: Annotated[MockTaskTemplate,
-                                                          pytest.fixture]) -> None:
-
-    sync_wait_for_send_twice_task_template.set_engine(assert_local_runner_with_mock_registry)
-
-    sync_wait_for_send_twice = sync_wait_for_send_twice_task_template.apply()
-
-    generator_obj = sync_wait_for_send_twice()
-    assert_task_state(sync_wait_for_send_twice, RunState.RUNNING)
-
-    i = 0
-    for i, result in enumerate(generator_obj):
-        assert result is None
-        assert generator_obj.send('content') == (i, 'content')
-    assert i == 1
-
-    assert_task_state(sync_wait_for_send_twice, RunState.FINISHED)
+@pc.parametrize(
+    'task_case',
+    [
+        pc.fixture_ref('sync_function_task_all_engines_mock_rest'),
+        pc.fixture_ref('sync_coroutine_task_all_engines_mock_rest')
+    ],
+    ids=['sync-function', 'sync-coroutine'])
+def test_sync_tasks_all_engines_mock_rest(task_case) -> None:
+    task, args, kwargs, assert_result = task_case
+    result = task(*args, **kwargs)
+    assert_result(task, result)
+    assert_task_state(task, RunState.FINISHED)
 
 
+@pc.parametrize(
+    'task_case',
+    [
+        pc.fixture_ref('async_function_task_all_engines_mock_rest'),
+        pc.fixture_ref('async_coroutine_task_all_engines_mock_rest')
+    ],
+    ids=['async-function', 'async-coroutine'])
 @pytest.mark.asyncio
-async def test_local_runner_async_coroutine(
-    assert_local_runner_with_mock_registry: Annotated[TaskRunnerStateChecker, pytest.fixture],
-    async_wait_a_bit_task_template: Annotated[MockTaskTemplate, pytest.fixture],
-) -> None:
-
-    async_wait_a_bit_task_template.set_engine(assert_local_runner_with_mock_registry)
-
-    async_wait_a_bit = async_wait_a_bit_task_template.apply()
-
-    async def async_assert_results_wait_a_bit(seconds: float) -> None:
-        assert await async_wait_a_bit(seconds) == seconds
-
-    await asyncio.gather(
-        async_assert_results_wait_a_bit(0.005),
-        async_wait_for_task_state(async_wait_a_bit, RunState.RUNNING))
-
-    assert_task_state(async_wait_a_bit, RunState.FINISHED)
-
-
-@pytest.mark.asyncio
-async def test_local_runner_async_generator_coroutine(
-        assert_local_runner_with_mock_registry: Annotated[TaskRunnerStateChecker, pytest.fixture],
-        async_wait_for_send_twice_task_template: Annotated[MockTaskTemplate,
-                                                           pytest.fixture]) -> None:
-
-    async_wait_for_send_twice_task_template.set_engine(assert_local_runner_with_mock_registry)
-
-    async_wait_for_send_twice = async_wait_for_send_twice_task_template.apply()
-
-    generator_obj = async_wait_for_send_twice()
-    assert_task_state(async_wait_for_send_twice, RunState.RUNNING)
-
-    i = 0
-    async for i, aresult in aenumerate(generator_obj):
-        assert aresult is None
-        assert await generator_obj.asend('content') == (i, 'content')
-    assert i == 1
-
-    assert_task_state(async_wait_for_send_twice, RunState.FINISHED)
+async def test_async_tasks_all_engines_mock_rest(task_case) -> None:
+    task, args, kwargs, assert_result = task_case
+    result = task(*args, **kwargs)
+    await assert_result(task, result)
+    assert_task_state(task, RunState.FINISHED)
