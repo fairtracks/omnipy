@@ -4,11 +4,11 @@ from io import StringIO
 import logging
 import os
 from time import sleep
-from typing import List
+from typing import Callable, List
 
 from engine.helpers.mocks import MockTask
 from unifair.engine.constants import RunState
-from unifair.engine.protocols import IsRunStateRegistry
+from unifair.engine.protocols import IsRunStateRegistry, IsTask, IsTaskRunnerEngine, IsTaskTemplate
 
 
 def read_log_lines_from_stream(str_stream: StringIO) -> List[str]:
@@ -62,3 +62,16 @@ def add_logger_to_registry(registry: IsRunStateRegistry) -> IsRunStateRegistry:
     logger.setLevel(logging.INFO)
     registry.set_logger(logger)
     return registry
+
+
+def convert_func_to_task(
+    name: str,
+    func: Callable,
+    task_template_cls: type(IsTaskTemplate),
+    engine: IsTaskRunnerEngine,
+    registry: IsRunStateRegistry,
+) -> IsTask:
+    task_template = task_template_cls(name, func)
+    engine.set_registry(registry)
+    task_template.set_engine(engine)
+    return task_template.apply()

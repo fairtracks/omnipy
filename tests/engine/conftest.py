@@ -1,16 +1,19 @@
 import asyncio
+from functools import partial
 from io import StringIO
 import logging
 from time import sleep
-from typing import Annotated, Awaitable, Callable
+from typing import Annotated, Awaitable, Callable, cast
 
 import pytest
+import pytest_cases as pc
 
 from unifair.engine.local import LocalRunner
 from unifair.engine.protocols import IsTaskRunnerEngine
 from unifair.engine.registry import RunStateRegistry
 
-from .helpers.functions import add_logger_to_registry
+from .cases_local import CallableTaskCases
+from .helpers.functions import add_logger_to_registry, convert_func_to_task
 from .helpers.mocks import (MockEngineConfig,
                             MockRunStateRegistry,
                             MockTask,
@@ -81,15 +84,6 @@ def mock_task_runner_engine_no_verbose(
     MockTaskTemplate.set_engine(engine)
     engine.set_registry(mock_run_state_registry)
     return engine
-
-
-@pytest.fixture(scope='function')
-def assert_local_runner_with_mock_registry(
-    mock_run_state_registry_with_logger: Annotated[MockRunStateRegistry, pytest.fixture]
-) -> IsTaskRunnerEngine:
-    local_runner = TaskRunnerStateChecker(LocalRunner())
-    local_runner.set_registry(mock_run_state_registry)
-    return local_runner
 
 
 @pytest.fixture(scope='module')
@@ -201,3 +195,78 @@ def async_wait_for_send_twice(
 ) -> MockTask:
 
     return async_wait_for_send_twice_task_template.apply()
+
+
+@pc.fixture(scope='function')
+@pc.parametrize(
+    task_template_cls=[MockTaskTemplate],
+    ids=['mtask'],
+)
+def mock_task_template(task_template_cls):
+    return task_template_cls
+
+
+@pc.fixture(scope='function')
+@pc.parametrize(
+    engine=[
+        TaskRunnerStateChecker(LocalRunner()),
+    ],
+    ids=[
+        'local',
+    ],
+)
+def all_engines_with_assert(engine):
+    return engine
+
+
+@pc.fixture(scope='function')
+@pc.parametrize(
+    registry=[pc.fixture_ref(mock_run_state_registry_with_logger)],
+    ids=['mregistry'],
+)
+def mock_registry(registry):
+    return registry
+
+
+def create_task_from_func_cases_with_parametrized_fixtures(func_case_tag: str,
+                                                           task_template_cls_fixture: str,
+                                                           engine_fixture: str,
+                                                           registry_fixture: str):
+    @pc.fixture(scope='function')
+    @pc.parametrize_with_cases(
+        'name, func, args, kwargs, assert_result', cases=CallableTaskCases, has_tag=func_case_tag)
+    @pc.parametrize(
+        'task_template_cls, engine, registry',
+        [
+            (
+                pc.fixture_ref(task_template_cls_fixture),
+                pc.fixture_ref(engine_fixture),
+                pc.fixture_ref(registry_fixture),
+            ),
+        ],
+        idgen=func_case_tag)
+    def get_task(name, func, args, kwargs, assert_result, task_template_cls, engine, registry):
+        task = convert_func_to_task(name, func, task_template_cls, engine, registry)
+        return task, args, kwargs, assert_result
+
+    return get_task
+
+
+create_task_all_engines_mock_rest = partial(
+    create_task_from_func_cases_with_parametrized_fixtures,
+    task_template_cls_fixture='mock_task_template',
+    engine_fixture='all_engines_with_assert',
+    registry_fixture='mock_registry',
+)
+
+sync_function_task_all_engines_mock_rest = create_task_all_engines_mock_rest(
+    func_case_tag='sync function')
+
+sync_coroutine_task_all_engines_mock_rest = create_task_all_engines_mock_rest(
+    func_case_tag='sync generator-coroutine')
+
+async_function_task_all_engines_mock_rest = create_task_all_engines_mock_rest(
+    func_case_tag='async coroutine')
+
+async_coroutine_task_all_engines_mock_rest = create_task_all_engines_mock_rest(
+    func_case_tag='async generator-coroutine')
