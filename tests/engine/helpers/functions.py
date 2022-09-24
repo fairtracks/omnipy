@@ -1,10 +1,11 @@
 import asyncio
 from datetime import datetime, timedelta
+from inspect import isawaitable
 from io import StringIO
 import logging
 import os
 from time import sleep
-from typing import Callable, List
+from typing import Awaitable, Callable, List, Optional
 
 from unifair.engine.constants import RunState
 from unifair.engine.protocols import IsRunStateRegistry, IsTask, IsTaskRunnerEngine, IsTaskTemplate
@@ -63,6 +64,20 @@ async def async_wait_for_task_state(task: IsTask, state: RunState, timeout_secs:
         _check_timeout(start_time, timeout_secs, task, state)
 
 
+def get_sync_assert_results_wait_a_bit_func(task: IsTask):
+    def sync_assert_results_wait_a_bit(seconds: float) -> None:
+        assert task(seconds) == seconds
+
+    return sync_assert_results_wait_a_bit
+
+
+def get_async_assert_results_wait_a_bit_func(task: IsTask):
+    async def async_assert_results_wait_a_bit(seconds: float) -> Awaitable:
+        assert await task(seconds) == seconds
+
+    return async_assert_results_wait_a_bit
+
+
 def add_logger_to_registry(registry: IsRunStateRegistry) -> IsRunStateRegistry:
     logger = logging.getLogger('uniFAIR')
     logger.setLevel(logging.INFO)
@@ -75,9 +90,17 @@ def convert_func_to_task(
     func: Callable,
     task_template_cls: type(IsTaskTemplate),
     engine: IsTaskRunnerEngine,
-    registry: IsRunStateRegistry,
+    registry: Optional[IsRunStateRegistry],
 ) -> IsTask:
     task_template = task_template_cls(name, func)
-    engine.set_registry(registry)
+    if registry:
+        engine.set_registry(registry)
     task_template.set_engine(engine)
     return task_template.apply()
+
+
+async def run_task_test(task_case):
+    task, run_and_assert_results = task_case
+    result = run_and_assert_results(task)
+    if result and isawaitable(result):
+        await result

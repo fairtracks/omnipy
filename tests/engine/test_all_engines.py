@@ -1,34 +1,18 @@
 import pytest
 import pytest_cases as pc
 
-from engine.helpers.functions import assert_task_state
-from unifair.engine.constants import RunState
+from .helpers.functions import run_task_test
 
 
 @pc.parametrize(
     'task_case',
     [
-        pc.fixture_ref('sync_function_task_all_engines_mock_rest'),
-        pc.fixture_ref('sync_coroutine_task_all_engines_mock_rest')
+        pc.fixture_ref('singlethread_mock_task_all_engines_mock_reg'),
+        pc.fixture_ref('multithread_mock_task_all_engines_mock_reg'),
+        pc.fixture_ref('multiprocess_mock_task_all_engines_mock_reg')
     ],
-    ids=['sync-function', 'sync-coroutine'])
-def test_sync_tasks_all_engines_mock_rest(task_case) -> None:
-    task, args, kwargs, assert_result = task_case
-    result = task(*args, **kwargs)
-    assert_result(task, result)
-    assert_task_state(task, RunState.FINISHED)
-
-
-@pc.parametrize(
-    'task_case',
-    [
-        pc.fixture_ref('async_function_task_all_engines_mock_rest'),
-        pc.fixture_ref('async_coroutine_task_all_engines_mock_rest')
-    ],
-    ids=['async-function', 'async-coroutine'])
+    ids=['single', 'multithread', 'multiprocess'],
+)
 @pytest.mark.asyncio
-async def test_async_tasks_all_engines_mock_rest(task_case) -> None:
-    task, args, kwargs, assert_result = task_case
-    result = task(*args, **kwargs)
-    await assert_result(task, result)
-    assert_task_state(task, RunState.FINISHED)
+async def test_mock_tasks_all_engines_mock_registry(task_case) -> None:
+    await run_task_test(task_case)
