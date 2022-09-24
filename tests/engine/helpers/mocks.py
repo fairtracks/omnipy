@@ -165,13 +165,26 @@ class MockRunStateRegistry:
         self.config = config
 
 
-class AssertLocalRunner(LocalRunner):
+class TaskRunnerStateChecker(TaskRunnerEngine):
+    def __init__(self, engine):
+        self._engine = engine
+        super().__init__()
+
+    def _init_engine(self) -> None:
+        self._engine._init_engine()  # noqa
+
+    def get_config_cls(self) -> Type[IsEngineConfig]:
+        return self._engine.get_config_cls()  # noqa
+
+    def _update_from_config(self) -> None:
+        return self._engine._update_from_config()  # noqa
+
     def _init_task(self, task: IsTask) -> None:
         from engine.helpers.functions import assert_task_state
         assert_task_state(task, RunState.INITIALIZED)
-        super()._init_task(task)
+        self._engine._init_task(task)  # noqa
 
-    def _run_task(self, task: IsTask, *args, **kwargs) -> Any:
+    def _run_task(self, task: IsTask, *args: Any, **kwargs: Any) -> Any:
         from engine.helpers.functions import assert_task_state
         assert_task_state(task, RunState.RUNNING)
-        return super()._run_task(task, *args, **kwargs)
+        return self._engine._run_task(task, *args, **kwargs)  # noqa

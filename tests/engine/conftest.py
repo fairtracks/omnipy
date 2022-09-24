@@ -6,16 +6,17 @@ from typing import Annotated, Awaitable, Callable
 
 import pytest
 
+from unifair.engine.local import LocalRunner
 from unifair.engine.protocols import IsTaskRunnerEngine
 from unifair.engine.registry import RunStateRegistry
 
 from .helpers.functions import add_logger_to_registry
-from .helpers.mocks import (AssertLocalRunner,
-                            MockEngineConfig,
+from .helpers.mocks import (MockEngineConfig,
                             MockRunStateRegistry,
                             MockTask,
                             MockTaskRunnerEngine,
-                            MockTaskTemplate)
+                            MockTaskTemplate,
+                            TaskRunnerStateChecker)
 
 
 @pytest.fixture(scope='function')
@@ -86,7 +87,7 @@ def mock_task_runner_engine_no_verbose(
 def assert_local_runner_with_mock_registry(
     mock_run_state_registry_with_logger: Annotated[MockRunStateRegistry, pytest.fixture]
 ) -> IsTaskRunnerEngine:
-    local_runner = AssertLocalRunner()
+    local_runner = TaskRunnerStateChecker(LocalRunner())
     local_runner.set_registry(mock_run_state_registry)
     return local_runner
 
