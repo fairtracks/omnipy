@@ -5,17 +5,15 @@ from aiostream.stream import enumerate as aenumerate
 import pytest
 
 from engine.helpers.functions import assert_task_state, async_wait_for_task_state
-from engine.helpers.mocks import AssertLocalRunner, MockRunStateRegistry, MockTask, MockTaskTemplate
+from engine.helpers.mocks import AssertLocalRunner, MockTaskTemplate
 from unifair.engine.constants import RunState
 
 
 def test_local_runner_sync_function(
-        mock_run_state_registry: Annotated[MockRunStateRegistry, pytest.fixture],
         assert_local_runner_with_mock_registry: Annotated[AssertLocalRunner, pytest.fixture],
         sync_power_task_template: Annotated[MockTaskTemplate, pytest.fixture]) -> None:
 
     sync_power_task_template.set_engine(assert_local_runner_with_mock_registry)
-    sync_power_task_template.set_registry(mock_run_state_registry)
 
     power = sync_power_task_template.apply()
     assert power(number=3, exponent=5) == 243
@@ -24,13 +22,11 @@ def test_local_runner_sync_function(
 
 
 def test_local_runner_sync_generator_coroutine(
-        mock_run_state_registry: Annotated[MockRunStateRegistry, pytest.fixture],
         assert_local_runner_with_mock_registry: Annotated[AssertLocalRunner, pytest.fixture],
         sync_wait_for_send_twice_task_template: Annotated[MockTaskTemplate,
                                                           pytest.fixture]) -> None:
 
     sync_wait_for_send_twice_task_template.set_engine(assert_local_runner_with_mock_registry)
-    sync_wait_for_send_twice_task_template.set_registry(mock_run_state_registry)
 
     sync_wait_for_send_twice = sync_wait_for_send_twice_task_template.apply()
 
@@ -48,13 +44,11 @@ def test_local_runner_sync_generator_coroutine(
 
 @pytest.mark.asyncio
 async def test_local_runner_async_coroutine(
-    mock_run_state_registry: Annotated[MockRunStateRegistry, pytest.fixture],
     assert_local_runner_with_mock_registry: Annotated[AssertLocalRunner, pytest.fixture],
     async_wait_a_bit_task_template: Annotated[MockTaskTemplate, pytest.fixture],
 ) -> None:
 
     async_wait_a_bit_task_template.set_engine(assert_local_runner_with_mock_registry)
-    async_wait_a_bit_task_template.set_registry(mock_run_state_registry)
 
     async_wait_a_bit = async_wait_a_bit_task_template.apply()
 
@@ -70,13 +64,11 @@ async def test_local_runner_async_coroutine(
 
 @pytest.mark.asyncio
 async def test_local_runner_async_generator_coroutine(
-        mock_run_state_registry: Annotated[MockRunStateRegistry, pytest.fixture],
         assert_local_runner_with_mock_registry: Annotated[AssertLocalRunner, pytest.fixture],
         async_wait_for_send_twice_task_template: Annotated[MockTaskTemplate,
                                                            pytest.fixture]) -> None:
 
     async_wait_for_send_twice_task_template.set_engine(assert_local_runner_with_mock_registry)
-    async_wait_for_send_twice_task_template.set_registry(mock_run_state_registry)
 
     async_wait_for_send_twice = async_wait_for_send_twice_task_template.apply()
 
