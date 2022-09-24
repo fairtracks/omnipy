@@ -1,4 +1,4 @@
-from engine.helpers.mocks import MockEngineConfig, MockTaskRunnerEngine
+from .helpers.mocks import MockEngineConfig, MockTaskRunnerEngine
 
 
 def test_engine_init() -> None:
