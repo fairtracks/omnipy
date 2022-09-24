@@ -168,7 +168,9 @@ def str_stream() -> StringIO:
 def simple_logger() -> logging.Logger:
     logger = logging.getLogger('test')
     logger.setLevel(logging.INFO)
-    return logger
+    yield logger
+    for handler in logger.handlers:
+        logger.removeHandler(handler)
 
 
 @pytest.fixture(scope='function')
@@ -176,9 +178,10 @@ def stream_logger(
     str_stream: Annotated[StringIO, pytest.fixture],
     simple_logger: Annotated[logging.Logger, pytest.fixture],
 ) -> logging.Logger:
-
-    simple_logger.addHandler(logging.StreamHandler(str_stream))
-    return simple_logger
+    stream_handler = logging.StreamHandler(str_stream)
+    simple_logger.addHandler(stream_handler)
+    yield simple_logger
+    simple_logger.removeHandler(stream_handler)
 
 
 @pytest.fixture(scope='module')
