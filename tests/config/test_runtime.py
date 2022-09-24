@@ -17,7 +17,7 @@ from unifair.engine.prefect import PrefectEngine
 from unifair.engine.registry import RunStateRegistry
 
 
-def test_config_default() -> None:
+def test_config_default(teardown_loggers) -> None:
     config = RuntimeConfig()
     assert isinstance(config.local, LocalRunnerConfig)
     assert isinstance(config.prefect, PrefectEngineConfig)
@@ -49,7 +49,6 @@ def test_classes_default() -> None:
 
 
 def test_default_config() -> None:
-
     runtime = Runtime()
 
     assert isinstance(runtime.config, RuntimeConfig)

@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated, Callable, List
 
 import pytest
@@ -37,3 +38,11 @@ def mock_config_publisher_with_subscribers(
     config.subscribe('text', subscriber_obj.set_text)
 
     return config
+
+
+@pytest.fixture(scope="module")
+def teardown_loggers():
+    yield
+    logger = logging.getLogger('uniFAIR')
+    for handler in logger.handlers:
+        logger.removeHandler(handler)
