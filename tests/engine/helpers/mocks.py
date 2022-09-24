@@ -36,8 +36,10 @@ class MockTask:
         cls.engine = engine
 
     @classmethod
-    def set_registry(cls, registry: IsRunStateRegistry) -> None:
-        cls.registry = registry
+    def extrack_registry(cls) -> IsRunStateRegistry:
+        from unifair.engine.base import Engine
+        assert isinstance(cls.engine, Engine)
+        return cls.engine._registry  # noqa
 
 
 class MockTaskTemplate(MockTask):
@@ -45,7 +47,6 @@ class MockTaskTemplate(MockTask):
         task = MockTask(self.name, self._func)
         assert self.engine is not None
         task.set_engine(self.engine)
-        task.set_registry(self.registry)
         assert isinstance(self.engine, TaskRunnerEngine)
         return self.engine.task_decorator(task)
 

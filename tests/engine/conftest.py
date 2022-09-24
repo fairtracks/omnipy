@@ -66,7 +66,6 @@ def mock_task_runner_engine_no_verbose(
     engine.set_config(MockEngineConfig(backend_verbose=False))
     MockTaskTemplate.set_engine(engine)
     engine.set_registry(mock_run_state_registry)
-    MockTaskTemplate.set_registry(mock_run_state_registry)
     return engine
 
 
