@@ -5,12 +5,12 @@ from aiostream.stream import enumerate as aenumerate
 import pytest
 
 from engine.helpers.functions import assert_task_state, async_wait_for_task_state
-from engine.helpers.mocks import AssertLocalRunner, MockTaskTemplate
+from engine.helpers.mocks import MockTaskTemplate, TaskRunnerStateChecker
 from unifair.engine.constants import RunState
 
 
 def test_local_runner_sync_function(
-        assert_local_runner_with_mock_registry: Annotated[AssertLocalRunner, pytest.fixture],
+        assert_local_runner_with_mock_registry: Annotated[TaskRunnerStateChecker, pytest.fixture],
         sync_power_task_template: Annotated[MockTaskTemplate, pytest.fixture]) -> None:
 
     sync_power_task_template.set_engine(assert_local_runner_with_mock_registry)
@@ -22,7 +22,7 @@ def test_local_runner_sync_function(
 
 
 def test_local_runner_sync_generator_coroutine(
-        assert_local_runner_with_mock_registry: Annotated[AssertLocalRunner, pytest.fixture],
+        assert_local_runner_with_mock_registry: Annotated[TaskRunnerStateChecker, pytest.fixture],
         sync_wait_for_send_twice_task_template: Annotated[MockTaskTemplate,
                                                           pytest.fixture]) -> None:
 
@@ -44,7 +44,7 @@ def test_local_runner_sync_generator_coroutine(
 
 @pytest.mark.asyncio
 async def test_local_runner_async_coroutine(
-    assert_local_runner_with_mock_registry: Annotated[AssertLocalRunner, pytest.fixture],
+    assert_local_runner_with_mock_registry: Annotated[TaskRunnerStateChecker, pytest.fixture],
     async_wait_a_bit_task_template: Annotated[MockTaskTemplate, pytest.fixture],
 ) -> None:
 
@@ -64,7 +64,7 @@ async def test_local_runner_async_coroutine(
 
 @pytest.mark.asyncio
 async def test_local_runner_async_generator_coroutine(
-        assert_local_runner_with_mock_registry: Annotated[AssertLocalRunner, pytest.fixture],
+        assert_local_runner_with_mock_registry: Annotated[TaskRunnerStateChecker, pytest.fixture],
         async_wait_for_send_twice_task_template: Annotated[MockTaskTemplate,
                                                            pytest.fixture]) -> None:
 
