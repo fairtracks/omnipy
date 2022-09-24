@@ -151,16 +151,18 @@ class MockRunStateRegistry:
     def all_tasks(self, state: Optional[RunState] = None) -> Tuple[IsTask, ...]:  # noqa
         return tuple(self._tasks.values())
 
+    def set_task_state(self, task: IsTask, state: RunState) -> None:
+        self._tasks[task.name] = task
+        self._task_state[task.name] = state
+        self._task_state_datetime[(task.name, state)] = datetime.now()
+        if self.logger:
+            self.logger.info(f'{task.name} - {state.name}')
+
     def set_logger(self, logger: Optional[logging.Logger]) -> None:
         self.logger = logger
 
     def set_config(self, config: IsRunStateRegistryConfig) -> None:
         self.config = config
-
-    def set_task_state(self, task: IsTask, state: RunState) -> None:
-        self._tasks[task.name] = task
-        self._task_state[task.name] = state
-        self._task_state_datetime[(task.name, state)] = datetime.now()
 
 
 class AssertLocalRunner(LocalRunner):
