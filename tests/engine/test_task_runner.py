@@ -12,20 +12,7 @@ from unifair.engine.protocols import IsTaskRunnerEngine
 from .helpers.functions import (assert_task_state,
                                 async_wait_for_task_state,
                                 sync_wait_for_task_state)
-from .helpers.mocks import MockEngineConfig, MockTask, MockTaskRunnerEngine, MockTaskTemplate
-
-
-def test_engine_init() -> None:
-    engine = MockTaskRunnerEngine()
-    assert engine.backend_verbose is True
-
-    engine = MockTaskRunnerEngine()
-    engine.set_config(MockEngineConfig(backend_verbose=True))
-    assert engine.backend_verbose is True
-
-    engine = MockTaskRunnerEngine()
-    engine.set_config(MockEngineConfig(backend_verbose=False))
-    assert engine.backend_verbose is False
+from .helpers.mocks import MockTask, MockTaskTemplate
 
 
 def test_mock_task_run(
