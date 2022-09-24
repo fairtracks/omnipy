@@ -1,12 +1,14 @@
 import asyncio
 from datetime import datetime, timedelta
 from io import StringIO
+import logging
 import os
 from time import sleep
 from typing import List
 
 from engine.helpers.mocks import MockTask
 from unifair.engine.constants import RunState
+from unifair.engine.protocols import IsRunStateRegistry
 
 
 def read_log_lines_from_stream(str_stream: StringIO) -> List[str]:
@@ -53,3 +55,10 @@ async def async_wait_for_task_state(task: MockTask, state: RunState, timeout_sec
     while extract_run_state(task) != state:
         await asyncio.sleep(0.001)
         _check_timeout(start_time, timeout_secs, task, state)
+
+
+def add_logger_to_registry(registry: IsRunStateRegistry) -> IsRunStateRegistry:
+    logger = logging.getLogger('uniFAIR')
+    logger.setLevel(logging.INFO)
+    registry.set_logger(logger)
+    return registry
