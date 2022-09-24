@@ -1,11 +1,11 @@
 import logging
 
-from engine.helpers.mocks import (MockLocalRunner,
-                                  MockLocalRunnerConfig,
-                                  MockPrefectEngine,
-                                  MockPrefectEngineConfig,
-                                  MockRunStateRegistry,
-                                  MockTaskTemplate)
+from tests.engine.helpers.mocks import (MockLocalRunner,
+                                        MockLocalRunnerConfig,
+                                        MockPrefectEngine,
+                                        MockPrefectEngineConfig,
+                                        MockRunStateRegistry,
+                                        MockTaskTemplate)
 from unifair.compute.task import TaskTemplate
 from unifair.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from unifair.config.registry import RunStateRegistryConfig

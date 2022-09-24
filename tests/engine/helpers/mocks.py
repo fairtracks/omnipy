@@ -180,11 +180,11 @@ class TaskRunnerStateChecker(TaskRunnerEngine):
         return self._engine._update_from_config()  # noqa
 
     def _init_task(self, task: IsTask) -> None:
-        from engine.helpers.functions import assert_task_state
+        from .functions import assert_task_state
         assert_task_state(task, RunState.INITIALIZED)
         self._engine._init_task(task)  # noqa
 
     def _run_task(self, task: IsTask, *args: Any, **kwargs: Any) -> Any:
-        from engine.helpers.functions import assert_task_state
+        from .functions import assert_task_state
         assert_task_state(task, RunState.RUNNING)
         return self._engine._run_task(task, *args, **kwargs)  # noqa

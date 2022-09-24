@@ -7,11 +7,12 @@ from typing import Annotated
 
 import pytest
 
-from engine.helpers.functions import read_log_line_from_stream, read_log_lines_from_stream
 from unifair.engine.constants import RunState
 from unifair.engine.protocols import IsTask
 from unifair.engine.registry import RunStateRegistry
 from unifair.util.helpers import get_datetime_format
+
+from .helpers.functions import read_log_line_from_stream, read_log_lines_from_stream
 
 
 def test_task_state_transitions(task_a: Annotated[IsTask, pytest.fixture],
