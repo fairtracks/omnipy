@@ -6,7 +6,6 @@ import os
 from time import sleep
 from typing import Callable, List
 
-from engine.helpers.mocks import MockTask
 from unifair.engine.constants import RunState
 from unifair.engine.protocols import IsRunStateRegistry, IsTask, IsTaskRunnerEngine, IsTaskTemplate
 
@@ -28,29 +27,36 @@ def read_log_line_from_stream(str_stream: StringIO) -> str:
         return ''
 
 
-def extract_run_state(task: MockTask):
-    return task.extrack_registry().get_task_state(task)  #
+def extract_run_state(task: IsTask):
+    if hasattr(task, 'extrack_registry'):
+        registry = task.extrack_registry()
+        if registry:
+            return registry.get_task_state(task)
+    else:
+        assert False, 'TODO: Fix for Task objects'
 
 
-def assert_task_state(task: MockTask, state: RunState):
-    assert extract_run_state(task) == state, state
+def assert_task_state(task: IsTask, state: RunState):
+    task_state = extract_run_state(task)
+    if task_state:
+        assert extract_run_state(task) == state, state
 
 
-def _check_timeout(start_time: datetime, timeout_secs: float, task: MockTask, state: RunState):
+def _check_timeout(start_time: datetime, timeout_secs: float, task: IsTask, state: RunState):
     if datetime.now() - start_time >= timedelta(seconds=timeout_secs):
         raise TimeoutError(f'Run state of "{task.name}" not set to {state.name} '
                            f'until timeout: {timeout_secs} sec(s). '
                            f'Current state: {extract_run_state(task).name}')
 
 
-def sync_wait_for_task_state(task: MockTask, state: RunState, timeout_secs: float = 1):
+def sync_wait_for_task_state(task: IsTask, state: RunState, timeout_secs: float = 1):
     start_time = datetime.now()
     while extract_run_state(task) != state:
         sleep(0.001)
         _check_timeout(start_time, timeout_secs, task, state)
 
 
-async def async_wait_for_task_state(task: MockTask, state: RunState, timeout_secs: float = 1):
+async def async_wait_for_task_state(task: IsTask, state: RunState, timeout_secs: float = 1):
     start_time = datetime.now()
     while extract_run_state(task) != state:
         await asyncio.sleep(0.001)
