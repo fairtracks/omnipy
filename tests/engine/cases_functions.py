@@ -1,5 +1,6 @@
 import asyncio
 from time import sleep
+from typing import Awaitable, Generator
 
 # Synchronous function: sync_power()
 
@@ -19,7 +20,7 @@ def sync_wait_a_bit(seconds: float) -> float:
 # Asynchronous coroutine: async_wait_a_bit()
 
 
-async def async_wait_a_bit(seconds: float) -> float:
+async def async_wait_a_bit(seconds: float) -> Awaitable[float]:
     await asyncio.sleep(seconds)
     return seconds
 
@@ -27,7 +28,7 @@ async def async_wait_a_bit(seconds: float) -> float:
 # Synchronous generator: range()
 
 
-def sync_range(num: int):
+def sync_range(num: int) -> Generator:
     for i in range(num):
         yield i
 
@@ -35,7 +36,7 @@ def sync_range(num: int):
 # Asynchronous generator: range()
 
 
-async def async_range(num: int):
+async def async_range(num: int) -> Awaitable[Generator]:
     for i in range(num):
         yield i
 
@@ -43,7 +44,7 @@ async def async_range(num: int):
 # Synchronous generator coroutine: sync_wait_for_send_twice()
 
 
-def sync_wait_for_send_twice():
+def sync_wait_for_send_twice() -> Generator:
     for i in range(2):
         value = yield
         yield i, value
@@ -52,7 +53,7 @@ def sync_wait_for_send_twice():
 # Asynchronous generator coroutine: async_wait_for_send_twice()
 
 
-async def async_wait_for_send_twice():
+async def async_wait_for_send_twice() -> Awaitable[Generator]:
     for i in range(2):
         value = yield
         yield i, value
