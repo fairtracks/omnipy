@@ -2,6 +2,9 @@ from typing import Callable
 
 import pytest
 
+from engine.helpers.mocks import MockEngineConfig, MockEngineSubclass
+from unifair.engine.protocols import IsEngine
+
 
 @pytest.fixture(scope='module')
 def action_func_no_params() -> Callable[[], None]:
@@ -43,3 +46,10 @@ def power_m1_func() -> Callable[[int, int, bool], int]:
         return number**exponent - (1 if minus_one else 0)
 
     return power_m1_func
+
+
+@pytest.fixture(scope='module')
+def mock_engine() -> IsEngine:
+    mock_engine = MockEngineSubclass()
+    mock_engine.set_config(MockEngineConfig())
+    return mock_engine

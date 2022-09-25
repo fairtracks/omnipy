@@ -6,6 +6,7 @@ from typing import Any, Callable, ClassVar, Dict, Optional, Tuple, Type
 
 from unifair.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from unifair.config.registry import RunStateRegistryConfig
+from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
 from unifair.engine.local import LocalRunner
 from unifair.engine.prefect import PrefectEngine
@@ -98,7 +99,7 @@ class MockEngineConfig:
     backend_verbose: bool = True
 
 
-class MockTaskRunnerEngine(TaskRunnerEngine):
+class MockEngineSubclass(Engine):
     def _init_engine(self) -> None:
         self.backend_task: Optional[MockBackendTask] = None
         self._update_from_config()
@@ -107,6 +108,12 @@ class MockTaskRunnerEngine(TaskRunnerEngine):
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
         self.backend_verbose: bool = self._config.backend_verbose
 
+    @classmethod
+    def get_config_cls(cls) -> Type[IsEngineConfig]:
+        return MockEngineConfig
+
+
+class MockTaskRunnerSubclass(TaskRunnerEngine, MockEngineSubclass):
     def _init_task(self, task: IsTask) -> None:
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
         self.backend_task = MockBackendTask(task, self._config)
@@ -114,10 +121,6 @@ class MockTaskRunnerEngine(TaskRunnerEngine):
     def _run_task(self, task: IsTask, *args: Any, **kwargs: Any) -> Any:
         assert self.backend_task is not None
         return self.backend_task.run(*args, **kwargs)
-
-    @classmethod
-    def get_config_cls(cls) -> Type[IsEngineConfig]:
-        return MockEngineConfig
 
 
 class MockBackendTask:

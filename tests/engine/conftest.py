@@ -13,7 +13,7 @@ from .helpers.functions import add_logger_to_registry, convert_func_to_task
 from .helpers.mocks import (MockEngineConfig,
                             MockRunStateRegistry,
                             MockTask,
-                            MockTaskRunnerEngine,
+                            MockTaskRunnerSubclass,
                             MockTaskTemplate,
                             TaskRunnerStateChecker)
 
@@ -34,7 +34,7 @@ def mock_task_template(task_template_cls):
 
 @pc.fixture(scope='function')
 @pc.parametrize(
-    engine=[MockTaskRunnerEngine()],
+    engine=[MockTaskRunnerSubclass()],
     ids=['assertinitrun[taskrunner-m[engine]]'],
 )
 def mock_task_runner_subclass_with_assert(engine):
@@ -43,7 +43,7 @@ def mock_task_runner_subclass_with_assert(engine):
 
 @pc.fixture(scope='function')
 @pc.parametrize(
-    engine=[MockTaskRunnerEngine()],
+    engine=[MockTaskRunnerSubclass()],
     ids=['taskrunner-m[engine]'],
 )
 def mock_task_runner_subclass_no_verbose(engine):
