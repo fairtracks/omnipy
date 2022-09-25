@@ -1,20 +1,35 @@
 import pytest
 
-from unifair.compute.flow import Flow, FlowTemplate
+from unifair.compute.flow import (DagFlow,
+                                  DagFlowTemplate,
+                                  Flow,
+                                  FlowTemplate,
+                                  FuncFlow,
+                                  FuncFlowTemplate)
 
 
 def test_init() -> None:
-    flow_template = FlowTemplate()
-    assert isinstance(flow_template, FlowTemplate)
-
-    with pytest.raises(TypeError):
-        FlowTemplate('extra_positional_argument')
+    with pytest.raises(RuntimeError):
+        FlowTemplate()
 
     with pytest.raises(RuntimeError):
         Flow()
 
-    flow = flow_template.apply()
+    dag_flow_template = DagFlowTemplate()
+    assert isinstance(dag_flow_template, FlowTemplate)
+    assert isinstance(dag_flow_template, DagFlowTemplate)
+
+    flow = dag_flow_template.apply()
     assert isinstance(flow, Flow)
+    assert isinstance(flow, DagFlow)
+
+    func_flow_template = FuncFlowTemplate()
+    assert isinstance(func_flow_template, FlowTemplate)
+    assert isinstance(func_flow_template, FuncFlowTemplate)
+
+    flow = func_flow_template.apply()
+    assert isinstance(flow, Flow)
+    assert isinstance(flow, FuncFlow)
 
 
 #
