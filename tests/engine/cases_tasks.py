@@ -2,7 +2,7 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import threading
 from types import NoneType
-from typing import Awaitable, Callable
+from typing import Awaitable, Callable, Generator, Tuple
 
 from aiostream.stream import enumerate as aenumerate
 import pytest
@@ -32,13 +32,16 @@ from .helpers.functions import (assert_task_state,
 
 # Synchronous function: power()
 
+RunTaskAndAssertType = Callable[[IsTask], None]
+AsyncRunTaskAndAssertType = Callable[[IsTask], Awaitable[None]]
+
 
 @pc.case(
     id='sync-function-power(4,2)==16',
     tags=['sync', 'function', 'singlethread', 'success', 'power'],
 )
-def case_sync_power_args():
-    def run_and_assert_results(task: IsTask):
+def case_sync_power_args() -> Tuple[str, Callable[[int, int], int], RunTaskAndAssertType]:
+    def run_and_assert_results(task: IsTask) -> None:
         assert task(4, 2) == 16
         assert_task_state(task, [RunState.FINISHED])
 
@@ -49,8 +52,8 @@ def case_sync_power_args():
     id='sync-function-power(number=3,exponent=5)==245',
     tags=['sync', 'function', 'singlethread', 'success', 'power'],
 )
-def case_sync_power_kwargs():
-    def run_and_assert_results(task: IsTask):
+def case_sync_power_kwargs() -> Tuple[str, Callable[[int, int], int], RunTaskAndAssertType]:
+    def run_and_assert_results(task: IsTask) -> None:
         assert task(number=3, exponent=5) == 243
         assert_task_state(task, [RunState.FINISHED])
 
@@ -64,8 +67,8 @@ def case_sync_power_kwargs():
     id='sync-generator-range',
     tags=['sync', 'generator', 'singlethread', 'success'],
 )
-def case_sync_range():
-    def run_and_assert_results(task: IsTask):
+def case_sync_range() -> Tuple[str, Callable[[int], Generator], RunTaskAndAssertType]:
+    def run_and_assert_results(task: IsTask) -> None:
         generator = task(5)
         assert_task_state(task, [RunState.RUNNING, RunState.FINISHED])
 
@@ -79,8 +82,9 @@ def case_sync_range():
     id='async-generator-range',
     tags=['async', 'generator', 'singlethread', 'localsuccess'],
 )
-def case_async_range():
-    async def run_and_assert_results(task: IsTask):
+def case_async_range() -> \
+        Tuple[str, Callable[[int], Awaitable[Generator]], AsyncRunTaskAndAssertType]:
+    async def run_and_assert_results(task: IsTask) -> None:
         from unifair.engine.prefect import PrefectEngine
         if check_engine_cls(task, PrefectEngine):
             pytest.xfail("TypeError: cannot pickle 'async_generator' object")
@@ -105,8 +109,8 @@ def case_async_range():
     id='sync-generator-coroutine-wait_for_send_twice()',
     tags=['sync', 'generator-coroutine', 'singlethread', 'localsuccess'],
 )
-def case_sync_wait_for_send_twice():
-    def run_and_assert_results(task: IsTask):
+def case_sync_wait_for_send_twice() -> Tuple[str, Callable[[], Generator], RunTaskAndAssertType]:
+    def run_and_assert_results(task: IsTask) -> None:
         from unifair.engine.prefect import PrefectEngine
         if check_engine_cls(task, PrefectEngine):
             pytest.xfail("AttributeError: 'list' object has no attribute 'send'")
@@ -129,8 +133,9 @@ def case_sync_wait_for_send_twice():
     id='async-generator-coroutine-wait_for_send_twice()',
     tags=['async', 'generator-coroutine', 'singlethread', 'localsuccess'],
 )
-def case_async_wait_for_send_twice():
-    async def run_and_assert_results(task: IsTask):
+def case_async_wait_for_send_twice() -> \
+        Tuple[str, Callable[[], Awaitable[Generator]], AsyncRunTaskAndAssertType]:
+    async def run_and_assert_results(task: IsTask) -> None:
         from unifair.engine.prefect import PrefectEngine
         if check_engine_cls(task, PrefectEngine):
             pytest.xfail("TypeError: cannot pickle 'async_generator' object")
@@ -156,8 +161,9 @@ def case_async_wait_for_send_twice():
     id='async-coroutine-wait_a_bit(0.005)==0.005',
     tags=['async', 'coroutine', 'singlethread', 'success'],
 )
-def case_async_wait_a_bit():
-    async def run_and_assert_results(task: IsTask):
+def case_async_wait_a_bit() -> \
+        Tuple[str, Callable[[float], Awaitable[float]], AsyncRunTaskAndAssertType]:
+    async def run_and_assert_results(task: IsTask) -> None:
         async_assert_results_wait_a_bit: Callable[[float], Awaitable] = \
             get_async_assert_results_wait_a_bit_func(task)
 
@@ -182,8 +188,9 @@ def case_async_wait_a_bit():
     id='sync-function-threading-wait_a_bit(0.005)==0.005',
     tags=['sync', 'function', 'multithread', 'success'],
 )
-def case_sync_wait_a_bit_multithreaded_threading():
-    def run_and_assert_results(task: IsTask):
+def case_sync_wait_a_bit_multithreaded_threading() -> \
+        Tuple[str, Callable[[float],float], RunTaskAndAssertType]:
+    def run_and_assert_results(task: IsTask) -> None:
         sync_assert_results_wait_a_bit: Callable[[float], NoneType] = \
             get_sync_assert_results_wait_a_bit_func(task)
         thread = threading.Thread(target=sync_assert_results_wait_a_bit, args=(0.005,))
@@ -201,8 +208,9 @@ def case_sync_wait_a_bit_multithreaded_threading():
     id='sync-function-futures-wait_a_bit(0.005)==0.005',
     tags=['sync', 'function', 'multithread', 'success'],
 )
-def case_sync_wait_a_bit_multithreaded_futures():
-    def run_and_assert_results(task: IsTask):
+def case_sync_wait_a_bit_multithreaded_futures() -> \
+        Tuple[str, Callable[[float], float], RunTaskAndAssertType]:
+    def run_and_assert_results(task: IsTask) -> None:
         with ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(task, 0.005)
             sync_wait_for_task_state(task, [RunState.RUNNING])
@@ -220,8 +228,9 @@ def case_sync_wait_a_bit_multithreaded_futures():
     id='async-coroutine-threading-wait_a_bit(0.005)==0.005',
     tags=['async', 'coroutine', 'multithread', 'success'],
 )
-def case_async_wait_a_bit_multithreaded_threading():
-    def run_and_assert_results(task: IsTask):
+def case_async_wait_a_bit_multithreaded_threading() -> \
+        Tuple[str, Callable[[float], Awaitable[float]], RunTaskAndAssertType]:
+    def run_and_assert_results(task: IsTask) -> None:
         async_assert_results_wait_a_bit: Callable[[float], Awaitable] = \
             get_async_assert_results_wait_a_bit_func(task)
 
@@ -243,8 +252,9 @@ def case_async_wait_a_bit_multithreaded_threading():
     id='async-coroutine-futures-wait_a_bit(0.005)==0.005',
     tags=['async', 'coroutine', 'multithread', 'success'],
 )
-def case_async_wait_a_bit_multithreaded_futures():
-    async def run_and_assert_results(task: IsTask):
+def case_async_wait_a_bit_multithreaded_futures() -> \
+        Tuple[str, Callable[[float], Awaitable[float]], AsyncRunTaskAndAssertType]:
+    async def run_and_assert_results(task: IsTask) -> None:
 
         future = await asyncio.get_event_loop().run_in_executor(None, task, 0.005)
         sync_wait_for_task_state(task, [RunState.RUNNING, RunState.FINISHED])
@@ -265,10 +275,12 @@ def case_async_wait_a_bit_multithreaded_futures():
 @pc.case(
     id='fail-sync-function-futures-wait_a_bit(0.005)==0.005',
     tags=['sync', 'function', 'multiprocess', 'fail'])
-def case_sync_wait_a_bit_multiprocessing_futures():
+def case_sync_wait_a_bit_multiprocessing_futures() -> \
+        Tuple[str, Callable[[float], float], RunTaskAndAssertType]:
+
     pytest.xfail("Can't pickle function")
 
-    def run_and_assert_results(task: IsTask):
+    def run_and_assert_results(task: IsTask) -> None:
         with ProcessPoolExecutor(max_workers=1) as executor:
             future = executor.submit(task, 0.005)
             assert future.result() == 0.005
@@ -283,10 +295,12 @@ def case_sync_wait_a_bit_multiprocessing_futures():
     id='fail-async-coroutine-futures-wait_a_bit(0.005)==0.005',
     tags=['async', 'coroutine', 'multiprocess', 'fail'],
 )
-def case_async_wait_a_bit_multiprocessing():
+def case_async_wait_a_bit_multiprocessing() -> \
+        Tuple[str, Callable[[float], Awaitable[float]], AsyncRunTaskAndAssertType]:
+
     pytest.xfail("Can't pickle function")
 
-    async def run_and_assert_results(task: IsTask):
+    async def run_and_assert_results(task: IsTask) -> None:
         async_assert_results_wait_a_bit: Callable[[float], Awaitable] = \
             get_async_assert_results_wait_a_bit_func(task)
 
