@@ -1,4 +1,4 @@
-from typing import Tuple, Type
+from typing import Tuple, Type, Union
 
 import pytest
 
@@ -30,16 +30,16 @@ def mock_job_classes() -> Tuple[Type[JobConfig], Type[JobTemplate], Type[Job]]:
 def test_init_mock():
     JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
 
-    job_template = JobTemplate()
-    assert isinstance(job_template, JobTemplate)
-    assert job_template.name is None
+    job_tmpl = JobTemplate()
+    assert isinstance(job_tmpl, JobTemplate)
+    assert job_tmpl.name is None
 
-    job_template = JobTemplate(name='name')
-    assert job_template.name == 'name'
+    job_tmpl = JobTemplate(name='name')
+    assert job_tmpl.name == 'name'
 
-    job = job_template.apply()
+    job = job_tmpl.apply()
     assert isinstance(job, Job)
-    assert job.name == job_template.name
+    assert job.name == job_tmpl.name
 
 
 def test_fail_only_jobtemplate_init_mock():
@@ -89,14 +89,14 @@ def test_job_creator_singular_mock(mock_engine) -> None:
     assert JobTemplate.job_creator is job_creator
     assert Job.job_creator is job_creator
 
-    job_template = JobTemplate()
-    assert job_template.__class__.job_creator is job_creator
+    job_tmpl = JobTemplate()
+    assert job_tmpl.__class__.job_creator is job_creator
 
-    job = job_template.apply()
+    job = job_tmpl.apply()
     assert job.__class__.job_creator is job_creator
 
-    job_template_new = JobTemplate()
-    assert job_template_new.__class__.job_creator is job_creator
+    job_tmpl_new = JobTemplate()
+    assert job_tmpl_new.__class__.job_creator is job_creator
 
 
 def test_engine_mock(mock_engine):
@@ -104,16 +104,16 @@ def test_engine_mock(mock_engine):
 
     assert JobTemplate.engine is None
 
-    job_template = JobTemplate()
-    assert job_template.engine is None
-    assert job_template.__class__.job_creator.engine is None
+    job_tmpl = JobTemplate()
+    assert job_tmpl.engine is None
+    assert job_tmpl.__class__.job_creator.engine is None
 
-    job_template.set_engine(mock_engine)
-    assert job_template.engine is mock_engine
-    assert job_template.__class__.job_creator.engine is mock_engine
+    job_tmpl.set_engine(mock_engine)
+    assert job_tmpl.engine is mock_engine
+    assert job_tmpl.__class__.job_creator.engine is mock_engine
 
     job_config_new = JobTemplate()
-    assert job_config_new is not job_template
+    assert job_config_new is not job_tmpl
     assert job_config_new.engine is mock_engine
     assert job_config_new.__class__.job_creator.engine is mock_engine
 
@@ -132,18 +132,18 @@ def test_engine_mock(mock_engine):
 def test_property_name_default_mock() -> None:
     JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
 
-    job_template = JobTemplate()
-    assert job_template.name is None
+    job_tmpl = JobTemplate()
+    assert job_tmpl.name is None
 
     with pytest.raises(AttributeError):
-        job_template.name = 'cool_name'  # noqa
+        job_tmpl.name = 'cool_name'  # noqa
 
 
 def test_property_name_change_mock() -> None:
     JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
 
-    job_template = JobTemplate(name='my_job')
-    for job in job_template, job_template.apply():
+    job_tmpl = JobTemplate(name='my_job')
+    for job in job_tmpl, job_tmpl.apply():
         assert job.name == 'my_job'
 
         with pytest.raises(AttributeError):
@@ -153,8 +153,8 @@ def test_property_name_change_mock() -> None:
 def test_property_name_validation_mock() -> None:
     JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
 
-    job_template = JobTemplate(name=None)
-    assert job_template.name is None
+    job_tmpl = JobTemplate(name=None)
+    assert job_tmpl.name is None
 
     with pytest.raises(ValueError):
         JobTemplate(name='')
@@ -164,120 +164,118 @@ def test_property_name_validation_mock() -> None:
 
 
 # def test_property_name_job() -> None:
-#     job_template = JobTemplate()
-#     assert job_template.name is None
+#     job_tmpl = JobTemplate()
+#     assert job_tmpl.name is None
 #
-#     job_1 = job_template.apply()
+#     job_1 = job_tmpl.apply()
 #     assert job_1.name is not None
 #     assert isinstance(job_1.name, str) and len(job_1.name) > 0
 #
-#     job_2 = job_template.apply()
+#     job_2 = job_tmpl.apply()
 #     assert job_1.name != job_2.name
 
 
 def test_equal_mock() -> None:
     JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
 
-    my_job_template = JobTemplate(name='my_job')
-    my_job_template_2 = JobTemplate(name='my_job')
-    for (my_job_obj, my_job_obj_2) in [(my_job_template, my_job_template_2),
-                                       (my_job_template.apply(), my_job_template_2.apply())]:
+    my_job_tmpl = JobTemplate(name='my_job')
+    my_job_tmpl_2 = JobTemplate(name='my_job')
+
+    for (my_job_obj, my_job_obj_2) in [(my_job_tmpl, my_job_tmpl_2),
+                                       (my_job_tmpl.apply(), my_job_tmpl_2.apply())]:
         assert my_job_obj == my_job_obj_2
 
-    other_job_template = JobTemplate(name='other_job')
-    for (my_job_obj, other_job_obj) in [(my_job_template, other_job_template),
-                                        (my_job_template.apply(), other_job_template.apply())]:
+    other_job_tmpl = JobTemplate(name='other_job')
+
+    for (my_job_obj, other_job_obj) in [(my_job_tmpl, other_job_tmpl),
+                                        (my_job_tmpl.apply(), other_job_tmpl.apply())]:
         assert my_job_obj != other_job_obj
 
-    assert my_job_template != "123"  # noqa
+    assert my_job_tmpl != "123"  # noqa
 
 
 def test_subclass_equal() -> None:
-    cmd_template = CommandMockJobTemplate('erase', params=dict(what='all'))
-    cmd_template_2 = CommandMockJobTemplate('erase', params=dict(what='all'))
-    for (cmd_obj, cmd_obj_2) in [(cmd_template, cmd_template_2),
-                                 (cmd_template.apply(), cmd_template_2.apply())]:
+
+    cmd_tmpl = CommandMockJobTemplate('erase', params=dict(what='all'))
+    cmd_tmpl_2 = CommandMockJobTemplate('erase', params=dict(what='all'))
+
+    for (cmd_obj, cmd_obj_2) in [(cmd_tmpl, cmd_tmpl_2), (cmd_tmpl.apply(), cmd_tmpl_2.apply())]:
         assert cmd_obj == cmd_obj_2
 
-    cmd_template_3 = CommandMockJobTemplate('restore', params=dict(what='all'))
-    for (cmd_obj, cmd_obj_3) in [(cmd_template, cmd_template_3),
-                                 (cmd_template.apply(), cmd_template_3.apply())]:
+    cmd_tmpl_3 = CommandMockJobTemplate('restore', params=dict(what='all'))
+
+    for (cmd_obj, cmd_obj_3) in [(cmd_tmpl, cmd_tmpl_3), (cmd_tmpl.apply(), cmd_tmpl_3.apply())]:
         assert cmd_obj != cmd_obj_3
 
-    cmd_template_4 = CommandMockJobTemplate('erase', params=dict(what='nothing'))
-    for (cmd_obj, cmd_obj_4) in [(cmd_template, cmd_template_4),
-                                 (cmd_template.apply(), cmd_template_4.apply())]:
+    cmd_tmpl_4 = CommandMockJobTemplate('erase', params=dict(what='nothing'))
+
+    for (cmd_obj, cmd_obj_4) in [(cmd_tmpl, cmd_tmpl_4), (cmd_tmpl.apply(), cmd_tmpl_4.apply())]:
         assert cmd_obj != cmd_obj_4
 
 
-def test_subclass_template():
-    cmd_template = CommandMockJobTemplate('erase')
-    assert isinstance(cmd_template, CommandMockJobTemplate)
-
-    assert cmd_template.uppercase is False
-    assert cmd_template.params == {}
-
-    with pytest.raises(TypeError):
-        cmd_template()  # noqa
+def _assert_immutable_command_mock_job_properties(
+        cmd_obj: Union[CommandMockJobTemplate, CommandMockJob]) -> None:
 
     with pytest.raises(AttributeError):
-        cmd_template.uppercase = False  # noqa
+        cmd_obj.uppercase = False  # noqa
 
     with pytest.raises(AttributeError):
-        cmd_template.params = {}  # noqa
+        cmd_obj.params = {}  # noqa
 
     with pytest.raises(TypeError):
-        cmd_template.params['what'] = 'none'  # noqa
+        cmd_obj.params['what'] = 'none'  # noqa
+
+    with pytest.raises(TypeError):
+        del cmd_obj.params['what']  # noqa
+
+
+def test_subclass_tmpl():
+    cmd_tmpl = CommandMockJobTemplate('erase')
+    assert isinstance(cmd_tmpl, CommandMockJobTemplate)
+
+    assert cmd_tmpl.uppercase is False
+    assert cmd_tmpl.params == {}
+
+    with pytest.raises(TypeError):
+        cmd_tmpl()  # noqa
+
+    _assert_immutable_command_mock_job_properties(cmd_tmpl)
 
 
 def test_subclass_apply():
-    cmd_template = CommandMockJobTemplate('erase', uppercase=True, params={'what': 'all'})
-    assert isinstance(cmd_template, CommandMockJobTemplate)
+    cmd_tmpl = CommandMockJobTemplate('erase', uppercase=True, params={'what': 'all'})
+    assert isinstance(cmd_tmpl, CommandMockJobTemplate)
 
-    cmd = cmd_template.apply()
+    cmd = cmd_tmpl.apply()
     assert isinstance(cmd, CommandMockJob)
 
     assert cmd.uppercase is True
     assert cmd.params == {'what': 'all'}
 
-    with pytest.raises(AttributeError):
-        cmd.uppercase = False  # noqa
-
-    with pytest.raises(AttributeError):
-        cmd.params = {}  # noqa
-
-    with pytest.raises(TypeError):
-        cmd.params['what'] = 'none'  # noqa
+    _assert_immutable_command_mock_job_properties(cmd)
 
     assert cmd() == 'ALL HAS BEEN ERASED'
 
 
 def test_subclass_apply_revise():
-    cmd_template = CommandMockJobTemplate('restore', params={'what': 'nothing'})
-    cmd = cmd_template.apply()
+    cmd_tmpl = CommandMockJobTemplate('restore', params={'what': 'nothing'})
+    cmd = cmd_tmpl.apply()
     assert isinstance(cmd, CommandMockJob)
 
     assert cmd() == 'nothing has been restored'
 
-    cmd_template_revised = cmd.revise()
-    assert isinstance(cmd_template_revised, CommandMockJobTemplate)
+    cmd_tmpl_revised = cmd.revise()
+    assert isinstance(cmd_tmpl_revised, CommandMockJobTemplate)
 
     assert cmd.uppercase is False
-    assert cmd_template_revised.params == {'what': 'nothing'}
+    assert cmd_tmpl_revised.params == {'what': 'nothing'}
 
     with pytest.raises(TypeError):
-        cmd_template_revised()  # noqa
+        cmd_tmpl_revised()  # noqa
 
-    with pytest.raises(AttributeError):
-        cmd_template_revised.uppercase = False  # noqa
+    _assert_immutable_command_mock_job_properties(cmd_tmpl_revised)
 
-    with pytest.raises(AttributeError):
-        cmd_template_revised.params = {}  # noqa
-
-    with pytest.raises(TypeError):
-        cmd_template_revised.params['what'] = 'all'  # noqa
-
-    cmd_revised = cmd_template_revised.apply()
+    cmd_revised = cmd_tmpl_revised.apply()
     assert cmd_revised() == 'nothing has been restored'
 
 
@@ -469,7 +467,7 @@ def test_subclass_apply_public_property_errors():
         job_tmpl.apply()
 
 
-# def test_job_template_as_decorator() -> None:
+# def test_job_tmpl_as_decorator() -> None:
 #     @JobTemplate
 #     def plus_one(number: int) -> int:
 #         return number + 1
@@ -482,7 +480,7 @@ def test_subclass_apply_public_property_errors():
 #     assert plus_one(3) == 4
 #
 #
-# def test_job_template_as_decorator_with_keyword_arguments() -> None:
+# def test_job_tmpl_as_decorator_with_keyword_arguments() -> None:
 #     @JobTemplate(
 #         name='plus_one',
 #         param_key_map=dict(number_a='number'),
@@ -492,17 +490,17 @@ def test_subclass_apply_public_property_errors():
 #     def plus_func(number_a: int, number_b: int) -> int:
 #         return number_a + number_b
 #
-#     plus_one_template = plus_func
+#     plus_one_tmpl = plus_func
 #
-#     assert isinstance(plus_one_template, JobTemplate)
+#     assert isinstance(plus_one_tmpl, JobTemplate)
 #
-#     plus_one = plus_one_template.apply()
+#     plus_one = plus_one_tmpl.apply()
 #     assert isinstance(plus_one, Job)
 #
 #     assert plus_one(3) == {'plus_one': 4}
 #
 #
-# def test_error_job_template_decorator_with_func_argument() -> None:
+# def test_error_job_tmpl_decorator_with_func_argument() -> None:
 #
 #     with pytest.raises(TypeError):
 #
