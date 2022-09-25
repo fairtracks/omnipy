@@ -20,7 +20,7 @@ class TaskConfig(JobConfig):
                  result_key: Optional[str] = None) -> None:
 
         name = name if name is not None else task_func.__name__
-        JobConfig.__init__(self, name=name)
+        super().__init__(name=name)
 
         self._task_func = task_func
         self._task_func_signature = inspect.signature(self._task_func)
