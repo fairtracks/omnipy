@@ -3,17 +3,14 @@ from __future__ import annotations
 import asyncio
 import inspect
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Tuple, Type, Union
+from typing import Any, Callable, Iterable, Mapping, Optional, Tuple, Type, Union
 
-from unifair.engine.protocols import IsEngine
-from unifair.util.helpers import create_merged_dict
+from unifair.compute.job import Job, JobConfig, JobTemplate
 from unifair.util.mixins import DynamicClassDecoratorMixin
 from unifair.util.param_key_mapper import ParamKeyMapper
 
 
-class TaskConfig:
-    _engine: IsEngine = None
-
+class TaskConfig(JobConfig):
     def __init__(self,
                  task_func: Callable,
                  *,
@@ -21,14 +18,16 @@ class TaskConfig:
                  fixed_params: Optional[Mapping[str, Any]] = None,
                  param_key_map: Optional[Mapping[str, str]] = None,
                  result_key: Optional[str] = None) -> None:
+
+        name = name if name is not None else task_func.__name__
+        JobConfig.__init__(self, name=name)
+
         self._task_func = task_func
         self._task_func_signature = inspect.signature(self._task_func)
-        self._name = name if name is not None else task_func.__name__
         self._fixed_params = dict(fixed_params) if fixed_params is not None else {}
         self._param_key_mapper = ParamKeyMapper(param_key_map if param_key_map is not None else {})
         self._result_key = result_key
 
-        self._check_not_empty_string('name', self.name)
         self._check_param_keys_in_func_signature(self.fixed_params.keys())
         self._check_param_keys_in_func_signature(self.param_key_map.keys())
         if self.result_key is not None:
@@ -42,19 +41,11 @@ class TaskConfig:
                                'signature of the task function are '
                                'allowed as keyword arguments to a Task object.')
 
-    @staticmethod
-    def _check_not_empty_string(param_name: str, param: str) -> None:
-        if len(param) == 0:
-            raise ValueError('Empty strings not allowed for parameter "{}"'.format(param_name))
-
-    def get_init_args(self) -> Tuple[Callable]:
+    def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return self._task_func,
 
-    def get_init_kwargs(self) -> Dict[str, Any]:
-        return {
-            key: getattr(self, key)
-            for key in ('name', 'fixed_params', 'param_key_map', 'result_key')
-        }
+    def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
+        return 'fixed_params', 'param_key_map', 'result_key'
 
     def has_coroutine_task_func(self) -> bool:
         return asyncio.iscoroutinefunction(self._task_func)
@@ -68,10 +59,6 @@ class TaskConfig:
         return self._task_func_signature.return_annotation
 
     @property
-    def name(self) -> str:
-        return self._name
-
-    @property
     def fixed_params(self) -> MappingProxyType[str, Any]:
         return MappingProxyType(self._fixed_params)
 
@@ -83,45 +70,21 @@ class TaskConfig:
     def result_key(self) -> Optional[str]:
         return self._result_key
 
-    def __eq__(self, other: object):
-        if not isinstance(other, TaskConfig):
-            return NotImplemented
-        return self.get_init_args() == other.get_init_args() \
-            and self.get_init_kwargs() == other.get_init_kwargs()
+
+class TaskTemplate(DynamicClassDecoratorMixin, JobTemplate, TaskConfig):
+    @classmethod
+    def _get_job_subcls_for_apply(cls) -> Type[Job]:
+        return Task
 
 
-class TaskTemplate(DynamicClassDecoratorMixin, TaskConfig):
-    def apply(self, **engine_kwargs: Any) -> Task:
-        return Task.from_task_template(self)
-
-    def refine(self, update: bool = True, **kwargs: Any) -> TaskTemplate:
-        if update:
-            for key, cur_val in self.get_init_kwargs().items():
-                if key in kwargs:
-                    new_val = create_merged_dict(cur_val, kwargs[key]) \
-                        if isinstance(cur_val, Mapping) else kwargs[key]
-                else:
-                    new_val = cur_val
-                kwargs[key] = new_val
-
-        return TaskTemplate(self._task_func, **kwargs)
+class Task(Job, TaskConfig):
+    @classmethod
+    def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
+        return TaskConfig
 
     @classmethod
-    def set_engine(cls, engine: IsEngine) -> None:
-        cls._engine = engine
-
-
-class Task(TaskConfig):
-    def __init__(self, *args: Any, **kwargs: Any):  # noqa
-        raise RuntimeError('Tasks should only be instantiated using TaskTemplate.apply()')
-
-    @classmethod
-    def from_task_template(cls, task_template: TaskTemplate):
-        init_args = task_template.get_init_args()
-        init_kwargs = task_template.get_init_kwargs()
-        task_obj = object.__new__(Task)
-        super(Task, task_obj).__init__(*init_args, **init_kwargs)
-        return task_obj
+    def _get_job_template_subcls_for_revise(cls) -> Type[JobTemplate]:
+        return TaskTemplate
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         mapped_fixed_params = self._param_key_mapper.delete_matching_keys(
@@ -142,13 +105,6 @@ class Task(TaskConfig):
             return {self._result_key: result}
         else:
             return result
-
-    @staticmethod
-    def _map_params(params: Dict[str, Any], key_map: Dict[str, str]) -> Dict[str, Any]:
-        return {key_map[key] if key in key_map else key: params[key] for key in params}
-
-    def revise(self) -> TaskTemplate:
-        return TaskTemplate(*self.get_init_args(), **self.get_init_kwargs())
 
 
 # TODO: Would we need the possibility to refine task templates by adding new task parameters?
