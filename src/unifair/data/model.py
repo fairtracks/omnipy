@@ -2,7 +2,7 @@ import json
 from types import NoneType
 from typing import Any, Generic, get_args, get_origin, Type, TypeVar, Union
 
-import orjson
+# from orjson import orjson
 from pydantic import Protocol, root_validator
 from pydantic.fields import ModelField, Undefined
 from pydantic.generics import GenericModel
@@ -10,10 +10,9 @@ from pydantic.generics import GenericModel
 RootT = TypeVar('RootT')
 ROOT_KEY = '__root__'
 
-
-def orjson_dumps(v, *, default):
-    # orjson.dumps returns bytes, to match standard json.dumps we need to decode
-    return orjson.dumps(v, default=default).decode()
+# def orjson_dumps(v, *, default):
+#     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
+#     return orjson.dumps(v, default=default).decode()
 
 
 class Model(GenericModel, Generic[RootT]):
@@ -34,8 +33,8 @@ class Model(GenericModel, Generic[RootT]):
         validate_all = True
         validate_assignment = True
         smart_union = True
-        json_loads = orjson.loads
-        json_dumps = orjson_dumps
+        # json_loads = orjson.loads
+        # json_dumps = orjson_dumps
 
     @classmethod
     def _get_default_value_from_model(cls, model: Type[RootT]) -> RootT:
