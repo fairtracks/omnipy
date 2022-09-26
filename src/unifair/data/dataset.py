@@ -4,6 +4,7 @@ from collections import UserDict
 import json
 from typing import Any, Dict, Generic, Iterator, Tuple, Type, TypeVar, Union
 
+from orjson import orjson
 from pydantic import Field, PrivateAttr, ValidationError
 from pydantic.generics import GenericModel
 
@@ -12,6 +13,11 @@ from unifair.data.model import Model
 ModelT = TypeVar('ModelT')
 Undefined = object()
 DATA_KEY = 'data'
+
+
+def orjson_dumps(v, *, default):
+    # orjson.dumps returns bytes, to match standard json.dumps we need to decode
+    return orjson.dumps(v, default=default).decode()
 
 
 class Dataset(GenericModel, Generic[ModelT], UserDict):
@@ -48,6 +54,8 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     """
     class Config:
         validate_assignment = True
+        json_loads = orjson.loads
+        json_dumps = orjson_dumps
 
     data: Dict[str, ModelT] = Field(default={})
 
