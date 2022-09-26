@@ -15,4 +15,5 @@ from .helpers.functions import run_task_test
 )
 @pytest.mark.asyncio
 async def test_mock_tasks_all_engines_mock_registry(task_case) -> None:
-    await run_task_test(task_case)
+    for i in range(2):
+        await run_task_test(task_case)

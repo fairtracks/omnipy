@@ -34,19 +34,20 @@ def mock_task_template(task_template_cls):
 
 @pc.fixture(scope='function')
 @pc.parametrize(
-    engine=[MockTaskRunnerSubclass()],
+    engine_cls=[MockTaskRunnerSubclass],
     ids=['assertinitrun[taskrunner-m[engine]]'],
 )
-def mock_task_runner_subclass_with_assert(engine):
-    return TaskRunnerStateChecker(engine)
+def mock_task_runner_subclass_with_assert(engine_cls):
+    return TaskRunnerStateChecker(engine_cls())
 
 
 @pc.fixture(scope='function')
 @pc.parametrize(
-    engine=[MockTaskRunnerSubclass()],
+    engine_cls=[MockTaskRunnerSubclass],
     ids=['taskrunner-m[engine]'],
 )
-def mock_task_runner_subclass_no_verbose(engine):
+def mock_task_runner_subclass_no_verbose(engine_cls):
+    engine = engine_cls()
     engine.set_config(MockEngineConfig(backend_verbose=False))
     return engine
 
@@ -123,7 +124,7 @@ mock_task_mock_taskrun_subcls = partial(
     task_template_cls_fixture='mock_task_template',
 )
 
-power_mock_task_mock_taskrun_subcls_with_backend_no_reg = mock_task_mock_taskrun_subcls(
+power_mock_task_mock_taskrun_subcls_config_no_verbose_reg = mock_task_mock_taskrun_subcls(
     func_case_tag='power',
     engine_fixture='mock_task_runner_subclass_no_verbose',
     registry_fixture='no_registry')

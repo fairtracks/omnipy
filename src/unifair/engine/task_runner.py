@@ -2,7 +2,7 @@ from abc import abstractmethod
 import inspect
 import sys
 from types import AsyncGeneratorType, GeneratorType
-from typing import Any
+from typing import Any, Callable
 
 from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
@@ -16,14 +16,13 @@ class TaskRunnerEngine(Engine):
 
     def task_decorator(self, task: IsTask) -> IsTask:
         self._register_task_state(task, RunState.INITIALIZED)
-        self._init_task(task)
 
         prev_call_func = task._call_func  # noqa
+        state = self._init_task(task, prev_call_func)
 
         def _call_func(*args: Any, **kwargs: Any) -> Any:
-            setattr(task, '_call_func', prev_call_func)
             self._register_task_state(task, RunState.RUNNING)
-            task_result = self._run_task(task, *args, **kwargs)
+            task_result = self._run_task(state, task, prev_call_func, *args, **kwargs)
 
             if isinstance(task_result, GeneratorType):
 
@@ -68,9 +67,9 @@ class TaskRunnerEngine(Engine):
         return task
 
     @abstractmethod
-    def _init_task(self, task: IsTask) -> None:
+    def _init_task(self, task: IsTask, call_func: Callable) -> Any:
         ...
 
     @abstractmethod
-    def _run_task(self, task: IsTask, *args, **kwargs) -> Any:
+    def _run_task(self, state: Any, task: IsTask, call_func: Callable, *args, **kwargs) -> Any:
         ...

@@ -1,11 +1,12 @@
 import pytest
 
-from engine.helpers.mocks import MockEngineConfig, MockEngineSubclass
-from unifair.engine.protocols import IsEngine
+from unifair.compute.job import JobConfig, JobCreator
+
+from .helpers.mocks import MockLocalRunner
 
 
-@pytest.fixture(scope='module')
-def mock_engine() -> IsEngine:
-    mock_engine = MockEngineSubclass()
-    mock_engine.set_config(MockEngineConfig())
-    return mock_engine
+@pytest.fixture(scope='function')
+def mock_local_runner() -> MockLocalRunner:
+    mock_local_runner = MockLocalRunner()
+    JobConfig.job_creator.set_engine(mock_local_runner)
+    return mock_local_runner

@@ -4,19 +4,19 @@ from abc import ABCMeta, abstractmethod
 from types import MappingProxyType
 from typing import Any, Dict, Hashable, Mapping, Optional, Tuple, Type, Union
 
-from unifair.engine.protocols import IsEngine
+from unifair.engine.protocols import IsTaskRunnerEngine
 from unifair.util.helpers import create_merged_dict
 
 
 class JobCreator:
     def __init__(self):
-        self._engine: Optional[IsEngine] = None
+        self._engine: Optional[IsTaskRunnerEngine] = None
 
-    def set_engine(self, engine: IsEngine) -> None:
+    def set_engine(self, engine: IsTaskRunnerEngine) -> None:
         self._engine = engine
 
     @property
-    def engine(self):
+    def engine(self) -> Optional[IsTaskRunnerEngine]:
         return self._engine
 
 
@@ -24,13 +24,13 @@ class JobConfigMeta(ABCMeta):
     _job_creator: JobCreator = JobCreator()
 
     @property
-    def job_creator(self):
+    def job_creator(self) -> JobCreator:
         return self._job_creator
 
 
 class JobTemplateMeta(JobConfigMeta):
     @property
-    def engine(self):
+    def engine(self) -> Optional[IsTaskRunnerEngine]:
         return self.job_creator.engine
 
 
@@ -39,7 +39,8 @@ class JobConfig(metaclass=JobConfigMeta):
         super().__init__()
 
         if not isinstance(self, JobTemplate) and not isinstance(self, Job):
-            raise RuntimeError('JobConfig can only be instantiated through one of its subclasses')
+            raise RuntimeError('JobConfig and subclasses not inheriting from JobTemplate '
+                               'or Job are not directly instantiatable')
 
         self._name: Optional[str] = name
 
@@ -98,15 +99,17 @@ class JobTemplate(JobConfig, metaclass=JobTemplateMeta):
         return Job
 
     @property
-    def engine(self):
+    def engine(self) -> Optional[IsTaskRunnerEngine]:
         return self.__class__.engine
 
     @classmethod
-    def set_engine(cls, engine: IsEngine) -> None:
-        cls.job_creator.set_engine(engine)
+    @abstractmethod
+    def _apply_engine_decorator(cls, job: Job) -> Job:
+        ...
 
     def apply(self) -> Job:
-        return self._get_job_subcls_for_apply().from_job_template(self)
+        job = self._get_job_subcls_for_apply().from_job_template(self)
+        return self._apply_engine_decorator(job)
 
     def refine(self, update: bool = True, **kwargs: Any) -> JobTemplate:
         if update:
@@ -152,3 +155,11 @@ class Job(JobConfig):
     @abstractmethod
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         ...
+
+    @abstractmethod
+    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
+        ...
+
+
+# TODO: Change JobConfig and friends into Generics such as one can annotated with
+#       e.g. 'TaskTemplate[[int], int]' instead of just 'TaskTemplate'

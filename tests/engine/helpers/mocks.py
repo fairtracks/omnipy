@@ -2,7 +2,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any, Callable, ClassVar, Dict, Optional, Tuple, Type
+from typing import Any, Callable, ClassVar, Dict, List, Optional, Tuple, Type
 
 from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
@@ -10,12 +10,21 @@ from unifair.engine.protocols import (IsEngine,
                                       IsEngineConfig,
                                       IsRunStateRegistry,
                                       IsRunStateRegistryConfig,
-                                      IsTask)
+                                      IsTask,
+                                      IsTaskRunnerEngine)
 from unifair.engine.task_runner import TaskRunnerEngine
 
 
+class MockJobCreator:
+    def __init__(self):
+        self.engine: Optional[IsTaskRunnerEngine] = None
+
+    def set_engine(self, engine: IsTaskRunnerEngine) -> None:
+        self.engine = engine
+
+
 class MockTask:
-    engine: ClassVar[Optional[IsEngine]] = None
+    job_creator = MockJobCreator()
 
     def __init__(self, name: str, func: Callable) -> None:
         self.name = name
@@ -26,10 +35,6 @@ class MockTask:
 
     def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         return self._func(*args, **kwargs)
-
-    @classmethod
-    def set_engine(cls, engine: IsEngine) -> None:
-        cls.engine = engine
 
     def has_coroutine_task_func(self) -> bool:
         return asyncio.iscoroutinefunction(self._func)
@@ -43,10 +48,7 @@ class MockTask:
 class MockTaskTemplate(MockTask):
     def apply(self) -> IsTask:
         task = MockTask(self.name, self._func)
-        assert self.engine is not None
-        task.set_engine(self.engine)
-        assert isinstance(self.engine, TaskRunnerEngine)
-        return self.engine.task_decorator(task)
+        return self.job_creator.engine.task_decorator(task)
 
 
 @dataclass
@@ -54,9 +56,21 @@ class MockEngineConfig:
     backend_verbose: bool = True
 
 
+class MockBackendTask:
+    def __init__(self, engine_config: MockEngineConfig):
+        self.backend_verbose = engine_config.backend_verbose
+
+    def run(self, task: IsTask, call_func: Callable, *args: Any, **kwargs: Any):
+        if self.backend_verbose:
+            print('Running task "{}": ...'.format(task.name))
+        result = call_func(*args, **kwargs)
+        if self.backend_verbose:
+            print('Result of task "{}": {}'.format(task.name, result))
+        return result
+
+
 class MockEngineSubclass(Engine):
     def _init_engine(self) -> None:
-        self.backend_task: Optional[MockBackendTask] = None
         self._update_from_config()
 
     def _update_from_config(self) -> None:
@@ -68,30 +82,19 @@ class MockEngineSubclass(Engine):
         return MockEngineConfig
 
 
-class MockTaskRunnerSubclass(TaskRunnerEngine, MockEngineSubclass):
-    def _init_task(self, task: IsTask) -> None:
+class MockTaskRunnerSubclass(MockEngineSubclass, TaskRunnerEngine):
+    def _init_engine(self) -> None:
+        super()._init_engine()
+        self.finished_backend_tasks: List[MockBackendTask] = []
+
+    def _init_task(self, task: IsTask, call_func: Callable) -> MockBackendTask:
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
-        self.backend_task = MockBackendTask(task, self._config)
+        return MockBackendTask(self._config)
 
-    def _run_task(self, task: IsTask, *args: Any, **kwargs: Any) -> Any:
-        assert self.backend_task is not None
-        return self.backend_task.run(*args, **kwargs)
-
-
-class MockBackendTask:
-    def __init__(self, task: Type[IsTask], engine_config: MockEngineConfig):
-        self.task = task
-        self.engine_config = engine_config
-        self.backend_verbose = engine_config.backend_verbose
-        self.finished = False
-
-    def run(self, *args: Any, **kwargs: Any):
-        if self.engine_config.backend_verbose:
-            print('Running task "{}": ...'.format(self.task.name))
-        result = self.task(*args, **kwargs)
-        if self.engine_config.backend_verbose:
-            print('Result of task "{}": {}'.format(self.task.name, result))
-        self.finished = True
+    def _run_task(self, state: MockBackendTask, task: IsTask, call_func: Callable, *args,
+                  **kwargs) -> Any:
+        result = state.run(task, call_func, *args, **kwargs)
+        self.finished_backend_tasks.append(state)
         return result
 
 

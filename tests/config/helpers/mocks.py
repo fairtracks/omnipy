@@ -2,17 +2,17 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any, ClassVar, Optional, Tuple, Type
+from typing import Optional, Tuple, Type
 
 from unifair.config.publisher import ConfigPublisher
 from unifair.engine.constants import RunState
-from unifair.engine.protocols import (IsEngine,
-                                      IsEngineConfig,
+from unifair.engine.protocols import (IsEngineConfig,
                                       IsLocalRunnerConfig,
                                       IsPrefectEngineConfig,
                                       IsRunStateRegistry,
                                       IsRunStateRegistryConfig,
-                                      IsTask)
+                                      IsTask,
+                                      IsTaskRunnerEngine)
 
 
 class MockFoo:
@@ -38,28 +38,15 @@ class MockSubscriberCls:
         self.text = text
 
 
-class MockTaskTemplate:
-    name: str
-    engine: ClassVar[Optional[IsEngine]] = None
+class MockJobCreator:
+    def __init__(self):
+        self.engine: Optional[IsTaskRunnerEngine] = None
 
-    @classmethod
-    def set_engine(cls, engine: IsEngine) -> None:
-        cls.engine = engine
-
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        ...
-
-    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
-        ...
-
-    def has_coroutine_task_func(self) -> bool:
-        ...
-
-    def apply(self) -> IsTask:
-        ...
+    def set_engine(self, engine: IsTaskRunnerEngine) -> None:
+        self.engine = engine
 
 
-class MockTaskTemplate2(MockTaskTemplate):
+class MockJobCreator2(MockJobCreator):
     ...
 
 
@@ -67,7 +54,7 @@ class MockEngine(ABC):
     def __init__(self) -> None:
         config_cls = self.get_config_cls()
         self._config: IsEngineConfig = config_cls()
-        self._registry: Optional[IsRunStateRegistry] = None
+        self.registry: Optional[IsRunStateRegistry] = None
 
     @classmethod
     @abstractmethod
@@ -78,11 +65,7 @@ class MockEngine(ABC):
         self._config = config
 
     def set_registry(self, registry: Optional[IsRunStateRegistry]) -> None:
-        self._registry = registry
-
-    @property
-    def registry(self) -> Optional[IsRunStateRegistry]:
-        return self._registry
+        self.registry = registry
 
 
 @dataclass

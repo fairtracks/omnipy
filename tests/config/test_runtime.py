@@ -1,10 +1,12 @@
 import logging
 
-from unifair.config.runtime import Runtime, RuntimeClasses, RuntimeConfig, RuntimeObjects
+from unifair.config.runtime import Runtime, RuntimeConfig, RuntimeObjects
 from unifair.engine.constants import EngineChoice
 
 from .helpers.functions import assert_logger
-from .helpers.mocks import (MockLocalRunner,
+from .helpers.mocks import (MockJobCreator,
+                            MockJobCreator2,
+                            MockLocalRunner,
                             MockLocalRunner2,
                             MockLocalRunnerConfig,
                             MockLocalRunnerConfig2,
@@ -14,70 +16,55 @@ from .helpers.mocks import (MockLocalRunner,
                             MockPrefectEngineConfig2,
                             MockRunStateRegistry,
                             MockRunStateRegistry2,
-                            MockRunStateRegistryConfig,
-                            MockTaskTemplate,
-                            MockTaskTemplate2)
+                            MockRunStateRegistryConfig)
 
 
-def test_config_default(teardown_loggers) -> None:
+def assert_runtime_config_default(config: RuntimeConfig):
     from unifair.config.engine import LocalRunnerConfig, PrefectEngineConfig
     from unifair.config.registry import RunStateRegistryConfig
 
-    config = RuntimeConfig()
+    assert isinstance(config.engine, str)
     assert isinstance(config.local, LocalRunnerConfig)
     assert isinstance(config.prefect, PrefectEngineConfig)
     assert isinstance(config.registry, RunStateRegistryConfig)
+    assert isinstance(config.registry.verbose, bool)
+
+    assert config.engine == EngineChoice.LOCAL
+    assert config.registry.verbose is True
 
 
-def test_objects_default() -> None:
+def assert_runtime_objects_default(objects: RuntimeObjects):
+    from unifair.compute.job import JobConfig, JobCreator
     from unifair.engine.local import LocalRunner
     from unifair.engine.prefect import PrefectEngine
     from unifair.engine.registry import RunStateRegistry
 
-    objects = RuntimeObjects()
-
     assert isinstance(objects.logger, logging.Logger)
-    assert_logger(objects.logger)
-
     assert isinstance(objects.registry, RunStateRegistry)
+    assert isinstance(objects.job_creator, JobCreator)
     assert isinstance(objects.local, LocalRunner)
     assert isinstance(objects.prefect, PrefectEngine)
 
+    assert_logger(objects.logger)
+    assert objects.job_creator is JobConfig.job_creator
 
-def test_classes_default() -> None:
-    from unifair.compute.task import TaskTemplate
 
-    classes = RuntimeClasses()
-    assert classes.task_template is TaskTemplate
+def test_config_default(teardown_loggers) -> None:
+    assert_runtime_config_default(RuntimeConfig())
+
+
+def test_objects_default() -> None:
+    assert_runtime_objects_default(RuntimeObjects())
 
 
 def test_default_config() -> None:
-    from unifair.compute.task import TaskTemplate
-    from unifair.config.engine import LocalRunnerConfig, PrefectEngineConfig
-    from unifair.config.registry import RunStateRegistryConfig
-    from unifair.engine.local import LocalRunner
-    from unifair.engine.prefect import PrefectEngine
-    from unifair.engine.registry import RunStateRegistry
-
     runtime = Runtime()
 
     assert isinstance(runtime.config, RuntimeConfig)
-    assert isinstance(runtime.config.engine, str)
-    assert isinstance(runtime.config.local, LocalRunnerConfig)
-    assert isinstance(runtime.config.prefect, PrefectEngineConfig)
-    assert isinstance(runtime.config.registry, RunStateRegistryConfig)
-    assert isinstance(runtime.config.registry.verbose, bool)
-
     assert isinstance(runtime.objects, RuntimeObjects)
-    assert isinstance(runtime.objects.logger, logging.Logger)
-    assert isinstance(runtime.objects.local, LocalRunner)
-    assert isinstance(runtime.objects.prefect, PrefectEngine)
-    assert isinstance(runtime.objects.registry, RunStateRegistry)
 
-    assert runtime.classes.task_template is TaskTemplate
-
-    assert runtime.config.engine == EngineChoice.LOCAL
-    assert runtime.config.registry.verbose is True
+    assert_runtime_config_default(runtime.config)
+    assert_runtime_objects_default(runtime.objects)
 
 
 def test_engines_subscribe_to_registry() -> None:
@@ -210,31 +197,32 @@ def test_registry_subscribe_to_config() -> None:
     assert runtime.config.registry is mock_registry_config_2
 
 
-def test_task_class_subscribe_to_engine() -> None:
+def test_job_creator_subscribe_to_engine() -> None:
+    mock_job_creator = MockJobCreator()
     mock_local_runner = MockLocalRunner()
     mock_prefect_engine = MockPrefectEngine()
     runtime = Runtime(
         objects=RuntimeObjects(
+            job_creator=mock_job_creator,
             local=mock_local_runner,
             prefect=mock_prefect_engine,
         ),
-        classes=RuntimeClasses(task_template=MockTaskTemplate),
         config=RuntimeConfig(engine=EngineChoice.PREFECT),
     )
 
-    assert issubclass(runtime.classes.task_template, MockTaskTemplate)
+    assert isinstance(runtime.objects.job_creator, MockJobCreator)
     assert isinstance(runtime.objects.local, MockLocalRunner)
     assert isinstance(runtime.objects.prefect, MockPrefectEngine)
     assert isinstance(runtime.config.engine, str)
 
     assert runtime.config.engine == EngineChoice.PREFECT
-    assert runtime.classes.task_template.engine is runtime.objects.prefect
+    assert runtime.objects.job_creator.engine is runtime.objects.prefect
 
     runtime.config.engine = EngineChoice.LOCAL
-    assert runtime.classes.task_template.engine is runtime.objects.local
+    assert runtime.objects.job_creator.engine is runtime.objects.local
 
     runtime.config.engine = EngineChoice.PREFECT
-    assert runtime.classes.task_template.engine is runtime.objects.prefect
+    assert runtime.objects.job_creator.engine is runtime.objects.prefect
 
     mock_local_runner_2 = MockLocalRunner()
     mock_prefect_engine_2 = MockPrefectEngine()
@@ -245,11 +233,11 @@ def test_task_class_subscribe_to_engine() -> None:
     runtime.objects.prefect = mock_prefect_engine_2
 
     assert runtime.config.engine == EngineChoice.PREFECT
-    assert runtime.classes.task_template.engine is runtime.objects.prefect is mock_prefect_engine_2
+    assert runtime.objects.job_creator.engine is runtime.objects.prefect is mock_prefect_engine_2
 
     runtime.config.engine = EngineChoice.LOCAL
-    assert runtime.classes.task_template.engine is runtime.objects.local is mock_local_runner_2
+    assert runtime.objects.job_creator.engine is runtime.objects.local is mock_local_runner_2
 
     runtime.config.engine = EngineChoice.PREFECT
-    runtime.classes.task_template = MockTaskTemplate2
-    assert runtime.classes.task_template.engine is runtime.objects.prefect is mock_prefect_engine_2
+    runtime.objects.job_creator = MockJobCreator2()
+    assert runtime.objects.job_creator.engine is runtime.objects.prefect is mock_prefect_engine_2
