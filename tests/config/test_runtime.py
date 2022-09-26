@@ -1,42 +1,43 @@
 import logging
 
-from tests.engine.helpers.mocks import (MockLocalRunner,
-                                        MockLocalRunnerConfig,
-                                        MockPrefectEngine,
-                                        MockPrefectEngineConfig,
-                                        MockRunStateRegistry,
-                                        MockTaskTemplate)
-from unifair.compute.task import TaskTemplate
-from unifair.config.engine import LocalRunnerConfig, PrefectEngineConfig
-from unifair.config.registry import RunStateRegistryConfig
-import unifair.config.runtime
 from unifair.config.runtime import Runtime, RuntimeClasses, RuntimeConfig, RuntimeObjects
 from unifair.engine.constants import EngineChoice
-from unifair.engine.local import LocalRunner
-from unifair.engine.prefect import PrefectEngine
-from unifair.engine.registry import RunStateRegistry
+
+from .helpers.functions import assert_logger
+from .helpers.mocks import (MockLocalRunner,
+                            MockLocalRunner2,
+                            MockLocalRunnerConfig,
+                            MockLocalRunnerConfig2,
+                            MockPrefectEngine,
+                            MockPrefectEngine2,
+                            MockPrefectEngineConfig,
+                            MockPrefectEngineConfig2,
+                            MockRunStateRegistry,
+                            MockRunStateRegistry2,
+                            MockRunStateRegistryConfig,
+                            MockTaskTemplate,
+                            MockTaskTemplate2)
 
 
 def test_config_default(teardown_loggers) -> None:
+    from unifair.config.engine import LocalRunnerConfig, PrefectEngineConfig
+    from unifair.config.registry import RunStateRegistryConfig
+
     config = RuntimeConfig()
     assert isinstance(config.local, LocalRunnerConfig)
     assert isinstance(config.prefect, PrefectEngineConfig)
     assert isinstance(config.registry, RunStateRegistryConfig)
 
 
-def _assert_logger(logger: logging.Logger) -> None:
-    assert logger.name == 'uniFAIR'
-    assert logger.level == logging.INFO
-    assert len(logger.handlers) == 1
-    assert isinstance(logger.handlers[0], logging.StreamHandler)
-    assert logger.handlers[0].stream is unifair.config.runtime.stdout
-
-
 def test_objects_default() -> None:
+    from unifair.engine.local import LocalRunner
+    from unifair.engine.prefect import PrefectEngine
+    from unifair.engine.registry import RunStateRegistry
+
     objects = RuntimeObjects()
 
     assert isinstance(objects.logger, logging.Logger)
-    _assert_logger(objects.logger)
+    assert_logger(objects.logger)
 
     assert isinstance(objects.registry, RunStateRegistry)
     assert isinstance(objects.local, LocalRunner)
@@ -44,11 +45,20 @@ def test_objects_default() -> None:
 
 
 def test_classes_default() -> None:
+    from unifair.compute.task import TaskTemplate
+
     classes = RuntimeClasses()
     assert classes.task_template is TaskTemplate
 
 
 def test_default_config() -> None:
+    from unifair.compute.task import TaskTemplate
+    from unifair.config.engine import LocalRunnerConfig, PrefectEngineConfig
+    from unifair.config.registry import RunStateRegistryConfig
+    from unifair.engine.local import LocalRunner
+    from unifair.engine.prefect import PrefectEngine
+    from unifair.engine.registry import RunStateRegistry
+
     runtime = Runtime()
 
     assert isinstance(runtime.config, RuntimeConfig)
@@ -82,7 +92,6 @@ def test_engines_subscribe_to_registry() -> None:
     assert runtime.objects.local is mock_local_runner
     assert runtime.objects.prefect is mock_prefect_engine
 
-    assert isinstance(runtime.objects.registry, RunStateRegistry)
     assert runtime.objects.local.registry is runtime.objects.registry
     assert runtime.objects.prefect.registry is runtime.objects.registry
 
@@ -96,9 +105,9 @@ def test_engines_subscribe_to_registry() -> None:
     assert runtime.objects.local.registry is runtime.objects.registry
     assert runtime.objects.prefect.registry is runtime.objects.registry
 
-    run_state_registry_2 = RunStateRegistry()
-    assert run_state_registry_2 is not runtime.objects.registry
-    runtime.objects.registry = run_state_registry_2
+    mock_run_state_registry_2 = MockRunStateRegistry2()
+    assert mock_run_state_registry_2 is not runtime.objects.registry
+    runtime.objects.registry = mock_run_state_registry_2
 
     assert runtime.objects.local.registry is runtime.objects.registry
     assert runtime.objects.prefect.registry is runtime.objects.registry
@@ -143,10 +152,10 @@ def test_engines_subscribe_to_config() -> None:
     assert runtime.objects.local.config.backend_verbose is True
     assert runtime.objects.prefect.config.server_url == 'https://another.prefectserver.nowhere'
 
-    runtime.objects.local = LocalRunner()
-    runtime.objects.prefect = PrefectEngine()
-    assert isinstance(runtime.config.local, LocalRunnerConfig)
-    assert isinstance(runtime.config.prefect, PrefectEngineConfig)
+    runtime.objects.local = MockLocalRunner2()
+    runtime.objects.prefect = MockPrefectEngine2()
+    assert isinstance(runtime.config.local, MockLocalRunnerConfig2)
+    assert isinstance(runtime.config.prefect, MockPrefectEngineConfig2)
     assert runtime.config.local is not mock_local_runner_config
     assert runtime.config.prefect is not mock_prefect_engine_config
 
@@ -170,35 +179,35 @@ def test_registry_subscribe_to_logger() -> None:
     runtime.objects.registry = MockRunStateRegistry()
     assert runtime.objects.registry.logger is runtime.objects.logger is logger_2
 
-    runtime.objects.registry = RunStateRegistry()
+    runtime.objects.registry = MockRunStateRegistry2()
     assert runtime.objects.logger is logger_2
 
 
 def test_registry_subscribe_to_config() -> None:
     mock_registry = MockRunStateRegistry()
-    registry_config = RunStateRegistryConfig(verbose=False)
+    mock_registry_config = MockRunStateRegistryConfig(verbose=False)
     runtime = Runtime(
         objects=RuntimeObjects(registry=mock_registry),
-        config=RuntimeConfig(registry=registry_config),
+        config=RuntimeConfig(registry=mock_registry_config),
     )
-    assert runtime.objects.registry.config is runtime.config.registry is registry_config
+    assert runtime.objects.registry.config is runtime.config.registry is mock_registry_config
     assert runtime.objects.registry.config.verbose is False
 
     runtime.config.registry.verbose = True
     assert runtime.objects.registry.config.verbose is True
 
-    registry_config_2 = RunStateRegistryConfig(verbose=False)
-    assert registry_config_2 is not registry_config
-    runtime.config.registry = registry_config_2
-    assert runtime.objects.registry.config is runtime.config.registry is registry_config_2
+    mock_registry_config_2 = MockRunStateRegistryConfig(verbose=False)
+    assert mock_registry_config_2 is not mock_registry_config
+    runtime.config.registry = mock_registry_config_2
+    assert runtime.objects.registry.config is runtime.config.registry is mock_registry_config_2
     assert runtime.objects.registry.config.verbose is False
 
     runtime.objects.registry = MockRunStateRegistry()
-    assert runtime.objects.registry.config is runtime.config.registry is registry_config_2
+    assert runtime.objects.registry.config is runtime.config.registry is mock_registry_config_2
     assert runtime.objects.registry.config.verbose is False
 
-    runtime.objects.registry = RunStateRegistry()
-    assert runtime.config.registry is registry_config_2
+    runtime.objects.registry = MockRunStateRegistry2()
+    assert runtime.config.registry is mock_registry_config_2
 
 
 def test_task_class_subscribe_to_engine() -> None:
@@ -242,4 +251,5 @@ def test_task_class_subscribe_to_engine() -> None:
     assert runtime.classes.task_template.engine is runtime.objects.local is mock_local_runner_2
 
     runtime.config.engine = EngineChoice.PREFECT
-    runtime.classes.task_template = TaskTemplate
+    runtime.classes.task_template = MockTaskTemplate2
+    assert runtime.classes.task_template.engine is runtime.objects.prefect is mock_prefect_engine_2

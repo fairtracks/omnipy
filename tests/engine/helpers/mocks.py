@@ -4,16 +4,10 @@ from datetime import datetime
 import logging
 from typing import Any, Callable, ClassVar, Dict, Optional, Tuple, Type
 
-from unifair.config.engine import LocalRunnerConfig, PrefectEngineConfig
-from unifair.config.registry import RunStateRegistryConfig
 from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
-from unifair.engine.local import LocalRunner
-from unifair.engine.prefect import PrefectEngine
 from unifair.engine.protocols import (IsEngine,
                                       IsEngineConfig,
-                                      IsLocalRunnerConfig,
-                                      IsPrefectEngineConfig,
                                       IsRunStateRegistry,
                                       IsRunStateRegistryConfig,
                                       IsTask)
@@ -42,7 +36,6 @@ class MockTask:
 
     @classmethod
     def extrack_registry(cls) -> IsRunStateRegistry:
-        from unifair.engine.base import Engine
         assert isinstance(cls.engine, Engine)
         return cls.engine._registry  # noqa
 
@@ -54,44 +47,6 @@ class MockTaskTemplate(MockTask):
         task.set_engine(self.engine)
         assert isinstance(self.engine, TaskRunnerEngine)
         return self.engine.task_decorator(task)
-
-
-@dataclass
-class MockLocalRunnerConfig(LocalRunnerConfig):
-    backend_verbose: bool = True
-
-
-class MockLocalRunner(LocalRunner):
-    @classmethod
-    def get_config_cls(cls) -> Type[IsEngineConfig]:
-        return MockLocalRunnerConfig
-
-    @property
-    def config(self) -> Optional[IsLocalRunnerConfig]:
-        return self._config
-
-    @property
-    def registry(self) -> Optional[IsRunStateRegistry]:
-        return self._registry
-
-
-@dataclass
-class MockPrefectEngineConfig(PrefectEngineConfig):
-    server_url: str = ''
-
-
-class MockPrefectEngine(PrefectEngine):
-    @classmethod
-    def get_config_cls(cls) -> Type[IsEngineConfig]:
-        return MockPrefectEngineConfig
-
-    @property
-    def config(self) -> Optional[IsPrefectEngineConfig]:
-        return self._config
-
-    @property
-    def registry(self) -> Optional[IsRunStateRegistry]:
-        return self._registry
 
 
 @dataclass
@@ -140,10 +95,15 @@ class MockBackendTask:
         return result
 
 
+@dataclass
+class MockRunStateRegistryConfig:
+    verbose: bool = True
+
+
 class MockRunStateRegistry:
     def __init__(self) -> None:
         self.logger: Optional[logging.Logger] = None
-        self.config: IsRunStateRegistryConfig = RunStateRegistryConfig()
+        self.config: IsRunStateRegistryConfig = MockRunStateRegistryConfig()
 
         self._tasks: Dict[str, IsTask] = {}
         self._task_state: Dict[str, RunState] = {}
@@ -170,28 +130,3 @@ class MockRunStateRegistry:
 
     def set_config(self, config: IsRunStateRegistryConfig) -> None:
         self.config = config
-
-
-class TaskRunnerStateChecker(TaskRunnerEngine):
-    def __init__(self, engine):
-        self._engine = engine
-        super().__init__()
-
-    def _init_engine(self) -> None:
-        self._engine._init_engine()  # noqa
-
-    def get_config_cls(self) -> Type[IsEngineConfig]:
-        return self._engine.get_config_cls()  # noqa
-
-    def _update_from_config(self) -> None:
-        return self._engine._update_from_config()  # noqa
-
-    def _init_task(self, task: IsTask) -> None:
-        from .functions import assert_task_state
-        assert_task_state(task, [RunState.INITIALIZED])
-        self._engine._init_task(task)  # noqa
-
-    def _run_task(self, task: IsTask, *args: Any, **kwargs: Any) -> Any:
-        from .functions import assert_task_state
-        assert_task_state(task, [RunState.RUNNING])
-        return self._engine._run_task(task, *args, **kwargs)  # noqa

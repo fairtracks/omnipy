@@ -9,13 +9,13 @@ import pytest_cases as pc
 from unifair.engine.local import LocalRunner
 from unifair.engine.prefect import PrefectEngine
 
+from .helpers.classes import TaskRunnerStateChecker
 from .helpers.functions import add_logger_to_registry, convert_func_to_task
 from .helpers.mocks import (MockEngineConfig,
                             MockRunStateRegistry,
                             MockTask,
                             MockTaskRunnerSubclass,
-                            MockTaskTemplate,
-                            TaskRunnerStateChecker)
+                            MockTaskTemplate)
 
 # TaskTemplate
 
