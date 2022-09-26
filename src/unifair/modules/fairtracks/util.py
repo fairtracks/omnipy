@@ -21,7 +21,10 @@ def serialize_to_tarpacked_csv_files(dataset_name: str, dataset: Dataset) -> Non
                             '..',
                             'data',
                             datetime.now().strftime('%Y_%m_%d-%H_%M_%S'))
-    os.makedirs(data_dir)
+
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+
     file_path = os.path.join(data_dir, dataset_name + '.tar.gz')
 
     print('Writing dataset as a gzipped tarpack of CSV files to "{}"'.format(
