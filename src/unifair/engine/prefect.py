@@ -5,6 +5,7 @@ from prefect import flow as prefect_flow
 from prefect import Flow as PrefectFlow
 from prefect import task as prefect_task
 from prefect import Task as PrefectTask
+from prefect.tasks import task_input_hash
 
 from unifair.config.engine import PrefectEngineConfig
 from unifair.engine.protocols import IsPrefectEngineConfig, IsTask
@@ -23,14 +24,21 @@ class PrefectEngine(TaskRunnerEngine):
         return PrefectEngineConfig
 
     def _init_task(self, task: IsTask, call_func: Callable) -> PrefectTask:
+
+        assert isinstance(self._config, PrefectEngineConfig)
+        task_kwargs = dict(
+            name=task.name,
+            cache_key_fn=task_input_hash if self._config.use_cached_results else None,
+        )
+
         if task.has_coroutine_task_func():
 
-            @prefect_task(name=task.name)
+            @prefect_task(**task_kwargs)
             async def run_task(*inner_args, **inner_kwargs):
                 return await call_func(*inner_args, **inner_kwargs)
         else:
 
-            @prefect_task(name=task.name)
+            @prefect_task(**task_kwargs)
             def run_task(*inner_args, **inner_kwargs):
                 return call_func(*inner_args, **inner_kwargs)
 
