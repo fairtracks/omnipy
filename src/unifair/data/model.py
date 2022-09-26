@@ -187,6 +187,22 @@ class Model(GenericModel, Generic[RootT]):
         new_model = self.parse_raw(json_contents, proto=Protocol.json)
         self._set_contents_without_validation(new_model)
 
+    # @classmethod
+    # def get_type_args(cls):
+    #     return cls.__fields__.get(ROOT_KEY).type_
+    #
+    # @classmethod
+    # def create_from_json(cls, data: Union[str, Tuple[str]]):
+    #     if isinstance(data, tuple):
+    #         data = data[0]
+    #
+    #     obj = cls()
+    #     obj.from_json(data)
+    #     return obj
+    #
+    # def __reduce__(self):
+    #     return self.__class__.create_from_json, (self.to_json(),)
+
     def _set_contents_without_validation(self, contents: RootT) -> None:
         validate_assignment = self.__config__.validate_assignment
         self.__config__.validate_assignment = False

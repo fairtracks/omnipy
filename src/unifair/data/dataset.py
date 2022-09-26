@@ -178,6 +178,23 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         return self._pretty_print_json(contents[DATA_KEY]) if pretty else json.dumps(
             contents[DATA_KEY])
 
+    # @classmethod
+    # def get_type_args(cls):
+    #     return cls.__fields__.get(DATA_KEY).type_
+    #
+    #
+    # @classmethod
+    # def create_from_json(cls, data: Union[str, Tuple[str]]):
+    #     if isinstance(data, tuple):
+    #         data = data[0]
+    #
+    #     obj = cls()
+    #     obj.from_json(data, update=False)
+    #     return obj
+    #
+    # def __reduce__(self):
+    #     return self.__class__.create_from_json, (self.to_json(),)
+
     def from_json(self, data: str, update: bool = True) -> None:
         if not update:
             self.clear()
