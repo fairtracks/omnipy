@@ -14,7 +14,7 @@ class IsLocalRunnerConfig(IsEngineConfig, Protocol):
 
 
 class IsPrefectEngineConfig(IsEngineConfig, Protocol):
-    ...
+    use_cached_results: int = False
 
 
 class IsRunStateRegistryConfig(Protocol):

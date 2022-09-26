@@ -26,10 +26,12 @@ def assert_runtime_config_default(config: RuntimeConfig):
     assert isinstance(config.engine, str)
     assert isinstance(config.local, LocalRunnerConfig)
     assert isinstance(config.prefect, PrefectEngineConfig)
+    assert isinstance(config.prefect.use_cached_results, bool)
     assert isinstance(config.registry, RunStateRegistryConfig)
     assert isinstance(config.registry.verbose, bool)
 
     assert config.engine == EngineChoice.LOCAL
+    assert config.prefect.use_cached_results is False
     assert config.registry.verbose is True
 
 

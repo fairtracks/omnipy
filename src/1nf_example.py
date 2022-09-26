@@ -1,7 +1,12 @@
+from unifair.config.runtime import Runtime
 from unifair.modules.fairtracks.tasks import import_dataset_from_encode
 from unifair.modules.fairtracks.util import \
     serialize_to_tarpacked_csv_files as u_serialize_to_tarpacked_csv_files
 from unifair.modules.tables.tasks import convert_to_1nf, remove_columns
+
+runtime = Runtime()
+runtime.config.engine = 'prefect'
+runtime.config.prefect.use_cached_results = True
 
 # I have tried out a new organising principle: Modules. Modules are a collections of
 # related dataset types, models, tasks, flows, and utilities, of a somewhat general nature
