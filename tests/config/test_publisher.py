@@ -2,7 +2,7 @@ from typing import Annotated, Callable, List
 
 import pytest
 
-from config.helpers.mock import MockConfigPublisher, MockFoo, MockSubscriberCls
+from .helpers.mocks import MockConfigPublisher, MockFoo, MockSubscriberCls
 
 
 def test_init_default() -> None:
