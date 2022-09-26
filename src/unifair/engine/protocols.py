@@ -110,6 +110,54 @@ class IsTaskTemplate(IsTask, Protocol):
         ...
 
 
+class IsDagFlow(Protocol):
+    ...
+
+
+class IsDagFlowTemplate(IsDagFlow, Protocol):
+    def apply(self) -> IsDagFlow:
+        ...
+
+
+class IsFuncFlow(Protocol):
+    ...
+
+
+class IsFuncFlowTemplate(IsFuncFlow, Protocol):
+    def apply(self) -> IsFuncFlow:
+        ...
+
+
+class IsEngine(Protocol):
+    def __init__(self) -> None:
+        ...
+
+    @classmethod
+    def get_config_cls(cls) -> Type[IsEngineConfig]:
+        ...
+
+    def set_config(self, config: IsEngineConfig) -> None:
+        ...
+
+    def set_registry(self, registry: Optional['IsRunStateRegistry']) -> None:
+        ...
+
+
+class IsTaskRunnerEngine(IsEngine, Protocol):
+    def task_decorator(self, task: IsTask) -> IsTask:
+        ...
+
+
+class IsDagFlowRunnerEngine(IsEngine, Protocol):
+    def dag_flow_decorator(self, dag_flow: IsDagFlow) -> IsDagFlow:
+        ...
+
+
+class IsFuncFlowRunnerEngine(IsEngine, Protocol):
+    def func_flow_decorator(self, dag_flow: IsFuncFlow) -> IsFuncFlow:
+        ...
+
+
 class IsRunStateRegistry(Protocol):
     def __init__(self) -> None:
         ...
@@ -130,24 +178,4 @@ class IsRunStateRegistry(Protocol):
         ...
 
     def set_config(self, config: IsRunStateRegistryConfig) -> None:
-        ...
-
-
-class IsEngine(Protocol):
-    def __init__(self) -> None:
-        ...
-
-    @classmethod
-    def get_config_cls(cls) -> Type[IsEngineConfig]:
-        ...
-
-    def set_config(self, config: IsEngineConfig) -> None:
-        ...
-
-    def set_registry(self, registry: Optional[IsRunStateRegistry]) -> None:
-        ...
-
-
-class IsTaskRunnerEngine(IsEngine, Protocol):
-    def task_decorator(self, task: IsTask) -> IsTask:
         ...
