@@ -29,13 +29,18 @@ def read_log_line_from_stream(str_stream: StringIO) -> str:
         return ''
 
 
+def extract_engine(task: IsTask):
+    engine = task.__class__.job_creator.engine
+    if hasattr(engine, '_engine'):  # TaskRunnerStateChecker
+        engine = engine._engine  # noqa
+    return engine
+
+
 def extract_run_state(task: IsTask):
-    if hasattr(task, 'extrack_registry'):
-        registry = task.extrack_registry()
-        if registry:
-            return registry.get_task_state(task)
-    else:
-        assert False, 'TODO: Fix for Task objects'
+    engine = extract_engine(task)
+    registry = engine._registry
+    if registry:
+        return registry.get_task_state(task)
 
 
 def assert_task_state(task: IsTask, states: List[RunState]):
@@ -88,14 +93,7 @@ def get_async_assert_results_wait_a_bit_func(task: IsTask):
 
 
 def check_engine_cls(task: IsTask, engine_cls: type[Engine]):
-    engine = getattr(task, 'engine')
-    if not engine:
-        engine = getattr(task, '_engine')
-
-    if hasattr(engine, '_engine'):  # TaskRunnerStateChecker
-        engine = engine._engine  # noqa
-
-    return isinstance(engine, engine_cls)
+    return isinstance(extract_engine(task), engine_cls)
 
 
 def add_logger_to_registry(registry: IsRunStateRegistry) -> IsRunStateRegistry:
@@ -113,9 +111,9 @@ def convert_func_to_task(
     registry: Optional[IsRunStateRegistry],
 ) -> IsTask:
     task_template = task_template_cls(name, func)
+    task_template_cls.job_creator.set_engine(engine)
     if registry:
         engine.set_registry(registry)
-    task_template.set_engine(engine)
     return task_template.apply()
 
 

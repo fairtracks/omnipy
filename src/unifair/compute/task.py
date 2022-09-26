@@ -76,6 +76,13 @@ class TaskTemplate(DynamicClassDecoratorMixin, JobTemplate, TaskConfig):
     def _get_job_subcls_for_apply(cls) -> Type[Job]:
         return Task
 
+    @classmethod
+    def _apply_engine_decorator(cls, task: Task) -> Task:
+        if cls.engine is not None:
+            return cls.engine.task_decorator(task)
+        else:
+            return task
+
 
 class Task(Job, TaskConfig):
     @classmethod
@@ -96,7 +103,8 @@ class Task(Job, TaskConfig):
                 raise TypeError('Keyword arguments {} matches parameter key map inversely.'.format(
                     tuple(set(kwargs.keys()) - set(mapped_kwargs.keys()))))
 
-            result = self._task_func(*args, **mapped_fixed_params, **mapped_kwargs)
+            result = self._call_func(*args, **mapped_fixed_params, **mapped_kwargs)
+
         except TypeError as e:
             raise TypeError(
                 'Incorrect task function arguments. Current parameter key map contents: {}'.format(
@@ -105,6 +113,9 @@ class Task(Job, TaskConfig):
             return {self._result_key: result}
         else:
             return result
+
+    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
+        return self._task_func(*args, **kwargs)
 
 
 # TODO: Would we need the possibility to refine task templates by adding new task parameters?

@@ -2,6 +2,7 @@ from types import MappingProxyType
 from typing import Any, Dict, Mapping, Optional, Tuple, Type, Union
 
 from unifair.compute.job import Job, JobConfig, JobTemplate
+from unifair.engine.protocols import IsEngineConfig, IsRunStateRegistry, IsTask
 
 
 class MockJobConfigSubclass(JobConfig):
@@ -17,6 +18,10 @@ class MockJobTemplateSubclass(JobTemplate, MockJobConfigSubclass):
     def _get_job_subcls_for_apply(cls) -> Type[Job]:
         return MockJobSubclass
 
+    @classmethod
+    def _apply_engine_decorator(cls, job: Job) -> Job:
+        return job
+
 
 class MockJobSubclass(Job, MockJobConfigSubclass):
     @classmethod
@@ -28,6 +33,9 @@ class MockJobSubclass(Job, MockJobConfigSubclass):
         return MockJobTemplateSubclass
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        ...
+
+    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         ...
 
 
@@ -84,6 +92,10 @@ class PublicPropertyErrorsMockJobTemplate(JobTemplate, PublicPropertyErrorsMockJ
     def _get_job_subcls_for_apply(cls) -> Type[Job]:
         return PublicPropertyErrorsMockJob
 
+    @classmethod
+    def _apply_engine_decorator(cls, job: Job) -> Job:
+        return job
+
 
 class PublicPropertyErrorsMockJob(Job, PublicPropertyErrorsMockJobConfig):
     @classmethod
@@ -95,6 +107,9 @@ class PublicPropertyErrorsMockJob(Job, PublicPropertyErrorsMockJobConfig):
         return PublicPropertyErrorsMockJobTemplate
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        ...
+
+    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         ...
 
 
@@ -109,6 +124,7 @@ class CommandMockJobConfig(JobConfig):
         self._command = command
         self._uppercase = uppercase
         self._params = dict(params) if params is not None else {}
+        self.engine_decorator_applied = False
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return self._command,
@@ -130,6 +146,10 @@ class CommandMockJobTemplate(JobTemplate, CommandMockJobConfig):
     def _get_job_subcls_for_apply(cls) -> Type[Job]:
         return CommandMockJob
 
+    def _apply_engine_decorator(self, job: Job) -> Job:
+        self.engine_decorator_applied = True
+        return job
+
 
 class CommandMockJob(Job, CommandMockJobConfig):
     @classmethod
@@ -141,6 +161,9 @@ class CommandMockJob(Job, CommandMockJobConfig):
         return CommandMockJobTemplate
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        return self._call_func(*args, **kwargs)
+
+    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         if self._command in ['erase', 'restore']:
             if 'what' in self.params:
                 log = f"{self.params['what']} has been {self._command}d" \
@@ -148,3 +171,30 @@ class CommandMockJob(Job, CommandMockJobConfig):
             else:
                 log = 'I know nothing'
             return log.upper() if self._uppercase else log
+
+
+class MockLocalRunner:
+    def __init__(self) -> None:
+        self.finished = False
+
+    @classmethod
+    def get_config_cls(cls) -> Type[IsEngineConfig]:
+        ...
+
+    def set_config(self, config: IsEngineConfig) -> None:
+        ...
+
+    def set_registry(self, registry: Optional[IsRunStateRegistry]) -> None:
+        ...
+
+    def task_decorator(self, task: IsTask) -> IsTask:
+        prev_call_func = task._call_func  # noqa
+
+        def _call_func(*args: Any, **kwargs: Any) -> Any:
+            result = prev_call_func(*args, **kwargs)
+            self.finished = True
+            return result
+
+        setattr(task, '_call_func', _call_func)
+
+        return task

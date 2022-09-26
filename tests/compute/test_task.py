@@ -24,8 +24,9 @@ def test_init() -> None:
 
 
 @pc.parametrize_with_cases('case', cases='.cases_tasks')
-def test_task_run(case: Case) -> None:
+def test_task_run(mock_local_runner, case: Case) -> None:
 
+    assert mock_local_runner.finished is False
     task_template = TaskTemplate(case.func)
 
     with pytest.raises(TypeError):
@@ -35,10 +36,13 @@ def test_task_run(case: Case) -> None:
     result = task(*case.args, **case.kwargs)
 
     assert task.name == case.name
+    assert mock_local_runner.finished is True
     case.assert_func(result)
 
 
-def test_task_run_parameter_variants() -> None:
+def test_task_run_parameter_variants(mock_local_runner) -> None:
+
+    assert mock_local_runner.finished is False
     power_m1 = TaskTemplate(power_m1_func).apply()
 
     assert power_m1(4, 3) == 63
@@ -48,6 +52,8 @@ def test_task_run_parameter_variants() -> None:
     assert power_m1(4, 3, minus_one=False) == 64
     assert power_m1(4, exponent=3, minus_one=False) == 64
     assert power_m1(number=4, exponent=3, minus_one=False) == 64
+
+    assert mock_local_runner.finished is True
 
 
 def test_error_missing_task_run_parameters() -> None:
@@ -400,50 +406,3 @@ def test_error_properties_param_key_map_and_fixed_params_unmatched_params() -> N
 
     with pytest.raises(KeyError):
         power_m1_template.refine(fixed_params=dict(engine='antigravity'))
-
-
-def test_task_template_as_decorator() -> None:
-    @TaskTemplate
-    def plus_one(number: int) -> int:
-        return number + 1
-
-    assert isinstance(plus_one, TaskTemplate)
-
-    plus_one = plus_one.apply()
-    assert isinstance(plus_one, Task)
-
-    assert plus_one(3) == 4
-
-
-def test_task_template_as_decorator_with_keyword_arguments() -> None:
-    @TaskTemplate(
-        name='plus_one',
-        param_key_map=dict(number_a='number'),
-        fixed_params=dict(number_b=1),
-        result_key='plus_one',
-    )
-    def plus_func(number_a: int, number_b: int) -> int:
-        return number_a + number_b
-
-    plus_one_template = plus_func
-
-    assert isinstance(plus_one_template, TaskTemplate)
-
-    plus_one = plus_one_template.apply()
-    assert isinstance(plus_one, Task)
-
-    assert plus_one(3) == {'plus_one': 4}
-
-
-def test_error_task_template_decorator_with_func_argument() -> None:
-
-    with pytest.raises(TypeError):
-
-        def myfunc(a: Callable) -> Callable:
-            return a
-
-        @TaskTemplate(myfunc)
-        def plus_one(number: int) -> int:
-            return number + 1
-
-        assert isinstance(plus_one, TaskTemplate)

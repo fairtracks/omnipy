@@ -7,6 +7,7 @@ from compute.helpers.mocks import (CommandMockJob,
                                    MockJobConfigSubclass,
                                    MockJobSubclass,
                                    MockJobTemplateSubclass,
+                                   MockLocalRunner,
                                    PublicPropertyErrorsMockJob,
                                    PublicPropertyErrorsMockJobTemplate)
 from unifair.compute.job import Job, JobConfig, JobCreator, JobTemplate
@@ -71,7 +72,7 @@ def test_fail_init_arg_mock() -> None:
         JobTemplate('name')  # noqa
 
 
-def test_job_creator_singular_mock(mock_engine) -> None:
+def test_job_creator_singular_mock() -> None:
     JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
 
     assert isinstance(JobConfig.job_creator, JobCreator)
@@ -99,7 +100,8 @@ def test_job_creator_singular_mock(mock_engine) -> None:
     assert job_tmpl_new.__class__.job_creator is job_creator
 
 
-def test_engine_mock(mock_engine):
+def test_engine_mock():
+    mock_local_runner = MockLocalRunner()
     JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
 
     assert JobTemplate.engine is None
@@ -108,25 +110,27 @@ def test_engine_mock(mock_engine):
     assert job_tmpl.engine is None
     assert job_tmpl.__class__.job_creator.engine is None
 
-    job_tmpl.set_engine(mock_engine)
-    assert job_tmpl.engine is mock_engine
-    assert job_tmpl.__class__.job_creator.engine is mock_engine
+    JobTemplate.job_creator.set_engine(mock_local_runner)
+
+    assert JobTemplate.job_creator.engine is mock_local_runner
+    assert JobConfig.job_creator.engine is mock_local_runner
+    assert Job.job_creator.engine is mock_local_runner
+
+    assert job_tmpl.engine is mock_local_runner
+    assert job_tmpl.__class__.job_creator.engine is mock_local_runner
 
     job_config_new = JobTemplate()
     assert job_config_new is not job_tmpl
-    assert job_config_new.engine is mock_engine
-    assert job_config_new.__class__.job_creator.engine is mock_engine
+    assert job_config_new.engine is mock_local_runner
+    assert job_config_new.__class__.job_creator.engine is mock_local_runner
 
-    assert JobTemplate.engine is mock_engine
+    assert JobTemplate.engine is mock_local_runner
 
+    assert not hasattr(JobTemplate, 'set_engine')
     assert not hasattr(JobConfig, 'engine')
     assert not hasattr(JobConfig, 'set_engine')
-    assert not hasattr(Job, 'set_engine')
     assert not hasattr(Job, 'engine')
-
-    assert JobTemplate.job_creator.engine is mock_engine
-    assert JobConfig.job_creator.engine is mock_engine
-    assert Job.job_creator.engine is mock_engine
+    assert not hasattr(Job, 'set_engine')
 
 
 def test_property_name_default_mock() -> None:
@@ -245,9 +249,11 @@ def test_subclass_tmpl():
 def test_subclass_apply():
     cmd_tmpl = CommandMockJobTemplate('erase', uppercase=True, params={'what': 'all'})
     assert isinstance(cmd_tmpl, CommandMockJobTemplate)
+    assert cmd_tmpl.engine_decorator_applied is False
 
     cmd = cmd_tmpl.apply()
     assert isinstance(cmd, CommandMockJob)
+    assert cmd_tmpl.engine_decorator_applied is True
 
     assert cmd.uppercase is True
     assert cmd.params == {'what': 'all'}
@@ -380,6 +386,7 @@ def test_subclass_refine_mapping() -> None:
 
 
 def test_subclass_refine_reset_mapping() -> None:
+
     cmd_tmpl = CommandMockJobTemplate('erase')
     cmd = cmd_tmpl.apply()
     assert cmd() == 'I know nothing'
@@ -465,50 +472,3 @@ def test_subclass_apply_public_property_errors():
     job_tmpl = PublicPropertyErrorsMockJobTemplate(property_index=5)
     with pytest.raises(TypeError):  # job_tmpl.params property value is mutable
         job_tmpl.apply()
-
-
-# def test_job_tmpl_as_decorator() -> None:
-#     @JobTemplate
-#     def plus_one(number: int) -> int:
-#         return number + 1
-#
-#     assert isinstance(plus_one, JobTemplate)
-#
-#     plus_one = plus_one.apply()
-#     assert isinstance(plus_one, Job)
-#
-#     assert plus_one(3) == 4
-#
-#
-# def test_job_tmpl_as_decorator_with_keyword_arguments() -> None:
-#     @JobTemplate(
-#         name='plus_one',
-#         param_key_map=dict(number_a='number'),
-#         fixed_params=dict(number_b=1),
-#         result_key='plus_one',
-#     )
-#     def plus_func(number_a: int, number_b: int) -> int:
-#         return number_a + number_b
-#
-#     plus_one_tmpl = plus_func
-#
-#     assert isinstance(plus_one_tmpl, JobTemplate)
-#
-#     plus_one = plus_one_tmpl.apply()
-#     assert isinstance(plus_one, Job)
-#
-#     assert plus_one(3) == {'plus_one': 4}
-#
-#
-# def test_error_job_tmpl_decorator_with_func_argument() -> None:
-#
-#     with pytest.raises(TypeError):
-#
-#         def myfunc(a: Callable) -> Callable:
-#             return a
-#
-#         @JobTemplate(myfunc)
-#         def plus_one(number: int) -> int:
-#             return number + 1
-#
-#         assert isinstance(plus_one, JobTemplate)

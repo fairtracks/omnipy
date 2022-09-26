@@ -1,4 +1,4 @@
-from typing import Any, Type
+from typing import Any, Callable, Type
 
 from unifair.config.engine import LocalRunnerConfig
 from unifair.engine.protocols import IsLocalRunnerConfig, IsTask
@@ -16,8 +16,8 @@ class LocalRunner(TaskRunnerEngine):
     def get_config_cls(cls) -> Type[IsLocalRunnerConfig]:
         return LocalRunnerConfig
 
-    def _init_task(self, task: IsTask) -> None:
+    def _init_task(self, task: IsTask, call_func: Callable) -> Any:
         ...
 
-    def _run_task(self, task: IsTask, *args, **kwargs) -> Any:
-        return task(*args, **kwargs)
+    def _run_task(self, state: Any, task: IsTask, call_func: Callable, *args, **kwargs) -> Any:
+        return call_func(*args, **kwargs)

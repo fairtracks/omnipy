@@ -56,6 +56,7 @@ class IsRuntimeConfig(IsConfigPublisher, Protocol):
 class IsRuntimeObjects(IsConfigPublisher, Protocol):
     logger: logging.Logger
     registry: 'IsRunStateRegistry'
+    job_creator: 'IsJobCreator'
     local: 'IsEngine'
     prefect: 'IsEngine'
 
@@ -63,6 +64,7 @@ class IsRuntimeObjects(IsConfigPublisher, Protocol):
             self,
             logger: Optional[logging.Logger] = None,  # noqa
             registry: Optional['IsRunStateRegistry'] = None,  # noqa
+            job_creator: Optional['IsJobCreator'] = None,  # noqa
             local: Optional['IsEngine'] = None,  # noqa
             prefect: Optional['IsEngine'] = None,  # noqa
             *args: Any,
@@ -70,29 +72,23 @@ class IsRuntimeObjects(IsConfigPublisher, Protocol):
         ...
 
 
-class IsRuntimeClasses(IsConfigPublisher, Protocol):
-    task_template: Type['IsTaskTemplate']
-
-    def __init__(
-            self,
-            task: Type['IsTaskTemplate'] = None,  # noqa
-            *args: Any,
-            **kwargs: Any) -> None:
-        ...
-
-
 class IsRuntime(IsConfigPublisher, Protocol):
     object: IsRuntimeObjects
-    classes: IsRuntimeClasses
     config: IsRuntimeConfig
 
     def __init__(
             self,
             object: Optional[IsRuntimeObjects] = None,  # noqa
-            classes: Optional[IsRuntimeClasses] = None,  # noqa
             config: Optional[IsRuntimeConfig] = None,  # noqa
             *args: Any,
             **kwargs: Any) -> None:
+        ...
+
+
+class IsJobCreator(Protocol):
+    engine: Optional['IsTaskRunnerEngine']
+
+    def set_engine(self, engine: 'IsTaskRunnerEngine') -> None:
         ...
 
 
@@ -106,10 +102,6 @@ class IsTask(Protocol):
         ...
 
     def has_coroutine_task_func(self) -> bool:
-        ...
-
-    @classmethod
-    def set_engine(cls, engine: 'IsEngine') -> None:
         ...
 
 
