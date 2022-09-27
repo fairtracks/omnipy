@@ -8,23 +8,23 @@ from aiostream.stream import enumerate as aenumerate
 import pytest
 import pytest_cases as pc
 
+from engine.helpers.functions import (assert_task_state,
+                                      async_wait_for_task_state,
+                                      check_engine_cls,
+                                      get_async_assert_results_wait_a_bit_func,
+                                      get_sync_assert_results_wait_a_bit_func,
+                                      resolve,
+                                      sync_wait_for_task_state)
 from unifair.engine.constants import RunState
 from unifair.engine.protocols import IsTask
 
-from .cases_functions import (async_range,
-                              async_wait_a_bit,
-                              async_wait_for_send_twice,
-                              sync_power,
-                              sync_range,
-                              sync_wait_a_bit,
-                              sync_wait_for_send_twice)
-from .helpers.functions import (assert_task_state,
-                                async_wait_for_task_state,
-                                check_engine_cls,
-                                get_async_assert_results_wait_a_bit_func,
-                                get_sync_assert_results_wait_a_bit_func,
-                                resolve,
-                                sync_wait_for_task_state)
+from .raw.functions import (async_range,
+                            async_wait_a_bit,
+                            async_wait_for_send_twice,
+                            sync_power,
+                            sync_range,
+                            sync_wait_a_bit,
+                            sync_wait_for_send_twice)
 
 #
 # Single thread
