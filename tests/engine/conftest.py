@@ -99,7 +99,7 @@ def task_from_func_cases_with_param_fixtures(
 ):
     @pc.fixture(scope='function')
     @pc.parametrize_with_cases(
-        'name, func, run_and_assert_results', cases='.cases_tasks', has_tag=func_case_tag)
+        'name, func, run_and_assert_results', cases='.cases.tasks', has_tag=func_case_tag)
     @pc.parametrize(
         'task_template_cls, engine, registry',
         [

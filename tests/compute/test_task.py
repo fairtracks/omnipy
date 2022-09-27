@@ -1,12 +1,12 @@
 from inspect import Parameter
-from typing import Callable
 
 import pytest
 import pytest_cases as pc
 
-from compute.cases_functions import format_to_string_func, power_m1_func
-from compute.cases_tasks import Case
 from unifair.compute.task import Task, TaskTemplate
+
+from .cases.raw.functions import format_to_string_func, power_m1_func
+from .cases.tasks import TaskCase
 
 
 def test_init() -> None:
@@ -23,8 +23,8 @@ def test_init() -> None:
     assert isinstance(task, Task)
 
 
-@pc.parametrize_with_cases('case', cases='.cases_tasks')
-def test_task_run(mock_local_runner, case: Case) -> None:
+@pc.parametrize_with_cases('case', cases='.cases.tasks')
+def test_task_run(mock_local_runner, case: TaskCase) -> None:
 
     assert mock_local_runner.finished is False
     task_template = TaskTemplate(case.func)
@@ -69,8 +69,8 @@ def test_error_missing_task_run_parameters() -> None:
         power_m1(4, minus_one=False)
 
 
-@pc.parametrize_with_cases('case', cases='.cases_tasks')
-def test_property_param_signature_and_return_type(case: Case) -> None:
+@pc.parametrize_with_cases('case', cases='.cases.tasks')
+def test_property_param_signature_and_return_type(case: TaskCase) -> None:
 
     task_template = TaskTemplate(case.func)
 

@@ -6,11 +6,11 @@ from typing import Any, Callable, Dict, Generic, Tuple, TypeVar, Union
 
 import pytest_cases as pc
 
-from compute.cases_functions import (action_func_no_params,
-                                     action_func_with_params,
-                                     data_import_func,
-                                     format_to_string_func,
-                                     power_m1_func)
+from .raw.functions import (action_func_no_params,
+                            action_func_with_params,
+                            data_import_func,
+                            format_to_string_func,
+                            power_m1_func)
 from unifair.compute.task import Task, TaskTemplate
 
 ArgT = TypeVar('ArgT')
@@ -18,7 +18,7 @@ ReturnT = TypeVar('ReturnT')
 
 
 @dataclass
-class Case(Generic[ArgT, ReturnT]):
+class TaskCase(Generic[ArgT, ReturnT]):
     name: str
     func: Callable[[ArgT], ReturnT]
     args: Tuple[Any, ...]
@@ -31,7 +31,7 @@ class Case(Generic[ArgT, ReturnT]):
     id='sync-function-action_func_no_params()',
     tags=['sync', 'function', 'singlethread', 'success'],
 )
-def case_sync_action_func_no_params() -> Case[[], None]:
+def case_sync_action_func_no_params() -> TaskCase[[], None]:
     def assert_results(result: NoneType) -> None:
         assert result is None
 
@@ -39,7 +39,7 @@ def case_sync_action_func_no_params() -> Case[[], None]:
         assert task_obj.param_signatures == {}
         assert task_obj.return_type is None
 
-    return Case(
+    return TaskCase(
         name='action_func_no_params',
         func=action_func_no_params,
         args=(),
@@ -53,7 +53,7 @@ def case_sync_action_func_no_params() -> Case[[], None]:
     id="sync-function-action_func_with_params('rm -rf *', verbose=True)",
     tags=['sync', 'function', 'singlethread', 'success'],
 )
-def case_sync_action_func_with_params() -> Case[[int, bool], None]:
+def case_sync_action_func_with_params() -> TaskCase[[int, bool], None]:
     def assert_results(result: NoneType) -> None:
         assert result is None
 
@@ -65,7 +65,7 @@ def case_sync_action_func_with_params() -> Case[[int, bool], None]:
         }
         assert task_obj.return_type is None
 
-    return Case(
+    return TaskCase(
         name='action_func_with_params',
         func=action_func_with_params,
         args=('rm -rf *',),
@@ -79,7 +79,7 @@ def case_sync_action_func_with_params() -> Case[[int, bool], None]:
     id='sync-function-data_import_func()',
     tags=['sync', 'function', 'singlethread', 'success'],
 )
-def case_sync_data_import_func() -> Case[[], str]:
+def case_sync_data_import_func() -> TaskCase[[], str]:
     def assert_results(json_data: str) -> None:
         assert type(json_data) is str
         assert json.loads(json_data) == dict(my_data=[123, 234, 345, 456])
@@ -88,7 +88,7 @@ def case_sync_data_import_func() -> Case[[], str]:
         assert task_obj.param_signatures == {}
         assert task_obj.return_type is str
 
-    return Case(
+    return TaskCase(
         name='data_import_func',
         func=data_import_func,
         args=(),
@@ -102,7 +102,7 @@ def case_sync_data_import_func() -> Case[[], str]:
     id="sync-function-format_to_string_func('Number', 12)",
     tags=['sync', 'function', 'singlethread', 'success'],
 )
-def case_sync_format_to_string_func() -> Case[[str, int], str]:
+def case_sync_format_to_string_func() -> TaskCase[[str, int], str]:
     def assert_results(result: str) -> None:
         assert result == 'Number: 12'
 
@@ -113,7 +113,7 @@ def case_sync_format_to_string_func() -> Case[[str, int], str]:
         }
         assert task_obj.return_type is str
 
-    return Case(
+    return TaskCase(
         name='format_to_string_func',
         func=format_to_string_func,
         args=('Number', 12),
@@ -127,7 +127,7 @@ def case_sync_format_to_string_func() -> Case[[str, int], str]:
     id='sync-function-power_m1_func(4, 3, minus_one=False)',
     tags=['sync', 'function', 'singlethread', 'success'],
 )
-def case_sync_power_m1_func() -> Case[[int, int, bool], int]:
+def case_sync_power_m1_func() -> TaskCase[[int, int, bool], int]:
     def assert_results(result: int) -> None:
         assert result == 64
 
@@ -147,7 +147,7 @@ def case_sync_power_m1_func() -> Case[[int, int, bool], int]:
         }
         assert task_obj.return_type is int
 
-    return Case(
+    return TaskCase(
         name='power_m1_func',
         func=power_m1_func,
         args=(4, 3),
