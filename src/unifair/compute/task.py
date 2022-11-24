@@ -6,7 +6,7 @@ from types import MappingProxyType
 from typing import Any, Callable, Iterable, Mapping, Optional, Tuple, Type, Union
 
 from unifair.compute.job import Job, JobConfig, JobTemplate
-from unifair.util.mixins import DynamicClassDecoratorMixin
+from unifair.util.decorators import callable_decorator_class
 from unifair.util.param_key_mapper import ParamKeyMapper
 
 
@@ -71,7 +71,8 @@ class TaskConfig(JobConfig):
         return self._result_key
 
 
-class TaskTemplate(DynamicClassDecoratorMixin, JobTemplate, TaskConfig):
+@callable_decorator_class
+class TaskTemplate(JobTemplate, TaskConfig):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type[Job]:
         return Task
