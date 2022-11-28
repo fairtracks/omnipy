@@ -1,8 +1,17 @@
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Protocol, runtime_checkable, TypeVar
 
 import pytest
 
 from unifair.util.decorators import callable_decorator_class
+
+# Note:
+#
+# Due to the following bug:
+#
+# https://github.com/python/mypy/issues/3135
+#
+# mypy is not correctly considering the types of the class decorator. As a consequence, it reports
+# a bunch of errors on MockClass and MockClassNotCallableArg that should clear up once bug is fixed
 
 
 @callable_decorator_class
@@ -13,72 +22,76 @@ class MockClass:
         self.kwargs = kwargs
 
 
-def test_fail_plain_decorator_not_callable_arg() -> None:  # noqa
-    with pytest.raises(AttributeError):
+def test_fail_plain_decorator_not_callable_arg() -> None:
+    @callable_decorator_class
+    class MockClassNotCallableArg:
+        def __init__(self) -> None:
+            ...
 
-        @callable_decorator_class
-        class MockClassNotCallableArg:  # noqa
-            def __init__(self, text: str, *args: Any, **kwargs: Any) -> None:  # noqa
-                self.text = text
+    with pytest.raises(TypeError):
+
+        @MockClassNotCallableArg
+        def my_func(*args: Any, **kwargs: Any) -> Dict[str, Any]:
+            return dict(args=args, kwargs=kwargs)
 
 
-def test_plain_decorator() -> None:  # noqa
+def test_plain_decorator() -> None:
     @MockClass
     def my_func(*args: Any, **kwargs: Any) -> Dict[str, Any]:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func) == MockClass
     with pytest.raises(TypeError):
-        my_func()  # noqa
+        my_func()  # type: ignore # noqa
 
     assert my_func.args == ()
     assert my_func.kwargs == {}
     assert my_func.func(1, 'b', c=True) == dict(args=(1, 'b'), kwargs=dict(c=True))
 
 
-def test_plain_decorator_parentheses() -> None:  # noqa
+def test_plain_decorator_parentheses() -> None:
     @MockClass()
     def my_func(*args: Any, **kwargs: Any) -> Dict[str, Any]:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func) == MockClass
     with pytest.raises(TypeError):
-        my_func()
+        my_func()  # type: ignore # noqa
 
     assert my_func.args == ()
     assert my_func.kwargs == {}
     assert my_func.func(1, 'b', c=True) == dict(args=(1, 'b'), kwargs=dict(c=True))
 
 
-def test_decorator_with_kwargs() -> None:  # noqa
+def test_decorator_with_kwargs() -> None:
     @MockClass(param=123, other=True)
     def my_func(*args: Any, **kwargs: Any) -> Dict[str, Any]:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func) == MockClass
     with pytest.raises(TypeError):
-        my_func()
+        my_func()  # type: ignore # noqa
 
     assert my_func.args == ()
     assert my_func.kwargs == dict(param=123, other=True)
     assert my_func.func(1, 'b', c=True) == dict(args=(1, 'b'), kwargs=dict(c=True))
 
 
-def test_decorator_with_args_and_kwargs() -> None:  # noqa
+def test_decorator_with_args_and_kwargs() -> None:
     @MockClass(123, True, param=123, other=True)
     def my_func(*args: Any, **kwargs: Any) -> Dict[str, Any]:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func) == MockClass
     with pytest.raises(TypeError):
-        my_func()
+        my_func()  # type: ignore # noqa
 
     assert my_func.args == (123, True)
     assert my_func.kwargs == dict(param=123, other=True)
     assert my_func.func(1, 'b', c=True) == dict(args=(1, 'b'), kwargs=dict(c=True))
 
 
-def test_decorator_as_function() -> None:  # noqa
+def test_decorator_as_function() -> None:
     def my_func(*args: Any, **kwargs: Any) -> Dict[str, Any]:
         return dict(args=args, kwargs=kwargs)
 
@@ -86,14 +99,14 @@ def test_decorator_as_function() -> None:  # noqa
 
     assert type(my_decorated_func) == MockClass
     with pytest.raises(TypeError):
-        my_decorated_func()
+        my_decorated_func()  # type: ignore # noqa
 
     assert my_decorated_func.args == ()
     assert my_decorated_func.kwargs == {}
     assert my_decorated_func.func(1, 'b', c=True) == dict(args=(1, 'b'), kwargs=dict(c=True))
 
 
-def test_decorator_as_function_args_kwargs() -> None:  # noqa
+def test_decorator_as_function_args_kwargs() -> None:
     def my_func(*args: Any, **kwargs: Any) -> Dict[str, Any]:
         return dict(args=args, kwargs=kwargs)
 
@@ -101,38 +114,38 @@ def test_decorator_as_function_args_kwargs() -> None:  # noqa
 
     assert type(my_decorated_func) == MockClass
     with pytest.raises(TypeError):
-        my_decorated_func()
+        my_decorated_func()  # type: ignore # noqa
 
     assert my_decorated_func.args == (123, True)
     assert my_decorated_func.kwargs == dict(param=123, other=True)
     assert my_decorated_func.func(1, 'b', c=True) == dict(args=(1, 'b'), kwargs=dict(c=True))
 
 
-def test_fail_decorator_as_function_no_args_no_func() -> None:  # noqa
+def test_fail_decorator_as_function_no_args_no_func() -> None:
     my_func = MockClass()
 
     assert type(my_func) == MockClass
     with pytest.raises(TypeError):
-        my_func()
+        my_func()  # type: ignore # noqa
     with pytest.raises(AttributeError):
         assert my_func.args == ()
     with pytest.raises(AttributeError):
         assert my_func.kwargs == {}
 
 
-def test_fail_decorator_as_function_args_and_kwargs_no_func() -> None:  # noqa
+def test_fail_decorator_as_function_args_and_kwargs_no_func() -> None:
     my_func = MockClass(123, True, param=123, other=True)
 
     assert type(my_func) == MockClass
     with pytest.raises(TypeError):
-        my_func()
+        my_func()  # type: ignore # noqa
     with pytest.raises(AttributeError):
         assert my_func.args == ()
     with pytest.raises(AttributeError):
         assert my_func.kwargs == {}
 
 
-def test_fail_double_decorator() -> None:  # noqa
+def test_fail_double_decorator() -> None:
     def extra_decorator(func: Callable) -> Callable:
         return func
 
