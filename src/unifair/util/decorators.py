@@ -1,39 +1,29 @@
-from inspect import Parameter, signature
-from typing import Callable, cast, Type, TypeAlias
+from typing import Callable, cast, Protocol, runtime_checkable, Type, TypeVar
 
 # Types
-InitWithCallableFirstArgAfterSelf: TypeAlias = Callable[[object, Callable, ...], None]
+
+T = TypeVar('T', covariant=True)
 
 
-# Helper functions
-def check_cls_init_has_callable_as_first_arg_after_self(cls: Type):
-    init_params = signature(cls.__init__).parameters
-
-    if len(init_params) > 1:
-        first_param = tuple(init_params.values())[1]
-
-        first_param_positional = first_param.kind in [
-            Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD
-        ]
-        first_param_callable = first_param.annotation in [Callable, 'Callable']
-
-        if first_param_positional and first_param_callable:
-            return
-
-    raise AttributeError('The first non-self argument of the __init__() method of class '
-                         f'"{cls.__name__}" is not annotated as a callable')
+@runtime_checkable
+class CallableParamAfterSelf(Protocol):
+    def __call__(self, callable_arg: Callable, /, *args: object, **kwargs: object) -> None:
+        ...
 
 
-# Decorators
-def callable_decorator_class(cls: Type) -> Callable:
+@runtime_checkable
+class CallableClass(Protocol[T]):
+    def __call__(self, *args: object, **kwargs: object) -> T:
+        ...
+
+
+def callable_decorator_class(cls: Type[T]) -> CallableClass[Type[T]]:
     """
     "Meta-decorator" that allows any class to function as a decorator for a callable. The only
     requirement is that the first argument after self of the __init__() method needs to be annotated
     as a callable. Arguments and keyword arguments to the class decorator are supported.
     """
-    check_cls_init_has_callable_as_first_arg_after_self(cls)
-
-    def _forward_call_to_obj_if_callable(self, *args, **kwargs):
+    def _forward_call_to_obj_if_callable(self, *args: object, **kwargs: object) -> Type[T]:
         """
         __call__ method at the class level which forward the call to instance-level call methods,
         if present (hardcoded as '_obj_call()'). This is needed due to the peculiarity that Python
@@ -47,7 +37,7 @@ def callable_decorator_class(cls: Type) -> Callable:
             return self._obj_call(*args, **kwargs)
         raise TypeError("'{}' object is not callable".format(self.__class__.__name__))
 
-    cls.__call__ = _forward_call_to_obj_if_callable
+    setattr(cls, '__call__', _forward_call_to_obj_if_callable)
 
     def _real_callable(arg: object) -> bool:
         """
@@ -57,37 +47,39 @@ def callable_decorator_class(cls: Type) -> Callable:
         if callable(arg):
             if hasattr(arg, '__call__'):
                 if hasattr(arg.__call__, '__func__'):
-                    if arg.__call__.__func__.__name__ == _forward_call_to_obj_if_callable.__name__:
+                    # due to mypy bug: https://github.com/python/mypy/issues/14123
+                    call_func_name = getattr(arg.__call__, '__func__').__name__
+
+                    if call_func_name == _forward_call_to_obj_if_callable.__name__:
                         return False
             return True
         return False
 
-    _wrapped_init: InitWithCallableFirstArgAfterSelf = \
-        cast(InitWithCallableFirstArgAfterSelf, cls.__init__)
+    _wrapped_init: CallableParamAfterSelf = cast(CallableParamAfterSelf, cls.__init__)
 
     # Wrapper method that replaces the __init __ method of the decorated class
-    def _init_wrapper(self, *args: object, **kwargs: object):
-        args = list(args)
+    def _init_wrapper(self, *args: object, **kwargs: object) -> None:
+        args_list = list(args)
 
         def _init(callable_arg: Callable) -> None:
-            _wrapped_init(self, callable_arg, *args, **kwargs)
+            _wrapped_init(self, callable_arg, *args_list, **kwargs)
 
-        if len(args) > 0 and _real_callable(args[0]):
+        if len(args_list) > 0 and _real_callable(args_list[0]):
             # Decorate the callable directly
-            _callable_arg: Callable = cast(Callable, args[0])
-            args.pop(0)
+            _callable_arg: Callable = cast(Callable, args_list[0])
+            args_list.pop(0)
             _init(_callable_arg)
         else:
             # Add an instance-level _obj_call method, which are again callable by the
             # class-level __call__ method. When this method is called, the provided _callable_arg
             # is decorated.
-            def _init_as_obj_call_method(self, _callable_arg: Callable):  # noqa
+            def _init_as_obj_call_method(self, _callable_arg: Callable) -> Type[T]:  # noqa
                 _init(_callable_arg)
                 del self._obj_call
                 return self
 
             self._obj_call = _init_as_obj_call_method.__get__(self)
 
-    cls.__init__ = _init_wrapper
+    setattr(cls, '__init__', _init_wrapper)
 
-    return cls
+    return cast(CallableClass[Type[T]], cls)
