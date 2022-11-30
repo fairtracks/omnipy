@@ -12,6 +12,7 @@ class RunState(IntEnum):
     FINISHED = 3
 
 
+# TODO: Add 'apply' state
 # TODO: Add 'failed' state and error management
 # TODO: Consider the need for a 'waiting' state
 
