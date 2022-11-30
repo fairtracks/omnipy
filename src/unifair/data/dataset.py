@@ -121,14 +121,14 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
                 'the excellent Python package named `pydantic`.')
 
     def __setitem__(self, obj_type: str, data_obj: Any) -> None:
-        had_prev_value = obj_type in self.data
+        has_prev_value = obj_type in self.data
         prev_value = self.data.get(obj_type)
 
         try:
             self.data[obj_type] = data_obj
             self._validate(obj_type)
         except:  # noqa
-            if had_prev_value:
+            if has_prev_value:
                 self.data[obj_type] = prev_value
             else:
                 del self.data[obj_type]
