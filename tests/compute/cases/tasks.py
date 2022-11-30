@@ -6,12 +6,13 @@ from typing import Any, Callable, Dict, Generic, Tuple, TypeVar, Union
 
 import pytest_cases as pc
 
+from unifair.compute.task import Task, TaskTemplate
+
 from .raw.functions import (action_func_no_params,
                             action_func_with_params,
                             data_import_func,
                             format_to_string_func,
                             power_m1_func)
-from unifair.compute.task import Task, TaskTemplate
 
 ArgT = TypeVar('ArgT')
 ReturnT = TypeVar('ReturnT')

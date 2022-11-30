@@ -1,4 +1,5 @@
 from inspect import Parameter
+from typing import Annotated
 
 import pytest
 import pytest_cases as pc
@@ -7,11 +8,12 @@ from unifair.compute.task import Task, TaskTemplate
 
 from .cases.raw.functions import format_to_string_func, power_m1_func
 from .cases.tasks import TaskCase
+from .helpers.mocks import MockLocalRunner
 
 
 def test_init() -> None:
     task_template = TaskTemplate(format_to_string_func)
-    assert isinstance(task_template, TaskTemplate)
+    assert isinstance(task_template, TaskTemplate)  # noqa
 
     with pytest.raises(TypeError):
         TaskTemplate(format_to_string_func, 'extra_positional_argument')
@@ -19,18 +21,19 @@ def test_init() -> None:
     with pytest.raises(RuntimeError):
         Task(format_to_string_func)
 
-    task = task_template.apply()
+    task = task_template.apply()  # noqa
     assert isinstance(task, Task)
 
 
 @pc.parametrize_with_cases('case', cases='.cases.tasks')
-def test_task_run(mock_local_runner, case: TaskCase) -> None:
+def test_task_run(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+                  case: TaskCase) -> None:
 
     assert mock_local_runner.finished is False
     task_template = TaskTemplate(case.func)
 
     with pytest.raises(TypeError):
-        task_template(*case.args, **case.kwargs)  # noqa
+        task_template(*case.args, **case.kwargs)
 
     task = task_template.apply()
     result = task(*case.args, **case.kwargs)
@@ -40,7 +43,8 @@ def test_task_run(mock_local_runner, case: TaskCase) -> None:
     case.assert_func(result)
 
 
-def test_task_run_parameter_variants(mock_local_runner) -> None:
+def test_task_run_parameter_variants(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
 
     assert mock_local_runner.finished is False
     power_m1 = TaskTemplate(power_m1_func).apply()

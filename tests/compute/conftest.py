@@ -9,4 +9,5 @@ from .helpers.mocks import MockLocalRunner
 def mock_local_runner() -> MockLocalRunner:
     mock_local_runner = MockLocalRunner()
     JobConfig.job_creator.set_engine(mock_local_runner)
-    return mock_local_runner
+    yield mock_local_runner
+    JobConfig.job_creator._engine = None

@@ -55,7 +55,7 @@ class TaskConfig(JobConfig):
         return self._task_func_signature.parameters
 
     @property
-    def return_type(self) -> Union[Type[Any]]:
+    def return_type(self) -> Type[Any]:
         return self._task_func_signature.return_annotation
 
     @property
