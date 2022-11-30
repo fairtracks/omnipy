@@ -69,6 +69,11 @@ def case_sync_power_kwargs() -> Tuple[str, Callable[[int, int], int], RunTaskAnd
 )
 def case_sync_range() -> Tuple[str, Callable[[int], Generator], RunTaskAndAssertType]:
     def run_and_assert_results(task: IsTask) -> None:
+        from unifair.engine.prefect import PrefectEngine
+        if check_engine_cls(task, PrefectEngine):
+            pytest.xfail("Synchronous generators stopped working with prefect v2.6.0 (before that,"
+                         "they were running eagerly, returning lists of all yielded values)")
+
         generator = task(5)
         assert_task_state(task, [RunState.RUNNING, RunState.FINISHED])
 
