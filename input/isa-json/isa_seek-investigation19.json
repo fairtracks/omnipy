@@ -1,0 +1,1005 @@
+{
+  "investigation": {
+    "identifier": "",
+    "title": "Bob's investigation",
+    "description": "",
+    "submissionDate": "",
+    "publicReleaseDate": "",
+    "ontologySourceReferences": [],
+    "filename": "Bob's investigation.txt",
+    "comments": [
+      {
+        "name": "ISAjson export time",
+        "value": "2022-11-07T08:09:59Z"
+      },
+      {
+        "name": "SEEK Project name",
+        "value": "Bob's PhD project"
+      },
+      {
+        "name": "SEEK Project ID",
+        "value": "http://localhost:3000/single_pages/2"
+      },
+      {
+        "name": "SEEK Investigation ID",
+        "value": "19"
+      }
+    ],
+    "publications": [],
+    "people": [
+      {
+        "@id": "#people/5",
+        "lastName": "Bob",
+        "firstName": "Bob",
+        "midInitials": "",
+        "email": "bob@testing.com",
+        "phone": "",
+        "fax": "",
+        "address": "",
+        "affiliation": "",
+        "roles": [
+          {
+            "termAccession": "",
+            "termSource": "",
+            "annotationValue": ""
+          }
+        ],
+        "comments": [
+          {
+            "@id": "",
+            "value": "",
+            "name": ""
+          }
+        ]
+      }
+    ],
+    "studies": [
+      {
+        "identifier": "",
+        "title": "Arabidopsis thaliana",
+        "description": "Nucleic acid sequencing and metabolomics and proteomics of Arabidopsis thaliana in specific experimental conditions to test a specific hypothesis.\r\n",
+        "submissionDate": "",
+        "publicReleaseDate": "",
+        "filename": "Arabidopsis thaliana.txt",
+        "comments": [
+          {
+            "name": "SEEK Study ID",
+            "value": "10"
+          },
+          {
+            "name": "SEEK creation date",
+            "value": "2022-11-03T16:20:49Z"
+          }
+        ],
+        "publications": [],
+        "people": [
+          {
+            "@id": "#people/5",
+            "lastName": "Bob",
+            "firstName": "Bob",
+            "midInitials": "",
+            "email": "bob@testing.com",
+            "phone": "",
+            "fax": "",
+            "address": "",
+            "affiliation": "",
+            "roles": [
+              {
+                "termAccession": "",
+                "termSource": "",
+                "annotationValue": ""
+              }
+            ],
+            "comments": [
+              {
+                "@id": "",
+                "value": "",
+                "name": ""
+              }
+            ]
+          }
+        ],
+        "studyDesignDescriptors": [],
+        "characteristicCategories": [
+          {
+            "@id": "#characteristic_category/Title_317",
+            "characteristicType": {
+              "annotationValue": "Title",
+              "termAccession": "",
+              "termSource": ""
+            }
+          },
+          {
+            "@id": "#characteristic_category/Description_318",
+            "characteristicType": {
+              "annotationValue": "Description",
+              "termAccession": "",
+              "termSource": ""
+            }
+          },
+          {
+            "@id": "#characteristic_category/tax_id_319",
+            "characteristicType": {
+              "annotationValue": "tax_id",
+              "termAccession": "",
+              "termSource": ""
+            }
+          },
+          {
+            "@id": "#characteristic_category/organism_320",
+            "characteristicType": {
+              "annotationValue": "organism",
+              "termAccession": "",
+              "termSource": ""
+            }
+          },
+          {
+            "@id": "#characteristic_category/cell_type_321",
+            "characteristicType": {
+              "annotationValue": "cell_type",
+              "termAccession": "",
+              "termSource": ""
+            }
+          },
+          {
+            "@id": "#characteristic_category/dev_stage_322",
+            "characteristicType": {
+              "annotationValue": "dev_stage",
+              "termAccession": "",
+              "termSource": ""
+            }
+          },
+          {
+            "@id": "#characteristic_category/collection_date_323",
+            "characteristicType": {
+              "annotationValue": "collection_date",
+              "termAccession": "",
+              "termSource": ""
+            }
+          },
+          {
+            "@id": "#characteristic_category/isolation_source_324",
+            "characteristicType": {
+              "annotationValue": "isolation_source",
+              "termAccession": "",
+              "termSource": ""
+            }
+          },
+          {
+            "@id": "#characteristic_category/collected_by_325",
+            "characteristicType": {
+              "annotationValue": "collected_by",
+              "termAccession": "",
+              "termSource": ""
+            }
+          },
+          {
+            "@id": "#characteristic_category/geographic_location_(country_and/or_sea)_326",
+            "characteristicType": {
+              "annotationValue": "geographic location (country and/or sea)",
+              "termAccession": "",
+              "termSource": ""
+            }
+          },
+          {
+            "@id": "#characteristic_category/submission_date_327",
+            "characteristicType": {
+              "annotationValue": "submission date",
+              "termAccession": "",
+              "termSource": ""
+            }
+          },
+          {
+            "@id": "#characteristic_category/status_328",
+            "characteristicType": {
+              "annotationValue": "status",
+              "termAccession": "",
+              "termSource": ""
+            }
+          },
+          {
+            "@id": "#characteristic_category/accession_329",
+            "characteristicType": {
+              "annotationValue": "accession",
+              "termAccession": "",
+              "termSource": ""
+            }
+          }
+        ],
+        "materials": {
+          "sources": [
+            {
+              "@id": "#source/330",
+              "name": "plant 1",
+              "characteristics": [
+                {
+                  "category": {
+                    "@id": "#characteristic_category/Title_317"
+                  },
+                  "value": {
+                    "annotationValue": "plant 1",
+                    "termSource": "",
+                    "termAccession": ""
+                  },
+                  "unit": {
+                    "termSource": "",
+                    "termAccession": "",
+                    "comments": []
+                  }
+                },
+                {
+                  "category": {
+                    "@id": "#characteristic_category/Description_318"
+                  },
+                  "value": {
+                    "annotationValue": "plant in the lab",
+                    "termSource": "",
+                    "termAccession": ""
+                  },
+                  "unit": {
+                    "termSource": "",
+                    "termAccession": "",
+                    "comments": []
+                  }
+                },
+                {
+                  "category": {
+                    "@id": "#characteristic_category/tax_id_319"
+                  },
+                  "value": {
+                    "annotationValue": "NCBI:txid3702",
+                    "termSource": "",
+                    "termAccession": ""
+                  },
+                  "unit": {
+                    "termSource": "",
+                    "termAccession": "",
+                    "comments": []
+                  }
+                },
+                {
+                  "category": {
+                    "@id": "#characteristic_category/organism_320"
+                  },
+                  "value": {
+                    "annotationValue": "Arabidopsis thaliana",
+                    "termSource": "",
+                    "termAccession": ""
+                  },
+                  "unit": {
+                    "termSource": "",
+                    "termAccession": "",
+                    "comments": []
+                  }
+                },
+                {
+                  "category": {
+                    "@id": "#characteristic_category/cell_type_321"
+                  },
+                  "value": {
+                    "annotationValue": "na",
+                    "termSource": "",
+                    "termAccession": ""
+                  },
+                  "unit": {
+                    "termSource": "",
+                    "termAccession": "",
+                    "comments": []
+                  }
+                },
+                {
+                  "category": {
+                    "@id": "#characteristic_category/dev_stage_322"
+                  },
+                  "value": {
+                    "annotationValue": "budding",
+                    "termSource": "",
+                    "termAccession": ""
+                  },
+                  "unit": {
+                    "termSource": "",
+                    "termAccession": "",
+                    "comments": []
+                  }
+                },
+                {
+                  "category": {
+                    "@id": "#characteristic_category/collection_date_323"
+                  },
+                  "value": {
+                    "annotationValue": "01/01/2022",
+                    "termSource": "",
+                    "termAccession": ""
+                  },
+                  "unit": {
+                    "termSource": "",
+                    "termAccession": "",
+                    "comments": []
+                  }
+                },
+                {
+                  "category": {
+                    "@id": "#characteristic_category/isolation_source_324"
+                  },
+                  "value": {
+                    "annotationValue": "seed",
+                    "termSource": "",
+                    "termAccession": ""
+                  },
+                  "unit": {
+                    "termSource": "",
+                    "termAccession": "",
+                    "comments": []
+                  }
+                },
+                {
+                  "category": {
+                    "@id": "#characteristic_category/collected_by_325"
+                  },
+                  "value": {
+                    "annotationValue": "Bob",
+                    "termSource": "",
+                    "termAccession": ""
+                  },
+                  "unit": {
+                    "termSource": "",
+                    "termAccession": "",
+                    "comments": []
+                  }
+                },
+                {
+                  "category": {
+                    "@id": "#characteristic_category/geographic_location_(country_and/or_sea)_326"
+                  },
+                  "value": {
+                    "annotationValue": "Belgium",
+                    "termSource": "",
+                    "termAccession": ""
+                  },
+                  "unit": {
+                    "termSource": "",
+                    "termAccession": "",
+                    "comments": []
+                  }
+                },
+                {
+                  "category": {
+                    "@id": "#characteristic_category/submission_date_327"
+                  },
+                  "value": {
+                    "annotationValue": "",
+                    "termSource": "",
+                    "termAccession": ""
+                  },
+                  "unit": {
+                    "termSource": "",
+                    "termAccession": "",
+                    "comments": []
+                  }
+                },
+                {
+                  "category": {
+                    "@id": "#characteristic_category/status_328"
+                  },
+                  "value": {
+                    "annotationValue": "",
+                    "termSource": "",
+                    "termAccession": ""
+                  },
+                  "unit": {
+                    "termSource": "",
+                    "termAccession": "",
+                    "comments": []
+                  }
+                },
+                {
+                  "category": {
+                    "@id": "#characteristic_category/accession_329"
+                  },
+                  "value": {
+                    "annotationValue": "",
+                    "termSource": "",
+                    "termAccession": ""
+                  },
+                  "unit": {
+                    "termSource": "",
+                    "termAccession": "",
+                    "comments": []
+                  }
+                }
+              ]
+            }
+          ],
+          "samples": [
+            {
+              "@id": "#sample/331",
+              "name": "leaf 1",
+              "derivesFrom": [
+                {
+                  "@id": "#source/330"
+                }
+              ],
+              "characteristics": [],
+              "factorValues": [
+                {
+                  "category": {
+                    "@id": ""
+                  },
+                  "value": {
+                    "annotationValue": "",
+                    "termSource": "",
+                    "termAccession": ""
+                  },
+                  "unit": {
+                    "termSource": "",
+                    "termAccession": "",
+                    "comments": []
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "protocols": [
+          {
+            "@id": "#protocol/18_10",
+            "name": "sample collection",
+            "protocolType": {
+              "annotationValue": "sample collection",
+              "termAccession": "",
+              "termSource": ""
+            },
+            "description": "",
+            "uri": "",
+            "version": "",
+            "parameters": [],
+            "components": [
+              {
+                "componentName": "",
+                "componentType": {
+                  "annotationValue": "",
+                  "termSource": "",
+                  "termAccession": ""
+                }
+              }
+            ]
+          },
+          {
+            "@id": "#protocol/19_18",
+            "name": "nucleic acid extraction",
+            "protocolType": {
+              "annotationValue": "nucleic acid extraction",
+              "termAccession": "",
+              "termSource": ""
+            },
+            "description": "",
+            "uri": "",
+            "version": "",
+            "parameters": [],
+            "components": [
+              {
+                "componentName": "",
+                "componentType": {
+                  "annotationValue": "",
+                  "termSource": "",
+                  "termAccession": ""
+                }
+              }
+            ]
+          },
+          {
+            "@id": "#protocol/20_20",
+            "name": "library construction",
+            "protocolType": {
+              "annotationValue": "library construction",
+              "termAccession": "",
+              "termSource": ""
+            },
+            "description": "",
+            "uri": "",
+            "version": "",
+            "parameters": [
+              {
+                "@id": "#parameter/349",
+                "parameterName": {
+                  "annotationValue": "library_construction_protocol",
+                  "termAccession": "",
+                  "termSource": ""
+                }
+              },
+              {
+                "@id": "#parameter/351",
+                "parameterName": {
+                  "annotationValue": "design_description",
+                  "termAccession": "",
+                  "termSource": ""
+                }
+              },
+              {
+                "@id": "#parameter/352",
+                "parameterName": {
+                  "annotationValue": "library source",
+                  "termAccession": "",
+                  "termSource": ""
+                }
+              },
+              {
+                "@id": "#parameter/353",
+                "parameterName": {
+                  "annotationValue": "library strategy",
+                  "termAccession": "",
+                  "termSource": ""
+                }
+              },
+              {
+                "@id": "#parameter/354",
+                "parameterName": {
+                  "annotationValue": "library selection",
+                  "termAccession": "",
+                  "termSource": ""
+                }
+              },
+              {
+                "@id": "#parameter/355",
+                "parameterName": {
+                  "annotationValue": "library layout",
+                  "termAccession": "",
+                  "termSource": ""
+                }
+              },
+              {
+                "@id": "#parameter/356",
+                "parameterName": {
+                  "annotationValue": "insert size",
+                  "termAccession": "",
+                  "termSource": ""
+                }
+              }
+            ],
+            "components": [
+              {
+                "componentName": "",
+                "componentType": {
+                  "annotationValue": "",
+                  "termSource": "",
+                  "termAccession": ""
+                }
+              }
+            ]
+          },
+          {
+            "@id": "#protocol/21_21",
+            "name": "nucleic acid sequencing",
+            "protocolType": {
+              "annotationValue": "nucleic acid sequencing",
+              "termAccession": "",
+              "termSource": ""
+            },
+            "description": "",
+            "uri": "",
+            "version": "",
+            "parameters": [
+              {
+                "@id": "#parameter/363",
+                "parameterName": {
+                  "annotationValue": "sequencing instrument",
+                  "termAccession": "",
+                  "termSource": ""
+                }
+              }
+            ],
+            "components": [
+              {
+                "componentName": "",
+                "componentType": {
+                  "annotationValue": "",
+                  "termSource": "",
+                  "termAccession": ""
+                }
+              }
+            ]
+          }
+        ],
+        "processSequence": [
+          {
+            "@id": "#process/sample_collection/331",
+            "name": "",
+            "executesProtocol": {
+              "@id": "#protocol/18_10"
+            },
+            "parameterValues": [],
+            "performer": "",
+            "date": "",
+            "previousProcess": {},
+            "nextProcess": {},
+            "inputs": [
+              {
+                "@id": "#source/330"
+              }
+            ],
+            "outputs": [
+              {
+                "@id": "#sample/331"
+              }
+            ]
+          }
+        ],
+        "assays": [
+          {
+            "@id": "#assay/18_20_21",
+            "filename": "a_assays.txt",
+            "measurementType": {
+              "annotationValue": "",
+              "termSource": "",
+              "termAccession": ""
+            },
+            "technologyType": {
+              "annotationValue": "",
+              "termSource": "",
+              "termAccession": ""
+            },
+            "technologyPlatform": "",
+            "characteristicCategories": [
+              {
+                "@id": "#characteristic_category/Title_350",
+                "characteristicType": {
+                  "annotationValue": "Title",
+                  "termAccession": "",
+                  "termSource": ""
+                }
+              },
+              {
+                "@id": "#characteristic_category/submission_date_358",
+                "characteristicType": {
+                  "annotationValue": "submission date",
+                  "termAccession": "",
+                  "termSource": ""
+                }
+              },
+              {
+                "@id": "#characteristic_category/status_359",
+                "characteristicType": {
+                  "annotationValue": "status",
+                  "termAccession": "",
+                  "termSource": ""
+                }
+              },
+              {
+                "@id": "#characteristic_category/accession_360",
+                "characteristicType": {
+                  "annotationValue": "accession",
+                  "termAccession": "",
+                  "termSource": ""
+                }
+              }
+            ],
+            "materials": {
+              "samples": [
+                {
+                  "@id": "#sample/331"
+                }
+              ],
+              "otherMaterials": [
+                {
+                  "@id": "#other_material/332",
+                  "name": "extract 1",
+                  "type": "Extract Name",
+                  "characteristics": [],
+                  "derivesFrom": [
+                    {
+                      "@id": "#sample/331"
+                    }
+                  ]
+                },
+                {
+                  "@id": "#other_material/333",
+                  "name": "library 1",
+                  "type": "library name",
+                  "characteristics": [
+                    {
+                      "category": {
+                        "@id": "#characteristic_category/Title_350"
+                      },
+                      "value": {
+                        "annotationValue": "library 1",
+                        "termSource": "",
+                        "termAccession": ""
+                      },
+                      "unit": {
+                        "termSource": "",
+                        "termAccession": "",
+                        "comments": []
+                      }
+                    },
+                    {
+                      "category": {
+                        "@id": "#characteristic_category/submission_date_358"
+                      },
+                      "value": {
+                        "annotationValue": "",
+                        "termSource": "",
+                        "termAccession": ""
+                      },
+                      "unit": {
+                        "termSource": "",
+                        "termAccession": "",
+                        "comments": []
+                      }
+                    },
+                    {
+                      "category": {
+                        "@id": "#characteristic_category/status_359"
+                      },
+                      "value": {
+                        "annotationValue": "",
+                        "termSource": "",
+                        "termAccession": ""
+                      },
+                      "unit": {
+                        "termSource": "",
+                        "termAccession": "",
+                        "comments": []
+                      }
+                    },
+                    {
+                      "category": {
+                        "@id": "#characteristic_category/accession_360"
+                      },
+                      "value": {
+                        "annotationValue": "",
+                        "termSource": "",
+                        "termAccession": ""
+                      },
+                      "unit": {
+                        "termSource": "",
+                        "termAccession": "",
+                        "comments": []
+                      }
+                    }
+                  ],
+                  "derivesFrom": [
+                    {
+                      "@id": "#other_material/332"
+                    }
+                  ]
+                }
+              ]
+            },
+            "processSequence": [
+              {
+                "@id": "#process/nucleic_acid_extraction/332",
+                "name": "",
+                "executesProtocol": {
+                  "@id": "#protocol/19_18"
+                },
+                "parameterValues": [],
+                "performer": "",
+                "date": "",
+                "previousProcess": {
+                  "@id": "#process/sample_collection/332"
+                },
+                "nextProcess": {
+                  "@id": "#process/library_construction/332"
+                },
+                "inputs": [
+                  {
+                    "@id": "#sample/331"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "@id": "#other_material/332"
+                  }
+                ]
+              },
+              {
+                "@id": "#process/library_construction/333",
+                "name": "",
+                "executesProtocol": {
+                  "@id": "#protocol/20_20"
+                },
+                "parameterValues": [
+                  {
+                    "category": {
+                      "@id": "#parameter/349"
+                    },
+                    "value": {
+                      "annotationValue": "lib prep",
+                      "termSource": "",
+                      "termAccession": ""
+                    },
+                    "unit": {
+                      "termSource": "",
+                      "termAccession": "",
+                      "comments": []
+                    }
+                  },
+                  {
+                    "category": {
+                      "@id": "#parameter/351"
+                    },
+                    "value": {
+                      "annotationValue": "Test",
+                      "termSource": "",
+                      "termAccession": ""
+                    },
+                    "unit": {
+                      "termSource": "",
+                      "termAccession": "",
+                      "comments": []
+                    }
+                  },
+                  {
+                    "category": {
+                      "@id": "#parameter/352"
+                    },
+                    "value": {
+                      "annotationValue": "OTHER",
+                      "termSource": "",
+                      "termAccession": ""
+                    },
+                    "unit": {
+                      "termSource": "",
+                      "termAccession": "",
+                      "comments": []
+                    }
+                  },
+                  {
+                    "category": {
+                      "@id": "#parameter/353"
+                    },
+                    "value": {
+                      "annotationValue": "OTHER",
+                      "termSource": "",
+                      "termAccession": ""
+                    },
+                    "unit": {
+                      "termSource": "",
+                      "termAccession": "",
+                      "comments": []
+                    }
+                  },
+                  {
+                    "category": {
+                      "@id": "#parameter/354"
+                    },
+                    "value": {
+                      "annotationValue": "RT-PCR",
+                      "termSource": "",
+                      "termAccession": ""
+                    },
+                    "unit": {
+                      "termSource": "",
+                      "termAccession": "",
+                      "comments": []
+                    }
+                  },
+                  {
+                    "category": {
+                      "@id": "#parameter/355"
+                    },
+                    "value": {
+                      "annotationValue": "SINGLE",
+                      "termSource": "",
+                      "termAccession": ""
+                    },
+                    "unit": {
+                      "termSource": "",
+                      "termAccession": "",
+                      "comments": []
+                    }
+                  },
+                  {
+                    "category": {
+                      "@id": "#parameter/356"
+                    },
+                    "value": {
+                      "annotationValue": "100",
+                      "termSource": "",
+                      "termAccession": ""
+                    },
+                    "unit": {
+                      "termSource": "",
+                      "termAccession": "",
+                      "comments": []
+                    }
+                  }
+                ],
+                "performer": "",
+                "date": "",
+                "previousProcess": {
+                  "@id": "#process/nucleic_acid_extraction/333"
+                },
+                "nextProcess": {
+                  "@id": "#process/nucleic_acid_sequencing/333"
+                },
+                "inputs": [
+                  {
+                    "@id": "#other_material/332"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "@id": "#other_material/333"
+                  }
+                ]
+              },
+              {
+                "@id": "#process/nucleic_acid_sequencing/334",
+                "name": "",
+                "executesProtocol": {
+                  "@id": "#protocol/21_21"
+                },
+                "parameterValues": [
+                  {
+                    "category": {
+                      "@id": "#parameter/363"
+                    },
+                    "value": {
+                      "annotationValue": " MinION",
+                      "termSource": "",
+                      "termAccession": ""
+                    },
+                    "unit": {
+                      "termSource": "",
+                      "termAccession": "",
+                      "comments": []
+                    }
+                  }
+                ],
+                "performer": "",
+                "date": "",
+                "previousProcess": {
+                  "@id": "#process/library_construction/334"
+                },
+                "nextProcess": {},
+                "inputs": [
+                  {
+                    "@id": "#other_material/333"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "@id": "#data_file/334"
+                  }
+                ]
+              }
+            ],
+            "dataFiles": [
+              {
+                "@id": "#data/334",
+                "name": "fake3.bam",
+                "type": "Raw Data File",
+                "comments": [
+                  {
+                    "name": "file type",
+                    "value": "bam"
+                  },
+                  {
+                    "name": "file checksum",
+                    "value": "9840f585055afc37de353706fd31a377"
+                  },
+                  {
+                    "name": "submission date",
+                    "value": ""
+                  },
+                  {
+                    "name": "status",
+                    "value": ""
+                  },
+                  {
+                    "name": "accession",
+                    "value": ""
+                  }
+                ]
+              }
+            ],
+            "unitCategories": []
+          }
+        ],
+        "factors": [],
+        "unitCategories": []
+      }
+    ]
+  }
+}
