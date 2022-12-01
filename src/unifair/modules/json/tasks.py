@@ -2,27 +2,18 @@ from collections import defaultdict
 from copy import copy
 from functools import lru_cache
 import os
-from typing import Any, Callable, cast, Dict, List, Tuple, Type, TypeVar, Union
+from typing import Callable, cast, Dict, Tuple, TypeVar
 
 import jq
 
-from modules import json
 from unifair.compute.task import TaskTemplate
 from unifair.data.dataset import Dataset
 from unifair.data.model import Model
 from unifair.modules.json.models import (JsonDataset,
-                                         JsonDict,
                                          JsonDictOfAnyModel,
-                                         JsonDictOfDictOfAnyModel,
                                          JsonDictOfListOfDictOfAnyModel,
-                                         JsonListOfAnyModel,
                                          JsonListOfDictOfAnyModel,
-                                         JsonListOfDictsModel,
-                                         JsonListOfNestedDictsModel,
-                                         JsonModel,
-                                         JsonNestedDictsModel,
-                                         JsonNoListType,
-                                         JsonType)
+                                         JsonListOfNestedDictsModel)
 
 ID_KEY = '_unifair_id'
 REF_KEY = '_unifair_ref'

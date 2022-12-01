@@ -1,4 +1,3 @@
-import json
 from typing import IO, Union
 
 from unifair.data.serializer import (create_dataset_from_tarfile,
