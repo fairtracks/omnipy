@@ -5,14 +5,14 @@ from unifair.data.serializer import (create_dataset_from_tarfile,
                                      create_tarfile_from_dataset,
                                      Serializer)
 
-from .models import JsonDataset
+from .models import JsonDataset, JsonModel
 
 
 class JsonDatasetToTarFileSerializer(Serializer):
     @staticmethod
     def serialize(json_dataset: JsonDataset) -> Union[bytes, memoryview]:
-        def json_encode_func(json_data: list) -> bytes:
-            return json.dumps(json_data).encode('utf8')
+        def json_encode_func(json_data: JsonModel) -> bytes:
+            return json_data.json(indent=2).encode('utf8')
 
         return create_tarfile_from_dataset(
             json_dataset, file_suffix='json', data_encode_func=json_encode_func)

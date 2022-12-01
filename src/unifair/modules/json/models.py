@@ -1,23 +1,118 @@
-from typing import Dict, List, Union
+# from __future__ import annotations
+from types import NoneType
+from typing import (Any,
+                    Dict,
+                    ForwardRef,
+                    Generic,
+                    List,
+                    Optional,
+                    TYPE_CHECKING,
+                    TypeAlias,
+                    TypeVar,
+                    Union)
+
+from pydantic import BaseModel
+from pydantic.generics import GenericModel
 
 from unifair.data.dataset import Dataset
-from unifair.data.model import Model
+from unifair.data.model import Model, ROOT_KEY
+
+JsonType = ForwardRef('JsonType')
+
+JsonListValT = TypeVar('JsonListValT')
+JsonDictValT = TypeVar('JsonDictValT')
+
+# class JsonList(GenericModel, Generic[JsonListValT]):
+#     __root__: List[JsonListValT] = []
+#
+#     @property
+#     def contents(self):
+#         return self.__root__
+#
+#     def to_data(self) -> Any:
+#         return self.dict()[ROOT_KEY]
+#
+#
+# class JsonDict(GenericModel, Generic[JsonDictValT]):
+#     __root__: Dict[str, JsonDictValT] = {}
+#
+#     @property
+#     def contents(self):
+#         return self.__root__
+#
+#     def to_data(self) -> Any:
+#         return self.dict()[ROOT_KEY]
 
 
-class JsonDatasetModel(Model[List[Dict[str, Union[int, float, List, Dict, str]]]]):
+class JsonList(Model[List[JsonListValT]], Generic[JsonListValT]):
     ...
 
-    @classmethod
-    def _parse_data(cls, data: List) -> List:
-        data = cls._data_not_empty_object(data)
-        return data
 
-    @classmethod
-    def _data_not_empty_object(cls, data: List):
-        for obj in data:
-            assert len(obj) > 0
-        return data
+class JsonDict(Model[Dict[str, JsonDictValT]], Generic[JsonDictValT]):
+    ...
 
 
-class JsonDataset(Dataset[JsonDatasetModel]):
+JsonScalarType = Union[int, float, str, bool, None]
+
+JsonType = Union[JsonScalarType, JsonList['JsonType'], JsonDict['JsonType']]
+
+JsonList['JsonType'].update_forward_refs(JsonType=JsonType)
+JsonDict['JsonType'].update_forward_refs(JsonType=JsonType)
+
+
+class JsonModel(Model[Union[JsonDict[JsonType], JsonList, JsonType]]):
+    ...
+
+
+class JsonDictOfAnyModel(Model[JsonDict[JsonType]]):
+    ...
+
+
+class JsonDictOfDictOfAnyModel(Model[JsonDict[JsonDict[JsonType]]]):
+    ...
+
+
+class JsonListOfAnyModel(Model[Union[JsonList[JsonType]]]):
+    ...
+
+
+class JsonListOfDictOfAnyModel(Model[JsonList[JsonDict[JsonType]]]):
+    ...
+
+
+class JsonDictOfListOfDictOfAnyModel(Model[JsonDict[JsonListOfDictOfAnyModel]]):
+    ...
+
+
+# @classmethod
+# def _parse_data(cls, data: Union[JsonList, JsonDict]) -> Union[JsonList, JsonDict]:
+#     # data = cls._data_not_empty_object(data)
+#     return data
+
+# @classmethod
+# def _data_not_empty_object(cls, data: List):
+#     for obj in data:
+#         assert len(obj) > 0
+#     return data
+
+
+class JsonDataset(Dataset[JsonModel]):
+    ...
+
+
+JsonNoListType = Union[JsonScalarType, JsonDict['JsonType']]
+
+JsonList['JsonNoListType'].update_forward_refs(JsonNoListType=JsonNoListType)
+JsonDict['JsonNoListType'].update_forward_refs(JsonNoListType=JsonNoListType)
+
+
+class JsonListOfDictsModel(Model[JsonList[JsonDict[JsonScalarType]]]):
+    ...
+
+
+class JsonNestedDictsModel(Model[JsonDict[JsonNoListType]]):
+    ...
+
+
+class JsonListOfNestedDictsModel(Model[JsonList[JsonNestedDictsModel]]):
     ...
