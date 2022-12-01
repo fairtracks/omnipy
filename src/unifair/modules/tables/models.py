@@ -1,9 +1,14 @@
 from typing import Dict, List, Union
 
 from unifair.data.model import Model
+from unifair.modules.json.models import JsonDict, JsonList
 
 
 class TableOfStrings(Model[List[Dict[str, str]]]):
+    ...
+
+
+class JsonTableOfStrings(Model[JsonList[JsonDict[str]]]):
     ...
 
 
