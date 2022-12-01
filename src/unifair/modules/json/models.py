@@ -1,21 +1,8 @@
 # from __future__ import annotations
-from types import NoneType
-from typing import (Any,
-                    Dict,
-                    ForwardRef,
-                    Generic,
-                    List,
-                    Optional,
-                    TYPE_CHECKING,
-                    TypeAlias,
-                    TypeVar,
-                    Union)
-
-from pydantic import BaseModel
-from pydantic.generics import GenericModel
+from typing import (Dict, ForwardRef, Generic, List, TypeVar, Union)
 
 from unifair.data.dataset import Dataset
-from unifair.data.model import Model, ROOT_KEY
+from unifair.data.model import Model
 
 JsonType = ForwardRef('JsonType')
 
