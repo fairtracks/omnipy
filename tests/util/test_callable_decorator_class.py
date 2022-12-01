@@ -24,15 +24,15 @@ class MockClass:
 
 def test_fail_plain_decorator_not_callable_arg() -> None:
     @callable_decorator_class
-    class MockClassNotCallableArg:
+    class MockClassNoCallableArg:
         def __init__(self) -> None:
             ...
 
     with pytest.raises(TypeError):
 
-        @MockClassNotCallableArg
+        @MockClassNoCallableArg
         def my_func(*args: Any, **kwargs: Any) -> Dict[str, Any]:
-            return dict(args=args, kwargs=kwargs)
+            return dict(args=args, kwargs=kwargs) @ callable_decorator_class
 
 
 def test_plain_decorator() -> None:
@@ -89,6 +89,42 @@ def test_decorator_with_args_and_kwargs() -> None:
     assert my_func.args == (123, True)
     assert my_func.kwargs == dict(param=123, other=True)
     assert my_func.func(1, 'b', c=True) == dict(args=(1, 'b'), kwargs=dict(c=True))
+
+
+def test_fail_callable_decorator_no_args() -> None:
+    with pytest.raises(TypeError):
+
+        @callable_decorator_class
+        class MockClassCallable:
+            def __init__(self, func: Callable, *args: Any, **kwargs: Any) -> None:
+                ...
+
+            def __call__(self, *args, **kwargs):
+                ...
+
+
+def test_fail_callable_decorator_no_args_parentheses() -> None:
+    with pytest.raises(TypeError):
+
+        @callable_decorator_class()
+        class MockClassCallable:
+            def __init__(self, func: Callable, *args: Any, **kwargs: Any) -> None:
+                ...
+
+            def __call__(self, *args, **kwargs):
+                ...
+
+
+def test_fail_callable_decorator_args_kwargs() -> None:
+    with pytest.raises(TypeError):
+
+        @callable_decorator_class(123, True, param=123, other=True)
+        class MockClassCallable:
+            def __init__(self, func: Callable, *args: Any, **kwargs: Any) -> None:
+                ...
+
+            def __call__(self, *args, **kwargs):
+                ...
 
 
 def test_decorator_as_function() -> None:

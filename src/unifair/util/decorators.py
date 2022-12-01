@@ -1,3 +1,4 @@
+from types import MethodWrapperType
 from typing import Callable, cast, Protocol, runtime_checkable, Type, TypeVar
 
 # Types
@@ -19,9 +20,13 @@ class CallableClass(Protocol[T]):
 
 def callable_decorator_class(cls: Type[T]) -> CallableClass[Type[T]]:
     """
-    "Meta-decorator" that allows any class to function as a decorator for a callable. The only
-    requirement is that the first argument after self of the __init__() method needs to be annotated
-    as a callable. Arguments and keyword arguments to the class decorator are supported.
+    "Meta-decorator" that allows any class to function as a decorator for a callable.
+
+    The only requirements are that 1) the first argument after self of the __init__() method needs
+    to be annotated as a callable, and 2) the class must not already be callable (have a __call__()
+    method).
+
+    Arguments and keyword arguments to the class decorator are supported.
     """
     def _forward_call_to_obj_if_callable(self, *args: object, **kwargs: object) -> Type[T]:
         """
@@ -36,6 +41,10 @@ def callable_decorator_class(cls: Type[T]) -> CallableClass[Type[T]]:
         if hasattr(self, '_obj_call'):
             return self._obj_call(*args, **kwargs)
         raise TypeError("'{}' object is not callable".format(self.__class__.__name__))
+
+    if not isinstance(cls.__call__, MethodWrapperType):
+        raise TypeError(
+            f'The decorated class "{cls.__name__}" must not already have a "__call__" method')
 
     setattr(cls, '__call__', _forward_call_to_obj_if_callable)
 
