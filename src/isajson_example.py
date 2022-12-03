@@ -1,8 +1,8 @@
 import os
 from typing import cast
 
+from unifair import runtime
 from unifair.compute.flow import FuncFlowTemplate
-from unifair.config.runtime import Runtime
 from unifair.data.dataset import Dataset
 from unifair.data.model import Model
 from unifair.modules.fairtracks.util import serialize_to_tarpacked_csv_files
@@ -21,7 +21,6 @@ from unifair.modules.tables.models import JsonTableOfStrings, TableOfStrings, Ta
 
 # from unifair.modules.tables.tasks import remove_columns
 
-runtime = Runtime()
 runtime.config.engine = 'local'
 runtime.config.prefect.use_cached_results = False
 
