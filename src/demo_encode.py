@@ -1,5 +1,5 @@
+from unifair import runtime
 from unifair.compute.flow import FuncFlowTemplate
-from unifair.config.runtime import Runtime
 from unifair.modules.fairtracks.tasks import import_dataset_from_encode
 from unifair.modules.fairtracks.util import serialize_to_tarpacked_csv_files
 from unifair.modules.json.models import JsonDictOfAnyModel
@@ -7,7 +7,6 @@ from unifair.modules.json.tasks import cast_dataset, split_all_nested_lists_from
 from unifair.modules.json.util import serialize_to_tarpacked_json_files
 from unifair.modules.tables.tasks import remove_columns
 
-runtime = Runtime()
 runtime.config.engine = 'local'
 runtime.config.prefect.use_cached_results = False
 
