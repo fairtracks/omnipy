@@ -1,6 +1,6 @@
 from datetime import datetime
 import logging
-from typing import Any, Callable, Optional, Protocol, Tuple, Type
+from typing import Any, Callable, Dict, Optional, Protocol, runtime_checkable, Tuple, Type
 
 from unifair.engine.constants import EngineChoice, RunState
 
@@ -92,8 +92,9 @@ class IsJobCreator(Protocol):
         ...
 
 
-class IsTask(Protocol):
+class IsJob(Protocol):
     name: str
+    flow_context: IsJobCreator
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         ...
@@ -101,31 +102,53 @@ class IsTask(Protocol):
     def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         ...
 
+
+class IsJobTemplate(Protocol):
+    in_flow_context: bool
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        pass
+
+
+class IsTask(IsJob, Protocol):
     def has_coroutine_task_func(self) -> bool:
         ...
 
 
-class IsTaskTemplate(IsTask, Protocol):
+class IsTaskTemplate(IsJobTemplate, Protocol):
     def apply(self) -> IsTask:
         ...
 
 
-class IsDagFlow(Protocol):
+class IsFlow(IsJob, Protocol):
     ...
 
 
-class IsDagFlowTemplate(IsDagFlow, Protocol):
-    def apply(self) -> IsDagFlow:
+class IsFlowTemplate(IsJobTemplate, Protocol):
+    def apply(self) -> IsFlow:
         ...
 
 
-class IsFuncFlow(Protocol):
+class IsDagFlow(IsFlow, Protocol):
+    tasks: Tuple[IsTask]
+
+    def has_coroutine_flow_func(self) -> bool:
+        ...
+
+    def get_call_args(self, *args, **kwargs) -> Dict[str, object]:
+        ...
+
+
+class IsDagFlowTemplate(IsDagFlow, IsFlowTemplate, Protocol):
     ...
 
 
-class IsFuncFlowTemplate(IsFuncFlow, Protocol):
-    def apply(self) -> IsFuncFlow:
-        ...
+class IsFuncFlow(IsFlow, Protocol):
+    ...
+
+
+class IsFuncFlowTemplate(IsFuncFlow, IsFlowTemplate, Protocol):
+    ...
 
 
 class IsEngine(Protocol):
@@ -148,11 +171,13 @@ class IsTaskRunnerEngine(IsEngine, Protocol):
         ...
 
 
+@runtime_checkable
 class IsDagFlowRunnerEngine(IsEngine, Protocol):
     def dag_flow_decorator(self, dag_flow: IsDagFlow) -> IsDagFlow:
         ...
 
 
+@runtime_checkable
 class IsFuncFlowRunnerEngine(IsEngine, Protocol):
     def func_flow_decorator(self, dag_flow: IsFuncFlow) -> IsFuncFlow:
         ...

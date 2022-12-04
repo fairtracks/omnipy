@@ -2,7 +2,11 @@ from types import MappingProxyType
 from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, Union
 
 from unifair.compute.job import CallableDecoratingJobTemplateMixin, Job, JobConfig, JobTemplate
-from unifair.engine.protocols import (IsEngineConfig, IsRunStateRegistry, IsTask)
+from unifair.engine.protocols import (IsDagFlow,
+                                      IsEngineConfig,
+                                      IsFuncFlow,
+                                      IsRunStateRegistry,
+                                      IsTask)
 from unifair.util.callable_decorator_cls import callable_decorator_cls
 
 
@@ -208,3 +212,41 @@ class MockLocalRunner:
         setattr(task, '_call_func', _call_func)
 
         return task
+
+    def dag_flow_decorator(self, flow: IsDagFlow) -> IsDagFlow:
+        def _call_func(*args: Any, **kwargs: Any) -> Any:
+            tasks = flow.tasks
+
+            results = {}
+            result = None
+            for i, task in enumerate(tasks):
+                if i == 0:
+                    results = flow.get_call_args(*args, **kwargs)
+
+                result = task(**results)
+                if isinstance(result, dict) and len(result) > 0:
+                    results.update(result)
+                else:
+                    results[task.name] = result
+
+            if results:
+                self.finished = True
+                return result
+
+        setattr(flow, '_call_func', _call_func)
+
+        return flow
+
+    def func_flow_decorator(self, flow: IsFuncFlow) -> IsFuncFlow:
+        prev_call_func = flow._call_func  # noqa
+
+        def _call_func(*args: Any, **kwargs: Any) -> Any:
+            with flow.flow_context:
+                result = prev_call_func(*args, **kwargs)
+
+            self.finished = True
+            return result
+
+        setattr(flow, '_call_func', _call_func)
+
+        return flow

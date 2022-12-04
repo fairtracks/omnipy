@@ -120,9 +120,8 @@ class JobTemplate(JobConfig, metaclass=JobTemplateMeta):
     def engine(self) -> Optional[IsTaskRunnerEngine]:
         return self.__class__.engine
 
-    @classmethod
     @abstractmethod
-    def _apply_engine_decorator(cls, job: Job) -> Job:
+    def _apply_engine_decorator(self, job: Job) -> Job:
         ...
 
     @classmethod
