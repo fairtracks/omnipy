@@ -8,21 +8,24 @@ from unifair.compute.task import Task, TaskTemplate
 
 from .cases.raw.functions import format_to_string_func, power_m1_func
 from .cases.tasks import TaskCase
+from .helpers.functions import assert_updated_wrapper
 from .helpers.mocks import MockLocalRunner
 
 
 def test_init() -> None:
     task_template = TaskTemplate(format_to_string_func)
     assert isinstance(task_template, TaskTemplate)  # noqa
+    assert_updated_wrapper(task_template, format_to_string_func)
 
     with pytest.raises(TypeError):
-        TaskTemplate(format_to_string_func, 'extra_positional_argument')
+        TaskTemplate('extra_positional_argument')(format_to_string_func)
 
     with pytest.raises(RuntimeError):
         Task(format_to_string_func)
 
     task = task_template.apply()  # noqa
     assert isinstance(task, Task)
+    assert_updated_wrapper(task, format_to_string_func)
 
 
 @pc.parametrize_with_cases('case', cases='.cases.tasks')
@@ -30,17 +33,21 @@ def test_task_run(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
                   case: TaskCase) -> None:
 
     assert mock_local_runner.finished is False
-    task_template = TaskTemplate(case.func)
+
+    task_template = TaskTemplate(case.task_func)
+    assert_updated_wrapper(task_template, case.task_func)
 
     with pytest.raises(TypeError):
         task_template(*case.args, **case.kwargs)
 
     task = task_template.apply()
+    assert_updated_wrapper(task, case.task_func)
+
     result = task(*case.args, **case.kwargs)
 
     assert task.name == case.name
     assert mock_local_runner.finished is True
-    case.assert_func(result)
+    case.assert_results_func(result)
 
 
 def test_task_run_parameter_variants(
@@ -76,7 +83,7 @@ def test_error_missing_task_run_parameters() -> None:
 @pc.parametrize_with_cases('case', cases='.cases.tasks')
 def test_property_param_signature_and_return_type(case: TaskCase) -> None:
 
-    task_template = TaskTemplate(case.func)
+    task_template = TaskTemplate(case.task_func)
 
     for task_obj in task_template, task_template.apply():
         case.assert_signature_and_return_type_func(task_obj)
