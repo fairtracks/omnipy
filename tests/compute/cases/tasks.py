@@ -62,7 +62,6 @@ def case_sync_action_func_with_params() -> TaskCase[[int, bool], None]:
         assert result is None
 
     def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):
-        print(task_obj.param_signatures)
         assert task_obj.param_signatures == {
             'command': Parameter('command', Parameter.POSITIONAL_OR_KEYWORD, annotation=str),
             'verbose': Parameter('verbose', Parameter.KEYWORD_ONLY, annotation=bool, default=False),
