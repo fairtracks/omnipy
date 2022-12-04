@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
+from functools import update_wrapper
 from types import MappingProxyType
-from typing import Any, Dict, Hashable, Mapping, Optional, Tuple, Type, Union
+from typing import Any, Dict, Generic, Hashable, Mapping, Optional, Tuple, Type, TypeVar, Union
 
 from unifair.engine.protocols import IsTaskRunnerEngine
 from unifair.util.helpers import create_merged_dict
@@ -107,8 +108,14 @@ class JobTemplate(JobConfig, metaclass=JobTemplateMeta):
     def _apply_engine_decorator(cls, job: Job) -> Job:
         ...
 
+    @classmethod
+    def create(cls, *init_args: object, **init_kwargs: object) -> JobTemplate:
+        return cls(*init_args, **init_kwargs)
+
     def apply(self) -> Job:
-        job = self._get_job_subcls_for_apply().from_job_template(self)
+        job_cls = self._get_job_subcls_for_apply()
+        job = job_cls.create(*self._get_init_args(), **self._get_init_kwargs())
+        update_wrapper(job, self, updated=[])
         return self._apply_engine_decorator(job)
 
     def refine(self, update: bool = True, **kwargs: Any) -> JobTemplate:
@@ -121,7 +128,26 @@ class JobTemplate(JobConfig, metaclass=JobTemplateMeta):
                     new_val = cur_val
                 kwargs[key] = new_val
 
-        return self.__class__(*self._get_init_args(), **kwargs)
+        return self.create(*self._get_init_args(), **kwargs)
+
+    @property
+    def in_flow_context(self) -> bool:
+        return self.__class__.job_creator.nested_context_level > 0
+
+    def __call__(self, *args, **kwargs):
+        if self.in_flow_context:
+            job = self.apply()
+            return job(*args, **kwargs)
+        raise TypeError("'{}' object is not callable".format(self.__class__.__name__))
+
+
+JobTemplateT = TypeVar('JobTemplateT', bound=JobTemplate)
+
+
+class CallableDecoratingJobTemplateMixin(Generic[JobTemplateT]):
+    @classmethod
+    def create(cls: Type[JobTemplateT], *init_args: object, **init_kwargs: object) -> JobTemplateT:
+        return cls(*(init_args[1:]), **init_kwargs)(init_args[0])
 
 
 class Job(JobConfig):
@@ -140,9 +166,7 @@ class Job(JobConfig):
                            'an instance of JobTemplate (or one of its subclasses)')
 
     @classmethod
-    def from_job_template(cls, job_template: JobTemplate):
-        init_args = job_template._get_init_args()
-        init_kwargs = job_template._get_init_kwargs()
+    def create(cls, *init_args: object, **init_kwargs: object) -> Job:
         job_obj = object.__new__(cls)
         job_config_cls = cls._get_job_config_subcls_for_init()
         job_config_cls.__init__(job_obj, *init_args, **init_kwargs)
@@ -150,7 +174,9 @@ class Job(JobConfig):
 
     def revise(self) -> JobTemplate:
         job_template_cls = self._get_job_template_subcls_for_revise()
-        return job_template_cls(*self._get_init_args(), **self._get_init_kwargs())
+        job_template = job_template_cls.create(*self._get_init_args(), **self._get_init_kwargs())
+        update_wrapper(job_template, self, updated=[])
+        return job_template
 
     @abstractmethod
     def __call__(self, *args: Any, **kwargs: Any) -> Any:

@@ -1,8 +1,9 @@
 from types import MappingProxyType
-from typing import Any, Dict, Mapping, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, Union
 
-from unifair.compute.job import Job, JobConfig, JobTemplate
-from unifair.engine.protocols import IsEngineConfig, IsRunStateRegistry, IsTask
+from unifair.compute.job import CallableDecoratingJobTemplateMixin, Job, JobConfig, JobTemplate
+from unifair.engine.protocols import (IsEngineConfig, IsRunStateRegistry, IsTask)
+from unifair.util.callable_decorator_cls import callable_decorator_cls
 
 
 class MockJobConfigSubclass(JobConfig):
@@ -115,19 +116,21 @@ class PublicPropertyErrorsMockJob(Job, PublicPropertyErrorsMockJobConfig):
 
 class CommandMockJobConfig(JobConfig):
     def __init__(self,
+                 cmd_func: Callable,
                  command: str,
                  *,
                  name: Optional[str] = None,
                  uppercase: bool = False,
                  params: Mapping[str, Union[int, str, bool]] = None):
         JobConfig.__init__(self, name=name)
+        self._cmd_func = cmd_func
         self._command = command
         self._uppercase = uppercase
         self._params = dict(params) if params is not None else {}
         self.engine_decorator_applied = False
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
-        return self._command,
+        return self._cmd_func, self._command,
 
     def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
         return 'uppercase', 'params'
@@ -141,7 +144,10 @@ class CommandMockJobConfig(JobConfig):
         return MappingProxyType(self._params)
 
 
-class CommandMockJobTemplate(JobTemplate, CommandMockJobConfig):
+@callable_decorator_cls
+class CommandMockJobTemplate(CallableDecoratingJobTemplateMixin['CommandMockJobTemplate'],
+                             JobTemplate,
+                             CommandMockJobConfig):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type[Job]:
         return CommandMockJob
@@ -171,6 +177,10 @@ class CommandMockJob(Job, CommandMockJobConfig):
             else:
                 log = 'I know nothing'
             return log.upper() if self._uppercase else log
+
+
+def mock_cmd_func(**params: bool) -> Any:  # noqa
+    pass
 
 
 class MockLocalRunner:

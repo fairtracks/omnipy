@@ -21,10 +21,10 @@ ReturnT = TypeVar('ReturnT')
 @dataclass
 class TaskCase(Generic[ArgT, ReturnT]):
     name: str
-    func: Callable[[ArgT], ReturnT]
+    task_func: Callable[[ArgT], ReturnT]
     args: Tuple[Any, ...]
     kwargs: Dict[str, Any]
-    assert_func: Callable[[Any], None]
+    assert_results_func: Callable[[Any], None]
     assert_signature_and_return_type_func: Callable[[Any], None]
 
 
@@ -42,10 +42,10 @@ def case_sync_action_func_no_params() -> TaskCase[[], None]:
 
     return TaskCase(
         name='action_func_no_params',
-        func=action_func_no_params,
+        task_func=action_func_no_params,
         args=(),
         kwargs={},
-        assert_func=assert_results,
+        assert_results_func=assert_results,
         assert_signature_and_return_type_func=assert_param_signature_and_return_type,
     )
 
@@ -68,10 +68,10 @@ def case_sync_action_func_with_params() -> TaskCase[[int, bool], None]:
 
     return TaskCase(
         name='action_func_with_params',
-        func=action_func_with_params,
+        task_func=action_func_with_params,
         args=('rm -rf *',),
         kwargs=dict(verbose=True),
-        assert_func=assert_results,
+        assert_results_func=assert_results,
         assert_signature_and_return_type_func=assert_param_signature_and_return_type,
     )
 
@@ -91,10 +91,10 @@ def case_sync_data_import_func() -> TaskCase[[], str]:
 
     return TaskCase(
         name='data_import_func',
-        func=data_import_func,
+        task_func=data_import_func,
         args=(),
         kwargs={},
-        assert_func=assert_results,
+        assert_results_func=assert_results,
         assert_signature_and_return_type_func=assert_param_signature_and_return_type,
     )
 
@@ -116,10 +116,10 @@ def case_sync_format_to_string_func() -> TaskCase[[str, int], str]:
 
     return TaskCase(
         name='format_to_string_func',
-        func=format_to_string_func,
+        task_func=format_to_string_func,
         args=('Number', 12),
         kwargs={},
-        assert_func=assert_results,
+        assert_results_func=assert_results,
         assert_signature_and_return_type_func=assert_param_signature_and_return_type,
     )
 
@@ -150,9 +150,9 @@ def case_sync_power_m1_func() -> TaskCase[[int, int, bool], int]:
 
     return TaskCase(
         name='power_m1_func',
-        func=power_m1_func,
+        task_func=power_m1_func,
         args=(4, 3),
         kwargs=dict(minus_one=False),
-        assert_func=assert_results,
+        assert_results_func=assert_results,
         assert_signature_and_return_type_func=assert_param_signature_and_return_type,
     )
