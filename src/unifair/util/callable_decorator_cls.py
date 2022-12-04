@@ -1,3 +1,4 @@
+from functools import update_wrapper
 from types import MethodWrapperType
 from typing import Callable, cast, Protocol, runtime_checkable, Type, TypeVar
 
@@ -18,7 +19,7 @@ class CallableClass(Protocol[T]):
         ...
 
 
-def callable_decorator_class(cls: Type[T]) -> CallableClass[Type[T]]:
+def callable_decorator_cls(cls: Type[T]) -> CallableClass[Type[T]]:
     """
     "Meta-decorator" that allows any class to function as a decorator for a callable.
 
@@ -28,6 +29,9 @@ def callable_decorator_class(cls: Type[T]) -> CallableClass[Type[T]]:
 
     Arguments and keyword arguments to the class decorator are supported.
     """
+    if not isinstance(cls.__call__, MethodWrapperType):
+        cls._wrapped_call: Callable = cast(Callable, cls.__call__)
+
     def _forward_call_to_obj_if_callable(self, *args: object, **kwargs: object) -> Type[T]:
         """
         __call__ method at the class level which forward the call to instance-level call methods,
@@ -40,11 +44,9 @@ def callable_decorator_class(cls: Type[T]) -> CallableClass[Type[T]]:
         """
         if hasattr(self, '_obj_call'):
             return self._obj_call(*args, **kwargs)
+        if hasattr(self, '_wrapped_call'):
+            return self._wrapped_call(*args, **kwargs)
         raise TypeError("'{}' object is not callable".format(self.__class__.__name__))
-
-    if not isinstance(cls.__call__, MethodWrapperType):
-        raise TypeError(
-            f'The decorated class "{cls.__name__}" must not already have a "__call__" method')
 
     setattr(cls, '__call__', _forward_call_to_obj_if_callable)
 
@@ -72,8 +74,9 @@ def callable_decorator_class(cls: Type[T]) -> CallableClass[Type[T]]:
 
         def _init(callable_arg: Callable) -> None:
             _wrapped_init(self, callable_arg, *args_list, **kwargs)
+            update_wrapper(self, callable_arg, updated=[])
 
-        if len(args_list) > 0 and _real_callable(args_list[0]):
+        if len(args_list) == 1 and _real_callable(args_list[0]):
             # Decorate the callable directly
             _callable_arg: Callable = cast(Callable, args_list[0])
             args_list.pop(0)
