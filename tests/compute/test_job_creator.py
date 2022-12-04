@@ -34,3 +34,23 @@ def test_job_creator_engine_not_singular():
 
     job_creator_1.set_engine(mock_local_runner)
     assert job_creator_2.engine is None
+
+
+def test_job_creator_nested_context_level():
+    job_creator = JobCreator()
+
+    assert job_creator.nested_context_level == 0
+
+    try:
+        with job_creator:
+            assert job_creator.nested_context_level == 1
+
+            with job_creator:
+                assert job_creator.nested_context_level == 2
+
+            assert job_creator.nested_context_level == 1
+            raise RuntimeError()
+    except RuntimeError:
+        pass
+
+    assert job_creator.nested_context_level == 0
