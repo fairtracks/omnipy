@@ -158,11 +158,8 @@ def split_outer_lists_from_dataset_as_new_data_files(
 
             for new_data_file_title, new_data_file in new_data_files.items():
                 data_files_maybe_with_nested_lists[new_data_file_title] += new_data_file
-            print(nested_record)
             data_files_without_nested_lists[data_file_title].append(nested_record)
 
-    for key in data_files_without_nested_lists.keys():
-        print(f', {key}: {data_files_without_nested_lists[key]}')
     all_data_files_without_nested_lists_ds = Dataset[JsonListOfNestedDictsModel](
         data_files_without_nested_lists)
     all_data_files_maybe_with_nested_lists_ds = Dataset[JsonListOfDictOfAnyModel](
