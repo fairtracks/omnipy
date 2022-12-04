@@ -5,20 +5,33 @@ from functools import update_wrapper
 from types import MappingProxyType
 from typing import Any, Dict, Generic, Hashable, Mapping, Optional, Tuple, Type, TypeVar, Union
 
-from unifair.engine.protocols import IsTaskRunnerEngine
+from unifair.engine.protocols import IsJobCreator, IsTaskRunnerEngine
 from unifair.util.helpers import create_merged_dict
 
 
 class JobCreator:
-    def __init__(self):
+    def __init__(self) -> None:
         self._engine: Optional[IsTaskRunnerEngine] = None
+        self._nested_context_level = 0
 
     def set_engine(self, engine: IsTaskRunnerEngine) -> None:
         self._engine = engine
 
+    def __enter__(self):
+        print('__enter__')
+        self._nested_context_level += 1
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        print('__exit__')
+        self._nested_context_level -= 1
+
     @property
     def engine(self) -> Optional[IsTaskRunnerEngine]:
         return self._engine
+
+    @property
+    def nested_context_level(self) -> int:
+        return self._nested_context_level
 
 
 class JobConfigMeta(ABCMeta):
@@ -33,6 +46,10 @@ class JobTemplateMeta(JobConfigMeta):
     @property
     def engine(self) -> Optional[IsTaskRunnerEngine]:
         return self.job_creator.engine
+
+    @property
+    def nested_context_level(self) -> int:
+        return self.job_creator.nested_context_level
 
 
 class JobConfig(metaclass=JobConfigMeta):
@@ -151,6 +168,10 @@ class CallableDecoratingJobTemplateMixin(Generic[JobTemplateT]):
 
 
 class Job(JobConfig):
+    @property
+    def flow_context(self) -> IsJobCreator:
+        return self.__class__.job_creator
+
     @classmethod
     @abstractmethod
     def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
