@@ -1,7 +1,31 @@
-from typing import Any, Callable, Optional, Type
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Callable, Generic, Optional, Type, TypeVar
 
 from unifair.engine.constants import RunState
-from unifair.engine.protocols import IsEngineConfig, IsRunStateRegistry, IsTask, IsTaskRunnerEngine
+from unifair.engine.protocols import (IsEngineConfig,
+                                      IsJob,
+                                      IsRunStateRegistry,
+                                      IsTask,
+                                      IsTaskRunnerEngine)
+
+
+class JobType(Enum):
+    task = 1
+    dag_flow = 2
+    func_flow = 3
+
+
+ArgT = TypeVar('ArgT')
+ReturnT = TypeVar('ReturnT')
+
+
+@dataclass
+class JobCase(Generic[ArgT, ReturnT]):
+    name: str
+    job_func: Callable[[ArgT], ReturnT]
+    run_and_assert_results_func: Callable[[Any], None]
+    job: Optional[IsJob] = None
 
 
 class TaskRunnerStateChecker(IsTaskRunnerEngine):

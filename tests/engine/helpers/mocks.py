@@ -13,6 +13,7 @@ from unifair.engine.protocols import (IsEngine,
                                       IsTask,
                                       IsTaskRunnerEngine)
 from unifair.engine.task_runner import TaskRunnerEngine
+from unifair.util.callable_decorator_cls import callable_decorator_cls
 
 
 class MockJobCreator:
@@ -26,7 +27,7 @@ class MockJobCreator:
 class MockTask:
     job_creator = MockJobCreator()
 
-    def __init__(self, name: str, func: Callable) -> None:
+    def __init__(self, func: Callable, *, name: Optional[str] = None) -> None:
         self.name = name
         self._func = func
 
@@ -45,9 +46,11 @@ class MockTask:
         return cls.engine._registry  # noqa
 
 
+@callable_decorator_cls
 class MockTaskTemplate(MockTask):
     def apply(self) -> IsTask:
-        task = MockTask(self.name, self._func)
+        task = MockTask(self._func, name=self.name)
+        print(self.job_creator.engine)
         return self.job_creator.engine.task_decorator(task)
 
 

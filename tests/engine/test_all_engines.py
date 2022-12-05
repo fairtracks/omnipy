@@ -1,19 +1,16 @@
 import pytest
 import pytest_cases as pc
 
-from .helpers.functions import run_task_test
+from .helpers.classes import JobCase
+from .helpers.functions import run_job_test
 
 
 @pc.parametrize(
-    'task_case',
-    [
-        pc.fixture_ref('singlethread_mock_task_all_engines_mock_reg'),
-        pc.fixture_ref('multithread_mock_task_all_engines_mock_reg'),
-        pc.fixture_ref('multiprocess_mock_task_all_engines_mock_reg')
-    ],
-    ids=['single', 'multithread', 'multiprocess'],
+    'job_case',
+    [pc.fixture_ref('all_func_types_all_engines_assert_runstate_mock_reg')],
+    ids=[''],
 )
 @pytest.mark.asyncio
-async def test_mock_tasks_all_engines_mock_registry(task_case) -> None:
+async def test_mock_tasks_all_engines_mock_registry(job_case: JobCase) -> None:
     for i in range(2):
-        await run_task_test(task_case)
+        await run_job_test(job_case)
