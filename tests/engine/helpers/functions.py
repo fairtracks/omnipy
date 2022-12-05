@@ -110,15 +110,52 @@ def convert_func_to_task(
     engine: IsTaskRunnerEngine,
     registry: Optional[IsRunStateRegistry],
 ) -> IsTask:
-    task_template = task_template_cls(name, func)
+    task_template = task_template_cls(name=name)(func)
     task_template_cls.job_creator.set_engine(engine)
     if registry:
         engine.set_registry(registry)
     return task_template.apply()
 
 
-async def run_task_test(task_case):
-    task, run_and_assert_results = task_case
-    result = run_and_assert_results(task)
+# def convert_func_to_dag_flow(
+#     name: str,
+#     func: Callable,
+#     task_template_cls: type(IsTaskTemplate),
+#     engine: IsTaskRunnerEngine,
+#     registry: Optional[IsRunStateRegistry],
+# ) -> IsTask:
+#     task_template = task_template_cls(name, func)
+#     task_template_cls.job_creator.set_engine(engine)
+#     if registry:
+#         engine.set_registry(registry)
+#     return task_template.apply()
+
+
+def update_job_case_with_job(
+    job_case: JobCase,
+    job_type: JobType,
+    job_template_cls: Type[IsJobTemplate],
+    engine: Type[IsEngine],
+    engine_decorator: Optional[Callable[[IsEngine], IsEngine]],
+    registry: Optional[IsRunStateRegistry],
+):
+    if engine_decorator:
+        engine = engine_decorator(engine)
+
+    if job_type.value == JobType.task.value:
+        engine = cast(IsTaskRunnerEngine, engine)
+        job_case.job = convert_func_to_task(
+            job_case.name,
+            job_case.job_func,
+            job_template_cls,
+            engine,
+            registry,
+        )
+
+    return job_case
+
+
+async def run_job_test(job_case: JobCase):
+    result = job_case.run_and_assert_results_func(job_case.job)
     if result and isawaitable(result):
         await result
