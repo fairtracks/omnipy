@@ -5,11 +5,20 @@ from io import StringIO
 import logging
 import os
 from time import sleep
-from typing import Awaitable, Callable, List, Optional
+from typing import Awaitable, Callable, cast, List, Optional, Type
 
+from unifair.compute.job import JobConfig
 from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
-from unifair.engine.protocols import IsRunStateRegistry, IsTask, IsTaskRunnerEngine, IsTaskTemplate
+from unifair.engine.protocols import (IsEngine,
+                                      IsFlow,
+                                      IsJobTemplate,
+                                      IsRunStateRegistry,
+                                      IsTask,
+                                      IsTaskRunnerEngine,
+                                      IsTaskTemplate)
+
+from .classes import JobCase, JobType
 
 
 def read_log_lines_from_stream(str_stream: StringIO) -> List[str]:
@@ -29,8 +38,8 @@ def read_log_line_from_stream(str_stream: StringIO) -> str:
         return ''
 
 
-def extract_engine(task: IsTask):
-    engine = task.__class__.job_creator.engine
+def extract_engine(job: JobConfig):
+    engine = job.__class__.job_creator.engine
     if hasattr(engine, '_engine'):  # TaskRunnerStateChecker
         engine = engine._engine  # noqa
     return engine
