@@ -1,8 +1,5 @@
 from typing import Any
 
-from isajson_example import (cast_to_table_of_strings_and_lists,
-                             extract_all_nested_lists,
-                             transpose_dataset_of_dicts_to_lists)
 import requests
 
 from unifair import runtime
@@ -11,12 +8,19 @@ from unifair.compute.task import TaskTemplate
 from unifair.data.dataset import Dataset
 from unifair.data.model import Model
 from unifair.modules.json.models import JsonDataset, JsonDictOfAnyModel, JsonModel
-from unifair.modules.json.tasks import cast_dataset
+from unifair.modules.json.tasks import (cast_dataset,
+                                        split_all_nested_lists_from_dataset,
+                                        transpose_dataset_of_dicts_to_lists)
 from unifair.modules.json.util import serialize_to_tarpacked_json_files
 from unifair.modules.tables.models import JsonTableOfStrings
 
 runtime.config.engine = 'local'
 runtime.config.prefect.use_cached_results = False
+
+transpose_dataset_of_dicts_to_lists = transpose_dataset_of_dicts_to_lists.apply()
+cast_dataset_new = cast_dataset.refine(name="cast_dataset_copy").apply()
+cast_dataset = cast_dataset.apply()
+split_all_nested_lists_from_dataset = split_all_nested_lists_from_dataset.apply()
 
 
 @TaskTemplate
@@ -55,15 +59,14 @@ def import_uniprot():
 #     ...
 
 import_uniprot = import_uniprot.apply()
-uniprot_dataset = import_uniprot()
 
 # serialize_to_tarpacked_json_files('1_import_unipro', uniprot_dataset)
 
 uniprot_1_ds = import_uniprot()
 uniprot_2_ds = cast_dataset(uniprot_1_ds, cast_model=JsonDictOfAnyModel)
 uniprot_3_ds = transpose_dataset_of_dicts_to_lists(uniprot_2_ds)
-uniprot_4_ds = extract_all_nested_lists(uniprot_3_ds)
-uniprot_5_ds = cast_to_table_of_strings_and_lists(uniprot_4_ds)
+uniprot_4_ds = split_all_nested_lists_from_dataset(uniprot_3_ds)
+uniprot_5_ds = cast_dataset_new(uniprot_4_ds, cast_model=JsonTableOfStrings)
 
 # output
 serialize_to_tarpacked_json_files('1_uniprot_per_infile_ds', uniprot_1_ds)
