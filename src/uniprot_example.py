@@ -11,8 +11,9 @@ from unifair.modules.fairtracks.util import serialize_to_tarpacked_csv_files
 from unifair.modules.json.models import JsonDataset, JsonDictOfAnyModel, JsonModel
 from unifair.modules.json.tasks import (cast_dataset,
                                         split_all_nested_lists_from_dataset,
-                                        transpose_dataset_of_dicts_to_lists,)
+                                        transpose_dataset_of_dicts_to_lists)
 from unifair.modules.json.util import serialize_to_tarpacked_json_files
+from unifair.modules.pandas.models import PandasDataset
 from unifair.modules.tables.models import JsonTableOfStrings
 
 runtime.config.engine = 'local'
@@ -69,10 +70,59 @@ uniprot_3_ds = transpose_dataset_of_dicts_to_lists(uniprot_2_ds)
 uniprot_4_ds = split_all_nested_lists_from_dataset(uniprot_3_ds)
 uniprot_5_ds = cast_dataset_new(uniprot_4_ds, cast_model=JsonTableOfStrings)
 
+
+@TaskTemplate
+def to_pandas(dataset: Dataset[JsonTableOfStrings]) -> PandasDataset:
+    pandas = PandasDataset()
+    pandas.from_data(dataset.to_data())
+    return pandas
+
+
+uniprot_6_ds = to_pandas.apply()(uniprot_5_ds)
+
+
+@TaskTemplate
+def pandas_magic(pandas: PandasDataset) -> PandasDataset:
+    df = pandas['results.genes.synonyms']
+    print(df)
+    df['_unifair_ref'] = df['_unifair_ref'].str.strip('results.genes.')
+    out_dataset = PandasDataset()
+    out_dataset['my_table'] = df
+    return out_dataset
+
+
+# @TaskTemplate
+# def join_a_with_b(pandas_ds: PandasDataset,
+#                   table_a_name: str,
+#                   a_ref_column: str,
+#                   table_b_name: str,
+#                   b_id_column: str,
+#                   join_table_name: str) -> PandasDataset:
+#     ...
+#
+#
+# join_a_with_b(uniprot_6_ds,
+#               'results.genes.synonyms',
+#               '_unifair_ref',
+#               'results.genes',
+#               '_unifair_id',
+#               'merged_table')
+
+uniprot_7_ds = pandas_magic.apply()(uniprot_6_ds)
+
 # output
 serialize_to_tarpacked_json_files('1_uniprot_per_infile_ds', uniprot_1_ds)
 serialize_to_tarpacked_json_files('2_uniprot_per_infile_dict_ds', uniprot_2_ds)
 serialize_to_tarpacked_json_files('3_uniprot_nested_list_ds', uniprot_3_ds)
 serialize_to_tarpacked_json_files('4_uniprot_unnested_list_ds', uniprot_4_ds)
 serialize_to_tarpacked_json_files('5_uniprot_tabular_json', uniprot_5_ds)
-serialize_to_tarpacked_csv_files('6_uniprot_tabular', uniprot_5_ds)
+serialize_to_tarpacked_csv_files('6_uniprot_tabular_csv', uniprot_5_ds)
+
+serialize_to_tarpacked_csv_files('7_output_csv', uniprot_7_ds)
+# results
+#     uniProtkbId
+#     primaryAccession
+# results.keywords
+#     name
+# results.gene.synonyms
+#     value
