@@ -7,10 +7,11 @@ from unifair.compute.flow import FuncFlowTemplate
 from unifair.compute.task import TaskTemplate
 from unifair.data.dataset import Dataset
 from unifair.data.model import Model
+from unifair.modules.fairtracks.util import serialize_to_tarpacked_csv_files
 from unifair.modules.json.models import JsonDataset, JsonDictOfAnyModel, JsonModel
 from unifair.modules.json.tasks import (cast_dataset,
                                         split_all_nested_lists_from_dataset,
-                                        transpose_dataset_of_dicts_to_lists)
+                                        transpose_dataset_of_dicts_to_lists,)
 from unifair.modules.json.util import serialize_to_tarpacked_json_files
 from unifair.modules.tables.models import JsonTableOfStrings
 
@@ -74,3 +75,4 @@ serialize_to_tarpacked_json_files('2_uniprot_per_infile_dict_ds', uniprot_2_ds)
 serialize_to_tarpacked_json_files('3_uniprot_nested_list_ds', uniprot_3_ds)
 serialize_to_tarpacked_json_files('4_uniprot_unnested_list_ds', uniprot_4_ds)
 serialize_to_tarpacked_json_files('5_uniprot_tabular_json', uniprot_5_ds)
+serialize_to_tarpacked_csv_files('6_uniprot_tabular', uniprot_5_ds)
