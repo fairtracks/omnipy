@@ -9,20 +9,6 @@ from unifair.data.model import Model
 
 
 @TaskTemplate
-def import_directory(directory: str,
-                     suffix: str = '.json',
-                     model: Model = Model[str]) -> Dataset[Model]:
-    dataset = Dataset[model]()
-    for import_filename in os.listdir(directory):
-        if import_filename.endswith(suffix):
-            with open(os.path.join(directory, import_filename)) as open_file:
-                dataset_name = '_'.join(import_filename.split('.')[:-1])
-                print(f"{import_filename} -> Dataset['{dataset_name}']")
-                dataset[dataset_name] = open_file.read()
-    return dataset
-
-
-@TaskTemplate
 def modify_datafile_contents(
     dataset: Dataset[Model[str]],
     modify_contents_func: Callable[[str], str],

@@ -3,16 +3,16 @@ import os
 
 from unifair import ROOT_DIR
 from unifair.data.dataset import Dataset
+from unifair.data.model import Model
 
-from .serializers import JsonDatasetToTarFileSerializer
+from .serializers import RawDatasetToTarFileSerializer
 
 
-def serialize_to_tarpacked_json_files(dataset_name: str, dataset: Dataset) -> None:
+def serialize_to_tarpacked_raw_files(dataset_name: str, dataset: Dataset[Model[str]]) -> None:
     """
     Serializing is not fully implemented, so here is a helper method to write a dataset to a
     dataset_name.tar.gz file with a set of csv files, one for each data item (endpoint/table)
     """
-
     data_dir = os.path.join(ROOT_DIR,
                             '..',
                             '..',
@@ -24,8 +24,8 @@ def serialize_to_tarpacked_json_files(dataset_name: str, dataset: Dataset) -> No
 
     file_path = os.path.join(data_dir, dataset_name + '.tar.gz')
 
-    print('Writing dataset as a gzipped tarpack of JSON files to "{}"'.format(
+    print('Writing dataset as a gzipped tarpack of raw files to "{}"'.format(
         os.path.abspath(file_path)))
-    serializer = JsonDatasetToTarFileSerializer()
+    serializer = RawDatasetToTarFileSerializer()
     with open(file_path, 'wb') as tarfile:
         tarfile.write(serializer.serialize(dataset))
