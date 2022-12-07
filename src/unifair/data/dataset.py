@@ -198,16 +198,15 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     # def __reduce__(self):
     #     return self.__class__.create_from_json, (self.to_json(),)
 
-    def from_json(self, data: str, update: bool = True) -> None:
+    # TODO: Update to_json similarly and fix tests
+
+    def from_json(self, data: Dict[str, str], update: bool = True) -> None:
         if not update:
             self.clear()
 
-        raw_parsed_json = json.loads(data)
-        assert type(raw_parsed_json) == dict
-
-        for obj_type, obj_val in raw_parsed_json.items():
-            new_model = self._get_model_class()()  # noqa
-            new_model.from_json(json.dumps(obj_val))
+        for obj_type, obj_val in data.items():
+            new_model = self.get_model_class()()  # noqa
+            new_model.from_json(obj_val)
             self[obj_type] = new_model
 
     @classmethod
