@@ -15,12 +15,7 @@ from unifair.modules.raw.tasks import modify_all_lines, modify_datafile_contents
 from unifair.modules.raw.util import serialize_to_tarpacked_raw_files
 from unifair.modules.tables.models import JsonTableOfStrings
 
-# Constants
-
-GFF_COLS = ['seqid', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
-ATTRIB_COL = GFF_COLS[-1]
-
-# Functions
+# TaskTemplates
 
 
 def slice_lines(all_lines: List[str],
@@ -29,8 +24,10 @@ def slice_lines(all_lines: List[str],
     return all_lines[start:end]
 
 
-def attrib_df_names(dataset: Dataset[Model[object]]) -> List[str]:
-    return [name for name in dataset.keys() if name.endswith(ATTRIB_COL)]
+slice_lines = modify_all_lines.refine(
+    name='slice_lines',
+    fixed_params=dict(modify_all_lines_func=slice_lines),
+)
 
 
 def transform_attr_line_to_json(_line_no: int, line: str) -> str:
@@ -38,13 +35,6 @@ def transform_attr_line_to_json(_line_no: int, line: str) -> str:
     json_obj_items = [f'"{key}": "{val}"' for key, val in items]
     return f'{{{", ".join(json_obj_items)}}},' + os.linesep
 
-
-# TaskTemplates
-
-slice_lines = modify_all_lines.refine(
-    name='slice_lines',
-    fixed_params=dict(modify_all_lines_func=slice_lines),
-)
 
 transform_all_lines_to_json = modify_each_line.refine(
     name='transform_all_lines_to_json',
@@ -55,6 +45,18 @@ transform_datafile_start_and_end_to_json = modify_datafile_contents.refine(
     name='transform_datafile_start_and_end_to_json',
     fixed_params=dict(modify_contents_func=lambda x: f'[{x[:-2]}]'),
 )  # Brackets + strip comma and newline from end
+
+# Constants
+
+GFF_COLS = ['seqid', 'source', 'type', 'start', 'end', 'score', 'strand', 'phase', 'attributes']
+ATTRIB_COL = GFF_COLS[-1]
+
+# Functions
+
+
+def attrib_df_names(dataset: Dataset[Model[object]]) -> List[str]:
+    return [name for name in dataset.keys() if name.endswith(ATTRIB_COL)]
+
 
 # Flow
 
