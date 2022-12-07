@@ -80,7 +80,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if value != Undefined:
             input_data[DATA_KEY] = value
 
-        if self._get_model_class() == ModelT:
+        if self.get_model_class() == ModelT:
             self._raise_no_model_exception()
 
         GenericModel.__init__(self, **input_data)
@@ -88,8 +88,12 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if not self.__doc__:
             self._set_standard_field_description()
 
-    def _get_model_class(self) -> Model:
+    # TODO: Add test for get_model_class
+
+    def get_model_class(self) -> Model:
         return self.__fields__.get(DATA_KEY).type_
+
+    # TODO: Update _raise_no_model_exception() text. Model is now a requirement
 
     @staticmethod
     def _raise_no_model_exception() -> None:
@@ -165,7 +169,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             self.clear()
 
         for obj_type, obj_val in data.items():
-            new_model = self._get_model_class()()  # noqa
+            new_model = self.get_model_class()()  # noqa
             new_model.from_data(obj_val)
             self[obj_type] = new_model
 
@@ -252,7 +256,7 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
         if obj_type in self._custom_field_models:
             return self._custom_field_models[obj_type]
         else:
-            return self._get_model_class()
+            return self.get_model_class()
 
     def _validate(self, obj_type: str) -> None:
         if obj_type in self._custom_field_models:
