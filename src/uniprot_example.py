@@ -78,7 +78,6 @@ uniprot_6_ds = to_pandas.run(uniprot_5_ds)
 @TaskTemplate
 def pandas_magic(pandas: PandasDataset) -> PandasDataset:
     df = pandas['results.genes.synonyms']
-    print(df)
     df['_unifair_ref'] = df['_unifair_ref'].str.strip('results.genes.')
     out_dataset = PandasDataset()
     out_dataset['my_table'] = df

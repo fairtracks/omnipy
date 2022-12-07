@@ -18,11 +18,9 @@ class JobCreator:
         self._engine = engine
 
     def __enter__(self):
-        print('__enter__')
         self._nested_context_level += 1
 
     def __exit__(self, exc_type, exc_value, traceback):
-        print('__exit__')
         self._nested_context_level -= 1
 
     @property
