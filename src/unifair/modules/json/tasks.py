@@ -194,9 +194,9 @@ def transpose_dataset_of_dicts_to_lists(dataset: Dataset[JsonDictOfAnyModel],
             if not isinstance(val, list):
                 val = [val]
 
-            for item in val:
+            for item_index, item in enumerate(val):
                 if isinstance(item, dict):
-                    data = {id_key: name}
+                    data = {id_key: f'{name}_{item_index}'}
                     assert id_key not in item
                     data.update(item)
                 else:
