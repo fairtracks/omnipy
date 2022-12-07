@@ -104,11 +104,13 @@ def get_ref_value(data_file_title, ident):
     return f'{data_file_title}.{ident}'
 
 
-def add_reference_to_parent_from_child(child: JsonListOfDictOfAnyModel,
-                                       parent_title: str,
-                                       ident: str,
-                                       ref_key: str,
-                                       default_key: str):
+def add_reference_to_parent_from_child(
+    child: JsonListOfDictOfAnyModel,
+    parent_title: str,
+    ident: str,
+    ref_key: str,
+    default_key: str,
+):
     ref_value = get_ref_value(parent_title, ident)
     for i, new_nested_record in enumerate(child):
         if not isinstance(new_nested_record, dict):
@@ -118,11 +120,13 @@ def add_reference_to_parent_from_child(child: JsonListOfDictOfAnyModel,
             new_nested_record, key=ref_key, default_value=ref_value, fail_if_present=True)
 
 
-def ensure_item_first_in_nested_record(nested_record,
-                                       key,
-                                       default_value,
-                                       update=True,
-                                       fail_if_present=False):
+def ensure_item_first_in_nested_record(
+    nested_record,
+    key,
+    default_value,
+    update=True,
+    fail_if_present=False,
+):
     value = default_value
 
     if key in nested_record:
@@ -149,12 +153,14 @@ def split_outer_lists_from_dataset_as_new_data_files(
             data_files_without_nested_lists[data_file_title] = []
 
         for record_id, nested_record in enumerate(data_file):
-            new_data_files = flatten_outer_level_of_nested_record(nested_record,
-                                                                  str(record_id),
-                                                                  data_file_title,
-                                                                  id_key,
-                                                                  ref_key,
-                                                                  default_key)
+            new_data_files = flatten_outer_level_of_nested_record(
+                nested_record,
+                str(record_id),
+                data_file_title,
+                id_key,
+                ref_key,
+                default_key,
+            )
 
             for new_data_file_title, new_data_file in new_data_files.items():
                 data_files_maybe_with_nested_lists[new_data_file_title] += new_data_file
@@ -169,16 +175,19 @@ def split_outer_lists_from_dataset_as_new_data_files(
 
 
 @TaskTemplate(fixed_params=dict(id_key=ID_KEY, ref_key=REF_KEY, default_key=DEFAULT_KEY))
-def split_all_nested_lists_from_dataset(dataset: Dataset[JsonListOfDictOfAnyModel],
-                                        id_key: str,
-                                        ref_key: str,
-                                        default_key: str) -> Dataset[JsonListOfNestedDictsModel]:
+def split_all_nested_lists_from_dataset(
+    dataset: Dataset[JsonListOfDictOfAnyModel],
+    id_key: str,
+    ref_key: str,
+    default_key: str,
+) -> Dataset[JsonListOfNestedDictsModel]:
     data_files_maybe_with_nested_lists_ds = dataset
     all_data_files_without_nested_lists_ds = Dataset[JsonListOfNestedDictsModel]()
 
     while len(data_files_maybe_with_nested_lists_ds) > 0:
         data_files_without_nested_lists_ds, data_files_maybe_with_nested_lists_ds = \
-            split_outer_lists_from_dataset_as_new_data_files(data_files_maybe_with_nested_lists_ds, id_key, ref_key, default_key)
+            split_outer_lists_from_dataset_as_new_data_files(
+                data_files_maybe_with_nested_lists_ds, id_key, ref_key, default_key)
         all_data_files_without_nested_lists_ds.update(data_files_without_nested_lists_ds)
 
     return all_data_files_without_nested_lists_ds
