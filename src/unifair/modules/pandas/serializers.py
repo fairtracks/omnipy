@@ -5,6 +5,8 @@ import pandas as pd
 
 from unifair.data.serializer import create_dataset_from_tarfile, create_tarfile_from_dataset
 
+from ...data.dataset import Dataset
+from ...data.model import Model
 from .models import PandasDataset
 
 
@@ -13,7 +15,7 @@ class PandasDatasetToTarFileSerializer:
     def serialize(pandas_dataset: PandasDataset) -> Union[bytes, memoryview]:
         def pandas_encode_func(pandas_data: pd.DataFrame) -> memoryview:
             csv_bytes = BytesIO()
-            pandas_data.to_csv(csv_bytes, encoding='utf8', mode='b')
+            pandas_data.to_csv(csv_bytes, encoding='utf8', mode='b', index=False)
             return csv_bytes.getbuffer()
 
         return create_tarfile_from_dataset(
@@ -24,7 +26,7 @@ class PandasDatasetToTarFileSerializer:
         pandas_dataset = PandasDataset()
 
         def csv_decode_func(file_stream: IO[bytes]) -> pd.DataFrame:
-            return pd.read_csv(file_stream, index_col=0, encoding='utf8')
+            return pd.read_csv(file_stream, encoding='utf8')
 
         def python_dictify_object(obj_type: str, obj_val: Any) -> Dict:
             return {obj_type: obj_val}
