@@ -2,7 +2,7 @@ from collections import defaultdict
 from copy import copy
 from functools import lru_cache
 import os
-from typing import Callable, cast, Dict, Tuple, TypeVar
+from typing import Callable, cast, Dict, Optional, Tuple, TypeVar
 
 import jq
 
@@ -22,16 +22,17 @@ DEFAULT_KEY = '__root__'
 
 @TaskTemplate
 def import_directory(directory: str) -> JsonDataset:
-    dataset = JsonDataset()
+    raw_dataset = Dataset[Model[str]]()
     for import_filename in os.listdir(directory):
         print(import_filename)
         if import_filename.endswith('.json'):
             with open(os.path.join(directory, import_filename)) as open_file:
                 dataset_name = import_filename.split('.')[0]
                 print(dataset_name)
-                model = JsonDataset()
-                model.from_json(open_file.read())
-                dataset[dataset_name] = model.to_data()
+                raw_dataset[dataset_name] = open_file.read()
+
+    dataset = JsonDataset()
+    dataset.from_json(raw_dataset.to_data())
     return dataset
 
 
@@ -175,7 +176,7 @@ def split_outer_lists_from_dataset_as_new_data_files(
 
 
 @TaskTemplate(fixed_params=dict(id_key=ID_KEY, ref_key=REF_KEY, default_key=DEFAULT_KEY))
-def split_all_nested_lists_from_dataset(
+def flatten_nested_json_to_list_of_dicts(
     dataset: Dataset[JsonListOfDictOfAnyModel],
     id_key: str,
     ref_key: str,
