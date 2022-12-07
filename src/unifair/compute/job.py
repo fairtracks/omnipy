@@ -128,6 +128,11 @@ class JobTemplate(JobConfig, metaclass=JobTemplateMeta):
     def create(cls, *init_args: object, **init_kwargs: object) -> JobTemplate:
         return cls(*init_args, **init_kwargs)
 
+    # TODO: Add test for run()
+
+    def run(self, *args: object, **kwargs: object):
+        return self.apply()(*args, **kwargs)
+
     def apply(self) -> Job:
         job_cls = self._get_job_subcls_for_apply()
         job = job_cls.create(*self._get_init_args(), **self._get_init_kwargs())
