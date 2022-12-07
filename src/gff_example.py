@@ -1,7 +1,6 @@
 from io import StringIO
 import os
-from types import NoneType
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple
 
 from unifair.compute.task import TaskTemplate
 from unifair.data.dataset import Dataset
@@ -11,21 +10,11 @@ from unifair.modules.fairtracks.util import (serialize_to_tarpacked_csv_files,
 from unifair.modules.json.util import serialize_to_tarpacked_json_files
 from unifair.modules.pandas import pd
 from unifair.modules.pandas.models import PandasDataset
+from unifair.modules.raw.tasks import (import_directory,
+                                       modify_all_lines,
+                                       modify_datafile_contents,
+                                       modify_each_line)
 from unifair.modules.tables.models import JsonTableOfStrings
-
-
-@TaskTemplate
-def import_directory(directory: str,
-                     suffix: str = '.json',
-                     model: Model = Model[str]) -> Dataset[Model]:
-    dataset = Dataset[model]()
-    for import_filename in os.listdir(directory):
-        if import_filename.endswith(suffix):
-            with open(os.path.join(directory, import_filename)) as open_file:
-                dataset_name = '_'.join(import_filename.split('.')[:-1])
-                print(f"{import_filename} -> Dataset['{dataset_name}']")
-                dataset[dataset_name] = open_file.read()
-    return dataset
 
 
 @TaskTemplate
@@ -66,49 +55,6 @@ def to_csv(
             encoding='utf8',
             index=False)
         out_dataset[key] = csv_stream.getvalue()
-    return out_dataset
-
-
-@TaskTemplate
-def modify_datafile_contents(
-    dataset: Dataset[Model[str]],
-    modify_contents_func: Callable[[str], str],
-    **kwargs: object,
-) -> Dataset[Model[str]]:
-    out_dataset = Dataset[Model[str]]()
-    for name, datafile in dataset.items():
-        out_dataset[name] = modify_contents_func(datafile, **kwargs)
-    return out_dataset
-
-
-@TaskTemplate
-def modify_each_line(
-    dataset: Dataset[Model[str]],
-    modify_line_func: Callable[[int, str], Union[NoneType, str]],
-    **kwargs: object,
-) -> Dataset[Model[str]]:
-    out_dataset = Dataset[Model[str]]()
-    for name, datafile in dataset.items():
-        output_data = StringIO()
-        for i, line in enumerate(StringIO(datafile)):
-            modified_line = modify_line_func(i, line, **kwargs)
-            if modified_line is not None:
-                output_data.write(modified_line)
-        out_dataset[name] = output_data.getvalue()
-    return out_dataset
-
-
-@TaskTemplate
-def modify_all_lines(
-    dataset: Dataset[Model[str]],
-    modify_all_lines_func: Callable[[int, List[str]], List[str]],
-    **kwargs: object,
-) -> Dataset[Model[str]]:
-    out_dataset = Dataset[Model[str]]()
-    for name, datafile in dataset.items():
-        all_lines = [line for line in StringIO(datafile)]
-        modified_lines = modify_all_lines_func(all_lines, **kwargs)
-        out_dataset[name] = os.linesep.join(modified_lines)
     return out_dataset
 
 
