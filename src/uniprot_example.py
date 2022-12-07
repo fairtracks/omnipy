@@ -10,7 +10,7 @@ from unifair.data.model import Model
 from unifair.modules.fairtracks.util import serialize_to_tarpacked_csv_files
 from unifair.modules.json.models import JsonDataset, JsonDictOfAnyModel, JsonModel
 from unifair.modules.json.tasks import (cast_dataset,
-                                        split_all_nested_lists_from_dataset,
+                                        flatten_nested_json_to_list_of_dicts,
                                         transpose_dataset_of_dicts_to_lists)
 from unifair.modules.json.util import serialize_to_tarpacked_json_files
 from unifair.modules.pandas.models import PandasDataset
@@ -18,11 +18,6 @@ from unifair.modules.tables.models import JsonTableOfStrings
 
 runtime.config.engine = 'local'
 runtime.config.prefect.use_cached_results = False
-
-transpose_dataset_of_dicts_to_lists = transpose_dataset_of_dicts_to_lists.apply()
-cast_dataset_new = cast_dataset.refine(name="cast_dataset_copy").apply()
-cast_dataset = cast_dataset.apply()
-split_all_nested_lists_from_dataset = split_all_nested_lists_from_dataset.apply()
 
 
 @TaskTemplate
@@ -60,15 +55,14 @@ def import_uniprot():
 # def uniprot() -> Dataset[JsonTableOfStrings]:
 #     ...
 
-import_uniprot = import_uniprot.apply()
-
 # serialize_to_tarpacked_json_files('1_import_unipro', uniprot_dataset)
 
-uniprot_1_ds = import_uniprot()
-uniprot_2_ds = cast_dataset(uniprot_1_ds, cast_model=JsonDictOfAnyModel)
-uniprot_3_ds = transpose_dataset_of_dicts_to_lists(uniprot_2_ds)
-uniprot_4_ds = split_all_nested_lists_from_dataset(uniprot_3_ds)
-uniprot_5_ds = cast_dataset_new(uniprot_4_ds, cast_model=JsonTableOfStrings)
+uniprot_1_ds = import_uniprot.run()
+uniprot_2_ds = cast_dataset.run(uniprot_1_ds, cast_model=JsonDictOfAnyModel)
+uniprot_3_ds = transpose_dataset_of_dicts_to_lists.run(uniprot_2_ds)
+uniprot_4_ds = flatten_nested_json_to_list_of_dicts.run(uniprot_3_ds)
+uniprot_5_ds = cast_dataset.refine(name="cast_dataset_copy").run(
+    uniprot_4_ds, cast_model=JsonTableOfStrings)
 
 
 @TaskTemplate
@@ -78,7 +72,7 @@ def to_pandas(dataset: Dataset[JsonTableOfStrings]) -> PandasDataset:
     return pandas
 
 
-uniprot_6_ds = to_pandas.apply()(uniprot_5_ds)
+uniprot_6_ds = to_pandas.run(uniprot_5_ds)
 
 
 @TaskTemplate
@@ -108,7 +102,7 @@ def pandas_magic(pandas: PandasDataset) -> PandasDataset:
 #               '_unifair_id',
 #               'merged_table')
 
-uniprot_7_ds = pandas_magic.apply()(uniprot_6_ds)
+uniprot_7_ds = pandas_magic.run(uniprot_6_ds)
 
 # output
 serialize_to_tarpacked_json_files('1_uniprot_per_infile_ds', uniprot_1_ds)
