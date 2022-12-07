@@ -1,6 +1,6 @@
 from unifair import runtime
 from unifair.modules.fairtracks.tasks import import_dataset_from_encode
-from unifair.modules.fairtracks.util import \
+from unifair.modules.pandas.util import \
     serialize_to_tarpacked_csv_files as u_serialize_to_tarpacked_csv_files
 from unifair.modules.tables.tasks import convert_to_1nf, remove_columns
 

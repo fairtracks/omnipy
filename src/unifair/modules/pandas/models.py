@@ -1,9 +1,9 @@
-from typing import Any, Dict, Iterable
-
-import pandas as pd
+from typing import Any, Dict, Iterable, List
 
 from unifair.data.dataset import Dataset
 from unifair.data.model import Model, ROOT_KEY
+
+from . import pd
 
 
 class PandasModel(Model[pd.DataFrame]):
@@ -44,3 +44,10 @@ class PandasModel(Model[pd.DataFrame]):
 
 class PandasDataset(Dataset[PandasModel]):
     ...
+
+
+class ListOfPandasDatasetsWithSameNumberOfFiles(Model[List[PandasDataset]]):
+    @classmethod
+    def _parse_data(cls, dataset_list: List[PandasDataset]) -> Any:
+        assert len(dataset_list) >= 2
+        assert all(len(dataset) for dataset in dataset_list)

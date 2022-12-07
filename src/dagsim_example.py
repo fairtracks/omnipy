@@ -1,10 +1,11 @@
 from unifair.compute.task import TaskTemplate
 from unifair.data.dataset import Dataset
 from unifair.data.model import Model
-from unifair.modules.fairtracks.util import serialize_to_tarpacked_raw_files
+from unifair.modules.general.tasks import import_directory
 from unifair.modules.json.models import JsonDataset, JsonDict, JsonType
 from unifair.modules.json.util import serialize_to_tarpacked_json_files
-from unifair.modules.raw.tasks import import_directory, modify_datafile_contents
+from unifair.modules.raw.tasks import modify_datafile_contents
+from unifair.modules.raw.util import serialize_to_tarpacked_raw_files
 
 # from unifair.modules.r_stat import r
 
