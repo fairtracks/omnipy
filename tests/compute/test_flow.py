@@ -77,6 +77,42 @@ def test_flow_run(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
 #       - dag_flow.tasks (should be a tuple, not a list, for immutability)
 
 
+def test_dag_flow_ignore_non_matched_returns(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate
+    def task_tmpl() -> int:
+        return 42
+
+    @TaskTemplate
+    def double_tmpl(number: int) -> int:
+        return number * 2
+
+    @DagFlowTemplate(task_tmpl.refine(result_key='number'), task_tmpl, double_tmpl)
+    def dag_flow_tmpl() -> int:
+        ...
+
+    dag_flow = dag_flow_tmpl.apply()
+    assert dag_flow() == 84
+
+
+def test_fail_dynamic_dag_flow_by_returned_dict(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate
+    def task_tmpl() -> Dict[str, int]:
+        return {'number': 42}
+
+    @TaskTemplate
+    def double_tmpl(number: int) -> int:
+        return number * 2
+
+    @DagFlowTemplate(task_tmpl, double_tmpl)
+    def dag_flow_tmpl() -> int:
+        ...
+
+    dag_flow = dag_flow_tmpl.apply()
+    assert dag_flow() == 84
+
+
 def test_func_flow_context(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
     @TaskTemplate
     def task_tmpl() -> int:

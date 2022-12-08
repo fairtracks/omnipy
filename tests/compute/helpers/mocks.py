@@ -7,6 +7,7 @@ from unifair.engine.protocols import (IsDagFlow,
                                       IsFuncFlow,
                                       IsRunStateRegistry,
                                       IsTask)
+from unifair.engine.task_runner import DagFlowRunnerEngine
 from unifair.util.callable_decorator_cls import callable_decorator_cls
 
 
@@ -210,31 +211,10 @@ class MockLocalRunner:
             return result
 
         setattr(task, '_call_func', _call_func)
-
         return task
 
-    def dag_flow_decorator(self, flow: IsDagFlow) -> IsDagFlow:
-        def _call_func(*args: Any, **kwargs: Any) -> Any:
-            tasks = flow.tasks
-
-            results = {}
-            result = None
-            for i, task in enumerate(tasks):
-                if i == 0:
-                    results = flow.get_call_args(*args, **kwargs)
-
-                result = task(**results)
-                if isinstance(result, dict) and len(result) > 0:
-                    results.update(result)
-                else:
-                    results[task.name] = result
-
-            if results:
-                self.finished = True
-                return result
-
-        setattr(flow, '_call_func', _call_func)
-
+    def dag_flow_decorator(self, flow: IsDagFlow) -> IsDagFlow:  # noqa
+        setattr(flow, '_call_func', DagFlowRunnerEngine.default_dag_flow_run_decorator(flow))
         return flow
 
     def func_flow_decorator(self, flow: IsFuncFlow) -> IsFuncFlow:
@@ -248,5 +228,4 @@ class MockLocalRunner:
             return result
 
         setattr(flow, '_call_func', _call_func)
-
         return flow
