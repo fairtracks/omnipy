@@ -1,4 +1,3 @@
-import inspect
 from typing import Annotated, Callable
 
 import pytest
@@ -83,9 +82,10 @@ def test_fail_task_template_decorator_with_func_argument() -> None:
     prefix='case_task_',
     has_tag='plain',
 )
-def test_fail_job_tmpl_decorator_with_func_argument(mock_local_runner: Annotated[MockLocalRunner,
-                                                                                 pytest.fixture],
-                                                    plus_one_template) -> None:
+def test_fail_func_flow_template_decorator_with_func_argument(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    plus_one_template,
+) -> None:
     with pytest.raises(TypeError):
 
         def myfunc(a: Callable) -> Callable:
