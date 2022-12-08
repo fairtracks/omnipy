@@ -5,6 +5,10 @@ from functools import update_wrapper
 from types import MappingProxyType
 from typing import Any, Dict, Generic, Hashable, Mapping, Optional, Tuple, Type, TypeVar, Union
 
+from inflection import underscore
+from prefect.utilities.names import generate_slug
+from slugify import slugify
+
 from unifair.engine.protocols import IsJobCreator, IsTaskRunnerEngine
 from unifair.util.helpers import create_merged_dict
 
@@ -63,6 +67,8 @@ class JobConfig(metaclass=JobConfigMeta):
         if self._name is not None:
             self._check_not_empty_string('name', self.name)
 
+        self._unique_name = None
+
     @staticmethod
     def _check_not_empty_string(param_name: str, param: str) -> None:
         if len(param) == 0:
@@ -100,6 +106,10 @@ class JobConfig(metaclass=JobConfigMeta):
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def unique_name(self) -> str:
+        return self._unique_name
 
     def __eq__(self, other: object):
         if not isinstance(other, JobConfig):
@@ -170,6 +180,15 @@ class CallableDecoratingJobTemplateMixin(Generic[JobTemplateT]):
 
 
 class Job(JobConfig):
+    def _generate_unique_name(self):
+        if self._name is None:
+            return None
+        class_name_snake_case = underscore(self.__class__.__name__)
+        self._unique_name = slugify(f'{class_name_snake_case}-{self._name}-{generate_slug(2)}')
+
+    def regenerate_unique_name(self) -> None:
+        self._generate_unique_name()
+
     @property
     def flow_context(self) -> IsJobCreator:
         return self.__class__.job_creator
@@ -193,6 +212,7 @@ class Job(JobConfig):
         job_obj = object.__new__(cls)
         job_config_cls = cls._get_job_config_subcls_for_init()
         job_config_cls.__init__(job_obj, *init_args, **init_kwargs)
+        job_obj._generate_unique_name()
         return job_obj
 
     def revise(self) -> JobTemplate:

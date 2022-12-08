@@ -140,10 +140,12 @@ def test_property_name_default_mock() -> None:
     JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
 
     job_tmpl = JobTemplate()
-    assert job_tmpl.name is None
 
-    with pytest.raises(AttributeError):
-        job_tmpl.name = 'cool_name'  # noqa
+    for job in job_tmpl, job_tmpl.apply():
+        assert job.name is None
+
+        with pytest.raises(AttributeError):
+            job.name = 'cool_name'  # noqa
 
 
 def test_property_name_change_mock() -> None:
@@ -168,6 +170,41 @@ def test_property_name_validation_mock() -> None:
 
     with pytest.raises(TypeError):
         JobTemplate(name=123)  # noqa
+
+
+def test_property_unique_name_default_mock() -> None:
+    JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
+
+    job_tmpl = JobTemplate()
+    assert job_tmpl.unique_name is None
+
+    with pytest.raises(AttributeError):
+        job_tmpl.unique_name = 'cool_name'  # noqa
+
+
+def test_property_unique_name_change_mock() -> None:
+    JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
+
+    job_tmpl = JobTemplate(name='my_job')
+    assert job_tmpl.unique_name is None
+
+    job = job_tmpl.apply()
+    assert job_tmpl.unique_name is None
+
+    assert job.unique_name.startswith('mock-job-subclass-my-job-')
+    assert job.unique_name != job.name
+
+    with pytest.raises(AttributeError):
+        job.unique_name = 'mock-job-subclass-my-job-crouching-dolphin'  # noqa
+
+    prev_unique_name = job.unique_name
+    job.regenerate_unique_name()
+    assert job.unique_name != prev_unique_name
+    assert job.unique_name.startswith('mock-job-subclass-my-job-')
+    assert job.unique_name != job.name
+
+    new_job_tmpl = job.revise()
+    assert new_job_tmpl.unique_name is None
 
 
 # def test_property_name_job() -> None:
