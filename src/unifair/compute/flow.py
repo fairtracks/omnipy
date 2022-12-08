@@ -147,7 +147,7 @@ class FuncFlowTemplate(CallableDecoratingJobTemplateMixin['FuncFlowTemplate'],
         if self.engine is not None and isinstance(self.engine, IsFuncFlowRunnerEngine):
             return self.engine.func_flow_decorator(flow)  # noqa  # Pycharm type checker bug
         else:
-            raise RuntimeError(f'Engine "{self.engine}" does not support DAG flows')
+            raise RuntimeError(f'Engine "{self.engine}" does not support function flows')
 
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type[Job]:

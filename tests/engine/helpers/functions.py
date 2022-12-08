@@ -109,7 +109,7 @@ def add_logger_to_registry(registry: IsRunStateRegistry) -> IsRunStateRegistry:
     return registry
 
 
-def convert_func_to_task(
+def create_task_with_func(
     name: str,
     func: Callable,
     task_template_cls: type(IsTaskTemplate),
@@ -126,7 +126,7 @@ def convert_func_to_task(
     return task_template.apply()
 
 
-def convert_func_to_dag_flow(
+def create_dag_flow_with_two_func_tasks(
     name: str,
     func: Callable,
     task_template_cls: type(IsTaskTemplate),
@@ -159,7 +159,7 @@ def update_job_case_with_job(
 
     job_case.job_type = job_type
     if job_type.value == JobType.task.value:
-        job_case.job = convert_func_to_task(
+        job_case.job = create_task_with_func(
             job_case.name,
             job_case.job_func,
             task_template_cls,
@@ -168,7 +168,7 @@ def update_job_case_with_job(
         )
     elif job_type.value == JobType.dag_flow.value:
         engine = cast(IsDagFlowRunnerEngine, engine)
-        job_case.job = convert_func_to_dag_flow(
+        job_case.job = create_dag_flow_with_two_func_tasks(
             job_case.name,
             job_case.job_func,
             task_template_cls,
