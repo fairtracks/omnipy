@@ -94,6 +94,7 @@ class IsJobCreator(Protocol):
 
 class IsJob(Protocol):
     name: str
+    unique_name: str
     flow_context: IsJobCreator
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
@@ -102,8 +103,12 @@ class IsJob(Protocol):
     def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         ...
 
+    def regenerate_unique_name(self) -> None:
+        ...
+
 
 class IsJobTemplate(Protocol):
+    job_creator: IsJobCreator
     in_flow_context: bool
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
@@ -187,16 +192,16 @@ class IsRunStateRegistry(Protocol):
     def __init__(self) -> None:
         ...
 
-    def get_task_state(self, task: IsTask) -> RunState:
+    def get_job_state(self, job: IsJob) -> RunState:
         ...
 
-    def get_task_state_datetime(self, task: IsTask, state: RunState) -> datetime:
+    def get_job_state_datetime(self, job: IsJob, state: RunState) -> datetime:
         ...
 
-    def all_tasks(self, state: Optional[RunState] = None) -> Tuple[IsTask, ...]:  # noqa
+    def all_jobs(self, state: Optional[RunState] = None) -> Tuple[IsJob, ...]:  # noqa
         ...
 
-    def set_task_state(self, task: IsTask, state: RunState) -> None:
+    def set_job_state(self, job: IsJob, state: RunState) -> None:
         ...
 
     def set_logger(self, logger: Optional[logging.Logger]) -> None:

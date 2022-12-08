@@ -12,13 +12,13 @@ from unifair.engine.constants import RunState
 from unifair.engine.protocols import IsJob
 
 from ..helpers.classes import JobCase
-from ..helpers.functions import (assert_task_state,
-                                 async_wait_for_task_state,
+from ..helpers.functions import (assert_job_state,
+                                 async_wait_for_job_state,
                                  check_engine_cls,
                                  get_async_assert_results_wait_a_bit_func,
                                  get_sync_assert_results_wait_a_bit_func,
                                  resolve,
-                                 sync_wait_for_task_state)
+                                 sync_wait_for_job_state)
 from .raw.functions import (async_range,
                             async_wait_a_bit,
                             async_wait_for_send_twice,
@@ -44,7 +44,7 @@ AsyncRunTaskAndAssertType = Callable[[IsJob], Awaitable[None]]
 def case_sync_power_args() -> JobCase[[int, int], int]:
     def run_and_assert_results(job: IsJob) -> None:
         assert job(4, 2) == 16
-        assert_task_state(job, [RunState.FINISHED])
+        assert_job_state(job, [RunState.FINISHED])
 
     return JobCase[[int, int], int]('power', sync_power, run_and_assert_results)
 
@@ -56,7 +56,7 @@ def case_sync_power_args() -> JobCase[[int, int], int]:
 def case_sync_power_kwargs() -> JobCase[[int, int], int]:
     def run_and_assert_results(job: IsJob) -> None:
         assert job(number=3, exponent=5) == 243
-        assert_task_state(job, [RunState.FINISHED])
+        assert_job_state(job, [RunState.FINISHED])
 
     return JobCase[[int, int], int]('power', sync_power, run_and_assert_results)
 
@@ -76,10 +76,10 @@ def case_sync_range() -> JobCase[[int], Generator]:
                          "they were running eagerly, returning lists of all yielded values)")
 
         generator = job(5)
-        assert_task_state(job, [RunState.RUNNING, RunState.FINISHED])
+        assert_job_state(job, [RunState.RUNNING, RunState.FINISHED])
 
         assert tuple(_ for _ in generator) == (0, 1, 2, 3, 4)
-        assert_task_state(job, [RunState.FINISHED])
+        assert_job_state(job, [RunState.FINISHED])
 
     return JobCase[[int], Generator]('range', sync_range, run_and_assert_results)
 
@@ -95,14 +95,14 @@ def case_async_range() -> JobCase[[int], Awaitable[Generator]]:
             pytest.xfail("TypeError: cannot pickle 'async_generator' object")
 
         generator = job(5)
-        assert_task_state(job, [RunState.RUNNING, RunState.FINISHED])
+        assert_job_state(job, [RunState.RUNNING, RunState.FINISHED])
 
         li = []
         async for i in generator:
             li.append(i)
         assert li == [0, 1, 2, 3, 4]
 
-        assert_task_state(job, [RunState.FINISHED])
+        assert_job_state(job, [RunState.FINISHED])
 
     return JobCase[[int], Awaitable[Generator]]('range', async_range, run_and_assert_results)
 
@@ -121,7 +121,7 @@ def case_sync_wait_for_send_twice() -> JobCase[[], Generator]:
             pytest.xfail("AttributeError: 'list' object has no attribute 'send'")
 
         generator_obj = job()
-        assert_task_state(job, [RunState.RUNNING, RunState.FINISHED])
+        assert_job_state(job, [RunState.RUNNING, RunState.FINISHED])
 
         i = 0
         for i, result in enumerate(generator_obj):
@@ -129,7 +129,7 @@ def case_sync_wait_for_send_twice() -> JobCase[[], Generator]:
             assert generator_obj.send('content') == (i, 'content')
         assert i == 1
 
-        assert_task_state(job, [RunState.FINISHED])
+        assert_job_state(job, [RunState.FINISHED])
 
     return JobCase[[], Generator]('wait_for_send_twice',
                                   sync_wait_for_send_twice,
@@ -147,7 +147,7 @@ def case_async_wait_for_send_twice() -> JobCase[[], Awaitable[Generator]]:
             pytest.xfail("TypeError: cannot pickle 'async_generator' object")
 
         generator_obj = job()
-        assert_task_state(job, [RunState.RUNNING])
+        assert_job_state(job, [RunState.RUNNING])
 
         i = 0
         async for i, aresult in aenumerate(generator_obj):
@@ -155,7 +155,7 @@ def case_async_wait_for_send_twice() -> JobCase[[], Awaitable[Generator]]:
             assert await generator_obj.asend('content') == (i, 'content')
         assert i == 1
 
-        assert_task_state(job, [RunState.FINISHED])
+        assert_job_state(job, [RunState.FINISHED])
 
     return JobCase[[], Awaitable[Generator]]('wait_for_send_twice',
                                              async_wait_for_send_twice,
@@ -176,10 +176,10 @@ def case_async_wait_a_bit() -> JobCase[[float], Awaitable[float]]:
 
         await asyncio.gather(
             async_assert_results_wait_a_bit(0.05),
-            async_wait_for_task_state(job, [RunState.RUNNING, RunState.FINISHED]),
+            async_wait_for_job_state(job, [RunState.RUNNING, RunState.FINISHED]),
         )
 
-        assert_task_state(job, [RunState.FINISHED])
+        assert_job_state(job, [RunState.FINISHED])
 
     return JobCase[[float], Awaitable[float]]('wait_a_bit',
                                               async_wait_a_bit,
@@ -204,10 +204,10 @@ def case_sync_wait_a_bit_multithreaded_threading() -> JobCase[[float], float]:
         thread = threading.Thread(target=sync_assert_results_wait_a_bit, args=(0.005,))
 
         thread.start()
-        sync_wait_for_task_state(job, [RunState.RUNNING])
+        sync_wait_for_job_state(job, [RunState.RUNNING])
 
         thread.join()
-        assert_task_state(job, [RunState.FINISHED])
+        assert_job_state(job, [RunState.FINISHED])
 
     return JobCase[[float], float]('wait_a_bit', sync_wait_a_bit, run_and_assert_results)
 
@@ -220,10 +220,10 @@ def case_sync_wait_a_bit_multithreaded_futures() -> JobCase[[float], float]:
     def run_and_assert_results(job: IsJob) -> None:
         with ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(job, 0.005)
-            sync_wait_for_task_state(job, [RunState.RUNNING])
+            sync_wait_for_job_state(job, [RunState.RUNNING])
 
             assert future.result() == 0.005
-            assert_task_state(job, [RunState.FINISHED])
+            assert_job_state(job, [RunState.FINISHED])
 
     return JobCase[[float], float]('wait_a_bit', sync_wait_a_bit, run_and_assert_results)
 
@@ -246,10 +246,10 @@ def case_async_wait_a_bit_multithreaded_threading() -> JobCase[[float], Awaitabl
         thread = threading.Thread(target=async_run_assert_results_wait_a_bit, args=(0.005,))
 
         thread.start()
-        sync_wait_for_task_state(job, [RunState.RUNNING])
+        sync_wait_for_job_state(job, [RunState.RUNNING])
 
         thread.join()
-        assert_task_state(job, [RunState.FINISHED])
+        assert_job_state(job, [RunState.FINISHED])
 
     return JobCase[[float], Awaitable[float]]('wait_a_bit',
                                               async_wait_a_bit,
@@ -264,10 +264,10 @@ def case_async_wait_a_bit_multithreaded_futures() -> JobCase[[float], Awaitable[
     async def run_and_assert_results(job: IsJob) -> None:
 
         future = await asyncio.get_event_loop().run_in_executor(None, job, 0.005)
-        sync_wait_for_task_state(job, [RunState.RUNNING, RunState.FINISHED])
+        sync_wait_for_job_state(job, [RunState.RUNNING, RunState.FINISHED])
 
         assert await resolve(future) == 0.005
-        assert_task_state(job, [RunState.FINISHED])
+        assert_job_state(job, [RunState.FINISHED])
 
     return JobCase[[float], Awaitable[float]]('wait_a_bit',
                                               async_wait_a_bit,

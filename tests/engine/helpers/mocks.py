@@ -1,6 +1,8 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
+from functools import update_wrapper
+import inspect
 import logging
 from typing import Any, Callable, ClassVar, Dict, List, Optional, Tuple, Type
 
@@ -10,21 +12,23 @@ from slugify import slugify
 
 from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
-from unifair.engine.protocols import (IsEngine,
+from unifair.engine.protocols import (IsDagFlow,
+                                      IsEngine,
                                       IsEngineConfig,
+                                      IsFlow,
+                                      IsJob,
                                       IsRunStateRegistry,
                                       IsRunStateRegistryConfig,
-                                      IsTask,
-                                      IsTaskRunnerEngine)
-from unifair.engine.task_runner import TaskRunnerEngine
+                                      IsTask)
+from unifair.engine.task_runner import DagFlowRunnerEngine, TaskRunnerEngine
 from unifair.util.callable_decorator_cls import callable_decorator_cls
 
 
 class MockJobCreator:
     def __init__(self):
-        self.engine: Optional[IsTaskRunnerEngine] = None
+        self.engine: Optional[IsEngine] = None
 
-    def set_engine(self, engine: IsTaskRunnerEngine) -> None:
+    def set_engine(self, engine: IsEngine) -> None:
         self.engine = engine
 
 
@@ -50,18 +54,52 @@ class MockTask:
     def has_coroutine_func(self) -> bool:
         return asyncio.iscoroutinefunction(self._func)
 
-    @classmethod
-    def extrack_registry(cls) -> IsRunStateRegistry:
-        assert isinstance(cls.engine, Engine)
-        return cls.engine._registry  # noqa
-
 
 @callable_decorator_cls
 class MockTaskTemplate(MockTask):
     def apply(self) -> IsTask:
         task = MockTask(self._func, name=self.name)
+        update_wrapper(task, self._func)
         print(self.job_creator.engine)
         return self.job_creator.engine.task_decorator(task)
+
+
+class MockDagFlow(MockTask):
+    def __init__(self,
+                 func: Callable,
+                 *tasks: MockTask,
+                 name: Optional[str] = None,
+                 **kwargs: object) -> None:
+        self._tasks = tasks
+        super().__init__(func, name=name, **kwargs)
+
+    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
+        raise Exception('sf')
+
+    @property
+    def tasks(self) -> Tuple[MockTask]:
+        return self._tasks
+
+    def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
+        return inspect.signature(self._func).bind(*args, **kwargs).arguments
+
+
+@callable_decorator_cls
+class MockDagFlowTemplate(MockDagFlow):
+    def __init__(self,
+                 func: Callable,
+                 *task_templates: 'MockDagFlowTemplate',
+                 name: Optional[str] = None) -> None:
+        self._task_templates = task_templates
+        super().__init__(func, name=name)
+
+    def apply(self) -> IsTask:
+        tasks = (task.apply() for task in self._task_templates)
+        dag_flow = MockDagFlow(self._func, *tasks, name=self.name)
+        dag_flow = self.job_creator.engine.dag_flow_decorator(dag_flow)
+        update_wrapper(dag_flow, self._func)
+        print(self.job_creator.engine)
+        return dag_flow
 
 
 @dataclass
@@ -82,9 +120,24 @@ class MockBackendTask:
         return result
 
 
-class MockEngineSubclass(Engine):
+class MockBackendFlow:
+    def __init__(self, engine_config: MockEngineConfig):
+        self.backend_verbose = engine_config.backend_verbose
+
+    def run(self, flow: IsFlow, call_func: Callable, *args: Any, **kwargs: Any):
+        if self.backend_verbose:
+            print('Running flow "{}": ...'.format(flow.name))
+        result = call_func(*args, **kwargs)
+        if self.backend_verbose:
+            print('Result of flow "{}": {}'.format(flow.name, result))
+        return result
+
+
+class MockJobRunnerSubclass(TaskRunnerEngine, DagFlowRunnerEngine):
     def _init_engine(self) -> None:
         self._update_from_config()
+        self.finished_backend_tasks: List[MockBackendTask] = []
+        self.finished_backend_flows: List[MockBackendFlow] = []
 
     def _update_from_config(self) -> None:
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
@@ -94,11 +147,7 @@ class MockEngineSubclass(Engine):
     def get_config_cls(cls) -> Type[IsEngineConfig]:
         return MockEngineConfig
 
-
-class MockTaskRunnerSubclass(MockEngineSubclass, TaskRunnerEngine):
-    def _init_engine(self) -> None:
-        super()._init_engine()
-        self.finished_backend_tasks: List[MockBackendTask] = []
+    # TaskRunnerEngine
 
     def _init_task(self, task: IsTask, call_func: Callable) -> MockBackendTask:
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
@@ -108,6 +157,23 @@ class MockTaskRunnerSubclass(MockEngineSubclass, TaskRunnerEngine):
                   **kwargs) -> Any:
         result = state.run(task, call_func, *args, **kwargs)
         self.finished_backend_tasks.append(state)
+        return result
+
+    # DagFlowRunnerEngine
+
+    def _init_dag_flow(self, flow: IsDagFlow, call_func: Callable) -> MockBackendFlow:
+        assert isinstance(self._config, MockEngineConfig)  # to help type checkers
+        return MockBackendFlow(self._config)
+
+    def _run_dag_flow(self,
+                      state: MockBackendFlow,
+                      flow: IsDagFlow,
+                      call_func: Callable,
+                      *args,
+                      **kwargs) -> Any:
+        call_func = self.default_dag_flow_run_decorator(flow)
+        result = state.run(flow, call_func, *args, **kwargs)
+        self.finished_backend_flows.append(state)
         return result
 
 
@@ -121,25 +187,25 @@ class MockRunStateRegistry:
         self.logger: Optional[logging.Logger] = None
         self.config: IsRunStateRegistryConfig = MockRunStateRegistryConfig()
 
-        self._tasks: Dict[str, IsTask] = {}
-        self._task_state: Dict[str, RunState] = {}
-        self._task_state_datetime: Dict[Tuple[str, RunState], datetime] = {}
+        self._jobs: Dict[str, IsJob] = {}
+        self._job_state: Dict[str, RunState] = {}
+        self._job_state_datetime: Dict[Tuple[str, RunState], datetime] = {}
 
-    def get_task_state(self, task: IsTask) -> RunState:
-        return self._task_state[task.name]
+    def get_job_state(self, job: IsJob) -> RunState:
+        return self._job_state[job.unique_name]
 
-    def get_task_state_datetime(self, task: IsTask, state: RunState) -> datetime:
-        return self._task_state_datetime[(task.name, state)]
+    def get_job_state_datetime(self, job: IsJob, state: RunState) -> datetime:
+        return self._job_state_datetime[(job.unique_name, state)]
 
-    def all_tasks(self, state: Optional[RunState] = None) -> Tuple[IsTask, ...]:  # noqa
-        return tuple(self._tasks.values())
+    def all_jobs(self, state: Optional[RunState] = None) -> Tuple[IsJob, ...]:  # noqa
+        return tuple(self._jobs.values())
 
-    def set_task_state(self, task: IsTask, state: RunState) -> None:
-        self._tasks[task.name] = task
-        self._task_state[task.name] = state
-        self._task_state_datetime[(task.name, state)] = datetime.now()
+    def set_job_state(self, job: IsJob, state: RunState) -> None:
+        self._jobs[job.unique_name] = job
+        self._job_state[job.unique_name] = state
+        self._job_state_datetime[(job.unique_name, state)] = datetime.now()
         if self.logger:
-            self.logger.info(f'{task.name} - {state.name}')
+            self.logger.info(f'{job.unique_name} - {state.name}')
 
     def set_logger(self, logger: Optional[logging.Logger]) -> None:
         self.logger = logger

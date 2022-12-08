@@ -18,9 +18,9 @@ class RunState(IntEnum):
 
 
 class RunStateLogMessages(str, Enum):
-    INITIALIZED = 'Initialized task "{}"'
-    RUNNING = 'Started running task "{}"...'
-    FINISHED = 'Task "{}" finished!'
+    INITIALIZED = 'Initialized "{}"'
+    RUNNING = 'Started running "{}"...'
+    FINISHED = 'Finished running "{}"!'
 
 
 UNIFAIR_LOG_FORMAT_STR: str = '%(levelname)s (%(name)s) - %(message)s'
