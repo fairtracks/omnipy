@@ -82,28 +82,28 @@ class TaskRunnerEngine(JobRunnerEngine):
 
 
 class DagFlowRunnerEngine(JobRunnerEngine):
-    def dag_flow_decorator(self, flow: IsDagFlow) -> IsDagFlow:
+    def dag_flow_decorator(self, dag_flow: IsDagFlow) -> IsDagFlow:
         # prev_call_func = flow._call_func  # Only raises error anyway
 
-        self._register_job_state(flow, RunState.INITIALIZED)
-        state = self._init_dag_flow(flow)
+        self._register_job_state(dag_flow, RunState.INITIALIZED)
+        state = self._init_dag_flow(dag_flow)
 
         def _call_func(*args: object, **kwargs: object) -> Any:
-            self._register_job_state(flow, RunState.RUNNING)
-            flow_result = self._run_dag_flow(state, flow, *args, **kwargs)
-            return self._decorate_result_with_job_finalization_detector(flow, flow_result)
+            self._register_job_state(dag_flow, RunState.RUNNING)
+            flow_result = self._run_dag_flow(state, dag_flow, *args, **kwargs)
+            return self._decorate_result_with_job_finalization_detector(dag_flow, flow_result)
 
-        setattr(flow, '_call_func', _call_func)
-        return flow
+        setattr(dag_flow, '_call_func', _call_func)
+        return dag_flow
 
     @staticmethod
-    def default_dag_flow_run_decorator(flow: IsDagFlow) -> Any:
+    def default_dag_flow_run_decorator(dag_flow: IsDagFlow) -> Any:
         def _inner_run_dag_flow(*args: object, **kwargs: object):
             results = {}
             result = None
-            for i, job in enumerate(flow.task_templates):
+            for i, job in enumerate(dag_flow.task_templates):
                 if i == 0:
-                    results = flow.get_call_args(*args, **kwargs)
+                    results = dag_flow.get_call_args(*args, **kwargs)
 
                 param_keys = set(inspect.signature(job).parameters.keys())
 
@@ -121,7 +121,7 @@ class DagFlowRunnerEngine(JobRunnerEngine):
                             param_keys.remove(key)
 
                 params = {key: val for key, val in results.items() if key in param_keys}
-                with flow.flow_context:
+                with dag_flow.flow_context:
                     result = job(**params)
 
                 if isinstance(result, dict) and len(result) > 0:
@@ -133,9 +133,39 @@ class DagFlowRunnerEngine(JobRunnerEngine):
         return _inner_run_dag_flow
 
     @abstractmethod
-    def _init_dag_flow(self, flow: IsDagFlow) -> Any:
+    def _init_dag_flow(self, dag_flow: IsDagFlow) -> Any:
         ...
 
     @abstractmethod
-    def _run_dag_flow(self, state: Any, flow: IsDagFlow, *args, **kwargs) -> Any:
+    def _run_dag_flow(self, state: Any, dag_flow: IsDagFlow, *args, **kwargs) -> Any:
+        ...
+
+
+class FuncFlowRunnerEngine(JobRunnerEngine):
+    def func_flow_decorator(self, func_flow: IsFuncFlow) -> IsFuncFlow:
+        prev_call_func = func_flow._call_func  # noqa
+
+        self._register_job_state(func_flow, RunState.INITIALIZED)
+        state = self._init_func_flow(func_flow, prev_call_func)
+
+        def _call_func(*args: object, **kwargs: object) -> Any:
+            self._register_job_state(func_flow, RunState.RUNNING)
+            with func_flow.flow_context:
+                flow_result = self._run_func_flow(state, func_flow, prev_call_func, *args, **kwargs)
+                return self._decorate_result_with_job_finalization_detector(func_flow, flow_result)
+
+        setattr(func_flow, '_call_func', _call_func)
+        return func_flow
+
+    @abstractmethod
+    def _init_func_flow(self, func_flow: IsFuncFlow, call_func: Callable) -> object:
+        ...
+
+    @abstractmethod
+    def _run_func_flow(self,
+                       state: Any,
+                       func_flow: IsFuncFlow,
+                       call_func: Callable,
+                       *args,
+                       **kwargs) -> Any:
         ...

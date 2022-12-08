@@ -15,6 +15,8 @@ from unifair.engine.protocols import (IsDagFlow,
                                       IsDagFlowTemplate,
                                       IsEngine,
                                       IsFlowTemplate,
+                                      IsFuncFlowRunnerEngine,
+                                      IsFuncFlowTemplate,
                                       IsJob,
                                       IsRunStateRegistry,
                                       IsTask,
@@ -145,6 +147,30 @@ def create_dag_flow_with_two_func_tasks(
     return dag_flow_template.apply()
 
 
+def create_func_flow_with_two_func_tasks(
+    name: str,
+    func: Callable,
+    task_template_cls: type(IsTaskTemplate),
+    func_flow_template_cls: type(IsFuncFlowTemplate),
+    engine: IsFuncFlowRunnerEngine,
+    registry: Optional[IsRunStateRegistry],
+) -> IsDagFlow:
+
+    task_template = task_template_cls(name=name)(func)
+
+    @func_flow_template_cls(name=name)
+    def func_flow_template(*args: object, **kwargs: object) -> object:
+        for i in range(2):
+            result = task_template(*args, **kwargs)
+        return result  # noqa
+
+    task_template_cls.job_creator.set_engine(engine)
+    if registry:
+        engine.set_registry(registry)
+
+    return func_flow_template.apply()
+
+
 def update_job_case_with_job(
     job_case: JobCase,
     job_type: JobType,
@@ -174,6 +200,16 @@ def update_job_case_with_job(
             task_template_cls,
             flow_template_cls,
             cast(IsDagFlowRunnerEngine, engine),
+            registry,
+        )
+    elif job_type.value == JobType.func_flow.value:
+        engine = cast(IsFuncFlowRunnerEngine, engine)
+        job_case.job = create_func_flow_with_two_func_tasks(
+            job_case.name,
+            job_case.job_func,
+            task_template_cls,
+            flow_template_cls,
+            cast(IsFuncFlowRunnerEngine, engine),
             registry,
         )
 

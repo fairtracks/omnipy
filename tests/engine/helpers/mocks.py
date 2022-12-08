@@ -110,8 +110,21 @@ class MockDagFlowTemplate(MockDagFlow):
         dag_flow = MockDagFlow(self._func, *self._task_templates, name=self.name)
         dag_flow = self.job_creator.engine.dag_flow_decorator(dag_flow)
         update_wrapper(dag_flow, self._func)
-        print(self.job_creator.engine)
         return dag_flow
+
+
+class MockFuncFlow(MockTask):
+    def __init__(self, flow_func: Callable, name: Optional[str] = None, **kwargs: object) -> None:
+        super().__init__(flow_func, name=name)
+
+
+@callable_decorator_cls
+class MockFuncFlowTemplate(MockFuncFlow, MockTaskTemplate):
+    def apply(self) -> IsTask:
+        func_flow = MockFuncFlow(self._func, name=self.name)
+        func_flow = self.job_creator.engine.func_flow_decorator(func_flow)
+        update_wrapper(func_flow, self._func)
+        return func_flow
 
 
 @dataclass

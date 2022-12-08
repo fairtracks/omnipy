@@ -6,6 +6,8 @@ from unifair.engine.constants import RunState
 from unifair.engine.protocols import (IsDagFlow,
                                       IsDagFlowRunnerEngine,
                                       IsEngineConfig,
+                                      IsFuncFlow,
+                                      IsFuncFlowRunnerEngine,
                                       IsJob,
                                       IsRunStateRegistry,
                                       IsTask,
@@ -31,7 +33,7 @@ class JobCase(Generic[ArgT, ReturnT]):
     job: Optional[IsJob] = None
 
 
-class JobRunnerStateChecker(IsTaskRunnerEngine, IsDagFlowRunnerEngine):
+class JobRunnerStateChecker(IsTaskRunnerEngine, IsDagFlowRunnerEngine, IsFuncFlowRunnerEngine):
     def __init__(self, engine):
         self._engine = engine
         self._engine.__init__()
@@ -50,6 +52,9 @@ class JobRunnerStateChecker(IsTaskRunnerEngine, IsDagFlowRunnerEngine):
 
     def dag_flow_decorator(self, dag_flow: IsDagFlow) -> IsDagFlow:
         return self._engine.dag_flow_decorator(dag_flow)
+
+    def func_flow_decorator(self, func_flow: IsFuncFlow) -> IsFuncFlow:
+        return self._engine.func_flow_decorator(func_flow)
 
     def _init_task(self, task: IsTask, call_func: Callable) -> Any:
         from .functions import assert_job_state
@@ -70,3 +75,13 @@ class JobRunnerStateChecker(IsTaskRunnerEngine, IsDagFlowRunnerEngine):
         from .functions import assert_job_state
         assert_job_state(dag_flow, [RunState.RUNNING])
         return self._engine._run_dag_flow(state, dag_flow, *args, **kwargs)  # noqa
+
+    def _init_func_flow(self, func_flow: IsFuncFlow) -> Any:
+        from .functions import assert_job_state
+        assert_job_state(func_flow, [RunState.INITIALIZED])
+        return self._engine._init_func_flow(dag_flow)  # noqa
+
+    def _run_func_flow(self, state: Any, func_flow: IsFuncFlow, *args, **kwargs) -> Any:
+        from .functions import assert_job_state
+        assert_job_state(func_flow, [RunState.RUNNING])
+        return self._engine._run_func_flow(state, func_flow, *args, **kwargs)  # noqa
