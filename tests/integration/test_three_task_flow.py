@@ -1,56 +1,92 @@
+from inspect import Parameter
+from types import NoneType
+from typing import Annotated, Dict
+
 import pytest
+import pytest_cases as pc
 
-from unifair.compute.flow import DagFlow, FlowTemplate, FuncFlow
-from unifair.config.runtime import Runtime
+from compute.cases.flows import FlowCase
+from engine.helpers.functions import assert_job_state
+from unifair.compute.flow import DagFlow, FuncFlow
+from unifair.engine.constants import RunState
 
 
-def _common_test_run_three_task_flow(runtime: Runtime, pos_square_root: FlowTemplate):
-    f_pos_square_root = pos_square_root.refine(
-        name='f_pos_square_root', text='result').apply(verbose=True)
+@pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='pos_square_root')
+def test_specialize_record_models_signature_and_return_type_func(
+        runtime_all_engines: Annotated[NoneType, pytest.fixture],  # noqa
+        case: FlowCase):
+    for flow_obj in case.flow_template, case.flow_template.apply():
+        assert flow_obj.param_signatures == {
+            'number': Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
+            'text': Parameter('text', Parameter.POSITIONAL_OR_KEYWORD, annotation=str),
+        }
+        assert flow_obj.return_type == Dict[str, int]
 
-    assert runtime.engine.verbose is True  # noqa
 
-    assert f_pos_square_root(4) == {'pos_square_root': 'RESULT: 2.0'}
-    assert f_pos_square_root(number=9) == {'pos_square_root': 'RESULT: 3.0'}
+@pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='pos_square_root')
+def test_run_three_task_flow(
+        runtime_all_engines: Annotated[NoneType, pytest.fixture],  # noqa
+        case: FlowCase):
+    pos_square_root = case.flow_template.apply()
 
-    assert f_pos_square_root.name == 'f_pos_square_root'
-    assert f_pos_square_root._mock_backend_flow.kwargs == {  # noqa
-        'backend_flow_param_1': True, 'backend_flow_param_2': 5
-    }
+    assert pos_square_root(4, 'result') == {'pos_square_root': 'RESULT: 2.0'}
+    assert pos_square_root(number=9, text='answer') == {'pos_square_root': 'ANSWER: 3.0'}
+    assert pos_square_root.name == 'pos_square_root'
+    assert_job_state(pos_square_root, RunState.FINISHED)
+
+
+@pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='pos_square_root')
+def test_refine_three_task_flow(
+        runtime_all_engines: Annotated[NoneType, pytest.fixture],  # noqa
+        case: FlowCase):
+
+    pos_square_root = case.flow_template.refine(text='=', name='pos_sqrt', result_key='+√').apply()
+
+    assert pos_square_root(4) == {'+√': '=: 2.0'}
+    assert pos_square_root(number=9) == {'+√': '=: 3.0'}
+    assert pos_square_root.name == 'pos_sqrt'
 
     with pytest.raises(TypeError):
-        f_pos_square_root()
+        pos_square_root()
 
     with pytest.raises(TypeError):
-        f_pos_square_root(4, 'answer')
-
-    pos_square_root_new = f_pos_square_root.revise()
-    if isinstance(f_pos_square_root, DagFlow):
-        tasks = pos_square_root_new.tasks
-        f_pos_square_root = f_pos_square_root.revise().refine(
-            {
-                2: tasks[2].refine(result_key='Positive square root')
-            },
-            fixed_params={
-                'text': 'answer'
-            },
-        ).apply()
-    elif isinstance(f_pos_square_root, FuncFlow):
-        f_pos_square_root = f_pos_square_root.revise().refine(
-            fixed_params={
-                'text': 'answer', 'result_key': 'Positive square root'
-            },).apply()
-    else:
-        raise RuntimeError('Should not occur')
-
-    assert runtime.engine.verbose is False  # noqa
-
-    assert f_pos_square_root(4) == {'Positive square root': 'ANSWER: 2.0'}
+        pos_square_root(4, 'answer')
 
 
-def test_run_three_task_dag_flow(runtime_local_runner, pos_square_root_dag_flow):
-    _common_test_run_three_task_flow(runtime_local_runner, pos_square_root_dag_flow)
+@pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='pos_square_root')
+def test_revise_refine_three_task_flow(
+        runtime_all_engines: Annotated[NoneType, pytest.fixture],  # noqa
+        case: FlowCase):
+
+    pos_square_root = case.flow_template.refine(text='=', name='pos_sqrt', result_key='+√').apply()
+
+    pos_square_root_new = pos_square_root.revise().refine(
+        fixed_params={
+            'text': 'answer'
+        },
+        result_key='Positive square root',
+    ).apply()
+
+    assert pos_square_root_new(4) == {'Positive square root': 'ANSWER: 2.0'}
+    assert pos_square_root_new.name == 'pos_sqrt'
 
 
-def test_run_three_task_func_flow(runtime_local_runner, pos_square_root_func_flow):
-    _common_test_run_three_task_flow(runtime_local_runner, pos_square_root_func_flow)
+@pc.parametrize_with_cases(
+    'case', cases='.cases.flows', prefix='case_sync_dagflow_', has_tag='pos_square_root')
+def test_revise_refine_three_task_dagflow_alternative(
+        runtime_all_engines: Annotated[NoneType, pytest.fixture],  # noqa
+        case: FlowCase):
+
+    pos_square_root = case.flow_template.refine(text='=', name='pos_sqrt', result_key='+√').apply()
+
+    task_tmpls = pos_square_root.task_templates
+    task_tmpls[-1].refine(result_key='Positive square root')
+    pos_square_root_new = pos_square_root.revise().refine(
+        *task_tmpls,
+        fixed_params={
+            'text': 'answer'
+        },
+    ).apply()
+
+    assert pos_square_root_new(4) == {'Positive square root': 'ANSWER: 2.0'}
+    assert pos_square_root_new.name == 'pos_sqrt'

@@ -1,9 +1,19 @@
+from inspect import Parameter
+from types import NoneType
+from typing import Annotated
+
 from pydantic import ValidationError
 import pytest
+import pytest_cases as pc
 
+from compute.cases.flows import FlowCase
+from engine.helpers.functions import assert_job_state
 from unifair.compute.flow import FlowTemplate
+from unifair.config.runtime import Runtime
 from unifair.data.dataset import Dataset, MultiModelDataset
+from unifair.engine.constants import EngineChoice, RunState
 
+from .cases.raw.flows import specialize_record_models_dag_flow, specialize_record_models_func_flow
 from .helpers.models import GeneralTable, MyOtherRecordSchema, MyRecordSchema, TableTemplate
 
 
@@ -59,17 +69,13 @@ def test_dataset_with_multiple_table_models():
 
 
 @pytest.mark.skip(reason="""
-TODO: Requires refactoring of Dataset class to use member variables instead of 'data' dict to 
-store objects. Idea: Add a '_data' private member with 'data' as alias to keep UserDict working, 
-however with no values to not duplicate content. Keep difference between Dataset and 
-MultiModelDataset as having two classes is useful for task typing, see e.g. the function 
+TODO: Requires refactoring of Dataset class to use member variables instead of 'data' dict to
+store objects. Idea: Add a '_data' private member with 'data' as alias to keep UserDict working,
+however with no values to not duplicate content. Keep difference between Dataset and
+MultiModelDataset as having two classes is useful for task typing, see e.g. the function
 definition of 'specialize_record_models' below.
 """)
-def test_dataset_with_multiple_table_models_json_schema(
-        GeneralTable,  # noqa
-        TableTemplate,  # noqa
-        MyRecordSchema,  # noqa
-        MyOtherRecordSchema):  # noqa
+def test_dataset_with_multiple_table_models_json_schema():
     my_dataset = MultiModelDataset[GeneralTable]()
 
     my_dataset.set_model('a', TableTemplate[MyRecordSchema])
@@ -79,31 +85,54 @@ def test_dataset_with_multiple_table_models_json_schema(
     assert 'MyOtherRecordSchema' in my_dataset.data['b'].to_json_schema(pretty=True)
 
 
-def _common_test_run_dataset_flow(specialize_record_models: FlowTemplate):
-    f_specialize_record_models = specialize_record_models.apply()
+@pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
+def test_specialize_record_models_signature_and_return_type_func(
+        runtime_all_engines: Annotated[NoneType, pytest.fixture],  # noqa
+        case: FlowCase):
+    for flow_obj in case.flow_template, case.flow_template.apply():
+        assert flow_obj.param_signatures == {
+            'tables':
+                Parameter(
+                    'tables',
+                    Parameter.POSITIONAL_OR_KEYWORD,
+                    annotation=Dataset[GeneralTable],
+                )
+        }
+        assert flow_obj.return_type == MultiModelDataset[GeneralTable]
+
+
+@pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
+def test_run_specialize_record_models_consistent_types(
+        runtime_all_engines: Annotated[NoneType, pytest.fixture],  # noqa
+        case: FlowCase):
+    specialize_record_models = case.flow_template.apply()
 
     old_dataset = Dataset[GeneralTable]()
     old_dataset['a'] = [{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}]
-    old_dataset['b'] = [{'b': 'df', 'c': True}, {'b': False, 'c': 'sg'}]  # inconsistent types
-
-    with pytest.raises(AssertionError):
-        _new_dataset = f_specialize_record_models(old_dataset)
-
-    old_dataset['b'] = [{'b': 'df', 'c': True}, {'b': 'sg', 'c': False}]  # consistent types
-
-    new_dataset = f_specialize_record_models(old_dataset)
+    old_dataset['b'] = [{'b': 'df', 'c': True}, {'b': 'sg', 'c': False}]
 
     # general model allows the tables to be switched
     old_dataset['a'], old_dataset['b'] = old_dataset['b'], old_dataset['a']
+
+    new_dataset = specialize_record_models(old_dataset)
 
     with pytest.raises(ValidationError):
         # per-table specialized models do not allow the tables to be switched
         new_dataset['a'], new_dataset['b'] = new_dataset['b'], new_dataset['a']
 
-
-def test_run_dataset_dag_flow(runtime_local_runner, specialize_record_models_dag_flow):
-    _common_test_run_dataset_flow(specialize_record_models_dag_flow, GeneralTable)
+    assert_job_state(specialize_record_models, RunState.FINISHED)
 
 
-def test_run_dataset_func_flow(runtime_local_runner, specialize_record_models_func_flow):
-    _common_test_run_dataset_flow(specialize_record_models_func_flow, GeneralTable)
+@pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
+def test_fail_run_specialize_record_models_inconsistent_types(
+        runtime_all_engines: Annotated[NoneType, pytest.fixture],  # noqa
+        case: FlowCase):
+
+    specialize_record_models = case.flow_template.apply()
+
+    old_dataset = Dataset[GeneralTable]()
+    old_dataset['a'] = [{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}]
+    old_dataset['b'] = [{'b': 'df', 'c': True}, {'b': False, 'c': 'sg'}]
+
+    with pytest.raises(AssertionError):
+        _new_dataset = specialize_record_models(old_dataset)
