@@ -173,13 +173,26 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             new_model.from_data(obj_val)
             self[obj_type] = new_model
 
-    def to_json(self, pretty=False) -> str:
-        json_content = self.json()
-        contents = json.loads(json_content)
-        assert len(contents.keys()) == 1 and next(iter(contents.keys())) == DATA_KEY
+    def to_json(self, pretty=False) -> Dict[str, str]:
+        result = {}
 
-        return self._pretty_print_json(contents[DATA_KEY]) if pretty else json.dumps(
-            contents[DATA_KEY])
+        for key, val in self.to_data().items():
+            result[key] = self._pretty_print_json(val) if pretty else json.dumps(val)
+        return result
+
+    def from_json(self,
+                  data: Union[Dict[str, str], Iterator[Tuple[str, str]]],
+                  update: bool = True) -> None:
+        if not isinstance(data, dict):
+            data = dict(data)
+
+        if not update:
+            self.clear()
+
+        for obj_type, obj_val in data.items():
+            new_model = self.get_model_class()()  # noqa
+            new_model.from_json(obj_val)
+            self[obj_type] = new_model
 
     # @classmethod
     # def get_type_args(cls):
@@ -197,17 +210,6 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     #
     # def __reduce__(self):
     #     return self.__class__.create_from_json, (self.to_json(),)
-
-    # TODO: Update to_json similarly and fix tests
-
-    def from_json(self, data: Dict[str, str], update: bool = True) -> None:
-        if not update:
-            self.clear()
-
-        for obj_type, obj_val in data.items():
-            new_model = self.get_model_class()()  # noqa
-            new_model.from_json(obj_val)
-            self[obj_type] = new_model
 
     @classmethod
     def to_json_schema(cls, pretty=False) -> Union[str, Dict[str, str]]:

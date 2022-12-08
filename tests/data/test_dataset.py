@@ -142,20 +142,13 @@ def test_import_and_export():
         }
     }
 
-    assert dataset.to_json(
-        pretty=False  # noqa
-    ) == '{"obj_type_1": {"a": "123", "b": "234", "c": "345"}, "obj_type_2": {"c": "456"}}'
-    assert dataset.to_json(pretty=True) == '''
-{
-    "obj_type_1": {
-        "a": "123",
-        "b": "234",
-        "c": "345"
-    },
-    "obj_type_2": {
-        "c": "456"
+    assert dataset.to_json(pretty=False) == {
+        'obj_type_1': '{"a": "123", "b": "234", "c": "345"}', 'obj_type_2': '{"c": "456"}'
     }
-}'''[1:]  # noqa
+    assert dataset.to_json(pretty=True) == {
+        'obj_type_1': '{\n    "a": "123",\n    "b": "234",\n    "c": "345"\n}',
+        'obj_type_2': '{\n    "c": "456"\n}'
+    }
 
     data = {'obj_type_1': {'a': 333, 'b': 555, 'c': 777}, 'obj_type_3': {'a': '99', 'b': '98'}}
     dataset.from_data(data)
@@ -181,7 +174,7 @@ def test_import_and_export():
         },
     }
 
-    json_import = '{"obj_type_2": {"a": 987, "b": 654}}'
+    json_import = {'obj_type_2': '{"a": 987, "b": 654}'}
 
     dataset.from_json(json_import)
     assert dataset.to_data() == {
@@ -194,6 +187,19 @@ def test_import_and_export():
 
     dataset.from_json(json_import, update=False)
     assert dataset.to_data() == {'obj_type_2': {'a': '987', 'b': '654'}}
+
+    json_import = (
+        ('obj_type_2', '{"a": 987, "b": 654}'),
+        ('obj_type_3', '{"b": 222, "c": 333}'),
+    )
+    dataset.from_json(json_import)
+    assert dataset.to_data() == {
+        'obj_type_2': {
+            'a': '987', 'b': '654'
+        }, 'obj_type_3': {
+            'b': '222', 'c': '333'
+        }
+    }
 
     assert dataset.to_json_schema(pretty=False) == (  # noqa
         '{"title": "Dataset[Model[Dict[str, str]]]", "description": "'
@@ -240,10 +246,10 @@ def test_import_export_custom_parser_to_other_type():
     assert dataset['obj_type_2'] == 23
     assert dataset.to_data() == {'obj_type_1': 30, 'obj_type_2': 23}
 
-    dataset.from_json('{"obj_type_2": "In our yellow submarine!"}', update=True)  # noqa
+    dataset.from_json({'obj_type_2': '"In our yellow submarine!"'}, update=True)  # noqa
     assert dataset['obj_type_1'] == 30
     assert dataset['obj_type_2'] == 24
-    assert dataset.to_json() == '{"obj_type_1": 30, "obj_type_2": 24}'
+    assert dataset.to_json() == {'obj_type_1': '30', 'obj_type_2': '24'}
 
     assert dataset.to_json_schema(pretty=True) == '''
 {
@@ -321,30 +327,16 @@ def test_complex_models():
 
     assert dataset.to_data() == {'1': [1], '2': [2, 1], '3': [3, 2, 1], '4': [4, 3, 2, 1]}
 
-    assert dataset.to_json(
-        pretty=False) == '{"1": [1], "2": [2, 1], "3": [3, 2, 1], "4": [4, 3, 2, 1]}'
+    assert dataset.to_json(pretty=False) == {
+        '1': '[1]', '2': '[2, 1]', '3': '[3, 2, 1]', '4': '[4, 3, 2, 1]'
+    }
 
-    assert dataset.to_json(pretty=True) == '''
-{
-    "1": [
-        1
-    ],
-    "2": [
-        2,
-        1
-    ],
-    "3": [
-        3,
-        2,
-        1
-    ],
-    "4": [
-        4,
-        3,
-        2,
-        1
-    ]
-}'''[1:]  # noqa
+    assert dataset.to_json(pretty=True) == {
+        '1': '[\n    1\n]',
+        '2': '[\n    2,\n    1\n]',
+        '3': '[\n    3,\n    2,\n    1\n]',
+        '4': '[\n    4,\n    3,\n    2,\n    1\n]'
+    }
 
     assert dataset.to_json_schema(pretty=True) == '''
 {
