@@ -8,8 +8,8 @@ from prefect import Task as PrefectTask
 from prefect.tasks import task_input_hash
 
 from unifair.config.engine import PrefectEngineConfig
+from unifair.engine.job_runner import TaskRunnerEngine
 from unifair.engine.protocols import IsPrefectEngineConfig, IsTask
-from unifair.engine.task_runner import TaskRunnerEngine
 
 
 class PrefectEngine(TaskRunnerEngine):

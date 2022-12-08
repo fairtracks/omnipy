@@ -1,8 +1,8 @@
 from typing import Any, Callable, Type
 
 from unifair.config.engine import LocalRunnerConfig
+from unifair.engine.job_runner import TaskRunnerEngine
 from unifair.engine.protocols import IsLocalRunnerConfig, IsTask
-from unifair.engine.task_runner import TaskRunnerEngine
 
 
 class LocalRunner(TaskRunnerEngine):

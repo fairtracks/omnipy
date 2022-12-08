@@ -2,12 +2,12 @@ from types import MappingProxyType
 from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, Union
 
 from unifair.compute.job import CallableDecoratingJobTemplateMixin, Job, JobConfig, JobTemplate
+from unifair.engine.job_runner import DagFlowRunnerEngine
 from unifair.engine.protocols import (IsDagFlow,
                                       IsEngineConfig,
                                       IsFuncFlow,
                                       IsRunStateRegistry,
                                       IsTask)
-from unifair.engine.task_runner import DagFlowRunnerEngine
 from unifair.util.callable_decorator_cls import callable_decorator_cls
 
 
