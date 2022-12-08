@@ -58,15 +58,15 @@ def test_task_run_parameter_variants(
     if hasattr(mock_local_runner, 'finished'):
         assert mock_local_runner.finished is False
 
-    power_m1 = TaskTemplate(power_m1_func).apply()
+    power_m1 = TaskTemplate(power_m1_func)
 
-    assert power_m1(4, 3) == 63
-    assert power_m1(4, exponent=3) == 63
-    assert power_m1(number=4, exponent=3) == 63
-    assert power_m1(4, 3, False) == 64
-    assert power_m1(4, 3, minus_one=False) == 64
-    assert power_m1(4, exponent=3, minus_one=False) == 64
-    assert power_m1(number=4, exponent=3, minus_one=False) == 64
+    assert power_m1.run(4, 3) == 63
+    assert power_m1.run(4, exponent=3) == 63
+    assert power_m1.run(number=4, exponent=3) == 63
+    assert power_m1.run(4, 3, False) == 64
+    assert power_m1.run(4, 3, minus_one=False) == 64
+    assert power_m1.run(4, exponent=3, minus_one=False) == 64
+    assert power_m1.run(number=4, exponent=3, minus_one=False) == 64
 
     if hasattr(mock_local_runner, 'finished'):
         assert mock_local_runner.finished is True
