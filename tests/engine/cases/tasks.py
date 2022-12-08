@@ -10,6 +10,7 @@ import pytest_cases as pc
 
 from unifair.engine.constants import RunState
 from unifair.engine.protocols import IsJob
+from unifair.util.helpers import resolve
 
 from ..helpers.classes import JobCase
 from ..helpers.functions import (assert_job_state,
@@ -17,7 +18,6 @@ from ..helpers.functions import (assert_job_state,
                                  check_engine_cls,
                                  get_async_assert_results_wait_a_bit_func,
                                  get_sync_assert_results_wait_a_bit_func,
-                                 resolve,
                                  sync_wait_for_job_state)
 from .raw.functions import (async_range,
                             async_wait_a_bit,
@@ -73,7 +73,10 @@ def case_sync_range() -> JobCase[[int], Generator]:
         from unifair.engine.prefect import PrefectEngine
         if check_engine_cls(job, PrefectEngine):
             pytest.xfail("Synchronous generators stopped working with prefect v2.6.0 (before that,"
-                         "they were running eagerly, returning lists of all yielded values)")
+                         "they were running eagerly, returning lists of all yielded values)."
+                         "Seems to be partly a pydantic bug:"
+                         "https://github.com/PrefectHQ/prefect/issues/7692"
+                         "https://github.com/PrefectHQ/prefect/pull/7714")
 
         generator = job(5)
         assert_job_state(job, [RunState.RUNNING, RunState.FINISHED])
@@ -90,10 +93,6 @@ def case_sync_range() -> JobCase[[int], Generator]:
 )
 def case_async_range() -> JobCase[[int], Awaitable[Generator]]:
     async def run_and_assert_results(job: IsJob) -> None:
-        from unifair.engine.prefect import PrefectEngine
-        if check_engine_cls(job, PrefectEngine):
-            pytest.xfail("TypeError: cannot pickle 'async_generator' object")
-
         generator = job(5)
         assert_job_state(job, [RunState.RUNNING, RunState.FINISHED])
 
@@ -118,7 +117,11 @@ def case_sync_wait_for_send_twice() -> JobCase[[], Generator]:
     def run_and_assert_results(job: IsJob) -> None:
         from unifair.engine.prefect import PrefectEngine
         if check_engine_cls(job, PrefectEngine):
-            pytest.xfail("AttributeError: 'list' object has no attribute 'send'")
+            pytest.xfail("Synchronous generators stopped working with prefect v2.6.0 (before that,"
+                         "they were running eagerly, returning lists of all yielded values)."
+                         "Seems to be partly a pydantic bug:"
+                         "https://github.com/PrefectHQ/prefect/issues/7692"
+                         "https://github.com/PrefectHQ/prefect/pull/7714")
 
         generator_obj = job()
         assert_job_state(job, [RunState.RUNNING, RunState.FINISHED])
@@ -142,10 +145,6 @@ def case_sync_wait_for_send_twice() -> JobCase[[], Generator]:
 )
 def case_async_wait_for_send_twice() -> JobCase[[], Awaitable[Generator]]:
     async def run_and_assert_results(job: IsJob) -> None:
-        from unifair.engine.prefect import PrefectEngine
-        if check_engine_cls(job, PrefectEngine):
-            pytest.xfail("TypeError: cannot pickle 'async_generator' object")
-
         generator_obj = job()
         assert_job_state(job, [RunState.RUNNING])
 
@@ -282,7 +281,7 @@ def case_async_wait_a_bit_multithreaded_futures() -> JobCase[[float], Awaitable[
 
 
 @pc.case(
-    id='fail-sync-function-futures-wait_a_bit(0.005)==0.005',
+    id='fail-sync-function-multiproc-futures-wait_a_bit(0.005)==0.005',
     tags=['sync', 'function', 'multiprocess', 'fail'])
 def case_sync_wait_a_bit_multiprocessing_futures() -> JobCase[[float], float]:
 
@@ -300,7 +299,7 @@ def case_sync_wait_a_bit_multiprocessing_futures() -> JobCase[[float], float]:
 
 
 @pc.case(
-    id='fail-async-coroutine-futures-wait_a_bit(0.005)==0.005',
+    id='fail-async-coroutine-multiproc-futures-wait_a_bit(0.005)==0.005',
     tags=['async', 'coroutine', 'multiprocess', 'fail'],
 )
 def case_async_wait_a_bit_multiprocessing() -> JobCase[[float], Awaitable[float]]:
