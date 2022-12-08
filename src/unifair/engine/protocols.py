@@ -126,7 +126,8 @@ class IsTaskTemplate(IsJobTemplate, Protocol):
 
 
 class IsFlow(IsJob, Protocol):
-    ...
+    def has_coroutine_func(self) -> bool:
+        ...
 
 
 class IsFlowTemplate(IsJobTemplate, Protocol):
