@@ -53,19 +53,19 @@ class Flow(Job, FlowConfig):
 class DagFlowConfig(FlowConfig):
     def __init__(
         self,
-        flow_func: Callable,
+        dag_flow_func: Callable,
         *task_templates: IsTaskTemplate,
         name: Optional[str] = None,
         **kwargs: Any,
     ):
-        self._flow_func = flow_func
-        self._flow_func_signature = inspect.signature(self._flow_func)
+        self._dag_flow_func = dag_flow_func
+        self._dag_flow_func_signature = inspect.signature(self._dag_flow_func)
         self._task_templates: Tuple[IsTaskTemplate] = task_templates
-        name = name if name is not None else self._flow_func.__name__
+        name = name if name is not None else self._dag_flow_func.__name__
         super().__init__(name=name, **kwargs)
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
-        return self._flow_func, *self._task_templates
+        return self._dag_flow_func, *self._task_templates
 
     def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
         return ()
@@ -75,15 +75,15 @@ class DagFlowConfig(FlowConfig):
         return self._task_templates
 
     def has_coroutine_func(self) -> bool:
-        return asyncio.iscoroutinefunction(self._flow_func)
+        return asyncio.iscoroutinefunction(self._dag_flow_func)
 
     @property
     def param_signatures(self) -> MappingProxyType:
-        return self._flow_func_signature.parameters
+        return self._dag_flow_func_signature.parameters
 
     @property
     def return_type(self) -> Type[Any]:
-        return self._flow_func_signature.return_annotation
+        return self._dag_flow_func_signature.return_annotation
 
 
 @callable_decorator_cls
@@ -114,29 +114,29 @@ class DagFlow(Flow, DagFlowConfig):
         raise NotImplementedError
 
     def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
-        return inspect.signature(self._flow_func).bind(*args, **kwargs).arguments
+        return inspect.signature(self._dag_flow_func).bind(*args, **kwargs).arguments
 
 
 class FuncFlowConfig(FlowConfig):
     def __init__(
         self,
-        flow_func: Callable,
+        func_flow_func: Callable,
         *,
         name: Optional[str] = None,
         **kwargs: Any,
     ):
-        name = name if name is not None else flow_func.__name__
+        name = name if name is not None else func_flow_func.__name__
         super().__init__(name=name)
-        self._flow_func = flow_func
+        self._func_flow_func = func_flow_func
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
-        return self._flow_func,
+        return self._func_flow_func,
 
     def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
         return ()
 
     def has_coroutine_func(self) -> bool:
-        return asyncio.iscoroutinefunction(self._flow_func)
+        return asyncio.iscoroutinefunction(self._func_flow_func)
 
 
 @callable_decorator_cls
@@ -164,7 +164,7 @@ class FuncFlow(Flow, FuncFlowConfig):
         return FuncFlowTemplate  # noqa  # Pycharm static type checker bug
 
     def _call_func(self, *args: object, **kwargs: object) -> Any:
-        return self._flow_func(*args, **kwargs)
+        return self._func_flow_func(*args, **kwargs)
 
 
 # TODO: Recursive replace - *args: Any -> *args: object, *kwargs: Any -> *kwargs: object

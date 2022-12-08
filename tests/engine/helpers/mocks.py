@@ -12,11 +12,12 @@ from slugify import slugify
 
 from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
-from unifair.engine.job_runner import DagFlowRunnerEngine, TaskRunnerEngine
+from unifair.engine.job_runner import DagFlowRunnerEngine, FuncFlowRunnerEngine, TaskRunnerEngine
 from unifair.engine.protocols import (IsDagFlow,
                                       IsEngine,
                                       IsEngineConfig,
                                       IsFlow,
+                                      IsFuncFlow,
                                       IsJob,
                                       IsRunStateRegistry,
                                       IsRunStateRegistryConfig,
@@ -158,7 +159,7 @@ class MockBackendFlow:
         return result
 
 
-class MockJobRunnerSubclass(TaskRunnerEngine, DagFlowRunnerEngine):
+class MockJobRunnerSubclass(TaskRunnerEngine, DagFlowRunnerEngine, FuncFlowRunnerEngine):
     def _init_engine(self) -> None:
         self._update_from_config()
         self.finished_backend_tasks: List[MockBackendTask] = []
@@ -186,13 +187,29 @@ class MockJobRunnerSubclass(TaskRunnerEngine, DagFlowRunnerEngine):
 
     # DagFlowRunnerEngine
 
-    def _init_dag_flow(self, flow: IsDagFlow) -> MockBackendFlow:
+    def _init_dag_flow(self, dag_flow: IsDagFlow) -> MockBackendFlow:
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
         return MockBackendFlow(self._config)
 
-    def _run_dag_flow(self, state: MockBackendFlow, flow: IsDagFlow, *args, **kwargs) -> Any:
-        call_func = self.default_dag_flow_run_decorator(flow)
-        result = state.run(flow, call_func, *args, **kwargs)
+    def _run_dag_flow(self, state: MockBackendFlow, dag_flow: IsDagFlow, *args, **kwargs) -> Any:
+        call_func = self.default_dag_flow_run_decorator(dag_flow)
+        result = state.run(dag_flow, call_func, *args, **kwargs)
+        self.finished_backend_flows.append(state)
+        return result
+
+    # FuncFlowRunnerEngine
+
+    def _init_func_flow(self, func_flow: IsFuncFlow, call_func: Callable) -> object:
+        assert isinstance(self._config, MockEngineConfig)  # to help type checkers
+        return MockBackendFlow(self._config)
+
+    def _run_func_flow(self,
+                       state: MockBackendFlow,
+                       func_flow: IsFuncFlow,
+                       call_func: Callable,
+                       *args,
+                       **kwargs) -> Any:
+        result = state.run(func_flow, call_func, *args, **kwargs)
         self.finished_backend_flows.append(state)
         return result
 
