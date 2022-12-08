@@ -45,7 +45,7 @@ def modify_all_lines(
 ) -> Dataset[Model[str]]:
     out_dataset = Dataset[Model[str]]()
     for name, datafile in dataset.items():
-        all_lines = [line for line in StringIO(datafile)]
+        all_lines = [line.strip() for line in StringIO(datafile)]
         modified_lines = modify_all_lines_func(all_lines, **kwargs)
         out_dataset[name] = os.linesep.join(modified_lines)
     return out_dataset
