@@ -12,5 +12,4 @@ from .helpers.functions import run_job_test
 )
 @pytest.mark.asyncio
 async def test_mock_tasks_all_engines_mock_registry(job_case: JobCase) -> None:
-    for i in range(2):
-        await run_job_test(job_case)
+    await run_job_test(job_case)
