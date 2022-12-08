@@ -4,6 +4,10 @@ from datetime import datetime
 import logging
 from typing import Any, Callable, ClassVar, Dict, List, Optional, Tuple, Type
 
+from inflection import underscore
+from prefect.utilities.names import generate_slug
+from slugify import slugify
+
 from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
 from unifair.engine.protocols import (IsEngine,
@@ -28,8 +32,14 @@ class MockTask:
     job_creator = MockJobCreator()
 
     def __init__(self, func: Callable, *, name: Optional[str] = None) -> None:
-        self.name = name
         self._func = func
+        self.name = name
+        self.regenerate_unique_name()
+
+    def regenerate_unique_name(self) -> None:
+        class_name_snake = underscore(self.__class__.__name__)
+        self.unique_name = slugify(  # noqa
+            f'{class_name_snake}-{underscore(self.name)}-{generate_slug(2)}')
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         return self._call_func(*args, **kwargs)
