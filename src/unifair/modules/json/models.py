@@ -1,5 +1,5 @@
 # from __future__ import annotations
-from typing import (Dict, ForwardRef, Generic, List, TypeVar, Union)
+from typing import Dict, ForwardRef, Generic, List, TypeVar, Union
 
 from unifair.data.dataset import Dataset
 from unifair.data.model import Model
@@ -31,23 +31,25 @@ JsonDictValT = TypeVar('JsonDictValT')
 #         return self.dict()[ROOT_KEY]
 
 
-class JsonList(Model[List[JsonListValT]], Generic[JsonListValT]):
+class JsonList(Model[List[Union[None, JsonListValT]]], Generic[JsonListValT]):
     ...
 
 
-class JsonDict(Model[Dict[str, JsonDictValT]], Generic[JsonDictValT]):
+class JsonDict(Model[Dict[str, Union[None, JsonDictValT]]], Generic[JsonDictValT]):
     ...
 
 
-JsonScalarType = Union[int, float, str, bool, None]
+class JsonScalarType(Model[Union[None, int, float, str, bool]]):
+    ...
 
-JsonType = Union[JsonScalarType, JsonList['JsonType'], JsonDict['JsonType']]
+
+JsonType = Union[None, JsonScalarType, JsonList['JsonType'], JsonDict['JsonType']]
 
 JsonList['JsonType'].update_forward_refs(JsonType=JsonType)
 JsonDict['JsonType'].update_forward_refs(JsonType=JsonType)
 
 
-class JsonModel(Model[Union[JsonDict[JsonType], JsonList, JsonType]]):
+class JsonModel(Model[JsonType]):
     ...
 
 
