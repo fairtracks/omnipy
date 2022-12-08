@@ -74,7 +74,7 @@ class DagFlowConfig(FlowConfig):
     def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
         return ()
 
-    def has_coroutine_flow_func(self) -> bool:
+    def has_coroutine_func(self) -> bool:
         return asyncio.iscoroutinefunction(self._flow_func)
 
     @property

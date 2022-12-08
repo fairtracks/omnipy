@@ -138,7 +138,7 @@ class IsFlowTemplate(IsJobTemplate, Protocol):
 class IsDagFlow(IsFlow, Protocol):
     tasks: Tuple[IsTask]
 
-    def has_coroutine_flow_func(self) -> bool:
+    def has_coroutine_func(self) -> bool:
         ...
 
     def get_call_args(self, *args, **kwargs) -> Dict[str, object]:
