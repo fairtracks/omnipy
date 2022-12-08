@@ -123,7 +123,7 @@ class DagFlow(Flow, DagFlowConfig):
         return self._tasks
 
     def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
-        return inspect.getcallargs(self._flow_func, *args, **kwargs)
+        return inspect.signature(self._flow_func).bind(*args, **kwargs).arguments
 
 
 class FuncFlowConfig(FlowConfig):
