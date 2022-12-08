@@ -53,7 +53,8 @@ def test_fail_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]
 @pc.parametrize_with_cases('case', cases='.cases.flows')
 def test_flow_run(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
                   case: FlowCase) -> None:
-    assert mock_local_runner.finished is False
+    if hasattr(mock_local_runner, 'finished'):
+        assert mock_local_runner.finished is False
 
     assert_updated_wrapper(case.flow_template, case.flow_func)
 
@@ -68,7 +69,8 @@ def test_flow_run(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     assert flow.name == case.name
     case.assert_results_func(results)
 
-    assert mock_local_runner.finished is True
+    if hasattr(mock_local_runner, 'finished'):
+        assert mock_local_runner.finished is True
 
 
 # TODO: Tests to add:

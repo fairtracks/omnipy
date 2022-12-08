@@ -19,8 +19,9 @@ from ...engine.helpers.functions import update_job_case_with_job
 
 @pc.fixture(scope='function')
 @pc.parametrize(
-    'job_type', [JobType.task, JobType.dag_flow, JobType.func_flow],
-    ids=['task', 'dag_flow', 'func_flow'])
+    'job_type',
+    [JobType.task, JobType.dag_flow],  #, JobType.func_flow],
+    ids=['task', 'dag_flow'])  #, 'func_flow'])
 @pc.parametrize('task_template_cls', [TaskTemplate], ids=[''])
 @pc.parametrize('dag_flow_template_cls', [DagFlowTemplate], ids=[''])
 @pc.parametrize('func_flow_template_cls', [FuncFlowTemplate], ids=[''])
