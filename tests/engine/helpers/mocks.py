@@ -47,7 +47,7 @@ class MockTask:
     def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         return self._func(*args, **kwargs)
 
-    def has_coroutine_task_func(self) -> bool:
+    def has_coroutine_func(self) -> bool:
         return asyncio.iscoroutinefunction(self._func)
 
     @classmethod

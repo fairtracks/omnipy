@@ -47,7 +47,7 @@ class TaskConfig(JobConfig):
     def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
         return 'fixed_params', 'param_key_map', 'result_key'
 
-    def has_coroutine_task_func(self) -> bool:
+    def has_coroutine_func(self) -> bool:
         return asyncio.iscoroutinefunction(self._task_func)
 
     @property
