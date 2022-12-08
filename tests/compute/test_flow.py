@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Dict
 
 import pytest
 import pytest_cases as pc
