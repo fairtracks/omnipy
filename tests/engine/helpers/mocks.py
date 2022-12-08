@@ -12,6 +12,7 @@ from slugify import slugify
 
 from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
+from unifair.engine.job_runner import DagFlowRunnerEngine, TaskRunnerEngine
 from unifair.engine.protocols import (IsDagFlow,
                                       IsEngine,
                                       IsEngineConfig,
@@ -20,7 +21,6 @@ from unifair.engine.protocols import (IsDagFlow,
                                       IsRunStateRegistry,
                                       IsRunStateRegistryConfig,
                                       IsTask)
-from unifair.engine.task_runner import DagFlowRunnerEngine, TaskRunnerEngine
 from unifair.util.callable_decorator_cls import callable_decorator_cls
 
 
