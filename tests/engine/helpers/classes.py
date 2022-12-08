@@ -61,13 +61,12 @@ class JobRunnerStateChecker(IsTaskRunnerEngine, IsDagFlowRunnerEngine):
         assert_job_state(task, [RunState.RUNNING])
         return self._engine._run_task(state, task, call_func, *args, **kwargs)  # noqa
 
-    def _init_dag_flow(self, dag_flow: IsDagFlow, call_func: Callable) -> Any:
+    def _init_dag_flow(self, dag_flow: IsDagFlow) -> Any:
         from .functions import assert_job_state
         assert_job_state(dag_flow, [RunState.INITIALIZED])
-        return self._engine._init_dag_flow(dag_flow, call_func)  # noqa
+        return self._engine._init_dag_flow(dag_flow)  # noqa
 
-    def _run_dag_flow(self, state: Any, dag_flow: IsDagFlow, call_func: Callable, *args,
-                      **kwargs) -> Any:
+    def _run_dag_flow(self, state: Any, dag_flow: IsDagFlow, *args, **kwargs) -> Any:
         from .functions import assert_job_state
         assert_job_state(dag_flow, [RunState.RUNNING])
-        return self._engine._run_dag_flow(state, dag_flow, call_func, *args, **kwargs)  # noqa
+        return self._engine._run_dag_flow(state, dag_flow, *args, **kwargs)  # noqa

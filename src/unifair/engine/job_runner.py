@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import inspect
 import sys
 from types import AsyncGeneratorType, GeneratorType
-from typing import Any, Callable
+from typing import Any, Awaitable, Callable, cast
 
 from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
@@ -16,6 +16,7 @@ class JobRunnerEngine(Engine, ABC):
 
     def _decorate_result_with_job_finalization_detector(self, job: IsJob, job_result: object):
         if isinstance(job_result, GeneratorType):
+            job_result = cast(GeneratorType, job_result)
 
             def detect_finished_generator_decorator():
                 try:
@@ -27,6 +28,7 @@ class JobRunnerEngine(Engine, ABC):
 
             return detect_finished_generator_decorator()
         elif isinstance(job_result, AsyncGeneratorType):
+            job_result = cast(AsyncGeneratorType, job_result)
 
             async def detect_finished_async_generator_decorator():
                 try:
@@ -43,6 +45,7 @@ class JobRunnerEngine(Engine, ABC):
             return detect_finished_async_generator_decorator()
 
         elif inspect.isawaitable(job_result):
+            job_result = cast(Awaitable, job_result)
 
             async def detect_finished_coroutine():
                 result = await job_result
@@ -80,15 +83,14 @@ class TaskRunnerEngine(JobRunnerEngine):
 
 class DagFlowRunnerEngine(JobRunnerEngine):
     def dag_flow_decorator(self, flow: IsDagFlow) -> IsDagFlow:
-        prev_call_func = flow._call_func  # noqa
+        # prev_call_func = flow._call_func  # Only raises error anyway
 
         self._register_job_state(flow, RunState.INITIALIZED)
-        state = self._init_dag_flow(flow, prev_call_func)
+        state = self._init_dag_flow(flow)
 
         def _call_func(*args: object, **kwargs: object) -> Any:
             self._register_job_state(flow, RunState.RUNNING)
-            # setattr(flow, '_call_func', prev_call_func)
-            flow_result = self._run_dag_flow(state, flow, prev_call_func, *args, **kwargs)
+            flow_result = self._run_dag_flow(state, flow, *args, **kwargs)
             return self._decorate_result_with_job_finalization_detector(flow, flow_result)
 
         setattr(flow, '_call_func', _call_func)
@@ -96,7 +98,7 @@ class DagFlowRunnerEngine(JobRunnerEngine):
 
     @staticmethod
     def default_dag_flow_run_decorator(flow: IsDagFlow) -> Any:
-        def _run_dag_flow(*args: object, **kwargs: object):
+        def _inner_run_dag_flow(*args: object, **kwargs: object):
             results = {}
             result = None
             for i, job in enumerate(flow.tasks):
@@ -127,13 +129,12 @@ class DagFlowRunnerEngine(JobRunnerEngine):
                     results[job.name] = result
             return result
 
-        return _run_dag_flow
+        return _inner_run_dag_flow
 
     @abstractmethod
-    def _init_dag_flow(self, flow: IsDagFlow, call_func: Callable) -> Any:
+    def _init_dag_flow(self, flow: IsDagFlow) -> Any:
         ...
 
     @abstractmethod
-    def _run_dag_flow(self, state: Any, flow: IsDagFlow, call_func: Callable, *args,
-                      **kwargs) -> Any:
+    def _run_dag_flow(self, state: Any, flow: IsDagFlow, *args, **kwargs) -> Any:
         ...

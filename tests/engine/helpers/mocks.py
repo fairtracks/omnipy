@@ -161,16 +161,11 @@ class MockJobRunnerSubclass(TaskRunnerEngine, DagFlowRunnerEngine):
 
     # DagFlowRunnerEngine
 
-    def _init_dag_flow(self, flow: IsDagFlow, call_func: Callable) -> MockBackendFlow:
+    def _init_dag_flow(self, flow: IsDagFlow) -> MockBackendFlow:
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
         return MockBackendFlow(self._config)
 
-    def _run_dag_flow(self,
-                      state: MockBackendFlow,
-                      flow: IsDagFlow,
-                      call_func: Callable,
-                      *args,
-                      **kwargs) -> Any:
+    def _run_dag_flow(self, state: MockBackendFlow, flow: IsDagFlow, *args, **kwargs) -> Any:
         call_func = self.default_dag_flow_run_decorator(flow)
         result = state.run(flow, call_func, *args, **kwargs)
         self.finished_backend_flows.append(state)
