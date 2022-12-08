@@ -10,15 +10,15 @@ def test_pandas_dataset_serializer_to_tar_file():
     pandas_data.from_data({'obj_type_2': [{'a': 'abc', 'b': 12}, {'c': 'bcd'}]})
     # fmt: off
     obj_type_1_csv = """
-,a,b
-0,abc,12
-1,bcd,23
+a,b
+abc,12
+bcd,23
 """[1:]
 
     obj_type_2_csv = """
-,a,b,c
-0,abc,12,
-1,,,bcd
+a,b,c
+abc,12,
+,,bcd
 """[1:]
 
     serializer = PandasDatasetToTarFileSerializer()
