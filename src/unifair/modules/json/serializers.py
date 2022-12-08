@@ -1,4 +1,4 @@
-from typing import IO, Union
+from typing import Dict, IO, Union
 
 from unifair.data.serializer import (create_dataset_from_tarfile,
                                      create_tarfile_from_dataset,
@@ -23,8 +23,8 @@ class JsonDatasetToTarFileSerializer(Serializer):
         def json_decode_func(file_stream: IO[bytes]) -> str:
             return file_stream.read().decode('utf8')
 
-        def json_dictify_object(obj_type: str, obj_val: str) -> str:
-            return '{{"{}": {}}}'.format(obj_type, obj_val)
+        def json_dictify_object(obj_type: str, obj_val: str) -> Dict[str, str]:
+            return {f'{obj_type}': f'{obj_val}'}
 
         create_dataset_from_tarfile(
             json_dataset,
