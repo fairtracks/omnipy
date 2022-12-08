@@ -1,11 +1,11 @@
 from typing import Any, Callable, Type
 
 from unifair.config.engine import LocalRunnerConfig
-from unifair.engine.job_runner import DagFlowRunnerEngine, TaskRunnerEngine
-from unifair.engine.protocols import IsDagFlow, IsLocalRunnerConfig, IsTask
+from unifair.engine.job_runner import DagFlowRunnerEngine, FuncFlowRunnerEngine, TaskRunnerEngine
+from unifair.engine.protocols import IsDagFlow, IsFuncFlow, IsLocalRunnerConfig, IsTask
 
 
-class LocalRunner(TaskRunnerEngine, DagFlowRunnerEngine):
+class LocalRunner(TaskRunnerEngine, DagFlowRunnerEngine, FuncFlowRunnerEngine):
     def _init_engine(self) -> None:
         ...
 
@@ -27,3 +27,15 @@ class LocalRunner(TaskRunnerEngine, DagFlowRunnerEngine):
 
     def _run_dag_flow(self, state: Any, flow: IsDagFlow, *args, **kwargs) -> Any:
         return self.default_dag_flow_run_decorator(flow)(*args, **kwargs)
+
+    def _init_func_flow(self, func_flow: IsFuncFlow, call_func: Callable) -> object:
+        pass
+
+    def _run_func_flow(self,
+                       state: Any,
+                       func_flow: IsFuncFlow,
+                       call_func: Callable,
+                       *args,
+                       **kwargs) -> Any:
+        with func_flow.flow_context:
+            return call_func(*args, **kwargs)

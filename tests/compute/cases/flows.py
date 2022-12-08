@@ -56,8 +56,6 @@ def case_sync_dagflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
 def case_sync_funcflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
     task_template = TaskTemplate(task_case.task_func)
 
-    pytest.xfail('Temporarily failing')
-
     def single_task_func_decorator(task: TaskTemplate) -> Callable:
         def single_task_func(*args, **kwargs):
             return task(*args, **kwargs)
