@@ -117,6 +117,10 @@ class JobConfig(metaclass=JobConfigMeta):
         return self._get_init_args() == other._get_init_args() \
             and self._get_init_kwargs() == other._get_init_kwargs()
 
+    @property
+    def in_flow_context(self) -> bool:
+        return self.__class__.job_creator.nested_context_level > 0
+
 
 class JobTemplate(JobConfig, metaclass=JobTemplateMeta):
     @classmethod
@@ -158,10 +162,6 @@ class JobTemplate(JobConfig, metaclass=JobTemplateMeta):
                 kwargs[key] = new_val
 
         return self.create(*self._get_init_args(), **kwargs)
-
-    @property
-    def in_flow_context(self) -> bool:
-        return self.__class__.job_creator.nested_context_level > 0
 
     def __call__(self, *args, **kwargs):
         if self.in_flow_context:

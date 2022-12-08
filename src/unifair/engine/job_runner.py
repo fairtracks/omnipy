@@ -101,7 +101,7 @@ class DagFlowRunnerEngine(JobRunnerEngine):
         def _inner_run_dag_flow(*args: object, **kwargs: object):
             results = {}
             result = None
-            for i, job in enumerate(flow.tasks):
+            for i, job in enumerate(flow.task_templates):
                 if i == 0:
                     results = flow.get_call_args(*args, **kwargs)
 
@@ -121,7 +121,8 @@ class DagFlowRunnerEngine(JobRunnerEngine):
                             param_keys.remove(key)
 
                 params = {key: val for key, val in results.items() if key in param_keys}
-                result = job(**params)
+                with flow.flow_context:
+                    result = job(**params)
 
                 if isinstance(result, dict) and len(result) > 0:
                     results.update(result)
