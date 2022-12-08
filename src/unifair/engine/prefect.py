@@ -31,7 +31,7 @@ class PrefectEngine(TaskRunnerEngine):
             cache_key_fn=task_input_hash if self._config.use_cached_results else None,
         )
 
-        if task.has_coroutine_task_func():
+        if task.has_coroutine_func():
 
             @prefect_task(**task_kwargs)
             async def run_task(*inner_args, **inner_kwargs):
