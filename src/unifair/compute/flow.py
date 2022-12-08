@@ -5,10 +5,7 @@ from types import MappingProxyType
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from unifair.compute.job import CallableDecoratingJobTemplateMixin, Job, JobConfig, JobTemplate
-from unifair.engine.protocols import (IsDagFlowRunnerEngine,
-                                      IsFuncFlowRunnerEngine,
-                                      IsTask,
-                                      IsTaskTemplate)
+from unifair.engine.protocols import IsDagFlowRunnerEngine, IsFuncFlowRunnerEngine, IsTaskTemplate
 from unifair.util.callable_decorator_cls import callable_decorator_cls
 
 
@@ -64,7 +61,6 @@ class DagFlowConfig(FlowConfig):
         self._flow_func = flow_func
         self._flow_func_signature = inspect.signature(self._flow_func)
         self._task_templates: Tuple[IsTaskTemplate] = task_templates
-        self._tasks: Optional[Tuple[IsTask]] = None
         name = name if name is not None else self._flow_func.__name__
         super().__init__(name=name, **kwargs)
 
@@ -73,6 +69,10 @@ class DagFlowConfig(FlowConfig):
 
     def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
         return ()
+
+    @property
+    def task_templates(self) -> Tuple[IsTaskTemplate]:
+        return self._task_templates
 
     def has_coroutine_func(self) -> bool:
         return asyncio.iscoroutinefunction(self._flow_func)
@@ -96,14 +96,9 @@ class DagFlowTemplate(CallableDecoratingJobTemplateMixin['DagFlowTemplate'],
 
     def _apply_engine_decorator(self, flow: 'DagFlow') -> 'DagFlow':
         if self.engine is not None and isinstance(self.engine, IsDagFlowRunnerEngine):
-            flow._tasks = tuple(task_template.apply() for task_template in self.task_templates)
             return self.engine.dag_flow_decorator(flow)  # noqa  # Pycharm static type checker bug
         else:
             raise RuntimeError(f'Engine "{self.engine}" does not support DAG flows')
-
-    @property
-    def task_templates(self) -> Tuple[IsTaskTemplate]:
-        return self._task_templates
 
 
 class DagFlow(Flow, DagFlowConfig):
@@ -117,10 +112,6 @@ class DagFlow(Flow, DagFlowConfig):
 
     def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         raise NotImplementedError
-
-    @property
-    def tasks(self) -> Tuple[IsTask]:
-        return self._tasks
 
     def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
         return inspect.signature(self._flow_func).bind(*args, **kwargs).arguments

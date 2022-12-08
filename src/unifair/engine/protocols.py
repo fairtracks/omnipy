@@ -96,6 +96,7 @@ class IsJob(Protocol):
     name: str
     unique_name: str
     flow_context: IsJobCreator
+    in_flow_context: bool
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         ...
@@ -136,7 +137,7 @@ class IsFlowTemplate(IsJobTemplate, Protocol):
 
 
 class IsDagFlow(IsFlow, Protocol):
-    tasks: Tuple[IsTask]
+    task_templates: Tuple[IsTaskTemplate]
 
     def has_coroutine_func(self) -> bool:
         ...

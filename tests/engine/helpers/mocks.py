@@ -27,9 +27,16 @@ from unifair.util.callable_decorator_cls import callable_decorator_cls
 class MockJobCreator:
     def __init__(self):
         self.engine: Optional[IsEngine] = None
+        self.nested_context_level = 0
 
     def set_engine(self, engine: IsEngine) -> None:
         self.engine = engine
+
+    def __enter__(self):
+        self.nested_context_level += 1
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.nested_context_level -= 1
 
 
 class MockTask:
@@ -54,9 +61,25 @@ class MockTask:
     def has_coroutine_func(self) -> bool:
         return asyncio.iscoroutinefunction(self._func)
 
+    @property
+    def flow_context(self):
+        return self.job_creator
+
+    @property
+    def in_flow_context(self):
+        return self.job_creator.nested_context_level > 0
+
 
 @callable_decorator_cls
 class MockTaskTemplate(MockTask):
+    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
+        if self.in_flow_context:
+            return self.run(*args, **kwargs)
+        raise TypeError("'{}' object is not callable".format(self.__class__.__name__))
+
+    def run(self, *args: object, **kwargs: object) -> object:
+        return self.apply()(*args, **kwargs)
+
     def apply(self) -> IsTask:
         task = MockTask(self._func, name=self.name)
         update_wrapper(task, self._func)
@@ -67,18 +90,15 @@ class MockTaskTemplate(MockTask):
 class MockDagFlow(MockTask):
     def __init__(self,
                  func: Callable,
-                 *tasks: MockTask,
+                 *task_templates: MockTaskTemplate,
                  name: Optional[str] = None,
                  **kwargs: object) -> None:
-        self._tasks = tasks
+        self._task_templates = task_templates
         super().__init__(func, name=name, **kwargs)
 
-    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
-        raise Exception('sf')
-
     @property
-    def tasks(self) -> Tuple[MockTask]:
-        return self._tasks
+    def task_templates(self) -> Tuple[MockTaskTemplate]:
+        return self._task_templates
 
     def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
         return inspect.signature(self._func).bind(*args, **kwargs).arguments
@@ -86,16 +106,8 @@ class MockDagFlow(MockTask):
 
 @callable_decorator_cls
 class MockDagFlowTemplate(MockDagFlow):
-    def __init__(self,
-                 func: Callable,
-                 *task_templates: 'MockDagFlowTemplate',
-                 name: Optional[str] = None) -> None:
-        self._task_templates = task_templates
-        super().__init__(func, name=name)
-
     def apply(self) -> IsTask:
-        tasks = (task.apply() for task in self._task_templates)
-        dag_flow = MockDagFlow(self._func, *tasks, name=self.name)
+        dag_flow = MockDagFlow(self._func, *self._task_templates, name=self.name)
         dag_flow = self.job_creator.engine.dag_flow_decorator(dag_flow)
         update_wrapper(dag_flow, self._func)
         print(self.job_creator.engine)

@@ -73,12 +73,14 @@ class PrefectEngine(TaskRunnerEngine, DagFlowRunnerEngine):
 
             @prefect_flow(**flow_kwargs)
             async def run_dag_flow(*inner_args, **inner_kwargs):
-                return await resolve(call_func(*inner_args, **inner_kwargs))
+                with flow.flow_context:
+                    return await resolve(call_func(*inner_args, **inner_kwargs))
         else:
 
             @prefect_flow(**flow_kwargs)
             def run_dag_flow(*inner_args, **inner_kwargs):
-                return call_func(*inner_args, **inner_kwargs)
+                with flow.flow_context:
+                    return call_func(*inner_args, **inner_kwargs)
 
         return run_dag_flow
 
