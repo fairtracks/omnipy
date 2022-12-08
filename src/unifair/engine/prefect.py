@@ -8,11 +8,12 @@ from prefect import Task as PrefectTask
 from prefect.tasks import task_input_hash
 
 from unifair.config.engine import PrefectEngineConfig
-from unifair.engine.job_runner import TaskRunnerEngine
-from unifair.engine.protocols import IsPrefectEngineConfig, IsTask
+from unifair.engine.job_runner import DagFlowRunnerEngine, TaskRunnerEngine
+from unifair.engine.protocols import IsDagFlow, IsPrefectEngineConfig, IsTask
+from unifair.util.helpers import resolve
 
 
-class PrefectEngine(TaskRunnerEngine):
+class PrefectEngine(TaskRunnerEngine, DagFlowRunnerEngine):
     def _init_engine(self) -> None:
         ...
 
@@ -44,14 +45,8 @@ class PrefectEngine(TaskRunnerEngine):
 
         return run_task
 
-    def _run_task(
-        self,
-        state: PrefectTask,
-        task: IsTask,
-        call_func: Callable,
-        *args,
-        **kwargs,
-    ) -> Any:
+    def _run_task(self, state: PrefectTask, task: IsTask, call_func: Callable, *args,
+                  **kwargs) -> Any:
 
         _prefect_task = state
 
@@ -59,7 +54,7 @@ class PrefectEngine(TaskRunnerEngine):
 
             @prefect_flow(name=task.name)
             async def task_flow(*inner_args, **inner_kwargs):
-                return await _prefect_task(*inner_args, **inner_kwargs)
+                return await resolve(_prefect_task(*inner_args, **inner_kwargs))
         else:
 
             @prefect_flow(name=task.name)
@@ -67,3 +62,28 @@ class PrefectEngine(TaskRunnerEngine):
                 return _prefect_task(*inner_args, **inner_kwargs)
 
         return task_flow(*args, **kwargs)
+
+    def _init_dag_flow(self, flow: IsDagFlow) -> Any:
+
+        assert isinstance(self._config, PrefectEngineConfig)
+        flow_kwargs = dict(name=flow.name,)
+        call_func = self.default_dag_flow_run_decorator(flow)
+
+        if flow.has_coroutine_func():
+
+            @prefect_flow(**flow_kwargs)
+            async def run_dag_flow(*inner_args, **inner_kwargs):
+                return await resolve(call_func(*inner_args, **inner_kwargs))
+        else:
+
+            @prefect_flow(**flow_kwargs)
+            def run_dag_flow(*inner_args, **inner_kwargs):
+                return call_func(*inner_args, **inner_kwargs)
+
+        return run_dag_flow
+
+    def _run_dag_flow(self, state: PrefectFlow, flow: IsDagFlow, *args, **kwargs) -> Any:
+
+        _prefect_flow = state
+
+        return _prefect_flow(*args, **kwargs)

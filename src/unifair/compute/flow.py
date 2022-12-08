@@ -144,6 +144,9 @@ class FuncFlowConfig(FlowConfig):
     def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
         return ()
 
+    def has_coroutine_func(self) -> bool:
+        return asyncio.iscoroutinefunction(self._flow_func)
+
 
 @callable_decorator_cls
 class FuncFlowTemplate(CallableDecoratingJobTemplateMixin['FuncFlowTemplate'],
