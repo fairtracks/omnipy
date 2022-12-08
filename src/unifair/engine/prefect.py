@@ -1,4 +1,5 @@
 import asyncio
+from datetime import timedelta
 from typing import Any, Callable, Type
 
 from prefect import flow as prefect_flow
@@ -30,7 +31,7 @@ class PrefectEngine(TaskRunnerEngine, DagFlowRunnerEngine):
         task_kwargs = dict(
             name=task.name,
             cache_key_fn=task_input_hash if self._config.use_cached_results else None,
-        )
+            cache_expiration=timedelta(days=1))
 
         if task.has_coroutine_func():
 
@@ -50,18 +51,24 @@ class PrefectEngine(TaskRunnerEngine, DagFlowRunnerEngine):
 
         _prefect_task = state
 
-        if asyncio.iscoroutinefunction(_prefect_task):
-
-            @prefect_flow(name=task.name)
-            async def task_flow(*inner_args, **inner_kwargs):
-                return await resolve(_prefect_task(*inner_args, **inner_kwargs))
+        if task.in_flow_context:
+            return _prefect_task(*args, return_state=False, **kwargs)
         else:
+            flow_kwargs = dict(name=task.name)
 
-            @prefect_flow(name=task.name)
-            def task_flow(*inner_args, **inner_kwargs):
-                return _prefect_task(*inner_args, **inner_kwargs)
+            if asyncio.iscoroutinefunction(_prefect_task):
 
-        return task_flow(*args, **kwargs)
+                @prefect_flow(**flow_kwargs)
+                async def task_flow(*inner_args, **inner_kwargs):
+                    return await resolve(
+                        _prefect_task(*inner_args, return_state=False, **inner_kwargs))
+            else:
+
+                @prefect_flow(**flow_kwargs)
+                def task_flow(*inner_args, **inner_kwargs):
+                    return _prefect_task(*inner_args, return_state=False, **inner_kwargs)
+
+            return task_flow(*args, **kwargs)
 
     def _init_dag_flow(self, flow: IsDagFlow) -> Any:
 
