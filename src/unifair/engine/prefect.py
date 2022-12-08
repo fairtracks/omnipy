@@ -9,12 +9,12 @@ from prefect import Task as PrefectTask
 from prefect.tasks import task_input_hash
 
 from unifair.config.engine import PrefectEngineConfig
-from unifair.engine.job_runner import DagFlowRunnerEngine, TaskRunnerEngine
-from unifair.engine.protocols import IsDagFlow, IsPrefectEngineConfig, IsTask
+from unifair.engine.job_runner import DagFlowRunnerEngine, FuncFlowRunnerEngine, TaskRunnerEngine
+from unifair.engine.protocols import IsDagFlow, IsFuncFlow, IsPrefectEngineConfig, IsTask
 from unifair.util.helpers import resolve
 
 
-class PrefectEngine(TaskRunnerEngine, DagFlowRunnerEngine):
+class PrefectEngine(TaskRunnerEngine, DagFlowRunnerEngine, FuncFlowRunnerEngine):
     def _init_engine(self) -> None:
         ...
 
@@ -24,6 +24,8 @@ class PrefectEngine(TaskRunnerEngine, DagFlowRunnerEngine):
     @classmethod
     def get_config_cls(cls) -> Type[IsPrefectEngineConfig]:
         return PrefectEngineConfig
+
+    # TaskRunnerEngine
 
     def _init_task(self, task: IsTask, call_func: Callable) -> PrefectTask:
 
@@ -70,23 +72,25 @@ class PrefectEngine(TaskRunnerEngine, DagFlowRunnerEngine):
 
             return task_flow(*args, **kwargs)
 
-    def _init_dag_flow(self, flow: IsDagFlow) -> Any:
+    # DagFlowRunnerEngine
+
+    def _init_dag_flow(self, dag_flow: IsDagFlow) -> Any:
 
         assert isinstance(self._config, PrefectEngineConfig)
-        flow_kwargs = dict(name=flow.name,)
-        call_func = self.default_dag_flow_run_decorator(flow)
+        flow_kwargs = dict(name=dag_flow.name,)
+        call_func = self.default_dag_flow_run_decorator(dag_flow)
 
-        if flow.has_coroutine_func():
+        if dag_flow.has_coroutine_func():
 
             @prefect_flow(**flow_kwargs)
             async def run_dag_flow(*inner_args, **inner_kwargs):
-                with flow.flow_context:
+                with dag_flow.flow_context:
                     return await resolve(call_func(*inner_args, **inner_kwargs))
         else:
 
             @prefect_flow(**flow_kwargs)
             def run_dag_flow(*inner_args, **inner_kwargs):
-                with flow.flow_context:
+                with dag_flow.flow_context:
                     return call_func(*inner_args, **inner_kwargs)
 
         return run_dag_flow
@@ -96,3 +100,39 @@ class PrefectEngine(TaskRunnerEngine, DagFlowRunnerEngine):
         _prefect_flow = state
 
         return _prefect_flow(*args, **kwargs)
+
+    # FuncFlowRunnerEngine
+
+    def _init_func_flow(self, func_flow: IsFuncFlow, call_func: Callable) -> object:
+
+        assert isinstance(self._config, PrefectEngineConfig)
+        flow_kwargs = dict(name=func_flow.name,)
+
+        if func_flow.has_coroutine_func():
+
+            @prefect_flow(**flow_kwargs)
+            async def run_func_flow(*inner_args, **inner_kwargs):
+                with func_flow.flow_context:
+                    return await resolve(call_func(*inner_args, **inner_kwargs))
+        else:
+
+            @prefect_flow(**flow_kwargs)
+            def run_func_flow(*inner_args, **inner_kwargs):
+                with func_flow.flow_context:
+                    return call_func(*inner_args, **inner_kwargs)
+
+        return run_func_flow
+
+    def _run_func_flow(self,
+                       state: Any,
+                       func_flow: IsFuncFlow,
+                       call_func: Callable,
+                       *args,
+                       **kwargs) -> Any:
+
+        _prefect_flow = state
+
+        return _prefect_flow(*args, **kwargs)
+
+
+# TODO: Refactor redundant code
