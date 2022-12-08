@@ -1,3 +1,4 @@
+import inspect
 import locale as pkg_locale
 from typing import Any, Dict, Mapping, Tuple, Union
 
@@ -17,3 +18,10 @@ def get_datetime_format(locale: Union[str, Tuple[str, str]] = '') -> str:
     else:
         datetime_format = '%a %b %e %X %Y'
     return datetime_format
+
+
+async def resolve(val):
+    if inspect.isawaitable(val):
+        return await val
+    else:
+        return val

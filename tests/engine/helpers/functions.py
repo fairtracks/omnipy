@@ -20,6 +20,7 @@ from unifair.engine.protocols import (IsDagFlow,
                                       IsTask,
                                       IsTaskRunnerEngine,
                                       IsTaskTemplate)
+from unifair.util.helpers import resolve
 
 from .classes import JobCase, JobType
 
@@ -81,13 +82,6 @@ async def async_wait_for_job_state(job: IsJob, states: List[RunState], timeout_s
     while extract_job_run_state(job) not in states:
         await asyncio.sleep(0.001)
         _check_timeout(start_time, timeout_secs, job, states)
-
-
-async def resolve(val):
-    if inspect.isawaitable(val):
-        return await val
-    else:
-        return val
 
 
 def get_sync_assert_results_wait_a_bit_func(job: IsJob):
@@ -187,6 +181,4 @@ def update_job_case_with_job(
 
 
 async def run_job_test(job_case: JobCase):
-    result = job_case.run_and_assert_results_func(job_case.job)
-    if result and inspect.isawaitable(result):
-        await result
+    await resolve(job_case.run_and_assert_results_func(job_case.job))
