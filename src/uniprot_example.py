@@ -1,6 +1,7 @@
 from typing import Any
 
 import requests
+import pandas as pd
 
 from unifair import runtime
 from unifair.compute.flow import FuncFlowTemplate
@@ -77,10 +78,38 @@ uniprot_6_ds = to_pandas.run(uniprot_5_ds)
 
 @TaskTemplate
 def pandas_magic(pandas: PandasDataset) -> PandasDataset:
-    df = pandas['results.genes.synonyms']
-    df['_unifair_ref'] = df['_unifair_ref'].str.strip('results.genes.')
+    #  Get synonym table and clean foreign key
+    df_synonym = pandas['results.genes.synonyms']
+    df_synonym['_unifair_ref'] = df_synonym['_unifair_ref'].str.strip('results.genes.')
+    
+    # Get gene table and join with synonym table to get gene foreign id
+    df_gene = pandas['results.genes']  
+    df_merge_1 = pd.merge(df_synonym, df_gene, left_on = "_unifair_ref", right_on='_unifair_id', how = "right")
+    df_merge_1 = df_merge_1.loc[:, ['value', '_unifair_ref_y']]
+    df_merge_1.columns = ['synomym', '_unifair_ref']
+    df_merge_1['_unifair_ref'].replace('results.', '', inplace = True, regex = True)
+    
+    # print(df_gene)
+    
+    # Get keywords table and clean foreign key
+    df_keywords = pandas['results.keywords']  
+    df_keywords['_unifair_ref'].replace('results.', '', inplace = True, regex = True)
+    df_keywords = df_keywords.loc[:, ['_unifair_ref', 'category', 'name']]
+    
+    # Merge keywords with synonym
+    df_merge_2 = pd.merge(df_merge_1, df_keywords, on = "_unifair_ref", how = "right")
+    
+    # Get results table for regene name and primary accession
+    df_results = pandas['results'] 
+    df_results = df_results.loc[:, ['_unifair_id', 'primaryAccession', 'uniProtkbId']]
+    df_merge_final = pd.merge(df_merge_2, df_results, left_on = "_unifair_ref", right_on='_unifair_id', how = "right") 
+       
     out_dataset = PandasDataset()
-    out_dataset['my_table'] = df
+    out_dataset['my_table'] = df_merge_final
+    
+    print(len(df_results.index))
+
+
     return out_dataset
 
 
