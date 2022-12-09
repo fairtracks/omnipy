@@ -1,3 +1,4 @@
+import inspect
 from inspect import Parameter
 from types import NoneType
 from typing import Annotated
@@ -90,7 +91,7 @@ def test_specialize_record_models_signature_and_return_type_func(
         runtime_all_engines: Annotated[NoneType, pytest.fixture],  # noqa
         case: FlowCase):
     for flow_obj in case.flow_template, case.flow_template.apply():
-        assert flow_obj.param_signatures == {
+        assert inspect.signature(flow_obj).parameters == {
             'tables':
                 Parameter(
                     'tables',
@@ -98,7 +99,7 @@ def test_specialize_record_models_signature_and_return_type_func(
                     annotation=Dataset[GeneralTable],
                 )
         }
-        assert flow_obj.return_type == MultiModelDataset[GeneralTable]
+        assert inspect.signature(flow_obj).return_annotation == MultiModelDataset[GeneralTable]
 
 
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')

@@ -27,7 +27,7 @@ def merge_key_value_into_str(key: Any, val: Any) -> str:
 @TaskTemplate()
 def extract_record_model(table: GeneralTable) -> RecordSchema:
     record_model = {}
-    for record in table:
+    for record in table.to_data():
         for field_key, field_val in record.items():
             if field_key not in record_model:
                 record_model[field_key] = type(field_val)

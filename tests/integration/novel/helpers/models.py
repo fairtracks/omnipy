@@ -33,7 +33,7 @@ class GeneralRecord(Model[Dict[str, Union[int, str]]]):
     """This is a general record"""
 
 
-class GeneralTable(TableTemplate[GeneralRecord]):
+class GeneralTable(Model[TableTemplate[GeneralRecord]]):
     """This is a general table"""
 
 

@@ -53,6 +53,6 @@ def specialize_record_models_func_flow(
         tables: Dataset[GeneralTable]) -> MultiModelDataset[GeneralTable]:
 
     record_models = Dataset[RecordSchema]([
-        (table_name, extract_record_model(table)) for table_name, table in tables
+        (table_name, extract_record_model(table)) for table_name, table in tables.items()
     ])
     return apply_models_to_dataset(tables, record_models)
