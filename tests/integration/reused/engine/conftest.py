@@ -12,16 +12,15 @@ from unifair.engine.protocols import (IsDagFlowTemplate,
                                       IsTaskTemplate)
 from unifair.engine.registry import RunStateRegistry
 
-from ...engine.conftest import all_engines
-from ...engine.helpers.classes import JobCase, JobType
-from ...engine.helpers.functions import update_job_case_with_job
+from ....engine.conftest import all_engines
+from ....engine.helpers.classes import JobCase, JobType
+from ....engine.helpers.functions import update_job_case_with_job
 
 
 @pc.fixture(scope='function')
 @pc.parametrize(
-    'job_type',
-    [JobType.task, JobType.dag_flow],  #, JobType.func_flow],
-    ids=['task', 'dag_flow'])  #, 'func_flow'])
+    'job_type', [JobType.task, JobType.dag_flow, JobType.func_flow],
+    ids=['task', 'dag_flow', 'func_flow'])
 @pc.parametrize('task_template_cls', [TaskTemplate], ids=[''])
 @pc.parametrize('dag_flow_template_cls', [DagFlowTemplate], ids=[''])
 @pc.parametrize('func_flow_template_cls', [FuncFlowTemplate], ids=[''])
@@ -50,7 +49,7 @@ def run_state_registry(registry):
 
 
 @pc.fixture(scope='function')
-@pc.parametrize_with_cases('job_case', cases='...engine.cases.tasks')
+@pc.parametrize_with_cases('job_case', cases='....engine.cases.tasks')
 @pc.parametrize('job_classes', [all_job_classes], ids=[''])
 @pc.parametrize('engine', [all_engines], ids=[''])
 @pc.parametrize('engine_decorator', [no_engine_decorator])
