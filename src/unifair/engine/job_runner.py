@@ -2,11 +2,11 @@ from abc import ABC, abstractmethod
 import inspect
 import sys
 from types import AsyncGeneratorType, GeneratorType
-from typing import Any, Awaitable, Callable, cast
+from typing import Any, Awaitable, Callable, cast, Iterable
 
 from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
-from unifair.engine.protocols import IsDagFlow, IsFuncFlow, IsJob, IsTask
+from unifair.engine.protocols import IsDagFlow, IsFuncFlow, IsJob, IsLinearFlow, IsTask
 
 
 class JobRunnerEngine(Engine, ABC):
@@ -78,6 +78,48 @@ class TaskRunnerEngine(JobRunnerEngine):
 
     @abstractmethod
     def _run_task(self, state: Any, task: IsTask, call_func: Callable, *args, **kwargs) -> Any:
+        ...
+
+
+class LinearFlowRunnerEngine(JobRunnerEngine):
+    def linear_flow_decorator(self, linear_flow: IsLinearFlow) -> IsLinearFlow:
+        # prev_call_func = flow._call_func  # Only raises error anyway
+
+        self._register_job_state(linear_flow, RunState.INITIALIZED)
+        state = self._init_linear_flow(linear_flow)
+
+        def _call_func(*args: object, **kwargs: object) -> Any:
+            self._register_job_state(linear_flow, RunState.RUNNING)
+            flow_result = self._run_linear_flow(state, linear_flow, *args, **kwargs)
+            return self._decorate_result_with_job_finalization_detector(linear_flow, flow_result)
+
+        setattr(linear_flow, '_call_func', _call_func)
+        return linear_flow
+
+    @staticmethod
+    def default_linear_flow_run_decorator(linear_flow: IsLinearFlow) -> Any:
+        def _inner_run_linear_flow(*args: object, **kwargs: object):
+
+            result = None
+            for i, job in enumerate(linear_flow.task_templates):
+                with linear_flow.flow_context:
+                    # TODO: Better handling or kwargs
+                    if i == 0:
+                        result = job(*args, **kwargs)
+                    else:
+                        result = job(*args)
+
+                args = result if isinstance(result, Iterable) else [result]
+            return result
+
+        return _inner_run_linear_flow
+
+    @abstractmethod
+    def _init_linear_flow(self, linear_flow: IsLinearFlow) -> Any:
+        ...
+
+    @abstractmethod
+    def _run_linear_flow(self, state: Any, linear_flow: IsLinearFlow, *args, **kwargs) -> Any:
         ...
 
 

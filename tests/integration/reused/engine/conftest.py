@@ -2,12 +2,13 @@ from typing import Callable, Optional, Tuple, Type
 
 import pytest_cases as pc
 
-from unifair.compute.flow import DagFlowTemplate, FuncFlowTemplate
+from unifair.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from unifair.compute.task import TaskTemplate
 from unifair.engine.protocols import (IsDagFlowTemplate,
                                       IsEngine,
                                       IsFuncFlowTemplate,
                                       IsJobTemplate,
+                                      IsLinearFlowTemplate,
                                       IsRunStateRegistry,
                                       IsTaskTemplate)
 from unifair.engine.registry import RunStateRegistry
@@ -19,18 +20,21 @@ from ....engine.helpers.functions import update_job_case_with_job
 
 @pc.fixture(scope='function')
 @pc.parametrize(
-    'job_type', [JobType.task, JobType.dag_flow, JobType.func_flow],
-    ids=['task', 'dag_flow', 'func_flow'])
+    'job_type', [JobType.task, JobType.linear_flow, JobType.dag_flow, JobType.func_flow],
+    ids=['task', 'linear_flow', 'dag_flow', 'func_flow'])
 @pc.parametrize('task_template_cls', [TaskTemplate], ids=[''])
+@pc.parametrize('linear_flow_template_cls', [LinearFlowTemplate], ids=[''])
 @pc.parametrize('dag_flow_template_cls', [DagFlowTemplate], ids=[''])
 @pc.parametrize('func_flow_template_cls', [FuncFlowTemplate], ids=[''])
 def all_job_classes(
     job_type: JobType,
     task_template_cls: Type[IsTaskTemplate],
+    linear_flow_template_cls: Type[IsLinearFlowTemplate],
     dag_flow_template_cls: Type[IsDagFlowTemplate],
     func_flow_template_cls: Type[IsFuncFlowTemplate],
 ):
-    return job_type, task_template_cls, dag_flow_template_cls, func_flow_template_cls
+    return job_type, task_template_cls, linear_flow_template_cls, \
+           dag_flow_template_cls, func_flow_template_cls
 
 
 @pc.fixture(scope='function', name='plain_engine')
@@ -61,10 +65,12 @@ def all_func_types_real_jobs_all_engines_real_reg(
     engine_decorator: Optional[Callable[[IsEngine], IsEngine]],
     registry: Optional[IsRunStateRegistry],
 ):
-    job_type, task_template_cls, dag_flow_template_cls, func_flow_template_cls = job_classes
+    job_type, task_template_cls, linear_flow_template_cls, dag_flow_template_cls, func_flow_template_cls = job_classes
 
     # TODO: Fix job_type comparisons everywhere (bug due to pytest.fixture?)
-    if job_type.value == JobType.dag_flow.value:
+    if job_type.value == JobType.linear_flow.value:
+        flow_template_cls = linear_flow_template_cls
+    elif job_type.value == JobType.dag_flow.value:
         flow_template_cls = dag_flow_template_cls
     elif job_type.value == JobType.func_flow.value:
         flow_template_cls = func_flow_template_cls

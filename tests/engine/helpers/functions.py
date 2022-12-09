@@ -18,6 +18,9 @@ from unifair.engine.protocols import (IsDagFlow,
                                       IsFuncFlowRunnerEngine,
                                       IsFuncFlowTemplate,
                                       IsJob,
+                                      IsLinearFlow,
+                                      IsLinearFlowRunnerEngine,
+                                      IsLinearFlowTemplate,
                                       IsRunStateRegistry,
                                       IsTask,
                                       IsTaskRunnerEngine,
@@ -128,6 +131,32 @@ def create_task_with_func(
     return task_template.apply()
 
 
+def create_linear_flow_with_two_func_tasks(
+    name: str,
+    func: Callable,
+    task_template_cls: type(IsTaskTemplate),
+    linear_flow_template_cls: type(IsLinearFlowTemplate),
+    engine: IsLinearFlowRunnerEngine,
+    registry: Optional[IsRunStateRegistry],
+) -> IsLinearFlow:
+    @task_template_cls
+    def passthrough_task(*args, **kwargs):
+        return args + tuple(kwargs.values())
+
+    task_template_func = task_template_cls(name=name)(func)
+    linear_flow_template = linear_flow_template_cls(
+        passthrough_task,
+        task_template_func,
+        name=name,
+    )(func,)
+
+    task_template_cls.job_creator.set_engine(engine)
+    if registry:
+        engine.set_registry(registry)
+
+    return linear_flow_template.apply()
+
+
 def create_dag_flow_with_two_func_tasks(
     name: str,
     func: Callable,
@@ -190,6 +219,16 @@ def update_job_case_with_job(
             job_case.job_func,
             task_template_cls,
             cast(IsTaskRunnerEngine, engine),
+            registry,
+        )
+    elif job_type.value == JobType.linear_flow.value:
+        engine = cast(IsLinearFlowRunnerEngine, engine)
+        job_case.job = create_linear_flow_with_two_func_tasks(
+            job_case.name,
+            job_case.job_func,
+            task_template_cls,
+            flow_template_cls,
+            cast(IsLinearFlowRunnerEngine, engine),
             registry,
         )
     elif job_type.value == JobType.dag_flow.value:

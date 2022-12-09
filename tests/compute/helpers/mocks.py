@@ -2,10 +2,11 @@ from types import MappingProxyType
 from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, Union
 
 from unifair.compute.job import CallableDecoratingJobTemplateMixin, Job, JobConfig, JobTemplate
-from unifair.engine.job_runner import DagFlowRunnerEngine
+from unifair.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
 from unifair.engine.protocols import (IsDagFlow,
                                       IsEngineConfig,
                                       IsFuncFlow,
+                                      IsLinearFlow,
                                       IsRunStateRegistry,
                                       IsTask)
 from unifair.util.callable_decorator_cls import callable_decorator_cls
@@ -212,6 +213,10 @@ class MockLocalRunner:
 
         setattr(task, '_call_func', _call_func)
         return task
+
+    def linear_flow_decorator(self, flow: IsLinearFlow) -> IsLinearFlow:  # noqa
+        setattr(flow, '_call_func', LinearFlowRunnerEngine.default_linear_flow_run_decorator(flow))
+        return flow
 
     def dag_flow_decorator(self, flow: IsDagFlow) -> IsDagFlow:  # noqa
         setattr(flow, '_call_func', DagFlowRunnerEngine.default_dag_flow_run_decorator(flow))

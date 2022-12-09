@@ -9,12 +9,22 @@ from prefect import Task as PrefectTask
 from prefect.tasks import task_input_hash
 
 from unifair.config.engine import PrefectEngineConfig
-from unifair.engine.job_runner import DagFlowRunnerEngine, FuncFlowRunnerEngine, TaskRunnerEngine
-from unifair.engine.protocols import IsDagFlow, IsFuncFlow, IsPrefectEngineConfig, IsTask
+from unifair.engine.job_runner import (DagFlowRunnerEngine,
+                                       FuncFlowRunnerEngine,
+                                       LinearFlowRunnerEngine,
+                                       TaskRunnerEngine)
+from unifair.engine.protocols import (IsDagFlow,
+                                      IsFuncFlow,
+                                      IsLinearFlow,
+                                      IsPrefectEngineConfig,
+                                      IsTask)
 from unifair.util.helpers import resolve
 
 
-class PrefectEngine(TaskRunnerEngine, DagFlowRunnerEngine, FuncFlowRunnerEngine):
+class PrefectEngine(TaskRunnerEngine,
+                    LinearFlowRunnerEngine,
+                    DagFlowRunnerEngine,
+                    FuncFlowRunnerEngine):
     def _init_engine(self) -> None:
         ...
 
@@ -70,6 +80,33 @@ class PrefectEngine(TaskRunnerEngine, DagFlowRunnerEngine, FuncFlowRunnerEngine)
                     return _prefect_task(*inner_args, **inner_kwargs)
 
             return task_flow(*args, **kwargs)
+
+    # LinearFlowRunnerEngine
+    def _init_linear_flow(self, linear_flow: IsLinearFlow) -> Any:
+        assert isinstance(self._config, PrefectEngineConfig)
+        flow_kwargs = dict(name=linear_flow.name,)
+        call_func = self.default_linear_flow_run_decorator(linear_flow)
+
+        if linear_flow.has_coroutine_func():
+
+            @prefect_flow(**flow_kwargs)
+            async def run_linear_flow(*inner_args, **inner_kwargs):
+                with linear_flow.flow_context:
+                    return await resolve(call_func(*inner_args, **inner_kwargs))
+        else:
+
+            @prefect_flow(**flow_kwargs)
+            def run_linear_flow(*inner_args, **inner_kwargs):
+                with linear_flow.flow_context:
+                    return call_func(*inner_args, **inner_kwargs)
+
+        return run_linear_flow
+
+    def _run_linear_flow(self, state: Any, linear_flow: IsLinearFlow, *args, **kwargs) -> Any:
+
+        _prefect_flow = state
+
+        return _prefect_flow(*args, **kwargs)
 
     # DagFlowRunnerEngine
 

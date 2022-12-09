@@ -4,7 +4,12 @@ import pytest
 import pytest_cases as pc
 
 from compute.helpers.mocks import MockLocalRunner
-from unifair.compute.flow import DagFlow, DagFlowTemplate, FuncFlow, FuncFlowTemplate
+from unifair.compute.flow import (DagFlow,
+                                  DagFlowTemplate,
+                                  FuncFlow,
+                                  FuncFlowTemplate,
+                                  LinearFlow,
+                                  LinearFlowTemplate)
 from unifair.compute.task import Task, TaskTemplate
 
 
@@ -13,8 +18,10 @@ from unifair.compute.task import Task, TaskTemplate
     cases='.cases.decorators',
     has_tag='task',
 )
-def test_task_template_as_decorator(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-                                    plus_one_template: TaskTemplate) -> None:
+def test_task_template_as_decorator(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    plus_one_template: TaskTemplate,
+) -> None:
     assert isinstance(plus_one_template, TaskTemplate)  # noqa  # Pycharm static type checker bug
     assert plus_one_template.name == 'plus_one'  # noqa  # Pycharm static type checker bug
 
@@ -27,11 +34,31 @@ def test_task_template_as_decorator(mock_local_runner: Annotated[MockLocalRunner
 @pc.parametrize_with_cases(
     'plus_five_template',
     cases='.cases.decorators',
+    has_tag='linear_flow',
+)
+def test_linear_flow_template_as_decorator(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    plus_five_template: LinearFlowTemplate,
+) -> None:
+
+    assert (plus_five_template, LinearFlowTemplate)
+    assert plus_five_template.name == 'plus_five'
+
+    plus_five = plus_five_template.apply()
+    assert isinstance(plus_five, LinearFlow)
+
+    assert plus_five(3) == 8
+
+
+@pc.parametrize_with_cases(
+    'plus_five_template',
+    cases='.cases.decorators',
     has_tag='dag_flow',
 )
-def test_dag_flow_template_as_decorator(mock_local_runner: Annotated[MockLocalRunner,
-                                                                     pytest.fixture],
-                                        plus_five_template: DagFlowTemplate) -> None:
+def test_dag_flow_template_as_decorator(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    plus_five_template: DagFlowTemplate,
+) -> None:
 
     assert (plus_five_template, DagFlowTemplate)
     assert plus_five_template.name == 'plus_five'
@@ -52,9 +79,10 @@ def test_dag_flow_template_as_decorator(mock_local_runner: Annotated[MockLocalRu
     cases='.cases.decorators',
     has_tag='func_flow',
 )
-def test_func_flow_template_as_decorator(mock_local_runner: Annotated[MockLocalRunner,
-                                                                      pytest.fixture],
-                                         plus_y_template: FuncFlowTemplate) -> None:
+def test_func_flow_template_as_decorator(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    plus_y_template: FuncFlowTemplate,
+) -> None:
 
     assert (plus_y_template, FuncFlowTemplate)
     assert plus_y_template.name == 'plus_y'

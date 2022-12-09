@@ -9,6 +9,7 @@ from unifair.engine.protocols import (IsDagFlow,
                                       IsFuncFlow,
                                       IsFuncFlowRunnerEngine,
                                       IsJob,
+                                      IsLinearFlow,
                                       IsRunStateRegistry,
                                       IsTask,
                                       IsTaskRunnerEngine)
@@ -16,8 +17,9 @@ from unifair.engine.protocols import (IsDagFlow,
 
 class JobType(Enum):
     task = 1
-    dag_flow = 2
-    func_flow = 3
+    linear_flow = 2
+    dag_flow = 3
+    func_flow = 4
 
 
 ArgT = TypeVar('ArgT')
@@ -50,6 +52,9 @@ class JobRunnerStateChecker(IsTaskRunnerEngine, IsDagFlowRunnerEngine, IsFuncFlo
     def task_decorator(self, task: IsTask) -> IsTask:
         return self._engine.task_decorator(task)
 
+    def linear_flow_decorator(self, linear_flow: IsLinearFlow) -> IsLinearFlow:
+        return self._engine.linear_flow_decorator(linear_flow)
+
     def dag_flow_decorator(self, dag_flow: IsDagFlow) -> IsDagFlow:
         return self._engine.dag_flow_decorator(dag_flow)
 
@@ -65,6 +70,16 @@ class JobRunnerStateChecker(IsTaskRunnerEngine, IsDagFlowRunnerEngine, IsFuncFlo
         from .functions import assert_job_state
         assert_job_state(task, [RunState.RUNNING])
         return self._engine._run_task(state, task, call_func, *args, **kwargs)  # noqa
+
+    def _init_linear_flow(self, linear_flow: IsLinearFlow) -> Any:
+        from .functions import assert_job_state
+        assert_job_state(linear_flow, [RunState.INITIALIZED])
+        return self._engine._init_linear_flow(linear_flow)  # noqa
+
+    def _run_linear_flow(self, state: Any, linear_flow: IsLinearFlow, *args, **kwargs) -> Any:
+        from .functions import assert_job_state
+        assert_job_state(linear_flow, [RunState.RUNNING])
+        return self._engine._run_linear_flow(state, linear_flow, *args, **kwargs)  # noqa
 
     def _init_dag_flow(self, dag_flow: IsDagFlow) -> Any:
         from .functions import assert_job_state

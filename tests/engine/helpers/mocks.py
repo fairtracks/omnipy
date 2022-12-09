@@ -12,13 +12,17 @@ from slugify import slugify
 
 from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
-from unifair.engine.job_runner import DagFlowRunnerEngine, FuncFlowRunnerEngine, TaskRunnerEngine
+from unifair.engine.job_runner import (DagFlowRunnerEngine,
+                                       FuncFlowRunnerEngine,
+                                       LinearFlowRunnerEngine,
+                                       TaskRunnerEngine)
 from unifair.engine.protocols import (IsDagFlow,
                                       IsEngine,
                                       IsEngineConfig,
                                       IsFlow,
                                       IsFuncFlow,
                                       IsJob,
+                                      IsLinearFlow,
                                       IsRunStateRegistry,
                                       IsRunStateRegistryConfig,
                                       IsTask)
@@ -45,7 +49,7 @@ class MockTask:
 
     def __init__(self, func: Callable, *, name: Optional[str] = None) -> None:
         self._func = func
-        self.name = name
+        self.name = name if name is not None else func.__name__
         self.regenerate_unique_name()
 
     def regenerate_unique_name(self) -> None:
@@ -86,6 +90,32 @@ class MockTaskTemplate(MockTask):
         update_wrapper(task, self._func)
         print(self.job_creator.engine)
         return self.job_creator.engine.task_decorator(task)
+
+
+class MockLinearFlow(MockTask):
+    def __init__(self,
+                 func: Callable,
+                 *task_templates: MockTaskTemplate,
+                 name: Optional[str] = None,
+                 **kwargs: object) -> None:
+        self._task_templates = task_templates
+        super().__init__(func, name=name, **kwargs)
+
+    @property
+    def task_templates(self) -> Tuple[MockTaskTemplate]:
+        return self._task_templates
+
+    def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
+        return inspect.signature(self._func).bind(*args, **kwargs).arguments
+
+
+@callable_decorator_cls
+class MockLinearFlowTemplate(MockLinearFlow):
+    def apply(self) -> IsTask:
+        linear_flow = MockLinearFlow(self._func, *self._task_templates, name=self.name)
+        linear_flow = self.job_creator.engine.linear_flow_decorator(linear_flow)
+        update_wrapper(linear_flow, self._func)
+        return linear_flow
 
 
 class MockDagFlow(MockTask):
@@ -159,7 +189,10 @@ class MockBackendFlow:
         return result
 
 
-class MockJobRunnerSubclass(TaskRunnerEngine, DagFlowRunnerEngine, FuncFlowRunnerEngine):
+class MockJobRunnerSubclass(TaskRunnerEngine,
+                            LinearFlowRunnerEngine,
+                            DagFlowRunnerEngine,
+                            FuncFlowRunnerEngine):
     def _init_engine(self) -> None:
         self._update_from_config()
         self.finished_backend_tasks: List[MockBackendTask] = []
@@ -183,6 +216,19 @@ class MockJobRunnerSubclass(TaskRunnerEngine, DagFlowRunnerEngine, FuncFlowRunne
                   **kwargs) -> Any:
         result = state.run(task, call_func, *args, **kwargs)
         self.finished_backend_tasks.append(state)
+        return result
+
+    # LinearFlowRunnerEngine
+
+    def _init_linear_flow(self, linear_flow: IsLinearFlow) -> MockBackendFlow:
+        assert isinstance(self._config, MockEngineConfig)  # to help type checkers
+        return MockBackendFlow(self._config)
+
+    def _run_linear_flow(self, state: MockBackendFlow, linear_flow: IsLinearFlow, *args,
+                         **kwargs) -> Any:
+        call_func = self.default_linear_flow_run_decorator(linear_flow)
+        result = state.run(linear_flow, call_func, *args, **kwargs)
+        self.finished_backend_flows.append(state)
         return result
 
     # DagFlowRunnerEngine

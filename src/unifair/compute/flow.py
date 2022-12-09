@@ -5,7 +5,10 @@ from types import MappingProxyType
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from unifair.compute.job import CallableDecoratingJobTemplateMixin, Job, JobConfig, JobTemplate
-from unifair.engine.protocols import IsDagFlowRunnerEngine, IsFuncFlowRunnerEngine, IsTaskTemplate
+from unifair.engine.protocols import (IsDagFlowRunnerEngine,
+                                      IsFuncFlowRunnerEngine,
+                                      IsLinearFlowRunnerEngine,
+                                      IsTaskTemplate)
 from unifair.util.callable_decorator_cls import callable_decorator_cls
 
 
@@ -48,6 +51,73 @@ class Flow(Job, FlowConfig):
     @abstractmethod
     def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         pass
+
+
+class LinearFlowConfig(FlowConfig):
+    def __init__(
+        self,
+        linear_flow_func: Callable,
+        *task_templates: IsTaskTemplate,
+        name: Optional[str] = None,
+        **kwargs: Any,
+    ):
+        self._linear_flow_func = linear_flow_func
+        self._linear_flow_func_signature = inspect.signature(self._linear_flow_func)
+        self._task_templates: Tuple[IsTaskTemplate] = task_templates
+        name = name if name is not None else self._linear_flow_func.__name__
+        super().__init__(name=name, **kwargs)
+
+    def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
+        return self._linear_flow_func, *self._task_templates
+
+    def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
+        return ()
+
+    @property
+    def task_templates(self) -> Tuple[IsTaskTemplate]:
+        return self._task_templates
+
+    def has_coroutine_func(self) -> bool:
+        return asyncio.iscoroutinefunction(self._linear_flow_func)
+
+    @property
+    def param_signatures(self) -> MappingProxyType:
+        return self._linear_flow_func_signature.parameters
+
+    @property
+    def return_type(self) -> Type[Any]:
+        return self._linear_flow_func_signature.return_annotation
+
+
+@callable_decorator_cls
+class LinearFlowTemplate(CallableDecoratingJobTemplateMixin['LinearFlowTemplate'],
+                         FlowTemplate,
+                         LinearFlowConfig):
+    @classmethod
+    def _get_job_subcls_for_apply(cls) -> Type[Job]:
+        return LinearFlow
+
+    def _apply_engine_decorator(self, flow: 'LinearFlow') -> 'LinearFlow':
+        if self.engine is not None and isinstance(self.engine, IsLinearFlowRunnerEngine):
+            return self.engine.linear_flow_decorator(flow)  # noqa  # Pycharm static type checker bug
+        else:
+            raise RuntimeError(f'Engine "{self.engine}" does not support DAG flows')
+
+
+class LinearFlow(Flow, LinearFlowConfig):
+    @classmethod
+    def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
+        return LinearFlowConfig
+
+    @classmethod
+    def _get_job_template_subcls_for_revise(cls) -> Type[JobTemplate]:
+        return LinearFlowTemplate  # noqa  # Pycharm static type checker bug
+
+    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
+        raise NotImplementedError
+
+    def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
+        return inspect.signature(self._linear_flow_func).bind(*args, **kwargs).arguments
 
 
 class DagFlowConfig(FlowConfig):

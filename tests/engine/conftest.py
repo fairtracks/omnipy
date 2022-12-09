@@ -21,6 +21,7 @@ from .helpers.mocks import (MockDagFlow,
                             MockEngineConfig,
                             MockFuncFlowTemplate,
                             MockJobRunnerSubclass,
+                            MockLinearFlowTemplate,
                             MockRunStateRegistry,
                             MockTask,
                             MockTaskTemplate)
@@ -35,6 +36,15 @@ from .helpers.mocks import (MockDagFlow,
 )
 def mock_task_template(task_template_cls):
     return task_template_cls
+
+
+@pc.fixture(scope='function')
+@pc.parametrize(
+    flow_template_cls=[MockLinearFlowTemplate],
+    ids=['m[linearflow]'],
+)
+def mock_linear_flow_template(flow_template_cls):
+    return flow_template_cls
 
 
 @pc.fixture(scope='function')
@@ -65,6 +75,15 @@ def mock_func_flow_template(flow_template_cls):
 )
 def mock_task_runner_subcls(task_runner_subcls):
     return task_runner_subcls
+
+
+@pc.fixture(scope='function')
+@pc.parametrize(
+    linear_flow_runner_subcls=[MockJobRunnerSubclass],
+    ids=['m[linearflow_runner]'],
+)
+def mock_linear_flow_runner_subcls(linear_flow_runner_subcls):
+    return linear_flow_runner_subcls
 
 
 @pc.fixture(scope='function')
@@ -147,6 +166,20 @@ def task_mock_classes(
 
 
 @pc.fixture(scope='function')
+@pc.parametrize('job_type', [JobType.linear_flow], ids=['linear_flow'])
+@pc.parametrize('task_template_cls', [pc.fixture_ref(mock_task_template)], ids=[''])
+@pc.parametrize('flow_template_cls', [pc.fixture_ref(mock_linear_flow_template)], ids=[''])
+@pc.parametrize('job_runner_subcls', [pc.fixture_ref(mock_linear_flow_runner_subcls)], ids=[''])
+def linear_flow_mock_classes(
+    job_type: JobType,
+    task_template_cls: Type[IsTaskTemplate],
+    flow_template_cls: Optional[Type[IsFlowTemplate]],
+    job_runner_subcls: Type[IsEngine],
+):
+    return job_type, task_template_cls, flow_template_cls, job_runner_subcls
+
+
+@pc.fixture(scope='function')
 @pc.parametrize('job_type', [JobType.dag_flow], ids=['dag_flow'])
 @pc.parametrize('task_template_cls', [pc.fixture_ref(mock_task_template)], ids=[''])
 @pc.parametrize('flow_template_cls', [pc.fixture_ref(mock_dag_flow_template)], ids=[''])
@@ -182,10 +215,11 @@ def func_flow_mock_classes(
 @pc.parametrize(
     'job_mock_classes', [
         task_mock_classes,
+        linear_flow_mock_classes,
         dag_flow_mock_classes,
         func_flow_mock_classes,
     ],
-    ids=['', '', ''])
+    ids=['', '', '', ''])
 @pc.parametrize('engine_decorator', [no_verbose_config_engine_decorator])
 @pc.parametrize('registry', [no_registry], ids=[''])
 def power_mock_jobs_mock_runner_subcls_no_verbose_no_reg(
@@ -211,10 +245,11 @@ def power_mock_jobs_mock_runner_subcls_no_verbose_no_reg(
 @pc.parametrize(
     'job_mock_classes', [
         task_mock_classes,
+        linear_flow_mock_classes,
         dag_flow_mock_classes,
         func_flow_mock_classes,
     ],
-    ids=['', '', ''])
+    ids=['', '', '', ''])
 @pc.parametrize('engine_decorator', [assert_runstate_engine_decorator])
 @pc.parametrize('registry', [mock_registry], ids=[''])
 def all_func_types_mock_jobs_mock_runner_subcls_assert_runstate_mock_reg(
@@ -243,10 +278,11 @@ def all_func_types_mock_jobs_mock_runner_subcls_assert_runstate_mock_reg(
 @pc.parametrize(
     'job_classes', [
         task_mock_classes,
+        linear_flow_mock_classes,
         dag_flow_mock_classes,
         func_flow_mock_classes,
     ],
-    ids=['', '', ''])
+    ids=['', '', '', ''])
 @pc.parametrize('engine', [all_engines], ids=[''])
 @pc.parametrize('engine_decorator', [assert_runstate_engine_decorator])
 @pc.parametrize('registry', [mock_registry], ids=[''])

@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, Generic, Tuple, TypeVar
 import pytest
 import pytest_cases as pc
 
-from unifair.compute.flow import DagFlowTemplate, FlowTemplate, FuncFlowTemplate
+from unifair.compute.flow import DagFlowTemplate, FlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from unifair.compute.task import TaskTemplate
 
 from .tasks import TaskCase
@@ -26,6 +26,26 @@ class FlowCase(Generic[ArgT, ReturnT]):
 
 
 # TODO: Add assert_signature_and_return_type_func
+
+
+@pc.case(
+    id='sync-linearflow-single-task',
+    tags=['sync', 'linearflow', 'singlethread', 'success'],
+)
+@pc.parametrize_with_cases('task_case', cases='.tasks')
+def case_sync_linearflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
+    task_template = TaskTemplate(task_case.task_func)
+    linear_flow = LinearFlowTemplate(task_template)(task_case.task_func)
+
+    return FlowCase(
+        name=task_case.name,
+        flow_func=task_case.task_func,
+        flow_template=linear_flow,
+        args=task_case.args,
+        kwargs=task_case.kwargs,
+        assert_results_func=task_case.assert_results_func,
+        # assert_signature_and_return_type_func=task_case.assert_signature_and_return_type_func,
+    )
 
 
 @pc.case(

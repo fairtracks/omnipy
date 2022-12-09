@@ -136,6 +136,20 @@ class IsFlowTemplate(IsJobTemplate, Protocol):
         ...
 
 
+class IsLinearFlow(IsFlow, Protocol):
+    task_templates: Tuple[IsTaskTemplate]
+
+    def has_coroutine_func(self) -> bool:
+        ...
+
+    def get_call_args(self, *args, **kwargs) -> Dict[str, object]:
+        ...
+
+
+class IsLinearFlowTemplate(IsLinearFlow, IsFlowTemplate, Protocol):
+    ...
+
+
 class IsDagFlow(IsFlow, Protocol):
     task_templates: Tuple[IsTaskTemplate]
 
@@ -175,6 +189,12 @@ class IsEngine(Protocol):
 
 class IsTaskRunnerEngine(IsEngine, Protocol):
     def task_decorator(self, task: IsTask) -> IsTask:
+        ...
+
+
+@runtime_checkable
+class IsLinearFlowRunnerEngine(IsEngine, Protocol):
+    def linear_flow_decorator(self, linear_flow: IsLinearFlow) -> IsLinearFlow:
         ...
 
 

@@ -1,6 +1,6 @@
 import pytest_cases as pc
 
-from unifair.compute.flow import DagFlowTemplate, FuncFlowTemplate
+from unifair.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from unifair.compute.task import TaskTemplate
 
 
@@ -29,6 +29,34 @@ def case_task_plus_other_as_plus_one_template() -> TaskTemplate:
         return number + other
 
     return plus_other  # noqa  # Pycharm static type checker bug
+
+
+@pc.case(
+    id='linear_flow-plus_five(number)',
+    tags=['sync', 'function', 'linear_flow', 'plain'],
+)
+@pc.parametrize_with_cases('plus_one_template', cases='.', has_tag='task')
+def case_linear_flow_number_plus_five_template(plus_one_template) -> LinearFlowTemplate:
+    @LinearFlowTemplate(*((plus_one_template,) * 5))
+    def plus_five(number: int) -> int:  # noqa
+        ...
+
+    return plus_five  # noqa  # Pycharm static type checker bug
+
+
+@pc.case(
+    id='linear_flow-plus_five(x)',
+    tags=['sync', 'function', 'linear_flow', 'with_kw_params'],
+)
+@pc.parametrize_with_cases('plus_one_template', cases='.', has_tag='task')
+def case_linear_flow_x_plus_five_template(plus_one_template) -> FuncFlowTemplate:
+    iterative_x_plus_one_template = plus_one_template.refine(param_key_map=dict(number='x'),)
+
+    @LinearFlowTemplate(*((iterative_x_plus_one_template,) * 5))
+    def plus_five(x: int) -> int:  # noqa
+        ...
+
+    return plus_five  # noqa  # Pycharm static type checker bug
 
 
 @pc.case(
