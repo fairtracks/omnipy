@@ -54,7 +54,7 @@ class PrefectEngine(TaskRunnerEngine, DagFlowRunnerEngine, FuncFlowRunnerEngine)
         _prefect_task = state
 
         if task.in_flow_context:
-            return _prefect_task(*args, return_state=False, **kwargs)
+            return _prefect_task(*args, **kwargs)
         else:
             flow_kwargs = dict(name=task.name)
 
@@ -62,13 +62,12 @@ class PrefectEngine(TaskRunnerEngine, DagFlowRunnerEngine, FuncFlowRunnerEngine)
 
                 @prefect_flow(**flow_kwargs)
                 async def task_flow(*inner_args, **inner_kwargs):
-                    return await resolve(
-                        _prefect_task(*inner_args, return_state=False, **inner_kwargs))
+                    return await resolve(_prefect_task(*inner_args, **inner_kwargs))
             else:
 
                 @prefect_flow(**flow_kwargs)
                 def task_flow(*inner_args, **inner_kwargs):
-                    return _prefect_task(*inner_args, return_state=False, **inner_kwargs)
+                    return _prefect_task(*inner_args, **inner_kwargs)
 
             return task_flow(*args, **kwargs)
 
