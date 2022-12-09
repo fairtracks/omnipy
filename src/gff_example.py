@@ -1,8 +1,9 @@
 import os
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from unifair import runtime
-from unifair.compute.flow import FuncFlowTemplate
+from unifair.compute.flow import FuncFlowTemplate, LinearFlowTemplate
+from unifair.compute.task import TaskTemplate
 from unifair.data.dataset import Dataset
 from unifair.data.model import Model
 from unifair.modules.general.tasks import import_directory, split_dataset
@@ -66,18 +67,33 @@ def attrib_df_names(dataset: Dataset[Model[object]]) -> List[str]:
 # Flow
 @FuncFlowTemplate
 def convert_gff_files(data: Dataset[Model[str]]) -> PandasDataset:
+    data = import_directory('input/gff', suffix='.gff', model=Model[str])
+    serialize_to_tarpacked_raw_files('1_data', data)
+
     data_2 = slice_lines(data, start=0, end=1000)
+    serialize_to_tarpacked_raw_files('2_data', data_2)
 
     pd_data_3 = from_csv(data_2, delimiter='\t', first_row_as_col_names=False, col_names=GFF_COLS)
+    serialize_to_tarpacked_csv_files('3_pd_data', pd_data_3)
+
     pd_data_4 = extract_columns_as_files(pd_data_3, [ATTRIB_COL])
+    serialize_to_tarpacked_csv_files('4_pd_data', pd_data_4)
+
     pd_data_5_main, pd_data_3_attrib = split_dataset(pd_data_4, attrib_df_names(pd_data_4))
+    serialize_to_tarpacked_csv_files('5_pd_data_main', pd_data_5_main)
 
     data_6_attrib = to_csv(pd_data_3_attrib, first_row_as_col_names=False)
+    serialize_to_tarpacked_raw_files('6_raw_data_attributes', data_6_attrib)
+
     data_7_attrib = transform_all_lines_to_json(data_6_attrib)
+    serialize_to_tarpacked_raw_files('7_raw_data_attributes', data_7_attrib)
+
     data_8_attrib = transform_datafile_start_and_end_to_json(data_7_attrib)
+    serialize_to_tarpacked_raw_files('8_raw_data_attributes', data_8_attrib)
 
     data_9_attrib = Dataset[JsonTableOfStrings]()
     data_9_attrib.from_json(data_8_attrib.to_data())
+    serialize_to_tarpacked_json_files('9_json_data_attributes', data_9_attrib)
 
     pd_data_7_attrib = PandasDataset()
     pd_data_7_attrib.from_data(data_9_attrib.to_data())
@@ -86,17 +102,8 @@ def convert_gff_files(data: Dataset[Model[str]]) -> PandasDataset:
         [pd_data_5_main, pd_data_7_attrib],
         vertical=False,
     )
-
-    serialize_to_tarpacked_raw_files('1_data', data)
-    serialize_to_tarpacked_raw_files('2_data', data_2)
-    serialize_to_tarpacked_csv_files('3_pd_data', pd_data_3)
-    serialize_to_tarpacked_csv_files('4_pd_data', pd_data_4)
-    serialize_to_tarpacked_csv_files('5_pd_data_main', pd_data_5_main)
-    serialize_to_tarpacked_raw_files('6_raw_data_attributes', data_6_attrib)
-    serialize_to_tarpacked_raw_files('7_raw_data_attributes', data_7_attrib)
-    serialize_to_tarpacked_raw_files('8_raw_data_attributes', data_8_attrib)
-    serialize_to_tarpacked_json_files('9_json_data_attributes', data_9_attrib)
     serialize_to_tarpacked_csv_files('10_pd_data', pd_data_10)
+    return pd_data_10
 
 
 @FuncFlowTemplate
