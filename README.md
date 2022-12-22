@@ -1,4 +1,10 @@
-# uniFAIR
+# omnipy
+
+omnipy is the new name of the Python package formerly known as uniFAIR. We are in the process of changing the name completely, but for now the documentation and code still refers to the package as "uniFAIR".
+
+We are very grateful to Dr. Jamin Chen, who gracefully transferred ownership of the (mostly unused) "omnipy" name in PyPI to us!
+
+--
 
 (NOTE: Read the section [Transformation on the FAIRtracks.net website](https://fairtracks.net/fair/#fair-07-transformation)
 for a more detailed and better formatted version of the following description!)
