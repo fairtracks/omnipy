@@ -1,11 +1,9 @@
-from typing import Dict
-
 from unifair.compute.flow import DagFlowTemplate, FuncFlowTemplate
 from unifair.data.dataset import Dataset, MultiModelDataset
 
-from ...helpers.models import GeneralTable, RecordSchema
+from ...helpers.models import GeneralTable, RecordSchemaDef
 from .tasks import (apply_models_to_dataset,
-                    extract_record_model,
+                    extract_record_schema_def,
                     merge_key_value_into_str,
                     square_root,
                     uppercase)
@@ -30,14 +28,14 @@ def pos_square_root_dag_flow(
 def pos_square_root_func_flow(
     number: int,
     text: str,
-) -> Dict[str, int]:
+) -> str:
     upper = uppercase(text)
     _neg_root, pos_root = square_root(number)
     return merge_key_value_into_str(upper, pos_root)
 
 
 @DagFlowTemplate(
-    extract_record_model.refine(
+    extract_record_schema_def.refine(
         param_key_map={'table': 'data'},
         result_key='models',  # iterate_over_dataset=True,
     ),
@@ -52,8 +50,7 @@ def specialize_record_models_dag_flow(
 @FuncFlowTemplate(name='specialize_record_models')
 def specialize_record_models_func_flow(
         tables: Dataset[GeneralTable]) -> MultiModelDataset[GeneralTable]:
-
-    record_models = Dataset[RecordSchema]([
-        (table_name, extract_record_model(table)) for table_name, table in tables.items()
+    record_schema_defs = Dataset[RecordSchemaDef]([
+        (table_name, extract_record_schema_def(table)) for table_name, table in tables.items()
     ])
-    return apply_models_to_dataset(tables, record_models)
+    return apply_models_to_dataset(tables, record_schema_defs)

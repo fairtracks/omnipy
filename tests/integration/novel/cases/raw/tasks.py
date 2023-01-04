@@ -3,7 +3,7 @@ from typing import Any, Dict
 from unifair.compute.task import TaskTemplate
 from unifair.data.dataset import Dataset, MultiModelDataset
 
-from ...helpers.models import GeneralTable, RecordSchema
+from ...helpers.models import GeneralTable, record_schema_factory, RecordSchemaDef, TableTemplate
 
 # from .validators import first_dataset_keys_in_all_datasets
 
@@ -23,9 +23,10 @@ def merge_key_value_into_str(key: Any, val: Any) -> str:
     return '{}: {}'.format(key, val)
 
 
+# TODO: Implement explicit serializer support (if needed)
 # @TaskTemplate(serializer=PythonSerializer)
 @TaskTemplate()
-def extract_record_model(table: GeneralTable) -> RecordSchema:
+def extract_record_schema_def(table: GeneralTable) -> RecordSchemaDef:
     record_model = {}
     for record in table.to_data():
         for field_key, field_val in record.items():
@@ -34,14 +35,21 @@ def extract_record_model(table: GeneralTable) -> RecordSchema:
             else:
                 assert record_model[field_key] == type(field_val)
 
-    return record_model
+    return RecordSchemaDef(record_model)
 
 
+# TODO: Implement support for extra validators
 # @TaskTemplate(serializer=CsvSerializer, extra_validators=(first_dataset_keys_in_all_datasets,))
 @TaskTemplate
-def apply_models_to_dataset(dataset: Dataset[GeneralTable],
-                            models: Dataset[RecordSchema]) -> MultiModelDataset[GeneralTable]:
+def apply_models_to_dataset(
+        dataset: Dataset[GeneralTable],
+        record_schema_defs: Dataset[RecordSchemaDef]) -> MultiModelDataset[GeneralTable]:
     multi_model_dataset = dataset.as_multi_model_dataset()
-    for obj_type in multi_model_dataset.keys():
-        multi_model_dataset.set_model(obj_type, models[obj_type])
+    for data_file in multi_model_dataset.keys():
+        multi_model_dataset.set_model(
+            data_file,
+            TableTemplate[record_schema_factory(
+                data_file,
+                record_schema_defs[data_file],
+            )])
     return multi_model_dataset

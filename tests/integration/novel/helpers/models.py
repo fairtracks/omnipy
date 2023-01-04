@@ -1,28 +1,40 @@
-from typing import Dict, Generic, List, Tuple, Type, TypeAlias, TypeVar, Union
+from typing import Dict, Generic, List, Type, TypeVar, Union
 
-from pydantic import BaseConfig, create_model, Extra
-import pytest
+from pydantic import BaseConfig, BaseModel, create_model, Extra
 
 from unifair.data.model import Model
 
-RecordSchema = Model[Dict[str, Type]]
+# Types
+
+RecordT = TypeVar('RecordT', bound=Model)
+
+RecordSchemaDefType = Dict[str, Type]
+
+# Models
 
 
-class RecordSchemaFactory(Model[Tuple[str, RecordSchema]]):
-    @classmethod
-    def _parse_data(cls, data: Tuple[str, RecordSchema]) -> Type[Model[RecordSchema]]:
-        name, contents = data
-
-        class Config(BaseConfig):
-            extra = Extra.forbid
-
-        return Model[create_model(
-            name,
-            **dict(((key, (val, val())) for key, val in contents.contents.items())),
-            __config__=Config)]
+class RecordSchemaDef(Model[RecordSchemaDefType]):
+    ...
 
 
-RecordT = TypeVar('RecordT', bound=Dict)  # noqa
+class RecordSchema(BaseModel):
+    ...
+
+
+def record_schema_factory(data_file: str,
+                          record_schema_def: RecordSchemaDefType) -> Type[RecordSchema]:
+    class Config(BaseConfig):
+        extra = Extra.forbid
+
+    return create_model(
+        data_file,
+        **dict(((key, (val, val())) for key, val in record_schema_def.items())),
+        __config__=Config)
+
+
+MyRecordSchema = record_schema_factory('MyRecordSchema', {'a': int, 'b': str})
+
+MyOtherRecordSchema = record_schema_factory('MyOtherRecordSchema', {'b': str, 'c': int})
 
 
 class TableTemplate(Model[List[RecordT]], Generic[RecordT]):
@@ -35,8 +47,3 @@ class GeneralRecord(Model[Dict[str, Union[int, str]]]):
 
 class GeneralTable(Model[TableTemplate[GeneralRecord]]):
     """This is a general table"""
-
-
-MyRecordSchema = RecordSchemaFactory(('MyRecordSchema', {'a': int, 'b': str})).contents
-
-MyOtherRecordSchema = RecordSchemaFactory(('MyOtherRecordSchema', {'b': str, 'c': int})).contents

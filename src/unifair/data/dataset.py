@@ -7,6 +7,7 @@ from typing import Any, Dict, Generic, Iterator, Tuple, Type, TypeVar, Union
 # from orjson import orjson
 from pydantic import Field, PrivateAttr, ValidationError
 from pydantic.generics import GenericModel
+from pydantic.utils import lenient_issubclass
 
 from unifair.data.model import Model
 
@@ -68,7 +69,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if isinstance(model, tuple) and len(model) == 1:
             model = model[0]
 
-        if model != ModelT and not issubclass(model, Model):
+        if model != ModelT and not lenient_issubclass(model, Model):
             raise TypeError('Invalid model: {}! '.format(model)
                             + 'uniFAIR Dataset models must be a specialization of the uniFAIR '
                             'Model class.')
@@ -229,7 +230,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         return json.dumps(json_content, indent=4)
 
     def as_multi_model_dataset(self) -> MultiModelDataset[ModelT]:
-        multi_model_dataset = MultiModelDataset[ModelT]()
+        multi_model_dataset = MultiModelDataset[self.get_model_class()]()
         for obj_type in self:
             multi_model_dataset.data[obj_type] = self.data[obj_type]
         return multi_model_dataset

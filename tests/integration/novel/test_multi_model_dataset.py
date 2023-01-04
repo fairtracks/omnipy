@@ -7,14 +7,11 @@ from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
 
-from compute.cases.flows import FlowCase
-from engine.helpers.functions import assert_job_state
-from unifair.compute.flow import FlowTemplate
-from unifair.config.runtime import Runtime
 from unifair.data.dataset import Dataset, MultiModelDataset
-from unifair.engine.constants import EngineChoice, RunState
+from unifair.engine.constants import RunState
 
-from .cases.raw.flows import specialize_record_models_dag_flow, specialize_record_models_func_flow
+from ...engine.helpers.functions import assert_job_state
+from .cases.flows import FlowCase
 from .helpers.models import GeneralTable, MyOtherRecordSchema, MyRecordSchema, TableTemplate
 
 
@@ -121,7 +118,7 @@ def test_run_specialize_record_models_consistent_types(
         # per-table specialized models do not allow the tables to be switched
         new_dataset['a'], new_dataset['b'] = new_dataset['b'], new_dataset['a']
 
-    assert_job_state(specialize_record_models, RunState.FINISHED)
+    assert_job_state(specialize_record_models, [RunState.FINISHED])
 
 
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
