@@ -12,7 +12,7 @@ from .tasks import (apply_models_to_dataset,
 
 
 @DagFlowTemplate(
-    uppercase.refine(result_key='upper'),
+    uppercase.refine(name='pos_square_root', result_key='upper'),
     square_root,
     merge_key_value_into_str.refine(
         param_key_map={
@@ -26,7 +26,7 @@ def pos_square_root_dag_flow(
     ...
 
 
-@FuncFlowTemplate(result_key='pos_square_root')
+@FuncFlowTemplate(name='pos_square_root', result_key='pos_square_root')
 def pos_square_root_func_flow(
     number: int,
     text: str,
@@ -42,13 +42,14 @@ def pos_square_root_func_flow(
         result_key='models',  # iterate_over_dataset=True,
     ),
     apply_models_to_dataset,
+    name='specialize_record_models',
 )
 def specialize_record_models_dag_flow(
         tables: Dataset[GeneralTable]) -> MultiModelDataset[GeneralTable]:  # noqa
     ...
 
 
-@FuncFlowTemplate
+@FuncFlowTemplate(name='specialize_record_models')
 def specialize_record_models_func_flow(
         tables: Dataset[GeneralTable]) -> MultiModelDataset[GeneralTable]:
 
