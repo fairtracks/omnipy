@@ -10,7 +10,7 @@ from pydantic.generics import GenericModel
 
 from unifair.data.model import Model
 
-ModelT = TypeVar('ModelT')
+ModelT = TypeVar('ModelT', bound=Type[Model])
 Undefined = object()
 DATA_KEY = 'data'
 
@@ -58,7 +58,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     data: Dict[str, ModelT] = Field(default={})
 
-    def __class_getitem__(cls, model: Union[Type[ModelT], Model]) -> Union[Type[ModelT], Model]:
+    def __class_getitem__(cls, model: ModelT) -> ModelT:
         # TODO: change model type to params: Union[Type[Any], Tuple[Type[Any], ...]]
         #       as in GenericModel
 
@@ -90,7 +90,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     # TODO: Add test for get_model_class
 
-    def get_model_class(self) -> Model:
+    def get_model_class(self) -> ModelT:
         return self.__fields__.get(DATA_KEY).type_
 
     # TODO: Update _raise_no_model_exception() text. Model is now a requirement
@@ -240,9 +240,9 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
 class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
 
-    _custom_field_models: Dict[str, Union[Type[ModelT], Model]] = PrivateAttr(default={})
+    _custom_field_models: Dict[str, ModelT] = PrivateAttr(default={})
 
-    def set_model(self, obj_type: str, model: Union[Type[ModelT], Model]) -> None:
+    def set_model(self, obj_type: str, model: ModelT) -> None:
         try:
             self._custom_field_models[obj_type] = model
             if obj_type in self.data:
@@ -253,7 +253,7 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
             del self._custom_field_models[obj_type]
             raise
 
-    def get_model(self, obj_type: str) -> Union[Type[ModelT], Model]:
+    def get_model(self, obj_type: str) -> ModelT:
         if obj_type in self._custom_field_models:
             return self._custom_field_models[obj_type]
         else:
