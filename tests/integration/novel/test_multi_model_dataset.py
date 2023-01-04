@@ -1,6 +1,5 @@
 import inspect
 from inspect import Parameter
-from types import NoneType
 from typing import Annotated
 
 from pydantic import ValidationError
@@ -85,7 +84,7 @@ def test_dataset_with_multiple_table_models_json_schema():
 
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
 def test_specialize_record_models_signature_and_return_type_func(
-        runtime_all_engines: Annotated[NoneType, pytest.fixture],  # noqa
+        runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         case: FlowCase):
     for flow_obj in case.flow_template, case.flow_template.apply():
         assert inspect.signature(flow_obj).parameters == {
@@ -101,7 +100,7 @@ def test_specialize_record_models_signature_and_return_type_func(
 
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
 def test_run_specialize_record_models_consistent_types(
-        runtime_all_engines: Annotated[NoneType, pytest.fixture],  # noqa
+        runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         case: FlowCase):
     specialize_record_models = case.flow_template.apply()
 
@@ -123,7 +122,7 @@ def test_run_specialize_record_models_consistent_types(
 
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
 def test_fail_run_specialize_record_models_inconsistent_types(
-        runtime_all_engines: Annotated[NoneType, pytest.fixture],  # noqa
+        runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         case: FlowCase):
 
     specialize_record_models = case.flow_template.apply()

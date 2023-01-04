@@ -99,7 +99,7 @@ class LinearFlowTemplate(CallableDecoratingJobTemplateMixin['LinearFlowTemplate'
 
     def _apply_engine_decorator(self, flow: 'LinearFlow') -> 'LinearFlow':
         if self.engine is not None and isinstance(self.engine, IsLinearFlowRunnerEngine):
-            return self.engine.linear_flow_decorator(flow)  # noqa  # Pycharm static type checker bug
+            return self.engine.linear_flow_decorator(flow)  # noqa  # Pycharm type checker bug
         else:
             raise RuntimeError(f'Engine "{self.engine}" does not support DAG flows')
 

@@ -3,7 +3,7 @@ from typing import Awaitable, Callable, Generic, TypeVar
 
 import pytest_cases as pc
 
-from unifair.engine.protocols import IsFlow, IsFlowTemplate, IsTask
+from unifair.engine.protocols import IsFlowTemplate, IsTask
 
 from .raw.flows import (pos_square_root_dag_flow,
                         pos_square_root_func_flow,
@@ -35,7 +35,7 @@ class FlowCase(Generic[ArgT, ReturnT]):
 def case_sync_dagflow_pos_square_root() -> FlowCase:
     return FlowCase(
         name='pos_square_root',
-        flow_template=pos_square_root_dag_flow,
+        flow_template=pos_square_root_dag_flow,  # noqa
     )
 
 
@@ -46,7 +46,7 @@ def case_sync_dagflow_pos_square_root() -> FlowCase:
 def case_sync_funcflow_pos_square_root() -> FlowCase:
     return FlowCase(
         name='pos_square_root',
-        flow_template=pos_square_root_func_flow,
+        flow_template=pos_square_root_func_flow,  # noqa
     )
 
 
@@ -62,7 +62,7 @@ def case_sync_funcflow_pos_square_root() -> FlowCase:
 def case_sync_dagflow_specialize_record_models() -> FlowCase:
     return FlowCase(
         name='specialize_record_models',
-        flow_template=specialize_record_models_dag_flow,
+        flow_template=specialize_record_models_dag_flow,  # noqa
     )
 
 
@@ -73,5 +73,5 @@ def case_sync_dagflow_specialize_record_models() -> FlowCase:
 def case_sync_funcflow_specialize_record_models() -> FlowCase:
     return FlowCase(
         name='specialize_record_models',
-        flow_template=specialize_record_models_func_flow,
+        flow_template=specialize_record_models_func_flow,  # noqa
     )
