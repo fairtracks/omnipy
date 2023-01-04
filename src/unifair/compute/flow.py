@@ -198,6 +198,7 @@ class FuncFlowConfig(FlowConfig):
         name = name if name is not None else func_flow_func.__name__
         super().__init__(name=name)
         self._func_flow_func = func_flow_func
+        self._func_flow_func_signature = inspect.signature(self._func_flow_func)
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return self._func_flow_func,
@@ -207,6 +208,14 @@ class FuncFlowConfig(FlowConfig):
 
     def has_coroutine_func(self) -> bool:
         return asyncio.iscoroutinefunction(self._func_flow_func)
+
+    @property
+    def param_signatures(self) -> MappingProxyType:
+        return self._func_flow_func_signature.parameters
+
+    @property
+    def return_type(self) -> Type[Any]:
+        return self._func_flow_func_signature.return_annotation
 
 
 @callable_decorator_cls
