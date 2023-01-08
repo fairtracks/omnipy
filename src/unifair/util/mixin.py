@@ -19,6 +19,8 @@ class DynamicMixinAcceptorFactory(type):
 
 
 class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorFactory):
+    # Constants
+    WITH_MIXINS_CLS_PREFIX = 'WithMixins'
 
     # Declarations needed by mypy
     _orig_class: Type
@@ -31,7 +33,6 @@ class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorFactory):
         if '__init__' not in cls.__dict__:
             raise TypeError('Mixin acceptor class is required to define a __init__() method.')
 
-        cls._orig_class = cls
         cls._orig_init_signature = inspect.signature(cls.__init__)
         cls._mixin_classes = []
         cls._init_params_per_mixin_cls = defaultdict(defaultdict)
@@ -87,9 +88,13 @@ class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorFactory):
 
         cls.__init__.__signature__ = updated_init_signature
 
-    def __new__(cls, *outer_args, **outer_kwargs):
-        cls_with_mixins = cls._create_subcls_inheriting_from_mixins_and_orig_cls()
-        return object.__new__(cls_with_mixins)
+    def __new__(cls, *args, **kwargs):
+        if not cls.__name__.endswith(cls.WITH_MIXINS_CLS_PREFIX):
+            cls_with_mixins = cls._create_subcls_inheriting_from_mixins_and_orig_cls()
+            cls_with_mixins._orig_class = cls
+            return object.__new__(cls_with_mixins)
+        else:
+            return object.__new__(cls)
 
     @classmethod
     def _create_subcls_inheriting_from_mixins_and_orig_cls(cls):
@@ -113,7 +118,7 @@ class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorFactory):
             self._orig_class.__init__(self, *args, **kwargs)
 
         cls_with_mixins = DynamicMixinAcceptorFactory(
-            f'{cls.__name__}WithMixins',
+            f'{cls.__name__}{cls.WITH_MIXINS_CLS_PREFIX}',
             tuple(list(cls._mixin_classes) + [cls]),
             dict(__init__=__init__),
         )

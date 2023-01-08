@@ -50,10 +50,12 @@ def _assert_args_and_kwargs(MockPlainCls: Type[DynamicMixinAcceptor],
                             kwargs: Dict[str, object],
                             mixin_init_kwarg_params: Dict[str, Parameter] = {}):
 
-    assert tuple(signature(MockPlainCls.__init__).parameters.keys()) == tuple(
-        ['self', 'args'] + list(mixin_init_kwarg_params.keys()) + ['kwargs'],)
-    assert tuple(signature(mock_plain_obj.__init__).parameters.keys()) == tuple(
-        ['args'] + list(mixin_init_kwarg_params.keys()) + ['kwargs'],)
+    non_self_param_keys = \
+        (['args'] if args else []) + list(mixin_init_kwarg_params.keys()) + ['kwargs']
+    assert tuple(signature(MockPlainCls.__init__).parameters.keys()) == \
+           tuple(['self'] + non_self_param_keys)
+    assert tuple(signature(mock_plain_obj.__init__).parameters.keys()) == \
+           tuple(non_self_param_keys)
 
     assert mock_plain_obj._mixin_init_kwarg_params == mixin_init_kwarg_params
     assert mock_plain_obj.args == args
@@ -324,7 +326,7 @@ def test_fail_no_init_method_state_dependent_mixin():
 
 
 def test_fail_missing_kwargs_init_param_state_dependent_mixin():
-    class MockNoKwargInitCls(DynamicMixinAcceptor):
+    class MockNoKwargsInitCls(DynamicMixinAcceptor):
         def __init__(self, *args):
             self.args = args
             self.kwargs = {}
@@ -333,7 +335,7 @@ def test_fail_missing_kwargs_init_param_state_dependent_mixin():
             return self.__class__.__name__
 
     with pytest.raises(AttributeError):
-        MockNoKwargInitCls.accept_mixin(MockKwArgStateDependentMixin)
+        MockNoKwargsInitCls.accept_mixin(MockKwArgStateDependentMixin)
 
 
 class MockPosOnlyArgStateDependentMixin:
@@ -346,6 +348,32 @@ def test_fail_pos_only_arg_mixin(mock_plain_cls):
 
     with pytest.raises(AttributeError):
         MockPlainCls.accept_mixin(MockPosOnlyArgStateDependentMixin)
+
+
+def test_missing_pos_args_init_param_state_dependent_mixin():
+    class MockNoPosArgsInitCls(DynamicMixinAcceptor):
+        def __init__(self, **kwargs):
+            self.args = ()
+            self.kwargs = kwargs
+
+        def to_override(self):
+            return self.__class__.__name__
+
+    MockNoPosArgsInitCls.accept_mixin(MockKwArgStateDependentMixin)
+
+    mock_no_pos_args_init_obj = MockNoPosArgsInitCls(verbose=True, my_kwarg_1='value')
+
+    _assert_args_and_kwargs(
+        MockNoPosArgsInitCls,
+        mock_no_pos_args_init_obj,
+        args=(),
+        kwargs=dict(verbose=True, my_kwarg_1='value', my_kwarg_2='default value'),
+        mixin_init_kwarg_params=dict(
+            my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
+            my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')))
+
+    assert mock_no_pos_args_init_obj.new_method() == 'value'
+    assert mock_no_pos_args_init_obj.to_override() == 'default value'
 
 
 def test_predefined_init_kwargs_progressive_multiple_state_dependent_mixins():

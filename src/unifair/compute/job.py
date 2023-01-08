@@ -11,6 +11,7 @@ from slugify import slugify
 
 from unifair.engine.protocols import IsJobCreator, IsTaskRunnerEngine
 from unifair.util.helpers import create_merged_dict
+from unifair.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorFactory
 
 
 class JobCreator:
@@ -54,7 +55,15 @@ class JobTemplateMeta(JobConfigMeta):
         return self.job_creator.nested_context_level
 
 
-class JobConfig(metaclass=JobConfigMeta):
+class JobConfigAndMixinAcceptorMeta(JobConfigMeta, DynamicMixinAcceptorFactory):
+    ...
+
+
+class JobTemplateAndMixinAcceptorMeta(JobTemplateMeta, JobConfigAndMixinAcceptorMeta):
+    ...
+
+
+class JobConfig(DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
     def __init__(self, *, name: Optional[str] = None, **kwargs: Any):
         super().__init__()
 
@@ -122,7 +131,7 @@ class JobConfig(metaclass=JobConfigMeta):
         return self.__class__.job_creator.nested_context_level > 0
 
 
-class JobTemplate(JobConfig, metaclass=JobTemplateMeta):
+class JobTemplate(JobConfig, metaclass=JobTemplateAndMixinAcceptorMeta):
     @classmethod
     @abstractmethod
     def _get_job_subcls_for_apply(cls) -> Type[Job]:
