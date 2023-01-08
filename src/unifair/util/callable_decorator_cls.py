@@ -68,7 +68,7 @@ def callable_decorator_cls(cls: Type[T]) -> CallableClass[Type[T]]:
 
     _wrapped_init: CallableParamAfterSelf = cast(CallableParamAfterSelf, cls.__init__)
 
-    # Wrapper method that replaces the __init __ method of the decorated class
+    # Wrapper method that replaces the __init__ method of the decorated class
     def _init_wrapper(self, *args: object, **kwargs: object) -> None:
         args_list = list(args)
 
