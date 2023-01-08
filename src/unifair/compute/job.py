@@ -165,7 +165,7 @@ class JobTemplate(JobConfig, metaclass=JobTemplateMeta):
         if self.in_flow_context:
             job = self.apply()
             return job(*args, **kwargs)
-        raise TypeError("'{}' object is not callable".format(self.__class__.__name__))
+        raise TypeError(f"'{self.__class__.__name__}' object is not callable")
 
 
 JobTemplateT = TypeVar('JobTemplateT', bound=JobTemplate)
