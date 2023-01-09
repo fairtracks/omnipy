@@ -36,14 +36,9 @@ def test_init_mock():
 
     job_tmpl = JobTemplate()
     assert isinstance(job_tmpl, JobTemplate)
-    assert job_tmpl.name is None
-
-    job_tmpl = JobTemplate(name='name')
-    assert job_tmpl.name == 'name'
 
     job = job_tmpl.apply()
     assert isinstance(job, Job)
-    assert job.name == job_tmpl.name
 
 
 def test_fail_only_jobtemplate_init_mock():
@@ -53,26 +48,7 @@ def test_fail_only_jobtemplate_init_mock():
         JobConfig()  # noqa
 
     with pytest.raises(RuntimeError):
-        JobConfig(name='name')  # noqa
-
-    with pytest.raises(RuntimeError):
         Job()
-
-    with pytest.raises(RuntimeError):
-        Job(name='name')
-
-    with pytest.raises(RuntimeError):
-        Job('name')  # noqa
-
-
-def test_fail_init_arg_mock() -> None:
-    JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
-
-    with pytest.raises(RuntimeError):
-        JobConfig('name')  # noqa
-
-    with pytest.raises(RuntimeError):
-        Job('name')  # noqa
 
 
 def test_job_creator_singular_mock() -> None:
@@ -136,104 +112,15 @@ def test_engine_mock():
     assert not hasattr(Job, 'set_engine')
 
 
-def test_property_name_default_mock() -> None:
-    JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
-
-    job_tmpl = JobTemplate()
-
-    for job in job_tmpl, job_tmpl.apply():
-        assert job.name is None
-
-        with pytest.raises(AttributeError):
-            job.name = 'cool_name'  # noqa
-
-
-def test_property_name_change_mock() -> None:
-    JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
-
-    job_tmpl = JobTemplate(name='my_job')
-    for job in job_tmpl, job_tmpl.apply():
-        assert job.name == 'my_job'
-
-        with pytest.raises(AttributeError):
-            job.name = 'my_cool_job'
-
-
-def test_property_name_validation_mock() -> None:
-    JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
-
-    job_tmpl = JobTemplate(name=None)
-    assert job_tmpl.name is None
-
-    with pytest.raises(ValueError):
-        JobTemplate(name='')
-
-    with pytest.raises(TypeError):
-        JobTemplate(name=123)  # noqa
-
-
-def test_property_unique_name_default_mock() -> None:
-    JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
-
-    job_tmpl = JobTemplate()
-    assert job_tmpl.unique_name is None
-
-    with pytest.raises(AttributeError):
-        job_tmpl.unique_name = 'cool_name'  # noqa
-
-
-def test_property_unique_name_change_mock() -> None:
-    JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
-
-    job_tmpl = JobTemplate(name='my_job')
-    assert job_tmpl.unique_name is None
-
-    job = job_tmpl.apply()
-    assert job_tmpl.unique_name is None
-
-    assert job.unique_name.startswith('mock-job-subclass-with-mixins-my-job-')
-    assert job.unique_name != job.name
-
-    with pytest.raises(AttributeError):
-        job.unique_name = 'mock-job-subclass-with-mixins-my-job-crouching-dolphin'  # noqa
-
-    prev_unique_name = job.unique_name
-    job.regenerate_unique_name()
-    assert job.unique_name != prev_unique_name
-    assert job.unique_name.startswith('mock-job-subclass-with-mixins-my-job-')
-    assert job.unique_name != job.name
-
-    new_job_tmpl = job.revise()
-    assert new_job_tmpl.unique_name is None
-
-
-# def test_property_name_job() -> None:
-#     job_tmpl = JobTemplate()
-#     assert job_tmpl.name is None
-#
-#     job_1 = job_tmpl.apply()
-#     assert job_1.name is not None
-#     assert isinstance(job_1.name, str) and len(job_1.name) > 0
-#
-#     job_2 = job_tmpl.apply()
-#     assert job_1.name != job_2.name
-
-
 def test_equal_mock() -> None:
     JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
 
-    my_job_tmpl = JobTemplate(name='my_job')
-    my_job_tmpl_2 = JobTemplate(name='my_job')
+    my_job_tmpl = JobTemplate()
+    my_job_tmpl_2 = JobTemplate()
 
     for (my_job_obj, my_job_obj_2) in [(my_job_tmpl, my_job_tmpl_2),
                                        (my_job_tmpl.apply(), my_job_tmpl_2.apply())]:
         assert my_job_obj == my_job_obj_2
-
-    other_job_tmpl = JobTemplate(name='other_job')
-
-    for (my_job_obj, other_job_obj) in [(my_job_tmpl, other_job_tmpl),
-                                        (my_job_tmpl.apply(), other_job_tmpl.apply())]:
-        assert my_job_obj != other_job_obj
 
     assert my_job_tmpl != "123"  # noqa
 
@@ -341,9 +228,9 @@ def test_subclass_refine_empty():
 
 
 def test_subclass_refine_scalar() -> None:
-    # Job template with name and mapping property 'params' as dict
+    # Job template with id and mapping property 'params' as dict
     all_erased_tmpl = CommandMockJobTemplate(
-        'erase', name='all_erased', params={
+        'erase', id='all_erased', params={
             'what': 'all', 'where': 'everywhere'
         })(mock_cmd_func,)
     all_erased = all_erased_tmpl.apply()
@@ -357,7 +244,7 @@ def test_subclass_refine_scalar() -> None:
     assert shout_tmpl != all_erased_tmpl
     for shout_obj in shout_tmpl, shout_tmpl.apply():
         assert_updated_wrapper(shout_obj, shout_tmpl)
-        assert shout_obj.name == 'all_erased'
+        assert shout_obj.id == 'all_erased'
         assert shout_obj.uppercase is True
         assert shout_obj.params == dict(what='all', where='everywhere')
 
@@ -366,28 +253,28 @@ def test_subclass_refine_scalar() -> None:
     assert shout != all_erased
     assert shout() == 'ALL HAS BEEN ERASED, EVERYWHERE'
 
-    # Refine job template with name and scalar property 'uppercase' as bool (update=False).
+    # Refine job template with id and scalar property 'uppercase' as bool (update=False).
     # Other properties are reset to default.
     silent_tmpl = shout_tmpl.refine(uppercase=False, update=False)  # noqa
     assert_updated_wrapper(silent_tmpl, shout_tmpl)
     assert silent_tmpl != shout_tmpl
     for silent_obj in silent_tmpl, silent_tmpl.apply():
         assert_updated_wrapper(silent_obj, silent_tmpl)
-        assert silent_obj.name is None
+        assert silent_obj.id is ''
         assert silent_obj.uppercase is False
         assert silent_obj.params == {}
 
-    silent = silent_tmpl.refine(name='silent').apply()
+    silent = silent_tmpl.refine(id='silent').apply()
     assert_updated_wrapper(silent, silent_tmpl)
     assert silent != shout
-    assert silent.name is 'silent'
+    assert silent.id is 'silent'
     assert silent() == 'I know nothing'
 
 
 def test_subclass_refine_mapping() -> None:
-    # Job template with name and scalar property 'uppercase' as bool
-    cmd_tmpl = CommandMockJobTemplate('restore', name='restore', uppercase=True)(mock_cmd_func)
-    assert cmd_tmpl.name == 'restore'
+    # Job template with id and scalar property 'uppercase' as bool
+    cmd_tmpl = CommandMockJobTemplate('restore', id='restore', uppercase=True)(mock_cmd_func)
+    assert cmd_tmpl.id == 'restore'
     assert cmd_tmpl.uppercase is True
     assert cmd_tmpl.params == {}
     cmd = cmd_tmpl.apply()
@@ -400,7 +287,7 @@ def test_subclass_refine_mapping() -> None:
     assert_updated_wrapper(nicer_tmpl, cmd_tmpl)
     assert nicer_tmpl != cmd_tmpl
     for nicer_obj in nicer_tmpl, nicer_tmpl.apply():
-        assert nicer_obj.name == 'restore'
+        assert nicer_obj.id == 'restore'
         assert nicer_obj.uppercase is True
         assert nicer_obj.params == dict(what='something', where='somewhere')
 
@@ -416,7 +303,7 @@ def test_subclass_refine_mapping() -> None:
     assert secret_tmpl != nicer_tmpl
     for secret_obj in secret_tmpl, secret_tmpl.apply():
         assert_updated_wrapper(secret_obj, secret_tmpl)
-        assert secret_obj.name == 'restore'
+        assert secret_obj.id == 'restore'
         assert secret_obj.uppercase is True
         assert secret_obj.params == dict(what='something', where='but it is a secret')
 
@@ -432,14 +319,14 @@ def test_subclass_refine_mapping() -> None:
     assert nothing_tmpl != secret_tmpl
     for nothing_obj in nothing_tmpl, nothing_tmpl.apply():
         assert_updated_wrapper(nothing_obj, nothing_tmpl)
-        assert nothing_obj.name is None
+        assert nothing_obj.id is ''
         assert nothing_obj.uppercase is False
         assert nothing_obj.params == dict(what='nothing')
 
-    nothing = nothing_tmpl.refine(name='nothing').apply()
+    nothing = nothing_tmpl.refine(id='nothing').apply()
     assert_updated_wrapper(nothing, nothing_tmpl)
     assert nothing != secret
-    assert nothing.name is 'nothing'
+    assert nothing.id is 'nothing'
     assert nothing() == 'nothing has been restored'
 
 

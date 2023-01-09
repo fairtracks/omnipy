@@ -148,6 +148,7 @@ class CommandMockJobConfig(
                  command: str,
                  *,
                  name: Optional[str] = None,
+                 id: str = '',
                  uppercase: bool = False,
                  params: Mapping[str, Union[int, str, bool]] = None,
                  **kwargs):
@@ -155,15 +156,20 @@ class CommandMockJobConfig(
         super().__init__()
         self._cmd_func = cmd_func
         self._command = command
+        self._id = id
         self._uppercase = uppercase
         self._params = dict(params) if params is not None else {}
         self.engine_decorator_applied = False
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
-        return self._cmd_func, self._command,
+        return self._cmd_func, self._command
 
     def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
-        return 'uppercase', 'params'
+        return 'id', 'uppercase', 'params'
+
+    @property
+    def id(self) -> str:
+        return self._id
 
     @property
     def uppercase(self) -> bool:
