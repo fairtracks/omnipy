@@ -66,7 +66,6 @@ def test_flow_run(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
 
     results = flow(*case.args, **case.kwargs)
 
-    assert flow.name == case.name
     case.assert_results_func(results)
 
     if hasattr(mock_local_runner, 'finished'):

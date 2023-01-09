@@ -1,9 +1,15 @@
-from typing import Tuple, Type
+from typing import Annotated, Tuple, Type
 
 import pytest
 
-from compute.helpers.mocks import MockJobConfigSubclass, MockJobSubclass, MockJobTemplateSubclass
+from compute.cases.raw.functions import power_m1_func
+from compute.helpers.mocks import (MockJobConfigSubclass,
+                                   MockJobSubclass,
+                                   MockJobTemplateSubclass,
+                                   MockLocalRunner)
+from unifair.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from unifair.compute.job import Job, JobConfig, JobTemplate
+from unifair.compute.task import TaskTemplate
 
 
 def mock_job_classes() -> Tuple[Type[JobConfig], Type[JobTemplate], Type[Job]]:
@@ -20,6 +26,41 @@ def test_property_name_default_mock() -> None:
 
         with pytest.raises(AttributeError):
             job.name = 'cool_name'  # noqa
+
+
+def test_property_name_default_task() -> None:
+
+    power_m1_tmpl = TaskTemplate(power_m1_func)
+
+    for power_m1_obj in power_m1_tmpl, power_m1_tmpl.apply():
+        assert power_m1_obj.name == 'power_m1_func'
+
+
+def test_property_name_default_linear_flow(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+
+    power_m1_tmpl = LinearFlowTemplate(power_m1_func)
+
+    for power_m1_obj in power_m1_tmpl, power_m1_tmpl.apply():
+        assert power_m1_obj.name == 'power_m1_func'
+
+
+def test_property_name_default_dag_flow(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+
+    power_m1_tmpl = DagFlowTemplate(power_m1_func)
+
+    for power_m1_obj in power_m1_tmpl, power_m1_tmpl.apply():
+        assert power_m1_obj.name == 'power_m1_func'
+
+
+def test_property_name_default_func_flow(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+
+    power_m1_tmpl = FuncFlowTemplate(power_m1_func)
+
+    for power_m1_obj in power_m1_tmpl, power_m1_tmpl.apply():
+        assert power_m1_obj.name == 'power_m1_func'
 
 
 def test_property_name_change_mock() -> None:

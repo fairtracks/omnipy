@@ -16,7 +16,6 @@ ReturnT = TypeVar('ReturnT')
 
 @dataclass
 class FlowCase(Generic[ArgT, ReturnT]):
-    name: str
     flow_func: Callable[[ArgT], ReturnT]
     flow_template: FlowTemplate
     args: Tuple[Any, ...]
@@ -38,7 +37,6 @@ def case_sync_linearflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
     linear_flow = LinearFlowTemplate(task_template)(task_case.task_func)
 
     return FlowCase(
-        name=task_case.name,
         flow_func=task_case.task_func,
         flow_template=linear_flow,
         args=task_case.args,
@@ -58,7 +56,6 @@ def case_sync_dagflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
     dag_flow = DagFlowTemplate(task_template)(task_case.task_func)
 
     return FlowCase(
-        name=task_case.name,
         flow_func=task_case.task_func,
         flow_template=dag_flow,
         args=task_case.args,
@@ -88,7 +85,6 @@ def case_sync_funcflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
     func_flow = FuncFlowTemplate(single_task_func)
 
     return FlowCase(
-        name=task_case.name,
         flow_func=single_task_func,
         flow_template=func_flow,
         args=task_case.args,

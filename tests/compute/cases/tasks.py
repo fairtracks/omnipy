@@ -24,7 +24,6 @@ ReturnT = TypeVar('ReturnT')
 
 @dataclass
 class TaskCase(Generic[ArgT, ReturnT]):
-    name: str
     task_func: Callable[[ArgT], ReturnT]
     args: Tuple[Any, ...]
     kwargs: Dict[str, Any]
@@ -49,7 +48,6 @@ def case_sync_action_func_no_params() -> TaskCase[[], None]:
         assert task_obj.return_type is None
 
     return TaskCase(
-        name='action_func_no_params',
         task_func=action_func_no_params,
         args=(),
         kwargs={},
@@ -77,7 +75,6 @@ def case_sync_action_func_with_params() -> TaskCase[[int, bool], None]:
         assert task_obj.return_type is None
 
     return TaskCase(
-        name='action_func_with_params',
         task_func=action_func_with_params,
         args=('rm -rf *',),
         kwargs=dict(verbose=True),
@@ -100,7 +97,6 @@ def case_sync_data_import_func() -> TaskCase[[], str]:
         assert task_obj.return_type is str
 
     return TaskCase(
-        name='data_import_func',
         task_func=data_import_func,
         args=(),
         kwargs={},
@@ -125,7 +121,6 @@ def case_sync_format_to_string_func() -> TaskCase[[str, int], str]:
         assert task_obj.return_type is str
 
     return TaskCase(
-        name='format_to_string_func',
         task_func=format_to_string_func,
         args=('Number', 12),
         kwargs={},
@@ -159,7 +154,6 @@ def case_sync_power_m1_func() -> TaskCase[[int, int, bool], int]:
         assert task_obj.return_type is int
 
     return TaskCase(
-        name='power_m1_func',
         task_func=power_m1_func,
         args=(4, 3),
         kwargs=dict(minus_one=False),
@@ -181,7 +175,6 @@ def case_sync_empty_dict_fun() -> TaskCase[[], Dict]:
         assert task_obj.return_type is Dict
 
     return TaskCase(
-        name='empty_dict_func',
         task_func=empty_dict_func,
         args=(),
         kwargs={},
@@ -205,7 +198,6 @@ def case_sync_plus_one_dict_func() -> TaskCase[[int], Dict[str, int]]:
         assert task_obj.return_type is Dict[str, int]
 
     return TaskCase(
-        name='plus_one_dict_func',
         task_func=plus_one_dict_func,
         args=(3,),
         kwargs={},
@@ -229,7 +221,6 @@ def case_sync_dict_of_squared_fun() -> TaskCase[[int], Dict[int, int]]:
         assert task_obj.return_type is Dict[int, int]
 
     return TaskCase(
-        name='dict_of_squared_func',
         task_func=dict_of_squared_func,
         args=(6,),
         kwargs={},

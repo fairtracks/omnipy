@@ -45,7 +45,6 @@ def test_task_run(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
 
     result = task(*case.args, **case.kwargs)
 
-    assert task.name == case.name
     case.assert_results_func(result)
 
     if hasattr(mock_local_runner, 'finished'):
@@ -108,14 +107,6 @@ def test_property_param_signature_and_return_type_immutable() -> None:
 
         with pytest.raises(AttributeError):
             task_obj.return_type = int
-
-
-def test_property_name_default() -> None:
-
-    power_m1_template = TaskTemplate(power_m1_func)
-
-    for power_m1_obj in power_m1_template, power_m1_template.apply():
-        assert power_m1_obj.name == 'power_m1_func'
 
 
 def test_property_fixed_params_default() -> None:
