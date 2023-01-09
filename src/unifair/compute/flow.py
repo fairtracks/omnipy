@@ -9,9 +9,9 @@ from unifair.compute.job import (CallableDecoratingJobTemplateMixin,
                                  JobConfig,
                                  JobConfigAndMixinAcceptorMeta,
                                  JobTemplate)
-from unifair.compute.mixins import (NameDagFlowConfigMixin,
-                                    NameFuncFlowConfigMixin,
-                                    NameLinearFlowConfigMixin)
+from unifair.compute.mixins.name import (NameDagFlowConfigMixin,
+                                         NameFuncFlowConfigMixin,
+                                         NameLinearFlowConfigMixin)
 from unifair.engine.protocols import (IsDagFlowRunnerEngine,
                                       IsFuncFlowRunnerEngine,
                                       IsLinearFlowRunnerEngine,

@@ -10,7 +10,7 @@ from unifair.compute.job import (CallableDecoratingJobTemplateMixin,
                                  JobConfig,
                                  JobConfigAndMixinAcceptorMeta,
                                  JobTemplate)
-from unifair.compute.mixins import NameTaskConfigMixin
+from unifair.compute.mixins.name import NameTaskConfigMixin
 from unifair.util.callable_decorator_cls import callable_decorator_cls
 from unifair.util.mixin import DynamicMixinAcceptor
 from unifair.util.param_key_mapper import ParamKeyMapper
