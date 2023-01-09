@@ -2,14 +2,15 @@ from typing import Annotated, Tuple, Type
 
 import pytest
 
-from compute.cases.raw.functions import power_m1_func
-from compute.helpers.mocks import (MockJobConfigSubclass,
-                                   MockJobSubclass,
-                                   MockJobTemplateSubclass,
-                                   MockLocalRunner)
 from unifair.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from unifair.compute.job import Job, JobConfig, JobTemplate
 from unifair.compute.task import TaskTemplate
+
+from ..cases.raw.functions import power_m1_func
+from ..helpers.mocks import (MockJobConfigSubclass,
+                             MockJobSubclass,
+                             MockJobTemplateSubclass,
+                             MockLocalRunner)
 
 
 def mock_job_classes() -> Tuple[Type[JobConfig], Type[JobTemplate], Type[Job]]:
