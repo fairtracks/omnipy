@@ -5,22 +5,28 @@ import inspect
 from types import MappingProxyType
 from typing import Any, Callable, Iterable, Mapping, Optional, Tuple, Type, Union
 
-from unifair.compute.job import CallableDecoratingJobTemplateMixin, Job, JobConfig, JobTemplate
+from unifair.compute.job import (CallableDecoratingJobTemplateMixin,
+                                 Job,
+                                 JobConfig,
+                                 JobConfigAndMixinAcceptorMeta,
+                                 JobTemplate)
+from unifair.compute.mixins import NameTaskConfigMixin
 from unifair.util.callable_decorator_cls import callable_decorator_cls
+from unifair.util.mixin import DynamicMixinAcceptor
 from unifair.util.param_key_mapper import ParamKeyMapper
 
 
-class TaskConfig(JobConfig):
+class TaskConfig(DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
     def __init__(self,
                  task_func: Callable,
                  *,
                  name: Optional[str] = None,
                  fixed_params: Optional[Mapping[str, Any]] = None,
                  param_key_map: Optional[Mapping[str, str]] = None,
-                 result_key: Optional[str] = None) -> None:
+                 result_key: Optional[str] = None,
+                 **kwargs: object) -> None:
 
-        name = name if name is not None else task_func.__name__
-        super().__init__(name=name)
+        super().__init__()
 
         self._task_func = task_func
         self._task_func_signature = inspect.signature(self._task_func)
@@ -71,8 +77,11 @@ class TaskConfig(JobConfig):
         return self._result_key
 
 
+TaskConfig.accept_mixin(NameTaskConfigMixin)
+
+
 @callable_decorator_cls
-class TaskTemplate(CallableDecoratingJobTemplateMixin['TaskTemplate'], JobTemplate, TaskConfig):
+class TaskTemplate(CallableDecoratingJobTemplateMixin['TaskTemplate'], TaskConfig, JobTemplate):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type[Job]:
         return Task
@@ -85,7 +94,10 @@ class TaskTemplate(CallableDecoratingJobTemplateMixin['TaskTemplate'], JobTempla
             return task
 
 
-class Task(Job, TaskConfig):
+class Task(TaskConfig, Job):
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+
     @classmethod
     def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
         return TaskConfig

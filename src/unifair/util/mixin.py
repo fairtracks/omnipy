@@ -14,8 +14,8 @@ class DynamicMixinAcceptorFactory(type):
     def __new__(mcs, name, bases, namespace):
         cls = type.__new__(mcs, name, bases, namespace)
 
-        if any(base.__name__ == 'DynamicMixinAcceptor' for base in cls.__bases__):
-            cls._init_cls_from_metaclass()
+        if name != 'DynamicMixinAcceptor':
+            cls._init_cls_from_metaclass(bases)
 
         return cls
 
@@ -31,13 +31,22 @@ class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorFactory):
     _init_params_per_mixin_cls: DefaultDict[str, DefaultDict[str, inspect.Parameter]]
 
     @classmethod
-    def _init_cls_from_metaclass(cls):
-        if '__init__' not in cls.__dict__:
-            raise TypeError('Mixin acceptor class is required to define a __init__() method.')
+    def _init_cls_from_metaclass(cls, bases):
+        if any(base.__name__ == 'DynamicMixinAcceptor' for base in bases):
+            if '__init__' not in cls.__dict__:
+                raise TypeError('Mixin acceptor class is required to define a __init__() method.')
 
         cls._orig_init_signature = inspect.signature(cls.__init__)
         cls._mixin_classes = []
         cls._init_params_per_mixin_cls = defaultdict(defaultdict)
+
+        for base in reversed(bases):
+            if hasattr(base, '_mixin_classes'):
+                for mixin_class in base._mixin_classes:
+                    if mixin_class.__name__ not in cls._init_params_per_mixin_cls:
+                        cls._mixin_classes.append(mixin_class)
+                        cls._init_params_per_mixin_cls[mixin_class.__name__] = \
+                            base._init_params_per_mixin_cls[mixin_class.__name__]
 
     @classmethod
     def _get_mixin_init_kwarg_params(cls) -> Dict[str, inspect.Parameter]:
@@ -92,7 +101,6 @@ class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorFactory):
     def __new__(cls, *args, **kwargs):
         if not cls.__name__.endswith(cls.WITH_MIXINS_CLS_PREFIX):
             cls_with_mixins = cls._create_subcls_inheriting_from_mixins_and_orig_cls()
-            cls_with_mixins._orig_class = cls
             return object.__new__(cls_with_mixins)
         else:
             return object.__new__(cls)
@@ -155,6 +163,10 @@ class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorFactory):
             tuple(list(reversed(cls._mixin_classes)) + [cls]),
             dict(__init__=__init__),
         )
+
+        cls_with_mixins._orig_class = cls
+        cls_with_mixins._orig_init_signature = inspect.signature(cls.__init__)
+
         cls_with_mixins._update_cls_init_signature_with_kwargs_for_all_mixins()  # noqa
 
         return cls_with_mixins

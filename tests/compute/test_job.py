@@ -68,11 +68,11 @@ def test_fail_only_jobtemplate_init_mock():
 def test_fail_init_arg_mock() -> None:
     JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
 
-    with pytest.raises(TypeError):
+    with pytest.raises(RuntimeError):
         JobConfig('name')  # noqa
 
-    with pytest.raises(TypeError):
-        JobTemplate('name')  # noqa
+    with pytest.raises(RuntimeError):
+        Job('name')  # noqa
 
 
 def test_job_creator_singular_mock() -> None:
@@ -191,16 +191,16 @@ def test_property_unique_name_change_mock() -> None:
     job = job_tmpl.apply()
     assert job_tmpl.unique_name is None
 
-    assert job.unique_name.startswith('mock-job-subclass-my-job-')
+    assert job.unique_name.startswith('mock-job-subclass-with-mixins-my-job-')
     assert job.unique_name != job.name
 
     with pytest.raises(AttributeError):
-        job.unique_name = 'mock-job-subclass-my-job-crouching-dolphin'  # noqa
+        job.unique_name = 'mock-job-subclass-with-mixins-my-job-crouching-dolphin'  # noqa
 
     prev_unique_name = job.unique_name
     job.regenerate_unique_name()
     assert job.unique_name != prev_unique_name
-    assert job.unique_name.startswith('mock-job-subclass-my-job-')
+    assert job.unique_name.startswith('mock-job-subclass-with-mixins-my-job-')
     assert job.unique_name != job.name
 
     new_job_tmpl = job.revise()

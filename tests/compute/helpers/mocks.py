@@ -1,7 +1,11 @@
 from types import MappingProxyType
 from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, Union
 
-from unifair.compute.job import CallableDecoratingJobTemplateMixin, Job, JobConfig, JobTemplate
+from unifair.compute.job import (CallableDecoratingJobTemplateMixin,
+                                 Job,
+                                 JobConfig,
+                                 JobConfigAndMixinAcceptorMeta,
+                                 JobTemplate)
 from unifair.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
 from unifair.engine.protocols import (IsDagFlow,
                                       IsEngineConfig,
@@ -10,9 +14,17 @@ from unifair.engine.protocols import (IsDagFlow,
                                       IsRunStateRegistry,
                                       IsTask)
 from unifair.util.callable_decorator_cls import callable_decorator_cls
+from unifair.util.mixin import DynamicMixinAcceptor
 
 
-class MockJobConfigSubclass(JobConfig):
+class MockJobConfigSubclass(
+        JobConfig,
+        DynamicMixinAcceptor,
+        metaclass=JobConfigAndMixinAcceptorMeta,
+):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return ()
 
@@ -20,7 +32,7 @@ class MockJobConfigSubclass(JobConfig):
         return ()
 
 
-class MockJobTemplateSubclass(JobTemplate, MockJobConfigSubclass):
+class MockJobTemplateSubclass(MockJobConfigSubclass, JobTemplate):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type[Job]:
         return MockJobSubclass
@@ -30,7 +42,7 @@ class MockJobTemplateSubclass(JobTemplate, MockJobConfigSubclass):
         return job
 
 
-class MockJobSubclass(Job, MockJobConfigSubclass):
+class MockJobSubclass(MockJobConfigSubclass, Job):
     @classmethod
     def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
         return MockJobConfigSubclass
@@ -46,7 +58,11 @@ class MockJobSubclass(Job, MockJobConfigSubclass):
         ...
 
 
-class PublicPropertyErrorsMockJobConfig(JobConfig):
+class PublicPropertyErrorsMockJobConfig(
+        JobConfig,
+        DynamicMixinAcceptor,
+        metaclass=JobConfigAndMixinAcceptorMeta,
+):
     strength = 1
 
     def __init__(self,
@@ -58,8 +74,10 @@ class PublicPropertyErrorsMockJobConfig(JobConfig):
                  strength: int = 1,
                  power: int = 1,
                  speed: int = 1,
-                 params: Mapping[str, Union[int, str, bool]] = None):
-        JobConfig.__init__(self, name=name)
+                 params: Mapping[str, Union[int, str, bool]] = None,
+                 **kwargs):
+
+        super().__init__()
         self._property_index = property_index
         self._verbose = verbose
         self.cost = cost
@@ -94,7 +112,7 @@ class PublicPropertyErrorsMockJobConfig(JobConfig):
         return self._params
 
 
-class PublicPropertyErrorsMockJobTemplate(JobTemplate, PublicPropertyErrorsMockJobConfig):
+class PublicPropertyErrorsMockJobTemplate(PublicPropertyErrorsMockJobConfig, JobTemplate):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type[Job]:
         return PublicPropertyErrorsMockJob
@@ -104,7 +122,7 @@ class PublicPropertyErrorsMockJobTemplate(JobTemplate, PublicPropertyErrorsMockJ
         return job
 
 
-class PublicPropertyErrorsMockJob(Job, PublicPropertyErrorsMockJobConfig):
+class PublicPropertyErrorsMockJob(PublicPropertyErrorsMockJobConfig, Job):
     @classmethod
     def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
         return PublicPropertyErrorsMockJobConfig
@@ -120,15 +138,21 @@ class PublicPropertyErrorsMockJob(Job, PublicPropertyErrorsMockJobConfig):
         ...
 
 
-class CommandMockJobConfig(JobConfig):
+class CommandMockJobConfig(
+        JobConfig,
+        DynamicMixinAcceptor,
+        metaclass=JobConfigAndMixinAcceptorMeta,
+):
     def __init__(self,
                  cmd_func: Callable,
                  command: str,
                  *,
                  name: Optional[str] = None,
                  uppercase: bool = False,
-                 params: Mapping[str, Union[int, str, bool]] = None):
-        JobConfig.__init__(self, name=name)
+                 params: Mapping[str, Union[int, str, bool]] = None,
+                 **kwargs):
+
+        super().__init__()
         self._cmd_func = cmd_func
         self._command = command
         self._uppercase = uppercase
@@ -152,8 +176,8 @@ class CommandMockJobConfig(JobConfig):
 
 @callable_decorator_cls
 class CommandMockJobTemplate(CallableDecoratingJobTemplateMixin['CommandMockJobTemplate'],
-                             JobTemplate,
-                             CommandMockJobConfig):
+                             CommandMockJobConfig,
+                             JobTemplate):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type[Job]:
         return CommandMockJob
@@ -163,7 +187,7 @@ class CommandMockJobTemplate(CallableDecoratingJobTemplateMixin['CommandMockJobT
         return job
 
 
-class CommandMockJob(Job, CommandMockJobConfig):
+class CommandMockJob(CommandMockJobConfig, Job):
     @classmethod
     def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
         return CommandMockJobConfig

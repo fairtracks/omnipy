@@ -4,47 +4,42 @@ import inspect
 from types import MappingProxyType
 from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
-from unifair.compute.job import CallableDecoratingJobTemplateMixin, Job, JobConfig, JobTemplate
+from unifair.compute.job import (CallableDecoratingJobTemplateMixin,
+                                 Job,
+                                 JobConfig,
+                                 JobConfigAndMixinAcceptorMeta,
+                                 JobTemplate)
+from unifair.compute.mixins import (NameDagFlowConfigMixin,
+                                    NameFuncFlowConfigMixin,
+                                    NameLinearFlowConfigMixin)
 from unifair.engine.protocols import (IsDagFlowRunnerEngine,
                                       IsFuncFlowRunnerEngine,
                                       IsLinearFlowRunnerEngine,
                                       IsTaskTemplate)
 from unifair.util.callable_decorator_cls import callable_decorator_cls
+from unifair.util.mixin import DynamicMixinAcceptor
+
+# class FlowConfig(JobConfig):
+#     def __init__(self, *, name: Optional[str] = None, **kwargs: Any):
+#         super().__init__()
+#
+#         # if self._name is not None:
+#         #     self._check_not_empty_string('name', self.name)
+#
+#     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
+#         return ()
+#
+#     def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
+#         return ()
 
 
-class FlowConfig(JobConfig):
-    def __init__(self, *, name: Optional[str] = None, **kwargs: Any):
-        super().__init__(name=name, **kwargs)
-
-        if self._name is not None:
-            self._check_not_empty_string('name', self.name)
-
-    def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
-        return ()
-
-    def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
-        return ()
-
-
-class FlowTemplate(JobTemplate, FlowConfig):
+class FlowTemplate(JobTemplate):
     @abstractmethod
     def _apply_engine_decorator(cls, job: Job) -> Job:
         pass
 
-    @classmethod
-    def _get_job_subcls_for_apply(cls) -> Type[Job]:
-        return Flow
 
-
-class Flow(Job, FlowConfig):
-    @classmethod
-    def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
-        return FlowConfig
-
-    @classmethod
-    def _get_job_template_subcls_for_revise(cls) -> Type[JobTemplate]:
-        return FlowTemplate
-
+class Flow(Job):
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         return self._call_func(*args, **kwargs)
 
@@ -53,7 +48,7 @@ class Flow(Job, FlowConfig):
         pass
 
 
-class LinearFlowConfig(FlowConfig):
+class LinearFlowConfig(JobConfig, DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
     def __init__(
         self,
         linear_flow_func: Callable,
@@ -61,11 +56,11 @@ class LinearFlowConfig(FlowConfig):
         name: Optional[str] = None,
         **kwargs: Any,
     ):
+        super().__init__()
+
         self._linear_flow_func = linear_flow_func
         self._linear_flow_func_signature = inspect.signature(self._linear_flow_func)
         self._task_templates: Tuple[IsTaskTemplate] = task_templates
-        name = name if name is not None else self._linear_flow_func.__name__
-        super().__init__(name=name, **kwargs)
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return self._linear_flow_func, *self._task_templates
@@ -89,10 +84,13 @@ class LinearFlowConfig(FlowConfig):
         return self._linear_flow_func_signature.return_annotation
 
 
+LinearFlowConfig.accept_mixin(NameLinearFlowConfigMixin)
+
+
 @callable_decorator_cls
 class LinearFlowTemplate(CallableDecoratingJobTemplateMixin['LinearFlowTemplate'],
-                         FlowTemplate,
-                         LinearFlowConfig):
+                         LinearFlowConfig,
+                         FlowTemplate):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type[Job]:
         return LinearFlow
@@ -104,7 +102,7 @@ class LinearFlowTemplate(CallableDecoratingJobTemplateMixin['LinearFlowTemplate'
             raise RuntimeError(f'Engine "{self.engine}" does not support DAG flows')
 
 
-class LinearFlow(Flow, LinearFlowConfig):
+class LinearFlow(LinearFlowConfig, Flow):
     @classmethod
     def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
         return LinearFlowConfig
@@ -120,7 +118,7 @@ class LinearFlow(Flow, LinearFlowConfig):
         return inspect.signature(self._linear_flow_func).bind(*args, **kwargs).arguments
 
 
-class DagFlowConfig(FlowConfig):
+class DagFlowConfig(JobConfig, DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
     def __init__(
         self,
         dag_flow_func: Callable,
@@ -128,11 +126,11 @@ class DagFlowConfig(FlowConfig):
         name: Optional[str] = None,
         **kwargs: Any,
     ):
+        super().__init__()
+
         self._dag_flow_func = dag_flow_func
         self._dag_flow_func_signature = inspect.signature(self._dag_flow_func)
         self._task_templates: Tuple[IsTaskTemplate] = task_templates
-        name = name if name is not None else self._dag_flow_func.__name__
-        super().__init__(name=name, **kwargs)
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return self._dag_flow_func, *self._task_templates
@@ -156,10 +154,13 @@ class DagFlowConfig(FlowConfig):
         return self._dag_flow_func_signature.return_annotation
 
 
+DagFlowConfig.accept_mixin(NameDagFlowConfigMixin)
+
+
 @callable_decorator_cls
 class DagFlowTemplate(CallableDecoratingJobTemplateMixin['DagFlowTemplate'],
-                      FlowTemplate,
-                      DagFlowConfig):
+                      DagFlowConfig,
+                      FlowTemplate):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type[Job]:
         return DagFlow
@@ -171,7 +172,7 @@ class DagFlowTemplate(CallableDecoratingJobTemplateMixin['DagFlowTemplate'],
             raise RuntimeError(f'Engine "{self.engine}" does not support DAG flows')
 
 
-class DagFlow(Flow, DagFlowConfig):
+class DagFlow(DagFlowConfig, Flow):
     @classmethod
     def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
         return DagFlowConfig
@@ -187,7 +188,7 @@ class DagFlow(Flow, DagFlowConfig):
         return inspect.signature(self._dag_flow_func).bind(*args, **kwargs).arguments
 
 
-class FuncFlowConfig(FlowConfig):
+class FuncFlowConfig(JobConfig, DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
     def __init__(
         self,
         func_flow_func: Callable,
@@ -195,8 +196,7 @@ class FuncFlowConfig(FlowConfig):
         name: Optional[str] = None,
         **kwargs: Any,
     ):
-        name = name if name is not None else func_flow_func.__name__
-        super().__init__(name=name)
+        super().__init__()
         self._func_flow_func = func_flow_func
         self._func_flow_func_signature = inspect.signature(self._func_flow_func)
 
@@ -218,10 +218,13 @@ class FuncFlowConfig(FlowConfig):
         return self._func_flow_func_signature.return_annotation
 
 
+FuncFlowConfig.accept_mixin(NameFuncFlowConfigMixin)
+
+
 @callable_decorator_cls
 class FuncFlowTemplate(CallableDecoratingJobTemplateMixin['FuncFlowTemplate'],
-                       FlowTemplate,
-                       FuncFlowConfig):
+                       FuncFlowConfig,
+                       FlowTemplate):
     def _apply_engine_decorator(self, flow: 'FuncFlow') -> 'FuncFlow':
         if self.engine is not None and isinstance(self.engine, IsFuncFlowRunnerEngine):
             return self.engine.func_flow_decorator(flow)  # noqa  # Pycharm type checker bug
@@ -233,7 +236,7 @@ class FuncFlowTemplate(CallableDecoratingJobTemplateMixin['FuncFlowTemplate'],
         return FuncFlow
 
 
-class FuncFlow(Flow, FuncFlowConfig):
+class FuncFlow(FuncFlowConfig, Flow):
     @classmethod
     def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
         return FuncFlowConfig

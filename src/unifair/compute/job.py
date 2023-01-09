@@ -5,10 +5,7 @@ from functools import update_wrapper
 from types import MappingProxyType
 from typing import Any, Dict, Generic, Hashable, Mapping, Optional, Tuple, Type, TypeVar, Union
 
-from inflection import underscore
-from prefect.utilities.names import generate_slug
-from slugify import slugify
-
+from unifair.compute.mixins import NameJobConfigMixin, NameJobMixin
 from unifair.engine.protocols import IsJobCreator, IsTaskRunnerEngine
 from unifair.util.helpers import create_merged_dict
 from unifair.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorFactory
@@ -64,24 +61,12 @@ class JobTemplateAndMixinAcceptorMeta(JobTemplateMeta, JobConfigAndMixinAcceptor
 
 
 class JobConfig(DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
-    def __init__(self, *, name: Optional[str] = None, **kwargs: Any):
-        super().__init__()
+    def __init__(self, *args: object, name: Optional[str] = None, **kwargs: object):
+        super().__init__(*args, **kwargs)
 
         if not isinstance(self, JobTemplate) and not isinstance(self, Job):
             raise RuntimeError('JobConfig and subclasses not inheriting from JobTemplate '
                                'or Job are not directly instantiatable')
-
-        self._name: Optional[str] = name
-
-        if self._name is not None:
-            self._check_not_empty_string('name', self.name)
-
-        self._unique_name = None
-
-    @staticmethod
-    def _check_not_empty_string(param_name: str, param: str) -> None:
-        if len(param) == 0:
-            raise ValueError('Empty strings not allowed for parameter "{}"'.format(param_name))
 
     @abstractmethod
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
@@ -95,7 +80,7 @@ class JobConfig(DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
         ...
 
     def _get_init_kwargs(self) -> Dict[str, Any]:
-        kwarg_keys = ['name']
+        kwarg_keys = list(self._mixin_init_kwarg_params.keys())
         kwarg_keys += list(self._get_init_kwarg_public_property_keys())
         for key in kwarg_keys:
             attribute = getattr(self.__class__, key)
@@ -112,14 +97,6 @@ class JobConfig(DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
 
         return {key: getattr(self, key) for key in kwarg_keys}
 
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def unique_name(self) -> str:
-        return self._unique_name
-
     def __eq__(self, other: object):
         if not isinstance(other, JobConfig):
             return NotImplemented
@@ -129,6 +106,9 @@ class JobConfig(DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
     @property
     def in_flow_context(self) -> bool:
         return self.__class__.job_creator.nested_context_level > 0
+
+
+JobConfig.accept_mixin(NameJobConfigMixin)
 
 
 class JobTemplate(JobConfig, metaclass=JobTemplateAndMixinAcceptorMeta):
@@ -186,16 +166,7 @@ class CallableDecoratingJobTemplateMixin(Generic[JobTemplateT]):
         return cls(*(init_args[1:]), **init_kwargs)(init_args[0])
 
 
-class Job(JobConfig):
-    def _generate_unique_name(self):
-        if self._name is None:
-            return None
-        class_name_snake_case = underscore(self.__class__.__name__)
-        self._unique_name = slugify(f'{class_name_snake_case}-{self._name}-{generate_slug(2)}')
-
-    def regenerate_unique_name(self) -> None:
-        self._generate_unique_name()
-
+class Job(JobConfig, DynamicMixinAcceptor):
     @property
     def flow_context(self) -> IsJobCreator:
         return self.__class__.job_creator
@@ -210,16 +181,22 @@ class Job(JobConfig):
     def _get_job_template_subcls_for_revise(cls) -> Type[JobTemplate]:
         return JobTemplate
 
-    def __init__(self, *args: Any, **kwargs: Any):  # noqa
+    def __new__(cls, *args: Any, **kwargs: Any):
+        super().__new__(cls, *args, **kwargs)
         raise RuntimeError('Job should only be instantiated using the "apply()" method of '
                            'an instance of JobTemplate (or one of its subclasses)')
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
     @classmethod
     def create(cls, *init_args: object, **init_kwargs: object) -> Job:
-        job_obj = object.__new__(cls)
         job_config_cls = cls._get_job_config_subcls_for_init()
-        job_config_cls.__init__(job_obj, *init_args, **init_kwargs)
-        job_obj._generate_unique_name()
+        if job_config_cls.__new__ is object.__new__:
+            job_obj = job_config_cls.__new__(cls)
+        else:
+            job_obj = job_config_cls.__new__(cls, *init_args, **init_kwargs)
+        job_obj.__init__(*init_args, **init_kwargs)
         return job_obj
 
     def revise(self) -> JobTemplate:
@@ -236,6 +213,8 @@ class Job(JobConfig):
     def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         ...
 
+
+Job.accept_mixin(NameJobMixin)
 
 # TODO: Change JobConfig and friends into Generics such as one can annotated with
 #       e.g. 'TaskTemplate[[int], int]' instead of just 'TaskTemplate'
