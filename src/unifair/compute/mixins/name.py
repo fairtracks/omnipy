@@ -44,21 +44,6 @@ class NameJobMixin:
         self._generate_unique_name()
 
 
-class NameTaskConfigMixin:
+class NameFuncJobConfigMixin:
     def __init__(self, *, name: Optional[str] = None):
-        self._name = name if name is not None else self._task_func.__name__
-
-
-class NameLinearFlowConfigMixin:
-    def __init__(self, *, name: Optional[str] = None):
-        self._name = name if name is not None else self._linear_flow_func.__name__
-
-
-class NameDagFlowConfigMixin:
-    def __init__(self, *, name: Optional[str] = None):
-        self._name = name if name is not None else self._dag_flow_func.__name__
-
-
-class NameFuncFlowConfigMixin:
-    def __init__(self, *, name: Optional[str] = None):
-        self._name = name if name is not None else self._func_flow_func.__name__
+        self._name = name if name is not None else self._job_func.__name__

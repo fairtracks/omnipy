@@ -4,7 +4,7 @@ from typing import Mapping, Optional
 from unifair.util.param_key_mapper import ParamKeyMapper
 
 
-class ParamsJobConfigMixin:
+class ParamsFuncJobConfigMixin:
     # Requires FuncSignatureJobConfigMixin
 
     def __init__(
@@ -16,8 +16,8 @@ class ParamsJobConfigMixin:
         self._fixed_params = dict(fixed_params) if fixed_params is not None else {}
         self._param_key_mapper = ParamKeyMapper(param_key_map if param_key_map is not None else {})
 
-        self._check_param_keys_in_func_signature(self.fixed_params.keys())
-        self._check_param_keys_in_func_signature(self.param_key_map.keys())
+        self._check_param_keys_in_func_signature(self.fixed_params.keys(), 'fixed_params')
+        self._check_param_keys_in_func_signature(self.param_key_map.keys(), 'param_key_map')
 
     @property
     def fixed_params(self) -> MappingProxyType[str, object]:
@@ -28,7 +28,7 @@ class ParamsJobConfigMixin:
         return MappingProxyType(self._param_key_mapper.key_map)
 
 
-class ParamsJobMixin:
+class ParamsFuncJobMixin:
     def __call__(self, *args: object, **kwargs: object) -> object:
         mapped_fixed_params = self._param_key_mapper.delete_matching_keys(
             self._fixed_params, inverse=True)

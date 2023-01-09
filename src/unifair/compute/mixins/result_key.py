@@ -1,7 +1,7 @@
 from typing import Optional
 
 
-class ResultKeyJobConfigMixin:
+class ResultKeyFuncJobConfigMixin:
     # Requires NameJobConfigMixin
 
     def __init__(self, *, result_key: Optional[str] = None):
@@ -15,7 +15,7 @@ class ResultKeyJobConfigMixin:
         return self._result_key
 
 
-class ResultKeyJobMixin:
+class ResultKeyFuncJobMixin:
     def __call__(self, *args: object, **kwargs: object) -> object:
 
         result = super().__call__(*args, **kwargs)

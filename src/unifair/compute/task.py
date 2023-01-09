@@ -8,10 +8,10 @@ from unifair.compute.job import (CallableDecoratingJobTemplateMixin,
                                  JobConfig,
                                  JobConfigAndMixinAcceptorMeta,
                                  JobTemplate)
-from unifair.compute.mixins.func_signature import FuncSignatureJobConfigMixin
-from unifair.compute.mixins.name import NameTaskConfigMixin
-from unifair.compute.mixins.params import ParamsJobConfigMixin, ParamsJobMixin
-from unifair.compute.mixins.result_key import ResultKeyJobConfigMixin, ResultKeyJobMixin
+from unifair.compute.mixins.func_signature import SignatureFuncJobConfigMixin
+from unifair.compute.mixins.name import NameFuncJobConfigMixin
+from unifair.compute.mixins.params import ParamsFuncJobConfigMixin, ParamsFuncJobMixin
+from unifair.compute.mixins.result_key import ResultKeyFuncJobConfigMixin, ResultKeyFuncJobMixin
 from unifair.util.callable_decorator_cls import callable_decorator_cls
 from unifair.util.mixin import DynamicMixinAcceptor
 
@@ -28,22 +28,22 @@ class TaskConfig(DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
 
         super().__init__()
 
-        self._task_func = task_func
+        self._job_func = task_func
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
-        return self._task_func,
+        return self._job_func,
 
     def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
         return ()
 
     def has_coroutine_func(self) -> bool:
-        return asyncio.iscoroutinefunction(self._task_func)
+        return asyncio.iscoroutinefunction(self._job_func)
 
 
-TaskConfig.accept_mixin(NameTaskConfigMixin)
-TaskConfig.accept_mixin(FuncSignatureJobConfigMixin)
-TaskConfig.accept_mixin(ParamsJobConfigMixin)
-TaskConfig.accept_mixin(ResultKeyJobConfigMixin)
+TaskConfig.accept_mixin(NameFuncJobConfigMixin)
+TaskConfig.accept_mixin(SignatureFuncJobConfigMixin)
+TaskConfig.accept_mixin(ParamsFuncJobConfigMixin)
+TaskConfig.accept_mixin(ResultKeyFuncJobConfigMixin)
 
 
 @callable_decorator_cls
@@ -73,10 +73,10 @@ class Task(TaskConfig, Job):
         return self._call_func(*args, **kwargs)
 
     def _call_func(self, *args: Any, **kwargs: Any) -> Any:
-        return self._task_func(*args, **kwargs)
+        return self._job_func(*args, **kwargs)
 
 
-Task.accept_mixin(ParamsJobMixin)
-Task.accept_mixin(ResultKeyJobMixin)
+Task.accept_mixin(ParamsFuncJobMixin)
+Task.accept_mixin(ResultKeyFuncJobMixin)
 
 # TODO: Would we need the possibility to refine task templates by adding new task parameters?
