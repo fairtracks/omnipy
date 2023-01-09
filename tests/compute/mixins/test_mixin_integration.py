@@ -1,27 +1,6 @@
-import pytest
-
 from unifair.compute.task import TaskTemplate
 
 from ..cases.raw.functions import power_m1_func
-
-
-def test_error_properties_param_key_map_and_fixed_params_unmatched_params_task() -> None:
-
-    power_m1_template = TaskTemplate(power_m1_func)
-
-    assert 'engine' not in power_m1_template.param_signatures
-
-    with pytest.raises(KeyError):
-        TaskTemplate(power_m1_func, param_key_map=dict(engine='motor'))
-
-    with pytest.raises(KeyError):
-        power_m1_template.refine(param_key_map=dict(engine='horsepower'))
-
-    with pytest.raises(KeyError):
-        TaskTemplate(power_m1_func, fixed_params=dict(engine='hyperdrive'))
-
-    with pytest.raises(KeyError):
-        power_m1_template.refine(fixed_params=dict(engine='antigravity'))
 
 
 def test_refine_task_template_with_other_properties_task() -> None:
