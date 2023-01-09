@@ -2,6 +2,8 @@ from collections import defaultdict
 import inspect
 from typing import DefaultDict, Dict, List, Protocol, Type
 
+from unifair.util.helpers import create_merged_dict
+
 
 class IsMixin(Protocol):
     def __init__(self, **kwargs: object) -> None:
@@ -50,8 +52,7 @@ class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorFactory):
 
     @classmethod
     def accept_mixin(cls, mixin_cls: Type) -> None:
-        # prepend for last mixin to potentially overwrite the others
-        cls._mixin_classes.insert(0, mixin_cls)
+        cls._mixin_classes.append(mixin_cls)
 
         if '__init__' in mixin_cls.__dict__:
             cls._store_init_signature_params_for_mixin(mixin_cls)
@@ -98,28 +99,60 @@ class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorFactory):
 
     @classmethod
     def _create_subcls_inheriting_from_mixins_and_orig_cls(cls):
-        def _initialize_mixin_and_update_kwargs_with_defaults(self, kwargs, mixin_cls):
-            mixin_kwargs = {}
+        def _initialize_mixins(self, kwargs):
+            for mixin_cls in self._mixin_classes:
+                mixin_kwargs = {}
 
-            for key, param in self._init_params_per_mixin_cls[mixin_cls.__name__].items():
-                if key in kwargs:
-                    mixin_kwargs[key] = kwargs[key]
-                elif param.default:
-                    kwargs[key] = param.default
+                for key, param in self._init_params_per_mixin_cls[mixin_cls.__name__].items():
+                    if key in kwargs:
+                        mixin_kwargs[key] = kwargs[key]
 
-            mixin_cls.__init__(self, **mixin_kwargs)
+                mixin_cls.__init__(self, **mixin_kwargs)
 
-            return kwargs
+        def _check_mixin_kwarg_defaults_and_return_if_not_in_kwargs(self, kwargs):
+            orig_init_param_dict = cls._orig_init_signature.parameters
+
+            kwarg_new_param_default = {}
+            kwarg_new_param_default_mixin_name = {}
+
+            for mixin_cls in self._mixin_classes:
+                for key, param in self._init_params_per_mixin_cls[mixin_cls.__name__].items():
+                    if param.default is not param.empty:
+                        if key in orig_init_param_dict and \
+                                param.default != orig_init_param_dict[key].default:
+                            raise AttributeError(
+                                f'Default value for keyword argument "{key}" differs between '
+                                f'__init__() methods of mixin class "{mixin_cls.__name__}" '
+                                f'and original class "{self._orig_class.__name__}": '
+                                f'{param.default} != {orig_init_param_dict[key].default}')
+                        elif key in kwarg_new_param_default and \
+                                param.default != kwarg_new_param_default[key]:
+                            raise AttributeError(
+                                f'Default value for keyword argument "{key}" differs between '
+                                f'__init__() methods of mixin classes "{mixin_cls.__name__}" and'
+                                f'"{kwarg_new_param_default_mixin_name[key]}": '
+                                f'{param.default} != {kwarg_new_param_default[key]}')
+                        else:
+                            kwarg_new_param_default[key] = param.default
+                            kwarg_new_param_default_mixin_name[key] = mixin_cls.__name__
+
+            return {
+                key: param_default for key,
+                param_default in kwarg_new_param_default.items() if key not in kwargs
+            }
 
         def __init__(self, *args, **kwargs):
-            for mixin_cls in self._mixin_classes:
-                kwargs = _initialize_mixin_and_update_kwargs_with_defaults(self, kwargs, mixin_cls)
+            mixin_kwargs_defaults = \
+                _check_mixin_kwarg_defaults_and_return_if_not_in_kwargs(self, kwargs)
 
-            self._orig_class.__init__(self, *args, **kwargs)
+            self._orig_class.__init__(self,
+                                      *args,
+                                      **create_merged_dict(kwargs, mixin_kwargs_defaults))
+            _initialize_mixins(self, kwargs)
 
         cls_with_mixins = DynamicMixinAcceptorFactory(
             f'{cls.__name__}{cls.WITH_MIXINS_CLS_PREFIX}',
-            tuple(list(cls._mixin_classes) + [cls]),
+            tuple(list(reversed(cls._mixin_classes)) + [cls]),
             dict(__init__=__init__),
         )
         cls_with_mixins._update_cls_init_signature_with_kwargs_for_all_mixins()  # noqa
