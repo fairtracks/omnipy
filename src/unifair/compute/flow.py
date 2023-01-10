@@ -2,7 +2,7 @@ from abc import ABC
 from typing import Any, Callable, cast, Generic, Mapping, Optional, Tuple, Type, Union
 
 from unifair.compute.func_job import FuncJob, FuncJobConfig, FuncJobTemplate
-from unifair.compute.job import CallableDecoratingJobTemplateMixin
+from unifair.compute.job import CallableDecoratingJobTemplateMixin, JobTemplate
 from unifair.compute.types import (FlowConfigT,
                                    FlowT,
                                    FlowTemplateT,
@@ -75,7 +75,8 @@ class TaskTemplatesFlowTemplate(TaskTemplatesFlowConfig, FlowTemplate[FlowT], Ge
 
         args = tuple([self._job_func] + list(*task_templates)) if task_templates else ()
 
-        return super().refine(
+        return JobTemplate.refine(
+            self,
             *args,
             update=update,
             **remove_none_vals(

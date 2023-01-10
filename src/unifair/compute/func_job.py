@@ -52,7 +52,8 @@ class FuncJobTemplate(FuncJobConfig, JobTemplate[JobT], Generic[JobT], ABC):
                result_key: Optional[str] = None,
                **kwargs: Any) -> FuncJobTemplateT:
 
-        return super().refine(
+        return JobTemplate.refine(
+            self,
             update=update,
             **remove_none_vals(
                 name=name,
