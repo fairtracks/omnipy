@@ -40,7 +40,7 @@ class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorFactory):
         cls._mixin_classes = []
         cls._init_params_per_mixin_cls = defaultdict(defaultdict)
 
-        for base in reversed(bases):
+        for base in bases:
             if hasattr(base, '_mixin_classes'):
                 for mixin_class in base._mixin_classes:
                     if mixin_class.__name__ not in cls._init_params_per_mixin_cls:
