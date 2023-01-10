@@ -16,6 +16,7 @@ class FuncJobTemplateCallable(Protocol[FuncJobTemplateT]):
         fixed_params: Optional[Mapping[str, object]] = None,
         param_key_map: Optional[Mapping[str, str]] = None,
         result_key: Optional[str] = None,
+        iterate_over_data_files: bool = False,
         **kwargs: object,
     ) -> Callable[[Callable], FuncJobTemplateT]:
         ...
@@ -33,6 +34,7 @@ class TaskTemplatesFlowTemplateCallable(Protocol[TaskTemplatesFlowTemplateT]):
         fixed_params: Optional[Mapping[str, object]] = None,
         param_key_map: Optional[Mapping[str, str]] = None,
         result_key: Optional[str] = None,
+        iterate_over_data_files: bool = False,
         **kwargs: object,
     ) -> Callable[[Callable], TaskTemplatesFlowTemplateT]:
         ...

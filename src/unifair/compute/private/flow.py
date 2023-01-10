@@ -29,6 +29,7 @@ class TaskTemplatesFlowConfig(FlowConfig):
         fixed_params: Optional[Mapping[str, object]] = None,
         param_key_map: Optional[Mapping[str, str]] = None,
         result_key: Optional[str] = None,
+        iterate_over_data_files: bool = False,
         **kwargs: Any,
     ):
         super().__init__(
@@ -38,6 +39,7 @@ class TaskTemplatesFlowConfig(FlowConfig):
                 fixed_params=fixed_params,
                 param_key_map=param_key_map,
                 result_key=result_key,
+                iterate_over_data_files=iterate_over_data_files,
                 **kwargs,
             ))
 
@@ -59,6 +61,7 @@ class TaskTemplatesFlowTemplate(TaskTemplatesFlowConfig, FlowTemplate[FlowT], Ge
                fixed_params: Optional[Mapping[str, object]] = None,
                param_key_map: Optional[Mapping[str, str]] = None,
                result_key: Optional[str] = None,
+               iterate_over_data_files: bool = False,
                **kwargs: Any) -> TaskTemplatesFlowTemplateT:
 
         args = tuple([self._job_func] + list(*task_templates)) if task_templates else ()
@@ -72,6 +75,7 @@ class TaskTemplatesFlowTemplate(TaskTemplatesFlowConfig, FlowTemplate[FlowT], Ge
                 fixed_params=fixed_params,
                 param_key_map=param_key_map,
                 result_key=result_key,
+                iterate_over_data_files=iterate_over_data_files,
                 **kwargs,
             ))
 
