@@ -349,7 +349,7 @@ def test_subclass_refine_reset_mapping() -> None:
     assert reset_params_tmpl.uppercase is True
     assert reset_params_tmpl.params == dict(what='nothing')
 
-    # Reset only mapping property 'params' with update=False.
+    # Reset mapping property 'params' with update=False.
     # Other properties needs to be explicitly added to not be reset
     for val in ({}, [], None):
         reset_params_tmpl = nothing_tmpl.refine(
