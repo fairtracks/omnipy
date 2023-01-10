@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, Generic, Mapping, Optional, Tuple, Union
 
 from unifair.compute.job import Job, JobConfig, JobConfigAndMixinAcceptorMeta, JobTemplate
 from unifair.compute.mixins.func_signature import SignatureFuncJobConfigMixin
+from unifair.compute.mixins.iterate import IterateFuncJobConfigMixin
 from unifair.compute.mixins.name import NameFuncJobConfigMixin
 from unifair.compute.mixins.params import ParamsFuncJobConfigMixin, ParamsFuncJobMixin
 from unifair.compute.mixins.result_key import ResultKeyFuncJobConfigMixin, ResultKeyFuncJobMixin
@@ -41,6 +42,7 @@ FuncJobConfig.accept_mixin(NameFuncJobConfigMixin)
 FuncJobConfig.accept_mixin(SignatureFuncJobConfigMixin)
 FuncJobConfig.accept_mixin(ParamsFuncJobConfigMixin)
 FuncJobConfig.accept_mixin(ResultKeyFuncJobConfigMixin)
+FuncJobConfig.accept_mixin(IterateFuncJobConfigMixin)
 
 
 class FuncJobTemplate(FuncJobConfig, JobTemplate[JobT], Generic[JobT], ABC):

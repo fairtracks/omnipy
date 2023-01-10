@@ -1,6 +1,35 @@
-from unifair.compute.task import TaskTemplate
+from inspect import Parameter
 
-from ..cases.raw.functions import power_m1_func
+from unifair.compute.task import TaskTemplate
+from unifair.data.dataset import Dataset
+from unifair.data.model import Model
+
+from ..cases.raw.functions import (all_data_files_plus_func,
+                                   power_m1_func,
+                                   single_data_file_plus_func)
+
+
+def test_iterate_over_data_files_func_signature() -> None:
+    all_plus_no_iter_template = TaskTemplate(
+        all_data_files_plus_func,
+        iterate_over_data_files=False,
+    )
+
+    all_plus_iter_template = TaskTemplate(
+        single_data_file_plus_func,
+        iterate_over_data_files=True,
+    )
+
+    for task_template in (all_plus_no_iter_template, all_plus_iter_template):
+        for task_obj in task_template, task_template.apply():
+            assert task_obj.param_signatures == {
+                'dataset':
+                    Parameter(
+                        'dataset', Parameter.POSITIONAL_OR_KEYWORD, annotation=Dataset[Model[int]]),
+                'number':
+                    Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
+            }
+            assert task_obj.return_type is Dataset[Model[int]]
 
 
 def test_refine_task_template_with_other_properties_task() -> None:

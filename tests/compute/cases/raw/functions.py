@@ -1,5 +1,8 @@
 from typing import Dict
 
+from unifair.data.dataset import Dataset
+from unifair.data.model import Model
+
 
 def action_func_no_params() -> None:
     # backend.do_something()
@@ -33,3 +36,14 @@ def plus_one_dict_func(number: int) -> Dict[str, int]:
 
 def dict_of_squared_func(number: int) -> Dict[int, int]:
     return {val: val**2 for val in range(number)}
+
+
+def all_data_files_plus_func(dataset: Dataset[Model[int]], number: int) -> Dataset[Model[int]]:
+    out_dataset = Dataset[Model[int]]()
+    for title, data_file in dataset.items():
+        out_dataset[title] = data_file + number
+    return out_dataset
+
+
+def single_data_file_plus_func(data_number: int, number: int) -> int:
+    return data_number + number
