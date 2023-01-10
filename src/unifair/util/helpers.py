@@ -1,13 +1,19 @@
 import inspect
 import locale as pkg_locale
-from typing import Any, Dict, Mapping, Tuple, Union
+from typing import Dict, Iterable, Mapping, Tuple, Union
+
+DictT = Union[Mapping[object, object], Iterable[Tuple[object, object]]]
 
 
-def create_merged_dict(dict_1: Union[Mapping[Any, Any]],
-                       dict_2: Union[Mapping[Any, Any]]) -> Dict[Any, Any]:
+def create_merged_dict(dict_1: DictT, dict_2: DictT) -> Dict[object, object]:
     merged_dict = dict(dict_1)
-    merged_dict.update(dict_2)
+    dict_2_cast = dict(dict_2)
+    merged_dict.update(dict_2_cast)
     return merged_dict
+
+
+def remove_none_vals(**kwargs: object) -> Dict[object, object]:
+    return {key: val for key, val in kwargs.items() if val is not None}
 
 
 def get_datetime_format(locale: Union[str, Tuple[str, str]] = '') -> str:

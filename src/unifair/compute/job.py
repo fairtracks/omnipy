@@ -144,13 +144,15 @@ class JobTemplate(JobConfig, Generic[JobT], metaclass=JobTemplateAndMixinAccepto
         if update:
             for key, cur_val in self._get_init_kwargs().items():
                 if key in kwargs:
-                    new_val = create_merged_dict(cur_val, kwargs[key]) \
-                        if isinstance(cur_val, Mapping) else kwargs[key]
+                    try:
+                        new_val = create_merged_dict(cur_val, kwargs[key])
+                    except (TypeError, ValueError):
+                        new_val = kwargs[key]
                 else:
                     new_val = cur_val
                 kwargs[key] = new_val
 
-        return self.create(*self._get_init_args(), **kwargs)
+        return self.create(*(args if args else self._get_init_args()), **kwargs)
 
     def __call__(self, *args, **kwargs):
         if self.in_flow_context:
