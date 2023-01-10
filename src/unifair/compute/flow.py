@@ -178,7 +178,7 @@ class DagFlowTemplate(CallableDecoratingJobTemplateMixin['DagFlowTemplate'],
     def _get_job_subcls_for_apply(cls) -> Type['DagFlow']:
         return DagFlow
 
-    def _apply_engine_decorator(self, flow: 'DagFlow') -> 'DagFlow':
+    def _apply_engine_decorator(self, job: IsDagFlow) -> IsDagFlow:
         if self.engine is not None and isinstance(self.engine, IsDagFlowRunnerEngine):
             return self.engine.dag_flow_decorator(job)
         else:

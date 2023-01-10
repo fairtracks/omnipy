@@ -6,7 +6,7 @@ from types import MappingProxyType
 from typing import Any, Dict, Generic, Hashable, Mapping, Optional, Tuple, Type, TypeVar, Union
 
 from unifair.compute.mixins.name import NameJobConfigMixin, NameJobMixin
-from unifair.engine.protocols import IsJobCreator, IsTaskRunnerEngine
+from unifair.engine.protocols import IsJob, IsJobCreator, IsTaskRunnerEngine
 from unifair.util.helpers import create_merged_dict
 from unifair.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorFactory
 
