@@ -19,7 +19,7 @@ def square_root(number: int) -> Dict[str, float]:
 
 
 @TaskTemplate
-def merge_key_value_into_str(key: Any, val: Any) -> str:
+def merge_key_value_into_str(key: object, val: object) -> str:
     return '{}: {}'.format(key, val)
 
 

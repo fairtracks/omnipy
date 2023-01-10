@@ -110,11 +110,13 @@ class JobConfig(DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
 
 JobConfig.accept_mixin(NameJobConfigMixin)
 
+JobT = TypeVar('JobT', bound='Job', covariant=True)
 
-class JobTemplate(JobConfig, metaclass=JobTemplateAndMixinAcceptorMeta):
+
+class JobTemplate(JobConfig, Generic[JobT], metaclass=JobTemplateAndMixinAcceptorMeta):
     @classmethod
     @abstractmethod
-    def _get_job_subcls_for_apply(cls) -> Type[Job]:
+    def _get_job_subcls_for_apply(cls) -> Type[JobT]:
         return Job
 
     @property
@@ -122,7 +124,7 @@ class JobTemplate(JobConfig, metaclass=JobTemplateAndMixinAcceptorMeta):
         return self.__class__.engine
 
     @abstractmethod
-    def _apply_engine_decorator(self, job: Job) -> Job:
+    def _apply_engine_decorator(self, job: IsJob) -> IsJob:
         ...
 
     @classmethod
@@ -132,13 +134,13 @@ class JobTemplate(JobConfig, metaclass=JobTemplateAndMixinAcceptorMeta):
     def run(self, *args: object, **kwargs: object):
         return self.apply()(*args, **kwargs)
 
-    def apply(self) -> Job:
+    def apply(self) -> JobT:
         job_cls = self._get_job_subcls_for_apply()
         job = job_cls.create(*self._get_init_args(), **self._get_init_kwargs())
         update_wrapper(job, self, updated=[])
         return self._apply_engine_decorator(job)
 
-    def refine(self, update: bool = True, **kwargs: Any) -> JobTemplate:
+    def refine(self, *args: object, update: bool = True, **kwargs: object) -> JobTemplate:
         if update:
             for key, cur_val in self._get_init_kwargs().items():
                 if key in kwargs:
@@ -157,7 +159,7 @@ class JobTemplate(JobConfig, metaclass=JobTemplateAndMixinAcceptorMeta):
         raise TypeError(f"'{self.__class__.__name__}' object is not callable")
 
 
-JobTemplateT = TypeVar('JobTemplateT', bound=JobTemplate)
+JobTemplateT = TypeVar('JobTemplateT', bound=JobTemplate, covariant=True)
 
 
 class CallableDecoratingJobTemplateMixin(Generic[JobTemplateT]):
@@ -166,19 +168,22 @@ class CallableDecoratingJobTemplateMixin(Generic[JobTemplateT]):
         return cls(*(init_args[1:]), **init_kwargs)(init_args[0])
 
 
-class Job(JobConfig, DynamicMixinAcceptor):
+JobConfigT = TypeVar('JobConfigT', bound=JobConfig, covariant=True)
+
+
+class Job(JobConfig, DynamicMixinAcceptor, Generic[JobConfigT, JobTemplateT]):
     @property
     def flow_context(self) -> IsJobCreator:
         return self.__class__.job_creator
 
     @classmethod
     @abstractmethod
-    def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
+    def _get_job_config_subcls_for_init(cls) -> Type[JobConfigT]:
         return JobConfig
 
     @classmethod
     @abstractmethod
-    def _get_job_template_subcls_for_revise(cls) -> Type[JobTemplate]:
+    def _get_job_template_subcls_for_revise(cls) -> Type[JobTemplateT]:
         return JobTemplate
 
     def __new__(cls, *args: Any, **kwargs: Any):
@@ -190,7 +195,7 @@ class Job(JobConfig, DynamicMixinAcceptor):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def create(cls, *init_args: object, **init_kwargs: object) -> Job:
+    def create(cls, *init_args: object, **init_kwargs: object) -> Job[JobConfigT, JobTemplateT]:
         job_config_cls = cls._get_job_config_subcls_for_init()
         if job_config_cls.__new__ is object.__new__:
             job_obj = job_config_cls.__new__(cls)
@@ -199,7 +204,7 @@ class Job(JobConfig, DynamicMixinAcceptor):
         job_obj.__init__(*init_args, **init_kwargs)
         return job_obj
 
-    def revise(self) -> JobTemplate:
+    def revise(self) -> JobTemplateT:
         job_template_cls = self._get_job_template_subcls_for_revise()
         job_template = job_template_cls.create(*self._get_init_args(), **self._get_init_kwargs())
         update_wrapper(job_template, self, updated=[])

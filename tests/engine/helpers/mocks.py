@@ -102,7 +102,7 @@ class MockLinearFlow(MockTask):
         super().__init__(func, name=name, **kwargs)
 
     @property
-    def task_templates(self) -> Tuple[MockTaskTemplate]:
+    def task_templates(self) -> Tuple[MockTaskTemplate, ...]:
         return self._task_templates
 
     def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
@@ -128,7 +128,7 @@ class MockDagFlow(MockTask):
         super().__init__(func, name=name, **kwargs)
 
     @property
-    def task_templates(self) -> Tuple[MockTaskTemplate]:
+    def task_templates(self) -> Tuple[MockTaskTemplate, ...]:
         return self._task_templates
 
     def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:

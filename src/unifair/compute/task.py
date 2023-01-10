@@ -12,11 +12,12 @@ from unifair.compute.mixins.func_signature import SignatureFuncJobConfigMixin
 from unifair.compute.mixins.name import NameFuncJobConfigMixin
 from unifair.compute.mixins.params import ParamsFuncJobConfigMixin, ParamsFuncJobMixin
 from unifair.compute.mixins.result_key import ResultKeyFuncJobConfigMixin, ResultKeyFuncJobMixin
+from unifair.engine.protocols import IsTask
 from unifair.util.callable_decorator_cls import callable_decorator_cls
 from unifair.util.mixin import DynamicMixinAcceptor
 
 
-class TaskConfig(DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
+class TaskConfig(JobConfig, DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
     def __init__(self,
                  task_func: Callable,
                  *,
@@ -47,26 +48,28 @@ TaskConfig.accept_mixin(ResultKeyFuncJobConfigMixin)
 
 
 @callable_decorator_cls
-class TaskTemplate(CallableDecoratingJobTemplateMixin['TaskTemplate'], TaskConfig, JobTemplate):
+class TaskTemplate(CallableDecoratingJobTemplateMixin['TaskTemplate'],
+                   TaskConfig,
+                   JobTemplate['Task']):
     @classmethod
-    def _get_job_subcls_for_apply(cls) -> Type[Job]:
+    def _get_job_subcls_for_apply(cls) -> Type[Task]:
         return Task
 
     @classmethod
-    def _apply_engine_decorator(cls, task: Task) -> Task:
+    def _apply_engine_decorator(cls, task: IsTask) -> IsTask:
         if cls.engine is not None:
             return cls.engine.task_decorator(task)
         else:
             return task
 
 
-class Task(TaskConfig, Job):
+class Task(TaskConfig, Job[TaskConfig, TaskTemplate]):
     @classmethod
-    def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
+    def _get_job_config_subcls_for_init(cls) -> Type[TaskConfig]:
         return TaskConfig
 
     @classmethod
-    def _get_job_template_subcls_for_revise(cls) -> Type[JobTemplate]:
+    def _get_job_template_subcls_for_revise(cls) -> Type[TaskTemplate]:
         return TaskTemplate
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:

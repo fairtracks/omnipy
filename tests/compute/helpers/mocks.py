@@ -10,6 +10,7 @@ from unifair.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngin
 from unifair.engine.protocols import (IsDagFlow,
                                       IsEngineConfig,
                                       IsFuncFlow,
+                                      IsJob,
                                       IsLinearFlow,
                                       IsRunStateRegistry,
                                       IsTask)
@@ -32,23 +33,23 @@ class MockJobConfigSubclass(
         return ()
 
 
-class MockJobTemplateSubclass(MockJobConfigSubclass, JobTemplate):
+class MockJobTemplateSubclass(MockJobConfigSubclass, JobTemplate['MockJobSubclass']):
     @classmethod
-    def _get_job_subcls_for_apply(cls) -> Type[Job]:
+    def _get_job_subcls_for_apply(cls) -> Type['MockJobSubclass']:
         return MockJobSubclass
 
     @classmethod
-    def _apply_engine_decorator(cls, job: Job) -> Job:
+    def _apply_engine_decorator(cls, job: IsJob) -> IsJob:
         return job
 
 
-class MockJobSubclass(MockJobConfigSubclass, Job):
+class MockJobSubclass(MockJobConfigSubclass, Job[MockJobConfigSubclass, MockJobTemplateSubclass]):
     @classmethod
-    def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
+    def _get_job_config_subcls_for_init(cls) -> Type[MockJobConfigSubclass]:
         return MockJobConfigSubclass
 
     @classmethod
-    def _get_job_template_subcls_for_revise(cls) -> Type[JobTemplate]:
+    def _get_job_template_subcls_for_revise(cls) -> Type[MockJobTemplateSubclass]:
         return MockJobTemplateSubclass
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
@@ -112,23 +113,26 @@ class PublicPropertyErrorsMockJobConfig(
         return self._params
 
 
-class PublicPropertyErrorsMockJobTemplate(PublicPropertyErrorsMockJobConfig, JobTemplate):
+class PublicPropertyErrorsMockJobTemplate(PublicPropertyErrorsMockJobConfig,
+                                          JobTemplate['PublicPropertyErrorsMockJob']):
     @classmethod
-    def _get_job_subcls_for_apply(cls) -> Type[Job]:
+    def _get_job_subcls_for_apply(cls) -> Type['PublicPropertyErrorsMockJob']:
         return PublicPropertyErrorsMockJob
 
     @classmethod
-    def _apply_engine_decorator(cls, job: Job) -> Job:
+    def _apply_engine_decorator(cls, job: IsJob) -> IsJob:
         return job
 
 
-class PublicPropertyErrorsMockJob(PublicPropertyErrorsMockJobConfig, Job):
+class PublicPropertyErrorsMockJob(PublicPropertyErrorsMockJobConfig,
+                                  Job[PublicPropertyErrorsMockJobConfig,
+                                      PublicPropertyErrorsMockJobTemplate]):
     @classmethod
-    def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
+    def _get_job_config_subcls_for_init(cls) -> Type[PublicPropertyErrorsMockJobConfig]:
         return PublicPropertyErrorsMockJobConfig
 
     @classmethod
-    def _get_job_template_subcls_for_revise(cls) -> Type[JobTemplate]:
+    def _get_job_template_subcls_for_revise(cls) -> Type[PublicPropertyErrorsMockJobTemplate]:
         return PublicPropertyErrorsMockJobTemplate
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
@@ -183,23 +187,23 @@ class CommandMockJobConfig(
 @callable_decorator_cls
 class CommandMockJobTemplate(CallableDecoratingJobTemplateMixin['CommandMockJobTemplate'],
                              CommandMockJobConfig,
-                             JobTemplate):
+                             JobTemplate['CommandMockJob']):
     @classmethod
-    def _get_job_subcls_for_apply(cls) -> Type[Job]:
+    def _get_job_subcls_for_apply(cls) -> Type['CommandMockJob']:
         return CommandMockJob
 
-    def _apply_engine_decorator(self, job: Job) -> Job:
+    def _apply_engine_decorator(self, job: IsJob) -> IsJob:
         self.engine_decorator_applied = True
         return job
 
 
-class CommandMockJob(CommandMockJobConfig, Job):
+class CommandMockJob(CommandMockJobConfig, Job[CommandMockJobConfig, CommandMockJobTemplate]):
     @classmethod
-    def _get_job_config_subcls_for_init(cls) -> Type[JobConfig]:
+    def _get_job_config_subcls_for_init(cls) -> Type[CommandMockJobConfig]:
         return CommandMockJobConfig
 
     @classmethod
-    def _get_job_template_subcls_for_revise(cls) -> Type[JobTemplate]:
+    def _get_job_template_subcls_for_revise(cls) -> Type[CommandMockJobTemplate]:
         return CommandMockJobTemplate
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
