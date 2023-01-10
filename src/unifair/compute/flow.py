@@ -44,6 +44,9 @@ class FlowConfig(JobConfig, DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcc
 
 
 FlowConfig.accept_mixin(NameFuncJobConfigMixin)
+FlowConfig.accept_mixin(SignatureFuncJobConfigMixin)
+FlowConfig.accept_mixin(ParamsFuncJobConfigMixin)
+FlowConfig.accept_mixin(ResultKeyFuncJobConfigMixin)
 
 FlowT = TypeVar('FlowT', bound='Flow', covariant=True)
 
@@ -67,12 +70,19 @@ class Flow(Job[FlowConfigT, FlowTemplateT], Generic[FlowConfigT, FlowTemplateT])
         pass
 
 
+Flow.accept_mixin(ParamsFuncJobMixin)
+Flow.accept_mixin(ResultKeyFuncJobMixin)
+
+
 class LinearFlowConfig(FlowConfig):
     def __init__(
         self,
         linear_flow_func: Callable,
         *task_templates: IsTaskTemplate,
         name: Optional[str] = None,
+        fixed_params: Optional[Mapping[str, object]] = None,
+        param_key_map: Optional[Mapping[str, str]] = None,
+        result_key: Optional[str] = None,
         **kwargs: Any,
     ):
         super().__init__()
@@ -89,17 +99,6 @@ class LinearFlowConfig(FlowConfig):
     @property
     def task_templates(self) -> Tuple[IsTaskTemplate, ...]:
         return self._task_templates
-
-    def has_coroutine_func(self) -> bool:
-        return asyncio.iscoroutinefunction(self._job_func)
-
-    @property
-    def param_signatures(self) -> MappingProxyType:
-        return self._linear_flow_func_signature.parameters
-
-    @property
-    def return_type(self) -> Type[Any]:
-        return self._linear_flow_func_signature.return_annotation
 
 
 @callable_decorator_cls
@@ -139,12 +138,14 @@ class DagFlowConfig(FlowConfig):
         dag_flow_func: Callable,
         *task_templates: IsTaskTemplate,
         name: Optional[str] = None,
+        fixed_params: Optional[Mapping[str, object]] = None,
+        param_key_map: Optional[Mapping[str, str]] = None,
+        result_key: Optional[str] = None,
         **kwargs: Any,
     ):
         super().__init__()
 
         self._job_func = dag_flow_func
-        self._dag_flow_func_signature = inspect.signature(self._job_func)
         self._task_templates: Tuple[IsTaskTemplate, ...] = task_templates
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
@@ -206,11 +207,13 @@ class FuncFlowConfig(FlowConfig):
         func_flow_func: Callable,
         *,
         name: Optional[str] = None,
+        fixed_params: Optional[Mapping[str, object]] = None,
+        param_key_map: Optional[Mapping[str, str]] = None,
+        result_key: Optional[str] = None,
         **kwargs: Any,
     ):
         super().__init__()
         self._job_func = func_flow_func
-        self._func_flow_func_signature = inspect.signature(self._job_func)
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return self._job_func,
@@ -220,14 +223,6 @@ class FuncFlowConfig(FlowConfig):
 
     def has_coroutine_func(self) -> bool:
         return asyncio.iscoroutinefunction(self._job_func)
-
-    @property
-    def param_signatures(self) -> MappingProxyType:
-        return self._func_flow_func_signature.parameters
-
-    @property
-    def return_type(self) -> Type[Any]:
-        return self._func_flow_func_signature.return_annotation
 
 
 @callable_decorator_cls
