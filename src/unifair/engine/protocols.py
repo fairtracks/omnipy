@@ -116,45 +116,60 @@ class IsJobTemplate(Protocol):
         pass
 
 
-class IsTask(IsJob, Protocol):
+class IsFuncJob(IsJob, Protocol):
     def has_coroutine_func(self) -> bool:
         ...
 
 
-class IsTaskTemplate(IsJobTemplate, Protocol):
+class IsFuncJobTemplate(IsJobTemplate, Protocol):
+    def apply(self) -> IsFuncJob:
+        ...
+
+
+class IsTask(IsFuncJob, Protocol):
+    def has_coroutine_func(self) -> bool:
+        ...
+
+
+class IsTaskTemplate(IsFuncJobTemplate, Protocol):
     def apply(self) -> IsTask:
         ...
 
 
-class IsFlow(IsJob, Protocol):
+class IsFlow(IsFuncJob, Protocol):
     def has_coroutine_func(self) -> bool:
         ...
 
 
-class IsFlowTemplate(IsJobTemplate, Protocol):
+class IsFlowTemplate(IsFuncJobTemplate, Protocol):
     def apply(self) -> IsFlow:
         ...
 
 
-class IsLinearFlow(IsFlow, Protocol):
+class IsTaskTemplatesFlow(IsFlow, Protocol):
     task_templates: Tuple[IsTaskTemplate]
 
     def get_call_args(self, *args, **kwargs) -> Dict[str, object]:
         ...
 
 
-class IsLinearFlowTemplate(IsLinearFlow, IsFlowTemplate, Protocol):
+class IsTaskTemplatesFlowTemplate(IsFuncJobTemplate, Protocol):
     ...
 
 
-class IsDagFlow(IsFlow, Protocol):
-    task_templates: Tuple[IsTaskTemplate]
-
-    def get_call_args(self, *args, **kwargs) -> Dict[str, object]:
-        ...
+class IsLinearFlow(IsTaskTemplatesFlow, Protocol):
+    ...
 
 
-class IsDagFlowTemplate(IsDagFlow, IsFlowTemplate, Protocol):
+class IsLinearFlowTemplate(IsLinearFlow, IsTaskTemplatesFlowTemplate, Protocol):
+    ...
+
+
+class IsDagFlow(IsTaskTemplatesFlow, Protocol):
+    ...
+
+
+class IsDagFlowTemplate(IsDagFlow, IsTaskTemplatesFlowTemplate, Protocol):
     ...
 
 
