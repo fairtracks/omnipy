@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import cast, Type
 
-from unifair.compute.func_job import FuncJob, FuncJobConfig, FuncJobTemplate
 from unifair.compute.job import CallableDecoratingJobTemplateMixin
+from unifair.compute.private.job import FuncJob, FuncJobConfig, FuncJobTemplate
 from unifair.compute.types import FuncJobTemplateCallable
 from unifair.engine.protocols import IsTask
 from unifair.util.callable_decorator_cls import callable_decorator_cls
