@@ -1,32 +1,16 @@
-from abc import ABC, abstractmethod
-import asyncio
-import inspect
-from typing import (Any,
-                    Callable,
-                    cast,
-                    Dict,
-                    Generic,
-                    Mapping,
-                    Optional,
-                    Protocol,
-                    Tuple,
-                    Type,
-                    TypeVar,
-                    Union)
+from abc import ABC
+from typing import Any, Callable, cast, Generic, Mapping, Optional, Tuple, Type, Union
 
 from unifair.compute.func_job import FuncJob, FuncJobConfig, FuncJobTemplate
-from unifair.compute.job import (CallableDecoratingJobTemplateMixin,
-                                 Job,
-                                 JobConfig,
-                                 JobConfigAndMixinAcceptorMeta,
-                                 JobTemplate)
-from unifair.compute.mixins.func_signature import SignatureFuncJobConfigMixin
-from unifair.compute.mixins.name import NameFuncJobConfigMixin
-from unifair.compute.mixins.params import ParamsFuncJobConfigMixin, ParamsFuncJobMixin
-from unifair.compute.mixins.result_key import ResultKeyFuncJobConfigMixin, ResultKeyFuncJobMixin
+from unifair.compute.job import CallableDecoratingJobTemplateMixin
+from unifair.compute.types import (FlowConfigT,
+                                   FlowT,
+                                   FlowTemplateT,
+                                   FuncJobTemplateCallable,
+                                   TaskTemplatesFlowTemplateCallable,
+                                   TaskTemplatesFlowTemplateT)
 from unifair.engine.protocols import (IsDagFlow,
                                       IsDagFlowRunnerEngine,
-                                      IsFlow,
                                       IsFuncFlow,
                                       IsFuncFlowRunnerEngine,
                                       IsLinearFlow,
@@ -34,11 +18,6 @@ from unifair.engine.protocols import (IsDagFlow,
                                       IsTaskTemplate)
 from unifair.util.callable_decorator_cls import callable_decorator_cls
 from unifair.util.helpers import remove_none_vals
-from unifair.util.mixin import DynamicMixinAcceptor
-
-FlowT = TypeVar('FlowT', bound='Flow', covariant=True)
-FlowConfigT = TypeVar('FlowConfigT', bound='FlowConfig', covariant=True)
-FlowTemplateT = TypeVar('FlowTemplateT', bound='FlowTemplate', covariant=True)
 
 
 class FlowConfig(FuncJobConfig):
@@ -83,6 +62,8 @@ class TaskTemplatesFlowConfig(FlowConfig):
     def task_templates(self) -> Tuple[IsTaskTemplate, ...]:
         return self._task_templates
 
+
+class TaskTemplatesFlowTemplate(TaskTemplatesFlowConfig, FlowTemplate[FlowT], Generic[FlowT], ABC):
     def refine(self,
                *task_templates: IsTaskTemplate,
                update: bool = True,
@@ -90,7 +71,7 @@ class TaskTemplatesFlowConfig(FlowConfig):
                fixed_params: Optional[Mapping[str, object]] = None,
                param_key_map: Optional[Mapping[str, str]] = None,
                result_key: Optional[str] = None,
-               **kwargs: Any) -> 'DagFlowTemplate':
+               **kwargs: Any) -> TaskTemplatesFlowTemplateT:
 
         args = tuple([self._job_func] + list(*task_templates)) if task_templates else ()
 
@@ -106,10 +87,6 @@ class TaskTemplatesFlowConfig(FlowConfig):
             ))
 
 
-class TaskTemplatesFlowTemplate(TaskTemplatesFlowConfig, FlowTemplate[FlowT], Generic[FlowT], ABC):
-    ...
-
-
 class TaskTemplatesFlow(TaskTemplatesFlowConfig,
                         Flow[FlowConfigT, FlowTemplateT],
                         Generic[FlowConfigT, FlowTemplateT],
@@ -121,7 +98,13 @@ class LinearFlowConfig(TaskTemplatesFlowConfig):
     ...
 
 
-@callable_decorator_cls
+def linear_flow_template_callable_decorator_cls(
+        cls: Type['LinearFlowTemplate']) -> TaskTemplatesFlowTemplateCallable['LinearFlowTemplate']:
+    return cast(TaskTemplatesFlowTemplateCallable['LinearFlowTemplate'],
+                callable_decorator_cls(cls))
+
+
+@linear_flow_template_callable_decorator_cls
 class LinearFlowTemplate(CallableDecoratingJobTemplateMixin['LinearFlowTemplate'],
                          LinearFlowConfig,
                          TaskTemplatesFlowTemplate['LinearFlow']):
@@ -150,7 +133,12 @@ class DagFlowConfig(TaskTemplatesFlowConfig):
     ...
 
 
-@callable_decorator_cls
+def dag_flow_template_callable_decorator_cls(
+        cls: Type['DagFlowTemplate']) -> TaskTemplatesFlowTemplateCallable['DagFlowTemplate']:
+    return cast(TaskTemplatesFlowTemplateCallable['DagFlowTemplate'], callable_decorator_cls(cls))
+
+
+@dag_flow_template_callable_decorator_cls
 class DagFlowTemplate(CallableDecoratingJobTemplateMixin['DagFlowTemplate'],
                       DagFlowConfig,
                       TaskTemplatesFlowTemplate['DagFlow']):
@@ -179,7 +167,12 @@ class FuncFlowConfig(FlowConfig):
     ...
 
 
-@callable_decorator_cls
+def func_flow_template_callable_decorator_cls(
+        cls: Type['FuncFlowTemplate']) -> FuncJobTemplateCallable['FuncFlowTemplate']:
+    return cast(FuncJobTemplateCallable['FuncFlowTemplate'], callable_decorator_cls(cls))
+
+
+@func_flow_template_callable_decorator_cls
 class FuncFlowTemplate(CallableDecoratingJobTemplateMixin['FuncFlowTemplate'],
                        FuncFlowConfig,
                        FlowTemplate['FuncFlow']):

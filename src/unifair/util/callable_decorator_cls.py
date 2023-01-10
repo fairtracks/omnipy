@@ -4,7 +4,7 @@ from typing import Callable, cast, Protocol, runtime_checkable, Type, TypeVar
 
 # Types
 
-T = TypeVar('T', covariant=True)
+DecoratorClassT = TypeVar('DecoratorClassT', covariant=True)
 
 
 @runtime_checkable
@@ -14,12 +14,12 @@ class CallableParamAfterSelf(Protocol):
 
 
 @runtime_checkable
-class CallableClass(Protocol[T]):
-    def __call__(self, *args: object, **kwargs: object) -> T:
+class CallableClass(Protocol[DecoratorClassT]):
+    def __call__(self, *args: object, **kwargs: object) -> Callable[[Callable], DecoratorClassT]:
         ...
 
 
-def callable_decorator_cls(cls: Type[T]) -> CallableClass[Type[T]]:
+def callable_decorator_cls(cls: Type[DecoratorClassT]) -> CallableClass[DecoratorClassT]:
     """
     "Meta-decorator" that allows any class to function as a decorator for a callable.
 
@@ -32,7 +32,8 @@ def callable_decorator_cls(cls: Type[T]) -> CallableClass[Type[T]]:
     if not isinstance(cls.__call__, MethodWrapperType):
         cls._wrapped_call: Callable = cast(Callable, cls.__call__)
 
-    def _forward_call_to_obj_if_callable(self, *args: object, **kwargs: object) -> Type[T]:
+    def _forward_call_to_obj_if_callable(self, *args: object,
+                                         **kwargs: object) -> Type[DecoratorClassT]:
         """
         __call__ method at the class level which forward the call to instance-level call methods,
         if present (hardcoded as '_obj_call()'). This is needed due to the peculiarity that Python
@@ -68,7 +69,7 @@ def callable_decorator_cls(cls: Type[T]) -> CallableClass[Type[T]]:
 
     _wrapped_new: Callable = cls.__new__
 
-    def _new_wrapper(cls, *args: object, **kwargs: object) -> T:
+    def _new_wrapper(cls, *args: object, **kwargs: object) -> DecoratorClassT:
         if _wrapped_new is object.__new__:
             obj = _wrapped_new(cls)
         else:
@@ -94,7 +95,8 @@ def callable_decorator_cls(cls: Type[T]) -> CallableClass[Type[T]]:
                 # Add an instance-level _obj_call method, which are again callable by the
                 # class-level __call__ method. When this method is called, the provided _callable_arg
                 # is decorated.
-                def _init_as_obj_call_method(self, _callable_arg: Callable) -> Type[T]:  # noqa
+                def _init_as_obj_call_method(
+                        self, _callable_arg: Callable) -> Type[DecoratorClassT]:  # noqa
                     _init(_callable_arg)
                     del self._obj_call
                     return self
@@ -109,4 +111,4 @@ def callable_decorator_cls(cls: Type[T]) -> CallableClass[Type[T]]:
 
     setattr(cls, '__new__', _new_wrapper)
 
-    return cast(CallableClass[Type[T]], cls)
+    return cast(CallableClass[DecoratorClassT], cls)

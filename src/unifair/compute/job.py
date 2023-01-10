@@ -3,9 +3,10 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from functools import update_wrapper
 from types import MappingProxyType
-from typing import Any, Dict, Generic, Hashable, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, Generic, Hashable, Optional, Tuple, Type, Union
 
 from unifair.compute.mixins.name import NameJobConfigMixin, NameJobMixin
+from unifair.compute.types import JobConfigT, JobT, JobTemplateT
 from unifair.engine.protocols import IsJob, IsJobCreator, IsTaskRunnerEngine
 from unifair.util.helpers import create_merged_dict
 from unifair.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorFactory
@@ -110,8 +111,6 @@ class JobConfig(DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
 
 JobConfig.accept_mixin(NameJobConfigMixin)
 
-JobT = TypeVar('JobT', bound='Job', covariant=True)
-
 
 class JobTemplate(JobConfig, Generic[JobT], metaclass=JobTemplateAndMixinAcceptorMeta):
     @classmethod
@@ -128,7 +127,7 @@ class JobTemplate(JobConfig, Generic[JobT], metaclass=JobTemplateAndMixinAccepto
         ...
 
     @classmethod
-    def create(cls, *init_args: object, **init_kwargs: object) -> JobTemplate:
+    def create(cls, *init_args: object, **init_kwargs: object) -> JobTemplateT:
         return cls(*init_args, **init_kwargs)
 
     def run(self, *args: object, **kwargs: object):
@@ -140,7 +139,7 @@ class JobTemplate(JobConfig, Generic[JobT], metaclass=JobTemplateAndMixinAccepto
         update_wrapper(job, self, updated=[])
         return self._apply_engine_decorator(job)
 
-    def refine(self, *args: object, update: bool = True, **kwargs: object) -> JobTemplate:
+    def refine(self, *args: object, update: bool = True, **kwargs: object) -> JobTemplateT:
         if update:
             for key, cur_val in self._get_init_kwargs().items():
                 if key in kwargs:
@@ -161,16 +160,10 @@ class JobTemplate(JobConfig, Generic[JobT], metaclass=JobTemplateAndMixinAccepto
         raise TypeError(f"'{self.__class__.__name__}' object is not callable")
 
 
-JobTemplateT = TypeVar('JobTemplateT', bound=JobTemplate, covariant=True)
-
-
 class CallableDecoratingJobTemplateMixin(Generic[JobTemplateT]):
     @classmethod
     def create(cls: Type[JobTemplateT], *init_args: object, **init_kwargs: object) -> JobTemplateT:
         return cls(*(init_args[1:]), **init_kwargs)(init_args[0])
-
-
-JobConfigT = TypeVar('JobConfigT', bound=JobConfig, covariant=True)
 
 
 class Job(JobConfig, DynamicMixinAcceptor, Generic[JobConfigT, JobTemplateT]):

@@ -1,28 +1,24 @@
 from __future__ import annotations
 
-import asyncio
-from typing import Any, Callable, Mapping, Optional, Tuple, Type, Union
+from typing import cast, Type
 
 from unifair.compute.func_job import FuncJob, FuncJobConfig, FuncJobTemplate
-from unifair.compute.job import (CallableDecoratingJobTemplateMixin,
-                                 Job,
-                                 JobConfig,
-                                 JobConfigAndMixinAcceptorMeta,
-                                 JobTemplate)
-from unifair.compute.mixins.func_signature import SignatureFuncJobConfigMixin
-from unifair.compute.mixins.name import NameFuncJobConfigMixin
-from unifair.compute.mixins.params import ParamsFuncJobConfigMixin, ParamsFuncJobMixin
-from unifair.compute.mixins.result_key import ResultKeyFuncJobConfigMixin, ResultKeyFuncJobMixin
+from unifair.compute.job import CallableDecoratingJobTemplateMixin
+from unifair.compute.types import FuncJobTemplateCallable
 from unifair.engine.protocols import IsTask
 from unifair.util.callable_decorator_cls import callable_decorator_cls
-from unifair.util.mixin import DynamicMixinAcceptor
 
 
 class TaskConfig(FuncJobConfig):
     ...
 
 
-@callable_decorator_cls
+def task_template_callable_decorator_cls(
+        cls: Type['TaskTemplate']) -> FuncJobTemplateCallable['TaskTemplate']:
+    return cast(FuncJobTemplateCallable['TaskTemplate'], callable_decorator_cls(cls))
+
+
+@task_template_callable_decorator_cls
 class TaskTemplate(CallableDecoratingJobTemplateMixin['TaskTemplate'],
                    TaskConfig,
                    FuncJobTemplate['Task']):
