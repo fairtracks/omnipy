@@ -83,6 +83,28 @@ class TaskTemplatesFlowConfig(FlowConfig):
     def task_templates(self) -> Tuple[IsTaskTemplate, ...]:
         return self._task_templates
 
+    def refine(self,
+               *task_templates: IsTaskTemplate,
+               update: bool = True,
+               name: Optional[str] = None,
+               fixed_params: Optional[Mapping[str, object]] = None,
+               param_key_map: Optional[Mapping[str, str]] = None,
+               result_key: Optional[str] = None,
+               **kwargs: Any) -> 'DagFlowTemplate':
+
+        args = tuple([self._job_func] + list(*task_templates)) if task_templates else ()
+
+        return super().refine(
+            *args,
+            update=update,
+            **remove_none_vals(
+                name=name,
+                fixed_params=fixed_params,
+                param_key_map=param_key_map,
+                result_key=result_key,
+                **kwargs,
+            ))
+
 
 class TaskTemplatesFlowTemplate(TaskTemplatesFlowConfig, FlowTemplate[FlowT], Generic[FlowT], ABC):
     ...
