@@ -12,12 +12,12 @@ from .tasks import (apply_models_to_dataset,
 @DagFlowTemplate(
     uppercase.refine(result_key='upper'),
     square_root,
-    merge_key_value_into_str.refine(
-        param_key_map={
-            'key': 'upper',
-            'val': 'pos_root',
-        }, result_key='pos_square_root'),
-    name='pos_square_root')
+    merge_key_value_into_str.refine(param_key_map={
+        'key': 'upper',
+        'val': 'pos_root',
+    }),
+    name='pos_square_root',
+    result_key='pos_square_root')
 def pos_square_root_dag_flow(
         number: int,  # noqa
         text: str,  # noqa
@@ -32,7 +32,7 @@ def pos_square_root_func_flow(
 ) -> str:
     upper = uppercase(text)
     _neg_root, pos_root = square_root(number).values()
-    return merge_key_value_into_str.refine(result_key='pos_square_root')(upper, pos_root)
+    return merge_key_value_into_str(upper, pos_root)
 
 
 @DagFlowTemplate(
