@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from functools import update_wrapper
 from types import MappingProxyType
-from typing import Any, Dict, Generic, Hashable, Mapping, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, Generic, Hashable, Optional, Tuple, Type, TypeVar, Union
 
 from unifair.compute.mixins.name import NameJobConfigMixin, NameJobMixin
 from unifair.engine.protocols import IsJob, IsJobCreator, IsTaskRunnerEngine

@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 import asyncio
 import inspect
 from typing import (Any,
@@ -14,6 +14,7 @@ from typing import (Any,
                     TypeVar,
                     Union)
 
+from unifair.compute.func_job import FuncJob, FuncJobConfig, FuncJobTemplate
 from unifair.compute.job import (CallableDecoratingJobTemplateMixin,
                                  Job,
                                  JobConfig,
@@ -32,52 +33,30 @@ from unifair.engine.protocols import (IsDagFlow,
                                       IsLinearFlowRunnerEngine,
                                       IsTaskTemplate)
 from unifair.util.callable_decorator_cls import callable_decorator_cls
+from unifair.util.helpers import remove_none_vals
 from unifair.util.mixin import DynamicMixinAcceptor
 
-
-class FlowConfig(JobConfig, DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
-    def __init__(self, *args: object, **kwargs: object):
-        super().__init__(*args, **kwargs)
-
-    def has_coroutine_func(self) -> bool:
-        return asyncio.iscoroutinefunction(self._job_func)
-
-
-FlowConfig.accept_mixin(NameFuncJobConfigMixin)
-FlowConfig.accept_mixin(SignatureFuncJobConfigMixin)
-FlowConfig.accept_mixin(ParamsFuncJobConfigMixin)
-FlowConfig.accept_mixin(ResultKeyFuncJobConfigMixin)
-
 FlowT = TypeVar('FlowT', bound='Flow', covariant=True)
+FlowConfigT = TypeVar('FlowConfigT', bound='FlowConfig', covariant=True)
+FlowTemplateT = TypeVar('FlowTemplateT', bound='FlowTemplate', covariant=True)
 
 
-class FlowTemplate(JobTemplate[FlowT], Generic[FlowT]):
-    @abstractmethod
-    def _apply_engine_decorator(self, job: IsFlow) -> IsFlow:
-        pass
+class FlowConfig(FuncJobConfig):
+    ...
 
 
-FlowConfigT = TypeVar('FlowConfigT', bound=FlowConfig, covariant=True)
-FlowTemplateT = TypeVar('FlowTemplateT', bound=FlowTemplate, covariant=True)
+class FlowTemplate(FuncJobTemplate[FlowT], Generic[FlowT], ABC):
+    ...
 
 
-class Flow(Job[FlowConfigT, FlowTemplateT], Generic[FlowConfigT, FlowTemplateT]):
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        return self._call_func(*args, **kwargs)
-
-    @abstractmethod
-    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
-        pass
+class Flow(FuncJob[FlowConfigT, FlowTemplateT], Generic[FlowConfigT, FlowTemplateT], ABC):
+    ...
 
 
-Flow.accept_mixin(ParamsFuncJobMixin)
-Flow.accept_mixin(ResultKeyFuncJobMixin)
-
-
-class LinearFlowConfig(FlowConfig):
+class TaskTemplatesFlowConfig(FlowConfig):
     def __init__(
         self,
-        linear_flow_func: Callable,
+        job_func: Callable,
         *task_templates: IsTaskTemplate,
         name: Optional[str] = None,
         fixed_params: Optional[Mapping[str, object]] = None,
@@ -85,26 +64,45 @@ class LinearFlowConfig(FlowConfig):
         result_key: Optional[str] = None,
         **kwargs: Any,
     ):
-        super().__init__()
+        super().__init__(
+            job_func,
+            **remove_none_vals(
+                name=name,
+                fixed_params=fixed_params,
+                param_key_map=param_key_map,
+                result_key=result_key,
+                **kwargs,
+            ))
 
-        self._job_func = linear_flow_func
         self._task_templates: Tuple[IsTaskTemplate, ...] = task_templates
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return self._job_func, *self._task_templates
-
-    def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
-        return ()
 
     @property
     def task_templates(self) -> Tuple[IsTaskTemplate, ...]:
         return self._task_templates
 
 
+class TaskTemplatesFlowTemplate(TaskTemplatesFlowConfig, FlowTemplate[FlowT], Generic[FlowT], ABC):
+    ...
+
+
+class TaskTemplatesFlow(TaskTemplatesFlowConfig,
+                        Flow[FlowConfigT, FlowTemplateT],
+                        Generic[FlowConfigT, FlowTemplateT],
+                        ABC):
+    ...
+
+
+class LinearFlowConfig(TaskTemplatesFlowConfig):
+    ...
+
+
 @callable_decorator_cls
 class LinearFlowTemplate(CallableDecoratingJobTemplateMixin['LinearFlowTemplate'],
                          LinearFlowConfig,
-                         FlowTemplate['LinearFlow']):
+                         TaskTemplatesFlowTemplate['LinearFlow']):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['LinearFlow']:
         return LinearFlow
@@ -116,7 +114,7 @@ class LinearFlowTemplate(CallableDecoratingJobTemplateMixin['LinearFlowTemplate'
             raise RuntimeError(f'Engine "{self.engine}" does not support linear flows')
 
 
-class LinearFlow(LinearFlowConfig, Flow[LinearFlowConfig, LinearFlowTemplate]):
+class LinearFlow(LinearFlowConfig, TaskTemplatesFlow[LinearFlowConfig, LinearFlowTemplate]):
     @classmethod
     def _get_job_config_subcls_for_init(cls) -> Type[LinearFlowConfig]:
         return LinearFlowConfig
@@ -125,55 +123,15 @@ class LinearFlow(LinearFlowConfig, Flow[LinearFlowConfig, LinearFlowTemplate]):
     def _get_job_template_subcls_for_revise(cls) -> Type[LinearFlowTemplate]:
         return LinearFlowTemplate
 
-    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
-        raise NotImplementedError
 
-    def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
-        return inspect.signature(self._job_func).bind(*args, **kwargs).arguments
-
-
-class DagFlowConfig(FlowConfig):
-    def __init__(
-        self,
-        dag_flow_func: Callable,
-        *task_templates: IsTaskTemplate,
-        name: Optional[str] = None,
-        fixed_params: Optional[Mapping[str, object]] = None,
-        param_key_map: Optional[Mapping[str, str]] = None,
-        result_key: Optional[str] = None,
-        **kwargs: Any,
-    ):
-        super().__init__()
-
-        self._job_func = dag_flow_func
-        self._task_templates: Tuple[IsTaskTemplate, ...] = task_templates
-
-    def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
-        return self._job_func, *self._task_templates
-
-    def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
-        return ()
-
-    @property
-    def task_templates(self) -> Tuple[IsTaskTemplate, ...]:
-        return self._task_templates
-
-    def has_coroutine_func(self) -> bool:
-        return asyncio.iscoroutinefunction(self._job_func)
-
-    @property
-    def param_signatures(self) -> MappingProxyType:
-        return self._dag_flow_func_signature.parameters
-
-    @property
-    def return_type(self) -> Type[Any]:
-        return self._dag_flow_func_signature.return_annotation
+class DagFlowConfig(TaskTemplatesFlowConfig):
+    ...
 
 
 @callable_decorator_cls
 class DagFlowTemplate(CallableDecoratingJobTemplateMixin['DagFlowTemplate'],
                       DagFlowConfig,
-                      FlowTemplate['DagFlow']):
+                      TaskTemplatesFlowTemplate['DagFlow']):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['DagFlow']:
         return DagFlow
@@ -185,7 +143,7 @@ class DagFlowTemplate(CallableDecoratingJobTemplateMixin['DagFlowTemplate'],
             raise RuntimeError(f'Engine "{self.engine}" does not support DAG flows')
 
 
-class DagFlow(DagFlowConfig, Flow[DagFlowConfig, DagFlowTemplate]):
+class DagFlow(DagFlowConfig, TaskTemplatesFlow[DagFlowConfig, DagFlowTemplate]):
     @classmethod
     def _get_job_config_subcls_for_init(cls) -> Type[DagFlowConfig]:
         return DagFlowConfig
@@ -194,35 +152,9 @@ class DagFlow(DagFlowConfig, Flow[DagFlowConfig, DagFlowTemplate]):
     def _get_job_template_subcls_for_revise(cls) -> Type[DagFlowTemplate]:
         return DagFlowTemplate
 
-    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
-        raise NotImplementedError
-
-    def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
-        return inspect.signature(self._job_func).bind(*args, **kwargs).arguments
-
 
 class FuncFlowConfig(FlowConfig):
-    def __init__(
-        self,
-        func_flow_func: Callable,
-        *,
-        name: Optional[str] = None,
-        fixed_params: Optional[Mapping[str, object]] = None,
-        param_key_map: Optional[Mapping[str, str]] = None,
-        result_key: Optional[str] = None,
-        **kwargs: Any,
-    ):
-        super().__init__()
-        self._job_func = func_flow_func
-
-    def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
-        return self._job_func,
-
-    def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
-        return ()
-
-    def has_coroutine_func(self) -> bool:
-        return asyncio.iscoroutinefunction(self._job_func)
+    ...
 
 
 @callable_decorator_cls
@@ -248,9 +180,6 @@ class FuncFlow(FuncFlowConfig, Flow[FuncFlowConfig, FuncFlowTemplate]):
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[FuncFlowTemplate]:
         return FuncFlowTemplate
-
-    def _call_func(self, *args: object, **kwargs: object) -> Any:
-        return self._job_func(*args, **kwargs)
 
 
 # TODO: Recursive replace - *args: Any -> *args: object, *kwargs: Any -> *kwargs: object
