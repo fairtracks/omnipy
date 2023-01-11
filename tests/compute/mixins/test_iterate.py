@@ -11,7 +11,7 @@ from ..cases.raw.functions import (all_data_files_plus_str_func,
 
 def test_property_iterate_over_data_files_default_task() -> None:
 
-    all_plus_no_iter_template = TaskTemplate(all_data_files_plus_str_func)
+    all_plus_no_iter_template = TaskTemplate()(all_data_files_plus_str_func)
 
     for all_plus_obj in all_plus_no_iter_template, all_plus_no_iter_template.apply():
         assert all_plus_obj.iterate_over_data_files is False
@@ -22,10 +22,10 @@ def test_property_iterate_over_data_files_default_task() -> None:
     assert out_dataset.to_data() == dict(a='5', b='7', c='0')
 
     with pytest.raises(TypeError):
-        TaskTemplate(all_data_files_plus_str_func, iterate_over_data_files=None)
+        TaskTemplate(iterate_over_data_files=None)(all_data_files_plus_str_func)
 
-    all_plus_no_iter_template = TaskTemplate(
-        all_data_files_plus_str_func, iterate_over_data_files=False)
+    all_plus_no_iter_template = TaskTemplate(iterate_over_data_files=False)(
+        all_data_files_plus_str_func)
 
     for all_plus_obj in all_plus_no_iter_template, all_plus_no_iter_template.apply():
         assert all_plus_obj.iterate_over_data_files is False
@@ -33,8 +33,8 @@ def test_property_iterate_over_data_files_default_task() -> None:
 
 def test_property_iterate_over_data_files_true_task() -> None:
 
-    all_plus_iter_template = TaskTemplate(
-        single_data_file_plus_str_func, iterate_over_data_files=True)
+    all_plus_iter_template = TaskTemplate(iterate_over_data_files=True)(
+        single_data_file_plus_str_func)
 
     for all_plus_obj in all_plus_iter_template, all_plus_iter_template.apply():
         assert all_plus_obj.iterate_over_data_files is True
@@ -47,4 +47,4 @@ def test_property_iterate_over_data_files_true_task() -> None:
 
 def test_fail_property_iterate_over_data_files_no_arg_task() -> None:
     with pytest.raises(AttributeError):
-        TaskTemplate(data_import_func, iterate_over_data_files=True)
+        TaskTemplate(iterate_over_data_files=True)(data_import_func)

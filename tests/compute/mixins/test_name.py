@@ -31,7 +31,7 @@ def test_property_name_default_mock() -> None:
 
 def test_property_name_default_task() -> None:
 
-    power_m1_tmpl = TaskTemplate(power_m1_func)
+    power_m1_tmpl = TaskTemplate()(power_m1_func)
 
     for power_m1_obj in power_m1_tmpl, power_m1_tmpl.apply():
         assert power_m1_obj.name == 'power_m1_func'
@@ -40,7 +40,7 @@ def test_property_name_default_task() -> None:
 def test_property_name_default_linear_flow(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
 
-    power_m1_tmpl = LinearFlowTemplate(power_m1_func)
+    power_m1_tmpl = LinearFlowTemplate()(power_m1_func)
 
     for power_m1_obj in power_m1_tmpl, power_m1_tmpl.apply():
         assert power_m1_obj.name == 'power_m1_func'
@@ -49,7 +49,7 @@ def test_property_name_default_linear_flow(
 def test_property_name_default_dag_flow(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
 
-    power_m1_tmpl = DagFlowTemplate(power_m1_func)
+    power_m1_tmpl = DagFlowTemplate()(power_m1_func)
 
     for power_m1_obj in power_m1_tmpl, power_m1_tmpl.apply():
         assert power_m1_obj.name == 'power_m1_func'
@@ -58,7 +58,7 @@ def test_property_name_default_dag_flow(
 def test_property_name_default_func_flow(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
 
-    power_m1_tmpl = FuncFlowTemplate(power_m1_func)
+    power_m1_tmpl = FuncFlowTemplate()(power_m1_func)
 
     for power_m1_obj in power_m1_tmpl, power_m1_tmpl.apply():
         assert power_m1_obj.name == 'power_m1_func'

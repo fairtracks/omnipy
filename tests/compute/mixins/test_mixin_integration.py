@@ -10,15 +10,11 @@ from ..cases.raw.functions import (all_data_files_plus_str_func,
 
 
 def test_iterate_over_data_files_func_signature() -> None:
-    all_plus_no_iter_template = TaskTemplate(
-        all_data_files_plus_str_func,
-        iterate_over_data_files=False,
-    )
+    all_plus_no_iter_template = TaskTemplate(iterate_over_data_files=False)(
+        all_data_files_plus_str_func)
 
-    all_plus_iter_template = TaskTemplate(
-        single_data_file_plus_str_func,
-        iterate_over_data_files=True,
-    )
+    all_plus_iter_template = TaskTemplate(iterate_over_data_files=True)(
+        single_data_file_plus_str_func)
 
     for task_template in (all_plus_no_iter_template, all_plus_iter_template):
         for task_obj in task_template, task_template.apply():
@@ -34,7 +30,7 @@ def test_iterate_over_data_files_func_signature() -> None:
 
 def test_refine_task_template_with_other_properties_task() -> None:
     # Plain task template
-    power_m1_template = TaskTemplate(power_m1_func)
+    power_m1_template = TaskTemplate()(power_m1_func)
     power_m1 = power_m1_template.apply()
     assert power_m1(4, 2) == 15
 

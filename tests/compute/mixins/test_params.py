@@ -7,7 +7,7 @@ from ..cases.raw.functions import power_m1_func
 
 def test_property_fixed_params_default_task() -> None:
 
-    power_m1_template = TaskTemplate(power_m1_func)
+    power_m1_template = TaskTemplate()(power_m1_func)
 
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.fixed_params == {}
@@ -16,20 +16,14 @@ def test_property_fixed_params_default_task() -> None:
     assert power_m1(number=4, exponent=3) == 63
 
     for val in ({}, [], None):
-        power_m1_template = TaskTemplate(power_m1_func, fixed_params=val)  # noqa
+        power_m1_template = TaskTemplate(fixed_params=val)(power_m1_func)
         for power_m1_obj in power_m1_template, power_m1_template.apply():
             assert power_m1_obj.fixed_params == {}
 
 
 def test_property_fixed_params_last_args_task() -> None:
 
-    square_template = TaskTemplate(
-        power_m1_func,
-        fixed_params=dict(
-            exponent=2,
-            minus_one=False,
-        ),
-    )
+    square_template = TaskTemplate(fixed_params=dict(exponent=2, minus_one=False))(power_m1_func)
 
     for square_obj in square_template, square_template.apply():
         assert square_obj.fixed_params == {
@@ -60,10 +54,7 @@ def test_property_fixed_params_last_args_task() -> None:
 
 def test_property_fixed_params_first_arg_task() -> None:
 
-    two_power_m1_template = TaskTemplate(
-        power_m1_func,
-        fixed_params=dict(number=2),
-    )
+    two_power_m1_template = TaskTemplate(fixed_params=dict(number=2))(power_m1_func)
 
     for two_power_m1_obj in two_power_m1_template, two_power_m1_template.apply():
         assert two_power_m1_obj.fixed_params == {
@@ -92,13 +83,7 @@ def test_property_fixed_params_first_arg_task() -> None:
 
 def test_property_fixed_params_all_args_task() -> None:
 
-    seven_template = TaskTemplate(
-        power_m1_func,
-        fixed_params=dict(
-            number=2,
-            exponent=3,
-        ),
-    )
+    seven_template = TaskTemplate(fixed_params=dict(number=2, exponent=3))(power_m1_func)
 
     for seven_obj in seven_template, seven_template.apply():
         assert seven_obj.fixed_params == {
@@ -131,7 +116,7 @@ def test_property_fixed_params_all_args_task() -> None:
 
 def test_property_param_key_map_default_task() -> None:
 
-    power_m1_template = TaskTemplate(power_m1_func)
+    power_m1_template = TaskTemplate()(power_m1_func)
 
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.param_key_map == {}
@@ -140,20 +125,13 @@ def test_property_param_key_map_default_task() -> None:
     assert power_m1(number=4, exponent=3) == 63
 
     for val in ({}, [], None):
-        power_m1_template = TaskTemplate(power_m1_func, param_key_map=val)
+        power_m1_template = TaskTemplate(param_key_map=val)(power_m1_func)
         for power_m1_obj in power_m1_template, power_m1_template.apply():
             assert power_m1_obj.param_key_map == {}
 
 
 def test_property_param_key_map_task() -> None:
-
-    power_m1_template = TaskTemplate(
-        power_m1_func,
-        param_key_map=dict(
-            number='n',
-            minus_one='m',
-        ),
-    )
+    power_m1_template = TaskTemplate(param_key_map=dict(number='n', minus_one='m'))(power_m1_func)
 
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.param_key_map == {
@@ -190,11 +168,8 @@ def test_property_param_key_map_task() -> None:
 
 def test_property_param_key_map_validation_task() -> None:
 
-    power_m1_template = TaskTemplate(
-        power_m1_func, param_key_map=[
-            ('number', 'n'),
-            ('exponent', 'e'),
-        ])  # noqa
+    power_m1_template = TaskTemplate(param_key_map=[('number', 'n'), ('exponent', 'e')])(
+        power_m1_func)
 
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.param_key_map == {
@@ -203,23 +178,23 @@ def test_property_param_key_map_validation_task() -> None:
         }
 
     with pytest.raises(ValueError):
-        TaskTemplate(power_m1_func, param_key_map={'number': 'same', 'exponent': 'same'})
+        TaskTemplate(param_key_map={'number': 'same', 'exponent': 'same'})(power_m1_func)
 
 
 def test_error_properties_param_key_map_and_fixed_params_unmatched_params_task() -> None:
 
-    power_m1_template = TaskTemplate(power_m1_func)
+    power_m1_template = TaskTemplate()(power_m1_func)
 
     assert 'engine' not in power_m1_template.param_signatures
 
     with pytest.raises(KeyError):
-        TaskTemplate(power_m1_func, param_key_map=dict(engine='motor'))
+        TaskTemplate(param_key_map=dict(engine='motor'))(power_m1_func)
 
     with pytest.raises(KeyError):
         power_m1_template.refine(param_key_map=dict(engine='horsepower'))
 
     with pytest.raises(KeyError):
-        TaskTemplate(power_m1_func, fixed_params=dict(engine='hyperdrive'))
+        TaskTemplate(fixed_params=dict(engine='hyperdrive'))(power_m1_func)
 
     with pytest.raises(KeyError):
         power_m1_template.refine(fixed_params=dict(engine='antigravity'))
