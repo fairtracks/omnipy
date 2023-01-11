@@ -7,7 +7,8 @@ from typing import Any, Dict, Generic, Hashable, Optional, Tuple, Type, Union
 
 from unifair.compute.mixins.name import NameJobBaseMixin, NameJobMixin
 from unifair.compute.types import JobBaseT, JobT, JobTemplateT
-from unifair.engine.protocols import IsJob, IsJobCreator, IsTaskRunnerEngine
+from unifair.config.job import JobConfig
+from unifair.engine.protocols import IsJob, IsJobConfig, IsJobCreator, IsTaskRunnerEngine
 from unifair.util.helpers import create_merged_dict
 from unifair.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorFactory
 
@@ -15,10 +16,14 @@ from unifair.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorFactory
 class JobCreator:
     def __init__(self) -> None:
         self._engine: Optional[IsTaskRunnerEngine] = None
+        self._config: IsJobConfig = JobConfig()
         self._nested_context_level = 0
 
     def set_engine(self, engine: IsTaskRunnerEngine) -> None:
         self._engine = engine
+
+    def set_config(self, config: IsJobConfig) -> None:
+        self._config = config
 
     def __enter__(self):
         self._nested_context_level += 1
@@ -31,15 +36,19 @@ class JobCreator:
         return self._engine
 
     @property
+    def config(self) -> IsJobConfig:
+        return self._config
+
+    @property
     def nested_context_level(self) -> int:
         return self._nested_context_level
 
 
 class JobBaseMeta(ABCMeta):
-    _job_creator: JobCreator = JobCreator()
+    _job_creator: IsJobCreator = JobCreator()
 
     @property
-    def job_creator(self) -> JobCreator:
+    def job_creator(self) -> IsJobCreator:
         return self._job_creator
 
 

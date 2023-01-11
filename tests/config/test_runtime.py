@@ -1,10 +1,12 @@
 import logging
 
+from unifair.config.job import GlobalResumePreviousRunsOptions, GlobalSerializeOutputsOptions
 from unifair.config.runtime import Runtime, RuntimeConfig, RuntimeObjects
 from unifair.engine.constants import EngineChoice
 
 from .helpers.functions import assert_logger
-from .helpers.mocks import (MockJobCreator,
+from .helpers.mocks import (MockJobConfig,
+                            MockJobCreator,
                             MockJobCreator2,
                             MockLocalRunner,
                             MockLocalRunner2,
@@ -21,8 +23,12 @@ from .helpers.mocks import (MockJobCreator,
 
 def assert_runtime_config_default(config: RuntimeConfig):
     from unifair.config.engine import LocalRunnerConfig, PrefectEngineConfig
+    from unifair.config.job import JobConfig
     from unifair.config.registry import RunStateRegistryConfig
 
+    assert isinstance(config.job, JobConfig)
+    assert isinstance(config.job.serialize_outputs, GlobalSerializeOutputsOptions)
+    assert isinstance(config.job.resume_previous_runs, GlobalResumePreviousRunsOptions)
     assert isinstance(config.engine, str)
     assert isinstance(config.local, LocalRunnerConfig)
     assert isinstance(config.prefect, PrefectEngineConfig)
@@ -30,6 +36,10 @@ def assert_runtime_config_default(config: RuntimeConfig):
     assert isinstance(config.registry, RunStateRegistryConfig)
     assert isinstance(config.registry.verbose, bool)
 
+    assert config.job.serialize_outputs == \
+           GlobalSerializeOutputsOptions.WRITE_FLOW_AND_TASK_OUTPUTS
+    assert config.job.resume_previous_runs == \
+           GlobalResumePreviousRunsOptions.OFF
     assert config.engine == EngineChoice.LOCAL
     assert config.prefect.use_cached_results is False
     assert config.registry.verbose is True
@@ -243,3 +253,35 @@ def test_job_creator_subscribe_to_engine() -> None:
     runtime.config.engine = EngineChoice.PREFECT
     runtime.objects.job_creator = MockJobCreator2()
     assert runtime.objects.job_creator.engine is runtime.objects.prefect is mock_prefect_engine_2
+
+
+def test_job_creator_subscribe_to_job_config() -> None:
+    mock_job_creator = MockJobCreator()
+    mock_job_config = MockJobConfig(serialize_outputs=False, resume_previous_runs=True)
+    runtime = Runtime(
+        objects=RuntimeObjects(job_creator=mock_job_creator),
+        config=RuntimeConfig(job=mock_job_config),
+    )
+    assert runtime.objects.job_creator.config is runtime.config.job is mock_job_config
+    assert runtime.objects.job_creator.config.serialize_outputs is False
+    assert runtime.objects.job_creator.config.resume_previous_runs is True
+
+    runtime.config.job.serialize_outputs = True
+    assert runtime.objects.job_creator.config.serialize_outputs is True
+    runtime.config.job.resume_previous_runs = False
+    assert runtime.objects.job_creator.config.resume_previous_runs is False
+
+    mock_job_config_2 = MockJobConfig(serialize_outputs=False, resume_previous_runs=True)
+    assert mock_job_config_2 is not mock_job_config
+    runtime.config.job = mock_job_config_2
+    assert runtime.objects.job_creator.config is runtime.config.job is mock_job_config_2
+    assert runtime.objects.job_creator.config.serialize_outputs is False
+    assert runtime.objects.job_creator.config.resume_previous_runs is True
+
+    runtime.objects.job_creator = MockJobCreator()
+    assert runtime.objects.job_creator.config is runtime.config.job is mock_job_config_2
+    assert runtime.objects.job_creator.config.serialize_outputs is False
+    assert runtime.objects.job_creator.config.resume_previous_runs is True
+
+    runtime.objects.job_creator = MockJobCreator2()
+    assert runtime.config.job is mock_job_config_2

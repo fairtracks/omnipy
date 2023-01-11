@@ -5,6 +5,7 @@ from typing import Any, Optional
 
 from unifair.compute.job import JobBase
 from unifair.config.engine import LocalRunnerConfig, PrefectEngineConfig
+from unifair.config.job import JobConfig
 from unifair.config.publisher import ConfigPublisher
 from unifair.config.registry import RunStateRegistryConfig
 from unifair.engine.constants import EngineChoice
@@ -12,6 +13,7 @@ from unifair.engine.local import LocalRunner
 from unifair.engine.prefect import PrefectEngine
 from unifair.engine.protocols import (IsEngine,
                                       IsEngineConfig,
+                                      IsJobConfig,
                                       IsJobCreator,
                                       IsLocalRunnerConfig,
                                       IsPrefectEngineConfig,
@@ -53,6 +55,7 @@ class RuntimeObjects(RuntimeEntry, ConfigPublisher):
 
 @dataclass
 class RuntimeConfig(RuntimeEntry, ConfigPublisher):
+    job: IsJobConfig = JobConfig()
     engine: EngineChoice = EngineChoice.LOCAL
     local: IsLocalRunnerConfig = LocalRunnerConfig()
     prefect: IsPrefectEngineConfig = PrefectEngineConfig()
@@ -81,6 +84,7 @@ class Runtime(ConfigPublisher):
         self.objects.subscribe('local', self._update_local_runner_config)
         self.objects.subscribe('prefect', self._update_prefect_engine_config)
 
+        self.config.subscribe('job', self.objects.job_creator.set_config)
         self.config.subscribe('local', self.objects.local.set_config)
         self.config.subscribe('prefect', self.objects.prefect.set_config)
         self.config.subscribe('registry', self.objects.registry.set_config)

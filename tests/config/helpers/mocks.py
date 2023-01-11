@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Optional, Tuple, Type
+from typing import Optional, Protocol, Tuple, Type
 
 from unifair.config.publisher import ConfigPublisher
 from unifair.engine.constants import RunState
@@ -38,12 +38,27 @@ class MockSubscriberCls:
         self.text = text
 
 
+class MockIsJobConfig(Protocol):
+    serialize_outputs: bool = True
+    resume_previous_runs: bool = False
+
+
+@dataclass
+class MockJobConfig:
+    serialize_outputs: bool = True
+    resume_previous_runs: bool = False
+
+
 class MockJobCreator:
-    def __init__(self):
+    def __init__(self) -> None:
         self.engine: Optional[IsTaskRunnerEngine] = None
+        self.config: MockIsJobConfig = MockJobConfig()
 
     def set_engine(self, engine: IsTaskRunnerEngine) -> None:
         self.engine = engine
+
+    def set_config(self, config: MockIsJobConfig) -> None:
+        self.config = config
 
 
 class MockJobCreator2(MockJobCreator):

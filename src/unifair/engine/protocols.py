@@ -2,7 +2,15 @@ from datetime import datetime
 import logging
 from typing import Any, Callable, Dict, Optional, Protocol, runtime_checkable, Tuple, Type
 
+from unifair.config.job import GlobalResumePreviousRunsOptions, GlobalSerializeOutputsOptions
 from unifair.engine.constants import EngineChoice, RunState
+
+
+class IsJobConfig(Protocol):
+    serialize_outputs: GlobalSerializeOutputsOptions = \
+        GlobalSerializeOutputsOptions.WRITE_FLOW_AND_TASK_OUTPUTS
+    resume_previous_runs: GlobalResumePreviousRunsOptions = \
+        GlobalResumePreviousRunsOptions.OFF
 
 
 class IsEngineConfig(Protocol):
@@ -86,7 +94,18 @@ class IsRuntime(IsConfigPublisher, Protocol):
 
 
 class IsJobCreator(Protocol):
+    config: IsJobConfig
     engine: Optional['IsTaskRunnerEngine']
+    nested_context_level: int
+
+    def __enter__(self):
+        ...
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        ...
+
+    def set_config(self, config: IsJobConfig) -> None:
+        ...
 
     def set_engine(self, engine: 'IsTaskRunnerEngine') -> None:
         ...
