@@ -10,6 +10,9 @@ from omnipy.compute.mixins.iterate import IterateFuncJobBaseMixin
 from omnipy.compute.mixins.name import NameFuncJobBaseMixin
 from omnipy.compute.mixins.params import ParamsFuncJobBaseMixin, ParamsFuncJobMixin
 from omnipy.compute.mixins.result_key import ResultKeyFuncJobBaseMixin, ResultKeyFuncJobMixin
+from omnipy.compute.mixins.serialize import (PersistOutputsOptions,
+                                             RestoreOutputsOptions,
+                                             SerializerFuncJobBaseMixin)
 from omnipy.util.helpers import remove_none_vals
 from omnipy.util.mixin import DynamicMixinAcceptor
 
@@ -23,6 +26,8 @@ class FuncJobBase(JobBase, DynamicMixinAcceptor, metaclass=JobBaseAndMixinAccept
                  param_key_map: Optional[Mapping[str, str]] = None,
                  result_key: Optional[str] = None,
                  iterate_over_data_files: bool = False,
+                 persist_outputs: Optional[PersistOutputsOptions] = None,
+                 restore_outputs: Optional[RestoreOutputsOptions] = None,
                  **kwargs: object) -> None:
 
         super().__init__()
@@ -44,6 +49,7 @@ FuncJobBase.accept_mixin(SignatureFuncJobBaseMixin)
 FuncJobBase.accept_mixin(IterateFuncJobBaseMixin)
 FuncJobBase.accept_mixin(ParamsFuncJobBaseMixin)
 FuncJobBase.accept_mixin(ResultKeyFuncJobBaseMixin)
+FuncJobBase.accept_mixin(SerializerFuncJobBaseMixin)
 
 
 class FuncJobTemplate(FuncJobBase, JobTemplate[JobT], Generic[JobT], ABC):
@@ -54,6 +60,8 @@ class FuncJobTemplate(FuncJobBase, JobTemplate[JobT], Generic[JobT], ABC):
                param_key_map: Optional[Mapping[str, str]] = None,
                result_key: Optional[str] = None,
                iterate_over_data_files: bool = False,
+               persist_outputs: Optional[PersistOutputsOptions] = None,
+               restore_outputs: Optional[RestoreOutputsOptions] = None,
                **kwargs: Any) -> FuncJobTemplateT:
 
         return JobTemplate.refine(
@@ -65,6 +73,8 @@ class FuncJobTemplate(FuncJobBase, JobTemplate[JobT], Generic[JobT], ABC):
                 param_key_map=param_key_map,
                 result_key=result_key,
                 iterate_over_data_files=iterate_over_data_files,
+                persist_outputs=persist_outputs,
+                restore_outputs=restore_outputs,
                 **kwargs,
             ))
 
