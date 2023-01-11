@@ -54,8 +54,8 @@ def test_property_fixed_params_last_args_task() -> None:
     with pytest.raises(TypeError):
         square(4, 3)
 
-        with pytest.raises(TypeError):
-            square(4, minus_one=True)
+    with pytest.raises(TypeError):
+        square(4, minus_one=True)
 
 
 def test_property_fixed_params_first_arg_task() -> None:
