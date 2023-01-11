@@ -4,11 +4,12 @@ from collections import UserDict
 import json
 from typing import Any, Dict, Generic, Iterator, Tuple, Type, TypeVar, Union
 
-from omnipy.data.model import Model
 # from orjson import orjson
 from pydantic import Field, PrivateAttr, ValidationError
 from pydantic.generics import GenericModel
 from pydantic.utils import lenient_issubclass
+
+from omnipy.data.model import Model
 
 ModelT = TypeVar('ModelT', bound=Type[Model])
 Undefined = object()

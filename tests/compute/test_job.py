@@ -1,6 +1,5 @@
 from typing import Tuple, Type, Union
 
-from omnipy.compute.job import Job, JobBase, JobCreator, JobTemplate
 import pytest
 
 from compute.helpers.mocks import (CommandMockJob,
@@ -12,6 +11,7 @@ from compute.helpers.mocks import (CommandMockJob,
                                    MockLocalRunner,
                                    PublicPropertyErrorsMockJob,
                                    PublicPropertyErrorsMockJobTemplate)
+from omnipy.compute.job import Job, JobBase, JobCreator, JobTemplate
 
 from .helpers.functions import assert_updated_wrapper
 

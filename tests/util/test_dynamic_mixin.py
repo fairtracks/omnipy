@@ -2,8 +2,9 @@ from abc import ABCMeta
 from inspect import Parameter, signature
 from typing import Dict, Tuple, Type
 
-from omnipy.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorFactory
 import pytest
+
+from omnipy.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorFactory
 
 
 @pytest.fixture(scope='function')

@@ -1,6 +1,7 @@
+import pytest_cases as pc
+
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
-import pytest_cases as pc
 
 
 @pc.case(

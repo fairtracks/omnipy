@@ -5,11 +5,12 @@ from types import NoneType
 from typing import Awaitable, Callable, Generator, Tuple
 
 from aiostream.stream import enumerate as aenumerate
+import pytest
+import pytest_cases as pc
+
 from omnipy.engine.constants import RunState
 from omnipy.engine.protocols import IsJob
 from omnipy.util.helpers import resolve
-import pytest
-import pytest_cases as pc
 
 from ..helpers.classes import JobCase
 from ..helpers.functions import (assert_job_state,

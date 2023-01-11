@@ -5,11 +5,12 @@ import logging
 from time import sleep
 from typing import Annotated
 
+import pytest
+
 from omnipy.engine.constants import RunState
 from omnipy.engine.protocols import IsDagFlow, IsTask
 from omnipy.engine.registry import RunStateRegistry
 from omnipy.util.helpers import get_datetime_format
-import pytest
 
 from .helpers.functions import read_log_line_from_stream, read_log_lines_from_stream
 

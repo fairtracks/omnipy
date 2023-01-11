@@ -1,9 +1,10 @@
 from typing import Dict, Generic, List, TypeVar
 
-from omnipy.data.dataset import Dataset
-from omnipy.data.model import Model
 from pydantic import PositiveInt, StrictInt, ValidationError
 import pytest
+
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 
 from .helpers.models import StringToLength
 

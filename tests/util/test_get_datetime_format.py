@@ -1,5 +1,6 @@
-from omnipy.util.helpers import get_datetime_format
 import pytest
+
+from omnipy.util.helpers import get_datetime_format
 
 
 @pytest.mark.skip(reason="""

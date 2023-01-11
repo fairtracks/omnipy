@@ -1,7 +1,8 @@
 from typing import Dict, Generic, List, Type, TypeVar, Union
 
-from omnipy.data.model import Model
 from pydantic import BaseConfig, BaseModel, create_model, Extra
+
+from omnipy.data.model import Model
 
 # Types
 

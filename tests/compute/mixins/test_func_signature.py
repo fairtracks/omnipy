@@ -1,8 +1,9 @@
 from inspect import Parameter
 
-from omnipy.compute.task import TaskTemplate
 import pytest
 import pytest_cases as pc
+
+from omnipy.compute.task import TaskTemplate
 
 from ..cases.raw.functions import format_to_string_func
 from ..cases.tasks import TaskCase

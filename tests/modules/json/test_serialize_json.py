@@ -1,6 +1,5 @@
 from omnipy.modules.json.models import JsonDataset
 from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
-
 from tests.data.helpers.functions import assert_tar_file_contents
 
 

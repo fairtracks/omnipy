@@ -1,7 +1,8 @@
 from typing import Iterable
 
-from omnipy.compute.task import TaskTemplate
 from pydantic import constr, PositiveInt
+
+from omnipy.compute.task import TaskTemplate
 
 from ..json.models import JsonDataset
 from .functions import encode_api

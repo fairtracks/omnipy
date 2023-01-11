@@ -1,10 +1,10 @@
 from deepdiff import DeepDiff
 import numpy as np
-from omnipy.modules.pandas.models import PandasDataset
 import pandas as pd
 from pydantic import ValidationError
 import pytest
 
+from omnipy.modules.pandas.models import PandasDataset
 from tests.modules.pandas.util import assert_pandas_frame_dtypes
 
 

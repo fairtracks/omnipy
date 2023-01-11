@@ -4,6 +4,7 @@ from functools import lru_cache
 from typing import Dict, List, Tuple
 
 import jq
+
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 

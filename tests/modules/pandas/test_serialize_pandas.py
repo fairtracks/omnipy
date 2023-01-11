@@ -1,6 +1,5 @@
 from omnipy.modules.pandas.models import PandasDataset
 from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
-
 from tests.data.helpers.functions import assert_tar_file_contents
 from tests.modules.pandas.util import assert_pandas_dataset_equals
 

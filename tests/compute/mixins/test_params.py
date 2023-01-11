@@ -1,5 +1,6 @@
-from omnipy.compute.task import TaskTemplate
 import pytest
+
+from omnipy.compute.task import TaskTemplate
 
 from ..cases.raw.functions import power_m1_func
 

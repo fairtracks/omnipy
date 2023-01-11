@@ -1,9 +1,10 @@
 from inspect import Parameter
 from typing import Annotated
 
-from omnipy.engine.constants import RunState
 import pytest
 import pytest_cases as pc
+
+from omnipy.engine.constants import RunState
 
 from ...compute.cases.flows import FlowCase
 from ...engine.helpers.functions import assert_job_state

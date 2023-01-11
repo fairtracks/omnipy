@@ -1,6 +1,7 @@
+import pytest_cases as pc
+
 from omnipy.config.runtime import Runtime
 from omnipy.engine.constants import EngineChoice
-import pytest_cases as pc
 
 
 @pc.fixture

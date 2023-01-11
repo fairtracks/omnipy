@@ -1,7 +1,8 @@
+import pytest
+
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-import pytest
 
 from ..cases.raw.functions import (all_data_files_plus_str_func,
                                    data_import_func,

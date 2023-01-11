@@ -1,9 +1,10 @@
 from types import NoneType
 from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
-from omnipy.data.model import Model
 from pydantic import PositiveInt, StrictInt, ValidationError
 import pytest
+
+from omnipy.data.model import Model
 
 from .helpers.models import StringToLength
 
