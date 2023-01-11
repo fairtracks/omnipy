@@ -23,4 +23,4 @@ class RunStateLogMessages(str, Enum):
     FINISHED = 'Finished running "{}"!'
 
 
-UNIFAIR_LOG_FORMAT_STR: str = '%(levelname)s (%(name)s) - %(message)s'
+OMNIPY_LOG_FORMAT_STR: str = '%(levelname)s (%(name)s) - %(message)s'

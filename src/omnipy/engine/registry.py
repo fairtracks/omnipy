@@ -4,7 +4,7 @@ import logging
 from typing import DefaultDict, Dict, List, Optional, Tuple, Union
 
 from omnipy.config.registry import RunStateRegistryConfig
-from omnipy.engine.constants import RunState, RunStateLogMessages, UNIFAIR_LOG_FORMAT_STR
+from omnipy.engine.constants import OMNIPY_LOG_FORMAT_STR, RunState, RunStateLogMessages
 from omnipy.engine.protocols import IsJob, IsRunStateRegistryConfig
 from omnipy.util.helpers import get_datetime_format
 
@@ -43,7 +43,7 @@ class RunStateRegistry:
             self._datetime_format = get_datetime_format(locale)
 
             if set_omnipy_formatter_on_handlers:
-                formatter = logging.Formatter(UNIFAIR_LOG_FORMAT_STR)
+                formatter = logging.Formatter(OMNIPY_LOG_FORMAT_STR)
                 for handler in self._logger.handlers:
                     handler.setFormatter(formatter)
 
