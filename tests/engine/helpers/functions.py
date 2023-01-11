@@ -108,7 +108,7 @@ def check_engine_cls(job: IsJob, engine_cls: type[Engine]):
 
 
 def add_logger_to_registry(registry: IsRunStateRegistry) -> IsRunStateRegistry:
-    logger = logging.getLogger('uniFAIR')
+    logger = logging.getLogger('omnipy')
     logger.setLevel(logging.INFO)
     registry.set_logger(logger)
     return registry

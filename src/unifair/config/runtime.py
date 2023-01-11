@@ -25,7 +25,7 @@ from unifair.engine.registry import RunStateRegistry
 
 
 def get_default_logger():
-    logger = logging.getLogger('uniFAIR')
+    logger = logging.getLogger('omnipy')
     logger.setLevel(logging.INFO)
     for handler in logger.handlers:
         logger.removeHandler(handler)

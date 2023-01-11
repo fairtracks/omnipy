@@ -43,6 +43,6 @@ def mock_config_publisher_with_subscribers(
 @pytest.fixture(scope='module')
 def teardown_loggers():
     yield
-    logger = logging.getLogger('uniFAIR')
+    logger = logging.getLogger('omnipy')
     for handler in logger.handlers:
         logger.removeHandler(handler)
