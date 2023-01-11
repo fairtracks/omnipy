@@ -41,9 +41,9 @@ class FuncJobConfig(JobConfig, DynamicMixinAcceptor, metaclass=JobConfigAndMixin
 
 FuncJobConfig.accept_mixin(NameFuncJobConfigMixin)
 FuncJobConfig.accept_mixin(SignatureFuncJobConfigMixin)
+FuncJobConfig.accept_mixin(IterateFuncJobConfigMixin)
 FuncJobConfig.accept_mixin(ParamsFuncJobConfigMixin)
 FuncJobConfig.accept_mixin(ResultKeyFuncJobConfigMixin)
-FuncJobConfig.accept_mixin(IterateFuncJobConfigMixin)
 
 
 class FuncJobTemplate(FuncJobConfig, JobTemplate[JobT], Generic[JobT], ABC):
