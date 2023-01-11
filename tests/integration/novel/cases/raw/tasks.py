@@ -40,7 +40,7 @@ def extract_record_schema_def(table: GeneralTable) -> RecordSchemaDef:
 
 # TODO: Implement support for extra validators
 # @TaskTemplate(serializer=CsvSerializer, extra_validators=(first_dataset_keys_in_all_datasets,))
-@TaskTemplate
+@TaskTemplate()
 def apply_models_to_dataset(
         dataset: Dataset[GeneralTable],
         record_schema_defs: Dataset[RecordSchemaDef]) -> MultiModelDataset[GeneralTable]:

@@ -35,8 +35,12 @@ class IterateFuncJobConfigMixin:
                 data_param = params[0]
                 rest_params = params[1:]
 
-                dataset_cls = Dataset[Model[data_param.annotation]]
-                out_dataset_cls = Dataset[Model[func_signature.return_annotation]]
+                def create_dataset_cls(data_file_type: Type) -> Dataset[Model]:
+                    return Dataset[data_file_type] if issubclass(data_file_type, Model) \
+                        else Dataset[Model[data_file_type]]
+
+                dataset_cls = create_dataset_cls(data_param.annotation)
+                out_dataset_cls = create_dataset_cls(func_signature.return_annotation)
                 dataset_param = data_param.replace(name='dataset', annotation=dataset_cls)
                 new_signature = func_signature.replace(
                     parameters=[dataset_param] + rest_params,
@@ -52,6 +56,7 @@ class IterateFuncJobConfigMixin:
                 self._job_func = _omnipy_iterate_func
                 self._job_func.__signature__ = new_signature
                 self._func_signature = new_signature
+                self.__signature__ = new_signature
 
     @property
     def iterate_over_data_files(self) -> Optional[str]:

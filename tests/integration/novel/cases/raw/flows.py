@@ -37,11 +37,11 @@ def pos_square_root_func_flow(
 
 @DagFlowTemplate(
     extract_record_schema_def.refine(
-        param_key_map={'table': 'data'},
-        result_key='models',
-        iterate_over_dataset=True,
+        param_key_map={'dataset': 'tables'},
+        result_key='record_schema_defs',
+        iterate_over_data_files=True,
     ),
-    apply_models_to_dataset,
+    apply_models_to_dataset.refine(param_key_map={'dataset': 'tables'}),
     name='specialize_record_models',
 )
 def specialize_record_models_dag_flow(
