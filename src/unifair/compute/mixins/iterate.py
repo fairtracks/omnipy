@@ -1,5 +1,5 @@
 from inspect import Parameter, signature
-from typing import Optional
+from typing import Optional, Type
 
 from unifair.data.dataset import Dataset
 from unifair.data.model import Model
@@ -44,7 +44,7 @@ class IterateFuncJobConfigMixin:
                 )
 
                 def _omnipy_iterate_func(dataset: dataset_cls, *args: object, **kwargs: object):
-                    out_dataset = dataset_cls()
+                    out_dataset = out_dataset_cls()
                     for title, data_file in dataset.items():
                         out_dataset[title] = inner_func(data_file, *args, **kwargs)
                     return out_dataset

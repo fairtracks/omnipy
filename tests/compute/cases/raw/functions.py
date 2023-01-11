@@ -38,12 +38,12 @@ def dict_of_squared_func(number: int) -> Dict[int, int]:
     return {val: val**2 for val in range(number)}
 
 
-def all_data_files_plus_func(dataset: Dataset[Model[int]], number: int) -> Dataset[Model[int]]:
-    out_dataset = Dataset[Model[int]]()
+def all_data_files_plus_str_func(dataset: Dataset[Model[int]], number: int) -> Dataset[Model[str]]:
+    out_dataset = Dataset[Model[str]]()
     for title, data_file in dataset.items():
         out_dataset[title] = data_file + number
     return out_dataset
 
 
-def single_data_file_plus_func(data_number: int, number: int) -> int:
-    return data_number + number
+def single_data_file_plus_str_func(data_number: int, number: int) -> str:
+    return str(data_number + number)

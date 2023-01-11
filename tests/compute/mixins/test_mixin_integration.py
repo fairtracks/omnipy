@@ -4,19 +4,19 @@ from unifair.compute.task import TaskTemplate
 from unifair.data.dataset import Dataset
 from unifair.data.model import Model
 
-from ..cases.raw.functions import (all_data_files_plus_func,
+from ..cases.raw.functions import (all_data_files_plus_str_func,
                                    power_m1_func,
-                                   single_data_file_plus_func)
+                                   single_data_file_plus_str_func)
 
 
 def test_iterate_over_data_files_func_signature() -> None:
     all_plus_no_iter_template = TaskTemplate(
-        all_data_files_plus_func,
+        all_data_files_plus_str_func,
         iterate_over_data_files=False,
     )
 
     all_plus_iter_template = TaskTemplate(
-        single_data_file_plus_func,
+        single_data_file_plus_str_func,
         iterate_over_data_files=True,
     )
 
@@ -29,7 +29,7 @@ def test_iterate_over_data_files_func_signature() -> None:
                 'number':
                     Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
             }
-            assert task_obj.return_type is Dataset[Model[int]]
+            assert task_obj.return_type is Dataset[Model[str]]
 
 
 def test_refine_task_template_with_other_properties_task() -> None:
