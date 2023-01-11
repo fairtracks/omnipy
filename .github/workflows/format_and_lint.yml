@@ -22,15 +22,15 @@ jobs:
           $HOME/.local/bin/poetry install
       - name: Check input line sorting with isort
         run: |
-          source $(poetry env info --path)/bin/activate
+          source $($HOME/.local/bin/poetry env info --path)/bin/activate
           isort -c .
 
       - name: Check standarized formatting with yapf
         run: |
-          source $(poetry env info --path)/bin/activate
+          source $($HOME/.local/bin/poetry env info --path)/bin/activate
           yapf -r --diff .
 
       - name: Lint with flake8
         run: |
-          source $(poetry env info --path)/bin/activate
+          source $($HOME/.local/bin/poetry env info --path)/bin/activate
           flake8 . --count --show-source --statistics
