@@ -185,7 +185,7 @@ class CommandMockJobBase(
 
 
 @callable_decorator_cls
-class CommandMockJobTemplate(CallableDecoratingJobTemplateMixin['CommandMockJobTemplate'],
+class CommandMockJobTemplate(CallableDecoratingJobTemplateMixin,
                              CommandMockJobBase,
                              JobTemplate['CommandMockJob']):
     @classmethod
