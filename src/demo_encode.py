@@ -1,11 +1,11 @@
-from unifair import runtime
-from unifair.compute.flow import FuncFlowTemplate
-from unifair.modules.fairtracks.tasks import import_dataset_from_encode
-from unifair.modules.general.tasks import cast_dataset
-from unifair.modules.json.models import JsonDictOfAnyModel
-from unifair.modules.json.util import serialize_to_tarpacked_json_files
-from unifair.modules.pandas.util import serialize_to_tarpacked_csv_files
-from unifair.modules.tables.tasks import flatten_nested_json_to_list_of_dicts, remove_columns
+from omnipy import runtime
+from omnipy.compute.flow import FuncFlowTemplate
+from omnipy.modules.fairtracks.tasks import import_dataset_from_encode
+from omnipy.modules.general.tasks import cast_dataset
+from omnipy.modules.json.models import JsonDictOfAnyModel
+from omnipy.modules.json.util import serialize_to_tarpacked_json_files
+from omnipy.modules.pandas.util import serialize_to_tarpacked_csv_files
+from omnipy.modules.tables.tasks import flatten_nested_json_to_list_of_dicts, remove_columns
 
 runtime.config.engine = 'local'
 runtime.config.prefect.use_cached_results = False

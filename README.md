@@ -1,6 +1,6 @@
 # omnipy
 
-omnipy is the new name of the Python package formerly known as uniFAIR. We are in the process of changing the name completely, but for now the documentation and code still refers to the package as "uniFAIR".
+omnipy is the new name of the Python package formerly known as uniFAIR.
 
 We are very grateful to Dr. Jamin Chen, who gracefully transferred ownership of the (mostly unused) "omnipy" name in PyPI to us!
 
@@ -11,12 +11,12 @@ for a more detailed and better formatted version of the following description!)
 
 ## Generic functionality
 
-uniFAIR is designed primarily to simplify development and deployment of (meta)data transformation 
+omnipy is designed primarily to simplify development and deployment of (meta)data transformation 
 processes in the context of FAIRification and data brokering efforts. However, the functionality is 
 very generic and can also be used to support research data (and metadata) transformations in a range 
 of fields and contexts beyond life science, including day-to-day research scenarios:
 
-![Conceptual overview of uniFAIR](https://fairtracks.net/_nuxt/img/b5d001e.png)
+![Conceptual overview of omnipy](https://fairtracks.net/_nuxt/img/b5d001e.png)
 
 **Data wrangling in day-to-day research:** Researchers in life science and other data-centric fields
 often need to extract, manipulate and integrate data and/or metadata from different sources, such as
@@ -33,15 +33,15 @@ General software for data wrangling and analysis, such as [Pandas](https://panda
 [R](https://www.r-project.org/) or [Frictionless](https://frictionlessdata.io/), are useful, but
 researchers still regularly end up with hard-to-reuse scripts, often with manual steps.
 
-**Step-wise data model transformations:** With the uniFAIR
+**Step-wise data model transformations:** With the omnipy
 Python package, researchers can import (meta)data in almost any shape or form: _nested JSON; tabular
 (relational) data; binary streams; or other data structures_. Through a step-by-step process, data
 is continuously parsed and reshaped according to a series of data model transformations.
 
-<ui-quote-text quote='uniFAIR tasks (single steps) and flows (workflows) are defined as transformations from specific input data models to specific output data models.'>
+<ui-quote-text quote='omnipy tasks (single steps) and flows (workflows) are defined as transformations from specific input data models to specific output data models.'>
 </ui-quote-text>
 
-**"Parse, don't validate":** uniFAIR follows the principles of "Type-driven design" (read 
+**"Parse, don't validate":** omnipy follows the principles of "Type-driven design" (read 
 _Technical note #2: "Parse, don't validate"_ on the 
 [FAIRtracks.net website](https://fairtracks.net/fair/#fair-07-transformation) for more info). It 
 makes use of cutting-edge [Python type hints](https://peps.python.org/pep-0484/) and the popular
@@ -50,13 +50,13 @@ models that can range from very general (e.g. _"any kind of JSON data", "any kin
 etc.) to very specific (e.g. _"follow the FAIRtracks JSON Schema for track files with the extra
 restriction of only allowing BigBED files"_).
 
-**Data types as contracts:** uniFAIR _tasks_ (single steps) or _flows_ (workflows) are defined as
+**Data types as contracts:** omnipy _tasks_ (single steps) or _flows_ (workflows) are defined as
 transformations from specific _input_ data models to specific _output_ data models.
 [pydantic](https://pydantic-docs.helpmanual.io/)-based parsing guarantees that the input and output
 data always follows the data models (i.e. data types). Thus, the data models defines "contracts"
 that simplifies reuse of tasks and flows in a _mix-and-match_ fashion.
 
-**Catalog of common processing steps:** uniFAIR is built from the ground up to be modular. We aim 
+**Catalog of common processing steps:** omnipy is built from the ground up to be modular. We aim 
 to provide a catalog of commonly useful functionality ranging from:
 
 - data import from REST API endpoints, common flat file formats, database dumps, etc.
@@ -74,13 +74,13 @@ to transform metadata to follow the [FAIRtracks standard](/standards/#standards-
 
 ![Catalog of commonly useful processing steps, data modules and tool integrations](https://fairtracks.net/_nuxt/img/72b3822.png)
 
-**Refine and apply templates:** A uniFAIR module typically consists of a set of generic _task_ and
+**Refine and apply templates:** A omnipy module typically consists of a set of generic _task_ and
 _flow templates_ with related data models, (de)serializers, and utility functions. The user can then
 pick task and flow templates from this extensible, modular catalog, further refine them in the
 context of a custom, use case-specific flow, and apply them to the desired compute engine to carry
 out the transformations needed to wrangle data into the required shape.
 
-**Rerun only when needed:** When piecing together a custom flow in uniFAIR, the user has persistent
+**Rerun only when needed:** When piecing together a custom flow in omnipy, the user has persistent
 access to the state of the data at every step of the process. Persistent intermediate data allows
 for caching of tasks based on the input data and parameters. Hence, if the input data and parameters
 of a task does not change between runs, the task is not rerun. This is particularly useful for
@@ -96,12 +96,12 @@ operation can be seamlessly scaled up to the full dataset and sent off in
 resources, using e.g. [Kubernetes](https://kubernetes.io/). Such offloaded flows
 can be easily monitored using a web GUI.
 
-![Working with uniFAIR directly from an Integrated Development Environment (IDE)](https://fairtracks.net/_nuxt/img/52fc9cf.png)
+![Working with omnipy directly from an Integrated Development Environment (IDE)](https://fairtracks.net/_nuxt/img/52fc9cf.png)
 
 **Industry-standard ETL backbone:** Offloading of flows to external compute resources is provided by
-the integration of uniFAIR with a workflow engine based on the [Prefect](https://www.prefect.io/)
+the integration of omnipy with a workflow engine based on the [Prefect](https://www.prefect.io/)
 Python package. Prefect is an industry-leading platform for dataflow automation and orchestration
-that brings a [series of powerful features](https://www.prefect.io/opensource/) to uniFAIR:
+that brings a [series of powerful features](https://www.prefect.io/opensource/) to omnipy:
 
 - Predefined integrations with a range of compute infrastructure solutions
 - Predefined integration with various services to support extraction, transformation, and loading
@@ -115,9 +115,9 @@ that brings a [series of powerful features](https://www.prefect.io/opensource/) 
 
 ![Overview of the compute infrastructure integrations that comes built-in with Prefect, here on the storage side.](https://fairtracks.net/_nuxt/img/30def05.png)
 
-**Pluggable workflow engines:** It is also possible to integrate uniFAIR with other workflow
+**Pluggable workflow engines:** It is also possible to integrate omnipy with other workflow
 backends by implementing new workflow engine plugins. This is relatively easy to do, as the core
-architecture of uniFAIR allows the user to easily switch the workflow engine at runtime. uniFAIR
+architecture of omnipy allows the user to easily switch the workflow engine at runtime. omnipy
 supports both traditional DAG-based and the more _avant garde_ code-based definition of flows. Two
 workflow engines are currently supported: _local_ and _prefect_.
 
@@ -127,7 +127,7 @@ As initial use cases, we will consider the following two scenarios:
 * Transforming TCGA metadata into FAIRtracks format
 
 ## Nomenclature:
-* uniFAIR is designed to work with content which could be classified both as data and metadata in their original context. For simplicity, we will refer to all such content as "data".
+* omnipy is designed to work with content which could be classified both as data and metadata in their original context. For simplicity, we will refer to all such content as "data".
 
 ## Overview of the proposed FAIRification process:
 

@@ -1,10 +1,9 @@
 from typing import Annotated, Tuple, Type
 
+from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
+from omnipy.compute.job import Job, JobBase, JobTemplate
+from omnipy.compute.task import TaskTemplate
 import pytest
-
-from unifair.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
-from unifair.compute.job import Job, JobBase, JobTemplate
-from unifair.compute.task import TaskTemplate
 
 from ..cases.raw.functions import power_m1_func
 from ..helpers.mocks import (MockJobBaseSubclass,

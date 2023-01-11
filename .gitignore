@@ -131,6 +131,6 @@ dmypy.json
 # PyCharm docs
 .idea
 
-# uniFAIR specific
+# omnipy specific
 #data
 input

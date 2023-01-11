@@ -1,7 +1,8 @@
+from omnipy.modules.pandas.models import PandasDataset
+from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
+
 from tests.data.helpers.functions import assert_tar_file_contents
 from tests.modules.pandas.util import assert_pandas_dataset_equals
-from unifair.modules.pandas.models import PandasDataset
-from unifair.modules.pandas.serializers import PandasDatasetToTarFileSerializer
 
 
 def test_pandas_dataset_serializer_to_tar_file():

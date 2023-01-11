@@ -1,21 +1,21 @@
 from types import MappingProxyType
 from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, Union
 
-from unifair.compute.job import (CallableDecoratingJobTemplateMixin,
-                                 Job,
-                                 JobBase,
-                                 JobBaseAndMixinAcceptorMeta,
-                                 JobTemplate)
-from unifair.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
-from unifair.engine.protocols import (IsDagFlow,
-                                      IsEngineConfig,
-                                      IsFuncFlow,
-                                      IsJob,
-                                      IsLinearFlow,
-                                      IsRunStateRegistry,
-                                      IsTask)
-from unifair.util.callable_decorator_cls import callable_decorator_cls
-from unifair.util.mixin import DynamicMixinAcceptor
+from omnipy.compute.job import (CallableDecoratingJobTemplateMixin,
+                                Job,
+                                JobBase,
+                                JobBaseAndMixinAcceptorMeta,
+                                JobTemplate)
+from omnipy.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
+from omnipy.engine.protocols import (IsDagFlow,
+                                     IsEngineConfig,
+                                     IsFuncFlow,
+                                     IsJob,
+                                     IsLinearFlow,
+                                     IsRunStateRegistry,
+                                     IsTask)
+from omnipy.util.callable_decorator_cls import callable_decorator_cls
+from omnipy.util.mixin import DynamicMixinAcceptor
 
 
 class MockJobBaseSubclass(

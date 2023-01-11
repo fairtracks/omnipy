@@ -4,15 +4,15 @@ from datetime import datetime
 import logging
 from typing import Optional, Protocol, Tuple, Type
 
-from unifair.config.publisher import ConfigPublisher
-from unifair.engine.constants import RunState
-from unifair.engine.protocols import (IsEngineConfig,
-                                      IsLocalRunnerConfig,
-                                      IsPrefectEngineConfig,
-                                      IsRunStateRegistry,
-                                      IsRunStateRegistryConfig,
-                                      IsTask,
-                                      IsTaskRunnerEngine)
+from omnipy.config.publisher import ConfigPublisher
+from omnipy.engine.constants import RunState
+from omnipy.engine.protocols import (IsEngineConfig,
+                                     IsLocalRunnerConfig,
+                                     IsPrefectEngineConfig,
+                                     IsRunStateRegistry,
+                                     IsRunStateRegistryConfig,
+                                     IsTask,
+                                     IsTaskRunnerEngine)
 
 
 class MockFoo:

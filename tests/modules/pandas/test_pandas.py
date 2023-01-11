@@ -1,11 +1,11 @@
 from deepdiff import DeepDiff
 import numpy as np
+from omnipy.modules.pandas.models import PandasDataset
 import pandas as pd
 from pydantic import ValidationError
 import pytest
 
 from tests.modules.pandas.util import assert_pandas_frame_dtypes
-from unifair.modules.pandas.models import PandasDataset
 
 
 def test_pandas_dataset_list_of_objects_same_keys():

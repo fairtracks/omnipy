@@ -5,12 +5,11 @@ import logging
 from time import sleep
 from typing import Annotated
 
+from omnipy.engine.constants import RunState
+from omnipy.engine.protocols import IsDagFlow, IsTask
+from omnipy.engine.registry import RunStateRegistry
+from omnipy.util.helpers import get_datetime_format
 import pytest
-
-from unifair.engine.constants import RunState
-from unifair.engine.protocols import IsDagFlow, IsTask
-from unifair.engine.registry import RunStateRegistry
-from unifair.util.helpers import get_datetime_format
 
 from .helpers.functions import read_log_line_from_stream, read_log_lines_from_stream
 
@@ -280,22 +279,22 @@ def test_state_change_logging_handler_formatting_variants(
     registry = RunStateRegistry()
 
     # Handler added after set_logger
-    registry.set_logger(simple_logger, set_unifair_formatter_on_handlers=True)
+    registry.set_logger(simple_logger, set_omnipy_formatter_on_handlers=True)
     simple_logger.addHandler(logging.StreamHandler(str_stream))
     registry.set_job_state(task_a, RunState.INITIALIZED)
 
     log_line = read_log_line_from_stream(str_stream)
     assert 'INFO (test)' not in log_line
 
-    # Handler added before set_logger, set_unifair_formatter_on_handlers=False
-    registry.set_logger(simple_logger, set_unifair_formatter_on_handlers=False)
+    # Handler added before set_logger, set_omnipy_formatter_on_handlers=False
+    registry.set_logger(simple_logger, set_omnipy_formatter_on_handlers=False)
     registry.set_job_state(task_a, RunState.RUNNING)
 
     log_line = read_log_line_from_stream(str_stream)
     assert 'INFO (test)' not in log_line
 
-    # Handler added before set_logger, set_unifair_formatter_on_handlers=True
-    registry.set_logger(simple_logger, set_unifair_formatter_on_handlers=True)
+    # Handler added before set_logger, set_omnipy_formatter_on_handlers=True
+    registry.set_logger(simple_logger, set_omnipy_formatter_on_handlers=True)
     registry.set_job_state(task_a, RunState.FINISHED)
 
     log_line = read_log_line_from_stream(str_stream)

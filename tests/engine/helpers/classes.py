@@ -2,17 +2,17 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Awaitable, Callable, Generic, Optional, Type, TypeVar, Union
 
-from unifair.engine.constants import RunState
-from unifair.engine.protocols import (IsDagFlow,
-                                      IsDagFlowRunnerEngine,
-                                      IsEngineConfig,
-                                      IsFuncFlow,
-                                      IsFuncFlowRunnerEngine,
-                                      IsJob,
-                                      IsLinearFlow,
-                                      IsRunStateRegistry,
-                                      IsTask,
-                                      IsTaskRunnerEngine)
+from omnipy.engine.constants import RunState
+from omnipy.engine.protocols import (IsDagFlow,
+                                     IsDagFlowRunnerEngine,
+                                     IsEngineConfig,
+                                     IsFuncFlow,
+                                     IsFuncFlowRunnerEngine,
+                                     IsJob,
+                                     IsLinearFlow,
+                                     IsRunStateRegistry,
+                                     IsTask,
+                                     IsTaskRunnerEngine)
 
 
 class JobType(Enum):

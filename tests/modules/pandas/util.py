@@ -1,6 +1,5 @@
+from omnipy.modules.pandas.models import PandasDataset
 import pandas as pd
-
-from unifair.modules.pandas.models import PandasDataset
 
 
 def assert_pandas_frame_dtypes(frame: pd.DataFrame, expected_dtypes: tuple) -> None:

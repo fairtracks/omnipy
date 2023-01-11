@@ -1,6 +1,5 @@
+from omnipy.compute.task import TaskTemplate
 import pytest
-
-from unifair.compute.task import TaskTemplate
 
 
 @pytest.fixture

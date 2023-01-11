@@ -1,4 +1,4 @@
-from unifair.data.model import Model
+from omnipy.data.model import Model
 
 
 class StringToLength(Model[str]):

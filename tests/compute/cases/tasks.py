@@ -4,10 +4,9 @@ import json
 from types import NoneType
 from typing import Any, Callable, Dict, Generic, Tuple, TypeVar, Union
 
+from omnipy.compute.task import Task, TaskTemplate
 import pytest
 import pytest_cases as pc
-
-from unifair.compute.task import Task, TaskTemplate
 
 from .raw.functions import (action_func_no_params,
                             action_func_with_params,

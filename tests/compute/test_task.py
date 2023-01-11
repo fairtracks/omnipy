@@ -1,10 +1,9 @@
 from inspect import Parameter
 from typing import Annotated
 
+from omnipy.compute.task import Task, TaskTemplate
 import pytest
 import pytest_cases as pc
-
-from unifair.compute.task import Task, TaskTemplate
 
 from .cases.raw.functions import format_to_string_func, power_m1_func
 from .cases.tasks import TaskCase

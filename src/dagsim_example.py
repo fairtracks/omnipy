@@ -1,17 +1,17 @@
-from unifair import runtime
-from unifair.compute.task import TaskTemplate
-from unifair.data.dataset import Dataset
-from unifair.data.model import Model
-from unifair.modules.general.tasks import import_directory
-from unifair.modules.json.models import JsonDataset, JsonDict, JsonType
-from unifair.modules.json.util import serialize_to_tarpacked_json_files
-from unifair.modules.raw.tasks import modify_datafile_contents
-from unifair.modules.raw.util import serialize_to_tarpacked_raw_files
+from omnipy import runtime
+from omnipy.compute.task import TaskTemplate
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
+from omnipy.modules.general.tasks import import_directory
+from omnipy.modules.json.models import JsonDataset, JsonDict, JsonType
+from omnipy.modules.json.util import serialize_to_tarpacked_json_files
+from omnipy.modules.raw.tasks import modify_datafile_contents
+from omnipy.modules.raw.util import serialize_to_tarpacked_raw_files
 
 runtime.config.engine = 'local'
 runtime.config.prefect.use_cached_results = False
 
-# from unifair.modules.r_stat import r
+# from omnipy.modules.r_stat import r
 
 # Regex patterns for parsing
 #     variable_pattern = re.compile(r"  type discrete \[ \d+ \] \{ (.+) \};\s*")

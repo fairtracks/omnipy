@@ -1,10 +1,9 @@
 from types import NoneType
 from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
+from omnipy.data.model import Model
 from pydantic import PositiveInt, StrictInt, ValidationError
 import pytest
-
-from unifair.data.model import Model
 
 from .helpers.models import StringToLength
 
@@ -207,10 +206,10 @@ def test_basic_union():
     #
     #   TypeA | TypeB
     #
-    # The requirements for unifair is currently Python 3.8, so the shorthand should
+    # The requirements for omnipy is currently Python 3.8, so the shorthand should
     # currently be avoided.
     #
-    # TODO: Consider whether uniFAIR should require Python 3.9 or 3.10 as type-related
+    # TODO: Consider whether omnipy should require Python 3.9 or 3.10 as type-related
     #       notation and functionality is undergoing large changes. Another example is
     #       the move towards lowercase int, list, dict instead of Int, List, Dict in
     #       Python 3.9. Another possibility is to use
@@ -502,7 +501,7 @@ in runtime (see: https://github.com/python/typing/issues/629)
 In this case, the description of the generic class MyList
 is not available from MyListOfStrings to_json_schema method.
 Any workarounds should best be implemented in pydantic,
-possibly in uniFAIR if this becomes a real issue.
+possibly in omnipy if this becomes a real issue.
 """)
 def test_json_schema_generic_models_known_issue():
     ListT = TypeVar('ListT', bound=List)  # noqa

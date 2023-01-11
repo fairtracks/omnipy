@@ -1,6 +1,7 @@
+from omnipy.modules.json.models import JsonDataset
+from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
+
 from tests.data.helpers.functions import assert_tar_file_contents
-from unifair.modules.json.models import JsonDataset
-from unifair.modules.json.serializers import JsonDatasetToTarFileSerializer
 
 
 def test_json_dataset_serializer_to_tar_file():

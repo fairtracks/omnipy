@@ -1,8 +1,8 @@
 from inspect import Parameter
 
-from unifair.compute.task import TaskTemplate
-from unifair.data.dataset import Dataset
-from unifair.data.model import Model
+from omnipy.compute.task import TaskTemplate
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 
 from ..cases.raw.functions import (all_data_files_plus_str_func,
                                    power_m1_func,

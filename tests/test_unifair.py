@@ -1,4 +1,4 @@
-from unifair import __version__
+from omnipy import __version__
 
 
 def test_version():

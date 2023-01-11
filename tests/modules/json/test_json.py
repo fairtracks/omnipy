@@ -2,12 +2,11 @@ from json import JSONDecodeError
 from types import NoneType
 from typing import List, Union
 
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
+from omnipy.modules.json.models import JsonDataset, JsonModel, JsonScalarType, JsonType
 from pydantic import ValidationError
 import pytest
-
-from unifair.data.dataset import Dataset
-from unifair.data.model import Model
-from unifair.modules.json.models import JsonDataset, JsonModel, JsonScalarType, JsonType
 
 
 def test_json_dataset_array_of_objects_same_keys():

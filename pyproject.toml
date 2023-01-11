@@ -4,7 +4,7 @@ version = "0.2.0"
 description = ""
 authors = ["Sveinung Gundersen <sveinugu@gmail.com>", "Federico Bianchini <fredebi@uio.no>", "Ahmed Ghanem <ahmedg@uio.no>", "Joshua Baskaran <joshuaba@uio.no>"]
 readme = "README.md"
-packages = [{include = "unifair", from = "src"}]
+packages = [{include = "omnipy", from = "src"}]
 
 
 [tool.poetry.dependencies]
@@ -59,7 +59,7 @@ split_before_arithmetic_operator = true
 profile = "google"
 force_single_line = false
 multi_line_output = 1
-src_paths = ["src/unifair", "tests"]
+src_paths = ["src/omnipy", "tests"]
 line_length = 100
 
 [flows]

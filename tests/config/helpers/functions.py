@@ -1,6 +1,6 @@
 import logging
 
-import unifair.config
+import omnipy.config
 
 
 def assert_logger(logger: logging.Logger) -> None:
@@ -8,4 +8,4 @@ def assert_logger(logger: logging.Logger) -> None:
     assert logger.level == logging.INFO
     assert len(logger.handlers) == 1
     assert isinstance(logger.handlers[0], logging.StreamHandler)
-    assert logger.handlers[0].stream is unifair.config.runtime.stdout
+    assert logger.handlers[0].stream is omnipy.config.runtime.stdout

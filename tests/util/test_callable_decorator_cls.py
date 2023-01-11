@@ -1,9 +1,8 @@
 import inspect
 from typing import Any, Callable, Dict, Union
 
+from omnipy.util.callable_decorator_cls import callable_decorator_cls
 import pytest
-
-from unifair.util.callable_decorator_cls import callable_decorator_cls
 
 # Note:
 #

@@ -1,7 +1,7 @@
 import sys
 
-from unifair.data.dataset import Dataset
-from unifair.data.model import Model
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 
 from .helpers.functions import assert_tar_file_contents
 from .helpers.mocks import MockNumberSerializer, MockNumberToTarFileSerializer, NumberDataset

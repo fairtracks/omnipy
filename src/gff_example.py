@@ -1,22 +1,22 @@
 import os
 from typing import List, Optional, Tuple
 
-from unifair import runtime
-from unifair.compute.flow import FuncFlowTemplate, LinearFlowTemplate
-from unifair.compute.task import TaskTemplate
-from unifair.data.dataset import Dataset
-from unifair.data.model import Model
-from unifair.modules.general.tasks import import_directory, split_dataset
-from unifair.modules.json.util import serialize_to_tarpacked_json_files
-from unifair.modules.pandas.models import PandasDataset
-from unifair.modules.pandas.tasks import (concat_dataframes_across_datasets,
-                                          extract_columns_as_files,
-                                          from_csv,
-                                          to_csv)
-from unifair.modules.pandas.util import serialize_to_tarpacked_csv_files
-from unifair.modules.raw.tasks import modify_all_lines, modify_datafile_contents, modify_each_line
-from unifair.modules.raw.util import serialize_to_tarpacked_raw_files
-from unifair.modules.tables.models import JsonTableOfStrings
+from omnipy import runtime
+from omnipy.compute.flow import FuncFlowTemplate, LinearFlowTemplate
+from omnipy.compute.task import TaskTemplate
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
+from omnipy.modules.general.tasks import import_directory, split_dataset
+from omnipy.modules.json.util import serialize_to_tarpacked_json_files
+from omnipy.modules.pandas.models import PandasDataset
+from omnipy.modules.pandas.tasks import (concat_dataframes_across_datasets,
+                                         extract_columns_as_files,
+                                         from_csv,
+                                         to_csv)
+from omnipy.modules.pandas.util import serialize_to_tarpacked_csv_files
+from omnipy.modules.raw.tasks import modify_all_lines, modify_datafile_contents, modify_each_line
+from omnipy.modules.raw.util import serialize_to_tarpacked_raw_files
+from omnipy.modules.tables.models import JsonTableOfStrings
 
 runtime.config.engine = 'local'
 runtime.config.prefect.use_cached_results = False

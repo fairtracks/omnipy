@@ -1,8 +1,8 @@
 import logging
 
-from unifair.config.job import GlobalResumePreviousRunsOptions, GlobalSerializeOutputsOptions
-from unifair.config.runtime import Runtime, RuntimeConfig, RuntimeObjects
-from unifair.engine.constants import EngineChoice
+from omnipy.config.job import GlobalResumePreviousRunsOptions, GlobalSerializeOutputsOptions
+from omnipy.config.runtime import Runtime, RuntimeConfig, RuntimeObjects
+from omnipy.engine.constants import EngineChoice
 
 from .helpers.functions import assert_logger
 from .helpers.mocks import (MockJobConfig,
@@ -22,9 +22,9 @@ from .helpers.mocks import (MockJobConfig,
 
 
 def assert_runtime_config_default(config: RuntimeConfig):
-    from unifair.config.engine import LocalRunnerConfig, PrefectEngineConfig
-    from unifair.config.job import JobConfig
-    from unifair.config.registry import RunStateRegistryConfig
+    from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
+    from omnipy.config.job import JobConfig
+    from omnipy.config.registry import RunStateRegistryConfig
 
     assert isinstance(config.job, JobConfig)
     assert isinstance(config.job.serialize_outputs, GlobalSerializeOutputsOptions)
@@ -46,10 +46,10 @@ def assert_runtime_config_default(config: RuntimeConfig):
 
 
 def assert_runtime_objects_default(objects: RuntimeObjects):
-    from unifair.compute.job import JobBase, JobCreator
-    from unifair.engine.local import LocalRunner
-    from unifair.engine.prefect import PrefectEngine
-    from unifair.engine.registry import RunStateRegistry
+    from omnipy.compute.job import JobBase, JobCreator
+    from omnipy.engine.local import LocalRunner
+    from omnipy.engine.prefect import PrefectEngine
+    from omnipy.engine.registry import RunStateRegistry
 
     assert isinstance(objects.logger, logging.Logger)
     assert isinstance(objects.registry, RunStateRegistry)

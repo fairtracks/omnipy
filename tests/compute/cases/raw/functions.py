@@ -1,7 +1,7 @@
 from typing import Dict
 
-from unifair.data.dataset import Dataset
-from unifair.data.model import Model
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 
 
 def action_func_no_params() -> None:

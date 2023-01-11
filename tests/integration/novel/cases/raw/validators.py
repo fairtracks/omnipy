@@ -1,7 +1,7 @@
 from typing import Any
 
-from unifair.data.dataset import Dataset
-from unifair.data.model import Model
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 
 
 def first_dataset_keys_in_all_datasets(*datasets: Dataset[Model[Any]]):

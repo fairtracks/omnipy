@@ -1,5 +1,5 @@
-from unifair.compute.flow import DagFlowTemplate, FuncFlowTemplate
-from unifair.data.dataset import Dataset, MultiModelDataset
+from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate
+from omnipy.data.dataset import Dataset, MultiModelDataset
 
 from ...helpers.models import GeneralTable, RecordSchemaDef
 from .tasks import (apply_models_to_dataset,

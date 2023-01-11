@@ -1,7 +1,7 @@
+from omnipy.compute.job import JobCreator
 import pytest
 
 from compute.helpers.mocks import MockLocalRunner
-from unifair.compute.job import JobCreator
 
 
 def test_job_creator_init():

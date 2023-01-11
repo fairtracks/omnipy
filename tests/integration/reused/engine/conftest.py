@@ -2,16 +2,16 @@ from typing import Callable, Optional, Tuple, Type
 
 import pytest_cases as pc
 
-from unifair.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
-from unifair.compute.task import TaskTemplate
-from unifair.engine.protocols import (IsDagFlowTemplate,
-                                      IsEngine,
-                                      IsFuncFlowTemplate,
-                                      IsJobTemplate,
-                                      IsLinearFlowTemplate,
-                                      IsRunStateRegistry,
-                                      IsTaskTemplate)
-from unifair.engine.registry import RunStateRegistry
+from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
+from omnipy.compute.task import TaskTemplate
+from omnipy.engine.protocols import (IsDagFlowTemplate,
+                                     IsEngine,
+                                     IsFuncFlowTemplate,
+                                     IsJobTemplate,
+                                     IsLinearFlowTemplate,
+                                     IsRunStateRegistry,
+                                     IsTaskTemplate)
+from omnipy.engine.registry import RunStateRegistry
 
 from ....engine.conftest import all_engines
 from ....engine.helpers.classes import JobCase, JobType

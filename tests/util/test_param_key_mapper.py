@@ -1,4 +1,4 @@
-from unifair.util.param_key_mapper import ParamKeyMapper
+from omnipy.util.param_key_mapper import ParamKeyMapper
 
 
 def test_map_matching_keys():

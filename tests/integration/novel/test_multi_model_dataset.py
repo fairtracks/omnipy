@@ -2,12 +2,11 @@ import inspect
 from inspect import Parameter
 from typing import Annotated
 
+from omnipy.data.dataset import Dataset, MultiModelDataset
+from omnipy.engine.constants import RunState
 from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
-
-from unifair.data.dataset import Dataset, MultiModelDataset
-from unifair.engine.constants import RunState
 
 from ...engine.helpers.functions import assert_job_state
 from .cases.flows import FlowCase

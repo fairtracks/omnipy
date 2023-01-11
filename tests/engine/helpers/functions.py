@@ -7,25 +7,25 @@ import os
 from time import sleep
 from typing import Awaitable, Callable, cast, List, Optional, Type
 
-from unifair.compute.job import JobBase
-from unifair.engine.base import Engine
-from unifair.engine.constants import RunState
-from unifair.engine.protocols import (IsDagFlow,
-                                      IsDagFlowRunnerEngine,
-                                      IsDagFlowTemplate,
-                                      IsEngine,
-                                      IsFlowTemplate,
-                                      IsFuncFlowRunnerEngine,
-                                      IsFuncFlowTemplate,
-                                      IsJob,
-                                      IsLinearFlow,
-                                      IsLinearFlowRunnerEngine,
-                                      IsLinearFlowTemplate,
-                                      IsRunStateRegistry,
-                                      IsTask,
-                                      IsTaskRunnerEngine,
-                                      IsTaskTemplate)
-from unifair.util.helpers import resolve
+from omnipy.compute.job import JobBase
+from omnipy.engine.base import Engine
+from omnipy.engine.constants import RunState
+from omnipy.engine.protocols import (IsDagFlow,
+                                     IsDagFlowRunnerEngine,
+                                     IsDagFlowTemplate,
+                                     IsEngine,
+                                     IsFlowTemplate,
+                                     IsFuncFlowRunnerEngine,
+                                     IsFuncFlowTemplate,
+                                     IsJob,
+                                     IsLinearFlow,
+                                     IsLinearFlowRunnerEngine,
+                                     IsLinearFlowTemplate,
+                                     IsRunStateRegistry,
+                                     IsTask,
+                                     IsTaskRunnerEngine,
+                                     IsTaskTemplate)
+from omnipy.util.helpers import resolve
 
 from .classes import JobCase, JobType
 

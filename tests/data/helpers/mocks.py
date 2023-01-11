@@ -1,11 +1,11 @@
 import sys
 from typing import Any, Dict, IO, Union
 
-from unifair.data.dataset import Dataset
-from unifair.data.model import Model
-from unifair.data.serializer import (create_dataset_from_tarfile,
-                                     create_tarfile_from_dataset,
-                                     Serializer)
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
+from omnipy.data.serializer import (create_dataset_from_tarfile,
+                                    create_tarfile_from_dataset,
+                                    Serializer)
 
 
 class NumberDataset(Dataset[Model[int]]):

@@ -10,23 +10,23 @@ from inflection import underscore
 from prefect.utilities.names import generate_slug
 from slugify import slugify
 
-from unifair.engine.base import Engine
-from unifair.engine.constants import RunState
-from unifair.engine.job_runner import (DagFlowRunnerEngine,
-                                       FuncFlowRunnerEngine,
-                                       LinearFlowRunnerEngine,
-                                       TaskRunnerEngine)
-from unifair.engine.protocols import (IsDagFlow,
-                                      IsEngine,
-                                      IsEngineConfig,
-                                      IsFlow,
-                                      IsFuncFlow,
-                                      IsJob,
-                                      IsLinearFlow,
-                                      IsRunStateRegistry,
-                                      IsRunStateRegistryConfig,
-                                      IsTask)
-from unifair.util.callable_decorator_cls import callable_decorator_cls
+from omnipy.engine.base import Engine
+from omnipy.engine.constants import RunState
+from omnipy.engine.job_runner import (DagFlowRunnerEngine,
+                                      FuncFlowRunnerEngine,
+                                      LinearFlowRunnerEngine,
+                                      TaskRunnerEngine)
+from omnipy.engine.protocols import (IsDagFlow,
+                                     IsEngine,
+                                     IsEngineConfig,
+                                     IsFlow,
+                                     IsFuncFlow,
+                                     IsJob,
+                                     IsLinearFlow,
+                                     IsRunStateRegistry,
+                                     IsRunStateRegistryConfig,
+                                     IsTask)
+from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
 
 class MockJobCreator:

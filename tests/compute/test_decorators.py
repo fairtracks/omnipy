@@ -4,13 +4,13 @@ import pytest
 import pytest_cases as pc
 
 from compute.helpers.mocks import MockLocalRunner
-from unifair.compute.flow import (DagFlow,
-                                  DagFlowTemplate,
-                                  FuncFlow,
-                                  FuncFlowTemplate,
-                                  LinearFlow,
-                                  LinearFlowTemplate)
-from unifair.compute.task import Task, TaskTemplate
+from omnipy.compute.flow import (DagFlow,
+                                 DagFlowTemplate,
+                                 FuncFlow,
+                                 FuncFlowTemplate,
+                                 LinearFlow,
+                                 LinearFlowTemplate)
+from omnipy.compute.task import Task, TaskTemplate
 
 
 @pc.parametrize_with_cases(

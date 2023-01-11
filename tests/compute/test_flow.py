@@ -3,13 +3,13 @@ from typing import Annotated, Dict
 import pytest
 import pytest_cases as pc
 
-from unifair.compute.flow import (DagFlow,
-                                  DagFlowTemplate,
-                                  Flow,
-                                  FlowTemplate,
-                                  FuncFlow,
-                                  FuncFlowTemplate)
-from unifair.compute.task import TaskTemplate
+from omnipy.compute.flow import (DagFlow,
+                                 DagFlowTemplate,
+                                 Flow,
+                                 FlowTemplate,
+                                 FuncFlow,
+                                 FuncFlowTemplate)
+from omnipy.compute.task import TaskTemplate
 
 from .cases.flows import FlowCase
 from .cases.raw.functions import format_to_string_func

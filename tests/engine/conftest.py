@@ -5,14 +5,14 @@ from typing import Annotated, Callable, cast, Optional, Tuple, Type
 import pytest
 import pytest_cases as pc
 
-from unifair.engine.local import LocalRunner
-from unifair.engine.prefect import PrefectEngine
-from unifair.engine.protocols import (IsEngine,
-                                      IsFlowTemplate,
-                                      IsJobTemplate,
-                                      IsRunStateRegistry,
-                                      IsTaskRunnerEngine,
-                                      IsTaskTemplate)
+from omnipy.engine.local import LocalRunner
+from omnipy.engine.prefect import PrefectEngine
+from omnipy.engine.protocols import (IsEngine,
+                                     IsFlowTemplate,
+                                     IsJobTemplate,
+                                     IsRunStateRegistry,
+                                     IsTaskRunnerEngine,
+                                     IsTaskTemplate)
 
 from .helpers.classes import JobCase, JobRunnerStateChecker, JobType
 from .helpers.functions import add_logger_to_registry, update_job_case_with_job

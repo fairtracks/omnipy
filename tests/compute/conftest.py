@@ -1,6 +1,5 @@
+from omnipy.compute.job import JobBase, JobCreator
 import pytest
-
-from unifair.compute.job import JobBase, JobCreator
 
 from .helpers.mocks import MockLocalRunner
 
