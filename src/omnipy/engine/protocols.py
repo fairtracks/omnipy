@@ -45,6 +45,7 @@ class IsConfigPublisher(Protocol):
 
 
 class IsRuntimeConfig(IsConfigPublisher, Protocol):
+    job: IsJobConfig
     engine: EngineChoice
     local: IsLocalRunnerConfig
     prefect: IsPrefectEngineConfig
@@ -52,7 +53,8 @@ class IsRuntimeConfig(IsConfigPublisher, Protocol):
 
     def __init__(
             self,
-            engine: EngineChoice = EngineChoice.LOCAL,  # noqas
+            job: Optional[IsJobConfig] = None,  # noqa
+            engine: EngineChoice = EngineChoice.LOCAL,  # noqa
             local_config: Optional[IsLocalRunnerConfig] = None,  # noqa
             prefect_config: Optional[IsPrefectEngineConfig] = None,  # noqa
             registry_config: Optional[IsRunStateRegistryConfig] = None,  # noqa
