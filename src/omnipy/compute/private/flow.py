@@ -2,9 +2,9 @@ from abc import ABC
 from typing import Any, Callable, Generic, Mapping, Optional, Tuple, Union
 
 from omnipy.compute.job import JobTemplate
+from omnipy.compute.job_types import FlowBaseT, FlowT, FlowTemplateT, TaskTemplatesFlowTemplateT
 from omnipy.compute.private.job import FuncJob, FuncJobBase, FuncJobTemplate
-from omnipy.compute.types import FlowBaseT, FlowT, FlowTemplateT, TaskTemplatesFlowTemplateT
-from omnipy.engine.protocols import IsTaskTemplate
+from omnipy.compute.task import TaskTemplate
 from omnipy.util.helpers import remove_none_vals
 
 
@@ -24,7 +24,7 @@ class TaskTemplatesFlowBase(FlowBase):
     def __init__(
         self,
         job_func: Callable,
-        *task_templates: IsTaskTemplate,
+        *task_templates: TaskTemplate,
         name: Optional[str] = None,
         fixed_params: Optional[Mapping[str, object]] = None,
         param_key_map: Optional[Mapping[str, str]] = None,
@@ -43,19 +43,19 @@ class TaskTemplatesFlowBase(FlowBase):
                 **kwargs,
             ))
 
-        self._task_templates: Tuple[IsTaskTemplate, ...] = task_templates
+        self._task_templates: Tuple[TaskTemplate, ...] = task_templates
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return self._job_func, *self._task_templates
 
     @property
-    def task_templates(self) -> Tuple[IsTaskTemplate, ...]:
+    def task_templates(self) -> Tuple[TaskTemplate, ...]:
         return self._task_templates
 
 
 class TaskTemplatesFlowTemplate(TaskTemplatesFlowBase, FlowTemplate[FlowT], Generic[FlowT], ABC):
-    def refine(self,
-               *task_templates: IsTaskTemplate,
+    def refine(self: TaskTemplatesFlowTemplateT,
+               *task_templates: TaskTemplate,
                update: bool = True,
                name: Optional[str] = None,
                fixed_params: Optional[Mapping[str, object]] = None,

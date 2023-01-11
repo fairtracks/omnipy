@@ -4,12 +4,12 @@ import inspect
 from typing import Any, Callable, Dict, Generic, Mapping, Optional, Tuple, Union
 
 from omnipy.compute.job import Job, JobBase, JobBaseAndMixinAcceptorMeta, JobTemplate
+from omnipy.compute.job_types import FuncJobTemplateT, JobBaseT, JobT, JobTemplateT
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.iterate import IterateFuncJobBaseMixin
 from omnipy.compute.mixins.name import NameFuncJobBaseMixin
 from omnipy.compute.mixins.params import ParamsFuncJobBaseMixin, ParamsFuncJobMixin
 from omnipy.compute.mixins.result_key import ResultKeyFuncJobBaseMixin, ResultKeyFuncJobMixin
-from omnipy.compute.types import FuncJobTemplateT, JobBaseT, JobT, JobTemplateT
 from omnipy.util.helpers import remove_none_vals
 from omnipy.util.mixin import DynamicMixinAcceptor
 
@@ -47,7 +47,7 @@ FuncJobBase.accept_mixin(ResultKeyFuncJobBaseMixin)
 
 
 class FuncJobTemplate(FuncJobBase, JobTemplate[JobT], Generic[JobT], ABC):
-    def refine(self,
+    def refine(self: FuncJobTemplateT,
                update: bool = True,
                name: Optional[str] = None,
                fixed_params: Optional[Mapping[str, object]] = None,

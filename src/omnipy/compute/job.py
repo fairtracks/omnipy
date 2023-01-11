@@ -5,8 +5,8 @@ from functools import update_wrapper
 from types import MappingProxyType
 from typing import Any, Dict, Generic, Hashable, Optional, Tuple, Type, Union
 
+from omnipy.compute.job_types import JobBaseT, JobT, JobTemplateT
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
-from omnipy.compute.types import JobBaseT, JobT, JobTemplateT
 from omnipy.config.job import JobConfig
 from omnipy.engine.protocols import IsJob, IsJobConfig, IsJobCreator, IsTaskRunnerEngine
 from omnipy.util.helpers import create_merged_dict
@@ -136,7 +136,7 @@ class JobTemplate(JobBase, Generic[JobT], metaclass=JobTemplateAndMixinAcceptorM
         ...
 
     @classmethod
-    def create(cls, *init_args: object, **init_kwargs: object) -> JobTemplateT:
+    def create(cls: Type[JobTemplateT], *init_args: object, **init_kwargs: object) -> JobTemplateT:
         return cls(*init_args, **init_kwargs)
 
     def run(self, *args: object, **kwargs: object):
@@ -148,7 +148,10 @@ class JobTemplate(JobBase, Generic[JobT], metaclass=JobTemplateAndMixinAcceptorM
         update_wrapper(job, self, updated=[])
         return self._apply_engine_decorator(job)
 
-    def refine(self, *args: object, update: bool = True, **kwargs: object) -> JobTemplateT:
+    def refine(self: JobTemplateT,
+               *args: object,
+               update: bool = True,
+               **kwargs: object) -> JobTemplateT:
         if update:
             for key, cur_val in self._get_init_kwargs().items():
                 if key in kwargs:
@@ -160,7 +163,7 @@ class JobTemplate(JobBase, Generic[JobT], metaclass=JobTemplateAndMixinAcceptorM
                     new_val = cur_val
                 kwargs[key] = new_val
 
-        return self.create(*(args if args else self._get_init_args()), **kwargs)
+        return self.create(*args or self._get_init_args(), **kwargs)
 
     def __call__(self, *args, **kwargs):
         if self.in_flow_context:
@@ -169,7 +172,7 @@ class JobTemplate(JobBase, Generic[JobT], metaclass=JobTemplateAndMixinAcceptorM
         raise TypeError(f"'{self.__class__.__name__}' object is not callable")
 
 
-class CallableDecoratingJobTemplateMixin(Generic[JobTemplateT]):
+class CallableDecoratingJobTemplateMixin:
     @classmethod
     def create(cls: Type[JobTemplateT], *init_args: object, **init_kwargs: object) -> JobTemplateT:
         return cls(*(init_args[1:]), **init_kwargs)(init_args[0])

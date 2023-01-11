@@ -166,7 +166,7 @@ class IsFlowTemplate(IsFuncJobTemplate, Protocol):
 
 
 class IsTaskTemplatesFlow(IsFlow, Protocol):
-    task_templates: Tuple[IsTaskTemplate]
+    task_templates: Tuple[IsTaskTemplate, ...]
 
     def get_call_args(self, *args, **kwargs) -> Dict[str, object]:
         ...

@@ -1,6 +1,6 @@
 from typing import Callable, Mapping, Optional, Protocol, TypeVar
 
-from omnipy.engine.protocols import IsTaskTemplate
+from omnipy.compute.task import TaskTemplate
 
 JobBaseT = TypeVar('JobBaseT', bound='JobBase', covariant=True)
 JobT = TypeVar('JobT', bound='Job', covariant=True)
@@ -9,7 +9,7 @@ JobTemplateT = TypeVar('JobTemplateT', bound='JobTemplate', covariant=True)
 FuncJobTemplateT = TypeVar('FuncJobTemplateT', bound='FuncJobTemplate', covariant=True)
 
 
-class FuncJobTemplateCallable(Protocol[FuncJobTemplateT]):
+class IsFuncJobTemplateCallable(Protocol[FuncJobTemplateT]):
     def __call__(
         self,
         name: Optional[str] = None,
@@ -26,10 +26,10 @@ TaskTemplatesFlowTemplateT = TypeVar(
     'TaskTemplatesFlowTemplateT', bound='TaskTemplatesFlowTemplate', covariant=True)
 
 
-class TaskTemplatesFlowTemplateCallable(Protocol[TaskTemplatesFlowTemplateT]):
+class IsTaskTemplatesFlowTemplateCallable(Protocol[TaskTemplatesFlowTemplateT]):
     def __call__(
         self,
-        *task_templates: IsTaskTemplate,
+        *task_templates: TaskTemplate,
         name: Optional[str] = None,
         fixed_params: Optional[Mapping[str, object]] = None,
         param_key_map: Optional[Mapping[str, str]] = None,
