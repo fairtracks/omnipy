@@ -16,7 +16,7 @@ from omnipy.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorFactory
 class JobCreator:
     def __init__(self) -> None:
         self._engine: Optional[IsTaskRunnerEngine] = None
-        self._config: IsJobConfig = JobConfig()
+        self._config: Optional[IsJobConfig] = None
         self._nested_context_level = 0
 
     def set_engine(self, engine: IsTaskRunnerEngine) -> None:
@@ -36,7 +36,7 @@ class JobCreator:
         return self._engine
 
     @property
-    def config(self) -> IsJobConfig:
+    def config(self) -> Optional[IsJobConfig]:
         return self._config
 
     @property
@@ -50,6 +50,10 @@ class JobBaseMeta(ABCMeta):
     @property
     def job_creator(self) -> IsJobCreator:
         return self._job_creator
+
+    @property
+    def config(self) -> Optional[IsJobConfig]:
+        return self.job_creator.config
 
 
 class JobTemplateMeta(JobBaseMeta):
@@ -112,6 +116,10 @@ class JobBase(DynamicMixinAcceptor, metaclass=JobBaseAndMixinAcceptorMeta):
             return NotImplemented
         return self._get_init_args() == other._get_init_args() \
             and self._get_init_kwargs() == other._get_init_kwargs()
+
+    @property
+    def config(self) -> Optional[IsJobConfig]:
+        return self.__class__.job_creator.config
 
     @property
     def in_flow_context(self) -> bool:

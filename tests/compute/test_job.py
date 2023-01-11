@@ -6,6 +6,7 @@ from compute.helpers.mocks import (CommandMockJob,
                                    CommandMockJobTemplate,
                                    mock_cmd_func,
                                    MockJobBaseSubclass,
+                                   MockJobConfig,
                                    MockJobSubclass,
                                    MockJobTemplateSubclass,
                                    MockLocalRunner,
@@ -98,10 +99,10 @@ def test_engine_mock():
     assert job_tmpl.engine is mock_local_runner
     assert job_tmpl.__class__.job_creator.engine is mock_local_runner
 
-    job_base_new = JobTemplate()
-    assert job_base_new is not job_tmpl
-    assert job_base_new.engine is mock_local_runner
-    assert job_base_new.__class__.job_creator.engine is mock_local_runner
+    job_tmpl_new = JobTemplate()
+    assert job_tmpl_new is not job_tmpl
+    assert job_tmpl_new.engine is mock_local_runner
+    assert job_tmpl_new.__class__.job_creator.engine is mock_local_runner
 
     assert JobTemplate.engine is mock_local_runner
 
@@ -110,6 +111,41 @@ def test_engine_mock():
     assert not hasattr(JobBase, 'set_engine')
     assert not hasattr(Job, 'engine')
     assert not hasattr(Job, 'set_engine')
+
+
+def test_config_mock():
+    mock_job_config = MockJobConfig()
+    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+
+    assert JobTemplate.config is None
+
+    job_tmpl = JobTemplate()
+    assert job_tmpl.config is None
+    assert job_tmpl.__class__.job_creator.config is None
+
+    JobTemplate.job_creator.set_config(mock_job_config)
+
+    assert JobTemplate.job_creator.config is mock_job_config
+    assert JobBase.job_creator.config is mock_job_config
+    assert Job.job_creator.config is mock_job_config
+
+    assert job_tmpl.config is mock_job_config
+    assert job_tmpl.apply().config is mock_job_config
+    assert job_tmpl.__class__.job_creator.config is mock_job_config
+
+    job_tmpl_new = JobTemplate()
+    assert job_tmpl_new is not job_tmpl
+    assert job_tmpl_new.config is mock_job_config
+    assert job_tmpl_new.apply().config is mock_job_config
+    assert job_tmpl_new.__class__.job_creator.config is mock_job_config
+
+    assert JobBase.config is mock_job_config
+    assert JobTemplate.config is mock_job_config
+    assert Job.config is mock_job_config
+
+    assert not hasattr(JobTemplate, 'set_config')
+    assert not hasattr(JobBase, 'set_config')
+    assert not hasattr(Job, 'set_config')
 
 
 def test_equal_mock() -> None:

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, Union
 
@@ -268,3 +269,9 @@ class MockLocalRunner:
 
         setattr(flow, '_call_func', _call_func)
         return flow
+
+
+@dataclass
+class MockJobConfig:
+    persist_outputs: bool = True
+    restore_outputs: bool = False
