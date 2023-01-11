@@ -5,7 +5,7 @@ from unifair.modules.json.serializers import JsonDatasetToTarFileSerializer
 
 def test_json_dataset_serializer_to_tar_file():
     json_data = JsonDataset()
-    obj_type_1_json = '''
+    obj_type_1_json = """
 [
   {
     "a": "abc",
@@ -15,8 +15,8 @@ def test_json_dataset_serializer_to_tar_file():
     "a": "bcd",
     "b": 23
   }
-]'''[1:]
-    obj_type_2_json = '''
+]"""[1:]
+    obj_type_2_json = """
 [
   {
     "a": "abc",
@@ -25,8 +25,8 @@ def test_json_dataset_serializer_to_tar_file():
   {
     "c": "bcd"
   }
-]'''[1:]
-    json_data.from_json({"obj_type.1": f'{obj_type_1_json}', "obj_type.2": f'{obj_type_2_json}'})
+]"""[1:]
+    json_data.from_json({'obj_type.1': f'{obj_type_1_json}', 'obj_type.2': f'{obj_type_2_json}'})
 
     serializer = JsonDatasetToTarFileSerializer()
     tarfile_bytes = serializer.serialize(json_data)

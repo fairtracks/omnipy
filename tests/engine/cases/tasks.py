@@ -72,11 +72,11 @@ def case_sync_range() -> JobCase[[int], Generator]:
     def run_and_assert_results(job: IsJob) -> None:
         from unifair.engine.prefect import PrefectEngine
         if check_engine_cls(job, PrefectEngine):
-            pytest.xfail("Synchronous generators stopped working with prefect v2.6.0 (before that,"
-                         "they were running eagerly, returning lists of all yielded values)."
-                         "Seems to be partly a pydantic bug:"
-                         "https://github.com/PrefectHQ/prefect/issues/7692"
-                         "https://github.com/PrefectHQ/prefect/pull/7714")
+            pytest.xfail('Synchronous generators stopped working with prefect v2.6.0 (before that,'
+                         'they were running eagerly, returning lists of all yielded values).'
+                         'Seems to be partly a pydantic bug:'
+                         'https://github.com/PrefectHQ/prefect/issues/7692'
+                         'https://github.com/PrefectHQ/prefect/pull/7714')
 
         generator = job(5)
         assert_job_state(job, [RunState.RUNNING, RunState.FINISHED])
@@ -117,11 +117,11 @@ def case_sync_wait_for_send_twice() -> JobCase[[], Generator]:
     def run_and_assert_results(job: IsJob) -> None:
         from unifair.engine.prefect import PrefectEngine
         if check_engine_cls(job, PrefectEngine):
-            pytest.xfail("Synchronous generators stopped working with prefect v2.6.0 (before that,"
-                         "they were running eagerly, returning lists of all yielded values)."
-                         "Seems to be partly a pydantic bug:"
-                         "https://github.com/PrefectHQ/prefect/issues/7692"
-                         "https://github.com/PrefectHQ/prefect/pull/7714")
+            pytest.xfail('Synchronous generators stopped working with prefect v2.6.0 (before that,'
+                         'they were running eagerly, returning lists of all yielded values).'
+                         'Seems to be partly a pydantic bug:'
+                         'https://github.com/PrefectHQ/prefect/issues/7692'
+                         'https://github.com/PrefectHQ/prefect/pull/7714')
 
         generator_obj = job()
         assert_job_state(job, [RunState.RUNNING, RunState.FINISHED])

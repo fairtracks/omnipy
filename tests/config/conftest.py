@@ -40,7 +40,7 @@ def mock_config_publisher_with_subscribers(
     return config
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope='module')
 def teardown_loggers():
     yield
     logger = logging.getLogger('uniFAIR')

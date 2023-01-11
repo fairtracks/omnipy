@@ -62,7 +62,7 @@ uniprot_1_ds = import_uniprot.run()
 uniprot_2_ds = cast_dataset.run(uniprot_1_ds, cast_model=JsonDictOfAnyModel)
 uniprot_3_ds = transpose_dataset_of_dicts_to_lists.run(uniprot_2_ds)
 uniprot_4_ds = flatten_nested_json_to_list_of_dicts.run(uniprot_3_ds)
-uniprot_5_ds = cast_dataset.refine(name="cast_dataset_copy").run(
+uniprot_5_ds = cast_dataset.refine(name='cast_dataset_copy').run(
     uniprot_4_ds, cast_model=JsonTableOfStrings)
 
 
@@ -85,7 +85,7 @@ def pandas_magic(pandas: PandasDataset) -> PandasDataset:
     # Get gene table and join with synonym table to get gene foreign id
     df_gene = pandas['results.genes']
     df_merge_1 = pd.merge(
-        df_synonym, df_gene, left_on="_unifair_ref", right_on='_unifair_id', how="right")
+        df_synonym, df_gene, left_on='_unifair_ref', right_on='_unifair_id', how='right')
     df_merge_1 = df_merge_1.loc[:, ['value', '_unifair_ref_y']]
     df_merge_1.columns = ['synomym', '_unifair_ref']
     df_merge_1['_unifair_ref'].replace('results.', '', inplace=True, regex=True)
@@ -98,13 +98,13 @@ def pandas_magic(pandas: PandasDataset) -> PandasDataset:
     df_keywords = df_keywords.loc[:, ['_unifair_ref', 'category', 'name']]
 
     # Merge keywords with synonym
-    df_merge_2 = pd.merge(df_merge_1, df_keywords, on="_unifair_ref", how="right")
+    df_merge_2 = pd.merge(df_merge_1, df_keywords, on='_unifair_ref', how='right')
 
     # Get results table for regene name and primary accession
     df_results = pandas['results']
     df_results = df_results.loc[:, ['_unifair_id', 'primaryAccession', 'uniProtkbId']]
     df_merge_final = pd.merge(
-        df_merge_2, df_results, left_on="_unifair_ref", right_on='_unifair_id', how="right")
+        df_merge_2, df_results, left_on='_unifair_ref', right_on='_unifair_id', how='right')
 
     out_dataset = PandasDataset()
     out_dataset['my_table'] = df_merge_final

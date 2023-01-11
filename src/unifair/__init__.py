@@ -7,4 +7,4 @@ from unifair.config.runtime import Runtime
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-runtime = Runtime() if "pytest" not in sys.modules else None
+runtime = Runtime() if 'pytest' not in sys.modules else None
