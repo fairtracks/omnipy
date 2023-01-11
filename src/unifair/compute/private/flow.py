@@ -2,13 +2,13 @@ from abc import ABC
 from typing import Any, Callable, Generic, Mapping, Optional, Tuple, Union
 
 from unifair.compute.job import JobTemplate
-from unifair.compute.private.job import FuncJob, FuncJobConfig, FuncJobTemplate
-from unifair.compute.types import FlowConfigT, FlowT, FlowTemplateT, TaskTemplatesFlowTemplateT
+from unifair.compute.private.job import FuncJob, FuncJobBase, FuncJobTemplate
+from unifair.compute.types import FlowBaseT, FlowT, FlowTemplateT, TaskTemplatesFlowTemplateT
 from unifair.engine.protocols import IsTaskTemplate
 from unifair.util.helpers import remove_none_vals
 
 
-class FlowConfig(FuncJobConfig):
+class FlowBase(FuncJobBase):
     ...
 
 
@@ -16,11 +16,11 @@ class FlowTemplate(FuncJobTemplate[FlowT], Generic[FlowT], ABC):
     ...
 
 
-class Flow(FuncJob[FlowConfigT, FlowTemplateT], Generic[FlowConfigT, FlowTemplateT], ABC):
+class Flow(FuncJob[FlowBaseT, FlowTemplateT], Generic[FlowBaseT, FlowTemplateT], ABC):
     ...
 
 
-class TaskTemplatesFlowConfig(FlowConfig):
+class TaskTemplatesFlowBase(FlowBase):
     def __init__(
         self,
         job_func: Callable,
@@ -53,7 +53,7 @@ class TaskTemplatesFlowConfig(FlowConfig):
         return self._task_templates
 
 
-class TaskTemplatesFlowTemplate(TaskTemplatesFlowConfig, FlowTemplate[FlowT], Generic[FlowT], ABC):
+class TaskTemplatesFlowTemplate(TaskTemplatesFlowBase, FlowTemplate[FlowT], Generic[FlowT], ABC):
     def refine(self,
                *task_templates: IsTaskTemplate,
                update: bool = True,
@@ -80,8 +80,8 @@ class TaskTemplatesFlowTemplate(TaskTemplatesFlowConfig, FlowTemplate[FlowT], Ge
             ))
 
 
-class TaskTemplatesFlow(TaskTemplatesFlowConfig,
-                        Flow[FlowConfigT, FlowTemplateT],
-                        Generic[FlowConfigT, FlowTemplateT],
+class TaskTemplatesFlow(TaskTemplatesFlowBase,
+                        Flow[FlowBaseT, FlowTemplateT],
+                        Generic[FlowBaseT, FlowTemplateT],
                         ABC):
     ...

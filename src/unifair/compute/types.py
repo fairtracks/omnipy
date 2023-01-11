@@ -2,7 +2,7 @@ from typing import Callable, Mapping, Optional, Protocol, TypeVar
 
 from unifair.engine.protocols import IsTaskTemplate
 
-JobConfigT = TypeVar('JobConfigT', bound='JobConfig', covariant=True)
+JobBaseT = TypeVar('JobBaseT', bound='JobBase', covariant=True)
 JobT = TypeVar('JobT', bound='Job', covariant=True)
 JobTemplateT = TypeVar('JobTemplateT', bound='JobTemplate', covariant=True)
 
@@ -41,5 +41,5 @@ class TaskTemplatesFlowTemplateCallable(Protocol[TaskTemplatesFlowTemplateT]):
 
 
 FlowT = TypeVar('FlowT', bound='Flow', covariant=True)
-FlowConfigT = TypeVar('FlowConfigT', bound='FlowConfig', covariant=True)
+FlowBaseT = TypeVar('FlowBaseT', bound='FlowBase', covariant=True)
 FlowTemplateT = TypeVar('FlowTemplateT', bound='FlowTemplate', covariant=True)

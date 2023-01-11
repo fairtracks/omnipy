@@ -3,7 +3,7 @@ import logging
 from sys import stdout
 from typing import Any, Optional
 
-from unifair.compute.job import JobConfig
+from unifair.compute.job import JobBase
 from unifair.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from unifair.config.publisher import ConfigPublisher
 from unifair.config.registry import RunStateRegistryConfig
@@ -46,7 +46,7 @@ class RuntimeEntry(ConfigPublisher):
 class RuntimeObjects(RuntimeEntry, ConfigPublisher):
     logger: logging.Logger = get_default_logger()
     registry: IsRunStateRegistry = RunStateRegistry()
-    job_creator: IsJobCreator = JobConfig.job_creator
+    job_creator: IsJobCreator = JobBase.job_creator
     local: IsEngine = LocalRunner()
     prefect: IsEngine = PrefectEngine()
 

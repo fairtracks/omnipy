@@ -7,7 +7,7 @@ import os
 from time import sleep
 from typing import Awaitable, Callable, cast, List, Optional, Type
 
-from unifair.compute.job import JobConfig
+from unifair.compute.job import JobBase
 from unifair.engine.base import Engine
 from unifair.engine.constants import RunState
 from unifair.engine.protocols import (IsDagFlow,
@@ -47,7 +47,7 @@ def read_log_line_from_stream(str_stream: StringIO) -> str:
         return ''
 
 
-def extract_engine(job: JobConfig):
+def extract_engine(job: JobBase):
     engine = job.__class__.job_creator.engine
     if hasattr(engine, '_engine'):  # TaskRunnerStateChecker
         engine = engine._engine  # noqa
@@ -55,7 +55,7 @@ def extract_engine(job: JobConfig):
 
 
 def extract_job_run_state(job: IsJob):
-    engine = extract_engine(cast(JobConfig, job))
+    engine = extract_engine(cast(JobBase, job))
     registry = engine._registry  # noqa
     if registry:
         return registry.get_job_state(job)

@@ -2,10 +2,10 @@ from typing import cast, Type
 
 from unifair.compute.job import CallableDecoratingJobTemplateMixin
 from unifair.compute.private.flow import (Flow,
-                                          FlowConfig,
+                                          FlowBase,
                                           FlowTemplate,
                                           TaskTemplatesFlow,
-                                          TaskTemplatesFlowConfig,
+                                          TaskTemplatesFlowBase,
                                           TaskTemplatesFlowTemplate)
 from unifair.compute.types import FuncJobTemplateCallable, TaskTemplatesFlowTemplateCallable
 from unifair.engine.protocols import (IsDagFlow,
@@ -17,7 +17,7 @@ from unifair.engine.protocols import (IsDagFlow,
 from unifair.util.callable_decorator_cls import callable_decorator_cls
 
 
-class LinearFlowConfig(TaskTemplatesFlowConfig):
+class LinearFlowBase(TaskTemplatesFlowBase):
     ...
 
 
@@ -29,7 +29,7 @@ def linear_flow_template_callable_decorator_cls(
 
 @linear_flow_template_callable_decorator_cls
 class LinearFlowTemplate(CallableDecoratingJobTemplateMixin['LinearFlowTemplate'],
-                         LinearFlowConfig,
+                         LinearFlowBase,
                          TaskTemplatesFlowTemplate['LinearFlow']):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['LinearFlow']:
@@ -42,17 +42,17 @@ class LinearFlowTemplate(CallableDecoratingJobTemplateMixin['LinearFlowTemplate'
             raise RuntimeError(f'Engine "{self.engine}" does not support linear flows')
 
 
-class LinearFlow(LinearFlowConfig, TaskTemplatesFlow[LinearFlowConfig, LinearFlowTemplate]):
+class LinearFlow(LinearFlowBase, TaskTemplatesFlow[LinearFlowBase, LinearFlowTemplate]):
     @classmethod
-    def _get_job_config_subcls_for_init(cls) -> Type[LinearFlowConfig]:
-        return LinearFlowConfig
+    def _get_job_base_subcls_for_init(cls) -> Type[LinearFlowBase]:
+        return LinearFlowBase
 
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[LinearFlowTemplate]:
         return LinearFlowTemplate
 
 
-class DagFlowConfig(TaskTemplatesFlowConfig):
+class DagFlowBase(TaskTemplatesFlowBase):
     ...
 
 
@@ -63,7 +63,7 @@ def dag_flow_template_callable_decorator_cls(
 
 @dag_flow_template_callable_decorator_cls
 class DagFlowTemplate(CallableDecoratingJobTemplateMixin['DagFlowTemplate'],
-                      DagFlowConfig,
+                      DagFlowBase,
                       TaskTemplatesFlowTemplate['DagFlow']):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['DagFlow']:
@@ -76,17 +76,17 @@ class DagFlowTemplate(CallableDecoratingJobTemplateMixin['DagFlowTemplate'],
             raise RuntimeError(f'Engine "{self.engine}" does not support DAG flows')
 
 
-class DagFlow(DagFlowConfig, TaskTemplatesFlow[DagFlowConfig, DagFlowTemplate]):
+class DagFlow(DagFlowBase, TaskTemplatesFlow[DagFlowBase, DagFlowTemplate]):
     @classmethod
-    def _get_job_config_subcls_for_init(cls) -> Type[DagFlowConfig]:
-        return DagFlowConfig
+    def _get_job_base_subcls_for_init(cls) -> Type[DagFlowBase]:
+        return DagFlowBase
 
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[DagFlowTemplate]:
         return DagFlowTemplate
 
 
-class FuncFlowConfig(FlowConfig):
+class FuncFlowBase(FlowBase):
     ...
 
 
@@ -97,7 +97,7 @@ def func_flow_template_callable_decorator_cls(
 
 @func_flow_template_callable_decorator_cls
 class FuncFlowTemplate(CallableDecoratingJobTemplateMixin['FuncFlowTemplate'],
-                       FuncFlowConfig,
+                       FuncFlowBase,
                        FlowTemplate['FuncFlow']):
     def _apply_engine_decorator(self, flow: IsFuncFlow) -> IsFuncFlow:
         if self.engine is not None and isinstance(self.engine, IsFuncFlowRunnerEngine):
@@ -110,10 +110,10 @@ class FuncFlowTemplate(CallableDecoratingJobTemplateMixin['FuncFlowTemplate'],
         return FuncFlow
 
 
-class FuncFlow(FuncFlowConfig, Flow[FuncFlowConfig, FuncFlowTemplate]):
+class FuncFlow(FuncFlowBase, Flow[FuncFlowBase, FuncFlowTemplate]):
     @classmethod
-    def _get_job_config_subcls_for_init(cls) -> Type[FuncFlowConfig]:
-        return FuncFlowConfig
+    def _get_job_base_subcls_for_init(cls) -> Type[FuncFlowBase]:
+        return FuncFlowBase
 
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[FuncFlowTemplate]:

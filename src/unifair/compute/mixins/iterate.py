@@ -5,8 +5,8 @@ from unifair.data.dataset import Dataset
 from unifair.data.model import Model
 
 
-class IterateFuncJobConfigMixin:
-    # Requires FuncSignatureJobConfigMixin
+class IterateFuncJobBaseMixin:
+    # Requires FuncSignatureJobBaseMixin
 
     def __init__(self, *, iterate_over_data_files: bool = False):
         self._iterate_over_data_files = iterate_over_data_files

@@ -5,8 +5,8 @@ from functools import update_wrapper
 from types import MappingProxyType
 from typing import Any, Dict, Generic, Hashable, Optional, Tuple, Type, Union
 
-from unifair.compute.mixins.name import NameJobConfigMixin, NameJobMixin
-from unifair.compute.types import JobConfigT, JobT, JobTemplateT
+from unifair.compute.mixins.name import NameJobBaseMixin, NameJobMixin
+from unifair.compute.types import JobBaseT, JobT, JobTemplateT
 from unifair.engine.protocols import IsJob, IsJobCreator, IsTaskRunnerEngine
 from unifair.util.helpers import create_merged_dict
 from unifair.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorFactory
@@ -35,7 +35,7 @@ class JobCreator:
         return self._nested_context_level
 
 
-class JobConfigMeta(ABCMeta):
+class JobBaseMeta(ABCMeta):
     _job_creator: JobCreator = JobCreator()
 
     @property
@@ -43,7 +43,7 @@ class JobConfigMeta(ABCMeta):
         return self._job_creator
 
 
-class JobTemplateMeta(JobConfigMeta):
+class JobTemplateMeta(JobBaseMeta):
     @property
     def engine(self) -> Optional[IsTaskRunnerEngine]:
         return self.job_creator.engine
@@ -53,20 +53,20 @@ class JobTemplateMeta(JobConfigMeta):
         return self.job_creator.nested_context_level
 
 
-class JobConfigAndMixinAcceptorMeta(JobConfigMeta, DynamicMixinAcceptorFactory):
+class JobBaseAndMixinAcceptorMeta(JobBaseMeta, DynamicMixinAcceptorFactory):
     ...
 
 
-class JobTemplateAndMixinAcceptorMeta(JobTemplateMeta, JobConfigAndMixinAcceptorMeta):
+class JobTemplateAndMixinAcceptorMeta(JobTemplateMeta, JobBaseAndMixinAcceptorMeta):
     ...
 
 
-class JobConfig(DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
+class JobBase(DynamicMixinAcceptor, metaclass=JobBaseAndMixinAcceptorMeta):
     def __init__(self, *args: object, name: Optional[str] = None, **kwargs: object):
         super().__init__(*args, **kwargs)
 
         if not isinstance(self, JobTemplate) and not isinstance(self, Job):
-            raise RuntimeError('JobConfig and subclasses not inheriting from JobTemplate '
+            raise RuntimeError('JobBase and subclasses not inheriting from JobTemplate '
                                'or Job are not directly instantiatable')
 
     @abstractmethod
@@ -99,7 +99,7 @@ class JobConfig(DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
         return {key: getattr(self, key) for key in kwarg_keys}
 
     def __eq__(self, other: object):
-        if not isinstance(other, JobConfig):
+        if not isinstance(other, JobBase):
             return NotImplemented
         return self._get_init_args() == other._get_init_args() \
             and self._get_init_kwargs() == other._get_init_kwargs()
@@ -109,10 +109,10 @@ class JobConfig(DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
         return self.__class__.job_creator.nested_context_level > 0
 
 
-JobConfig.accept_mixin(NameJobConfigMixin)
+JobBase.accept_mixin(NameJobBaseMixin)
 
 
-class JobTemplate(JobConfig, Generic[JobT], metaclass=JobTemplateAndMixinAcceptorMeta):
+class JobTemplate(JobBase, Generic[JobT], metaclass=JobTemplateAndMixinAcceptorMeta):
     @classmethod
     @abstractmethod
     def _get_job_subcls_for_apply(cls) -> Type[JobT]:
@@ -166,15 +166,15 @@ class CallableDecoratingJobTemplateMixin(Generic[JobTemplateT]):
         return cls(*(init_args[1:]), **init_kwargs)(init_args[0])
 
 
-class Job(JobConfig, DynamicMixinAcceptor, Generic[JobConfigT, JobTemplateT]):
+class Job(JobBase, DynamicMixinAcceptor, Generic[JobBaseT, JobTemplateT]):
     @property
     def flow_context(self) -> IsJobCreator:
         return self.__class__.job_creator
 
     @classmethod
     @abstractmethod
-    def _get_job_config_subcls_for_init(cls) -> Type[JobConfigT]:
-        return JobConfig
+    def _get_job_base_subcls_for_init(cls) -> Type[JobBaseT]:
+        return JobBase
 
     @classmethod
     @abstractmethod
@@ -190,12 +190,12 @@ class Job(JobConfig, DynamicMixinAcceptor, Generic[JobConfigT, JobTemplateT]):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def create(cls, *init_args: object, **init_kwargs: object) -> Job[JobConfigT, JobTemplateT]:
-        job_config_cls = cls._get_job_config_subcls_for_init()
-        if job_config_cls.__new__ is object.__new__:
-            job_obj = job_config_cls.__new__(cls)
+    def create(cls, *init_args: object, **init_kwargs: object) -> Job[JobBaseT, JobTemplateT]:
+        job_base_cls = cls._get_job_base_subcls_for_init()
+        if job_base_cls.__new__ is object.__new__:
+            job_obj = job_base_cls.__new__(cls)
         else:
-            job_obj = job_config_cls.__new__(cls, *init_args, **init_kwargs)
+            job_obj = job_base_cls.__new__(cls, *init_args, **init_kwargs)
         job_obj.__init__(*init_args, **init_kwargs)
         return job_obj
 
@@ -216,5 +216,5 @@ class Job(JobConfig, DynamicMixinAcceptor, Generic[JobConfigT, JobTemplateT]):
 
 Job.accept_mixin(NameJobMixin)
 
-# TODO: Change JobConfig and friends into Generics such as one can annotated with
+# TODO: Change JobBase and friends into Generics such as one can annotated with
 #       e.g. 'TaskTemplate[[int], int]' instead of just 'TaskTemplate'

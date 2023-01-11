@@ -5,7 +5,7 @@ from prefect.utilities.names import generate_slug
 from slugify import slugify
 
 
-class NameJobConfigMixin:
+class NameJobBaseMixin:
     def __init__(self, *, name: Optional[str] = None):
 
         self._name: Optional[str] = name
@@ -44,6 +44,6 @@ class NameJobMixin:
         self._generate_unique_name()
 
 
-class NameFuncJobConfigMixin:
+class NameFuncJobBaseMixin:
     def __init__(self, *, name: Optional[str] = None):
         self._name = name if name is not None else self._job_func.__name__

@@ -3,18 +3,18 @@ import asyncio
 import inspect
 from typing import Any, Callable, Dict, Generic, Mapping, Optional, Tuple, Union
 
-from unifair.compute.job import Job, JobConfig, JobConfigAndMixinAcceptorMeta, JobTemplate
-from unifair.compute.mixins.func_signature import SignatureFuncJobConfigMixin
-from unifair.compute.mixins.iterate import IterateFuncJobConfigMixin
-from unifair.compute.mixins.name import NameFuncJobConfigMixin
-from unifair.compute.mixins.params import ParamsFuncJobConfigMixin, ParamsFuncJobMixin
-from unifair.compute.mixins.result_key import ResultKeyFuncJobConfigMixin, ResultKeyFuncJobMixin
-from unifair.compute.types import FuncJobTemplateT, JobConfigT, JobT, JobTemplateT
+from unifair.compute.job import Job, JobBase, JobBaseAndMixinAcceptorMeta, JobTemplate
+from unifair.compute.mixins.func_signature import SignatureFuncJobBaseMixin
+from unifair.compute.mixins.iterate import IterateFuncJobBaseMixin
+from unifair.compute.mixins.name import NameFuncJobBaseMixin
+from unifair.compute.mixins.params import ParamsFuncJobBaseMixin, ParamsFuncJobMixin
+from unifair.compute.mixins.result_key import ResultKeyFuncJobBaseMixin, ResultKeyFuncJobMixin
+from unifair.compute.types import FuncJobTemplateT, JobBaseT, JobT, JobTemplateT
 from unifair.util.helpers import remove_none_vals
 from unifair.util.mixin import DynamicMixinAcceptor
 
 
-class FuncJobConfig(JobConfig, DynamicMixinAcceptor, metaclass=JobConfigAndMixinAcceptorMeta):
+class FuncJobBase(JobBase, DynamicMixinAcceptor, metaclass=JobBaseAndMixinAcceptorMeta):
     def __init__(self,
                  job_func: Callable,
                  *,
@@ -39,14 +39,14 @@ class FuncJobConfig(JobConfig, DynamicMixinAcceptor, metaclass=JobConfigAndMixin
         return asyncio.iscoroutinefunction(self._job_func)
 
 
-FuncJobConfig.accept_mixin(NameFuncJobConfigMixin)
-FuncJobConfig.accept_mixin(SignatureFuncJobConfigMixin)
-FuncJobConfig.accept_mixin(IterateFuncJobConfigMixin)
-FuncJobConfig.accept_mixin(ParamsFuncJobConfigMixin)
-FuncJobConfig.accept_mixin(ResultKeyFuncJobConfigMixin)
+FuncJobBase.accept_mixin(NameFuncJobBaseMixin)
+FuncJobBase.accept_mixin(SignatureFuncJobBaseMixin)
+FuncJobBase.accept_mixin(IterateFuncJobBaseMixin)
+FuncJobBase.accept_mixin(ParamsFuncJobBaseMixin)
+FuncJobBase.accept_mixin(ResultKeyFuncJobBaseMixin)
 
 
-class FuncJobTemplate(FuncJobConfig, JobTemplate[JobT], Generic[JobT], ABC):
+class FuncJobTemplate(FuncJobBase, JobTemplate[JobT], Generic[JobT], ABC):
     def refine(self,
                update: bool = True,
                name: Optional[str] = None,
@@ -69,7 +69,7 @@ class FuncJobTemplate(FuncJobConfig, JobTemplate[JobT], Generic[JobT], ABC):
             ))
 
 
-class FuncJob(FuncJobConfig, Job[JobConfigT, JobTemplateT], Generic[JobConfigT, JobTemplateT], ABC):
+class FuncJob(FuncJobBase, Job[JobBaseT, JobTemplateT], Generic[JobBaseT, JobTemplateT], ABC):
     def __call__(self, *args: object, **kwargs: object) -> object:
         return self._call_func(*args, **kwargs)
 

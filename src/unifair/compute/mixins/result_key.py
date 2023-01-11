@@ -1,8 +1,8 @@
 from typing import Optional
 
 
-class ResultKeyFuncJobConfigMixin:
-    # Requires NameJobConfigMixin
+class ResultKeyFuncJobBaseMixin:
+    # Requires NameJobBaseMixin
 
     def __init__(self, *, result_key: Optional[str] = None):
         self._result_key = result_key

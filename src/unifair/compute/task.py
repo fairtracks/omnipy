@@ -3,13 +3,13 @@ from __future__ import annotations
 from typing import cast, Type
 
 from unifair.compute.job import CallableDecoratingJobTemplateMixin
-from unifair.compute.private.job import FuncJob, FuncJobConfig, FuncJobTemplate
+from unifair.compute.private.job import FuncJob, FuncJobBase, FuncJobTemplate
 from unifair.compute.types import FuncJobTemplateCallable
 from unifair.engine.protocols import IsTask
 from unifair.util.callable_decorator_cls import callable_decorator_cls
 
 
-class TaskConfig(FuncJobConfig):
+class TaskBase(FuncJobBase):
     ...
 
 
@@ -20,7 +20,7 @@ def task_template_callable_decorator_cls(
 
 @task_template_callable_decorator_cls
 class TaskTemplate(CallableDecoratingJobTemplateMixin['TaskTemplate'],
-                   TaskConfig,
+                   TaskBase,
                    FuncJobTemplate['Task']):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type[Task]:
@@ -34,10 +34,10 @@ class TaskTemplate(CallableDecoratingJobTemplateMixin['TaskTemplate'],
             return task
 
 
-class Task(TaskConfig, FuncJob[TaskConfig, TaskTemplate]):
+class Task(TaskBase, FuncJob[TaskBase, TaskTemplate]):
     @classmethod
-    def _get_job_config_subcls_for_init(cls) -> Type[TaskConfig]:
-        return TaskConfig
+    def _get_job_base_subcls_for_init(cls) -> Type[TaskBase]:
+        return TaskBase
 
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[TaskTemplate]:

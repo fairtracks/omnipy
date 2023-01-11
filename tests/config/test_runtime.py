@@ -36,7 +36,7 @@ def assert_runtime_config_default(config: RuntimeConfig):
 
 
 def assert_runtime_objects_default(objects: RuntimeObjects):
-    from unifair.compute.job import JobConfig, JobCreator
+    from unifair.compute.job import JobBase, JobCreator
     from unifair.engine.local import LocalRunner
     from unifair.engine.prefect import PrefectEngine
     from unifair.engine.registry import RunStateRegistry
@@ -48,7 +48,7 @@ def assert_runtime_objects_default(objects: RuntimeObjects):
     assert isinstance(objects.prefect, PrefectEngine)
 
     assert_logger(objects.logger)
-    assert objects.job_creator is JobConfig.job_creator
+    assert objects.job_creator is JobBase.job_creator
 
 
 def test_config_default(teardown_loggers) -> None:

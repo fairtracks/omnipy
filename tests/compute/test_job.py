@@ -5,20 +5,20 @@ import pytest
 from compute.helpers.mocks import (CommandMockJob,
                                    CommandMockJobTemplate,
                                    mock_cmd_func,
-                                   MockJobConfigSubclass,
+                                   MockJobBaseSubclass,
                                    MockJobSubclass,
                                    MockJobTemplateSubclass,
                                    MockLocalRunner,
                                    PublicPropertyErrorsMockJob,
                                    PublicPropertyErrorsMockJobTemplate)
-from unifair.compute.job import Job, JobConfig, JobCreator, JobTemplate
+from unifair.compute.job import Job, JobBase, JobCreator, JobTemplate
 
 from .helpers.functions import assert_updated_wrapper
 
 
 def test_init_abstract():
     with pytest.raises(TypeError):
-        JobConfig()
+        JobBase()
 
     with pytest.raises(TypeError):
         JobTemplate()
@@ -27,12 +27,12 @@ def test_init_abstract():
         Job()
 
 
-def mock_job_classes() -> Tuple[Type[JobConfig], Type[JobTemplate], Type[Job]]:
-    return MockJobConfigSubclass, MockJobTemplateSubclass, MockJobSubclass
+def mock_job_classes() -> Tuple[Type[JobBase], Type[JobTemplate], Type[Job]]:
+    return MockJobBaseSubclass, MockJobTemplateSubclass, MockJobSubclass
 
 
 def test_init_mock():
-    JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
+    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
 
     job_tmpl = JobTemplate()
     assert isinstance(job_tmpl, JobTemplate)
@@ -42,22 +42,22 @@ def test_init_mock():
 
 
 def test_fail_only_jobtemplate_init_mock():
-    JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
+    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
 
     with pytest.raises(RuntimeError):
-        JobConfig()  # noqa
+        JobBase()  # noqa
 
     with pytest.raises(RuntimeError):
         Job()
 
 
 def test_job_creator_singular_mock() -> None:
-    JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
+    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
 
-    assert isinstance(JobConfig.job_creator, JobCreator)
+    assert isinstance(JobBase.job_creator, JobCreator)
 
     with pytest.raises(AttributeError):
-        JobConfig.job_creator = JobCreator()
+        JobBase.job_creator = JobCreator()
 
     with pytest.raises(AttributeError):
         JobTemplate.job_creator = JobCreator()
@@ -65,7 +65,7 @@ def test_job_creator_singular_mock() -> None:
     with pytest.raises(AttributeError):
         Job.job_creator = JobCreator()
 
-    job_creator = JobConfig.job_creator
+    job_creator = JobBase.job_creator
     assert JobTemplate.job_creator is job_creator
     assert Job.job_creator is job_creator
 
@@ -81,7 +81,7 @@ def test_job_creator_singular_mock() -> None:
 
 def test_engine_mock():
     mock_local_runner = MockLocalRunner()
-    JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
+    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
 
     assert JobTemplate.engine is None
 
@@ -92,28 +92,28 @@ def test_engine_mock():
     JobTemplate.job_creator.set_engine(mock_local_runner)
 
     assert JobTemplate.job_creator.engine is mock_local_runner
-    assert JobConfig.job_creator.engine is mock_local_runner
+    assert JobBase.job_creator.engine is mock_local_runner
     assert Job.job_creator.engine is mock_local_runner
 
     assert job_tmpl.engine is mock_local_runner
     assert job_tmpl.__class__.job_creator.engine is mock_local_runner
 
-    job_config_new = JobTemplate()
-    assert job_config_new is not job_tmpl
-    assert job_config_new.engine is mock_local_runner
-    assert job_config_new.__class__.job_creator.engine is mock_local_runner
+    job_base_new = JobTemplate()
+    assert job_base_new is not job_tmpl
+    assert job_base_new.engine is mock_local_runner
+    assert job_base_new.__class__.job_creator.engine is mock_local_runner
 
     assert JobTemplate.engine is mock_local_runner
 
     assert not hasattr(JobTemplate, 'set_engine')
-    assert not hasattr(JobConfig, 'engine')
-    assert not hasattr(JobConfig, 'set_engine')
+    assert not hasattr(JobBase, 'engine')
+    assert not hasattr(JobBase, 'set_engine')
     assert not hasattr(Job, 'engine')
     assert not hasattr(Job, 'set_engine')
 
 
 def test_equal_mock() -> None:
-    JobConfig, JobTemplate, Job = mock_job_classes()  # noqa
+    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
 
     my_job_tmpl = JobTemplate()
     my_job_tmpl_2 = JobTemplate()

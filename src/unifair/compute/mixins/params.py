@@ -4,8 +4,8 @@ from typing import Mapping, Optional
 from unifair.util.param_key_mapper import ParamKeyMapper
 
 
-class ParamsFuncJobConfigMixin:
-    # Requires FuncSignatureJobConfigMixin
+class ParamsFuncJobBaseMixin:
+    # Requires FuncSignatureJobBaseMixin
 
     def __init__(
         self,
