@@ -1,6 +1,6 @@
 import logging
 
-from omnipy.config.job import GlobalResumePreviousRunsOptions, GlobalSerializeOutputsOptions
+from omnipy.config.job import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
 from omnipy.config.runtime import Runtime, RuntimeConfig, RuntimeObjects
 from omnipy.engine.constants import EngineChoice
 
@@ -27,8 +27,8 @@ def assert_runtime_config_default(config: RuntimeConfig):
     from omnipy.config.registry import RunStateRegistryConfig
 
     assert isinstance(config.job, JobConfig)
-    assert isinstance(config.job.serialize_outputs, GlobalSerializeOutputsOptions)
-    assert isinstance(config.job.resume_previous_runs, GlobalResumePreviousRunsOptions)
+    assert isinstance(config.job.persist_outputs, ConfigPersistOutputsOptions)
+    assert isinstance(config.job.restore_outputs, ConfigRestoreOutputsOptions)
     assert isinstance(config.engine, str)
     assert isinstance(config.local, LocalRunnerConfig)
     assert isinstance(config.prefect, PrefectEngineConfig)
@@ -36,10 +36,10 @@ def assert_runtime_config_default(config: RuntimeConfig):
     assert isinstance(config.registry, RunStateRegistryConfig)
     assert isinstance(config.registry.verbose, bool)
 
-    assert config.job.serialize_outputs == \
-           GlobalSerializeOutputsOptions.WRITE_FLOW_AND_TASK_OUTPUTS
-    assert config.job.resume_previous_runs == \
-           GlobalResumePreviousRunsOptions.OFF
+    assert config.job.persist_outputs == \
+           ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
+    assert config.job.restore_outputs == \
+           ConfigRestoreOutputsOptions.DISABLED
     assert config.engine == EngineChoice.LOCAL
     assert config.prefect.use_cached_results is False
     assert config.registry.verbose is True
@@ -257,31 +257,31 @@ def test_job_creator_subscribe_to_engine() -> None:
 
 def test_job_creator_subscribe_to_job_config() -> None:
     mock_job_creator = MockJobCreator()
-    mock_job_config = MockJobConfig(serialize_outputs=False, resume_previous_runs=True)
+    mock_job_config = MockJobConfig(persist_outputs=False, restore_outputs=True)
     runtime = Runtime(
         objects=RuntimeObjects(job_creator=mock_job_creator),
         config=RuntimeConfig(job=mock_job_config),
     )
     assert runtime.objects.job_creator.config is runtime.config.job is mock_job_config
-    assert runtime.objects.job_creator.config.serialize_outputs is False
-    assert runtime.objects.job_creator.config.resume_previous_runs is True
+    assert runtime.objects.job_creator.config.persist_outputs is False
+    assert runtime.objects.job_creator.config.restore_outputs is True
 
-    runtime.config.job.serialize_outputs = True
-    assert runtime.objects.job_creator.config.serialize_outputs is True
-    runtime.config.job.resume_previous_runs = False
-    assert runtime.objects.job_creator.config.resume_previous_runs is False
+    runtime.config.job.persist_outputs = True
+    assert runtime.objects.job_creator.config.persist_outputs is True
+    runtime.config.job.restore_outputs = False
+    assert runtime.objects.job_creator.config.restore_outputs is False
 
-    mock_job_config_2 = MockJobConfig(serialize_outputs=False, resume_previous_runs=True)
+    mock_job_config_2 = MockJobConfig(persist_outputs=False, restore_outputs=True)
     assert mock_job_config_2 is not mock_job_config
     runtime.config.job = mock_job_config_2
     assert runtime.objects.job_creator.config is runtime.config.job is mock_job_config_2
-    assert runtime.objects.job_creator.config.serialize_outputs is False
-    assert runtime.objects.job_creator.config.resume_previous_runs is True
+    assert runtime.objects.job_creator.config.persist_outputs is False
+    assert runtime.objects.job_creator.config.restore_outputs is True
 
     runtime.objects.job_creator = MockJobCreator()
     assert runtime.objects.job_creator.config is runtime.config.job is mock_job_config_2
-    assert runtime.objects.job_creator.config.serialize_outputs is False
-    assert runtime.objects.job_creator.config.resume_previous_runs is True
+    assert runtime.objects.job_creator.config.persist_outputs is False
+    assert runtime.objects.job_creator.config.restore_outputs is True
 
     runtime.objects.job_creator = MockJobCreator2()
     assert runtime.config.job is mock_job_config_2

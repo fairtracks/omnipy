@@ -2,15 +2,15 @@ from datetime import datetime
 import logging
 from typing import Any, Callable, Dict, Optional, Protocol, runtime_checkable, Tuple, Type
 
-from omnipy.config.job import GlobalResumePreviousRunsOptions, GlobalSerializeOutputsOptions
+from omnipy.config.job import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
 from omnipy.engine.constants import EngineChoice, RunState
 
 
 class IsJobConfig(Protocol):
-    serialize_outputs: GlobalSerializeOutputsOptions = \
-        GlobalSerializeOutputsOptions.WRITE_FLOW_AND_TASK_OUTPUTS
-    resume_previous_runs: GlobalResumePreviousRunsOptions = \
-        GlobalResumePreviousRunsOptions.OFF
+    persist_outputs: ConfigPersistOutputsOptions = \
+        ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
+    restore_outputs: ConfigRestoreOutputsOptions = \
+        ConfigRestoreOutputsOptions.DISABLED
 
 
 class IsEngineConfig(Protocol):

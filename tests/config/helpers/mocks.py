@@ -39,14 +39,14 @@ class MockSubscriberCls:
 
 
 class MockIsJobConfig(Protocol):
-    serialize_outputs: bool = True
-    resume_previous_runs: bool = False
+    persist_outputs: bool = True
+    restore_outputs: bool = False
 
 
 @dataclass
 class MockJobConfig:
-    serialize_outputs: bool = True
-    resume_previous_runs: bool = False
+    persist_outputs: bool = True
+    restore_outputs: bool = False
 
 
 class MockJobCreator:
