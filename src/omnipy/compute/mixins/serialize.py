@@ -28,17 +28,19 @@ class SerializerFuncJobBaseMixin:
                  persist_outputs: Optional[PersistOutputsOptions] = None,
                  restore_outputs: Optional[RestoreOutputsOptions] = None):
 
-        has_job_config = self.config is not None
-
         if persist_outputs is None:
-            self._persist_outputs = PersistOpts.FOLLOW_CONFIG if has_job_config else None
+            self._persist_outputs = PersistOpts.FOLLOW_CONFIG if self._has_job_config else None
         else:
             self._persist_outputs = PersistOpts(persist_outputs)
 
         if restore_outputs is None:
-            self._restore_outputs = RestoreOpts.FOLLOW_CONFIG if has_job_config else None
+            self._restore_outputs = RestoreOpts.FOLLOW_CONFIG if self._has_job_config else None
         else:
             self._restore_outputs = RestoreOpts(restore_outputs)
+
+    @property
+    def _has_job_config(self) -> bool:
+        return self.config is not None
 
     @property
     def persist_outputs(self) -> Optional[PersistOutputsOptions]:
@@ -50,7 +52,7 @@ class SerializerFuncJobBaseMixin:
 
     @property
     def will_persist_outputs(self) -> PersistOutputsOptions:
-        if self._persist_outputs is not PersistOpts.FOLLOW_CONFIG:
+        if not self._has_job_config or self._persist_outputs is not PersistOpts.FOLLOW_CONFIG:
             return self._persist_outputs if self._persist_outputs is not None \
                     else PersistOpts.DISABLED
         else:
@@ -71,7 +73,7 @@ class SerializerFuncJobBaseMixin:
 
     @property
     def will_restore_outputs(self) -> RestoreOutputsOptions:
-        if self._restore_outputs is not RestoreOpts.FOLLOW_CONFIG:
+        if not self._has_job_config or self._restore_outputs is not RestoreOpts.FOLLOW_CONFIG:
             return self._restore_outputs if self._restore_outputs is not None \
                     else RestoreOpts.DISABLED
         else:
