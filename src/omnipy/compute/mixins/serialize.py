@@ -2,11 +2,13 @@ from datetime import datetime
 from enum import Enum
 import os
 from pathlib import Path
+import tarfile
 from typing import Optional
 
 from omnipy.config.job import ConfigPersistOutputsOptions as ConfigPersistOpts
 from omnipy.config.job import ConfigRestoreOutputsOptions as ConfigRestoreOpts
 from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 from omnipy.data.serializer import SerializerRegistry
 from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
 from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
@@ -94,13 +96,24 @@ class SerializerFuncJobBaseMixin:
 
 
 class SerializerFuncJobMixin:
+    def __init__(self) -> None:
+        self._serializer_registry = self._create_serializer_registry()
+
+    def _create_serializer_registry(self):
+        registry = SerializerRegistry()
+
+        registry.register(PandasDatasetToTarFileSerializer)
+        registry.register(RawDatasetToTarFileSerializer)
+        registry.register(JsonDatasetToTarFileSerializer)
+
+        return registry
+
     def __call__(self, *args: object, **kwargs: object) -> object:
         if self.will_restore_outputs in [
                 RestoreOpts.AUTO_ENABLE_IGNORE_PARAMS, RestoreOpts.FORCE_ENABLE_IGNORE_PARAMS
         ]:
             try:
-                results = self._deserialize_and_restore_outputs()
-                return result
+                return self._deserialize_and_restore_outputs()
             except Exception:
                 if self.will_restore_outputs is RestoreOpts.FORCE_ENABLE_IGNORE_PARAMS:
                     raise
@@ -111,23 +124,10 @@ class SerializerFuncJobMixin:
             if isinstance(results, Dataset):
                 self._serialize_and_persist_outputs(results)
             else:
-                from omnipy import runtime
-                if runtime:
-                    runtime.objects.registry.log(
-                        datetime.now(),
-                        f'Results of {self.unique_name} is not a Dataset and cannot'
-                        f'be automatically serialized and persisted!')
+                self._log_message(f'Results of {self.unique_name} is not a Dataset and cannot '
+                                  f'be automatically serialized and persisted!')
 
         return results
-
-    def _create_serializer_registry(self):
-        registry = SerializerRegistry()
-
-        registry.register(PandasDatasetToTarFileSerializer)
-        registry.register(RawDatasetToTarFileSerializer)
-        registry.register(JsonDatasetToTarFileSerializer)
-
-        return registry
 
     def _serialize_and_persist_outputs(self, results: Dataset):
         run_time = self.datetime_of_flow_run if self.datetime_of_flow_run is not None \
@@ -141,18 +141,68 @@ class SerializerFuncJobMixin:
         num_cur_files = len(os.listdir(output_path))
         file_path = output_path.joinpath(f'{num_cur_files:02}-{self.name}.tar.gz')
 
-        from omnipy import runtime
-        if runtime:
-            runtime.objects.registry.log(
-                datetime.now(),
-                f'Writing dataset as a gzipped tarpack of raw files to "{os.path.abspath(file_path)}"'
-            )
+        parsed_dataset, serializer = \
+            self._serializer_registry.auto_detect_tar_file_serializer(results)
 
-        serializer_registry = self._create_serializer_registry()
-        parsed_dataset, serializer = serializer_registry.auto_detect_tar_file_serializer(results)
+        self._log_message(f'Writing dataset as a gzipped tarpack to "{os.path.abspath(file_path)}"')
 
         with open(file_path, 'wb') as tarfile:
             tarfile.write(serializer.serialize(parsed_dataset))
 
-    def _deserialize_and_restore_outputs(self):
+    # TODO: Refactor
+    def _deserialize_and_restore_outputs(self) -> Dataset:
+        output_path = Path(self.config.persist_data_dir_path)
+        if os.path.exists(output_path):
+            reverse_sorted_date_dirs = list(reversed(sorted(os.listdir(output_path))))
+            if len(reverse_sorted_date_dirs) > 0:
+                last_dir = reverse_sorted_date_dirs[-1]
+                last_dir_path = output_path.joinpath(last_dir)
+                for job_output_name in reversed(sorted(os.listdir(last_dir_path))):
+                    name_part_of_filename = job_output_name[3:-7]
+                    print(name_part_of_filename)
+                    if name_part_of_filename == self.name:
+                        tar_file_path = last_dir_path.joinpath(job_output_name)
+                        with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
+                            file_suffixes = set(fn.split('.')[-1] for fn in tarfile_obj.getnames())
+                        if len(file_suffixes) != 1:
+                            self._log_message(f'Tar archive contains files with different or '
+                                              f'no file suffixes: {file_suffixes}. Serializer '
+                                              f'cannot be uniquely determined. Aborting '
+                                              f'restore.')
+                        else:
+                            file_suffix = file_suffixes.pop()
+                            serializers = self._serializer_registry.\
+                                detect_tar_file_serializers_from_file_suffix(file_suffix)
+                            if len(serializers) == 0:
+                                self._log_message(
+                                    f'No serializer for file suffix "{file_suffix}" can be'
+                                    f'determined. Aborting restore.')
+                            else:
+                                serializer = serializers[0]
+                                with open(tar_file_path, 'rb') as tarfile_binary:
+                                    dataset = serializer.deserialize(tarfile_binary.read())
+                                if dataset.get_model_class() is \
+                                        self.return_type().get_model_class():
+                                    return dataset
+                                else:
+                                    try:
+                                        new_dataset = self.return_type()
+                                        if new_dataset.get_model_class() is Model[str]:
+                                            new_dataset.from_data(dataset.to_json())
+                                        else:
+                                            new_dataset.from_json(dataset.to_data())
+                                        return new_dataset
+                                    except:
+                                        return dataset
+
         raise RuntimeError('No persisted output')
+
+    @classmethod
+    def _log_message(cls, log_message: str) -> None:
+        from omnipy import runtime
+        if runtime:
+            runtime.objects.registry.log(datetime.now(), log_message)
+
+    # TODO: Refactor logging as a general mixin and add it to at least RunStateRegistry (as now)
+    #       and also JobCreator, possibly engines, and more. Use RuntimeConfig to subscribe to
+    #       loggers, as now.

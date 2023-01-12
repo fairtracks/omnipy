@@ -33,7 +33,7 @@ json_dataset['json_python_b'] = [1, 4, 9, {'options': {'verbose': False}}]
 
 json_str_dataset = Dataset[Model[str]]()
 json_str_dataset['json_str_a'] = '{"one": ["contents", 1, true], "two": null}'
-json_str_dataset['json_str_b'] = '[1, 4, 9, {"options": {"verbose": false} }]'
+json_str_dataset['json_str_b'] = '[1, 4, 9, {"options": {"verbose": false}}]'
 
 csv_dataset = Dataset[Model[str]]()
 csv_dataset['csv_person'] = 'firstname,lastname,age\nJohn,Doe,46\nJane,Doe,42\nMr,Miyagi,82\n'

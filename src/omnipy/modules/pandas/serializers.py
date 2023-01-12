@@ -14,14 +14,17 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer):
         return PandasDataset
 
     @classmethod
+    def get_output_file_suffix(cls) -> str:
+        return 'csv'
+
+    @classmethod
     def serialize(cls, pandas_dataset: PandasDataset) -> Union[bytes, memoryview]:
         def pandas_encode_func(pandas_data: pd.DataFrame) -> memoryview:
             csv_bytes = BytesIO()
             pandas_data.to_csv(csv_bytes, encoding='utf8', mode='b', index=False)
             return csv_bytes.getbuffer()
 
-        return cls.create_tarfile_from_dataset(
-            pandas_dataset, file_suffix='csv', data_encode_func=pandas_encode_func)
+        return cls.create_tarfile_from_dataset(pandas_dataset, data_encode_func=pandas_encode_func)
 
     @classmethod
     def deserialize(cls, tarfile_bytes: bytes) -> PandasDataset:
@@ -36,7 +39,6 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer):
         cls.create_dataset_from_tarfile(
             pandas_dataset,
             tarfile_bytes,
-            file_suffix='csv',
             data_decode_func=csv_decode_func,
             dictify_object_func=python_dictify_object,
             import_method='from_data')  # noqa

@@ -52,3 +52,5 @@ def test_serializer_registry():
 
     assert registry.serializers == (MockNumberToTarFileSerializer, MockNumberSerializer)
     assert registry.tar_file_serializers == (MockNumberToTarFileSerializer,)
+    assert registry.detect_tar_file_serializers_from_file_suffix('num') == \
+           (MockNumberToTarFileSerializer,)

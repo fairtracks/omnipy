@@ -12,12 +12,15 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer):
         return JsonDataset
 
     @classmethod
+    def get_output_file_suffix(cls) -> str:
+        return 'json'
+
+    @classmethod
     def serialize(cls, json_dataset: JsonDataset) -> Union[bytes, memoryview]:
         def json_encode_func(json_data: JsonModel) -> bytes:
             return json_data.json(indent=2).encode('utf8')
 
-        return cls.create_tarfile_from_dataset(
-            json_dataset, file_suffix='json', data_encode_func=json_encode_func)
+        return cls.create_tarfile_from_dataset(json_dataset, data_encode_func=json_encode_func)
 
     @classmethod
     def deserialize(cls, tarfile_bytes: bytes) -> JsonDataset:
@@ -32,7 +35,6 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer):
         cls.create_dataset_from_tarfile(
             json_dataset,
             tarfile_bytes,
-            file_suffix='json',
             data_decode_func=json_decode_func,
             dictify_object_func=json_dictify_object,
             import_method='from_json')

@@ -16,6 +16,10 @@ class MockNumberSerializer(Serializer):
         return NumberDataset
 
     @classmethod
+    def get_output_file_suffix(cls) -> str:
+        return 'num'
+
+    @classmethod
     def serialize(cls, number_dataset: NumberDataset) -> Union[bytes, memoryview]:
         return ','.join(':'.join([k, str(v)]) for (k, v) in number_dataset.items()).encode('utf8')
 
@@ -33,12 +37,15 @@ class MockNumberToTarFileSerializer(TarFileSerializer):
         return NumberDataset
 
     @classmethod
+    def get_output_file_suffix(cls) -> str:
+        return 'num'
+
+    @classmethod
     def serialize(cls, number_dataset: NumberDataset) -> Union[bytes, memoryview]:
         def number_encode_func(number_data: int) -> bytes:
             return bytes([number_data])
 
-        return cls.create_tarfile_from_dataset(
-            number_dataset, file_suffix='num', data_encode_func=number_encode_func)
+        return cls.create_tarfile_from_dataset(number_dataset, data_encode_func=number_encode_func)
 
     @classmethod
     def deserialize(cls, tarfile_bytes: bytes) -> NumberDataset:
@@ -53,7 +60,6 @@ class MockNumberToTarFileSerializer(TarFileSerializer):
         cls.create_dataset_from_tarfile(
             number_dataset,
             tarfile_bytes,
-            file_suffix='num',
             data_decode_func=number_decode_func,
             dictify_object_func=python_dictify_object,
         )

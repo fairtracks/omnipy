@@ -11,12 +11,15 @@ class RawDatasetToTarFileSerializer(TarFileSerializer):
         return Dataset[Model[str]]
 
     @classmethod
+    def get_output_file_suffix(cls) -> str:
+        return 'raw'
+
+    @classmethod
     def serialize(cls, dataset: Dataset[Model[str]]) -> bytes:
         def raw_encode_func(contents: str) -> bytes:
             return contents.encode('utf8')
 
-        return cls.create_tarfile_from_dataset(
-            dataset, file_suffix='raw', data_encode_func=raw_encode_func)
+        return cls.create_tarfile_from_dataset(dataset, data_encode_func=raw_encode_func)
 
     @classmethod
     def deserialize(cls, tarfile_bytes: bytes) -> Dataset[Model[str]]:
@@ -31,7 +34,6 @@ class RawDatasetToTarFileSerializer(TarFileSerializer):
         cls.create_dataset_from_tarfile(
             dataset,
             tarfile_bytes,
-            file_suffix='raw',
             data_decode_func=raw_decode_func,
             dictify_object_func=python_dictify_object,
             import_method='from_data')  # noqa
