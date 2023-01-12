@@ -8,18 +8,6 @@ from omnipy.compute.task import TaskTemplate
 from omnipy.config.job import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions, JobConfig
 from omnipy.engine.protocols import IsRuntime
 
-from .cases.raw.functions import json_func
-
-
-@pytest.fixture(scope='function')
-def json_task_tmpl() -> TaskTemplate:
-    return TaskTemplate()(json_func)
-
-
-@pytest.fixture(scope='function')
-def json_flow_tmpl(json_task_tmpl: Annotated[TaskTemplate, pytest.fixture]) -> LinearFlowTemplate:
-    return LinearFlowTemplate(json_task_tmpl)(json_func)
-
 
 def test_all_properties_pytest_default_config(
     json_task_tmpl: Annotated[TaskTemplate, pytest.fixture],) -> None:
@@ -187,7 +175,3 @@ def test_properties_restore_outputs_override_config(
             json_flow_tmpl_4, json_flow_tmpl_4.apply():
         assert job_obj_4.restore_outputs is RestoreOutputsOptions.FOLLOW_CONFIG
         assert job_obj_4.will_restore_outputs is RestoreOutputsOptions.AUTO_ENABLE_IGNORE_PARAMS
-
-
-# def test_auto_detect_serializer(json_task_tmpl: Annotated[TaskTemplate, pytest.fixture],):
-#     assert auto_detect_serializer(json_task_tmpl.run()) == JsonDatasetToTarFileSerializer

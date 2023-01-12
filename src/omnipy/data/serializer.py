@@ -4,6 +4,8 @@ import tarfile
 from tarfile import TarInfo
 from typing import Any, Callable, Dict, IO, Tuple, Type, Union
 
+from pydantic import ValidationError
+
 from omnipy.data.dataset import Dataset
 
 
@@ -70,3 +72,42 @@ class SerializerRegistry:
     @property
     def tar_file_serializers(self) -> Tuple[Type[TarFileSerializer], ...]:
         return tuple(cls for cls in self._serializer_classes if issubclass(cls, TarFileSerializer))
+
+    def auto_detect(self, dataset: Dataset):
+        return self._autodetect_serializer(dataset, self.serializers)
+
+    def auto_detect_tar_file_serializer(self, dataset: Dataset):
+        return self._autodetect_serializer(dataset, self.tar_file_serializers)
+
+    @classmethod
+    def _autodetect_serializer(cls, dataset, serializers):
+        # def _direct(dataset, new_dataset_cls):
+        #     new_dataset = new_dataset_cls(dataset)
+        #     return new_dataset
+
+        def _to_data_from_json(dataset, new_dataset_cls):
+            new_dataset = new_dataset_cls()
+            new_dataset.from_json(dataset.to_data())
+            return new_dataset
+
+        def _to_data_from_data(dataset, new_dataset_cls):
+            new_dataset = new_dataset_cls()
+            new_dataset.from_data(dataset.to_data())
+            return new_dataset
+
+        # def _to_json_from_json(dataset, new_dataset_cls):
+        #     new_dataset = new_dataset_cls()
+        #     new_dataset.from_json(dataset.to_json())
+        #     return new_dataset
+
+        for func in (_to_data_from_json, _to_data_from_data):
+            for serializer in serializers:
+                new_dataset_cls = serializer.get_supported_dataset_type()
+
+                try:
+                    new_dataset = func(dataset, new_dataset_cls)
+                    return new_dataset, serializer
+                except (TypeError, ValueError, ValidationError) as e:
+                    print(e)
+
+        return None, None
