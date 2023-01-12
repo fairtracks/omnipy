@@ -2,6 +2,7 @@ import sys
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
+from omnipy.data.serializer import SerializerRegistry
 
 from .helpers.functions import assert_tar_file_contents
 from .helpers.mocks import MockNumberSerializer, MockNumberToTarFileSerializer, NumberDataset
@@ -41,3 +42,13 @@ def test_number_dataset_to_tar_file_serializer():
     deserialized_json_data = serializer.deserialize(tarfile_bytes)
 
     assert deserialized_json_data == number_data
+
+
+def test_serializer_registry():
+    registry = SerializerRegistry()
+
+    registry.register(MockNumberToTarFileSerializer)
+    registry.register(MockNumberSerializer)
+
+    assert registry.serializers == (MockNumberToTarFileSerializer, MockNumberSerializer)
+    assert registry.tar_file_serializers == (MockNumberToTarFileSerializer,)

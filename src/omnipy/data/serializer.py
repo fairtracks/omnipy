@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from io import BytesIO
 import tarfile
 from tarfile import TarInfo
-from typing import Any, Callable, Dict, IO, Type, Union
+from typing import Any, Callable, Dict, IO, Tuple, Type, Union
 
 from omnipy.data.dataset import Dataset
 
@@ -57,9 +57,17 @@ class TarFileSerializer(Serializer, ABC):
                     dictify_object_func(obj_type, data_decode_func(obj_type_file)))
 
 
-class CsvSerializer:
-    pass
+class SerializerRegistry:
+    def __init__(self) -> None:
+        self._serializer_classes: list[Type[Serializer]] = []
 
+    def register(self, serializer_cls: Type[Serializer]) -> None:
+        self._serializer_classes.append(serializer_cls)
 
-class PythonSerializer:
-    pass
+    @property
+    def serializers(self) -> Tuple[Type[Serializer], ...]:
+        return tuple(self._serializer_classes)
+
+    @property
+    def tar_file_serializers(self) -> Tuple[Type[TarFileSerializer], ...]:
+        return tuple(cls for cls in self._serializer_classes if issubclass(cls, TarFileSerializer))
