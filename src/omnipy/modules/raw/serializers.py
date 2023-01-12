@@ -6,8 +6,8 @@ from omnipy.data.serializer import TarFileSerializer
 
 
 class RawDatasetToTarFileSerializer(TarFileSerializer):
-    @property
-    def supported_dataset_type(self) -> Type[Dataset]:
+    @classmethod
+    def get_supported_dataset_type(cls) -> Type[Dataset]:
         return Dataset[Model[str]]
 
     @classmethod

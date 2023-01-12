@@ -8,9 +8,8 @@ from omnipy.data.dataset import Dataset
 
 
 class Serializer(ABC):
-    @property
-    @abstractmethod
-    def supported_dataset_type(self) -> Type[Dataset]:
+    @classmethod
+    def get_supported_dataset_type(cls) -> Type[Dataset]:
         pass
 
     @classmethod

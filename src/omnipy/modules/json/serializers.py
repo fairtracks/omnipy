@@ -7,8 +7,8 @@ from .models import JsonDataset, JsonModel
 
 
 class JsonDatasetToTarFileSerializer(TarFileSerializer):
-    @property
-    def supported_dataset_type(self) -> Type[Dataset]:
+    @classmethod
+    def get_supported_dataset_type(cls) -> Type[Dataset]:
         return JsonDataset
 
     @classmethod

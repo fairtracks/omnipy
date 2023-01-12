@@ -11,8 +11,8 @@ class NumberDataset(Dataset[Model[int]]):
 
 
 class MockNumberSerializer(Serializer):
-    @property
-    def supported_dataset_type(self) -> Type[Dataset]:
+    @classmethod
+    def get_supported_dataset_type(cls) -> Type[Dataset]:
         return NumberDataset
 
     @classmethod
@@ -28,8 +28,8 @@ class MockNumberSerializer(Serializer):
 
 
 class MockNumberToTarFileSerializer(TarFileSerializer):
-    @property
-    def supported_dataset_type(self) -> Type[Dataset]:
+    @classmethod
+    def get_supported_dataset_type(cls) -> Type[Dataset]:
         return NumberDataset
 
     @classmethod

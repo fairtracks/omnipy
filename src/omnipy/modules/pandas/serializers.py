@@ -1,16 +1,16 @@
 from io import BytesIO
-from typing import Any, Dict, IO, Union, Type
+from typing import Any, Dict, IO, Type, Union
 
 from omnipy.data.serializer import TarFileSerializer
 
 from . import pd
-from .models import PandasDataset
 from ...data.dataset import Dataset
+from .models import PandasDataset
 
 
 class PandasDatasetToTarFileSerializer(TarFileSerializer):
-    @property
-    def supported_dataset_type(self) -> Type[Dataset]:
+    @classmethod
+    def get_supported_dataset_type(cls) -> Type[Dataset]:
         return PandasDataset
 
     @classmethod
