@@ -159,7 +159,6 @@ class SerializerFuncJobMixin:
                 last_dir_path = output_path.joinpath(last_dir)
                 for job_output_name in reversed(sorted(os.listdir(last_dir_path))):
                     name_part_of_filename = job_output_name[3:-7]
-                    print(name_part_of_filename)
                     if name_part_of_filename == self.name:
                         tar_file_path = last_dir_path.joinpath(job_output_name)
                         with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
