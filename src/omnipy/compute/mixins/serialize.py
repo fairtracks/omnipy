@@ -153,9 +153,9 @@ class SerializerFuncJobMixin:
     def _deserialize_and_restore_outputs(self) -> Dataset:
         output_path = Path(self.config.persist_data_dir_path)
         if os.path.exists(output_path):
-            reverse_sorted_date_dirs = list(reversed(sorted(os.listdir(output_path))))
-            if len(reverse_sorted_date_dirs) > 0:
-                last_dir = reverse_sorted_date_dirs[-1]
+            sorted_date_dirs = list(sorted(os.listdir(output_path)))
+            if len(sorted_date_dirs) > 0:
+                last_dir = sorted_date_dirs[-1]
                 last_dir_path = output_path.joinpath(last_dir)
                 for job_output_name in reversed(sorted(os.listdir(last_dir_path))):
                     name_part_of_filename = job_output_name[3:-7]
@@ -178,6 +178,9 @@ class SerializerFuncJobMixin:
                                     f'No serializer for file suffix "{file_suffix}" can be'
                                     f'determined. Aborting restore.')
                             else:
+                                self._log_message(f'Reading dataset from a gzipped tarpack at'
+                                                  f' "{os.path.abspath(tar_file_path)}"')
+
                                 serializer = serializers[0]
                                 with open(tar_file_path, 'rb') as tarfile_binary:
                                     dataset = serializer.deserialize(tarfile_binary.read())
