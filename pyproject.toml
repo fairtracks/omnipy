@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "omnipy"
-version = "0.4.2"
+version = "0.5.0"
 description = ""
 authors = ["Sveinung Gundersen <sveinugu@gmail.com>", "Federico Bianchini <fredebi@uio.no>", "Ahmed Ghanem <ahmedg@uio.no>", "Joshua Baskaran <joshuaba@uio.no>"]
 readme = "README.md"
