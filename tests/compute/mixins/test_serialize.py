@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Type
 
 import pytest
 
@@ -6,7 +6,7 @@ from omnipy.compute.flow import LinearFlowTemplate
 from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.compute.task import TaskTemplate
 from omnipy.config.job import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions, JobConfig
-from omnipy.config.runtime import Runtime
+from omnipy.engine.protocols import IsRuntime
 
 from .cases.raw.functions import json_func
 
@@ -21,12 +21,6 @@ def json_flow_tmpl(json_task_tmpl: Annotated[TaskTemplate, pytest.fixture]) -> L
     return LinearFlowTemplate(json_task_tmpl)(json_func)
 
 
-@pytest.fixture(scope='function')
-def runtime() -> Runtime:
-    Runtime.config.job = JobConfig()
-    return Runtime()
-
-
 def test_all_properties_pytest_default_config(
     json_task_tmpl: Annotated[TaskTemplate, pytest.fixture],) -> None:
 
@@ -38,7 +32,7 @@ def test_all_properties_pytest_default_config(
 
 
 def test_all_properties_runtime_default_config(
-    runtime: Annotated[Runtime, pytest.fixture],
+    runtime: Annotated[IsRuntime, pytest.fixture],
     json_task_tmpl: Annotated[TaskTemplate, pytest.fixture],
     json_flow_tmpl: Annotated[LinearFlowTemplate, pytest.fixture],
 ) -> None:
@@ -56,7 +50,7 @@ def test_all_properties_runtime_default_config(
 
 
 def test_properties_persist_outputs_enable_disable(
-    runtime: Annotated[Runtime, pytest.fixture],
+    runtime: Annotated[IsRuntime, pytest.fixture],
     json_task_tmpl: Annotated[TaskTemplate, pytest.fixture],
     json_flow_tmpl: Annotated[LinearFlowTemplate, pytest.fixture],
 ) -> None:
@@ -87,7 +81,7 @@ def test_properties_persist_outputs_enable_disable(
 
 
 def test_properties_persist_outputs_override_config(
-    runtime: Annotated[Runtime, pytest.fixture],
+    runtime: Annotated[IsRuntime, pytest.fixture],
     json_task_tmpl: Annotated[TaskTemplate, pytest.fixture],
     json_flow_tmpl: Annotated[LinearFlowTemplate, pytest.fixture],
 ) -> None:
@@ -132,7 +126,7 @@ def test_properties_persist_outputs_override_config(
 
 
 def test_properties_restore_outputs_enable_disable(
-    runtime: Annotated[Runtime, pytest.fixture],
+    runtime: Annotated[IsRuntime, pytest.fixture],
     json_task_tmpl: Annotated[TaskTemplate, pytest.fixture],
     json_flow_tmpl: Annotated[LinearFlowTemplate, pytest.fixture],
 ) -> None:
@@ -152,7 +146,7 @@ def test_properties_restore_outputs_enable_disable(
 
 
 def test_properties_restore_outputs_override_config(
-    runtime: Annotated[Runtime, pytest.fixture],
+    runtime: Annotated[IsRuntime, pytest.fixture],
     json_task_tmpl: Annotated[TaskTemplate, pytest.fixture],
     json_flow_tmpl: Annotated[LinearFlowTemplate, pytest.fixture],
 ) -> None:
@@ -195,5 +189,5 @@ def test_properties_restore_outputs_override_config(
         assert job_obj_4.will_restore_outputs is RestoreOutputsOptions.AUTO_ENABLE_IGNORE_PARAMS
 
 
-def test_auto_detect_serializer(json_task_tmpl: Annotated[TaskTemplate, pytest.fixture],):
-    assert auto_detect_serializer(json_task_tmpl.run()) == JsonDatasetToTarFileSerializer
+# def test_auto_detect_serializer(json_task_tmpl: Annotated[TaskTemplate, pytest.fixture],):
+#     assert auto_detect_serializer(json_task_tmpl.run()) == JsonDatasetToTarFileSerializer

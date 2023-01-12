@@ -1,4 +1,4 @@
-from typing import Tuple, Type, Union
+from typing import Annotated, Tuple, Type, Union
 
 import pytest
 
@@ -52,7 +52,8 @@ def test_fail_only_jobtemplate_init_mock():
         Job()
 
 
-def test_job_creator_singular_mock() -> None:
+def test_job_creator_singular_mock(
+        teardown_reset_job_creator: Annotated[None, pytest.fixture]) -> None:
     JobBase, JobTemplate, Job = mock_job_classes()  # noqa
 
     assert isinstance(JobBase.job_creator, JobCreator)
@@ -80,7 +81,7 @@ def test_job_creator_singular_mock() -> None:
     assert job_tmpl_new.__class__.job_creator is job_creator
 
 
-def test_engine_mock():
+def test_engine_mock(teardown_reset_job_creator: Annotated[None, pytest.fixture]):
     mock_local_runner = MockLocalRunner()
     JobBase, JobTemplate, Job = mock_job_classes()  # noqa
 
@@ -113,7 +114,7 @@ def test_engine_mock():
     assert not hasattr(Job, 'set_engine')
 
 
-def test_config_mock():
+def test_config_mock(teardown_reset_job_creator: Annotated[None, pytest.fixture]):
     mock_job_config = MockJobConfig()
     JobBase, JobTemplate, Job = mock_job_classes()  # noqa
 

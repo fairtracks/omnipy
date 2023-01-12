@@ -83,20 +83,23 @@ class IsRuntimeObjects(IsConfigPublisher, Protocol):
 
 
 class IsRuntime(IsConfigPublisher, Protocol):
-    object: IsRuntimeObjects
+    objects: IsRuntimeObjects
     config: IsRuntimeConfig
 
     def __init__(
             self,
-            object: Optional[IsRuntimeObjects] = None,  # noqa
+            objects: Optional[IsRuntimeObjects] = None,  # noqa
             config: Optional[IsRuntimeConfig] = None,  # noqa
             *args: Any,
             **kwargs: Any) -> None:
         ...
 
+    def reset_subscriptions(self):
+        ...
+
 
 class IsJobCreator(Protocol):
-    config: IsJobConfig
+    config: Optional[IsJobConfig]
     engine: Optional['IsTaskRunnerEngine']
     nested_context_level: int
 

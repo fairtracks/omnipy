@@ -36,7 +36,6 @@ serialize_to_tarpacked_json_files('splitted_encode_json', splitted_encode_json)
 serialize_to_tarpacked_csv_files('splitted_encode_csv', splitted_encode_json)
 # serialize_to_tarpacked_csv_files('encode_json_pruned', encode_json_pruned)
 
-# runtime = Runtime()
 # runtime.config.engine = 'prefect'
 # runtime.config.prefect.use_cached_results = True
 #

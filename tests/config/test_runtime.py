@@ -1,8 +1,12 @@
 import logging
+from typing import Annotated, Type
+
+import pytest
 
 from omnipy.config.job import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
-from omnipy.config.runtime import Runtime, RuntimeConfig, RuntimeObjects
+from omnipy.config.runtime import RuntimeConfig, RuntimeObjects
 from omnipy.engine.constants import EngineChoice
+from omnipy.engine.protocols import IsRuntime
 
 from .helpers.functions import assert_logger
 from .helpers.mocks import (MockJobConfig,
@@ -69,9 +73,7 @@ def test_objects_default() -> None:
     assert_runtime_objects_default(RuntimeObjects())
 
 
-def test_default_config() -> None:
-    runtime = Runtime()
-
+def test_default_config(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
     assert isinstance(runtime.config, RuntimeConfig)
     assert isinstance(runtime.objects, RuntimeObjects)
 
@@ -79,10 +81,11 @@ def test_default_config() -> None:
     assert_runtime_objects_default(runtime.objects)
 
 
-def test_engines_subscribe_to_registry() -> None:
+def test_engines_subscribe_to_registry(
+        runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
     mock_local_runner = MockLocalRunner()
     mock_prefect_engine = MockPrefectEngine()
-    runtime = Runtime(
+    runtime = runtime_cls(
         objects=RuntimeObjects(
             local=mock_local_runner,
             prefect=mock_prefect_engine,
@@ -112,10 +115,11 @@ def test_engines_subscribe_to_registry() -> None:
     assert runtime.objects.prefect.registry is runtime.objects.registry
 
 
-def test_engines_subscribe_to_config() -> None:
+def test_engines_subscribe_to_config(
+        runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
     mock_local_runner = MockLocalRunner()
     mock_prefect_engine = MockPrefectEngine()
-    runtime = Runtime(
+    runtime = runtime_cls(
         objects=RuntimeObjects(
             local=mock_local_runner,
             prefect=mock_prefect_engine,
@@ -159,13 +163,14 @@ def test_engines_subscribe_to_config() -> None:
     assert runtime.config.prefect is not mock_prefect_engine_config
 
 
-def test_registry_subscribe_to_logger() -> None:
+def test_registry_subscribe_to_logger(
+        runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
     logger_1 = logging.getLogger('logger_1')
     logger_2 = logging.getLogger('logger_2')
     assert logger_1 is not logger_2
 
     mock_registry = MockRunStateRegistry()
-    runtime = Runtime(objects=RuntimeObjects(
+    runtime = runtime_cls(objects=RuntimeObjects(
         logger=logger_1,
         registry=mock_registry,
     ))
@@ -182,10 +187,11 @@ def test_registry_subscribe_to_logger() -> None:
     assert runtime.objects.logger is logger_2
 
 
-def test_registry_subscribe_to_config() -> None:
+def test_registry_subscribe_to_config(
+        runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
     mock_registry = MockRunStateRegistry()
     mock_registry_config = MockRunStateRegistryConfig(verbose=False)
-    runtime = Runtime(
+    runtime = runtime_cls(
         objects=RuntimeObjects(registry=mock_registry),
         config=RuntimeConfig(registry=mock_registry_config),
     )
@@ -209,11 +215,12 @@ def test_registry_subscribe_to_config() -> None:
     assert runtime.config.registry is mock_registry_config_2
 
 
-def test_job_creator_subscribe_to_engine() -> None:
+def test_job_creator_subscribe_to_engine(
+        runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
     mock_job_creator = MockJobCreator()
     mock_local_runner = MockLocalRunner()
     mock_prefect_engine = MockPrefectEngine()
-    runtime = Runtime(
+    runtime = runtime_cls(
         objects=RuntimeObjects(
             job_creator=mock_job_creator,
             local=mock_local_runner,
@@ -255,10 +262,11 @@ def test_job_creator_subscribe_to_engine() -> None:
     assert runtime.objects.job_creator.engine is runtime.objects.prefect is mock_prefect_engine_2
 
 
-def test_job_creator_subscribe_to_job_config() -> None:
+def test_job_creator_subscribe_to_job_config(
+        runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
     mock_job_creator = MockJobCreator()
     mock_job_config = MockJobConfig(persist_outputs=False, restore_outputs=True)
-    runtime = Runtime(
+    runtime = runtime_cls(
         objects=RuntimeObjects(job_creator=mock_job_creator),
         config=RuntimeConfig(job=mock_job_config),
     )

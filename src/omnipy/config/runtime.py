@@ -19,6 +19,7 @@ from omnipy.engine.protocols import (IsEngine,
                                      IsPrefectEngineConfig,
                                      IsRunStateRegistry,
                                      IsRunStateRegistryConfig,
+                                     IsRuntime,
                                      IsRuntimeConfig,
                                      IsRuntimeObjects)
 from omnipy.engine.registry import RunStateRegistry
@@ -35,7 +36,7 @@ def get_default_logger():
 
 @dataclass
 class RuntimeEntry(ConfigPublisher):
-    _back: Optional['Runtime'] = field(default=None, init=False, repr=False)
+    _back: Optional[IsRuntime] = field(default=None, init=False, repr=False)
 
     def __setattr__(self, key, value):
         super().__setattr__(key, value)
@@ -44,30 +45,36 @@ class RuntimeEntry(ConfigPublisher):
             self._back.reset_subscriptions()
 
 
+def _job_creator_factory():
+    return JobBase.job_creator
+
+
 @dataclass
 class RuntimeObjects(RuntimeEntry, ConfigPublisher):
-    logger: logging.Logger = get_default_logger()
-    registry: IsRunStateRegistry = RunStateRegistry()
-    job_creator: IsJobCreator = JobBase.job_creator
-    local: IsEngine = LocalRunner()
-    prefect: IsEngine = PrefectEngine()
+    logger: logging.Logger = field(default_factory=get_default_logger)
+    registry: IsRunStateRegistry = field(default_factory=RunStateRegistry)
+    job_creator: IsJobCreator = field(default_factory=_job_creator_factory)
+    local: IsEngine = field(default_factory=LocalRunner)
+    prefect: IsEngine = field(default_factory=PrefectEngine)
 
 
 @dataclass
 class RuntimeConfig(RuntimeEntry, ConfigPublisher):
-    job: IsJobConfig = JobConfig()
+    job: IsJobConfig = field(default_factory=JobConfig)
     engine: EngineChoice = EngineChoice.LOCAL
-    local: IsLocalRunnerConfig = LocalRunnerConfig()
-    prefect: IsPrefectEngineConfig = PrefectEngineConfig()
-    registry: IsRunStateRegistryConfig = RunStateRegistryConfig()
+    local: IsLocalRunnerConfig = field(default_factory=LocalRunnerConfig)
+    prefect: IsPrefectEngineConfig = field(default_factory=PrefectEngineConfig)
+    registry: IsRunStateRegistryConfig = field(default_factory=RunStateRegistryConfig)
 
 
 @dataclass
 class Runtime(ConfigPublisher):
-    objects: IsRuntimeObjects = RuntimeObjects()
-    config: IsRuntimeConfig = RuntimeConfig()
+    objects: IsRuntimeObjects = field(default_factory=RuntimeObjects)
+    config: IsRuntimeConfig = field(default_factory=RuntimeConfig)
 
     def __post_init__(self):
+        super().__init__()
+
         self.objects._back = self
         self.config._back = self
 
@@ -103,8 +110,8 @@ class Runtime(ConfigPublisher):
         return setattr(self.config, engine_choice, engine_config)
 
     def _new_engine_config_if_new_cls(self, engine: IsEngine, engine_choice: EngineChoice) -> None:
-        # TODO: when parsing config from file is implemented, make sure that the new engine config
-        #       classes here reparse the config files
+        # TODO: when parsing config from file is implemented, make sure that the new engine
+        #       config classes here reparse the config files
         engine_config_cls = engine.get_config_cls()
         if self._get_engine_config(engine_choice).__class__ is not engine_config_cls:
             self._set_engine_config(engine_choice, engine_config_cls())
