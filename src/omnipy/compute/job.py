@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
+from datetime import datetime
 from functools import update_wrapper
 from types import MappingProxyType
 from typing import Any, Dict, Generic, Hashable, Optional, Tuple, Type, Union
@@ -17,7 +18,8 @@ class JobCreator:
     def __init__(self) -> None:
         self._engine: Optional[IsTaskRunnerEngine] = None
         self._config: Optional[IsJobConfig] = None
-        self._nested_context_level = 0
+        self._nested_context_level: int = 0
+        self._datetime_of_nested_context_run: Optional[datetime] = None
 
     def set_engine(self, engine: IsTaskRunnerEngine) -> None:
         self._engine = engine
@@ -26,10 +28,16 @@ class JobCreator:
         self._config = config
 
     def __enter__(self):
+        if self._nested_context_level == 0:
+            self._datetime_of_nested_context_run = datetime.now()
+
         self._nested_context_level += 1
 
     def __exit__(self, exc_type, exc_value, traceback):
         self._nested_context_level -= 1
+
+        if self._nested_context_level == 0:
+            self._datetime_of_nested_context_run = None
 
     @property
     def engine(self) -> Optional[IsTaskRunnerEngine]:
@@ -42,6 +50,10 @@ class JobCreator:
     @property
     def nested_context_level(self) -> int:
         return self._nested_context_level
+
+    @property
+    def datetime_of_nested_context_run(self) -> datetime:
+        return self._datetime_of_nested_context_run
 
 
 class JobBaseMeta(ABCMeta):
@@ -190,6 +202,10 @@ class Job(JobBase, DynamicMixinAcceptor, Generic[JobBaseT, JobTemplateT]):
     @property
     def flow_context(self) -> IsJobCreator:
         return self.__class__.job_creator
+
+    @property
+    def datetime_of_flow_run(self) -> datetime:
+        return self.__class__.job_creator.datetime_of_nested_context_run
 
     @classmethod
     @abstractmethod

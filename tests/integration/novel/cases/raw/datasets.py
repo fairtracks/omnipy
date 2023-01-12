@@ -15,10 +15,6 @@ pandas_dataset.from_data({
                          columns=('fruit', 'taste'))
 })
 
-csv_dataset = Dataset[Model[str]]()
-csv_dataset['csv_person'] = 'firstname,lastname,age\nJohn,Doe,46\nJane,Doe,42\nMr,Miyagi,82\n'
-csv_dataset['csv_fruits'] = 'fruit,taste\napple,sweet\norange,sweet and sour\nlemon,sour\n'
-
 json_table_dataset = JsonDataset()
 json_table_dataset['json_table_a'] = [
     dict(firstname='John', lastname='Doe', age=46),
@@ -38,6 +34,10 @@ json_dataset['json_python_b'] = [1, 4, 9, {'options': {'verbose': False}}]
 json_str_dataset = Dataset[Model[str]]()
 json_str_dataset['json_str_a'] = '{"one": ["contents", 1, true], "two": null}'
 json_str_dataset['json_str_b'] = '[1, 4, 9, {"options": {"verbose": false} }]'
+
+csv_dataset = Dataset[Model[str]]()
+csv_dataset['csv_person'] = 'firstname,lastname,age\nJohn,Doe,46\nJane,Doe,42\nMr,Miyagi,82\n'
+csv_dataset['csv_fruits'] = 'fruit,taste\napple,sweet\norange,sweet and sour\nlemon,sour\n'
 
 str_dataset = Dataset[Model[str]]()
 str_dataset['str_a'] = '1, 2, 4, 6 -> aa\n6, 3, 4, 2 -> ab\n'

@@ -7,10 +7,9 @@ from omnipy.engine.constants import EngineChoice, RunState
 
 
 class IsJobConfig(Protocol):
-    persist_outputs: ConfigPersistOutputsOptions = \
-        ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
-    restore_outputs: ConfigRestoreOutputsOptions = \
-        ConfigRestoreOutputsOptions.DISABLED
+    persist_outputs: ConfigPersistOutputsOptions
+    restore_outputs: ConfigRestoreOutputsOptions
+    persist_data_dir_path: str
 
 
 class IsEngineConfig(Protocol):
@@ -102,6 +101,7 @@ class IsJobCreator(Protocol):
     config: Optional[IsJobConfig]
     engine: Optional['IsTaskRunnerEngine']
     nested_context_level: int
+    datetime_of_nested_context_run: datetime
 
     def __enter__(self):
         ...

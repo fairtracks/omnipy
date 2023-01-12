@@ -12,7 +12,8 @@ from omnipy.compute.mixins.params import ParamsFuncJobBaseMixin, ParamsFuncJobMi
 from omnipy.compute.mixins.result_key import ResultKeyFuncJobBaseMixin, ResultKeyFuncJobMixin
 from omnipy.compute.mixins.serialize import (PersistOutputsOptions,
                                              RestoreOutputsOptions,
-                                             SerializerFuncJobBaseMixin)
+                                             SerializerFuncJobBaseMixin,
+                                             SerializerFuncJobMixin)
 from omnipy.util.helpers import remove_none_vals
 from omnipy.util.mixin import DynamicMixinAcceptor
 
@@ -92,3 +93,4 @@ class FuncJob(FuncJobBase, Job[JobBaseT, JobTemplateT], Generic[JobBaseT, JobTem
 
 FuncJob.accept_mixin(ParamsFuncJobMixin)
 FuncJob.accept_mixin(ResultKeyFuncJobMixin)
+FuncJob.accept_mixin(SerializerFuncJobMixin)

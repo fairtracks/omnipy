@@ -31,11 +31,6 @@ def test_serializer_registry_auto_detect_pandas_dataset(registry):
     assert serializer is PandasDatasetToTarFileSerializer
 
 
-def test_serializer_registry_auto_detect_csv_dataset(registry):
-    dataset, serializer = registry.auto_detect_tar_file_serializer(csv_dataset)
-    assert serializer is RawDatasetToTarFileSerializer
-
-
 def test_serializer_registry_auto_detect_json_table_dataset(registry):
     dataset, serializer = registry.auto_detect_tar_file_serializer(json_table_dataset)
     assert serializer is PandasDatasetToTarFileSerializer
@@ -49,6 +44,11 @@ def test_serializer_registry_auto_detect_json_dataset(registry):
 def test_serializer_registry_auto_detect_json_str_dataset(registry):
     dataset, serializer = registry.auto_detect_tar_file_serializer(json_str_dataset)
     assert serializer is JsonDatasetToTarFileSerializer
+
+
+def test_serializer_registry_auto_detect_csv_dataset(registry):
+    dataset, serializer = registry.auto_detect_tar_file_serializer(csv_dataset)
+    assert serializer is RawDatasetToTarFileSerializer
 
 
 def test_serializer_registry_auto_detect_str_dataset(registry):

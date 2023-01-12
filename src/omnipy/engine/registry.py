@@ -96,8 +96,13 @@ class RunStateRegistry:
 
     def _log_state_change(self, job: IsJob, state: RunState) -> None:
         if self._logger is not None:
-            datetime_str = self.get_job_state_datetime(job, state).strftime(self._datetime_format)
             log_msg = RunStateLogMessages[state.name].value.format(job.unique_name)
+            datetime_obj = self.get_job_state_datetime(job, state)
+            self.log(datetime_obj, log_msg)
+
+    def log(self, datetime_obj: datetime, log_msg: str):
+        if self._logger is not None:
+            datetime_str = datetime_obj.strftime(self._datetime_format)
             self._logger.info(f'{datetime_str}: {log_msg}')
 
     def _raise_job_error(self, job: IsJob, msg: str) -> None:
