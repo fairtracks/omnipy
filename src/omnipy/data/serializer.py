@@ -108,6 +108,6 @@ class SerializerRegistry:
                     new_dataset = func(dataset, new_dataset_cls)
                     return new_dataset, serializer
                 except (TypeError, ValueError, ValidationError) as e:
-                    print(e)
+                    pass
 
         return None, None
