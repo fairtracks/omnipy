@@ -1,3 +1,4 @@
+from omnipy.data.serializer import TarFileSerializer
 from omnipy.modules.json.models import JsonDataset
 from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
 from tests.data.helpers.functions import assert_tar_file_contents
@@ -29,6 +30,9 @@ def test_json_dataset_serializer_to_tar_file():
     json_data.from_json({'obj_type.1': f'{obj_type_1_json}', 'obj_type.2': f'{obj_type_2_json}'})
 
     serializer = JsonDatasetToTarFileSerializer()
+    assert serializer.supported_dataset_type is JsonDataset
+    assert isinstance(serializer, TarFileSerializer)
+
     tarfile_bytes = serializer.serialize(json_data)
     decode_func = lambda x: x.decode('utf8')  # noqa
 
