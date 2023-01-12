@@ -148,7 +148,6 @@ class SerializerFuncJobMixin:
                 f'Writing dataset as a gzipped tarpack of raw files to "{os.path.abspath(file_path)}"'
             )
 
-        print(os.path.abspath(file_path))
         serializer_registry = self._create_serializer_registry()
         parsed_dataset, serializer = serializer_registry.auto_detect_tar_file_serializer(results)
 
