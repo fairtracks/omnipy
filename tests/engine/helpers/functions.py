@@ -140,13 +140,13 @@ def create_linear_flow_with_two_func_tasks(
     registry: Optional[IsRunStateRegistry],
 ) -> IsLinearFlow:
     @task_template_cls
-    def passthrough_task(*args, **kwargs):
-        return args + tuple(kwargs.values())
+    def passthrough_task(arg):
+        return arg
 
     task_template_func = task_template_cls(name=name)(func)
     linear_flow_template = linear_flow_template_cls(
-        passthrough_task,
         task_template_func,
+        passthrough_task,
         name=name,
     )(func,)
 

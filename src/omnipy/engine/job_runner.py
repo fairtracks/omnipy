@@ -109,7 +109,7 @@ class LinearFlowRunnerEngine(JobRunnerEngine):
                     else:
                         result = job(*args)
 
-                args = result if isinstance(result, Iterable) else [result]
+                args = (result,)
             return result
 
         return _inner_run_linear_flow

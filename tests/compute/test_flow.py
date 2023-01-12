@@ -1,4 +1,4 @@
-from typing import Annotated, Dict
+from typing import Annotated, Dict, Iterable, Tuple, Union
 
 import pytest
 import pytest_cases as pc
@@ -8,7 +8,8 @@ from omnipy.compute.flow import (DagFlow,
                                  Flow,
                                  FlowTemplate,
                                  FuncFlow,
-                                 FuncFlowTemplate)
+                                 FuncFlowTemplate,
+                                 LinearFlowTemplate)
 from omnipy.compute.task import TaskTemplate
 
 from .cases.flows import FlowCase
@@ -79,7 +80,26 @@ def test_flow_run(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
 #       - linear flow peculiarities
 
 
-def test_dag_flow_ignore_non_matched_returns(
+def test_linear_flow_only_first_positional(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate
+    def task_tmpl() -> Tuple[int]:
+        return 42, 42
+
+    @TaskTemplate
+    def my_formula_tmpl(number: Union[int, Tuple[int, ...]], plus_number: int = 0) -> int:
+        number = sum(number) if isinstance(number, Iterable) else number
+        return number * 2 + plus_number
+
+    @LinearFlowTemplate(task_tmpl, my_formula_tmpl)
+    def linear_flow_tmpl() -> int:
+        ...
+
+    linear_flow = linear_flow_tmpl.apply()
+    assert linear_flow() == 168
+
+
+def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
     @TaskTemplate
     def task_tmpl() -> int:
@@ -89,7 +109,11 @@ def test_dag_flow_ignore_non_matched_returns(
     def double_tmpl(number: int) -> int:
         return number * 2
 
-    @DagFlowTemplate(task_tmpl.refine(result_key='number'), task_tmpl, double_tmpl)
+    @DagFlowTemplate(
+        task_tmpl.refine(result_key='number'),
+        task_tmpl.refine(result_key='bumber'),
+        task_tmpl,
+        double_tmpl)
     def dag_flow_tmpl() -> int:
         ...
 
