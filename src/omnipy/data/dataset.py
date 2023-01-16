@@ -11,7 +11,7 @@ from pydantic.utils import lenient_issubclass
 
 from omnipy.data.model import Model
 
-ModelT = TypeVar('ModelT', bound=Type[Model])
+ModelT = TypeVar('ModelT', bound=Model)
 Undefined = object()
 DATA_KEY = 'data'
 
@@ -69,7 +69,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if isinstance(model, tuple) and len(model) == 1:
             model = model[0]
 
-        if model != ModelT and not lenient_issubclass(model, Model):
+        if not isinstance(model, TypeVar) and not lenient_issubclass(model, Model):
             raise TypeError('Invalid model: {}! '.format(model)
                             + 'omnipy Dataset models must be a specialization of the omnipy '
                             'Model class.')

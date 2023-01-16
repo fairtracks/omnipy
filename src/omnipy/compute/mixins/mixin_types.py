@@ -3,13 +3,13 @@ from typing import Protocol, Type, TypeVar, Union
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
-InputT = TypeVar('InputT')
+InputT = TypeVar('InputT', bound=object)
 ModelInputT = TypeVar('ModelInputT', bound=Model)
-ReturnT = TypeVar('ReturnT')
+ReturnT = TypeVar('ReturnT', bound=object)
 ModelReturnT = TypeVar('ModelReturnT', bound=Model)
-InputTypeT = Union[Type[InputT], Type[ModelInputT]]
-InputDatasetT = Union[Dataset[Type[Model[Type[InputT]]]], Dataset[Type[ModelInputT]]]
-ReturnDatasetT = Union[Dataset[Type[Model[Type[ReturnT]]]], Dataset[Type[ModelReturnT]]]
+InputTypeT = Union[InputT, ModelInputT]
+InputDatasetT = Union[Dataset[Model[InputT]], Dataset[ModelInputT]]
+ReturnDatasetT = Union[Dataset[Model[ReturnT]], Dataset[ModelReturnT]]
 
 
 class IsIterateInnerCallable(Protocol):

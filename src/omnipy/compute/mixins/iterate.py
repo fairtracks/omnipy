@@ -41,7 +41,7 @@ class IterateFuncJobBaseMixin:
 
                 def create_dataset_cls(data_file_type: InputTypeT) -> Type[InputDatasetT]:
                     return Dataset[data_file_type] if issubclass(data_file_type, Model) \
-                        else Dataset[Type[Model[data_file_type]]]
+                        else Dataset[Model[data_file_type]]
 
                 dataset_cls = create_dataset_cls(data_param.annotation)
                 out_dataset_cls = create_dataset_cls(func_signature.return_annotation)
