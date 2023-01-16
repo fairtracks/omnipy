@@ -7,21 +7,19 @@ from omnipy.modules.raw.protocols import (IsModifyAllLinesCallable,
                                           IsModifyEachLineCallable)
 
 
-@TaskTemplate()
+@TaskTemplate(iterate_over_data_files=True)
 def modify_datafile_contents(
     data_file: str,
     modify_contents_func: IsModifyContentsCallable,
-    iterate_over_data_files=True,
     **kwargs: object,
 ) -> str:
     return modify_contents_func(data_file, **kwargs)
 
 
-@TaskTemplate()
+@TaskTemplate(iterate_over_data_files=True)
 def modify_each_line(
     data_file: str,
     modify_line_func: IsModifyEachLineCallable,
-    iterate_over_data_files=True,
     **kwargs: object,
 ) -> str:
     output_data = StringIO()
@@ -32,11 +30,10 @@ def modify_each_line(
     return output_data.getvalue()
 
 
-@TaskTemplate()
+@TaskTemplate(iterate_over_data_files=True)
 def modify_all_lines(
     data_file: str,
     modify_all_lines_func: IsModifyAllLinesCallable,
-    iterate_over_data_files=True,
     **kwargs: object,
 ) -> str:
     all_lines = [line.strip() for line in StringIO(data_file)]
