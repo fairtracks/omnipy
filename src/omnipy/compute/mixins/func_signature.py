@@ -18,6 +18,10 @@ class SignatureFuncJobBaseMixin:
     def _check_param_keys_in_func_signature(self,
                                             param_keys: Iterable[str],
                                             modifier_kwarg_key: str) -> None:
+        if any(param.kind == inspect.Parameter.VAR_KEYWORD
+               for param in self.param_signatures.values()):
+            return
+
         for param_key in param_keys:
             if param_key not in self.param_signatures:
                 raise KeyError('Parameter "{}" was not found in the '.format(param_key)

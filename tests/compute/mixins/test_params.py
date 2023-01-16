@@ -2,7 +2,7 @@ import pytest
 
 from omnipy.compute.task import TaskTemplate
 
-from ..cases.raw.functions import power_m1_func
+from ..cases.raw.functions import kwargs_func, power_m1_func
 
 
 def test_property_fixed_params_default_task() -> None:
@@ -114,6 +114,21 @@ def test_property_fixed_params_all_args_task() -> None:
         seven(number=3, exponent=4, minus_one=False)
 
 
+def test_property_fixed_params_kwargs_task() -> None:
+
+    kwargs_tmpl = TaskTemplate(fixed_params=dict(number=2, boolean=False))(kwargs_func)
+
+    for kwargs_job_obj in kwargs_tmpl, kwargs_tmpl.apply():
+        assert kwargs_job_obj.fixed_params == {
+            'number': 2,
+            'boolean': False,
+        }
+
+    kwargs_task = kwargs_tmpl.apply()
+    assert kwargs_task() == "{'number': 2, 'boolean': False}"
+    assert kwargs_task(text='message') == "{'number': 2, 'boolean': False, 'text': 'message'}"
+
+
 def test_property_param_key_map_default_task() -> None:
 
     power_m1_template = TaskTemplate()(power_m1_func)
@@ -179,6 +194,22 @@ def test_property_param_key_map_validation_task() -> None:
 
     with pytest.raises(ValueError):
         TaskTemplate(param_key_map={'number': 'same', 'exponent': 'same'})(power_m1_func)
+
+
+def test_property_param_key_map_kwargs_task() -> None:
+
+    kwargs_tmpl = TaskTemplate(param_key_map=dict(number='num', boolean='bool'))(kwargs_func)
+
+    for kwargs_job_obj in kwargs_tmpl, kwargs_tmpl.apply():
+        assert kwargs_job_obj.param_key_map == {
+            'number': 'num',
+            'boolean': 'bool',
+        }
+
+    kwargs_task = kwargs_tmpl.apply()
+    assert kwargs_task(num=2, bool=False) == "{'number': 2, 'boolean': False}"
+    assert kwargs_task(num=2, bool=False, text='message') == \
+           "{'number': 2, 'boolean': False, 'text': 'message'}"
 
 
 def test_error_properties_param_key_map_and_fixed_params_unmatched_params_task() -> None:

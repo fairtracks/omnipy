@@ -38,6 +38,10 @@ def dict_of_squared_func(number: int) -> Dict[int, int]:
     return {val: val**2 for val in range(number)}
 
 
+def kwargs_func(**kwargs: object) -> str:
+    return repr(kwargs)
+
+
 def all_data_files_plus_str_func(dataset: Dataset[Model[int]], number: int) -> Dataset[Model[str]]:
     out_dataset = Dataset[Model[str]]()
     for title, data_file in dataset.items():
