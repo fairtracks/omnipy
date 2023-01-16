@@ -9,7 +9,7 @@ from . import pd
 from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset
 
 
-@TaskTemplate
+@TaskTemplate()
 def from_csv(dataset: Dataset[Model[bytes]],
              delimiter: str = ',',
              first_row_as_col_names=True,
@@ -30,7 +30,7 @@ def from_csv(dataset: Dataset[Model[bytes]],
     return out_dataset
 
 
-@TaskTemplate
+@TaskTemplate()
 def to_csv(
     dataset: PandasDataset,
     delimiter: str = ',',
@@ -50,7 +50,7 @@ def to_csv(
     return out_dataset
 
 
-@TaskTemplate
+@TaskTemplate()
 def extract_columns_as_files(dataset: PandasDataset, col_names: List[str]) -> PandasDataset:
     out_dataset = PandasDataset()
     for key, item in dataset.items():
@@ -62,7 +62,7 @@ def extract_columns_as_files(dataset: PandasDataset, col_names: List[str]) -> Pa
     return out_dataset
 
 
-@TaskTemplate
+@TaskTemplate()
 def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSameNumberOfFiles,
                                       vertical=True) -> PandasDataset:
     # We know from the data type that there are at least two datasets and that there is an equal

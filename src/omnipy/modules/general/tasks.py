@@ -8,7 +8,7 @@ from omnipy.data.model import Model
 ModelT = TypeVar('ModelT', bound=Model)
 
 
-@TaskTemplate
+@TaskTemplate()
 def cast_dataset(dataset: Dataset, cast_model: Callable[[], ModelT]) -> ModelT:
     out_dataset: Dataset[ModelT] = Dataset[cast_model]()
     for name, item in dataset.items():
@@ -16,7 +16,7 @@ def cast_dataset(dataset: Dataset, cast_model: Callable[[], ModelT]) -> ModelT:
     return out_dataset
 
 
-@TaskTemplate
+@TaskTemplate()
 def split_dataset(
         dataset: Dataset[Model[object]],
         datafile_names_for_b: List[str]) -> Tuple[Dataset[Model[object]], Dataset[Model[object]]]:
@@ -29,7 +29,7 @@ def split_dataset(
     return dataset_a, dataset_b
 
 
-@TaskTemplate
+@TaskTemplate()
 def import_directory(directory: str,
                      suffix: str = '.json',
                      model: Model = Model[str]) -> Dataset[Model]:

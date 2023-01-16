@@ -7,7 +7,7 @@ from omnipy.data.model import Model
 from .models import JsonDataset
 
 
-@TaskTemplate
+@TaskTemplate()
 def import_directory(directory: str) -> JsonDataset:
     raw_dataset = Dataset[Model[str]]()
     for import_filename in os.listdir(directory):

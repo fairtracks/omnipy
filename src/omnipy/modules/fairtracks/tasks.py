@@ -8,7 +8,7 @@ from ..json.models import JsonDataset
 from .functions import encode_api
 
 
-@TaskTemplate
+@TaskTemplate()
 def import_dataset_from_encode(endpoints: Iterable[constr(min_length=1)],
                                max_data_item_count: PositiveInt) -> JsonDataset:
     dataset = JsonDataset()

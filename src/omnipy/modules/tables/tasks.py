@@ -20,7 +20,7 @@ REF_KEY = '_omnipy_ref'
 DEFAULT_KEY = '__root__'
 
 
-@TaskTemplate
+@TaskTemplate()
 def remove_columns(
         json_dataset: JsonDataset,
         column_keys_for_data_items: Dict[str, List[str]]) -> Dataset[TableOfStringsAndLists]:
@@ -36,7 +36,7 @@ def remove_columns(
     return Dataset[TableOfStringsAndLists](json_dataset.to_data())
 
 
-@TaskTemplate
+@TaskTemplate()
 def convert_to_1nf(input_dataset: Dataset[TableOfStringsAndLists]) -> Dataset[TableOfStrings]:
     out_dataset = Dataset[TableOfStrings]()
     for table_name, table in input_dataset.items():
@@ -193,7 +193,7 @@ def flatten_nested_json_to_list_of_dicts(
     return all_data_files_without_nested_lists_ds
 
 
-@TaskTemplate
+@TaskTemplate()
 def transpose_dataset_of_dicts_to_lists(dataset: Dataset[JsonDictOfAnyModel],
                                         id_key: str = ID_KEY) -> Dataset[JsonListOfDictOfAnyModel]:
     output_dataset = Dataset[JsonListOfDictOfAnyModel]()
