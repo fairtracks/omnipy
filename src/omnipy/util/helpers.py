@@ -31,3 +31,8 @@ async def resolve(val):
         return await val
     else:
         return val
+
+
+def repr_max_len(data: object, max_len: int = 70):
+    repr_str = repr(data)
+    return repr_str[:max_len] + '...' if len(repr_str) > max_len else repr_str

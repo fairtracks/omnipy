@@ -1,6 +1,7 @@
 from types import MappingProxyType
 from typing import Mapping, Optional
 
+from omnipy.util.helpers import repr_max_len
 from omnipy.util.param_key_mapper import ParamKeyMapper
 
 
@@ -47,10 +48,10 @@ class ParamsFuncJobMixin:
                     f'Incorrect job function arguments for job "{self.name}"!\n'
                     f'Job class name: {self.__class__.__name__}\n'
                     f'Current parameter key map contents: {self.param_key_map}\n'
-                    f'Positional arguments: {args}\n'
-                    f'Keyword arguments: {kwargs}\n'
-                    f'Mapped fixed parameters: {mapped_fixed_params}\n'
-                    f'Mapped keyword arguments: {mapped_kwargs}\n'
+                    f'Positional arguments: {repr_max_len(args)}\n'
+                    f'Keyword arguments: {repr_max_len(kwargs)}\n'
+                    f'Mapped fixed parameters: {repr_max_len(mapped_fixed_params)}\n'
+                    f'Mapped keyword arguments: {repr_max_len(mapped_kwargs)}\n'
                     f'Call function signature parameters: '
                     f'{[(str(p), p.kind) for p in self.param_signatures.values()]}') from e
             else:
