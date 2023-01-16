@@ -1,6 +1,10 @@
 from inspect import Parameter, signature
-from typing import Optional, Type
+from typing import cast, Type
 
+from omnipy.compute.mixins.mixin_types import (InputDatasetT,
+                                               InputTypeT,
+                                               IsIterateInnerCallable,
+                                               ReturnDatasetT)
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
@@ -17,7 +21,7 @@ class IterateFuncJobBaseMixin:
                 f'not "{iterate_over_data_files}"')
 
         if iterate_over_data_files:
-            inner_func = self._job_func
+            inner_func: IsIterateInnerCallable = cast(IsIterateInnerCallable, self._job_func)
             if inner_func.__name__ != '_omnipy_iterate_func':
                 func_signature = signature(inner_func)
                 params = list(func_signature.parameters.values())
@@ -35,9 +39,9 @@ class IterateFuncJobBaseMixin:
                 data_param = params[0]
                 rest_params = params[1:]
 
-                def create_dataset_cls(data_file_type: Type) -> Dataset[Model]:
+                def create_dataset_cls(data_file_type: InputTypeT) -> Type[InputDatasetT]:
                     return Dataset[data_file_type] if issubclass(data_file_type, Model) \
-                        else Dataset[Model[data_file_type]]
+                        else Dataset[Type[Model[data_file_type]]]
 
                 dataset_cls = create_dataset_cls(data_param.annotation)
                 out_dataset_cls = create_dataset_cls(func_signature.return_annotation)
@@ -47,7 +51,11 @@ class IterateFuncJobBaseMixin:
                     return_annotation=out_dataset_cls,
                 )
 
-                def _omnipy_iterate_func(dataset: dataset_cls, *args: object, **kwargs: object):
+                def _omnipy_iterate_func(
+                    dataset: InputDatasetT,
+                    *args: object,
+                    **kwargs: object,
+                ) -> ReturnDatasetT:
                     out_dataset = out_dataset_cls()
                     for title, data_file in dataset.items():
                         out_dataset[title] = inner_func(data_file, *args, **kwargs)
@@ -59,5 +67,5 @@ class IterateFuncJobBaseMixin:
                 self.__signature__ = new_signature
 
     @property
-    def iterate_over_data_files(self) -> Optional[str]:
+    def iterate_over_data_files(self) -> bool:
         return self._iterate_over_data_files
