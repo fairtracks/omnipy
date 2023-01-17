@@ -13,4 +13,4 @@ def test_default():
 
 
 def test_different_locale():
-    assert get_datetime_format(('no_NO', 'UTF-8')) == '%a %e %b %X %Y'
+    assert get_datetime_format(('de_DE', 'UTF-8')) == '%a %d %b %Y %T %Z'
