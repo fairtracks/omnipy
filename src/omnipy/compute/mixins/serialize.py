@@ -130,9 +130,7 @@ class SerializerFuncJobMixin:
         return results
 
     def _serialize_and_persist_outputs(self, results: Dataset):
-        run_time = self.time_of_cur_toplevel_flow_run if self.time_of_cur_toplevel_flow_run is not None \
-            else datetime.now()
-        datetime_str = run_time.strftime('%Y_%m_%d-%H_%M_%S')
+        datetime_str = self._generate_datetime_str()
         output_path = Path(self.config.persist_data_dir_path).joinpath(datetime_str)
 
         if not os.path.exists(output_path):
@@ -148,6 +146,17 @@ class SerializerFuncJobMixin:
 
         with open(file_path, 'wb') as tarfile:
             tarfile.write(serializer.serialize(parsed_dataset))
+
+    def _generate_datetime_str(self):
+        if self.time_of_cur_toplevel_flow_run:
+            run_time = self.time_of_cur_toplevel_flow_run
+        else:
+            if hasattr(self, 'time_of_last_run'):
+                run_time = self.time_of_last_run
+            else:
+                run_time = datetime.now()
+        datetime_str = run_time.strftime('%Y_%m_%d-%H_%M_%S')
+        return datetime_str
 
     # TODO: Refactor
     def _deserialize_and_restore_outputs(self) -> Dataset:
