@@ -1,7 +1,8 @@
 from omnipy.data.serializer import TarFileSerializer
 from omnipy.modules.json.models import JsonDataset
 from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
-from tests.data.helpers.functions import assert_tar_file_contents
+
+from ...data.helpers.functions import assert_tar_file_contents
 
 
 def test_json_dataset_serializer_to_tar_file():

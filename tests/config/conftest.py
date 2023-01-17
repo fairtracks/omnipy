@@ -3,7 +3,7 @@ from typing import Annotated, Callable, List
 
 import pytest
 
-from config.helpers.mocks import MockConfigPublisher, MockSubscriberCls
+from .helpers.mocks import MockConfigPublisher, MockSubscriberCls
 
 
 @pytest.fixture(scope='function')
