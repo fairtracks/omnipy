@@ -28,6 +28,21 @@ def test_iterate_over_data_files_func_signature() -> None:
             assert task_obj.return_type is Dataset[Model[str]]
 
 
+def test_iterate_over_data_files_param() -> None:
+
+    task_template_cls = TaskTemplate(
+        fixed_params=dict(number=2),
+        param_key_map=dict(dataset='data_numbers'),
+        iterate_over_data_files=True,
+    )
+
+    single_data_file_plus_str_template = task_template_cls(single_data_file_plus_str_func)
+
+    dataset = Dataset[Model[int]]({'a': 5, 'b': -2})
+    assert single_data_file_plus_str_template.run(data_numbers=dataset) == \
+           Dataset[Model[str]]({'a': '7', 'b': '0'})
+
+
 def test_refine_task_template_with_other_properties_task() -> None:
     # Plain task template
     power_m1_template = TaskTemplate()(power_m1_func)
