@@ -9,10 +9,7 @@ from .helpers.functions import assert_updated_wrapper
 from .helpers.mocks import (CommandMockJob,
                             CommandMockJobTemplate,
                             mock_cmd_func,
-                            MockJobBaseSubclass,
                             MockJobConfig,
-                            MockJobSubclass,
-                            MockJobTemplateSubclass,
                             MockLocalRunner,
                             PublicPropertyErrorsMockJob,
                             PublicPropertyErrorsMockJobTemplate)
@@ -30,6 +27,9 @@ class PropertyTest(NamedTuple):
     set_method: Optional[str] = None
 
 
+MockJobClasses = Tuple[Type[JobBase], Type[JobTemplate], Type[Job]]
+
+
 def test_init_abstract():
     with pytest.raises(TypeError):
         JobBase()
@@ -41,12 +41,8 @@ def test_init_abstract():
         Job()
 
 
-def mock_job_classes() -> Tuple[Type[JobBase], Type[JobTemplate], Type[Job]]:
-    return MockJobBaseSubclass, MockJobTemplateSubclass, MockJobSubclass
-
-
-def test_init_mock():
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+def test_init_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    JobBase, JobTemplate, Job = mock_job_classes  # noqa
 
     job_tmpl = JobTemplate()
     assert isinstance(job_tmpl, JobTemplate)
@@ -55,8 +51,9 @@ def test_init_mock():
     assert isinstance(job, Job)
 
 
-def test_fail_only_jobtemplate_init_mock():
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+def test_fail_only_jobtemplate_init_mock(
+        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    JobBase, JobTemplate, Job = mock_job_classes  # noqa
 
     with pytest.raises(RuntimeError):
         JobBase()  # noqa
@@ -66,8 +63,9 @@ def test_fail_only_jobtemplate_init_mock():
 
 
 def test_job_creator_singular_mock(
+        mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
         teardown_reset_job_creator: Annotated[None, pytest.fixture]) -> None:
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+    JobBase, JobTemplate, Job = mock_job_classes  # noqa
 
     assert isinstance(JobBase.job_creator, JobCreator)
 
@@ -95,12 +93,13 @@ def test_job_creator_singular_mock(
 
 
 def test_job_creator_properties_mock(
+    mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
     teardown_reset_job_creator: Annotated[None, pytest.fixture],
     mock_job_datetime: Annotated[datetime, pytest.fixture],
 ):
     mock_local_runner = MockLocalRunner()
     mock_job_config = MockJobConfig()
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+    JobBase, JobTemplate, Job = mock_job_classes  # noqa
 
     for test in [
             PropertyTest(
@@ -144,20 +143,20 @@ def test_job_creator_properties_mock(
     ]:
         job_tmpl = JobTemplate()
         job = job_tmpl.apply()
-        _assert_prop_getattr_all(job_tmpl, job, test, test.default_val)
+        _assert_prop_getattr_all(mock_job_classes, job_tmpl, job, test, test.default_val)
 
         if test.enter_exit:
             JobTemplate.job_creator.__enter__()
         else:
             getattr(JobTemplate.job_creator, test.set_method)(test.val)
 
-        _assert_prop_getattr_all(job_tmpl, job, test, test.val)
+        _assert_prop_getattr_all(mock_job_classes, job_tmpl, job, test, test.val)
 
         job_tmpl_new = JobTemplate()
         assert job_tmpl_new is not job_tmpl
         job_new = job_tmpl_new.apply()
         assert job_new is not job
-        _assert_prop_getattr_all(job_tmpl_new, job_new, test, test.val)
+        _assert_prop_getattr_all(mock_job_classes, job_tmpl_new, job_new, test, test.val)
 
         if test.enter_exit:
             JobTemplate.job_creator.__exit__(None, None, None)
@@ -167,8 +166,12 @@ def test_job_creator_properties_mock(
             assert not hasattr(Job, test.set_method)
 
 
-def _assert_prop_getattr_all(job_tmpl: JobTemplate, job: Job, test: PropertyTest, val: object):
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+def _assert_prop_getattr_all(mock_job_classes: MockJobClasses,
+                             job_tmpl: JobTemplate,
+                             job: Job,
+                             test: PropertyTest,
+                             val: object):
+    JobBase, JobTemplate, Job = mock_job_classes  # noqa
 
     _assert_prop_getattr_job_subcls(
         JobBase,
@@ -220,8 +223,9 @@ def _assert_prop_getattr(job_cls_or_obj, in_job_obj, property, val):
         assert not hasattr(job_cls_or_obj, property)
 
 
-def test_flow_context_and_datetime_of_flow_runm() -> None:
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+def test_flow_context_and_datetime_of_flow_runm(
+        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    JobBase, JobTemplate, Job = mock_job_classes  # noqa
 
     job_tmpl = JobTemplate()
     job = job_tmpl.apply()
@@ -246,8 +250,8 @@ def test_flow_context_and_datetime_of_flow_runm() -> None:
         assert job.datetime_of_flow_run == prev_datetime
 
 
-def test_equal_mock() -> None:
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+def test_equal_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    JobBase, JobTemplate, Job = mock_job_classes  # noqa
 
     my_job_tmpl = JobTemplate()
     my_job_tmpl_2 = JobTemplate()

@@ -1,11 +1,19 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Tuple, Type
 
 import pytest
 
-from omnipy.compute.job import JobBase, JobCreator
+from omnipy.compute.job import Job, JobBase, JobCreator, JobTemplate
 
-from .helpers.mocks import MockLocalRunner
+from .helpers.mocks import (MockJobBaseSubclass,
+                            MockJobSubclass,
+                            MockJobTemplateSubclass,
+                            MockLocalRunner)
+
+
+@pytest.fixture(scope='function')
+def mock_job_classes() -> Tuple[Type[JobBase], Type[JobTemplate], Type[Job]]:
+    return MockJobBaseSubclass, MockJobTemplateSubclass, MockJobSubclass
 
 
 @pytest.fixture(scope='function')
