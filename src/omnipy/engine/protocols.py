@@ -1,7 +1,9 @@
 from datetime import datetime
 import logging
-from typing import Any, Callable, Dict, Optional, Protocol, runtime_checkable, Tuple, Type
+from types import MappingProxyType
+from typing import Any, Callable, Dict, Mapping, Optional, Protocol, runtime_checkable, Tuple, Type
 
+from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.config.job import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
 from omnipy.engine.constants import EngineChoice, RunState
 
@@ -121,39 +123,106 @@ class IsJobCreator(IsNestedContext, Protocol):
 class IsJob(Protocol):
     name: str
     unique_name: str
+    config: Optional[IsJobConfig]
     in_flow_context: bool
+    time_of_cur_toplevel_flow_run: datetime
+
+    @classmethod
+    def create(cls, *init_args: object, **init_kwargs: object) -> 'IsJob':
+        ...
+
+    def revise(self) -> 'IsJobTemplate':
+        ...
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         ...
 
+    def regenerate_unique_name(self) -> None:
+        ...
+
+    def __eq__(self, other: object):
+        ...
+
+
+class IsJobTemplate(Protocol):
+    config: Optional[IsJobConfig]
+    engine: Optional['IsTaskRunnerEngine']
+    in_flow_context: bool
+
+    @classmethod
+    def create(cls, *init_args: object, **init_kwargs: object) -> 'IsJobTemplate':
+        ...
+
+    def run(self, *args: object, **kwargs: object) -> object:
+        ...
+
+    def apply(self) -> IsJob:
+        ...
+
+    def refine(self, *args: object, update: bool = True, **kwargs: object) -> 'IsJobTemplate':
+        ...
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        ...
+
+
+class IsFuncJob(IsJob, Protocol):
+    param_signatures: MappingProxyType
+    return_type: Type[object]
+    iterate_over_data_files: bool
+    fixed_params: MappingProxyType[str, object]
+    param_key_map: MappingProxyType[str, str]
+    result_key: Optional[str]
+    persist_outputs: Optional[PersistOutputsOptions]
+    restore_outputs: Optional[RestoreOutputsOptions]
+    will_persist_outputs: PersistOutputsOptions
+    will_restore_outputs: RestoreOutputsOptions
+
+    def has_coroutine_func(self) -> bool:
+        ...
+
     def _call_func(self, *args: Any, **kwargs: Any) -> Any:
+        ...
+
+    def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
+        ...
+
+
+class IsFuncJobTemplate(IsJobTemplate, Protocol):
+    name: str
+    unique_name: str
+    param_signatures: MappingProxyType
+    return_type: Type[object]
+    iterate_over_data_files: bool
+    fixed_params: MappingProxyType[str, object]
+    param_key_map: MappingProxyType[str, str]
+    result_key: Optional[str]
+    persist_outputs: Optional[PersistOutputsOptions]
+    restore_outputs: Optional[RestoreOutputsOptions]
+    will_persist_outputs: PersistOutputsOptions
+    will_restore_outputs: RestoreOutputsOptions
+
+    def apply(self) -> IsFuncJob:
+        ...
+
+    def refine(self,
+               update: bool = True,
+               name: Optional[str] = None,
+               iterate_over_data_files: bool = False,
+               fixed_params: Optional[Mapping[str, object]] = None,
+               param_key_map: Optional[Mapping[str, str]] = None,
+               result_key: Optional[str] = None,
+               persist_outputs: Optional[PersistOutputsOptions] = None,
+               restore_outputs: Optional[RestoreOutputsOptions] = None,
+               **kwargs: object) -> 'IsFuncJobTemplate':
         ...
 
     def regenerate_unique_name(self) -> None:
         ...
 
 
-class IsJobTemplate(Protocol):
-    job_creator: IsJobCreator
-    in_flow_context: bool
-
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        pass
-
-
-class IsFuncJob(IsJob, Protocol):
-    def has_coroutine_func(self) -> bool:
-        ...
-
-
-class IsFuncJobTemplate(IsJobTemplate, Protocol):
-    def apply(self) -> IsFuncJob:
-        ...
-
-
 class IsTask(IsFuncJob, Protocol):
-    def has_coroutine_func(self) -> bool:
-        ...
+    ...
 
 
 class IsTaskTemplate(IsFuncJobTemplate, Protocol):
@@ -174,12 +243,22 @@ class IsFlowTemplate(IsFuncJobTemplate, Protocol):
 class IsTaskTemplatesFlow(IsFlow, Protocol):
     task_templates: Tuple[IsTaskTemplate, ...]
 
-    def get_call_args(self, *args, **kwargs) -> Dict[str, object]:
-        ...
-
 
 class IsTaskTemplatesFlowTemplate(IsFuncJobTemplate, Protocol):
-    ...
+    task_templates: Tuple[IsTaskTemplate, ...]
+
+    def refine(self,
+               *task_templates: IsTaskTemplate,
+               update: bool = True,
+               name: Optional[str] = None,
+               iterate_over_data_files: bool = False,
+               fixed_params: Optional[Mapping[str, object]] = None,
+               param_key_map: Optional[Mapping[str, str]] = None,
+               result_key: Optional[str] = None,
+               persist_outputs: Optional[PersistOutputsOptions] = None,
+               restore_outputs: Optional[RestoreOutputsOptions] = None,
+               **kwargs: object) -> 'IsTaskTemplatesFlowTemplate':
+        ...
 
 
 class IsLinearFlow(IsTaskTemplatesFlow, Protocol):
@@ -187,7 +266,8 @@ class IsLinearFlow(IsTaskTemplatesFlow, Protocol):
 
 
 class IsLinearFlowTemplate(IsLinearFlow, IsTaskTemplatesFlowTemplate, Protocol):
-    ...
+    def apply(self) -> IsLinearFlow:
+        ...
 
 
 class IsDagFlow(IsTaskTemplatesFlow, Protocol):
@@ -195,7 +275,8 @@ class IsDagFlow(IsTaskTemplatesFlow, Protocol):
 
 
 class IsDagFlowTemplate(IsDagFlow, IsTaskTemplatesFlowTemplate, Protocol):
-    ...
+    def apply(self) -> IsDagFlow:
+        ...
 
 
 class IsFuncFlow(IsFlow, Protocol):
@@ -203,7 +284,8 @@ class IsFuncFlow(IsFlow, Protocol):
 
 
 class IsFuncFlowTemplate(IsFuncFlow, IsFlowTemplate, Protocol):
-    ...
+    def apply(self) -> IsFuncFlow:
+        ...
 
 
 class IsEngine(Protocol):

@@ -60,9 +60,6 @@ class MockJobSubclass(MockJobBaseSubclass, Job[MockJobBaseSubclass, MockJobTempl
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         ...
 
-    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
-        ...
-
 
 class MockFlowBaseSubclass(FlowBase):
     ...
@@ -174,9 +171,6 @@ class PublicPropertyErrorsMockJob(PublicPropertyErrorsMockJobBase,
         return PublicPropertyErrorsMockJobTemplate
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        ...
-
-    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         ...
 
 

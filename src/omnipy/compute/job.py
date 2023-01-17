@@ -122,7 +122,7 @@ class JobBase(DynamicMixinAcceptor, metaclass=JobBaseAndMixinAcceptorMeta):
 
         return {key: getattr(self, key) for key in kwarg_keys}
 
-    def __eq__(self, other: object):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, JobBase):
             return NotImplemented
         return self._get_init_args() == other._get_init_args() \
@@ -158,7 +158,7 @@ class JobTemplate(JobBase, Generic[JobT], metaclass=JobTemplateAndMixinAcceptorM
     def create(cls: Type[JobTemplateT], *init_args: object, **init_kwargs: object) -> JobTemplateT:
         return cls(*init_args, **init_kwargs)
 
-    def run(self, *args: object, **kwargs: object):
+    def run(self, *args: object, **kwargs: object) -> object:
         return self.apply()(*args, **kwargs)
 
     def apply(self) -> JobT:
@@ -238,10 +238,6 @@ class Job(JobBase, DynamicMixinAcceptor, Generic[JobBaseT, JobTemplateT]):
 
     @abstractmethod
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        ...
-
-    @abstractmethod
-    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         ...
 
 

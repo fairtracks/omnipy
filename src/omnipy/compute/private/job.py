@@ -46,10 +46,10 @@ class FuncJobTemplate(FuncJobBase, JobTemplate[JobT], Generic[JobT], ABC):
     def refine(self: FuncJobTemplateT,
                update: bool = True,
                name: Optional[str] = None,
+               iterate_over_data_files: bool = False,
                fixed_params: Optional[Mapping[str, object]] = None,
                param_key_map: Optional[Mapping[str, str]] = None,
                result_key: Optional[str] = None,
-               iterate_over_data_files: bool = False,
                persist_outputs: Optional[PersistOutputsOptions] = None,
                restore_outputs: Optional[RestoreOutputsOptions] = None,
                **kwargs: object) -> FuncJobTemplateT:
@@ -59,10 +59,10 @@ class FuncJobTemplate(FuncJobBase, JobTemplate[JobT], Generic[JobT], ABC):
             update=update,
             **remove_none_vals(
                 name=name,
+                iterate_over_data_files=iterate_over_data_files,
                 fixed_params=fixed_params,
                 param_key_map=param_key_map,
                 result_key=result_key,
-                iterate_over_data_files=iterate_over_data_files,
                 persist_outputs=persist_outputs,
                 restore_outputs=restore_outputs,
                 **kwargs,

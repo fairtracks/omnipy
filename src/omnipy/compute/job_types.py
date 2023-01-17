@@ -11,10 +11,10 @@ class IsFuncJobTemplateCallable(Protocol[FuncJobTemplateT]):
     def __call__(
         self,
         name: Optional[str] = None,
+        iterate_over_data_files: bool = False,
         fixed_params: Optional[Mapping[str, object]] = None,
         param_key_map: Optional[Mapping[str, str]] = None,
         result_key: Optional[str] = None,
-        iterate_over_data_files: bool = False,
         **kwargs: object,
     ) -> Callable[[Callable], FuncJobTemplateT]:
         ...
@@ -29,10 +29,10 @@ class IsTaskTemplatesFlowTemplateCallable(Protocol[TaskTemplatesFlowTemplateT]):
         self,
         *task_templates: 'TaskTemplate',
         name: Optional[str] = None,
+        iterate_over_data_files: bool = False,
         fixed_params: Optional[Mapping[str, object]] = None,
         param_key_map: Optional[Mapping[str, str]] = None,
         result_key: Optional[str] = None,
-        iterate_over_data_files: bool = False,
         **kwargs: object,
     ) -> Callable[[Callable], TaskTemplatesFlowTemplateT]:
         ...
