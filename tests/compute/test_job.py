@@ -1,4 +1,5 @@
-from typing import Annotated, Tuple, Type, Union
+from datetime import datetime
+from typing import Annotated, NamedTuple, Optional, Tuple, Type, Union
 
 import pytest
 
@@ -15,6 +16,18 @@ from compute.helpers.mocks import (CommandMockJob,
 from omnipy.compute.job import Job, JobBase, JobCreator, JobTemplate
 
 from .helpers.functions import assert_updated_wrapper
+
+
+class PropertyTest(NamedTuple):
+    property: str
+    enter_exit: bool
+    default_val: object
+    val: object
+    in_job_base: bool
+    in_job_template: bool
+    in_job: bool
+    at_obj_level: bool
+    set_method: Optional[str] = None
 
 
 def test_init_abstract():
@@ -81,72 +94,138 @@ def test_job_creator_singular_mock(
     assert job_tmpl_new.__class__.job_creator is job_creator
 
 
-def test_engine_mock(teardown_reset_job_creator: Annotated[None, pytest.fixture]):
+def test_job_creator_properties_mock(teardown_reset_job_creator: Annotated[None, pytest.fixture]):
     mock_local_runner = MockLocalRunner()
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
-
-    assert JobTemplate.engine is None
-
-    job_tmpl = JobTemplate()
-    assert job_tmpl.engine is None
-    assert job_tmpl.__class__.job_creator.engine is None
-
-    JobTemplate.job_creator.set_engine(mock_local_runner)
-
-    assert JobTemplate.job_creator.engine is mock_local_runner
-    assert JobBase.job_creator.engine is mock_local_runner
-    assert Job.job_creator.engine is mock_local_runner
-
-    assert job_tmpl.engine is mock_local_runner
-    assert job_tmpl.__class__.job_creator.engine is mock_local_runner
-
-    job_tmpl_new = JobTemplate()
-    assert job_tmpl_new is not job_tmpl
-    assert job_tmpl_new.engine is mock_local_runner
-    assert job_tmpl_new.__class__.job_creator.engine is mock_local_runner
-
-    assert JobTemplate.engine is mock_local_runner
-
-    assert not hasattr(JobTemplate, 'set_engine')
-    assert not hasattr(JobBase, 'engine')
-    assert not hasattr(JobBase, 'set_engine')
-    assert not hasattr(Job, 'engine')
-    assert not hasattr(Job, 'set_engine')
-
-
-def test_config_mock(teardown_reset_job_creator: Annotated[None, pytest.fixture]):
     mock_job_config = MockJobConfig()
     JobBase, JobTemplate, Job = mock_job_classes()  # noqa
 
-    assert JobTemplate.config is None
+    class MockDatetime:
+        def __init__(self):
+            self._now = datetime.now()
 
-    job_tmpl = JobTemplate()
-    assert job_tmpl.config is None
-    assert job_tmpl.__class__.job_creator.config is None
+        def now(self):
+            return self._now
 
-    JobTemplate.job_creator.set_config(mock_job_config)
+    mock_datetime = MockDatetime()
+    import omnipy.compute.job
+    omnipy.compute.job.datetime = mock_datetime
 
-    assert JobTemplate.job_creator.config is mock_job_config
-    assert JobBase.job_creator.config is mock_job_config
-    assert Job.job_creator.config is mock_job_config
+    for test in [
+            PropertyTest(
+                property='engine',
+                enter_exit=False,
+                default_val=None,
+                val=mock_local_runner,
+                in_job_base=False,
+                in_job_template=True,
+                in_job=False,
+                at_obj_level=True,
+                set_method='set_engine'),
+            PropertyTest(
+                property='config',
+                enter_exit=False,
+                default_val=None,
+                val=mock_job_config,
+                in_job_base=True,
+                in_job_template=True,
+                in_job=True,
+                at_obj_level=True,
+                set_method='set_config'),
+            PropertyTest(
+                property='nested_context_level',
+                enter_exit=True,
+                default_val=0,
+                val=1,
+                in_job_base=False,
+                in_job_template=True,
+                in_job=False,
+                at_obj_level=False),
+            PropertyTest(
+                property='datetime_of_nested_context_run',
+                enter_exit=True,
+                default_val=None,
+                val=mock_datetime.now(),
+                in_job_base=False,
+                in_job_template=False,
+                in_job=False,
+                at_obj_level=False)
+    ]:
+        job_tmpl = JobTemplate()
+        job = job_tmpl.apply()
+        _assert_prop_getattr_all(job_tmpl, job, test, test.default_val)
 
-    assert job_tmpl.config is mock_job_config
-    assert job_tmpl.apply().config is mock_job_config
-    assert job_tmpl.__class__.job_creator.config is mock_job_config
+        if test.enter_exit:
+            JobTemplate.job_creator.__enter__()
+        else:
+            getattr(JobTemplate.job_creator, test.set_method)(test.val)
 
-    job_tmpl_new = JobTemplate()
-    assert job_tmpl_new is not job_tmpl
-    assert job_tmpl_new.config is mock_job_config
-    assert job_tmpl_new.apply().config is mock_job_config
-    assert job_tmpl_new.__class__.job_creator.config is mock_job_config
+        _assert_prop_getattr_all(job_tmpl, job, test, test.val)
 
-    assert JobBase.config is mock_job_config
-    assert JobTemplate.config is mock_job_config
-    assert Job.config is mock_job_config
+        job_tmpl_new = JobTemplate()
+        assert job_tmpl_new is not job_tmpl
+        job_new = job_tmpl_new.apply()
+        assert job_new is not job
+        _assert_prop_getattr_all(job_tmpl_new, job_new, test, test.val)
 
-    assert not hasattr(JobTemplate, 'set_config')
-    assert not hasattr(JobBase, 'set_config')
-    assert not hasattr(Job, 'set_config')
+        if test.enter_exit:
+            JobTemplate.job_creator.__exit__(None, None, None)
+        else:
+            assert not hasattr(JobTemplate, test.set_method)
+            assert not hasattr(JobBase, test.set_method)
+            assert not hasattr(Job, test.set_method)
+
+
+def _assert_prop_getattr_all(job_tmpl: JobTemplate, job: Job, test: PropertyTest, val: object):
+    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+
+    _assert_prop_getattr_job_subcls(
+        JobBase,
+        None,
+        test.property,
+        test.in_job_base,
+        test.at_obj_level,
+        val,
+    )
+    _assert_prop_getattr_job_subcls(
+        JobTemplate,
+        job_tmpl,
+        test.property,
+        test.in_job_template,
+        test.at_obj_level,
+        val,
+    )
+    _assert_prop_getattr_job_subcls(
+        Job,
+        job,
+        test.property,
+        test.in_job,
+        test.at_obj_level,
+        val,
+    )
+
+
+def _assert_prop_getattr_job_subcls(job_cls: Type,
+                                    job_obj: Optional[JobBase],
+                                    property: str,
+                                    in_job_obj: bool,
+                                    at_obj_level: bool,
+                                    val: object):
+
+    assert getattr(job_cls.job_creator, property) is val
+    _assert_prop_getattr(job_cls, in_job_obj, property, val)
+
+    if job_obj:
+        assert getattr(job_obj.__class__.job_creator, property) is val
+        if at_obj_level:
+            _assert_prop_getattr(job_obj, in_job_obj, property, val)
+            _assert_prop_getattr(job_obj.__class__, in_job_obj, property, val)
+
+
+def _assert_prop_getattr(job_cls_or_obj, in_job_obj, property, val):
+    if in_job_obj:
+        assert getattr(job_cls_or_obj, property) is val
+    else:
+        assert not hasattr(job_cls_or_obj, property)
 
 
 def test_equal_mock() -> None:
@@ -297,14 +376,14 @@ def test_subclass_refine_scalar() -> None:
     assert silent_tmpl != shout_tmpl
     for silent_obj in silent_tmpl, silent_tmpl.apply():
         assert_updated_wrapper(silent_obj, silent_tmpl)
-        assert silent_obj.id is ''
+        assert silent_obj.id == ''
         assert silent_obj.uppercase is False
         assert silent_obj.params == {}
 
     silent = silent_tmpl.refine(id='silent').apply()
     assert_updated_wrapper(silent, silent_tmpl)
     assert silent != shout
-    assert silent.id is 'silent'
+    assert silent.id == 'silent'
     assert silent() == 'I know nothing'
 
 
@@ -356,14 +435,14 @@ def test_subclass_refine_mapping() -> None:
     assert nothing_tmpl != secret_tmpl
     for nothing_obj in nothing_tmpl, nothing_tmpl.apply():
         assert_updated_wrapper(nothing_obj, nothing_tmpl)
-        assert nothing_obj.id is ''
+        assert nothing_obj.id == ''
         assert nothing_obj.uppercase is False
         assert nothing_obj.params == dict(what='nothing')
 
     nothing = nothing_tmpl.refine(id='nothing').apply()
     assert_updated_wrapper(nothing, nothing_tmpl)
     assert nothing != secret
-    assert nothing.id is 'nothing'
+    assert nothing.id == 'nothing'
     assert nothing() == 'nothing has been restored'
 
 

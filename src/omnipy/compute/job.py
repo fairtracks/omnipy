@@ -8,7 +8,6 @@ from typing import Any, Dict, Generic, Hashable, Optional, Tuple, Type, Union
 
 from omnipy.compute.job_types import JobBaseT, JobT, JobTemplateT
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
-from omnipy.config.job import JobConfig
 from omnipy.engine.protocols import IsJob, IsJobConfig, IsJobCreator, IsTaskRunnerEngine
 from omnipy.util.helpers import create_merged_dict
 from omnipy.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorFactory
@@ -54,9 +53,6 @@ class JobCreator:
     @property
     def datetime_of_nested_context_run(self) -> datetime:
         return self._datetime_of_nested_context_run
-
-
-# TODO: test datetime_of_nested_context_run
 
 
 class JobBaseMeta(ABCMeta):
