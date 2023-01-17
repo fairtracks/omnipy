@@ -15,7 +15,7 @@ from omnipy.compute.task import TaskTemplate
 from .cases.flows import FlowCase
 from .cases.raw.functions import format_to_string_func
 from .helpers.functions import assert_updated_wrapper
-from .helpers.mocks import MockLocalRunner
+from .helpers.mocks import MockLocalRunner, MockTaskTemplateAssertSameDatetime
 
 
 def test_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
@@ -140,43 +140,89 @@ def test_dynamic_dag_flow_by_returned_dict(
 
 
 def test_func_flow_context(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    @TaskTemplate
+
+    # TaskTemplate
+    @MockTaskTemplateAssertSameDatetime()
     def task_tmpl() -> int:
         return 42
 
     with pytest.raises(TypeError):
         task_tmpl()
 
-    @TaskTemplate
+    task = task_tmpl.apply()
+    assert task() == 42
+    assert task_tmpl.last_datetime_of_flow_run is None
+    task_tmpl.reset_last_datetime()
+
+    # LinearFlowTemplate
+    @MockTaskTemplateAssertSameDatetime()
+    def plus_one_tmpl(number: int) -> int:
+        return number + 1
+
+    @LinearFlowTemplate(task_tmpl, plus_one_tmpl)
+    def linear_flow_tmpl() -> int:
+        ...
+
+    with pytest.raises(TypeError):
+        linear_flow_tmpl()
+
+    _assert_diff_datetime_of_two_flow_runs(
+        linear_flow_tmpl, assert_result=43, assert_task_tmpl=task_tmpl)
+
+    # DagFlowTemplate
+    @MockTaskTemplateAssertSameDatetime()
     def double_tmpl(number: int) -> int:
         return number * 2
 
-    @DagFlowTemplate(task_tmpl.refine(result_key='number'), double_tmpl)
+    @DagFlowTemplate(linear_flow_tmpl.refine(result_key='number'), double_tmpl)
     def dag_flow_tmpl() -> int:
         ...
 
     with pytest.raises(TypeError):
         dag_flow_tmpl()
 
-    dag_flow = dag_flow_tmpl.apply()
-    assert dag_flow() == 84
+    _assert_diff_datetime_of_two_flow_runs(
+        dag_flow_tmpl, assert_result=86, assert_task_tmpl=task_tmpl)
 
-    @FuncFlowTemplate
+    # FuncFlowTemplate
+    @FuncFlowTemplate()
     def func_flow_tmpl(number: int) -> int:
         return dag_flow_tmpl() + number
 
     with pytest.raises(TypeError):
-        func_flow_tmpl(16)
+        func_flow_tmpl(14)
 
-    func_flow = func_flow_tmpl.apply()
-    assert func_flow(16) == 100
+    _assert_diff_datetime_of_two_flow_runs(
+        func_flow_tmpl, 14, assert_result=100, assert_task_tmpl=task_tmpl)
 
-    @FuncFlowTemplate
+    # FuncFlowTemplate again
+    @FuncFlowTemplate()
     def func_flow_2_tmpl() -> int:
-        return int(func_flow_tmpl(16) / 2)
+        return int(func_flow_tmpl(14) / 2)
 
     with pytest.raises(TypeError):
         func_flow_2_tmpl()
 
-    func_flow_2 = func_flow_2_tmpl.apply()
-    assert func_flow_2() == 50
+    _assert_diff_datetime_of_two_flow_runs(
+        func_flow_2_tmpl, assert_result=50, assert_task_tmpl=task_tmpl)
+
+
+def _assert_diff_datetime_of_two_flow_runs(flow_tmpl: FlowTemplate,
+                                           *args: object,
+                                           assert_result: object,
+                                           assert_task_tmpl: MockTaskTemplateAssertSameDatetime):
+    linear_flow = flow_tmpl.apply()
+
+    assert linear_flow(*args) == assert_result
+
+    assert linear_flow.datetime_of_flow_run is None
+    assert assert_task_tmpl.last_datetime_of_flow_run is not None
+    datetime_of_prev_linear_flow_run = assert_task_tmpl.last_datetime_of_flow_run
+    assert_task_tmpl.reset_last_datetime()
+
+    assert linear_flow(*args) == assert_result
+
+    assert linear_flow.datetime_of_flow_run is None
+    assert assert_task_tmpl.last_datetime_of_flow_run is not None
+    assert assert_task_tmpl.last_datetime_of_flow_run != datetime_of_prev_linear_flow_run
+    assert_task_tmpl.reset_last_datetime()

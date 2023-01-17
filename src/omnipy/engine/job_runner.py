@@ -101,15 +101,15 @@ class LinearFlowRunnerEngine(JobRunnerEngine):
         def _inner_run_linear_flow(*args: object, **kwargs: object):
 
             result = None
-            for i, job in enumerate(linear_flow.task_templates):
-                with linear_flow.flow_context:
-                    # TODO: Better handling or kwargs
+            with linear_flow.flow_context:
+                for i, job in enumerate(linear_flow.task_templates):
+                    # TODO: Better handling of kwargs
                     if i == 0:
                         result = job(*args, **kwargs)
                     else:
                         result = job(*args)
 
-                args = (result,)
+                    args = (result,)
             return result
 
         return _inner_run_linear_flow
@@ -143,33 +143,33 @@ class DagFlowRunnerEngine(JobRunnerEngine):
         def _inner_run_dag_flow(*args: object, **kwargs: object):
             results = {}
             result = None
-            for i, job in enumerate(dag_flow.task_templates):
-                if i == 0:
-                    results = dag_flow.get_call_args(*args, **kwargs)
+            with dag_flow.flow_context:
+                for i, job in enumerate(dag_flow.task_templates):
+                    if i == 0:
+                        results = dag_flow.get_call_args(*args, **kwargs)
 
-                param_keys = set(inspect.signature(job).parameters.keys())
+                    param_keys = set(inspect.signature(job).parameters.keys())
 
-                # TODO: Refactor to remove dependency
-                #       Also, add test for not allowing override of fixed_params
-                if hasattr(job, 'param_key_map'):
-                    for key, val in job.param_key_map.items():
-                        if key in param_keys:
-                            param_keys.remove(key)
-                            param_keys.add(val)
+                    # TODO: Refactor to remove dependency
+                    #       Also, add test for not allowing override of fixed_params
+                    if hasattr(job, 'param_key_map'):
+                        for key, val in job.param_key_map.items():
+                            if key in param_keys:
+                                param_keys.remove(key)
+                                param_keys.add(val)
 
-                if hasattr(job, 'fixed_params'):
-                    for key in job.fixed_params.keys():
-                        if key in param_keys:
-                            param_keys.remove(key)
+                    if hasattr(job, 'fixed_params'):
+                        for key in job.fixed_params.keys():
+                            if key in param_keys:
+                                param_keys.remove(key)
 
-                params = {key: val for key, val in results.items() if key in param_keys}
-                with dag_flow.flow_context:
+                    params = {key: val for key, val in results.items() if key in param_keys}
                     result = job(**params)
 
-                if isinstance(result, dict) and len(result) > 0:
-                    results.update(result)
-                else:
-                    results[job.name] = result
+                    if isinstance(result, dict) and len(result) > 0:
+                        results.update(result)
+                    else:
+                        results[job.name] = result
             return result
 
         return _inner_run_dag_flow

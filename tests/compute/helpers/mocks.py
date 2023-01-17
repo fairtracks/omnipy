@@ -1,12 +1,16 @@
 from dataclasses import dataclass
+from datetime import datetime
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Mapping, Optional, Tuple, Type, Union
+from typing import Any, Callable, cast, Dict, List, Mapping, Optional, Tuple, Type, Union
 
 from omnipy.compute.job import (CallableDecoratingJobTemplateMixin,
                                 Job,
                                 JobBase,
                                 JobBaseAndMixinAcceptorMeta,
                                 JobTemplate)
+from omnipy.compute.job_types import IsFuncJobTemplateCallable, JobBaseT, JobT, JobTemplateT
+from omnipy.compute.private.job import FuncJob, FuncJobTemplate
+from omnipy.compute.task import TaskBase
 from omnipy.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
 from omnipy.engine.protocols import (IsDagFlow,
                                      IsEngineConfig,
@@ -275,3 +279,55 @@ class MockLocalRunner:
 class MockJobConfig:
     persist_outputs: bool = True
     restore_outputs: bool = False
+
+
+class MockTaskBaseAssertSameDatetime(TaskBase):
+    _last_datetime_of_flow_run: Optional[datetime] = []
+
+    @property
+    def last_datetime_of_flow_run(self) -> List[datetime]:
+        return self._last_datetime_of_flow_run[0] if self._last_datetime_of_flow_run else None
+
+
+def mock_task_template_assert_same_datetime_callable_decorator_cls(
+    cls: Type['MockTaskTemplateAssertSameDatetime']
+) -> IsFuncJobTemplateCallable['MockTaskTemplateAssertSameDatetime']:
+    return cast(IsFuncJobTemplateCallable['MockTaskTemplateAssertSameDatetime'],
+                callable_decorator_cls(cls))
+
+
+@mock_task_template_assert_same_datetime_callable_decorator_cls
+class MockTaskTemplateAssertSameDatetime(CallableDecoratingJobTemplateMixin,
+                                         MockTaskBaseAssertSameDatetime,
+                                         FuncJobTemplate['MockTaskAssertSameDatetime']):
+    @classmethod
+    def _get_job_subcls_for_apply(cls) -> Type[JobT]:
+        return MockTaskAssertSameDatetime
+
+    def _apply_engine_decorator(self, job: IsJob) -> IsJob:
+        return job
+
+    @classmethod
+    def reset_last_datetime(cls) -> None:
+        cls._last_datetime_of_flow_run.clear()
+
+
+class MockTaskAssertSameDatetime(MockTaskBaseAssertSameDatetime,
+                                 FuncJob[MockTaskBaseAssertSameDatetime,
+                                         MockTaskTemplateAssertSameDatetime]):
+    @classmethod
+    def _get_job_base_subcls_for_init(cls) -> Type[JobBaseT]:
+        return MockTaskBaseAssertSameDatetime
+
+    @classmethod
+    def _get_job_template_subcls_for_revise(cls) -> Type[JobTemplateT]:
+        return MockTaskTemplateAssertSameDatetime
+
+    def __call__(self, *args: object, **kwargs: object) -> object:
+        # tmpl_cls = self._get_job_template_subcls_for_revise()
+        if self.last_datetime_of_flow_run:
+            assert self.last_datetime_of_flow_run == self.datetime_of_flow_run
+        else:
+            self._last_datetime_of_flow_run.append(self.datetime_of_flow_run)
+
+        return super().__call__(*args, **kwargs)
