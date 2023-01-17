@@ -1,14 +1,15 @@
 import pytest_cases as pc
 
-from compute.mixins.cases.raw.functions import (csv_func,
-                                                json_func,
-                                                json_str_func,
-                                                json_table_func,
-                                                pandas_func,
-                                                python_func,
-                                                str_func)
 from omnipy.compute.flow import LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
+
+from .raw.functions import (csv_func,
+                            json_func,
+                            json_str_func,
+                            json_table_func,
+                            pandas_func,
+                            python_func,
+                            str_func)
 
 
 @pc.case(tags=['task'])

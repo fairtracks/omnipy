@@ -324,7 +324,6 @@ class MockTaskAssertSameDatetime(MockTaskBaseAssertSameDatetime,
         return MockTaskTemplateAssertSameDatetime
 
     def __call__(self, *args: object, **kwargs: object) -> object:
-        # tmpl_cls = self._get_job_template_subcls_for_revise()
         if self.last_datetime_of_flow_run:
             assert self.last_datetime_of_flow_run == self.datetime_of_flow_run
         else:

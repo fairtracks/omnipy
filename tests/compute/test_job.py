@@ -3,19 +3,19 @@ from typing import Annotated, NamedTuple, Optional, Tuple, Type, Union
 
 import pytest
 
-from compute.helpers.mocks import (CommandMockJob,
-                                   CommandMockJobTemplate,
-                                   mock_cmd_func,
-                                   MockJobBaseSubclass,
-                                   MockJobConfig,
-                                   MockJobSubclass,
-                                   MockJobTemplateSubclass,
-                                   MockLocalRunner,
-                                   PublicPropertyErrorsMockJob,
-                                   PublicPropertyErrorsMockJobTemplate)
 from omnipy.compute.job import Job, JobBase, JobCreator, JobTemplate
 
 from .helpers.functions import assert_updated_wrapper
+from .helpers.mocks import (CommandMockJob,
+                            CommandMockJobTemplate,
+                            mock_cmd_func,
+                            MockJobBaseSubclass,
+                            MockJobConfig,
+                            MockJobSubclass,
+                            MockJobTemplateSubclass,
+                            MockLocalRunner,
+                            PublicPropertyErrorsMockJob,
+                            PublicPropertyErrorsMockJobTemplate)
 
 
 class PropertyTest(NamedTuple):

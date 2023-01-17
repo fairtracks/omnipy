@@ -4,8 +4,6 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from compute.mixins.cases.raw.functions import json_func
-from omnipy.compute.flow import LinearFlowTemplate
 from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.compute.private.job import FuncJob, FuncJobBase, FuncJobTemplate
 from omnipy.compute.task import TaskTemplate

@@ -1,7 +1,8 @@
 import pytest
 
-from compute.helpers.mocks import MockJobConfig, MockLocalRunner
 from omnipy.compute.job import JobCreator
+
+from .helpers.mocks import MockJobConfig, MockLocalRunner
 
 
 def test_job_creator_init():
