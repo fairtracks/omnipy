@@ -137,8 +137,9 @@ class SerializerFuncJobMixin:
             os.makedirs(output_path)
 
         num_cur_files = len(os.listdir(output_path))
-        file_path = output_path.joinpath(
-            f'{num_cur_files:02}_{self.__class__.__name__.lower()}_{self.name}.tar.gz')
+        job_name = '_'.join(self.unique_name.split('-')[:-2])
+
+        file_path = output_path.joinpath(f'{num_cur_files:02}_{job_name}.tar.gz')
 
         parsed_dataset, serializer = \
             self._serializer_registry.auto_detect_tar_file_serializer(results)

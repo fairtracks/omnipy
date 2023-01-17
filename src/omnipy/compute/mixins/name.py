@@ -4,6 +4,8 @@ from inflection import underscore
 from prefect.utilities.names import generate_slug
 from slugify import slugify
 
+from omnipy.util.mixin import DynamicMixinAcceptor
+
 
 class NameJobBaseMixin:
     def __init__(self, *, name: Optional[str] = None):
@@ -37,7 +39,12 @@ class NameJobMixin:
     def _generate_unique_name(self):
         if self._name is None:
             return None
-        class_name_snake_case = underscore(self.__class__.__name__)
+
+        class_name = self.__class__.__name__
+        if class_name.endswith(DynamicMixinAcceptor.WITH_MIXINS_CLS_PREFIX):
+            class_name = class_name[:-len(DynamicMixinAcceptor.WITH_MIXINS_CLS_PREFIX)]
+
+        class_name_snake_case = underscore(class_name)
         self._unique_name = slugify(f'{class_name_snake_case}-{self._name}-{generate_slug(2)}')
 
     def regenerate_unique_name(self) -> None:

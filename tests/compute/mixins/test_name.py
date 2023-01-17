@@ -110,11 +110,11 @@ def test_property_unique_name_change_mock() -> None:
     job = job_tmpl.apply()
     assert job_tmpl.unique_name is None
 
-    assert job.unique_name.startswith('mock-job-subclass-with-mixins-my-job-')
+    assert job.unique_name.startswith('mock-job-subclass-my-job-')
     assert job.unique_name != job.name
 
     with pytest.raises(AttributeError):
-        job.unique_name = 'mock-job-subclass-with-mixins-my-job-crouching-dolphin'  # noqa
+        job.unique_name = 'mock-job-subclass-my-job-crouching-dolphin'  # noqa
 
 
 def test_property_unique_name_uniqueness_mock() -> None:
@@ -125,10 +125,10 @@ def test_property_unique_name_uniqueness_mock() -> None:
     job_1 = job_tmpl.apply()
     job_2 = job_tmpl.apply()
 
-    assert job_1.unique_name.startswith('mock-job-subclass-with-mixins-my-job-')
+    assert job_1.unique_name.startswith('mock-job-subclass-my-job-')
     assert job_1.unique_name != job_1.name
 
-    assert job_2.unique_name.startswith('mock-job-subclass-with-mixins-my-job-')
+    assert job_2.unique_name.startswith('mock-job-subclass-my-job-')
     assert job_2.unique_name != job_2.name
 
     assert job_1.name == job_2.name
@@ -140,13 +140,13 @@ def test_property_unique_name_regenerate_mock() -> None:
 
     job = JobTemplate(name='my_job').apply()
 
-    assert job.unique_name.startswith('mock-job-subclass-with-mixins-my-job-')
+    assert job.unique_name.startswith('mock-job-subclass-my-job-')
     assert job.unique_name != job.name
 
     prev_unique_name = job.unique_name
     job.regenerate_unique_name()
 
-    assert job.unique_name.startswith('mock-job-subclass-with-mixins-my-job-')
+    assert job.unique_name.startswith('mock-job-subclass-my-job-')
     assert job.unique_name != job.name
 
     assert job.unique_name != prev_unique_name
