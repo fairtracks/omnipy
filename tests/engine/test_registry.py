@@ -310,7 +310,7 @@ def test_state_change_logging_date_localization(
 ):
     registry = RunStateRegistry()
 
-    locale = ('de_DE', 'UTF-8')
+    locale = ('no_NO', 'UTF-8')
     registry.set_logger(stream_logger, locale=locale)
 
     registry.set_job_state(task_a, RunState.INITIALIZED)
