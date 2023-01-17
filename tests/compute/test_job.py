@@ -94,21 +94,13 @@ def test_job_creator_singular_mock(
     assert job_tmpl_new.__class__.job_creator is job_creator
 
 
-def test_job_creator_properties_mock(teardown_reset_job_creator: Annotated[None, pytest.fixture]):
+def test_job_creator_properties_mock(
+    teardown_reset_job_creator: Annotated[None, pytest.fixture],
+    mock_job_datetime: Annotated[datetime, pytest.fixture],
+):
     mock_local_runner = MockLocalRunner()
     mock_job_config = MockJobConfig()
     JobBase, JobTemplate, Job = mock_job_classes()  # noqa
-
-    class MockDatetime:
-        def __init__(self):
-            self._now = datetime.now()
-
-        def now(self):
-            return self._now
-
-    mock_datetime = MockDatetime()
-    import omnipy.compute.job
-    omnipy.compute.job.datetime = mock_datetime
 
     for test in [
             PropertyTest(
@@ -144,7 +136,7 @@ def test_job_creator_properties_mock(teardown_reset_job_creator: Annotated[None,
                 property='datetime_of_nested_context_run',
                 enter_exit=True,
                 default_val=None,
-                val=mock_datetime.now(),
+                val=mock_job_datetime.now(),
                 in_job_base=False,
                 in_job_template=False,
                 in_job=False,
