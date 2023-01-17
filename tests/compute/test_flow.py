@@ -212,7 +212,6 @@ def _assert_diff_datetime_of_two_flow_runs(flow_tmpl: FlowTemplate,
                                            assert_result: object,
                                            assert_task_tmpl: MockTaskTemplateAssertSameDatetime):
     linear_flow = flow_tmpl.apply()
-
     assert linear_flow(*args) == assert_result
 
     assert linear_flow.datetime_of_flow_run is None
@@ -220,6 +219,7 @@ def _assert_diff_datetime_of_two_flow_runs(flow_tmpl: FlowTemplate,
     datetime_of_prev_linear_flow_run = assert_task_tmpl.last_datetime_of_flow_run
     assert_task_tmpl.reset_last_datetime()
 
+    linear_flow = flow_tmpl.apply()
     assert linear_flow(*args) == assert_result
 
     assert linear_flow.datetime_of_flow_run is None
