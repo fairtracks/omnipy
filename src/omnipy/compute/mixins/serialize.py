@@ -66,7 +66,7 @@ class SerializerFuncJobBaseMixin:
             return self._persist_outputs if self._persist_outputs is not None \
                     else PersistOpts.DISABLED
         else:
-            from omnipy.compute.private.flow import FlowBase
+            from omnipy.compute.flow import FlowBase
             from omnipy.compute.task import TaskBase
 
             config_persist_opt = self.config.persist_outputs
