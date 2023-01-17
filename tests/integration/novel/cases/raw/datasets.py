@@ -28,7 +28,7 @@ json_table_dataset['json_table_b'] = [
 ]
 
 json_dataset = JsonDataset()
-json_dataset['json_python_a'] = {'one': ["contents", 1, True], 'two': None}
+json_dataset['json_python_a'] = {'one': ['contents', 1, True], 'two': None}
 json_dataset['json_python_b'] = [1, 4, 9, {'options': {'verbose': False}}]
 
 json_str_dataset = Dataset[Model[str]]()
