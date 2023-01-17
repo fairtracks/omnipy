@@ -137,7 +137,7 @@ class SerializerFuncJobMixin:
             os.makedirs(output_path)
 
         num_cur_files = len(os.listdir(output_path))
-        job_name = '_'.join(self.unique_name.split('-')[:-2])
+        job_name = self._create_job_name()
 
         file_path = output_path.joinpath(f'{num_cur_files:02}_{job_name}.tar.gz')
 
@@ -148,6 +148,9 @@ class SerializerFuncJobMixin:
 
         with open(file_path, 'wb') as tarfile:
             tarfile.write(serializer.serialize(parsed_dataset))
+
+    def _create_job_name(self):
+        return '_'.join(self.unique_name.split('-')[:-2])
 
     def _generate_datetime_str(self):
         if self.time_of_cur_toplevel_flow_run:
@@ -169,8 +172,8 @@ class SerializerFuncJobMixin:
                 last_dir = sorted_date_dirs[-1]
                 last_dir_path = output_path.joinpath(last_dir)
                 for job_output_name in reversed(sorted(os.listdir(last_dir_path))):
-                    name_part_of_filename = ''.join(job_output_name.split('_')[2:])[:-7]
-                    if name_part_of_filename == self.name:
+                    name_part_of_filename = job_output_name[3:-7]
+                    if name_part_of_filename == self._create_job_name():
                         tar_file_path = last_dir_path.joinpath(job_output_name)
                         with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
                             file_suffixes = set(fn.split('.')[-1] for fn in tarfile_obj.getnames())
