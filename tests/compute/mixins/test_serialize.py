@@ -5,8 +5,7 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutputsOptions
-from omnipy.compute.private.job import FuncJob, FuncJobBase, FuncJobTemplate
-from omnipy.compute.task import TaskTemplate
+from omnipy.compute.task import FuncJob, FuncJobBase, FuncJobTemplate, TaskTemplate
 from omnipy.config.job import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
 from omnipy.engine.protocols import IsRuntime
 
