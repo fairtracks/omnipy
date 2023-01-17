@@ -137,7 +137,8 @@ class SerializerFuncJobMixin:
             os.makedirs(output_path)
 
         num_cur_files = len(os.listdir(output_path))
-        file_path = output_path.joinpath(f'{num_cur_files:02}-{self.name}.tar.gz')
+        file_path = output_path.joinpath(
+            f'{num_cur_files:02}_{self.__class__.__name__.lower()}_{self.name}.tar.gz')
 
         parsed_dataset, serializer = \
             self._serializer_registry.auto_detect_tar_file_serializer(results)
@@ -167,7 +168,7 @@ class SerializerFuncJobMixin:
                 last_dir = sorted_date_dirs[-1]
                 last_dir_path = output_path.joinpath(last_dir)
                 for job_output_name in reversed(sorted(os.listdir(last_dir_path))):
-                    name_part_of_filename = job_output_name[3:-7]
+                    name_part_of_filename = ''.join(job_output_name.split('_')[2:])[:-7]
                     if name_part_of_filename == self.name:
                         tar_file_path = last_dir_path.joinpath(job_output_name)
                         with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
