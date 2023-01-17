@@ -10,7 +10,31 @@ from omnipy.util.helpers import remove_none_vals
 
 
 class FlowBase(FuncJobBase):
-    ...
+    def __init__(
+        self,
+        job_func: Callable,
+        name: Optional[str] = None,
+        fixed_params: Optional[Mapping[str, object]] = None,
+        param_key_map: Optional[Mapping[str, str]] = None,
+        result_key: Optional[str] = None,
+        iterate_over_data_files: bool = False,
+        persist_outputs: Optional[PersistOutputsOptions] = None,
+        restore_outputs: Optional[RestoreOutputsOptions] = None,
+        **kwargs: object,
+    ):
+        super().__init__(
+            job_func,
+            **remove_none_vals(
+                name=name,
+                fixed_params=fixed_params,
+                param_key_map=param_key_map,
+                result_key=result_key,
+                iterate_over_data_files=iterate_over_data_files,
+                persist_outputs=persist_outputs,
+                restore_outputs=restore_outputs,
+                **kwargs,
+            ))
+
 
 
 class FlowTemplate(FuncJobTemplate[FlowT], Generic[FlowT], ABC):
@@ -33,7 +57,7 @@ class TaskTemplatesFlowBase(FlowBase):
         iterate_over_data_files: bool = False,
         persist_outputs: Optional[PersistOutputsOptions] = None,
         restore_outputs: Optional[RestoreOutputsOptions] = None,
-        **kwargs: Any,
+        **kwargs: object,
     ):
         super().__init__(
             job_func,
@@ -69,7 +93,7 @@ class TaskTemplatesFlowTemplate(TaskTemplatesFlowBase, FlowTemplate[FlowT], Gene
                iterate_over_data_files: bool = False,
                persist_outputs: Optional[PersistOutputsOptions] = None,
                restore_outputs: Optional[RestoreOutputsOptions] = None,
-               **kwargs: Any) -> TaskTemplatesFlowTemplateT:
+               **kwargs: object) -> TaskTemplatesFlowTemplateT:
 
         args = tuple([self._job_func] + list(*task_templates)) if task_templates else ()
 

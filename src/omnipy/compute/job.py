@@ -87,7 +87,7 @@ class JobTemplateAndMixinAcceptorMeta(JobTemplateMeta, JobBaseAndMixinAcceptorMe
 
 class JobBase(DynamicMixinAcceptor, metaclass=JobBaseAndMixinAcceptorMeta):
     def __init__(self, *args: object, name: Optional[str] = None, **kwargs: object):
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
         if not isinstance(self, JobTemplate) and not isinstance(self, Job):
             raise RuntimeError('JobBase and subclasses not inheriting from JobTemplate '

@@ -19,19 +19,8 @@ from omnipy.util.mixin import DynamicMixinAcceptor
 
 
 class FuncJobBase(JobBase, DynamicMixinAcceptor, metaclass=JobBaseAndMixinAcceptorMeta):
-    def __init__(self,
-                 job_func: Callable,
-                 *,
-                 name: Optional[str] = None,
-                 fixed_params: Optional[Mapping[str, object]] = None,
-                 param_key_map: Optional[Mapping[str, str]] = None,
-                 result_key: Optional[str] = None,
-                 iterate_over_data_files: bool = False,
-                 persist_outputs: Optional[PersistOutputsOptions] = None,
-                 restore_outputs: Optional[RestoreOutputsOptions] = None,
-                 **kwargs: object) -> None:
-
-        super().__init__()
+    def __init__(self, job_func: Callable, **kwargs: object) -> None:
+        super().__init__(**kwargs)
 
         self._job_func = job_func
 
@@ -63,7 +52,7 @@ class FuncJobTemplate(FuncJobBase, JobTemplate[JobT], Generic[JobT], ABC):
                iterate_over_data_files: bool = False,
                persist_outputs: Optional[PersistOutputsOptions] = None,
                restore_outputs: Optional[RestoreOutputsOptions] = None,
-               **kwargs: Any) -> FuncJobTemplateT:
+               **kwargs: object) -> FuncJobTemplateT:
 
         return JobTemplate.refine(
             self,
