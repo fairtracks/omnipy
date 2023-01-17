@@ -1,4 +1,5 @@
 from abc import ABC
+from datetime import datetime
 from typing import Any, Callable, Generic, Mapping, Optional, Tuple, Union
 
 from omnipy.compute.job import JobTemplate
@@ -6,6 +7,7 @@ from omnipy.compute.job_types import FlowBaseT, FlowT, FlowTemplateT, TaskTempla
 from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.compute.private.job import FuncJob, FuncJobBase, FuncJobTemplate
 from omnipy.compute.task import TaskTemplate
+from omnipy.engine.protocols import IsNestedContext
 from omnipy.util.helpers import remove_none_vals
 
 
@@ -35,6 +37,7 @@ class FlowBase(FuncJobBase):
                 **kwargs,
             ))
 
+        self._time_of_last_run = None
 
 
 class FlowTemplate(FuncJobTemplate[FlowT], Generic[FlowT], ABC):
@@ -42,7 +45,23 @@ class FlowTemplate(FuncJobTemplate[FlowT], Generic[FlowT], ABC):
 
 
 class Flow(FuncJob[FlowBaseT, FlowTemplateT], Generic[FlowBaseT, FlowTemplateT], ABC):
-    ...
+    @property
+    def flow_context(self) -> IsNestedContext:
+        class FlowContext:
+            @classmethod
+            def __enter__(cls):
+                self.__class__.job_creator.__enter__()
+                self._time_of_last_run = self.time_of_cur_toplevel_flow_run
+
+            @classmethod
+            def __exit__(cls, exc_type, exc_val, exc_tb):
+                self.__class__.job_creator.__exit__(exc_type, exc_val, exc_tb)
+
+        return FlowContext()
+
+    @property
+    def time_of_last_run(self) -> datetime:
+        return self._time_of_last_run
 
 
 class TaskTemplatesFlowBase(FlowBase):

@@ -3,6 +3,7 @@ from datetime import datetime
 from types import MappingProxyType
 from typing import Any, Callable, cast, Dict, List, Mapping, Optional, Tuple, Type, Union
 
+from omnipy.compute.flow import Flow, FlowBase, FlowTemplate
 from omnipy.compute.job import (CallableDecoratingJobTemplateMixin,
                                 Job,
                                 JobBase,
@@ -61,6 +62,39 @@ class MockJobSubclass(MockJobBaseSubclass, Job[MockJobBaseSubclass, MockJobTempl
 
     def _call_func(self, *args: Any, **kwargs: Any) -> Any:
         ...
+
+
+class MockFlowBaseSubclass(FlowBase):
+    ...
+
+
+def mock_flow_template_callable_decorator_cls(
+        cls: Type['MockFlowTemplateSubclass']
+) -> IsFuncJobTemplateCallable['MockFlowTemplateSubclass']:
+    return cast(IsFuncJobTemplateCallable['MockFlowTemplateSubclass'], callable_decorator_cls(cls))
+
+
+@mock_flow_template_callable_decorator_cls
+class MockFlowTemplateSubclass(CallableDecoratingJobTemplateMixin,
+                               MockFlowBaseSubclass,
+                               FlowTemplate['MockFlowSubclass']):
+    @classmethod
+    def _get_job_subcls_for_apply(cls) -> Type['MockFlowSubclass']:
+        return MockFlowSubclass
+
+    @classmethod
+    def _apply_engine_decorator(cls, job: IsJob) -> IsJob:
+        return job
+
+
+class MockFlowSubclass(MockFlowBaseSubclass, Flow[MockFlowBaseSubclass, MockFlowTemplateSubclass]):
+    @classmethod
+    def _get_job_base_subcls_for_init(cls) -> Type[MockFlowBaseSubclass]:
+        return MockFlowBaseSubclass
+
+    @classmethod
+    def _get_job_template_subcls_for_revise(cls) -> Type[MockFlowTemplateSubclass]:
+        return MockFlowTemplateSubclass
 
 
 class PublicPropertyErrorsMockJobBase(
@@ -280,52 +314,55 @@ class MockJobConfig:
     restore_outputs: bool = False
 
 
-class MockTaskBaseAssertSameDatetime(TaskBase):
-    _last_datetime_of_flow_run: Optional[datetime] = []
+class MockTaskBaseAssertSameTimeOfCurFlowRun(TaskBase):
+    _persisted_time_of_cur_toplevel_flow_run: Optional[datetime] = []
 
     @property
-    def last_datetime_of_flow_run(self) -> List[datetime]:
-        return self._last_datetime_of_flow_run[0] if self._last_datetime_of_flow_run else None
+    def persisted_time_of_cur_toplevel_flow_run(self) -> List[datetime]:
+        return self._persisted_time_of_cur_toplevel_flow_run[
+            0] if self._persisted_time_of_cur_toplevel_flow_run else None
 
 
-def mock_task_template_assert_same_datetime_callable_decorator_cls(
-    cls: Type['MockTaskTemplateAssertSameDatetime']
-) -> IsFuncJobTemplateCallable['MockTaskTemplateAssertSameDatetime']:
-    return cast(IsFuncJobTemplateCallable['MockTaskTemplateAssertSameDatetime'],
+def mock_task_template_assert_same_time_of_cur_flow_run_callable_decorator_cls(
+    cls: Type['MockTaskTemplateAssertSameTimeOfCurFlowRun']
+) -> IsFuncJobTemplateCallable['MockTaskTemplateAssertSameTimeOfCurFlowRun']:
+    return cast(IsFuncJobTemplateCallable['MockTaskTemplateAssertSameTimeOfCurFlowRun'],
                 callable_decorator_cls(cls))
 
 
-@mock_task_template_assert_same_datetime_callable_decorator_cls
-class MockTaskTemplateAssertSameDatetime(CallableDecoratingJobTemplateMixin,
-                                         MockTaskBaseAssertSameDatetime,
-                                         FuncJobTemplate['MockTaskAssertSameDatetime']):
+@mock_task_template_assert_same_time_of_cur_flow_run_callable_decorator_cls
+class MockTaskTemplateAssertSameTimeOfCurFlowRun(
+        CallableDecoratingJobTemplateMixin,
+        MockTaskBaseAssertSameTimeOfCurFlowRun,
+        FuncJobTemplate['MockTaskAssertSameTimeOfCurFlowRun']):
     @classmethod
-    def _get_job_subcls_for_apply(cls) -> Type[JobT]:
-        return MockTaskAssertSameDatetime
+    def _get_job_subcls_for_apply(cls) -> Type['MockTaskAssertSameTimeOfCurFlowRun']:
+        return MockTaskAssertSameTimeOfCurFlowRun
 
     def _apply_engine_decorator(self, job: IsJob) -> IsJob:
         return job
 
     @classmethod
-    def reset_last_datetime(cls) -> None:
-        cls._last_datetime_of_flow_run.clear()
+    def reset_persisted_time_of_cur_toplevel_flow_run(cls) -> None:
+        cls._persisted_time_of_cur_toplevel_flow_run.clear()
 
 
-class MockTaskAssertSameDatetime(MockTaskBaseAssertSameDatetime,
-                                 FuncJob[MockTaskBaseAssertSameDatetime,
-                                         MockTaskTemplateAssertSameDatetime]):
+class MockTaskAssertSameTimeOfCurFlowRun(MockTaskBaseAssertSameTimeOfCurFlowRun,
+                                         FuncJob[MockTaskBaseAssertSameTimeOfCurFlowRun,
+                                                 MockTaskTemplateAssertSameTimeOfCurFlowRun]):
     @classmethod
-    def _get_job_base_subcls_for_init(cls) -> Type[JobBaseT]:
-        return MockTaskBaseAssertSameDatetime
+    def _get_job_base_subcls_for_init(cls) -> Type['MockTaskBaseAssertSameTimeOfCurFlowRun']:
+        return MockTaskBaseAssertSameTimeOfCurFlowRun
 
     @classmethod
-    def _get_job_template_subcls_for_revise(cls) -> Type[JobTemplateT]:
-        return MockTaskTemplateAssertSameDatetime
+    def _get_job_template_subcls_for_revise(
+            cls) -> Type['MockTaskTemplateAssertSameTimeOfCurFlowRun']:
+        return MockTaskTemplateAssertSameTimeOfCurFlowRun
 
     def __call__(self, *args: object, **kwargs: object) -> object:
-        if self.last_datetime_of_flow_run:
-            assert self.last_datetime_of_flow_run == self.datetime_of_flow_run
+        if self.persisted_time_of_cur_toplevel_flow_run:
+            assert self.persisted_time_of_cur_toplevel_flow_run == self.time_of_cur_toplevel_flow_run
         else:
-            self._last_datetime_of_flow_run.append(self.datetime_of_flow_run)
+            self._persisted_time_of_cur_toplevel_flow_run.append(self.time_of_cur_toplevel_flow_run)
 
         return super().__call__(*args, **kwargs)

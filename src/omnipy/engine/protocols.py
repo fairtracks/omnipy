@@ -97,17 +97,19 @@ class IsRuntime(IsConfigPublisher, Protocol):
         ...
 
 
-class IsJobCreator(Protocol):
-    config: Optional[IsJobConfig]
-    engine: Optional['IsTaskRunnerEngine']
-    nested_context_level: int
-    datetime_of_nested_context_run: datetime
-
+class IsNestedContext(Protocol):
     def __enter__(self):
         ...
 
     def __exit__(self, exc_type, exc_value, traceback):
         ...
+
+
+class IsJobCreator(IsNestedContext, Protocol):
+    engine: Optional['IsTaskRunnerEngine']
+    config: Optional[IsJobConfig]
+    nested_context_level: int
+    time_of_cur_toplevel_nested_context_run: datetime
 
     def set_config(self, config: IsJobConfig) -> None:
         ...
@@ -119,7 +121,6 @@ class IsJobCreator(Protocol):
 class IsJob(Protocol):
     name: str
     unique_name: str
-    flow_context: IsJobCreator
     in_flow_context: bool
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
@@ -161,8 +162,8 @@ class IsTaskTemplate(IsFuncJobTemplate, Protocol):
 
 
 class IsFlow(IsFuncJob, Protocol):
-    def has_coroutine_func(self) -> bool:
-        ...
+    flow_context: IsNestedContext
+    time_of_last_run: datetime
 
 
 class IsFlowTemplate(IsFuncJobTemplate, Protocol):

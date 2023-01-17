@@ -1,4 +1,5 @@
-from typing import Annotated, Dict, Iterable, Tuple, Union
+from datetime import datetime
+from typing import Annotated, Dict, Iterable, Tuple, Type, Union
 
 import pytest
 import pytest_cases as pc
@@ -6,20 +7,101 @@ import pytest_cases as pc
 from omnipy.compute.flow import (DagFlow,
                                  DagFlowTemplate,
                                  Flow,
+                                 FlowBase,
                                  FlowTemplate,
                                  FuncFlow,
                                  FuncFlowTemplate,
+                                 LinearFlow,
                                  LinearFlowTemplate)
+from omnipy.compute.job import Job, JobBase, JobTemplate
 from omnipy.compute.task import TaskTemplate
 
 from .cases.flows import FlowCase
 from .cases.raw.functions import format_to_string_func
 from .helpers.functions import assert_updated_wrapper
-from .helpers.mocks import MockLocalRunner, MockTaskTemplateAssertSameDatetime
+from .helpers.mocks import (MockFlowTemplateSubclass,
+                            MockJobTemplateSubclass,
+                            MockLocalRunner,
+                            MockTaskTemplateAssertSameTimeOfCurFlowRun)
+
+MockJobClasses = Tuple[Type[JobBase], Type[JobTemplate], Type[Job]]
+MockFlowClasses = Tuple[Type[FlowBase], Type[FlowTemplate], Type[Flow]]
 
 
-def test_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+def test_flow_context_mock() -> None:
+    flow_tmpl = MockFlowTemplateSubclass()(lambda x: x)
+    flow = flow_tmpl.apply()
+    job_tmpl = MockJobTemplateSubclass()
+    job = job_tmpl.apply()
+
+    for job_obj in flow, flow_tmpl, job, job_tmpl:
+        assert job_obj.in_flow_context is False
+
+    for job_obj in flow_tmpl, job, job_tmpl:
+        assert not hasattr(job_obj, 'flow_context')
+
+    with flow.flow_context:
+        job_tmpl_inside = MockJobTemplateSubclass()
+        job_inside = job_tmpl_inside.apply()
+
+        for job_obj in flow, flow_tmpl, job, job_tmpl, job_inside, job_tmpl_inside:
+            assert job_obj.in_flow_context is True
+
+    job_tmpl_outside = MockJobTemplateSubclass()
+    job_outside = job_tmpl_outside.apply()
+
+    for job_obj in (flow,
+                    flow_tmpl,
+                    job,
+                    job_tmpl,
+                    job_inside,
+                    job_tmpl_inside,
+                    job_outside,
+                    job_tmpl_outside):
+        assert job_obj.in_flow_context is False
+
+
+def test_time_of_flow_run_mock() -> None:
+    flow_tmpl = MockFlowTemplateSubclass()(lambda x: x)
+    flow = flow_tmpl.apply()
+    job_tmpl = MockJobTemplateSubclass()
+    job = job_tmpl.apply()
+
+    assert flow.time_of_cur_toplevel_flow_run is None
+    assert job.time_of_cur_toplevel_flow_run is None
+
+    assert not hasattr(flow_tmpl, 'time_of_cur_toplevel_flow_run')
+    assert not hasattr(job_tmpl, 'time_of_cur_toplevel_flow_run')
+
+    for job_obj in flow_tmpl, job, job_tmpl:
+        assert not hasattr(job_obj, 'time_of_last_run')
+
+    assert flow.time_of_last_run is None
+    with flow.flow_context:
+        assert isinstance(flow.time_of_last_run, datetime)
+        prev_time_of_last_tun = flow.time_of_last_run
+        assert flow.time_of_cur_toplevel_flow_run == prev_time_of_last_tun
+
+        job_inside = MockJobTemplateSubclass().apply()
+
+        assert job.time_of_cur_toplevel_flow_run == prev_time_of_last_tun
+        assert job_inside.time_of_cur_toplevel_flow_run == prev_time_of_last_tun
+
+    job_outside = MockJobTemplateSubclass().apply()
+
+    assert flow.time_of_cur_toplevel_flow_run is None
+    assert job.time_of_cur_toplevel_flow_run is None
+    assert job_inside.time_of_cur_toplevel_flow_run is None
+    assert job_outside.time_of_cur_toplevel_flow_run is None
+
+    assert flow.time_of_last_run == prev_time_of_last_tun
+
+
+def test_init_all_flow_classes(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
     for class_info in [{
+            'template_cls': LinearFlowTemplate, 'flow_cls': LinearFlow
+    }, {
             'template_cls': DagFlowTemplate, 'flow_cls': DagFlow
     }, {
             'template_cls': FuncFlowTemplate, 'flow_cls': FuncFlow
@@ -52,8 +134,8 @@ def test_fail_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]
 
 
 @pc.parametrize_with_cases('case', cases='.cases.flows')
-def test_flow_run(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-                  case: FlowCase) -> None:
+def test_flow_run_all_flow_classes(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+                                   case: FlowCase) -> None:
     if hasattr(mock_local_runner, 'finished'):
         assert mock_local_runner.finished is False
 
@@ -139,23 +221,21 @@ def test_dynamic_dag_flow_by_returned_dict(
     assert dag_flow() == 84
 
 
-def test_func_flow_context(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+def test_time_of_multi_level_flow_run_all_flow_classes(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
 
     # TaskTemplate
-    @MockTaskTemplateAssertSameDatetime()
+    @MockTaskTemplateAssertSameTimeOfCurFlowRun()
     def task_tmpl() -> int:
         return 42
 
-    with pytest.raises(TypeError):
-        task_tmpl()
-
     task = task_tmpl.apply()
     assert task() == 42
-    assert task_tmpl.last_datetime_of_flow_run is None
-    task_tmpl.reset_last_datetime()
+    assert task_tmpl.persisted_time_of_cur_toplevel_flow_run is None
+    task_tmpl.reset_persisted_time_of_cur_toplevel_flow_run()
 
     # LinearFlowTemplate
-    @MockTaskTemplateAssertSameDatetime()
+    @MockTaskTemplateAssertSameTimeOfCurFlowRun()
     def plus_one_tmpl(number: int) -> int:
         return number + 1
 
@@ -163,14 +243,11 @@ def test_func_flow_context(mock_local_runner: Annotated[MockLocalRunner, pytest.
     def linear_flow_tmpl() -> int:
         ...
 
-    with pytest.raises(TypeError):
-        linear_flow_tmpl()
-
-    _assert_diff_datetime_of_two_flow_runs(
+    _assert_diff_time_of_two_flow_runs(
         linear_flow_tmpl, assert_result=43, assert_task_tmpl=task_tmpl)
 
     # DagFlowTemplate
-    @MockTaskTemplateAssertSameDatetime()
+    @MockTaskTemplateAssertSameTimeOfCurFlowRun()
     def double_tmpl(number: int) -> int:
         return number * 2
 
@@ -178,21 +255,14 @@ def test_func_flow_context(mock_local_runner: Annotated[MockLocalRunner, pytest.
     def dag_flow_tmpl() -> int:
         ...
 
-    with pytest.raises(TypeError):
-        dag_flow_tmpl()
-
-    _assert_diff_datetime_of_two_flow_runs(
-        dag_flow_tmpl, assert_result=86, assert_task_tmpl=task_tmpl)
+    _assert_diff_time_of_two_flow_runs(dag_flow_tmpl, assert_result=86, assert_task_tmpl=task_tmpl)
 
     # FuncFlowTemplate
     @FuncFlowTemplate()
     def func_flow_tmpl(number: int) -> int:
         return dag_flow_tmpl() + number
 
-    with pytest.raises(TypeError):
-        func_flow_tmpl(14)
-
-    _assert_diff_datetime_of_two_flow_runs(
+    _assert_diff_time_of_two_flow_runs(
         func_flow_tmpl, 14, assert_result=100, assert_task_tmpl=task_tmpl)
 
     # FuncFlowTemplate again
@@ -203,26 +273,31 @@ def test_func_flow_context(mock_local_runner: Annotated[MockLocalRunner, pytest.
     with pytest.raises(TypeError):
         func_flow_2_tmpl()
 
-    _assert_diff_datetime_of_two_flow_runs(
+    _assert_diff_time_of_two_flow_runs(
         func_flow_2_tmpl, assert_result=50, assert_task_tmpl=task_tmpl)
 
 
-def _assert_diff_datetime_of_two_flow_runs(flow_tmpl: FlowTemplate,
-                                           *args: object,
-                                           assert_result: object,
-                                           assert_task_tmpl: MockTaskTemplateAssertSameDatetime):
-    linear_flow = flow_tmpl.apply()
-    assert linear_flow(*args) == assert_result
+def _assert_diff_time_of_two_flow_runs(
+        flow_tmpl: FlowTemplate,
+        *args: object,
+        assert_result: object,
+        assert_task_tmpl: MockTaskTemplateAssertSameTimeOfCurFlowRun):
+    flow = flow_tmpl.apply()
+    assert flow(*args) == assert_result
 
-    assert linear_flow.datetime_of_flow_run is None
-    assert assert_task_tmpl.last_datetime_of_flow_run is not None
-    datetime_of_prev_linear_flow_run = assert_task_tmpl.last_datetime_of_flow_run
-    assert_task_tmpl.reset_last_datetime()
+    assert flow.time_of_cur_toplevel_flow_run is None
+    assert isinstance(flow.time_of_last_run, datetime)
+    time_of_prev_flow_run = flow.time_of_last_run
 
-    linear_flow = flow_tmpl.apply()
-    assert linear_flow(*args) == assert_result
+    assert assert_task_tmpl.persisted_time_of_cur_toplevel_flow_run == time_of_prev_flow_run
+    assert_task_tmpl.reset_persisted_time_of_cur_toplevel_flow_run()
 
-    assert linear_flow.datetime_of_flow_run is None
-    assert assert_task_tmpl.last_datetime_of_flow_run is not None
-    assert assert_task_tmpl.last_datetime_of_flow_run != datetime_of_prev_linear_flow_run
-    assert_task_tmpl.reset_last_datetime()
+    flow_2 = flow_tmpl.apply()
+    assert flow_2(*args) == assert_result
+
+    assert flow_2.time_of_cur_toplevel_flow_run is None
+    assert isinstance(flow_2.time_of_last_run, datetime)
+    assert flow_2.time_of_last_run != time_of_prev_flow_run
+
+    assert assert_task_tmpl.persisted_time_of_cur_toplevel_flow_run == flow_2.time_of_last_run
+    assert_task_tmpl.reset_persisted_time_of_cur_toplevel_flow_run()

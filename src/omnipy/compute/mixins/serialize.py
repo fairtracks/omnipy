@@ -130,7 +130,7 @@ class SerializerFuncJobMixin:
         return results
 
     def _serialize_and_persist_outputs(self, results: Dataset):
-        run_time = self.datetime_of_flow_run if self.datetime_of_flow_run is not None \
+        run_time = self.time_of_cur_toplevel_flow_run if self.time_of_cur_toplevel_flow_run is not None \
             else datetime.now()
         datetime_str = run_time.strftime('%Y_%m_%d-%H_%M_%S')
         output_path = Path(self.config.persist_data_dir_path).joinpath(datetime_str)

@@ -18,7 +18,7 @@ class JobCreator:
         self._engine: Optional[IsTaskRunnerEngine] = None
         self._config: Optional[IsJobConfig] = None
         self._nested_context_level: int = 0
-        self._datetime_of_nested_context_run: Optional[datetime] = None
+        self._time_of_cur_toplevel_nested_context_run: Optional[datetime] = None
 
     def set_engine(self, engine: IsTaskRunnerEngine) -> None:
         self._engine = engine
@@ -28,7 +28,7 @@ class JobCreator:
 
     def __enter__(self):
         if self._nested_context_level == 0:
-            self._datetime_of_nested_context_run = datetime.now()
+            self._time_of_cur_toplevel_nested_context_run = datetime.now()
 
         self._nested_context_level += 1
 
@@ -36,7 +36,7 @@ class JobCreator:
         self._nested_context_level -= 1
 
         if self._nested_context_level == 0:
-            self._datetime_of_nested_context_run = None
+            self._time_of_cur_toplevel_nested_context_run = None
 
     @property
     def engine(self) -> Optional[IsTaskRunnerEngine]:
@@ -51,8 +51,8 @@ class JobCreator:
         return self._nested_context_level
 
     @property
-    def datetime_of_nested_context_run(self) -> datetime:
-        return self._datetime_of_nested_context_run
+    def time_of_cur_toplevel_nested_context_run(self) -> datetime:
+        return self._time_of_cur_toplevel_nested_context_run
 
 
 class JobBaseMeta(ABCMeta):
@@ -199,12 +199,8 @@ class CallableDecoratingJobTemplateMixin:
 
 class Job(JobBase, DynamicMixinAcceptor, Generic[JobBaseT, JobTemplateT]):
     @property
-    def flow_context(self) -> IsJobCreator:
-        return self.__class__.job_creator
-
-    @property
-    def datetime_of_flow_run(self) -> datetime:
-        return self.__class__.job_creator.datetime_of_nested_context_run
+    def time_of_cur_toplevel_flow_run(self) -> datetime:
+        return self.__class__.job_creator.time_of_cur_toplevel_nested_context_run
 
     @classmethod
     @abstractmethod

@@ -132,7 +132,7 @@ def test_job_creator_properties_mock(
                 in_job=False,
                 at_obj_level=False),
             PropertyTest(
-                property='datetime_of_nested_context_run',
+                property='time_of_cur_toplevel_nested_context_run',
                 enter_exit=True,
                 default_val=None,
                 val=mock_job_datetime.now(),
@@ -221,33 +221,6 @@ def _assert_prop_getattr(job_cls_or_obj, in_job_obj, property, val):
         assert getattr(job_cls_or_obj, property) is val
     else:
         assert not hasattr(job_cls_or_obj, property)
-
-
-def test_flow_context_and_datetime_of_flow_runm(
-        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
-    JobBase, JobTemplate, Job = mock_job_classes  # noqa
-
-    job_tmpl = JobTemplate()
-    job = job_tmpl.apply()
-
-    assert not job_tmpl.in_flow_context
-    assert not job.in_flow_context
-
-    assert not hasattr(job_tmpl, 'datetime_of_flow_run')
-    assert job.datetime_of_flow_run is None
-
-    assert not hasattr(job_tmpl, 'flow_context')
-    with job.flow_context:
-        assert job_tmpl.in_flow_context
-        assert job.in_flow_context
-        assert isinstance(job.datetime_of_flow_run, datetime)
-        prev_datetime = job.datetime_of_flow_run
-
-        job_tmpl_2 = JobTemplate()
-        job_2 = job_tmpl_2.apply()
-        assert job_tmpl_2.in_flow_context
-        assert job_2.in_flow_context
-        assert job.datetime_of_flow_run == prev_datetime
 
 
 def test_equal_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
