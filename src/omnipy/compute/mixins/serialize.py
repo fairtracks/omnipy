@@ -38,6 +38,7 @@ class SerializerFuncJobBaseMixin:
                  persist_outputs: Optional[PersistOutputsOptions] = None,
                  restore_outputs: Optional[RestoreOutputsOptions] = None):
 
+        # TODO: Possibly reimplement logic using a state machine, e.g. "transitions" package
         if persist_outputs is None:
             self._persist_outputs = PersistOpts.FOLLOW_CONFIG if self._has_job_config else None
         else:

@@ -66,6 +66,7 @@ class RunStateRegistry:
         return other_job_same_unique_name and id(other_job_same_unique_name) != id(job)
 
     def _update_job_registration(self, job: IsJob, state: RunState) -> None:
+        # TODO: Reimplement logic using a state machine, e.g. "transitions" package
         if self._other_job_registered_with_same_unique_name(job):
             while self._other_job_registered_with_same_unique_name(job):
                 job.regenerate_unique_name()
