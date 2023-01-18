@@ -93,12 +93,8 @@ class JobBase(DynamicMixinAcceptor, metaclass=JobBaseAndMixinAcceptorMeta):
             raise RuntimeError('JobBase and subclasses not inheriting from JobTemplate '
                                'or Job are not directly instantiatable')
 
-    @abstractmethod
-    def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
-        ...
-
-    def _get_init_args(self) -> Union[Tuple[()], Tuple[Any, ...]]:
-        return self._get_init_arg_values()
+    def _get_init_args(self) -> Tuple[object, ...]:
+        return ()
 
     def _get_init_kwargs(self) -> Dict[str, Any]:
         kwarg_keys = list(self._mixin_init_kwarg_params.keys())

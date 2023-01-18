@@ -25,10 +25,7 @@ class MockJobBaseSubclass(
         metaclass=JobBaseAndMixinAcceptorMeta,
 ):
     def __init__(self, *args, **kwargs):
-        super().__init__()
-
-    def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
-        return ()
+        super().__init__(*args, **kwargs)
 
 
 class MockJobTemplateSubclass(MockJobBaseSubclass, JobTemplate['MockJobSubclass']):
@@ -105,7 +102,7 @@ class CommandMockJobBase(
         self._command = command
         self.engine_decorator_applied = False
 
-    def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
+    def _get_init_args(self) -> Tuple[object, ...]:
         return self._cmd_func, self._command
 
 
@@ -176,9 +173,6 @@ class PublicPropertyErrorsMockJobBase(
 ):
     def __init__(self, *, name: Optional[str] = None, **kwargs):
         super().__init__(name=name, **kwargs)
-
-    def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
-        return ()
 
 
 class MockJobBaseVerboseMixin:

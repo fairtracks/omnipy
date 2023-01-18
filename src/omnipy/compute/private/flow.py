@@ -93,7 +93,7 @@ class TaskTemplatesFlowBase(FlowBase):
 
         self._task_templates: Tuple[TaskTemplate, ...] = task_templates
 
-    def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
+    def _get_init_args(self) -> Tuple[object, ...]:
         return self._job_func, *self._task_templates
 
     @property

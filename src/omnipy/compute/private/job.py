@@ -24,7 +24,7 @@ class FuncJobBase(JobBase, DynamicMixinAcceptor, metaclass=JobBaseAndMixinAccept
 
         self._job_func = job_func
 
-    def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
+    def _get_init_args(self) -> Tuple[object, ...]:
         return self._job_func,
 
     def has_coroutine_func(self) -> bool:

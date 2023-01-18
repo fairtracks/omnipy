@@ -37,7 +37,7 @@ MockJobClasses = Tuple[Type[JobBase], Type[JobTemplate], Type[Job]]
 
 
 def test_init_abstract():
-    with pytest.raises(TypeError):
+    with pytest.raises(RuntimeError):
         JobBase()
 
     with pytest.raises(TypeError):
