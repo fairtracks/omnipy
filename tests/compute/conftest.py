@@ -3,8 +3,15 @@ from typing import Annotated, Tuple, Type
 
 import pytest
 
+from omnipy.compute.flow import (DagFlow,
+                                 DagFlowTemplate,
+                                 FuncFlow,
+                                 FuncFlowTemplate,
+                                 LinearFlow,
+                                 LinearFlowTemplate)
 from omnipy.compute.job import Job, JobBase, JobCreator, JobTemplate
 
+from .helpers.classes import FlowClsTuple
 from .helpers.mocks import (MockJobBaseSubclass,
                             MockJobSubclass,
                             MockJobTemplateSubclass,
@@ -48,3 +55,12 @@ def mock_job_datetime():
     yield mock_datetime
 
     omnipy.compute.job.datetime = prev_datetime
+
+
+@pytest.fixture(scope='function')
+def all_flow_classes() -> Tuple[FlowClsTuple, ...]:
+    return (
+        FlowClsTuple(template_cls=LinearFlowTemplate, flow_cls=LinearFlow),
+        FlowClsTuple(template_cls=DagFlowTemplate, flow_cls=DagFlow),
+        FlowClsTuple(template_cls=FuncFlowTemplate, flow_cls=FuncFlow),
+    )

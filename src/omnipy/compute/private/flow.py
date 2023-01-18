@@ -114,7 +114,7 @@ class TaskTemplatesFlowTemplate(TaskTemplatesFlowBase, FlowTemplate[FlowT], Gene
                restore_outputs: Optional[RestoreOutputsOptions] = None,
                **kwargs: object) -> TaskTemplatesFlowTemplateT:
 
-        args = tuple([self._job_func] + list(*task_templates)) if task_templates else ()
+        args = tuple([self._job_func] + list(task_templates)) if task_templates else ()
 
         return JobTemplate.refine(
             self,

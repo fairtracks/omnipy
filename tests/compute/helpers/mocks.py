@@ -9,7 +9,7 @@ from omnipy.compute.job import (CallableDecoratingJobTemplateMixin,
                                 JobBase,
                                 JobBaseAndMixinAcceptorMeta,
                                 JobTemplate)
-from omnipy.compute.job_types import IsFuncJobTemplateCallable, JobBaseT, JobT, JobTemplateT
+from omnipy.compute.job_types import IsFuncJobTemplateCallable
 from omnipy.compute.task import FuncJob, FuncJobTemplate, TaskBase
 from omnipy.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
 from omnipy.engine.protocols import (IsDagFlow,

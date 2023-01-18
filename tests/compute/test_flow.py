@@ -4,21 +4,19 @@ from typing import Annotated, Dict, Iterable, Tuple, Type, Union
 import pytest
 import pytest_cases as pc
 
-from omnipy.compute.flow import (DagFlow,
-                                 DagFlowTemplate,
+from omnipy.compute.flow import (DagFlowTemplate,
                                  Flow,
                                  FlowBase,
                                  FlowTemplate,
-                                 FuncFlow,
                                  FuncFlowTemplate,
-                                 LinearFlow,
                                  LinearFlowTemplate)
 from omnipy.compute.job import Job, JobBase, JobTemplate
 from omnipy.compute.task import TaskTemplate
 
 from .cases.flows import FlowCase
-from .cases.raw.functions import format_to_string_func
-from .helpers.functions import assert_updated_wrapper
+from .cases.raw.functions import data_import_func, empty_dict_func, format_to_string_func
+from .helpers.classes import FlowClsTuple
+from .helpers.functions import assert_flow_or_flow_template, assert_updated_wrapper
 from .helpers.mocks import (MockFlowTemplateSubclass,
                             MockJobTemplateSubclass,
                             MockLocalRunner,
@@ -98,28 +96,36 @@ def test_time_of_flow_run_mock() -> None:
 
 
 def test_init_all_flow_classes(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    for class_info in [{
-            'template_cls': LinearFlowTemplate, 'flow_cls': LinearFlow
-    }, {
-            'template_cls': DagFlowTemplate, 'flow_cls': DagFlow
-    }, {
-            'template_cls': FuncFlowTemplate, 'flow_cls': FuncFlow
-    }]:
-        template_cls = class_info['template_cls']
-        flow_cls = class_info['flow_cls']
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+        all_flow_classes: Annotated[Tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
+    for class_info in all_flow_classes:
+        template_cls = class_info.template_cls
+        flow_cls = class_info.flow_cls
 
         flow_template = template_cls(format_to_string_func)
-        assert isinstance(flow_template, FlowTemplate)
-        assert isinstance(flow_template, template_cls)
-        assert_updated_wrapper(flow_template, format_to_string_func)
+        assert_flow_or_flow_template(
+            flow_template,
+            assert_flow_cls=template_cls,
+            assert_func=format_to_string_func,
+            assert_name='format_to_string_func')
 
         with pytest.raises(RuntimeError):
             flow_cls(format_to_string_func)
 
-        flow = flow_template.apply()  # noqa  # Pycharm static type checker bug
-        assert isinstance(flow, flow_cls)
-        assert_updated_wrapper(flow, format_to_string_func)
+
+def test_init_linear_and_dag_flow_templates(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+        all_flow_classes: Annotated[Tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
+    for class_info in all_flow_classes:
+        template_cls = class_info.template_cls
+
+        if any(issubclass(template_cls, cls) for cls in (LinearFlowTemplate, DagFlowTemplate)):
+            flow_template = template_cls(TaskTemplate(format_to_string_func))(format_to_string_func)
+            assert_flow_or_flow_template(
+                flow_template,
+                assert_flow_cls=template_cls,
+                assert_func=format_to_string_func,
+                assert_name='format_to_string_func')
 
 
 def test_fail_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
@@ -131,6 +137,84 @@ def test_fail_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]
 
     with pytest.raises(TypeError):
         FuncFlowTemplate('extra_positional_argument')(lambda x: x)
+
+
+def test_apply_run_all_flow_classes(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+        all_flow_classes: Annotated[Tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
+    for class_info in all_flow_classes:
+        template_cls = class_info.template_cls
+        flow_cls = class_info.flow_cls
+
+        if any(issubclass(template_cls, cls) for cls in (LinearFlowTemplate, DagFlowTemplate)):
+            flow_template = template_cls(TaskTemplate(format_to_string_func))(format_to_string_func)
+        else:
+            flow_template = template_cls(format_to_string_func)
+
+        flow = flow_template.apply()
+        assert_flow_or_flow_template(
+            flow,
+            assert_flow_cls=flow_cls,
+            assert_func=format_to_string_func,
+            assert_name='format_to_string_func')
+
+        assert flow_template.run('text', number=1) == 'text: 1'
+        assert flow('text', number=1) == 'text: 1'
+
+        with pytest.raises(TypeError):
+            flow_template.run('text')
+            flow('text')
+
+
+def test_refine_all_flow_classes(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+        all_flow_classes: Annotated[Tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
+    for class_info in all_flow_classes:
+        template_cls = class_info.template_cls
+
+        if any(issubclass(template_cls, cls) for cls in (LinearFlowTemplate, DagFlowTemplate)):
+            flow_template = template_cls(TaskTemplate(format_to_string_func))(empty_dict_func)
+            flow_template_2 = flow_template.refine(
+                TaskTemplate(data_import_func), name='data_import')
+
+            assert_flow_or_flow_template(
+                flow_template_2,
+                assert_flow_cls=template_cls,
+                assert_func=empty_dict_func,
+                assert_name='data_import')
+            assert flow_template_2.run() == '{"my_data": [123,234,345,456]}'
+        else:
+            flow_template = template_cls(empty_dict_func)
+            flow_template_2 = flow_template.refine(name='not_data_import')
+
+            assert_flow_or_flow_template(
+                flow_template_2,
+                assert_flow_cls=template_cls,
+                assert_func=empty_dict_func,
+                assert_name='not_data_import')
+            assert flow_template_2.run() == {}
+
+
+def test_revise_all_flow_classes(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+        all_flow_classes: Annotated[Tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
+    for class_info in all_flow_classes:
+        template_cls = class_info.template_cls
+
+        if any(issubclass(template_cls, cls) for cls in (LinearFlowTemplate, DagFlowTemplate)):
+            flow_template = template_cls(TaskTemplate(format_to_string_func))(format_to_string_func)
+        else:
+            flow_template = template_cls(format_to_string_func)
+
+        flow = flow_template.apply()
+        flow_template_2 = flow.revise()
+
+        assert_flow_or_flow_template(
+            flow_template_2,
+            assert_flow_cls=template_cls,
+            assert_func=format_to_string_func,
+            assert_name='format_to_string_func')
+        assert flow_template_2.run('text', 1) == 'text: 1'
 
 
 @pc.parametrize_with_cases('case', cases='.cases.flows')
