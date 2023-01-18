@@ -13,4 +13,8 @@ def test_default():
 
 
 def test_different_locale():
-    assert get_datetime_format(('de_DE', 'UTF-8')) == '%a %d %b %Y %T %Z'
+    # TODO: Add new platforms as needed
+    assert get_datetime_format(('de_DE', 'UTF-8')) in (
+        '%a %e %b %X %Y',  # MacOS
+        '%a %d %b %Y %T %Z',  # Ubuntu
+    )
