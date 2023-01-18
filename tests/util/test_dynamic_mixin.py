@@ -543,6 +543,46 @@ def test_predefined_init_kwargs_progressive_multiple_state_mixins_same_default(
     assert mock_predefined_init_kwargs_plain_obj.to_override() == 'default value'
 
 
+def test_predefined_init_kwargs_progressive_multiple_state_mixins_different_withmixin_classes(
+        mock_predefined_init_kwargs_cls):
+    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  #noqa
+
+    MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
+
+    mock_obj_1 = MockPredefinedInitKwargsCls('a', 1, verbose=True, my_kwarg_1='value')
+
+    MockPredefinedInitKwargsCls.accept_mixin(MockOtherKwArgStateMixin)
+
+    mock_obj_2 = MockPredefinedInitKwargsCls(
+        'a', 1, verbose=True, my_kwarg_1='value', my_other_kwarg_1='other value')
+
+    assert mock_obj_1.__class__.__name__ == mock_obj_2.__class__.__name__
+    assert mock_obj_1.__class__ != mock_obj_2.__class__
+
+    _assert_args_and_kwargs(
+        mock_obj_1,
+        args=('a', 1),
+        kwargs=dict(verbose=True, my_kwarg_1='value', my_kwarg_2='default value'),
+        mixin_init_kwarg_params=dict(
+            my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
+            my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
+        mock_cls=mock_obj_1.__class__)
+
+    _assert_args_and_kwargs(
+        mock_obj_2,
+        args=('a', 1),
+        kwargs=dict(
+            verbose=True,
+            my_kwarg_1='value',
+            my_kwarg_2='default value',
+            my_other_kwarg_1='other value'),
+        mixin_init_kwarg_params=dict(
+            my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
+            my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value'),
+            my_other_kwarg_1=Parameter('my_other_kwarg_1', Parameter.KEYWORD_ONLY)),
+        mock_cls=mock_obj_2.__class__)
+
+
 def test_fail_predefined_init_kwargs_state_mixin_diff_default(mock_predefined_init_kwargs_cls):
     MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  #noqa
 
