@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Callable, cast, Mapping, Optional, Type
 
-from omnipy.compute.job import CallableDecoratingJobTemplateMixin
 from omnipy.compute.job_types import IsFuncJobTemplateCallable
 from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.compute.private.job import FuncJob, FuncJobBase, FuncJobTemplate
@@ -44,7 +43,7 @@ def task_template_callable_decorator_cls(
 
 
 @task_template_callable_decorator_cls
-class TaskTemplate(CallableDecoratingJobTemplateMixin, TaskBase, FuncJobTemplate['Task']):
+class TaskTemplate(TaskBase, FuncJobTemplate['Task']):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type[Task]:
         return Task

@@ -1,6 +1,5 @@
 from typing import cast, Type
 
-from omnipy.compute.job import CallableDecoratingJobTemplateMixin
 from omnipy.compute.job_types import IsFuncJobTemplateCallable, IsTaskTemplatesFlowTemplateCallable
 from omnipy.compute.private.flow import (Flow,
                                          FlowBase,
@@ -29,9 +28,7 @@ def linear_flow_template_callable_decorator_cls(
 
 
 @linear_flow_template_callable_decorator_cls
-class LinearFlowTemplate(CallableDecoratingJobTemplateMixin,
-                         LinearFlowBase,
-                         TaskTemplatesFlowTemplate['LinearFlow']):
+class LinearFlowTemplate(LinearFlowBase, TaskTemplatesFlowTemplate['LinearFlow']):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['LinearFlow']:
         return LinearFlow
@@ -63,9 +60,7 @@ def dag_flow_template_callable_decorator_cls(
 
 
 @dag_flow_template_callable_decorator_cls
-class DagFlowTemplate(CallableDecoratingJobTemplateMixin,
-                      DagFlowBase,
-                      TaskTemplatesFlowTemplate['DagFlow']):
+class DagFlowTemplate(DagFlowBase, TaskTemplatesFlowTemplate['DagFlow']):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['DagFlow']:
         return DagFlow
@@ -97,7 +92,7 @@ def func_flow_template_callable_decorator_cls(
 
 
 @func_flow_template_callable_decorator_cls
-class FuncFlowTemplate(CallableDecoratingJobTemplateMixin, FuncFlowBase, FlowTemplate['FuncFlow']):
+class FuncFlowTemplate(FuncFlowBase, FlowTemplate['FuncFlow']):
     def _apply_engine_decorator(self, flow: IsFuncFlow) -> IsFuncFlow:
         if self.engine is not None and isinstance(self.engine, IsFuncFlowRunnerEngine):
             return self.engine.func_flow_decorator(flow)

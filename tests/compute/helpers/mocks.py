@@ -4,11 +4,7 @@ from types import MappingProxyType
 from typing import Any, Callable, cast, Dict, List, Mapping, Optional, Tuple, Type, Union
 
 from omnipy.compute.flow import Flow, FlowBase, FlowTemplate
-from omnipy.compute.job import (CallableDecoratingJobTemplateMixin,
-                                Job,
-                                JobBase,
-                                JobBaseAndMixinAcceptorMeta,
-                                JobTemplate)
+from omnipy.compute.job import (Job, JobBase, JobBaseAndMixinAcceptorMeta, JobTemplate)
 from omnipy.compute.job_types import IsFuncJobTemplateCallable
 from omnipy.compute.task import FuncJob, FuncJobTemplate, TaskBase
 from omnipy.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
@@ -72,9 +68,7 @@ def mock_flow_template_callable_decorator_cls(
 
 
 @mock_flow_template_callable_decorator_cls
-class MockFlowTemplateSubclass(CallableDecoratingJobTemplateMixin,
-                               MockFlowBaseSubclass,
-                               FlowTemplate['MockFlowSubclass']):
+class MockFlowTemplateSubclass(MockFlowBaseSubclass, FlowTemplate['MockFlowSubclass']):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['MockFlowSubclass']:
         return MockFlowSubclass
@@ -217,9 +211,7 @@ class CommandMockJobBase(
 
 
 @callable_decorator_cls
-class CommandMockJobTemplate(CallableDecoratingJobTemplateMixin,
-                             CommandMockJobBase,
-                             JobTemplate['CommandMockJob']):
+class CommandMockJobTemplate(CommandMockJobBase, JobTemplate['CommandMockJob']):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['CommandMockJob']:
         return CommandMockJob
@@ -326,7 +318,6 @@ def mock_task_template_assert_same_time_of_cur_flow_run_callable_decorator_cls(
 
 @mock_task_template_assert_same_time_of_cur_flow_run_callable_decorator_cls
 class MockTaskTemplateAssertSameTimeOfCurFlowRun(
-        CallableDecoratingJobTemplateMixin,
         MockTaskBaseAssertSameTimeOfCurFlowRun,
         FuncJobTemplate['MockTaskAssertSameTimeOfCurFlowRun']):
     @classmethod

@@ -155,8 +155,16 @@ class JobTemplate(JobBase, Generic[JobT], metaclass=JobTemplateAndMixinAcceptorM
         ...
 
     @classmethod
-    def create(cls: Type[JobTemplateT], *init_args: object, **init_kwargs: object) -> JobTemplateT:
-        return cls(*init_args, **init_kwargs)
+    def create(cls: Type[JobTemplateT], *args: object, **kwargs: object) -> JobTemplateT:
+        if len(args) >= 1:
+            if not callable(args[0]):
+                raise TypeError(f'First argument of a job is assumed to be a callable, '
+                                f'not: {args[0]}')
+            job_func = args[0]
+            args = args[1:]
+            return cls(*args, **kwargs)(job_func)
+        else:
+            return cls(*args, **kwargs)
 
     def run(self, *args: object, **kwargs: object) -> object:
         return self.apply()(*args, **kwargs)
@@ -193,15 +201,8 @@ class JobTemplate(JobBase, Generic[JobT], metaclass=JobTemplateAndMixinAcceptorM
 
     def __call__(self, *args, **kwargs):
         if self.in_flow_context:
-            job = self.apply()
-            return job(*args, **kwargs)
+            return self.run(*args, **kwargs)
         raise TypeError(f"'{self.__class__.__name__}' object is not callable")
-
-
-class CallableDecoratingJobTemplateMixin:
-    @classmethod
-    def create(cls: Type[JobTemplateT], *init_args: object, **init_kwargs: object) -> JobTemplateT:
-        return cls(*(init_args[1:]), **init_kwargs)(init_args[0])
 
 
 class Job(JobBase, DynamicMixinAcceptor, Generic[JobBaseT, JobTemplateT]):
