@@ -186,16 +186,25 @@ class CommandMockJobBase(
         super().__init__()
         self._cmd_func = cmd_func
         self._command = command
-        self._id = id
-        self._uppercase = uppercase
-        self._params = dict(params) if params is not None else {}
         self.engine_decorator_applied = False
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return self._cmd_func, self._command
 
     def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
-        return 'id', 'uppercase', 'params'
+        return ()
+
+
+class CommandMockJobBaseParamMixin:
+    def __init__(self,
+                 *,
+                 id: str = '',
+                 uppercase: bool = False,
+                 params: Mapping[str, Union[int, str, bool]] = None):
+
+        self._id = id
+        self._uppercase = uppercase
+        self._params = dict(params) if params is not None else {}
 
     @property
     def id(self) -> str:
@@ -208,6 +217,9 @@ class CommandMockJobBase(
     @property
     def params(self) -> MappingProxyType[str, Any]:
         return MappingProxyType(self._params)
+
+
+CommandMockJobBase.accept_mixin(CommandMockJobBaseParamMixin)
 
 
 @callable_decorator_cls
