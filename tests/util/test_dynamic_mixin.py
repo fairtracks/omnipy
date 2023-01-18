@@ -194,12 +194,14 @@ def test_progressive_multiple_new_method_and_override_no_state_mixins(mock_plain
 
     MockPlainCls.accept_mixin(MockOverrideNoStateMixin)
 
-    mock_plain_obj = MockPlainCls('a', 1, verbose=True)
+    mock_plain_obj_2 = MockPlainCls('a', 1, verbose=True)
 
-    _assert_args_and_kwargs(MockPlainCls, mock_plain_obj, args=('a', 1), kwargs=dict(verbose=True))
+    _assert_args_and_kwargs(
+        MockPlainCls, mock_plain_obj_2, args=('a', 1), kwargs=dict(verbose=True))
 
-    assert mock_plain_obj.new_method() == 'new method'
-    assert mock_plain_obj.to_override() == 'overridden method'
+    assert mock_plain_obj_2.new_method() == 'new method'
+    assert mock_plain_obj_2.to_override() == 'overridden method'
+
 
 
 def test_multiple_orig_class_different_no_state_mixins(mock_plain_cls, mock_other_plain_cls):
@@ -297,12 +299,12 @@ def test_progressive_multiple_state_mixins_same_default(mock_plain_cls):
 
     MockPlainCls.accept_mixin(MockOtherKwArgStateMixin)
 
-    mock_plain_obj = MockPlainCls(
+    mock_plain_obj_2 = MockPlainCls(
         'a', 1, verbose=True, my_kwarg_1='value', my_other_kwarg_1='other value')
 
     _assert_args_and_kwargs(
         MockPlainCls,
-        mock_plain_obj,
+        mock_plain_obj_2,
         args=('a', 1),
         kwargs=dict(
             verbose=True,
@@ -314,15 +316,15 @@ def test_progressive_multiple_state_mixins_same_default(mock_plain_cls):
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value'),
             my_other_kwarg_1=Parameter('my_other_kwarg_1', Parameter.KEYWORD_ONLY)))
 
-    assert mock_plain_obj.new_method() == 'other value'
-    assert mock_plain_obj.to_override() == 'default value'
+    assert mock_plain_obj_2.new_method() == 'other value'
+    assert mock_plain_obj_2.to_override() == 'default value'
 
-    mock_plain_obj = MockPlainCls(
+    mock_plain_obj_3 = MockPlainCls(
         'a', 1, verbose=True, my_kwarg_1='alt1A', my_other_kwarg_1='alt1B', my_kwarg_2='alt2')
 
     _assert_args_and_kwargs(
         MockPlainCls,
-        mock_plain_obj,
+        mock_plain_obj_3,
         args=('a', 1),
         kwargs=dict(verbose=True, my_kwarg_1='alt1A', my_other_kwarg_1='alt1B', my_kwarg_2='alt2'),
         mixin_init_kwarg_params=dict(
@@ -330,9 +332,8 @@ def test_progressive_multiple_state_mixins_same_default(mock_plain_cls):
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value'),
             my_other_kwarg_1=Parameter('my_other_kwarg_1', Parameter.KEYWORD_ONLY)))
 
-    assert mock_plain_obj.new_method() == 'alt1B'
-    assert mock_plain_obj.to_override() == 'alt2'
-
+    assert mock_plain_obj_3.new_method() == 'alt1B'
+    assert mock_plain_obj_3.to_override() == 'alt2'
 
 def test_fail_progressive_multiple_state_mixins_diff_defaults(mock_plain_cls):
     MockPlainCls = mock_plain_cls  # noqa
