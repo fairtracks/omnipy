@@ -98,6 +98,12 @@ class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorFactory):
 
         cls.__init__.__signature__ = updated_init_signature
 
+    @classmethod
+    def reset_mixins(cls):
+        cls._mixin_classes.clear()
+        cls._init_params_per_mixin_cls.clear()
+        cls.__init__.__signature__ = cls._orig_init_signature
+
     def __new__(cls, *args, **kwargs):
         if not cls.__name__.endswith(cls.WITH_MIXINS_CLS_PREFIX):
             cls_with_mixins = cls._create_subcls_inheriting_from_mixins_and_orig_cls()
