@@ -30,9 +30,6 @@ class MockJobBaseSubclass(
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return ()
 
-    def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
-        return ()
-
 
 class MockJobTemplateSubclass(MockJobBaseSubclass, JobTemplate['MockJobSubclass']):
     @classmethod
@@ -111,9 +108,6 @@ class CommandMockJobBase(
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return self._cmd_func, self._command
 
-    def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
-        return ()
-
 
 class CommandMockJobBaseParamMixin:
     def __init__(self,
@@ -184,9 +178,6 @@ class PublicPropertyErrorsMockJobBase(
         super().__init__(name=name, **kwargs)
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
-        return ()
-
-    def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
         return ()
 
 

@@ -100,13 +100,8 @@ class JobBase(DynamicMixinAcceptor, metaclass=JobBaseAndMixinAcceptorMeta):
     def _get_init_args(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return self._get_init_arg_values()
 
-    @abstractmethod
-    def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
-        ...
-
     def _get_init_kwargs(self) -> Dict[str, Any]:
         kwarg_keys = list(self._mixin_init_kwarg_params.keys())
-        kwarg_keys += list(self._get_init_kwarg_public_property_keys())
         for key in kwarg_keys:
             attribute = getattr(self.__class__, key)
 

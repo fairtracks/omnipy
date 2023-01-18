@@ -27,9 +27,6 @@ class FuncJobBase(JobBase, DynamicMixinAcceptor, metaclass=JobBaseAndMixinAccept
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return self._job_func,
 
-    def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
-        return ()
-
     def has_coroutine_func(self) -> bool:
         return asyncio.iscoroutinefunction(self._job_func)
 
