@@ -88,86 +88,6 @@ class MockFlowSubclass(MockFlowBaseSubclass, Flow[MockFlowBaseSubclass, MockFlow
         return MockFlowTemplateSubclass
 
 
-class PublicPropertyErrorsMockJobBase(
-        JobBase,
-        DynamicMixinAcceptor,
-        metaclass=JobBaseAndMixinAcceptorMeta,
-):
-    strength = 1
-
-    def __init__(self,
-                 *,
-                 name: Optional[str] = None,
-                 property_index: int = None,
-                 verbose: bool = True,
-                 cost: int = 1,
-                 strength: int = 1,
-                 power: int = 1,
-                 speed: int = 1,
-                 params: Mapping[str, Union[int, str, bool]] = None,
-                 **kwargs):
-
-        super().__init__()
-        self._property_index = property_index
-        self._verbose = verbose
-        self.cost = cost
-        self.strength = strength
-        self._power = power
-        self._speed = speed
-        self._params = params if params is not None else {}
-
-    def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
-        return ()
-
-    def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
-        if self._property_index is not None:
-            index = self._property_index
-            return ('verbose', 'cost', 'strength', 'power', 'speed', 'params')[index:index + 1]
-        else:
-            return ()
-
-    def power(self) -> int:
-        return self._power
-
-    @property
-    def speed(self) -> int:
-        return self._speed
-
-    @speed.setter
-    def speed(self, speed: int):
-        self._speed = speed
-
-    @property
-    def params(self) -> Dict[str, Any]:
-        return self._params
-
-
-class PublicPropertyErrorsMockJobTemplate(PublicPropertyErrorsMockJobBase,
-                                          JobTemplate['PublicPropertyErrorsMockJob']):
-    @classmethod
-    def _get_job_subcls_for_apply(cls) -> Type['PublicPropertyErrorsMockJob']:
-        return PublicPropertyErrorsMockJob
-
-    @classmethod
-    def _apply_engine_decorator(cls, job: IsJob) -> IsJob:
-        return job
-
-
-class PublicPropertyErrorsMockJob(PublicPropertyErrorsMockJobBase,
-                                  Job[PublicPropertyErrorsMockJobBase,
-                                      PublicPropertyErrorsMockJobTemplate]):
-    @classmethod
-    def _get_job_base_subcls_for_init(cls) -> Type[PublicPropertyErrorsMockJobBase]:
-        return PublicPropertyErrorsMockJobBase
-
-    @classmethod
-    def _get_job_template_subcls_for_revise(cls) -> Type[PublicPropertyErrorsMockJobTemplate]:
-        return PublicPropertyErrorsMockJobTemplate
-
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        ...
-
-
 class CommandMockJobBase(
         JobBase,
         DynamicMixinAcceptor,
@@ -253,6 +173,86 @@ class CommandMockJob(CommandMockJobBase, Job[CommandMockJobBase, CommandMockJobT
             else:
                 log = 'I know nothing'
             return log.upper() if self._uppercase else log
+
+
+class PublicPropertyErrorsMockJobBase(
+        JobBase,
+        DynamicMixinAcceptor,
+        metaclass=JobBaseAndMixinAcceptorMeta,
+):
+    strength = 1
+
+    def __init__(self,
+                 *,
+                 name: Optional[str] = None,
+                 property_index: int = None,
+                 verbose: bool = True,
+                 cost: int = 1,
+                 strength: int = 1,
+                 power: int = 1,
+                 speed: int = 1,
+                 params: Mapping[str, Union[int, str, bool]] = None,
+                 **kwargs):
+
+        super().__init__()
+        self._property_index = property_index
+        self._verbose = verbose
+        self.cost = cost
+        self.strength = strength
+        self._power = power
+        self._speed = speed
+        self._params = params if params is not None else {}
+
+    def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
+        return ()
+
+    def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
+        if self._property_index is not None:
+            index = self._property_index
+            return ('verbose', 'cost', 'strength', 'power', 'speed', 'params')[index:index + 1]
+        else:
+            return ()
+
+    def power(self) -> int:
+        return self._power
+
+    @property
+    def speed(self) -> int:
+        return self._speed
+
+    @speed.setter
+    def speed(self, speed: int):
+        self._speed = speed
+
+    @property
+    def params(self) -> Dict[str, Any]:
+        return self._params
+
+
+class PublicPropertyErrorsMockJobTemplate(PublicPropertyErrorsMockJobBase,
+                                          JobTemplate['PublicPropertyErrorsMockJob']):
+    @classmethod
+    def _get_job_subcls_for_apply(cls) -> Type['PublicPropertyErrorsMockJob']:
+        return PublicPropertyErrorsMockJob
+
+    @classmethod
+    def _apply_engine_decorator(cls, job: IsJob) -> IsJob:
+        return job
+
+
+class PublicPropertyErrorsMockJob(PublicPropertyErrorsMockJobBase,
+                                  Job[PublicPropertyErrorsMockJobBase,
+                                      PublicPropertyErrorsMockJobTemplate]):
+    @classmethod
+    def _get_job_base_subcls_for_init(cls) -> Type[PublicPropertyErrorsMockJobBase]:
+        return PublicPropertyErrorsMockJobBase
+
+    @classmethod
+    def _get_job_template_subcls_for_revise(cls) -> Type[PublicPropertyErrorsMockJobTemplate]:
+        return PublicPropertyErrorsMockJobTemplate
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        ...
 
 
 def mock_cmd_func(**params: bool) -> Any:  # noqa
