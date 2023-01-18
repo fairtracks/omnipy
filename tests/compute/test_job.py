@@ -510,6 +510,21 @@ def test_revise_refine_mappings_are_copied() -> None:
     assert len(all_revised_refined_tmpl.params) == 2
 
 
+def test_fail_subclass_refine_first_arg_not_callable():
+    cmd_tmpl = CommandMockJobTemplate('erase')('mock_cmd_func')
+
+    with pytest.raises(TypeError):
+        cmd_tmpl.refine('restore')
+
+
+def test_fail_subclass_revise_first_arg_not_callable():
+    cmd_tmpl = CommandMockJobTemplate('erase')('mock_cmd_func')
+    cmd = cmd_tmpl.apply()
+
+    with pytest.raises(TypeError):
+        cmd.revise()
+
+
 def test_subclass_apply_public_property_errors():
     job_tmpl = PublicPropertyErrorsMockJobTemplate(property_index=None)
     job = job_tmpl.apply()
