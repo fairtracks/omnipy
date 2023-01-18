@@ -180,41 +180,49 @@ class PublicPropertyErrorsMockJobBase(
         DynamicMixinAcceptor,
         metaclass=JobBaseAndMixinAcceptorMeta,
 ):
-    strength = 1
-
-    def __init__(self,
-                 *,
-                 name: Optional[str] = None,
-                 property_index: int = None,
-                 verbose: bool = True,
-                 cost: int = 1,
-                 strength: int = 1,
-                 power: int = 1,
-                 speed: int = 1,
-                 params: Mapping[str, Union[int, str, bool]] = None,
-                 **kwargs):
-
-        super().__init__()
-        self._property_index = property_index
-        self._verbose = verbose
-        self.cost = cost
-        self.strength = strength
-        self._power = power
-        self._speed = speed
-        self._params = params if params is not None else {}
+    def __init__(self, *, name: Optional[str] = None, **kwargs):
+        super().__init__(name=name, **kwargs)
 
     def _get_init_arg_values(self) -> Union[Tuple[()], Tuple[Any, ...]]:
         return ()
 
     def _get_init_kwarg_public_property_keys(self) -> Tuple[str, ...]:
-        if self._property_index is not None:
-            index = self._property_index
-            return ('verbose', 'cost', 'strength', 'power', 'speed', 'params')[index:index + 1]
-        else:
-            return ()
+        return ()
+
+
+class MockJobBaseVerboseMixin:
+    """  Error: no attribute 'verbose' """
+    def __init__(self, *, verbose: bool = True):
+        self._verbose = verbose
+
+
+class MockJobBaseCostMixin:
+    """  Error: 'cost' is object attribute """
+    def __init__(self, *, cost: int = 1):
+        self.cost = cost
+
+
+class MockJobBaseStrengthMixin:
+    """  Error: 'strength' is class attribute """
+    strength = 1
+
+    def __init__(self, *, strength: int = 1):
+        self.strength = strength
+
+
+class MockJobBasePowerMixin:
+    """  Error: 'power' is method """
+    def __init__(self, *, power: int = 1):
+        self._power = power
 
     def power(self) -> int:
         return self._power
+
+
+class MockJobBaseSpeedMixin:
+    """  Error: 'speed' property is writable """
+    def __init__(self, *, speed: int = 1):
+        self._speed = speed
 
     @property
     def speed(self) -> int:
@@ -223,6 +231,12 @@ class PublicPropertyErrorsMockJobBase(
     @speed.setter
     def speed(self, speed: int):
         self._speed = speed
+
+
+class MockJobBaseParamsMixin:
+    """  Error: 'params' property value is mutable """
+    def __init__(self, *, params: Optional[Mapping[str, Union[int, str, bool]]] = None):
+        self._params = params if params is not None else {}
 
     @property
     def params(self) -> Dict[str, Any]:
