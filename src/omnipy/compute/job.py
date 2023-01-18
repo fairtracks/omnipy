@@ -220,13 +220,13 @@ class Job(JobBase, DynamicMixinAcceptor, Generic[JobBaseT, JobTemplateT]):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def create(cls, *init_args: object, **init_kwargs: object) -> Job[JobBaseT, JobTemplateT]:
+    def create(cls, *args: object, **kwargs: object) -> Job[JobBaseT, JobTemplateT]:
         job_base_cls = cls._get_job_base_subcls_for_init()
         if job_base_cls.__new__ is object.__new__:
             job_obj = job_base_cls.__new__(cls)
         else:
-            job_obj = job_base_cls.__new__(cls, *init_args, **init_kwargs)
-        job_obj.__init__(*init_args, **init_kwargs)
+            job_obj = job_base_cls.__new__(cls, *args, **kwargs)
+        job_obj.__init__(*args, **kwargs)
         return job_obj
 
     def revise(self) -> JobTemplateT:
