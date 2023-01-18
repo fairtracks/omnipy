@@ -4,7 +4,7 @@ from types import MappingProxyType
 from typing import Any, Callable, cast, Dict, List, Mapping, Optional, Tuple, Type, Union
 
 from omnipy.compute.flow import Flow, FlowBase, FlowTemplate
-from omnipy.compute.job import (Job, JobBase, JobBaseAndMixinAcceptorMeta, JobTemplate)
+from omnipy.compute.job import Job, JobBase, JobBaseAndMixinAcceptorMeta, JobTemplate
 from omnipy.compute.job_types import IsFuncJobTemplateCallable
 from omnipy.compute.task import FuncJob, FuncJobTemplate, TaskBase
 from omnipy.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
