@@ -182,7 +182,14 @@ class JobTemplate(JobBase, Generic[JobT], metaclass=JobTemplateAndMixinAcceptorM
                     new_val = cur_val
                 kwargs[key] = new_val
 
-        return self.create(*args or self._get_init_args(), **kwargs)
+        init_args = self._get_init_args()
+        if len(args) >= 1:
+            assert len(init_args) >= 1
+            args = tuple([init_args[0]] + list(args))
+        else:
+            args = init_args
+
+        return self.create(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
         if self.in_flow_context:
