@@ -1,5 +1,7 @@
 from typing import Callable, Mapping, Optional, Protocol, TypeVar
 
+from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutputsOptions
+
 JobBaseT = TypeVar('JobBaseT', bound='JobBase', covariant=True)
 JobT = TypeVar('JobT', bound='Job', covariant=True)
 JobTemplateT = TypeVar('JobTemplateT', bound='JobTemplate', covariant=True)
@@ -15,6 +17,8 @@ class IsFuncJobTemplateCallable(Protocol[FuncJobTemplateT]):
         fixed_params: Optional[Mapping[str, object]] = None,
         param_key_map: Optional[Mapping[str, str]] = None,
         result_key: Optional[str] = None,
+        persist_outputs: Optional[PersistOutputsOptions] = None,
+        restore_outputs: Optional[RestoreOutputsOptions] = None,
         **kwargs: object,
     ) -> Callable[[Callable], FuncJobTemplateT]:
         ...
@@ -33,6 +37,8 @@ class IsTaskTemplatesFlowTemplateCallable(Protocol[TaskTemplatesFlowTemplateT]):
         fixed_params: Optional[Mapping[str, object]] = None,
         param_key_map: Optional[Mapping[str, str]] = None,
         result_key: Optional[str] = None,
+        persist_outputs: Optional[PersistOutputsOptions] = None,
+        restore_outputs: Optional[RestoreOutputsOptions] = None,
         **kwargs: object,
     ) -> Callable[[Callable], TaskTemplatesFlowTemplateT]:
         ...
