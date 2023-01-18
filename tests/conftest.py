@@ -1,3 +1,4 @@
+import tempfile
 from typing import Annotated, Type
 
 import pytest
@@ -13,4 +14,9 @@ def runtime_cls() -> Type[IsRuntime]:
 
 @pytest.fixture(scope='function')
 def runtime(runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> IsRuntime:
-    return runtime_cls()
+    runtime = runtime_cls()
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        runtime.config.job.persist_data_dir_path = tmp_dir_path
+
+        yield runtime

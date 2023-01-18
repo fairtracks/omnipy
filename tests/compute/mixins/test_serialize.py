@@ -1,4 +1,3 @@
-import tempfile
 from typing import Annotated
 
 import pytest
@@ -172,14 +171,10 @@ def test_persist_and_restore(
     runtime: Annotated[IsRuntime, pytest.fixture],
     case_tmpl: Annotated[FuncJobTemplate[FuncJob], pc.case],
 ) -> None:
+    case_persist_tmpl = case_tmpl.refine(persist_outputs='enabled')
+    dataset_persist = case_persist_tmpl.run()
 
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        runtime.config.job.persist_data_dir_path = tmp_dir_path
+    case_restore_tmpl = case_tmpl.refine(restore_outputs='force_ignore_params')
+    dataset_restore = case_restore_tmpl.run()
 
-        case_persist_tmpl = case_tmpl.refine(persist_outputs='enabled')
-        dataset_persist = case_persist_tmpl.run()
-
-        case_restore_tmpl = case_tmpl.refine(restore_outputs='force_ignore_params')
-        dataset_restore = case_restore_tmpl.run()
-
-        assert dataset_persist == dataset_restore
+    assert dataset_persist == dataset_restore
