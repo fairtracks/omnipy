@@ -4,7 +4,7 @@ from typing import Dict, Optional, Tuple, Type
 
 import pytest
 
-from omnipy.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorFactory
+from omnipy.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorMeta
 
 
 @pytest.fixture(scope='function')
@@ -603,7 +603,7 @@ def test_other_metaclass_for_base_cls_state_mixin():
     class OtherBase(metaclass=OtherMetaClass):
         ...
 
-    class MergedMetaClass(OtherMetaClass, DynamicMixinAcceptorFactory):
+    class MergedMetaClass(OtherMetaClass, DynamicMixinAcceptorMeta):
         ...
 
     class MockOtherMetaclassForBaseCls(OtherBase, DynamicMixinAcceptor, metaclass=MergedMetaClass):

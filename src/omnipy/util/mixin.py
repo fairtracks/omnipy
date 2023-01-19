@@ -1,6 +1,6 @@
 from collections import defaultdict
 import inspect
-from typing import DefaultDict, Dict, List, Protocol, Type
+from typing import Any, cast, DefaultDict, Dict, Iterable, List, Protocol, Tuple, Type
 
 from omnipy.util.helpers import create_merged_dict
 
@@ -10,17 +10,20 @@ class IsMixin(Protocol):
         ...
 
 
-class DynamicMixinAcceptorFactory(type):
-    def __new__(mcs, name, bases, namespace):
+class DynamicMixinAcceptorMeta(type):
+    def __new__(mcs: Type['DynamicMixinAcceptorMeta'],
+                name: str,
+                bases: Tuple[type, ...],
+                namespace: Dict[str, Any]) -> Type['DynamicMixinAcceptor']:
         cls = type.__new__(mcs, name, bases, namespace)
-
+        cls = cast(Type['DynamicMixinAcceptor'], cls)
         if name != 'DynamicMixinAcceptor':
             cls._init_cls_from_metaclass(bases)
 
         return cls
 
 
-class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorFactory):
+class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorMeta):
     # Constants
     WITH_MIXINS_CLS_PREFIX = 'WithMixins'
 
@@ -31,22 +34,43 @@ class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorFactory):
     _init_params_per_mixin_cls: DefaultDict[str, DefaultDict[str, inspect.Parameter]]
 
     @classmethod
-    def _init_cls_from_metaclass(cls, bases):
-        if any(base.__name__ == 'DynamicMixinAcceptor' for base in bases):
-            if '__init__' not in cls.__dict__:
-                raise TypeError('Mixin acceptor class is required to define a __init__() method.')
+    def _init_cls_from_metaclass(
+        cls,
+        bases: Tuple[type, ...],
+    ) -> None:
+        if issubclass(cls, DynamicMixinAcceptor) and '__init__' not in cls.__dict__:
+            raise TypeError('Mixin acceptor class is required to define a __init__() method.')
 
         cls._orig_init_signature = inspect.signature(cls.__init__)
         cls._mixin_classes = []
         cls._init_params_per_mixin_cls = defaultdict(defaultdict)
 
+        cls._copy_mixin_classes_from_bases(bases)
+
+    @classmethod
+    def _copy_mixin_classes_from_bases(cls, bases: Tuple[type, ...]) -> None:
         for base in bases:
-            if hasattr(base, '_mixin_classes'):
-                for mixin_class in base._mixin_classes:
-                    if mixin_class.__name__ not in cls._init_params_per_mixin_cls:
-                        cls._mixin_classes.append(mixin_class)
-                        cls._init_params_per_mixin_cls[mixin_class.__name__] = \
-                            base._init_params_per_mixin_cls[mixin_class.__name__]
+            if issubclass(base, DynamicMixinAcceptor) and base != DynamicMixinAcceptor:
+                cls._copy_mixin_classes_from_mixin_acceptor_base(base)
+
+    @classmethod
+    def _copy_mixin_classes_from_mixin_acceptor_base(
+        cls,
+        base: Type['DynamicMixinAcceptor'],
+    ) -> None:
+        for mixin_class in base._mixin_classes:
+            cls._copy_mixin_class_from_mixin_acceptor_base(base, mixin_class)
+
+    @classmethod
+    def _copy_mixin_class_from_mixin_acceptor_base(
+        cls,
+        base: Type['DynamicMixinAcceptor'],
+        mixin_class: Type,
+    ) -> None:
+        if mixin_class.__name__ not in cls._init_params_per_mixin_cls:
+            cls._mixin_classes.append(mixin_class)
+            cls._init_params_per_mixin_cls[mixin_class.__name__] = \
+                base._init_params_per_mixin_cls[mixin_class.__name__]
 
     @classmethod
     def _get_mixin_init_kwarg_params(cls) -> Dict[str, inspect.Parameter]:
@@ -164,7 +188,7 @@ class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorFactory):
                                       **create_merged_dict(kwargs, mixin_kwargs_defaults))
             _initialize_mixins(self, kwargs)
 
-        cls_with_mixins = DynamicMixinAcceptorFactory(
+        cls_with_mixins = DynamicMixinAcceptorMeta(
             f'{cls.__name__}{cls.WITH_MIXINS_CLS_PREFIX}',
             tuple(list(reversed(cls._mixin_classes)) + [cls]),
             dict(__init__=__init__),
