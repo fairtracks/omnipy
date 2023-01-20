@@ -14,6 +14,9 @@ class NameJobBaseMixin:
 
         if self._name is not None:
             self._check_not_empty_string('name', self._name)
+        else:
+            if hasattr(self, '_job_func'):
+                self._name = self._job_func.__name__
 
         self._unique_name = None
 
@@ -51,6 +54,7 @@ class NameJobMixin:
         self._generate_unique_name()
 
 
-class NameFuncJobBaseMixin:
-    def __init__(self, *, name: Optional[str] = None):
-        self._name = name if name is not None else self._job_func.__name__
+#
+# class NameFuncJobBaseMixin:
+#     def __init__(self, *, name: Optional[str] = None):
+#         self._name = name if name is not None else self._job_func.__name__

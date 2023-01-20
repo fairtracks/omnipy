@@ -7,7 +7,6 @@ from omnipy.compute.job import Job, JobBase, JobBaseAndMixinAcceptorMeta, JobTem
 from omnipy.compute.job_types import FuncJobTemplateT, JobBaseT, JobT, JobTemplateT
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.iterate import IterateFuncJobBaseMixin
-from omnipy.compute.mixins.name import NameFuncJobBaseMixin
 from omnipy.compute.mixins.params import ParamsFuncJobBaseMixin, ParamsFuncJobMixin
 from omnipy.compute.mixins.result_key import ResultKeyFuncJobBaseMixin, ResultKeyFuncJobMixin
 from omnipy.compute.mixins.serialize import (PersistOutputsOptions,
@@ -31,7 +30,6 @@ class FuncJobBase(JobBase, DynamicMixinAcceptor, metaclass=JobBaseAndMixinAccept
         return asyncio.iscoroutinefunction(self._job_func)
 
 
-FuncJobBase.accept_mixin(NameFuncJobBaseMixin)
 FuncJobBase.accept_mixin(SignatureFuncJobBaseMixin)
 FuncJobBase.accept_mixin(IterateFuncJobBaseMixin)
 FuncJobBase.accept_mixin(ParamsFuncJobBaseMixin)
