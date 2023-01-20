@@ -7,7 +7,6 @@ from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutput
 from omnipy.compute.private.job import FuncJob, FuncJobBase, FuncJobTemplate
 from omnipy.engine.protocols import IsTask
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
-from omnipy.util.helpers import remove_none_vals
 
 
 class TaskBase(FuncJobBase):
@@ -23,18 +22,20 @@ class TaskBase(FuncJobBase):
         restore_outputs: Optional[RestoreOutputsOptions] = None,
         **kwargs: object,
     ):
-        super().__init__(
-            job_func,
-            **remove_none_vals(
-                name=name,
-                iterate_over_data_files=iterate_over_data_files,
-                fixed_params=fixed_params,
-                param_key_map=param_key_map,
-                result_key=result_key,
-                persist_outputs=persist_outputs,
-                restore_outputs=restore_outputs,
-                **kwargs,
-            ))
+        ...
+
+    #     super().__init__(
+    #         job_func,
+    #         **remove_none_vals(
+    #             name=name,
+    #             iterate_over_data_files=iterate_over_data_files,
+    #             fixed_params=fixed_params,
+    #             param_key_map=param_key_map,
+    #             result_key=result_key,
+    #             persist_outputs=persist_outputs,
+    #             restore_outputs=restore_outputs,
+    #             **kwargs,
+    #         ))
 
 
 def task_template_callable_decorator_cls(

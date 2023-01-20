@@ -87,7 +87,7 @@ class JobTemplateAndMixinAcceptorMeta(JobTemplateMeta, JobBaseAndMixinAcceptorMe
 
 class JobBase(DynamicMixinAcceptor, metaclass=JobBaseAndMixinAcceptorMeta):
     def __init__(self, *args: object, name: Optional[str] = None, **kwargs: object):
-        super().__init__()
+        # super().__init__()
 
         if not isinstance(self, JobTemplate) and not isinstance(self, Job):
             raise RuntimeError('JobBase and subclasses not inheriting from JobTemplate '
@@ -216,8 +216,8 @@ class Job(JobBase, DynamicMixinAcceptor, Generic[JobBaseT, JobTemplateT]):
         raise RuntimeError('Job should only be instantiated using the "apply()" method of '
                            'an instance of JobTemplate (or one of its subclasses)')
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
 
     @classmethod
     def create(cls, *args: object, **kwargs: object) -> Job[JobBaseT, JobTemplateT]:

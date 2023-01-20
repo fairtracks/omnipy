@@ -19,8 +19,8 @@ from omnipy.util.mixin import DynamicMixinAcceptor
 
 
 class FuncJobBase(JobBase, DynamicMixinAcceptor, metaclass=JobBaseAndMixinAcceptorMeta):
-    def __init__(self, job_func: Callable, **kwargs: object) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, job_func: Callable, *args: object, **kwargs: object) -> None:
+        # super().__init__(**kwargs)
 
         self._job_func = job_func
 

@@ -15,6 +15,7 @@ class FlowBase(FuncJobBase):
     def __init__(
         self,
         job_func: Callable,
+        *args: object,
         name: Optional[str] = None,
         iterate_over_data_files: bool = False,
         fixed_params: Optional[Mapping[str, object]] = None,
@@ -24,18 +25,18 @@ class FlowBase(FuncJobBase):
         restore_outputs: Optional[RestoreOutputsOptions] = None,
         **kwargs: object,
     ):
-        super().__init__(
-            job_func,
-            **remove_none_vals(
-                name=name,
-                iterate_over_data_files=iterate_over_data_files,
-                fixed_params=fixed_params,
-                param_key_map=param_key_map,
-                result_key=result_key,
-                persist_outputs=persist_outputs,
-                restore_outputs=restore_outputs,
-                **kwargs,
-            ))
+        # super().__init__(
+        #     job_func,
+        #     **remove_none_vals(
+        #         name=name,
+        #         iterate_over_data_files=iterate_over_data_files,
+        #         fixed_params=fixed_params,
+        #         param_key_map=param_key_map,
+        #         result_key=result_key,
+        #         persist_outputs=persist_outputs,
+        #         restore_outputs=restore_outputs,
+        #         **kwargs,
+        #     ))
 
         self._time_of_last_run = None
 
@@ -78,18 +79,18 @@ class TaskTemplatesFlowBase(FlowBase):
         restore_outputs: Optional[RestoreOutputsOptions] = None,
         **kwargs: object,
     ):
-        super().__init__(
-            job_func,
-            **remove_none_vals(
-                name=name,
-                iterate_over_data_files=iterate_over_data_files,
-                fixed_params=fixed_params,
-                param_key_map=param_key_map,
-                result_key=result_key,
-                persist_outputs=persist_outputs,
-                restore_outputs=restore_outputs,
-                **kwargs,
-            ))
+        # super().__init__(
+        #     job_func,
+        #     **remove_none_vals(
+        #         name=name,
+        #         iterate_over_data_files=iterate_over_data_files,
+        #         fixed_params=fixed_params,
+        #         param_key_map=param_key_map,
+        #         result_key=result_key,
+        #         persist_outputs=persist_outputs,
+        #         restore_outputs=restore_outputs,
+        #         **kwargs,
+        #     ))
 
         self._task_templates: Tuple[TaskTemplate, ...] = task_templates
 
