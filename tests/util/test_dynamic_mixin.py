@@ -4,7 +4,7 @@ from typing import Dict, Optional, Tuple, Type, TypeVar, Generic, get_args
 
 import pytest
 
-from omnipy.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorMeta
+from omnipy.util.mixin import DynamicMixinAcceptor
 
 
 @pytest.fixture(scope='function')
@@ -698,44 +698,3 @@ def test_nested_mixins_static_outer_inheritance_from_generic(
     assert mock_obj.new_method() == '(value, default value)'
     assert mock_obj.override() == 'overridden by: MockMockPlainClsWithMixins'
     assert get_args(mock_obj.__class__.__orig_bases__[1]) == (int,)
-
-
-def test_other_metaclass_for_base_cls_state_mixin():
-    class OtherMetaClass(ABCMeta):
-        def __new__(mcs, name, bases, namespace):
-            cls = super().__new__(mcs, name, bases, namespace)
-            cls._member = 'something'
-            return cls
-
-    class OtherBase(metaclass=OtherMetaClass):
-        ...
-
-    class MergedMetaClass(OtherMetaClass, DynamicMixinAcceptorMeta):
-        ...
-
-    class MockOtherMetaclassForBaseCls(OtherBase, DynamicMixinAcceptor, metaclass=MergedMetaClass):
-        def __init__(self, *args, **kwargs):
-            self.args = args
-            self.kwargs = kwargs
-
-        def override(self):
-            return f'overridden by: {self.__class__.__name__}'
-
-    MockOtherMetaclassForBaseCls.accept_mixin(MockKwArgStateMixin)
-
-    mock_other_metaclass_for_base_obj = MockOtherMetaclassForBaseCls(
-        'a', 1, verbose=True, my_kwarg_1='value')
-
-    _assert_args_and_kwargs(
-        mock_other_metaclass_for_base_obj,
-        args=('a', 1),
-        kwargs=dict(verbose=True, my_kwarg_1='value'),
-        mixin_init_kwarg_params=dict(
-            my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
-            my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
-        mock_cls=MockOtherMetaclassForBaseCls)
-
-    assert mock_other_metaclass_for_base_obj.new_method() == '(value, default value)'
-    assert mock_other_metaclass_for_base_obj.override(
-    ) == 'overridden by: MockOtherMetaclassForBaseClsWithMixins'
-    assert mock_other_metaclass_for_base_obj._member == 'something'

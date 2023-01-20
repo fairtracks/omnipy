@@ -3,7 +3,7 @@ import asyncio
 import inspect
 from typing import Any, Callable, Dict, Generic, Mapping, Optional, Tuple, Union
 
-from omnipy.compute.job import Job, JobBase, JobBaseAndMixinAcceptorMeta, JobTemplate
+from omnipy.compute.job import Job, JobBase, JobBaseMeta, JobTemplate
 from omnipy.compute.job_types import FuncJobTemplateT, JobBaseT, JobT, JobTemplateT
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.iterate import IterateFuncJobBaseMixin
@@ -17,7 +17,7 @@ from omnipy.util.helpers import remove_none_vals
 from omnipy.util.mixin import DynamicMixinAcceptor
 
 
-class FuncJobBase(JobBase, DynamicMixinAcceptor, metaclass=JobBaseAndMixinAcceptorMeta):
+class FuncJobBase(JobBase, DynamicMixinAcceptor, metaclass=JobBaseMeta):
     def __init__(self, job_func: Callable, *args: object, **kwargs: object) -> None:
         # super().__init__(**kwargs)
 

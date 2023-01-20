@@ -1,7 +1,7 @@
 import types
 from collections import defaultdict
 import inspect
-from typing import Any, cast, DefaultDict, Dict, List, Protocol, Tuple, Type
+from typing import DefaultDict, Dict, List, Protocol, Type
 
 from omnipy.util.helpers import transfer_generic_args_to_cls, generic_aware_issubclass, get_bases
 
@@ -11,34 +11,7 @@ class IsMixin(Protocol):
         ...
 
 
-class DynamicMixinAcceptorMeta(type):
-    def __new__(mcs: Type['DynamicMixinAcceptorMeta'],
-                name: str,
-                bases: Tuple[type, ...],
-                namespace: Dict[str, Any]) -> Type['DynamicMixinAcceptor']:
-        try:
-            cls: type = type.__new__(mcs, name, bases, namespace)
-        except TypeError:
-
-            def fill_ns(ns):
-                ns |= namespace
-                return ns
-
-            cls = types.new_class(
-                name,
-                bases,
-                {},
-                fill_ns,
-            )
-
-        cls = cast(Type['DynamicMixinAcceptor'], cls)
-        if name != 'DynamicMixinAcceptor':
-            cls._init_cls_from_metaclass()
-
-        return cls
-
-
-class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorMeta):
+class DynamicMixinAcceptor:
     # Constants
     WITH_MIXINS_CLS_PREFIX = 'WithMixins'
 
@@ -51,8 +24,9 @@ class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorMeta):
     def __class_getitem__(cls, item):
         return super().__class_getitem__(item)
 
-    @classmethod
-    def _init_cls_from_metaclass(cls,) -> None:
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+
         if DynamicMixinAcceptor in get_bases(cls) and not hasattr(cls, '__init__'):
             raise TypeError('Mixin acceptor class is required to define a __init__() method.')
 
@@ -216,10 +190,15 @@ class DynamicMixinAcceptor(metaclass=DynamicMixinAcceptorMeta):
 
             cls_bases_with_mixins.append(cls_base)
 
-        cls_with_mixins = DynamicMixinAcceptorMeta(
+        def fill_ns(ns):
+            ns |= dict(__init__=__init__)
+            return ns
+
+        cls_with_mixins = types.new_class(
             f'{cls.__name__}{cls.WITH_MIXINS_CLS_PREFIX}',
             tuple([cls] + cls_bases_with_mixins),
-            dict(__init__=__init__),
+            {},
+            fill_ns,
         )
 
         cls_with_mixins._orig_class = cls

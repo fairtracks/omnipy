@@ -4,7 +4,7 @@ from types import MappingProxyType
 from typing import Any, Callable, cast, Dict, List, Mapping, Optional, Tuple, Type, Union
 
 from omnipy.compute.flow import Flow, FlowBase, FlowTemplate
-from omnipy.compute.job import Job, JobBase, JobBaseAndMixinAcceptorMeta, JobTemplate
+from omnipy.compute.job import Job, JobBase, JobBaseMeta, JobTemplate
 from omnipy.compute.job_types import IsFuncJobTemplateCallable
 from omnipy.compute.task import FuncJob, FuncJobTemplate, TaskBase
 from omnipy.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
@@ -22,7 +22,7 @@ from omnipy.util.mixin import DynamicMixinAcceptor
 class MockJobBaseSubclass(
         JobBase,
         DynamicMixinAcceptor,
-        metaclass=JobBaseAndMixinAcceptorMeta,
+        metaclass=JobBaseMeta,
 ):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -85,7 +85,7 @@ class MockFlowSubclass(MockFlowBaseSubclass, Flow[MockFlowBaseSubclass, MockFlow
 class CommandMockJobBase(
         JobBase,
         DynamicMixinAcceptor,
-        metaclass=JobBaseAndMixinAcceptorMeta,
+        metaclass=JobBaseMeta,
 ):
     def __init__(self,
                  cmd_func: Callable,
@@ -169,7 +169,7 @@ class CommandMockJob(CommandMockJobBase, Job[CommandMockJobBase, CommandMockJobT
 class PublicPropertyErrorsMockJobBase(
         JobBase,
         DynamicMixinAcceptor,
-        metaclass=JobBaseAndMixinAcceptorMeta,
+        metaclass=JobBaseMeta,
 ):
     def __init__(self, *, name: Optional[str] = None, **kwargs):
         super().__init__(name=name, **kwargs)

@@ -10,7 +10,7 @@ from omnipy.compute.job_types import JobBaseT, JobT, JobTemplateT
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
 from omnipy.engine.protocols import IsJob, IsJobConfig, IsJobCreator, IsTaskRunnerEngine
 from omnipy.util.helpers import create_merged_dict
-from omnipy.util.mixin import DynamicMixinAcceptor, DynamicMixinAcceptorMeta
+from omnipy.util.mixin import DynamicMixinAcceptor
 
 
 class JobCreator:
@@ -77,15 +77,7 @@ class JobTemplateMeta(JobBaseMeta):
         return self.job_creator.nested_context_level
 
 
-class JobBaseAndMixinAcceptorMeta(JobBaseMeta, DynamicMixinAcceptorMeta):
-    ...
-
-
-class JobTemplateAndMixinAcceptorMeta(JobTemplateMeta, JobBaseAndMixinAcceptorMeta):
-    ...
-
-
-class JobBase(DynamicMixinAcceptor, metaclass=JobBaseAndMixinAcceptorMeta):
+class JobBase(DynamicMixinAcceptor, metaclass=JobBaseMeta):
     def __init__(self, *args: object, name: Optional[str] = None, **kwargs: object):
         # super().__init__()
 
@@ -131,7 +123,7 @@ class JobBase(DynamicMixinAcceptor, metaclass=JobBaseAndMixinAcceptorMeta):
 JobBase.accept_mixin(NameJobBaseMixin)
 
 
-class JobTemplate(JobBase, Generic[JobT], metaclass=JobTemplateAndMixinAcceptorMeta):
+class JobTemplate(JobBase, Generic[JobT], metaclass=JobTemplateMeta):
     @classmethod
     @abstractmethod
     def _get_job_subcls_for_apply(cls) -> Type[JobT]:
