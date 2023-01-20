@@ -131,11 +131,7 @@ class DynamicMixinAcceptor:
             obj = super(cls, cls_with_mixins).__new__(cls_with_mixins, *args, **kwargs)
 
         else:
-            super_new = super().__new__
-            if super_new is object.__new__:
-                obj = super().__new__(cls)
-            else:
-                obj = super().__new__(cls, *args, **kwargs)
+            obj = object.__new__(cls)
 
         cls._update_cls_init_signature_with_kwargs_for_all_mixins()
         return obj
