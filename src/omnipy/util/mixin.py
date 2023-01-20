@@ -46,7 +46,7 @@ class DynamicMixinAcceptor:
         return self._get_mixin_init_kwarg_params()
 
     @classmethod
-    def _get_mixin_init_kwarg_params_with_all_bases(cls) -> Dict[str, inspect.Parameter]:
+    def _get_mixin_init_kwarg_params_including_bases(cls) -> Dict[str, inspect.Parameter]:
         all_mixin_init_kwarg_params: Dict[str, inspect.Parameter] = {}
 
         base_list = list(cls.__mro__)
@@ -67,8 +67,8 @@ class DynamicMixinAcceptor:
         return all_mixin_init_kwarg_params
 
     @property
-    def _mixin_init_kwarg_params_with_all_bases(self) -> Dict[str, inspect.Parameter]:
-        return self._get_mixin_init_kwarg_params_with_all_bases()
+    def _mixin_init_kwarg_params_including_bases(self) -> Dict[str, inspect.Parameter]:
+        return self._get_mixin_init_kwarg_params_including_bases()
 
     @classmethod
     def accept_mixin(cls, mixin_cls: Type) -> None:
@@ -108,7 +108,7 @@ class DynamicMixinAcceptor:
             init_params = init_params[:-1]
 
         only_mixin_params = [
-            val for (key, val) in cls._get_mixin_init_kwarg_params_with_all_bases().items()
+            val for (key, val) in cls._get_mixin_init_kwarg_params_including_bases().items()
             if key not in orig_init_param_dict
         ]
 

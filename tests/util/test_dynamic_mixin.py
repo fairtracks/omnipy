@@ -154,18 +154,18 @@ def _assert_args_and_kwargs(mock_obj: object,
                             kwargs: Dict[str, object],
                             mock_cls: Optional[Type] = None,
                             mixin_init_kwarg_params: Dict[str, Parameter] = {},
-                            mixin_init_kwarg_params_with_all_bases: Dict[str, Parameter] = {},
+                            mixin_init_kwarg_params_including_bases: Dict[str, Parameter] = {},
                             args_in_signature=True):
 
-    if mixin_init_kwarg_params and not mixin_init_kwarg_params_with_all_bases:
-        mixin_init_kwarg_params_with_all_bases = mixin_init_kwarg_params
+    if mixin_init_kwarg_params and not mixin_init_kwarg_params_including_bases:
+        mixin_init_kwarg_params_including_bases = mixin_init_kwarg_params
 
     non_self_param_keys = (['args'] if args_in_signature else []) + list(
-        mixin_init_kwarg_params_with_all_bases.keys()) + ['kwargs']
+        mixin_init_kwarg_params_including_bases.keys()) + ['kwargs']
 
     assert mock_obj._mixin_init_kwarg_params == mixin_init_kwarg_params
-    assert mock_obj._mixin_init_kwarg_params_with_all_bases == \
-           mixin_init_kwarg_params_with_all_bases
+    assert mock_obj._mixin_init_kwarg_params_including_bases == \
+           mixin_init_kwarg_params_including_bases
     assert mock_obj.args == args
     assert mock_obj.kwargs == kwargs
 
@@ -627,7 +627,7 @@ def test_nested_mixins_static_outer_inheritance(mock_predefined_init_kwargs_cls)
         args=(),
         kwargs=dict(my_kwarg_1='value', my_kwarg_2='default value'),
         mixin_init_kwarg_params=dict(),
-        mixin_init_kwarg_params_with_all_bases=dict(
+        mixin_init_kwarg_params_including_bases=dict(
             my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
         mock_cls=MockMockPlainCls)
@@ -659,7 +659,7 @@ def test_nested_mixins_double_static_outer_inheritance(mock_predefined_init_kwar
         args=(),
         kwargs=dict(my_kwarg_1='value', my_kwarg_2='default value'),
         mixin_init_kwarg_params=dict(),
-        mixin_init_kwarg_params_with_all_bases=dict(
+        mixin_init_kwarg_params_including_bases=dict(
             my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
         mock_cls=MockMockPlainCls)
@@ -689,7 +689,7 @@ def test_nested_mixins_static_outer_inheritance_from_generic(
         args=(),
         kwargs=dict(my_kwarg_1='value', my_kwarg_2='default value'),
         mixin_init_kwarg_params=dict(),
-        mixin_init_kwarg_params_with_all_bases=dict(
+        mixin_init_kwarg_params_including_bases=dict(
             my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
         mock_cls=MockMockPlainCls)

@@ -89,7 +89,7 @@ class JobBase(DynamicMixinAcceptor, metaclass=JobBaseMeta):
         return ()
 
     def _get_init_kwargs(self) -> Dict[str, Any]:
-        kwarg_keys = list(self._mixin_init_kwarg_params_with_all_bases.keys())
+        kwarg_keys = list(self._mixin_init_kwarg_params_including_bases.keys())
         for key in kwarg_keys:
             attribute = getattr(self.__class__, key)
 
