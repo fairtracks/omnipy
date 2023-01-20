@@ -97,7 +97,7 @@ class JobBase(DynamicMixinAcceptor, metaclass=JobBaseAndMixinAcceptorMeta):
         return ()
 
     def _get_init_kwargs(self) -> Dict[str, Any]:
-        kwarg_keys = list(self._mixin_init_kwarg_params.keys())
+        kwarg_keys = list(self._mixin_init_kwarg_params_with_all_bases.keys())
         for key in kwarg_keys:
             attribute = getattr(self.__class__, key)
 
@@ -211,10 +211,10 @@ class Job(JobBase, DynamicMixinAcceptor, Generic[JobBaseT, JobTemplateT]):
     def _get_job_template_subcls_for_revise(cls) -> Type[JobTemplateT]:
         return JobTemplate
 
-    def __new__(cls, *args: Any, **kwargs: Any):
-        super().__new__(cls, *args, **kwargs)
-        raise RuntimeError('Job should only be instantiated using the "apply()" method of '
-                           'an instance of JobTemplate (or one of its subclasses)')
+    # def __new__(cls, *args: Any, **kwargs: Any):
+    #     super().__new__(cls, *args, **kwargs)
+    #     raise RuntimeError('Job should only be instantiated using the "apply()" method of '
+    #                        'an instance of JobTemplate (or one of its subclasses)')
 
     # def __init__(self, *args, **kwargs):
     #     super().__init__(*args, **kwargs)
