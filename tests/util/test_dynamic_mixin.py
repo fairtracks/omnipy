@@ -461,6 +461,14 @@ def test_diff_orig_class_multiple_state_mixins_diff_default(mock_plain_cls, mock
     assert mock_other_plain_obj.override() == 'overridden by: MockOtherPlainClsWithMixins'
 
 
+def test_fail_no_init_method_state_mixin():
+    with pytest.raises(TypeError):
+
+        class MockNoInitCls(DynamicMixinAcceptor):
+            def to_override(self):
+                return self.__class__.__name__
+
+
 def test_fail_pos_only_arg_mixin(mock_plain_cls):
     MockPlainCls = mock_plain_cls  # noqa
 

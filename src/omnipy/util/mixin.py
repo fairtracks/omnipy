@@ -27,7 +27,7 @@ class DynamicMixinAcceptor:
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
 
-        if DynamicMixinAcceptor in get_bases(cls) and not hasattr(cls, '__init__'):
+        if DynamicMixinAcceptor in get_bases(cls) and cls.__init__ is object.__init__:
             raise TypeError('Mixin acceptor class is required to define a __init__() method.')
 
         cls._orig_init_signature = inspect.signature(cls.__init__)
@@ -82,7 +82,7 @@ class DynamicMixinAcceptor:
             cls._store_init_signature_params_for_mixin(mixin_cls)
 
             if update:
-                cls._update_cls_init_signature_with_kwargs_for_all_mixins()
+                cls._update_cls_init_signature_with_kwargs_all_mixin_kwargs()
 
     @classmethod
     def _store_init_signature_params_for_mixin(cls, mixin_cls):
@@ -97,9 +97,16 @@ class DynamicMixinAcceptor:
                     cls._init_params_per_mixin_cls[mixin_cls.__name__][key] = param
 
     @classmethod
-    def _update_cls_init_signature_with_kwargs_for_all_mixins(cls):
-        orig_init_param_dict = cls._orig_init_signature.parameters
+    def _update_cls_init_signature_with_kwargs_all_mixin_kwargs(cls):
+        updated_init_signature = cls._get_updated_cls_init_signature_with_all_mixin_kwargs()
 
+        cls.__init__.__signature__ = updated_init_signature
+        if hasattr(cls, '_orig_class'):
+            cls._orig_class.__init____signature__ = updated_init_signature
+
+    @classmethod
+    def _get_updated_cls_init_signature_with_all_mixin_kwargs(cls):
+        orig_init_param_dict = cls._orig_init_signature.parameters
         init_params = list(orig_init_param_dict.values())
         opt_var_keyword_param = []
 
@@ -113,11 +120,7 @@ class DynamicMixinAcceptor:
         ]
 
         updated_params = init_params + only_mixin_params + opt_var_keyword_param
-        updated_init_signature = cls._orig_init_signature.replace(parameters=updated_params)
-
-        cls.__init__.__signature__ = updated_init_signature
-        if hasattr(cls, '_orig_class'):
-            cls._orig_class.__init____signature__ = updated_init_signature
+        return cls._orig_init_signature.replace(parameters=updated_params)
 
     @classmethod
     def reset_mixins(cls):
@@ -133,7 +136,7 @@ class DynamicMixinAcceptor:
         else:
             obj = object.__new__(cls)
 
-        cls._update_cls_init_signature_with_kwargs_for_all_mixins()
+        cls._update_cls_init_signature_with_kwargs_all_mixin_kwargs()
         return obj
 
     @classmethod
