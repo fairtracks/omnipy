@@ -1,6 +1,8 @@
 import inspect
 import locale as pkg_locale
-from typing import Dict, Iterable, Mapping, Tuple, Union
+from typing import Dict, Iterable, Mapping, Tuple, Union, Type, get_args, get_origin
+
+from typing_inspect import is_generic_type, get_generic_bases
 
 DictT = Union[Mapping[object, object], Iterable[Tuple[object, object]]]
 
@@ -8,7 +10,7 @@ DictT = Union[Mapping[object, object], Iterable[Tuple[object, object]]]
 def create_merged_dict(dict_1: DictT, dict_2: DictT) -> Dict[object, object]:
     merged_dict = dict(dict_1)
     dict_2_cast = dict(dict_2)
-    merged_dict.update(dict_2_cast)
+    merged_dict |= dict_2_cast
     return merged_dict
 
 
@@ -27,12 +29,27 @@ def get_datetime_format(locale: Union[str, Tuple[str, str]] = '') -> str:
 
 
 async def resolve(val):
-    if inspect.isawaitable(val):
-        return await val
-    else:
-        return val
+    return await val if inspect.isawaitable(val) else val
 
 
 def repr_max_len(data: object, max_len: int = 200):
     repr_str = repr(data)
-    return repr_str[:max_len] + '...' if len(repr_str) > max_len else repr_str
+    return f'{repr_str[:max_len]}...' if len(repr_str) > max_len else repr_str
+
+
+def get_bases(cls):
+    return get_generic_bases(cls) if is_generic_type(cls) else cls.__bases__
+
+
+def generic_aware_issubclass(cls, cls_or_tuple):
+    try:
+        return issubclass(cls, cls_or_tuple)
+    except TypeError:
+        return issubclass(get_origin(cls), cls_or_tuple)
+
+
+def transfer_generic_args_to_cls(to_cls, from_generic_type):
+    try:
+        return to_cls[get_args(from_generic_type)]
+    except (TypeError, AttributeError):
+        return to_cls
