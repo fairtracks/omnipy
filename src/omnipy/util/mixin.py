@@ -141,6 +141,9 @@ class DynamicMixinAcceptor:
 
     @classmethod
     def _create_subcls_inheriting_from_mixins_and_orig_cls(cls):
+
+        # TODO: Refactor this, and possibly elsewhere in class
+
         def __init__(self, *args, **kwargs):
             cls.__init__(self, *args, **kwargs)
             mixin_kwargs_defaults = {}
