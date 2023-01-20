@@ -1,6 +1,6 @@
 from abc import ABCMeta
 from inspect import Parameter, signature
-from typing import Dict, Optional, Tuple, Type
+from typing import Dict, Optional, Tuple, Type, TypeVar, Generic, get_args
 
 import pytest
 
@@ -14,8 +14,8 @@ def mock_plain_cls() -> Type:
             self.args = args
             self.kwargs = kwargs
 
-        def to_override(self):
-            return self.__class__.__name__
+        def override(self):
+            return f'overridden by: {self.__class__.__name__}'
 
     return MockPlainCls
 
@@ -27,8 +27,8 @@ def mock_other_plain_cls() -> Type:
             self.args = args
             self.kwargs = kwargs
 
-        def to_override(self):
-            return self.__class__.__name__
+        def override(self):
+            return f'overridden by: {self.__class__.__name__}'
 
     return MockOtherPlainCls
 
@@ -36,15 +36,38 @@ def mock_other_plain_cls() -> Type:
 @pytest.fixture(scope='function')
 def mock_predefined_init_kwargs_cls() -> Type:
     class MockPredefinedInitKwargsCls(DynamicMixinAcceptor):
-        def __init__(self, *args, my_kwarg_1, my_kwarg_2='default value', **kwargs):
-            kwargs.update({'my_kwarg_1': my_kwarg_1, 'my_kwarg_2': my_kwarg_2})
-            self.args = args
+        args = ()
+
+        def __init__(self, *, my_kwarg_1, my_kwarg_2='default value', **kwargs):
+            kwargs |= {'my_kwarg_1': my_kwarg_1, 'my_kwarg_2': my_kwarg_2}
+            if hasattr(self, 'kwargs'):
+                self.plain_kwargs = self.kwargs
             self.kwargs = kwargs
 
-        def to_override(self):
-            return self.__class__.__name__
+        def override(self):
+            return f'overridden by: {self.__class__.__name__}'
 
     return MockPredefinedInitKwargsCls
+
+
+T = TypeVar('T')
+
+
+@pytest.fixture(scope='function')
+def mock_predefined_init_kwargs_generic_cls() -> Type:
+    class MockPredefinedInitKwargsGenericCls(DynamicMixinAcceptor, Generic[T]):
+        args = ()
+
+        def __init__(self, *, my_kwarg_1, my_kwarg_2='default value', **kwargs):
+            kwargs |= {'my_kwarg_1': my_kwarg_1, 'my_kwarg_2': my_kwarg_2}
+            if hasattr(self, 'kwargs'):
+                self.plain_kwargs = self.kwargs
+            self.kwargs = kwargs
+
+        def override(self):
+            return f'overridden by: {self.__class__.__name__}'
+
+    return MockPredefinedInitKwargsGenericCls
 
 
 class MockNewMethodNoStateMixin:
@@ -61,7 +84,7 @@ class MockOtherNewMethodNoStateMixin:
 
 class MockOverrideNoStateMixin:
     # @classmethod
-    def to_override(self):
+    def override(self):
         return 'overridden method'
 
 
@@ -71,10 +94,10 @@ class MockKwArgStateMixin:
         self._my_kwarg_2 = my_kwarg_2
 
     def new_method(self):
-        return self._my_kwarg_1
+        return f'({self._my_kwarg_1}, {self._my_kwarg_2})'
 
-    def to_override(self):
-        return self._my_kwarg_2
+    def override(self):
+        return 'overridden method'
 
 
 class MockOtherKwArgStateMixin:
@@ -83,10 +106,10 @@ class MockOtherKwArgStateMixin:
         self._my_kwarg_2 = my_kwarg_2
 
     def new_method(self):
-        return self._my_other_kwarg_1
+        return f'({self._my_other_kwarg_1}, {self._my_kwarg_2})'
 
-    def to_override(self):
-        return self._my_kwarg_2
+    def override(self):
+        return 'overridden method'
 
 
 class MockKwArgAccessOrigClsMemberStateMixin:
@@ -103,10 +126,10 @@ class MockOtherKwArgDiffDefaultStateMixin:
         self._my_kwarg_2 = my_kwarg_2
 
     def new_method(self):
-        return self._my_other_kwarg_1
+        return f'({self._my_other_kwarg_1}, {self._my_kwarg_2})'
 
-    def to_override(self):
-        return self._my_kwarg_2
+    def override(self):
+        return 'overridden method'
 
 
 class MockPosOnlyArgStateMixin:
@@ -123,19 +146,26 @@ def test_no_mixins(mock_plain_cls):
         mock_plain_obj, args=('a', 1), kwargs=dict(verbose=True), mock_cls=MockPlainCls)
 
     assert not hasattr(mock_plain_obj, 'new_method')
-    assert mock_plain_obj.to_override() == 'MockPlainClsWithMixins'
+    assert mock_plain_obj.override() == 'overridden by: MockPlainClsWithMixins'
 
 
 def _assert_args_and_kwargs(mock_obj: object,
                             args: Tuple[object, ...],
                             kwargs: Dict[str, object],
                             mock_cls: Optional[Type] = None,
-                            mixin_init_kwarg_params: Dict[str, Parameter] = {}):
+                            mixin_init_kwarg_params: Dict[str, Parameter] = {},
+                            mixin_init_kwarg_params_with_all_bases: Dict[str, Parameter] = {},
+                            args_in_signature=True):
 
-    non_self_param_keys = \
-        (['args'] if args else []) + list(mixin_init_kwarg_params.keys()) + ['kwargs']
+    if mixin_init_kwarg_params and not mixin_init_kwarg_params_with_all_bases:
+        mixin_init_kwarg_params_with_all_bases = mixin_init_kwarg_params
+
+    non_self_param_keys = (['args'] if args_in_signature else []) + list(
+        mixin_init_kwarg_params_with_all_bases.keys()) + ['kwargs']
 
     assert mock_obj._mixin_init_kwarg_params == mixin_init_kwarg_params
+    assert mock_obj._mixin_init_kwarg_params_with_all_bases == \
+           mixin_init_kwarg_params_with_all_bases
     assert mock_obj.args == args
     assert mock_obj.kwargs == kwargs
 
@@ -158,13 +188,13 @@ def test_new_method_no_state_mixin(mock_plain_cls):
         mock_plain_obj, args=('a', 1), kwargs=dict(verbose=True), mock_cls=MockPlainCls)
 
     assert mock_plain_obj.new_method() == 'new method'
-    assert mock_plain_obj.to_override() == 'MockPlainClsWithMixins'
+    assert mock_plain_obj.override() == 'overridden by: MockPlainClsWithMixins'
 
 
 def test_multiple_new_method_no_state_mixins(mock_plain_cls):
     MockPlainCls = mock_plain_cls  # noqa
-    MockPlainCls.accept_mixin(MockNewMethodNoStateMixin)
     MockPlainCls.accept_mixin(MockOtherNewMethodNoStateMixin)
+    MockPlainCls.accept_mixin(MockNewMethodNoStateMixin)
 
     mock_plain_obj = MockPlainCls('a', 1, verbose=True)
 
@@ -172,7 +202,7 @@ def test_multiple_new_method_no_state_mixins(mock_plain_cls):
         mock_plain_obj, args=('a', 1), kwargs=dict(verbose=True), mock_cls=MockPlainCls)
 
     assert mock_plain_obj.new_method() == 'other new method'
-    assert mock_plain_obj.to_override() == 'MockPlainClsWithMixins'
+    assert mock_plain_obj.override() == 'overridden by: MockPlainClsWithMixins'
 
 
 def test_override_no_state_mixin(mock_plain_cls):
@@ -185,7 +215,7 @@ def test_override_no_state_mixin(mock_plain_cls):
         mock_plain_obj, args=('a', 1), kwargs=dict(verbose=True), mock_cls=MockPlainCls)
 
     assert not hasattr(mock_plain_obj, 'new_method')
-    assert mock_plain_obj.to_override() == 'overridden method'
+    assert mock_plain_obj.override() == 'overridden by: MockPlainClsWithMixins'
 
 
 def test_progressive_multiple_new_method_and_override_no_state_mixins(mock_plain_cls):
@@ -198,7 +228,7 @@ def test_progressive_multiple_new_method_and_override_no_state_mixins(mock_plain
         mock_plain_obj, args=('a', 1), kwargs=dict(verbose=True), mock_cls=MockPlainCls)
 
     assert mock_plain_obj.new_method() == 'new method'
-    assert mock_plain_obj.to_override() == 'MockPlainClsWithMixins'
+    assert mock_plain_obj.override() == 'overridden by: MockPlainClsWithMixins'
 
     MockPlainCls.accept_mixin(MockOverrideNoStateMixin)
 
@@ -208,7 +238,7 @@ def test_progressive_multiple_new_method_and_override_no_state_mixins(mock_plain
         mock_plain_obj_2, args=('a', 1), kwargs=dict(verbose=True), mock_cls=MockPlainCls)
 
     assert mock_plain_obj_2.new_method() == 'new method'
-    assert mock_plain_obj_2.to_override() == 'overridden method'
+    assert mock_plain_obj_2.override() == 'overridden by: MockPlainClsWithMixins'
 
 
 def test_reset_multiple_no_state_mixins(mock_plain_cls):
@@ -219,7 +249,7 @@ def test_reset_multiple_no_state_mixins(mock_plain_cls):
     mock_plain_obj = MockPlainCls('a', 1, verbose=True)
 
     assert mock_plain_obj.new_method() == 'new method'
-    assert mock_plain_obj.to_override() == 'overridden method'
+    assert mock_plain_obj.override() == 'overridden by: MockPlainClsWithMixins'
 
     MockPlainCls.reset_mixins()
 
@@ -229,7 +259,7 @@ def test_reset_multiple_no_state_mixins(mock_plain_cls):
         mock_plain_obj_2, args=('a', 1), kwargs=dict(verbose=True), mock_cls=MockPlainCls)
 
     assert not hasattr(mock_plain_obj_2, 'new_method')
-    assert mock_plain_obj_2.to_override() == 'MockPlainClsWithMixins'
+    assert mock_plain_obj_2.override() == 'overridden by: MockPlainClsWithMixins'
 
 
 def test_multiple_orig_class_different_no_state_mixins(mock_plain_cls, mock_other_plain_cls):
@@ -242,7 +272,7 @@ def test_multiple_orig_class_different_no_state_mixins(mock_plain_cls, mock_othe
         mock_plain_obj, args=('a', 1), kwargs=dict(verbose=True), mock_cls=MockPlainCls)
 
     assert mock_plain_obj.new_method() == 'new method'
-    assert mock_plain_obj.to_override() == 'MockPlainClsWithMixins'
+    assert mock_plain_obj.override() == 'overridden by: MockPlainClsWithMixins'
 
     MockOtherPlainCls = mock_other_plain_cls  # noqa
     MockOtherPlainCls.accept_mixin(MockOverrideNoStateMixin)
@@ -253,7 +283,7 @@ def test_multiple_orig_class_different_no_state_mixins(mock_plain_cls, mock_othe
         mock_other_plain_obj, args=('a', 1), kwargs=dict(verbose=True), mock_cls=MockOtherPlainCls)
 
     assert not hasattr(mock_other_plain_obj, 'new_method')
-    assert mock_other_plain_obj.to_override() == 'overridden method'
+    assert mock_other_plain_obj.override() == 'overridden by: MockOtherPlainClsWithMixins'
 
 
 def test_state_mixin(mock_plain_cls):
@@ -265,14 +295,14 @@ def test_state_mixin(mock_plain_cls):
     _assert_args_and_kwargs(
         mock_plain_obj,
         args=('a', 1),
-        kwargs=dict(verbose=True, my_kwarg_1='value', my_kwarg_2='default value'),
+        kwargs=dict(verbose=True, my_kwarg_1='value'),
         mixin_init_kwarg_params=dict(
             my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
         mock_cls=MockPlainCls)
 
-    assert mock_plain_obj.new_method() == 'value'
-    assert mock_plain_obj.to_override() == 'default value'
+    assert mock_plain_obj.new_method() == '(value, default value)'
+    assert mock_plain_obj.override() == 'overridden by: MockPlainClsWithMixins'
 
 
 def test_access_orig_cls_member_state_mixin(mock_plain_cls):
@@ -289,7 +319,7 @@ def test_access_orig_cls_member_state_mixin(mock_plain_cls):
         mock_cls=MockPlainCls)
 
     assert mock_plain_obj.new_method() == 'my_kwarg: something'
-    assert mock_plain_obj.to_override() == 'MockPlainClsWithMixins'
+    assert mock_plain_obj.override() == 'overridden by: MockPlainClsWithMixins'
 
 
 def test_fail_missing_kwargs_multiple_state_mixin(mock_plain_cls):
@@ -317,14 +347,14 @@ def test_progressive_multiple_state_mixins_same_default(mock_plain_cls):
     _assert_args_and_kwargs(
         mock_plain_obj,
         args=('a', 1),
-        kwargs=dict(verbose=True, my_kwarg_1='value', my_kwarg_2='default value'),
+        kwargs=dict(verbose=True, my_kwarg_1='value'),
         mixin_init_kwarg_params=dict(
             my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
         mock_cls=MockPlainCls)
 
-    assert mock_plain_obj.new_method() == 'value'
-    assert mock_plain_obj.to_override() == 'default value'
+    assert mock_plain_obj.new_method() == '(value, default value)'
+    assert mock_plain_obj.override() == 'overridden by: MockPlainClsWithMixins'
 
     MockPlainCls.accept_mixin(MockOtherKwArgStateMixin)
 
@@ -334,19 +364,15 @@ def test_progressive_multiple_state_mixins_same_default(mock_plain_cls):
     _assert_args_and_kwargs(
         mock_plain_obj_2,
         args=('a', 1),
-        kwargs=dict(
-            verbose=True,
-            my_kwarg_1='value',
-            my_kwarg_2='default value',
-            my_other_kwarg_1='other value'),
+        kwargs=dict(verbose=True, my_kwarg_1='value', my_other_kwarg_1='other value'),
         mixin_init_kwarg_params=dict(
             my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value'),
             my_other_kwarg_1=Parameter('my_other_kwarg_1', Parameter.KEYWORD_ONLY)),
         mock_cls=MockPlainCls)
 
-    assert mock_plain_obj_2.new_method() == 'other value'
-    assert mock_plain_obj_2.to_override() == 'default value'
+    assert mock_plain_obj_2.new_method() == '(value, default value)'
+    assert mock_plain_obj_2.override() == 'overridden by: MockPlainClsWithMixins'
 
     mock_plain_obj_3 = MockPlainCls(
         'a', 1, verbose=True, my_kwarg_1='alt1A', my_other_kwarg_1='alt1B', my_kwarg_2='alt2')
@@ -361,8 +387,8 @@ def test_progressive_multiple_state_mixins_same_default(mock_plain_cls):
             my_other_kwarg_1=Parameter('my_other_kwarg_1', Parameter.KEYWORD_ONLY)),
         mock_cls=MockPlainCls)
 
-    assert mock_plain_obj_3.new_method() == 'alt1B'
-    assert mock_plain_obj_3.to_override() == 'alt2'
+    assert mock_plain_obj_3.new_method() == '(alt1A, alt2)'
+    assert mock_plain_obj_3.override() == 'overridden by: MockPlainClsWithMixins'
 
 
 def test_reset_multiple_state_mixins(mock_plain_cls):
@@ -384,8 +410,8 @@ def test_reset_multiple_state_mixins(mock_plain_cls):
             my_other_kwarg_1=Parameter('my_other_kwarg_1', Parameter.KEYWORD_ONLY)),
         mock_cls=MockPlainCls)
 
-    assert mock_plain_obj.new_method() == 'alt1B'
-    assert mock_plain_obj.to_override() == 'alt2'
+    assert mock_plain_obj.new_method() == '(alt1A, alt2)'
+    assert mock_plain_obj.override() == 'overridden by: MockPlainClsWithMixins'
 
     MockPlainCls.reset_mixins()
 
@@ -395,17 +421,7 @@ def test_reset_multiple_state_mixins(mock_plain_cls):
         mock_plain_obj_2, args=('a', 1), kwargs=dict(verbose=True), mock_cls=MockPlainCls)
 
     assert not hasattr(mock_plain_obj_2, 'new_method')
-    assert mock_plain_obj_2.to_override() == 'MockPlainClsWithMixins'
-
-
-def test_fail_progressive_multiple_state_mixins_diff_defaults(mock_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
-
-    MockPlainCls.accept_mixin(MockKwArgStateMixin)
-    MockPlainCls.accept_mixin(MockOtherKwArgDiffDefaultStateMixin)
-
-    with pytest.raises(AttributeError):
-        MockPlainCls('a', 1, verbose=True, my_kwarg_1='value')
+    assert mock_plain_obj_2.override() == 'overridden by: MockPlainClsWithMixins'
 
 
 def test_diff_orig_class_multiple_state_mixins_diff_default(mock_plain_cls, mock_other_plain_cls):
@@ -417,14 +433,14 @@ def test_diff_orig_class_multiple_state_mixins_diff_default(mock_plain_cls, mock
     _assert_args_and_kwargs(
         mock_plain_obj,
         args=('a', 1),
-        kwargs=dict(verbose=True, my_kwarg_1='value', my_kwarg_2='default value'),
+        kwargs=dict(verbose=True, my_kwarg_1='value'),
         mixin_init_kwarg_params=dict(
             my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
         mock_cls=MockPlainCls)
 
-    assert mock_plain_obj.new_method() == 'value'
-    assert mock_plain_obj.to_override() == 'default value'
+    assert mock_plain_obj.new_method() == '(value, default value)'
+    assert mock_plain_obj.override() == 'overridden by: MockPlainClsWithMixins'
 
     MockOtherPlainCls = mock_other_plain_cls  # noqa
     MockOtherPlainCls.accept_mixin(MockOtherKwArgDiffDefaultStateMixin)
@@ -434,36 +450,15 @@ def test_diff_orig_class_multiple_state_mixins_diff_default(mock_plain_cls, mock
     _assert_args_and_kwargs(
         mock_other_plain_obj,
         args=('a', 1),
-        kwargs=dict(verbose=True, my_kwarg_2='other default value', my_other_kwarg_1='other value'),
+        kwargs=dict(verbose=True, my_other_kwarg_1='other value'),
         mixin_init_kwarg_params=dict(
             my_other_kwarg_1=Parameter('my_other_kwarg_1', Parameter.KEYWORD_ONLY),
             my_kwarg_2=Parameter(
                 'my_kwarg_2', Parameter.KEYWORD_ONLY, default='other default value')),
         mock_cls=MockOtherPlainCls)
 
-    assert mock_other_plain_obj.new_method() == 'other value'
-    assert mock_other_plain_obj.to_override() == 'other default value'
-
-
-def test_fail_no_init_method_state_mixin():
-    with pytest.raises(TypeError):
-
-        class MockNoInitCls(DynamicMixinAcceptor):
-            def to_override(self):
-                return self.__class__.__name__
-
-
-def test_fail_missing_kwargs_init_param_state_mixin():
-    class MockNoKwargsInitCls(DynamicMixinAcceptor):
-        def __init__(self, *args):
-            self.args = args
-            self.kwargs = {}
-
-        def to_override(self):
-            return self.__class__.__name__
-
-    with pytest.raises(AttributeError):
-        MockNoKwargsInitCls.accept_mixin(MockKwArgStateMixin)
+    assert mock_other_plain_obj.new_method() == '(other value, other default value)'
+    assert mock_other_plain_obj.override() == 'overridden by: MockOtherPlainClsWithMixins'
 
 
 def test_fail_pos_only_arg_mixin(mock_plain_cls):
@@ -479,8 +474,8 @@ def test_missing_pos_args_init_param_state_mixin():
             self.args = ()
             self.kwargs = kwargs
 
-        def to_override(self):
-            return self.__class__.__name__
+        def override(self):
+            return f'overridden by: {self.__class__.__name__}'
 
     MockNoPosArgsInitCls.accept_mixin(MockKwArgStateMixin)
 
@@ -489,14 +484,15 @@ def test_missing_pos_args_init_param_state_mixin():
     _assert_args_and_kwargs(
         mock_no_pos_args_init_obj,
         args=(),
-        kwargs=dict(verbose=True, my_kwarg_1='value', my_kwarg_2='default value'),
+        kwargs=dict(verbose=True, my_kwarg_1='value'),
         mixin_init_kwarg_params=dict(
             my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
-        mock_cls=MockNoPosArgsInitCls)
+        mock_cls=MockNoPosArgsInitCls,
+        args_in_signature=False)
 
-    assert mock_no_pos_args_init_obj.new_method() == 'value'
-    assert mock_no_pos_args_init_obj.to_override() == 'default value'
+    assert mock_no_pos_args_init_obj.new_method() == '(value, default value)'
+    assert mock_no_pos_args_init_obj.override() == 'overridden by: MockNoPosArgsInitClsWithMixins'
 
 
 def test_predefined_init_kwargs_progressive_multiple_state_mixins_same_default(
@@ -506,28 +502,30 @@ def test_predefined_init_kwargs_progressive_multiple_state_mixins_same_default(
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
 
     mock_predefined_init_kwargs_plain_obj = MockPredefinedInitKwargsCls(
-        'a', 1, verbose=True, my_kwarg_1='value')
+        verbose=True, my_kwarg_1='value')
 
     _assert_args_and_kwargs(
         mock_predefined_init_kwargs_plain_obj,
-        args=('a', 1),
+        args=(),
         kwargs=dict(verbose=True, my_kwarg_1='value', my_kwarg_2='default value'),
         mixin_init_kwarg_params=dict(
             my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
-        mock_cls=MockPredefinedInitKwargsCls)
+        mock_cls=MockPredefinedInitKwargsCls,
+        args_in_signature=False)
 
-    assert mock_predefined_init_kwargs_plain_obj.new_method() == 'value'
-    assert mock_predefined_init_kwargs_plain_obj.to_override() == 'default value'
+    assert mock_predefined_init_kwargs_plain_obj.new_method() == '(value, default value)'
+    assert mock_predefined_init_kwargs_plain_obj.override() == \
+           'overridden by: MockPredefinedInitKwargsClsWithMixins'
 
     MockPredefinedInitKwargsCls.accept_mixin(MockOtherKwArgStateMixin)
 
     mock_predefined_init_kwargs_plain_obj = MockPredefinedInitKwargsCls(
-        'a', 1, verbose=True, my_kwarg_1='value', my_other_kwarg_1='other value')
+        verbose=True, my_kwarg_1='value', my_other_kwarg_1='other value')
 
     _assert_args_and_kwargs(
         mock_predefined_init_kwargs_plain_obj,
-        args=('a', 1),
+        args=(),
         kwargs=dict(
             verbose=True,
             my_kwarg_1='value',
@@ -537,10 +535,12 @@ def test_predefined_init_kwargs_progressive_multiple_state_mixins_same_default(
             my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value'),
             my_other_kwarg_1=Parameter('my_other_kwarg_1', Parameter.KEYWORD_ONLY)),
-        mock_cls=MockPredefinedInitKwargsCls)
+        mock_cls=MockPredefinedInitKwargsCls,
+        args_in_signature=False)
 
-    assert mock_predefined_init_kwargs_plain_obj.new_method() == 'other value'
-    assert mock_predefined_init_kwargs_plain_obj.to_override() == 'default value'
+    assert mock_predefined_init_kwargs_plain_obj.new_method() == '(value, default value)'
+    assert mock_predefined_init_kwargs_plain_obj.override() == \
+           'overridden by: MockPredefinedInitKwargsClsWithMixins'
 
 
 def test_predefined_init_kwargs_progressive_multiple_state_mixins_different_withmixin_classes(
@@ -549,28 +549,29 @@ def test_predefined_init_kwargs_progressive_multiple_state_mixins_different_with
 
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
 
-    mock_obj_1 = MockPredefinedInitKwargsCls('a', 1, verbose=True, my_kwarg_1='value')
+    mock_obj_1 = MockPredefinedInitKwargsCls(verbose=True, my_kwarg_1='value')
 
     MockPredefinedInitKwargsCls.accept_mixin(MockOtherKwArgStateMixin)
 
     mock_obj_2 = MockPredefinedInitKwargsCls(
-        'a', 1, verbose=True, my_kwarg_1='value', my_other_kwarg_1='other value')
+        verbose=True, my_kwarg_1='value', my_other_kwarg_1='other value')
 
     assert mock_obj_1.__class__.__name__ == mock_obj_2.__class__.__name__
     assert mock_obj_1.__class__ != mock_obj_2.__class__
 
     _assert_args_and_kwargs(
         mock_obj_1,
-        args=('a', 1),
+        args=(),
         kwargs=dict(verbose=True, my_kwarg_1='value', my_kwarg_2='default value'),
         mixin_init_kwarg_params=dict(
             my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
-        mock_cls=mock_obj_1.__class__)
+        mock_cls=mock_obj_1.__class__,
+        args_in_signature=False)
 
     _assert_args_and_kwargs(
         mock_obj_2,
-        args=('a', 1),
+        args=(),
         kwargs=dict(
             verbose=True,
             my_kwarg_1='value',
@@ -580,17 +581,123 @@ def test_predefined_init_kwargs_progressive_multiple_state_mixins_different_with
             my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value'),
             my_other_kwarg_1=Parameter('my_other_kwarg_1', Parameter.KEYWORD_ONLY)),
-        mock_cls=mock_obj_2.__class__)
+        mock_cls=mock_obj_2.__class__,
+        args_in_signature=False)
 
 
-def test_fail_predefined_init_kwargs_state_mixin_diff_default(mock_predefined_init_kwargs_cls):
+def test_nested_mixins(mock_predefined_init_kwargs_cls, mock_plain_cls):
     MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  #noqa
+    MockPlainCls = mock_plain_cls  # noqa
 
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
-    MockPredefinedInitKwargsCls.accept_mixin(MockOtherKwArgDiffDefaultStateMixin)
+    MockPlainCls.accept_mixin(MockPredefinedInitKwargsCls)
 
-    with pytest.raises(AttributeError):
-        MockPredefinedInitKwargsCls('a', 1, verbose=True, my_kwarg_1='value')
+    mock_obj = MockPlainCls('a', 1, verbose=True, my_kwarg_1='value')
+
+    _assert_args_and_kwargs(
+        mock_obj,
+        args=('a', 1),
+        kwargs=dict(my_kwarg_1='value', my_kwarg_2='default value'),
+        mixin_init_kwarg_params=dict(
+            my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
+            my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
+        mock_cls=MockPlainCls)
+
+    assert mock_obj.plain_kwargs == dict(verbose=True, my_kwarg_1='value')
+    assert mock_obj.new_method() == '(value, default value)'
+    assert mock_obj.override() == 'overridden by: MockPlainClsWithMixins'
+
+
+def test_nested_mixins_static_outer_inheritance(mock_predefined_init_kwargs_cls):
+    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  #noqa
+    MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
+
+    class MockMockPlainCls(MockPredefinedInitKwargsCls):
+        def __init__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+
+        def override(self):
+            return f'overridden by: {self.__class__.__name__}'
+
+    mock_obj = MockMockPlainCls(verbose=True, my_kwarg_1='value')
+
+    _assert_args_and_kwargs(
+        mock_obj,
+        args=(),
+        kwargs=dict(my_kwarg_1='value', my_kwarg_2='default value'),
+        mixin_init_kwarg_params=dict(),
+        mixin_init_kwarg_params_with_all_bases=dict(
+            my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
+            my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
+        mock_cls=MockMockPlainCls)
+
+    assert mock_obj.plain_kwargs == dict(verbose=True, my_kwarg_1='value')
+    assert mock_obj.new_method() == '(value, default value)'
+    assert mock_obj.override() == 'overridden by: MockMockPlainClsWithMixins'
+
+
+def test_nested_mixins_double_static_outer_inheritance(mock_predefined_init_kwargs_cls):
+    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  #noqa
+    MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
+
+    class MockMockPlainCls(MockPredefinedInitKwargsCls):
+        def __init__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+
+        def override(self):
+            return f'overridden by: {self.__class__.__name__}'
+
+    class MockMockMockPlainCls(MockMockPlainCls):
+        ...
+
+    mock_obj = MockMockMockPlainCls(verbose=True, my_kwarg_1='value')
+
+    _assert_args_and_kwargs(
+        mock_obj,
+        args=(),
+        kwargs=dict(my_kwarg_1='value', my_kwarg_2='default value'),
+        mixin_init_kwarg_params=dict(),
+        mixin_init_kwarg_params_with_all_bases=dict(
+            my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
+            my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
+        mock_cls=MockMockPlainCls)
+
+    assert mock_obj.plain_kwargs == dict(my_kwarg_1='value')
+    assert mock_obj.new_method() == '(value, default value)'
+    assert mock_obj.override() == 'overridden by: MockMockMockPlainClsWithMixins'
+
+
+def test_nested_mixins_static_outer_inheritance_from_generic(
+        mock_predefined_init_kwargs_generic_cls):
+    MockPredefinedInitKwargsGenericCls = mock_predefined_init_kwargs_generic_cls  #noqa
+    MockPredefinedInitKwargsGenericCls.accept_mixin(MockKwArgStateMixin)
+
+    class MockMockPlainCls(MockPredefinedInitKwargsGenericCls[int]):
+        def __init__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+
+        def override(self):
+            return f'overridden by: {self.__class__.__name__}'
+
+    mock_obj = MockMockPlainCls(verbose=True, my_kwarg_1='value')
+
+    _assert_args_and_kwargs(
+        mock_obj,
+        args=(),
+        kwargs=dict(my_kwarg_1='value', my_kwarg_2='default value'),
+        mixin_init_kwarg_params=dict(),
+        mixin_init_kwarg_params_with_all_bases=dict(
+            my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
+            my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
+        mock_cls=MockMockPlainCls)
+
+    assert mock_obj.plain_kwargs == dict(verbose=True, my_kwarg_1='value')
+    assert mock_obj.new_method() == '(value, default value)'
+    assert mock_obj.override() == 'overridden by: MockMockPlainClsWithMixins'
+    assert get_args(mock_obj.__class__.__orig_bases__[1]) == (int,)
 
 
 def test_other_metaclass_for_base_cls_state_mixin():
@@ -611,8 +718,8 @@ def test_other_metaclass_for_base_cls_state_mixin():
             self.args = args
             self.kwargs = kwargs
 
-        def to_override(self):
-            return self.__class__.__name__
+        def override(self):
+            return f'overridden by: {self.__class__.__name__}'
 
     MockOtherMetaclassForBaseCls.accept_mixin(MockKwArgStateMixin)
 
@@ -622,12 +729,13 @@ def test_other_metaclass_for_base_cls_state_mixin():
     _assert_args_and_kwargs(
         mock_other_metaclass_for_base_obj,
         args=('a', 1),
-        kwargs=dict(verbose=True, my_kwarg_1='value', my_kwarg_2='default value'),
+        kwargs=dict(verbose=True, my_kwarg_1='value'),
         mixin_init_kwarg_params=dict(
             my_kwarg_1=Parameter('my_kwarg_1', Parameter.KEYWORD_ONLY),
             my_kwarg_2=Parameter('my_kwarg_2', Parameter.KEYWORD_ONLY, default='default value')),
         mock_cls=MockOtherMetaclassForBaseCls)
 
-    assert mock_other_metaclass_for_base_obj.new_method() == 'value'
-    assert mock_other_metaclass_for_base_obj.to_override() == 'default value'
+    assert mock_other_metaclass_for_base_obj.new_method() == '(value, default value)'
+    assert mock_other_metaclass_for_base_obj.override(
+    ) == 'overridden by: MockOtherMetaclassForBaseClsWithMixins'
     assert mock_other_metaclass_for_base_obj._member == 'something'
