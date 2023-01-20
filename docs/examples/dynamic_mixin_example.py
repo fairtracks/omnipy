@@ -1,10 +1,14 @@
 from omnipy.util.mixin import DynamicMixinAcceptor
 
+#
+# Traditional inheritance
+#
+
 
 class A:
-    def __init__(self, *, k='A'):
+    def __init__(self, *, default='A'):
         super().__init__()
-        self.k = k
+        self.default = default
 
     def obj_method(self):
         return 'A'
@@ -19,9 +23,9 @@ class A:
 
 
 class B(A):
-    def __init__(self, *, k='B'):
-        super().__init__(k=k)
-        self.k = k
+    def __init__(self, *, default='B'):
+        super().__init__(default=default)
+        self.default = default
 
     def obj_method(self):
         return 'B'
@@ -32,9 +36,9 @@ class B(A):
 
 
 class C(A):
-    def __init__(self, *, k='C'):
-        super().__init__(k=k)
-        self.k = k
+    def __init__(self, *, default='C'):
+        super().__init__(default=default)
+        self.default = default
 
     def obj_method(self):
         return 'C'
@@ -53,9 +57,14 @@ class D(B, C):
         return 'D'
 
 
+#
+# Dynamic mixins
+#
+
+
 class AA:
-    def __init__(self, *, k='AA'):
-        self.k = k
+    def __init__(self, *, default='AA'):
+        self.default = default
 
     def obj_method(self):
         return 'AA'
@@ -70,8 +79,8 @@ class AA:
 
 
 class BB(DynamicMixinAcceptor):
-    def __init__(self, *, k='BB'):
-        self.k = k
+    def __init__(self, *, default='BB'):
+        self.default = default
 
     def obj_method(self):
         return 'BB'
@@ -82,8 +91,8 @@ class BB(DynamicMixinAcceptor):
 
 
 class CC(DynamicMixinAcceptor):
-    def __init__(self, *, k='CC'):
-        self.k = k
+    def __init__(self, *, default='CC'):
+        self.default = default
 
     def obj_method(self):
         return 'CC'
@@ -101,32 +110,46 @@ class DD(DynamicMixinAcceptor):
         return 'DD'
 
 
-BB.accept_mixin(AA)
-CC.accept_mixin(AA)
 DD.accept_mixin(BB)
+BB.accept_mixin(AA)
 DD.accept_mixin(CC)
+CC.accept_mixin(AA)
+
+#
+# Instantiate and print results
+#
 
 
-def instantiate_and_print_results(d_cls, header):
+def instantiate_and_print_results(d_cls, d_obj_name, header):
     print(header)
     print()
 
-    d = d_cls()
+    d_obj = d_cls()
 
-    d_base_classes = d.__class__.__bases__
-    print(f'd.__class__.__bases__={d_base_classes}')
+    d_base_classes = d_obj.__class__.__bases__
+    print(f'{d_obj_name}.__class__.__bases__={d_base_classes}')
 
     for i in range(len(d_base_classes)):
-        print(f'd.__class__.__bases__[{i}].__bases__={d.__class__.__bases__[i].__bases__}')
+        print(
+            f'{d_obj_name}.__class__.__bases__[{i}].__bases__={d_obj.__class__.__bases__[i].__bases__}'
+        )
 
     print()
-    print(f'd.obj_method()={d.obj_method()}')
-    print(f'd.cls_method()={d.cls_method()}')
-    print(f'd.static_top_level()={d.static_top_level()}')
-    print(f'd.kwargs={d.kwargs}')
-    print(f'd.k={d.k}')
+    print(f"{d_obj_name} = {d_cls.__name__}()")
+    print(f"{d_obj_name}.obj_method() == '{d_obj.obj_method()}'")
+    print(f"{d_obj_name}.cls_method() == '{d_obj.cls_method()}'")
+    print(f"{d_obj_name}.static_top_level() == '{d_obj.static_top_level()}'")
+    print(f"{d_obj_name}.kwargs == {d_obj.kwargs}")
+    print(f"{d_obj_name}.default == '{d_obj.default}'")
+
+    d_obj = d_cls(default='Something else')
+
+    print()
+    print(f"{d_obj_name} = {d_cls.__name__}(default='Something else')")
+    print(f"{d_obj_name}.default == '{d_obj.default}'")
+    print(f"{d_obj_name}.kwargs == {d_obj.kwargs}")
     print()
 
 
-instantiate_and_print_results(D, 'Traditional inheritance:')
-instantiate_and_print_results(DD, 'Dynamic mixins:')
+instantiate_and_print_results(D, 'd', 'Traditional inheritance:')
+instantiate_and_print_results(DD, 'dd', 'Dynamic mixins:')
