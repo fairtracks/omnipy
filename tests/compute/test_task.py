@@ -4,6 +4,7 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
+from omnipy.compute.job import JobStateException
 from omnipy.compute.task import Task, TaskTemplate
 
 from .cases.raw.functions import format_to_string_func, power_m1_func
@@ -20,7 +21,7 @@ def test_init() -> None:
     with pytest.raises(TypeError):
         TaskTemplate('extra_positional_argument')(format_to_string_func)
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(JobStateException):
         Task(format_to_string_func)
 
     task = task_template.apply()  # noqa

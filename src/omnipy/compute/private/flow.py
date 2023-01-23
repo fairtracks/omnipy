@@ -5,47 +5,48 @@ from typing import Any, Callable, Generic, Mapping, Optional, Tuple, Union
 from omnipy.compute.job import JobTemplate
 from omnipy.compute.job_types import FlowBaseT, FlowT, FlowTemplateT, TaskTemplatesFlowTemplateT
 from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutputsOptions
-from omnipy.compute.private.job import FuncJob, FuncJobBase, FuncJobTemplate
+from omnipy.compute.private.job import FuncArgJobBase
 from omnipy.compute.task import TaskTemplate
 from omnipy.engine.protocols import IsNestedContext
 from omnipy.util.helpers import remove_none_vals
 
+# class FlowInit(FuncArgJobBase):
+#     def __init__(
+#         self,
+#         job_func: Callable,
+#         *args: object,
+#         name: Optional[str] = None,
+#         iterate_over_data_files: bool = False,
+#         fixed_params: Optional[Mapping[str, object]] = None,
+#         param_key_map: Optional[Mapping[str, str]] = None,
+#         result_key: Optional[str] = None,
+#         persist_outputs: Optional[PersistOutputsOptions] = None,
+#         restore_outputs: Optional[RestoreOutputsOptions] = None,
+#         **kwargs: object,
+#     ):
+#         # super().__init__(
+#         #     job_func,
+#         #     **remove_none_vals(
+#         #         name=name,
+#         #         iterate_over_data_files=iterate_over_data_files,
+#         #         fixed_params=fixed_params,
+#         #         param_key_map=param_key_map,
+#         #         result_key=result_key,
+#         #         persist_outputs=persist_outputs,
+#         #         restore_outputs=restore_outputs,
+#         #         **kwargs,
+#         #     ))
+#
+#         self._time_of_last_run = None
 
-class FlowBase(FuncJobBase):
-    def __init__(
-        self,
-        job_func: Callable,
-        *args: object,
-        name: Optional[str] = None,
-        iterate_over_data_files: bool = False,
-        fixed_params: Optional[Mapping[str, object]] = None,
-        param_key_map: Optional[Mapping[str, str]] = None,
-        result_key: Optional[str] = None,
-        persist_outputs: Optional[PersistOutputsOptions] = None,
-        restore_outputs: Optional[RestoreOutputsOptions] = None,
-        **kwargs: object,
-    ):
-        # super().__init__(
-        #     job_func,
-        #     **remove_none_vals(
-        #         name=name,
-        #         iterate_over_data_files=iterate_over_data_files,
-        #         fixed_params=fixed_params,
-        #         param_key_map=param_key_map,
-        #         result_key=result_key,
-        #         persist_outputs=persist_outputs,
-        #         restore_outputs=restore_outputs,
-        #         **kwargs,
-        #     ))
+# class FlowTemplate(FuncJobTemplate, ABC):
+#     ...
 
+
+class FlowContextJobMixin:
+    def __init__(self) -> None:
         self._time_of_last_run = None
 
-
-class FlowTemplate(FuncJobTemplate[FlowT], Generic[FlowT], ABC):
-    ...
-
-
-class Flow(FuncJob[FlowBaseT, FlowTemplateT], Generic[FlowBaseT, FlowTemplateT], ABC):
     @property
     def flow_context(self) -> IsNestedContext:
         class FlowContext:
@@ -65,32 +66,37 @@ class Flow(FuncJob[FlowBaseT, FlowTemplateT], Generic[FlowBaseT, FlowTemplateT],
         return self._time_of_last_run
 
 
-class TaskTemplatesFlowBase(FlowBase):
-    def __init__(
-        self,
-        job_func: Callable,
-        *task_templates: TaskTemplate,
-        name: Optional[str] = None,
-        iterate_over_data_files: bool = False,
-        fixed_params: Optional[Mapping[str, object]] = None,
-        param_key_map: Optional[Mapping[str, str]] = None,
-        result_key: Optional[str] = None,
-        persist_outputs: Optional[PersistOutputsOptions] = None,
-        restore_outputs: Optional[RestoreOutputsOptions] = None,
-        **kwargs: object,
-    ):
-        # super().__init__(
-        #     job_func,
-        #     **remove_none_vals(
-        #         name=name,
-        #         iterate_over_data_files=iterate_over_data_files,
-        #         fixed_params=fixed_params,
-        #         param_key_map=param_key_map,
-        #         result_key=result_key,
-        #         persist_outputs=persist_outputs,
-        #         restore_outputs=restore_outputs,
-        #         **kwargs,
-        #     ))
+# class TaskTemplatesFlowBase(FlowInit):
+#     def __init__(
+#         self,
+#         job_func: Callable,
+#         *task_templates: TaskTemplate,
+#         name: Optional[str] = None,
+#         iterate_over_data_files: bool = False,
+#         fixed_params: Optional[Mapping[str, object]] = None,
+#         param_key_map: Optional[Mapping[str, str]] = None,
+#         result_key: Optional[str] = None,
+#         persist_outputs: Optional[PersistOutputsOptions] = None,
+#         restore_outputs: Optional[RestoreOutputsOptions] = None,
+#         **kwargs: object,
+#     ):
+#         # super().__init__(
+#         #     job_func,
+#         #     **remove_none_vals(
+#         #         name=name,
+#         #         iterate_over_data_files=iterate_over_data_files,
+#         #         fixed_params=fixed_params,
+#         #         param_key_map=param_key_map,
+#         #         result_key=result_key,
+#         #         persist_outputs=persist_outputs,
+#         #         restore_outputs=restore_outputs,
+#         #         **kwargs,
+#         #     ))
+
+
+class TaskTemplateArgsJobBase(FuncArgJobBase):
+    def __init__(self, job_func: Callable, *task_templates: TaskTemplate, **kwargs: object) -> None:
+        # FuncArgJobBase.__init__(self, job_func, *task_templates, **kwargs)
 
         self._task_templates: Tuple[TaskTemplate, ...] = task_templates
 
@@ -101,38 +107,47 @@ class TaskTemplatesFlowBase(FlowBase):
     def task_templates(self) -> Tuple[TaskTemplate, ...]:
         return self._task_templates
 
+    def _refine(self,
+                *task_templates: TaskTemplate,
+                update: bool = True,
+                **kwargs: object):  # -> TaskTemplatesFlowTemplateT:
 
-class TaskTemplatesFlowTemplate(TaskTemplatesFlowBase, FlowTemplate[FlowT], Generic[FlowT], ABC):
-    def refine(self: TaskTemplatesFlowTemplateT,
-               *task_templates: TaskTemplate,
-               update: bool = True,
-               name: Optional[str] = None,
-               iterate_over_data_files: bool = False,
-               fixed_params: Optional[Mapping[str, object]] = None,
-               param_key_map: Optional[Mapping[str, str]] = None,
-               result_key: Optional[str] = None,
-               persist_outputs: Optional[PersistOutputsOptions] = None,
-               restore_outputs: Optional[RestoreOutputsOptions] = None,
-               **kwargs: object) -> TaskTemplatesFlowTemplateT:
-
-        return JobTemplate.refine(
-            self,
+        return super()._refine(
             *task_templates,
             update=update,
-            **remove_none_vals(
-                name=name,
-                iterate_over_data_files=iterate_over_data_files,
-                fixed_params=fixed_params,
-                param_key_map=param_key_map,
-                result_key=result_key,
-                persist_outputs=persist_outputs,
-                restore_outputs=restore_outputs,
-                **kwargs,
-            ))
+            **kwargs,
+        )
 
 
-class TaskTemplatesFlow(TaskTemplatesFlowBase,
-                        Flow[FlowBaseT, FlowTemplateT],
-                        Generic[FlowBaseT, FlowTemplateT],
-                        ABC):
-    ...
+#
+# class TaskTemplatesFlowTemplate(TaskTemplatesFlowBase, ABC):
+#     def refine(self,
+#                *task_templates: TaskTemplate,
+#                update: bool = True,
+#                name: Optional[str] = None,
+#                iterate_over_data_files: bool = False,
+#                fixed_params: Optional[Mapping[str, object]] = None,
+#                param_key_map: Optional[Mapping[str, str]] = None,
+#                result_key: Optional[str] = None,
+#                persist_outputs: Optional[PersistOutputsOptions] = None,
+#                restore_outputs: Optional[RestoreOutputsOptions] = None,
+#                **kwargs: object):  # -> TaskTemplatesFlowTemplateT:
+#
+#         return self._refine(
+#             self,
+#             *task_templates,
+#             update=update,
+#             **remove_none_vals(
+#                 name=name,
+#                 iterate_over_data_files=iterate_over_data_files,
+#                 fixed_params=fixed_params,
+#                 param_key_map=param_key_map,
+#                 result_key=result_key,
+#                 persist_outputs=persist_outputs,
+#                 restore_outputs=restore_outputs,
+#                 **kwargs,
+#             ))
+#
+#
+# class TaskTemplatesFlow(TaskTemplatesFlowBase, Flow, ABC):
+#     ...

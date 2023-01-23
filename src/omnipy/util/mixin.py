@@ -145,6 +145,7 @@ class DynamicMixinAcceptor:
         # TODO: Refactor this, and possibly elsewhere in class
 
         def __init__(self, *args, **kwargs):
+            # print(f'__init__ for obj of class: {self.__class__.__name__}')
             cls.__init__(self, *args, **kwargs)
             mixin_kwargs_defaults = {}
 

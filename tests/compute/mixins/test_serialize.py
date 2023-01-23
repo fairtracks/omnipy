@@ -4,7 +4,7 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutputsOptions
-from omnipy.compute.task import FuncJob, FuncJobBase, FuncJobTemplate, TaskTemplate
+from omnipy.compute.task import FuncArgJobBase, TaskTemplate
 from omnipy.config.job import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
 from omnipy.engine.protocols import IsRuntime
 
@@ -132,7 +132,7 @@ def test_properties_restore_outputs_enable_disable(
 @pc.parametrize_with_cases('case_tmpl', cases='.cases.jobs', prefix='case_config_')
 def test_properties_restore_outputs_override_config(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    case_tmpl: Annotated[FuncJobBase, pc.case],
+    case_tmpl: Annotated[FuncArgJobBase, pc.case],
 ) -> None:
 
     assert runtime.config.job.restore_outputs == ConfigRestoreOutputsOptions.DISABLED
@@ -169,7 +169,7 @@ def test_properties_restore_outputs_override_config(
 @pc.parametrize_with_cases('case_tmpl', cases='.cases.jobs', prefix='case_')
 def test_persist_and_restore(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    case_tmpl: Annotated[FuncJobTemplate[FuncJob], pc.case],
+    case_tmpl: Annotated[FuncArgJobBase, pc.case],
 ) -> None:
     case_persist_tmpl = case_tmpl.refine(persist_outputs='enabled')
     dataset_persist = case_persist_tmpl.run()

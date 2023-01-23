@@ -4,14 +4,10 @@ from typing import Annotated, Dict, Iterable, Tuple, Type, Union
 import pytest
 import pytest_cases as pc
 
-from omnipy.compute.flow import (DagFlowTemplate,
-                                 Flow,
-                                 FlowBase,
-                                 FlowTemplate,
-                                 FuncFlowTemplate,
-                                 LinearFlowTemplate)
-from omnipy.compute.job import Job, JobBase, JobTemplate
+from omnipy.compute.flow import (DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate)
+from omnipy.compute.job import Job, JobBase, JobTemplate, JobStateException
 from omnipy.compute.task import TaskTemplate
+from omnipy.engine.protocols import IsFlowTemplate
 
 from .cases.flows import FlowCase
 from .cases.raw.functions import data_import_func, empty_dict_func, format_to_string_func
@@ -23,11 +19,10 @@ from .helpers.mocks import (MockFlowTemplateSubclass,
                             MockTaskTemplateAssertSameTimeOfCurFlowRun)
 
 MockJobClasses = Tuple[Type[JobBase], Type[JobTemplate], Type[Job]]
-MockFlowClasses = Tuple[Type[FlowBase], Type[FlowTemplate], Type[Flow]]
 
 
 def test_flow_context_mock() -> None:
-    flow_tmpl = MockFlowTemplateSubclass()(lambda x: x)
+    flow_tmpl = MockFlowTemplateSubclass()
     flow = flow_tmpl.apply()
     job_tmpl = MockJobTemplateSubclass()
     job = job_tmpl.apply()
@@ -60,7 +55,7 @@ def test_flow_context_mock() -> None:
 
 
 def test_time_of_flow_run_mock() -> None:
-    flow_tmpl = MockFlowTemplateSubclass()(lambda x: x)
+    flow_tmpl = MockFlowTemplateSubclass()
     flow = flow_tmpl.apply()
     job_tmpl = MockJobTemplateSubclass()
     job = job_tmpl.apply()
@@ -109,7 +104,7 @@ def test_init_all_flow_classes(
             assert_func=format_to_string_func,
             assert_name='format_to_string_func')
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(JobStateException):
             flow_cls(format_to_string_func)
 
 
@@ -362,7 +357,7 @@ def test_time_of_multi_level_flow_run_all_flow_classes(
 
 
 def _assert_diff_time_of_two_flow_runs(
-        flow_tmpl: FlowTemplate,
+        flow_tmpl: IsFlowTemplate,
         *args: object,
         assert_result: object,
         assert_task_tmpl: MockTaskTemplateAssertSameTimeOfCurFlowRun):

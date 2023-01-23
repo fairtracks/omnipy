@@ -50,7 +50,8 @@ def assert_runtime_config_default(config: RuntimeConfig):
 
 
 def assert_runtime_objects_default(objects: RuntimeObjects):
-    from omnipy.compute.job import JobBase, JobCreator
+    from omnipy.compute.job import JobBase
+    from omnipy.compute.job_creator import JobCreator
     from omnipy.engine.local import LocalRunner
     from omnipy.engine.prefect import PrefectEngine
     from omnipy.engine.registry import RunStateRegistry

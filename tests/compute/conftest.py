@@ -9,18 +9,16 @@ from omnipy.compute.flow import (DagFlow,
                                  FuncFlowTemplate,
                                  LinearFlow,
                                  LinearFlowTemplate)
-from omnipy.compute.job import Job, JobBase, JobCreator, JobTemplate
+from omnipy.compute.job import Job, JobBase, JobTemplate
+from omnipy.compute.job_creator import JobCreator
 
 from .helpers.classes import FlowClsTuple
-from .helpers.mocks import (MockJobBaseSubclass,
-                            MockJobSubclass,
-                            MockJobTemplateSubclass,
-                            MockLocalRunner)
+from .helpers.mocks import (MockJobSubclass, MockJobTemplateSubclass, MockLocalRunner)
 
 
 @pytest.fixture(scope='function')
-def mock_job_classes() -> Tuple[Type[JobBase], Type[JobTemplate], Type[Job]]:
-    return MockJobBaseSubclass, MockJobTemplateSubclass, MockJobSubclass
+def mock_job_classes() -> Tuple[Type[JobTemplate], Type[Job]]:
+    return MockJobTemplateSubclass, MockJobSubclass
 
 
 @pytest.fixture(scope='function')
@@ -48,13 +46,13 @@ def mock_job_datetime():
 
     mock_datetime = MockDatetime()
 
-    import omnipy.compute.job
-    prev_datetime = omnipy.compute.job.datetime
-    omnipy.compute.job.datetime = mock_datetime
+    import omnipy.compute.job_creator
+    prev_datetime = omnipy.compute.job_creator.datetime
+    omnipy.compute.job_creator.datetime = mock_datetime
 
     yield mock_datetime
 
-    omnipy.compute.job.datetime = prev_datetime
+    omnipy.compute.job_creator.datetime = prev_datetime
 
 
 @pytest.fixture(scope='function')

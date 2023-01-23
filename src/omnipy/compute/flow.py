@@ -1,12 +1,9 @@
 from typing import cast, Type
 
+from omnipy.compute.job import JobTemplate, Job
 from omnipy.compute.job_types import IsFuncJobTemplateCallable, IsTaskTemplatesFlowTemplateCallable
-from omnipy.compute.private.flow import (Flow,
-                                         FlowBase,
-                                         FlowTemplate,
-                                         TaskTemplatesFlow,
-                                         TaskTemplatesFlowBase,
-                                         TaskTemplatesFlowTemplate)
+from omnipy.compute.private.flow import TaskTemplateArgsJobBase, FlowContextJobMixin
+from omnipy.compute.private.job import FuncArgJobBase
 from omnipy.engine.protocols import (IsDagFlow,
                                      IsDagFlowRunnerEngine,
                                      IsFuncFlow,
@@ -16,19 +13,19 @@ from omnipy.engine.protocols import (IsDagFlow,
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
 
-class LinearFlowBase(TaskTemplatesFlowBase):
+class FlowBase:
     ...
 
 
-def linear_flow_template_callable_decorator_cls(
-        cls: Type['LinearFlowTemplate']
-) -> IsTaskTemplatesFlowTemplateCallable['LinearFlowTemplate']:
-    return cast(IsTaskTemplatesFlowTemplateCallable['LinearFlowTemplate'],
-                callable_decorator_cls(cls))
+# def linear_flow_template_callable_decorator_cls(
+#         cls: Type['LinearFlowTemplate']
+# ) -> IsTaskTemplatesFlowTemplateCallable['LinearFlowTemplate']:
+#     return cast(IsTaskTemplatesFlowTemplateCallable['LinearFlowTemplate'],
+#                 callable_decorator_cls(cls))
 
 
-@linear_flow_template_callable_decorator_cls
-class LinearFlowTemplate(LinearFlowBase, TaskTemplatesFlowTemplate['LinearFlow']):
+@callable_decorator_cls
+class LinearFlowTemplate(JobTemplate, FlowBase, TaskTemplateArgsJobBase):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['LinearFlow']:
         return LinearFlow
@@ -40,27 +37,19 @@ class LinearFlowTemplate(LinearFlowBase, TaskTemplatesFlowTemplate['LinearFlow']
             raise RuntimeError(f'Engine "{self.engine}" does not support linear flows')
 
 
-class LinearFlow(LinearFlowBase, TaskTemplatesFlow[LinearFlowBase, LinearFlowTemplate]):
-    @classmethod
-    def _get_job_base_subcls_for_init(cls) -> Type[LinearFlowBase]:
-        return LinearFlowBase
-
+class LinearFlow(Job, FlowBase, TaskTemplateArgsJobBase):
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[LinearFlowTemplate]:
         return LinearFlowTemplate
 
 
-class DagFlowBase(TaskTemplatesFlowBase):
-    ...
+# def dag_flow_template_callable_decorator_cls(
+#         cls: Type['DagFlowTemplate']) -> IsTaskTemplatesFlowTemplateCallable['DagFlowTemplate']:
+#     return cast(IsTaskTemplatesFlowTemplateCallable['DagFlowTemplate'], callable_decorator_cls(cls))
 
 
-def dag_flow_template_callable_decorator_cls(
-        cls: Type['DagFlowTemplate']) -> IsTaskTemplatesFlowTemplateCallable['DagFlowTemplate']:
-    return cast(IsTaskTemplatesFlowTemplateCallable['DagFlowTemplate'], callable_decorator_cls(cls))
-
-
-@dag_flow_template_callable_decorator_cls
-class DagFlowTemplate(DagFlowBase, TaskTemplatesFlowTemplate['DagFlow']):
+@callable_decorator_cls
+class DagFlowTemplate(JobTemplate, FlowBase, TaskTemplateArgsJobBase):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['DagFlow']:
         return DagFlow
@@ -72,27 +61,19 @@ class DagFlowTemplate(DagFlowBase, TaskTemplatesFlowTemplate['DagFlow']):
             raise RuntimeError(f'Engine "{self.engine}" does not support DAG flows')
 
 
-class DagFlow(DagFlowBase, TaskTemplatesFlow[DagFlowBase, DagFlowTemplate]):
-    @classmethod
-    def _get_job_base_subcls_for_init(cls) -> Type[DagFlowBase]:
-        return DagFlowBase
-
+class DagFlow(Job, FlowBase, TaskTemplateArgsJobBase):
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[DagFlowTemplate]:
         return DagFlowTemplate
 
 
-class FuncFlowBase(FlowBase):
-    ...
+# def func_flow_template_callable_decorator_cls(
+#         cls: Type['FuncFlowTemplate']) -> IsFuncJobTemplateCallable['FuncFlowTemplate']:
+#     return cast(IsFuncJobTemplateCallable['FuncFlowTemplate'], callable_decorator_cls(cls))
 
 
-def func_flow_template_callable_decorator_cls(
-        cls: Type['FuncFlowTemplate']) -> IsFuncJobTemplateCallable['FuncFlowTemplate']:
-    return cast(IsFuncJobTemplateCallable['FuncFlowTemplate'], callable_decorator_cls(cls))
-
-
-@func_flow_template_callable_decorator_cls
-class FuncFlowTemplate(FuncFlowBase, FlowTemplate['FuncFlow']):
+@callable_decorator_cls
+class FuncFlowTemplate(JobTemplate, FlowBase, FuncArgJobBase):
     def _apply_engine_decorator(self, flow: IsFuncFlow) -> IsFuncFlow:
         if self.engine is not None and isinstance(self.engine, IsFuncFlowRunnerEngine):
             return self.engine.func_flow_decorator(flow)
@@ -104,14 +85,14 @@ class FuncFlowTemplate(FuncFlowBase, FlowTemplate['FuncFlow']):
         return FuncFlow
 
 
-class FuncFlow(FuncFlowBase, Flow[FuncFlowBase, FuncFlowTemplate]):
-    @classmethod
-    def _get_job_base_subcls_for_init(cls) -> Type[FuncFlowBase]:
-        return FuncFlowBase
-
+class FuncFlow(Job, FlowBase, FuncArgJobBase):
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[FuncFlowTemplate]:
         return FuncFlowTemplate
 
+
+LinearFlow.accept_mixin(FlowContextJobMixin)
+DagFlow.accept_mixin(FlowContextJobMixin)
+FuncFlow.accept_mixin(FlowContextJobMixin)
 
 # TODO: Recursive replace - *args: Any -> *args: object, *kwargs: Any -> *kwargs: object

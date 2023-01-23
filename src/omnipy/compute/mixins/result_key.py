@@ -14,11 +14,9 @@ class ResultKeyFuncJobBaseMixin:
     def result_key(self) -> Optional[str]:
         return self._result_key
 
+    def _call_job(self, *args: object, **kwargs: object) -> object:
 
-class ResultKeyFuncJobMixin:
-    def __call__(self, *args: object, **kwargs: object) -> object:
-
-        result = super().__call__(*args, **kwargs)
+        result = super()._call_job(*args, **kwargs)
 
         if self._result_key:
             return {self._result_key: result}

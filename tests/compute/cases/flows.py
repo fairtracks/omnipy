@@ -5,8 +5,9 @@ from typing import Any, Callable, Dict, Generic, Tuple, TypeVar
 import pytest
 import pytest_cases as pc
 
-from omnipy.compute.flow import DagFlowTemplate, FlowTemplate, FuncFlowTemplate, LinearFlowTemplate
+from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
+from omnipy.engine.protocols import IsFlowTemplate
 
 from .tasks import TaskCase
 
@@ -17,7 +18,7 @@ ReturnT = TypeVar('ReturnT')
 @dataclass
 class FlowCase(Generic[ArgT, ReturnT]):
     flow_func: Callable[[ArgT], ReturnT]
-    flow_template: FlowTemplate
+    flow_template: IsFlowTemplate
     args: Tuple[Any, ...]
     kwargs: Dict[str, Any]
     assert_results_func: Callable[[Any], None]

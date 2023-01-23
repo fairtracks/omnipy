@@ -9,7 +9,6 @@ from omnipy.util.mixin import DynamicMixinAcceptor
 
 class NameJobBaseMixin:
     def __init__(self, *, name: Optional[str] = None):
-
         self._name: Optional[str] = name
 
         if self._name is not None:
@@ -18,7 +17,8 @@ class NameJobBaseMixin:
             if hasattr(self, '_job_func'):
                 self._name = self._job_func.__name__
 
-        self._unique_name = None
+        # TODO: When job state machine is implemented, check using that to see if in job state
+        self._unique_name = self._generate_unique_name() if hasattr(self, 'create_job') else None
 
     @staticmethod
     def _check_not_empty_string(param_name: str, param: str) -> None:
@@ -33,13 +33,7 @@ class NameJobBaseMixin:
     def unique_name(self) -> str:
         return self._unique_name
 
-
-class NameJobMixin:
-    def __init__(self, *, name: Optional[str] = None):
-        self._name: Optional[str] = name
-        self._generate_unique_name()
-
-    def _generate_unique_name(self):
+    def _generate_unique_name(self) -> str:
         if self._name is None:
             return None
 
@@ -48,10 +42,15 @@ class NameJobMixin:
             class_name = class_name[:-len(DynamicMixinAcceptor.WITH_MIXINS_CLS_PREFIX)]
 
         class_name_snake_case = underscore(class_name)
-        self._unique_name = slugify(f'{class_name_snake_case}-{self._name}-{generate_slug(2)}')
+        return slugify(f'{class_name_snake_case}-{self._name}-{generate_slug(2)}')
 
+    def _regenerate_unique_name(self) -> None:
+        self._unique_name = self._generate_unique_name()
+
+
+class NameJobMixin:
     def regenerate_unique_name(self) -> None:
-        self._generate_unique_name()
+        self._regenerate_unique_name()
 
 
 #

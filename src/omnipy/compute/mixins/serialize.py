@@ -49,6 +49,17 @@ class SerializerFuncJobBaseMixin:
         else:
             self._restore_outputs = RestoreOpts(restore_outputs)
 
+        self._serializer_registry = self._create_serializer_registry()
+
+    def _create_serializer_registry(self):
+        registry = SerializerRegistry()
+
+        registry.register(PandasDatasetToTarFileSerializer)
+        registry.register(RawDatasetToTarFileSerializer)
+        registry.register(JsonDatasetToTarFileSerializer)
+
+        return registry
+
     @property
     def _has_job_config(self) -> bool:
         return self.config is not None
@@ -95,21 +106,7 @@ class SerializerFuncJobBaseMixin:
             assert config_restore_opt == ConfigRestoreOpts.DISABLED
             return RestoreOpts.DISABLED
 
-
-class SerializerFuncJobMixin:
-    def __init__(self) -> None:
-        self._serializer_registry = self._create_serializer_registry()
-
-    def _create_serializer_registry(self):
-        registry = SerializerRegistry()
-
-        registry.register(PandasDatasetToTarFileSerializer)
-        registry.register(RawDatasetToTarFileSerializer)
-        registry.register(JsonDatasetToTarFileSerializer)
-
-        return registry
-
-    def __call__(self, *args: object, **kwargs: object) -> object:
+    def _call_job(self, *args: object, **kwargs: object) -> object:
         if self.will_restore_outputs in [
                 RestoreOpts.AUTO_ENABLE_IGNORE_PARAMS, RestoreOpts.FORCE_ENABLE_IGNORE_PARAMS
         ]:
@@ -119,7 +116,7 @@ class SerializerFuncJobMixin:
                 if self.will_restore_outputs is RestoreOpts.FORCE_ENABLE_IGNORE_PARAMS:
                     raise
 
-        results = super().__call__(*args, **kwargs)
+        results = super()._call_job(*args, **kwargs)
 
         if self.will_persist_outputs is PersistOpts.ENABLED:
             if isinstance(results, Dataset):

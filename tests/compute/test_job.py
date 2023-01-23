@@ -3,18 +3,19 @@ from typing import Annotated, NamedTuple, Optional, Tuple, Type, Union
 
 import pytest
 
-from omnipy.compute.job import Job, JobBase, JobCreator, JobTemplate
+from omnipy.compute.job import Job, JobBase, JobTemplate, JobStateException
+from omnipy.compute.job_creator import JobCreator
 
 from .helpers.functions import assert_updated_wrapper
 from .helpers.mocks import (CommandMockJob,
                             CommandMockJobTemplate,
                             mock_cmd_func,
-                            MockJobBaseCostMixin,
-                            MockJobBaseParamsMixin,
-                            MockJobBasePowerMixin,
-                            MockJobBaseSpeedMixin,
-                            MockJobBaseStrengthMixin,
-                            MockJobBaseVerboseMixin,
+                            PublicPropertyErrorsMockCostMixin,
+                            PublicPropertyErrorsMockParamsMixin,
+                            PublicPropertyErrorsMockPowerMixin,
+                            PublicPropertyErrorsMockSpeedMixin,
+                            PublicPropertyErrorsMockStrengthMixin,
+                            PublicPropertyErrorsMockVerboseMixin,
                             MockJobConfig,
                             MockLocalRunner,
                             PublicPropertyErrorsMockJob,
@@ -33,11 +34,11 @@ class PropertyTest(NamedTuple):
     set_method: Optional[str] = None
 
 
-MockJobClasses = Tuple[Type[JobBase], Type[JobTemplate], Type[Job]]
+MockJobClasses = Tuple[Type[JobTemplate], Type[Job]]
 
 
 def test_init_abstract():
-    with pytest.raises(RuntimeError):
+    with pytest.raises(JobStateException):
         JobBase()
 
     with pytest.raises(TypeError):
@@ -48,7 +49,7 @@ def test_init_abstract():
 
 
 def test_init_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
-    JobBase, JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa
 
     job_tmpl = JobTemplate()
     assert isinstance(job_tmpl, JobTemplate)
@@ -59,19 +60,19 @@ def test_init_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) 
 
 def test_fail_only_jobtemplate_init_mock(
         mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
-    JobBase, JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(JobStateException):
         JobBase()  # noqa
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(JobStateException):
         Job()
 
 
 def test_job_creator_singular_mock(
         mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
         teardown_reset_job_creator: Annotated[None, pytest.fixture]) -> None:
-    JobBase, JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa
 
     assert isinstance(JobBase.job_creator, JobCreator)
 
@@ -105,7 +106,7 @@ def test_job_creator_properties_mock(
 ):
     mock_local_runner = MockLocalRunner()
     mock_job_config = MockJobConfig()
-    JobBase, JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa
 
     for test in [
             PropertyTest(
@@ -113,9 +114,9 @@ def test_job_creator_properties_mock(
                 enter_exit=False,
                 default_val=None,
                 val=mock_local_runner,
-                in_job_base=False,
+                in_job_base=True,
                 in_job_template=True,
-                in_job=False,
+                in_job=True,
                 at_obj_level=True,
                 set_method='set_engine'),
             PropertyTest(
@@ -133,9 +134,9 @@ def test_job_creator_properties_mock(
                 enter_exit=True,
                 default_val=0,
                 val=1,
-                in_job_base=False,
+                in_job_base=True,
                 in_job_template=True,
-                in_job=False,
+                in_job=True,
                 at_obj_level=False),
             PropertyTest(
                 property='time_of_cur_toplevel_nested_context_run',
@@ -177,7 +178,7 @@ def _assert_prop_getattr_all(mock_job_classes: MockJobClasses,
                              job: Job,
                              test: PropertyTest,
                              val: object):
-    JobBase, JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa
 
     _assert_prop_getattr_job_subcls(
         JobBase,
@@ -230,7 +231,7 @@ def _assert_prop_getattr(job_cls_or_obj, in_job_obj, property, val):
 
 
 def test_equal_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
-    JobBase, JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa
 
     my_job_tmpl = JobTemplate()
     my_job_tmpl_2 = JobTemplate()
@@ -536,37 +537,37 @@ def test_fail_subclass_apply_public_property_errors_with_mixins():
     job = job_tmpl.apply()
     assert isinstance(job, PublicPropertyErrorsMockJob)
 
-    PublicPropertyErrorsMockJobTemplate.accept_mixin(MockJobBaseVerboseMixin)
+    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockVerboseMixin)
     job_tmpl = PublicPropertyErrorsMockJobTemplate()
     with pytest.raises(AttributeError):  # No attribute 'job_tmpl.verbose'
         job_tmpl.apply()
 
     PublicPropertyErrorsMockJobTemplate.reset_mixins()
-    PublicPropertyErrorsMockJobTemplate.accept_mixin(MockJobBaseCostMixin)
+    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockCostMixin)
     job_tmpl = PublicPropertyErrorsMockJobTemplate()
     with pytest.raises(AttributeError):  # 'job_tmpl.cost' is object attribute
         job_tmpl.apply()
 
     PublicPropertyErrorsMockJobTemplate.reset_mixins()
-    PublicPropertyErrorsMockJobTemplate.accept_mixin(MockJobBaseStrengthMixin)
+    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockStrengthMixin)
     job_tmpl = PublicPropertyErrorsMockJobTemplate()
     with pytest.raises(TypeError):  # 'job_tmpl.strength' is class attribute
         job_tmpl.apply()
 
     PublicPropertyErrorsMockJobTemplate.reset_mixins()
-    PublicPropertyErrorsMockJobTemplate.accept_mixin(MockJobBasePowerMixin)
+    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockPowerMixin)
     job_tmpl = PublicPropertyErrorsMockJobTemplate()
     with pytest.raises(TypeError):  # 'job_tmpl.power' is method
         job_tmpl.apply()
 
     PublicPropertyErrorsMockJobTemplate.reset_mixins()
-    PublicPropertyErrorsMockJobTemplate.accept_mixin(MockJobBaseSpeedMixin)
+    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockSpeedMixin)
     job_tmpl = PublicPropertyErrorsMockJobTemplate()
     with pytest.raises(TypeError):  # 'job_tmpl.speed' property is writable
         job_tmpl.apply()
 
     PublicPropertyErrorsMockJobTemplate.reset_mixins()
-    PublicPropertyErrorsMockJobTemplate.accept_mixin(MockJobBaseParamsMixin)
+    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockParamsMixin)
     job_tmpl = PublicPropertyErrorsMockJobTemplate()
     with pytest.raises(TypeError):  # 'job_tmpl.params' property value is mutable
         job_tmpl.apply()

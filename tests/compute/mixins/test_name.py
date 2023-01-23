@@ -7,18 +7,15 @@ from omnipy.compute.job import Job, JobBase, JobTemplate
 from omnipy.compute.task import TaskTemplate
 
 from ..cases.raw.functions import power_m1_func
-from ..helpers.mocks import (MockJobBaseSubclass,
-                             MockJobSubclass,
-                             MockJobTemplateSubclass,
-                             MockLocalRunner)
+from ..helpers.mocks import (MockJobSubclass, MockJobTemplateSubclass, MockLocalRunner)
 
 
-def mock_job_classes() -> Tuple[Type[JobBase], Type[JobTemplate], Type[Job]]:
-    return MockJobBaseSubclass, MockJobTemplateSubclass, MockJobSubclass
+def mock_job_classes() -> Tuple[Type[JobTemplate], Type[Job]]:
+    return MockJobTemplateSubclass, MockJobSubclass
 
 
 def test_property_name_default_mock() -> None:
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+    JobTemplate, Job = mock_job_classes()  # noqa
 
     job_tmpl = JobTemplate()
 
@@ -65,7 +62,7 @@ def test_property_name_default_func_flow(
 
 
 def test_property_name_change_mock() -> None:
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+    JobTemplate, Job = mock_job_classes()  # noqa
 
     job_tmpl = JobTemplate(name='my_job')
 
@@ -77,7 +74,7 @@ def test_property_name_change_mock() -> None:
 
 
 def test_property_name_validation_mock() -> None:
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+    JobTemplate, Job = mock_job_classes()  # noqa
 
     job_tmpl = JobTemplate(name=None)
     assert job_tmpl.name is None
@@ -90,7 +87,7 @@ def test_property_name_validation_mock() -> None:
 
 
 def test_property_unique_name_default_mock() -> None:
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+    JobTemplate, Job = mock_job_classes()  # noqa
 
     job_tmpl = JobTemplate()
 
@@ -102,7 +99,7 @@ def test_property_unique_name_default_mock() -> None:
 
 
 def test_property_unique_name_change_mock() -> None:
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+    JobTemplate, Job = mock_job_classes()  # noqa
 
     job_tmpl = JobTemplate(name='my_job')
     assert job_tmpl.unique_name is None
@@ -118,7 +115,7 @@ def test_property_unique_name_change_mock() -> None:
 
 
 def test_property_unique_name_uniqueness_mock() -> None:
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+    JobTemplate, Job = mock_job_classes()  # noqa
 
     job_tmpl = JobTemplate(name='my_job')
 
@@ -136,7 +133,7 @@ def test_property_unique_name_uniqueness_mock() -> None:
 
 
 def test_property_unique_name_regenerate_mock() -> None:
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+    JobTemplate, Job = mock_job_classes()  # noqa
 
     job = JobTemplate(name='my_job').apply()
 
@@ -153,7 +150,7 @@ def test_property_unique_name_regenerate_mock() -> None:
 
 
 def test_property_unique_name_revise_mock() -> None:
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+    JobTemplate, Job = mock_job_classes()  # noqa
 
     job = JobTemplate(name='my_job').apply()
     assert job.unique_name is not None
@@ -163,7 +160,7 @@ def test_property_unique_name_revise_mock() -> None:
 
 
 def test_equal_job_dependent_on_name_mock() -> None:
-    JobBase, JobTemplate, Job = mock_job_classes()  # noqa
+    JobTemplate, Job = mock_job_classes()  # noqa
 
     my_job_tmpl = JobTemplate(name='my_job')
     my_job_tmpl_2 = JobTemplate(name='my_job')
