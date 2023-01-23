@@ -15,7 +15,8 @@ from omnipy.engine.protocols import (IsDagFlow,
                                      IsJob,
                                      IsLinearFlow,
                                      IsRunStateRegistry,
-                                     IsTask)
+                                     IsTask,
+                                     IsEngine)
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
 from omnipy.util.mixin import DynamicMixinAcceptor
 
@@ -116,12 +117,11 @@ class CommandMockJobTemplate(JobTemplate, CommandMockInit, JobBase):
     def _get_job_subcls_for_apply(cls) -> Type['CommandMockJob']:
         return CommandMockJob
 
-    def _apply_engine_decorator(self, job: IsJob) -> IsJob:
-        self.engine_decorator_applied = True
-        return job
-
 
 class CommandMockJob(Job, CommandMockInit, JobBase):
+    def _apply_engine_decorator(self, engine: IsEngine) -> None:
+        self.engine_decorator_applied = True
+
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[CommandMockJobTemplate]:
         return CommandMockJobTemplate
@@ -230,37 +230,46 @@ class MockLocalRunner:
     def set_registry(self, registry: Optional[IsRunStateRegistry]) -> None:
         ...
 
-    def task_decorator(self, task: IsTask) -> IsTask:
-        prev_call_func = task._call_func  # noqa
+    def apply_task_decorator(self, task: IsTask, job_callback_accept_decorator: Callable) -> None:
+        def _task_decorator(call_func: Callable) -> Callable:
+            def _call_func(*args: Any, **kwargs: Any) -> Any:
+                result = call_func(*args, **kwargs)
+                self.finished = True
+                return result
 
-        def _call_func(*args: Any, **kwargs: Any) -> Any:
-            result = prev_call_func(*args, **kwargs)
-            self.finished = True
-            return result
+            return _call_func
 
-        setattr(task, '_call_func', _call_func)
-        return task
+        job_callback_accept_decorator(_task_decorator)
 
-    def linear_flow_decorator(self, flow: IsLinearFlow) -> IsLinearFlow:  # noqa
-        setattr(flow, '_call_func', LinearFlowRunnerEngine.default_linear_flow_run_decorator(flow))
-        return flow
+    def apply_linear_flow_decorator(self,
+                                    linear_flow: IsLinearFlow,
+                                    job_callback_accept_decorator: Callable) -> None:
+        def _default_linear_flow_decorator(call_func: Callable) -> Callable:
+            return LinearFlowRunnerEngine.default_linear_flow_run_decorator(linear_flow)
 
-    def dag_flow_decorator(self, flow: IsDagFlow) -> IsDagFlow:  # noqa
-        setattr(flow, '_call_func', DagFlowRunnerEngine.default_dag_flow_run_decorator(flow))
-        return flow
+        job_callback_accept_decorator(_default_linear_flow_decorator)
 
-    def func_flow_decorator(self, flow: IsFuncFlow) -> IsFuncFlow:
-        prev_call_func = flow._call_func  # noqa
+    def apply_dag_flow_decorator(self, dag_flow: IsDagFlow,
+                                 job_callback_accept_decorator: Callable) -> None:
+        def _default_dag_flow_decorator(call_func: Callable) -> Callable:
+            return DagFlowRunnerEngine.default_dag_flow_run_decorator(dag_flow)
 
-        def _call_func(*args: Any, **kwargs: Any) -> Any:
-            with flow.flow_context:
-                result = prev_call_func(*args, **kwargs)
+        job_callback_accept_decorator(_default_dag_flow_decorator)
 
-            self.finished = True
-            return result
+    def apply_func_flow_decorator(self,
+                                  func_flow: IsFuncFlow,
+                                  job_callback_accept_decorator: Callable) -> None:
+        def _func_flow_decorator(call_func: Callable) -> Callable:
+            def _call_func(*args: Any, **kwargs: Any) -> Any:
+                with func_flow.flow_context:
+                    result = call_func(*args, **kwargs)
 
-        setattr(flow, '_call_func', _call_func)
-        return flow
+                self.finished = True
+                return result
+
+            return _call_func
+
+        job_callback_accept_decorator(_func_flow_decorator)
 
 
 @dataclass

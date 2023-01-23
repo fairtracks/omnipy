@@ -8,7 +8,7 @@ from typing import Any, Dict, Generic, Hashable, Optional, Tuple, Type
 
 from omnipy.compute.job_creator import JobBaseMeta
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
-from omnipy.engine.protocols import IsJob, IsJobConfig, IsTaskRunnerEngine
+from omnipy.engine.protocols import IsJob, IsJobConfig, IsEngine
 from omnipy.util.helpers import create_merged_dict
 from omnipy.util.mixin import DynamicMixinAcceptor
 
@@ -62,7 +62,8 @@ class JobBase(DynamicMixinAcceptor, metaclass=JobBaseMeta):
         job_cls = self._get_job_subcls_for_apply()
         job = job_cls.create_job(*self._get_init_args(), **self._get_init_kwargs())
         update_wrapper(job, self, updated=[])
-        return self._apply_engine_decorator(job)
+        job._apply_engine_decorator(self.engine)
+        return job
 
     def _refine(self, *args: object, update: bool = True, **kwargs: object):  # -> JobTemplateT:
         refine_kwargs = kwargs.copy()
@@ -135,12 +136,17 @@ class JobBase(DynamicMixinAcceptor, metaclass=JobBaseMeta):
         return self._get_init_args() == other._get_init_args() \
             and self._get_init_kwargs() == other._get_init_kwargs()
 
+    def _check_engine(self, engine_protocol: IsEngine):
+        if self.engine is None or not isinstance(self.engine, engine_protocol):
+            raise RuntimeError(f'Engine "{self.engine}" does not support '
+                               f'job runner protocol: {engine_protocol.__name__}')
+
     @property
     def config(self) -> Optional[IsJobConfig]:
         return self.__class__.job_creator.config
 
     @property
-    def engine(self) -> Optional[IsTaskRunnerEngine]:
+    def engine(self) -> Optional[IsEngine]:
         return self.__class__.engine
 
     @property
@@ -152,10 +158,6 @@ JobBase.accept_mixin(NameJobBaseMixin)
 
 
 class JobTemplate:
-    @abstractmethod
-    def _apply_engine_decorator(self, job: IsJob) -> IsJob:
-        ...
-
     @classmethod
     def create_job_template(cls, *args: object, **kwargs: object):  # -> JobTemplateT:
         return cls._create_job_template(*args, **kwargs)
@@ -174,6 +176,10 @@ class JobTemplate:
 
 
 class Job:
+    @abstractmethod
+    def _apply_engine_decorator(self, engine: IsEngine) -> None:
+        ...
+
     @property
     def time_of_cur_toplevel_flow_run(self) -> datetime:
         return self.__class__.job_creator.time_of_cur_toplevel_nested_context_run

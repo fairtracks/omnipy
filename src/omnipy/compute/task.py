@@ -6,7 +6,7 @@ from omnipy.compute.job import JobBase, JobTemplate, Job
 from omnipy.compute.job_types import IsFuncJobTemplateCallable
 from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.compute.private.job import FuncArgJobBase
-from omnipy.engine.protocols import IsTask
+from omnipy.engine.protocols import IsTask, IsEngine, IsTaskRunnerEngine
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
 # class TaskInit(FuncArgJobBase):
@@ -52,15 +52,14 @@ class TaskTemplate(JobTemplate, TaskBase, FuncArgJobBase):
     def _get_job_subcls_for_apply(cls) -> Type[Task]:
         return Task
 
-    @classmethod
-    def _apply_engine_decorator(cls, task: IsTask) -> IsTask:
-        if cls.engine is not None:
-            return cls.engine.task_decorator(task)
-        else:
-            return task
-
 
 class Task(Job, TaskBase, FuncArgJobBase):
+    def _apply_engine_decorator(self, engine: IsEngine) -> None:
+        # self._check_engine(IsTaskRunnerEngine)
+        if self.engine:
+            engine = cast(IsTaskRunnerEngine, self.engine)
+            engine.apply_task_decorator(self, self._accept_call_func_decorator)
+
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[TaskTemplate]:
         return TaskTemplate

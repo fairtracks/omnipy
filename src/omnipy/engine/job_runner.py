@@ -59,18 +59,19 @@ class JobRunnerEngine(Engine, ABC):
 
 
 class TaskRunnerEngine(JobRunnerEngine):
-    def task_decorator(self, task: IsTask) -> IsTask:
-        prev_call_func = task._call_func  # noqa
-        self._register_job_state(task, RunState.INITIALIZED)
-        state = self._init_task(task, prev_call_func)
+    def apply_task_decorator(self, task: IsTask, job_callback_accept_decorator: Callable) -> None:
+        def _task_decorator(call_func: Callable) -> Callable:
+            self._register_job_state(task, RunState.INITIALIZED)
+            state = self._init_task(task, call_func)
 
-        def _call_func(*args: Any, **kwargs: Any) -> Any:
-            self._register_job_state(task, RunState.RUNNING)
-            task_result = self._run_task(state, task, prev_call_func, *args, **kwargs)
-            return self._decorate_result_with_job_finalization_detector(task, task_result)
+            def _task_runner_call_func(*args: Any, **kwargs: Any) -> Any:
+                self._register_job_state(task, RunState.RUNNING)
+                task_result = self._run_task(state, task, call_func, *args, **kwargs)
+                return self._decorate_result_with_job_finalization_detector(task, task_result)
 
-        setattr(task, '_call_func', _call_func)
-        return task
+            return _task_runner_call_func
+
+        job_callback_accept_decorator(_task_decorator)
 
     @abstractmethod
     def _init_task(self, task: IsTask, call_func: Callable) -> Any:
@@ -82,19 +83,22 @@ class TaskRunnerEngine(JobRunnerEngine):
 
 
 class LinearFlowRunnerEngine(JobRunnerEngine):
-    def linear_flow_decorator(self, linear_flow: IsLinearFlow) -> IsLinearFlow:
-        # prev_call_func = flow._call_func  # Only raises error anyway
+    def apply_linear_flow_decorator(self,
+                                    linear_flow: IsLinearFlow,
+                                    job_callback_accept_decorator: Callable) -> None:
+        def _linear_flow_decorator(call_func: Callable) -> Callable:
+            self._register_job_state(linear_flow, RunState.INITIALIZED)
+            state = self._init_linear_flow(linear_flow)
 
-        self._register_job_state(linear_flow, RunState.INITIALIZED)
-        state = self._init_linear_flow(linear_flow)
+            def _linear_flow_runner_call_func(*args: object, **kwargs: object) -> Any:
+                self._register_job_state(linear_flow, RunState.RUNNING)
+                flow_result = self._run_linear_flow(state, linear_flow, *args, **kwargs)
+                return self._decorate_result_with_job_finalization_detector(
+                    linear_flow, flow_result)
 
-        def _call_func(*args: object, **kwargs: object) -> Any:
-            self._register_job_state(linear_flow, RunState.RUNNING)
-            flow_result = self._run_linear_flow(state, linear_flow, *args, **kwargs)
-            return self._decorate_result_with_job_finalization_detector(linear_flow, flow_result)
+            return _linear_flow_runner_call_func
 
-        setattr(linear_flow, '_call_func', _call_func)
-        return linear_flow
+        job_callback_accept_decorator(_linear_flow_decorator)
 
     @staticmethod
     def default_linear_flow_run_decorator(linear_flow: IsLinearFlow) -> Any:
@@ -124,19 +128,20 @@ class LinearFlowRunnerEngine(JobRunnerEngine):
 
 
 class DagFlowRunnerEngine(JobRunnerEngine):
-    def dag_flow_decorator(self, dag_flow: IsDagFlow) -> IsDagFlow:
-        # prev_call_func = flow._call_func  # Only raises error anyway
+    def apply_dag_flow_decorator(self, dag_flow: IsDagFlow,
+                                 job_callback_accept_decorator: Callable) -> None:
+        def _dag_flow_decorator(call_func: Callable) -> Callable:
+            self._register_job_state(dag_flow, RunState.INITIALIZED)
+            state = self._init_dag_flow(dag_flow)
 
-        self._register_job_state(dag_flow, RunState.INITIALIZED)
-        state = self._init_dag_flow(dag_flow)
+            def _dag_flow_runner_call_func(*args: object, **kwargs: object) -> Any:
+                self._register_job_state(dag_flow, RunState.RUNNING)
+                flow_result = self._run_dag_flow(state, dag_flow, *args, **kwargs)
+                return self._decorate_result_with_job_finalization_detector(dag_flow, flow_result)
 
-        def _call_func(*args: object, **kwargs: object) -> Any:
-            self._register_job_state(dag_flow, RunState.RUNNING)
-            flow_result = self._run_dag_flow(state, dag_flow, *args, **kwargs)
-            return self._decorate_result_with_job_finalization_detector(dag_flow, flow_result)
+            return _dag_flow_runner_call_func
 
-        setattr(dag_flow, '_call_func', _call_func)
-        return dag_flow
+        job_callback_accept_decorator(_dag_flow_decorator)
 
     @staticmethod
     def default_dag_flow_run_decorator(dag_flow: IsDagFlow) -> Any:
@@ -184,20 +189,23 @@ class DagFlowRunnerEngine(JobRunnerEngine):
 
 
 class FuncFlowRunnerEngine(JobRunnerEngine):
-    def func_flow_decorator(self, func_flow: IsFuncFlow) -> IsFuncFlow:
-        prev_call_func = func_flow._call_func  # noqa
+    def apply_func_flow_decorator(self,
+                                  func_flow: IsFuncFlow,
+                                  job_callback_accept_decorator: Callable) -> None:
+        def _func_flow_decorator(call_func: Callable) -> Callable:
+            self._register_job_state(func_flow, RunState.INITIALIZED)
+            state = self._init_func_flow(func_flow, call_func)
 
-        self._register_job_state(func_flow, RunState.INITIALIZED)
-        state = self._init_func_flow(func_flow, prev_call_func)
+            def _func_flow_runner_call_func(*args: object, **kwargs: object) -> Any:
+                self._register_job_state(func_flow, RunState.RUNNING)
+                with func_flow.flow_context:
+                    flow_result = self._run_func_flow(state, func_flow, call_func, *args, **kwargs)
+                    return self._decorate_result_with_job_finalization_detector(
+                        func_flow, flow_result)
 
-        def _call_func(*args: object, **kwargs: object) -> Any:
-            self._register_job_state(func_flow, RunState.RUNNING)
-            with func_flow.flow_context:
-                flow_result = self._run_func_flow(state, func_flow, prev_call_func, *args, **kwargs)
-                return self._decorate_result_with_job_finalization_detector(func_flow, flow_result)
+            return _func_flow_runner_call_func
 
-        setattr(func_flow, '_call_func', _call_func)
-        return func_flow
+        job_callback_accept_decorator(_func_flow_decorator)
 
     @abstractmethod
     def _init_func_flow(self, func_flow: IsFuncFlow, call_func: Callable) -> object:

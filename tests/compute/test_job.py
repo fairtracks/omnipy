@@ -299,7 +299,7 @@ def test_subclass_apply():
 
     cmd = cmd_tmpl.apply()
     assert isinstance(cmd, CommandMockJob)
-    assert cmd_tmpl.engine_decorator_applied is True
+    assert cmd.engine_decorator_applied is True
     assert_updated_wrapper(cmd, cmd_tmpl)
 
     assert cmd.uppercase is True

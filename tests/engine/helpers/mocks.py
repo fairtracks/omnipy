@@ -10,6 +10,7 @@ from inflection import underscore
 from prefect.utilities.names import generate_slug
 from slugify import slugify
 
+from omnipy.compute.job_types import GeneralDecorator
 from omnipy.engine.base import Engine
 from omnipy.engine.constants import RunState
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
@@ -49,6 +50,7 @@ class MockTask:
 
     def __init__(self, func: Callable, *, name: Optional[str] = None) -> None:
         self._func = func
+        self._func_signature = inspect.signature(self._func)
         self.name = name if name is not None else func.__name__
         self.regenerate_unique_name()
 
@@ -74,6 +76,12 @@ class MockTask:
     def in_flow_context(self):
         return self.job_creator.nested_context_level > 0
 
+    def _accept_call_func_decorator(self, call_func_decorator: GeneralDecorator) -> None:
+        self._func = call_func_decorator(self._func)
+
+    def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
+        return self._func_signature.bind(*args, **kwargs).arguments
+
 
 @callable_decorator_cls
 class MockTaskTemplate(MockTask):
@@ -87,9 +95,9 @@ class MockTaskTemplate(MockTask):
 
     def apply(self) -> IsTask:
         task = MockTask(self._func, name=self.name)
+        self.job_creator.engine.apply_task_decorator(task, task._accept_call_func_decorator)
         update_wrapper(task, self._func)
-        print(self.job_creator.engine)
-        return self.job_creator.engine.task_decorator(task)
+        return task
 
 
 class MockLinearFlow(MockTask):
@@ -105,15 +113,13 @@ class MockLinearFlow(MockTask):
     def task_templates(self) -> Tuple[MockTaskTemplate, ...]:
         return self._task_templates
 
-    def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
-        return inspect.signature(self._func).bind(*args, **kwargs).arguments
-
 
 @callable_decorator_cls
 class MockLinearFlowTemplate(MockLinearFlow):
-    def apply(self) -> IsTask:
+    def apply(self) -> MockLinearFlow:
         linear_flow = MockLinearFlow(self._func, *self._task_templates, name=self.name)
-        linear_flow = self.job_creator.engine.linear_flow_decorator(linear_flow)
+        self.job_creator.engine.apply_linear_flow_decorator(linear_flow,
+                                                            linear_flow._accept_call_func_decorator)
         update_wrapper(linear_flow, self._func)
         return linear_flow
 
@@ -131,15 +137,13 @@ class MockDagFlow(MockTask):
     def task_templates(self) -> Tuple[MockTaskTemplate, ...]:
         return self._task_templates
 
-    def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
-        return inspect.signature(self._func).bind(*args, **kwargs).arguments
-
 
 @callable_decorator_cls
 class MockDagFlowTemplate(MockDagFlow):
-    def apply(self) -> IsTask:
+    def apply(self) -> MockDagFlow:
         dag_flow = MockDagFlow(self._func, *self._task_templates, name=self.name)
-        dag_flow = self.job_creator.engine.dag_flow_decorator(dag_flow)
+        self.job_creator.engine.apply_dag_flow_decorator(dag_flow,
+                                                         dag_flow._accept_call_func_decorator)
         update_wrapper(dag_flow, self._func)
         return dag_flow
 
@@ -151,9 +155,10 @@ class MockFuncFlow(MockTask):
 
 @callable_decorator_cls
 class MockFuncFlowTemplate(MockFuncFlow, MockTaskTemplate):
-    def apply(self) -> IsTask:
+    def apply(self) -> MockFuncFlow:
         func_flow = MockFuncFlow(self._func, name=self.name)
-        func_flow = self.job_creator.engine.func_flow_decorator(func_flow)
+        self.job_creator.engine.apply_func_flow_decorator(func_flow,
+                                                          func_flow._accept_call_func_decorator)
         update_wrapper(func_flow, self._func)
         return func_flow
 

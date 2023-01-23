@@ -3,6 +3,7 @@ import logging
 from types import MappingProxyType
 from typing import Any, Callable, Dict, Mapping, Optional, Protocol, runtime_checkable, Tuple, Type
 
+from omnipy.compute.job_types import GeneralDecorator
 from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.config.job import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
 from omnipy.engine.constants import EngineChoice, RunState
@@ -181,9 +182,6 @@ class IsFuncJob(IsJob, Protocol):
     def has_coroutine_func(self) -> bool:
         ...
 
-    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
-        ...
-
     def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
         ...
 
@@ -243,6 +241,9 @@ class IsFlowTemplate(IsFuncJobTemplate, Protocol):
 class IsTaskTemplatesFlow(IsFlow, Protocol):
     task_templates: Tuple[IsTaskTemplate, ...]
 
+    def _accept_call_func_decorator(self, call_func_decorator: GeneralDecorator) -> None:
+        ...
+
 
 class IsTaskTemplatesFlowTemplate(IsFuncJobTemplate, Protocol):
     task_templates: Tuple[IsTaskTemplate, ...]
@@ -288,6 +289,7 @@ class IsFuncFlowTemplate(IsFuncFlow, IsFlowTemplate, Protocol):
         ...
 
 
+@runtime_checkable
 class IsEngine(Protocol):
     def __init__(self) -> None:
         ...
@@ -303,26 +305,32 @@ class IsEngine(Protocol):
         ...
 
 
+@runtime_checkable
 class IsTaskRunnerEngine(IsEngine, Protocol):
-    def task_decorator(self, task: IsTask) -> IsTask:
+    def apply_task_decorator(self, task: IsTask, job_callback_accept_decorator: Callable) -> None:
         ...
 
 
 @runtime_checkable
 class IsLinearFlowRunnerEngine(IsEngine, Protocol):
-    def linear_flow_decorator(self, linear_flow: IsLinearFlow) -> IsLinearFlow:
+    def apply_linear_flow_decorator(self,
+                                    linear_flow: IsLinearFlow,
+                                    job_callback_accept_decorator: Callable) -> None:
         ...
 
 
 @runtime_checkable
 class IsDagFlowRunnerEngine(IsEngine, Protocol):
-    def dag_flow_decorator(self, dag_flow: IsDagFlow) -> IsDagFlow:
+    def apply_dag_flow_decorator(self, dag_flow: IsDagFlow,
+                                 job_callback_accept_decorator: Callable) -> None:
         ...
 
 
 @runtime_checkable
 class IsFuncFlowRunnerEngine(IsEngine, Protocol):
-    def func_flow_decorator(self, dag_flow: IsFuncFlow) -> IsFuncFlow:
+    def apply_func_flow_decorator(self,
+                                  func_flow: IsFuncFlow,
+                                  job_callback_accept_decorator: Callable) -> None:
         ...
 
 

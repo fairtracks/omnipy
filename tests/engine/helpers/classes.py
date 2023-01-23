@@ -49,17 +49,22 @@ class JobRunnerStateChecker(IsTaskRunnerEngine, IsDagFlowRunnerEngine, IsFuncFlo
     def get_config_cls(self) -> Type[IsEngineConfig]:
         return self._engine.get_config_cls()  # noqa
 
-    def task_decorator(self, task: IsTask) -> IsTask:
-        return self._engine.task_decorator(task)
+    def apply_task_decorator(self, task: IsTask, job_callback_accept_decorator: Callable) -> None:
+        return self._engine.apply_task_decorator(task, job_callback_accept_decorator)
 
-    def linear_flow_decorator(self, linear_flow: IsLinearFlow) -> IsLinearFlow:
-        return self._engine.linear_flow_decorator(linear_flow)
+    def apply_linear_flow_decorator(self,
+                                    linear_flow: IsLinearFlow,
+                                    job_callback_accept_decorator: Callable) -> None:
+        return self._engine.apply_linear_flow_decorator(linear_flow, job_callback_accept_decorator)
 
-    def dag_flow_decorator(self, dag_flow: IsDagFlow) -> IsDagFlow:
-        return self._engine.dag_flow_decorator(dag_flow)
+    def apply_dag_flow_decorator(self, dag_flow: IsDagFlow,
+                                 job_callback_accept_decorator: Callable) -> None:
+        return self._engine.apply_dag_flow_decorator(dag_flow, job_callback_accept_decorator)
 
-    def func_flow_decorator(self, func_flow: IsFuncFlow) -> IsFuncFlow:
-        return self._engine.func_flow_decorator(func_flow)
+    def apply_func_flow_decorator(self,
+                                  func_flow: IsFuncFlow,
+                                  job_callback_accept_decorator: Callable) -> None:
+        return self._engine.apply_func_flow_decorator(func_flow, job_callback_accept_decorator)
 
     def _init_task(self, task: IsTask, call_func: Callable) -> Any:
         from .functions import assert_job_state

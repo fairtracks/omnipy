@@ -47,3 +47,4 @@ class IsTaskTemplatesFlowTemplateCallable(Protocol[TaskTemplatesFlowTemplateT]):
 FlowT = TypeVar('FlowT', bound='Flow', covariant=True)
 FlowBaseT = TypeVar('FlowBaseT', bound='FlowBase', covariant=True)
 FlowTemplateT = TypeVar('FlowTemplateT', bound='FlowTemplate', covariant=True)
+GeneralDecorator = Callable[[Callable], Callable]

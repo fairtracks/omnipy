@@ -1,20 +1,14 @@
-from abc import ABC
 import asyncio
-import inspect
-from typing import Any, Callable, Dict, Generic, Mapping, Optional, Tuple, Union
+from typing import Callable, Dict, Tuple
 
-from omnipy.compute.job import Job, JobBase, JobTemplate
-from omnipy.compute.job_creator import JobBaseMeta
+from omnipy.compute.job import JobBase
+from omnipy.compute.job_types import GeneralDecorator
 # from omnipy.compute.job_types import FuncJobTemplateT, JobBaseT, JobT, JobTemplateT
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.iterate import IterateFuncJobBaseMixin
 from omnipy.compute.mixins.params import ParamsFuncJobBaseMixin
 from omnipy.compute.mixins.result_key import ResultKeyFuncJobBaseMixin
-from omnipy.compute.mixins.serialize import (PersistOutputsOptions,
-                                             RestoreOutputsOptions,
-                                             SerializerFuncJobBaseMixin)
-from omnipy.util.helpers import remove_none_vals
-from omnipy.util.mixin import DynamicMixinAcceptor
+from omnipy.compute.mixins.serialize import (SerializerFuncJobBaseMixin)
 
 
 class PlainFuncArgJobBase(JobBase):
@@ -29,28 +23,31 @@ class PlainFuncArgJobBase(JobBase):
         return asyncio.iscoroutinefunction(self._job_func)
 
     def _call_job(self, *args: object, **kwargs: object) -> object:
+        """To be overloaded by mixins"""
         return self._call_func(*args, **kwargs)
 
     def _call_func(self, *args: object, **kwargs: object) -> object:
+        """
+        To be decorated by job runners and mixins that need early application. Should not
+        be overloaded using inheritance. The method _accept_call_func_decorator accepts
+        decorators.
+        """
         return self._job_func(*args, **kwargs)
 
-    def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
-        return inspect.signature(self._job_func).bind(*args, **kwargs).arguments
+    def _accept_call_func_decorator(self, call_func_decorator: GeneralDecorator) -> None:
+        self._call_func = call_func_decorator(self._call_func)
 
 
-# Needs a separate level. If not, self._call_func changes from IterateFuncJobBaseMixin
-# would be overwritten by FuncArgJobBase
-PlainFuncArgJobBase.accept_mixin(IterateFuncJobBaseMixin)
-
-
+# Extra level needed for mixins to be able to overload _call_job (and possibly other methods)
 class FuncArgJobBase(PlainFuncArgJobBase):
     ...
 
 
 FuncArgJobBase.accept_mixin(SignatureFuncJobBaseMixin)
-FuncArgJobBase.accept_mixin(ParamsFuncJobBaseMixin)
-FuncArgJobBase.accept_mixin(ResultKeyFuncJobBaseMixin)
+FuncArgJobBase.accept_mixin(IterateFuncJobBaseMixin)
 FuncArgJobBase.accept_mixin(SerializerFuncJobBaseMixin)
+FuncArgJobBase.accept_mixin(ResultKeyFuncJobBaseMixin)
+FuncArgJobBase.accept_mixin(ParamsFuncJobBaseMixin)
 
 # class FuncJobTemplate(FuncArgJobBase, JobTemplate, ABC):
 #     def refine(self,

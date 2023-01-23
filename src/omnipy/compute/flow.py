@@ -30,14 +30,13 @@ class LinearFlowTemplate(JobTemplate, FlowBase, TaskTemplateArgsJobBase):
     def _get_job_subcls_for_apply(cls) -> Type['LinearFlow']:
         return LinearFlow
 
-    def _apply_engine_decorator(self, flow: IsLinearFlow) -> IsLinearFlow:
-        if self.engine is not None and isinstance(self.engine, IsLinearFlowRunnerEngine):
-            return self.engine.linear_flow_decorator(flow)
-        else:
-            raise RuntimeError(f'Engine "{self.engine}" does not support linear flows')
-
 
 class LinearFlow(Job, FlowBase, TaskTemplateArgsJobBase):
+    def _apply_engine_decorator(self, engine: IsLinearFlowRunnerEngine) -> None:
+        self._check_engine(IsLinearFlowRunnerEngine)
+        engine = cast(IsLinearFlowRunnerEngine, self.engine)
+        engine.apply_linear_flow_decorator(self, self._accept_call_func_decorator)
+
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[LinearFlowTemplate]:
         return LinearFlowTemplate
@@ -54,14 +53,13 @@ class DagFlowTemplate(JobTemplate, FlowBase, TaskTemplateArgsJobBase):
     def _get_job_subcls_for_apply(cls) -> Type['DagFlow']:
         return DagFlow
 
-    def _apply_engine_decorator(self, job: IsDagFlow) -> IsDagFlow:
-        if self.engine is not None and isinstance(self.engine, IsDagFlowRunnerEngine):
-            return self.engine.dag_flow_decorator(job)
-        else:
-            raise RuntimeError(f'Engine "{self.engine}" does not support DAG flows')
-
 
 class DagFlow(Job, FlowBase, TaskTemplateArgsJobBase):
+    def _apply_engine_decorator(self, engine: IsDagFlowRunnerEngine) -> None:
+        self._check_engine(IsDagFlowRunnerEngine)
+        engine = cast(IsDagFlowRunnerEngine, self.engine)
+        engine.apply_dag_flow_decorator(self, self._accept_call_func_decorator)
+
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[DagFlowTemplate]:
         return DagFlowTemplate
@@ -74,18 +72,17 @@ class DagFlow(Job, FlowBase, TaskTemplateArgsJobBase):
 
 @callable_decorator_cls
 class FuncFlowTemplate(JobTemplate, FlowBase, FuncArgJobBase):
-    def _apply_engine_decorator(self, flow: IsFuncFlow) -> IsFuncFlow:
-        if self.engine is not None and isinstance(self.engine, IsFuncFlowRunnerEngine):
-            return self.engine.func_flow_decorator(flow)
-        else:
-            raise RuntimeError(f'Engine "{self.engine}" does not support function flows')
-
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['FuncFlow']:
         return FuncFlow
 
 
 class FuncFlow(Job, FlowBase, FuncArgJobBase):
+    def _apply_engine_decorator(self, engine: IsFuncFlowRunnerEngine) -> None:
+        self._check_engine(IsFuncFlowRunnerEngine)
+        engine = cast(IsFuncFlowRunnerEngine, self.engine)
+        engine.apply_func_flow_decorator(self, self._accept_call_func_decorator)
+
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[FuncFlowTemplate]:
         return FuncFlowTemplate
