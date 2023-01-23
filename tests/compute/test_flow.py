@@ -5,7 +5,8 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.compute.flow import (DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate, FuncFlow)
-from omnipy.compute.job import Job, JobBase, JobTemplate, JobStateException
+from omnipy.compute.job import Job, JobBase, JobTemplate
+from omnipy.compute.job_types import JobStateException
 from omnipy.compute.task import TaskTemplate
 from omnipy.engine.protocols import IsFlowTemplate
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Callable, Mapping, Optional, Protocol, TypeVar
 
 from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutputsOptions
@@ -48,3 +50,7 @@ FlowT = TypeVar('FlowT', bound='Flow', covariant=True)
 FlowBaseT = TypeVar('FlowBaseT', bound='FlowBase', covariant=True)
 FlowTemplateT = TypeVar('FlowTemplateT', bound='FlowTemplate', covariant=True)
 GeneralDecorator = Callable[[Callable], Callable]
+
+
+class JobStateException(Exception):
+    ...

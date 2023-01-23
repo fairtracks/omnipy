@@ -7,14 +7,11 @@ from types import MappingProxyType
 from typing import Any, Dict, Generic, Hashable, Optional, Tuple, Type
 
 from omnipy.compute.job_creator import JobBaseMeta
+from omnipy.compute.job_types import JobStateException
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
 from omnipy.engine.protocols import IsJob, IsJobConfig, IsEngine
 from omnipy.util.helpers import create_merged_dict
 from omnipy.util.mixin import DynamicMixinAcceptor
-
-
-class JobStateException(Exception):
-    ...
 
 
 class JobBase(DynamicMixinAcceptor, metaclass=JobBaseMeta):
