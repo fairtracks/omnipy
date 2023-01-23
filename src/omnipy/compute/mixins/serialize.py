@@ -142,10 +142,15 @@ class SerializerFuncJobBaseMixin:
         parsed_dataset, serializer = \
             self._serializer_registry.auto_detect_tar_file_serializer(results)
 
-        self._log_message(f'Writing dataset as a gzipped tarpack to "{os.path.abspath(file_path)}"')
+        if serializer is None:
+            self._log_message(f'Unable to find a serializer for results of job "{self.name}", '
+                              f'with data type "{type(results)}". Will abort persisting results...')
+        else:
+            self._log_message(
+                f'Writing dataset as a gzipped tarpack to "{os.path.abspath(file_path)}"')
 
-        with open(file_path, 'wb') as tarfile:
-            tarfile.write(serializer.serialize(parsed_dataset))
+            with open(file_path, 'wb') as tarfile:
+                tarfile.write(serializer.serialize(parsed_dataset))
 
     def _create_job_name(self):
         return '_'.join(self.unique_name.split('-')[:-2])

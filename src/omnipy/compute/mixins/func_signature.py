@@ -27,4 +27,5 @@ class SignatureFuncJobBaseMixin:
                 raise KeyError('Parameter "{}" was not found in the '.format(param_key)
                                + 'signature of the job function. Only parameters in the '
                                'signature of the job function are '
-                               f'allowed as keys in the "{modifier_kwarg_key}" modifier.')
+                               f'allowed as keys in the "{modifier_kwarg_key}" modifier: '
+                               f"{', '.join(key for key in self.param_signatures.keys())}")
