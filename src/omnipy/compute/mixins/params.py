@@ -17,6 +17,9 @@ class ParamsFuncJobBaseMixin:
         self._fixed_params = dict(fixed_params) if fixed_params is not None else {}
         self._param_key_mapper = ParamKeyMapper(param_key_map if param_key_map is not None else {})
 
+        self._check_param_keys_in_func_signature(self.fixed_params.keys(), 'fixed_params')
+        self._check_param_keys_in_func_signature(self.param_key_map.keys(), 'param_key_map')
+
     @property
     def fixed_params(self) -> MappingProxyType[str, object]:
         return MappingProxyType(self._fixed_params)
@@ -26,8 +29,6 @@ class ParamsFuncJobBaseMixin:
         return MappingProxyType(self._param_key_mapper.key_map)
 
     def _call_job(self, *args: object, **kwargs: object) -> object:
-        self._check_param_keys_in_func_signature(self.fixed_params.keys(), 'fixed_params')
-        self._check_param_keys_in_func_signature(self.param_key_map.keys(), 'param_key_map')
 
         mapped_fixed_params = self._param_key_mapper.delete_matching_keys(
             self._fixed_params, inverse=True)
