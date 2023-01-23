@@ -4,12 +4,12 @@ from abc import abstractmethod
 from datetime import datetime
 from functools import update_wrapper
 from types import MappingProxyType
-from typing import Any, Dict, Generic, Hashable, Optional, Tuple, Type
+from typing import Any, Dict, Hashable, Optional, Tuple
 
 from omnipy.compute.job_creator import JobBaseMeta
 from omnipy.compute.job_types import JobStateException
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
-from omnipy.engine.protocols import IsJob, IsJobConfig, IsEngine
+from omnipy.engine.protocols import IsJobConfig, IsEngine
 from omnipy.util.helpers import create_merged_dict
 from omnipy.util.mixin import DynamicMixinAcceptor
 
@@ -151,9 +151,6 @@ class JobBase(DynamicMixinAcceptor, metaclass=JobBaseMeta):
         return self.__class__.job_creator.nested_context_level > 0
 
 
-JobBase.accept_mixin(NameJobBaseMixin)
-
-
 class JobTemplate:
     def __init__(self, *args, **kwargs):
         if JobBase not in self.__class__.__mro__:
@@ -177,7 +174,7 @@ class JobTemplate:
         return self._call_job_template(*args, **kwargs)
 
 
-class Job:
+class Job(DynamicMixinAcceptor):
     def __init__(self, *args, **kwargs):
         if JobBase not in self.__class__.__mro__:
             raise TypeError('Job is not meant to be instantiated outside the context '
@@ -212,3 +209,6 @@ class Job:
 
 # TODO: Change JobBase and friends into Generics such as one can annotated with
 #       e.g. 'TaskTemplate[[int], int]' instead of just 'TaskTemplate'
+
+JobBase.accept_mixin(NameJobBaseMixin)
+Job.accept_mixin(NameJobMixin)
