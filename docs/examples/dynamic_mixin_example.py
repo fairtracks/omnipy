@@ -28,6 +28,7 @@ class B(A):
         self.default = default
 
     def obj_method(self):
+        print(f'super().obj_method() == {super().obj_method()}')
         return 'B'
 
     @classmethod
@@ -41,6 +42,7 @@ class C(A):
         self.default = default
 
     def obj_method(self):
+        print(f'super().obj_method() == {super().obj_method()}')
         return 'C'
 
     @classmethod
@@ -54,6 +56,7 @@ class D(B, C):
         self.kwargs = kwargs
 
     def obj_method(self):
+        print(f'super().obj_method() == {super().obj_method()}')
         return 'D'
 
 
@@ -83,6 +86,7 @@ class BB(DynamicMixinAcceptor):
         self.default = default
 
     def obj_method(self):
+        print(f'super().obj_method() == {super().obj_method()}')
         return 'BB'
 
     @classmethod
@@ -95,6 +99,7 @@ class CC(DynamicMixinAcceptor):
         self.default = default
 
     def obj_method(self):
+        print(f'super().obj_method() == {super().obj_method()}')
         return 'CC'
 
     @classmethod
@@ -107,6 +112,7 @@ class DD(DynamicMixinAcceptor):
         self.kwargs = kwargs
 
     def obj_method(self):
+        print(f'super().obj_method() == {super().obj_method()}')
         return 'DD'
 
 
