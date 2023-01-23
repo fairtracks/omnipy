@@ -1,5 +1,5 @@
 from inspect import Parameter, signature
-from typing import cast, Type, Callable
+from typing import Callable, cast, Type
 
 from omnipy.compute.mixins.mixin_types import (InputDatasetT,
                                                InputTypeT,

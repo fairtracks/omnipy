@@ -1,9 +1,9 @@
-import types
 from collections import defaultdict
 import inspect
+import types
 from typing import DefaultDict, Dict, List, Protocol, Type
 
-from omnipy.util.helpers import transfer_generic_args_to_cls, generic_aware_issubclass, get_bases
+from omnipy.util.helpers import generic_aware_issubclass, get_bases, transfer_generic_args_to_cls
 
 
 class IsMixin(Protocol):

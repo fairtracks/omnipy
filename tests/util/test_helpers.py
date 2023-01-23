@@ -1,6 +1,6 @@
-from typing import TypeVar, Dict, Generic, get_type_hints, get_args
+from typing import Dict, Generic, get_args, get_type_hints, TypeVar
 
-from typing_inspect import get_parameters, get_generic_type, get_bound, get_args, get_last_args
+from typing_inspect import get_args, get_bound, get_generic_type, get_last_args, get_parameters
 
 from omnipy.util.helpers import transfer_generic_args_to_cls
 

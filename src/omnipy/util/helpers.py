@@ -1,8 +1,8 @@
 import inspect
 import locale as pkg_locale
-from typing import Dict, Iterable, Mapping, Tuple, Union, Type, get_args, get_origin
+from typing import Dict, get_args, get_origin, Iterable, Mapping, Tuple, Type, Union
 
-from typing_inspect import is_generic_type, get_generic_bases
+from typing_inspect import get_generic_bases, is_generic_type
 
 DictT = Union[Mapping[object, object], Iterable[Tuple[object, object]]]
 

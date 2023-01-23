@@ -1,6 +1,6 @@
 from abc import ABCMeta
 from inspect import Parameter, signature
-from typing import Dict, Optional, Tuple, Type, TypeVar, Generic, get_args
+from typing import Dict, Generic, get_args, Optional, Tuple, Type, TypeVar
 
 import pytest
 

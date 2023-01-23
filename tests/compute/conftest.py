@@ -13,7 +13,7 @@ from omnipy.compute.job import Job, JobBase, JobTemplate
 from omnipy.compute.job_creator import JobCreator
 
 from .helpers.classes import FlowClsTuple
-from .helpers.mocks import (MockJobSubclass, MockJobTemplateSubclass, MockLocalRunner)
+from .helpers.mocks import MockJobSubclass, MockJobTemplateSubclass, MockLocalRunner
 
 
 @pytest.fixture(scope='function')

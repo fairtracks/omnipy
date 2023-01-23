@@ -141,11 +141,11 @@ def instantiate_and_print_results(d_cls, d_obj_name, header):
         )
 
     print()
-    print(f"{d_obj_name} = {d_cls.__name__}()")
+    print(f'{d_obj_name} = {d_cls.__name__}()')
     print(f"{d_obj_name}.obj_method() == '{d_obj.obj_method()}'")
     print(f"{d_obj_name}.cls_method() == '{d_obj.cls_method()}'")
     print(f"{d_obj_name}.static_top_level() == '{d_obj.static_top_level()}'")
-    print(f"{d_obj_name}.kwargs == {d_obj.kwargs}")
+    print(f'{d_obj_name}.kwargs == {d_obj.kwargs}')
     print(f"{d_obj_name}.default == '{d_obj.default}'")
 
     d_obj = d_cls(default='Something else')
@@ -153,7 +153,7 @@ def instantiate_and_print_results(d_cls, d_obj_name, header):
     print()
     print(f"{d_obj_name} = {d_cls.__name__}(default='Something else')")
     print(f"{d_obj_name}.default == '{d_obj.default}'")
-    print(f"{d_obj_name}.kwargs == {d_obj.kwargs}")
+    print(f'{d_obj_name}.kwargs == {d_obj.kwargs}')
     print()
 
 

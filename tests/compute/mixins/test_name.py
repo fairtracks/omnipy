@@ -7,7 +7,7 @@ from omnipy.compute.job import Job, JobBase, JobTemplate
 from omnipy.compute.task import TaskTemplate
 
 from ..cases.raw.functions import power_m1_func
-from ..helpers.mocks import (MockJobSubclass, MockJobTemplateSubclass, MockLocalRunner)
+from ..helpers.mocks import MockJobSubclass, MockJobTemplateSubclass, MockLocalRunner
 
 
 def mock_job_classes() -> Tuple[Type[JobTemplate], Type[Job]]:

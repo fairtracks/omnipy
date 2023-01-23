@@ -8,7 +8,7 @@ from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.iterate import IterateFuncJobBaseMixin
 from omnipy.compute.mixins.params import ParamsFuncJobBaseMixin
 from omnipy.compute.mixins.result_key import ResultKeyFuncJobBaseMixin
-from omnipy.compute.mixins.serialize import (SerializerFuncJobBaseMixin)
+from omnipy.compute.mixins.serialize import SerializerFuncJobBaseMixin
 
 
 class PlainFuncArgJobBase(JobBase):

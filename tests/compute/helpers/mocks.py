@@ -10,13 +10,13 @@ from omnipy.compute.private.flow import FlowContextJobMixin
 from omnipy.compute.private.job import FuncArgJobBase
 from omnipy.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
 from omnipy.engine.protocols import (IsDagFlow,
+                                     IsEngine,
                                      IsEngineConfig,
                                      IsFuncFlow,
                                      IsJob,
                                      IsLinearFlow,
                                      IsRunStateRegistry,
-                                     IsTask,
-                                     IsEngine)
+                                     IsTask)
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
 from omnipy.util.mixin import DynamicMixinAcceptor
 

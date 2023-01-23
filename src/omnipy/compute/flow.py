@@ -1,8 +1,8 @@
 from typing import cast, Type
 
-from omnipy.compute.job import JobTemplate, Job
+from omnipy.compute.job import Job, JobTemplate
 from omnipy.compute.job_types import IsFuncJobTemplateCallable, IsTaskTemplatesFlowTemplateCallable
-from omnipy.compute.private.flow import TaskTemplateArgsJobBase, FlowContextJobMixin
+from omnipy.compute.private.flow import FlowContextJobMixin, TaskTemplateArgsJobBase
 from omnipy.compute.private.job import FuncArgJobBase
 from omnipy.engine.protocols import (IsDagFlow,
                                      IsDagFlowRunnerEngine,
