@@ -158,6 +158,11 @@ JobBase.accept_mixin(NameJobBaseMixin)
 
 
 class JobTemplate:
+    def __init__(self, *args, **kwargs):
+        if JobBase not in self.__class__.__mro__:
+            raise TypeError('JobTemplate is not meant to be instantiated outside the context '
+                            'of a JobBase subclass.')
+
     @classmethod
     def create_job_template(cls, *args: object, **kwargs: object):  # -> JobTemplateT:
         return cls._create_job_template(*args, **kwargs)
@@ -176,6 +181,11 @@ class JobTemplate:
 
 
 class Job:
+    def __init__(self, *args, **kwargs):
+        if JobBase not in self.__class__.__mro__:
+            raise TypeError('Job is not meant to be instantiated outside the context '
+                            'of a JobBase subclass.')
+
     @abstractmethod
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         ...

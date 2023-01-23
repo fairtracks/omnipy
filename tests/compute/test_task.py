@@ -19,7 +19,7 @@ def test_init() -> None:
     assert_updated_wrapper(task_template, format_to_string_func)
 
     with pytest.raises(TypeError):
-        TaskTemplate('extra_positional_argument')(format_to_string_func)
+        TaskTemplate(format_to_string_func)(format_to_string_func)
 
     with pytest.raises(JobStateException):
         Task(format_to_string_func)

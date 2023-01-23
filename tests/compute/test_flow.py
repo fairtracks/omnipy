@@ -4,7 +4,7 @@ from typing import Annotated, Dict, Iterable, Tuple, Type, Union
 import pytest
 import pytest_cases as pc
 
-from omnipy.compute.flow import (DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate)
+from omnipy.compute.flow import (DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate, FuncFlow)
 from omnipy.compute.job import Job, JobBase, JobTemplate, JobStateException
 from omnipy.compute.task import TaskTemplate
 from omnipy.engine.protocols import IsFlowTemplate
@@ -125,13 +125,10 @@ def test_init_linear_and_dag_flow_templates(
 
 def test_fail_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
     with pytest.raises(TypeError):
-        FlowTemplate()
+        FuncFlow()
 
     with pytest.raises(TypeError):
-        Flow()
-
-    with pytest.raises(TypeError):
-        FuncFlowTemplate('extra_positional_argument')(lambda x: x)
+        FuncFlowTemplate(lambda x: x)(lambda y: y)
 
 
 def test_apply_run_all_flow_classes(
