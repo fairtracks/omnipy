@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from omnipy.abstract.enums import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
+from omnipy.api.enums import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
 
 
 def _get_persist_data_dir_path():

@@ -3,7 +3,7 @@ from typing import Annotated, Type
 
 import pytest
 
-from omnipy.abstract.protocols import IsRuntime
+from omnipy.api.protocols import IsRuntime
 
 
 @pytest.fixture(scope='function')

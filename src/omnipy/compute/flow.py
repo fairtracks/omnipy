@@ -1,8 +1,8 @@
 from typing import cast, Type
 
-from omnipy.abstract.protocols import (IsDagFlowRunnerEngine,
-                                       IsFuncFlowRunnerEngine,
-                                       IsLinearFlowRunnerEngine)
+from omnipy.api.protocols import (IsDagFlowRunnerEngine,
+                                  IsFuncFlowRunnerEngine,
+                                  IsLinearFlowRunnerEngine)
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import Job, JobTemplate
 from omnipy.compute.mixins.flow_context import FlowContextJobMixin

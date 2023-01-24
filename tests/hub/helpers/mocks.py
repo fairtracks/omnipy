@@ -4,14 +4,14 @@ from datetime import datetime
 import logging
 from typing import Optional, Protocol, Tuple, Type
 
-from omnipy.abstract.enums import RunState
-from omnipy.abstract.protocols import (IsEngineConfig,
-                                       IsLocalRunnerConfig,
-                                       IsPrefectEngineConfig,
-                                       IsRunStateRegistry,
-                                       IsRunStateRegistryConfig,
-                                       IsTask,
-                                       IsTaskRunnerEngine)
+from omnipy.api.enums import RunState
+from omnipy.api.protocols import (IsEngineConfig,
+                                  IsLocalRunnerConfig,
+                                  IsPrefectEngineConfig,
+                                  IsRunStateRegistry,
+                                  IsRunStateRegistryConfig,
+                                  IsTask,
+                                  IsTaskRunnerEngine)
 from omnipy.hub.publisher import ConfigPublisher
 
 

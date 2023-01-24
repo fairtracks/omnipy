@@ -3,11 +3,11 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from omnipy.abstract.enums import (ConfigPersistOutputsOptions,
-                                   ConfigRestoreOutputsOptions,
-                                   PersistOutputsOptions,
-                                   RestoreOutputsOptions)
-from omnipy.abstract.protocols import IsRuntime
+from omnipy.api.enums import (ConfigPersistOutputsOptions,
+                              ConfigRestoreOutputsOptions,
+                              PersistOutputsOptions,
+                              RestoreOutputsOptions)
+from omnipy.api.protocols import IsRuntime
 from omnipy.compute.task import FuncArgJobBase, TaskTemplate
 
 

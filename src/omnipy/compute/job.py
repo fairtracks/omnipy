@@ -6,8 +6,8 @@ from functools import update_wrapper
 from types import MappingProxyType
 from typing import Any, Dict, Hashable, Optional, Tuple
 
-from omnipy.abstract.exceptions import JobStateException
-from omnipy.abstract.protocols import IsEngine, IsJobConfig
+from omnipy.api.exceptions import JobStateException
+from omnipy.api.protocols import IsEngine, IsJobConfig
 from omnipy.compute.job_creator import JobBaseMeta
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
 from omnipy.util.helpers import create_merged_dict

@@ -4,7 +4,7 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from omnipy.abstract.exceptions import JobStateException
+from omnipy.api.exceptions import JobStateException
 from omnipy.compute.task import Task, TaskTemplate
 
 from .cases.raw.functions import format_to_string_func, power_m1_func

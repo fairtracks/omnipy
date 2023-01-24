@@ -4,9 +4,9 @@ from pathlib import Path
 import tarfile
 from typing import Optional
 
-from omnipy.abstract.enums import ConfigPersistOutputsOptions as ConfigPersistOpts
-from omnipy.abstract.enums import ConfigRestoreOutputsOptions as ConfigRestoreOpts
-from omnipy.abstract.enums import PersistOutputsOptions, RestoreOutputsOptions
+from omnipy.api.enums import ConfigPersistOutputsOptions as ConfigPersistOpts
+from omnipy.api.enums import ConfigRestoreOutputsOptions as ConfigRestoreOpts
+from omnipy.api.enums import PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import SerializerRegistry

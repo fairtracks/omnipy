@@ -14,12 +14,12 @@ from typing import (Any,
                     Type,
                     TypeVar)
 
-from omnipy.abstract.enums import (ConfigPersistOutputsOptions,
-                                   ConfigRestoreOutputsOptions,
-                                   EngineChoice,
-                                   PersistOutputsOptions,
-                                   RestoreOutputsOptions,
-                                   RunState)
+from omnipy.api.enums import (ConfigPersistOutputsOptions,
+                              ConfigRestoreOutputsOptions,
+                              EngineChoice,
+                              PersistOutputsOptions,
+                              RestoreOutputsOptions,
+                              RunState)
 
 
 class IsNestedContext(Protocol):

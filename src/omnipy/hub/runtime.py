@@ -3,18 +3,18 @@ import logging
 from sys import stdout
 from typing import Any, Optional
 
-from omnipy.abstract.enums import EngineChoice
-from omnipy.abstract.protocols import (IsEngine,
-                                       IsEngineConfig,
-                                       IsJobConfig,
-                                       IsJobConfigHolder,
-                                       IsLocalRunnerConfig,
-                                       IsPrefectEngineConfig,
-                                       IsRunStateRegistry,
-                                       IsRunStateRegistryConfig,
-                                       IsRuntime,
-                                       IsRuntimeConfig,
-                                       IsRuntimeObjects)
+from omnipy.api.enums import EngineChoice
+from omnipy.api.protocols import (IsEngine,
+                                  IsEngineConfig,
+                                  IsJobConfig,
+                                  IsJobConfigHolder,
+                                  IsLocalRunnerConfig,
+                                  IsPrefectEngineConfig,
+                                  IsRunStateRegistry,
+                                  IsRunStateRegistryConfig,
+                                  IsRuntime,
+                                  IsRuntimeConfig,
+                                  IsRuntimeObjects)
 from omnipy.compute.job import JobBase
 from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import JobConfig

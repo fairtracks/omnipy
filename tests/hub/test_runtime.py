@@ -3,10 +3,8 @@ from typing import Annotated, Type
 
 import pytest
 
-from omnipy.abstract.enums import (ConfigPersistOutputsOptions,
-                                   ConfigRestoreOutputsOptions,
-                                   EngineChoice)
-from omnipy.abstract.protocols import IsRuntime
+from omnipy.api.enums import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions, EngineChoice
+from omnipy.api.protocols import IsRuntime
 from omnipy.hub.runtime import RuntimeConfig, RuntimeObjects
 
 from .helpers.functions import assert_logger

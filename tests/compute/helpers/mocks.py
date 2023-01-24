@@ -3,14 +3,14 @@ from datetime import datetime
 from types import MappingProxyType
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union
 
-from omnipy.abstract.protocols import (IsDagFlow,
-                                       IsEngine,
-                                       IsEngineConfig,
-                                       IsFuncFlow,
-                                       IsJob,
-                                       IsLinearFlow,
-                                       IsRunStateRegistry,
-                                       IsTask)
+from omnipy.api.protocols import (IsDagFlow,
+                                  IsEngine,
+                                  IsEngineConfig,
+                                  IsFuncFlow,
+                                  IsJob,
+                                  IsLinearFlow,
+                                  IsRunStateRegistry,
+                                  IsTask)
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import Job, JobBase, JobTemplate
 from omnipy.compute.mixins.flow_context import FlowContextJobMixin

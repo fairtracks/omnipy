@@ -10,17 +10,17 @@ from inflection import underscore
 from prefect.utilities.names import generate_slug
 from slugify import slugify
 
-from omnipy.abstract.enums import RunState
-from omnipy.abstract.protocols import (GeneralDecorator,
-                                       IsDagFlow,
-                                       IsEngine,
-                                       IsEngineConfig,
-                                       IsFlow,
-                                       IsFuncFlow,
-                                       IsJob,
-                                       IsLinearFlow,
-                                       IsRunStateRegistryConfig,
-                                       IsTask)
+from omnipy.api.enums import RunState
+from omnipy.api.protocols import (GeneralDecorator,
+                                  IsDagFlow,
+                                  IsEngine,
+                                  IsEngineConfig,
+                                  IsFlow,
+                                  IsFuncFlow,
+                                  IsJob,
+                                  IsLinearFlow,
+                                  IsRunStateRegistryConfig,
+                                  IsTask)
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,

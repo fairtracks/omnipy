@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from omnipy.abstract.protocols import IsNestedContext
+from omnipy.api.protocols import IsNestedContext
 
 
 class FlowContextJobMixin:
