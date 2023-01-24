@@ -1,17 +1,15 @@
-from typing import Dict, List
-
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.modules.json.models import JsonDataset
 from omnipy.modules.pandas.models import PandasDataset
 
-from .....integration.novel.cases.raw.datasets import (csv_dataset,
-                                                       json_dataset,
-                                                       json_str_dataset,
-                                                       json_table_dataset,
-                                                       pandas_dataset,
-                                                       python_dataset,
-                                                       str_dataset)
+from .datasets import (csv_dataset,
+                       json_dataset,
+                       json_str_dataset,
+                       json_table_dataset,
+                       pandas_dataset,
+                       python_dataset,
+                       str_dataset)
 
 
 def pandas_func() -> PandasDataset:

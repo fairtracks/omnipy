@@ -9,7 +9,7 @@ import pytest_cases as pc
 from omnipy.abstract.enums import RunState
 from omnipy.data.dataset import Dataset, MultiModelDataset
 
-from ...engine.helpers.functions import assert_job_state
+from ....engine.helpers.functions import assert_job_state
 from .cases.flows import FlowCase
 from .helpers.models import GeneralTable, MyOtherRecordSchema, MyRecordSchema, TableTemplate
 

@@ -4,11 +4,11 @@ from typing import Annotated
 
 import pytest
 
-from engine.helpers.mocks import (MockDagFlow,
-                                  MockDagFlowTemplate,
-                                  MockJobRunnerSubclass,
-                                  MockTask,
-                                  MockTaskTemplate)
+from ..engine.helpers.mocks import (MockDagFlow,
+                                    MockDagFlowTemplate,
+                                    MockJobRunnerSubclass,
+                                    MockTask,
+                                    MockTaskTemplate)
 
 
 @pytest.fixture(scope='function')

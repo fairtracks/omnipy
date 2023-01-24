@@ -5,13 +5,13 @@ from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
 from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
 from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
 
-from .cases.raw.datasets import (csv_dataset,
-                                 json_dataset,
-                                 json_str_dataset,
-                                 json_table_dataset,
-                                 pandas_dataset,
-                                 python_dataset,
-                                 str_dataset)
+from .cases.datasets import (csv_dataset,
+                             json_dataset,
+                             json_str_dataset,
+                             json_table_dataset,
+                             pandas_dataset,
+                             python_dataset,
+                             str_dataset)
 
 
 @pytest.fixture

@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Dict
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset, MultiModelDataset
