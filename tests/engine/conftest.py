@@ -1,8 +1,5 @@
-from io import StringIO
-import logging
-from typing import Annotated, Callable, cast, Optional, Tuple, Type
+from typing import Callable, cast, Optional, Tuple, Type
 
-import pytest
 import pytest_cases as pc
 
 from omnipy.engine.local import LocalRunner
@@ -12,14 +9,12 @@ from omnipy.abstract.protocols import IsJobTemplate, IsTaskTemplate, IsFlowTempl
 
 from .helpers.classes import JobCase, JobRunnerStateChecker, JobType
 from .helpers.functions import add_logger_to_registry, update_job_case_with_job
-from .helpers.mocks import (MockDagFlow,
-                            MockDagFlowTemplate,
+from .helpers.mocks import (MockDagFlowTemplate,
                             MockEngineConfig,
                             MockFuncFlowTemplate,
                             MockJobRunnerSubclass,
                             MockLinearFlowTemplate,
                             MockRunStateRegistry,
-                            MockTask,
                             MockTaskTemplate)
 
 # JobTemplate subclasses
@@ -300,81 +295,3 @@ def all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg(
         engine_decorator,
         registry,
     )
-
-
-# test_registry
-
-
-@pytest.fixture(scope='function')
-def str_stream() -> StringIO:
-    return StringIO()
-
-
-@pytest.fixture(scope='function')
-def simple_logger() -> logging.Logger:
-    logger = logging.getLogger('test')
-    logger.setLevel(logging.INFO)
-    yield logger
-    for handler in logger.handlers:
-        logger.removeHandler(handler)
-
-
-@pytest.fixture(scope='function')
-def stream_logger(
-    str_stream: Annotated[StringIO, pytest.fixture],
-    simple_logger: Annotated[logging.Logger, pytest.fixture],
-) -> logging.Logger:
-    stream_handler = logging.StreamHandler(str_stream)
-    simple_logger.addHandler(stream_handler)
-    yield simple_logger
-    simple_logger.removeHandler(stream_handler)
-
-
-@pytest.fixture(scope='module')
-def task_template_a() -> MockTaskTemplate:
-    MockTaskTemplate.job_creator.engine = MockJobRunnerSubclass()
-
-    @MockTaskTemplate(name='a')
-    def concat_a(s: str) -> str:
-        return s + 'a'
-
-    return concat_a
-
-
-@pytest.fixture(scope='module')
-def task_template_b() -> MockTaskTemplate:
-    MockTaskTemplate.job_creator.engine = MockJobRunnerSubclass()
-
-    @MockTaskTemplate(name='b')
-    def concat_b(s: str) -> str:
-        return s + 'b'
-
-    return concat_b
-
-
-@pytest.fixture(scope='module')
-def task_a(task_template_a) -> MockTask:
-    return task_template_a.apply()
-
-
-@pytest.fixture(scope='module')
-def task_b(task_template_b) -> MockTask:
-    return task_template_b.apply()
-
-
-@pytest.fixture(scope='module')
-def dag_flow_a(task_template_a, task_template_b) -> MockDagFlow:
-    @MockDagFlowTemplate(task_template_a, task_template_b, name='a')
-    def concat_a(s: str) -> str:
-        ...
-
-    return concat_a.apply()
-
-
-@pytest.fixture(scope='module')
-def dag_flow_b(task_template_a, task_template_b) -> MockDagFlow:
-    @MockDagFlowTemplate(task_template_a, task_template_b, name='b')
-    def concat_b(s: str) -> str:
-        ...
-
-    return concat_b.apply()
