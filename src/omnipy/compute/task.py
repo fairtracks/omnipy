@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import cast, Type
 
-from omnipy.api.protocols import IsEngine, IsTaskRunnerEngine
+from omnipy.api.protocols import IsEngine, IsFuncJobTemplateCallable, IsTaskRunnerEngine
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import Job, JobTemplate
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
@@ -35,16 +35,17 @@ from omnipy.util.callable_decorator_cls import callable_decorator_cls
 #     #             **kwargs,
 #     #         ))
 
-# def task_template_callable_decorator_cls(
-#         cls: Type['TaskTemplate']) -> IsFuncJobTemplateCallable['TaskTemplate']:
-#     return cast(IsFuncJobTemplateCallable['TaskTemplate'], callable_decorator_cls(cls))
+
+def task_template_callable_decorator_cls(
+        cls: Type['TaskTemplate']) -> IsFuncJobTemplateCallable['TaskTemplate']:
+    return cast(IsFuncJobTemplateCallable['TaskTemplate'], callable_decorator_cls(cls))
 
 
 class TaskBase:
     ...
 
 
-@callable_decorator_cls
+@task_template_callable_decorator_cls
 class TaskTemplate(JobTemplate, TaskBase, FuncArgJobBase):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type[Task]:
