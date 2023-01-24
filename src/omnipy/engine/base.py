@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Type
 
-from omnipy.abstract.protocols import IsRunStateRegistry, IsEngineConfig
+from omnipy.abstract.protocols import IsEngineConfig, IsRunStateRegistry
 
 
 class Engine(ABC):

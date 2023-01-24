@@ -3,10 +3,12 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from omnipy.abstract.enums import PersistOutputsOptions, RestoreOutputsOptions, \
-    ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
-from omnipy.compute.task import FuncArgJobBase, TaskTemplate
+from omnipy.abstract.enums import (ConfigPersistOutputsOptions,
+                                   ConfigRestoreOutputsOptions,
+                                   PersistOutputsOptions,
+                                   RestoreOutputsOptions)
 from omnipy.abstract.protocols import IsRuntime
+from omnipy.compute.task import FuncArgJobBase, TaskTemplate
 
 
 @pc.parametrize_with_cases('case_tmpl', cases='.cases.jobs', has_tag='task', prefix='case_config_')

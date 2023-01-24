@@ -4,11 +4,11 @@ from typing import Annotated, Dict, Iterable, Tuple, Type, Union
 import pytest
 import pytest_cases as pc
 
+from omnipy.abstract.exceptions import JobStateException
+from omnipy.abstract.protocols import IsFlowTemplate
 from omnipy.compute.flow import DagFlowTemplate, FuncFlow, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.job import Job, JobBase, JobTemplate
-from omnipy.abstract.exceptions import JobStateException
 from omnipy.compute.task import TaskTemplate
-from omnipy.abstract.protocols import IsFlowTemplate
 
 from .cases.flows import FlowCase
 from .cases.raw.functions import data_import_func, empty_dict_func, format_to_string_func

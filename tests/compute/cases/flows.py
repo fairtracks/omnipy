@@ -4,9 +4,9 @@ from typing import Any, Callable, Dict, Generic, Tuple, TypeVar
 
 import pytest_cases as pc
 
+from omnipy.abstract.protocols import IsFlowTemplate
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
-from omnipy.abstract.protocols import IsFlowTemplate
 
 from .tasks import TaskCase
 

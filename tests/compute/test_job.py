@@ -3,9 +3,9 @@ from typing import Annotated, NamedTuple, Optional, Tuple, Type, Union
 
 import pytest
 
+from omnipy.abstract.exceptions import JobStateException
 from omnipy.compute.job import Job, JobBase, JobTemplate
 from omnipy.compute.job_creator import JobCreator
-from omnipy.abstract.exceptions import JobStateException
 
 from .helpers.functions import assert_updated_wrapper
 from .helpers.mocks import (CommandMockJob,

@@ -2,10 +2,15 @@ from typing import Callable, Optional, Tuple, Type
 
 import pytest_cases as pc
 
+from omnipy.abstract.protocols import (IsDagFlowTemplate,
+                                       IsEngine,
+                                       IsFuncFlowTemplate,
+                                       IsJobTemplate,
+                                       IsLinearFlowTemplate,
+                                       IsRunStateRegistry,
+                                       IsTaskTemplate)
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
-from omnipy.abstract.protocols import IsJobTemplate, IsTaskTemplate, IsLinearFlowTemplate, \
-    IsDagFlowTemplate, IsFuncFlowTemplate, IsEngine, IsRunStateRegistry
 from omnipy.log.registry import RunStateRegistry
 
 from ....engine.conftest import all_engines

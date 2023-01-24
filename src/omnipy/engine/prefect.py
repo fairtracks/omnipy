@@ -8,13 +8,16 @@ from prefect import task as prefect_task
 from prefect import Task as PrefectTask
 from prefect.tasks import task_input_hash
 
+from omnipy.abstract.protocols import (IsDagFlow,
+                                       IsFuncFlow,
+                                       IsLinearFlow,
+                                       IsPrefectEngineConfig,
+                                       IsTask)
 from omnipy.config.engine import PrefectEngineConfig
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
-from omnipy.abstract.protocols import IsTask, IsLinearFlow, IsDagFlow, IsFuncFlow, \
-    IsPrefectEngineConfig
 from omnipy.util.helpers import resolve
 
 

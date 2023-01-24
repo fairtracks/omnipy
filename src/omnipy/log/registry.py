@@ -3,10 +3,10 @@ from datetime import datetime
 import logging
 from typing import DefaultDict, Dict, List, Optional, Tuple, Union
 
-from omnipy.config.registry import RunStateRegistryConfig
 from omnipy.abstract.constants import OMNIPY_LOG_FORMAT_STR
 from omnipy.abstract.enums import RunState, RunStateLogMessages
 from omnipy.abstract.protocols import IsJob, IsRunStateRegistryConfig
+from omnipy.config.registry import RunStateRegistryConfig
 from omnipy.util.helpers import get_datetime_format
 
 

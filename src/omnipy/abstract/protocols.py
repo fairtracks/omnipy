@@ -1,13 +1,25 @@
 from __future__ import annotations
 
-import logging
 from datetime import datetime
+import logging
 from types import MappingProxyType
-from typing import Protocol, Optional, Any, Type, Dict, Mapping, Tuple, TypeVar, Callable, \
-    runtime_checkable
+from typing import (Any,
+                    Callable,
+                    Dict,
+                    Mapping,
+                    Optional,
+                    Protocol,
+                    runtime_checkable,
+                    Tuple,
+                    Type,
+                    TypeVar)
 
-from omnipy.abstract.enums import PersistOutputsOptions, RestoreOutputsOptions, \
-    ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions, EngineChoice, RunState
+from omnipy.abstract.enums import (ConfigPersistOutputsOptions,
+                                   ConfigRestoreOutputsOptions,
+                                   EngineChoice,
+                                   PersistOutputsOptions,
+                                   RestoreOutputsOptions,
+                                   RunState)
 
 
 class IsNestedContext(Protocol):

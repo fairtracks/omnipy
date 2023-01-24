@@ -11,12 +11,20 @@ from prefect.utilities.names import generate_slug
 from slugify import slugify
 
 from omnipy.abstract.enums import RunState
+from omnipy.abstract.protocols import (GeneralDecorator,
+                                       IsDagFlow,
+                                       IsEngine,
+                                       IsEngineConfig,
+                                       IsFlow,
+                                       IsFuncFlow,
+                                       IsJob,
+                                       IsLinearFlow,
+                                       IsRunStateRegistryConfig,
+                                       IsTask)
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
-from omnipy.abstract.protocols import IsJob, IsTask, IsFlow, IsLinearFlow, IsDagFlow, IsFuncFlow, \
-    GeneralDecorator, IsEngine, IsEngineConfig, IsRunStateRegistryConfig
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
 

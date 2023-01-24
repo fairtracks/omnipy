@@ -1,11 +1,12 @@
 from typing import cast, Type
 
-from omnipy.compute.job import Job, JobTemplate
-from omnipy.compute.tasklist_job import TaskTemplateArgsJobBase
-from omnipy.compute.mixins.flow_context import FlowContextJobMixin
+from omnipy.abstract.protocols import (IsDagFlowRunnerEngine,
+                                       IsFuncFlowRunnerEngine,
+                                       IsLinearFlowRunnerEngine)
 from omnipy.compute.func_job import FuncArgJobBase
-from omnipy.abstract.protocols import IsLinearFlowRunnerEngine, IsDagFlowRunnerEngine, \
-    IsFuncFlowRunnerEngine
+from omnipy.compute.job import Job, JobTemplate
+from omnipy.compute.mixins.flow_context import FlowContextJobMixin
+from omnipy.compute.tasklist_job import TaskTemplateArgsJobBase
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
 

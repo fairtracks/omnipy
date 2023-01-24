@@ -4,7 +4,7 @@ from abc import ABCMeta
 from datetime import datetime
 from typing import Optional
 
-from omnipy.abstract.protocols import IsJobConfigHolder, IsTaskRunnerEngine, IsJobConfig
+from omnipy.abstract.protocols import IsJobConfig, IsJobConfigHolder, IsTaskRunnerEngine
 
 
 class JobCreator:

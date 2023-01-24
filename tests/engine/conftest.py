@@ -2,10 +2,14 @@ from typing import Callable, cast, Optional, Tuple, Type
 
 import pytest_cases as pc
 
+from omnipy.abstract.protocols import (IsEngine,
+                                       IsFlowTemplate,
+                                       IsJobTemplate,
+                                       IsRunStateRegistry,
+                                       IsTaskRunnerEngine,
+                                       IsTaskTemplate)
 from omnipy.engine.local import LocalRunner
 from omnipy.engine.prefect import PrefectEngine
-from omnipy.abstract.protocols import IsJobTemplate, IsTaskTemplate, IsFlowTemplate, IsEngine, \
-    IsTaskRunnerEngine, IsRunStateRegistry
 
 from .helpers.classes import JobCase, JobRunnerStateChecker, JobType
 from .helpers.functions import add_logger_to_registry, update_job_case_with_job

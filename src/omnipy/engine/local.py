@@ -1,12 +1,15 @@
 from typing import Any, Callable, Type
 
+from omnipy.abstract.protocols import (IsDagFlow,
+                                       IsFuncFlow,
+                                       IsLinearFlow,
+                                       IsLocalRunnerConfig,
+                                       IsTask)
 from omnipy.config.engine import LocalRunnerConfig
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
-from omnipy.abstract.protocols import IsTask, IsLinearFlow, IsDagFlow, IsFuncFlow, \
-    IsLocalRunnerConfig
 
 
 class LocalRunner(TaskRunnerEngine,

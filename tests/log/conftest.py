@@ -1,11 +1,14 @@
-import logging
 from io import StringIO
+import logging
 from typing import Annotated
 
 import pytest
 
-from engine.helpers.mocks import MockTaskTemplate, MockJobRunnerSubclass, MockTask, MockDagFlow, \
-    MockDagFlowTemplate
+from engine.helpers.mocks import (MockDagFlow,
+                                  MockDagFlowTemplate,
+                                  MockJobRunnerSubclass,
+                                  MockTask,
+                                  MockTaskTemplate)
 
 
 @pytest.fixture(scope='function')

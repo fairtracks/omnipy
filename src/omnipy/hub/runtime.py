@@ -3,18 +3,26 @@ import logging
 from sys import stdout
 from typing import Any, Optional
 
+from omnipy.abstract.enums import EngineChoice
+from omnipy.abstract.protocols import (IsEngine,
+                                       IsEngineConfig,
+                                       IsJobConfig,
+                                       IsJobConfigHolder,
+                                       IsLocalRunnerConfig,
+                                       IsPrefectEngineConfig,
+                                       IsRunStateRegistry,
+                                       IsRunStateRegistryConfig,
+                                       IsRuntime,
+                                       IsRuntimeConfig,
+                                       IsRuntimeObjects)
 from omnipy.compute.job import JobBase
 from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import JobConfig
-from omnipy.data.serializer import SerializerRegistry
-from omnipy.hub.publisher import ConfigPublisher
 from omnipy.config.registry import RunStateRegistryConfig
-from omnipy.abstract.enums import EngineChoice
+from omnipy.data.serializer import SerializerRegistry
 from omnipy.engine.local import LocalRunner
 from omnipy.engine.prefect import PrefectEngine
-from omnipy.abstract.protocols import IsEngine, IsRunStateRegistry, IsEngineConfig, \
-    IsLocalRunnerConfig, IsPrefectEngineConfig, IsRunStateRegistryConfig, IsJobConfig, \
-    IsJobConfigHolder, IsRuntimeConfig, IsRuntimeObjects, IsRuntime
+from omnipy.hub.publisher import ConfigPublisher
 from omnipy.log.registry import RunStateRegistry
 from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
 from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer

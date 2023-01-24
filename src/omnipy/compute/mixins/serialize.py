@@ -4,12 +4,13 @@ from pathlib import Path
 import tarfile
 from typing import Optional
 
-from omnipy.abstract.enums import PersistOutputsOptions, RestoreOutputsOptions, \
-    ConfigPersistOutputsOptions as ConfigPersistOpts, \
-    ConfigRestoreOutputsOptions as ConfigRestoreOpts
+from omnipy.abstract.enums import ConfigPersistOutputsOptions as ConfigPersistOpts
+from omnipy.abstract.enums import ConfigRestoreOutputsOptions as ConfigRestoreOpts
+from omnipy.abstract.enums import PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import SerializerRegistry
+
 # from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
 # from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
 # from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer

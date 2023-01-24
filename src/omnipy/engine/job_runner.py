@@ -4,9 +4,9 @@ import sys
 from types import AsyncGeneratorType, GeneratorType
 from typing import Any, Awaitable, Callable, cast
 
-from omnipy.engine.base import Engine
 from omnipy.abstract.enums import RunState
-from omnipy.abstract.protocols import IsJob, IsTask, IsLinearFlow, IsDagFlow, IsFuncFlow
+from omnipy.abstract.protocols import IsDagFlow, IsFuncFlow, IsJob, IsLinearFlow, IsTask
+from omnipy.engine.base import Engine
 
 
 class JobRunnerEngine(Engine, ABC):

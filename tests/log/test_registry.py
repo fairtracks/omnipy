@@ -8,11 +8,11 @@ from typing import Annotated
 import pytest
 
 from omnipy.abstract.enums import RunState
-from omnipy.abstract.protocols import IsTask, IsDagFlow
+from omnipy.abstract.protocols import IsDagFlow, IsTask
 from omnipy.log.registry import RunStateRegistry
 from omnipy.util.helpers import get_datetime_format
 
-from .helpers.functions import read_log_lines_from_stream, read_log_line_from_stream
+from .helpers.functions import read_log_line_from_stream, read_log_lines_from_stream
 
 
 def test_job_state_transitions(
