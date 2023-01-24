@@ -42,7 +42,7 @@ class ParamsFuncJobBaseMixin:
             result = super()._call_job(*args, **mapped_fixed_params, **mapped_kwargs)
 
         except TypeError as e:
-            if not str(e).startswith('Incorrect job function arguments'):
+            if str(e).startswith('Incorrect job function arguments'):
                 raise TypeError(
                     f'Incorrect job function arguments for job "{self.name}"!\n'
                     f'Job class name: {self.__class__.__name__}\n'
