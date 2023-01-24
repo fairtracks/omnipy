@@ -13,6 +13,8 @@ from ..json.models import (JsonDataset,
                            JsonDictOfListOfDictOfAnyModel,
                            JsonListOfDictOfAnyModel,
                            JsonListOfNestedDictsModel)
+from ..pandas.models import PandasDataset
+
 from .models import TableOfStrings, TableOfStringsAndLists
 
 ID_KEY = '_omnipy_id'

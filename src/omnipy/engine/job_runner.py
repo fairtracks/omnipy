@@ -2,11 +2,11 @@ from abc import ABC, abstractmethod
 import inspect
 import sys
 from types import AsyncGeneratorType, GeneratorType
-from typing import Any, Awaitable, Callable, cast, Iterable
+from typing import Any, Awaitable, Callable, cast
 
 from omnipy.engine.base import Engine
-from omnipy.engine.constants import RunState
-from omnipy.engine.protocols import IsDagFlow, IsFuncFlow, IsJob, IsLinearFlow, IsTask
+from omnipy.abstract.enums import RunState
+from omnipy.abstract.protocols import IsJob, IsTask, IsLinearFlow, IsDagFlow, IsFuncFlow
 
 
 class JobRunnerEngine(Engine, ABC):

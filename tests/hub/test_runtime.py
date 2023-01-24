@@ -3,10 +3,10 @@ from typing import Annotated, Type
 
 import pytest
 
-from omnipy.config.job import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
-from omnipy.config.runtime import RuntimeConfig, RuntimeObjects
-from omnipy.engine.constants import EngineChoice
-from omnipy.engine.protocols import IsRuntime
+from omnipy.abstract.enums import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions, \
+    EngineChoice
+from omnipy.hub.runtime import RuntimeConfig, RuntimeObjects
+from omnipy.abstract.protocols import IsRuntime
 
 from .helpers.functions import assert_logger
 from .helpers.mocks import (MockJobConfig,
@@ -54,7 +54,7 @@ def assert_runtime_objects_default(objects: RuntimeObjects):
     from omnipy.compute.job_creator import JobCreator
     from omnipy.engine.local import LocalRunner
     from omnipy.engine.prefect import PrefectEngine
-    from omnipy.engine.registry import RunStateRegistry
+    from omnipy.log.registry import RunStateRegistry
 
     assert isinstance(objects.logger, logging.Logger)
     assert isinstance(objects.registry, RunStateRegistry)

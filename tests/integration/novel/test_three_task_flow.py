@@ -4,7 +4,7 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from omnipy.engine.constants import RunState
+from omnipy.abstract.enums import RunState
 
 from ...compute.cases.flows import FlowCase
 from ...engine.helpers.functions import assert_job_state

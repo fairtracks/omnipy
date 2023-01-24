@@ -1,50 +1,19 @@
 import asyncio
 from datetime import datetime, timedelta
-import inspect
-from io import StringIO
 import logging
-import os
 from time import sleep
 from typing import Awaitable, Callable, cast, List, Optional, Type
 
 from omnipy.compute.job import JobBase
 from omnipy.engine.base import Engine
-from omnipy.engine.constants import RunState
-from omnipy.engine.protocols import (IsDagFlow,
-                                     IsDagFlowRunnerEngine,
-                                     IsDagFlowTemplate,
-                                     IsEngine,
-                                     IsFlowTemplate,
-                                     IsFuncFlowRunnerEngine,
-                                     IsFuncFlowTemplate,
-                                     IsJob,
-                                     IsLinearFlow,
-                                     IsLinearFlowRunnerEngine,
-                                     IsLinearFlowTemplate,
-                                     IsRunStateRegistry,
-                                     IsTask,
-                                     IsTaskRunnerEngine,
-                                     IsTaskTemplate)
+from omnipy.abstract.enums import RunState
+from omnipy.abstract.protocols import IsJob, IsTask, IsTaskTemplate, IsFlowTemplate, IsLinearFlow, \
+    IsLinearFlowTemplate, IsDagFlow, IsDagFlowTemplate, IsFuncFlowTemplate, IsEngine, \
+    IsTaskRunnerEngine, IsLinearFlowRunnerEngine, IsDagFlowRunnerEngine, IsFuncFlowRunnerEngine, \
+    IsRunStateRegistry
 from omnipy.util.helpers import resolve
 
 from .classes import JobCase, JobType
-
-
-def read_log_lines_from_stream(str_stream: StringIO) -> List[str]:
-    str_stream.seek(0)
-    log_lines = [line.rstrip(os.linesep) for line in str_stream.readlines()]
-    str_stream.seek(0)
-    str_stream.truncate(0)
-    return log_lines
-
-
-def read_log_line_from_stream(str_stream: StringIO) -> str:
-    log_lines = read_log_lines_from_stream(str_stream)
-    if len(log_lines) == 1:
-        return log_lines[0]
-    else:
-        assert len(log_lines) == 0
-        return ''
 
 
 def extract_engine(job: JobBase):

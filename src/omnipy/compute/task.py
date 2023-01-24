@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import Callable, cast, Mapping, Optional, Type
+from typing import cast, Type
 
-from omnipy.compute.job import Job, JobBase, JobTemplate
-from omnipy.compute.job_types import IsFuncJobTemplateCallable
-from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutputsOptions
-from omnipy.compute.private.job import FuncArgJobBase
-from omnipy.engine.protocols import IsEngine, IsTask, IsTaskRunnerEngine
+from omnipy.compute.job import Job, JobTemplate
+from omnipy.compute.func_job import FuncArgJobBase
+from omnipy.abstract.protocols import IsEngine, IsTaskRunnerEngine
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
 # class TaskInit(FuncArgJobBase):

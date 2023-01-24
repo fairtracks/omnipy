@@ -3,12 +3,12 @@ from typing import Annotated, Type
 
 import pytest
 
-from omnipy.engine.protocols import IsRuntime
+from omnipy.abstract.protocols import IsRuntime
 
 
 @pytest.fixture(scope='function')
 def runtime_cls() -> Type[IsRuntime]:
-    from omnipy.config.runtime import Runtime
+    from omnipy.hub.runtime import Runtime
     return Runtime
 
 

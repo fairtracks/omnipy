@@ -2,12 +2,11 @@ from dataclasses import dataclass
 from functools import update_wrapper
 from typing import Any, Callable, Dict, Generic, Tuple, TypeVar
 
-import pytest
 import pytest_cases as pc
 
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
-from omnipy.engine.protocols import IsFlowTemplate
+from omnipy.abstract.protocols import IsFlowTemplate
 
 from .tasks import TaskCase
 

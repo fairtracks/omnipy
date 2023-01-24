@@ -5,7 +5,7 @@ import pytest
 
 from omnipy.compute.job import Job, JobBase, JobTemplate
 from omnipy.compute.job_creator import JobCreator
-from omnipy.compute.job_types import JobStateException
+from omnipy.abstract.exceptions import JobStateException
 
 from .helpers.functions import assert_updated_wrapper
 from .helpers.mocks import (CommandMockJob,
@@ -121,7 +121,7 @@ def test_job_creator_properties_mock(
                 at_obj_level=True,
                 set_method='set_engine'),
             PropertyTest(
-                property='config',
+                property='hub',
                 enter_exit=False,
                 default_val=None,
                 val=mock_job_config,

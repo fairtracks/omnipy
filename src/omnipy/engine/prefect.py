@@ -13,11 +13,8 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
-from omnipy.engine.protocols import (IsDagFlow,
-                                     IsFuncFlow,
-                                     IsLinearFlow,
-                                     IsPrefectEngineConfig,
-                                     IsTask)
+from omnipy.abstract.protocols import IsTask, IsLinearFlow, IsDagFlow, IsFuncFlow, \
+    IsPrefectEngineConfig
 from omnipy.util.helpers import resolve
 
 

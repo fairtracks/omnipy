@@ -4,29 +4,19 @@ from datetime import datetime
 from functools import update_wrapper
 import inspect
 import logging
-from typing import Any, Callable, ClassVar, Dict, List, Optional, Tuple, Type
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 from inflection import underscore
 from prefect.utilities.names import generate_slug
 from slugify import slugify
 
-from omnipy.compute.job_types import GeneralDecorator
-from omnipy.engine.base import Engine
-from omnipy.engine.constants import RunState
+from omnipy.abstract.enums import RunState
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
-from omnipy.engine.protocols import (IsDagFlow,
-                                     IsEngine,
-                                     IsEngineConfig,
-                                     IsFlow,
-                                     IsFuncFlow,
-                                     IsJob,
-                                     IsLinearFlow,
-                                     IsRunStateRegistry,
-                                     IsRunStateRegistryConfig,
-                                     IsTask)
+from omnipy.abstract.protocols import IsJob, IsTask, IsFlow, IsLinearFlow, IsDagFlow, IsFuncFlow, \
+    GeneralDecorator, IsEngine, IsEngineConfig, IsRunStateRegistryConfig
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
 

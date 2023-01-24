@@ -6,23 +6,19 @@ from typing import Any, Optional
 from omnipy.compute.job import JobBase
 from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import JobConfig
-from omnipy.config.publisher import ConfigPublisher
+from omnipy.data.serializer import SerializerRegistry
+from omnipy.hub.publisher import ConfigPublisher
 from omnipy.config.registry import RunStateRegistryConfig
-from omnipy.engine.constants import EngineChoice
+from omnipy.abstract.enums import EngineChoice
 from omnipy.engine.local import LocalRunner
 from omnipy.engine.prefect import PrefectEngine
-from omnipy.engine.protocols import (IsEngine,
-                                     IsEngineConfig,
-                                     IsJobConfig,
-                                     IsJobCreator,
-                                     IsLocalRunnerConfig,
-                                     IsPrefectEngineConfig,
-                                     IsRunStateRegistry,
-                                     IsRunStateRegistryConfig,
-                                     IsRuntime,
-                                     IsRuntimeConfig,
-                                     IsRuntimeObjects)
-from omnipy.engine.registry import RunStateRegistry
+from omnipy.abstract.protocols import IsEngine, IsRunStateRegistry, IsEngineConfig, \
+    IsLocalRunnerConfig, IsPrefectEngineConfig, IsRunStateRegistryConfig, IsJobConfig, \
+    IsJobConfigHolder, IsRuntimeConfig, IsRuntimeObjects, IsRuntime
+from omnipy.log.registry import RunStateRegistry
+from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
+from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
+from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
 
 
 def get_default_logger():
@@ -53,7 +49,7 @@ def _job_creator_factory():
 class RuntimeObjects(RuntimeEntry, ConfigPublisher):
     logger: logging.Logger = field(default_factory=get_default_logger)
     registry: IsRunStateRegistry = field(default_factory=RunStateRegistry)
-    job_creator: IsJobCreator = field(default_factory=_job_creator_factory)
+    job_creator: IsJobConfigHolder = field(default_factory=_job_creator_factory)
     local: IsEngine = field(default_factory=LocalRunner)
     prefect: IsEngine = field(default_factory=PrefectEngine)
 
@@ -124,3 +120,12 @@ class Runtime(ConfigPublisher):
 
     def _update_job_creator_engine(self, _item_changed: Any):
         self.objects.job_creator.set_engine(self._get_engine(self.config.engine))
+
+    def _create_serializer_registry(self):
+        registry = SerializerRegistry()
+        #
+        registry.register(PandasDatasetToTarFileSerializer)
+        registry.register(RawDatasetToTarFileSerializer)
+        registry.register(JsonDatasetToTarFileSerializer)
+
+        return registry

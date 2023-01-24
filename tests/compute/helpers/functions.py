@@ -1,7 +1,7 @@
 import inspect
 from typing import Callable, Type, Union
 
-from omnipy.engine.protocols import IsJob, IsJobTemplate
+from omnipy.abstract.protocols import IsJob, IsJobTemplate
 
 
 def assert_updated_wrapper(a, b):

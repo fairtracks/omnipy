@@ -1,32 +1,18 @@
 from datetime import datetime
-from enum import Enum
 import os
 from pathlib import Path
 import tarfile
 from typing import Optional
 
-from omnipy.config.job import ConfigPersistOutputsOptions as ConfigPersistOpts
-from omnipy.config.job import ConfigRestoreOutputsOptions as ConfigRestoreOpts
+from omnipy.abstract.enums import PersistOutputsOptions, RestoreOutputsOptions, \
+    ConfigPersistOutputsOptions as ConfigPersistOpts, \
+    ConfigRestoreOutputsOptions as ConfigRestoreOpts
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import SerializerRegistry
-from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
-from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
-from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
-
-
-class PersistOutputsOptions(str, Enum):
-    DISABLED = 'disabled'
-    FOLLOW_CONFIG = 'config'
-    ENABLED = 'enabled'
-
-
-class RestoreOutputsOptions(str, Enum):
-    DISABLED = 'disabled'
-    FOLLOW_CONFIG = 'config'
-    AUTO_ENABLE_IGNORE_PARAMS = 'auto_ignore_params'
-    FORCE_ENABLE_IGNORE_PARAMS = 'force_ignore_params'
-
+# from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
+# from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
+# from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
 
 PersistOpts = PersistOutputsOptions
 RestoreOpts = RestoreOutputsOptions
@@ -53,10 +39,10 @@ class SerializerFuncJobBaseMixin:
 
     def _create_serializer_registry(self):
         registry = SerializerRegistry()
-
-        registry.register(PandasDatasetToTarFileSerializer)
-        registry.register(RawDatasetToTarFileSerializer)
-        registry.register(JsonDatasetToTarFileSerializer)
+        #
+        # registry.register(PandasDatasetToTarFileSerializer)
+        # registry.register(RawDatasetToTarFileSerializer)
+        # registry.register(JsonDatasetToTarFileSerializer)
 
         return registry
 
@@ -77,21 +63,21 @@ class SerializerFuncJobBaseMixin:
         if not self._has_job_config or self._persist_outputs is not PersistOpts.FOLLOW_CONFIG:
             return self._persist_outputs if self._persist_outputs is not None \
                     else PersistOpts.DISABLED
-        else:
-            from omnipy.compute.flow import FlowBase
-            from omnipy.compute.task import TaskBase
-
-            config_persist_opt = self.config.persist_outputs
-
-            if config_persist_opt == ConfigPersistOpts.ENABLE_FLOW_OUTPUTS:
-                return PersistOpts.ENABLED if isinstance(self, FlowBase) else PersistOpts.DISABLED
-            elif config_persist_opt == ConfigPersistOpts.ENABLE_FLOW_AND_TASK_OUTPUTS:
-                return PersistOpts.ENABLED \
-                        if any(isinstance(self, cls) for cls in (FlowBase, TaskBase)) \
-                        else PersistOpts.DISABLED
-            else:
-                assert config_persist_opt == ConfigPersistOpts.DISABLED
-                return PersistOpts.DISABLED
+        # else:
+        #     from omnipy.compute.flow import FlowBase
+        #     from omnipy.compute.task import TaskBase
+        #
+        #     config_persist_opt = self.config.persist_outputs
+        #
+        #     if config_persist_opt == ConfigPersistOpts.ENABLE_FLOW_OUTPUTS:
+        #         return PersistOpts.ENABLED if isinstance(self, FlowBase) else PersistOpts.DISABLED
+        #     elif config_persist_opt == ConfigPersistOpts.ENABLE_FLOW_AND_TASK_OUTPUTS:
+        #         return PersistOpts.ENABLED \
+        #                 if any(isinstance(self, cls) for cls in (FlowBase, TaskBase)) \
+        #                 else PersistOpts.DISABLED
+        #     else:
+        #         assert config_persist_opt == ConfigPersistOpts.DISABLED
+        #         return PersistOpts.DISABLED
 
     @property
     def will_restore_outputs(self) -> RestoreOutputsOptions:

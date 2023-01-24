@@ -1,103 +1,13 @@
-from datetime import datetime
+from __future__ import annotations
+
 import logging
+from datetime import datetime
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Mapping, Optional, Protocol, runtime_checkable, Tuple, Type
+from typing import Protocol, Optional, Any, Type, Dict, Mapping, Tuple, TypeVar, Callable, \
+    runtime_checkable
 
-from omnipy.compute.job_types import GeneralDecorator
-from omnipy.compute.mixins.serialize import PersistOutputsOptions, RestoreOutputsOptions
-from omnipy.config.job import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
-from omnipy.engine.constants import EngineChoice, RunState
-
-
-class IsJobConfig(Protocol):
-    persist_outputs: ConfigPersistOutputsOptions
-    restore_outputs: ConfigRestoreOutputsOptions
-    persist_data_dir_path: str
-
-
-class IsEngineConfig(Protocol):
-    ...
-
-
-class IsLocalRunnerConfig(IsEngineConfig, Protocol):
-    ...
-
-
-class IsPrefectEngineConfig(IsEngineConfig, Protocol):
-    use_cached_results: int = False
-
-
-class IsRunStateRegistryConfig(Protocol):
-    verbose: bool = True
-
-    def __init__(
-            self,
-            verbose: bool = True,  # noqa
-            *args: Any,
-            **kwargs: Any) -> None:
-        ...
-
-
-class IsConfigPublisher(Protocol):
-    def subscribe(self, config_item: str, callback_fun: Callable[[Any], None]):
-        ...
-
-    def unsubscribe_all(self) -> None:
-        ...
-
-
-class IsRuntimeConfig(IsConfigPublisher, Protocol):
-    job: IsJobConfig
-    engine: EngineChoice
-    local: IsLocalRunnerConfig
-    prefect: IsPrefectEngineConfig
-    registry: IsRunStateRegistryConfig
-
-    def __init__(
-            self,
-            job: Optional[IsJobConfig] = None,  # noqa
-            engine: EngineChoice = EngineChoice.LOCAL,  # noqa
-            local_config: Optional[IsLocalRunnerConfig] = None,  # noqa
-            prefect_config: Optional[IsPrefectEngineConfig] = None,  # noqa
-            registry_config: Optional[IsRunStateRegistryConfig] = None,  # noqa
-            *args: Any,
-            **kwargs: Any) -> None:
-        ...
-
-
-class IsRuntimeObjects(IsConfigPublisher, Protocol):
-    logger: logging.Logger
-    registry: 'IsRunStateRegistry'
-    job_creator: 'IsJobCreator'
-    local: 'IsEngine'
-    prefect: 'IsEngine'
-
-    def __init__(
-            self,
-            logger: Optional[logging.Logger] = None,  # noqa
-            registry: Optional['IsRunStateRegistry'] = None,  # noqa
-            job_creator: Optional['IsJobCreator'] = None,  # noqa
-            local: Optional['IsEngine'] = None,  # noqa
-            prefect: Optional['IsEngine'] = None,  # noqa
-            *args: Any,
-            **kwargs: Any) -> None:
-        ...
-
-
-class IsRuntime(IsConfigPublisher, Protocol):
-    objects: IsRuntimeObjects
-    config: IsRuntimeConfig
-
-    def __init__(
-            self,
-            objects: Optional[IsRuntimeObjects] = None,  # noqa
-            config: Optional[IsRuntimeConfig] = None,  # noqa
-            *args: Any,
-            **kwargs: Any) -> None:
-        ...
-
-    def reset_subscriptions(self):
-        ...
+from omnipy.abstract.enums import PersistOutputsOptions, RestoreOutputsOptions, \
+    ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions, EngineChoice, RunState
 
 
 class IsNestedContext(Protocol):
@@ -108,17 +18,20 @@ class IsNestedContext(Protocol):
         ...
 
 
-class IsJobCreator(IsNestedContext, Protocol):
-    engine: Optional['IsTaskRunnerEngine']
+class IsJobConfigHolder(Protocol):
+    engine: Optional[IsEngine]
     config: Optional[IsJobConfig]
-    nested_context_level: int
-    time_of_cur_toplevel_nested_context_run: datetime
 
     def set_config(self, config: IsJobConfig) -> None:
         ...
 
-    def set_engine(self, engine: 'IsTaskRunnerEngine') -> None:
+    def set_engine(self, engine: IsEngine) -> None:
         ...
+
+
+class IsJobCreator(IsNestedContext, IsJobConfigHolder, Protocol):
+    nested_context_level: int
+    time_of_cur_toplevel_nested_context_run: datetime
 
 
 class IsJob(Protocol):
@@ -147,7 +60,7 @@ class IsJob(Protocol):
 
 class IsJobTemplate(Protocol):
     config: Optional[IsJobConfig]
-    engine: Optional['IsTaskRunnerEngine']
+    engine: Optional[IsTaskRunnerEngine]
     in_flow_context: bool
 
     @classmethod
@@ -289,6 +202,53 @@ class IsFuncFlowTemplate(IsFuncFlow, IsFlowTemplate, Protocol):
         ...
 
 
+JobBaseT = TypeVar('JobBaseT', bound='JobBase', covariant=True)
+JobT = TypeVar('JobT', bound='Job', covariant=True)
+JobTemplateT = TypeVar('JobTemplateT', bound='JobTemplate', covariant=True)
+FuncJobTemplateT = TypeVar('FuncJobTemplateT', bound='FuncJobTemplate', covariant=True)
+
+
+class IsFuncJobTemplateCallable(Protocol[FuncJobTemplateT]):
+    def __call__(
+        self,
+        name: Optional[str] = None,
+        iterate_over_data_files: bool = False,
+        fixed_params: Optional[Mapping[str, object]] = None,
+        param_key_map: Optional[Mapping[str, str]] = None,
+        result_key: Optional[str] = None,
+        persist_outputs: Optional[PersistOutputsOptions] = None,
+        restore_outputs: Optional[RestoreOutputsOptions] = None,
+        **kwargs: object,
+    ) -> Callable[[Callable], FuncJobTemplateT]:
+        ...
+
+
+TaskTemplatesFlowTemplateT = TypeVar(
+    'TaskTemplatesFlowTemplateT', bound='TaskTemplatesFlowTemplate', covariant=True)
+
+
+class IsTaskTemplatesFlowTemplateCallable(Protocol[TaskTemplatesFlowTemplateT]):
+    def __call__(
+        self,
+        *task_templates: 'TaskTemplate',
+        name: Optional[str] = None,
+        iterate_over_data_files: bool = False,
+        fixed_params: Optional[Mapping[str, object]] = None,
+        param_key_map: Optional[Mapping[str, str]] = None,
+        result_key: Optional[str] = None,
+        persist_outputs: Optional[PersistOutputsOptions] = None,
+        restore_outputs: Optional[RestoreOutputsOptions] = None,
+        **kwargs: object,
+    ) -> Callable[[Callable], TaskTemplatesFlowTemplateT]:
+        ...
+
+
+FlowT = TypeVar('FlowT', bound='Flow', covariant=True)
+FlowBaseT = TypeVar('FlowBaseT', bound='FlowBase', covariant=True)
+FlowTemplateT = TypeVar('FlowTemplateT', bound='FlowTemplate', covariant=True)
+GeneralDecorator = Callable[[Callable], Callable]
+
+
 @runtime_checkable
 class IsEngine(Protocol):
     def __init__(self) -> None:
@@ -354,4 +314,95 @@ class IsRunStateRegistry(Protocol):
         ...
 
     def set_config(self, config: IsRunStateRegistryConfig) -> None:
+        ...
+
+
+class IsEngineConfig(Protocol):
+    ...
+
+
+class IsLocalRunnerConfig(IsEngineConfig, Protocol):
+    ...
+
+
+class IsPrefectEngineConfig(IsEngineConfig, Protocol):
+    use_cached_results: int = False
+
+
+class IsRunStateRegistryConfig(Protocol):
+    verbose: bool = True
+
+    def __init__(
+            self,
+            verbose: bool = True,  # noqa
+            *args: Any,
+            **kwargs: Any) -> None:
+        ...
+
+
+class IsConfigPublisher(Protocol):
+    def subscribe(self, config_item: str, callback_fun: Callable[[Any], None]):
+        ...
+
+    def unsubscribe_all(self) -> None:
+        ...
+
+
+class IsJobConfig(Protocol):
+    persist_outputs: ConfigPersistOutputsOptions
+    restore_outputs: ConfigRestoreOutputsOptions
+    persist_data_dir_path: str
+
+
+class IsRuntimeConfig(IsConfigPublisher, Protocol):
+    job: IsJobConfig
+    engine: EngineChoice
+    local: IsLocalRunnerConfig
+    prefect: IsPrefectEngineConfig
+    registry: IsRunStateRegistryConfig
+
+    def __init__(
+            self,
+            job: Optional[IsJobConfig] = None,  # noqa
+            engine: EngineChoice = EngineChoice.LOCAL,  # noqa
+            local_config: Optional[IsLocalRunnerConfig] = None,  # noqa
+            prefect_config: Optional[IsPrefectEngineConfig] = None,  # noqa
+            registry_config: Optional[IsRunStateRegistryConfig] = None,  # noqa
+            *args: Any,
+            **kwargs: Any) -> None:
+        ...
+
+
+class IsRuntimeObjects(IsConfigPublisher, Protocol):
+    logger: logging.Logger
+    registry: IsRunStateRegistry
+    job_creator: IsJobConfigHolder
+    local: IsEngine
+    prefect: IsEngine
+
+    def __init__(
+            self,
+            logger: Optional[logging.Logger] = None,  # noqa
+            registry: Optional[IsRunStateRegistry] = None,  # noqa
+            job_creator: Optional[IsJobConfigHolder] = None,  # noqa
+            local: Optional[IsEngine] = None,  # noqa
+            prefect: Optional[IsEngine] = None,  # noqa
+            *args: Any,
+            **kwargs: Any) -> None:
+        ...
+
+
+class IsRuntime(IsConfigPublisher, Protocol):
+    objects: IsRuntimeObjects
+    config: IsRuntimeConfig
+
+    def __init__(
+            self,
+            objects: Optional[IsRuntimeObjects] = None,  # noqa
+            config: Optional[IsRuntimeConfig] = None,  # noqa
+            *args: Any,
+            **kwargs: Any) -> None:
+        ...
+
+    def reset_subscriptions(self):
         ...

@@ -4,15 +4,10 @@ from datetime import datetime
 import logging
 from typing import Optional, Protocol, Tuple, Type
 
-from omnipy.config.publisher import ConfigPublisher
-from omnipy.engine.constants import RunState
-from omnipy.engine.protocols import (IsEngineConfig,
-                                     IsLocalRunnerConfig,
-                                     IsPrefectEngineConfig,
-                                     IsRunStateRegistry,
-                                     IsRunStateRegistryConfig,
-                                     IsTask,
-                                     IsTaskRunnerEngine)
+from omnipy.hub.publisher import ConfigPublisher
+from omnipy.abstract.enums import RunState
+from omnipy.abstract.protocols import IsTask, IsTaskRunnerEngine, IsRunStateRegistry, IsEngineConfig, \
+    IsLocalRunnerConfig, IsPrefectEngineConfig, IsRunStateRegistryConfig
 
 
 class MockFoo:

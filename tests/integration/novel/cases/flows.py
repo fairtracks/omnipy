@@ -3,7 +3,7 @@ from typing import Awaitable, Callable, Generic, TypeVar
 
 import pytest_cases as pc
 
-from omnipy.engine.protocols import IsFlowTemplate, IsTask
+from omnipy.abstract.protocols import IsTask, IsFlowTemplate
 
 from .raw.flows import (pos_square_root_dag_flow,
                         pos_square_root_func_flow,

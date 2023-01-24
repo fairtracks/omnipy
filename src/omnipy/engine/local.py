@@ -5,7 +5,8 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
-from omnipy.engine.protocols import IsDagFlow, IsFuncFlow, IsLinearFlow, IsLocalRunnerConfig, IsTask
+from omnipy.abstract.protocols import IsTask, IsLinearFlow, IsDagFlow, IsFuncFlow, \
+    IsLocalRunnerConfig
 
 
 class LocalRunner(TaskRunnerEngine,

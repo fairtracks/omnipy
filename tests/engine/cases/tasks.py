@@ -2,14 +2,14 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import threading
 from types import NoneType
-from typing import Awaitable, Callable, Generator, Tuple
+from typing import Awaitable, Callable, Generator
 
 from aiostream.stream import enumerate as aenumerate
 import pytest
 import pytest_cases as pc
 
-from omnipy.engine.constants import RunState
-from omnipy.engine.protocols import IsJob
+from omnipy.abstract.enums import RunState
+from omnipy.abstract.protocols import IsJob
 from omnipy.util.helpers import resolve
 
 from ..helpers.classes import JobCase

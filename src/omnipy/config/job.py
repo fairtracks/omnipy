@@ -1,19 +1,9 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
 from pathlib import Path
 from typing import Optional
 
-
-class ConfigPersistOutputsOptions(str, Enum):
-    DISABLED = 'disabled'
-    ENABLE_FLOW_OUTPUTS = 'flow'
-    ENABLE_FLOW_AND_TASK_OUTPUTS = 'all'
-
-
-class ConfigRestoreOutputsOptions(str, Enum):
-    DISABLED = 'disabled'
-    AUTO_ENABLE_IGNORE_PARAMS = 'auto_ignore_params'
+from omnipy.abstract.enums import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
 
 
 def _get_persist_data_dir_path():
