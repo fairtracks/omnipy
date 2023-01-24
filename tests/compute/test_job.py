@@ -121,7 +121,7 @@ def test_job_creator_properties_mock(
                 at_obj_level=True,
                 set_method='set_engine'),
             PropertyTest(
-                property='hub',
+                property='config',
                 enter_exit=False,
                 default_val=None,
                 val=mock_job_config,
