@@ -10,10 +10,9 @@ from omnipy.abstract.enums import PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import SerializerRegistry
-
-# from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
-# from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
-# from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
+from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
+from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
+from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
 
 PersistOpts = PersistOutputsOptions
 RestoreOpts = RestoreOutputsOptions
@@ -39,11 +38,12 @@ class SerializerFuncJobBaseMixin:
         self._serializer_registry = self._create_serializer_registry()
 
     def _create_serializer_registry(self):
+        # TODO: store in runtime, to remove dependencies
         registry = SerializerRegistry()
-        #
-        # registry.register(PandasDatasetToTarFileSerializer)
-        # registry.register(RawDatasetToTarFileSerializer)
-        # registry.register(JsonDatasetToTarFileSerializer)
+
+        registry.register(PandasDatasetToTarFileSerializer)
+        registry.register(RawDatasetToTarFileSerializer)
+        registry.register(JsonDatasetToTarFileSerializer)
 
         return registry
 
@@ -64,21 +64,22 @@ class SerializerFuncJobBaseMixin:
         if not self._has_job_config or self._persist_outputs is not PersistOpts.FOLLOW_CONFIG:
             return self._persist_outputs if self._persist_outputs is not None \
                     else PersistOpts.DISABLED
-        # else:
-        #     from omnipy.compute.flow import FlowBase
-        #     from omnipy.compute.task import TaskBase
-        #
-        #     config_persist_opt = self.config.persist_outputs
-        #
-        #     if config_persist_opt == ConfigPersistOpts.ENABLE_FLOW_OUTPUTS:
-        #         return PersistOpts.ENABLED if isinstance(self, FlowBase) else PersistOpts.DISABLED
-        #     elif config_persist_opt == ConfigPersistOpts.ENABLE_FLOW_AND_TASK_OUTPUTS:
-        #         return PersistOpts.ENABLED \
-        #                 if any(isinstance(self, cls) for cls in (FlowBase, TaskBase)) \
-        #                 else PersistOpts.DISABLED
-        #     else:
-        #         assert config_persist_opt == ConfigPersistOpts.DISABLED
-        #         return PersistOpts.DISABLED
+        else:
+            # TODO: Refactor using Flow and Task Mixins
+            from omnipy.compute.flow import FlowBase
+            from omnipy.compute.task import TaskBase
+
+            config_persist_opt = self.config.persist_outputs
+
+            if config_persist_opt == ConfigPersistOpts.ENABLE_FLOW_OUTPUTS:
+                return PersistOpts.ENABLED if isinstance(self, FlowBase) else PersistOpts.DISABLED
+            elif config_persist_opt == ConfigPersistOpts.ENABLE_FLOW_AND_TASK_OUTPUTS:
+                return PersistOpts.ENABLED \
+                        if any(isinstance(self, cls) for cls in (FlowBase, TaskBase)) \
+                        else PersistOpts.DISABLED
+            else:
+                assert config_persist_opt == ConfigPersistOpts.DISABLED
+                return PersistOpts.DISABLED
 
     @property
     def will_restore_outputs(self) -> RestoreOutputsOptions:
