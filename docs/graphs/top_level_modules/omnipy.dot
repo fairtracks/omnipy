@@ -1,0 +1,31 @@
+digraph G {
+    rankdir = TB;
+    node [style=filled,fillcolor="#ffffff",fontcolor="#000000",fontname=Helvetica,fontsize=10];    abstract [fillcolor="#f91010",fontcolor="#ffffff",label="abstract"];
+    compute [fillcolor="#f91010",fontcolor="#ffffff",label="compute"];
+    modules [fillcolor="#f31616",fontcolor="#ffffff",label="modules"];
+    data [fillcolor="#f91010",fontcolor="#ffffff",label="data"];
+    log [fillcolor="#c24747",fontcolor="#ffffff",label="log"];
+    config [fillcolor="#e72222",fontcolor="#ffffff",label="config"];
+    engine [fillcolor="#e72222",fontcolor="#ffffff",label="engine"];
+    util [fillcolor="#f91010",fontcolor="#ffffff",label="util"];
+    hub [fillcolor="#ce3b3b",fontcolor="#ffffff",label="hub"];
+    abstract -> compute [fillcolor="#f91010",minlen="2"];
+    abstract -> config [fillcolor="#f91010",minlen="2"];
+    abstract -> engine [fillcolor="#f91010",minlen="2"];
+    abstract -> hub [fillcolor="#f91010",minlen="2"];
+    abstract -> log [fillcolor="#f91010",minlen="2"];
+    compute -> hub [fillcolor="#f91010",minlen="2"];
+    compute -> modules [fillcolor="#f91010",minlen="3"];
+    config -> engine [fillcolor="#e72222",minlen="2"];
+    config -> hub [fillcolor="#e72222",minlen="2"];
+    config -> log [fillcolor="#e72222",minlen="2"];
+    data -> compute [fillcolor="#f91010",minlen="3"];
+    data -> hub [fillcolor="#f91010",minlen="2"];
+    data -> modules [fillcolor="#f91010",minlen="3"];
+    engine -> hub [fillcolor="#e72222",minlen="2"];
+    log -> hub [fillcolor="#c24747",minlen="2"];
+    modules -> hub [fillcolor="#f31616",minlen="2"];
+    util -> compute [fillcolor="#f91010",minlen="2"];
+    util -> engine [fillcolor="#f91010",minlen="2"];
+    util -> log [fillcolor="#f91010",minlen="2"];
+}
