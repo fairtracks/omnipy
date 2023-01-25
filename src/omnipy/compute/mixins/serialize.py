@@ -110,8 +110,8 @@ class SerializerFuncJobBaseMixin:
             if isinstance(results, Dataset):
                 self._serialize_and_persist_outputs(results)
             else:
-                self._log_message(f'Results of {self.unique_name} is not a Dataset and cannot '
-                                  f'be automatically serialized and persisted!')
+                self.log(f'Results of {self.unique_name} is not a Dataset and cannot '
+                         f'be automatically serialized and persisted!')
 
         return results
 
@@ -131,11 +131,10 @@ class SerializerFuncJobBaseMixin:
             self._serializer_registry.auto_detect_tar_file_serializer(results)
 
         if serializer is None:
-            self._log_message(f'Unable to find a serializer for results of job "{self.name}", '
-                              f'with data type "{type(results)}". Will abort persisting results...')
+            self.log(f'Unable to find a serializer for results of job "{self.name}", '
+                     f'with data type "{type(results)}". Will abort persisting results...')
         else:
-            self._log_message(
-                f'Writing dataset as a gzipped tarpack to "{os.path.abspath(file_path)}"')
+            self.log(f'Writing dataset as a gzipped tarpack to "{os.path.abspath(file_path)}"')
 
             with open(file_path, 'wb') as tarfile:
                 tarfile.write(serializer.serialize(parsed_dataset))
@@ -169,21 +168,20 @@ class SerializerFuncJobBaseMixin:
                         with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
                             file_suffixes = set(fn.split('.')[-1] for fn in tarfile_obj.getnames())
                         if len(file_suffixes) != 1:
-                            self._log_message(f'Tar archive contains files with different or '
-                                              f'no file suffixes: {file_suffixes}. Serializer '
-                                              f'cannot be uniquely determined. Aborting '
-                                              f'restore.')
+                            self.log(f'Tar archive contains files with different or '
+                                     f'no file suffixes: {file_suffixes}. Serializer '
+                                     f'cannot be uniquely determined. Aborting '
+                                     f'restore.')
                         else:
                             file_suffix = file_suffixes.pop()
                             serializers = self._serializer_registry.\
                                 detect_tar_file_serializers_from_file_suffix(file_suffix)
                             if len(serializers) == 0:
-                                self._log_message(
-                                    f'No serializer for file suffix "{file_suffix}" can be'
-                                    f'determined. Aborting restore.')
+                                self.log(f'No serializer for file suffix "{file_suffix}" can be'
+                                         f'determined. Aborting restore.')
                             else:
-                                self._log_message(f'Reading dataset from a gzipped tarpack at'
-                                                  f' "{os.path.abspath(tar_file_path)}"')
+                                self.log(f'Reading dataset from a gzipped tarpack at'
+                                         f' "{os.path.abspath(tar_file_path)}"')
 
                                 serializer = serializers[0]
                                 with open(tar_file_path, 'rb') as tarfile_binary:
@@ -203,13 +201,3 @@ class SerializerFuncJobBaseMixin:
                                         return dataset
 
         raise RuntimeError('No persisted output')
-
-    @classmethod
-    def _log_message(cls, log_message: str) -> None:
-        from omnipy import runtime
-        if runtime:
-            runtime.objects.registry.log(datetime.now(), log_message)
-
-    # TODO: Refactor logging as a general mixin and add it to at least RunStateRegistry (as now)
-    #       and also JobCreator, possibly engines, and more. Use RuntimeConfig to subscribe to
-    #       loggers, as now.

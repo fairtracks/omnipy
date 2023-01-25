@@ -222,21 +222,21 @@ def test_state_change_logging(
 
         assert len(log_lines) == 6
 
-        assert log_lines[0] == f'INFO (test) - ' \
+        assert log_lines[0] == f'INFO - ' \
                                f'{datetime_list[0].strftime(get_datetime_format())}: ' \
-                               f'Initialized "{job_a.unique_name}"'
-        assert log_lines[1] == f'INFO (test) - ' \
+                               f'Initialized "{job_a.unique_name}" (test)'
+        assert log_lines[1] == f'INFO - ' \
                                f'{datetime_list[1].strftime(get_datetime_format())}: ' \
-                               f'Started running "{job_a.unique_name}"...'
-        assert log_lines[2] == f'INFO (test) - ' \
+                               f'Started running "{job_a.unique_name}"... (test)'
+        assert log_lines[2] == f'INFO - ' \
                                f'{datetime_list[2].strftime(get_datetime_format())}: ' \
-                               f'Initialized "{job_b.unique_name}"'
-        assert log_lines[3] == f'INFO (test) - ' \
+                               f'Initialized "{job_b.unique_name}" (test)'
+        assert log_lines[3] == f'INFO - ' \
                                f'{datetime_list[3].strftime(get_datetime_format())}: ' \
-                               f'Finished running "{job_a.unique_name}"!'
-        assert log_lines[4] == f'INFO (test) - ' \
+                               f'Finished running "{job_a.unique_name}"! (test)'
+        assert log_lines[4] == f'INFO - ' \
                                f'{datetime_list[4].strftime(get_datetime_format())}: ' \
-                               f'Started running "{job_b.unique_name}"...'
-        assert log_lines[5] == f'INFO (test) - ' \
+                               f'Started running "{job_b.unique_name}"... (test)'
+        assert log_lines[5] == f'INFO - ' \
                                f'{datetime_list[5].strftime(get_datetime_format())}: ' \
-                               f'Finished running "{job_b.unique_name}"!'
+                               f'Finished running "{job_b.unique_name}"! (test)'
