@@ -1,4 +1,6 @@
 import logging
+import os
+from pathlib import Path
 from typing import Annotated, Type
 
 import pytest
@@ -24,7 +26,7 @@ from .helpers.mocks import (MockJobConfig,
                             MockRunStateRegistryConfig)
 
 
-def assert_runtime_config_default(config: RuntimeConfig):
+def assert_runtime_config_default(config: RuntimeConfig, dir_path: str):
     from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
     from omnipy.config.job import JobConfig
     from omnipy.config.registry import RunStateRegistryConfig
@@ -32,20 +34,26 @@ def assert_runtime_config_default(config: RuntimeConfig):
     assert isinstance(config.job, JobConfig)
     assert isinstance(config.job.persist_outputs, ConfigPersistOutputsOptions)
     assert isinstance(config.job.restore_outputs, ConfigRestoreOutputsOptions)
+    assert isinstance(config.job.persist_data_dir_path, str)
     assert isinstance(config.engine, str)
     assert isinstance(config.local, LocalRunnerConfig)
     assert isinstance(config.prefect, PrefectEngineConfig)
     assert isinstance(config.prefect.use_cached_results, bool)
     assert isinstance(config.registry, RunStateRegistryConfig)
     assert isinstance(config.registry.verbose, bool)
+    assert isinstance(config.registry.log_dir_path, str)
 
     assert config.job.persist_outputs == \
            ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
     assert config.job.restore_outputs == \
            ConfigRestoreOutputsOptions.DISABLED
+    assert config.job.persist_data_dir_path == \
+           os.path.join(dir_path, 'data')
     assert config.engine == EngineChoice.LOCAL
     assert config.prefect.use_cached_results is False
     assert config.registry.verbose is True
+    assert config.registry.log_dir_path == \
+           os.path.join(dir_path, 'logs')
 
 
 def assert_runtime_objects_default(objects: RuntimeObjects):
@@ -65,19 +73,22 @@ def assert_runtime_objects_default(objects: RuntimeObjects):
     assert objects.job_creator is JobBase.job_creator
 
 
-def test_config_default(teardown_loggers) -> None:
-    assert_runtime_config_default(RuntimeConfig())
+def test_config_default(runtime: Annotated[IsRuntime, pytest.fixture],
+                        teardown_loggers: Annotated[None, pytest.fixture],
+                        tmp_dir_path: Annotated[str, pytest.fixture]) -> None:
+    assert_runtime_config_default(RuntimeConfig(), str(Path.cwd()))
 
 
-def test_objects_default() -> None:
+def test_objects_default(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
     assert_runtime_objects_default(RuntimeObjects())
 
 
-def test_default_config(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+def test_default_config(runtime: Annotated[IsRuntime, pytest.fixture],
+                        tmp_dir_path: Annotated[str, pytest.fixture]) -> None:
     assert isinstance(runtime.config, RuntimeConfig)
     assert isinstance(runtime.objects, RuntimeObjects)
 
-    assert_runtime_config_default(runtime.config)
+    assert_runtime_config_default(runtime.config, tmp_dir_path)
     assert_runtime_objects_default(runtime.objects)
 
 

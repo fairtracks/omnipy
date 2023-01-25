@@ -1,6 +1,7 @@
-import tempfile
 from datetime import datetime
-from typing import Annotated, Type
+import os
+import tempfile
+from typing import Annotated, Generator, Type
 
 import pytest
 
@@ -14,13 +15,22 @@ def runtime_cls() -> Type[IsRuntime]:
 
 
 @pytest.fixture(scope='function')
-def runtime(runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> IsRuntime:
+def tmp_dir_path() -> Generator[str, None, None]:
+    with tempfile.TemporaryDirectory() as _tmp_dir_path:
+        yield _tmp_dir_path
+
+
+@pytest.fixture(scope='function')
+def runtime(
+    runtime_cls: Annotated[Type[IsRuntime], pytest.fixture],
+    tmp_dir_path: Annotated[str, pytest.fixture],
+) -> Generator[IsRuntime, None, None]:
     runtime = runtime_cls()
 
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        runtime.config.job.persist_data_dir_path = tmp_dir_path
+    runtime.config.job.persist_data_dir_path = os.path.join(tmp_dir_path, 'data')
+    runtime.config.registry.log_dir_path = os.path.join(tmp_dir_path, 'logs')
 
-        yield runtime
+    yield runtime
 
 
 @pytest.fixture(scope='function')

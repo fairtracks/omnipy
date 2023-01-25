@@ -343,6 +343,7 @@ class IsPrefectEngineConfig(IsEngineConfig, Protocol):
 
 class IsRunStateRegistryConfig(Protocol):
     verbose: bool = True
+    log_dir_path: str
 
     def __init__(
             self,
