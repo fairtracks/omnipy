@@ -7,7 +7,7 @@ from omnipy.api.constants import OMNIPY_LOG_FORMAT_STR
 from omnipy.util.helpers import get_datetime_format
 
 
-class LogDynMixin:
+class LogMixin:
     def __init__(self) -> None:
         if not logging.root.handlers:
             pass

@@ -9,14 +9,14 @@ import pytest_cases as pc
 from log.helpers.functions import (assert_log_line_from_stream,
                                    assert_log_lines_from_stream,
                                    read_log_line_from_stream)
-from omnipy.log.mixin import LogDynMixin
+from omnipy.log.mixin import LogMixin
 from omnipy.util.helpers import get_datetime_format
 from omnipy.util.mixin import DynamicMixinAcceptor
 
 
 @pc.case(id='my_class_as_regular_log_mixin_subclass')
 def case_my_class_as_regular_log_mixin_subclass() -> Type:
-    class MyClass(LogDynMixin):
+    class MyClass(LogMixin):
         def __init__(self, foo: int, bar: bool = True):
             super().__init__()
             self.foo = foo
@@ -32,7 +32,7 @@ def case_my_class_as_dynamic_log_mixin_subclass() -> Type:
             self.foo = foo
             self.bar = bar
 
-    MyClass.accept_mixin(LogDynMixin)
+    MyClass.accept_mixin(LogMixin)
     return MyClass
 
 

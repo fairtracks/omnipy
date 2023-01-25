@@ -13,14 +13,14 @@ from .helpers.mocks import (CommandMockJob,
                             mock_cmd_func,
                             MockJobConfig,
                             MockLocalRunner,
-                            PublicPropertyErrorsMockCostDynMixin,
+                            PublicPropertyErrorsMockCostMixin,
                             PublicPropertyErrorsMockJob,
                             PublicPropertyErrorsMockJobTemplate,
-                            PublicPropertyErrorsMockParamsDynMixin,
-                            PublicPropertyErrorsMockPowerDynMixin,
-                            PublicPropertyErrorsMockSpeedDynMixin,
-                            PublicPropertyErrorsMockStrengthDynMixin,
-                            PublicPropertyErrorsMockVerboseDynMixin)
+                            PublicPropertyErrorsMockParamsMixin,
+                            PublicPropertyErrorsMockPowerMixin,
+                            PublicPropertyErrorsMockSpeedMixin,
+                            PublicPropertyErrorsMockStrengthMixin,
+                            PublicPropertyErrorsMockVerboseMixin)
 
 
 class PropertyTest(NamedTuple):
@@ -538,37 +538,37 @@ def test_fail_subclass_apply_public_property_errors_with_mixins():
     job = job_tmpl.apply()
     assert isinstance(job, PublicPropertyErrorsMockJob)
 
-    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockVerboseDynMixin)
+    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockVerboseMixin)
     job_tmpl = PublicPropertyErrorsMockJobTemplate()
     with pytest.raises(AttributeError):  # No attribute 'job_tmpl.verbose'
         job_tmpl.apply()
 
     PublicPropertyErrorsMockJobTemplate.reset_mixins()
-    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockCostDynMixin)
+    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockCostMixin)
     job_tmpl = PublicPropertyErrorsMockJobTemplate()
     with pytest.raises(AttributeError):  # 'job_tmpl.cost' is object attribute
         job_tmpl.apply()
 
     PublicPropertyErrorsMockJobTemplate.reset_mixins()
-    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockStrengthDynMixin)
+    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockStrengthMixin)
     job_tmpl = PublicPropertyErrorsMockJobTemplate()
     with pytest.raises(TypeError):  # 'job_tmpl.strength' is class attribute
         job_tmpl.apply()
 
     PublicPropertyErrorsMockJobTemplate.reset_mixins()
-    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockPowerDynMixin)
+    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockPowerMixin)
     job_tmpl = PublicPropertyErrorsMockJobTemplate()
     with pytest.raises(TypeError):  # 'job_tmpl.power' is method
         job_tmpl.apply()
 
     PublicPropertyErrorsMockJobTemplate.reset_mixins()
-    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockSpeedDynMixin)
+    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockSpeedMixin)
     job_tmpl = PublicPropertyErrorsMockJobTemplate()
     with pytest.raises(TypeError):  # 'job_tmpl.speed' property is writable
         job_tmpl.apply()
 
     PublicPropertyErrorsMockJobTemplate.reset_mixins()
-    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockParamsDynMixin)
+    PublicPropertyErrorsMockJobTemplate.accept_mixin(PublicPropertyErrorsMockParamsMixin)
     job_tmpl = PublicPropertyErrorsMockJobTemplate()
     with pytest.raises(TypeError):  # 'job_tmpl.params' property value is mutable
         job_tmpl.apply()

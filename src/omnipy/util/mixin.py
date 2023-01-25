@@ -6,7 +6,7 @@ from typing import DefaultDict, Dict, List, Protocol, Type
 from omnipy.util.helpers import generic_aware_issubclass, get_bases, transfer_generic_args_to_cls
 
 
-class IsDynMixin(Protocol):
+class IsMixin(Protocol):
     def __init__(self, **kwargs: object) -> None:
         ...
 

@@ -5,8 +5,8 @@ from omnipy.util.helpers import repr_max_len
 from omnipy.util.param_key_mapper import ParamKeyMapper
 
 
-class ParamsFuncJobBaseDynMixin:
-    # Requires FuncSignatureJobBaseDynMixin
+class ParamsFuncJobBaseMixin:
+    # Requires FuncSignatureJobBaseMixin
 
     def __init__(
         self,

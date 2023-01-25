@@ -7,7 +7,7 @@ from omnipy.api.protocols import (IsDagFlowRunnerEngine,
                                   IsTaskTemplatesFlowTemplateCallable)
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import Job, JobTemplate
-from omnipy.compute.mixins.flow_context import FlowContextJobDynMixin
+from omnipy.compute.mixins.flow_context import FlowContextJobMixin
 from omnipy.compute.tasklist_job import TaskTemplateArgsJobBase
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
@@ -88,8 +88,8 @@ class FuncFlow(Job, FlowBase, FuncArgJobBase):
         return FuncFlowTemplate
 
 
-LinearFlow.accept_mixin(FlowContextJobDynMixin)
-DagFlow.accept_mixin(FlowContextJobDynMixin)
-FuncFlow.accept_mixin(FlowContextJobDynMixin)
+LinearFlow.accept_mixin(FlowContextJobMixin)
+DagFlow.accept_mixin(FlowContextJobMixin)
+FuncFlow.accept_mixin(FlowContextJobMixin)
 
 # TODO: Recursive replace - *args: Any -> *args: object, *kwargs: Any -> *kwargs: object

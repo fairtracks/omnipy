@@ -3,7 +3,7 @@ from datetime import datetime
 from omnipy.api.protocols import IsNestedContext
 
 
-class FlowContextJobDynMixin:
+class FlowContextJobMixin:
     def __init__(self) -> None:
         self._time_of_last_run = None
 

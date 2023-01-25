@@ -4,11 +4,11 @@ from typing import Callable, Dict, Tuple
 from omnipy.api.protocols import GeneralDecorator
 from omnipy.compute.job import JobBase
 # from omnipy.compute.job_types import FuncJobTemplateT, JobBaseT, JobT, JobTemplateT
-from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseDynMixin
-from omnipy.compute.mixins.iterate import IterateFuncJobBaseDynMixin
-from omnipy.compute.mixins.params import ParamsFuncJobBaseDynMixin
-from omnipy.compute.mixins.result_key import ResultKeyFuncJobBaseDynMixin
-from omnipy.compute.mixins.serialize import SerializerFuncJobBaseDynMixin
+from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
+from omnipy.compute.mixins.iterate import IterateFuncJobBaseMixin
+from omnipy.compute.mixins.params import ParamsFuncJobBaseMixin
+from omnipy.compute.mixins.result_key import ResultKeyFuncJobBaseMixin
+from omnipy.compute.mixins.serialize import SerializerFuncJobBaseMixin
 
 
 class PlainFuncArgJobBase(JobBase):
@@ -43,11 +43,11 @@ class FuncArgJobBase(PlainFuncArgJobBase):
     ...
 
 
-FuncArgJobBase.accept_mixin(SignatureFuncJobBaseDynMixin)
-FuncArgJobBase.accept_mixin(IterateFuncJobBaseDynMixin)
-FuncArgJobBase.accept_mixin(SerializerFuncJobBaseDynMixin)
-FuncArgJobBase.accept_mixin(ResultKeyFuncJobBaseDynMixin)
-FuncArgJobBase.accept_mixin(ParamsFuncJobBaseDynMixin)
+FuncArgJobBase.accept_mixin(SignatureFuncJobBaseMixin)
+FuncArgJobBase.accept_mixin(IterateFuncJobBaseMixin)
+FuncArgJobBase.accept_mixin(SerializerFuncJobBaseMixin)
+FuncArgJobBase.accept_mixin(ResultKeyFuncJobBaseMixin)
+FuncArgJobBase.accept_mixin(ParamsFuncJobBaseMixin)
 
 # class FuncJobTemplate(FuncArgJobBase, JobTemplate, ABC):
 #     def refine(self,

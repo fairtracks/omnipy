@@ -5,10 +5,10 @@ from typing import DefaultDict, Dict, List, Optional, Tuple
 from omnipy.api.enums import RunState, RunStateLogMessages
 from omnipy.api.protocols import IsJob, IsRunStateRegistryConfig
 from omnipy.config.registry import RunStateRegistryConfig
-from omnipy.log.mixin import LogDynMixin
+from omnipy.log.mixin import LogMixin
 
 
-class RunStateRegistry(LogDynMixin):
+class RunStateRegistry(LogMixin):
     def __init__(self) -> None:
         super().__init__()
 

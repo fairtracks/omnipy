@@ -7,7 +7,7 @@ from slugify import slugify
 from omnipy.util.mixin import DynamicMixinAcceptor
 
 
-class NameJobBaseDynMixin:
+class NameJobBaseMixin:
     def __init__(self, *, name: Optional[str] = None):
         self._name: Optional[str] = name
 
@@ -54,6 +54,6 @@ class NameJobMixin:
 
 
 #
-# class NameFuncJobBaseDynMixin:
+# class NameFuncJobBaseMixin:
 #     def __init__(self, *, name: Optional[str] = None):
 #         self._name = name if name is not None else self._job_func.__name__

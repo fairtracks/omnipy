@@ -13,7 +13,7 @@ from omnipy.api.protocols import (IsDagFlow,
                                   IsTask)
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import Job, JobBase, JobTemplate
-from omnipy.compute.mixins.flow_context import FlowContextJobDynMixin
+from omnipy.compute.mixins.flow_context import FlowContextJobMixin
 from omnipy.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
@@ -61,7 +61,7 @@ class MockFlowSubclass(Job, JobBase):
         return MockFlowTemplateSubclass
 
 
-MockFlowSubclass.accept_mixin(FlowContextJobDynMixin)
+MockFlowSubclass.accept_mixin(FlowContextJobMixin)
 
 
 class CommandMockInit:
@@ -84,7 +84,7 @@ class CommandMockInit:
         return self._cmd_func, self._command
 
 
-class CommandMockParamDynMixin:
+class CommandMockParamMixin:
     def __init__(self,
                  *,
                  id: str = '',
@@ -133,23 +133,23 @@ class CommandMockJob(Job, CommandMockInit, JobBase):
             return log.upper() if self._uppercase else log
 
 
-CommandMockJobTemplate.accept_mixin(CommandMockParamDynMixin)
-CommandMockJob.accept_mixin(CommandMockParamDynMixin)
+CommandMockJobTemplate.accept_mixin(CommandMockParamMixin)
+CommandMockJob.accept_mixin(CommandMockParamMixin)
 
 
-class PublicPropertyErrorsMockVerboseDynMixin:
+class PublicPropertyErrorsMockVerboseMixin:
     """  Error: no attribute 'verbose' """
     def __init__(self, *, verbose: bool = True):
         self._verbose = verbose
 
 
-class PublicPropertyErrorsMockCostDynMixin:
+class PublicPropertyErrorsMockCostMixin:
     """  Error: 'cost' is object attribute """
     def __init__(self, *, cost: int = 1):
         self.cost = cost
 
 
-class PublicPropertyErrorsMockStrengthDynMixin:
+class PublicPropertyErrorsMockStrengthMixin:
     """  Error: 'strength' is class attribute """
     strength = 1
 
@@ -157,7 +157,7 @@ class PublicPropertyErrorsMockStrengthDynMixin:
         self.strength = strength
 
 
-class PublicPropertyErrorsMockPowerDynMixin:
+class PublicPropertyErrorsMockPowerMixin:
     """  Error: 'power' is method """
     def __init__(self, *, power: int = 1):
         self._power = power
@@ -166,7 +166,7 @@ class PublicPropertyErrorsMockPowerDynMixin:
         return self._power
 
 
-class PublicPropertyErrorsMockSpeedDynMixin:
+class PublicPropertyErrorsMockSpeedMixin:
     """  Error: 'speed' property is writable """
     def __init__(self, *, speed: int = 1):
         self._speed = speed
@@ -180,7 +180,7 @@ class PublicPropertyErrorsMockSpeedDynMixin:
         self._speed = speed
 
 
-class PublicPropertyErrorsMockParamsDynMixin:
+class PublicPropertyErrorsMockParamsMixin:
     """  Error: 'params' property value is mutable """
     def __init__(self, *, params: Optional[Mapping[str, Union[int, str, bool]]] = None):
         self._params = params if params is not None else {}
