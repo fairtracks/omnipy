@@ -48,8 +48,8 @@ def _generate_new_signature(job_func: Callable):
 # Classes
 
 
-class IterateFuncJobBaseMixin:
-    # Requires FuncSignatureJobBaseMixin
+class IterateFuncJobBaseDynMixin:
+    # Requires FuncSignatureJobBaseDynMixin
 
     def __init__(self, *, iterate_over_data_files: bool = False):
         self._iterate_over_data_files = iterate_over_data_files

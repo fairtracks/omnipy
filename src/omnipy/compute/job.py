@@ -9,7 +9,7 @@ from typing import Any, Dict, Hashable, Optional, Tuple
 from omnipy.api.exceptions import JobStateException
 from omnipy.api.protocols import IsEngine, IsJobConfig
 from omnipy.compute.job_creator import JobBaseMeta
-from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
+from omnipy.compute.mixins.name import NameJobBaseDynMixin, NameJobMixin
 from omnipy.util.helpers import create_merged_dict
 from omnipy.util.mixin import DynamicMixinAcceptor
 
@@ -210,5 +210,5 @@ class Job(DynamicMixinAcceptor):
 # TODO: Change JobBase and friends into Generics such as one can annotated with
 #       e.g. 'TaskTemplate[[int], int]' instead of just 'TaskTemplate'
 
-JobBase.accept_mixin(NameJobBaseMixin)
+JobBase.accept_mixin(NameJobBaseDynMixin)
 Job.accept_mixin(NameJobMixin)

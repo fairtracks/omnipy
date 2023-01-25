@@ -3,7 +3,7 @@ from types import MappingProxyType
 from typing import Dict, Iterable, Type
 
 
-class SignatureFuncJobBaseMixin:
+class SignatureFuncJobBaseDynMixin:
     def __init__(self):
         self._func_signature = inspect.signature(self._job_func)
         self.__signature__ = self._func_signature

@@ -6,7 +6,7 @@ from typing import DefaultDict, Dict, List, Protocol, Type
 from omnipy.util.helpers import generic_aware_issubclass, get_bases, transfer_generic_args_to_cls
 
 
-class IsMixin(Protocol):
+class IsDynMixin(Protocol):
     def __init__(self, **kwargs: object) -> None:
         ...
 
@@ -28,7 +28,8 @@ class DynamicMixinAcceptor:
         super().__init_subclass__(**kwargs)
 
         if DynamicMixinAcceptor in get_bases(cls) and cls.__init__ is object.__init__:
-            raise TypeError('Mixin acceptor class is required to define a __init__() method.')
+            raise TypeError(
+                'Dynamic mixin acceptor class is required to define a __init__() method.')
 
         cls._orig_init_signature = inspect.signature(cls.__init__)
         cls._mixin_classes = []

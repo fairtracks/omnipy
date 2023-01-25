@@ -18,7 +18,7 @@ PersistOpts = PersistOutputsOptions
 RestoreOpts = RestoreOutputsOptions
 
 
-class SerializerFuncJobBaseMixin:
+class SerializerFuncJobBaseDynMixin:
     def __init__(self,
                  *,
                  persist_outputs: Optional[PersistOutputsOptions] = None,
