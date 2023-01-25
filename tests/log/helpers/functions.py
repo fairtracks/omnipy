@@ -27,7 +27,8 @@ def assert_log_lines_from_stream(num_log_lines, str_stream):
     log_lines = read_log_lines_from_stream(str_stream)
     assert len(log_lines) == num_log_lines
     for log_line in log_lines:
-        assert 'INFO (test)' in log_line
+        assert 'INFO' in log_line
+        assert '(test)' in log_line
     return log_lines
 
 

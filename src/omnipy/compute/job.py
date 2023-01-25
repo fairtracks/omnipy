@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from datetime import datetime
 from functools import update_wrapper
+import logging
 from types import MappingProxyType
 from typing import Any, Dict, Hashable, Optional, Tuple
 
@@ -10,11 +11,12 @@ from omnipy.api.exceptions import JobStateException
 from omnipy.api.protocols import IsEngine, IsJobConfig
 from omnipy.compute.job_creator import JobBaseMeta
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
+from omnipy.log.mixin import LogMixin
 from omnipy.util.helpers import create_merged_dict
 from omnipy.util.mixin import DynamicMixinAcceptor
 
 
-class JobBase(DynamicMixinAcceptor, metaclass=JobBaseMeta):
+class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
     def __init__(self, *args: object, name: Optional[str] = None, **kwargs: object):
         # super().__init__()
 
@@ -204,11 +206,16 @@ class Job(DynamicMixinAcceptor):
         return self._revise()
 
     def __call__(self, *args: object, **kwargs: object) -> object:
-        return self._call_job(*args, **kwargs)
+        try:
+            return self._call_job(*args, **kwargs)
+        except Exception as e:
+            self.log(e, level=logging.ERROR)
+            raise
 
 
 # TODO: Change JobBase and friends into Generics such as one can annotated with
 #       e.g. 'TaskTemplate[[int], int]' instead of just 'TaskTemplate'
 
 JobBase.accept_mixin(NameJobBaseMixin)
+# JobBase.accept_mixin(LogMixin)
 Job.accept_mixin(NameJobMixin)

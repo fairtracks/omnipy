@@ -78,12 +78,12 @@ def test_default_log(
 
     fixed_datetime_now = mock_log_mixin_datetime.now()
 
-    my_obj.log('Log message', logging.DEBUG)
+    my_obj.log('Log message', level=logging.INFO)
 
     assert_log_line_from_stream(
         str_stream,
         msg='Log message',
-        level='DEBUG',
+        level='INFO',
         logger='tests.log.test_log_mixin.MyClass',
         datetime_obj=fixed_datetime_now,
     )
@@ -96,7 +96,9 @@ def test_set_logger(
     my_class_with_log_mixin: Annotated[Type, pytest.fixture],
     mock_log_mixin_datetime: Annotated[datetime, pytest.fixture],
 ):
-    simple_logger.addHandler(logging.StreamHandler(str_stream))
+    stream_handler = logging.StreamHandler(str_stream)
+    simple_logger.addHandler(stream_handler)
+    simple_logger.setLevel(logging.DEBUG)
     fixed_datetime_now = mock_log_mixin_datetime.now()
 
     my_obj = my_class_with_log_mixin(42, False)
@@ -154,21 +156,21 @@ def test_state_change_logging_handler_formatting_variants(
     my_obj.log('Log message')
 
     log_line = read_log_line_from_stream(str_stream)
-    assert 'INFO (test)' not in log_line
+    assert '(test)' not in log_line
 
     # Handler added before set_logger, set_omnipy_formatter_on_handlers=False
     my_obj.set_logger(simple_logger, set_omnipy_formatter_on_handlers=False)
     my_obj.log('New log message')
 
     log_line = read_log_line_from_stream(str_stream)
-    assert 'INFO (test)' not in log_line
+    assert '(test)' not in log_line
 
     # Handler added before set_logger, set_omnipy_formatter_on_handlers=True
     my_obj.set_logger(simple_logger, set_omnipy_formatter_on_handlers=True)
     my_obj.log('Another log message')
 
     log_line = read_log_line_from_stream(str_stream)
-    assert 'INFO (test)' in log_line
+    assert '(test)' in log_line
 
 
 @pc.parametrize_with_cases('my_class_with_log_mixin', cases='.')
@@ -188,4 +190,4 @@ def test_state_change_logging_date_localization(
     log_lines = assert_log_lines_from_stream(1, str_stream)
 
     assert fixed_datetime_now.strftime(get_datetime_format(locale)) in log_lines[0]
-    assert 'INFO (test)' in log_lines[0]
+    assert '(test)' in log_lines[0]
