@@ -1,4 +1,5 @@
 import tempfile
+from datetime import datetime
 from typing import Annotated, Type
 
 import pytest
@@ -20,3 +21,15 @@ def runtime(runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> IsRuntim
         runtime.config.job.persist_data_dir_path = tmp_dir_path
 
         yield runtime
+
+
+@pytest.fixture(scope='function')
+def mock_datetime() -> datetime:
+    class MockDatetime(datetime):
+        def __init__(self, *args: object, **kwargs: object):
+            self._now = datetime.now()
+
+        def now(self, tz=None):
+            return self._now
+
+    return MockDatetime(2000, 1, 1)

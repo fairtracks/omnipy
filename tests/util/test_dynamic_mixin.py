@@ -137,6 +137,14 @@ class MockPosOnlyArgStateDynMixin:
         self._my_pos_only_arg = my_pos_only_arg
 
 
+def test_cls_with_mixins_name_and_module(mock_plain_cls):
+    MockPlainCls = mock_plain_cls  # noqa
+
+    mock_plain_obj = MockPlainCls('a', 1, verbose=True)
+    assert mock_plain_obj.__class__.__name__ == 'MockPlainClsWithMixins'
+    assert mock_plain_obj.__class__.__module__ == 'tests.util.test_dynamic_mixin'
+
+
 def test_no_mixins(mock_plain_cls):
     MockPlainCls = mock_plain_cls  # noqa
 

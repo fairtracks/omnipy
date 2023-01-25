@@ -204,6 +204,7 @@ class DynamicMixinAcceptor:
             {},
             fill_ns,
         )
+        cls_with_mixins.__module__ = cls.__module__
 
         cls_with_mixins._orig_class = cls
         cls_with_mixins._orig_init_signature = inspect.signature(cls.__init__)

@@ -12,7 +12,7 @@ from omnipy.api.protocols import IsDagFlow, IsTask
 from omnipy.log.registry import RunStateRegistry
 from omnipy.util.helpers import get_datetime_format
 
-from .helpers.functions import read_log_line_from_stream, read_log_lines_from_stream
+from .helpers.functions import read_log_lines_from_stream
 
 
 def test_job_state_transitions(
@@ -240,87 +240,3 @@ def test_state_change_logging(
         assert log_lines[5] == f'INFO (test) - ' \
                                f'{datetime_list[5].strftime(get_datetime_format())}: ' \
                                f'Finished running "{job_b.unique_name}"!'
-
-
-def test_state_change_logging_unset(
-    str_stream: Annotated[StringIO, pytest.fixture],
-    simple_logger: Annotated[logging.Logger, pytest.fixture],
-    task_a: Annotated[IsTask, pytest.fixture],
-):
-    simple_logger.addHandler(logging.StreamHandler(str_stream))
-
-    registry = RunStateRegistry()
-    registry.set_logger(simple_logger)
-
-    registry.set_job_state(task_a, RunState.INITIALIZED)
-    _assert_log_lines_from_stream(1, str_stream)
-
-    registry.set_logger(None)
-    registry.set_job_state(task_a, RunState.RUNNING)
-    _assert_log_lines_from_stream(0, str_stream)
-
-    registry.set_logger(simple_logger)
-    registry.set_job_state(task_a, RunState.FINISHED)
-    _assert_log_lines_from_stream(1, str_stream)
-
-
-def _assert_log_lines_from_stream(num_log_lines, str_stream):
-    log_lines = read_log_lines_from_stream(str_stream)
-    assert len(log_lines) == num_log_lines
-    for log_line in log_lines:
-        assert 'INFO (test)' in log_line
-    return log_lines
-
-
-def test_state_change_logging_handler_formatting_variants(
-    str_stream: Annotated[StringIO, pytest.fixture],
-    simple_logger: Annotated[logging.Logger, pytest.fixture],
-    task_a: Annotated[IsTask, pytest.fixture],
-):
-    registry = RunStateRegistry()
-
-    # Handler added after set_logger
-    registry.set_logger(simple_logger, set_omnipy_formatter_on_handlers=True)
-    simple_logger.addHandler(logging.StreamHandler(str_stream))
-    registry.set_job_state(task_a, RunState.INITIALIZED)
-
-    log_line = read_log_line_from_stream(str_stream)
-    assert 'INFO (test)' not in log_line
-
-    # Handler added before set_logger, set_omnipy_formatter_on_handlers=False
-    registry.set_logger(simple_logger, set_omnipy_formatter_on_handlers=False)
-    registry.set_job_state(task_a, RunState.RUNNING)
-
-    log_line = read_log_line_from_stream(str_stream)
-    assert 'INFO (test)' not in log_line
-
-    # Handler added before set_logger, set_omnipy_formatter_on_handlers=True
-    registry.set_logger(simple_logger, set_omnipy_formatter_on_handlers=True)
-    registry.set_job_state(task_a, RunState.FINISHED)
-
-    log_line = read_log_line_from_stream(str_stream)
-
-    assert 'INFO (test)' in log_line
-
-
-def test_state_change_logging_date_localization(
-    str_stream: Annotated[StringIO, pytest.fixture],
-    stream_logger: Annotated[logging.Logger, pytest.fixture],
-    task_a: Annotated[IsTask, pytest.fixture],
-):
-    registry = RunStateRegistry()
-
-    locale = ('de_DE', 'UTF-8')
-    registry.set_logger(stream_logger, locale=locale)
-
-    registry.set_job_state(task_a, RunState.INITIALIZED)
-
-    log_lines = _assert_log_lines_from_stream(1, str_stream)
-
-    _assert_localized_datetime_for_log_line(registry, locale, task_a, log_lines, 0)
-
-
-def _assert_localized_datetime_for_log_line(registry, locale, job, log_lines, line_index):
-    init_datetime = registry.get_job_state_datetime(job, RunState.INITIALIZED)
-    assert init_datetime.strftime(get_datetime_format(locale)) in log_lines[line_index]
-    assert 'INFO (test)' in log_lines[0]

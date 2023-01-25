@@ -1,8 +1,10 @@
+from datetime import datetime
 from io import StringIO
 import logging
-from typing import Annotated
+from typing import Annotated, Generator
 
 import pytest
+import pytest_cases as pc
 
 from ..engine.helpers.mocks import (MockDagFlow,
                                     MockDagFlowTemplate,
@@ -84,3 +86,16 @@ def dag_flow_b(task_template_a, task_template_b) -> MockDagFlow:
         ...
 
     return concat_b.apply()
+
+
+@pc.fixture(scope='function')
+def mock_log_mixin_datetime(
+        mock_datetime: Annotated[datetime, pytest.fixture]) -> Generator[datetime, None, None]:
+    import omnipy.log.mixin
+
+    prev_datetime = omnipy.log.mixin.datetime
+    omnipy.log.mixin.datetime = mock_datetime
+
+    yield mock_datetime
+
+    omnipy.log.mixin.datetime = prev_datetime

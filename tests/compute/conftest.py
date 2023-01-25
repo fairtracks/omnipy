@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Tuple, Type
+from typing import Annotated, Tuple, Type, Generator
 
 import pytest
 
@@ -36,17 +36,10 @@ def mock_local_runner(
 
 
 @pytest.fixture(scope='function')
-def mock_job_datetime():
-    class MockDatetime:
-        def __init__(self):
-            self._now = datetime.now()
-
-        def now(self):
-            return self._now
-
-    mock_datetime = MockDatetime()
-
+def mock_job_datetime(
+        mock_datetime: Annotated[datetime, pytest.fixture]) -> Generator[datetime, None, None]:
     import omnipy.compute.job_creator
+
     prev_datetime = omnipy.compute.job_creator.datetime
     omnipy.compute.job_creator.datetime = mock_datetime
 

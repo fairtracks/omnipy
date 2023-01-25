@@ -1,19 +1,17 @@
 from collections import defaultdict
 from datetime import datetime
-import logging
-from typing import DefaultDict, Dict, List, Optional, Tuple, Union
+from typing import DefaultDict, Dict, List, Optional, Tuple
 
-from omnipy.api.constants import OMNIPY_LOG_FORMAT_STR
 from omnipy.api.enums import RunState, RunStateLogMessages
 from omnipy.api.protocols import IsJob, IsRunStateRegistryConfig
 from omnipy.config.registry import RunStateRegistryConfig
-from omnipy.util.helpers import get_datetime_format
+from omnipy.log.mixin import LogDynMixin
 
 
-class RunStateRegistry:
+class RunStateRegistry(LogDynMixin):
     def __init__(self) -> None:
-        self._datetime_format: Optional[str] = None
-        self._logger: Optional[logging.Logger] = None
+        super().__init__()
+
         self._config: IsRunStateRegistryConfig = RunStateRegistryConfig()
 
         self._jobs: Dict[str, IsJob] = {}
@@ -33,20 +31,6 @@ class RunStateRegistry:
             return tuple(self._jobs[unique_name] for unique_name in job_unique_names)
         else:
             return tuple(self._jobs.values())
-
-    def set_logger(self,
-                   logger: Optional[logging.Logger],
-                   set_omnipy_formatter_on_handlers=True,
-                   locale: Union[str, Tuple[str, str]] = '') -> None:
-
-        self._logger = logger
-        if self._logger is not None:
-            self._datetime_format = get_datetime_format(locale)
-
-            if set_omnipy_formatter_on_handlers:
-                formatter = logging.Formatter(OMNIPY_LOG_FORMAT_STR)
-                for handler in self._logger.handlers:
-                    handler.setFormatter(formatter)
 
     def set_config(self, config: IsRunStateRegistryConfig) -> None:
         self._config = config
@@ -97,15 +81,9 @@ class RunStateRegistry:
         self._job_state_datetime[(job.unique_name, state)] = cur_datetime
 
     def _log_state_change(self, job: IsJob, state: RunState) -> None:
-        if self._logger is not None:
-            log_msg = RunStateLogMessages[state.name].value.format(job.unique_name)
-            datetime_obj = self.get_job_state_datetime(job, state)
-            self.log(datetime_obj, log_msg)
-
-    def log(self, datetime_obj: datetime, log_msg: str):
-        if self._logger is not None:
-            datetime_str = datetime_obj.strftime(self._datetime_format)
-            self._logger.info(f'{datetime_str}: {log_msg}')
+        log_msg = RunStateLogMessages[state.name].value.format(job.unique_name)
+        datetime_obj = self.get_job_state_datetime(job, state)
+        self.log(log_msg, datetime_obj=datetime_obj)
 
     def _raise_job_error(self, job: IsJob, msg: str) -> None:
         raise ValueError(f'Error in job "{job.unique_name}": {msg}')
