@@ -1,7 +1,10 @@
 from datetime import datetime
 from io import StringIO
 import logging
-from typing import Annotated, Generator, Type
+from logging import root, WARN
+from logging.handlers import TimedRotatingFileHandler
+import os
+from typing import Annotated, Type
 
 import pytest
 import pytest_cases as pc
@@ -9,6 +12,7 @@ import pytest_cases as pc
 from log.helpers.functions import (assert_log_line_from_stream,
                                    assert_log_lines_from_stream,
                                    read_log_line_from_stream)
+from omnipy.api.protocols import IsRuntime
 from omnipy.log.mixin import LogMixin
 from omnipy.util.helpers import get_datetime_format
 from omnipy.util.mixin import DynamicMixinAcceptor
@@ -17,8 +21,8 @@ from omnipy.util.mixin import DynamicMixinAcceptor
 @pc.case(id='my_class_as_regular_log_mixin_subclass')
 def case_my_class_as_regular_log_mixin_subclass() -> Type:
     class MyClass(LogMixin):
-        def __init__(self, foo: int, bar: bool = True):
-            super().__init__()
+        def __init__(self, foo: int, bar: bool = True, **kwargs: object):
+            super().__init__(**kwargs)
             self.foo = foo
             self.bar = bar
 
@@ -28,7 +32,7 @@ def case_my_class_as_regular_log_mixin_subclass() -> Type:
 @pc.case(id='my_class_as_dynamic_log_mixin_subclass')
 def case_my_class_as_dynamic_log_mixin_subclass() -> Type:
     class MyClass(DynamicMixinAcceptor):
-        def __init__(self, foo: int, bar: bool = True):
+        def __init__(self, foo: int, bar: bool = True, **kwargs: object):
             self.foo = foo
             self.bar = bar
 
@@ -36,17 +40,24 @@ def case_my_class_as_dynamic_log_mixin_subclass() -> Type:
     return MyClass
 
 
-@pytest.fixture
-def log_to_string_stream(
-    str_stream: Annotated[StringIO, pytest.fixture],) -> Generator[StringIO, None, None]:
-    import logging
+@pc.parametrize_with_cases('my_class_with_log_mixin', cases='.')
+def test_root_logger(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    tmp_dir_path: Annotated[str, pytest.fixture],
+    my_class_with_log_mixin: Annotated[Type, pytest.fixture],
+):
+    log_dir_path = os.path.join(tmp_dir_path, 'logs')
+    my_obj = my_class_with_log_mixin(42, False, log_dir_path=log_dir_path)
 
-    stream_handler = logging.StreamHandler(str_stream)
-    logging.root.addHandler(stream_handler)
+    assert root.level == WARN
+    assert len(root.handlers) > 1
 
-    yield str_stream
+    for handler in root.handlers:
+        assert handler.__class__.__name__ != 'PrefectConsoleHandler'
 
-    logging.root.removeHandler(stream_handler)
+    assert isinstance(root.handlers[-1], TimedRotatingFileHandler)
+    assert root.handlers[-1].baseFilename == os.path.join(log_dir_path, 'omnipy.log')
+    assert root.handlers[-1].level == WARN
 
 
 @pc.parametrize_with_cases('my_class_with_log_mixin', cases='.')
@@ -67,12 +78,12 @@ def test_default_log(
 
     fixed_datetime_now = mock_log_mixin_datetime.now()
 
-    my_obj.log('Log message', logging.WARN)
+    my_obj.log('Log message', logging.DEBUG)
 
     assert_log_line_from_stream(
         str_stream,
         msg='Log message',
-        level='WARNING',
+        level='DEBUG',
         logger='tests.log.test_log_mixin.MyClass',
         datetime_obj=fixed_datetime_now,
     )
@@ -95,12 +106,12 @@ def test_set_logger(
     with pytest.raises(AttributeError):
         my_obj.logger = simple_logger
 
-    my_obj.log('Log message', logging.WARN)
+    my_obj.log('Log message', logging.DEBUG)
 
     assert_log_line_from_stream(
         str_stream,
         msg='Log message',
-        level='WARNING',
+        level='DEBUG',
         logger='test',
         datetime_obj=fixed_datetime_now,
     )
