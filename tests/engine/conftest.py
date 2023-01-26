@@ -9,7 +9,7 @@ from omnipy.api.protocols import (IsEngine,
                                   IsTaskRunnerEngine,
                                   IsTaskTemplate)
 from omnipy.engine.local import LocalRunner
-from omnipy.engine.prefect import PrefectEngine
+from omnipy.modules.prefect.engine.prefect import PrefectEngine
 
 from .helpers.classes import JobCase, JobRunnerStateChecker, JobType
 from .helpers.functions import add_logger_to_registry, update_job_case_with_job

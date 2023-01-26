@@ -60,8 +60,8 @@ def assert_runtime_objects_default(objects: RuntimeObjects):
     from omnipy.compute.job import JobBase
     from omnipy.compute.job_creator import JobCreator
     from omnipy.engine.local import LocalRunner
-    from omnipy.engine.prefect import PrefectEngine
     from omnipy.log.registry import RunStateRegistry
+    from omnipy.modules.prefect.engine.prefect import PrefectEngine
 
     assert isinstance(objects.logger, logging.Logger)
     assert isinstance(objects.registry, RunStateRegistry)

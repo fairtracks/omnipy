@@ -21,11 +21,11 @@ from omnipy.config.job import JobConfig
 from omnipy.config.registry import RunStateRegistryConfig
 from omnipy.data.serializer import SerializerRegistry
 from omnipy.engine.local import LocalRunner
-from omnipy.engine.prefect import PrefectEngine
 from omnipy.hub.publisher import ConfigPublisher
 from omnipy.log.registry import RunStateRegistry
 from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
 from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
+from omnipy.modules.prefect.engine.prefect import PrefectEngine
 from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
 
 

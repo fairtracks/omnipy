@@ -70,7 +70,7 @@ def case_sync_power_kwargs() -> JobCase[[int, int], int]:
 )
 def case_sync_range() -> JobCase[[int], Generator]:
     def run_and_assert_results(job: IsJob) -> None:
-        from omnipy.engine.prefect import PrefectEngine
+        from omnipy.modules.prefect.engine.prefect import PrefectEngine
         if check_engine_cls(job, PrefectEngine):
             pytest.xfail('Synchronous generators stopped working with prefect v2.6.0 (before that,'
                          'they were running eagerly, returning lists of all yielded values).'
@@ -115,7 +115,7 @@ def case_async_range() -> JobCase[[int], Awaitable[Generator]]:
 )
 def case_sync_wait_for_send_twice() -> JobCase[[], Generator]:
     def run_and_assert_results(job: IsJob) -> None:
-        from omnipy.engine.prefect import PrefectEngine
+        from omnipy.modules.prefect.engine.prefect import PrefectEngine
         if check_engine_cls(job, PrefectEngine):
             pytest.xfail('Synchronous generators stopped working with prefect v2.6.0 (before that,'
                          'they were running eagerly, returning lists of all yielded values).'
