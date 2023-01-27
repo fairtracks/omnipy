@@ -13,7 +13,6 @@ from ..json.models import (JsonDataset,
                            JsonDictOfListOfDictOfAnyModel,
                            JsonListOfDictOfAnyModel,
                            JsonListOfNestedDictsModel)
-from ..pandas.models import PandasDataset
 from .models import TableOfStrings, TableOfStringsAndLists
 
 ID_KEY = '_omnipy_id'
@@ -194,7 +193,7 @@ def flatten_nested_json_to_list_of_dicts(
     return all_data_files_without_nested_lists_ds
 
 
-@TaskTemplate(iterate_over_data_files=True)
+@TaskTemplate()
 def transpose_dataset_of_dicts_to_lists(dataset: JsonDictOfAnyModel,
                                         id_key: str = ID_KEY) -> JsonListOfDictOfAnyModel:
     output_dataset = Dataset[JsonListOfDictOfAnyModel]()
