@@ -194,9 +194,9 @@ def flatten_nested_json_to_list_of_dicts(
     return all_data_files_without_nested_lists_ds
 
 
-@TaskTemplate()
-def transpose_dataset_of_dicts_to_lists(dataset: Dataset[JsonDictOfAnyModel],
-                                        id_key: str = ID_KEY) -> Dataset[JsonListOfDictOfAnyModel]:
+@TaskTemplate(iterate_over_data_files=True)
+def transpose_dataset_of_dicts_to_lists(dataset: JsonDictOfAnyModel,
+                                        id_key: str = ID_KEY) -> JsonListOfDictOfAnyModel:
     output_dataset = Dataset[JsonListOfDictOfAnyModel]()
     output_data = defaultdict(list)
     for name, item in dataset.items():
