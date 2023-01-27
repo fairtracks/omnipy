@@ -92,7 +92,7 @@ class SerializerRegistry:
         def _to_data_from_json(dataset, new_dataset_cls):
             new_dataset = new_dataset_cls()
             # Temporary hack
-            assert new_dataset.__name__ != 'PandasDataset'
+            assert new_dataset.__class__.__name__ != 'PandasDataset'
             new_dataset.from_json(dataset.to_data())
             return new_dataset
 
