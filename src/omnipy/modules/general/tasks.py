@@ -1,5 +1,5 @@
 import os
-from typing import Callable, cast, List, Tuple, TypeVar
+from typing import Callable, cast, List, Tuple, TypeVar, Type
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
@@ -31,13 +31,17 @@ def split_dataset(
 
 @TaskTemplate()
 def import_directory(directory: str,
-                     suffix: str = '.json',
-                     model: Model = Model[str]) -> Dataset[Model]:
+                     exclude_prefixes: Tuple[str, ...] = ('.', '_'),
+                     include_suffixes: Tuple[str, ...] = (),
+                     model: Type[Model] = Model[str]) -> Dataset[Model]:
     dataset = Dataset[model]()
     for import_filename in os.listdir(directory):
-        if import_filename.endswith(suffix):
-            with open(os.path.join(directory, import_filename)) as open_file:
-                dataset_name = '_'.join(import_filename.split('.')[:-1])
-                print(f"{import_filename} -> Dataset['{dataset_name}']")
-                dataset[dataset_name] = open_file.read()
+        if not exclude_prefixes or \
+                not any(import_filename.startswith(prefix) for prefix in exclude_prefixes):
+            if not include_suffixes or \
+                    any(import_filename.endswith(suffix) for suffix in include_suffixes):
+                with open(os.path.join(directory, import_filename)) as open_file:
+                    dataset_name = '_'.join(import_filename.split('.')[:-1])
+                    print(f"{import_filename} -> Dataset['{dataset_name}']")
+                    dataset[dataset_name] = open_file.read()
     return dataset
