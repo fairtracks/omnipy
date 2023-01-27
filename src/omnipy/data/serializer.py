@@ -89,10 +89,10 @@ class SerializerRegistry:
         #     new_dataset = new_dataset_cls(dataset)
         #     return new_dataset
 
-        def _to_data_from_json(dataset, new_dataset_cls):
-            new_dataset = new_dataset_cls()
-            new_dataset.from_json(dataset.to_data())
-            return new_dataset
+        # def _to_data_from_json(dataset, new_dataset_cls):
+        #     new_dataset = new_dataset_cls()
+        #     new_dataset.from_json(dataset.to_data())
+        #     return new_dataset
 
         def _to_data_from_data(dataset, new_dataset_cls):
             new_dataset = new_dataset_cls()
