@@ -2,18 +2,17 @@ import asyncio
 from datetime import timedelta
 from typing import Any, Callable, Type
 
-from prefect import flow as prefect_flow
-from prefect import Flow as PrefectFlow
-from prefect import task as prefect_task
-from prefect import Task as PrefectTask
-from prefect.tasks import task_input_hash
-
 from omnipy.api.protocols import IsDagFlow, IsFuncFlow, IsLinearFlow, IsPrefectEngineConfig, IsTask
 from omnipy.config.engine import PrefectEngineConfig
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
+from omnipy.modules.prefect import flow as prefect_flow
+from omnipy.modules.prefect import Flow as PrefectFlow
+from omnipy.modules.prefect import task as prefect_task
+from omnipy.modules.prefect import Task as PrefectTask
+from omnipy.modules.prefect import task_input_hash
 from omnipy.util.helpers import resolve
 
 
@@ -34,7 +33,6 @@ class PrefectEngine(TaskRunnerEngine,
     # TaskRunnerEngine
 
     def _init_task(self, task: IsTask, call_func: Callable) -> PrefectTask:
-
         assert isinstance(self._config, PrefectEngineConfig)
         task_kwargs = dict(
             name=task.name,

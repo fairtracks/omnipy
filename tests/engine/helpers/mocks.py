@@ -7,7 +7,6 @@ import logging
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 from inflection import underscore
-from prefect.utilities.names import generate_slug
 from slugify import slugify
 
 from omnipy.api.enums import RunState
@@ -25,6 +24,7 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
+from omnipy.modules.prefect import generate_slug
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
 

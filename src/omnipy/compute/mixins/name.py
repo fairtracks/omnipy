@@ -1,9 +1,9 @@
 from typing import Optional
 
 from inflection import underscore
-from prefect.utilities.names import generate_slug
 from slugify import slugify
 
+from omnipy.modules.prefect import generate_slug
 from omnipy.util.mixin import DynamicMixinAcceptor
 
 

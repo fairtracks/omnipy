@@ -37,7 +37,7 @@ class TaskCase(Generic[ArgT, ReturnT]):
 )
 def case_sync_action_func_no_params() -> TaskCase[[], None]:
     def assert_results(result: NoneType) -> None:
-        from prefect import State
+        from omnipy.modules.prefect import State
         if isinstance(result, list) and len(result) == 1 and isinstance(result[0], State):
             pytest.xfail('None results are returned as State. Perhaps bug in Prefect?')
             # TODO: Check up: None results are returned as State
@@ -62,7 +62,7 @@ def case_sync_action_func_no_params() -> TaskCase[[], None]:
 )
 def case_sync_action_func_with_params() -> TaskCase[[int, bool], None]:
     def assert_results(result: NoneType) -> None:
-        from prefect import State
+        from omnipy.modules.prefect import State
         if isinstance(result, list) and len(result) == 1 and isinstance(result[0], State):
             pytest.xfail('None results are returned as State. Perhaps bug in Prefect?')
         assert result is None
