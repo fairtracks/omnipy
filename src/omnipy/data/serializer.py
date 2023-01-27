@@ -89,10 +89,12 @@ class SerializerRegistry:
         #     new_dataset = new_dataset_cls(dataset)
         #     return new_dataset
 
-        # def _to_data_from_json(dataset, new_dataset_cls):
-        #     new_dataset = new_dataset_cls()
-        #     new_dataset.from_json(dataset.to_data())
-        #     return new_dataset
+        def _to_data_from_json(dataset, new_dataset_cls):
+            new_dataset = new_dataset_cls()
+            # Temporary hack
+            assert new_dataset.__name__ != 'PandasDataset'
+            new_dataset.from_json(dataset.to_data())
+            return new_dataset
 
         def _to_data_from_data(dataset, new_dataset_cls):
             new_dataset = new_dataset_cls()
@@ -104,15 +106,14 @@ class SerializerRegistry:
         #     new_dataset.from_json(dataset.to_json())
         #     return new_dataset
 
-        # for func in (_to_data_from_json, _to_data_from_data):
-        for func in (_to_data_from_data,):
+        for func in (_to_data_from_json, _to_data_from_data):
             for serializer in serializers:
                 new_dataset_cls = serializer.get_supported_dataset_type()
 
                 try:
                     new_dataset = func(dataset, new_dataset_cls)
                     return new_dataset, serializer
-                except (TypeError, ValueError, ValidationError) as e:
+                except (TypeError, ValueError, ValidationError, AssertionError) as e:
                     pass
 
         return None, None
