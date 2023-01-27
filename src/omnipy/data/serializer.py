@@ -105,7 +105,7 @@ class SerializerRegistry:
         #     return new_dataset
 
         # for func in (_to_data_from_json, _to_data_from_data):
-        for func in (_to_data_from_data):
+        for func in (_to_data_from_data,):
             for serializer in serializers:
                 new_dataset_cls = serializer.get_supported_dataset_type()
 
