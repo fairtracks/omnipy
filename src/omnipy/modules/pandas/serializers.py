@@ -19,6 +19,8 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer):
 
     @classmethod
     def serialize(cls, pandas_dataset: PandasDataset) -> Union[bytes, memoryview]:
+        assert isinstance(pandas_dataset, PandasDataset)
+
         def pandas_encode_func(pandas_data: pd.DataFrame) -> memoryview:
             csv_bytes = BytesIO()
             pandas_data.to_csv(csv_bytes, encoding='utf8', mode='b', index=False)
