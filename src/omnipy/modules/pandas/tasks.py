@@ -1,5 +1,5 @@
 from io import StringIO
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
@@ -9,13 +9,21 @@ from . import pd
 from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset
 
 
+@TaskTemplate
+def convert_dataset_list_of_dicts_to_pandas(
+        dataset: Dataset[Model[List[Dict[str, object]]]]) -> PandasDataset:
+    pandas_dataset = PandasDataset()
+    pandas_dataset.from_data(dataset.to_data())
+    return pandas_dataset
+
+
 @TaskTemplate()
-def from_csv(dataset: Dataset[Model[bytes]],
-             delimiter: str = ',',
-             first_row_as_col_names=True,
-             col_names: Optional[List[str]] = None,
-             ignore_comments: bool = True,
-             comments_char: str = '#') -> PandasDataset:
+def convert_dataset_csv_to_pandas(dataset: Dataset[Model[bytes]],
+                                  delimiter: str = ',',
+                                  first_row_as_col_names=True,
+                                  col_names: Optional[List[str]] = None,
+                                  ignore_comments: bool = True,
+                                  comments_char: str = '#') -> PandasDataset:
     out_dataset = PandasDataset()
     for key, item in dataset.items():
         df = pd.read_csv(
@@ -31,7 +39,7 @@ def from_csv(dataset: Dataset[Model[bytes]],
 
 
 @TaskTemplate()
-def to_csv(
+def convert_dataset_pandas_to_csv(
     dataset: PandasDataset,
     delimiter: str = ',',
     first_row_as_col_names=True,
