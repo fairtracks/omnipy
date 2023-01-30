@@ -27,6 +27,18 @@ json_table_dataset['json_table_b'] = [
     dict(fruit='lemon', taste='sour')
 ]
 
+json_nested_table_dataset = JsonDataset()
+json_nested_table_dataset['json_nested_table_a'] = [
+    dict(name=dict(firstname='John', lastname='Doe'), age=46),
+    dict(name=dict(firstname='Jane', lastname='Doe'), age=42),
+    dict(name=dict(firstname='Mr.', lastname='Miyagi'), age=82)
+]
+json_nested_table_dataset['json_nested_table_b'] = [
+    dict(name=dict(fruit='apple'), taste='sweet'),
+    dict(name=dict(fruit='orange'), taste='sweet and sour'),
+    dict(name=dict(fruit='lemon'), taste='sour')
+]
+
 json_dataset = JsonDataset()
 json_dataset['json_python_a'] = {'one': ['contents', 1, True], 'two': None}
 json_dataset['json_python_b'] = [1, 4, 9, {'options': {'verbose': False}}]

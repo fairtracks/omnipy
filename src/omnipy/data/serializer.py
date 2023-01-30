@@ -91,8 +91,6 @@ class SerializerRegistry:
 
         def _to_data_from_json(dataset, new_dataset_cls):
             new_dataset = new_dataset_cls()
-            # Temporary hack
-            assert new_dataset.__class__.__name__ != 'PandasDataset'
             new_dataset.from_json(dataset.to_data())
             return new_dataset
 
@@ -101,12 +99,16 @@ class SerializerRegistry:
             new_dataset.from_data(dataset.to_data())
             return new_dataset
 
+        def _to_data_from_data_if_instance(dataset, new_dataset_cls):
+            assert isinstance(dataset, new_dataset_cls)
+            return _to_data_from_data(dataset, new_dataset_cls)
+
         # def _to_json_from_json(dataset, new_dataset_cls):
         #     new_dataset = new_dataset_cls()
         #     new_dataset.from_json(dataset.to_json())
         #     return new_dataset
 
-        for func in (_to_data_from_json, _to_data_from_data):
+        for func in (_to_data_from_data_if_instance, _to_data_from_json, _to_data_from_data):
             for serializer in serializers:
                 new_dataset_cls = serializer.get_supported_dataset_type()
 

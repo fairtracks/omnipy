@@ -7,6 +7,7 @@ from .functions import (csv_func,
                         json_func,
                         json_str_func,
                         json_table_func,
+                        json_nested_table_func,
                         pandas_func,
                         python_func,
                         str_func)
@@ -30,6 +31,16 @@ def case_json_table_task_tmpl() -> TaskTemplate:
 @pc.case(tags=['flow'])
 def case_json_table_flow_tmpl() -> LinearFlowTemplate:
     return LinearFlowTemplate(case_json_table_task_tmpl())(json_table_func)
+
+
+@pc.case(tags=['task'])
+def case_json_nested_table_task_tmpl() -> TaskTemplate:
+    return TaskTemplate()(json_nested_table_func)
+
+
+@pc.case(tags=['flow'])
+def case_json_nested_table_flow_tmpl() -> LinearFlowTemplate:
+    return LinearFlowTemplate(case_json_nested_table_task_tmpl())(json_nested_table_func)
 
 
 @pc.case(tags=['task'])

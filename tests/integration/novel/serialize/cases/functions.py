@@ -7,6 +7,7 @@ from .datasets import (csv_dataset,
                        json_dataset,
                        json_str_dataset,
                        json_table_dataset,
+                       json_nested_table_dataset,
                        pandas_dataset,
                        python_dataset,
                        str_dataset)
@@ -18,6 +19,10 @@ def pandas_func() -> PandasDataset:
 
 def json_table_func() -> JsonDataset:
     return json_table_dataset
+
+
+def json_nested_table_func() -> JsonDataset:
+    return json_nested_table_dataset
 
 
 def json_func() -> JsonDataset:
