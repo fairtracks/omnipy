@@ -9,13 +9,14 @@ from typing import Annotated, Type
 import pytest
 import pytest_cases as pc
 
-from log.helpers.functions import (assert_log_line_from_stream,
-                                   assert_log_lines_from_stream,
-                                   read_log_line_from_stream)
 from omnipy.api.protocols import IsRuntime
 from omnipy.log.mixin import LogMixin
 from omnipy.util.helpers import get_datetime_format
 from omnipy.util.mixin import DynamicMixinAcceptor
+
+from .helpers.functions import (assert_log_line_from_stream,
+                                assert_log_lines_from_stream,
+                                read_log_line_from_stream)
 
 
 @pc.case(id='my_class_as_regular_log_mixin_subclass')

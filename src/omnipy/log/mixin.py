@@ -41,7 +41,7 @@ class LogMixin:
 
         handler = StreamHandler(sys.stderr)
         # handler.setLevel(INFO)
-        if not any(isinstance(h, handler) for h in self._logger.handlers):
+        if not any(isinstance(h, StreamHandler) for h in self._logger.handlers):
             self._logger.addHandler(handler)
             self._set_omnipy_formatter_on_handlers()
 
