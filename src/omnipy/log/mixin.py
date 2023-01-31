@@ -15,22 +15,22 @@ class LogMixin:
 
     def __init__(self, *, log_dir_path: str = None) -> None:
         if log_dir_path and not self._added_root_handler:
-
-            log_file_path = Path(log_dir_path).joinpath('omnipy.log')
-
-            if not os.path.exists(log_dir_path):
-                os.makedirs(log_dir_path)
-
-            for handler in root.handlers:
-                if handler.__class__.__name__ == 'PrefectConsoleHandler':
-                    root.removeHandler(handler)
-
-            fileHandler = TimedRotatingFileHandler(
-                log_file_path, when='d', interval=1, backupCount=7)
-            fileHandler.setLevel(WARN)
-            self._set_omnipy_formatter_on_handler(fileHandler)
-
-            root.addHandler(fileHandler)
+            #
+            # log_file_path = Path(log_dir_path).joinpath('omnipy.log')
+            #
+            # if not os.path.exists(log_dir_path):
+            #     os.makedirs(log_dir_path)
+            #
+            # for handler in root.handlers:
+            #     if handler.__class__.__name__ == 'PrefectConsoleHandler':
+            #         root.removeHandler(handler)
+            #
+            # fileHandler = TimedRotatingFileHandler(
+            #     log_file_path, when='d', interval=1, backupCount=7)
+            # fileHandler.setLevel(WARN)
+            # self._set_omnipy_formatter_on_handler(fileHandler)
+            #
+            # root.addHandler(fileHandler)
 
             self._added_root_handler = True
 
@@ -41,8 +41,9 @@ class LogMixin:
 
         handler = StreamHandler(sys.stderr)
         # handler.setLevel(INFO)
-        self._logger.addHandler(handler)
-        self._set_omnipy_formatter_on_handlers()
+        if not any(isinstance(h, handler) for h in self._logger.handlers):
+            self._logger.addHandler(handler)
+            self._set_omnipy_formatter_on_handlers()
 
     # def log(self, msg: str, level: int = INFO):
     #     logger = getLogger(__name__)
