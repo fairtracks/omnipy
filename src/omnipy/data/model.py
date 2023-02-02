@@ -1,10 +1,10 @@
 import json
 from types import NoneType
-from typing import Any, Generic, get_args, get_origin, Type, TypeVar, Union
+from typing import Any, Dict, Generic, get_args, get_origin, Type, TypeVar, Union
 
 # from orjson import orjson
 from pydantic import Protocol, root_validator
-from pydantic.fields import ModelField, Undefined
+from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 
 RootT = TypeVar('RootT')
@@ -118,17 +118,37 @@ class Model(GenericModel, Generic[RootT]):
 
         return created_model
 
-    def __new__(cls, value=Undefined, **kwargs):
+    def __new__(cls, value: Union[RootT, UndefinedType] = Undefined, **kwargs):
         model_not_specified = ROOT_KEY not in cls.__fields__
         if model_not_specified:
             cls._raise_no_model_exception()
         return super().__new__(cls)
 
-    def __init__(self, value=Undefined, /, **data: RootT) -> None:
-        if value is not Undefined:
-            data[ROOT_KEY] = value
+    def __init__(
+        self,
+        value: Union[RootT, UndefinedType] = Undefined,
+        /,
+        __root__: Union[RootT, UndefinedType] = Undefined,
+        **data: object,
+    ) -> None:
+        super_data: Dict[str, RootT] = {}
+        num_root_vals = 0
 
-        super().__init__(**data)
+        if value is not Undefined:
+            super_data[ROOT_KEY] = value
+            num_root_vals += 1
+
+        if __root__ is not Undefined:
+            super_data[ROOT_KEY] = __root__
+            num_root_vals += 1
+
+        if data:
+            super_data[ROOT_KEY] = data
+            num_root_vals += 1
+
+        assert num_root_vals <= 1
+
+        super().__init__(**super_data)
 
         if not self.__class__.__doc__:
             self._set_standard_field_description()
@@ -238,3 +258,6 @@ class Model(GenericModel, Generic[RootT]):
                 contents_prop.__set__(self, value)
             else:
                 raise RuntimeError('Model does not allow setting of extra attributes')
+
+    def __eq__(self, other: object) -> bool:
+        return self.__class__ == other.__class__ and super().__eq__(other)

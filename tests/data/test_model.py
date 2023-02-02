@@ -1,7 +1,7 @@
 from types import NoneType
-from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar, Union
 
-from pydantic import PositiveInt, StrictInt, ValidationError
+from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
 
 from omnipy.data.model import Model
@@ -47,8 +47,10 @@ def test_init_and_data():
 
     assert Model[int](12).to_data() == 12
     assert Model[str]('test').to_data() == 'test'
-    assert Model[Dict]({'a': 2}).to_data() == {'a': 2}
     assert Model[List]([2, 4, 'b', {}]).to_data() == [2, 4, 'b', {}]
+    assert Model[Dict]({'a': 2, 'b': True}).to_data() == {'a': 2, 'b': True}
+    assert Model[Dict](a=2, b=True).to_data() == {'a': 2, 'b': True}
+    assert Model[Dict]((('a', 2), ('b', True))).to_data() == {'a': 2, 'b': True}
 
 
 def test_load():
@@ -78,10 +80,68 @@ def test_equality():
     assert model == Model[int](123)
     assert model != Model[int](234)
 
-    # Equality is only dependent on the data, not the types/model
-    assert Model[int](1).to_data() == 1
-    assert Model[PositiveInt](1).to_data() == 1
-    assert Model[int](1) == Model[PositiveInt](1)
+    # Equality is dependent on the datatype/model, in contrast to pydantic.
+    # Relevant issue: https://github.com/pydantic/pydantic/pull/3066
+    assert Model[int](1) != Model[PositiveInt](1)
+
+    assert Model[List[int]]([1, 2, 3]) == Model[List[int]]([1.0, 2.0, 3.0])
+    assert Model[List[int]]([1, 2, 3]) != Model[List[float]]([1.0, 2.0, 3.0])
+    assert Model[List[int]]([1, 2, 3]) != Model[List[int]]([1, 2])
+
+    class PydanticModel(BaseModel):
+        a: int = 0
+
+    class OtherPydanticModel(BaseModel):
+        a: str = '0'
+
+    class A(Model[PydanticModel]):
+        ...
+
+    class B(Model[OtherPydanticModel]):
+        ...
+
+    assert A(a=1) == A(a=1)
+    assert A(a=1) == A({'a': 1})
+    assert A(a=1) != A(a=2)
+    assert A(a=1) != B(a=1)
+
+    class EqualPydanticModel(PydanticModel):
+        ...
+
+    class C(Model[EqualPydanticModel]):
+        ...
+
+    assert A(a=1) != C(a=1)
+
+    class D(A):
+        ...
+
+    assert A(a=1) != D(a=1)
+
+
+def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model]) -> bool:
+    is_subclass = issubclass(model_cls_a, model_cls_b)
+
+    model_a = model_cls_a()
+    is_instance = isinstance(model_a, model_cls_b)
+
+    return is_subclass and is_instance
+
+
+@pytest.mark.skip(reason="To be implemented later. Should be issubtype instead")
+def test_issubclass_and_isinstance():
+    assert _issubclass_and_isinstance(Model[str], Model[str])
+    assert not _issubclass_and_isinstance(Model[int], Model[str])
+
+    assert _issubclass_and_isinstance(Model[int], Model[Union[int, str]])
+    assert _issubclass_and_isinstance(Model[str], Model[Union[int, str]])
+
+    assert _issubclass_and_isinstance(Model[List[str]], Model[List])
+
+    class MyStrList(Model[List[str]]):
+        ...
+
+    assert _issubclass_and_isinstance(MyStrList, Model[List])
 
 
 def test_parse_convertible_data():
@@ -713,7 +773,10 @@ def test_complex_nested_models():
 }"""[1:]
 
 
-def test_pandas_dataframe_builtin_direct():
+def test_pandas_dataframe_non_builtin_direct():
+    # TODO: Using pandas here to test concept of non-builtin data structures. Switch to other
+    #  example to remove dependency, to prepare splitting of pandas module to separate repo
+
     import pandas as pd
 
     class PandasDataFrameModel(Model[pd.DataFrame]):
