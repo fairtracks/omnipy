@@ -1,15 +1,15 @@
 from typing import Dict, IO, Type, Union
 
+from omnipy.data.dataset import Dataset
 from omnipy.data.serializer import TarFileSerializer
-
-from ...data.dataset import Dataset
-from .models import JsonDataset, JsonModel
+from omnipy.modules.json.datasets import JsonBaseDataset, JsonDataset
+from omnipy.modules.json.models import JsonModel
 
 
 class JsonDatasetToTarFileSerializer(TarFileSerializer):
     @classmethod
     def get_supported_dataset_type(cls) -> Type[Dataset]:
-        return JsonDataset
+        return JsonBaseDataset
 
     @classmethod
     def get_output_file_suffix(cls) -> str:

@@ -1,107 +1,74 @@
-# from __future__ import annotations
-from typing import Dict, ForwardRef, Generic, List, TypeVar, Union
+from __future__ import annotations
 
-from omnipy.data.dataset import Dataset
+from typing import Dict, Generic, List, Optional, TypeAlias, TypeVar, Union
+
 from omnipy.data.model import Model
+from omnipy.modules.json.types import JsonScalar
 
-JsonType = ForwardRef('JsonType')
+# Basic building block models
 
-JsonListValT = TypeVar('JsonListValT')
-JsonDictValT = TypeVar('JsonDictValT')
-
-# class JsonList(GenericModel, Generic[JsonListValT]):
-#     __root__: List[JsonListValT] = []
-#
-#     @property
-#     def contents(self):
-#         return self.__root__
-#
-#     def to_data(self) -> Any:
-#         return self.dict()[ROOT_KEY]
-#
-#
-# class JsonDict(GenericModel, Generic[JsonDictValT]):
-#     __root__: Dict[str, JsonDictValT] = {}
-#
-#     @property
-#     def contents(self):
-#         return self.__root__
-#
-#     def to_data(self) -> Any:
-#         return self.dict()[ROOT_KEY]
+BaseT = TypeVar('BaseT', bound=Union[JsonScalar, 'JsonListModel', 'JsonDictModel', List, Dict])
+JsonSubModelT = TypeVar('JsonSubModelT', bound=Union[JsonScalar, 'JsonListModel', 'JsonDictModel'])
 
 
-class JsonList(Model[List[Union[None, JsonListValT]]], Generic[JsonListValT]):
+class _JsonBaseModel(Model[BaseT], Generic[BaseT]):
     ...
 
 
-class JsonDict(Model[Dict[str, Union[None, JsonDictValT]]], Generic[JsonDictValT]):
+# Optional needed by pydantic
+class JsonListModel(_JsonBaseModel[List[Optional[JsonSubModelT]]], Generic[JsonSubModelT]):
     ...
 
 
-class JsonScalarType(Model[Union[None, int, float, str, bool]]):
+# Optional needed by pydantic
+class JsonDictModel(_JsonBaseModel[Dict[str, Optional[JsonSubModelT]]], Generic[JsonSubModelT]):
     ...
 
 
-JsonType = Union[None, JsonScalarType, JsonList['JsonType'], JsonDict['JsonType']]
+JsonSubModel: TypeAlias = Union[JsonScalar,
+                                JsonListModel['JsonSubModel'],
+                                JsonDictModel['JsonSubModel']]
+JsonNoListsSubModel: TypeAlias = Union[JsonScalar, JsonDictModel['JsonNoListsSubModel']]
 
-JsonList['JsonType'].update_forward_refs(JsonType=JsonType)
-JsonDict['JsonType'].update_forward_refs(JsonType=JsonType)
+JsonListModel['JsonSubModel'].update_forward_refs(JsonSubModel=JsonSubModel)
+JsonDictModel['JsonSubModel'].update_forward_refs(JsonSubModel=JsonSubModel)
+JsonListModel['JsonNoListsSubModel'].update_forward_refs(JsonNoListsSubModel=JsonNoListsSubModel)
+JsonDictModel['JsonNoListsSubModel'].update_forward_refs(JsonNoListsSubModel=JsonNoListsSubModel)
+
+# Core JSON model
 
 
-class JsonModel(Model[JsonType]):
+class JsonModel(_JsonBaseModel[JsonSubModel]):
     ...
 
 
-class JsonDictOfAnyModel(Model[JsonDict[JsonType]]):
+# Generic JSON dataset to use for custom JSON models
+
+
+class JsonCustomModel(_JsonBaseModel[JsonSubModelT], Generic[JsonSubModelT]):
     ...
 
 
-class JsonDictOfDictOfAnyModel(Model[JsonDict[JsonDict[JsonType]]]):
-    ...
+# List at the top level
 
+JsonListOfScalarsModel: TypeAlias = JsonListModel[JsonScalar]
+JsonListOfAnyModel: TypeAlias = JsonListModel[JsonSubModel]
+JsonListOfDictsOfScalarsModel: TypeAlias = JsonListModel[JsonDictModel[JsonScalar]]
+JsonListOfDictsOfAnyModel: TypeAlias = JsonListModel[JsonDictModel[JsonSubModel]]
+JsonListOfListsOfScalarsModel: TypeAlias = JsonListModel[JsonListModel[JsonScalar]]
+JsonListOfListsOfAnyModel: TypeAlias = JsonListModel[JsonListModel[JsonSubModel]]
 
-class JsonListOfAnyModel(Model[Union[JsonList[JsonType]]]):
-    ...
+# Dict at the top level
 
+JsonDictOfScalarsModel: TypeAlias = JsonDictModel[JsonScalar]
+JsonDictOfAnyModel: TypeAlias = JsonDictModel[JsonSubModel]
+JsonDictOfDictsOfScalarsModel: TypeAlias = JsonDictModel[JsonDictModel[JsonScalar]]
+JsonDictOfDictsOfAnyModel: TypeAlias = JsonDictModel[JsonDictModel[JsonSubModel]]
+JsonDictOfListsOfScalarsModel: TypeAlias = JsonDictModel[JsonListModel[JsonScalar]]
+JsonDictOfListsOfAnyModel: TypeAlias = JsonDictModel[JsonListModel[JsonSubModel]]
 
-class JsonListOfDictOfAnyModel(Model[JsonList[JsonDict[JsonType]]]):
-    ...
+# More specific models
 
-
-class JsonDictOfListOfDictOfAnyModel(Model[JsonDict[JsonListOfDictOfAnyModel]]):
-    ...
-
-
-# @classmethod
-# def _parse_data(cls, data: Union[JsonList, JsonDict]) -> Union[JsonList, JsonDict]:
-#     # data = cls._data_not_empty_object(data)
-#     return data
-
-# @classmethod
-# def _data_not_empty_object(cls, data: List):
-#     for obj in data:
-#         assert len(obj) > 0
-#     return data
-
-
-class JsonDataset(Dataset[JsonModel]):
-    ...
-
-
-JsonNoListType = Union[JsonScalarType, JsonDict['JsonType']]
-
-JsonList['JsonNoListType'].update_forward_refs(JsonNoListType=JsonNoListType)
-JsonDict['JsonNoListType'].update_forward_refs(JsonNoListType=JsonNoListType)
-
-
-class JsonListOfDictsModel(Model[JsonList[JsonDict[JsonScalarType]]]):
-    ...
-
-
-class JsonNestedDictsModel(Model[JsonDict[JsonNoListType]]):
-    ...
-
-
-class JsonListOfNestedDictsModel(Model[JsonList[JsonNestedDictsModel]]):
-    ...
+JsonNestedDictsModel: TypeAlias = JsonDictModel[JsonNoListsSubModel]
+JsonListOfNestedDictsModel: TypeAlias = JsonListModel[JsonNestedDictsModel]
+JsonDictOfListsOfDictsOfAnyModel: TypeAlias = JsonDictModel[JsonListOfDictsOfAnyModel]

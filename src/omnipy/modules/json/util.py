@@ -3,8 +3,7 @@ import os
 
 from omnipy import ROOT_DIR
 from omnipy.data.dataset import Dataset
-
-from .serializers import JsonDatasetToTarFileSerializer
+from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
 
 
 def serialize_to_tarpacked_json_files(dataset_name: str, dataset: Dataset) -> None:

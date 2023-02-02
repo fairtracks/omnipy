@@ -3,8 +3,8 @@ from typing import Iterable
 from pydantic import constr, PositiveInt
 
 from omnipy.compute.task import TaskTemplate
+from omnipy.modules.json.datasets import JsonDataset
 
-from ..json.models import JsonDataset
 from .functions import encode_api
 
 
