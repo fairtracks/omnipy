@@ -10,7 +10,7 @@ from omnipy.compute.flow import (DagFlow,
                                  LinearFlow,
                                  LinearFlowTemplate)
 from omnipy.compute.job import Job, JobBase, JobTemplate
-from omnipy.compute.job_creator import JobCreator
+from omnipy.compute.job_creator import JobCreator, JobBaseMeta
 
 from .helpers.classes import FlowClsTuple
 from .helpers.mocks import MockJobSubclass, MockJobTemplateSubclass, MockLocalRunner
@@ -24,7 +24,7 @@ def mock_job_classes() -> Tuple[Type[JobTemplate], Type[Job]]:
 @pytest.fixture(scope='function')
 def teardown_reset_job_creator() -> None:
     yield None
-    JobBase._job_creator = JobCreator()
+    JobBaseMeta._job_creator = JobCreator()
 
 
 @pytest.fixture(scope='function')
