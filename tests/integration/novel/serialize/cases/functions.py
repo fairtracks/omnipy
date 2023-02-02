@@ -1,6 +1,6 @@
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-from omnipy.modules.json.models import JsonDataset
+from omnipy.modules.json.datasets import JsonDataset
 from omnipy.modules.pandas.models import PandasDataset
 
 from .datasets import (csv_dataset,

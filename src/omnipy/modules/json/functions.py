@@ -75,16 +75,16 @@ def transform_into_list_of_dicts(value: Union[JsonListOfAny, JsonDictOfAny],
     if isinstance(value, JsonDict):
         return JsonListOfDictsOfAny([value])
     else:
-        ret_val = JsonListOfDictsOfAny()
+        ret_value = JsonListOfDictsOfAny()
 
-        for i, list_val in enumerate(value):
+        for list_val in value:
             if isinstance(list_val, dict):
-                ret_val[i] = list_val
+                ret_value.append(list_val)
             else:
                 new_nested_record = JsonDictOfAny({default_key: list_val})
-                ret_val[i] = new_nested_record
+                ret_value.append(new_nested_record)
 
-        return ret_val
+        return ret_value
 
 
 def add_references_to_parent_in_child_records(

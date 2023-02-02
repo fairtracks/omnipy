@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Tuple
+from typing import cast, Tuple
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
@@ -58,8 +58,11 @@ def flatten_outer_level_of_all_data_files(
         defaultdict(JsonListOfDictsOfScalars)
     data_files_of_any: defaultdict[str, JsonListOfDictsOfAny] = defaultdict(JsonListOfDictsOfAny)
 
-    for data_file_title, item in dataset.items():
-        data_file: JsonListOfDictsOfAny = item.to_data()
+    dataset_as_data: JsonDictOfListsOfDictsOfAny = \
+        cast(JsonDictOfListsOfDictsOfAny, dataset.to_data())
+
+    for data_file_title, item in dataset_as_data.items():
+        data_file: JsonListOfDictsOfAny = item
 
         if len(data_file) == 0:
             data_files_of_scalar_records[data_file_title] = JsonListOfDictsOfScalars()
