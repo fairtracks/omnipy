@@ -24,8 +24,7 @@ class PandasModel(Model[pd.DataFrame]):
         assert not any(data.isna().all(axis=1))
 
     def dict(self, *args, **kwargs) -> Dict[Any, Any]:
-        json_data = super().dict(*args, **kwargs)[ROOT_KEY].to_json(orient='records')  # noqa
-        return json.loads(json_data)
+        return super().dict(*args, **kwargs)[ROOT_KEY].to_dict(orient='records')  # noqa
 
     def from_data(self, value: Iterable[Any]) -> None:
         self.contents = self._convert_ints_to_nullable_ints(pd.DataFrame(value))

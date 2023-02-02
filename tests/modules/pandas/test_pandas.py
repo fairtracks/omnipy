@@ -1,3 +1,5 @@
+from math import nan
+
 from deepdiff import DeepDiff
 import numpy as np
 import pandas as pd
@@ -147,6 +149,16 @@ def test_pandas_dataset_list_of_nested_objects():
     assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'object'))
     assert pandas_data.to_data() == data
     assert pandas_data['obj_type'].loc[0, 'b'] == {'c': [1, 3]}
+
+
+@pytest.mark.skip(reason="To be implemented later")
+def test_pandas_dataset_missing_values():
+    pandas_data = PandasDataset()
+    pandas_data.from_data(
+        {'obj_type': [dict(a=1, b='a', c=1.0, d=True), dict(a=None, b=None, c=None, d=None)]})
+    assert pandas_data.to_data() == {
+        'obj_type': [dict(a=1, b='a', c=1.0, d=True), dict(a=None, b='', c=nan, d=None)]
+    }
 
 
 def test_pandas_dataset_empty_list():
