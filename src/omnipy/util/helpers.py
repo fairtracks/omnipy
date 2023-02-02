@@ -41,7 +41,7 @@ def get_bases(cls):
     return get_generic_bases(cls) if is_generic_type(cls) else cls.__bases__
 
 
-def generic_aware_issubclass(cls, cls_or_tuple):
+def generic_aware_issubclass_ignore_args(cls, cls_or_tuple):
     try:
         return issubclass(cls, cls_or_tuple)
     except TypeError:

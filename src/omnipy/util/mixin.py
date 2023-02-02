@@ -3,7 +3,9 @@ import inspect
 import types
 from typing import DefaultDict, Dict, List, Protocol, Type
 
-from omnipy.util.helpers import generic_aware_issubclass, get_bases, transfer_generic_args_to_cls
+from omnipy.util.helpers import (generic_aware_issubclass_ignore_args,
+                                 get_bases,
+                                 transfer_generic_args_to_cls)
 
 
 class IsMixin(Protocol):
@@ -218,4 +220,4 @@ class DynamicMixinAcceptor:
     def _is_true_acceptor_subclass(cls):
         if cls == DynamicMixinAcceptor:
             return False
-        return generic_aware_issubclass(cls, DynamicMixinAcceptor)
+        return generic_aware_issubclass_ignore_args(cls, DynamicMixinAcceptor)
