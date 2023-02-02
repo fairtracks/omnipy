@@ -6,6 +6,7 @@ from typing import Annotated, Generator, Type
 import pytest
 
 from omnipy.api.protocols import IsRuntime
+from omnipy.compute.job_creator import JobCreator, JobBaseMeta
 
 
 @pytest.fixture(scope='function')
@@ -31,6 +32,8 @@ def runtime(
     runtime.config.registry.log_dir_path = os.path.join(tmp_dir_path, 'logs')
 
     yield runtime
+
+    JobBaseMeta._job_creator = JobCreator()
 
 
 @pytest.fixture(scope='function')
