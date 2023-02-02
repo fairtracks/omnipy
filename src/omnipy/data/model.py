@@ -259,5 +259,6 @@ class Model(GenericModel, Generic[RootT]):
             else:
                 raise RuntimeError('Model does not allow setting of extra attributes')
 
+    # TODO: Update Dataset.__eq__ similarly, with tests
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and super().__eq__(other)
