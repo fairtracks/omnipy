@@ -8,6 +8,7 @@ from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
 from .cases.datasets import (csv_dataset,
                              json_dataset,
                              json_str_dataset,
+                             json_table_as_str_dataset,
                              json_table_dataset,
                              pandas_dataset,
                              python_dataset,
@@ -41,9 +42,14 @@ def test_serializer_registry_auto_detect_json_dataset(registry):
     assert serializer is JsonDatasetToTarFileSerializer
 
 
+def test_serializer_registry_auto_detect_json_table_as_str_dataset(registry):
+    dataset, serializer = registry.auto_detect_tar_file_serializer(json_table_as_str_dataset)
+    assert serializer is RawDatasetToTarFileSerializer
+
+
 def test_serializer_registry_auto_detect_json_str_dataset(registry):
     dataset, serializer = registry.auto_detect_tar_file_serializer(json_str_dataset)
-    assert serializer is JsonDatasetToTarFileSerializer
+    assert serializer is RawDatasetToTarFileSerializer
 
 
 def test_serializer_registry_auto_detect_csv_dataset(registry):

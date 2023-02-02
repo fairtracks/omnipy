@@ -8,8 +8,12 @@ from omnipy.modules.json.models import JsonModel
 
 class JsonDatasetToTarFileSerializer(TarFileSerializer):
     @classmethod
-    def get_supported_dataset_type(cls) -> Type[Dataset]:
-        return JsonBaseDataset
+    def is_dataset_directly_supported(cls, dataset: Dataset) -> bool:
+        return isinstance(dataset, JsonBaseDataset)
+
+    @classmethod
+    def get_dataset_cls_for_new(cls) -> Type[Dataset]:
+        return JsonDataset
 
     @classmethod
     def get_output_file_suffix(cls) -> str:

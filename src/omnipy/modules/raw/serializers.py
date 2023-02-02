@@ -1,5 +1,7 @@
 from typing import Any, Dict, IO, Type
 
+from typing_inspect import get_generic_bases, get_generic_type, get_origin, get_parameters
+
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import TarFileSerializer
@@ -7,7 +9,11 @@ from omnipy.data.serializer import TarFileSerializer
 
 class RawDatasetToTarFileSerializer(TarFileSerializer):
     @classmethod
-    def get_supported_dataset_type(cls) -> Type[Dataset]:
+    def is_dataset_directly_supported(cls, dataset: Dataset) -> bool:
+        return type(dataset) == Dataset[Model[str]]
+
+    @classmethod
+    def get_dataset_cls_for_new(cls) -> Type[Dataset]:
         return Dataset[Model[str]]
 
     @classmethod

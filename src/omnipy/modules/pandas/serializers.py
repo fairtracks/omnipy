@@ -10,7 +10,11 @@ from .models import PandasDataset
 
 class PandasDatasetToTarFileSerializer(TarFileSerializer):
     @classmethod
-    def get_supported_dataset_type(cls) -> Type[Dataset]:
+    def is_dataset_directly_supported(cls, dataset: Dataset) -> bool:
+        return isinstance(dataset, PandasDataset)
+
+    @classmethod
+    def get_dataset_cls_for_new(cls) -> Type[Dataset]:
         return PandasDataset
 
     @classmethod

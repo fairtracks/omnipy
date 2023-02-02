@@ -16,7 +16,7 @@ def test_number_dataset_serializer():
 
     serializer = MockNumberSerializer()
 
-    assert serializer.get_supported_dataset_type() is NumberDataset
+    assert serializer.get_dataset_cls_for_new() is NumberDataset
 
     serialized_bytes = serializer.serialize(number_data)
     assert serialized_bytes == b'obj_type1:35,obj_type2:12'
@@ -31,7 +31,7 @@ def test_number_dataset_to_tar_file_serializer():
 
     serializer = MockNumberToTarFileSerializer()
 
-    assert serializer.get_supported_dataset_type() is NumberDataset
+    assert serializer.get_dataset_cls_for_new() is NumberDataset
 
     tarfile_bytes = serializer.serialize(number_data)
     decode_func = lambda x: int.from_bytes(x, byteorder=sys.byteorder)  # noqa

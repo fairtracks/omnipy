@@ -3,6 +3,7 @@ import pandas
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.modules.json.datasets import JsonDataset
+from omnipy.modules.json.models import JsonModel
 from omnipy.modules.pandas.models import PandasDataset
 
 pandas_dataset = PandasDataset()
@@ -15,7 +16,7 @@ pandas_dataset.from_data({
                          columns=('fruit', 'taste'))
 })
 
-json_table_dataset = JsonDataset()
+json_table_dataset = Dataset[JsonModel]()
 json_table_dataset['json_table_a'] = [
     dict(firstname='John', lastname='Doe', age=46),
     dict(firstname='Jane', lastname='Doe', age=42),
@@ -39,7 +40,21 @@ json_nested_table_dataset['json_nested_table_b'] = [
     dict(name=dict(fruit='lemon'), taste='sour')
 ]
 
-json_dataset = JsonDataset()
+json_table_as_str_dataset = Dataset[Model[str]]()
+json_table_as_str_dataset['json_table_a'] = """
+[
+    {"firstname": "John", "lastname": "Doe", "age": 46},
+    {"firstname": "Jane", "lastname": "Doe", "age": 42},
+    {"firstname": "Mr.", "lastname": "Miyagi", "age": 82}
+]"""[1:]
+json_table_as_str_dataset['json_table_b'] = """
+[
+    {"fruit": "apple", "taste": "sweet"},
+    {"fruit": "orange", "taste": "sweet and sour"},
+    {"fruit": "lemon", "taste": "sour"}
+]"""[1:]
+
+json_dataset = Dataset[JsonModel]()
 json_dataset['json_python_a'] = {'one': ['contents', 1, True], 'two': None}
 json_dataset['json_python_b'] = [1, 4, 9, {'options': {'verbose': False}}]
 

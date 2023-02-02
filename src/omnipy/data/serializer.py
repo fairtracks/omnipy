@@ -12,7 +12,12 @@ from omnipy.data.dataset import Dataset
 class Serializer(ABC):
     @classmethod
     @abstractmethod
-    def get_supported_dataset_type(cls) -> Type[Dataset]:
+    def is_dataset_directly_supported(cls, dataset: Dataset) -> bool:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def get_dataset_cls_for_new(cls) -> Type[Dataset]:
         pass
 
     @classmethod
@@ -85,35 +90,37 @@ class SerializerRegistry:
 
     @classmethod
     def _autodetect_serializer(cls, dataset, serializers):
-        # def _direct(dataset, new_dataset_cls):
+        # def _direct(dataset: Dataset, serializer: Serializer):
+        #     new_dataset_cls = serializer.get_dataset_cls_for_new()
         #     new_dataset = new_dataset_cls(dataset)
         #     return new_dataset
 
-        def _to_data_from_json(dataset, new_dataset_cls):
+        def _to_data_from_json(dataset: Dataset, serializer: Serializer):
+            new_dataset_cls = serializer.get_dataset_cls_for_new()
             new_dataset = new_dataset_cls()
             new_dataset.from_json(dataset.to_data())
             return new_dataset
 
-        def _to_data_from_data(dataset, new_dataset_cls):
+        def _to_data_from_data(dataset: Dataset, serializer: Serializer):
+            new_dataset_cls = serializer.get_dataset_cls_for_new()
             new_dataset = new_dataset_cls()
             new_dataset.from_data(dataset.to_data())
             return new_dataset
 
-        def _to_data_from_data_if_instance(dataset, new_dataset_cls):
-            assert isinstance(dataset, new_dataset_cls)
-            return _to_data_from_data(dataset, new_dataset_cls)
+        def _to_data_from_data_if_direct(dataset, serializer: Serializer):
+            assert serializer.is_dataset_directly_supported(dataset)
+            return _to_data_from_data(dataset, serializer)
 
-        # def _to_json_from_json(dataset, new_dataset_cls):
+        # def _to_json_from_json(dataset: Dataset, serializer: Serializer):
+        #     new_dataset_cls = serializer.get_dataset_cls_for_new()
         #     new_dataset = new_dataset_cls()
         #     new_dataset.from_json(dataset.to_json())
         #     return new_dataset
 
-        for func in (_to_data_from_data_if_instance, _to_data_from_json, _to_data_from_data):
+        for func in (_to_data_from_data_if_direct, _to_data_from_json, _to_data_from_data):
             for serializer in serializers:
-                new_dataset_cls = serializer.get_supported_dataset_type()
-
                 try:
-                    new_dataset = func(dataset, new_dataset_cls)
+                    new_dataset = func(dataset, serializer)
                     return new_dataset, serializer
                 except (TypeError, ValueError, ValidationError, AssertionError) as e:
                     pass
