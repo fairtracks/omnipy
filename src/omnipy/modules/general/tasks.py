@@ -1,5 +1,5 @@
 import os
-from typing import Callable, cast, List, Tuple, TypeVar, Type
+from typing import Callable, cast, List, Tuple, Type, TypeVar
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset

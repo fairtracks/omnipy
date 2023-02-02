@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Tuple, Type, Generator
+from typing import Annotated, Generator, Tuple, Type
 
 import pytest
 

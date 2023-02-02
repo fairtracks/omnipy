@@ -1,13 +1,13 @@
 from io import StringIO
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
 from . import pd
-from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset
 from ..general.models import NotIteratorExceptStrings
+from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset
 
 
 @TaskTemplate

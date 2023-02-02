@@ -6,7 +6,7 @@ from typing import Annotated, Generator, Type
 import pytest
 
 from omnipy.api.protocols import IsRuntime
-from omnipy.compute.job_creator import JobCreator, JobBaseMeta
+from omnipy.compute.job_creator import JobBaseMeta, JobCreator
 
 
 @pytest.fixture(scope='function')

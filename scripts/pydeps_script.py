@@ -122,5 +122,5 @@ def main(base_name: str) -> None:
     subprocess.run(['dot', '-Tpng', f'uml/{base_name}.dot', '-o', f'uml/{base_name}.png'])
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     typer.run(main)

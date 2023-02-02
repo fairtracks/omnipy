@@ -151,7 +151,7 @@ def test_pandas_dataset_list_of_nested_objects():
     assert pandas_data['obj_type'].loc[0, 'b'] == {'c': [1, 3]}
 
 
-@pytest.mark.skip(reason="To be implemented later")
+@pytest.mark.skip(reason='To be implemented later')
 def test_pandas_dataset_missing_values():
     pandas_data = PandasDataset()
     pandas_data.from_data(

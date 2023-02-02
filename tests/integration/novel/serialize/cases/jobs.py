@@ -5,13 +5,13 @@ from omnipy.compute.task import TaskTemplate
 
 from .functions import (csv_func,
                         json_func,
-                        json_str_func,
-                        json_table_func,
                         json_nested_table_func,
+                        json_str_func,
+                        json_table_as_str_func,
+                        json_table_func,
                         pandas_func,
                         python_func,
-                        str_func,
-                        json_table_as_str_func)
+                        str_func)
 
 
 @pc.case(tags=['task'])

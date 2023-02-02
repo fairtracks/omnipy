@@ -41,7 +41,7 @@ def case_my_class_as_dynamic_log_mixin_subclass() -> Type:
     return MyClass
 
 
-@pytest.mark.skip(reason="To be implemented later")
+@pytest.mark.skip(reason='To be implemented later')
 @pc.parametrize_with_cases('my_class_with_log_mixin', cases='.')
 def test_root_logger(
     runtime: Annotated[IsRuntime, pytest.fixture],

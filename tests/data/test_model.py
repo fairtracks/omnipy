@@ -128,7 +128,7 @@ def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model
     return is_subclass and is_instance
 
 
-@pytest.mark.skip(reason="To be implemented later. Should be issubtype instead")
+@pytest.mark.skip(reason='To be implemented later. Should be issubtype instead')
 def test_issubclass_and_isinstance():
     assert _issubclass_and_isinstance(Model[str], Model[str])
     assert not _issubclass_and_isinstance(Model[int], Model[str])
