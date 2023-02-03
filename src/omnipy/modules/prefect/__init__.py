@@ -10,7 +10,7 @@ def set_prefect_config_path():
         f"{Path(prefect_module_dir).joinpath('settings', 'logging.yml')}"
 
 
-# set_prefect_config_path()
+set_prefect_config_path()
 
 from prefect import flow, Flow, State, task, Task
 from prefect.tasks import task_input_hash
