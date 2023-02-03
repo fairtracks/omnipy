@@ -1,8 +1,5 @@
 from copy import copy
-from functools import lru_cache
 from typing import cast, Dict, Tuple, Union
-
-import jq
 
 from omnipy.modules.json.types import (JsonDict,
                                        JsonDictOfAny,
@@ -22,28 +19,23 @@ def flatten_outer_level_of_nested_record(
     default_key: str,
 ) -> Tuple[JsonDictOfScalars, JsonDictOfListsOfDictsOfAny]:
 
-    all_top_level_parents_of_subtrees: JsonDict[Union[JsonListOfAny, JsonDictOfAny]] \
-        = filter_all_top_level_parents_of_subtrees(nested_record)
     record_id = ensure_item_first_in_nested_record(nested_record, key=id_key, value=record_id)
 
     new_data_files: JsonDictOfListsOfDictsOfAny = JsonDictOfListsOfDictsOfAny()
+    records_of_scalars: JsonDictOfScalars = JsonDictOfScalars()
 
-    value: Union[JsonListOfAny, JsonDictOfAny]
-    for key, value in all_top_level_parents_of_subtrees.items():
-        new_data_file_title: str = f'{data_file_title}.{key}'
-        new_data_file: JsonListOfDictsOfAny = \
-            transform_into_list_of_dicts(value, default_key=default_key)
+    for key, value in nested_record.items():
+        if any(isinstance(value, typ) for typ in (dict, list)):
+            new_data_file_title: str = f'{data_file_title}.{key}'
+            new_data_file: JsonListOfDictsOfAny = transform_into_list_of_dicts(
+                cast(Union[JsonListOfAny, JsonDictOfAny], value), default_key=default_key)
 
-        add_references_to_parent_in_child_records(
-            child=new_data_file, parent_title=data_file_title, ident=record_id, ref_key=ref_key)
+            add_references_to_parent_in_child_records(
+                child=new_data_file, parent_title=data_file_title, ident=record_id, ref_key=ref_key)
 
-        new_data_files[new_data_file_title] = new_data_file
-
-    records_of_scalars: JsonDictOfScalars = JsonDictOfScalars({
-        key: cast(JsonScalar, val)
-        for (key, val) in nested_record.items()
-        if key not in all_top_level_parents_of_subtrees
-    })
+            new_data_files[new_data_file_title] = new_data_file
+        else:
+            records_of_scalars[key] = cast(JsonScalar, value)
 
     return records_of_scalars, new_data_files
 
@@ -101,13 +93,3 @@ def add_references_to_parent_in_child_records(
 
 def get_ref_value(data_file_title: str, ident: str) -> str:
     return f'{data_file_title}.{ident}'
-
-
-@lru_cache(maxsize=1)
-def get_filter_all_top_level_parents_of_subtrees_compiler():
-    return jq.compile('map_values(arrays,objects)')
-
-
-def filter_all_top_level_parents_of_subtrees(
-        data: JsonDictOfAny) -> JsonDict[Union[JsonListOfAny, JsonDictOfAny]]:
-    return get_filter_all_top_level_parents_of_subtrees_compiler().input(data).first()
