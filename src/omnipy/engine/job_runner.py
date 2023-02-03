@@ -37,7 +37,6 @@ class JobRunnerEngine(Engine, ABC):
                     else:
                         value = yield await job_result.__anext__()
                     while True:
-                        print(value)
                         value = yield await job_result.asend(value)
                 except StopAsyncIteration:
                     self._register_job_state(job, RunState.FINISHED)

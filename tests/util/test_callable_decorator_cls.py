@@ -117,7 +117,6 @@ def test_decorator_with_args_and_kwargs_first_arg_func() -> None:
     def my_func(*args: Any, **kwargs: Any) -> Dict[str, Any]:
         return dict(args=args, kwargs=kwargs)
 
-    print(my_func)
     assert type(my_func) == MockClass
     _assert_func_decoration(my_func)  # noqa
     _assert_call_func(my_func)

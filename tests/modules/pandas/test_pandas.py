@@ -98,7 +98,7 @@ Currently, columns of dtype=float64 are currently changed into the 'nullable int
 if all values in the column are either whole numbers or nan. This might be incorrect in relation
 to the data model imported from. Prior knowledge of the imported data model (before pandas import)
 is required to do better. This should be handled in the planned refactoring of imports/exports. """)
-def test_pandas_dataset_list_of_objects_float_and_missing_numbers():
+def test_pandas_dataset_list_of_objects_float_numbers_and_missing_values():
     pandas_data = PandasDataset()
     data = {
         'obj_type': [
