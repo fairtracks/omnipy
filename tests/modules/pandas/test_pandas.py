@@ -1,4 +1,5 @@
 from math import nan
+import os
 
 from deepdiff import DeepDiff
 import numpy as np
@@ -90,12 +91,14 @@ def test_pandas_dataset_list_of_objects_float_numbers():
         significant_digits=3)
 
 
-@pytest.mark.skip(reason="""
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason="""
 Currently, columns of dtype=float64 are currently changed into the 'nullable integer' dtype `Int64`
 if all values in the column are either whole numbers or nan. This might be incorrect in relation
 to the data model imported from. Prior knowledge of the imported data model (before pandas import)
 is required to do better. This should be handled in the planned refactoring of imports/exports. """)
-def test_pandas_dataset_list_of_objects_float_numbers():
+def test_pandas_dataset_list_of_objects_float_and_missing_numbers():
     pandas_data = PandasDataset()
     data = {
         'obj_type': [
@@ -151,7 +154,7 @@ def test_pandas_dataset_list_of_nested_objects():
     assert pandas_data['obj_type'].loc[0, 'b'] == {'c': [1, 3]}
 
 
-@pytest.mark.skip(reason='To be implemented later')
+@pytest.mark.skipif(os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1', reason='To be implemented later')
 def test_pandas_dataset_missing_values():
     pandas_data = PandasDataset()
     pandas_data.from_data(

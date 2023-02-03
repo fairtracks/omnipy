@@ -1,5 +1,6 @@
 import inspect
 from inspect import Parameter
+import os
 from typing import Annotated
 
 from pydantic import ValidationError
@@ -65,7 +66,9 @@ def test_dataset_with_multiple_table_models():
     assert my_dataset.get_model('a') == TableTemplate[MyRecordSchema]
 
 
-@pytest.mark.skip(reason="""
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason="""
 TODO: Requires refactoring of Dataset class to use member variables instead of 'data' dict to
 store objects. Idea: Add a '_data' private member with 'data' as alias to keep UserDict working,
 however with no values to not duplicate content. Keep difference between Dataset and

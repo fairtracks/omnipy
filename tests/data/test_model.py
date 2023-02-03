@@ -1,3 +1,4 @@
+import os
 from types import NoneType
 from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar, Union
 
@@ -128,7 +129,9 @@ def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model
     return is_subclass and is_instance
 
 
-@pytest.mark.skip(reason='To be implemented later. Should be issubtype instead')
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason='To be implemented later. Should be issubtype instead')
 def test_issubclass_and_isinstance():
     assert _issubclass_and_isinstance(Model[str], Model[str])
     assert not _issubclass_and_isinstance(Model[int], Model[str])
@@ -349,7 +352,9 @@ def test_parsing_independent_on_union_type_order():
     assert type(FloatIntStrUnionModel('15').to_data()) == str
 
 
-@pytest.mark.skip(reason="""
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason="""
 Known issue due to bug in pydantic (https://github.com/pydantic/pydantic/issues/4519).
 The first initiation of Model with a nested Union of float and str is cached by
 pydantic and defines the order of the second initiation (even though the order of
@@ -555,7 +560,9 @@ def test_json_schema_generic_model_two_levels():
 }"""[1:]
 
 
-@pytest.mark.skip(reason="""
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason="""
 Known issue due to shortcomings of the typing standard library.
 Class variables of generic classes are not all available in
 in runtime (see: https://github.com/python/typing/issues/629)
