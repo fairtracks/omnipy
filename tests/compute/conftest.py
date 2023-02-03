@@ -10,7 +10,7 @@ from omnipy.compute.flow import (DagFlow,
                                  LinearFlow,
                                  LinearFlowTemplate)
 from omnipy.compute.job import Job, JobBase, JobTemplate
-from omnipy.compute.job_creator import JobCreator, JobBaseMeta
+from omnipy.compute.job_creator import JobBaseMeta, JobCreator
 
 from .helpers.classes import FlowClsTuple
 from .helpers.mocks import MockJobSubclass, MockJobTemplateSubclass, MockLocalRunner
