@@ -6,6 +6,10 @@ We are very grateful to Dr. Jamin Chen, who gracefully transferred ownership of 
 
 --
 
+Update Feb 3, 2023: Documentation of the omnipy API is still sparse. However, for running examples,
+please check out the [omnipy-examples repo](https://github.com/fairtracks/omnipy_examples) and its
+related [PYPI package](https://pypi.org/project/omnipy-examples/)!
+
 (NOTE: Read the section [Transformation on the FAIRtracks.net website](https://fairtracks.net/fair/#fair-07-transformation)
 for a more detailed and better formatted version of the following description!)
 
