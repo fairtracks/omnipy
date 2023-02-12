@@ -48,7 +48,7 @@ class RunStateRegistry(LogMixin):
 
     def _other_job_registered_with_same_unique_name(self, job: IsJob) -> bool:
         other_job_same_unique_name = self._jobs.get(job.unique_name)
-        return other_job_same_unique_name and id(other_job_same_unique_name) != id(job)
+        return bool(other_job_same_unique_name) and id(other_job_same_unique_name) != id(job)
 
     def _update_job_registration(self, job: IsJob, state: RunState) -> None:
         # TODO: Reimplement logic using a state machine, e.g. "transitions" package
