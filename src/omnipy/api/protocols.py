@@ -349,6 +349,8 @@ class IsJobConfig(Protocol):
 
 
 class IsRootLogConfig(Protocol):
+    log_format_str: str = '%(levelname)s - %(message)s (%(name)s)'
+    locale: Optional[LocaleType] = None
     log_to_stdout: bool
     log_to_stderr: bool
     log_to_file: bool

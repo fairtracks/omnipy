@@ -15,6 +15,8 @@ from omnipy.hub.root_log import RootLogObjects
 def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: str):
     assert isinstance(root_log, RootLogConfig)
 
+    assert root_log.log_format_str == '%(levelname)s - %(message)s (%(name)s)'
+    assert root_log.locale is None
     assert root_log.log_to_stdout is True
     assert root_log.log_to_stderr is True
     assert root_log.log_to_file is True
@@ -28,6 +30,14 @@ def _log_record_for_level(level: int):
     test_logger = logging.getLogger('test_logger')
     return test_logger.makeRecord(
         name=test_logger.name, level=level, fn='', lno=0, msg='my log msg', args=(), exc_info=None)
+
+
+def _assert_root_log_formatter(formatter: Optional[logging.Formatter],
+                               root_log_config: RootLogConfig):
+    if root_log_config.log_format_str:
+        assert formatter
+        assert formatter.format(_log_record_for_level(logging.DEBUG)) == \
+               'DEBUG - my log msg (test_logger)'
 
 
 def _assert_root_stdout_handler(root_stdout_handler: Optional[logging.StreamHandler],
@@ -80,14 +90,20 @@ def _assert_root_file_handler(root_file_handler: Optional[TimedRotatingFileHandl
 
 def _assert_root_log_objects(root_log_objects: RootLogObjects,
                              root_log_config: RootLogConfig) -> None:
+    _assert_root_log_formatter(root_log_objects.formatter, root_log_config)
     _assert_root_stdout_handler(root_log_objects.stdout_handler, root_log_config)
     _assert_root_stderr_handler(root_log_objects.stderr_handler, root_log_config)
     _assert_root_file_handler(root_log_objects.file_handler, root_log_config)
 
     root_handlers = logging.root.handlers
-    assert root_log_objects.stdout_handler in root_handlers
-    assert root_log_objects.stderr_handler in root_handlers
-    assert root_log_objects.file_handler in root_handlers
+    for handler in [
+            root_log_objects.stdout_handler,
+            root_log_objects.stderr_handler,
+            root_log_objects.file_handler,
+    ]:
+        if handler:
+            assert handler.formatter is root_log_objects.formatter
+            assert handler in root_handlers
 
 
 def test_root_log_config_default(teardown_rm_root_log_dir: Annotated[None, pytest.fixture]) -> None:

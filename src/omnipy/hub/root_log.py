@@ -21,36 +21,32 @@ class RootLogConfigEntryPublisher(RootLogConfig, RuntimeEntryPublisher):
 class RootLogObjects:
     _config: IsRootLogConfig = field(
         init=False, repr=False, default_factory=RootLogConfigEntryPublisher)
+    formatter: Optional[logging.Formatter] = None
     stdout_handler: Optional[StreamHandler] = None
     stderr_handler: Optional[StreamHandler] = None
     file_handler: Optional[TimedRotatingFileHandler] = None
 
     def __post_init__(self):
-        self._configure_all_handlers()
+        self._configure_all_objects()
 
     def set_config(self, config: IsRootLogConfig):
         self._remove_all_handlers_from_root_logger()
         self._config = config
-        self._configure_all_handlers()
+        self._configure_all_objects()
 
-    def _configure_all_handlers(self):
+    def _configure_all_objects(self):
+        self._configure_formatter()
         self._configure_stdout_handler()
         self._configure_stderr_handler()
         self._configure_file_handler()
 
         self._add_all_handlers_to_root_logger()
 
-    def _remove_all_handlers_from_root_logger(self):
-        root_logger = logging.root
-        root_logger.removeHandler(self.stdout_handler)
-        root_logger.removeHandler(self.stderr_handler)
-        root_logger.removeHandler(self.file_handler)
-
-    def _add_all_handlers_to_root_logger(self):
-        root_logger = logging.root
-        root_logger.addHandler(self.stdout_handler)
-        root_logger.addHandler(self.stderr_handler)
-        root_logger.addHandler(self.file_handler)
+    def _configure_formatter(self):
+        if self._config.log_format_str:
+            self.formatter = logging.Formatter(self._config.log_format_str)
+        else:
+            self.formatter = None
 
     def _configure_stdout_handler(self):
         if self._config.log_to_stdout:
@@ -86,3 +82,21 @@ class RootLogObjects:
             self.file_handler.setLevel(self._config.file_log_min_level)
         else:
             self.file_handler = None
+
+    def _remove_all_handlers_from_root_logger(self):
+        root_logger = logging.root
+        root_logger.removeHandler(self.stdout_handler)
+        root_logger.removeHandler(self.stderr_handler)
+        root_logger.removeHandler(self.file_handler)
+
+    def _add_handler_to_root_logger(self, handler: Optional[logging.Handler]):
+        if handler:
+            root_logger = logging.root
+            if self.formatter:
+                handler.setFormatter(self.formatter)
+            root_logger.addHandler(handler)
+
+    def _add_all_handlers_to_root_logger(self):
+        self._add_handler_to_root_logger(self.stdout_handler)
+        self._add_handler_to_root_logger(self.stderr_handler)
+        self._add_handler_to_root_logger(self.file_handler)
