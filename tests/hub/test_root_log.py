@@ -14,17 +14,10 @@ from omnipy.hub.root_log import RootLogObjects
 
 def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: str):
     assert isinstance(root_log, RootLogConfig)
-    assert isinstance(root_log.log_to_stdout, bool)
-    assert isinstance(root_log.log_to_stderr, bool)
-    assert isinstance(root_log.log_to_file, bool)
-    assert isinstance(root_log.stdout_log_min_level, int)
-    assert isinstance(root_log.stderr_log_min_level, int)
-    assert isinstance(root_log.file_log_min_level, int)
-    assert isinstance(root_log.file_log_dir_path, str)
 
-    assert root_log.log_to_stdout
-    assert root_log.log_to_stderr
-    assert root_log.log_to_file
+    assert root_log.log_to_stdout is True
+    assert root_log.log_to_stderr is True
+    assert root_log.log_to_file is True
     assert root_log.stdout_log_min_level == logging.INFO
     assert root_log.stderr_log_min_level == logging.ERROR
     assert root_log.file_log_min_level == logging.WARNING
@@ -90,6 +83,11 @@ def _assert_root_log_objects(root_log_objects: RootLogObjects,
     _assert_root_stdout_handler(root_log_objects.stdout_handler, root_log_config)
     _assert_root_stderr_handler(root_log_objects.stderr_handler, root_log_config)
     _assert_root_file_handler(root_log_objects.file_handler, root_log_config)
+
+    root_handlers = logging.root.handlers
+    assert root_log_objects.stdout_handler in root_handlers
+    assert root_log_objects.stderr_handler in root_handlers
+    assert root_log_objects.file_handler in root_handlers
 
 
 def test_root_log_config_default(teardown_rm_root_log_dir: Annotated[None, pytest.fixture]) -> None:

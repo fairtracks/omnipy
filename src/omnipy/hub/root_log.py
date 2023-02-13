@@ -29,6 +29,7 @@ class RootLogObjects:
         self._configure_all_handlers()
 
     def set_config(self, config: IsRootLogConfig):
+        self._remove_all_handlers_from_root_logger()
         self._config = config
         self._configure_all_handlers()
 
@@ -36,6 +37,20 @@ class RootLogObjects:
         self._configure_stdout_handler()
         self._configure_stderr_handler()
         self._configure_file_handler()
+
+        self._add_all_handlers_to_root_logger()
+
+    def _remove_all_handlers_from_root_logger(self):
+        root_logger = logging.root
+        root_logger.removeHandler(self.stdout_handler)
+        root_logger.removeHandler(self.stderr_handler)
+        root_logger.removeHandler(self.file_handler)
+
+    def _add_all_handlers_to_root_logger(self):
+        root_logger = logging.root
+        root_logger.addHandler(self.stdout_handler)
+        root_logger.addHandler(self.stderr_handler)
+        root_logger.addHandler(self.file_handler)
 
     def _configure_stdout_handler(self):
         if self._config.log_to_stdout:

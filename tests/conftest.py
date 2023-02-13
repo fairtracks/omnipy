@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 import os
 import shutil
 import tempfile
@@ -9,17 +10,27 @@ import pytest
 from omnipy.api.protocols import IsRuntime
 from omnipy.compute.job_creator import JobBaseMeta, JobCreator
 from omnipy.config.root_log import RootLogConfig
-from omnipy.hub.runtime import RuntimeConfig
 
 
 @pytest.fixture(scope='function')
 def teardown_rm_root_log_dir() -> Generator[None, None, None]:
     root_log_config = RootLogConfig()
     log_dir_path = root_log_config.file_log_dir_path
-    print(log_dir_path)
     yield
     if os.path.exists(log_dir_path):
         shutil.rmtree(log_dir_path)
+
+
+@pytest.fixture(scope='function')
+def teardown_remove_root_log_handlers() -> Generator[None, None, None]:
+    root_logger = logging.root
+    num_root_log_handlers = len(root_logger.handlers)
+    print(root_logger.handlers)
+    yield
+    assert len(root_logger.handlers[num_root_log_handlers:]) <= 3
+    for handler in root_logger.handlers[num_root_log_handlers:]:
+        root_logger.removeHandler(handler)
+    print(root_logger.handlers)
 
 
 @pytest.fixture(scope='function')
@@ -29,7 +40,10 @@ def tmp_dir_path() -> Generator[str, None, None]:
 
 
 @pytest.fixture(scope='function')
-def runtime_cls(teardown_rm_root_log_dir: Annotated[None, pytest.fixture]) -> Type[IsRuntime]:
+def runtime_cls(
+    teardown_rm_root_log_dir: Annotated[None, pytest.fixture],
+    teardown_remove_root_log_handlers: Annotated[None, pytest.fixture],
+) -> Type[IsRuntime]:
     from omnipy.hub.runtime import Runtime
     return Runtime
 

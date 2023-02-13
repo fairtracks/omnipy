@@ -7,7 +7,6 @@ import pytest
 
 from omnipy.api.enums import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions, EngineChoice
 from omnipy.api.protocols import IsRuntime
-from omnipy.config.root_log import RootLogConfig
 from omnipy.hub.runtime import RuntimeConfig, RuntimeObjects
 
 from .helpers.mocks import (MockJobConfig,
@@ -33,21 +32,8 @@ def _assert_runtime_config_default(config: RuntimeConfig, dir_path: str):
     from omnipy.config.job import JobConfig
 
     assert isinstance(config.job, JobConfig)
-    assert isinstance(config.job.persist_outputs, ConfigPersistOutputsOptions)
-    assert isinstance(config.job.restore_outputs, ConfigRestoreOutputsOptions)
-    assert isinstance(config.job.persist_data_dir_path, str)
-    assert isinstance(config.engine, str)
     assert isinstance(config.local, LocalRunnerConfig)
     assert isinstance(config.prefect, PrefectEngineConfig)
-    assert isinstance(config.prefect.use_cached_results, bool)
-    assert isinstance(config.root_log, RootLogConfig)
-    assert isinstance(config.root_log.log_to_stdout, bool)
-    assert isinstance(config.root_log.log_to_stderr, bool)
-    assert isinstance(config.root_log.log_to_file, bool)
-    assert isinstance(config.root_log.stdout_log_min_level, int)
-    assert isinstance(config.root_log.stderr_log_min_level, int)
-    assert isinstance(config.root_log.file_log_min_level, int)
-    assert isinstance(config.root_log.file_log_dir_path, str)
 
     assert config.job.persist_outputs == \
            ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
@@ -57,13 +43,6 @@ def _assert_runtime_config_default(config: RuntimeConfig, dir_path: str):
            os.path.join(dir_path, 'data')
     assert config.engine == EngineChoice.LOCAL
     assert config.prefect.use_cached_results is False
-    assert config.root_log.log_to_stdout
-    assert config.root_log.log_to_stderr
-    assert config.root_log.log_to_file
-    assert config.root_log.stdout_log_min_level == logging.INFO
-    assert config.root_log.stderr_log_min_level == logging.ERROR
-    assert config.root_log.file_log_min_level == logging.WARNING
-    assert config.root_log.file_log_dir_path == os.path.join(dir_path, 'logs')
 
 
 def _assert_runtime_objects_default(objects: RuntimeObjects, config: RuntimeConfig):
@@ -81,8 +60,6 @@ def _assert_runtime_objects_default(objects: RuntimeObjects, config: RuntimeConf
     assert isinstance(objects.prefect, PrefectEngine)
 
     assert isinstance(objects.registry, RunStateRegistry)
-
-    # _assert_root_log_objects(objects.root_log, config.root_log)
 
 
 def test_config_default(teardown_rm_root_log_dir: Annotated[None, pytest.fixture]) -> None:
@@ -185,31 +162,6 @@ def test_engines_subscribe_to_config(
     assert isinstance(runtime.config.prefect, MockPrefectEngineConfig2)
     assert runtime.config.local is not mock_local_runner_config
     assert runtime.config.prefect is not mock_prefect_engine_config
-
-
-#
-# def test_registry_subscribe_to_logger(
-#         runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
-#     logger_1 = logging.getLogger('logger_1')
-#     logger_2 = logging.getLogger('logger_2')
-#     assert logger_1 is not logger_2
-#
-#     mock_registry = MockRunStateRegistry()
-#     runtime = runtime_cls(objects=RuntimeObjects(
-#         logger=logger_1,
-#         registry=mock_registry,
-#     ))
-#
-#     assert runtime.objects.registry.logger is runtime.objects.logger is logger_1
-#
-#     runtime.objects.logger = logger_2
-#     assert runtime.objects.registry.logger is runtime.objects.logger is logger_2
-#
-#     runtime.objects.registry = MockRunStateRegistry()
-#     assert runtime.objects.registry.logger is runtime.objects.logger is logger_2
-#
-#     runtime.objects.registry = MockRunStateRegistry2()
-#     assert runtime.objects.logger is logger_2
 
 
 def test_root_log_object_subscribe_to_config(
