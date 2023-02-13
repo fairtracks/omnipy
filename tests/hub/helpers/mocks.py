@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-import logging
 from typing import Optional, Protocol, Tuple, Type
 
 from omnipy.api.enums import RunState
@@ -12,30 +11,6 @@ from omnipy.api.protocols import (IsEngineConfig,
                                   IsRunStateRegistry,
                                   IsTask,
                                   IsTaskRunnerEngine)
-from omnipy.hub.publisher import ConfigPublisher
-
-
-class MockFoo:
-    ...
-
-
-@dataclass
-class MockConfigPublisher(ConfigPublisher):
-    foo: Optional[MockFoo] = None
-    text: str = 'bar'
-    number: int = 42
-
-
-class MockSubscriberCls:
-    def __init__(self):
-        self.foo: Optional[MockFoo] = None
-        self.text: str = ''
-
-    def set_foo(self, foo: Optional[MockFoo]) -> None:
-        self.foo = foo
-
-    def set_text(self, text: str) -> None:
-        self.text = text
 
 
 class MockIsJobConfig(Protocol):

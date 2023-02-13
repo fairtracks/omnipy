@@ -8,7 +8,7 @@ def _subscribers_factory():
 
 
 @dataclass
-class ConfigPublisher:
+class DataPublisher:
     _subscriptions: DefaultDict[str, List[Callable[[Any], None]]] = \
         field(default_factory=_subscribers_factory, init=False, repr=False)
 

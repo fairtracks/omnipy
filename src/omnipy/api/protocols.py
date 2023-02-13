@@ -334,7 +334,7 @@ class IsPrefectEngineConfig(IsEngineConfig, Protocol):
     use_cached_results: int = False
 
 
-class IsConfigPublisher(Protocol):
+class IsDataPublisher(Protocol):
     def subscribe(self, config_item: str, callback_fun: Callable[[Any], None]):
         ...
 
@@ -362,11 +362,11 @@ class IsRootLogObjects(Protocol):
     pass
 
 
-class IsRootLogConfigEntryPublisher(IsRootLogConfig, IsConfigPublisher, Protocol):
+class IsRootLogConfigEntryPublisher(IsRootLogConfig, IsDataPublisher, Protocol):
     ...
 
 
-class IsRuntimeConfig(IsConfigPublisher, Protocol):
+class IsRuntimeConfig(IsDataPublisher, Protocol):
     job: IsJobConfig
     engine: EngineChoice
     local: IsLocalRunnerConfig
@@ -385,7 +385,7 @@ class IsRuntimeConfig(IsConfigPublisher, Protocol):
         ...
 
 
-class IsRuntimeObjects(IsConfigPublisher, Protocol):
+class IsRuntimeObjects(IsDataPublisher, Protocol):
     job_creator: IsJobConfigHolder
     local: IsEngine
     prefect: IsEngine
@@ -404,7 +404,7 @@ class IsRuntimeObjects(IsConfigPublisher, Protocol):
         ...
 
 
-class IsRuntime(IsConfigPublisher, Protocol):
+class IsRuntime(IsDataPublisher, Protocol):
     config: IsRuntimeConfig
     objects: IsRuntimeObjects
 

@@ -3,7 +3,7 @@ from typing import Annotated, Callable, List
 
 import pytest
 
-from .helpers.mocks import MockConfigPublisher, MockSubscriberCls
+from util.helpers.mocks import MockDataPublisher, MockSubscriberCls
 
 
 @pytest.fixture(scope='function')
@@ -29,9 +29,9 @@ def list_appender_subscriber_func(
 def mock_config_publisher_with_subscribers(
     subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
-) -> MockConfigPublisher:
+) -> MockDataPublisher:
 
-    config = MockConfigPublisher()
+    config = MockDataPublisher()
 
     config.subscribe('foo', subscriber_obj.set_foo)
     config.subscribe('text', list_appender_subscriber_func)

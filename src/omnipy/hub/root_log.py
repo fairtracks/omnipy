@@ -9,7 +9,7 @@ from typing import Optional
 
 from omnipy.api.protocols import IsRootLogConfig
 from omnipy.config.root_log import RootLogConfig
-from omnipy.hub.runtime_publisher import RuntimeEntryPublisher
+from omnipy.hub.entry import RuntimeEntryPublisher
 
 
 @dataclass

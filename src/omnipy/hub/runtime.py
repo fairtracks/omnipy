@@ -18,9 +18,8 @@ from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import JobConfig
 from omnipy.data.serializer import SerializerRegistry
 from omnipy.engine.local import LocalRunner
-from omnipy.hub.publisher import ConfigPublisher
+from omnipy.hub.entry import DataPublisher, RuntimeEntryPublisher
 from omnipy.hub.root_log import RootLogConfigEntryPublisher, RootLogObjects
-from omnipy.hub.runtime_publisher import RuntimeEntryPublisher
 from omnipy.log.registry import RunStateRegistry
 from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
 from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
@@ -51,7 +50,7 @@ class RuntimeObjects(RuntimeEntryPublisher):
 
 
 @dataclass
-class Runtime(ConfigPublisher):
+class Runtime(DataPublisher):
     config: IsRuntimeConfig = field(default_factory=RuntimeConfig)
     objects: IsRuntimeObjects = field(default_factory=RuntimeObjects)
 
