@@ -62,23 +62,31 @@ handlers:
 loggers:
     prefect:
         level: "${PREFECT_LOGGING_LEVEL}"
-        handlers: [console]
-        propagate: no
+#        handlers: [console]
+        handlers: []
+#        propagate: no
+        propagate: yes
 
     prefect.extra:
         level: "${PREFECT_LOGGING_LEVEL}"
-        handlers: [orion, console]
-        propagate: no
+#        handlers: [orion, console]
+        handlers: [orion]
+#        propagate: no
+        propagate: yes
 
     prefect.flow_runs:
         level: NOTSET
-        handlers: [orion, console_flow_runs]
-        propagate: no
+#        handlers: [orion, console_flow_runs]
+        handlers: [orion]
+#        propagate: no
+        propagate: yes
 
     prefect.task_runs:
         level: NOTSET
-        handlers: [orion, console_task_runs]
-        propagate: no
+#        handlers: [orion, console_task_runs]
+        handlers: [orion]
+#        propagate: no
+        propagate: yes
 
     prefect.orion:
         level: "${PREFECT_LOGGING_SERVER_LEVEL}"
@@ -93,9 +101,9 @@ loggers:
         handlers: [console]
         propagate: no
 
-# The root logger: any logger without propagation disabled sends to here as well
-root:
-    # By default, we display warning level logs from any library in the console
-    # to match Python's default behavior while formatting logs nicely
-    level: WARNING
-    handlers: []
+## The root logger: any logger without propagation disabled sends to here as well
+#root:
+#    # By default, we display warning level logs from any library in the console
+#    # to match Python's default behavior while formatting logs nicely
+#    level: WARNING
+#    handlers: [console]
