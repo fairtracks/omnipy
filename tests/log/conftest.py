@@ -6,6 +6,8 @@ from typing import Annotated, Generator
 import pytest
 import pytest_cases as pc
 
+from omnipy.log.constants import OMNIPY_LOG_FORMAT_STR
+
 from ..engine.helpers.mocks import (MockDagFlow,
                                     MockDagFlowTemplate,
                                     MockJobRunnerSubclass,

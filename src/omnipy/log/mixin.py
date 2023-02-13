@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 from typing import Optional, Tuple, Union
 
-from omnipy.api.constants import OMNIPY_LOG_FORMAT_STR
+from omnipy.log.constants import OMNIPY_LOG_FORMAT_STR
 from omnipy.util.helpers import get_datetime_format
 
 
