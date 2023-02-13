@@ -149,13 +149,11 @@ def _assert_runtime_objects_default(objects: RuntimeObjects, config: RuntimeConf
     _assert_root_log_objects(objects.root_log, config.root_log)
 
 
-def test_config_default(runtime: Annotated[IsRuntime, pytest.fixture],
-                        teardown_loggers: Annotated[None, pytest.fixture],
-                        tmp_dir_path: Annotated[str, pytest.fixture]) -> None:
+def test_config_default(teardown_rm_root_log_dir: Annotated[None, pytest.fixture]) -> None:
     _assert_runtime_config_default(RuntimeConfig(), str(Path.cwd()))
 
 
-def test_objects_default(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+def test_objects_default(teardown_rm_root_log_dir: Annotated[None, pytest.fixture]) -> None:
     _assert_runtime_objects_default(RuntimeObjects(), RuntimeConfig())
 
 

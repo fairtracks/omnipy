@@ -1,5 +1,6 @@
 from datetime import datetime
 import os
+import shutil
 import tempfile
 from typing import Annotated, Generator, Type
 
@@ -7,18 +8,30 @@ import pytest
 
 from omnipy.api.protocols import IsRuntime
 from omnipy.compute.job_creator import JobBaseMeta, JobCreator
+from omnipy.config.root_log import RootLogConfig
+from omnipy.hub.runtime import RuntimeConfig
 
 
 @pytest.fixture(scope='function')
-def runtime_cls() -> Type[IsRuntime]:
-    from omnipy.hub.runtime import Runtime
-    return Runtime
+def teardown_rm_root_log_dir() -> Generator[None, None, None]:
+    root_log_config = RootLogConfig()
+    log_dir_path = root_log_config.file_log_dir_path
+    print(log_dir_path)
+    yield
+    if os.path.exists(log_dir_path):
+        shutil.rmtree(log_dir_path)
 
 
 @pytest.fixture(scope='function')
 def tmp_dir_path() -> Generator[str, None, None]:
     with tempfile.TemporaryDirectory() as _tmp_dir_path:
         yield _tmp_dir_path
+
+
+@pytest.fixture(scope='function')
+def runtime_cls(teardown_rm_root_log_dir: Annotated[None, pytest.fixture]) -> Type[IsRuntime]:
+    from omnipy.hub.runtime import Runtime
+    return Runtime
 
 
 @pytest.fixture(scope='function')
