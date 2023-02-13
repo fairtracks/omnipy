@@ -362,12 +362,16 @@ class IsRootLogObjects(Protocol):
     pass
 
 
+class IsRootLogConfigEntryPublisher(IsRootLogConfig, IsConfigPublisher, Protocol):
+    ...
+
+
 class IsRuntimeConfig(IsConfigPublisher, Protocol):
     job: IsJobConfig
     engine: EngineChoice
     local: IsLocalRunnerConfig
     prefect: IsPrefectEngineConfig
-    root_log: IsRootLogConfig
+    root_log: IsRootLogConfigEntryPublisher
 
     def __init__(
             self,
@@ -375,7 +379,7 @@ class IsRuntimeConfig(IsConfigPublisher, Protocol):
             engine: EngineChoice = EngineChoice.LOCAL,  # noqa
             local: Optional[IsLocalRunnerConfig] = None,  # noqa
             prefect: Optional[IsPrefectEngineConfig] = None,  # noqa
-            root_log: Optional[IsRootLogConfig] = None,  # noqa
+            root_log: Optional[IsRootLogConfigEntryPublisher] = None,  # noqa
             *args: Any,
             **kwargs: Any) -> None:
         ...

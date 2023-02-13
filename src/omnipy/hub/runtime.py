@@ -8,7 +8,7 @@ from omnipy.api.protocols import (IsEngine,
                                   IsJobConfigHolder,
                                   IsLocalRunnerConfig,
                                   IsPrefectEngineConfig,
-                                  IsRootLogConfig,
+                                  IsRootLogConfigEntryPublisher,
                                   IsRootLogObjects,
                                   IsRunStateRegistry,
                                   IsRuntimeConfig,
@@ -38,7 +38,7 @@ class RuntimeConfig(RuntimeEntryPublisher):
     engine: EngineChoice = EngineChoice.LOCAL
     local: IsLocalRunnerConfig = field(default_factory=LocalRunnerConfig)
     prefect: IsPrefectEngineConfig = field(default_factory=PrefectEngineConfig)
-    root_log: IsRootLogConfig = field(default_factory=RootLogConfigEntryPublisher)
+    root_log: IsRootLogConfigEntryPublisher = field(default_factory=RootLogConfigEntryPublisher)
 
 
 @dataclass
@@ -59,8 +59,8 @@ class Runtime(ConfigPublisher):
         super().__init__()
 
         self.config._back = self
-        self.objects._back = self
         self.config.root_log._back = self
+        self.objects._back = self
 
         self.reset_subscriptions()
 
