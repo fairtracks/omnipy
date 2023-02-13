@@ -192,7 +192,7 @@ def test_same_unique_name_different_job(
 
 def test_state_change_logging(
     str_stream: Annotated[StringIO, pytest.fixture],
-    stream_logger: Annotated[logging.Logger, pytest.fixture],
+    stream_root_logger: Annotated[logging.Logger, pytest.fixture],
     task_a: Annotated[IsTask, pytest.fixture],
     task_b: Annotated[IsTask, pytest.fixture],
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],

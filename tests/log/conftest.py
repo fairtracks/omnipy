@@ -30,7 +30,7 @@ def simple_root_logger() -> Generator[logging.Logger, None, None]:
 
 
 @pytest.fixture(scope='function')
-def stream_logger(
+def stream_root_logger(
     str_stream: Annotated[StringIO, pytest.fixture],
     simple_root_logger: Annotated[logging.Logger, pytest.fixture],
 ) -> Generator[logging.Logger, None, None]:

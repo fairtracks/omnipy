@@ -44,7 +44,7 @@ def case_my_class_as_dynamic_log_mixin_subclass() -> Type:
 @pc.parametrize_with_cases('my_class_with_log_mixin', cases='.')
 def test_default_log(
     str_stream: Annotated[StringIO, pytest.fixture],
-    stream_logger: Annotated[logging.Logger, pytest.fixture],
+    stream_root_logger: Annotated[logging.Logger, pytest.fixture],
     my_class_with_log_mixin: Annotated[Type, pytest.fixture],
     mock_log_mixin_datetime: Annotated[datetime, pytest.fixture],
 ):
@@ -70,7 +70,7 @@ def test_default_log(
 @pc.parametrize_with_cases('my_class_with_log_mixin', cases='.')
 def test_logging_date_localization(
     str_stream: Annotated[StringIO, pytest.fixture],
-    stream_logger: Annotated[logging.Logger, pytest.fixture],
+    stream_root_logger: Annotated[logging.Logger, pytest.fixture],
     my_class_with_log_mixin: Annotated[Type, pytest.fixture],
     mock_log_mixin_datetime: Annotated[datetime, pytest.fixture],
 ):
@@ -78,7 +78,7 @@ def test_logging_date_localization(
     fixed_datetime_now = mock_log_mixin_datetime.now()
 
     locale = ('de_DE', 'UTF-8')
-    my_obj.set_logger(stream_logger, locale=locale)
+    my_obj.set_logger(stream_root_logger, locale=locale)
     my_obj.log('Log message')
 
     log_lines = assert_log_lines_from_stream(1, str_stream)
