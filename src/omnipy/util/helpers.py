@@ -1,8 +1,10 @@
 import inspect
 import locale as pkg_locale
-from typing import Dict, get_args, get_origin, Iterable, Mapping, Tuple, Type, Union
+from typing import Dict, get_args, get_origin, Iterable, Mapping, Optional, Tuple, Union
 
 from typing_inspect import get_generic_bases, is_generic_type
+
+from omnipy.api.types import LocaleType
 
 DictT = Union[Mapping[object, object], Iterable[Tuple[object, object]]]
 
@@ -18,7 +20,7 @@ def remove_none_vals(**kwargs: object) -> Dict[object, object]:
     return {key: val for key, val in kwargs.items() if val is not None}
 
 
-def get_datetime_format(locale: Union[str, Tuple[str, str]] = '') -> str:
+def get_datetime_format(locale: Optional[LocaleType] = None) -> str:
     pkg_locale.setlocale(pkg_locale.LC_ALL, locale)
 
     if hasattr(pkg_locale, 'nl_langinfo'):  # noqa

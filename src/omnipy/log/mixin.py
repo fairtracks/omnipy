@@ -1,12 +1,7 @@
 from datetime import datetime
-from logging import Formatter, getLogger, Handler, INFO, Logger, root, StreamHandler, WARN
-from logging.handlers import TimedRotatingFileHandler
-import os
-from pathlib import Path
-import sys
-from typing import Optional, Tuple, Union
+from logging import getLogger, INFO, Logger
+from typing import Optional
 
-from omnipy.log.constants import OMNIPY_LOG_FORMAT_STR
 from omnipy.util.helpers import get_datetime_format
 
 

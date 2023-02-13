@@ -19,6 +19,7 @@ from omnipy.api.enums import (ConfigPersistOutputsOptions,
                               PersistOutputsOptions,
                               RestoreOutputsOptions,
                               RunState)
+from omnipy.api.types import GeneralDecorator, LocaleType
 
 
 class IsNestedContext(Protocol):
@@ -257,7 +258,6 @@ class IsTaskTemplatesFlowTemplateCallable(Protocol[TaskTemplatesFlowTemplateT]):
 FlowT = TypeVar('FlowT', bound='Flow', covariant=True)
 FlowBaseT = TypeVar('FlowBaseT', bound='FlowBase', covariant=True)
 FlowTemplateT = TypeVar('FlowTemplateT', bound='FlowTemplate', covariant=True)
-GeneralDecorator = Callable[[Callable], Callable]
 
 
 @runtime_checkable
