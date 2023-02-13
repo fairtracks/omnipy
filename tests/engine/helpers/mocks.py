@@ -18,7 +18,6 @@ from omnipy.api.protocols import (GeneralDecorator,
                                   IsFuncFlow,
                                   IsJob,
                                   IsLinearFlow,
-                                  IsRunStateRegistryConfig,
                                   IsTask)
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
@@ -270,9 +269,6 @@ class MockRunStateRegistryConfig:
 
 class MockRunStateRegistry:
     def __init__(self) -> None:
-        self.logger: Optional[logging.Logger] = None
-        self.config: IsRunStateRegistryConfig = MockRunStateRegistryConfig()
-
         self._jobs: Dict[str, IsJob] = {}
         self._job_state: Dict[str, RunState] = {}
         self._job_state_datetime: Dict[Tuple[str, RunState], datetime] = {}
@@ -290,11 +286,3 @@ class MockRunStateRegistry:
         self._jobs[job.unique_name] = job
         self._job_state[job.unique_name] = state
         self._job_state_datetime[(job.unique_name, state)] = datetime.now()
-        if self.logger:
-            self.logger.info(f'{job.unique_name} - {state.name}')
-
-    def set_logger(self, logger: Optional[logging.Logger]) -> None:
-        self.logger = logger
-
-    def set_config(self, config: IsRunStateRegistryConfig) -> None:
-        self.config = config

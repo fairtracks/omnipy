@@ -3,21 +3,19 @@ from datetime import datetime
 from typing import DefaultDict, Dict, List, Optional, Tuple
 
 from omnipy.api.enums import RunState, RunStateLogMessages
-from omnipy.api.protocols import IsJob, IsRunStateRegistryConfig
-from omnipy.config.registry import RunStateRegistryConfig
+from omnipy.api.protocols import IsJob
 from omnipy.log.mixin import LogMixin
 
 
 class RunStateRegistry(LogMixin):
     def __init__(self) -> None:
-        self._config: IsRunStateRegistryConfig = RunStateRegistryConfig()
 
         self._jobs: Dict[str, IsJob] = {}
         self._job_states: Dict[str, RunState] = {}
         self._state_jobs: DefaultDict[RunState, List[str]] = defaultdict(list)
         self._job_state_datetime: Dict[Tuple[str, RunState], datetime] = {}
 
-        super().__init__(log_dir_path=self._config.log_dir_path)
+        super().__init__()
 
     def get_job_state(self, job: IsJob) -> RunState:
         return self._job_states[job.unique_name]
@@ -31,9 +29,6 @@ class RunStateRegistry(LogMixin):
             return tuple(self._jobs[unique_name] for unique_name in job_unique_names)
         else:
             return tuple(self._jobs.values())
-
-    def set_config(self, config: IsRunStateRegistryConfig) -> None:
-        self._config = config
 
     def set_job_state(self, job: IsJob, state: RunState) -> None:
         cur_datetime = datetime.now()

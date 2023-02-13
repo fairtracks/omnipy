@@ -21,23 +21,24 @@ def str_stream() -> StringIO:
 
 
 @pytest.fixture(scope='function')
-def simple_logger() -> logging.Logger:
-    logger = logging.getLogger('test')
-    logger.setLevel(logging.INFO)
-    yield logger
-    for handler in logger.handlers:
-        logger.removeHandler(handler)
+def simple_root_logger() -> Generator[logging.Logger, None, None]:
+    root_logger = logging.root
+    prev_level = root_logger.level
+    root_logger.setLevel(logging.INFO)
+    yield root_logger
+    root_logger.setLevel(prev_level)
 
 
 @pytest.fixture(scope='function')
 def stream_logger(
     str_stream: Annotated[StringIO, pytest.fixture],
-    simple_logger: Annotated[logging.Logger, pytest.fixture],
-) -> logging.Logger:
+    simple_root_logger: Annotated[logging.Logger, pytest.fixture],
+) -> Generator[logging.Logger, None, None]:
     stream_handler = logging.StreamHandler(str_stream)
-    simple_logger.addHandler(stream_handler)
-    yield simple_logger
-    simple_logger.removeHandler(stream_handler)
+    stream_handler.setFormatter(logging.Formatter(OMNIPY_LOG_FORMAT_STR))
+    simple_root_logger.addHandler(stream_handler)
+    yield simple_root_logger
+    simple_root_logger.removeHandler(stream_handler)
 
 
 @pytest.fixture(scope='module')

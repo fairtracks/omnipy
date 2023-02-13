@@ -29,7 +29,7 @@ def runtime(
     runtime = runtime_cls()
 
     runtime.config.job.persist_data_dir_path = os.path.join(tmp_dir_path, 'data')
-    runtime.config.registry.log_dir_path = os.path.join(tmp_dir_path, 'logs')
+    runtime.config.root_log.file_log_dir_path = os.path.join(tmp_dir_path, 'logs')
 
     yield runtime
 

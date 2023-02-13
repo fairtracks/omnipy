@@ -8,8 +8,8 @@ from omnipy.api.enums import RunState
 from omnipy.api.protocols import (IsEngineConfig,
                                   IsLocalRunnerConfig,
                                   IsPrefectEngineConfig,
+                                  IsRootLogConfig,
                                   IsRunStateRegistry,
-                                  IsRunStateRegistryConfig,
                                   IsTask,
                                   IsTaskRunnerEngine)
 from omnipy.hub.publisher import ConfigPublisher
@@ -133,16 +133,24 @@ class MockPrefectEngine2(MockPrefectEngine):
         return MockPrefectEngineConfig2
 
 
+class MockRootLogObjects:
+    def __init__(self):
+        self.config: Optional[IsRootLogConfig] = None
+
+    def set_config(self, config: IsRootLogConfig):
+        self.config = config
+
+
+class MockRootLogObjects2(MockRootLogObjects):
+    ...
+
+
 @dataclass
-class MockRunStateRegistryConfig:
-    verbose: bool = True
+class MockRootLogConfig:
+    log_to_stderr: bool = True
 
 
 class MockRunStateRegistry:
-    def __init__(self) -> None:
-        self.logger: Optional[logging.Logger] = None
-        self.config: IsRunStateRegistryConfig = MockRunStateRegistryConfig()
-
     def get_task_state(self, task: IsTask) -> RunState:
         ...
 
@@ -154,12 +162,6 @@ class MockRunStateRegistry:
 
     def set_task_state(self, task: IsTask, state: RunState) -> None:
         ...
-
-    def set_logger(self, logger: Optional[logging.Logger]) -> None:
-        self.logger = logger
-
-    def set_config(self, config: IsRunStateRegistryConfig) -> None:
-        self.config = config
 
 
 class MockRunStateRegistry2(MockRunStateRegistry):

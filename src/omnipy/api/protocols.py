@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 from types import MappingProxyType
 from typing import (Any,
                     Callable,
@@ -322,12 +321,6 @@ class IsRunStateRegistry(Protocol):
     def set_job_state(self, job: IsJob, state: RunState) -> None:
         ...
 
-    def set_logger(self, logger: Optional[logging.Logger]) -> None:
-        ...
-
-    def set_config(self, config: IsRunStateRegistryConfig) -> None:
-        ...
-
 
 class IsEngineConfig(Protocol):
     ...
@@ -339,18 +332,6 @@ class IsLocalRunnerConfig(IsEngineConfig, Protocol):
 
 class IsPrefectEngineConfig(IsEngineConfig, Protocol):
     use_cached_results: int = False
-
-
-class IsRunStateRegistryConfig(Protocol):
-    verbose: bool = True
-    log_dir_path: str
-
-    def __init__(
-            self,
-            verbose: bool = True,  # noqa
-            *args: Any,
-            **kwargs: Any) -> None:
-        ...
 
 
 class IsConfigPublisher(Protocol):
@@ -367,52 +348,66 @@ class IsJobConfig(Protocol):
     persist_data_dir_path: str
 
 
+class IsRootLogConfig(Protocol):
+    log_to_stdout: bool
+    log_to_stderr: bool
+    log_to_file: bool
+    stdout_log_min_level: int
+    stderr_log_min_level: int
+    file_log_min_level: int
+    file_log_dir_path: str
+
+
+class IsRootLogObjects(Protocol):
+    pass
+
+
 class IsRuntimeConfig(IsConfigPublisher, Protocol):
     job: IsJobConfig
     engine: EngineChoice
     local: IsLocalRunnerConfig
     prefect: IsPrefectEngineConfig
-    registry: IsRunStateRegistryConfig
+    root_log: IsRootLogConfig
 
     def __init__(
             self,
             job: Optional[IsJobConfig] = None,  # noqa
             engine: EngineChoice = EngineChoice.LOCAL,  # noqa
-            local_config: Optional[IsLocalRunnerConfig] = None,  # noqa
-            prefect_config: Optional[IsPrefectEngineConfig] = None,  # noqa
-            registry_config: Optional[IsRunStateRegistryConfig] = None,  # noqa
+            local: Optional[IsLocalRunnerConfig] = None,  # noqa
+            prefect: Optional[IsPrefectEngineConfig] = None,  # noqa
+            root_log: Optional[IsRootLogConfig] = None,  # noqa
             *args: Any,
             **kwargs: Any) -> None:
         ...
 
 
 class IsRuntimeObjects(IsConfigPublisher, Protocol):
-    logger: logging.Logger
-    registry: IsRunStateRegistry
     job_creator: IsJobConfigHolder
     local: IsEngine
     prefect: IsEngine
+    registry: IsRunStateRegistry
+    root_log: IsRootLogObjects
 
     def __init__(
             self,
-            logger: Optional[logging.Logger] = None,  # noqa
-            registry: Optional[IsRunStateRegistry] = None,  # noqa
             job_creator: Optional[IsJobConfigHolder] = None,  # noqa
             local: Optional[IsEngine] = None,  # noqa
             prefect: Optional[IsEngine] = None,  # noqa
+            registry: Optional[IsRunStateRegistry] = None,  # noqa
+            root_log: Optional[IsRootLogObjects] = None,  # noqa
             *args: Any,
             **kwargs: Any) -> None:
         ...
 
 
 class IsRuntime(IsConfigPublisher, Protocol):
-    objects: IsRuntimeObjects
     config: IsRuntimeConfig
+    objects: IsRuntimeObjects
 
     def __init__(
             self,
-            objects: Optional[IsRuntimeObjects] = None,  # noqa
             config: Optional[IsRuntimeConfig] = None,  # noqa
+            objects: Optional[IsRuntimeObjects] = None,  # noqa
             *args: Any,
             **kwargs: Any) -> None:
         ...

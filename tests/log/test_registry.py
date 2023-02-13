@@ -192,17 +192,14 @@ def test_same_unique_name_different_job(
 
 def test_state_change_logging(
     str_stream: Annotated[StringIO, pytest.fixture],
-    simple_logger: Annotated[logging.Logger, pytest.fixture],
+    stream_logger: Annotated[logging.Logger, pytest.fixture],
     task_a: Annotated[IsTask, pytest.fixture],
     task_b: Annotated[IsTask, pytest.fixture],
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],
     dag_flow_b: Annotated[IsDagFlow, pytest.fixture],
 ):
-    simple_logger.addHandler(logging.StreamHandler(str_stream))
-
     for job_a, job_b in [(task_a, task_b), (dag_flow_a, dag_flow_b)]:
         registry = RunStateRegistry()
-        registry.set_logger(simple_logger)
 
         events = [
             (job_a, RunState.INITIALIZED),
@@ -224,19 +221,25 @@ def test_state_change_logging(
 
         assert log_lines[0] == f'INFO - ' \
                                f'{datetime_list[0].strftime(get_datetime_format())}: ' \
-                               f'Initialized "{job_a.unique_name}" (test)'
+                               f'Initialized "{job_a.unique_name}" ' \
+                               f'(omnipy.log.registry.RunStateRegistry)'
         assert log_lines[1] == f'INFO - ' \
                                f'{datetime_list[1].strftime(get_datetime_format())}: ' \
-                               f'Started running "{job_a.unique_name}"... (test)'
+                               f'Started running "{job_a.unique_name}"... ' \
+                               f'(omnipy.log.registry.RunStateRegistry)'
         assert log_lines[2] == f'INFO - ' \
                                f'{datetime_list[2].strftime(get_datetime_format())}: ' \
-                               f'Initialized "{job_b.unique_name}" (test)'
+                               f'Initialized "{job_b.unique_name}" ' \
+                               f'(omnipy.log.registry.RunStateRegistry)'
         assert log_lines[3] == f'INFO - ' \
                                f'{datetime_list[3].strftime(get_datetime_format())}: ' \
-                               f'Finished running "{job_a.unique_name}"! (test)'
+                               f'Finished running "{job_a.unique_name}"! ' \
+                               f'(omnipy.log.registry.RunStateRegistry)'
         assert log_lines[4] == f'INFO - ' \
                                f'{datetime_list[4].strftime(get_datetime_format())}: ' \
-                               f'Started running "{job_b.unique_name}"... (test)'
+                               f'Started running "{job_b.unique_name}"... ' \
+                               f'(omnipy.log.registry.RunStateRegistry)'
         assert log_lines[5] == f'INFO - ' \
                                f'{datetime_list[5].strftime(get_datetime_format())}: ' \
-                               f'Finished running "{job_b.unique_name}"! (test)'
+                               f'Finished running "{job_b.unique_name}"! ' \
+                               f'(omnipy.log.registry.RunStateRegistry)'

@@ -12,7 +12,7 @@ from omnipy.engine.local import LocalRunner
 from omnipy.modules.prefect.engine.prefect import PrefectEngine
 
 from .helpers.classes import JobCase, JobRunnerStateChecker, JobType
-from .helpers.functions import add_logger_to_registry, update_job_case_with_job
+from .helpers.functions import update_job_case_with_job
 from .helpers.mocks import (MockDagFlowTemplate,
                             MockEngineConfig,
                             MockFuncFlowTemplate,
@@ -134,7 +134,7 @@ def no_verbose_config_engine_decorator():
     ids=['m[registry]'],
 )
 def mock_registry(registry):
-    return cast(MockRunStateRegistry, add_logger_to_registry(registry))
+    return registry
 
 
 @pc.fixture(scope='function')
