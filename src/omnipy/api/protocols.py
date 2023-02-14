@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
+from logging.handlers import TimedRotatingFileHandler
 from types import MappingProxyType
 from typing import (Any,
                     Callable,
@@ -349,8 +351,8 @@ class IsJobConfig(Protocol):
 
 
 class IsRootLogConfig(Protocol):
-    log_format_str: str = '%(levelname)s - %(message)s (%(name)s)'
-    locale: Optional[LocaleType] = None
+    log_format_str: str
+    locale: LocaleType
     log_to_stdout: bool
     log_to_stderr: bool
     log_to_file: bool
@@ -361,7 +363,13 @@ class IsRootLogConfig(Protocol):
 
 
 class IsRootLogObjects(Protocol):
-    pass
+    formatter: Optional[logging.Formatter] = None
+    stdout_handler: Optional[logging.StreamHandler] = None
+    stderr_handler: Optional[logging.StreamHandler] = None
+    file_handler: Optional[TimedRotatingFileHandler] = None
+
+    def set_config(self, config: IsRootLogConfig) -> None:
+        ...
 
 
 class IsRootLogConfigEntryPublisher(IsRootLogConfig, IsDataPublisher, Protocol):

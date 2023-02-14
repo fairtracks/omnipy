@@ -25,12 +25,10 @@ def teardown_rm_root_log_dir() -> Generator[None, None, None]:
 def teardown_remove_root_log_handlers() -> Generator[None, None, None]:
     root_logger = logging.root
     num_root_log_handlers = len(root_logger.handlers)
-    print(root_logger.handlers)
     yield
     assert len(root_logger.handlers[num_root_log_handlers:]) <= 3
     for handler in root_logger.handlers[num_root_log_handlers:]:
         root_logger.removeHandler(handler)
-    print(root_logger.handlers)
 
 
 @pytest.fixture(scope='function')

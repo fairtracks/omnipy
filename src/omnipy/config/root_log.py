@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
+import locale as pkg_locale
 import logging
 from pathlib import Path
-from typing import Optional
 
 from omnipy.api.types import LocaleType
 
@@ -12,8 +12,8 @@ def _get_log_dir_path() -> str:
 
 @dataclass
 class RootLogConfig:
-    log_format_str: str = '%(levelname)s - %(message)s (%(name)s)'
-    locale: Optional[LocaleType] = None
+    log_format_str: str = '{engine} {asctime} - {levelname}: {message} [{name}]'
+    locale: LocaleType = pkg_locale.getlocale()
     log_to_stdout: bool = True
     log_to_stderr: bool = True
     log_to_file: bool = True

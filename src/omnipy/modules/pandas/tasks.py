@@ -80,7 +80,6 @@ def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSame
     out_dataset = PandasDataset()
     out_datafile_names = tuple(dataset_list[0].keys())
     for df_index in range(len(out_datafile_names)):
-        print([tuple(dataset.keys())[df_index] for dataset in dataset_list])
         df = pd.concat([tuple(dataset.values())[df_index] for dataset in dataset_list],
                        axis=0 if vertical else 1)
         out_dataset[out_datafile_names[df_index]] = df

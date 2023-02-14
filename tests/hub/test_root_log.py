@@ -1,22 +1,28 @@
+from datetime import datetime
+from io import StringIO
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
 from pathlib import Path
-from typing import Annotated, Optional
+import time
+from typing import Annotated, Optional, Type
 
 import pytest
 
+from log.helpers.functions import assert_log_lines_from_stream
 import omnipy
-from omnipy.api.protocols import IsRuntime
+from omnipy.api.protocols import IsRootLogConfig, IsRootLogConfigEntryPublisher, IsRuntime
+from omnipy.api.types import LocaleType
 from omnipy.config.root_log import RootLogConfig
 from omnipy.hub.root_log import RootLogObjects
+from omnipy.util.helpers import get_datetime_format
 
 
 def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: str):
     assert isinstance(root_log, RootLogConfig)
+    assert isinstance(root_log.locale, (str, tuple))
 
-    assert root_log.log_format_str == '%(levelname)s - %(message)s (%(name)s)'
-    assert root_log.locale is None
+    assert root_log.log_format_str == '%(asctime)s: %(levelname)s - %(message)s (%(name)s)'
     assert root_log.log_to_stdout is True
     assert root_log.log_to_stderr is True
     assert root_log.log_to_file is True
@@ -32,16 +38,25 @@ def _log_record_for_level(level: int):
         name=test_logger.name, level=level, fn='', lno=0, msg='my log msg', args=(), exc_info=None)
 
 
-def _assert_root_log_formatter(formatter: Optional[logging.Formatter],
-                               root_log_config: RootLogConfig):
+def _assert_root_log_formatter(
+    formatter: Optional[logging.Formatter],
+    root_log_config: IsRootLogConfig,
+):
     if root_log_config.log_format_str:
         assert formatter
-        assert formatter.format(_log_record_for_level(logging.DEBUG)) == \
-               'DEBUG - my log msg (test_logger)'
+        record = _log_record_for_level(logging.DEBUG)
+        fixed_datetime_now = datetime.now()
+        record.created = time.mktime(fixed_datetime_now.timetuple())
+
+        formatted_record = formatter.format(record)
+
+        assert 'DEBUG - my log msg (test_logger)' in formatted_record
+        assert fixed_datetime_now.strftime(get_datetime_format(
+            root_log_config.locale)) in formatted_record
 
 
 def _assert_root_stdout_handler(root_stdout_handler: Optional[logging.StreamHandler],
-                                root_log_config: RootLogConfig):
+                                root_log_config: IsRootLogConfig):
     if root_log_config.log_to_stdout:
         assert isinstance(root_stdout_handler, logging.StreamHandler)
         assert root_stdout_handler.stream is omnipy.hub.root_log.stdout
@@ -65,7 +80,7 @@ def _assert_root_stdout_handler(root_stdout_handler: Optional[logging.StreamHand
 
 
 def _assert_root_stderr_handler(root_stderr_handler: Optional[logging.StreamHandler],
-                                root_log_config: RootLogConfig):
+                                root_log_config: IsRootLogConfig):
     if root_log_config.log_to_stderr:
         assert isinstance(root_stderr_handler, logging.StreamHandler)
         assert root_stderr_handler.stream is omnipy.hub.root_log.stderr
@@ -75,7 +90,7 @@ def _assert_root_stderr_handler(root_stderr_handler: Optional[logging.StreamHand
 
 
 def _assert_root_file_handler(root_file_handler: Optional[TimedRotatingFileHandler],
-                              root_log_config: RootLogConfig):
+                              root_log_config: IsRootLogConfig):
     if root_log_config.log_to_file:
         assert isinstance(root_file_handler, TimedRotatingFileHandler)
         assert root_file_handler.when == 'D'
@@ -88,8 +103,10 @@ def _assert_root_file_handler(root_file_handler: Optional[TimedRotatingFileHandl
         assert root_file_handler is None
 
 
-def _assert_root_log_objects(root_log_objects: RootLogObjects,
-                             root_log_config: RootLogConfig) -> None:
+def _assert_root_log_objects(
+    root_log_objects: RootLogObjects,
+    root_log_config: IsRootLogConfig,
+) -> None:
     _assert_root_log_formatter(root_log_objects.formatter, root_log_config)
     _assert_root_stdout_handler(root_log_objects.stdout_handler, root_log_config)
     _assert_root_stderr_handler(root_log_objects.stderr_handler, root_log_config)
@@ -115,8 +132,10 @@ def test_root_log_objects_default(
     _assert_root_log_objects(RootLogObjects(), RootLogConfig())
 
 
-def test_runtime_root_log_config(runtime: Annotated[IsRuntime, pytest.fixture],
-                                 tmp_dir_path: Annotated[str, pytest.fixture]) -> None:
+def test_runtime_root_log_config(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    tmp_dir_path: Annotated[str, pytest.fixture],
+) -> None:
     assert isinstance(runtime.config.root_log, RootLogConfig)
     assert isinstance(runtime.objects.root_log, RootLogObjects)
 
@@ -167,3 +186,29 @@ def test_root_log_config_dependencies(runtime: Annotated[IsRuntime, pytest.fixtu
     runtime.config.root_log.file_log_dir_path = str(Path(tmp_dir_path).joinpath('extra_level'))
 
     _assert_root_file_handler(runtime.objects.root_log.file_handler, runtime.config.root_log)
+
+
+def test_log_formatter_date_localization(runtime: Annotated[IsRuntime, pytest.fixture],):
+    fixed_datetime_now = datetime.now()
+    prev_formatter = runtime.objects.root_log.formatter
+
+    prev_locale = runtime.config.root_log.locale
+    runtime.config.root_log.locale = ('de_DE', 'UTF-8')
+    new_formatter = runtime.objects.root_log.formatter
+
+    assert new_formatter
+    assert new_formatter is not prev_formatter
+
+    formatted_log_entry = new_formatter.format(_log_record_for_level(logging.INFO))
+
+    log_lines = assert_log_lines_from_stream(1, StringIO(formatted_log_entry))
+
+    locale: LocaleType = runtime.config.root_log.locale
+    assert fixed_datetime_now.strftime(get_datetime_format(locale)) in log_lines[0]
+    assert '(test_logger)' in log_lines[0]
+
+    runtime.config.root_log.locale = prev_locale
+    newer_formatter = runtime.objects.root_log.formatter
+
+    assert newer_formatter
+    assert newer_formatter is not new_formatter

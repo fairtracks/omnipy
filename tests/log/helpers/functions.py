@@ -28,18 +28,15 @@ def assert_log_lines_from_stream(num_log_lines, str_stream):
     assert len(log_lines) == num_log_lines
     for log_line in log_lines:
         assert 'INFO' in log_line
-        assert 'root' in log_line
+        assert '(test_logger)' in log_line
     return log_lines
 
 
 def assert_log_line_from_stream(str_stream,
                                 msg: str,
                                 level: Optional[str] = None,
-                                logger: Optional[str] = None,
-                                datetime_obj: Optional[datetime] = None):
+                                logger: Optional[str] = None):
     log_line = read_log_line_from_stream(str_stream)
     assert msg in log_line
     assert level in log_line if level else level not in log_line
     assert logger in log_line if logger else logger not in log_line
-    if datetime_obj:
-        assert datetime_obj.strftime(get_datetime_format()) in log_line

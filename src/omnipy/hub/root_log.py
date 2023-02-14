@@ -10,6 +10,7 @@ from typing import Optional
 from omnipy.api.protocols import IsRootLogConfig
 from omnipy.config.root_log import RootLogConfig
 from omnipy.hub.entry import RuntimeEntryPublisher
+from omnipy.util.helpers import get_datetime_format
 
 
 @dataclass
@@ -21,6 +22,7 @@ class RootLogConfigEntryPublisher(RootLogConfig, RuntimeEntryPublisher):
 class RootLogObjects:
     _config: IsRootLogConfig = field(
         init=False, repr=False, default_factory=RootLogConfigEntryPublisher)
+
     formatter: Optional[logging.Formatter] = None
     stdout_handler: Optional[StreamHandler] = None
     stderr_handler: Optional[StreamHandler] = None
@@ -30,11 +32,12 @@ class RootLogObjects:
         self._configure_all_objects()
 
     def set_config(self, config: IsRootLogConfig):
-        self._remove_all_handlers_from_root_logger()
         self._config = config
         self._configure_all_objects()
 
     def _configure_all_objects(self):
+        self._remove_all_handlers_from_root_logger()
+
         self._configure_formatter()
         self._configure_stdout_handler()
         self._configure_stderr_handler()
@@ -44,7 +47,8 @@ class RootLogObjects:
 
     def _configure_formatter(self):
         if self._config.log_format_str:
-            self.formatter = logging.Formatter(self._config.log_format_str)
+            datetime_fmt = get_datetime_format(self._config.locale)
+            self.formatter = logging.Formatter(self._config.log_format_str, datetime_fmt, style='{')
         else:
             self.formatter = None
 
@@ -85,9 +89,12 @@ class RootLogObjects:
 
     def _remove_all_handlers_from_root_logger(self):
         root_logger = logging.root
-        root_logger.removeHandler(self.stdout_handler)
-        root_logger.removeHandler(self.stderr_handler)
-        root_logger.removeHandler(self.file_handler)
+        handlersToRemove = [
+            handler for handler in root_logger.handlers
+            if isinstance(handler, StreamHandler) or isinstance(handler, TimedRotatingFileHandler)
+        ]
+        for handler in handlersToRemove:
+            root_logger.removeHandler(handler)
 
     def _add_handler_to_root_logger(self, handler: Optional[logging.Handler]):
         if handler:
