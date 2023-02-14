@@ -22,7 +22,7 @@ def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: str):
     assert isinstance(root_log, RootLogConfig)
     assert isinstance(root_log.locale, (str, tuple))
 
-    assert root_log.log_format_str == '%(asctime)s: %(levelname)s - %(message)s (%(name)s)'
+    assert root_log.log_format_str == '{engine} {asctime} - {levelname}: {message} [{name}]'
     assert root_log.log_to_stdout is True
     assert root_log.log_to_stderr is True
     assert root_log.log_to_file is True
@@ -32,10 +32,14 @@ def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: str):
     assert root_log.file_log_dir_path == os.path.join(dir_path, 'logs')
 
 
-def _log_record_for_level(level: int):
+def _log_record_for_level(level: int, datetime_obj: Optional[datetime] = None):
     test_logger = logging.getLogger('test_logger')
-    return test_logger.makeRecord(
+    record = test_logger.makeRecord(
         name=test_logger.name, level=level, fn='', lno=0, msg='my log msg', args=(), exc_info=None)
+    record.engine = '[TEST]'
+    if datetime_obj:
+        record.created = time.mktime(datetime_obj.timetuple())
+    return record
 
 
 def _assert_root_log_formatter(
@@ -50,7 +54,7 @@ def _assert_root_log_formatter(
 
         formatted_record = formatter.format(record)
 
-        assert 'DEBUG - my log msg (test_logger)' in formatted_record
+        assert 'DEBUG: my log msg [test_logger]' in formatted_record
         assert fixed_datetime_now.strftime(get_datetime_format(
             root_log_config.locale)) in formatted_record
 
@@ -199,13 +203,14 @@ def test_log_formatter_date_localization(runtime: Annotated[IsRuntime, pytest.fi
     assert new_formatter
     assert new_formatter is not prev_formatter
 
-    formatted_log_entry = new_formatter.format(_log_record_for_level(logging.INFO))
+    formatted_log_entry = new_formatter.format(
+        _log_record_for_level(logging.INFO, datetime_obj=fixed_datetime_now))
 
     log_lines = assert_log_lines_from_stream(1, StringIO(formatted_log_entry))
 
     locale: LocaleType = runtime.config.root_log.locale
     assert fixed_datetime_now.strftime(get_datetime_format(locale)) in log_lines[0]
-    assert '(test_logger)' in log_lines[0]
+    assert '[test_logger]' in log_lines[0]
 
     runtime.config.root_log.locale = prev_locale
     newer_formatter = runtime.objects.root_log.formatter
