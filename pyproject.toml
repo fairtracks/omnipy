@@ -71,7 +71,7 @@ mypy_path = "src:tests"
 warn_no_return = false
 
 [tool.pytest.ini_options]
-addopts = "-v --tb=native"
+addopts = "--tb=native"
 testpaths = [
     "tests",
 ]
