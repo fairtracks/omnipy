@@ -9,6 +9,7 @@ from .models import PandasDataset
 
 
 class PandasDatasetToTarFileSerializer(TarFileSerializer):
+    """"""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: Dataset) -> bool:
         return isinstance(dataset, PandasDataset)

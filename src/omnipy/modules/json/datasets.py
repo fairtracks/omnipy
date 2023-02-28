@@ -30,6 +30,7 @@ JsonModelT = TypeVar('JsonModelT', bound=Union[JsonModel, JsonListModel, JsonDic
 
 
 class JsonBaseDataset(Dataset[JsonModelT], Generic[JsonModelT]):
+    """"""
     ...
 
 
@@ -37,6 +38,7 @@ class JsonBaseDataset(Dataset[JsonModelT], Generic[JsonModelT]):
 
 
 class JsonDataset(JsonBaseDataset[JsonModel]):
+    """"""
     ...
 
 

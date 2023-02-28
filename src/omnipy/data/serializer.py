@@ -10,6 +10,7 @@ from omnipy.data.dataset import Dataset
 
 
 class Serializer(ABC):
+    """"""
     @classmethod
     @abstractmethod
     def is_dataset_directly_supported(cls, dataset: Dataset) -> bool:
@@ -37,6 +38,7 @@ class Serializer(ABC):
 
 
 class TarFileSerializer(Serializer, ABC):
+    """"""
     @classmethod
     def create_tarfile_from_dataset(cls,
                                     dataset: Dataset,

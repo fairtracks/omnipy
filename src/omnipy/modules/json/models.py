@@ -17,11 +17,13 @@ class _JsonBaseModel(Model[BaseT], Generic[BaseT]):
 
 # Optional needed by pydantic
 class JsonListModel(_JsonBaseModel[List[Optional[JsonSubModelT]]], Generic[JsonSubModelT]):
+    """"""
     ...
 
 
 # Optional needed by pydantic
 class JsonDictModel(_JsonBaseModel[Dict[str, Optional[JsonSubModelT]]], Generic[JsonSubModelT]):
+    """"""
     ...
 
 
@@ -39,6 +41,7 @@ JsonDictModel['JsonNoListsSubModel'].update_forward_refs(JsonNoListsSubModel=Jso
 
 
 class JsonModel(_JsonBaseModel[JsonSubModel]):
+    """"""
     ...
 
 
@@ -46,6 +49,7 @@ class JsonModel(_JsonBaseModel[JsonSubModel]):
 
 
 class JsonCustomModel(_JsonBaseModel[JsonSubModelT], Generic[JsonSubModelT]):
+    """"""
     ...
 
 

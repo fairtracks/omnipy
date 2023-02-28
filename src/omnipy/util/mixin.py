@@ -9,6 +9,7 @@ from omnipy.util.helpers import (generic_aware_issubclass_ignore_args,
 
 
 class IsMixin(Protocol):
+    """"""
     def __init__(self, **kwargs: object) -> None:
         ...
 

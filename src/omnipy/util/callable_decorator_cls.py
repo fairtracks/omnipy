@@ -9,6 +9,7 @@ DecoratorClassT = TypeVar('DecoratorClassT', covariant=True)
 
 @runtime_checkable
 class CallableParamAfterSelf(Protocol):
+    """"""
     def __call__(self, callable_arg: Callable, /, *args: object, **kwargs: object) -> None:
         ...
 

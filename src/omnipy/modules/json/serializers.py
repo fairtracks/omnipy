@@ -7,6 +7,7 @@ from omnipy.modules.json.models import JsonModel
 
 
 class JsonDatasetToTarFileSerializer(TarFileSerializer):
+    """"""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: Dataset) -> bool:
         return isinstance(dataset, JsonBaseDataset)

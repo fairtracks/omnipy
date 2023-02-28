@@ -10,6 +10,7 @@ from omnipy.engine.base import Engine
 
 
 class JobRunnerEngine(Engine, ABC):
+    """Base class for job runner engine implementations"""
     def _register_job_state(self, job: IsJob, state: RunState) -> None:
         if self._registry:
             self._registry.set_job_state(job, state)
@@ -58,6 +59,7 @@ class JobRunnerEngine(Engine, ABC):
 
 
 class TaskRunnerEngine(JobRunnerEngine):
+    """Base class for task runner engine implementations"""
     def apply_task_decorator(self, task: IsTask, job_callback_accept_decorator: Callable) -> None:
         def _task_decorator(call_func: Callable) -> Callable:
             self._register_job_state(task, RunState.INITIALIZED)
@@ -82,6 +84,7 @@ class TaskRunnerEngine(JobRunnerEngine):
 
 
 class LinearFlowRunnerEngine(JobRunnerEngine):
+    """Base class for linear flow runner engine implementations"""
     def apply_linear_flow_decorator(self,
                                     linear_flow: IsLinearFlow,
                                     job_callback_accept_decorator: Callable) -> None:
@@ -127,6 +130,7 @@ class LinearFlowRunnerEngine(JobRunnerEngine):
 
 
 class DagFlowRunnerEngine(JobRunnerEngine):
+    """Base class for DAG flow runner engine implementations"""
     def apply_dag_flow_decorator(self, dag_flow: IsDagFlow,
                                  job_callback_accept_decorator: Callable) -> None:
         def _dag_flow_decorator(call_func: Callable) -> Callable:
@@ -188,6 +192,7 @@ class DagFlowRunnerEngine(JobRunnerEngine):
 
 
 class FuncFlowRunnerEngine(JobRunnerEngine):
+    """Base class for function flow runner engine implementations"""
     def apply_func_flow_decorator(self,
                                   func_flow: IsFuncFlow,
                                   job_callback_accept_decorator: Callable) -> None:

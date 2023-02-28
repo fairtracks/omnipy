@@ -8,6 +8,7 @@ from omnipy.data.serializer import TarFileSerializer
 
 
 class RawDatasetToTarFileSerializer(TarFileSerializer):
+    """"""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: Dataset) -> bool:
         return type(dataset) == Dataset[Model[str]]

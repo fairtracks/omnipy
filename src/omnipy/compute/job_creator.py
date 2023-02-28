@@ -50,6 +50,7 @@ class JobCreator:
 
 
 class JobBaseMeta(ABCMeta):
+    """"""
     _job_creator: IsJobConfigHolder = JobCreator()
 
     @property

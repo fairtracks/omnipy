@@ -12,6 +12,7 @@ class LocalRunner(TaskRunnerEngine,
                   LinearFlowRunnerEngine,
                   DagFlowRunnerEngine,
                   FuncFlowRunnerEngine):
+    """Local job runner"""
     def _init_engine(self) -> None:
         ...
 

@@ -13,6 +13,7 @@ ReturnDatasetT = Union[Dataset[Model[ReturnT]], Dataset[ModelReturnT]]
 
 
 class IsIterateInnerCallable(Protocol):
+    """"""
     def __call__(
         self,
         data_file: Union[InputT, ModelInputT],

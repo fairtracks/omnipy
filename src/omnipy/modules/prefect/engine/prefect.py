@@ -20,6 +20,7 @@ class PrefectEngine(TaskRunnerEngine,
                     LinearFlowRunnerEngine,
                     DagFlowRunnerEngine,
                     FuncFlowRunnerEngine):
+    """Job runner engine for Prefect"""
     def _init_engine(self) -> None:
         ...
 

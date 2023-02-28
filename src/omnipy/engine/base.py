@@ -5,6 +5,7 @@ from omnipy.api.protocols import IsEngineConfig, IsRunStateRegistry
 
 
 class Engine(ABC):
+    """Base class for engine implementations"""
     def __init__(self) -> None:
         config_cls = self.get_config_cls()
         self._config: IsEngineConfig = config_cls()
@@ -33,7 +34,8 @@ class Engine(ABC):
     def get_config_cls(cls) -> Type[IsEngineConfig]:
         """
         Specification of config class mapped to an Engine subclass. Must be implemented by all
-        subclasses of Engine. If no configuration is needed, the EngineConfig class can be returned.
+        subclasses of Engine. If no configuration is needed, then the EngineConfig class should be
+        returned.
         :return: Class implementing the IsEngineConfig protocol
         """
 
