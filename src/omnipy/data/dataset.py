@@ -22,23 +22,29 @@ DATA_KEY = 'data'
 
 class Dataset(GenericModel, Generic[ModelT], UserDict):
     """
-    Dataset is a generic class. Subclasses of Dataset need to specify the type of the contents
-    that is accepted according to its model.
+    Dict-based container of data files that follow a specific Model
 
-    This can be done directly, e.g.:
+    Dataset is a generic class that cannot be instantiated directly. Instead, a Dataset class needs
+    to be specialized with a data model before Dataset objects can be instantiated. A data model
+    functions as a data parser and guarantees that the parsed data follows the specified model.
 
-        class MyDataset(Dataset[Dict[str, List[int]]):
-            pass
+    The specialization must be done through the use of Model, either directly, e.g.::
 
-    or indirectly through the use of Model, e.g.:
+        MyDataset = Dataset[Model[Dict[str, List[int]]])
+
+    ... or indirectly, using a Model subclass, e.g.::
 
         class MyModel(Model[Dict[str, List[int]]):
             pass
 
+        MyDataset = Dataset[MyModel]
+
+    ... alternatively through the specification of a Dataset subclass::
+
         class MyDataset(Dataset[MyModel]):
             pass
 
-    This can also be done in a more deeply nested structure, e.g.:
+    The specialization can also be done in a more deeply nested structure, e.g.::
 
         class MyNumberList(Model[List[int]]):
             pass
@@ -49,8 +55,17 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         class MyDataset(Dataset[MyToplevelDict]):
             pass
 
-    Note: the naming of the classes in the examples are for illustrative purposes only and should
-    not read as a naming standard.
+    Once instantiated, a dataset object functions as a dict of data files, with the keys
+    referring to the data file names and the contents to the data file contents, e.g.::
+
+        MyNumberListDataset = Dataset[Model[List[int]]]
+
+        my_dataset = MyNumberListDataset({'file_1': [1,2,3]})
+        my_dataset['file_2'] = [2,3,4]
+
+        print(my_dataset.keys())
+
+    The Dataset class is a wrapper class around the powerful `GenericModel` class from pydantic.
     """
     class Config:
         validate_assignment = True
@@ -241,7 +256,8 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
 class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
     """
-        Variant of Dataset that allows custom models to be set on individual data files.
+        Variant of Dataset that allows custom models to be set on individual data files
+
         Note that the general model still needs to hold for all data files, in addition to any
         custom models.
     """

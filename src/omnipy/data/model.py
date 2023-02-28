@@ -17,11 +17,36 @@ ROOT_KEY = '__root__'
 
 class Model(GenericModel, Generic[RootT]):
     """
-    Model is a generic class. Subclasses of Model need to specify the type of
-    contents that is accepted according to its model. Example:
+    A data model containing a value parsed according to the model.
 
-        class MyNumberList(DatasetModel[List[int]]):
+    If no value is provided, the value is set to the default value of the data model, found by
+    calling the model class without parameters, e.g. `int()`.
+
+    Model is a generic class that cannot be instantiated directly. Instead, a Model class needs
+    to be specialized with a data type before Model objects can be instantiated. A data model
+    functions as a data parser and guarantees that the parsed data follows the specified model.
+
+    Example data model specialized as a class alias::
+
+        MyNumberList = Model[List[int]]
+
+    ... alternatively as a Model subclass::
+
+        class MyNumberList(Model[List[int]]):
             pass
+
+    Once instantiated, a Model object functions as a parser, e.g.::
+
+        my_number_list = MyNumberList([2,3,4])
+
+        my_number_list.contents = ['3', 4, True]
+        assert my_number_list.contents == [3,4,1]
+
+    While the following should raise a `ValidationError`::
+
+        my_number_list.contents = ['abc', 'def']
+
+    The Model class is a wrapper class around the powerful `GenericModel` class from pydantic.
 
     See also docs of the Dataset class for more usage examples.
     """
