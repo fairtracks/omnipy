@@ -40,3 +40,8 @@
 table.summarytable {
     width: 100%;
 }
+
+.sidebar-container, .toc-drawer {
+    box-sizing: border-box;
+    width: 20em;
+}
