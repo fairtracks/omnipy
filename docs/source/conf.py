@@ -133,7 +133,7 @@ def contains(seq, item):
 
 def prepare_jinja_env(jinja_env) -> None:
     """Add `contains` custom test to Jinja environment."""
-    jinja_env.tests["contains"] = contains
+    jinja_env.tests['contains'] = contains
 
 
 autoapi_prepare_jinja_env = prepare_jinja_env
@@ -144,6 +144,4 @@ rst_prolog = """
 """
 
 # Related custom CSS
-html_css_files = [
-    "css/label.css",
-]
+html_css_files = ['css/label.css']
