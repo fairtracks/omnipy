@@ -4,12 +4,14 @@ from enum import Enum, IntEnum
 
 
 class PersistOutputsOptions(str, Enum):
+    """"""
     DISABLED = 'disabled'
     FOLLOW_CONFIG = 'config'
     ENABLED = 'enabled'
 
 
 class RestoreOutputsOptions(str, Enum):
+    """"""
     DISABLED = 'disabled'
     FOLLOW_CONFIG = 'config'
     AUTO_ENABLE_IGNORE_PARAMS = 'auto_ignore_params'
@@ -17,22 +19,26 @@ class RestoreOutputsOptions(str, Enum):
 
 
 class ConfigPersistOutputsOptions(str, Enum):
+    """"""
     DISABLED = 'disabled'
     ENABLE_FLOW_OUTPUTS = 'flow'
     ENABLE_FLOW_AND_TASK_OUTPUTS = 'all'
 
 
 class ConfigRestoreOutputsOptions(str, Enum):
+    """"""
     DISABLED = 'disabled'
     AUTO_ENABLE_IGNORE_PARAMS = 'auto_ignore_params'
 
 
 class EngineChoice(str, Enum):
+    """"""
     LOCAL = 'local'
     PREFECT = 'prefect'
 
 
 class RunState(IntEnum):
+    """"""
     INITIALIZED = 1
     RUNNING = 2
     FINISHED = 3
@@ -44,6 +50,7 @@ class RunState(IntEnum):
 
 
 class RunStateLogMessages(str, Enum):
+    """"""
     INITIALIZED = 'Initialized "{}"'
     RUNNING = 'Started running "{}"...'
     FINISHED = 'Finished running "{}"!'

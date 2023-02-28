@@ -25,30 +25,65 @@ extensions = [
 ]
 
 autoapi_dirs = ['../../src/omnipy']
-autoapi_keep_files = False
-autoapi_type = "python"
-autoapi_template_dir = "templates/autoapi"
+autoapi_keep_files = True
+autoapi_type = 'python'
+autoapi_template_dir = '../templates/autoapi'
 autoapi_options = [
-    "members",
-    "inherited-members",
-    "undoc-members",
-    "special-members",
-    "show-inheritance",
-    "show-module-summary",
-    "imported-members",
+    'members',
+    'inherited-members',
+    'undoc-members',
+    'special-members',
+    'show-inheritance',
+    'show-module-summary',
+    'imported-members',
 ]
 
-autodoc_typehints = "both"
+autodoc_typehints = 'signature'
+
+
+def attr_inherited_from_other_package(attr_name_rel: str, class_name: str, module_abs: str) -> bool:
+    import importlib
+    import inspect
+
+    try:
+        module = importlib.import_module(module_abs)
+        cls = getattr(module, class_name)
+
+        attr_info = None
+        for attr in inspect.classify_class_attrs(cls):
+            if attr.name == attr_name_rel:
+                attr_info = attr
+
+        return attr_info is None or attr_info.defining_class.__module__.split('.')[0] != 'omnipy'
+    except Exception as e:
+        print(f'Exception occurred for attr {attr_name_rel}: {type(e)} {e}')
+        return True
 
 
 def skip_members(app, what, name, obj, skip, options):
-    if what in ("method", "attribute") and name.split('.')[-1].startswith('__'):
-        skip = name not in ('__call__',)
+    name_split = name.split('.')
+    name_rel = name_split[-1]
+
+    if what in ('method', 'attribute'):
+        assert len(name_split) > 3, name
+        class_name = name_split[-2]
+        module_abs = '.'.join(name_split[:-2])
+
+        if name_rel.startswith('__'):
+            # __call__ method of Template classes are internal, should not be used externally
+            if name_rel != '__call__' or class_name.endswith('Template'):
+                skip = True
+        elif attr_inherited_from_other_package(name_rel, class_name, module_abs):
+            skip = True
+
+    elif what == 'class' and name_rel in ('Config', 'list', 'dict'):
+        skip = True
+
     return skip
 
 
 def setup(sphinx):
-    sphinx.connect("autoapi-skip-member", skip_members)
+    sphinx.connect('autoapi-skip-member', skip_members)
 
 
 # templates_path = ['templates']

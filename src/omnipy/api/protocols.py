@@ -25,6 +25,7 @@ from omnipy.api.types import GeneralDecorator, LocaleType
 
 
 class IsNestedContext(Protocol):
+    """"""
     def __enter__(self):
         ...
 
@@ -33,6 +34,7 @@ class IsNestedContext(Protocol):
 
 
 class IsJobConfigHolder(Protocol):
+    """"""
     engine: Optional[IsEngine]
     config: Optional[IsJobConfig]
 
@@ -44,11 +46,13 @@ class IsJobConfigHolder(Protocol):
 
 
 class IsJobCreator(IsNestedContext, IsJobConfigHolder, Protocol):
+    """"""
     nested_context_level: int
     time_of_cur_toplevel_nested_context_run: datetime
 
 
 class IsJob(Protocol):
+    """"""
     name: str
     unique_name: str
     config: Optional[IsJobConfig]
@@ -73,6 +77,7 @@ class IsJob(Protocol):
 
 
 class IsJobTemplate(Protocol):
+    """"""
     config: Optional[IsJobConfig]
     engine: Optional[IsTaskRunnerEngine]
     in_flow_context: bool
@@ -95,6 +100,7 @@ class IsJobTemplate(Protocol):
 
 
 class IsFuncJob(IsJob, Protocol):
+    """"""
     param_signatures: MappingProxyType
     return_type: Type[object]
     iterate_over_data_files: bool
@@ -114,6 +120,7 @@ class IsFuncJob(IsJob, Protocol):
 
 
 class IsFuncJobTemplate(IsJobTemplate, Protocol):
+    """"""
     name: str
     unique_name: str
     param_signatures: MappingProxyType
@@ -147,25 +154,30 @@ class IsFuncJobTemplate(IsJobTemplate, Protocol):
 
 
 class IsTask(IsFuncJob, Protocol):
+    """"""
     ...
 
 
 class IsTaskTemplate(IsFuncJobTemplate, Protocol):
+    """"""
     def apply(self) -> IsTask:
         ...
 
 
 class IsFlow(IsFuncJob, Protocol):
+    """"""
     flow_context: IsNestedContext
     time_of_last_run: datetime
 
 
 class IsFlowTemplate(IsFuncJobTemplate, Protocol):
+    """"""
     def apply(self) -> IsFlow:
         ...
 
 
 class IsTaskTemplatesFlow(IsFlow, Protocol):
+    """"""
     task_templates: Tuple[IsTaskTemplate, ...]
 
     def _accept_call_func_decorator(self, call_func_decorator: GeneralDecorator) -> None:
@@ -173,6 +185,7 @@ class IsTaskTemplatesFlow(IsFlow, Protocol):
 
 
 class IsTaskTemplatesFlowTemplate(IsFuncJobTemplate, Protocol):
+    """"""
     task_templates: Tuple[IsTaskTemplate, ...]
 
     def refine(self,
@@ -190,28 +203,34 @@ class IsTaskTemplatesFlowTemplate(IsFuncJobTemplate, Protocol):
 
 
 class IsLinearFlow(IsTaskTemplatesFlow, Protocol):
+    """"""
     ...
 
 
 class IsLinearFlowTemplate(IsLinearFlow, IsTaskTemplatesFlowTemplate, Protocol):
+    """"""
     def apply(self) -> IsLinearFlow:
         ...
 
 
 class IsDagFlow(IsTaskTemplatesFlow, Protocol):
+    """"""
     ...
 
 
 class IsDagFlowTemplate(IsDagFlow, IsTaskTemplatesFlowTemplate, Protocol):
+    """"""
     def apply(self) -> IsDagFlow:
         ...
 
 
 class IsFuncFlow(IsFlow, Protocol):
+    """"""
     ...
 
 
 class IsFuncFlowTemplate(IsFuncFlow, IsFlowTemplate, Protocol):
+    """"""
     def apply(self) -> IsFuncFlow:
         ...
 
@@ -223,6 +242,7 @@ FuncJobTemplateT = TypeVar('FuncJobTemplateT', bound='FuncJobTemplate', covarian
 
 
 class IsFuncJobTemplateCallable(Protocol[FuncJobTemplateT]):
+    """"""
     def __call__(
         self,
         name: Optional[str] = None,
@@ -242,6 +262,7 @@ TaskTemplatesFlowTemplateT = TypeVar(
 
 
 class IsTaskTemplatesFlowTemplateCallable(Protocol[TaskTemplatesFlowTemplateT]):
+    """"""
     def __call__(
         self,
         *task_templates: 'TaskTemplate',
@@ -264,6 +285,7 @@ FlowTemplateT = TypeVar('FlowTemplateT', bound='FlowTemplate', covariant=True)
 
 @runtime_checkable
 class IsEngine(Protocol):
+    """"""
     def __init__(self) -> None:
         ...
 
@@ -280,12 +302,14 @@ class IsEngine(Protocol):
 
 @runtime_checkable
 class IsTaskRunnerEngine(IsEngine, Protocol):
+    """"""
     def apply_task_decorator(self, task: IsTask, job_callback_accept_decorator: Callable) -> None:
         ...
 
 
 @runtime_checkable
 class IsLinearFlowRunnerEngine(IsEngine, Protocol):
+    """"""
     def apply_linear_flow_decorator(self,
                                     linear_flow: IsLinearFlow,
                                     job_callback_accept_decorator: Callable) -> None:
@@ -294,6 +318,7 @@ class IsLinearFlowRunnerEngine(IsEngine, Protocol):
 
 @runtime_checkable
 class IsDagFlowRunnerEngine(IsEngine, Protocol):
+    """"""
     def apply_dag_flow_decorator(self, dag_flow: IsDagFlow,
                                  job_callback_accept_decorator: Callable) -> None:
         ...
@@ -301,6 +326,7 @@ class IsDagFlowRunnerEngine(IsEngine, Protocol):
 
 @runtime_checkable
 class IsFuncFlowRunnerEngine(IsEngine, Protocol):
+    """"""
     def apply_func_flow_decorator(self,
                                   func_flow: IsFuncFlow,
                                   job_callback_accept_decorator: Callable) -> None:
@@ -308,6 +334,7 @@ class IsFuncFlowRunnerEngine(IsEngine, Protocol):
 
 
 class IsRunStateRegistry(Protocol):
+    """"""
     def __init__(self) -> None:
         ...
 
@@ -325,18 +352,22 @@ class IsRunStateRegistry(Protocol):
 
 
 class IsEngineConfig(Protocol):
+    """"""
     ...
 
 
 class IsLocalRunnerConfig(IsEngineConfig, Protocol):
+    """"""
     ...
 
 
 class IsPrefectEngineConfig(IsEngineConfig, Protocol):
+    """"""
     use_cached_results: int = False
 
 
 class IsDataPublisher(Protocol):
+    """"""
     def subscribe(self, config_item: str, callback_fun: Callable[[Any], None]):
         ...
 
@@ -345,12 +376,14 @@ class IsDataPublisher(Protocol):
 
 
 class IsJobConfig(Protocol):
+    """"""
     persist_outputs: ConfigPersistOutputsOptions
     restore_outputs: ConfigRestoreOutputsOptions
     persist_data_dir_path: str
 
 
 class IsRootLogConfig(Protocol):
+    """"""
     log_format_str: str
     locale: LocaleType
     log_to_stdout: bool
@@ -363,6 +396,7 @@ class IsRootLogConfig(Protocol):
 
 
 class IsRootLogObjects(Protocol):
+    """"""
     formatter: Optional[logging.Formatter] = None
     stdout_handler: Optional[logging.StreamHandler] = None
     stderr_handler: Optional[logging.StreamHandler] = None
@@ -373,10 +407,12 @@ class IsRootLogObjects(Protocol):
 
 
 class IsRootLogConfigEntryPublisher(IsRootLogConfig, IsDataPublisher, Protocol):
+    """"""
     ...
 
 
 class IsRuntimeConfig(IsDataPublisher, Protocol):
+    """"""
     job: IsJobConfig
     engine: EngineChoice
     local: IsLocalRunnerConfig
@@ -396,6 +432,7 @@ class IsRuntimeConfig(IsDataPublisher, Protocol):
 
 
 class IsRuntimeObjects(IsDataPublisher, Protocol):
+    """"""
     job_creator: IsJobConfigHolder
     local: IsEngine
     prefect: IsEngine
@@ -415,6 +452,7 @@ class IsRuntimeObjects(IsDataPublisher, Protocol):
 
 
 class IsRuntime(IsDataPublisher, Protocol):
+    """"""
     config: IsRuntimeConfig
     objects: IsRuntimeObjects
 

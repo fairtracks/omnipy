@@ -20,8 +20,8 @@ class Model(GenericModel, Generic[RootT]):
     Model is a generic class. Subclasses of Model need to specify the type of
     contents that is accepted according to its model. Example:
 
-    class MyNumberList(DatasetModel[List[int]]):
-        pass
+        class MyNumberList(DatasetModel[List[int]]):
+            pass
 
     See also docs of the Dataset class for more usage examples.
     """

@@ -27,27 +27,27 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     This can be done directly, e.g.:
 
-    class MyDataset(Dataset[Dict[str, List[int]]):
-        pass
+        class MyDataset(Dataset[Dict[str, List[int]]):
+            pass
 
     or indirectly through the use of Model, e.g.:
 
-    class MyModel(Model[Dict[str, List[int]]):
-        pass
+        class MyModel(Model[Dict[str, List[int]]):
+            pass
 
-    class MyDataset(Dataset[MyModel]):
-        pass
+        class MyDataset(Dataset[MyModel]):
+            pass
 
     This can also be done in a more deeply nested structure, e.g.:
 
-    class MyNumberList(Model[List[int]]):
-        pass
+        class MyNumberList(Model[List[int]]):
+            pass
 
-    class MyToplevelDict(Model[Dict[str, MyNumberList]]):
-        pass
+        class MyToplevelDict(Model[Dict[str, MyNumberList]]):
+            pass
 
-    class MyDataset(Dataset[MyToplevelDict]):
-        pass
+        class MyDataset(Dataset[MyToplevelDict]):
+            pass
 
     Note: the naming of the classes in the examples are for illustrative purposes only and should
     not read as a naming standard.
@@ -240,6 +240,11 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
 
 class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
+    """
+        Variant of Dataset that allows custom models to be set on individual data files.
+        Note that the general model still needs to hold for all data files, in addition to any
+        custom models.
+    """
 
     _custom_field_models: Dict[str, ModelT] = PrivateAttr(default={})
 

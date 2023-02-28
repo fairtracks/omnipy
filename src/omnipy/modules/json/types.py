@@ -8,10 +8,12 @@ JsonT = TypeVar('JsonT', bound=Union[JsonScalar, 'JsonList', 'JsonDict'])
 
 
 class JsonList(List[JsonT], Generic[JsonT]):
+    """"""
     ...
 
 
 class JsonDict(Dict[str, JsonT], Generic[JsonT]):
+    """"""
     ...
 
 
