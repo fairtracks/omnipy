@@ -25,7 +25,7 @@ extensions = [
 ]
 
 autoapi_dirs = ['../../src/omnipy']
-autoapi_keep_files = True
+autoapi_keep_files = False
 autoapi_type = 'python'
 autoapi_template_dir = '../templates/autoapi'
 autoapi_options = [
