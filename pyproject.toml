@@ -7,6 +7,7 @@ repository = "http://github.com/fairtracks/omnipy"
 authors = ["Sveinung Gundersen <sveinugu@gmail.com>", "Federico Bianchini <fredebi@uio.no>", "Ahmed Ghanem <ahmedg@uio.no>", "Joshua Baskaran <joshuaba@uio.no>"]
 readme = "README.md"
 homepage = "https://fairtracks.net/fair/#fair-07-transformation"
+documentation = "http://omnipy.readthedocs.io/"
 keywords = ["data wrangling", "metadata", "workflows", "etl", "research data", "prefect", "pydantic", "FAIR", "ontologies", "JSON", "tabular", "type-driven", "orchestration", "data models", "universal"]
 classifiers = ["Development Status :: 2 - Pre-Alpha", "Framework :: Pydantic", "Intended Audience :: Developers", "Intended Audience :: Science/Research", "License :: OSI Approved :: Apache Software License", "Programming Language :: Python :: 3.10", "Topic :: Software Development :: Libraries"]
 packages = [{include = "omnipy", from = "src"}]
