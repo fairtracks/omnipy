@@ -273,7 +273,7 @@ def test_basic_union():
     # The requirements for omnipy is currently Python 3.8, so the shorthand should
     # currently be avoided.
     #
-    # TODO: Consider whether omnipy should require Python 3.9 or 3.10 as type-related
+    # TDDD: Consider whether omnipy should require Python 3.9 or 3.10 as type-related
     #       notation and functionality is undergoing large changes. Another example is
     #       the move towards lowercase int, list, dict instead of Int, List, Dict in
     #       Python 3.9. Another possibility is to use
@@ -781,7 +781,7 @@ def test_complex_nested_models():
 
 
 def test_pandas_dataframe_non_builtin_direct():
-    # TODO: Using pandas here to test concept of non-builtin data structures. Switch to other
+    # TDDD: Using pandas here to test concept of non-builtin data structures. Switch to other
     #  example to remove dependency, to prepare splitting of pandas module to separate repo
 
     import pandas as pd

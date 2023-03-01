@@ -17,7 +17,7 @@ class NameJobBaseMixin:
             if hasattr(self, '_job_func'):
                 self._name = self._job_func.__name__
 
-        # TODO: When job state machine is implemented, check using that to see if in job state
+        # TDDD: When job state machine is implemented, check using that to see if in job state
         self._unique_name = self._generate_unique_name() if hasattr(self, 'create_job') else None
 
     @staticmethod

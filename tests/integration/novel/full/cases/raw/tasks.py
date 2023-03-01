@@ -23,7 +23,7 @@ def merge_key_value_into_str(key: object, val: object) -> str:
     return '{}: {}'.format(key, val)
 
 
-# TODO: Implement explicit serializer support (if needed)
+# TDDD: Implement explicit serializer support (if needed)
 # @TaskTemplate(serializer=PythonSerializer)
 @TaskTemplate()
 def extract_record_schema_def(table: GeneralTable) -> RecordSchemaDef:
@@ -38,7 +38,7 @@ def extract_record_schema_def(table: GeneralTable) -> RecordSchemaDef:
     return RecordSchemaDef(record_model)
 
 
-# TODO: Implement support for extra validators
+# TDDD: Implement support for extra validators
 # @TaskTemplate(serializer=CsvSerializer, extra_validators=(first_dataset_keys_in_all_datasets,))
 @TaskTemplate()
 def apply_models_to_dataset(

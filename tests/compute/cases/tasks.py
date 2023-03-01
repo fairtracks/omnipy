@@ -40,7 +40,7 @@ def case_sync_action_func_no_params() -> TaskCase[[], None]:
         from omnipy.modules.prefect import State
         if isinstance(result, list) and len(result) == 1 and isinstance(result[0], State):
             pytest.xfail('None results are returned as State. Perhaps bug in Prefect?')
-            # TODO: Check up: None results are returned as State
+            # TDDD: Check up: None results are returned as State
         assert result is None
 
     def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):

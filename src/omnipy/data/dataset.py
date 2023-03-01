@@ -75,7 +75,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     data: Dict[str, ModelT] = Field(default={})
 
     def __class_getitem__(cls, model: ModelT) -> ModelT:
-        # TODO: change model type to params: Union[Type[Any], Tuple[Type[Any], ...]]
+        # TDDD: change model type to params: Union[Type[Any], Tuple[Type[Any], ...]]
         #       as in GenericModel
 
         # For now, only singular model types are allowed. These lines are needed for
@@ -104,12 +104,12 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if not self.__doc__:
             self._set_standard_field_description()
 
-    # TODO: Add test for get_model_class
+    # TDDD: Add test for get_model_class
 
     def get_model_class(self) -> ModelT:
         return self.__fields__.get(DATA_KEY).type_
 
-    # TODO: Update _raise_no_model_exception() text. Model is now a requirement
+    # TDDD: Update _raise_no_model_exception() text. Model is now a requirement
 
     @staticmethod
     def _raise_no_model_exception() -> None:
@@ -251,7 +251,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         return multi_model_dataset
 
 
-# TODO: Use json serializer package from the pydantic config instead of 'json'
+# TDDD: Use json serializer package from the pydantic config instead of 'json'
 
 
 class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):

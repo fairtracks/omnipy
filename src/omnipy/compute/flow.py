@@ -16,7 +16,7 @@ class FlowBase:
     ...
 
 
-# TODO: Reimplement typing of flows and task to harmonize with new structure
+# TDDD: Reimplement typing of flows and task to harmonize with new structure
 def linear_flow_template_callable_decorator_cls(
         cls: Type['LinearFlowTemplate']
 ) -> IsTaskTemplatesFlowTemplateCallable['LinearFlowTemplate']:
@@ -92,4 +92,4 @@ LinearFlow.accept_mixin(FlowContextJobMixin)
 DagFlow.accept_mixin(FlowContextJobMixin)
 FuncFlow.accept_mixin(FlowContextJobMixin)
 
-# TODO: Recursive replace - *args: Any -> *args: object, *kwargs: Any -> *kwargs: object
+# TDDD: Recursive replace - *args: Any -> *args: object, *kwargs: Any -> *kwargs: object
