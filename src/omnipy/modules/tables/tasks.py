@@ -9,7 +9,7 @@ from ..json.datasets import JsonListOfDictsOfAnyDataset
 @TaskTemplate()
 def remove_columns(json_dataset: JsonListOfDictsOfAnyDataset,
                    column_keys_for_data_items: Dict[str, List[str]]) -> JsonListOfDictsOfAnyDataset:
-    # TDDD: implement general solution to make sure that one does not modify input data by
+    # TODO: implement general solution to make sure that one does not modify input data by
     #       automatically copying or otherwise. Perhaps setting immutable/frozen option in pydantic,
     #       if available?
     #

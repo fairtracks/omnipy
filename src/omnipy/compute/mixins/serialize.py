@@ -24,7 +24,7 @@ class SerializerFuncJobBaseMixin:
                  persist_outputs: Optional[PersistOutputsOptions] = None,
                  restore_outputs: Optional[RestoreOutputsOptions] = None):
 
-        # TDDD: Possibly reimplement logic using a state machine, e.g. "transitions" package
+        # TODO: Possibly reimplement logic using a state machine, e.g. "transitions" package
         if persist_outputs is None:
             self._persist_outputs = PersistOpts.FOLLOW_CONFIG if self._has_job_config else None
         else:
@@ -38,7 +38,7 @@ class SerializerFuncJobBaseMixin:
         self._serializer_registry = self._create_serializer_registry()
 
     def _create_serializer_registry(self):
-        # TDDD: store in runtime, to remove dependencies
+        # TODO: store in runtime, to remove dependencies
         registry = SerializerRegistry()
 
         registry.register(PandasDatasetToTarFileSerializer)
@@ -65,7 +65,7 @@ class SerializerFuncJobBaseMixin:
             return self._persist_outputs if self._persist_outputs is not None \
                     else PersistOpts.DISABLED
         else:
-            # TDDD: Refactor using Flow and Task Mixins
+            # TODO: Refactor using Flow and Task Mixins
             from omnipy.compute.flow import FlowBase
             from omnipy.compute.task import TaskBase
 
@@ -153,7 +153,7 @@ class SerializerFuncJobBaseMixin:
         datetime_str = run_time.strftime('%Y_%m_%d-%H_%M_%S')
         return datetime_str
 
-    # TDDD: Refactor
+    # TODO: Refactor
     def _deserialize_and_restore_outputs(self) -> Dataset:
         output_path = Path(self.config.persist_data_dir_path)
         if os.path.exists(output_path):

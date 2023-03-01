@@ -24,7 +24,7 @@ class FlowCase(Generic[ArgT, ReturnT]):
     # assert_signature_and_return_type_func: Callable[[Any], None]
 
 
-# TDDD: Add assert_signature_and_return_type_func
+# TODO: Add assert_signature_and_return_type_func
 
 
 @pc.case(

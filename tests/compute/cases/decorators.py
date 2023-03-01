@@ -81,7 +81,7 @@ def case_dag_flow_number_plus_five_template(plus_one_template) -> DagFlowTemplat
 )
 @pc.parametrize_with_cases('plus_one_template', cases='.', has_tag='task')
 def case_dag_flow_x_plus_five_template(plus_one_template) -> FuncFlowTemplate:
-    # TDDD: Expand on this example with param_key_map and result_key, given these
+    # TODO: Expand on this example with param_key_map and result_key, given these
     #       are reimplemented as mixins
 
     iterative_x_plus_one_template = plus_one_template.refine(
@@ -117,7 +117,7 @@ def case_func_flow_plus_y_template(plus_one_template) -> FuncFlowTemplate:
 )
 @pc.parametrize_with_cases('plus_one_template', cases='.', has_tag='task')
 def case_func_flow_plus_function_as_plus_y_template(plus_one_template) -> FuncFlowTemplate:
-    # TDDD: Expand on this example with param_key_map and result_key, given these
+    # TODO: Expand on this example with param_key_map and result_key, given these
     #       are reimplemented as mixins
 
     @FuncFlowTemplate(name='plus_y')

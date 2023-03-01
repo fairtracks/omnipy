@@ -20,7 +20,7 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
     def __init__(self, *args: object, name: Optional[str] = None, **kwargs: object):
         # super().__init__()
 
-        # TDDD: refactor using state machine
+        # TODO: refactor using state machine
 
         if not isinstance(self, JobTemplate) and not isinstance(self, Job):
             raise JobStateException('JobBase and subclasses not inheriting from JobTemplate '
@@ -50,7 +50,7 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
         else:
             job_obj = cls.__new__(cls, *args, **kwargs)
 
-        # TDDD: refactor using state machine
+        # TODO: refactor using state machine
         job_obj._from_apply = True
         job_obj.__init__(*args, **kwargs)
         job_obj._from_apply = False
@@ -213,7 +213,7 @@ class Job(DynamicMixinAcceptor):
             raise
 
 
-# TDDD: Change JobBase and friends into Generics such as one can annotated with
+# TODO: Change JobBase and friends into Generics such as one can annotated with
 #       e.g. 'TaskTemplate[[int], int]' instead of just 'TaskTemplate'
 
 JobBase.accept_mixin(NameJobBaseMixin)

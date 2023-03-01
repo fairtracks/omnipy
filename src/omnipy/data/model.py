@@ -116,7 +116,7 @@ class Model(GenericModel, Generic[RootT]):
         del cls.__annotations__[ROOT_KEY]
 
     def __class_getitem__(cls, model: Union[Type[RootT], TypeVar]) -> Union[Type[RootT], TypeVar]:
-        # TDDD: change model type to params: Union[Type[Any], Tuple[Type[Any], ...]]
+        # TODO: change model type to params: Union[Type[Any], Tuple[Type[Any], ...]]
         #       as in GenericModel
 
         # For now, only singular model types are allowed. These lines are needed for
@@ -136,7 +136,7 @@ class Model(GenericModel, Generic[RootT]):
 
         # As long as models are not created concurrently, setting the class members temporarily
         # should not have averse effects
-        # TDDD: Check if we can move to explicit definition of __root__ field at the object
+        # TODO: Check if we can move to explicit definition of __root__ field at the object
         #       level in pydantic 2.0 (when it is released)
         if cls == Model:
             cls._depopulate_root_field()
@@ -284,6 +284,6 @@ class Model(GenericModel, Generic[RootT]):
             else:
                 raise RuntimeError('Model does not allow setting of extra attributes')
 
-    # TDDD: Update Dataset.__eq__ similarly, with tests
+    # TODO: Update Dataset.__eq__ similarly, with tests
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and super().__eq__(other)

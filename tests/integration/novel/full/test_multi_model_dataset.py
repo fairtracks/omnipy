@@ -69,7 +69,7 @@ def test_dataset_with_multiple_table_models():
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason="""
-TDDD: Requires refactoring of Dataset class to use member variables instead of 'data' dict to
+TODO: Requires refactoring of Dataset class to use member variables instead of 'data' dict to
 store objects. Idea: Add a '_data' private member with 'data' as alias to keep UserDict working,
 however with no values to not duplicate content. Keep difference between Dataset and
 MultiModelDataset as having two classes is useful for task typing, see e.g. the function
@@ -101,7 +101,7 @@ def test_specialize_record_models_signature_and_return_type_func(
         assert inspect.signature(flow_obj).return_annotation == MultiModelDataset[GeneralTable]
 
 
-# TDDD: Harmonize signature of job object and param_signatures mixin. Should both be used?
+# TODO: Harmonize signature of job object and param_signatures mixin. Should both be used?
 
 
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')

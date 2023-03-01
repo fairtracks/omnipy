@@ -44,9 +44,9 @@ class RunState(IntEnum):
     FINISHED = 3
 
 
-# TDDD: Add 'apply' state
-# TDDD: Add 'failed' state and error management
-# TDDD: Consider the need for a 'waiting' state
+# TODO: Add 'apply' state
+# TODO: Add 'failed' state and error management
+# TODO: Consider the need for a 'waiting' state
 
 
 class RunStateLogMessages(str, Enum):
