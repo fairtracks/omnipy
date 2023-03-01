@@ -9,13 +9,14 @@ from typing import Annotated, Optional, Type
 
 import pytest
 
-from log.helpers.functions import assert_log_lines_from_stream
 import omnipy
 from omnipy.api.protocols import IsRootLogConfig, IsRootLogConfigEntryPublisher, IsRuntime
 from omnipy.api.types import LocaleType
 from omnipy.config.root_log import RootLogConfig
 from omnipy.hub.root_log import RootLogObjects
 from omnipy.util.helpers import get_datetime_format
+
+from ..log.helpers.functions import assert_log_lines_from_stream
 
 
 def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: str):
