@@ -370,6 +370,22 @@ def test_complex_models():
 }'''  # noqa
 
 
+def test_equality():
+
+    list_dataset_int = Dataset[Model[List[int]]]
+    list_dataset_float = Dataset[Model[List[float]]]
+
+    dataset1 = list_dataset_int({'file_1': [1, 2, 3]})
+    dataset2 = list_dataset_int({'file_1': [1.0, 2.0, 3.0]})
+    dataset3 = list_dataset_float({'file_1': [1.0, 2.0, 3.0]})
+
+    assert dataset1 == dataset2
+
+    assert dataset2 != dataset3
+
+    # Should be another way to get the type of model, e.g., when we have a Dict[int, str]?
+
+
 def test_dataset_model_class():
     assert Dataset[Model[int]]().get_model_class() == Model[int]
     assert Dataset[Model[str]]().get_model_class() == Model[str]
