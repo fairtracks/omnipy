@@ -256,6 +256,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and super().__eq__(other)
 
+
 # TODO: Use json serializer package from the pydantic config instead of 'json'
 
 
