@@ -383,8 +383,6 @@ def test_equality() -> None:
     assert int_list_dataset != float_list_dataset_same_datafile_name
     assert int_list_dataset != int_list_dataset_different_datafile_name
 
-    # Should be another way to get the type of model, e.g., when we have a Dict[int, str]?
-
 
 def test_dataset_model_class():
     assert Dataset[Model[int]]().get_model_class() == Model[int]
