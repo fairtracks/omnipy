@@ -179,4 +179,4 @@ def test_persist_and_restore(
     case_restore_tmpl = case_tmpl.refine(restore_outputs='force_ignore_params')
     dataset_restore = case_restore_tmpl.run()
 
-    assert dataset_persist == dataset_restore
+    assert dataset_restore.to_data() == dataset_persist.to_data()
