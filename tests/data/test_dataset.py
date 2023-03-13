@@ -370,4 +370,11 @@ def test_complex_models():
 }'''  # noqa
 
 
+def test_dataset_model_class():
+    assert Dataset[Model[int]]().get_model_class() == Model[int]
+    assert Dataset[Model[str]]().get_model_class() == Model[str]
+    assert Dataset[Model[List[float]]]().get_model_class() == Model[List[float]]
+    assert Dataset[Model[Dict[int, str]]]().get_model_class() == Model[Dict[int, str]]
+
+
 # TODO: Add unit tests for MultiModelDataset
