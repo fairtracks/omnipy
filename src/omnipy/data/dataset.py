@@ -104,9 +104,12 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if not self.__doc__:
             self._set_standard_field_description()
 
-    # TODO: Add test for get_model_class
-
     def get_model_class(self) -> ModelT:
+        """
+        Returns the concrete Model class used for all data files in the dataset, e.g.:
+        `Model[List[int]]`
+        :return: The concrete Model class used for all data files in the dataset
+        """
         return self.__fields__.get(DATA_KEY).type_
 
     # TODO: Update _raise_no_model_exception() text. Model is now a requirement
