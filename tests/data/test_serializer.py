@@ -20,7 +20,10 @@ def test_number_dataset_serializer():
 
     serialized_bytes = serializer.serialize(number_data)
     assert serialized_bytes == b'obj_type1:35,obj_type2:12'
-    assert serializer.deserialize(serialized_bytes) == number_data
+
+    deserialized_obj = serializer.deserialize(serialized_bytes)
+    assert deserialized_obj.to_data() == number_data.to_data()
+    assert type(deserialized_obj) is NumberDataset
 
 
 def test_number_dataset_to_tar_file_serializer():
