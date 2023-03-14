@@ -1,10 +1,10 @@
-import pandas as pd
-
+from omnipy.modules.pandas import pd
 from omnipy.modules.pandas.models import PandasDataset
 
 
 def assert_pandas_frame_dtypes(frame: pd.DataFrame, expected_dtypes: tuple) -> None:
-    assert tuple(str(_) for _ in frame.dtypes) == expected_dtypes
+    real_dtypes = tuple(str(_) for _ in frame.dtypes)
+    assert real_dtypes == expected_dtypes, f'{real_dtypes} != {expected_dtypes}'
 
 
 def assert_pandas_dataset_equals(pandas_dataset_1: PandasDataset,

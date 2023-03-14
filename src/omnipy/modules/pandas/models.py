@@ -1,5 +1,5 @@
-import json
-from typing import Any, Dict, Iterable, List
+from collections.abc import Iterable
+from typing import Any, Dict, List
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model, ROOT_KEY
@@ -24,23 +24,15 @@ class PandasModel(Model[pd.DataFrame]):
         assert not any(data.isna().all(axis=1))
 
     def dict(self, *args, **kwargs) -> Dict[Any, Any]:
-        return super().dict(*args, **kwargs)[ROOT_KEY].to_dict(orient='records')  # noqa
+        df = super().dict(*args, **kwargs)[ROOT_KEY]
+        df = df.replace({pd.NA: None})
+        return df.to_dict(orient='records')  # noqa
 
     def from_data(self, value: Iterable[Any]) -> None:
-        self.contents = self._convert_ints_to_nullable_ints(pd.DataFrame(value))
+        self.contents = pd.DataFrame(value).convert_dtypes()
 
     def from_json(self, value: str) -> None:
-        self.contents = self._convert_ints_to_nullable_ints(pd.read_json(value))
-
-    @classmethod
-    def _convert_ints_to_nullable_ints(cls, dataframe: pd.DataFrame) -> pd.DataFrame:
-        for key, col in dataframe.items():
-            if col.dtype == 'int64' or (col.dtype == 'float64' and col.isna().any()):
-                try:
-                    dataframe[key] = col.astype(float).astype('Int64')
-                except TypeError:
-                    pass
-        return dataframe
+        self.contents = pd.read_json(value).convert_dtypes()
 
 
 class PandasDataset(Dataset[PandasModel]):

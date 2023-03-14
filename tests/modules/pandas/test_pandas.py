@@ -3,10 +3,10 @@ import os
 
 from deepdiff import DeepDiff
 import numpy as np
-import pandas as pd
 from pydantic import ValidationError
 import pytest
 
+from omnipy.modules.pandas import pd
 from omnipy.modules.pandas.models import PandasDataset
 
 from .util import assert_pandas_frame_dtypes
@@ -25,7 +25,7 @@ def test_pandas_dataset_list_of_objects_same_keys():
         }]),
         check_dtype=False,
     )
-    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'Int64'))
+    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('string', 'Int64'))
     assert pandas_data.to_data() == data
 
 
@@ -42,7 +42,7 @@ def test_pandas_dataset_json_list_of_objects_same_keys():
         }]),
         check_dtype=False,
     )
-    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'Int64'))
+    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('string', 'Int64'))
     assert pandas_data.to_json() == json_data
 
 
@@ -59,16 +59,22 @@ def test_pandas_dataset_list_of_objects_different_keys():
         }]),
         check_dtype=False,
     )
-    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'Int64', 'object'))
+    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('string', 'Int64', 'string'))
     assert pandas_data.to_data() == {
         'obj_type': [{
-            'a': 'abc', 'b': 12, 'c': np.nan
+            'a': 'abc', 'b': 12, 'c': None
         }, {
-            'a': np.nan, 'b': pd.NA, 'c': 'bcd'
+            'a': None, 'b': None, 'c': 'bcd'
         }]
     }
 
 
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason="""
+Pandas converts 'a' column into 'Int64' since all values can be cast into integers. Should remain 
+floats.
+""")
 def test_pandas_dataset_list_of_objects_float_numbers():
     pandas_data = PandasDataset()
     data = {'obj_type': [{'a': 12.0, 'b': 12.1}, {'a': 3.0}]}
@@ -81,7 +87,7 @@ def test_pandas_dataset_list_of_objects_float_numbers():
             'a': 3.0, 'b': None
         }]),
     )
-    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('float64', 'float64'))
+    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('Float64', 'Float64'))
     assert not DeepDiff(
         pandas_data.to_data(), {'obj_type': [{
             'a': 12.0, 'b': 12.1
@@ -91,50 +97,46 @@ def test_pandas_dataset_list_of_objects_float_numbers():
         significant_digits=3)
 
 
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason="""
-Currently, columns of dtype=float64 are currently changed into the 'nullable integer' dtype `Int64`
-if all values in the column are either whole numbers or nan. This might be incorrect in relation
-to the data model imported from. Prior knowledge of the imported data model (before pandas import)
-is required to do better. This should be handled in the planned refactoring of imports/exports. """)
 def test_pandas_dataset_list_of_objects_float_numbers_and_missing_values():
     pandas_data = PandasDataset()
     data = {
         'obj_type': [
             {
-                'a': 12.0, 'b': 12.1
+                'int': 12, 'float': 12.1, 'bool': True, 'str': 'abc'
             },
             {
-                'a': 3.0
+                'int': -3, 'bool': False
             },
             {
-                'b': 14.3
+                'float': 14.3, 'str': 'def'
             },
         ]
     }
     pandas_data.from_data(data)
+
     pd.testing.assert_frame_equal(
         pandas_data['obj_type'],
         pd.DataFrame([{
-            'a': 12.0, 'b': 12.1
+            'int': 12, 'float': 12.1, 'bool': True, 'str': 'abc'
         }, {
-            'a': 3.0, 'b': None
+            'int': -3, 'float': pd.NA, 'bool': False, 'str': pd.NA
         }, {
-            'a': None, 'b': 14.3
-        }]),
+            'int': pd.NA, 'float': 14.3, 'bool': pd.NA, 'str': 'def'
+        }],),
+        check_dtype=False,
     )
-    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('float64', 'float64'))
-    assert not DeepDiff(
-        pandas_data.to_data(),
-        {'obj_type': [{
-            'a': 12.0, 'b': 12.1
+
+    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('Int64', 'Float64', 'boolean', 'string'))
+
+    assert pandas_data.to_data() == {
+        'obj_type': [{
+            'int': 12, 'float': 12.1, 'bool': True, 'str': 'abc'
         }, {
-            'a': 3.0, 'b': np.nan
+            'int': -3, 'float': None, 'bool': False, 'str': None
         }, {
-            'a': np.nan, 'b': 14.3
-        }]},
-        significant_digits=3)
+            'int': None, 'float': 14.3, 'bool': None, 'str': 'def'
+        }]
+    }
 
 
 def test_pandas_dataset_list_of_nested_objects():
@@ -148,8 +150,8 @@ def test_pandas_dataset_list_of_nested_objects():
                 'c': [1, 3]
             }
         }]),
-    )
-    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('object', 'object'))
+        check_dtype=False)
+    assert_pandas_frame_dtypes(pandas_data['obj_type'], ('string', 'object'))
     assert pandas_data.to_data() == data
     assert pandas_data['obj_type'].loc[0, 'b'] == {'c': [1, 3]}
 
