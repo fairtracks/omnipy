@@ -201,3 +201,7 @@ class SerializerFuncJobBaseMixin:
                                         return dataset
 
         raise RuntimeError('No persisted output')
+
+
+# TODO: Add configuration option for serialize mixin to specify per flow to not preserve
+#       task outputs

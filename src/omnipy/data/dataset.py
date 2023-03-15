@@ -76,7 +76,12 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     def __class_getitem__(cls, model: ModelT) -> ModelT:
         # TODO: change model type to params: Union[Type[Any], Tuple[Type[Any], ...]]
-        #       as in GenericModel
+        #       as in GenericModel. Unclear where this can be done, if anywhere? E.g.:
+        #           a = Dataset[Model[int]]
+        #           a['adsfas'] = 2
+        #           Traceback (most recent call last):
+        #             ...
+        #           TypeError: 'ModelMetaclass' object does not support item assignment
 
         # For now, only singular model types are allowed. These lines are needed for
         # interoperability with pydantic GenericModel, which internally stores the model
@@ -93,6 +98,9 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     def __init__(self,
                  value: Union[Dict[str, Any], Iterator[Tuple[str, Any]]] = Undefined,
                  **input_data: Any) -> None:
+        # TODO: Error message when forgetting parenthesis when creating Dataset should be improved.
+        #       Appears
+
         if value != Undefined:
             input_data[DATA_KEY] = value
 

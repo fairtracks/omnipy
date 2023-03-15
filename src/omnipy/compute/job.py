@@ -164,6 +164,8 @@ class JobTemplate:
         return cls._create_job_template(*args, **kwargs)
 
     def run(self, *args: object, **kwargs: object) -> object:
+        # TODO: Using JobTemplate.run() inside flows should give error message
+
         return self.apply()(*args, **kwargs)
 
     def apply(self):  # -> JobT:
