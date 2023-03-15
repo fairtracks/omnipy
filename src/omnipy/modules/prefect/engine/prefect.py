@@ -9,12 +9,13 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
-from omnipy.modules.prefect import flow as prefect_flow
-from omnipy.modules.prefect import Flow as PrefectFlow
-from omnipy.modules.prefect import task as prefect_task
-from omnipy.modules.prefect import Task as PrefectTask
-from omnipy.modules.prefect import task_input_hash
 from omnipy.util.helpers import resolve
+
+from .. import Flow as PrefectFlow
+from .. import flow as prefect_flow
+from .. import task as prefect_task
+from .. import Task as PrefectTask
+from .. import task_input_hash
 
 
 class PrefectEngine(TaskRunnerEngine,

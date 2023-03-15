@@ -4,15 +4,16 @@ from typing import cast, Tuple
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-from omnipy.modules.json.datasets import (JsonDataset,
-                                          JsonDictOfAnyDataset,
-                                          JsonListOfDictsOfAnyDataset,
-                                          JsonListOfDictsOfScalarsDataset)
-from omnipy.modules.json.functions import flatten_outer_level_of_nested_record
-from omnipy.modules.json.types import (JsonDictOfListsOfDictsOfAny,
-                                       JsonDictOfScalars,
-                                       JsonListOfDictsOfAny,
-                                       JsonListOfDictsOfScalars)
+
+from .datasets import (JsonDataset,
+                       JsonDictOfAnyDataset,
+                       JsonListOfDictsOfAnyDataset,
+                       JsonListOfDictsOfScalarsDataset)
+from .functions import flatten_outer_level_of_nested_record
+from .types import (JsonDictOfListsOfDictsOfAny,
+                    JsonDictOfScalars,
+                    JsonListOfDictsOfAny,
+                    JsonListOfDictsOfScalars)
 
 ID_KEY = '_omnipy_id'
 REF_KEY = '_omnipy_ref'

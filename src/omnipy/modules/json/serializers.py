@@ -2,8 +2,9 @@ from typing import Dict, IO, Type, Union
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.serializer import TarFileSerializer
-from omnipy.modules.json.datasets import JsonBaseDataset, JsonDataset
-from omnipy.modules.json.models import JsonModel
+
+from .datasets import JsonBaseDataset, JsonDataset
+from .models import JsonModel
 
 
 class JsonDatasetToTarFileSerializer(TarFileSerializer):

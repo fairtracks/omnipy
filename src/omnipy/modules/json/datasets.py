@@ -3,24 +3,25 @@ from __future__ import annotations
 from typing import Generic, TypeAlias, TypeVar, Union
 
 from omnipy.data.dataset import Dataset
-from omnipy.modules.json.models import (JsonDictModel,
-                                        JsonDictOfAnyModel,
-                                        JsonDictOfDictsOfAnyModel,
-                                        JsonDictOfDictsOfScalarsModel,
-                                        JsonDictOfListsOfAnyModel,
-                                        JsonDictOfListsOfDictsOfAnyModel,
-                                        JsonDictOfListsOfScalarsModel,
-                                        JsonDictOfScalarsModel,
-                                        JsonListModel,
-                                        JsonListOfAnyModel,
-                                        JsonListOfDictsOfAnyModel,
-                                        JsonListOfDictsOfScalarsModel,
-                                        JsonListOfListsOfAnyModel,
-                                        JsonListOfListsOfScalarsModel,
-                                        JsonListOfNestedDictsModel,
-                                        JsonListOfScalarsModel,
-                                        JsonModel,
-                                        JsonNestedDictsModel)
+
+from .models import (JsonDictModel,
+                     JsonDictOfAnyModel,
+                     JsonDictOfDictsOfAnyModel,
+                     JsonDictOfDictsOfScalarsModel,
+                     JsonDictOfListsOfAnyModel,
+                     JsonDictOfListsOfDictsOfAnyModel,
+                     JsonDictOfListsOfScalarsModel,
+                     JsonDictOfScalarsModel,
+                     JsonListModel,
+                     JsonListOfAnyModel,
+                     JsonListOfDictsOfAnyModel,
+                     JsonListOfDictsOfScalarsModel,
+                     JsonListOfListsOfAnyModel,
+                     JsonListOfListsOfScalarsModel,
+                     JsonListOfNestedDictsModel,
+                     JsonListOfScalarsModel,
+                     JsonModel,
+                     JsonNestedDictsModel)
 
 # TODO: switch from plural to singular for names of modules in omnipy modules
 # TODO: call omnipy modules something else than modules, to distinguish from Python modules.

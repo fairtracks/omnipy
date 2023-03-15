@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import Dict, Generic, List, Optional, TypeAlias, TypeVar, Union
 
 from omnipy.data.model import Model
-from omnipy.modules.json.types import JsonScalar
+
+from .types import JsonScalar
 
 # Basic building block models
 

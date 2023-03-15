@@ -2,8 +2,7 @@ from copy import deepcopy
 from typing import Dict, List
 
 from omnipy.compute.task import TaskTemplate
-
-from ..json.datasets import JsonListOfDictsOfAnyDataset
+from omnipy.modules.json.datasets import JsonListOfDictsOfAnyDataset
 
 
 @TaskTemplate()

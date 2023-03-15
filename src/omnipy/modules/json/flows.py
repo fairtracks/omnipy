@@ -1,10 +1,7 @@
 from omnipy.compute.flow import FuncFlowTemplate
-from omnipy.modules.json.datasets import (JsonListOfDictsOfAnyDataset,
-                                          JsonListOfDictsOfScalarsDataset)
-from omnipy.modules.json.tasks import (DEFAULT_KEY,
-                                       flatten_outer_level_of_all_data_files,
-                                       ID_KEY,
-                                       REF_KEY)
+
+from .datasets import JsonListOfDictsOfAnyDataset, JsonListOfDictsOfScalarsDataset
+from .tasks import DEFAULT_KEY, flatten_outer_level_of_all_data_files, ID_KEY, REF_KEY
 
 
 @FuncFlowTemplate(fixed_params=dict(id_key=ID_KEY, ref_key=REF_KEY, default_key=DEFAULT_KEY))

@@ -2,9 +2,8 @@ from io import StringIO
 import os
 
 from omnipy.compute.task import TaskTemplate
-from omnipy.modules.raw.protocols import (IsModifyAllLinesCallable,
-                                          IsModifyContentsCallable,
-                                          IsModifyEachLineCallable)
+
+from .protocols import IsModifyAllLinesCallable, IsModifyContentsCallable, IsModifyEachLineCallable
 
 
 @TaskTemplate(iterate_over_data_files=True)

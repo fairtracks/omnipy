@@ -1,13 +1,13 @@
 from copy import copy
 from typing import cast, Dict, Tuple, Union
 
-from omnipy.modules.json.types import (JsonDict,
-                                       JsonDictOfAny,
-                                       JsonDictOfListsOfDictsOfAny,
-                                       JsonDictOfScalars,
-                                       JsonListOfAny,
-                                       JsonListOfDictsOfAny,
-                                       JsonScalar)
+from .types import (JsonDict,
+                    JsonDictOfAny,
+                    JsonDictOfListsOfDictsOfAny,
+                    JsonDictOfScalars,
+                    JsonListOfAny,
+                    JsonListOfDictsOfAny,
+                    JsonScalar)
 
 
 def flatten_outer_level_of_nested_record(
