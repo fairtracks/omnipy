@@ -5,21 +5,20 @@ from time import sleep
 from typing import Awaitable, Callable, cast, List, Optional, Type
 
 from omnipy.api.enums import RunState
-from omnipy.api.protocols import (IsDagFlow,
-                                  IsDagFlowRunnerEngine,
-                                  IsDagFlowTemplate,
-                                  IsEngine,
-                                  IsFlowTemplate,
-                                  IsFuncFlowRunnerEngine,
-                                  IsFuncFlowTemplate,
-                                  IsJob,
-                                  IsLinearFlow,
-                                  IsLinearFlowRunnerEngine,
-                                  IsLinearFlowTemplate,
-                                  IsRunStateRegistry,
-                                  IsTask,
-                                  IsTaskRunnerEngine,
-                                  IsTaskTemplate)
+from omnipy.api.protocols.private import IsEngine, IsRunStateRegistry
+from omnipy.api.protocols.public.engine import (IsDagFlowRunnerEngine,
+                                                IsFuncFlowRunnerEngine,
+                                                IsLinearFlowRunnerEngine,
+                                                IsTaskRunnerEngine)
+from omnipy.api.protocols.public.job import (IsDagFlow,
+                                             IsDagFlowTemplate,
+                                             IsFlowTemplate,
+                                             IsFuncFlowTemplate,
+                                             IsJob,
+                                             IsLinearFlow,
+                                             IsLinearFlowTemplate,
+                                             IsTask,
+                                             IsTaskTemplate)
 from omnipy.compute.job import JobBase
 from omnipy.engine.base import Engine
 from omnipy.util.helpers import resolve

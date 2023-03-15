@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Optional
 
-from omnipy.api.protocols import IsRuntime
+from omnipy.api.protocols.public.runtime import IsRuntime
 from omnipy.util.publisher import DataPublisher
 
 

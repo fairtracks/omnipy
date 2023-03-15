@@ -1,6 +1,7 @@
 from typing import Any, Callable, Type
 
-from omnipy.api.protocols import IsDagFlow, IsFuncFlow, IsLinearFlow, IsLocalRunnerConfig, IsTask
+from omnipy.api.protocols.public.job import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.api.protocols.public.runtime import IsLocalRunnerConfig
 from omnipy.config.engine import LocalRunnerConfig
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,

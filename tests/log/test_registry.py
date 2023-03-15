@@ -8,9 +8,8 @@ from typing import Annotated
 import pytest
 
 from omnipy.api.enums import RunState
-from omnipy.api.protocols import IsDagFlow, IsTask
+from omnipy.api.protocols.public.job import IsDagFlow, IsTask
 from omnipy.log.registry import RunStateRegistry
-from omnipy.util.helpers import get_datetime_format
 
 from .helpers.functions import read_log_lines_from_stream
 

@@ -1,10 +1,10 @@
 from typing import cast, Type
 
-from omnipy.api.protocols import (IsDagFlowRunnerEngine,
-                                  IsFuncFlowRunnerEngine,
-                                  IsFuncJobTemplateCallable,
-                                  IsLinearFlowRunnerEngine,
-                                  IsTaskTemplatesFlowTemplateCallable)
+from omnipy.api.protocols.public.engine import (IsDagFlowRunnerEngine,
+                                                IsFuncFlowRunnerEngine,
+                                                IsLinearFlowRunnerEngine)
+from omnipy.api.protocols.public.job import (IsFuncJobTemplateCallable,
+                                             IsTaskTemplatesFlowTemplateCallable)
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import Job, JobTemplate
 from omnipy.compute.mixins.flow_context import FlowContextJobMixin

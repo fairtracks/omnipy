@@ -8,7 +8,8 @@ from types import MappingProxyType
 from typing import Any, Dict, Hashable, Optional, Tuple
 
 from omnipy.api.exceptions import JobStateException
-from omnipy.api.protocols import IsEngine, IsJobConfig
+from omnipy.api.protocols.private import IsEngine
+from omnipy.api.protocols.public.runtime import IsJobConfig
 from omnipy.compute.job_creator import JobBaseMeta
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
 from omnipy.log.mixin import LogMixin

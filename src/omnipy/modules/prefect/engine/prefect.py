@@ -2,7 +2,8 @@ import asyncio
 from datetime import timedelta
 from typing import Any, Callable, Type
 
-from omnipy.api.protocols import IsDagFlow, IsFuncFlow, IsLinearFlow, IsPrefectEngineConfig, IsTask
+from omnipy.api.protocols.public.job import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.api.protocols.public.runtime import IsPrefectEngineConfig
 from omnipy.config.engine import PrefectEngineConfig
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,

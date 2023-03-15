@@ -6,7 +6,7 @@ from typing import Annotated, Type
 import pytest
 
 from omnipy.api.enums import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions, EngineChoice
-from omnipy.api.protocols import IsRuntime
+from omnipy.api.protocols.public.runtime import IsRuntime
 from omnipy.hub.runtime import RuntimeConfig, RuntimeObjects
 
 from .helpers.mocks import (MockJobConfig,

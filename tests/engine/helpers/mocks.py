@@ -10,14 +10,13 @@ from inflection import underscore
 from slugify import slugify
 
 from omnipy.api.enums import RunState
-from omnipy.api.protocols import (IsDagFlow,
-                                  IsEngine,
-                                  IsEngineConfig,
-                                  IsFlow,
-                                  IsFuncFlow,
-                                  IsJob,
-                                  IsLinearFlow,
-                                  IsTask)
+from omnipy.api.protocols.private import IsEngine, IsEngineConfig
+from omnipy.api.protocols.public.job import (IsDagFlow,
+                                             IsFlow,
+                                             IsFuncFlow,
+                                             IsJob,
+                                             IsLinearFlow,
+                                             IsTask)
 from omnipy.api.types import GeneralDecorator
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
