@@ -6,13 +6,13 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Un
 from omnipy.api.protocols.private import IsEngine, IsEngineConfig, IsRunStateRegistry
 from omnipy.api.protocols.public.job import IsDagFlow, IsFuncFlow, IsJob, IsLinearFlow, IsTask
 from omnipy.compute.func_job import FuncArgJobBase
-from omnipy.compute.job import Job, JobBase, JobTemplate
+from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.mixins.flow_context import FlowContextJobMixin
 from omnipy.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
 
-class MockJobTemplateSubclass(JobTemplate, JobBase):
+class MockJobTemplateSubclass(JobTemplateMixin, JobBase):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['MockJobSubclass']:
         return MockJobSubclass
@@ -22,7 +22,7 @@ class MockJobTemplateSubclass(JobTemplate, JobBase):
         return job
 
 
-class MockJobSubclass(Job, JobBase):
+class MockJobSubclass(JobMixin, JobBase):
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[MockJobTemplateSubclass]:
         return MockJobTemplateSubclass
@@ -39,7 +39,7 @@ class MockJobSubclass(Job, JobBase):
 
 
 # @callable_decorator_cls
-class MockFlowTemplateSubclass(JobTemplate, JobBase):
+class MockFlowTemplateSubclass(JobTemplateMixin, JobBase):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['MockFlowSubclass']:
         return MockFlowSubclass
@@ -49,7 +49,7 @@ class MockFlowTemplateSubclass(JobTemplate, JobBase):
         return job
 
 
-class MockFlowSubclass(Job, JobBase):
+class MockFlowSubclass(JobMixin, JobBase):
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[MockFlowTemplateSubclass]:
         return MockFlowTemplateSubclass
@@ -103,13 +103,13 @@ class CommandMockParamMixin:
 
 
 @callable_decorator_cls
-class CommandMockJobTemplate(JobTemplate, CommandMockInit, JobBase):
+class CommandMockJobTemplate(JobTemplateMixin, CommandMockInit, JobBase):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['CommandMockJob']:
         return CommandMockJob
 
 
-class CommandMockJob(Job, CommandMockInit, JobBase):
+class CommandMockJob(JobMixin, CommandMockInit, JobBase):
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         self.engine_decorator_applied = True
 
@@ -184,7 +184,7 @@ class PublicPropertyErrorsMockParamsMixin:
         return self._params
 
 
-class PublicPropertyErrorsMockJobTemplate(JobTemplate, JobBase):
+class PublicPropertyErrorsMockJobTemplate(JobTemplateMixin, JobBase):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['PublicPropertyErrorsMockJob']:
         return PublicPropertyErrorsMockJob
@@ -194,7 +194,7 @@ class PublicPropertyErrorsMockJobTemplate(JobTemplate, JobBase):
         return job
 
 
-class PublicPropertyErrorsMockJob(Job, JobBase):
+class PublicPropertyErrorsMockJob(JobMixin, JobBase):
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[PublicPropertyErrorsMockJobTemplate]:
         return PublicPropertyErrorsMockJobTemplate
@@ -298,7 +298,7 @@ class AssertSameTimeOfCurFlowRunJobBaseMixin:
 
 
 @callable_decorator_cls
-class MockTaskTemplateAssertSameTimeOfCurFlowRun(JobTemplate, FuncArgJobBase):
+class MockTaskTemplateAssertSameTimeOfCurFlowRun(JobTemplateMixin, FuncArgJobBase):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type['MockTaskAssertSameTimeOfCurFlowRun']:
         return MockTaskAssertSameTimeOfCurFlowRun
@@ -307,7 +307,7 @@ class MockTaskTemplateAssertSameTimeOfCurFlowRun(JobTemplate, FuncArgJobBase):
         return job
 
 
-class MockTaskAssertSameTimeOfCurFlowRun(Job, FuncArgJobBase):
+class MockTaskAssertSameTimeOfCurFlowRun(JobMixin, FuncArgJobBase):
     @classmethod
     def _get_job_template_subcls_for_revise(
             cls) -> Type['MockTaskTemplateAssertSameTimeOfCurFlowRun']:

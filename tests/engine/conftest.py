@@ -18,7 +18,7 @@ from .helpers.mocks import (MockDagFlowTemplate,
                             MockRunStateRegistry,
                             MockTaskTemplate)
 
-# JobTemplate subclasses
+# Mock job templates
 
 
 @pc.fixture(scope='function')

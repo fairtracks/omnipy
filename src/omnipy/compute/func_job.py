@@ -48,7 +48,7 @@ FuncArgJobBase.accept_mixin(SerializerFuncJobBaseMixin)
 FuncArgJobBase.accept_mixin(ResultKeyFuncJobBaseMixin)
 FuncArgJobBase.accept_mixin(ParamsFuncJobBaseMixin)
 
-# class FuncJobTemplate(FuncArgJobBase, JobTemplate, ABC):
+# class FuncJobTemplate(FuncArgJobBase, JobTemplateMixin, ABC):
 #     def refine(self,
 #                update: bool = True,
 #                name: Optional[str] = None,

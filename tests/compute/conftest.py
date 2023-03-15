@@ -9,7 +9,7 @@ from omnipy.compute.flow import (DagFlow,
                                  FuncFlowTemplate,
                                  LinearFlow,
                                  LinearFlowTemplate)
-from omnipy.compute.job import Job, JobBase, JobTemplate
+from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.job_creator import JobBaseMeta, JobCreator
 
 from .helpers.classes import FlowClsTuple
@@ -17,7 +17,7 @@ from .helpers.mocks import MockJobSubclass, MockJobTemplateSubclass, MockLocalRu
 
 
 @pytest.fixture(scope='function')
-def mock_job_classes() -> Tuple[Type[JobTemplate], Type[Job]]:
+def mock_job_classes() -> Tuple[Type[JobTemplateMixin], Type[JobMixin]]:
     return MockJobTemplateSubclass, MockJobSubclass
 
 

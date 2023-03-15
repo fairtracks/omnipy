@@ -7,7 +7,7 @@ import pytest_cases as pc
 from omnipy.api.exceptions import JobStateException
 from omnipy.api.protocols.public.job import IsFlowTemplate
 from omnipy.compute.flow import DagFlowTemplate, FuncFlow, FuncFlowTemplate, LinearFlowTemplate
-from omnipy.compute.job import Job, JobBase, JobTemplate
+from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.task import TaskTemplate
 
 from .cases.flows import FlowCase
@@ -19,7 +19,7 @@ from .helpers.mocks import (MockFlowTemplateSubclass,
                             MockLocalRunner,
                             MockTaskTemplateAssertSameTimeOfCurFlowRun)
 
-MockJobClasses = Tuple[Type[JobBase], Type[JobTemplate], Type[Job]]
+MockJobClasses = Tuple[Type[JobBase], Type[JobTemplateMixin], Type[JobMixin]]
 
 
 def test_flow_context_mock() -> None:

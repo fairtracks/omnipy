@@ -6,7 +6,7 @@ from omnipy.api.protocols.private import IsEngine
 from omnipy.api.protocols.public.engine import IsTaskRunnerEngine
 from omnipy.api.protocols.public.job import IsFuncJobTemplateCallable
 from omnipy.compute.func_job import FuncArgJobBase
-from omnipy.compute.job import Job, JobTemplate
+from omnipy.compute.job import JobMixin, JobTemplateMixin
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
 # class TaskInit(FuncArgJobBase):
@@ -48,13 +48,13 @@ class TaskBase:
 
 
 @task_template_callable_decorator_cls
-class TaskTemplate(JobTemplate, TaskBase, FuncArgJobBase):
+class TaskTemplate(JobTemplateMixin, TaskBase, FuncArgJobBase):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type[Task]:
         return Task
 
 
-class Task(Job, TaskBase, FuncArgJobBase):
+class Task(JobMixin, TaskBase, FuncArgJobBase):
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         # self._check_engine(IsTaskRunnerEngine)
         if self.engine:

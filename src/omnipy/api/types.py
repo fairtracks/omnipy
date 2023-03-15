@@ -5,8 +5,8 @@ from typing import Callable, Optional, Tuple, TypeAlias, TypeVar, Union
 GeneralDecorator = Callable[[Callable], Callable]
 LocaleType: TypeAlias = Union[str, Tuple[Optional[str], Optional[str]]]
 JobBaseT = TypeVar('JobBaseT', bound='JobBase', covariant=True)
-JobT = TypeVar('JobT', bound='Job', covariant=True)
-JobTemplateT = TypeVar('JobTemplateT', bound='JobTemplate', covariant=True)
+JobT = TypeVar('JobT', bound='JobMixin', covariant=True)
+JobTemplateT = TypeVar('JobTemplateT', bound='JobTemplateMixin', covariant=True)
 FuncJobTemplateT = TypeVar('FuncJobTemplateT', bound='FuncJobTemplate', covariant=True)
 TaskTemplatesFlowTemplateT = TypeVar(
     'TaskTemplatesFlowTemplateT', bound='TaskTemplatesFlowTemplate', covariant=True)

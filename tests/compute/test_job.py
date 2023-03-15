@@ -4,7 +4,7 @@ from typing import Annotated, NamedTuple, Optional, Tuple, Type, Union
 import pytest
 
 from omnipy.api.exceptions import JobStateException
-from omnipy.compute.job import Job, JobBase, JobTemplate
+from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.job_creator import JobCreator
 
 from .helpers.functions import assert_updated_wrapper
@@ -35,7 +35,7 @@ class PropertyTest(NamedTuple):
     set_method: Optional[str] = None
 
 
-MockJobClasses = Tuple[Type[JobTemplate], Type[Job]]
+MockJobClasses = Tuple[Type[JobTemplateMixin], Type[JobMixin]]
 
 
 def test_init_abstract():
@@ -43,10 +43,10 @@ def test_init_abstract():
         JobBase()
 
     with pytest.raises(TypeError):
-        JobTemplate()
+        JobTemplateMixin()
 
     with pytest.raises(TypeError):
-        Job()
+        JobMixin()
 
 
 def test_init_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
@@ -175,8 +175,8 @@ def test_job_creator_properties_mock(
 
 
 def _assert_prop_getattr_all(mock_job_classes: MockJobClasses,
-                             job_tmpl: JobTemplate,
-                             job: Job,
+                             job_tmpl: JobTemplateMixin,
+                             job: JobMixin,
                              test: PropertyTest,
                              val: object):
     JobTemplate, Job = mock_job_classes  # noqa

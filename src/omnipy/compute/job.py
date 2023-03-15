@@ -9,6 +9,7 @@ from typing import Any, Dict, Hashable, Optional, Tuple
 
 from omnipy.api.exceptions import JobStateException
 from omnipy.api.protocols.private import IsEngine
+from omnipy.api.protocols.public.job import IsJobTemplate
 from omnipy.api.protocols.public.runtime import IsJobConfig
 from omnipy.compute.job_creator import JobBaseMeta
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
@@ -23,14 +24,15 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
 
         # TODO: refactor using state machine
 
-        if not isinstance(self, JobTemplate) and not isinstance(self, Job):
-            raise JobStateException('JobBase and subclasses not inheriting from JobTemplate '
-                                    'or Job are not directly instantiatable')
+        if not isinstance(self, JobTemplateMixin) and not isinstance(self, JobMixin):
+            raise JobStateException('JobBase and subclasses not inheriting from JobTemplateMixin '
+                                    'or JobMixin are not directly instantiatable')
 
         from_apply = hasattr(self, '_from_apply') and self._from_apply is True
-        if isinstance(self, Job) and not from_apply:
-            raise JobStateException('Job should only be instantiated using the "apply()" method of '
-                                    'an instance of JobTemplate (or one of its subclasses)')
+        if isinstance(self, JobMixin) and not from_apply:
+            raise JobStateException(
+                'JobMixin should only be instantiated using the "apply()" method of '
+                'an instance of JobTemplateMixin (or one of its subclasses)')
 
     @classmethod
     def _create_job_template(cls, *args: object, **kwargs: object):  # -> JobTemplateT:
@@ -45,7 +47,7 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
             return cls(*args, **kwargs)
 
     @classmethod
-    def _create_job(cls, *args: object, **kwargs: object):  # -> Job[JobBaseT, JobTemplateT]:
+    def _create_job(cls, *args: object, **kwargs: object):  # -> JobMixin[JobBaseT, JobTemplateT]:
         if cls.__new__ is object.__new__:
             job_obj = cls.__new__(cls)
         else:
@@ -115,12 +117,12 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
     @classmethod
     # @abstractmethod
     def _get_job_template_subcls_for_revise(cls):  # -> Type[JobTemplateT]:
-        return JobTemplate
+        return JobTemplateMixin
 
     @classmethod
     # @abstractmethod
     def _get_job_subcls_for_apply(cls):  # -> Type[JobT]:
-        return Job
+        return JobMixin
 
     def _call_job_template(self, *args: object, **kwargs: object) -> object:
         if self.in_flow_context:
@@ -154,10 +156,10 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
         return self.__class__.job_creator.nested_context_level > 0
 
 
-class JobTemplate:
+class JobTemplateMixin:
     def __init__(self, *args, **kwargs):
         if JobBase not in self.__class__.__mro__:
-            raise TypeError('JobTemplate is not meant to be instantiated outside the context '
+            raise TypeError('JobTemplateMixin is not meant to be instantiated outside the context '
                             'of a JobBase subclass.')
 
     @classmethod
@@ -165,7 +167,7 @@ class JobTemplate:
         return cls._create_job_template(*args, **kwargs)
 
     def run(self, *args: object, **kwargs: object) -> object:
-        # TODO: Using JobTemplate.run() inside flows should give error message
+        # TODO: Using JobTemplateMixin.run() inside flows should give error message
 
         return self.apply()(*args, **kwargs)
 
@@ -179,10 +181,10 @@ class JobTemplate:
         return self._call_job_template(*args, **kwargs)
 
 
-class Job(DynamicMixinAcceptor):
+class JobMixin(DynamicMixinAcceptor):
     def __init__(self, *args, **kwargs):
         if JobBase not in self.__class__.__mro__:
-            raise TypeError('Job is not meant to be instantiated outside the context '
+            raise TypeError('JobMixin is not meant to be instantiated outside the context '
                             'of a JobBase subclass.')
 
     @abstractmethod
@@ -195,8 +197,8 @@ class Job(DynamicMixinAcceptor):
 
     # def __new__(cls, *args: Any, **kwargs: Any):
     #     super().__new__(cls, *args, **kwargs)
-    #     raise RuntimeError('Job should only be instantiated using the "apply()" method of '
-    #                        'an instance of JobTemplate (or one of its subclasses)')
+    #     raise RuntimeError('JobMixin should only be instantiated using the "apply()" method of '
+    #                        'an instance of JobTemplateMixin (or one of its subclasses)')
 
     # def __init__(self, *args, **kwargs):
     #     super().__init__(*args, **kwargs)
@@ -221,4 +223,4 @@ class Job(DynamicMixinAcceptor):
 
 JobBase.accept_mixin(NameJobBaseMixin)
 # JobBase.accept_mixin(LogMixin)
-Job.accept_mixin(NameJobMixin)
+JobMixin.accept_mixin(NameJobMixin)
