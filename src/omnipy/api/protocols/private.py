@@ -4,13 +4,31 @@ from datetime import datetime
 from typing import Any, Callable, Optional, Protocol, runtime_checkable, Tuple, Type
 
 from omnipy.api.enums import RunState
+from omnipy.api.types import DecoratorClassT, GeneralDecorator
 
 
 class IsUniquelyNamedJob(Protocol):
     """"""
-    unique_name: str
+    @property
+    def name(self) -> str:
+        ...
+
+    @property
+    def unique_name(self) -> str:
+        ...
+
+    def __init__(self, *, name: Optional[str] = None):
+        ...
 
     def regenerate_unique_name(self) -> None:
+        ...
+
+
+class IsPlainFuncArgJobBase(Protocol):
+    """"""
+    _job_func: Callable
+
+    def _accept_call_func_decorator(self, call_func_decorator: GeneralDecorator) -> None:
         ...
 
 
@@ -61,3 +79,16 @@ class IsEngine(Protocol):
 class IsEngineConfig(Protocol):
     """"""
     ...
+
+
+@runtime_checkable
+class IsCallableParamAfterSelf(Protocol):
+    """"""
+    def __call__(self, callable_arg: Callable, /, *args: object, **kwargs: object) -> None:
+        ...
+
+
+@runtime_checkable
+class IsCallableClass(Protocol[DecoratorClassT]):
+    def __call__(self, *args: object, **kwargs: object) -> Callable[[Callable], DecoratorClassT]:
+        ...

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import cast, Optional
 
 from inflection import underscore
 from slugify import slugify
@@ -26,14 +26,14 @@ class NameJobBaseMixin:
             raise ValueError('Empty strings not allowed for parameter "{}"'.format(param_name))
 
     @property
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         return self._name
 
     @property
-    def unique_name(self) -> str:
+    def unique_name(self) -> Optional[str]:
         return self._unique_name
 
-    def _generate_unique_name(self) -> str:
+    def _generate_unique_name(self) -> Optional[str]:
         if self._name is None:
             return None
 
@@ -50,10 +50,5 @@ class NameJobBaseMixin:
 
 class NameJobMixin:
     def regenerate_unique_name(self) -> None:
-        self._regenerate_unique_name()
-
-
-#
-# class NameFuncJobBaseMixin:
-#     def __init__(self, *, name: Optional[str] = None):
-#         self._name = name if name is not None else self._job_func.__name__
+        self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
+        self_as_name_job_base_mixin._regenerate_unique_name()

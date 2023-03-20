@@ -1,18 +1,31 @@
+from __future__ import annotations
+
 import inspect
 import locale as pkg_locale
-from typing import Dict, get_args, get_origin, Iterable, Mapping, Optional, Tuple, Union
+from typing import cast, Dict, get_args, get_origin, Iterable, Mapping, Optional, Tuple, Union
 
 from typing_inspect import get_generic_bases, is_generic_type
 
 from omnipy.api.types import LocaleType
 
-DictT = Union[Mapping[object, object], Iterable[Tuple[object, object]]]
+Dictable = Union[Mapping[object, object], Iterable[Tuple[object, object]]]
 
 
-def create_merged_dict(dict_1: DictT, dict_2: DictT) -> Dict[object, object]:
-    merged_dict = dict(dict_1)
-    dict_2_cast = dict(dict_2)
-    merged_dict |= dict_2_cast
+def as_dictable(obj: object) -> Optional[Dictable]:
+    def _is_iterable_of_tuple_pairs(obj_inner: object) -> bool:
+        return isinstance(obj_inner, Iterable) and \
+            all(isinstance(el, tuple) and len(el) == 2 for el in obj_inner)
+
+    if isinstance(obj, Mapping) or _is_iterable_of_tuple_pairs(obj):
+        return cast(Dictable, obj)
+    else:
+        return None
+
+
+def create_merged_dict(dictable_1: Dictable, dictable_2: Dictable) -> Dict[object, object]:
+    merged_dict = dictable_1 if isinstance(dictable_1, dict) else dict(dictable_1)
+    dict_2 = dictable_2 if isinstance(dictable_2, dict) else dict(dictable_2)
+    merged_dict |= dict_2
     return merged_dict
 
 

@@ -5,21 +5,37 @@ from datetime import datetime
 from functools import update_wrapper
 import logging
 from types import MappingProxyType
-from typing import Any, Dict, Hashable, Optional, Tuple
+from typing import Any, cast, Dict, Hashable, Optional, Tuple, Type, Union
 
 from omnipy.api.exceptions import JobStateException
-from omnipy.api.protocols.private import IsEngine
-from omnipy.api.protocols.public.job import IsJobTemplate
+from omnipy.api.protocols.private import IsCallableClass, IsEngine
+from omnipy.api.protocols.public.job import IsJob, IsJobBase, IsJobCreator, IsJobTemplate
 from omnipy.api.protocols.public.runtime import IsJobConfig
 from omnipy.compute.job_creator import JobBaseMeta
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
 from omnipy.log.mixin import LogMixin
-from omnipy.util.helpers import create_merged_dict
+from omnipy.util.helpers import as_dictable, create_merged_dict
 from omnipy.util.mixin import DynamicMixinAcceptor
 
 
 class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
-    def __init__(self, *args: object, name: Optional[str] = None, **kwargs: object):
+    @property
+    def _job_creator(self) -> IsJobCreator:
+        return self.__class__.job_creator
+
+    @property
+    def config(self) -> Optional[IsJobConfig]:
+        return self.__class__.job_creator.config
+
+    @property
+    def engine(self) -> Optional[IsEngine]:
+        return self.__class__.job_creator.engine
+
+    @property
+    def in_flow_context(self) -> bool:
+        return self.__class__.nested_context_level > 0
+
+    def __init__(self, *args: object, **kwargs: object):
         # super().__init__()
 
         # TODO: refactor using state machine
@@ -35,47 +51,61 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
                 'an instance of JobTemplateMixin (or one of its subclasses)')
 
     @classmethod
-    def _create_job_template(cls, *args: object, **kwargs: object):  # -> JobTemplateT:
+    def _create_job_template(cls, *args: object, **kwargs: object) -> IsJobTemplate:
         if len(args) >= 1:
+            cls_as_callable_class = cast(Type[IsCallableClass], cls)
+
             if not callable(args[0]):
                 raise TypeError(f'First argument of a job is assumed to be a callable, '
                                 f'not: {args[0]}')
             job_func = args[0]
             args = args[1:]
-            return cls(*args, **kwargs)(job_func)
+            obj_1 = cls_as_callable_class(*args, **kwargs)(job_func)
+            return cast(IsJobTemplate, obj_1)
         else:
-            return cls(*args, **kwargs)
+            obj_2 = cls(*args, **kwargs)
+            return cast(IsJobTemplate, obj_2)
 
     @classmethod
-    def _create_job(cls, *args: object, **kwargs: object):  # -> JobMixin[JobBaseT, JobTemplateT]:
+    def _create_job(cls, *args: object, **kwargs: object) -> IsJob:
         if cls.__new__ is object.__new__:
-            job_obj = cls.__new__(cls)
+            obj = cls.__new__(cls)
         else:
-            job_obj = cls.__new__(cls, *args, **kwargs)
+            obj = cls.__new__(cls, *args, **kwargs)
 
         # TODO: refactor using state machine
-        job_obj._from_apply = True
-        job_obj.__init__(*args, **kwargs)
-        job_obj._from_apply = False
 
-        return job_obj
+        obj._from_apply = True
+        obj.__init__(*args, **kwargs)
+        obj._from_apply = False
 
-    def _apply(self):  # -> JobT:
+        return cast(IsJob, obj)
+
+    def _apply(self) -> IsJob:
         job_cls = self._get_job_subcls_for_apply()
         job = job_cls.create_job(*self._get_init_args(), **self._get_init_kwargs())
-        update_wrapper(job, self, updated=[])
-        job._apply_engine_decorator(self.engine)
+
+        if self.engine:
+            job._apply_engine_decorator(self.engine)
+
         return job
 
-    def _refine(self, *args: object, update: bool = True, **kwargs: object):  # -> JobTemplateT:
+    def _refine(self, *args: Any, update: bool = True, **kwargs: object) -> IsJobTemplate:
+        self_as_job_template = cast(IsJobTemplate, self)
+
         refine_kwargs = kwargs.copy()
 
         if update:
             for key, cur_val in self._get_init_kwargs().items():
                 if key in refine_kwargs:
-                    try:
-                        new_val = create_merged_dict(cur_val, refine_kwargs[key])
-                    except (TypeError, ValueError):
+                    refine_val = refine_kwargs[key]
+                    cur_val_dictable = as_dictable(cur_val)
+                    refine_val_dictable = as_dictable(refine_val)
+                    if cur_val_dictable is not None and refine_val_dictable is not None:
+                        new_val: Union[object,
+                                       Dict] = create_merged_dict(cur_val_dictable,
+                                                                  refine_val_dictable)
+                    else:
                         new_val = refine_kwargs[key]
                 else:
                     new_val = cur_val
@@ -85,19 +115,18 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
         refine_args = [init_args[0]] if len(init_args) >= 1 else []
         refine_args += args if args else init_args[1:]
 
-        return self.create_job_template(*refine_args, **refine_kwargs)
+        return self_as_job_template.create_job_template(*refine_args, **refine_kwargs)
 
-    def _revise(self):  # -> JobTemplateT:
+    def _revise(self) -> IsJobTemplate:
         job_template_cls = self._get_job_template_subcls_for_revise()
         job_template = job_template_cls.create_job_template(*self._get_init_args(),
                                                             **self._get_init_kwargs())
-        update_wrapper(job_template, self, updated=[])
         return job_template
 
     def _get_init_args(self) -> Tuple[object, ...]:
         return ()
 
-    def _get_init_kwargs(self) -> Dict[str, Any]:
+    def _get_init_kwargs(self) -> Dict[str, object]:
         kwarg_keys = list(self._mixin_init_kwarg_params_including_bases.keys())
         for key in kwarg_keys:
             attribute = getattr(self.__class__, key)
@@ -114,46 +143,35 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
 
         return {key: getattr(self, key) for key in kwarg_keys}
 
-    @classmethod
-    # @abstractmethod
-    def _get_job_template_subcls_for_revise(cls):  # -> Type[JobTemplateT]:
-        return JobTemplateMixin
-
-    @classmethod
-    # @abstractmethod
-    def _get_job_subcls_for_apply(cls):  # -> Type[JobT]:
-        return JobMixin
-
-    def _call_job_template(self, *args: object, **kwargs: object) -> object:
-        if self.in_flow_context:
-            return self.run(*args, **kwargs)
-        raise TypeError(f"'{self.__class__.__name__}' object is not callable")
-
-    def _call_job(self, *args: object, **kwargs: object) -> object:
-        pass
-
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, JobBase):
             return NotImplemented
         return self._get_init_args() == other._get_init_args() \
             and self._get_init_kwargs() == other._get_init_kwargs()
 
-    def _check_engine(self, engine_protocol: IsEngine):
+    @classmethod
+    def _get_job_template_subcls_for_revise(cls) -> Type[IsJobTemplate]:
+        return IsJobTemplate
+
+    @classmethod
+    def _get_job_subcls_for_apply(cls) -> Type[IsJob]:
+        return IsJob
+
+    def _call_job_template(self, *args: object, **kwargs: object) -> object:
+        self_as_job_template = cast(IsJobTemplate, self)
+
+        if self.in_flow_context:
+            return self_as_job_template.run(*args, **kwargs)
+
+        raise TypeError(f"'{self.__class__.__name__}' object is not callable")
+
+    def _call_job(self, *args: object, **kwargs: object) -> object:
+        pass
+
+    def _check_engine(self, engine_protocol: Type):
         if self.engine is None or not isinstance(self.engine, engine_protocol):
             raise RuntimeError(f'Engine "{self.engine}" does not support '
                                f'job runner protocol: {engine_protocol.__name__}')
-
-    @property
-    def config(self) -> Optional[IsJobConfig]:
-        return self.__class__.job_creator.config
-
-    @property
-    def engine(self) -> Optional[IsEngine]:
-        return self.__class__.engine
-
-    @property
-    def in_flow_context(self) -> bool:
-        return self.__class__.job_creator.nested_context_level > 0
 
 
 class JobTemplateMixin:
@@ -163,7 +181,7 @@ class JobTemplateMixin:
                             'of a JobBase subclass.')
 
     @classmethod
-    def create_job_template(cls, *args: object, **kwargs: object):  # -> JobTemplateT:
+    def create_job_template(cls: Type[IsJobBase], *args: object, **kwargs: object) -> IsJobTemplate:
         return cls._create_job_template(*args, **kwargs)
 
     def run(self, *args: object, **kwargs: object) -> object:
@@ -171,14 +189,19 @@ class JobTemplateMixin:
 
         return self.apply()(*args, **kwargs)
 
-    def apply(self):  # -> JobT:
-        return self._apply()
+    def apply(self) -> IsJob:
+        self_as_job_base = cast(IsJobBase, self)
+        job = self_as_job_base._apply()
+        update_wrapper(job, self, updated=[])
+        return job
 
-    def refine(self, *args: object, update: bool = True, **kwargs: object):  # -> JobTemplateT:
-        return self._refine(*args, update=update, **kwargs)
+    def refine(self, *args: Any, update: bool = True, **kwargs: object) -> IsJobTemplate:
+        self_as_job_base = cast(IsJobBase, self)
+        return self_as_job_base._refine(*args, update=update, **kwargs)
 
     def __call__(self, *args: object, **kwargs: object) -> object:
-        return self._call_job_template(*args, **kwargs)
+        self_as_job_base = cast(IsJobBase, self)
+        return self_as_job_base._call_job_template(*args, **kwargs)
 
 
 class JobMixin(DynamicMixinAcceptor):
@@ -192,29 +215,28 @@ class JobMixin(DynamicMixinAcceptor):
         ...
 
     @property
-    def time_of_cur_toplevel_flow_run(self) -> datetime:
-        return self.__class__.job_creator.time_of_cur_toplevel_nested_context_run
-
-    # def __new__(cls, *args: Any, **kwargs: Any):
-    #     super().__new__(cls, *args, **kwargs)
-    #     raise RuntimeError('JobMixin should only be instantiated using the "apply()" method of '
-    #                        'an instance of JobTemplateMixin (or one of its subclasses)')
-
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
+    def time_of_cur_toplevel_flow_run(self) -> Optional[datetime]:
+        self_as_job_base = cast(IsJobBase, self)
+        return self_as_job_base._job_creator.time_of_cur_toplevel_nested_context_run
 
     @classmethod
-    def create_job(cls, *args: object, **kwargs: object):
-        return cls._create_job(*args, **kwargs)
+    def create_job(cls, *args: object, **kwargs: object) -> IsJob:
+        cls_as_job_base = cast(IsJobBase, cls)
+        return cls_as_job_base._create_job(*args, **kwargs)
 
-    def revise(self):  # -> JobTemplateT:
-        return self._revise()
+    def revise(self) -> IsJobTemplate:
+        self_as_job_base = cast(IsJobBase, self)
+        job_template = self_as_job_base._revise()
+        update_wrapper(job_template, self, updated=[])
+        return job_template
 
     def __call__(self, *args: object, **kwargs: object) -> object:
+        self_as_job_base = cast(IsJobBase, self)
+
         try:
-            return self._call_job(*args, **kwargs)
+            return self_as_job_base._call_job(*args, **kwargs)
         except Exception as e:
-            self.log(e, level=logging.ERROR)
+            self_as_job_base.log(str(e), level=logging.ERROR)
             raise
 
 
@@ -222,5 +244,4 @@ class JobMixin(DynamicMixinAcceptor):
 #       e.g. 'TaskTemplate[[int], int]' instead of just 'TaskTemplate'
 
 JobBase.accept_mixin(NameJobBaseMixin)
-# JobBase.accept_mixin(LogMixin)
 JobMixin.accept_mixin(NameJobMixin)

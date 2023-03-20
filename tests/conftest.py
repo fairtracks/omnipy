@@ -58,7 +58,7 @@ def runtime(
 
     yield runtime
 
-    JobBaseMeta._job_creator = JobCreator()
+    JobBaseMeta._job_creator_obj = JobCreator()
 
 
 @pytest.fixture(scope='function')

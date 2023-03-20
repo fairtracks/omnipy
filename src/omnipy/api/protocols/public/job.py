@@ -1,71 +1,137 @@
 from __future__ import annotations
 
 from datetime import datetime
+from logging import INFO, Logger
 from types import MappingProxyType
 from typing import Any, Callable, Dict, Mapping, Optional, Protocol, Tuple, Type
 
 from omnipy.api.enums import PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.api.protocols.private import IsEngine, IsUniquelyNamedJob
 from omnipy.api.protocols.public.runtime import IsJobConfig, IsJobConfigHolder
-from omnipy.api.types import FuncJobTemplateT, GeneralDecorator, TaskTemplatesFlowTemplateT
+from omnipy.api.types import JobT, JobTemplateT
 
 
-class IsJob(IsUniquelyNamedJob, Protocol):
-    """"""
-    name: str
-    config: Optional[IsJobConfig]
-    in_flow_context: bool
-    time_of_cur_toplevel_flow_run: datetime
-
-    @classmethod
-    def create(cls, *init_args: object, **init_kwargs: object) -> 'IsJob':
+class CanLog(Protocol):
+    @property
+    def logger(self) -> Logger:
         ...
 
-    def revise(self) -> 'IsJobTemplate':
+    def log(self, log_msg: str, level: int = INFO, datetime_obj: Optional[datetime] = None):
         ...
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+
+class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol):
+    @property
+    def _job_creator(self) -> IsJobCreator:
+        ...
+
+    @property
+    def config(self) -> Optional[IsJobConfig]:
+        ...
+
+    @property
+    def engine(self) -> Optional[IsEngine]:
+        ...
+
+    @property
+    def in_flow_context(self) -> bool:
         ...
 
     def __eq__(self, other: object):
         ...
 
-
-class IsJobTemplate(Protocol):
-    """"""
-    config: Optional[IsJobConfig]
-    engine: Optional[IsEngine]
-    in_flow_context: bool
+    @classmethod
+    def _create_job_template(cls, *args: object, **kwargs: object) -> IsJobTemplate:
+        ...
 
     @classmethod
-    def create(cls, *init_args: object, **init_kwargs: object) -> 'IsJobTemplate':
+    def _create_job(cls, *args: object, **kwargs: object) -> IsJob:
+        ...
+
+    def _apply(self) -> IsJob:
+        ...
+
+    def _refine(self, *args: Any, update: bool = True, **kwargs: object) -> IsJobTemplate:
+        ...
+
+    def _revise(self) -> IsJobTemplate:
+        ...
+
+    def _call_job_template(self, *args: object, **kwargs: object) -> object:
+        ...
+
+    def _call_job(self, *args: object, **kwargs: object) -> object:
+        ...
+
+
+class IsJob(IsJobBase, Protocol):
+    """"""
+    @property
+    def time_of_cur_toplevel_flow_run(self) -> Optional[datetime]:
+        ...
+
+    @classmethod
+    def create_job(cls, *args: object, **kwargs: object) -> IsJob:
+        ...
+
+    def __call__(self, *args: object, **kwargs: object) -> object:
+        ...
+
+    def _apply_engine_decorator(self, engine: IsEngine) -> None:
+        ...
+
+
+class IsJobTemplate(IsJobBase, Protocol):
+    """"""
+    @classmethod
+    def create_job_template(cls, *args: object, **kwargs: object) -> IsJobTemplate:
         ...
 
     def run(self, *args: object, **kwargs: object) -> object:
         ...
 
-    def apply(self) -> IsJob:
-        ...
 
-    def refine(self, *args: object, update: bool = True, **kwargs: object) -> 'IsJobTemplate':
-        ...
-
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        ...
-
-
-class IsFuncJob(IsJob, Protocol):
+class IsFuncJobBase(IsJob, Protocol):
     """"""
-    param_signatures: MappingProxyType
-    return_type: Type[object]
-    iterate_over_data_files: bool
-    fixed_params: MappingProxyType[str, object]
-    param_key_map: MappingProxyType[str, str]
-    result_key: Optional[str]
-    persist_outputs: Optional[PersistOutputsOptions]
-    restore_outputs: Optional[RestoreOutputsOptions]
-    will_persist_outputs: PersistOutputsOptions
-    will_restore_outputs: RestoreOutputsOptions
+    @property
+    def param_signatures(self) -> MappingProxyType:
+        ...
+
+    @property
+    def return_type(self) -> Type[object]:
+        ...
+
+    @property
+    def iterate_over_data_files(self) -> bool:
+        ...
+
+    @property
+    def persist_outputs(self) -> Optional[PersistOutputsOptions]:
+        ...
+
+    @property
+    def restore_outputs(self) -> Optional[RestoreOutputsOptions]:
+        ...
+
+    @property
+    def will_persist_outputs(self) -> PersistOutputsOptions:
+        ...
+
+    @property
+    def will_restore_outputs(self) -> RestoreOutputsOptions:
+        ...
+
+    @property
+    def result_key(self) -> Optional[str]:
+        ...
+
+    @property
+    def fixed_params(self) -> MappingProxyType[str, object]:
+        ...
+
+    @property
+    def param_key_map(self) -> MappingProxyType[str, str]:
+        ...
 
     def has_coroutine_func(self) -> bool:
         ...
@@ -74,75 +140,79 @@ class IsFuncJob(IsJob, Protocol):
         ...
 
 
-class IsFuncJobTemplate(IsJobTemplate, Protocol):
+class IsFuncJob(IsFuncJobBase, Protocol[JobT]):
     """"""
-    name: str
-    unique_name: str
-    param_signatures: MappingProxyType
-    return_type: Type[object]
-    iterate_over_data_files: bool
-    fixed_params: MappingProxyType[str, object]
-    param_key_map: MappingProxyType[str, str]
-    result_key: Optional[str]
-    persist_outputs: Optional[PersistOutputsOptions]
-    restore_outputs: Optional[RestoreOutputsOptions]
-    will_persist_outputs: PersistOutputsOptions
-    will_restore_outputs: RestoreOutputsOptions
-
-    def apply(self) -> IsFuncJob:
+    def revise(self) -> JobT:
         ...
 
+
+class IsFuncJobTemplateCallable(Protocol[JobTemplateT]):
+    """"""
+    def __call__(
+        self,
+        name: Optional[str] = None,
+        iterate_over_data_files: bool = False,
+        persist_outputs: Optional[PersistOutputsOptions] = None,
+        restore_outputs: Optional[RestoreOutputsOptions] = None,
+        result_key: Optional[str] = None,
+        fixed_params: Optional[Mapping[str, object]] = None,
+        param_key_map: Optional[Mapping[str, str]] = None,
+        **kwargs: object,
+    ) -> Callable[[Callable], JobTemplateT]:
+        ...
+
+
+class IsFuncJobTemplate(IsJobTemplate, IsFuncJobBase, Protocol[JobTemplateT, JobT]):
+    """"""
     def refine(self,
+               *args: Any,
                update: bool = True,
                name: Optional[str] = None,
                iterate_over_data_files: bool = False,
-               fixed_params: Optional[Mapping[str, object]] = None,
-               param_key_map: Optional[Mapping[str, str]] = None,
-               result_key: Optional[str] = None,
                persist_outputs: Optional[PersistOutputsOptions] = None,
                restore_outputs: Optional[RestoreOutputsOptions] = None,
-               **kwargs: object) -> 'IsFuncJobTemplate':
+               result_key: Optional[str] = None,
+               fixed_params: Optional[Mapping[str, object]] = None,
+               param_key_map: Optional[Mapping[str, str]] = None,
+               **kwargs: object) -> JobTemplateT:
         ...
 
-    def regenerate_unique_name(self) -> None:
-        ...
-
-
-class IsTask(IsFuncJob, Protocol):
-    """"""
-    ...
-
-
-class IsTaskTemplate(IsFuncJobTemplate, Protocol):
-    """"""
-    def apply(self) -> IsTask:
+    def apply(self) -> JobT:
         ...
 
 
-class IsFlow(IsFuncJob, Protocol):
+class IsTaskTemplateArgsJobBase(IsFuncJobBase, Protocol):
     """"""
-    flow_context: IsNestedContext
-    time_of_last_run: datetime
-
-
-class IsFlowTemplate(IsFuncJobTemplate, Protocol):
-    """"""
-    def apply(self) -> IsFlow:
+    @property
+    def task_templates(self) -> Tuple[IsTaskTemplate, ...]:
         ...
 
 
-class IsTaskTemplatesFlow(IsFlow, Protocol):
+class IsTaskTemplateArgsJob(IsFuncJob[JobT], Protocol[JobT]):
     """"""
-    task_templates: Tuple[IsTaskTemplate, ...]
 
-    def _accept_call_func_decorator(self, call_func_decorator: GeneralDecorator) -> None:
+
+class IsTaskTemplatesFlowTemplateCallable(Protocol[JobTemplateT]):
+    """"""
+    def __call__(
+        self,
+        *task_templates: IsTaskTemplate,
+        name: Optional[str] = None,
+        iterate_over_data_files: bool = False,
+        persist_outputs: Optional[PersistOutputsOptions] = None,
+        restore_outputs: Optional[RestoreOutputsOptions] = None,
+        result_key: Optional[str] = None,
+        fixed_params: Optional[Mapping[str, object]] = None,
+        param_key_map: Optional[Mapping[str, str]] = None,
+        **kwargs: object,
+    ) -> Callable[[Callable], JobTemplateT]:
         ...
 
 
-class IsTaskTemplatesFlowTemplate(IsFuncJobTemplate, Protocol):
+class IsTaskTemplateArgsJobTemplate(IsFuncJobTemplate[JobTemplateT, JobT],
+                                    IsTaskTemplateArgsJobBase,
+                                    Protocol[JobTemplateT, JobT]):
     """"""
-    task_templates: Tuple[IsTaskTemplate, ...]
-
     def refine(self,
                *task_templates: IsTaskTemplate,
                update: bool = True,
@@ -153,74 +223,70 @@ class IsTaskTemplatesFlowTemplate(IsFuncJobTemplate, Protocol):
                result_key: Optional[str] = None,
                persist_outputs: Optional[PersistOutputsOptions] = None,
                restore_outputs: Optional[RestoreOutputsOptions] = None,
-               **kwargs: object) -> 'IsTaskTemplatesFlowTemplate':
+               **kwargs: object) -> JobTemplateT:
         ...
 
 
-class IsLinearFlow(IsTaskTemplatesFlow, Protocol):
+class IsTaskTemplate(IsFuncJobTemplate['IsTaskTemplate', 'IsTask'], Protocol):
     """"""
     ...
 
 
-class IsLinearFlowTemplate(IsLinearFlow, IsTaskTemplatesFlowTemplate, Protocol):
-    """"""
-    def apply(self) -> IsLinearFlow:
-        ...
-
-
-class IsDagFlow(IsTaskTemplatesFlow, Protocol):
+class IsTask(IsFuncJob[IsTaskTemplate], Protocol):
     """"""
     ...
 
 
-class IsDagFlowTemplate(IsDagFlow, IsTaskTemplatesFlowTemplate, Protocol):
+class IsFlow(Protocol):
     """"""
-    def apply(self) -> IsDagFlow:
+    @property
+    def flow_context(self) -> IsNestedContext:
+        ...
+
+    @property
+    def time_of_last_run(self) -> Optional[datetime]:
         ...
 
 
-class IsFuncFlow(IsFlow, Protocol):
+class IsFlowTemplate(Protocol):
     """"""
     ...
 
 
-class IsFuncFlowTemplate(IsFuncFlow, IsFlowTemplate, Protocol):
+class IsLinearFlowTemplate(IsTaskTemplateArgsJobTemplate['IsLinearFlowTemplate', 'IsLinearFlow'],
+                           IsFlowTemplate,
+                           Protocol):
     """"""
-    def apply(self) -> IsFuncFlow:
-        ...
+    ...
 
 
-class IsFuncJobTemplateCallable(Protocol[FuncJobTemplateT]):
+class IsLinearFlow(IsTaskTemplateArgsJob[IsLinearFlowTemplate], IsFlow, Protocol):
     """"""
-    def __call__(
-        self,
-        name: Optional[str] = None,
-        iterate_over_data_files: bool = False,
-        fixed_params: Optional[Mapping[str, object]] = None,
-        param_key_map: Optional[Mapping[str, str]] = None,
-        result_key: Optional[str] = None,
-        persist_outputs: Optional[PersistOutputsOptions] = None,
-        restore_outputs: Optional[RestoreOutputsOptions] = None,
-        **kwargs: object,
-    ) -> Callable[[Callable], FuncJobTemplateT]:
-        ...
+    ...
 
 
-class IsTaskTemplatesFlowTemplateCallable(Protocol[TaskTemplatesFlowTemplateT]):
+class IsDagFlowTemplate(IsTaskTemplateArgsJobTemplate['IsDagFlowTemplate', 'IsDagFlow'],
+                        IsFlowTemplate,
+                        Protocol):
     """"""
-    def __call__(
-        self,
-        *task_templates: 'TaskTemplate',
-        name: Optional[str] = None,
-        iterate_over_data_files: bool = False,
-        fixed_params: Optional[Mapping[str, object]] = None,
-        param_key_map: Optional[Mapping[str, str]] = None,
-        result_key: Optional[str] = None,
-        persist_outputs: Optional[PersistOutputsOptions] = None,
-        restore_outputs: Optional[RestoreOutputsOptions] = None,
-        **kwargs: object,
-    ) -> Callable[[Callable], TaskTemplatesFlowTemplateT]:
-        ...
+    ...
+
+
+class IsDagFlow(IsTaskTemplateArgsJob[IsDagFlowTemplate], IsFlow, Protocol):
+    """"""
+    ...
+
+
+class IsFuncFlowTemplate(IsFuncJobTemplate['IsFuncFlowTemplate', 'IsFuncFlow'],
+                         IsFlowTemplate,
+                         Protocol):
+    """"""
+    ...
+
+
+class IsFuncFlow(IsFuncJob[IsFuncFlowTemplate], Protocol):
+    """"""
+    ...
 
 
 class IsNestedContext(Protocol):
@@ -234,5 +300,10 @@ class IsNestedContext(Protocol):
 
 class IsJobCreator(IsNestedContext, IsJobConfigHolder, Protocol):
     """"""
-    nested_context_level: int
-    time_of_cur_toplevel_nested_context_run: datetime
+    @property
+    def nested_context_level(self) -> int:
+        ...
+
+    @property
+    def time_of_cur_toplevel_nested_context_run(self) -> Optional[datetime]:
+        ...

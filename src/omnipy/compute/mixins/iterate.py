@@ -1,6 +1,8 @@
 from inspect import Parameter, signature
 from typing import Callable, cast, Type
 
+from omnipy.api.protocols.private import IsPlainFuncArgJobBase
+from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.mixin_types import (InputDatasetT,
                                                InputTypeT,
                                                IsIterateInnerCallable,
@@ -25,8 +27,10 @@ def _check_job_func_parameters(job_func: Callable) -> None:
 
 
 def _create_dataset_cls(data_file_type: InputTypeT) -> Type[InputDatasetT]:
-    return Dataset[data_file_type] if issubclass(data_file_type, Model) \
-        else Dataset[Model[data_file_type]]
+    if issubclass(data_file_type, Model):
+        return Dataset[data_file_type]  # type: ignore
+    else:
+        return Dataset[Model[data_file_type]]  # type: ignore
 
 
 def _generate_new_signature(job_func: Callable):
@@ -49,9 +53,10 @@ def _generate_new_signature(job_func: Callable):
 
 
 class IterateFuncJobBaseMixin:
-    # Requires FuncSignatureJobBaseMixin
-
     def __init__(self, *, iterate_over_data_files: bool = False):
+        self_as_plain_func_arg_job_base = cast(IsPlainFuncArgJobBase, self)
+        self_as_signature_func_job_base_mixin = cast(SignatureFuncJobBaseMixin, self)
+
         self._iterate_over_data_files = iterate_over_data_files
 
         if not isinstance(self.iterate_over_data_files, bool):
@@ -60,7 +65,7 @@ class IterateFuncJobBaseMixin:
                 f'not "{iterate_over_data_files}"')
 
         if iterate_over_data_files:
-            job_func = self._job_func
+            job_func = self_as_plain_func_arg_job_base._job_func
             if job_func.__name__ != '_omnipy_iterate_func':
 
                 def _iterate_over_data_files_decorator(call_func: Callable):
@@ -84,10 +89,11 @@ class IterateFuncJobBaseMixin:
                     return _omnipy_iterate_func
 
                 _check_job_func_parameters(job_func)
-                self._accept_call_func_decorator(_iterate_over_data_files_decorator)
+                self_as_plain_func_arg_job_base._accept_call_func_decorator(
+                    _iterate_over_data_files_decorator)
 
                 new_signature = _generate_new_signature(job_func)
-                self._update_func_signature(new_signature)
+                self_as_signature_func_job_base_mixin._update_func_signature(new_signature)
 
     @property
     def iterate_over_data_files(self) -> bool:

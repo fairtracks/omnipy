@@ -1,26 +1,12 @@
 from functools import update_wrapper
 from types import MethodWrapperType
-from typing import Callable, cast, Protocol, runtime_checkable, Type, TypeVar
+from typing import Callable, cast, Type
 
-# Types
-
-DecoratorClassT = TypeVar('DecoratorClassT', covariant=True)
-
-
-@runtime_checkable
-class CallableParamAfterSelf(Protocol):
-    """"""
-    def __call__(self, callable_arg: Callable, /, *args: object, **kwargs: object) -> None:
-        ...
+from omnipy.api.protocols.private import IsCallableClass, IsCallableParamAfterSelf
+from omnipy.api.types import DecoratorClassT
 
 
-@runtime_checkable
-class CallableClass(Protocol[DecoratorClassT]):
-    def __call__(self, *args: object, **kwargs: object) -> Callable[[Callable], DecoratorClassT]:
-        ...
-
-
-def callable_decorator_cls(cls: Type[DecoratorClassT]) -> CallableClass[DecoratorClassT]:
+def callable_decorator_cls(cls: Type[DecoratorClassT]) -> IsCallableClass[DecoratorClassT]:
     """
     "Meta-decorator" that allows any class to function as a decorator for a callable.
 
@@ -77,7 +63,8 @@ def callable_decorator_cls(cls: Type[DecoratorClassT]) -> CallableClass[Decorato
             obj = _wrapped_new(cls, *args, **kwargs)
             # setattr(cls, '__new__', _wrapped_new)
 
-        _wrapped_init: CallableParamAfterSelf = cast(CallableParamAfterSelf, obj.__class__.__init__)
+        _wrapped_init: IsCallableParamAfterSelf = cast(IsCallableParamAfterSelf,
+                                                       obj.__class__.__init__)
 
         # Wrapper method that replaces the __init__ method of the decorated class
         def _init_wrapper(self, *args: object, **kwargs: object) -> None:
@@ -112,4 +99,4 @@ def callable_decorator_cls(cls: Type[DecoratorClassT]) -> CallableClass[Decorato
 
     setattr(cls, '__new__', _new_wrapper)
 
-    return cast(CallableClass[DecoratorClassT], cls)
+    return cast(IsCallableClass[DecoratorClassT], cls)

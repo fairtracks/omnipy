@@ -112,8 +112,13 @@ class IsPrefectEngineConfig(IsEngineConfig, Protocol):
 
 class IsJobConfigHolder(Protocol):
     """"""
-    engine: Optional[IsEngine]
-    config: Optional[IsJobConfig]
+    @property
+    def config(self) -> Optional[IsJobConfig]:
+        ...
+
+    @property
+    def engine(self) -> Optional[IsEngine]:
+        ...
 
     def set_config(self, config: IsJobConfig) -> None:
         ...

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from omnipy.api.protocols.public.job import IsNestedContext
 
@@ -22,5 +23,5 @@ class FlowContextJobMixin:
         return FlowContext()
 
     @property
-    def time_of_last_run(self) -> datetime:
+    def time_of_last_run(self) -> Optional[datetime]:
         return self._time_of_last_run

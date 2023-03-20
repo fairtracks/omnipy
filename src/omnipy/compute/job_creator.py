@@ -4,18 +4,19 @@ from abc import ABCMeta
 from datetime import datetime
 from typing import Optional
 
-from omnipy.api.protocols.public.engine import IsTaskRunnerEngine
-from omnipy.api.protocols.public.runtime import IsJobConfig, IsJobConfigHolder
+from omnipy.api.protocols.private import IsEngine
+from omnipy.api.protocols.public.job import IsJobCreator
+from omnipy.api.protocols.public.runtime import IsJobConfig
 
 
 class JobCreator:
     def __init__(self) -> None:
-        self._engine: Optional[IsTaskRunnerEngine] = None
+        self._engine: Optional[IsEngine] = None
         self._config: Optional[IsJobConfig] = None
         self._nested_context_level: int = 0
         self._time_of_cur_toplevel_nested_context_run: Optional[datetime] = None
 
-    def set_engine(self, engine: IsTaskRunnerEngine) -> None:
+    def set_engine(self, engine: IsEngine) -> None:
         self._engine = engine
 
     def set_config(self, config: IsJobConfig) -> None:
@@ -34,7 +35,7 @@ class JobCreator:
             self._time_of_cur_toplevel_nested_context_run = None
 
     @property
-    def engine(self) -> Optional[IsTaskRunnerEngine]:
+    def engine(self) -> Optional[IsEngine]:
         return self._engine
 
     @property
@@ -46,25 +47,17 @@ class JobCreator:
         return self._nested_context_level
 
     @property
-    def time_of_cur_toplevel_nested_context_run(self) -> datetime:
+    def time_of_cur_toplevel_nested_context_run(self) -> Optional[datetime]:
         return self._time_of_cur_toplevel_nested_context_run
 
 
 class JobBaseMeta(ABCMeta):
     """"""
-    _job_creator: IsJobConfigHolder = JobCreator()
+    _job_creator_obj = JobCreator()
 
     @property
-    def job_creator(self) -> IsJobConfigHolder:
-        return self._job_creator
-
-    @property
-    def config(self) -> Optional[IsJobConfig]:
-        return self.job_creator.config
-
-    @property
-    def engine(self) -> Optional[IsTaskRunnerEngine]:
-        return self.job_creator.engine
+    def job_creator(self) -> IsJobCreator:
+        return self._job_creator_obj
 
     @property
     def nested_context_level(self) -> int:

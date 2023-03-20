@@ -2,11 +2,16 @@ from datetime import datetime
 import os
 from pathlib import Path
 import tarfile
-from typing import Optional
+from typing import cast, Optional, Type
 
 from omnipy.api.enums import ConfigPersistOutputsOptions as ConfigPersistOpts
 from omnipy.api.enums import ConfigRestoreOutputsOptions as ConfigRestoreOpts
 from omnipy.api.enums import PersistOutputsOptions, RestoreOutputsOptions
+from omnipy.api.protocols.public.job import IsJobBase
+from omnipy.api.protocols.public.runtime import IsJobConfig
+from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
+from omnipy.compute.mixins.name import NameJobBaseMixin
+from omnipy.config.job import JobConfig
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import SerializerRegistry
@@ -49,7 +54,25 @@ class SerializerFuncJobBaseMixin:
 
     @property
     def _has_job_config(self) -> bool:
-        return self.config is not None
+        self_as_job_base = cast(IsJobBase, self)
+        return self_as_job_base.config is not None
+
+    @property
+    def _job_config(self) -> IsJobConfig:
+        self_as_job_base = cast(IsJobBase, self)
+        if self_as_job_base.config is None:
+            return JobConfig()
+        else:
+            return self_as_job_base.config
+
+    def _log(self, msg: str) -> None:
+        self_as_job_base = cast(IsJobBase, self)
+        self_as_job_base.log(msg)
+
+    @property
+    def _return_type(self) -> Type[object]:
+        self_as_signature_func_job_base_mixin = cast(SignatureFuncJobBaseMixin, self)
+        return self_as_signature_func_job_base_mixin.return_type
 
     @property
     def persist_outputs(self) -> Optional[PersistOutputsOptions]:
@@ -69,7 +92,7 @@ class SerializerFuncJobBaseMixin:
             from omnipy.compute.flow import FlowBase
             from omnipy.compute.task import TaskBase
 
-            config_persist_opt = self.config.persist_outputs
+            config_persist_opt = self._job_config.persist_outputs
 
             if config_persist_opt == ConfigPersistOpts.ENABLE_FLOW_OUTPUTS:
                 return PersistOpts.ENABLED if isinstance(self, FlowBase) else PersistOpts.DISABLED
@@ -87,7 +110,7 @@ class SerializerFuncJobBaseMixin:
             return self._restore_outputs if self._restore_outputs is not None \
                     else RestoreOpts.DISABLED
         else:
-            config_restore_opt = self.config.restore_outputs
+            config_restore_opt = self._job_config.restore_outputs
 
             if config_restore_opt == ConfigRestoreOpts.AUTO_ENABLE_IGNORE_PARAMS:
                 return RestoreOpts.AUTO_ENABLE_IGNORE_PARAMS
@@ -95,6 +118,8 @@ class SerializerFuncJobBaseMixin:
             return RestoreOpts.DISABLED
 
     def _call_job(self, *args: object, **kwargs: object) -> object:
+        self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
+
         if self.will_restore_outputs in [
                 RestoreOpts.AUTO_ENABLE_IGNORE_PARAMS, RestoreOpts.FORCE_ENABLE_IGNORE_PARAMS
         ]:
@@ -104,20 +129,24 @@ class SerializerFuncJobBaseMixin:
                 if self.will_restore_outputs is RestoreOpts.FORCE_ENABLE_IGNORE_PARAMS:
                     raise
 
-        results = super()._call_job(*args, **kwargs)
+        super_as_job_base = cast(IsJobBase, super())
+        results = super_as_job_base._call_job(*args, **kwargs)
 
         if self.will_persist_outputs is PersistOpts.ENABLED:
             if isinstance(results, Dataset):
                 self._serialize_and_persist_outputs(results)
             else:
-                self.log(f'Results of {self.unique_name} is not a Dataset and cannot '
-                         f'be automatically serialized and persisted!')
+                self._log(
+                    f'Results of {self_as_name_job_base_mixin.unique_name} is not a Dataset and cannot '
+                    f'be automatically serialized and persisted!')
 
         return results
 
     def _serialize_and_persist_outputs(self, results: Dataset):
+        self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
+
         datetime_str = self._generate_datetime_str()
-        output_path = Path(self.config.persist_data_dir_path).joinpath(datetime_str)
+        output_path = Path(self._job_config.persist_data_dir_path).joinpath(datetime_str)
 
         if not os.path.exists(output_path):
             os.makedirs(output_path)
@@ -131,10 +160,11 @@ class SerializerFuncJobBaseMixin:
             self._serializer_registry.auto_detect_tar_file_serializer(results)
 
         if serializer is None:
-            self.log(f'Unable to find a serializer for results of job "{self.name}", '
-                     f'with data type "{type(results)}". Will abort persisting results...')
+            self._log(
+                f'Unable to find a serializer for results of job "{self_as_name_job_base_mixin.name}", '
+                f'with data type "{type(results)}". Will abort persisting results...')
         else:
-            self.log(f'Writing dataset as a gzipped tarpack to "{os.path.abspath(file_path)}"')
+            self._log(f'Writing dataset as a gzipped tarpack to "{os.path.abspath(file_path)}"')
 
             with open(file_path, 'wb') as tarfile:
                 tarfile.write(serializer.serialize(parsed_dataset))
@@ -146,7 +176,7 @@ class SerializerFuncJobBaseMixin:
         if self.time_of_cur_toplevel_flow_run:
             run_time = self.time_of_cur_toplevel_flow_run
         else:
-            if hasattr(self, 'time_of_last_run'):
+            if hasattr(self, 'time_of_last_run') and self.time_of_last_run:
                 run_time = self.time_of_last_run
             else:
                 run_time = datetime.now()
@@ -155,7 +185,7 @@ class SerializerFuncJobBaseMixin:
 
     # TODO: Refactor
     def _deserialize_and_restore_outputs(self) -> Dataset:
-        output_path = Path(self.config.persist_data_dir_path)
+        output_path = Path(self._job_config.persist_data_dir_path)
         if os.path.exists(output_path):
             sorted_date_dirs = list(sorted(os.listdir(output_path)))
             if len(sorted_date_dirs) > 0:
@@ -168,30 +198,31 @@ class SerializerFuncJobBaseMixin:
                         with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
                             file_suffixes = set(fn.split('.')[-1] for fn in tarfile_obj.getnames())
                         if len(file_suffixes) != 1:
-                            self.log(f'Tar archive contains files with different or '
-                                     f'no file suffixes: {file_suffixes}. Serializer '
-                                     f'cannot be uniquely determined. Aborting '
-                                     f'restore.')
+                            self._log(f'Tar archive contains files with different or '
+                                      f'no file suffixes: {file_suffixes}. Serializer '
+                                      f'cannot be uniquely determined. Aborting '
+                                      f'restore.')
                         else:
                             file_suffix = file_suffixes.pop()
                             serializers = self._serializer_registry.\
                                 detect_tar_file_serializers_from_file_suffix(file_suffix)
                             if len(serializers) == 0:
-                                self.log(f'No serializer for file suffix "{file_suffix}" can be'
-                                         f'determined. Aborting restore.')
+                                self._log(f'No serializer for file suffix "{file_suffix}" can be'
+                                          f'determined. Aborting restore.')
                             else:
-                                self.log(f'Reading dataset from a gzipped tarpack at'
-                                         f' "{os.path.abspath(tar_file_path)}"')
+                                self._log(f'Reading dataset from a gzipped tarpack at'
+                                          f' "{os.path.abspath(tar_file_path)}"')
 
                                 serializer = serializers[0]
                                 with open(tar_file_path, 'rb') as tarfile_binary:
                                     dataset = serializer.deserialize(tarfile_binary.read())
-                                if dataset.get_model_class() is \
-                                        self.return_type().get_model_class():
+                                return_dataset_cls = cast(Type[Dataset], self._return_type)
+                                if return_dataset_cls().get_model_class(
+                                ) is dataset.get_model_class():
                                     return dataset
                                 else:
                                     try:
-                                        new_dataset = self.return_type()
+                                        new_dataset = return_dataset_cls()
                                         if new_dataset.get_model_class() is Model[str]:
                                             new_dataset.from_data(dataset.to_json())
                                         else:

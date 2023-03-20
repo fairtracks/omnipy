@@ -24,7 +24,7 @@ def mock_job_classes() -> Tuple[Type[JobTemplateMixin], Type[JobMixin]]:
 @pytest.fixture(scope='function')
 def teardown_reset_job_creator() -> None:
     yield None
-    JobBaseMeta._job_creator = JobCreator()
+    JobBaseMeta._job_creator_obj = JobCreator()
 
 
 @pytest.fixture(scope='function')
