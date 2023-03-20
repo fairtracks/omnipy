@@ -4,7 +4,7 @@ from types import MappingProxyType
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union
 
 from omnipy.api.protocols.private import IsEngine, IsEngineConfig, IsRunStateRegistry
-from omnipy.api.protocols.public.job import IsDagFlow, IsFuncFlow, IsJob, IsLinearFlow, IsTask
+from omnipy.api.protocols.public.job import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.mixins.flow_context import FlowContextJobMixin
@@ -18,8 +18,8 @@ class MockJobTemplateSubclass(JobTemplateMixin, JobBase):
         return MockJobSubclass
 
     @classmethod
-    def _apply_engine_decorator(cls, job: IsJob) -> IsJob:
-        return job
+    def _apply_engine_decorator(cls, engine: IsEngine) -> None:
+        ...
 
 
 class MockJobSubclass(JobMixin, JobBase):
@@ -45,8 +45,8 @@ class MockFlowTemplateSubclass(JobTemplateMixin, JobBase):
         return MockFlowSubclass
 
     @classmethod
-    def _apply_engine_decorator(cls, job: IsJob) -> IsJob:
-        return job
+    def _apply_engine_decorator(cls, engine: IsEngine) -> None:
+        ...
 
 
 class MockFlowSubclass(JobMixin, JobBase):
@@ -190,8 +190,8 @@ class PublicPropertyErrorsMockJobTemplate(JobTemplateMixin, JobBase):
         return PublicPropertyErrorsMockJob
 
     @classmethod
-    def _apply_engine_decorator(cls, job: IsJob) -> IsJob:
-        return job
+    def _apply_engine_decorator(cls, engine: IsEngine) -> None:
+        ...
 
 
 class PublicPropertyErrorsMockJob(JobMixin, JobBase):
@@ -303,8 +303,9 @@ class MockTaskTemplateAssertSameTimeOfCurFlowRun(JobTemplateMixin, FuncArgJobBas
     def _get_job_subcls_for_apply(cls) -> Type['MockTaskAssertSameTimeOfCurFlowRun']:
         return MockTaskAssertSameTimeOfCurFlowRun
 
-    def _apply_engine_decorator(self, job: IsJob) -> IsJob:
-        return job
+    @classmethod
+    def _apply_engine_decorator(cls, engine: IsEngine) -> None:
+        ...
 
 
 class MockTaskAssertSameTimeOfCurFlowRun(JobMixin, FuncArgJobBase):

@@ -4,6 +4,7 @@ from typing import Annotated, NamedTuple, Optional, Tuple, Type, Union
 import pytest
 
 from omnipy.api.exceptions import JobStateException
+from omnipy.api.protocols.public.job import IsJobBase
 from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.job_creator import JobCreator
 
@@ -208,27 +209,34 @@ def _assert_prop_getattr_all(mock_job_classes: MockJobClasses,
 
 
 def _assert_prop_getattr_job_subcls(job_cls: Type,
-                                    job_obj: Optional[JobBase],
+                                    job_obj: Optional[IsJobBase],
                                     property: str,
                                     in_job_obj: bool,
                                     at_obj_level: bool,
                                     val: object):
 
     assert getattr(job_cls.job_creator, property) is val
-    _assert_prop_getattr(job_cls, in_job_obj, property, val)
+    _assert_prop_getattr_cls(job_cls, in_job_obj, property, val)
 
     if job_obj:
         assert getattr(job_obj.__class__.job_creator, property) is val
         if at_obj_level:
-            _assert_prop_getattr(job_obj, in_job_obj, property, val)
-            _assert_prop_getattr(job_obj.__class__, in_job_obj, property, val)
+            _assert_prop_getattr_job(job_obj, in_job_obj, property, val)
+            _assert_prop_getattr_cls(job_obj.__class__, in_job_obj, property, val)
 
 
-def _assert_prop_getattr(job_cls_or_obj, in_job_obj, property, val):
+def _assert_prop_getattr_cls(job_cls, in_job_obj, property, val):
     if in_job_obj:
-        assert getattr(job_cls_or_obj, property) is val
+        assert hasattr(job_cls, property)
     else:
-        assert not hasattr(job_cls_or_obj, property)
+        assert not hasattr(job_cls, property)
+
+
+def _assert_prop_getattr_job(job_obj, in_job_obj, property, val):
+    if in_job_obj:
+        assert getattr(job_obj, property) is val
+    else:
+        assert not hasattr(job_obj, property)
 
 
 def test_equal_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
@@ -292,7 +300,7 @@ def test_subclass_tmpl():
     _assert_immutable_command_mock_job_properties(cmd_tmpl)
 
 
-def test_subclass_apply():
+def test_subclass_apply(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]):
     cmd_tmpl = CommandMockJobTemplate(
         'erase', uppercase=True, params={'what': 'all'})(mock_cmd_func,)
     assert isinstance(cmd_tmpl, CommandMockJobTemplate)

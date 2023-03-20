@@ -22,7 +22,7 @@ class MockClass:
         self.args = args
         self.kwargs = kwargs
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: object, **kwargs: object) -> Dict:
         return dict(call_args=args, call_kwargs=kwargs)
 
 
@@ -207,7 +207,7 @@ def test_fail_decorator_as_function_args_and_kwargs_no_func() -> None:
     assert type(my_func) == MockClass
 
     with pytest.raises(TypeError):
-        my_func()  # type: ignore # noqa
+        my_func()
     with pytest.raises(AttributeError):
         assert my_func.args == ()
     with pytest.raises(AttributeError):

@@ -1,4 +1,3 @@
-from inspect import Parameter
 from typing import Annotated
 
 import pytest

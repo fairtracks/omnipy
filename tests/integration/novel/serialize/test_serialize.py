@@ -49,7 +49,6 @@ def test_properties_persist_outputs_enable_disable(
 ) -> None:
 
     runtime.config.job.persist_outputs = ConfigPersistOutputsOptions.ENABLE_FLOW_OUTPUTS
-    assert TaskTemplate.config.persist_outputs == ConfigPersistOutputsOptions.ENABLE_FLOW_OUTPUTS
 
     for task_obj in case_task_tmpl, case_task_tmpl.apply():
         assert task_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG

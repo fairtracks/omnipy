@@ -3,7 +3,7 @@ from typing import Annotated, Tuple, Type
 import pytest
 
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
-from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
+from omnipy.compute.job import JobMixin, JobTemplateMixin
 from omnipy.compute.task import TaskTemplate
 
 from ..cases.raw.functions import power_m1_func

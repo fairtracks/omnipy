@@ -112,7 +112,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if not self.__doc__:
             self._set_standard_field_description()
 
-    def get_model_class(self) -> ModelT:
+    def get_model_class(self) -> Type[Model]:
         """
         Returns the concrete Model class used for all data files in the dataset, e.g.:
         `Model[List[int]]`
