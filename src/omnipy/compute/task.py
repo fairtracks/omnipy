@@ -15,8 +15,8 @@ from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
 
 def task_template_callable_decorator_cls(
-        cls: Type['TaskTemplate']) -> IsFuncJobTemplateCallable['IsTaskTemplate']:
-    return cast(IsFuncJobTemplateCallable['IsTaskTemplate'], callable_decorator_cls(cls))
+        cls: Type[TaskTemplate]) -> IsFuncJobTemplateCallable[IsTaskTemplate]:
+    return cast(IsFuncJobTemplateCallable[IsTaskTemplate], callable_decorator_cls(cls))
 
 
 class TaskBase:

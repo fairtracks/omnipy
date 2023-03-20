@@ -27,8 +27,8 @@ class FlowBase:
 
 def linear_flow_template_callable_decorator_cls(
         cls: Type['LinearFlowTemplate']
-) -> IsTaskTemplatesFlowTemplateCallable['IsLinearFlowTemplate']:
-    return cast(IsTaskTemplatesFlowTemplateCallable['IsLinearFlowTemplate'],
+) -> IsTaskTemplatesFlowTemplateCallable[IsLinearFlowTemplate]:
+    return cast(IsTaskTemplatesFlowTemplateCallable[IsLinearFlowTemplate],
                 callable_decorator_cls(cls))
 
 
@@ -52,9 +52,8 @@ class LinearFlow(JobMixin, FlowBase, TaskTemplateArgsJobBase):
 
 
 def dag_flow_template_callable_decorator_cls(
-        cls: Type['DagFlowTemplate']) -> IsTaskTemplatesFlowTemplateCallable['IsDagFlowTemplate']:
-    return cast(IsTaskTemplatesFlowTemplateCallable['IsDagFlowTemplate'],
-                callable_decorator_cls(cls))
+        cls: Type['DagFlowTemplate']) -> IsTaskTemplatesFlowTemplateCallable[IsDagFlowTemplate]:
+    return cast(IsTaskTemplatesFlowTemplateCallable[IsDagFlowTemplate], callable_decorator_cls(cls))
 
 
 @dag_flow_template_callable_decorator_cls
@@ -77,8 +76,8 @@ class DagFlow(JobMixin, FlowBase, TaskTemplateArgsJobBase):
 
 
 def func_flow_template_callable_decorator_cls(
-        cls: Type['FuncFlowTemplate']) -> IsFuncJobTemplateCallable['IsFuncFlowTemplate']:
-    return cast(IsFuncJobTemplateCallable['IsFuncFlowTemplate'], callable_decorator_cls(cls))
+        cls: Type['FuncFlowTemplate']) -> IsFuncJobTemplateCallable[IsFuncFlowTemplate]:
+    return cast(IsFuncJobTemplateCallable[IsFuncFlowTemplate], callable_decorator_cls(cls))
 
 
 @func_flow_template_callable_decorator_cls
