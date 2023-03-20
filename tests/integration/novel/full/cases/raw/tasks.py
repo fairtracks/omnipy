@@ -1,30 +1,34 @@
 from typing import Dict
 
 from omnipy.compute.task import TaskTemplate
+from omnipy.compute.typing import mypy_fix_task_template
 from omnipy.data.dataset import Dataset, MultiModelDataset
 
 from ...helpers.models import GeneralTable, record_schema_factory, RecordSchemaDef, TableTemplate
 
-# from .validators import first_dataset_keys_in_all_datasets
 
-
+@mypy_fix_task_template
 @TaskTemplate
 def uppercase(text: str) -> str:
     return text.upper()
 
 
+@mypy_fix_task_template
 @TaskTemplate
 def square_root(number: int) -> Dict[str, float]:
     return {'neg_root': -number**0.5, 'pos_root': number**0.5}
 
 
+@mypy_fix_task_template
 @TaskTemplate
 def merge_key_value_into_str(key: object, val: object) -> str:
     return '{}: {}'.format(key, val)
 
 
 # TODO: Implement explicit serializer support (if needed)
-# @TaskTemplate(serializer=PythonSerializer)
+
+
+@mypy_fix_task_template
 @TaskTemplate()
 def extract_record_schema_def(table: GeneralTable) -> RecordSchemaDef:
     record_model = {}
@@ -39,7 +43,8 @@ def extract_record_schema_def(table: GeneralTable) -> RecordSchemaDef:
 
 
 # TODO: Implement support for extra validators
-# @TaskTemplate(serializer=CsvSerializer, extra_validators=(first_dataset_keys_in_all_datasets,))
+# @TaskTemplate(extra_validators=(first_dataset_keys_in_all_datasets,))
+@mypy_fix_task_template
 @TaskTemplate()
 def apply_models_to_dataset(
         dataset: Dataset[GeneralTable],

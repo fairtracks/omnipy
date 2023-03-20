@@ -2,9 +2,11 @@ from copy import deepcopy
 from typing import Dict, List
 
 from omnipy.compute.task import TaskTemplate
+from omnipy.compute.typing import mypy_fix_task_template
 from omnipy.modules.json.datasets import JsonListOfDictsOfAnyDataset
 
 
+@mypy_fix_task_template
 @TaskTemplate()
 def remove_columns(json_dataset: JsonListOfDictsOfAnyDataset,
                    column_keys_for_data_items: Dict[str, List[str]]) -> JsonListOfDictsOfAnyDataset:
@@ -21,6 +23,7 @@ def remove_columns(json_dataset: JsonListOfDictsOfAnyDataset,
     return JsonListOfDictsOfAnyDataset(json_dataset.to_data())
 
 
+# @mypy_fix_task_template
 # @TaskTemplate()
 # def convert_to_1nf(input_dataset: Dataset[TableOfStringsAndLists]) -> Dataset[TableOfStrings]:
 #     out_dataset = Dataset[TableOfStrings]()

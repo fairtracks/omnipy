@@ -10,6 +10,7 @@ from omnipy.compute.flow import (DagFlow,
                                  LinearFlow,
                                  LinearFlowTemplate)
 from omnipy.compute.task import Task, TaskTemplate
+from omnipy.compute.typing import mypy_fix_func_flow_template, mypy_fix_task_template
 
 from .helpers.mocks import MockLocalRunner
 
@@ -100,6 +101,7 @@ def test_fail_task_template_decorator_with_func_argument() -> None:
         def myfunc(a: Callable) -> Callable:
             return a
 
+        @mypy_fix_task_template
         @TaskTemplate(myfunc)
         def plus_one(number: int) -> int:
             return number + 1
@@ -120,6 +122,7 @@ def test_fail_func_flow_template_decorator_with_func_argument(
         def myfunc(a: Callable) -> Callable:
             return a
 
+        @mypy_fix_func_flow_template
         @FuncFlowTemplate(myfunc)
         def plus_one(number: int) -> int:
             return plus_one_template(number)

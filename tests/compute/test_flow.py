@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Dict, Iterable, Tuple, Type, Union
+from typing import Annotated, cast, Dict, Iterable, Tuple, Type, Union
 
 import pytest
 import pytest_cases as pc
@@ -9,6 +9,10 @@ from omnipy.api.protocols.public.job import IsFlowTemplate
 from omnipy.compute.flow import DagFlowTemplate, FuncFlow, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.task import TaskTemplate
+from omnipy.compute.typing import (mypy_fix_dag_flow_template,
+                                   mypy_fix_func_flow_template,
+                                   mypy_fix_linear_flow_template,
+                                   mypy_fix_task_template)
 
 from .cases.flows import FlowCase
 from .cases.raw.functions import data_import_func, empty_dict_func, format_to_string_func
@@ -241,10 +245,12 @@ def test_flow_run_all_flow_classes(mock_local_runner: Annotated[MockLocalRunner,
 
 def test_linear_flow_only_first_positional(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @mypy_fix_task_template
     @TaskTemplate
     def task_tmpl() -> Tuple[int]:
         return 42, 42
 
+    @mypy_fix_task_template
     @TaskTemplate
     def my_formula_tmpl(number: Union[int, Tuple[int, ...]], plus_number: int = 0) -> int:
         number = sum(number) if isinstance(number, Iterable) else number
@@ -260,20 +266,23 @@ def test_linear_flow_only_first_positional(
 
 def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @mypy_fix_task_template
     @TaskTemplate
     def task_tmpl() -> int:
         return 42
 
+    @mypy_fix_task_template
     @TaskTemplate
     def double_tmpl(number: int) -> int:
         return number * 2
 
+    @mypy_fix_dag_flow_template
     @DagFlowTemplate(
         task_tmpl.refine(result_key='number'),
         task_tmpl.refine(result_key='bumber'),
         task_tmpl,
         double_tmpl)
-    def dag_flow_tmpl() -> int:
+    def dag_flow_tmpl() -> int:  # type: ignore
         ...
 
     dag_flow = dag_flow_tmpl.apply()
@@ -282,26 +291,35 @@ def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
 
 def test_dynamic_dag_flow_by_returned_dict(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @mypy_fix_task_template
     @TaskTemplate
     def task_tmpl() -> Dict[str, int]:
         return {'number': 42}
 
+    @mypy_fix_task_template
     @TaskTemplate
     def double_tmpl(number: int) -> int:
         return number * 2
 
+    @mypy_fix_dag_flow_template
     @DagFlowTemplate(task_tmpl, double_tmpl)
-    def dag_flow_tmpl() -> int:
+    def dag_flow_tmpl() -> int:  # type: ignore
         ...
 
     dag_flow = dag_flow_tmpl.apply()
     assert dag_flow() == 84
 
 
+def mypy_fix_mock_task_template_assert_same_time(
+        mock_task_template_assert_same_time: object) -> MockTaskTemplateAssertSameTimeOfCurFlowRun:
+    return cast(MockTaskTemplateAssertSameTimeOfCurFlowRun, mock_task_template_assert_same_time)
+
+
 def test_time_of_multi_level_flow_run_all_flow_classes(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
 
     # TaskTemplate
+    @mypy_fix_mock_task_template_assert_same_time
     @MockTaskTemplateAssertSameTimeOfCurFlowRun()
     def task_tmpl() -> int:
         return 42
@@ -312,29 +330,33 @@ def test_time_of_multi_level_flow_run_all_flow_classes(
     task_tmpl.reset_persisted_time_of_cur_toplevel_flow_run()
 
     # LinearFlowTemplate
+    @mypy_fix_mock_task_template_assert_same_time
     @MockTaskTemplateAssertSameTimeOfCurFlowRun()
     def plus_one_tmpl(number: int) -> int:
         return number + 1
 
+    @mypy_fix_linear_flow_template
     @LinearFlowTemplate(task_tmpl, plus_one_tmpl)
-    def linear_flow_tmpl() -> int:
+    def linear_flow_tmpl() -> int:  # type: ignore
         ...
 
     _assert_diff_time_of_two_flow_runs(
         linear_flow_tmpl, assert_result=43, assert_task_tmpl=task_tmpl)
 
     # DagFlowTemplate
+    @mypy_fix_mock_task_template_assert_same_time
     @MockTaskTemplateAssertSameTimeOfCurFlowRun()
     def double_tmpl(number: int) -> int:
         return number * 2
 
+    @mypy_fix_dag_flow_template
     @DagFlowTemplate(linear_flow_tmpl.refine(result_key='number'), double_tmpl)
-    def dag_flow_tmpl() -> int:
+    def dag_flow_tmpl() -> int:  # type: ignore
         ...
 
     _assert_diff_time_of_two_flow_runs(dag_flow_tmpl, assert_result=86, assert_task_tmpl=task_tmpl)
 
-    # FuncFlowTemplate
+    @mypy_fix_func_flow_template
     @FuncFlowTemplate()
     def func_flow_tmpl(number: int) -> int:
         return dag_flow_tmpl() + number
@@ -343,6 +365,7 @@ def test_time_of_multi_level_flow_run_all_flow_classes(
         func_flow_tmpl, 14, assert_result=100, assert_task_tmpl=task_tmpl)
 
     # FuncFlowTemplate again
+    @mypy_fix_func_flow_template
     @FuncFlowTemplate()
     def func_flow_2_tmpl() -> int:
         return int(func_flow_tmpl(14) / 2)

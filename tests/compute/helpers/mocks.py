@@ -1,10 +1,18 @@
 from dataclasses import dataclass
 from datetime import datetime
 from types import MappingProxyType
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, Union
+from typing import Any, Callable, cast, Dict, List, Mapping, Optional, Protocol, Tuple, Type, Union
 
 from omnipy.api.protocols.private import IsEngine, IsEngineConfig, IsRunStateRegistry
-from omnipy.api.protocols.public.job import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.api.protocols.public.engine import IsTaskRunnerEngine
+from omnipy.api.protocols.public.job import (IsDagFlow,
+                                             IsFuncFlow,
+                                             IsFuncJob,
+                                             IsFuncJobTemplate,
+                                             IsJob,
+                                             IsJobTemplate,
+                                             IsLinearFlow,
+                                             IsTask)
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.mixins.flow_context import FlowContextJobMixin
@@ -290,29 +298,37 @@ class AssertSameTimeOfCurFlowRunJobBaseMixin:
         return super()._call_func(*args, **kwargs)
 
 
-# def mock_task_template_assert_same_time_of_cur_flow_run_callable_decorator_cls(
-#     cls: Type['MockTaskTemplateAssertSameTimeOfCurFlowRun']
-# ) -> IsFuncJobTemplateCallable['MockTaskTemplateAssertSameTimeOfCurFlowRun']:
-#     return cast(IsFuncJobTemplateCallable['MockTaskTemplateAssertSameTimeOfCurFlowRun'],
-#                 callable_decorator_cls(cls))
+class IsMockTaskTemplateAssertSameTimeOfCurFlowRun(
+        IsFuncJobTemplate['IsMockTaskTemplateAssertSameTimeOfCurFlowRun',
+                          'IsMockTaskAssertSameTimeOfCurFlowRun'],
+        Protocol):
+    """"""
+    ...
+
+
+class IsMockTaskAssertSameTimeOfCurFlowRun(IsFuncJob[IsMockTaskTemplateAssertSameTimeOfCurFlowRun],
+                                           Protocol):
+    """"""
 
 
 @callable_decorator_cls
 class MockTaskTemplateAssertSameTimeOfCurFlowRun(JobTemplateMixin, FuncArgJobBase):
     @classmethod
-    def _get_job_subcls_for_apply(cls) -> Type['MockTaskAssertSameTimeOfCurFlowRun']:
-        return MockTaskAssertSameTimeOfCurFlowRun
-
-    @classmethod
-    def _apply_engine_decorator(cls, engine: IsEngine) -> None:
-        ...
+    def _get_job_subcls_for_apply(cls) -> Type[IsJob]:
+        return cast(Type[IsMockTaskAssertSameTimeOfCurFlowRun], MockTaskAssertSameTimeOfCurFlowRun)
 
 
 class MockTaskAssertSameTimeOfCurFlowRun(JobMixin, FuncArgJobBase):
+    def _apply_engine_decorator(self, engine: IsEngine) -> None:
+        if self.engine:
+            engine = cast(IsTaskRunnerEngine, self.engine)
+            self_with_mixins = cast(IsTask, self)
+            engine.apply_task_decorator(self_with_mixins, self._accept_call_func_decorator)
+
     @classmethod
-    def _get_job_template_subcls_for_revise(
-            cls) -> Type['MockTaskTemplateAssertSameTimeOfCurFlowRun']:
-        return MockTaskTemplateAssertSameTimeOfCurFlowRun
+    def _get_job_template_subcls_for_revise(cls) -> Type[IsJobTemplate]:
+        return cast(Type[IsMockTaskTemplateAssertSameTimeOfCurFlowRun],
+                    MockTaskTemplateAssertSameTimeOfCurFlowRun)
 
 
 MockTaskTemplateAssertSameTimeOfCurFlowRun.accept_mixin(AssertSameTimeOfCurFlowRunJobBaseMixin)

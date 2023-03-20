@@ -2,6 +2,7 @@ from io import StringIO
 from typing import Dict, List, Optional
 
 from omnipy.compute.task import TaskTemplate
+from omnipy.compute.typing import mypy_fix_task_template
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
@@ -10,7 +11,8 @@ from ..general.models import NotIteratorExceptStrings
 from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset
 
 
-@TaskTemplate
+@mypy_fix_task_template
+@TaskTemplate()
 def convert_dataset_list_of_dicts_to_pandas(
         dataset: Dataset[Model[List[Dict[str, NotIteratorExceptStrings]]]]) -> PandasDataset:
     pandas_dataset = PandasDataset()
@@ -18,6 +20,7 @@ def convert_dataset_list_of_dicts_to_pandas(
     return pandas_dataset
 
 
+@mypy_fix_task_template
 @TaskTemplate()
 def convert_dataset_csv_to_pandas(dataset: Dataset[Model[bytes]],
                                   delimiter: str = ',',
@@ -39,6 +42,7 @@ def convert_dataset_csv_to_pandas(dataset: Dataset[Model[bytes]],
     return out_dataset
 
 
+@mypy_fix_task_template
 @TaskTemplate()
 def convert_dataset_pandas_to_csv(
     dataset: PandasDataset,
@@ -59,6 +63,7 @@ def convert_dataset_pandas_to_csv(
     return out_dataset
 
 
+@mypy_fix_task_template
 @TaskTemplate()
 def extract_columns_as_files(dataset: PandasDataset, col_names: List[str]) -> PandasDataset:
     out_dataset = PandasDataset()
@@ -71,6 +76,7 @@ def extract_columns_as_files(dataset: PandasDataset, col_names: List[str]) -> Pa
     return out_dataset
 
 
+@mypy_fix_task_template
 @TaskTemplate()
 def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSameNumberOfFiles,
                                       vertical=True) -> PandasDataset:

@@ -2,10 +2,12 @@ from io import StringIO
 import os
 
 from omnipy.compute.task import TaskTemplate
+from omnipy.compute.typing import mypy_fix_task_template
 
 from .protocols import IsModifyAllLinesCallable, IsModifyContentsCallable, IsModifyEachLineCallable
 
 
+@mypy_fix_task_template
 @TaskTemplate(iterate_over_data_files=True)
 def modify_datafile_contents(
     data_file: str,
@@ -15,6 +17,7 @@ def modify_datafile_contents(
     return modify_contents_func(data_file, **kwargs)
 
 
+@mypy_fix_task_template
 @TaskTemplate(iterate_over_data_files=True)
 def modify_each_line(
     data_file: str,
@@ -29,6 +32,7 @@ def modify_each_line(
     return output_data.getvalue()
 
 
+@mypy_fix_task_template
 @TaskTemplate(iterate_over_data_files=True)
 def modify_all_lines(
     data_file: str,
