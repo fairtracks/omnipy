@@ -20,6 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           curl -sSL https://install.python-poetry.org | python3 - --version 1.4.0
+          $HOME/.local/bin/poetry install
       - name: Check input line sorting with isort
         run: |
           source $(poetry env info --path)/bin/activate
