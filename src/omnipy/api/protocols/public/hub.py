@@ -5,8 +5,9 @@ from logging.handlers import TimedRotatingFileHandler
 from typing import Any, Optional, Protocol
 
 from omnipy.api.enums import EngineChoice
+from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
 from omnipy.api.protocols.private.engine import IsEngine
-from omnipy.api.protocols.private.hub import IsDataPublisher, IsJobConfigHolder
+from omnipy.api.protocols.private.hub import IsDataPublisher
 from omnipy.api.protocols.private.log import IsRunStateRegistry
 from omnipy.api.protocols.public.config import (IsJobConfig,
                                                 IsLocalRunnerConfig,

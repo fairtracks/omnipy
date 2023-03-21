@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from omnipy.api.protocols.private.config import IsJobConfigBase
 from omnipy.api.protocols.private.engine import IsEngineConfig
-from omnipy.api.protocols.private.hub import IsJobConfigBase
 from omnipy.api.types import LocaleType
 
 
