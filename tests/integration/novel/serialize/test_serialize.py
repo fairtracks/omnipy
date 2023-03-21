@@ -7,7 +7,7 @@ from omnipy.api.enums import (ConfigPersistOutputsOptions,
                               ConfigRestoreOutputsOptions,
                               PersistOutputsOptions,
                               RestoreOutputsOptions)
-from omnipy.api.protocols.public.runtime import IsRuntime
+from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.compute.task import FuncArgJobBase, TaskTemplate
 
 

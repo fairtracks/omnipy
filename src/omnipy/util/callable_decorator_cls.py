@@ -2,7 +2,7 @@ from functools import update_wrapper
 from types import MethodWrapperType
 from typing import Callable, cast, Type
 
-from omnipy.api.protocols.private import IsCallableClass, IsCallableParamAfterSelf
+from omnipy.api.protocols.private.util import IsCallableClass, IsCallableParamAfterSelf
 from omnipy.api.types import DecoratorClassT
 
 

@@ -4,11 +4,10 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 from typing import Any, Optional, Protocol
 
-from omnipy.api.enums import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions, EngineChoice
-from omnipy.api.protocols.private import (IsDataPublisher,
-                                          IsEngine,
-                                          IsEngineConfig,
-                                          IsRunStateRegistry)
+from omnipy.api.enums import EngineChoice
+from omnipy.api.protocols.private.engine import IsEngine, IsEngineConfig
+from omnipy.api.protocols.private.hub import IsDataPublisher, IsJobConfigBase, IsJobConfigHolder
+from omnipy.api.protocols.private.log import IsRunStateRegistry
 from omnipy.api.types import LocaleType
 
 
@@ -34,6 +33,7 @@ class IsRuntimeConfig(IsDataPublisher, Protocol):
 
 class IsRuntimeObjects(IsDataPublisher, Protocol):
     """"""
+
     job_creator: IsJobConfigHolder
     local: IsEngine
     prefect: IsEngine
@@ -74,11 +74,9 @@ class IsLocalRunnerConfig(IsEngineConfig, Protocol):
     ...
 
 
-class IsJobConfig(Protocol):
+class IsJobConfig(IsJobConfigBase, Protocol):
     """"""
-    persist_outputs: ConfigPersistOutputsOptions
-    restore_outputs: ConfigRestoreOutputsOptions
-    persist_data_dir_path: str
+    ...
 
 
 class IsRootLogConfig(Protocol):
@@ -108,23 +106,6 @@ class IsRootLogObjects(Protocol):
 class IsPrefectEngineConfig(IsEngineConfig, Protocol):
     """"""
     use_cached_results: int = False
-
-
-class IsJobConfigHolder(Protocol):
-    """"""
-    @property
-    def config(self) -> Optional[IsJobConfig]:
-        ...
-
-    @property
-    def engine(self) -> Optional[IsEngine]:
-        ...
-
-    def set_config(self, config: IsJobConfig) -> None:
-        ...
-
-    def set_engine(self, engine: IsEngine) -> None:
-        ...
 
 
 class IsRootLogConfigEntryPublisher(IsRootLogConfig, IsDataPublisher, Protocol):

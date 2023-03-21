@@ -8,9 +8,11 @@ from types import MappingProxyType
 from typing import Any, cast, Dict, Hashable, Optional, Tuple, Type, Union
 
 from omnipy.api.exceptions import JobStateException
-from omnipy.api.protocols.private import IsCallableClass, IsEngine
-from omnipy.api.protocols.public.job import IsJob, IsJobBase, IsJobCreator, IsJobTemplate
-from omnipy.api.protocols.public.runtime import IsJobConfig
+from omnipy.api.protocols.private.compute.job import IsJob, IsJobBase, IsJobTemplate
+from omnipy.api.protocols.private.compute.job_creator import IsJobCreator
+from omnipy.api.protocols.private.engine import IsEngine
+from omnipy.api.protocols.private.util import IsCallableClass
+from omnipy.api.protocols.public.hub import IsJobConfig
 from omnipy.compute.job_creator import JobBaseMeta
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
 from omnipy.log.mixin import LogMixin

@@ -2,15 +2,16 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from omnipy.api.enums import EngineChoice
-from omnipy.api.protocols.private import IsEngine, IsEngineConfig, IsRunStateRegistry
-from omnipy.api.protocols.public.runtime import (IsJobConfig,
-                                                 IsJobConfigHolder,
-                                                 IsLocalRunnerConfig,
-                                                 IsPrefectEngineConfig,
-                                                 IsRootLogConfigEntryPublisher,
-                                                 IsRootLogObjects,
-                                                 IsRuntimeConfig,
-                                                 IsRuntimeObjects)
+from omnipy.api.protocols.private.engine import IsEngine, IsEngineConfig
+from omnipy.api.protocols.private.hub import IsJobConfigHolder
+from omnipy.api.protocols.private.log import IsRunStateRegistry
+from omnipy.api.protocols.public.hub import (IsJobConfig,
+                                             IsLocalRunnerConfig,
+                                             IsPrefectEngineConfig,
+                                             IsRootLogConfigEntryPublisher,
+                                             IsRootLogObjects,
+                                             IsRuntimeConfig,
+                                             IsRuntimeObjects)
 from omnipy.compute.job import JobBase
 from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import JobConfig

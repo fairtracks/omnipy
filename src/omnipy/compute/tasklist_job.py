@@ -1,6 +1,9 @@
 from typing import Callable, cast, Tuple
 
-from omnipy.api.protocols.public.job import IsTaskTemplate, IsTaskTemplateArgsJobTemplate
+from omnipy.api.protocols.private.compute.job import (IsJob,
+                                                      IsJobTemplate,
+                                                      IsTaskTemplateArgsJobTemplate)
+from omnipy.api.protocols.public.compute import IsTaskTemplate
 from omnipy.compute.func_job import FuncArgJobBase
 
 
@@ -16,14 +19,17 @@ class TaskTemplateArgsJobBase(FuncArgJobBase):
     def task_templates(self) -> Tuple[IsTaskTemplate, ...]:
         return self._task_templates
 
-    def _refine(self,
-                *task_templates: IsTaskTemplate,
-                update: bool = True,
-                **kwargs: object) -> IsTaskTemplateArgsJobTemplate:
+    def _refine(
+            self,
+            *task_templates: IsTaskTemplate,
+            update: bool = True,
+            **kwargs: object
+    ) -> IsTaskTemplateArgsJobTemplate[IsTaskTemplate, IsJobTemplate, IsJob]:
 
         refined_template = super()._refine(
             *task_templates,
             update=update,
             **kwargs,
         )
-        return cast(IsTaskTemplateArgsJobTemplate, refined_template)
+        return cast(IsTaskTemplateArgsJobTemplate[IsTaskTemplate, IsJobTemplate, IsJob],
+                    refined_template)

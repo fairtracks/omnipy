@@ -1,9 +1,9 @@
 import pytest_cases as pc
 
-from omnipy.api.protocols.public.job import (IsDagFlowTemplate,
-                                             IsFuncFlowTemplate,
-                                             IsLinearFlowTemplate,
-                                             IsTaskTemplate)
+from omnipy.api.protocols.public.compute import (IsDagFlowTemplate,
+                                                 IsFuncFlowTemplate,
+                                                 IsLinearFlowTemplate,
+                                                 IsTaskTemplate)
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import (mypy_fix_dag_flow_template,

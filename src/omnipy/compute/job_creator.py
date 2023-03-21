@@ -4,9 +4,9 @@ from abc import ABCMeta
 from datetime import datetime
 from typing import Optional
 
-from omnipy.api.protocols.private import IsEngine
-from omnipy.api.protocols.public.job import IsJobCreator
-from omnipy.api.protocols.public.runtime import IsJobConfig
+from omnipy.api.protocols.private.compute.job_creator import IsJobCreator
+from omnipy.api.protocols.private.engine import IsEngine
+from omnipy.api.protocols.public.hub import IsJobConfig
 
 
 class JobCreator:

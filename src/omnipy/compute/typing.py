@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import cast
 
-from omnipy.api.protocols.public.job import (IsDagFlowTemplate,
-                                             IsFuncFlowTemplate,
-                                             IsLinearFlowTemplate,
-                                             IsTaskTemplate)
+from omnipy.api.protocols.public.compute import (IsDagFlowTemplate,
+                                                 IsFuncFlowTemplate,
+                                                 IsLinearFlowTemplate,
+                                                 IsTaskTemplate)
 
 # Needed due to lack of support for class decorators in mypy.
 # See: https://github.com/python/mypy/issues/3135

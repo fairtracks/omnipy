@@ -1,7 +1,7 @@
 from types import MappingProxyType
 from typing import cast, Mapping, Optional
 
-from omnipy.api.protocols.public.job import IsJobBase
+from omnipy.api.protocols.private.compute.job import IsJobBase
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.name import NameJobBaseMixin
 from omnipy.util.helpers import repr_max_len

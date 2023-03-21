@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from omnipy.api.protocols.public.job import IsNestedContext
+from omnipy.api.protocols.private.compute.mixins import IsNestedContext
 
 
 class FlowContextJobMixin:

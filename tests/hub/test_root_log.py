@@ -10,7 +10,7 @@ from typing import Annotated, Optional
 import pytest
 
 import omnipy
-from omnipy.api.protocols.public.runtime import IsRootLogConfig, IsRuntime
+from omnipy.api.protocols.public.hub import IsRootLogConfig, IsRuntime
 from omnipy.api.types import LocaleType
 from omnipy.config.root_log import RootLogConfig
 from omnipy.hub.root_log import RootLogObjects

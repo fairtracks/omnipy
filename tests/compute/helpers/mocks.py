@@ -3,16 +3,14 @@ from datetime import datetime
 from types import MappingProxyType
 from typing import Any, Callable, cast, Dict, List, Mapping, Optional, Protocol, Tuple, Type, Union
 
-from omnipy.api.protocols.private import IsEngine, IsEngineConfig, IsRunStateRegistry
+from omnipy.api.protocols.private.compute.job import (IsFuncArgJob,
+                                                      IsFuncArgJobTemplate,
+                                                      IsJob,
+                                                      IsJobTemplate)
+from omnipy.api.protocols.private.engine import IsEngine, IsEngineConfig
+from omnipy.api.protocols.private.log import IsRunStateRegistry
+from omnipy.api.protocols.public.compute import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
 from omnipy.api.protocols.public.engine import IsTaskRunnerEngine
-from omnipy.api.protocols.public.job import (IsDagFlow,
-                                             IsFuncFlow,
-                                             IsFuncJob,
-                                             IsFuncJobTemplate,
-                                             IsJob,
-                                             IsJobTemplate,
-                                             IsLinearFlow,
-                                             IsTask)
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.mixins.flow_context import FlowContextJobMixin
@@ -299,15 +297,15 @@ class AssertSameTimeOfCurFlowRunJobBaseMixin:
 
 
 class IsMockTaskTemplateAssertSameTimeOfCurFlowRun(
-        IsFuncJobTemplate['IsMockTaskTemplateAssertSameTimeOfCurFlowRun',
-                          'IsMockTaskAssertSameTimeOfCurFlowRun'],
+        IsFuncArgJobTemplate['IsMockTaskTemplateAssertSameTimeOfCurFlowRun',
+                             'IsMockTaskAssertSameTimeOfCurFlowRun'],
         Protocol):
     """"""
     ...
 
 
-class IsMockTaskAssertSameTimeOfCurFlowRun(IsFuncJob[IsMockTaskTemplateAssertSameTimeOfCurFlowRun],
-                                           Protocol):
+class IsMockTaskAssertSameTimeOfCurFlowRun(
+        IsFuncArgJob[IsMockTaskTemplateAssertSameTimeOfCurFlowRun], Protocol):
     """"""
 
 

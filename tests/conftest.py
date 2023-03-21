@@ -7,7 +7,7 @@ from typing import Annotated, Generator, Type
 
 import pytest
 
-from omnipy.api.protocols.public.runtime import IsRuntime
+from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.compute.job_creator import JobBaseMeta, JobCreator
 from omnipy.config.root_log import RootLogConfig
 

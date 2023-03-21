@@ -1,6 +1,6 @@
 from typing import cast, Optional
 
-from omnipy.api.protocols.public.job import IsJobBase
+from omnipy.api.protocols.private.compute.job import IsJobBase
 from omnipy.compute.mixins.name import NameJobBaseMixin
 
 

@@ -1,10 +1,12 @@
-from typing import Callable, cast, Optional, Tuple, Type
+from typing import Callable, Optional, Tuple, Type
 
 import pytest_cases as pc
 
-from omnipy.api.protocols.private import IsEngine, IsRunStateRegistry
+from omnipy.api.protocols.private.compute.job import IsJobTemplate
+from omnipy.api.protocols.private.engine import IsEngine
+from omnipy.api.protocols.private.log import IsRunStateRegistry
+from omnipy.api.protocols.public.compute import IsFlowTemplate, IsTaskTemplate
 from omnipy.api.protocols.public.engine import IsTaskRunnerEngine
-from omnipy.api.protocols.public.job import IsFlowTemplate, IsJobTemplate, IsTaskTemplate
 from omnipy.engine.local import LocalRunner
 from omnipy.modules.prefect.engine.prefect import PrefectEngine
 

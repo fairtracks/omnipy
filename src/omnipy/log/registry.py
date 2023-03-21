@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import DefaultDict, Dict, List, Optional, Tuple
 
 from omnipy.api.enums import RunState, RunStateLogMessages
-from omnipy.api.protocols.private import IsUniquelyNamedJob
+from omnipy.api.protocols.private.compute.mixins import IsUniquelyNamedJob
 from omnipy.log.mixin import LogMixin
 
 

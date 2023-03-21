@@ -1,19 +1,20 @@
 from typing import cast, Type
 
-from omnipy.api.protocols.private import IsEngine
+from omnipy.api.protocols.private.compute.job import (IsFuncArgJobTemplateCallable,
+                                                      IsJob,
+                                                      IsJobTemplate,
+                                                      IsTaskTemplateArgsJobTemplateCallable)
+from omnipy.api.protocols.private.engine import IsEngine
+from omnipy.api.protocols.public.compute import (IsDagFlow,
+                                                 IsDagFlowTemplate,
+                                                 IsFuncFlow,
+                                                 IsFuncFlowTemplate,
+                                                 IsLinearFlow,
+                                                 IsLinearFlowTemplate,
+                                                 IsTaskTemplate)
 from omnipy.api.protocols.public.engine import (IsDagFlowRunnerEngine,
                                                 IsFuncFlowRunnerEngine,
                                                 IsLinearFlowRunnerEngine)
-from omnipy.api.protocols.public.job import (IsDagFlow,
-                                             IsDagFlowTemplate,
-                                             IsFuncFlow,
-                                             IsFuncFlowTemplate,
-                                             IsFuncJobTemplateCallable,
-                                             IsJob,
-                                             IsJobTemplate,
-                                             IsLinearFlow,
-                                             IsLinearFlowTemplate,
-                                             IsTaskTemplatesFlowTemplateCallable)
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import JobMixin, JobTemplateMixin
 from omnipy.compute.mixins.flow_context import FlowContextJobMixin
@@ -26,9 +27,9 @@ class FlowBase:
 
 
 def linear_flow_template_callable_decorator_cls(
-        cls: Type['LinearFlowTemplate']
-) -> IsTaskTemplatesFlowTemplateCallable[IsLinearFlowTemplate]:
-    return cast(IsTaskTemplatesFlowTemplateCallable[IsLinearFlowTemplate],
+    cls: Type['LinearFlowTemplate']
+) -> IsTaskTemplateArgsJobTemplateCallable[IsTaskTemplate, IsLinearFlowTemplate]:
+    return cast(IsTaskTemplateArgsJobTemplateCallable[IsTaskTemplate, IsLinearFlowTemplate],
                 callable_decorator_cls(cls))
 
 
@@ -52,8 +53,10 @@ class LinearFlow(JobMixin, FlowBase, TaskTemplateArgsJobBase):
 
 
 def dag_flow_template_callable_decorator_cls(
-        cls: Type['DagFlowTemplate']) -> IsTaskTemplatesFlowTemplateCallable[IsDagFlowTemplate]:
-    return cast(IsTaskTemplatesFlowTemplateCallable[IsDagFlowTemplate], callable_decorator_cls(cls))
+    cls: Type['DagFlowTemplate']
+) -> IsTaskTemplateArgsJobTemplateCallable[IsTaskTemplate, IsDagFlowTemplate]:
+    return cast(IsTaskTemplateArgsJobTemplateCallable[IsTaskTemplate, IsDagFlowTemplate],
+                callable_decorator_cls(cls))
 
 
 @dag_flow_template_callable_decorator_cls
@@ -76,8 +79,8 @@ class DagFlow(JobMixin, FlowBase, TaskTemplateArgsJobBase):
 
 
 def func_flow_template_callable_decorator_cls(
-        cls: Type['FuncFlowTemplate']) -> IsFuncJobTemplateCallable[IsFuncFlowTemplate]:
-    return cast(IsFuncJobTemplateCallable[IsFuncFlowTemplate], callable_decorator_cls(cls))
+        cls: Type['FuncFlowTemplate']) -> IsFuncArgJobTemplateCallable[IsFuncFlowTemplate]:
+    return cast(IsFuncArgJobTemplateCallable[IsFuncFlowTemplate], callable_decorator_cls(cls))
 
 
 @func_flow_template_callable_decorator_cls

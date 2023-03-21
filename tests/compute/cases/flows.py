@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, Generic, Tuple, TypeVar
 
 import pytest_cases as pc
 
-from omnipy.api.protocols.public.job import IsFlowTemplate
+from omnipy.api.protocols.public.compute import IsFlowTemplate
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
 

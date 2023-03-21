@@ -4,7 +4,7 @@ from typing import Annotated, NamedTuple, Optional, Tuple, Type, Union
 import pytest
 
 from omnipy.api.exceptions import JobStateException
-from omnipy.api.protocols.public.job import IsJobBase
+from omnipy.api.protocols.private.compute.job import IsJobBase
 from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.job_creator import JobCreator
 

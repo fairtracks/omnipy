@@ -9,7 +9,7 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.api.enums import RunState
-from omnipy.api.protocols.public.job import IsJob
+from omnipy.api.protocols.private.compute.job import IsJob
 from omnipy.util.helpers import resolve
 
 from ..helpers.classes import JobCase

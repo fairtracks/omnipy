@@ -1,7 +1,7 @@
 from inspect import Parameter, signature
 from typing import Callable, cast, Type
 
-from omnipy.api.protocols.private import IsPlainFuncArgJobBase
+from omnipy.api.protocols.private.compute.job import IsPlainFuncArgJobBase
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.mixin_types import (InputDatasetT,
                                                InputTypeT,

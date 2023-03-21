@@ -7,8 +7,8 @@ from typing import cast, Optional, Type
 from omnipy.api.enums import ConfigPersistOutputsOptions as ConfigPersistOpts
 from omnipy.api.enums import ConfigRestoreOutputsOptions as ConfigRestoreOpts
 from omnipy.api.enums import PersistOutputsOptions, RestoreOutputsOptions
-from omnipy.api.protocols.public.job import IsJobBase
-from omnipy.api.protocols.public.runtime import IsJobConfig
+from omnipy.api.protocols.private.compute.job import IsJobBase
+from omnipy.api.protocols.public.hub import IsJobConfig
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.name import NameJobBaseMixin
 from omnipy.config.job import JobConfig

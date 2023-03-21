@@ -3,20 +3,15 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import update_wrapper
 import inspect
-import logging
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 from inflection import underscore
 from slugify import slugify
 
 from omnipy.api.enums import RunState
-from omnipy.api.protocols.private import IsEngine, IsEngineConfig
-from omnipy.api.protocols.public.job import (IsDagFlow,
-                                             IsFlow,
-                                             IsFuncFlow,
-                                             IsJob,
-                                             IsLinearFlow,
-                                             IsTask)
+from omnipy.api.protocols.private.compute.job import IsJob
+from omnipy.api.protocols.private.engine import IsEngine, IsEngineConfig
+from omnipy.api.protocols.public.compute import IsDagFlow, IsFlow, IsFuncFlow, IsLinearFlow, IsTask
 from omnipy.api.types import GeneralDecorator
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,

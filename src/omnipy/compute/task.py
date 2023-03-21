@@ -2,21 +2,20 @@ from __future__ import annotations
 
 from typing import cast, Type
 
-from omnipy.api.protocols.private import IsEngine
+from omnipy.api.protocols.private.compute.job import (IsFuncArgJobTemplateCallable,
+                                                      IsJob,
+                                                      IsJobTemplate)
+from omnipy.api.protocols.private.engine import IsEngine
+from omnipy.api.protocols.public.compute import IsTask, IsTaskTemplate
 from omnipy.api.protocols.public.engine import IsTaskRunnerEngine
-from omnipy.api.protocols.public.job import (IsFuncJobTemplateCallable,
-                                             IsJob,
-                                             IsJobTemplate,
-                                             IsTask,
-                                             IsTaskTemplate)
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import JobMixin, JobTemplateMixin
 from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
 
 def task_template_callable_decorator_cls(
-        cls: Type[TaskTemplate]) -> IsFuncJobTemplateCallable[IsTaskTemplate]:
-    return cast(IsFuncJobTemplateCallable[IsTaskTemplate], callable_decorator_cls(cls))
+        cls: Type[TaskTemplate]) -> IsFuncArgJobTemplateCallable[IsTaskTemplate]:
+    return cast(IsFuncArgJobTemplateCallable[IsTaskTemplate], callable_decorator_cls(cls))
 
 
 class TaskBase:

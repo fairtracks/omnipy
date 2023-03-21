@@ -8,7 +8,7 @@ from typing import Annotated
 import pytest
 
 from omnipy.api.enums import RunState
-from omnipy.api.protocols.public.job import IsDagFlow, IsTask
+from omnipy.api.protocols.public.compute import IsDagFlow, IsTask
 from omnipy.log.registry import RunStateRegistry
 
 from .helpers.functions import read_log_lines_from_stream
