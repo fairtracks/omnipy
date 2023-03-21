@@ -7,17 +7,11 @@ from typing import Any, Optional, Protocol
 from omnipy.api.enums import EngineChoice
 from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
 from omnipy.api.protocols.private.engine import IsEngine
-from omnipy.api.protocols.private.hub import IsDataPublisher
 from omnipy.api.protocols.private.log import IsRunStateRegistry
 from omnipy.api.protocols.public.config import (IsJobConfig,
                                                 IsLocalRunnerConfig,
                                                 IsPrefectEngineConfig,
                                                 IsRootLogConfig)
-
-
-class IsRootLogConfigEntryPublisher(IsRootLogConfig, IsDataPublisher, Protocol):
-    """"""
-    ...
 
 
 class IsRootLogObjects(Protocol):
@@ -31,13 +25,13 @@ class IsRootLogObjects(Protocol):
         ...
 
 
-class IsRuntimeConfig(IsDataPublisher, Protocol):
+class IsRuntimeConfig(Protocol):
     """"""
     job: IsJobConfig
     engine: EngineChoice
     local: IsLocalRunnerConfig
     prefect: IsPrefectEngineConfig
-    root_log: IsRootLogConfigEntryPublisher
+    root_log: IsRootLogConfig
 
     def __init__(
             self,
@@ -51,7 +45,7 @@ class IsRuntimeConfig(IsDataPublisher, Protocol):
         ...
 
 
-class IsRuntimeObjects(IsDataPublisher, Protocol):
+class IsRuntimeObjects(Protocol):
     """"""
 
     job_creator: IsJobConfigHolder
@@ -72,7 +66,7 @@ class IsRuntimeObjects(IsDataPublisher, Protocol):
         ...
 
 
-class IsRuntime(IsDataPublisher, Protocol):
+class IsRuntime(Protocol):
     """"""
     config: IsRuntimeConfig
     objects: IsRuntimeObjects

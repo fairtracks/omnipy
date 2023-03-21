@@ -7,11 +7,9 @@ from omnipy.api.protocols.private.engine import IsEngine, IsEngineConfig
 from omnipy.api.protocols.private.log import IsRunStateRegistry
 from omnipy.api.protocols.public.config import (IsJobConfig,
                                                 IsLocalRunnerConfig,
-                                                IsPrefectEngineConfig)
-from omnipy.api.protocols.public.hub import (IsRootLogConfigEntryPublisher,
-                                             IsRootLogObjects,
-                                             IsRuntimeConfig,
-                                             IsRuntimeObjects)
+                                                IsPrefectEngineConfig,
+                                                IsRootLogConfig)
+from omnipy.api.protocols.public.hub import IsRootLogObjects, IsRuntimeConfig, IsRuntimeObjects
 from omnipy.compute.job import JobBase
 from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import JobConfig
@@ -36,7 +34,7 @@ class RuntimeConfig(RuntimeEntryPublisher):
     engine: EngineChoice = EngineChoice.LOCAL
     local: IsLocalRunnerConfig = field(default_factory=LocalRunnerConfig)
     prefect: IsPrefectEngineConfig = field(default_factory=PrefectEngineConfig)
-    root_log: IsRootLogConfigEntryPublisher = field(default_factory=RootLogConfigEntryPublisher)
+    root_log: IsRootLogConfig = field(default_factory=RootLogConfigEntryPublisher)
 
 
 @dataclass
