@@ -6,7 +6,7 @@ from typing import Optional
 
 from omnipy.api.protocols.private.compute.job_creator import IsJobCreator
 from omnipy.api.protocols.private.engine import IsEngine
-from omnipy.api.protocols.public.hub import IsJobConfig
+from omnipy.api.protocols.public.config import IsJobConfig
 
 
 class JobCreator:

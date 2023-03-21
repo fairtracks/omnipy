@@ -5,10 +5,10 @@ from omnipy.api.enums import EngineChoice
 from omnipy.api.protocols.private.engine import IsEngine, IsEngineConfig
 from omnipy.api.protocols.private.hub import IsJobConfigHolder
 from omnipy.api.protocols.private.log import IsRunStateRegistry
-from omnipy.api.protocols.public.hub import (IsJobConfig,
-                                             IsLocalRunnerConfig,
-                                             IsPrefectEngineConfig,
-                                             IsRootLogConfigEntryPublisher,
+from omnipy.api.protocols.public.config import (IsJobConfig,
+                                                IsLocalRunnerConfig,
+                                                IsPrefectEngineConfig)
+from omnipy.api.protocols.public.hub import (IsRootLogConfigEntryPublisher,
                                              IsRootLogObjects,
                                              IsRuntimeConfig,
                                              IsRuntimeObjects)

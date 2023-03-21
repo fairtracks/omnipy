@@ -7,7 +7,7 @@ from pathlib import Path
 from sys import stderr, stdout
 from typing import Optional
 
-from omnipy.api.protocols.public.hub import IsRootLogConfig
+from omnipy.api.protocols.public.config import IsRootLogConfig
 from omnipy.config.root_log import RootLogConfig
 from omnipy.hub.entry import RuntimeEntryPublisher
 from omnipy.util.helpers import get_datetime_format

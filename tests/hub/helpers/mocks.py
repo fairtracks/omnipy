@@ -7,10 +7,10 @@ from omnipy.api.enums import RunState
 from omnipy.api.protocols.private.engine import IsEngineConfig
 from omnipy.api.protocols.private.log import IsRunStateRegistry
 from omnipy.api.protocols.public.compute import IsTask
+from omnipy.api.protocols.public.config import (IsLocalRunnerConfig,
+                                                IsPrefectEngineConfig,
+                                                IsRootLogConfig)
 from omnipy.api.protocols.public.engine import IsTaskRunnerEngine
-from omnipy.api.protocols.public.hub import (IsLocalRunnerConfig,
-                                             IsPrefectEngineConfig,
-                                             IsRootLogConfig)
 
 
 class MockIsJobConfig(Protocol):

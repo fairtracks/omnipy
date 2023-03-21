@@ -5,10 +5,29 @@ from logging.handlers import TimedRotatingFileHandler
 from typing import Any, Optional, Protocol
 
 from omnipy.api.enums import EngineChoice
-from omnipy.api.protocols.private.engine import IsEngine, IsEngineConfig
-from omnipy.api.protocols.private.hub import IsDataPublisher, IsJobConfigBase, IsJobConfigHolder
+from omnipy.api.protocols.private.engine import IsEngine
+from omnipy.api.protocols.private.hub import IsDataPublisher, IsJobConfigHolder
 from omnipy.api.protocols.private.log import IsRunStateRegistry
-from omnipy.api.types import LocaleType
+from omnipy.api.protocols.public.config import (IsJobConfig,
+                                                IsLocalRunnerConfig,
+                                                IsPrefectEngineConfig,
+                                                IsRootLogConfig)
+
+
+class IsRootLogConfigEntryPublisher(IsRootLogConfig, IsDataPublisher, Protocol):
+    """"""
+    ...
+
+
+class IsRootLogObjects(Protocol):
+    """"""
+    formatter: Optional[logging.Formatter] = None
+    stdout_handler: Optional[logging.StreamHandler] = None
+    stderr_handler: Optional[logging.StreamHandler] = None
+    file_handler: Optional[TimedRotatingFileHandler] = None
+
+    def set_config(self, config: IsRootLogConfig) -> None:
+        ...
 
 
 class IsRuntimeConfig(IsDataPublisher, Protocol):
@@ -67,47 +86,3 @@ class IsRuntime(IsDataPublisher, Protocol):
 
     def reset_subscriptions(self):
         ...
-
-
-class IsLocalRunnerConfig(IsEngineConfig, Protocol):
-    """"""
-    ...
-
-
-class IsJobConfig(IsJobConfigBase, Protocol):
-    """"""
-    ...
-
-
-class IsRootLogConfig(Protocol):
-    """"""
-    log_format_str: str
-    locale: LocaleType
-    log_to_stdout: bool
-    log_to_stderr: bool
-    log_to_file: bool
-    stdout_log_min_level: int
-    stderr_log_min_level: int
-    file_log_min_level: int
-    file_log_dir_path: str
-
-
-class IsRootLogObjects(Protocol):
-    """"""
-    formatter: Optional[logging.Formatter] = None
-    stdout_handler: Optional[logging.StreamHandler] = None
-    stderr_handler: Optional[logging.StreamHandler] = None
-    file_handler: Optional[TimedRotatingFileHandler] = None
-
-    def set_config(self, config: IsRootLogConfig) -> None:
-        ...
-
-
-class IsPrefectEngineConfig(IsEngineConfig, Protocol):
-    """"""
-    use_cached_results: int = False
-
-
-class IsRootLogConfigEntryPublisher(IsRootLogConfig, IsDataPublisher, Protocol):
-    """"""
-    ...
