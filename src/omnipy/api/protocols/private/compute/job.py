@@ -50,7 +50,7 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol):
     def _apply(self) -> IsJob:
         ...
 
-    def _refine(self, *args: Any, update: bool = True, **kwargs: object) -> IsJobTemplate:
+    def _refine(self, *args: object, update: bool = True, **kwargs: object) -> IsJobTemplate:
         ...
 
     def _revise(self) -> IsJobTemplate:
@@ -172,7 +172,7 @@ class IsFuncArgJobTemplateCallable(Protocol[JobTemplateT]):
 class IsFuncArgJobTemplate(IsJobTemplate, IsFuncArgJobBase, Protocol[JobTemplateT, JobT]):
     """"""
     def refine(self,
-               *args: Any,
+               *args: object,
                update: bool = True,
                name: Optional[str] = None,
                iterate_over_data_files: bool = False,

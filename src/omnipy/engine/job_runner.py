@@ -66,7 +66,7 @@ class TaskRunnerEngine(JobRunnerEngine):
             self._register_job_state(task, RunState.INITIALIZED)
             state = self._init_task(task, call_func)
 
-            def _task_runner_call_func(*args: Any, **kwargs: Any) -> Any:
+            def _task_runner_call_func(*args: object, **kwargs: object) -> Any:
                 self._register_job_state(task, RunState.RUNNING)
                 task_result = self._run_task(state, task, call_func, *args, **kwargs)
                 return self._decorate_result_with_job_finalization_detector(task, task_result)

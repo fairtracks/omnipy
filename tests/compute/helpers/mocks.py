@@ -229,7 +229,7 @@ class MockLocalRunner:
 
     def apply_task_decorator(self, task: IsTask, job_callback_accept_decorator: Callable) -> None:
         def _task_decorator(call_func: Callable) -> Callable:
-            def _call_func(*args: Any, **kwargs: Any) -> Any:
+            def _call_func(*args: object, **kwargs: object) -> Any:
                 result = call_func(*args, **kwargs)
                 self.finished = True
                 return result
@@ -257,7 +257,7 @@ class MockLocalRunner:
                                   func_flow: IsFuncFlow,
                                   job_callback_accept_decorator: Callable) -> None:
         def _func_flow_decorator(call_func: Callable) -> Callable:
-            def _call_func(*args: Any, **kwargs: Any) -> Any:
+            def _call_func(*args: object, **kwargs: object) -> Any:
                 with func_flow.flow_context:
                     result = call_func(*args, **kwargs)
 

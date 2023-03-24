@@ -17,7 +17,7 @@ from omnipy.util.callable_decorator_cls import callable_decorator_cls
 
 @callable_decorator_cls
 class MockClass:
-    def __init__(self, func: Callable, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, func: Callable, *args: object, **kwargs: object) -> None:
         self.func = func
         self.args = args
         self.kwargs = kwargs
@@ -35,7 +35,7 @@ def test_fail_plain_decorator_not_callable_arg() -> None:
     with pytest.raises(TypeError):
 
         @MockClassNoCallableArg
-        def my_func(*args: Any, **kwargs: Any) -> Dict[str, Any]:
+        def my_func(*args: object, **kwargs: object) -> Dict[str, Any]:
             return dict(args=args, kwargs=kwargs)
 
 
@@ -114,7 +114,7 @@ def test_decorator_with_args_and_kwargs_first_arg_func() -> None:
         pass
 
     @MockClass(other_func, 123, True, param=123, other=True)
-    def my_func(*args: Any, **kwargs: Any) -> Dict[str, Any]:
+    def my_func(*args: object, **kwargs: object) -> Dict[str, Any]:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func) == MockClass
@@ -129,7 +129,7 @@ def test_decorator_with_args_and_kwargs_first_arg_func() -> None:
 def test_double_decorator_with_args_and_kwargs() -> None:
     @MockClass(234, False, param=234, other=False)
     @MockClass(123, True, param=123, other=True)
-    def my_func(*args: Any, **kwargs: Any) -> Dict[str, Any]:
+    def my_func(*args: object, **kwargs: object) -> Dict[str, Any]:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func) == MockClass
@@ -153,7 +153,7 @@ def test_fail_decorator_with_single_callable_arg() -> None:
     with pytest.raises(TypeError):
 
         @MockClassSingleCallableArg(extra_func)
-        def my_func(*args: Any, **kwargs: Any) -> Dict[str, Any]:
+        def my_func(*args: object, **kwargs: object) -> Dict[str, Any]:
             return dict(args=args, kwargs=kwargs)
 
 
