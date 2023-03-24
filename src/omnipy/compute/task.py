@@ -25,6 +25,7 @@ class TaskBase:
 
 @task_template_callable_decorator_cls
 class TaskTemplate(JobTemplateMixin, TaskBase, FuncArgJobBase):
+    """"""
     @classmethod
     def _get_job_subcls_for_apply(cls) -> Type[IsJob]:
         return cast(Type[IsTask], Task)

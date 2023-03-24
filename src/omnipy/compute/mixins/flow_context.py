@@ -5,6 +5,7 @@ from omnipy.api.protocols.private.compute.mixins import IsNestedContext
 
 
 class FlowContextJobMixin:
+    """"""
     def __init__(self) -> None:
         self._time_of_last_run = None
 
