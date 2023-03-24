@@ -40,8 +40,8 @@ class IsRuntimeConfig(Protocol):
             local: Optional[IsLocalRunnerConfig] = None,  # noqa
             prefect: Optional[IsPrefectEngineConfig] = None,  # noqa
             root_log: Optional[IsRootLogConfigEntryPublisher] = None,  # noqa
-            *args: Any,
-            **kwargs: Any) -> None:
+            *args: object,
+            **kwargs: object) -> None:
         ...
 
 
@@ -61,8 +61,8 @@ class IsRuntimeObjects(Protocol):
             prefect: Optional[IsEngine] = None,  # noqa
             registry: Optional[IsRunStateRegistry] = None,  # noqa
             root_log: Optional[IsRootLogObjects] = None,  # noqa
-            *args: Any,
-            **kwargs: Any) -> None:
+            *args: object,
+            **kwargs: object) -> None:
         ...
 
 
@@ -75,8 +75,8 @@ class IsRuntime(Protocol):
             self,
             config: Optional[IsRuntimeConfig] = None,  # noqa
             objects: Optional[IsRuntimeObjects] = None,  # noqa
-            *args: Any,
-            **kwargs: Any) -> None:
+            *args: object,
+            **kwargs: object) -> None:
         ...
 
     def reset_subscriptions(self):

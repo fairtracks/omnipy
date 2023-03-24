@@ -50,10 +50,10 @@ class MockTask:
         self.unique_name = slugify(  # noqa
             f'{class_name_snake}-{underscore(self.name)}-{generate_slug(2)}')
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+    def __call__(self, *args: object, **kwargs: object) -> Any:
         return self._call_func(*args, **kwargs)
 
-    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
+    def _call_func(self, *args: object, **kwargs: object) -> Any:
         return self._func(*args, **kwargs)
 
     def has_coroutine_func(self) -> bool:
@@ -76,7 +76,7 @@ class MockTask:
 
 @callable_decorator_cls
 class MockTaskTemplate(MockTask):
-    def _call_func(self, *args: Any, **kwargs: Any) -> Any:
+    def _call_func(self, *args: object, **kwargs: object) -> Any:
         if self.in_flow_context:
             return self.run(*args, **kwargs)
         raise TypeError("'{}' object is not callable".format(self.__class__.__name__))
@@ -163,7 +163,7 @@ class MockBackendTask:
     def __init__(self, engine_config: MockEngineConfig):
         self.backend_verbose = engine_config.backend_verbose
 
-    def run(self, task: IsTask, call_func: Callable, *args: Any, **kwargs: Any):
+    def run(self, task: IsTask, call_func: Callable, *args: object, **kwargs: object):
         if self.backend_verbose:
             print('Running task "{}": ...'.format(task.name))
         result = call_func(*args, **kwargs)
@@ -176,7 +176,7 @@ class MockBackendFlow:
     def __init__(self, engine_config: MockEngineConfig):
         self.backend_verbose = engine_config.backend_verbose
 
-    def run(self, flow: IsFlow, call_func: Callable, *args: Any, **kwargs: Any):
+    def run(self, flow: IsFlow, call_func: Callable, *args: object, **kwargs: object):
         if self.backend_verbose:
             print('Running flow "{}": ...'.format(flow.name))
         result = call_func(*args, **kwargs)
