@@ -2,9 +2,13 @@
 
 import json
 import sys
+from typing import cast, Dict, List, Optional, Union
 
 from numpy import arange
+from pydantic import BaseModel
 import requests
+
+from omnipy.modules.json.types import Json, JsonDict
 
 #########################################################
 # user parameters
@@ -26,18 +30,45 @@ annotations_endpt = 'https://api.gdc.cancer.gov/annotations'
 ###########################################################
 # step1: get total number of TCGA projects (program.name)
 ###########################################################
-params = {
-    'facets': 'program.name',
-    'from': 0,
-    'size': 0,
-}
-response = requests.get(projects_endpt, params=params)
-buckets = response.json()['data']['aggregations']['program.name']['buckets']
 
-for j in arange(len(buckets)):
-    if buckets[j]['key'] == 'TCGA':
-        size_max = buckets[j]['doc_count']
-        break
+
+class Content(BaseModel):
+    field: str
+    value: List[str]
+
+
+class Filter(BaseModel):
+    op: str = 'in'
+    content: Content
+
+
+def create_filter(field: str, value: List[str]) -> Filter:
+    return Filter(content=Content(field=field, value=value))
+
+
+def call_endpoint(endpoint: str, filter: Optional[Filter] = None, **kwargs: object) -> Json:
+    if filter:
+        kwargs['filter'] = filter.dict()
+    return requests.get(endpoint, params=kwargs).json()  # type: ignore
+
+
+def get_project_count_for_program(program: str) -> Optional[int]:
+    response = call_endpoint(
+        projects_endpt,
+        facets='program.name',
+        size=0,
+        **{'from': 0},  # due to 'from' being a reserved keyword
+    )
+    buckets = response['data']['aggregations']['program.name']['buckets']
+
+    for bucket in buckets:
+        if bucket['key'] == program:
+            project_count = bucket['doc_count']
+            return project_count
+        raise ValueError(f'Program with name "{program}" could not be found')
+
+
+size_max = cast(int, get_project_count_for_program('TCGA'))
 
 if download_all_projects:
     size = size_max
@@ -47,30 +78,16 @@ else:
 ##############################################################
 # step 2: filtered query to get the UIDs of each TCGA project
 ##############################################################
-fields = ['summary.case_count', 'summary.file_count']
-fields = ','.join(fields)
+fields = ','.join(['summary.case_count', 'summary.file_count'])
 
-filters = {
-    'op': 'in',
-    'content': {
-        'field': 'program.name',
-        'value': ['TCGA'],
-    },
-}
+response = call_endpoint(
+    projects_endpt, filter=create_filter('program.name', ['TCGA']), fields=fields, size=size)
 
-params = {
-    'filters': json.dumps(filters),
-    'fields': fields,
-    'size': size,
-}
-
-response = requests.get(projects_endpt, params=params)
-
-if len(response.json()['data']['hits']) != size:
+if len(response['data']['hits']) != size:
     print('size mismatch')
     sys.exit()
 
-projects_list = (response.json()['data']['hits'])
+projects_list = response['data']['hits']
 
 ##########################################################################
 # Step3: filtered query on 'cases' (filter on project_id) to get cases ID for each TCGA project
