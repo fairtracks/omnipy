@@ -139,12 +139,12 @@ for proj in projects_list:
     proj_id_list.append(proj['id'])
     for case in proj['cases']:
         case_id_list.append(case['id'])
-        for file in case['files']:
+        for i, file in enumerate(case['files']):
+            if i >= number_of_files:
+                continue
             file_id_list.append(file['file_id'])
         for ant in case['annotations']:
             ant_id_list.append(ant['annotation_id'])
-
-file_id_list = file_id_list[0:number_of_files]
 
 id_dict = {
     'projects': proj_id_list,
