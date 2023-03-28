@@ -94,29 +94,16 @@ projects_list = response['data']['hits']
 #      the IDs for all the files are also available form this endpoint
 ########################################################################
 
-fields = ['files.file_id', 'summary.file_count', 'annotation']
-fields = ','.join(fields)
-
+fields = ','.join(['files.file_id', 'summary.file_count', 'annotation'])
 for proj in projects_list:
     if download_all_cases:
         size = proj['summary']['case_count']
     else:
         size = min(proj['summary']['case_count'], number_of_cases)
-    filters = {
-        'op': 'in',
-        'content': {
-            'field': 'project.project_id',
-            'value': proj['id'],
-        },
-    }
-    params = {
-        'filters': json.dumps(filters),
-        'fields': fields,
-        'size': size,
-    }
-    response = requests.get(cases_endpt, params=params)
-    cases = (response.json()['data']['hits'])
-    proj['cases'] = cases
+    response = call_endpoint(
+        cases_endpt, filter=create_filter('project.project_id', [proj['id']]), fields=fields, size=size)
+    print(response)
+    proj['cases'] = response['data']['hits']
 
 ##############################################################################
 # step4: filtered query on 'annotations' (filter on case_id) to get cases
