@@ -79,31 +79,29 @@ else:
 # step 2: filtered query to get the UIDs of each TCGA project
 ##############################################################
 fields = ','.join(['summary.case_count', 'summary.file_count'])
-
 response = call_endpoint(
     projects_endpt, filter=create_filter('program.name', ['TCGA']), fields=fields, size=size)
 
-if len(response['data']['hits']) != size:
+projects = response['data']['hits']
+if len(projects) != size:
     print('size mismatch')
     sys.exit()
 
-projects_list = response['data']['hits']
 
 ##########################################################################
 # Step3: filtered query on 'cases' (filter on project_id) to get cases ID for each TCGA project
 #      the IDs for all the files are also available form this endpoint
 ########################################################################
 
-fields = ','.join(['files.file_id', 'summary.file_count', 'annotation'])
-for proj in projects_list:
+for project in projects:
     if download_all_cases:
-        size = proj['summary']['case_count']
+        size = project['summary']['case_count']
     else:
-        size = min(proj['summary']['case_count'], number_of_cases)
+        size = min(project['summary']['case_count'], number_of_cases)
     response = call_endpoint(
-        cases_endpt, filter=create_filter('project.project_id', [proj['id']]), fields=fields, size=size)
-    print(response)
-    proj['cases'] = response['data']['hits']
+        cases_endpt, filter=create_filter('project.project_id', [project['id']]),
+        fields=','.join(['files.file_id', 'summary.file_count', 'annotation']), size=size)
+    project['cases'] = response['data']['hits']
 
 ##############################################################################
 # step4: filtered query on 'annotations' (filter on case_id) to get cases
@@ -111,24 +109,12 @@ for proj in projects_list:
 #        form this endpoint
 ##############################################################################
 
-fields = ['annotation_id']
-
-for proj in projects_list:
-    for case in proj['cases']:
-        filters = {
-            'op': 'in',
-            'content': {
-                'field': 'case_id',
-                'value': case['id'],
-            },
-        }
-        params = {
-            'fields': fields,
-            'filters': json.dumps(filters),
-        }
-        response = requests.get(annotations_endpt, params=params)
-        annotations = response.json()['data']['hits']
-        case['annotations'] = annotations
+for project in projects:
+    for case in project['cases']:
+        response = call_endpoint(
+            annotations_endpt, filter=create_filter('case_id', [case['id']]),
+            fields=['annotation_id'], size=size)
+        case['annotations'] = response['data']['hits']
 
 ############################################################################
 # step 5: create list of IDs for projects, cases, files and annotations
@@ -138,24 +124,24 @@ for proj in projects_list:
 proj_id_list = []
 case_id_list = []
 file_id_list = []
-ant_id_list = []
+annotation_id_list = []
 
-for proj in projects_list:
-    proj_id_list.append(proj['id'])
-    for case in proj['cases']:
+for project in projects:
+    proj_id_list.append(project['id'])
+    for case in project['cases']:
         case_id_list.append(case['id'])
         for i, file in enumerate(case['files']):
             if i >= number_of_files:
                 continue
             file_id_list.append(file['file_id'])
-        for ant in case['annotations']:
-            ant_id_list.append(ant['annotation_id'])
+        for annotation in case['annotations']:
+            annotation_id_list.append(annotation['annotation_id'])
 
 id_dict = {
     'projects': proj_id_list,
     'cases': case_id_list,
     'files': file_id_list,
-    'annotations': ant_id_list,
+    'annotations': annotation_id_list,
 }
 
 for entry in ['cases', 'projects', 'files', 'annotations']:
