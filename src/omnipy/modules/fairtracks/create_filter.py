@@ -4,14 +4,13 @@ import json
 import sys
 from typing import cast, Dict, List, Optional, Union
 
-from numpy import arange
 from pydantic import BaseModel
 import requests
 
 from omnipy.modules.json.types import Json, JsonDict
 
 #########################################################
-### user parameters
+# user parameters
 #######################################################
 download_all_projects = False
 download_all_cases = False
@@ -21,7 +20,7 @@ number_of_files = 2
 # NB very few annotations per case, get all
 
 #######################################################
-###endpoints definition
+#endpoints definition
 ########################################################
 projects_endpt = 'https://api.gdc.cancer.gov/projects'
 cases_endpt = 'https://api.gdc.cancer.gov/cases'
@@ -46,9 +45,9 @@ def create_filter(field: str, value: List[str]) -> Filter:
     return Filter(content=Content(field=field, value=value))
 
 
-def call_endpoint(endpoint: str, filter: Optional[Filter] = None, **kwargs: object) -> Json:
-    if filter:
-        kwargs['filter'] = filter.dict()
+def call_endpoint(endpoint: str, filters: Optional[Filter] = None, **kwargs: object) -> Json:
+    if filters:
+        kwargs['filters'] = json.dumps(filters.dict())
     return requests.get(endpoint, params=kwargs).json()  # type: ignore
 
 
@@ -78,15 +77,13 @@ else:
 ##############################################################
 # step 2: filtered query to get the UIDs of each TCGA project
 ##############################################################
-fields = ','.join(['summary.case_count', 'summary.file_count'])
-response = call_endpoint(
-    projects_endpt, filter=create_filter('program.name', ['TCGA']), fields=fields, size=size)
-
+fields = ','.join(['summary.case_count', 'summary.file_count', 'program.name'])
+response = call_endpoint(projects_endpt, filters=create_filter('program.name', ['TCGA']), fields=fields, size=size)
+response2 = call_endpoint(projects_endpt, fields=fields, size=size)
 projects = response['data']['hits']
 if len(projects) != size:
     print('size mismatch')
     sys.exit()
-
 
 ##########################################################################
 #Step3: filtered query on 'cases' (filter on project_id) to get cases ID for each TCGA project
