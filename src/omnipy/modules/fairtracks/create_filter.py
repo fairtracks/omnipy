@@ -79,7 +79,6 @@ else:
 ##############################################################
 fields = ','.join(['summary.case_count', 'summary.file_count', 'program.name'])
 response = call_endpoint(projects_endpt, filters=create_filter('program.name', ['TCGA']), fields=fields, size=size)
-response2 = call_endpoint(projects_endpt, fields=fields, size=size)
 projects = response['data']['hits']
 if len(projects) != size:
     print('size mismatch')
