@@ -100,8 +100,10 @@ def test_iterate_over_data_files() -> None:
         single_int_model_plus_int_return_str_model_func)
 
     dataset = Dataset[Model[int]]({'a': 5, 'b': -2})
-    assert single_data_file_plus_str_template.run(dataset, number=2) == \
-           Dataset[Model[str]]({'a': '7', 'b': '0'})
+    assert single_data_file_plus_str_template.run(
+        dataset, number=2) == Dataset[Model[str]]({  # type: ignore[arg-type]
+            'a': '7', 'b': '0'
+        })
 
 
 def test_iterate_over_data_files_output_dataset_cls() -> None:
@@ -113,8 +115,10 @@ def test_iterate_over_data_files_output_dataset_cls() -> None:
         single_int_model_plus_int_return_str_model_func)
 
     dataset = Dataset[Model[int]]({'a': 5, 'b': -2})
-    assert single_data_file_plus_str_template.run(dataset, number=2) == \
-           CustomStrDataset({'a': '7', 'b': '0'})
+    assert single_data_file_plus_str_template.run(
+        dataset, number=2) == CustomStrDataset({  # type: ignore[arg-type]
+            'a': '7', 'b': '0'
+        })
 
 
 def test_iterate_over_data_files_param() -> None:
@@ -128,8 +132,10 @@ def test_iterate_over_data_files_param() -> None:
         single_int_model_plus_int_return_str_model_func)
 
     dataset = Dataset[Model[int]]({'a': 5, 'b': -2})
-    assert single_data_file_plus_str_template.run(data_numbers=dataset) == \
-           Dataset[Model[str]]({'a': '7', 'b': '0'})
+    assert single_data_file_plus_str_template.run(
+        data_numbers=dataset,) == Dataset[Model[str]]({  # type: ignore[call-arg]
+            'a': '7', 'b': '0'
+        })
 
 
 def test_refine_task_template_with_other_properties_task() -> None:
@@ -154,7 +160,7 @@ def test_refine_task_template_with_other_properties_task() -> None:
 
     my_power = my_power_template.apply()
     assert my_power != power_m1
-    assert my_power(num=3) == {'by_the_power_of_grayskull': 26}
+    assert my_power(num=3) == {'by_the_power_of_grayskull': 26}  # type: ignore[call-arg]
 
     # Refine task template with two properties (update=True)
     my_power_template_2 = my_power_template.refine(
@@ -168,7 +174,12 @@ def test_refine_task_template_with_other_properties_task() -> None:
 
     my_power_2 = my_power_template_2.apply()
     assert my_power_2 != my_power
-    assert my_power_2(numb=3, min=False) == {'by_the_power_of_grayskull': 27}
+    assert my_power_2(
+        numb=3,  # type: ignore[call-arg]
+        min=False,
+    ) == {
+        'by_the_power_of_grayskull': 27
+    }
 
     # Refine task template with single property (update=False)
     my_power_template_3 = my_power_template_2.refine(
@@ -182,7 +193,7 @@ def test_refine_task_template_with_other_properties_task() -> None:
 
     my_power_3 = my_power_template_3.apply()
     assert my_power_3 != my_power_2
-    assert my_power_3(exponent=3) == 27
+    assert my_power_3(exponent=3) == 27  # type: ignore[call-arg]
 
     # One-liner to reset properties to default values
     my_power_4 = my_power_3.revise().refine(update=False).apply()

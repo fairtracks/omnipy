@@ -2,12 +2,9 @@ import os
 from typing import Type, TypeVar
 
 from omnipy.compute.task import TaskTemplate
-from omnipy.compute.typing import mypy_fix_task_template
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
-#
-# @mypy_fix_task_template
 # @TaskTemplate()
 # def cast_dataset(dataset: Dataset, cast_model: Callable[[], ModelT]) -> ModelT:
 #     out_dataset: Dataset[ModelT] = Dataset[cast_model]()
@@ -16,7 +13,6 @@ from omnipy.data.model import Model
 #     return out_dataset
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def split_dataset(
         dataset: Dataset[Model[object]],
@@ -34,7 +30,6 @@ def split_dataset(
     return dataset_a, dataset_b
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def import_directory(directory: str,
                      exclude_prefixes: tuple[str, ...] = ('.', '_'),
@@ -56,7 +51,6 @@ def import_directory(directory: str,
 _DatasetT = TypeVar('_DatasetT', bound=Dataset)
 
 
-@mypy_fix_task_template
-@TaskTemplate
+@TaskTemplate()
 def convert_dataset(dataset: Dataset, dataset_cls: type[_DatasetT], **kwargs: object) -> _DatasetT:
     return dataset_cls(dataset, **kwargs)

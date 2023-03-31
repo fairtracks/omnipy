@@ -6,10 +6,6 @@ from omnipy.api.protocols.public.compute import (IsDagFlowTemplate,
                                                  IsTaskTemplate)
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
-from omnipy.compute.typing import (mypy_fix_dag_flow_template,
-                                   mypy_fix_func_flow_template,
-                                   mypy_fix_linear_flow_template,
-                                   mypy_fix_task_template)
 
 
 @pc.case(
@@ -17,8 +13,7 @@ from omnipy.compute.typing import (mypy_fix_dag_flow_template,
     tags=['sync', 'function', 'task', 'plain'],
 )
 def case_task_plus_one_template() -> IsTaskTemplate:
-    @mypy_fix_task_template
-    @TaskTemplate
+    @TaskTemplate()
     def plus_one(number: int) -> int:
         return number + 1
 
@@ -30,7 +25,6 @@ def case_task_plus_one_template() -> IsTaskTemplate:
     tags=['sync', 'function', 'task', 'with_kw_params'],
 )
 def case_task_plus_other_as_plus_one_template() -> IsTaskTemplate:
-    @mypy_fix_task_template
     @TaskTemplate(
         name='plus_one',
         fixed_params=dict(other=1),
@@ -47,9 +41,8 @@ def case_task_plus_other_as_plus_one_template() -> IsTaskTemplate:
 )
 @pc.parametrize_with_cases('plus_one_template', cases='.', has_tag='task')
 def case_linear_flow_number_plus_five_template(plus_one_template) -> IsLinearFlowTemplate:
-    @mypy_fix_linear_flow_template
     @LinearFlowTemplate(*((plus_one_template,) * 5))
-    def plus_five(number: int) -> int:  # type: ignore
+    def plus_five(number: int) -> int:
         ...
 
     return plus_five
@@ -63,9 +56,8 @@ def case_linear_flow_number_plus_five_template(plus_one_template) -> IsLinearFlo
 def case_linear_flow_x_plus_five_template(plus_one_template) -> IsLinearFlowTemplate:
     iterative_x_plus_one_template = plus_one_template.refine(param_key_map=dict(number='x'),)
 
-    @mypy_fix_linear_flow_template
     @LinearFlowTemplate(*((iterative_x_plus_one_template,) * 5))
-    def plus_five(x: int) -> int:  # type: ignore
+    def plus_five(x: int) -> int:
         ...
 
     return plus_five
@@ -80,9 +72,8 @@ def case_dag_flow_number_plus_five_template(plus_one_template) -> IsDagFlowTempl
 
     iterative_number_plus_one_template = plus_one_template.refine(result_key='number')
 
-    @mypy_fix_dag_flow_template
     @DagFlowTemplate(*((iterative_number_plus_one_template,) * 5))
-    def plus_five(number: int) -> int:  # type: ignore
+    def plus_five(number: int) -> int:
         ...
 
     return plus_five
@@ -102,9 +93,8 @@ def case_dag_flow_x_plus_five_template(plus_one_template) -> IsDagFlowTemplate:
         result_key='x',
     )
 
-    @mypy_fix_dag_flow_template
     @DagFlowTemplate(*((iterative_x_plus_one_template,) * 5))
-    def plus_five(x: int) -> int:  # type: ignore
+    def plus_five(x: int) -> int:
         ...
 
     return plus_five
@@ -116,8 +106,7 @@ def case_dag_flow_x_plus_five_template(plus_one_template) -> IsDagFlowTemplate:
 )
 @pc.parametrize_with_cases('plus_one_template', cases='.', has_tag='task')
 def case_func_flow_plus_y_template(plus_one_template) -> IsFuncFlowTemplate:
-    @mypy_fix_func_flow_template
-    @FuncFlowTemplate
+    @FuncFlowTemplate()
     def plus_y(number: int, y: int) -> int:
         for _ in range(y):
             number = plus_one_template(number=number)
@@ -135,7 +124,6 @@ def case_func_flow_plus_function_as_plus_y_template(plus_one_template) -> IsFunc
     # TODO: Expand on this example with param_key_map and result_key, given these
     #       are reimplemented as mixins
 
-    @mypy_fix_func_flow_template
     @FuncFlowTemplate(name='plus_y')
     def plus_function(x: int, y: int) -> int:
         for _ in range(y):

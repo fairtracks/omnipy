@@ -6,9 +6,9 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
 InputT = TypeVar('InputT', default=object)
-ModelInputT = TypeVar('ModelInputT', default=Model)
+ModelInputT = TypeVar('ModelInputT', bound=Model, default=Model)
 ReturnT = TypeVar('ReturnT', default=object)
-ModelReturnT = TypeVar('ModelReturnT', default=Model)
+ModelReturnT = TypeVar('ModelReturnT', bound=Model, default=Model)
 InputTypeT: TypeAlias = InputT | ModelInputT
 InputDatasetT: TypeAlias = Dataset[Model[InputT]] | Dataset[ModelInputT]
 ReturnDatasetT: TypeAlias = Dataset[Model[ReturnT]] | Dataset[ModelReturnT]

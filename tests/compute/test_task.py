@@ -4,7 +4,7 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.api.exceptions import JobStateException
-from omnipy.compute.task import Task, TaskTemplate
+from omnipy.compute.task import _TaskTemplate, Task, TaskTemplate
 
 from .cases.raw.functions import format_to_string_func, power_m1_func
 from .cases.tasks import TaskCase
@@ -12,18 +12,18 @@ from .helpers.functions import assert_updated_wrapper
 from .helpers.mocks import MockLocalRunner
 
 
-def test_init() -> None:
-    task_template = TaskTemplate(format_to_string_func)
-    assert isinstance(task_template, TaskTemplate)  # noqa
+def test_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    task_template = TaskTemplate()(format_to_string_func)
+    assert isinstance(task_template, _TaskTemplate)
     assert_updated_wrapper(task_template, format_to_string_func)
 
     with pytest.raises(TypeError):
-        TaskTemplate(format_to_string_func)(format_to_string_func)
+        TaskTemplate(format_to_string_func)(format_to_string_func)  # type: ignore[misc, arg-type]
 
     with pytest.raises(JobStateException):
         Task(format_to_string_func)
 
-    task = task_template.apply()  # noqa
+    task = task_template.apply()
     assert isinstance(task, Task)
     assert_updated_wrapper(task, format_to_string_func)
 
@@ -34,7 +34,7 @@ def test_task_run(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     if hasattr(mock_local_runner, 'finished'):
         assert mock_local_runner.finished is False
 
-    task_template = TaskTemplate(case.task_func)
+    task_template = TaskTemplate()(case.task_func)
     assert_updated_wrapper(task_template, case.task_func)
 
     with pytest.raises(TypeError):
@@ -57,7 +57,7 @@ def test_task_run_parameter_variants(
     if hasattr(mock_local_runner, 'finished'):
         assert mock_local_runner.finished is False
 
-    power_m1 = TaskTemplate(power_m1_func)
+    power_m1 = TaskTemplate()(power_m1_func)
 
     assert power_m1.run(4, 3) == 63
     assert power_m1.run(4, exponent=3) == 63
@@ -72,13 +72,13 @@ def test_task_run_parameter_variants(
 
 
 def test_error_missing_task_run_parameters() -> None:
-    power_m1 = TaskTemplate(power_m1_func).apply()
+    power_m1 = TaskTemplate()(power_m1_func).apply()
 
     with pytest.raises(TypeError):
-        power_m1()
+        power_m1()  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
-        power_m1(5)
+        power_m1(5)  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
-        power_m1(4, minus_one=False)
+        power_m1(4, minus_one=False)  # type: ignore[call-arg]

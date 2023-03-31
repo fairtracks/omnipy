@@ -3,13 +3,16 @@ from io import BytesIO
 import os
 import tarfile
 from tarfile import TarInfo
-from typing import Any, Callable, IO, Type
+from typing import Any, Callable, cast, IO, ParamSpec, Type
 
 from pydantic import ValidationError
 
 from omnipy.api.protocols.private.log import CanLog
 from omnipy.api.protocols.public.data import IsDataset, IsSerializer, IsTarFileSerializer
+from omnipy.data.helpers import HasData
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
+
+LogP = ParamSpec('LogP')
 
 
 class Serializer(ABC):
@@ -40,15 +43,15 @@ class Serializer(ABC):
         pass
 
 
-class TarFileSerializer(Serializer, ABC):
+class TarFileSerializer(Serializer):
     """"""
     @classmethod
     def create_tarfile_from_dataset(cls,
                                     dataset: IsDataset,
-                                    data_encode_func: Callable[[Any], bytes | memoryview]):
+                                    data_encode_func: Callable[[Any], bytes | memoryview]) -> bytes:
         bytes_io = BytesIO()
         with tarfile.open(fileobj=bytes_io, mode='w:gz') as tarfile_stream:
-            for data_file, data in dataset.items():
+            for data_file, data in dataset.items():  # type: ignore[attr-defined]
                 json_data_bytestream = BytesIO(data_encode_func(data.contents))
                 json_data_bytestream.seek(0)
                 tarinfo = TarInfo(name=f'{data_file}.{cls.get_output_file_suffix()}')
@@ -63,10 +66,11 @@ class TarFileSerializer(Serializer, ABC):
                                     data_decode_func: Callable[[IO[bytes]], Any],
                                     dictify_object_func: Callable[[str, Any], dict | str],
                                     import_method: str = 'from_data',
-                                    any_file_suffix: bool = False):
+                                    any_file_suffix: bool = False) -> None:
         with tarfile.open(fileobj=BytesIO(tarfile_bytes), mode='r:gz') as tarfile_stream:
             for filename in tarfile_stream.getnames():
                 data_file = tarfile_stream.extractfile(filename)
+                assert data_file is not None
                 if not any_file_suffix:
                     assert filename.endswith(f'.{cls.get_output_file_suffix()}')
                 data_file_name = os.path.basename('.'.join(filename.split('.')[:-1]))
@@ -89,10 +93,11 @@ class SerializerRegistry:
     def tar_file_serializers(self) -> tuple[Type[IsTarFileSerializer], ...]:
         return tuple(cls for cls in self._serializer_classes if issubclass(cls, TarFileSerializer))
 
-    def auto_detect(self, dataset: IsDataset):
+    def auto_detect(self, dataset: IsDataset) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
         return self._autodetect_serializer(dataset, self.serializers)
 
-    def auto_detect_tar_file_serializer(self, dataset: IsDataset):
+    def auto_detect_tar_file_serializer(
+            self, dataset: IsDataset) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
         return self._autodetect_serializer(dataset, self.tar_file_serializers)
 
     @classmethod
@@ -100,7 +105,7 @@ class SerializerRegistry:
         cls,
         dataset: IsDataset,
         serializers: tuple[Type[IsSerializer], ...],
-    ) -> tuple[IsDataset, IsSerializer]:
+    ) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
 
         from omnipy.hub.runtime import runtime
         if runtime:
@@ -124,7 +129,7 @@ class SerializerRegistry:
         self,
         dataset: IsDataset,
         serializers: tuple[Type[IsSerializer], ...],
-    ) -> tuple[IsDataset, IsSerializer]:
+    ) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
 
         # def _direct(dataset: Dataset, serializer: Serializer):
         #     new_dataset_cls = serializer.get_dataset_cls_for_new()
@@ -163,7 +168,8 @@ class SerializerRegistry:
 
         return None, None
 
-    def detect_tar_file_serializers_from_dataset_cls(self, dataset: IsDataset):
+    def detect_tar_file_serializers_from_dataset_cls(
+            self, dataset: IsDataset) -> tuple[Type[IsTarFileSerializer], ...]:
         serializers = tuple(
             serializer_cls for serializer_cls in self.tar_file_serializers
             if serializer_cls.is_dataset_directly_supported(dataset))
@@ -172,14 +178,16 @@ class SerializerRegistry:
                                 if serializer_cls.get_output_file_suffix() == 'bytes')
         return serializers
 
-    def detect_tar_file_serializers_from_file_suffix(self, file_suffix: str):
+    def detect_tar_file_serializers_from_file_suffix(
+            self, file_suffix: str) -> tuple[Type[IsTarFileSerializer], ...]:
         return tuple(serializer_cls for serializer_cls in self.tar_file_serializers
                      if serializer_cls.get_output_file_suffix() == file_suffix)
 
     def load_from_tar_file_path_based_on_file_suffix(self,
                                                      log_obj: CanLog,
                                                      tar_file_path: str,
-                                                     to_dataset: IsDataset):
+                                                     to_dataset: IsDataset) -> IsDataset | None:
+        log: Callable
         if hasattr(log_obj, 'log'):
             log = log_obj.log
         else:
@@ -207,7 +215,7 @@ class SerializerRegistry:
                     auto_dataset = serializer.deserialize(tarfile_binary.read())
 
                 if to_dataset.get_model_class() is auto_dataset.get_model_class():
-                    to_dataset.data = auto_dataset.data
+                    cast(HasData, to_dataset).data = cast(HasData, auto_dataset).data
                     return to_dataset
                 else:
                     try:
@@ -222,7 +230,8 @@ class SerializerRegistry:
     def load_from_tar_file_path_based_on_dataset_cls(self,
                                                      log_obj: CanLog,
                                                      tar_file_path: str,
-                                                     to_dataset: IsDataset):
+                                                     to_dataset: IsDataset) -> IsDataset | None:
+        log: Callable
         if hasattr(log_obj, 'log'):
             log = log_obj.log
         else:
@@ -239,6 +248,6 @@ class SerializerRegistry:
                     f'"{serializer.__name__}"')
 
                 with open(tar_file_path, 'rb') as tarfile_binary:
-                    out_dataset = serializer.deserialize(tarfile_binary.read(), any)
+                    out_dataset = serializer.deserialize(tarfile_binary.read())
 
                 return out_dataset

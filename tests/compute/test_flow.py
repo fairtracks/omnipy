@@ -1,25 +1,26 @@
 from collections.abc import Iterable
 from datetime import datetime
-from typing import Annotated, cast, Type
+from typing import Annotated, Callable, cast, Type
 
 import pytest
 import pytest_cases as pc
 
 from omnipy.api.exceptions import JobStateException
-from omnipy.api.protocols.public.compute import IsFlowTemplate
-from omnipy.compute.flow import DagFlowTemplate, FuncFlow, FuncFlowTemplate, LinearFlowTemplate
+from omnipy.api.protocols.private.compute.job import IsFuncArgJobTemplate
+from omnipy.api.protocols.public.compute import (IsDagFlowTemplate,
+                                                 IsFuncFlowTemplate,
+                                                 IsLinearFlowTemplate)
+from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.task import TaskTemplate
-from omnipy.compute.typing import (mypy_fix_dag_flow_template,
-                                   mypy_fix_func_flow_template,
-                                   mypy_fix_linear_flow_template,
-                                   mypy_fix_task_template)
 
 from .cases.flows import FlowCase
 from .cases.raw.functions import data_import_func, empty_dict_func, format_to_string_func
-from .helpers.classes import FlowClsTuple
+from .helpers.classes import AnyFlowClsTuple, FuncArgFlowClsTuple, TaskTemplateArgFlowClsTuple
 from .helpers.functions import assert_flow_or_flow_template, assert_updated_wrapper
-from .helpers.mocks import (MockFlowTemplateSubclass,
+from .helpers.mocks import (_MockTaskTemplateAssertSameTimeOfCurFlowRun,
+                            IsMockTaskTemplateAssertSameTimeOfCurFlowRun,
+                            MockFlowTemplateSubclass,
                             MockJobTemplateSubclass,
                             MockLocalRunner,
                             MockTaskTemplateAssertSameTimeOfCurFlowRun)
@@ -28,9 +29,9 @@ MockJobClasses = tuple[Type[JobBase], Type[JobTemplateMixin], Type[JobMixin]]
 
 
 def test_flow_context_mock() -> None:
-    flow_tmpl = MockFlowTemplateSubclass()
+    flow_tmpl: MockFlowTemplateSubclass = MockFlowTemplateSubclass()
     flow = flow_tmpl.apply()
-    job_tmpl = MockJobTemplateSubclass()
+    job_tmpl: MockJobTemplateSubclass = MockJobTemplateSubclass()
     job = job_tmpl.apply()
 
     for job_obj in flow, flow_tmpl, job, job_tmpl:
@@ -40,13 +41,13 @@ def test_flow_context_mock() -> None:
         assert not hasattr(job_obj, 'flow_context')
 
     with flow.flow_context:
-        job_tmpl_inside = MockJobTemplateSubclass()
+        job_tmpl_inside: MockJobTemplateSubclass = MockJobTemplateSubclass()
         job_inside = job_tmpl_inside.apply()
 
         for job_obj in flow, flow_tmpl, job, job_tmpl, job_inside, job_tmpl_inside:
             assert job_obj.in_flow_context is True
 
-    job_tmpl_outside = MockJobTemplateSubclass()
+    job_tmpl_outside: MockJobTemplateSubclass = MockJobTemplateSubclass()
     job_outside = job_tmpl_outside.apply()
 
     for job_obj in (flow,
@@ -61,9 +62,9 @@ def test_flow_context_mock() -> None:
 
 
 def test_time_of_flow_run_mock() -> None:
-    flow_tmpl = MockFlowTemplateSubclass()
+    flow_tmpl: MockFlowTemplateSubclass = MockFlowTemplateSubclass()
     flow = flow_tmpl.apply()
-    job_tmpl = MockJobTemplateSubclass()
+    job_tmpl: MockJobTemplateSubclass = MockJobTemplateSubclass()
     job = job_tmpl.apply()
 
     assert flow.time_of_cur_toplevel_flow_run is None
@@ -78,13 +79,14 @@ def test_time_of_flow_run_mock() -> None:
     assert flow.time_of_last_run is None
     with flow.flow_context:
         assert isinstance(flow.time_of_last_run, datetime)
-        prev_time_of_last_tun = flow.time_of_last_run
-        assert flow.time_of_cur_toplevel_flow_run == prev_time_of_last_tun
+        assert flow.time_of_last_run is not None
+        prev_time_of_last_run = flow.time_of_last_run
+        assert flow.time_of_cur_toplevel_flow_run == prev_time_of_last_run
 
         job_inside = MockJobTemplateSubclass().apply()
 
-        assert job.time_of_cur_toplevel_flow_run == prev_time_of_last_tun
-        assert job_inside.time_of_cur_toplevel_flow_run == prev_time_of_last_tun
+        assert job.time_of_cur_toplevel_flow_run == prev_time_of_last_run
+        assert job_inside.time_of_cur_toplevel_flow_run == prev_time_of_last_run
 
     job_outside = MockJobTemplateSubclass().apply()
 
@@ -93,131 +95,187 @@ def test_time_of_flow_run_mock() -> None:
     assert job_inside.time_of_cur_toplevel_flow_run is None
     assert job_outside.time_of_cur_toplevel_flow_run is None
 
-    assert flow.time_of_last_run == prev_time_of_last_tun
+    assert flow.time_of_last_run == prev_time_of_last_run
 
 
-def test_init_all_flow_classes(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-        all_flow_classes: Annotated[tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
-    for class_info in all_flow_classes:
-        template_cls = class_info.template_cls
-        flow_cls = class_info.flow_cls
+def test_fail_init_flow_cls_tuple(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    flow_cls_tuple: Annotated[AnyFlowClsTuple, pytest.fixture],
+) -> None:
+    flow_cls = flow_cls_tuple.flow_cls
 
-        flow_template = template_cls(format_to_string_func)
-        assert_flow_or_flow_template(
-            flow_template,
-            assert_flow_cls=template_cls,
-            assert_func=format_to_string_func,
-            assert_name='format_to_string_func')
-
-        with pytest.raises(JobStateException):
-            flow_cls(format_to_string_func)
+    with pytest.raises(JobStateException):
+        flow_cls(format_to_string_func)
 
 
-def test_init_linear_and_dag_flow_templates(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-        all_flow_classes: Annotated[tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
-    for class_info in all_flow_classes:
-        template_cls = class_info.template_cls
-
-        if any(issubclass(template_cls, cls) for cls in (LinearFlowTemplate, DagFlowTemplate)):
-            flow_template = template_cls(TaskTemplate(format_to_string_func))(format_to_string_func)
-            assert_flow_or_flow_template(
-                flow_template,
-                assert_flow_cls=template_cls,
-                assert_func=format_to_string_func,
-                assert_name='format_to_string_func')
-
-
-def test_fail_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+def test_fail_init_func_arg_flow_classes(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
+) -> None:
+    flow_cls, flow_tmpl_cls, _ = func_arg_flow_cls_tuple
     with pytest.raises(TypeError):
-        FuncFlow()
+        flow_cls()
 
     with pytest.raises(TypeError):
-        FuncFlowTemplate(lambda x: x)(lambda y: y)
+        flow_tmpl_cls(lambda x: x)(lambda y: y)  # type: ignore[misc, call-arg]
 
 
-def test_apply_run_all_flow_classes(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-        all_flow_classes: Annotated[tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
-    for class_info in all_flow_classes:
-        template_cls = class_info.template_cls
-        flow_cls = class_info.flow_cls
+def test_init_task_template_args_flow_templates(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    task_tmpl_arg_flow_cls_tuple: Annotated[TaskTemplateArgFlowClsTuple, pytest.fixture],
+) -> None:
+    _, flow_tmpl_cls, assert_flow_tmpl_cls = task_tmpl_arg_flow_cls_tuple
 
-        if any(issubclass(template_cls, cls) for cls in (LinearFlowTemplate, DagFlowTemplate)):
-            flow_template = template_cls(TaskTemplate(format_to_string_func))(format_to_string_func)
-        else:
-            flow_template = template_cls(format_to_string_func)
+    task_tmpl = TaskTemplate()(format_to_string_func)
+    flow_template = flow_tmpl_cls(task_tmpl)(format_to_string_func)
 
-        flow = flow_template.apply()
-        assert_flow_or_flow_template(
-            flow,
-            assert_flow_cls=flow_cls,
-            assert_func=format_to_string_func,
-            assert_name='format_to_string_func')
-
-        assert flow_template.run('text', number=1) == 'text: 1'
-        assert flow('text', number=1) == 'text: 1'
-
-        with pytest.raises(TypeError):
-            flow_template.run('text')
-            flow('text')
+    assert_flow_or_flow_template(
+        flow_template,
+        assert_flow_cls=assert_flow_tmpl_cls,
+        assert_func=format_to_string_func,
+        assert_name='format_to_string_func')
 
 
-def test_refine_all_flow_classes(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-        all_flow_classes: Annotated[tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
-    for class_info in all_flow_classes:
-        template_cls = class_info.template_cls
+def test_init_func_arg_flow_templates(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
+) -> None:
+    _, flow_tmpl_cls, assert_flow_tmpl_cls = func_arg_flow_cls_tuple
 
-        if any(issubclass(template_cls, cls) for cls in (LinearFlowTemplate, DagFlowTemplate)):
-            flow_template = template_cls(TaskTemplate(format_to_string_func))(empty_dict_func)
-            flow_template_2 = flow_template.refine(
-                TaskTemplate(data_import_func), name='data_import')
+    flow_template = flow_tmpl_cls()(format_to_string_func)
 
-            assert_flow_or_flow_template(
-                flow_template_2,
-                assert_flow_cls=template_cls,
-                assert_func=empty_dict_func,
-                assert_name='data_import')
-            assert flow_template_2.run() == '{"my_data": [123,234,345,456]}'
-        else:
-            flow_template = template_cls(empty_dict_func)
-            flow_template_2 = flow_template.refine(name='not_data_import')
-
-            assert_flow_or_flow_template(
-                flow_template_2,
-                assert_flow_cls=template_cls,
-                assert_func=empty_dict_func,
-                assert_name='not_data_import')
-            assert flow_template_2.run() == {}
+    assert_flow_or_flow_template(
+        flow_template,
+        assert_flow_cls=assert_flow_tmpl_cls,
+        assert_func=format_to_string_func,
+        assert_name='format_to_string_func')
 
 
-def test_revise_all_flow_classes(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-        all_flow_classes: Annotated[tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
-    for class_info in all_flow_classes:
-        template_cls = class_info.template_cls
+def _run_and_assert_flow_template(flow_template: IsFuncArgJobTemplate,
+                                  assert_flow_cls: type,
+                                  assert_func: Callable,
+                                  assert_name: str) -> None:
+    flow = flow_template.apply()
+    assert_flow_or_flow_template(
+        flow, assert_flow_cls=assert_flow_cls, assert_func=assert_func, assert_name=assert_name)
 
-        if any(issubclass(template_cls, cls) for cls in (LinearFlowTemplate, DagFlowTemplate)):
-            flow_template = template_cls(TaskTemplate(format_to_string_func))(format_to_string_func)
-        else:
-            flow_template = template_cls(format_to_string_func)
+    assert flow_template.run('text', number=1) == 'text: 1'
+    assert flow('text', number=1) == 'text: 1'
 
-        flow = flow_template.apply()
-        flow_template_2 = flow.revise()
+    with pytest.raises(TypeError):
+        flow_template.run('text')
+        flow('text')
 
-        assert_flow_or_flow_template(
-            flow_template_2,
-            assert_flow_cls=template_cls,
-            assert_func=format_to_string_func,
-            assert_name='format_to_string_func')
-        assert flow_template_2.run('text', 1) == 'text: 1'
+
+def test_apply_run_task_tmpl_arg_flow_cls_tuple(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    task_tmpl_arg_flow_cls_tuple: Annotated[TaskTemplateArgFlowClsTuple, pytest.fixture],
+) -> None:
+    flow_cls, flow_tmpl_cls, _ = task_tmpl_arg_flow_cls_tuple
+
+    task_tmpl = TaskTemplate()(format_to_string_func)
+    flow_template = flow_tmpl_cls(task_tmpl)(format_to_string_func)
+
+    _run_and_assert_flow_template(flow_template,
+                                  flow_cls,
+                                  format_to_string_func,
+                                  'format_to_string_func')
+
+
+def test_apply_run_func_arg_flow_cls_tuple(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
+) -> None:
+    flow_cls, flow_tmpl_cls, _ = func_arg_flow_cls_tuple
+
+    flow_template = flow_tmpl_cls()(format_to_string_func)
+
+    _run_and_assert_flow_template(flow_template,
+                                  flow_cls,
+                                  format_to_string_func,
+                                  'format_to_string_func')
+
+
+def test_refine_task_tmpl_arg_flow_cls_tuple(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    task_tmpl_arg_flow_cls_tuple: Annotated[TaskTemplateArgFlowClsTuple, pytest.fixture],
+) -> None:
+    _, flow_tmpl_cls, assert_flow_tmpl_cls = task_tmpl_arg_flow_cls_tuple
+
+    flow_template = flow_tmpl_cls(TaskTemplate()(format_to_string_func))(empty_dict_func)
+    flow_template_2 = flow_template.refine(TaskTemplate()(data_import_func), name='data_import')
+
+    assert_flow_or_flow_template(
+        flow_template_2,
+        assert_flow_cls=assert_flow_tmpl_cls,
+        assert_func=empty_dict_func,
+        assert_name='data_import')
+    assert flow_template_2.run() == '{"my_data": [123,234,345,456]}'
+
+
+def test_refine_func_arg_flow_cls_tuple(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
+) -> None:
+    _, flow_tmpl_cls, assert_flow_tmpl_cls = func_arg_flow_cls_tuple
+
+    flow_template = flow_tmpl_cls()(empty_dict_func)
+    flow_template_2 = flow_template.refine(name='not_data_import')
+
+    assert_flow_or_flow_template(
+        flow_template_2,
+        assert_flow_cls=assert_flow_tmpl_cls,
+        assert_func=empty_dict_func,
+        assert_name='not_data_import')
+    assert flow_template_2.run() == {}
+
+
+def _apply_revise_and_run_and_assert_flow_template(flow_template: IsFuncArgJobTemplate,
+                                                   assert_flow_tmpl_cls: type,
+                                                   assert_func: Callable,
+                                                   assert_name: str) -> None:
+    flow = flow_template.apply()
+    flow_template_2 = flow.revise()
+
+    assert_flow_or_flow_template(
+        flow_template_2,
+        assert_flow_cls=assert_flow_tmpl_cls,
+        assert_func=format_to_string_func,
+        assert_name='format_to_string_func')
+    assert flow_template_2.run('text', 1) == 'text: 1'
+
+
+def test_revise_task_tmpl_arg_flow_cls_tuple(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    task_tmpl_arg_flow_cls_tuple: Annotated[TaskTemplateArgFlowClsTuple, pytest.fixture],
+) -> None:
+    _, flow_tmpl_cls, assert_flow_tmpl_cls = task_tmpl_arg_flow_cls_tuple
+
+    flow_template = flow_tmpl_cls(TaskTemplate()(format_to_string_func))(format_to_string_func)
+
+    _apply_revise_and_run_and_assert_flow_template(flow_template,
+                                                   assert_flow_tmpl_cls,
+                                                   format_to_string_func,
+                                                   'format_to_string_func')
+
+
+def test_revise_func_arg_flow_cls_tuple(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
+) -> None:
+    _, flow_tmpl_cls, assert_flow_tmpl_cls = func_arg_flow_cls_tuple
+
+    flow_template = flow_tmpl_cls()(format_to_string_func)
+
+    _apply_revise_and_run_and_assert_flow_template(flow_template,
+                                                   assert_flow_tmpl_cls,
+                                                   format_to_string_func,
+                                                   'format_to_string_func')
 
 
 @pc.parametrize_with_cases('case', cases='.cases.flows')
-def test_flow_run_all_flow_classes(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-                                   case: FlowCase) -> None:
+def test_flow_run_flow_cls_tuple(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+                                 case: FlowCase) -> None:
     if hasattr(mock_local_runner, 'finished'):
         assert mock_local_runner.finished is False
 
@@ -246,13 +304,11 @@ def test_flow_run_all_flow_classes(mock_local_runner: Annotated[MockLocalRunner,
 
 def test_linear_flow_only_first_positional(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    @mypy_fix_task_template
-    @TaskTemplate
-    def task_tmpl() -> tuple[int]:
+    @TaskTemplate()
+    def task_tmpl() -> tuple[int, int]:
         return 42, 42
 
-    @mypy_fix_task_template
-    @TaskTemplate
+    @TaskTemplate()
     def my_formula_tmpl(number: int | tuple[int, ...], plus_number: int = 0) -> int:
         number = sum(number) if isinstance(number, Iterable) else number
         return number * 2 + plus_number
@@ -267,23 +323,20 @@ def test_linear_flow_only_first_positional(
 
 def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    @mypy_fix_task_template
-    @TaskTemplate
+    @TaskTemplate()
     def task_tmpl() -> int:
         return 42
 
-    @mypy_fix_task_template
-    @TaskTemplate
+    @TaskTemplate()
     def double_tmpl(number: int) -> int:
         return number * 2
 
-    @mypy_fix_dag_flow_template
     @DagFlowTemplate(
         task_tmpl.refine(result_key='number'),
         task_tmpl.refine(result_key='bumber'),
         task_tmpl,
         double_tmpl)
-    def dag_flow_tmpl() -> int:  # type: ignore
+    def dag_flow_tmpl() -> int:
         ...
 
     dag_flow = dag_flow_tmpl.apply()
@@ -292,19 +345,16 @@ def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
 
 def test_dynamic_dag_flow_by_returned_dict(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    @mypy_fix_task_template
-    @TaskTemplate
+    @TaskTemplate()
     def task_tmpl() -> dict[str, int]:
         return {'number': 42}
 
-    @mypy_fix_task_template
-    @TaskTemplate
+    @TaskTemplate()
     def double_tmpl(number: int) -> int:
         return number * 2
 
-    @mypy_fix_dag_flow_template
     @DagFlowTemplate(task_tmpl, double_tmpl)
-    def dag_flow_tmpl() -> int:  # type: ignore
+    def dag_flow_tmpl() -> int:
         ...
 
     dag_flow = dag_flow_tmpl.apply()
@@ -312,15 +362,14 @@ def test_dynamic_dag_flow_by_returned_dict(
 
 
 def mypy_fix_mock_task_template_assert_same_time(
-        mock_task_template_assert_same_time: object) -> MockTaskTemplateAssertSameTimeOfCurFlowRun:
-    return cast(MockTaskTemplateAssertSameTimeOfCurFlowRun, mock_task_template_assert_same_time)
+        mock_task_template_assert_same_time: object) -> _MockTaskTemplateAssertSameTimeOfCurFlowRun:
+    return cast(_MockTaskTemplateAssertSameTimeOfCurFlowRun, mock_task_template_assert_same_time)
 
 
-def test_time_of_multi_level_flow_run_all_flow_classes(
+def test_time_of_multi_level_flow_run_flow_cls_tuple(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
 
     # TaskTemplate
-    @mypy_fix_mock_task_template_assert_same_time
     @MockTaskTemplateAssertSameTimeOfCurFlowRun()
     def task_tmpl() -> int:
         return 42
@@ -331,33 +380,28 @@ def test_time_of_multi_level_flow_run_all_flow_classes(
     task_tmpl.reset_persisted_time_of_cur_toplevel_flow_run()
 
     # LinearFlowTemplate
-    @mypy_fix_mock_task_template_assert_same_time
     @MockTaskTemplateAssertSameTimeOfCurFlowRun()
     def plus_one_tmpl(number: int) -> int:
         return number + 1
 
-    @mypy_fix_linear_flow_template
     @LinearFlowTemplate(task_tmpl, plus_one_tmpl)
-    def linear_flow_tmpl() -> int:  # type: ignore
+    def linear_flow_tmpl() -> int:
         ...
 
     _assert_diff_time_of_two_flow_runs(
         linear_flow_tmpl, assert_result=43, assert_task_tmpl=task_tmpl)
 
     # DagFlowTemplate
-    @mypy_fix_mock_task_template_assert_same_time
     @MockTaskTemplateAssertSameTimeOfCurFlowRun()
     def double_tmpl(number: int) -> int:
         return number * 2
 
-    @mypy_fix_dag_flow_template
     @DagFlowTemplate(linear_flow_tmpl.refine(result_key='number'), double_tmpl)
-    def dag_flow_tmpl() -> int:  # type: ignore
+    def dag_flow_tmpl() -> int:
         ...
 
     _assert_diff_time_of_two_flow_runs(dag_flow_tmpl, assert_result=86, assert_task_tmpl=task_tmpl)
 
-    @mypy_fix_func_flow_template
     @FuncFlowTemplate()
     def func_flow_tmpl(number: int) -> int:
         return dag_flow_tmpl() + number
@@ -366,7 +410,6 @@ def test_time_of_multi_level_flow_run_all_flow_classes(
         func_flow_tmpl, 14, assert_result=100, assert_task_tmpl=task_tmpl)
 
     # FuncFlowTemplate again
-    @mypy_fix_func_flow_template
     @FuncFlowTemplate()
     def func_flow_2_tmpl() -> int:
         return int(func_flow_tmpl(14) / 2)
@@ -379,10 +422,10 @@ def test_time_of_multi_level_flow_run_all_flow_classes(
 
 
 def _assert_diff_time_of_two_flow_runs(
-        flow_tmpl: IsFlowTemplate,
+        flow_tmpl: IsLinearFlowTemplate | IsDagFlowTemplate | IsFuncFlowTemplate,
         *args: object,
         assert_result: object,
-        assert_task_tmpl: MockTaskTemplateAssertSameTimeOfCurFlowRun):
+        assert_task_tmpl: IsMockTaskTemplateAssertSameTimeOfCurFlowRun):
     flow = flow_tmpl.apply()
     assert flow(*args) == assert_result
 

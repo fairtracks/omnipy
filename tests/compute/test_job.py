@@ -1,19 +1,25 @@
 from datetime import datetime
-from typing import Annotated, NamedTuple, Type
+from typing import Annotated, cast, NamedTuple
 
 import pytest
 
 from omnipy.api.exceptions import JobStateException
-from omnipy.api.protocols.private.compute.job import IsJobBase
 from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.job_creator import JobCreator
 
+from .conftest import MockJobClasses
 from .helpers.functions import assert_updated_wrapper
-from .helpers.mocks import (CommandMockJob,
+from .helpers.mocks import (_CommandMockJobTemplate,
+                            CommandMockJob,
                             CommandMockJobTemplate,
+                            IsCommandMockJob,
+                            IsCommandMockJobTemplate,
+                            IsMockJob,
+                            IsMockJobTemplate,
                             mock_cmd_func,
                             MockJobConfig,
                             MockLocalRunner,
+                            ParamsType,
                             PublicPropertyErrorsMockCostMixin,
                             PublicPropertyErrorsMockJob,
                             PublicPropertyErrorsMockJobTemplate,
@@ -36,10 +42,7 @@ class PropertyTest(NamedTuple):
     set_method: str | None = None
 
 
-MockJobClasses = tuple[Type[JobTemplateMixin], Type[JobMixin]]
-
-
-def test_init_abstract():
+def test_init_abstract() -> None:
     with pytest.raises(JobStateException):
         JobBase()
 
@@ -47,7 +50,7 @@ def test_init_abstract():
         JobTemplateMixin()
 
     with pytest.raises(TypeError):
-        JobMixin()
+        JobMixin()  # type: ignore[abstract]
 
 
 def test_init_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
@@ -79,33 +82,35 @@ def test_job_creator_singular_mock(
     assert isinstance(JobBase.job_creator, JobCreator)
 
     with pytest.raises(AttributeError):
-        JobBase.job_creator = JobCreator()
+        JobBase.job_creator = JobCreator()  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        JobTemplate.job_creator = JobCreator()
+        JobTemplate.job_creator = JobCreator()  # type: ignore[attr-defined]
 
     with pytest.raises(AttributeError):
-        Job.job_creator = JobCreator()
+        Job.job_creator = JobCreator()  # type: ignore[attr-defined]
 
     job_creator = JobBase.job_creator
-    assert JobTemplate.job_creator is job_creator
-    assert Job.job_creator is job_creator
+
+    assert cast(type[JobBase], JobTemplate).job_creator is job_creator
+    assert cast(type[JobBase], Job).job_creator is job_creator
 
     job_tmpl = JobTemplate()
-    assert job_tmpl.__class__.job_creator is job_creator
+    assert cast(JobBase, job_tmpl).__class__.job_creator is job_creator
 
     job = job_tmpl.apply()
-    assert job.__class__.job_creator is job_creator
+    job_as_job_base = cast(JobBase, job)
+    assert job_as_job_base.__class__.job_creator is job_creator
 
     job_tmpl_new = JobTemplate()
-    assert job_tmpl_new.__class__.job_creator is job_creator
+    assert cast(JobBase, job_tmpl_new).__class__.job_creator is job_creator
 
 
 def test_job_creator_properties_mock(
     mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
     teardown_reset_job_creator: Annotated[None, pytest.fixture],
     mock_job_datetime: Annotated[datetime, pytest.fixture],
-):
+) -> None:
     mock_local_runner = MockLocalRunner()
     mock_job_config = MockJobConfig()
     JobTemplate, Job = mock_job_classes  # noqa
@@ -154,10 +159,12 @@ def test_job_creator_properties_mock(
         job = job_tmpl.apply()
         _assert_prop_getattr_all(mock_job_classes, job_tmpl, job, test, test.default_val)
 
+        JobTemplateAsJobBase = cast(type[JobBase], JobTemplate)
         if test.enter_exit:
-            JobTemplate.job_creator.__enter__()
+            JobTemplateAsJobBase.job_creator.__enter__()
         else:
-            getattr(JobTemplate.job_creator, test.set_method)(test.val)
+            assert test.set_method
+            getattr(JobTemplateAsJobBase.job_creator, test.set_method)(test.val)
 
         _assert_prop_getattr_all(mock_job_classes, job_tmpl, job, test, test.val)
 
@@ -168,16 +175,17 @@ def test_job_creator_properties_mock(
         _assert_prop_getattr_all(mock_job_classes, job_tmpl_new, job_new, test, test.val)
 
         if test.enter_exit:
-            JobTemplate.job_creator.__exit__(None, None, None)
+            JobTemplateAsJobBase.job_creator.__exit__(None, None, None)
         else:
+            assert test.set_method
             assert not hasattr(JobTemplate, test.set_method)
             assert not hasattr(JobBase, test.set_method)
             assert not hasattr(Job, test.set_method)
 
 
 def _assert_prop_getattr_all(mock_job_classes: MockJobClasses,
-                             job_tmpl: JobTemplateMixin,
-                             job: JobMixin,
+                             job_tmpl: IsMockJobTemplate,
+                             job: IsMockJob,
                              test: PropertyTest,
                              val: object):
     JobTemplate, Job = mock_job_classes  # noqa
@@ -208,18 +216,20 @@ def _assert_prop_getattr_all(mock_job_classes: MockJobClasses,
     )
 
 
-def _assert_prop_getattr_job_subcls(job_cls: Type,
-                                    job_obj: IsJobBase | None,
+def _assert_prop_getattr_job_subcls(job_cls: type,
+                                    job_obj: IsMockJobTemplate | IsMockJob | None,
                                     property: str,
                                     in_job_obj: bool,
                                     at_obj_level: bool,
                                     val: object):
 
-    assert getattr(job_cls.job_creator, property) is val
+    job_cls_as_job_base_cls = cast(type[JobBase], job_cls)
+    assert getattr(job_cls_as_job_base_cls.job_creator, property) is val
     _assert_prop_getattr_cls(job_cls, in_job_obj, property, val)
 
     if job_obj:
-        assert getattr(job_obj.__class__.job_creator, property) is val
+        job_obj_as_job_base = cast(JobBase, job_obj)
+        assert getattr(job_obj_as_job_base.__class__.job_creator, property) is val
         if at_obj_level:
             _assert_prop_getattr_job(job_obj, in_job_obj, property, val)
             _assert_prop_getattr_cls(job_obj.__class__, in_job_obj, property, val)
@@ -272,38 +282,38 @@ def test_subclass_equal() -> None:
 
 
 def _assert_immutable_command_mock_job_properties(
-        cmd_obj: CommandMockJobTemplate | CommandMockJob) -> None:
+        cmd_obj: IsCommandMockJobTemplate | IsCommandMockJob) -> None:
 
     with pytest.raises(AttributeError):
-        cmd_obj.uppercase = False  # noqa
+        cmd_obj.uppercase = False  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        cmd_obj.params = {}  # noqa
+        cmd_obj.params = {}  # type: ignore[misc, assignment]
 
     with pytest.raises(TypeError):
-        cmd_obj.params['what'] = 'none'  # noqa
+        cmd_obj.params['what'] = 'none'  # type: ignore[index]
 
     with pytest.raises(TypeError):
-        del cmd_obj.params['what']  # noqa
+        del cmd_obj.params['what']  # type: ignore[attr-defined]
 
 
-def test_subclass_tmpl():
+def test_subclass_tmpl() -> None:
     cmd_tmpl = CommandMockJobTemplate('erase')(mock_cmd_func)
-    assert isinstance(cmd_tmpl, CommandMockJobTemplate)
+    assert isinstance(cmd_tmpl, _CommandMockJobTemplate)
 
     assert cmd_tmpl.uppercase is False
     assert cmd_tmpl.params == {}
 
     with pytest.raises(TypeError):
-        cmd_tmpl()  # noqa
+        cmd_tmpl()
 
     _assert_immutable_command_mock_job_properties(cmd_tmpl)
 
 
-def test_subclass_apply(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]):
+def test_subclass_apply(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
     cmd_tmpl = CommandMockJobTemplate(
         'erase', uppercase=True, params={'what': 'all'})(mock_cmd_func,)
-    assert isinstance(cmd_tmpl, CommandMockJobTemplate)
+    assert isinstance(cmd_tmpl, _CommandMockJobTemplate)
     assert cmd_tmpl.engine_decorator_applied is False
 
     cmd = cmd_tmpl.apply()
@@ -319,7 +329,7 @@ def test_subclass_apply(mock_local_runner: Annotated[MockLocalRunner, pytest.fix
     assert cmd() == 'ALL HAS BEEN ERASED'
 
 
-def test_subclass_apply_revise():
+def test_subclass_apply_revise() -> None:
     cmd_tmpl = CommandMockJobTemplate('restore', params={'what': 'nothing'})(mock_cmd_func)
     cmd = cmd_tmpl.apply()
     assert_updated_wrapper(cmd, cmd_tmpl)
@@ -329,7 +339,7 @@ def test_subclass_apply_revise():
 
     cmd_tmpl_revised = cmd.revise()
     assert_updated_wrapper(cmd_tmpl_revised, cmd)
-    assert isinstance(cmd_tmpl_revised, CommandMockJobTemplate)
+    assert isinstance(cmd_tmpl_revised, _CommandMockJobTemplate)
 
     assert cmd.uppercase is False
     assert cmd_tmpl_revised.params == {'what': 'nothing'}
@@ -344,12 +354,12 @@ def test_subclass_apply_revise():
     assert cmd_revised() == 'nothing has been restored'
 
 
-def test_subclass_refine_empty():
+def test_subclass_refine_empty() -> None:
     cmd_tmpl = CommandMockJobTemplate('restore', params={'what': 'nothing'})(mock_cmd_func)
 
     cmd_tmpl_refined = cmd_tmpl.refine()
     assert_updated_wrapper(cmd_tmpl_refined, cmd_tmpl)
-    assert isinstance(cmd_tmpl_refined, CommandMockJobTemplate)
+    assert isinstance(cmd_tmpl_refined, _CommandMockJobTemplate)
     assert cmd_tmpl_refined is not cmd_tmpl
     assert cmd_tmpl_refined == cmd_tmpl
 
@@ -478,6 +488,7 @@ def test_subclass_refine_reset_mapping() -> None:
 
     # Reset mapping property 'params' with update=False.
     # Other properties needs to be explicitly added to not be reset
+    val: ParamsType
     for val in ({}, [], None):
         reset_params_tmpl = nothing_tmpl.refine(
             uppercase=nothing_tmpl.uppercase,
@@ -526,23 +537,25 @@ def test_revise_refine_mappings_are_copied() -> None:
     assert len(all_revised_refined_tmpl.params) == 2
 
 
-def test_fail_subclass_refine_first_arg_not_callable():
-    cmd_tmpl = CommandMockJobTemplate('erase')('mock_cmd_func')
+def test_fail_subclass_refine_first_arg_not_callable() -> None:
+    cmd_tmpl: IsCommandMockJobTemplate = CommandMockJobTemplate('erase')(
+        'mock_cmd_func')  # type: ignore[arg-type]
 
     with pytest.raises(TypeError):
-        cmd_tmpl.refine('restore')
+        cmd_tmpl.refine('restore')  # type: ignore[arg-type]
 
 
-def test_fail_subclass_revise_first_arg_not_callable():
-    cmd_tmpl = CommandMockJobTemplate('erase')('mock_cmd_func')
+def test_fail_subclass_revise_first_arg_not_callable() -> None:
+    cmd_tmpl: IsCommandMockJobTemplate = CommandMockJobTemplate('erase')(
+        'mock_cmd_func')  # type: ignore[arg-type]
     cmd = cmd_tmpl.apply()
 
     with pytest.raises(TypeError):
         cmd.revise()
 
 
-def test_fail_subclass_apply_public_property_errors_with_mixins():
-    job_tmpl = PublicPropertyErrorsMockJobTemplate()
+def test_fail_subclass_apply_public_property_errors_with_mixins() -> None:
+    job_tmpl: PublicPropertyErrorsMockJobTemplate = PublicPropertyErrorsMockJobTemplate()
     job = job_tmpl.apply()
     assert isinstance(job, PublicPropertyErrorsMockJob)
 

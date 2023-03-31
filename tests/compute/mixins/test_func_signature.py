@@ -24,11 +24,11 @@ def test_property_param_signature_and_return_type_immutable_task() -> None:
 
     for task_obj in task_template, task_template.apply():
         with pytest.raises(AttributeError):
-            task_obj.param_signatures = {}  # noqa
+            task_obj.param_signatures = {}  # type: ignore[misc, assignment]
 
         with pytest.raises(TypeError):
-            task_obj.param_signatures['new'] = Parameter(  # noqa
+            task_obj.param_signatures['new'] = Parameter(  # type: ignore[index]
                 'new', Parameter.POSITIONAL_OR_KEYWORD, annotation=bool)
 
         with pytest.raises(AttributeError):
-            task_obj.return_type = int
+            task_obj.return_type = int  # type: ignore[misc]

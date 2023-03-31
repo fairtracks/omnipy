@@ -1,4 +1,4 @@
-from typing import Any, Callable, IO, Iterator, Protocol, Type, TypeVar
+from typing import Any, Callable, IO, Iterator, Protocol, Sized, Type, TypeVar
 
 from pydantic.fields import Undefined, UndefinedType
 
@@ -7,7 +7,7 @@ from omnipy.api.protocols.private.log import CanLog
 _ModelT = TypeVar('_ModelT')
 
 
-class IsDataset(Protocol[_ModelT]):
+class IsDataset(Sized, Protocol[_ModelT]):
     """
     Dict-based container of data files that follow a specific Model
     """
@@ -68,31 +68,32 @@ class IsSerializer(Protocol):
     """"""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
-        pass
+        ...
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
-        pass
+        ...
 
     @classmethod
     def get_output_file_suffix(cls) -> str:
-        pass
+        ...
 
     @classmethod
     def serialize(cls, dataset: IsDataset) -> bytes | memoryview:
-        pass
+        ...
 
     @classmethod
     def deserialize(cls, serialized: bytes, any_file_suffix=False) -> IsDataset:
-        pass
+        ...
 
 
-class IsTarFileSerializer(IsSerializer):
+class IsTarFileSerializer(IsSerializer, Protocol):
     @classmethod
     def create_tarfile_from_dataset(cls,
                                     dataset: IsDataset,
-                                    data_encode_func: Callable[[Any], bytes | memoryview]):
+                                    data_encode_func: Callable[[Any], bytes | memoryview]) -> bytes:
         """"""
+        ...
 
     @classmethod
     def create_dataset_from_tarfile(cls,
@@ -100,8 +101,8 @@ class IsTarFileSerializer(IsSerializer):
                                     tarfile_bytes: bytes,
                                     data_decode_func: Callable[[IO[bytes]], Any],
                                     dictify_object_func: Callable[[str, Any], dict | str],
-                                    import_method='from_data',
-                                    any_file_suffix: bool = False):
+                                    import_method: str = 'from_data',
+                                    any_file_suffix: bool = False) -> None:
         ...
 
 
@@ -121,30 +122,34 @@ class IsSerializerRegistry(Protocol):
     def tar_file_serializers(self) -> tuple[Type[IsTarFileSerializer], ...]:
         ...
 
-    def auto_detect(self, dataset: IsDataset):
+    def auto_detect(self, dataset: IsDataset) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
         ...
 
-    def auto_detect_tar_file_serializer(self, dataset: IsDataset):
+    def auto_detect_tar_file_serializer(
+            self, dataset: IsDataset) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
         ...
 
     @classmethod
-    def _autodetect_serializer(cls, dataset, serializers):
+    def _autodetect_serializer(cls, dataset,
+                               serializers) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
         ...
 
-    def detect_tar_file_serializers_from_dataset_cls(self, dataset: IsDataset):
+    def detect_tar_file_serializers_from_dataset_cls(
+            self, dataset: IsDataset) -> tuple[Type[IsTarFileSerializer], ...]:
         ...
 
-    def detect_tar_file_serializers_from_file_suffix(self, file_suffix: str):
+    def detect_tar_file_serializers_from_file_suffix(
+            self, file_suffix: str) -> tuple[Type[IsTarFileSerializer], ...]:
         ...
 
     def load_from_tar_file_path_based_on_file_suffix(self,
                                                      log_obj: CanLog,
                                                      tar_file_path: str,
-                                                     to_dataset: IsDataset):
+                                                     to_dataset: IsDataset) -> IsDataset | None:
         ...
 
     def load_from_tar_file_path_based_on_dataset_cls(self,
                                                      log_obj: CanLog,
                                                      tar_file_path: str,
-                                                     to_dataset: IsDataset):
+                                                     to_dataset: IsDataset) -> IsDataset | None:
         ...

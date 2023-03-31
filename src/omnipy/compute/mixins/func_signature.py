@@ -1,12 +1,15 @@
 from collections.abc import Iterable
 import inspect
 from types import MappingProxyType
-from typing import Type
+from typing import cast
+
+from omnipy.api.protocols.private.compute.job import IsPlainFuncArgJobBase
 
 
 class SignatureFuncJobBaseMixin:
     def __init__(self):
-        self._func_signature = inspect.signature(self._job_func)
+        self_as_plain_func_arg_job_base = cast(IsPlainFuncArgJobBase, self)
+        self._func_signature = inspect.signature(self_as_plain_func_arg_job_base._job_func)
         self.__signature__ = self._func_signature
 
     @property
@@ -14,7 +17,7 @@ class SignatureFuncJobBaseMixin:
         return self._func_signature.parameters
 
     @property
-    def return_type(self) -> Type[object]:
+    def return_type(self) -> type:
         return self._func_signature.return_annotation
 
     def _check_param_keys_in_func_signature(self,

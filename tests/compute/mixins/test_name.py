@@ -1,29 +1,25 @@
-from typing import Annotated, Type
+from typing import Annotated
 
 import pytest
 
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
-from omnipy.compute.job import JobMixin, JobTemplateMixin
 from omnipy.compute.task import TaskTemplate
 
 from ..cases.raw.functions import power_m1_func
-from ..helpers.mocks import MockJobSubclass, MockJobTemplateSubclass, MockLocalRunner
+from ..conftest import MockJobClasses
+from ..helpers.mocks import MockLocalRunner
 
 
-def mock_job_classes() -> tuple[Type[JobTemplateMixin], Type[JobMixin]]:
-    return MockJobTemplateSubclass, MockJobSubclass
-
-
-def test_property_name_default_mock() -> None:
-    JobTemplate, Job = mock_job_classes()  # noqa
-
+def test_property_name_default_mock(
+        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    JobTemplate, _ = mock_job_classes
     job_tmpl = JobTemplate()
 
     for job in job_tmpl, job_tmpl.apply():
         assert job.name is None
 
         with pytest.raises(AttributeError):
-            job.name = 'cool_name'  # noqa
+            job.name = 'cool_name'  # pyright: ignore [reportAttributeAccessIssue]
 
 
 def test_property_name_default_task() -> None:
@@ -61,8 +57,9 @@ def test_property_name_default_func_flow(
         assert power_m1_obj.name == 'power_m1_func'
 
 
-def test_property_name_change_mock() -> None:
-    JobTemplate, Job = mock_job_classes()  # noqa
+def test_property_name_change_mock(
+        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate(name='my_job')
 
@@ -70,11 +67,12 @@ def test_property_name_change_mock() -> None:
         assert job.name == 'my_job'
 
         with pytest.raises(AttributeError):
-            job.name = 'my_cool_job'
+            job.name = 'my_cool_job'  # type: ignore[misc]
 
 
-def test_property_name_validation_mock() -> None:
-    JobTemplate, Job = mock_job_classes()  # noqa
+def test_property_name_validation_mock(
+        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate(name=None)
     assert job_tmpl.name is None
@@ -83,11 +81,12 @@ def test_property_name_validation_mock() -> None:
         JobTemplate(name='')
 
     with pytest.raises(TypeError):
-        JobTemplate(name=123)  # noqa
+        JobTemplate(name=123)  # pyright: ignore [reportArgumentType]
 
 
-def test_property_unique_name_default_mock() -> None:
-    JobTemplate, Job = mock_job_classes()  # noqa
+def test_property_unique_name_default_mock(
+        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate()
 
@@ -95,11 +94,12 @@ def test_property_unique_name_default_mock() -> None:
         assert job.unique_name is None
 
         with pytest.raises(AttributeError):
-            job.unique_name = 'cool_name'  # noqa
+            job.unique_name = 'cool_name'  # pyright: ignore [reportAttributeAccessIssue]
 
 
-def test_property_unique_name_change_mock() -> None:
-    JobTemplate, Job = mock_job_classes()  # noqa
+def test_property_unique_name_change_mock(
+        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate(name='my_job')
     assert job_tmpl.unique_name is None
@@ -111,11 +111,13 @@ def test_property_unique_name_change_mock() -> None:
     assert job.unique_name != job.name
 
     with pytest.raises(AttributeError):
-        job.unique_name = 'mock-job-subclass-my-job-crouching-dolphin'  # noqa
+        unique_name = 'mock-job-subclass-my-job-crouching-dolphin'
+        job.unique_name = unique_name  # pyright: ignore [reportAttributeAccessIssue]
 
 
-def test_property_unique_name_uniqueness_mock() -> None:
-    JobTemplate, Job = mock_job_classes()  # noqa
+def test_property_unique_name_uniqueness_mock(
+        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate(name='my_job')
 
@@ -132,8 +134,9 @@ def test_property_unique_name_uniqueness_mock() -> None:
     assert job_1.unique_name != job_2.unique_name
 
 
-def test_property_unique_name_regenerate_mock() -> None:
-    JobTemplate, Job = mock_job_classes()  # noqa
+def test_property_unique_name_regenerate_mock(
+        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    JobTemplate, _ = mock_job_classes
 
     job = JobTemplate(name='my_job').apply()
 
@@ -149,8 +152,9 @@ def test_property_unique_name_regenerate_mock() -> None:
     assert job.unique_name != prev_unique_name
 
 
-def test_property_unique_name_revise_mock() -> None:
-    JobTemplate, Job = mock_job_classes()  # noqa
+def test_property_unique_name_revise_mock(
+        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    JobTemplate, _ = mock_job_classes
 
     job = JobTemplate(name='my_job').apply()
     assert job.unique_name is not None
@@ -159,8 +163,9 @@ def test_property_unique_name_revise_mock() -> None:
     assert new_job_tmpl.unique_name is None
 
 
-def test_equal_job_dependent_on_name_mock() -> None:
-    JobTemplate, Job = mock_job_classes()  # noqa
+def test_equal_job_dependent_on_name_mock(
+        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    JobTemplate, _ = mock_job_classes
 
     my_job_tmpl = JobTemplate(name='my_job')
     my_job_tmpl_2 = JobTemplate(name='my_job')

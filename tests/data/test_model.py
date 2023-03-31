@@ -1465,23 +1465,11 @@ def test_recursive_generic_tuple_model_with_none() -> None:
     class MyGenericScalarModel(Model[T], Generic[T]):
         ...
 
-    # if sys.version_info >= (3, 12):
-
     class MyGenericOnlyTuplesAndScalarsModel(
             Model[tuple[TypeVarStore[T]
                         | ForwardRef('MyGenericOnlyTuplesAndScalarsAlias'), ...]],
             Generic[T]):
         ...
-
-    # else:
-    #     # This for some reason cause a TypeError in Python 3.12. Probably related to PEP695,
-    #     # However new type syntax crashes pydantic.
-    #     class MyGenericOnlyTuplesAndScalarsModel(
-    #             Model[tuple[TypeVarStore[T]
-    #                         | ForwardRef('MyGenericOnlyTuplesAndScalarsAlias[T]'),
-    #                         ...]],
-    #             Generic[T]):
-    #         ...
 
     MyGenericOnlyTuplesAndScalarsAlias: TypeAlias = \
         MyGenericScalarModel[T] | MyGenericOnlyTuplesAndScalarsModel[T]

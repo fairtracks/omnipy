@@ -2,7 +2,6 @@ from collections import defaultdict
 from typing import cast
 
 from omnipy.compute.task import TaskTemplate
-from omnipy.compute.typing import mypy_fix_task_template
 from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import obj_or_model_contents_isinstance
 from omnipy.data.model import Model
@@ -25,7 +24,6 @@ REF_KEY = '_omnipy_ref'
 DEFAULT_KEY = '__root__'
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def convert_dataset_string_to_json(dataset: Dataset[Model[str]]) -> JsonDataset:
     json_dataset = JsonDataset()
@@ -33,7 +31,6 @@ def convert_dataset_string_to_json(dataset: Dataset[Model[str]]) -> JsonDataset:
     return json_dataset
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> JsonListDataset:
     input_dataset: dict[str, JsonDict] = dataset.to_data()
@@ -58,7 +55,6 @@ def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> J
     return JsonListDataset(output_dataset)
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def _flatten_outer_level_of_all_data_files(
         dataset: JsonListOfDictsDataset, id_key: str, ref_key: str,

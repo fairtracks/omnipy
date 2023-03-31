@@ -21,7 +21,7 @@ def test_fail_property_iterate_over_data_files_no_arg_task() -> None:
 @pc.parametrize_with_cases('case', cases='..cases.iterate_tasks')
 def test_properties_default_values_task(case: IterateDataFilesCase) -> None:
     with pytest.raises(ValueError):
-        TaskTemplate(iterate_over_data_files=None)(case.task_func)
+        TaskTemplate(iterate_over_data_files=None)(case.task_func)  # type: ignore[arg-type]
 
     no_iter_default_template = TaskTemplate()(case.task_func)
 
@@ -227,7 +227,8 @@ async def test_iterate_over_data_files_await_future_task(case: IterateDataFilesC
     dataset = Dataset[Model[int]](dict(a=3, b=5, c=-2))
 
     output_dataset = Dataset[Model[int]]()
-    task: asyncio.Task = _run_task_template(case, task_template, dataset, output_dataset)
+    task = _run_task_template(case, task_template, dataset, output_dataset)
+    assert isinstance(task, asyncio.Task)
 
     assert case.func_second_arg_is_future
     while len(output_dataset.pending_data) != 3:
@@ -258,7 +259,7 @@ async def test_iterate_over_data_files_await_future_task(case: IterateDataFilesC
 
 
 def _assert_all_failed_data(
-    returned_dataset: Dataset[Model[int]],
+    returned_dataset: Dataset[Model[int]] | Dataset[Model[str]],
     exception_cls: type[BaseException],
 ) -> None:
     failed_task_details = returned_dataset.failed_task_details()

@@ -2,7 +2,6 @@ from io import StringIO
 from typing import Mapping, Sequence
 
 from omnipy.compute.task import TaskTemplate
-from omnipy.compute.typing import mypy_fix_task_template
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
@@ -12,7 +11,6 @@ from .helpers import extract_common_colnames
 from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset, PandasModel
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def convert_dataset_list_of_dicts_to_pandas(
         dataset: Dataset[Model[list[dict[str, NotIterableExceptStrOrBytesModel]]]]) \
@@ -22,7 +20,6 @@ def convert_dataset_list_of_dicts_to_pandas(
     return pandas_dataset
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def convert_dataset_csv_to_pandas(dataset: Dataset[Model[bytes]],
                                   delimiter: str = ',',
@@ -44,7 +41,6 @@ def convert_dataset_csv_to_pandas(dataset: Dataset[Model[bytes]],
     return out_dataset
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def convert_dataset_pandas_to_csv(
     dataset: PandasDataset,
@@ -65,7 +61,6 @@ def convert_dataset_pandas_to_csv(
     return out_dataset
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def extract_columns_as_files(dataset: PandasDataset, col_names: list[str]) -> PandasDataset:
     out_dataset = PandasDataset()
@@ -78,7 +73,6 @@ def extract_columns_as_files(dataset: PandasDataset, col_names: list[str]) -> Pa
     return out_dataset
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSameNumberOfFiles,
                                       vertical=True) -> PandasDataset:
@@ -94,7 +88,6 @@ def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSame
     return out_dataset
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def join_tables(table_1: PandasModel,
                 table_2: PandasModel,
@@ -142,7 +135,6 @@ def join_tables(table_1: PandasModel,
     return PandasModel(merged_df)
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def cartesian_product(table_1: PandasModel, table_2: PandasModel) -> PandasModel:
     merged_df = pd.merge(

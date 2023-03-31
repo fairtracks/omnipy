@@ -3,14 +3,18 @@ from typing import Annotated, Callable
 import pytest
 import pytest_cases as pc
 
-from omnipy.compute.flow import (DagFlow,
-                                 DagFlowTemplate,
+from omnipy.api.protocols.public.compute import (IsDagFlowTemplate,
+                                                 IsFuncFlowTemplate,
+                                                 IsLinearFlowTemplate,
+                                                 IsTaskTemplate)
+from omnipy.compute.flow import (_DagFlowTemplate,
+                                 _FuncFlowTemplate,
+                                 _LinearFlowTemplate,
+                                 DagFlow,
                                  FuncFlow,
                                  FuncFlowTemplate,
-                                 LinearFlow,
-                                 LinearFlowTemplate)
-from omnipy.compute.task import Task, TaskTemplate
-from omnipy.compute.typing import mypy_fix_func_flow_template, mypy_fix_task_template
+                                 LinearFlow)
+from omnipy.compute.task import _TaskTemplate, Task, TaskTemplate
 
 from .helpers.mocks import MockLocalRunner
 
@@ -22,9 +26,9 @@ from .helpers.mocks import MockLocalRunner
 )
 def test_task_template_as_decorator(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-    plus_one_template: TaskTemplate,
+    plus_one_template: IsTaskTemplate,
 ) -> None:
-    assert isinstance(plus_one_template, TaskTemplate)  # noqa  # Pycharm static type checker bug
+    assert isinstance(plus_one_template, _TaskTemplate)  # noqa  # Pycharm static type checker bug
     assert plus_one_template.name == 'plus_one'  # noqa  # Pycharm static type checker bug
 
     plus_one = plus_one_template.apply()  # noqa  # Pycharm static type checker bug
@@ -40,10 +44,10 @@ def test_task_template_as_decorator(
 )
 def test_linear_flow_template_as_decorator(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-    plus_five_template: LinearFlowTemplate,
+    plus_five_template: IsLinearFlowTemplate,
 ) -> None:
 
-    assert isinstance(plus_five_template, LinearFlowTemplate)
+    assert isinstance(plus_five_template, _LinearFlowTemplate)
     assert plus_five_template.name == 'plus_five'
 
     plus_five = plus_five_template.apply()
@@ -59,10 +63,10 @@ def test_linear_flow_template_as_decorator(
 )
 def test_dag_flow_template_as_decorator(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-    plus_five_template: DagFlowTemplate,
+    plus_five_template: IsDagFlowTemplate,
 ) -> None:
 
-    assert isinstance(plus_five_template, DagFlowTemplate)
+    assert isinstance(plus_five_template, _DagFlowTemplate)
     assert plus_five_template.name == 'plus_five'
 
     plus_five = plus_five_template.apply()
@@ -83,10 +87,10 @@ def test_dag_flow_template_as_decorator(
 )
 def test_func_flow_template_as_decorator(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-    plus_y_template: FuncFlowTemplate,
+    plus_y_template: IsFuncFlowTemplate,
 ) -> None:
 
-    assert isinstance(plus_y_template, FuncFlowTemplate)
+    assert isinstance(plus_y_template, _FuncFlowTemplate)
     assert plus_y_template.name == 'plus_y'
 
     plus_y = plus_y_template.apply()
@@ -101,8 +105,7 @@ def test_fail_task_template_decorator_with_func_argument() -> None:
         def myfunc(a: Callable) -> Callable:
             return a
 
-        @mypy_fix_task_template
-        @TaskTemplate(myfunc)
+        @TaskTemplate(myfunc)  # type: ignore[misc, arg-type]
         def plus_one(number: int) -> int:
             return number + 1
 
@@ -122,7 +125,6 @@ def test_fail_func_flow_template_decorator_with_func_argument(
         def myfunc(a: Callable) -> Callable:
             return a
 
-        @mypy_fix_func_flow_template
-        @FuncFlowTemplate(myfunc)
+        @FuncFlowTemplate(myfunc)  # type: ignore[misc, arg-type]
         def plus_one(number: int) -> int:
             return plus_one_template(number)

@@ -2,7 +2,7 @@ import asyncio
 from inspect import iscoroutinefunction
 from typing import Callable, cast, Coroutine
 
-from omnipy.api.protocols.private.compute.job import IsJobBase, IsPlainFuncArgJobBase
+from omnipy.api.protocols.private.compute.job import IsJobBase
 from omnipy.util.helpers import get_event_loop_and_check_if_loop_is_running
 
 
@@ -19,12 +19,12 @@ class AutoAsyncJobBaseMixin:
         return self._auto_async
 
     def _call_job(self, *args: object, **kwargs: object) -> object:
-        self_as_plain_func_arg_job_base = cast(IsPlainFuncArgJobBase, self)
         self_as_job_base = cast(IsJobBase, self)
         super_as_job_base = cast(IsJobBase, super())
 
-        job_func = self_as_plain_func_arg_job_base._job_func
-        job_func_is_coroutine: bool = iscoroutinefunction(job_func)
+        assert hasattr(self, '_job_func')
+        self._job_func: Callable
+        job_func_is_coroutine: bool = iscoroutinefunction(self._job_func)
         super_call_job_func = cast(Callable[..., Coroutine], super_as_job_base._call_job)
 
         loop, loop_is_running = get_event_loop_and_check_if_loop_is_running()

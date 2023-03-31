@@ -92,7 +92,7 @@ def mock_datetime() -> datetime:
         def __init__(self, *args: object, **kwargs: object):
             self._now = datetime.now()
 
-        def now(self, tz=None):
+        def now(self, tz=None) -> datetime:  # type: ignore[override]
             return self._now
 
     return MockDatetime(2000, 1, 1)

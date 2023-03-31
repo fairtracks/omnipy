@@ -1,5 +1,5 @@
 from types import MappingProxyType
-from typing import cast, Mapping
+from typing import cast, Iterable, Mapping
 
 from omnipy.api.protocols.private.compute.job import IsJobBase
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
@@ -12,8 +12,8 @@ class ParamsFuncJobBaseMixin:
     def __init__(
         self,
         *,
-        fixed_params: Mapping[str, object] | None = None,
-        param_key_map: Mapping[str, str] | None = None,
+        fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
+        param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
     ):
         self_as_signature_func_job_base_mixin = cast(SignatureFuncJobBaseMixin, self)
 

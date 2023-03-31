@@ -60,6 +60,7 @@ pytest-mypy-plugins = "^3.1.2"
 devtools = "^0.12.2"
 mypy = "^1.11.2"
 pytest-aiohttp = "^1.0.5"
+pyright = "^1.1.389"
 
 [tool.poetry.group.docs.dependencies]
 portray = {git = "https://github.com/HeinrichAD/portray.git"}
@@ -137,7 +138,7 @@ follow_imports = "silent"
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_unused_configs = true
-warn_unreachable = true
+warn_unreachable = false
 show_error_codes = true
 
 # Explicit is better than implicit
@@ -169,6 +170,9 @@ disallow_untyped_decorators = false
 ##init_forbid_extra = true
 #init_typed = false
 #warn_required_dynamic_aliases = true
+
+[tool.pyright]
+reportFunctionMemberAccess = 'warning'
 
 [tool.pytest.ini_options]
 addopts = "--tb=native"

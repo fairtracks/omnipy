@@ -10,7 +10,6 @@ from chardet import UniversalDetector
 from typing_extensions import TypeVar
 
 from omnipy.compute.task import TaskTemplate
-from omnipy.compute.typing import mypy_fix_task_template
 from omnipy.data.dataset import Dataset, Model
 from omnipy.util.setdeque import SetDeque
 
@@ -18,7 +17,6 @@ from .datasets import StrDataset
 from .protocols import IsModifyAllLinesCallable, IsModifyContentsCallable, IsModifyEachLineCallable
 
 
-@mypy_fix_task_template
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=StrDataset)
 def decode_bytes(data: Model[bytes], encoding: str | None = None) -> str:
     if encoding is None:
@@ -47,7 +45,6 @@ def decode_bytes(data: Model[bytes], encoding: str | None = None) -> str:
     return data.decode(encoding)
 
 
-@mypy_fix_task_template
 @TaskTemplate(iterate_over_data_files=True)
 def modify_datafile_contents(
     data_file: Model[str],
@@ -57,7 +54,6 @@ def modify_datafile_contents(
     return modify_contents_func(str(data_file), **kwargs)
 
 
-@mypy_fix_task_template
 @TaskTemplate(iterate_over_data_files=True)
 def modify_each_line(
     data_file: Model[str],
@@ -72,7 +68,6 @@ def modify_each_line(
     return output_data.getvalue()
 
 
-@mypy_fix_task_template
 @TaskTemplate(iterate_over_data_files=True)
 def modify_all_lines(
     data_file: Model[str],
@@ -84,19 +79,18 @@ def modify_all_lines(
     return os.linesep.join(modified_lines)
 
 
-_SequenceModelT = TypeVar('_SequenceModelT', default=Model[str | bytes | list | tuple | deque])
+_SequenceModelT = TypeVar(
+    '_SequenceModelT', bound=Model, default=Model[str | bytes | list | tuple | deque])
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def concat_all(dataset: Dataset[_SequenceModelT]) -> _SequenceModelT:
     return reduce(add, (val for val in dataset.values()))
 
 
-_UniqueModelT = TypeVar('_UniqueModelT', default=Model[dict | set | SetDeque])
+_UniqueModelT = TypeVar('_UniqueModelT', bound=Model, default=Model[dict | set | SetDeque])
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def union_all(dataset: Dataset[_UniqueModelT]) -> _UniqueModelT:
     all_vals = tuple(val for val in dataset.values())

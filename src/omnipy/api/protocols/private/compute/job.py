@@ -1,7 +1,9 @@
 from datetime import datetime
 from inspect import BoundArguments
 from types import MappingProxyType
-from typing import Any, Callable, Mapping, Protocol, Type
+from typing import Any, Callable, Iterable, Mapping, ParamSpec, Protocol, runtime_checkable
+
+from typing_extensions import TypeVar
 
 from omnipy.api.enums import (OutputStorageProtocolOptions,
                               PersistOutputsOptions,
@@ -19,8 +21,12 @@ from omnipy.api.typedefs import (GeneralDecorator,
                                  TaskTemplateCovT,
                                  TaskTemplateT)
 
+CallP = ParamSpec('CallP')
+RetCovT = TypeVar('RetCovT', covariant=True)
+RetContraT = TypeVar('RetContraT', contravariant=True)
 
-class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol):
+
+class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol[JobTemplateT, JobT, CallP, RetCovT]):
     """"""
     @property
     def _job_creator(self) -> IsJobCreator:
@@ -38,68 +44,81 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol):
     def in_flow_context(self) -> bool:
         ...
 
-    def __eq__(self, other: object):
+    def __eq__(self, other: object) -> bool:
         ...
 
     @classmethod
-    def _create_job_template(cls, *args: object, **kwargs: object) -> 'IsJobTemplate':
+    def _create_job_template(cls, *args: object, **kwargs: object) -> JobTemplateT:
         ...
 
     @classmethod
-    def _create_job(cls, *args: object, **kwargs: object) -> 'IsJob':
+    def _create_job(cls, *args: object, **kwargs: object) -> JobT:
         ...
 
-    def _apply(self) -> 'IsJob':
+    def _apply(self) -> JobT:
         ...
 
-    def _refine(self, *args: Any, update: bool = True, **kwargs: object) -> 'IsJobTemplate':
+    def _refine(self, *args: Any, update: bool = True, **kwargs: object) -> JobTemplateT:
         ...
 
-    def _revise(self) -> 'IsJobTemplate':
+    def _revise(self) -> JobTemplateT:
         ...
 
-    def _call_job_template(self, *args: object, **kwargs: object) -> object:
+    def _call_job_template(self, *args: CallP.args, **kwargs: CallP.kwargs) -> RetCovT:
         ...
 
-    def _call_job(self, *args: object, **kwargs: object) -> object:
+    def _call_job(self, *args: CallP.args, **kwargs: CallP.kwargs) -> RetCovT:
         ...
 
 
-class IsJob(IsJobBase, Protocol):
+class IsJobBaseCallable(IsJobBase[JobTemplateT, JobT, CallP, RetCovT],
+                        Protocol[JobTemplateT, JobT, CallP, RetCovT]):
+    def __call__(self, *args: CallP.args, **kwargs: CallP.kwargs) -> RetCovT:
+        ...
+
+
+@runtime_checkable
+class IsJob(IsJobBaseCallable[JobTemplateT, JobT, CallP, RetCovT],
+            Protocol[JobTemplateT, JobT, CallP, RetCovT]):
     """"""
     @property
     def time_of_cur_toplevel_flow_run(self) -> datetime | None:
         ...
 
     @classmethod
-    def create_job(cls, *args: object, **kwargs: object) -> 'IsJob':
+    def create_job(cls, *args: object, **kwargs: object) -> JobT:
         ...
 
-    def __call__(self, *args: object, **kwargs: object) -> object:
+    def revise(self) -> JobTemplateT:
         ...
 
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         ...
 
 
-class IsJobTemplate(IsJobBase, Protocol):
+@runtime_checkable
+class IsJobTemplate(IsJobBaseCallable[JobTemplateT, JobT, CallP, RetCovT],
+                    Protocol[JobTemplateT, JobT, CallP, RetCovT]):
     """"""
     @classmethod
-    def create_job_template(cls, *args: object, **kwargs: object) -> 'IsJobTemplate':
+    def create_job_template(cls, *args: object, **kwargs: object) -> JobTemplateT:
         ...
 
-    def run(self, *args: object, **kwargs: object) -> object:
+    def run(self, *args: CallP.args, **kwargs: CallP.kwargs) -> RetCovT:
+        ...
+
+    def apply(self) -> JobT:
         ...
 
 
-class IsFuncArgJobBase(IsJob, Protocol):
+class IsFuncArgJobBase(Protocol):
     """"""
     @property
     def param_signatures(self) -> MappingProxyType:
         ...
 
     @property
-    def return_type(self) -> Type[object]:
+    def return_type(self) -> type:
         ...
 
     @property
@@ -161,26 +180,25 @@ class IsFuncArgJobBase(IsJob, Protocol):
         ...
 
 
+# Change?
 class IsPlainFuncArgJobBase(Protocol):
     """"""
+
     _job_func: Callable
 
     def _accept_call_func_decorator(self, call_func_decorator: GeneralDecorator) -> None:
         ...
 
 
-class IsFuncArgJob(IsFuncArgJobBase, Protocol[JobT]):
-    """"""
-    def revise(self) -> JobT:
-        ...
+CallableT = TypeVar('CallableT', bound=Callable)
 
 
-class IsFuncArgJobTemplateCallable(Protocol[
-        JobTemplateT,
-]):
+class HasFuncArgJobTemplateInit(Protocol[JobTemplateT, CallP, RetContraT]):
     """"""
     def __call__(
         self,
+        job_func: Callable[CallP, RetContraT],
+        *,
         name: str | None = None,
         iterate_over_data_files: bool = False,
         output_dataset_param: str | None = None,
@@ -189,14 +207,16 @@ class IsFuncArgJobTemplateCallable(Protocol[
         persist_outputs: PersistOutputsOptions | None = None,
         restore_outputs: RestoreOutputsOptions | None = None,
         result_key: str | None = None,
-        fixed_params: Mapping[str, object] | None = None,
-        param_key_map: Mapping[str, str] | None = None,
+        fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
+        param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
         **kwargs: object,
-    ) -> Callable[[Callable], JobTemplateT]:
+    ) -> JobTemplateT:
         ...
 
 
-class IsFuncArgJobTemplate(IsJobTemplate, IsFuncArgJobBase, Protocol[JobTemplateT, JobT]):
+class IsFuncArgJobTemplate(IsJobTemplate[JobTemplateT, JobT, CallP, RetCovT],
+                           IsFuncArgJobBase,
+                           Protocol[JobTemplateT, JobT, CallP, RetCovT]):
     """"""
     def refine(self,
                *args: Any,
@@ -209,13 +229,16 @@ class IsFuncArgJobTemplate(IsJobTemplate, IsFuncArgJobBase, Protocol[JobTemplate
                persist_outputs: PersistOutputsOptions | None = None,
                restore_outputs: RestoreOutputsOptions | None = None,
                result_key: str | None = None,
-               fixed_params: Mapping[str, object] | None = None,
-               param_key_map: Mapping[str, str] | None = None,
+               fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
+               param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
                **kwargs: object) -> JobTemplateT:
         ...
 
-    def apply(self) -> JobT:
-        ...
+
+class IsFuncArgJob(IsJob[JobTemplateT, JobT, CallP, RetCovT],
+                   IsFuncArgJobBase,
+                   Protocol[JobTemplateT, JobT, CallP, RetCovT]):
+    """"""
 
 
 class IsTaskTemplateArgsJobBase(IsFuncArgJobBase, Protocol[TaskTemplateCovT]):
@@ -226,15 +249,20 @@ class IsTaskTemplateArgsJobBase(IsFuncArgJobBase, Protocol[TaskTemplateCovT]):
 
 
 class IsTaskTemplateArgsJob(IsTaskTemplateArgsJobBase[TaskTemplateCovT],
-                            IsFuncArgJob[JobT],
-                            Protocol[TaskTemplateCovT, JobT]):
+                            IsFuncArgJob[JobTemplateT, JobT, CallP, RetCovT],
+                            Protocol[TaskTemplateCovT, JobTemplateT, JobT, CallP, RetCovT]):
     """"""
 
 
-class IsTaskTemplateArgsJobTemplateCallable(Protocol[TaskTemplateContraT, JobTemplateT]):
+class HasTaskTemplateArgsJobTemplateInit(Protocol[JobTemplateT,
+                                                  TaskTemplateContraT,
+                                                  CallP,
+                                                  RetContraT]):
     """"""
     def __call__(
         self,
+        job_func: Callable[CallP, RetContraT],
+        /,
         *task_templates: TaskTemplateContraT,
         name: str | None = None,
         iterate_over_data_files: bool = False,
@@ -244,16 +272,16 @@ class IsTaskTemplateArgsJobTemplateCallable(Protocol[TaskTemplateContraT, JobTem
         persist_outputs: PersistOutputsOptions | None = None,
         restore_outputs: RestoreOutputsOptions | None = None,
         result_key: str | None = None,
-        fixed_params: Mapping[str, object] | None = None,
-        param_key_map: Mapping[str, str] | None = None,
+        fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
+        param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
         **kwargs: object,
-    ) -> Callable[[Callable], JobTemplateT]:
+    ) -> JobTemplateT:
         ...
 
 
-class IsTaskTemplateArgsJobTemplate(IsFuncArgJobTemplate[JobTemplateT, JobT],
+class IsTaskTemplateArgsJobTemplate(IsFuncArgJobTemplate[JobTemplateT, JobT, CallP, RetCovT],
                                     IsTaskTemplateArgsJobBase[TaskTemplateT],
-                                    Protocol[TaskTemplateT, JobTemplateT, JobT]):
+                                    Protocol[TaskTemplateT, JobTemplateT, JobT, CallP, RetCovT]):
     """"""
     def refine(self,
                *task_templates: TaskTemplateT,
@@ -263,8 +291,8 @@ class IsTaskTemplateArgsJobTemplate(IsFuncArgJobTemplate[JobTemplateT, JobT],
                output_dataset_param: str | None = None,
                output_dataset_cls: type[IsDataset] | None = None,
                auto_async: bool = True,
-               fixed_params: Mapping[str, object] | None = None,
-               param_key_map: Mapping[str, str] | None = None,
+               fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
+               param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
                result_key: str | None = None,
                persist_outputs: PersistOutputsOptions | None = None,
                restore_outputs: RestoreOutputsOptions | None = None,

@@ -1,3 +1,5 @@
+from typing import Iterable, Mapping
+
 import pytest
 
 from omnipy.compute.task import TaskTemplate
@@ -15,6 +17,7 @@ def test_property_fixed_params_default_task() -> None:
     power_m1 = power_m1_template.apply()
     assert power_m1(number=4, exponent=3) == 63
 
+    val: Mapping[str, object] | Iterable[tuple[str, object]] | None
     for val in ({}, [], None):
         power_m1_template = TaskTemplate(fixed_params=val)(power_m1_func)
         for power_m1_obj in power_m1_template, power_m1_template.apply():
@@ -33,23 +36,23 @@ def test_property_fixed_params_last_args_task() -> None:
 
     square = square_template.apply()
 
-    assert square(4) == 16
-    assert square(number=5) == 25
+    assert square(4) == 16  # type: ignore[call-arg]
+    assert square(number=5) == 25  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
-        square()
+        square()  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
-        square(exponent=5)
+        square(exponent=5)  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
-        square(minus_one=True)
+        square(minus_one=True)  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
         square(4, 3)
 
     with pytest.raises(TypeError):
-        square(4, minus_one=True)
+        square(4, minus_one=True)  # type: ignore[call-arg]
 
 
 def test_property_fixed_params_first_arg_task() -> None:
@@ -62,23 +65,23 @@ def test_property_fixed_params_first_arg_task() -> None:
         }
 
     two_power_m1 = two_power_m1_template.apply()
-    assert two_power_m1(exponent=4) == 15
-    assert two_power_m1(exponent=4, minus_one=False) == 16
+    assert two_power_m1(exponent=4) == 15  # type: ignore[call-arg]
+    assert two_power_m1(exponent=4, minus_one=False) == 16  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
-        two_power_m1()
+        two_power_m1()  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
-        two_power_m1(3)
+        two_power_m1(3)  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
         two_power_m1(3, False)
 
     with pytest.raises(TypeError):
-        two_power_m1(3, minus_one=False)
+        two_power_m1(3, minus_one=False)  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
-        two_power_m1(minus_one=False)
+        two_power_m1(minus_one=False)  # type: ignore[call-arg]
 
 
 def test_property_fixed_params_all_args_task() -> None:
@@ -92,14 +95,14 @@ def test_property_fixed_params_all_args_task() -> None:
         }
 
     seven = seven_template.apply()
-    assert seven() == 7
-    assert seven(minus_one=False) == 8
+    assert seven() == 7  # type: ignore[call-arg]
+    assert seven(minus_one=False) == 8  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
-        seven(False)
+        seven(False)  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
-        seven(number=3)
+        seven(number=3)  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
         seven(3, 4)
@@ -139,6 +142,7 @@ def test_property_param_key_map_default_task() -> None:
     power_m1 = power_m1_template.apply()
     assert power_m1(number=4, exponent=3) == 63
 
+    val: Mapping[str, str] | Iterable[tuple[str, str]] | None
     for val in ({}, [], None):
         power_m1_template = TaskTemplate(param_key_map=val)(power_m1_func)
         for power_m1_obj in power_m1_template, power_m1_template.apply():
@@ -157,28 +161,28 @@ def test_property_param_key_map_task() -> None:
     power_m1 = power_m1_template.apply()
 
     assert power_m1(4, 3) == 63
-    assert power_m1(n=4, exponent=3) == 63
+    assert power_m1(n=4, exponent=3) == 63  # type: ignore[call-arg]
     assert power_m1(4, exponent=3) == 63
-    assert power_m1(4, 3, m=False) == 64
+    assert power_m1(4, 3, m=False) == 64  # type: ignore[call-arg]
     assert power_m1(4, 3, False) == 64
 
     with pytest.raises(TypeError):
-        power_m1(5)
+        power_m1(5)  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
         power_m1(number=5, exponent=3)
 
     with pytest.raises(TypeError):
-        power_m1(n=5, number=5, exponent=3)
+        power_m1(n=5, number=5, exponent=3)  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
-        power_m1(n=5, exponent=3, minus_one=False)
+        power_m1(n=5, exponent=3, minus_one=False)  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
-        power_m1(n=5, exponent=3, m=False, minus_one=False)
+        power_m1(n=5, exponent=3, m=False, minus_one=False)  # type: ignore[call-arg]
 
     with pytest.raises(TypeError):
-        power_m1(5, 3, extra_attr=123)
+        power_m1(5, 3, extra_attr=123)  # type: ignore[call-arg]
 
 
 def test_property_param_key_map_validation_task() -> None:

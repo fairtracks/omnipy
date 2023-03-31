@@ -1,6 +1,6 @@
 import asyncio
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable
+from typing import Any, Callable
 
 import pytest_cases as pc
 
@@ -21,7 +21,7 @@ from .raw.functions import (all_int_dataset_plus_int_return_str_dataset_func,
 
 @dataclass
 class IterateDataFilesCase:
-    task_func: Callable | Awaitable
+    task_func: Callable
     args: tuple[Any, ...]
     kwargs: dict[str, Any]
     func_is_async: bool

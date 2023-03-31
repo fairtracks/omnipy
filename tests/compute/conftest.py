@@ -1,23 +1,40 @@
 from datetime import datetime
-from typing import Annotated, Generator, Type
+from typing import Annotated, cast, Generator
 
 import pytest
+import pytest_cases as pc
 
-from omnipy.compute.flow import (DagFlow,
+from omnipy.compute.flow import (_DagFlowTemplate,
+                                 _FuncFlowTemplate,
+                                 _LinearFlowTemplate,
+                                 DagFlow,
                                  DagFlowTemplate,
                                  FuncFlow,
                                  FuncFlowTemplate,
                                  LinearFlow,
                                  LinearFlowTemplate)
-from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
+from omnipy.compute.job import JobBase
 
-from .helpers.classes import FlowClsTuple
-from .helpers.mocks import MockJobSubclass, MockJobTemplateSubclass, MockLocalRunner
+from .helpers.classes import (AnyFlowClsTuple,
+                              FlowClsTuple,
+                              FuncArgFlowClsTuple,
+                              FuncFlowTemplateCallable,
+                              SingleTaskDagFlowTemplateCallable,
+                              SingleTaskLinearFlowTemplateCallable,
+                              TaskTemplateArgFlowClsTuple)
+from .helpers.mocks import (IsMockJob,
+                            IsMockJobTemplate,
+                            MockJobSubclass,
+                            MockJobTemplateSubclass,
+                            MockLocalRunner)
+
+MockJobClasses = tuple[type[IsMockJobTemplate], type[IsMockJob]]
 
 
 @pytest.fixture(scope='function')
-def mock_job_classes() -> tuple[Type[JobTemplateMixin], Type[JobMixin]]:
-    return MockJobTemplateSubclass, MockJobSubclass
+def mock_job_classes() -> MockJobClasses:
+    return (cast(type[IsMockJobTemplate], MockJobTemplateSubclass),
+            cast(type[IsMockJob], MockJobSubclass))
 
 
 @pytest.fixture(scope='function')
@@ -34,17 +51,58 @@ def mock_job_datetime(
     import omnipy.compute.job_creator
 
     prev_datetime = omnipy.compute.job_creator.datetime
-    omnipy.compute.job_creator.datetime = mock_datetime
+    omnipy.compute.job_creator.datetime = mock_datetime  # type: ignore[misc, assignment]
+
+    mock_datetime.now()
 
     yield mock_datetime
 
-    omnipy.compute.job_creator.datetime = prev_datetime
+    omnipy.compute.job_creator.datetime = prev_datetime  # type: ignore[misc]
 
 
-@pytest.fixture(scope='function')
-def all_flow_classes() -> tuple[FlowClsTuple, ...]:
-    return (
-        FlowClsTuple(template_cls=LinearFlowTemplate, flow_cls=LinearFlow),
-        FlowClsTuple(template_cls=DagFlowTemplate, flow_cls=DagFlow),
-        FlowClsTuple(template_cls=FuncFlowTemplate, flow_cls=FuncFlow),
+@pc.fixture(scope='function')
+def linear_flow_cls_tuple() -> FlowClsTuple[type[LinearFlow], SingleTaskLinearFlowTemplateCallable]:
+    return FlowClsTuple(
+        flow_cls=LinearFlow,
+        flow_tmpl_cls=LinearFlowTemplate,
+        assert_flow_tmpl_cls=_LinearFlowTemplate,
     )
+
+
+@pc.fixture(scope='function')
+def dag_flow_cls_tuple() -> FlowClsTuple[type[DagFlow], SingleTaskDagFlowTemplateCallable]:
+    return FlowClsTuple(
+        flow_cls=DagFlow,
+        flow_tmpl_cls=DagFlowTemplate,
+        assert_flow_tmpl_cls=_DagFlowTemplate,
+    )
+
+
+@pc.fixture(scope='function')
+def func_flow_cls_tuple() -> FlowClsTuple[type[FuncFlow], FuncFlowTemplateCallable]:
+    return FlowClsTuple(
+        flow_cls=FuncFlow,
+        flow_tmpl_cls=FuncFlowTemplate,
+        assert_flow_tmpl_cls=_FuncFlowTemplate,
+    )
+
+
+@pc.fixture(scope='function')
+@pc.parametrize('flow_cls_tuple', [func_flow_cls_tuple])
+def func_arg_flow_cls_tuple(
+        flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pc.fixture]) -> FuncArgFlowClsTuple:
+    return flow_cls_tuple
+
+
+@pc.fixture(scope='function')
+@pc.parametrize('flow_cls_tuple', [linear_flow_cls_tuple, dag_flow_cls_tuple])
+def task_tmpl_arg_flow_cls_tuple(
+    flow_cls_tuple: Annotated[TaskTemplateArgFlowClsTuple,
+                              pc.fixture]) -> TaskTemplateArgFlowClsTuple:
+    return flow_cls_tuple
+
+
+@pc.fixture(scope='function')
+@pc.parametrize('_flow_cls_tuple', [dag_flow_cls_tuple, linear_flow_cls_tuple, func_flow_cls_tuple])
+def flow_cls_tuple(_flow_cls_tuple: AnyFlowClsTuple) -> AnyFlowClsTuple:
+    return _flow_cls_tuple

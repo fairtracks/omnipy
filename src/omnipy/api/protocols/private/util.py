@@ -1,16 +1,14 @@
 from types import TracebackType
-from typing import Callable, Protocol, runtime_checkable, TypeVar
+from typing import Callable, Protocol, runtime_checkable
 
-from omnipy.api.typedefs import DecoratorClassT
+from typing_extensions import TypeVar
+
 from omnipy.util.setdeque import SetDeque
 
-_ObjT = TypeVar('_ObjT', bound=object)
 _ObjContraT = TypeVar('_ObjContraT', contravariant=True, bound=object)
 _AnyKeyT = TypeVar('_AnyKeyT', contravariant=True, bound=object)
 _ValT = TypeVar('_ValT', bound=object)
 _ContentsT = TypeVar('_ContentsT', bound=object)
-_ContentCovT = TypeVar('_ContentCovT', covariant=True, bound=object)
-_ContentContraT = TypeVar('_ContentContraT', contravariant=True, bound=object)
 _HasContentsT = TypeVar('_HasContentsT', bound='HasContents')
 
 
@@ -18,13 +16,6 @@ _HasContentsT = TypeVar('_HasContentsT', bound='HasContents')
 class IsCallableParamAfterSelf(Protocol):
     """"""
     def __call__(self, callable_arg: Callable, /, *args: object, **kwargs: object) -> None:
-        ...
-
-
-@runtime_checkable
-class IsCallableClass(Protocol[DecoratorClassT]):
-    """"""
-    def __call__(self, *args: object, **kwargs: object) -> Callable[[Callable], DecoratorClassT]:
         ...
 
 

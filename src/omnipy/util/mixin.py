@@ -1,17 +1,11 @@
 from collections import defaultdict
 import inspect
 import types
-from typing import DefaultDict, Protocol, Type
+from typing import DefaultDict, Type
 
-from typing_extensions import get_original_bases
+from typing_extensions import get_original_bases, Self
 
 from omnipy.util.helpers import generic_aware_issubclass_ignore_args, transfer_generic_args_to_cls
-
-
-class IsMixin(Protocol):
-    """"""
-    def __init__(self, **kwargs: object) -> None:
-        ...
 
 
 class DynamicMixinAcceptor:
@@ -23,9 +17,6 @@ class DynamicMixinAcceptor:
     _orig_init_signature: inspect.Signature
     _mixin_classes: list[Type]
     _init_params_per_mixin_cls: DefaultDict[str, DefaultDict[str, inspect.Parameter]]
-
-    def __class_getitem__(cls, item):
-        return super().__class_getitem__(item)
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -96,7 +87,7 @@ class DynamicMixinAcceptor:
                     raise AttributeError(
                         'All params in the signature of the __init__() method in a dynamic '
                         'mixin class must be keyword-only or var-keyword '
-                        '(except for the "self" param)')
+                        f'(except for the "self" param). Failing param: {param.name}')
                 if param.kind == param.KEYWORD_ONLY:
                     cls._init_params_per_mixin_cls[mixin_cls.__name__][key] = param
 
@@ -133,7 +124,6 @@ class DynamicMixinAcceptor:
         cls.__init__.__signature__ = cls._orig_init_signature
 
     def __new__(cls, *args, **kwargs):
-        print(cls.__name__)
         if not cls.__name__.endswith(cls.WITH_MIXINS_CLS_SUFFIX):
             cls_with_mixins = cls._create_subcls_inheriting_from_mixins_and_orig_cls()
             obj = super(cls, cls_with_mixins).__new__(cls_with_mixins, *args, **kwargs)
@@ -145,7 +135,7 @@ class DynamicMixinAcceptor:
         return obj
 
     @classmethod
-    def _create_subcls_inheriting_from_mixins_and_orig_cls(cls):  # noqa: C901
+    def _create_subcls_inheriting_from_mixins_and_orig_cls(cls) -> type[Self]:  # noqa: C901
 
         # TODO: Refactor this, and possibly elsewhere in class
 
@@ -202,7 +192,7 @@ class DynamicMixinAcceptor:
             ns |= dict(__init__=__init__)
             return ns
 
-        cls_with_mixins = types.new_class(
+        cls_with_mixins: type[Self] = types.new_class(
             f'{cls.__name__}{cls.WITH_MIXINS_CLS_SUFFIX}',
             tuple([cls] + cls_bases_with_mixins),
             {},

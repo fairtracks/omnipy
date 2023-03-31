@@ -1,5 +1,5 @@
 import inspect
-from typing import Callable, Type
+from typing import Callable
 
 from omnipy.api.protocols.private.compute.job import IsJob, IsJobTemplate
 
@@ -17,7 +17,7 @@ def assert_updated_wrapper(a, b):
 
 def assert_flow_or_flow_template(
     flow_obj: IsJobTemplate | IsJob,
-    assert_flow_cls: Type,
+    assert_flow_cls: type,
     assert_func: Callable,
     assert_name: str,
 ) -> None:

@@ -8,9 +8,10 @@ from omnipy.api.enums import ConfigRestoreOutputsOptions as ConfigRestoreOpts
 from omnipy.api.enums import (OutputStorageProtocolOptions,
                               PersistOutputsOptions,
                               RestoreOutputsOptions)
-from omnipy.api.protocols.private.compute.job import IsJobBase
+from omnipy.api.protocols.private.compute.job import IsJob, IsJobBase
+from omnipy.api.protocols.public.compute import IsFlow
 from omnipy.api.protocols.public.config import IsJobConfig
-from omnipy.api.protocols.public.data import IsSerializerRegistry
+from omnipy.api.protocols.public.data import IsDataset, IsSerializerRegistry
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.name import NameJobBaseMixin
 from omnipy.config.job import JobConfig
@@ -176,22 +177,28 @@ class SerializerFuncJobBaseMixin:
                       f'"{self_as_name_job_base_mixin.name}", with data type "{type(results)}". '
                       f'Will abort persisting results...')
         else:
+            assert parsed_dataset is not None
             self._log(f'Writing dataset as a gzipped tarpack to "{os.path.abspath(file_path)}"')
 
             with open(file_path, 'wb') as tarfile:
                 tarfile.write(serializer.serialize(parsed_dataset))
 
     def _job_name(self):
-        return '_'.join(self.unique_name.split('-')[:-2])
+        self_as_job_base = cast(IsJobBase, self)
+        return '_'.join(self_as_job_base.unique_name.split('-')[:-2])
 
     def _generate_datetime_str(self):
-        if self.time_of_cur_toplevel_flow_run:
-            run_time = self.time_of_cur_toplevel_flow_run
+        self_as_job = cast(IsJob, self)
+
+        if self_as_job.time_of_cur_toplevel_flow_run:
+            run_time = self_as_job.time_of_cur_toplevel_flow_run
         else:
-            if hasattr(self, 'time_of_last_run') and self.time_of_last_run:
-                run_time = self.time_of_last_run
+            self_as_flow = cast(IsFlow, self)
+            if hasattr(self, 'time_of_last_run') and self_as_flow.time_of_last_run:
+                run_time = self_as_flow.time_of_last_run
             else:
                 run_time = datetime.now()
+
         datetime_str = run_time.strftime('%Y_%m_%d-%H_%M_%S')
         return datetime_str
 
@@ -213,14 +220,16 @@ class SerializerFuncJobBaseMixin:
                 yield last_dir_path / job_output_name
 
     # TODO: Further refactor _deserialize_and_restore_outputs
-    def _deserialize_and_restore_outputs(self) -> Dataset:
+    def _deserialize_and_restore_outputs(self) -> IsDataset | None:
+        self_as_job_base = cast(IsJobBase, self)
+
         persist_data_dir_path = Path(self._job_config.output_storage.local.persist_data_dir_path)
         if os.path.exists(persist_data_dir_path):
             for tar_file_path in self._all_job_output_file_paths_in_reverse_order_for_last_run(
                     persist_data_dir_path, self._job_name()):
                 to_dataset = cast(Type[Dataset], self._return_type)
                 return self._serializer_registry.load_from_tar_file_path_based_on_file_suffix(
-                    self, tar_file_path, to_dataset())
+                    self_as_job_base, str(tar_file_path), to_dataset())
 
         raise RuntimeError('No persisted output')
 

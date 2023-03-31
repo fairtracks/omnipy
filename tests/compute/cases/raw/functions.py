@@ -11,7 +11,7 @@ def action_func_no_params() -> None:
     return
 
 
-def action_func_with_params(command: str, *, verbose: bool = False) -> None:  # noqa
+def action_func_with_params(command: str, verbose: bool = False) -> None:  # noqa
     # backend.run(command, verbose=verbose)
     return
 
@@ -25,7 +25,7 @@ def format_to_string_func(text: str, number: int) -> str:
 
 
 def power_m1_func(number: int | Model[int], exponent: int, minus_one: bool = True) -> int:
-    return number**exponent - (1 if minus_one else 0)
+    return number**exponent - (1 if minus_one else 0)  # type: ignore[operator]
 
 
 def empty_dict_func() -> dict:

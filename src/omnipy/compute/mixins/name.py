@@ -1,4 +1,4 @@
-from typing import cast
+from typing import Callable, cast
 
 from inflection import underscore
 from slugify import slugify
@@ -15,6 +15,7 @@ class NameJobBaseMixin:
             self._check_not_empty_string('name', self._name)
         else:
             if hasattr(self, '_job_func'):
+                self._job_func: Callable
                 self._name = self._job_func.__name__
 
         # TODO: When job state machine is implemented, check using that to see if in job state

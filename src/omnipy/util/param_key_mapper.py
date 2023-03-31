@@ -1,8 +1,8 @@
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping
 
 
 class ParamKeyMapper:
-    def __init__(self, key_map: Mapping[str, str]):
+    def __init__(self, key_map: Mapping[str, str] | Iterable[tuple[str, str]]):
         self.key_map = dict(key_map)
         self._inverse_key_map = {val: key for key, val in self.key_map.items()}
 

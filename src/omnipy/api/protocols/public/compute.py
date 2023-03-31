@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Protocol
+from typing import ParamSpec, Protocol, TypeVar
 
 from omnipy.api.protocols.private.compute.job import (IsFuncArgJob,
                                                       IsFuncArgJobTemplate,
@@ -7,15 +7,24 @@ from omnipy.api.protocols.private.compute.job import (IsFuncArgJob,
                                                       IsTaskTemplateArgsJobTemplate)
 from omnipy.api.protocols.private.compute.mixins import IsNestedContext
 
+CallP = ParamSpec('CallP')
+RetT = TypeVar('RetT')
+RetCovT = TypeVar('RetCovT', covariant=True)
 
-class IsTaskTemplate(IsFuncArgJobTemplate['IsTaskTemplate', 'IsTask'], Protocol):
+
+class IsTaskTemplate(IsFuncArgJobTemplate['IsTaskTemplate[CallP, RetT]',
+                                          'IsTask[CallP, RetT]',
+                                          CallP,
+                                          RetT],
+                     Protocol[CallP, RetT]):
     """
     Loosely coupled type replacement for the :py:class:`~omnipy.compute.task.TaskTemplate` class
     """
     ...
 
 
-class IsTask(IsFuncArgJob[IsTaskTemplate], Protocol):
+class IsTask(IsFuncArgJob['IsTaskTemplate[CallP, RetT]', 'IsTask[CallP, RetT]', CallP, RetT],
+             Protocol[CallP, RetT]):
     """"""
     ...
 
@@ -37,40 +46,64 @@ class IsFlow(Protocol):
 
 
 class IsLinearFlowTemplate(IsTaskTemplateArgsJobTemplate[IsTaskTemplate,
-                                                         'IsLinearFlowTemplate',
-                                                         'IsLinearFlow'],
+                                                         'IsLinearFlowTemplate[CallP, RetCovT]',
+                                                         'IsLinearFlow[CallP, RetCovT]',
+                                                         CallP,
+                                                         RetCovT],
                            IsFlowTemplate,
-                           Protocol):
+                           Protocol[CallP, RetCovT]):
     """"""
     ...
 
 
-class IsLinearFlow(IsTaskTemplateArgsJob[IsTaskTemplate, IsLinearFlowTemplate], IsFlow, Protocol):
+class IsLinearFlow(IsTaskTemplateArgsJob[IsTaskTemplate,
+                                         'IsLinearFlowTemplate[CallP, RetCovT]',
+                                         'IsLinearFlow[CallP, RetCovT]',
+                                         CallP,
+                                         RetCovT],
+                   IsFlow,
+                   Protocol[CallP, RetCovT]):
     """"""
     ...
 
 
 class IsDagFlowTemplate(IsTaskTemplateArgsJobTemplate[IsTaskTemplate,
-                                                      'IsDagFlowTemplate',
-                                                      'IsDagFlow'],
+                                                      'IsDagFlowTemplate[CallP, RetCovT]',
+                                                      'IsDagFlow[CallP, RetCovT]',
+                                                      CallP,
+                                                      RetCovT],
                         IsFlowTemplate,
-                        Protocol):
+                        Protocol[CallP, RetCovT]):
     """"""
     ...
 
 
-class IsDagFlow(IsTaskTemplateArgsJob[IsTaskTemplate, IsDagFlowTemplate], IsFlow, Protocol):
+class IsDagFlow(IsTaskTemplateArgsJob[IsTaskTemplate,
+                                      'IsDagFlowTemplate[CallP, RetCovT]',
+                                      'IsDagFlow[CallP, RetCovT]',
+                                      CallP,
+                                      RetCovT],
+                IsFlow,
+                Protocol[CallP, RetCovT]):
     """"""
     ...
 
 
-class IsFuncFlowTemplate(IsFuncArgJobTemplate['IsFuncFlowTemplate', 'IsFuncFlow'],
+class IsFuncFlowTemplate(IsFuncArgJobTemplate['IsFuncFlowTemplate[CallP, RetCovT]',
+                                              'IsFuncFlow[CallP, RetCovT]',
+                                              CallP,
+                                              RetCovT],
                          IsFlowTemplate,
-                         Protocol):
+                         Protocol[CallP, RetCovT]):
     """"""
     ...
 
 
-class IsFuncFlow(IsFuncArgJob[IsFuncFlowTemplate], Protocol):
+class IsFuncFlow(IsFuncArgJob['IsFuncFlowTemplate[CallP, RetCovT]',
+                              'IsFuncFlow[CallP, RetCovT]',
+                              CallP,
+                              RetCovT],
+                 IsFlow,
+                 Protocol[CallP, RetCovT]):
     """"""
     ...

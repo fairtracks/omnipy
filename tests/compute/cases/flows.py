@@ -1,23 +1,26 @@
 from dataclasses import dataclass
 from functools import update_wrapper
-from typing import Any, Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, ParamSpec, TypeVar
 
 import pytest_cases as pc
 
-from omnipy.api.protocols.public.compute import IsFlowTemplate
+from omnipy.api.protocols.public.compute import (IsDagFlowTemplate,
+                                                 IsFuncFlowTemplate,
+                                                 IsLinearFlowTemplate,
+                                                 IsTaskTemplate)
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
 
 from .tasks import TaskCase
 
-ArgT = TypeVar('ArgT')
-ReturnT = TypeVar('ReturnT')
+CallP = ParamSpec('CallP')
+RetT = TypeVar('RetT')
 
 
 @dataclass
-class FlowCase(Generic[ArgT, ReturnT]):
-    flow_func: Callable[[ArgT], ReturnT]
-    flow_template: IsFlowTemplate
+class FlowCase(Generic[CallP, RetT]):
+    flow_func: Callable[CallP, RetT]
+    flow_template: IsLinearFlowTemplate | IsDagFlowTemplate | IsFuncFlowTemplate
     args: tuple[Any, ...]
     kwargs: dict[str, Any]
     assert_results_func: Callable[[Any], None]
@@ -33,7 +36,7 @@ class FlowCase(Generic[ArgT, ReturnT]):
 )
 @pc.parametrize_with_cases('task_case', cases='.tasks')
 def case_sync_linearflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
-    task_template = TaskTemplate(task_case.task_func)
+    task_template = TaskTemplate()(task_case.task_func)
     linear_flow = LinearFlowTemplate(task_template)(task_case.task_func)
 
     return FlowCase(
@@ -52,7 +55,7 @@ def case_sync_linearflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
 )
 @pc.parametrize_with_cases('task_case', cases='.tasks')
 def case_sync_dagflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
-    task_template = TaskTemplate(task_case.task_func)
+    task_template = TaskTemplate()(task_case.task_func)
     dag_flow = DagFlowTemplate(task_template)(task_case.task_func)
 
     return FlowCase(
@@ -71,9 +74,9 @@ def case_sync_dagflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
 )
 @pc.parametrize_with_cases('task_case', cases='.tasks')
 def case_sync_funcflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
-    task_template = TaskTemplate(task_case.task_func)
+    task_template = TaskTemplate()(task_case.task_func)
 
-    def single_task_func_decorator(task: TaskTemplate) -> Callable:
+    def single_task_func_decorator(task: IsTaskTemplate) -> Callable:
         def single_task_func(*args, **kwargs):
             return task(*args, **kwargs)
 
@@ -82,7 +85,7 @@ def case_sync_funcflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
 
     single_task_func = single_task_func_decorator(task_template)
 
-    func_flow = FuncFlowTemplate(single_task_func)
+    func_flow = FuncFlowTemplate()(single_task_func)
 
     return FlowCase(
         flow_func=single_task_func,

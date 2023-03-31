@@ -3,22 +3,27 @@ from datetime import datetime
 from functools import update_wrapper
 import logging
 from types import MappingProxyType
-from typing import Any, cast, Hashable, Type
+from typing import Any, Callable, cast, Generic, Hashable, ParamSpec, Type, TypeVar
 
-from omnipy.api.exceptions import JobStateException
+from omnipy.api.exceptions import JobStateException, ShouldNotOccurException
 from omnipy.api.protocols.private.compute.job import IsJob, IsJobBase, IsJobTemplate
 from omnipy.api.protocols.private.compute.job_creator import IsJobCreator
 from omnipy.api.protocols.private.engine import IsEngine
-from omnipy.api.protocols.private.util import IsCallableClass
 from omnipy.api.protocols.public.config import IsJobConfig
+from omnipy.api.typedefs import JobT, JobTemplateT
 from omnipy.compute.job_creator import JobBaseMeta
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
 from omnipy.hub.log.mixin import LogMixin
 from omnipy.util.helpers import as_dictable, create_merged_dict
 from omnipy.util.mixin import DynamicMixinAcceptor
 
+CallP = ParamSpec('CallP')
+RetT = TypeVar('RetT')
 
-class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
+
+class JobBase(
+        LogMixin, DynamicMixinAcceptor, Generic[JobTemplateT, JobT, CallP, RetT],
+        metaclass=JobBaseMeta):
     @property
     def _job_creator(self) -> IsJobCreator:
         return self.__class__.job_creator
@@ -44,30 +49,30 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
             raise JobStateException('JobBase and subclasses not inheriting from JobTemplateMixin '
                                     'or JobMixin are not directly instantiatable')
 
-        from_apply = hasattr(self, '_from_apply') and self._from_apply is True
+        self._from_apply: bool
+        from_apply: bool = hasattr(self, '_from_apply') and self._from_apply is True
         if isinstance(self, JobMixin) and not from_apply:
             raise JobStateException(
                 'JobMixin should only be instantiated using the "apply()" method of '
                 'an instance of JobTemplateMixin (or one of its subclasses)')
 
     @classmethod
-    def _create_job_template(cls, *args: object, **kwargs: object) -> IsJobTemplate:
+    def _create_job_template(cls, *args: object, **kwargs: object) -> JobTemplateT:
         if len(args) >= 1:
-            cls_as_callable_class = cast(Type[IsCallableClass], cls)
+            cls_as_doubly_callable = cast(Callable[..., Callable[[Callable], JobTemplateT]], cls)
 
             if not callable(args[0]):
                 raise TypeError(f'First argument of a job is assumed to be a callable, '
                                 f'not: {args[0]}')
             job_func = args[0]
             args = args[1:]
-            obj_1 = cls_as_callable_class(*args, **kwargs)(job_func)
-            return cast(IsJobTemplate, obj_1)
+            return cls_as_doubly_callable(*args, **kwargs)(job_func)
         else:
-            obj_2 = cls(*args, **kwargs)
-            return cast(IsJobTemplate, obj_2)
+            cls_as_callable = cast(Callable[..., JobTemplateT], cls)
+            return cls_as_callable(*args, **kwargs)
 
     @classmethod
-    def _create_job(cls, *args: object, **kwargs: object) -> IsJob:
+    def _create_job(cls, *args: object, **kwargs: object) -> JobT:
         if cls.__new__ is object.__new__:
             obj = cls.__new__(cls)
         else:
@@ -79,18 +84,17 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
         obj.__init__(*args, **kwargs)
         obj._from_apply = False
 
-        return cast(IsJob, obj)
+        return cast(JobT, obj)
 
-    def _apply(self) -> IsJob:
+    def _apply(self) -> JobT:
         job_cls = self._get_job_subcls_for_apply()
         job = job_cls.create_job(*self._get_init_args(), **self._get_init_kwargs())
-
         if self.engine:
             job._apply_engine_decorator(self.engine)
 
-        return job
+        return cast(JobT, job)
 
-    def _refine(self, *args: Any, update: bool = True, **kwargs: object) -> IsJobTemplate:
+    def _refine(self, *args: Any, update: bool = True, **kwargs: object) -> JobTemplateT:
         self_as_job_template = cast(IsJobTemplate, self)
 
         refine_kwargs = kwargs.copy()
@@ -116,7 +120,7 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
 
         return self_as_job_template.create_job_template(*refine_args, **refine_kwargs)
 
-    def _revise(self) -> IsJobTemplate:
+    def _revise(self) -> JobTemplateT:
         job_template_cls = self._get_job_template_subcls_for_revise()
         job_template = job_template_cls.create_job_template(*self._get_init_args(),
                                                             **self._get_init_kwargs())
@@ -149,23 +153,25 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
             and self._get_init_kwargs() == other._get_init_kwargs()
 
     @classmethod
-    def _get_job_template_subcls_for_revise(cls) -> Type[IsJobTemplate]:
-        return IsJobTemplate
+    def _get_job_template_subcls_for_revise(
+            cls) -> type[IsJobTemplate[JobTemplateT, JobT, CallP, RetT]]:
+        raise ShouldNotOccurException()
 
     @classmethod
-    def _get_job_subcls_for_apply(cls) -> Type[IsJob]:
-        return IsJob
+    def _get_job_subcls_for_apply(
+            cls) -> type[IsJob[JobTemplateT, IsJob[JobTemplateT, JobT, CallP, RetT], CallP, RetT]]:
+        raise ShouldNotOccurException()
 
-    def _call_job_template(self, *args: object, **kwargs: object) -> object:
-        self_as_job_template = cast(IsJobTemplate, self)
+    def _call_job_template(self, *args: CallP.args, **kwargs: CallP.kwargs) -> RetT:
+        self_as_job_template = cast(IsJobTemplate[JobTemplateT, JobT, CallP, RetT], self)
 
         if self.in_flow_context:
             return self_as_job_template.run(*args, **kwargs)
 
         raise TypeError(f"'{self.__class__.__name__}' object is not callable. Try .run() method")
 
-    def _call_job(self, *args: object, **kwargs: object) -> object:
-        pass
+    def _call_job(self, *args: CallP.args, **kwargs: CallP.kwargs) -> RetT:
+        ...
 
     def _check_engine(self, engine_protocol: Type):
         if self.engine is None or not isinstance(self.engine, engine_protocol):
@@ -173,37 +179,42 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
                                f'job runner protocol: {engine_protocol.__name__}')
 
 
-class JobTemplateMixin:
-    def __init__(self, *args, **kwargs):
+class JobTemplateMixin(Generic[JobTemplateT, JobT, CallP, RetT]):
+    def __init__(self, *args: object, **kwargs: object):
         if JobBase not in self.__class__.__mro__:
             raise TypeError('JobTemplateMixin is not meant to be instantiated outside the context '
                             'of a JobBase subclass.')
 
     @classmethod
-    def create_job_template(cls: Type[IsJobBase], *args: object, **kwargs: object) -> IsJobTemplate:
-        return cls._create_job_template(*args, **kwargs)
+    def create_job_template(cls, *args: object, **kwargs: object) -> JobTemplateT:
+        cls_as_job_base = cast(type[IsJobBase[JobTemplateT, JobT, CallP, RetT]], cls)
+        return cls_as_job_base._create_job_template(*args, **kwargs)
 
-    def run(self, *args: object, **kwargs: object) -> object:
+    def _cast_to_job_tmpl(
+            self
+    ) -> IsJobTemplate[JobTemplateT, IsJob[JobTemplateT, JobT, CallP, RetT], CallP, RetT]:
+        return cast(
+            IsJobTemplate[JobTemplateT, IsJob[JobTemplateT, JobT, CallP, RetT], CallP, RetT], self)
+
+    def run(self, *args: CallP.args, **kwargs: CallP.kwargs) -> RetT:
         # TODO: Using JobTemplateMixin.run() inside flows should give error message
+        return self._cast_to_job_tmpl().apply()(*args, **kwargs)
 
-        return self.apply()(*args, **kwargs)
-
-    def apply(self) -> IsJob:
-        self_as_job_base = cast(IsJobBase, self)
-        job = self_as_job_base._apply()
+    def apply(self) -> JobT:
+        job = self._cast_to_job_tmpl()._apply()
         update_wrapper(job, self, updated=[])
-        return job
+        return cast(JobT, job)
 
-    def refine(self, *args: Any, update: bool = True, **kwargs: object) -> IsJobTemplate:
-        self_as_job_base = cast(IsJobBase, self)
+    def refine(self, *args: Any, update: bool = True, **kwargs: object) -> JobTemplateT:
+        self_as_job_base = cast(IsJobBase[JobTemplateT, JobT, CallP, RetT], self)
         return self_as_job_base._refine(*args, update=update, **kwargs)
 
-    def __call__(self, *args: object, **kwargs: object) -> object:
-        self_as_job_base = cast(IsJobBase, self)
+    def __call__(self, *args: CallP.args, **kwargs: CallP.kwargs) -> RetT:
+        self_as_job_base = cast(IsJobBase[JobTemplateT, JobT, CallP, RetT], self)
         return self_as_job_base._call_job_template(*args, **kwargs)
 
 
-class JobMixin(DynamicMixinAcceptor):
+class JobMixin(DynamicMixinAcceptor, Generic[JobTemplateT, JobT, CallP, RetT]):
     def __init__(self, *args, **kwargs):
         if JobBase not in self.__class__.__mro__:
             raise TypeError('JobMixin is not meant to be instantiated outside the context '
@@ -215,22 +226,23 @@ class JobMixin(DynamicMixinAcceptor):
 
     @property
     def time_of_cur_toplevel_flow_run(self) -> datetime | None:
-        self_as_job_base = cast(IsJobBase, self)
+        self_as_job_base = cast(IsJobBase[JobTemplateT, JobT, CallP, RetT], self)
         return self_as_job_base._job_creator.time_of_cur_toplevel_nested_context_run
 
     @classmethod
-    def create_job(cls, *args: object, **kwargs: object) -> IsJob:
-        cls_as_job_base = cast(IsJobBase, cls)
+    def create_job(cls, *args: object, **kwargs: object) -> JobT:
+        cls_as_job_base = cast(IsJobBase[JobTemplateT, JobT, CallP, RetT], cls)
         return cls_as_job_base._create_job(*args, **kwargs)
 
-    def revise(self) -> IsJobTemplate:
-        self_as_job_base = cast(IsJobBase, self)
+    def revise(self) -> JobTemplateT:
+        self_as_job_base = cast(
+            IsJobBase[IsJobTemplate[JobTemplateT, JobT, CallP, RetT], JobT, CallP, RetT], self)
         job_template = self_as_job_base._revise()
         update_wrapper(job_template, self, updated=[])
-        return job_template
+        return cast(JobTemplateT, job_template)
 
-    def __call__(self, *args: object, **kwargs: object) -> object:
-        self_as_job_base = cast(IsJobBase, self)
+    def __call__(self, *args: CallP.args, **kwargs: CallP.kwargs) -> RetT:
+        self_as_job_base = cast(IsJobBase[JobTemplateT, JobT, CallP, RetT], self)
 
         try:
             return self_as_job_base._call_job(*args, **kwargs)

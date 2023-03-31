@@ -2,7 +2,6 @@ from copy import copy, deepcopy
 from typing import cast
 
 from omnipy.compute.task import TaskTemplate
-from omnipy.compute.typing import mypy_fix_task_template
 
 from ..json.datasets import JsonListOfDictsDataset
 from ..json.typedefs import JsonScalar
@@ -12,7 +11,6 @@ from .models import (TableDictOfDictsOfJsonScalarsModel,
                      TableWithColNamesModel)
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def remove_columns(json_dataset: JsonListOfDictsDataset,
                    column_keys_for_data_items: dict[str, list[str]]) -> JsonListOfDictsDataset:
@@ -29,7 +27,6 @@ def remove_columns(json_dataset: JsonListOfDictsDataset,
     return JsonListOfDictsDataset(json_dataset.to_data())
 
 
-@mypy_fix_task_template
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TableWithColNamesDataset)
 def rename_col_names(data_file: TableWithColNamesModel,
                      prev2new_keymap: dict[str, str]) -> TableWithColNamesModel:
@@ -38,7 +35,6 @@ def rename_col_names(data_file: TableWithColNamesModel,
     } for row in data_file])
 
 
-@mypy_fix_task_template
 @TaskTemplate()
 def transpose_columns_with_data_files(dataset: TableWithColNamesDataset,
                                       exclude_cols: tuple[str]) -> None:
@@ -63,7 +59,6 @@ def transpose_columns_with_data_files(dataset: TableWithColNamesDataset,
     return output_dataset
 
 
-# @mypy_fix_task_template
 # @TaskTemplate()
 # def convert_to_1nf(input_dataset: Dataset[TableOfStringsAndLists]) -> Dataset[TableOfStrings]:
 #     out_dataset = Dataset[TableOfStrings]()

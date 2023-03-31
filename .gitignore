@@ -140,3 +140,7 @@ poetry.lock
 
 # Documentation
 html
+
+# IPython / Jupyter
+
+.ipynb_checkpoints
