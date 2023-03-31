@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Protocol, runtime_checkable
+from typing import Callable, Protocol, runtime_checkable, TypeVar
 
 from omnipy.api.types import DecoratorClassT
 
@@ -12,8 +12,11 @@ class IsCallableParamAfterSelf(Protocol):
         ...
 
 
+CC = TypeVar('CC', bound=Callable, contravariant=True)
+
+
 @runtime_checkable
-class IsCallableClass(Protocol[DecoratorClassT]):
+class IsCallableClass(Protocol[DecoratorClassT, CC]):
     """"""
-    def __call__(self, *args: object, **kwargs: object) -> Callable[[Callable], DecoratorClassT]:
+    def __call__(self, *args: object, **kwargs: object) -> Callable[[CC], DecoratorClassT]:
         ...

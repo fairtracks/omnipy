@@ -1,5 +1,5 @@
 import asyncio
-from typing import Callable, Tuple
+from typing import Callable, Generic, Tuple, TypeVar
 
 from omnipy.api.types import GeneralDecorator
 from omnipy.compute.job import JobBase
@@ -9,12 +9,14 @@ from omnipy.compute.mixins.params import ParamsFuncJobBaseMixin
 from omnipy.compute.mixins.result_key import ResultKeyFuncJobBaseMixin
 from omnipy.compute.mixins.serialize import SerializerFuncJobBaseMixin
 
+C = TypeVar('C', bound=Callable)
 
-class PlainFuncArgJobBase(JobBase):
-    def __init__(self, job_func: Callable, *args: object, **kwargs: object) -> None:
+
+class PlainFuncArgJobBase(JobBase, Generic[C]):
+    def __init__(self, job_func: C, *args: object, **kwargs: object) -> None:
         self._job_func = job_func
 
-    def _get_init_args(self) -> Tuple[object, ...]:
+    def _get_init_args(self) -> Tuple[C]:
         return self._job_func,
 
     def has_coroutine_func(self) -> bool:
@@ -37,7 +39,7 @@ class PlainFuncArgJobBase(JobBase):
 
 
 # Extra level needed for mixins to be able to overload _call_job (and possibly other methods)
-class FuncArgJobBase(PlainFuncArgJobBase):
+class FuncArgJobBase(PlainFuncArgJobBase[C], Generic[C]):
     ...
 
 

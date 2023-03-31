@@ -5,7 +5,17 @@ from datetime import datetime
 from functools import update_wrapper
 import logging
 from types import MappingProxyType
-from typing import Any, cast, Dict, Hashable, Optional, Tuple, Type, Union
+from typing import (Any,
+                    Callable,
+                    cast,
+                    Dict,
+                    Generic,
+                    Hashable,
+                    Optional,
+                    Tuple,
+                    Type,
+                    TypeVar,
+                    Union)
 
 from omnipy.api.exceptions import JobStateException
 from omnipy.api.protocols.private.compute.job import IsJob, IsJobBase, IsJobTemplate
@@ -176,14 +186,18 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
                                f'job runner protocol: {engine_protocol.__name__}')
 
 
-class JobTemplateMixin:
+C = TypeVar('C', bound=Callable)
+
+
+class JobTemplateMixin(Generic[C]):
     def __init__(self, *args, **kwargs):
         if JobBase not in self.__class__.__mro__:
             raise TypeError('JobTemplateMixin is not meant to be instantiated outside the context '
                             'of a JobBase subclass.')
 
     @classmethod
-    def create_job_template(cls: Type[IsJobBase], *args: object, **kwargs: object) -> IsJobTemplate:
+    def create_job_template(cls: Type[IsJobBase[C]], *args: object,
+                            **kwargs: object) -> IsJobTemplate[C]:
         return cls._create_job_template(*args, **kwargs)
 
     def run(self, *args: object, **kwargs: object) -> object:
@@ -191,22 +205,22 @@ class JobTemplateMixin:
 
         return self.apply()(*args, **kwargs)
 
-    def apply(self) -> IsJob:
-        self_as_job_base = cast(IsJobBase, self)
+    def apply(self) -> IsJob[C]:
+        self_as_job_base = cast(IsJobBase[C], self)
         job = self_as_job_base._apply()
         update_wrapper(job, self, updated=[])
         return job
 
-    def refine(self, *args: Any, update: bool = True, **kwargs: object) -> IsJobTemplate:
-        self_as_job_base = cast(IsJobBase, self)
+    def refine(self, *args: Any, update: bool = True, **kwargs: object) -> IsJobTemplate[C]:
+        self_as_job_base = cast(IsJobBase[C], self)
         return self_as_job_base._refine(*args, update=update, **kwargs)
 
     def __call__(self, *args: object, **kwargs: object) -> object:
-        self_as_job_base = cast(IsJobBase, self)
+        self_as_job_base = cast(IsJobBase[C], self)
         return self_as_job_base._call_job_template(*args, **kwargs)
 
 
-class JobMixin(DynamicMixinAcceptor):
+class JobMixin(DynamicMixinAcceptor, Generic[C]):
     def __init__(self, *args, **kwargs):
         if JobBase not in self.__class__.__mro__:
             raise TypeError('JobMixin is not meant to be instantiated outside the context '
@@ -218,22 +232,22 @@ class JobMixin(DynamicMixinAcceptor):
 
     @property
     def time_of_cur_toplevel_flow_run(self) -> Optional[datetime]:
-        self_as_job_base = cast(IsJobBase, self)
+        self_as_job_base = cast(IsJobBase[C], self)
         return self_as_job_base._job_creator.time_of_cur_toplevel_nested_context_run
 
     @classmethod
     def create_job(cls, *args: object, **kwargs: object) -> IsJob:
-        cls_as_job_base = cast(IsJobBase, cls)
+        cls_as_job_base = cast(IsJobBase[C], cls)
         return cls_as_job_base._create_job(*args, **kwargs)
 
     def revise(self) -> IsJobTemplate:
-        self_as_job_base = cast(IsJobBase, self)
+        self_as_job_base = cast(IsJobBase[C], self)
         job_template = self_as_job_base._revise()
         update_wrapper(job_template, self, updated=[])
         return job_template
 
     def __call__(self, *args: object, **kwargs: object) -> object:
-        self_as_job_base = cast(IsJobBase, self)
+        self_as_job_base = cast(IsJobBase[C], self)
 
         try:
             return self_as_job_base._call_job(*args, **kwargs)

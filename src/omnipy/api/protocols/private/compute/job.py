@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Mapping, Optional, Protocol, Tuple, Type
+from typing import Any, Callable, Dict, Mapping, Optional, Protocol, Tuple, Type, TypeVar
 
 from omnipy.api.enums import PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.api.protocols.private.compute.job_creator import IsJobCreator
@@ -17,8 +17,10 @@ from omnipy.api.types import (GeneralDecorator,
                               TaskTemplateCovT,
                               TaskTemplateT)
 
+C = TypeVar('C', bound=Callable)
 
-class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol):
+
+class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol[C]):
     """"""
     @property
     def _job_creator(self) -> IsJobCreator:
@@ -40,57 +42,54 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol):
         ...
 
     @classmethod
-    def _create_job_template(cls, *args: object, **kwargs: object) -> IsJobTemplate:
+    def _create_job_template(cls, *args: object, **kwargs: object) -> IsJobTemplate[C]:
         ...
 
     @classmethod
-    def _create_job(cls, *args: object, **kwargs: object) -> IsJob:
+    def _create_job(cls, *args: object, **kwargs: object) -> IsJob[C]:
         ...
 
-    def _apply(self) -> IsJob:
+    def _apply(self) -> IsJob[C]:
         ...
 
-    def _refine(self, *args: Any, update: bool = True, **kwargs: object) -> IsJobTemplate:
+    def _refine(self, *args: Any, update: bool = True, **kwargs: object) -> IsJobTemplate[C]:
         ...
 
-    def _revise(self) -> IsJobTemplate:
+    def _revise(self) -> IsJobTemplate[C]:
         ...
 
-    def _call_job_template(self, *args: object, **kwargs: object) -> object:
-        ...
-
-    def _call_job(self, *args: object, **kwargs: object) -> object:
-        ...
+    _call_job_template: C
+    _call_job: C
 
 
-class IsJob(IsJobBase, Protocol):
+class IsJobBaseCallable(IsJobBase[C], Protocol[C]):
+    __call__: C
+
+
+class IsJob(IsJobBaseCallable[C], Protocol[C]):
     """"""
     @property
     def time_of_cur_toplevel_flow_run(self) -> Optional[datetime]:
         ...
 
     @classmethod
-    def create_job(cls, *args: object, **kwargs: object) -> IsJob:
-        ...
-
-    def __call__(self, *args: object, **kwargs: object) -> object:
+    def create_job(cls, *args: object, **kwargs: object) -> IsJob[C]:
         ...
 
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         ...
 
 
-class IsJobTemplate(IsJobBase, Protocol):
+class IsJobTemplate(IsJobBaseCallable[C], Protocol[C]):
     """"""
     @classmethod
-    def create_job_template(cls, *args: object, **kwargs: object) -> IsJobTemplate:
+    def create_job_template(cls, *args: object, **kwargs: object) -> IsJobTemplate[C]:
         ...
 
-    def run(self, *args: object, **kwargs: object) -> object:
-        ...
+    run: C
 
 
-class IsFuncArgJobBase(IsJob, Protocol):
+class IsFuncArgJobBase(IsJob[C], Protocol[C]):
     """"""
     @property
     def param_signatures(self) -> MappingProxyType:
@@ -139,6 +138,7 @@ class IsFuncArgJobBase(IsJob, Protocol):
         ...
 
 
+## Change?
 class IsPlainFuncArgJobBase(Protocol):
     """"""
     _job_func: Callable
@@ -147,13 +147,16 @@ class IsPlainFuncArgJobBase(Protocol):
         ...
 
 
-class IsFuncArgJob(IsFuncArgJobBase, Protocol[JobT]):
+class IsFuncArgJob(IsFuncArgJobBase[C], Protocol[JobT, C]):
     """"""
     def revise(self) -> JobT:
         ...
 
 
-class IsFuncArgJobTemplateCallable(Protocol[JobTemplateT]):
+CC = TypeVar('CC', bound=Callable, contravariant=True)
+
+
+class IsFuncArgJobTemplateCallable(Protocol[JobTemplateT, CC]):
     """"""
     def __call__(
         self,
@@ -165,11 +168,11 @@ class IsFuncArgJobTemplateCallable(Protocol[JobTemplateT]):
         fixed_params: Optional[Mapping[str, object]] = None,
         param_key_map: Optional[Mapping[str, str]] = None,
         **kwargs: object,
-    ) -> Callable[[Callable], JobTemplateT]:
+    ) -> Callable[[CC], JobTemplateT]:
         ...
 
 
-class IsFuncArgJobTemplate(IsJobTemplate, IsFuncArgJobBase, Protocol[JobTemplateT, JobT]):
+class IsFuncArgJobTemplate(IsJobTemplate[C], IsFuncArgJobBase[C], Protocol[JobTemplateT, JobT, C]):
     """"""
     def refine(self,
                *args: Any,
@@ -188,16 +191,16 @@ class IsFuncArgJobTemplate(IsJobTemplate, IsFuncArgJobBase, Protocol[JobTemplate
         ...
 
 
-class IsTaskTemplateArgsJobBase(IsFuncArgJobBase, Protocol[TaskTemplateCovT]):
+class IsTaskTemplateArgsJobBase(IsFuncArgJobBase[C], Protocol[TaskTemplateCovT, C]):
     """"""
     @property
     def task_templates(self) -> Tuple[TaskTemplateCovT, ...]:
         ...
 
 
-class IsTaskTemplateArgsJob(IsTaskTemplateArgsJobBase[TaskTemplateCovT],
-                            IsFuncArgJob[JobT],
-                            Protocol[TaskTemplateCovT, JobT]):
+class IsTaskTemplateArgsJob(IsTaskTemplateArgsJobBase[TaskTemplateCovT, C],
+                            IsFuncArgJob[JobT, C],
+                            Protocol[TaskTemplateCovT, JobT, C]):
     """"""
 
 
@@ -218,9 +221,9 @@ class IsTaskTemplateArgsJobTemplateCallable(Protocol[TaskTemplateContraT, JobTem
         ...
 
 
-class IsTaskTemplateArgsJobTemplate(IsFuncArgJobTemplate[JobTemplateT, JobT],
-                                    IsTaskTemplateArgsJobBase[TaskTemplateT],
-                                    Protocol[TaskTemplateT, JobTemplateT, JobT]):
+class IsTaskTemplateArgsJobTemplate(IsFuncArgJobTemplate[JobTemplateT, JobT, C],
+                                    IsTaskTemplateArgsJobBase[TaskTemplateT, C],
+                                    Protocol[TaskTemplateT, JobTemplateT, JobT, C]):
     """"""
     def refine(self,
                *task_templates: TaskTemplateT,
