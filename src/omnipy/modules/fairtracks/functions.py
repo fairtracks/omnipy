@@ -6,7 +6,7 @@ GDC_BASE_URL = 'https://api.gdc.cancer.gov/'
 
 
 # ['experiments', 'biosample']
-def encode_api(cls, endpoint='experiments', id=None, limit=None, format='json', frame='object'):
+def encode_api(endpoint='experiments', id=None, limit=None, format='json', frame='object'):
     api_url = ENCODE_BASE_URL + endpoint + '/' + (id if id else '@@listing') + '?' + '&'.join(
         (['limit=' + limit] if limit else []) + (['format=' + format] if format else [])
         + (['frame=' + frame] if frame else []))
@@ -22,7 +22,7 @@ def encode_api(cls, endpoint='experiments', id=None, limit=None, format='json', 
 
 
 # ['projects', 'cases', 'files', 'annotations'], starting_point='0', size='25'
-def gdc_api(cls, object_type='projects', starting_point=None, size=None):
+def gdc_api(object_type='projects', starting_point=None, size=None):
     api_url = GDC_BASE_URL + object_type + '/' + '?' + \
               '&'.join(
                   (['from=' + starting_point] if starting_point else [])
