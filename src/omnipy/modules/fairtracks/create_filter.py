@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 
+from copy import copy
 import json
 import sys
-from copy import copy
-from typing import cast, Dict, List, Optional, Union
+from typing import List, Optional
 
 from pydantic import BaseModel
 import requests
 
-from omnipy.compute.flow import LinearFlowTemplate, DagFlowTemplate
+from omnipy.compute.flow import LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
-from omnipy.modules.json.datasets import JsonListOfDictsOfScalarsDataset, JsonDictOfScalarsDataset, \
-    JsonDictOfDictsOfScalarsDataset, JsonDataset
-from omnipy.modules.json.models import JsonListOfDictsOfScalarsModel, JsonDictOfScalarsModel, \
-    JsonDictOfDictsOfScalarsModel
-from omnipy.modules.json.types import Json, JsonDict
+from omnipy.modules.json.datasets import (JsonDataset,
+                                          JsonDictOfDictsOfScalarsDataset,
+                                          JsonListOfDictsOfScalarsDataset)
+from omnipy.modules.json.models import JsonDictOfDictsOfScalarsModel, JsonListOfDictsOfScalarsModel
+from omnipy.modules.json.typedefs import Json
 
 #########################################################
 # user parameters
@@ -74,7 +74,9 @@ def get_project_counts() -> JsonListOfDictsOfScalarsDataset:
 
 
 @TaskTemplate(iterate_over_data_files=True)
-def create_dict_from_list_of_dicts(list_of_dicts: JsonListOfDictsOfScalarsModel, field_whose_values_will_be_new_keys:str) -> JsonDictOfDictsOfScalarsModel:
+def create_dict_from_list_of_dicts(
+        list_of_dicts: JsonListOfDictsOfScalarsModel,
+        field_whose_values_will_be_new_keys: str) -> JsonDictOfDictsOfScalarsModel:
     output_dict = {}
     for item in list_of_dicts:
         item_copy = copy(item.contents)
@@ -84,14 +86,13 @@ def create_dict_from_list_of_dicts(list_of_dicts: JsonListOfDictsOfScalarsModel,
     return output_dict
 
 
-
-
 # TODO: Figure out why JsonDictOfDictsOfScalarsModel was serialized as CSV
 # TODO: Somehow fix so that we do not need to call Model.contents within a task
 
 
 @TaskTemplate()
-def rest_of_the_steps(project_count_per_program: JsonDictOfDictsOfScalarsDataset) -> JsonDataset:
+def rest_of_the_steps(  # noqa: C901
+        project_count_per_program: JsonDictOfDictsOfScalarsDataset) -> JsonDataset:
     ##############################################################
     # step 2: filtered query to get the UIDs of each TCGA project
     ##############################################################
@@ -104,7 +105,8 @@ def rest_of_the_steps(project_count_per_program: JsonDictOfDictsOfScalarsDataset
         size = min(size_max, number_of_projects)
 
     fields = ','.join(['summary.case_count', 'summary.file_count'])
-    response = call_endpoint(projects_endpt, filters=create_filter('program.name', ['TCGA']), fields=fields, size=size)
+    response = call_endpoint(
+        projects_endpt, filters=create_filter('program.name', ['TCGA']), fields=fields, size=size)
     projects = response['data']['hits']
     if len(projects) != size:
         print('size mismatch')
@@ -113,7 +115,7 @@ def rest_of_the_steps(project_count_per_program: JsonDictOfDictsOfScalarsDataset
     ##########################################################################
     # Step3: filtered query on 'cases' (filter on project_id) to get cases ID for each TCGA project
     #        the IDs for all the files are also available form this endpoint
-    ########################################################################
+    ##############################################################################################
 
     for project in projects:
         if download_all_cases:
@@ -121,8 +123,10 @@ def rest_of_the_steps(project_count_per_program: JsonDictOfDictsOfScalarsDataset
         else:
             size = min(project['summary']['case_count'], number_of_cases)
         response = call_endpoint(
-            cases_endpt, filter=create_filter('project.project_id', [project['id']]),
-            fields=','.join(['files.file_id', 'summary.file_count', 'annotation']), size=size)
+            cases_endpt,
+            filter=create_filter('project.project_id', [project['id']]),
+            fields=','.join(['files.file_id', 'summary.file_count', 'annotation']),
+            size=size)
         project['cases'] = response['data']['hits']
 
     ##############################################################################
@@ -134,8 +138,10 @@ def rest_of_the_steps(project_count_per_program: JsonDictOfDictsOfScalarsDataset
     for project in projects:
         for case in project['cases']:
             response = call_endpoint(
-                annotations_endpt, filter=create_filter('case_id', [case['id']]),
-                fields=['annotation_id'], size=size)
+                annotations_endpt,
+                filter=create_filter('case_id', [case['id']]),
+                fields=['annotation_id'],
+                size=size)
             case['annotations'] = response['data']['hits']
 
     ############################################################################
@@ -171,11 +177,15 @@ def rest_of_the_steps(project_count_per_program: JsonDictOfDictsOfScalarsDataset
         dataset[entry] = create_filter(entry[0:-1] + '_id', id_dict[entry])
     return dataset
 
-@LinearFlowTemplate(get_project_counts,
-                    create_dict_from_list_of_dicts.refine(name='create_dict_from_list_of_dicts_using_key_field',
-                                                          fixed_params=dict(field_whose_values_will_be_new_keys='key')),
-                    rest_of_the_steps)
-def get_filters_for_tcga()->JsonDictOfDictsOfScalarsModel:
+
+@LinearFlowTemplate(
+    get_project_counts,
+    create_dict_from_list_of_dicts.refine(
+        name='create_dict_from_list_of_dicts_using_key_field',
+        fixed_params=dict(field_whose_values_will_be_new_keys='key')),
+    rest_of_the_steps)
+def get_filters_for_tcga() -> JsonDictOfDictsOfScalarsModel:
     ...
 
-get_filters_for_tcga.run()
+
+# get_filters_for_tcga.run()
