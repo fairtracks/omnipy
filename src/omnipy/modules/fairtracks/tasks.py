@@ -21,3 +21,13 @@ def import_dataset_from_encode(endpoints: Iterable[constr(min_length=1)],
             format='json',
         )
     return dataset
+
+
+def a(a: int) -> int:
+    return a + 2
+
+
+tttts = TaskTemplate()(a)
+reveal_type(tttts)
+b = tttts.run(a=2)
+reveal_type(b)

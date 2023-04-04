@@ -61,6 +61,38 @@ def a(a: int) -> int:
 #
 # TaskTemplate = get_task_template()
 
+
+class ListDoubler(Generic[C]):
+    def __init__(self, l: list[C]) -> None:
+        self._l = list
+
+    def get_double_l(self) -> list[C]:
+        return self._l + self._l
+
+
+reveal_type(ListDoubler)
+reveal_type(TaskTemplateInner)
+
+
+class IsPrintingListDoubler(Protocol[C]):
+    def get_double_l(self):
+        ...
+
+    def print(self):
+        ...
+
+
+def add_print(cls: Type[ListDoubler[C]]) -> IsPrintingListDoubler[C]:
+    def _inner():
+        print(cls.get_double_l())
+
+    cls.print = _inner
+    return cast(IsPrintingListDoubler[C], cls)
+
+
+P = add_print(ListDoubler)
+reveal_type(P)
+
 TaskTemplate = task_template_callable_decorator_cls(TaskTemplateInner)
 reveal_type(TaskTemplate)
 
