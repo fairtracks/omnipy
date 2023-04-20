@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "omnipy"
-version = "0.10.3"
+version = "0.10.4"
 description = "Omnipy is a high level Python library for type-driven data wrangling and scalable workflow orchestration (under development)"
 license = "Apache-2.0"
 repository = "http://github.com/fairtracks/omnipy"
