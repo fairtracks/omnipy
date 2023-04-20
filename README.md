@@ -3,6 +3,8 @@
 
 Omnipy is the new name of the Python package formerly known as uniFAIR.
 
+![Conceptual overview of Omnipy](https://fairtracks.net/_nuxt/img/aef0283-1440.png)
+
 We are very grateful to Dr. Jamin Chen, who gracefully transferred ownership of the (mostly unused) "omnipy" name in PyPI to us!
 
 --
@@ -14,6 +16,7 @@ related [PYPI package](https://pypi.org/project/omnipy-examples/)!
 (NOTE: Read the section [Transformation on the FAIRtracks.net website](https://fairtracks.net/fair/#fair-07-transformation)
 for a more detailed and better formatted version of the following description!)
 
+
 ## Generic functionality
 
 Omnipy is designed primarily to simplify development and deployment of (meta)data transformation 
@@ -21,7 +24,7 @@ processes in the context of FAIRification and data brokering efforts. However, t
 very generic and can also be used to support research data (and metadata) transformations in a range 
 of fields and contexts beyond life science, including day-to-day research scenarios:
 
-![Conceptual overview of Omnipy](https://fairtracks.net/_nuxt/img/aef0283-1440.png)
+![Conceptual overview of Omnipy](https://fairtracks.net/materials/images/omnipy-overview.png)
 
 **Data wrangling in day-to-day research:** Researchers in life science and other data-centric fields
 often need to extract, manipulate and integrate data and/or metadata from different sources, such as
@@ -342,5 +345,3 @@ As initial use cases, we will consider the following two scenarios:
   * Validation of FAIRtracks document
 
 Suggestion: we will use Pandas DataFrames as the core data structure for tables, given that the library provides the required features (specifically Foreign key and Join capabilities)
-
-
