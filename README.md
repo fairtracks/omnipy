@@ -3,8 +3,6 @@
 
 Omnipy is the new name of the Python package formerly known as uniFAIR.
 
-![Conceptual overview of Omnipy](https://fairtracks.net/_nuxt/img/aef0283-1440.png)
-
 We are very grateful to Dr. Jamin Chen, who gracefully transferred ownership of the (mostly unused) "omnipy" name in PyPI to us!
 
 --
