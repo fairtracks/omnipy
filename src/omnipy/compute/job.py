@@ -92,7 +92,7 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
 
         return job
 
-    def _refine(self, *args: object, update: bool = True, **kwargs: object) -> IsJobTemplate:
+    def _refine(self, *args: Any, update: bool = True, **kwargs: object) -> IsJobTemplate:
         self_as_job_template = cast(IsJobTemplate, self)
 
         refine_kwargs = kwargs.copy()
@@ -197,7 +197,7 @@ class JobTemplateMixin:
         update_wrapper(job, self, updated=[])
         return job
 
-    def refine(self, *args: object, update: bool = True, **kwargs: object) -> IsJobTemplate:
+    def refine(self, *args: Any, update: bool = True, **kwargs: object) -> IsJobTemplate:
         self_as_job_base = cast(IsJobBase, self)
         return self_as_job_base._refine(*args, update=update, **kwargs)
 
