@@ -24,5 +24,4 @@ jobs:
 
       - name: Run pre-commit hooks with hook-stage "manual" (=checks only)
         run: |
-          source $(poetry env info --path)/bin/activate
           pre-commit run --hook-stage manual --all-files
