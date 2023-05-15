@@ -1,4 +1,4 @@
-from typing import Protocol, Type, TypeVar, Union
+from typing import Protocol, TypeVar, Union
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
