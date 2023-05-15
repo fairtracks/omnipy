@@ -11,7 +11,9 @@ from omnipy.api.protocols.private.compute.mixins import IsNestedContext
 
 
 class IsTaskTemplate(IsFuncArgJobTemplate['IsTaskTemplate', 'IsTask'], Protocol):
-    """"""
+    """
+    Loosely coupled type replacement for the :py:class:`~omnipy.compute.task.TaskTemplate` class
+    """
     ...
 
 
