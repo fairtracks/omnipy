@@ -33,8 +33,11 @@
 
 The setup for automatic formatting and linting is rather complex. The main alternative is to use 
 black, which is easier to set up, but it does not have as many options and the main omnipy developer
-is opinionated against the default black setup.. The yapf config is not fully
+is opinionated against the default black setup. The yapf config is not fully
 defined. 
+
+- To install git hooks that automagically format and lint before every commit:
+  - `pre-commit install`
 
 - In PyCharm -> File Watchers:
   - Click arrow icon pointing down and to the left
