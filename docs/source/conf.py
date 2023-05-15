@@ -10,8 +10,10 @@ import sys
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Omnipy'
-copyright = '2023, Sveinung Gundersen, Joshua Baskaran, Federico Bianchini, Jeanne Cheneby, Ahmed Ghanem, Pável Vázquez'
-author = 'Sveinung Gundersen, Joshua Baskaran, Federico Bianchini, Jeanne Cheneby, Ahmed Ghanem, Pável Vázquez'
+copyright = '2023, Sveinung Gundersen, Joshua Baskaran, Federico Bianchini, Jeanne Cheneby, ' \
+            'Ahmed Ghanem, Pável Vázquez'
+author = 'Sveinung Gundersen, Joshua Baskaran, Federico Bianchini, Jeanne Cheneby, Ahmed Ghanem, ' \
+         'Pável Vázquez'
 release = '0.10.4'
 
 # -- General configuration ---------------------------------------------------

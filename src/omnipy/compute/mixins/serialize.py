@@ -2,7 +2,7 @@ from datetime import datetime
 import os
 from pathlib import Path
 import tarfile
-from typing import cast, Optional, Type
+from typing import cast, Generator, Optional, Type
 
 from omnipy.api.enums import ConfigPersistOutputsOptions as ConfigPersistOpts
 from omnipy.api.enums import ConfigRestoreOutputsOptions as ConfigRestoreOpts
@@ -86,7 +86,7 @@ class SerializerFuncJobBaseMixin:
     def will_persist_outputs(self) -> PersistOutputsOptions:
         if not self._has_job_config or self._persist_outputs is not PersistOpts.FOLLOW_CONFIG:
             return self._persist_outputs if self._persist_outputs is not None \
-                    else PersistOpts.DISABLED
+                else PersistOpts.DISABLED
         else:
             # TODO: Refactor using Flow and Task Mixins
             from omnipy.compute.flow import FlowBase
@@ -98,8 +98,8 @@ class SerializerFuncJobBaseMixin:
                 return PersistOpts.ENABLED if isinstance(self, FlowBase) else PersistOpts.DISABLED
             elif config_persist_opt == ConfigPersistOpts.ENABLE_FLOW_AND_TASK_OUTPUTS:
                 return PersistOpts.ENABLED \
-                        if any(isinstance(self, cls) for cls in (FlowBase, TaskBase)) \
-                        else PersistOpts.DISABLED
+                    if any(isinstance(self, cls) for cls in (FlowBase, TaskBase)) \
+                    else PersistOpts.DISABLED
             else:
                 assert config_persist_opt == ConfigPersistOpts.DISABLED
                 return PersistOpts.DISABLED
@@ -108,7 +108,7 @@ class SerializerFuncJobBaseMixin:
     def will_restore_outputs(self) -> RestoreOutputsOptions:
         if not self._has_job_config or self._restore_outputs is not RestoreOpts.FOLLOW_CONFIG:
             return self._restore_outputs if self._restore_outputs is not None \
-                    else RestoreOpts.DISABLED
+                else RestoreOpts.DISABLED
         else:
             config_restore_opt = self._job_config.restore_outputs
 
@@ -137,8 +137,8 @@ class SerializerFuncJobBaseMixin:
                 self._serialize_and_persist_outputs(results)
             else:
                 self._log(
-                    f'Results of {self_as_name_job_base_mixin.unique_name} is not a Dataset and cannot '
-                    f'be automatically serialized and persisted!')
+                    f'Results of {self_as_name_job_base_mixin.unique_name} is not a Dataset and '
+                    f'cannot be automatically serialized and persisted!')
 
         return results
 
@@ -152,7 +152,7 @@ class SerializerFuncJobBaseMixin:
             os.makedirs(output_path)
 
         num_cur_files = len(os.listdir(output_path))
-        job_name = self._create_job_name()
+        job_name = self._job_name()
 
         file_path = output_path.joinpath(f'{num_cur_files:02}_{job_name}.tar.gz')
 
@@ -160,16 +160,16 @@ class SerializerFuncJobBaseMixin:
             self._serializer_registry.auto_detect_tar_file_serializer(results)
 
         if serializer is None:
-            self._log(
-                f'Unable to find a serializer for results of job "{self_as_name_job_base_mixin.name}", '
-                f'with data type "{type(results)}". Will abort persisting results...')
+            self._log('Unable to find a serializer for results of job '
+                      f'"{self_as_name_job_base_mixin.name}", with data type "{type(results)}". '
+                      f'Will abort persisting results...')
         else:
             self._log(f'Writing dataset as a gzipped tarpack to "{os.path.abspath(file_path)}"')
 
             with open(file_path, 'wb') as tarfile:
                 tarfile.write(serializer.serialize(parsed_dataset))
 
-    def _create_job_name(self):
+    def _job_name(self):
         return '_'.join(self.unique_name.split('-')[:-2])
 
     def _generate_datetime_str(self):
@@ -183,53 +183,60 @@ class SerializerFuncJobBaseMixin:
         datetime_str = run_time.strftime('%Y_%m_%d-%H_%M_%S')
         return datetime_str
 
-    # TODO: Refactor
-    def _deserialize_and_restore_outputs(self) -> Dataset:
-        output_path = Path(self._job_config.persist_data_dir_path)
-        if os.path.exists(output_path):
-            sorted_date_dirs = list(sorted(os.listdir(output_path)))
-            if len(sorted_date_dirs) > 0:
-                last_dir = sorted_date_dirs[-1]
-                last_dir_path = output_path.joinpath(last_dir)
-                for job_output_name in reversed(sorted(os.listdir(last_dir_path))):
-                    name_part_of_filename = job_output_name[3:-7]
-                    if name_part_of_filename == self._create_job_name():
-                        tar_file_path = last_dir_path.joinpath(job_output_name)
-                        with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
-                            file_suffixes = set(fn.split('.')[-1] for fn in tarfile_obj.getnames())
-                        if len(file_suffixes) != 1:
-                            self._log(f'Tar archive contains files with different or '
-                                      f'no file suffixes: {file_suffixes}. Serializer '
-                                      f'cannot be uniquely determined. Aborting '
-                                      f'restore.')
-                        else:
-                            file_suffix = file_suffixes.pop()
-                            serializers = self._serializer_registry.\
-                                detect_tar_file_serializers_from_file_suffix(file_suffix)
-                            if len(serializers) == 0:
-                                self._log(f'No serializer for file suffix "{file_suffix}" can be'
-                                          f'determined. Aborting restore.')
-                            else:
-                                self._log(f'Reading dataset from a gzipped tarpack at'
-                                          f' "{os.path.abspath(tar_file_path)}"')
+    @staticmethod
+    def _all_job_output_file_paths_in_reverse_order_for_last_run(
+            persist_data_dir_path: Path, job_name: str) -> Generator[Path, None, None]:
+        sorted_date_dirs = list(sorted(os.listdir(persist_data_dir_path)))
+        if len(sorted_date_dirs) > 0:
+            last_dir = sorted_date_dirs[-1]
+            last_dir_path = persist_data_dir_path.joinpath(last_dir)
+            for job_output_name in reversed(sorted(os.listdir(last_dir_path))):
+                name_part_of_filename = job_output_name[3:-7]
+                if name_part_of_filename == job_name:
+                    yield last_dir_path.joinpath(job_output_name)
+        else:
+            raise StopIteration
 
-                                serializer = serializers[0]
-                                with open(tar_file_path, 'rb') as tarfile_binary:
-                                    dataset = serializer.deserialize(tarfile_binary.read())
-                                return_dataset_cls = cast(Type[Dataset], self._return_type)
-                                if return_dataset_cls().get_model_class(
-                                ) is dataset.get_model_class():
-                                    return dataset
+    # TODO: Further refactor _deserialize_and_restore_outputs
+    def _deserialize_and_restore_outputs(self) -> Dataset:
+        persist_data_dir_path = Path(self._job_config.persist_data_dir_path)
+        if os.path.exists(persist_data_dir_path):
+            for tar_file_path in self._all_job_output_file_paths_in_reverse_order_for_last_run(
+                    persist_data_dir_path, self._job_name()):
+                with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
+                    file_suffixes = set(fn.split('.')[-1] for fn in tarfile_obj.getnames())
+                if len(file_suffixes) != 1:
+                    self._log(f'Tar archive contains files with different or '
+                              f'no file suffixes: {file_suffixes}. Serializer '
+                              f'cannot be uniquely determined. Aborting '
+                              f'restore.')
+                else:
+                    file_suffix = file_suffixes.pop()
+                    serializers = self._serializer_registry.\
+                        detect_tar_file_serializers_from_file_suffix(file_suffix)
+                    if len(serializers) == 0:
+                        self._log(f'No serializer for file suffix "{file_suffix}" can be'
+                                  f'determined. Aborting restore.')
+                    else:
+                        self._log(f'Reading dataset from a gzipped tarpack at'
+                                  f' "{os.path.abspath(tar_file_path)}"')
+
+                        serializer = serializers[0]
+                        with open(tar_file_path, 'rb') as tarfile_binary:
+                            dataset = serializer.deserialize(tarfile_binary.read())
+                        return_dataset_cls = cast(Type[Dataset], self._return_type)
+                        if return_dataset_cls().get_model_class() is dataset.get_model_class():
+                            return dataset
+                        else:
+                            try:
+                                new_dataset = return_dataset_cls()
+                                if new_dataset.get_model_class() is Model[str]:
+                                    new_dataset.from_data(dataset.to_json())
                                 else:
-                                    try:
-                                        new_dataset = return_dataset_cls()
-                                        if new_dataset.get_model_class() is Model[str]:
-                                            new_dataset.from_data(dataset.to_json())
-                                        else:
-                                            new_dataset.from_json(dataset.to_data())
-                                        return new_dataset
-                                    except:
-                                        return dataset
+                                    new_dataset.from_json(dataset.to_data())
+                                return new_dataset
+                            except Exception:
+                                return dataset
 
         raise RuntimeError('No persisted output')
 
