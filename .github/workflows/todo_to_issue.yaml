@@ -1,7 +1,7 @@
 name: "Run TODO to Issue"
 on: ["push"]
 jobs:
-    build:
+    todo-to-issue:
         runs-on: "ubuntu-latest"
         steps:
             - uses: "actions/checkout@v3"

@@ -6,7 +6,7 @@ on:
     - cron: '0 0 * * *'
 
 jobs:
-  auto-update:
+  autoupdate-precommit:
     runs-on: ubuntu-latest
     strategy:
       matrix:
