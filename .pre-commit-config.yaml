@@ -20,12 +20,25 @@ repos:
         name: "yapf"
         additional_dependencies: [toml]
         args: [ '--style', 'pyproject.toml', '--parallel', '--in-place' ]
+        stages: [ commit ]
+        types: [ python ]
+      - id: yapf
+        name: "yapf (check)"
+        additional_dependencies: [toml]
+        args: [ '--style', 'pyproject.toml', '--parallel', '--diff' ]
+        stages: [ manual ]
         types: [ python ]
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
     hooks:
       - id: isort
         name: isort
+        stages: [ commit ]
+        types: [ python ]
+      - id: isort
+        name: isort (check)
+        args: [ '--check-only' ]
+        stages: [ manual ]
         types: [ python ]
   - repo: https://github.com/pycqa/flake8
     rev: 6.0.0
