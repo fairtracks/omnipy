@@ -1,0 +1,40 @@
+# Adapted from https://github.com/browniebroke/browniebroke.com, Copyright (c) 2017 Bruno Allaname, available under the
+# MIT license
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  auto-update:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+#        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit autoupdate
+        run: pre-commit autoupdate
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.CPR_GITHUB_TOKEN }}
+          branch: update/pre-commit-autoupdate
+          title: Auto-update pre-commit hooks
+          commit-message: Auto-update pre-commit hooks
+          body: |
+            Update versions of tools in pre-commit 
+            configs to latest version
+          labels: dependencies
