@@ -26,9 +26,13 @@ def split_dataset(
     model_cls = dataset.get_model_class()
     datafile_names_for_a = set(dataset.keys()) - set(datafile_names_for_b)
     dataset_a = Dataset[model_cls](  # type: ignore
-        {name: dataset[name] for name in dataset.keys() if name in datafile_names_for_a})
+        {
+            name: dataset[name] for name in dataset.keys() if name in datafile_names_for_a
+        })
     dataset_b = Dataset[model_cls](  # type: ignore
-        {name: dataset[name] for name in dataset.keys() if name in datafile_names_for_b})
+        {
+            name: dataset[name] for name in dataset.keys() if name in datafile_names_for_b
+        })
     return dataset_a, dataset_b
 
 
