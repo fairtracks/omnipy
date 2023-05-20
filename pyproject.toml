@@ -50,6 +50,7 @@ furo = "^2022.12.7"
 sphinx = "^6.1.3"
 sphinx-autoapi = "^2.0.1"
 sphinx-copybutton = "^0.5.1"
+portray = "^1.8.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -128,3 +129,14 @@ addopts = "--tb=native"
 testpaths = [
     "tests",
 ]
+
+[tool.portray]
+docs_dir = "docs/portray"
+directory = "src"
+
+[tool.portray.pdocs]
+template_dir = "docs/templates/pdocs"
+
+#[[tool.portray.extra_markdown_extensions]]
+#[tool.portray.extra_markdown_extensions.toc]
+#permalink = true
