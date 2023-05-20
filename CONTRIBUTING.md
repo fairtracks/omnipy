@@ -6,10 +6,10 @@
   - `curl -sSL https://install.python-poetry.org | python3 -`
 
 - Configure locally installed virtualenv (under `.venv`):
-  - `poetry config virtualenvs.in-project true `
+  - `poetry config virtualenvs.in-project true`
 
 - Install dependencies:
-  - `poetry install --with dev --with doc`
+  - `poetry install --with dev --with docs`
 
 - Update all dependencies:
   - `poetry update`
