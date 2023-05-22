@@ -9,7 +9,7 @@ from pydantic import Field, PrivateAttr, ValidationError
 from pydantic.generics import GenericModel
 from pydantic.utils import lenient_issubclass
 
-from omnipy.data.model import Model
+from omnipy.data.model import Model, generate_qualname
 
 ModelT = TypeVar('ModelT', bound=Model)
 Undefined = object()
@@ -88,7 +88,11 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             raise TypeError('Invalid model: {}! '.format(model)
                             + 'omnipy Dataset models must be a specialization of the omnipy '
                             'Model class.')
-        return super().__class_getitem__(model)
+        created_dataset = super().__class_getitem__(model)
+
+        created_dataset.__qualname__ = generate_qualname(cls.__name__, model)
+
+        return created_dataset
 
     def __init__(self,
                  value: Union[Dict[str, Any], Iterator[Tuple[str, Any]]] = Undefined,

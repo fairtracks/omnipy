@@ -2,10 +2,13 @@ import json
 from types import NoneType
 from typing import Any, Dict, Generic, get_args, get_origin, Type, TypeVar, Union
 
+from isort import place_module
+from isort.sections import STDLIB
 # from orjson import orjson
 from pydantic import Protocol, root_validator
 from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
+from pydantic.typing import display_as_type
 
 RootT = TypeVar('RootT')
 ROOT_KEY = '__root__'
@@ -13,6 +16,14 @@ ROOT_KEY = '__root__'
 # def orjson_dumps(v, *, default):
 #     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
 #     return orjson.dumps(v, default=default).decode()
+
+
+def generate_qualname(cls_name: str, model: Any) -> str:
+    m_module = model.__module__ if hasattr(model, '__module__') else ''
+    m_module_prefix = f'{m_module}.' \
+        if m_module and place_module(m_module) != STDLIB else ''
+    fully_qual_model_name = f"{m_module_prefix}{display_as_type(model)}"
+    return f'{cls_name}[{fully_qual_model_name}]'
 
 
 class Model(GenericModel, Generic[RootT]):
@@ -140,6 +151,8 @@ class Model(GenericModel, Generic[RootT]):
         #       level in pydantic 2.0 (when it is released)
         if cls == Model:
             cls._depopulate_root_field()
+
+        created_model.__qualname__ = generate_qualname(cls.__name__, model)
 
         return created_model
 
