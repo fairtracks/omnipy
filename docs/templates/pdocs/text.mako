@@ -123,6 +123,26 @@ def convert_to_qual_name_type_hint_str(type_hint: Any) -> str:
     return formatannotation(fixed_get_type_hints(type_hint))
 %>
 
+
+##
+## cleanup_type_hint_str_before_parsing
+##
+
+<%
+
+_TYPE_HINTS_REPLACE_MAP = {
+    '~': '',
+    '+': '',
+    '-': '',
+}
+
+def cleanup_type_hint_str_before_parsing(type_hint):
+    for from_str, to_str in _TYPE_HINTS_REPLACE_MAP.items():
+        type_hint = type_hint.replace(from_str, to_str)
+    return type_hint
+%>
+
+
 ##
 ## parse_type_hint
 ##
@@ -275,7 +295,8 @@ ${divider}
                     row.append(MISSING_STR)
                 else:
                     type_name = el.type_name
-                    for basic_type_name in set(parse_type_hint(type_name)):
+                    cleaned_type_name = cleanup_type_hint_str_before_parsing(type_name)
+                    for basic_type_name in set(parse_type_hint(cleaned_type_name)):
                         refname, url = lookup(module, basic_type_name)
                         if refname:
                             type_name = type_name.replace(basic_type_name, f'[{refname}]({url})')
