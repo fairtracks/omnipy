@@ -361,7 +361,7 @@ def ${func.name}(
 
 % if parsed_ds:
     <%
-        from docstring_parser import DocstringParam
+        from docstring_parser import DocstringParam, DocstringReturns
 
         short_desc = parsed_ds.short_description
         long_desc = parsed_ds.long_description
@@ -394,8 +394,22 @@ def ${func.name}(
                                              is_optional=IGNORED,
                                              default=default))
 
+            description = ds_returns.description if ds_returns else ''
+
+            type_name = get_type_name_from_annotation(signature.return_annotation, signature.empty)
+
+            if type_name:
+                returns = DocstringReturns(args=[],
+                                           description=description,
+                                           type_name=type_name,
+                                           is_generator=inspect.isgeneratorfunction(func.func),
+                                           return_name=IGNORED)
+            else:
+                returns = None
+
         else:
             params = ds_params
+            returns = ds_returns
     %>
 ${par(short_desc)}
 ${par(long_desc)}
@@ -408,11 +422,11 @@ ${par(long_desc)}
 ${table_rows(params, show_header=True, show_arg_name=True,
              show_type=True, show_description=True, show_default=True)}
     % endif
-    % if ret:
+    % if returns:
 
-**${"Yields:" if ret.is_generator else "Returns:"}**
+**${"Yields:" if returns.is_generator else "Returns:"}**
 
-${table_rows([ret], show_header=True, show_type=True, show_description=True)}
+${table_rows([returns], show_header=True, show_type=True, show_description=True)}
     % endif
     % if raises:
 **Raises:**
