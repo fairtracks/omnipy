@@ -81,44 +81,19 @@ ${s}
 
 
 ##
-## module_url()
+## get_type_name_from_annotation
 ##
 
 <%
-def module_url(parent, m):
-    """
-    Adapted from https://github.com/timothycrosley/pdocs/blob/master/pdocs/html_helpers.py
-    """
-
-    import os
-    import pdocs
-
-    relpath = os.path.relpath(m.name.replace(".", "/"), parent.name.replace(".", "/"))
-    if relpath == ".":
-        return ""
+def get_type_name_from_annotation(annotation, empty_obj):
+    if annotation is not empty_obj:
+        # (f'Before: {repr(annotation)}')
+        type_name = convert_to_qual_name_type_hint_str(annotation)
+        # print(f'After: {repr(type_name)}')
     else:
-        return relpath + "/"
-%>
+        type_name = ''
 
-
-##
-## lookup()
-##
-
-<%
-def lookup(module, refname):
-    """
-    Adapted from https://github.com/timothycrosley/pdocs/blob/master/pdocs/html_helpers.py
-    """
-
-    import pdocs
-
-    d = module.find_ident(refname)
-    if isinstance(d, pdocs.doc.External):
-        return None, None
-    if isinstance(d, pdocs.doc.Module):
-        return d.refname, module_url(module, d)
-    return d.name, f"{module_url(module, d.module)}#{d.name.lower()}"
+    return type_name
 %>
 
 
@@ -213,6 +188,52 @@ def parse_type_hint(type_hint_string):
 %>
 
 
+##
+## module_url()
+##
+
+<%
+def module_url(parent, m):
+    """
+    Adapted from https://github.com/timothycrosley/pdocs/blob/master/pdocs/html_helpers.py
+    """
+
+    import os
+    import pdocs
+
+    relpath = os.path.relpath(m.name.replace(".", "/"), parent.name.replace(".", "/"))
+    if relpath == ".":
+        return ""
+    else:
+        return relpath + "/"
+%>
+
+
+##
+## lookup()
+##
+
+<%
+def lookup(module, refname):
+    """
+    Adapted from https://github.com/timothycrosley/pdocs/blob/master/pdocs/html_helpers.py
+    """
+
+    import pdocs
+
+    if not '.' in refname:
+        refname = f'{module.name}.{refname}'
+
+    d = module.find_ident(refname)
+
+    if isinstance(d, pdocs.doc.External):
+        return None, None
+    if isinstance(d, pdocs.doc.Module):
+        return d.refname, module_url(module, d)
+
+    return d.name, f"{module_url(module, d.module)}#{d.name.lower()}"
+%>
+
 
 ##
 ## table_rows()
@@ -277,6 +298,7 @@ ${row}
 % endif
 </%def>
 
+
 ##
 ## function()
 ##
@@ -309,6 +331,7 @@ ${h4(func.name)}
 ${h3(func.name)}
 % endif
 
+
 ``` python3
 def ${func.name}(
     ${",\n    ".join(formatted_params)}
@@ -339,12 +362,7 @@ def ${func.name}(
                 if name in ds_params_map:
                     description = ds_params_map[name].description
 
-                if param.annotation is not param.empty:
-                    # print(f'Before: {repr(param.annotation)}')
-                    type_name = convert_to_qual_name_type_hint_str(param.annotation)
-                    # print(f'After: {repr(anno)}')
-                else:
-                    type_name = ''
+                type_name = get_type_name_from_annotation(param.annotation, param.empty)
 
                 default = param.default if param.default is not param.empty else ''
 
