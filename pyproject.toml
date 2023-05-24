@@ -53,6 +53,7 @@ sphinx-autoapi = "^2.0.1"
 sphinx-copybutton = "^0.5.1"
 portray = "^1.8.0"
 docstring-parser = "^0.15"
+pymdown-extensions = "^10.0.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -136,9 +137,31 @@ testpaths = [
 docs_dir = "docs/portray"
 directory = "src"
 
+[[tool.portray.extra_markdown_extensions]]
+[tool.portray.extra_markdown_extensions."pymdownx.highlight"]
+anchor_linenums = true
+line_spans = "__span"
+pygments_lang_class = true
+
+[tool.portray.mkdocs]
+extra_css = ["stylesheets/extra.css"]
+markdown_extensions = [
+    "admonition",
+    "codehilite",
+    "extra",
+    "pymdownx.details",
+    "pymdownx.inlinehilite",
+    "pymdownx.snippets",
+    "pymdownx.superfences",
+]
+
+[tool.portray.mkdocs.theme]
+#favicon = "art/logo_small.png"
+#logo = "art/logo_small.png"
+name = "material"
+custom_dir = "docs/overrides"
+palette = {scheme = "omnipy"}
+
+
 [tool.portray.pdocs]
 template_dir = "docs/templates/pdocs"
-
-#[[tool.portray.extra_markdown_extensions]]
-#[tool.portray.extra_markdown_extensions.toc]
-#permalink = true

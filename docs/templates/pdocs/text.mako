@@ -47,7 +47,7 @@
 
 <%
     IGNORED = None
-    MISSING_STR = '–'
+    MISSING_STR = ''
     IGNORE_PARAMS = ['cls', 'self']
 %>
 
@@ -246,9 +246,9 @@ ${divider}
             if kind:
                 row.append(kind)
             if show_name:
-                row.append(el.name)
+                row.append(f'`{el.name}`')
             if show_arg_name:
-                row.append(el.arg_name)
+                row.append(f'`{el.arg_name}`')
             if show_type:
                 if not el.type_name:
                     row.append(MISSING_STR)
@@ -258,7 +258,7 @@ ${divider}
                         refname, url = lookup(module, basic_type_name)
                         if refname:
                             type_name = type_name.replace(basic_type_name, f'[{refname}]({url})')
-                    row.append(type_name)
+                    row.append(f'<code>{type_name}</code>')
             if show_description:
                 if hasattr(el, 'parsed_docstring') and el.parsed_docstring and \
                         el.parsed_docstring.short_description:
@@ -309,7 +309,7 @@ ${h4(func.name)}
 ${h3(func.name)}
 % endif
 
-```python3
+``` python3
 def ${func.name}(
     ${",\n    ".join(formatted_params)}
 )${' -> ' + formatted_return if formatted_return else ''}
@@ -386,7 +386,7 @@ ${func.docstring}
 
 % if show_source_code and func.source:
 
-??? example "View Source"
+??? source "View Source"
         ${"\n        ".join(func.source)}
 
 % endif
@@ -460,7 +460,7 @@ ${cls.docstring}
 
 % if show_source_code and cls.source:
 
-??? example "View Source"
+??? source "View Source"
         ${"\n        ".join(cls.source)}
 
 ------
@@ -552,7 +552,7 @@ ${table_rows(classes, kind='Class', show_name=True, show_description=True)}
 
 % if show_source_code and module.source:
 
-??? example "View Source"
+??? source "View Source"
         ${"\n        ".join(module.source)}
 
 % endif

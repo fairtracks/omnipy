@@ -1,0 +1,33 @@
+[data-md-color-scheme="omnipy"] {
+  --md-typeset-a-color:                #2C7A26  ;
+  --md-primary-fg-color:               #B89E1D;
+  --md-primary-fg-color--light:        #E3C225;
+  --md-primary-fg-color--dark:         #947F18;
+  --md-accent-fg-color:                #289421;
+  --md-accent-fg-color--transparent:   #2894211A;
+}
+
+/* Orange: #B84714 #BD7555 */
+
+:root > * {
+  --md-code-hl-number-color:   #7D4A14;
+  --md-code-hl-special-color: #BD663E;
+  --md-code-hl-function-color: #A64112  ;
+  --md-code-hl-constant-color: #848285;
+  --md-code-hl-keyword-color: #6278A1;
+}
+
+.md-typeset .admonition.source,
+.md-typeset details.source {
+  border-color: #0C6106 ;
+}
+.md-typeset .source > .admonition-title,
+.md-typeset .source > summary {
+  background-color: #0C61061A;
+}
+.md-typeset .source > .admonition-title::before,
+.md-typeset .source > summary::before {
+  background-color: #0C6106;
+  -webkit-mask-image: var(--md-admonition-icon--example);
+          mask-image: var(--md-admonition-icon--example);
+}
