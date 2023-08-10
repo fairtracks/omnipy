@@ -124,7 +124,7 @@ class SerializerRegistry:
                 try:
                     new_dataset = func(dataset, serializer)
                     return new_dataset, serializer
-                except (TypeError, ValueError, ValidationError, AssertionError) as e:
+                except (TypeError, ValueError, ValidationError, AssertionError):
                     pass
 
         return None, None

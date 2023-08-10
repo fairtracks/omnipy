@@ -23,12 +23,9 @@ def encode_api(endpoint='experiments', id=None, limit=None, format='json', frame
 
 # ['projects', 'cases', 'files', 'annotations'], starting_point='0', size='25'
 def gdc_api(object_type='projects', starting_point=None, size=None):
-    api_url = GDC_BASE_URL + object_type + '/' + '?' + \
-              '&'.join(
-                  (['from=' + starting_point] if starting_point else [])
-                  + (['size=' + size] if size else [])
-                  + (['expand=' + 'project'] if object_type == 'cases' else [])
-              )
+    api_url = GDC_BASE_URL + object_type + '/' + '?' + '&'.join(
+        (['from=' + starting_point] if starting_point else []) + (['size=' + size] if size else [])
+        + ([+ 'project'] if object_type == 'cases' else []))
     print(api_url)
     response = requests.get(api_url)
     if response.status_code != 200:

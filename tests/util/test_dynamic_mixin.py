@@ -1,4 +1,4 @@
-from abc import ABCMeta
+# from abc import ABCMeta
 from inspect import Parameter, signature
 from typing import Dict, Generic, get_args, Optional, Tuple, Type, TypeVar
 
@@ -114,7 +114,7 @@ class MockOtherKwArgStateMixin:
 
 class MockKwArgAccessOrigClsMemberStateMixin:
     def __init__(self, *, my_kwarg):
-        self._value = f'my_kwarg: {my_kwarg}' if self.kwargs.get('verbose') == True else my_kwarg
+        self._value = f'my_kwarg: {my_kwarg}' if self.kwargs.get('verbose', False) else my_kwarg
 
     def new_method(self):
         return self._value
@@ -182,7 +182,7 @@ def _assert_args_and_kwargs(mock_obj: object,
 
     if mock_cls:
         assert tuple(signature(mock_cls.__init__).parameters.keys()) == \
-           tuple(['self'] + non_self_param_keys)
+               tuple(['self'] + non_self_param_keys)
 
 
 def test_new_method_no_state_mixin(mock_plain_cls):
@@ -513,7 +513,7 @@ def test_missing_pos_args_init_param_state_mixin():
 
 def test_predefined_init_kwargs_progressive_multiple_state_mixins_same_default(
         mock_predefined_init_kwargs_cls):
-    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  #noqa
+    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa
 
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
 
@@ -561,7 +561,7 @@ def test_predefined_init_kwargs_progressive_multiple_state_mixins_same_default(
 
 def test_predefined_init_kwargs_progressive_multiple_state_mixins_different_withmixin_classes(
         mock_predefined_init_kwargs_cls):
-    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  #noqa
+    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa
 
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
 
@@ -602,7 +602,7 @@ def test_predefined_init_kwargs_progressive_multiple_state_mixins_different_with
 
 
 def test_nested_mixins(mock_predefined_init_kwargs_cls, mock_plain_cls):
-    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  #noqa
+    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa
     MockPlainCls = mock_plain_cls  # noqa
 
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
@@ -625,7 +625,7 @@ def test_nested_mixins(mock_predefined_init_kwargs_cls, mock_plain_cls):
 
 
 def test_nested_mixins_static_outer_inheritance(mock_predefined_init_kwargs_cls):
-    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  #noqa
+    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
 
     class MockMockPlainCls(MockPredefinedInitKwargsCls):
@@ -654,7 +654,7 @@ def test_nested_mixins_static_outer_inheritance(mock_predefined_init_kwargs_cls)
 
 
 def test_nested_mixins_double_static_outer_inheritance(mock_predefined_init_kwargs_cls):
-    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  #noqa
+    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
 
     class MockMockPlainCls(MockPredefinedInitKwargsCls):
@@ -687,7 +687,7 @@ def test_nested_mixins_double_static_outer_inheritance(mock_predefined_init_kwar
 
 def test_nested_mixins_static_outer_inheritance_from_generic(
         mock_predefined_init_kwargs_generic_cls):
-    MockPredefinedInitKwargsGenericCls = mock_predefined_init_kwargs_generic_cls  #noqa
+    MockPredefinedInitKwargsGenericCls = mock_predefined_init_kwargs_generic_cls  # noqa
     MockPredefinedInitKwargsGenericCls.accept_mixin(MockKwArgStateMixin)
 
     class MockMockPlainCls(MockPredefinedInitKwargsGenericCls[int]):
