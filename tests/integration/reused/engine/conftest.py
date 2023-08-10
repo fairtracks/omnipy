@@ -33,8 +33,11 @@ def all_job_classes(
     dag_flow_template_cls: Type[IsDagFlowTemplate],
     func_flow_template_cls: Type[IsFuncFlowTemplate],
 ):
-    return job_type, task_template_cls, linear_flow_template_cls, \
-           dag_flow_template_cls, func_flow_template_cls
+    return (job_type,
+            task_template_cls,
+            linear_flow_template_cls,
+            dag_flow_template_cls,
+            func_flow_template_cls)
 
 
 @pc.fixture(scope='function', name='plain_engine')
@@ -65,7 +68,11 @@ def all_func_types_real_jobs_all_engines_real_reg(
     engine_decorator: Optional[Callable[[IsEngine], IsEngine]],
     registry: Optional[IsRunStateRegistry],
 ):
-    job_type, task_template_cls, linear_flow_template_cls, dag_flow_template_cls, func_flow_template_cls = job_classes
+    (job_type,
+     task_template_cls,
+     linear_flow_template_cls,
+     dag_flow_template_cls,
+     func_flow_template_cls) = job_classes
 
     # TODO: Fix job_type comparisons everywhere (bug due to pytest.fixture?)
     if job_type.value == JobType.linear_flow.value:
