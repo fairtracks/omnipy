@@ -13,7 +13,7 @@ for endpt_str in ['projects', 'cases', 'files', 'annotations']:
 
     with open(endpt_str + '_filter.json', 'r') as infile:
         filters = json.load(infile)
-        params = {  #'fields': fields,
+        params = {  # 'fields': fields,
             'filters': json.dumps(filters),
         }
     response = requests.get(endpt, params=params)
