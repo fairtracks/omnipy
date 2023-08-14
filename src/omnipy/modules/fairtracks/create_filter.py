@@ -7,7 +7,7 @@ from numpy import arange
 import requests
 
 #########################################################
-### user parameters
+# user parameters
 #######################################################
 download_all_projects = False
 download_all_cases = False
@@ -17,7 +17,7 @@ number_of_files = 2
 # NB very few annotations per case, get all
 
 #######################################################
-###endpoints definition
+# endpoints definition
 ########################################################
 projects_endpt = 'https://api.gdc.cancer.gov/projects'
 cases_endpt = 'https://api.gdc.cancer.gov/cases'
@@ -73,7 +73,7 @@ if len(response.json()['data']['hits']) != size:
 projects_list = (response.json()['data']['hits'])
 
 ##########################################################################
-#Step3: filtered query on 'cases' (filter on project_id) to get cases ID for each TCGA project
+# Step3: filtered query on 'cases' (filter on project_id) to get cases ID for each TCGA project
 #      the IDs for all the files are also available form this endpoint
 ########################################################################
 
@@ -102,7 +102,7 @@ for proj in projects_list:
     proj['cases'] = cases
 
 ##########################################################################
-#step4: filtered query on 'annotations' (filter on case_id) to get cases ID for each TCGA project
+# step4: filtered query on 'annotations' (filter on case_id) to get cases ID for each TCGA project
 #      the IDs for all the files are also available form this endpoint
 ########################################################################
 
