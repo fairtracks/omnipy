@@ -11,7 +11,7 @@ class RawDatasetToTarFileSerializer(TarFileSerializer):
     """"""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: Dataset) -> bool:
-        return type(dataset) == Dataset[Model[str]]
+        return type(dataset) is Dataset[Model[str]]
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[Dataset]:
