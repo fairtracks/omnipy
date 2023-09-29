@@ -1,9 +1,6 @@
-from datetime import datetime
 from io import StringIO
 import os
 from typing import List, Optional
-
-from omnipy.util.helpers import get_datetime_format
 
 
 def read_log_lines_from_stream(str_stream: StringIO) -> List[str]:

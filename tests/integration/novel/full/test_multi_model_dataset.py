@@ -16,11 +16,15 @@ from .helpers.models import GeneralTable, MyOtherRecordSchema, MyRecordSchema, T
 
 
 def test_table_models():
-    _a = GeneralTable([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
-    _b = TableTemplate[MyRecordSchema]([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
+    _a = GeneralTable([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])  # noqa: F841
+    # yapf: disable
+    _b = TableTemplate[MyRecordSchema]([{'a': 123, 'b': 'ads'},  # noqa: F841
+                                        {'a': 234, 'b': 'acs'}])
 
     with pytest.raises(ValidationError):
-        _c = TableTemplate[MyOtherRecordSchema]([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
+        _c = TableTemplate[MyOtherRecordSchema]([{'a': 123, 'b': 'ads'},  # noqa: F841
+                                                 {'a': 234, 'b': 'acs'}])
+    # yapf: disable
 
     # print(_a.to_json_schema(pretty=True))
     # print(_b.to_json_schema(pretty=True))
@@ -138,4 +142,4 @@ def test_fail_run_specialize_record_models_inconsistent_types(
     old_dataset['b'] = [{'b': 'df', 'c': True}, {'b': False, 'c': 'sg'}]
 
     with pytest.raises(AssertionError):
-        _new_dataset = specialize_record_models(old_dataset)
+        _new_dataset = specialize_record_models(old_dataset)  # noqa: F841

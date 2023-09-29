@@ -144,7 +144,7 @@ class DynamicMixinAcceptor:
         return obj
 
     @classmethod
-    def _create_subcls_inheriting_from_mixins_and_orig_cls(cls):
+    def _create_subcls_inheriting_from_mixins_and_orig_cls(cls):  # noqa: C901
 
         # TODO: Refactor this, and possibly elsewhere in class
 

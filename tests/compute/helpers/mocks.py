@@ -37,13 +37,6 @@ class MockJobSubclass(JobMixin, JobBase):
         ...
 
 
-#
-# def mock_flow_template_callable_decorator_cls(
-#         cls: Type['MockFlowTemplateSubclass']
-# ) -> IsFuncJobTemplateCallable['MockFlowTemplateSubclass']:
-#     return cast(IsFuncJobTemplateCallable['MockFlowTemplateSubclass'], callable_decorator_cls(cls))
-
-
 # @callable_decorator_cls
 class MockFlowTemplateSubclass(JobTemplateMixin, JobBase):
     @classmethod
@@ -289,7 +282,8 @@ class AssertSameTimeOfCurFlowRunJobBaseMixin:
 
     def _call_func(self, *args: object, **kwargs: object) -> object:
         if self.persisted_time_of_cur_toplevel_flow_run:
-            assert self.persisted_time_of_cur_toplevel_flow_run == self.time_of_cur_toplevel_flow_run
+            assert self.persisted_time_of_cur_toplevel_flow_run == \
+                   self.time_of_cur_toplevel_flow_run
         else:
             self._persisted_time_of_cur_toplevel_flow_run.append(self.time_of_cur_toplevel_flow_run)
 

@@ -6,7 +6,8 @@ from omnipy.api.protocols.private.util import IsCallableClass, IsCallableParamAf
 from omnipy.api.types import DecoratorClassT
 
 
-def callable_decorator_cls(cls: Type[DecoratorClassT]) -> IsCallableClass[DecoratorClassT]:
+def callable_decorator_cls(  # noqa: C901
+        cls: Type[DecoratorClassT]) -> IsCallableClass[DecoratorClassT]:
     """
     "Meta-decorator" that allows any class to function as a decorator for a callable.
 
@@ -81,8 +82,8 @@ def callable_decorator_cls(cls: Type[DecoratorClassT]) -> IsCallableClass[Decora
                 _init(_callable_arg)
             else:
                 # Add an instance-level _obj_call method, which are again callable by the
-                # class-level __call__ method. When this method is called, the provided _callable_arg
-                # is decorated.
+                # class-level __call__ method. When this method is called, the provided
+                # _callable_arg is decorated.
                 def _init_as_obj_call_method(
                         self, _callable_arg: Callable) -> Type[DecoratorClassT]:  # noqa
                     _init(_callable_arg)

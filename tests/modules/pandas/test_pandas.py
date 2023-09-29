@@ -72,8 +72,8 @@ def test_pandas_dataset_list_of_objects_different_keys():
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason="""
-Pandas converts 'a' column into 'Int64' since all values can be cast into integers. Should remain 
-floats.
+Pandas converts 'a' column into 'Int64' since all values can be cast into integers.
+ Should remain floats.
 """)
 def test_pandas_dataset_list_of_objects_float_numbers():
     pandas_data = PandasDataset()

@@ -16,7 +16,9 @@ class JobRunnerEngine(Engine, ABC):
         if self._registry:
             self._registry.set_job_state(job, state)
 
-    def _decorate_result_with_job_finalization_detector(self, job: IsJob, job_result: object):
+    def _decorate_result_with_job_finalization_detector(  # noqa: C901
+            self, job: IsJob, job_result: object):
+        # TODO: Simplify _decorate_result_with_job_finalization_detector()
         if isinstance(job_result, GeneratorType):
             job_result = cast(GeneratorType, job_result)
 
@@ -148,7 +150,7 @@ class DagFlowRunnerEngine(JobRunnerEngine):
         job_callback_accept_decorator(_dag_flow_decorator)
 
     @staticmethod
-    def default_dag_flow_run_decorator(dag_flow: IsDagFlow) -> Any:
+    def default_dag_flow_run_decorator(dag_flow: IsDagFlow) -> Any:  # noqa: C901
         def _inner_run_dag_flow(*args: object, **kwargs: object):
             results = {}
             result = None
