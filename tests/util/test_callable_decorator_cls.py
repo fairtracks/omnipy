@@ -58,7 +58,7 @@ def test_plain_decorator() -> None:
     def my_func(*args: object, **kwargs: object) -> Dict[str, object]:
         return dict(args=args, kwargs=kwargs)
 
-    assert type(my_func) == MockClass
+    assert type(my_func) is MockClass
     _assert_func_decoration(my_func)  # noqa
     _assert_call_func(my_func)
 
@@ -72,7 +72,7 @@ def test_plain_decorator_parentheses() -> None:
     def my_func(*args: object, **kwargs: object) -> Dict[str, object]:
         return dict(args=args, kwargs=kwargs)
 
-    assert type(my_func) == MockClass
+    assert type(my_func) is MockClass
     _assert_func_decoration(my_func)  # noqa
     _assert_call_func(my_func)
 
@@ -86,7 +86,7 @@ def test_decorator_with_kwargs() -> None:
     def my_func(*args: object, **kwargs: object) -> Dict[str, object]:
         return dict(args=args, kwargs=kwargs)
 
-    assert type(my_func) == MockClass
+    assert type(my_func) is MockClass
     _assert_func_decoration(my_func)  # noqa
     _assert_call_func(my_func)
 
@@ -100,7 +100,7 @@ def test_decorator_with_args_and_kwargs() -> None:
     def my_func(*args: object, **kwargs: object) -> Dict[str, object]:
         return dict(args=args, kwargs=kwargs)
 
-    assert type(my_func) == MockClass
+    assert type(my_func) is MockClass
     _assert_func_decoration(my_func)  # noqa
     _assert_call_func(my_func)
 
@@ -117,7 +117,7 @@ def test_decorator_with_args_and_kwargs_first_arg_func() -> None:
     def my_func(*args: object, **kwargs: object) -> Dict[str, Any]:
         return dict(args=args, kwargs=kwargs)
 
-    assert type(my_func) == MockClass
+    assert type(my_func) is MockClass
     _assert_func_decoration(my_func)  # noqa
     _assert_call_func(my_func)
 
@@ -132,7 +132,7 @@ def test_double_decorator_with_args_and_kwargs() -> None:
     def my_func(*args: object, **kwargs: object) -> Dict[str, Any]:
         return dict(args=args, kwargs=kwargs)
 
-    assert type(my_func) == MockClass
+    assert type(my_func) is MockClass
     _assert_func_decoration(my_func)  # noqa
     _assert_call_func(my_func)
 
@@ -167,7 +167,7 @@ def my_fancy_func(*args: Union[int, str], **kwargs: bool) -> Dict[str, Any]:
 def test_decorator_as_function_fancy_func() -> None:
     my_func = MockClass(my_fancy_func)
 
-    assert type(my_func) == MockClass
+    assert type(my_func) is MockClass
     _assert_func_decoration(my_func)  # noqa
     _assert_call_func(my_func)
 
@@ -179,7 +179,7 @@ def test_decorator_as_function_fancy_func() -> None:
 def test_decorator_as_function_fancy_func_args_kwargs() -> None:
     my_func = MockClass(123, True, param=123, other=True)(my_fancy_func)
 
-    assert type(my_func) == MockClass
+    assert type(my_func) is MockClass
     _assert_func_decoration(my_func)  # noqa
     _assert_call_func(my_func)
 
@@ -191,7 +191,7 @@ def test_decorator_as_function_fancy_func_args_kwargs() -> None:
 def test_fail_decorator_as_function_no_args_no_func() -> None:
     my_func = MockClass()
 
-    assert type(my_func) == MockClass
+    assert type(my_func) is MockClass
 
     with pytest.raises(TypeError):
         my_func()  # type: ignore # noqa
@@ -204,7 +204,7 @@ def test_fail_decorator_as_function_no_args_no_func() -> None:
 def test_fail_decorator_as_function_args_and_kwargs_no_func() -> None:
     my_func = MockClass(123, True, param=123, other=True)
 
-    assert type(my_func) == MockClass
+    assert type(my_func) is MockClass
 
     with pytest.raises(TypeError):
         my_func()
