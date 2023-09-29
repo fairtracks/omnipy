@@ -14,7 +14,7 @@ copyright = '2023, Sveinung Gundersen, Joshua Baskaran, Federico Bianchini, Jean
             'Ahmed Ghanem, Pável Vázquez'
 author = 'Sveinung Gundersen, Joshua Baskaran, Federico Bianchini, Jeanne Cheneby, Ahmed Ghanem, ' \
          'Pável Vázquez'
-release = '0.10.4'
+release = '0.10.5'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
