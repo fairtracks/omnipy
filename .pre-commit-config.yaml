@@ -10,11 +10,11 @@ repos:
       - id: check-ast
         types: [ python ]
   - repo: https://github.com/python-poetry/poetry
-    rev: 1.4.0
+    rev: 1.6.0
     hooks:
       - id: poetry-check
   - repo: https://github.com/google/yapf
-    rev: v0.33.0
+    rev: v0.40.2
     hooks:
       - id: yapf
         name: "yapf"
@@ -41,7 +41,7 @@ repos:
         stages: [ manual ]
         types: [ python ]
   - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
+    rev: 6.1.0
     hooks:
       - id: flake8
         additional_dependencies: [flake8-quotes==3.3.2]
