@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from logging.handlers import TimedRotatingFileHandler
-from typing import Any, Optional, Protocol
+from typing import Optional, Protocol
 
 from omnipy.api.enums import EngineChoice
 from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
