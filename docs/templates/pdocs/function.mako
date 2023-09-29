@@ -2,8 +2,12 @@
 <%namespace file="table.mako" import="table_rows"/>
 
 <%!
+    from docstring_parser import DocstringParam, DocstringReturns
+    from omnipy.util.mako_helpers import get_type_name_from_annotation
+%>
+
+<%!
     IGNORED = None
-    MISSING_STR = ''
     IGNORE_PARAMS = ['cls', 'self']
 %>
 ##
@@ -47,7 +51,6 @@ def ${func.name}(
 
 % if parsed_ds:
     <%
-        from docstring_parser import DocstringParam, DocstringReturns
 
         short_desc = parsed_ds.short_description
         long_desc = parsed_ds.long_description
@@ -130,4 +133,3 @@ ${func.docstring}
 
 % endif
 </%def>
-
