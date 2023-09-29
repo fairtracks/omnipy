@@ -1,3 +1,9 @@
+<%!
+    from omnipy.util.mako_helpers import parse_type_hint, cleanup_type_hint_str_before_parsing, lookup
+
+    MISSING_STR = ''
+%>
+
 ##
 ## table_rows()
 ##

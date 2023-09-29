@@ -11,12 +11,6 @@
 ## Constants
 ##
 
-<%!
-    IGNORED = None
-    MISSING_STR = ''
-    IGNORE_PARAMS = ['cls', 'self']
-%>
-
 ##
 ## h1(), h2(), h3(), h4()
 ##
