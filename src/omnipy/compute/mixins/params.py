@@ -35,7 +35,7 @@ class ParamsFuncJobBaseMixin:
 
     def _call_job(self, *args: object, **kwargs: object) -> object:
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
-        self_signature_func_job_base_mixin = cast(SignatureFuncJobBaseMixin, self)
+        self_as_signature_func_job_base_mixin = cast(SignatureFuncJobBaseMixin, self)
 
         mapped_fixed_params = self._param_key_mapper.delete_matching_keys(
             self._fixed_params, inverse=True)
@@ -51,17 +51,17 @@ class ParamsFuncJobBaseMixin:
 
         except TypeError as e:
             if str(e).startswith('Incorrect job function arguments'):
-                raise TypeError(
-                    f'Incorrect job function arguments for job "{self_as_name_job_base_mixin.name}"!\n'
-                    f'Job class name: {self.__class__.__name__}\n'
-                    f'Current parameter key map contents: {self.param_key_map}\n'
-                    f'Positional arguments: {repr_max_len(args)}\n'
-                    f'Keyword arguments: {repr_max_len(kwargs)}\n'
-                    f'Mapped fixed parameters: {repr_max_len(mapped_fixed_params)}\n'
-                    f'Mapped keyword arguments: {repr_max_len(mapped_kwargs)}\n'
-                    f'Call function signature parameters: '
-                    f'{[(str(p), p.kind) for p in self_signature_func_job_base_mixin.param_signatures.values()]}'
-                ) from e
+                signature_values = self_as_signature_func_job_base_mixin.param_signatures.values()
+                raise TypeError(f'Incorrect job function arguments for job '
+                                f'"{self_as_name_job_base_mixin.name}"!\n'
+                                f'Job class name: {self.__class__.__name__}\n'
+                                f'Current parameter key map contents: {self.param_key_map}\n'
+                                f'Positional arguments: {repr_max_len(args)}\n'
+                                f'Keyword arguments: {repr_max_len(kwargs)}\n'
+                                f'Mapped fixed parameters: {repr_max_len(mapped_fixed_params)}\n'
+                                f'Mapped keyword arguments: {repr_max_len(mapped_kwargs)}\n'
+                                f'Call function signature parameters: '
+                                f'{[(str(p), p.kind) for p in signature_values]}') from e
             else:
                 raise
 

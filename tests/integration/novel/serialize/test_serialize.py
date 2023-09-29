@@ -8,7 +8,7 @@ from omnipy.api.enums import (ConfigPersistOutputsOptions,
                               PersistOutputsOptions,
                               RestoreOutputsOptions)
 from omnipy.api.protocols.public.hub import IsRuntime
-from omnipy.compute.task import FuncArgJobBase, TaskTemplate
+from omnipy.compute.task import FuncArgJobBase
 
 
 @pc.parametrize_with_cases('case_tmpl', cases='.cases.jobs', has_tag='task', prefix='case_config_')

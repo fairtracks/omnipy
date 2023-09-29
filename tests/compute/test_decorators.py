@@ -43,7 +43,7 @@ def test_linear_flow_template_as_decorator(
     plus_five_template: LinearFlowTemplate,
 ) -> None:
 
-    assert (plus_five_template, LinearFlowTemplate)
+    assert isinstance(plus_five_template, LinearFlowTemplate)
     assert plus_five_template.name == 'plus_five'
 
     plus_five = plus_five_template.apply()
@@ -62,7 +62,7 @@ def test_dag_flow_template_as_decorator(
     plus_five_template: DagFlowTemplate,
 ) -> None:
 
-    assert (plus_five_template, DagFlowTemplate)
+    assert isinstance(plus_five_template, DagFlowTemplate)
     assert plus_five_template.name == 'plus_five'
 
     plus_five = plus_five_template.apply()
@@ -86,7 +86,7 @@ def test_func_flow_template_as_decorator(
     plus_y_template: FuncFlowTemplate,
 ) -> None:
 
-    assert (plus_y_template, FuncFlowTemplate)
+    assert isinstance(plus_y_template, FuncFlowTemplate)
     assert plus_y_template.name == 'plus_y'
 
     plus_y = plus_y_template.apply()

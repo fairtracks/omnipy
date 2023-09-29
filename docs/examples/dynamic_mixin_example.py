@@ -136,9 +136,8 @@ def instantiate_and_print_results(d_cls, d_obj_name, header):
     print(f'{d_obj_name}.__class__.__bases__={d_base_classes}')
 
     for i in range(len(d_base_classes)):
-        print(
-            f'{d_obj_name}.__class__.__bases__[{i}].__bases__={d_obj.__class__.__bases__[i].__bases__}'
-        )
+        print(f'{d_obj_name}.__class__.__bases__[{i}].__bases__='
+              + d_obj.__class__.__bases__[i].__bases__)
 
     print()
     print(f'{d_obj_name} = {d_cls.__name__}()')
