@@ -39,6 +39,9 @@ defined.
 - To install git hooks that automagically format and lint before every commit:
   - `pre-commit install`
 
+- To update pre-commit-managed dependencies to the latest repos' versions:
+  - `pre-commit autoupdate`
+
 - In PyCharm -> File Watchers:
   - Click arrow icon pointing down and to the left
   - Select `pycharm_file_watchers.xml`
