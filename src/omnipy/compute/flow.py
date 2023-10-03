@@ -19,7 +19,7 @@ from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import JobMixin, JobTemplateMixin
 from omnipy.compute.mixins.flow_context import FlowContextJobMixin
 from omnipy.compute.tasklist_job import TaskTemplateArgsJobBase
-from omnipy.util.callable_decorator_cls import callable_decorator_cls
+from omnipy.util.callable_decorator import callable_decorator_cls
 
 
 class FlowBase:

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 import inspect
 import locale as pkg_locale
-from typing import cast, Dict, get_args, get_origin, Iterable, Mapping, Optional, Tuple, Union
+from typing import cast, Dict, get_args, get_origin, Mapping, Optional, Tuple, Union
 
 from typing_inspect import get_generic_bases, is_generic_type
 

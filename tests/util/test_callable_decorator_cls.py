@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, Union
 
 import pytest
 
-from omnipy.util.callable_decorator_cls import callable_decorator_cls
+from omnipy.util.callable_decorator import callable_decorator_cls
 
 # Note:
 #

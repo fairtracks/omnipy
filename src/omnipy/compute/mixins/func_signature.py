@@ -1,6 +1,7 @@
+from collections.abc import Iterable
 import inspect
 from types import MappingProxyType
-from typing import Dict, Iterable, Type
+from typing import Dict, Type
 
 
 class SignatureFuncJobBaseMixin:

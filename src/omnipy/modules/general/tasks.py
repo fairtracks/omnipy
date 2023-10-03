@@ -1,12 +1,10 @@
 import os
-from typing import Callable, cast, List, Tuple, Type, TypeVar
+from typing import Callable, cast, List, Tuple, Type
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
-from omnipy.data.dataset import Dataset
+from omnipy.data.dataset import Dataset, ModelT
 from omnipy.data.model import Model
-
-ModelT = TypeVar('ModelT', bound=Model)
 
 
 @mypy_fix_task_template

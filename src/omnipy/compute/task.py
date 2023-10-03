@@ -10,7 +10,7 @@ from omnipy.api.protocols.public.compute import IsTask, IsTaskTemplate
 from omnipy.api.protocols.public.engine import IsTaskRunnerEngine
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import JobMixin, JobTemplateMixin
-from omnipy.util.callable_decorator_cls import callable_decorator_cls
+from omnipy.util.callable_decorator import callable_decorator_cls
 
 
 def task_template_callable_decorator_cls(
