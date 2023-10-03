@@ -15,7 +15,7 @@ from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.mixins.flow_context import FlowContextJobMixin
 from omnipy.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
-from omnipy.util.callable_decorator_cls import callable_decorator_cls
+from omnipy.util.callable_decorator import callable_decorator_cls
 
 
 class MockJobTemplateSubclass(JobTemplateMixin, JobBase):

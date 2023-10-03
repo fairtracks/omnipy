@@ -6,13 +6,13 @@ from typing import Any, Dict, Generic, Iterator, Tuple, Type, TypeVar, Union
 
 # from orjson import orjson
 from pydantic import Field, PrivateAttr, ValidationError
+from pydantic.fields import Undefined
 from pydantic.generics import GenericModel
 from pydantic.utils import lenient_issubclass
 
 from omnipy.data.model import Model, generate_qualname
 
 ModelT = TypeVar('ModelT', bound=Model)
-Undefined = object()
 DATA_KEY = 'data'
 
 # def orjson_dumps(v, *, default):

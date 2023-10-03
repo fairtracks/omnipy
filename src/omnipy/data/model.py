@@ -5,7 +5,8 @@ from typing import Any, Dict, Generic, get_args, get_origin, Type, TypeVar, Unio
 from isort import place_module
 from isort.sections import STDLIB
 # from orjson import orjson
-from pydantic import Protocol, root_validator
+from pydantic import Protocol as pydantic_protocol
+from pydantic import root_validator
 from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.typing import display_as_type
@@ -241,7 +242,7 @@ class Model(GenericModel, Generic[RootT]):
             return json_content
 
     def from_json(self, json_contents: str) -> None:
-        new_model = self.parse_raw(json_contents, proto=Protocol.json)
+        new_model = self.parse_raw(json_contents, proto=pydantic_protocol.json)
         self._set_contents_without_validation(new_model)
 
     # @classmethod

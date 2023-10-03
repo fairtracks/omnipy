@@ -1,5 +1,6 @@
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Annotated, cast, Dict, Iterable, Tuple, Type, Union
+from typing import Annotated, cast, Dict, Tuple, Type, Union
 
 import pytest
 import pytest_cases as pc

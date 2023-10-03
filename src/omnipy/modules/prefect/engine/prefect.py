@@ -11,11 +11,7 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       TaskRunnerEngine)
 from omnipy.util.helpers import resolve
 
-from .. import Flow as PrefectFlow
-from .. import flow as prefect_flow
-from .. import task as prefect_task
-from .. import Task as PrefectTask
-from .. import task_input_hash
+from .. import prefect_flow, prefect_task, PrefectFlow, PrefectTask, task_input_hash
 
 
 class PrefectEngine(TaskRunnerEngine,
