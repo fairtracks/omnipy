@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Hashable, Iterable
 import inspect
 import locale as pkg_locale
-from typing import cast, Dict, get_args, get_origin, Mapping, Optional, Tuple, Union
+from typing import Any, cast, Dict, get_args, get_origin, Mapping, Optional, Tuple, TypeVar, Union
 
 from typing_inspect import get_generic_bases, is_generic_type
 
 from omnipy.api.types import LocaleType
 
-Dictable = Union[Mapping[object, object], Iterable[Tuple[object, object]]]
+KeyT = TypeVar('KeyT', bound=Hashable)
+
+Dictable = Union[Mapping[KeyT, Any], Iterable[Tuple[KeyT, Any]]]
 
 
 def as_dictable(obj: object) -> Optional[Dictable]:
@@ -23,7 +25,7 @@ def as_dictable(obj: object) -> Optional[Dictable]:
         return None
 
 
-def create_merged_dict(dictable_1: Dictable, dictable_2: Dictable) -> Dict[object, object]:
+def create_merged_dict(dictable_1: Dictable[KeyT], dictable_2: Dictable[KeyT]) -> Dict[KeyT, Any]:
     merged_dict = dictable_1 if isinstance(dictable_1, dict) else dict(dictable_1)
     dict_2 = dictable_2 if isinstance(dictable_2, dict) else dict(dictable_2)
     merged_dict |= dict_2
