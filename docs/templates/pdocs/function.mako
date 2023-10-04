@@ -1,4 +1,4 @@
-<%namespace file="general.mako" import="h1, h2, h3, h4, par"/>
+<%namespace file="general.mako" import="h1, h2, h3, h4, h5, par"/>
 <%namespace file="table.mako" import="table_rows"/>
 
 <%!
@@ -26,9 +26,9 @@
 
     %>
 % if class_level:
-${h4(func.name)}
+${h5(func.name)}
 % else:
-${h3(func.name)}
+${h4(func.name)}
 % endif
 
 
