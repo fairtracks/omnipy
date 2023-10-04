@@ -19,13 +19,6 @@
         import inspect
 
         try:
-            module_name = func.func.__module__ if hasattr(func.func, '__module__') else func.func.__class__.__module__
-            if module_name:
-                import importlib
-                module = importlib.import_module(module_name)
-                globals().update(vars(module))
-                # print(f'Importing: {module_name}')
-
             signature = inspect.signature(func.func)
         except (TypeError, ValueError) as e:
             signature = None

@@ -5,7 +5,7 @@ from types import ModuleType
 from typing import Any, get_type_hints, List
 
 from docstring_parser import DocstringParam, DocstringReturns
-from pdocs.doc import External, Function, Module
+from pdocs.doc import Doc, External, Function, Module
 
 from omnipy.util.helpers import create_merged_dict
 
@@ -28,7 +28,7 @@ def merge_signature_with_docstring(func: Function,
         if name in ds_params_map:
             description = ds_params_map[name].description
 
-        type_name = get_type_name_from_annotation(param.annotation, param.empty)
+        type_name = get_type_name_from_annotation(func.module.module, param.annotation, param.empty)
 
         default = param.default if param.default is not param.empty else ''
 
@@ -43,7 +43,8 @@ def merge_signature_with_docstring(func: Function,
 
     description = ds_returns.description if ds_returns else ''
 
-    if type_name := get_type_name_from_annotation(signature.return_annotation,
+    if type_name := get_type_name_from_annotation(func.module.module,
+                                                  signature.return_annotation,
                                                   signature.empty):
         returns = DocstringReturns(
             args=[],
@@ -57,10 +58,10 @@ def merge_signature_with_docstring(func: Function,
     return params, returns
 
 
-def get_type_name_from_annotation(annotation, empty_obj):
+def get_type_name_from_annotation(module: ModuleType, annotation, empty_obj):
     if annotation is not empty_obj:
         # (f'Before: {repr(annotation)}')
-        type_name = convert_to_qual_name_type_hint_str(annotation)
+        type_name = convert_to_qual_name_type_hint_str(module, annotation)
         # print(f'After: {repr(type_name)}')
     else:
         type_name = ''
@@ -68,7 +69,24 @@ def get_type_name_from_annotation(annotation, empty_obj):
     return type_name
 
 
-def convert_to_qual_name_type_hint_str(type_hint: Any) -> str:
+def recursive_module_import(module: ModuleType, imported_modules: List[ModuleType] = []):
+    module_vars = vars(module)
+    imported_modules.append(module)
+
+    for val in module_vars.values():
+        if isclass(val):
+            for base_cls in val.__bases__:
+                base_cls_module = getmodule(base_cls)
+                if base_cls_module and _is_internal_module(base_cls_module):
+                    module_vars = create_merged_dict(
+                        recursive_module_import(base_cls_module, imported_modules),
+                        module_vars,
+                    )
+
+    return module_vars
+
+
+def convert_to_qual_name_type_hint_str(module: ModuleType, type_hint: Any) -> str:
     def fixed_get_type_hints(obj: Any) -> str:
         """
         Workaround from https://stackoverflow.com/a/66845686, due to limitations in get_type_hints()
@@ -79,7 +97,7 @@ def convert_to_qual_name_type_hint_str(type_hint: Any) -> str:
             class X:
                 x: obj
 
-            return get_type_hints(X)['x']
+            return get_type_hints(X, globalns=recursive_module_import(module))['x']
         except NameError as e:
             print(e)
             return obj
