@@ -1,5 +1,5 @@
 <%!
-    from omnipy.util.mako_helpers import parse_type_hint, cleanup_type_hint_str_before_parsing, lookup
+    from omnipy.util.mako_helpers import format_type_as_markdown
 
     MISSING_STR = ''
 %>
@@ -43,12 +43,7 @@ ${divider}
                 if not el.type_name:
                     row.append(MISSING_STR)
                 else:
-                    type_name = el.type_name
-                    cleaned_type_name = cleanup_type_hint_str_before_parsing(type_name)
-                    for basic_type_name in set(parse_type_hint(cleaned_type_name)):
-                        refname, url = lookup(module, basic_type_name)
-                        if refname:
-                            type_name = type_name.replace(basic_type_name, f'[{refname}]({url})')
+                    type_name = format_type_as_markdown(module, el.type_name)
                     row.append(f'<code>{type_name}</code>')
             if show_description:
                 if hasattr(el, 'parsed_docstring') and el.parsed_docstring and \

@@ -36,6 +36,15 @@ def convert_to_qual_name_type_hint_str(type_hint: Any) -> str:
     return formatannotation(fixed_get_type_hints(type_hint))
 
 
+def format_type_as_markdown(module, type_name: str):
+    cleaned_type_name = cleanup_type_hint_str_before_parsing(type_name)
+    for basic_type_name in set(parse_type_hint(cleaned_type_name)):
+        refname, url = lookup(module, basic_type_name)
+        if refname:
+            type_name = type_name.replace(basic_type_name, f'[{refname}]({url})')
+    return type_name
+
+
 _TYPE_HINTS_REPLACE_MAP = {
     '~': '',
     '+': '',
