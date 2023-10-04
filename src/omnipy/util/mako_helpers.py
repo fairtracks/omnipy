@@ -1,9 +1,60 @@
 import ast
-from inspect import formatannotation
+from inspect import formatannotation, getmodule, isclass, isgeneratorfunction, Signature
 import os
-from typing import Any, get_type_hints
+from types import ModuleType
+from typing import Any, get_type_hints, List
 
-import pdocs
+from docstring_parser import DocstringParam, DocstringReturns
+from pdocs.doc import External, Function, Module
+
+from omnipy.util.helpers import create_merged_dict
+
+IGNORED = None
+IGNORE_PARAMS = ['cls', 'self']
+
+
+def merge_signature_with_docstring(func: Function,
+                                   signature: Signature,
+                                   ds_params: List[DocstringParam],
+                                   ds_returns: DocstringReturns):
+    ds_params_map = {ds_param.arg_name: ds_param for ds_param in ds_params}
+    params = []
+
+    for name, param in signature.parameters.items():
+        if name in IGNORE_PARAMS:
+            continue
+
+        description = ''
+        if name in ds_params_map:
+            description = ds_params_map[name].description
+
+        type_name = get_type_name_from_annotation(param.annotation, param.empty)
+
+        default = param.default if param.default is not param.empty else ''
+
+        params.append(
+            DocstringParam(
+                args=[],
+                description=description,
+                arg_name=name,
+                type_name=type_name,
+                is_optional=IGNORED,
+                default=default))
+
+    description = ds_returns.description if ds_returns else ''
+
+    if type_name := get_type_name_from_annotation(signature.return_annotation,
+                                                  signature.empty):
+        returns = DocstringReturns(
+            args=[],
+            description=description,
+            type_name=type_name,
+            is_generator=isgeneratorfunction(func.func),
+            return_name=IGNORED)
+    else:
+        returns = None
+
+    return params, returns
 
 
 def get_type_name_from_annotation(annotation, empty_obj):
@@ -126,9 +177,9 @@ def lookup(module, refname):
 
     d = module.find_ident(refname)
 
-    if isinstance(d, pdocs.doc.External):
+    if isinstance(d, External):
         return None, None
-    if isinstance(d, pdocs.doc.Module):
+    if isinstance(d, Module):
         return d.refname, module_url(module, d)
 
     return d.name, f'{module_url(module, d.module)}#{d.name.lower()}'

@@ -3,13 +3,9 @@
 
 <%!
     from docstring_parser import DocstringParam, DocstringReturns
-    from omnipy.util.mako_helpers import get_type_name_from_annotation
+    from omnipy.util.mako_helpers import merge_signature_with_docstring
 %>
 
-<%!
-    IGNORED = None
-    IGNORE_PARAMS = ['cls', 'self']
-%>
 ##
 ## function()
 ##
@@ -51,7 +47,6 @@ def ${func.name}(
 
 % if parsed_ds:
     <%
-
         short_desc = parsed_ds.short_description
         long_desc = parsed_ds.long_description
         ds_params = parsed_ds.params
@@ -59,46 +54,9 @@ def ${func.name}(
         raises = parsed_ds.raises
 
         if signature:
-            ds_params_map = {}
-            for ds_param in ds_params:
-                ds_params_map[ds_param.arg_name] = ds_param
-
-            params = []
-            for name, param in signature.parameters.items():
-                if name in IGNORE_PARAMS:
-                    continue
-
-                description = ''
-                if name in ds_params_map:
-                    description = ds_params_map[name].description
-
-                type_name = get_type_name_from_annotation(param.annotation, param.empty)
-
-                default = param.default if param.default is not param.empty else ''
-
-                params.append(DocstringParam(args=[],
-                                             description=description,
-                                             arg_name=name,
-                                             type_name=type_name,
-                                             is_optional=IGNORED,
-                                             default=default))
-
-            description = ds_returns.description if ds_returns else ''
-
-            type_name = get_type_name_from_annotation(signature.return_annotation, signature.empty)
-
-            if type_name:
-                returns = DocstringReturns(args=[],
-                                           description=description,
-                                           type_name=type_name,
-                                           is_generator=inspect.isgeneratorfunction(func.func),
-                                           return_name=IGNORED)
-            else:
-                returns = None
-
+            params, returns = merge_signature_with_docstring(func, signature, ds_params, ds_returns)
         else:
-            params = ds_params
-            returns = ds_returns
+            params, returns = ds_params, ds_returns
     %>
 ${par(short_desc)}
 ${par(long_desc)}
