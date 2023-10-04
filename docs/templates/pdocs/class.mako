@@ -3,6 +3,9 @@
 <%namespace file="variable.mako" import="variable"/>
 <%namespace file="function.mako" import="function"/>
 
+<%!
+    from omnipy.util.mako_helpers import filter_external, filter_internal
+%>
 ##
 ## class()
 ##
@@ -54,10 +57,14 @@ ${cls.docstring}
 % endif
 
 <%
-  class_vars = cls.class_variables()
-  static_methods = cls.functions()
-  inst_vars = cls.instance_variables()
-  methods = cls.methods()
+  class_vars_external = filter_external(cls.class_variables())
+  class_vars_internal = filter_internal(cls.class_variables())
+  static_methods_external = filter_external(cls.functions())
+  static_methods_internal = filter_internal(cls.functions())
+  inst_vars_external = filter_external(cls.instance_variables())
+  inst_vars_internal = filter_internal(cls.instance_variables())
+  methods_external = filter_external(cls.methods())
+  methods_internal = filter_internal(cls.methods())
   mro = cls.mro()
   subclasses = cls.subclasses()
 %>
@@ -75,35 +82,32 @@ ${h4('Descendants')}
     % endfor
 % endif
 
-% if class_vars:
+% if class_vars_internal:
 ${h4('Class variables')}
-    % for v in class_vars:
+    % for v in class_vars_internal:
 ${variable(v)}
-
     % endfor
 % endif
 
-% if static_methods:
+% if static_methods_internal:
 ${h4('Static methods')}
-    % for f in static_methods:
+    % for f in static_methods_internal:
 ${function(f, True)}
-
     % endfor
 % endif
 
-% if inst_vars:
+% if inst_vars_internal:
 ${h4('Instance variables')}
-% for v in inst_vars:
+    % for v in inst_vars_internal:
 ${variable(v)}
-
-% endfor
+    % endfor
 % endif
-% if methods:
-${h4('Methods')}
-% for m in methods:
-${function(m, True)}
 
-% endfor
+% if methods_internal:
+${h4('Methods')}
+    % for m in methods_internal:
+${function(m, True)}
+    % endfor
 % endif
 
 </%def>

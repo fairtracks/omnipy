@@ -13,6 +13,24 @@ IGNORED = None
 IGNORE_PARAMS = ['cls', 'self']
 
 
+def filter_external(members: List[Doc]):
+    return list(_ for _ in members if externally_inherited(_))
+
+
+def filter_internal(members: List[Doc]):
+    return list(_ for _ in members if not externally_inherited(_))
+
+
+def externally_inherited(member: Doc):
+    if hasattr(member, 'inherits'):
+        if externally_inherited(member.inherits):
+            return True
+        elif not member.inherits.cls.module.name.startswith('omnipy'):
+            print(member.inherits.cls.module.name)
+            return True
+    return member.name not in vars(member.cls.cls)
+
+
 def merge_signature_with_docstring(func: Function,
                                    signature: Signature,
                                    ds_params: List[DocstringParam],
@@ -69,6 +87,10 @@ def get_type_name_from_annotation(module: ModuleType, annotation, empty_obj):
     return type_name
 
 
+def _is_internal_module(module: ModuleType, imported_modules: List[ModuleType]):
+    return module not in imported_modules and module.__name__.startswith('omnipy')
+
+
 def recursive_module_import(module: ModuleType, imported_modules: List[ModuleType] = []):
     module_vars = vars(module)
     imported_modules.append(module)
@@ -77,7 +99,7 @@ def recursive_module_import(module: ModuleType, imported_modules: List[ModuleTyp
         if isclass(val):
             for base_cls in val.__bases__:
                 base_cls_module = getmodule(base_cls)
-                if base_cls_module and _is_internal_module(base_cls_module):
+                if base_cls_module and _is_internal_module(base_cls_module, imported_modules):
                     module_vars = create_merged_dict(
                         recursive_module_import(base_cls_module, imported_modules),
                         module_vars,
