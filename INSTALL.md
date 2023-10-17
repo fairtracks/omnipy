@@ -35,6 +35,6 @@ Omnipy is integrated with the powerful [Prefect](https://prefect.io) data flow o
 - To run an example using the `prefect` engine, e.g.:
   - `omnipy-examples --engine prefect isajson`
 - After completion of some runs, you can check the flow logs and orchestration options in the Prefect UI:
-  - `prefect orion start`
+  - `prefect server start`
 
 More info on Prefect configuration will come soon...
