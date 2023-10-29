@@ -68,19 +68,20 @@ ${cls.docstring}
   mro = cls.mro()
   subclasses = cls.subclasses()
 %>
-% if mro:
-${h4('Ancestors (in MRO)')}
-    % for c in mro:
-* ${c.refname}
-    % endfor
-% endif
 
-% if subclasses:
-${h4('Descendants')}
-    % for c in subclasses:
-* ${c.refname}
-    % endfor
-% endif
+## % if mro:
+## ${h4('Ancestors (in MRO)')}
+##     % for c in mro:
+## * ${c.refname}
+##     % endfor
+## % endif
+
+## % if subclasses:
+## ${h4('Descendants')}
+##     % for c in subclasses:
+## * ${c.refname}
+##     % endfor
+## % endif
 
 % if class_vars_internal:
 ${h4('Class variables')}
