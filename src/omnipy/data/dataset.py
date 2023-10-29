@@ -10,7 +10,7 @@ from pydantic.fields import Undefined
 from pydantic.generics import GenericModel
 from pydantic.utils import lenient_issubclass
 
-from omnipy.data.model import Model, generate_qualname
+from omnipy.data.model import generate_qualname, Model
 
 ModelT = TypeVar('ModelT', bound=Model)
 DATA_KEY = 'data'
