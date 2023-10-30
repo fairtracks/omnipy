@@ -13,22 +13,44 @@ IGNORED = None
 IGNORE_PARAMS = ['cls', 'self']
 
 
-def filter_external(members: List[Doc]):
-    return list(_ for _ in members if externally_inherited(_))
+def filter_internal_external(cls: type, members: List[Doc]):
+    internal_members = []
+    external_members = []
+
+    for member in members:
+        try:
+            if is_member(cls, member.name) or is_internally_inherited(cls, member.name, ['omnipy']):
+                internal_members.append(member)
+            else:
+                external_members.append(member)
+        except AttributeError as e:
+            print(e)
+
+    return internal_members, external_members
 
 
-def filter_internal(members: List[Doc]):
-    return list(_ for _ in members if not externally_inherited(_))
+def is_member(cls: type, member_name: str):
+    return member_name in vars(cls)
 
 
-def externally_inherited(member: Doc):
-    if hasattr(member, 'inherits'):
-        if externally_inherited(member.inherits):
-            return True
-        elif not member.inherits.cls.module.name.startswith('omnipy'):
-            print(member.inherits.cls.module.name)
-            return True
-    return member.name not in vars(member.cls.cls)
+def is_internally_inherited(cls: type,
+                            member_name: str,
+                            internal_packages: List[str],
+                            outer: bool = True):
+    if outer and member_name not in dir(cls):
+        raise AttributeError(f'"{member_name}" is not a member of class "{cls.__name__}"')
+
+    if is_member(cls, member_name):
+        if outer:
+            return False
+        else:
+            is_internal = any(cls.__module__.startswith(pkg) for pkg in internal_packages)
+            return is_internal
+    else:
+        for base_cls in cls.__bases__:
+            if is_internally_inherited(base_cls, member_name, internal_packages, outer=False):
+                return True
+        return False
 
 
 def merge_signature_with_docstring(func: Function,

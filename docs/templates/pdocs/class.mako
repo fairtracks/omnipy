@@ -4,7 +4,7 @@
 <%namespace file="function.mako" import="function"/>
 
 <%!
-    from omnipy.util.mako_helpers import filter_external, filter_internal
+    from omnipy.util.mako_helpers import filter_internal_external
 %>
 ##
 ## class()
@@ -57,14 +57,10 @@ ${cls.docstring}
 % endif
 
 <%
-  class_vars_external = filter_external(cls.class_variables())
-  class_vars_internal = filter_internal(cls.class_variables())
-  static_methods_external = filter_external(cls.functions())
-  static_methods_internal = filter_internal(cls.functions())
-  inst_vars_external = filter_external(cls.instance_variables())
-  inst_vars_internal = filter_internal(cls.instance_variables())
-  methods_external = filter_external(cls.methods())
-  methods_internal = filter_internal(cls.methods())
+  class_vars_internal, class_vars_external = filter_internal_external(cls.cls, cls.class_variables())
+  static_methods_internal, static_methods_external = filter_internal_external(cls.cls, cls.functions())
+  inst_vars_internal, inst_vars_external = filter_internal_external(cls.cls, cls.instance_variables())
+  methods_internal, methods_external = filter_internal_external(cls.cls, cls.methods())
   mro = cls.mro()
   subclasses = cls.subclasses()
 %>
