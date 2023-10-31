@@ -21,4 +21,4 @@ build:
       - poetry install --with docs
 
       # Generate documentation
-      - python scripts/generate_portray_docs.py for_readthedocs
+      - LC_ALL=C python scripts/generate_portray_docs.py for_readthedocs
