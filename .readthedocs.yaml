@@ -20,5 +20,6 @@ build:
       # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
       - poetry install --with docs
 
-sphinx:
-  configuration: docs/source/conf.py
+
+mkdocs:
+  configuration: pyproject.toml
