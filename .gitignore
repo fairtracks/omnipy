@@ -137,3 +137,6 @@ input
 
 # Recommended for libraries to not commit poetry.lock
 poetry.lock
+
+# Documentation
+html
