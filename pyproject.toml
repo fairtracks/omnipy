@@ -135,7 +135,7 @@ testpaths = [
 
 [tool.portray]
 docs_dir = "docs/portray"
-directory = "src"
+directory = "."
 
 [[tool.portray.extra_markdown_extensions]]
 [tool.portray.extra_markdown_extensions."pymdownx.highlight"]
