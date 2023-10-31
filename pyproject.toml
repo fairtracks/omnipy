@@ -54,6 +54,7 @@ sphinx-copybutton = "^0.5.1"
 portray = {git = "https://github.com/HeinrichAD/portray.git"}
 docstring-parser = "^0.15"
 pymdown-extensions = "^10.0.1"
+hug = {git = "https://github.com/hugapi/hug.git", branch="develop"}
 
 [build-system]
 requires = ["poetry-core"]
