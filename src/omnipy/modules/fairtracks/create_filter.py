@@ -24,7 +24,7 @@ cases_endpt = 'https://api.gdc.cancer.gov/cases'
 annotations_endpt = 'https://api.gdc.cancer.gov/annotations'
 
 
-def create_filter():
+def create_filter():  # noqa: C901
     ###########################################################
     # step1: get total number of TCGA projects (program.name)
     ###########################################################
@@ -103,10 +103,11 @@ def create_filter():
         cases = (response.json()['data']['hits'])
         proj['cases'] = cases
 
-    ##########################################################################
-    # step4: filtered query on 'annotations' (filter on case_id) to get cases ID for each TCGA project
-    #      the IDs for all the files are also available form this endpoint
-    ########################################################################
+    ##############################################################################
+    # step4: filtered query on 'annotations' (filter on case_id) to get cases
+    #        ID for each TCGA project the IDs for all the files are also available
+    #        form this endpoint
+    ##############################################################################
 
     fields = ['annotation_id']
 

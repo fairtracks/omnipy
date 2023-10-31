@@ -40,27 +40,27 @@ class InheritanceCase:
 
 @pc.case(id='type_class_variable', tags=['element_type'])
 def case_type_class_variable() -> str:
-    return "class_variable"
+    return 'class_variable'
 
 
 @pc.case(id='type_property', tags=['element_type'])
 def case_type_property() -> str:
-    return "property"
+    return 'property'
 
 
 @pc.case(id='type_classmethod', tags=['element_type'])
 def case_type_classmethod() -> str:
-    return "classmethod"
+    return 'classmethod'
 
 
 @pc.case(id='type_staticmethod', tags=['element_type'])
 def case_type_staticmethod() -> str:
-    return "staticmethod"
+    return 'staticmethod'
 
 
 @pc.case(id='type_method', tags=['element_type'])
 def case_type_method() -> str:
-    return "method"
+    return 'method'
 
 
 @pc.case(id='packages_empty', tags=['packages'])

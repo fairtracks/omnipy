@@ -23,7 +23,7 @@ def generate_qualname(cls_name: str, model: Any) -> str:
     m_module = model.__module__ if hasattr(model, '__module__') else ''
     m_module_prefix = f'{m_module}.' \
         if m_module and place_module(m_module) != STDLIB else ''
-    fully_qual_model_name = f"{m_module_prefix}{display_as_type(model)}"
+    fully_qual_model_name = f'{m_module_prefix}{display_as_type(model)}'
     return f'{cls_name}[{fully_qual_model_name}]'
 
 

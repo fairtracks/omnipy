@@ -8,7 +8,7 @@ import typer
 
 
 def _is_exported(ident_name):
-    return not ident_name.startswith("_") or ident_name in [
+    return not ident_name.startswith('_') or ident_name in [
         '__enter__',
         '__exit__',
         '__cmp__',
