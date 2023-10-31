@@ -11,7 +11,7 @@ build:
   commands:
       # Install poetry
       # https://python-poetry.org/docs/#installing-manually
-      - pip install poetry==1.4.0
+      - pip install poetry==1.6.1
 
       # Tell poetry to not use a virtual environment
       - poetry config virtualenvs.create false
