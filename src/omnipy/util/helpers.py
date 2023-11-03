@@ -37,7 +37,6 @@ def remove_none_vals(**kwargs: object) -> Dict[object, object]:
 
 
 def get_datetime_format(locale: Optional[LocaleType] = None) -> str:
-    print(f'Setting locale to "{locale}"...')
     pkg_locale.setlocale(pkg_locale.LC_ALL, locale)
 
     if hasattr(pkg_locale, 'nl_langinfo'):  # noqa
