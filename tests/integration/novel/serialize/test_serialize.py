@@ -3,8 +3,10 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.enums import (ConfigPersistOutputsOptions,
+from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
+                              ConfigPersistOutputsOptions,
                               ConfigRestoreOutputsOptions,
+                              OutputStorageProtocolOptions,
                               PersistOutputsOptions,
                               RestoreOutputsOptions)
 from omnipy.api.protocols.public.hub import IsRuntime
@@ -18,6 +20,8 @@ def test_all_properties_pytest_default_config(case_tmpl) -> None:
         assert job_obj.will_persist_outputs is PersistOutputsOptions.DISABLED
         assert job_obj.restore_outputs is None
         assert job_obj.will_restore_outputs is RestoreOutputsOptions.DISABLED
+        assert job_obj.output_storage_protocol is None
+        assert job_obj.output_storage_protocol_to_use is OutputStorageProtocolOptions.LOCAL
 
 
 @pc.parametrize_with_cases('case_tmpl', cases='.cases.jobs', prefix='case_config_')
@@ -29,6 +33,7 @@ def test_all_properties_runtime_default_config(
     assert runtime.config.job.output_storage.persist_outputs == \
            ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
     assert runtime.config.job.output_storage.restore_outputs == ConfigRestoreOutputsOptions.DISABLED
+    assert runtime.config.job.output_storage.protocol == ConfigOutputStorageProtocolOptions.LOCAL
 
     for job_obj in case_tmpl, case_tmpl.apply():
         assert job_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG
@@ -36,6 +41,9 @@ def test_all_properties_runtime_default_config(
 
         assert job_obj.restore_outputs is RestoreOutputsOptions.FOLLOW_CONFIG
         assert job_obj.will_restore_outputs is RestoreOutputsOptions.DISABLED
+
+        assert job_obj.output_storage_protocol is OutputStorageProtocolOptions.FOLLOW_CONFIG
+        assert job_obj.output_storage_protocol_to_use is OutputStorageProtocolOptions.LOCAL
 
 
 @pc.parametrize_with_cases(
@@ -165,6 +173,65 @@ def test_properties_restore_outputs_override_config(
     for job_obj_4 in case_tmpl_4, case_tmpl_4.apply():
         assert job_obj_4.restore_outputs is RestoreOutputsOptions.FOLLOW_CONFIG
         assert job_obj_4.will_restore_outputs is RestoreOutputsOptions.AUTO_ENABLE_IGNORE_PARAMS
+
+
+@pc.parametrize_with_cases(
+    'case_task_tmpl', cases='.cases.jobs', has_tag='task', prefix='case_config_')
+@pc.parametrize_with_cases(
+    'case_flow_tmpl', cases='.cases.jobs', has_tag='flow', prefix='case_config_')
+def test_properties_output_storage_protocols(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    case_task_tmpl,
+    case_flow_tmpl,
+) -> None:
+
+    runtime.config.job.output_storage.protocol = ConfigOutputStorageProtocolOptions.S3
+
+    for job_obj in case_task_tmpl, case_task_tmpl.apply(), case_flow_tmpl, case_flow_tmpl.apply():
+        assert job_obj.output_storage_protocol is OutputStorageProtocolOptions.FOLLOW_CONFIG
+        assert job_obj.output_storage_protocol_to_use is OutputStorageProtocolOptions.S3
+
+    runtime.config.job.output_storage.protocol = ConfigOutputStorageProtocolOptions.LOCAL
+
+    for job_obj in case_task_tmpl, case_task_tmpl.apply(), case_flow_tmpl, case_flow_tmpl.apply():
+        assert job_obj.output_storage_protocol is OutputStorageProtocolOptions.FOLLOW_CONFIG
+        assert job_obj.output_storage_protocol_to_use is OutputStorageProtocolOptions.LOCAL
+
+
+@pc.parametrize_with_cases('case_tmpl', cases='.cases.jobs', prefix='case_config_')
+def test_properties_output_storage_protocols_override_config(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    case_tmpl,
+) -> None:
+    assert runtime.config.job.output_storage.protocol == ConfigOutputStorageProtocolOptions.LOCAL
+
+    case_tmpl_2 = case_tmpl.refine(output_storage_protocol='s3')
+
+    for job_obj_2 in case_tmpl_2, case_tmpl_2.apply():
+        assert job_obj_2.output_storage_protocol is OutputStorageProtocolOptions.S3
+        assert job_obj_2.output_storage_protocol_to_use is OutputStorageProtocolOptions.S3
+
+    case_tmpl_3 = case_tmpl.refine(output_storage_protocol='local')
+
+    for job_obj_3 in case_tmpl_3, case_tmpl_3.apply():
+        assert job_obj_3.output_storage_protocol is OutputStorageProtocolOptions.LOCAL
+        assert job_obj_3.output_storage_protocol_to_use is OutputStorageProtocolOptions.LOCAL
+
+    runtime.config.job.output_storage.protocol = 's3'
+
+    for job_obj in case_tmpl, case_tmpl.apply():
+        assert job_obj.output_storage_protocol is OutputStorageProtocolOptions.FOLLOW_CONFIG
+        assert job_obj.output_storage_protocol_to_use is OutputStorageProtocolOptions.S3
+
+    for job_obj_3 in case_tmpl_3, case_tmpl_3.apply():
+        assert job_obj_3.output_storage_protocol is OutputStorageProtocolOptions.LOCAL
+        assert job_obj_3.output_storage_protocol_to_use is OutputStorageProtocolOptions.LOCAL
+
+    case_tmpl_4 = case_tmpl_3.refine(output_storage_protocol='config')
+
+    for job_obj_4 in case_tmpl_4, case_tmpl_4.apply():
+        assert job_obj_4.output_storage_protocol is OutputStorageProtocolOptions.FOLLOW_CONFIG
+        assert job_obj_4.output_storage_protocol_to_use is OutputStorageProtocolOptions.S3
 
 
 @pc.parametrize_with_cases('case_tmpl', cases='.cases.jobs', prefix='case_')

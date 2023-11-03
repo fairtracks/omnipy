@@ -4,10 +4,10 @@ from typing import Annotated, Type
 
 import pytest
 
-from omnipy.api.enums import (ConfigPersistOutputsOptions,
+from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
+                              ConfigPersistOutputsOptions,
                               ConfigRestoreOutputsOptions,
-                              EngineChoice,
-                              OutputStorageProtocolOptions)
+                              EngineChoice)
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.hub.runtime import RuntimeConfig, RuntimeObjects
 
@@ -42,7 +42,7 @@ def _assert_runtime_config_default(config: RuntimeConfig, dir_path: str):
     assert config.job.output_storage.restore_outputs == \
            ConfigRestoreOutputsOptions.DISABLED
     assert config.job.output_storage.protocol == \
-           OutputStorageProtocolOptions.LOCAL
+           ConfigOutputStorageProtocolOptions.LOCAL
     assert config.job.output_storage.local.persist_data_dir_path == \
            os.path.join(dir_path, 'outputs')
     assert config.job.output_storage.s3.persist_data_dir_path == os.path.join('omnipy', 'outputs')

@@ -18,6 +18,13 @@ class RestoreOutputsOptions(str, Enum):
     FORCE_ENABLE_IGNORE_PARAMS = 'force_ignore_params'
 
 
+class OutputStorageProtocolOptions(str, Enum):
+    """"""
+    LOCAL = 'local'
+    S3 = 's3'
+    FOLLOW_CONFIG = 'config'
+
+
 class ConfigPersistOutputsOptions(str, Enum):
     """"""
     DISABLED = 'disabled'
@@ -31,7 +38,7 @@ class ConfigRestoreOutputsOptions(str, Enum):
     AUTO_ENABLE_IGNORE_PARAMS = 'auto_ignore_params'
 
 
-class OutputStorageProtocolOptions(str, Enum):
+class ConfigOutputStorageProtocolOptions(str, Enum):
     """"""
     LOCAL = 'local'
     S3 = 's3'

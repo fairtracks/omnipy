@@ -4,7 +4,10 @@ from datetime import datetime
 from types import MappingProxyType
 from typing import Any, Callable, Dict, Mapping, Optional, Protocol, Tuple, Type
 
-from omnipy.api.enums import PersistOutputsOptions, RestoreOutputsOptions
+from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
+                              OutputStorageProtocolOptions,
+                              PersistOutputsOptions,
+                              RestoreOutputsOptions)
 from omnipy.api.protocols.private.compute.job_creator import IsJobCreator
 from omnipy.api.protocols.private.compute.mixins import IsUniquelyNamedJob
 from omnipy.api.protocols.private.engine import IsEngine
@@ -113,11 +116,19 @@ class IsFuncArgJobBase(IsJob, Protocol):
         ...
 
     @property
+    def output_storage_protocol(self) -> Optional[OutputStorageProtocolOptions]:
+        ...
+
+    @property
     def will_persist_outputs(self) -> PersistOutputsOptions:
         ...
 
     @property
     def will_restore_outputs(self) -> RestoreOutputsOptions:
+        ...
+
+    @property
+    def output_storage_protocol_to_use(self) -> OutputStorageProtocolOptions:
         ...
 
     @property

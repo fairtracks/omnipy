@@ -4,9 +4,12 @@ from pathlib import Path
 import tarfile
 from typing import cast, Generator, Optional, Type
 
+from omnipy.api.enums import ConfigOutputStorageProtocolOptions as ConfigProtocolOpts
 from omnipy.api.enums import ConfigPersistOutputsOptions as ConfigPersistOpts
 from omnipy.api.enums import ConfigRestoreOutputsOptions as ConfigRestoreOpts
-from omnipy.api.enums import PersistOutputsOptions, RestoreOutputsOptions
+from omnipy.api.enums import (OutputStorageProtocolOptions,
+                              PersistOutputsOptions,
+                              RestoreOutputsOptions)
 from omnipy.api.protocols.private.compute.job import IsJobBase
 from omnipy.api.protocols.public.config import IsJobConfig
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
@@ -21,13 +24,15 @@ from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
 
 PersistOpts = PersistOutputsOptions
 RestoreOpts = RestoreOutputsOptions
+ProtocolOpts = OutputStorageProtocolOptions
 
 
 class SerializerFuncJobBaseMixin:
     def __init__(self,
                  *,
                  persist_outputs: Optional[PersistOutputsOptions] = None,
-                 restore_outputs: Optional[RestoreOutputsOptions] = None):
+                 restore_outputs: Optional[RestoreOutputsOptions] = None,
+                 output_storage_protocol: Optional[OutputStorageProtocolOptions] = None):
 
         # TODO: Possibly reimplement logic using a state machine, e.g. "transitions" package
         if persist_outputs is None:
@@ -39,6 +44,11 @@ class SerializerFuncJobBaseMixin:
             self._restore_outputs = RestoreOpts.FOLLOW_CONFIG if self._has_job_config else None
         else:
             self._restore_outputs = RestoreOpts(restore_outputs)
+
+        if output_storage_protocol is None:
+            self._output_storage_protocol = ProtocolOpts.FOLLOW_CONFIG if self._has_job_config else None
+        else:
+            self._output_storage_protocol = ProtocolOpts(output_storage_protocol)
 
         self._serializer_registry = self._create_serializer_registry()
 
@@ -83,6 +93,10 @@ class SerializerFuncJobBaseMixin:
         return self._restore_outputs
 
     @property
+    def output_storage_protocol(self) -> Optional[OutputStorageProtocolOptions]:
+        return self._output_storage_protocol
+
+    @property
     def will_persist_outputs(self) -> PersistOutputsOptions:
         if not self._has_job_config or self._persist_outputs is not PersistOpts.FOLLOW_CONFIG:
             return self._persist_outputs if self._persist_outputs is not None \
@@ -116,6 +130,15 @@ class SerializerFuncJobBaseMixin:
                 return RestoreOpts.AUTO_ENABLE_IGNORE_PARAMS
             assert config_restore_opt == ConfigRestoreOpts.DISABLED
             return RestoreOpts.DISABLED
+
+    @property
+    def output_storage_protocol_to_use(self) -> OutputStorageProtocolOptions:
+        if not self._has_job_config or self._output_storage_protocol is not ProtocolOpts.FOLLOW_CONFIG:
+            return self._output_storage_protocol if self._output_storage_protocol is not None \
+                else ProtocolOpts.LOCAL
+        else:
+            config_protocol = self._job_config.output_storage.protocol
+            return ProtocolOpts(config_protocol)
 
     def _call_job(self, *args: object, **kwargs: object) -> object:
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
