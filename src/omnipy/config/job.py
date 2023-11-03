@@ -3,7 +3,9 @@ import os
 # from datetime import datetime
 from pathlib import Path
 
-from omnipy.api.enums import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
+from omnipy.api.enums import (ConfigPersistOutputsOptions,
+                              ConfigRestoreOutputsOptions,
+                              OutputStorageProtocolOptions)
 from omnipy.api.protocols.public.config import (IsLocalOutputStorage,
                                                 IsOutputStorage,
                                                 IsS3OutputStorage)
@@ -35,6 +37,7 @@ class OutputStorage:
         ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
     restore_outputs: ConfigRestoreOutputsOptions = \
         ConfigRestoreOutputsOptions.DISABLED
+    protocol: OutputStorageProtocolOptions = OutputStorageProtocolOptions.LOCAL
     local: IsLocalOutputStorage = field(default_factory=LocalOutputStorage)
     s3: IsS3OutputStorage = field(default_factory=S3OutputStorage)
 

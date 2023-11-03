@@ -31,6 +31,12 @@ class ConfigRestoreOutputsOptions(str, Enum):
     AUTO_ENABLE_IGNORE_PARAMS = 'auto_ignore_params'
 
 
+class OutputStorageProtocolOptions(str, Enum):
+    """"""
+    LOCAL = 'local'
+    S3 = 's3'
+
+
 class EngineChoice(str, Enum):
     """"""
     LOCAL = 'local'

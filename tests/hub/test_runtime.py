@@ -4,7 +4,10 @@ from typing import Annotated, Type
 
 import pytest
 
-from omnipy.api.enums import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions, EngineChoice
+from omnipy.api.enums import (ConfigPersistOutputsOptions,
+                              ConfigRestoreOutputsOptions,
+                              EngineChoice,
+                              OutputStorageProtocolOptions)
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.hub.runtime import RuntimeConfig, RuntimeObjects
 
@@ -38,6 +41,8 @@ def _assert_runtime_config_default(config: RuntimeConfig, dir_path: str):
            ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
     assert config.job.output_storage.restore_outputs == \
            ConfigRestoreOutputsOptions.DISABLED
+    assert config.job.output_storage.protocol == \
+           OutputStorageProtocolOptions.LOCAL
     assert config.job.output_storage.local.persist_data_dir_path == \
            os.path.join(dir_path, 'outputs')
     assert config.job.output_storage.s3.persist_data_dir_path == os.path.join('omnipy', 'outputs')

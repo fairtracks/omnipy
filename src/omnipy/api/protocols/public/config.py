@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from omnipy.api.enums import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
+from omnipy.api.enums import (ConfigPersistOutputsOptions,
+                              ConfigRestoreOutputsOptions,
+                              OutputStorageProtocolOptions)
 from omnipy.api.types import LocaleType
 
 
@@ -57,5 +59,6 @@ class IsS3OutputStorage(IsOutputStorageBase, Protocol):
 class IsOutputStorage(Protocol):
     persist_outputs: ConfigPersistOutputsOptions
     restore_outputs: ConfigRestoreOutputsOptions
+    protocol: OutputStorageProtocolOptions
     local: IsLocalOutputStorage
     s3: IsS3OutputStorage
