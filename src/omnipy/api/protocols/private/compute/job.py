@@ -7,9 +7,9 @@ from typing import Any, Callable, Dict, Mapping, Optional, Protocol, Tuple, Type
 from omnipy.api.enums import PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.api.protocols.private.compute.job_creator import IsJobCreator
 from omnipy.api.protocols.private.compute.mixins import IsUniquelyNamedJob
-from omnipy.api.protocols.private.config import IsJobConfigBase
 from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.private.log import CanLog
+from omnipy.api.protocols.public.config import IsJobConfig
 from omnipy.api.types import (GeneralDecorator,
                               JobT,
                               JobTemplateT,
@@ -25,7 +25,7 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol):
         ...
 
     @property
-    def config(self) -> Optional[IsJobConfigBase]:
+    def config(self) -> Optional[IsJobConfig]:
         ...
 
     @property

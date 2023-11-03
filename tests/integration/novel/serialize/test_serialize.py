@@ -26,9 +26,9 @@ def test_all_properties_runtime_default_config(
     case_tmpl,
 ) -> None:
 
-    assert runtime.config.job.persist_outputs == \
+    assert runtime.config.job.output_storage.persist_outputs == \
            ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
-    assert runtime.config.job.restore_outputs == ConfigRestoreOutputsOptions.DISABLED
+    assert runtime.config.job.output_storage.restore_outputs == ConfigRestoreOutputsOptions.DISABLED
 
     for job_obj in case_tmpl, case_tmpl.apply():
         assert job_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG
@@ -48,7 +48,7 @@ def test_properties_persist_outputs_enable_disable(
     case_flow_tmpl,
 ) -> None:
 
-    runtime.config.job.persist_outputs = ConfigPersistOutputsOptions.ENABLE_FLOW_OUTPUTS
+    runtime.config.job.output_storage.persist_outputs = ConfigPersistOutputsOptions.ENABLE_FLOW_OUTPUTS
 
     for task_obj in case_task_tmpl, case_task_tmpl.apply():
         assert task_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG
@@ -58,14 +58,14 @@ def test_properties_persist_outputs_enable_disable(
         assert flow_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG
         assert flow_obj.will_persist_outputs is PersistOutputsOptions.ENABLED
 
-    runtime.config.job.persist_outputs = \
+    runtime.config.job.output_storage.persist_outputs = \
         ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
 
     for job_obj in case_task_tmpl, case_task_tmpl.apply(), case_flow_tmpl, case_flow_tmpl.apply():
         assert job_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG
         assert job_obj.will_persist_outputs is PersistOutputsOptions.ENABLED
 
-    runtime.config.job.persist_outputs = ConfigPersistOutputsOptions.DISABLED
+    runtime.config.job.output_storage.persist_outputs = ConfigPersistOutputsOptions.DISABLED
 
     for job_obj in case_task_tmpl, case_task_tmpl.apply(), case_flow_tmpl, case_flow_tmpl.apply():
         assert job_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG
@@ -78,7 +78,7 @@ def test_properties_persist_outputs_override_config(
     case_tmpl,
 ) -> None:
 
-    assert runtime.config.job.persist_outputs == \
+    assert runtime.config.job.output_storage.persist_outputs == \
            ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
 
     case_tmpl_2 = case_tmpl.refine(persist_outputs='disabled')
@@ -93,7 +93,7 @@ def test_properties_persist_outputs_override_config(
         assert job_obj_3.persist_outputs is PersistOutputsOptions.ENABLED
         assert job_obj_3.will_persist_outputs is PersistOutputsOptions.ENABLED
 
-    runtime.config.job.persist_outputs = 'disabled'
+    runtime.config.job.output_storage.persist_outputs = 'disabled'
 
     for job_obj in case_tmpl, case_tmpl.apply():
         assert job_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG
@@ -116,14 +116,14 @@ def test_properties_restore_outputs_enable_disable(
     case_tmpl,
 ) -> None:
 
-    runtime.config.job.restore_outputs = \
+    runtime.config.job.output_storage.restore_outputs = \
         ConfigRestoreOutputsOptions.AUTO_ENABLE_IGNORE_PARAMS
 
     for job_obj in case_tmpl, case_tmpl.apply():
         assert job_obj.restore_outputs is RestoreOutputsOptions.FOLLOW_CONFIG
         assert job_obj.will_restore_outputs is RestoreOutputsOptions.AUTO_ENABLE_IGNORE_PARAMS
 
-    runtime.config.job.restore_outputs = ConfigRestoreOutputsOptions.DISABLED
+    runtime.config.job.output_storage.restore_outputs = ConfigRestoreOutputsOptions.DISABLED
 
     for job_obj in case_tmpl, case_tmpl.apply():
         assert job_obj.restore_outputs is RestoreOutputsOptions.FOLLOW_CONFIG
@@ -136,7 +136,7 @@ def test_properties_restore_outputs_override_config(
     case_tmpl: Annotated[FuncArgJobBase, pc.case],
 ) -> None:
 
-    assert runtime.config.job.restore_outputs == ConfigRestoreOutputsOptions.DISABLED
+    assert runtime.config.job.output_storage.restore_outputs == ConfigRestoreOutputsOptions.DISABLED
 
     case_tmpl_2 = case_tmpl.refine(restore_outputs='auto_ignore_params')
 
@@ -150,7 +150,7 @@ def test_properties_restore_outputs_override_config(
         assert job_obj_3.restore_outputs is RestoreOutputsOptions.FORCE_ENABLE_IGNORE_PARAMS
         assert job_obj_3.will_restore_outputs is RestoreOutputsOptions.FORCE_ENABLE_IGNORE_PARAMS
 
-    runtime.config.job.restore_outputs = 'auto_ignore_params'
+    runtime.config.job.output_storage.restore_outputs = 'auto_ignore_params'
 
     for job_obj in case_tmpl, case_tmpl.apply():
         assert job_obj.restore_outputs is RestoreOutputsOptions.FOLLOW_CONFIG

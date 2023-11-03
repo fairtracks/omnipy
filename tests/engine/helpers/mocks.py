@@ -10,8 +10,9 @@ from slugify import slugify
 
 from omnipy.api.enums import RunState
 from omnipy.api.protocols.private.compute.job import IsJob
-from omnipy.api.protocols.private.engine import IsEngine, IsEngineConfig
+from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.public.compute import IsDagFlow, IsFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.api.protocols.public.config import IsEngineConfig
 from omnipy.api.types import GeneralDecorator
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,

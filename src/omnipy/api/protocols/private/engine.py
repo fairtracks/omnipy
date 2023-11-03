@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional, Protocol, runtime_checkable, Type
 
 from omnipy.api.protocols.private.log import IsRunStateRegistry
+from omnipy.api.protocols.public.config import IsEngineConfig
 
 
 @runtime_checkable
@@ -20,8 +21,3 @@ class IsEngine(Protocol):
 
     def set_registry(self, registry: Optional[IsRunStateRegistry]) -> None:
         ...
-
-
-class IsEngineConfig(Protocol):
-    """"""
-    ...

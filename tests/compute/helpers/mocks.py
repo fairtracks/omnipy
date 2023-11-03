@@ -7,9 +7,10 @@ from omnipy.api.protocols.private.compute.job import (IsFuncArgJob,
                                                       IsFuncArgJobTemplate,
                                                       IsJob,
                                                       IsJobTemplate)
-from omnipy.api.protocols.private.engine import IsEngine, IsEngineConfig
+from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.private.log import IsRunStateRegistry
 from omnipy.api.protocols.public.compute import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.api.protocols.public.config import IsEngineConfig
 from omnipy.api.protocols.public.engine import IsTaskRunnerEngine
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin

@@ -10,6 +10,7 @@ import pytest
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.compute.job_creator import JobBaseMeta, JobCreator
 from omnipy.config.root_log import RootLogConfig
+from omnipy.hub.runtime import RuntimeConfig
 
 
 @pytest.fixture(scope='function')
@@ -53,7 +54,8 @@ def runtime(
 ) -> Generator[IsRuntime, None, None]:
     runtime = runtime_cls()
 
-    runtime.config.job.persist_data_dir_path = os.path.join(tmp_dir_path, 'data')
+    runtime.config.job.output_storage.local.persist_data_dir_path = os.path.join(
+        tmp_dir_path, 'outputs')
     runtime.config.root_log.file_log_dir_path = os.path.join(tmp_dir_path, 'logs')
 
     yield runtime

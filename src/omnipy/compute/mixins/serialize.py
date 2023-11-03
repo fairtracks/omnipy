@@ -92,7 +92,7 @@ class SerializerFuncJobBaseMixin:
             from omnipy.compute.flow import FlowBase
             from omnipy.compute.task import TaskBase
 
-            config_persist_opt = self._job_config.persist_outputs
+            config_persist_opt = self._job_config.output_storage.persist_outputs
 
             if config_persist_opt == ConfigPersistOpts.ENABLE_FLOW_OUTPUTS:
                 return PersistOpts.ENABLED if isinstance(self, FlowBase) else PersistOpts.DISABLED
@@ -110,7 +110,7 @@ class SerializerFuncJobBaseMixin:
             return self._restore_outputs if self._restore_outputs is not None \
                 else RestoreOpts.DISABLED
         else:
-            config_restore_opt = self._job_config.restore_outputs
+            config_restore_opt = self._job_config.output_storage.restore_outputs
 
             if config_restore_opt == ConfigRestoreOpts.AUTO_ENABLE_IGNORE_PARAMS:
                 return RestoreOpts.AUTO_ENABLE_IGNORE_PARAMS
@@ -146,7 +146,8 @@ class SerializerFuncJobBaseMixin:
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
 
         datetime_str = self._generate_datetime_str()
-        output_path = Path(self._job_config.persist_data_dir_path).joinpath(datetime_str)
+        output_path = Path(
+            self._job_config.output_storage.local.persist_data_dir_path).joinpath(datetime_str)
 
         if not os.path.exists(output_path):
             os.makedirs(output_path)
@@ -199,7 +200,7 @@ class SerializerFuncJobBaseMixin:
 
     # TODO: Further refactor _deserialize_and_restore_outputs
     def _deserialize_and_restore_outputs(self) -> Dataset:
-        persist_data_dir_path = Path(self._job_config.persist_data_dir_path)
+        persist_data_dir_path = Path(self._job_config.output_storage.local.persist_data_dir_path)
         if os.path.exists(persist_data_dir_path):
             for tar_file_path in self._all_job_output_file_paths_in_reverse_order_for_last_run(
                     persist_data_dir_path, self._job_name()):

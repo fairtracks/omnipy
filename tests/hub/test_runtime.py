@@ -34,12 +34,17 @@ def _assert_runtime_config_default(config: RuntimeConfig, dir_path: str):
     assert isinstance(config.local, LocalRunnerConfig)
     assert isinstance(config.prefect, PrefectEngineConfig)
 
-    assert config.job.persist_outputs == \
+    assert config.job.output_storage.persist_outputs == \
            ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
-    assert config.job.restore_outputs == \
+    assert config.job.output_storage.restore_outputs == \
            ConfigRestoreOutputsOptions.DISABLED
-    assert config.job.persist_data_dir_path == \
-           os.path.join(dir_path, 'data')
+    assert config.job.output_storage.local.persist_data_dir_path == \
+           os.path.join(dir_path, 'outputs')
+    assert config.job.output_storage.s3.persist_data_dir_path == os.path.join('omnipy', 'outputs')
+    assert config.job.output_storage.s3.endpoint_url == ''
+    assert config.job.output_storage.s3.bucket_name == ''
+    assert config.job.output_storage.s3.access_key == ''
+    assert config.job.output_storage.s3.secret_key == ''
     assert config.engine == EngineChoice.LOCAL
     assert config.prefect.use_cached_results is False
 

@@ -3,9 +3,10 @@ from typing import Any
 
 from omnipy.api.enums import EngineChoice
 from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
-from omnipy.api.protocols.private.engine import IsEngine, IsEngineConfig
+from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.private.log import IsRunStateRegistry
-from omnipy.api.protocols.public.config import (IsJobConfig,
+from omnipy.api.protocols.public.config import (IsEngineConfig,
+                                                IsJobConfig,
                                                 IsLocalRunnerConfig,
                                                 IsPrefectEngineConfig,
                                                 IsRootLogConfig)

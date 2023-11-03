@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from omnipy.api.protocols.private.config import IsJobConfigBase
-from omnipy.api.protocols.private.engine import IsEngineConfig
+from omnipy.api.enums import ConfigPersistOutputsOptions, ConfigRestoreOutputsOptions
 from omnipy.api.types import LocaleType
+
+
+class IsEngineConfig(Protocol):
+    """"""
+    ...
 
 
 class IsLocalRunnerConfig(IsEngineConfig, Protocol):
@@ -17,9 +21,9 @@ class IsPrefectEngineConfig(IsEngineConfig, Protocol):
     use_cached_results: int = False
 
 
-class IsJobConfig(IsJobConfigBase, Protocol):
+class IsJobConfig(Protocol):
     """"""
-    ...
+    output_storage: IsOutputStorage
 
 
 class IsRootLogConfig(Protocol):
@@ -33,3 +37,25 @@ class IsRootLogConfig(Protocol):
     stderr_log_min_level: int
     file_log_min_level: int
     file_log_dir_path: str
+
+
+class IsOutputStorageBase(Protocol):
+    persist_data_dir_path: str
+
+
+class IsLocalOutputStorage(IsOutputStorageBase, Protocol):
+    ...
+
+
+class IsS3OutputStorage(IsOutputStorageBase, Protocol):
+    endpoint_url: str
+    access_key: str
+    secret_key: str
+    bucket_name: str
+
+
+class IsOutputStorage(Protocol):
+    persist_outputs: ConfigPersistOutputsOptions
+    restore_outputs: ConfigRestoreOutputsOptions
+    local: IsLocalOutputStorage
+    s3: IsS3OutputStorage
