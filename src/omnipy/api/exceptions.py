@@ -1,5 +1,7 @@
 import omnipy.util.pydantic as pyd
 
+__all__ = ['JobStateException']
+
 
 class JobStateException(Exception):
     ...

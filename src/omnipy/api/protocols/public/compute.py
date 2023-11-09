@@ -6,12 +6,16 @@ from omnipy.api.protocols.private.compute.job import (IsFuncArgJob,
                                                       IsTaskTemplateArgsJob,
                                                       IsTaskTemplateArgsJobTemplate)
 from omnipy.api.protocols.private.compute.mixins import IsNestedContext
+from omnipy.util.decorators import export
+
+__all__ = []
 
 CallP = ParamSpec('CallP')
 RetT = TypeVar('RetT')
 RetCovT = TypeVar('RetCovT', covariant=True)
 
 
+@export
 class IsTaskTemplate(IsFuncArgJobTemplate['IsTaskTemplate[CallP, RetT]',
                                           'IsTask[CallP, RetT]',
                                           CallP,

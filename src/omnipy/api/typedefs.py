@@ -4,6 +4,8 @@ from typing import _LiteralGenericAlias  # type: ignore[attr-defined]
 from typing import _UnionGenericAlias  # type: ignore[attr-defined]
 from typing import _SpecialForm, Callable, ForwardRef, TypeAlias, TypeVar
 
+__all__: list[str] = []
+
 GeneralDecorator = Callable[[Callable], Callable]
 LocaleType: TypeAlias = str | tuple[str | None, str | None]
 

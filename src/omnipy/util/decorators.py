@@ -1,4 +1,5 @@
 from contextlib import AbstractContextManager
+import inspect
 from typing import Any, Callable, Concatenate, ContextManager, Generic, ParamSpec, TypeVar
 
 _DecoratedP = ParamSpec('_DecoratedP')
@@ -108,3 +109,19 @@ def call_super_if_available(call_super_before_method: bool):
                 return method(self._calling_obj_or_cls, arg)
 
     return SuperCaller
+
+
+"""
+Simple decorator for self-registering classes and functions as exported (in `__all__`).
+
+Adapted from https://stackoverflow.com/a/35710527
+"""
+
+
+def export(cls_or_fn):
+    module = inspect.getmodule(cls_or_fn)
+    if hasattr(module, '__all__'):
+        module.__all__.append(cls_or_fn.__name__)
+    else:
+        module.__all__ = [cls_or_fn.__name__]
+    return cls_or_fn
