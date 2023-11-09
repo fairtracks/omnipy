@@ -6,13 +6,18 @@ from isort import place_module
 from isort.sections import STDLIB
 # from orjson import orjson
 from pydantic import Protocol as pydantic_protocol
-from pydantic import root_validator
-from pydantic.fields import ModelField, Undefined, UndefinedType
-from pydantic.generics import GenericModel
+from pydantic import root_validator as pydantic_root_validator
+from pydantic.fields import ModelField as PydanticModelField
+from pydantic.fields import Undefined as PydanticUndefined
+from pydantic.fields import UndefinedType as PydanticUndefinedType
+from pydantic.generics import GenericModel as PydanticGenericModel
 from pydantic.typing import display_as_type
 
 RootT = TypeVar('RootT')
 ROOT_KEY = '__root__'
+
+Undefined = PydanticUndefined
+UndefinedType = PydanticUndefinedType
 
 # def orjson_dumps(v, *, default):
 #     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
@@ -20,14 +25,17 @@ ROOT_KEY = '__root__'
 
 
 def generate_qualname(cls_name: str, model: Any) -> str:
-    m_module = model.__module__ if hasattr(model, '__module__') else ''
-    m_module_prefix = f'{m_module}.' \
-        if m_module and place_module(m_module) != STDLIB else ''
-    fully_qual_model_name = f'{m_module_prefix}{display_as_type(model)}'
+    if isinstance(model, str):  # ForwardRef
+        fully_qual_model_name = model
+    else:
+        m_module = model.__module__ if hasattr(model, '__module__') else ''
+        m_module_prefix = f'{m_module}.' \
+            if m_module and place_module(m_module) != STDLIB else ''
+        fully_qual_model_name = f'{m_module_prefix}{display_as_type(model)}'
     return f'{cls_name}[{fully_qual_model_name}]'
 
 
-class Model(GenericModel, Generic[RootT]):
+class Model(PydanticGenericModel, Generic[RootT]):
     """
     A data model containing a value parsed according to the model.
 
@@ -111,7 +119,7 @@ class Model(GenericModel, Generic[RootT]):
         else:
             cls.__config__.fields[ROOT_KEY] = {'default_factory': get_default_val}
 
-        data_field = ModelField.infer(
+        data_field = PydanticModelField.infer(
             name=ROOT_KEY,
             value=Undefined,
             annotation=model,
@@ -153,7 +161,10 @@ class Model(GenericModel, Generic[RootT]):
         if cls == Model:
             cls._depopulate_root_field()
 
-        created_model.__qualname__ = generate_qualname(cls.__name__, model)
+        created_model.__qualname__ = generate_qualname(cls.__qualname__, model)
+        if isinstance(model, str):  # ForwardRef
+            created_model.__name__ = f'{cls.__name__}[{model}]'
+        created_model.__module__ = cls.__module__
 
         return created_model
 
@@ -213,7 +224,7 @@ class Model(GenericModel, Generic[RootT]):
     def _parse_data(cls, data: RootT) -> Any:
         return data
 
-    @root_validator
+    @pydantic_root_validator
     def _parse_root_object(cls, root_obj: RootT) -> Any:  # noqa
         if ROOT_KEY not in root_obj:
             return root_obj
@@ -289,7 +300,7 @@ class Model(GenericModel, Generic[RootT]):
                             '\t"class MyNumberList(Model[List[int]]): ..."')
 
     def __setattr__(self, attr: str, value: Any) -> None:
-        if attr in self.__dict__ and attr not in [ROOT_KEY]:
+        if attr in ['__module__'] + list(self.__dict__.keys()) and attr not in [ROOT_KEY]:
             super().__setattr__(attr, value)
         else:
             if attr in ['contents']:
@@ -298,6 +309,9 @@ class Model(GenericModel, Generic[RootT]):
             else:
                 raise RuntimeError('Model does not allow setting of extra attributes')
 
-    # TODO: Update Dataset.__eq__ similarly, with tests
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and super().__eq__(other)
+
+    def __repr__(self) -> str:
+        super_repr = super().__repr__()
+        return super_repr.replace(f'{ROOT_KEY}=', '')
