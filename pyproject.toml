@@ -35,6 +35,9 @@ typing-inspect = "^0.8.0"
 #orjson = "^3.8.0"
 #python-slugify = "^7.0.0"
 isort = "^5.12.0"
+boto3 = "^1.28.75"
+moto = "^4.2.7"
+whyqd = "^1.0.8"
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"

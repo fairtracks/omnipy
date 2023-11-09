@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from functools import update_wrapper
+import inspect
 from types import MethodWrapperType
 from typing import Callable, cast, Type
 
@@ -101,3 +104,19 @@ def callable_decorator_cls(  # noqa: C901
     setattr(cls, '__new__', _new_wrapper)
 
     return cast(IsCallableClass[DecoratorClassT], cls)
+
+
+"""
+Simple decorator for self-registering classes and functions as exported (in `__all__`).
+
+Adapted from https://stackoverflow.com/a/35710527
+"""
+
+
+def export(cls_or_fn):
+    module = inspect.getmodule(cls_or_fn)
+    if hasattr(module, '__all__'):
+        module.__all__.append(cls_or_fn.__name__)
+    else:
+        module.__all__ = [cls_or_fn.__name__]
+    return cls_or_fn

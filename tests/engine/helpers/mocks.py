@@ -19,7 +19,7 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
 from omnipy.modules.prefect import generate_slug
-from omnipy.util.callable_decorator import callable_decorator_cls
+from omnipy.util.decorators import callable_decorator_cls
 
 
 class MockJobCreator:

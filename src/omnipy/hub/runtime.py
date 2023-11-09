@@ -9,8 +9,9 @@ from omnipy.api.protocols.public.config import (IsEngineConfig,
                                                 IsJobConfig,
                                                 IsLocalRunnerConfig,
                                                 IsPrefectEngineConfig,
-                                                IsRootLogConfig)
-from omnipy.api.protocols.public.hub import IsRootLogObjects, IsRuntimeConfig, IsRuntimeObjects
+                                                IsRootLogConfig,
+                                                IsRuntimeConfig)
+from omnipy.api.protocols.public.hub import IsRootLogObjects, IsRuntimeObjects
 from omnipy.compute.job import JobBase
 from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import JobConfig

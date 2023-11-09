@@ -4,44 +4,26 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 from typing import Optional, Protocol
 
-from omnipy.api.enums import EngineChoice
 from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
 from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.private.log import IsRunStateRegistry
-from omnipy.api.protocols.public.config import (IsJobConfig,
-                                                IsLocalRunnerConfig,
-                                                IsPrefectEngineConfig,
-                                                IsRootLogConfig)
+from omnipy.api.protocols.public.config import IsRootLogConfig, IsRuntimeConfig
 
 
-class IsRootLogObjects(Protocol):
+class IsRuntime(Protocol):
     """"""
-    formatter: Optional[logging.Formatter] = None
-    stdout_handler: Optional[logging.StreamHandler] = None
-    stderr_handler: Optional[logging.StreamHandler] = None
-    file_handler: Optional[TimedRotatingFileHandler] = None
-
-    def set_config(self, config: IsRootLogConfig) -> None:
-        ...
-
-
-class IsRuntimeConfig(Protocol):
-    """"""
-    job: IsJobConfig
-    engine: EngineChoice
-    local: IsLocalRunnerConfig
-    prefect: IsPrefectEngineConfig
-    root_log: IsRootLogConfig
+    config: IsRuntimeConfig
+    objects: IsRuntimeObjects
 
     def __init__(
             self,
-            job: Optional[IsJobConfig] = None,  # noqa
-            engine: EngineChoice = EngineChoice.LOCAL,  # noqa
-            local: Optional[IsLocalRunnerConfig] = None,  # noqa
-            prefect: Optional[IsPrefectEngineConfig] = None,  # noqa
-            root_log: Optional[IsRootLogConfigEntryPublisher] = None,  # noqa
+            config: Optional[IsRuntimeConfig] = None,  # noqa
+            objects: Optional[IsRuntimeObjects] = None,  # noqa
             *args: object,
             **kwargs: object) -> None:
+        ...
+
+    def reset_subscriptions(self):
         ...
 
 
@@ -66,18 +48,12 @@ class IsRuntimeObjects(Protocol):
         ...
 
 
-class IsRuntime(Protocol):
+class IsRootLogObjects(Protocol):
     """"""
-    config: IsRuntimeConfig
-    objects: IsRuntimeObjects
+    formatter: Optional[logging.Formatter] = None
+    stdout_handler: Optional[logging.StreamHandler] = None
+    stderr_handler: Optional[logging.StreamHandler] = None
+    file_handler: Optional[TimedRotatingFileHandler] = None
 
-    def __init__(
-            self,
-            config: Optional[IsRuntimeConfig] = None,  # noqa
-            objects: Optional[IsRuntimeObjects] = None,  # noqa
-            *args: object,
-            **kwargs: object) -> None:
-        ...
-
-    def reset_subscriptions(self):
+    def set_config(self, config: IsRootLogConfig) -> None:
         ...

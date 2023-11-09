@@ -8,8 +8,12 @@ from omnipy.api.protocols.private.compute.job import (IsFuncArgJob,
                                                       IsTaskTemplateArgsJob,
                                                       IsTaskTemplateArgsJobTemplate)
 from omnipy.api.protocols.private.compute.mixins import IsNestedContext
+from omnipy.util.decorators import export
+
+__all__ = []
 
 
+@export
 class IsTaskTemplate(IsFuncArgJobTemplate['IsTaskTemplate', 'IsTask'], Protocol):
     """
     Loosely coupled type replacement for the :py:class:`~omnipy.compute.task.TaskTemplate` class
