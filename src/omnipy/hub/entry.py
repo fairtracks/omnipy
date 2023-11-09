@@ -1,13 +1,15 @@
-from dataclasses import dataclass, field
+# from dataclasses import dataclass, field
 from typing import Optional
+
+from pydantic import Field
 
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.util.publisher import DataPublisher
 
 
-@dataclass
+# @dataclass
 class RuntimeEntryPublisher(DataPublisher):
-    _back: Optional[IsRuntime] = field(default=None, init=False, repr=False)
+    _back: Optional[IsRuntime] = Field(default=None, init=False, repr=False)
 
     def __setattr__(self, key, value):
         super().__setattr__(key, value)

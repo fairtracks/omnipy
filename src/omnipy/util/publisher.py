@@ -1,16 +1,21 @@
 from collections import defaultdict
-from dataclasses import dataclass, field
+# from dataclasses import dataclass, field
 from typing import Any, Callable, DefaultDict, List
+
+from pydantic import BaseModel, Field
 
 
 def _subscribers_factory():
     return defaultdict(list)
 
 
-@dataclass
-class DataPublisher:
+# @dataclass
+class DataPublisher(BaseModel):
     _subscriptions: DefaultDict[str, List[Callable[[Any], None]]] = \
-        field(default_factory=_subscribers_factory, init=False, repr=False)
+        Field(default_factory=_subscribers_factory, init=False, repr=False)
+
+    class Config:
+        arbitrary_types_allowed = True
 
     def subscribe(self, config_item: str, callback_fun: Callable[[Any], None]):
         if not hasattr(self, config_item):

@@ -1,5 +1,7 @@
-from dataclasses import dataclass, field
+# from dataclasses import dataclass, field
 from typing import Any
+
+from pydantic import Field
 
 from omnipy.api.enums import EngineChoice
 from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
@@ -29,28 +31,31 @@ def _job_creator_factory():
     return JobBase.job_creator
 
 
-@dataclass
+# @dataclass
 class RuntimeConfig(RuntimeEntryPublisher):
-    job: IsJobConfig = field(default_factory=JobConfig)
+    job: IsJobConfig = Field(default_factory=JobConfig)
     engine: EngineChoice = EngineChoice.LOCAL
-    local: IsLocalRunnerConfig = field(default_factory=LocalRunnerConfig)
-    prefect: IsPrefectEngineConfig = field(default_factory=PrefectEngineConfig)
-    root_log: IsRootLogConfig = field(default_factory=RootLogConfigEntryPublisher)
+    local: IsLocalRunnerConfig = Field(default_factory=LocalRunnerConfig)
+    prefect: IsPrefectEngineConfig = Field(default_factory=PrefectEngineConfig)
+    root_log: IsRootLogConfig = Field(default_factory=RootLogConfigEntryPublisher)
 
 
-@dataclass
+# @dataclass
 class RuntimeObjects(RuntimeEntryPublisher):
-    job_creator: IsJobConfigHolder = field(default_factory=_job_creator_factory)
-    local: IsEngine = field(default_factory=LocalRunner)
-    prefect: IsEngine = field(default_factory=PrefectEngine)
-    registry: IsRunStateRegistry = field(default_factory=RunStateRegistry)
-    root_log: IsRootLogObjects = field(default_factory=RootLogObjects)
+    job_creator: IsJobConfigHolder = Field(default_factory=_job_creator_factory)
+    local: IsEngine = Field(default_factory=LocalRunner)
+    prefect: IsEngine = Field(default_factory=PrefectEngine)
+    registry: IsRunStateRegistry = Field(default_factory=RunStateRegistry)
+    root_log: IsRootLogObjects = Field(default_factory=RootLogObjects)
 
 
-@dataclass
+# TODO: Add automatic parsing of config values when setting to string values
+
+
+# @dataclass
 class Runtime(DataPublisher):
-    config: IsRuntimeConfig = field(default_factory=RuntimeConfig)
-    objects: IsRuntimeObjects = field(default_factory=RuntimeObjects)
+    config: IsRuntimeConfig = Field(default_factory=RuntimeConfig)
+    objects: IsRuntimeObjects = Field(default_factory=RuntimeObjects)
 
     def __post_init__(self):
         super().__init__()

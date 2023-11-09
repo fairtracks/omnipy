@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
                               ConfigPersistOutputsOptions,
@@ -8,26 +8,31 @@ from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
 from omnipy.api.types import LocaleType
 
 
+@runtime_checkable
 class IsEngineConfig(Protocol):
     """"""
     ...
 
 
+@runtime_checkable
 class IsLocalRunnerConfig(IsEngineConfig, Protocol):
     """"""
     ...
 
 
+@runtime_checkable
 class IsPrefectEngineConfig(IsEngineConfig, Protocol):
     """"""
     use_cached_results: int = False
 
 
+@runtime_checkable
 class IsJobConfig(Protocol):
     """"""
     output_storage: IsOutputStorage
 
 
+@runtime_checkable
 class IsRootLogConfig(Protocol):
     """"""
     log_format_str: str
@@ -41,6 +46,7 @@ class IsRootLogConfig(Protocol):
     file_log_dir_path: str
 
 
+@runtime_checkable
 class IsOutputStorageBase(Protocol):
     persist_data_dir_path: str
 

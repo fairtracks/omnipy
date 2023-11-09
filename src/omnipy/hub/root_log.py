@@ -13,12 +13,12 @@ from omnipy.hub.entry import RuntimeEntryPublisher
 from omnipy.util.helpers import get_datetime_format
 
 
-@dataclass
+# @dataclass
 class RootLogConfigEntryPublisher(RootLogConfig, RuntimeEntryPublisher):
     ...
 
 
-@dataclass
+# @dataclass
 class RootLogObjects:
     _config: IsRootLogConfig = field(
         init=False, repr=False, default_factory=RootLogConfigEntryPublisher)

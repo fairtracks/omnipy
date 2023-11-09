@@ -1,16 +1,18 @@
-from dataclasses import dataclass
+# from dataclasses import dataclass
+
+from pydantic import BaseModel
 
 
-@dataclass
-class EngineConfig:
+# @dataclass
+class EngineConfig(BaseModel):
     ...
 
 
-@dataclass
+# @dataclass
 class LocalRunnerConfig(EngineConfig):
     ...
 
 
-@dataclass
+# @dataclass
 class PrefectEngineConfig(EngineConfig):
     use_cached_results: int = False

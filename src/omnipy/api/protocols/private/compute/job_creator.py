@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Protocol
+from typing import Optional, Protocol, runtime_checkable
 
 from omnipy.api.protocols.private.compute.mixins import IsNestedContext
 from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.public.config import IsJobConfig
 
 
+@runtime_checkable
 class IsJobConfigHolder(Protocol):
     """"""
     @property
@@ -25,6 +26,7 @@ class IsJobConfigHolder(Protocol):
         ...
 
 
+@runtime_checkable
 class IsJobCreator(IsNestedContext, IsJobConfigHolder, Protocol):
     """"""
     @property

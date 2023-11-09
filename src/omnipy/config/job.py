@@ -1,7 +1,9 @@
-from dataclasses import dataclass, field
+# from dataclasses import field
 import os
 # from datetime import datetime
 from pathlib import Path
+
+from pydantic import BaseModel, Field
 
 from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
                               ConfigPersistOutputsOptions,
@@ -17,12 +19,12 @@ def _get_persist_data_dir_path() -> str:
     return str(Path.cwd().joinpath(Path('outputs')))
 
 
-@dataclass
+# @dataclass
 class LocalOutputStorage:
-    persist_data_dir_path: str = field(default_factory=_get_persist_data_dir_path)
+    persist_data_dir_path: str = Field(default_factory=_get_persist_data_dir_path)
 
 
-@dataclass
+# @dataclass
 class S3OutputStorage:
     persist_data_dir_path: str = os.path.join('omnipy', 'outputs')
     endpoint_url: str = ""
@@ -31,17 +33,17 @@ class S3OutputStorage:
     secret_key: str = ""
 
 
-@dataclass
+# @dataclass
 class OutputStorage:
     persist_outputs: ConfigPersistOutputsOptions = \
         ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
     restore_outputs: ConfigRestoreOutputsOptions = \
         ConfigRestoreOutputsOptions.DISABLED
     protocol: ConfigOutputStorageProtocolOptions = ConfigOutputStorageProtocolOptions.LOCAL
-    local: IsLocalOutputStorage = field(default_factory=LocalOutputStorage)
-    s3: IsS3OutputStorage = field(default_factory=S3OutputStorage)
+    local: IsLocalOutputStorage = Field(default_factory=LocalOutputStorage)
+    s3: IsS3OutputStorage = Field(default_factory=S3OutputStorage)
 
 
-@dataclass
-class JobConfig:
-    output_storage: IsOutputStorage = field(default_factory=OutputStorage)
+# @dataclass
+class JobConfig(BaseModel):
+    output_storage: IsOutputStorage = Field(default_factory=OutputStorage)
