@@ -431,6 +431,46 @@ def test_nonetype():
         NoneModel('None')
 
 
+def test_nested_model_classes_none_as_default() -> None:
+    class MaybeNumberModel(Model[Optional[int]]):
+        ...
+
+    class OuterMaybeNumberModel(Model[MaybeNumberModel]):
+        ...
+
+    assert OuterMaybeNumberModel().to_data() is None
+
+
+def test_nested_model_classes_inner_generic_none_as_default() -> None:
+    class MaybeNumberModel(Model[Optional[int]]):
+        ...
+
+    BaseT = TypeVar('BaseT', bound=MaybeNumberModel)
+
+    class BaseModel(Model[BaseT], Generic[BaseT]):
+        ...
+
+    class OuterMaybeNumberModel(BaseModel[MaybeNumberModel]):
+        ...
+
+    assert OuterMaybeNumberModel().to_data() is None
+
+
+def test_nested_model_classes_inner_optional_generic_none_as_default() -> None:
+    class MaybeNumberModel(Model[Optional[int]]):
+        ...
+
+    BaseT = TypeVar('BaseT', bound=Optional[MaybeNumberModel])
+
+    class BaseModel(Model[BaseT], Generic[BaseT]):
+        ...
+
+    class OuterMaybeNumberModel(BaseModel[MaybeNumberModel]):
+        ...
+
+    assert OuterMaybeNumberModel().to_data() is None
+
+
 def test_import_export_methods():
     assert Model[int](12).to_data() == 12
     assert Model[str]('test').to_data() == 'test'

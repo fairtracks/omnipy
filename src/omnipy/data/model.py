@@ -146,6 +146,8 @@ class Model(GenericModel, Generic[RootT]):
 
         created_model = super().__class_getitem__(model)
 
+        cls._propagate_allow_none_from_model(model, created_model)
+
         # As long as models are not created concurrently, setting the class members temporarily
         # should not have averse effects
         # TODO: Check if we can move to explicit definition of __root__ field at the object
@@ -156,6 +158,12 @@ class Model(GenericModel, Generic[RootT]):
         created_model.__qualname__ = generate_qualname(cls.__name__, model)
 
         return created_model
+
+    @classmethod
+    def _propagate_allow_none_from_model(cls, model, created_model):
+        if (inspect.isclass(model) and issubclass(model, Model) and
+                model.__fields__[ROOT_KEY].allow_none):
+            created_model.__fields__[ROOT_KEY].allow_none = True
 
     def __new__(cls, value: Union[RootT, UndefinedType] = Undefined, **kwargs):
         model_not_specified = ROOT_KEY not in cls.__fields__
