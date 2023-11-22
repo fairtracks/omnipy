@@ -94,7 +94,7 @@ def case_sync_data_import_func() -> TaskCase[[], str]:
 
     def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):
         assert task_obj.param_signatures == {}
-        assert task_obj.return_type is str
+        assert task_obj.return_type == str
 
     return TaskCase(
         task_func=data_import_func,
@@ -118,7 +118,7 @@ def case_sync_format_to_string_func() -> TaskCase[[str, int], str]:
             'text': Parameter('text', Parameter.POSITIONAL_OR_KEYWORD, annotation=str),
             'number': Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
         }
-        assert task_obj.return_type is str
+        assert task_obj.return_type == str
 
     return TaskCase(
         task_func=format_to_string_func,
@@ -151,7 +151,7 @@ def case_sync_power_m1_func() -> TaskCase[[int, int, bool], int]:
                     default=True,
                 )
         }
-        assert task_obj.return_type is int
+        assert task_obj.return_type == int
 
     return TaskCase(
         task_func=power_m1_func,
@@ -172,7 +172,7 @@ def case_sync_empty_dict_fun() -> TaskCase[[], Dict]:
 
     def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):
         assert task_obj.param_signatures == {}
-        assert task_obj.return_type is Dict
+        assert task_obj.return_type == Dict
 
     return TaskCase(
         task_func=empty_dict_func,
@@ -195,7 +195,7 @@ def case_sync_plus_one_dict_func() -> TaskCase[[int], Dict[str, int]]:
         assert task_obj.param_signatures == {
             'number': Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
         }
-        assert task_obj.return_type is Dict[str, int]
+        assert task_obj.return_type == Dict[str, int]
 
     return TaskCase(
         task_func=plus_one_dict_func,
@@ -218,7 +218,7 @@ def case_sync_dict_of_squared_fun() -> TaskCase[[int], Dict[int, int]]:
         assert task_obj.param_signatures == {
             'number': Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
         }
-        assert task_obj.return_type is Dict[int, int]
+        assert task_obj.return_type == Dict[int, int]
 
     return TaskCase(
         task_func=dict_of_squared_func,
