@@ -1,3 +1,4 @@
+import inspect
 import json
 from types import NoneType
 from typing import Any, Dict, Generic, get_args, get_origin, Type, TypeVar, Union
@@ -159,8 +160,18 @@ class Model(GenericModel, Generic[RootT]):
 
         return created_model
 
+    # Partial workaround of https://github.com/pydantic/pydantic/issues/3836, together with
+    # _parse_none_value_with_root_type_if_model(). See series of relevant tests in test_model.py
+    # starting with test_nested_model_classes_none_as_default().
+    #
+    # TODO: Revisit Model._propagate_allow_none_from_model() and
+    #       Model._parse_none_value_with_root_type_if_model with pydantic v2
     @classmethod
     def _propagate_allow_none_from_model(cls, model, created_model):
+        if get_origin(model) is Union:
+            for arg in get_args(model):
+                cls._propagate_allow_none_from_model(arg, created_model)
+
         if (inspect.isclass(model) and issubclass(model, Model) and
                 model.__fields__[ROOT_KEY].allow_none):
             created_model.__fields__[ROOT_KEY].allow_none = True
@@ -222,11 +233,35 @@ class Model(GenericModel, Generic[RootT]):
         return data
 
     @root_validator
-    def _parse_root_object(cls, root_obj: RootT) -> Any:  # noqa
-        if ROOT_KEY not in root_obj:
-            return root_obj
-        else:
-            return {ROOT_KEY: cls._parse_data(root_obj[ROOT_KEY])}
+    def _parse_root_object(cls, root_obj: Dict[str, RootT]) -> Any:  # noqa
+        assert ROOT_KEY in root_obj
+        value = root_obj[ROOT_KEY]
+        value = cls._parse_none_value_with_root_type_if_model(value)
+        return {ROOT_KEY: cls._parse_data(value)}
+
+    # Partial workaround of https://github.com/pydantic/pydantic/issues/3836, together with
+    # _propagate_allow_none_from_model().  See series of relevant tests in test_model.py
+    # starting with test_nested_model_classes_none_as_default().
+    @classmethod
+    def _parse_none_value_with_root_type_if_model(cls, value):
+        root_type = cls.__fields__.get(ROOT_KEY).type_
+        if value is None:
+            value = cls._parse_with_root_type_if_model(value, root_type)
+        return value
+
+    @classmethod
+    def _parse_with_root_type_if_model(cls, value: Any, root_type: Type) -> Any:
+        if get_origin(root_type) is Union:
+            for arg in get_args(root_type):
+                return cls._parse_with_root_type_if_model(value, arg)
+
+        if inspect.isclass(root_type) and issubclass(root_type, Model):
+            try:
+                return root_type.parse_obj(value)
+            except ValidationError:
+                ...
+
+        return value
 
     @property
     def contents(self) -> Any:

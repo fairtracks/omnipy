@@ -1,6 +1,6 @@
 import os
 from types import NoneType
-from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeAlias, TypeVar, Union
 
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
@@ -431,6 +431,8 @@ def test_nonetype():
         NoneModel('None')
 
 
+# Simpler working test added to illustrate more complex fails related to pydantic issue:
+# https://github.com/pydantic/pydantic/issues/3836
 def test_nested_model_classes_none_as_default() -> None:
     class MaybeNumberModel(Model[Optional[int]]):
         ...
@@ -438,9 +440,11 @@ def test_nested_model_classes_none_as_default() -> None:
     class OuterMaybeNumberModel(Model[MaybeNumberModel]):
         ...
 
-    assert OuterMaybeNumberModel().to_data() is None
+    assert OuterMaybeNumberModel().contents == MaybeNumberModel(None)
 
 
+# Simpler working test added to illustrate more complex fails related to pydantic issue:
+# https://github.com/pydantic/pydantic/issues/3836
 def test_nested_model_classes_inner_generic_none_as_default() -> None:
     class MaybeNumberModel(Model[Optional[int]]):
         ...
@@ -453,9 +457,13 @@ def test_nested_model_classes_inner_generic_none_as_default() -> None:
     class OuterMaybeNumberModel(BaseModel[MaybeNumberModel]):
         ...
 
-    assert OuterMaybeNumberModel().to_data() is None
+    assert OuterMaybeNumberModel().contents == MaybeNumberModel(None)
 
 
+# First failing test of the more complex scenarios related to pydantic issue:
+# https://github.com/pydantic/pydantic/issues/3836
+# Partial workaround in methods Model._propagate_allow_none_from_model() and
+# Model._parse_none_value_with_root_type_if_model() fixed this test
 def test_nested_model_classes_inner_optional_generic_none_as_default() -> None:
     class MaybeNumberModel(Model[Optional[int]]):
         ...
@@ -468,7 +476,99 @@ def test_nested_model_classes_inner_optional_generic_none_as_default() -> None:
     class OuterMaybeNumberModel(BaseModel[MaybeNumberModel]):
         ...
 
-    assert OuterMaybeNumberModel().to_data() is None
+    assert OuterMaybeNumberModel().contents == MaybeNumberModel(None)
+
+
+# Second failing test of the more complex scenarios related to pydantic issue:
+# https://github.com/pydantic/pydantic/issues/3836
+# Partial workaround in methods Model._propagate_allow_none_from_model() and
+# Model._parse_none_value_with_root_type_if_model() fixed this test
+def test_union_nested_model_classes_inner_optional_generic_none_as_default() -> None:
+    class MaybeNumberModel(Model[Optional[int]]):
+        ...
+
+    class MaybeStringModel(Model[Optional[str]]):
+        ...
+
+    BaseT = TypeVar('BaseT', bound=Optional[Union[MaybeNumberModel, MaybeStringModel]])
+
+    class BaseModel(Model[BaseT], Generic[BaseT]):
+        ...
+
+    class OuterMaybeNumberModel(BaseModel[Union[MaybeNumberModel, MaybeStringModel]]):
+        ...
+
+    assert OuterMaybeNumberModel().contents == MaybeNumberModel(None)
+
+
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason="""
+Known issue described here: https://github.com/pydantic/pydantic/issues/3836
+One workaround is to add an Optional to ListModel, however this excludes MaybeNumberModel 
+from holding the None (similarly for JsonScalarModel).
+
+TODO: Check if test_union_nested_model_classes_inner_forwardref_generic_list_of_none() and 
+      test_union_nested_model_classes_inner_forwardref_double_generic_none_as_default() are fixed
+      by Pydantic v2
+""")
+def test_union_nested_model_classes_inner_forwardref_generic_list_of_none() -> None:
+    BaseT = TypeVar('BaseT', bound=Union['ListModel', 'MaybeNumberModel'])
+
+    class MaybeNumberModel(Model[Optional[int]]):
+        ...
+
+    class GenericListModel(Model[List[BaseT]], Generic[BaseT]):
+        ...
+
+    class ListModel(GenericListModel['FullModel']):
+        ...
+
+    # # Possible workaround
+    # class ListModel(GenericListModel[Optional['FullModel']]):
+    #     ...
+
+    FullModel: TypeAlias = Union[ListModel, MaybeNumberModel]
+
+    ListModel.update_forward_refs(FullModel=FullModel)
+
+    assert ListModel().contents == []
+    assert ListModel([None]).contents == [MaybeNumberModel(None)]
+    # # Workaround results
+    # assert ListModel([None]).contents == [None]
+
+
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason="""
+Known issue that popped up in omnipy.modules.json.models. Might be solved by pydantic v2.
+Dropping JsonBaseModel (here: BaseModel) is one workaround as it (in contrast to JsonBaseDataset)
+does not seem to be needed.
+""")
+def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_default() -> None:
+    MaybeNumber: TypeAlias = Optional[int]
+
+    BaseT = TypeVar('BaseT', bound=Union[List, 'FullModel', MaybeNumber])
+
+    class BaseModel(Model[BaseT], Generic[BaseT]):
+        ...
+
+    class MaybeNumberModel(BaseModel[MaybeNumber]):
+        ...
+
+    # Problem is here. Default value of List[BaseT] is [], while default value of
+    # BaseModel[List[BaseT]] is None
+    class GenericListModel(BaseModel[List[BaseT]], Generic[BaseT]):
+        ...
+
+    class ListModel(GenericListModel['FullModel']):
+        ...
+
+    FullModel: TypeAlias = Union[ListModel, MaybeNumberModel]
+
+    ListModel.update_forward_refs(FullModel=FullModel)
+
+    assert ListModel().contents == []
 
 
 def test_import_export_methods():
