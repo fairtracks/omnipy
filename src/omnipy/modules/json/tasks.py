@@ -11,10 +11,10 @@ from .datasets import (JsonDataset,
                        JsonListOfDictsOfAnyDataset,
                        JsonListOfDictsOfScalarsDataset)
 from .functions import flatten_outer_level_of_nested_record
-from .types import (JsonDictOfListsOfDictsOfAny,
-                    JsonDictOfScalars,
-                    JsonListOfDictsOfAny,
-                    JsonListOfDictsOfScalars)
+from .typedefs import (JsonDictOfListsOfDicts,
+                       JsonDictOfScalars,
+                       JsonListOfDicts,
+                       JsonListOfDictsOfScalars)
 
 ID_KEY = '_omnipy_id'
 REF_KEY = '_omnipy_ref'
@@ -61,20 +61,20 @@ def flatten_outer_level_of_all_data_files(
 
     data_files_of_scalar_records: defaultdict[str, JsonListOfDictsOfScalars] = \
         defaultdict(JsonListOfDictsOfScalars)
-    data_files_of_any: defaultdict[str, JsonListOfDictsOfAny] = defaultdict(JsonListOfDictsOfAny)
+    data_files_of_any: defaultdict[str, JsonListOfDicts] = defaultdict(JsonListOfDicts)
 
-    dataset_as_data: JsonDictOfListsOfDictsOfAny = \
-        cast(JsonDictOfListsOfDictsOfAny, dataset.to_data())
+    dataset_as_data: JsonDictOfListsOfDicts = \
+        cast(JsonDictOfListsOfDicts, dataset.to_data())
 
     for data_file_title, item in dataset_as_data.items():
-        data_file: JsonListOfDictsOfAny = item
+        data_file: JsonListOfDicts = item
 
         if len(data_file) == 0:
             data_files_of_scalar_records[data_file_title] = JsonListOfDictsOfScalars()
 
         for record_id, nested_record in enumerate(data_file):
             record_of_scalars: JsonDictOfScalars
-            new_data_files_of_any: JsonDictOfListsOfDictsOfAny
+            new_data_files_of_any: JsonDictOfListsOfDicts
             record_of_scalars, new_data_files_of_any = flatten_outer_level_of_nested_record(
                 nested_record,
                 str(record_id),
@@ -85,7 +85,7 @@ def flatten_outer_level_of_all_data_files(
             )
 
             new_data_file_title: str
-            new_data_file_of_any: JsonListOfDictsOfAny
+            new_data_file_of_any: JsonListOfDicts
             for new_data_file_title, new_data_file_of_any in new_data_files_of_any.items():
                 data_files_of_any[new_data_file_title] += new_data_file_of_any
             data_files_of_scalar_records[data_file_title].append(record_of_scalars)

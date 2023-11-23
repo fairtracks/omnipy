@@ -8,7 +8,7 @@ from omnipy.modules.json.models import (JsonDictModel,
                                         JsonListModel,
                                         JsonModel,
                                         JsonSubModel)
-from omnipy.modules.json.types import JsonScalar
+from omnipy.modules.json.typedefs import JsonScalar
 
 
 def test_json_dataset():

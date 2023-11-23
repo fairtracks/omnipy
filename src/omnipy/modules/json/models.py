@@ -4,7 +4,7 @@ from typing import Dict, Generic, List, Optional, TypeAlias, TypeVar, Union
 
 from omnipy.data.model import Model
 
-from .types import JsonScalar
+from .typedefs import JsonScalar
 
 # Basic building block models
 
