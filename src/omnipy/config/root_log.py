@@ -3,7 +3,7 @@ import locale as pkg_locale
 import logging
 from pathlib import Path
 
-from omnipy.api.types import LocaleType
+from omnipy.api.typedefs import LocaleType
 
 
 def _get_log_dir_path() -> str:

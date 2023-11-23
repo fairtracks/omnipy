@@ -13,7 +13,7 @@ from omnipy.api.protocols.private.compute.job import IsJob
 from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.public.compute import IsDagFlow, IsFlow, IsFuncFlow, IsLinearFlow, IsTask
 from omnipy.api.protocols.public.config import IsEngineConfig
-from omnipy.api.types import GeneralDecorator
+from omnipy.api.typedefs import GeneralDecorator
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,

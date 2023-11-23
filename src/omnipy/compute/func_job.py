@@ -1,7 +1,7 @@
 import asyncio
 from typing import Callable, Tuple
 
-from omnipy.api.types import GeneralDecorator
+from omnipy.api.typedefs import GeneralDecorator
 from omnipy.compute.job import JobBase
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.iterate import IterateFuncJobBaseMixin

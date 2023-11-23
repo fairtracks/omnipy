@@ -12,7 +12,7 @@ import pytest
 import omnipy
 from omnipy.api.protocols.public.config import IsRootLogConfig
 from omnipy.api.protocols.public.hub import IsRuntime
-from omnipy.api.types import LocaleType
+from omnipy.api.typedefs import LocaleType
 from omnipy.config.root_log import RootLogConfig
 from omnipy.hub.root_log import RootLogObjects
 from omnipy.util.helpers import get_datetime_format

@@ -5,7 +5,7 @@ from typing import Protocol
 from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
                               ConfigPersistOutputsOptions,
                               ConfigRestoreOutputsOptions)
-from omnipy.api.types import LocaleType
+from omnipy.api.typedefs import LocaleType
 
 
 class IsEngineConfig(Protocol):

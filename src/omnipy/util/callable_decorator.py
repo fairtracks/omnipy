@@ -3,7 +3,7 @@ from types import MethodWrapperType
 from typing import Callable, cast, Type
 
 from omnipy.api.protocols.private.util import IsCallableClass, IsCallableParamAfterSelf
-from omnipy.api.types import DecoratorClassT
+from omnipy.api.typedefs import DecoratorClassT
 
 
 def callable_decorator_cls(  # noqa: C901

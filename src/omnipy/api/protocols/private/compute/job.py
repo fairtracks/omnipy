@@ -13,12 +13,12 @@ from omnipy.api.protocols.private.compute.mixins import IsUniquelyNamedJob
 from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.private.log import CanLog
 from omnipy.api.protocols.public.config import IsJobConfig
-from omnipy.api.types import (GeneralDecorator,
-                              JobT,
-                              JobTemplateT,
-                              TaskTemplateContraT,
-                              TaskTemplateCovT,
-                              TaskTemplateT)
+from omnipy.api.typedefs import (GeneralDecorator,
+                                 JobT,
+                                 JobTemplateT,
+                                 TaskTemplateContraT,
+                                 TaskTemplateCovT,
+                                 TaskTemplateT)
 
 
 class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol):
