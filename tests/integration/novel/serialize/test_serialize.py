@@ -56,7 +56,8 @@ def test_properties_persist_outputs_enable_disable(
     case_flow_tmpl,
 ) -> None:
 
-    runtime.config.job.output_storage.persist_outputs = ConfigPersistOutputsOptions.ENABLE_FLOW_OUTPUTS
+    runtime.config.job.output_storage.persist_outputs = (
+        ConfigPersistOutputsOptions.ENABLE_FLOW_OUTPUTS)
 
     for task_obj in case_task_tmpl, case_task_tmpl.apply():
         assert task_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG
@@ -66,8 +67,8 @@ def test_properties_persist_outputs_enable_disable(
         assert flow_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG
         assert flow_obj.will_persist_outputs is PersistOutputsOptions.ENABLED
 
-    runtime.config.job.output_storage.persist_outputs = \
-        ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
+    runtime.config.job.output_storage.persist_outputs = (
+        ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS)
 
     for job_obj in case_task_tmpl, case_task_tmpl.apply(), case_flow_tmpl, case_flow_tmpl.apply():
         assert job_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG

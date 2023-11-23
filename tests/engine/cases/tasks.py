@@ -254,8 +254,8 @@ def case_async_wait_a_bit_multithreaded_threading() -> JobCase[[float], Awaitabl
 def case_async_wait_a_bit_multithreaded_futures() -> JobCase[[float], Awaitable[float]]:
     async def run_and_assert_results(job: IsJob) -> None:
         from omnipy.modules.prefect.engine.prefect import PrefectEngine
-        if (any(_ in job.__class__.__name__ for _ in ['LinearFlow', 'DagFlow']) and
-                check_engine_cls(job, PrefectEngine)):
+        if any(_ in job.__class__.__name__ for _ in ['LinearFlow', 'DagFlow']) \
+                and check_engine_cls(job, PrefectEngine):
             pytest.xfail('Stopped working in some Prefect version between 2.10.10 and 2.13.3.'
                          '(Unclear if the above comment is specific to this test case, as all'
                          'tests in test_all_engines.py were disabled).')

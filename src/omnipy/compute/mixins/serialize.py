@@ -4,7 +4,6 @@ from pathlib import Path
 import tarfile
 from typing import cast, Generator, Optional, Type
 
-from omnipy.api.enums import ConfigOutputStorageProtocolOptions as ConfigProtocolOpts
 from omnipy.api.enums import ConfigPersistOutputsOptions as ConfigPersistOpts
 from omnipy.api.enums import ConfigRestoreOutputsOptions as ConfigRestoreOpts
 from omnipy.api.enums import (OutputStorageProtocolOptions,
@@ -46,7 +45,8 @@ class SerializerFuncJobBaseMixin:
             self._restore_outputs = RestoreOpts(restore_outputs)
 
         if output_storage_protocol is None:
-            self._output_storage_protocol = ProtocolOpts.FOLLOW_CONFIG if self._has_job_config else None
+            self._output_storage_protocol = \
+                ProtocolOpts.FOLLOW_CONFIG if self._has_job_config else None
         else:
             self._output_storage_protocol = ProtocolOpts(output_storage_protocol)
 
@@ -133,7 +133,8 @@ class SerializerFuncJobBaseMixin:
 
     @property
     def output_storage_protocol_to_use(self) -> OutputStorageProtocolOptions:
-        if not self._has_job_config or self._output_storage_protocol is not ProtocolOpts.FOLLOW_CONFIG:
+        if not self._has_job_config \
+                or self._output_storage_protocol is not ProtocolOpts.FOLLOW_CONFIG:
             return self._output_storage_protocol if self._output_storage_protocol is not None \
                 else ProtocolOpts.LOCAL
         else:
