@@ -7,7 +7,7 @@ from typing import Any, cast, Dict, get_args, get_origin, Mapping, Optional, Tup
 
 from typing_inspect import get_generic_bases, is_generic_type
 
-from omnipy.api.types import LocaleType
+from omnipy.api.typedefs import LocaleType
 
 KeyT = TypeVar('KeyT', bound=Hashable)
 

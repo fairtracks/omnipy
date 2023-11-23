@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Callable, Protocol, runtime_checkable
 
-from omnipy.api.types import DecoratorClassT
+from omnipy.api.typedefs import DecoratorClassT
 
 
 @runtime_checkable

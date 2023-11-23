@@ -3,10 +3,10 @@ from typing import Callable, cast, Type
 
 from omnipy.api.protocols.private.compute.job import IsPlainFuncArgJobBase
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
-from omnipy.compute.mixins.mixin_types import (InputDatasetT,
-                                               InputTypeT,
-                                               IsIterateInnerCallable,
-                                               ReturnDatasetT)
+from omnipy.compute.mixins.typedefs import (InputDatasetT,
+                                            InputTypeT,
+                                            IsIterateInnerCallable,
+                                            ReturnDatasetT)
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
