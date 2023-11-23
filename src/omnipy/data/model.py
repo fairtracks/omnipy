@@ -7,7 +7,7 @@ from isort import place_module
 from isort.sections import STDLIB
 # from orjson import orjson
 from pydantic import Protocol as pydantic_protocol
-from pydantic import root_validator
+from pydantic import root_validator, ValidationError
 from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.typing import display_as_type
@@ -172,8 +172,8 @@ class Model(GenericModel, Generic[RootT]):
             for arg in get_args(model):
                 cls._propagate_allow_none_from_model(arg, created_model)
 
-        if (inspect.isclass(model) and issubclass(model, Model) and
-                model.__fields__[ROOT_KEY].allow_none):
+        if inspect.isclass(model) and issubclass(model, Model) \
+                and model.__fields__[ROOT_KEY].allow_none:
             created_model.__fields__[ROOT_KEY].allow_none = True
 
     def __new__(cls, value: Union[RootT, UndefinedType] = Undefined, **kwargs):

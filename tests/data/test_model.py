@@ -505,10 +505,10 @@ def test_union_nested_model_classes_inner_optional_generic_none_as_default() -> 
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason="""
 Known issue described here: https://github.com/pydantic/pydantic/issues/3836
-One workaround is to add an Optional to ListModel, however this excludes MaybeNumberModel 
+One workaround is to add an Optional to ListModel, however this excludes MaybeNumberModel
 from holding the None (similarly for JsonScalarModel).
 
-TODO: Check if test_union_nested_model_classes_inner_forwardref_generic_list_of_none() and 
+TODO: Check if test_union_nested_model_classes_inner_forwardref_generic_list_of_none() and
       test_union_nested_model_classes_inner_forwardref_double_generic_none_as_default() are fixed
       by Pydantic v2
 """)

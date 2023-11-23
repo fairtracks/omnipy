@@ -25,10 +25,10 @@ class LocalOutputStorage:
 @dataclass
 class S3OutputStorage:
     persist_data_dir_path: str = os.path.join('omnipy', 'outputs')
-    endpoint_url: str = ""
-    bucket_name: str = ""
-    access_key: str = ""
-    secret_key: str = ""
+    endpoint_url: str = ''
+    bucket_name: str = ''
+    access_key: str = ''
+    secret_key: str = ''
 
 
 @dataclass

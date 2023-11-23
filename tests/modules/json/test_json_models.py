@@ -26,8 +26,9 @@
 #     # assert Dataset[Model[Dict[str, str]]](test_data)['a'] == JsonDictModel['JsonSubModel']({
 #     #     '123': 2312
 #     # })
-#     assert Dataset[JsonDictModel['JsonSubModel']](test_data)['a'] == JsonDictModel['JsonSubModel']({
-#         '123': 2312
+#     assert Dataset[JsonDictModel['JsonSubModel']](test_data)['a'] == \
+#         JsonDictModel['JsonSubModel']({
+#             '123': 2312
 #     })
 #     assert JsonDictOfAnyDataset(test_data)['a'] == JsonDictModel['JsonSubModel']({'123': 2312})
 #     assert Dataset[Model[Dict[str, int]]](test_data)['a'] == JsonDictModel['JsonSubModel']({

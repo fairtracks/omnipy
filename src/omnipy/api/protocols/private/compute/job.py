@@ -4,8 +4,7 @@ from datetime import datetime
 from types import MappingProxyType
 from typing import Any, Callable, Dict, Mapping, Optional, Protocol, Tuple, Type
 
-from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
-                              OutputStorageProtocolOptions,
+from omnipy.api.enums import (OutputStorageProtocolOptions,
                               PersistOutputsOptions,
                               RestoreOutputsOptions)
 from omnipy.api.protocols.private.compute.job_creator import IsJobCreator
