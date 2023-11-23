@@ -27,4 +27,4 @@ jobs:
       - name: Test with pytest
         run: |
           source $(poetry env info --path)/bin/activate
-          pytest
+          pytest --mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml
