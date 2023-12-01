@@ -19,10 +19,7 @@ from omnipy.engine.local import LocalRunner
 from omnipy.hub.entry import DataPublisher, RuntimeEntryPublisher
 from omnipy.hub.root_log import RootLogConfigEntryPublisher, RootLogObjects
 from omnipy.log.registry import RunStateRegistry
-from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
-from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
 from omnipy.modules.prefect.engine.prefect import PrefectEngine
-from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
 
 
 def _job_creator_factory():
@@ -106,6 +103,10 @@ class Runtime(DataPublisher):
         self.objects.job_creator.set_engine(self._get_engine(self.config.engine))
 
     def _create_serializer_registry(self):
+        from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
+        from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
+        from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
+
         registry = SerializerRegistry()
 
         registry.register(PandasDatasetToTarFileSerializer)
