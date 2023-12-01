@@ -17,9 +17,6 @@ from omnipy.config.job import JobConfig
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import SerializerRegistry
-from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
-from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
-from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
 
 PersistOpts = PersistOutputsOptions
 RestoreOpts = RestoreOutputsOptions
@@ -53,6 +50,10 @@ class SerializerFuncJobBaseMixin:
         self._serializer_registry = self._create_serializer_registry()
 
     def _create_serializer_registry(self):
+        from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
+        from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
+        from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
+
         # TODO: store in runtime, to remove dependencies
         registry = SerializerRegistry()
 
