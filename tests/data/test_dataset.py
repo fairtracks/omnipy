@@ -298,8 +298,11 @@ def test_complex_models():
     # and `typing.get_origin(List)() == []`.
 
     class MyReversedListModel(Model[ListT], Generic[ListT]):
-        # Commented out, due to test_json_schema_generic_models_known_issue_1 in test_model
+        # Commented out docstring, due to test_json_schema_generic_models_known_issue in test_model
         # in order to make this test independent on that issue.
+        #
+        # TODO: Revisit MyReversedListModel comment if test_json_schema_generic_models_known_issue
+        #       is fixed
         #
         # """
         # Generic model that sorts any list in reverse order.
