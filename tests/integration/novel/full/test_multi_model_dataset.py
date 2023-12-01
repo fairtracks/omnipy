@@ -15,14 +15,15 @@ from .cases.flows import FlowCase
 from .helpers.models import GeneralTable, MyOtherRecordSchema, MyRecordSchema, TableTemplate
 
 
-def test_table_models():
-    _a = GeneralTable([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])  # noqa: F841
+# TODO: After Pydantic v2 support: Add "-> None" to all tests to open up for mypy syntax checking
+def test_table_models() -> None:
+    _a = GeneralTable([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
     # yapf: disable
-    _b = TableTemplate[MyRecordSchema]([{'a': 123, 'b': 'ads'},  # noqa: F841
-                                        {'a': 234, 'b': 'acs'}])
+    _b = TableTemplate[MyRecordSchema]([{'a': 123, 'b': 'ads'},
+                                             {'a': 234, 'b': 'acs'}])
 
     with pytest.raises(ValidationError):
-        _c = TableTemplate[MyOtherRecordSchema]([{'a': 123, 'b': 'ads'},  # noqa: F841
+        _c = TableTemplate[MyOtherRecordSchema]([{'a': 123, 'b': 'ads'},
                                                  {'a': 234, 'b': 'acs'}])
     # yapf: disable
 
