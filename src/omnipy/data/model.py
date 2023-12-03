@@ -91,9 +91,18 @@ class Model(GenericModel, Generic[RootT]):
         if origin_type is Union:
             if NoneType in args:
                 return None
+            last_error = None
             for arg in args:
                 if callable(arg):
-                    return cls._get_default_value_from_model(arg)
+                    try:
+                        return cls._get_default_value_from_model(arg)
+                    except Exception as e:
+                        last_error = e
+            main_error = TypeError(f'Cannot instantiate model "{model}".')
+            if last_error:
+                raise main_error from last_error
+            else:
+                raise main_error
         elif origin_type is tuple:
             if args and Ellipsis not in args:
                 return tuple(cls._get_default_value_from_model(arg) for arg in args)

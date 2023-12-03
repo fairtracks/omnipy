@@ -288,7 +288,7 @@ def test_basic_union():
     assert UnionModel([]).to_data() == []
 
 
-def test_union_default_value_from_first_type():
+def test_union_default_value_from_first_callable_type():
     class IntFirstUnionModel(Model[Union[int, str]]):
         ...
 
@@ -299,9 +299,16 @@ def test_union_default_value_from_first_type():
 
     assert StrFirstUnionModel().to_data() == ''
 
+    # with pytest.raises(TypeError):
+
+    class FirstTypeNotInstantiatableUnionModel(Model[Union[Any, str]]):
+        ...
+
+    assert FirstTypeNotInstantiatableUnionModel().to_data() == ''
+
     with pytest.raises(TypeError):
 
-        class FirstTypeNotCallableUnionModel(Model[Union[Any, str]]):
+        class NoTypeInstantiatableUnionModel(Model[Union[Any, Type]]):
             ...
 
 

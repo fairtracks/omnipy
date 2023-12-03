@@ -37,18 +37,6 @@ class RecordSchemaBase(BaseModel):
 #
 # Now the code fails not run at all with the error:
 #
-#     TypeError: Can't instantiate abstract class Mapping with abstract methods
-#                __getitem__, __iter__, __len__
-#
-# Which is due to omnipy's Mapping class, which tries to instantiate the type argument to generate
-# a default value. In case of a Union, the first type is the one that needs to be instantiated,
-# so a simple fix is to change the order:
-#
-#     RecordT = TypeVar(
-#         'RecordT', bound=Model[Union[RecordSchemaBase, Mapping[str, Union[Type, UnionType]]]])
-#
-# However, the omnipy-related error is now replaced with a Pydantic-related one (Pydantic v1):
-#
 #     TypeError: 'member_descriptor' object is not iterable
 #
 # In addition, mypy still fails, unhelpfully with the exact same error message as above. It turns
@@ -68,7 +56,7 @@ class RecordSchemaBase(BaseModel):
 # With the final variant, all of mypy, pydantic and omnipy work as they should:
 
 RecordT = TypeVar(
-    'RecordT', bound=Model[Union[RecordSchemaBase, Mapping[str, Union[Type, object]]]])
+    'RecordT', bound=Model[Union[Mapping[str, Union[Type, object]], RecordSchemaBase]])
 
 RecordSchemaDefType = Dict[str, Type[object]]
 
