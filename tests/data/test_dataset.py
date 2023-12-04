@@ -1,6 +1,7 @@
-from typing import Dict, Generic, List, TypeVar
+from types import NoneType
+from typing import Dict, Generic, List, Optional, TypeVar, Union
 
-from pydantic import PositiveInt, StrictInt, ValidationError
+from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
 
 from omnipy.data.dataset import Dataset
@@ -111,6 +112,69 @@ def test_more_dict_methods_with_parsing():
     dataset.clear()
     assert len(dataset) == 0
     assert dataset.to_data() == {}
+
+
+def test_equality() -> None:
+    assert Dataset[Model[list[int]]]({'file_1': [1, 2, 3], 'file_2': [1.0, 2.0, 3.0]}) == \
+           Dataset[Model[list[int]]]({'file_1': [1.0, 2.0, 3.0], 'file_2': [1, 2, 3]})
+
+    assert Dataset[Model[list[int]]]({'file_1': [1, 2, 3], 'file_2': [1, 2, 3]}) != \
+           Dataset[Model[list[int]]]({'file_1': [1, 2, 3], 'file_2': [3, 2, 1]})
+
+    assert Dataset[Model[list[int]]]({'1': [1, 2, 3]}) == \
+           Dataset[Model[list[int]]]({1: [1, 2, 3]})
+
+    assert Dataset[Model[list[int]]]({'file_1': [1, 2, 3]}) != \
+           Dataset[Model[list[float]]]({'file_1': [1.0, 2.0, 3.0]})
+
+
+def test_complex_equality() -> None:
+    class MyIntList(Model[list[int]]):
+        ...
+
+    class MyInt(Model[int]):
+        ...
+
+    assert Dataset[Model[list[int]]]({'file_1': [1, 2, 3]}) != \
+           Dataset[MyIntList]({'file_1': [1, 2, 3]})
+
+    assert Dataset[Model[MyIntList]]({'file_1': [1, 2, 3]}) == \
+           Dataset[Model[MyIntList]]({'file_1': MyIntList([1, 2, 3])})
+
+    assert Dataset[Model[list[MyInt]]]({'file_1': [1, 2, 3]}) == \
+           Dataset[Model[list[MyInt]]]({'file_1': list[MyInt]([1, 2, 3])})
+
+    assert Dataset[Model[list[MyInt]]]({'file_1': [1, 2, 3]}) != \
+           Dataset[Model[List[MyInt]]]({'file_1': [1, 2, 3]})
+
+    # Had to be set to dict to trigger difference in data contents. Validation for some reason
+    # harmonised the data contents to list[MyInt] even though the model itself keeps the data
+    # as MyIntList if provided in that form
+    as_list_of_myints_dataset = Dataset[Model[MyIntList | list[MyInt]]]({'file_1': [1, 2, 3]})
+    as_myintlist_dataset = Dataset[Model[MyIntList | list[MyInt]]]()
+    as_myintlist_dataset.data['file_1'] = MyIntList([1, 2, 3])
+
+    assert as_list_of_myints_dataset != as_myintlist_dataset
+
+    assert Dataset[Model[MyIntList | list[MyInt]]]({'file_1': [1, 2, 3]}) == \
+           Dataset[Model[Union[MyIntList, list[MyInt]]]]({'file_1': [1, 2, 3]})
+
+    assert Dataset[Model[MyIntList | list[MyInt]]]({'file_1': [1, 2, 3]}).to_data() == \
+           Dataset[Model[MyIntList | list[MyInt]]]({'file_1': MyIntList([1, 2, 3])}).to_data()
+
+
+def test_equality_with_pydantic() -> None:
+    class PydanticModel(BaseModel):
+        a: int = 0
+
+    class EqualPydanticModel(BaseModel):
+        a: int = 0
+
+    assert Dataset[Model[PydanticModel]]({'file_1': {'a': 1}}) == \
+           Dataset[Model[PydanticModel]]({'file_1': {'a': 1.0}})
+
+    assert Dataset[Model[PydanticModel]]({'file_1': {'a': 1}}) != \
+           Dataset[Model[EqualPydanticModel]]({'file_1': {'a': 1}})
 
 
 def test_basic_validation():
@@ -371,20 +435,6 @@ def test_complex_models():
         }
     }
 }'''  # noqa
-
-
-def test_equality() -> None:
-    IntListDataset = Dataset[Model[List[int]]]
-    FloatListDataset = Dataset[Model[List[float]]]
-
-    int_list_dataset = IntListDataset({'file_1': [1, 2, 3]})
-    int_list_dataset_same_datafile_name = IntListDataset({'file_1': [1.0, 2.0, 3.0]})
-    float_list_dataset_same_datafile_name = FloatListDataset({'file_1': [1.0, 2.0, 3.0]})
-    int_list_dataset_different_datafile_name = IntListDataset({'file_2': [1.0, 2.0, 3.0]})
-
-    assert int_list_dataset == int_list_dataset_same_datafile_name
-    assert int_list_dataset != float_list_dataset_same_datafile_name
-    assert int_list_dataset != int_list_dataset_different_datafile_name
 
 
 def test_dataset_model_class():

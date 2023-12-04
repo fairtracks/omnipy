@@ -266,8 +266,11 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         return multi_model_dataset
 
     def __eq__(self, other: object) -> bool:
-        return self.__class__ == other.__class__ and super().__eq__(other)
-
+        # return self.__class__ == other.__class__ and super().__eq__(other)
+        return isinstance(other, Dataset) \
+            and self.__class__ == other.__class__ \
+            and self.data == other.data \
+            and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
 
 # TODO: Use json serializer package from the pydantic config instead of 'json'
 
