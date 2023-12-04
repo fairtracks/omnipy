@@ -73,7 +73,7 @@ def test_load():
         Model[int](5).foo = True  # noqa
 
 
-def test_equality():
+def test_equality_other_models():
     assert Model[int]() == Model[int]()
 
     model = Model[int]()
@@ -85,39 +85,78 @@ def test_equality():
     # Relevant issue: https://github.com/pydantic/pydantic/pull/3066
     assert Model[int](1) != Model[PositiveInt](1)
 
-    assert Model[List[int]]([1, 2, 3]) == Model[List[int]]([1.0, 2.0, 3.0])
-    assert Model[List[int]]([1, 2, 3]) != Model[List[float]]([1.0, 2.0, 3.0])
-    assert Model[List[int]]([1, 2, 3]) != Model[List[int]]([1, 2])
+    assert Model[list[int]]([1, 2, 3]) == Model[list[int]]([1.0, 2.0, 3.0])
+    assert Model[list[int]]([1, 2, 3]) != Model[list[float]]([1.0, 2.0, 3.0])
+    assert Model[list[int]]([1, 2, 3]) != Model[list[int]]([1, 2])
+    assert Model[list[int]]([1, 2, 3]) != Model[list[int | float]]([1, 2, 3])
 
+
+def test_complex_equality():
+    class MyIntList(Model[list[int]]):
+        ...
+
+    class MyInt(Model[int]):
+        ...
+
+    assert Model[MyIntList]([1, 2, 3]) == Model[MyIntList](MyIntList([1, 2, 3]))
+    assert Model[list[MyInt]]([1, 2, 3]) == Model[list[MyInt]](list[MyInt]([1, 2, 3]))
+    assert Model[list[MyInt]]([1, 2, 3]) != Model[List[MyInt]]([1, 2, 3])
+
+    assert Model[MyIntList | list[MyInt]]([1, 2, 3]) != \
+           Model[MyIntList | list[MyInt]](MyIntList([1, 2, 3]))
+    assert Model[MyIntList | list[MyInt]]([1, 2, 3]).to_data() == \
+           Model[MyIntList | list[MyInt]](MyIntList([1, 2, 3])).to_data()
+
+
+# TODO: Revisit with pydantic v2. Expected to change
+def test_equality_with_pydantic_not_symmetric():
+    class RootPydanticInt(BaseModel):
+        __root__: int
+
+    class MyInt(Model[int]):
+        ...
+
+    assert RootPydanticInt(__root__=1) != 1
+    assert RootPydanticInt(__root__=1) == {'__root__': 1}
+    assert MyInt(1) != 1
+    assert MyInt(1) != {'__root__': 1}
+
+    assert RootPydanticInt(__root__=1) == MyInt(1)
+    assert MyInt(1) != RootPydanticInt(__root__=1)
+
+
+def test_equality_with_pydantic_as_args():
     class PydanticModel(BaseModel):
         a: int = 0
 
     class OtherPydanticModel(BaseModel):
-        a: str = '0'
+        a: float = 0
 
-    class A(Model[PydanticModel]):
+    assert PydanticModel(a=1) == OtherPydanticModel(a=1)
+
+    class MyModel(Model[PydanticModel]):
         ...
 
-    class B(Model[OtherPydanticModel]):
+    class MyOtherModel(Model[OtherPydanticModel]):
         ...
 
-    assert A(a=1) == A(a=1)
-    assert A(a=1) == A({'a': 1})
-    assert A(a=1) != A(a=2)
-    assert A(a=1) != B(a=1)
+    assert MyModel(a=1) == MyModel(a=1)
+    assert MyModel(a=1) == MyModel({'a': 1})
+    assert MyModel(a=1) != MyModel(a=2)
+    assert MyModel(a=1) != MyOtherModel(a=1)
 
     class EqualPydanticModel(PydanticModel):
         ...
 
-    class C(Model[EqualPydanticModel]):
+    class MyEqualModel(Model[EqualPydanticModel]):
         ...
 
-    assert A(a=1) != C(a=1)
+    assert MyModel(a=1) != MyEqualModel(a=1)
 
-    class D(A):
+    class MyInherited(MyModel):
         ...
 
-    assert A(a=1) != D(a=1)
+    assert MyModel(a=1) != MyInherited(a=1)
 
 
 def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model]) -> bool:
