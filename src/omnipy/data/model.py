@@ -1,12 +1,13 @@
 import json
 from types import UnionType
-from typing import Any, cast, Dict, Generic, get_args, get_origin, Type, TypeVar, Union
+from typing import Any, cast, Dict, Generic, get_args, get_origin, List, Type, TypeVar, Union
 
 from isort import place_module
 from isort.sections import STDLIB
 # from orjson import orjson
+from pydantic import NoneIsNotAllowedError
 from pydantic import Protocol as pydantic_protocol
-from pydantic import root_validator, ValidationError
+from pydantic import root_validator
 from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.typing import display_as_type, is_none_type
@@ -182,6 +183,8 @@ class Model(GenericModel, Generic[RootT]):
                 cls._propagate_allow_none_from_model(arg, created_model)
 
         if lenient_issubclass(model, Model) \
+                and get_origin(created_model.__fields__[ROOT_KEY].outer_type_) \
+                    not in [List, Dict, list, dict] \
                 and model.__fields__[ROOT_KEY].allow_none:
             created_model.__fields__[ROOT_KEY].allow_none = True
 
@@ -253,22 +256,40 @@ class Model(GenericModel, Generic[RootT]):
     # starting with test_nested_model_classes_none_as_default().
     @classmethod
     def _parse_none_value_with_root_type_if_model(cls, value):
-        root_type = cls.__fields__.get(ROOT_KEY).type_
+        root_field = cls.__fields__.get(ROOT_KEY)
+        root_type = root_field.type_
         if value is None:
-            value = cls._parse_with_root_type_if_model(value, root_type)
+            value = cls._parse_with_root_type_if_model(value, root_field, root_type)
         return value
 
     @classmethod
-    def _parse_with_root_type_if_model(cls, value: Any, root_type: Type) -> Any:
+    def _parse_with_root_type_if_model(cls, value: Any, root_field: ModelField,
+                                       root_type: Type) -> Any:
         if get_origin(root_type) is Union:
+            last_error = None
             for arg in get_args(root_type):
-                return cls._parse_with_root_type_if_model(value, arg)
+                try:
+                    return cls._parse_with_root_type_if_model(value, root_field, arg)
+                except Exception as e:
+                    last_error = e
+            main_error = NoneIsNotAllowedError()
+            if last_error:
+                raise main_error from last_error
+            else:
+                raise main_error
 
-        if lenient_issubclass(root_type, Model):
-            try:
-                return root_type.parse_obj(value)
-            except ValidationError:
-                ...
+        if lenient_issubclass(root_type, Model) \
+                and get_origin(root_type.__fields__[ROOT_KEY].outer_type_) not in [List, Dict, list, dict]:  # Very much a hack
+            return root_type.parse_obj(value)
+        else:
+            none_default = root_field.default_factory() is None if root_field.default_factory \
+                else root_field.default is None
+            root_type_is_none = is_none_type(root_type)
+            root_type_is_optional = get_origin(root_type) is Union \
+                                    and any(is_none_type(arg) for arg in get_args(root_type))
+            supports_none = none_default or root_type_is_none or root_type_is_optional
+            if not supports_none:
+                raise NoneIsNotAllowedError()
 
         return value
 
