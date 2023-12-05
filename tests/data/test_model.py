@@ -1,4 +1,5 @@
 import os
+from textwrap import dedent
 from types import NoneType
 from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeAlias, TypeVar, Union
 
@@ -666,34 +667,34 @@ def test_import_export_methods():
     assert model_list.to_data() == [True, 'text', -47.9]
 
     std_description = Model._get_standard_field_description()
-    assert Model[int].to_json_schema(pretty=True) == '''
-{
-    "title": "Model[int]",
-    "description": "'''[1:] + std_description + '''",
-    "type": "integer"
-}'''  # noqa:Q001
+    assert Model[int].to_json_schema(pretty=True) == dedent('''\
+    {
+      "title": "Model[int]",
+      "description": "''' + std_description + '''",
+      "type": "integer"
+    }''')
 
-    assert Model[str].to_json_schema(pretty=True) == '''
-{
-    "title": "Model[str]",
-    "description": "'''[1:] + std_description + '''",
-    "type": "string"
-}'''  # noqa:Q001
+    assert Model[str].to_json_schema(pretty=True) == dedent('''\
+    {
+      "title": "Model[str]",
+      "description": "''' + std_description + '''",
+      "type": "string"
+    }''')
 
-    assert Model[Dict].to_json_schema(pretty=True) == '''
-{
-    "title": "Model[Dict]",
-    "description": "'''[1:] + std_description + '''",
-    "type": "object"
-}'''  # noqa:Q001
+    assert Model[Dict].to_json_schema(pretty=True) == dedent('''\
+    {
+      "title": "Model[Dict]",
+      "description": "''' + std_description + '''",
+      "type": "object"
+    }''')
 
-    assert Model[List].to_json_schema(pretty=True) == '''
-{
-    "title": "Model[List]",
-    "description": "'''[1:] + std_description + '''",
-    "type": "array",
-    "items": {}
-}'''  # noqa:Q001
+    assert Model[List].to_json_schema(pretty=True) == dedent('''\
+    {
+      "title": "Model[List]",
+      "description": "''' + std_description + '''",
+      "type": "array",
+      "items": {}
+    }''')
 
 
 def test_json_schema_generic_model_one_level():
@@ -702,21 +703,21 @@ def test_json_schema_generic_model_one_level():
     class MyList(Model[ListT], Generic[ListT]):
         """My very interesting list model!"""
 
-    assert MyList.to_json_schema(pretty=True) == """
-{
-    "title": "MyList",
-    "description": "My very interesting list model!",
-    "type": "array",
-    "items": {}
-}"""[1:]
+    assert MyList.to_json_schema(pretty=True) == dedent('''\
+    {
+      "title": "MyList",
+      "description": "My very interesting list model!",
+      "type": "array",
+      "items": {}
+    }''')
 
-    assert MyList[List].to_json_schema(pretty=True) == """
-{
-    "title": "MyList[List]",
-    "description": "My very interesting list model!",
-    "type": "array",
-    "items": {}
-}"""[1:]
+    assert MyList[List].to_json_schema(pretty=True) == dedent('''\
+    {
+      "title": "MyList[List]",
+      "description": "My very interesting list model!",
+      "type": "array",
+      "items": {}
+    }''')
 
 
 def test_json_schema_generic_model_two_levels():
@@ -725,25 +726,25 @@ def test_json_schema_generic_model_two_levels():
     class MyListOfStrings(Model[List[StrT]], Generic[StrT]):
         """My very own list of strings!"""
 
-    assert MyListOfStrings.to_json_schema(pretty=True) == """
-{
-    "title": "MyListOfStrings",
-    "description": "My very own list of strings!",
-    "type": "array",
-    "items": {
+    assert MyListOfStrings.to_json_schema(pretty=True) == dedent('''\
+    {
+      "title": "MyListOfStrings",
+      "description": "My very own list of strings!",
+      "type": "array",
+      "items": {
         "type": "string"
-    }
-}"""[1:]
+      }
+    }''')
 
-    assert MyListOfStrings[str].to_json_schema(pretty=True) == """
-{
-    "title": "MyListOfStrings[str]",
-    "description": "My very own list of strings!",
-    "type": "array",
-    "items": {
+    assert MyListOfStrings[str].to_json_schema(pretty=True) == dedent('''\
+    {
+      "title": "MyListOfStrings[str]",
+      "description": "My very own list of strings!",
+      "type": "array",
+      "items": {
         "type": "string"
-    }
-}"""[1:]
+      }
+    }''')
 
 
 @pytest.mark.skipif(
@@ -766,12 +767,12 @@ def test_json_schema_generic_models_known_issue():
     class MyListOfStrings(Model[MyList[List[str]]]):
         """MyList. What more can you ask for?"""
 
-    assert MyListOfStrings.to_json_schema(pretty=True) == """
-{
-    "title": "MyListOfStrings",
-    "description": "MyList. What more can you ask for?",
-    "$ref": "#/definitions/MyList_List_str__",
-    "definitions": {
+    assert MyListOfStrings.to_json_schema(pretty=True) == dedent('''\
+    {
+      "title": "MyListOfStrings",
+      "description": "MyList. What more can you ask for?",
+      "$ref": "#/definitions/MyList_List_str__",
+      "definitions": {
         "MyList_List_str__": {
             "title": "MyList[List[str]]",
             "description": "My very interesting list model!.",
@@ -780,8 +781,8 @@ def test_json_schema_generic_models_known_issue():
                 "type": "string"
             }
         }
-    }
-}"""[1:]
+      }
+    }''')
 
 
 def test_custom_parser():
@@ -860,19 +861,19 @@ def test_nested_model():
         2: [2], 3: [3], 4: [2, 2], 5: [5], 6: [2, 3], 7: [7], 8: [2, 2, 2], 9: [3, 3], 10: [2, 5]
     })
 
-    assert model_1.to_json_schema(pretty=True) == """
-{
-    "title": "DictToListOfPositiveInts",
-    "description": "This model is perfect for a mapping product numbers to factor lists",
-    "type": "object",
-    "additionalProperties": {
+    assert model_1.to_json_schema(pretty=True) == dedent('''\
+    {
+      "title": "DictToListOfPositiveInts",
+      "description": "This model is perfect for a mapping product numbers to factor lists",
+      "type": "object",
+      "additionalProperties": {
         "type": "array",
         "items": {
-            "type": "integer",
-            "exclusiveMinimum": 0
+          "type": "integer",
+          "exclusiveMinimum": 0
         }
-    }
-}"""[1:]
+      }
+    }''')
 
 
 def test_complex_nested_models():
@@ -952,18 +953,18 @@ def test_complex_nested_models():
         'X': ['II', 'V']
     }
 
-    assert roman_dict_model_1.to_json_schema(pretty=True) == """
-{
-    "title": "ProductFactorDictInRomanNumerals",
-    "description": "Extremely useful model",
-    "type": "object",
-    "additionalProperties": {
+    assert roman_dict_model_1.to_json_schema(pretty=True) == dedent('''\
+    {
+      "title": "ProductFactorDictInRomanNumerals",
+      "description": "Extremely useful model",
+      "type": "object",
+      "additionalProperties": {
         "type": "array",
         "items": {
-            "type": "string"
+          "type": "string"
         }
-    }
-}"""[1:]
+      }
+    }''')
 
 
 def test_pandas_dataframe_non_builtin_direct():

@@ -330,7 +330,7 @@ class Model(GenericModel, Generic[RootT]):
 
     @staticmethod
     def _pretty_print_json(json_content: Any) -> str:
-        return json.dumps(json_content, indent=4)
+        return json.dumps(json_content, indent=2)
 
     def _check_for_root_key(self) -> None:
         if ROOT_KEY not in self.__dict__:
