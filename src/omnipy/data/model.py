@@ -1,6 +1,17 @@
 import json
 from types import UnionType
-from typing import Any, cast, Dict, Generic, get_args, get_origin, List, Type, TypeVar, Union
+from typing import (Annotated,
+                    Any,
+                    cast,
+                    Dict,
+                    Generic,
+                    get_args,
+                    get_origin,
+                    List,
+                    Optional,
+                    Type,
+                    TypeVar,
+                    Union)
 
 from isort import place_module
 from isort.sections import STDLIB
@@ -12,6 +23,8 @@ from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_issubclass
+
+from omnipy.util.helpers import is_optional
 
 RootT = TypeVar('RootT', covariant=True, bound=object)
 ROOT_KEY = '__root__'
@@ -65,7 +78,7 @@ class Model(GenericModel, Generic[RootT]):
     See also docs of the Dataset class for more usage examples.
     """
 
-    __root__: RootT
+    __root__: Optional[RootT]
 
     class Config:
         arbitrary_types_allowed = True
@@ -85,6 +98,11 @@ class Model(GenericModel, Generic[RootT]):
                 model = model.__bound__  # noqa
         origin_type = get_origin(model)
         args = get_args(model)
+
+        if origin_type is Annotated:
+            model = args[0]
+            origin_type = get_origin(model)
+            args = get_args(model)
 
         if origin_type in (None, ()):
             origin_type = model
@@ -122,6 +140,9 @@ class Model(GenericModel, Generic[RootT]):
         else:
             cls.__config__.fields[ROOT_KEY] = {'default_factory': get_default_val}
 
+        if not is_optional(model):
+            model = Annotated[Optional[model], 'Fake Optional from Model']
+
         data_field = ModelField.infer(
             name=ROOT_KEY,
             value=Undefined,
@@ -131,6 +152,8 @@ class Model(GenericModel, Generic[RootT]):
 
         cls.__fields__[ROOT_KEY] = data_field
         cls.__annotations__[ROOT_KEY] = model
+
+        return model
 
     @classmethod
     def _depopulate_root_field(cls):
@@ -148,16 +171,18 @@ class Model(GenericModel, Generic[RootT]):
         if isinstance(model, tuple) and len(model) == 1:
             model = model[0]
 
+        orig_model = model
+
         # Populating the root field at runtime instead of providing a __root__ Field explicitly
         # is needed due to the inability of typing/pydantic to provide a dynamic default based on
         # the actual type. The following issue in mypy seems relevant:
         # https://github.com/python/mypy/issues/3737 (as well as linked issues)
         if cls == Model:  # Only for the base Model class
-            cls._populate_root_field(model)
+            model = cls._populate_root_field(model)
 
         created_model = super().__class_getitem__(model)
 
-        cls._propagate_allow_none_from_model(model, created_model)
+        # cls._propagate_allow_none_from_model(model, created_model)
 
         # As long as models are not created concurrently, setting the class members temporarily
         # should not have averse effects
@@ -166,27 +191,34 @@ class Model(GenericModel, Generic[RootT]):
         if cls == Model:
             cls._depopulate_root_field()
 
+        if created_model.__name__.startswith('Model[') and get_origin(model) is Annotated:
+            created_model.__name__ = f'Model[{display_as_type(orig_model)}]'
         created_model.__qualname__ = generate_qualname(cls.__name__, model)
 
         return created_model
 
-    # Partial workaround of https://github.com/pydantic/pydantic/issues/3836, together with
-    # _parse_none_value_with_root_type_if_model(). See series of relevant tests in test_model.py
-    # starting with test_nested_model_classes_none_as_default().
+    # # Partial workaround of https://github.com/pydantic/pydantic/issues/3836, together with
+    # # _parse_none_value_with_root_type_if_model(). See series of relevant tests in test_model.py
+    # # starting with test_nested_model_classes_none_as_default().
+    # #
+    # # TODO: Revisit Model._propagate_allow_none_from_model() and
+    # #       Model._parse_none_value_with_root_type_if_model with pydantic v2
+    # @classmethod
+    # def _propagate_allow_none_from_model(cls, model, created_model):
+    #     if get_origin(model) is Union:
+    #         for arg in get_args(model):
+    #             cls._propagate_allow_none_from_model(arg, created_model)
     #
-    # TODO: Revisit Model._propagate_allow_none_from_model() and
-    #       Model._parse_none_value_with_root_type_if_model with pydantic v2
-    @classmethod
-    def _propagate_allow_none_from_model(cls, model, created_model):
-        if get_origin(model) is Union:
-            for arg in get_args(model):
-                cls._propagate_allow_none_from_model(arg, created_model)
-
-        if lenient_issubclass(model, Model) \
-                and get_origin(created_model.__fields__[ROOT_KEY].outer_type_) \
-                    not in [List, Dict, list, dict] \
-                and model.__fields__[ROOT_KEY].allow_none:
-            created_model.__fields__[ROOT_KEY].allow_none = True
+    #     # Very much a hack
+    #     origin = get_origin(model)
+    #     if origin:
+    #         model = origin
+    #
+    #     if lenient_issubclass(model, Model) \
+    #             and get_origin(created_model.__fields__[ROOT_KEY].outer_type_) \
+    #                 not in [List, Dict, list, dict] \
+    #             and model.__fields__[ROOT_KEY].allow_none:
+    #         created_model.__fields__[ROOT_KEY].allow_none = True
 
     def __new__(cls, value: Union[Any, UndefinedType] = Undefined, **kwargs):
         model_not_specified = ROOT_KEY not in cls.__fields__
@@ -265,6 +297,9 @@ class Model(GenericModel, Generic[RootT]):
     @classmethod
     def _parse_with_root_type_if_model(cls, value: Any, root_field: ModelField,
                                        root_type: Type) -> Any:
+        if get_origin(root_type) is Annotated:
+            root_type = get_args(root_type)[0]
+
         if get_origin(root_type) is Union:
             last_error = None
             for arg in get_args(root_type):
