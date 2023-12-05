@@ -619,13 +619,29 @@ def test_list_and_dict_of_none_model_known_issue():
 # Simpler working test added to illustrate more complex fails related to pydantic issue:
 # https://github.com/pydantic/pydantic/issues/3836
 def test_nested_model_classes_none_as_default() -> None:
-    class MaybeNumberModel(Model[Optional[int]]):
+    class MaybeNumberModelOptional(Model[Optional[int]]):
         ...
 
-    class OuterMaybeNumberModel(Model[MaybeNumberModel]):
+    class MaybeNumberModelUnion(Model[Union[int, None]]):
         ...
 
-    assert OuterMaybeNumberModel().contents == MaybeNumberModel(None)
+    class MaybeNumberModelUnionNew(Model[int | None]):
+        ...
+
+    class OuterMaybeNumberModelOptional(Model[MaybeNumberModelOptional]):
+        ...
+
+    class OuterMaybeNumberModelUnion(Model[MaybeNumberModelUnion]):
+        ...
+
+    class OuterMaybeNumberModelUnionNew(Model[MaybeNumberModelUnionNew]):
+        ...
+
+    assert OuterMaybeNumberModelOptional().contents == MaybeNumberModelOptional(None)
+
+    assert OuterMaybeNumberModelUnion().contents == MaybeNumberModelUnion(None)
+
+    assert OuterMaybeNumberModelUnionNew().contents == MaybeNumberModelUnionNew(None)
 
 
 # Simpler working test added to illustrate more complex fails related to pydantic issue:
