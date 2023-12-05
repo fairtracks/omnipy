@@ -1,7 +1,7 @@
 import inspect
 import json
 from types import NoneType
-from typing import Any, Dict, Generic, get_args, get_origin, Type, TypeVar, Union
+from typing import Any, cast, Dict, Generic, get_args, get_origin, Type, TypeVar, Union
 
 from isort import place_module
 from isort.sections import STDLIB
@@ -12,7 +12,7 @@ from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.typing import display_as_type
 
-RootT = TypeVar('RootT')
+RootT = TypeVar('RootT', covariant=True, bound=object)
 ROOT_KEY = '__root__'
 
 # def orjson_dumps(v, *, default):
@@ -185,7 +185,7 @@ class Model(GenericModel, Generic[RootT]):
                 and model.__fields__[ROOT_KEY].allow_none:
             created_model.__fields__[ROOT_KEY].allow_none = True
 
-    def __new__(cls, value: Union[RootT, UndefinedType] = Undefined, **kwargs):
+    def __new__(cls, value: Union[Any, UndefinedType] = Undefined, **kwargs):
         model_not_specified = ROOT_KEY not in cls.__fields__
         if model_not_specified:
             cls._raise_no_model_exception()
@@ -193,24 +193,24 @@ class Model(GenericModel, Generic[RootT]):
 
     def __init__(
         self,
-        value: Union[RootT, UndefinedType] = Undefined,
+        value: Union[Any, UndefinedType] = Undefined,
         /,
-        __root__: Union[RootT, UndefinedType] = Undefined,
-        **data: object,
+        __root__: Union[Any, UndefinedType] = Undefined,
+        **data: Any,
     ) -> None:
         super_data: Dict[str, RootT] = {}
         num_root_vals = 0
 
         if value is not Undefined:
-            super_data[ROOT_KEY] = value
+            super_data[ROOT_KEY] = cast(RootT, value)
             num_root_vals += 1
 
         if __root__ is not Undefined:
-            super_data[ROOT_KEY] = __root__
+            super_data[ROOT_KEY] = cast(RootT, __root__)
             num_root_vals += 1
 
         if data:
-            super_data[ROOT_KEY] = data
+            super_data[ROOT_KEY] = cast(RootT, data)
             num_root_vals += 1
 
         assert num_root_vals <= 1
@@ -273,7 +273,7 @@ class Model(GenericModel, Generic[RootT]):
         return value
 
     @property
-    def contents(self) -> Any:
+    def contents(self) -> RootT:
         return self.__dict__.get(ROOT_KEY)
 
     @contents.setter
@@ -355,4 +355,3 @@ class Model(GenericModel, Generic[RootT]):
             and self.__class__ == other.__class__ \
             and self.contents == other.contents \
             and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
-
