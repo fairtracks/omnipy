@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Hashable, Iterable
 import inspect
 import locale as pkg_locale
+from types import UnionType
 from typing import Any, cast, Dict, get_args, get_origin, Mapping, Optional, Tuple, TypeVar, Union
 
 from typing_inspect import get_generic_bases, is_generic_type
@@ -71,3 +72,8 @@ def transfer_generic_args_to_cls(to_cls, from_generic_type):
         return to_cls[get_args(from_generic_type)]
     except (TypeError, AttributeError):
         return to_cls
+
+
+def is_optional(cls_or_type):
+    return get_origin(cls_or_type) in [Union, UnionType] and \
+        type(None) in get_args(cls_or_type)
