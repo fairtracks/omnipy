@@ -1,6 +1,5 @@
-import inspect
 import json
-from types import NoneType
+from types import UnionType
 from typing import Any, cast, Dict, Generic, get_args, get_origin, Type, TypeVar, Union
 
 from isort import place_module
@@ -10,7 +9,8 @@ from pydantic import Protocol as pydantic_protocol
 from pydantic import root_validator, ValidationError
 from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
-from pydantic.typing import display_as_type
+from pydantic.typing import display_as_type, is_none_type
+from pydantic.utils import lenient_issubclass
 
 RootT = TypeVar('RootT', covariant=True, bound=object)
 ROOT_KEY = '__root__'
@@ -88,8 +88,8 @@ class Model(GenericModel, Generic[RootT]):
         if origin_type in (None, ()):
             origin_type = model
 
-        if origin_type is Union:
-            if NoneType in args:
+        if origin_type in [Union, UnionType]:
+            if any(is_none_type(arg) for arg in args):
                 return None
             last_error = None
             for arg in args:
@@ -181,7 +181,7 @@ class Model(GenericModel, Generic[RootT]):
             for arg in get_args(model):
                 cls._propagate_allow_none_from_model(arg, created_model)
 
-        if inspect.isclass(model) and issubclass(model, Model) \
+        if lenient_issubclass(model, Model) \
                 and model.__fields__[ROOT_KEY].allow_none:
             created_model.__fields__[ROOT_KEY].allow_none = True
 
@@ -264,7 +264,7 @@ class Model(GenericModel, Generic[RootT]):
             for arg in get_args(root_type):
                 return cls._parse_with_root_type_if_model(value, arg)
 
-        if inspect.isclass(root_type) and issubclass(root_type, Model):
+        if lenient_issubclass(root_type, Model):
             try:
                 return root_type.parse_obj(value)
             except ValidationError:
