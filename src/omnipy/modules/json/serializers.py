@@ -22,7 +22,7 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer):
         return 'json'
 
     @classmethod
-    def serialize(cls, json_dataset: JsonDataset) -> Union[bytes, memoryview]:
+    def serialize(cls, json_dataset: JsonBaseDataset) -> Union[bytes, memoryview]:
         def json_encode_func(json_data: JsonModel) -> bytes:
             return json_data.json(indent=2).encode('utf8')
 

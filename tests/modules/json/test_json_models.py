@@ -1,42 +1,75 @@
-# from typing import Dict, Optional, Union
-#
-# from omnipy.data.dataset import Dataset
-# from omnipy.data.model import Model
-# from omnipy.modules.json.datasets import JsonDataset, JsonDictOfAnyDataset
-# from omnipy.modules.json.models import (JsonDictModel,
-#                                         JsonDictOfAnyModel,
-#                                         JsonListModel,
-#                                         JsonModel,
-#                                         JsonSubModel)
-# from omnipy.modules.json.typedefs import JsonScalar
-#
-#
-# def test_json_dataset():
-#     test_data = {'a': {'123': 2312}, 'b': {'sd': 'df'}}
-#     assert JsonDataset(test_data)['a'] == JsonDictModel['JsonSubModel']({'123': 2312})
-#     assert Dataset[Model[JsonSubModel]](test_data)['a'] == JsonDictModel['JsonSubModel']({
-#         '123': 2312
-#     })
-#     assert JsonDictOfAnyDataset(test_data)['a'] == 1
-#     assert JsonDictOfAnyDataset(test_data)['a'] == JsonSubModel({'123': 2312})
-#     assert Dataset[Model[JsonDictModel['JsonSubModel']]](
-#         test_data)['a'] == JsonDictModel['JsonSubModel']({
-#             '123': 2312
-#         })
-#     # assert Dataset[Model[Dict[str, str]]](test_data)['a'] == JsonDictModel['JsonSubModel']({
-#     #     '123': 2312
-#     # })
-#     assert Dataset[JsonDictModel['JsonSubModel']](test_data)['a'] == \
-#         JsonDictModel['JsonSubModel']({
-#             '123': 2312
-#     })
-#     assert JsonDictOfAnyDataset(test_data)['a'] == JsonDictModel['JsonSubModel']({'123': 2312})
-#     assert Dataset[Model[Dict[str, int]]](test_data)['a'] == JsonDictModel['JsonSubModel']({
-#         '123': 2312
-#     })
-#
-#
-# def test_json_dataset_consistency():
-#     test_data = {'a': {'123': 2312}, 'b': {'sd': 'df'}}
-#     assert JsonDataset(test_data)['a'] == _JsonDictM({'123': 2312})
-#     assert JsonDictDataset(test_data)['a'] == _JsonDictM({'123': 2312})
+from dataclasses import fields
+from typing import TypeAlias
+
+from pydantic import ValidationError
+import pytest
+import pytest_cases as pc
+
+from omnipy.modules.json.models import (_JsonBaseDictM,
+                                        _JsonBaseListM,
+                                        _JsonDictM,
+                                        _JsonDictOfScalarsM,
+                                        _JsonListM,
+                                        _JsonScalarM,
+                                        JsonCustomDictModel,
+                                        JsonCustomListModel,
+                                        JsonCustomScalarModel,
+                                        JsonDictModel,
+                                        JsonDictOfScalarsModel,
+                                        JsonListModel,
+                                        JsonListOfScalarsModel,
+                                        JsonModel)
+from tests.modules.json.helpers.classes import CaseInfo
+
+
+@pc.parametrize_with_cases('case', cases='.cases.json_data')
+def test_json_models(case: CaseInfo) -> None:
+    for field in fields(case.data_points):
+        name = field.name
+        for model_cls in case.model_classes_for_data_point(name):
+            data = getattr(case.data_points, name)
+
+            print('\n---')
+            print(f'Field name: {name}')
+            print(f'Model class: {model_cls.__name__}')
+            print(f'Data input: {data}')
+
+            if case.data_point_should_fail(name):
+                with pytest.raises(ValidationError) as e:
+                    model_cls(data)
+                print(f'Error: {e}')
+            else:
+
+                model_obj = model_cls(data)
+                print(f'repr(model_obj): {repr(model_obj)}')
+                print(f'model_obj.contents: {model_obj.contents}')
+                print(f'model_obj.to_data(): {model_obj.to_data()}')
+                print(f'model_obj.to_json(): {model_obj.to_json(pretty=True)}')
+
+
+def test_json_model_consistency_basic():
+    MyJsonDictOfScalarsModel: TypeAlias = JsonCustomDictModel[JsonCustomScalarModel]
+    MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonCustomScalarModel]
+
+    example_dict_data = {'abc': 2312}
+    assert JsonModel(example_dict_data) == JsonModel(
+        __root__=_JsonDictM(__root__={'abc': _JsonScalarM(__root__=2312)}))
+    assert JsonDictModel(example_dict_data) == JsonDictModel(
+        __root__=_JsonDictM(__root__={'abc': _JsonScalarM(__root__=2312)}))
+    assert JsonDictOfScalarsModel(example_dict_data) == JsonDictOfScalarsModel(
+        __root__=_JsonDictOfScalarsM(__root__={'abc': _JsonScalarM(__root__=2312)}))
+    assert MyJsonDictOfScalarsModel(example_dict_data) == MyJsonDictOfScalarsModel(
+        __root__=_JsonBaseDictM[JsonCustomScalarModel](__root__={
+            'abc': _JsonScalarM(__root__=2312)
+        }))
+
+    example_list_data = ['abc', 2312]
+    assert JsonModel(example_list_data) == JsonModel(
+        __root__=_JsonListM(__root__=[_JsonScalarM(__root__='abc'), _JsonScalarM(__root__=2312)]))
+    assert JsonListModel(example_list_data) == JsonListModel(
+        __root__=_JsonListM(__root__=[_JsonScalarM(__root__='abc'), _JsonScalarM(__root__=2312)]))
+    assert JsonListOfScalarsModel(example_list_data) == JsonListOfScalarsModel(
+        __root__=_JsonListM(__root__=[_JsonScalarM(__root__='abc'), _JsonScalarM(__root__=2312)]))
+    assert MyJsonListOfScalarsModel(example_list_data) == MyJsonListOfScalarsModel(
+        __root__=_JsonBaseListM[JsonCustomScalarModel](
+            __root__=[_JsonScalarM(__root__='abc'), _JsonScalarM(__root__=2312)]))

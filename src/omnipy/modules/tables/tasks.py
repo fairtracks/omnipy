@@ -3,13 +3,13 @@ from typing import Dict, List
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
-from omnipy.modules.json.datasets import JsonListOfDictsOfAnyDataset
+from omnipy.modules.json.datasets import JsonListOfDictsDataset
 
 
 @mypy_fix_task_template
 @TaskTemplate()
-def remove_columns(json_dataset: JsonListOfDictsOfAnyDataset,
-                   column_keys_for_data_items: Dict[str, List[str]]) -> JsonListOfDictsOfAnyDataset:
+def remove_columns(json_dataset: JsonListOfDictsDataset,
+                   column_keys_for_data_items: Dict[str, List[str]]) -> JsonListOfDictsDataset:
     # TODO: implement general solution to make sure that one does not modify input data by
     #       automatically copying or otherwise. Perhaps setting immutable/frozen option in pydantic,
     #       if available?
@@ -20,7 +20,7 @@ def remove_columns(json_dataset: JsonListOfDictsOfAnyDataset,
             for column in column_keys:
                 if column in record:
                     del record[column]
-    return JsonListOfDictsOfAnyDataset(json_dataset.to_data())
+    return JsonListOfDictsDataset(json_dataset.to_data())
 
 
 # @mypy_fix_task_template
