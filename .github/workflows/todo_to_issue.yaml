@@ -1,9 +1,20 @@
 name: "Run TODO to Issue"
-on: ["push"]
+on:
+  pull_request:
+    types:
+      - closed
+
 jobs:
-    todo-to-issue:
-        runs-on: "ubuntu-latest"
-        steps:
-            - uses: "actions/checkout@v3"
-            - name: "TODO to Issue"
-              uses: "alstr/todo-to-issue-action@v4"
+  if_merged:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+    - run: |
+        echo The PR was merged
+
+  todo-to-issue:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v3"
+      - name: "TODO to Issue"
+        uses: "alstr/todo-to-issue-action@v4"
