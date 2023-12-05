@@ -7,8 +7,8 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
 from .datasets import (JsonDataset,
-                       JsonDictOfAnyDataset,
-                       JsonListOfDictsOfAnyDataset,
+                       JsonDictDataset,
+                       JsonListOfDictsDataset,
                        JsonListOfDictsOfScalarsDataset)
 from .functions import flatten_outer_level_of_nested_record
 from .typedefs import (JsonDictOfListsOfDicts,
@@ -31,9 +31,9 @@ def convert_dataset_string_to_json(dataset: Dataset[Model[str]]) -> JsonDataset:
 
 @mypy_fix_task_template
 @TaskTemplate()
-def transpose_dataset_of_dicts_to_lists(dataset: JsonDictOfAnyDataset,
-                                        id_key: str = ID_KEY) -> JsonListOfDictsOfAnyDataset:
-    output_dataset = JsonListOfDictsOfAnyDataset()
+def transpose_dataset_of_dicts_to_lists(dataset: JsonDictDataset,
+                                        id_key: str = ID_KEY) -> JsonListOfDictsDataset:
+    output_dataset = JsonListOfDictsDataset()
     output_data = defaultdict(list)
 
     for name, item in dataset.items():
@@ -56,8 +56,8 @@ def transpose_dataset_of_dicts_to_lists(dataset: JsonDictOfAnyDataset,
 @mypy_fix_task_template
 @TaskTemplate()
 def flatten_outer_level_of_all_data_files(
-        dataset: JsonListOfDictsOfAnyDataset, id_key: str, ref_key: str,
-        default_key: str) -> Tuple[JsonListOfDictsOfScalarsDataset, JsonListOfDictsOfAnyDataset]:
+        dataset: JsonListOfDictsDataset, id_key: str, ref_key: str,
+        default_key: str) -> Tuple[JsonListOfDictsOfScalarsDataset, JsonListOfDictsDataset]:
 
     data_files_of_scalar_records: defaultdict[str, JsonListOfDictsOfScalars] = \
         defaultdict(JsonListOfDictsOfScalars)
@@ -91,6 +91,6 @@ def flatten_outer_level_of_all_data_files(
             data_files_of_scalar_records[data_file_title].append(record_of_scalars)
 
     data_files_of_scalar_records_ds = JsonListOfDictsOfScalarsDataset(data_files_of_scalar_records)
-    data_files_of_any_ds = JsonListOfDictsOfAnyDataset(data_files_of_any)
+    data_files_of_any_ds = JsonListOfDictsDataset(data_files_of_any)
 
     return data_files_of_scalar_records_ds, data_files_of_any_ds

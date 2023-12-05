@@ -1,33 +1,37 @@
 from __future__ import annotations
 
-from typing import Generic, TypeAlias, TypeVar, Union
+from typing import Generic, TypeVar
 
 from omnipy.data.dataset import Dataset
 
+from ...data.model import Model
 from .models import (JsonDictModel,
-                     JsonDictOfAnyModel,
-                     JsonDictOfDictsOfAnyModel,
+                     JsonDictOfDictsModel,
                      JsonDictOfDictsOfScalarsModel,
-                     JsonDictOfListsOfAnyModel,
-                     JsonDictOfListsOfDictsOfAnyModel,
+                     JsonDictOfListsModel,
+                     JsonDictOfListsOfDictsModel,
                      JsonDictOfListsOfScalarsModel,
+                     JsonDictOfNestedListsModel,
                      JsonDictOfScalarsModel,
                      JsonListModel,
-                     JsonListOfAnyModel,
-                     JsonListOfDictsOfAnyModel,
+                     JsonListOfDictsModel,
                      JsonListOfDictsOfScalarsModel,
-                     JsonListOfListsOfAnyModel,
+                     JsonListOfListsModel,
                      JsonListOfListsOfScalarsModel,
                      JsonListOfNestedDictsModel,
                      JsonListOfScalarsModel,
                      JsonModel,
-                     JsonNestedDictsModel)
+                     JsonNestedDictsModel,
+                     JsonNestedListsModel,
+                     JsonNoDictsModel,
+                     JsonNoListsModel,
+                     JsonScalarModel)
 
 # TODO: switch from plural to singular for names of modules in omnipy modules
 # TODO: call omnipy modules something else than modules, to distinguish from Python modules.
 #       Perhaps plugins?
-
-JsonModelT = TypeVar('JsonModelT', bound=Union[JsonModel, JsonListModel, JsonDictModel])
+#
+JsonModelT = TypeVar('JsonModelT', bound=Model)
 
 
 class JsonBaseDataset(Dataset[JsonModelT], Generic[JsonModelT]):
@@ -35,38 +39,108 @@ class JsonBaseDataset(Dataset[JsonModelT], Generic[JsonModelT]):
     ...
 
 
-# Instance of JsonBaseDataset that covers all JSON data
-
-
 class JsonDataset(JsonBaseDataset[JsonModel]):
     """"""
     ...
 
 
-# Generic JSON dataset to use for custom JSON datasets
+class JsonScalarDataset(JsonBaseDataset[JsonScalarModel]):
+    """"""
+    ...
 
-JsonCustomDataset: TypeAlias = JsonBaseDataset
 
-# List as top-level type
+# List at the top level
 
-JsonListOfScalarsDatabase: TypeAlias = JsonBaseDataset[JsonListOfScalarsModel]
-JsonListOfAnyDataset: TypeAlias = JsonBaseDataset[JsonListOfAnyModel]
-JsonListOfDictsOfScalarsDataset: TypeAlias = JsonBaseDataset[JsonListOfDictsOfScalarsModel]
-JsonListOfDictsOfAnyDataset: TypeAlias = JsonBaseDataset[JsonListOfDictsOfAnyModel]
-JsonListOfListsOfScalarsDataset: TypeAlias = JsonBaseDataset[JsonListOfListsOfScalarsModel]
-JsonListOfListsOfAnyDataset: TypeAlias = JsonBaseDataset[JsonListOfListsOfAnyModel]
 
-# Dict as top-level type
+class JsonListDataset(JsonBaseDataset[JsonListModel]):
+    """"""
+    ...
 
-JsonDictOfScalarsDataset: TypeAlias = JsonBaseDataset[JsonDictOfScalarsModel]
-JsonDictOfAnyDataset: TypeAlias = JsonBaseDataset[JsonDictOfAnyModel]
-JsonDictOfDictsOfScalarsDataset: TypeAlias = JsonBaseDataset[JsonDictOfDictsOfScalarsModel]
-JsonDictOfDictsOfAnyDataset: TypeAlias = JsonBaseDataset[JsonDictOfDictsOfAnyModel]
-JsonDictOfListsOfScalarsDataset: TypeAlias = JsonBaseDataset[JsonDictOfListsOfScalarsModel]
-JsonDictOfListsOfAnyDataset: TypeAlias = JsonBaseDataset[JsonDictOfListsOfAnyModel]
 
-# More specific models
+class JsonListOfScalarsDataset(JsonBaseDataset[JsonListOfScalarsModel]):
+    """"""
+    ...
 
-JsonNestedDictsDataset: TypeAlias = JsonBaseDataset[JsonNestedDictsModel]
-JsonListOfNestedDictsDataset: TypeAlias = JsonBaseDataset[JsonListOfNestedDictsModel]
-JsonDictOfListsOfDictsOfAnyDataset: TypeAlias = JsonBaseDataset[JsonDictOfListsOfDictsOfAnyModel]
+
+class JsonListOfListsDataset(JsonBaseDataset[JsonListOfListsModel]):
+    """"""
+    ...
+
+
+class JsonListOfListsOfScalarsDataset(JsonBaseDataset[JsonListOfListsOfScalarsModel]):
+    """"""
+    ...
+
+
+class JsonListOfDictsDataset(JsonBaseDataset[JsonListOfDictsModel]):
+    """"""
+    ...
+
+
+class JsonListOfDictsOfScalarsDataset(JsonBaseDataset[JsonListOfDictsOfScalarsModel]):
+    """"""
+    ...
+
+
+# Dict at the top level
+
+
+class JsonDictDataset(JsonBaseDataset[JsonDictModel]):
+    ...
+
+
+class JsonDictOfScalarsDataset(JsonBaseDataset[JsonDictOfScalarsModel]):
+    ...
+
+
+class JsonDictOfListsDataset(JsonBaseDataset[JsonDictOfListsModel]):
+    ...
+
+
+class JsonDictOfListsOfScalarsDataset(JsonBaseDataset[JsonDictOfListsOfScalarsModel]):
+    ...
+
+
+class JsonDictOfDictsDataset(JsonBaseDataset[JsonDictOfDictsModel]):
+    ...
+
+
+class JsonDictOfDictsOfScalarsDataset(JsonBaseDataset[JsonDictOfDictsOfScalarsModel]):
+    ...
+
+
+# Nested datasets
+
+
+class JsonNoDictsDataset(JsonBaseDataset[JsonNoDictsModel]):
+    ...
+
+
+class JsonNestedListsDataset(JsonBaseDataset[JsonNestedListsModel]):
+    ...
+
+
+class JsonNoListsDataset(JsonBaseDataset[JsonNoListsModel]):
+    ...
+
+
+class JsonNestedDictsDataset(JsonBaseDataset[JsonNestedDictsModel]):
+    ...
+
+
+# More specific datasets
+
+
+class JsonListOfNestedDictsDataset(JsonBaseDataset[JsonListOfNestedDictsModel]):
+    ...
+
+
+class JsonDictOfNestedListsDataset(JsonBaseDataset[JsonDictOfNestedListsModel]):
+    ...
+
+
+class JsonDictOfListsOfDictsDataset(JsonBaseDataset[JsonDictOfListsOfDictsModel]):
+    ...
+
+
+# Custom datasets

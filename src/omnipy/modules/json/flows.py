@@ -1,14 +1,14 @@
 from omnipy.compute.flow import FuncFlowTemplate
 from omnipy.compute.typing import mypy_fix_func_flow_template
 
-from .datasets import JsonListOfDictsOfAnyDataset, JsonListOfDictsOfScalarsDataset
+from .datasets import JsonListOfDictsDataset, JsonListOfDictsOfScalarsDataset
 from .tasks import DEFAULT_KEY, flatten_outer_level_of_all_data_files, ID_KEY, REF_KEY
 
 
 @mypy_fix_func_flow_template
 @FuncFlowTemplate(fixed_params=dict(id_key=ID_KEY, ref_key=REF_KEY, default_key=DEFAULT_KEY))
 def flatten_nested_json(
-    dataset: JsonListOfDictsOfAnyDataset,
+    dataset: JsonListOfDictsDataset,
     id_key: str,
     ref_key: str,
     default_key: str,

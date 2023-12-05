@@ -1,14 +1,14 @@
 from typing import Dict, List, Union
 
 from omnipy.data.model import Model
-from omnipy.modules.json.models import JsonDictModel, JsonListModel
+from omnipy.modules.json.models import JsonCustomDictModel, JsonCustomListModel
 
 
 class TableOfStrings(Model[List[Dict[str, str]]]):
     ...
 
 
-class JsonTableOfStrings(JsonListModel[JsonDictModel[str]]):
+class JsonTableOfStrings(JsonCustomListModel[JsonCustomDictModel[str]]):
     ...
 
 
