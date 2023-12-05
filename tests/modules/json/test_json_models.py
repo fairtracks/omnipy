@@ -1,4 +1,6 @@
 from dataclasses import fields
+import os
+from textwrap import dedent
 from typing import TypeAlias
 
 from pydantic import ValidationError
@@ -73,3 +75,58 @@ def test_json_model_consistency_basic():
     assert MyJsonListOfScalarsModel(example_list_data) == MyJsonListOfScalarsModel(
         __root__=_JsonBaseListM[JsonCustomScalarModel](
             __root__=[_JsonScalarM(__root__='abc'), _JsonScalarM(__root__=2312)]))
+
+
+# TODO: Revisit test_json_model_consistency_none_known_issue after pydantic v2 is supported.
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason=dedent("""\
+      Known issue with omnipy hack for pydantic v1. None values are not pushed to the _JsonScalarM
+      model, but stays at the _JsonDictM or _JsonListM parent. Not captured by equals for some
+      reason (another bug?), so added check based on `.contents`.
+      """))
+def test_json_model_consistency_none_known_issue():
+    MyJsonDictOfScalarsModel: TypeAlias = JsonCustomDictModel[JsonCustomScalarModel]
+    MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonCustomScalarModel]
+
+    example_dict_data = {'abc': None}
+    assert JsonModel(example_dict_data) == JsonModel(
+        __root__=_JsonDictM(__root__={'abc': _JsonScalarM(__root__=None)}))
+
+    assert JsonDictModel(example_dict_data) == JsonDictModel(
+        __root__=_JsonDictM(__root__={'abc': _JsonScalarM(__root__=None)}))
+
+    assert JsonDictOfScalarsModel(example_dict_data) == JsonDictOfScalarsModel(
+        __root__=_JsonDictOfScalarsM(__root__={'abc': _JsonScalarM(__root__=None)}))
+
+    assert MyJsonDictOfScalarsModel(example_dict_data) == MyJsonDictOfScalarsModel(
+        __root__=_JsonBaseDictM[JsonCustomScalarModel](__root__={
+            'abc': _JsonScalarM(__root__=None)
+        }))
+
+    example_list_data = ['abc', None]
+    assert JsonModel(example_list_data) == JsonModel(
+        __root__=_JsonListM(__root__=[_JsonScalarM(__root__='abc'), _JsonScalarM(__root__=None)]))
+
+    assert JsonListModel(example_list_data) == JsonListModel(
+        __root__=_JsonListM(__root__=[_JsonScalarM(__root__='abc'), _JsonScalarM(__root__=None)]))
+
+    assert JsonListOfScalarsModel(example_list_data) == JsonListOfScalarsModel(
+        __root__=_JsonListM(__root__=[_JsonScalarM(__root__='abc'), _JsonScalarM(__root__=None)]))
+
+    assert MyJsonListOfScalarsModel(example_list_data) == MyJsonListOfScalarsModel(
+        __root__=_JsonBaseListM[JsonCustomScalarModel](
+            __root__=[_JsonScalarM(__root__='abc'), _JsonScalarM(__root__=None)]))
+
+
+# TODO: Revisit test_error_list_of_single_dict_with_two_elements after pydantic v2 is supported.
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason=dedent("""\
+      Known issue with pydantic v1 due to attempting to parse a list of tuples to a dictionary. 
+      Here the inner dict is treated as a sequence, which returns the keys.
+      """))
+def test_error_list_of_single_dict_with_two_elements():
+    with pytest.raises(ValidationError):
+        a = JsonDictModel([{'a': 1, 'b': 2}])
+        assert a.to_data() == {'a': 'b'}
