@@ -2,15 +2,28 @@ from __future__ import annotations
 
 from collections import UserDict
 import json
-from typing import Any, Dict, Generic, Iterator, Tuple, Type, TypeVar, Union
+from typing import (Annotated,
+                    Any,
+                    Dict,
+                    Generic,
+                    get_args,
+                    get_origin,
+                    Iterator,
+                    Optional,
+                    Tuple,
+                    Type,
+                    TypeVar,
+                    Union)
 
 # from orjson import orjson
-from pydantic import Field, PrivateAttr, ValidationError
+from pydantic import Field, PrivateAttr, root_validator, ValidationError
 from pydantic.fields import Undefined
 from pydantic.generics import GenericModel
+from pydantic.typing import display_as_type
 from pydantic.utils import lenient_issubclass
 
 from omnipy.data.model import generate_qualname, Model
+from omnipy.util.helpers import is_optional
 
 ModelT = TypeVar('ModelT', bound=Model)
 DATA_KEY = 'data'
@@ -84,12 +97,22 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if isinstance(model, tuple) and len(model) == 1:
             model = model[0]
 
+        orig_model = model
+
+        model = cls._origmodel_if_annotated_optional(model)
+
         if not isinstance(model, TypeVar) and not lenient_issubclass(model, Model):
             raise TypeError('Invalid model: {}! '.format(model)
                             + 'omnipy Dataset models must be a specialization of the omnipy '
                             'Model class.')
+
+        if cls == Dataset and not is_optional(model):
+            model = Annotated[Optional[model], 'Fake Optional from Dataset']
+
         created_dataset = super().__class_getitem__(model)
 
+        if created_dataset.__name__.startswith('Dataset[') and get_origin(model) is Annotated:
+            created_dataset.__name__ = f'Dataset[{display_as_type(orig_model)}]'
         created_dataset.__qualname__ = generate_qualname(cls.__name__, model)
 
         return created_dataset
@@ -116,16 +139,25 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if not self.__doc__:
             self._set_standard_field_description()
 
-    def get_model_class(self) -> Type[Model]:
+    @classmethod
+    def get_model_class(cls) -> Type[Model]:
         """
         Returns the concrete Model class used for all data files in the dataset, e.g.:
         `Model[List[int]]`
         :return: The concrete Model class used for all data files in the dataset
         """
-        return self.__fields__.get(DATA_KEY).type_
+        model_type = cls.__fields__.get(DATA_KEY).type_
+        return cls._origmodel_if_annotated_optional(model_type)
+
+    @classmethod
+    def _origmodel_if_annotated_optional(cls, model):
+        if get_origin(model) is Annotated:
+            unannotated_type = get_args(model)[0]
+            if is_optional(unannotated_type):
+                model = get_args(unannotated_type)[0]
+        return model
 
     # TODO: Update _raise_no_model_exception() text. Model is now a requirement
-
     @staticmethod
     def _raise_no_model_exception() -> None:
         raise TypeError(
@@ -186,6 +218,16 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             super().__setattr__(attr, value)
         else:
             raise RuntimeError('Model does not allow setting of extra attributes')
+
+    @root_validator()
+    def _parse_root_object(cls, root_obj: Dict[str, ModelT]) -> Any:  # noqa
+        assert DATA_KEY in root_obj
+        data_dict = root_obj[DATA_KEY]
+        model = cls.get_model_class()
+        for key, val in data_dict.items():
+            if val is None:
+                data_dict[key] = model.parse_obj(val)
+        return {DATA_KEY: data_dict}
 
     def to_data(self) -> Dict[str, Any]:
         return GenericModel.dict(self).get(DATA_KEY)
@@ -271,6 +313,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             and self.__class__ == other.__class__ \
             and self.data == other.data \
             and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
+
 
 # TODO: Use json serializer package from the pydantic config instead of 'json'
 

@@ -61,6 +61,45 @@ def test_init_with_basic_parsing():
     assert dataset_3['obj_type_3'] == 'True'
 
 
+def test_parsing_none_allowed():
+    class NoneModel(Model[NoneType]):
+        ...
+
+    assert Dataset[NoneModel]({'a': None}).to_data() == {'a': None}
+
+    with pytest.raises(ValidationError):
+        Dataset[NoneModel]({'a': 'None'})
+
+    class MaybeNumberModelOptional(Model[Optional[int]]):
+        ...
+
+    class MaybeNumberModelUnion(Model[Union[int, None]]):
+        ...
+
+    class MaybeNumberModelUnionNew(Model[int | None]):
+        ...
+
+    for model_cls in [MaybeNumberModelOptional, MaybeNumberModelUnion, MaybeNumberModelUnionNew]:
+        # for model_cls in [MaybeNumberModelOptional, MaybeNumberModelUnion]:
+        assert Dataset[model_cls]({'a': None, 'b': 13}).to_data() == {'a': None, 'b': 13}
+
+        with pytest.raises(ValidationError):
+            Dataset[model_cls]({'a': 'None'})
+
+
+def test_parsing_none_not_allowed():
+    class IntListModel(Model[List[int]]):
+        ...
+
+    class IntDictModel(Model[Dict[int, int]]):
+        ...
+
+    for model_cls in [IntListModel, IntDictModel]:
+
+        with pytest.raises(ValidationError):
+            Dataset[model_cls]({'a': None})
+
+
 def test_more_dict_methods_with_parsing():
     dataset_1 = Dataset[Model[int]]()
 
