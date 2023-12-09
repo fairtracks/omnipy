@@ -120,7 +120,8 @@ def test_json_model_consistency_none_known_issue():
             __root__=[_JsonScalarM(__root__='abc'), _JsonScalarM(__root__=None)]))
 
 
-# TODO: Revisit test_error_list_of_single_dict_with_two_elements after pydantic v2 is supported.
+# TODO: Revisit test_error_list_of_single_dict_with_two_elements and
+#  case_frozen_dicts_no_type_args_known_issue after pydantic v2 is supported.
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason=dedent("""\
