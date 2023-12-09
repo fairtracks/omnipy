@@ -30,6 +30,9 @@ DATA_KEY = 'data'
 #     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
 #     return orjson.dumps(v, default=default).decode()
 
+# TODO: implement copy(), __copy__() and __deepcopy__() for Dataset and Model, making use of
+#       BaseModel.copy()
+
 
 class Dataset(GenericModel, Generic[ModelT], UserDict):
     """
@@ -127,6 +130,9 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         #           Traceback (most recent call last):
         #             ...
         #           TypeError: 'ModelMetaclass' object does not support item assignment
+        #
+        # TODO: Allow e.g. Dataset[Model[int]](a=1, b=2) init
+        # TODO: Disallow e.g. Dataset[Model[str]](Model[int](5)) ==  Dataset[Model[str]](data=Model[int](5)) == Dataset[Model[str]](data={'__root__': Model[str]('5')})
 
         if value != Undefined:
             input_data[DATA_KEY] = value
