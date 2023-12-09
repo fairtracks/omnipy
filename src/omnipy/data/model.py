@@ -250,6 +250,8 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             cls._raise_no_model_exception()
         return super().__new__(cls)
 
+    # TODO: Allow e.g. Model[str](Model[int](5)) == Model[str](Model[int](5).contents).
+    #       Should then work the same as dataset
     def __init__(
         self,
         value: Union[Any, UndefinedType] = Undefined,
