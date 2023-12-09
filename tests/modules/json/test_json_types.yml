@@ -1,5 +1,9 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/typeddjango/pytest-mypy-plugins/master/pytest_mypy_plugins/schema.json
 
+# Note: tests.modules.json.cases.json_data and tests.modules.general.cases.frozen_data holds derived
+#       versions of the tests in this file. Updates to the tests in this file should be reflected in
+#       updates of the respective derived tests in the other modules.
+
 - case: test_json_scalar
   main: |
     from omnipy.modules.json.typedefs import JsonScalar
