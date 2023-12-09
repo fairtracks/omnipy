@@ -16,10 +16,11 @@ packages = [{include = "omnipy", from = "src"}]
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
 #python = ">=3.8.1,<4.0"
+#pendulum = "^3.0.0b1"
 aiostream = "^0.4.5"
-greenlet = "^2.0.1"
+#greenlet = "2.0.2"
 inflection = "^0.5.1"
-pandas = "^1.2.4"
+pandas = "2.1.4"
 prefect = "^2.7.3"
 pydantic = "^1.10.2"
 pytest-asyncio = "^0.20.2"
@@ -43,9 +44,10 @@ pytest = "^7.1.0"
 pytest-pycharm = "^0.7.0"
 types-python-slugify = "^8.0.0.1"
 types-requests = "^2.28.11.15"
-pandas-stubs = "^1.5.3.230304"
+pandas-stubs = "^2.1.1.230928"
 pre-commit = "^2.15.0"
 pytest-mypy-plugins = "^3.0.0"
+devtools = "^0.12.2"
 
 [tool.poetry.group.docs.dependencies]
 furo = "^2022.12.7"
@@ -121,6 +123,11 @@ warn_no_return = false
 #show_column_numbers = true
 error_summary = true
 verbosity = 0
+#no_implicit_reexport = true
+
+#plugins = [
+#  "pydantic.mypy"
+#]
 
 [[tool.mypy.overrides]]
 module = "tests.*"
