@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Optional, Protocol, runtime_checkable, Type
 
 from omnipy.api.protocols.private.log import IsRunStateRegistry

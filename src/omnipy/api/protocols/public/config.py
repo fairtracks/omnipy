@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Protocol
 
 from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
@@ -25,7 +23,7 @@ class IsPrefectEngineConfig(IsEngineConfig, Protocol):
 
 class IsJobConfig(Protocol):
     """"""
-    output_storage: IsOutputStorage
+    output_storage: 'IsOutputStorage'
 
 
 class IsRootLogConfig(Protocol):

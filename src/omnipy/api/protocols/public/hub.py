@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from typing import Optional, Protocol
@@ -39,7 +37,7 @@ class IsRuntimeConfig(Protocol):
             engine: EngineChoice = EngineChoice.LOCAL,  # noqa
             local: Optional[IsLocalRunnerConfig] = None,  # noqa
             prefect: Optional[IsPrefectEngineConfig] = None,  # noqa
-            root_log: Optional[IsRootLogConfigEntryPublisher] = None,  # noqa
+            root_log: Optional['IsRootLogConfigEntryPublisher'] = None,  # noqa
             *args: object,
             **kwargs: object) -> None:
         ...

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Callable, Protocol, runtime_checkable
 
 from omnipy.api.protocols.private.engine import IsEngine
