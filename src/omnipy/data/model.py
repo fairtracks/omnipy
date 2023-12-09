@@ -8,8 +8,9 @@ from typing import (Annotated,
                     Generic,
                     get_args,
                     get_origin,
-                    List,
                     Optional,
+                    overload,
+                    SupportsIndex,
                     Type,
                     TypeVar,
                     Union)
@@ -28,7 +29,11 @@ from pydantic.utils import lenient_isinstance, lenient_issubclass
 
 from omnipy.util.helpers import is_optional
 
+_KeyT = TypeVar('_KeyT')
+_ValT = TypeVar('_ValT')
+_IdxT = TypeVar('_IdxT', bound=SupportsIndex)
 RootT = TypeVar('RootT', covariant=True, bound=object)
+
 ROOT_KEY = '__root__'
 
 # def orjson_dumps(v, *, default):
@@ -451,3 +456,46 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             and self.__class__ == other.__class__ \
             and self.contents == other.contents \
             and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
+
+    @overload
+    def __getitem__(self: 'Model[Model[Mapping[_KeyT, _ValT]]]', item: _KeyT) -> _ValT:
+        ...
+
+    @overload
+    def __getitem__(self: 'Model[Mapping[_KeyT, _ValT]]', item: _KeyT) -> _ValT:
+        ...
+
+    @overload
+    def __getitem__(self: 'Model[Model[Sequence[_ValT]]]', item: slice) -> 'RootT':
+        ...
+
+    @overload
+    def __getitem__(self: 'Model[Sequence[_ValT]]', item: slice) -> 'Model[RootT]':
+        ...
+
+    @overload
+    def __getitem__(self: 'Model[Model[Sequence[_ValT]]]', item: int) -> _ValT:
+        ...
+
+    @overload
+    def __getitem__(self: 'Model[Sequence[_ValT]]', item: int) -> _ValT:
+        ...
+
+    def __getitem__(self, item):
+        contents = self.contents
+        if isinstance(contents, Model):
+            if isinstance(contents.contents, Sequence):
+                if isinstance(item, int):
+                    return contents.contents[item]
+                if isinstance(item, slice):
+                    return type(contents)(contents.contents[item])
+            if isinstance(contents.contents, Mapping):
+                return contents.contents[cast(_KeyT, item)]
+        else:
+            if isinstance(contents, Sequence):
+                if isinstance(item, int):
+                    return contents[item]
+                if isinstance(item, slice):
+                    return type(self)(contents[item])
+            if isinstance(contents, Mapping):
+                return contents[cast(_KeyT, item)]
