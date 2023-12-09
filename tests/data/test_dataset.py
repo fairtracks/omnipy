@@ -1,3 +1,4 @@
+from textwrap import dedent
 from types import NoneType
 from typing import Dict, Generic, List, Optional, TypeVar, Union
 
@@ -249,8 +250,18 @@ def test_import_and_export():
         'obj_type_1': '{"a": "123", "b": "234", "c": "345"}', 'obj_type_2': '{"c": "456"}'
     }
     assert dataset.to_json(pretty=True) == {
-        'obj_type_1': '{\n    "a": "123",\n    "b": "234",\n    "c": "345"\n}',
-        'obj_type_2': '{\n    "c": "456"\n}'
+        'obj_type_1':
+            dedent('''\
+            {
+              "a": "123",
+              "b": "234",
+              "c": "345"
+            }'''),
+        'obj_type_2':
+            dedent('''\
+            {
+              "c": "456"
+            }''')
     }
 
     data = {'obj_type_1': {'a': 333, 'b': 555, 'c': 777}, 'obj_type_3': {'a': '99', 'b': '98'}}
@@ -313,13 +324,13 @@ def test_import_and_export():
         '"description": "' + Model._get_standard_field_description()
         + '", "type": "object", "additionalProperties": {"type": "string"}}}}')
 
-    assert dataset.to_json_schema(pretty=True) == '''
-{
-    "title": "Dataset[Model[Dict[str, str]]]",
-    "description": "'''[1:] + Dataset._get_standard_field_description() + '''",
-    "default": {},
-    "type": "object",
-    "additionalProperties": {
+    assert dataset.to_json_schema(pretty=True) == dedent('''\
+    {
+      "title": "Dataset[Model[Dict[str, str]]]",
+      "description": "''' + Dataset._get_standard_field_description() + '''",
+      "default": {},
+      "type": "object",
+      "additionalProperties": {
         "$ref": "#/definitions/Model_Dict_str__str__"
     },
     "definitions": {
@@ -331,8 +342,8 @@ def test_import_and_export():
                 "type": "string"
             }
         }
-    }
-}'''  # noqa
+      }
+    }''')
 
     assert dataset.to_json() == dataset.to_json(pretty=False)  # noqa
     assert dataset.to_json_schema() == dataset.to_json_schema(pretty=False)  # noqa
@@ -354,23 +365,23 @@ def test_import_export_custom_parser_to_other_type():
     assert dataset['obj_type_2'] == 24
     assert dataset.to_json() == {'obj_type_1': '30', 'obj_type_2': '24'}
 
-    assert dataset.to_json_schema(pretty=True) == '''
-{
-    "title": "Dataset[StringToLength]",
-    "description": "'''[1:] + Dataset._get_standard_field_description() + '''",
-    "default": {},
-    "type": "object",
-    "additionalProperties": {
+    assert dataset.to_json_schema(pretty=True) == dedent('''\
+    {
+      "title": "Dataset[StringToLength]",
+      "description": "''' + Dataset._get_standard_field_description() + '''",
+      "default": {},
+      "type": "object",
+      "additionalProperties": {
         "$ref": "#/definitions/StringToLength"
-    },
-    "definitions": {
+      },
+      "definitions": {
         "StringToLength": {
-            "title": "StringToLength",
-            "description": "''' + Model._get_standard_field_description() + '''",
-            "type": "string"
+          "title": "StringToLength",
+          "description": "''' + Model._get_standard_field_description() + '''",
+          "type": "string"
         }
-    }
-}'''  # noqa
+      }
+    }''')
 
 
 def test_complex_models():
@@ -438,19 +449,41 @@ def test_complex_models():
     }
 
     assert dataset.to_json(pretty=True) == {
-        '1': '[\n    1\n]',
-        '2': '[\n    2,\n    1\n]',
-        '3': '[\n    3,\n    2,\n    1\n]',
-        '4': '[\n    4,\n    3,\n    2,\n    1\n]'
+        '1':
+            dedent('''\
+            [
+              1
+            ]'''),
+        '2':
+            dedent('''\
+            [
+              2,
+              1
+            ]'''),
+        '3':
+            dedent('''\
+            [
+              3,
+              2,
+              1
+            ]'''),
+        '4':
+            dedent('''\
+            [
+              4,
+              3,
+              2,
+              1
+            ]''')
     }
 
-    assert dataset.to_json_schema(pretty=True) == '''
-{
-    "title": "MyReversedRangeList",
-    "description": "'''[1:] + Dataset._get_standard_field_description() + '''",
-    "default": {},
-    "type": "object",
-    "additionalProperties": {
+    assert dataset.to_json_schema(pretty=True) == dedent('''\
+    {
+      "title": "MyReversedRangeList",
+      "description": "''' + Dataset._get_standard_field_description() + '''",
+      "default": {},
+      "type": "object",
+      "additionalProperties": {
         "$ref": "#/definitions/MyReversedListModel_MyRangeList_"
     },
     "definitions": {
@@ -472,8 +505,8 @@ def test_complex_models():
                 }
             ]
         }
-    }
-}'''  # noqa
+      }
+    }''')
 
 
 def test_dataset_model_class():
