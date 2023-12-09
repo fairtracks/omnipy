@@ -21,7 +21,8 @@ from omnipy.modules.json.models import (_JsonBaseDictM,
                                         JsonListModel,
                                         JsonListOfScalarsModel,
                                         JsonModel)
-from tests.modules.json.helpers.classes import CaseInfo
+
+from ..helpers.classes import CaseInfo
 
 
 @pc.parametrize_with_cases('case', cases='.cases.json_data')

@@ -45,20 +45,21 @@ from omnipy.modules.json.models import (JsonDictModel,
                                         JsonNoListsModel,
                                         JsonScalarModel)
 from omnipy.modules.json.typedefs import JsonScalar as JS
-from tests.modules.json.cases.raw.examples import (b_bool,
-                                                   b_dict,
-                                                   b_float,
-                                                   b_int,
-                                                   b_list,
-                                                   b_none,
-                                                   b_set,
-                                                   b_str,
-                                                   b_tuple,
-                                                   e_bool_key_dict,
-                                                   e_float_key_dict,
-                                                   e_int_key_dict,
-                                                   e_none_key_dict)
-from tests.modules.json.helpers.classes import CaseInfo
+
+from ...helpers.classes import CaseInfo
+from .raw.examples import (b_bool,
+                           b_dict,
+                           b_float,
+                           b_int,
+                           b_list,
+                           b_none,
+                           b_set,
+                           b_str,
+                           b_tuple,
+                           e_bool_key_dict,
+                           e_float_key_dict,
+                           e_int_key_dict,
+                           e_none_key_dict)
 
 
 @pc.case(id='test_json_scalar', tags=[])
