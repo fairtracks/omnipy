@@ -4,7 +4,18 @@ from collections.abc import Hashable, Iterable
 import inspect
 import locale as pkg_locale
 from types import UnionType
-from typing import Any, cast, Dict, get_args, get_origin, Mapping, Optional, Tuple, TypeVar, Union
+from typing import (Any,
+                    cast,
+                    ClassVar,
+                    Dict,
+                    get_args,
+                    get_origin,
+                    Mapping,
+                    Optional,
+                    Protocol,
+                    Tuple,
+                    TypeVar,
+                    Union)
 
 from typing_inspect import get_generic_bases, is_generic_type
 
@@ -74,6 +85,43 @@ def transfer_generic_args_to_cls(to_cls, from_generic_type):
         return to_cls
 
 
-def is_optional(cls_or_type):
+def is_iterable(obj: object) -> bool:
+    try:
+        iter(obj)
+        return True
+    except TypeError as e:
+        return False
+    return ShouldNotOccurException()
+
+
+def is_optional(cls_or_type: type) -> bool:
     return get_origin(cls_or_type) in [Union, UnionType] and \
         type(None) in get_args(cls_or_type)
+
+
+def is_strict_subclass(
+        __cls: type,
+        __class_or_tuple: type | UnionType | tuple[type | UnionType | tuple[Any, ...], ...]
+) -> bool:
+    if issubclass(__cls, __class_or_tuple):
+        if isinstance(__class_or_tuple, Iterable):
+            return __cls not in __class_or_tuple
+        else:
+            return __cls != __class_or_tuple
+    return False
+
+
+class IsDataclass(Protocol):
+    __dataclass_fields__: ClassVar[Dict]
+
+
+class PrintExceptionContext:
+    def __enter__(self):
+        ...
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print(f'{exc_type.__name__}: {str(exc_val).splitlines()[0]}', end='')
+        return True
+
+
+print_exception = PrintExceptionContext()

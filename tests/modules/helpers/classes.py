@@ -2,7 +2,7 @@ from typing import NamedTuple, Type
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-from tests.modules.json.helpers.typedefs import IsDataclass
+from omnipy.util.helpers import IsDataclass
 
 ERROR_PREFIX = 'err_'
 
