@@ -9,6 +9,7 @@ from typing_inspect import get_generic_type
 from omnipy.util.helpers import (is_iterable,
                                  is_optional,
                                  is_strict_subclass,
+                                 LastErrorHolder,
                                  print_exception,
                                  transfer_generic_args_to_cls)
 
@@ -180,3 +181,35 @@ def test_print_exception(capsys: pytest.CaptureFixture) -> None:
 
     captured = capsys.readouterr()  # type: ignore
     assert captured.out == 'NotImplementedError: Multi-line error!'
+
+
+def _raise_if_even_for_range(count: int):
+    def raise_if_even(a: int):
+        if a % 2 == 0:
+            raise ValueError(f'a={a} is even')
+
+    iterable = range(count)
+
+    last_error_holder = LastErrorHolder()
+    for item in iterable:
+        with last_error_holder:
+            raise_if_even(item)
+
+    last_error_holder.raise_derived(EOFError(f'No more numbers, last was: {item}'))
+
+
+def test_with_last_error() -> None:
+    with pytest.raises(EOFError, match='last was: 0') as exc_info:
+        _raise_if_even_for_range(1)
+
+    assert 'a=0 is even' in str(exc_info.getrepr())
+
+    with pytest.raises(EOFError, match='last was: 2') as exc_info:
+        _raise_if_even_for_range(3)
+
+    assert 'a=2 is even' in str(exc_info.getrepr())
+
+    with pytest.raises(EOFError, match='last was: 5') as exc_info:
+        _raise_if_even_for_range(6)
+
+    assert 'a=4 is even' in str(exc_info.getrepr())

@@ -122,3 +122,22 @@ class PrintExceptionContext:
 
 
 print_exception = PrintExceptionContext()
+
+
+class LastErrorHolder:
+    def __init__(self):
+        self._last_error = None
+
+    def __enter__(self):
+        ...
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_val is not None:
+            self._last_error = exc_val
+        return True
+
+    def raise_derived(self, exc: Exception):
+        if self._last_error is not None:
+            raise exc from self._last_error
+        else:
+            raise exc
