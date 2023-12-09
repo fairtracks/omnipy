@@ -7,14 +7,15 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
 from . import pd
-from ..general.models import NotIteratorExceptStrings
+from ..general.models import NotIterableExceptStrOrBytesModel
 from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset
 
 
 @mypy_fix_task_template
 @TaskTemplate()
 def convert_dataset_list_of_dicts_to_pandas(
-        dataset: Dataset[Model[List[Dict[str, NotIteratorExceptStrings]]]]) -> PandasDataset:
+        dataset: Dataset[Model[List[Dict[str,
+                                         NotIterableExceptStrOrBytesModel]]]]) -> PandasDataset:
     pandas_dataset = PandasDataset()
     pandas_dataset.from_data(dataset.to_data())
     return pandas_dataset
