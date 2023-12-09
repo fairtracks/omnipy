@@ -293,7 +293,11 @@ class JsonDictOfListsOfDictsModel(Model[_JsonBaseDictM[_JsonBaseListM[_JsonDictM
 
 # Custom models
 
-JsonCustomScalarModel: TypeAlias = Optional[_JsonScalarM]
+JsonScalarModelArg: TypeAlias = _JsonScalarM
+
+
+class JsonCustomModel(Model[_JsonBaseListM[_JsonBaseT]], Generic[_JsonBaseT]):
+    ...
 
 
 class JsonCustomListModel(Model[_JsonBaseListM[_JsonBaseT]], Generic[_JsonBaseT]):

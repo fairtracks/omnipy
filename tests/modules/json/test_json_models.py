@@ -15,12 +15,12 @@ from omnipy.modules.json.models import (_JsonBaseDictM,
                                         _JsonScalarM,
                                         JsonCustomDictModel,
                                         JsonCustomListModel,
-                                        JsonCustomScalarModel,
                                         JsonDictModel,
                                         JsonDictOfScalarsModel,
                                         JsonListModel,
                                         JsonListOfScalarsModel,
-                                        JsonModel)
+                                        JsonModel,
+                                        JsonScalarModelArg)
 
 from ..helpers.classes import CaseInfo
 
@@ -51,8 +51,8 @@ def test_json_models(case: CaseInfo) -> None:
 
 
 def test_json_model_consistency_basic():
-    MyJsonDictOfScalarsModel: TypeAlias = JsonCustomDictModel[JsonCustomScalarModel]
-    MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonCustomScalarModel]
+    MyJsonDictOfScalarsModel: TypeAlias = JsonCustomDictModel[JsonScalarModelArg]
+    MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonScalarModelArg]
 
     example_dict_data = {'abc': 2312}
     assert JsonModel(example_dict_data) == JsonModel(
@@ -62,7 +62,7 @@ def test_json_model_consistency_basic():
     assert JsonDictOfScalarsModel(example_dict_data) == JsonDictOfScalarsModel(
         __root__=_JsonDictOfScalarsM(__root__={'abc': _JsonScalarM(__root__=2312)}))
     assert MyJsonDictOfScalarsModel(example_dict_data) == MyJsonDictOfScalarsModel(
-        __root__=_JsonBaseDictM[JsonCustomScalarModel](__root__={
+        __root__=_JsonBaseDictM[JsonScalarModelArg](__root__={
             'abc': _JsonScalarM(__root__=2312)
         }))
 
@@ -74,7 +74,7 @@ def test_json_model_consistency_basic():
     assert JsonListOfScalarsModel(example_list_data) == JsonListOfScalarsModel(
         __root__=_JsonListM(__root__=[_JsonScalarM(__root__='abc'), _JsonScalarM(__root__=2312)]))
     assert MyJsonListOfScalarsModel(example_list_data) == MyJsonListOfScalarsModel(
-        __root__=_JsonBaseListM[JsonCustomScalarModel](
+        __root__=_JsonBaseListM[JsonScalarModelArg](
             __root__=[_JsonScalarM(__root__='abc'), _JsonScalarM(__root__=2312)]))
 
 
@@ -87,8 +87,8 @@ def test_json_model_consistency_basic():
       reason (another bug?), so added check based on `.contents`.
       """))
 def test_json_model_consistency_none_known_issue():
-    MyJsonDictOfScalarsModel: TypeAlias = JsonCustomDictModel[JsonCustomScalarModel]
-    MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonCustomScalarModel]
+    MyJsonDictOfScalarsModel: TypeAlias = JsonCustomDictModel[JsonScalarModelArg]
+    MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonScalarModelArg]
 
     example_dict_data = {'abc': None}
     assert JsonModel(example_dict_data) == JsonModel(
@@ -101,7 +101,7 @@ def test_json_model_consistency_none_known_issue():
         __root__=_JsonDictOfScalarsM(__root__={'abc': _JsonScalarM(__root__=None)}))
 
     assert MyJsonDictOfScalarsModel(example_dict_data) == MyJsonDictOfScalarsModel(
-        __root__=_JsonBaseDictM[JsonCustomScalarModel](__root__={
+        __root__=_JsonBaseDictM[JsonScalarModelArg](__root__={
             'abc': _JsonScalarM(__root__=None)
         }))
 
@@ -116,7 +116,7 @@ def test_json_model_consistency_none_known_issue():
         __root__=_JsonListM(__root__=[_JsonScalarM(__root__='abc'), _JsonScalarM(__root__=None)]))
 
     assert MyJsonListOfScalarsModel(example_list_data) == MyJsonListOfScalarsModel(
-        __root__=_JsonBaseListM[JsonCustomScalarModel](
+        __root__=_JsonBaseListM[JsonScalarModelArg](
             __root__=[_JsonScalarM(__root__='abc'), _JsonScalarM(__root__=None)]))
 
 
