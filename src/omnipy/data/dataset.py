@@ -297,7 +297,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     @staticmethod
     def _pretty_print_json(json_content: Any) -> str:
-        return json.dumps(json_content, indent=4)
+        return json.dumps(json_content, indent=2)
 
     def as_multi_model_dataset(self) -> 'MultiModelDataset[ModelT]':
         multi_model_dataset = MultiModelDataset[self.get_model_class()]()
