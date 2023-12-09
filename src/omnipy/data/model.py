@@ -27,7 +27,7 @@ from pydantic.main import ModelMetaclass
 from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass
 
-from omnipy.util.helpers import is_optional
+from omnipy.util.helpers import is_optional, LastErrorHolder
 
 _KeyT = TypeVar('_KeyT')
 _ValT = TypeVar('_ValT')
@@ -139,18 +139,13 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         if origin_type in [Union, UnionType]:
             if any(is_none_type(arg) for arg in args):
                 return None
-            last_error = None
+
+            last_error_holder = LastErrorHolder()
             for arg in args:
                 if callable(arg):
-                    try:
+                    with last_error_holder:
                         return cls._get_default_value_from_model(arg)
-                    except Exception as e:
-                        last_error = e
-            main_error = TypeError(f'Cannot instantiate model "{model}".')
-            if last_error:
-                raise main_error from last_error
-            else:
-                raise main_error
+            last_error_holder.raise_derived(TypeError(f'Cannot instantiate model "{model}".'))
         elif origin_type is tuple:
             if args and Ellipsis not in args:
                 return tuple(cls._get_default_value_from_model(arg) for arg in args)
@@ -331,17 +326,13 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             root_type = get_args(root_type)[0]
 
         if get_origin(root_type) is Union:
-            last_error = None
+            last_error_holder = LastErrorHolder()
+
             for arg in get_args(root_type):
-                try:
+                with last_error_holder:
                     return cls._parse_with_root_type_if_model(value, root_field, arg)
-                except Exception as e:
-                    last_error = e
-            main_error = NoneIsNotAllowedError()
-            if last_error:
-                raise main_error from last_error
-            else:
-                raise main_error
+
+            last_error_holder.raise_derived(NoneIsNotAllowedError())
 
         if lenient_issubclass(root_type, Model):
             if root_field.outer_type_ != root_type:
