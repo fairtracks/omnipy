@@ -251,17 +251,17 @@ def test_import_and_export():
     }
     assert dataset.to_json(pretty=True) == {
         'obj_type_1':
-            dedent('''\
+            dedent("""\
             {
               "a": "123",
               "b": "234",
               "c": "345"
-            }'''),
+            }"""),
         'obj_type_2':
-            dedent('''\
+            dedent("""\
             {
               "c": "456"
-            }''')
+            }""")
     }
 
     data = {'obj_type_1': {'a': 333, 'b': 555, 'c': 777}, 'obj_type_3': {'a': '99', 'b': '98'}}
@@ -343,7 +343,7 @@ def test_import_and_export():
           }
         }
       }
-    }''')
+    }''')  # noqa: Q001
 
     assert dataset.to_json() == dataset.to_json(pretty=False)  # noqa
     assert dataset.to_json_schema() == dataset.to_json_schema(pretty=False)  # noqa
@@ -381,7 +381,7 @@ def test_import_export_custom_parser_to_other_type():
           "type": "string"
         }
       }
-    }''')
+    }''')  # noqa: Q001
 
 
 def test_generic_dataset_unbound_typevar():
@@ -450,7 +450,7 @@ def test_generic_dataset_bound_typevar():
         MyListOfIntsOrStringsDataset({'a': {'x': 123}})
 
     # Further restricting the contents of the tuples and lists
-    assert MyListOfIntsOrStringsDataset[str]({'a': (123, '456')})['a'] == ["123", "456"]
+    assert MyListOfIntsOrStringsDataset[str]({'a': (123, '456')})['a'] == ['123', '456']
     assert MyListOfIntsOrStringsDataset[int]({'a': (123, '456')})['a'] == [123, 456]
 
     with pytest.raises(ValidationError):
@@ -564,31 +564,31 @@ def test_complex_models():
 
     assert dataset.to_json(pretty=True) == {
         '1':
-            dedent('''\
+            dedent("""\
             [
               1
-            ]'''),
+            ]"""),
         '2':
-            dedent('''\
+            dedent("""\
             [
               2,
               1
-            ]'''),
+            ]"""),
         '3':
-            dedent('''\
+            dedent("""\
             [
               3,
               2,
               1
-            ]'''),
+            ]"""),
         '4':
-            dedent('''\
+            dedent("""\
             [
               4,
               3,
               2,
               1
-            ]''')
+            ]""")
     }
 
     assert dataset.to_json_schema(pretty=True) == dedent('''\
@@ -620,7 +620,7 @@ def test_complex_models():
           ]
         }
       }
-    }''')
+    }''')  # noqa: Q001
 
 
 def test_dataset_model_class():

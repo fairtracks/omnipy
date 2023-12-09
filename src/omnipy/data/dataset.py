@@ -102,9 +102,9 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
         model = cls._origmodel_if_annotated_optional(model)
 
-        if (not isinstance(model, TypeVar) \
+        if not isinstance(model, TypeVar) \
                 and not lenient_issubclass(model, Model) \
-                and not is_strict_subclass(cls, Dataset)):
+                and not is_strict_subclass(cls, Dataset):
             raise TypeError('Invalid model: {}! '.format(model)
                             + 'omnipy Dataset models must be a specialization of the omnipy '
                             'Model class.')
@@ -132,7 +132,9 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         #           TypeError: 'ModelMetaclass' object does not support item assignment
         #
         # TODO: Allow e.g. Dataset[Model[int]](a=1, b=2) init
-        # TODO: Disallow e.g. Dataset[Model[str]](Model[int](5)) ==  Dataset[Model[str]](data=Model[int](5)) == Dataset[Model[str]](data={'__root__': Model[str]('5')})
+        # TODO: Disallow e.g.:
+        #       Dataset[Model[str]](Model[int](5)) ==  Dataset[Model[str]](data=Model[int](5))
+        #       == Dataset[Model[str]](data={'__root__': Model[str]('5')})
 
         if value != Undefined:
             input_data[DATA_KEY] = value

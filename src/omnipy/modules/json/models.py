@@ -310,7 +310,7 @@ class JsonCustomDictModel(Model[_JsonBaseDictM[_JsonBaseT]], Generic[_JsonBaseT]
 
 # Add note of dict keys to models containing dicts
 
-_NOTE_ON_DICT_KEYS = '''
+_NOTE_ON_DICT_KEYS = """
     Note:
         JSON dicts (or "objects") only supports strings as keys. By default, however, omnipy
         JSON models parse the basic types `float`, `int`, and `bool` as strings if used as keys
@@ -323,7 +323,7 @@ _NOTE_ON_DICT_KEYS = '''
             {'a': None, '0.5': 12.3, '1': 123, 'False': True}
             >>> my_dict.to_json()
             '{"a": null, "0.5": 12.3, "1": 123, "False": true}'
-    '''
+    """
 
 _dict_related_json_model_classes: list[Type[Model]] = [
     JsonModel,

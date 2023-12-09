@@ -366,7 +366,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
                 else root_field.default is None
             root_type_is_none = is_none_type(root_type)
             root_type_is_optional = get_origin(root_type) is Union \
-                                    and any(is_none_type(arg) for arg in get_args(root_type))
+                and any(is_none_type(arg) for arg in get_args(root_type))
             supports_none = none_default or root_type_is_none or root_type_is_optional
             if not supports_none:
                 raise NoneIsNotAllowedError()

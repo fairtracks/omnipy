@@ -218,11 +218,10 @@ def case_frozen_dicts_or_tuples_known_issue() -> CaseInfo:
 
 @pc.case(id='test_nested_frozen_dicts_or_tuples', tags=[])
 def case_nested_frozen_dicts_or_tuples() -> CaseInfo:
-    _two_level_list: list[FSV | list[FSV] |
-                          dict[str, FSV]] = f_list + [list(f_list)] + [dict(f_dict)]
-    _two_level_dict: dict[str, str | list[FSV] | dict[str, FSV]] = {
-        'a': f_str, 'b': list(f_list), 'c': dict(f_dict)
-    }
+    _two_level_list: list[FSV | list[FSV] | dict[str, FSV]] = \
+        f_list + [list(f_list)] + [dict(f_dict)]
+    _two_level_dict: dict[str, str | list[FSV] | dict[str, FSV]] = \
+        {'a': f_str, 'b': list(f_list), 'c': dict(f_dict)}
 
     @dataclass
     class NestedFrozenDictsOrTuplesDataPoints:
@@ -247,8 +246,8 @@ def case_nested_frozen_dicts_or_tuples() -> CaseInfo:
 
         # Origs: l_three_level_list, j_three_level_list
         nft_three_level_list: list[FSV | list[FSV] | dict[str, FSV]
-                                  | list[FSV | list[FSV] | dict[str, FSV]]
-                                  | dict[str, str | list[FSV] | dict[str, FSV]]] = \
+                                   | list[FSV | list[FSV] | dict[str, FSV]]
+                                   | dict[str, str | list[FSV] | dict[str, FSV]]] = \
             field(default_factory=lambda: list(f_list + [list(f_list), dict(f_dict),
                                                          list(_two_level_list),
                                                          dict(_two_level_dict)]))
@@ -274,8 +273,8 @@ def case_nested_frozen_dicts_or_tuples() -> CaseInfo:
 
         # Origs: d_three_level_dict, j_three_level_dict
         nfd_three_level_dict: dict[str, int | list[FSV] | dict[str, FSV]
-                                  | list[FSV | list[FSV] | dict[str, FSV]]
-                                  | dict[str, str | list[FSV] | dict[str, FSV]]] = \
+                                   | list[FSV | list[FSV] | dict[str, FSV]]
+                                   | dict[str, str | list[FSV] | dict[str, FSV]]] = \
             field(default_factory=lambda: {'a': f_int, 'b': list(f_list), 'c': dict(f_dict),
                                            'd': list(_two_level_list), 'e': dict(_two_level_dict)})
 
@@ -371,7 +370,7 @@ def case_nested_frozen_dicts() -> CaseInfo:
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason=dedent("""\
       Known issue due to failure of getting access to TypeAlias as string from runtime pydantic,
-      here, the `_FrozenNoDictsUnion` TypeAlias. Stops propagation of the type variables to the 
+      here, the `_FrozenNoDictsUnion` TypeAlias. Stops propagation of the type variables to the
       `_FrozenScalarM` class. Same issue as case_frozen_dicts_or_tuples_known_issue() and
       case_nested_frozen_dicts_known_issue().
       """))
@@ -384,8 +383,8 @@ def case_nested_frozen_tuples_known_issue() -> CaseInfo:
         #
 
         err_ft_tuple_wrong_scalar: tuple = ej_tuple_wrong_scalar
-        err_n_frozen_tuples_with_wrong_scalar_level_three: list[FSV | list[FSV | dict[str, FSV]]] = \
-            field(default_factory=lambda: list(f_list + [list(f_list + [ej_tuple_wrong_scalar])]))
+        err_n_frozen_tuples_with_wrong_scalar_level_three: list[FSV | list[FSV | dict[str, FSV]]] \
+            = field(default_factory=lambda: list(f_list + [list(f_list + [ej_tuple_wrong_scalar])]))
 
     return CaseInfo(
         name='test_(nested)_frozen_tuples_known_issue',
@@ -401,7 +400,6 @@ def case_nested_frozen_tuples_known_issue() -> CaseInfo:
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason=dedent("""\
-      Known issue with pydantic v1 due to attempting to parse a tuple of tuples to a dictionary. 
       Here the outer tuple is empty, generating an empty dict. Should be fixed in pydantic v2.
       """))
 @pc.case(id='test_(nested)_frozen_dicts_no_type_args_known_issue', tags=[])
@@ -417,7 +415,8 @@ def case_frozen_dicts_no_type_args_known_issue() -> CaseInfo:
         fd_frozendict_wrong_scalar: FrozenDict = \
             field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_wrong_scalar))
         n_frozen_dicts_with_wrong_scalar_level_three: dict[str, dict[str, FSV | list[FSV]]] = \
-            field(default_factory=lambda: {'a': dict(f_dict), 'b': {'x': ej_frozendict_wrong_scalar}})
+            field(default_factory=lambda:
+                  {'a': dict(f_dict), 'b': {'x': ej_frozendict_wrong_scalar}})
 
         # TODO: Check if pydantic v2 fixes this. Real error due to init of dict by (here empty)
         #  sequence of tuples. Same error in case_frozen_dicts_known_issue below
@@ -442,8 +441,8 @@ def case_frozen_dicts_no_type_args_known_issue() -> CaseInfo:
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason=dedent("""\
       Known issue due to failure of getting access to TypeAlias as string from runtime pydantic,
-      here, the `_FrozenNoDictsUnion` TypeAlias. Stops propagation of the type variables to the 
-      `_FrozenScalarM` class. Same issue as case_frozen_dicts_or_tuples_known_issue() and 
+      here, the `_FrozenNoDictsUnion` TypeAlias. Stops propagation of the type variables to the
+      `_FrozenScalarM` class. Same issue as case_frozen_dicts_or_tuples_known_issue() and
       case_nested_frozen_tuples_known_issue().
       """))
 @pc.case(id='test_(nested)_frozen_dicts_known_issue', tags=[])
@@ -458,7 +457,8 @@ def case_nested_frozen_dicts_known_issue() -> CaseInfo:
         err_fd_frozendict_wrong_scalar: FrozenDict = \
             field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_wrong_scalar))
         err_n_frozen_dicts_with_wrong_scalar_level_three: dict[str, dict[str, FSV | list[FSV]]] = \
-            field(default_factory=lambda: {'a': dict(f_dict), 'b': {'x': ej_frozendict_wrong_scalar}})
+            field(default_factory=lambda:
+                  {'a': dict(f_dict), 'b': {'x': ej_frozendict_wrong_scalar}})
 
         # Same error as in case_frozen_dicts_no_type_args_known_issue
         err_fd_frozendict_iterable_scalar_empty: FrozenDict = \

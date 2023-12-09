@@ -314,7 +314,7 @@ def case_json_list_on_top() -> CaseInfo:
             field(default_factory=lambda: [list(b_list), dict(b_dict)])
         err_l_list_of_lists_with_scalars_at_level_two: list[JS | list[JS]] = \
             field(default_factory=lambda: list(b_list + [list(b_list)]))
-        l_list_of_lists_three_levels: list[list[JS | list[JS]| dict[str, JS]]] = \
+        l_list_of_lists_three_levels: list[list[JS | list[JS] | dict[str, JS]]] = \
             field(default_factory=lambda: [list(b_list), [list(b_list), dict(b_dict)]])
 
         #
@@ -350,7 +350,7 @@ def case_json_list_on_top() -> CaseInfo:
             field(default_factory=lambda: [dict(b_dict), list(b_list)])
         err_l_list_of_dicts_with_scalars_at_level_two: list[JS | dict[str, JS]] = \
             field(default_factory=lambda: list(b_list + [dict(b_dict)]))
-        l_list_of_dicts_three_levels: list[dict[str, JS| list[JS]]]  = \
+        l_list_of_dicts_three_levels: list[dict[str, JS | list[JS]]] = \
             field(default_factory=lambda: [dict(b_dict), {'a': list(b_list)}])
 
         #
@@ -462,7 +462,8 @@ def case_json_dict_on_top() -> CaseInfo:
             field(default_factory=lambda: {'a': b_none})
         d_dict_of_lists_of_scalars: dict[str, list[JS]] = \
             field(default_factory=lambda: {'a': list(b_list), 'b': list(b_list)})
-        err_d_dict_of_lists_of_scalars_with_dict_at_level_two: dict[str, list[JS] | dict[str, JS]] = \
+        err_d_dict_of_lists_of_scalars_with_dict_at_level_two: \
+            dict[str, list[JS] | dict[str, JS]] = \
             field(default_factory=lambda: {'a': list(b_list), 'b': dict(b_dict)})
         err_d_dict_of_lists_of_scalars_with_scalars_at_level_two: dict[str, JS | list[JS]] = \
             field(default_factory=lambda: {'a': b_none, 'b': list(b_list)})
@@ -838,7 +839,8 @@ def case_json_more_specific_types() -> CaseInfo:
         m_dict_of_lists_of_dicts_three_levels: dict[str, list[dict[str, JS]]] = \
             field(default_factory=lambda: {'a': [dict(b_dict)], 'b': [dict(b_dict)]})
         m_dict_of_lists_of_dicts_four_levels: dict[str, list[dict[str, JS | list[JS]]]] = \
-            field(default_factory=lambda: {'a': [dict(b_dict)], 'b': [{'a': b_str, 'b': list(b_list)}]})
+            field(default_factory=lambda:
+                  {'a': [dict(b_dict)], 'b': [{'a': b_str, 'b': list(b_list)}]})
         err_m_dict_of_lists_of_dicts_with_dict_of_none_level_two: dict[str, dict[str, None]] = \
             field(default_factory=lambda: {'a': {'b': b_none}})
         err_m_dict_of_lists_of_dicts_with_dict_level_two: \
