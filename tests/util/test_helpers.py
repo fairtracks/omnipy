@@ -56,7 +56,7 @@ def test_is_iterable() -> None:
     assert is_iterable(42) is False
     assert is_iterable(3.14) is False
 
-    assert is_iterable("money") is True
+    assert is_iterable('money') is True
     assert is_iterable((1, 2, 3)) is True
     assert is_iterable([1, 2, 3]) is True
     assert is_iterable({1: 2, 3: 4}) is True
@@ -173,10 +173,10 @@ def test_print_exception(capsys: pytest.CaptureFixture) -> None:
 
     with print_exception:
         raise NotImplementedError(
-            dedent('''\
+            dedent("""\
             Multi-line error!
             - More info here..
-            - And here are the nitty gritty details...'''))
+            - And here are the nitty gritty details..."""))
 
     captured = capsys.readouterr()  # type: ignore
     assert captured.out == 'NotImplementedError: Multi-line error!'

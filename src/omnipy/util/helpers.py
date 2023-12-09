@@ -87,9 +87,8 @@ def is_iterable(obj: object) -> bool:
     try:
         iter(obj)
         return True
-    except TypeError as e:
+    except TypeError:
         return False
-    return ShouldNotOccurException()
 
 
 def is_optional(cls_or_type: type) -> bool:

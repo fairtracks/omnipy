@@ -125,7 +125,7 @@ def test_json_model_consistency_none_known_issue():
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason=dedent("""\
-      Known issue with pydantic v1 due to attempting to parse a list of tuples to a dictionary. 
+      Known issue with pydantic v1 due to attempting to parse a list of tuples to a dictionary.
       Here the inner dict is treated as a sequence, which returns the keys.
       """))
 def test_error_list_of_single_dict_with_two_elements():

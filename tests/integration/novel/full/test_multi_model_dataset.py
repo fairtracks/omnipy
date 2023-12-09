@@ -17,18 +17,12 @@ from .helpers.models import GeneralTable, MyOtherRecordSchema, MyRecordSchema, T
 
 # TODO: After Pydantic v2 support: Add "-> None" to all tests to open up for mypy syntax checking
 def test_table_models() -> None:
-    _a = GeneralTable([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
-    # yapf: disable
-    _b = TableTemplate[MyRecordSchema]([{'a': 123, 'b': 'ads'},
-                                             {'a': 234, 'b': 'acs'}])
+    GeneralTable([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
+
+    TableTemplate[MyRecordSchema]([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
 
     with pytest.raises(ValidationError):
-        _c = TableTemplate[MyOtherRecordSchema]([{'a': 123, 'b': 'ads'},
-                                                 {'a': 234, 'b': 'acs'}])
-    # yapf: disable
-
-    # print(_a.to_json_schema(pretty=True))
-    # print(_b.to_json_schema(pretty=True))
+        TableTemplate[MyOtherRecordSchema]([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
 
 
 def test_dataset_with_multiple_table_models():
