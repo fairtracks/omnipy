@@ -1,6 +1,6 @@
 from textwrap import dedent
 from types import NoneType
-from typing import Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
 
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
@@ -332,15 +332,15 @@ def test_import_and_export():
       "type": "object",
       "additionalProperties": {
         "$ref": "#/definitions/Model_Dict_str__str__"
-    },
-    "definitions": {
+      },
+      "definitions": {
         "Model_Dict_str__str__": {
-            "title": "Model[Dict[str, str]]",
-            "description": "''' + Model._get_standard_field_description() + '''",
-            "type": "object",
-            "additionalProperties": {
-                "type": "string"
-            }
+          "title": "Model[Dict[str, str]]",
+          "description": "''' + Model._get_standard_field_description() + '''",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     }''')
@@ -384,6 +384,124 @@ def test_import_export_custom_parser_to_other_type():
     }''')
 
 
+def test_generic_dataset_unbound_typevar():
+    # Note that the TypeVars for generic Dataset classes do not need to be bound, in contrast to
+    # TypeVars used for generic Model classes (see test_generic_dataset_bound_typevar() below).
+    # Here the TypeVar is used to specialize `tuple` and `list`, not `Model`, and does not need to
+    # be bound.
+    _DatasetValT = TypeVar('DatasetValT')
+
+    class MyTupleOrListDataset(Dataset[Model[tuple[_DatasetValT, ...] | list[_DatasetValT]]],
+                               Generic[_DatasetValT]):
+        ...
+
+    # Without further restrictions
+
+    assert MyTupleOrListDataset().to_data() == {}
+    assert MyTupleOrListDataset({'a': (123, 'a')})['a'] == (123, 'a')
+    assert MyTupleOrListDataset({'a': [True, False]})['a'] == [True, False]
+
+    with pytest.raises(ValidationError):
+        MyTupleOrListDataset({'a': 123})
+
+    with pytest.raises(ValidationError):
+        MyTupleOrListDataset({'a': 'abc'})
+
+    with pytest.raises(ValidationError):
+        MyTupleOrListDataset({'a': {'x': 123}})
+
+    # Restricting the contents of the tuples and lists
+
+    assert MyTupleOrListDataset[int]({'a': (123, '456')})['a'] == (123, 456)
+    assert MyTupleOrListDataset[bool]({'a': [False, 1, '0']})['a'] == [False, True, False]
+
+    with pytest.raises(ValidationError):
+        MyTupleOrListDataset[int]({'a': (123, 'abc')})
+
+
+def test_generic_dataset_bound_typevar():
+    # Note that the TypeVars for generic Model classes need to be bound to a type who in itself, or
+    # whose origin_type produces a default value when called without parameters. Here, `ValT` is
+    # bound to `int | str`, and `typing.get_origin(int | str)() == 0`.
+    _ModelValT = TypeVar('_ModelValT', bound=int | str)
+
+    class MyListOfIntsOrStringsModel(Model[list[_ModelValT]], Generic[_ModelValT]):
+        ...
+
+    # Since we in this case are just passing on the TypeVar to the Model, mypy will complain if the
+    # TypeVar is also not bound for the Dataset, however Dataset in itself do not require the
+    # TypeVar to be bound (see test_generic_dataset_unbound_typevar() above).
+    class MyListOfIntsOrStringsDataset(Dataset[MyListOfIntsOrStringsModel[_ModelValT]],
+                                       Generic[_ModelValT]):
+        ...
+
+    assert MyListOfIntsOrStringsDataset().to_data() == {}
+
+    assert MyListOfIntsOrStringsDataset({'a': (123, 'a')})['a'] == [123, 'a']
+    assert MyListOfIntsOrStringsDataset({'a': [True, False]})['a'] == [1, 0]
+
+    with pytest.raises(ValidationError):
+        MyListOfIntsOrStringsDataset({'a': 123})
+
+    with pytest.raises(ValidationError):
+        MyListOfIntsOrStringsDataset({'a': 'abc'})
+
+    with pytest.raises(ValidationError):
+        MyListOfIntsOrStringsDataset({'a': {'x': 123}})
+
+    # Further restricting the contents of the tuples and lists
+    assert MyListOfIntsOrStringsDataset[str]({'a': (123, '456')})['a'] == ["123", "456"]
+    assert MyListOfIntsOrStringsDataset[int]({'a': (123, '456')})['a'] == [123, 456]
+
+    with pytest.raises(ValidationError):
+        MyListOfIntsOrStringsDataset[int]({'a': (123, 'abc')})
+
+    # Note that the following override of the TypeVar binding will work in runtime, but mypy will
+    # produce an error
+    assert MyListOfIntsOrStringsDataset[list]().to_data() == {}  # type: ignore
+
+
+def test_generic_dataset_two_typevars():
+    # Here the TypeVars do not need to be bound, as they are used to specialize `dict`, not `Model`.
+    _KeyT = TypeVar('_KeyT')
+    _ValT = TypeVar('_ValT')
+
+    class MyFilledDictModel(Model[dict[_KeyT, _ValT]], Generic[_KeyT, _ValT]):
+        @classmethod
+        def _parse_data(cls, data: dict[_KeyT, _ValT]) -> Any:
+            assert len(data) > 0
+            return data
+
+    class MyFilledDictDataset(Dataset[MyFilledDictModel[_KeyT, _ValT]], Generic[_KeyT, _ValT]):
+        ...
+
+    # Without further restrictions
+
+    assert MyFilledDictDataset().to_data() == {}
+    assert MyFilledDictDataset({'a': {1: 123}, 'b': {'x': 'abc', 'y': '123'}}).to_data() == \
+           {'a': {1: 123}, 'b': {'x': 'abc', 'y': '123'}}
+
+    with pytest.raises(ValidationError):
+        MyFilledDictDataset({'a': 123})
+
+    with pytest.raises(ValidationError):
+        MyFilledDictDataset({'a': 'abc'})
+
+    with pytest.raises(ValidationError):
+        MyFilledDictDataset({'a': {'x': 123}, 'b': {}})
+
+    # Restricting the key and value types
+
+    assert MyFilledDictDataset[int, int]({'a': {1: 123}, 'b': {'2': '456'}}).to_data() == \
+           {'a': {1: 123}, 'b': {2: 456}}
+    assert MyFilledDictDataset[int, str]({'a': {1: 123}, 'b': {'2': '456'}}).to_data() == \
+           {'a': {1: '123'}, 'b': {2: '456'}}
+    assert MyFilledDictDataset[str, int]({'a': {1: 123}, 'b': {'2': '456'}}).to_data() == \
+           {'a': {'1': 123}, 'b': {'2': 456}}
+    assert MyFilledDictDataset[str, str]({'a': {1: 123}, 'b': {'2': '456'}}).to_data() == \
+           {'a': {'1': '123'}, 'b': {'2': '456'}}
+
+
 def test_complex_models():
     #
     # Model subclass
@@ -406,10 +524,6 @@ def test_complex_models():
     #
 
     ListT = TypeVar('ListT', bound=List)  # noqa
-
-    # Note that the TypeVars need to be bound to a type who in itself, or whose origin_type
-    # produces a default value when called without parameters. Here, `listT` is bound to List,
-    # and `typing.get_origin(List)() == []`.
 
     class MyReversedListModel(Model[ListT], Generic[ListT]):
         # Commented out docstring, due to test_json_schema_generic_models_known_issue in test_model
@@ -485,25 +599,25 @@ def test_complex_models():
       "type": "object",
       "additionalProperties": {
         "$ref": "#/definitions/MyReversedListModel_MyRangeList_"
-    },
-    "definitions": {
+      },
+      "definitions": {
         "MyRangeList": {
-            "title": "MyRangeList",
-            "description": "Transforms a pair of min and max ints to an inclusive range",
-            "type": "array",
-            "items": {
-                "type": "integer",
-                "exclusiveMinimum": 0
-            }
+          "title": "MyRangeList",
+          "description": "Transforms a pair of min and max ints to an inclusive range",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          }
         },
         "MyReversedListModel_MyRangeList_": {
-            "title": "MyReversedListModel[MyRangeList]",
-            "description": "''' + Model._get_standard_field_description() + '''",
-            "allOf": [
-                {
-                    "$ref": "#/definitions/MyRangeList"
-                }
-            ]
+          "title": "MyReversedListModel[MyRangeList]",
+          "description": "''' + Model._get_standard_field_description() + '''",
+          "allOf": [
+            {
+              "$ref": "#/definitions/MyRangeList"
+            }
+          ]
         }
       }
     }''')

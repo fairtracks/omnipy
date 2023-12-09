@@ -934,6 +934,10 @@ def test_import_export_methods():
 def test_json_schema_generic_model_one_level():
     ListT = TypeVar('ListT', bound=List)  # noqa
 
+    # Note that the TypeVars need to be bound to a type who in itself, or whose origin_type
+    # produces a default value when called without parameters. Here, `ListT` is bound to List,
+    # and `typing.get_origin(List)() == []`.
+
     class MyList(Model[ListT], Generic[ListT]):
         """My very interesting list model!"""
 
