@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Dict, List, TypeAlias, Union
 
 JsonScalar: TypeAlias = Union[None, int, float, str, bool]

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Dict, Generic, List, Optional, Type, TypeAlias, TypeVar, Union
 
 from omnipy.data.model import Model

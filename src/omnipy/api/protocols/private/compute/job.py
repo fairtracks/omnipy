@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from datetime import datetime
 from types import MappingProxyType
 from typing import Any, Callable, Dict, Mapping, Optional, Protocol, Tuple, Type
@@ -42,20 +40,20 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol):
         ...
 
     @classmethod
-    def _create_job_template(cls, *args: object, **kwargs: object) -> IsJobTemplate:
+    def _create_job_template(cls, *args: object, **kwargs: object) -> 'IsJobTemplate':
         ...
 
     @classmethod
-    def _create_job(cls, *args: object, **kwargs: object) -> IsJob:
+    def _create_job(cls, *args: object, **kwargs: object) -> 'IsJob':
         ...
 
-    def _apply(self) -> IsJob:
+    def _apply(self) -> 'IsJob':
         ...
 
-    def _refine(self, *args: Any, update: bool = True, **kwargs: object) -> IsJobTemplate:
+    def _refine(self, *args: Any, update: bool = True, **kwargs: object) -> 'IsJobTemplate':
         ...
 
-    def _revise(self) -> IsJobTemplate:
+    def _revise(self) -> 'IsJobTemplate':
         ...
 
     def _call_job_template(self, *args: object, **kwargs: object) -> object:
@@ -72,7 +70,7 @@ class IsJob(IsJobBase, Protocol):
         ...
 
     @classmethod
-    def create_job(cls, *args: object, **kwargs: object) -> IsJob:
+    def create_job(cls, *args: object, **kwargs: object) -> 'IsJob':
         ...
 
     def __call__(self, *args: object, **kwargs: object) -> object:
@@ -85,7 +83,7 @@ class IsJob(IsJobBase, Protocol):
 class IsJobTemplate(IsJobBase, Protocol):
     """"""
     @classmethod
-    def create_job_template(cls, *args: object, **kwargs: object) -> IsJobTemplate:
+    def create_job_template(cls, *args: object, **kwargs: object) -> 'IsJobTemplate':
         ...
 
     def run(self, *args: object, **kwargs: object) -> object:

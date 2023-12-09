@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import cast, Type
 
 from omnipy.api.protocols.private.compute.job import (IsFuncArgJobTemplateCallable,
@@ -14,7 +12,7 @@ from omnipy.util.callable_decorator import callable_decorator_cls
 
 
 def task_template_callable_decorator_cls(
-        cls: Type[TaskTemplate]) -> IsFuncArgJobTemplateCallable[IsTaskTemplate]:
+        cls: 'Type[TaskTemplate]') -> IsFuncArgJobTemplateCallable[IsTaskTemplate]:
     return cast(IsFuncArgJobTemplateCallable[IsTaskTemplate], callable_decorator_cls(cls))
 
 

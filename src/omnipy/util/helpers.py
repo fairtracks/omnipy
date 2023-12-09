@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from collections.abc import Hashable, Iterable
 import inspect
 import locale as pkg_locale
