@@ -1,4 +1,4 @@
-from typing import Dict, Generic, List, Optional, Type, TypeAlias, TypeVar, Union
+from typing import Dict, Generic, List, Type, TypeAlias, TypeVar, Union
 
 from omnipy.data.model import Model
 
@@ -12,11 +12,7 @@ from .typedefs import JsonScalar
 
 _JsonBaseT = TypeVar(
     '_JsonBaseT',
-    bound=Optional[Union['_JsonScalarM',
-                         '_JsonBaseListM',
-                         '_JsonBaseDictM',
-                         '_JsonListM',
-                         '_JsonDictM']])
+    bound=Union['_JsonScalarM', '_JsonBaseListM', '_JsonBaseDictM', '_JsonListM', '_JsonDictM'])
 
 
 class _JsonScalarM(Model[JsonScalar]):
@@ -31,44 +27,48 @@ class _JsonBaseDictM(Model[Dict[str, _JsonBaseT]], Generic[_JsonBaseT]):
     ...
 
 
-# Optional is workaround for test_union_nested_model_classes_inner_forwardref_generic_list_of_none
-class _JsonListM(_JsonBaseListM[Optional['_JsonAnyUnion']]):
+# Note: This intermediate level of JSON models is needed for two reasons. 1) as targets for
+#       .updateForwardRefs(), as this does not seem to work properly directly on a generic model
+#       (e.g. `_JsonBaseListM['_JsonAnyUnion'].updateForwardRefs()`), at least in pydantic v1.
+#       But even if this is fixed in pydantic v2, or more probably in python 3.13 with PEP649, the
+#       intermediate level is still needed due to the other reason: 2) For consistency in the
+#       hierarchy of JSON models, as tested in e.g. `test_json_model_consistency_basic()`. The
+#       intermediate level of models seems a good solution to make sure the level of the model
+#       hierarchy stays the same for e.g. `JsonModel` and `JsonDictModel`.
+
+
+class _JsonListM(_JsonBaseListM['_JsonAnyUnion']):
     ...
 
 
-# Optional is workaround for test_union_nested_model_classes_inner_forwardref_generic_list_of_none
-class _JsonDictM(_JsonBaseDictM[Optional['_JsonAnyUnion']]):
+class _JsonDictM(_JsonBaseDictM['_JsonAnyUnion']):
     ...
 
 
-# Optional is workaround for test_union_nested_model_classes_inner_forwardref_generic_list_of_none
-class _JsonNoDictsM(_JsonBaseListM[Optional['_JsonNoDictsUnion']]):
+class _JsonNoDictsM(_JsonBaseListM['_JsonNoDictsUnion']):
     ...
 
 
-# Optional is workaround for test_union_nested_model_classes_inner_forwardref_generic_list_of_none
-class _JsonNoListsM(_JsonBaseDictM[Optional['_JsonNoListsUnion']]):
+class _JsonNoListsM(_JsonBaseDictM['_JsonNoListsUnion']):
     ...
 
-
-# class _JsonAnyUnion(Model[Union[_JsonScalarM, _JsonListM, _JsonDictM]]):
-#     ...
 
 # TypeAliases
+# TODO: Consider whether these TypeAliases are needed in pydantic v2. In v1 they are needed to for
+#       the hack for propagating None to work. Removing this level will simplify JSON models.
+#       If updated, also update frozen models
 
 _JsonAnyUnion: TypeAlias = Union[_JsonScalarM, _JsonListM, _JsonDictM]
 _JsonNoDictsUnion: TypeAlias = Union[_JsonScalarM, _JsonNoDictsM]
 _JsonNoListsUnion: TypeAlias = Union[_JsonScalarM, _JsonNoListsM]
 
-# Optional is workaround for test_union_nested_model_classes_inner_forwardref_generic_list_of_none
-_JsonListOfScalarsM: TypeAlias = _JsonBaseListM[Optional[_JsonScalarM]]
+_JsonListOfScalarsM: TypeAlias = _JsonBaseListM[_JsonScalarM]
 
-# Optional is workaround for test_union_nested_model_classes_inner_forwardref_generic_list_of_none
-_JsonDictOfScalarsM: TypeAlias = _JsonBaseDictM[Optional[_JsonScalarM]]
+_JsonDictOfScalarsM: TypeAlias = _JsonBaseDictM[_JsonScalarM]
 
 # Basic models needs to update their forward_refs with type aliases declared above
 
-_JsonListM.update_forward_refs(_JsonAnyUnion=_JsonAnyUnion)
+_JsonListM.update_forward_refs()
 _JsonDictM.update_forward_refs()
 _JsonNoDictsM.update_forward_refs()
 _JsonNoListsM.update_forward_refs()

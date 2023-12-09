@@ -1,3 +1,4 @@
+from collections.abc import Mapping, Sequence
 import json
 from types import UnionType
 from typing import (Annotated,
@@ -21,8 +22,9 @@ from pydantic import Protocol as pydantic_protocol
 from pydantic import root_validator
 from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
+from pydantic.main import ModelMetaclass
 from pydantic.typing import display_as_type, is_none_type
-from pydantic.utils import lenient_issubclass
+from pydantic.utils import lenient_isinstance, lenient_issubclass
 
 from omnipy.util.helpers import is_optional
 
@@ -42,7 +44,29 @@ def generate_qualname(cls_name: str, model: Any) -> str:
     return f'{cls_name}[{fully_qual_model_name}]'
 
 
-class Model(GenericModel, Generic[RootT]):
+class MyModelMetaclass(ModelMetaclass):
+    # Hack to overcome bug in pydantic/fields.py (v1.10.13), lines 636-641:
+    #
+    # if origin is None or origin is CollectionsHashable:
+    #     # field is not "typing" object eg. Union, Dict, List etc.
+    #     # allow None for virtual superclasses of NoneType, e.g. Hashable
+    #     if isinstance(self.type_, type) and isinstance(None, self.type_):
+    #         self.allow_none = True
+    #     return
+    #
+    # This hinders models (including pure pydantic BaseModels) to be properly considered as
+    # subfields, e.g. in `list[MyModel]` as `get_origin(MyModel) is None`. Here, we want allow_none
+    # to be set to True so that Model is allowed to validate a None value.
+    #
+    # TODO: Revisit the need for MyModelMetaclass hack in pydantic v2
+
+    def __instancecheck__(self, instance: Any) -> bool:
+        if instance is None:
+            return True
+        return super().__instancecheck__(instance)
+
+
+class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     """
     A data model containing a value parsed according to the model.
 
@@ -290,8 +314,7 @@ class Model(GenericModel, Generic[RootT]):
     def _parse_none_value_with_root_type_if_model(cls, value):
         root_field = cls.__fields__.get(ROOT_KEY)
         root_type = root_field.type_
-        if value is None:
-            value = cls._parse_with_root_type_if_model(value, root_field, root_type)
+        value = cls._parse_with_root_type_if_model(value, root_field, root_type)
         return value
 
     @classmethod
@@ -313,10 +336,25 @@ class Model(GenericModel, Generic[RootT]):
             else:
                 raise main_error
 
-        if lenient_issubclass(root_type, Model) \
-                and get_origin(root_type.__fields__[ROOT_KEY].outer_type_) not in [List, Dict, list, dict]:  # Very much a hack
-            return root_type.parse_obj(value)
-        else:
+        if lenient_issubclass(root_type, Model):
+            if root_field.outer_type_ != root_type:
+                outer_type = get_origin(root_field.outer_type_)
+                if lenient_issubclass(outer_type, Sequence) and lenient_isinstance(value, Sequence):
+                    return outer_type(  # type: ignore
+                        root_type.parse_obj(val)
+                        if is_none_type(val) or not lenient_isinstance(val, Model) else val
+                        for val in value)
+                elif lenient_issubclass(outer_type, Mapping) and lenient_isinstance(value, Mapping):
+                    return outer_type({  # type: ignore
+                        key:
+                            root_type.parse_obj(val)
+                            if is_none_type(val) or not lenient_isinstance(val, Model) else val
+                        for (key, val) in value.items()
+                    })
+            else:
+                return root_type.parse_obj(
+                    value) if is_none_type(value) or not lenient_isinstance(value, Model) else value
+        if value is None:
             none_default = root_field.default_factory() is None if root_field.default_factory \
                 else root_field.default is None
             root_type_is_none = is_none_type(root_type)
