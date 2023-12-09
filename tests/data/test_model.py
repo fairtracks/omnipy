@@ -1,6 +1,6 @@
 import os
 from textwrap import dedent
-from types import NoneType
+from types import MappingProxyType, NoneType
 from typing import (Annotated,
                     Any,
                     Dict,
@@ -17,6 +17,7 @@ from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
 
 from omnipy.data.model import Model
+from omnipy.modules.general.typedefs import FrozenDict
 
 
 def test_no_model_known_issue():
@@ -563,57 +564,153 @@ def test_none_not_allowed():
             model_cls(None)
 
 
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason='Current pydantic v1 hack requires nested types like list and dict to explicitly'
-    'include Optional in their arguments to support parsing of None.')
-def test_list_and_dict_of_none_model_known_issue():
+def test_list_of_none():
     class NoneModel(Model[NoneType]):
         ...
 
     class ListOfNoneModel(Model[list[NoneModel]]):
         ...
 
-    # Workaround
-    #
-    # class ListOfNoneModel(Model[list[Optional[NoneModel]]]):
-    #     ...
+    assert ListOfNoneModel().contents == []
+    assert ListOfNoneModel([]).contents == []
 
-    assert ListOfNoneModel() == ListOfNoneModel([])
-    assert ListOfNoneModel([]) == ListOfNoneModel([])
-
-    # Workaround fails this for some reason
     with pytest.raises(ValidationError):
         ListOfNoneModel(None)
 
-    # Workaround also fails to push None to NoneModel
-    assert ListOfNoneModel([None]) == ListOfNoneModel([NoneModel(None)])
+    assert ListOfNoneModel((None,)).contents == [NoneModel(None)]
+    assert ListOfNoneModel([None]).contents == [NoneModel(None)]
 
     with pytest.raises(ValidationError):
         ListOfNoneModel({1: None})
 
+
+def test_tuple_of_none():
+    class NoneModel(Model[NoneType]):
+        ...
+
+    class TupleOfNoneModel(Model[tuple[NoneModel, ...]]):
+        ...
+
+    assert TupleOfNoneModel().contents == ()
+    assert TupleOfNoneModel(()).contents == ()
+
+    with pytest.raises(ValidationError):
+        TupleOfNoneModel(None)
+
+    assert TupleOfNoneModel((None,)).contents == (NoneModel(None),)
+    assert TupleOfNoneModel([None]).contents == (NoneModel(None),)
+
+    with pytest.raises(ValidationError):
+        TupleOfNoneModel({1: None})
+
+
+def test_dict_of_none():
+    class NoneModel(Model[NoneType]):
+        ...
+
     class DictOfInt2NoneModel(Model[dict[int, NoneModel]]):
         ...
 
-    # Workaround
-    #
-    # class DictOfInt2NoneModel(Model[dict[int, Optional[NoneModel]]]):
-    #     ...
+    assert DictOfInt2NoneModel().contents == {}
+    assert DictOfInt2NoneModel({}).contents == {}
 
-    assert DictOfInt2NoneModel() == DictOfInt2NoneModel({})
-
-    # Workaround fails this for some reason
     with pytest.raises(ValidationError):
         DictOfInt2NoneModel(None)
 
     with pytest.raises(ValidationError):
         DictOfInt2NoneModel([None])
 
-    # Workaround also fails to push None to NoneModel
-    assert DictOfInt2NoneModel({1: None}) == DictOfInt2NoneModel({1: NoneModel(None)})
+    assert DictOfInt2NoneModel({1: None}).contents == {1: NoneModel(None)}
+    assert DictOfInt2NoneModel(MappingProxyType({1: None})).contents == {1: NoneModel(None)}
 
     with pytest.raises(ValidationError):
         DictOfInt2NoneModel({'hello': None})
+
+
+def test_frozendict_of_none():
+    class NoneModel(Model[NoneType]):
+        ...
+
+    class FrozenDictOfInt2NoneModel(Model[FrozenDict[int, NoneModel]]):
+        ...
+
+    assert FrozenDictOfInt2NoneModel().contents == FrozenDict()
+    assert FrozenDictOfInt2NoneModel().contents == FrozenDict()
+
+    with pytest.raises(ValidationError):
+        FrozenDictOfInt2NoneModel(None)
+
+    with pytest.raises(ValidationError):
+        FrozenDictOfInt2NoneModel([None])
+
+    assert FrozenDictOfInt2NoneModel({1: None}).contents == FrozenDict({1: NoneModel(None)})
+    assert FrozenDictOfInt2NoneModel(FrozenDict({1: None
+                                                 })).contents == FrozenDict({1: NoneModel(None)})
+
+    with pytest.raises(ValidationError):
+        FrozenDictOfInt2NoneModel({'hello': None})
+
+
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason='Current pydantic v1 hack requires nested types like list and dict to explicitly'
+    'include Optional in their arguments to support parsing of None.')
+def test_nested_list_and_dict_of_none_model_known_issue():
+    class NoneModel(Model[NoneType]):
+        ...
+
+    class ListOfListOfNoneModel(Model[list[list[NoneModel]]]):
+        ...
+
+    # Workaround
+    # class ListOfListOfNoneModel(Model[list[list[Optional[NoneModel]]]]):
+    #     ...
+
+    assert ListOfListOfNoneModel() == ListOfListOfNoneModel([])
+    assert ListOfListOfNoneModel([]) == ListOfListOfNoneModel([])
+
+    with pytest.raises(ValidationError):
+        ListOfListOfNoneModel(None)
+
+    with pytest.raises(ValidationError):
+        ListOfListOfNoneModel([None])
+
+    # Workaround fails with this
+    assert ListOfListOfNoneModel([[None]]) == ListOfListOfNoneModel([[NoneModel(None)]])
+
+    # Workaround assert
+    # assert ListOfListOfNoneModel([[None]]).contents == [[None]]
+
+    with pytest.raises(ValidationError):
+        ListOfListOfNoneModel([{1: None}])
+
+    class DictOfDictOfInt2NoneModel(Model[dict[int, dict[int, NoneModel]]]):
+        ...
+
+    # Workaround
+    # class DictOfDictOfInt2NoneModel(Model[dict[int, dict[int, Optional[NoneModel]]]]):
+    #     ...
+
+    DictOfDictOfInt2NoneModel()
+
+    with pytest.raises(ValidationError):
+        DictOfDictOfInt2NoneModel(None)
+
+    with pytest.raises(ValidationError):
+        DictOfDictOfInt2NoneModel([None])
+
+    with pytest.raises(ValidationError):
+        DictOfDictOfInt2NoneModel({1: None})
+
+    # Workaround fails with this
+    assert DictOfDictOfInt2NoneModel({1: {2: None}}) == \
+        DictOfDictOfInt2NoneModel({1: {2: NoneModel(None)}})
+
+    # Workaround assert
+    # assert DictOfDictOfInt2NoneModel({1: {2: None}}).contents == {1: {2: None}}
+
+    with pytest.raises(ValidationError):
+        DictOfDictOfInt2NoneModel({1: {'hello': None}})
 
 
 # Simpler working test added to illustrate more complex fails related to pydantic issue:
@@ -691,7 +788,7 @@ def test_union_nested_model_classes_inner_optional_generic_none_as_default() -> 
     class MaybeStringModel(Model[Optional[str]]):
         ...
 
-    BaseT = TypeVar('BaseT', bound=Optional[Union[MaybeNumberModel, MaybeStringModel]])
+    BaseT = TypeVar('BaseT', bound=Union[MaybeNumberModel, MaybeStringModel])
 
     class BaseModel(Model[BaseT], Generic[BaseT]):
         ...
@@ -702,17 +799,6 @@ def test_union_nested_model_classes_inner_optional_generic_none_as_default() -> 
     assert OuterMaybeNumberModel().contents == MaybeNumberModel(None)
 
 
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason="""
-Known issue described here: https://github.com/pydantic/pydantic/issues/3836
-One workaround is to add an Optional to ListModel, however this excludes MaybeNumberModel
-from holding the None (similarly for JsonScalarModel).
-
-TODO: Check if test_union_nested_model_classes_inner_forwardref_generic_list_of_none() and
-      test_union_nested_model_classes_inner_forwardref_double_generic_none_as_default() are fixed
-      by Pydantic v2
-""")
 def test_union_nested_model_classes_inner_forwardref_generic_list_of_none() -> None:
     BaseT = TypeVar('BaseT', bound=Union['ListModel', 'MaybeNumberModel'])
 
@@ -725,18 +811,12 @@ def test_union_nested_model_classes_inner_forwardref_generic_list_of_none() -> N
     class ListModel(GenericListModel['FullModel']):
         ...
 
-    # # Possible workaround
-    # class ListModel(GenericListModel[Optional['FullModel']]):
-    #     ...
-
     FullModel: TypeAlias = Union[ListModel, MaybeNumberModel]
 
     ListModel.update_forward_refs(FullModel=FullModel)
 
     assert ListModel().contents == []
     assert ListModel([None]).contents == [MaybeNumberModel(None)]
-    # # Workaround results
-    # assert ListModel([None]).contents == [None]
 
 
 @pytest.mark.skipif(
@@ -928,12 +1008,12 @@ def test_json_schema_generic_models_known_issue():
       "$ref": "#/definitions/MyList_List_str__",
       "definitions": {
         "MyList_List_str__": {
-            "title": "MyList[List[str]]",
-            "description": "My very interesting list model!.",
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
+          "title": "MyList[List[str]]",
+          "description": "My very interesting list model!.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }''')
