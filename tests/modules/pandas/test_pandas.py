@@ -7,7 +7,7 @@ from pydantic import ValidationError
 import pytest
 
 from omnipy.modules.pandas import pd
-from omnipy.modules.pandas.models import PandasDataset
+from omnipy.modules.pandas.models import PandasDataset, PandasModel
 
 from .util import assert_pandas_frame_dtypes
 
@@ -198,3 +198,58 @@ def test_pandas_dataset_error_empty_objects():
     pandas_data = PandasDataset()
     with pytest.raises(ValidationError):
         pandas_data['obj_type'] = [{'a': 'abc', 'b': 12}, {}]
+
+
+def test_pandas_model_input_output_data():
+    pandas_model = PandasModel()
+    data = [
+        {
+            'int': 12, 'float': 12.1, 'bool': True, 'str': 'abc'
+        },
+        {
+            'int': -3, 'bool': False
+        },
+        {
+            'float': 14.3, 'str': 'def'
+        },
+    ]
+    pandas_model.from_data(data)
+    assert pandas_model.to_data() == [{
+        'bool': True, 'float': 12.1, 'int': 12, 'str': 'abc'
+    }, {
+        'bool': False, 'float': None, 'int': -3, 'str': None
+    }, {
+        'bool': None, 'float': 14.3, 'int': None, 'str': 'def'
+    }]
+
+
+def test_pandas_dataset_input_output_data():
+    pandas_dataset = PandasDataset()
+    data = {
+        'abc': [
+            {
+                'int': 12, 'float': 12.1, 'bool': True, 'str': 'abc'
+            },
+            {
+                'int': -3, 'bool': False
+            },
+            {
+                'float': 14.3, 'str': 'def'
+            },
+        ]
+    }
+    pandas_dataset.from_data(data)
+    assert pandas_dataset.to_data() == {
+        'abc': [{
+            'bool': True, 'float': 12.1, 'int': 12, 'str': 'abc'
+        }, {
+            'bool': False, 'float': None, 'int': -3, 'str': None
+        }, {
+            'bool': None, 'float': 14.3, 'int': None, 'str': 'def'
+        }]
+    }
+
+
+# Placeholder
+def test_pandas_model_input_output_json():
+    ...
