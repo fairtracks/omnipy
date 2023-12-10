@@ -91,7 +91,7 @@ def is_iterable(obj: object) -> bool:
         return False
 
 
-def is_optional(cls_or_type: type) -> bool:
+def is_optional(cls_or_type: type | UnionType | None) -> bool:
     return get_origin(cls_or_type) in [Union, UnionType] and \
         type(None) in get_args(cls_or_type)
 
@@ -110,34 +110,3 @@ def is_strict_subclass(
 
 class IsDataclass(Protocol):
     __dataclass_fields__: ClassVar[Dict]
-
-
-class PrintExceptionContext:
-    def __enter__(self):
-        ...
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        print(f'{exc_type.__name__}: {str(exc_val).splitlines()[0]}', end='')
-        return True
-
-
-print_exception = PrintExceptionContext()
-
-
-class LastErrorHolder:
-    def __init__(self):
-        self._last_error = None
-
-    def __enter__(self):
-        ...
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_val is not None:
-            self._last_error = exc_val
-        return True
-
-    def raise_derived(self, exc: Exception):
-        if self._last_error is not None:
-            raise exc from self._last_error
-        else:
-            raise exc
