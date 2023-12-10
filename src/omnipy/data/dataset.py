@@ -15,7 +15,7 @@ from typing import (Annotated,
 
 # from orjson import orjson
 from pydantic import Field, PrivateAttr, root_validator, ValidationError
-from pydantic.fields import Undefined
+from pydantic.fields import Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.typing import display_as_type
 from pydantic.utils import lenient_issubclass
@@ -120,9 +120,13 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
         return created_dataset
 
-    def __init__(self,
-                 value: Union[Dict[str, Any], Iterator[Tuple[str, Any]]] = Undefined,
-                 **input_data: Any) -> None:
+    def __init__(
+        self,
+        value: dict[str, object] | Iterator[tuple[str, object]] | UndefinedType = Undefined,
+        *,
+        data: dict[str, object] | UndefinedType = Undefined,
+        **input_data: object,
+    ) -> None:
         # TODO: Error message when forgetting parenthesis when creating Dataset should be improved.
         #       Unclear where this can be done, if anywhere? E.g.:
         #           a = Dataset[Model[int]]
@@ -136,13 +140,30 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         #       Dataset[Model[str]](Model[int](5)) ==  Dataset[Model[str]](data=Model[int](5))
         #       == Dataset[Model[str]](data={'__root__': Model[str]('5')})
 
+        super_kwargs = {}
+
+        assert DATA_KEY not in input_data, \
+            ('Not allowed with"data" as input_data key. Not sure how you managed this? Are you '
+             'trying to break Dataset init on purpose?')
+
         if value != Undefined:
-            input_data[DATA_KEY] = value
+            assert data == Undefined, \
+                'Not allowed to combine positional and "data" keyword argument'
+            assert len(input_data) == 0, 'Not allowed to combine positional and keyword arguments'
+            super_kwargs[DATA_KEY] = value
+
+        if data != Undefined:
+            assert len(input_data) == 0, \
+                "Not allowed to combine 'data' with other keyword arguments"
+            super_kwargs[DATA_KEY] = data
+
+        if DATA_KEY not in super_kwargs and len(input_data) > 0:
+            super_kwargs[DATA_KEY] = input_data
 
         if self.get_model_class() == ModelT:
             self._raise_no_model_exception()
 
-        GenericModel.__init__(self, **input_data)
+        GenericModel.__init__(self, **super_kwargs)
         UserDict.__init__(self, self.data)  # noqa
         if not self.__doc__:
             self._set_standard_field_description()

@@ -64,6 +64,21 @@ def test_init_and_data():
     assert Model[Dict]((('a', 2), ('b', True))).to_data() == {'a': 2, 'b': True}
 
 
+def test_error_init():
+    with pytest.raises(TypeError):
+        assert Model[tuple[int, ...]](12, 2, 4).to_data() == 12
+    assert Model[tuple[int, ...]]((12, 2, 4)).to_data() == (12, 2, 4)
+
+    with pytest.raises(AssertionError):
+        Model[int](123, __root__=234)
+
+    with pytest.raises(AssertionError):
+        Model[int](123, other=234)
+
+    with pytest.raises(AssertionError):
+        Model[int](__root__=123, other=234)
+
+
 def test_load():
     model = Model[int]()
     model.from_data(12)

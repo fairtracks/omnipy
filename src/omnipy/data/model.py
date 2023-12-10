@@ -244,7 +244,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     def __init__(
         self,
         value: Union[Any, UndefinedType] = Undefined,
-        /,
+        *,
         __root__: Union[Any, UndefinedType] = Undefined,
         **data: Any,
     ) -> None:
@@ -263,7 +263,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             super_data[ROOT_KEY] = cast(RootT, data)
             num_root_vals += 1
 
-        assert num_root_vals <= 1
+        assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
 
         super().__init__(**super_data)
 
