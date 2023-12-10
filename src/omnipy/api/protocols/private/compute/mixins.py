@@ -1,4 +1,4 @@
-from typing import Optional, Protocol
+from typing import Protocol
 
 
 class IsUniquelyNamedJob(Protocol):
@@ -11,7 +11,7 @@ class IsUniquelyNamedJob(Protocol):
     def unique_name(self) -> str:
         ...
 
-    def __init__(self, *, name: Optional[str] = None):
+    def __init__(self, *, name: str | None = None):
         ...
 
     def regenerate_unique_name(self) -> None:

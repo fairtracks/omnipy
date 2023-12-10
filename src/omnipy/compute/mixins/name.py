@@ -1,4 +1,4 @@
-from typing import cast, Optional
+from typing import cast
 
 from inflection import underscore
 from slugify import slugify
@@ -8,8 +8,8 @@ from omnipy.util.mixin import DynamicMixinAcceptor
 
 
 class NameJobBaseMixin:
-    def __init__(self, *, name: Optional[str] = None):
-        self._name: Optional[str] = name
+    def __init__(self, *, name: str | None = None):
+        self._name: str | None = name
 
         if self._name is not None:
             self._check_not_empty_string('name', self._name)
@@ -26,14 +26,14 @@ class NameJobBaseMixin:
             raise ValueError('Empty strings not allowed for parameter "{}"'.format(param_name))
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         return self._name
 
     @property
-    def unique_name(self) -> Optional[str]:
+    def unique_name(self) -> str | None:
         return self._unique_name
 
-    def _generate_unique_name(self) -> Optional[str]:
+    def _generate_unique_name(self) -> str | None:
         if self._name is None:
             return None
 

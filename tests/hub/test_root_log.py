@@ -5,7 +5,7 @@ from logging.handlers import TimedRotatingFileHandler
 import os
 from pathlib import Path
 import time
-from typing import Annotated, Optional
+from typing import Annotated
 
 import pytest
 
@@ -34,7 +34,7 @@ def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: str):
     assert root_log.file_log_dir_path == os.path.join(dir_path, 'logs')
 
 
-def _log_record_for_level(level: int, datetime_obj: Optional[datetime] = None):
+def _log_record_for_level(level: int, datetime_obj: datetime | None = None):
     test_logger = logging.getLogger('test_logger')
     record = test_logger.makeRecord(
         name=test_logger.name, level=level, fn='', lno=0, msg='my log msg', args=(), exc_info=None)
@@ -45,7 +45,7 @@ def _log_record_for_level(level: int, datetime_obj: Optional[datetime] = None):
 
 
 def _assert_root_log_formatter(
-    formatter: Optional[logging.Formatter],
+    formatter: logging.Formatter | None,
     root_log_config: IsRootLogConfig,
 ):
     if root_log_config.log_format_str:
@@ -61,7 +61,7 @@ def _assert_root_log_formatter(
             root_log_config.locale)) in formatted_record
 
 
-def _assert_root_stdout_handler(root_stdout_handler: Optional[logging.StreamHandler],
+def _assert_root_stdout_handler(root_stdout_handler: logging.StreamHandler | None,
                                 root_log_config: IsRootLogConfig):
     if root_log_config.log_to_stdout:
         assert isinstance(root_stdout_handler, logging.StreamHandler)
@@ -85,7 +85,7 @@ def _assert_root_stdout_handler(root_stdout_handler: Optional[logging.StreamHand
         assert root_stdout_handler is None
 
 
-def _assert_root_stderr_handler(root_stderr_handler: Optional[logging.StreamHandler],
+def _assert_root_stderr_handler(root_stderr_handler: logging.StreamHandler | None,
                                 root_log_config: IsRootLogConfig):
     if root_log_config.log_to_stderr:
         assert isinstance(root_stderr_handler, logging.StreamHandler)
@@ -95,7 +95,7 @@ def _assert_root_stderr_handler(root_stderr_handler: Optional[logging.StreamHand
         assert root_stderr_handler is None
 
 
-def _assert_root_file_handler(root_file_handler: Optional[TimedRotatingFileHandler],
+def _assert_root_file_handler(root_file_handler: TimedRotatingFileHandler | None,
                               root_log_config: IsRootLogConfig):
     if root_log_config.log_to_file:
         assert isinstance(root_file_handler, TimedRotatingFileHandler)

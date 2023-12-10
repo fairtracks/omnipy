@@ -110,7 +110,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     See also docs of the Dataset class for more usage examples.
     """
 
-    __root__: Optional[RootT]
+    __root__: RootT | None
 
     class Config:
         arbitrary_types_allowed = True
@@ -189,8 +189,8 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         del cls.__fields__[ROOT_KEY]
         del cls.__annotations__[ROOT_KEY]
 
-    def __class_getitem__(cls, model: Union[Type[RootT], TypeVar]) -> Union[Type[RootT], TypeVar]:
-        # TODO: change model type to params: Union[Type[Any], tuple[Type[Any], ...]]
+    def __class_getitem__(cls, model: Type[RootT] | TypeVar) -> Type[RootT] | TypeVar:
+        # TODO: change model type to params: Type[Any], tuple[Type[Any], ...]]
         #       as in GenericModel
 
         # For now, only singular model types are allowed. These lines are needed for
@@ -232,7 +232,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
         return created_model
 
-    def __new__(cls, value: Union[Any, UndefinedType] = Undefined, **kwargs):
+    def __new__(cls, value: Any | UndefinedType = Undefined, **kwargs):
         model_not_specified = ROOT_KEY not in cls.__fields__
         if model_not_specified:
             cls._raise_no_model_exception()
@@ -242,9 +242,9 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     #       Should then work the same as dataset
     def __init__(
         self,
-        value: Union[Any, UndefinedType] = Undefined,
+        value: Any | UndefinedType = Undefined,
         *,
-        __root__: Union[Any, UndefinedType] = Undefined,
+        __root__: Any | UndefinedType = Undefined,
         **data: Any,
     ) -> None:
         super_data: dict[str, RootT] = {}
@@ -407,7 +407,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         return root_type
 
     # @classmethod
-    # def create_from_json(cls, data: Union[str, tuple[str]]):
+    # def create_from_json(cls, data: str | tuple[str]):
     #     if isinstance(data, tuple):
     #         data = data[0]
     #

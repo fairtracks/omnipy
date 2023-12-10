@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import update_wrapper
 import inspect
-from typing import Any, Callable, Optional, Type
+from typing import Any, Callable, Type
 
 from inflection import underscore
 from slugify import slugify
@@ -24,7 +24,7 @@ from omnipy.util.callable_decorator import callable_decorator_cls
 
 class MockJobCreator:
     def __init__(self):
-        self.engine: Optional[IsEngine] = None
+        self.engine: IsEngine | None = None
         self.nested_context_level = 0
 
     def set_engine(self, engine: IsEngine) -> None:
@@ -40,7 +40,7 @@ class MockJobCreator:
 class MockTask:
     job_creator = MockJobCreator()
 
-    def __init__(self, func: Callable, *, name: Optional[str] = None) -> None:
+    def __init__(self, func: Callable, *, name: str | None = None) -> None:
         self._func = func
         self._func_signature = inspect.signature(self._func)
         self.name = name if name is not None else func.__name__
@@ -96,7 +96,7 @@ class MockLinearFlow(MockTask):
     def __init__(self,
                  func: Callable,
                  *task_templates: MockTaskTemplate,
-                 name: Optional[str] = None,
+                 name: str | None = None,
                  **kwargs: object) -> None:
         self._task_templates = task_templates
         super().__init__(func, name=name, **kwargs)
@@ -120,7 +120,7 @@ class MockDagFlow(MockTask):
     def __init__(self,
                  func: Callable,
                  *task_templates: MockTaskTemplate,
-                 name: Optional[str] = None,
+                 name: str | None = None,
                  **kwargs: object) -> None:
         self._task_templates = task_templates
         super().__init__(func, name=name, **kwargs)
@@ -141,7 +141,7 @@ class MockDagFlowTemplate(MockDagFlow):
 
 
 class MockFuncFlow(MockTask):
-    def __init__(self, flow_func: Callable, name: Optional[str] = None, **kwargs: object) -> None:
+    def __init__(self, flow_func: Callable, name: str | None = None, **kwargs: object) -> None:
         super().__init__(flow_func, name=name)
 
 
@@ -274,7 +274,7 @@ class MockRunStateRegistry:
     def get_job_state_datetime(self, job: IsJob, state: RunState) -> datetime:
         return self._job_state_datetime[(job.unique_name, state)]
 
-    def all_jobs(self, state: Optional[RunState] = None) -> tuple[IsJob, ...]:  # noqa
+    def all_jobs(self, state: RunState | None = None) -> tuple[IsJob, ...]:  # noqa
         return tuple(self._jobs.values())
 
     def set_job_state(self, job: IsJob, state: RunState) -> None:

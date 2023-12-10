@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
-from typing import DefaultDict, Optional
+from typing import DefaultDict
 
 from omnipy.api.enums import RunState, RunStateLogMessages
 from omnipy.api.protocols.private.compute.mixins import IsUniquelyNamedJob
@@ -23,7 +23,7 @@ class RunStateRegistry(LogMixin):
     def get_job_state_datetime(self, job: IsUniquelyNamedJob, state: RunState) -> datetime:
         return self._job_state_datetime[(job.unique_name, state)]
 
-    def all_jobs(self, state: Optional[RunState] = None) -> tuple[IsUniquelyNamedJob, ...]:
+    def all_jobs(self, state: RunState | None = None) -> tuple[IsUniquelyNamedJob, ...]:
         if state is not None:
             job_unique_names = self._state_jobs[state]
             return tuple(self._jobs[unique_name] for unique_name in job_unique_names)

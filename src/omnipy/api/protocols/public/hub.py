@@ -1,6 +1,6 @@
 import logging
 from logging.handlers import TimedRotatingFileHandler
-from typing import Optional, Protocol
+from typing import Protocol
 
 from omnipy.api.enums import EngineChoice
 from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
@@ -14,10 +14,10 @@ from omnipy.api.protocols.public.config import (IsJobConfig,
 
 class IsRootLogObjects(Protocol):
     """"""
-    formatter: Optional[logging.Formatter] = None
-    stdout_handler: Optional[logging.StreamHandler] = None
-    stderr_handler: Optional[logging.StreamHandler] = None
-    file_handler: Optional[TimedRotatingFileHandler] = None
+    formatter: logging.Formatter | None = None
+    stdout_handler: logging.StreamHandler | None = None
+    stderr_handler: logging.StreamHandler | None = None
+    file_handler: TimedRotatingFileHandler | None = None
 
     def set_config(self, config: IsRootLogConfig) -> None:
         ...
@@ -33,11 +33,11 @@ class IsRuntimeConfig(Protocol):
 
     def __init__(
             self,
-            job: Optional[IsJobConfig] = None,  # noqa
+            job: IsJobConfig | None = None,  # noqa
             engine: EngineChoice = EngineChoice.LOCAL,  # noqa
-            local: Optional[IsLocalRunnerConfig] = None,  # noqa
-            prefect: Optional[IsPrefectEngineConfig] = None,  # noqa
-            root_log: Optional['IsRootLogConfigEntryPublisher'] = None,  # noqa
+            local: IsLocalRunnerConfig | None = None,  # noqa
+            prefect: IsPrefectEngineConfig | None = None,  # noqa
+            root_log: 'IsRootLogConfigEntryPublisher | None' = None,  # noqa
             *args: object,
             **kwargs: object) -> None:
         ...
@@ -54,11 +54,11 @@ class IsRuntimeObjects(Protocol):
 
     def __init__(
             self,
-            job_creator: Optional[IsJobConfigHolder] = None,  # noqa
-            local: Optional[IsEngine] = None,  # noqa
-            prefect: Optional[IsEngine] = None,  # noqa
-            registry: Optional[IsRunStateRegistry] = None,  # noqa
-            root_log: Optional[IsRootLogObjects] = None,  # noqa
+            job_creator: IsJobConfigHolder | None = None,  # noqa
+            local: IsEngine | None = None,  # noqa
+            prefect: IsEngine | None = None,  # noqa
+            registry: IsRunStateRegistry | None = None,  # noqa
+            root_log: IsRootLogObjects | None = None,  # noqa
             *args: object,
             **kwargs: object) -> None:
         ...
@@ -71,8 +71,8 @@ class IsRuntime(Protocol):
 
     def __init__(
             self,
-            config: Optional[IsRuntimeConfig] = None,  # noqa
-            objects: Optional[IsRuntimeObjects] = None,  # noqa
+            config: IsRuntimeConfig | None = None,  # noqa
+            objects: IsRuntimeObjects | None = None,  # noqa
             *args: object,
             **kwargs: object) -> None:
         ...

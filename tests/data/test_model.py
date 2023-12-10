@@ -218,8 +218,8 @@ def test_issubclass_and_isinstance():
     assert _issubclass_and_isinstance(Model[str], Model[str])
     assert not _issubclass_and_isinstance(Model[int], Model[str])
 
-    assert _issubclass_and_isinstance(Model[int], Model[Union[int, str]])
-    assert _issubclass_and_isinstance(Model[str], Model[Union[int, str]])
+    assert _issubclass_and_isinstance(Model[int], Model[int | str])
+    assert _issubclass_and_isinstance(Model[str], Model[int | str])
 
     assert _issubclass_and_isinstance(Model[list[str]], Model[list])
 
@@ -352,17 +352,11 @@ def test_basic_union():
     #
     #   TypeA | TypeB
     #
-    # The requirements for omnipy is currently Python 3.8, so the shorthand should
-    # currently be avoided.
-    #
-    # TODO: Consider whether omnipy should require Python 3.9 or 3.10 as type-related
-    #       notation and functionality is undergoing large changes. Another example is
-    #       the move towards lowercase int, list, dict instead of Int, List, Dict in
-    #       Python 3.9. Another possibility is to use
-    #       "from __future__ import annotations", which is already used a few places.
-    #       Consider also versions requirements for pydantic and mypy (as well as
-    #       prefect)
-    class UnionModel(Model[Union[int, str, list]]):
+    # The requirements for omnipy is Python 3.10, and there have been some hashin issues with mostly
+    # the older form of this notation, so the newer should be preferred. The old form are kept
+    # several places in this file tests related to the notation.
+
+    class UnionModel(Model[int | str | list]):
         ...
 
     assert UnionModel(15).to_data() == 15
@@ -438,24 +432,24 @@ def test_optional_v1_hack_nested_annotated_union_default_not_defined_by_first_ty
 
 
 def test_union_default_value_from_first_callable_type():
-    class FirstTypeNotInstantiatableUnionModel(Model[Union[Any, str]]):
+    class FirstTypeNotInstantiatableUnionModel(Model[Any | str]):
         ...
 
     assert FirstTypeNotInstantiatableUnionModel().to_data() == ''
 
     with pytest.raises(TypeError):
 
-        class NoTypeInstantiatableUnionModel(Model[Union[Any, Type]]):
+        class NoTypeInstantiatableUnionModel(Model[Any | Type]):
             ...
 
 
 def test_union_default_value_if_any_none():
-    class NoneFirstUnionModel(Model[Union[None, str]]):
+    class NoneFirstUnionModel(Model[None | str]):
         ...
 
     assert NoneFirstUnionModel().to_data() is None
 
-    class NoneSecondUnionModel(Model[Union[str, None]]):
+    class NoneSecondUnionModel(Model[str | None]):
         ...
 
     assert NoneSecondUnionModel().to_data() is None
@@ -862,7 +856,7 @@ does not seem to be needed.
 def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_default() -> None:
     MaybeNumber: TypeAlias = Optional[int]
 
-    BaseT = TypeVar('BaseT', bound=Union[list, 'FullModel', MaybeNumber])
+    BaseT = TypeVar('BaseT', bound=list | 'FullModel' | MaybeNumber)
 
     class BaseModel(Model[BaseT], Generic[BaseT]):
         ...
@@ -878,7 +872,7 @@ def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_defa
     class ListModel(GenericListModel['FullModel']):
         ...
 
-    FullModel: TypeAlias = Union[ListModel, MaybeNumberModel]
+    FullModel: TypeAlias = ListModel | MaybeNumberModel
 
     ListModel.update_forward_refs(FullModel=FullModel)
 

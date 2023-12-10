@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Protocol
+from typing import Protocol
 
 from omnipy.api.protocols.private.compute.mixins import IsNestedContext
 from omnipy.api.protocols.private.engine import IsEngine
@@ -9,11 +9,11 @@ from omnipy.api.protocols.public.config import IsJobConfig
 class IsJobConfigHolder(Protocol):
     """"""
     @property
-    def config(self) -> Optional[IsJobConfig]:
+    def config(self) -> IsJobConfig | None:
         ...
 
     @property
-    def engine(self) -> Optional[IsEngine]:
+    def engine(self) -> IsEngine | None:
         ...
 
     def set_config(self, config: IsJobConfig) -> None:
@@ -30,5 +30,5 @@ class IsJobCreator(IsNestedContext, IsJobConfigHolder, Protocol):
         ...
 
     @property
-    def time_of_cur_toplevel_nested_context_run(self) -> Optional[datetime]:
+    def time_of_cur_toplevel_nested_context_run(self) -> datetime | None:
         ...

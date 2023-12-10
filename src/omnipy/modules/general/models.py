@@ -1,11 +1,11 @@
-from typing import Generic, Hashable, Optional, TypeAlias, TypeVar
+from typing import Generic, Hashable, TypeAlias, TypeVar
 
 from omnipy.data.model import Model
 from omnipy.modules.general.typedefs import FrozenDict
 from omnipy.util.helpers import is_iterable
 
 
-class NotIterableExceptStrOrBytesModel(Model[Optional[object]]):
+class NotIterableExceptStrOrBytesModel(Model[object | None]):
     """
     Model describing any object that is not iterable, except for `str` and `bytes` types.
     As strings and bytes are iterable (over the characters/bytes) but also generally useful and

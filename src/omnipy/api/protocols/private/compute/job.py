@@ -1,6 +1,6 @@
 from datetime import datetime
 from types import MappingProxyType
-from typing import Any, Callable, Mapping, Optional, Protocol, Type
+from typing import Any, Callable, Mapping, Protocol, Type
 
 from omnipy.api.enums import (OutputStorageProtocolOptions,
                               PersistOutputsOptions,
@@ -25,11 +25,11 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol):
         ...
 
     @property
-    def config(self) -> Optional[IsJobConfig]:
+    def config(self) -> IsJobConfig | None:
         ...
 
     @property
-    def engine(self) -> Optional[IsEngine]:
+    def engine(self) -> IsEngine | None:
         ...
 
     @property
@@ -66,7 +66,7 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol):
 class IsJob(IsJobBase, Protocol):
     """"""
     @property
-    def time_of_cur_toplevel_flow_run(self) -> Optional[datetime]:
+    def time_of_cur_toplevel_flow_run(self) -> datetime | None:
         ...
 
     @classmethod
@@ -105,15 +105,15 @@ class IsFuncArgJobBase(IsJob, Protocol):
         ...
 
     @property
-    def persist_outputs(self) -> Optional[PersistOutputsOptions]:
+    def persist_outputs(self) -> PersistOutputsOptions | None:
         ...
 
     @property
-    def restore_outputs(self) -> Optional[RestoreOutputsOptions]:
+    def restore_outputs(self) -> RestoreOutputsOptions | None:
         ...
 
     @property
-    def output_storage_protocol(self) -> Optional[OutputStorageProtocolOptions]:
+    def output_storage_protocol(self) -> OutputStorageProtocolOptions | None:
         ...
 
     @property
@@ -129,7 +129,7 @@ class IsFuncArgJobBase(IsJob, Protocol):
         ...
 
     @property
-    def result_key(self) -> Optional[str]:
+    def result_key(self) -> str | None:
         ...
 
     @property
@@ -165,13 +165,13 @@ class IsFuncArgJobTemplateCallable(Protocol[JobTemplateT]):
     """"""
     def __call__(
         self,
-        name: Optional[str] = None,
+        name: str | None = None,
         iterate_over_data_files: bool = False,
-        persist_outputs: Optional[PersistOutputsOptions] = None,
-        restore_outputs: Optional[RestoreOutputsOptions] = None,
-        result_key: Optional[str] = None,
-        fixed_params: Optional[Mapping[str, object]] = None,
-        param_key_map: Optional[Mapping[str, str]] = None,
+        persist_outputs: PersistOutputsOptions | None = None,
+        restore_outputs: RestoreOutputsOptions | None = None,
+        result_key: str | None = None,
+        fixed_params: Mapping[str, object] | None = None,
+        param_key_map: Mapping[str, str] | None = None,
         **kwargs: object,
     ) -> Callable[[Callable], JobTemplateT]:
         ...
@@ -182,13 +182,13 @@ class IsFuncArgJobTemplate(IsJobTemplate, IsFuncArgJobBase, Protocol[JobTemplate
     def refine(self,
                *args: Any,
                update: bool = True,
-               name: Optional[str] = None,
+               name: str | None = None,
                iterate_over_data_files: bool = False,
-               persist_outputs: Optional[PersistOutputsOptions] = None,
-               restore_outputs: Optional[RestoreOutputsOptions] = None,
-               result_key: Optional[str] = None,
-               fixed_params: Optional[Mapping[str, object]] = None,
-               param_key_map: Optional[Mapping[str, str]] = None,
+               persist_outputs: PersistOutputsOptions | None = None,
+               restore_outputs: RestoreOutputsOptions | None = None,
+               result_key: str | None = None,
+               fixed_params: Mapping[str, object] | None = None,
+               param_key_map: Mapping[str, str] | None = None,
                **kwargs: object) -> JobTemplateT:
         ...
 
@@ -214,13 +214,13 @@ class IsTaskTemplateArgsJobTemplateCallable(Protocol[TaskTemplateContraT, JobTem
     def __call__(
         self,
         *task_templates: TaskTemplateContraT,
-        name: Optional[str] = None,
+        name: str | None = None,
         iterate_over_data_files: bool = False,
-        persist_outputs: Optional[PersistOutputsOptions] = None,
-        restore_outputs: Optional[RestoreOutputsOptions] = None,
-        result_key: Optional[str] = None,
-        fixed_params: Optional[Mapping[str, object]] = None,
-        param_key_map: Optional[Mapping[str, str]] = None,
+        persist_outputs: PersistOutputsOptions | None = None,
+        restore_outputs: RestoreOutputsOptions | None = None,
+        result_key: str | None = None,
+        fixed_params: Mapping[str, object] | None = None,
+        param_key_map: Mapping[str, str] | None = None,
         **kwargs: object,
     ) -> Callable[[Callable], JobTemplateT]:
         ...
@@ -233,12 +233,12 @@ class IsTaskTemplateArgsJobTemplate(IsFuncArgJobTemplate[JobTemplateT, JobT],
     def refine(self,
                *task_templates: TaskTemplateT,
                update: bool = True,
-               name: Optional[str] = None,
+               name: str | None = None,
                iterate_over_data_files: bool = False,
-               fixed_params: Optional[Mapping[str, object]] = None,
-               param_key_map: Optional[Mapping[str, str]] = None,
-               result_key: Optional[str] = None,
-               persist_outputs: Optional[PersistOutputsOptions] = None,
-               restore_outputs: Optional[RestoreOutputsOptions] = None,
+               fixed_params: Mapping[str, object] | None = None,
+               param_key_map: Mapping[str, str] | None = None,
+               result_key: str | None = None,
+               persist_outputs: PersistOutputsOptions | None = None,
+               restore_outputs: RestoreOutputsOptions | None = None,
                **kwargs: object) -> JobTemplateT:
         ...

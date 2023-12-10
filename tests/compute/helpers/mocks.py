@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from types import MappingProxyType
-from typing import Any, Callable, cast, Mapping, Optional, Protocol, Type, Union
+from typing import Any, Callable, cast, Mapping, Protocol, Type
 
 from omnipy.api.protocols.private.compute.job import (IsFuncArgJob,
                                                       IsFuncArgJobTemplate,
@@ -63,10 +63,10 @@ class CommandMockInit:
                  cmd_func: Callable,
                  command: str,
                  *,
-                 name: Optional[str] = None,
+                 name: str | None = None,
                  id: str = '',
                  uppercase: bool = False,
-                 params: Mapping[str, Union[int, str, bool]] = None,
+                 params: Mapping[str, int | str | bool] = None,
                  **kwargs):
 
         super().__init__(name=name, **kwargs)
@@ -83,7 +83,7 @@ class CommandMockParamMixin:
                  *,
                  id: str = '',
                  uppercase: bool = False,
-                 params: Mapping[str, Union[int, str, bool]] = None):
+                 params: Mapping[str, int | str | bool] = None):
 
         self._id = id
         self._uppercase = uppercase
@@ -176,7 +176,7 @@ class PublicPropertyErrorsMockSpeedMixin:
 
 class PublicPropertyErrorsMockParamsMixin:
     """  Error: 'params' property value is mutable """
-    def __init__(self, *, params: Optional[Mapping[str, Union[int, str, bool]]] = None):
+    def __init__(self, *, params: Mapping[str, int | str | bool] | None = None):
         self._params = params if params is not None else {}
 
     @property
@@ -218,7 +218,7 @@ class MockLocalRunner:
     def set_config(self, config: IsEngineConfig) -> None:
         ...
 
-    def set_registry(self, registry: Optional[IsRunStateRegistry]) -> None:
+    def set_registry(self, registry: IsRunStateRegistry | None) -> None:
         ...
 
     def apply_task_decorator(self, task: IsTask, job_callback_accept_decorator: Callable) -> None:
@@ -270,7 +270,7 @@ class MockJobConfig:
 
 
 class AssertSameTimeOfCurFlowRunJobBaseMixin:
-    _persisted_time_of_cur_toplevel_flow_run: Optional[datetime] = []
+    _persisted_time_of_cur_toplevel_flow_run: datetime | None = []
 
     @property
     def persisted_time_of_cur_toplevel_flow_run(self) -> list[datetime]:

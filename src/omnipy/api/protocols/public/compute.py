@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Protocol
+from typing import Protocol
 
 from omnipy.api.protocols.private.compute.job import (IsFuncArgJob,
                                                       IsFuncArgJobTemplate,
@@ -32,7 +32,7 @@ class IsFlow(Protocol):
         ...
 
     @property
-    def time_of_last_run(self) -> Optional[datetime]:
+    def time_of_last_run(self) -> datetime | None:
         ...
 
 

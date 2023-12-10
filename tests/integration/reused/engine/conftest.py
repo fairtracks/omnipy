@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Type
+from typing import Callable, Type
 
 import pytest_cases as pc
 
@@ -65,8 +65,8 @@ def all_func_types_real_jobs_all_engines_real_reg(
     job_case: JobCase,
     job_classes: tuple[JobType, Type[IsJobTemplate]],
     engine: Type[IsEngine],
-    engine_decorator: Optional[Callable[[IsEngine], IsEngine]],
-    registry: Optional[IsRunStateRegistry],
+    engine_decorator: Callable[[IsEngine], IsEngine] | None,
+    registry: IsRunStateRegistry | None,
 ):
     (job_type,
      task_template_cls,

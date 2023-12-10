@@ -1,5 +1,5 @@
 from copy import copy
-from typing import cast, Union
+from typing import cast
 
 from .typedefs import (JsonDict,
                        JsonDictOfListsOfDicts,
@@ -27,7 +27,7 @@ def flatten_outer_level_of_nested_record(
         if any(isinstance(value, typ) for typ in (dict, list)):
             new_data_file_title: str = f'{data_file_title}.{key}'
             new_data_file: JsonListOfDicts = transform_into_list_of_dicts(
-                cast(Union[JsonList, JsonDict], value), default_key=default_key)
+                cast(JsonList | JsonDict, value), default_key=default_key)
 
             add_references_to_parent_in_child_records(
                 child=new_data_file, parent_title=data_file_title, ident=record_id, ref_key=ref_key)
@@ -61,8 +61,7 @@ def update_dict_from_front(dict_a: dict, dict_b: dict) -> None:
     dict_a.update(dict_a_copy)
 
 
-def transform_into_list_of_dicts(value: Union[JsonList, JsonDict],
-                                 default_key: str) -> JsonListOfDicts:
+def transform_into_list_of_dicts(value: JsonList | JsonDict, default_key: str) -> JsonListOfDicts:
     if isinstance(value, dict):
         return JsonListOfDicts([value])
     else:

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Awaitable, Callable, Generic, Optional, Type, TypeVar, Union
+from typing import Any, Awaitable, Callable, Generic, Type, TypeVar
 
 from omnipy.api.enums import RunState
 from omnipy.api.protocols.private.compute.job import IsJob
@@ -27,9 +27,9 @@ ReturnT = TypeVar('ReturnT')
 class JobCase(Generic[ArgT, ReturnT]):
     name: str
     job_func: Callable[[ArgT], ReturnT]
-    run_and_assert_results_func: Union[Callable[[Any], None], Awaitable[Callable[[Any], None]]]
-    job_type: Optional[JobType] = None
-    job: Optional[IsJob] = None
+    run_and_assert_results_func: Callable[[Any], None] | Awaitable[Callable[[Any], None]]
+    job_type: JobType | None = None
+    job: IsJob | None = None
 
 
 class JobRunnerStateChecker(IsTaskRunnerEngine, IsDagFlowRunnerEngine, IsFuncFlowRunnerEngine):
@@ -40,7 +40,7 @@ class JobRunnerStateChecker(IsTaskRunnerEngine, IsDagFlowRunnerEngine, IsFuncFlo
     def set_config(self, config: IsEngineConfig) -> None:
         self._engine.set_config(config)
 
-    def set_registry(self, registry: Optional[IsRunStateRegistry]) -> None:
+    def set_registry(self, registry: IsRunStateRegistry | None) -> None:
         self._engine.set_registry(registry)
 
     def get_config_cls(self) -> Type[IsEngineConfig]:

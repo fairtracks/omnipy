@@ -2,7 +2,7 @@ from datetime import datetime
 import os
 from pathlib import Path
 import tarfile
-from typing import cast, Generator, Optional, Type
+from typing import cast, Generator, Type
 
 from omnipy.api.enums import ConfigPersistOutputsOptions as ConfigPersistOpts
 from omnipy.api.enums import ConfigRestoreOutputsOptions as ConfigRestoreOpts
@@ -26,9 +26,9 @@ ProtocolOpts = OutputStorageProtocolOptions
 class SerializerFuncJobBaseMixin:
     def __init__(self,
                  *,
-                 persist_outputs: Optional[PersistOutputsOptions] = None,
-                 restore_outputs: Optional[RestoreOutputsOptions] = None,
-                 output_storage_protocol: Optional[OutputStorageProtocolOptions] = None):
+                 persist_outputs: PersistOutputsOptions | None = None,
+                 restore_outputs: RestoreOutputsOptions | None = None,
+                 output_storage_protocol: OutputStorageProtocolOptions | None = None):
 
         # TODO: Possibly reimplement logic using a state machine, e.g. "transitions" package
         if persist_outputs is None:
@@ -86,15 +86,15 @@ class SerializerFuncJobBaseMixin:
         return self_as_signature_func_job_base_mixin.return_type
 
     @property
-    def persist_outputs(self) -> Optional[PersistOutputsOptions]:
+    def persist_outputs(self) -> PersistOutputsOptions | None:
         return self._persist_outputs
 
     @property
-    def restore_outputs(self) -> Optional[RestoreOutputsOptions]:
+    def restore_outputs(self) -> RestoreOutputsOptions | None:
         return self._restore_outputs
 
     @property
-    def output_storage_protocol(self) -> Optional[OutputStorageProtocolOptions]:
+    def output_storage_protocol(self) -> OutputStorageProtocolOptions | None:
         return self._output_storage_protocol
 
     @property

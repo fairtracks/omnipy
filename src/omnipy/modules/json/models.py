@@ -1,4 +1,4 @@
-from typing import Generic, Type, TypeAlias, TypeVar, Union
+from typing import Generic, Type, TypeAlias, TypeVar
 
 from omnipy.data.model import Model
 
@@ -11,8 +11,7 @@ from .typedefs import JsonScalar
 # Basic building block models
 
 _JsonBaseT = TypeVar(
-    '_JsonBaseT',
-    bound=Union['JsonScalarM', 'JsonListM', 'JsonDictM', 'JsonAnyListM', 'JsonAnyDictM'])
+    '_JsonBaseT', bound='JsonScalarM | JsonListM | JsonDictM | JsonAnyListM | JsonAnyDictM')
 
 
 class JsonScalarM(Model[JsonScalar]):
@@ -58,9 +57,9 @@ class JsonOnlyDictsM(JsonDictM['_JsonOnlyDictsUnion']):
 #       the hack for propagating None to work. Removing this level will simplify JSON models.
 #       If updated, also update frozen models
 
-_JsonAnyUnion: TypeAlias = Union[JsonScalarM, JsonAnyListM, JsonAnyDictM]
-_JsonOnlyListsUnion: TypeAlias = Union[JsonScalarM, JsonOnlyListsM]
-_JsonOnlyDictsUnion: TypeAlias = Union[JsonScalarM, JsonOnlyDictsM]
+_JsonAnyUnion: TypeAlias = JsonScalarM | JsonAnyListM | JsonAnyDictM
+_JsonOnlyListsUnion: TypeAlias = JsonScalarM | JsonOnlyListsM
+_JsonOnlyDictsUnion: TypeAlias = JsonScalarM | JsonOnlyDictsM
 
 _JsonListOfScalarsM: TypeAlias = JsonListM[JsonScalarM]
 

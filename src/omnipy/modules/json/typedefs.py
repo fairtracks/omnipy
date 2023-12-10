@@ -1,9 +1,9 @@
-from typing import TypeAlias, Union
+from typing import TypeAlias
 
-JsonScalar: TypeAlias = Union[None, int, float, str, bool]
+JsonScalar: TypeAlias = None | int | float | str | bool
 JsonList: TypeAlias = list['Json']
 JsonDict: TypeAlias = dict[str, 'Json']
-Json: TypeAlias = Union[JsonList, JsonDict, JsonScalar]
+Json: TypeAlias = JsonList | JsonDict | JsonScalar
 
 # list at the top level
 
@@ -23,10 +23,10 @@ JsonDictOfDictsOfScalars: TypeAlias = dict[str, JsonDictOfScalars]
 
 # Exclusion variants
 
-JsonNoDicts: TypeAlias = Union[JsonScalar, 'JsonNestedLists']
+JsonNoDicts: TypeAlias = 'JsonScalar | JsonNestedLists'
 JsonNestedLists: TypeAlias = list[JsonNoDicts]
 
-JsonNoLists: TypeAlias = Union[JsonScalar, 'JsonNestedDicts']
+JsonNoLists: TypeAlias = 'JsonScalar | JsonNestedDicts'
 JsonNestedDicts: TypeAlias = dict[str, JsonNoLists]
 
 # More specific types
