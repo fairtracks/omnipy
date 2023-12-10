@@ -23,10 +23,10 @@ class PandasModel(Model[pd.DataFrame]):
     def _data_not_empty_object(data: pd.DataFrame) -> None:
         assert not any(data.isna().all(axis=1))
 
-    def dict(self, *args, **kwargs) -> Dict[Any, Any]:
+    def dict(self, *args, **kwargs) -> Dict[str, Dict[Any, Any]]:
         df = super().dict(*args, **kwargs)[ROOT_KEY]
         df = df.replace({pd.NA: None})
-        return df.to_dict(orient='records')  # noqa
+        return {ROOT_KEY: df.to_dict(orient='records')}
 
     def from_data(self, value: Iterable[Any]) -> None:
         self.contents = pd.DataFrame(value).convert_dtypes()
