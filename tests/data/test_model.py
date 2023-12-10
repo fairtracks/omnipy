@@ -959,6 +959,126 @@ def test_import_export_methods():
     }''')  # noqa: Q001
 
 
+def test_model_function_as_dict():
+    model = Model[dict[str, int]]({'abc': 123})
+
+    assert len(model) == 1
+    assert model['abc'] == 123
+
+    model['abc'] = 321
+    model['bcd'] = 234
+    model['cde'] = 345
+
+    with pytest.raises(ValidationError):
+        model['def'] = 'eggs'
+
+    assert 'cde' in model
+    assert 'def' not in model
+
+    assert len(model) == 3
+    assert model['abc'] == 321
+
+    assert model.contents == {'abc': 321, 'bcd': 234, 'cde': 345}
+
+    assert tuple(model.keys()) == ('abc', 'bcd', 'cde')
+    assert tuple(model.values()) == (321, 234, 345)
+    assert tuple(model.items()) == (('abc', 321), ('bcd', 234), ('cde', 345))
+
+    assert isinstance(model, Model)
+    model.update({'def': 456, 'efg': 567})
+    assert 'def' in model
+    assert isinstance(model, Model)
+
+    model |= {'efg': 765, 'ghi': 678}
+    assert model['efg'] == 765
+    assert isinstance(model, Model)
+
+    del model['bcd']
+
+    other = {'abc': 321, 'cde': 345, 'def': 456, 'efg': 765, 'ghi': 678}
+    assert model.contents == other
+    assert model == Model[dict[str, int]](other)
+
+
+def test_model_function_as_list_simple():
+    model = Model[list[int]]()
+    assert len(model) == 0
+
+    model.append(123)
+    assert len(model) == 1
+    assert model[0] == 123
+    assert isinstance(model, Model)
+
+    model += [234, 345, 456]
+    assert len(model) == 4
+    assert model[-1] == 456
+    assert isinstance(model, Model)
+
+    assert model[1:-1].contents == [234, 345]
+    assert isinstance(model, Model)
+
+    assert tuple(reversed(model)) == (456, 345, 234, 123)
+
+    model[2] = 432
+    model[3] = '654'
+    assert model[2] == 432
+    assert model[3] == 654
+
+    with pytest.raises(ValidationError):
+        model[0] = 'bacon'
+
+    assert model[1] == 234
+
+    model[1] /= 2
+    assert model[1] == 117
+    assert isinstance(model, Model)
+
+    assert model.contents == [123, 117, 432, 654]
+    assert model.index(432) == 2
+
+    assert model.pop() == 654
+    assert len(model) == 3
+
+
+def test_model_function_as_list_no_nested_validation():
+    model = Model[list[int | list[int]]]([123, 234, [345]])
+
+    model[-1].append(tuple(range(5)))
+    assert len(model) == 3
+    assert model.contents == [123, 234, [345, (0, 1, 2, 3, 4)]]
+
+    assert model[-1][0] == 345
+
+    with pytest.raises(TypeError):
+        model[-1][1][-1] = 0
+    assert model.contents == [123, 234, [345, (0, 1, 2, 3, 4)]]
+    assert not isinstance(model[-1][1], Model)
+
+    model[-1].append('a')
+    assert model.contents == [123, 234, [345, (0, 1, 2, 3, 4), 'a']]
+
+
+def test_model_function_as_list_nested_validation():
+    model = Model[list[Model[list[Model[list[int]] | int]] | int]]([123, 234, [345]])
+
+    model[-1].append(tuple(range(5)))
+    assert len(model) == 3
+    assert model.to_data() == [123, 234, [345, [0, 1, 2, 3, 4]]]
+
+    assert model[-1][0] == 345
+
+    model[-1][1][-1] = 0
+    assert model.to_data() == [123, 234, [345, [0, 1, 2, 3, 0]]]
+    assert isinstance(model[-1][1], Model)
+
+    with pytest.raises(ValidationError):
+        model[-1].append('a')
+
+
+def test_model_copy():
+    ...
+
+
 def test_json_schema_generic_model_one_level():
     ListT = TypeVar('ListT', bound=List)  # noqa
 

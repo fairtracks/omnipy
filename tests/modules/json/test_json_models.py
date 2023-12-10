@@ -131,3 +131,10 @@ def test_error_list_of_single_dict_with_two_elements():
     with pytest.raises(ValidationError):
         a = JsonDictModel([{'a': 1, 'b': 2}])
         assert a.to_data() == {'a': 'b'}
+
+
+# TODO: Write tests for misc model operations relevant for JSON data. Try to avoid overlap with
+#       with test_model.
+def test_json_model_operations():
+    a = JsonDictModel([{'a': 1, 'b': 2}])
+    a['c'] = 3

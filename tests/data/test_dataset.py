@@ -630,4 +630,18 @@ def test_dataset_model_class():
     assert Dataset[Model[Dict[int, str]]]().get_model_class() == Model[Dict[int, str]]
 
 
+def test_dataset_switch_models_issue():
+    dataset = Dataset[Model[int]]({'a': 123, 'b': 234})
+    dataset['a'], dataset['b'] = dataset['b'], dataset['a']
+
+    dataset = Dataset[Model[Model[int]]]({'a': 123, 'b': 234})
+    dataset['a'], dataset['b'] = dataset['b'], dataset['a']
+
+    dataset = Dataset[Model[list[int]]]({'a': [123], 'b': [234]})
+    dataset['a'], dataset['b'] = dataset['b'], dataset['a']
+
+    dataset = Dataset[Model[Model[list[int]]]]({'a': [123], 'b': [234]})
+    dataset['a'], dataset['b'] = dataset['b'], dataset['a']
+
+
 # TODO: Add unit tests for MultiModelDataset
