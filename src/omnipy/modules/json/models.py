@@ -1,4 +1,4 @@
-from typing import Dict, Generic, List, Type, TypeAlias, TypeVar, Union
+from typing import Generic, Type, TypeAlias, TypeVar, Union
 
 from omnipy.data.model import Model
 
@@ -12,24 +12,24 @@ from .typedefs import JsonScalar
 
 _JsonBaseT = TypeVar(
     '_JsonBaseT',
-    bound=Union['_JsonScalarM', '_JsonBaseListM', '_JsonBaseDictM', '_JsonListM', '_JsonDictM'])
+    bound=Union['JsonScalarM', 'JsonListM', 'JsonDictM', 'JsonAnyListM', 'JsonAnyDictM'])
 
 
-class _JsonScalarM(Model[JsonScalar]):
+class JsonScalarM(Model[JsonScalar]):
     ...
 
 
-class _JsonBaseListM(Model[List[_JsonBaseT]], Generic[_JsonBaseT]):
+class JsonListM(Model[list[_JsonBaseT]], Generic[_JsonBaseT]):
     ...
 
 
-class _JsonBaseDictM(Model[Dict[str, _JsonBaseT]], Generic[_JsonBaseT]):
+class JsonDictM(Model[dict[str, _JsonBaseT]], Generic[_JsonBaseT]):
     ...
 
 
 # Note: This intermediate level of JSON models is needed for two reasons. 1) as targets for
 #       .updateForwardRefs(), as this does not seem to work properly directly on a generic model
-#       (e.g. `_JsonBaseListM['_JsonAnyUnion'].updateForwardRefs()`), at least in pydantic v1.
+#       (e.g. `JsonListM['_JsonAnyUnion'].updateForwardRefs()`), at least in pydantic v1.
 #       But even if this is fixed in pydantic v2, or more probably in python 3.13 with PEP649, the
 #       intermediate level is still needed due to the other reason: 2) For consistency in the
 #       hierarchy of JSON models, as tested in e.g. `test_json_model_consistency_basic()`. The
@@ -37,19 +37,19 @@ class _JsonBaseDictM(Model[Dict[str, _JsonBaseT]], Generic[_JsonBaseT]):
 #       hierarchy stays the same for e.g. `JsonModel` and `JsonDictModel`.
 
 
-class _JsonListM(_JsonBaseListM['_JsonAnyUnion']):
+class JsonAnyListM(JsonListM['_JsonAnyUnion']):
     ...
 
 
-class _JsonDictM(_JsonBaseDictM['_JsonAnyUnion']):
+class JsonAnyDictM(JsonDictM['_JsonAnyUnion']):
     ...
 
 
-class _JsonNoDictsM(_JsonBaseListM['_JsonNoDictsUnion']):
+class JsonOnlyListsM(JsonListM['_JsonOnlyListsUnion']):
     ...
 
 
-class _JsonNoListsM(_JsonBaseDictM['_JsonNoListsUnion']):
+class JsonOnlyDictsM(JsonDictM['_JsonOnlyDictsUnion']):
     ...
 
 
@@ -58,20 +58,20 @@ class _JsonNoListsM(_JsonBaseDictM['_JsonNoListsUnion']):
 #       the hack for propagating None to work. Removing this level will simplify JSON models.
 #       If updated, also update frozen models
 
-_JsonAnyUnion: TypeAlias = Union[_JsonScalarM, _JsonListM, _JsonDictM]
-_JsonNoDictsUnion: TypeAlias = Union[_JsonScalarM, _JsonNoDictsM]
-_JsonNoListsUnion: TypeAlias = Union[_JsonScalarM, _JsonNoListsM]
+_JsonAnyUnion: TypeAlias = Union[JsonScalarM, JsonAnyListM, JsonAnyDictM]
+_JsonOnlyListsUnion: TypeAlias = Union[JsonScalarM, JsonOnlyListsM]
+_JsonOnlyDictsUnion: TypeAlias = Union[JsonScalarM, JsonOnlyDictsM]
 
-_JsonListOfScalarsM: TypeAlias = _JsonBaseListM[_JsonScalarM]
+_JsonListOfScalarsM: TypeAlias = JsonListM[JsonScalarM]
 
-_JsonDictOfScalarsM: TypeAlias = _JsonBaseDictM[_JsonScalarM]
+_JsonDictOfScalarsM: TypeAlias = JsonDictM[JsonScalarM]
 
 # Basic models needs to update their forward_refs with type aliases declared above
 
-_JsonListM.update_forward_refs()
-_JsonDictM.update_forward_refs()
-_JsonNoDictsM.update_forward_refs()
-_JsonNoListsM.update_forward_refs()
+JsonAnyListM.update_forward_refs()
+JsonAnyDictM.update_forward_refs()
+JsonOnlyListsM.update_forward_refs()
+JsonOnlyDictsM.update_forward_refs()
 
 #
 # Exportable models
@@ -118,7 +118,7 @@ class JsonModel(Model[_JsonAnyUnion]):
 # Scalars
 
 
-class JsonScalarModel(Model[_JsonScalarM]):
+class JsonScalarModel(Model[JsonScalarM]):
     """
     JsonScalarModel is a limited JSON model supporting only scalar JSON content, e.g. the basic
     types: `None`, `int`, `float`, `str`, and `bool`. Lists and dicts (or "objects") are not
@@ -151,7 +151,7 @@ class JsonScalarModel(Model[_JsonScalarM]):
 # List at the top level
 
 
-class JsonListModel(Model[_JsonListM]):
+class JsonListModel(Model[JsonAnyListM]):
     """
     JsonListModel is a limited JSON model supporting only JSON content that has a list (or "array"
     in JSON nomenclature) at the root. The contents of the top-level list can be any JSON content,
@@ -187,26 +187,26 @@ class JsonListOfScalarsModel(Model[_JsonListOfScalarsM]):
     ...
 
 
-class JsonListOfListsModel(Model[_JsonBaseListM[_JsonListM]]):
+class JsonListOfListsModel(Model[JsonListM[JsonAnyListM]]):
     ...
 
 
-class JsonListOfListsOfScalarsModel(Model[_JsonBaseListM[_JsonListOfScalarsM]]):
+class JsonListOfListsOfScalarsModel(Model[JsonListM[_JsonListOfScalarsM]]):
     ...
 
 
-class JsonListOfDictsModel(Model[_JsonBaseListM[_JsonDictM]]):
+class JsonListOfDictsModel(Model[JsonListM[JsonAnyDictM]]):
     ...
 
 
-class JsonListOfDictsOfScalarsModel(Model[_JsonBaseListM[_JsonDictOfScalarsM]]):
+class JsonListOfDictsOfScalarsModel(Model[JsonListM[_JsonDictOfScalarsM]]):
     ...
 
 
 # Dict at the top level
 
 
-class JsonDictModel(Model[_JsonDictM]):
+class JsonDictModel(Model[JsonAnyDictM]):
     """
     JsonDictModel is a limited JSON model supporting only JSON content that has a dict (or "object"
     in JSON nomenclature) at the root. The values of the top-level dict can be any JSON content,
@@ -241,70 +241,68 @@ class JsonDictOfScalarsModel(Model[_JsonDictOfScalarsM]):
     ...
 
 
-class JsonDictOfListsModel(Model[_JsonBaseDictM[_JsonListM]]):
+class JsonDictOfListsModel(Model[JsonDictM[JsonAnyListM]]):
     ...
 
 
-class JsonDictOfListsOfScalarsModel(Model[_JsonBaseDictM[_JsonListOfScalarsM]]):
+class JsonDictOfListsOfScalarsModel(Model[JsonDictM[_JsonListOfScalarsM]]):
     ...
 
 
-class JsonDictOfDictsModel(Model[_JsonBaseDictM[_JsonDictM]]):
+class JsonDictOfDictsModel(Model[JsonDictM[JsonAnyDictM]]):
     ...
 
 
-class JsonDictOfDictsOfScalarsModel(Model[_JsonBaseDictM[_JsonDictOfScalarsM]]):
+class JsonDictOfDictsOfScalarsModel(Model[JsonDictM[_JsonDictOfScalarsM]]):
     ...
 
 
 # Nested models
 
 
-class JsonNoDictsModel(Model[_JsonNoDictsUnion]):
+class JsonNoDictsModel(Model[_JsonOnlyListsUnion]):
     ...
 
 
-class JsonNestedListsModel(Model[_JsonNoDictsM]):
+class JsonNestedListsModel(Model[JsonOnlyListsM]):
     ...
 
 
-class JsonNoListsModel(Model[_JsonNoListsUnion]):
+class JsonNoListsModel(Model[_JsonOnlyDictsUnion]):
     ...
 
 
-class JsonNestedDictsModel(Model[_JsonNoListsM]):
+class JsonNestedDictsModel(Model[JsonOnlyDictsM]):
     ...
 
 
 # More specific models
 
 
-class JsonListOfNestedDictsModel(Model[_JsonBaseListM[_JsonNoListsM]]):
+class JsonListOfNestedDictsModel(Model[JsonListM[JsonOnlyDictsM]]):
     ...
 
 
-class JsonDictOfNestedListsModel(Model[_JsonBaseDictM[_JsonNoDictsM]]):
+class JsonDictOfNestedListsModel(Model[JsonDictM[JsonOnlyListsM]]):
     ...
 
 
-class JsonDictOfListsOfDictsModel(Model[_JsonBaseDictM[_JsonBaseListM[_JsonDictM]]]):
+class JsonDictOfListsOfDictsModel(Model[JsonDictM[JsonListM[JsonAnyDictM]]]):
     ...
 
 
 # Custom models
 
-JsonScalarModelArg: TypeAlias = _JsonScalarM
 
-
-class JsonCustomModel(Model[_JsonBaseListM[_JsonBaseT]], Generic[_JsonBaseT]):
+class JsonCustomModel(Model[JsonListM[_JsonBaseT]], Generic[_JsonBaseT]):
     ...
 
 
-class JsonCustomListModel(Model[_JsonBaseListM[_JsonBaseT]], Generic[_JsonBaseT]):
+class JsonCustomListModel(Model[JsonListM[_JsonBaseT]], Generic[_JsonBaseT]):
     ...
 
 
-class JsonCustomDictModel(Model[_JsonBaseDictM[_JsonBaseT]], Generic[_JsonBaseT]):
+class JsonCustomDictModel(Model[JsonDictM[_JsonBaseT]], Generic[_JsonBaseT]):
     ...
 
 
