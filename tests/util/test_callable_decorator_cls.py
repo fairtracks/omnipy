@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Callable, Union
+from typing import Any, Callable
 
 import pytest
 
@@ -157,7 +157,7 @@ def test_fail_decorator_with_single_callable_arg() -> None:
             return dict(args=args, kwargs=kwargs)
 
 
-def my_fancy_func(*args: Union[int, str], **kwargs: bool) -> dict[str, Any]:
+def my_fancy_func(*args: int | str, **kwargs: bool) -> dict[str, Any]:
     """
     Documentation of myfunc()
     """

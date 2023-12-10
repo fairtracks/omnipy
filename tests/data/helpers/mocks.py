@@ -1,5 +1,5 @@
 import sys
-from typing import Any, IO, Type, Union
+from typing import Any, IO, Type
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
@@ -24,7 +24,7 @@ class MockNumberSerializer(Serializer):
         return 'num'
 
     @classmethod
-    def serialize(cls, number_dataset: NumberDataset) -> Union[bytes, memoryview]:
+    def serialize(cls, number_dataset: NumberDataset) -> bytes | memoryview:
         return ','.join(':'.join([k, str(v)]) for (k, v) in number_dataset.items()).encode('utf8')
 
     @classmethod
@@ -49,7 +49,7 @@ class MockNumberToTarFileSerializer(TarFileSerializer):
         return 'num'
 
     @classmethod
-    def serialize(cls, number_dataset: NumberDataset) -> Union[bytes, memoryview]:
+    def serialize(cls, number_dataset: NumberDataset) -> bytes | memoryview:
         def number_encode_func(number_data: int) -> bytes:
             return bytes([number_data])
 

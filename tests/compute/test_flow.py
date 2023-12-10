@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from datetime import datetime
-from typing import Annotated, cast, Type, Union
+from typing import Annotated, cast, Type
 
 import pytest
 import pytest_cases as pc
@@ -253,7 +253,7 @@ def test_linear_flow_only_first_positional(
 
     @mypy_fix_task_template
     @TaskTemplate
-    def my_formula_tmpl(number: Union[int, tuple[int, ...]], plus_number: int = 0) -> int:
+    def my_formula_tmpl(number: int | tuple[int, ...], plus_number: int = 0) -> int:
         number = sum(number) if isinstance(number, Iterable) else number
         return number * 2 + plus_number
 

@@ -5,7 +5,6 @@ from logging.handlers import TimedRotatingFileHandler
 import os
 from pathlib import Path
 from sys import stderr, stdout
-from typing import Optional
 
 from omnipy.api.protocols.public.config import IsRootLogConfig
 from omnipy.config.root_log import RootLogConfig
@@ -23,10 +22,10 @@ class RootLogObjects:
     _config: IsRootLogConfig = field(
         init=False, repr=False, default_factory=RootLogConfigEntryPublisher)
 
-    formatter: Optional[logging.Formatter] = None
-    stdout_handler: Optional[StreamHandler] = None
-    stderr_handler: Optional[StreamHandler] = None
-    file_handler: Optional[TimedRotatingFileHandler] = None
+    formatter: logging.Formatter | None = None
+    stdout_handler: StreamHandler | None = None
+    stderr_handler: StreamHandler | None = None
+    file_handler: TimedRotatingFileHandler | None = None
 
     def __post_init__(self):
         self._configure_all_objects()
@@ -67,14 +66,14 @@ class RootLogObjects:
         else:
             self.stdout_handler = None
 
-    def _configure_stderr_handler(self) -> Optional[StreamHandler]:
+    def _configure_stderr_handler(self) -> StreamHandler | None:
         if self._config.log_to_stderr:
             self.stderr_handler = StreamHandler(stderr)
             self.stderr_handler.setLevel(self._config.stderr_log_min_level)
         else:
             self.stderr_handler = None
 
-    def _configure_file_handler(self) -> Optional[TimedRotatingFileHandler]:
+    def _configure_file_handler(self) -> TimedRotatingFileHandler | None:
         if self._config.log_to_file:
             log_dir_path = self._config.file_log_dir_path
             if not os.path.exists(log_dir_path):
@@ -96,7 +95,7 @@ class RootLogObjects:
         for handler in handlersToRemove:
             root_logger.removeHandler(handler)
 
-    def _add_handler_to_root_logger(self, handler: Optional[logging.Handler]):
+    def _add_handler_to_root_logger(self, handler: logging.Handler | None):
         if handler:
             root_logger = logging.root
             if self.formatter:

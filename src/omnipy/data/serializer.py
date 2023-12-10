@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from io import BytesIO
 import tarfile
 from tarfile import TarInfo
-from typing import Any, Callable, IO, Type, Union
+from typing import Any, Callable, IO, Type
 
 from pydantic import ValidationError
 
@@ -28,7 +28,7 @@ class Serializer(ABC):
 
     @classmethod
     @abstractmethod
-    def serialize(cls, dataset: Dataset) -> Union[bytes, memoryview]:
+    def serialize(cls, dataset: Dataset) -> bytes | memoryview:
         pass
 
     @classmethod
@@ -42,7 +42,7 @@ class TarFileSerializer(Serializer, ABC):
     @classmethod
     def create_tarfile_from_dataset(cls,
                                     dataset: Dataset,
-                                    data_encode_func: Callable[[Any], Union[bytes, memoryview]]):
+                                    data_encode_func: Callable[[Any], bytes | memoryview]):
         bytes_io = BytesIO()
         with tarfile.open(fileobj=bytes_io, mode='w:gz') as tarfile_stream:
             for obj_type, data_obj in dataset.items():
@@ -58,7 +58,7 @@ class TarFileSerializer(Serializer, ABC):
                                     dataset: Dataset,
                                     tarfile_bytes: bytes,
                                     data_decode_func: Callable[[IO[bytes]], Any],
-                                    dictify_object_func: Callable[[str, Any], Union[dict, str]],
+                                    dictify_object_func: Callable[[str, Any], dict | str],
                                     import_method='from_data'):
         with tarfile.open(fileobj=BytesIO(tarfile_bytes), mode='r:gz') as tarfile_stream:
             for filename in tarfile_stream.getnames():

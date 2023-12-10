@@ -1,6 +1,5 @@
 from abc import ABCMeta
 from datetime import datetime
-from typing import Optional
 
 from omnipy.api.protocols.private.compute.job_creator import IsJobCreator
 from omnipy.api.protocols.private.engine import IsEngine
@@ -9,10 +8,10 @@ from omnipy.api.protocols.public.config import IsJobConfig
 
 class JobCreator:
     def __init__(self) -> None:
-        self._engine: Optional[IsEngine] = None
-        self._config: Optional[IsJobConfig] = None
+        self._engine: IsEngine | None = None
+        self._config: IsJobConfig | None = None
         self._nested_context_level: int = 0
-        self._time_of_cur_toplevel_nested_context_run: Optional[datetime] = None
+        self._time_of_cur_toplevel_nested_context_run: datetime | None = None
 
     def set_engine(self, engine: IsEngine) -> None:
         self._engine = engine
@@ -33,11 +32,11 @@ class JobCreator:
             self._time_of_cur_toplevel_nested_context_run = None
 
     @property
-    def engine(self) -> Optional[IsEngine]:
+    def engine(self) -> IsEngine | None:
         return self._engine
 
     @property
-    def config(self) -> Optional[IsJobConfig]:
+    def config(self) -> IsJobConfig | None:
         return self._config
 
     @property
@@ -45,7 +44,7 @@ class JobCreator:
         return self._nested_context_level
 
     @property
-    def time_of_cur_toplevel_nested_context_run(self) -> Optional[datetime]:
+    def time_of_cur_toplevel_nested_context_run(self) -> datetime | None:
         return self._time_of_cur_toplevel_nested_context_run
 
 

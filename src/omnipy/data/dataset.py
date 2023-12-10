@@ -1,15 +1,6 @@
 from collections import UserDict
 import json
-from typing import (Annotated,
-                    Any,
-                    Generic,
-                    get_args,
-                    get_origin,
-                    Iterator,
-                    Optional,
-                    Type,
-                    TypeVar,
-                    Union)
+from typing import Annotated, Any, Generic, get_args, get_origin, Iterator, Optional, Type, TypeVar
 
 # from orjson import orjson
 from pydantic import Field, PrivateAttr, root_validator, ValidationError
@@ -87,7 +78,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     data: dict[str, ModelT] = Field(default={})
 
     def __class_getitem__(cls, model: ModelT) -> ModelT:
-        # TODO: change model type to params: Union[Type[Any], tuple[Type[Any], ...]]
+        # TODO: change model type to params: Type[Any] | tuple[Type[Any], ...]
         #       as in GenericModel.
 
         # For now, only singular model types are allowed. These lines are needed for
@@ -260,7 +251,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         return GenericModel.dict(self).get(DATA_KEY)
 
     def from_data(self,
-                  data: Union[dict[str, Any], Iterator[tuple[str, Any]]],
+                  data: dict[str, Any] | Iterator[tuple[str, Any]],
                   update: bool = True) -> None:
         if not isinstance(data, dict):
             data = dict(data)
@@ -281,7 +272,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         return result
 
     def from_json(self,
-                  data: Union[dict[str, str], Iterator[tuple[str, str]]],
+                  data: dict[str, str] | Iterator[tuple[str, str]],
                   update: bool = True) -> None:
         if not isinstance(data, dict):
             data = dict(data)
@@ -300,7 +291,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     #
     #
     # @classmethod
-    # def create_from_json(cls, data: Union[str, tuple[str]]):
+    # def create_from_json(cls, data: str, tuple[str]]):
     #     if isinstance(data, tuple):
     #         data = data[0]
     #
@@ -312,7 +303,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     #     return self.__class__.create_from_json, (self.to_json(),)
 
     @classmethod
-    def to_json_schema(cls, pretty=False) -> Union[str, dict[str, str]]:
+    def to_json_schema(cls, pretty=False) -> str | dict[str, str]:
         result = {}
         schema = cls.schema()
         for key, val in schema['properties']['data'].items():

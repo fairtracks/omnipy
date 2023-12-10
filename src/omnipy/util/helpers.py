@@ -2,16 +2,7 @@ from collections.abc import Hashable, Iterable
 import inspect
 import locale as pkg_locale
 from types import UnionType
-from typing import (Any,
-                    cast,
-                    ClassVar,
-                    get_args,
-                    get_origin,
-                    Mapping,
-                    Optional,
-                    Protocol,
-                    TypeVar,
-                    Union)
+from typing import Any, cast, ClassVar, get_args, get_origin, Mapping, Protocol, TypeVar, Union
 
 from typing_inspect import get_generic_bases, is_generic_type
 
@@ -19,10 +10,10 @@ from omnipy.api.typedefs import LocaleType
 
 KeyT = TypeVar('KeyT', bound=Hashable)
 
-Dictable = Union[Mapping[KeyT, Any], Iterable[tuple[KeyT, Any]]]
+Dictable = Mapping[KeyT, Any] | Iterable[tuple[KeyT, Any]]
 
 
-def as_dictable(obj: object) -> Optional[Dictable]:
+def as_dictable(obj: object) -> Dictable | None:
     def _is_iterable_of_tuple_pairs(obj_inner: object) -> bool:
         return isinstance(obj_inner, Iterable) and \
             all(isinstance(el, tuple) and len(el) == 2 for el in obj_inner)
@@ -44,7 +35,7 @@ def remove_none_vals(**kwargs: object) -> dict[object, object]:
     return {key: val for key, val in kwargs.items() if val is not None}
 
 
-def get_datetime_format(locale: Optional[LocaleType] = None) -> str:
+def get_datetime_format(locale: LocaleType | None = None) -> str:
     pkg_locale.setlocale(pkg_locale.LC_ALL, locale)
 
     if hasattr(pkg_locale, 'nl_langinfo'):  # noqa

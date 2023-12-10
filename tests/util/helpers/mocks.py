@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from omnipy.util.publisher import DataPublisher
 
@@ -10,17 +9,17 @@ class MockFoo:
 
 @dataclass
 class MockDataPublisher(DataPublisher):
-    foo: Optional[MockFoo] = None
+    foo: MockFoo | None = None
     text: str = 'bar'
     number: int = 42
 
 
 class MockSubscriberCls:
     def __init__(self):
-        self.foo: Optional[MockFoo] = None
+        self.foo: MockFoo | None = None
         self.text: str = ''
 
-    def set_foo(self, foo: Optional[MockFoo]) -> None:
+    def set_foo(self, foo: MockFoo | None) -> None:
         self.foo = foo
 
     def set_text(self, text: str) -> None:

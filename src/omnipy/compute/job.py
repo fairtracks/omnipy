@@ -3,7 +3,7 @@ from datetime import datetime
 from functools import update_wrapper
 import logging
 from types import MappingProxyType
-from typing import Any, cast, Hashable, Optional, Type, Union
+from typing import Any, cast, Hashable, Type
 
 from omnipy.api.exceptions import JobStateException
 from omnipy.api.protocols.private.compute.job import IsJob, IsJobBase, IsJobTemplate
@@ -24,11 +24,11 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
         return self.__class__.job_creator
 
     @property
-    def config(self) -> Optional[IsJobConfig]:
+    def config(self) -> IsJobConfig | None:
         return self.__class__.job_creator.config
 
     @property
-    def engine(self) -> Optional[IsEngine]:
+    def engine(self) -> IsEngine | None:
         return self.__class__.job_creator.engine
 
     @property
@@ -102,9 +102,8 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
                     cur_val_dictable = as_dictable(cur_val)
                     refine_val_dictable = as_dictable(refine_val)
                     if cur_val_dictable is not None and refine_val_dictable is not None:
-                        new_val: Union[object,
-                                       dict] = create_merged_dict(cur_val_dictable,
-                                                                  refine_val_dictable)
+                        new_val: object | dict = create_merged_dict(cur_val_dictable,
+                                                                    refine_val_dictable)
                     else:
                         new_val = refine_kwargs[key]
                 else:
@@ -215,7 +214,7 @@ class JobMixin(DynamicMixinAcceptor):
         ...
 
     @property
-    def time_of_cur_toplevel_flow_run(self) -> Optional[datetime]:
+    def time_of_cur_toplevel_flow_run(self) -> datetime | None:
         self_as_job_base = cast(IsJobBase, self)
         return self_as_job_base._job_creator.time_of_cur_toplevel_nested_context_run
 

@@ -1,5 +1,5 @@
 import typing
-from typing import Generic, Mapping, Type, TypeVar, Union
+from typing import Generic, Mapping, Type, TypeVar
 
 from pydantic import BaseConfig, BaseModel, create_model, Extra
 
@@ -19,8 +19,7 @@ class RecordSchemaBase(BaseModel):
 # Hours were spend figuring this out. Let's start with the following TypeVar definition, which
 # looks like it ought to be working:
 #
-#     RecordT = TypeVar(
-#         'RecordT', bound=Model[Union[dict[str, Union[Type, UnionType]], RecordSchemaBase]])
+#     RecordT = TypeVar('RecordT', bound=Model[dict[str, Type | UnionType] | RecordSchemaBase])
 #
 # There are, however, several issues with this that cause mypy to complain, however the exact
 # reasons are difficult to unravel. Mypy only complains with a very generic error message:
@@ -32,8 +31,7 @@ class RecordSchemaBase(BaseModel):
 # of the bound `RecordT` type variable and therefore needs it to be covariant or contravariant.
 # Switching `dict` with `Mapping`, which is not invariant, still does not work:
 #
-#     RecordT = TypeVar(
-#         'RecordT', bound=Model[Union[Mapping[str, Union[Type, UnionType]], RecordSchemaBase]])
+#     RecordT = TypeVar('RecordT', bound=Model[Mapping[str, Type | UnionType] | RecordSchemaBase])
 #
 # Now the code fails not run at all with the error:
 #
@@ -55,8 +53,7 @@ class RecordSchemaBase(BaseModel):
 # Due to this inconsistency and the use of a private type, `UnionType` was switched to `object`.
 # With the final variant, all of mypy, pydantic and omnipy work as they should:
 
-RecordT = TypeVar(
-    'RecordT', bound=Model[Union[Mapping[str, Union[Type, object]], RecordSchemaBase]])
+RecordT = TypeVar('RecordT', bound=Model[Mapping[str, Type | object] | RecordSchemaBase])
 
 RecordSchemaDefType = dict[str, Type[object]]
 
@@ -114,7 +111,7 @@ class TableTemplate(Model[list[RecordT]], Generic[RecordT]):
     """This is a generic template model for tables"""
 
 
-class GeneralRecord(Model[dict[str, Union[int, str]]]):
+class GeneralRecord(Model[dict[str, int | str]]):
     """This is a general record"""
 
 

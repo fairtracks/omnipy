@@ -1,6 +1,6 @@
 from collections import UserDict
 from types import MappingProxyType
-from typing import Generic, Optional, Sequence, TypeVar
+from typing import Generic, Sequence, TypeVar
 
 _KeyT = TypeVar('_KeyT')
 _ValT = TypeVar('_ValT')
@@ -50,7 +50,7 @@ class FrozenDict(UserDict[_KeyT, _ValT], Generic[_KeyT, _ValT]):
         NestedFrozenDictsModel, NestedTuplesModel and NestedFrozenCollectionsModel.
     """
     def __init__(self,
-                 unfrozen_dict: Optional[dict[_KeyT, _ValT] | Sequence[tuple[_KeyT, _ValT]]] = None,
+                 unfrozen_dict: dict[_KeyT, _ValT] | Sequence[tuple[_KeyT, _ValT]] | None = None,
                  /,
                  **kwargs):
         super().__init__(unfrozen_dict, **kwargs)

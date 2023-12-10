@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Type
+from typing import Callable, Type
 
 import pytest_cases as pc
 
@@ -153,7 +153,7 @@ def no_registry(registry):
 def task_mock_classes(
     job_type: JobType,
     task_template_cls: Type[IsTaskTemplate],
-    flow_template_cls: Optional[Type[IsFlowTemplate]],
+    flow_template_cls: Type[IsFlowTemplate] | None,
     job_runner_subcls: Type[IsEngine],
 ):
     return job_type, task_template_cls, flow_template_cls, job_runner_subcls
@@ -167,7 +167,7 @@ def task_mock_classes(
 def linear_flow_mock_classes(
     job_type: JobType,
     task_template_cls: Type[IsTaskTemplate],
-    flow_template_cls: Optional[Type[IsFlowTemplate]],
+    flow_template_cls: Type[IsFlowTemplate] | None,
     job_runner_subcls: Type[IsEngine],
 ):
     return job_type, task_template_cls, flow_template_cls, job_runner_subcls
@@ -181,7 +181,7 @@ def linear_flow_mock_classes(
 def dag_flow_mock_classes(
     job_type: JobType,
     task_template_cls: Type[IsTaskTemplate],
-    flow_template_cls: Optional[Type[IsFlowTemplate]],
+    flow_template_cls: Type[IsFlowTemplate] | None,
     job_runner_subcls: Type[IsEngine],
 ):
     return job_type, task_template_cls, flow_template_cls, job_runner_subcls
@@ -195,7 +195,7 @@ def dag_flow_mock_classes(
 def func_flow_mock_classes(
     job_type: JobType,
     task_template_cls: Type[IsTaskTemplate],
-    flow_template_cls: Optional[Type[IsFlowTemplate]],
+    flow_template_cls: Type[IsFlowTemplate] | None,
     job_runner_subcls: Type[IsEngine],
 ):
     return job_type, task_template_cls, flow_template_cls, job_runner_subcls
@@ -219,8 +219,8 @@ def func_flow_mock_classes(
 def power_mock_jobs_mock_runner_subcls_no_verbose_no_reg(
     job_case: JobCase,
     job_mock_classes: tuple[JobType, Type[IsJobTemplate], Type[IsEngine]],
-    engine_decorator: Optional[Callable[[IsEngine], IsEngine]],
-    registry: Optional[IsRunStateRegistry],
+    engine_decorator: Callable[[IsEngine], IsEngine] | None,
+    registry: IsRunStateRegistry | None,
 ):
     job_type, task_template_cls, flow_template_cls, job_runner_subcls = job_mock_classes
     return update_job_case_with_job(
@@ -249,8 +249,8 @@ def power_mock_jobs_mock_runner_subcls_no_verbose_no_reg(
 def all_func_types_mock_jobs_mock_runner_subcls_assert_runstate_mock_reg(
     job_case: JobCase,
     job_mock_classes: tuple[JobType, Type[IsJobTemplate], Type[IsEngine]],
-    engine_decorator: Optional[Callable[[IsEngine], IsEngine]],
-    registry: Optional[IsRunStateRegistry],
+    engine_decorator: Callable[[IsEngine], IsEngine] | None,
+    registry: IsRunStateRegistry | None,
 ):
     job_type, task_template_cls, flow_template_cls, job_runner_subcls = job_mock_classes
     return update_job_case_with_job(
@@ -284,8 +284,8 @@ def all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg(
     job_case: JobCase,
     job_classes: tuple[JobType, Type[IsJobTemplate], Type[IsEngine]],
     engine: Type[IsEngine],
-    engine_decorator: Optional[Callable[[IsEngine], IsEngine]],
-    registry: Optional[IsRunStateRegistry],
+    engine_decorator: Callable[[IsEngine], IsEngine] | None,
+    registry: IsRunStateRegistry | None,
 ):
     job_type, task_template_cls, flow_template_cls, job_runner_subcls = job_classes
 

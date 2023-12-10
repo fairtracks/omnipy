@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 import os
 from textwrap import dedent
-from typing import Type, TypeAlias, Union
+from typing import Type, TypeAlias
 
 import pytest
 import pytest_cases as pc
@@ -34,8 +34,8 @@ from .raw.examples import (e_complex_key_dict,
                            f_str,
                            f_tuple)
 
-FSK: TypeAlias = Union[int, str, complex]  # for keys
-FSV: TypeAlias = Union[None, int, str, complex]  # for values
+FSK: TypeAlias = int | str | complex  # for keys
+FSV: TypeAlias = None | int | str | complex  # for values
 
 
 @pc.case(id='test_frozen_tuples', tags=[])

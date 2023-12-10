@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, NamedTuple, Optional, Type, Union
+from typing import Annotated, NamedTuple, Type
 
 import pytest
 
@@ -33,7 +33,7 @@ class PropertyTest(NamedTuple):
     in_job_template: bool
     in_job: bool
     at_obj_level: bool
-    set_method: Optional[str] = None
+    set_method: str | None = None
 
 
 MockJobClasses = tuple[Type[JobTemplateMixin], Type[JobMixin]]
@@ -209,7 +209,7 @@ def _assert_prop_getattr_all(mock_job_classes: MockJobClasses,
 
 
 def _assert_prop_getattr_job_subcls(job_cls: Type,
-                                    job_obj: Optional[IsJobBase],
+                                    job_obj: IsJobBase | None,
                                     property: str,
                                     in_job_obj: bool,
                                     at_obj_level: bool,
@@ -272,7 +272,7 @@ def test_subclass_equal() -> None:
 
 
 def _assert_immutable_command_mock_job_properties(
-        cmd_obj: Union[CommandMockJobTemplate, CommandMockJob]) -> None:
+        cmd_obj: CommandMockJobTemplate | CommandMockJob) -> None:
 
     with pytest.raises(AttributeError):
         cmd_obj.uppercase = False  # noqa

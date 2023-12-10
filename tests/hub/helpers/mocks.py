@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, Protocol, Type
+from typing import Protocol, Type
 
 from omnipy.api.enums import RunState
 from omnipy.api.protocols.private.log import IsRunStateRegistry
@@ -26,7 +26,7 @@ class MockJobConfig:
 
 class MockJobCreator:
     def __init__(self) -> None:
-        self.engine: Optional[IsTaskRunnerEngine] = None
+        self.engine: IsTaskRunnerEngine | None = None
         self.config: MockIsJobConfig = MockJobConfig()
 
     def set_engine(self, engine: IsTaskRunnerEngine) -> None:
@@ -44,7 +44,7 @@ class MockEngine(ABC):
     def __init__(self) -> None:
         config_cls = self.get_config_cls()
         self._config: IsEngineConfig = config_cls()
-        self.registry: Optional[IsRunStateRegistry] = None
+        self.registry: IsRunStateRegistry | None = None
 
     @classmethod
     @abstractmethod
@@ -54,7 +54,7 @@ class MockEngine(ABC):
     def set_config(self, config: IsEngineConfig) -> None:
         self._config = config
 
-    def set_registry(self, registry: Optional[IsRunStateRegistry]) -> None:
+    def set_registry(self, registry: IsRunStateRegistry | None) -> None:
         self.registry = registry
 
 
@@ -110,7 +110,7 @@ class MockPrefectEngine2(MockPrefectEngine):
 
 class MockRootLogObjects:
     def __init__(self):
-        self.config: Optional[IsRootLogConfig] = None
+        self.config: IsRootLogConfig | None = None
 
     def set_config(self, config: IsRootLogConfig):
         self.config = config
@@ -132,7 +132,7 @@ class MockRunStateRegistry:
     def get_task_state_datetime(self, task: IsTask, state: RunState) -> datetime:
         ...
 
-    def all_tasks(self, state: Optional[RunState] = None) -> tuple[IsTask, ...]:  # noqa
+    def all_tasks(self, state: RunState | None = None) -> tuple[IsTask, ...]:  # noqa
         ...
 
     def set_task_state(self, task: IsTask, state: RunState) -> None:

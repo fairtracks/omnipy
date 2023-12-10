@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 from time import sleep
-from typing import Awaitable, Callable, cast, Optional, Type
+from typing import Awaitable, Callable, cast, Type
 
 from omnipy.api.enums import RunState
 from omnipy.api.protocols.private.compute.job import IsJob
@@ -91,7 +91,7 @@ def create_task_with_func(
     func: Callable,
     task_template_cls: type(IsTaskTemplate),
     engine: IsTaskRunnerEngine,
-    registry: Optional[IsRunStateRegistry],
+    registry: IsRunStateRegistry | None,
 ) -> IsTask:
 
     task_template = task_template_cls(name=name)(func)
@@ -109,7 +109,7 @@ def create_linear_flow_with_two_func_tasks(
     task_template_cls: type(IsTaskTemplate),
     linear_flow_template_cls: type(IsLinearFlowTemplate),
     engine: IsLinearFlowRunnerEngine,
-    registry: Optional[IsRunStateRegistry],
+    registry: IsRunStateRegistry | None,
 ) -> IsLinearFlow:
     @task_template_cls
     def passthrough_task(arg):
@@ -135,7 +135,7 @@ def create_dag_flow_with_two_func_tasks(
     task_template_cls: type(IsTaskTemplate),
     dag_flow_template_cls: type(IsDagFlowTemplate),
     engine: IsDagFlowRunnerEngine,
-    registry: Optional[IsRunStateRegistry],
+    registry: IsRunStateRegistry | None,
 ) -> IsDagFlow:
 
     task_template = task_template_cls(name=name)(func)
@@ -154,7 +154,7 @@ def create_func_flow_with_two_func_tasks(
     task_template_cls: type(IsTaskTemplate),
     func_flow_template_cls: type(IsFuncFlowTemplate),
     engine: IsFuncFlowRunnerEngine,
-    registry: Optional[IsRunStateRegistry],
+    registry: IsRunStateRegistry | None,
 ) -> IsDagFlow:
 
     task_template = task_template_cls(name=name)(func)
@@ -176,10 +176,10 @@ def update_job_case_with_job(
     job_case: JobCase,
     job_type: JobType,
     task_template_cls: Type[IsTaskTemplate],
-    flow_template_cls: Optional[Type[IsFlowTemplate]],
+    flow_template_cls: Type[IsFlowTemplate] | None,
     engine: Type[IsEngine],
-    engine_decorator: Optional[Callable[[IsEngine], IsEngine]],
-    registry: Optional[IsRunStateRegistry],
+    engine_decorator: Callable[[IsEngine], IsEngine] | None,
+    registry: IsRunStateRegistry | None,
 ):
     if engine_decorator:
         engine = engine_decorator(engine)

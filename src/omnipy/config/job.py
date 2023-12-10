@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 import os
-# from datetime import datetime
 from pathlib import Path
 
 from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
@@ -9,8 +8,6 @@ from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
 from omnipy.api.protocols.public.config import (IsLocalOutputStorage,
                                                 IsOutputStorage,
                                                 IsS3OutputStorage)
-
-# from typing import Optional
 
 
 def _get_persist_data_dir_path() -> str:

@@ -1,5 +1,4 @@
 from io import StringIO
-from typing import Optional
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
@@ -26,7 +25,7 @@ def convert_dataset_list_of_dicts_to_pandas(
 def convert_dataset_csv_to_pandas(dataset: Dataset[Model[bytes]],
                                   delimiter: str = ',',
                                   first_row_as_col_names=True,
-                                  col_names: Optional[list[str]] = None,
+                                  col_names: list[str] | None = None,
                                   ignore_comments: bool = True,
                                   comments_char: str = '#') -> PandasDataset:
     out_dataset = PandasDataset()
@@ -49,7 +48,7 @@ def convert_dataset_pandas_to_csv(
     dataset: PandasDataset,
     delimiter: str = ',',
     first_row_as_col_names=True,
-    col_names: Optional[list[str]] = None,
+    col_names: list[str] | None = None,
 ) -> Dataset[Model[str]]:
     out_dataset = Dataset[Model[str]]()
     for key, df in dataset.items():

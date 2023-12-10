@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Type
+from typing import Type
 
 from omnipy.api.protocols.private.log import IsRunStateRegistry
 from omnipy.api.protocols.public.config import IsEngineConfig
@@ -10,7 +10,7 @@ class Engine(ABC):
     def __init__(self) -> None:
         config_cls = self.get_config_cls()
         self._config: IsEngineConfig = config_cls()
-        self._registry: Optional[IsRunStateRegistry] = None
+        self._registry: IsRunStateRegistry | None = None
 
         self._init_engine()
 
@@ -44,5 +44,5 @@ class Engine(ABC):
         self._config = config
         self._update_from_config()
 
-    def set_registry(self, registry: Optional[IsRunStateRegistry]) -> None:
+    def set_registry(self, registry: IsRunStateRegistry | None) -> None:
         self._registry = registry

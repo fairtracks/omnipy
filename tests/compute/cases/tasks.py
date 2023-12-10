@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from inspect import Parameter
 import json
 from types import NoneType
-from typing import Any, Callable, Generic, TypeVar, Union
+from typing import Any, Callable, Generic, TypeVar
 
 import pytest
 import pytest_cases as pc
@@ -43,7 +43,7 @@ def case_sync_action_func_no_params() -> TaskCase[[], None]:
             # TODO: Check up: None results are returned as State
         assert result is None
 
-    def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):
+    def assert_param_signature_and_return_type(task_obj: TaskTemplate | Task):
         assert task_obj.param_signatures == {}
         assert task_obj.return_type is None
 
@@ -67,7 +67,7 @@ def case_sync_action_func_with_params() -> TaskCase[[int, bool], None]:
             pytest.xfail('None results are returned as State. Perhaps bug in Prefect?')
         assert result is None
 
-    def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):
+    def assert_param_signature_and_return_type(task_obj: TaskTemplate | Task):
         assert task_obj.param_signatures == {
             'command': Parameter('command', Parameter.POSITIONAL_OR_KEYWORD, annotation=str),
             'verbose': Parameter('verbose', Parameter.KEYWORD_ONLY, annotation=bool, default=False),
@@ -92,7 +92,7 @@ def case_sync_data_import_func() -> TaskCase[[], str]:
         assert type(json_data) is str
         assert json.loads(json_data) == dict(my_data=[123, 234, 345, 456])
 
-    def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):
+    def assert_param_signature_and_return_type(task_obj: TaskTemplate | Task):
         assert task_obj.param_signatures == {}
         assert task_obj.return_type == str
 
@@ -113,7 +113,7 @@ def case_sync_format_to_string_func() -> TaskCase[[str, int], str]:
     def assert_results(result: str) -> None:
         assert result == 'Number: 12'
 
-    def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):
+    def assert_param_signature_and_return_type(task_obj: TaskTemplate | Task):
         assert task_obj.param_signatures == {
             'text': Parameter('text', Parameter.POSITIONAL_OR_KEYWORD, annotation=str),
             'number': Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
@@ -137,7 +137,7 @@ def case_sync_power_m1_func() -> TaskCase[[int, int, bool], int]:
     def assert_results(result: int) -> None:
         assert result == 64
 
-    def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):
+    def assert_param_signature_and_return_type(task_obj: TaskTemplate | Task):
         assert task_obj.param_signatures == {
             'number':
                 Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
@@ -170,7 +170,7 @@ def case_sync_empty_dict_fun() -> TaskCase[[], dict]:
     def assert_results(result: dict) -> None:
         assert result == {}
 
-    def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):
+    def assert_param_signature_and_return_type(task_obj: TaskTemplate | Task):
         assert task_obj.param_signatures == {}
         assert task_obj.return_type == dict
 
@@ -191,7 +191,7 @@ def case_sync_plus_one_dict_func() -> TaskCase[[int], dict[str, int]]:
     def assert_results(result: dict[str, int]) -> None:
         assert result == {'number': 4}
 
-    def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):
+    def assert_param_signature_and_return_type(task_obj: TaskTemplate | Task):
         assert task_obj.param_signatures == {
             'number': Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
         }
@@ -214,7 +214,7 @@ def case_sync_dict_of_squared_fun() -> TaskCase[[int], dict[int, int]]:
     def assert_results(result: dict[int, int]) -> None:
         assert result == {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
 
-    def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):
+    def assert_param_signature_and_return_type(task_obj: TaskTemplate | Task):
         assert task_obj.param_signatures == {
             'number': Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
         }

@@ -1,6 +1,5 @@
 from io import StringIO
 import os
-from typing import Optional
 
 
 def read_log_lines_from_stream(str_stream: StringIO) -> list[str]:
@@ -31,8 +30,8 @@ def assert_log_lines_from_stream(num_log_lines, str_stream):
 
 def assert_log_line_from_stream(str_stream,
                                 msg: str,
-                                level: Optional[str] = None,
-                                logger: Optional[str] = None):
+                                level: str | None = None,
+                                logger: str | None = None):
     log_line = read_log_line_from_stream(str_stream)
     assert msg in log_line
     assert level in log_line if level else level not in log_line

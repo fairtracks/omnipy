@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Any, IO, Type, Union
+from typing import Any, IO, Type
 
 from omnipy.data.serializer import TarFileSerializer
 
@@ -23,7 +23,7 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer):
         return 'csv'
 
     @classmethod
-    def serialize(cls, pandas_dataset: PandasDataset) -> Union[bytes, memoryview]:
+    def serialize(cls, pandas_dataset: PandasDataset) -> bytes | memoryview:
         assert isinstance(pandas_dataset, PandasDataset)
 
         def pandas_encode_func(pandas_data: pd.DataFrame) -> memoryview:

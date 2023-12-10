@@ -1,6 +1,6 @@
 from collections import UserDict
 from dataclasses import dataclass
-from typing import Optional, Type
+from typing import Type
 
 import pytest
 import pytest_cases as pc
@@ -34,8 +34,8 @@ class Child(Parent, ParentGeneric[int], UserDict):
 class InheritanceCase:
     element_name: str
     internal_packages: list[str]
-    internally_inherited: Optional[bool] = None
-    raise_exception: Optional[Type[Exception]] = None
+    internally_inherited: bool | None = None
+    raise_exception: Type[Exception] | None = None
 
 
 @pc.case(id='type_class_variable', tags=['element_type'])

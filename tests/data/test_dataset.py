@@ -61,6 +61,8 @@ def test_init_with_basic_parsing():
     assert dataset_3['obj_type_2'] == '123'
     assert dataset_3['obj_type_3'] == 'True'
 
+    # TODO: Change most or all Dataset inits in tests and elsewhere to use this format. Also change
+    #       from 'obj_type' to 'file' everywhere.
     dataset_4 = Dataset[Model[dict[int, int]]](file_1={1: 1234, 2: 2345}, file_2={2: 2345, 3: 3456})
 
     assert len(dataset_4) == 2
@@ -97,7 +99,7 @@ def test_parsing_none_allowed():
     class MaybeNumberModelOptional(Model[Optional[int]]):
         ...
 
-    class MaybeNumberModelUnion(Model[Union[int, None]]):
+    class MaybeNumberModelUnion(Model[int | None]):
         ...
 
     class MaybeNumberModelUnionNew(Model[int | None]):
