@@ -132,8 +132,8 @@ dmypy.json
 .idea
 
 # omnipy specific
-data
-input
+/data
+/input
 
 # Recommended for libraries to not commit poetry.lock
 poetry.lock
