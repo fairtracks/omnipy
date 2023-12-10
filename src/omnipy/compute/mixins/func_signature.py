@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 import inspect
 from types import MappingProxyType
-from typing import Dict, Type
+from typing import Type
 
 
 class SignatureFuncJobBaseMixin:
@@ -37,5 +37,5 @@ class SignatureFuncJobBaseMixin:
         self._func_signature = new_signature
         self.__signature__ = new_signature
 
-    def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
+    def get_call_args(self, *args: object, **kwargs: object) -> dict[str, object]:
         return self._func_signature.bind(*args, **kwargs).arguments

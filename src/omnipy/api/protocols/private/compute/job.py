@@ -1,6 +1,6 @@
 from datetime import datetime
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Mapping, Optional, Protocol, Tuple, Type
+from typing import Any, Callable, Mapping, Optional, Protocol, Type
 
 from omnipy.api.enums import (OutputStorageProtocolOptions,
                               PersistOutputsOptions,
@@ -143,7 +143,7 @@ class IsFuncArgJobBase(IsJob, Protocol):
     def has_coroutine_func(self) -> bool:
         ...
 
-    def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
+    def get_call_args(self, *args: object, **kwargs: object) -> dict[str, object]:
         ...
 
 
@@ -199,7 +199,7 @@ class IsFuncArgJobTemplate(IsJobTemplate, IsFuncArgJobBase, Protocol[JobTemplate
 class IsTaskTemplateArgsJobBase(IsFuncArgJobBase, Protocol[TaskTemplateCovT]):
     """"""
     @property
-    def task_templates(self) -> Tuple[TaskTemplateCovT, ...]:
+    def task_templates(self) -> tuple[TaskTemplateCovT, ...]:
         ...
 
 

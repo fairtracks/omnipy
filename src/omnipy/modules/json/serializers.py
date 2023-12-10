@@ -1,4 +1,4 @@
-from typing import Dict, IO, Type, Union
+from typing import IO, Type, Union
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.serializer import TarFileSerializer
@@ -35,7 +35,7 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer):
         def json_decode_func(file_stream: IO[bytes]) -> str:
             return file_stream.read().decode('utf8')
 
-        def json_dictify_object(obj_type: str, obj_val: str) -> Dict[str, str]:
+        def json_dictify_object(obj_type: str, obj_val: str) -> dict[str, str]:
             return {f'{obj_type}': f'{obj_val}'}
 
         cls.create_dataset_from_tarfile(

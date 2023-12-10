@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 from time import sleep
-from typing import Awaitable, Callable, cast, List, Optional, Type
+from typing import Awaitable, Callable, cast, Optional, Type
 
 from omnipy.api.enums import RunState
 from omnipy.api.protocols.private.compute.job import IsJob
@@ -40,13 +40,13 @@ def extract_job_run_state(job: IsJob):
         return registry.get_job_state(job)
 
 
-def assert_job_state(job: IsJob, states: List[RunState]):
+def assert_job_state(job: IsJob, states: list[RunState]):
     job_state = extract_job_run_state(job)
     if job_state:
         assert job_state in states, job_state
 
 
-def _check_timeout(start_time: datetime, timeout_secs: float, job: IsJob, states: List[RunState]):
+def _check_timeout(start_time: datetime, timeout_secs: float, job: IsJob, states: list[RunState]):
     if datetime.now() - start_time >= timedelta(seconds=timeout_secs):
         raise TimeoutError(
             f'Run state of "{job.name}" not set to {[state.name for state in states]} '
@@ -54,14 +54,14 @@ def _check_timeout(start_time: datetime, timeout_secs: float, job: IsJob, states
             f'Current state: {extract_job_run_state(job).name}')
 
 
-def sync_wait_for_job_state(job: IsJob, states: List[RunState], timeout_secs: float = 1):
+def sync_wait_for_job_state(job: IsJob, states: list[RunState], timeout_secs: float = 1):
     start_time = datetime.now()
     while extract_job_run_state(job) not in states:
         sleep(0.001)
         _check_timeout(start_time, timeout_secs, job, states)
 
 
-async def async_wait_for_job_state(job: IsJob, states: List[RunState], timeout_secs: float = 1):
+async def async_wait_for_job_state(job: IsJob, states: list[RunState], timeout_secs: float = 1):
     start_time = datetime.now()
     while extract_job_run_state(job) not in states:
         await asyncio.sleep(0.001)

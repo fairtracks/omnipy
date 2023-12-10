@@ -1,5 +1,5 @@
 from copy import copy
-from typing import cast, Dict, Tuple, Union
+from typing import cast, Union
 
 from .typedefs import (JsonDict,
                        JsonDictOfListsOfDicts,
@@ -16,7 +16,7 @@ def flatten_outer_level_of_nested_record(
     id_key: str,
     ref_key: str,
     default_key: str,
-) -> Tuple[JsonDictOfScalars, JsonDictOfListsOfDicts]:
+) -> tuple[JsonDictOfScalars, JsonDictOfListsOfDicts]:
 
     record_id = ensure_item_first_in_nested_record(nested_record, key=id_key, value=record_id)
 
@@ -54,7 +54,7 @@ def ensure_item_first_in_nested_record(
     return value
 
 
-def update_dict_from_front(dict_a: Dict, dict_b: Dict) -> None:
+def update_dict_from_front(dict_a: dict, dict_b: dict) -> None:
     dict_a_copy = copy(dict_a)
     dict_a.clear()
     dict_a.update(dict_b)
@@ -63,7 +63,7 @@ def update_dict_from_front(dict_a: Dict, dict_b: Dict) -> None:
 
 def transform_into_list_of_dicts(value: Union[JsonList, JsonDict],
                                  default_key: str) -> JsonListOfDicts:
-    if isinstance(value, Dict):
+    if isinstance(value, dict):
         return JsonListOfDicts([value])
     else:
         ret_value = JsonListOfDicts()

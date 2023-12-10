@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from inspect import Parameter
 import json
 from types import NoneType
-from typing import Any, Callable, Dict, Generic, Tuple, TypeVar, Union
+from typing import Any, Callable, Generic, TypeVar, Union
 
 import pytest
 import pytest_cases as pc
@@ -25,8 +25,8 @@ ReturnT = TypeVar('ReturnT')
 @dataclass
 class TaskCase(Generic[ArgT, ReturnT]):
     task_func: Callable[[ArgT], ReturnT]
-    args: Tuple[Any, ...]
-    kwargs: Dict[str, Any]
+    args: tuple[Any, ...]
+    kwargs: dict[str, Any]
     assert_results_func: Callable[[Any], None]
     assert_signature_and_return_type_func: Callable[[Any], None]
 
@@ -166,13 +166,13 @@ def case_sync_power_m1_func() -> TaskCase[[int, int, bool], int]:
     id='sync-function-empty_dict_func()',
     tags=['sync', 'function', 'singlethread', 'success'],
 )
-def case_sync_empty_dict_fun() -> TaskCase[[], Dict]:
-    def assert_results(result: Dict) -> None:
+def case_sync_empty_dict_fun() -> TaskCase[[], dict]:
+    def assert_results(result: dict) -> None:
         assert result == {}
 
     def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):
         assert task_obj.param_signatures == {}
-        assert task_obj.return_type == Dict
+        assert task_obj.return_type == dict
 
     return TaskCase(
         task_func=empty_dict_func,
@@ -187,15 +187,15 @@ def case_sync_empty_dict_fun() -> TaskCase[[], Dict]:
     id='sync-function-plus_one_dict_func()',
     tags=['sync', 'function', 'singlethread', 'success'],
 )
-def case_sync_plus_one_dict_func() -> TaskCase[[int], Dict[str, int]]:
-    def assert_results(result: Dict[str, int]) -> None:
+def case_sync_plus_one_dict_func() -> TaskCase[[int], dict[str, int]]:
+    def assert_results(result: dict[str, int]) -> None:
         assert result == {'number': 4}
 
     def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):
         assert task_obj.param_signatures == {
             'number': Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
         }
-        assert task_obj.return_type == Dict[str, int]
+        assert task_obj.return_type == dict[str, int]
 
     return TaskCase(
         task_func=plus_one_dict_func,
@@ -210,15 +210,15 @@ def case_sync_plus_one_dict_func() -> TaskCase[[int], Dict[str, int]]:
     id='sync-function-dict_of_squared_func()',
     tags=['sync', 'function', 'singlethread', 'success'],
 )
-def case_sync_dict_of_squared_fun() -> TaskCase[[int], Dict[int, int]]:
-    def assert_results(result: Dict[int, int]) -> None:
+def case_sync_dict_of_squared_fun() -> TaskCase[[int], dict[int, int]]:
+    def assert_results(result: dict[int, int]) -> None:
         assert result == {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
 
     def assert_param_signature_and_return_type(task_obj: Union[TaskTemplate, Task]):
         assert task_obj.param_signatures == {
             'number': Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
         }
-        assert task_obj.return_type == Dict[int, int]
+        assert task_obj.return_type == dict[int, int]
 
     return TaskCase(
         task_func=dict_of_squared_func,

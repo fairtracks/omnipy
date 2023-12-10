@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import cast, Tuple
+from typing import cast
 
 from omnipy.compute.flow import FuncFlowTemplate
 from omnipy.compute.task import TaskTemplate
@@ -84,7 +84,7 @@ def transpose_dicts_of_lists_of_dicts_2_lists_of_dicts(
 @TaskTemplate()
 def flatten_outer_level_of_all_data_files(
         dataset: JsonListOfDictsDataset, id_key: str, ref_key: str,
-        default_key: str) -> Tuple[JsonListOfDictsOfScalarsDataset, JsonListOfDictsDataset]:
+        default_key: str) -> tuple[JsonListOfDictsOfScalarsDataset, JsonListOfDictsDataset]:
 
     data_files_of_scalar_records: defaultdict[str, JsonListOfDictsOfScalars] = \
         defaultdict(JsonListOfDictsOfScalars)

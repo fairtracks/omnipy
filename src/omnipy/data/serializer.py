@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from io import BytesIO
 import tarfile
 from tarfile import TarInfo
-from typing import Any, Callable, Dict, IO, Tuple, Type, Union
+from typing import Any, Callable, IO, Type, Union
 
 from pydantic import ValidationError
 
@@ -58,7 +58,7 @@ class TarFileSerializer(Serializer, ABC):
                                     dataset: Dataset,
                                     tarfile_bytes: bytes,
                                     data_decode_func: Callable[[IO[bytes]], Any],
-                                    dictify_object_func: Callable[[str, Any], Union[Dict, str]],
+                                    dictify_object_func: Callable[[str, Any], Union[dict, str]],
                                     import_method='from_data'):
         with tarfile.open(fileobj=BytesIO(tarfile_bytes), mode='r:gz') as tarfile_stream:
             for filename in tarfile_stream.getnames():
@@ -77,11 +77,11 @@ class SerializerRegistry:
         self._serializer_classes.append(serializer_cls)
 
     @property
-    def serializers(self) -> Tuple[Type[Serializer], ...]:
+    def serializers(self) -> tuple[Type[Serializer], ...]:
         return tuple(self._serializer_classes)
 
     @property
-    def tar_file_serializers(self) -> Tuple[Type[TarFileSerializer], ...]:
+    def tar_file_serializers(self) -> tuple[Type[TarFileSerializer], ...]:
         return tuple(cls for cls in self._serializer_classes if issubclass(cls, TarFileSerializer))
 
     def auto_detect(self, dataset: Dataset):

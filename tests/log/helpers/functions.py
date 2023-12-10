@@ -1,9 +1,9 @@
 from io import StringIO
 import os
-from typing import List, Optional
+from typing import Optional
 
 
-def read_log_lines_from_stream(str_stream: StringIO) -> List[str]:
+def read_log_lines_from_stream(str_stream: StringIO) -> list[str]:
     str_stream.seek(0)
     log_lines = [line.rstrip(os.linesep) for line in str_stream.readlines()]
     str_stream.seek(0)

@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from datetime import datetime
-from typing import Annotated, cast, Dict, Tuple, Type, Union
+from typing import Annotated, cast, Type, Union
 
 import pytest
 import pytest_cases as pc
@@ -24,7 +24,7 @@ from .helpers.mocks import (MockFlowTemplateSubclass,
                             MockLocalRunner,
                             MockTaskTemplateAssertSameTimeOfCurFlowRun)
 
-MockJobClasses = Tuple[Type[JobBase], Type[JobTemplateMixin], Type[JobMixin]]
+MockJobClasses = tuple[Type[JobBase], Type[JobTemplateMixin], Type[JobMixin]]
 
 
 def test_flow_context_mock() -> None:
@@ -98,7 +98,7 @@ def test_time_of_flow_run_mock() -> None:
 
 def test_init_all_flow_classes(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-        all_flow_classes: Annotated[Tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
+        all_flow_classes: Annotated[tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
     for class_info in all_flow_classes:
         template_cls = class_info.template_cls
         flow_cls = class_info.flow_cls
@@ -116,7 +116,7 @@ def test_init_all_flow_classes(
 
 def test_init_linear_and_dag_flow_templates(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-        all_flow_classes: Annotated[Tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
+        all_flow_classes: Annotated[tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
     for class_info in all_flow_classes:
         template_cls = class_info.template_cls
 
@@ -139,7 +139,7 @@ def test_fail_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]
 
 def test_apply_run_all_flow_classes(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-        all_flow_classes: Annotated[Tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
+        all_flow_classes: Annotated[tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
     for class_info in all_flow_classes:
         template_cls = class_info.template_cls
         flow_cls = class_info.flow_cls
@@ -166,7 +166,7 @@ def test_apply_run_all_flow_classes(
 
 def test_refine_all_flow_classes(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-        all_flow_classes: Annotated[Tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
+        all_flow_classes: Annotated[tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
     for class_info in all_flow_classes:
         template_cls = class_info.template_cls
 
@@ -195,7 +195,7 @@ def test_refine_all_flow_classes(
 
 def test_revise_all_flow_classes(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-        all_flow_classes: Annotated[Tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
+        all_flow_classes: Annotated[tuple[FlowClsTuple, ...], pytest.fixture]) -> None:
     for class_info in all_flow_classes:
         template_cls = class_info.template_cls
 
@@ -248,12 +248,12 @@ def test_linear_flow_only_first_positional(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
     @mypy_fix_task_template
     @TaskTemplate
-    def task_tmpl() -> Tuple[int]:
+    def task_tmpl() -> tuple[int]:
         return 42, 42
 
     @mypy_fix_task_template
     @TaskTemplate
-    def my_formula_tmpl(number: Union[int, Tuple[int, ...]], plus_number: int = 0) -> int:
+    def my_formula_tmpl(number: Union[int, tuple[int, ...]], plus_number: int = 0) -> int:
         number = sum(number) if isinstance(number, Iterable) else number
         return number * 2 + plus_number
 
@@ -294,7 +294,7 @@ def test_dynamic_dag_flow_by_returned_dict(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
     @mypy_fix_task_template
     @TaskTemplate
-    def task_tmpl() -> Dict[str, int]:
+    def task_tmpl() -> dict[str, int]:
         return {'number': 42}
 
     @mypy_fix_task_template

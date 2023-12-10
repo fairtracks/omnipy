@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Generator, Tuple, Type
+from typing import Annotated, Generator, Type
 
 import pytest
 
@@ -17,7 +17,7 @@ from .helpers.mocks import MockJobSubclass, MockJobTemplateSubclass, MockLocalRu
 
 
 @pytest.fixture(scope='function')
-def mock_job_classes() -> Tuple[Type[JobTemplateMixin], Type[JobMixin]]:
+def mock_job_classes() -> tuple[Type[JobTemplateMixin], Type[JobMixin]]:
     return MockJobTemplateSubclass, MockJobSubclass
 
 
@@ -49,7 +49,7 @@ def mock_job_datetime(
 
 
 @pytest.fixture(scope='function')
-def all_flow_classes() -> Tuple[FlowClsTuple, ...]:
+def all_flow_classes() -> tuple[FlowClsTuple, ...]:
     return (
         FlowClsTuple(template_cls=LinearFlowTemplate, flow_cls=LinearFlow),
         FlowClsTuple(template_cls=DagFlowTemplate, flow_cls=DagFlow),

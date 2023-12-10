@@ -2,13 +2,11 @@ from collections import UserDict
 import json
 from typing import (Annotated,
                     Any,
-                    Dict,
                     Generic,
                     get_args,
                     get_origin,
                     Iterator,
                     Optional,
-                    Tuple,
                     Type,
                     TypeVar,
                     Union)
@@ -44,11 +42,11 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     The specialization must be done through the use of Model, either directly, e.g.::
 
-        MyDataset = Dataset[Model[Dict[str, List[int]]])
+        MyDataset = Dataset[Model[dict[str, list[int]]])
 
     ... or indirectly, using a Model subclass, e.g.::
 
-        class MyModel(Model[Dict[str, List[int]]):
+        class MyModel(Model[dict[str, list[int]]):
             pass
 
         MyDataset = Dataset[MyModel]
@@ -60,10 +58,10 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     The specialization can also be done in a more deeply nested structure, e.g.::
 
-        class MyNumberList(Model[List[int]]):
+        class MyNumberList(Model[list[int]]):
             pass
 
-        class MyToplevelDict(Model[Dict[str, MyNumberList]]):
+        class MyToplevelDict(Model[dict[str, MyNumberList]]):
             pass
 
         class MyDataset(Dataset[MyToplevelDict]):
@@ -72,7 +70,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     Once instantiated, a dataset object functions as a dict of data files, with the keys
     referring to the data file names and the contents to the data file contents, e.g.::
 
-        MyNumberListDataset = Dataset[Model[List[int]]]
+        MyNumberListDataset = Dataset[Model[list[int]]]
 
         my_dataset = MyNumberListDataset({'file_1': [1,2,3]})
         my_dataset['file_2'] = [2,3,4]
@@ -86,10 +84,10 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         # json_loads = orjson.loads
         # json_dumps = orjson_dumps
 
-    data: Dict[str, ModelT] = Field(default={})
+    data: dict[str, ModelT] = Field(default={})
 
     def __class_getitem__(cls, model: ModelT) -> ModelT:
-        # TODO: change model type to params: Union[Type[Any], Tuple[Type[Any], ...]]
+        # TODO: change model type to params: Union[Type[Any], tuple[Type[Any], ...]]
         #       as in GenericModel.
 
         # For now, only singular model types are allowed. These lines are needed for
@@ -172,7 +170,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     def get_model_class(cls) -> Type[Model]:
         """
         Returns the concrete Model class used for all data files in the dataset, e.g.:
-        `Model[List[int]]`
+        `Model[list[int]]`
         :return: The concrete Model class used for all data files in the dataset
         """
         model_type = cls.__fields__.get(DATA_KEY).type_
@@ -192,12 +190,12 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         raise TypeError(
             'Note: The Dataset class requires a concrete model to be specified as '
             'a type hierarchy within brackets either directly, e.g.:\n\n'
-            '\tmodel = Dataset[List[int]]()\n\n'
+            '\tmodel = Dataset[list[int]]()\n\n'
             'or indirectly in a subclass definition, e.g.:\n\n'
-            '\tclass MyNumberListDataset(Dataset[List[int]]): ...\n\n'
+            '\tclass MyNumberListDataset(Dataset[list[int]]): ...\n\n'
             'In both cases, the use of the Model class or a subclass is encouraged if anything '
             'other than the simplest cases, e.g.:\n\n'
-            '\tclass MyNumberListModel(Model[List[int]]): ...\n'
+            '\tclass MyNumberListModel(Model[list[int]]): ...\n'
             '\tclass MyDataset(Dataset[MyNumberListModel]): ...\n\n'
             'Usage of Dataset without a type specification results in this exception. '
             'Similar use of the Model class do not currently result in an exception, only '
@@ -249,7 +247,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             raise RuntimeError('Model does not allow setting of extra attributes')
 
     @root_validator()
-    def _parse_root_object(cls, root_obj: Dict[str, ModelT]) -> Any:  # noqa
+    def _parse_root_object(cls, root_obj: dict[str, ModelT]) -> Any:  # noqa
         assert DATA_KEY in root_obj
         data_dict = root_obj[DATA_KEY]
         model = cls.get_model_class()
@@ -258,11 +256,11 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
                 data_dict[key] = model.parse_obj(val)
         return {DATA_KEY: data_dict}
 
-    def to_data(self) -> Dict[str, Any]:
+    def to_data(self) -> dict[str, Any]:
         return GenericModel.dict(self).get(DATA_KEY)
 
     def from_data(self,
-                  data: Union[Dict[str, Any], Iterator[Tuple[str, Any]]],
+                  data: Union[dict[str, Any], Iterator[tuple[str, Any]]],
                   update: bool = True) -> None:
         if not isinstance(data, dict):
             data = dict(data)
@@ -275,7 +273,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             new_model.from_data(obj_val)
             self[obj_type] = new_model
 
-    def to_json(self, pretty=False) -> Dict[str, str]:
+    def to_json(self, pretty=False) -> dict[str, str]:
         result = {}
 
         for key, val in self.to_data().items():
@@ -283,7 +281,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         return result
 
     def from_json(self,
-                  data: Union[Dict[str, str], Iterator[Tuple[str, str]]],
+                  data: Union[dict[str, str], Iterator[tuple[str, str]]],
                   update: bool = True) -> None:
         if not isinstance(data, dict):
             data = dict(data)
@@ -302,7 +300,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     #
     #
     # @classmethod
-    # def create_from_json(cls, data: Union[str, Tuple[str]]):
+    # def create_from_json(cls, data: Union[str, tuple[str]]):
     #     if isinstance(data, tuple):
     #         data = data[0]
     #
@@ -314,7 +312,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     #     return self.__class__.create_from_json, (self.to_json(),)
 
     @classmethod
-    def to_json_schema(cls, pretty=False) -> Union[str, Dict[str, str]]:
+    def to_json_schema(cls, pretty=False) -> Union[str, dict[str, str]]:
         result = {}
         schema = cls.schema()
         for key, val in schema['properties']['data'].items():
@@ -355,7 +353,7 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
         custom models.
     """
 
-    _custom_field_models: Dict[str, ModelT] = PrivateAttr(default={})
+    _custom_field_models: dict[str, ModelT] = PrivateAttr(default={})
 
     def set_model(self, obj_type: str, model: ModelT) -> None:
         try:

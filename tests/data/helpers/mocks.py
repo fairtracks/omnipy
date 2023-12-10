@@ -1,5 +1,5 @@
 import sys
-from typing import Any, Dict, IO, Type, Union
+from typing import Any, IO, Type, Union
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
@@ -62,7 +62,7 @@ class MockNumberToTarFileSerializer(TarFileSerializer):
         def number_decode_func(file_stream: IO[bytes]) -> int:
             return int.from_bytes(file_stream.read(), byteorder=sys.byteorder)
 
-        def python_dictify_object(obj_type: str, obj_val: Any) -> Dict:
+        def python_dictify_object(obj_type: str, obj_val: Any) -> dict:
             return {obj_type: obj_val}
 
         cls.create_dataset_from_tarfile(

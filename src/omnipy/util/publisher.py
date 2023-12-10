@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Callable, DefaultDict, List
+from typing import Any, Callable, DefaultDict
 
 
 def _subscribers_factory():
@@ -9,7 +9,7 @@ def _subscribers_factory():
 
 @dataclass
 class DataPublisher:
-    _subscriptions: DefaultDict[str, List[Callable[[Any], None]]] = \
+    _subscriptions: DefaultDict[str, list[Callable[[Any], None]]] = \
         field(default_factory=_subscribers_factory, init=False, repr=False)
 
     def subscribe(self, config_item: str, callback_fun: Callable[[Any], None]):

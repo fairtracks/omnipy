@@ -3,7 +3,7 @@ from datetime import datetime
 from functools import update_wrapper
 import logging
 from types import MappingProxyType
-from typing import Any, cast, Dict, Hashable, Optional, Tuple, Type, Union
+from typing import Any, cast, Hashable, Optional, Type, Union
 
 from omnipy.api.exceptions import JobStateException
 from omnipy.api.protocols.private.compute.job import IsJob, IsJobBase, IsJobTemplate
@@ -103,7 +103,7 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
                     refine_val_dictable = as_dictable(refine_val)
                     if cur_val_dictable is not None and refine_val_dictable is not None:
                         new_val: Union[object,
-                                       Dict] = create_merged_dict(cur_val_dictable,
+                                       dict] = create_merged_dict(cur_val_dictable,
                                                                   refine_val_dictable)
                     else:
                         new_val = refine_kwargs[key]
@@ -123,10 +123,10 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
                                                             **self._get_init_kwargs())
         return job_template
 
-    def _get_init_args(self) -> Tuple[object, ...]:
+    def _get_init_args(self) -> tuple[object, ...]:
         return ()
 
-    def _get_init_kwargs(self) -> Dict[str, object]:
+    def _get_init_kwargs(self) -> dict[str, object]:
         kwarg_keys = list(self._mixin_init_kwarg_params_including_bases.keys())
         for key in kwarg_keys:
             attribute = getattr(self.__class__, key)

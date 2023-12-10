@@ -1,4 +1,4 @@
-from typing import List, Protocol
+from typing import Protocol
 
 
 class IsModifyContentsCallable(Protocol):
@@ -15,5 +15,5 @@ class IsModifyEachLineCallable(Protocol):
 
 class IsModifyAllLinesCallable(Protocol):
     """"""
-    def __call__(self, all_lines: List[str], **kwargs: object) -> List[str]:
+    def __call__(self, all_lines: list[str], **kwargs: object) -> list[str]:
         ...

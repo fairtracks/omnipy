@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Any, Dict, IO, Type, Union
+from typing import Any, IO, Type, Union
 
 from omnipy.data.serializer import TarFileSerializer
 
@@ -40,7 +40,7 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer):
         def csv_decode_func(file_stream: IO[bytes]) -> pd.DataFrame:
             return pd.read_csv(file_stream, encoding='utf8')
 
-        def python_dictify_object(obj_type: str, obj_val: Any) -> Dict:
+        def python_dictify_object(obj_type: str, obj_val: Any) -> dict:
             return {obj_type: obj_val}
 
         cls.create_dataset_from_tarfile(

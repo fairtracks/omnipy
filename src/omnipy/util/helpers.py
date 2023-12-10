@@ -5,13 +5,11 @@ from types import UnionType
 from typing import (Any,
                     cast,
                     ClassVar,
-                    Dict,
                     get_args,
                     get_origin,
                     Mapping,
                     Optional,
                     Protocol,
-                    Tuple,
                     TypeVar,
                     Union)
 
@@ -21,7 +19,7 @@ from omnipy.api.typedefs import LocaleType
 
 KeyT = TypeVar('KeyT', bound=Hashable)
 
-Dictable = Union[Mapping[KeyT, Any], Iterable[Tuple[KeyT, Any]]]
+Dictable = Union[Mapping[KeyT, Any], Iterable[tuple[KeyT, Any]]]
 
 
 def as_dictable(obj: object) -> Optional[Dictable]:
@@ -35,14 +33,14 @@ def as_dictable(obj: object) -> Optional[Dictable]:
         return None
 
 
-def create_merged_dict(dictable_1: Dictable[KeyT], dictable_2: Dictable[KeyT]) -> Dict[KeyT, Any]:
+def create_merged_dict(dictable_1: Dictable[KeyT], dictable_2: Dictable[KeyT]) -> dict[KeyT, Any]:
     merged_dict = dictable_1 if isinstance(dictable_1, dict) else dict(dictable_1)
     dict_2 = dictable_2 if isinstance(dictable_2, dict) else dict(dictable_2)
     merged_dict |= dict_2
     return merged_dict
 
 
-def remove_none_vals(**kwargs: object) -> Dict[object, object]:
+def remove_none_vals(**kwargs: object) -> dict[object, object]:
     return {key: val for key, val in kwargs.items() if val is not None}
 
 
@@ -109,4 +107,4 @@ def is_strict_subclass(
 
 
 class IsDataclass(Protocol):
-    __dataclass_fields__: ClassVar[Dict]
+    __dataclass_fields__: ClassVar[dict]

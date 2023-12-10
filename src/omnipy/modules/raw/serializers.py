@@ -1,4 +1,4 @@
-from typing import Any, Dict, IO, Type
+from typing import Any, IO, Type
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
@@ -35,7 +35,7 @@ class RawDatasetToTarFileSerializer(TarFileSerializer):
         def raw_decode_func(file_stream: IO[bytes]) -> str:
             return file_stream.read().decode('utf8')
 
-        def python_dictify_object(obj_type: str, obj_val: Any) -> Dict:
+        def python_dictify_object(obj_type: str, obj_val: Any) -> dict:
             return {obj_type: obj_val}
 
         cls.create_dataset_from_tarfile(

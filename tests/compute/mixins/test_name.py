@@ -1,4 +1,4 @@
-from typing import Annotated, Tuple, Type
+from typing import Annotated, Type
 
 import pytest
 
@@ -10,7 +10,7 @@ from ..cases.raw.functions import power_m1_func
 from ..helpers.mocks import MockJobSubclass, MockJobTemplateSubclass, MockLocalRunner
 
 
-def mock_job_classes() -> Tuple[Type[JobTemplateMixin], Type[JobMixin]]:
+def mock_job_classes() -> tuple[Type[JobTemplateMixin], Type[JobMixin]]:
     return MockJobTemplateSubclass, MockJobSubclass
 
 

@@ -6,7 +6,6 @@ from types import UnionType
 from typing import (Annotated,
                     Any,
                     cast,
-                    Dict,
                     Generic,
                     get_args,
                     get_origin,
@@ -57,7 +56,7 @@ class MyModelMetaclass(ModelMetaclass):
     # Hack to overcome bug in pydantic/fields.py (v1.10.13), lines 636-641:
     #
     # if origin is None or origin is CollectionsHashable:
-    #     # field is not "typing" object eg. Union, Dict, List etc.
+    #     # field is not "typing" object eg. Union, dict, list etc.
     #     # allow None for virtual superclasses of NoneType, e.g. Hashable
     #     if isinstance(self.type_, type) and isinstance(None, self.type_):
     #         self.allow_none = True
@@ -88,11 +87,11 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
     Example data model specialized as a class alias::
 
-        MyNumberList = Model[List[int]]
+        MyNumberList = Model[list[int]]
 
     ... alternatively as a Model subclass::
 
-        class MyNumberList(Model[List[int]]):
+        class MyNumberList(Model[list[int]]):
             pass
 
     Once instantiated, a Model object functions as a parser, e.g.::
@@ -191,7 +190,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         del cls.__annotations__[ROOT_KEY]
 
     def __class_getitem__(cls, model: Union[Type[RootT], TypeVar]) -> Union[Type[RootT], TypeVar]:
-        # TODO: change model type to params: Union[Type[Any], Tuple[Type[Any], ...]]
+        # TODO: change model type to params: Union[Type[Any], tuple[Type[Any], ...]]
         #       as in GenericModel
 
         # For now, only singular model types are allowed. These lines are needed for
@@ -248,7 +247,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         __root__: Union[Any, UndefinedType] = Undefined,
         **data: Any,
     ) -> None:
-        super_data: Dict[str, RootT] = {}
+        super_data: dict[str, RootT] = {}
         num_root_vals = 0
 
         if value is not Undefined:
@@ -274,9 +273,9 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     def _raise_no_model_exception() -> None:
         raise TypeError('Note: The Model class requires a concrete model to be specified as '
                         'a type hierarchy within brackets either directly, e.g.:\n\n'
-                        '\tmodel = Model[List[int]]([1,2,3])\n\n'
+                        '\tmodel = Model[list[int]]([1,2,3])\n\n'
                         'or indirectly in a subclass definition, e.g.:\n\n'
-                        '\tclass MyNumberList(Model[List[int]]): ...\n\n')
+                        '\tclass MyNumberList(Model[list[int]]): ...\n\n')
 
     def _set_standard_field_description(self) -> None:
         self.__fields__[ROOT_KEY].field_info.description = self._get_standard_field_description()
@@ -307,7 +306,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         return data
 
     @root_validator
-    def _parse_root_object(cls, root_obj: Dict[str, RootT]) -> Any:  # noqa
+    def _parse_root_object(cls, root_obj: dict[str, RootT]) -> Any:  # noqa
         assert ROOT_KEY in root_obj
         value = root_obj[ROOT_KEY]
         value = cls._parse_none_value_with_root_type_if_model(value)
@@ -408,7 +407,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         return root_type
 
     # @classmethod
-    # def create_from_json(cls, data: Union[str, Tuple[str]]):
+    # def create_from_json(cls, data: Union[str, tuple[str]]):
     #     if isinstance(data, tuple):
     #         data = data[0]
     #
@@ -442,9 +441,9 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         if ROOT_KEY not in self.__dict__:
             raise TypeError('The Model class requires the specific model to be specified in as '
                             'a type hierarchy within brackets either directly, e.g.:\n'
-                            '\t"model = Model[List[int]]([1,2,3])"\n'
+                            '\t"model = Model[list[int]]([1,2,3])"\n'
                             'or indirectly in a subclass definition, e.g.:\n'
-                            '\t"class MyNumberList(Model[List[int]]): ..."')
+                            '\t"class MyNumberList(Model[list[int]]): ..."')
 
     def __setattr__(self, attr: str, value: Any) -> None:
         if attr in self.__dict__ and attr not in [ROOT_KEY]:

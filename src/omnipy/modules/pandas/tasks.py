@@ -1,5 +1,5 @@
 from io import StringIO
-from typing import Dict, List, Optional
+from typing import Optional
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
@@ -14,7 +14,7 @@ from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset
 @mypy_fix_task_template
 @TaskTemplate()
 def convert_dataset_list_of_dicts_to_pandas(
-        dataset: Dataset[Model[List[Dict[str,
+        dataset: Dataset[Model[list[dict[str,
                                          NotIterableExceptStrOrBytesModel]]]]) -> PandasDataset:
     pandas_dataset = PandasDataset()
     pandas_dataset.from_data(dataset.to_data())
@@ -26,7 +26,7 @@ def convert_dataset_list_of_dicts_to_pandas(
 def convert_dataset_csv_to_pandas(dataset: Dataset[Model[bytes]],
                                   delimiter: str = ',',
                                   first_row_as_col_names=True,
-                                  col_names: Optional[List[str]] = None,
+                                  col_names: Optional[list[str]] = None,
                                   ignore_comments: bool = True,
                                   comments_char: str = '#') -> PandasDataset:
     out_dataset = PandasDataset()
@@ -49,7 +49,7 @@ def convert_dataset_pandas_to_csv(
     dataset: PandasDataset,
     delimiter: str = ',',
     first_row_as_col_names=True,
-    col_names: Optional[List[str]] = None,
+    col_names: Optional[list[str]] = None,
 ) -> Dataset[Model[str]]:
     out_dataset = Dataset[Model[str]]()
     for key, df in dataset.items():
@@ -66,7 +66,7 @@ def convert_dataset_pandas_to_csv(
 
 @mypy_fix_task_template
 @TaskTemplate()
-def extract_columns_as_files(dataset: PandasDataset, col_names: List[str]) -> PandasDataset:
+def extract_columns_as_files(dataset: PandasDataset, col_names: list[str]) -> PandasDataset:
     out_dataset = PandasDataset()
     for key, item in dataset.items():
         df = dataset[key]

@@ -1,5 +1,3 @@
-from typing import Dict
-
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
@@ -26,15 +24,15 @@ def power_m1_func(number: int, exponent: int, minus_one: bool = True) -> int:
     return number**exponent - (1 if minus_one else 0)
 
 
-def empty_dict_func() -> Dict:
+def empty_dict_func() -> dict:
     return {}
 
 
-def plus_one_dict_func(number: int) -> Dict[str, int]:
+def plus_one_dict_func(number: int) -> dict[str, int]:
     return {'number': number + 1}
 
 
-def dict_of_squared_func(number: int) -> Dict[int, int]:
+def dict_of_squared_func(number: int) -> dict[int, int]:
     return {val: val**2 for val in range(number)}
 
 

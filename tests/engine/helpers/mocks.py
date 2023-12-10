@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import update_wrapper
 import inspect
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type
+from typing import Any, Callable, Optional, Type
 
 from inflection import underscore
 from slugify import slugify
@@ -71,7 +71,7 @@ class MockTask:
     def _accept_call_func_decorator(self, call_func_decorator: GeneralDecorator) -> None:
         self._func = call_func_decorator(self._func)
 
-    def get_call_args(self, *args: object, **kwargs: object) -> Dict[str, object]:
+    def get_call_args(self, *args: object, **kwargs: object) -> dict[str, object]:
         return self._func_signature.bind(*args, **kwargs).arguments
 
 
@@ -102,7 +102,7 @@ class MockLinearFlow(MockTask):
         super().__init__(func, name=name, **kwargs)
 
     @property
-    def task_templates(self) -> Tuple[MockTaskTemplate, ...]:
+    def task_templates(self) -> tuple[MockTaskTemplate, ...]:
         return self._task_templates
 
 
@@ -126,7 +126,7 @@ class MockDagFlow(MockTask):
         super().__init__(func, name=name, **kwargs)
 
     @property
-    def task_templates(self) -> Tuple[MockTaskTemplate, ...]:
+    def task_templates(self) -> tuple[MockTaskTemplate, ...]:
         return self._task_templates
 
 
@@ -192,8 +192,8 @@ class MockJobRunnerSubclass(TaskRunnerEngine,
                             FuncFlowRunnerEngine):
     def _init_engine(self) -> None:
         self._update_from_config()
-        self.finished_backend_tasks: List[MockBackendTask] = []
-        self.finished_backend_flows: List[MockBackendFlow] = []
+        self.finished_backend_tasks: list[MockBackendTask] = []
+        self.finished_backend_flows: list[MockBackendFlow] = []
 
     def _update_from_config(self) -> None:
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
@@ -264,9 +264,9 @@ class MockRunStateRegistryConfig:
 
 class MockRunStateRegistry:
     def __init__(self) -> None:
-        self._jobs: Dict[str, IsJob] = {}
-        self._job_state: Dict[str, RunState] = {}
-        self._job_state_datetime: Dict[Tuple[str, RunState], datetime] = {}
+        self._jobs: dict[str, IsJob] = {}
+        self._job_state: dict[str, RunState] = {}
+        self._job_state_datetime: dict[tuple[str, RunState], datetime] = {}
 
     def get_job_state(self, job: IsJob) -> RunState:
         return self._job_state[job.unique_name]
@@ -274,7 +274,7 @@ class MockRunStateRegistry:
     def get_job_state_datetime(self, job: IsJob, state: RunState) -> datetime:
         return self._job_state_datetime[(job.unique_name, state)]
 
-    def all_jobs(self, state: Optional[RunState] = None) -> Tuple[IsJob, ...]:  # noqa
+    def all_jobs(self, state: Optional[RunState] = None) -> tuple[IsJob, ...]:  # noqa
         return tuple(self._jobs.values())
 
     def set_job_state(self, job: IsJob, state: RunState) -> None:

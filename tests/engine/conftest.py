@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Tuple, Type
+from typing import Callable, Optional, Type
 
 import pytest_cases as pc
 
@@ -218,7 +218,7 @@ def func_flow_mock_classes(
 @pc.parametrize('registry', [no_registry], ids=[''])
 def power_mock_jobs_mock_runner_subcls_no_verbose_no_reg(
     job_case: JobCase,
-    job_mock_classes: Tuple[JobType, Type[IsJobTemplate], Type[IsEngine]],
+    job_mock_classes: tuple[JobType, Type[IsJobTemplate], Type[IsEngine]],
     engine_decorator: Optional[Callable[[IsEngine], IsEngine]],
     registry: Optional[IsRunStateRegistry],
 ):
@@ -248,7 +248,7 @@ def power_mock_jobs_mock_runner_subcls_no_verbose_no_reg(
 @pc.parametrize('registry', [mock_registry], ids=[''])
 def all_func_types_mock_jobs_mock_runner_subcls_assert_runstate_mock_reg(
     job_case: JobCase,
-    job_mock_classes: Tuple[JobType, Type[IsJobTemplate], Type[IsEngine]],
+    job_mock_classes: tuple[JobType, Type[IsJobTemplate], Type[IsEngine]],
     engine_decorator: Optional[Callable[[IsEngine], IsEngine]],
     registry: Optional[IsRunStateRegistry],
 ):
@@ -282,7 +282,7 @@ def all_func_types_mock_jobs_mock_runner_subcls_assert_runstate_mock_reg(
 @pc.parametrize('registry', [mock_registry], ids=[''])
 def all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg(
     job_case: JobCase,
-    job_classes: Tuple[JobType, Type[IsJobTemplate], Type[IsEngine]],
+    job_classes: tuple[JobType, Type[IsJobTemplate], Type[IsEngine]],
     engine: Type[IsEngine],
     engine_decorator: Optional[Callable[[IsEngine], IsEngine]],
     registry: Optional[IsRunStateRegistry],

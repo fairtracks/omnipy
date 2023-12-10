@@ -2,7 +2,7 @@ import ast
 from inspect import formatannotation, getmodule, isclass, isgeneratorfunction, Signature
 import os
 from types import ModuleType
-from typing import Any, get_type_hints, List
+from typing import Any, get_type_hints
 
 from docstring_parser import DocstringParam, DocstringReturns
 from pdocs.doc import Doc, External, Function, Module
@@ -13,7 +13,7 @@ IGNORED = None
 IGNORE_PARAMS = ['cls', 'self']
 
 
-def filter_internal_external(cls: type, members: List[Doc]):
+def filter_internal_external(cls: type, members: list[Doc]):
     internal_members = []
     external_members = []
 
@@ -35,7 +35,7 @@ def is_member(cls: type, member_name: str):
 
 def is_internally_inherited(cls: type,
                             member_name: str,
-                            internal_packages: List[str],
+                            internal_packages: list[str],
                             outer: bool = True):
     if outer and member_name not in dir(cls):
         raise AttributeError(f'"{member_name}" is not a member of class "{cls.__name__}"')
@@ -55,7 +55,7 @@ def is_internally_inherited(cls: type,
 
 def merge_signature_with_docstring(func: Function,
                                    signature: Signature,
-                                   ds_params: List[DocstringParam],
+                                   ds_params: list[DocstringParam],
                                    ds_returns: DocstringReturns):
     ds_params_map = {ds_param.arg_name: ds_param for ds_param in ds_params}
     params = []
@@ -109,11 +109,11 @@ def get_type_name_from_annotation(module: ModuleType, annotation, empty_obj):
     return type_name
 
 
-def _is_internal_module(module: ModuleType, imported_modules: List[ModuleType]):
+def _is_internal_module(module: ModuleType, imported_modules: list[ModuleType]):
     return module not in imported_modules and module.__name__.startswith('omnipy')
 
 
-def recursive_module_import(module: ModuleType, imported_modules: List[ModuleType] = []):
+def recursive_module_import(module: ModuleType, imported_modules: list[ModuleType] = []):
     module_vars = vars(module)
     imported_modules.append(module)
 
@@ -184,10 +184,10 @@ def parse_type_hint(type_hint_string):
         list: The individual types parsed from the type hint string.
 
     Example:
-        type_hint = "Union[typing.List[str], typing.Dict[str, int], Tuple[int, str], Optional[int]]"
+        type_hint = "Union[list[str], dict[str, int], tuple[int, str], Optional[int]]"
         parsed_types = parse_type_hint(type_hint)
         print(parsed_types)
-        # Output: ['Union', 'typing.List', 'str', 'typing.Dict', 'str', 'int', 'Tuple', 'int',
+        # Output: ['Union', 'list', 'str', 'dict', 'str', 'int', 'tuple', 'int',
                    'str', 'Optional', 'int']
     """
     # print(f'Parsing: {repr(type_hint_string)}')
@@ -219,7 +219,7 @@ def parse_type_hint(type_hint_string):
         elif isinstance(node, ast.Attribute):
             process_node(node.value, qual_names + [node.attr])
 
-        elif isinstance(node, ast.Tuple):
+        elif isinstance(node, ast.tuple):
             for elt in node.elts:
                 process_node(elt, qual_names)
 

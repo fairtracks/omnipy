@@ -1,6 +1,6 @@
 # from abc import ABCMeta
 from inspect import Parameter, signature
-from typing import Dict, Generic, get_args, Optional, Tuple, Type, TypeVar
+from typing import Generic, get_args, Optional, Type, TypeVar
 
 import pytest
 
@@ -158,11 +158,11 @@ def test_no_mixins(mock_plain_cls):
 
 
 def _assert_args_and_kwargs(mock_obj: object,
-                            args: Tuple[object, ...],
-                            kwargs: Dict[str, object],
+                            args: tuple[object, ...],
+                            kwargs: dict[str, object],
                             mock_cls: Optional[Type] = None,
-                            mixin_init_kwarg_params: Dict[str, Parameter] = {},
-                            mixin_init_kwarg_params_including_bases: Dict[str, Parameter] = {},
+                            mixin_init_kwarg_params: dict[str, Parameter] = {},
+                            mixin_init_kwarg_params_including_bases: dict[str, Parameter] = {},
                             args_in_signature=True):
 
     if mixin_init_kwarg_params and not mixin_init_kwarg_params_including_bases:
