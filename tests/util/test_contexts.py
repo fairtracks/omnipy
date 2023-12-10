@@ -1,0 +1,163 @@
+import sys
+from textwrap import dedent
+
+import pytest
+
+from omnipy.util.contexts import AttribHolder, LastErrorHolder, print_exception
+
+
+def test_capture_stdout_stderr(capsys: pytest.CaptureFixture) -> None:
+    print('To be or not to be, that is the question', end='')
+    print('Something is rotten in the state of Denmark', end='', file=sys.stderr)
+
+    captured = capsys.readouterr()
+    assert captured.out == 'To be or not to be, that is the question'
+    assert captured.err == 'Something is rotten in the state of Denmark'
+
+
+def test_print_exception(capsys: pytest.CaptureFixture) -> None:
+    with print_exception:
+        'a' + 1  # type: ignore
+
+    captured = capsys.readouterr()
+    assert captured.out == 'TypeError: can only concatenate str (not "int") to str'
+
+    with print_exception:
+        raise NotImplementedError(
+            dedent("""\
+            Multi-line error!
+            - More info here..
+            - And here are the nitty gritty details..."""))
+
+    captured = capsys.readouterr()  # type: ignore
+    assert captured.out == 'NotImplementedError: Multi-line error!'
+
+
+def _raise_if_even_for_range(count: int):
+    def raise_if_even(a: int):
+        if a % 2 == 0:
+            raise ValueError(f'a={a} is even')
+
+    iterable = range(count)
+
+    last_error_holder = LastErrorHolder()
+    for item in iterable:
+        with last_error_holder:
+            raise_if_even(item)
+
+    last_error_holder.raise_derived(EOFError(f'No more numbers, last was: {item}'))
+
+
+def test_with_last_error() -> None:
+    with pytest.raises(EOFError, match='last was: 0') as exc_info:
+        _raise_if_even_for_range(1)
+
+    assert 'a=0 is even' in str(exc_info.getrepr())
+
+    with pytest.raises(EOFError, match='last was: 2') as exc_info:
+        _raise_if_even_for_range(3)
+
+    assert 'a=2 is even' in str(exc_info.getrepr())
+
+    with pytest.raises(EOFError, match='last was: 5') as exc_info:
+        _raise_if_even_for_range(6)
+
+    assert 'a=4 is even' in str(exc_info.getrepr())
+
+
+def test_with_class_attrib_holder_reset_attr_if_exception() -> None:
+    class A:
+        ...
+
+    class B:
+        def __init__(self, num: int) -> None:
+            self.num = num
+
+    a = A()
+    with AttribHolder(a, 'num') as ms:
+        assert ms._prev_attr is None
+
+    b = B(5)
+    with AttribHolder(b, 'num') as ms:
+        b.num = 7
+        assert ms._prev_attr == 5
+    assert b.num == 7
+
+    try:
+        b.num = 5
+        with AttribHolder(b, 'num') as ms:
+            b.num = 7
+            assert ms._prev_attr == 5
+            raise RuntimeError()
+    except RuntimeError:
+        pass
+    assert b.num == 5
+
+
+def test_with_class_attrib_holder_reset_attr_if_exception_copy() -> None:
+    class B:
+        def __init__(self, numbers: list[int]) -> None:
+            self.numbers = numbers
+
+    b = B([5])
+    try:
+        with AttribHolder(b, 'numbers') as ms:
+            b.numbers[0] += 2
+            assert b.numbers == [7]
+            assert ms._prev_attr == [7]
+            raise RuntimeError()
+    except RuntimeError:
+        pass
+    assert b.numbers == [7]
+
+    try:
+        b.numbers = [5]
+        with AttribHolder(b, 'numbers', copy_attr=True) as ms:
+            b.numbers[0] += 2
+            assert b.numbers == [7]
+            assert ms._prev_attr == [5]
+            raise RuntimeError()
+    except RuntimeError:
+        pass
+    assert b.numbers == [5]
+
+
+def test_with_class_attrib_holder_method_switching() -> None:
+    class A:
+        ...
+
+    class B:
+        def method(self):
+            return 'method'
+
+    def other_method(self):
+        return 'other_method'
+
+    a = A()
+    with AttribHolder(a, 'method', other_method, on_class=True) as ms:
+        assert ms._prev_attr is None
+        with pytest.raises(AttributeError):
+            a.method()  # type: ignore
+
+    A.method = other_method
+
+    a = A()
+    with AttribHolder(a, 'method', other_method, on_class=True) as ms:
+        assert a.method() == 'other_method'  # type: ignore
+        assert ms._prev_attr is None
+
+    b = B()
+    with AttribHolder(b, 'method', other_method, on_class=True) as ms:
+        assert b.method() == 'other_method'
+        assert ms._prev_attr.__name__ == 'method'
+    assert b.method() == 'method'
+
+    b = B()
+    try:
+        with AttribHolder(b, 'method', other_method, on_class=True) as ms:
+            assert b.method() == 'other_method'
+            assert ms._prev_attr.__name__ == 'method'
+            raise RuntimeError()
+    except RuntimeError:
+        pass
+    assert b.method() == 'method'
