@@ -12,8 +12,7 @@ class FrozenDict(UserDict[_KeyT, _ValT], Generic[_KeyT, _ValT]):
     """
     FrozenDict works exactly like a dict except that it cannot be modified after initialisation:
 
-        >>> from omnipy.modules.general.typedefs import FrozenDict
-        >>> from omnipy.util.helpers import print_exception
+        >>> from omnipy import FrozenDict, print_exception
         >>> from types import MappingProxyType
         >>>
         >>> my_dict = FrozenDict({'temperature': 'chilly'})

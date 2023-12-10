@@ -122,7 +122,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         # json_dumps = orjson_dumps
 
     @classmethod
-    def _get_default_value_from_model(cls, model: Type[RootT]) -> RootT:
+    def _get_default_value_from_model(cls, model: Type[RootT]) -> RootT:  # noqa: C901
         if isinstance(model, TypeVar):
             if model.__bound__ is None:  # noqa
                 raise TypeError('The TypeVar "{}" needs to be bound to a '.format(model.__name__)
@@ -150,7 +150,8 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
                     with last_error_holder:
                         return cls._get_default_value_from_model(arg)
             last_error_holder.raise_derived(TypeError(f'Cannot instantiate model "{model}".'))
-        elif origin_type is tuple:
+
+        if origin_type is tuple:
             if args and Ellipsis not in args:
                 return tuple(cls._get_default_value_from_model(arg) for arg in args)
 
@@ -231,29 +232,6 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
                             functools.partialmethod(cls._special_method, name, method_info))
 
         return created_model
-
-    # # Partial workaround of https://github.com/pydantic/pydantic/issues/3836, together with
-    # # _parse_none_value_with_root_type_if_model(). See series of relevant tests in test_model.py
-    # # starting with test_nested_model_classes_none_as_default().
-    # #
-    # # TODO: Revisit Model._propagate_allow_none_from_model() and
-    # #       Model._parse_none_value_with_root_type_if_model with pydantic v2
-    # @classmethod
-    # def _propagate_allow_none_from_model(cls, model, created_model):
-    #     if get_origin(model) is Union:
-    #         for arg in get_args(model):
-    #             cls._propagate_allow_none_from_model(arg, created_model)
-    #
-    #     # Very much a hack
-    #     origin = get_origin(model)
-    #     if origin:
-    #         model = origin
-    #
-    #     if lenient_issubclass(model, Model) \
-    #             and get_origin(created_model.__fields__[ROOT_KEY].outer_type_) \
-    #                 not in [List, Dict, list, dict] \
-    #             and model.__fields__[ROOT_KEY].allow_none:
-    #         created_model.__fields__[ROOT_KEY].allow_none = True
 
     def __new__(cls, value: Union[Any, UndefinedType] = Undefined, **kwargs):
         model_not_specified = ROOT_KEY not in cls.__fields__
@@ -353,11 +331,9 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
         if get_origin(root_type) is Union:
             last_error_holder = LastErrorHolder()
-
             for arg in get_args(root_type):
                 with last_error_holder:
                     return cls._parse_with_root_type_if_model(value, root_field, arg)
-
             last_error_holder.raise_derived(NoneIsNotAllowedError())
 
         if lenient_issubclass(root_type, Model):
