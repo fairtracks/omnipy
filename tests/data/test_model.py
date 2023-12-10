@@ -83,6 +83,34 @@ def test_load():
         Model[int](5).foo = True  # noqa
 
 
+def test_get_inner_outer_type():
+    model = Model[int]()
+    assert model.outer_type() == int
+    assert model.inner_type() == int
+    assert model.is_nested_type() is False
+
+    model = Model[list[int]]()
+    assert model.outer_type() == list
+    assert model.outer_type(with_args=True) == list[int]
+    assert model.inner_type() == int
+    assert model.inner_type(with_args=True) == int
+    assert model.is_nested_type() is True
+
+    model = Model[list[list[int]]]()
+    assert model.outer_type() == list
+    assert model.outer_type(with_args=True) == list[list[int]]
+    assert model.inner_type() == list
+    assert model.inner_type(with_args=True) == list[int]
+    assert model.is_nested_type() is True
+
+    model = Model[dict[str, list[int]]]()
+    assert model.outer_type() == dict
+    assert model.outer_type(with_args=True) == dict[str, list[int]]
+    assert model.inner_type() == list
+    assert model.inner_type(with_args=True) == list[int]
+    assert model.is_nested_type() is True
+
+
 def test_equality_other_models():
     assert Model[int]() == Model[int]()
 
