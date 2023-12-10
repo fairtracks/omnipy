@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from typing import Any, Dict, List
+from typing import Any
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model, ROOT_KEY
@@ -23,7 +23,7 @@ class PandasModel(Model[pd.DataFrame]):
     def _data_not_empty_object(data: pd.DataFrame) -> None:
         assert not any(data.isna().all(axis=1))
 
-    def dict(self, *args, **kwargs) -> Dict[str, Dict[Any, Any]]:
+    def dict(self, *args, **kwargs) -> dict[str, dict[Any, Any]]:
         df = super().dict(*args, **kwargs)[ROOT_KEY]
         df = df.replace({pd.NA: None})
         return {ROOT_KEY: df.to_dict(orient='records')}
@@ -39,8 +39,8 @@ class PandasDataset(Dataset[PandasModel]):
     ...
 
 
-class ListOfPandasDatasetsWithSameNumberOfFiles(Model[List[PandasDataset]]):
+class ListOfPandasDatasetsWithSameNumberOfFiles(Model[list[PandasDataset]]):
     @classmethod
-    def _parse_data(cls, dataset_list: List[PandasDataset]) -> Any:
+    def _parse_data(cls, dataset_list: list[PandasDataset]) -> Any:
         assert len(dataset_list) >= 2
         assert all(len(dataset) for dataset in dataset_list)

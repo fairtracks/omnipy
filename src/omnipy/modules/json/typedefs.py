@@ -1,36 +1,36 @@
-from typing import Dict, List, TypeAlias, Union
+from typing import TypeAlias, Union
 
 JsonScalar: TypeAlias = Union[None, int, float, str, bool]
-JsonList: TypeAlias = List['Json']
-JsonDict: TypeAlias = Dict[str, 'Json']
+JsonList: TypeAlias = list['Json']
+JsonDict: TypeAlias = dict[str, 'Json']
 Json: TypeAlias = Union[JsonList, JsonDict, JsonScalar]
 
-# List at the top level
+# list at the top level
 
-JsonListOfScalars: TypeAlias = List[JsonScalar]
-JsonListOfLists: TypeAlias = List[JsonList]
-JsonListOfListsOfScalars: TypeAlias = List[JsonListOfScalars]
-JsonListOfDicts: TypeAlias = List[JsonDict]
-JsonListOfDictsOfScalars: TypeAlias = List['JsonDictOfScalars']
+JsonListOfScalars: TypeAlias = list[JsonScalar]
+JsonListOfLists: TypeAlias = list[JsonList]
+JsonListOfListsOfScalars: TypeAlias = list[JsonListOfScalars]
+JsonListOfDicts: TypeAlias = list[JsonDict]
+JsonListOfDictsOfScalars: TypeAlias = list['JsonDictOfScalars']
 
-# Dict at the top level
+# dict at the top level
 
-JsonDictOfScalars: TypeAlias = Dict[str, JsonScalar]
-JsonDictOfLists: TypeAlias = Dict[str, JsonList]
-JsonDictOfListsOfScalars: TypeAlias = Dict[str, JsonListOfScalars]
-JsonDictOfDicts: TypeAlias = Dict[str, JsonDict]
-JsonDictOfDictsOfScalars: TypeAlias = Dict[str, JsonDictOfScalars]
+JsonDictOfScalars: TypeAlias = dict[str, JsonScalar]
+JsonDictOfLists: TypeAlias = dict[str, JsonList]
+JsonDictOfListsOfScalars: TypeAlias = dict[str, JsonListOfScalars]
+JsonDictOfDicts: TypeAlias = dict[str, JsonDict]
+JsonDictOfDictsOfScalars: TypeAlias = dict[str, JsonDictOfScalars]
 
 # Exclusion variants
 
 JsonNoDicts: TypeAlias = Union[JsonScalar, 'JsonNestedLists']
-JsonNestedLists: TypeAlias = List[JsonNoDicts]
+JsonNestedLists: TypeAlias = list[JsonNoDicts]
 
 JsonNoLists: TypeAlias = Union[JsonScalar, 'JsonNestedDicts']
-JsonNestedDicts: TypeAlias = Dict[str, JsonNoLists]
+JsonNestedDicts: TypeAlias = dict[str, JsonNoLists]
 
 # More specific types
 
-JsonListOfNestedDicts: TypeAlias = List[JsonNestedDicts]
-JsonDictOfNestedLists: TypeAlias = Dict[str, JsonNestedLists]
-JsonDictOfListsOfDicts: TypeAlias = Dict[str, JsonListOfDicts]
+JsonListOfNestedDicts: TypeAlias = list[JsonNestedDicts]
+JsonDictOfNestedLists: TypeAlias = dict[str, JsonNestedLists]
+JsonDictOfListsOfDicts: TypeAlias = dict[str, JsonListOfDicts]

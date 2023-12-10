@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from functools import update_wrapper
-from typing import Any, Callable, Dict, Generic, Tuple, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 
 import pytest_cases as pc
 
@@ -18,8 +18,8 @@ ReturnT = TypeVar('ReturnT')
 class FlowCase(Generic[ArgT, ReturnT]):
     flow_func: Callable[[ArgT], ReturnT]
     flow_template: IsFlowTemplate
-    args: Tuple[Any, ...]
-    kwargs: Dict[str, Any]
+    args: tuple[Any, ...]
+    kwargs: dict[str, Any]
     assert_results_func: Callable[[Any], None]
     # assert_signature_and_return_type_func: Callable[[Any], None]
 

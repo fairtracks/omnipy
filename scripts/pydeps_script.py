@@ -31,13 +31,13 @@
 
 from pathlib import Path
 import subprocess
-from typing import Dict, List, Mapping, Tuple
+from typing import Mapping
 
 import typer
 
 
-def find_modules(path: Path, path_components: List[str]) -> Mapping[str, List[str]]:
-    modules: Dict[str, List[str]] = {}
+def find_modules(path: Path, path_components: list[str]) -> Mapping[str, list[str]]:
+    modules: dict[str, list[str]] = {}
     ruined_module = '_'.join(path_components)
     if path.is_dir():
         modules[ruined_module] = (
@@ -51,14 +51,14 @@ def find_modules(path: Path, path_components: List[str]) -> Mapping[str, List[st
     return modules
 
 
-def shorten(name: str, modules: Mapping[str, List[str]]) -> str:
+def shorten(name: str, modules: Mapping[str, list[str]]) -> str:
     retval = '•'.join(modules[name.strip()])
     if retval in ['graph', 'edge']:
         return f'{retval}_'
     return retval
 
 
-def attrs(fmt: str) -> Dict[str, str]:
+def attrs(fmt: str) -> dict[str, str]:
     return dict(kv.split('=') for kv in fmt.strip()[:-2].split(','))  # type: ignore
 
 
@@ -79,7 +79,7 @@ def main(base_name: str) -> None:
     body = lines[6:-3]
     nodes = [line for line in body if '->' not in line if line]
 
-    node_mapping: Dict[str, Dict[str, str]] = {}
+    node_mapping: dict[str, dict[str, str]] = {}
     for node in nodes:
         name, fmt = node.split('[')
         sname = shorten(name, modules)
@@ -89,7 +89,7 @@ def main(base_name: str) -> None:
 
     rules = [line for line in body if '->' in line]
 
-    rule_mapping: Dict[Tuple[str, str], Dict[str, str]] = {}
+    rule_mapping: dict[tuple[str, str], dict[str, str]] = {}
     used_nodes = set()
     for rule in rules:
         arrow, fmt = rule.split('[')
@@ -112,7 +112,7 @@ def main(base_name: str) -> None:
     with open(f'uml/{base_name}.dot', 'w') as fp:
         fp.write('\n'.join(header))
         for n in used_nodes:
-            some_dict: Dict[str, str] = node_mapping[n]
+            some_dict: dict[str, str] = node_mapping[n]
             some_dict['label'] = '"%s"' % n
             print('    {} {}'.format(n, attrs2fmt(some_dict)), file=fp)
         for (a, b), fmt_dict in rule_mapping.items():

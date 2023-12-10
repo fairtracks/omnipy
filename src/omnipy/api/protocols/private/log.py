@@ -1,6 +1,6 @@
 from datetime import datetime
 from logging import INFO, Logger
-from typing import Optional, Protocol, Tuple
+from typing import Optional, Protocol
 
 from omnipy.api.enums import RunState
 from omnipy.api.protocols.private.compute.mixins import IsUniquelyNamedJob
@@ -27,7 +27,7 @@ class IsRunStateRegistry(Protocol):
     def get_job_state_datetime(self, job: IsUniquelyNamedJob, state: RunState) -> datetime:
         ...
 
-    def all_jobs(self, state: Optional[RunState] = None) -> Tuple[IsUniquelyNamedJob, ...]:  # noqa
+    def all_jobs(self, state: Optional[RunState] = None) -> tuple[IsUniquelyNamedJob, ...]:  # noqa
         ...
 
     def set_job_state(self, job: IsUniquelyNamedJob, state: RunState) -> None:

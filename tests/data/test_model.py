@@ -1,17 +1,7 @@
 import os
 from textwrap import dedent
 from types import MappingProxyType, NoneType
-from typing import (Annotated,
-                    Any,
-                    Dict,
-                    Generic,
-                    List,
-                    Optional,
-                    Tuple,
-                    Type,
-                    TypeAlias,
-                    TypeVar,
-                    Union)
+from typing import Annotated, Any, Generic, List, Optional, Type, TypeAlias, TypeVar, Union
 
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
@@ -53,15 +43,15 @@ def test_init_and_data():
 
     assert Model[int]().to_data() == 0
     assert Model[str]().to_data() == ''
-    assert Model[Dict]().to_data() == {}
-    assert Model[List]().to_data() == []
+    assert Model[dict]().to_data() == {}
+    assert Model[list]().to_data() == []
 
     assert Model[int](12).to_data() == 12
     assert Model[str]('test').to_data() == 'test'
-    assert Model[List]([2, 4, 'b', {}]).to_data() == [2, 4, 'b', {}]
-    assert Model[Dict]({'a': 2, 'b': True}).to_data() == {'a': 2, 'b': True}
-    assert Model[Dict](a=2, b=True).to_data() == {'a': 2, 'b': True}
-    assert Model[Dict]((('a', 2), ('b', True))).to_data() == {'a': 2, 'b': True}
+    assert Model[list]([2, 4, 'b', {}]).to_data() == [2, 4, 'b', {}]
+    assert Model[dict]({'a': 2, 'b': True}).to_data() == {'a': 2, 'b': True}
+    assert Model[dict](a=2, b=True).to_data() == {'a': 2, 'b': True}
+    assert Model[dict]((('a', 2), ('b', True))).to_data() == {'a': 2, 'b': True}
 
 
 def test_error_init():
@@ -231,12 +221,12 @@ def test_issubclass_and_isinstance():
     assert _issubclass_and_isinstance(Model[int], Model[Union[int, str]])
     assert _issubclass_and_isinstance(Model[str], Model[Union[int, str]])
 
-    assert _issubclass_and_isinstance(Model[List[str]], Model[List])
+    assert _issubclass_and_isinstance(Model[list[str]], Model[list])
 
-    class MyStrList(Model[List[str]]):
+    class MyStrList(Model[list[str]]):
         ...
 
-    assert _issubclass_and_isinstance(MyStrList, Model[List])
+    assert _issubclass_and_isinstance(MyStrList, Model[list])
 
 
 def test_parse_convertible_data():
@@ -302,7 +292,7 @@ def test_error_invalid_model():
 
 
 def test_tuple_of_anything():
-    class TupleModel(Model[Tuple]):
+    class TupleModel(Model[tuple]):
         ...
 
     assert TupleModel().to_data() == ()
@@ -312,7 +302,7 @@ def test_tuple_of_anything():
 
 
 def test_tuple_of_single_type():
-    class TupleModel(Model[Tuple[int]]):
+    class TupleModel(Model[tuple[int]]):
         ...
 
     assert TupleModel().to_data() == (0,)
@@ -327,7 +317,7 @@ def test_tuple_of_single_type():
 
 
 def test_tuple_of_single_type_repeated():
-    class TupleModel(Model[Tuple[int, ...]]):
+    class TupleModel(Model[tuple[int, ...]]):
         ...
 
     assert TupleModel().to_data() == ()
@@ -340,7 +330,7 @@ def test_tuple_of_single_type_repeated():
 
 
 def test_fixed_tuple_of_different_types():
-    class TupleModel(Model[Tuple[int, str]]):
+    class TupleModel(Model[tuple[int, str]]):
         ...
 
     assert TupleModel().to_data() == (0, '')
@@ -372,7 +362,7 @@ def test_basic_union():
     #       "from __future__ import annotations", which is already used a few places.
     #       Consider also versions requirements for pydantic and mypy (as well as
     #       prefect)
-    class UnionModel(Model[Union[int, str, List]]):
+    class UnionModel(Model[Union[int, str, list]]):
         ...
 
     assert UnionModel(15).to_data() == 15
@@ -556,7 +546,7 @@ def test_nested_union_default_value():
 
     assert NestedUnionWithOptional().to_data() is None
 
-    class NestedUnionWithSingleTypeTuple(Model[Union[Union[Tuple[str], int], float]]):
+    class NestedUnionWithSingleTypeTuple(Model[Union[Union[tuple[str], int], float]]):
         ...
 
     assert NestedUnionWithSingleTypeTuple().to_data() == ('',)
@@ -594,10 +584,10 @@ def test_none_allowed():
 
 
 def test_none_not_allowed():
-    class IntListModel(Model[List[int]]):
+    class IntListModel(Model[list[int]]):
         ...
 
-    class IntDictModel(Model[Dict[int, int]]):
+    class IntDictModel(Model[dict[int, int]]):
         ...
 
     for model_cls in [IntListModel, IntDictModel]:
@@ -848,7 +838,7 @@ def test_union_nested_model_classes_inner_forwardref_generic_list_of_none() -> N
     class MaybeNumberModel(Model[Optional[int]]):
         ...
 
-    class GenericListModel(Model[List[BaseT]], Generic[BaseT]):
+    class GenericListModel(Model[list[BaseT]], Generic[BaseT]):
         ...
 
     class ListModel(GenericListModel['FullModel']):
@@ -872,7 +862,7 @@ does not seem to be needed.
 def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_default() -> None:
     MaybeNumber: TypeAlias = Optional[int]
 
-    BaseT = TypeVar('BaseT', bound=Union[List, 'FullModel', MaybeNumber])
+    BaseT = TypeVar('BaseT', bound=Union[list, 'FullModel', MaybeNumber])
 
     class BaseModel(Model[BaseT], Generic[BaseT]):
         ...
@@ -880,9 +870,9 @@ def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_defa
     class MaybeNumberModel(BaseModel[MaybeNumber]):
         ...
 
-    # Problem is here. Default value of List[BaseT] is [], while default value of
-    # BaseModel[List[BaseT]] is None
-    class GenericListModel(BaseModel[List[BaseT]], Generic[BaseT]):
+    # Problem is here. Default value of list[BaseT] is [], while default value of
+    # BaseModel[list[BaseT]] is None
+    class GenericListModel(BaseModel[list[BaseT]], Generic[BaseT]):
         ...
 
     class ListModel(GenericListModel['FullModel']):
@@ -898,18 +888,18 @@ def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_defa
 def test_import_export_methods():
     assert Model[int](12).to_data() == 12
     assert Model[str]('test').to_data() == 'test'
-    assert Model[Dict]({'a': 2}).to_data() == {'a': 2}
-    assert Model[List]([2, 4, 'b']).to_data() == [2, 4, 'b']
+    assert Model[dict]({'a': 2}).to_data() == {'a': 2}
+    assert Model[list]([2, 4, 'b']).to_data() == [2, 4, 'b']
 
     assert Model[int](12).contents == 12
     assert Model[str]('test').contents == 'test'
-    assert Model[Dict]({'a': 2}).contents == {'a': 2}
-    assert Model[List]([2, 4, 'b']).contents == [2, 4, 'b']
+    assert Model[dict]({'a': 2}).contents == {'a': 2}
+    assert Model[list]([2, 4, 'b']).contents == [2, 4, 'b']
 
     assert Model[int](12).to_json() == '12'
     assert Model[str]('test').to_json() == '"test"'
-    assert Model[Dict]({'a': 2}).to_json() == '{"a": 2}'
-    assert Model[List]([2, 4, 'b']).to_json() == '[2, 4, "b"]'
+    assert Model[dict]({'a': 2}).to_json() == '{"a": 2}'
+    assert Model[list]([2, 4, 'b']).to_json() == '[2, 4, "b"]'
 
     model_int = Model[int]()
     model_int.from_json('12')
@@ -927,7 +917,7 @@ def test_import_export_methods():
     assert model_str.contents == '13'
     assert model_str.to_data() == '13'
 
-    model_dict = Model[Dict]()
+    model_dict = Model[dict]()
     model_dict.from_json('{"a": 2}')
     assert model_dict.to_data() == {'a': 2}
 
@@ -935,7 +925,7 @@ def test_import_export_methods():
     assert model_dict.contents == {'b': 3}
     assert model_dict.to_data() == {'b': 3}
 
-    model_list = Model[List]()
+    model_list = Model[list]()
     model_list.from_json('[2, 4, "b"]')
     assert model_list.to_data() == [2, 4, 'b']
 
@@ -958,16 +948,16 @@ def test_import_export_methods():
       "type": "string"
     }''')  # noqa: Q001
 
-    assert Model[Dict].to_json_schema(pretty=True) == dedent('''\
+    assert Model[dict].to_json_schema(pretty=True) == dedent('''\
     {
-      "title": "Model[Dict]",
+      "title": "Model[dict]",
       "description": "''' + std_description + '''",
       "type": "object"
     }''')  # noqa: Q001
 
-    assert Model[List].to_json_schema(pretty=True) == dedent('''\
+    assert Model[list].to_json_schema(pretty=True) == dedent('''\
     {
-      "title": "Model[List]",
+      "title": "Model[list]",
       "description": "''' + std_description + '''",
       "type": "array",
       "items": {}
@@ -1095,11 +1085,11 @@ def test_model_copy():
 
 
 def test_json_schema_generic_model_one_level():
-    ListT = TypeVar('ListT', bound=List)  # noqa
+    ListT = TypeVar('ListT', bound=list)  # noqa
 
     # Note that the TypeVars need to be bound to a type who in itself, or whose origin_type
-    # produces a default value when called without parameters. Here, `ListT` is bound to List,
-    # and `typing.get_origin(List)() == []`.
+    # produces a default value when called without parameters. Here, `ListT` is bound to list,
+    # and `typing.get_origin(list)() == []`.
 
     class MyList(Model[ListT], Generic[ListT]):
         """My very interesting list model!"""
@@ -1112,9 +1102,9 @@ def test_json_schema_generic_model_one_level():
       "items": {}
     }""")
 
-    assert MyList[List].to_json_schema(pretty=True) == dedent("""\
+    assert MyList[list].to_json_schema(pretty=True) == dedent("""\
     {
-      "title": "MyList[List]",
+      "title": "MyList[list]",
       "description": "My very interesting list model!",
       "type": "array",
       "items": {}
@@ -1124,7 +1114,7 @@ def test_json_schema_generic_model_one_level():
 def test_json_schema_generic_model_two_levels():
     StrT = TypeVar('StrT', bound=str)  # noqa
 
-    class MyListOfStrings(Model[List[StrT]], Generic[StrT]):
+    class MyListOfStrings(Model[list[StrT]], Generic[StrT]):
         """My very own list of strings!"""
 
     assert MyListOfStrings.to_json_schema(pretty=True) == dedent("""\
@@ -1160,12 +1150,12 @@ Any workarounds should best be implemented in pydantic,
 possibly in omnipy if this becomes a real issue.
 """)
 def test_json_schema_generic_models_known_issue():
-    ListT = TypeVar('ListT', bound=List)  # noqa
+    ListT = TypeVar('ListT', bound=list)  # noqa
 
     class MyList(Model[ListT], Generic[ListT]):
         """My very interesting list model!"""
 
-    class MyListOfStrings(Model[MyList[List[str]]]):
+    class MyListOfStrings(Model[MyList[list[str]]]):
         """MyList. What more can you ask for?"""
 
     assert MyListOfStrings.to_json_schema(pretty=True) == dedent("""\
@@ -1175,7 +1165,7 @@ def test_json_schema_generic_models_known_issue():
       "$ref": "#/definitions/MyList_List_str__",
       "definitions": {
         "MyList_List_str__": {
-          "title": "MyList[List[str]]",
+          "title": "MyList[list[str]]",
           "description": "My very interesting list model!.",
           "type": "array",
           "items": {
@@ -1232,7 +1222,7 @@ def test_custom_parser_to_other_type():
 
 
 def test_nested_model():
-    class DictToListOfPositiveInts(Model[Dict[PositiveInt, List[PositiveInt]]]):
+    class DictToListOfPositiveInts(Model[dict[PositiveInt, list[PositiveInt]]]):
         """This model is perfect for a mapping product numbers to factor lists"""
 
     model_1 = DictToListOfPositiveInts()
@@ -1280,12 +1270,12 @@ def test_nested_model():
 
 
 def test_complex_nested_models():
-    class ProductFactorsTuple(Model[Tuple[PositiveInt, List[PositiveInt]]]):
+    class ProductFactorsTuple(Model[tuple[PositiveInt, list[PositiveInt]]]):
         """This model maps a single product to its product_factors, including validation"""
         @classmethod
         def _parse_data(
-                cls, data: Tuple[PositiveInt,
-                                 List[PositiveInt]]) -> Tuple[PositiveInt, List[PositiveInt]]:
+                cls, data: tuple[PositiveInt,
+                                 list[PositiveInt]]) -> tuple[PositiveInt, list[PositiveInt]]:
             from functools import reduce
             from operator import mul
 
@@ -1293,7 +1283,7 @@ def test_complex_nested_models():
             assert reduce(mul, factors) == product
             return data
 
-    class ListOfProductFactorsTuples(Model[List[ProductFactorsTuple]]):
+    class ListOfProductFactorsTuples(Model[list[ProductFactorsTuple]]):
         """A list of ProductFactorsTuples"""
 
     model = ListOfProductFactorsTuples()
@@ -1326,10 +1316,10 @@ def test_complex_nested_models():
             assert 0 < number <= 10
             return roman_numerals[number - 1]
 
-    class ListOfProductFactorsTuplesRoman(Model[List[Tuple[RomanNumeral, List[RomanNumeral]]]]):
+    class ListOfProductFactorsTuplesRoman(Model[list[tuple[RomanNumeral, list[RomanNumeral]]]]):
         """A list of ProductFactorsTuples with RomanNumerals"""
 
-    class ProductFactorDictInRomanNumerals(Model[Dict[str, List[str]]]):
+    class ProductFactorDictInRomanNumerals(Model[dict[str, list[str]]]):
         """Extremely useful model"""
 
     roman_tuple_model = ListOfProductFactorsTuplesRoman(unloaded_data)

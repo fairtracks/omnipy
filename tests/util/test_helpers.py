@@ -1,5 +1,5 @@
 from types import NoneType
-from typing import Dict, Generic, get_args, Iterator, Optional, TypeVar, Union
+from typing import Generic, get_args, Iterator, Optional, TypeVar, Union
 
 from typing_inspect import get_generic_type
 
@@ -21,7 +21,7 @@ def test_transfer_generic_params_to_new_generic_cls() -> None:
 
     assert get_args(get_generic_type(init_dict)) == (str, int)
 
-    class MyDict(Dict[T, U]):
+    class MyDict(dict[T, U]):
         ...
 
     my_dict = MyDict({'b': 234})

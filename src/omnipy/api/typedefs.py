@@ -1,7 +1,7 @@
-from typing import Callable, Optional, Tuple, TypeAlias, TypeVar, Union
+from typing import Callable, TypeAlias, TypeVar
 
 GeneralDecorator = Callable[[Callable], Callable]
-LocaleType: TypeAlias = Union[str, Tuple[Optional[str], Optional[str]]]
+LocaleType: TypeAlias = str | tuple[str | None, str | None]
 
 DecoratorClassT = TypeVar('DecoratorClassT', covariant=True)
 JobConfigT = TypeVar('JobConfigT', covariant=True)

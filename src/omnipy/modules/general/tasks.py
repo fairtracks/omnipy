@@ -1,5 +1,5 @@
 import os
-from typing import Callable, cast, List, Tuple, Type
+from typing import Callable, cast, Type
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
@@ -20,7 +20,7 @@ def cast_dataset(dataset: Dataset, cast_model: Callable[[], ModelT]) -> ModelT:
 @TaskTemplate()
 def split_dataset(
         dataset: Dataset[Model[object]],
-        datafile_names_for_b: List[str]) -> Tuple[Dataset[Model[object]], Dataset[Model[object]]]:
+        datafile_names_for_b: list[str]) -> tuple[Dataset[Model[object]], Dataset[Model[object]]]:
     model_cls = dataset.get_model_class()
     datafile_names_for_a = set(dataset.keys()) - set(datafile_names_for_b)
     dataset_a = Dataset[model_cls](  # type: ignore
@@ -37,8 +37,8 @@ def split_dataset(
 @mypy_fix_task_template
 @TaskTemplate()
 def import_directory(directory: str,
-                     exclude_prefixes: Tuple[str, ...] = ('.', '_'),
-                     include_suffixes: Tuple[str, ...] = (),
+                     exclude_prefixes: tuple[str, ...] = ('.', '_'),
+                     include_suffixes: tuple[str, ...] = (),
                      model: Type[Model] = Model[str]) -> Dataset[Model]:
     dataset = Dataset[model]()
     for import_filename in os.listdir(directory):

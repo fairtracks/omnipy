@@ -1,6 +1,6 @@
 from textwrap import dedent
 from types import NoneType
-from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Generic, List, Optional, TypeVar, Union
 
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
@@ -30,7 +30,7 @@ def test_no_model():
 
     with pytest.raises(TypeError):
 
-        class MyDataset(Dataset[List[str]]):
+        class MyDataset(Dataset[list[str]]):
             ...
 
         MyDataset()
@@ -112,10 +112,10 @@ def test_parsing_none_allowed():
 
 
 def test_parsing_none_not_allowed():
-    class IntListModel(Model[List[int]]):
+    class IntListModel(Model[list[int]]):
         ...
 
-    class IntDictModel(Model[Dict[int, int]]):
+    class IntDictModel(Model[dict[int, int]]):
         ...
 
     for model_cls in [IntListModel, IntDictModel]:
@@ -249,11 +249,11 @@ def test_basic_validation():
         dataset_1['obj_type_2'] = -234
 
     with pytest.raises(ValueError):
-        Dataset[Model[List[StrictInt]]]([12.4, 11])  # noqa
+        Dataset[Model[list[StrictInt]]]([12.4, 11])  # noqa
 
 
 def test_import_and_export():
-    dataset = Dataset[Model[Dict[str, str]]]()
+    dataset = Dataset[Model[dict[str, str]]]()
 
     data = {'obj_type_1': {'a': 123, 'b': 234, 'c': 345}, 'obj_type_2': {'c': 456}}
     dataset.from_data(data)
@@ -339,26 +339,26 @@ def test_import_and_export():
     }
 
     assert dataset.to_json_schema(pretty=False) == (  # noqa
-        '{"title": "Dataset[Model[Dict[str, str]]]", "description": "'
+        '{"title": "Dataset[Model[dict[str, str]]]", "description": "'
         + Dataset._get_standard_field_description()
         + '", "default": {}, "type": "object", "additionalProperties": '
-        '{"$ref": "#/definitions/Model_Dict_str__str__"}, "definitions": '
-        '{"Model_Dict_str__str__": {"title": "Model[Dict[str, str]]", '
+        '{"$ref": "#/definitions/Model_dict_str__str__"}, "definitions": '
+        '{"Model_dict_str__str__": {"title": "Model[dict[str, str]]", '
         '"description": "' + Model._get_standard_field_description()
         + '", "type": "object", "additionalProperties": {"type": "string"}}}}')
 
     assert dataset.to_json_schema(pretty=True) == dedent('''\
     {
-      "title": "Dataset[Model[Dict[str, str]]]",
+      "title": "Dataset[Model[dict[str, str]]]",
       "description": "''' + Dataset._get_standard_field_description() + '''",
       "default": {},
       "type": "object",
       "additionalProperties": {
-        "$ref": "#/definitions/Model_Dict_str__str__"
+        "$ref": "#/definitions/Model_dict_str__str__"
       },
       "definitions": {
-        "Model_Dict_str__str__": {
-          "title": "Model[Dict[str, str]]",
+        "Model_dict_str__str__": {
+          "title": "Model[dict[str, str]]",
           "description": "''' + Model._get_standard_field_description() + '''",
           "type": "object",
           "additionalProperties": {
@@ -530,12 +530,12 @@ def test_complex_models():
     # Model subclass
     #
 
-    class MyRangeList(Model[List[PositiveInt]]):
+    class MyRangeList(Model[list[PositiveInt]]):
         """
         Transforms a pair of min and max ints to an inclusive range
         """
         @classmethod
-        def _parse_data(cls, data: List[PositiveInt]) -> List[PositiveInt]:
+        def _parse_data(cls, data: list[PositiveInt]) -> list[PositiveInt]:
             if not data:
                 return []
             else:
@@ -546,7 +546,7 @@ def test_complex_models():
     # Generic model subclass
     #
 
-    ListT = TypeVar('ListT', bound=List)  # noqa
+    ListT = TypeVar('ListT', bound=list)  # noqa
 
     class MyReversedListModel(Model[ListT], Generic[ListT]):
         # Commented out docstring, due to test_json_schema_generic_models_known_issue in test_model
@@ -559,7 +559,7 @@ def test_complex_models():
         # Generic model that sorts any list in reverse order.
         # """
         @classmethod
-        def _parse_data(cls, data: List) -> List:
+        def _parse_data(cls, data: list) -> list:
             if isinstance(data, Model):
                 data = data.to_data()
             return list(reversed(sorted(data)))
@@ -649,8 +649,8 @@ def test_complex_models():
 def test_dataset_model_class():
     assert Dataset[Model[int]]().get_model_class() == Model[int]
     assert Dataset[Model[str]]().get_model_class() == Model[str]
-    assert Dataset[Model[List[float]]]().get_model_class() == Model[List[float]]
-    assert Dataset[Model[Dict[int, str]]]().get_model_class() == Model[Dict[int, str]]
+    assert Dataset[Model[list[float]]]().get_model_class() == Model[list[float]]
+    assert Dataset[Model[dict[int, str]]]().get_model_class() == Model[dict[int, str]]
 
 
 def test_dataset_switch_models_issue():

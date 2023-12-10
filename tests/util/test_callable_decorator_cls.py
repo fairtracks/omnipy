@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Callable, Dict, Union
+from typing import Any, Callable, Union
 
 import pytest
 
@@ -22,7 +22,7 @@ class MockClass:
         self.args = args
         self.kwargs = kwargs
 
-    def __call__(self, *args: object, **kwargs: object) -> Dict:
+    def __call__(self, *args: object, **kwargs: object) -> dict:
         return dict(call_args=args, call_kwargs=kwargs)
 
 
@@ -35,7 +35,7 @@ def test_fail_plain_decorator_not_callable_arg() -> None:
     with pytest.raises(TypeError):
 
         @MockClassNoCallableArg
-        def my_func(*args: object, **kwargs: object) -> Dict[str, Any]:
+        def my_func(*args: object, **kwargs: object) -> dict[str, Any]:
             return dict(args=args, kwargs=kwargs)
 
 
@@ -55,7 +55,7 @@ def _assert_call_func(my_func):
 
 def test_plain_decorator() -> None:
     @MockClass
-    def my_func(*args: object, **kwargs: object) -> Dict[str, object]:
+    def my_func(*args: object, **kwargs: object) -> dict[str, object]:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func) is MockClass
@@ -69,7 +69,7 @@ def test_plain_decorator() -> None:
 
 def test_plain_decorator_parentheses() -> None:
     @MockClass()
-    def my_func(*args: object, **kwargs: object) -> Dict[str, object]:
+    def my_func(*args: object, **kwargs: object) -> dict[str, object]:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func) is MockClass
@@ -83,7 +83,7 @@ def test_plain_decorator_parentheses() -> None:
 
 def test_decorator_with_kwargs() -> None:
     @MockClass(param=123, other=True)
-    def my_func(*args: object, **kwargs: object) -> Dict[str, object]:
+    def my_func(*args: object, **kwargs: object) -> dict[str, object]:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func) is MockClass
@@ -97,7 +97,7 @@ def test_decorator_with_kwargs() -> None:
 
 def test_decorator_with_args_and_kwargs() -> None:
     @MockClass(123, True, param=123, other=True)
-    def my_func(*args: object, **kwargs: object) -> Dict[str, object]:
+    def my_func(*args: object, **kwargs: object) -> dict[str, object]:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func) is MockClass
@@ -114,7 +114,7 @@ def test_decorator_with_args_and_kwargs_first_arg_func() -> None:
         pass
 
     @MockClass(other_func, 123, True, param=123, other=True)
-    def my_func(*args: object, **kwargs: object) -> Dict[str, Any]:
+    def my_func(*args: object, **kwargs: object) -> dict[str, Any]:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func) is MockClass
@@ -129,7 +129,7 @@ def test_decorator_with_args_and_kwargs_first_arg_func() -> None:
 def test_double_decorator_with_args_and_kwargs() -> None:
     @MockClass(234, False, param=234, other=False)
     @MockClass(123, True, param=123, other=True)
-    def my_func(*args: object, **kwargs: object) -> Dict[str, Any]:
+    def my_func(*args: object, **kwargs: object) -> dict[str, Any]:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func) is MockClass
@@ -153,11 +153,11 @@ def test_fail_decorator_with_single_callable_arg() -> None:
     with pytest.raises(TypeError):
 
         @MockClassSingleCallableArg(extra_func)
-        def my_func(*args: object, **kwargs: object) -> Dict[str, Any]:
+        def my_func(*args: object, **kwargs: object) -> dict[str, Any]:
             return dict(args=args, kwargs=kwargs)
 
 
-def my_fancy_func(*args: Union[int, str], **kwargs: bool) -> Dict[str, Any]:
+def my_fancy_func(*args: Union[int, str], **kwargs: bool) -> dict[str, Any]:
     """
     Documentation of myfunc()
     """

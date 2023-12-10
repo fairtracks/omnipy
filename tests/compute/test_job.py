@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, NamedTuple, Optional, Tuple, Type, Union
+from typing import Annotated, NamedTuple, Optional, Type, Union
 
 import pytest
 
@@ -36,7 +36,7 @@ class PropertyTest(NamedTuple):
     set_method: Optional[str] = None
 
 
-MockJobClasses = Tuple[Type[JobTemplateMixin], Type[JobMixin]]
+MockJobClasses = tuple[Type[JobTemplateMixin], Type[JobMixin]]
 
 
 def test_init_abstract():

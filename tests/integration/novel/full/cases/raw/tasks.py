@@ -1,5 +1,3 @@
-from typing import Dict
-
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
 from omnipy.data.dataset import Dataset, MultiModelDataset
@@ -15,7 +13,7 @@ def uppercase(text: str) -> str:
 
 @mypy_fix_task_template
 @TaskTemplate
-def square_root(number: int) -> Dict[str, float]:
+def square_root(number: int) -> dict[str, float]:
     return {'neg_root': -number**0.5, 'pos_root': number**0.5}
 
 

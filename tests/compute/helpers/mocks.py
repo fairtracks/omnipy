@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from types import MappingProxyType
-from typing import Any, Callable, cast, Dict, List, Mapping, Optional, Protocol, Tuple, Type, Union
+from typing import Any, Callable, cast, Mapping, Optional, Protocol, Type, Union
 
 from omnipy.api.protocols.private.compute.job import (IsFuncArgJob,
                                                       IsFuncArgJobTemplate,
@@ -74,7 +74,7 @@ class CommandMockInit:
         self._command = command
         self.engine_decorator_applied = False
 
-    def _get_init_args(self) -> Tuple[object, ...]:
+    def _get_init_args(self) -> tuple[object, ...]:
         return self._cmd_func, self._command
 
 
@@ -180,7 +180,7 @@ class PublicPropertyErrorsMockParamsMixin:
         self._params = params if params is not None else {}
 
     @property
-    def params(self) -> Dict[str, Any]:
+    def params(self) -> dict[str, Any]:
         return self._params
 
 
@@ -273,7 +273,7 @@ class AssertSameTimeOfCurFlowRunJobBaseMixin:
     _persisted_time_of_cur_toplevel_flow_run: Optional[datetime] = []
 
     @property
-    def persisted_time_of_cur_toplevel_flow_run(self) -> List[datetime]:
+    def persisted_time_of_cur_toplevel_flow_run(self) -> list[datetime]:
         return self._persisted_time_of_cur_toplevel_flow_run[0] \
             if self._persisted_time_of_cur_toplevel_flow_run else None
 

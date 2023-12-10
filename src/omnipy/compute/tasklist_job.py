@@ -1,4 +1,4 @@
-from typing import Callable, cast, Tuple
+from typing import Callable, cast
 
 from omnipy.api.protocols.private.compute.job import (IsJob,
                                                       IsJobTemplate,
@@ -10,13 +10,13 @@ from omnipy.compute.func_job import FuncArgJobBase
 class TaskTemplateArgsJobBase(FuncArgJobBase):
     def __init__(self, job_func: Callable, *task_templates: IsTaskTemplate,
                  **kwargs: object) -> None:
-        self._task_templates: Tuple[IsTaskTemplate, ...] = task_templates
+        self._task_templates: tuple[IsTaskTemplate, ...] = task_templates
 
-    def _get_init_args(self) -> Tuple[object, ...]:
+    def _get_init_args(self) -> tuple[object, ...]:
         return self._job_func, *self._task_templates
 
     @property
-    def task_templates(self) -> Tuple[IsTaskTemplate, ...]:
+    def task_templates(self) -> tuple[IsTaskTemplate, ...]:
         return self._task_templates
 
     def _refine(

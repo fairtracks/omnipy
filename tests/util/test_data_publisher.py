@@ -1,4 +1,4 @@
-from typing import Annotated, Callable, List
+from typing import Annotated, Callable
 
 import pytest
 
@@ -21,7 +21,7 @@ def test_init_params() -> None:
 
 
 def test_unregistered_subscribers(
-    text_list: Annotated[List[str], pytest.fixture],
+    text_list: Annotated[list[str], pytest.fixture],
     subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
 ) -> None:
@@ -32,7 +32,7 @@ def test_unregistered_subscribers(
 
 
 def test_subscribe_defaults(
-    text_list: Annotated[List[str], pytest.fixture],
+    text_list: Annotated[list[str], pytest.fixture],
     subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
 ) -> None:
@@ -49,7 +49,7 @@ def test_subscribe_defaults(
 
 
 def test_subscribe_init_values(
-    text_list: Annotated[List[str], pytest.fixture],
+    text_list: Annotated[list[str], pytest.fixture],
     subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
 ) -> None:
@@ -89,7 +89,7 @@ def test_fail_subscribe_private_config_item(
 
 
 def test_setattr_no_subscribers(
-    text_list: Annotated[List[str], pytest.fixture],
+    text_list: Annotated[list[str], pytest.fixture],
     subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
     mock_config_publisher_with_subscribers: Annotated[MockDataPublisher, pytest.fixture],
@@ -105,7 +105,7 @@ def test_setattr_no_subscribers(
 
 
 def test_setattr_single_subscriber(
-    text_list: Annotated[List[str], pytest.fixture],
+    text_list: Annotated[list[str], pytest.fixture],
     subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
     mock_config_publisher_with_subscribers: Annotated[MockDataPublisher, pytest.fixture],
@@ -128,7 +128,7 @@ def test_setattr_single_subscriber(
 
 
 def test_setattr_two_subscribers(
-    text_list: Annotated[List[str], pytest.fixture],
+    text_list: Annotated[list[str], pytest.fixture],
     subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
     mock_config_publisher_with_subscribers: Annotated[MockDataPublisher, pytest.fixture],
@@ -150,7 +150,7 @@ def test_setattr_two_subscribers(
 
 
 def test_unsubscribe_all(
-    text_list: Annotated[List[str], pytest.fixture],
+    text_list: Annotated[list[str], pytest.fixture],
     subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
     mock_config_publisher_with_subscribers: Annotated[MockDataPublisher, pytest.fixture],
@@ -168,7 +168,7 @@ def test_unsubscribe_all(
 
 
 def test_change_subscribers_no_effect(
-    text_list: Annotated[List[str], pytest.fixture],
+    text_list: Annotated[list[str], pytest.fixture],
     subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
     mock_config_publisher_with_subscribers: Annotated[MockDataPublisher, pytest.fixture],

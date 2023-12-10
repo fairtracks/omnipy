@@ -1,7 +1,7 @@
 from collections import defaultdict
 import inspect
 import types
-from typing import DefaultDict, Dict, List, Protocol, Type
+from typing import DefaultDict, Protocol, Type
 
 from omnipy.util.helpers import (generic_aware_issubclass_ignore_args,
                                  get_bases,
@@ -21,7 +21,7 @@ class DynamicMixinAcceptor:
     # Declarations needed by mypy
     _orig_class: Type
     _orig_init_signature: inspect.Signature
-    _mixin_classes: List[Type]
+    _mixin_classes: list[Type]
     _init_params_per_mixin_cls: DefaultDict[str, DefaultDict[str, inspect.Parameter]]
 
     def __class_getitem__(cls, item):
@@ -39,19 +39,19 @@ class DynamicMixinAcceptor:
         cls._init_params_per_mixin_cls = defaultdict(defaultdict)
 
     @classmethod
-    def _get_mixin_init_kwarg_params(cls) -> Dict[str, inspect.Parameter]:
+    def _get_mixin_init_kwarg_params(cls) -> dict[str, inspect.Parameter]:
         return {
             key: param for param_dict in cls._init_params_per_mixin_cls.values() for key,
             param in param_dict.items()
         }
 
     @property
-    def _mixin_init_kwarg_params(self) -> Dict[str, inspect.Parameter]:
+    def _mixin_init_kwarg_params(self) -> dict[str, inspect.Parameter]:
         return self._get_mixin_init_kwarg_params()
 
     @classmethod
-    def _get_mixin_init_kwarg_params_including_bases(cls) -> Dict[str, inspect.Parameter]:
-        all_mixin_init_kwarg_params: Dict[str, inspect.Parameter] = {}
+    def _get_mixin_init_kwarg_params_including_bases(cls) -> dict[str, inspect.Parameter]:
+        all_mixin_init_kwarg_params: dict[str, inspect.Parameter] = {}
 
         base_list = list(cls.__mro__)
         skip_bases = {'DynamicMixinAcceptor'}
@@ -71,7 +71,7 @@ class DynamicMixinAcceptor:
         return all_mixin_init_kwarg_params
 
     @property
-    def _mixin_init_kwarg_params_including_bases(self) -> Dict[str, inspect.Parameter]:
+    def _mixin_init_kwarg_params_including_bases(self) -> dict[str, inspect.Parameter]:
         return self._get_mixin_init_kwarg_params_including_bases()
 
     @classmethod

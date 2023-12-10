@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Tuple, Type
+from typing import Callable, Optional, Type
 
 import pytest_cases as pc
 
@@ -63,7 +63,7 @@ def run_state_registry(registry):
 @pc.parametrize('registry', [run_state_registry], ids=[''])
 def all_func_types_real_jobs_all_engines_real_reg(
     job_case: JobCase,
-    job_classes: Tuple[JobType, Type[IsJobTemplate]],
+    job_classes: tuple[JobType, Type[IsJobTemplate]],
     engine: Type[IsEngine],
     engine_decorator: Optional[Callable[[IsEngine], IsEngine]],
     registry: Optional[IsRunStateRegistry],

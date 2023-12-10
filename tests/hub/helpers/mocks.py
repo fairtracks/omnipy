@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, Protocol, Tuple, Type
+from typing import Optional, Protocol, Type
 
 from omnipy.api.enums import RunState
 from omnipy.api.protocols.private.log import IsRunStateRegistry
@@ -132,7 +132,7 @@ class MockRunStateRegistry:
     def get_task_state_datetime(self, task: IsTask, state: RunState) -> datetime:
         ...
 
-    def all_tasks(self, state: Optional[RunState] = None) -> Tuple[IsTask, ...]:  # noqa
+    def all_tasks(self, state: Optional[RunState] = None) -> tuple[IsTask, ...]:  # noqa
         ...
 
     def set_task_state(self, task: IsTask, state: RunState) -> None:

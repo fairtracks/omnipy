@@ -1,5 +1,5 @@
 import asyncio
-from typing import Callable, Tuple
+from typing import Callable
 
 from omnipy.api.typedefs import GeneralDecorator
 from omnipy.compute.job import JobBase
@@ -14,7 +14,7 @@ class PlainFuncArgJobBase(JobBase):
     def __init__(self, job_func: Callable, *args: object, **kwargs: object) -> None:
         self._job_func = job_func
 
-    def _get_init_args(self) -> Tuple[object, ...]:
+    def _get_init_args(self) -> tuple[object, ...]:
         return self._job_func,
 
     def has_coroutine_func(self) -> bool:
