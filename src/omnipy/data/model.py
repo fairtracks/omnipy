@@ -389,10 +389,22 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         new_model = self.parse_raw(json_contents, proto=pydantic_protocol.json)
         self._set_contents_without_validation(new_model)
 
-    # @classmethod
-    # def get_type_args(cls):
-    #     return cls.__fields__.get(ROOT_KEY).type_
-    #
+    def inner_type(self, with_args: bool = False) -> type | None:
+        return self._get_root_type(outer=False, with_args=with_args)
+
+    def outer_type(self, with_args: bool = False) -> type | None:
+        return self._get_root_type(outer=True, with_args=with_args)
+
+    def is_nested_type(self) -> bool:
+        return not self.inner_type(with_args=True) == self.outer_type(with_args=True)
+
+    def _get_root_type(self, outer: bool, with_args: bool) -> type | None:
+        root_field = cast(ModelField, self.__class__.__fields__.get(ROOT_KEY))
+        root_type = root_field.outer_type_ if outer else root_field.type_
+        if get_args(root_type):
+            return root_type if with_args else get_origin(root_type)
+        return root_type
+
     # @classmethod
     # def create_from_json(cls, data: Union[str, Tuple[str]]):
     #     if isinstance(data, tuple):
