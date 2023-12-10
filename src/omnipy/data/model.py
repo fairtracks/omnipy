@@ -1,4 +1,6 @@
 from collections.abc import Mapping, Sequence
+import functools
+import inspect
 import json
 from types import UnionType
 from typing import (Annotated,
@@ -9,7 +11,6 @@ from typing import (Annotated,
                     get_args,
                     get_origin,
                     Optional,
-                    overload,
                     SupportsIndex,
                     Type,
                     TypeVar,
@@ -20,14 +21,17 @@ from isort.sections import STDLIB
 # from orjson import orjson
 from pydantic import NoneIsNotAllowedError
 from pydantic import Protocol as pydantic_protocol
-from pydantic import root_validator
+from pydantic import root_validator, ValidationError
 from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.main import ModelMetaclass
 from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass
 
-from omnipy.util.helpers import is_optional, LastErrorHolder
+from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
+from omnipy.util.contexts import AttribHolder, LastErrorHolder
+from omnipy.util.decorators import add_callback_after_call
+from omnipy.util.helpers import is_optional
 
 _KeyT = TypeVar('_KeyT')
 _ValT = TypeVar('_ValT')
@@ -219,6 +223,13 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             created_model.__name__ = f'Model[{display_as_type(orig_model)}]'
         created_model.__qualname__ = generate_qualname(cls.__name__, model)
 
+        if inspect.isclass(orig_model):
+            for name, method_info in SPECIAL_METHODS_INFO.items():
+                if hasattr(orig_model, name):
+                    setattr(created_model,
+                            name,
+                            functools.partialmethod(cls._special_method, name, method_info))
+
         return created_model
 
     # # Partial workaround of https://github.com/pydantic/pydantic/issues/3836, together with
@@ -297,6 +308,21 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         return ('This class represents a concrete model for data items in the `omnipy` Python '
                 'package. It is a statically typed specialization of the Model class, '
                 'which is itself wrapping the excellent Python package named `pydantic`.')
+
+    @classmethod
+    def validate(cls: Type['Model'], value: Any) -> 'Model':
+        """
+        Hack to allow overwriting of __iter__ method without compromising pydantic validation. Part
+        of the pydantic API and not the Omnipy API.
+        """
+        if isinstance(value, Model):
+            with AttribHolder(value, '__iter__', GenericModel.__iter__, on_class=True):
+                return super().validate(value)
+        else:
+            return super().validate(value)
+
+    def validate_contents(self):
+        self.contents = self.contents
 
     @classmethod
     def _parse_data(cls, data: RootT) -> Any:
@@ -454,51 +480,64 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             else:
                 raise RuntimeError('Model does not allow setting of extra attributes')
 
+    def _special_method(self, name: str, info: MethodInfo, *args: object,
+                        **kwargs: object) -> object:
+        method = self._getattr_from_contents(name)
+
+        if info.state_changing:
+            with AttribHolder(self, 'contents', copy_attr=True):
+                ret = method(*args, **kwargs)
+                self.validate_contents()
+        else:
+            ret = method(*args, **kwargs)
+
+        if info.maybe_returns_same_type:
+            ret = self._convert_to_model_if_reasonable(args, name, ret)
+
+        return ret
+
+    def _convert_to_model_if_reasonable(self, args, name, ret):
+        if not isinstance(ret, self.__class__):
+            if name == '__getitem__':
+                assert len(args) == 1
+                if isinstance(args[0], int):
+                    assert self.is_nested_type()
+                    # TODO: With Python 3.13 and PEP 649, reconsider the choice to not automatically
+                    #       generate nested models through '__getitem__'.
+                    #
+                    # Seems to work, but the consequences for this are big and requires thought
+                    # and consideration.
+                    #
+                    # try:
+                    #     ret = Model[self.inner_type(with_args=True)](ret)
+                    # except ValidationError:
+                    #     pass
+                    return ret
+
+            # We can do this with some ease of mind as all the methods except '__getitem__' with
+            # integer argument are supposed to possibly return a result of the same type.
+            outer_type = self.outer_type(with_args=False)
+            if outer_type is not None and isinstance(ret, outer_type):
+                try:
+                    ret = self.__class__(ret)
+                except ValidationError:
+                    pass
+        return ret
+
+    def __getattr__(self, attr: str) -> Any:
+        ret = self._getattr_from_contents(attr)
+        if callable(ret):
+            ret = add_callback_after_call(ret, self.validate_contents)
+        return ret
+
+    def _getattr_from_contents(self, attr):
+        if isinstance(self.contents, Model):
+            return getattr(self.contents.contents, attr)
+        else:
+            return getattr(self.contents, attr)
+
     def __eq__(self, other: object) -> bool:
         return isinstance(other, Model) \
             and self.__class__ == other.__class__ \
             and self.contents == other.contents \
             and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
-
-    @overload
-    def __getitem__(self: 'Model[Model[Mapping[_KeyT, _ValT]]]', item: _KeyT) -> _ValT:
-        ...
-
-    @overload
-    def __getitem__(self: 'Model[Mapping[_KeyT, _ValT]]', item: _KeyT) -> _ValT:
-        ...
-
-    @overload
-    def __getitem__(self: 'Model[Model[Sequence[_ValT]]]', item: slice) -> 'RootT':
-        ...
-
-    @overload
-    def __getitem__(self: 'Model[Sequence[_ValT]]', item: slice) -> 'Model[RootT]':
-        ...
-
-    @overload
-    def __getitem__(self: 'Model[Model[Sequence[_ValT]]]', item: int) -> _ValT:
-        ...
-
-    @overload
-    def __getitem__(self: 'Model[Sequence[_ValT]]', item: int) -> _ValT:
-        ...
-
-    def __getitem__(self, item):
-        contents = self.contents
-        if isinstance(contents, Model):
-            if isinstance(contents.contents, Sequence):
-                if isinstance(item, int):
-                    return contents.contents[item]
-                if isinstance(item, slice):
-                    return type(contents)(contents.contents[item])
-            if isinstance(contents.contents, Mapping):
-                return contents.contents[cast(_KeyT, item)]
-        else:
-            if isinstance(contents, Sequence):
-                if isinstance(item, int):
-                    return contents[item]
-                if isinstance(item, slice):
-                    return type(self)(contents[item])
-            if isinstance(contents, Mapping):
-                return contents[cast(_KeyT, item)]
