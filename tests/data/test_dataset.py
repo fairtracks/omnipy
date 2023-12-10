@@ -61,6 +61,29 @@ def test_init_with_basic_parsing():
     assert dataset_3['obj_type_2'] == '123'
     assert dataset_3['obj_type_3'] == 'True'
 
+    dataset_4 = Dataset[Model[dict[int, int]]](file_1={1: 1234, 2: 2345}, file_2={2: 2345, 3: 3456})
+
+    assert len(dataset_4) == 2
+    assert dataset_4['file_1'] == {1: 1234, 2: 2345}
+    assert dataset_4['file_2'] == {2: 2345, 3: 3456}
+
+
+def test_init_errors():
+    with pytest.raises(TypeError):
+        Dataset[Model[int]]({'file_1': 123}, {'file_2': 234})
+
+    with pytest.raises(AssertionError):
+        Dataset[Model[int]]({'file_1': 123}, data={'file_2': 234})
+
+    with pytest.raises(AssertionError):
+        Dataset[Model[int]]({'file_1': 123}, file_2=234)
+
+    with pytest.raises(AssertionError):
+        Dataset[Model[int]](data={'file_1': 123}, file_2=234)
+
+    with pytest.raises(ValidationError):
+        Dataset[Model[int]](data=123)
+
 
 def test_parsing_none_allowed():
     class NoneModel(Model[NoneType]):
