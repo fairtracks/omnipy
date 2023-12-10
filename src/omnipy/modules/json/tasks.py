@@ -1,13 +1,17 @@
 from collections import defaultdict
 from typing import cast, Tuple
 
+from omnipy.compute.flow import FuncFlowTemplate
 from omnipy.compute.task import TaskTemplate
-from omnipy.compute.typing import mypy_fix_task_template
+from omnipy.compute.typing import mypy_fix_func_flow_template, mypy_fix_task_template
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
 from .datasets import (JsonDataset,
                        JsonDictDataset,
+                       JsonDictOfDictsDataset,
+                       JsonDictOfListsOfDictsDataset,
+                       JsonListDataset,
                        JsonListOfDictsDataset,
                        JsonListOfDictsOfScalarsDataset)
 from .functions import flatten_outer_level_of_nested_record
@@ -31,9 +35,8 @@ def convert_dataset_string_to_json(dataset: Dataset[Model[str]]) -> JsonDataset:
 
 @mypy_fix_task_template
 @TaskTemplate()
-def transpose_dataset_of_dicts_to_lists(dataset: JsonDictDataset,
-                                        id_key: str = ID_KEY) -> JsonListOfDictsDataset:
-    output_dataset = JsonListOfDictsDataset()
+def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> JsonListDataset:
+    output_dataset = JsonListDataset()
     output_data = defaultdict(list)
 
     for name, item in dataset.items():
@@ -49,7 +52,29 @@ def transpose_dataset_of_dicts_to_lists(dataset: JsonDictDataset,
                 else:
                     data = val_item
                 output_data[key].append(data)
-    output_dataset |= output_data.items()
+    output_dataset |= output_data
+    return output_dataset
+
+
+@mypy_fix_func_flow_template
+@FuncFlowTemplate()
+def transpose_dict_of_dicts_2_list_of_dicts(
+    dataset: JsonDictOfDictsDataset,
+    id_key: str = ID_KEY,
+) -> JsonListOfDictsDataset:
+    output_dataset = JsonListOfDictsDataset()
+    output_dataset |= transpose_dicts_2_lists(dataset, id_key=id_key)
+    return output_dataset
+
+
+@mypy_fix_func_flow_template
+@FuncFlowTemplate()
+def transpose_dicts_of_lists_of_dicts_2_lists_of_dicts(
+    dataset: JsonDictOfListsOfDictsDataset,
+    id_key: str = ID_KEY,
+) -> JsonListOfDictsDataset:
+    output_dataset = JsonListOfDictsDataset()
+    output_dataset |= transpose_dicts_2_lists(dataset, id_key=id_key)
     return output_dataset
 
 
