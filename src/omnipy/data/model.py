@@ -30,7 +30,7 @@ from pydantic.utils import lenient_isinstance, lenient_issubclass
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
 from omnipy.util.contexts import AttribHolder, LastErrorHolder
 from omnipy.util.decorators import add_callback_after_call
-from omnipy.util.helpers import is_optional
+from omnipy.util.helpers import is_optional, is_union, remove_annotated_plus_optional_if_present
 
 _KeyT = TypeVar('_KeyT')
 _ValT = TypeVar('_ValT')
@@ -168,7 +168,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         else:
             cls.__config__.fields[ROOT_KEY] = {'default_factory': get_default_val}
 
-        if not is_optional(model):
+        if not get_origin(model) == Annotated and not is_optional(model):
             model = Annotated[Optional[model], 'Fake Optional from Model']
 
         data_field = ModelField.infer(
@@ -223,9 +223,12 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             created_model.__name__ = f'Model[{display_as_type(orig_model)}]'
         created_model.__qualname__ = generate_qualname(cls.__name__, model)
 
-        if inspect.isclass(orig_model):
+        outer_type = created_model._get_root_type(outer=True, with_args=True)
+        outer_type_plain = created_model._get_root_type(outer=True, with_args=False)
+
+        if inspect.isclass(outer_type_plain) and not is_union(outer_type):
             for name, method_info in SPECIAL_METHODS_INFO.items():
-                if hasattr(orig_model, name):
+                if hasattr(outer_type_plain, name):
                     setattr(created_model,
                             name,
                             functools.partialmethod(cls._special_method, name, method_info))
@@ -391,17 +394,19 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         self._set_contents_without_validation(new_model)
 
     def inner_type(self, with_args: bool = False) -> type | None:
-        return self._get_root_type(outer=False, with_args=with_args)
+        return self.__class__._get_root_type(outer=False, with_args=with_args)
 
     def outer_type(self, with_args: bool = False) -> type | None:
-        return self._get_root_type(outer=True, with_args=with_args)
+        return self.__class__._get_root_type(outer=True, with_args=with_args)
 
     def is_nested_type(self) -> bool:
         return not self.inner_type(with_args=True) == self.outer_type(with_args=True)
 
-    def _get_root_type(self, outer: bool, with_args: bool) -> type | None:
-        root_field = cast(ModelField, self.__class__.__fields__.get(ROOT_KEY))
+    @classmethod
+    def _get_root_type(cls, outer: bool, with_args: bool) -> type | None:
+        root_field = cast(ModelField, cls.__fields__.get(ROOT_KEY))
         root_type = root_field.outer_type_ if outer else root_field.type_
+        root_type = remove_annotated_plus_optional_if_present(root_type)
         if get_args(root_type):
             return root_type if with_args else get_origin(root_type)
         return root_type
