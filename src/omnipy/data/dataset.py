@@ -124,7 +124,6 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         #             ...
         #           TypeError: 'ModelMetaclass' object does not support item assignment
         #
-        # TODO: Allow e.g. Dataset[Model[int]](a=1, b=2) init
         # TODO: Disallow e.g.:
         #       Dataset[Model[str]](Model[int](5)) ==  Dataset[Model[str]](data=Model[int](5))
         #       == Dataset[Model[str]](data={'__root__': Model[str]('5')})
