@@ -17,7 +17,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          curl -sSL https://install.python-poetry.org | python3 - --version 1.4.0
+          curl -sSL https://install.python-poetry.org | python3 - --version 1.7.1
           $HOME/.local/bin/poetry install
       - name: Install locale - de_DE.UTF-8
         run: |
@@ -25,5 +25,4 @@ jobs:
           sudo update-locale LANG=de_DE.UTF-8
       - name: Test with pytest
         run: |
-          source $(poetry env info --path)/bin/activate
-          pytest --mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml
+          poetry run pytest -v --mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml
