@@ -136,5 +136,5 @@ def test_error_list_of_single_dict_with_two_elements():
 # TODO: Write tests for misc model operations relevant for JSON data. Try to avoid overlap with
 #       with test_model.
 def test_json_model_operations():
-    a = JsonDictModel([{'a': 1, 'b': 2}])
+    a = JsonDictModel({'a': 1, 'b': 2, 'c': 3})
     a['c'] = 3
