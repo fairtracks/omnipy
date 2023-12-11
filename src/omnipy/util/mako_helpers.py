@@ -219,7 +219,7 @@ def parse_type_hint(type_hint_string):
         elif isinstance(node, ast.Attribute):
             process_node(node.value, qual_names + [node.attr])
 
-        elif isinstance(node, ast.tuple):
+        elif isinstance(node, ast.Tuple):
             for elt in node.elts:
                 process_node(elt, qual_names)
 
