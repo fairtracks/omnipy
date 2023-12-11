@@ -1,3 +1,4 @@
+from math import floor
 import os
 from textwrap import dedent
 from types import MappingProxyType, NoneType
@@ -965,7 +966,7 @@ def test_import_export_methods():
     }''')  # noqa: Q001
 
 
-def test_model_function_as_dict():
+def test_model_operations_as_dict():
     model = Model[dict[str, int]]({'abc': 123})
 
     assert len(model) == 1
@@ -1006,7 +1007,7 @@ def test_model_function_as_dict():
     assert model == Model[dict[str, int]](other)
 
 
-def test_model_function_as_list_simple():
+def test_model_operations_as_list_simple():
     model = Model[list[int]]()
     assert len(model) == 0
 
@@ -1046,7 +1047,7 @@ def test_model_function_as_list_simple():
     assert len(model) == 3
 
 
-def test_model_function_as_list_no_nested_validation():
+def test_model_operations_as_list_no_nested_validation():
     model = Model[list[int | list[int]]]([123, 234, [345]])
 
     model[-1].append(tuple(range(5)))
@@ -1064,7 +1065,7 @@ def test_model_function_as_list_no_nested_validation():
     assert model.contents == [123, 234, [345, (0, 1, 2, 3, 4), 'a']]
 
 
-def test_model_function_as_list_nested_validation():
+def test_model_operations_as_list_nested_validation():
     model = Model[list[Model[list[Model[list[int]] | int]] | int]]([123, 234, [345]])
 
     model[-1].append(tuple(range(5)))
@@ -1079,6 +1080,33 @@ def test_model_function_as_list_nested_validation():
 
     with pytest.raises(ValidationError):
         model[-1].append('a')
+
+
+def test_model_operations_as_scalars():
+    model = Model[int](1)
+
+    assert (model + 1).contents == 2
+    assert (1 + model).contents == 2
+    assert model.contents == 1
+
+    model *= 10
+    assert model.contents == 10
+
+    assert model / 3 == pytest.approx(3.333333)  # converting to other basic type removes Model
+    assert (model // 3).contents == 3
+    assert -model.contents == -10
+
+    assert (model % 3).contents == 1  # modulo
+    assert (model & 2).contents == 2  # bitwise AND
+    assert (model**2).contents == 100  # power
+
+    assert float(model) == float(10)  # converting to other basic type removes Model
+
+    model = Model[float](10)
+    assert (model / 3).contents == pytest.approx(3.333333)
+
+    model = Model[float](2.5)
+    assert floor(model) == 2  # converting to other basic type removes Model
 
 
 def test_model_copy():
