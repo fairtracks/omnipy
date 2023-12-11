@@ -2,7 +2,17 @@ from collections.abc import Hashable, Iterable
 import inspect
 import locale as pkg_locale
 from types import UnionType
-from typing import Any, cast, ClassVar, get_args, get_origin, Mapping, Protocol, TypeVar, Union
+from typing import (Annotated,
+                    Any,
+                    cast,
+                    ClassVar,
+                    get_args,
+                    get_origin,
+                    Mapping,
+                    Protocol,
+                    Type,
+                    TypeVar,
+                    Union)
 
 from typing_inspect import get_generic_bases, is_generic_type
 
@@ -80,9 +90,12 @@ def is_iterable(obj: object) -> bool:
         return False
 
 
-def is_optional(cls_or_type: type | UnionType | None) -> bool:
-    return get_origin(cls_or_type) in [Union, UnionType] and \
-        type(None) in get_args(cls_or_type)
+def is_union(cls_or_type: type | UnionType | None | object) -> bool:
+    return get_origin(cls_or_type) in [Union, UnionType]
+
+
+def is_optional(cls_or_type: type | UnionType | None | object) -> bool:
+    return is_union(cls_or_type) and type(None) in get_args(cls_or_type)
 
 
 def is_strict_subclass(
@@ -99,3 +112,16 @@ def is_strict_subclass(
 
 class IsDataclass(Protocol):
     __dataclass_fields__: ClassVar[dict]
+
+
+def remove_annotated_plus_optional_if_present(
+        type_or_class: Type | UnionType | object) -> Type | UnionType | object:
+    if get_origin(type_or_class) == Annotated:
+        type_or_class = get_args(type_or_class)[0]
+        if is_optional(type_or_class):
+            args = get_args(type_or_class)
+            if len(args) == 2:
+                type_or_class = args[0]
+            else:
+                type_or_class = Union[args[:-1]]
+    return type_or_class
