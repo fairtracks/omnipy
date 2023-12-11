@@ -1,11 +1,13 @@
 from types import NoneType
-from typing import Generic, get_args, Iterator, Optional, TypeVar, Union
+from typing import Annotated, Generic, get_args, Iterator, Optional, TypeVar, Union
 
 from typing_inspect import get_generic_type
 
 from omnipy.util.helpers import (is_iterable,
                                  is_optional,
                                  is_strict_subclass,
+                                 is_union,
+                                 remove_annotated_plus_optional_if_present,
                                  transfer_generic_args_to_cls)
 
 T = TypeVar('T')
@@ -72,30 +74,54 @@ def test_is_iterable() -> None:
     assert is_iterable(MyModernIter()) is True
 
 
+def test_is_union() -> None:
+    assert is_union(str) is False
+    assert is_union(Optional[str]) is True
+    assert is_union(Union[str, None]) is True
+    assert is_union(str | None) is True
+
+    assert is_union(str | int) is True
+    assert is_union(Union[str, int]) is True
+    assert is_union(Optional[str | int]) is True
+    assert is_union(Optional[Union[str, int]]) is True
+
+    assert is_union(Union[str, int, None]) is True
+    assert is_union(Union[Union[str, int], None]) is True
+    assert is_union(Union[Union[str, None], int]) is True
+
+    assert is_union(Union[str, int] | None) is True
+    assert is_union(Union[str, None] | int) is True
+
+    assert is_union(str | int | None) is True
+    assert is_union(str | None | int) is True
+
+    assert is_union(None) is False
+
+
 def test_is_optional() -> None:
     assert is_optional(str) is False
-    assert is_optional(Optional[str]) is True  # type: ignore
-    assert is_optional(Union[str, None]) is True  # type: ignore
-    assert is_optional(Union[str, NoneType]) is True  # type: ignore
+    assert is_optional(Optional[str]) is True
+    assert is_optional(Union[str, None]) is True
+    assert is_optional(Union[str, NoneType]) is True
     assert is_optional(str | None) is True
     assert is_optional(str | NoneType) is True
 
     assert is_optional(str | int) is False
-    assert is_optional(Union[str, int]) is False  # type: ignore
-    assert is_optional(Optional[str | int]) is True  # type: ignore
-    assert is_optional(Optional[Union[str, int]]) is True  # type: ignore
+    assert is_optional(Union[str, int]) is False
+    assert is_optional(Optional[str | int]) is True
+    assert is_optional(Optional[Union[str, int]]) is True
 
-    assert is_optional(Union[str, int, None]) is True  # type: ignore
-    assert is_optional(Union[str, int, NoneType]) is True  # type: ignore
-    assert is_optional(Union[str, None, int]) is True  # type: ignore
-    assert is_optional(Union[str, NoneType, int]) is True  # type: ignore
+    assert is_optional(Union[str, int, None]) is True
+    assert is_optional(Union[str, int, NoneType]) is True
+    assert is_optional(Union[str, None, int]) is True
+    assert is_optional(Union[str, NoneType, int]) is True
 
-    assert is_optional(Union[Union[str, int], None]) is True  # type: ignore
-    assert is_optional(Union[Union[str, int], NoneType]) is True  # type: ignore
-    assert is_optional(Union[Union[str, NoneType], int]) is True  # type: ignore
-    assert is_optional(Union[Union[str, None], int]) is True  # type: ignore
+    assert is_optional(Union[Union[str, int], None]) is True
+    assert is_optional(Union[Union[str, int], NoneType]) is True
+    assert is_optional(Union[Union[str, NoneType], int]) is True
+    assert is_optional(Union[Union[str, None], int]) is True
 
-    assert is_optional(Union[str, int] | None) is True  # type: ignore
+    assert is_optional(Union[str, int] | None) is True
     assert is_optional(Union[str, int] | NoneType) is True
     assert is_optional(Union[str, NoneType] | int) is True
     assert is_optional(Union[str, None] | int) is True
@@ -147,3 +173,33 @@ def test_is_strict_subclass() -> None:
     assert is_strict_subclass(Father, (Sister, Brother)) is False
     assert is_strict_subclass(Mother, (Mother, Father)) is False
     assert is_strict_subclass(Child, (Mother, Child)) is False
+
+
+def test_remove_annotated_optional_if_present() -> None:
+    remove_annotated_plus_opt = remove_annotated_plus_optional_if_present
+
+    assert remove_annotated_plus_opt(str) == str
+    assert remove_annotated_plus_opt(str | list[int]) == str | list[int]
+    assert remove_annotated_plus_opt(str | list[int] | None) == str | list[int] | None
+    assert remove_annotated_plus_opt(Union[str, list[int]]) == Union[str, list[int]]
+    assert remove_annotated_plus_opt(Union[str, list[int], None]) == Union[str, list[int], None]
+    assert remove_annotated_plus_opt(Optional[Union[str, list[int]]]) == \
+           Optional[Union[str, list[int]]]
+
+    assert remove_annotated_plus_opt(Annotated[str, 'something']) == str
+    assert remove_annotated_plus_opt(Annotated[str | list[int], 'something']) == str | list[int]
+    assert remove_annotated_plus_opt(Annotated[Union[str, list[int]], 'something']) == \
+           Union[str, list[int]]
+
+    assert remove_annotated_plus_opt(Annotated[str | None, 'something']) == str
+    assert remove_annotated_plus_opt(Annotated[Union[str, None], 'something']) == str
+    assert remove_annotated_plus_opt(Annotated[Optional[str], 'something']) == str
+
+    assert remove_annotated_plus_opt(Annotated[str | list[int] | None, 'something']) == \
+           Union[str, list[int]]
+    assert remove_annotated_plus_opt(Annotated[Union[str, list[int], None], 'something']) == \
+           Union[str, list[int]]
+    assert remove_annotated_plus_opt(Annotated[Optional[Union[str, list[int]]], 'something']) == \
+           Union[str, list[int]]
+    assert remove_annotated_plus_opt(Annotated[Optional[str | list[int]],
+                                               'something']) == Union[str, list[int]]
