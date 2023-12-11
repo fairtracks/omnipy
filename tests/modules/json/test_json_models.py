@@ -19,7 +19,8 @@ from omnipy.modules.json.models import (_JsonDictOfScalarsM,
                                         JsonListModel,
                                         JsonListOfScalarsModel,
                                         JsonModel,
-                                        JsonScalarM)
+                                        JsonScalarM,
+                                        JsonScalarModel)
 
 from ..helpers.classes import CaseInfo
 
@@ -138,3 +139,9 @@ def test_error_list_of_single_dict_with_two_elements():
 def test_json_model_operations():
     a = JsonDictModel({'a': 1, 'b': 2, 'c': 3})
     a['c'] = 3
+
+    b = JsonScalarM(1)
+    assert (b + 1).contents == 2
+
+    c = JsonScalarModel(1)
+    assert (c + 1).contents == 2
