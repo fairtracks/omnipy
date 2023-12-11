@@ -63,6 +63,12 @@ hug = {git = "https://github.com/hugapi/hug.git", branch="develop"}
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.setuptools.package-data]
+"omnipy" = ["py.typed"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.yapf]
 based_on_style = "google"
 align_closing_bracket_with_visual_indent = true
