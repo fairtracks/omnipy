@@ -226,12 +226,15 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         outer_type = created_model._get_root_type(outer=True, with_args=True)
         outer_type_plain = created_model._get_root_type(outer=True, with_args=False)
 
-        if inspect.isclass(outer_type_plain) and not is_union(outer_type):
+        if inspect.isclass(outer_type_plain) or is_union(outer_type):
             for name, method_info in SPECIAL_METHODS_INFO.items():
-                if hasattr(outer_type_plain, name):
-                    setattr(created_model,
-                            name,
-                            functools.partialmethod(cls._special_method, name, method_info))
+                outer_types = get_args(outer_type) if is_union(outer_type) else [outer_type_plain]
+                for type_to_support in outer_types:
+                    if hasattr(type_to_support, name):
+                        setattr(created_model,
+                                name,
+                                functools.partialmethod(cls._special_method, name, method_info))
+                        break
 
         return created_model
 
@@ -496,12 +499,16 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
             # We can do this with some ease of mind as all the methods except '__getitem__' with
             # integer argument are supposed to possibly return a result of the same type.
-            outer_type = self.outer_type(with_args=False)
-            if outer_type is not None and isinstance(ret, outer_type):
-                try:
-                    ret = self.__class__(ret)
-                except ValidationError:
-                    pass
+            outer_type = self.outer_type(with_args=True)
+            outer_type_plain = self.outer_type()
+
+            types_to_check = get_args(outer_type) if is_union(outer_type) else [outer_type_plain]
+            for type_to_check in types_to_check:
+                if type_to_check is not None and isinstance(ret, type_to_check):
+                    try:
+                        ret = self.__class__(ret)
+                    except ValidationError:
+                        pass
         return ret
 
     def __getattr__(self, attr: str) -> Any:

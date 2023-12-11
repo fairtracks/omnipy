@@ -1109,6 +1109,27 @@ def test_model_operations_as_scalars():
     assert floor(model) == 2  # converting to other basic type removes Model
 
 
+def test_model_operations_as_union_of_scalars():
+    model = Model[int | float](1)
+
+    assert (model + 1).contents == 2
+    assert (1 + model).contents == 2
+    assert model.contents == 1
+
+    model *= 10
+    assert model.contents == 10
+
+    assert (model / 3).contents == pytest.approx(3.333333)
+    assert (model // 3).contents == 3
+    assert -model.contents == -10
+
+    assert (model % 3).contents == 1  # modulo
+    assert (model & 2).contents == 2  # bitwise AND
+    assert (model**2).contents == 100  # power
+
+    assert float(model) == 10  # float(), int(), etc always converts
+
+
 def test_model_copy():
     ...
 
