@@ -90,6 +90,17 @@
 
   - Click "OK" to save new settings
 
+#### Setting up test configurations
+
+  - From Run menu (in menubar) or configuration popup (by the triangle icon):
+    - Select "Edit Configurations..."
+      - Click "+" to add new configuration, select "Python tests"->"pytest"
+        - Name: `pytest in tests`
+        - Script path: select "tests" directory
+        - Parameters: `--mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process`
+        - Click OK
+      - Repeat for other subprojects/test modules as needed, e.g. `pytest in tests.modules` (path=`...tests/modules`)
+
 #### For automatic formatting and linting
 
 The setup for automatic formatting and linting is rather complex. The main alternative is to use 
