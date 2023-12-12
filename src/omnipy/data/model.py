@@ -273,7 +273,9 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
         assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
 
-        if isinstance(super_data[ROOT_KEY], Model):
+        if ROOT_KEY in super_data \
+                and isinstance(super_data[ROOT_KEY], Model) \
+                and not is_none_type(super_data[ROOT_KEY]):  # Consequence of MyModelMetaclass hack
             super_data[ROOT_KEY] = super_data[ROOT_KEY].to_data()
 
         super().__init__(**super_data)
