@@ -7,7 +7,7 @@ from omnipy.data.model import Model, ROOT_KEY
 from . import pd
 
 
-class PandasModel(Model[pd.DataFrame]):
+class PandasModel(Model[Model[pd.DataFrame]]):
     @classmethod
     def _parse_data(cls, data: pd.DataFrame) -> pd.DataFrame:
         cls._data_column_names_are_strings(data)
@@ -35,7 +35,7 @@ class PandasModel(Model[pd.DataFrame]):
         self.contents = pd.read_json(value).convert_dtypes()
 
 
-class PandasDataset(Dataset[PandasModel]):
+class PandasDataset(Dataset[Model[PandasModel]]):
     ...
 
 
