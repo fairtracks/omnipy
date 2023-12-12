@@ -1,7 +1,7 @@
 from collections.abc import Hashable, Iterable
 import inspect
 import locale as pkg_locale
-from types import UnionType
+from types import GenericAlias, UnionType
 from typing import (Annotated,
                     Any,
                     cast,
@@ -112,6 +112,10 @@ def is_strict_subclass(
 
 class IsDataclass(Protocol):
     __dataclass_fields__: ClassVar[dict]
+
+
+def ensure_plain_type(in_type: type | GenericAlias) -> type | GenericAlias | None | Any:
+    return get_origin(in_type) if get_args(in_type) else in_type
 
 
 def remove_annotated_plus_optional_if_present(

@@ -410,9 +410,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         root_field = cast(ModelField, cls.__fields__.get(ROOT_KEY))
         root_type = root_field.outer_type_ if outer else root_field.type_
         root_type = remove_annotated_plus_optional_if_present(root_type)
-        if get_args(root_type):
-            return root_type if with_args else get_origin(root_type)
-        return root_type
+        return root_type if with_args else ensure_plain_type(root_type)
 
     # @classmethod
     # def create_from_json(cls, data: str | tuple[str]):
@@ -484,7 +482,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             if name == '__getitem__':
                 assert len(args) == 1
                 if isinstance(args[0], int):
-                    assert self.is_nested_type()
+                    # assert self.is_nested_type()
                     # TODO: With Python 3.13 and PEP 649, reconsider the choice to not automatically
                     #       generate nested models through '__getitem__'.
                     #
@@ -504,7 +502,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
             types_to_check = get_args(outer_type) if is_union(outer_type) else [outer_type_plain]
             for type_to_check in types_to_check:
-                if type_to_check is not None and isinstance(ret, type_to_check):
+                if type_to_check is not None and isinstance(ret, ensure_plain_type(type_to_check)):
                     try:
                         ret = self.__class__(ret)
                     except ValidationError:

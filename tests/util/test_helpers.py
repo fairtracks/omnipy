@@ -3,7 +3,8 @@ from typing import Annotated, Generic, get_args, Iterator, Optional, TypeVar, Un
 
 from typing_inspect import get_generic_type
 
-from omnipy.util.helpers import (is_iterable,
+from omnipy.util.helpers import (ensure_plain_type,
+                                 is_iterable,
                                  is_optional,
                                  is_strict_subclass,
                                  is_union,
@@ -44,6 +45,11 @@ def test_do_not_transfer_generic_params_to_non_generic_cls() -> None:
     my_typed_int = my_int_cls(123)
 
     assert get_args(get_generic_type(my_typed_int)) == ()
+
+
+def test_ensure_plain_type() -> None:
+    assert ensure_plain_type(list) == list
+    assert ensure_plain_type(list[str]) == list
 
 
 def test_is_iterable() -> None:
