@@ -33,6 +33,38 @@
   - `poetry cache clear pypi --all`
 
 
+### Running tests
+
+- To run all tests, type:
+  - `pytest --mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process`
+
+- If you are repeatedly running tests on the command line, e.g.:
+  - `export PYTEST_ARGS="--mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process"`
+  - Using `zsh`, which is default shell on Mac:
+    - `pytest $=PYTEST_ARGS tests`
+  - Using `bash`:
+    - `eval pytest $PYTEST_ARGS tests`
+
+- With a specific subpackage/testmodule
+  - Using `zsh`:
+    - `pytest $=PYTEST_ARGS tests/modules/json`
+  - Using `bash`:
+    - `eval pytest $PYTEST_ARGS tests/modules/json`
+
+- With a specific test module (this test example is a mypy typing test, which is the reason for the
+  extra variables in the first place):
+  - Using `zsh`:
+    - `pytest $=PYTEST_ARGS tests/modules/json/test_json_types.yml`
+  - Using `bash`:
+    - `eval pytest $PYTEST_ARGS tests/modules/json/test_json_types.yml`
+
+- With a specific test:
+  - Using `zsh`:
+    - `pytest $=PYTEST_ARGS tests/modules/json/test_json_types.yml::test_json_scalar`
+  - Using `bash`:
+    - `eval pytest $PYTEST_ARGS tests/modules/json/test_json_types.yml::test_json_scalar`
+
+
 ### Configure PyCharm project for Omnipy
 
 - Preparation (in terminal). Note the paths to the Python and Poetry binaries:
