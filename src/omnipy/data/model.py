@@ -30,7 +30,10 @@ from pydantic.utils import lenient_isinstance, lenient_issubclass
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
 from omnipy.util.contexts import AttribHolder, LastErrorHolder
 from omnipy.util.decorators import add_callback_after_call
-from omnipy.util.helpers import is_optional, is_union, remove_annotated_plus_optional_if_present
+from omnipy.util.helpers import (ensure_plain_type,
+                                 is_optional,
+                                 is_union,
+                                 remove_annotated_plus_optional_if_present)
 
 _KeyT = TypeVar('_KeyT')
 _ValT = TypeVar('_ValT')
@@ -269,6 +272,9 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             num_root_vals += 1
 
         assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
+
+        if isinstance(super_data[ROOT_KEY], Model):
+            super_data[ROOT_KEY] = super_data[ROOT_KEY].to_data()
 
         super().__init__(**super_data)
 
