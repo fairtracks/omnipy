@@ -1059,7 +1059,7 @@ def test_model_operations_as_nested_list_no_validation_at_second_level():
     assert model.contents == [123, 234, [0, 1, 2, (0, 1, 2, 'b')]]
 
 
-def test_model_operations_as_model_nested_list_with_full_validation():
+def test_model_operations_as_nested_list_with_full_validation():
     model = Model[list[Model[list[Model[list[int]] | int]] | int]]([123, 234, [345]])
 
     model[-1] = tuple(range(3))
@@ -1131,16 +1131,16 @@ def test_model_operations_as_dict():
 
 
 def test_model_operations_as_nested_dict_no_validation_at_second_level():
-    model = Model[dict[str, dict[int, int]]]({'a': {12: 234, 13: 345}})
+    model = Model[dict[str, dict[int, int] | int]]({'a': {12: 234, 13: 345}})
 
     with pytest.raises(ValidationError):
-        model['a'] = 123
+        model['a'] = 'abc'
 
     with pytest.raises(ValidationError):
         model['a'] = None
 
     with pytest.raises(ValidationError):
-        model['a'] = [123]
+        model['a'] = ['abc']
 
     with pytest.raises(ValidationError):
         model['a'] = []
@@ -1171,46 +1171,65 @@ def test_model_operations_as_nested_dict_no_validation_at_second_level():
     assert model.contents == {'a': {14: 456, '14': '654', '15': {'a': 'b', 'c': (0, 1, 2)}}}
 
 
-#
-# def test_model_operations_as_nested_dict_no_validation_at_second_level():
-#     model = Model[dict[str, dict[int, int]]]({'a': {12: 234, 13: 345}})
-#
-#     with pytest.raises(ValidationError):
-#         model['a'] = 123
-#
-#     with pytest.raises(ValidationError):
-#         model['a'] = None
-#
-#     with pytest.raises(ValidationError):
-#         model['a'] = [123]
-#
-#     with pytest.raises(ValidationError):
-#         model['a'] = []
-#
-#     with pytest.raises(ValidationError):
-#         model['a'] = {'abc': 'bce'}
-#
-#     model['a'] = {'14': '456'}
-#     assert model.contents == ({'a': {14: 456}})
-#
-#     # model['a'] is the result of an __getitem__ and is not wrapped as a Model
-#     assert isinstance(model, Model)
-#     assert not isinstance(model, dict)
-#     assert not isinstance(model['a'], Model)
-#     assert isinstance(model['a'], dict)
-#
-#     model['a'].update({'14': '654', '15': {'a': 'b'}})
-#     assert len(model['a']) == 3
-#     assert model.contents == {'a': {14: 456, '14': '654', '15': {'a': 'b'}}}
-#
-#     # Here the model['a']|= operation is an __ior__ operation on the "parent" model object, as it
-#     # will hold the result. `model` is still a Model and validation will raise an error
-#     with pytest.raises(ValidationError):
-#         model['a'] |= {'16': 'a'}
-#
-#     # This is an __ior__ on model['a'], which is a dict, not a model
-#     model['a']['15'] |= {'c': tuple(range(3))}
-#     assert model.contents == {'a': {14: 456, '14': '654', '15': {'a': 'b', 'c': (0, 1, 2)}}}
+def test_model_operations_as_nested_dict_with_full_validation():
+    model = Model[dict[str, Model[dict[int, Model[dict[int, int]] | int] | int]]]({
+        'a': {
+            12: 234, 13: 345
+        }
+    })
+
+    with pytest.raises(ValidationError):
+        model['a'] = 'abc'
+
+    with pytest.raises(ValidationError):
+        model['a'] = None
+
+    with pytest.raises(ValidationError):
+        model['a'] = ['abc']
+
+    with pytest.raises(ValidationError):
+        model['a'] = []
+
+    with pytest.raises(ValidationError):
+        model['a'] = {'abc': 'bce'}
+
+    model['a'] = {'14': '456'}
+    assert model.to_data() == ({'a': {14: 456}})
+
+    with pytest.raises(ValidationError):
+        model['a'].update({'14': '654', '15': {'a': 'b'}})
+
+    assert len(model['a']) == 1
+    assert model.to_data() == {'a': {14: 456}}
+
+    with pytest.raises(ValidationError):
+        model['a'].update({'14': '654', '15': {'111': {1: 2}}})
+
+    model['a'].update({'14': '654', '15': {'111': 4321}})
+
+    assert len(model['a']) == 2
+    assert model.to_data() == {'a': {14: 654, 15: {111: 4321}}}
+
+    with pytest.raises(ValidationError):
+        model['a'] |= {'16': {'a': 'b'}}
+
+    model['a'] |= {'16': {'112': 5432}}
+    assert model.to_data() == {'a': {14: 654, 15: {111: 4321}, 16: {112: 5432}}}
+
+    with pytest.raises(ValidationError):
+        model['a'][15] |= {112: tuple(range(3))}
+
+    with pytest.raises(ValidationError):
+        model['a'][15] |= {'112': 'a'}
+
+    with pytest.raises(ValidationError):
+        model['a'][15] |= {'112': []}
+
+    with pytest.raises(ValidationError):
+        model['a'][15][111] = []
+
+    model['a'][15] = []
+    assert model.to_data() == {'a': {14: 654, 15: {}, 16: {112: 5432}}}
 
 
 def test_model_operations_as_scalars():
