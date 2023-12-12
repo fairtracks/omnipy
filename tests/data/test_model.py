@@ -971,6 +971,124 @@ def test_import_export_methods():
     }''')  # noqa: Q001
 
 
+def test_model_operations_as_list_simple():
+    model = Model[list[int]]()
+    assert len(model) == 0
+
+    model.append(123)
+    assert len(model) == 1
+    assert model[0] == 123
+    assert isinstance(model, Model)
+
+    model += [234, 345, 456]
+    assert len(model) == 4
+    assert model[-1] == 456
+    assert isinstance(model, Model)
+
+    assert model[1:-1].contents == [234, 345]
+    assert isinstance(model, Model)
+
+    assert tuple(reversed(model)) == (456, 345, 234, 123)
+
+    model[2] = 432
+    model[3] = '654'
+    assert model[2] == 432
+    assert model[3] == 654
+
+    with pytest.raises(ValidationError):
+        model[0] = 'bacon'
+
+    assert model[1] == 234
+
+    model[1] /= 2
+    assert model[1] == 117
+    assert isinstance(model, Model)
+
+    assert model.contents == [123, 117, 432, 654]
+    assert model.index(432) == 2
+
+    assert model.pop() == 654
+    assert len(model) == 3
+
+
+def test_model_operations_as_nested_list_no_validation_at_second_level():
+    model = Model[list[int | list[int]]]([123, 234, [345]])
+
+    with pytest.raises(ValidationError):
+        model[-1] = 'abc'
+
+    with pytest.raises(ValidationError):
+        model[-1] = None
+
+    with pytest.raises(ValidationError):
+        model[-1] = {2: 3}
+
+    with pytest.raises(ValidationError):
+        model[-1] = {}
+
+    with pytest.raises(ValidationError):
+        model[-1] = ['abc', 'bce']
+
+    model[-1] = tuple(range(3))
+    assert model.contents == [123, 234, [0, 1, 2]]
+
+    # model[-1] is the result of an __getitem__ and is not wrapped as a Model
+    assert isinstance(model, Model)
+    assert not isinstance(model, list)
+    assert not isinstance(model[-1], Model)
+    assert isinstance(model[-1], list)
+
+    model[-1].append(tuple(range(3)))
+    assert len(model[-1]) == 4
+    assert model.contents == [123, 234, [0, 1, 2, (0, 1, 2)]]
+
+    assert model[-1][-1][-1] == 2
+
+    with pytest.raises(TypeError):
+        model[-1][-1][-1] = 15
+    assert isinstance(model[-1][-1], tuple)
+    assert not isinstance(model[-1][1], Model)
+
+    # Here the model[-1] += operation is an __iadd__ operation on the "parent" model object, as it
+    # will hold the result. `model`  is still a Model and validation will raise an error
+    with pytest.raises(ValidationError):
+        model[-1] += ('a',)
+
+    # This is an __iadd__ on model[-1], which is a list, not a model
+    model[-1][3] += ('b',)
+    assert model.contents == [123, 234, [0, 1, 2, (0, 1, 2, 'b')]]
+
+
+def test_model_operations_as_model_nested_list_with_full_validation():
+    model = Model[list[Model[list[Model[list[int]] | int]] | int]]([123, 234, [345]])
+
+    model[-1] = tuple(range(3))
+    assert model.to_data() == [123, 234, [0, 1, 2]]
+
+    # model[-1] is wrapped as a Model according to nested type args
+    assert isinstance(model, Model)
+    assert not isinstance(model, list)
+    assert isinstance(model[-1], Model)
+    assert not isinstance(model[-1], list)
+
+    model[-1].append(tuple(range(3)))
+    assert len(model[-1]) == 4
+    assert model.to_data() == [123, 234, [0, 1, 2, [0, 1, 2]]]
+
+    assert model[-1][-1][-1] == 2
+
+    model[-1][-1][-1] = 15
+    assert model.to_data() == [123, 234, [0, 1, 2, [0, 1, 15]]]
+    assert not isinstance(model[-1][-1], tuple)
+    assert isinstance(model[-1][-1], Model)
+
+    with pytest.raises(ValidationError):
+        model[-1] += ('a',)
+    with pytest.raises(ValidationError):
+        model[-1][3] += ('b',)
+    assert model.to_data() == [123, 234, [0, 1, 2, [0, 1, 15]]]
+
+
 def test_model_operations_as_dict():
     model = Model[dict[str, int]]({'abc': 123})
 
@@ -1012,79 +1130,87 @@ def test_model_operations_as_dict():
     assert model == Model[dict[str, int]](other)
 
 
-def test_model_operations_as_list_simple():
-    model = Model[list[int]]()
-    assert len(model) == 0
-
-    model.append(123)
-    assert len(model) == 1
-    assert model[0] == 123
-    assert isinstance(model, Model)
-
-    model += [234, 345, 456]
-    assert len(model) == 4
-    assert model[-1] == 456
-    assert isinstance(model, Model)
-
-    assert model[1:-1].contents == [234, 345]
-    assert isinstance(model, Model)
-
-    assert tuple(reversed(model)) == (456, 345, 234, 123)
-
-    model[2] = 432
-    model[3] = '654'
-    assert model[2] == 432
-    assert model[3] == 654
+def test_model_operations_as_nested_dict_no_validation_at_second_level():
+    model = Model[dict[str, dict[int, int]]]({'a': {12: 234, 13: 345}})
 
     with pytest.raises(ValidationError):
-        model[0] = 'bacon'
-
-    assert model[1] == 234
-
-    model[1] /= 2
-    assert model[1] == 117
-    assert isinstance(model, Model)
-
-    assert model.contents == [123, 117, 432, 654]
-    assert model.index(432) == 2
-
-    assert model.pop() == 654
-    assert len(model) == 3
-
-
-def test_model_operations_as_list_no_nested_validation():
-    model = Model[list[int | list[int]]]([123, 234, [345]])
-
-    model[-1].append(tuple(range(5)))
-    assert len(model) == 3
-    assert model.contents == [123, 234, [345, (0, 1, 2, 3, 4)]]
-
-    assert model[-1][0] == 345
-
-    with pytest.raises(TypeError):
-        model[-1][1][-1] = 0
-    assert model.contents == [123, 234, [345, (0, 1, 2, 3, 4)]]
-    assert not isinstance(model[-1][1], Model)
-
-    model[-1].append('a')
-    assert model.contents == [123, 234, [345, (0, 1, 2, 3, 4), 'a']]
-
-
-def test_model_operations_as_list_nested_validation():
-    model = Model[list[Model[list[Model[list[int]] | int]] | int]]([123, 234, [345]])
-
-    model[-1].append(tuple(range(5)))
-    assert len(model) == 3
-    assert model.to_data() == [123, 234, [345, [0, 1, 2, 3, 4]]]
-
-    assert model[-1][0] == 345
-
-    model[-1][1][-1] = 0
-    assert model.to_data() == [123, 234, [345, [0, 1, 2, 3, 0]]]
-    assert isinstance(model[-1][1], Model)
+        model['a'] = 123
 
     with pytest.raises(ValidationError):
-        model[-1].append('a')
+        model['a'] = None
+
+    with pytest.raises(ValidationError):
+        model['a'] = [123]
+
+    with pytest.raises(ValidationError):
+        model['a'] = []
+
+    with pytest.raises(ValidationError):
+        model['a'] = {'abc': 'bce'}
+
+    model['a'] = {'14': '456'}
+    assert model.contents == ({'a': {14: 456}})
+
+    # model['a'] is the result of an __getitem__ and is not wrapped as a Model
+    assert isinstance(model, Model)
+    assert not isinstance(model, dict)
+    assert not isinstance(model['a'], Model)
+    assert isinstance(model['a'], dict)
+
+    model['a'].update({'14': '654', '15': {'a': 'b'}})
+    assert len(model['a']) == 3
+    assert model.contents == {'a': {14: 456, '14': '654', '15': {'a': 'b'}}}
+
+    # Here the model['a']|= operation is an __ior__ operation on the "parent" model object, as it
+    # will hold the result. `model` is still a Model and validation will raise an error
+    with pytest.raises(ValidationError):
+        model['a'] |= {'16': 'a'}
+
+    # This is an __ior__ on model['a'], which is a dict, not a model
+    model['a']['15'] |= {'c': tuple(range(3))}
+    assert model.contents == {'a': {14: 456, '14': '654', '15': {'a': 'b', 'c': (0, 1, 2)}}}
+
+
+#
+# def test_model_operations_as_nested_dict_no_validation_at_second_level():
+#     model = Model[dict[str, dict[int, int]]]({'a': {12: 234, 13: 345}})
+#
+#     with pytest.raises(ValidationError):
+#         model['a'] = 123
+#
+#     with pytest.raises(ValidationError):
+#         model['a'] = None
+#
+#     with pytest.raises(ValidationError):
+#         model['a'] = [123]
+#
+#     with pytest.raises(ValidationError):
+#         model['a'] = []
+#
+#     with pytest.raises(ValidationError):
+#         model['a'] = {'abc': 'bce'}
+#
+#     model['a'] = {'14': '456'}
+#     assert model.contents == ({'a': {14: 456}})
+#
+#     # model['a'] is the result of an __getitem__ and is not wrapped as a Model
+#     assert isinstance(model, Model)
+#     assert not isinstance(model, dict)
+#     assert not isinstance(model['a'], Model)
+#     assert isinstance(model['a'], dict)
+#
+#     model['a'].update({'14': '654', '15': {'a': 'b'}})
+#     assert len(model['a']) == 3
+#     assert model.contents == {'a': {14: 456, '14': '654', '15': {'a': 'b'}}}
+#
+#     # Here the model['a']|= operation is an __ior__ operation on the "parent" model object, as it
+#     # will hold the result. `model` is still a Model and validation will raise an error
+#     with pytest.raises(ValidationError):
+#         model['a'] |= {'16': 'a'}
+#
+#     # This is an __ior__ on model['a'], which is a dict, not a model
+#     model['a']['15'] |= {'c': tuple(range(3))}
+#     assert model.contents == {'a': {14: 456, '14': '654', '15': {'a': 'b', 'c': (0, 1, 2)}}}
 
 
 def test_model_operations_as_scalars():
