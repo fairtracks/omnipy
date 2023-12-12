@@ -121,3 +121,7 @@ defined.
   - In the PyCharm settings for the mypy plugin:
     - Select the mypy binary 
     - Select `pyproject.toml` as the mypy config file
+- In PyCharm Preferences/Settings->Editor->Inspections, uncheck the following:
+  - "Incorrect type"
+  - "Invalid type hints definitions and usages"
+  - "Missing type hinting for function definition"
