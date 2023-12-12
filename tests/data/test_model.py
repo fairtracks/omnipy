@@ -55,6 +55,11 @@ def test_init_and_data():
     assert Model[dict]((('a', 2), ('b', True))).to_data() == {'a': 2, 'b': True}
 
 
+def test_init_model_as_input():
+    assert Model[int](Model[float](4.5)).to_data() == 4
+    assert Model[tuple[int, ...]](Model[list[float]]([4.5, 2.3])).to_data() == (4, 2)
+
+
 def test_error_init():
     with pytest.raises(TypeError):
         assert Model[tuple[int, ...]](12, 2, 4).to_data() == 12
