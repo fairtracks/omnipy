@@ -577,5 +577,5 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     def __eq__(self, other: object) -> bool:
         return isinstance(other, Model) \
             and self.__class__ == other.__class__ \
-            and self.contents == other.contents \
+            and all_equals(self.contents, other.contents) \
             and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
