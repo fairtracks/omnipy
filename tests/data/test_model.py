@@ -731,8 +731,9 @@ def test_model_union_none_known_issue():
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason='Current pydantic v1 hack requires nested types like list and dict to explicitly'
-    'include Optional in their arguments to support parsing of None.')
-def test_nested_list_and_dict_of_none_model_known_issue():
+    'include Optional in their arguments to support parsing of None when the level of '
+    'nesting is 2 or more')
+def test_doubly_nested_list_and_dict_of_none_model_known_issue():
     class NoneModel(Model[NoneType]):
         ...
 
@@ -835,10 +836,6 @@ def test_nested_model_classes_inner_generic_none_as_default() -> None:
     assert OuterMaybeNumberModel().contents == MaybeNumberModel(None)
 
 
-# First failing test of the more complex scenarios related to pydantic issue:
-# https://github.com/pydantic/pydantic/issues/3836
-# Partial workaround in methods Model._propagate_allow_none_from_model() and
-# Model._parse_none_value_with_root_type_if_model() fixed this test
 def test_nested_model_classes_inner_optional_generic_none_as_default() -> None:
     class MaybeNumberModel(Model[Optional[int]]):
         ...
@@ -854,10 +851,6 @@ def test_nested_model_classes_inner_optional_generic_none_as_default() -> None:
     assert OuterMaybeNumberModel().contents == MaybeNumberModel(None)
 
 
-# Second failing test of the more complex scenarios related to pydantic issue:
-# https://github.com/pydantic/pydantic/issues/3836
-# Partial workaround in methods Model._propagate_allow_none_from_model() and
-# Model._parse_none_value_with_root_type_if_model() fixed this test
 def test_union_nested_model_classes_inner_optional_generic_none_as_default() -> None:
     class MaybeNumberModel(Model[Optional[int]]):
         ...
@@ -903,7 +896,8 @@ Known issue that popped up in omnipy.modules.json.models. Might be solved by pyd
 Dropping JsonBaseModel (here: BaseModel) is one workaround as it (in contrast to JsonBaseDataset)
 does not seem to be needed.
 """)
-def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_default() -> None:
+def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_default_known_issue(
+) -> None:
     MaybeNumber: TypeAlias = Optional[int]
 
     BaseT = TypeVar('BaseT', bound=list | 'FullModel' | MaybeNumber)
