@@ -14,6 +14,7 @@ from omnipy.modules.json.models import (_JsonDictOfScalarsM,
                                         JsonCustomListModel,
                                         JsonDictM,
                                         JsonDictModel,
+                                        JsonDictOfDictsModel,
                                         JsonDictOfScalarsModel,
                                         JsonListM,
                                         JsonListModel,
@@ -145,3 +146,19 @@ def test_json_model_operations():
 
     c = JsonScalarModel(1)
     assert (c + 1).contents == 2
+
+
+def test_json_known_bug():
+    c = JsonDictOfDictsModel({'a': {'b': {'c': 123}}})
+
+    with pytest.raises(ValidationError):
+        c['a'] = [123, 434]
+
+    assert c.to_data() == {'a': {'b': {'c': 123}}}
+
+    c = JsonDictOfDictsModel({'a': {'b': {'c': 123}}})
+
+    # with pytest.raises(ValidationError):
+    c['a'] = []
+
+    assert c.to_data() == {'a': {}}
