@@ -1,6 +1,8 @@
+from copy import copy
 from types import NoneType
 from typing import Annotated, Generic, get_args, Iterator, Optional, TypeVar, Union
 
+import pytest
 from typing_inspect import get_generic_type
 
 from omnipy.util.helpers import (ensure_plain_type,
@@ -9,6 +11,7 @@ from omnipy.util.helpers import (ensure_plain_type,
                                  is_strict_subclass,
                                  is_union,
                                  remove_annotated_plus_optional_if_present,
+                                 RestorableContents,
                                  transfer_generic_args_to_cls)
 
 T = TypeVar('T')
@@ -209,3 +212,59 @@ def test_remove_annotated_optional_if_present() -> None:
            Union[str, list[int]]
     assert remove_annotated_plus_opt(Annotated[Optional[str | list[int]],
                                                'something']) == Union[str, list[int]]
+
+
+def test_restorable_contents():
+    contents = RestorableContents()
+
+    my_list = [1, 3, 5]
+    my_dict = {1: 2, 3: 4}
+    my_other_list = [my_list]
+
+    assert contents.has_snapshot() is False
+
+    with pytest.raises(AssertionError):
+        contents.get_last_snapshot()
+
+    with pytest.raises(AssertionError):
+        contents.last_snapshot_taken_of_same_obj(my_list)
+
+    with pytest.raises(AssertionError):
+        contents.differs_from_last_snapshot(my_list)
+
+    contents.take_snapshot(my_list)
+    assert contents.has_snapshot() is True
+    assert contents.last_snapshot_taken_of_same_obj(my_list) is True
+    assert contents.differs_from_last_snapshot(my_list) is False
+
+    assert contents.last_snapshot_taken_of_same_obj(copy(my_list)) is False
+    assert contents.differs_from_last_snapshot(copy(my_list)) is False
+
+    my_list.append(7)
+    assert my_list == [1, 3, 5, 7]
+    assert my_other_list == [[1, 3, 5, 7]]
+    assert contents.last_snapshot_taken_of_same_obj(my_list) is True
+    assert contents.differs_from_last_snapshot(my_list) is True
+
+    my_old_list = my_list
+    my_list = contents.get_last_snapshot()
+    assert my_list == [1, 3, 5]
+    assert my_old_list == [1, 3, 5, 7]
+    assert my_other_list == [[1, 3, 5, 7]]
+
+    assert my_list is not my_old_list  # the snapshot is a (preferably deep) copy of the old object
+    assert contents.last_snapshot_taken_of_same_obj(my_list) is False
+    assert contents.differs_from_last_snapshot(my_list) is False
+
+    my_dict[5] = my_list
+    assert my_dict == {1: 2, 3: 4, 5: [1, 3, 5]}
+
+    assert contents.last_snapshot_taken_of_same_obj(my_dict) is False
+    contents.take_snapshot(my_dict)
+    assert contents.last_snapshot_taken_of_same_obj(my_dict) is True
+    assert contents.differs_from_last_snapshot(my_dict) is False
+
+    del my_dict[5]
+    assert my_dict == {1: 2, 3: 4}
+    assert contents.last_snapshot_taken_of_same_obj(my_dict) is True
+    assert contents.differs_from_last_snapshot(my_dict) is True

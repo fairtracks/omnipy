@@ -1,4 +1,5 @@
 from collections.abc import Hashable, Iterable
+from copy import copy, deepcopy
 import inspect
 import locale as pkg_locale
 from types import GenericAlias, UnionType
@@ -9,11 +10,13 @@ from typing import (Annotated,
                     get_args,
                     get_origin,
                     Mapping,
+                    NamedTuple,
                     Protocol,
                     Type,
                     TypeVar,
                     Union)
 
+from pydantic import ValidationError
 from typing_inspect import get_generic_bases, is_generic_type
 
 from omnipy.api.typedefs import LocaleType
@@ -140,3 +143,38 @@ def remove_annotated_plus_optional_if_present(
             else:
                 type_or_class = Union[args[:-1]]
     return type_or_class
+
+
+class Snapshot(NamedTuple):
+    id: int
+    obj_copy: object
+
+
+class RestorableContents:
+    def __init__(self):
+        self._last_snapshot: Snapshot | None = None
+
+    def has_snapshot(self) -> bool:
+        return self._last_snapshot is not None
+
+    def take_snapshot(self, obj: object):
+        try:
+            snapshot_obj = deepcopy(obj)
+        except (TypeError, ValueError, ValidationError):
+            snapshot_obj = copy(obj)
+        self._last_snapshot = Snapshot(id(obj), snapshot_obj)
+
+    def _assert_not_empty(self):
+        assert self.has_snapshot(), 'No snapshot has been taken yet'
+
+    def get_last_snapshot(self) -> object:
+        self._assert_not_empty()
+        return self._last_snapshot.obj_copy
+
+    def last_snapshot_taken_of_same_obj(self, obj: object) -> bool:
+        self._assert_not_empty()
+        return self._last_snapshot.id == id(obj)
+
+    def differs_from_last_snapshot(self, obj: object) -> bool:
+        self._assert_not_empty()
+        return not all_equals(self._last_snapshot.obj_copy, obj)
