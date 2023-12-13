@@ -98,6 +98,17 @@ def is_optional(cls_or_type: type | UnionType | None | object) -> bool:
     return is_union(cls_or_type) and type(None) in get_args(cls_or_type)
 
 
+def all_equals(first, second) -> bool:
+    equals = first == second
+    if is_iterable(equals):
+        if hasattr(equals, 'all') and callable(getattr(equals, 'all')):
+            return equals.all()
+        else:
+            return all(equals)
+    else:
+        return equals
+
+
 def is_strict_subclass(
         __cls: type,
         __class_or_tuple: type | UnionType | tuple[type | UnionType | tuple[Any, ...], ...]
