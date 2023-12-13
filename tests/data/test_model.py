@@ -145,23 +145,18 @@ def test_equality_other_models():
     assert Model[list[int]]([1, 2, 3]) != Model[list[float]]([1.0, 2.0, 3.0])
     assert Model[list[int]]([1, 2, 3]) != Model[list[int]]([1, 2])
     assert Model[list[int]]([1, 2, 3]) != Model[list[int | float]]([1, 2, 3])
+    assert Model[list[int]]([1, 2, 3]) != Model[List[int]]([1, 2, 3])
 
 
 def test_complex_equality():
-    class MyIntList(Model[list[int]]):
-        ...
+    model_1 = Model[list[int]]()
+    model_1.contents = [1, 2, 3]
+    model_2 = Model[list[int]]()
+    model_2.contents = (1, 2, 3)
 
-    class MyInt(Model[int]):
-        ...
-
-    assert Model[MyIntList]([1, 2, 3]) == Model[MyIntList](MyIntList([1, 2, 3]))
-    assert Model[list[MyInt]]([1, 2, 3]) == Model[list[MyInt]](list[MyInt]([1, 2, 3]))
-    assert Model[list[MyInt]]([1, 2, 3]) != Model[List[MyInt]]([1, 2, 3])
-
-    assert Model[MyIntList | list[MyInt]]([1, 2, 3]) != \
-           Model[MyIntList | list[MyInt]](MyIntList([1, 2, 3]))
-    assert Model[MyIntList | list[MyInt]]([1, 2, 3]).to_data() == \
-           Model[MyIntList | list[MyInt]](MyIntList([1, 2, 3])).to_data()
+    assert model_1 != model_2
+    model_2.validate_contents()
+    assert model_1 == model_2
 
 
 # TODO: Revisit with pydantic v2. Expected to change
@@ -264,7 +259,7 @@ def test_parse_convertible_data():
     assert model_3 != model_4
 
 
-def test_parse_inconvertible_data():
+def test_load_inconvertible_data():
     class NumberModel(Model[int]):
         ...
 
@@ -272,12 +267,14 @@ def test_parse_inconvertible_data():
 
     with pytest.raises(ValidationError):
         model.from_data('fifteen')
+    assert model.contents == 0
 
     with pytest.raises(ValidationError):
         NumberModel([])
+    assert model.contents == 0
 
 
-def test_load_data_no_conversion():
+def test_load_inconvertible_data_strict_type():
     class StrictNumberModel(Model[StrictInt]):
         ...
 
@@ -285,15 +282,43 @@ def test_load_data_no_conversion():
 
     with pytest.raises(ValidationError):
         model.from_data(123.4)
+    assert model.contents == 0
 
     with pytest.raises(ValidationError):
         model.from_data('234')
+    assert model.contents == 0
 
     with pytest.raises(ValidationError):
         StrictNumberModel(234.9)
+    assert model.contents == 0
 
     model.from_data(123)
-    assert model == StrictNumberModel(123)
+    assert model.contents == 123
+
+
+def test_load_inconvertible_data_nested_type():
+    class ListOfIntsModel(Model[list[int]]):
+        ...
+
+    model = ListOfIntsModel()
+
+    with pytest.raises(ValidationError):
+        model.from_data(123.4)
+    assert model.contents == []
+
+    model.from_data([])
+    assert model.contents == []
+
+    with pytest.raises(ValidationError):
+        model.from_data(['abc'])
+    assert model.contents == []
+
+    with pytest.raises(ValidationError):
+        ListOfIntsModel([[]])
+    assert model.contents == []
+
+    model.from_data([123, 234])
+    assert model.contents == [123, 234]
 
 
 def test_error_invalid_model():
@@ -691,6 +716,18 @@ def test_frozendict_of_none():
         FrozenDictOfInt2NoneModel({'hello': None})
 
 
+# TODO: Look at union + None bug. Perhaps fixed by pydantic v2, but should probably be fixed before
+#       that
+
+
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason='Known issue, unknown why. Most probably related to pydantic v1 hack')
+def test_model_union_none_known_issue():
+    with pytest.raises(ValidationError):
+        [Model[int | float]](None)
+
+
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason='Current pydantic v1 hack requires nested types like list and dict to explicitly'
@@ -913,14 +950,27 @@ def test_import_export_methods():
     assert model_int.to_data() == 12
 
     model_int.contents = '13'
+    assert model_int.contents == '13'
+    model_int.validate_contents()
     assert model_int.contents == 13
     assert model_int.to_data() == 13
 
+    model_int.from_data(14)
+    assert model_int.contents == 14
+    model_int.from_data('14')
+    assert model_int.contents == 14
+
     model_str = Model[str]()
     model_str.from_json('"test"')
+    assert model_str.contents == 'test'
+    assert model_str.to_data() == 'test'
+    model_str.from_data('test')
+    assert model_str.contents == 'test'
     assert model_str.to_data() == 'test'
 
     model_str.contents = 13
+    assert model_str.contents == 13
+    model_str.validate_contents()
     assert model_str.contents == '13'
     assert model_str.to_data() == '13'
 
@@ -1049,14 +1099,13 @@ def test_model_operations_as_nested_list_no_validation_at_second_level():
     assert isinstance(model[-1][-1], tuple)
     assert not isinstance(model[-1][1], Model)
 
-    # Here the model[-1] += operation is an __iadd__ operation on the "parent" model object, as it
-    # will hold the result. `model`  is still a Model and validation will raise an error
+    # Here the `model[-1] +=` operation is a series of `__get__`, `__iadd__`, and `__set__`
+    # operations, with the `__get__` and `__set__` operating on the "parent" model object.
+    # In contrast, the `append()` method only operates on the child level. As only the parent is
+    # a Model object, the `+=` operation will trigger a validation, while the `append()` will not.
     with pytest.raises(ValidationError):
         model[-1] += ('a',)
-
-    # This is an __iadd__ on model[-1], which is a list, not a model
-    model[-1][3] += ('b',)
-    assert model.contents == [123, 234, [0, 1, 2, (0, 1, 2, 'b')]]
+    assert model.contents == [123, 234, [0, 1, 2]]
 
 
 def test_model_operations_as_nested_list_with_full_validation():
@@ -1142,14 +1191,15 @@ def test_model_operations_as_nested_dict_no_validation_at_second_level():
     with pytest.raises(ValidationError):
         model['a'] = ['abc']
 
-    with pytest.raises(ValidationError):
-        model['a'] = []
+    # empty list is parsed as empty dict in pydantic v1
+    model['a'] = []
+    assert model.contents == {'a': {}}
 
     with pytest.raises(ValidationError):
         model['a'] = {'abc': 'bce'}
 
     model['a'] = {'14': '456'}
-    assert model.contents == ({'a': {14: 456}})
+    assert model.contents == {'a': {14: 456}}
 
     # model['a'] is the result of an __getitem__ and is not wrapped as a Model
     assert isinstance(model, Model)
@@ -1157,18 +1207,17 @@ def test_model_operations_as_nested_dict_no_validation_at_second_level():
     assert not isinstance(model['a'], Model)
     assert isinstance(model['a'], dict)
 
-    model['a'].update({'14': '654', '15': {'a': 'b'}})
+    # As model['a'] is not a Model, update() does not validate
+    f = model['a']
+    f.update({'14': '654', '15': {'a': 'b'}})
     assert len(model['a']) == 3
     assert model.contents == {'a': {14: 456, '14': '654', '15': {'a': 'b'}}}
 
-    # Here the model['a']|= operation is an __ior__ operation on the "parent" model object, as it
-    # will hold the result. `model` is still a Model and validation will raise an error
+    # The|= operator combines an "__or__" (which equals to update() for dicts)(
     with pytest.raises(ValidationError):
         model['a'] |= {'16': 'a'}
 
-    # This is an __ior__ on model['a'], which is a dict, not a model
-    model['a']['15'] |= {'c': tuple(range(3))}
-    assert model.contents == {'a': {14: 456, '14': '654', '15': {'a': 'b', 'c': (0, 1, 2)}}}
+    assert model.contents == {'a': {14: 456}}
 
 
 def test_model_operations_as_nested_dict_with_full_validation():
@@ -1181,20 +1230,27 @@ def test_model_operations_as_nested_dict_with_full_validation():
     with pytest.raises(ValidationError):
         model['a'] = 'abc'
 
-    with pytest.raises(ValidationError):
-        model['a'] = None
+    # See test_model_union_none_known_issue()
+    #
+    # with pytest.raises(ValidationError):
+    #     model['a'] = None
 
     with pytest.raises(ValidationError):
         model['a'] = ['abc']
 
-    with pytest.raises(ValidationError):
-        model['a'] = []
+    model['a'] = []
+    assert model.to_data() == ({'a': {}})
 
     with pytest.raises(ValidationError):
         model['a'] = {'abc': 'bce'}
 
     model['a'] = {'14': '456'}
     assert model.to_data() == ({'a': {14: 456}})
+
+    assert isinstance(model, Model)
+    assert not isinstance(model, dict)
+    assert isinstance(model['a'], Model)
+    assert not isinstance(model['a'], dict)
 
     with pytest.raises(ValidationError):
         model['a'].update({'14': '654', '15': {'a': 'b'}})

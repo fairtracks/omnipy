@@ -23,17 +23,19 @@ from pydantic import Protocol as pydantic_protocol
 from pydantic import root_validator, ValidationError
 from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
-from pydantic.main import ModelMetaclass
+from pydantic.main import ModelMetaclass, validate_model
 from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass
 
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
 from omnipy.util.contexts import AttribHolder, LastErrorHolder
 from omnipy.util.decorators import add_callback_after_call
-from omnipy.util.helpers import (ensure_plain_type,
+from omnipy.util.helpers import (all_equals,
+                                 ensure_plain_type,
                                  is_optional,
                                  is_union,
-                                 remove_annotated_plus_optional_if_present)
+                                 remove_annotated_plus_optional_if_present,
+                                 RestorableContents)
 
 _KeyT = TypeVar('_KeyT')
 _ValT = TypeVar('_ValT')
@@ -53,6 +55,9 @@ def generate_qualname(cls_name: str, model: Any) -> str:
         if m_module and place_module(m_module) != STDLIB else ''
     fully_qual_model_name = f'{m_module_prefix}{display_as_type(model)}'
     return f'{cls_name}[{fully_qual_model_name}]'
+
+
+_restorable_content_cache: dict[int, RestorableContents] = {}
 
 
 class MyModelMetaclass(ModelMetaclass):
@@ -118,7 +123,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     class Config:
         arbitrary_types_allowed = True
         validate_all = True
-        validate_assignment = True
+        # validate_assignment = True
         smart_union = True
         # json_loads = orjson.loads
         # json_dumps = orjson_dumps
@@ -280,8 +285,14 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
         super().__init__(**super_data)
 
+        self._get_restorable_contents().take_snapshot(self.contents)  # initial snapshot
+
         if not self.__class__.__doc__:
             self._set_standard_field_description()
+
+    def __del__(self):
+        if id(self) in _restorable_content_cache:
+            del _restorable_content_cache[id(self)]
 
     @staticmethod
     def _raise_no_model_exception() -> None:
@@ -313,8 +324,25 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         else:
             return super().validate(value)
 
-    def validate_contents(self):
-        self.contents = self.contents
+    def validate_contents(self) -> None:
+        self._validate_and_set_contents(self.contents)
+
+    def _validate_and_set_contents(self, new_contents: RootT) -> None:
+        self.contents = self._validate_contents_from_value(new_contents)
+        self._get_restorable_contents().take_snapshot(self.contents)  # snapshot of last validated
+
+    def _validate_contents_from_value(self, value: RootT) -> RootT:
+        if isinstance(value, Model) and not is_none_type(value):
+            value = value.to_data()
+        values, fields_set, validation_error = validate_model(self.__class__, {ROOT_KEY: value})
+        if validation_error:
+            raise validation_error
+        return values[ROOT_KEY]
+
+    def _get_restorable_contents(self):
+        if not id(self) in _restorable_content_cache:
+            _restorable_content_cache[id(self)] = RestorableContents()
+        return _restorable_content_cache.get(id(self))
 
     @classmethod
     def _parse_data(cls, data: RootT) -> Any:
@@ -391,8 +419,8 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     def to_data(self) -> Any:
         return self.dict()[ROOT_KEY]
 
-    def from_data(self, value: Any) -> None:
-        self.contents = value
+    def from_data(self, value: object) -> None:
+        self._validate_and_set_contents(value)
 
     def to_json(self, pretty=False) -> str:
         json_content = self.json()
@@ -403,7 +431,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
     def from_json(self, json_contents: str) -> None:
         new_model = self.parse_raw(json_contents, proto=pydantic_protocol.json)
-        self._set_contents_without_validation(new_model)
+        self.contents = new_model.contents
 
     def inner_type(self, with_args: bool = False) -> type | None:
         return self.__class__._get_root_type(outer=False, with_args=with_args)
@@ -432,12 +460,6 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     #
     # def __reduce__(self):
     #     return self.__class__.create_from_json, (self.to_json(),)
-
-    def _set_contents_without_validation(self, contents: RootT) -> None:
-        validate_assignment = self.__config__.validate_assignment
-        self.__config__.validate_assignment = False
-        self.contents = contents.contents
-        self.__config__.validate_assignment = validate_assignment
 
     @classmethod
     def to_json_schema(cls, pretty=False) -> str:
@@ -475,9 +497,30 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         method = self._getattr_from_contents(name)
 
         if info.state_changing:
-            with AttribHolder(self, 'contents', copy_attr=True):
+            restorable = self._get_restorable_contents()
+            if restorable.has_snapshot() \
+                    and restorable.last_snapshot_taken_of_same_obj(self.contents) \
+                    and restorable.differs_from_last_snapshot(self.contents):
+
+                # Current contents not validated
+                reset_contents_to_last_snapshot = AttribHolder(
+                    self, 'contents', restorable.get_last_snapshot(), reset_to_other=True)
+                with reset_contents_to_last_snapshot:
+                    validated_contents = self._validate_contents_from_value(self.contents)
+
+                reset_contents_to_validated_prev = AttribHolder(
+                    self, 'contents', validated_contents, reset_to_other=True)
+                reset_solution = reset_contents_to_validated_prev
+            else:
+                reset_contents_to_prev = AttribHolder(self, 'contents', copy_attr=True)
+                reset_solution = reset_contents_to_prev
+
+            with reset_solution:
                 ret = method(*args, **kwargs)
-                self.validate_contents()
+                needs_validation = restorable.differs_from_last_snapshot(self.contents) \
+                    if restorable.has_snapshot() else True
+                if needs_validation:
+                    self.validate_contents()
         else:
             ret = method(*args, **kwargs)
 
@@ -521,7 +564,8 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     def __getattr__(self, attr: str) -> Any:
         ret = self._getattr_from_contents(attr)
         if callable(ret):
-            ret = add_callback_after_call(ret, self.validate_contents)
+            contents_holder = AttribHolder(self, 'contents', copy_attr=True)
+            ret = add_callback_after_call(ret, self.validate_contents, with_context=contents_holder)
         return ret
 
     def _getattr_from_contents(self, attr):
