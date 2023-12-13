@@ -1,4 +1,4 @@
-from contextlib import AbstractContextManager
+from contextlib import AbstractContextManager, contextmanager
 from copy import deepcopy
 
 from omnipy.util.helpers import all_equals
@@ -84,6 +84,11 @@ class AttribHolder(AbstractContextManager):
 
         if self._store_prev_attr:
             self._prev_value = None
+
+
+@contextmanager
+def nothing(*args, **kwds):
+    yield None
 
 
 class PrintExceptionContext(AbstractContextManager):

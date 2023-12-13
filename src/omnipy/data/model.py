@@ -28,7 +28,7 @@ from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass
 
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
-from omnipy.util.contexts import AttribHolder, LastErrorHolder
+from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
 from omnipy.util.decorators import add_callback_after_call
 from omnipy.util.helpers import (all_equals,
                                  ensure_plain_type,
@@ -285,7 +285,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
         super().__init__(**super_data)
 
-        self._get_restorable_contents().take_snapshot(self.contents)  # initial snapshot
+        self._take_snapshot_of_validated_contents()  # initial snapshot
 
         if not self.__class__.__doc__:
             self._set_standard_field_description()
@@ -329,7 +329,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
     def _validate_and_set_contents(self, new_contents: RootT) -> None:
         self.contents = self._validate_contents_from_value(new_contents)
-        self._get_restorable_contents().take_snapshot(self.contents)  # snapshot of last validated
+        self._take_snapshot_of_validated_contents()
 
     def _validate_contents_from_value(self, value: RootT) -> RootT:
         if isinstance(value, Model) and not is_none_type(value):
@@ -343,6 +343,16 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         if not id(self) in _restorable_content_cache:
             _restorable_content_cache[id(self)] = RestorableContents()
         return _restorable_content_cache.get(id(self))
+
+    def _take_snapshot_of_validated_contents(self):
+        interactive_mode = self._is_interactive_mode()
+        if interactive_mode:
+            self._get_restorable_contents().take_snapshot(self.contents)
+
+    def _is_interactive_mode(self):
+        from omnipy import runtime
+        interactive_mode = runtime.config.data.interactive_mode if runtime else True
+        return interactive_mode
 
     @classmethod
     def _parse_data(cls, data: RootT) -> Any:
@@ -498,27 +508,33 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
         if info.state_changing:
             restorable = self._get_restorable_contents()
-            if restorable.has_snapshot() \
-                    and restorable.last_snapshot_taken_of_same_obj(self.contents) \
-                    and restorable.differs_from_last_snapshot(self.contents):
+            if self._is_interactive_mode():
+                if restorable.has_snapshot() \
+                        and restorable.last_snapshot_taken_of_same_obj(self.contents) \
+                        and restorable.differs_from_last_snapshot(self.contents):
 
-                # Current contents not validated
-                reset_contents_to_last_snapshot = AttribHolder(
-                    self, 'contents', restorable.get_last_snapshot(), reset_to_other=True)
-                with reset_contents_to_last_snapshot:
-                    validated_contents = self._validate_contents_from_value(self.contents)
+                    # Current contents not validated
+                    reset_contents_to_last_snapshot = AttribHolder(
+                        self, 'contents', restorable.get_last_snapshot(), reset_to_other=True)
+                    with reset_contents_to_last_snapshot:
+                        validated_contents = self._validate_contents_from_value(self.contents)
 
-                reset_contents_to_validated_prev = AttribHolder(
-                    self, 'contents', validated_contents, reset_to_other=True)
-                reset_solution = reset_contents_to_validated_prev
+                    reset_contents_to_validated_prev = AttribHolder(
+                        self, 'contents', validated_contents, reset_to_other=True)
+                    reset_solution = reset_contents_to_validated_prev
+                else:
+                    reset_contents_to_prev = AttribHolder(self, 'contents', copy_attr=True)
+                    reset_solution = reset_contents_to_prev
             else:
-                reset_contents_to_prev = AttribHolder(self, 'contents', copy_attr=True)
-                reset_solution = reset_contents_to_prev
+                reset_solution = nothing()
 
             with reset_solution:
                 ret = method(*args, **kwargs)
-                needs_validation = restorable.differs_from_last_snapshot(self.contents) \
-                    if restorable.has_snapshot() else True
+                if self._is_interactive_mode():
+                    needs_validation = restorable.differs_from_last_snapshot(self.contents) \
+                        if restorable.has_snapshot() else True
+                else:
+                    needs_validation = True
                 if needs_validation:
                     self.validate_contents()
         else:
@@ -565,7 +581,8 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         ret = self._getattr_from_contents(attr)
         if callable(ret):
             contents_holder = AttribHolder(self, 'contents', copy_attr=True)
-            ret = add_callback_after_call(ret, self.validate_contents, with_context=contents_holder)
+            context = contents_holder if self._is_interactive_mode() else nothing()
+            ret = add_callback_after_call(ret, self.validate_contents, with_context=context)
         return ret
 
     def _getattr_from_contents(self, attr):
