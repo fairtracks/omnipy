@@ -307,7 +307,8 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         of the pydantic API and not the Omnipy API.
         """
         if isinstance(value, Model):
-            with AttribHolder(value, '__iter__', GenericModel.__iter__, on_class=True):
+            with AttribHolder(
+                    value, '__iter__', GenericModel.__iter__, switch_to_other=True, on_class=True):
                 return super().validate(value)
         else:
             return super().validate(value)
