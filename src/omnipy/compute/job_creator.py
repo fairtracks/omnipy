@@ -1,4 +1,5 @@
 from abc import ABCMeta
+from contextlib import AbstractContextManager
 from datetime import datetime
 
 from omnipy.api.protocols.private.compute.job_creator import IsJobCreator
@@ -6,7 +7,7 @@ from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.public.config import IsJobConfig
 
 
-class JobCreator:
+class JobCreator(AbstractContextManager):
     def __init__(self) -> None:
         self._engine: IsEngine | None = None
         self._config: IsJobConfig | None = None

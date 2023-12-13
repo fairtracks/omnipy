@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import datetime
 from functools import update_wrapper
@@ -22,7 +23,7 @@ from omnipy.modules.prefect import generate_slug
 from omnipy.util.callable_decorator import callable_decorator_cls
 
 
-class MockJobCreator:
+class MockJobCreator(AbstractContextManager):
     def __init__(self):
         self.engine: IsEngine | None = None
         self.nested_context_level = 0
