@@ -476,17 +476,23 @@ def case_json_dict_on_top() -> CaseInfo:
 
         err_d_dict_of_dicts_none: None = b_none
         err_d_dict_of_dicts_str: str = b_str
+        d_dict_of_dicts_empty_dict: dict[str, JS] = field(default_factory=lambda: {})
         err_d_dict_of_dicts_dict_of_none: dict[str, None] = \
             field(default_factory=lambda: {'a': b_none})
         err_d_dict_of_dicts_one_level: dict[str, JS] = field(default_factory=lambda: dict(b_dict))
         d_dict_of_dicts: dict[str, dict[str, JS]] = \
-            field(default_factory=lambda: {'a': dict(b_dict), 'b': dict(b_dict)})
+            field(default_factory=lambda: {'a': {}, 'b': dict(b_dict)})
+        # Orig: err_d_dict_of_dicts_with_empty_list_at_level_two. Due to parsing to dict (v1)
+        d_dict_of_dicts_with_empty_list_at_level_two: dict[str, dict[str, JS] | list[JS]] = \
+            field(default_factory=lambda: {'a': {}, 'b': dict(b_dict), 'c': []})
         err_d_dict_of_dicts_with_list_at_level_two: dict[str, dict[str, JS] | list[JS]] = \
-            field(default_factory=lambda: {'a': dict(b_dict), 'b': list(b_list)})
+            field(default_factory=lambda: {'a': {}, 'b': dict(b_dict), 'c': list(b_list)})
         err_d_dict_of_dicts_with_scalars_at_level_two: dict[str, JS | dict[str, JS]] = \
-            field(default_factory=lambda: {'a': b_str, 'b': dict(b_dict)})
-        d_dict_of_dicts_three_levels: dict[str, dict[str, JS | list[JS]]] = \
-            field(default_factory=lambda: {'a': dict(b_dict), 'b': {'x': list(b_list)}})
+            field(default_factory=lambda: {'a': b_str, 'b': {}, 'c': dict(b_dict)})
+        d_dict_of_dicts_three_levels: dict[str, dict[str, JS | list[JS] | dict[str, JS]]] = \
+            field(default_factory=lambda: {'a': dict(b_dict),
+                                           'b': {'w': [], 'x': list(b_list),
+                                                 'y': {}, 'z': dict(b_dict)}})
 
         #
         # JsonDictOfDictsOfScalarsModel
@@ -494,18 +500,28 @@ def case_json_dict_on_top() -> CaseInfo:
 
         err_d_dict_of_dicts_of_scalars_none: None = b_none
         err_d_dict_of_dicts_of_scalars_bool: bool = b_bool
+        d_dict_of_dicts_of_scalars_empty_dict: dict[str, JS] = field(default_factory=lambda: {})
         err_d_dict_of_dicts_of_scalars_dict_of_none: dict[str, None] = \
             field(default_factory=lambda: {'a': b_none})
         err_d_dict_of_dicts_of_scalars_one_level: dict[str, JS] = \
             field(default_factory=lambda: dict(b_dict))
         d_dict_of_dicts_of_scalars: dict[str, dict[str, JS]] = \
-            field(default_factory=lambda: {'a': dict(b_dict), 'b': dict(b_dict)})
-        err_d_dict_of_dicts_of_scalars_with_list: dict[str, dict[str, JS] | list[JS]] = \
-            field(default_factory=lambda: {'a': dict(b_dict), 'b': list(b_list)})
-        err_d_dict_of_dicts_of_scalars_with_scalars: dict[str, JS | dict[str, JS]] = \
-            field(default_factory=lambda: {'a': b_int, 'b': dict(b_dict)})
-        err_d_dict_of_dicts_of_scalars_three_levels: dict[str, dict[str, JS | list[JS]]] = \
-            field(default_factory=lambda: {'a': dict(b_dict), 'b': {'x': list(b_list)}})
+            field(default_factory=lambda: {'a': {}, 'b': dict(b_dict)})
+        # Orig: d_dict_of_dicts_of_scalars_with_empty_list_at_level_two. Due to parsing to dict (v1)
+        d_dict_of_dicts_of_scalars_with_empty_list_at_level_two: \
+            dict[str, dict[str, JS] | list[JS]] = \
+            field(default_factory=lambda: {'a': {}, 'b': dict(b_dict), 'c': []})
+        err_d_dict_of_dicts_of_scalars_with_list_at_level_two: \
+            dict[str, dict[str, JS] | list[JS]] = \
+            field(default_factory=lambda: {'a': {}, 'b': dict(b_dict), 'c': list(b_list)})
+        err_d_dict_of_dicts_of_scalars_with_scalars_at_level_two: dict[str, JS | dict[str, JS]] = \
+            field(default_factory=lambda: {'a': b_str, 'b': {}, 'c': dict(b_dict)})
+        err_d_dict_of_dicts_of_scalars_three_levels_empty_dict: \
+            dict[str, dict[str, JS | dict[str, JS]]] = \
+            field(default_factory=lambda: {'a': dict(b_dict), 'b': {'x': {}}})
+        err_d_dict_of_dicts_of_scalars_three_levels_dict: \
+            dict[str, dict[str, JS | dict[str, JS]]] = \
+            field(default_factory=lambda: {'a': dict(b_dict), 'b': {'x': dict(b_dict)}})
 
     return CaseInfo(
         name='test_json_dict_on_top',
