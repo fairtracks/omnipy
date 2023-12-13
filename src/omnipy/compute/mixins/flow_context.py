@@ -1,3 +1,4 @@
+from contextlib import AbstractContextManager
 from datetime import datetime
 
 from omnipy.api.protocols.private.compute.mixins import IsNestedContext
@@ -10,7 +11,7 @@ class FlowContextJobMixin:
 
     @property
     def flow_context(self) -> IsNestedContext:
-        class FlowContext:
+        class FlowContext(AbstractContextManager):
             @classmethod
             def __enter__(cls):
                 self.__class__.job_creator.__enter__()

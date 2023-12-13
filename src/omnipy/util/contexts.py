@@ -1,7 +1,13 @@
-from copy import copy
+from contextlib import AbstractContextManager
+from copy import deepcopy
+
+from omnipy.util.helpers import all_equals
+
+# TODO: Consider refactoring as many as possible of the context managers (AbstractContextManager
+#       subclasses) to @contextmanager-decorated methods
 
 
-class LastErrorHolder:
+class LastErrorHolder(AbstractContextManager):
     def __init__(self):
         self._last_error = None
 
@@ -20,7 +26,12 @@ class LastErrorHolder:
             raise exc
 
 
-class AttribHolder:
+Undefined = object()
+
+
+# TODO: Perhaps the two use cases of this are so dissimilar that the class should be split into two
+#       distinct subclasses to make the code easier to understand?
+class AttribHolder(AbstractContextManager):
     def __init__(self,
                  obj: object,
                  attr_name: str,
@@ -57,7 +68,7 @@ class AttribHolder:
             self._prev_attr = None
 
 
-class PrintExceptionContext:
+class PrintExceptionContext(AbstractContextManager):
     def __enter__(self):
         ...
 
