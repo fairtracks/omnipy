@@ -65,6 +65,26 @@ def test_with_last_error() -> None:
     assert 'a=4 is even' in str(exc_info.getrepr())
 
 
+def test_attrib_holder_init() -> None:
+    class A:
+        def __init__(self, num: int) -> None:
+            self.num = num
+
+    a = A(5)
+
+    with pytest.raises(AssertionError):
+        AttribHolder(a, 'num', reset_to_other=True)
+
+    with pytest.raises(AssertionError):
+        AttribHolder(a, 'num', switch_to_other=True)
+
+    with pytest.raises(AssertionError):
+        AttribHolder(a, 'num', 9)
+
+    with pytest.raises(AssertionError):
+        AttribHolder(a, 'num', 9, reset_to_other=True, switch_to_other=True)
+
+
 def test_with_class_attrib_holder_reset_attr_if_exception() -> None:
     class A:
         ...
@@ -75,51 +95,69 @@ def test_with_class_attrib_holder_reset_attr_if_exception() -> None:
 
     a = A()
     with AttribHolder(a, 'num') as ms:
-        assert ms._prev_attr is None
+        assert ms._prev_value is None
 
     b = B(5)
     with AttribHolder(b, 'num') as ms:
         b.num = 7
-        assert ms._prev_attr == 5
+        assert ms._prev_value == 5
     assert b.num == 7
 
     try:
         b.num = 5
         with AttribHolder(b, 'num') as ms:
             b.num = 7
-            assert ms._prev_attr == 5
+            assert ms._prev_value == 5
             raise RuntimeError()
     except RuntimeError:
         pass
     assert b.num == 5
 
 
-def test_with_class_attrib_holder_reset_attr_if_exception_copy() -> None:
+def test_with_class_attrib_holder_set_attr_to_other_if_exception() -> None:
+    class A:
+        def __init__(self, num: int) -> None:
+            self.num = num
+
+    a = A(5)
+
+    try:
+        a.num = 5
+        with AttribHolder(a, 'num', 9, reset_to_other=True) as ms:
+            a.num = 7
+            assert ms._prev_value is None
+            raise RuntimeError()
+    except RuntimeError:
+        pass
+    assert a.num == 9
+
+
+def test_with_class_attrib_holder_reset_attr_if_exception_deepcopy() -> None:
     class B:
-        def __init__(self, numbers: list[int]) -> None:
+        def __init__(self, numbers: list[list[int]]) -> None:
             self.numbers = numbers
 
-    b = B([5])
+    b = B([[5]])
     try:
         with AttribHolder(b, 'numbers') as ms:
-            b.numbers[0] += 2
-            assert b.numbers == [7]
-            assert ms._prev_attr == [7]
+            b.numbers[0][0] += 2
+            assert b.numbers == [[7]]
+            assert ms._prev_value == [[7]]
             raise RuntimeError()
     except RuntimeError:
         pass
-    assert b.numbers == [7]
+    assert b.numbers == [[7]]
 
     try:
-        b.numbers = [5]
+        b.numbers = [[5]]
         with AttribHolder(b, 'numbers', copy_attr=True) as ms:
-            b.numbers[0] += 2
-            assert b.numbers == [7]
-            assert ms._prev_attr == [5]
+            b.numbers[0][0] += 2
+            assert b.numbers == [[7]]
+            assert ms._prev_value == [[5]]
             raise RuntimeError()
     except RuntimeError:
         pass
-    assert b.numbers == [5]
+    assert b.numbers == [[5]]
 
 
 def test_with_class_attrib_holder_method_switching() -> None:
@@ -134,29 +172,29 @@ def test_with_class_attrib_holder_method_switching() -> None:
         return 'other_method'
 
     a = A()
-    with AttribHolder(a, 'method', other_method, on_class=True) as ms:
-        assert ms._prev_attr is None
+    with AttribHolder(a, 'method', other_method, switch_to_other=True, on_class=True) as ms:
+        assert ms._prev_value is None
         with pytest.raises(AttributeError):
             a.method()  # type: ignore
 
     A.method = other_method
 
     a = A()
-    with AttribHolder(a, 'method', other_method, on_class=True) as ms:
+    with AttribHolder(a, 'method', other_method, switch_to_other=True, on_class=True) as ms:
         assert a.method() == 'other_method'  # type: ignore
-        assert ms._prev_attr is None
+        assert ms._prev_value is None
 
     b = B()
-    with AttribHolder(b, 'method', other_method, on_class=True) as ms:
+    with AttribHolder(b, 'method', other_method, switch_to_other=True, on_class=True) as ms:
         assert b.method() == 'other_method'
-        assert ms._prev_attr.__name__ == 'method'
+        assert ms._prev_value.__name__ == 'method'
     assert b.method() == 'method'
 
     b = B()
     try:
-        with AttribHolder(b, 'method', other_method, on_class=True) as ms:
+        with AttribHolder(b, 'method', other_method, switch_to_other=True, on_class=True) as ms:
             assert b.method() == 'other_method'
-            assert ms._prev_attr.__name__ == 'method'
+            assert ms._prev_value.__name__ == 'method'
             raise RuntimeError()
     except RuntimeError:
         pass
