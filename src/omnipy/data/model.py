@@ -533,7 +533,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         if not isinstance(ret, self.__class__):
             if name == '__getitem__':
                 assert len(args) == 1
-                if isinstance(args[0], int):
+                if not isinstance(args[0], slice):
                     # assert self.is_nested_type()
                     # TODO: With Python 3.13 and PEP 649, reconsider the choice to not automatically
                     #       generate nested models through '__getitem__'.
