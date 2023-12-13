@@ -382,12 +382,12 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             if root_field.outer_type_ != root_type:
                 outer_type = get_origin(root_field.outer_type_)
                 if lenient_issubclass(outer_type, Sequence) and lenient_isinstance(value, Sequence):
-                    return outer_type(  # type: ignore
+                    return outer_type(
                         root_type.parse_obj(val)
                         if is_none_type(val) or not lenient_isinstance(val, Model) else val
                         for val in value)
                 elif lenient_issubclass(outer_type, Mapping) and lenient_isinstance(value, Mapping):
-                    return outer_type({  # type: ignore
+                    return outer_type({
                         key:
                             root_type.parse_obj(val)
                             if is_none_type(val) or not lenient_isinstance(val, Model) else val
