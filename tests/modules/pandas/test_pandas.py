@@ -253,3 +253,14 @@ def test_pandas_dataset_input_output_data():
 # Placeholder
 def test_pandas_model_input_output_json():
     ...
+
+
+def test_operation_pandas():
+    a = PandasModel()
+    a.from_data([{'x': 2, 'y': 3}, {'x': 3, 'y': -1}])
+
+    assert type(a) is PandasModel
+
+    b = a + 1
+
+    assert type(b) is PandasModel
