@@ -13,4 +13,4 @@ class LocalRunnerConfig(EngineConfig):
 
 @dataclass
 class PrefectEngineConfig(EngineConfig):
-    use_cached_results: int = False
+    use_cached_results: bool = False

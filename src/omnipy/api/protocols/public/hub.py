@@ -6,7 +6,8 @@ from omnipy.api.enums import EngineChoice
 from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
 from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.private.log import IsRunStateRegistry
-from omnipy.api.protocols.public.config import (IsJobConfig,
+from omnipy.api.protocols.public.config import (IsDataConfig,
+                                                IsJobConfig,
                                                 IsLocalRunnerConfig,
                                                 IsPrefectEngineConfig,
                                                 IsRootLogConfig)
@@ -26,6 +27,7 @@ class IsRootLogObjects(Protocol):
 class IsRuntimeConfig(Protocol):
     """"""
     job: IsJobConfig
+    data: IsDataConfig
     engine: EngineChoice
     local: IsLocalRunnerConfig
     prefect: IsPrefectEngineConfig
@@ -34,6 +36,7 @@ class IsRuntimeConfig(Protocol):
     def __init__(
             self,
             job: IsJobConfig | None = None,  # noqa
+            data: IsDataConfig | None = None,  # noqa
             engine: EngineChoice = EngineChoice.LOCAL,  # noqa
             local: IsLocalRunnerConfig | None = None,  # noqa
             prefect: IsPrefectEngineConfig | None = None,  # noqa

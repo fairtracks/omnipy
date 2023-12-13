@@ -9,6 +9,7 @@ from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
                               ConfigRestoreOutputsOptions,
                               EngineChoice)
 from omnipy.api.protocols.public.hub import IsRuntime
+from omnipy.config.data import DataConfig
 from omnipy.hub.runtime import RuntimeConfig, RuntimeObjects
 
 from .helpers.mocks import (MockJobConfig,
@@ -34,6 +35,7 @@ def _assert_runtime_config_default(config: RuntimeConfig, dir_path: str):
     from omnipy.config.job import JobConfig
 
     assert isinstance(config.job, JobConfig)
+    assert isinstance(config.data, DataConfig)
     assert isinstance(config.local, LocalRunnerConfig)
     assert isinstance(config.prefect, PrefectEngineConfig)
 
@@ -50,6 +52,7 @@ def _assert_runtime_config_default(config: RuntimeConfig, dir_path: str):
     assert config.job.output_storage.s3.bucket_name == ''
     assert config.job.output_storage.s3.access_key == ''
     assert config.job.output_storage.s3.secret_key == ''
+    assert config.data.interactive_mode is True
     assert config.engine == EngineChoice.LOCAL
     assert config.prefect.use_cached_results is False
 

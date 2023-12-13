@@ -18,12 +18,17 @@ class IsLocalRunnerConfig(IsEngineConfig, Protocol):
 
 class IsPrefectEngineConfig(IsEngineConfig, Protocol):
     """"""
-    use_cached_results: int = False
+    use_cached_results: bool = False
 
 
 class IsJobConfig(Protocol):
     """"""
     output_storage: 'IsOutputStorage'
+
+
+class IsDataConfig(Protocol):
+    """"""
+    interactive_mode: bool
 
 
 class IsRootLogConfig(Protocol):

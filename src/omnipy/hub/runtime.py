@@ -5,13 +5,15 @@ from omnipy.api.enums import EngineChoice
 from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
 from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.private.log import IsRunStateRegistry
-from omnipy.api.protocols.public.config import (IsEngineConfig,
+from omnipy.api.protocols.public.config import (IsDataConfig,
+                                                IsEngineConfig,
                                                 IsJobConfig,
                                                 IsLocalRunnerConfig,
                                                 IsPrefectEngineConfig,
                                                 IsRootLogConfig)
 from omnipy.api.protocols.public.hub import IsRootLogObjects, IsRuntimeConfig, IsRuntimeObjects
 from omnipy.compute.job import JobBase
+from omnipy.config.data import DataConfig
 from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import JobConfig
 from omnipy.data.serializer import SerializerRegistry
@@ -29,6 +31,7 @@ def _job_creator_factory():
 @dataclass
 class RuntimeConfig(RuntimeEntryPublisher):
     job: IsJobConfig = field(default_factory=JobConfig)
+    data: IsDataConfig = field(default_factory=DataConfig)
     engine: EngineChoice = EngineChoice.LOCAL
     local: IsLocalRunnerConfig = field(default_factory=LocalRunnerConfig)
     prefect: IsPrefectEngineConfig = field(default_factory=PrefectEngineConfig)
