@@ -4,6 +4,8 @@ import os
 import sys
 from typing import Optional
 
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 from omnipy.hub.runtime import Runtime
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -21,3 +23,5 @@ def _get_runtime() -> Optional['Runtime']:
 
 
 runtime: Optional['Runtime'] = _get_runtime()
+
+__all__ = [Model, Dataset]
