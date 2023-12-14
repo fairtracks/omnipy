@@ -10,6 +10,7 @@ from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
                               EngineChoice)
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.config.data import DataConfig
+from omnipy.data.serializer import SerializerRegistry
 from omnipy.hub.runtime import RuntimeConfig, RuntimeObjects
 
 from .helpers.mocks import (MockJobConfig,
@@ -72,6 +73,7 @@ def _assert_runtime_objects_default(objects: RuntimeObjects, config: RuntimeConf
     assert isinstance(objects.prefect, PrefectEngine)
 
     assert isinstance(objects.registry, RunStateRegistry)
+    assert isinstance(objects.serializers, SerializerRegistry)
 
 
 def test_config_default(teardown_rm_root_log_dir: Annotated[None, pytest.fixture]) -> None:

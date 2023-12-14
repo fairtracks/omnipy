@@ -6,6 +6,7 @@ from typing import Any, Callable, IO, Type
 
 from pydantic import ValidationError
 
+from omnipy.api.protocols.public.data import IsDataset, IsSerializer, IsTarFileSerializer
 from omnipy.data.dataset import Dataset
 
 
@@ -13,12 +14,12 @@ class Serializer(ABC):
     """"""
     @classmethod
     @abstractmethod
-    def is_dataset_directly_supported(cls, dataset: Dataset) -> bool:
+    def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         pass
 
     @classmethod
     @abstractmethod
-    def get_dataset_cls_for_new(cls) -> Type[Dataset]:
+    def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
         pass
 
     @classmethod
@@ -28,12 +29,12 @@ class Serializer(ABC):
 
     @classmethod
     @abstractmethod
-    def serialize(cls, dataset: Dataset) -> bytes | memoryview:
+    def serialize(cls, dataset: IsDataset) -> bytes | memoryview:
         pass
 
     @classmethod
     @abstractmethod
-    def deserialize(cls, serialized: bytes) -> Dataset:
+    def deserialize(cls, serialized: bytes) -> IsDataset:
         pass
 
 
@@ -41,7 +42,7 @@ class TarFileSerializer(Serializer, ABC):
     """"""
     @classmethod
     def create_tarfile_from_dataset(cls,
-                                    dataset: Dataset,
+                                    dataset: IsDataset,
                                     data_encode_func: Callable[[Any], bytes | memoryview]):
         bytes_io = BytesIO()
         with tarfile.open(fileobj=bytes_io, mode='w:gz') as tarfile_stream:
@@ -55,7 +56,7 @@ class TarFileSerializer(Serializer, ABC):
 
     @classmethod
     def create_dataset_from_tarfile(cls,
-                                    dataset: Dataset,
+                                    dataset: IsDataset,
                                     tarfile_bytes: bytes,
                                     data_decode_func: Callable[[IO[bytes]], Any],
                                     dictify_object_func: Callable[[str, Any], dict | str],
@@ -71,23 +72,23 @@ class TarFileSerializer(Serializer, ABC):
 
 class SerializerRegistry:
     def __init__(self) -> None:
-        self._serializer_classes: list[Type[Serializer]] = []
+        self._serializer_classes: list[Type[IsSerializer]] = []
 
-    def register(self, serializer_cls: Type[Serializer]) -> None:
+    def register(self, serializer_cls: Type[IsSerializer]) -> None:
         self._serializer_classes.append(serializer_cls)
 
     @property
-    def serializers(self) -> tuple[Type[Serializer], ...]:
+    def serializers(self) -> tuple[Type[IsSerializer], ...]:
         return tuple(self._serializer_classes)
 
     @property
-    def tar_file_serializers(self) -> tuple[Type[TarFileSerializer], ...]:
+    def tar_file_serializers(self) -> tuple[Type[IsTarFileSerializer], ...]:
         return tuple(cls for cls in self._serializer_classes if issubclass(cls, TarFileSerializer))
 
-    def auto_detect(self, dataset: Dataset):
+    def auto_detect(self, dataset: IsDataset):
         return self._autodetect_serializer(dataset, self.serializers)
 
-    def auto_detect_tar_file_serializer(self, dataset: Dataset):
+    def auto_detect_tar_file_serializer(self, dataset: IsDataset):
         return self._autodetect_serializer(dataset, self.tar_file_serializers)
 
     @classmethod
@@ -97,19 +98,19 @@ class SerializerRegistry:
         #     new_dataset = new_dataset_cls(dataset)
         #     return new_dataset
 
-        def _to_data_from_json(dataset: Dataset, serializer: Serializer):
+        def _to_data_from_json(dataset: IsDataset, serializer: IsSerializer):
             new_dataset_cls = serializer.get_dataset_cls_for_new()
             new_dataset = new_dataset_cls()
             new_dataset.from_json(dataset.to_data())
             return new_dataset
 
-        def _to_data_from_data(dataset: Dataset, serializer: Serializer):
+        def _to_data_from_data(dataset: IsDataset, serializer: IsSerializer):
             new_dataset_cls = serializer.get_dataset_cls_for_new()
             new_dataset = new_dataset_cls()
             new_dataset.from_data(dataset.to_data())
             return new_dataset
 
-        def _to_data_from_data_if_direct(dataset, serializer: Serializer):
+        def _to_data_from_data_if_direct(dataset: IsDataset, serializer: IsSerializer):
             assert serializer.is_dataset_directly_supported(dataset)
             return _to_data_from_data(dataset, serializer)
 
