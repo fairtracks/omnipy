@@ -105,7 +105,7 @@ def all_equals(first, second) -> bool:
     equals = first == second
     if is_iterable(equals):
         if hasattr(equals, 'all') and callable(getattr(equals, 'all')):
-            return equals.all()
+            return equals.all(None)  # works for both pandas and numpy
         else:
             return all(equals)
     else:
