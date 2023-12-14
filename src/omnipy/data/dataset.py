@@ -1,5 +1,7 @@
 from collections import UserDict
 import json
+import os
+import tarfile
 from typing import Annotated, Any, Generic, get_args, get_origin, Iterator, Optional, Type, TypeVar
 
 # from orjson import orjson
@@ -317,6 +319,41 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     @staticmethod
     def _pretty_print_json(json_content: Any) -> str:
         return json.dumps(json_content, indent=2)
+
+    def save(self, directory: str):
+        serializer_registry = self._get_serializer_registry()
+
+        parsed_dataset, serializer = serializer_registry.auto_detect_tar_file_serializer(self)
+
+        if serializer is None:
+            print(f'Unable to find a serializer for dataset with data type "{type(self)}". '
+                  f'Will abort saving...')
+        else:
+            print(f'Writing dataset as a gzipped tarpack to "{os.path.abspath(directory)}"')
+
+            out_tar_gz_path = f'{directory}.tar.gz'
+
+            with open(out_tar_gz_path, 'wb') as out_tar_gz_file:
+                out_tar_gz_file.write(serializer.serialize(parsed_dataset))
+
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+
+            tar = tarfile.open(out_tar_gz_path)
+            tar.extractall(path=directory)
+            tar.close()
+
+    def load(self, directory: str):
+        serializer_registry = self._get_serializer_registry()
+        return serializer_registry.load_from_tar_file_path(self, directory, self)
+
+    def _get_serializer_registry(self):
+        from omnipy import runtime
+        if len(runtime.objects.serializers.serializers) == 0:
+            from omnipy.modules import register_serializers
+            register_serializers(runtime.objects.serializers)
+        serializer_registry = runtime.objects.serializers
+        return serializer_registry
 
     def as_multi_model_dataset(self) -> 'MultiModelDataset[ModelT]':
         multi_model_dataset = MultiModelDataset[self.get_model_class()]()

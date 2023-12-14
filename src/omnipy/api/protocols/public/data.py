@@ -2,7 +2,9 @@ from typing import Any, Callable, IO, Iterator, Protocol, Type, TypeVar
 
 from pydantic.fields import Undefined, UndefinedType
 
-ModelT = TypeVar("ModelT")
+from omnipy.api.protocols.private.log import CanLog
+
+ModelT = TypeVar('ModelT')
 
 
 class IsDataset(Protocol[ModelT]):
@@ -129,4 +131,7 @@ class IsSerializerRegistry(Protocol):
         ...
 
     def detect_tar_file_serializers_from_file_suffix(self, file_suffix: str):
+        ...
+
+    def load_from_tar_file_path(self, log_obj: CanLog, tar_file_path: str, to_dataset: IsDataset):
         ...

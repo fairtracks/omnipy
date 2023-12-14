@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
 from io import BytesIO
+import os
 import tarfile
 from tarfile import TarInfo
 from typing import Any, Callable, IO, Type
 
 from pydantic import ValidationError
 
+from omnipy.api.protocols.private.log import CanLog
 from omnipy.api.protocols.public.data import IsDataset, IsSerializer, IsTarFileSerializer
-from omnipy.data.dataset import Dataset
 
 
 class Serializer(ABC):
@@ -133,3 +134,43 @@ class SerializerRegistry:
     def detect_tar_file_serializers_from_file_suffix(self, file_suffix: str):
         return tuple(serializer_cls for serializer_cls in self.tar_file_serializers
                      if serializer_cls.get_output_file_suffix() == file_suffix)
+
+    def load_from_tar_file_path(self, log_obj: CanLog, tar_file_path: str, to_dataset: IsDataset):
+        if hasattr(log_obj, 'log'):
+            log = log_obj.log
+        else:
+            log = print
+
+        with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
+            file_suffixes = set(fn.split('.')[-1] for fn in tarfile_obj.getnames())
+        if len(file_suffixes) != 1:
+            log(f'Tar archive contains files with different or '
+                f'no file suffixes: {file_suffixes}. Serializer '
+                f'cannot be uniquely determined. Aborting '
+                f'restore.')
+        else:
+            file_suffix = file_suffixes.pop()
+            serializers = self.detect_tar_file_serializers_from_file_suffix(file_suffix)
+            if len(serializers) == 0:
+                log(f'No serializer for file suffix "{file_suffix}" can be'
+                    f'determined. Aborting restore.')
+            else:
+                log(f'Reading dataset from a gzipped tarpack at'
+                    f' "{os.path.abspath(tar_file_path)}"')
+
+                serializer = serializers[0]
+                with open(tar_file_path, 'rb') as tarfile_binary:
+                    auto_dataset = serializer.deserialize(tarfile_binary.read())
+
+                if to_dataset.get_model_class() is auto_dataset.get_model_class():
+                    to_dataset.data = auto_dataset.data
+                    return to_dataset
+                else:
+                    try:
+                        if to_dataset.get_model_class().inner_type == str:
+                            to_dataset.from_data(auto_dataset.to_json())
+                        else:
+                            to_dataset.from_json(auto_dataset.to_data())
+                        return to_dataset
+                    except Exception:
+                        return auto_dataset

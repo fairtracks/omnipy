@@ -1,7 +1,6 @@
 from datetime import datetime
 import os
 from pathlib import Path
-import tarfile
 from typing import cast, Generator, Type
 
 from omnipy.api.enums import ConfigPersistOutputsOptions as ConfigPersistOpts
@@ -16,7 +15,6 @@ from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.name import NameJobBaseMixin
 from omnipy.config.job import JobConfig
 from omnipy.data.dataset import Dataset
-from omnipy.data.model import Model
 from omnipy.data.serializer import SerializerRegistry
 from omnipy.modules import register_serializers
 
@@ -228,40 +226,9 @@ class SerializerFuncJobBaseMixin:
         if os.path.exists(persist_data_dir_path):
             for tar_file_path in self._all_job_output_file_paths_in_reverse_order_for_last_run(
                     persist_data_dir_path, self._job_name()):
-                with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
-                    file_suffixes = set(fn.split('.')[-1] for fn in tarfile_obj.getnames())
-                if len(file_suffixes) != 1:
-                    self._log(f'Tar archive contains files with different or '
-                              f'no file suffixes: {file_suffixes}. Serializer '
-                              f'cannot be uniquely determined. Aborting '
-                              f'restore.')
-                else:
-                    file_suffix = file_suffixes.pop()
-                    serializers = self._serializer_registry.\
-                        detect_tar_file_serializers_from_file_suffix(file_suffix)
-                    if len(serializers) == 0:
-                        self._log(f'No serializer for file suffix "{file_suffix}" can be'
-                                  f'determined. Aborting restore.')
-                    else:
-                        self._log(f'Reading dataset from a gzipped tarpack at'
-                                  f' "{os.path.abspath(tar_file_path)}"')
-
-                        serializer = serializers[0]
-                        with open(tar_file_path, 'rb') as tarfile_binary:
-                            dataset = serializer.deserialize(tarfile_binary.read())
-                        return_dataset_cls = cast(Type[Dataset], self._return_type)
-                        if return_dataset_cls().get_model_class() is dataset.get_model_class():
-                            return dataset
-                        else:
-                            try:
-                                new_dataset = return_dataset_cls()
-                                if new_dataset.get_model_class() is Model[str]:
-                                    new_dataset.from_data(dataset.to_json())
-                                else:
-                                    new_dataset.from_json(dataset.to_data())
-                                return new_dataset
-                            except Exception:
-                                return dataset
+                to_dataset = cast(Type[Dataset], self._return_type)
+                return self._serializer_registry.load_from_tar_file_path(
+                    self, tar_file_path, to_dataset())
 
         raise RuntimeError('No persisted output')
 
