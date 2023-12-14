@@ -16,7 +16,7 @@ def test_no_model():
         Dataset()
 
     with pytest.raises(TypeError):
-        Dataset({'obj_type_1': 123, 'obj_type_2': 234})
+        Dataset({'file_1': 123, 'file_2': 234})
 
     with pytest.raises(TypeError):
 
@@ -39,49 +39,54 @@ def test_no_model():
 def test_init_with_basic_parsing():
     dataset_1 = Dataset[Model[int]]()
 
-    dataset_1['obj_type_1'] = 123
-    dataset_1['obj_type_2'] = 456
+    dataset_1['data_file_1'] = 123
+    dataset_1['data_file_2'] = 456
 
     assert len(dataset_1) == 2
-    assert dataset_1['obj_type_1'] == 123
-    assert dataset_1['obj_type_2'] == 456
+    assert dataset_1['data_file_1'] == Model[int](123)
+    assert dataset_1['data_file_2'].contents == 456
 
-    dataset_2 = Dataset[Model[int]]({'obj_type_1': 456.5, 'obj_type_2': '789', 'obj_type_3': True})
+    dataset_2 = Dataset[Model[int]]({
+        'data_file_1': 456.5, 'data_file_2': '789', 'data_file_3': True
+    })
 
     assert len(dataset_2) == 3
-    assert dataset_2['obj_type_1'] == 456
-    assert dataset_2['obj_type_2'] == 789
-    assert dataset_2['obj_type_3'] == 1
+    assert dataset_2['data_file_1'].contents == 456
+    assert dataset_2['data_file_2'].contents == 789
+    assert dataset_2['data_file_3'].contents == 1
 
-    dataset_3 = Dataset[Model[str]]([('obj_type_1', 'abc'), ('obj_type_2', 123),
-                                     ('obj_type_3', True)])
+    dataset_3 = Dataset[Model[str]]([('data_file_1', 'abc'), ('data_file_2', 123),
+                                     ('data_file_3', True)])
 
     assert len(dataset_3) == 3
-    assert dataset_3['obj_type_1'] == 'abc'
-    assert dataset_3['obj_type_2'] == '123'
-    assert dataset_3['obj_type_3'] == 'True'
+    assert dataset_3['data_file_1'].contents == 'abc'
+    assert dataset_3['data_file_2'].contents == '123'
+    assert dataset_3['data_file_3'].contents == 'True'
 
-    # TODO: Change most or all Dataset inits in tests and elsewhere to use this format. Also change
-    #       from 'obj_type' to 'file' everywhere.
-    dataset_4 = Dataset[Model[dict[int, int]]](file_1={1: 1234, 2: 2345}, file_2={2: 2345, 3: 3456})
+    dataset_4 = Dataset[Model[dict[int, int]]](
+        data_file_1={
+            1: 1234, 2: 2345
+        }, data_file_2={
+            2: 2345, 3: 3456
+        })
 
     assert len(dataset_4) == 2
-    assert dataset_4['file_1'] == {1: 1234, 2: 2345}
-    assert dataset_4['file_2'] == {2: 2345, 3: 3456}
+    assert dataset_4['data_file_1'].contents == {1: 1234, 2: 2345}
+    assert dataset_4['data_file_2'].contents == {2: 2345, 3: 3456}
 
 
 def test_init_errors():
     with pytest.raises(TypeError):
-        Dataset[Model[int]]({'file_1': 123}, {'file_2': 234})
+        Dataset[Model[int]]({'data_file_1': 123}, {'data_file_2': 234})
 
     with pytest.raises(AssertionError):
-        Dataset[Model[int]]({'file_1': 123}, data={'file_2': 234})
+        Dataset[Model[int]]({'data_file_1': 123}, data={'data_file_2': 234})
 
     with pytest.raises(AssertionError):
-        Dataset[Model[int]]({'file_1': 123}, file_2=234)
+        Dataset[Model[int]]({'data_file_1': 123}, data_file_2=234)
 
     with pytest.raises(AssertionError):
-        Dataset[Model[int]](data={'file_1': 123}, file_2=234)
+        Dataset[Model[int]](data={'data_file_1': 123}, data_file_2=234)
 
     with pytest.raises(ValidationError):
         Dataset[Model[int]](data=123)
@@ -134,45 +139,46 @@ def test_more_dict_methods_with_parsing():
     assert list(dataset_1.values()) == []
     assert list(dataset_1.items()) == []
 
-    dataset = Dataset[Model[str]]({'obj_type_1': 123, 'obj_type_2': 234})
+    dataset = Dataset[Model[str]]({'data_file_1': 123, 'data_file_2': 234})
 
-    assert list(dataset.keys()) == ['obj_type_1', 'obj_type_2']
-    assert list(dataset.values()) == ['123', '234']
-    assert list(dataset.items()) == [('obj_type_1', '123'), ('obj_type_2', '234')]
+    assert list(dataset.keys()) == ['data_file_1', 'data_file_2']
+    assert list(dataset.values()) == [Model[str]('123'), Model[str]('234')]
+    assert list(dataset.items()) == [('data_file_1', Model[str]('123')),
+                                     ('data_file_2', Model[str]('234'))]
 
-    dataset['obj_type_2'] = 345
+    dataset['data_file_2'] = 345
 
     assert len(dataset) == 2
-    assert dataset['obj_type_1'] == '123'
-    assert dataset['obj_type_2'] == '345'
+    assert dataset['data_file_1'].contents == '123'
+    assert dataset['data_file_2'].contents == '345'
 
-    del dataset['obj_type_1']
+    del dataset['data_file_1']
     assert len(dataset) == 1
-    assert dataset['obj_type_2'] == '345'
+    assert dataset['data_file_2'].contents == '345'
 
     with pytest.raises(KeyError):
-        assert dataset['obj_type_3']
+        assert dataset['data_file_3']
 
-    dataset.update({'obj_type_2': 456, 'obj_type_3': 567})
-    assert dataset['obj_type_2'] == '456'
-    assert dataset['obj_type_3'] == '567'
+    dataset.update({'data_file_2': 456, 'data_file_3': 567})
+    assert dataset['data_file_2'].contents == '456'
+    assert dataset['data_file_3'].contents == '567'
 
-    dataset.setdefault('obj_type_3', 789)
-    assert dataset.get('obj_type_3') == '567'
+    dataset.setdefault('data_file_3', 789)
+    assert dataset.get('data_file_3').contents == '567'
 
-    dataset.setdefault('obj_type_4', 789)
-    assert dataset.get('obj_type_4') == '789'
+    dataset.setdefault('data_file_4', 789)
+    assert dataset.get('data_file_4').contents == '789'
 
     assert len(dataset) == 3
 
-    dataset.pop('obj_type_3')
+    dataset.pop('data_file_3')
     assert len(dataset) == 2
 
     # UserDict() implementation of popitem pops items FIFO contrary of the LIFO specified
     # in the standard library: https://docs.python.org/3/library/stdtypes.html#dict.popitem
     dataset.popitem()
     assert len(dataset) == 1
-    assert dataset.to_data() == {'obj_type_4': '789'}
+    assert dataset.to_data() == {'data_file_4': '789'}
 
     dataset.clear()
     assert len(dataset) == 0
@@ -180,17 +186,17 @@ def test_more_dict_methods_with_parsing():
 
 
 def test_equality() -> None:
-    assert Dataset[Model[list[int]]]({'file_1': [1, 2, 3], 'file_2': [1.0, 2.0, 3.0]}) == \
-           Dataset[Model[list[int]]]({'file_1': [1.0, 2.0, 3.0], 'file_2': [1, 2, 3]})
+    assert Dataset[Model[list[int]]]({'data_file_1': [1, 2, 3], 'data_file_2': [1.0, 2.0, 3.0]}) == \
+           Dataset[Model[list[int]]]({'data_file_1': [1.0, 2.0, 3.0], 'data_file_2': [1, 2, 3]})
 
-    assert Dataset[Model[list[int]]]({'file_1': [1, 2, 3], 'file_2': [1, 2, 3]}) != \
-           Dataset[Model[list[int]]]({'file_1': [1, 2, 3], 'file_2': [3, 2, 1]})
+    assert Dataset[Model[list[int]]]({'data_file_1': [1, 2, 3], 'data_file_2': [1, 2, 3]}) != \
+           Dataset[Model[list[int]]]({'data_file_1': [1, 2, 3], 'data_file_2': [3, 2, 1]})
 
     assert Dataset[Model[list[int]]]({'1': [1, 2, 3]}) == \
            Dataset[Model[list[int]]]({1: [1, 2, 3]})
 
-    assert Dataset[Model[list[int]]]({'file_1': [1, 2, 3]}) != \
-           Dataset[Model[list[float]]]({'file_1': [1.0, 2.0, 3.0]})
+    assert Dataset[Model[list[int]]]({'data_file_1': [1, 2, 3]}) != \
+           Dataset[Model[list[float]]]({'data_file_1': [1.0, 2.0, 3.0]})
 
 
 def test_complex_equality() -> None:
@@ -200,32 +206,32 @@ def test_complex_equality() -> None:
     class MyInt(Model[int]):
         ...
 
-    assert Dataset[Model[list[int]]]({'file_1': [1, 2, 3]}) != \
-           Dataset[MyIntList]({'file_1': [1, 2, 3]})
+    assert Dataset[Model[list[int]]]({'data_file_1': [1, 2, 3]}) != \
+           Dataset[MyIntList]({'data_file_1': [1, 2, 3]})
 
-    assert Dataset[Model[MyIntList]]({'file_1': [1, 2, 3]}) == \
-           Dataset[Model[MyIntList]]({'file_1': MyIntList([1, 2, 3])})
+    assert Dataset[Model[MyIntList]]({'data_file_1': [1, 2, 3]}) == \
+           Dataset[Model[MyIntList]]({'data_file_1': MyIntList([1, 2, 3])})
 
-    assert Dataset[Model[list[MyInt]]]({'file_1': [1, 2, 3]}) == \
-           Dataset[Model[list[MyInt]]]({'file_1': list[MyInt]([1, 2, 3])})
+    assert Dataset[Model[list[MyInt]]]({'data_file_1': [1, 2, 3]}) == \
+           Dataset[Model[list[MyInt]]]({'data_file_1': list[MyInt]([1, 2, 3])})
 
-    assert Dataset[Model[list[MyInt]]]({'file_1': [1, 2, 3]}) != \
-           Dataset[Model[List[MyInt]]]({'file_1': [1, 2, 3]})
+    assert Dataset[Model[list[MyInt]]]({'data_file_1': [1, 2, 3]}) != \
+           Dataset[Model[List[MyInt]]]({'data_file_1': [1, 2, 3]})
 
     # Had to be set to dict to trigger difference in data contents. Validation for some reason
     # harmonised the data contents to list[MyInt] even though the model itself keeps the data
     # as MyIntList if provided in that form
-    as_list_of_myints_dataset = Dataset[Model[MyIntList | list[MyInt]]]({'file_1': [1, 2, 3]})
+    as_list_of_myints_dataset = Dataset[Model[MyIntList | list[MyInt]]]({'data_file_1': [1, 2, 3]})
     as_myintlist_dataset = Dataset[Model[MyIntList | list[MyInt]]]()
-    as_myintlist_dataset.data['file_1'] = MyIntList([1, 2, 3])
+    as_myintlist_dataset.data['data_file_1'] = MyIntList([1, 2, 3])
 
     assert as_list_of_myints_dataset != as_myintlist_dataset
 
-    assert Dataset[Model[MyIntList | list[MyInt]]]({'file_1': [1, 2, 3]}) == \
-           Dataset[Model[Union[MyIntList, list[MyInt]]]]({'file_1': [1, 2, 3]})
+    assert Dataset[Model[MyIntList | list[MyInt]]]({'data_file_1': [1, 2, 3]}) == \
+           Dataset[Model[Union[MyIntList, list[MyInt]]]]({'data_file_1': [1, 2, 3]})
 
-    assert Dataset[Model[MyIntList | list[MyInt]]]({'file_1': [1, 2, 3]}).to_data() == \
-           Dataset[Model[MyIntList | list[MyInt]]]({'file_1': MyIntList([1, 2, 3])}).to_data()
+    assert Dataset[Model[MyIntList | list[MyInt]]]({'data_file_1': [1, 2, 3]}).to_data() == \
+           Dataset[Model[MyIntList | list[MyInt]]]({'data_file_1': MyIntList([1, 2, 3])}).to_data()
 
 
 def test_equality_with_pydantic() -> None:
@@ -235,20 +241,20 @@ def test_equality_with_pydantic() -> None:
     class EqualPydanticModel(BaseModel):
         a: int = 0
 
-    assert Dataset[Model[PydanticModel]]({'file_1': {'a': 1}}) == \
-           Dataset[Model[PydanticModel]]({'file_1': {'a': 1.0}})
+    assert Dataset[Model[PydanticModel]]({'data_file_1': {'a': 1}}) == \
+           Dataset[Model[PydanticModel]]({'data_file_1': {'a': 1.0}})
 
-    assert Dataset[Model[PydanticModel]]({'file_1': {'a': 1}}) != \
-           Dataset[Model[EqualPydanticModel]]({'file_1': {'a': 1}})
+    assert Dataset[Model[PydanticModel]]({'data_file_1': {'a': 1}}) != \
+           Dataset[Model[EqualPydanticModel]]({'data_file_1': {'a': 1}})
 
 
 def test_basic_validation():
     dataset_1 = Dataset[Model[PositiveInt]]()
 
-    dataset_1['obj_type_1'] = 123
+    dataset_1['data_file_1'] = 123
 
     with pytest.raises(ValueError):
-        dataset_1['obj_type_2'] = -234
+        dataset_1['data_file_2'] = -234
 
     with pytest.raises(ValueError):
         Dataset[Model[list[StrictInt]]]([12.4, 11])  # noqa
@@ -257,85 +263,85 @@ def test_basic_validation():
 def test_import_and_export():
     dataset = Dataset[Model[dict[str, str]]]()
 
-    data = {'obj_type_1': {'a': 123, 'b': 234, 'c': 345}, 'obj_type_2': {'c': 456}}
+    data = {'data_file_1': {'a': 123, 'b': 234, 'c': 345}, 'data_file_2': {'c': 456}}
     dataset.from_data(data)
 
-    assert dataset['obj_type_1'] == {'a': '123', 'b': '234', 'c': '345'}
-    assert dataset['obj_type_2'] == {'c': '456'}
+    assert dataset['data_file_1'].contents == {'a': '123', 'b': '234', 'c': '345'}
+    assert dataset['data_file_2'].contents == {'c': '456'}
 
     assert dataset.to_data() == {
-        'obj_type_1': {
+        'data_file_1': {
             'a': '123', 'b': '234', 'c': '345'
-        }, 'obj_type_2': {
+        }, 'data_file_2': {
             'c': '456'
         }
     }
 
     assert dataset.to_json(pretty=False) == {
-        'obj_type_1': '{"a": "123", "b": "234", "c": "345"}', 'obj_type_2': '{"c": "456"}'
+        'data_file_1': '{"a": "123", "b": "234", "c": "345"}', 'data_file_2': '{"c": "456"}'
     }
     assert dataset.to_json(pretty=True) == {
-        'obj_type_1':
+        'data_file_1':
             dedent("""\
             {
               "a": "123",
               "b": "234",
               "c": "345"
             }"""),
-        'obj_type_2':
+        'data_file_2':
             dedent("""\
             {
               "c": "456"
             }""")
     }
 
-    data = {'obj_type_1': {'a': 333, 'b': 555, 'c': 777}, 'obj_type_3': {'a': '99', 'b': '98'}}
+    data = {'data_file_1': {'a': 333, 'b': 555, 'c': 777}, 'data_file_3': {'a': '99', 'b': '98'}}
     dataset.from_data(data)
 
     assert dataset.to_data() == {
-        'obj_type_1': {
+        'data_file_1': {
             'a': '333', 'b': '555', 'c': '777'
         },
-        'obj_type_2': {
+        'data_file_2': {
             'c': '456'
         },
-        'obj_type_3': {
+        'data_file_3': {
             'a': '99', 'b': '98'
         }
     }
 
-    data = {'obj_type_1': {'a': 167, 'b': 761}}
+    data = {'data_file_1': {'a': 167, 'b': 761}}
     dataset.from_data(data, update=False)
 
     assert dataset.to_data() == {
-        'obj_type_1': {
+        'data_file_1': {
             'a': '167', 'b': '761'
         },
     }
 
-    json_import = {'obj_type_2': '{"a": 987, "b": 654}'}
+    json_import = {'data_file_2': '{"a": 987, "b": 654}'}
 
     dataset.from_json(json_import)
     assert dataset.to_data() == {
-        'obj_type_1': {
+        'data_file_1': {
             'a': '167', 'b': '761'
-        }, 'obj_type_2': {
+        }, 'data_file_2': {
             'a': '987', 'b': '654'
         }
     }
 
     dataset.from_json(json_import, update=False)
-    assert dataset.to_data() == {'obj_type_2': {'a': '987', 'b': '654'}}
+    assert dataset.to_data() == {'data_file_2': {'a': '987', 'b': '654'}}
 
     json_import = (
-        ('obj_type_2', '{"a": 987, "b": 654}'),
-        ('obj_type_3', '{"b": 222, "c": 333}'),
+        ('data_file_2', '{"a": 987, "b": 654}'),
+        ('data_file_3', '{"b": 222, "c": 333}'),
     )
     dataset.from_json(json_import)
     assert dataset.to_data() == {
-        'obj_type_2': {
+        'data_file_2': {
             'a': '987', 'b': '654'
-        }, 'obj_type_3': {
+        }, 'data_file_3': {
             'b': '222', 'c': '333'
         }
     }
@@ -377,18 +383,18 @@ def test_import_and_export():
 def test_import_export_custom_parser_to_other_type():
     dataset = Dataset[StringToLength]()
 
-    dataset['obj_type_1'] = 'And we lived beneath the waves'
-    assert dataset['obj_type_1'] == 30
+    dataset['data_file_1'] = 'And we lived beneath the waves'
+    assert dataset['data_file_1'].contents == 30
 
-    dataset.from_data({'obj_type_2': 'In our yellow submarine'}, update=True)  # noqa
-    assert dataset['obj_type_1'] == 30
-    assert dataset['obj_type_2'] == 23
-    assert dataset.to_data() == {'obj_type_1': 30, 'obj_type_2': 23}
+    dataset.from_data({'data_file_2': 'In our yellow submarine'}, update=True)  # noqa
+    assert dataset['data_file_1'].contents == 30
+    assert dataset['data_file_2'].contents == 23
+    assert dataset.to_data() == {'data_file_1': 30, 'data_file_2': 23}
 
-    dataset.from_json({'obj_type_2': '"In our yellow submarine!"'}, update=True)  # noqa
-    assert dataset['obj_type_1'] == 30
-    assert dataset['obj_type_2'] == 24
-    assert dataset.to_json() == {'obj_type_1': '30', 'obj_type_2': '24'}
+    dataset.from_json({'data_file_2': '"In our yellow submarine!"'}, update=True)  # noqa
+    assert dataset['data_file_1'].contents == 30
+    assert dataset['data_file_2'].contents == 24
+    assert dataset.to_json() == {'data_file_1': '30', 'data_file_2': '24'}
 
     assert dataset.to_json_schema(pretty=True) == dedent('''\
     {
@@ -423,8 +429,8 @@ def test_generic_dataset_unbound_typevar():
     # Without further restrictions
 
     assert MyTupleOrListDataset().to_data() == {}
-    assert MyTupleOrListDataset({'a': (123, 'a')})['a'] == (123, 'a')
-    assert MyTupleOrListDataset({'a': [True, False]})['a'] == [True, False]
+    assert MyTupleOrListDataset({'a': (123, 'a')})['a'].contents == (123, 'a')
+    assert MyTupleOrListDataset({'a': [True, False]})['a'].contents == [True, False]
 
     with pytest.raises(ValidationError):
         MyTupleOrListDataset({'a': 123})
@@ -437,8 +443,8 @@ def test_generic_dataset_unbound_typevar():
 
     # Restricting the contents of the tuples and lists
 
-    assert MyTupleOrListDataset[int]({'a': (123, '456')})['a'] == (123, 456)
-    assert MyTupleOrListDataset[bool]({'a': [False, 1, '0']})['a'] == [False, True, False]
+    assert MyTupleOrListDataset[int]({'a': (123, '456')})['a'].contents == (123, 456)
+    assert MyTupleOrListDataset[bool]({'a': [False, 1, '0']})['a'].contents == [False, True, False]
 
     with pytest.raises(ValidationError):
         MyTupleOrListDataset[int]({'a': (123, 'abc')})
@@ -462,8 +468,8 @@ def test_generic_dataset_bound_typevar():
 
     assert MyListOfIntsOrStringsDataset().to_data() == {}
 
-    assert MyListOfIntsOrStringsDataset({'a': (123, 'a')})['a'] == [123, 'a']
-    assert MyListOfIntsOrStringsDataset({'a': [True, False]})['a'] == [1, 0]
+    assert MyListOfIntsOrStringsDataset({'a': (123, 'a')})['a'].contents == [123, 'a']
+    assert MyListOfIntsOrStringsDataset({'a': [True, False]})['a'].contents == [1, 0]
 
     with pytest.raises(ValidationError):
         MyListOfIntsOrStringsDataset({'a': 123})
@@ -475,8 +481,8 @@ def test_generic_dataset_bound_typevar():
         MyListOfIntsOrStringsDataset({'a': {'x': 123}})
 
     # Further restricting the contents of the tuples and lists
-    assert MyListOfIntsOrStringsDataset[str]({'a': (123, '456')})['a'] == ['123', '456']
-    assert MyListOfIntsOrStringsDataset[int]({'a': (123, '456')})['a'] == [123, 456]
+    assert MyListOfIntsOrStringsDataset[str]({'a': (123, '456')})['a'].contents == ['123', '456']
+    assert MyListOfIntsOrStringsDataset[int]({'a': (123, '456')})['a'].contents == [123, 456]
 
     with pytest.raises(ValidationError):
         MyListOfIntsOrStringsDataset[int]({'a': (123, 'abc')})
@@ -579,7 +585,7 @@ def test_complex_models():
         dataset.from_data([(i, [0, i]) for i in range(0, 5)])  # noqa
 
     dataset.from_data([(i, [1, i]) for i in range(1, 5)])  # noqa
-    assert dataset['4'] == [4, 3, 2, 1]
+    assert dataset['4'].contents == [4, 3, 2, 1]
 
     assert dataset.to_data() == {'1': [1], '2': [2, 1], '3': [3, 2, 1], '4': [4, 3, 2, 1]}
 

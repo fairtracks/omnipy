@@ -206,27 +206,27 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
                 'particular specialization of the Model class. Both main classes are wrapping '
                 'the excellent Python package named `pydantic`.')
 
-    def __setitem__(self, obj_type: str, data_obj: Any) -> None:
-        has_prev_value = obj_type in self.data
-        prev_value = self.data.get(obj_type)
+    def __setitem__(self, data_file: str, data_obj: Any) -> None:
+        has_prev_value = data_file in self.data
+        prev_value = self.data.get(data_file)
 
         try:
-            self.data[obj_type] = data_obj
-            self._validate(obj_type)
+            self.data[data_file] = data_obj
+            self._validate(data_file)
         except:  # noqa
             if has_prev_value:
-                self.data[obj_type] = prev_value
+                self.data[data_file] = prev_value
             else:
-                del self.data[obj_type]
+                del self.data[data_file]
             raise
 
-    def __getitem__(self, obj_type: str) -> Any:
-        if obj_type in self.data:
-            return self.data[obj_type].contents
+    def __getitem__(self, data_file: str) -> Any:
+        if data_file in self.data:
+            return self.data[data_file]
         else:
-            return self.data[obj_type]
+            return self.data[data_file]
 
-    def _validate(self, _obj_type: str) -> None:
+    def _validate(self, _data_file: str) -> None:
         self.data = self.data  # Triggers pydantic validation, as validate_assignment=True
 
     def __iter__(self) -> Iterator:
@@ -260,10 +260,10 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if not update:
             self.clear()
 
-        for obj_type, obj_val in data.items():
+        for data_file, obj_val in data.items():
             new_model = self.get_model_class()()  # noqa
             new_model.from_data(obj_val)
-            self[obj_type] = new_model
+            self[data_file] = new_model
 
     def to_json(self, pretty=False) -> dict[str, str]:
         result = {}
@@ -281,10 +281,10 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if not update:
             self.clear()
 
-        for obj_type, obj_val in data.items():
+        for data_file, obj_val in data.items():
             new_model = self.get_model_class()()  # noqa
             new_model.from_json(obj_val)
-            self[obj_type] = new_model
+            self[data_file] = new_model
 
     # @classmethod
     # def get_type_args(cls):
@@ -357,8 +357,8 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     def as_multi_model_dataset(self) -> 'MultiModelDataset[ModelT]':
         multi_model_dataset = MultiModelDataset[self.get_model_class()]()
-        for obj_type in self:
-            multi_model_dataset.data[obj_type] = self.data[obj_type]
+        for data_file in self:
+            multi_model_dataset.data[data_file] = self.data[data_file]
         return multi_model_dataset
 
     def __eq__(self, other: object) -> bool:
@@ -382,32 +382,32 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
 
     _custom_field_models: dict[str, ModelT] = PrivateAttr(default={})
 
-    def set_model(self, obj_type: str, model: ModelT) -> None:
+    def set_model(self, data_file: str, model: ModelT) -> None:
         try:
-            self._custom_field_models[obj_type] = model
-            if obj_type in self.data:
-                self._validate(obj_type)
+            self._custom_field_models[data_file] = model
+            if data_file in self.data:
+                self._validate(data_file)
             else:
-                self.data[obj_type] = model()
+                self.data[data_file] = model()
         except ValidationError:
-            del self._custom_field_models[obj_type]
+            del self._custom_field_models[data_file]
             raise
 
-    def get_model(self, obj_type: str) -> ModelT:
-        if obj_type in self._custom_field_models:
-            return self._custom_field_models[obj_type]
+    def get_model(self, data_file: str) -> ModelT:
+        if data_file in self._custom_field_models:
+            return self._custom_field_models[data_file]
         else:
             return self.get_model_class()
 
-    def _validate(self, obj_type: str) -> None:
-        if obj_type in self._custom_field_models:
-            model = self._custom_field_models[obj_type]
+    def _validate(self, data_file: str) -> None:
+        if data_file in self._custom_field_models:
+            model = self._custom_field_models[data_file]
             if not isinstance(model, Model):
                 model = Model[model]
-            data_obj = self._to_data_if_model(self.data[obj_type])
+            data_obj = self._to_data_if_model(self.data[data_file])
             parsed_data = self._to_data_if_model(model(data_obj))
-            self.data[obj_type] = parsed_data
-        super()._validate(obj_type)  # validates all data according to ModelT
+            self.data[data_file] = parsed_data
+        super()._validate(data_file)  # validates all data according to ModelT
 
     @staticmethod
     def _to_data_if_model(data_obj: Any):

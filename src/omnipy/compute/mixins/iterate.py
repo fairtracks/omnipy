@@ -82,7 +82,7 @@ class IterateFuncJobBaseMixin:
                         out_dataset = out_dataset_cls()
 
                         for title, data_file in dataset.items():
-                            out_dataset[title] = inner_func(data_file, *args, **kwargs)
+                            out_dataset[title] = inner_func(data_file.contents, *args, **kwargs)
 
                         return out_dataset
 
