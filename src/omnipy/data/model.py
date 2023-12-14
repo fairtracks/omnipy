@@ -432,6 +432,9 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     def from_data(self, value: object) -> None:
         self._validate_and_set_contents(value)
 
+    def absorb_and_replace(self, other: 'Model'):
+        self.from_data(other.to_data())
+
     def to_json(self, pretty=False) -> str:
         json_content = self.json()
         if pretty:
