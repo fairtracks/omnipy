@@ -265,6 +265,12 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             new_model.from_data(obj_val)
             self[data_file] = new_model
 
+    def absorb(self, other: 'Dataset'):
+        self.from_data(other.to_data(), update=True)
+
+    def absorb_and_replace(self, other: 'Dataset'):
+        self.from_data(other.to_data(), update=False)
+
     def to_json(self, pretty=False) -> dict[str, str]:
         result = {}
 
@@ -347,7 +353,8 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         serializer_registry = self._get_serializer_registry()
         return serializer_registry.load_from_tar_file_path(self, directory, self)
 
-    def _get_serializer_registry(self):
+    @staticmethod
+    def _get_serializer_registry():
         from omnipy import runtime
         if len(runtime.objects.serializers.serializers) == 0:
             from omnipy.modules import register_serializers
