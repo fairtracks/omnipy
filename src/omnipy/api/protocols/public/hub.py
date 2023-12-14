@@ -11,6 +11,7 @@ from omnipy.api.protocols.public.config import (IsDataConfig,
                                                 IsLocalRunnerConfig,
                                                 IsPrefectEngineConfig,
                                                 IsRootLogConfig)
+from omnipy.api.protocols.public.data import IsSerializerRegistry
 
 
 class IsRootLogObjects(Protocol):
@@ -53,6 +54,7 @@ class IsRuntimeObjects(Protocol):
     local: IsEngine
     prefect: IsEngine
     registry: IsRunStateRegistry
+    serializers: IsSerializerRegistry
     root_log: IsRootLogObjects
 
     def __init__(
@@ -61,6 +63,7 @@ class IsRuntimeObjects(Protocol):
             local: IsEngine | None = None,  # noqa
             prefect: IsEngine | None = None,  # noqa
             registry: IsRunStateRegistry | None = None,  # noqa
+            serializers: IsSerializerRegistry | None = None,
             root_log: IsRootLogObjects | None = None,  # noqa
             *args: object,
             **kwargs: object) -> None:

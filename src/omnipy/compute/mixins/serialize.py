@@ -11,19 +11,34 @@ from omnipy.api.enums import (OutputStorageProtocolOptions,
                               RestoreOutputsOptions)
 from omnipy.api.protocols.private.compute.job import IsJobBase
 from omnipy.api.protocols.public.config import IsJobConfig
+from omnipy.api.protocols.public.data import IsSerializerRegistry
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.name import NameJobBaseMixin
 from omnipy.config.job import JobConfig
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import SerializerRegistry
+from omnipy.modules import register_serializers
 
 PersistOpts = PersistOutputsOptions
 RestoreOpts = RestoreOutputsOptions
 ProtocolOpts = OutputStorageProtocolOptions
 
 
+def _setup_serializer_registry() -> IsSerializerRegistry:
+    from omnipy import runtime
+    if runtime is not None:
+        return runtime.objects.serializers
+    else:
+        registry = SerializerRegistry()
+        register_serializers(registry)
+        return registry
+
+
 class SerializerFuncJobBaseMixin:
+
+    _serializer_registry: IsSerializerRegistry = _setup_serializer_registry()
+
     def __init__(self,
                  *,
                  persist_outputs: PersistOutputsOptions | None = None,
@@ -46,22 +61,6 @@ class SerializerFuncJobBaseMixin:
                 ProtocolOpts.FOLLOW_CONFIG if self._has_job_config else None
         else:
             self._output_storage_protocol = ProtocolOpts(output_storage_protocol)
-
-        self._serializer_registry = self._create_serializer_registry()
-
-    def _create_serializer_registry(self):
-        from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
-        from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
-        from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
-
-        # TODO: store in runtime, to remove dependencies
-        registry = SerializerRegistry()
-
-        registry.register(PandasDatasetToTarFileSerializer)
-        registry.register(RawDatasetToTarFileSerializer)
-        registry.register(JsonDatasetToTarFileSerializer)
-
-        return registry
 
     @property
     def _has_job_config(self) -> bool:

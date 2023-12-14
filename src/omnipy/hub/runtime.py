@@ -11,6 +11,7 @@ from omnipy.api.protocols.public.config import (IsDataConfig,
                                                 IsLocalRunnerConfig,
                                                 IsPrefectEngineConfig,
                                                 IsRootLogConfig)
+from omnipy.api.protocols.public.data import IsSerializerRegistry
 from omnipy.api.protocols.public.hub import IsRootLogObjects, IsRuntimeConfig, IsRuntimeObjects
 from omnipy.compute.job import JobBase
 from omnipy.config.data import DataConfig
@@ -21,6 +22,7 @@ from omnipy.engine.local import LocalRunner
 from omnipy.hub.entry import DataPublisher, RuntimeEntryPublisher
 from omnipy.hub.root_log import RootLogConfigEntryPublisher, RootLogObjects
 from omnipy.log.registry import RunStateRegistry
+from omnipy.modules import register_serializers
 from omnipy.modules.prefect.engine.prefect import PrefectEngine
 
 
@@ -44,7 +46,11 @@ class RuntimeObjects(RuntimeEntryPublisher):
     local: IsEngine = field(default_factory=LocalRunner)
     prefect: IsEngine = field(default_factory=PrefectEngine)
     registry: IsRunStateRegistry = field(default_factory=RunStateRegistry)
+    serializers: IsSerializerRegistry = field(default_factory=SerializerRegistry)
     root_log: IsRootLogObjects = field(default_factory=RootLogObjects)
+
+    def __post_init__(self):
+        register_serializers(self.serializers)
 
 
 @dataclass
