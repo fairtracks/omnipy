@@ -57,10 +57,10 @@ class MultiModelDataset(Protocol[ModelT]):
     """
         Variant of Dataset that allows custom models to be set on individual data files
     """
-    def set_model(self, obj_type: str, model: ModelT) -> None:
+    def set_model(self, data_file: str, model: ModelT) -> None:
         ...
 
-    def get_model(self, obj_type: str) -> ModelT:
+    def get_model(self, data_file: str) -> ModelT:
         ...
 
 

@@ -40,8 +40,8 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer):
         def csv_decode_func(file_stream: IO[bytes]) -> pd.DataFrame:
             return pd.read_csv(file_stream, encoding='utf8')
 
-        def python_dictify_object(obj_type: str, obj_val: Any) -> dict:
-            return {obj_type: obj_val}
+        def python_dictify_object(data_file: str, obj_val: Any) -> dict:
+            return {data_file: obj_val}
 
         cls.create_dataset_from_tarfile(
             pandas_dataset,

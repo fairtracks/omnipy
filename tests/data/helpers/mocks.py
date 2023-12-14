@@ -62,8 +62,8 @@ class MockNumberToTarFileSerializer(TarFileSerializer):
         def number_decode_func(file_stream: IO[bytes]) -> int:
             return int.from_bytes(file_stream.read(), byteorder=sys.byteorder)
 
-        def python_dictify_object(obj_type: str, obj_val: Any) -> dict:
-            return {obj_type: obj_val}
+        def python_dictify_object(data_file: str, obj_val: Any) -> dict:
+            return {data_file: obj_val}
 
         cls.create_dataset_from_tarfile(
             number_dataset,

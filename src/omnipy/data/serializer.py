@@ -47,10 +47,10 @@ class TarFileSerializer(Serializer, ABC):
                                     data_encode_func: Callable[[Any], bytes | memoryview]):
         bytes_io = BytesIO()
         with tarfile.open(fileobj=bytes_io, mode='w:gz') as tarfile_stream:
-            for obj_type, data_obj in dataset.items():
-                json_data_bytestream = BytesIO(data_encode_func(data_obj))
+            for data_file, data in dataset.items():
+                json_data_bytestream = BytesIO(data_encode_func(data))
                 json_data_bytestream.seek(0)
-                tarinfo = TarInfo(name=f'{obj_type}.{cls.get_output_file_suffix()}')
+                tarinfo = TarInfo(name=f'{data_file}.{cls.get_output_file_suffix()}')
                 tarinfo.size = len(json_data_bytestream.getbuffer())
                 tarfile_stream.addfile(tarinfo, json_data_bytestream)
         return bytes_io.getbuffer().tobytes()
@@ -64,11 +64,11 @@ class TarFileSerializer(Serializer, ABC):
                                     import_method='from_data'):
         with tarfile.open(fileobj=BytesIO(tarfile_bytes), mode='r:gz') as tarfile_stream:
             for filename in tarfile_stream.getnames():
-                obj_type_file = tarfile_stream.extractfile(filename)
+                data_file = tarfile_stream.extractfile(filename)
                 assert filename.endswith(f'.{cls.get_output_file_suffix()}')
-                obj_type = '.'.join(filename.split('.')[:-1])
+                data_file_name = '.'.join(filename.split('.')[:-1])
                 getattr(dataset, import_method)(
-                    dictify_object_func(obj_type, data_decode_func(obj_type_file)))
+                    dictify_object_func(data_file_name, data_decode_func(data_file)))
 
 
 class SerializerRegistry:

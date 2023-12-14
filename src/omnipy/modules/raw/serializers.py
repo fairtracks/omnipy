@@ -35,8 +35,8 @@ class RawDatasetToTarFileSerializer(TarFileSerializer):
         def raw_decode_func(file_stream: IO[bytes]) -> str:
             return file_stream.read().decode('utf8')
 
-        def python_dictify_object(obj_type: str, obj_val: Any) -> dict:
-            return {obj_type: obj_val}
+        def python_dictify_object(data_file: str, obj_val: Any) -> dict:
+            return {data_file: obj_val}
 
         cls.create_dataset_from_tarfile(
             dataset,
