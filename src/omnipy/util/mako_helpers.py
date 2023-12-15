@@ -1,5 +1,5 @@
 import ast
-from inspect import formatannotation, getmodule, isclass, isgeneratorfunction, Signature
+from inspect import formatannotation, isgeneratorfunction, Signature
 import os
 from types import ModuleType
 from typing import Any, get_type_hints
@@ -7,7 +7,7 @@ from typing import Any, get_type_hints
 from docstring_parser import DocstringParam, DocstringReturns
 from pdocs.doc import Doc, External, Function, Module
 
-from omnipy.util.helpers import create_merged_dict
+from omnipy.util.helpers import recursive_module_import
 
 IGNORED = None
 IGNORE_PARAMS = ['cls', 'self']
@@ -107,27 +107,6 @@ def get_type_name_from_annotation(module: ModuleType, annotation, empty_obj):
         type_name = ''
 
     return type_name
-
-
-def _is_internal_module(module: ModuleType, imported_modules: list[ModuleType]):
-    return module not in imported_modules and module.__name__.startswith('omnipy')
-
-
-def recursive_module_import(module: ModuleType, imported_modules: list[ModuleType] = []):
-    module_vars = vars(module)
-    imported_modules.append(module)
-
-    for val in module_vars.values():
-        if isclass(val):
-            for base_cls in val.__bases__:
-                base_cls_module = getmodule(base_cls)
-                if base_cls_module and _is_internal_module(base_cls_module, imported_modules):
-                    module_vars = create_merged_dict(
-                        recursive_module_import(base_cls_module, imported_modules),
-                        module_vars,
-                    )
-
-    return module_vars
 
 
 def convert_to_qual_name_type_hint_str(module: ModuleType, type_hint: Any) -> str:

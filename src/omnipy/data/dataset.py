@@ -9,6 +9,7 @@ from pydantic import Field, PrivateAttr, root_validator, ValidationError
 from pydantic.fields import Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.utils import lenient_issubclass
+from tabulate import tabulate
 
 from omnipy.data.model import _cleanup_name_qualname_and_module, Model
 from omnipy.util.helpers import is_optional, is_strict_subclass, remove_forward_ref_notation
@@ -358,7 +359,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     def load(self, directory: str):
         serializer_registry = self._get_serializer_registry()
-        return serializer_registry.load_from_tar_file_path(self, directory, self)
+        self.include(serializer_registry.load_from_tar_file_path(self, directory, self))
 
     @staticmethod
     def _get_serializer_registry():
@@ -387,6 +388,14 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     def __repr_args__(self):
         return [(k, v.contents) for k, v in self.data.items()]
+
+    def __repr__(self):
+        return tabulate(
+            ((k, type(v).__name__, len(v) if hasattr(v, '__len__') else 'N/A') \
+             for k, v in self.items()),
+            ('Data file name', 'Type', 'Length'),
+            tablefmt="rounded_outline",
+        )
 
 
 # TODO: Use json serializer package from the pydantic config instead of 'json'

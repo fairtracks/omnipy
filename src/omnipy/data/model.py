@@ -15,7 +15,7 @@ from typing import (Annotated,
                     TypeVar,
                     Union)
 
-# from orjson import orjson
+from devtools import debug
 from pydantic import NoneIsNotAllowedError
 from pydantic import Protocol as PydanticProtocol
 from pydantic import root_validator, ValidationError
@@ -24,6 +24,7 @@ from pydantic.generics import GenericModel
 from pydantic.main import ModelMetaclass, validate_model
 from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass
+from tabulate import tabulate
 
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
 from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
@@ -508,7 +509,8 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
                             '\t"class MyNumberList(Model[list[int]]): ..."')
 
     def __setattr__(self, attr: str, value: Any) -> None:
-        if attr in ['__module__'] + list(self.__dict__.keys()) and attr not in [ROOT_KEY]:
+        if attr in ['__module__'] + list(
+                self.__dict__.keys()) and attr not in [ROOT_KEY] or attr in ['__repr__']:
             super().__setattr__(attr, value)
         else:
             if attr in ['contents']:
@@ -617,3 +619,11 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
     def __repr_args__(self):
         return [(None, self.contents)]
+
+    def __str__(self):
+        return tabulate(
+            ((self.__class__.__name__, ''), ('Raw file preview', 'Data structure'),
+             (str(self.to_data()), debug.format(self))),
+            maxcolwidths=[(40, 40)],
+            tablefmt="rounded_outline",
+        )

@@ -1,8 +1,9 @@
 from collections.abc import Hashable, Iterable
 from copy import copy, deepcopy
 import inspect
+from inspect import getmodule, isclass
 import locale as pkg_locale
-from types import GenericAlias, UnionType
+from types import GenericAlias, ModuleType, UnionType
 from typing import (Annotated,
                     Any,
                     cast,
@@ -192,3 +193,24 @@ class RestorableContents:
     def differs_from_last_snapshot(self, obj: object) -> bool:
         self._assert_not_empty()
         return not all_equals(self._last_snapshot.obj_copy, obj)
+
+
+def _is_internal_module(module: ModuleType, imported_modules: list[ModuleType]):
+    return module not in imported_modules and module.__name__.startswith('omnipy')
+
+
+def recursive_module_import(module: ModuleType, imported_modules: list[ModuleType] = []):
+    module_vars = vars(module)
+    imported_modules.append(module)
+
+    for val in module_vars.values():
+        if isclass(val):
+            for base_cls in val.__bases__:
+                base_cls_module = getmodule(base_cls)
+                if base_cls_module and _is_internal_module(base_cls_module, imported_modules):
+                    module_vars = create_merged_dict(
+                        recursive_module_import(base_cls_module, imported_modules),
+                        module_vars,
+                    )
+
+    return module_vars
