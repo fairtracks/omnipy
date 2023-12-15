@@ -240,8 +240,8 @@ def test_repr():
     assert repr(Model[int]) == "<class 'omnipy.data.model.Model[int]'>"
     assert repr(Model[int](5)) == 'Model[int](5)'
 
-    assert repr(
-        Model[Model[int]]) == "<class 'omnipy.data.model.Model[omnipy.data.model.Model[int]]'>"
+    assert repr(Model[Model[int]]) \
+           == "<class 'omnipy.data.model.Model[omnipy.data.model.Model[int]]'>"
     assert repr(Model[Model[int]](Model[int](5))) == 'Model[Model[int]](Model[int](5))'
 
     assert repr(ParentModel) == "<class 'tests.data.test_model.ParentGenericModel[NumberModel]'>"

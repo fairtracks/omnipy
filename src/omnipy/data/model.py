@@ -17,7 +17,7 @@ from typing import (Annotated,
 
 # from orjson import orjson
 from pydantic import NoneIsNotAllowedError
-from pydantic import Protocol as pydantic_protocol
+from pydantic import Protocol as PydanticProtocol
 from pydantic import root_validator, ValidationError
 from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
@@ -224,8 +224,6 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             model = cls._populate_root_field(model)
 
         created_model = super().__class_getitem__(model)
-
-        # cls._propagate_allow_none_from_model(model, created_model)
 
         # As long as models are not created concurrently, setting the class members temporarily
         # should not have averse effects
@@ -457,7 +455,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             return json_content
 
     def from_json(self, json_contents: str) -> None:
-        new_model = self.parse_raw(json_contents, proto=pydantic_protocol.json)
+        new_model = self.parse_raw(json_contents, proto=PydanticProtocol.json)
         self.contents = new_model.contents
 
     def inner_type(self, with_args: bool = False) -> type | None:
