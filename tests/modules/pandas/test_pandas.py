@@ -43,7 +43,7 @@ def test_pandas_dataset_json_list_of_objects_same_keys():
         check_dtype=False,
     )
     assert_pandas_frame_dtypes(pandas_data['data_file'], ('string', 'Int64'))
-    assert pandas_data.to_json() == json_data
+    assert pandas_data.to_json(pretty=False) == json_data
 
 
 def test_pandas_dataset_list_of_objects_different_keys():

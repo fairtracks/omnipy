@@ -37,7 +37,7 @@ class IsDataset(Protocol[ModelT]):
                   update: bool = True) -> None:
         ...
 
-    def to_json(self, pretty=False) -> dict[str, str]:
+    def to_json(self, pretty=True) -> dict[str, str]:
         ...
 
     def from_json(self,
@@ -46,7 +46,7 @@ class IsDataset(Protocol[ModelT]):
         ...
 
     @classmethod
-    def to_json_schema(cls, pretty=False) -> str | dict[str, str]:
+    def to_json_schema(cls, pretty=True) -> str | dict[str, str]:
         ...
 
     def as_multi_model_dataset(self) -> 'MultiModelDataset[ModelT]':

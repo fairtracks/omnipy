@@ -435,7 +435,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     def absorb_and_replace(self, other: 'Model'):
         self.from_data(other.to_data())
 
-    def to_json(self, pretty=False) -> str:
+    def to_json(self, pretty=True) -> str:
         json_content = self.json()
         if pretty:
             return self._pretty_print_json(json.loads(json_content))
@@ -475,7 +475,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     #     return self.__class__.create_from_json, (self.to_json(),)
 
     @classmethod
-    def to_json_schema(cls, pretty=False) -> str:
+    def to_json_schema(cls, pretty=True) -> str:
         schema = cls.schema()
 
         if pretty:

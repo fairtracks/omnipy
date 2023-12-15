@@ -376,8 +376,8 @@ def test_import_and_export():
       }
     }''')  # noqa: Q001
 
-    assert dataset.to_json() == dataset.to_json(pretty=False)  # noqa
-    assert dataset.to_json_schema() == dataset.to_json_schema(pretty=False)  # noqa
+    assert dataset.to_json() == dataset.to_json(pretty=True)  # noqa
+    assert dataset.to_json_schema() == dataset.to_json_schema(pretty=True)  # noqa
 
 
 def test_import_export_custom_parser_to_other_type():
