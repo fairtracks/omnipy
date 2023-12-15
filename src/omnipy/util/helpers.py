@@ -16,7 +16,10 @@ from typing import (Annotated,
                     TypeVar,
                     Union)
 
+from isort import place_module
+from isort.sections import STDLIB
 from pydantic import ValidationError
+from pydantic.typing import display_as_type
 from typing_inspect import get_generic_bases, is_generic_type
 
 from omnipy.api.typedefs import LocaleType
@@ -143,6 +146,17 @@ def remove_annotated_plus_optional_if_present(
             else:
                 type_or_class = Union[args[:-1]]
     return type_or_class
+
+
+def remove_forward_ref_notation(type_str: str):
+    return type_str.replace("ForwardRef('", '').replace("')", '')
+
+
+def generate_qualname(cls_name: str, model: Any) -> str:
+    m_module = model.__module__ if hasattr(model, '__module__') else ''
+    m_module_prefix = f'{m_module}.' if m_module and place_module(m_module) != STDLIB else ''
+    fully_qual_model_name = f'{m_module_prefix}{display_as_type(model)}'
+    return f'{cls_name}[{fully_qual_model_name}]'
 
 
 class Snapshot(NamedTuple):

@@ -1,6 +1,6 @@
 from textwrap import dedent
 from types import NoneType
-from typing import Any, Generic, List, Optional, TypeVar, Union
+from typing import Any, Generic, List, Optional, TypeAlias, TypeVar, Union
 
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
@@ -246,6 +246,58 @@ def test_equality_with_pydantic() -> None:
 
     assert Dataset[Model[PydanticModel]]({'data_file_1': {'a': 1}}) != \
            Dataset[Model[EqualPydanticModel]]({'data_file_1': {'a': 1}})
+
+
+ChildT = TypeVar('ChildT', bound=object)
+
+
+class ParentGenericDataset(Dataset[Model[Optional[ChildT]]], Generic[ChildT]):
+    ...
+
+
+ParentDataset: TypeAlias = ParentGenericDataset['NumberModel']
+ParentDatasetNested: TypeAlias = ParentGenericDataset[Union[Model[str], 'NumberModel']]
+
+
+class NumberModel(Model[int]):
+    ...
+
+
+ParentDataset.update_forward_refs(NumberModel=NumberModel)
+ParentDatasetNested.update_forward_refs(NumberModel=NumberModel)
+
+
+def test_qualname():
+    assert Model[int].__qualname__ == 'Model[int]'
+    assert Model[Model[int]].__qualname__ == 'Model[omnipy.data.model.Model[int]]'
+    assert ParentDataset.__qualname__ == 'ParentGenericDataset[NumberModel]'
+    assert ParentDatasetNested.__qualname__ == 'ParentGenericDataset[Union[Model[str], NumberModel]]'
+
+
+def test_repr():
+    assert repr(Dataset[
+        Model[int]]) == "<class 'omnipy.data.dataset.Dataset[omnipy.data.model.Model[int]]'>"
+    assert repr(Dataset[Model[int]](a=5, b=7)) == 'Dataset[Model[int]](a=5, b=7)'
+    assert repr(Dataset[Model[int]]({'a': 5, 'b': 7})) == 'Dataset[Model[int]](a=5, b=7)'
+    assert repr(Dataset[Model[int]](data={'a': 5, 'b': 7})) == 'Dataset[Model[int]](a=5, b=7)'
+    assert repr(Dataset[Model[int]]([('a', 5), ('b', 7)])) == 'Dataset[Model[int]](a=5, b=7)'
+    assert repr(Dataset[Model[int]](data=[('a', 5), ('b', 7)])) == 'Dataset[Model[int]](a=5, b=7)'
+
+    assert repr(Dataset[Model[Model[int]]]
+                ) == "<class 'omnipy.data.dataset.Dataset[omnipy.data.model.Model[Model[int]]]'>"
+    assert repr(Dataset[Model[Model[int]]](
+        a=Model[int](5))) == 'Dataset[Model[Model[int]]](a=Model[int](5))'
+
+    assert repr(
+        ParentDataset) == "<class 'tests.data.test_dataset.ParentGenericDataset[NumberModel]'>"
+    assert repr(
+        ParentDataset(a=NumberModel(5))) == 'ParentGenericDataset[NumberModel](a=NumberModel(5))'
+
+    assert repr(
+        ParentDatasetNested
+    ) == "<class 'tests.data.test_dataset.ParentGenericDataset[Union[Model[str], NumberModel]]'>"
+    assert repr(ParentDatasetNested(
+        a='abc')) == "ParentGenericDataset[Union[Model[str], NumberModel]](a=Model[str]('abc'))"
 
 
 def test_basic_validation():

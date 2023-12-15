@@ -15,8 +15,6 @@ from typing import (Annotated,
                     TypeVar,
                     Union)
 
-from isort import place_module
-from isort.sections import STDLIB
 # from orjson import orjson
 from pydantic import NoneIsNotAllowedError
 from pydantic import Protocol as pydantic_protocol
@@ -32,9 +30,11 @@ from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
 from omnipy.util.decorators import add_callback_after_call
 from omnipy.util.helpers import (all_equals,
                                  ensure_plain_type,
+                                 generate_qualname,
                                  is_optional,
                                  is_union,
                                  remove_annotated_plus_optional_if_present,
+                                 remove_forward_ref_notation,
                                  RestorableContents)
 
 _KeyT = TypeVar('_KeyT')
@@ -44,18 +44,25 @@ RootT = TypeVar('RootT', covariant=True, bound=object)
 
 ROOT_KEY = '__root__'
 
+
+def _cleanup_name_qualname_and_module(cls, created_model_or_dataset, model, orig_model):
+    if isinstance(model, str):  # ForwardRef
+        created_model_or_dataset.__name__ = f'{cls.__name__}[{model}]'
+        created_model_or_dataset.__qualname__ = created_model_or_dataset.__name__
+    else:
+        if created_model_or_dataset.__name__.startswith(f'{cls.__name__}[') \
+                and get_origin(model) is Annotated:
+            created_model_or_dataset.__name__ = f'{cls.__name__}[{display_as_type(orig_model)}]'
+            created_model_or_dataset.__qualname__ = generate_qualname(cls.__qualname__, orig_model)
+        else:
+            created_model_or_dataset.__qualname__ = generate_qualname(cls.__qualname__, model)
+
+    created_model_or_dataset.__module__ = cls.__module__
+
+
 # def orjson_dumps(v, *, default):
 #     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
 #     return orjson.dumps(v, default=default).decode()
-
-
-def generate_qualname(cls_name: str, model: Any) -> str:
-    m_module = model.__module__ if hasattr(model, '__module__') else ''
-    m_module_prefix = f'{m_module}.' \
-        if m_module and place_module(m_module) != STDLIB else ''
-    fully_qual_model_name = f'{m_module_prefix}{display_as_type(model)}'
-    return f'{cls_name}[{fully_qual_model_name}]'
-
 
 _restorable_content_cache: dict[int, RestorableContents] = {}
 
@@ -227,9 +234,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         if cls == Model:
             cls._depopulate_root_field()
 
-        if created_model.__name__.startswith('Model[') and get_origin(model) is Annotated:
-            created_model.__name__ = f'Model[{display_as_type(orig_model)}]'
-        created_model.__qualname__ = generate_qualname(cls.__name__, model)
+        _cleanup_name_qualname_and_module(cls, created_model, model, orig_model)
 
         outer_type = created_model._get_root_type(outer=True, with_args=True)
         outer_type_plain = created_model._get_root_type(outer=True, with_args=False)
@@ -323,6 +328,15 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
                 return super().validate(value)
         else:
             return super().validate(value)
+
+    @classmethod
+    def update_forward_refs(cls, **localns: Any) -> None:
+        """
+        Try to update ForwardRefs on fields based on this Model, globalns and localns.
+        """
+        super().update_forward_refs(**localns)
+        cls.__name__ = remove_forward_ref_notation(cls.__name__)
+        cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
     def validate_contents(self) -> None:
         self._validate_and_set_contents(self.contents)
@@ -496,7 +510,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
                             '\t"class MyNumberList(Model[list[int]]): ..."')
 
     def __setattr__(self, attr: str, value: Any) -> None:
-        if attr in self.__dict__ and attr not in [ROOT_KEY]:
+        if attr in ['__module__'] + list(self.__dict__.keys()) and attr not in [ROOT_KEY]:
             super().__setattr__(attr, value)
         else:
             if attr in ['contents']:
@@ -599,3 +613,9 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             and self.__class__ == other.__class__ \
             and all_equals(self.contents, other.contents) \
             and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
+
+    def __repr__(self) -> str:
+        return super().__repr__()
+
+    def __repr_args__(self):
+        return [(None, self.contents)]

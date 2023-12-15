@@ -8,11 +8,10 @@ from typing import Annotated, Any, Generic, get_args, get_origin, Iterator, Opti
 from pydantic import Field, PrivateAttr, root_validator, ValidationError
 from pydantic.fields import Undefined, UndefinedType
 from pydantic.generics import GenericModel
-from pydantic.typing import display_as_type
 from pydantic.utils import lenient_issubclass
 
-from omnipy.data.model import generate_qualname, Model
-from omnipy.util.helpers import is_optional, is_strict_subclass
+from omnipy.data.model import _cleanup_name_qualname_and_module, Model
+from omnipy.util.helpers import is_optional, is_strict_subclass, remove_forward_ref_notation
 
 ModelT = TypeVar('ModelT', bound=Model)
 DATA_KEY = 'data'
@@ -105,9 +104,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
         created_dataset = super().__class_getitem__(model)
 
-        if created_dataset.__name__.startswith('Dataset[') and get_origin(model) is Annotated:
-            created_dataset.__name__ = f'Dataset[{display_as_type(orig_model)}]'
-        created_dataset.__qualname__ = generate_qualname(cls.__name__, model)
+        _cleanup_name_qualname_and_module(cls, created_dataset, model, orig_model)
 
         return created_dataset
 
@@ -225,6 +222,16 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             return self.data[data_file]
         else:
             return self.data[data_file]
+
+    @classmethod
+    def update_forward_refs(cls, **localns: Any) -> None:
+        """
+        Try to update ForwardRefs on fields based on this Model, globalns and localns.
+        """
+        cls.get_model_class().update_forward_refs(**localns)  # Update Model cls
+        super().update_forward_refs(**localns)
+        cls.__name__ = remove_forward_ref_notation(cls.__name__)
+        cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
     def _validate(self, _data_file: str) -> None:
         self.data = self.data  # Triggers pydantic validation, as validate_assignment=True
@@ -374,6 +381,12 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             and self.__class__ == other.__class__ \
             and self.data == other.data \
             and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
+
+    def __repr__(self) -> str:
+        return super().__repr__()
+
+    def __repr_args__(self):
+        return [(k, v.contents) for k, v in self.data.items()]
 
 
 # TODO: Use json serializer package from the pydantic config instead of 'json'
