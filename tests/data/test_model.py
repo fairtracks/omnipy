@@ -210,6 +210,48 @@ def test_equality_with_pydantic_as_args():
     assert MyModel(a=1) != MyInherited(a=1)
 
 
+ChildT = TypeVar('ChildT', bound=object)
+
+
+class ParentGenericModel(Model[Optional[ChildT]], Generic[ChildT]):
+    ...
+
+
+ParentModel: TypeAlias = ParentGenericModel['NumberModel']
+ParentModelNested: TypeAlias = ParentGenericModel[Union[str, 'NumberModel']]
+
+
+class NumberModel(Model[int]):
+    ...
+
+
+ParentModel.update_forward_refs(NumberModel=NumberModel)
+ParentModelNested.update_forward_refs(NumberModel=NumberModel)
+
+
+def test_qualname():
+    assert Model[int].__qualname__ == 'Model[int]'
+    assert Model[Model[int]].__qualname__ == 'Model[omnipy.data.model.Model[int]]'
+    assert ParentModel.__qualname__ == 'ParentGenericModel[NumberModel]'
+    assert ParentModelNested.__qualname__ == 'ParentGenericModel[Union[str, NumberModel]]'
+
+
+def test_repr():
+    assert repr(Model[int]) == "<class 'omnipy.data.model.Model[int]'>"
+    assert repr(Model[int](5)) == 'Model[int](5)'
+
+    assert repr(
+        Model[Model[int]]) == "<class 'omnipy.data.model.Model[omnipy.data.model.Model[int]]'>"
+    assert repr(Model[Model[int]](Model[int](5))) == 'Model[Model[int]](Model[int](5))'
+
+    assert repr(ParentModel) == "<class 'tests.data.test_model.ParentGenericModel[NumberModel]'>"
+    assert repr(ParentModel(NumberModel(5))) == 'ParentGenericModel[NumberModel](NumberModel(5))'
+
+    assert repr(ParentModelNested
+                ) == "<class 'tests.data.test_model.ParentGenericModel[Union[str, NumberModel]]'>"
+    assert repr(ParentModelNested('abc')) == "ParentGenericModel[Union[str, NumberModel]]('abc')"
+
+
 def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model]) -> bool:
     is_subclass = issubclass(model_cls_a, model_cls_b)
 
