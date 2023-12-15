@@ -271,7 +271,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     def absorb_and_replace(self, other: 'Dataset'):
         self.from_data(other.to_data(), update=False)
 
-    def to_json(self, pretty=False) -> dict[str, str]:
+    def to_json(self, pretty=True) -> dict[str, str]:
         result = {}
 
         for key, val in self.to_data().items():
@@ -310,7 +310,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     #     return self.__class__.create_from_json, (self.to_json(),)
 
     @classmethod
-    def to_json_schema(cls, pretty=False) -> str | dict[str, str]:
+    def to_json_schema(cls, pretty=True) -> str | dict[str, str]:
         result = {}
         schema = cls.schema()
         for key, val in schema['properties']['data'].items():

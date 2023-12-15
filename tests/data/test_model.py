@@ -936,8 +936,8 @@ def test_import_export_methods():
 
     assert Model[int](12).to_json() == '12'
     assert Model[str]('test').to_json() == '"test"'
-    assert Model[dict]({'a': 2}).to_json() == '{"a": 2}'
-    assert Model[list]([2, 4, 'b']).to_json() == '[2, 4, "b"]'
+    assert Model[dict]({'a': 2}).to_json(pretty=False) == '{"a": 2}'
+    assert Model[list]([2, 4, 'b']).to_json(pretty=False) == '[2, 4, "b"]'
 
     model_int = Model[int]()
     model_int.from_json('12')
@@ -985,28 +985,28 @@ def test_import_export_methods():
     assert model_list.to_data() == [True, 'text', -47.9]
 
     std_description = Model._get_standard_field_description()
-    assert Model[int].to_json_schema(pretty=True) == dedent('''\
+    assert Model[int].to_json_schema() == dedent('''\
     {
       "title": "Model[int]",
       "description": "''' + std_description + '''",
       "type": "integer"
     }''')  # noqa: Q001
 
-    assert Model[str].to_json_schema(pretty=True) == dedent('''\
+    assert Model[str].to_json_schema() == dedent('''\
     {
       "title": "Model[str]",
       "description": "''' + std_description + '''",
       "type": "string"
     }''')  # noqa: Q001
 
-    assert Model[dict].to_json_schema(pretty=True) == dedent('''\
+    assert Model[dict].to_json_schema() == dedent('''\
     {
       "title": "Model[dict]",
       "description": "''' + std_description + '''",
       "type": "object"
     }''')  # noqa: Q001
 
-    assert Model[list].to_json_schema(pretty=True) == dedent('''\
+    assert Model[list].to_json_schema() == dedent('''\
     {
       "title": "Model[list]",
       "description": "''' + std_description + '''",
@@ -1494,8 +1494,9 @@ def test_nested_model():
     model_1.from_data(unloaded_data)
     assert model_1.to_data() == unloaded_data
 
-    assert model_1.to_json() == ('{"2": [2], "3": [3], "4": [2, 2], "5": [5], "6": [2, 3], '
-                                 '"7": [7], "8": [2, 2, 2], "9": [3, 3], "10": [2, 5]}')
+    assert model_1.to_json(
+        pretty=False) == ('{"2": [2], "3": [3], "4": [2, 2], "5": [5], "6": [2, 3], '
+                          '"7": [7], "8": [2, 2, 2], "9": [3, 3], "10": [2, 5]}')
 
     model_2 = DictToListOfPositiveInts()
     model_2.from_json('{"2": [2], "3": [3], "4": [2, 2], "5": [5], "6": [2, 3], '
@@ -1504,7 +1505,7 @@ def test_nested_model():
         2: [2], 3: [3], 4: [2, 2], 5: [5], 6: [2, 3], 7: [7], 8: [2, 2, 2], 9: [3, 3], 10: [2, 5]
     })
 
-    assert model_1.to_json_schema(pretty=True) == dedent("""\
+    assert model_1.to_json_schema() == dedent("""\
     {
       "title": "DictToListOfPositiveInts",
       "description": "This model is perfect for a mapping product numbers to factor lists",
@@ -1575,10 +1576,10 @@ def test_complex_nested_models():
     roman_tuple_model = ListOfProductFactorsTuplesRoman(unloaded_data)
     roman_dict_model_1 = ProductFactorDictInRomanNumerals(roman_tuple_model.to_data())
 
-    assert roman_dict_model_1.to_json() == (
-        '{"II": ["II"], "III": ["III"], "IV": ["II", "II"], "V": ["V"], '
-        '"VI": ["II", "III"], "VII": ["VII"], "VIII": ["II", "II", "II"], '
-        '"IX": ["III", "III"], "X": ["II", "V"]}')
+    assert roman_dict_model_1.to_json(
+        pretty=False) == ('{"II": ["II"], "III": ["III"], "IV": ["II", "II"], "V": ["V"], '
+                          '"VI": ["II", "III"], "VII": ["VII"], "VIII": ["II", "II", "II"], '
+                          '"IX": ["III", "III"], "X": ["II", "V"]}')
 
     roman_dict_model_2 = ProductFactorDictInRomanNumerals()
     roman_dict_model_2.from_json('{"II": ["II"], "III": ["III"], "IV": ["II", "II"], "V": ["V"], '
@@ -1596,7 +1597,7 @@ def test_complex_nested_models():
         'X': ['II', 'V']
     }
 
-    assert roman_dict_model_1.to_json_schema(pretty=True) == dedent("""\
+    assert roman_dict_model_1.to_json_schema() == dedent("""\
     {
       "title": "ProductFactorDictInRomanNumerals",
       "description": "Extremely useful model",
