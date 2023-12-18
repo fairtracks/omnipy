@@ -257,7 +257,7 @@ class JsonDictOfDictsOfScalarsModel(Model[JsonDictM[_JsonDictOfScalarsM]]):
 # Nested models
 
 
-class JsonNoDictsModel(Model[_JsonOnlyListsUnion]):
+class JsonOnlyListsModel(Model[_JsonOnlyListsUnion]):
     ...
 
 
@@ -265,7 +265,7 @@ class JsonNestedListsModel(Model[JsonOnlyListsM]):
     ...
 
 
-class JsonNoListsModel(Model[_JsonOnlyDictsUnion]):
+class JsonOnlyDictsModel(Model[_JsonOnlyDictsUnion]):
     ...
 
 
@@ -328,7 +328,7 @@ _dict_related_json_model_classes: list[Type[Model]] = [
     JsonDictOfListsOfScalarsModel,
     JsonDictOfDictsModel,
     JsonDictOfDictsOfScalarsModel,
-    JsonNoListsModel,
+    JsonOnlyDictsModel,
     JsonNestedListsModel,
     JsonListOfNestedDictsModel,
     JsonDictOfNestedListsModel,

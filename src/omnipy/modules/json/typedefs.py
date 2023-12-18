@@ -23,11 +23,11 @@ JsonDictOfDictsOfScalars: TypeAlias = dict[str, JsonDictOfScalars]
 
 # Exclusion variants
 
-JsonNoDicts: TypeAlias = 'JsonScalar | JsonNestedLists'
-JsonNestedLists: TypeAlias = list[JsonNoDicts]
+JsonOnlyLists: TypeAlias = 'JsonScalar | JsonNestedLists'
+JsonNestedLists: TypeAlias = list[JsonOnlyLists]
 
-JsonNoLists: TypeAlias = 'JsonScalar | JsonNestedDicts'
-JsonNestedDicts: TypeAlias = dict[str, JsonNoLists]
+JsonOnlyDicts: TypeAlias = 'JsonScalar | JsonNestedDicts'
+JsonNestedDicts: TypeAlias = dict[str, JsonOnlyDicts]
 
 # More specific types
 
