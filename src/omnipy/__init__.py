@@ -65,7 +65,10 @@ from omnipy.modules.pandas.tasks import (concat_dataframes_across_datasets,
                                          convert_dataset_pandas_to_csv,
                                          extract_columns_as_files)
 from omnipy.modules.raw.models import JoinLinesModel, SplitAndStripLinesModel, SplitLinesModel
-from omnipy.modules.raw.tasks import modify_all_lines, modify_datafile_contents, modify_each_line
+from omnipy.modules.raw.tasks import (decode_bytes,
+                                      modify_all_lines,
+                                      modify_datafile_contents,
+                                      modify_each_line)
 from omnipy.modules.tables.tasks import remove_columns
 
 # from omnipy.util.helpers import recursive_module_import
@@ -134,6 +137,7 @@ __all__ = [
     'convert_dataset_csv_to_pandas',
     'convert_dataset_pandas_to_csv',
     'convert_dataset_list_of_dicts_to_pandas',
+    'decode_bytes',
     'modify_all_lines',
     'modify_datafile_contents',
     'modify_each_line',
