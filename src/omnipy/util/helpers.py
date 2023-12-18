@@ -89,6 +89,14 @@ def transfer_generic_args_to_cls(to_cls, from_generic_type):
         return to_cls
 
 
+def ensure_plain_type(in_type: type | GenericAlias) -> type | GenericAlias | None | Any:
+    return get_origin(in_type) if get_args(in_type) else in_type
+
+
+def ensure_non_str_byte_iterable(value):
+    return value if is_iterable(value) and not type(value) in (str, bytes) else (value,)
+
+
 def is_iterable(obj: object) -> bool:
     try:
         iter(obj)
@@ -130,10 +138,6 @@ def is_strict_subclass(
 
 class IsDataclass(Protocol):
     __dataclass_fields__: ClassVar[dict]
-
-
-def ensure_plain_type(in_type: type | GenericAlias) -> type | GenericAlias | None | Any:
-    return get_origin(in_type) if get_args(in_type) else in_type
 
 
 def remove_annotated_plus_optional_if_present(
@@ -214,3 +218,12 @@ def recursive_module_import(module: ModuleType, imported_modules: list[ModuleTyp
                     )
 
     return module_vars
+
+
+def get_calling_module_name() -> str | None:
+    stack = inspect.stack()
+    if len(stack) >= 3:
+        grandparent_frame = inspect.stack()[2][0]
+        module = inspect.getmodule(grandparent_frame)
+        if module is not None:
+            return module.__name__

@@ -2,7 +2,7 @@ from typing import Generic, TypeVar
 
 from omnipy.util.param_key_mapper import ParamKeyMapper
 
-# For test_mako_helpers.test_internally_inherited
+# For test_mako_helpers::test_internally_inherited
 
 T = TypeVar('T')
 
