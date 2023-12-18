@@ -5,7 +5,9 @@ from typing import Annotated, Generic, get_args, Iterator, Optional, TypeVar, Un
 import pytest
 from typing_inspect import get_generic_type
 
-from omnipy.util.helpers import (ensure_plain_type,
+from omnipy.util.helpers import (ensure_non_str_byte_iterable,
+                                 ensure_plain_type,
+                                 get_calling_module_name,
                                  is_iterable,
                                  is_optional,
                                  is_strict_subclass,
@@ -13,6 +15,8 @@ from omnipy.util.helpers import (ensure_plain_type,
                                  remove_annotated_plus_optional_if_present,
                                  RestorableContents,
                                  transfer_generic_args_to_cls)
+
+from .helpers import other_module_call_get_calling_module_name
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -53,6 +57,22 @@ def test_do_not_transfer_generic_params_to_non_generic_cls() -> None:
 def test_ensure_plain_type() -> None:
     assert ensure_plain_type(list) == list
     assert ensure_plain_type(list[str]) == list
+
+
+def test_ensure_non_str_byte_iterable() -> None:
+    assert ensure_non_str_byte_iterable((1, 2, 3)) == (1, 2, 3)
+    assert ensure_non_str_byte_iterable([1, 2, 3]) == [1, 2, 3]
+    assert ensure_non_str_byte_iterable({'a': 1, 'b': 2}) == {'a': 1, 'b': 2}
+    assert ensure_non_str_byte_iterable({'a', 'b'}) == {'a', 'b'}
+
+    assert ensure_non_str_byte_iterable(123) == (123,)
+    assert ensure_non_str_byte_iterable('abc') == ('abc',)
+    assert ensure_non_str_byte_iterable(b'abc') == (b'abc',)
+    assert ensure_non_str_byte_iterable(None) == (None,)
+    assert ensure_non_str_byte_iterable(True) == (True,)
+
+    x = object()
+    assert ensure_non_str_byte_iterable(x) == (x,)
 
 
 def test_is_iterable() -> None:
@@ -268,3 +288,11 @@ def test_restorable_contents():
     assert my_dict == {1: 2, 3: 4}
     assert contents.last_snapshot_taken_of_same_obj(my_dict) is True
     assert contents.differs_from_last_snapshot(my_dict) is True
+
+
+def test_get_calling_module_name() -> None:
+    def local_call_get_calling_module_name() -> str:
+        return get_calling_module_name()
+
+    assert local_call_get_calling_module_name() == 'tests.util.test_helpers'
+    assert other_module_call_get_calling_module_name() == 'tests.util.test_helpers'
