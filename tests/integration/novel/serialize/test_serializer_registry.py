@@ -3,7 +3,7 @@ import pytest
 from omnipy.data.serializer import SerializerRegistry
 from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
 from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
-from omnipy.modules.raw.serializers import RawDatasetToTarFileSerializer
+from omnipy.modules.raw.serializers import RawStrDatasetToTarFileSerializer
 
 from .cases.datasets import (csv_dataset,
                              json_dataset,
@@ -21,7 +21,7 @@ def registry():
     registry = SerializerRegistry()
 
     registry.register(PandasDatasetToTarFileSerializer)
-    registry.register(RawDatasetToTarFileSerializer)
+    registry.register(RawStrDatasetToTarFileSerializer)
     registry.register(JsonDatasetToTarFileSerializer)
 
     return registry
@@ -44,22 +44,22 @@ def test_serializer_registry_auto_detect_json_dataset(registry):
 
 def test_serializer_registry_auto_detect_json_table_as_str_dataset(registry):
     dataset, serializer = registry.auto_detect_tar_file_serializer(json_table_as_str_dataset)
-    assert serializer is RawDatasetToTarFileSerializer
+    assert serializer is RawStrDatasetToTarFileSerializer
 
 
 def test_serializer_registry_auto_detect_json_str_dataset(registry):
     dataset, serializer = registry.auto_detect_tar_file_serializer(json_str_dataset)
-    assert serializer is RawDatasetToTarFileSerializer
+    assert serializer is RawStrDatasetToTarFileSerializer
 
 
 def test_serializer_registry_auto_detect_csv_dataset(registry):
     dataset, serializer = registry.auto_detect_tar_file_serializer(csv_dataset)
-    assert serializer is RawDatasetToTarFileSerializer
+    assert serializer is RawStrDatasetToTarFileSerializer
 
 
 def test_serializer_registry_auto_detect_str_dataset(registry):
     dataset, serializer = registry.auto_detect_tar_file_serializer(str_dataset)
-    assert serializer is RawDatasetToTarFileSerializer
+    assert serializer is RawStrDatasetToTarFileSerializer
 
 
 def test_serializer_registry_auto_detect_python_dataset(registry):

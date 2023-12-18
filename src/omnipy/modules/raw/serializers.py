@@ -1,5 +1,6 @@
 from typing import Any, IO, Type
 
+from omnipy.api.protocols.public.data import IsDataset
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import TarFileSerializer
@@ -7,14 +8,14 @@ from omnipy.data.serializer import TarFileSerializer
 # from typing_inspect import get_generic_bases, get_generic_type, get_origin, get_parameters
 
 
-class RawDatasetToTarFileSerializer(TarFileSerializer):
+class RawStrDatasetToTarFileSerializer(TarFileSerializer):
     """"""
     @classmethod
-    def is_dataset_directly_supported(cls, dataset: Dataset) -> bool:
+    def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         return type(dataset) is Dataset[Model[str]]
 
     @classmethod
-    def get_dataset_cls_for_new(cls) -> Type[Dataset]:
+    def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
         return Dataset[Model[str]]
 
     @classmethod
@@ -29,7 +30,7 @@ class RawDatasetToTarFileSerializer(TarFileSerializer):
         return cls.create_tarfile_from_dataset(dataset, data_encode_func=raw_encode_func)
 
     @classmethod
-    def deserialize(cls, tarfile_bytes: bytes) -> Dataset[Model[str]]:
+    def deserialize(cls, tarfile_bytes: bytes, any_file_suffix=False) -> Dataset[Model[str]]:
         dataset = Dataset[Model[str]]()
 
         def raw_decode_func(file_stream: IO[bytes]) -> str:
@@ -43,6 +44,51 @@ class RawDatasetToTarFileSerializer(TarFileSerializer):
             tarfile_bytes,
             data_decode_func=raw_decode_func,
             dictify_object_func=python_dictify_object,
-            import_method='from_data')  # noqa
+            import_method='from_data',
+            any_file_suffix=any_file_suffix,
+        )  # noqa
+
+        return dataset
+
+
+class RawBytesDatasetToTarFileSerializer(TarFileSerializer):
+    """"""
+    @classmethod
+    def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
+        return type(dataset) is Dataset[Model[bytes]]
+
+    @classmethod
+    def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+        return Dataset[Model[bytes]]
+
+    @classmethod
+    def get_output_file_suffix(cls) -> str:
+        return 'bytes.raw'
+
+    @classmethod
+    def serialize(cls, dataset: Dataset[Model[bytes]]) -> bytes:
+        def raw_encode_func(contents: bytes) -> bytes:
+            return contents
+
+        return cls.create_tarfile_from_dataset(dataset, data_encode_func=raw_encode_func)
+
+    @classmethod
+    def deserialize(cls, tarfile_bytes: bytes, any_file_suffix=False) -> Dataset[Model[bytes]]:
+        dataset = Dataset[Model[bytes]]()
+
+        def raw_decode_func(file_stream: IO[bytes]) -> bytes:
+            return file_stream.read()
+
+        def python_dictify_object(data_file: str, obj_val: Any) -> dict:
+            return {data_file: obj_val}
+
+        cls.create_dataset_from_tarfile(
+            dataset,
+            tarfile_bytes,
+            data_decode_func=raw_decode_func,
+            dictify_object_func=python_dictify_object,
+            import_method='from_data',
+            any_file_suffix=any_file_suffix,
+        )  # noqa
 
         return dataset

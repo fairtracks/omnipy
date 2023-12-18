@@ -356,9 +356,18 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             tar.extractall(path=directory)
             tar.close()
 
-    def load(self, directory: str):
+    def load(self, tar_gz_file_path: str):
         serializer_registry = self._get_serializer_registry()
-        return serializer_registry.load_from_tar_file_path(self, directory, self)
+
+        loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_dataset_cls(
+            self, tar_gz_file_path, self)
+        if loaded_dataset is not None:
+            self.absorb(loaded_dataset)
+            return
+
+        self.absorb(
+            serializer_registry.load_from_tar_file_path_based_on_file_suffix(
+                self, tar_gz_file_path, self))
 
     @staticmethod
     def _get_serializer_registry():

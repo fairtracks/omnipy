@@ -227,7 +227,7 @@ class SerializerFuncJobBaseMixin:
             for tar_file_path in self._all_job_output_file_paths_in_reverse_order_for_last_run(
                     persist_data_dir_path, self._job_name()):
                 to_dataset = cast(Type[Dataset], self._return_type)
-                return self._serializer_registry.load_from_tar_file_path(
+                return self._serializer_registry.load_from_tar_file_path_based_on_file_suffix(
                     self, tar_file_path, to_dataset())
 
         raise RuntimeError('No persisted output')

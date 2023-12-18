@@ -35,7 +35,7 @@ class Serializer(ABC):
 
     @classmethod
     @abstractmethod
-    def deserialize(cls, serialized: bytes) -> IsDataset:
+    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> IsDataset:
         pass
 
 
@@ -61,11 +61,13 @@ class TarFileSerializer(Serializer, ABC):
                                     tarfile_bytes: bytes,
                                     data_decode_func: Callable[[IO[bytes]], Any],
                                     dictify_object_func: Callable[[str, Any], dict | str],
-                                    import_method='from_data'):
+                                    import_method: str = 'from_data',
+                                    any_file_suffix: bool = False):
         with tarfile.open(fileobj=BytesIO(tarfile_bytes), mode='r:gz') as tarfile_stream:
             for filename in tarfile_stream.getnames():
                 data_file = tarfile_stream.extractfile(filename)
-                assert filename.endswith(f'.{cls.get_output_file_suffix()}')
+                if not any_file_suffix:
+                    assert filename.endswith(f'.{cls.get_output_file_suffix()}')
                 data_file_name = '.'.join(filename.split('.')[:-1])
                 getattr(dataset, import_method)(
                     dictify_object_func(data_file_name, data_decode_func(data_file)))
@@ -131,11 +133,19 @@ class SerializerRegistry:
 
         return None, None
 
+    def detect_tar_file_serializers_from_dataset_cls(self, dataset: IsDataset):
+        return tuple(
+            serializer_cls for serializer_cls in self.tar_file_serializers
+            if serializer_cls.is_dataset_directly_supported(dataset))
+
     def detect_tar_file_serializers_from_file_suffix(self, file_suffix: str):
         return tuple(serializer_cls for serializer_cls in self.tar_file_serializers
                      if serializer_cls.get_output_file_suffix() == file_suffix)
 
-    def load_from_tar_file_path(self, log_obj: CanLog, tar_file_path: str, to_dataset: IsDataset):
+    def load_from_tar_file_path_based_on_file_suffix(self,
+                                                     log_obj: CanLog,
+                                                     tar_file_path: str,
+                                                     to_dataset: IsDataset):
         if hasattr(log_obj, 'log'):
             log = log_obj.log
         else:
@@ -174,3 +184,28 @@ class SerializerRegistry:
                         return to_dataset
                     except Exception:
                         return auto_dataset
+
+    def load_from_tar_file_path_based_on_dataset_cls(self,
+                                                     log_obj: CanLog,
+                                                     tar_file_path: str,
+                                                     to_dataset: IsDataset):
+        if hasattr(log_obj, 'log'):
+            log = log_obj.log
+        else:
+            log = print
+
+        with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
+            serializers = self.detect_tar_file_serializers_from_dataset_cls(to_dataset)
+            if len(serializers) == 0:
+                log(f'No serializer for Dataset with type "{type(to_dataset)}" can be '
+                    f'determined. Aborting load.')
+            else:
+                for serializer in serializers:
+                    log(f'Reading dataset from a gzipped tarpack at'
+                        f' "{os.path.abspath(tar_file_path)}" with serializer type: '
+                        f'"{type(serializer)}"')
+
+                    with open(tar_file_path, 'rb') as tarfile_binary:
+                        out_dataset = serializer.deserialize(tarfile_binary.read(), any)
+
+                    return out_dataset
