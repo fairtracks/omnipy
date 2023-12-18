@@ -83,7 +83,7 @@ class IsSerializer(Protocol):
         pass
 
     @classmethod
-    def deserialize(cls, serialized: bytes) -> IsDataset:
+    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> IsDataset:
         pass
 
 
@@ -100,7 +100,8 @@ class IsTarFileSerializer(IsSerializer):
                                     tarfile_bytes: bytes,
                                     data_decode_func: Callable[[IO[bytes]], Any],
                                     dictify_object_func: Callable[[str, Any], dict | str],
-                                    import_method='from_data'):
+                                    import_method='from_data',
+                                    any_file_suffix: bool = False):
         ...
 
 
@@ -130,8 +131,20 @@ class IsSerializerRegistry(Protocol):
     def _autodetect_serializer(cls, dataset, serializers):
         ...
 
+    def detect_tar_file_serializers_from_dataset_cls(self, dataset: IsDataset):
+        ...
+
     def detect_tar_file_serializers_from_file_suffix(self, file_suffix: str):
         ...
 
-    def load_from_tar_file_path(self, log_obj: CanLog, tar_file_path: str, to_dataset: IsDataset):
+    def load_from_tar_file_path_based_on_file_suffix(self,
+                                                     log_obj: CanLog,
+                                                     tar_file_path: str,
+                                                     to_dataset: IsDataset):
+        ...
+
+    def load_from_tar_file_path_based_on_dataset_cls(self,
+                                                     log_obj: CanLog,
+                                                     tar_file_path: str,
+                                                     to_dataset: IsDataset):
         ...
