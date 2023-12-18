@@ -20,8 +20,8 @@ from omnipy.modules.json.datasets import (JsonDataset,
                                           JsonListOfScalarsDataset,
                                           JsonNestedDictsDataset,
                                           JsonNestedListsDataset,
-                                          JsonNoDictsDataset,
-                                          JsonNoListsDataset,
+                                          JsonOnlyDictsDataset,
+                                          JsonOnlyListsDataset,
                                           JsonScalarDataset)
 from omnipy.modules.json.models import (JsonDictModel,
                                         JsonDictOfDictsModel,
@@ -41,8 +41,8 @@ from omnipy.modules.json.models import (JsonDictModel,
                                         JsonModel,
                                         JsonNestedDictsModel,
                                         JsonNestedListsModel,
-                                        JsonNoDictsModel,
-                                        JsonNoListsModel,
+                                        JsonOnlyDictsModel,
+                                        JsonOnlyListsModel,
                                         JsonScalarModel)
 from omnipy.modules.json.typedefs import JsonScalar as JS
 
@@ -549,7 +549,7 @@ def case_json_nested_lists() -> CaseInfo:
     class JsonNestedListsDataPoints:
 
         #
-        # JsonNoDictsModel
+        # JsonOnlyListsModel
         #
 
         v_no_dicts_none: None = b_none
@@ -615,11 +615,11 @@ def case_json_nested_lists() -> CaseInfo:
     return CaseInfo(
         name='test_json_nested_lists',
         prefix2model_classes={
-            'v_no_dicts': (JsonNoDictsModel,),
+            'v_no_dicts': (JsonOnlyListsModel,),
             'v_nested_lists': (JsonNestedListsModel,),
         },
         prefix2dataset_classes={
-            'v_no_dicts': (JsonNoDictsDataset,),
+            'v_no_dicts': (JsonOnlyListsDataset,),
             'v_nested_lists': (JsonNestedListsDataset,),
         },
         data_points=JsonNestedListsDataPoints(),
@@ -631,7 +631,7 @@ def case_json_nested_dicts() -> CaseInfo:
     @dataclass
     class JsonNestedDictsDataPoints:
         #
-        # JsonNoListsModel
+        # JsonOnlyDictsModel
         #
 
         v_no_lists_none: None = b_none
@@ -718,11 +718,11 @@ def case_json_nested_dicts() -> CaseInfo:
     return CaseInfo(
         name='test_json_nested_dicts',
         prefix2model_classes={
-            'v_no_lists': (JsonNoListsModel,),
+            'v_no_lists': (JsonOnlyDictsModel,),
             'v_nested_dicts': (JsonNestedDictsModel,),
         },
         prefix2dataset_classes={
-            'v_no_lists': (JsonNoListsDataset,),
+            'v_no_lists': (JsonOnlyDictsDataset,),
             'v_nested_dicts': (JsonNestedDictsDataset,),
         },
         data_points=JsonNestedDictsDataPoints(),

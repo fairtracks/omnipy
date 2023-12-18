@@ -21,8 +21,8 @@ from .models import (JsonDictModel,
                      JsonModel,
                      JsonNestedDictsModel,
                      JsonNestedListsModel,
-                     JsonNoDictsModel,
-                     JsonNoListsModel,
+                     JsonOnlyDictsModel,
+                     JsonOnlyListsModel,
                      JsonScalarModel)
 
 # TODO: switch from plural to singular for names of modules in omnipy modules
@@ -110,7 +110,7 @@ class JsonDictOfDictsOfScalarsDataset(JsonBaseDataset[JsonDictOfDictsOfScalarsMo
 # Nested datasets
 
 
-class JsonNoDictsDataset(JsonBaseDataset[JsonNoDictsModel]):
+class JsonOnlyListsDataset(JsonBaseDataset[JsonOnlyListsModel]):
     ...
 
 
@@ -118,7 +118,7 @@ class JsonNestedListsDataset(JsonBaseDataset[JsonNestedListsModel]):
     ...
 
 
-class JsonNoListsDataset(JsonBaseDataset[JsonNoListsModel]):
+class JsonOnlyDictsDataset(JsonBaseDataset[JsonOnlyDictsModel]):
     ...
 
 
