@@ -20,7 +20,7 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer):
 
     @classmethod
     def get_output_file_suffix(cls) -> str:
-        return 'raw'
+        return 'txt'
 
     @classmethod
     def serialize(cls, dataset: Dataset[Model[str]]) -> bytes:
@@ -63,7 +63,7 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer):
 
     @classmethod
     def get_output_file_suffix(cls) -> str:
-        return 'bytes.raw'
+        return 'bytes'
 
     @classmethod
     def serialize(cls, dataset: Dataset[Model[bytes]]) -> bytes:
