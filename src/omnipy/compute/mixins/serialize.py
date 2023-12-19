@@ -24,7 +24,7 @@ ProtocolOpts = OutputStorageProtocolOptions
 
 
 def _setup_serializer_registry() -> IsSerializerRegistry:
-    from omnipy import runtime
+    from omnipy.hub.runtime import runtime
     if runtime is not None:
         return runtime.objects.serializers
     else:

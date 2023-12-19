@@ -362,7 +362,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     @staticmethod
     def _get_serializer_registry():
-        from omnipy import runtime
+        from omnipy.hub.runtime import runtime
         if len(runtime.objects.serializers.serializers) == 0:
             from omnipy.modules import register_serializers
             register_serializers(runtime.objects.serializers)
