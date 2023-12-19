@@ -7,21 +7,21 @@ from omnipy.data.model import Model, ROOT_KEY
 from . import pd
 
 
-class PandasModel(Model[pd.DataFrame]):
-    @classmethod
-    def _parse_data(cls, data: pd.DataFrame) -> pd.DataFrame:
-        cls._data_column_names_are_strings(data)
-        cls._data_not_empty_object(data)
-        return data
+class PandasModel(Model[pd.DataFrame | pd.Series]):
+    # @classmethod
+    # def _parse_data(cls, data: pd.DataFrame | pd.Series) -> pd.DataFrame | pd.Series:
+    #     # cls._data_column_names_are_strings(data)
+    #     cls._data_not_empty_object(data)
+    #     return data
 
-    @staticmethod
-    def _data_column_names_are_strings(data: pd.DataFrame) -> None:
-        for column in data.columns:
-            assert isinstance(column, str)
+    # @staticmethod
+    # def _data_column_names_are_strings(data: pd.DataFrame) -> None:
+    #     for column in data.columns:
+    #         assert isinstance(column, str)
 
-    @staticmethod
-    def _data_not_empty_object(data: pd.DataFrame) -> None:
-        assert not any(data.isna().all(axis=1))
+    # @staticmethod
+    # def _data_not_empty_object(data: pd.DataFrame) -> None:
+    #     assert not any(data.isna().all(axis=1))
 
     def dict(self, *args, **kwargs) -> dict[str, dict[Any, Any]]:
         df = super().dict(*args, **kwargs)[ROOT_KEY]
