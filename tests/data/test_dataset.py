@@ -217,7 +217,7 @@ def test_get_items_with_tuple_or_list() -> None:
            == dataset['data_file_1',] == dataset[('data_file_1',)] == dataset[['data_file_1']] \
            == Dataset[Model[int]](data_file_1=123)
     assert dataset[0, 2] == dataset[(0, 2)] == dataset[[0, 2]] \
-           == dataset['data_file_1','data_file_3'] == dataset[('data_file_1', 'data_file_3')] \
+           == dataset['data_file_1', 'data_file_3'] == dataset[('data_file_1', 'data_file_3')] \
            == dataset[['data_file_1', 'data_file_3']] == dataset[[0, 'data_file_3']] \
            == Dataset[Model[int]](data_file_1=dataset['data_file_1'],
                                   data_file_3=dataset['data_file_3']) \

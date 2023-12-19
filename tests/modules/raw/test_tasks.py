@@ -27,12 +27,12 @@ def test_decode_bytes(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
     for case in test_cases:
         assert decode_bytes.run(
             Dataset[Model[bytes]](a=case.bytes_data), encoding=case.encoding)['a'].contents == \
-               case.target_str
+            case.target_str
 
     for case in test_cases:
         assert decode_bytes.run(
             Dataset[Model[bytes]](a=case.bytes_data), encoding=None)['a'].contents == \
-               case.target_str
+            case.target_str
 
     assert decode_bytes.run(
         Dataset[Model[bytes]](dict([(case.encoding, case.bytes_data) for case in test_cases])),

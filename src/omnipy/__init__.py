@@ -1,9 +1,6 @@
 __version__ = '0.12.3'
 
-import importlib
 import os
-import sys
-from typing import Optional
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
@@ -137,6 +134,7 @@ __all__ = [
     'convert_dataset_csv_to_pandas',
     'convert_dataset_pandas_to_csv',
     'convert_dataset_list_of_dicts_to_pandas',
+    'extract_columns_as_files',
     'decode_bytes',
     'modify_all_lines',
     'modify_datafile_contents',

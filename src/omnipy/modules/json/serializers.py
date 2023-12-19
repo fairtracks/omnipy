@@ -1,6 +1,5 @@
 from typing import IO, Type
 
-from omnipy.data.dataset import Dataset
 from omnipy.data.serializer import TarFileSerializer
 
 from ...api.protocols.public.data import IsDataset

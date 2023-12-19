@@ -194,18 +194,17 @@ class SerializerRegistry:
         else:
             log = print
 
-        with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
-            serializers = self.detect_tar_file_serializers_from_dataset_cls(to_dataset)
-            if len(serializers) == 0:
-                log(f'No serializer for Dataset with type "{type(to_dataset)}" can be '
-                    f'determined. Aborting load.')
-            else:
-                for serializer in serializers:
-                    log(f'Reading dataset from a gzipped tarpack at'
-                        f' "{os.path.abspath(tar_file_path)}" with serializer type: '
-                        f'"{type(serializer)}"')
+        serializers = self.detect_tar_file_serializers_from_dataset_cls(to_dataset)
+        if len(serializers) == 0:
+            log(f'No serializer for Dataset with type "{type(to_dataset)}" can be '
+                f'determined. Aborting load.')
+        else:
+            for serializer in serializers:
+                log(f'Reading dataset from a gzipped tarpack at'
+                    f' "{os.path.abspath(tar_file_path)}" with serializer type: '
+                    f'"{type(serializer)}"')
 
-                    with open(tar_file_path, 'rb') as tarfile_binary:
-                        out_dataset = serializer.deserialize(tarfile_binary.read(), any)
+                with open(tar_file_path, 'rb') as tarfile_binary:
+                    out_dataset = serializer.deserialize(tarfile_binary.read(), any)
 
-                    return out_dataset
+                return out_dataset

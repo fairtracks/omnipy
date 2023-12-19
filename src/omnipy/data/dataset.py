@@ -428,7 +428,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             print(get_calling_module_name())
             if get_calling_module_name() in INTERACTIVE_MODULES:
                 _waiting_for_terminal_repr(True)
-                return _table_repr(self)
+                return self._table_repr()
         return self._trad_repr()
 
     def _trad_repr(self) -> str:
@@ -443,7 +443,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
               humanize.naturalsize(objsize.get_deep_size(v)))
              for i, (k, v) in enumerate(self.items())),
             ('#', 'Data file name', 'Type', 'Length', 'Size (in memory)'),
-            tablefmt="rounded_outline",
+            tablefmt='rounded_outline',
         )
         _waiting_for_terminal_repr(False)
         return ret

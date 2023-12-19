@@ -64,7 +64,7 @@ class IsRuntimeObjects(Protocol):
             local: IsEngine | None = None,  # noqa
             prefect: IsEngine | None = None,  # noqa
             registry: IsRunStateRegistry | None = None,  # noqa
-            serializers: IsSerializerRegistry | None = None,
+            serializers: IsSerializerRegistry | None = None,  # noqa
             root_log: IsRootLogObjects | None = None,  # noqa
             *args: object,
             **kwargs: object) -> None:
