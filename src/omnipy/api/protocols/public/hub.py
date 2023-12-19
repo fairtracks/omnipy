@@ -56,6 +56,7 @@ class IsRuntimeObjects(Protocol):
     registry: IsRunStateRegistry
     serializers: IsSerializerRegistry
     root_log: IsRootLogObjects
+    waiting_for_terminal_repr: bool
 
     def __init__(
             self,

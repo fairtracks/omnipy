@@ -48,6 +48,7 @@ class RuntimeObjects(RuntimeEntryPublisher):
     registry: IsRunStateRegistry = field(default_factory=RunStateRegistry)
     serializers: IsSerializerRegistry = field(default_factory=SerializerRegistry)
     root_log: IsRootLogObjects = field(default_factory=RootLogObjects)
+    waiting_for_terminal_repr: bool = False
 
 
 @dataclass
