@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+import sys
 from typing import Any
 
 from omnipy.api.enums import EngineChoice
@@ -112,3 +113,18 @@ class Runtime(DataPublisher):
 
     def _update_job_creator_engine(self, _item_changed: Any):
         self.objects.job_creator.set_engine(self._get_engine(self.config.engine))
+
+
+# TODO: The check disabling runtime for tests also trigger for tests that are run outside of Omnipy,
+#  breaking tests on the user side.
+#  Find a better way to disable the global runtime object for Omnipy tests
+
+
+def _get_runtime() -> 'Runtime | None':
+    if 'pytest' not in sys.modules:
+        return Runtime()
+    else:
+        return None
+
+
+runtime: 'Runtime | None' = _get_runtime()
