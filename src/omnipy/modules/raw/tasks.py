@@ -16,7 +16,8 @@ def decode_bytes(data: bytes, encoding: str | None = None) -> str:
         detector = UniversalDetector()
         for line in data.splitlines():
             detector.feed(line)
-            if detector.done: break
+            if detector.done:
+                break
         detector.close()
         result = detector.result
 

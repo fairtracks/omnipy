@@ -686,7 +686,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
                      bottom_structure),
                 ),
                 maxcolwidths=[header_column_width, data_column_width],
-                tablefmt="rounded_grid",
+                tablefmt='rounded_grid',
             )
         else:
             out = tabulate(
@@ -696,7 +696,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
                      os.linesep.join(new_structure_lines)),
                 ),
                 maxcolwidths=[header_column_width, data_column_width],
-                tablefmt="rounded_grid",
+                tablefmt='rounded_grid',
             )
 
         _waiting_for_terminal_repr(False)
