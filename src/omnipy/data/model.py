@@ -2,6 +2,9 @@ from collections.abc import Mapping, Sequence
 import functools
 import inspect
 import json
+import os
+import shutil
+from textwrap import dedent
 from types import UnionType
 from typing import (Annotated,
                     Any,
@@ -15,7 +18,7 @@ from typing import (Annotated,
                     TypeVar,
                     Union)
 
-# from orjson import orjson
+from devtools import debug, PrettyFormat
 from pydantic import NoneIsNotAllowedError
 from pydantic import Protocol as PydanticProtocol
 from pydantic import root_validator, ValidationError
@@ -24,6 +27,7 @@ from pydantic.generics import GenericModel
 from pydantic.main import ModelMetaclass, validate_model
 from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass
+from tabulate import tabulate
 
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
 from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
@@ -31,6 +35,7 @@ from omnipy.util.decorators import add_callback_after_call
 from omnipy.util.helpers import (all_equals,
                                  ensure_plain_type,
                                  generate_qualname,
+                                 get_calling_module_name,
                                  is_optional,
                                  is_union,
                                  remove_annotated_plus_optional_if_present,
@@ -43,6 +48,9 @@ _IdxT = TypeVar('_IdxT', bound=SupportsIndex)
 RootT = TypeVar('RootT', covariant=True, bound=object)
 
 ROOT_KEY = '__root__'
+
+# TODO: Refactor Dataset and Model using mixins (including below functions)
+INTERACTIVE_MODULES = ['__main__', 'IPython.lib.pretty', 'IPython.core.interactiveshell']
 
 
 def _cleanup_name_qualname_and_module(cls, created_model_or_dataset, model, orig_model):
@@ -58,6 +66,23 @@ def _cleanup_name_qualname_and_module(cls, created_model_or_dataset, model, orig
             created_model_or_dataset.__qualname__ = generate_qualname(cls.__qualname__, model)
 
     created_model_or_dataset.__module__ = cls.__module__
+
+
+def _is_interactive_mode() -> bool:
+    from omnipy.hub.runtime import runtime
+    return runtime.config.data.interactive_mode if runtime else True
+
+
+def _waiting_for_terminal_repr(new_value: bool | None = None) -> bool:
+    from omnipy.hub.runtime import runtime
+    if runtime is None:
+        return False
+
+    if new_value is not None:
+        runtime.objects.waiting_for_terminal_repr = new_value
+        return new_value
+    else:
+        return runtime.objects.waiting_for_terminal_repr
 
 
 # def orjson_dumps(v, *, default):
@@ -357,14 +382,9 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         return _restorable_content_cache.get(id(self))
 
     def _take_snapshot_of_validated_contents(self):
-        interactive_mode = self._is_interactive_mode()
+        interactive_mode = _is_interactive_mode()
         if interactive_mode:
             self._get_restorable_contents().take_snapshot(self.contents)
-
-    def _is_interactive_mode(self):
-        from omnipy import runtime
-        interactive_mode = runtime.config.data.interactive_mode if runtime else True
-        return interactive_mode
 
     @classmethod
     def _parse_data(cls, data: RootT) -> Any:
@@ -523,7 +543,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
         if info.state_changing:
             restorable = self._get_restorable_contents()
-            if self._is_interactive_mode():
+            if _is_interactive_mode():
                 if restorable.has_snapshot() \
                         and restorable.last_snapshot_taken_of_same_obj(self.contents) \
                         and restorable.differs_from_last_snapshot(self.contents):
@@ -545,7 +565,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
             with reset_solution:
                 ret = method(*args, **kwargs)
-                if self._is_interactive_mode():
+                if _is_interactive_mode():
                     needs_validation = restorable.differs_from_last_snapshot(self.contents) \
                         if restorable.has_snapshot() else True
                 else:
@@ -596,7 +616,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         ret = self._getattr_from_contents(attr)
         if callable(ret):
             contents_holder = AttribHolder(self, 'contents', copy_attr=True)
-            context = contents_holder if self._is_interactive_mode() else nothing()
+            context = contents_holder if _is_interactive_mode() else nothing()
             ret = add_callback_after_call(ret, self.validate_contents, with_context=context)
         return ret
 
@@ -613,7 +633,72 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
 
     def __repr__(self) -> str:
+        if _is_interactive_mode() and not _waiting_for_terminal_repr():
+            if get_calling_module_name() in INTERACTIVE_MODULES:
+                _waiting_for_terminal_repr(True)
+                return self._table_repr
+        return self._trad_repr()
+
+    def _trad_repr(self) -> str:
         return super().__repr__()
 
     def __repr_args__(self):
         return [(None, self.contents)]
+
+    def _table_repr(self) -> str:
+        tabulate.PRESERVE_WHITESPACE = True  # Does not seem to work together with 'maxcolwidths'
+
+        terminal_size = shutil.get_terminal_size()
+        header_column_width = len('(bottom')
+        num_columns = 2
+        table_chars_width = 3 * num_columns + 1
+        data_column_width = terminal_size.columns - table_chars_width - header_column_width
+
+        data_indent = 2
+
+        inspect.getmodule(debug).pformat = PrettyFormat(
+            indent_step=data_indent,
+            simple_cutoff=20,
+            width=data_column_width - data_indent,
+            yield_from_generators=True,
+        )
+
+        structure = str(debug.format(self))
+        structure_lines = structure.splitlines()
+        new_structure_lines = dedent(os.linesep.join(structure_lines[1:])).splitlines()
+        if new_structure_lines[0].startswith('self: '):
+            new_structure_lines[0] = new_structure_lines[0][5:]
+        max_section_height = (terminal_size.lines - 8) // 2
+        structure_len = len(new_structure_lines)
+
+        if structure_len > max_section_height * 2 + 1:
+            top_structure_end = max_section_height
+            bottom_structure_start = structure_len - max_section_height
+
+            top_structure = os.linesep.join(new_structure_lines[:top_structure_end])
+            bottom_structure = os.linesep.join(new_structure_lines[bottom_structure_start:])
+
+            out = tabulate(
+                (
+                    ('#', self.__class__.__name__),
+                    (os.linesep.join(str(i) for i in range(top_structure_end)), top_structure),
+                    (os.linesep.join(str(i) for i in range(bottom_structure_start, structure_len)),
+                     bottom_structure),
+                ),
+                maxcolwidths=[header_column_width, data_column_width],
+                tablefmt="rounded_grid",
+            )
+        else:
+            out = tabulate(
+                (
+                    ('#', self.__class__.__name__),
+                    (os.linesep.join(str(i) for i in range(structure_len)),
+                     os.linesep.join(new_structure_lines)),
+                ),
+                maxcolwidths=[header_column_width, data_column_width],
+                tablefmt="rounded_grid",
+            )
+
+        _waiting_for_terminal_repr(False)
+
+        return out

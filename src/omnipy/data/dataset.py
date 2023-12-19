@@ -4,14 +4,25 @@ import os
 import tarfile
 from typing import Annotated, Any, Generic, get_args, get_origin, Iterator, Optional, Type, TypeVar
 
+import humanize
+import objsize
 # from orjson import orjson
 from pydantic import Field, PrivateAttr, root_validator, ValidationError
 from pydantic.fields import Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.utils import lenient_issubclass
+from tabulate import tabulate
 
-from omnipy.data.model import _cleanup_name_qualname_and_module, Model
-from omnipy.util.helpers import is_optional, is_strict_subclass, remove_forward_ref_notation
+from omnipy.data.model import (_cleanup_name_qualname_and_module,
+                               _is_interactive_mode,
+                               _waiting_for_terminal_repr,
+                               INTERACTIVE_MODULES,
+                               Model)
+from omnipy.util.helpers import (get_calling_module_name,
+                                 is_iterable,
+                                 is_optional,
+                                 is_strict_subclass,
+                                 remove_forward_ref_notation)
 
 ModelT = TypeVar('ModelT', bound=Model)
 DATA_KEY = 'data'
@@ -391,11 +402,33 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             and self.data == other.data \
             and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
 
-    def __repr__(self) -> str:
-        return super().__repr__()
-
     def __repr_args__(self):
         return [(k, v.contents) for k, v in self.data.items()]
+
+    def __repr__(self):
+        if _is_interactive_mode() and not _waiting_for_terminal_repr():
+            print(get_calling_module_name())
+            if get_calling_module_name() in INTERACTIVE_MODULES:
+                _waiting_for_terminal_repr(True)
+                return _table_repr(self)
+        return self._trad_repr()
+
+    def _trad_repr(self) -> str:
+        return super().__repr__()
+
+    def _table_repr(self) -> str:
+        ret = tabulate(
+            ((i,
+              k,
+              type(v).__name__,
+              len(v) if hasattr(v, '__len__') else 'N/A',
+              humanize.naturalsize(objsize.get_deep_size(v)))
+             for i, (k, v) in enumerate(self.items())),
+            ('#', 'Data file name', 'Type', 'Length', 'Size (in memory)'),
+            tablefmt="rounded_outline",
+        )
+        _waiting_for_terminal_repr(False)
+        return ret
 
 
 # TODO: Use json serializer package from the pydantic config instead of 'json'
