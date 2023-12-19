@@ -36,7 +36,7 @@ def test_no_model():
         MyDataset()
 
 
-def test_init_with_basic_parsing():
+def test_init_with_basic_parsing() -> None:
     dataset_1 = Dataset[Model[int]]()
 
     dataset_1['data_file_1'] = 123
@@ -169,6 +169,9 @@ def test_more_dict_methods_with_parsing():
     dataset.setdefault('data_file_4', 789)
     assert dataset.get('data_file_4').contents == '789'
 
+    assert dataset.fromkeys(['data_file_1', 'data_file_2'], 321) == \
+        Dataset[Model[str]](data_file_1='321', data_file_2='321')
+
     assert len(dataset) == 3
 
     dataset.pop('data_file_3')
@@ -183,6 +186,51 @@ def test_more_dict_methods_with_parsing():
     dataset.clear()
     assert len(dataset) == 0
     assert dataset.to_data() == {}
+
+
+def test_get_item_with_int_and_slice() -> None:
+    dataset = Dataset[Model[int]](data_file_1=123, data_file_2=456, data_file_3=789)
+    assert dataset[0] == dataset['data_file_1'] == Model[int](123)
+    assert dataset[1] == dataset['data_file_2'] == Model[int](456)
+    assert dataset[2] == dataset[-1] == dataset['data_file_3'] == Model[int](789)
+
+    assert dataset[0:2] == Dataset[Model[int]](data_file_1=dataset['data_file_1'],
+                                               data_file_2=dataset['data_file_2']) \
+           == Dataset[Model[int]](data_file_1=123, data_file_2=456)
+    assert dataset[-1:] == dataset[2:3] == Dataset[Model[int]](data_file_3=dataset['data_file_3']) \
+           == Dataset[Model[int]](data_file_3=789)
+    assert dataset[:] == dataset
+    assert dataset[1:1] == Dataset[Model[int]]()
+
+    with pytest.raises(IndexError):
+        dataset[3]
+
+    assert dataset[2:4] == Dataset[Model[int]](data_file_3=dataset['data_file_3']) \
+           == Dataset[Model[int]](data_file_3=789)
+
+
+def test_get_items_with_tuple_or_list() -> None:
+    dataset = Dataset[Model[int]](data_file_1=123, data_file_2=456, data_file_3=789)
+
+    assert dataset[()] == dataset[[]] == Dataset[Model[int]]()
+    assert dataset[0,] == dataset[(0,)] == dataset[[0]] \
+           == dataset['data_file_1',] == dataset[('data_file_1',)] == dataset[['data_file_1']] \
+           == Dataset[Model[int]](data_file_1=123)
+    assert dataset[0, 2] == dataset[(0, 2)] == dataset[[0, 2]] \
+           == dataset['data_file_1','data_file_3'] == dataset[('data_file_1', 'data_file_3')] \
+           == dataset[['data_file_1', 'data_file_3']] == dataset[[0, 'data_file_3']] \
+           == Dataset[Model[int]](data_file_1=dataset['data_file_1'],
+                                  data_file_3=dataset['data_file_3']) \
+           == Dataset[Model[int]](data_file_1=123, data_file_3=789)
+
+    with pytest.raises(IndexError):
+        dataset[0, 3]
+
+    with pytest.raises(KeyError):
+        dataset[0, 'data_file_4']
+
+    with pytest.raises(IndexError):
+        dataset[[0, 3]]
 
 
 def test_equality() -> None:

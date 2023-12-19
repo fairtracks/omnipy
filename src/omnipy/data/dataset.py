@@ -1,4 +1,5 @@
 from collections import UserDict
+from collections.abc import Iterable, Mapping
 import json
 import os
 import tarfile
@@ -121,9 +122,9 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     def __init__(
         self,
-        value: dict[str, object] | Iterator[tuple[str, object]] | UndefinedType = Undefined,
+        value: Mapping[str, object] | Iterable[tuple[str, object]] | UndefinedType = Undefined,
         *,
-        data: dict[str, object] | UndefinedType = Undefined,
+        data: Mapping[str, object] | UndefinedType = Undefined,
         **input_data: object,
     ) -> None:
         # TODO: Error message when forgetting parenthesis when creating Dataset should be improved.
@@ -228,11 +229,26 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
                 del self.data[data_file]
             raise
 
-    def __getitem__(self, data_file: str) -> Any:
-        if data_file in self.data:
-            return self.data[data_file]
+    def __getitem__(self, selector: str | int | slice | Iterable[str | int]) -> Any:
+        if isinstance(selector, str):
+            if selector in self.data:
+                return self.data[selector]
+            else:
+                return self.data[selector]
         else:
-            return self.data[data_file]
+            data_keys = tuple(self.data.keys())
+
+            if isinstance(selector, int):
+                return self.data[data_keys[selector]]
+            elif isinstance(selector, slice):
+                return self.__class__({key: self.data[key] for key in data_keys[selector]})
+            elif is_iterable(selector):
+                selected_keys = [data_keys[_] if isinstance(_, int) else _ for _ in selector]
+                return self.__class__({key: self.data[key] for key in selected_keys})
+            else:
+                raise KeyError(
+                    'Selector is of incorrect type. Must be a string, a positive integer,'
+                    'or a slice (e.g. `dataset[2:5]`).')
 
     @classmethod
     def update_forward_refs(cls, **localns: Any) -> None:
@@ -297,7 +313,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         return result
 
     def from_json(self,
-                  data: dict[str, str] | Iterator[tuple[str, str]],
+                  data: Mapping[str, str] | Iterable[tuple[str, str]],
                   update: bool = True) -> None:
         if not isinstance(data, dict):
             data = dict(data)
