@@ -48,7 +48,7 @@ class TarFileSerializer(Serializer, ABC):
         bytes_io = BytesIO()
         with tarfile.open(fileobj=bytes_io, mode='w:gz') as tarfile_stream:
             for data_file, data in dataset.items():
-                json_data_bytestream = BytesIO(data_encode_func(data))
+                json_data_bytestream = BytesIO(data_encode_func(data.contents))
                 json_data_bytestream.seek(0)
                 tarinfo = TarInfo(name=f'{data_file}.{cls.get_output_file_suffix()}')
                 tarinfo.size = len(json_data_bytestream.getbuffer())
