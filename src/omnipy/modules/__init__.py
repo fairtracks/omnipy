@@ -7,10 +7,10 @@ def register_serializers(registry: IsSerializerRegistry):
     from .raw.serializers import (RawBytesDatasetToTarFileSerializer,
                                   RawStrDatasetToTarFileSerializer)
 
-    registry.register(PandasDatasetToTarFileSerializer)
     registry.register(RawStrDatasetToTarFileSerializer)
     registry.register(RawBytesDatasetToTarFileSerializer)
     registry.register(JsonDatasetToTarFileSerializer)
+    registry.register(PandasDatasetToTarFileSerializer)
 
 
 # TODO: Add module with helper classes/functions/takss to make it simpler to contact REST apis

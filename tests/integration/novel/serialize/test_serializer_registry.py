@@ -20,9 +20,9 @@ def registry():
 
     registry = SerializerRegistry()
 
-    registry.register(PandasDatasetToTarFileSerializer)
     registry.register(RawStrDatasetToTarFileSerializer)
     registry.register(JsonDatasetToTarFileSerializer)
+    registry.register(PandasDatasetToTarFileSerializer)
 
     return registry
 
@@ -34,7 +34,7 @@ def test_serializer_registry_auto_detect_pandas_dataset(registry):
 
 def test_serializer_registry_auto_detect_json_table_dataset(registry):
     dataset, serializer = registry.auto_detect_tar_file_serializer(json_table_dataset)
-    assert serializer is PandasDatasetToTarFileSerializer
+    assert serializer is JsonDatasetToTarFileSerializer
 
 
 def test_serializer_registry_auto_detect_json_dataset(registry):
