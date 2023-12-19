@@ -382,11 +382,13 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     @staticmethod
     def _get_serializer_registry():
+        from omnipy.data.serializer import SerializerRegistry
         from omnipy.hub.runtime import runtime
-        if len(runtime.objects.serializers.serializers) == 0:
-            from omnipy.modules import register_serializers
-            register_serializers(runtime.objects.serializers)
-        serializer_registry = runtime.objects.serializers
+        from omnipy.modules import register_serializers
+        serializer_registry = SerializerRegistry() if runtime is None else \
+            runtime.objects.serializers
+        if len(serializer_registry.serializers) == 0:
+            register_serializers(serializer_registry)
         return serializer_registry
 
     def as_multi_model_dataset(self) -> 'MultiModelDataset[ModelT]':
@@ -421,7 +423,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             ((i,
               k,
               type(v).__name__,
-              len(v) if hasattr(v, '__len__') else 'N/A',
+              v.__len__() if hasattr(v, '__len__') else 'N/A',
               humanize.naturalsize(objsize.get_deep_size(v)))
              for i, (k, v) in enumerate(self.items())),
             ('#', 'Data file name', 'Type', 'Length', 'Size (in memory)'),
