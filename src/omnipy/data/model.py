@@ -31,7 +31,7 @@ from tabulate import tabulate
 
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
 from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
-from omnipy.util.decorators import add_callback_after_call
+from omnipy.util.decorators import add_callback_after_call, apply_decorator_to_property
 from omnipy.util.helpers import (all_equals,
                                  ensure_plain_type,
                                  generate_qualname,
@@ -539,7 +539,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
     def _special_method(self, name: str, info: MethodInfo, *args: object,
                         **kwargs: object) -> object:
-        method = self._getattr_from_contents(name)
+        method = self._getattr_from_contents_obj(name)
 
         if info.state_changing:
             restorable = self._get_restorable_contents()
@@ -613,18 +613,28 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         return ret
 
     def __getattr__(self, attr: str) -> Any:
-        ret = self._getattr_from_contents(attr)
-        if callable(ret):
+        contents_attr = self._getattr_from_contents_obj(attr)
+        if _is_interactive_mode():
             contents_holder = AttribHolder(self, 'contents', copy_attr=True)
-            context = contents_holder if _is_interactive_mode() else nothing()
-            ret = add_callback_after_call(ret, self.validate_contents, with_context=context)
-        return ret
 
-    def _getattr_from_contents(self, attr):
+            if not isinstance(self._getattr_from_contents_cls(attr),
+                              property) and callable(contents_attr):
+                contents_attr = add_callback_after_call(
+                    contents_attr, self.validate_contents, with_context=contents_holder)
+
+        return contents_attr
+
+    def _getattr_from_contents_obj(self, attr):
+        return getattr(self._get_real_contents(), attr)
+
+    def _getattr_from_contents_cls(self, attr):
+        return getattr(self._get_real_contents().__class__, attr)
+
+    def _get_real_contents(self):
         if isinstance(self.contents, Model):
-            return getattr(self.contents.contents, attr)
+            return self.contents.contents
         else:
-            return getattr(self.contents, attr)
+            return self.contents
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, Model) \

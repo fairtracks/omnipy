@@ -1,5 +1,5 @@
 from contextlib import AbstractContextManager
-from typing import Callable, ParamSpec, TypeVar
+from typing import Any, Callable, ParamSpec, TypeVar
 
 DecoratedP = ParamSpec('DecoratedP')
 DecoratedR = TypeVar('DecoratedR')
@@ -31,3 +31,11 @@ def add_callback_after_call(func: Callable[DecoratedP, DecoratedR],
             return func(*args, **kwargs)
 
     return _inner
+
+
+def apply_decorator_to_property(prop: property, decorator: Callable[[Callable], Any]) -> property:
+    return property(
+        fget=decorator(prop.fget) if prop.fget is not None else None,
+        fset=decorator(prop.fset) if prop.fset is not None else None,
+        fdel=decorator(prop.fdel) if prop.fdel is not None else None,
+        doc=prop.__doc__)

@@ -2,7 +2,16 @@ from math import floor
 import os
 from textwrap import dedent
 from types import MappingProxyType, NoneType
-from typing import Annotated, Any, Generic, List, Optional, Type, TypeAlias, TypeVar, Union
+from typing import (Annotated,
+                    Any,
+                    Callable,
+                    Generic,
+                    List,
+                    Optional,
+                    Type,
+                    TypeAlias,
+                    TypeVar,
+                    Union)
 
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
@@ -1370,6 +1379,67 @@ def test_model_operations_as_union_of_scalars():
     assert (model**2).contents == 100  # power
 
     assert float(model) == 10  # float(), int(), etc always converts
+
+
+# TODO: Add support in Model for mimicking the setting and deletion of properties
+# def test_mimic_property():
+#     class MyMetadata:
+#         def __init__(self) -> None:
+#             self._metadata: str | None = 'metadata'
+#
+#         @property
+#         def metadata(self):
+#             return self._metadata
+#
+#         @metadata.setter
+#         def metadata(self, value: str | None):
+#             self._metadata = value
+#
+#             if value is None:
+#                 raise ValueError('Not allowed to reset to None')
+#
+#         @metadata.deleter
+#         def metadata(self):
+#             self._metadata = None
+#             raise ValueError('Not allowed to delete metadata')
+#
+#
+#     model = Model[MyMetadata]()
+#     assert model.metadata == 'metadata'
+#
+#     model.metadata = 'my metadata'
+#     assert model.metadata == 'my metadata'
+#
+#     with pytest.raises(ValueError):
+#         model.metadata = None
+#
+#     assert model.metadata == 'my metadata'
+#
+#     with pytest.raises(ValueError):
+#         del model.metadata
+#     assert model.metadata == 'my metadata'
+
+
+def test_mimic_callable_property():
+    # Example of previously failing callable property is pandas.DataFrame.loc
+
+    class MyCallable:
+        def __init__(self):
+            self.called = False
+
+        def __call__(self):
+            self.called = True
+
+    class MyCallableHolder:
+        def __init__(self) -> None:
+            self._func: Callable = MyCallable()
+
+        @property
+        def func(self) -> Callable:
+            return self._func
+
+    model = Model[MyCallableHolder]()
+    assert model.func.called is False
 
 
 def test_model_copy():
