@@ -15,27 +15,16 @@ from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.name import NameJobBaseMixin
 from omnipy.config.job import JobConfig
 from omnipy.data.dataset import Dataset
-from omnipy.data.serializer import SerializerRegistry
-from omnipy.modules import register_serializers
+from omnipy.modules import get_serializer_registry
 
 PersistOpts = PersistOutputsOptions
 RestoreOpts = RestoreOutputsOptions
 ProtocolOpts = OutputStorageProtocolOptions
 
 
-def _setup_serializer_registry() -> IsSerializerRegistry:
-    from omnipy.hub.runtime import runtime
-    if runtime is not None:
-        return runtime.objects.serializers
-    else:
-        registry = SerializerRegistry()
-        register_serializers(registry)
-        return registry
-
-
 class SerializerFuncJobBaseMixin:
 
-    _serializer_registry: IsSerializerRegistry = _setup_serializer_registry()
+    _serializer_registry: IsSerializerRegistry = get_serializer_registry()
 
     def __init__(self,
                  *,
