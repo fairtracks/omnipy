@@ -3,7 +3,16 @@ from collections.abc import Iterable, Mapping
 import json
 import os
 import tarfile
-from typing import Annotated, Any, Generic, get_args, get_origin, Iterator, Optional, Type, TypeVar
+from typing import (Annotated,
+                    Any,
+                    Callable,
+                    Generic,
+                    get_args,
+                    get_origin,
+                    Iterator,
+                    Optional,
+                    Type,
+                    TypeVar)
 
 import humanize
 import objsize
@@ -308,15 +317,25 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     def from_data(self,
                   data: dict[str, Any] | Iterator[tuple[str, Any]],
                   update: bool = True) -> None:
+        def callback_func(model: ModelT, contents: Any):
+            model.from_data(contents)
+
+        self._from_dict_with_callback(data, update, callback_func)
+
+    def _from_dict_with_callback(self,
+                                 data: dict[str, Any] | Iterator[tuple[str, Any]],
+                                 update: bool,
+                                 callback_func: Callable):
         if not isinstance(data, dict):
             data = dict(data)
 
         if not update:
             self.clear()
 
-        for data_file, obj_val in data.items():
-            new_model = self.get_model_class()()  # noqa
-            new_model.from_data(obj_val)
+        model_cls = self.get_model_class()
+        for data_file, contents in data.items():
+            new_model = model_cls()
+            callback_func(new_model, contents)
             self[data_file] = new_model
 
     def absorb(self, other: 'Dataset'):
@@ -335,16 +354,10 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     def from_json(self,
                   data: Mapping[str, str] | Iterable[tuple[str, str]],
                   update: bool = True) -> None:
-        if not isinstance(data, dict):
-            data = dict(data)
+        def callback_func(model: ModelT, contents: Any):
+            model.from_json(contents)
 
-        if not update:
-            self.clear()
-
-        for data_file, obj_val in data.items():
-            new_model = self.get_model_class()()  # noqa
-            new_model.from_json(obj_val)
-            self[data_file] = new_model
+        self._from_dict_with_callback(data, update, callback_func)
 
     # @classmethod
     # def get_type_args(cls):
@@ -515,12 +528,38 @@ ParamModelT = TypeVar('ParamModelT', bound=ParamModel)
 
 class ParamDataset(Dataset[ParamModelT | DataWithParams[ParamModelT, KwargValT]],
                    Generic[ParamModelT, KwargValT]):
-    def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
+    def _init(self, super_kwargs: dict[str, ParamModelT], **kwargs: KwargValT) -> None:
         if kwargs and DATA_KEY in super_kwargs:
             super_kwargs[DATA_KEY] = {
                 key: DataWithParams(data=val, params=kwargs) for key,
                 val in super_kwargs[DATA_KEY].items()
             }
+
+    def from_data(self,
+                  data: dict[str, ParamModelT] | Iterator[tuple[str, ParamModelT]],
+                  update: bool = True,
+                  **kwargs: KwargValT) -> None:
+        if kwargs:
+
+            def callback_func(model: ModelT, contents: Any):
+                model.from_data(contents, **kwargs)
+
+            self._from_dict_with_callback(data, update, callback_func)
+        else:
+            super().from_data(data, update=update)
+
+    def from_json(self,
+                  data: Mapping[str, str] | Iterable[tuple[str, str]],
+                  update: bool = True,
+                  **kwargs: KwargValT) -> None:
+        if kwargs:
+
+            def callback_func(model: ModelT, contents: Any):
+                model.from_json(contents, **kwargs)
+
+            self._from_dict_with_callback(data, update, callback_func)
+        else:
+            super().from_json(data, update=update)
 
     @root_validator()
     def _parse_root_object(

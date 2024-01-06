@@ -783,6 +783,23 @@ def test_dataset_switch_models_issue():
 def test_parametrized_dataset():
     assert UpperStrDataset(x='foo')['x'].contents == 'foo'
     assert UpperStrDataset({'x': 'bar'}, upper=True)['x'].contents == 'BAR'
+    assert UpperStrDataset({'x': 'foo', 'y': 'bar'}, upper=True).to_data() == dict(x='FOO', y='BAR')
+
+    dataset = UpperStrDataset()
+    dataset['x'] = 'foo'
+    assert dataset['x'].contents == 'foo'
+
+    dataset.from_data({'y': 'bar', 'z': 'foobar'}, upper=True)
+    assert dataset.to_data() == dict(x='foo', y='BAR', z='FOOBAR')
+
+    dataset.from_data({'y': 'bar', 'z': 'foobar'}, update=False)
+    assert dataset.to_data() == dict(y='bar', z='foobar')
+
+    dataset.from_json({'x': '"foo"'}, upper=True)
+    assert dataset.to_data() == dict(x='FOO', y='bar', z='foobar')
+
+    dataset.from_json({'x': '"foo"'}, update=False)
+    assert dataset.to_data() == dict(x='foo')
 
     with pytest.raises(KeyError):
         UpperStrDataset({'x': 'bar'}, upper=True)['upper']

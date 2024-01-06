@@ -1805,6 +1805,20 @@ def test_parametrized_model() -> None:
     assert UpperStrModel('foo').contents == 'foo'
     assert UpperStrModel('bar', upper=True).contents == 'BAR'
 
+    model = UpperStrModel()
+
+    model.from_data('foo')
+    assert model.contents == 'foo'
+
+    model.from_data('bar', upper=True)
+    assert model.contents == 'BAR'
+
+    model.from_json('"foobar"')
+    assert model.contents == 'foobar'
+
+    model.from_json('"foobar"', upper=True)
+    assert model.contents == 'FOOBAR'
+
 
 def test_parametrized_list_of_model() -> None:
     assert ListOfUpperStrModel().contents == []
@@ -1814,3 +1828,18 @@ def test_parametrized_list_of_model() -> None:
     assert ListOfUpperStrModel(['foo', 'bar'], upper=True).contents \
            == [UpperStrModel('foo', upper=True), UpperStrModel('bar', upper=True)]
     assert ListOfUpperStrModel(['foo', 'bar'], upper=True).to_data() == ['FOO', 'BAR']
+
+    model = ListOfUpperStrModel()
+
+    model.from_data(['foo'])
+    assert model.contents == [UpperStrModel('foo', upper=False)]
+
+    model.from_data(['foo'], upper=True)
+    model.append('bar')
+    assert model.contents == [UpperStrModel('foo', upper=True), UpperStrModel('bar', upper=False)]
+
+    model.from_json('["foo", "bar"]')
+    assert model.contents == [UpperStrModel('foo', upper=False), UpperStrModel('bar', upper=False)]
+
+    model.from_json('["foo", "bar"]', upper=True)
+    assert model.contents == [UpperStrModel('foo', upper=True), UpperStrModel('bar', upper=True)]
