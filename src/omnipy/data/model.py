@@ -313,7 +313,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             num_root_vals += 1
 
         if data:
-            if num_root_vals == 0:
+            if num_root_vals == 0 or not self.is_param_model():
                 super_data[ROOT_KEY] = cast(RootT, data)
                 num_root_vals += 1
 
@@ -501,6 +501,17 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     @classmethod
     def is_nested_type(cls) -> bool:
         return not cls.inner_type(with_args=True) == cls.outer_type(with_args=True)
+
+    @classmethod
+    def is_param_model(cls) -> bool:
+        if cls.outer_type() is list:
+            type_to_check = cls.inner_type(with_args=True)
+        else:
+            type_to_check = cls.outer_type(with_args=True)
+        args = get_args(type_to_check)
+        return is_union(type_to_check) \
+            and len(args) == 2 \
+            and lenient_issubclass(args[1], DataWithParams)
 
     @classmethod
     def _get_root_field(cls) -> ModelField:
