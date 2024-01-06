@@ -764,6 +764,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
 
 KwargValT = TypeVar('KwargValT', bound=object)
+ParamModelT = TypeVar('ParamModelT', bound='ParamModel')
 
 
 class DataWithParams(GenericModel, Generic[RootT, KwargValT]):
@@ -786,14 +787,10 @@ class ParamModel(Model[RootT | DataWithParams[RootT, KwargValT]], Generic[RootT,
 
         return created_model
 
-    def _init(self, super_kwargs: dict[str, RootT], **kwargs: Any) -> None:
+    def _init(self, super_kwargs: dict[str, RootT], **kwargs: KwargValT) -> None:
         if kwargs and ROOT_KEY in super_kwargs:
             super_kwargs[ROOT_KEY] = cast(
                 RootT, DataWithParams(data=super_kwargs[ROOT_KEY], params=kwargs))
-
-    @classmethod
-    def _parse_data(cls, data: RootT, **params: KwargValT) -> RootT:
-        return data
 
     @root_validator
     def _parse_root_object(cls, root_obj: dict[str,
@@ -809,20 +806,39 @@ class ParamModel(Model[RootT | DataWithParams[RootT, KwargValT]], Generic[RootT,
         else:
             data = root_val
 
-        data = cls._parse_none_value_with_root_type_if_model(data)
+        # data = cls._parse_none_value_with_root_type_if_model(data)
         return {ROOT_KEY: cls._parse_data(data, **params)}
 
+    @classmethod
+    def _parse_data(cls, data: RootT, **params: KwargValT) -> RootT:
+        return data
 
-ParamModelT = TypeVar('ParamModelT', bound=ParamModel)
+    def from_data(self, value: object, **kwargs: KwargValT) -> None:
+        super().from_data(value)
+        if kwargs:
+            self._validate_and_set_contents_with_params(self.contents, **kwargs)
+
+    def from_json(self, json_contents: str, **kwargs: KwargValT) -> None:
+        super().from_json(json_contents)
+        if kwargs:
+            self._validate_and_set_contents_with_params(self.contents, **kwargs)
+
+    def _validate_and_set_contents_with_params(self, contents: RootT, **kwargs: KwargValT):
+        self._validate_and_set_contents(DataWithParams(data=contents, params=kwargs))
 
 
 #
-class ListOfParamModel(Model[list[ParamModelT | DataWithParams[list[ParamModelT], KwargValT]]],
-                       Generic[ParamModelT, KwargValT]):
+class ListOfParamModel(ParamModel[list[ParamModelT], KwargValT], Generic[ParamModelT, KwargValT]):
     def _init(self,
               super_kwargs: dict[str, list[ParamModelT | DataWithParams[ParamModelT, KwargValT]]],
-              **data: Any) -> None:
-        if data and ROOT_KEY in super_kwargs:
-            super_kwargs[ROOT_KEY] = cast(
-                list[ParamModelT | DataWithParams[ParamModelT, KwargValT]],
-                [DataWithParams(data=_, params=data) for _ in super_kwargs[ROOT_KEY]])
+              **kwargs: KwargValT) -> None:
+        if kwargs and ROOT_KEY in super_kwargs:
+            super_kwargs[ROOT_KEY] = [
+                DataWithParams(data=_, params=kwargs) for _ in super_kwargs[ROOT_KEY]
+            ]
+
+    def _validate_and_set_contents_with_params(self,
+                                               contents: list[ParamModelT],
+                                               **kwargs: KwargValT):
+        self._validate_and_set_contents(
+            [DataWithParams(data=model.contents, params=kwargs) for model in contents])
