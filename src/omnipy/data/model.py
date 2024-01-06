@@ -36,6 +36,9 @@ from omnipy.util.helpers import (all_equals,
                                  ensure_plain_type,
                                  generate_qualname,
                                  get_calling_module_name,
+                                 get_first_item,
+                                 has_items,
+                                 is_non_str_byte_iterable,
                                  is_optional,
                                  is_union,
                                  remove_annotated_plus_optional_if_present,
@@ -680,6 +683,16 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             new_structure_lines[0] = new_structure_lines[0][5:]
         max_section_height = (terminal_size.lines - 8) // 2
         structure_len = len(new_structure_lines)
+
+        def _is_table():
+            data = self.to_data()
+            if is_non_str_byte_iterable(data) and has_items(data):
+                first_level_item = get_first_item(data)
+                if is_non_str_byte_iterable(first_level_item) and has_items(first_level_item):
+                    second_level_item = get_first_item(first_level_item)
+                    if not is_non_str_byte_iterable(second_level_item):
+                        return True
+            return False
 
         if structure_len > max_section_height * 2 + 1:
             top_structure_end = max_section_height
