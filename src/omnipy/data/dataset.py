@@ -439,7 +439,6 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     def __repr__(self):
         if _is_interactive_mode() and not _waiting_for_terminal_repr():
-            print(get_calling_module_name())
             if get_calling_module_name() in INTERACTIVE_MODULES:
                 _waiting_for_terminal_repr(True)
                 return self._table_repr()
