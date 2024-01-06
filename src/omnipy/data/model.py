@@ -414,7 +414,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     # starting with test_nested_model_classes_none_as_default().
     @classmethod
     def _parse_none_value_with_root_type_if_model(cls, value):
-        root_field = cls.__fields__.get(ROOT_KEY)
+        root_field = cls._get_root_field()
         root_type = root_field.type_
         value = cls._parse_with_root_type_if_model(value, root_field, root_type)
         return value
@@ -486,18 +486,25 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         new_model = self.parse_raw(json_contents, proto=PydanticProtocol.json)
         self.contents = new_model.contents
 
-    def inner_type(self, with_args: bool = False) -> type | None:
-        return self.__class__._get_root_type(outer=False, with_args=with_args)
+    @classmethod
+    def inner_type(cls, with_args: bool = False) -> type | None:
+        return cls._get_root_type(outer=False, with_args=with_args)
 
-    def outer_type(self, with_args: bool = False) -> type | None:
-        return self.__class__._get_root_type(outer=True, with_args=with_args)
+    @classmethod
+    def outer_type(cls, with_args: bool = False) -> type | None:
+        return cls._get_root_type(outer=True, with_args=with_args)
 
-    def is_nested_type(self) -> bool:
-        return not self.inner_type(with_args=True) == self.outer_type(with_args=True)
+    @classmethod
+    def is_nested_type(cls) -> bool:
+        return not cls.inner_type(with_args=True) == cls.outer_type(with_args=True)
+
+    @classmethod
+    def _get_root_field(cls) -> ModelField:
+        return cast(ModelField, cls.__fields__.get(ROOT_KEY))
 
     @classmethod
     def _get_root_type(cls, outer: bool, with_args: bool) -> type | None:
-        root_field = cast(ModelField, cls.__fields__.get(ROOT_KEY))
+        root_field = cls._get_root_field()
         root_type = root_field.outer_type_ if outer else root_field.type_
         root_type = remove_annotated_plus_optional_if_present(root_type)
         return root_type if with_args else ensure_plain_type(root_type)
@@ -633,8 +640,8 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         if _is_interactive_mode():
             contents_holder = AttribHolder(self, 'contents', copy_attr=True)
 
-            if not isinstance(self._getattr_from_contents_cls(attr),
-                              property) and callable(contents_attr):
+            contents_cls_attr = self._getattr_from_contents_cls(attr)
+            if not isinstance(contents_cls_attr, property) and callable(contents_attr):
                 contents_attr = add_callback_after_call(
                     contents_attr, self.validate_contents, with_context=contents_holder)
 
