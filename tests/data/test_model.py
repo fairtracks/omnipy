@@ -16,8 +16,10 @@ from typing import (Annotated,
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
 
-from omnipy.data.model import ListOfParamModel, Model, ParamModel
+from omnipy.data.model import Model
 from omnipy.modules.general.typedefs import FrozenDict
+
+from .helpers.models import ListOfUpperStrModel, UpperStrModel
 
 
 def test_no_model_known_issue():
@@ -1798,24 +1800,17 @@ def test_pandas_dataframe_non_builtin_direct():
 
 
 def test_parametrized_model() -> None:
-    class MyModel(ParamModel[str, bool]):
-        @classmethod
-        def _parse_data(cls, data: str, upper: bool = False) -> str:
-            return data.upper() if upper else data
+    assert UpperStrModel().contents == ''
+    assert UpperStrModel().is_param_model()
+    assert UpperStrModel('foo').contents == 'foo'
+    assert UpperStrModel('bar', upper=True).contents == 'BAR'
 
-    assert MyModel().contents == ''
-    assert MyModel().is_param_model()
-    assert MyModel('foo').contents == 'foo'
-    assert MyModel('bar', upper=True).contents == 'BAR'
 
-    class ListOfMyModel(ListOfParamModel[MyModel, bool]):
-        ...
-
-    assert ListOfMyModel().contents == []
-    assert ListOfMyModel().is_param_model()
-    assert ListOfMyModel(['foo']).contents == [MyModel('foo')]
-    assert ListOfMyModel(['foo']).to_data() == ['foo']
-    assert ListOfMyModel(['foo', 'bar'], upper=True).contents == [
-        MyModel('foo', upper=True), MyModel('bar', upper=True)
-    ]
-    assert ListOfMyModel(['foo', 'bar'], upper=True).to_data() == ['FOO', 'BAR']
+def test_parametrized_list_of_model() -> None:
+    assert ListOfUpperStrModel().contents == []
+    assert ListOfUpperStrModel().is_param_model()
+    assert ListOfUpperStrModel(['foo']).contents == [UpperStrModel('foo')]
+    assert ListOfUpperStrModel(['foo']).to_data() == ['foo']
+    assert ListOfUpperStrModel(['foo', 'bar'], upper=True).contents \
+           == [UpperStrModel('foo', upper=True), UpperStrModel('bar', upper=True)]
+    assert ListOfUpperStrModel(['foo', 'bar'], upper=True).to_data() == ['FOO', 'BAR']

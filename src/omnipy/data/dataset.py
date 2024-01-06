@@ -17,13 +17,17 @@ from tabulate import tabulate
 from omnipy.data.model import (_cleanup_name_qualname_and_module,
                                _is_interactive_mode,
                                _waiting_for_terminal_repr,
+                               DataWithParams,
                                INTERACTIVE_MODULES,
                                is_model_instance,
-                               Model)
+                               Model,
+                               ParamModel)
 from omnipy.util.helpers import (get_calling_module_name,
                                  is_iterable,
                                  is_optional,
                                  is_strict_subclass,
+                                 is_union,
+                                 remove_annotated_plus_optional_if_present,
                                  remove_forward_ref_notation)
 
 ModelT = TypeVar('ModelT', bound=Model)
@@ -104,11 +108,17 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         orig_model = model
 
         model = cls._origmodel_if_annotated_optional(model)
+        args = get_args(model)
 
-        if not isinstance(model, TypeVar) \
-                and not lenient_issubclass(model, Model) \
+        if is_union(model) and len(args) == 2 and lenient_issubclass(args[1], DataWithParams):
+            model_to_check = args[0]
+        else:
+            model_to_check = model
+
+        if not isinstance(model_to_check, TypeVar) \
+                and not lenient_issubclass(model_to_check, Model) \
                 and not is_strict_subclass(cls, Dataset):
-            raise TypeError('Invalid model: {}! '.format(model)
+            raise TypeError('Invalid model: {}! '.format(model_to_check)
                             + 'omnipy Dataset models must be a specialization of the omnipy '
                             'Model class.')
 
@@ -126,7 +136,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         value: Mapping[str, object] | Iterable[tuple[str, object]] | UndefinedType = Undefined,
         *,
         data: Mapping[str, object] | UndefinedType = Undefined,
-        **input_data: object,
+        **kwargs: object,
     ) -> None:
         # TODO: Error message when forgetting parenthesis when creating Dataset should be improved.
         #       Unclear where this can be done, if anywhere? E.g.:
@@ -142,31 +152,40 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
         super_kwargs = {}
 
-        assert DATA_KEY not in input_data, \
-            ('Not allowed with"data" as input_data key. Not sure how you managed this? Are you '
-             'trying to break Dataset init on purpose?')
+        assert DATA_KEY not in kwargs, \
+            ('Not allowed with "data" as kwargs key. Not sure how you managed this? Are you trying '
+             'to break Dataset init on purpose?')
 
         if value != Undefined:
             assert data == Undefined, \
                 'Not allowed to combine positional and "data" keyword argument'
-            assert len(input_data) == 0, 'Not allowed to combine positional and keyword arguments'
+            assert len(kwargs) == 0 or self.get_model_class().is_param_model(), \
+                'Not allowed to combine positional and keyword arguments'
             super_kwargs[DATA_KEY] = value
 
         if data != Undefined:
-            assert len(input_data) == 0, \
+            assert len(kwargs) == 0, \
                 "Not allowed to combine 'data' with other keyword arguments"
             super_kwargs[DATA_KEY] = data
 
-        if DATA_KEY not in super_kwargs and len(input_data) > 0:
-            super_kwargs[DATA_KEY] = input_data
+        if kwargs:
+            if DATA_KEY not in super_kwargs:
+                super_kwargs[DATA_KEY] = kwargs
+                kwargs = {}
 
         if self.get_model_class() == ModelT:
             self._raise_no_model_exception()
 
+        self._init(super_kwargs, **kwargs)
+
         GenericModel.__init__(self, **super_kwargs)
         UserDict.__init__(self, self.data)  # noqa
+
         if not self.__doc__:
             self._set_standard_field_description()
+
+    def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
+        ...
 
     @classmethod
     def get_model_class(cls) -> Type[Model]:
@@ -181,9 +200,9 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     @classmethod
     def _origmodel_if_annotated_optional(cls, model):
         if get_origin(model) is Annotated:
-            unannotated_type = get_args(model)[0]
-            if is_optional(unannotated_type):
-                model = get_args(unannotated_type)[0]
+            model = remove_annotated_plus_optional_if_present(model)
+            if is_union(model):
+                model = get_args(model)[0]
         return model
 
     # TODO: Update _raise_no_model_exception() text. Model is now a requirement
@@ -489,3 +508,27 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
         if is_model_instance(data_obj):
             data_obj = data_obj.to_data()
         return data_obj
+
+
+KwargValT = TypeVar('KwargValT', bound=object)
+ParamModelT = TypeVar('ParamModelT', bound=ParamModel)
+
+
+class ParamDataset(Dataset[ParamModelT | DataWithParams[ParamModelT, KwargValT]],
+                   Generic[ParamModelT, KwargValT]):
+    def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
+        if kwargs and DATA_KEY in super_kwargs:
+            super_kwargs[DATA_KEY] = {
+                key: DataWithParams(data=val, params=kwargs) for key,
+                val in super_kwargs[DATA_KEY].items()
+            }
+
+    @root_validator()
+    def _parse_root_object(
+        cls,
+        root_obj: dict[str,
+                       dict[str, ParamModelT] | DataWithParams[ParamModelT, KwargValT]]) -> Any:
+        assert DATA_KEY in root_obj
+        data_dict = root_obj[DATA_KEY]
+
+        return {DATA_KEY: data_dict}
