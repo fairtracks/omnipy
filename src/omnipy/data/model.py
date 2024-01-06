@@ -299,39 +299,40 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         value: Any | UndefinedType = Undefined,
         *,
         __root__: Any | UndefinedType = Undefined,
-        **data: Any,
+        **kwargs: Any,
     ) -> None:
-        super_data: dict[str, RootT] = {}
+        super_kwargs: dict[str, RootT] = {}
         num_root_vals = 0
 
         if value is not Undefined:
-            super_data[ROOT_KEY] = cast(RootT, value)
+            super_kwargs[ROOT_KEY] = cast(RootT, value)
             num_root_vals += 1
 
         if __root__ is not Undefined:
-            super_data[ROOT_KEY] = cast(RootT, __root__)
+            super_kwargs[ROOT_KEY] = cast(RootT, __root__)
             num_root_vals += 1
 
-        if data:
+        if kwargs:
             if num_root_vals == 0 or not self.is_param_model():
-                super_data[ROOT_KEY] = cast(RootT, data)
+                super_kwargs[ROOT_KEY] = cast(RootT, kwargs)
+                kwargs = {}
                 num_root_vals += 1
 
         assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
 
-        if ROOT_KEY in super_data and is_model_instance(super_data[ROOT_KEY]):
-            super_data[ROOT_KEY] = super_data[ROOT_KEY].to_data()
+        if ROOT_KEY in super_kwargs and is_model_instance(super_kwargs[ROOT_KEY]):
+            super_kwargs[ROOT_KEY] = super_kwargs[ROOT_KEY].to_data()
 
-        self._init(super_data, **data)
+        self._init(super_kwargs, **kwargs)
 
-        super().__init__(**super_data)
+        super().__init__(**super_kwargs)
 
         self._take_snapshot_of_validated_contents()  # initial snapshot
 
         if not self.__class__.__doc__:
             self._set_standard_field_description()
 
-    def _init(self, super_data: dict[str, Any], **data: Any) -> None:
+    def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
         ...
 
     def __del__(self):
@@ -427,7 +428,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     def _parse_with_root_type_if_model(cls, value: Any, root_field: ModelField,
                                        root_type: Type) -> Any:
         if get_origin(root_type) is Annotated:
-            root_type = get_args(root_type)[0]
+            root_type = remove_annotated_plus_optional_if_present(root_type)
 
         if get_origin(root_type) is Union:
             last_error_holder = LastErrorHolder()
@@ -785,10 +786,10 @@ class ParamModel(Model[RootT | DataWithParams[RootT, KwargValT]], Generic[RootT,
 
         return created_model
 
-    def _init(self, super_data: dict[str, RootT], **data: Any) -> None:
-        if data and ROOT_KEY in super_data:
-            super_data[ROOT_KEY] = cast(RootT,
-                                        DataWithParams(data=super_data[ROOT_KEY], params=data))
+    def _init(self, super_kwargs: dict[str, RootT], **kwargs: Any) -> None:
+        if kwargs and ROOT_KEY in super_kwargs:
+            super_kwargs[ROOT_KEY] = cast(
+                RootT, DataWithParams(data=super_kwargs[ROOT_KEY], params=kwargs))
 
     @classmethod
     def _parse_data(cls, data: RootT, **params: KwargValT) -> RootT:
@@ -819,9 +820,9 @@ ParamModelT = TypeVar('ParamModelT', bound=ParamModel)
 class ListOfParamModel(Model[list[ParamModelT | DataWithParams[list[ParamModelT], KwargValT]]],
                        Generic[ParamModelT, KwargValT]):
     def _init(self,
-              super_data: dict[str, list[ParamModelT | DataWithParams[ParamModelT, KwargValT]]],
+              super_kwargs: dict[str, list[ParamModelT | DataWithParams[ParamModelT, KwargValT]]],
               **data: Any) -> None:
-        if data and ROOT_KEY in super_data:
-            super_data[ROOT_KEY] = cast(
+        if data and ROOT_KEY in super_kwargs:
+            super_kwargs[ROOT_KEY] = cast(
                 list[ParamModelT | DataWithParams[ParamModelT, KwargValT]],
-                [DataWithParams(data=_, params=data) for _ in super_data[ROOT_KEY]])
+                [DataWithParams(data=_, params=data) for _ in super_kwargs[ROOT_KEY]])
