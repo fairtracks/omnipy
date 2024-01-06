@@ -31,7 +31,7 @@ def convert_dataset_csv_to_pandas(dataset: Dataset[Model[bytes]],
     out_dataset = PandasDataset()
     for key, item in dataset.items():
         df = pd.read_csv(
-            StringIO(item),
+            StringIO(item.contents),
             sep=delimiter,
             header='infer' if first_row_as_col_names else 0,
             names=col_names,
