@@ -169,20 +169,24 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         # json_dumps = orjson_dumps
 
     @classmethod
-    def _get_default_value_from_model(cls, model: Type[RootT]) -> RootT:  # noqa: C901
+    def _get_bound_if_typevar(cls, model: Type[RootT]) -> RootT:
         if isinstance(model, TypeVar):
             if model.__bound__ is None:  # noqa
                 raise TypeError('The TypeVar "{}" needs to be bound to a '.format(model.__name__)
                                 + 'type that provides a default value when called')
             else:
-                model = model.__bound__  # noqa
+                return model.__bound__  # noqa
+        return model
+
+    @classmethod
+    def _get_default_value_from_model(cls, model: Type[RootT]) -> RootT:  # noqa: C901
+        model = cls._get_bound_if_typevar(model)
         origin_type = get_origin(model)
         args = get_args(model)
 
         if origin_type is Annotated:
-            model = args[0]
-            origin_type = get_origin(model)
-            args = get_args(model)
+            model = remove_annotated_plus_optional_if_present(model)
+            return cls._get_default_value_from_model(model)
 
         if origin_type in (None, ()):
             origin_type = model
@@ -237,7 +241,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         del cls.__fields__[ROOT_KEY]
         del cls.__annotations__[ROOT_KEY]
 
-    def __class_getitem__(cls, model: Type[RootT] | TypeVar) -> Type[RootT] | TypeVar:
+    def __class_getitem__(cls, model: Type[RootT] | TypeVar) -> 'Model[Type[RootT] | TypeVar]':
         # TODO: change model type to params: Type[Any], tuple[Type[Any], ...]]
         #       as in GenericModel
 
@@ -756,6 +760,20 @@ class DataWithParams(GenericModel, Generic[RootT, KwargValT]):
 
 
 class ParamModel(Model[RootT | DataWithParams[RootT, KwargValT]], Generic[RootT, KwargValT]):
+    def __class_getitem__(
+            cls, model: tuple[Type[RootT], Type[KwargValT]]) -> 'ParamModel[RootT, KwargValT]':
+        created_model = super().__class_getitem__(model)
+        outer_type = created_model._get_root_type(outer=True, with_args=True)
+        default_val = cls._get_default_value_from_model(outer_type)
+
+        def get_default_val() -> RootT | DataWithParams[RootT, KwargValT]:
+            return default_val
+
+        root_field = created_model._get_root_field()
+        root_field.default_factory = get_default_val
+
+        return created_model
+
     def _init(self, super_data: dict[str, RootT], **data: Any) -> None:
         if data and ROOT_KEY in super_data:
             super_data[ROOT_KEY] = cast(RootT,

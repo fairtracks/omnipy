@@ -1803,12 +1803,16 @@ def test_parametrized_model() -> None:
         def _parse_data(cls, data: str, upper: bool = False) -> str:
             return data.upper() if upper else data
 
+    assert MyModel().contents == ''
+    assert MyModel().is_param_model()
     assert MyModel('foo').contents == 'foo'
     assert MyModel('bar', upper=True).contents == 'BAR'
 
     class ListOfMyModel(ListOfParamModel[MyModel, bool]):
         ...
 
+    assert ListOfMyModel().contents == []
+    assert ListOfMyModel().is_param_model()
     assert ListOfMyModel(['foo']).contents == [MyModel('foo')]
     assert ListOfMyModel(['foo']).to_data() == ['foo']
     assert ListOfMyModel(['foo', 'bar'], upper=True).contents == [
