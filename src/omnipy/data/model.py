@@ -188,7 +188,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
             last_error_holder = LastErrorHolder()
             for arg in args:
-                if callable(arg):
+                if callable(arg) or isinstance(arg, TypeVar):
                     with last_error_holder:
                         return cls._get_default_value_from_model(arg)
             last_error_holder.raise_derived(TypeError(f'Cannot instantiate model "{model}".'))
@@ -304,8 +304,9 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             num_root_vals += 1
 
         if data:
-            super_data[ROOT_KEY] = cast(RootT, data)
-            num_root_vals += 1
+            if num_root_vals == 0:
+                super_data[ROOT_KEY] = cast(RootT, data)
+                num_root_vals += 1
 
         assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
 
@@ -314,12 +315,17 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
                 and not is_none_type(super_data[ROOT_KEY]):  # Consequence of MyModelMetaclass hack
             super_data[ROOT_KEY] = super_data[ROOT_KEY].to_data()
 
+        self._init(super_data, **data)
+
         super().__init__(**super_data)
 
         self._take_snapshot_of_validated_contents()  # initial snapshot
 
         if not self.__class__.__doc__:
             self._set_standard_field_description()
+
+    def _init(self, super_data: dict[str, Any], **data: Any) -> None:
+        ...
 
     def __del__(self):
         if id(self) in _restorable_content_cache:
@@ -390,7 +396,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
             self._get_restorable_contents().take_snapshot(self.contents)
 
     @classmethod
-    def _parse_data(cls, data: RootT) -> Any:
+    def _parse_data(cls, data: Any) -> Any:
         return data
 
     @root_validator
@@ -608,11 +614,19 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
             types_to_check = get_args(outer_type) if is_union(outer_type) else [outer_type_plain]
             for type_to_check in types_to_check:
-                if type_to_check is not None and isinstance(ret, ensure_plain_type(type_to_check)):
-                    try:
-                        ret = self.__class__(ret)
-                    except ValidationError:
-                        pass
+                # TODO: Remove inner_type_to_check loop when Annotated hack is removed with
+                #       pydantic v2
+                type_to_check = remove_annotated_plus_optional_if_present(type_to_check)
+                inner_types_to_check = get_args(type_to_check) if is_union(type_to_check) else [
+                    type_to_check
+                ]
+                for inner_type_to_check in inner_types_to_check:
+                    if inner_type_to_check is not None and isinstance(
+                            ret, ensure_plain_type(inner_type_to_check)):
+                        try:
+                            ret = self.__class__(ret)
+                        except ValidationError:
+                            pass
         return ret
 
     def __getattr__(self, attr: str) -> Any:
@@ -649,7 +663,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         if _is_interactive_mode() and not _waiting_for_terminal_repr():
             if get_calling_module_name() in INTERACTIVE_MODULES:
                 _waiting_for_terminal_repr(True)
-                return self._table_repr
+                return self._table_repr()
         return self._trad_repr()
 
     def _trad_repr(self) -> str:
@@ -725,3 +739,54 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         _waiting_for_terminal_repr(False)
 
         return out
+
+
+KwargValT = TypeVar('KwargValT', bound=object)
+
+
+class DataWithParams(GenericModel, Generic[RootT, KwargValT]):
+    data: RootT
+    params: dict[str, KwargValT]
+
+
+class ParamModel(Model[RootT | DataWithParams[RootT, KwargValT]], Generic[RootT, KwargValT]):
+    def _init(self, super_data: dict[str, RootT], **data: Any) -> None:
+        if data and ROOT_KEY in super_data:
+            super_data[ROOT_KEY] = cast(RootT,
+                                        DataWithParams(data=super_data[ROOT_KEY], params=data))
+
+    @classmethod
+    def _parse_data(cls, data: RootT, **params: KwargValT) -> RootT:
+        return data
+
+    @root_validator
+    def _parse_root_object(cls, root_obj: dict[str,
+                                               RootT | DataWithParams[RootT, KwargValT]]) -> Any:
+        assert ROOT_KEY in root_obj
+        root_val = root_obj[ROOT_KEY]
+
+        params: dict[str, KwargValT] = {}
+
+        if isinstance(root_val, DataWithParams):
+            data = root_val.data
+            params = root_val.params
+        else:
+            data = root_val
+
+        data = cls._parse_none_value_with_root_type_if_model(data)
+        return {ROOT_KEY: cls._parse_data(data, **params)}
+
+
+ParamModelT = TypeVar('ParamModelT', bound=ParamModel)
+
+
+#
+class ListOfParamModel(Model[list[ParamModelT | DataWithParams[list[ParamModelT], KwargValT]]],
+                       Generic[ParamModelT, KwargValT]):
+    def _init(self,
+              super_data: dict[str, list[ParamModelT | DataWithParams[ParamModelT, KwargValT]]],
+              **data: Any) -> None:
+        if data and ROOT_KEY in super_data:
+            super_data[ROOT_KEY] = cast(
+                list[ParamModelT | DataWithParams[ParamModelT, KwargValT]],
+                [DataWithParams(data=_, params=data) for _ in super_data[ROOT_KEY]])

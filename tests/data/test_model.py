@@ -16,7 +16,7 @@ from typing import (Annotated,
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
 
-from omnipy.data.model import Model
+from omnipy.data.model import ListOfParamModel, Model, ParamModel
 from omnipy.modules.general.typedefs import FrozenDict
 
 
@@ -1795,3 +1795,23 @@ def test_pandas_dataframe_non_builtin_direct():
         model_2.contents,
         dataframe,
     )
+
+
+def test_parametrized_model() -> None:
+    class MyModel(ParamModel[str, bool]):
+        @classmethod
+        def _parse_data(cls, data: str, upper: bool = False) -> str:
+            return data.upper() if upper else data
+
+    assert MyModel('foo').contents == 'foo'
+    assert MyModel('bar', upper=True).contents == 'BAR'
+
+    class ListOfMyModel(ListOfParamModel[MyModel, bool]):
+        ...
+
+    assert ListOfMyModel(['foo']).contents == [MyModel('foo')]
+    assert ListOfMyModel(['foo']).to_data() == ['foo']
+    assert ListOfMyModel(['foo', 'bar'], upper=True).contents == [
+        MyModel('foo', upper=True), MyModel('bar', upper=True)
+    ]
+    assert ListOfMyModel(['foo', 'bar'], upper=True).to_data() == ['FOO', 'BAR']
