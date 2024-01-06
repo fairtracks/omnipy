@@ -89,6 +89,11 @@ def _waiting_for_terminal_repr(new_value: bool | None = None) -> bool:
         return runtime.objects.waiting_for_terminal_repr
 
 
+def is_model_instance(obj: object) -> bool:
+    return lenient_isinstance(obj, Model) \
+        and not is_none_type(obj)  # Consequence of MyModelMetaclass hack
+
+
 # def orjson_dumps(v, *, default):
 #     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
 #     return orjson.dumps(v, default=default).decode()
@@ -310,9 +315,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
         assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
 
-        if ROOT_KEY in super_data \
-                and isinstance(super_data[ROOT_KEY], Model) \
-                and not is_none_type(super_data[ROOT_KEY]):  # Consequence of MyModelMetaclass hack
+        if ROOT_KEY in super_data and is_model_instance(super_data[ROOT_KEY]):
             super_data[ROOT_KEY] = super_data[ROOT_KEY].to_data()
 
         self._init(super_data, **data)
@@ -354,7 +357,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         Hack to allow overwriting of __iter__ method without compromising pydantic validation. Part
         of the pydantic API and not the Omnipy API.
         """
-        if isinstance(value, Model):
+        if is_model_instance(value):
             with AttribHolder(
                     value, '__iter__', GenericModel.__iter__, switch_to_other=True, on_class=True):
                 return super().validate(value)
@@ -378,7 +381,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         self._take_snapshot_of_validated_contents()
 
     def _validate_contents_from_value(self, value: RootT) -> RootT:
-        if isinstance(value, Model) and not is_none_type(value):
+        if is_model_instance(value):
             value = value.to_data()
         values, fields_set, validation_error = validate_model(self.__class__, {ROOT_KEY: value})
         if validation_error:
@@ -434,19 +437,15 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
                 outer_type = get_origin(root_field.outer_type_)
                 if lenient_issubclass(outer_type, Sequence) and lenient_isinstance(value, Sequence):
                     return outer_type(
-                        root_type.parse_obj(val)
-                        if is_none_type(val) or not lenient_isinstance(val, Model) else val
+                        root_type.parse_obj(val) if not is_model_instance(val) else val
                         for val in value)
                 elif lenient_issubclass(outer_type, Mapping) and lenient_isinstance(value, Mapping):
                     return outer_type({
-                        key:
-                            root_type.parse_obj(val)
-                            if is_none_type(val) or not lenient_isinstance(val, Model) else val
+                        key: root_type.parse_obj(val) if not is_model_instance(val) else val
                         for (key, val) in value.items()
                     })
             else:
-                return root_type.parse_obj(
-                    value) if is_none_type(value) or not lenient_isinstance(value, Model) else value
+                return root_type.parse_obj(value) if not is_model_instance(value) else value
         if value is None:
             none_default = root_field.default_factory() is None if root_field.default_factory \
                 else root_field.default is None
@@ -648,13 +647,13 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         return getattr(self._get_real_contents().__class__, attr)
 
     def _get_real_contents(self):
-        if isinstance(self.contents, Model):
+        if is_model_instance(self.contents):
             return self.contents.contents
         else:
             return self.contents
 
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, Model) \
+        return is_model_instance(other) \
             and self.__class__ == other.__class__ \
             and all_equals(self.contents, other.contents) \
             and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case

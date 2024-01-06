@@ -18,6 +18,7 @@ from omnipy.data.model import (_cleanup_name_qualname_and_module,
                                _is_interactive_mode,
                                _waiting_for_terminal_repr,
                                INTERACTIVE_MODULES,
+                               is_model_instance,
                                Model)
 from omnipy.util.helpers import (get_calling_module_name,
                                  is_iterable,
@@ -476,7 +477,7 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
     def _validate(self, data_file: str) -> None:
         if data_file in self._custom_field_models:
             model = self._custom_field_models[data_file]
-            if not isinstance(model, Model):
+            if not is_model_instance(model):
                 model = Model[model]
             data_obj = self._to_data_if_model(self.data[data_file])
             parsed_data = self._to_data_if_model(model(data_obj))
@@ -485,6 +486,6 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
 
     @staticmethod
     def _to_data_if_model(data_obj: Any):
-        if isinstance(data_obj, Model):
+        if is_model_instance(data_obj):
             data_obj = data_obj.to_data()
         return data_obj
