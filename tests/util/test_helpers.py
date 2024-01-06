@@ -1,5 +1,5 @@
 from copy import copy
-from types import NoneType
+from types import MethodType, NoneType
 from typing import Annotated, Generic, get_args, Iterator, Optional, TypeVar, Union
 
 import pytest
@@ -8,7 +8,10 @@ from typing_inspect import get_generic_type
 from omnipy.util.helpers import (ensure_non_str_byte_iterable,
                                  ensure_plain_type,
                                  get_calling_module_name,
+                                 get_first_item,
+                                 has_items,
                                  is_iterable,
+                                 is_non_str_byte_iterable,
                                  is_optional,
                                  is_strict_subclass,
                                  is_union,
@@ -59,22 +62,6 @@ def test_ensure_plain_type() -> None:
     assert ensure_plain_type(list[str]) == list
 
 
-def test_ensure_non_str_byte_iterable() -> None:
-    assert ensure_non_str_byte_iterable((1, 2, 3)) == (1, 2, 3)
-    assert ensure_non_str_byte_iterable([1, 2, 3]) == [1, 2, 3]
-    assert ensure_non_str_byte_iterable({'a': 1, 'b': 2}) == {'a': 1, 'b': 2}
-    assert ensure_non_str_byte_iterable({'a', 'b'}) == {'a', 'b'}
-
-    assert ensure_non_str_byte_iterable(123) == (123,)
-    assert ensure_non_str_byte_iterable('abc') == ('abc',)
-    assert ensure_non_str_byte_iterable(b'abc') == (b'abc',)
-    assert ensure_non_str_byte_iterable(None) == (None,)
-    assert ensure_non_str_byte_iterable(True) == (True,)
-
-    x = object()
-    assert ensure_non_str_byte_iterable(x) == (x,)
-
-
 def test_is_iterable() -> None:
     assert is_iterable(None) is False
     assert is_iterable(False) is False
@@ -82,6 +69,7 @@ def test_is_iterable() -> None:
     assert is_iterable(3.14) is False
 
     assert is_iterable('money') is True
+    assert is_iterable(b'money') is True
     assert is_iterable((1, 2, 3)) is True
     assert is_iterable([1, 2, 3]) is True
     assert is_iterable({1: 2, 3: 4}) is True
@@ -103,6 +91,100 @@ def test_is_iterable() -> None:
     assert is_iterable(MyModernIter()) is True
 
 
+def test_is_non_str_byte_iterable() -> None:
+    assert is_non_str_byte_iterable(None) is False
+    assert is_non_str_byte_iterable(False) is False
+    assert is_non_str_byte_iterable(42) is False
+    assert is_non_str_byte_iterable(3.14) is False
+
+    assert is_non_str_byte_iterable('money') is False
+    assert is_non_str_byte_iterable(b'money') is False
+    assert is_non_str_byte_iterable((1, 2, 3)) is True
+    assert is_non_str_byte_iterable([1, 2, 3]) is True
+    assert is_non_str_byte_iterable({1: 2, 3: 4}) is True
+    assert is_non_str_byte_iterable({1, 5, 6}) is True
+
+    class MyNonIter:
+        ...
+
+    class MyHistoricIter:
+        def __getitem__(self, index: int) -> int:
+            return (1, 2, 3)[index]
+
+    class MyModernIter:
+        def __iter__(self) -> Iterator[int]:
+            return iter((1, 2, 3))
+
+    assert is_non_str_byte_iterable(MyNonIter()) is False
+    assert is_non_str_byte_iterable(MyHistoricIter()) is True
+    assert is_non_str_byte_iterable(MyModernIter()) is True
+
+
+def test_ensure_non_str_byte_iterable() -> None:
+    assert ensure_non_str_byte_iterable((1, 2, 3)) == (1, 2, 3)
+    assert ensure_non_str_byte_iterable([1, 2, 3]) == [1, 2, 3]
+    assert ensure_non_str_byte_iterable({'a': 1, 'b': 2}) == {'a': 1, 'b': 2}
+    assert ensure_non_str_byte_iterable({'a', 'b'}) == {'a', 'b'}
+
+    assert ensure_non_str_byte_iterable(123) == (123,)
+    assert ensure_non_str_byte_iterable('abc') == ('abc',)
+    assert ensure_non_str_byte_iterable(b'abc') == (b'abc',)
+    assert ensure_non_str_byte_iterable(None) == (None,)
+    assert ensure_non_str_byte_iterable(True) == (True,)
+
+    x = object()
+    assert ensure_non_str_byte_iterable(x) == (x,)
+
+
+def test_has_items() -> None:
+    assert has_items(None) is False
+    assert has_items(False) is False
+    assert has_items(42) is False
+    assert has_items(3.14) is False
+
+    assert has_items('') is False
+    assert has_items(b'') is False
+    assert has_items('money') is True
+    assert has_items(b'money') is True
+
+    assert has_items(()) is False
+    assert has_items([]) is False
+    assert has_items({}) is False
+    assert has_items(set()) is False
+
+    assert has_items((1, 2, 3)) is True
+    assert has_items([1, 2, 3]) is True
+    assert has_items({1: 2, 3: 4}) is True
+    assert has_items({1, 5, 6}) is True
+
+    class MyClass:
+        ...
+
+    def __len__(self):
+        return 1
+
+    a = MyClass()
+    a.__len__ = MethodType(__len__, a)
+
+    assert has_items(a) is True
+
+
+def test_get_first_item() -> None:
+    with pytest.raises(AssertionError):
+        get_first_item(42)
+
+    with pytest.raises(AssertionError):
+        get_first_item('')
+
+    with pytest.raises(AssertionError):
+        get_first_item([])
+
+    assert get_first_item((1, 2, 3)) == 1
+    assert get_first_item([1, 2, 3]) == 1
+    assert get_first_item({1: 2, 3: 4}) == 1
+    assert get_first_item({1, 5, 6}) == 1
+
+
 def test_is_union() -> None:
     assert is_union(str) is False
     assert is_union(Optional[str]) is True
@@ -120,6 +202,7 @@ def test_is_union() -> None:
 
     assert is_union(Union[str, int] | None) is True
     assert is_union(Union[str, None] | int) is True
+    assert is_union(Union) is True
 
     assert is_union(str | int | None) is True
     assert is_union(str | None | int) is True

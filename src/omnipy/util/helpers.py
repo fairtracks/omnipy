@@ -93,10 +93,6 @@ def ensure_plain_type(in_type: type | GenericAlias) -> type | GenericAlias | Non
     return get_origin(in_type) if get_args(in_type) else in_type
 
 
-def ensure_non_str_byte_iterable(value):
-    return value if is_iterable(value) and not type(value) in (str, bytes) else (value,)
-
-
 def is_iterable(obj: object) -> bool:
     try:
         iter(obj)
@@ -105,8 +101,27 @@ def is_iterable(obj: object) -> bool:
         return False
 
 
+def is_non_str_byte_iterable(obj: object) -> bool:
+    return is_iterable(obj) and not type(obj) in (str, bytes)
+
+
+def ensure_non_str_byte_iterable(value):
+    return value if is_non_str_byte_iterable(value) else (value,)
+
+
+def has_items(obj: object) -> bool:
+    return hasattr(obj, '__len__') and obj.__len__() > 0
+
+
+def get_first_item(iterable: Iterable[object]) -> object:
+    assert has_items(iterable)
+    for item in iterable:
+        return item
+
+
 def is_union(cls_or_type: type | UnionType | None | object) -> bool:
-    return get_origin(cls_or_type) in [Union, UnionType]
+    union_types = [Union, UnionType]
+    return cls_or_type in union_types or get_origin(cls_or_type) in union_types
 
 
 def is_optional(cls_or_type: type | UnionType | None | object) -> bool:
