@@ -1,3 +1,4 @@
+import os
 from textwrap import dedent
 from types import NoneType
 from typing import Any, Generic, List, Optional, TypeAlias, TypeVar, Union
@@ -8,6 +9,7 @@ import pytest
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
+from .helpers.datasets import DefaultStrDataset, UpperStrDataset
 from .helpers.models import StringToLength
 
 
@@ -776,3 +778,26 @@ def test_dataset_switch_models_issue():
 
 
 # TODO: Add unit tests for MultiModelDataset
+
+
+def test_parametrized_dataset():
+    assert UpperStrDataset(x='foo')['x'].contents == 'foo'
+    assert UpperStrDataset({'x': 'bar'}, upper=True)['x'].contents == 'BAR'
+
+    with pytest.raises(KeyError):
+        UpperStrDataset({'x': 'bar'}, upper=True)['upper']
+    assert UpperStrDataset(x='bar', upper=True)['upper'].contents == 'True'
+
+
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason='ParamDataset does not support None values yet. Wait until pydantic v2 removed the'
+    'Annotated hack to simplify implementation')
+def test_parametrized_dataset_with_none():
+    with pytest.raises(ValidationError):
+        UpperStrDataset(x=None)
+    with pytest.raises(ValidationError):
+        UpperStrDataset(x=None, upper=True)
+
+    assert DefaultStrDataset(x=None)['x'].contents == 'default'
+    assert DefaultStrDataset({'x': None}, default='other')['x'].contents == 'other'
