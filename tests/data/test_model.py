@@ -1066,7 +1066,49 @@ def test_import_export_methods():
     }''')  # noqa: Q001
 
 
-def test_model_operations_as_list_simple():
+# This would probably cause more trouble than it's worth and is (possibly permanently) put on ice
+# def test_mimic_isinstance():
+#     assert isinstance(Model[int](), int)
+#     assert not isinstance(Model[int](), str)
+#     assert isinstance(Model[str](), str)
+#     assert isinstance(Model[str](), int)
+#
+#     assert isinstance(Model[list](), Sequence)
+#     assert not isinstance(Model[list](), Mapping)
+#     assert isinstance(Model[dict[str, str]](), Mapping)
+#     assert isinstance(Model[dict[str, str]](), Sequence)
+#
+#     class MyParentClass:
+#         ...
+#
+#     class MyChildClass(MyParentClass):
+#         ...
+#
+#     assert not isinstance(Model[int](), MyParentClass)
+#     assert not isinstance(Model[int](), MyChildClass)
+#
+#     assert isinstance(Model[MyParentClass](), MyParentClass)
+#     assert isinstance(Model[MyChildClass](), MyChildClass)
+#
+#     assert not isinstance(Model[MyParentClass](), MyChildClass)
+#     assert isinstance(Model[MyChildClass](), MyParentClass)
+#
+#
+# def test_mimic_isinstance_union():
+#     assert not isinstance(Model[int | str](), UnionType)
+#     assert not isinstance(Model[int | str](1), UnionType)
+#     assert not isinstance(Model[int | str]('1'), UnionType)
+#
+#     assert not isinstance(Model[int | str](), int)
+#     assert isinstance(Model[int | str](1), int)
+#     assert not isinstance(Model[int | str]('1'), int)
+#
+#     assert not isinstance(Model[int | str](), str)
+#     assert isinstance(Model[int | str](1), str)
+#     assert not isinstance(Model[int | str]('1'), str)
+
+
+def test_mimic_simple_list_operations():
     model = Model[list[int]]()
     assert len(model) == 0
 
@@ -1106,7 +1148,7 @@ def test_model_operations_as_list_simple():
     assert len(model) == 3
 
 
-def test_model_operations_as_nested_list_no_validation_at_second_level():
+def test_mimic_nested_list_operations_no_validation_at_second_level():
     model = Model[list[int | list[int]]]([123, 234, [345]])
 
     with pytest.raises(ValidationError):
@@ -1153,7 +1195,7 @@ def test_model_operations_as_nested_list_no_validation_at_second_level():
     assert model.contents == [123, 234, [0, 1, 2]]
 
 
-def test_model_operations_as_nested_list_with_full_validation():
+def test_mimic_nested_list_operations_with_full_validation():
     model = Model[list[Model[list[Model[list[int]] | int]] | int]]([123, 234, [345]])
 
     model[-1] = tuple(range(3))
@@ -1224,7 +1266,7 @@ def test_model_operations_as_dict():
     assert model == Model[dict[str, int]](other)
 
 
-def test_model_operations_as_nested_dict_no_validation_at_second_level():
+def test_mimic_nested_dict_operations_no_validation_at_second_level():
     model = Model[dict[str, dict[int, int] | int]]({'a': {12: 234, 13: 345}})
 
     with pytest.raises(ValidationError):
@@ -1265,7 +1307,7 @@ def test_model_operations_as_nested_dict_no_validation_at_second_level():
     assert model.contents == {'a': {14: 456}}
 
 
-def test_model_operations_as_nested_dict_with_full_validation():
+def test_mimic_nested_dict_operations_with_full_validation():
     model = Model[dict[str, Model[dict[int, Model[dict[int, int]] | int] | int]]]({
         'a': {
             12: 234, 13: 345
@@ -1360,7 +1402,7 @@ def test_model_operations_as_scalars():
     assert floor(model) == 2  # converting to other basic type removes Model
 
 
-def test_model_operations_as_union_of_scalars():
+def test_mimic_operations_as_union_of_scalars():
     model = Model[int | float](1)
 
     assert (model + 1).contents == 2
