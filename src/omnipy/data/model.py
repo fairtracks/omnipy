@@ -1,3 +1,4 @@
+from abc import ABCMeta
 from collections.abc import Mapping, Sequence
 import functools
 import inspect
@@ -31,7 +32,7 @@ from tabulate import tabulate
 
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
 from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
-from omnipy.util.decorators import add_callback_after_call, apply_decorator_to_property
+from omnipy.util.decorators import add_callback_after_call
 from omnipy.util.helpers import (all_equals,
                                  ensure_plain_type,
                                  generate_qualname,
@@ -110,7 +111,6 @@ class MyModelMetaclass(ModelMetaclass):
     # to be set to True so that Model is allowed to validate a None value.
     #
     # TODO: Revisit the need for MyModelMetaclass hack in pydantic v2
-
     def __instancecheck__(self, instance: Any) -> bool:
         if instance is None:
             return True

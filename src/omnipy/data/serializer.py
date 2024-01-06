@@ -197,7 +197,7 @@ class SerializerRegistry:
         serializers = self.detect_tar_file_serializers_from_dataset_cls(to_dataset)
         if len(serializers) == 0:
             log(f'No serializer for Dataset with type "{type(to_dataset)}" can be '
-                f'determined. Aborting load.')
+                f'determined.')
         else:
             for serializer in serializers:
                 log(f'Reading dataset from a gzipped tarpack at'
