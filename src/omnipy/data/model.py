@@ -1,4 +1,3 @@
-from abc import ABCMeta
 from collections.abc import Mapping, Sequence
 import functools
 import inspect

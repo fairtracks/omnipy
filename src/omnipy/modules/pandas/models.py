@@ -2,7 +2,7 @@ from collections.abc import Iterable
 from typing import Any
 
 from omnipy.data.dataset import Dataset
-from omnipy.data.model import Model, ROOT_KEY
+from omnipy.data.model import Model
 
 from . import pd
 

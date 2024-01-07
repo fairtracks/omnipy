@@ -77,8 +77,8 @@ def test_split_to_and_join_lines_models():
     assert JoinLinesModel(SplitToLinesModel(data, strip=False)).contents == data
 
 
-def test_split_to_and_join_items() -> None:
-    data_tab = "abc\t def \tghi\tjkl"
+def test_split_to_and_join_items():
+    data_tab = 'abc\t def \tghi\tjkl'
 
     items_stripped_tab = SplitToItemsModel(data_tab)
     assert items_stripped_tab.contents == ['abc', 'def', 'ghi', 'jkl']
@@ -90,7 +90,7 @@ def test_split_to_and_join_items() -> None:
     assert items_unstripped_tab[1] == ' def '
     assert items_unstripped_tab[-2:].contents == ['ghi', 'jkl']
 
-    data_comma = "abc, def, ghi, jkl"
+    data_comma = 'abc, def, ghi, jkl'
 
     items_stripped_comma = SplitToItemsModel(data_comma, delimiter=',')
     assert items_stripped_comma.contents == ['abc', 'def', 'ghi', 'jkl']
@@ -106,7 +106,7 @@ def test_split_to_and_join_items() -> None:
     assert comma_space_joined_items[1:-1].contents == 'ef, gh'
 
 
-def test_split_lines_to_columns_and_join_columns_to_lines() -> None:
+def test_split_lines_to_columns_and_join_columns_to_lines():
     data_tab = ['abc\t def \tghi\t jkl', 'mno\t pqr\tstu\t vwx', 'yz']
 
     cols_stripped_tab = SplitLinesToColumnsModel(data_tab)
@@ -132,13 +132,13 @@ def test_split_lines_to_columns_and_join_columns_to_lines() -> None:
     assert cols_stripped_comma[1:].to_data() == [['mno', 'pqr', 'stu', 'vwx'], ['yz']]
 
     joined_cols = JoinColumnsToLinesModel(cols_stripped_tab[1:])
-    assert joined_cols.contents == [JoinItemsModel('mno\tpqr\tstu\tvwx'), \
-                                    JoinItemsModel('yz')]
+    assert joined_cols.contents \
+           == [JoinItemsModel('mno\tpqr\tstu\tvwx'), JoinItemsModel('yz')]
     assert joined_cols[1:].contents == [JoinItemsModel('yz')]
     assert joined_cols.to_data() == ['mno\tpqr\tstu\tvwx', 'yz']
 
     joined_cols = JoinColumnsToLinesModel(cols_stripped_comma[1:], delimiter=', ')
-    assert joined_cols.contents == [JoinItemsModel('mno, pqr, stu, vwx'), \
-                                    JoinItemsModel('yz')]
+    assert joined_cols.contents \
+           == [JoinItemsModel('mno, pqr, stu, vwx'), JoinItemsModel('yz')]
     assert joined_cols[1:].contents == [JoinItemsModel('yz')]
     assert joined_cols.to_data() == ['mno, pqr, stu, vwx', 'yz']

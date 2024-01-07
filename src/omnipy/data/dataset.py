@@ -12,6 +12,7 @@ from typing import (Annotated,
                     Iterator,
                     Optional,
                     Type,
+                    TypeAlias,
                     TypeVar)
 
 import humanize
@@ -141,7 +142,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
         return created_dataset
 
-    def __init__(
+    def __init__(  # noqa: C901
         self,
         value: Mapping[str, object] | Iterable[tuple[str, object]] | UndefinedType = Undefined,
         *,
@@ -192,7 +193,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             self._raise_no_model_exception()
 
         dataset_as_input = DATA_KEY in super_kwargs \
-                           and lenient_isinstance(super_kwargs[DATA_KEY], Dataset)
+            and lenient_isinstance(super_kwargs[DATA_KEY], Dataset)
         if dataset_as_input:
             super_kwargs[DATA_KEY] = super_kwargs[DATA_KEY].to_data()
 
@@ -545,13 +546,16 @@ KwargValT = TypeVar('KwargValT', bound=object)
 ParamModelT = TypeVar('ParamModelT', bound=ParamModel)
 ListOfParamModelT = TypeVar('ListOfParamModelT', bound=ListOfParamModel)
 
+ParamModelSuperKwargsType: TypeAlias = \
+    dict[str, dict[str, ParamModelT | DataWithParams[ParamModelT, KwargValT]]]
+
+ListOfParamModelSuperKwargsType: TypeAlias = \
+    dict[str, dict[str, list[ListOfParamModelT | DataWithParams[ListOfParamModelT, KwargValT]]]]
+
 
 class ParamDataset(Dataset[ParamModelT | DataWithParams[ParamModelT, KwargValT]],
                    Generic[ParamModelT, KwargValT]):
-    def _init(self,
-              super_kwargs: dict[str,
-                                 dict[str, ParamModelT | DataWithParams[ParamModelT, KwargValT]]],
-              **kwargs: KwargValT) -> None:
+    def _init(self, super_kwargs: ParamModelSuperKwargsType, **kwargs: KwargValT) -> None:
         if kwargs and DATA_KEY in super_kwargs:
             super_kwargs[DATA_KEY] = {
                 key: DataWithParams(data=val, params=kwargs)
@@ -587,12 +591,7 @@ class ParamDataset(Dataset[ParamModelT | DataWithParams[ParamModelT, KwargValT]]
 
 class ListOfParamModelDataset(ParamDataset[ListOfParamModelT, KwargValT],
                               Generic[ListOfParamModelT, KwargValT]):
-    def _init(self,
-              super_kwargs: dict[str,
-                                 dict[str,
-                                      list[ListOfParamModelT |
-                                           DataWithParams[ListOfParamModelT, KwargValT]]]],
-              **kwargs: KwargValT) -> None:
+    def _init(self, super_kwargs: ListOfParamModelSuperKwargsType, **kwargs: KwargValT) -> None:
         if kwargs and DATA_KEY in super_kwargs:
             super_kwargs[DATA_KEY] = {
                 key: [DataWithParams(data=_, params=kwargs) for _ in val]
