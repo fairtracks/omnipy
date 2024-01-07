@@ -45,7 +45,7 @@ humanize = "^4.9.0"
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"
-mypy = "^1.7.1"
+mypy = "1.7.1"
 pytest = "^7.1.0"
 pytest-pycharm = "^0.7.0"
 types-python-slugify = "^8.0.0.1"
