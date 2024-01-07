@@ -320,12 +320,20 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
         assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
 
-        if ROOT_KEY in super_kwargs and is_model_instance(super_kwargs[ROOT_KEY]):
+        model_as_input = ROOT_KEY in super_kwargs and is_model_instance(super_kwargs[ROOT_KEY])
+        if model_as_input:
             super_kwargs[ROOT_KEY] = super_kwargs[ROOT_KEY].to_data()
 
         self._init(super_kwargs, **kwargs)
 
-        super().__init__(**super_kwargs)
+        try:
+            super().__init__(**super_kwargs)
+        except ValidationError:
+            if model_as_input:
+                super().__init__()
+                self.from_data(super_kwargs[ROOT_KEY])
+            else:
+                raise
 
         self._take_snapshot_of_validated_contents()  # initial snapshot
 
@@ -471,8 +479,11 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     def contents(self, value: RootT) -> None:
         super().__setattr__(ROOT_KEY, value)
 
+    def dict(self, *args, **kwargs) -> dict[str, dict[Any, Any]]:
+        return {ROOT_KEY: self.to_data()}
+
     def to_data(self) -> Any:
-        return self.dict()[ROOT_KEY]
+        return super().dict()[ROOT_KEY]
 
     def from_data(self, value: object) -> None:
         self._validate_and_set_contents(value)

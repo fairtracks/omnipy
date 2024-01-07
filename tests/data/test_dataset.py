@@ -9,8 +9,11 @@ import pytest
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
-from .helpers.datasets import DefaultStrDataset, UpperStrDataset
-from .helpers.models import StringToLength
+from .helpers.datasets import (DefaultStrDataset,
+                               ListOfUpperStrDataset,
+                               MyFloatObjDataset,
+                               UpperStrDataset)
+from .helpers.models import MyFloatObject, StringToLength, UpperStrModel
 
 
 def test_no_model():
@@ -75,6 +78,26 @@ def test_init_with_basic_parsing() -> None:
     assert len(dataset_4) == 2
     assert dataset_4['data_file_1'].contents == {1: 1234, 2: 2345}
     assert dataset_4['data_file_2'].contents == {2: 2345, 3: 3456}
+
+
+def test_init_dataset_as_input():
+    assert Dataset[Model[int]](Dataset[Model[float]](x=4.5, y=5.5)).to_data() == {'x': 4, 'y': 5}
+
+    list_of_floats_dataset = Dataset[Model[list[float]]](x=[4.5, 2.3], y=[1.3, 4.2, 6.7])
+    tuple_of_ints_dataset = Dataset[Model[tuple[int, ...]]](list_of_floats_dataset)
+    assert tuple_of_ints_dataset.to_data() == {'x': (4, 2), 'y': (1, 4, 6)}
+
+
+def test_init_converting_dataset_as_input():
+    my_float_dataset = MyFloatObjDataset()
+    my_float_dataset.from_data(dict(x=4.5, y=3.25))
+    assert my_float_dataset['x'].contents == MyFloatObject(int_part=4, float_part=0.5)
+    assert my_float_dataset.to_data() == {'x': 4.5, 'y': 3.25}
+
+    assert Dataset[Model[float]](my_float_dataset)['x'].contents == 4.5
+    assert MyFloatObjDataset(Dataset[Model[float]](x=4.5, y=3.25)).to_data() == {
+        'x': 4.5, 'y': 3.25
+    }
 
 
 def test_init_errors():

@@ -22,11 +22,11 @@ class PandasModel(Model[pd.DataFrame | pd.Series]):
     # @staticmethod
     # def _data_not_empty_object(data: pd.DataFrame) -> None:
     #     assert not any(data.isna().all(axis=1))
+    #
 
-    def dict(self, *args, **kwargs) -> dict[str, dict[Any, Any]]:
-        df = super().dict(*args, **kwargs)[ROOT_KEY]
-        df = df.replace({pd.NA: None})
-        return {ROOT_KEY: df.to_dict(orient='records')}
+    def to_data(self) -> Any:
+        df = self.contents.replace({pd.NA: None})
+        return df.to_dict(orient='records')
 
     def from_data(self, value: Iterable[Any]) -> None:
         self._validate_and_set_contents(pd.DataFrame(value).convert_dtypes())

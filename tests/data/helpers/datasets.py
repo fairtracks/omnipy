@@ -1,8 +1,10 @@
-from omnipy.data.dataset import ListOfParamModelDataset, ParamDataset
+from omnipy.data.dataset import Dataset, ListOfParamModelDataset, ParamDataset
 
-from .models import DefaultStrModel, ListOfUpperStrModel, UpperStrModel
+from .models import DefaultStrModel, ListOfUpperStrModel, MyFloatObjModel, UpperStrModel
 
-from .models import DefaultStrModel, UpperStrModel
+
+class MyFloatObjDataset(Dataset[MyFloatObjModel]):
+    ...
 
 
 class UpperStrDataset(ParamDataset[UpperStrModel, bool]):

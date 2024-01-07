@@ -1,6 +1,23 @@
+from dataclasses import dataclass
+from math import floor
 from types import NoneType
 
 from omnipy.data.model import ListOfParamModel, Model, ParamModel
+
+
+@dataclass
+class MyFloatObject:
+    int_part: int = 0
+    float_part: float = 0.0
+    precision: int = 4
+
+
+class MyFloatObjModel(Model[MyFloatObject]):
+    def to_data(self) -> float:
+        return self.contents.int_part + self.contents.float_part
+
+    def from_data(self, value: float):
+        self._validate_and_set_contents(MyFloatObject(int_part=floor(value), float_part=value % 1))
 
 
 class StringToLength(Model[str]):
