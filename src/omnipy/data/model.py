@@ -27,7 +27,6 @@ from pydantic.generics import GenericModel
 from pydantic.main import ModelMetaclass, validate_model
 from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass
-from tabulate import tabulate
 
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
 from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
@@ -44,6 +43,7 @@ from omnipy.util.helpers import (all_equals,
                                  remove_annotated_plus_optional_if_present,
                                  remove_forward_ref_notation,
                                  RestorableContents)
+from omnipy.util.tabulate import tabulate
 
 _KeyT = TypeVar('_KeyT')
 _ValT = TypeVar('_ValT')

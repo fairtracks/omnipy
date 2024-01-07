@@ -22,7 +22,6 @@ from pydantic import Field, PrivateAttr, root_validator, ValidationError
 from pydantic.fields import Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.utils import lenient_isinstance, lenient_issubclass
-from tabulate import tabulate
 
 from omnipy.data.model import (_cleanup_name_qualname_and_module,
                                _is_interactive_mode,
@@ -40,6 +39,7 @@ from omnipy.util.helpers import (get_calling_module_name,
                                  is_union,
                                  remove_annotated_plus_optional_if_present,
                                  remove_forward_ref_notation)
+from omnipy.util.tabulate import tabulate
 
 ModelT = TypeVar('ModelT', bound=Model)
 DATA_KEY = 'data'
