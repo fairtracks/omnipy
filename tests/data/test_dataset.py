@@ -781,40 +781,41 @@ def test_dataset_switch_models_issue():
 
 
 def test_parametrized_dataset():
-    assert UpperStrDataset(x='foo')['x'].contents == 'foo'
-    assert UpperStrDataset({'x': 'bar'}, upper=True)['x'].contents == 'BAR'
-    assert UpperStrDataset({'x': 'foo', 'y': 'bar'}, upper=True).to_data() == dict(x='FOO', y='BAR')
+    assert UpperStrDataset(dict(x='foo'))['x'].contents == 'foo'
+    assert UpperStrDataset(dict(x='bar'), upper=True)['x'].contents == 'BAR'
+    assert UpperStrDataset(dict(x='foo', y='bar'), upper=True).to_data() == dict(x='FOO', y='BAR')
 
     dataset = UpperStrDataset()
     dataset['x'] = 'foo'
     assert dataset['x'].contents == 'foo'
 
-    dataset.from_data({'y': 'bar', 'z': 'foobar'}, upper=True)
+    dataset.from_data(dict(y='bar', z='foobar'), upper=True)
     assert dataset.to_data() == dict(x='foo', y='BAR', z='FOOBAR')
 
-    dataset.from_data({'y': 'bar', 'z': 'foobar'}, update=False)
+    dataset.from_data(dict(y='bar', z='foobar'), update=False)
     assert dataset.to_data() == dict(y='bar', z='foobar')
 
-    dataset.from_json({'x': '"foo"'}, upper=True)
+    dataset.from_json(dict(x='"foo"'), upper=True)
     assert dataset.to_data() == dict(x='FOO', y='bar', z='foobar')
 
-    dataset.from_json({'x': '"foo"'}, update=False)
+    dataset.from_json(dict(x='"foo"'), update=False)
     assert dataset.to_data() == dict(x='foo')
 
     with pytest.raises(KeyError):
-        UpperStrDataset({'x': 'bar'}, upper=True)['upper']
-    assert UpperStrDataset(x='bar', upper=True)['upper'].contents == 'True'
+        UpperStrDataset(dict(x='bar'), upper=True)['upper']
+    with pytest.raises(AssertionError):
+        assert UpperStrDataset(x='bar', upper=True)
 
 
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason='ParamDataset does not support None values yet. Wait until pydantic v2 removed the'
+    reason='ParamDataset does not support None values yet. Wait until pydantic v2 removes the'
     'Annotated hack to simplify implementation')
 def test_parametrized_dataset_with_none():
     with pytest.raises(ValidationError):
-        UpperStrDataset(x=None)
+        UpperStrDataset(dict(x=None))
     with pytest.raises(ValidationError):
-        UpperStrDataset(x=None, upper=True)
+        UpperStrDataset(dict(x=None), upper=True)
 
-    assert DefaultStrDataset(x=None)['x'].contents == 'default'
-    assert DefaultStrDataset({'x': None}, default='other')['x'].contents == 'other'
+    assert DefaultStrDataset(dict(x=None))['x'].contents == 'default'
+    assert DefaultStrDataset(dict(x=None), default='other')['x'].contents == 'other'
