@@ -819,3 +819,37 @@ def test_parametrized_dataset_with_none():
 
     assert DefaultStrDataset(dict(x=None))['x'].contents == 'default'
     assert DefaultStrDataset(dict(x=None), default='other')['x'].contents == 'other'
+
+
+def test_list_of_parametrized_model_dataset():
+    assert ListOfUpperStrDataset(dict(x=['foo']))['x'].contents == [UpperStrModel('foo')]
+    assert ListOfUpperStrDataset(dict(x=['foo']))['x'].to_data() == ['foo']
+
+    dataset_1 = ListOfUpperStrDataset(dict(x=['foo', 'bar'], y=['foobar']), upper=True)
+    assert dataset_1['x'].contents \
+           == [UpperStrModel('foo', upper=True), UpperStrModel('bar', upper=True)]
+    assert dataset_1.to_data() == {'x': ['FOO', 'BAR'], 'y': ['FOOBAR']}
+
+    dataset_2 = ListOfUpperStrDataset()
+    dataset_2['x'] = ['foo']
+    assert dataset_2['x'].contents == [UpperStrModel('foo')]
+
+    dataset_2.from_data(dict(x=['foo']))
+    assert dataset_2.to_data() == dict(x=['foo'])
+
+    dataset_2.from_data(dict(y=['foo', 'bar'], z=['foobar']), upper=True)
+    assert dataset_2.to_data() == dict(x=['foo'], y=['FOO', 'BAR'], z=['FOOBAR'])
+
+    dataset_2.from_data(dict(y=['foo', 'bar'], z=['foobar']), update=False)
+    assert dataset_2.to_data() == dict(y=['foo', 'bar'], z=['foobar'])
+
+    dataset_2.from_json(dict(x='["foo", "bar"]'), upper=True)
+    assert dataset_2.to_data() == dict(x=['FOO', 'BAR'], y=['foo', 'bar'], z=['foobar'])
+
+    dataset_2.from_json(dict(x='["foo", "bar"]'), update=False)
+    assert dataset_2.to_data() == dict(x=['foo', 'bar'])
+
+    with pytest.raises(KeyError):
+        ListOfUpperStrDataset(dict(x=['bar']), upper=True)['upper']
+    with pytest.raises(AssertionError):
+        assert ListOfUpperStrDataset(x=['bar'], upper=True)
