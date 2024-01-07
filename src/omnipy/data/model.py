@@ -724,11 +724,12 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         data_column_width = terminal_size.columns - table_chars_width - header_column_width
 
         data_indent = 2
+        extra_space_due_to_escaped_chars = 12
 
         inspect.getmodule(debug).pformat = PrettyFormat(
             indent_step=data_indent,
             simple_cutoff=20,
-            width=data_column_width - data_indent,
+            width=data_column_width - data_indent - extra_space_due_to_escaped_chars,
             yield_from_generators=True,
         )
 
