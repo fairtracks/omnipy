@@ -77,10 +77,12 @@ from omnipy.modules.raw.models import (BytesModel,
                                        SplitToItemsModel,
                                        SplitToLinesModel,
                                        StrModel)
-from omnipy.modules.raw.tasks import (decode_bytes,
+from omnipy.modules.raw.tasks import (concat_all,
+                                      decode_bytes,
                                       modify_all_lines,
                                       modify_datafile_contents,
-                                      modify_each_line)
+                                      modify_each_line,
+                                      union_all)
 from omnipy.modules.tables.tasks import remove_columns
 
 # from omnipy.util.helpers import recursive_module_import
@@ -167,6 +169,8 @@ __all__ = [
     'modify_all_lines',
     'modify_datafile_contents',
     'modify_each_line',
+    'concat_all',
+    'union_all',
     'remove_columns',
 ]
 
