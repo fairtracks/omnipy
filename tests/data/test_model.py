@@ -1820,7 +1820,21 @@ def test_parametrized_model() -> None:
     assert model.contents == 'FOOBAR'
 
 
-def test_parametrized_list_of_model() -> None:
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason='ParamModel does not support None values yet. Wait until pydantic v2 removes the'
+    'Annotated hack to simplify implementation')
+def test_parametrized_model_with_none():
+    with pytest.raises(ValidationError):
+        UpperStrModel(None)
+    with pytest.raises(ValidationError):
+        UpperStrModel(None, upper=True)
+
+    assert DefaultStrModel(None).contents == 'default'
+    assert DefaultStrModel(None, default='other').contents == 'other'
+
+
+def test_list_of_parametrized_model() -> None:
     assert ListOfUpperStrModel().contents == []
     assert ListOfUpperStrModel().is_param_model()
     assert ListOfUpperStrModel(['foo']).contents == [UpperStrModel('foo')]
