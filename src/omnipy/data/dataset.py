@@ -474,6 +474,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         data = download_file_to_memory(url)
 
         if data is None:
+            print(f'Failed to download file from {url}')
             return None
 
         download_path = os.path.join(tmp_dir_path, os.path.basename(path))
