@@ -449,6 +449,8 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             parsed_url = urlparse(path_or_url)
             if parsed_url.scheme in ['http', 'https']:
                 download_path = self._download_file(path_or_url, parsed_url.path, tmp_dir_path)
+                if download_path is None:
+                    return
                 tar_gz_file_path = self._ensure_tar_gz_file(download_path)
             elif parsed_url.scheme in ['file', '']:
                 tar_gz_file_path = self._ensure_tar_gz_file(parsed_url.path)
