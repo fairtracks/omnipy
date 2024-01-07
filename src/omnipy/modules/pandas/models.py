@@ -26,7 +26,10 @@ class PandasModel(Model[pd.DataFrame | pd.Series]):
 
     def to_data(self) -> Any:
         df = self.contents.replace({pd.NA: None})
-        return df.to_dict(orient='records')
+        if isinstance(df, pd.DataFrame):
+            return df.to_dict(orient='records')
+        elif isinstance(df, pd.Series):
+            return df.to_dict()
 
     def from_data(self, value: Iterable[Any]) -> None:
         self._validate_and_set_contents(pd.DataFrame(value).convert_dtypes())
