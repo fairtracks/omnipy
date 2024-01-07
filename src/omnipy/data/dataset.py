@@ -452,7 +452,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     @staticmethod
     def _get_serializer_registry():
         from omnipy.modules import get_serializer_registry
-        return get_serializer_registry
+        return get_serializer_registry()
 
     def as_multi_model_dataset(self) -> 'MultiModelDataset[ModelT]':
         multi_model_dataset = MultiModelDataset[self.get_model_class()]()
