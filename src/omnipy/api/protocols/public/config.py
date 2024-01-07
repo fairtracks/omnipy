@@ -29,6 +29,8 @@ class IsJobConfig(Protocol):
 class IsDataConfig(Protocol):
     """"""
     interactive_mode: bool
+    terminal_size_columns: int
+    terminal_size_lines: int
 
 
 class IsRootLogConfig(Protocol):

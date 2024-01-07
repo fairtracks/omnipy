@@ -76,6 +76,16 @@ def _is_interactive_mode() -> bool:
     return runtime.config.data.interactive_mode if runtime else True
 
 
+def _get_terminal_size() -> os.terminal_size:
+    from omnipy.hub.runtime import runtime
+
+    shutil_terminal_size = shutil.get_terminal_size()
+    columns = runtime.config.data.terminal_size_columns if runtime else shutil_terminal_size.columns
+    lines = runtime.config.data.terminal_size_lines if runtime else shutil_terminal_size.lines
+
+    return os.terminal_size((columns, lines))
+
+
 def _waiting_for_terminal_repr(new_value: bool | None = None) -> bool:
     from omnipy.hub.runtime import runtime
     if runtime is None:
@@ -707,7 +717,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     def _table_repr(self) -> str:
         tabulate.PRESERVE_WHITESPACE = True  # Does not seem to work together with 'maxcolwidths'
 
-        terminal_size = shutil.get_terminal_size()
+        terminal_size = _get_terminal_size()
         header_column_width = len('(bottom')
         num_columns = 2
         table_chars_width = 3 * num_columns + 1

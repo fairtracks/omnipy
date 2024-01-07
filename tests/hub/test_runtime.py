@@ -54,6 +54,8 @@ def _assert_runtime_config_default(config: RuntimeConfig, dir_path: str):
     assert config.job.output_storage.s3.access_key == ''
     assert config.job.output_storage.s3.secret_key == ''
     assert config.data.interactive_mode is True
+    assert config.data.terminal_size_columns == 80
+    assert config.data.terminal_size_lines == 24
     assert config.engine == EngineChoice.LOCAL
     assert config.prefect.use_cached_results is False
 
