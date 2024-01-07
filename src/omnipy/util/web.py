@@ -16,7 +16,7 @@ async def download_file_to_memory_async(url: str):
 def download_file_to_memory(url: str) -> bytes | None:
     try:
         loop = asyncio.get_running_loop()
-        loop.create_task(download_file_to_memory_async(url))
+        return loop.create_task(download_file_to_memory_async(url))
     except RuntimeError:
         loop = asyncio.new_event_loop()
         return loop.run_until_complete(download_file_to_memory_async(url))
