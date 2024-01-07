@@ -20,7 +20,7 @@ import objsize
 from pydantic import Field, PrivateAttr, root_validator, ValidationError
 from pydantic.fields import Undefined, UndefinedType
 from pydantic.generics import GenericModel
-from pydantic.utils import lenient_issubclass
+from pydantic.utils import lenient_isinstance, lenient_issubclass
 from tabulate import tabulate
 
 from omnipy.data.model import (_cleanup_name_qualname_and_module,
@@ -191,9 +191,22 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if self.get_model_class() == ModelT:
             self._raise_no_model_exception()
 
+        dataset_as_input = DATA_KEY in super_kwargs \
+                           and lenient_isinstance(super_kwargs[DATA_KEY], Dataset)
+        if dataset_as_input:
+            super_kwargs[DATA_KEY] = super_kwargs[DATA_KEY].to_data()
+
         self._init(super_kwargs, **kwargs)
 
-        GenericModel.__init__(self, **super_kwargs)
+        try:
+            GenericModel.__init__(self, **super_kwargs)
+        except ValidationError:
+            if dataset_as_input:
+                GenericModel.__init__(self)
+                self.from_data(super_kwargs[DATA_KEY])
+            else:
+                raise
+
         UserDict.__init__(self, self.data)  # noqa
 
         if not self.__doc__:

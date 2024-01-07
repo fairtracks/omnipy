@@ -19,7 +19,11 @@ import pytest
 from omnipy.data.model import Model
 from omnipy.modules.general.typedefs import FrozenDict
 
-from .helpers.models import ListOfUpperStrModel, UpperStrModel
+from .helpers.models import (DefaultStrModel,
+                             ListOfUpperStrModel,
+                             MyFloatObject,
+                             MyFloatObjModel,
+                             UpperStrModel)
 
 
 def test_no_model_known_issue():
@@ -69,6 +73,20 @@ def test_init_and_data():
 def test_init_model_as_input():
     assert Model[int](Model[float](4.5)).to_data() == 4
     assert Model[tuple[int, ...]](Model[list[float]]([4.5, 2.3])).to_data() == (4, 2)
+
+    assert Model[Model[int]](Model[float](4.5)).contents == Model[int](4)
+    assert Model[Model[int]](Model[float](4.5)).to_data() == 4
+
+
+def test_init_converting_model_as_input():
+    assert MyFloatObjModel().contents == MyFloatObject()
+    my_float_model = MyFloatObjModel()
+    my_float_model.from_data(4.5)
+    assert my_float_model.contents == MyFloatObject(int_part=4, float_part=0.5)
+    assert my_float_model.to_data() == 4.5
+
+    assert Model[float](my_float_model).contents == 4.5
+    assert MyFloatObjModel(Model[float](4.5)).to_data() == 4.5
 
 
 def test_error_init():
