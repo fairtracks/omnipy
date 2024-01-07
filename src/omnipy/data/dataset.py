@@ -29,6 +29,7 @@ from omnipy.data.model import (_cleanup_name_qualname_and_module,
                                DataWithParams,
                                INTERACTIVE_MODULES,
                                is_model_instance,
+                               ListOfParamModel,
                                Model,
                                ParamModel)
 from omnipy.util.helpers import (get_calling_module_name,
@@ -529,19 +530,23 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
 
 KwargValT = TypeVar('KwargValT', bound=object)
 ParamModelT = TypeVar('ParamModelT', bound=ParamModel)
+ListOfParamModelT = TypeVar('ListOfParamModelT', bound=ListOfParamModel)
 
 
 class ParamDataset(Dataset[ParamModelT | DataWithParams[ParamModelT, KwargValT]],
                    Generic[ParamModelT, KwargValT]):
-    def _init(self, super_kwargs: dict[str, ParamModelT], **kwargs: KwargValT) -> None:
+    def _init(self,
+              super_kwargs: dict[str,
+                                 dict[str, ParamModelT | DataWithParams[ParamModelT, KwargValT]]],
+              **kwargs: KwargValT) -> None:
         if kwargs and DATA_KEY in super_kwargs:
             super_kwargs[DATA_KEY] = {
-                key: DataWithParams(data=val, params=kwargs) for key,
-                val in super_kwargs[DATA_KEY].items()
+                key: DataWithParams(data=val, params=kwargs)
+                for (key, val) in super_kwargs[DATA_KEY].items()
             }
 
     def from_data(self,
-                  data: dict[str, ParamModelT] | Iterator[tuple[str, ParamModelT]],
+                  data: dict[str, Any] | Iterator[tuple[str, Any]],
                   update: bool = True,
                   **kwargs: KwargValT) -> None:
         if kwargs:
@@ -566,12 +571,17 @@ class ParamDataset(Dataset[ParamModelT | DataWithParams[ParamModelT, KwargValT]]
         else:
             super().from_json(data, update=update)
 
-    @root_validator()
-    def _parse_root_object(
-        cls,
-        root_obj: dict[str,
-                       dict[str, ParamModelT] | DataWithParams[ParamModelT, KwargValT]]) -> Any:
-        assert DATA_KEY in root_obj
-        data_dict = root_obj[DATA_KEY]
 
-        return {DATA_KEY: data_dict}
+class ListOfParamModelDataset(ParamDataset[ListOfParamModelT, KwargValT],
+                              Generic[ListOfParamModelT, KwargValT]):
+    def _init(self,
+              super_kwargs: dict[str,
+                                 dict[str,
+                                      list[ListOfParamModelT |
+                                           DataWithParams[ListOfParamModelT, KwargValT]]]],
+              **kwargs: KwargValT) -> None:
+        if kwargs and DATA_KEY in super_kwargs:
+            super_kwargs[DATA_KEY] = {
+                key: [DataWithParams(data=_, params=kwargs) for _ in val]
+                for (key, val) in super_kwargs[DATA_KEY].items()
+            }
