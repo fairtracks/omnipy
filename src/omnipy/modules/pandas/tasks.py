@@ -92,11 +92,6 @@ def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSame
     return out_dataset
 
 
-import pandas as pd
-
-from omnipy.modules.pandas.models import PandasDataset
-
-
 @mypy_fix_task_template
 @TaskTemplate()
 def join_tables(dataset: PandasDataset, join_type: str = 'outer') -> PandasDataset:

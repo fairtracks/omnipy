@@ -9,7 +9,7 @@ async def download_file_to_memory_async(url: str):
         if response.status_code == 200:
             return response.content
         else:
-            print(f"Failed to download file from {url}")
+            print(f'Failed to download file from {url}')
             return None
 
 

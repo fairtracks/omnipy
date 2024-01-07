@@ -1,5 +1,7 @@
 """Pretty-print tabular data."""
 
+# flake8: noqa
+
 from collections import namedtuple
 from collections.abc import Iterable, Sized
 import dataclasses

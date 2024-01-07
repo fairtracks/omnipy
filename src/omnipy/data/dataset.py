@@ -488,7 +488,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
                 print(f'Creating compressed file {os.path.abspath(tar_gz_file_path)} from '
                       f'the contents of "{os.path.abspath(path)}"')
 
-                with tarfile.open(tar_gz_file_path, "w:gz") as tar:
+                with tarfile.open(tar_gz_file_path, 'w:gz') as tar:
                     if os.path.isdir(path):
                         for fn in os.listdir(path):
                             p = os.path.join(path, fn)

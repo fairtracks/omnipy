@@ -92,7 +92,11 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 __all__ = [
     'runtime',
     'Dataset',
+    'ParamDataset',
+    'ListOfParamModelDataset',
     'Model',
+    'ParamModel',
+    'ListOfParamModel',
     'JsonDataset',
     'JsonDictDataset',
     'JsonDictOfDictsDataset',
