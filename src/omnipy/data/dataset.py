@@ -3,6 +3,7 @@ from collections.abc import Iterable, Mapping
 import json
 import os
 import tarfile
+from tempfile import TemporaryDirectory
 from typing import (Annotated,
                     Any,
                     Callable,
@@ -14,6 +15,7 @@ from typing import (Annotated,
                     Type,
                     TypeAlias,
                     TypeVar)
+from urllib.parse import urlparse
 
 import humanize
 import objsize
@@ -40,6 +42,7 @@ from omnipy.util.helpers import (get_calling_module_name,
                                  remove_annotated_plus_optional_if_present,
                                  remove_forward_ref_notation)
 from omnipy.util.tabulate import tabulate
+from omnipy.util.web import download_file_to_memory
 
 ModelT = TypeVar('ModelT', bound=Model)
 DATA_KEY = 'data'
@@ -413,7 +416,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
     def _pretty_print_json(json_content: Any) -> str:
         return json.dumps(json_content, indent=2)
 
-    def save(self, directory: str):
+    def save(self, path: str):
         serializer_registry = self._get_serializer_registry()
 
         parsed_dataset, serializer = serializer_registry.auto_detect_tar_file_serializer(self)
@@ -422,32 +425,79 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             print(f'Unable to find a serializer for dataset with data type "{type(self)}". '
                   f'Will abort saving...')
         else:
-            print(f'Writing dataset as a gzipped tarpack to "{os.path.abspath(directory)}"')
+            if not path.endswith('.tar.gz'):
+                out_tar_gz_path = f'{path}.tar.gz'
 
-            out_tar_gz_path = f'{directory}.tar.gz'
+            print(f'Writing dataset as a gzipped tarpack to "{os.path.abspath(out_tar_gz_path)}"')
 
             with open(out_tar_gz_path, 'wb') as out_tar_gz_file:
                 out_tar_gz_file.write(serializer.serialize(parsed_dataset))
 
+            directory = os.path.abspath(out_tar_gz_path[:-7])
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
             tar = tarfile.open(out_tar_gz_path)
+            print(f'Extracting contents to directory "{os.path.abspath(out_tar_gz_path[:-7])}"')
             tar.extractall(path=directory)
             tar.close()
 
-    def load(self, tar_gz_file_path: str):
-        serializer_registry = self._get_serializer_registry()
+    def load(self, path_or_url: str, by_file_suffix=False):
+        with TemporaryDirectory() as tmp_dir_path:
+            serializer_registry = self._get_serializer_registry()
 
-        loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_dataset_cls(
-            self, tar_gz_file_path, self)
-        if loaded_dataset is not None:
-            self.absorb(loaded_dataset)
-            return
+            parsed_url = urlparse(path_or_url)
+            if parsed_url.scheme in ['http', 'https']:
+                download_path = self._download_file(path_or_url, parsed_url.path, tmp_dir_path)
+                tar_gz_file_path = self._ensure_tar_gz_file(download_path)
+            elif parsed_url.scheme in ['file', '']:
+                tar_gz_file_path = self._ensure_tar_gz_file(parsed_url.path)
+            else:
+                raise ValueError(f'Unsupported scheme "{parsed_url.scheme}"')
 
-        self.absorb(
-            serializer_registry.load_from_tar_file_path_based_on_file_suffix(
-                self, tar_gz_file_path, self))
+            if by_file_suffix:
+                loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_file_suffix(
+                    self, tar_gz_file_path, self)
+            else:
+                loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_dataset_cls(
+                    self, tar_gz_file_path, self)
+            if loaded_dataset is not None:
+                self.absorb(loaded_dataset)
+                return
+            else:
+                raise RuntimeError('Unable to load serializer')
+
+    def _download_file(self, url: str, path: str, tmp_dir_path: str) -> str | None:
+        print(f'Downloading {url}...')
+        data = download_file_to_memory(url)
+
+        if data is None:
+            return None
+
+        download_path = os.path.join(tmp_dir_path, os.path.basename(path))
+        with open(download_path, 'wb') as out_file:
+            out_file.write(data)
+        return download_path
+
+    def _ensure_tar_gz_file(self, path: str):
+        assert os.path.exists(path), f'No file or directory at {path}'
+
+        if not path.endswith('.tar.gz'):
+            tar_gz_file_path = path + '.tar.gz'
+            if not os.path.isfile(tar_gz_file_path):
+                print(f'Creating compressed file {os.path.abspath(tar_gz_file_path)} from '
+                      f'the contents of "{os.path.abspath(path)}"')
+
+                with tarfile.open(tar_gz_file_path, "w:gz") as tar:
+                    if os.path.isdir(path):
+                        for fn in os.listdir(path):
+                            p = os.path.join(path, fn)
+                            tar.add(p, arcname=fn)
+                    elif os.path.isfile(path):
+                        tar.add(path)
+            return tar_gz_file_path
+
+        return path
 
     @staticmethod
     def _get_serializer_registry():

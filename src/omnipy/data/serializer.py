@@ -68,7 +68,7 @@ class TarFileSerializer(Serializer, ABC):
                 data_file = tarfile_stream.extractfile(filename)
                 if not any_file_suffix:
                     assert filename.endswith(f'.{cls.get_output_file_suffix()}')
-                data_file_name = '.'.join(filename.split('.')[:-1])
+                data_file_name = os.path.basename('.'.join(filename.split('.')[:-1]))
                 getattr(dataset, import_method)(
                     dictify_object_func(data_file_name, data_decode_func(data_file)))
 
@@ -134,9 +134,13 @@ class SerializerRegistry:
         return None, None
 
     def detect_tar_file_serializers_from_dataset_cls(self, dataset: IsDataset):
-        return tuple(
+        serializers = tuple(
             serializer_cls for serializer_cls in self.tar_file_serializers
             if serializer_cls.is_dataset_directly_supported(dataset))
+        if len(serializers) == 0:
+            serializers = tuple(serializer_cls for serializer_cls in self.tar_file_serializers
+                                if serializer_cls.get_output_file_suffix() == 'bytes')
+        return serializers
 
     def detect_tar_file_serializers_from_file_suffix(self, file_suffix: str):
         return tuple(serializer_cls for serializer_cls in self.tar_file_serializers
@@ -202,7 +206,7 @@ class SerializerRegistry:
             for serializer in serializers:
                 log(f'Reading dataset from a gzipped tarpack at'
                     f' "{os.path.abspath(tar_file_path)}" with serializer type: '
-                    f'"{type(serializer)}"')
+                    f'"{serializer.__name__}"')
 
                 with open(tar_file_path, 'rb') as tarfile_binary:
                     out_dataset = serializer.deserialize(tarfile_binary.read(), any)

@@ -41,6 +41,7 @@ pathspec = "0.12.1"
 devtools = "^0.12.2"
 objsize = "^0.7.0"
 humanize = "^4.9.0"
+httpx = "^0.26.0"
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"
