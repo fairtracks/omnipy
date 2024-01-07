@@ -2,8 +2,8 @@ __version__ = '0.14.2'
 
 import os
 
-from omnipy.data.dataset import Dataset
-from omnipy.data.model import Model
+from omnipy.data.dataset import Dataset, ParamDataset, ListOfParamModelDataset
+from omnipy.data.model import Model, ParamModel, ListOfParamModel
 from omnipy.hub.runtime import runtime
 # from omnipy.util.helpers import recursive_module_import
 from omnipy.modules.general.tasks import import_directory, split_dataset
@@ -61,12 +61,22 @@ from omnipy.modules.pandas.tasks import (concat_dataframes_across_datasets,
                                          convert_dataset_list_of_dicts_to_pandas,
                                          convert_dataset_pandas_to_csv,
                                          extract_columns_as_files)
-from omnipy.modules.raw.models import (JoinColumnsToLinesModel,
+from omnipy.modules.raw.datasets import (BytesDataset,
+                                         JoinColumnsToLinesDataset,
+                                         JoinItemsDataset,
+                                         JoinLinesDataset,
+                                         SplitLinesToColumnsDataset,
+                                         SplitToItemsDataset,
+                                         SplitToLinesDataset,
+                                         StrDataset)
+from omnipy.modules.raw.models import (BytesModel,
+                                       JoinColumnsToLinesModel,
                                        JoinItemsModel,
                                        JoinLinesModel,
                                        SplitLinesToColumnsModel,
                                        SplitToItemsModel,
-                                       SplitToLinesModel)
+                                       SplitToLinesModel,
+                                       StrModel)
 from omnipy.modules.raw.tasks import (decode_bytes,
                                       modify_all_lines,
                                       modify_datafile_contents,
@@ -126,12 +136,22 @@ __all__ = [
     'ListOfPandasDatasetsWithSameNumberOfFiles',
     'PandasModel',
     'PandasDataset',
+    'BytesDataset',
+    'SplitToLinesDataset',
+    'JoinLinesDataset',
+    'SplitToItemsDataset',
+    'JoinItemsDataset',
+    'SplitLinesToColumnsDataset',
+    'JoinColumnsToLinesDataset',
+    'StrDataset',
+    'BytesModel',
     'SplitToLinesModel',
     'JoinLinesModel',
     'SplitToItemsModel',
     'JoinItemsModel',
     'SplitLinesToColumnsModel',
     'JoinColumnsToLinesModel',
+    'StrModel',
     'import_directory',
     'split_dataset',
     'flatten_nested_json',
