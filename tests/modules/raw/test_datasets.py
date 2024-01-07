@@ -91,8 +91,8 @@ def test_split_to_and_join_lines_models():
 
 
 def test_split_to_and_join_items():
-    data_tab_start = "abc\t def \tghi\tjkl"
-    data_tab_end = "mno\t pqr \tstu\tvwx\tyz "
+    data_tab_start = 'abc\t def \tghi\tjkl'
+    data_tab_end = 'mno\t pqr \tstu\tvwx\tyz '
 
     items_stripped_tab = SplitToItemsDataset(dict(start=data_tab_start, end=data_tab_end))
     assert items_stripped_tab['start'].contents == ['abc', 'def', 'ghi', 'jkl']
@@ -105,8 +105,8 @@ def test_split_to_and_join_items():
     assert items_unstripped_tab['start'][1] == ' def '
     assert items_unstripped_tab['end'][-2:].contents == ['vwx', 'yz ']
 
-    data_comma_start = "abc, def, ghi, jkl"
-    data_comma_end = "mno, pqr, stu, vwx, yz"
+    data_comma_start = 'abc, def, ghi, jkl'
+    data_comma_end = 'mno, pqr, stu, vwx, yz'
 
     items_stripped_comma = SplitToItemsDataset(
         dict(start=data_comma_start, end=data_comma_end), delimiter=',')
