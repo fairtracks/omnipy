@@ -179,6 +179,11 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
         if kwargs:
             if DATA_KEY not in super_kwargs:
+                assert not self.get_model_class().is_param_model(), \
+                    ('If any keyword arguments are defined, parametrized datasets require at least '
+                     'one positional argument in the __init__ method (typically providing the data '
+                     'in the form of a dict from name to content for each data file).')
+
                 super_kwargs[DATA_KEY] = kwargs
                 kwargs = {}
 
