@@ -1,9 +1,9 @@
-__version__ = '0.14.2'
+__version__ = '0.14.3'
 
 import os
 
-from omnipy.data.dataset import Dataset, ParamDataset, ListOfParamModelDataset
-from omnipy.data.model import Model, ParamModel, ListOfParamModel
+from omnipy.data.dataset import Dataset, ListOfParamModelDataset, ParamDataset
+from omnipy.data.model import ListOfParamModel, Model, ParamModel
 from omnipy.hub.runtime import runtime
 # from omnipy.util.helpers import recursive_module_import
 from omnipy.modules.general.tasks import import_directory, split_dataset
