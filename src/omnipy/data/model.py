@@ -708,6 +708,10 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
                 return self._table_repr()
         return self._trad_repr()
 
+    def view(self):
+        from omnipy import PandasModel
+        return PandasModel(self).contents
+
     def _trad_repr(self) -> str:
         return super().__repr__()
 
