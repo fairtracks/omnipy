@@ -8,6 +8,7 @@ from omnipy.data.model import Model
 from . import pd
 from ..general.models import NotIterableExceptStrOrBytesModel
 from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset
+from .util import is_pairwise_consistent_values
 
 
 @mypy_fix_task_template
@@ -94,7 +95,9 @@ def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSame
 
 @mypy_fix_task_template
 @TaskTemplate()
-def join_tables(dataset: PandasDataset, join_type: str = 'outer') -> PandasDataset:
+def join_tables(dataset: PandasDataset,
+                join_type: str = 'outer',
+                allow_multiple_join_cols_if_consistent: bool = False) -> PandasDataset:
     assert len(dataset) == 2
 
     output_dataset = PandasDataset()
@@ -104,11 +107,25 @@ def join_tables(dataset: PandasDataset, join_type: str = 'outer') -> PandasDatas
     df_1 = dataset[table_name_1]
     df_2 = dataset[table_name_2]
 
-    common_headers = set(df_1.columns) & set(df_2.columns)
-    assert len(common_headers) == 1
+    common_headers_set = set(df_1.columns) & set(df_2.columns)
+    common_headers = tuple(col for col in df_1.columns if col in common_headers_set)
+
+    join_cols = []
+    if len(common_headers) > 1:
+        if allow_multiple_join_cols_if_consistent:
+            if is_pairwise_consistent_values(df_1, df_2, common_headers):
+                join_cols += list(common_headers)
+            else:
+                raise ValueError()
+        else:
+            raise ValueError(f'No common column names were found. '
+                             f'"{table_name_1}": {tuple(df_1.columns)}. '
+                             f'"{table_name_2}": {tuple(df_2.columns)}')
+    else:
+        join_cols = common_headers[0]
 
     merged_df = pd.merge(
-        df_1.loc[:, :], df_2.loc[:, :], on=common_headers.pop(), how=join_type).convert_dtypes()
+        df_1.loc[:, :], df_2.loc[:, :], on=join_cols, how=join_type).convert_dtypes()
 
     output_dataset[output_table_name] = merged_df
     return output_dataset

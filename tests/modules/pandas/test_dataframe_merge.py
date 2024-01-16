@@ -1,3 +1,4 @@
+import os
 from typing import Annotated
 
 from pandas import DataFrame
@@ -45,11 +46,37 @@ def table_dbe2():
 
 
 @pytest.fixture
-def table_bce():
+def table_bce_consistent():
     return DataFrame(
         [
             [345, True, 34],
             [234, False, 23],
+            [123, True, 34],
+        ],
+        columns=['B', 'C', 'E'],
+    )
+
+
+@pytest.fixture
+def table_bce_consistent_dupl_row():
+    return DataFrame(
+        [
+            [345, True, 34],
+            [234, False, 23],
+            [234, False, 45],
+            [123, True, 34],
+        ],
+        columns=['B', 'C', 'E'],
+    )
+
+
+@pytest.fixture
+def table_bce_inconsistent():
+    return DataFrame(
+        [
+            [345, False, 34],
+            [234, False, 23],
+            [234, True, 45],
             [123, True, 34],
         ],
         columns=['B', 'C', 'E'],
@@ -216,6 +243,73 @@ def test_right_join_tables_on_column_some_matching(
     }
 
 
+def test_default_outer_join_tables_multiple_columns_same_name_error(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    table_abc: Annotated[DataFrame, pytest.fixture],
+    table_bce_consistent: Annotated[DataFrame, pytest.fixture],
+):
+    dataset = PandasDataset()
+    dataset['table_abc'] = table_abc
+    dataset['table_bce_consistent'] = table_bce_consistent
+
+    with pytest.raises(ValueError):
+        join_tables.run(dataset)
+
+
+def test_default_outer_join_tables_multiple_columns_same_name_allow_multiple_consistent(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    table_abc: Annotated[DataFrame, pytest.fixture],
+    table_bce_consistent: Annotated[DataFrame, pytest.fixture],
+):
+    dataset = PandasDataset()
+    dataset['table_abc'] = table_abc
+    dataset['table_bce_consistent'] = table_bce_consistent
+
+    joined_dataset = join_tables.run(dataset, allow_multiple_join_cols_if_consistent=True)
+
+    assert joined_dataset.to_data() == {
+        'table_abc_join_table_bce_consistent': [
+            dict(A='abc', B=123, C=True, E=34),
+            dict(A='bcd', B=234, C=False, E=23),
+            dict(A='cde', B=345, C=True, E=34),
+        ]
+    }
+
+
+def test_default_outer_join_tables_multiple_columns_same_name_allow_multiple_consistent_dupl_row(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    table_abc: Annotated[DataFrame, pytest.fixture],
+    table_bce_consistent_dupl_row: Annotated[DataFrame, pytest.fixture],
+):
+    dataset = PandasDataset()
+    dataset['table_abc'] = table_abc
+    dataset['table_bce_consistent_dupl_row'] = table_bce_consistent_dupl_row
+
+    joined_dataset = join_tables.run(dataset, allow_multiple_join_cols_if_consistent=True)
+
+    assert joined_dataset.to_data() == {
+        'table_abc_join_table_bce_consistent_dupl_row': [
+            dict(A='abc', B=123, C=True, E=34),
+            dict(A='bcd', B=234, C=False, E=23),
+            dict(A='bcd', B=234, C=False, E=45),
+            dict(A='cde', B=345, C=True, E=34),
+        ]
+    }
+
+
+def test_default_outer_join_tables_multiple_columns_same_name_allow_multiple_inconsistent(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    table_abc: Annotated[DataFrame, pytest.fixture],
+    table_bce_inconsistent: Annotated[DataFrame, pytest.fixture],
+):
+    dataset = PandasDataset()
+    dataset['table_abc'] = table_abc
+    dataset['table_bce_inconsistent'] = table_bce_inconsistent
+
+    with pytest.raises(ValueError):
+        join_tables.run(dataset, allow_multiple_join_cols_if_consistent=True)
+
+
 # def test_join_tables_on_column_missing_data(
 #     runtime: Annotated[IsRuntime, pytest.fixture],
 #     table_abc: Annotated[DataFrame, pytest.fixture],
@@ -236,3 +330,12 @@ def test_right_join_tables_on_column_some_matching(
 #     }
 
 # Further tests
+# TODO: join_tables: When Multiple columns that have the same name -> check consistency of common columns.
+#       If identical, then merge columns.
+# TODO: join_tables: Specify left/right columns to merge on
+# TODO: join_tables: Specify left/right columns to merge on -> multiple columns with same name
+# TODO: join_tables: Specify left/right columns to merge on -> specified columns do not exist
+# TODO: join_tables: No overlapping column names in A and B
+# TODO: join_tables: Empty dataframe
+# TODO: join_tables: Multiple matching rows
+# TODO: join_tables: Multiple tables
