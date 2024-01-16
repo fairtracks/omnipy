@@ -204,3 +204,8 @@ def test_pandas_dataset_error_empty_objects():
     pandas_data = PandasDataset()
     pandas_data['data_file'] = [{'a': 'abc', 'b': 12}, {}]
     assert pd.isna(pandas_data['data_file'].loc[1]).all()
+
+
+# Placeholder
+def test_pandas_model_input_output_json():
+    ...
