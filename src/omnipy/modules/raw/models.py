@@ -1,6 +1,8 @@
 import os
 
-from omnipy.data.model import ListOfParamModel, Model, ParamModel
+from pydantic.generics import _generic_types_cache
+
+from omnipy.data.model import DataWithParams, ListOfParamModel, Model, ParamModel
 
 
 class BytesModel(ParamModel[str | bytes, str]):
@@ -12,6 +14,12 @@ class BytesModel(ParamModel[str | bytes, str]):
         return data.encode(encoding)
 
     ...
+
+
+# Workaround for https://github.com/pydantic/pydantic/issues/4519
+# (which is also not fixed in pydantic v2)
+del _generic_types_cache[(ParamModel, (str | bytes, str), ())]
+del _generic_types_cache[(DataWithParams, (str | bytes, str), ())]
 
 
 class StrModel(ParamModel[bytes | str, str]):

@@ -36,6 +36,8 @@ def test_str_dataset():
     assert StrDataset(dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].contents == 'æøå'
     assert StrDataset(dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'), encoding='utf-8')['a'].contents == 'æøå'
     assert StrDataset(dict(a=b'\xe6\xf8\xe5'), encoding='latin-1')['a'].contents == 'æøå'
+    assert StrDataset(
+        dict(a=b'\xef\xbb\xbfsomething'), encoding='utf-8-sig')['a'].contents == 'something'
 
     with pytest.raises(ValidationError):
         StrDataset(dict(a=b'\xe6\xf8\xe5'), encoding='utf-8')
