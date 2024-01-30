@@ -11,7 +11,8 @@ from .functions import (csv_func,
                         json_table_func,
                         pandas_func,
                         python_func,
-                        str_func)
+                        str_func,
+                        str_unicode_func)
 
 
 @pc.case(tags=['task'])
@@ -92,6 +93,16 @@ def case_str_task_tmpl() -> TaskTemplate:
 @pc.case(tags=['flow'])
 def case_str_flow_tmpl() -> LinearFlowTemplate:
     return LinearFlowTemplate(case_str_task_tmpl())(str_func)
+
+
+@pc.case(tags=['task'])
+def case_str_unicode_task_tmpl() -> TaskTemplate:
+    return TaskTemplate()(str_unicode_func)
+
+
+@pc.case(tags=['flow'])
+def case_str_unicode_flow_tmpl() -> LinearFlowTemplate:
+    return LinearFlowTemplate(case_str_unicode_task_tmpl())(str_unicode_func)
 
 
 @pc.case(tags=['task'])
