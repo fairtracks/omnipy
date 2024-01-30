@@ -33,6 +33,7 @@ def test_str_model():
     assert StrModel(b'\xc3\xa6\xc3\xb8\xc3\xa5').contents == 'æøå'
     assert StrModel(b'\xc3\xa6\xc3\xb8\xc3\xa5', encoding='utf-8').contents == 'æøå'
     assert StrModel(b'\xe6\xf8\xe5', encoding='latin-1').contents == 'æøå'
+    assert StrModel(b'\xef\xbb\xbfsomething', encoding='utf-8-sig').contents == 'something'
 
     with pytest.raises(ValidationError):
         StrModel(b'\xe6\xf8\xe5', encoding='utf-8')
