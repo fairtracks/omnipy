@@ -42,8 +42,9 @@ def test_str_model():
         StrModel(b'\xe6\xf8\xe5', encoding='my-encoding')
 
 
-def test_split_to_and_join_lines_models():
+def test_split_to_and_join_lines_model():
     data = """\
+        
         Alas, poor Yorick! I knew him, Horatio: a fellow
         of infinite jest, of most excellent fancy: he hath
         borne me on his back a thousand times; and now, how
@@ -52,19 +53,23 @@ def test_split_to_and_join_lines_models():
         not how oft. Where be your gibes now? your
         gambols? your songs? your flashes of merriment,
         that were wont to set the table on a roar? Not one
-        now, to mock your own grinning? quite chap-fallen."""
+        now, to mock your own grinning? quite chap-fallen.
+        """
 
     lines_stripped = SplitToLinesModel(data)
     assert lines_stripped[0] == 'Alas, poor Yorick! I knew him, Horatio: a fellow'
 
     lines_unstripped = SplitToLinesModel(data, strip=False)
-    assert lines_unstripped[0] == '        Alas, poor Yorick! I knew him, Horatio: a fellow'
+    assert lines_unstripped[0] == '        '
+    assert lines_unstripped[1] == '        Alas, poor Yorick! I knew him, Horatio: a fellow'
+    assert lines_unstripped[-1] == '        '
 
     last_lines = lines_stripped[3:]
     assert last_lines[0:2].contents == [
         'abhorred in my imagination it is! my gorge rises at',
         'it. Here hung those lips that I have kissed I know'
     ]
+    assert last_lines[-1] == 'now, to mock your own grinning? quite chap-fallen.'
 
     joined_lines = JoinLinesModel(last_lines[0:2])
     assert joined_lines.contents == dedent("""\
@@ -73,12 +78,12 @@ def test_split_to_and_join_lines_models():
 
     assert joined_lines[:joined_lines.index(' ')].contents == 'abhorred'
     assert JoinLinesModel(SplitToLinesModel(data)).contents == \
-           os.linesep.join([line.strip() for line in data.split(os.linesep)])
+           os.linesep.join([line.strip() for line in data.strip().split(os.linesep)])
 
     assert JoinLinesModel(SplitToLinesModel(data, strip=False)).contents == data
 
 
-def test_split_to_and_join_items():
+def test_split_to_and_join_items_model():
     data_tab = 'abc\t def \tghi\tjkl'
 
     items_stripped_tab = SplitToItemsModel(data_tab)
@@ -107,7 +112,7 @@ def test_split_to_and_join_items():
     assert comma_space_joined_items[1:-1].contents == 'ef, gh'
 
 
-def test_split_lines_to_columns_and_join_columns_to_lines():
+def test_split_lines_to_columns_and_join_columns_to_lines_model():
     data_tab = ['abc\t def \tghi\t jkl', 'mno\t pqr\tstu\t vwx', 'yz']
 
     cols_stripped_tab = SplitLinesToColumnsModel(data_tab)

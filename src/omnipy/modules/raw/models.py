@@ -39,6 +39,8 @@ class SplitToLinesModel(ParamModel[str | list[str], bool]):
         if isinstance(data, list):
             return data
 
+        if strip:
+            data = data.strip()
         lines = data.split(os.linesep)
         return [line.strip() for line in lines] if strip else lines
 

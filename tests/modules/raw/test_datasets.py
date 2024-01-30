@@ -46,8 +46,9 @@ def test_str_dataset():
         StrDataset(dict(a=b'\xe6\xf8\xe5'), encoding='my-encoding')
 
 
-def test_split_to_and_join_lines_models():
+def test_split_to_and_join_lines_dataset():
     data = """\
+        
         Alas, poor Yorick! I knew him, Horatio: a fellow
         of infinite jest, of most excellent fancy: he hath
         borne me on his back a thousand times; and now, how
@@ -56,16 +57,20 @@ def test_split_to_and_join_lines_models():
         not how oft. Where be your gibes now? your
         gambols? your songs? your flashes of merriment,
         that were wont to set the table on a roar? Not one
-        now, to mock your own grinning? quite chap-fallen."""
+        now, to mock your own grinning? quite chap-fallen.
+        """
 
     lines_stripped = SplitToLinesDataset(dict(monologue=data))
     assert lines_stripped['monologue'][0] == 'Alas, poor Yorick! I knew him, Horatio: a fellow'
 
     lines_unstripped = SplitToLinesDataset(dict(monologue=data), strip=False)
-    assert lines_unstripped['monologue'][0] == \
+    assert lines_unstripped['monologue'][0] == '        '
+    assert lines_unstripped['monologue'][1] == \
            '        Alas, poor Yorick! I knew him, Horatio: a fellow'
+    assert lines_unstripped['monologue'][-1] == '        '
 
     lines_stripped['last_lines'] = lines_stripped['monologue'][3:]
+    assert lines_stripped['last_lines'][-1] == 'now, to mock your own grinning? quite chap-fallen.'
 
     for data_file, lines in lines_stripped.items():
         lines_stripped[data_file] = lines[0:2]
@@ -85,14 +90,14 @@ def test_split_to_and_join_lines_models():
 
     assert joined_lines['last_lines'][:joined_lines['last_lines'].index(' ')].contents == 'abhorred'
     assert JoinLinesDataset(SplitToLinesDataset(dict(monologue=data))).to_data() == \
-           {'monologue': os.linesep.join([line.strip() for line in data.split(os.linesep)])}
+           {'monologue': os.linesep.join([line.strip() for line in data.strip().split(os.linesep)])}
 
     assert JoinLinesDataset(SplitToLinesDataset(dict(monologue=data), strip=False)).to_data() == {
         'monologue': data
     }
 
 
-def test_split_to_and_join_items():
+def test_split_to_and_join_items_dataset():
     data_tab_start = 'abc\t def \tghi\tjkl'
     data_tab_end = 'mno\t pqr \tstu\tvwx\tyz '
 
@@ -131,7 +136,7 @@ def test_split_to_and_join_items():
     assert comma_space_joined_items['end'][1:-1].contents == 'qr, st'
 
 
-def test_split_lines_to_columns_and_join_columns_to_lines():
+def test_split_lines_to_columns_and_join_columns_to_lines_dataset():
     data_tab_forward = ['abc\t def \tghi\t jkl', 'mno\t pqr\tstu\t vwx', 'yz']
     data_tab_reverse = ['zyx\twvu\t tsr \t pqo', ' nml\t kji\thgf\t edc', 'ab ']
 
