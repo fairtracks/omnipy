@@ -497,7 +497,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
                             p = os.path.join(path, fn)
                             tar.add(p, arcname=fn)
                     elif os.path.isfile(path):
-                        tar.add(path)
+                        tar.add(path, arcname=os.path.basename(path))
             return tar_gz_file_path
 
         return path
