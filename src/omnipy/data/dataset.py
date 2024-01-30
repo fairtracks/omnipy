@@ -493,7 +493,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
                 with tarfile.open(tar_gz_file_path, 'w:gz') as tar:
                     if os.path.isdir(path):
-                        for fn in os.listdir(path):
+                        for fn in sorted(os.listdir(path)):
                             p = os.path.join(path, fn)
                             tar.add(p, arcname=fn)
                     elif os.path.isfile(path):
