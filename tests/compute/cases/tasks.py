@@ -7,6 +7,7 @@ from typing import Any, Callable, Generic, TypeVar
 import pytest
 import pytest_cases as pc
 
+from omnipy import Model
 from omnipy.compute.task import Task, TaskTemplate
 
 from .raw.functions import (action_func_no_params,
@@ -140,7 +141,7 @@ def case_sync_power_m1_func() -> TaskCase[[int, int, bool], int]:
     def assert_param_signature_and_return_type(task_obj: TaskTemplate | Task):
         assert task_obj.param_signatures == {
             'number':
-                Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
+                Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int | Model[int]),
             'exponent':
                 Parameter('exponent', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
             'minus_one':

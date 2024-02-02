@@ -87,13 +87,13 @@ ModelT = TypeVar('ModelT', bound=Model)
 @mypy_fix_task_template
 @TaskTemplate()
 def concat_all(dataset: Dataset[ModelT]) -> ModelT:
-    return reduce(add, (val.contents for val in dataset.values()))
+    return reduce(add, (val for val in dataset.values()))
 
 
 @mypy_fix_task_template
 @TaskTemplate()
 def union_all(dataset: Dataset[ModelT]) -> ModelT:
-    all_vals = tuple(val.contents for val in dataset.values())
+    all_vals = tuple(val for val in dataset.values())
     assert len(all_vals) > 0
     first_val = deepcopy(all_vals[0])
 

@@ -20,7 +20,7 @@ def format_to_string_func(text: str, number: int) -> str:
     return '{}: {}'.format(text, number)
 
 
-def power_m1_func(number: int, exponent: int, minus_one: bool = True) -> int:
+def power_m1_func(number: int | Model[int], exponent: int, minus_one: bool = True) -> int:
     return number**exponent - (1 if minus_one else 0)
 
 
@@ -47,5 +47,5 @@ def all_data_files_plus_str_func(dataset: Dataset[Model[int]], number: int) -> D
     return out_dataset
 
 
-def single_data_file_plus_str_func(data_number: int, number: int) -> str:
+def single_data_file_plus_str_func(data_number: Model[int], number: int) -> str:
     return str(data_number + number)
