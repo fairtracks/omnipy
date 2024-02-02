@@ -2,6 +2,7 @@ from inspect import Parameter, signature
 from typing import Callable, cast, Type
 
 from omnipy.api.protocols.private.compute.job import IsPlainFuncArgJobBase
+from omnipy.api.protocols.public.data import IsDataset
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.typedefs import (InputDatasetT,
                                             InputTypeT,
@@ -33,7 +34,10 @@ def _create_dataset_cls(data_file_type: InputTypeT) -> Type[InputDatasetT]:
         return Dataset[Model[data_file_type]]  # type: ignore
 
 
-def _generate_new_signature(job_func: Callable):
+def _generate_new_signature(
+    job_func: Callable,
+    return_dataset_cls: type[IsDataset] | None = None,
+):
     func_signature = signature(job_func)
     params = list(func_signature.parameters.values())
     data_param = params[0]
@@ -41,11 +45,13 @@ def _generate_new_signature(job_func: Callable):
 
     dataset_cls = _create_dataset_cls(data_param.annotation)
     dataset_param = data_param.replace(name='dataset', annotation=dataset_cls)
-    out_dataset_cls = _create_dataset_cls(func_signature.return_annotation)
+
+    if return_dataset_cls is None:
+        return_dataset_cls = _create_dataset_cls(func_signature.return_annotation)
 
     return func_signature.replace(
         parameters=[dataset_param] + rest_params,
-        return_annotation=out_dataset_cls,
+        return_annotation=return_dataset_cls,
     )
 
 
@@ -53,11 +59,15 @@ def _generate_new_signature(job_func: Callable):
 
 
 class IterateFuncJobBaseMixin:
-    def __init__(self, *, iterate_over_data_files: bool = False):
+    def __init__(self,
+                 *,
+                 iterate_over_data_files: bool = False,
+                 return_dataset_cls: type[IsDataset] | None = None):
         self_as_plain_func_arg_job_base = cast(IsPlainFuncArgJobBase, self)
         self_as_signature_func_job_base_mixin = cast(SignatureFuncJobBaseMixin, self)
 
         self._iterate_over_data_files = iterate_over_data_files
+        self._return_dataset_cls = return_dataset_cls
 
         if not isinstance(self.iterate_over_data_files, bool):
             raise TypeError(
@@ -68,6 +78,11 @@ class IterateFuncJobBaseMixin:
             job_func = self_as_plain_func_arg_job_base._job_func
             if job_func.__name__ != '_omnipy_iterate_func':
 
+                _check_job_func_parameters(job_func)
+
+                new_signature = _generate_new_signature(job_func, self._return_dataset_cls)
+                self_as_signature_func_job_base_mixin._update_func_signature(new_signature)
+
                 def _iterate_over_data_files_decorator(call_func: Callable):
                     def _omnipy_iterate_func(
                         dataset: InputDatasetT,
@@ -77,9 +92,8 @@ class IterateFuncJobBaseMixin:
                         inner_func: IsIterateInnerCallable = \
                             cast(IsIterateInnerCallable, call_func)
 
-                        return_type = signature(job_func).return_annotation
-                        out_dataset_cls = _create_dataset_cls(return_type)
-                        out_dataset = out_dataset_cls()
+                        return_dataset_cls = new_signature.return_annotation
+                        out_dataset = return_dataset_cls()
 
                         for title, data_file in dataset.items():
                             out_dataset[title] = inner_func(data_file, *args, **kwargs)
@@ -88,13 +102,13 @@ class IterateFuncJobBaseMixin:
 
                     return _omnipy_iterate_func
 
-                _check_job_func_parameters(job_func)
                 self_as_plain_func_arg_job_base._accept_call_func_decorator(
                     _iterate_over_data_files_decorator)
-
-                new_signature = _generate_new_signature(job_func)
-                self_as_signature_func_job_base_mixin._update_func_signature(new_signature)
 
     @property
     def iterate_over_data_files(self) -> bool:
         return self._iterate_over_data_files
+
+    @property
+    def return_dataset_cls(self) -> type[IsDataset] | None:
+        return self._return_dataset_cls

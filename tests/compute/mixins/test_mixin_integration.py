@@ -7,6 +7,7 @@ from omnipy.data.model import Model
 from ..cases.raw.functions import (all_data_files_plus_str_func,
                                    power_m1_func,
                                    single_data_file_plus_str_func)
+from ..helpers.classes import CustomStrDataset
 
 
 def test_iterate_over_data_files_func_signature() -> None:
@@ -28,8 +29,44 @@ def test_iterate_over_data_files_func_signature() -> None:
             assert task_obj.return_type is Dataset[Model[str]]
 
 
-def test_iterate_over_data_files_param() -> None:
+def test_iterate_over_data_files_func_signature_custom_dataset_type() -> None:
+    all_plus_iter_template = TaskTemplate(
+        iterate_over_data_files=True, return_dataset_cls=CustomStrDataset)(
+            single_data_file_plus_str_func)
 
+    for task_obj in all_plus_iter_template, all_plus_iter_template.apply():
+        assert task_obj.param_signatures == {
+            'dataset':
+                Parameter(
+                    'dataset', Parameter.POSITIONAL_OR_KEYWORD, annotation=Dataset[Model[int]]),
+            'number':
+                Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
+        }
+        assert task_obj.return_type is CustomStrDataset
+
+
+def test_iterate_over_data_files() -> None:
+    task_template_cls = TaskTemplate(iterate_over_data_files=True)
+    single_data_file_plus_str_template = task_template_cls(single_data_file_plus_str_func)
+
+    dataset = Dataset[Model[int]]({'a': 5, 'b': -2})
+    assert single_data_file_plus_str_template.run(dataset, number=2) == \
+           Dataset[Model[str]]({'a': '7', 'b': '0'})
+
+
+def test_iterate_over_data_files_return_dataset_cls() -> None:
+    task_template_cls = TaskTemplate(
+        iterate_over_data_files=True,
+        return_dataset_cls=CustomStrDataset,
+    )
+    single_data_file_plus_str_template = task_template_cls(single_data_file_plus_str_func)
+
+    dataset = Dataset[Model[int]]({'a': 5, 'b': -2})
+    assert single_data_file_plus_str_template.run(dataset, number=2) == \
+           CustomStrDataset({'a': '7', 'b': '0'})
+
+
+def test_iterate_over_data_files_param() -> None:
     task_template_cls = TaskTemplate(
         fixed_params=dict(number=2),
         param_key_map=dict(dataset='data_numbers'),

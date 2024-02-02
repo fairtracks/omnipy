@@ -11,12 +11,12 @@ from chardet import UniversalDetector
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
 
-from ... import Dataset, Model
+from ... import Dataset, Model, StrDataset
 from .protocols import IsModifyAllLinesCallable, IsModifyContentsCallable, IsModifyEachLineCallable
 
 
 @mypy_fix_task_template
-@TaskTemplate(iterate_over_data_files=True)
+@TaskTemplate(iterate_over_data_files=True, return_dataset_cls=StrDataset)
 def decode_bytes(data: bytes, encoding: str | None = None) -> str:
     if encoding is None:
         detector = UniversalDetector()

@@ -10,6 +10,7 @@ from omnipy.api.protocols.private.compute.mixins import IsUniquelyNamedJob
 from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.private.log import CanLog
 from omnipy.api.protocols.public.config import IsJobConfig
+from omnipy.api.protocols.public.data import IsDataset
 from omnipy.api.typedefs import (GeneralDecorator,
                                  JobT,
                                  JobTemplateT,
@@ -105,6 +106,10 @@ class IsFuncArgJobBase(IsJob, Protocol):
         ...
 
     @property
+    def return_dataset_cls(self) -> type[IsDataset]:
+        ...
+
+    @property
     def persist_outputs(self) -> PersistOutputsOptions | None:
         ...
 
@@ -161,12 +166,15 @@ class IsFuncArgJob(IsFuncArgJobBase, Protocol[JobT]):
         ...
 
 
-class IsFuncArgJobTemplateCallable(Protocol[JobTemplateT]):
+class IsFuncArgJobTemplateCallable(Protocol[
+        JobTemplateT,
+]):
     """"""
     def __call__(
         self,
         name: str | None = None,
         iterate_over_data_files: bool = False,
+        return_dataset_cls: type[IsDataset] | None = None,
         persist_outputs: PersistOutputsOptions | None = None,
         restore_outputs: RestoreOutputsOptions | None = None,
         result_key: str | None = None,
@@ -184,6 +192,7 @@ class IsFuncArgJobTemplate(IsJobTemplate, IsFuncArgJobBase, Protocol[JobTemplate
                update: bool = True,
                name: str | None = None,
                iterate_over_data_files: bool = False,
+               return_dataset_cls: type[IsDataset] | None = None,
                persist_outputs: PersistOutputsOptions | None = None,
                restore_outputs: RestoreOutputsOptions | None = None,
                result_key: str | None = None,
@@ -216,6 +225,7 @@ class IsTaskTemplateArgsJobTemplateCallable(Protocol[TaskTemplateContraT, JobTem
         *task_templates: TaskTemplateContraT,
         name: str | None = None,
         iterate_over_data_files: bool = False,
+        return_dataset_cls: type[IsDataset] | None = None,
         persist_outputs: PersistOutputsOptions | None = None,
         restore_outputs: RestoreOutputsOptions | None = None,
         result_key: str | None = None,
@@ -235,6 +245,7 @@ class IsTaskTemplateArgsJobTemplate(IsFuncArgJobTemplate[JobTemplateT, JobT],
                update: bool = True,
                name: str | None = None,
                iterate_over_data_files: bool = False,
+               return_dataset_cls: type[IsDataset] | None = None,
                fixed_params: Mapping[str, object] | None = None,
                param_key_map: Mapping[str, str] | None = None,
                result_key: str | None = None,
