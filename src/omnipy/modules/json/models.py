@@ -291,10 +291,6 @@ class JsonDictOfListsOfDictsModel(Model[JsonDictM[JsonListM[JsonAnyDictM]]]):
 # Custom models
 
 
-class JsonCustomModel(Model[JsonListM[_JsonBaseT]], Generic[_JsonBaseT]):
-    ...
-
-
 class JsonCustomListModel(Model[JsonListM[_JsonBaseT]], Generic[_JsonBaseT]):
     ...
 
