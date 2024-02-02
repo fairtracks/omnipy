@@ -58,7 +58,7 @@ def test_split_to_and_join_lines_dataset():
         gambols? your songs? your flashes of merriment,
         that were wont to set the table on a roar? Not one
         now, to mock your own grinning? quite chap-fallen.
-        """
+        """  # noqa: W293
 
     lines_stripped = SplitToLinesDataset(dict(monologue=data))
     assert lines_stripped['monologue'][0] == 'Alas, poor Yorick! I knew him, Horatio: a fellow'

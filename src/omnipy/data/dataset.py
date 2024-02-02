@@ -2,7 +2,6 @@ from collections import UserDict
 from collections.abc import Iterable, Mapping
 import json
 import os
-from pathlib import PureWindowsPath
 import tarfile
 from tempfile import TemporaryDirectory
 from typing import (Annotated,
