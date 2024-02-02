@@ -2,6 +2,7 @@ from collections import UserDict
 from collections.abc import Iterable, Mapping
 import json
 import os
+from pathlib import PureWindowsPath
 import tarfile
 from tempfile import TemporaryDirectory
 from typing import (Annotated,
@@ -15,7 +16,7 @@ from typing import (Annotated,
                     Type,
                     TypeAlias,
                     TypeVar)
-from urllib.parse import urlparse
+from urllib.parse import ParseResult, urlparse
 
 import humanize
 import objsize
@@ -447,6 +448,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             serializer_registry = self._get_serializer_registry()
 
             parsed_url = urlparse(path_or_url)
+
             if parsed_url.scheme in ['http', 'https']:
                 download_path = self._download_file(path_or_url, parsed_url.path, tmp_dir_path)
                 if download_path is None:
@@ -454,6 +456,8 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
                 tar_gz_file_path = self._ensure_tar_gz_file(download_path)
             elif parsed_url.scheme in ['file', '']:
                 tar_gz_file_path = self._ensure_tar_gz_file(parsed_url.path)
+            elif self._is_windows_path(parsed_url):
+                tar_gz_file_path = self._ensure_tar_gz_file(path_or_url)
             else:
                 raise ValueError(f'Unsupported scheme "{parsed_url.scheme}"')
 
@@ -469,7 +473,12 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             else:
                 raise RuntimeError('Unable to load serializer')
 
-    def _download_file(self, url: str, path: str, tmp_dir_path: str) -> str | None:
+    @staticmethod
+    def _is_windows_path(parsed_url: ParseResult) -> bool:
+        return len(parsed_url.scheme) == 1 and parsed_url.scheme.isalpha()
+
+    @staticmethod
+    def _download_file(url: str, path: str, tmp_dir_path: str) -> str | None:
         print(f'Downloading {url}...')
         data = download_file_to_memory(url)
 
@@ -482,7 +491,8 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             out_file.write(data)
         return download_path
 
-    def _ensure_tar_gz_file(self, path: str):
+    @staticmethod
+    def _ensure_tar_gz_file(path: str):
         assert os.path.exists(path), f'No file or directory at {path}'
 
         if not path.endswith('.tar.gz'):
