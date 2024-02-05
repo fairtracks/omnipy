@@ -1,85 +1,36 @@
-import os
 from typing import Annotated
 
+from deepdiff import DeepDiff
 from pandas import DataFrame
+import pandas as pd
 import pytest
+import pytest_cases as pc
 
+from modules.pandas.cases.table_pairs import TablePairCase
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.modules.pandas.models import PandasDataset
 from omnipy.modules.pandas.tasks import join_tables
+from omnipy.modules.tables.datasets import TableWithColNamesDataset
 
 
-@pytest.fixture
-def table_abc():
-    return DataFrame(
-        [
-            ['abc', 123, True],
-            ['bcd', 234, False],
-            ['cde', 345, True],
-        ],
-        columns=['A', 'B', 'C'],
+@pc.parametrize_with_cases('case', cases='.cases.table_pairs')
+def test_join_tables(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    case: TablePairCase,
+):
+    tables = TableWithColNamesDataset(table_1=case.table_1, table_2=case.table_2)
+    dataset = PandasDataset(tables)
+
+    result_datafile_name = 'table_1_join_table_2'
+    assert DeepDiff(
+        join_tables.run(dataset)[result_datafile_name].to_data(),
+        case.result_outer_join,
+        significant_digits=3,
     )
-
-
-@pytest.fixture
-def table_dbe():
-    return DataFrame(
-        [
-            [1.2, 345, 34],
-            [3.4, 234, 23],
-            [3.2, 123, 34],
-        ],
-        columns=['D', 'B', 'E'],
-    )
-
-
-@pytest.fixture
-def table_dbe2():
-    return DataFrame(
-        [
-            [1.2, 345, 34],
-            [3.4, 432, 23],
-            [3.2, 123, 34],
-        ],
-        columns=['D', 'B', 'E'],
-    )
-
-
-@pytest.fixture
-def table_bce_consistent():
-    return DataFrame(
-        [
-            [345, True, 34],
-            [234, False, 23],
-            [123, True, 34],
-        ],
-        columns=['B', 'C', 'E'],
-    )
-
-
-@pytest.fixture
-def table_bce_consistent_dupl_row():
-    return DataFrame(
-        [
-            [345, True, 34],
-            [234, False, 23],
-            [234, False, 45],
-            [123, True, 34],
-        ],
-        columns=['B', 'C', 'E'],
-    )
-
-
-@pytest.fixture
-def table_bce_inconsistent():
-    return DataFrame(
-        [
-            [345, False, 34],
-            [234, False, 23],
-            [234, True, 45],
-            [123, True, 34],
-        ],
-        columns=['B', 'C', 'E'],
+    assert DeepDiff(
+        join_tables.run(dataset, join_type='inner')[result_datafile_name].to_data(),
+        case.result_outer_join,
+        significant_digits=3,
     )
 
 
@@ -297,7 +248,7 @@ def test_default_outer_join_tables_multiple_columns_same_name_allow_multiple_con
     }
 
 
-def test_default_outer_join_tables_multiple_columns_same_name_allow_multiple_inconsistent(
+def test_default_outer_join_tables_multiple_columns_same_name_allow_multiple_consistent_complex(
     runtime: Annotated[IsRuntime, pytest.fixture],
     table_abc: Annotated[DataFrame, pytest.fixture],
     table_bce_inconsistent: Annotated[DataFrame, pytest.fixture],
@@ -308,6 +259,19 @@ def test_default_outer_join_tables_multiple_columns_same_name_allow_multiple_inc
 
     with pytest.raises(ValueError):
         join_tables.run(dataset, allow_multiple_join_cols_if_consistent=True)
+
+
+def test_default_outer_join_tables_multiple_columns_same_name_allow_multiple_inconsistent(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    table_adult_lastname_firstname_consistent: Annotated[DataFrame, pytest.fixture],
+    table_firstname_lastname_age: Annotated[DataFrame, pytest.fixture],
+):
+    dataset = PandasDataset()
+    dataset['table_adult_lastname_firstname_consistent'] = table_adult_lastname_firstname_consistent
+    dataset['table_firstname_lastname_age'] = table_firstname_lastname_age
+
+    joined_dataset = join_tables.run(dataset, allow_multiple_join_cols_if_consistent=True)
+    pass
 
 
 # def test_join_tables_on_column_missing_data(
