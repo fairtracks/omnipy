@@ -21,10 +21,7 @@ class TableOfStringsAndLists(Model[list[dict[str, str | list[str]]]]):
 
 class TableWithColNamesModel(Model[JsonListOfListsOfScalarsModel | JsonListOfDictsOfScalarsModel]):
     @classmethod
-    def _parse_data(
-        cls,
-        data:
-        'JsonListOfListsOfScalarsModel | JsonListOfDictsOfScalarsModel | TableWithColNamesModel'):
+    def _parse_data(cls, data: JsonListOfListsOfScalarsModel | JsonListOfDictsOfScalarsModel):
         if len(data) > 0:
             if isinstance(data[0], JsonListM):
                 first_row_as_colnames = JsonCustomListModel[str](data[0])

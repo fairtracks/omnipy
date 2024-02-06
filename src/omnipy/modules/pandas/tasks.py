@@ -125,8 +125,8 @@ def join_tables(table_1: PandasModel,
     else:
         on = on_cols
 
-    column_info = f"common columns: {on}" if on is not None \
-        else f"column mappings: {tuple(on_cols.items())}"
+    column_info = f'common columns: {on}' if on is not None \
+        else f'column mappings: {tuple(on_cols.items())}'
     print(f'Joining tables on {column_info}, using join type: {join_type}...')
 
     merged_df = pd.merge(
