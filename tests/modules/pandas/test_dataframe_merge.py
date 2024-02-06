@@ -1,238 +1,56 @@
-from typing import Annotated
+from typing import Annotated, NamedTuple
 
-from pandas import DataFrame
+import pandas as pd
 import pytest
+import pytest_cases as pc
 
+from modules.pandas.cases.tablepairs import TablePairCase
+from modules.pandas.helpers.functions import (convert_testcase_table_to_dataframe,
+                                              get_target_as_pandas_model)
 from omnipy.api.protocols.public.hub import IsRuntime
-from omnipy.modules.pandas.models import PandasDataset
-from omnipy.modules.pandas.tasks import join_tables
+from omnipy.modules.pandas.models import PandasModel
+from omnipy.modules.pandas.tasks import cartesian_product, join_tables
 
 
-@pytest.fixture
-def table_abc():
-    return DataFrame(
-        [
-            ['abc', 123, True],
-            ['bcd', 234, False],
-            ['cde', 345, True],
-        ],
-        columns=['A', 'B', 'C'],
-    )
+class TableJoinTest(NamedTuple):
+    type: str
+    attr: str
 
 
-@pytest.fixture
-def table_dbe():
-    return DataFrame(
-        [
-            [1.2, 345, 34],
-            [3.4, 234, 23],
-            [3.2, 123, 34],
-        ],
-        columns=['D', 'B', 'E'],
-    )
-
-
-@pytest.fixture
-def table_dbe2():
-    return DataFrame(
-        [
-            [1.2, 345, 34],
-            [3.4, 432, 23],
-            [3.2, 123, 34],
-        ],
-        columns=['D', 'B', 'E'],
-    )
-
-
-@pytest.fixture
-def table_bce():
-    return DataFrame(
-        [
-            [345, True, 34],
-            [234, False, 23],
-            [123, True, 34],
-        ],
-        columns=['B', 'C', 'E'],
-    )
-
-
-def test_default_outer_join_tables_on_column_all_matching(
+@pc.parametrize_with_cases('case', cases='.cases.tablepairs', has_tag='join')
+def test_join_tables(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    table_abc: Annotated[DataFrame, pytest.fixture],
-    table_dbe: Annotated[DataFrame, pytest.fixture],
+    case: TablePairCase,
 ):
-    dataset = PandasDataset()
-    dataset['table_abc'] = table_abc
-    dataset['table_dbe'] = table_dbe
+    table_1 = PandasModel(convert_testcase_table_to_dataframe(case.table_1))
+    table_2 = PandasModel(convert_testcase_table_to_dataframe(case.table_2))
 
-    joined_dataset = join_tables.run(dataset)
-
-    assert joined_dataset.to_data() == {
-        'table_abc_join_table_dbe': [
-            dict(A='abc', B=123, C=True, D=3.2, E=34),
-            dict(A='bcd', B=234, C=False, D=3.4, E=23),
-            dict(A='cde', B=345, C=True, D=1.2, E=34),
-        ]
-    }
+    for join_type in ['outer', 'inner', 'left', 'right']:
+        if case.exception_cls:
+            with pytest.raises(case.exception_cls):
+                join_tables.run(table_1, table_2, join_type=join_type, on_cols=case.on_cols)
+        else:
+            result = join_tables.run(table_1, table_2, join_type=join_type, on_cols=case.on_cols)
+            target = get_target_as_pandas_model(getattr(case, f'result_{join_type}_join'))
+            pd.testing.assert_frame_equal(result.contents, target.contents, check_dtype=False)
 
 
-def test_default_outer_join_tables_on_column_some_matching(
+@pc.parametrize_with_cases('case', cases='.cases.tablepairs', has_tag='cartesian')
+def test_cartesian_product_of_tables(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    table_abc: Annotated[DataFrame, pytest.fixture],
-    table_dbe2: Annotated[DataFrame, pytest.fixture],
+    case: TablePairCase,
 ):
-    dataset = PandasDataset()
-    dataset['table_abc'] = table_abc
-    dataset['table_dbe2'] = table_dbe2
+    table_1 = PandasModel(convert_testcase_table_to_dataframe(case.table_1))
+    table_2 = PandasModel(convert_testcase_table_to_dataframe(case.table_2))
 
-    joined_dataset = join_tables.run(dataset)
+    if case.exception_cls:
+        with pytest.raises(case.exception_cls):
+            cartesian_product.run(table_1, table_2)
+    else:
+        result = cartesian_product.run(table_1, table_2)
+        target = get_target_as_pandas_model(getattr(case, 'result_cartesian'))
+        pd.testing.assert_frame_equal(result.contents, target.contents, check_column_type=False)
 
-    assert joined_dataset.to_data() == {
-        'table_abc_join_table_dbe2': [
-            dict(A='abc', B=123, C=True, D=3.2, E=34),
-            dict(A='bcd', B=234, C=False, D=None, E=None),
-            dict(A='cde', B=345, C=True, D=1.2, E=34),
-            dict(A=None, B=432, C=None, D=3.4, E=23),
-        ]
-    }
-
-
-def test_inner_join_tables_on_column_all_matching(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    table_abc: Annotated[DataFrame, pytest.fixture],
-    table_dbe: Annotated[DataFrame, pytest.fixture],
-):
-    dataset = PandasDataset()
-    dataset['table_abc'] = table_abc
-    dataset['table_dbe'] = table_dbe
-
-    joined_dataset = join_tables.run(dataset, join_type='inner')
-
-    assert joined_dataset.to_data() == {
-        'table_abc_join_table_dbe': [
-            dict(A='abc', B=123, C=True, D=3.2, E=34),
-            dict(A='bcd', B=234, C=False, D=3.4, E=23),
-            dict(A='cde', B=345, C=True, D=1.2, E=34),
-        ]
-    }
-
-
-def test_inner_join_tables_on_column_some_matching(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    table_abc: Annotated[DataFrame, pytest.fixture],
-    table_dbe2: Annotated[DataFrame, pytest.fixture],
-):
-    dataset = PandasDataset()
-    dataset['table_abc'] = table_abc
-    dataset['table_dbe2'] = table_dbe2
-
-    joined_dataset = join_tables.run(dataset, join_type='inner')
-
-    assert joined_dataset.to_data() == {
-        'table_abc_join_table_dbe2': [
-            dict(A='abc', B=123, C=True, D=3.2, E=34),
-            dict(A='cde', B=345, C=True, D=1.2, E=34),
-        ]
-    }
-
-
-def test_left_join_tables_on_column_all_matching(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    table_abc: Annotated[DataFrame, pytest.fixture],
-    table_dbe: Annotated[DataFrame, pytest.fixture],
-):
-    dataset = PandasDataset()
-    dataset['table_abc'] = table_abc
-    dataset['table_dbe'] = table_dbe
-
-    joined_dataset = join_tables.run(dataset, join_type='left')
-
-    assert joined_dataset.to_data() == {
-        'table_abc_join_table_dbe': [
-            dict(A='abc', B=123, C=True, D=3.2, E=34),
-            dict(A='bcd', B=234, C=False, D=3.4, E=23),
-            dict(A='cde', B=345, C=True, D=1.2, E=34),
-        ]
-    }
-
-
-def test_left_join_tables_on_column_some_matching(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    table_abc: Annotated[DataFrame, pytest.fixture],
-    table_dbe2: Annotated[DataFrame, pytest.fixture],
-):
-    dataset = PandasDataset()
-    dataset['table_abc'] = table_abc
-    dataset['table_dbe2'] = table_dbe2
-
-    joined_dataset = join_tables.run(dataset, join_type='left')
-
-    assert joined_dataset.to_data() == {
-        'table_abc_join_table_dbe2': [
-            dict(A='abc', B=123, C=True, D=3.2, E=34),
-            dict(A='bcd', B=234, C=False, D=None, E=None),
-            dict(A='cde', B=345, C=True, D=1.2, E=34),
-        ]
-    }
-
-
-def test_right_join_tables_on_column_all_matching(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    table_abc: Annotated[DataFrame, pytest.fixture],
-    table_dbe: Annotated[DataFrame, pytest.fixture],
-):
-    dataset = PandasDataset()
-    dataset['table_abc'] = table_abc
-    dataset['table_dbe'] = table_dbe
-
-    joined_dataset = join_tables.run(dataset, join_type='right')
-
-    assert joined_dataset.to_data() == {
-        'table_abc_join_table_dbe': [
-            dict(A='cde', B=345, C=True, D=1.2, E=34),
-            dict(A='bcd', B=234, C=False, D=3.4, E=23),
-            dict(A='abc', B=123, C=True, D=3.2, E=34),
-        ]
-    }
-
-
-def test_right_join_tables_on_column_some_matching(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    table_abc: Annotated[DataFrame, pytest.fixture],
-    table_dbe2: Annotated[DataFrame, pytest.fixture],
-):
-    dataset = PandasDataset()
-    dataset['table_abc'] = table_abc
-    dataset['table_dbe2'] = table_dbe2
-
-    joined_dataset = join_tables.run(dataset, join_type='right')
-
-    assert joined_dataset.to_data() == {
-        'table_abc_join_table_dbe2': [
-            dict(A='cde', B=345, C=True, D=1.2, E=34),
-            dict(A=None, B=432, C=None, D=3.4, E=23),
-            dict(A='abc', B=123, C=True, D=3.2, E=34),
-        ]
-    }
-
-
-# def test_join_tables_on_column_missing_data(
-#     runtime: Annotated[IsRuntime, pytest.fixture],
-#     table_abc: Annotated[DataFrame, pytest.fixture],
-#     table_dbe2: Annotated[DataFrame, pytest.fixture],
-# ):
-#     dataset = PandasDataset()
-#     dataset['table_abc'] = table_abc
-#     dataset['table_dbe2'] = table_dbe2
-#
-#     joined_dataset = join_tables.run(dataset)
-#
-#     assert joined_dataset.to_data() == {
-#         'table_a_join_table_b': [
-#             dict(A='abc', B=123, C=True, D=3.2, E=34),
-#             dict(A='bcd', B=234, C=False, D=3.4, E=23),
-#             dict(A='cde', B=345, C=True, D=1.2, E=34),
-#         ]
-#     }
 
 # Further tests
+# TODO: join_tables: Multiple tables

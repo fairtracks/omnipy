@@ -1,4 +1,5 @@
 from io import StringIO
+from typing import Mapping, Sequence
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
@@ -7,7 +8,8 @@ from omnipy.data.model import Model
 
 from . import pd
 from ..general.models import NotIterableExceptStrOrBytesModel
-from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset
+from .helpers import extract_common_colnames
+from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset, PandasModel
 
 
 @mypy_fix_task_template
@@ -94,21 +96,60 @@ def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSame
 
 @mypy_fix_task_template
 @TaskTemplate()
-def join_tables(dataset: PandasDataset, join_type: str = 'outer') -> PandasDataset:
-    assert len(dataset) == 2
+def join_tables(table_1: PandasModel,
+                table_2: PandasModel,
+                join_type: str = 'outer',
+                on_cols: Sequence[str] | Mapping[str, str] | None = None) -> PandasModel:
+    if join_type == 'cross':
+        raise ValueError('join_type="cross" not supported. Please use "cartesian_product" task.')
+    assert join_type in ['inner', 'outer', 'left', 'right']
 
-    output_dataset = PandasDataset()
+    common_colnames = extract_common_colnames(table_1, table_2)
 
-    table_name_1, table_name_2 = tuple(dataset.keys())
-    output_table_name = f'{table_name_1}_join_{table_name_2}'
-    df_1 = dataset[table_name_1]
-    df_2 = dataset[table_name_2]
+    if (on_cols is None and len(common_colnames) == 0) \
+            or (on_cols is not None and len(on_cols) == 0):
+        raise ValueError(f'No common column names were found. '
+                         f'table_1: {tuple(table_1.columns)}. '
+                         f'table_2: {tuple(table_2.columns)}. '
+                         f'on_cols: {on_cols}')
 
-    common_headers = set(df_1.columns) & set(df_2.columns)
-    assert len(common_headers) == 1
+    on = None
+    left_on = None
+    right_on = None
+
+    if on_cols is None:
+        on = common_colnames
+    elif isinstance(on_cols, Mapping):
+        left_on = tuple(on_cols.keys())
+        right_on = tuple(on_cols.values())
+    else:
+        on = on_cols
+
+    column_info = f"common columns: {on}" if on is not None \
+        else f"column mappings: {tuple(on_cols.items())}"
+    print(f'Joining tables on {column_info}, using join type: {join_type}...')
 
     merged_df = pd.merge(
-        df_1.loc[:, :], df_2.loc[:, :], on=common_headers.pop(), how=join_type).convert_dtypes()
+        table_1.loc[:, :],
+        table_2.loc[:, :],
+        on=on,
+        left_on=left_on,
+        right_on=right_on,
+        how=join_type,
+        suffixes=('_1', '_2'),
+    ).convert_dtypes()
 
-    output_dataset[output_table_name] = merged_df
-    return output_dataset
+    return PandasModel(merged_df)
+
+
+@mypy_fix_task_template
+@TaskTemplate()
+def cartesian_product(table_1: PandasModel, table_2: PandasModel) -> PandasModel:
+    merged_df = pd.merge(
+        table_1.loc[:, :],
+        table_2.loc[:, :],
+        how='cross',
+        suffixes=('_1', '_2'),
+    ).convert_dtypes()
+
+    return PandasModel(merged_df)
