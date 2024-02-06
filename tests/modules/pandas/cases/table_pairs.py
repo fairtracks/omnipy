@@ -10,6 +10,7 @@ class TablePairCase:
     table_1: JsonListOfListsOfScalars
     table_2: JsonListOfListsOfScalars
     common_colnames: tuple[str, ...]
+    join_on: tuple[str, ...] | dict[str, str] | None = None
     res_outer_join: JsonListOfListsOfScalars | None = None
     res_outer_join_last_col: JsonListOfListsOfScalars | None = None
     res_inner_join: JsonListOfListsOfScalars | None = None
@@ -19,7 +20,6 @@ class TablePairCase:
     res_right_join: JsonListOfListsOfScalars | None = None
     res_right_join_last_col: JsonListOfListsOfScalars | None = None
     res_cross_join: JsonListOfListsOfScalars | None = None
-    res_cross_join_last_col: JsonListOfListsOfScalars | None = None
 
 
 @pc.case(id='table_pair_one_common_colname_all_match', tags=[''])
@@ -213,6 +213,65 @@ def case_table_pair_multiple_common_colnames_all_match(
     )
 
 
+@pc.case(id='table_pair_multiple_common_colnames_all_match_out_of_order', tags=[''])
+def case_table_pair_multiple_common_colnames_all_match_out_of_order(
+        table_age_firstname_lastname, table_lastname_firstname_adult_all_match) -> TablePairCase:
+    res_outer_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname', 'lastname', 'adult'],
+        [7, 'Bob', 'Duck', False],
+        [39, 'Donald', 'Duck', True],
+        [41, 'Mickey', 'Mouse', True],
+    ]
+    res_outer_join_last_col: JsonListOfListsOfScalars = [
+        ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
+        [7, 'Bob', 'Duck', 'Donald', True],
+        [7, 'Bob', 'Duck', 'Bob', False],
+        [39, 'Donald', 'Duck', 'Donald', True],
+        [39, 'Donald', 'Duck', 'Bob', False],
+        [41, 'Mickey', 'Mouse', 'Mickey', True],
+    ]
+    res_right_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname', 'lastname', 'adult'],
+        [39, 'Donald', 'Duck', True],
+        [41, 'Mickey', 'Mouse', True],
+        [7, 'Bob', 'Duck', False],
+    ]
+    res_right_join_last_col: JsonListOfListsOfScalars = [
+        ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
+        [7, 'Bob', 'Duck', 'Donald', True],
+        [39, 'Donald', 'Duck', 'Donald', True],
+        [41, 'Mickey', 'Mouse', 'Mickey', True],
+        [7, 'Bob', 'Duck', 'Bob', False],
+        [39, 'Donald', 'Duck', 'Bob', False],
+    ]
+    res_cross_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname_1', 'lastname_1', 'lastname_2', 'firstname_2', 'adult'],
+        [7, 'Bob', 'Duck', 'Duck', 'Donald', True],
+        [7, 'Bob', 'Duck', 'Mouse', 'Mickey', True],
+        [7, 'Bob', 'Duck', 'Duck', 'Bob', False],
+        [39, 'Donald', 'Duck', 'Duck', 'Donald', True],
+        [39, 'Donald', 'Duck', 'Mouse', 'Mickey', True],
+        [39, 'Donald', 'Duck', 'Duck', 'Bob', False],
+        [41, 'Mickey', 'Mouse', 'Duck', 'Donald', True],
+        [41, 'Mickey', 'Mouse', 'Mouse', 'Mickey', True],
+        [41, 'Mickey', 'Mouse', 'Duck', 'Bob', False],
+    ]
+    return TablePairCase(
+        table_1=table_age_firstname_lastname,
+        table_2=table_lastname_firstname_adult_all_match,
+        common_colnames=('firstname', 'lastname'),
+        res_outer_join=res_outer_join,
+        res_outer_join_last_col=res_outer_join_last_col,
+        res_inner_join=res_outer_join,
+        res_inner_join_last_col=res_outer_join_last_col,
+        res_left_join=res_outer_join,
+        res_left_join_last_col=res_outer_join_last_col,
+        res_right_join=res_right_join,
+        res_right_join_last_col=res_right_join_last_col,
+        res_cross_join=res_cross_join,
+    )
+
+
 @pc.case(id='table_pair_multiple_common_colnames_double_match', tags=[''])
 def case_table_pair_multiple_common_colnames_double_match(
         table_age_firstname_lastname, table_firstname_lastname_adult_double_match) -> TablePairCase:
@@ -352,18 +411,78 @@ def case_table_pair_multiple_common_colnames_partial_match(
 def case_table_pair_multiple_common_colnames_partial_match_plus_extra(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_partial_match_plus_extra) -> TablePairCase:
+    res_outer_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname', 'lastname', 'adult'],
+        [7, 'Bob', 'Duck', False],
+        [39, 'Donald', 'Duck', True],
+        [41, 'Mickey', 'Mouse', None],
+        [None, 'Minnie', 'Mouse', True],
+    ]
+    res_outer_join_last_col: JsonListOfListsOfScalars = [
+        ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
+        [7, 'Bob', 'Duck', 'Donald', True],
+        [7, 'Bob', 'Duck', 'Bob', False],
+        [39, 'Donald', 'Duck', 'Donald', True],
+        [39, 'Donald', 'Duck', 'Bob', False],
+        [41, 'Mickey', 'Mouse', 'Minnie', True],
+    ]
+    res_inner_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname', 'lastname', 'adult'],
+        [7, 'Bob', 'Duck', False],
+        [39, 'Donald', 'Duck', True],
+    ]
+    res_inner_join_last_col: JsonListOfListsOfScalars = [
+        ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
+        [7, 'Bob', 'Duck', 'Donald', True],
+        [7, 'Bob', 'Duck', 'Bob', False],
+        [39, 'Donald', 'Duck', 'Donald', True],
+        [39, 'Donald', 'Duck', 'Bob', False],
+        [41, 'Mickey', 'Mouse', 'Minnie', True],
+    ]
+    res_left_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname', 'lastname', 'adult'],
+        [7, 'Bob', 'Duck', False],
+        [39, 'Donald', 'Duck', True],
+        [41, 'Mickey', 'Mouse', None],
+    ]
+    res_right_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname', 'lastname', 'adult'],
+        [39, 'Donald', 'Duck', True],
+        [None, 'Minnie', 'Mouse', True],
+        [7, 'Bob', 'Duck', False],
+    ]
+    res_right_join_last_col: JsonListOfListsOfScalars = [
+        ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
+        [7, 'Bob', 'Duck', 'Donald', True],
+        [39, 'Donald', 'Duck', 'Donald', True],
+        [41, 'Mickey', 'Mouse', 'Minnie', True],
+        [7, 'Bob', 'Duck', 'Bob', False],
+        [39, 'Donald', 'Duck', 'Bob', False],
+    ]
+    res_cross_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname_1', 'lastname_1', 'firstname_2', 'lastname_2', 'adult'],
+        [7, 'Bob', 'Duck', 'Donald', 'Duck', True],
+        [7, 'Bob', 'Duck', 'Minnie', 'Mouse', True],
+        [7, 'Bob', 'Duck', 'Bob', 'Duck', False],
+        [39, 'Donald', 'Duck', 'Donald', 'Duck', True],
+        [39, 'Donald', 'Duck', 'Minnie', 'Mouse', True],
+        [39, 'Donald', 'Duck', 'Bob', 'Duck', False],
+        [41, 'Mickey', 'Mouse', 'Donald', 'Duck', True],
+        [41, 'Mickey', 'Mouse', 'Minnie', 'Mouse', True],
+        [41, 'Mickey', 'Mouse', 'Bob', 'Duck', False],
+    ]
     return TablePairCase(
         table_1=table_age_firstname_lastname,
         table_2=table_firstname_lastname_adult_partial_match_plus_extra,
         common_colnames=('firstname', 'lastname'),
         res_outer_join=res_outer_join,
-        res_outer_join_last_col=res_outer_join,
+        res_outer_join_last_col=res_outer_join_last_col,
         res_inner_join=res_inner_join,
-        res_inner_join_last_col=res_inner_join,
+        res_inner_join_last_col=res_inner_join_last_col,
         res_left_join=res_left_join,
-        res_left_join_last_col=res_left_join,
+        res_left_join_last_col=res_inner_join_last_col,
         res_right_join=res_right_join,
-        res_right_join_last_col=res_right_join,
+        res_right_join_last_col=res_right_join_last_col,
         res_cross_join=res_cross_join,
     )
 
@@ -372,37 +491,71 @@ def case_table_pair_multiple_common_colnames_partial_match_plus_extra(
 def case_table_pair_multiple_common_colnames_all_match_plus_extra(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_all_match_plus_extra) -> TablePairCase:
+    res_outer_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname', 'lastname', 'adult'],
+        [7, 'Bob', 'Duck', False],
+        [39, 'Donald', 'Duck', True],
+        [41, 'Mickey', 'Mouse', True],
+        [None, 'Minnie', 'Mouse', True],
+    ]
+    res_outer_join_last_col: JsonListOfListsOfScalars = [
+        ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
+        [7, 'Bob', 'Duck', 'Donald', True],
+        [7, 'Bob', 'Duck', 'Bob', False],
+        [39, 'Donald', 'Duck', 'Donald', True],
+        [39, 'Donald', 'Duck', 'Bob', False],
+        [41, 'Mickey', 'Mouse', 'Mickey', True],
+        [41, 'Mickey', 'Mouse', 'Minnie', True],
+    ]
+    res_inner_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname', 'lastname', 'adult'],
+        [7, 'Bob', 'Duck', False],
+        [39, 'Donald', 'Duck', True],
+        [41, 'Mickey', 'Mouse', True],
+    ]
+    res_right_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname', 'lastname', 'adult'],
+        [39, 'Donald', 'Duck', True],
+        [41, 'Mickey', 'Mouse', True],
+        [None, 'Minnie', 'Mouse', True],
+        [7, 'Bob', 'Duck', False],
+    ]
+    res_right_join_last_col: JsonListOfListsOfScalars = [
+        ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
+        [7, 'Bob', 'Duck', 'Donald', True],
+        [39, 'Donald', 'Duck', 'Donald', True],
+        [41, 'Mickey', 'Mouse', 'Mickey', True],
+        [41, 'Mickey', 'Mouse', 'Minnie', True],
+        [7, 'Bob', 'Duck', 'Bob', False],
+        [39, 'Donald', 'Duck', 'Bob', False],
+    ]
+    res_cross_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname_1', 'lastname_1', 'firstname_2', 'lastname_2', 'adult'],
+        [7, 'Bob', 'Duck', 'Donald', 'Duck', True],
+        [7, 'Bob', 'Duck', 'Mickey', 'Mouse', True],
+        [7, 'Bob', 'Duck', 'Minnie', 'Mouse', True],
+        [7, 'Bob', 'Duck', 'Bob', 'Duck', False],
+        [39, 'Donald', 'Duck', 'Donald', 'Duck', True],
+        [39, 'Donald', 'Duck', 'Mickey', 'Mouse', True],
+        [39, 'Donald', 'Duck', 'Minnie', 'Mouse', True],
+        [39, 'Donald', 'Duck', 'Bob', 'Duck', False],
+        [41, 'Mickey', 'Mouse', 'Donald', 'Duck', True],
+        [41, 'Mickey', 'Mouse', 'Mickey', 'Mouse', True],
+        [41, 'Mickey', 'Mouse', 'Minnie', 'Mouse', True],
+        [41, 'Mickey', 'Mouse', 'Bob', 'Duck', False],
+    ]
     return TablePairCase(
         table_1=table_age_firstname_lastname,
         table_2=table_firstname_lastname_adult_all_match_plus_extra,
         common_colnames=('firstname', 'lastname'),
         res_outer_join=res_outer_join,
-        res_outer_join_last_col=res_outer_join,
+        res_outer_join_last_col=res_outer_join_last_col,
         res_inner_join=res_inner_join,
-        res_inner_join_last_col=res_inner_join,
-        res_left_join=res_left_join,
-        res_left_join_last_col=res_left_join,
+        res_inner_join_last_col=res_outer_join_last_col,
+        res_left_join=res_inner_join,
+        res_left_join_last_col=res_outer_join_last_col,
         res_right_join=res_right_join,
-        res_right_join_last_col=res_right_join,
-        res_cross_join=res_cross_join,
-    )
-
-
-@pc.case(id='table_pair_multiple_common_colnames_all_match_out_of_order', tags=[''])
-def case_table_pair_multiple_common_colnames_all_match_out_of_order(
-        table_age_firstname_lastname, table_lastname_firstname_adult_all_match) -> TablePairCase:
-    return TablePairCase(
-        table_1=table_age_firstname_lastname,
-        table_2=table_lastname_firstname_adult_all_match,
-        common_colnames=('firstname', 'lastname'),
-        res_outer_join=res_outer_join,
-        res_outer_join_last_col=res_outer_join,
-        res_inner_join=res_inner_join,
-        res_inner_join_last_col=res_inner_join,
-        res_left_join=res_left_join,
-        res_left_join_last_col=res_left_join,
-        res_right_join=res_right_join,
-        res_right_join_last_col=res_right_join,
+        res_right_join_last_col=res_right_join_last_col,
         res_cross_join=res_cross_join,
     )
 
@@ -411,36 +564,96 @@ def case_table_pair_multiple_common_colnames_all_match_out_of_order(
 def case_table_pair_multiple_common_colnames_no_match_when_paired(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_no_match_when_paired) -> TablePairCase:
+    # Why this order of res_outer_join?
+    res_outer_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname', 'lastname', 'adult'],
+        [7, 'Bob', 'Duck', None],
+        [39, 'Donald', 'Duck', None],
+        [41, 'Mickey', 'Mouse', None],
+        [None, 'Mickey', 'Duck', True],
+        [None, 'Mickey', 'Duck', False],
+        [None, 'Donald', 'Mouse', True],
+        [None, 'Bob', 'Mouse', False],
+    ]
+    res_outer_join_last_col: JsonListOfListsOfScalars = [
+        ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
+        [7, 'Bob', 'Duck', 'Mickey', True],
+        [7, 'Bob', 'Duck', 'Mickey', False],
+        [39, 'Donald', 'Duck', 'Mickey', True],
+        [39, 'Donald', 'Duck', 'Mickey', False],
+        [41, 'Mickey', 'Mouse', 'Donald', True],
+        [41, 'Mickey', 'Mouse', 'Bob', False],
+    ]
+    res_inner_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname', 'lastname', 'adult'],
+    ]
+    res_inner_join_last_col: JsonListOfListsOfScalars = [
+        ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
+        [7, 'Bob', 'Duck', 'Mickey', True],
+        [7, 'Bob', 'Duck', 'Mickey', False],
+        [39, 'Donald', 'Duck', 'Mickey', True],
+        [39, 'Donald', 'Duck', 'Mickey', False],
+        [41, 'Mickey', 'Mouse', 'Donald', True],
+        [41, 'Mickey', 'Mouse', 'Bob', False],
+    ]
+    res_left_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname', 'lastname', 'adult'],
+        [7, 'Bob', 'Duck', None],
+        [39, 'Donald', 'Duck', None],
+        [41, 'Mickey', 'Mouse', None],
+    ]
+    res_right_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname', 'lastname', 'adult'],
+        [None, 'Mickey', 'Duck', True],
+        [None, 'Donald', 'Mouse', True],
+        [None, 'Bob', 'Mouse', False],
+        [None, 'Mickey', 'Duck', False],
+    ]
+    res_right_join_last_col: JsonListOfListsOfScalars = [
+        ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
+        [7, 'Bob', 'Duck', 'Mickey', True],
+        [39, 'Donald', 'Duck', 'Mickey', True],
+        [41, 'Mickey', 'Mouse', 'Donald', True],
+        [41, 'Mickey', 'Mouse', 'Bob', False],
+        [7, 'Bob', 'Duck', 'Mickey', False],
+        [39, 'Donald', 'Duck', 'Mickey', False],
+    ]
+    res_cross_join: JsonListOfListsOfScalars = [
+        ['age', 'firstname_1', 'lastname_1', 'firstname_2', 'lastname_2', 'adult'],
+        [7, 'Bob', 'Duck', 'Mickey', 'Duck', True],
+        [7, 'Bob', 'Duck', 'Donald', 'Mouse', True],
+        [7, 'Bob', 'Duck', 'Bob', 'Mouse', False],
+        [7, 'Bob', 'Duck', 'Mickey', 'Duck', False],
+        [39, 'Donald', 'Duck', 'Mickey', 'Duck', True],
+        [39, 'Donald', 'Duck', 'Donald', 'Mouse', True],
+        [39, 'Donald', 'Duck', 'Bob', 'Mouse', False],
+        [39, 'Donald', 'Duck', 'Mickey', 'Duck', False],
+        [41, 'Mickey', 'Mouse', 'Mickey', 'Duck', True],
+        [41, 'Mickey', 'Mouse', 'Donald', 'Mouse', True],
+        [41, 'Mickey', 'Mouse', 'Bob', 'Mouse', False],
+        [41, 'Mickey', 'Mouse', 'Mickey', 'Duck', False],
+    ]
     return TablePairCase(
         table_1=table_age_firstname_lastname,
         table_2=table_firstname_lastname_adult_no_match_when_paired,
         common_colnames=('firstname', 'lastname'),
         res_outer_join=res_outer_join,
-        res_outer_join_last_col=res_outer_join,
+        res_outer_join_last_col=res_outer_join_last_col,
         res_inner_join=res_inner_join,
-        res_inner_join_last_col=res_inner_join,
+        res_inner_join_last_col=res_inner_join_last_col,
         res_left_join=res_left_join,
-        res_left_join_last_col=res_left_join,
+        res_left_join_last_col=res_outer_join_last_col,
         res_right_join=res_right_join,
-        res_right_join_last_col=res_right_join,
+        res_right_join_last_col=res_right_join_last_col,
         res_cross_join=res_cross_join,
     )
 
 
 @pc.case(id='table_pair_no_common_colnames', tags=[''])
 def case_table_pair_no_common_colnames(table_age_firstname_lastname,
-                                       table_weight_height) -> TablePairCase:
+                                       table_last_first_weight_height) -> TablePairCase:
     return TablePairCase(
         table_1=table_age_firstname_lastname,
-        table_2=table_weight_height,
+        table_2=table_last_first_weight_height,
         common_colnames=(),
-        res_outer_join=res_outer_join,
-        res_outer_join_last_col=res_outer_join,
-        res_inner_join=res_inner_join,
-        res_inner_join_last_col=res_inner_join,
-        res_left_join=res_left_join,
-        res_left_join_last_col=res_left_join,
-        res_right_join=res_right_join,
-        res_right_join_last_col=res_right_join,
-        res_cross_join=res_cross_join,
     )

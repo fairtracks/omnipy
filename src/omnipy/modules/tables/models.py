@@ -28,10 +28,13 @@ class TableWithColNamesModel(Model[JsonListOfListsOfScalarsModel | JsonListOfDic
         if len(data) > 0:
             if isinstance(data[0], JsonListM):
                 first_row_as_colnames = JsonCustomListModel[str](data[0])
+                rows = data[1:]
+                # if len(rows) == 0:
+                #     rows = [[None] * len(first_row_as_colnames)]
                 return [{
                     col_name: row[i] if i < len(row) else None for i,
                     col_name in enumerate(first_row_as_colnames)
-                } for row in data[1:]]
+                } for row in rows]
             else:
                 assert isinstance(data[0], JsonDictM)
                 return data

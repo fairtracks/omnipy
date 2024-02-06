@@ -53,6 +53,16 @@ def table_firstname_lastname_adult_all_match() -> JsonListOfListsOfScalars:
 
 
 @pc.fixture
+def table_lastname_firstname_adult_all_match() -> JsonListOfListsOfScalars:
+    return [
+        ['lastname', 'firstname', 'adult'],
+        ['Duck', 'Donald', True],
+        ['Mouse', 'Mickey', True],
+        ['Duck', 'Bob', False],
+    ]
+
+
+@pc.fixture
 def table_firstname_lastname_adult_double_match() -> JsonListOfListsOfScalars:
     return [
         ['firstname', 'lastname', 'adult'],
@@ -94,16 +104,6 @@ def table_firstname_lastname_adult_all_match_plus_extra() -> JsonListOfListsOfSc
 
 
 @pc.fixture
-def table_lastname_firstname_adult_all_match() -> JsonListOfListsOfScalars:
-    return [
-        ['lastname', 'firstname', 'adult'],
-        ['Duck', 'Donald', True],
-        ['Mouse', 'Mickey', True],
-        ['Duck', 'Bob', False],
-    ]
-
-
-@pc.fixture
 def table_firstname_lastname_adult_no_match_when_paired() -> JsonListOfListsOfScalars:
     return [
         ['firstname', 'lastname', 'adult'],
@@ -115,10 +115,10 @@ def table_firstname_lastname_adult_no_match_when_paired() -> JsonListOfListsOfSc
 
 
 @pc.fixture
-def table_weight_height() -> JsonListOfListsOfScalars:
+def table_last_first_weight_height() -> JsonListOfListsOfScalars:
     return [
-        ['weight', 'height'],
-        [37.2, 127],
-        [75.4, 165],
-        [69.8, 171],
+        ['last', 'first', 'weight', 'height'],
+        ['Duck', 'Bob', 37.2, 127],
+        ['Duck', 'Donald', 75.4, 165],
+        ['Mouse', 'Mickey', 69.8, 171],
     ]

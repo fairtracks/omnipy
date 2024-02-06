@@ -1,7 +1,5 @@
-from dataclasses import dataclass
 from typing import Annotated, NamedTuple
 
-from deepdiff import DeepDiff
 from pandas import DataFrame
 import pandas as pd
 import pytest
@@ -12,7 +10,6 @@ from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.modules.pandas.helpers import extract_common_colnames
 from omnipy.modules.pandas.models import PandasDataset, PandasModel
 from omnipy.modules.pandas.tasks import join_tables
-from omnipy.modules.tables.datasets import TableWithColNamesDataset
 from omnipy.modules.tables.models import TableWithColNamesModel
 
 
@@ -43,13 +40,30 @@ def test_join_tables(
             TableJoinTest(type='right', attr='res_right_join_last_col', on_last_common_col=True),
             TableJoinTest(type='cross', attr='res_cross_join', on_last_common_col=False),
     ]:
-        a = join_tables.run(
-            table_1,
-            table_2,
-            join_type=test_info.type,
-            on_cols=common_colnames[-1] if test_info.on_last_common_col else None).contents
-        b = PandasModel(TableWithColNamesModel(getattr(case, test_info.attr))).contents
-        pd.testing.assert_frame_equal(a, b)
+        if len(common_colnames) == 0:
+            with pytest.raises(ValueError):
+                _run_join_tables(common_colnames, table_1, table_2, test_info)
+        else:
+            result = _run_join_tables(common_colnames, table_1, table_2, test_info)
+            target = _get_target_as_pandas_model(case, test_info)
+            pd.testing.assert_frame_equal(result.contents, target.contents, check_dtype=False)
+
+
+def _get_target_as_pandas_model(case: TablePairCase, test_info: TableJoinTest):
+    test_case_table = getattr(case, test_info.attr)
+    return PandasModel(
+        pd.DataFrame(test_case_table[1:], columns=test_case_table[0]).convert_dtypes())
+
+
+def _run_join_tables(common_colnames: tuple[str, ...],
+                     table_1: PandasModel,
+                     table_2: PandasModel,
+                     test_info: TableJoinTest) -> PandasModel:
+    return join_tables.run(
+        table_1,
+        table_2,
+        join_type=test_info.type,
+        on_cols=common_colnames[-1] if common_colnames and test_info.on_last_common_col else None)
 
 
 def test_default_outer_join_tables_on_column_all_matching(
@@ -312,12 +326,8 @@ def test_default_outer_join_tables_multiple_columns_same_name_allow_multiple_inc
 #     }
 
 # Further tests
-# TODO: join_tables: When Multiple columns that have the same name -> check consistency of common columns.
-#       If identical, then merge columns.
 # TODO: join_tables: Specify left/right columns to merge on
 # TODO: join_tables: Specify left/right columns to merge on -> multiple columns with same name
 # TODO: join_tables: Specify left/right columns to merge on -> specified columns do not exist
-# TODO: join_tables: No overlapping column names in A and B
 # TODO: join_tables: Empty dataframe
-# TODO: join_tables: Multiple matching rows
 # TODO: join_tables: Multiple tables
