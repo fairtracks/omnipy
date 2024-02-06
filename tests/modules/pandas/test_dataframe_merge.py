@@ -1,4 +1,5 @@
-from typing import Annotated
+from dataclasses import dataclass
+from typing import Annotated, NamedTuple
 
 from deepdiff import DeepDiff
 from pandas import DataFrame
@@ -8,9 +9,17 @@ import pytest_cases as pc
 
 from modules.pandas.cases.table_pairs import TablePairCase
 from omnipy.api.protocols.public.hub import IsRuntime
-from omnipy.modules.pandas.models import PandasDataset
+from omnipy.modules.pandas.helpers import extract_common_colnames
+from omnipy.modules.pandas.models import PandasDataset, PandasModel
 from omnipy.modules.pandas.tasks import join_tables
 from omnipy.modules.tables.datasets import TableWithColNamesDataset
+from omnipy.modules.tables.models import TableWithColNamesModel
+
+
+class TableJoinTest(NamedTuple):
+    type: str
+    attr: str
+    on_last_common_col: bool
 
 
 @pc.parametrize_with_cases('case', cases='.cases.table_pairs')
@@ -18,20 +27,29 @@ def test_join_tables(
     runtime: Annotated[IsRuntime, pytest.fixture],
     case: TablePairCase,
 ):
-    tables = TableWithColNamesDataset(table_1=case.table_1, table_2=case.table_2)
-    dataset = PandasDataset(tables)
+    table_1 = PandasModel(TableWithColNamesModel(case.table_1))
+    table_2 = PandasModel(TableWithColNamesModel(case.table_2))
 
-    result_datafile_name = 'table_1_join_table_2'
-    assert DeepDiff(
-        join_tables.run(dataset)[result_datafile_name].to_data(),
-        case.result_outer_join,
-        significant_digits=3,
-    )
-    assert DeepDiff(
-        join_tables.run(dataset, join_type='inner')[result_datafile_name].to_data(),
-        case.result_outer_join,
-        significant_digits=3,
-    )
+    common_colnames = extract_common_colnames(table_1, table_2)
+
+    for test_info in [
+            TableJoinTest(type='outer', attr='res_outer_join', on_last_common_col=False),
+            TableJoinTest(type='outer', attr='res_outer_join_last_col', on_last_common_col=True),
+            TableJoinTest(type='inner', attr='res_inner_join', on_last_common_col=False),
+            TableJoinTest(type='inner', attr='res_inner_join_last_col', on_last_common_col=True),
+            TableJoinTest(type='left', attr='res_left_join', on_last_common_col=False),
+            TableJoinTest(type='left', attr='res_left_join_last_col', on_last_common_col=True),
+            TableJoinTest(type='right', attr='res_right_join', on_last_common_col=False),
+            TableJoinTest(type='right', attr='res_right_join_last_col', on_last_common_col=True),
+            TableJoinTest(type='cross', attr='res_cross_join', on_last_common_col=False),
+    ]:
+        a = join_tables.run(
+            table_1,
+            table_2,
+            join_type=test_info.type,
+            on_cols=common_colnames[-1] if test_info.on_last_common_col else None).contents
+        b = PandasModel(TableWithColNamesModel(getattr(case, test_info.attr))).contents
+        pd.testing.assert_frame_equal(a, b)
 
 
 def test_default_outer_join_tables_on_column_all_matching(
@@ -84,7 +102,7 @@ def test_inner_join_tables_on_column_all_matching(
     dataset['table_abc'] = table_abc
     dataset['table_dbe'] = table_dbe
 
-    joined_dataset = join_tables.run(dataset, join_type='inner')
+    joined_dataset = join_tables.run(dataset, type='inner')
 
     assert joined_dataset.to_data() == {
         'table_abc_join_table_dbe': [
@@ -104,7 +122,7 @@ def test_inner_join_tables_on_column_some_matching(
     dataset['table_abc'] = table_abc
     dataset['table_dbe2'] = table_dbe2
 
-    joined_dataset = join_tables.run(dataset, join_type='inner')
+    joined_dataset = join_tables.run(dataset, type='inner')
 
     assert joined_dataset.to_data() == {
         'table_abc_join_table_dbe2': [
@@ -123,7 +141,7 @@ def test_left_join_tables_on_column_all_matching(
     dataset['table_abc'] = table_abc
     dataset['table_dbe'] = table_dbe
 
-    joined_dataset = join_tables.run(dataset, join_type='left')
+    joined_dataset = join_tables.run(dataset, type='left')
 
     assert joined_dataset.to_data() == {
         'table_abc_join_table_dbe': [
@@ -143,7 +161,7 @@ def test_left_join_tables_on_column_some_matching(
     dataset['table_abc'] = table_abc
     dataset['table_dbe2'] = table_dbe2
 
-    joined_dataset = join_tables.run(dataset, join_type='left')
+    joined_dataset = join_tables.run(dataset, type='left')
 
     assert joined_dataset.to_data() == {
         'table_abc_join_table_dbe2': [
@@ -163,7 +181,7 @@ def test_right_join_tables_on_column_all_matching(
     dataset['table_abc'] = table_abc
     dataset['table_dbe'] = table_dbe
 
-    joined_dataset = join_tables.run(dataset, join_type='right')
+    joined_dataset = join_tables.run(dataset, type='right')
 
     assert joined_dataset.to_data() == {
         'table_abc_join_table_dbe': [
@@ -183,7 +201,7 @@ def test_right_join_tables_on_column_some_matching(
     dataset['table_abc'] = table_abc
     dataset['table_dbe2'] = table_dbe2
 
-    joined_dataset = join_tables.run(dataset, join_type='right')
+    joined_dataset = join_tables.run(dataset, type='right')
 
     assert joined_dataset.to_data() == {
         'table_abc_join_table_dbe2': [

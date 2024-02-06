@@ -6,10 +6,9 @@ import numpy as np
 from pydantic import ValidationError
 import pytest
 
+from modules.pandas.helpers.asserts import assert_pandas_frame_dtypes
 from omnipy.modules.pandas import pd
 from omnipy.modules.pandas.models import PandasDataset, PandasModel
-
-from .util import assert_pandas_frame_dtypes
 
 
 def test_pandas_dataset_list_of_objects_same_keys():

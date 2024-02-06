@@ -64,17 +64,6 @@ def table_firstname_lastname_adult_double_match() -> JsonListOfListsOfScalars:
 
 
 @pc.fixture
-def table_firstname_lastname_adult_all_match_plus_extra() -> JsonListOfListsOfScalars:
-    return [
-        ['firstname', 'lastname', 'adult'],
-        ['Donald', 'Duck', True],
-        ['Mickey', 'Mouse', True],
-        ['Minnie', 'Mouse', True],
-        ['Bob', 'Duck', False],
-    ]
-
-
-@pc.fixture
 def table_firstname_lastname_adult_partial_match() -> JsonListOfListsOfScalars:
     return [
         ['firstname', 'lastname', 'adult'],
@@ -88,6 +77,17 @@ def table_firstname_lastname_adult_partial_match_plus_extra() -> JsonListOfLists
     return [
         ['firstname', 'lastname', 'adult'],
         ['Donald', 'Duck', True],
+        ['Minnie', 'Mouse', True],
+        ['Bob', 'Duck', False],
+    ]
+
+
+@pc.fixture
+def table_firstname_lastname_adult_all_match_plus_extra() -> JsonListOfListsOfScalars:
+    return [
+        ['firstname', 'lastname', 'adult'],
+        ['Donald', 'Duck', True],
+        ['Mickey', 'Mouse', True],
         ['Minnie', 'Mouse', True],
         ['Bob', 'Duck', False],
     ]

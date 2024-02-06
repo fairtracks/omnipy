@@ -1,4 +1,5 @@
 from io import StringIO
+from typing import Sequence
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
@@ -9,7 +10,7 @@ from . import pd
 from ..general.models import NotIterableExceptStrOrBytesModel
 from .helpers import (are_values_of_equally_named_columns_internally_consistent,
                       extract_common_colnames)
-from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset
+from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset, PandasModel
 
 
 @mypy_fix_task_template
@@ -96,39 +97,27 @@ def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSame
 
 @mypy_fix_task_template
 @TaskTemplate()
-def join_tables(dataset: PandasDataset,
+def join_tables(table_1: PandasModel,
+                table_2: PandasModel,
                 join_type: str = 'outer',
-                allow_multiple_join_cols_if_consistent: bool = False) -> PandasDataset:
-    assert len(dataset) == 2
-
-    output_dataset = PandasDataset()
-
-    table_name_1, table_name_2 = tuple(dataset.keys())
-    output_table_name = f'{table_name_1}_join_{table_name_2}'
-
-    df_1 = dataset[table_name_1]
-    df_2 = dataset[table_name_2]
-
-    common_colnames = extract_common_colnames(df_1, df_2)
+                on_cols: Sequence[str] | None = None) -> PandasModel:
+    common_colnames = extract_common_colnames(table_1, table_2)
     print(f'Joining tables on common columns: {common_colnames}, using join type: {join_type}...')
 
-    join_cols = []
-    if len(common_colnames) > 1:
-        if allow_multiple_join_cols_if_consistent:
-            if are_values_of_equally_named_columns_internally_consistent(
-                    df_1.contents, df_2.contents):
-                join_cols += list(common_colnames)
-            else:
-                raise ValueError()
-        else:
-            raise ValueError(f'No common column names were found. '
-                             f'"{table_name_1}": {tuple(df_1.columns)}. '
-                             f'"{table_name_2}": {tuple(df_2.columns)}')
-    else:
-        join_cols = common_colnames[0]
+    if len(common_colnames) == 0:
+        raise ValueError(f'No common column names were found. '
+                         f'table_1: {tuple(table_1.columns)}. '
+                         f'table_2: {tuple(table_2.columns)}')
+
+    if on_cols is None:
+        on_cols = common_colnames
 
     merged_df = pd.merge(
-        df_1.loc[:, :], df_2.loc[:, :], on=join_cols, how=join_type).convert_dtypes()
+        table_1.loc[:, :],
+        table_2.loc[:, :],
+        on=None if join_type == 'cross' else on_cols,
+        how=join_type,
+        suffixes=('_1', '_2'),
+    ).convert_dtypes()
 
-    output_dataset[output_table_name] = merged_df
-    return output_dataset
+    return PandasModel(merged_df)
