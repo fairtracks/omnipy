@@ -18,7 +18,8 @@ def flatten_outer_level_of_nested_record(
     default_key: str,
 ) -> tuple[JsonDictOfScalars, JsonDictOfListsOfDicts]:
 
-    record_id = ensure_item_first_in_nested_record(nested_record, key=id_key, value=record_id)
+    record_id = ensure_item_first_in_nested_record(
+        nested_record, key=id_key, value=f'{data_file_title}.{record_id}')
 
     new_data_files: JsonDictOfListsOfDicts = JsonDictOfListsOfDicts()
     records_of_scalars: JsonDictOfScalars = JsonDictOfScalars()
@@ -83,11 +84,6 @@ def add_references_to_parent_in_child_records(
     ident: str,
     ref_key: str,
 ):
-    ref_value = get_ref_value(parent_title, ident)
     for new_nested_record in child:
         ensure_item_first_in_nested_record(
-            new_nested_record, key=ref_key, value=ref_value, fail_if_present=True)
-
-
-def get_ref_value(data_file_title: str, ident: str) -> str:
-    return f'{data_file_title}.{ident}'
+            new_nested_record, key=ref_key, value=ident, fail_if_present=True)
