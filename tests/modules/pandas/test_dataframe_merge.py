@@ -6,6 +6,7 @@ import pytest
 import pytest_cases as pc
 
 from modules.pandas.cases.table_pairs import TablePairCase
+from modules.pandas.helpers.functions import convert_testcase_table_to_dataframe
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.modules.pandas.helpers import extract_common_colnames
 from omnipy.modules.pandas.models import PandasDataset, PandasModel
@@ -50,9 +51,7 @@ def test_join_tables(
 
 
 def _get_target_as_pandas_model(case: TablePairCase, test_info: TableJoinTest):
-    test_case_table = getattr(case, test_info.attr)
-    return PandasModel(
-        pd.DataFrame(test_case_table[1:], columns=test_case_table[0]).convert_dtypes())
+    return PandasModel(convert_testcase_table_to_dataframe(getattr(case, test_info.attr)))
 
 
 def _run_join_tables(common_colnames: tuple[str, ...],

@@ -6,13 +6,16 @@ import pytest
 import pytest_cases as pc
 
 from modules.pandas.cases.table_pairs import TablePairCase
+from modules.pandas.helpers.functions import convert_testcase_table_to_dataframe
 from omnipy.modules.pandas.helpers import (
     are_values_of_equally_named_columns_internally_consistent, extract_common_colnames)
 
 
 @pc.parametrize_with_cases('case', cases='.cases.table_pairs')
 def test_extract_common_colnames(case: TablePairCase):
-    assert extract_common_colnames(case.table_1, case.table_1) == case.common_colnames
+    case_df_1 = convert_testcase_table_to_dataframe(case.table_1)
+    case_df_2 = convert_testcase_table_to_dataframe(case.table_2)
+    assert extract_common_colnames(case_df_1, case_df_2) == case.common_colnames
 
 
 # @pc.parametrize_with_cases('case', cases='.cases.dataframe_pairs')
