@@ -53,12 +53,12 @@ def table_firstname_lastname_adult_all_match() -> JsonListOfListsOfScalars:
 
 
 @pc.fixture
-def table_lastname_firstname_adult_all_match() -> JsonListOfListsOfScalars:
+def table_adult_lastname_firstname_all_match() -> JsonListOfListsOfScalars:
     return [
-        ['lastname', 'firstname', 'adult'],
-        ['Duck', 'Donald', True],
-        ['Mouse', 'Mickey', True],
-        ['Duck', 'Bob', False],
+        ['adult', 'lastname', 'firstname'],
+        [True, 'Duck', 'Donald'],
+        [True, 'Mouse', 'Mickey'],
+        [False, 'Duck', 'Bob'],
     ]
 
 
