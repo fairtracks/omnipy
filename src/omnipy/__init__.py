@@ -2,6 +2,13 @@ __version__ = '0.15.1'
 
 import os
 
+from omnipy.compute.flow import (DagFlow,
+                                 DagFlowTemplate,
+                                 FuncFlow,
+                                 FuncFlowTemplate,
+                                 LinearFlow,
+                                 LinearFlowTemplate)
+from omnipy.compute.task import Task, TaskTemplate
 from omnipy.data.dataset import Dataset, ListOfParamModelDataset, ParamDataset
 from omnipy.data.model import ListOfParamModel, Model, ParamModel
 from omnipy.hub.runtime import runtime
@@ -30,7 +37,9 @@ from omnipy.modules.json.datasets import (JsonDataset,
                                           JsonOnlyListsDataset,
                                           JsonScalarDataset)
 from omnipy.modules.json.flows import flatten_nested_json
-from omnipy.modules.json.models import (JsonDictModel,
+from omnipy.modules.json.models import (JsonCustomDictModel,
+                                        JsonCustomListModel,
+                                        JsonDictModel,
                                         JsonDictOfDictsModel,
                                         JsonDictOfDictsOfScalarsModel,
                                         JsonDictOfListsModel,
@@ -57,11 +66,13 @@ from omnipy.modules.json.tasks import (transpose_dict_of_dicts_2_list_of_dicts,
 from omnipy.modules.pandas.models import (ListOfPandasDatasetsWithSameNumberOfFiles,
                                           PandasDataset,
                                           PandasModel)
-from omnipy.modules.pandas.tasks import (concat_dataframes_across_datasets,
+from omnipy.modules.pandas.tasks import (cartesian_product,
+                                         concat_dataframes_across_datasets,
                                          convert_dataset_csv_to_pandas,
                                          convert_dataset_list_of_dicts_to_pandas,
                                          convert_dataset_pandas_to_csv,
-                                         extract_columns_as_files)
+                                         extract_columns_as_files,
+                                         join_tables)
 from omnipy.modules.raw.datasets import (BytesDataset,
                                          JoinColumnsToLinesDataset,
                                          JoinItemsDataset,
@@ -84,6 +95,8 @@ from omnipy.modules.raw.tasks import (concat_all,
                                       modify_datafile_contents,
                                       modify_each_line,
                                       union_all)
+from omnipy.modules.tables.datasets import TableWithColNamesDataset
+from omnipy.modules.tables.models import TableWithColNamesModel
 from omnipy.modules.tables.tasks import remove_columns
 
 # from omnipy.util.helpers import recursive_module_import
@@ -92,6 +105,14 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 __all__ = [
     'runtime',
+    'DagFlow',
+    'DagFlowTemplate',
+    'FuncFlow',
+    'FuncFlowTemplate',
+    'LinearFlow',
+    'LinearFlowTemplate',
+    'Task',
+    'TaskTemplate',
     'Dataset',
     'ParamDataset',
     'ListOfParamModelDataset',
@@ -100,6 +121,8 @@ __all__ = [
     'ListOfParamModel',
     'IsaJsonModel',
     'IsaJsonDataset',
+    'JsonCustomDictModel',
+    'JsonCustomListModel',
     'JsonDataset',
     'JsonDictDataset',
     'JsonDictOfDictsDataset',
@@ -161,6 +184,8 @@ __all__ = [
     'SplitLinesToColumnsModel',
     'JoinColumnsToLinesModel',
     'StrModel',
+    'TableWithColNamesDataset',
+    'TableWithColNamesModel',
     'import_directory',
     'split_dataset',
     'flatten_nested_json',
@@ -172,6 +197,8 @@ __all__ = [
     'convert_dataset_pandas_to_csv',
     'convert_dataset_list_of_dicts_to_pandas',
     'extract_columns_as_files',
+    'join_tables',
+    'cartesian_product',
     'decode_bytes',
     'modify_all_lines',
     'modify_datafile_contents',
