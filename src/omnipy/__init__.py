@@ -7,6 +7,7 @@ from omnipy.data.model import ListOfParamModel, Model, ParamModel
 from omnipy.hub.runtime import runtime
 # from omnipy.util.helpers import recursive_module_import
 from omnipy.modules.general.tasks import import_directory, split_dataset
+from omnipy.modules.isa import IsaJsonDataset, IsaJsonModel
 from omnipy.modules.json.datasets import (JsonDataset,
                                           JsonDictDataset,
                                           JsonDictOfDictsDataset,
@@ -97,6 +98,8 @@ __all__ = [
     'Model',
     'ParamModel',
     'ListOfParamModel',
+    'IsaJsonModel',
+    'IsaJsonDataset',
     'JsonDataset',
     'JsonDictDataset',
     'JsonDictOfDictsDataset',
