@@ -1,7 +1,4 @@
-from datetime import date, datetime
-from typing import Union
-
-from pydantic import BaseModel, constr, Extra
+from pydantic import BaseModel, Extra
 
 from omnipy.data.model import Model
 from omnipy.modules.isa.models.investigation_schema import (IsaInvestigationModel,

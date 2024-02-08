@@ -3,7 +3,6 @@ from typing import IO, Type
 from omnipy.data.serializer import TarFileSerializer
 
 from ...api.protocols.public.data import IsDataset
-from ..isa.datasets import IsaJsonDataset
 from .datasets import JsonBaseDataset, JsonDataset
 from .models import JsonModel
 
@@ -12,6 +11,7 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer):
     """"""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
+        from ..isa.datasets import IsaJsonDataset
         return isinstance(dataset, JsonBaseDataset) or isinstance(dataset, IsaJsonDataset)
 
     @classmethod
