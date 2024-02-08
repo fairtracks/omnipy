@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from math import floor
 from types import NoneType
 
+from pydantic import BaseModel, Field
+
 from omnipy.data.model import ListOfParamModel, Model, ParamModel
 
 
@@ -40,3 +42,18 @@ class DefaultStrModel(ParamModel[NoneType | str, str]):
     @classmethod
     def _parse_data(cls, data: NoneType, default: str = 'default') -> str:
         return default if data is None else data
+
+
+class PydanticChildModel(BaseModel):
+    id: int = Field(0, alias='@id')
+    value: float = 0
+
+
+class PydanticParentModel(BaseModel):
+    id: int = Field(0, alias='@id')
+    children: list[PydanticChildModel] = []
+    children_omnipy: list[Model[PydanticChildModel]] = []
+
+
+class MyPydanticModel(Model[PydanticParentModel]):
+    ...

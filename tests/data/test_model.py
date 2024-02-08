@@ -23,6 +23,7 @@ from .helpers.models import (DefaultStrModel,
                              ListOfUpperStrModel,
                              MyFloatObject,
                              MyFloatObjModel,
+                             MyPydanticModel,
                              UpperStrModel)
 
 
@@ -1126,6 +1127,42 @@ def test_import_export_methods():
 #     assert not isinstance(Model[int | str](), str)
 #     assert isinstance(Model[int | str](1), str)
 #     assert not isinstance(Model[int | str]('1'), str)
+
+
+def test_model_of_pydantic_model() -> None:
+    model = MyPydanticModel({'@id': 1, 'children': [{'@id': 10, 'value': 1.23}]})
+    assert model.id == 1
+    assert len(model.children) == 1
+    assert model.children[0].id == 10
+    assert model.children[0].value == 1.23
+
+    model.id = '2'
+    assert model.id == 2
+    assert len(model.children) == 1
+
+    model.children[0].value = '1.23'
+    assert model.children[0].value == '1.23'
+
+    model.children_omnipy = model.children
+    model.children_omnipy[0].id = '11'
+    assert model.children_omnipy[0].id == 11
+
+    with pytest.raises(ValidationError):
+        model.children_omnipy[0].value = 'abc'
+
+    model.children[0].value = 'abc'
+    with pytest.raises(ValidationError):
+        model.validate_contents()
+
+    assert model.to_data() == {
+        '@id': 2,
+        'children': [{
+            '@id': 10, 'value': 'abc'
+        }],
+        'children_omnipy': [{
+            '@id': 11, 'value': 1.23
+        }]
+    }
 
 
 def test_mimic_simple_list_operations():

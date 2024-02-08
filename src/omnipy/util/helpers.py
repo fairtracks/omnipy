@@ -19,7 +19,7 @@ from typing import (Annotated,
 
 from isort import place_module
 from isort.sections import STDLIB
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 from pydantic.typing import display_as_type
 from typing_inspect import get_generic_bases, is_generic_type
 
@@ -149,6 +149,10 @@ def is_strict_subclass(
         else:
             return __cls != __class_or_tuple
     return False
+
+
+def is_pure_pydantic_model(obj: object):
+    return type(obj).__bases__ == (BaseModel,)
 
 
 class IsDataclass(Protocol):

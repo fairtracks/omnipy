@@ -13,7 +13,7 @@ from .helpers.datasets import (DefaultStrDataset,
                                ListOfUpperStrDataset,
                                MyFloatObjDataset,
                                UpperStrDataset)
-from .helpers.models import MyFloatObject, StringToLength, UpperStrModel
+from .helpers.models import MyFloatObject, MyPydanticModel, StringToLength, UpperStrModel
 
 
 def test_no_model():
@@ -798,6 +798,50 @@ def test_dataset_switch_models_issue():
 
     dataset = Dataset[Model[Model[list[int]]]]({'a': [123], 'b': [234]})
     dataset['a'], dataset['b'] = dataset['b'], dataset['a']
+
+
+def test_dataset_of_pydantic_model() -> None:
+    dataset = Dataset[MyPydanticModel](
+        x={
+            '@id': 1,
+            'children': [{
+                '@id': 10, 'value': 1.23
+            }],
+        },
+        y={
+            '@id': 2,
+            'children_omnipy': [{
+                '@id': 11, 'value': 2.34
+            }],
+        })
+    assert dataset['x'].id == 1
+    assert len(dataset['x'].children) == 1
+    assert dataset['x'].children[0].id == 10
+    assert dataset['y'].children_omnipy[0].value == 2.34
+
+    dataset['x'].children[0].value = 'abc'
+    with pytest.raises(ValidationError):
+        dataset['x'].validate_contents()
+
+    with pytest.raises(ValidationError):
+        dataset['y'].children_omnipy[0].value = 'abc'
+
+    assert dataset.to_data() == {
+        'x': {
+            '@id': 1,
+            'children': [{
+                '@id': 10, 'value': 'abc'
+            }],
+            'children_omnipy': [],
+        },
+        'y': {
+            '@id': 2,
+            'children': [],
+            'children_omnipy': [{
+                '@id': 11, 'value': 2.34
+            }],
+        }
+    }
 
 
 # TODO: Add unit tests for MultiModelDataset

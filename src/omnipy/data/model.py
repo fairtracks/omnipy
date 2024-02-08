@@ -39,6 +39,7 @@ from omnipy.util.helpers import (all_equals,
                                  has_items,
                                  is_non_str_byte_iterable,
                                  is_optional,
+                                 is_pure_pydantic_model,
                                  is_union,
                                  remove_annotated_plus_optional_if_present,
                                  remove_forward_ref_notation,
@@ -405,6 +406,8 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     def _validate_contents_from_value(self, value: RootT) -> RootT:
         if is_model_instance(value):
             value = value.to_data()
+        elif is_pure_pydantic_model(value):
+            value = value.dict(by_alias=True)
         values, fields_set, validation_error = validate_model(self.__class__, {ROOT_KEY: value})
         if validation_error:
             raise validation_error
@@ -492,7 +495,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         return {ROOT_KEY: self.to_data()}
 
     def to_data(self) -> Any:
-        return super().dict()[ROOT_KEY]
+        return super().dict(by_alias=True)[ROOT_KEY]
 
     def from_data(self, value: object) -> None:
         self._validate_and_set_contents(value)
@@ -586,7 +589,14 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
                 contents_prop = getattr(self.__class__, attr)
                 contents_prop.__set__(self, value)
             else:
-                raise RuntimeError('Model does not allow setting of extra attributes')
+                if self._is_pure_pydantic_model():
+                    self._special_method(
+                        '__setattr__',
+                        MethodInfo(state_changing=True, maybe_returns_same_type=False),
+                        attr,
+                        value)
+                else:
+                    raise RuntimeError('Model does not allow setting of extra attributes')
 
     def _special_method(self, name: str, info: MethodInfo, *args: object,
                         **kwargs: object) -> object:
@@ -673,7 +683,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
 
     def __getattr__(self, attr: str) -> Any:
         contents_attr = self._getattr_from_contents_obj(attr)
-        if _is_interactive_mode():
+        if _is_interactive_mode() and not self._is_pure_pydantic_model():
             contents_holder = AttribHolder(self, 'contents', copy_attr=True)
 
             contents_cls_attr = self._getattr_from_contents_cls(attr)
@@ -682,6 +692,9 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
                     contents_attr, self.validate_contents, with_context=contents_holder)
 
         return contents_attr
+
+    def _is_pure_pydantic_model(self):
+        return is_pure_pydantic_model(self._get_real_contents())
 
     def _getattr_from_contents_obj(self, attr):
         return getattr(self._get_real_contents(), attr)

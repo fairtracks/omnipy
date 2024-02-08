@@ -335,7 +335,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         return {DATA_KEY: data_dict}
 
     def to_data(self) -> dict[str, Any]:
-        return GenericModel.dict(self).get(DATA_KEY)
+        return GenericModel.dict(self, by_alias=True).get(DATA_KEY)
 
     def from_data(self,
                   data: dict[str, Any] | Iterator[tuple[str, Any]],

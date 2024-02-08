@@ -2,9 +2,12 @@ from copy import copy
 from types import MethodType, NoneType
 from typing import Annotated, Generic, get_args, Iterator, Optional, TypeVar, Union
 
+from pydantic import BaseModel
+from pydantic.generics import GenericModel
 import pytest
 from typing_inspect import get_generic_type
 
+from omnipy import Dataset, Model
 from omnipy.util.helpers import (ensure_non_str_byte_iterable,
                                  ensure_plain_type,
                                  get_calling_module_name,
@@ -13,6 +16,7 @@ from omnipy.util.helpers import (ensure_non_str_byte_iterable,
                                  is_iterable,
                                  is_non_str_byte_iterable,
                                  is_optional,
+                                 is_pure_pydantic_model,
                                  is_strict_subclass,
                                  is_union,
                                  remove_annotated_plus_optional_if_present,
@@ -285,6 +289,34 @@ def test_is_strict_subclass() -> None:
     assert is_strict_subclass(Father, (Sister, Brother)) is False
     assert is_strict_subclass(Mother, (Mother, Father)) is False
     assert is_strict_subclass(Child, (Mother, Child)) is False
+
+
+def test_is_pure_pydantic_model() -> None:
+    class PydanticModel(BaseModel):
+        ...
+
+    T = TypeVar('T')
+
+    class GenericPydanticModel(GenericModel, Generic[T]):
+        ...
+
+    class Mixin:
+        ...
+
+    class MultiInheritModel(BaseModel, Mixin):
+        ...
+
+    class PydanticModelSubclass(PydanticModel):
+        ...
+
+    assert is_pure_pydantic_model(PydanticModel())
+    assert not is_pure_pydantic_model(BaseModel())
+    assert not is_pure_pydantic_model(GenericPydanticModel())
+    assert not is_pure_pydantic_model(MultiInheritModel())
+    assert not is_pure_pydantic_model(PydanticModelSubclass())
+    assert not is_pure_pydantic_model(Model[PydanticModel]())
+    assert not is_pure_pydantic_model(Dataset[Model[PydanticModel]]())
+    assert not is_pure_pydantic_model('model')
 
 
 def test_remove_annotated_optional_if_present() -> None:
