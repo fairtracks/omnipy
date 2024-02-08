@@ -6,6 +6,8 @@ from omnipy.api.protocols.private.compute.job import (IsJob,
 from omnipy.api.protocols.public.compute import IsTaskTemplate
 from omnipy.compute.func_job import FuncArgJobBase
 
+# TODO: Update TaskTemplateArgsJobBase typing to also allow sub-flows
+
 
 class TaskTemplateArgsJobBase(FuncArgJobBase):
     def __init__(self, job_func: Callable, *task_templates: IsTaskTemplate,
