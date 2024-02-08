@@ -6,7 +6,9 @@ from datetime import date, datetime
 from enum import Enum
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, constr, Extra, Field
+from pydantic import BaseModel, constr, Extra, Field, validator
+
+from omnipy.data.model import Model
 
 from . import (assay_schema,
                comment_schema,
@@ -20,6 +22,7 @@ from . import (assay_schema,
                publication_schema,
                sample_schema,
                source_schema)
+from .validators import date_to_iso_format
 
 
 class FieldType(Enum):
@@ -27,14 +30,19 @@ class FieldType(Enum):
 
 
 class Materials(BaseModel):
-    sources: Optional[List[source_schema.IsaSourceSchema]] = None
-    samples: Optional[List[sample_schema.IsaSampleSchema]] = None
-    otherMaterials: Optional[List[material_schema.IsaMaterialSchema]] = None
+    sources: Optional[List[source_schema.IsaSourceModel]] = None
+    samples: Optional[List[sample_schema.IsaSampleModel]] = None
+    otherMaterials: Optional[List[material_schema.IsaMaterialModel]] = None
+
+
+class MaterialsModel(Model[Materials]):
+    ...
 
 
 class IsaStudySchema(BaseModel):
     class Config:
         extra = Extra.forbid
+        use_enum_values = True
 
     field_id: Optional[str] = Field(None, alias='@id')
     field_context: Optional[str] = Field(None, alias='@context')
@@ -45,24 +53,33 @@ class IsaStudySchema(BaseModel):
     description: Optional[str] = None
     submissionDate: Optional[Union[datetime, date, constr(max_length=0)]] = None
     publicReleaseDate: Optional[Union[datetime, date, constr(max_length=0)]] = None
-    publications: Optional[List[publication_schema.IsaPublicationSchema]] = None
-    people: Optional[List[person_schema.IsaPersonSchema]] = None
+    publications: Optional[List[publication_schema.IsaPublicationModel]] = None
+    people: Optional[List[person_schema.IsaPersonModel]] = None
     studyDesignDescriptors: Optional[List[
-        ontology_annotation_schema.IsaOntologyReferenceSchema]] = None
-    protocols: Optional[List[protocol_schema.IsaProtocolSchema]] = None
+        ontology_annotation_schema.IsaOntologyReferenceModel]] = None
+    protocols: Optional[List[protocol_schema.IsaProtocolModel]] = None
     materials: Optional[Materials] = None
-    processSequence: Optional[List[process_schema.IsaProcessOrProtocolApplicationSchema]] = None
-    assays: Optional[List[assay_schema.IsaAssayJsonSchema]] = None
-    factors: Optional[List[factor_schema.IsaFactorSchema]] = None
+    processSequence: Optional[List[process_schema.IsaProcessOrProtocolApplicationModel]] = None
+    assays: Optional[List[assay_schema.IsaAssayJsonModel]] = None
+    factors: Optional[List[factor_schema.IsaFactorModel]] = None
     characteristicCategories: Optional[List[
-        material_attribute_schema.IsaMaterialAttributeSchema]] = Field(
+        material_attribute_schema.IsaMaterialAttributeModel]] = \
+        Field(
             None,
-            description=
-            'List of all the characteristics categories (or material attributes) defined in the study, used to avoid duplication of their declaration when each material_attribute_value is created. ',
-        )
-    unitCategories: Optional[List[ontology_annotation_schema.IsaOntologyReferenceSchema]] = Field(
-        None,
-        description=
-        'List of all the units defined in the study, used to avoid duplication of their declaration when each value is created. ',
-    )
-    comments: Optional[List[comment_schema.IsaCommentSchema]] = None
+            description='List of all the characteristics categories (or material attributes) '
+                        'defined in the study, used to avoid duplication of their declaration '
+                        'when each material_attribute_value is created. ')
+    unitCategories: Optional[List[ontology_annotation_schema.IsaOntologyReferenceModel]] = \
+        Field(
+            None,
+            description='List of all the units defined in the study, used to avoid duplication '
+                        'of their declaration when each value is created. ')
+    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+
+    _date_to_iso_format = validator(
+        'submissionDate', 'publicReleaseDate', allow_reuse=True)(
+            date_to_iso_format)
+
+
+class IsaStudyModel(Model[IsaStudySchema]):
+    ...

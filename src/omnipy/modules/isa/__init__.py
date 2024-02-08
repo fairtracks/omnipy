@@ -1,5 +1,6 @@
-from .datasets import IsaJsonDataset
-from .models import IsaJsonModel
+from .datasets import FlattenedIsaJsonDataset, IsaJsonDataset
+from .flows import flatten_isa_json
+from .models import FlattenedIsaJsonModel, IsaJsonModel
 from .models.assay_schema import IsaAssayJsonSchema
 from .models.comment_schema import IsaCommentSchema
 from .models.data_schema import IsaDataSchema
@@ -47,5 +48,8 @@ __all__ = [
     'IsaStudyGroupSchema',
     'IsaStudySchema',
     'IsaJsonDataset',
-    'IsaJsonModel'
+    'IsaJsonModel',
+    'FlattenedIsaJsonDataset',
+    'FlattenedIsaJsonModel',
+    'flatten_isa_json',
 ]

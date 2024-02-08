@@ -13,8 +13,12 @@ from omnipy.data.dataset import Dataset, ListOfParamModelDataset, ParamDataset
 from omnipy.data.model import ListOfParamModel, Model, ParamModel
 from omnipy.hub.runtime import runtime
 # from omnipy.util.helpers import recursive_module_import
-from omnipy.modules.general.tasks import import_directory, split_dataset
-from omnipy.modules.isa import IsaJsonDataset, IsaJsonModel
+from omnipy.modules.general.tasks import convert_dataset, import_directory, split_dataset
+from omnipy.modules.isa import (flatten_isa_json,
+                                FlattenedIsaJsonDataset,
+                                FlattenedIsaJsonModel,
+                                IsaJsonDataset,
+                                IsaJsonModel)
 from omnipy.modules.json.datasets import (JsonDataset,
                                           JsonDictDataset,
                                           JsonDictOfDictsDataset,
@@ -119,6 +123,8 @@ __all__ = [
     'Model',
     'ParamModel',
     'ListOfParamModel',
+    'FlattenedIsaJsonDataset',
+    'FlattenedIsaJsonModel',
     'IsaJsonModel',
     'IsaJsonDataset',
     'JsonCustomDictModel',
@@ -188,6 +194,8 @@ __all__ = [
     'TableWithColNamesModel',
     'import_directory',
     'split_dataset',
+    'convert_dataset',
+    'flatten_isa_json',
     'flatten_nested_json',
     'transpose_dicts_2_lists',
     'transpose_dict_of_dicts_2_list_of_dicts',

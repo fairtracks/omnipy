@@ -7,6 +7,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Extra, Field
 
+from omnipy.data.model import Model
+
 from . import comment_schema, factor_value_schema, material_attribute_value_schema, source_schema
 
 
@@ -17,13 +19,18 @@ class FieldType(Enum):
 class IsaSampleSchema(BaseModel):
     class Config:
         extra = Extra.forbid
+        use_enum_values = True
 
     field_id: Optional[str] = Field(None, alias='@id')
     field_context: Optional[str] = Field(None, alias='@context')
     field_type: Optional[FieldType] = Field(None, alias='@type')
     name: Optional[str] = None
     characteristics: Optional[List[
-        material_attribute_value_schema.IsaMaterialAttributeSchema]] = None
-    factorValues: Optional[List[factor_value_schema.IsaFactorValueSchema]] = None
-    derivesFrom: Optional[List[source_schema.IsaSourceSchema]] = None
-    comments: Optional[List[comment_schema.IsaCommentSchema]] = None
+        material_attribute_value_schema.IsaMaterialAttributeValueModel]] = None
+    factorValues: Optional[List[factor_value_schema.IsaFactorValueModel]] = None
+    derivesFrom: Optional[List[source_schema.IsaSourceModel]] = None
+    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+
+
+class IsaSampleModel(Model[IsaSampleSchema]):
+    ...

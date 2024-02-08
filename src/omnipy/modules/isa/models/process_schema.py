@@ -6,7 +6,9 @@ from datetime import date, datetime
 from enum import Enum
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, constr, Extra, Field
+from pydantic import BaseModel, constr, Extra, Field, validator
+
+from omnipy.data.model import Model
 
 from . import (comment_schema,
                data_schema,
@@ -15,6 +17,7 @@ from . import (comment_schema,
                protocol_schema,
                sample_schema,
                source_schema)
+from .validators import date_to_iso_format
 
 
 class FieldType(Enum):
@@ -24,30 +27,37 @@ class FieldType(Enum):
 class IsaProcessOrProtocolApplicationSchema(BaseModel):
     class Config:
         extra = Extra.forbid
+        use_enum_values = True
 
     field_id: Optional[str] = Field(None, alias='@id')
     field_context: Optional[str] = Field(None, alias='@context')
     field_type: Optional[FieldType] = Field(None, alias='@type')
     name: Optional[str] = None
-    executesProtocol: Optional[protocol_schema.IsaProtocolSchema] = None
+    executesProtocol: Optional[protocol_schema.IsaProtocolModel] = None
     parameterValues: Optional[List[
-        process_parameter_value_schema.IsaProcessParameterValueSchema]] = None
+        process_parameter_value_schema.IsaProcessParameterValueModel]] = None
     performer: Optional[str] = None
     date: Optional[Union[datetime, date, constr(max_length=0)]] = None
-    previousProcess: Optional['IsaProcessOrProtocolApplicationSchema'] = None
-    nextProcess: Optional['IsaProcessOrProtocolApplicationSchema'] = None
+    previousProcess: Optional['IsaProcessOrProtocolApplicationModel'] = None
+    nextProcess: Optional['IsaProcessOrProtocolApplicationModel'] = None
     inputs: Optional[List[Union[
-        source_schema.IsaSourceSchema,
-        sample_schema.IsaSampleSchema,
-        data_schema.IsaDataSchema,
-        material_schema.IsaMaterialSchema,
+        source_schema.IsaSourceModel,
+        sample_schema.IsaSampleModel,
+        data_schema.IsaDataModel,
+        material_schema.IsaMaterialModel,
     ]]] = None
     outputs: Optional[List[Union[
-        sample_schema.IsaSampleSchema,
-        data_schema.IsaDataSchema,
-        material_schema.IsaMaterialSchema,
+        sample_schema.IsaSampleModel,
+        data_schema.IsaDataModel,
+        material_schema.IsaMaterialModel,
     ]]] = None
-    comments: Optional[List[comment_schema.IsaCommentSchema]] = None
+    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+
+    _date_to_iso_format = validator('date', allow_reuse=True)(date_to_iso_format)
+
+
+class IsaProcessOrProtocolApplicationModel(Model[IsaProcessOrProtocolApplicationSchema]):
+    ...
 
 
 IsaProcessOrProtocolApplicationSchema.update_forward_refs()

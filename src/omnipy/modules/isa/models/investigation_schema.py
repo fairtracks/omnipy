@@ -6,13 +6,16 @@ from datetime import date, datetime
 from enum import Enum
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, constr, Extra, Field
+from pydantic import BaseModel, constr, Extra, Field, validator
+
+from omnipy.data.model import Model
 
 from . import (comment_schema,
                ontology_source_reference_schema,
                person_schema,
                publication_schema,
                study_schema)
+from .validators import date_to_iso_format
 
 
 class FieldType(Enum):
@@ -22,6 +25,7 @@ class FieldType(Enum):
 class IsaInvestigationSchema(BaseModel):
     class Config:
         extra = Extra.forbid
+        use_enum_values = True
 
     field_id: Optional[str] = Field(None, alias='@id')
     field_context: Optional[str] = Field(None, alias='@context')
@@ -33,8 +37,16 @@ class IsaInvestigationSchema(BaseModel):
     submissionDate: Optional[Union[datetime, date, constr(max_length=0)]] = None
     publicReleaseDate: Optional[Union[datetime, date, constr(max_length=0)]] = None
     ontologySourceReferences: Optional[List[
-        ontology_source_reference_schema.IsaOntologySourceReferenceSchema]] = None
-    publications: Optional[List[publication_schema.IsaPublicationSchema]] = None
-    people: Optional[List[person_schema.IsaPersonSchema]] = None
-    studies: Optional[List[study_schema.IsaStudySchema]] = None
-    comments: Optional[List[comment_schema.IsaCommentSchema]] = None
+        ontology_source_reference_schema.IsaOntologySourceReferenceModel]] = None
+    publications: Optional[List[publication_schema.IsaPublicationModel]] = None
+    people: Optional[List[person_schema.IsaPersonModel]] = None
+    studies: Optional[List[study_schema.IsaStudyModel]] = None
+    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+
+    _date_to_iso_format = validator(
+        'submissionDate', 'publicReleaseDate', allow_reuse=True)(
+            date_to_iso_format)
+
+
+class IsaInvestigationModel(Model[IsaInvestigationSchema]):
+    ...

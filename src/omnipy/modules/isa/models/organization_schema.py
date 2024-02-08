@@ -7,6 +7,8 @@ from typing import Optional
 
 from pydantic import BaseModel, Extra, Field
 
+from omnipy.data.model import Model
+
 
 class FieldType(Enum):
     Organization = 'Organization'
@@ -15,8 +17,13 @@ class FieldType(Enum):
 class IsaOrganizationSchema(BaseModel):
     class Config:
         extra = Extra.forbid
+        use_enum_values = True
 
     field_id: Optional[str] = Field(None, alias='@id')
     field_context: Optional[str] = Field(None, alias='@context')
     field_type: Optional[FieldType] = Field(None, alias='@type')
     name: Optional[str] = None
+
+
+class IsaOrganizationModel(Model[IsaOrganizationSchema]):
+    ...

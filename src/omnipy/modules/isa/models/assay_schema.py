@@ -7,6 +7,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Extra, Field
 
+from omnipy.data.model import Model
+
 from . import (comment_schema,
                data_schema,
                material_attribute_schema,
@@ -21,33 +23,42 @@ class FieldType(Enum):
 
 
 class Materials(BaseModel):
-    samples: Optional[List[sample_schema.IsaSampleSchema]] = None
-    otherMaterials: Optional[List[material_schema.IsaMaterialSchema]] = None
+    samples: Optional[List[sample_schema.IsaSampleModel]] = None
+    otherMaterials: Optional[List[material_schema.IsaMaterialModel]] = None
+
+
+class MaterialsModel(Model[Materials]):
+    ...
 
 
 class IsaAssayJsonSchema(BaseModel):
     class Config:
         extra = Extra.forbid
+        use_enum_values = True
 
     field_id: Optional[str] = Field(None, alias='@id')
     field_context: Optional[str] = Field(None, alias='@context')
     field_type: Optional[FieldType] = Field(None, alias='@type')
     filename: Optional[str] = None
-    measurementType: Optional[ontology_annotation_schema.IsaOntologyReferenceSchema] = (None)
-    technologyType: Optional[ontology_annotation_schema.IsaOntologyReferenceSchema] = (None)
+    measurementType: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = (None)
+    technologyType: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = (None)
     technologyPlatform: Optional[str] = None
-    dataFiles: Optional[List[data_schema.IsaDataSchema]] = None
-    materials: Optional[Materials] = None
-    characteristicCategories: Optional[List[
-        material_attribute_schema.IsaMaterialAttributeSchema]] = Field(
+    dataFiles: Optional[List[data_schema.IsaDataModel]] = None
+    materials: Optional[MaterialsModel] = None
+    characteristicCategories: Optional[List[material_attribute_schema.IsaMaterialAttributeModel]] =\
+        Field(
             None,
-            description=
-            'List of all the characteristics categories (or material attributes) defined in the study, used to avoid duplication of their declaration when each material_attribute_value is created. ',
-        )
-    unitCategories: Optional[List[ontology_annotation_schema.IsaOntologyReferenceSchema]] = Field(
-        None,
-        description=
-        'List of all the unitsdefined in the study, used to avoid duplication of their declaration when each value is created. ',
-    )
-    processSequence: Optional[List[process_schema.IsaProcessOrProtocolApplicationSchema]] = None
-    comments: Optional[List[comment_schema.IsaCommentSchema]] = None
+            description='List of all the characteristics categories (or material attributes) '
+            'defined in the study, used to avoid duplication of their declaration '
+            'when each material_attribute_value is created. ')
+    unitCategories: Optional[List[ontology_annotation_schema.IsaOntologyReferenceModel]] = \
+        Field(
+            None,
+            description='List of all the unitsdefined in the study, used to avoid duplication '
+                        'of their declaration when each value is created. ')
+    processSequence: Optional[List[process_schema.IsaProcessOrProtocolApplicationModel]] = None
+    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+
+
+class IsaAssayJsonModel(Model[IsaAssayJsonSchema]):
+    ...

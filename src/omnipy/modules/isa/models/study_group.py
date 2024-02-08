@@ -7,6 +7,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Extra, Field
 
+from omnipy.data.model import Model
+
 from . import comment_schema, factor_value_schema, sample_schema
 
 
@@ -17,12 +19,17 @@ class FieldType(Enum):
 class IsaStudyGroupSchema(BaseModel):
     class Config:
         extra = Extra.forbid
+        use_enum_values = True
 
     field_id: Optional[str] = Field(None, alias='@id')
     field_context: Optional[str] = Field(None, alias='@context')
     field_type: Optional[FieldType] = Field(None, alias='@type')
     name: Optional[str] = None
-    factor_levels: Optional[List[factor_value_schema.IsaFactorValueSchema]] = None
+    factor_levels: Optional[List[factor_value_schema.IsaFactorValueModel]] = None
     study_group_size: Optional[int] = None
-    members: Optional[List[sample_schema.IsaSampleSchema]] = None
-    comments: Optional[List[comment_schema.IsaCommentSchema]] = None
+    members: Optional[List[sample_schema.IsaSampleModel]] = None
+    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+
+
+class IsaStudyGroupModel(Model[IsaStudyGroupSchema]):
+    ...

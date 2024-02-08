@@ -1,5 +1,5 @@
 import os
-from typing import Callable, cast, Type
+from typing import Callable, cast, Type, TypeVar
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
@@ -51,3 +51,11 @@ def import_directory(directory: str,
                     print(f"{import_filename} -> Dataset['{dataset_name}']")
                     dataset[dataset_name] = open_file.read()
     return dataset
+
+
+DatasetT = TypeVar('DatasetT', bound=Dataset)
+
+
+@TaskTemplate
+def convert_dataset(dataset: Dataset, dataset_cls: type[DatasetT]) -> DatasetT:
+    return dataset_cls(dataset)

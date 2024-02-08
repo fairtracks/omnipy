@@ -7,6 +7,8 @@ from typing import List, Optional, Union
 
 from pydantic import BaseModel, Extra, Field
 
+from omnipy.data.model import Model
+
 from . import comment_schema
 
 
@@ -17,6 +19,7 @@ class FieldType(Enum):
 class IsaOntologyReferenceSchema(BaseModel):
     class Config:
         extra = Extra.forbid
+        use_enum_values = True
 
     field_id: Optional[str] = Field(None, alias='@id')
     field_context: Optional[str] = Field(None, alias='@context')
@@ -24,8 +27,12 @@ class IsaOntologyReferenceSchema(BaseModel):
     annotationValue: Optional[Union[str, float]] = None
     termSource: Optional[str] = Field(
         None,
-        description=
-        'The abbreviated ontology name. It should correspond to one of the sources as specified in the ontologySourceReference section of the Investigation.',
+        description='The abbreviated ontology name. It should correspond to one of the sources as '
+        'specified in the ontologySourceReference section of the Investigation.',
     )
     termAccession: Optional[str] = None
-    comments: Optional[List[comment_schema.IsaCommentSchema]] = None
+    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+
+
+class IsaOntologyReferenceModel(Model[IsaOntologyReferenceSchema]):
+    ...

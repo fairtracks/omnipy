@@ -7,6 +7,8 @@ from typing import List, Optional, Union
 
 from pydantic import BaseModel, Extra, Field
 
+from omnipy.data.model import Model
+
 from . import comment_schema, ontology_annotation_schema, protocol_parameter_schema
 
 
@@ -17,11 +19,16 @@ class FieldType(Enum):
 class IsaProcessParameterValueSchema(BaseModel):
     class Config:
         extra = Extra.forbid
+        use_enum_values = True
 
     field_id: Optional[str] = Field(None, alias='@id')
     field_context: Optional[str] = Field(None, alias='@context')
     field_type: Optional[FieldType] = Field(None, alias='@type')
-    category: Optional[protocol_parameter_schema.IsaProtocolParameterSchema] = None
-    value: Optional[Union[ontology_annotation_schema.IsaOntologyReferenceSchema, str, float]] = None
-    unit: Optional[ontology_annotation_schema.IsaOntologyReferenceSchema] = None
-    comments: Optional[List[comment_schema.IsaCommentSchema]] = None
+    category: Optional[protocol_parameter_schema.IsaProtocolParameterModel] = None
+    value: Optional[Union[ontology_annotation_schema.IsaOntologyReferenceModel, str, float]] = None
+    unit: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = None
+    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+
+
+class IsaProcessParameterValueModel(Model[IsaProcessParameterValueSchema]):
+    ...
