@@ -22,7 +22,6 @@ aiostream = "^0.4.5"
 inflection = "^0.5.1"
 pandas = "<2.2"
 prefect = "<2.14"
-pydantic = "^1.10.2"
 pytest-asyncio = "^0.20.2"
 pytest-cases = "^3.6.13"
 requests = "^2.25.1"
@@ -42,6 +41,7 @@ devtools = "^0.12.2"
 objsize = "^0.7.0"
 humanize = "^4.9.0"
 httpx = "^0.26.0"
+pydantic = {version = "<2", extras = ["email"]}
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"
@@ -55,7 +55,6 @@ pre-commit = "^2.15.0"
 pytest-mypy-plugins = "^3.0.0"
 devtools = "^0.12.2"
 ipython = "^8.18.1"
-pydantic = {version = "<2", extras = ["email"]}
 
 [tool.poetry.group.docs.dependencies]
 portray = {git = "https://github.com/HeinrichAD/portray.git"}
