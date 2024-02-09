@@ -55,6 +55,7 @@ pre-commit = "^2.15.0"
 pytest-mypy-plugins = "^3.0.0"
 devtools = "^0.12.2"
 ipython = "^8.18.1"
+pydantic = {version = "<2", extras = ["email"]}
 
 [tool.poetry.group.docs.dependencies]
 portray = {git = "https://github.com/HeinrichAD/portray.git"}
