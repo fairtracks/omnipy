@@ -17,7 +17,7 @@ from .protocols import IsModifyAllLinesCallable, IsModifyContentsCallable, IsMod
 
 @mypy_fix_task_template
 @TaskTemplate(iterate_over_data_files=True, return_dataset_cls=StrDataset)
-def decode_bytes(data: bytes, encoding: str | None = None) -> str:
+def decode_bytes(data: Model[bytes], encoding: str | None = None) -> str:
     if encoding is None:
         detector = UniversalDetector()
         for line in data.splitlines():
@@ -47,22 +47,22 @@ def decode_bytes(data: bytes, encoding: str | None = None) -> str:
 @mypy_fix_task_template
 @TaskTemplate(iterate_over_data_files=True)
 def modify_datafile_contents(
-    data_file: str,
+    data_file: Model[str],
     modify_contents_func: IsModifyContentsCallable,
     **kwargs: object,
 ) -> str:
-    return modify_contents_func(data_file, **kwargs)
+    return modify_contents_func(str(data_file), **kwargs)
 
 
 @mypy_fix_task_template
 @TaskTemplate(iterate_over_data_files=True)
 def modify_each_line(
-    data_file: str,
+    data_file: Model[str],
     modify_line_func: IsModifyEachLineCallable,
     **kwargs: object,
 ) -> str:
     output_data = StringIO()
-    for i, line in enumerate(StringIO(data_file)):
+    for i, line in enumerate(StringIO(str(data_file))):
         modified_line = modify_line_func(i, line, **kwargs)
         if modified_line is not None:
             output_data.write(modified_line)
@@ -72,11 +72,11 @@ def modify_each_line(
 @mypy_fix_task_template
 @TaskTemplate(iterate_over_data_files=True)
 def modify_all_lines(
-    data_file: str,
+    data_file: Model[str],
     modify_all_lines_func: IsModifyAllLinesCallable,
     **kwargs: object,
 ) -> str:
-    all_lines = [line.strip() for line in StringIO(data_file)]
+    all_lines = [line.strip() for line in StringIO(str(data_file))]
     modified_lines = modify_all_lines_func(all_lines, **kwargs)
     return os.linesep.join(modified_lines)
 
