@@ -1,6 +1,10 @@
-from omnipy import Dataset
+from typing import Generic, TypeVar
 
-from .models import TableWithColNamesModel
+from pydantic import BaseModel
+
+from omnipy.data.dataset import Dataset
+
+from .models import TableOfPydanticRecordsModel, TableWithColNamesModel
 
 
 class TableWithColNamesDataset(Dataset[TableWithColNamesModel]):
@@ -10,3 +14,11 @@ class TableWithColNamesDataset(Dataset[TableWithColNamesModel]):
         for data_file in self.values():
             col_names.update(dict.fromkeys(data_file.col_names))
         return tuple(col_names.keys())
+
+
+_PydanticModelT = TypeVar('_PydanticModelT', bound=BaseModel)
+
+
+class TableOfPydanticRecordsDataset(Dataset[TableOfPydanticRecordsModel[_PydanticModelT]],
+                                    Generic[_PydanticModelT]):
+    ...

@@ -99,9 +99,11 @@ from omnipy.modules.raw.tasks import (concat_all,
                                       modify_datafile_contents,
                                       modify_each_line,
                                       union_all)
-from omnipy.modules.tables.datasets import TableWithColNamesDataset
-from omnipy.modules.tables.models import TableWithColNamesModel
-from omnipy.modules.tables.tasks import remove_columns
+from omnipy.modules.tables.datasets import TableOfPydanticRecordsDataset, TableWithColNamesDataset
+from omnipy.modules.tables.models import TableOfPydanticRecordsModel, TableWithColNamesModel
+from omnipy.modules.tables.tasks import (remove_columns,
+                                         rename_col_names,
+                                         transpose_columns_with_data_files)
 
 # from omnipy.util.helpers import recursive_module_import
 
@@ -190,7 +192,9 @@ __all__ = [
     'SplitLinesToColumnsModel',
     'JoinColumnsToLinesModel',
     'StrModel',
+    'TableOfPydanticRecordsDataset',
     'TableWithColNamesDataset',
+    'TableOfPydanticRecordsModel',
     'TableWithColNamesModel',
     'import_directory',
     'split_dataset',
@@ -214,6 +218,8 @@ __all__ = [
     'concat_all',
     'union_all',
     'remove_columns',
+    'rename_col_names',
+    'transpose_columns_with_data_files'
 ]
 
 #

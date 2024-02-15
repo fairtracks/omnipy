@@ -1,3 +1,7 @@
+from typing import Generic, TypeVar
+
+from pydantic import BaseModel
+
 from omnipy.data.model import Model
 
 from ..json.models import (JsonCustomListModel,
@@ -44,3 +48,10 @@ class TableWithColNamesModel(Model[JsonListOfListsOfScalarsModel | JsonListOfDic
         for row in self:
             col_names.update(dict.fromkeys(row.keys()))
         return tuple(col_names.keys())
+
+
+_PydanticModelT = TypeVar('_PydanticModelT', bound=BaseModel)
+
+
+class TableOfPydanticRecordsModel(Model[list[_PydanticModelT]], Generic[_PydanticModelT]):
+    ...
