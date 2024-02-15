@@ -15,8 +15,8 @@ from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset, Pa
 @mypy_fix_task_template
 @TaskTemplate()
 def convert_dataset_list_of_dicts_to_pandas(
-        dataset: Dataset[Model[list[dict[str,
-                                         NotIterableExceptStrOrBytesModel]]]]) -> PandasDataset:
+        dataset: Dataset[Model[list[dict[str, NotIterableExceptStrOrBytesModel]]]]) \
+        -> PandasDataset:
     pandas_dataset = PandasDataset()
     pandas_dataset.from_data(dataset.to_data())
     return pandas_dataset

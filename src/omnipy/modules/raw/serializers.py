@@ -5,8 +5,6 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import TarFileSerializer
 
-# from typing_inspect import get_generic_bases, get_generic_type, get_origin, get_parameters
-
 
 class RawStrDatasetToTarFileSerializer(TarFileSerializer):
     """"""
