@@ -162,7 +162,7 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
         if self.in_flow_context:
             return self_as_job_template.run(*args, **kwargs)
 
-        raise TypeError(f"'{self.__class__.__name__}' object is not callable")
+        raise TypeError(f"'{self.__class__.__name__}' object is not callable. Try .run() method")
 
     def _call_job(self, *args: object, **kwargs: object) -> object:
         pass
