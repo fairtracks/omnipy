@@ -604,20 +604,20 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
         return data_obj
 
 
-KwargValT = TypeVar('KwargValT', bound=object)
-ParamModelT = TypeVar('ParamModelT', bound=ParamModel)
-ListOfParamModelT = TypeVar('ListOfParamModelT', bound=ListOfParamModel)
+_KwargValT = TypeVar('_KwargValT', bound=object)
+_ParamModelT = TypeVar('_ParamModelT', bound=ParamModel)
+_ListOfParamModelT = TypeVar('_ListOfParamModelT', bound=ListOfParamModel)
 
 ParamModelSuperKwargsType: TypeAlias = \
-    dict[str, dict[str, ParamModelT | DataWithParams[ParamModelT, KwargValT]]]
+    dict[str, dict[str, _ParamModelT | DataWithParams[_ParamModelT, _KwargValT]]]
 
 ListOfParamModelSuperKwargsType: TypeAlias = \
-    dict[str, dict[str, list[ListOfParamModelT | DataWithParams[ListOfParamModelT, KwargValT]]]]
+    dict[str, dict[str, list[_ListOfParamModelT | DataWithParams[_ListOfParamModelT, _KwargValT]]]]
 
 
-class ParamDataset(Dataset[ParamModelT | DataWithParams[ParamModelT, KwargValT]],
-                   Generic[ParamModelT, KwargValT]):
-    def _init(self, super_kwargs: ParamModelSuperKwargsType, **kwargs: KwargValT) -> None:
+class ParamDataset(Dataset[_ParamModelT | DataWithParams[_ParamModelT, _KwargValT]],
+                   Generic[_ParamModelT, _KwargValT]):
+    def _init(self, super_kwargs: ParamModelSuperKwargsType, **kwargs: _KwargValT) -> None:
         if kwargs and DATA_KEY in super_kwargs:
             super_kwargs[DATA_KEY] = {
                 key: DataWithParams(data=val, params=kwargs)
@@ -627,7 +627,7 @@ class ParamDataset(Dataset[ParamModelT | DataWithParams[ParamModelT, KwargValT]]
     def from_data(self,
                   data: dict[str, Any] | Iterator[tuple[str, Any]],
                   update: bool = True,
-                  **kwargs: KwargValT) -> None:
+                  **kwargs: _KwargValT) -> None:
         if kwargs:
 
             def callback_func(model: ModelT, contents: Any):
@@ -640,7 +640,7 @@ class ParamDataset(Dataset[ParamModelT | DataWithParams[ParamModelT, KwargValT]]
     def from_json(self,
                   data: Mapping[str, str] | Iterable[tuple[str, str]],
                   update: bool = True,
-                  **kwargs: KwargValT) -> None:
+                  **kwargs: _KwargValT) -> None:
         if kwargs:
 
             def callback_func(model: ModelT, contents: Any):
@@ -651,9 +651,9 @@ class ParamDataset(Dataset[ParamModelT | DataWithParams[ParamModelT, KwargValT]]
             super().from_json(data, update=update)
 
 
-class ListOfParamModelDataset(ParamDataset[ListOfParamModelT, KwargValT],
-                              Generic[ListOfParamModelT, KwargValT]):
-    def _init(self, super_kwargs: ListOfParamModelSuperKwargsType, **kwargs: KwargValT) -> None:
+class ListOfParamModelDataset(ParamDataset[_ListOfParamModelT, _KwargValT],
+                              Generic[_ListOfParamModelT, _KwargValT]):
+    def _init(self, super_kwargs: ListOfParamModelSuperKwargsType, **kwargs: _KwargValT) -> None:
         if kwargs and DATA_KEY in super_kwargs:
             super_kwargs[DATA_KEY] = {
                 key: [DataWithParams(data=_, params=kwargs) for _ in val]

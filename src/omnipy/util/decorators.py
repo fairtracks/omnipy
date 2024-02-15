@@ -1,16 +1,16 @@
 from contextlib import AbstractContextManager
 from typing import Any, Callable, ParamSpec, TypeVar
 
-DecoratedP = ParamSpec('DecoratedP')
-DecoratedR = TypeVar('DecoratedR')
-CallbackP = ParamSpec('CallbackP')
+_DecoratedP = ParamSpec('_DecoratedP')
+_DecoratedR = TypeVar('_DecoratedR')
+_CallbackP = ParamSpec('_CallbackP')
 
 
-def add_callback_after_call(func: Callable[DecoratedP, DecoratedR],
-                            callback_func: Callable[CallbackP, None],
-                            *cb_args: CallbackP.args,
+def add_callback_after_call(func: Callable[_DecoratedP, _DecoratedR],
+                            callback_func: Callable[_CallbackP, None],
+                            *cb_args: _CallbackP.args,
                             with_context: AbstractContextManager | None = None,
-                            **cb_kwargs: CallbackP.kwargs) -> Callable[DecoratedP, DecoratedR]:
+                            **cb_kwargs: _CallbackP.kwargs) -> Callable[_DecoratedP, _DecoratedR]:
     class ValidateAfterCall(AbstractContextManager):
         def __enter__(self):
             ...
@@ -22,7 +22,7 @@ def add_callback_after_call(func: Callable[DecoratedP, DecoratedR],
                 callback_func(*cb_args, **cb_kwargs)
             return ret
 
-    def _inner(*args: DecoratedP.args, **kwargs: DecoratedP.kwargs) -> DecoratedR:
+    def _inner(*args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs) -> _DecoratedR:
         if with_context:
             with with_context:
                 with ValidateAfterCall():

@@ -4,10 +4,10 @@ from pydantic.fields import Undefined, UndefinedType
 
 from omnipy.api.protocols.private.log import CanLog
 
-ModelT = TypeVar('ModelT')
+_ModelT = TypeVar('_ModelT')
 
 
-class IsDataset(Protocol[ModelT]):
+class IsDataset(Protocol[_ModelT]):
     """
     Dict-based container of data files that follow a specific Model
     """
@@ -21,7 +21,7 @@ class IsDataset(Protocol[ModelT]):
         ...
 
     @classmethod
-    def get_model_class(cls) -> Type[ModelT]:
+    def get_model_class(cls) -> Type[_ModelT]:
         """
         Returns the concrete Model class used for all data files in the dataset, e.g.:
         `Model[list[int]]`
@@ -49,18 +49,18 @@ class IsDataset(Protocol[ModelT]):
     def to_json_schema(cls, pretty=True) -> str | dict[str, str]:
         ...
 
-    def as_multi_model_dataset(self) -> 'MultiModelDataset[ModelT]':
+    def as_multi_model_dataset(self) -> 'MultiModelDataset[_ModelT]':
         ...
 
 
-class MultiModelDataset(Protocol[ModelT]):
+class MultiModelDataset(Protocol[_ModelT]):
     """
         Variant of Dataset that allows custom models to be set on individual data files
     """
-    def set_model(self, data_file: str, model: ModelT) -> None:
+    def set_model(self, data_file: str, model: _ModelT) -> None:
         ...
 
-    def get_model(self, data_file: str) -> ModelT:
+    def get_model(self, data_file: str) -> _ModelT:
         ...
 
 

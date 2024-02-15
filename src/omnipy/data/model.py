@@ -12,6 +12,7 @@ from typing import (Annotated,
                     Generic,
                     get_args,
                     get_origin,
+                    Hashable,
                     Optional,
                     SupportsIndex,
                     Type,
@@ -46,10 +47,10 @@ from omnipy.util.helpers import (all_equals,
                                  RestorableContents)
 from omnipy.util.tabulate import tabulate
 
-_KeyT = TypeVar('_KeyT')
+_KeyT = TypeVar('_KeyT', bound=Hashable)
 _ValT = TypeVar('_ValT')
 _IdxT = TypeVar('_IdxT', bound=SupportsIndex)
-RootT = TypeVar('RootT', covariant=True, bound=object)
+_RootT = TypeVar('_RootT', covariant=True, bound=object)
 
 ROOT_KEY = '__root__'
 
@@ -132,7 +133,7 @@ class MyModelMetaclass(ModelMetaclass):
         return super().__instancecheck__(instance)
 
 
-class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
+class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
     """
     A data model containing a value parsed according to the model.
 
@@ -168,7 +169,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     See also docs of the Dataset class for more usage examples.
     """
 
-    __root__: RootT | None
+    __root__: _RootT | None
 
     class Config:
         arbitrary_types_allowed = True
@@ -179,7 +180,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         # json_dumps = orjson_dumps
 
     @classmethod
-    def _get_bound_if_typevar(cls, model: Type[RootT]) -> RootT:
+    def _get_bound_if_typevar(cls, model: Type[_RootT]) -> _RootT:
         if isinstance(model, TypeVar):
             if model.__bound__ is None:  # noqa
                 raise TypeError('The TypeVar "{}" needs to be bound to a '.format(model.__name__)
@@ -189,7 +190,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         return model
 
     @classmethod
-    def _get_default_value_from_model(cls, model: Type[RootT]) -> RootT:  # noqa: C901
+    def _get_default_value_from_model(cls, model: Type[_RootT]) -> _RootT:  # noqa: C901
         model = cls._get_bound_if_typevar(model)
         origin_type = get_origin(model)
         args = get_args(model)
@@ -219,10 +220,10 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         return origin_type()
 
     @classmethod
-    def _populate_root_field(cls, model: Type[RootT]) -> None:
+    def _populate_root_field(cls, model: Type[_RootT]) -> None:
         default_val = cls._get_default_value_from_model(model)
 
-        def get_default_val() -> RootT:
+        def get_default_val() -> _RootT:
             return default_val
 
         if ROOT_KEY in cls.__config__.fields:
@@ -251,7 +252,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         del cls.__fields__[ROOT_KEY]
         del cls.__annotations__[ROOT_KEY]
 
-    def __class_getitem__(cls, model: Type[RootT] | TypeVar) -> 'Model[Type[RootT] | TypeVar]':
+    def __class_getitem__(cls, model: Type[_RootT] | TypeVar) -> 'Model[Type[_RootT] | TypeVar]':
         # TODO: change model type to params: Type[Any], tuple[Type[Any], ...]]
         #       as in GenericModel
 
@@ -311,20 +312,20 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         __root__: Any | UndefinedType = Undefined,
         **kwargs: Any,
     ) -> None:
-        super_kwargs: dict[str, RootT] = {}
+        super_kwargs: dict[str, _RootT] = {}
         num_root_vals = 0
 
         if value is not Undefined:
-            super_kwargs[ROOT_KEY] = cast(RootT, value)
+            super_kwargs[ROOT_KEY] = cast(_RootT, value)
             num_root_vals += 1
 
         if __root__ is not Undefined:
-            super_kwargs[ROOT_KEY] = cast(RootT, __root__)
+            super_kwargs[ROOT_KEY] = cast(_RootT, __root__)
             num_root_vals += 1
 
         if kwargs:
             if num_root_vals == 0 or not self.is_param_model():
-                super_kwargs[ROOT_KEY] = cast(RootT, kwargs)
+                super_kwargs[ROOT_KEY] = cast(_RootT, kwargs)
                 kwargs = {}
                 num_root_vals += 1
 
@@ -399,11 +400,11 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
     def validate_contents(self) -> None:
         self._validate_and_set_contents(self.contents)
 
-    def _validate_and_set_contents(self, new_contents: RootT) -> None:
+    def _validate_and_set_contents(self, new_contents: _RootT) -> None:
         self.contents = self._validate_contents_from_value(new_contents)
         self._take_snapshot_of_validated_contents()
 
-    def _validate_contents_from_value(self, value: RootT) -> RootT:
+    def _validate_contents_from_value(self, value: _RootT) -> _RootT:
         if is_model_instance(value):
             value = value.to_data()
         elif is_pure_pydantic_model(value):
@@ -428,7 +429,7 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         return data
 
     @root_validator
-    def _parse_root_object(cls, root_obj: dict[str, RootT]) -> Any:  # noqa
+    def _parse_root_object(cls, root_obj: dict[str, _RootT]) -> Any:  # noqa
         assert ROOT_KEY in root_obj
         value = root_obj[ROOT_KEY]
         value = cls._parse_none_value_with_root_type_if_model(value)
@@ -484,11 +485,11 @@ class Model(GenericModel, Generic[RootT], metaclass=MyModelMetaclass):
         return value
 
     @property
-    def contents(self) -> RootT:
+    def contents(self) -> _RootT:
         return self.__dict__.get(ROOT_KEY)
 
     @contents.setter
-    def contents(self, value: RootT) -> None:
+    def contents(self, value: _RootT) -> None:
         super().__setattr__(ROOT_KEY, value)
 
     def dict(self, *args, **kwargs) -> dict[str, dict[Any, Any]]:
@@ -805,19 +806,19 @@ KwargValT = TypeVar('KwargValT', bound=object)
 ParamModelT = TypeVar('ParamModelT', bound='ParamModel')
 
 
-class DataWithParams(GenericModel, Generic[RootT, KwargValT]):
-    data: RootT
+class DataWithParams(GenericModel, Generic[_RootT, KwargValT]):
+    data: _RootT
     params: dict[str, KwargValT]
 
 
-class ParamModel(Model[RootT | DataWithParams[RootT, KwargValT]], Generic[RootT, KwargValT]):
+class ParamModel(Model[_RootT | DataWithParams[_RootT, KwargValT]], Generic[_RootT, KwargValT]):
     def __class_getitem__(
-            cls, model: tuple[Type[RootT], Type[KwargValT]]) -> 'ParamModel[RootT, KwargValT]':
+            cls, model: tuple[Type[_RootT], Type[KwargValT]]) -> 'ParamModel[_RootT, KwargValT]':
         created_model = super().__class_getitem__(model)
         outer_type = created_model._get_root_type(outer=True, with_args=True)
         default_val = cls._get_default_value_from_model(outer_type)
 
-        def get_default_val() -> RootT | DataWithParams[RootT, KwargValT]:
+        def get_default_val() -> _RootT | DataWithParams[_RootT, KwargValT]:
             return default_val
 
         root_field = created_model._get_root_field()
@@ -825,14 +826,14 @@ class ParamModel(Model[RootT | DataWithParams[RootT, KwargValT]], Generic[RootT,
 
         return created_model
 
-    def _init(self, super_kwargs: dict[str, RootT], **kwargs: KwargValT) -> None:
+    def _init(self, super_kwargs: dict[str, _RootT], **kwargs: KwargValT) -> None:
         if kwargs and ROOT_KEY in super_kwargs:
             super_kwargs[ROOT_KEY] = cast(
-                RootT, DataWithParams(data=super_kwargs[ROOT_KEY], params=kwargs))
+                _RootT, DataWithParams(data=super_kwargs[ROOT_KEY], params=kwargs))
 
     @root_validator
     def _parse_root_object(cls, root_obj: dict[str,
-                                               RootT | DataWithParams[RootT, KwargValT]]) -> Any:
+                                               _RootT | DataWithParams[_RootT, KwargValT]]) -> Any:
         assert ROOT_KEY in root_obj
         root_val = root_obj[ROOT_KEY]
 
@@ -848,7 +849,7 @@ class ParamModel(Model[RootT | DataWithParams[RootT, KwargValT]], Generic[RootT,
         return {ROOT_KEY: cls._parse_data(data, **params)}
 
     @classmethod
-    def _parse_data(cls, data: RootT, **params: KwargValT) -> RootT:
+    def _parse_data(cls, data: _RootT, **params: KwargValT) -> _RootT:
         return data
 
     def from_data(self, value: object, **kwargs: KwargValT) -> None:
@@ -861,7 +862,7 @@ class ParamModel(Model[RootT | DataWithParams[RootT, KwargValT]], Generic[RootT,
         if kwargs:
             self._validate_and_set_contents_with_params(self.contents, **kwargs)
 
-    def _validate_and_set_contents_with_params(self, contents: RootT, **kwargs: KwargValT):
+    def _validate_and_set_contents_with_params(self, contents: _RootT, **kwargs: KwargValT):
         self._validate_and_set_contents(DataWithParams(data=contents, params=kwargs))
 
 

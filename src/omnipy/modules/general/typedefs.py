@@ -1,8 +1,8 @@
 from collections import UserDict
 from types import MappingProxyType
-from typing import Generic, Sequence, TypeVar
+from typing import Generic, Hashable, Sequence, TypeVar
 
-_KeyT = TypeVar('_KeyT')
+_KeyT = TypeVar('_KeyT', bound=Hashable)
 _ValT = TypeVar('_ValT')
 
 

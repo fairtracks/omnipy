@@ -53,9 +53,9 @@ def import_directory(directory: str,
     return dataset
 
 
-DatasetT = TypeVar('DatasetT', bound=Dataset)
+_DatasetT = TypeVar('_DatasetT', bound=Dataset)
 
 
 @TaskTemplate
-def convert_dataset(dataset: Dataset, dataset_cls: type[DatasetT]) -> DatasetT:
+def convert_dataset(dataset: Dataset, dataset_cls: type[_DatasetT]) -> _DatasetT:
     return dataset_cls(dataset)

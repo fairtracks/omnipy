@@ -29,10 +29,10 @@ from .models import (JsonDictModel,
 # TODO: call omnipy modules something else than modules, to distinguish from Python modules.
 #       Perhaps plugins?
 #
-JsonModelT = TypeVar('JsonModelT', bound=Model)
+_JsonModelT = TypeVar('_JsonModelT', bound=Model)
 
 
-class JsonBaseDataset(Dataset[JsonModelT], Generic[JsonModelT]):
+class JsonBaseDataset(Dataset[_JsonModelT], Generic[_JsonModelT]):
     """"""
     ...
 

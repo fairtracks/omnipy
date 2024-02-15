@@ -25,9 +25,9 @@ from typing_inspect import get_generic_bases, is_generic_type
 
 from omnipy.api.typedefs import LocaleType
 
-KeyT = TypeVar('KeyT', bound=Hashable)
+_KeyT = TypeVar('_KeyT', bound=Hashable)
 
-Dictable = Mapping[KeyT, Any] | Iterable[tuple[KeyT, Any]]
+Dictable = Mapping[_KeyT, Any] | Iterable[tuple[_KeyT, Any]]
 
 
 def as_dictable(obj: object) -> Dictable | None:
@@ -41,7 +41,8 @@ def as_dictable(obj: object) -> Dictable | None:
         return None
 
 
-def create_merged_dict(dictable_1: Dictable[KeyT], dictable_2: Dictable[KeyT]) -> dict[KeyT, Any]:
+def create_merged_dict(dictable_1: Dictable[_KeyT],
+                       dictable_2: Dictable[_KeyT]) -> dict[_KeyT, Any]:
     merged_dict = dictable_1 if isinstance(dictable_1, dict) else dict(dictable_1)
     dict_2 = dictable_2 if isinstance(dictable_2, dict) else dict(dictable_2)
     merged_dict |= dict_2
