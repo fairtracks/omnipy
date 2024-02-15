@@ -8,9 +8,9 @@ from omnipy.modules.json.datasets import (JsonDictDataset,
                                           JsonDictOfListsOfDictsDataset,
                                           JsonListDataset,
                                           JsonListOfDictsDataset)
-from omnipy.modules.json.tasks import (transpose_dict_of_dicts_2_list_of_dicts,
-                                       transpose_dicts_2_lists,
+from omnipy.modules.json.flows import (transpose_dict_of_dicts_2_list_of_dicts,
                                        transpose_dicts_of_lists_of_dicts_2_lists_of_dicts)
+from omnipy.modules.json.tasks import transpose_dicts_2_lists
 
 
 def test_transpose_empty_dicts_2_nothing(runtime: Annotated[IsRuntime, pytest.fixture]):

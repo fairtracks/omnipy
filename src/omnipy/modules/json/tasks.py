@@ -1,16 +1,13 @@
 from collections import defaultdict
 from typing import cast
 
-from omnipy.compute.flow import FuncFlowTemplate
 from omnipy.compute.task import TaskTemplate
-from omnipy.compute.typing import mypy_fix_func_flow_template, mypy_fix_task_template
+from omnipy.compute.typing import mypy_fix_task_template
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
 from .datasets import (JsonDataset,
                        JsonDictDataset,
-                       JsonDictOfDictsDataset,
-                       JsonDictOfListsOfDictsDataset,
                        JsonListDataset,
                        JsonListOfDictsDataset,
                        JsonListOfDictsOfScalarsDataset)
@@ -55,28 +52,6 @@ def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> J
                 else:
                     output_dataset[key].append(val_item)
 
-    return output_dataset
-
-
-@mypy_fix_func_flow_template
-@FuncFlowTemplate()
-def transpose_dict_of_dicts_2_list_of_dicts(
-    dataset: JsonDictOfDictsDataset,
-    id_key: str = ID_KEY,
-) -> JsonListOfDictsDataset:
-    output_dataset = JsonListOfDictsDataset()
-    output_dataset |= transpose_dicts_2_lists(dataset, id_key=id_key)
-    return output_dataset
-
-
-@mypy_fix_func_flow_template
-@FuncFlowTemplate()
-def transpose_dicts_of_lists_of_dicts_2_lists_of_dicts(
-    dataset: JsonDictOfListsOfDictsDataset,
-    id_key: str = ID_KEY,
-) -> JsonListOfDictsDataset:
-    output_dataset = JsonListOfDictsDataset()
-    output_dataset |= transpose_dicts_2_lists(dataset, id_key=id_key)
     return output_dataset
 
 
