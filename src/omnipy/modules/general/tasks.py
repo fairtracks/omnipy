@@ -56,6 +56,7 @@ def import_directory(directory: str,
 _DatasetT = TypeVar('_DatasetT', bound=Dataset)
 
 
+@mypy_fix_task_template
 @TaskTemplate
 def convert_dataset(dataset: Dataset, dataset_cls: type[_DatasetT]) -> _DatasetT:
     return dataset_cls(dataset)
