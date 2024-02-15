@@ -3,7 +3,7 @@ from typing import Callable, cast, Type, TypeVar
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
-from omnipy.data.dataset import Dataset, ModelT
+from omnipy.data.dataset import Dataset, ModelT, ParamDataset
 from omnipy.data.model import Model
 
 
@@ -58,5 +58,5 @@ _DatasetT = TypeVar('_DatasetT', bound=Dataset)
 
 @mypy_fix_task_template
 @TaskTemplate
-def convert_dataset(dataset: Dataset, dataset_cls: type[_DatasetT]) -> _DatasetT:
-    return dataset_cls(dataset)
+def convert_dataset(dataset: Dataset, dataset_cls: type[_DatasetT], **kwargs: object) -> _DatasetT:
+    return dataset_cls(dataset, **kwargs)
