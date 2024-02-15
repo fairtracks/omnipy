@@ -1,9 +1,9 @@
 from pydantic import BaseModel, Extra
 
 from omnipy.data.model import Model
-from omnipy.modules.isa.models.investigation_schema import (IsaInvestigationModel,
-                                                            IsaInvestigationSchema)
-from omnipy.modules.json.models import JsonListOfDictsOfScalarsModel
+
+from ...json.models import JsonListOfDictsOfScalarsModel
+from ..models.investigation_schema import IsaInvestigationModel, IsaInvestigationSchema
 
 ISA_JSON_MODEL_TOP_LEVEL_KEY: str = 'investigation'
 

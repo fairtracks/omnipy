@@ -10,8 +10,9 @@ from chardet import UniversalDetector
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
+from omnipy.data.dataset import Dataset, Model
 
-from ... import Dataset, Model, StrDataset
+from .datasets import StrDataset
 from .protocols import IsModifyAllLinesCallable, IsModifyContentsCallable, IsModifyEachLineCallable
 
 
@@ -81,18 +82,18 @@ def modify_all_lines(
     return os.linesep.join(modified_lines)
 
 
-ModelT = TypeVar('ModelT', bound=Model)
+_ModelT = TypeVar('_ModelT', bound=Model)
 
 
 @mypy_fix_task_template
 @TaskTemplate()
-def concat_all(dataset: Dataset[ModelT]) -> ModelT:
+def concat_all(dataset: Dataset[_ModelT]) -> _ModelT:
     return reduce(add, (val for val in dataset.values()))
 
 
 @mypy_fix_task_template
 @TaskTemplate()
-def union_all(dataset: Dataset[ModelT]) -> ModelT:
+def union_all(dataset: Dataset[_ModelT]) -> _ModelT:
     all_vals = tuple(val for val in dataset.values())
     assert len(all_vals) > 0
     first_val = deepcopy(all_vals[0])

@@ -1,6 +1,6 @@
 import pandas as pd
 
-from omnipy import PandasModel
+from .models import PandasModel
 
 
 def extract_common_colnames(df_1: PandasModel | pd.DataFrame, df_2: PandasModel | pd.DataFrame):

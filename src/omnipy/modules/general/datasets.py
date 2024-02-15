@@ -1,11 +1,9 @@
 from typing import Generic, TypeVar
 
 from omnipy.data.dataset import Dataset
-from omnipy.modules.general.models import (NestedFrozenDictsModel,
-                                           NestedFrozenDictsOrTuplesModel,
-                                           NestedFrozenTuplesModel)
 
 _KeyT = TypeVar('_KeyT')
+from .models import NestedFrozenDictsModel, NestedFrozenDictsOrTuplesModel, NestedFrozenTuplesModel
 _ScT = TypeVar('_ScT')
 
 

@@ -1,12 +1,13 @@
 from omnipy.data.dataset import Dataset, ListOfParamModelDataset, ParamDataset
-from omnipy.modules.raw.models import (BytesModel,
-                                       JoinColumnsToLinesModel,
-                                       JoinItemsModel,
-                                       JoinLinesModel,
-                                       SplitLinesToColumnsModel,
-                                       SplitToItemsModel,
-                                       SplitToLinesModel,
-                                       StrModel)
+
+from .models import (BytesModel,
+                     JoinColumnsToLinesModel,
+                     JoinItemsModel,
+                     JoinLinesModel,
+                     SplitLinesToColumnsModel,
+                     SplitToItemsModel,
+                     SplitToLinesModel,
+                     StrModel)
 
 
 class BytesDataset(ParamDataset[BytesModel, str]):

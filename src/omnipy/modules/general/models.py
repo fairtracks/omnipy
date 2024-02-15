@@ -1,8 +1,9 @@
 from typing import Generic, Hashable, TypeAlias, TypeVar
 
 from omnipy.data.model import Model
-from omnipy.modules.general.typedefs import FrozenDict
 from omnipy.util.helpers import is_iterable
+
+from .typedefs import FrozenDict
 
 
 class NotIterableExceptStrOrBytesModel(Model[object | None]):

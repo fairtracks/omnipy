@@ -1,10 +1,10 @@
 from io import BytesIO
 from typing import Any, IO, Type
 
+from omnipy.api.protocols.public.data import IsDataset
 from omnipy.data.serializer import TarFileSerializer
 
 from . import pd
-from ...api.protocols.public.data import IsDataset
 from .models import PandasDataset
 
 

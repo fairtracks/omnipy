@@ -1,8 +1,8 @@
 from typing import Generic, TypeVar
 
 from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 
-from ...data.model import Model
 from .models import (JsonDictModel,
                      JsonDictOfDictsModel,
                      JsonDictOfDictsOfScalarsModel,
