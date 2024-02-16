@@ -242,8 +242,10 @@ def recursive_module_import(module: ModuleType, imported_modules: list[ModuleTyp
 
 def get_calling_module_name() -> str | None:
     stack = inspect.stack()
-    if len(stack) >= 3:
-        grandparent_frame = inspect.stack()[2][0]
+    start_frame_index = 2
+    while len(stack) > start_frame_index:
+        grandparent_frame = stack[start_frame_index][0]
         module = inspect.getmodule(grandparent_frame)
         if module is not None:
             return module.__name__
+        start_frame_index += 1

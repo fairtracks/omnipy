@@ -23,8 +23,6 @@ from omnipy.util.helpers import (ensure_non_str_byte_iterable,
                                  RestorableContents,
                                  transfer_generic_args_to_cls)
 
-from .helpers import other_module_call_get_calling_module_name
-
 T = TypeVar('T')
 U = TypeVar('U')
 
@@ -409,5 +407,10 @@ def test_get_calling_module_name() -> None:
     def local_call_get_calling_module_name() -> str:
         return get_calling_module_name()
 
+    from .helpers.other_module import (calling_module_name_when_importing_other_module,
+                                       other_module_call_get_calling_module_name)
+
     assert local_call_get_calling_module_name() == 'tests.util.test_helpers'
     assert other_module_call_get_calling_module_name() == 'tests.util.test_helpers'
+    assert calling_module_name_when_importing_other_module == 'tests.util.test_helpers'
+
