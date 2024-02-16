@@ -8,7 +8,8 @@ import pytest
 from typing_inspect import get_generic_type
 
 from omnipy import Dataset, Model
-from omnipy.util.helpers import (ensure_non_str_byte_iterable,
+from omnipy.util.helpers import (called_from_omnipy_tests,
+                                 ensure_non_str_byte_iterable,
                                  ensure_plain_type,
                                  get_calling_module_name,
                                  get_first_item,
@@ -414,3 +415,7 @@ def test_get_calling_module_name() -> None:
     assert other_module_call_get_calling_module_name() == 'tests.util.test_helpers'
     assert calling_module_name_when_importing_other_module == 'tests.util.test_helpers'
 
+
+def test_called_from_omnipy_tests() -> None:
+    # Negative test is left as an exercise to the reader
+    assert called_from_omnipy_tests()

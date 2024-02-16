@@ -249,3 +249,16 @@ def get_calling_module_name() -> str | None:
         if module is not None:
             return module.__name__
         start_frame_index += 1
+
+
+def called_from_omnipy_tests() -> bool:
+    stack = inspect.stack()
+    for index in range(len(stack)):
+        frame = stack[index][0]
+        module = inspect.getmodule(frame)
+        if module is not None \
+                and module.__name__.startswith('tests') \
+                and module.__file__ is not None \
+                and 'omnipy/tests' in module.__file__:
+            return True
+    return False
