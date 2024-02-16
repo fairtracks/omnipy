@@ -3,7 +3,7 @@ from typing import Callable, cast, Type, TypeVar
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
-from omnipy.data.dataset import Dataset, ModelT, ParamDataset
+from omnipy.data.dataset import Dataset, ModelT
 from omnipy.data.model import Model
 
 
