@@ -81,7 +81,10 @@ def case_dag_flow_number_plus_five_template(plus_one_template) -> IsDagFlowTempl
     iterative_number_plus_one_template = plus_one_template.refine(result_key='number')
 
     @mypy_fix_dag_flow_template
-    @DagFlowTemplate(*((iterative_number_plus_one_template,) * 5))
+    @DagFlowTemplate(
+        *((iterative_number_plus_one_template,) * 5),
+        dag_flow_result_selector_key=None,
+    )
     def plus_five(number: int) -> int:  # type: ignore
         ...
 
@@ -89,22 +92,22 @@ def case_dag_flow_number_plus_five_template(plus_one_template) -> IsDagFlowTempl
 
 
 @pc.case(
-    id='dag_flow-plus_five(x)',
+    id='dag_flow-plus_five(number=dataset)',
     tags=['sync', 'function', 'dag_flow', 'with_kw_params'],
 )
 @pc.parametrize_with_cases('plus_one_template', cases='.', has_tag='task')
-def case_dag_flow_x_plus_five_template(plus_one_template) -> IsDagFlowTemplate:
+def case_dag_flow_dataset_plus_five_template(plus_one_template) -> IsDagFlowTemplate:
     # TODO: Expand on this example with param_key_map and result_key, given these
     #       are reimplemented as mixins
 
-    iterative_x_plus_one_template = plus_one_template.refine(
-        param_key_map=dict(number='x'),
-        result_key='x',
-    )
+    iterative_x_plus_one_template = plus_one_template.refine(param_key_map=dict(number='dataset'))
 
     @mypy_fix_dag_flow_template
-    @DagFlowTemplate(*((iterative_x_plus_one_template,) * 5))
-    def plus_five(x: int) -> int:  # type: ignore
+    @DagFlowTemplate(
+        *((iterative_x_plus_one_template,) * 5),
+        dag_flow_result_selector_key=None,
+    )
+    def plus_five(dataset: int) -> int:  # type: ignore
         ...
 
     return plus_five

@@ -1,6 +1,8 @@
 from contextlib import AbstractContextManager, contextmanager
 from copy import deepcopy
 
+from pydantic.fields import Undefined, UndefinedType
+
 from omnipy.util.helpers import all_equals
 
 # TODO: Consider refactoring as many as possible of the context managers (AbstractContextManager
@@ -24,9 +26,6 @@ class LastErrorHolder(AbstractContextManager):
             raise exc from self._last_error
         else:
             raise exc
-
-
-Undefined = object()
 
 
 # TODO: Perhaps the two use cases of this are so dissimilar that the class should be split into two

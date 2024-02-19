@@ -170,14 +170,14 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
             ('Not allowed with "data" as kwargs key. Not sure how you managed this? Are you trying '
              'to break Dataset init on purpose?')
 
-        if value != Undefined:
-            assert data == Undefined, \
+        if value is not Undefined:
+            assert data is Undefined, \
                 'Not allowed to combine positional and "data" keyword argument'
             assert len(kwargs) == 0 or self.get_model_class().is_param_model(), \
                 'Not allowed to combine positional and keyword arguments'
             super_kwargs[DATA_KEY] = value
 
-        if data != Undefined:
+        if data is not Undefined:
             assert len(kwargs) == 0, \
                 "Not allowed to combine 'data' with other keyword arguments"
             super_kwargs[DATA_KEY] = data

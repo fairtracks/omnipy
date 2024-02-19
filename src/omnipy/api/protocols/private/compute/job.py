@@ -2,6 +2,8 @@ from datetime import datetime
 from types import MappingProxyType
 from typing import Any, Callable, Mapping, Protocol, Type
 
+from pydantic.fields import UndefinedType
+
 from omnipy.api.enums import (OutputStorageProtocolOptions,
                               PersistOutputsOptions,
                               RestoreOutputsOptions)
@@ -134,7 +136,19 @@ class IsFuncArgJobBase(IsJob, Protocol):
         ...
 
     @property
-    def result_key(self) -> str | None:
+    def result_key(self) -> str | UndefinedType | None:
+        ...
+
+    @property
+    def has_result_key(self) -> bool:
+        ...
+
+    @property
+    def default_result_key_for_dag_jobs(self) -> str | UndefinedType | None:
+        ...
+
+    @property
+    def dag_flow_result_selector_key(self) -> str | None:
         ...
 
     @property
@@ -177,7 +191,9 @@ class IsFuncArgJobTemplateCallable(Protocol[
         return_dataset_cls: type[IsDataset] | None = None,
         persist_outputs: PersistOutputsOptions | None = None,
         restore_outputs: RestoreOutputsOptions | None = None,
-        result_key: str | None = None,
+        result_key: str | None | UndefinedType = Undefined,
+        default_result_key_for_dag_jobs: str | None | UndefinedType = Undefined,
+        dag_flow_result_selector_key: str | None = None,
         fixed_params: Mapping[str, object] | None = None,
         param_key_map: Mapping[str, str] | None = None,
         **kwargs: object,
@@ -195,7 +211,9 @@ class IsFuncArgJobTemplate(IsJobTemplate, IsFuncArgJobBase, Protocol[JobTemplate
                return_dataset_cls: type[IsDataset] | None = None,
                persist_outputs: PersistOutputsOptions | None = None,
                restore_outputs: RestoreOutputsOptions | None = None,
-               result_key: str | None = None,
+               result_key: str | None | UndefinedType = Undefined,
+               default_result_key_for_dag_jobs: str | None | UndefinedType = Undefined,
+               dag_flow_result_selector_key: str | None = None,
                fixed_params: Mapping[str, object] | None = None,
                param_key_map: Mapping[str, str] | None = None,
                **kwargs: object) -> JobTemplateT:
@@ -228,7 +246,9 @@ class IsTaskTemplateArgsJobTemplateCallable(Protocol[TaskTemplateContraT, JobTem
         return_dataset_cls: type[IsDataset] | None = None,
         persist_outputs: PersistOutputsOptions | None = None,
         restore_outputs: RestoreOutputsOptions | None = None,
-        result_key: str | None = None,
+        result_key: str | None | UndefinedType = Undefined,
+        default_result_key_for_dag_jobs: str | None | UndefinedType = Undefined,
+        dag_flow_result_selector_key: str | None = None,
         fixed_params: Mapping[str, object] | None = None,
         param_key_map: Mapping[str, str] | None = None,
         **kwargs: object,
@@ -248,7 +268,9 @@ class IsTaskTemplateArgsJobTemplate(IsFuncArgJobTemplate[JobTemplateT, JobT],
                return_dataset_cls: type[IsDataset] | None = None,
                fixed_params: Mapping[str, object] | None = None,
                param_key_map: Mapping[str, str] | None = None,
-               result_key: str | None = None,
+               result_key: str | None | UndefinedType = Undefined,
+               default_result_key_for_dag_jobs: str | None | UndefinedType = Undefined,
+               dag_flow_result_selector_key: str | None = None,
                persist_outputs: PersistOutputsOptions | None = None,
                restore_outputs: RestoreOutputsOptions | None = None,
                **kwargs: object) -> JobTemplateT:
