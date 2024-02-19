@@ -131,17 +131,17 @@ class SerializerFuncJobBaseMixin:
                     raise
 
         super_as_job_base = cast(IsJobBase, super())
-        results = super_as_job_base._call_job(*args, **kwargs)
+        result = super_as_job_base._call_job(*args, **kwargs)
 
         if self.will_persist_outputs is PersistOpts.ENABLED:
-            if isinstance(results, Dataset):
-                self._serialize_and_persist_outputs(results)
+            if isinstance(result, Dataset):
+                self._serialize_and_persist_outputs(result)
             else:
                 self._log(
                     f'Results of {self_as_name_job_base_mixin.unique_name} is not a Dataset and '
                     f'cannot be automatically serialized and persisted!')
 
-        return results
+        return result
 
     def _serialize_and_persist_outputs(self, results: Dataset):
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)

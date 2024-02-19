@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import inspect
 import sys
 from types import AsyncGeneratorType, GeneratorType
-from typing import Any, Awaitable, Callable, cast
+from typing import Any, Awaitable, Callable, cast, Mapping
 
 from omnipy.api.enums import RunState
 from omnipy.api.protocols.private.compute.job import IsJob
@@ -152,12 +152,12 @@ class DagFlowRunnerEngine(JobRunnerEngine):
     @staticmethod
     def default_dag_flow_run_decorator(dag_flow: IsDagFlow) -> Any:  # noqa: C901
         def _inner_run_dag_flow(*args: object, **kwargs: object):
-            results = {}
-            result = None
+            job_args: dict[str, object] = {}
+            results: dict[str, object] = {}
             with dag_flow.flow_context:
                 for i, job in enumerate(dag_flow.task_templates):
                     if i == 0:
-                        results = dag_flow.get_bound_args(*args, **kwargs).arguments
+                        job_args = dag_flow.get_bound_args(*args, **kwargs).arguments
 
                     param_keys = set(inspect.signature(job).parameters.keys())
 
@@ -174,14 +174,16 @@ class DagFlowRunnerEngine(JobRunnerEngine):
                             if key in param_keys:
                                 param_keys.remove(key)
 
-                    params = {key: val for key, val in results.items() if key in param_keys}
-                    result = job(**params)
+                    params = {key: val for key, val in job_args.items() if key in param_keys}
+                    job_result = job(**params)
 
-                    if isinstance(result, dict) and len(result) > 0:
-                        results.update(result)
+                    if isinstance(job_result, Mapping) and len(job_result) > 0:
+                        results.update(job_result)
                     else:
-                        results[job.name] = result
-            return result
+                        results[job.name] = job_result
+
+                    job_args.update(results)
+            return results
 
         return _inner_run_dag_flow
 

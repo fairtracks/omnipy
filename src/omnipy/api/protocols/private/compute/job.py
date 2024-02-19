@@ -20,6 +20,7 @@ from omnipy.api.typedefs import (GeneralDecorator,
                                  TaskTemplateContraT,
                                  TaskTemplateCovT,
                                  TaskTemplateT)
+from omnipy.util.pydantic import Undefined, UndefinedType
 
 CallP = ParamSpec('CallP')
 RetCovT = TypeVar('RetCovT', covariant=True)
@@ -162,7 +163,19 @@ class IsFuncArgJobBase(Protocol):
         ...
 
     @property
-    def result_key(self) -> str | None:
+    def result_key(self) -> str | UndefinedType | None:
+        ...
+
+    @property
+    def has_result_key(self) -> bool:
+        ...
+
+    @property
+    def default_result_key_for_dag_jobs(self) -> str | UndefinedType | None:
+        ...
+
+    @property
+    def dag_flow_result_selector_key(self) -> str | None:
         ...
 
     @property
@@ -206,7 +219,9 @@ class HasFuncArgJobTemplateInit(Protocol[JobTemplateT, CallP, RetContraT]):
         auto_async: bool = True,
         persist_outputs: PersistOutputsOptions | None = None,
         restore_outputs: RestoreOutputsOptions | None = None,
-        result_key: str | None = None,
+        result_key: str | None | UndefinedType = Undefined,
+        default_result_key_for_dag_jobs: str | None | UndefinedType = Undefined,
+        dag_flow_result_selector_key: str | None = None,
         fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
         param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
         **kwargs: object,
@@ -228,7 +243,9 @@ class IsFuncArgJobTemplate(IsJobTemplate[JobTemplateT, JobT, CallP, RetCovT],
                auto_async: bool = True,
                persist_outputs: PersistOutputsOptions | None = None,
                restore_outputs: RestoreOutputsOptions | None = None,
-               result_key: str | None = None,
+               result_key: str | None | UndefinedType = Undefined,
+               default_result_key_for_dag_jobs: str | None | UndefinedType = Undefined,
+               dag_flow_result_selector_key: str | None = None,
                fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
                param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
                **kwargs: object) -> JobTemplateT:
@@ -271,7 +288,9 @@ class HasTaskTemplateArgsJobTemplateInit(Protocol[JobTemplateT,
         auto_async: bool = True,
         persist_outputs: PersistOutputsOptions | None = None,
         restore_outputs: RestoreOutputsOptions | None = None,
-        result_key: str | None = None,
+        result_key: str | None | UndefinedType = Undefined,
+        default_result_key_for_dag_jobs: str | None | UndefinedType = Undefined,
+        dag_flow_result_selector_key: str | None = None,
         fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
         param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
         **kwargs: object,
@@ -293,7 +312,9 @@ class IsTaskTemplateArgsJobTemplate(IsFuncArgJobTemplate[JobTemplateT, JobT, Cal
                auto_async: bool = True,
                fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
                param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
-               result_key: str | None = None,
+               result_key: str | None | UndefinedType = Undefined,
+               default_result_key_for_dag_jobs: str | None | UndefinedType = Undefined,
+               dag_flow_result_selector_key: str | None = None,
                persist_outputs: PersistOutputsOptions | None = None,
                restore_outputs: RestoreOutputsOptions | None = None,
                **kwargs: object) -> JobTemplateT:

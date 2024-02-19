@@ -77,7 +77,7 @@ def test_dag_flow_template_as_decorator(
     assert isinstance(result, dict)
     assert len(result) == 1
     key, val = result.popitem()
-    assert key in ('number', 'x')
+    assert key in ('number', 'dataset')
     assert val == 8
 
 
