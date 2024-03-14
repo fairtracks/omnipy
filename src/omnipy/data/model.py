@@ -55,7 +55,9 @@ _RootT = TypeVar('_RootT', covariant=True, bound=object)
 ROOT_KEY = '__root__'
 
 # TODO: Refactor Dataset and Model using mixins (including below functions)
-INTERACTIVE_MODULES = ['__main__', 'IPython.lib.pretty', 'IPython.core.interactiveshell']
+INTERACTIVE_MODULES = [
+    '__main__', 'IPython.lib.pretty', 'IPython.core.interactiveshell', 'pydevd_asyncio_utils'
+]
 
 
 def _cleanup_name_qualname_and_module(cls, created_model_or_dataset, model, orig_model):
@@ -733,6 +735,11 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         return [(None, self.contents)]
 
     def _table_repr(self) -> str:
+        from omnipy.data.dataset import Dataset
+
+        if issubclass(self.outer_type(), Dataset):
+            return self.contents._table_repr()
+
         tabulate.PRESERVE_WHITESPACE = True  # Does not seem to work together with 'maxcolwidths'
 
         terminal_size = _get_terminal_size()
