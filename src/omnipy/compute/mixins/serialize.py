@@ -198,16 +198,19 @@ class SerializerFuncJobBaseMixin:
     @staticmethod
     def _all_job_output_file_paths_in_reverse_order_for_last_run(
             persist_data_dir_path: Path, job_name: str) -> Generator[Path, None, None]:
-        sorted_date_dirs = list(sorted(os.listdir(persist_data_dir_path)))
-        if len(sorted_date_dirs) > 0:
-            last_dir = sorted_date_dirs[-1]
-            last_dir_path = persist_data_dir_path.joinpath(last_dir)
-            for job_output_name in reversed(sorted(os.listdir(last_dir_path))):
-                name_part_of_filename = job_output_name[3:-7]
-                if name_part_of_filename == job_name:
-                    yield last_dir_path.joinpath(job_output_name)
-        else:
-            raise StopIteration
+
+        sorted_date_dirs = iter(sorted(os.listdir(persist_data_dir_path)))
+
+        try:
+            last_dir = next(sorted_date_dirs)
+        except StopIteration:
+            raise
+
+        last_dir_path = persist_data_dir_path / last_dir
+        for job_output_name in reversed(sorted(os.listdir(last_dir_path))):
+            name_part_of_filename = job_output_name[3:-7]
+            if name_part_of_filename == job_name:
+                yield last_dir_path / job_output_name
 
     # TODO: Further refactor _deserialize_and_restore_outputs
     def _deserialize_and_restore_outputs(self) -> Dataset:
