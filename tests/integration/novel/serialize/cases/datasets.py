@@ -6,6 +6,8 @@ from omnipy.data.model import Model
 from omnipy.modules.json.datasets import JsonDataset
 from omnipy.modules.pandas.models import PandasDataset
 
+from .models import PydanticModel, TwoLevelPydanticModel
+
 pandas_dataset = PandasDataset()
 pandas_dataset.from_data({
     'pandas_person':
@@ -79,3 +81,17 @@ str_unicode_dataset['str_unicode_b'] = b'\xef\xbb\xbf3, 5, 6, 3 -> ba\n2, 5, 6, 
 python_dataset = Dataset[Model[object]]()
 python_dataset['python_a'] = [{'a': 1, 'b': [2, 3, 4], 'c': {'yes': True, 'no': False}}]
 python_dataset['python_b'] = lambda x: x + 1
+
+pydantic_dataset = Dataset[Model[PydanticModel]]()
+pydantic_dataset['pydantic_a'] = dict(number=3, string='three')
+pydantic_dataset['pydantic_b'] = dict(number=5, string='five')
+
+two_level_pydantic_dataset = Dataset[Model[TwoLevelPydanticModel]]()
+two_level_pydantic_dataset['two_level_pydantic_a'] = dict(
+    a=dict(number=3, string='three'),
+    b=dict(number=4, string='four'),
+)
+two_level_pydantic_dataset['two_level_pydantic_b'] = dict(
+    a=dict(number=4, string='four'),
+    b=dict(number=5, string='five'),
+)

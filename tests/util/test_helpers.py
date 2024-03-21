@@ -15,6 +15,7 @@ from omnipy.util.helpers import (called_from_omnipy_tests,
                                  get_first_item,
                                  has_items,
                                  is_iterable,
+                                 is_non_omnipy_pydantic_model,
                                  is_non_str_byte_iterable,
                                  is_optional,
                                  is_pure_pydantic_model,
@@ -290,7 +291,7 @@ def test_is_strict_subclass() -> None:
     assert is_strict_subclass(Child, (Mother, Child)) is False
 
 
-def test_is_pure_pydantic_model() -> None:
+def test_is_pydantic_model() -> None:
     class PydanticModel(BaseModel):
         ...
 
@@ -308,14 +309,43 @@ def test_is_pure_pydantic_model() -> None:
     class PydanticModelSubclass(PydanticModel):
         ...
 
+    class OmnipyModel(Model[int]):
+        ...
+
+    class OmnipyModelSubclass(Model[int]):
+        ...
+
+    class MultiInheritOmnipyAndPydanticModel(Model[int], BaseModel):
+        ...
+
+    class MultiInheritOmnipyAndGenericPydanticModel(Model[int], GenericModel, Generic[T]):
+        ...
+
     assert is_pure_pydantic_model(PydanticModel())
     assert not is_pure_pydantic_model(BaseModel())
     assert not is_pure_pydantic_model(GenericPydanticModel())
     assert not is_pure_pydantic_model(MultiInheritModel())
     assert not is_pure_pydantic_model(PydanticModelSubclass())
+    assert not is_pure_pydantic_model(OmnipyModel())
+    assert not is_pure_pydantic_model(OmnipyModelSubclass())
+    assert not is_pure_pydantic_model(MultiInheritOmnipyAndPydanticModel())
+    assert not is_pure_pydantic_model(MultiInheritOmnipyAndGenericPydanticModel())
     assert not is_pure_pydantic_model(Model[PydanticModel]())
     assert not is_pure_pydantic_model(Dataset[Model[PydanticModel]]())
     assert not is_pure_pydantic_model('model')
+
+    assert is_non_omnipy_pydantic_model(PydanticModel())
+    assert not is_non_omnipy_pydantic_model(BaseModel())
+    assert is_non_omnipy_pydantic_model(GenericPydanticModel())
+    assert is_non_omnipy_pydantic_model(MultiInheritModel())
+    assert is_non_omnipy_pydantic_model(PydanticModelSubclass())
+    assert not is_non_omnipy_pydantic_model(OmnipyModel())
+    assert not is_non_omnipy_pydantic_model(OmnipyModelSubclass())
+    assert not is_non_omnipy_pydantic_model(MultiInheritOmnipyAndPydanticModel())
+    assert not is_non_omnipy_pydantic_model(MultiInheritOmnipyAndGenericPydanticModel())
+    assert not is_non_omnipy_pydantic_model(Model[PydanticModel]())
+    assert not is_non_omnipy_pydantic_model(Dataset[Model[PydanticModel]]())
+    assert not is_non_omnipy_pydantic_model('model')
 
 
 def test_remove_annotated_optional_if_present() -> None:

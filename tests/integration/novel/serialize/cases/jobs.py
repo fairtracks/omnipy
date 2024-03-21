@@ -10,9 +10,11 @@ from .functions import (csv_func,
                         json_table_as_str_func,
                         json_table_func,
                         pandas_func,
+                        pydantic_func,
                         python_func,
                         str_func,
-                        str_unicode_func)
+                        str_unicode_func,
+                        two_level_pydantic_func)
 
 
 @pc.case(tags=['task'])
@@ -113,3 +115,23 @@ def fail_case_python_task_tmpl() -> TaskTemplate:
 @pc.case(tags=['flow'])
 def fail_case_python_flow_tmpl() -> LinearFlowTemplate:
     return LinearFlowTemplate(fail_case_python_task_tmpl())(python_func)
+
+
+@pc.case(tags=['task'])
+def case_pydantic_task_tmpl() -> TaskTemplate:
+    return TaskTemplate()(pydantic_func)
+
+
+@pc.case(tags=['flow'])
+def case_pydantic_flow_tmpl() -> LinearFlowTemplate:
+    return LinearFlowTemplate(case_pydantic_task_tmpl())(pydantic_func)
+
+
+@pc.case(tags=['task'])
+def case_two_level_pydantic_task_tmpl() -> TaskTemplate:
+    return TaskTemplate()(two_level_pydantic_func)
+
+
+@pc.case(tags=['flow'])
+def case_two_level_pydantic_flow_tmpl() -> LinearFlowTemplate:
+    return LinearFlowTemplate(case_two_level_pydantic_task_tmpl())(two_level_pydantic_func)
