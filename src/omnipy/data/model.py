@@ -38,6 +38,7 @@ from omnipy.util.helpers import (all_equals,
                                  get_calling_module_name,
                                  get_first_item,
                                  has_items,
+                                 is_non_omnipy_pydantic_model,
                                  is_non_str_byte_iterable,
                                  is_optional,
                                  is_pure_pydantic_model,
@@ -409,7 +410,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
     def _validate_contents_from_value(self, value: _RootT) -> _RootT:
         if is_model_instance(value):
             value = value.to_data()
-        elif is_pure_pydantic_model(value):
+        elif is_non_omnipy_pydantic_model(value):
             value = value.dict(by_alias=True)
         values, fields_set, validation_error = validate_model(self.__class__, {ROOT_KEY: value})
         if validation_error:
@@ -592,7 +593,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
                 contents_prop = getattr(self.__class__, attr)
                 contents_prop.__set__(self, value)
             else:
-                if self._is_pure_pydantic_model():
+                if self._is_non_omnipy_pydantic_model():
                     self._special_method(
                         '__setattr__',
                         MethodInfo(state_changing=True, maybe_returns_same_type=False),
@@ -686,7 +687,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
 
     def __getattr__(self, attr: str) -> Any:
         contents_attr = self._getattr_from_contents_obj(attr)
-        if _is_interactive_mode() and not self._is_pure_pydantic_model():
+        if _is_interactive_mode() and not self._is_non_omnipy_pydantic_model():
             contents_holder = AttribHolder(self, 'contents', copy_attr=True)
 
             contents_cls_attr = self._getattr_from_contents_cls(attr)
@@ -698,6 +699,9 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
 
     def _is_pure_pydantic_model(self):
         return is_pure_pydantic_model(self._get_real_contents())
+
+    def _is_non_omnipy_pydantic_model(self):
+        return is_non_omnipy_pydantic_model(self._get_real_contents())
 
     def _getattr_from_contents_obj(self, attr):
         return getattr(self._get_real_contents(), attr)

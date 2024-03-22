@@ -14,6 +14,7 @@ from typing import (Annotated,
                     Union)
 
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
+from pydantic.generics import GenericModel
 import pytest
 
 from omnipy.data.model import Model
@@ -1478,6 +1479,46 @@ def test_mimic_operations_as_union_of_scalars():
     assert (model**2).contents == 100  # power
 
     assert float(model) == 10  # float(), int(), etc always converts
+
+
+def test_mimic_operations_on_pydantic_models():
+    T = TypeVar('T')
+
+    class MyPydanticModel(BaseModel):
+        a: int = 0
+
+    class MyPydanticModelSubCls(MyPydanticModel):
+        b: str = ''
+
+    class MyGenericPydanticModel(GenericModel, Generic[T]):
+        a: T | None = None
+
+    class MyGenericPydanticModelSubCls(MyGenericPydanticModel[int]):
+        b: str = ''
+
+    model = Model[MyPydanticModel]()
+    assert model.a == 0
+    model.a = 2
+    assert model.a == 2
+
+    model = Model[MyPydanticModelSubCls]()
+    assert model.a == 0
+    assert model.b == ''
+    model.b = 'something'
+    assert model.b == 'something'
+
+    model = Model[MyGenericPydanticModel[str]]()
+    assert model.a is None
+    model.a = 'something'
+    assert model.a == 'something'
+
+    model = Model[MyGenericPydanticModelSubCls]()
+    assert model.a == None
+    model.a = 2
+    assert model.a == 2
+    assert model.b == ''
+    model.b = 'something'
+    assert model.b == 'something'
 
 
 # TODO: Add support in Model for mimicking the setting and deletion of properties

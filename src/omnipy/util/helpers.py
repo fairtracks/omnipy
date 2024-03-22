@@ -20,6 +20,7 @@ from typing import (Annotated,
 from isort import place_module
 from isort.sections import STDLIB
 from pydantic import BaseModel, ValidationError
+from pydantic.generics import GenericModel
 from pydantic.typing import display_as_type
 from typing_inspect import get_generic_bases, is_generic_type
 
@@ -154,6 +155,17 @@ def is_strict_subclass(
 
 def is_pure_pydantic_model(obj: object):
     return type(obj).__bases__ == (BaseModel,)
+
+
+def is_non_omnipy_pydantic_model(obj: object):
+    from omnipy.data.dataset import Dataset
+    from omnipy.data.model import Model
+
+    mro = type(obj).__mro__
+    return mro[0] != BaseModel \
+        and (BaseModel in mro or GenericModel in mro) \
+        and Model not in mro \
+        and Dataset not in mro
 
 
 class IsDataclass(Protocol):
