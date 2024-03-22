@@ -11,9 +11,12 @@ from .datasets import (csv_dataset,
                        json_table_as_str_dataset,
                        json_table_dataset,
                        pandas_dataset,
+                       pydantic_dataset,
                        python_dataset,
                        str_dataset,
-                       str_unicode_dataset)
+                       str_unicode_dataset,
+                       two_level_pydantic_dataset)
+from .models import PydanticModel, TwoLevelPydanticModel
 
 
 def pandas_func() -> PandasDataset:
@@ -54,3 +57,11 @@ def str_unicode_func() -> StrDataset:
 
 def python_func() -> Dataset[Model[object]]:
     return python_dataset
+
+
+def pydantic_func() -> Dataset[Model[PydanticModel]]:
+    return pydantic_dataset
+
+
+def two_level_pydantic_func() -> Dataset[Model[TwoLevelPydanticModel]]:
+    return two_level_pydantic_dataset

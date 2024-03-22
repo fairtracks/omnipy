@@ -36,14 +36,14 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer):
         def json_decode_func(file_stream: IO[bytes]) -> str:
             return file_stream.read().decode('utf8')
 
-        def json_dictify_object(data_file: str, obj_val: str) -> dict[str, str]:
-            return {f'{data_file}': f'{obj_val}'}
+        def python_dictify_object(data_file: str, obj_val: object) -> dict:
+            return {data_file: obj_val}
 
         cls.create_dataset_from_tarfile(
             json_dataset,
             tarfile_bytes,
             data_decode_func=json_decode_func,
-            dictify_object_func=json_dictify_object,
+            dictify_object_func=python_dictify_object,
             import_method='from_json',
             any_file_suffix=any_file_suffix,
         )

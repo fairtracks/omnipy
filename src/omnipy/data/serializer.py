@@ -69,8 +69,32 @@ class TarFileSerializer(Serializer, ABC):
                 if not any_file_suffix:
                     assert filename.endswith(f'.{cls.get_output_file_suffix()}')
                 data_file_name = os.path.basename('.'.join(filename.split('.')[:-1]))
-                getattr(dataset, import_method)(
-                    dictify_object_func(data_file_name, data_decode_func(data_file)))
+                getattr(dataset, import_method)({data_file_name: data_decode_func(data_file)})
+
+
+class DatasetToTarFileSerializer(TarFileSerializer):
+    def __init__(self, registry: 'SerializerRegistry'):
+        self._registry = registry
+
+    @classmethod
+    def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
+        ...
+
+    @classmethod
+    def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+        ...
+
+    @classmethod
+    def get_output_file_suffix(cls) -> str:
+        return 'num'
+
+    @classmethod
+    def serialize(cls, number_dataset: IsDataset) -> bytes | memoryview:
+        ...
+
+    @classmethod
+    def deserialize(cls, tarfile_bytes: bytes, any_file_suffix=False) -> IsDataset:
+        ...
 
 
 class SerializerRegistry:
