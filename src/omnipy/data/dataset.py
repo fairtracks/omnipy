@@ -137,7 +137,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
                             + 'omnipy Dataset models must be a specialization of the omnipy '
                             'Model class.')
 
-        if cls == Dataset and not is_optional(model):
+        if cls == Dataset and not is_optional(model):  # TODO: Handle MultiModelDataset??
             model = Annotated[Optional[model], 'Fake Optional from Dataset']
 
         created_dataset = super().__class_getitem__(model)
