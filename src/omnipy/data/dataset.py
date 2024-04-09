@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 from typing import (Annotated,
                     Any,
                     Callable,
+                    cast,
                     Generic,
                     get_args,
                     get_origin,
@@ -21,7 +22,7 @@ import humanize
 import objsize
 # from orjson import orjson
 from pydantic import Field, PrivateAttr, root_validator, ValidationError
-from pydantic.fields import Undefined, UndefinedType
+from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.utils import lenient_isinstance, lenient_issubclass
 
@@ -220,13 +221,17 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         ...
 
     @classmethod
+    def _get_data_field(cls) -> ModelField:
+        return cast(ModelField, cls.__fields__.get(DATA_KEY))
+
+    @classmethod
     def get_model_class(cls) -> Type[Model]:
         """
         Returns the concrete Model class used for all data files in the dataset, e.g.:
         `Model[list[int]]`
         :return: The concrete Model class used for all data files in the dataset
         """
-        model_type = cls.__fields__.get(DATA_KEY).type_
+        model_type = cls._get_data_field().type_
         return cls._origmodel_if_annotated_optional(model_type)
 
     @classmethod
