@@ -57,7 +57,11 @@ ROOT_KEY = '__root__'
 
 # TODO: Refactor Dataset and Model using mixins (including below functions)
 INTERACTIVE_MODULES = [
-    '__main__', 'IPython.lib.pretty', 'IPython.core.interactiveshell', 'pydevd_asyncio_utils'
+    '__main__',
+    'IPython.lib.pretty',
+    'IPython.core.interactiveshell',
+    '_pydevd_bundle.pydevd_asyncio_utils',
+    '_pydevd_bundle.pydevd_exec2',
 ]
 
 
