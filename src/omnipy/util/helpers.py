@@ -3,6 +3,7 @@ from copy import copy, deepcopy
 import inspect
 from inspect import getmodule, isclass
 import locale as pkg_locale
+from pathlib import Path
 from types import GenericAlias, ModuleType, UnionType
 from typing import (Annotated,
                     Any,
@@ -274,3 +275,9 @@ def called_from_omnipy_tests() -> bool:
                 and 'omnipy/tests' in module.__file__:
             return True
     return False
+
+
+def ensure_path_obj(dir_path: Path | str) -> Path:
+    if isinstance(dir_path, str):
+        dir_path = Path(dir_path)
+    return dir_path

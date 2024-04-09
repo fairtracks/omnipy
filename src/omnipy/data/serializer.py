@@ -1,14 +1,25 @@
 from abc import ABC, abstractmethod
+import ast
 from io import BytesIO
 import os
+from pathlib import Path
 import tarfile
 from tarfile import TarInfo
-from typing import Any, Callable, IO, Type
+from typing import Any, BinaryIO, Callable, Generic, IO, Type, TypeVar
 
 from pydantic import ValidationError
 
 from omnipy.api.protocols.private.log import CanLog
-from omnipy.api.protocols.public.data import IsDataset, IsSerializer, IsTarFileSerializer
+from omnipy.api.protocols.public.data import (IsDataEncoder,
+                                              IsDataset,
+                                              IsModel,
+                                              IsSerializer,
+                                              IsTarFileSerializer,
+                                              RootT,
+                                              SupportsGeneralSerializerQueries)
+from omnipy.util.helpers import ensure_path_obj
+
+DatasetT = TypeVar('DatasetT', bound=IsDataset)
 
 
 class Serializer(ABC):
@@ -16,27 +27,78 @@ class Serializer(ABC):
     @classmethod
     @abstractmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
-        pass
+        ...
 
     @classmethod
     @abstractmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
-        pass
+        ...
 
     @classmethod
     @abstractmethod
     def get_output_file_suffix(cls) -> str:
-        pass
+        ...
+
+    # @classmethod
+    # @abstractmethod
+    # def serialize(cls, dataset: IsDataset) -> bytes | memoryview:
+    #     ...
+    #
+    # @classmethod
+    # @abstractmethod
+    # def deserialize(cls, serialized: bytes, any_file_suffix=False) -> IsDataset:
+    #     ...
+
+
+class BytesSerializerMixin(IsDataEncoder[RootT], SupportsGeneralSerializerQueries, Generic[RootT]):
+    @classmethod
+    def serialize_to_bytes(cls, dataset: IsDataset[IsModel[RootT]]) -> BinaryIO:
+        dataset_as_dict = {
+            key: cls.encode_data(key, val.contents).decode('utf8') for (key, val) in dataset.items()
+        }
+        return BytesIO(repr(dataset_as_dict).encode('utf8'))
 
     @classmethod
-    @abstractmethod
-    def serialize(cls, dataset: IsDataset) -> bytes | memoryview:
-        pass
+    def deserialize_from_bytes(cls, data: BinaryIO) -> IsDataset[IsModel[RootT]]:
+        dataset_cls = cls.get_dataset_cls_for_new()
+        dataset = dataset_cls()
+
+        dataset_as_dict_repr = data.read().decode('utf8')
+        dataset_as_dict: dict[str, str] = ast.literal_eval(dataset_as_dict_repr)
+        for key, val in dataset_as_dict.items():
+            dataset[key] = cls.decode_data(key, val.encode('utf8'))
+
+        return dataset
+
+
+class DirectorySerializerMixin(IsDataEncoder[RootT],
+                               SupportsGeneralSerializerQueries,
+                               Generic[RootT]):
+    @classmethod
+    def serialize_to_directory(cls, dataset: IsDataset[IsModel[RootT]],
+                               dir_path: Path | str) -> None:
+        dir_path = ensure_path_obj(dir_path)
+        os.makedirs(dir_path)
+
+        for key, val in dataset.items():
+            with open(dir_path / f'{key}.{cls.get_output_file_suffix()}', 'bw') as file:
+                file.write(cls.encode_data(key, val.contents))
 
     @classmethod
-    @abstractmethod
-    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> IsDataset:
-        pass
+    def deserialize_from_directory(cls, dir_path: Path | str) -> IsDataset[IsModel[RootT]]:
+        dir_path = ensure_path_obj(dir_path)
+
+        dataset_cls = cls.get_dataset_cls_for_new()
+        dataset = dataset_cls()
+
+        for root, dirs, files in os.walk(dir_path):
+            for filename in files:
+                basename, suffix = os.path.splitext(filename)
+                assert suffix == f'{os.path.extsep}{cls.get_output_file_suffix()}'
+                with open(dir_path / filename, 'br') as file:
+                    dataset[basename] = cls.decode_data(basename, file.read())
+
+        return dataset
 
 
 class TarFileSerializer(Serializer, ABC):
@@ -66,11 +128,36 @@ class TarFileSerializer(Serializer, ABC):
         with tarfile.open(fileobj=BytesIO(tarfile_bytes), mode='r:gz') as tarfile_stream:
             for filename in tarfile_stream.getnames():
                 data_file = tarfile_stream.extractfile(filename)
+                assert data_file is not None
                 if not any_file_suffix:
                     assert filename.endswith(f'.{cls.get_output_file_suffix()}')
                 data_file_name = os.path.basename('.'.join(filename.split('.')[:-1]))
-                getattr(dataset, import_method)(
-                    dictify_object_func(data_file_name, data_decode_func(data_file)))
+                getattr(dataset, import_method)({data_file_name: data_decode_func(data_file)})
+
+
+class DatasetToTarFileSerializer(TarFileSerializer):
+    def __init__(self, registry: 'SerializerRegistry'):
+        self._registry = registry
+
+    @classmethod
+    def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
+        ...
+
+    @classmethod
+    def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+        ...
+
+    @classmethod
+    def get_output_file_suffix(cls) -> str:
+        return 'num'
+
+    @classmethod
+    def serialize(cls, number_dataset: IsDataset) -> bytes | memoryview:
+        ...
+
+    @classmethod
+    def deserialize(cls, tarfile_bytes: bytes, any_file_suffix=False) -> IsDataset:
+        ...
 
 
 class SerializerRegistry:
@@ -129,7 +216,7 @@ class SerializerRegistry:
                     new_dataset = func(dataset, serializer)
                     return new_dataset, serializer
                 except (TypeError, ValueError, ValidationError, AssertionError):
-                    pass
+                    ...
 
         return None, None
 

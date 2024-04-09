@@ -225,7 +225,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         return cast(ModelField, cls.__fields__.get(DATA_KEY))
 
     @classmethod
-    def get_model_class(cls) -> Type[Model]:
+    def get_model_class(cls) -> type[ModelT]:
         """
         Returns the concrete Model class used for all data files in the dataset, e.g.:
         `Model[list[int]]`
@@ -575,7 +575,7 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
 
     _custom_field_models: dict[str, ModelT] = PrivateAttr(default={})
 
-    def set_model(self, data_file: str, model: ModelT) -> None:
+    def set_model(self, data_file: str, model: type[ModelT]) -> None:
         try:
             self._custom_field_models[data_file] = model
             if data_file in self.data:
@@ -586,7 +586,7 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
             del self._custom_field_models[data_file]
             raise
 
-    def get_model(self, data_file: str) -> ModelT:
+    def get_model(self, data_file: str) -> type[ModelT]:
         if data_file in self._custom_field_models:
             return self._custom_field_models[data_file]
         else:
