@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from math import floor
 from types import NoneType
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -56,4 +57,16 @@ class PydanticParentModel(BaseModel):
 
 
 class MyPydanticModel(Model[PydanticParentModel]):
+    ...
+
+
+class LiteralFiveModel(Model[Literal[5]]):
+    ...
+
+
+class LiteralTextModel(Model[Literal['text']]):
+    ...
+
+
+class LiteralFiveOrTextModel(Model[Literal[5, 'text']]):
     ...

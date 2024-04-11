@@ -13,6 +13,7 @@ from typing import (Annotated,
                     get_args,
                     get_origin,
                     Hashable,
+                    Literal,
                     Optional,
                     SupportsIndex,
                     Type,
@@ -220,9 +221,11 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
                         return cls._get_default_value_from_model(arg)
             last_error_holder.raise_derived(TypeError(f'Cannot instantiate model "{model}".'))
 
-        if origin_type is tuple:
-            if args and Ellipsis not in args:
-                return tuple(cls._get_default_value_from_model(arg) for arg in args)
+        if origin_type is tuple and args and Ellipsis not in args:
+            return cast(_RootT, tuple(cls._get_default_value_from_model(arg) for arg in args))
+
+        if origin_type is Literal:
+            return args[0]
 
         return origin_type()
 
@@ -292,9 +295,12 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         outer_type = created_model._get_root_type(outer=True, with_args=True)
         outer_type_plain = created_model._get_root_type(outer=True, with_args=False)
 
-        if inspect.isclass(outer_type_plain) or is_union(outer_type):
+        if inspect.isclass(outer_type_plain) or is_union(outer_type) or outer_type_plain is Literal:
             for name, method_info in SPECIAL_METHODS_INFO.items():
-                outer_types = get_args(outer_type) if is_union(outer_type) else [outer_type_plain]
+                if is_union(outer_type) or outer_type_plain is Literal:
+                    outer_types = get_args(outer_type)
+                else:
+                    outer_types = [outer_type_plain]
                 for type_to_support in outer_types:
                     if hasattr(type_to_support, name):
                         setattr(created_model,
@@ -681,7 +687,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
                     type_to_check
                 ]
                 for inner_type_to_check in inner_types_to_check:
-                    if inner_type_to_check is not None and isinstance(
+                    if inner_type_to_check not in [None, Literal] and isinstance(
                             ret, ensure_plain_type(inner_type_to_check)):
                         try:
                             ret = self.__class__(ret)

@@ -7,6 +7,7 @@ from typing import (Annotated,
                     Callable,
                     Generic,
                     List,
+                    Literal,
                     Optional,
                     Type,
                     TypeAlias,
@@ -22,6 +23,9 @@ from omnipy.modules.general.typedefs import FrozenDict
 
 from .helpers.models import (DefaultStrModel,
                              ListOfUpperStrModel,
+                             LiteralFiveModel,
+                             LiteralFiveOrTextModel,
+                             LiteralTextModel,
                              MyFloatObject,
                              MyFloatObjModel,
                              MyPydanticModel,
@@ -1582,6 +1586,50 @@ def test_mimic_callable_property():
     assert model.func.called is False
 
 
+def test_literal_model_defaults():
+    assert LiteralFiveModel().to_data() == 5
+    assert LiteralFiveModel().outer_type(with_args=True) is Literal[5]
+
+    assert LiteralTextModel().to_data() == 'text'
+    assert LiteralTextModel().outer_type(with_args=True) is Literal['text']
+
+    assert LiteralFiveOrTextModel().to_data() == 5
+    assert LiteralFiveOrTextModel().outer_type(with_args=True) is Literal[5, 'text']
+
+
+def test_literal_model_validation():
+    with pytest.raises(ValidationError):
+        LiteralFiveModel(4)
+
+    with pytest.raises(ValidationError):
+        LiteralTextModel('txt')
+
+    with pytest.raises(ValidationError):
+        LiteralFiveOrTextModel(4)
+
+    with pytest.raises(ValidationError):
+        LiteralFiveOrTextModel('txt')
+
+
+def test_mimic_operations_on_literal_models():
+    assert LiteralFiveModel(5) / 5 == 1
+    with pytest.raises(AttributeError):
+        LiteralFiveModel().upper()
+
+    assert LiteralTextModel().upper() == 'TEXT'
+    assert LiteralTextModel('text') + '.txt' == 'text.txt'
+    with pytest.raises(TypeError):
+        LiteralTextModel() / 2
+
+    assert LiteralFiveOrTextModel() + 5 == 10
+    assert LiteralFiveOrTextModel('text').upper() == 'TEXT'
+    with pytest.raises(AttributeError):
+        LiteralFiveOrTextModel().upper()
+    with pytest.raises(AttributeError):
+        LiteralFiveOrTextModel('text') / 2
+
+
+@pytest.mark.skipif(os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1', reason="Not implemented")
 def test_model_copy():
     ...
 
