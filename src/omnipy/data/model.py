@@ -5,10 +5,11 @@ import json
 import os
 import shutil
 from textwrap import dedent
-from types import UnionType
+from types import ModuleType, NoneType, UnionType
 from typing import (Annotated,
                     Any,
                     cast,
+                    ContextManager,
                     Generic,
                     get_args,
                     get_origin,
@@ -16,7 +17,7 @@ from typing import (Annotated,
                     Literal,
                     Optional,
                     SupportsIndex,
-                    Type,
+                    TypeAlias,
                     TypeVar,
                     Union)
 
@@ -26,10 +27,11 @@ from pydantic import Protocol as PydanticProtocol
 from pydantic import root_validator, ValidationError
 from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
-from pydantic.main import ModelMetaclass, validate_model
+from pydantic.main import BaseModel, ModelMetaclass, validate_model
 from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass
 
+from omnipy.api.typedefs import TypeForm
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
 from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
 from omnipy.util.decorators import add_callback_after_call
@@ -52,7 +54,7 @@ from omnipy.util.tabulate import tabulate
 _KeyT = TypeVar('_KeyT', bound=Hashable)
 _ValT = TypeVar('_ValT')
 _IdxT = TypeVar('_IdxT', bound=SupportsIndex)
-_RootT = TypeVar('_RootT', covariant=True, bound=object)
+_RootT = TypeVar('_RootT', bound=object | None)
 
 ROOT_KEY = '__root__'
 
@@ -188,17 +190,18 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         # json_dumps = orjson_dumps
 
     @classmethod
-    def _get_bound_if_typevar(cls, model: Type[_RootT]) -> _RootT:
+    def _get_bound_if_typevar(cls,
+                              model: type[_RootT] | TypeForm | TypeVar) -> type[_RootT] | TypeForm:
         if isinstance(model, TypeVar):
-            if model.__bound__ is None:  # noqa
+            if model.__bound__ is None:
                 raise TypeError('The TypeVar "{}" needs to be bound to a '.format(model.__name__)
                                 + 'type that provides a default value when called')
             else:
-                return model.__bound__  # noqa
+                return model.__bound__
         return model
 
     @classmethod
-    def _get_default_value_from_model(cls, model: Type[_RootT]) -> _RootT:  # noqa: C901
+    def _get_default_value_from_model(cls, model: type[_RootT] | TypeForm | TypeVar) -> _RootT:
         model = cls._get_bound_if_typevar(model)
         origin_type = get_origin(model)
         args = get_args(model)
@@ -210,9 +213,12 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         if origin_type in (None, ()):
             origin_type = model
 
+        if origin_type is None:
+            origin_type = NoneType
+
         if origin_type in [Union, UnionType]:
             if any(is_none_type(arg) for arg in args):
-                return None
+                return cast(_RootT, None)
 
             last_error_holder = LastErrorHolder()
             for arg in args:
@@ -227,22 +233,23 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         if origin_type is Literal:
             return args[0]
 
-        return origin_type()
+        return cast(_RootT, origin_type())
 
     @classmethod
-    def _populate_root_field(cls, model: Type[_RootT]) -> None:
+    def _populate_root_field(cls, model: type[_RootT] | TypeVar) -> type[_RootT]:
         default_val = cls._get_default_value_from_model(model)
 
         def get_default_val() -> _RootT:
             return default_val
 
         if ROOT_KEY in cls.__config__.fields:
-            cls.__config__.fields[ROOT_KEY]['default_factory'] = get_default_val
+            cls.__config__.fields[ROOT_KEY]['default_factory'] = get_default_val  # type: ignore
         else:
-            cls.__config__.fields[ROOT_KEY] = {'default_factory': get_default_val}
+            cls.__config__.fields[ROOT_KEY] = {'default_factory': get_default_val}  # type: ignore
 
         if not get_origin(model) == Annotated and not is_optional(model):
-            model = Annotated[Optional[model], 'Fake Optional from Model']
+            model = cast(type[_RootT], Annotated[Optional[model], 'Fake Optional from Model'])
+        model = cast(type[_RootT], model)  # casting away fake optionals and TypeVar
 
         data_field = ModelField.infer(
             name=ROOT_KEY,
@@ -262,9 +269,10 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         del cls.__fields__[ROOT_KEY]
         del cls.__annotations__[ROOT_KEY]
 
-    def __class_getitem__(cls, model: Type[_RootT] | TypeVar) -> 'Model[Type[_RootT] | TypeVar]':
-        # TODO: change model type to params: Type[Any], tuple[Type[Any], ...]]
-        #       as in GenericModel
+    def __class_getitem__(  # type: ignore[override]
+        cls,
+        model: type[_RootT] | tuple[type[_RootT]] | tuple[type[_RootT], Any] | TypeVar
+    ) -> 'Model[type[_RootT]]':
 
         # For now, only singular model types are allowed. These lines are needed for
         # interoperability with pydantic GenericModel, which internally stores the model
@@ -272,16 +280,19 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         if isinstance(model, tuple) and len(model) == 1:
             model = model[0]
 
-        orig_model = model
+        orig_model: type[_RootT] | tuple[type[_RootT], Any] | TypeVar = model
 
         # Populating the root field at runtime instead of providing a __root__ Field explicitly
         # is needed due to the inability of typing/pydantic to provide a dynamic default based on
         # the actual type. The following issue in mypy seems relevant:
         # https://github.com/python/mypy/issues/3737 (as well as linked issues)
         if cls == Model:  # Only for the base Model class
-            model = cls._populate_root_field(model)
+            model = cls._populate_root_field(cast(type[_RootT], model))
+        else:
+            # Other subtypes do not support TypeVar anyway
+            model = cast(type[_RootT] | tuple[type[_RootT], Any], model)
 
-        created_model = super().__class_getitem__(model)
+        created_model = cast(Model, super().__class_getitem__(model))
 
         # As long as models are not created concurrently, setting the class members temporarily
         # should not have averse effects
@@ -295,12 +306,13 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         outer_type = created_model._get_root_type(outer=True, with_args=True)
         outer_type_plain = created_model._get_root_type(outer=True, with_args=False)
 
+        # TODO: See if it is possible to type Model mimicking of root type, e.g. with Protocol
         if inspect.isclass(outer_type_plain) or is_union(outer_type) or outer_type_plain is Literal:
             for name, method_info in SPECIAL_METHODS_INFO.items():
                 if is_union(outer_type) or outer_type_plain is Literal:
                     outer_types = get_args(outer_type)
                 else:
-                    outer_types = [outer_type_plain]
+                    outer_types = (outer_type_plain,)
                 for type_to_support in outer_types:
                     if hasattr(type_to_support, name):
                         setattr(created_model,
@@ -346,11 +358,13 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
 
         model_as_input = ROOT_KEY in super_kwargs and is_model_instance(super_kwargs[ROOT_KEY])
         if model_as_input:
-            super_kwargs[ROOT_KEY] = super_kwargs[ROOT_KEY].to_data()
+            # Casting to _RootT now, will be validated in super()__init__()
+            super_kwargs[ROOT_KEY] = cast(_RootT, cast(Model, super_kwargs[ROOT_KEY]).to_data())
 
         self._init(super_kwargs, **kwargs)
 
         try:
+            # Pydantic validation of super_kwargs
             super().__init__(**super_kwargs)
         except ValidationError:
             if model_as_input:
@@ -389,7 +403,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
                 'which is itself wrapping the excellent Python package named `pydantic`.')
 
     @classmethod
-    def validate(cls: Type['Model'], value: Any) -> 'Model':
+    def validate(cls: type['Model'], value: Any) -> 'Model':
         """
         Hack to allow overwriting of __iter__ method without compromising pydantic validation. Part
         of the pydantic API and not the Omnipy API.
@@ -413,15 +427,15 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
     def validate_contents(self) -> None:
         self._validate_and_set_contents(self.contents)
 
-    def _validate_and_set_contents(self, new_contents: _RootT) -> None:
+    def _validate_and_set_contents(self, new_contents: object) -> None:
         self.contents = self._validate_contents_from_value(new_contents)
         self._take_snapshot_of_validated_contents()
 
-    def _validate_contents_from_value(self, value: _RootT) -> _RootT:
+    def _validate_contents_from_value(self, value: object) -> _RootT:
         if is_model_instance(value):
-            value = value.to_data()
+            value = cast(Model[_RootT], value).to_data()
         elif is_non_omnipy_pydantic_model(value):
-            value = value.dict(by_alias=True)
+            value = cast(_RootT, cast(BaseModel, value).dict(by_alias=True))
         values, fields_set, validation_error = validate_model(self.__class__, {ROOT_KEY: value})
         if validation_error:
             raise validation_error
@@ -438,29 +452,31 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             self._get_restorable_contents().take_snapshot(self.contents)
 
     @classmethod
-    def _parse_data(cls, data: Any) -> Any:
+    def _parse_data(cls, data: Any) -> _RootT:
         return data
 
     @root_validator
-    def _parse_root_object(cls, root_obj: dict[str, _RootT]) -> Any:  # noqa
+    def _parse_root_object(cls, root_obj: dict[str, _RootT | None]) -> Any:
         assert ROOT_KEY in root_obj
         value = root_obj[ROOT_KEY]
         value = cls._parse_none_value_with_root_type_if_model(value)
         return {ROOT_KEY: cls._parse_data(value)}
 
     # Partial workaround of https://github.com/pydantic/pydantic/issues/3836, together with
-    # _propagate_allow_none_from_model().  See series of relevant tests in test_model.py
+    # fake optional type hack.  See series of relevant tests in test_model.py
     # starting with test_nested_model_classes_none_as_default().
     @classmethod
-    def _parse_none_value_with_root_type_if_model(cls, value):
-        root_field = cls._get_root_field()
-        root_type = root_field.type_
+    def _parse_none_value_with_root_type_if_model(cls, value: _RootT | None) -> _RootT:
+        root_field: ModelField = cls._get_root_field()
+        root_type = cast(TypeForm, root_field.type_)
         value = cls._parse_with_root_type_if_model(value, root_field, root_type)
         return value
 
     @classmethod
-    def _parse_with_root_type_if_model(cls, value: Any, root_field: ModelField,
-                                       root_type: Type) -> Any:
+    def _parse_with_root_type_if_model(cls,
+                                       value: _RootT | None,
+                                       root_field: ModelField,
+                                       root_type: TypeForm) -> _RootT:
         if get_origin(root_type) is Annotated:
             root_type = remove_annotated_plus_optional_if_present(root_type)
 
@@ -472,19 +488,24 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             last_error_holder.raise_derived(NoneIsNotAllowedError())
 
         if lenient_issubclass(root_type, Model):
+            root_type = cast(Model[_RootT], root_type)
             if root_field.outer_type_ != root_type:
                 outer_type = get_origin(root_field.outer_type_)
                 if lenient_issubclass(outer_type, Sequence) and lenient_isinstance(value, Sequence):
+                    seq_value = cast(Sequence, value)
                     return outer_type(
-                        root_type.parse_obj(val) if not is_model_instance(val) else val
-                        for val in value)
+                        val if is_model_instance(val) else root_type.parse_obj(val)
+                        for val in seq_value)
                 elif lenient_issubclass(outer_type, Mapping) and lenient_isinstance(value, Mapping):
+                    map_value = cast(Mapping, value)
+
                     return outer_type({
-                        key: root_type.parse_obj(val) if not is_model_instance(val) else val
-                        for (key, val) in value.items()
+                        key: val if is_model_instance(val) else root_type.parse_obj(val)
+                        for (key, val) in map_value.items()
                     })
             else:
-                return root_type.parse_obj(value) if not is_model_instance(value) else value
+                return cast(_RootT,
+                            value if is_model_instance(value) else root_type.parse_obj(value))
         if value is None:
             none_default = root_field.default_factory() is None if root_field.default_factory \
                 else root_field.default is None
@@ -494,21 +515,31 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             supports_none = none_default or root_type_is_none or root_type_is_optional
             if not supports_none:
                 raise NoneIsNotAllowedError()
+            value = cast(_RootT, value)
 
         return value
 
     @property
     def contents(self) -> _RootT:
-        return self.__dict__.get(ROOT_KEY)
+        return cast(_RootT, self.__dict__.get(ROOT_KEY))
 
     @contents.setter
     def contents(self, value: _RootT) -> None:
         super().__setattr__(ROOT_KEY, value)
 
-    def dict(self, *args, **kwargs) -> dict[str, dict[Any, Any]]:
+    def dict(self, *args, **kwargs) -> dict[str, object]:
         return {ROOT_KEY: self.to_data()}
 
-    def to_data(self) -> Any:
+    # TODO: Improve typing of to_data/from_data. Should be limited to JSON types at least, but also
+    #       `_RootT` for simple models (without submodels). Handling Submodels is tricky, and may
+    #       not be possible, e.g. `Model[list[Model[int]]().to_data()` should be type `list[int]`.
+    #       A possibility is to support manually providing proper to_data, e.g. through
+    #       Generic Mixin class, e.g.:
+    #       ```python
+    #       class MyModel(Model[list[Model[int]]], ModelData[list[int]]):
+    #          ...
+    #       ```
+    def to_data(self) -> object:
         return super().dict(by_alias=True)[ROOT_KEY]
 
     def from_data(self, value: object) -> None:
@@ -529,11 +560,11 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         self.contents = new_model.contents
 
     @classmethod
-    def inner_type(cls, with_args: bool = False) -> type | None:
+    def inner_type(cls, with_args: bool = False) -> TypeForm | None:
         return cls._get_root_type(outer=False, with_args=with_args)
 
     @classmethod
-    def outer_type(cls, with_args: bool = False) -> type | None:
+    def outer_type(cls, with_args: bool = False) -> TypeForm | None:
         return cls._get_root_type(outer=True, with_args=with_args)
 
     @classmethod
@@ -556,7 +587,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         return cast(ModelField, cls.__fields__.get(ROOT_KEY))
 
     @classmethod
-    def _get_root_type(cls, outer: bool, with_args: bool) -> type | None:
+    def _get_root_type(cls, outer: bool, with_args: bool) -> TypeForm | None:
         root_field = cls._get_root_field()
         root_type = root_field.outer_type_ if outer else root_field.type_
         root_type = remove_annotated_plus_optional_if_present(root_type)
@@ -618,6 +649,8 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
 
         if info.state_changing:
             restorable = self._get_restorable_contents()
+            reset_solution: ContextManager
+
             if _is_interactive_mode():
                 if restorable.has_snapshot() \
                         and restorable.last_snapshot_taken_of_same_obj(self.contents) \
@@ -728,8 +761,8 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
     def __eq__(self, other: object) -> bool:
         return is_model_instance(other) \
             and self.__class__ == other.__class__ \
-            and all_equals(self.contents, other.contents) \
-            and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
+            and all_equals(self.contents, cast(Model, other).contents) \
+            and self.to_data() == cast(Model, other).to_data()  # last is probably unnecessary, but just in case
 
     def __repr__(self) -> str:
         if _is_interactive_mode() and not _waiting_for_terminal_repr():
@@ -751,10 +784,11 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
     def _table_repr(self) -> str:
         from omnipy.data.dataset import Dataset
 
-        if issubclass(self.outer_type(), Dataset):
-            return self.contents._table_repr()
+        outer_type = self.outer_type()
+        if inspect.isclass(outer_type) and issubclass(outer_type, Dataset):
+            return cast(Dataset, self.contents)._table_repr()
 
-        tabulate.PRESERVE_WHITESPACE = True  # Does not seem to work together with 'maxcolwidths'
+        # tabulate.PRESERVE_WHITESPACE = True  # Does not seem to work together with 'maxcolwidths'
 
         terminal_size = _get_terminal_size()
         header_column_width = len('(bottom')
@@ -765,7 +799,8 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         data_indent = 2
         extra_space_due_to_escaped_chars = 12
 
-        inspect.getmodule(debug).pformat = PrettyFormat(
+        debug_module = cast(ModuleType, inspect.getmodule(debug))
+        debug_module.pformat = PrettyFormat(  # type: ignore[attr-defined]
             indent_step=data_indent,
             simple_cutoff=20,
             width=data_column_width - data_indent - extra_space_due_to_escaped_chars,
@@ -823,42 +858,47 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         return out
 
 
-KwargValT = TypeVar('KwargValT', bound=object)
-ParamModelT = TypeVar('ParamModelT', bound='ParamModel')
+_ParamRootT = TypeVar('_ParamRootT', bound=object | None)
+_KwargValT = TypeVar('_KwargValT', bound=object)
 
 
-class DataWithParams(GenericModel, Generic[_RootT, KwargValT]):
-    data: _RootT
-    params: dict[str, KwargValT]
+class DataWithParams(GenericModel, Generic[_ParamRootT, _KwargValT]):
+    data: _ParamRootT
+    params: dict[str, _KwargValT]
 
 
-class ParamModel(Model[_RootT | DataWithParams[_RootT, KwargValT]], Generic[_RootT, KwargValT]):
-    def __class_getitem__(
-            cls, model: tuple[Type[_RootT], Type[KwargValT]]) -> 'ParamModel[_RootT, KwargValT]':
+class ParamModel(Model[_ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
+                 Generic[_ParamRootT, _KwargValT]):
+    def __class_getitem__(  # type: ignore[override]
+        cls,
+        model: tuple[type[_ParamRootT], type[_KwargValT]]  # type: ignore[override]
+    ) -> 'ParamModel[_ParamRootT, _KwargValT]':
         created_model = super().__class_getitem__(model)
         outer_type = created_model._get_root_type(outer=True, with_args=True)
         default_val = cls._get_default_value_from_model(outer_type)
 
-        def get_default_val() -> _RootT | DataWithParams[_RootT, KwargValT]:
+        def get_default_val() -> _ParamRootT | DataWithParams[_ParamRootT, _KwargValT]:
             return default_val
 
         root_field = created_model._get_root_field()
         root_field.default_factory = get_default_val
 
-        return created_model
+        return cast(ParamModel, created_model)
 
-    def _init(self, super_kwargs: dict[str, _RootT], **kwargs: KwargValT) -> None:
+    def _init(self,
+              super_kwargs: dict[str, _ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
+              **kwargs: _KwargValT) -> None:
         if kwargs and ROOT_KEY in super_kwargs:
-            super_kwargs[ROOT_KEY] = cast(
-                _RootT, DataWithParams(data=super_kwargs[ROOT_KEY], params=kwargs))
+            super_kwargs[ROOT_KEY] = DataWithParams(
+                data=cast(_ParamRootT, super_kwargs[ROOT_KEY]), params=kwargs)
 
     @root_validator
-    def _parse_root_object(cls, root_obj: dict[str,
-                                               _RootT | DataWithParams[_RootT, KwargValT]]) -> Any:
+    def _parse_root_object(
+            cls, root_obj: dict[str, _ParamRootT | DataWithParams[_ParamRootT, _KwargValT]]) -> Any:
         assert ROOT_KEY in root_obj
         root_val = root_obj[ROOT_KEY]
 
-        params: dict[str, KwargValT] = {}
+        params: dict[str, _KwargValT] = {}
 
         if isinstance(root_val, DataWithParams):
             data = root_val.data
@@ -870,35 +910,50 @@ class ParamModel(Model[_RootT | DataWithParams[_RootT, KwargValT]], Generic[_Roo
         return {ROOT_KEY: cls._parse_data(data, **params)}
 
     @classmethod
-    def _parse_data(cls, data: _RootT, **params: KwargValT) -> _RootT:
+    def _parse_data(cls, data: _ParamRootT, **params: _KwargValT) -> _ParamRootT:
         return data
 
-    def from_data(self, value: object, **kwargs: KwargValT) -> None:
+    def from_data(self, value: object, **kwargs: _KwargValT) -> None:
         super().from_data(value)
         if kwargs:
-            self._validate_and_set_contents_with_params(self.contents, **kwargs)
+            self._validate_and_set_contents_with_params(cast(_ParamRootT, self.contents), **kwargs)
 
-    def from_json(self, json_contents: str, **kwargs: KwargValT) -> None:
+    def from_json(self, json_contents: str, **kwargs: _KwargValT) -> None:
         super().from_json(json_contents)
         if kwargs:
-            self._validate_and_set_contents_with_params(self.contents, **kwargs)
+            self._validate_and_set_contents_with_params(cast(_ParamRootT, self.contents), **kwargs)
 
-    def _validate_and_set_contents_with_params(self, contents: _RootT, **kwargs: KwargValT):
+    def _validate_and_set_contents_with_params(self, contents: _ParamRootT, **kwargs: _KwargValT):
         self._validate_and_set_contents(DataWithParams(data=contents, params=kwargs))
 
 
-#
-class ListOfParamModel(ParamModel[list[ParamModelT], KwargValT], Generic[ParamModelT, KwargValT]):
+_ParamModelT = TypeVar('_ParamModelT', bound='ParamModel')
+
+_ParamRootA: TypeAlias = _ParamModelT | DataWithParams[_ParamModelT, _KwargValT]
+
+# TODO: Check if fixed in pydantic 2: Hack to fix issue with  GenericModel subclasses
+#       (here: DataWithParams) not registering multiple parameters
+_ParamRootA.__parameters__ = (_ParamModelT, _KwargValT)  # type: ignore[attr-defined]
+
+
+class ListOfParamModel(ParamModel[list[_ParamRootA[_ParamModelT, _KwargValT]], _KwargValT],
+                       Generic[_ParamModelT, _KwargValT]):
     def _init(self,
-              super_kwargs: dict[str, list[ParamModelT | DataWithParams[ParamModelT, KwargValT]]],
-              **kwargs: KwargValT) -> None:
+              super_kwargs: dict[str,
+                                 list[_ParamRootA[_ParamModelT, _KwargValT]] |
+                                 DataWithParams[list[_ParamRootA[_ParamModelT, _KwargValT]],
+                                                _KwargValT]],
+              **kwargs: _KwargValT) -> None:
         if kwargs and ROOT_KEY in super_kwargs:
             super_kwargs[ROOT_KEY] = [
                 DataWithParams(data=_, params=kwargs) for _ in super_kwargs[ROOT_KEY]
             ]
 
     def _validate_and_set_contents_with_params(self,
-                                               contents: list[ParamModelT],
-                                               **kwargs: KwargValT):
-        self._validate_and_set_contents(
-            [DataWithParams(data=model.contents, params=kwargs) for model in contents])
+                                               contents: list[_ParamRootA[_ParamModelT,
+                                                                          _KwargValT]],
+                                               **kwargs: _KwargValT):
+        self._validate_and_set_contents([
+            DataWithParams(data=cast(_ParamModelT, model).contents, params=kwargs)
+            for model in contents
+        ])

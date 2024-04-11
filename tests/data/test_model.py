@@ -1,10 +1,11 @@
 from math import floor
 import os
 from textwrap import dedent
-from types import MappingProxyType, NoneType
+from types import MappingProxyType
 from typing import (Annotated,
                     Any,
                     Callable,
+                    cast,
                     Generic,
                     List,
                     Literal,
@@ -32,7 +33,7 @@ from .helpers.models import (DefaultStrModel,
                              UpperStrModel)
 
 
-def test_no_model_known_issue():
+def test_no_model_known_issue() -> None:
     # Correctly instantiating a model in the beginning of the test implicitly tests whether
     # creating a model sets the field-related class members of Model, such that a later object
     # instantiation without a specified model reuses the previous fields. This which would have
@@ -50,7 +51,7 @@ def test_no_model_known_issue():
         ModelSubclass()
 
 
-def test_init_and_data():
+def test_init_and_data() -> None:
     model = Model[int]()
     assert (isinstance(model, Model))
     assert (model.__class__.__name__ == 'Model[int]')
@@ -76,7 +77,7 @@ def test_init_and_data():
     assert Model[dict]((('a', 2), ('b', True))).to_data() == {'a': 2, 'b': True}
 
 
-def test_init_model_as_input():
+def test_init_model_as_input() -> None:
     assert Model[int](Model[float](4.5)).to_data() == 4
     assert Model[tuple[int, ...]](Model[list[float]]([4.5, 2.3])).to_data() == (4, 2)
 
@@ -84,7 +85,7 @@ def test_init_model_as_input():
     assert Model[Model[int]](Model[float](4.5)).to_data() == 4
 
 
-def test_init_converting_model_as_input():
+def test_init_converting_model_as_input() -> None:
     assert MyFloatObjModel().contents == MyFloatObject()
     my_float_model = MyFloatObjModel()
     my_float_model.from_data(4.5)
@@ -95,9 +96,9 @@ def test_init_converting_model_as_input():
     assert MyFloatObjModel(Model[float](4.5)).to_data() == 4.5
 
 
-def test_error_init():
+def test_error_init() -> None:
     with pytest.raises(TypeError):
-        assert Model[tuple[int, ...]](12, 2, 4).to_data() == 12
+        assert Model[tuple[int, ...]](12, 2, 4).to_data() == 12  # type: ignore
     assert Model[tuple[int, ...]]((12, 2, 4)).to_data() == (12, 2, 4)
 
     with pytest.raises(AssertionError):
@@ -110,7 +111,7 @@ def test_error_init():
         Model[int](__root__=123, other=234)
 
 
-def test_load():
+def test_load() -> None:
     model = Model[int]()
     model.from_data(12)
     assert model.to_data() == 12
@@ -129,42 +130,42 @@ def test_load():
         Model[int](5).foo = True  # noqa
 
 
-def test_get_inner_outer_type():
-    model = Model[int]()
-    assert model.outer_type() == int
-    assert model.inner_type() == int
-    assert model.is_nested_type() is False
+def test_get_inner_outer_type() -> None:
+    int_model = Model[int]()
+    assert int_model.outer_type() == int
+    assert int_model.inner_type() == int
+    assert int_model.is_nested_type() is False
 
-    model = Model[list[int]]()
-    assert model.outer_type() == list
-    assert model.outer_type(with_args=True) == list[int]
-    assert model.inner_type() == int
-    assert model.inner_type(with_args=True) == int
-    assert model.is_nested_type() is True
+    list_of_ints_model = Model[list[int]]()
+    assert list_of_ints_model.outer_type() == list
+    assert list_of_ints_model.outer_type(with_args=True) == list[int]
+    assert list_of_ints_model.inner_type() == int
+    assert list_of_ints_model.inner_type(with_args=True) == int
+    assert list_of_ints_model.is_nested_type() is True
 
-    model = Model[list[list[int]]]()
-    assert model.outer_type() == list
-    assert model.outer_type(with_args=True) == list[list[int]]
-    assert model.inner_type() == list
-    assert model.inner_type(with_args=True) == list[int]
-    assert model.is_nested_type() is True
+    list_of_lists_of_ints_model = Model[list[list[int]]]()
+    assert list_of_lists_of_ints_model.outer_type() == list
+    assert list_of_lists_of_ints_model.outer_type(with_args=True) == list[list[int]]
+    assert list_of_lists_of_ints_model.inner_type() == list
+    assert list_of_lists_of_ints_model.inner_type(with_args=True) == list[int]
+    assert list_of_lists_of_ints_model.is_nested_type() is True
 
-    model = Model[dict[str, list[int]]]()
-    assert model.outer_type() == dict
-    assert model.outer_type(with_args=True) == dict[str, list[int]]
-    assert model.inner_type() == list
-    assert model.inner_type(with_args=True) == list[int]
-    assert model.is_nested_type() is True
+    dict_of_strings_to_list_of_ints_model = Model[dict[str, list[int]]]()
+    assert dict_of_strings_to_list_of_ints_model.outer_type() == dict
+    assert dict_of_strings_to_list_of_ints_model.outer_type(with_args=True) == dict[str, list[int]]
+    assert dict_of_strings_to_list_of_ints_model.inner_type() == list
+    assert dict_of_strings_to_list_of_ints_model.inner_type(with_args=True) == list[int]
+    assert dict_of_strings_to_list_of_ints_model.is_nested_type() is True
 
-    model = Model[Annotated[Optional[dict[str, list[int]]], 'Something']]()
-    assert model.outer_type() == dict
-    assert model.outer_type(with_args=True) == dict[str, list[int]]
-    assert model.inner_type() == list
-    assert model.inner_type(with_args=True) == list[int]
-    assert model.is_nested_type() is True
+    fake_optional_model = Model[Annotated[Optional[dict[str, list[int]]], 'Something']]()
+    assert fake_optional_model.outer_type() == dict
+    assert fake_optional_model.outer_type(with_args=True) == dict[str, list[int]]
+    assert fake_optional_model.inner_type() == list
+    assert fake_optional_model.inner_type(with_args=True) == list[int]
+    assert fake_optional_model.is_nested_type() is True
 
 
-def test_equality_other_models():
+def test_equality_other_models() -> None:
     assert Model[int]() == Model[int]()
 
     model = Model[int]()
@@ -183,11 +184,11 @@ def test_equality_other_models():
     assert Model[list[int]]([1, 2, 3]) != Model[List[int]]([1, 2, 3])
 
 
-def test_complex_equality():
+def test_complex_equality() -> None:
     model_1 = Model[list[int]]()
     model_1.contents = [1, 2, 3]
     model_2 = Model[list[int]]()
-    model_2.contents = (1, 2, 3)
+    model_2.contents = (1, 2, 3)  # type: ignore[assignment]
 
     assert model_1 != model_2
     model_2.validate_contents()
@@ -195,7 +196,7 @@ def test_complex_equality():
 
 
 # TODO: Revisit with pydantic v2. Expected to change
-def test_equality_with_pydantic_not_symmetric():
+def test_equality_with_pydantic_not_symmetric() -> None:
     class RootPydanticInt(BaseModel):
         __root__: int
 
@@ -211,7 +212,7 @@ def test_equality_with_pydantic_not_symmetric():
     assert MyInt(1) != RootPydanticInt(__root__=1)
 
 
-def test_equality_with_pydantic_as_args():
+def test_equality_with_pydantic_as_args() -> None:
     class PydanticModel(BaseModel):
         a: int = 0
 
@@ -264,14 +265,14 @@ ParentModel.update_forward_refs(NumberModel=NumberModel)
 ParentModelNested.update_forward_refs(NumberModel=NumberModel)
 
 
-def test_qualname():
+def test_qualname() -> None:
     assert Model[int].__qualname__ == 'Model[int]'
     assert Model[Model[int]].__qualname__ == 'Model[omnipy.data.model.Model[int]]'
     assert ParentModel.__qualname__ == 'ParentGenericModel[NumberModel]'
     assert ParentModelNested.__qualname__ == 'ParentGenericModel[Union[str, NumberModel]]'
 
 
-def test_repr():
+def test_repr() -> None:
     assert repr(Model[int]) == "<class 'omnipy.data.model.Model[int]'>"
     assert repr(Model[int](5)) == 'Model[int](5)'
 
@@ -299,7 +300,7 @@ def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason='To be implemented later. Should be issubtype instead')
-def test_issubclass_and_isinstance():
+def test_issubclass_and_isinstance() -> None:
     assert _issubclass_and_isinstance(Model[str], Model[str])
     assert not _issubclass_and_isinstance(Model[int], Model[str])
 
@@ -314,8 +315,8 @@ def test_issubclass_and_isinstance():
     assert _issubclass_and_isinstance(MyStrList, Model[list])
 
 
-def test_parse_convertible_data():
-    NumberModel = Model[int]  # noqa
+def test_parse_convertible_data() -> None:
+    NumberModel = Model[int]
 
     model_1 = NumberModel(123.3)
     assert model_1.to_data() == 123
@@ -336,7 +337,7 @@ def test_parse_convertible_data():
     assert model_3 != model_4
 
 
-def test_load_inconvertible_data():
+def test_load_inconvertible_data() -> None:
     class NumberModel(Model[int]):
         ...
 
@@ -351,7 +352,7 @@ def test_load_inconvertible_data():
     assert model.contents == 0
 
 
-def test_load_inconvertible_data_strict_type():
+def test_load_inconvertible_data_strict_type() -> None:
     class StrictNumberModel(Model[StrictInt]):
         ...
 
@@ -373,7 +374,7 @@ def test_load_inconvertible_data_strict_type():
     assert model.contents == 123
 
 
-def test_load_inconvertible_data_nested_type():
+def test_load_inconvertible_data_nested_type() -> None:
     class ListOfIntsModel(Model[list[int]]):
         ...
 
@@ -398,15 +399,15 @@ def test_load_inconvertible_data_nested_type():
     assert model.contents == [123, 234]
 
 
-def test_error_invalid_model():
+def test_error_invalid_model() -> None:
 
     with pytest.raises(TypeError):
 
-        class DoubleTypesModel(Model[int, str]):  # noqa
+        class DoubleTypesModel(Model[int, str]):  # type: ignore[type-arg]
             ...
 
 
-def test_tuple_of_anything():
+def test_tuple_of_anything() -> None:
     class TupleModel(Model[tuple]):
         ...
 
@@ -416,7 +417,7 @@ def test_tuple_of_anything():
         TupleModel(1)
 
 
-def test_tuple_of_single_type():
+def test_tuple_of_single_type() -> None:
     class TupleModel(Model[tuple[int]]):
         ...
 
@@ -431,7 +432,7 @@ def test_tuple_of_single_type():
         TupleModel((1, 's', True))
 
 
-def test_tuple_of_single_type_repeated():
+def test_tuple_of_single_type_repeated() -> None:
     class TupleModel(Model[tuple[int, ...]]):
         ...
 
@@ -444,7 +445,7 @@ def test_tuple_of_single_type_repeated():
         TupleModel((1, 's', True))
 
 
-def test_fixed_tuple_of_different_types():
+def test_fixed_tuple_of_different_types() -> None:
     class TupleModel(Model[tuple[int, str]]):
         ...
 
@@ -462,7 +463,7 @@ def test_fixed_tuple_of_different_types():
         TupleModel((1, 's', True))
 
 
-def test_basic_union():
+def test_basic_union() -> None:
     # Note: Python 3.10 introduced a shorthand form for Union[TypeA, TypeB]:
     #
     #   TypeA | TypeB
@@ -492,7 +493,7 @@ individual tests. New Union nomenclature introduced in Python 3.10 does not help
 under Annotated. Issue is not present in e.g. List or Dict as the default values of these are
 [] and {}, respectively.
 """)
-def test_nested_annotated_union_default_not_defined_by_first_type_known_issue():
+def test_nested_annotated_union_default_not_defined_by_first_type_known_issue() -> None:
     class IntFirstAnnotatedUnionModel(Model[Annotated[Union[int, str], 'test']]):
         ...
 
@@ -524,7 +525,8 @@ Same issue as in test_nested_union_default_not_defined_by_first_type_known_issue
 more common by "pydantic v1"-related hack in Model (in omnipy), where adding Annotater[Optional]
 to all models have added two levels to the type nesting.
 """)
-def test_optional_v1_hack_nested_annotated_union_default_not_defined_by_first_type_known_issue():
+def test_optional_v1_hack_nested_annotated_union_default_not_defined_by_first_type_known_issue(
+) -> None:
     class IntFirstUnionModel(Model[Union[int, str]]):
         ...
 
@@ -535,18 +537,18 @@ def test_optional_v1_hack_nested_annotated_union_default_not_defined_by_first_ty
 
     assert StrFirstUnionModel().to_data() == ''
 
-    class IntFirstUnionModel(Model[int | str]):
+    class IntFirstNewUnionModel(Model[int | str]):
         ...
 
-    assert IntFirstUnionModel().to_data() == 0
+    assert IntFirstNewUnionModel().to_data() == 0
 
-    class StrFirstUnionModel(Model[str | int]):
+    class StrFirstNewUnionModel(Model[str | int]):
         ...
 
-    assert StrFirstUnionModel().to_data() == ''
+    assert StrFirstNewUnionModel().to_data() == ''
 
 
-def test_union_default_value_from_first_callable_type():
+def test_union_default_value_from_first_callable_type() -> None:
     class FirstTypeNotInstantiatableUnionModel(Model[Any | str]):
         ...
 
@@ -558,7 +560,7 @@ def test_union_default_value_from_first_callable_type():
             ...
 
 
-def test_union_default_value_if_any_none():
+def test_union_default_value_if_any_none() -> None:
     class NoneFirstUnionModel(Model[None | str]):
         ...
 
@@ -581,7 +583,7 @@ this pops up is parsing strings to int or float. There is no reason to always ch
 other, so the order decides. The "pydantic v1"-related hack in Model (in omnipy), adding
 Annotater[Optional] to all models, triggers type caching in the typing package.
 """)
-def test_optional_v1_hack_parsing_independent_on_union_type_order_known_issue():
+def test_optional_v1_hack_parsing_independent_on_union_type_order_known_issue() -> None:
     class FloatIntUnionModel(Model[Union[float, int]]):
         ...
 
@@ -628,7 +630,7 @@ def test_optional_v1_hack_parsing_independent_on_union_type_order_known_issue():
     assert type(FloatIntStrUnionModel('15').to_data()) == str
 
 
-def test_optional():
+def test_optional() -> None:
     class OptionalIntModel(Model[Optional[int]]):
         ...
 
@@ -644,7 +646,7 @@ def test_optional():
         OptionalIntModel('None')
 
 
-def test_nested_union_default_value():
+def test_nested_union_default_value() -> None:
     class NestedUnion(Model[Union[Union[str, int], float]]):
         ...
 
@@ -661,8 +663,8 @@ def test_nested_union_default_value():
     assert NestedUnionWithSingleTypeTuple().to_data() == ('',)
 
 
-def test_none_allowed():
-    class NoneModel(Model[NoneType]):
+def test_none_allowed() -> None:
+    class NoneModel(Model[None]):
         ...
 
     assert NoneModel().to_data() is None
@@ -692,7 +694,7 @@ def test_none_allowed():
             model_cls('None')
 
 
-def test_none_not_allowed():
+def test_none_not_allowed() -> None:
     class IntListModel(Model[list[int]]):
         ...
 
@@ -700,14 +702,14 @@ def test_none_not_allowed():
         ...
 
     for model_cls in [IntListModel, IntDictModel]:
-        assert model_cls().to_data() is not None
+        assert cast(Model, model_cls()).to_data() is not None
 
         with pytest.raises(ValidationError):
             model_cls(None)
 
 
-def test_list_of_none():
-    class NoneModel(Model[NoneType]):
+def test_list_of_none() -> None:
+    class NoneModel(Model[None]):
         ...
 
     class ListOfNoneModel(Model[list[NoneModel]]):
@@ -726,8 +728,8 @@ def test_list_of_none():
         ListOfNoneModel({1: None})
 
 
-def test_tuple_of_none():
-    class NoneModel(Model[NoneType]):
+def test_tuple_of_none() -> None:
+    class NoneModel(Model[None]):
         ...
 
     class TupleOfNoneModel(Model[tuple[NoneModel, ...]]):
@@ -746,8 +748,8 @@ def test_tuple_of_none():
         TupleOfNoneModel({1: None})
 
 
-def test_dict_of_none():
-    class NoneModel(Model[NoneType]):
+def test_dict_of_none() -> None:
+    class NoneModel(Model[None]):
         ...
 
     class DictOfInt2NoneModel(Model[dict[int, NoneModel]]):
@@ -769,8 +771,8 @@ def test_dict_of_none():
         DictOfInt2NoneModel({'hello': None})
 
 
-def test_frozendict_of_none():
-    class NoneModel(Model[NoneType]):
+def test_frozendict_of_none() -> None:
+    class NoneModel(Model[None]):
         ...
 
     class FrozenDictOfInt2NoneModel(Model[FrozenDict[int, NoneModel]]):
@@ -800,9 +802,9 @@ def test_frozendict_of_none():
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason='Known issue, unknown why. Most probably related to pydantic v1 hack')
-def test_model_union_none_known_issue():
+def test_model_union_none_known_issue() -> None:
     with pytest.raises(ValidationError):
-        [Model[int | float]](None)
+        Model[int | float](None)
 
 
 @pytest.mark.skipif(
@@ -810,8 +812,8 @@ def test_model_union_none_known_issue():
     reason='Current pydantic v1 hack requires nested types like list and dict to explicitly'
     'include Optional in their arguments to support parsing of None when the level of '
     'nesting is 2 or more')
-def test_doubly_nested_list_and_dict_of_none_model_known_issue():
-    class NoneModel(Model[NoneType]):
+def test_doubly_nested_list_and_dict_of_none_model_known_issue() -> None:
+    class NoneModel(Model[None]):
         ...
 
     class ListOfListOfNoneModel(Model[list[list[NoneModel]]]):
@@ -1000,7 +1002,7 @@ def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_defa
     assert ListModel().contents == []
 
 
-def test_import_export_methods():
+def test_import_export_methods() -> None:
     assert Model[int](12).to_data() == 12
     assert Model[str]('test').to_data() == 'test'
     assert Model[dict]({'a': 2}).to_data() == {'a': 2}
@@ -1020,7 +1022,7 @@ def test_import_export_methods():
     model_int.from_json('12')
     assert model_int.to_data() == 12
 
-    model_int.contents = '13'
+    model_int.contents = '13'  # type: ignore[assignment]
     assert model_int.contents == '13'
     model_int.validate_contents()
     assert model_int.contents == 13
@@ -1039,7 +1041,7 @@ def test_import_export_methods():
     assert model_str.contents == 'test'
     assert model_str.to_data() == 'test'
 
-    model_str.contents = 13
+    model_str.contents = 13  # type: ignore[assignment]
     assert model_str.contents == 13
     model_str.validate_contents()
     assert model_str.contents == '13'
@@ -1093,7 +1095,7 @@ def test_import_export_methods():
 
 
 # This would probably cause more trouble than it's worth and is (possibly permanently) put on ice
-# def test_mimic_isinstance():
+# def test_mimic_isinstance() -> None:
 #     assert isinstance(Model[int](), int)
 #     assert not isinstance(Model[int](), str)
 #     assert isinstance(Model[str](), str)
@@ -1120,7 +1122,7 @@ def test_import_export_methods():
 #     assert isinstance(Model[MyChildClass](), MyParentClass)
 #
 #
-# def test_mimic_isinstance_union():
+# def test_mimic_isinstance_union() -> None:
 #     assert not isinstance(Model[int | str](), UnionType)
 #     assert not isinstance(Model[int | str](1), UnionType)
 #     assert not isinstance(Model[int | str]('1'), UnionType)
@@ -1170,37 +1172,37 @@ def test_model_of_pydantic_model() -> None:
     }
 
 
-def test_mimic_simple_list_operations():
+def test_mimic_simple_list_operations() -> None:
     model = Model[list[int]]()
     assert len(model) == 0
 
     model.append(123)
     assert len(model) == 1
-    assert model[0] == 123
+    assert model[0] == 123  # type: ignore[index]
     assert isinstance(model, Model)
 
-    model += [234, 345, 456]
+    model += [234, 345, 456]  # type: ignore[operator]
     assert len(model) == 4
-    assert model[-1] == 456
+    assert model[-1] == 456  # type: ignore[index]
     assert isinstance(model, Model)
 
-    assert model[1:-1].contents == [234, 345]
+    assert model[1:-1].contents == [234, 345]  # type: ignore[index]
     assert isinstance(model, Model)
 
     assert tuple(reversed(model)) == (456, 345, 234, 123)
 
     model[2] = 432
     model[3] = '654'
-    assert model[2] == 432
-    assert model[3] == 654
+    assert model[2] == 432  # type: ignore[index]
+    assert model[3] == 654  # type: ignore[index]
 
     with pytest.raises(ValidationError):
         model[0] = 'bacon'
 
-    assert model[1] == 234
+    assert model[1] == 234  # type: ignore[index]
 
-    model[1] /= 2
-    assert model[1] == 117
+    model[1] /= 2  # type: ignore[index]
+    assert model[1] == 117  # type: ignore[index]
     assert isinstance(model, Model)
 
     assert model.contents == [123, 117, 432, 654]
@@ -1210,7 +1212,7 @@ def test_mimic_simple_list_operations():
     assert len(model) == 3
 
 
-def test_mimic_nested_list_operations_no_validation_at_second_level():
+def test_mimic_nested_list_operations_no_validation_at_second_level() -> None:
     model = Model[list[int | list[int]]]([123, 234, [345]])
 
     with pytest.raises(ValidationError):
@@ -1233,31 +1235,31 @@ def test_mimic_nested_list_operations_no_validation_at_second_level():
 
     # model[-1] is the result of an __getitem__ and is not wrapped as a Model
     assert isinstance(model, Model)
-    assert not isinstance(model, list)
-    assert not isinstance(model[-1], Model)
-    assert isinstance(model[-1], list)
+    assert not isinstance(model, list)  # type: ignore[unreachable]
+    assert not isinstance(model[-1], Model)  # type: ignore[index]
+    assert isinstance(model[-1], list)  # type: ignore[index]
 
-    model[-1].append(tuple(range(3)))
-    assert len(model[-1]) == 4
+    model[-1].append(tuple(range(3)))  # type: ignore[index]
+    assert len(model[-1]) == 4  # type: ignore[index]
     assert model.contents == [123, 234, [0, 1, 2, (0, 1, 2)]]
 
-    assert model[-1][-1][-1] == 2
+    assert model[-1][-1][-1] == 2  # type: ignore[index]
 
     with pytest.raises(TypeError):
-        model[-1][-1][-1] = 15
-    assert isinstance(model[-1][-1], tuple)
-    assert not isinstance(model[-1][1], Model)
+        model[-1][-1][-1] = 15  # type: ignore[index]
+    assert isinstance(model[-1][-1], tuple)  # type: ignore[index]
+    assert not isinstance(model[-1][1], Model)  # type: ignore[index]
 
     # Here the `model[-1] +=` operation is a series of `__get__`, `__iadd__`, and `__set__`
     # operations, with the `__get__` and `__set__` operating on the "parent" model object.
     # In contrast, the `append()` method only operates on the child level. As only the parent is
     # a Model object, the `+=` operation will trigger a validation, while the `append()` will not.
     with pytest.raises(ValidationError):
-        model[-1] += ('a',)
+        model[-1] += ('a',)  # type: ignore[index]
     assert model.contents == [123, 234, [0, 1, 2]]
 
 
-def test_mimic_nested_list_operations_with_full_validation():
+def test_mimic_nested_list_operations_with_full_validation() -> None:
     model = Model[list[Model[list[Model[list[int]] | int]] | int]]([123, 234, [345]])
 
     model[-1] = tuple(range(3))
@@ -1265,33 +1267,33 @@ def test_mimic_nested_list_operations_with_full_validation():
 
     # model[-1] is wrapped as a Model according to nested type args
     assert isinstance(model, Model)
-    assert not isinstance(model, list)
-    assert isinstance(model[-1], Model)
-    assert not isinstance(model[-1], list)
+    assert not isinstance(model, list)  # type: ignore[unreachable]
+    assert isinstance(model[-1], Model)  # type: ignore[index]
+    assert not isinstance(model[-1], list)  # type: ignore[index, unreachable]
 
-    model[-1].append(tuple(range(3)))
-    assert len(model[-1]) == 4
+    model[-1].append(tuple(range(3)))  # type: ignore[index]
+    assert len(model[-1]) == 4  # type: ignore[index]
     assert model.to_data() == [123, 234, [0, 1, 2, [0, 1, 2]]]
 
-    assert model[-1][-1][-1] == 2
+    assert model[-1][-1][-1] == 2  # type: ignore[index]
 
-    model[-1][-1][-1] = 15
+    model[-1][-1][-1] = 15  # type: ignore[index]
     assert model.to_data() == [123, 234, [0, 1, 2, [0, 1, 15]]]
-    assert not isinstance(model[-1][-1], tuple)
-    assert isinstance(model[-1][-1], Model)
+    assert not isinstance(model[-1][-1], tuple)  # type: ignore[index]
+    assert isinstance(model[-1][-1], Model)  # type: ignore[index]
 
     with pytest.raises(ValidationError):
-        model[-1] += ('a',)
+        model[-1] += ('a',)  # type: ignore[index, operator]
     with pytest.raises(ValidationError):
-        model[-1][3] += ('b',)
+        model[-1][3] += ('b',)  # type: ignore[index]
     assert model.to_data() == [123, 234, [0, 1, 2, [0, 1, 15]]]
 
 
-def test_model_operations_as_dict():
+def test_model_operations_as_dict() -> None:
     model = Model[dict[str, int]]({'abc': 123})
 
     assert len(model) == 1
-    assert model['abc'] == 123
+    assert model['abc'] == 123  # type: ignore[index]
 
     model['abc'] = 321
     model['bcd'] = 234
@@ -1300,11 +1302,11 @@ def test_model_operations_as_dict():
     with pytest.raises(ValidationError):
         model['def'] = 'eggs'
 
-    assert 'cde' in model
-    assert 'def' not in model
+    assert 'cde' in model  # type: ignore[operator]
+    assert 'def' not in model  # type: ignore[operator]
 
     assert len(model) == 3
-    assert model['abc'] == 321
+    assert model['abc'] == 321  # type: ignore[index]
 
     assert model.contents == {'abc': 321, 'bcd': 234, 'cde': 345}
 
@@ -1314,11 +1316,11 @@ def test_model_operations_as_dict():
 
     assert isinstance(model, Model)
     model.update({'def': 456, 'efg': 567})
-    assert 'def' in model
+    assert 'def' in model  # type: ignore[operator]
     assert isinstance(model, Model)
 
-    model |= {'efg': 765, 'ghi': 678}
-    assert model['efg'] == 765
+    model |= {'efg': 765, 'ghi': 678}  # type: ignore[operator]
+    assert model['efg'] == 765  # type: ignore[index]
     assert isinstance(model, Model)
 
     del model['bcd']
@@ -1328,7 +1330,7 @@ def test_model_operations_as_dict():
     assert model == Model[dict[str, int]](other)
 
 
-def test_mimic_nested_dict_operations_no_validation_at_second_level():
+def test_mimic_nested_dict_operations_no_validation_at_second_level() -> None:
     model = Model[dict[str, dict[int, int] | int]]({'a': {12: 234, 13: 345}})
 
     with pytest.raises(ValidationError):
@@ -1352,24 +1354,24 @@ def test_mimic_nested_dict_operations_no_validation_at_second_level():
 
     # model['a'] is the result of an __getitem__ and is not wrapped as a Model
     assert isinstance(model, Model)
-    assert not isinstance(model, dict)
-    assert not isinstance(model['a'], Model)
-    assert isinstance(model['a'], dict)
+    assert not isinstance(model, dict)  # type: ignore[unreachable]
+    assert not isinstance(model['a'], Model)  # type: ignore[index]
+    assert isinstance(model['a'], dict)  # type: ignore[index]
 
     # As model['a'] is not a Model, update() does not validate
-    f = model['a']
+    f = model['a']  # type: ignore[index]
     f.update({'14': '654', '15': {'a': 'b'}})
-    assert len(model['a']) == 3
+    assert len(model['a']) == 3  # type: ignore[index]
     assert model.contents == {'a': {14: 456, '14': '654', '15': {'a': 'b'}}}
 
     # The|= operator combines an "__or__" (which equals to update() for dicts)(
     with pytest.raises(ValidationError):
-        model['a'] |= {'16': 'a'}
+        model['a'] |= {'16': 'a'}  # type: ignore[index]
 
     assert model.contents == {'a': {14: 456}}
 
 
-def test_mimic_nested_dict_operations_with_full_validation():
+def test_mimic_nested_dict_operations_with_full_validation() -> None:
     model = Model[dict[str, Model[dict[int, Model[dict[int, int]] | int] | int]]]({
         'a': {
             12: 234, 13: 345
@@ -1397,95 +1399,103 @@ def test_mimic_nested_dict_operations_with_full_validation():
     assert model.to_data() == ({'a': {14: 456}})
 
     assert isinstance(model, Model)
-    assert not isinstance(model, dict)
-    assert isinstance(model['a'], Model)
-    assert not isinstance(model['a'], dict)
+    assert not isinstance(model, dict)  # type: ignore[unreachable]
+    assert isinstance(model['a'], Model)  # type: ignore[index]
+    assert not isinstance(model['a'], dict)  # type: ignore[index, unreachable]
 
     with pytest.raises(ValidationError):
-        model['a'].update({'14': '654', '15': {'a': 'b'}})
+        model['a'].update({'14': '654', '15': {'a': 'b'}})  # type: ignore[index]
 
-    assert len(model['a']) == 1
+    assert len(model['a']) == 1  # type: ignore[index]
     assert model.to_data() == {'a': {14: 456}}
 
     with pytest.raises(ValidationError):
-        model['a'].update({'14': '654', '15': {'111': {1: 2}}})
+        model['a'].update({'14': '654', '15': {'111': {1: 2}}})  # type: ignore[index]
 
-    model['a'].update({'14': '654', '15': {'111': 4321}})
+    model['a'].update({'14': '654', '15': {'111': 4321}})  # type: ignore[index]
 
-    assert len(model['a']) == 2
+    assert len(model['a']) == 2  # type: ignore[index]
     assert model.to_data() == {'a': {14: 654, 15: {111: 4321}}}
 
     with pytest.raises(ValidationError):
-        model['a'] |= {'16': {'a': 'b'}}
+        model['a'] |= {'16': {'a': 'b'}}  # type: ignore[index, operator]
 
-    model['a'] |= {'16': {'112': 5432}}
+    model['a'] |= {'16': {'112': 5432}}  # type: ignore[index, operator]
     assert model.to_data() == {'a': {14: 654, 15: {111: 4321}, 16: {112: 5432}}}
 
     with pytest.raises(ValidationError):
-        model['a'][15] |= {112: tuple(range(3))}
+        model['a'][15] |= {112: tuple(range(3))}  # type: ignore[index]
 
     with pytest.raises(ValidationError):
-        model['a'][15] |= {'112': 'a'}
+        model['a'][15] |= {'112': 'a'}  # type: ignore[index]
 
     with pytest.raises(ValidationError):
-        model['a'][15] |= {'112': []}
+        model['a'][15] |= {'112': []}  # type: ignore[index]
 
     with pytest.raises(ValidationError):
-        model['a'][15][111] = []
+        model['a'][15][111] = []  # type: ignore[index]
 
-    model['a'][15] = []
+    model['a'][15] = []  # type: ignore[index]
     assert model.to_data() == {'a': {14: 654, 15: {}, 16: {112: 5432}}}
 
 
-def test_model_operations_as_scalars():
-    model = Model[int](1)
+def test_model_operations_as_scalars() -> None:
+    int_model = Model[int](1)
 
-    assert (model + 1).contents == 2
-    assert (1 + model).contents == 2
-    assert model.contents == 1
+    assert (int_model + 1).contents == 2  # type: ignore[operator, attr-defined]
+    assert (1 + int_model).contents == 2  # type: ignore[operator, attr-defined]
+    assert int_model.contents == 1
 
-    model *= 10
-    assert model.contents == 10
+    int_model *= 10  # type: ignore[operator, assignment]
+    assert int_model.contents == 10
 
-    assert model / 3 == pytest.approx(3.333333)  # converting to other basic type removes Model
-    assert (model // 3).contents == 3
-    assert -model.contents == -10
+    # converting to other basic type removes Model
+    assert int_model / 3 == pytest.approx(3.333333)  # type: ignore[operator]
+    assert (int_model // 3).contents == 3  # type: ignore[operator, attr-defined]
+    assert -int_model.contents == -10
 
-    assert (model % 3).contents == 1  # modulo
-    assert (model & 2).contents == 2  # bitwise AND
-    assert (model**2).contents == 100  # power
+    # modulo
+    assert (int_model % 3).contents == 1  # type: ignore[operator, attr-defined]
+    # bitwise AND
+    assert (int_model & 2).contents == 2  # type: ignore[operator, attr-defined]
+    # power
+    assert (int_model**2).contents == 100  # type: ignore[operator]
 
-    assert float(model) == float(10)  # converting to other basic type removes Model
+    assert float(int_model) == float(10)  # converting to other basic type removes Model
 
-    model = Model[float](10)
-    assert (model / 3).contents == pytest.approx(3.333333)
+    float_model = Model[float](10)
+    assert (float_model / 3).contents == pytest.approx(  # type: ignore[operator, attr-defined]
+        3.333333)
 
-    model = Model[float](2.5)
-    assert floor(model) == 2  # converting to other basic type removes Model
+    float_model_2 = Model[float](2.5)
+    assert floor(float_model_2) == 2  # converting to other basic type removes Model
 
 
-def test_mimic_operations_as_union_of_scalars():
+def test_mimic_operations_as_union_of_scalars() -> None:
     model = Model[int | float](1)
 
-    assert (model + 1).contents == 2
-    assert (1 + model).contents == 2
+    assert (model + 1).contents == 2  # type: ignore[operator, attr-defined]
+    assert (1 + model).contents == 2  # type: ignore[operator, attr-defined]
     assert model.contents == 1
 
-    model *= 10
+    model *= 10  # type: ignore[operator, assignment]
     assert model.contents == 10
 
-    assert (model / 3).contents == pytest.approx(3.333333)
-    assert (model // 3).contents == 3
+    assert (model / 3).contents == pytest.approx(3.333333)  # type: ignore[operator, attr-defined]
+    assert (model // 3).contents == 3  # type: ignore[operator, attr-defined]
     assert -model.contents == -10
 
-    assert (model % 3).contents == 1  # modulo
-    assert (model & 2).contents == 2  # bitwise AND
-    assert (model**2).contents == 100  # power
+    # modulo
+    assert (model % 3).contents == 1  # type: ignore[operator, attr-defined]
+    # bitwise AND
+    assert (model & 2).contents == 2  # type: ignore[operator, attr-defined]
+    # power
+    assert (model**2).contents == 100  # type: ignore[operator]
 
     assert float(model) == 10  # float(), int(), etc always converts
 
 
-def test_mimic_operations_on_pydantic_models():
+def test_mimic_operations_on_pydantic_models() -> None:
     T = TypeVar('T')
 
     class MyPydanticModel(BaseModel):
@@ -1500,33 +1510,33 @@ def test_mimic_operations_on_pydantic_models():
     class MyGenericPydanticModelSubCls(MyGenericPydanticModel[int]):
         b: str = ''
 
-    model = Model[MyPydanticModel]()
-    assert model.a == 0
-    model.a = 2
-    assert model.a == 2
+    my_pydantic_model = Model[MyPydanticModel]()
+    assert my_pydantic_model.a == 0
+    my_pydantic_model.a = 2
+    assert my_pydantic_model.a == 2
 
-    model = Model[MyPydanticModelSubCls]()
-    assert model.a == 0
-    assert model.b == ''
-    model.b = 'something'
-    assert model.b == 'something'
+    my_pydantic_model_sub = Model[MyPydanticModelSubCls]()
+    assert my_pydantic_model_sub.a == 0
+    assert my_pydantic_model_sub.b == ''
+    my_pydantic_model_sub.b = 'something'
+    assert my_pydantic_model_sub.b == 'something'
 
-    model = Model[MyGenericPydanticModel[str]]()
-    assert model.a is None
-    model.a = 'something'
-    assert model.a == 'something'
+    my_generic_pydantic_model = Model[MyGenericPydanticModel[str]]()
+    assert my_generic_pydantic_model.a is None
+    my_generic_pydantic_model.a = 'something'
+    assert my_generic_pydantic_model.a == 'something'
 
-    model = Model[MyGenericPydanticModelSubCls]()
-    assert model.a == None
-    model.a = 2
-    assert model.a == 2
-    assert model.b == ''
-    model.b = 'something'
-    assert model.b == 'something'
+    my_generic_pydantic_model_sub = Model[MyGenericPydanticModelSubCls]()
+    assert my_generic_pydantic_model_sub.a == None
+    my_generic_pydantic_model_sub.a = 2
+    assert my_generic_pydantic_model_sub.a == 2
+    assert my_generic_pydantic_model_sub.b == ''
+    my_generic_pydantic_model_sub.b = 'something'
+    assert my_generic_pydantic_model_sub.b == 'something'
 
 
 # TODO: Add support in Model for mimicking the setting and deletion of properties
-# def test_mimic_property():
+# def test_mimic_property() -> None:
 #     class MyMetadata:
 #         def __init__(self) -> None:
 #             self._metadata: str | None = 'metadata'
@@ -1564,7 +1574,7 @@ def test_mimic_operations_on_pydantic_models():
 #     assert model.metadata == 'my metadata'
 
 
-def test_mimic_callable_property():
+def test_mimic_callable_property() -> None:
     # Example of previously failing callable property is pandas.DataFrame.loc
 
     class MyCallable:
@@ -1586,7 +1596,7 @@ def test_mimic_callable_property():
     assert model.func.called is False
 
 
-def test_literal_model_defaults():
+def test_literal_model_defaults() -> None:
     assert LiteralFiveModel().to_data() == 5
     assert LiteralFiveModel().outer_type(with_args=True) is Literal[5]
 
@@ -1597,7 +1607,7 @@ def test_literal_model_defaults():
     assert LiteralFiveOrTextModel().outer_type(with_args=True) is Literal[5, 'text']
 
 
-def test_literal_model_validation():
+def test_literal_model_validation() -> None:
     with pytest.raises(ValidationError):
         LiteralFiveModel(4)
 
@@ -1611,7 +1621,7 @@ def test_literal_model_validation():
         LiteralFiveOrTextModel('txt')
 
 
-def test_mimic_operations_on_literal_models():
+def test_mimic_operations_on_literal_models() -> None:
     assert LiteralFiveModel(5) / 5 == 1
     with pytest.raises(AttributeError):
         LiteralFiveModel().upper()
@@ -1630,12 +1640,12 @@ def test_mimic_operations_on_literal_models():
 
 
 @pytest.mark.skipif(os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1', reason="Not implemented")
-def test_model_copy():
+def test_model_copy() -> None:
     ...
 
 
-def test_json_schema_generic_model_one_level():
-    ListT = TypeVar('ListT', bound=list)  # noqa
+def test_json_schema_generic_model_one_level() -> None:
+    ListT = TypeVar('ListT', bound=list)
 
     # Note that the TypeVars need to be bound to a type who in itself, or whose origin_type
     # produces a default value when called without parameters. Here, `ListT` is bound to list,
@@ -1661,8 +1671,8 @@ def test_json_schema_generic_model_one_level():
     }""")
 
 
-def test_json_schema_generic_model_two_levels():
-    StrT = TypeVar('StrT', bound=str)  # noqa
+def test_json_schema_generic_model_two_levels() -> None:
+    StrT = TypeVar('StrT', bound=str)
 
     class MyListOfStrings(Model[list[StrT]], Generic[StrT]):
         """My very own list of strings!"""
@@ -1699,8 +1709,8 @@ is not available from MyListOfStrings to_json_schema method.
 Any workarounds should best be implemented in pydantic,
 possibly in omnipy if this becomes a real issue.
 """)
-def test_json_schema_generic_models_known_issue():
-    ListT = TypeVar('ListT', bound=list)  # noqa
+def test_json_schema_generic_models_known_issue() -> None:
+    ListT = TypeVar('ListT', bound=list)
 
     class MyList(Model[ListT], Generic[ListT]):
         """My very interesting list model!"""
@@ -1726,7 +1736,7 @@ def test_json_schema_generic_models_known_issue():
     }""")
 
 
-def test_custom_parser():
+def test_custom_parser() -> None:
     class UpperCaseStr(Model[str]):
         @classmethod
         def _parse_data(cls, data: str) -> str:
@@ -1741,7 +1751,7 @@ def test_custom_parser():
     assert model.to_data() == 'I NEED SOMEBODY!'
 
 
-def test_custom_parser_and_validation():
+def test_custom_parser_and_validation() -> None:
     class OnlyUpperCaseLettersStr(Model[str]):
         @classmethod
         def _parse_data(cls, data: str) -> str:
@@ -1751,8 +1761,8 @@ def test_custom_parser_and_validation():
     assert OnlyUpperCaseLettersStr('help').to_data() == 'HELP'
 
     model = OnlyUpperCaseLettersStr()
-    model.from_data('Notjustanybody')  # noqa
-    assert model.to_data() == 'NOTJUSTANYBODY'  # noqa
+    model.from_data('Notjustanybody')
+    assert model.to_data() == 'NOTJUSTANYBODY'
 
     with pytest.raises(ValidationError):
         OnlyUpperCaseLettersStr('Help!')
@@ -1762,7 +1772,7 @@ def test_custom_parser_and_validation():
         model.from_data('Not just anybody! Call 911!!')
 
 
-def test_custom_parser_to_other_type():
+def test_custom_parser_to_other_type() -> None:
     from .helpers.models import StringToLength
 
     assert StringToLength('So we sailed up to the sun').to_data() == 26
@@ -1771,7 +1781,7 @@ def test_custom_parser_to_other_type():
     assert string_to_length.to_data() == 30
 
 
-def test_nested_model():
+def test_nested_model() -> None:
     class DictToListOfPositiveInts(Model[dict[PositiveInt, list[PositiveInt]]]):
         """This model is perfect for a mapping product numbers to factor lists"""
 
@@ -1785,12 +1795,12 @@ def test_nested_model():
     assert model_1.to_data() == product_factors
 
     unloaded_data = model_1.to_data()
-    unloaded_data[10] = [-2, -5]
+    unloaded_data[10] = [-2, -5]  # type: ignore[index]
 
     with pytest.raises(ValidationError):
         model_1.from_data(unloaded_data)
 
-    unloaded_data[10] = [2, 5]
+    unloaded_data[10] = [2, 5]  # type: ignore[index]
     model_1.from_data(unloaded_data)
     assert model_1.to_data() == unloaded_data
 
@@ -1801,8 +1811,16 @@ def test_nested_model():
     model_2 = DictToListOfPositiveInts()
     model_2.from_json('{"2": [2], "3": [3], "4": [2, 2], "5": [5], "6": [2, 3], '
                       '"7": [7], "8": [2, 2, 2], "9": [3, 3], "10": [2, 5]}')
-    assert sorted(model_2.to_data()) == sorted({
-        2: [2], 3: [3], 4: [2, 2], 5: [5], 6: [2, 3], 7: [7], 8: [2, 2, 2], 9: [3, 3], 10: [2, 5]
+    assert sorted(model_2.to_data()) == sorted({  # type: ignore[call-overload]
+        2: [2],
+        3: [3],
+        4: [2, 2],
+        5: [5],
+        6: [2, 3],
+        7: [7],
+        8: [2, 2, 2],
+        9: [3, 3],
+        10: [2, 5]
     })
 
     assert model_1.to_json_schema() == dedent("""\
@@ -1820,7 +1838,7 @@ def test_nested_model():
     }""")
 
 
-def test_complex_nested_models():
+def test_complex_nested_models() -> None:
     class ProductFactorsTuple(Model[tuple[PositiveInt, list[PositiveInt]]]):
         """This model maps a single product to its product_factors, including validation"""
         @classmethod
@@ -1847,12 +1865,12 @@ def test_complex_nested_models():
     assert model.to_data() == product_factors_as_tuples
 
     unloaded_data = model.to_data()
-    unloaded_data.append((10, [3, 5]))
+    unloaded_data.append((10, [3, 5]))  # type: ignore[attr-defined]
 
     with pytest.raises(ValidationError):
         model.from_data(unloaded_data)
 
-    unloaded_data[-1] = (10, [2, 5])
+    unloaded_data[-1] = (10, [2, 5])  # type: ignore[index]
     model.from_data(unloaded_data)
 
     assert model.to_data() == unloaded_data
@@ -1911,7 +1929,7 @@ def test_complex_nested_models():
     }""")
 
 
-def test_pandas_dataframe_non_builtin_direct():
+def test_pandas_dataframe_non_builtin_direct() -> None:
     # TODO: Using pandas here to test concept of non-builtin data structures. Switch to other
     #  example to remove dependency, to prepare splitting of pandas module to separate repo
 
@@ -1968,7 +1986,7 @@ def test_parametrized_model() -> None:
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason='ParamModel does not support None values yet. Wait until pydantic v2 removes the'
     'Annotated hack to simplify implementation')
-def test_parametrized_model_with_none():
+def test_parametrized_model_with_none() -> None:
     with pytest.raises(ValidationError):
         UpperStrModel(None)
     with pytest.raises(ValidationError):
