@@ -1,5 +1,6 @@
 from contextlib import AbstractContextManager, contextmanager
 from copy import deepcopy
+from typing import ContextManager
 
 from omnipy.util.helpers import all_equals
 
@@ -87,7 +88,7 @@ class AttribHolder(AbstractContextManager):
 
 
 @contextmanager
-def nothing(*args, **kwds):
+def nothing(*args, **kwds) -> ContextManager[None]:
     yield None
 
 

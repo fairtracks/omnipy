@@ -198,9 +198,13 @@ def test_more_dict_methods_with_parsing():
         Dataset[Model[str]](data_file_1='321', data_file_2='321')
 
     assert len(dataset) == 3
+    assert 'data_file_2' in dataset
+    assert 'data_file_3' in dataset
+    assert 'data_file_4' in dataset
 
     dataset.pop('data_file_3')
     assert len(dataset) == 2
+    assert 'data_file_3' not in dataset
 
     # UserDict() implementation of popitem pops items FIFO contrary of the LIFO specified
     # in the standard library: https://docs.python.org/3/library/stdtypes.html#dict.popitem
@@ -538,6 +542,62 @@ def test_import_export_custom_parser_to_other_type():
         }
       }
     }''')  # noqa: Q001
+
+
+def test_copy():
+    from copy import copy
+    numbers = [1, 2, 3]
+    dataset = Dataset[Model[list[int]]]({'data_file_1': numbers, 'data_file_2': numbers})
+
+    for dataset_copy in [dataset.copy(), copy(dataset)]:
+        assert dataset == dataset_copy
+        assert type(dataset) == type(dataset_copy)
+
+        dataset['data_file_1'].append(4)
+        assert dataset == dataset_copy
+
+        dataset['data_file_3'] = numbers
+        assert dataset != dataset_copy
+        assert len(dataset) != len(dataset_copy)
+
+        assert dataset['data_file_1'].contents == [1, 2, 3, 4]
+        assert dataset_copy['data_file_1'].contents == [1, 2, 3, 4]
+
+        assert dataset['data_file_2'].contents == [1, 2, 3]
+        assert dataset_copy['data_file_2'].contents == [1, 2, 3]
+
+        assert dataset['data_file_3'].contents == [1, 2, 3]
+        assert 'data_file_3' not in dataset_copy
+
+        dataset['data_file_1'].remove(4)
+        del dataset['data_file_3']
+
+
+def test_deepcopy():
+    from copy import deepcopy
+    numbers = [1, 2, 3]
+    dataset = Dataset[Model[list[int]]]({'data_file_1': numbers, 'data_file_2': numbers})
+
+    for dataset_deepcopy in [dataset.deepcopy(), deepcopy(dataset)]:
+        assert dataset == dataset_deepcopy
+
+        dataset['data_file_1'].append(4)
+        assert dataset != dataset_deepcopy
+
+        dataset['data_file_3'] = numbers
+        assert len(dataset) != len(dataset_deepcopy)
+
+        assert dataset['data_file_1'].contents == [1, 2, 3, 4]
+        assert dataset_deepcopy['data_file_1'].contents == [1, 2, 3]
+
+        assert dataset['data_file_2'].contents == [1, 2, 3]
+        assert dataset_deepcopy['data_file_2'].contents == [1, 2, 3]
+
+        assert dataset['data_file_3'].contents == [1, 2, 3]
+        assert 'data_file_3' not in dataset_deepcopy
+
+        dataset['data_file_1'].remove(4)
+        del dataset['data_file_3']
 
 
 def test_generic_dataset_unbound_typevar():

@@ -13,7 +13,6 @@ from typing import (Annotated,
                     get_origin,
                     Iterator,
                     Optional,
-                    Type,
                     TypeAlias,
                     TypeVar)
 from urllib.parse import ParseResult, urlparse
@@ -26,6 +25,7 @@ from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.utils import lenient_isinstance, lenient_issubclass
 
+from omnipy.api.protocols.public.data import IsModel
 from omnipy.data.model import (_cleanup_name_qualname_and_module,
                                _is_interactive_mode,
                                _waiting_for_terminal_repr,
@@ -110,7 +110,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
 
     data: dict[str, ModelT] = Field(default={})
 
-    def __class_getitem__(cls, model: ModelT) -> ModelT:
+    def __class_getitem__(cls, model: ModelT) -> ModelT:  # type: ignore[override]
         # TODO: change model type to params: Type[Any] | tuple[Type[Any], ...]
         #       as in GenericModel.
 
@@ -140,7 +140,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         if cls == Dataset and not is_optional(model):  # TODO: Handle MultiModelDataset??
             model = Annotated[Optional[model], 'Fake Optional from Dataset']
 
-        created_dataset = super().__class_getitem__(model)
+        created_dataset = super().__class_getitem__(model)  # type: ignore[override]
 
         _cleanup_name_qualname_and_module(cls, created_dataset, model, orig_model)
 
@@ -225,7 +225,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         return cast(ModelField, cls.__fields__.get(DATA_KEY))
 
     @classmethod
-    def get_model_class(cls) -> Type[Model]:
+    def get_model_class(cls) -> type[ModelT]:
         """
         Returns the concrete Model class used for all data files in the dataset, e.g.:
         `Model[list[int]]`
@@ -271,6 +271,28 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
                 'It is a statically typed specialization of the Dataset class according to a '
                 'particular specialization of the Model class. Both main classes are wrapping '
                 'the excellent Python package named `pydantic`.')
+
+    # def copy(
+    #         self: 'Model',
+    #         *,
+    #         include: Optional[Union['AbstractSetIntStr', 'MappingIntStrAny']] = None,
+    #         exclude: Optional[Union['AbstractSetIntStr', 'MappingIntStrAny']] = None,
+    #         update: Optional['DictStrAny'] = None,
+    #         deep: bool = False,
+    # ) -> 'Model':
+    #     pass
+
+    def copy(self):
+        return self.__copy__()
+
+    def deepcopy(self):
+        return self.__deepcopy__()
+
+    def __copy__(self):
+        return GenericModel.copy(self, update={'data': self.data.copy()}, deep=False)
+
+    def __deepcopy__(self, _memo=None):
+        return GenericModel.copy(self, deep=True)
 
     def __setitem__(self, data_file: str, data_obj: Any) -> None:
         has_prev_value = data_file in self.data
@@ -573,9 +595,12 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
         custom models.
     """
 
-    _custom_field_models: dict[str, ModelT] = PrivateAttr(default={})
+    # Custom field models should really be a subtype of ModelT, however this is currently not
+    # checkable in the type system. Instead, we rely on the _validate method to ensure that the
+    # custom field models are valid.
+    _custom_field_models: dict[str, type[IsModel]] = PrivateAttr(default={})
 
-    def set_model(self, data_file: str, model: ModelT) -> None:
+    def set_model(self, data_file: str, model: type[IsModel]) -> None:
         try:
             self._custom_field_models[data_file] = model
             if data_file in self.data:
@@ -586,7 +611,7 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
             del self._custom_field_models[data_file]
             raise
 
-    def get_model(self, data_file: str) -> ModelT:
+    def get_model(self, data_file: str) -> type[IsModel]:
         if data_file in self._custom_field_models:
             return self._custom_field_models[data_file]
         else:

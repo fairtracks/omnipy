@@ -6,6 +6,6 @@ _terminal_size = shutil.get_terminal_size()
 
 @dataclass
 class DataConfig:
-    interactive_mode: bool = True
+    interactive_mode: bool = False
     terminal_size_columns: int = _terminal_size.columns
     terminal_size_lines: int = _terminal_size.lines

@@ -3,6 +3,7 @@ from copy import copy, deepcopy
 import inspect
 from inspect import getmodule, isclass
 import locale as pkg_locale
+from pathlib import Path
 from types import GenericAlias, ModuleType, UnionType
 from typing import (Annotated,
                     Any,
@@ -13,7 +14,6 @@ from typing import (Annotated,
                     Mapping,
                     NamedTuple,
                     Protocol,
-                    Type,
                     TypeVar,
                     Union)
 
@@ -24,7 +24,7 @@ from pydantic.generics import GenericModel
 from pydantic.typing import display_as_type
 from typing_inspect import get_generic_bases, is_generic_type
 
-from omnipy.api.typedefs import LocaleType
+from omnipy.api.typedefs import LocaleType, TypeForm
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
 
@@ -172,12 +172,11 @@ class IsDataclass(Protocol):
     __dataclass_fields__: ClassVar[dict]
 
 
-def remove_annotated_plus_optional_if_present(
-        type_or_class: Type | UnionType | object) -> Type | UnionType | object:
+def remove_annotated_plus_optional_if_present(type_or_class: TypeForm) -> TypeForm:
     if get_origin(type_or_class) == Annotated:
         type_or_class = get_args(type_or_class)[0]
         if is_optional(type_or_class):
-            args = get_args(type_or_class)
+            args: tuple[type, ...] = get_args(type_or_class)
             if len(args) == 2:
                 type_or_class = args[0]
             else:
@@ -274,3 +273,9 @@ def called_from_omnipy_tests() -> bool:
                 and 'omnipy/tests' in module.__file__:
             return True
     return False
+
+
+def ensure_path_obj(dir_path: Path | str) -> Path:
+    if isinstance(dir_path, str):
+        dir_path = Path(dir_path)
+    return dir_path

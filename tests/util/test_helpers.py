@@ -168,14 +168,14 @@ def test_has_items() -> None:
         return 1
 
     a = MyClass()
-    a.__len__ = MethodType(__len__, a)
+    a.__len__ = MethodType(__len__, a)  # type: ignore[attr-defined]
 
     assert has_items(a) is True
 
 
 def test_get_first_item() -> None:
     with pytest.raises(AssertionError):
-        get_first_item(42)
+        get_first_item(42)  # type: ignore[arg-type]
 
     with pytest.raises(AssertionError):
         get_first_item('')
@@ -204,7 +204,7 @@ def test_is_union() -> None:
     assert is_union(Union[Union[str, int], None]) is True
     assert is_union(Union[Union[str, None], int]) is True
 
-    assert is_union(Union[str, int] | None) is True
+    assert is_union(Union[str, int] | None) is True  # type: ignore[operator]
     assert is_union(Union[str, None] | int) is True
     assert is_union(Union) is True
 
@@ -237,7 +237,7 @@ def test_is_optional() -> None:
     assert is_optional(Union[Union[str, NoneType], int]) is True
     assert is_optional(Union[Union[str, None], int]) is True
 
-    assert is_optional(Union[str, int] | None) is True
+    assert is_optional(Union[str, int] | None) is True  # type: ignore[operator]
     assert is_optional(Union[str, int] | NoneType) is True
     assert is_optional(Union[str, NoneType] | int) is True
     assert is_optional(Union[str, None] | int) is True
@@ -435,7 +435,7 @@ def test_restorable_contents():
 
 
 def test_get_calling_module_name() -> None:
-    def local_call_get_calling_module_name() -> str:
+    def local_call_get_calling_module_name() -> str | None:
         return get_calling_module_name()
 
     from .helpers.other_module import (calling_module_name_when_importing_other_module,

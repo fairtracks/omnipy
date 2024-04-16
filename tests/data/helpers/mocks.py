@@ -1,20 +1,28 @@
+from io import BytesIO
 import sys
-from typing import Any, IO, Type
+from typing import Any, BinaryIO, Callable, IO, Type
 
 from omnipy.api.protocols.public.data import IsDataset
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-from omnipy.data.serializer import Serializer, TarFileSerializer
+from omnipy.data.serializer import (BytesSerializerMixin,
+                                    DirectorySerializerMixin,
+                                    Serializer,
+                                    TarFileSerializer)
 
 
 class NumberDataset(Dataset[Model[int]]):
     ...
 
 
-class MockNumberSerializer(Serializer):
+class TextDataset(Dataset[Model[str]]):
+    ...
+
+
+class MockNumberSerializer(Serializer, BytesSerializerMixin[int], DirectorySerializerMixin[int]):
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
-        return isinstance(dataset, NumberDataset)
+        return isinstance(dataset, Dataset) and dataset.get_model_class() == Model[int]
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
@@ -25,16 +33,34 @@ class MockNumberSerializer(Serializer):
         return 'num'
 
     @classmethod
-    def serialize(cls, number_dataset: NumberDataset) -> bytes | memoryview:
-        return ','.join(
-            ':'.join([k, str(v.contents)]) for (k, v) in number_dataset.items()).encode('utf8')
+    def encode_data(cls, dataset_key: str, data: int) -> bytes:
+        return bytes([data])
 
     @classmethod
-    def deserialize(cls, serialized_bytes: bytes, any_file_suffix=False) -> NumberDataset:
-        number_dataset = NumberDataset()
-        for key, val in [_.split(':') for _ in serialized_bytes.decode('utf8').split(',')]:
-            number_dataset[key] = int(val)
-        return number_dataset
+    def decode_data(cls, dataset_key: str, encoded_data: bytes) -> int:
+        return int.from_bytes(encoded_data, byteorder=sys.byteorder)
+
+
+class MockTextSerializer(Serializer, BytesSerializerMixin[str], DirectorySerializerMixin[str]):
+    @classmethod
+    def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
+        return isinstance(dataset, Dataset) and dataset.get_model_class() == Model[str]
+
+    @classmethod
+    def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+        return TextDataset
+
+    @classmethod
+    def get_output_file_suffix(cls) -> str:
+        return 'txt'
+
+    @classmethod
+    def encode_data(cls, dataset_key: str, data: str) -> bytes:
+        return data.encode('utf8')
+
+    @classmethod
+    def decode_data(cls, dataset_key: str, encoded_data: bytes) -> str:
+        return encoded_data.decode('utf8')
 
 
 class MockNumberToTarFileSerializer(TarFileSerializer):

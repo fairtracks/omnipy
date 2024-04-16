@@ -8,6 +8,7 @@ from textwrap import dedent
 from types import ModuleType, NoneType, UnionType
 from typing import (Annotated,
                     Any,
+                    Callable,
                     cast,
                     ContextManager,
                     Generic,
@@ -441,10 +442,10 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             raise validation_error
         return values[ROOT_KEY]
 
-    def _get_restorable_contents(self):
+    def _get_restorable_contents(self) -> RestorableContents:
         if not id(self) in _restorable_content_cache:
             _restorable_content_cache[id(self)] = RestorableContents()
-        return _restorable_content_cache.get(id(self))
+        return _restorable_content_cache[id(self)]
 
     def _take_snapshot_of_validated_contents(self):
         interactive_mode = _is_interactive_mode()
@@ -525,6 +526,11 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
 
     @contents.setter
     def contents(self, value: _RootT) -> None:
+        """
+        Sets the contents of the model. Note: in contrast to the `__init__()`, `from_data()` and
+        `from_json()` methods, the contents are not validated automatically. To validate the contents,
+        call the `validate_contents()` method explicitly.
+        """
         super().__setattr__(ROOT_KEY, value)
 
     def dict(self, *args, **kwargs) -> dict[str, object]:
@@ -648,38 +654,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         method = self._getattr_from_contents_obj(name)
 
         if info.state_changing:
-            restorable = self._get_restorable_contents()
-            reset_solution: ContextManager
-
-            if _is_interactive_mode():
-                if restorable.has_snapshot() \
-                        and restorable.last_snapshot_taken_of_same_obj(self.contents) \
-                        and restorable.differs_from_last_snapshot(self.contents):
-
-                    # Current contents not validated
-                    reset_contents_to_last_snapshot = AttribHolder(
-                        self, 'contents', restorable.get_last_snapshot(), reset_to_other=True)
-                    with reset_contents_to_last_snapshot:
-                        validated_contents = self._validate_contents_from_value(self.contents)
-
-                    reset_contents_to_validated_prev = AttribHolder(
-                        self, 'contents', validated_contents, reset_to_other=True)
-                    reset_solution = reset_contents_to_validated_prev
-                else:
-                    reset_contents_to_prev = AttribHolder(self, 'contents', copy_attr=True)
-                    reset_solution = reset_contents_to_prev
-            else:
-                reset_solution = nothing()
-
-            with reset_solution:
-                ret = method(*args, **kwargs)
-                if _is_interactive_mode():
-                    needs_validation = restorable.differs_from_last_snapshot(self.contents) \
-                        if restorable.has_snapshot() else True
-                else:
-                    needs_validation = True
-                if needs_validation:
-                    self.validate_contents()
+            ret = self._call_method_with_content_reset_if_validation_error(method, *args, **kwargs)
         else:
             ret = method(*args, **kwargs)
 
@@ -687,6 +662,52 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             ret = self._convert_to_model_if_reasonable(args, name, ret)
 
         return ret
+
+    def _call_method_with_content_reset_if_validation_error(self,
+                                                            method: Callable,
+                                                            *args: object,
+                                                            **kwargs: object) -> object:
+        restorable_contents = self._get_restorable_contents()
+        contents_reset_solution = self._get_contents_reset_solution(restorable_contents)
+
+        with contents_reset_solution:
+            ret = method(*args, **kwargs)
+
+            if _is_interactive_mode():
+                needs_validation = \
+                    restorable_contents.differs_from_last_snapshot(self.contents) \
+                        if restorable_contents.has_snapshot() else True
+            else:
+                needs_validation = True
+
+            if needs_validation:
+                self.validate_contents()
+
+        return ret
+
+    def _get_contents_reset_solution(self, restorable) -> ContextManager:
+        reset_solution: ContextManager
+
+        if _is_interactive_mode():
+            if restorable.has_snapshot() \
+                    and restorable.last_snapshot_taken_of_same_obj(self.contents) \
+                    and restorable.differs_from_last_snapshot(self.contents):
+
+                # Current contents not validated
+                reset_contents_to_last_snapshot = AttribHolder(
+                    self, 'contents', restorable.get_last_snapshot(), reset_to_other=True)
+                with reset_contents_to_last_snapshot:
+                    validated_contents = self._validate_contents_from_value(self.contents)
+
+                reset_contents_to_validated_prev = AttribHolder(
+                    self, 'contents', validated_contents, reset_to_other=True)
+                reset_solution = reset_contents_to_validated_prev
+            else:
+                reset_contents_to_prev = AttribHolder(self, 'contents', copy_attr=True)
+                reset_solution = reset_contents_to_prev
+        else:
+            reset_solution = nothing()
+        return reset_solution
 
     def _convert_to_model_if_reasonable(self, args, name, ret):
         if not isinstance(ret, self.__class__):
