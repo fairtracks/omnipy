@@ -31,6 +31,7 @@ from pydantic.main import BaseModel, ModelMetaclass, validate_model
 from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass
 
+from omnipy.api.exceptions import ParamException
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
 from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
@@ -907,7 +908,14 @@ class ParamModel(Model[_ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
             data = root_val
 
         # data = cls._parse_none_value_with_root_type_if_model(data)
-        return {ROOT_KEY: cls._parse_data(data, **params)}
+        try:
+            return {ROOT_KEY: cls._parse_data(data, **params)}
+        except TypeError as exc:
+            import inspect
+            for key in params.keys():
+                if key not in inspect.signature(cls._parse_data).parameters:
+                    raise ParamException(exc) from None
+            raise exc
 
     @classmethod
     def _parse_data(cls, data: _ParamRootT, **params: _KwargValT) -> _ParamRootT:

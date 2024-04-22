@@ -19,6 +19,7 @@ from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 from pydantic.generics import GenericModel
 import pytest
 
+from omnipy.api.exceptions import ParamException
 from omnipy.data.model import Model
 from omnipy.modules.general.typedefs import FrozenDict
 
@@ -1982,6 +1983,19 @@ def test_parametrized_model() -> None:
     assert model.contents == 'FOOBAR'
 
 
+def test_parametrized_model_wrong_keyword() -> None:
+    with pytest.raises(ParamException):
+        UpperStrModel('bar', supper=True)
+
+    model = UpperStrModel()
+
+    with pytest.raises(ParamException):
+        model.from_data('bar', supper=True)
+
+    with pytest.raises(ParamException):
+        model.from_json('"foobar"', supper=True)
+
+
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason='ParamModel does not support None values yet. Wait until pydantic v2 removes the'
@@ -2019,3 +2033,16 @@ def test_list_of_parametrized_model() -> None:
 
     model.from_json('["foo", "bar"]', upper=True)
     assert model.contents == [UpperStrModel('foo', upper=True), UpperStrModel('bar', upper=True)]
+
+
+def test_list_of_parametrized_model_wrong_keyword() -> None:
+    with pytest.raises(ParamException):
+        ListOfUpperStrModel(['bar'], supper=True)
+
+    model = ListOfUpperStrModel()
+
+    with pytest.raises(ParamException):
+        model.from_data(['bar'], supper=True)
+
+    with pytest.raises(ParamException):
+        model.from_json('["foobar"]', supper=True)

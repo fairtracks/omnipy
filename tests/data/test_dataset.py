@@ -6,6 +6,7 @@ from typing import Any, Generic, List, Optional, TypeAlias, TypeVar, Union
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
 
+from omnipy.api.exceptions import ParamException
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
@@ -874,6 +875,19 @@ def test_parametrized_dataset():
         assert UpperStrDataset(x='bar', upper=True)
 
 
+def test_parametrized_dataset_wrong_keyword() -> None:
+    with pytest.raises(ParamException):
+        UpperStrDataset(dict(x='bar'), supper=True)
+
+    dataset = UpperStrDataset()
+
+    with pytest.raises(ParamException):
+        dataset.from_data(dict(x='bar'), supper=True)
+
+    with pytest.raises(ParamException):
+        dataset.from_json(dict(x='"foobar"'), supper=True)
+
+
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason='ParamDataset does not support None values yet. Wait until pydantic v2 removes the'
@@ -920,3 +934,16 @@ def test_list_of_parametrized_model_dataset():
         ListOfUpperStrDataset(dict(x=['bar']), upper=True)['upper']
     with pytest.raises(AssertionError):
         assert ListOfUpperStrDataset(x=['bar'], upper=True)
+
+
+def test_list_of_parametrized_model_wrong_keyword() -> None:
+    with pytest.raises(ParamException):
+        ListOfUpperStrDataset(dict(x=['bar']), supper=True)
+
+    dataset = ListOfUpperStrDataset()
+
+    with pytest.raises(ParamException):
+        dataset.from_data(dict(x=['bar']), supper=True)
+
+    with pytest.raises(ParamException):
+        dataset.from_json(dict(x='["foobar"]'), supper=True)
