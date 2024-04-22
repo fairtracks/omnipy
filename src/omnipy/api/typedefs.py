@@ -20,4 +20,6 @@ TaskTemplateContraT = TypeVar('TaskTemplateContraT', contravariant=True)
 TaskTemplateCovT = TypeVar('TaskTemplateCovT', covariant=True)
 
 # TODO: While waiting for https://github.com/python/mypy/issues/9773
-TypeForm: TypeAlias = type | UnionType | _UnionGenericAlias | _AnnotatedAlias | _GenericAlias | _LiteralGenericAlias | _SpecialForm
+TypeForm: TypeAlias = (
+    type | UnionType | _UnionGenericAlias | _AnnotatedAlias | _GenericAlias | _LiteralGenericAlias
+    | _SpecialForm)

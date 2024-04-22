@@ -103,9 +103,9 @@ TableFormat = namedtuple(
 
 def _is_separating_line(row):
     row_type = type(row)
-    is_sl = (row_type == list or
-             row_type == str) and ((len(row) >= 1 and row[0] == SEPARATING_LINE) or
-                                   (len(row) >= 2 and row[1] == SEPARATING_LINE))
+    is_sl = (row_type == list
+             or row_type == str) and ((len(row) >= 1 and row[0] == SEPARATING_LINE) or
+                                      (len(row) >= 2 and row[1] == SEPARATING_LINE))
     return is_sl
 
 
@@ -890,9 +890,9 @@ def _isint(string, inttype=int):
     >>> _isint("123.45")
     False
     """
-    return (type(string) is inttype or
-            ((hasattr(string, "is_integer") or hasattr(string, "__array__")) and
-             str(type(string)).startswith("<class 'numpy.int"))  # numpy.int64 and similar
+    return (type(string) is inttype
+            or ((hasattr(string, "is_integer") or hasattr(string, "__array__"))
+                and str(type(string)).startswith("<class 'numpy.int"))  # numpy.int64 and similar
             or (isinstance(string,
                            (bytes, str)) and _isconvertible(inttype, string))  # integer as string
             )
@@ -1397,12 +1397,12 @@ def _normalize_tabular_data(tabular_data, headers, showindex="default"):
         if headers == "keys" and not rows:
             # an empty table (issue #81)
             headers = []
-        elif (headers == "keys" and hasattr(tabular_data, "dtype") and
-              getattr(tabular_data.dtype, "names")):
+        elif (headers == "keys" and hasattr(tabular_data, "dtype")
+              and getattr(tabular_data.dtype, "names")):
             # numpy record array
             headers = tabular_data.dtype.names
-        elif (headers == "keys" and len(rows) > 0 and isinstance(rows[0], tuple) and
-              hasattr(rows[0], "_fields")):
+        elif (headers == "keys" and len(rows) > 0 and isinstance(rows[0], tuple)
+              and hasattr(rows[0], "_fields")):
             # namedtuple
             headers = list(map(str, rows[0]._fields))
         elif len(rows) > 0 and hasattr(rows[0], "keys") and hasattr(rows[0], "values"):
@@ -1436,8 +1436,8 @@ def _normalize_tabular_data(tabular_data, headers, showindex="default"):
                 raise ValueError("headers for a list of dicts is not a dict or a keyword")
             rows = [[row.get(k) for k in keys] for row in rows]
 
-        elif (headers == "keys" and hasattr(tabular_data, "description") and
-              hasattr(tabular_data, "fetchone") and hasattr(tabular_data, "rowcount")):
+        elif (headers == "keys" and hasattr(tabular_data, "description")
+              and hasattr(tabular_data, "fetchone") and hasattr(tabular_data, "rowcount")):
             # Python Database API cursor object (PEP 0249)
             # print tabulate(cursor, headers='keys')
             headers = [column[0] for column in tabular_data.description]
@@ -2133,8 +2133,8 @@ def tabulate(
     has_invisible = _ansi_codes.search(plain_text) is not None
 
     enable_widechars = wcwidth is not None and WIDE_CHARS_MODE
-    if (not isinstance(tablefmt, TableFormat) and tablefmt in multiline_formats and
-            _is_multiline(plain_text)):
+    if (not isinstance(tablefmt, TableFormat) and tablefmt in multiline_formats
+            and _is_multiline(plain_text)):
         tablefmt = multiline_formats.get(tablefmt, tablefmt)
         is_multiline = True
     else:
@@ -2418,8 +2418,8 @@ def _format_table(fmt, headers, headersaligns, rows, colwidths, colaligns, is_mu
         )
     else:
         separating_line = (
-            fmt.linebetweenrows or fmt.linebelowheader or fmt.linebelow or fmt.lineabove or
-            Line("", "", "", ""))
+            fmt.linebetweenrows or fmt.linebelowheader or fmt.linebelow or fmt.lineabove
+            or Line("", "", "", ""))
         for row in padded_rows:
             # test to see if either the 1st column or the 2nd column (account for showindex) has
             # the SEPARATING_LINE flag
@@ -2598,16 +2598,16 @@ class _CustomTextWrap(textwrap.TextWrapper):
                 del cur_line[-1]
 
             if cur_line:
-                if (self.max_lines is None or len(lines) + 1 < self.max_lines or
-                    (not chunks or self.drop_whitespace and len(chunks) == 1 and
-                     not chunks[0].strip()) and cur_len <= width):
+                if (self.max_lines is None or len(lines) + 1 < self.max_lines
+                        or (not chunks or self.drop_whitespace and len(chunks) == 1
+                            and not chunks[0].strip()) and cur_len <= width):
                     # Convert current line back to a string and store it in
                     # list of all lines (return value).
                     self._update_lines(lines, indent + "".join(cur_line))
                 else:
                     while cur_line:
-                        if (cur_line[-1].strip() and
-                                cur_len + self._len(self.placeholder) <= width):
+                        if (cur_line[-1].strip()
+                                and cur_len + self._len(self.placeholder) <= width):
                             cur_line.append(self.placeholder)
                             self._update_lines(lines, indent + "".join(cur_line))
                             break

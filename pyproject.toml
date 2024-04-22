@@ -73,6 +73,7 @@ build-backend = "poetry.core.masonry.api"
 where = ["src"]
 
 [tool.yapf]
+allow_split_before_dict_value = true
 based_on_style = "google"
 align_closing_bracket_with_visual_indent = true
 blank_line_before_nested_class_or_def = false
@@ -82,6 +83,8 @@ join_multiple_lines = true
 split_all_comma_separated_values = false
 split_all_top_level_comma_separated_values = true
 split_before_expression_after_opening_paren = true
+split_before_bitwise_operator = true
+split_before_logical_operator = true
 split_before_arithmetic_operator = true
 
 [tool.isort]

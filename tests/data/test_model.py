@@ -1527,7 +1527,7 @@ def test_mimic_operations_on_pydantic_models() -> None:
     assert my_generic_pydantic_model.a == 'something'
 
     my_generic_pydantic_model_sub = Model[MyGenericPydanticModelSubCls]()
-    assert my_generic_pydantic_model_sub.a == None
+    assert my_generic_pydantic_model_sub.a is None
     my_generic_pydantic_model_sub.a = 2
     assert my_generic_pydantic_model_sub.a == 2
     assert my_generic_pydantic_model_sub.b == ''
@@ -1639,7 +1639,7 @@ def test_mimic_operations_on_literal_models() -> None:
         LiteralFiveOrTextModel('text') / 2
 
 
-@pytest.mark.skipif(os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1', reason="Not implemented")
+@pytest.mark.skipif(os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1', reason='Not implemented')
 def test_model_copy() -> None:
     ...
 

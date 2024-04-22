@@ -762,7 +762,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         return is_model_instance(other) \
             and self.__class__ == other.__class__ \
             and all_equals(self.contents, cast(Model, other).contents) \
-            and self.to_data() == cast(Model, other).to_data()  # last is probably unnecessary, but just in case
+            and self.to_data() == cast(Model, other).to_data()  # last line is just in case
 
     def __repr__(self) -> str:
         if _is_interactive_mode() and not _waiting_for_terminal_repr():
@@ -940,9 +940,9 @@ class ListOfParamModel(ParamModel[list[_ParamRootA[_ParamModelT, _KwargValT]], _
                        Generic[_ParamModelT, _KwargValT]):
     def _init(self,
               super_kwargs: dict[str,
-                                 list[_ParamRootA[_ParamModelT, _KwargValT]] |
-                                 DataWithParams[list[_ParamRootA[_ParamModelT, _KwargValT]],
-                                                _KwargValT]],
+                                 list[_ParamRootA[_ParamModelT, _KwargValT]]
+                                 | DataWithParams[list[_ParamRootA[_ParamModelT, _KwargValT]],
+                                                  _KwargValT]],
               **kwargs: _KwargValT) -> None:
         if kwargs and ROOT_KEY in super_kwargs:
             super_kwargs[ROOT_KEY] = [
