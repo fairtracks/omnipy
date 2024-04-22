@@ -579,8 +579,8 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             type_to_check = cls.outer_type(with_args=True)
         args = get_args(type_to_check)
         return is_union(type_to_check) \
-            and len(args) == 2 \
-            and lenient_issubclass(args[1], DataWithParams)
+            and len(args) >= 2 \
+            and lenient_issubclass(args[-1], DataWithParams)
 
     @classmethod
     def _get_root_field(cls) -> ModelField:
