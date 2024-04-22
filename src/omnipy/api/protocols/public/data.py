@@ -292,7 +292,16 @@ class IsMultiModelDataset(IsDataset[_ModelT], Protocol[_ModelT]):
         ...
 
 
-e: IsMultiModelDataset[IsModel[int]] = MultiModelDataset[Model[int]]()
+#
+# from omnipy import Dataset, Model
+# from omnipy.data.dataset import MultiModelDataset
+#
+# t: IsModel[int] = Model[int]
+#
+# d: IsDataset[IsModel[int]] = Dataset[Model[int]]()
+#
+# e: IsMultiModelDataset[IsModel[int]] = MultiModelDataset[Model[int]]()
+#
 
 
 class CanSerialize(Protocol[RootT]):
