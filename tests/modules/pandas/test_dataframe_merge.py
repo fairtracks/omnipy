@@ -4,12 +4,12 @@ import pandas as pd
 import pytest
 import pytest_cases as pc
 
-from modules.pandas.cases.tablepairs import TablePairCase
-from modules.pandas.helpers.functions import (convert_testcase_table_to_dataframe,
-                                              get_target_as_pandas_model)
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.modules.pandas.models import PandasModel
 from omnipy.modules.pandas.tasks import cartesian_product, join_tables
+
+from .cases.tablepairs import TablePairCase
+from .helpers.functions import convert_testcase_table_to_dataframe, get_target_as_pandas_model
 
 
 class TableJoinTest(NamedTuple):

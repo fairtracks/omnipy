@@ -1,8 +1,9 @@
 import pytest_cases as pc
 
-from modules.pandas.cases.tablepairs import TablePairCase
-from modules.pandas.helpers.functions import convert_testcase_table_to_dataframe
 from omnipy.modules.pandas.helpers import extract_common_colnames
+
+from .cases.tablepairs import TablePairCase
+from .helpers.functions import convert_testcase_table_to_dataframe
 
 
 @pc.parametrize_with_cases('case', cases='.cases.tablepairs', has_tag='on_all_cols')
