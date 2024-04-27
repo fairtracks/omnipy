@@ -4,7 +4,8 @@ import inspect
 from inspect import getmodule, isclass
 import locale as pkg_locale
 from types import GenericAlias, ModuleType, UnionType
-from typing import (Annotated,
+from typing import (_UnionGenericAlias,
+                    Annotated,
                     Any,
                     cast,
                     ClassVar,
@@ -93,6 +94,14 @@ def transfer_generic_args_to_cls(to_cls, from_generic_type):
 
 def ensure_plain_type(in_type: type | GenericAlias) -> type | GenericAlias | None | Any:
     return get_origin(in_type) if get_args(in_type) else in_type
+
+
+def all_type_variants(
+        in_type: type | GenericAlias | UnionType | _UnionGenericAlias) -> tuple[type, ...]:
+    if is_union(in_type):
+        return get_args(in_type)
+    else:
+        return (in_type,)
 
 
 def is_iterable(obj: object) -> bool:

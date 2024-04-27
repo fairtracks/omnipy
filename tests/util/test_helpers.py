@@ -8,7 +8,8 @@ import pytest
 from typing_inspect import get_generic_type
 
 from omnipy import Dataset, Model
-from omnipy.util.helpers import (called_from_omnipy_tests,
+from omnipy.util.helpers import (all_type_variants,
+                                 called_from_omnipy_tests,
                                  ensure_non_str_byte_iterable,
                                  ensure_plain_type,
                                  get_calling_module_name,
@@ -64,6 +65,16 @@ def test_do_not_transfer_generic_params_to_non_generic_cls() -> None:
 def test_ensure_plain_type() -> None:
     assert ensure_plain_type(list) == list
     assert ensure_plain_type(list[str]) == list
+
+
+def test_all_type_variants() -> None:
+    assert all_type_variants(list) == (list,)
+    assert all_type_variants(list[str]) == (list[str],)
+    assert all_type_variants(int | str) == (int, str)
+    assert all_type_variants(int | str | tuple[int] | list[int | str]) == (int,
+                                                                           str,
+                                                                           tuple[int],
+                                                                           list[int | str])
 
 
 def test_is_iterable() -> None:
