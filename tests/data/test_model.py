@@ -1198,7 +1198,7 @@ def _assert_model_or_val(dyn_convert: bool,
         _assert_val(model_or_val, target_type, contents)
 
 
-@pytest.mark.parametrize("dyn_convert", [False, True])
+@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_simple_list_operations(
     runtime: Annotated[IsRuntime, pytest.fixture],
     dyn_convert: bool,
@@ -1244,7 +1244,7 @@ def test_mimic_simple_list_operations(
     assert len(model) == 3
 
 
-@pytest.mark.parametrize("dyn_convert", [False, True])
+@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_nested_list_operations(
     runtime: Annotated[IsRuntime, pytest.fixture],
     dyn_convert: bool,
@@ -1318,7 +1318,7 @@ def test_mimic_nested_list_operations(
     _assert_val(two_as_bytes, bytes, b'\x02\x00\x00\x00')
 
 
-@pytest.mark.parametrize("dyn_convert", [False, True])
+@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_model_operations_as_dict(
     runtime: Annotated[IsRuntime, pytest.fixture],
     dyn_convert: bool,
@@ -1357,7 +1357,7 @@ def test_model_operations_as_dict(
     _assert_model_or_val(dyn_convert, model, dict[str, int], other)
 
 
-@pytest.mark.parametrize("dyn_convert", [False, True])
+@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_nested_dict_operations(
     runtime: Annotated[IsRuntime, pytest.fixture],
     dyn_convert: bool,
@@ -1414,7 +1414,7 @@ def test_mimic_nested_dict_operations(
     _assert_model_or_val(dyn_convert, model, dict[str, dict[int, int] | int], {'a': {14: 456}})
 
 
-@pytest.mark.parametrize("dyn_convert", [False, True])
+@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_list_and_dict_iterators(
     runtime: Annotated[IsRuntime, pytest.fixture],
     dyn_convert: bool,
@@ -1438,7 +1438,7 @@ def test_mimic_list_and_dict_iterators(
         _assert_model_or_val(dyn_convert, key, int, i)
 
 
-@pytest.mark.parametrize("dyn_convert", [False, True])
+@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_doubly_nested_nonmodel_containers_are_copies_known_issue(
     runtime: Annotated[IsRuntime, pytest.fixture],
     dyn_convert: bool,
@@ -1466,7 +1466,7 @@ def test_mimic_doubly_nested_nonmodel_containers_are_copies_known_issue(
     _assert_model_or_val(dyn_convert, dict_model, dict[int, dict[int, int]], {0: {1: 1}})
 
 
-@pytest.mark.parametrize("dyn_convert", [False, True])
+@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_nested_list_operations_with_model_subclass_containers(
     runtime: Annotated[IsRuntime, pytest.fixture],
     dyn_convert: bool,
@@ -1514,7 +1514,7 @@ def test_mimic_nested_list_operations_with_model_subclass_containers(
     _assert_model_or_val(dyn_convert, double_model[0], int, 123)  # type: ignore[index]
 
 
-@pytest.mark.parametrize("dyn_convert", [False, True])
+@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_nested_dict_operations_with_model_containers(
     runtime: Annotated[IsRuntime, pytest.fixture],
     dyn_convert: bool,

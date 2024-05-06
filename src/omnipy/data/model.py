@@ -1,4 +1,4 @@
-from collections.abc import Mapping, Sequence
+from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 import functools
 import inspect
@@ -74,6 +74,16 @@ INTERACTIVE_MODULES = [
     '_pydevd_bundle.pydevd_asyncio_utils',
     '_pydevd_bundle.pydevd_exec2',
 ]
+
+_validate_cls_counts: defaultdict[str, int] = defaultdict(int)
+
+
+def debug_get_sorted_validate_counts() -> dict[str, int]:
+    return dict(reversed(sorted(_validate_cls_counts.items(), key=lambda item: item[1])))
+
+
+def debug_get_total_validate_count() -> int:
+    return sum(val for key, val in _validate_cls_counts.items())
 
 
 def _cleanup_name_qualname_and_module(cls, created_model_or_dataset, model, orig_model):
@@ -376,6 +386,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
 
         try:
             # Pydantic validation of super_kwargs
+            _validate_cls_counts[self.__class__.__name__] += 1
             super().__init__(**super_kwargs)
         except ValidationError:
             if model_as_input:
@@ -419,6 +430,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         Hack to allow overwriting of __iter__ method without compromising pydantic validation. Part
         of the pydantic API and not the Omnipy API.
         """
+        _validate_cls_counts[cls.__name__] += 1
         if is_model_instance(value):
             with AttribHolder(
                     value, '__iter__', GenericModel.__iter__, switch_to_other=True, on_class=True):
@@ -656,8 +668,8 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
                 else:
                     raise RuntimeError('Model does not allow setting of extra attributes')
 
-    def _special_method(self, name: str, info: MethodInfo, *args: object,
-                        **kwargs: object) -> object:
+    def _special_method(  # noqa: C901
+            self, name: str, info: MethodInfo, *args: object, **kwargs: object) -> object:
         try:
             method = self._getattr_from_contents_obj(name)
         except AttributeError:
@@ -735,17 +747,15 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
 
         return _per_element_model_generator
 
-    def _convert_to_model_if_reasonable(
+    def _convert_to_model_if_reasonable(  # noqa: C901
         self,
         ret: Mapping[_KeyT, _ValT] | Iterable[_ValT] | _ReturnT | _RootT,
         level_up: bool = False,
-        level_up_arg_idx: int = 1
-    ) -> ('Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] '
-          '| Model[_ReturnT] | Model[_RootT] | _ReturnT'):
+        level_up_arg_idx: int = 1) -> ('Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] '
+                                       '| Model[_ReturnT] | Model[_RootT] | _ReturnT'):
 
         if not is_model_instance(ret):
             outer_type = self.outer_type(with_args=True)
-
             # For double Models, e.g. Model[Model[int]], where _get_real_contents() have already
             # skipped the outer Model to get the `ret`, we need to do the same to compare the value
             # with the corresponding type.

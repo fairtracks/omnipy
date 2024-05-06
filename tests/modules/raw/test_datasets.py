@@ -104,7 +104,7 @@ def test_split_to_and_join_lines_dataset(use_str_model: bool) -> None:
 
 
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
-def test_split_to_and_join_lines_dataset(use_str_model: bool) -> None:
+def test_split_to_and_join_items_dataset(use_str_model: bool) -> None:
     raw_data_tab_start = 'abc\t def \tghi\tjkl'
     data_tab_start = Model[str](raw_data_tab_start) if use_str_model else raw_data_tab_start
 
@@ -149,10 +149,10 @@ def test_split_to_and_join_lines_dataset(use_str_model: bool) -> None:
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
 def test_split_lines_to_columns_and_join_columns_to_lines_dataset(use_str_model: bool) -> None:
     raw_data_tab_fw = ['abc\t def \tghi\t jkl', 'mno\t pqr\tstu\t vwx', 'yz']
-    data_tab_fw = [Model[str](l) for l in raw_data_tab_fw] if use_str_model else raw_data_tab_fw
+    data_tab_fw = [Model[str](_) for _ in raw_data_tab_fw] if use_str_model else raw_data_tab_fw
 
     raw_data_tab_rev = ['zyx\twvu\t tsr \t pqo', ' nml\t kji\thgf\t edc', 'ab ']
-    data_tab_rev = [Model[str](l) for l in raw_data_tab_rev] if use_str_model else raw_data_tab_rev
+    data_tab_rev = [Model[str](_) for _ in raw_data_tab_rev] if use_str_model else raw_data_tab_rev
 
     cols_stripped_tab = SplitLinesToColumnsDataset(dict(forward=data_tab_fw, reverse=data_tab_rev))
     assert cols_stripped_tab['forward'][0].contents == ['abc', 'def', 'ghi', 'jkl']
@@ -172,11 +172,11 @@ def test_split_lines_to_columns_and_join_columns_to_lines_dataset(use_str_model:
            == [[' nml', ' kji', 'hgf', ' edc'], ['ab ']]
 
     raw_data_comma_fw = ['abc, def, ghi, jkl', 'mno, pqr, stu, vwx', 'yz']
-    data_comma_fw = [Model[str](l) for l in raw_data_comma_fw] \
+    data_comma_fw = [Model[str](_) for _ in raw_data_comma_fw] \
         if use_str_model else raw_data_comma_fw
 
     raw_data_comma_rev = ['zyx, wvu, tsr, pqo', 'nml, kji, hgf, edc', 'ab']
-    data_comma_rev = [Model[str](l) for l in raw_data_comma_rev] \
+    data_comma_rev = [Model[str](_) for _ in raw_data_comma_rev] \
         if use_str_model else raw_data_comma_rev
 
     cols_stripped_comma = SplitLinesToColumnsDataset(
