@@ -3,18 +3,23 @@ from copy import copy, deepcopy
 import inspect
 from inspect import getmodule, isclass
 import locale as pkg_locale
-from types import GenericAlias, ModuleType, UnionType
-from typing import (_UnionGenericAlias,
+from types import GenericAlias, ModuleType, NoneType, UnionType
+from typing import _AnnotatedAlias  # type: ignore[attr-defined]
+from typing import _LiteralGenericAlias  # type: ignore[attr-defined]
+from typing import _LiteralSpecialForm  # type: ignore[attr-defined]
+from typing import _UnionGenericAlias  # type: ignore[attr-defined]
+from typing import (_SpecialForm,
                     Annotated,
                     Any,
                     cast,
                     ClassVar,
+                    ForwardRef,
                     get_args,
                     get_origin,
                     Mapping,
                     NamedTuple,
+                    overload,
                     Protocol,
-                    Type,
                     TypeVar,
                     Union)
 
@@ -25,7 +30,7 @@ from pydantic.generics import GenericModel
 from pydantic.typing import display_as_type
 from typing_inspect import get_generic_bases, is_generic_type
 
-from omnipy.api.typedefs import LocaleType
+from omnipy.api.typedefs import LocaleType, TypeForm
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
 
@@ -92,21 +97,58 @@ def transfer_generic_args_to_cls(to_cls, from_generic_type):
         return to_cls
 
 
-def ensure_plain_type(in_type: type | GenericAlias) -> type | GenericAlias | None | Any:
-    return get_origin(in_type) if get_args(in_type) else in_type
+@overload
+def ensure_plain_type(in_type: ForwardRef) -> ForwardRef:
+    ...
+
+
+@overload
+def ensure_plain_type(in_type: TypeVar) -> TypeVar:
+    ...
+
+
+@overload
+def ensure_plain_type(in_type: type | GenericAlias | UnionType) -> type:
+    ...
+
+
+@overload
+def ensure_plain_type(in_type: _SpecialForm) -> _SpecialForm:
+    ...
+
+
+@overload
+def ensure_plain_type(
+    in_type: _LiteralGenericAlias | _UnionGenericAlias | _AnnotatedAlias
+) -> _LiteralSpecialForm | type:
+    ...
+
+
+def ensure_plain_type(
+        in_type: TypeForm) -> ForwardRef | TypeVar | type | _SpecialForm | _LiteralSpecialForm:
+
+    if in_type == NoneType:
+        return None
+
+    origin = get_origin(in_type)
+    if origin == Union:
+        return UnionType
+    else:
+        return cast(type | ForwardRef | TypeVar, origin if get_args(in_type) else in_type)
 
 
 def all_type_variants(
-        in_type: type | GenericAlias | UnionType | _UnionGenericAlias) -> tuple[type, ...]:
+    in_type: type | GenericAlias | UnionType | _UnionGenericAlias
+) -> tuple[type | GenericAlias, ...]:
     if is_union(in_type):
         return get_args(in_type)
     else:
-        return (in_type,)
+        return (cast(type | GenericAlias, in_type),)
 
 
 def is_iterable(obj: object) -> bool:
     try:
-        iter(obj)
+        iter(obj)  # type: ignore[call-overload]
         return True
     except TypeError:
         return False
@@ -181,8 +223,7 @@ class IsDataclass(Protocol):
     __dataclass_fields__: ClassVar[dict]
 
 
-def remove_annotated_plus_optional_if_present(
-        type_or_class: Type | UnionType | object) -> Type | UnionType | object:
+def remove_annotated_plus_optional_if_present(type_or_class: TypeForm) -> TypeForm:
     if get_origin(type_or_class) == Annotated:
         type_or_class = get_args(type_or_class)[0]
         if is_optional(type_or_class):
@@ -211,7 +252,7 @@ class Snapshot(NamedTuple):
 
 
 class RestorableContents:
-    def __init__(self):
+    def __init__(self) -> None:
         self._last_snapshot: Snapshot | None = None
 
     def has_snapshot(self) -> bool:
@@ -224,20 +265,18 @@ class RestorableContents:
             snapshot_obj = copy(obj)
         self._last_snapshot = Snapshot(id(obj), snapshot_obj)
 
-    def _assert_not_empty(self):
+    def _get_not_empty_snapshot(self) -> Snapshot:
         assert self.has_snapshot(), 'No snapshot has been taken yet'
+        return cast(Snapshot, self._last_snapshot)
 
     def get_last_snapshot(self) -> object:
-        self._assert_not_empty()
-        return self._last_snapshot.obj_copy
+        return self._get_not_empty_snapshot().obj_copy
 
     def last_snapshot_taken_of_same_obj(self, obj: object) -> bool:
-        self._assert_not_empty()
-        return self._last_snapshot.id == id(obj)
+        return self._get_not_empty_snapshot().id == id(obj)
 
     def differs_from_last_snapshot(self, obj: object) -> bool:
-        self._assert_not_empty()
-        return not all_equals(self._last_snapshot.obj_copy, obj)
+        return not all_equals(self._get_not_empty_snapshot().obj_copy, obj)
 
 
 def _is_internal_module(module: ModuleType, imported_modules: list[ModuleType]):

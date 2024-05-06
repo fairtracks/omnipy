@@ -1,13 +1,23 @@
 from copy import copy
-from types import MethodType, NoneType
-from typing import Annotated, Generic, get_args, Iterator, Optional, TypeVar, Union
+from types import MethodType, NoneType, UnionType
+from typing import (Annotated,
+                    Any,
+                    ForwardRef,
+                    Generic,
+                    get_args,
+                    Iterator,
+                    Literal,
+                    Optional,
+                    TypeVar,
+                    Union)
 
 from pydantic import BaseModel
 from pydantic.generics import GenericModel
 import pytest
 from typing_inspect import get_generic_type
 
-from omnipy import Dataset, Model
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 from omnipy.util.helpers import (all_type_variants,
                                  called_from_omnipy_tests,
                                  ensure_non_str_byte_iterable,
@@ -63,8 +73,19 @@ def test_do_not_transfer_generic_params_to_non_generic_cls() -> None:
 
 
 def test_ensure_plain_type() -> None:
-    assert ensure_plain_type(list) == list
-    assert ensure_plain_type(list[str]) == list
+    T = TypeVar('T')
+
+    assert ensure_plain_type(ForwardRef('list[str]')) == ForwardRef('list[str]')  # ForwardRef
+    assert ensure_plain_type(T) == T  # TypeVar
+    assert ensure_plain_type(list) == list  # type
+    assert ensure_plain_type(list[str]) == list  # GenericAlias
+    assert ensure_plain_type(str | int) == UnionType  # UnionType
+    assert ensure_plain_type(Any) == Any  # _SpecialForm
+    assert ensure_plain_type(Literal[5]) == Literal  # _LiteralGenericAlias
+    assert ensure_plain_type(Union[str, int]) == UnionType  # _UnionGenericAlias
+    assert ensure_plain_type(Annotated[str, 'annotation']) == Annotated  # _AnnotatedAlias
+    assert ensure_plain_type(None) is None  # NoneType
+    assert ensure_plain_type(NoneType) is None  # NoneType
 
 
 def test_all_type_variants() -> None:
@@ -179,14 +200,14 @@ def test_has_items() -> None:
         return 1
 
     a = MyClass()
-    a.__len__ = MethodType(__len__, a)
+    a.__len__ = MethodType(__len__, a)  # type: ignore[attr-defined]
 
     assert has_items(a) is True
 
 
 def test_get_first_item() -> None:
     with pytest.raises(AssertionError):
-        get_first_item(42)
+        get_first_item(42)  # type: ignore[arg-type]
 
     with pytest.raises(AssertionError):
         get_first_item('')
@@ -215,7 +236,7 @@ def test_is_union() -> None:
     assert is_union(Union[Union[str, int], None]) is True
     assert is_union(Union[Union[str, None], int]) is True
 
-    assert is_union(Union[str, int] | None) is True
+    assert is_union(Union[str, int] | None) is True  # type: ignore[operator]
     assert is_union(Union[str, None] | int) is True
     assert is_union(Union) is True
 
@@ -248,7 +269,7 @@ def test_is_optional() -> None:
     assert is_optional(Union[Union[str, NoneType], int]) is True
     assert is_optional(Union[Union[str, None], int]) is True
 
-    assert is_optional(Union[str, int] | None) is True
+    assert is_optional(Union[str, int] | None) is True  # type: ignore[operator]
     assert is_optional(Union[str, int] | NoneType) is True
     assert is_optional(Union[str, NoneType] | int) is True
     assert is_optional(Union[str, None] | int) is True
@@ -446,7 +467,7 @@ def test_restorable_contents():
 
 
 def test_get_calling_module_name() -> None:
-    def local_call_get_calling_module_name() -> str:
+    def local_call_get_calling_module_name() -> str | None:
         return get_calling_module_name()
 
     from .helpers.other_module import (calling_module_name_when_importing_other_module,
