@@ -1,6 +1,7 @@
 from typing import NamedTuple, Type
 
-from omnipy import Dataset, Model
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 
 
 class FlowClsTuple(NamedTuple):

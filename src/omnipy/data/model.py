@@ -780,7 +780,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         return self._trad_repr()
 
     def view(self):
-        from omnipy import PandasModel
+        from omnipy.modules.pandas.models import PandasModel
         return PandasModel(self).contents
 
     def _trad_repr(self) -> str:

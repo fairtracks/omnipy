@@ -4,7 +4,7 @@ from textwrap import dedent
 from pydantic import ValidationError
 import pytest
 
-from omnipy import JoinItemsModel, SplitToItemsModel
+from omnipy.data.model import Model
 from omnipy.modules.raw.datasets import (BytesDataset,
                                          JoinColumnsToLinesDataset,
                                          JoinItemsDataset,
@@ -13,6 +13,7 @@ from omnipy.modules.raw.datasets import (BytesDataset,
                                          SplitToItemsDataset,
                                          SplitToLinesDataset,
                                          StrDataset)
+from omnipy.modules.raw.models import JoinItemsModel, SplitToItemsModel
 
 
 def test_bytes_dataset():

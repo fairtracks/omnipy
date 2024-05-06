@@ -7,8 +7,8 @@ from typing import Any, Callable, Generic, TypeVar
 import pytest
 import pytest_cases as pc
 
-from omnipy import Model
 from omnipy.compute.task import Task, TaskTemplate
+from omnipy.data.model import Model
 
 from .raw.functions import (action_func_no_params,
                             action_func_with_params,
