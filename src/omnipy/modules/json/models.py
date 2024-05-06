@@ -11,7 +11,7 @@ from .typedefs import JsonScalar
 # Basic building block models
 
 _JsonBaseT = TypeVar(
-    '_JsonBaseT', bound='JsonScalarM | JsonListM | JsonDictM | JsonAnyListM | JsonAnyDictM')
+    '_JsonBaseT', bound='JsonScalar | JsonListM | JsonDictM | JsonAnyListM | JsonAnyDictM')
 
 
 class JsonScalarM(Model[JsonScalar]):
@@ -57,13 +57,13 @@ class JsonOnlyDictsM(JsonDictM['_JsonOnlyDictsUnion']):
 #       the hack for propagating None to work. Removing this level will simplify JSON models.
 #       If updated, also update frozen models
 
-_JsonAnyUnion: TypeAlias = JsonScalarM | JsonAnyListM | JsonAnyDictM
-_JsonOnlyListsUnion: TypeAlias = JsonScalarM | JsonOnlyListsM
-_JsonOnlyDictsUnion: TypeAlias = JsonScalarM | JsonOnlyDictsM
+_JsonAnyUnion: TypeAlias = JsonScalar | JsonAnyListM | JsonAnyDictM
+_JsonOnlyListsUnion: TypeAlias = JsonScalar | JsonOnlyListsM
+_JsonOnlyDictsUnion: TypeAlias = JsonScalar | JsonOnlyDictsM
 
-_JsonListOfScalarsM: TypeAlias = JsonListM[JsonScalarM]
+_JsonListOfScalarsM: TypeAlias = JsonListM[JsonScalar]
 
-_JsonDictOfScalarsM: TypeAlias = JsonDictM[JsonScalarM]
+_JsonDictOfScalarsM: TypeAlias = JsonDictM[JsonScalar]
 
 # Basic models needs to update their forward_refs with type aliases declared above
 
