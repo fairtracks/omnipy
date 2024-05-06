@@ -181,6 +181,8 @@ def case_async_wait_a_bit() -> JobCase[[float], Awaitable[float]]:
 # Multiple threads
 #
 
+# TODO: Allow local config changes for multithreaded jobs (or only allow multiprocessing)
+
 # Synchronous function: wait_a_bit()
 
 
