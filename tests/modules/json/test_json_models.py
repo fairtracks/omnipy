@@ -22,6 +22,7 @@ from omnipy.modules.json.models import (_JsonDictOfScalarsM,
                                         JsonModel,
                                         JsonScalarM,
                                         JsonScalarModel)
+from omnipy.modules.json.typedefs import JsonScalar
 
 from ..helpers.classes import CaseInfo
 
@@ -52,31 +53,28 @@ def test_json_models(case: CaseInfo) -> None:
 
 
 def test_json_model_consistency_basic():
-    MyJsonDictOfScalarsModel: TypeAlias = JsonCustomDictModel[JsonScalarM]
-    MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonScalarM]
+    MyJsonDictOfScalarsModel: TypeAlias = JsonCustomDictModel[JsonScalar]
+    MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonScalar]
 
     example_dict_data = {'abc': 2312}
-    assert JsonModel(example_dict_data) == JsonModel(
-        __root__=JsonAnyDictM(__root__={'abc': JsonScalarM(__root__=2312)}))
-    assert JsonDictModel(example_dict_data) == JsonDictModel(
-        __root__=JsonAnyDictM(__root__={'abc': JsonScalarM(__root__=2312)}))
-    assert JsonDictOfScalarsModel(example_dict_data) == JsonDictOfScalarsModel(
-        __root__=_JsonDictOfScalarsM(__root__={'abc': JsonScalarM(__root__=2312)}))
-    assert MyJsonDictOfScalarsModel(example_dict_data) == MyJsonDictOfScalarsModel(
-        __root__=JsonDictM[JsonScalarM](__root__={
-            'abc': JsonScalarM(__root__=2312)
-        }))
+    assert JsonModel(example_dict_data).contents == JsonAnyDictM(__root__={'abc': 2312})
+    assert JsonDictModel(example_dict_data).contents == JsonAnyDictM(__root__={'abc': 2312})
+    assert JsonDictOfScalarsModel(example_dict_data).contents == JsonDictM[JsonScalar](
+        __root__={
+            'abc': 2312
+        })
+    assert MyJsonDictOfScalarsModel(example_dict_data).contents == JsonDictM[JsonScalar](
+        __root__={
+            'abc': 2312
+        })
 
     example_list_data = ['abc', 2312]
-    assert JsonModel(example_list_data) == JsonModel(
-        __root__=JsonAnyListM(__root__=[JsonScalarM(__root__='abc'), JsonScalarM(__root__=2312)]))
-    assert JsonListModel(example_list_data) == JsonListModel(
-        __root__=JsonAnyListM(__root__=[JsonScalarM(__root__='abc'), JsonScalarM(__root__=2312)]))
-    assert JsonListOfScalarsModel(example_list_data) == JsonListOfScalarsModel(
-        __root__=JsonAnyListM(__root__=[JsonScalarM(__root__='abc'), JsonScalarM(__root__=2312)]))
-    assert MyJsonListOfScalarsModel(example_list_data) == MyJsonListOfScalarsModel(
-        __root__=JsonListM[JsonScalarM](
-            __root__=[JsonScalarM(__root__='abc'), JsonScalarM(__root__=2312)]))
+    assert JsonModel(example_list_data).contents == JsonAnyListM(__root__=['abc', 2312])
+    assert JsonListModel(example_list_data).contents == JsonAnyListM(__root__=['abc', 2312])
+    assert JsonListOfScalarsModel(example_list_data).contents == JsonListM[JsonScalar](
+        __root__=['abc', 2312])
+    assert MyJsonListOfScalarsModel(example_list_data).contents == JsonListM[JsonScalar](
+        __root__=['abc', 2312])
 
 
 # TODO: Revisit test_json_model_consistency_none_known_issue after pydantic v2 is supported.
@@ -92,33 +90,30 @@ def test_json_model_consistency_none_known_issue():
     MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonScalarM]
 
     example_dict_data = {'abc': None}
-    assert JsonModel(example_dict_data) == JsonModel(
-        __root__=JsonAnyDictM(__root__={'abc': JsonScalarM(__root__=None)}))
+    assert JsonModel(example_dict_data).contents == JsonAnyDictM(__root__={'abc': None})
 
-    assert JsonDictModel(example_dict_data) == JsonDictModel(
-        __root__=JsonAnyDictM(__root__={'abc': JsonScalarM(__root__=None)}))
+    assert JsonDictModel(example_dict_data).contents == JsonAnyDictM(__root__={'abc': None})
 
-    assert JsonDictOfScalarsModel(example_dict_data) == JsonDictOfScalarsModel(
-        __root__=_JsonDictOfScalarsM(__root__={'abc': JsonScalarM(__root__=None)}))
+    assert JsonDictOfScalarsModel(example_dict_data).contents == JsonDictM[JsonScalarM](
+        __root__={
+            'abc': None
+        })
 
-    assert MyJsonDictOfScalarsModel(example_dict_data) == MyJsonDictOfScalarsModel(
-        __root__=JsonDictM[JsonScalarM](__root__={
-            'abc': JsonScalarM(__root__=None)
-        }))
+    assert MyJsonDictOfScalarsModel(example_dict_data).contents == JsonDictM[JsonScalarM](
+        __root__={
+            'abc': None
+        })
 
     example_list_data = ['abc', None]
-    assert JsonModel(example_list_data) == JsonModel(
-        __root__=JsonAnyListM(__root__=[JsonScalarM(__root__='abc'), JsonScalarM(__root__=None)]))
+    assert JsonModel(example_list_data).contents == JsonAnyListM(__root__=['abc', None])
 
-    assert JsonListModel(example_list_data) == JsonListModel(
-        __root__=JsonAnyListM(__root__=[JsonScalarM(__root__='abc'), JsonScalarM(__root__=None)]))
+    assert JsonListModel(example_list_data).contents == JsonAnyListM(__root__=['abc', None])
 
-    assert JsonListOfScalarsModel(example_list_data) == JsonListOfScalarsModel(
-        __root__=JsonAnyListM(__root__=[JsonScalarM(__root__='abc'), JsonScalarM(__root__=None)]))
+    assert JsonListOfScalarsModel(example_list_data).contents == JsonListM[JsonScalarM](
+        __root__=['abc', None])
 
-    assert MyJsonListOfScalarsModel(example_list_data) == MyJsonListOfScalarsModel(
-        __root__=JsonListM[JsonScalarM](
-            __root__=[JsonScalarM(__root__='abc'), JsonScalarM(__root__=None)]))
+    assert MyJsonListOfScalarsModel(example_list_data).contents == JsonListM[JsonScalarM](
+        __root__=['abc', None])
 
 
 # TODO: Revisit test_error_list_of_single_dict_with_two_elements and
