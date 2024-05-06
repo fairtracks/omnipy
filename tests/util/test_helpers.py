@@ -22,6 +22,7 @@ from omnipy.util.helpers import (all_type_variants,
                                  called_from_omnipy_tests,
                                  ensure_non_str_byte_iterable,
                                  ensure_plain_type,
+                                 evaluate_any_forward_refs_if_possible,
                                  get_calling_module_name,
                                  get_first_item,
                                  has_items,
@@ -86,6 +87,62 @@ def test_ensure_plain_type() -> None:
     assert ensure_plain_type(Annotated[str, 'annotation']) == Annotated  # _AnnotatedAlias
     assert ensure_plain_type(None) is None  # NoneType
     assert ensure_plain_type(NoneType) is None  # NoneType
+
+
+class MyGlobalClass:
+    ...
+
+
+def test_evaluate_any_forward_refs_if_possible() -> None:
+    assert evaluate_any_forward_refs_if_possible(ForwardRef('list')) == list
+    assert evaluate_any_forward_refs_if_possible(ForwardRef('list[str]')) == list[str]
+
+    assert evaluate_any_forward_refs_if_possible(ForwardRef('MyGlobalClass')) == MyGlobalClass
+    assert evaluate_any_forward_refs_if_possible(
+        list[ForwardRef('MyGlobalClass')]) == list[MyGlobalClass]  # type: ignore[misc]
+    assert evaluate_any_forward_refs_if_possible(
+        list[list[ForwardRef('MyGlobalClass')]]) == list[list[MyGlobalClass]]  # type: ignore[misc]
+
+    assert evaluate_any_forward_refs_if_possible(
+        ForwardRef('MyLocalClass')) == ForwardRef('MyLocalClass')
+
+    assert evaluate_any_forward_refs_if_possible(
+        ForwardRef('MyLocalClass'),
+        **locals(),
+    ) == ForwardRef('MyLocalClass')
+
+    class MyLocalClass:
+        ...
+
+    assert evaluate_any_forward_refs_if_possible(
+        ForwardRef('MyLocalClass'),) == ForwardRef('MyLocalClass')
+
+    assert evaluate_any_forward_refs_if_possible(
+        ForwardRef('MyLocalClass'),
+        **locals(),
+    ) == MyLocalClass
+
+    assert evaluate_any_forward_refs_if_possible(
+        ForwardRef('MyLocalClass'),
+        MyLocalClass=MyLocalClass,
+    ) == MyLocalClass
+
+    assert evaluate_any_forward_refs_if_possible(
+        list[ForwardRef('MyLocalClass')],  # type: ignore[misc]
+        MyLocalClass=MyLocalClass,
+    ) == list[MyLocalClass]
+
+    assert evaluate_any_forward_refs_if_possible(
+        Union[
+            list[ForwardRef('MyLocalClass')],  # type: ignore[misc]
+            tuple[ForwardRef('MyLocalClass')]],  # type: ignore[misc]
+        MyLocalClass=MyLocalClass,
+    ) == Union[list[MyLocalClass], tuple[MyLocalClass]]
+
+    assert evaluate_any_forward_refs_if_possible(
+        list[ForwardRef('MyLocalClass')] | tuple[ForwardRef('MyLocalClass')],  # type: ignore[misc]
+        MyLocalClass=MyLocalClass,
+    ) == list[MyLocalClass] | tuple[MyLocalClass]
 
 
 def test_all_type_variants() -> None:

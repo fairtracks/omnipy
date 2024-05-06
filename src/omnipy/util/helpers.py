@@ -1,8 +1,11 @@
 from collections.abc import Hashable, Iterable
 from copy import copy, deepcopy
+import functools
 import inspect
 from inspect import getmodule, isclass
 import locale as pkg_locale
+import operator
+import sys
 from types import GenericAlias, ModuleType, NoneType, UnionType
 from typing import _AnnotatedAlias  # type: ignore[attr-defined]
 from typing import _LiteralGenericAlias  # type: ignore[attr-defined]
@@ -135,6 +138,35 @@ def ensure_plain_type(
         return UnionType
     else:
         return cast(type | ForwardRef | TypeVar, origin if get_args(in_type) else in_type)
+
+
+def evaluate_any_forward_refs_if_possible(in_type: TypeForm,
+                                          calling_module: str | None = None,
+                                          **localns) -> TypeForm:
+    if not calling_module:
+        calling_module = get_calling_module_name() if 'ForwardRef' in str(in_type) else None
+
+    if isinstance(in_type, ForwardRef):
+        if calling_module and calling_module in sys.modules:
+            globalns = sys.modules[calling_module].__dict__.copy()
+        else:
+            globalns = {}
+        try:
+            return cast(type | GenericAlias, in_type._evaluate(globalns, localns, frozenset()))
+        except NameError:
+            pass
+    else:
+        origin = get_origin(in_type)
+        args = get_args(in_type)
+        if origin and args:
+            new_args = tuple(
+                evaluate_any_forward_refs_if_possible(arg, calling_module, **localns)
+                for arg in args)
+            if origin == UnionType:
+                return functools.reduce(operator.or_, new_args)
+            else:
+                return origin[new_args]
+    return in_type
 
 
 def all_type_variants(
