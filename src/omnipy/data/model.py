@@ -277,6 +277,25 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         del cls.__fields__[ROOT_KEY]
         del cls.__annotations__[ROOT_KEY]
 
+    @classmethod
+    def _prepare_cls_members_to_mimic_model(cls, created_model: 'Model[type[_RootT]]') -> None:
+        outer_type = created_model._get_root_type(outer=True, with_args=True)
+        outer_type_plain = created_model._get_root_type(outer=True, with_args=False)
+
+        # TODO: See if it is possible to type Model mimicking of root type, e.g. with Protocol
+        if inspect.isclass(outer_type_plain) or is_union(outer_type) or outer_type_plain is Literal:
+            for name, method_info in SPECIAL_METHODS_INFO.items():
+                if is_union(outer_type) or outer_type_plain is Literal:
+                    outer_types = get_args(outer_type)
+                else:
+                    outer_types = (outer_type_plain,)
+                for type_to_support in outer_types:
+                    if hasattr(type_to_support, name):
+                        setattr(created_model,
+                                name,
+                                functools.partialmethod(cls._special_method, name, method_info))
+                        break
+
     def __class_getitem__(  # type: ignore[override]
         cls,
         model: type[_RootT] | tuple[type[_RootT]] | tuple[type[_RootT], Any] | TypeVar
