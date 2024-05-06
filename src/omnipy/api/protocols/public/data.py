@@ -49,11 +49,11 @@ class IsDataset(Protocol[_ModelT]):
     def to_json_schema(cls, pretty=True) -> str | dict[str, str]:
         ...
 
-    def as_multi_model_dataset(self) -> 'MultiModelDataset[_ModelT]':
+    def as_multi_model_dataset(self) -> 'IsMultiModelDataset[_ModelT]':
         ...
 
 
-class MultiModelDataset(Protocol[_ModelT]):
+class IsMultiModelDataset(Protocol[_ModelT]):
     """
         Variant of Dataset that allows custom models to be set on individual data files
     """
