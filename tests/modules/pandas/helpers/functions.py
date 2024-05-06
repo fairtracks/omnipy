@@ -1,7 +1,7 @@
 import pandas as pd
 
-from omnipy import PandasModel
 from omnipy.modules.json.typedefs import JsonListOfListsOfScalars
+from omnipy.modules.pandas.models import PandasModel
 
 
 def convert_testcase_table_to_dataframe(testcase_table: JsonListOfListsOfScalars):

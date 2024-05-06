@@ -1,6 +1,6 @@
-from omnipy import convert_dataset
 from omnipy.data.dataset import Dataset, ParamDataset
 from omnipy.data.model import Model, ParamModel
+from omnipy.modules.general.tasks import convert_dataset
 
 
 class FloatModel(Model[float]):
