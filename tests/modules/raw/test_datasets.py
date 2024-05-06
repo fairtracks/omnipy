@@ -47,8 +47,9 @@ def test_str_dataset():
         StrDataset(dict(a=b'\xe6\xf8\xe5'), encoding='my-encoding')
 
 
-def test_split_to_and_join_lines_dataset():
-    data = """\
+@pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
+def test_split_to_and_join_lines_dataset(use_str_model: bool) -> None:
+    raw_data = """\
         
         Alas, poor Yorick! I knew him, Horatio: a fellow
         of infinite jest, of most excellent fancy: he hath
@@ -60,18 +61,21 @@ def test_split_to_and_join_lines_dataset():
         that were wont to set the table on a roar? Not one
         now, to mock your own grinning? quite chap-fallen.
         """  # noqa: W293
+    data = Model[str](raw_data) if use_str_model else raw_data
 
     lines_stripped = SplitToLinesDataset(dict(monologue=data))
-    assert lines_stripped['monologue'][0] == 'Alas, poor Yorick! I knew him, Horatio: a fellow'
+    assert lines_stripped['monologue'][0].contents == (
+        'Alas, poor Yorick! I knew him, Horatio: a fellow')
 
     lines_unstripped = SplitToLinesDataset(dict(monologue=data), strip=False)
-    assert lines_unstripped['monologue'][0] == '        '
-    assert lines_unstripped['monologue'][1] == \
-           '        Alas, poor Yorick! I knew him, Horatio: a fellow'
-    assert lines_unstripped['monologue'][-1] == '        '
+    assert lines_unstripped['monologue'][0].contents == '        '
+    assert lines_unstripped['monologue'][1].contents == (
+        '        Alas, poor Yorick! I knew him, Horatio: a fellow')
+    assert lines_unstripped['monologue'][-1].contents == '        '
 
     lines_stripped['last_lines'] = lines_stripped['monologue'][3:]
-    assert lines_stripped['last_lines'][-1] == 'now, to mock your own grinning? quite chap-fallen.'
+    assert lines_stripped['last_lines'][-1].contents == (
+        'now, to mock your own grinning? quite chap-fallen.')
 
     for data_file, lines in lines_stripped.items():
         lines_stripped[data_file] = lines[0:2]
@@ -90,27 +94,32 @@ def test_split_to_and_join_lines_dataset():
         it. Here hung those lips that I have kissed I know""")
 
     assert joined_lines['last_lines'][:joined_lines['last_lines'].index(' ')].contents == 'abhorred'
-    assert JoinLinesDataset(SplitToLinesDataset(dict(monologue=data))).to_data() == \
-           {'monologue': os.linesep.join([line.strip() for line in data.strip().split(os.linesep)])}
+    assert JoinLinesDataset(SplitToLinesDataset(dict(monologue=data))).to_data() == {
+        'monologue': os.linesep.join([line.strip() for line in raw_data.strip().split(os.linesep)])
+    }
 
     assert JoinLinesDataset(SplitToLinesDataset(dict(monologue=data), strip=False)).to_data() == {
-        'monologue': data
+        'monologue': raw_data
     }
 
 
-def test_split_to_and_join_items_dataset():
-    data_tab_start = 'abc\t def \tghi\tjkl'
-    data_tab_end = 'mno\t pqr \tstu\tvwx\tyz '
+@pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
+def test_split_to_and_join_lines_dataset(use_str_model: bool) -> None:
+    raw_data_tab_start = 'abc\t def \tghi\tjkl'
+    data_tab_start = Model[str](raw_data_tab_start) if use_str_model else raw_data_tab_start
+
+    raw_data_tab_end = 'mno\t pqr \tstu\tvwx\tyz '
+    data_tab_end = Model[str](raw_data_tab_end) if use_str_model else raw_data_tab_end
 
     items_stripped_tab = SplitToItemsDataset(dict(start=data_tab_start, end=data_tab_end))
     assert items_stripped_tab['start'].contents == ['abc', 'def', 'ghi', 'jkl']
-    assert items_stripped_tab['start'][1] == 'def'
+    assert items_stripped_tab['start'][1].contents == 'def'
     assert items_stripped_tab['end'][-2:].contents == ['vwx', 'yz']
 
     items_unstripped_tab = SplitToItemsDataset(
         dict(start=data_tab_start, end=data_tab_end), strip=False)
     assert items_unstripped_tab['start'].contents == ['abc', ' def ', 'ghi', 'jkl']
-    assert items_unstripped_tab['start'][1] == ' def '
+    assert items_unstripped_tab['start'][1].contents == ' def '
     assert items_unstripped_tab['end'][-2:].contents == ['vwx', 'yz ']
 
     data_comma_start = 'abc, def, ghi, jkl'
@@ -119,7 +128,7 @@ def test_split_to_and_join_items_dataset():
     items_stripped_comma = SplitToItemsDataset(
         dict(start=data_comma_start, end=data_comma_end), delimiter=',')
     assert items_stripped_comma['start'].contents == ['abc', 'def', 'ghi', 'jkl']
-    assert items_stripped_comma['start'][1] == 'def'
+    assert items_stripped_comma['start'][1].contents == 'def'
     assert items_stripped_comma['end'][-2:].contents == ['vwx', 'yz']
 
     for data_file, items in items_stripped_comma.items():
@@ -137,37 +146,46 @@ def test_split_to_and_join_items_dataset():
     assert comma_space_joined_items['end'][1:-1].contents == 'qr, st'
 
 
-def test_split_lines_to_columns_and_join_columns_to_lines_dataset():
-    data_tab_forward = ['abc\t def \tghi\t jkl', 'mno\t pqr\tstu\t vwx', 'yz']
-    data_tab_reverse = ['zyx\twvu\t tsr \t pqo', ' nml\t kji\thgf\t edc', 'ab ']
+@pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
+def test_split_lines_to_columns_and_join_columns_to_lines_dataset(use_str_model: bool) -> None:
+    raw_data_tab_fw = ['abc\t def \tghi\t jkl', 'mno\t pqr\tstu\t vwx', 'yz']
+    data_tab_fw = [Model[str](l) for l in raw_data_tab_fw] if use_str_model else raw_data_tab_fw
 
-    cols_stripped_tab = SplitLinesToColumnsDataset(
-        dict(forward=data_tab_forward, reverse=data_tab_reverse))
+    raw_data_tab_rev = ['zyx\twvu\t tsr \t pqo', ' nml\t kji\thgf\t edc', 'ab ']
+    data_tab_rev = [Model[str](l) for l in raw_data_tab_rev] if use_str_model else raw_data_tab_rev
+
+    cols_stripped_tab = SplitLinesToColumnsDataset(dict(forward=data_tab_fw, reverse=data_tab_rev))
     assert cols_stripped_tab['forward'][0].contents == ['abc', 'def', 'ghi', 'jkl']
-    assert cols_stripped_tab['forward'][0][1] == 'def'
+    assert cols_stripped_tab['forward'][0][1].contents == 'def'
     assert cols_stripped_tab['reverse'][1:2].contents \
            == [SplitToItemsModel(' nml\t kji\thgf\t edc')]
     assert cols_stripped_tab['reverse'][1:].to_data() \
            == [['nml', 'kji', 'hgf', 'edc'], ['ab']]
 
     cols_unstripped_tab = SplitLinesToColumnsDataset(
-        dict(forward=data_tab_forward, reverse=data_tab_reverse), strip=False)
+        dict(forward=data_tab_fw, reverse=data_tab_rev), strip=False)
     assert cols_unstripped_tab['forward'][0].contents == ['abc', ' def ', 'ghi', ' jkl']
-    assert cols_unstripped_tab['forward'][0][1] == ' def '
+    assert cols_unstripped_tab['forward'][0][1].contents == ' def '
     assert cols_unstripped_tab['reverse'][1:2].contents \
            == [SplitToItemsModel(' nml\t kji\thgf\t edc', strip=False)]
     assert cols_unstripped_tab['reverse'][1:].to_data() \
            == [[' nml', ' kji', 'hgf', ' edc'], ['ab ']]
 
-    data_comma_forward = ['abc, def, ghi, jkl', 'mno, pqr, stu, vwx', 'yz']
-    data_comma_reverse = ['zyx, wvu, tsr, pqo', 'nml, kji, hgf, edc', 'ab']
+    raw_data_comma_fw = ['abc, def, ghi, jkl', 'mno, pqr, stu, vwx', 'yz']
+    data_comma_fw = [Model[str](l) for l in raw_data_comma_fw] \
+        if use_str_model else raw_data_comma_fw
+
+    raw_data_comma_rev = ['zyx, wvu, tsr, pqo', 'nml, kji, hgf, edc', 'ab']
+    data_comma_rev = [Model[str](l) for l in raw_data_comma_rev] \
+        if use_str_model else raw_data_comma_rev
 
     cols_stripped_comma = SplitLinesToColumnsDataset(
-        dict(forward=data_comma_forward, reverse=data_comma_reverse), delimiter=',')
+        dict(forward=data_comma_fw, reverse=data_comma_rev), delimiter=',')
     assert cols_stripped_comma['forward'][0].contents == ['abc', 'def', 'ghi', 'jkl']
-    assert cols_stripped_comma['forward'][0][1] == 'def'
-    assert cols_stripped_comma['reverse'][1:2].contents \
-           == [SplitToItemsModel('nml, kji, hgf, edc', delimiter=',')]
+    assert cols_stripped_comma['forward'][0][1].contents == 'def'
+    assert cols_stripped_comma['reverse'][1:2].contents == [
+        SplitToItemsModel('nml, kji, hgf, edc', delimiter=',')
+    ]
     assert cols_stripped_comma['reverse'][1:].to_data() == [['nml', 'kji', 'hgf', 'edc'], ['ab']]
 
     for data_file, items in cols_stripped_comma.items():

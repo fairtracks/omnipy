@@ -616,17 +616,23 @@ _ListOfParamModelT = TypeVar('_ListOfParamModelT', bound=ListOfParamModel)
 ParamModelSuperKwargsType: TypeAlias = \
     dict[str, dict[str, _ParamModelT | DataWithParams[_ParamModelT, _KwargValT]]]
 
-ListOfParamModelSuperKwargsType: TypeAlias = \
-    dict[str, dict[str, list[_ListOfParamModelT | DataWithParams[_ListOfParamModelT, _KwargValT]]]]
-
 
 class ParamDataset(Dataset[_ParamModelT | DataWithParams[_ParamModelT, _KwargValT]],
                    Generic[_ParamModelT, _KwargValT]):
     def _init(self, super_kwargs: ParamModelSuperKwargsType, **kwargs: _KwargValT) -> None:
         if kwargs and DATA_KEY in super_kwargs:
+
+            def _convert_if_model(data: _ParamModelT) -> _ParamModelT:
+                if is_model_instance(data):
+                    # Casting to _ParamModelT now, will be validated in super()__init__()
+                    return cast(_ParamModelT, cast(Model, data).to_data())
+                else:
+                    return data
+
+            data_in = cast(dict[str, _ParamModelT], super_kwargs[DATA_KEY])
             super_kwargs[DATA_KEY] = {
-                key: DataWithParams(data=val, params=kwargs)
-                for (key, val) in super_kwargs[DATA_KEY].items()
+                key: DataWithParams(data=_convert_if_model(val), params=kwargs)
+                for (key, val) in data_in.items()
             }
 
     def from_data(self,
@@ -658,9 +664,24 @@ class ParamDataset(Dataset[_ParamModelT | DataWithParams[_ParamModelT, _KwargVal
 
 class ListOfParamModelDataset(ParamDataset[_ListOfParamModelT, _KwargValT],
                               Generic[_ListOfParamModelT, _KwargValT]):
-    def _init(self, super_kwargs: ListOfParamModelSuperKwargsType, **kwargs: _KwargValT) -> None:
+    def _init(self,
+              super_kwargs: dict[str,
+                                 dict[str,
+                                      ListOfParamModel[_ParamModelT, _KwargValT]
+                                      | list[DataWithParams[_ParamModelT, _KwargValT]]]],
+              **kwargs: _KwargValT) -> None:
         if kwargs and DATA_KEY in super_kwargs:
+
+            def _convert_if_model(data: _ParamModelT) -> _ParamModelT:
+                if is_model_instance(data):
+                    # Casting to _ParamModelT now, will be validated in super()__init__()
+                    return cast(_ParamModelT, cast(Model, data).to_data())
+                else:
+                    return data
+
+            data_in = cast(dict[str, list[_ParamModelT]], super_kwargs[DATA_KEY])
+
             super_kwargs[DATA_KEY] = {
-                key: [DataWithParams(data=_, params=kwargs) for _ in val]
-                for (key, val) in super_kwargs[DATA_KEY].items()
+                key: [DataWithParams(data=_convert_if_model(el), params=kwargs) for el in val]
+                for (key, val) in data_in.items()
             }

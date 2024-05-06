@@ -964,6 +964,7 @@ class ParamModel(Model[_ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
               super_kwargs: dict[str, _ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
               **kwargs: _KwargValT) -> None:
         if kwargs and ROOT_KEY in super_kwargs:
+            assert not isinstance(super_kwargs[ROOT_KEY], DataWithParams)
             super_kwargs[ROOT_KEY] = DataWithParams(
                 data=cast(_ParamRootT, super_kwargs[ROOT_KEY]), params=kwargs)
 
@@ -1011,30 +1012,36 @@ class ParamModel(Model[_ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
 
 _ParamModelT = TypeVar('_ParamModelT', bound='ParamModel')
 
-_ParamRootA: TypeAlias = _ParamModelT | DataWithParams[_ParamModelT, _KwargValT]
 
-# TODO: Check if fixed in pydantic 2: Hack to fix issue with  GenericModel subclasses
-#       (here: DataWithParams) not registering multiple parameters
-_ParamRootA.__parameters__ = (_ParamModelT, _KwargValT)  # type: ignore[attr-defined]
-
-
-class ListOfParamModel(ParamModel[list[_ParamRootA[_ParamModelT, _KwargValT]], _KwargValT],
+class ListOfParamModel(ParamModel[list[_ParamModelT
+                                       | DataWithParams[_ParamModelT, _KwargValT]],
+                                  _KwargValT],
                        Generic[_ParamModelT, _KwargValT]):
-    def _init(self,
-              super_kwargs: dict[str,
-                                 list[_ParamRootA[_ParamModelT, _KwargValT]]
-                                 | DataWithParams[list[_ParamRootA[_ParamModelT, _KwargValT]],
-                                                  _KwargValT]],
-              **kwargs: _KwargValT) -> None:
+    def _init(
+            self,
+            super_kwargs: dict[  # type: ignore[override]
+                str,
+                list[_ParamModelT
+                     | DataWithParams[_ParamModelT, _KwargValT]]],
+            **kwargs: _KwargValT) -> None:
         if kwargs and ROOT_KEY in super_kwargs:
+
+            def _convert_if_model(data: _ParamModelT) -> _ParamModelT:
+                if is_model_instance(data):
+                    # Casting to _ParamModelT now, will be validated in super()__init__()
+                    return cast(_ParamModelT, cast(Model, data).to_data())
+                else:
+                    return data
+
+            root_val = cast(list[_ParamModelT], super_kwargs[ROOT_KEY])
             super_kwargs[ROOT_KEY] = [
-                DataWithParams(data=_, params=kwargs) for _ in super_kwargs[ROOT_KEY]
+                DataWithParams(data=_convert_if_model(el), params=kwargs) for el in root_val
             ]
 
-    def _validate_and_set_contents_with_params(self,
-                                               contents: list[_ParamRootA[_ParamModelT,
-                                                                          _KwargValT]],
-                                               **kwargs: _KwargValT):
+    def _validate_and_set_contents_with_params(
+            self,
+            contents: list[_ParamModelT | DataWithParams[_ParamModelT, _KwargValT]],
+            **kwargs: _KwargValT):
         self._validate_and_set_contents([
             DataWithParams(data=cast(_ParamModelT, model).contents, params=kwargs)
             for model in contents
