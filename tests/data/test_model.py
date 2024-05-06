@@ -1244,6 +1244,37 @@ def test_mimic_simple_list_operations(
     assert len(model) == 3
 
 
+# TODO: Implement automatic conversion for mimicked operations, to allow for e.g.
+#       `Model[int](1) + '1'`
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason="""
+Mimicking operators only supports the same types as the original type, e.g. `Model[int](1) + '1'`
+still raises TypeError. This is also true for two Model instances, e.g. 
+`Model[int](1) + Model[int](1)`. Should be relatively easy to support automatic validation of 
+arguments as the same Model if `NotImplemented` Exception is raised from the operator method, 
+e.g. `__add__()`.
+""")
+@pytest.mark.parametrize('dyn_convert', [False, True])
+def test_mimic_simple_list_operator_with_convert_known_issue(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    dyn_convert: bool,
+) -> None:
+    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
+
+    model = Model[list[int]]([0])
+
+    model[0] += '42'  # type: ignore[index]
+
+    _assert_model_or_val(dyn_convert, model[0], int, 42)  # type: ignore[index]
+    _assert_model_or_val(dyn_convert, model, list[int], [42])
+
+    model[0] -= Model[int]('42')  # type: ignore[index]
+
+    _assert_model_or_val(dyn_convert, model[0], int, 0)  # type: ignore[index]
+    _assert_model_or_val(dyn_convert, model, list[int], [0])
+
+
 @pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_nested_list_operations(
     runtime: Annotated[IsRuntime, pytest.fixture],
