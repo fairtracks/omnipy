@@ -7,8 +7,7 @@ from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
 
-from omnipy.modules.json.models import (_JsonDictOfScalarsM,
-                                        JsonAnyDictM,
+from omnipy.modules.json.models import (JsonAnyDictM,
                                         JsonAnyListM,
                                         JsonCustomDictModel,
                                         JsonCustomListModel,
