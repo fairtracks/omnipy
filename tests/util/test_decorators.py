@@ -3,7 +3,7 @@ from typing import Callable
 import pytest
 
 from omnipy.util.contexts import AttribHolder
-from omnipy.util.decorators import add_callback_after_call, apply_decorator_to_property
+from omnipy.util.decorators import add_callback_after_call, apply_decorator_to_property, no_context
 
 
 def test_callback_after_func_call() -> None:
@@ -11,16 +11,19 @@ def test_callback_after_func_call() -> None:
         a.append(b)
         return a
 
-    def my_callback_after_call(x: list[int], *, y: int) -> None:
-        x.append(y)
+    def my_callback_after_call(ret: list[int] | None, x: int, *, y: int) -> list[int] | None:
+        if ret is not None:
+            ret.append(x)
+            ret.append(y)
+        return ret
 
     my_list = [1, 2, 3]
 
     decorated_my_appender = add_callback_after_call(
-        my_appender, my_callback_after_call, my_list, y=0)
+        my_appender, my_callback_after_call, no_context, 5, y=6)
 
     ret_list = decorated_my_appender(my_list, 4)
-    assert ret_list == my_list == [1, 2, 3, 4, 0]
+    assert ret_list == my_list == [1, 2, 3, 4, 5, 6]
 
 
 def test_callback_after_func_call_with_attrib_holder_error_in_func() -> None:
@@ -28,18 +31,19 @@ def test_callback_after_func_call_with_attrib_holder_error_in_func() -> None:
         def __init__(self, numbers: list[int]) -> None:
             self.numbers = numbers
 
-    def my_appender(a: A, b: int) -> list[int]:
+    def my_appender(a: A, b: int) -> A:
         a.numbers.append(b)
         raise RuntimeError()
 
-    def my_callback_after_call(x: A, *, y: int) -> None:
+    def my_callback_after_call(ret: A | None, x: A, *, y: int) -> None:
+        assert ret is None
         x.numbers.append(y)
 
     my_a = A([1, 2, 3])
 
-    restore_numbers = AttribHolder(my_a, 'numbers', copy_attr=True)
+    restore_numbers_context = AttribHolder(my_a, 'numbers', copy_attr=True)
     decorated_my_appender = add_callback_after_call(
-        my_appender, my_callback_after_call, my_a, y=0, with_context=restore_numbers)
+        my_appender, my_callback_after_call, restore_numbers_context, my_a, y=0)
 
     try:
         decorated_my_appender(my_a, 4)
@@ -54,19 +58,22 @@ def test_callback_after_func_call_with_attrib_holder_error_in_callback_func() ->
         def __init__(self, numbers: list[int]) -> None:
             self.numbers = numbers
 
-    def my_appender(a: A, b: int) -> list[int]:
+    def my_appender(a: A, b: int) -> A:
         a.numbers.append(b)
         return a
 
-    def my_callback_after_call(x: A, *, y: int) -> None:
+    def my_callback_after_call(ret: A | None, x: A, *, y: int) -> None:
+        if ret is not None:
+            ret.numbers.append(y)
         x.numbers.append(y)
         raise RuntimeError()
 
     my_a = A([1, 2, 3])
+    my_other_a = A([1, 2, 3])
 
-    restore_numbers = AttribHolder(my_a, 'numbers', copy_attr=True)
+    restore_numbers_context = AttribHolder(my_a, 'numbers', copy_attr=True)
     decorated_my_appender = add_callback_after_call(
-        my_appender, my_callback_after_call, my_a, y=0, with_context=restore_numbers)
+        my_appender, my_callback_after_call, restore_numbers_context, my_other_a, y=4)
 
     try:
         decorated_my_appender(my_a, 4)
@@ -74,6 +81,7 @@ def test_callback_after_func_call_with_attrib_holder_error_in_callback_func() ->
         pass
 
     assert my_a.numbers == [1, 2, 3]
+    assert my_other_a.numbers == [1, 2, 3, 4]
 
 
 def test_apply_decorator_to_property():

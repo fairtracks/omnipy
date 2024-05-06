@@ -1,34 +1,50 @@
 from contextlib import AbstractContextManager
-from typing import Any, Callable, ParamSpec, TypeVar
+from typing import Any, Callable, Concatenate, ParamSpec, TypeVar
 
 _DecoratedP = ParamSpec('_DecoratedP')
 _DecoratedR = TypeVar('_DecoratedR')
 _CallbackP = ParamSpec('_CallbackP')
+_CallbackR = TypeVar('_CallbackR')
+_ReturnT = TypeVar('_ReturnT')
+
+no_context = None
 
 
-def add_callback_after_call(func: Callable[_DecoratedP, _DecoratedR],
-                            callback_func: Callable[_CallbackP, None],
+def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
+                            callback_func: Callable[Concatenate[_ReturnT | None, _CallbackP],
+                                                    _CallbackR],
+                            with_context: AbstractContextManager | None,
                             *cb_args: _CallbackP.args,
-                            with_context: AbstractContextManager | None = None,
                             **cb_kwargs: _CallbackP.kwargs) -> Callable[_DecoratedP, _DecoratedR]:
-    class ValidateAfterCall(AbstractContextManager):
+    class CallbackAfterCall(AbstractContextManager):
+        def __init__(self, callback_func, *args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs):
+            self._callback_func = callback_func
+            self._args = args
+            self._kwargs = kwargs
+            self.return_value: _ReturnT | None = None
+
         def __enter__(self):
-            ...
+            self.return_value = self._callback_func(*self._args, **self._kwargs)
+            return self
 
         def __exit__(self, exc_type, exc_val, exc_tb):
             ret = None
 
             if exc_val is None:
-                callback_func(*cb_args, **cb_kwargs)
+                self.return_value = callback_func(self.return_value, *cb_args, **cb_kwargs)
             return ret
+
+    def _callback_after_call(decorated_func, *args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs):
+        with CallbackAfterCall(decorated_func, *args, **kwargs) as callback:
+            ...
+        return callback.return_value
 
     def _inner(*args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs) -> _DecoratedR:
         if with_context:
             with with_context:
-                with ValidateAfterCall():
-                    return func(*args, **kwargs)
-        with ValidateAfterCall():
-            return func(*args, **kwargs)
+                return _callback_after_call(decorated_func, *args, **kwargs)
+
+        return _callback_after_call(decorated_func, *args, **kwargs)
 
     return _inner
 

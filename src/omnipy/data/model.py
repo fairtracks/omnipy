@@ -731,13 +731,20 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
 
     def __getattr__(self, attr: str) -> Any:
         contents_attr = self._getattr_from_contents_obj(attr)
+
         if _is_interactive_mode() and not self._is_non_omnipy_pydantic_model():
-            contents_holder = AttribHolder(self, 'contents', copy_attr=True)
+            contents_holder_context = AttribHolder(self, 'contents', copy_attr=True)
 
             contents_cls_attr = self._getattr_from_contents_cls(attr)
+
+            def _validate_contents(ret: Any):
+                self.validate_contents()
+                return ret
+
             if not isinstance(contents_cls_attr, property) and callable(contents_attr):
-                contents_attr = add_callback_after_call(
-                    contents_attr, self.validate_contents, with_context=contents_holder)
+                contents_attr = add_callback_after_call(contents_attr,
+                                                        _validate_contents,
+                                                        contents_holder_context)
 
         return contents_attr
 
