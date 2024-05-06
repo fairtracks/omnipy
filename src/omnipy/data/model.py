@@ -1,15 +1,19 @@
 from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 import functools
 import inspect
 import json
 import os
 import shutil
 from textwrap import dedent
-from types import ModuleType, NoneType, UnionType
+from types import GenericAlias, ModuleType, NoneType, UnionType
 from typing import (Annotated,
                     Any,
+                    Callable,
                     cast,
                     ContextManager,
+                    ForwardRef,
+                    Generator,
                     Generic,
                     get_args,
                     get_origin,
@@ -17,7 +21,6 @@ from typing import (Annotated,
                     Literal,
                     Optional,
                     SupportsIndex,
-                    TypeAlias,
                     TypeVar,
                     Union)
 
@@ -35,9 +38,11 @@ from omnipy.api.exceptions import ParamException
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
 from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
-from omnipy.util.decorators import add_callback_after_call
+from omnipy.util.decorators import add_callback_after_call, no_context
 from omnipy.util.helpers import (all_equals,
+                                 all_type_variants,
                                  ensure_plain_type,
+                                 evaluate_any_forward_refs_if_possible,
                                  generate_qualname,
                                  get_calling_module_name,
                                  get_first_item,
@@ -54,6 +59,8 @@ from omnipy.util.tabulate import tabulate
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
 _ValT = TypeVar('_ValT')
+_IterT = TypeVar('_IterT')
+_ReturnT = TypeVar('_ReturnT')
 _IdxT = TypeVar('_IdxT', bound=SupportsIndex)
 _RootT = TypeVar('_RootT', bound=object | None)
 
@@ -303,23 +310,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             cls._depopulate_root_field()
 
         _cleanup_name_qualname_and_module(cls, created_model, model, orig_model)
-
-        outer_type = created_model._get_root_type(outer=True, with_args=True)
-        outer_type_plain = created_model._get_root_type(outer=True, with_args=False)
-
-        # TODO: See if it is possible to type Model mimicking of root type, e.g. with Protocol
-        if inspect.isclass(outer_type_plain) or is_union(outer_type) or outer_type_plain is Literal:
-            for name, method_info in SPECIAL_METHODS_INFO.items():
-                if is_union(outer_type) or outer_type_plain is Literal:
-                    outer_types = get_args(outer_type)
-                else:
-                    outer_types = (outer_type_plain,)
-                for type_to_support in outer_types:
-                    if hasattr(type_to_support, name):
-                        setattr(created_model,
-                                name,
-                                functools.partialmethod(cls._special_method, name, method_info))
-                        break
+        cls._prepare_cls_members_to_mimic_model(created_model)
 
         return created_model
 
@@ -562,11 +553,13 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
 
     @classmethod
     def inner_type(cls, with_args: bool = False) -> TypeForm | None:
-        return cls._get_root_type(outer=False, with_args=with_args)
+        return evaluate_any_forward_refs_if_possible(
+            cls._get_root_type(outer=False, with_args=with_args), cls.__module__)
 
     @classmethod
     def outer_type(cls, with_args: bool = False) -> TypeForm | None:
-        return cls._get_root_type(outer=True, with_args=with_args)
+        return evaluate_any_forward_refs_if_possible(
+            cls._get_root_type(outer=True, with_args=with_args), cls.__module__)
 
     @classmethod
     def is_nested_type(cls) -> bool:
@@ -646,7 +639,13 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
 
     def _special_method(self, name: str, info: MethodInfo, *args: object,
                         **kwargs: object) -> object:
-        method = self._getattr_from_contents_obj(name)
+        try:
+            method = self._getattr_from_contents_obj(name)
+        except AttributeError:
+            if name == '__len__':
+                raise TypeError(f"object of type '{self.__class__.__name__}' has no len()")
+            else:
+                raise
 
         if info.state_changing:
             restorable = self._get_restorable_contents()
@@ -681,53 +680,103 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
                     needs_validation = True
                 if needs_validation:
                     self.validate_contents()
+        elif name == '__iter__' and isinstance(self, Iterable):
+            _per_element_model_generator = self._get_per_element_model_generator(
+                cast(Iterable, self.contents),
+                level_up_arg_idx=0,
+            )
+
+            return _per_element_model_generator()
         else:
             ret = method(*args, **kwargs)
 
         if info.maybe_returns_same_type:
-            ret = self._convert_to_model_if_reasonable(args, name, ret)
-
-        return ret
-
-    def _convert_to_model_if_reasonable(self, args, name, ret):
-        if not isinstance(ret, self.__class__):
+            level_up = False
             if name == '__getitem__':
                 assert len(args) == 1
                 if not isinstance(args[0], slice):
-                    # assert self.is_nested_type()
-                    # TODO: With Python 3.13 and PEP 649, reconsider the choice to not automatically
-                    #       generate nested models through '__getitem__'.
-                    #
-                    # Seems to work, but the consequences for this are big and requires thought
-                    # and consideration.
-                    #
-                    # try:
-                    #     ret = Model[self.inner_type(with_args=True)](ret)
-                    # except ValidationError:
-                    #     pass
-                    return ret
+                    level_up = True
 
             # We can do this with some ease of mind as all the methods except '__getitem__' with
             # integer argument are supposed to possibly return a result of the same type.
-            outer_type = self.outer_type(with_args=True)
-            outer_type_plain = self.outer_type()
+            ret = self._convert_to_model_if_reasonable(ret, level_up=level_up, level_up_arg_idx=-1)
 
-            types_to_check = get_args(outer_type) if is_union(outer_type) else [outer_type_plain]
-            for type_to_check in types_to_check:
+        return ret
+
+    def _get_per_element_model_generator(self,
+                                         elements: Iterable | None,
+                                         level_up_arg_idx: int | slice) -> Callable[..., Generator]:
+        def _per_element_model_generator(elements=elements):
+            for el in elements:
+                yield self._convert_to_model_if_reasonable(
+                    el,
+                    level_up=True,
+                    level_up_arg_idx=level_up_arg_idx,
+                )
+
+        return _per_element_model_generator
+
+    def _convert_to_model_if_reasonable(
+        self,
+        ret: Mapping[_KeyT, _ValT] | Iterable[_ValT] | _ReturnT | _RootT,
+        level_up: bool = False,
+        level_up_arg_idx: int = 1
+    ) -> ('Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] '
+          '| Model[_ReturnT] | Model[_RootT] | _ReturnT'):
+
+        if not is_model_instance(ret):
+            outer_type = self.outer_type(with_args=True)
+
+            # For double Models, e.g. Model[Model[int]], where _get_real_contents() have already
+            # skipped the outer Model to get the `ret`, we need to do the same to compare the value
+            # with the corresponding type.
+            if lenient_issubclass(ensure_plain_type(outer_type), Model):
+                outer_type = cast(Model, outer_type).outer_type(with_args=True)
+
+            for type_to_check in all_type_variants(outer_type):
                 # TODO: Remove inner_type_to_check loop when Annotated hack is removed with
                 #       pydantic v2
-                type_to_check = remove_annotated_plus_optional_if_present(type_to_check)
-                inner_types_to_check = get_args(type_to_check) if is_union(type_to_check) else [
-                    type_to_check
-                ]
-                for inner_type_to_check in inner_types_to_check:
-                    if inner_type_to_check not in [None, Literal] and isinstance(
-                            ret, ensure_plain_type(inner_type_to_check)):
-                        try:
-                            ret = self.__class__(ret)
-                        except ValidationError:
-                            pass
-        return ret
+                type_to_check = cast(type | GenericAlias,
+                                     remove_annotated_plus_optional_if_present(type_to_check))
+                for inner_type_to_check in all_type_variants(type_to_check):
+                    plain_inner_type_to_check = ensure_plain_type(inner_type_to_check)
+                    if plain_inner_type_to_check in (ForwardRef, TypeVar, Literal, None):
+                        continue
+
+                    if level_up:
+                        inner_type_args = get_args(inner_type_to_check)
+                        if inner_type_args:
+                            for level_up_type_to_check in all_type_variants(
+                                    inner_type_args[level_up_arg_idx]):
+                                level_up_type_to_check = self._fix_tuple_type_from_args(
+                                    level_up_type_to_check)
+                                if lenient_isinstance(ret,
+                                                      ensure_plain_type(level_up_type_to_check)):
+                                    try:
+                                        return Model[level_up_type_to_check](ret)  # type: ignore
+                                    except (ValidationError, TypeError):
+                                        pass
+
+                    else:
+                        if lenient_isinstance(ret, plain_inner_type_to_check):
+                            try:
+                                return self.__class__(ret)
+                            except (ValidationError, TypeError):
+                                pass
+
+        return cast(_ReturnT, ret)
+
+    def _fix_tuple_type_from_args(
+        self, level_up_type_to_check: type | GenericAlias | tuple[type | GenericAlias, ...]
+    ) -> type | GenericAlias:
+        if isinstance(level_up_type_to_check, tuple):
+            match len(level_up_type_to_check):
+                case 1:
+                    return level_up_type_to_check[0]
+                case _:
+                    return tuple[level_up_type_to_check]  # type: ignore[valid-type]
+        else:
+            return level_up_type_to_check
 
     def __getattr__(self, attr: str) -> Any:
         contents_attr = self._getattr_from_contents_obj(attr)
@@ -745,6 +794,24 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
                 contents_attr = add_callback_after_call(contents_attr,
                                                         _validate_contents,
                                                         contents_holder_context)
+
+        if attr in ('keys', 'values', 'items'):
+            level_up_arg_idx: int | slice
+            match attr:
+                case 'keys':
+                    level_up_arg_idx = 0
+                case 'values':
+                    level_up_arg_idx = 1
+                case 'items':
+                    level_up_arg_idx = slice(None)
+
+            _per_element_model_generator = self._get_per_element_model_generator(
+                None,
+                level_up_arg_idx=level_up_arg_idx,
+            )
+            contents_attr = add_callback_after_call(contents_attr,
+                                                    _per_element_model_generator,
+                                                    no_context)
 
         return contents_attr
 
