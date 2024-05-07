@@ -29,6 +29,7 @@ class IsJobConfig(Protocol):
 class IsDataConfig(Protocol):
     """"""
     interactive_mode: bool
+    dynamically_convert_elements_to_models: bool
     terminal_size_columns: int
     terminal_size_lines: int
 

@@ -35,6 +35,8 @@ from omnipy.util.helpers import (all_type_variants,
                                  is_union,
                                  remove_annotated_plus_optional_if_present,
                                  RestorableContents,
+                                 Snapshot,
+                                 SnapshotHolder,
                                  transfer_generic_args_to_cls)
 
 T = TypeVar('T')
@@ -467,60 +469,94 @@ def test_remove_annotated_optional_if_present() -> None:
                                                'something']) == Union[str, list[int]]
 
 
-def test_restorable_contents():
-    contents = RestorableContents()
+def test_snapshots():
+    snapshot_holder = SnapshotHolder()
 
-    my_list = [1, 3, 5]
-    my_dict = {1: 2, 3: 4}
-    my_other_list = [my_list]
+    class MyList(list):
+        @property
+        def contents(self) -> list:
+            return list(self)
 
-    assert contents.has_snapshot() is False
+    my_list = MyList([1, 3, 5])
+    assert my_list.contents == [1, 3, 5]
 
-    with pytest.raises(AssertionError):
-        contents.get_last_snapshot()
+    assert my_list not in snapshot_holder
+    assert snapshot_holder.get(my_list) is None
 
-    with pytest.raises(AssertionError):
-        contents.last_snapshot_taken_of_same_obj(my_list)
+    with pytest.raises(KeyError):
+        snapshot_holder[my_list]
 
-    with pytest.raises(AssertionError):
-        contents.differs_from_last_snapshot(my_list)
+    with pytest.raises(TypeError):
+        snapshot_holder[my_list] = my_list
 
-    contents.take_snapshot(my_list)
-    assert contents.has_snapshot() is True
-    assert contents.last_snapshot_taken_of_same_obj(my_list) is True
-    assert contents.differs_from_last_snapshot(my_list) is False
+    assert len(snapshot_holder) == 0
 
-    assert contents.last_snapshot_taken_of_same_obj(copy(my_list)) is False
-    assert contents.differs_from_last_snapshot(copy(my_list)) is False
+    snapshot_holder.take_snapshot(my_list)
 
+    assert my_list in snapshot_holder
+    assert snapshot_holder.get(my_list) is snapshot_holder[my_list]
+    assert isinstance(snapshot_holder[my_list], Snapshot)
+
+    snapshot = snapshot_holder[my_list]
+    assert snapshot.id == id(my_list)
+    assert snapshot.taken_of_same_obj(my_list) is True
+
+    assert snapshot.obj_copy == my_list
+    assert snapshot.differs_from(my_list) is False
+
+    assert id(snapshot.obj_copy) != id(my_list)
+
+    assert snapshot.taken_of_same_obj(copy(my_list)) is False
+    assert snapshot.differs_from(copy(my_list)) is False
+
+    my_other_list = MyList([my_list])
     my_list.append(7)
-    assert my_list == [1, 3, 5, 7]
-    assert my_other_list == [[1, 3, 5, 7]]
-    assert contents.last_snapshot_taken_of_same_obj(my_list) is True
-    assert contents.differs_from_last_snapshot(my_list) is True
+    assert snapshot.taken_of_same_obj(my_list) is True
+    assert snapshot.differs_from(my_list) is True
+    assert my_list == MyList([1, 3, 5, 7])
+    assert my_other_list == MyList([[1, 3, 5, 7]])
 
-    my_old_list = my_list
-    my_list = contents.get_last_snapshot()
-    assert my_list == [1, 3, 5]
-    assert my_old_list == [1, 3, 5, 7]
-    assert my_other_list == [[1, 3, 5, 7]]
+    my_list_from_snapshot = snapshot.obj_copy
+    assert my_list_from_snapshot == MyList([1, 3, 5])
 
-    assert my_list is not my_old_list  # the snapshot is a (preferably deep) copy of the old object
-    assert contents.last_snapshot_taken_of_same_obj(my_list) is False
-    assert contents.differs_from_last_snapshot(my_list) is False
+    assert my_list_from_snapshot is not my_list  # the snapshot is a (preferably deep) copy of the old object
+    assert snapshot.taken_of_same_obj(my_list_from_snapshot) is False
+    assert snapshot.differs_from(my_list_from_snapshot) is False
 
-    my_dict[5] = my_list
-    assert my_dict == {1: 2, 3: 4, 5: [1, 3, 5]}
+    class MyDict(dict):
+        @property
+        def contents(self) -> dict:
+            return dict(self)
 
-    assert contents.last_snapshot_taken_of_same_obj(my_dict) is False
-    contents.take_snapshot(my_dict)
-    assert contents.last_snapshot_taken_of_same_obj(my_dict) is True
-    assert contents.differs_from_last_snapshot(my_dict) is False
+    my_dict = MyDict({1: 2, 3: 4})
+
+    my_dict[5] = my_list_from_snapshot
+    assert my_dict == MyDict({1: 2, 3: 4, 5: [1, 3, 5]})
+
+    assert my_dict not in snapshot_holder
+    snapshot_holder.take_snapshot(my_dict)
+    assert snapshot_holder[my_dict].taken_of_same_obj(my_dict) is True
+    assert snapshot_holder[my_dict].differs_from(my_dict) is False
 
     del my_dict[5]
-    assert my_dict == {1: 2, 3: 4}
-    assert contents.last_snapshot_taken_of_same_obj(my_dict) is True
-    assert contents.differs_from_last_snapshot(my_dict) is True
+    assert my_dict == MyDict({1: 2, 3: 4})
+    assert snapshot_holder[my_dict].taken_of_same_obj(my_dict) is True
+    assert snapshot_holder[my_dict].differs_from(my_dict) is True
+
+    assert len(snapshot_holder) == 2
+
+    del my_dict
+    assert len(snapshot_holder) == 1
+
+    del my_list
+    assert len(snapshot_holder) == 1
+
+    my_list = my_other_list[0]
+    assert my_list in snapshot_holder
+
+    del my_list
+    del my_other_list
+    assert len(snapshot_holder) == 0
 
 
 def test_get_calling_module_name() -> None:

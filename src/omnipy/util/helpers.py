@@ -25,6 +25,7 @@ from typing import (_SpecialForm,
                     Protocol,
                     TypeVar,
                     Union)
+from weakref import WeakKeyDictionary, WeakValueDictionary
 
 from isort import place_module
 from isort.sections import STDLIB
@@ -282,6 +283,60 @@ class Snapshot(NamedTuple):
     id: int
     obj_copy: object
 
+    def taken_of_same_obj(self, obj: object) -> bool:
+        return self.id == id(obj)
+
+    def differs_from(self, obj: object) -> bool:
+        return not all_equals(self.obj_copy, obj)
+
+
+class ObjId(list):
+    def __init__(self, obj: object) -> None:
+        super().__init__([id(obj)])
+
+    def __hash__(self) -> int:
+        return self[0]
+
+
+class SnapshotHolder:
+    def __init__(self) -> None:
+        self._object_refs: WeakValueDictionary[ObjId, object] = WeakValueDictionary()
+        self._snapshots: WeakKeyDictionary[ObjId, Snapshot] = WeakKeyDictionary()
+        self._deep_copy_memo = {}
+
+    def __contains__(self, obj: object) -> bool:
+        return ObjId(obj) in self._snapshots
+
+    def get(self, obj: object) -> object:
+        obj_id = ObjId(obj)
+        if obj_id in self._snapshots:
+            return self._snapshots[obj_id]
+        else:
+            return None
+
+    def __getitem__(self, obj: object) -> object:
+        if self.get(obj) is None:
+            raise KeyError(f'{obj} is not in SnapshotHolder')
+        else:
+            return self.get(obj)
+
+    def __len__(self) -> int:
+        return len(self._snapshots)
+
+    def take_snapshot(self, obj: object) -> None:
+        try:
+            obj_copy = deepcopy(obj.contents, self._deep_copy_memo)
+        except (TypeError, ValueError, ValidationError) as exp:
+            print(exp)
+            obj_copy = copy(obj.contents)
+
+        obj_id = ObjId(obj)
+        self._object_refs[obj_id] = obj
+        self._snapshots[obj_id] = Snapshot(id(obj), obj_copy)
+
+
+_memo: dict[int, object] = {}
+
 
 class RestorableContents:
     def __init__(self) -> None:
@@ -292,8 +347,8 @@ class RestorableContents:
 
     def take_snapshot(self, obj: object):
         try:
-            snapshot_obj = deepcopy(obj)
-        except (TypeError, ValueError, ValidationError):
+            snapshot_obj = deepcopy(obj, _memo)
+        except (TypeError, ValueError, ValidationError) as exp:
             snapshot_obj = copy(obj)
         self._last_snapshot = Snapshot(id(obj), snapshot_obj)
 

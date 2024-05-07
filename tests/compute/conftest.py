@@ -22,12 +22,6 @@ def mock_job_classes() -> tuple[Type[JobTemplateMixin], Type[JobMixin]]:
 
 
 @pytest.fixture(scope='function')
-def teardown_reset_job_creator() -> None:
-    yield None
-    JobBaseMeta._job_creator_obj = JobCreator()
-
-
-@pytest.fixture(scope='function')
 def mock_local_runner(
         teardown_reset_job_creator: Annotated[None, pytest.fixture]) -> MockLocalRunner:
     mock_local_runner = MockLocalRunner()

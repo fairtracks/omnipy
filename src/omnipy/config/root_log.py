@@ -7,7 +7,7 @@ from omnipy.api.typedefs import LocaleType
 
 
 def _get_log_dir_path() -> str:
-    return str(Path.cwd().joinpath(Path('logs')))
+    return str(Path.cwd() / 'logs')
 
 
 @dataclass

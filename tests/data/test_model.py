@@ -1198,6 +1198,101 @@ def _assert_model_or_val(dyn_convert: bool,
         _assert_val(model_or_val, target_type, contents)
 
 
+def test_snapshot_with_mimic_special_method_and_interactive_mode(
+    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+    # runtime.config.data.interactive_mode = True
+
+    model = Model[list[int]]([123])
+
+    assert model.snapshot == model.contents == [123]
+    assert model.snapshot_taken_of_same_obj(model.contents) is True
+    assert model.contents_validated is True
+
+    first_snapshot_id = id(model.snapshot)
+    assert first_snapshot_id != id(model.contents)  # snapshot is copy of contents
+
+    with pytest.raises(ValidationError):
+        model += ['abc']  # type: ignore[operator]
+
+    assert model.snapshot == model.contents == [123]
+    assert model.snapshot_taken_of_same_obj(model.contents) is False
+    assert model.contents_validated is False
+
+    second_snapshot_id = id(model.snapshot)
+    assert second_snapshot_id == first_snapshot_id
+
+    model += [456]  # type: ignore[operator]
+
+    assert model.snapshot == model.contents == [123, 456]
+    assert model.snapshot_taken_of_same_obj(model.contents) is True
+    assert model.contents_validated is True
+
+    third_snapshot_id = id(model.snapshot)
+    assert third_snapshot_id != second_snapshot_id
+
+    model.validate_contents()
+
+    assert model.snapshot == model.contents == [123, 456]
+    assert model.snapshot_taken_of_same_obj(model.contents) is True
+    assert model.contents_validated is True
+
+    fourth_snapshot_id = id(model.snapshot)
+    assert fourth_snapshot_id != third_snapshot_id
+
+
+def test_mimic_special_method_no_interactive_mode(
+    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+    # runtime.config.data.interactive_mode = False
+
+    model = Model[list[int]]([123])
+    assert model.has_snapshot is False
+    with pytest.raises(AssertionError):
+        assert model.snapshot
+
+    with pytest.raises(ValidationError):
+        model += ['abc']  # type: ignore[operator]
+
+    _assert_model(model, list[int], [123, 'abc'])
+    assert model.snapshot is None
+
+    with pytest.raises(ValidationError):
+        model += [456]  # type: ignore[operator]
+
+    _assert_model(model, list[int], [123, 'abc', 456])
+    assert model.snapshot is None
+
+    with pytest.raises(ValidationError):
+        model.validate_contents(
+            restore_snapshot_if_interactive_and_invalid=False,
+            take_snapshot_if_interactive_and_valid=True)
+
+    _assert_model(model, list[int], [123, 'abc', 456])
+    assert model.snapshot is None
+
+    with pytest.raises(ValidationError):
+        model.validate_contents(
+            restore_snapshot_if_interactive_and_invalid=True,
+            take_snapshot_if_interactive_and_valid=True)
+
+    _assert_model(model, list[int], [123, 'abc', 456])
+    assert model.snapshot is None
+
+    runtime.config.data.interactive_mode = True
+
+    with pytest.raises(AssertionError):
+        model.validate_contents(
+            restore_snapshot_if_interactive_and_invalid=True,
+            take_snapshot_if_interactive_and_valid=True)
+
+    del model[1]
+
+    model.validate_contents(
+        restore_snapshot_if_interactive_and_invalid=True,
+        take_snapshot_if_interactive_and_valid=True)
+    assert model.snapshot.obj_copy == model.contents == [123, 456]
+    assert id(model.snapshot.obj_copy) != id(model.contents)
+
+
 @pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_simple_list_operations(
     runtime: Annotated[IsRuntime, pytest.fixture],
@@ -1218,7 +1313,7 @@ def test_mimic_simple_list_operations(
     assert len(model) == 4
 
     _assert_model_or_val(dyn_convert, model[-1], int, 456)  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model[1:-1], list[int], [234, 345])  # type: ignore[index]
+    _assert_model(model[1:-1], list[int], [234, 345])  # type: ignore[index]
 
     assert tuple(reversed(model)) == (456, 345, 234, 123)
 
@@ -1236,7 +1331,7 @@ def test_mimic_simple_list_operations(
     model[1] /= 2  # type: ignore[index]
 
     _assert_model_or_val(dyn_convert, model[1], int, 117)  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model, list[int], [123, 117, 432, 654])
+    _assert_model(model, list[int], [123, 117, 432, 654])
 
     assert model.index(432) == 2
 
@@ -1301,7 +1396,7 @@ def test_mimic_nested_list_operations(
 
     model[-1] = tuple(range(3))
 
-    _assert_model_or_val(dyn_convert, model, list[int | list[int]], [123, 234, [0, 1, 2]])
+    _assert_model(model, list[int | list[int]], [123, 234, [0, 1, 2]])
     _assert_model_or_val(dyn_convert, model[0], int, 123)  # type: ignore[index]
     _assert_model_or_val(dyn_convert, model[-1], list[int], [0, 1, 2])  # type: ignore[index]
 
