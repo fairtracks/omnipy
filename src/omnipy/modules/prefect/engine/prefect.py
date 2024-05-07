@@ -1,4 +1,5 @@
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Callable, Type
 
@@ -9,9 +10,15 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
+from omnipy.hub.entry import RuntimeEntryPublisher
 from omnipy.util.helpers import resolve
 
 from .. import prefect_flow, prefect_task, PrefectFlow, PrefectTask, task_input_hash
+
+
+@dataclass
+class PrefectEngineConfigEntryPublisher(PrefectEngineConfig, RuntimeEntryPublisher):
+    ...
 
 
 class PrefectEngine(TaskRunnerEngine,

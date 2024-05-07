@@ -36,6 +36,7 @@ from pydantic.utils import lenient_isinstance, lenient_issubclass
 
 from omnipy.api.exceptions import ParamException
 from omnipy.api.typedefs import TypeForm
+from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
 from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
 from omnipy.util.decorators import add_callback_after_call, no_context
@@ -54,7 +55,8 @@ from omnipy.util.helpers import (all_equals,
                                  is_union,
                                  remove_annotated_plus_optional_if_present,
                                  remove_forward_ref_notation,
-                                 RestorableContents)
+                                 RestorableContents,
+                                 Snapshot)
 from omnipy.util.tabulate import tabulate
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
@@ -101,11 +103,6 @@ def _cleanup_name_qualname_and_module(cls, created_model_or_dataset, model, orig
     created_model_or_dataset.__module__ = cls.__module__
 
 
-def _is_interactive_mode() -> bool:
-    from omnipy.hub.runtime import runtime
-    return runtime.config.data.interactive_mode if runtime else True
-
-
 def _get_terminal_size() -> os.terminal_size:
     from omnipy.hub.runtime import runtime
 
@@ -130,7 +127,7 @@ def _waiting_for_terminal_repr(new_value: bool | None = None) -> bool:
 
 def is_model_instance(obj: object) -> bool:
     return lenient_isinstance(obj, Model) \
-        and not is_none_type(obj)  # Consequence of MyModelMetaclass hack
+        and not is_none_type(obj)  # Consequence of _ModelMetaclass hack
 
 
 # def orjson_dumps(v, *, default):
@@ -140,7 +137,7 @@ def is_model_instance(obj: object) -> bool:
 _restorable_content_cache: dict[int, RestorableContents] = {}
 
 
-class MyModelMetaclass(ModelMetaclass):
+class _ModelMetaclass(ModelMetaclass, DataClassBaseMeta):
     # Hack to overcome bug in pydantic/fields.py (v1.10.13), lines 636-641:
     #
     # if origin is None or origin is CollectionsHashable:
@@ -154,14 +151,14 @@ class MyModelMetaclass(ModelMetaclass):
     # subfields, e.g. in `list[MyModel]` as `get_origin(MyModel) is None`. Here, we want allow_none
     # to be set to True so that Model is allowed to validate a None value.
     #
-    # TODO: Revisit the need for MyModelMetaclass hack in pydantic v2
+    # TODO: Revisit the need for _ModelMetaclass hack in pydantic v2
     def __instancecheck__(self, instance: Any) -> bool:
         if instance is None:
             return True
         return super().__instancecheck__(instance)
 
 
-class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
+class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetaclass):
     """
     A data model containing a value parsed according to the model.
 
@@ -395,7 +392,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             else:
                 raise
 
-        self._take_snapshot_of_validated_contents()  # initial snapshot
+        self._take_snapshot_of_validated_contents(initial=True)
 
         if not self.__class__.__doc__:
             self._set_standard_field_description()
@@ -469,9 +466,22 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             _restorable_content_cache[id(self)] = RestorableContents()
         return _restorable_content_cache.get(id(self))
 
-    def _take_snapshot_of_validated_contents(self):
-        interactive_mode = _is_interactive_mode()
-        if interactive_mode:
+    @property
+    def snapshot(self) -> Snapshot:
+        return self._get_restorable_contents().get_last_snapshot()
+
+    def snapshot_taken_of_same_obj(self, obj: object) -> bool:
+        return self._get_restorable_contents().last_snapshot_taken_of_same_obj(obj)
+
+    def differs_from_snapshot(self, obj: object) -> bool:
+        return self._get_restorable_contents().differs_from_last_snapshot(obj)
+
+    @property
+    def contents_validated(self) -> bool:
+        return True
+
+    def _take_snapshot_of_validated_contents(self, initial: bool = False) -> None:
+        if initial or self.config.interactive_mode:
             self._get_restorable_contents().take_snapshot(self.contents)
 
     @classmethod
@@ -682,9 +692,8 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             restorable = self._get_restorable_contents()
             reset_solution: ContextManager
 
-            if _is_interactive_mode():
+            if self.config.interactive_mode:
                 if restorable.has_snapshot() \
-                        and restorable.last_snapshot_taken_of_same_obj(self.contents) \
                         and restorable.differs_from_last_snapshot(self.contents):
 
                     # Current contents not validated
@@ -704,7 +713,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
 
             with reset_solution:
                 ret = method(*args, **kwargs)
-                if _is_interactive_mode():
+                if self.config.interactive_mode:
                     needs_validation = restorable.differs_from_last_snapshot(self.contents) \
                         if restorable.has_snapshot() else True
                 else:
@@ -754,7 +763,11 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         level_up_arg_idx: int = 1) -> ('Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] '
                                        '| Model[_ReturnT] | Model[_RootT] | _ReturnT'):
 
-        if not is_model_instance(ret):
+        if level_up and not self.config.dynamically_convert_elements_to_models:
+            ...
+        elif is_model_instance(ret):
+            ...
+        else:
             outer_type = self.outer_type(with_args=True)
             # For double Models, e.g. Model[Model[int]], where _get_real_contents() have already
             # skipped the outer Model to get the `ret`, we need to do the same to compare the value
@@ -810,7 +823,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
     def __getattr__(self, attr: str) -> Any:
         contents_attr = self._getattr_from_contents_obj(attr)
 
-        if _is_interactive_mode() and not self._is_non_omnipy_pydantic_model():
+        if self.config.interactive_mode and not self._is_non_omnipy_pydantic_model():
             contents_holder_context = AttribHolder(self, 'contents', copy_attr=True)
 
             contents_cls_attr = self._getattr_from_contents_cls(attr)
@@ -869,7 +882,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             and self.to_data() == cast(Model, other).to_data()  # last line is just in case
 
     def __repr__(self) -> str:
-        if _is_interactive_mode() and not _waiting_for_terminal_repr():
+        if self.config.interactive_mode and not _waiting_for_terminal_repr():
             if get_calling_module_name() in INTERACTIVE_MODULES:
                 _waiting_for_terminal_repr(True)
                 return self._table_repr()
