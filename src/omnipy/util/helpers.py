@@ -45,7 +45,7 @@ from pydantic.generics import GenericModel
 from pydantic.typing import display_as_type
 from typing_inspect import get_generic_bases, is_generic_type
 
-from omnipy.api.protocols.private.util import HasContents
+from omnipy.api.protocols.private.util import HasContents, IsSnapshot
 from omnipy.api.typedefs import LocaleType, TypeForm
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
@@ -581,7 +581,7 @@ class Snapshot(Generic[_ObjT, _ContentT]):
         return not all_equals(self.obj_copy, obj)
 
 
-class SnapshotHolder(WeakKeyRefContainer[HasContents[_ContentT], Snapshot[_ObjT, _ContentT]],
+class SnapshotHolder(WeakKeyRefContainer[HasContents[_ContentT], IsSnapshot[_ObjT, _ContentT]],
                      Generic[_ObjT, _ContentT]):
     def __init__(self) -> None:
         super().__init__()
@@ -590,7 +590,7 @@ class SnapshotHolder(WeakKeyRefContainer[HasContents[_ContentT], Snapshot[_ObjT,
         self._obj_copy_id_keys = defaultdict[int, list[int]](list[int])
         self.keys_for_deleted_objs: list[int] = []
 
-    def __setitem__(self, obj: HasContents[_ContentT], value: Snapshot[_ObjT, _ContentT]) -> None:
+    def __setitem__(self, obj: HasContents[_ContentT], value: IsSnapshot[_ObjT, _ContentT]) -> None:
         raise TypeError(f"'{self.__class__.__name__}' object does not support item assignment")
 
     def __getattribute__(self, name: str) -> Any:

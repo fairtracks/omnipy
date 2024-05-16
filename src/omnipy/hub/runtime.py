@@ -3,7 +3,7 @@ from typing import Any
 
 from omnipy.api.enums import EngineChoice
 from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
-from omnipy.api.protocols.private.data import IsDataConfigHolder
+from omnipy.api.protocols.private.data import IsDataClassCreator
 from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.private.log import IsRunStateRegistry
 from omnipy.api.protocols.public.config import (IsDataConfig,
@@ -68,7 +68,7 @@ class RuntimeConfig(RuntimeEntryPublisher):
 @dataclass
 class RuntimeObjects(RuntimeEntryPublisher):
     job_creator: IsJobConfigHolder = field(default_factory=_job_creator_factory)
-    data_class_creator: IsDataConfigHolder = field(default_factory=_data_class_creator_factory)
+    data_class_creator: IsDataClassCreator = field(default_factory=_data_class_creator_factory)
     local: IsEngine = field(default_factory=LocalRunner)
     prefect: IsEngine = field(default_factory=PrefectEngine)
     registry: IsRunStateRegistry = field(default_factory=RunStateRegistry)
