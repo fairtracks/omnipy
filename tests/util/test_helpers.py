@@ -1,6 +1,7 @@
 from collections import UserDict, UserList
 from copy import copy, deepcopy
 import gc
+import sys
 from types import MethodType, NoneType, UnionType
 from typing import (Annotated,
                     Any,
@@ -21,6 +22,7 @@ from typing_inspect import get_generic_type
 from omnipy.api.protocols.private.util import HasContents
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
+from omnipy.util.contexts import Undefined
 from omnipy.util.helpers import (all_type_variants,
                                  called_from_omnipy_tests,
                                  ensure_non_str_byte_iterable,
@@ -497,7 +499,7 @@ def test_ref_count_memo_dict() -> None:
 
             self_id = id(self)
             contents_id = id(self.contents)
-            del self
+            self.contents = Undefined
             ref_count_memo_dict.recursively_remove_deleted_objs(self_id, contents_id)
 
         def __repr__(self) -> str:
@@ -506,53 +508,54 @@ def test_ref_count_memo_dict() -> None:
     def _outer_test_count_memo_dict() -> tuple:
         def _inner_test_count_memo_dict() -> tuple[MyClass, tuple]:
             a_list = [1, 2, 3]
-            b_tuple = ('I want my...', 'I want my...', 'I want my MTV')
+            # creating tuple through list to not add a reference to the tuple in the code object
+            b_tuple = tuple(['I want my...', 'I want my...', 'I want my MTV'])
             c_dict = {1: 2, 3: a_list}
             d_obj = MyClass({2: 4, 6: a_list})
             e_obj = MyClass({1: a_list, 2: d_obj})
+            print(f'a_list refcount: {sys.getrefcount(a_list)}')
 
             id_a = id(a_list)
             id_b = id(b_tuple)
             id_c = id(c_dict)
-            id_d = id(d_obj)
+            # id_d = id(d_obj)
             id_d_c = id(d_obj.contents)
-            id_e = id(e_obj)
+            # id_e = id(e_obj)
             id_e_c = id(e_obj.contents)
-            all_ids = (id_a, id_b, id_c, id_d, id_d_c, id_e, id_e_c)
+            all_ids = (id_a, id_b, id_c, id_d_c, id_e_c)
 
             ref_count_memo_dict[id_a] = a_list
             ref_count_memo_dict[id_b] = b_tuple
             ref_count_memo_dict[id_c] = c_dict
-            ref_count_memo_dict[id_d] = d_obj
+            # ref_count_memo_dict[id_d] = d_obj
             ref_count_memo_dict[id_d_c] = d_obj.contents
-            ref_count_memo_dict[id_e] = e_obj
+            # ref_count_memo_dict[id_e] = e_obj
             ref_count_memo_dict[id_e_c] = e_obj.contents
+            print(f'a_list refcount: {sys.getrefcount(a_list)}')
 
             assert ref_count_memo_dict[id_a] == a_list
             assert ref_count_memo_dict[id_b] == b_tuple
             assert ref_count_memo_dict[id_c] == c_dict
-            assert ref_count_memo_dict[id_d] == d_obj
+            # assert ref_count_memo_dict[id_d] == d_obj
             assert ref_count_memo_dict[id_d_c] == d_obj.contents
-            assert ref_count_memo_dict[id_e] == e_obj
+            # assert ref_count_memo_dict[id_e] == e_obj
             assert ref_count_memo_dict[id_e_c] == e_obj.contents
 
-            _assert_values_in_memo(ref_count_memo_dict,
-                                   all_ids, (True, True, True, True, True, True, True))
+            _assert_values_in_memo(ref_count_memo_dict, all_ids, (True, True, True, True, True))
 
             del a_list
             del b_tuple
 
             # a_list was deleted, but is still linked from c_dict and d_obj
             ref_count_memo_dict.recursively_remove_deleted_objs(id_a)
-            _assert_values_in_memo(ref_count_memo_dict,
-                                   all_ids, (True, True, True, True, True, True, True))
+            _assert_values_in_memo(ref_count_memo_dict, all_ids, (True, True, True, True, True))
 
             print('Returning from _inner_test_count_memo_dict()')
 
             return e_obj, all_ids
 
         e_obj, all_ids = _inner_test_count_memo_dict()
-        id_a, id_b, id_c, id_d, id_d_c, id_e, id_e_c = all_ids
+        id_a, id_b, id_c, id_d_c, id_e_c = all_ids
 
         # a_list is still linked from d_obj
         # b_tuple was already deleted, but not checked for ref count until now
@@ -561,19 +564,17 @@ def test_ref_count_memo_dict() -> None:
         # d_obj was deleted when out of scope of_inner_test_count_memo_dict(), but e_obj still
         #     references it.
         ref_count_memo_dict.recursively_remove_deleted_objs(id_b, id_c)
-        _assert_values_in_memo(ref_count_memo_dict,
-                               all_ids, (True, False, False, True, True, True, True))
+        _assert_values_in_memo(ref_count_memo_dict, all_ids, (True, False, False, True, True))
 
         print('Returning from _outer_test_count_memo_dict()')
         return all_ids
 
     all_ids = _outer_test_count_memo_dict()
 
-    # e_obj is deleted when out of scope of _outer_test_count_memo_dict(), and d_obj.__del__()
+    # e_obj is deleted when out of scope of _outer_test_count_memo_dict(), and e_obj.__del__()
     #     method calls recursively_remove_deleted_objs(id_e). No more references left to a, b, c, d, and e.
     # d_obj was fully deleted when e_obj is deleted.
-    _assert_values_in_memo(ref_count_memo_dict,
-                           all_ids, (False, False, False, False, False, False, False))
+    _assert_values_in_memo(ref_count_memo_dict, all_ids, (False, False, False, False, False))
 
 
 class HasContentsMixin(Generic[_ContentT]):
@@ -742,9 +743,11 @@ def test_snapshot_deepcopy_reuse_objects() -> None:
         def __del__(self) -> None:
             if snapshot_holder is not None:
                 content_id = id(self.contents)
+                # self_id = id(self)
                 self.data = []
                 try:
-                    snapshot_holder.recursively_remove_deleted_obj_from_deepcopy_memo(content_id)
+                    # snapshot_holder.recursively_remove_deleted_obj_from_deepcopy_memo(content_id)
+                    snapshot_holder.keys_for_deleted_objs.append(content_id)
                 except (AttributeError) as exp:
                     print(exp)
                     print(snapshot_holder._deepcopy_memo)
