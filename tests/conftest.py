@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 import os
+from pathlib import Path
 import shutil
 import tempfile
 from typing import Annotated, Generator, Type
@@ -10,6 +11,7 @@ import pytest
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.compute.job_creator import JobBaseMeta, JobCreator
 from omnipy.config.root_log import RootLogConfig
+from omnipy.data.data_class_creator import DataClassBaseMeta, DataClassCreator
 
 
 @pytest.fixture(scope='function')
@@ -32,15 +34,29 @@ def teardown_remove_root_log_handlers() -> Generator[None, None, None]:
 
 
 @pytest.fixture(scope='function')
-def tmp_dir_path() -> Generator[str, None, None]:
+def tmp_dir_path() -> Generator[Path, None, None]:
     with tempfile.TemporaryDirectory() as _tmp_dir_path:
-        yield _tmp_dir_path
+        yield Path(_tmp_dir_path)
+
+
+@pytest.fixture(scope='function')
+def teardown_reset_job_creator() -> Generator[None, None, None]:
+    yield None
+    JobBaseMeta._job_creator_obj = JobCreator()
+
+
+@pytest.fixture(scope='function')
+def teardown_reset_data_class_creator() -> Generator[None, None, None]:
+    yield None
+    DataClassBaseMeta._data_class_creator_obj = DataClassCreator()
 
 
 @pytest.fixture(scope='function')
 def runtime_cls(
     teardown_rm_root_log_dir: Annotated[None, pytest.fixture],
     teardown_remove_root_log_handlers: Annotated[None, pytest.fixture],
+    teardown_reset_job_creator: Annotated[None, pytest.fixture],
+    teardown_reset_data_class_creator: Annotated[None, pytest.fixture],
 ) -> Type[IsRuntime]:
     from omnipy.hub.runtime import Runtime
     return Runtime
@@ -49,17 +65,15 @@ def runtime_cls(
 @pytest.fixture(scope='function')
 def runtime(
     runtime_cls: Annotated[Type[IsRuntime], pytest.fixture],
-    tmp_dir_path: Annotated[str, pytest.fixture],
+    tmp_dir_path: Annotated[Path, pytest.fixture],
 ) -> Generator[IsRuntime, None, None]:
     runtime = runtime_cls()
 
-    runtime.config.job.output_storage.local.persist_data_dir_path = os.path.join(
-        tmp_dir_path, 'outputs')
-    runtime.config.root_log.file_log_dir_path = os.path.join(tmp_dir_path, 'logs')
+    runtime.config.reset_to_defaults()
+    runtime.config.job.output_storage.local.persist_data_dir_path = str(tmp_dir_path / 'outputs')
+    runtime.config.root_log.file_log_dir_path = str(tmp_dir_path / 'logs')
 
     yield runtime
-
-    JobBaseMeta._job_creator_obj = JobCreator()
 
 
 @pytest.fixture(scope='function')

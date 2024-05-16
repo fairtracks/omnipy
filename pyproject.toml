@@ -42,6 +42,7 @@ objsize = "^0.7.0"
 humanize = "^4.9.0"
 httpx = "^0.26.0"
 pydantic = {version = "<2", extras = ["email"]}
+bidict = "^0.23.1"
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"

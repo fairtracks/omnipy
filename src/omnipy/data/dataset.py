@@ -24,10 +24,11 @@ import objsize
 from pydantic import Field, PrivateAttr, root_validator, ValidationError
 from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
+from pydantic.main import ModelMetaclass
 from pydantic.utils import lenient_isinstance, lenient_issubclass
 
+from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.model import (_cleanup_name_qualname_and_module,
-                               _is_interactive_mode,
                                _waiting_for_terminal_repr,
                                DataWithParams,
                                INTERACTIVE_MODULES,
@@ -56,7 +57,11 @@ DATA_KEY = 'data'
 #       BaseModel.copy()
 
 
-class Dataset(GenericModel, Generic[ModelT], UserDict):
+class _DatasetMetaclass(ModelMetaclass, DataClassBaseMeta):
+    ...
+
+
+class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=_DatasetMetaclass):
     """
     Dict-based container of data files that follow a specific Model
 
@@ -538,7 +543,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict):
         return [(k, v.contents) for k, v in self.data.items()]
 
     def __repr__(self):
-        if _is_interactive_mode() and not _waiting_for_terminal_repr():
+        if self.config.interactive_mode and not _waiting_for_terminal_repr():
             if get_calling_module_name() in INTERACTIVE_MODULES:
                 _waiting_for_terminal_repr(True)
                 return self._table_repr()

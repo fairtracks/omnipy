@@ -36,6 +36,7 @@ from pydantic.utils import lenient_isinstance, lenient_issubclass
 
 from omnipy.api.exceptions import ParamException
 from omnipy.api.typedefs import TypeForm
+from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
 from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
 from omnipy.util.decorators import add_callback_after_call, no_context
@@ -54,7 +55,8 @@ from omnipy.util.helpers import (all_equals,
                                  is_union,
                                  remove_annotated_plus_optional_if_present,
                                  remove_forward_ref_notation,
-                                 RestorableContents)
+                                 RestorableContents,
+                                 Snapshot)
 from omnipy.util.tabulate import tabulate
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
@@ -101,11 +103,6 @@ def _cleanup_name_qualname_and_module(cls, created_model_or_dataset, model, orig
     created_model_or_dataset.__module__ = cls.__module__
 
 
-def _is_interactive_mode() -> bool:
-    from omnipy.hub.runtime import runtime
-    return runtime.config.data.interactive_mode if runtime else True
-
-
 def _get_terminal_size() -> os.terminal_size:
     from omnipy.hub.runtime import runtime
 
@@ -130,7 +127,7 @@ def _waiting_for_terminal_repr(new_value: bool | None = None) -> bool:
 
 def is_model_instance(obj: object) -> bool:
     return lenient_isinstance(obj, Model) \
-        and not is_none_type(obj)  # Consequence of MyModelMetaclass hack
+        and not is_none_type(obj)  # Consequence of _ModelMetaclass hack
 
 
 # def orjson_dumps(v, *, default):
@@ -140,7 +137,7 @@ def is_model_instance(obj: object) -> bool:
 _restorable_content_cache: dict[int, RestorableContents] = {}
 
 
-class MyModelMetaclass(ModelMetaclass):
+class _ModelMetaclass(ModelMetaclass, DataClassBaseMeta):
     # Hack to overcome bug in pydantic/fields.py (v1.10.13), lines 636-641:
     #
     # if origin is None or origin is CollectionsHashable:
@@ -154,14 +151,14 @@ class MyModelMetaclass(ModelMetaclass):
     # subfields, e.g. in `list[MyModel]` as `get_origin(MyModel) is None`. Here, we want allow_none
     # to be set to True so that Model is allowed to validate a None value.
     #
-    # TODO: Revisit the need for MyModelMetaclass hack in pydantic v2
+    # TODO: Revisit the need for _ModelMetaclass hack in pydantic v2
     def __instancecheck__(self, instance: Any) -> bool:
         if instance is None:
             return True
         return super().__instancecheck__(instance)
 
 
-class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
+class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetaclass):
     """
     A data model containing a value parsed according to the model.
 
@@ -395,7 +392,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             else:
                 raise
 
-        self._take_snapshot_of_validated_contents()  # initial snapshot
+        self._take_snapshot_of_validated_contents(initial=True)
 
         if not self.__class__.__doc__:
             self._set_standard_field_description()
@@ -447,11 +444,20 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
-    def validate_contents(self) -> None:
-        self._validate_and_set_contents(self.contents)
+    def validate_contents(self, restore_snapshot_if_interactive_and_invalid: bool = False) -> None:
+        self._validate_and_set_value(
+            self.contents,
+            restore_snapshot_if_interactive_and_invalid=restore_snapshot_if_interactive_and_invalid)
 
-    def _validate_and_set_contents(self, new_contents: object) -> None:
-        self.contents = self._validate_contents_from_value(new_contents)
+    def _validate_and_set_value(self,
+                                new_contents: object,
+                                restore_snapshot_if_interactive_and_invalid: bool = False) -> None:
+        if restore_snapshot_if_interactive_and_invalid and self.config.interactive_mode:
+            reset_solution = AttribHolder(self, 'contents', self.snapshot, reset_to_other=True)
+        else:
+            reset_solution = nothing()
+        with reset_solution:
+            self.contents = self._validate_contents_from_value(new_contents)
         self._take_snapshot_of_validated_contents()
 
     def _validate_contents_from_value(self, value: object) -> _RootT:
@@ -469,10 +475,26 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             _restorable_content_cache[id(self)] = RestorableContents()
         return _restorable_content_cache.get(id(self))
 
-    def _take_snapshot_of_validated_contents(self):
-        interactive_mode = _is_interactive_mode()
-        if interactive_mode:
+    @property
+    def snapshot(self) -> Snapshot:
+        return self._get_restorable_contents().get_last_snapshot()
+
+    def snapshot_taken_of_same_obj(self, obj: object) -> bool:
+        return self._get_restorable_contents().last_snapshot_taken_of_same_obj(obj)
+
+    def differs_from_snapshot(self, obj: object) -> bool:
+        return self._get_restorable_contents().differs_from_last_snapshot(obj)
+
+    @property
+    def contents_validated(self) -> bool:
+        needs_validation = self.differs_from_snapshot(self.contents) \
+                           or not self.snapshot_taken_of_same_obj(self.contents)
+        return not needs_validation
+
+    def _take_snapshot_of_validated_contents(self, initial: bool = False) -> None:
+        if initial or self.config.interactive_mode:
             self._get_restorable_contents().take_snapshot(self.contents)
+            print(f'{id(self.contents)} -> {id(self.snapshot)}: {self.contents}')
 
     @classmethod
     def _parse_data(cls, data: Any) -> _RootT:
@@ -566,7 +588,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         return super().dict(by_alias=True)[ROOT_KEY]
 
     def from_data(self, value: object) -> None:
-        self._validate_and_set_contents(value)
+        self._validate_and_set_value(value)
 
     def absorb_and_replace(self, other: 'Model'):
         self.from_data(other.to_data())
@@ -670,56 +692,27 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
 
     def _special_method(  # noqa: C901
             self, name: str, info: MethodInfo, *args: object, **kwargs: object) -> object:
-        try:
-            method = self._getattr_from_contents_obj(name)
-        except AttributeError:
-            if name == '__len__':
-                raise TypeError(f"object of type '{self.__class__.__name__}' has no len()")
-            else:
-                raise
 
-        if info.state_changing:
-            restorable = self._get_restorable_contents()
-            reset_solution: ContextManager
+        if info.state_changing and self.config.interactive_mode:
+            if not self.contents_validated:
+                self.validate_contents(restore_snapshot_if_interactive_and_invalid=True)
 
-            if _is_interactive_mode():
-                if restorable.has_snapshot() \
-                        and restorable.last_snapshot_taken_of_same_obj(self.contents) \
-                        and restorable.differs_from_last_snapshot(self.contents):
-
-                    # Current contents not validated
-                    reset_contents_to_last_snapshot = AttribHolder(
-                        self, 'contents', restorable.get_last_snapshot(), reset_to_other=True)
-                    with reset_contents_to_last_snapshot:
-                        validated_contents = self._validate_contents_from_value(self.contents)
-
-                    reset_contents_to_validated_prev = AttribHolder(
-                        self, 'contents', validated_contents, reset_to_other=True)
-                    reset_solution = reset_contents_to_validated_prev
-                else:
-                    reset_contents_to_prev = AttribHolder(self, 'contents', copy_attr=True)
-                    reset_solution = reset_contents_to_prev
-            else:
-                reset_solution = nothing()
-
-            with reset_solution:
-                ret = method(*args, **kwargs)
-                if _is_interactive_mode():
-                    needs_validation = restorable.differs_from_last_snapshot(self.contents) \
-                        if restorable.has_snapshot() else True
-                else:
-                    needs_validation = True
-                if needs_validation:
+            reset_contents_to_prev = AttribHolder(self, 'contents', copy_attr=True)
+            with reset_contents_to_prev:
+                ret = self._call_special_method(name, *args, **kwargs)
+                if self.differs_from_snapshot(self.contents):
                     self.validate_contents()
+
         elif name == '__iter__' and isinstance(self, Iterable):
             _per_element_model_generator = self._get_per_element_model_generator(
                 cast(Iterable, self.contents),
                 level_up_arg_idx=0,
             )
-
             return _per_element_model_generator()
         else:
-            ret = method(*args, **kwargs)
+            ret = self._call_special_method(name, *args, **kwargs)
+            if info.state_changing:
+                self.validate_contents()
 
         if info.maybe_returns_same_type:
             level_up = False
@@ -732,6 +725,18 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             # integer argument are supposed to possibly return a result of the same type.
             ret = self._convert_to_model_if_reasonable(ret, level_up=level_up, level_up_arg_idx=-1)
 
+        return ret
+
+    def _call_special_method(self, name: str, *args: object, **kwargs: object) -> object:
+        try:
+            method = self._getattr_from_contents_obj(name)
+        except AttributeError:
+            if name == '__len__':
+                raise TypeError(f"object of type '{self.__class__.__name__}' has no len()")
+            else:
+                raise
+
+        ret = method(*args, **kwargs)
         return ret
 
     def _get_per_element_model_generator(self,
@@ -754,7 +759,11 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
         level_up_arg_idx: int = 1) -> ('Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] '
                                        '| Model[_ReturnT] | Model[_RootT] | _ReturnT'):
 
-        if not is_model_instance(ret):
+        if level_up and not self.config.dynamically_convert_elements_to_models:
+            ...
+        elif is_model_instance(ret):
+            ...
+        else:
             outer_type = self.outer_type(with_args=True)
             # For double Models, e.g. Model[Model[int]], where _get_real_contents() have already
             # skipped the outer Model to get the `ret`, we need to do the same to compare the value
@@ -810,7 +819,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
     def __getattr__(self, attr: str) -> Any:
         contents_attr = self._getattr_from_contents_obj(attr)
 
-        if _is_interactive_mode() and not self._is_non_omnipy_pydantic_model():
+        if self.config.interactive_mode and not self._is_non_omnipy_pydantic_model():
             contents_holder_context = AttribHolder(self, 'contents', copy_attr=True)
 
             contents_cls_attr = self._getattr_from_contents_cls(attr)
@@ -869,7 +878,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             and self.to_data() == cast(Model, other).to_data()  # last line is just in case
 
     def __repr__(self) -> str:
-        if _is_interactive_mode() and not _waiting_for_terminal_repr():
+        if self.config.interactive_mode and not _waiting_for_terminal_repr():
             if get_calling_module_name() in INTERACTIVE_MODULES:
                 _waiting_for_terminal_repr(True)
                 return self._table_repr()
@@ -1036,7 +1045,7 @@ class ParamModel(Model[_ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
             self._validate_and_set_contents_with_params(cast(_ParamRootT, self.contents), **kwargs)
 
     def _validate_and_set_contents_with_params(self, contents: _ParamRootT, **kwargs: _KwargValT):
-        self._validate_and_set_contents(DataWithParams(data=contents, params=kwargs))
+        self._validate_and_set_value(DataWithParams(data=contents, params=kwargs))
 
 
 _ParamModelT = TypeVar('_ParamModelT', bound='ParamModel')
@@ -1071,7 +1080,7 @@ class ListOfParamModel(ParamModel[list[_ParamModelT
             self,
             contents: list[_ParamModelT | DataWithParams[_ParamModelT, _KwargValT]],
             **kwargs: _KwargValT):
-        self._validate_and_set_contents([
+        self._validate_and_set_value([
             DataWithParams(data=cast(_ParamModelT, model).contents, params=kwargs)
             for model in contents
         ])
