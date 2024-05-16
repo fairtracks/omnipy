@@ -8,7 +8,7 @@ class MethodInfo(NamedTuple):
 
 # Ordered after their order in the Python documentation
 # (https://docs.python.org/3.10/reference/datamodel.html)
-SPECIAL_METHODS_INFO: dict[str, MethodInfo] = {
+_SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
     # 3.3.1. Basic customization ############################################
     '__bool__': MethodInfo(state_changing=False, maybe_returns_same_type=False),
     # 3.3.7. Emulating container types ######################################
@@ -83,3 +83,7 @@ SPECIAL_METHODS_INFO: dict[str, MethodInfo] = {
     '__floor__': MethodInfo(state_changing=False, maybe_returns_same_type=True),
     '__ceil__': MethodInfo(state_changing=False, maybe_returns_same_type=True),
 }
+
+
+def get_special_methods_info_dict() -> dict[str, MethodInfo]:
+    return _SPECIAL_METHODS_INFO_DICT

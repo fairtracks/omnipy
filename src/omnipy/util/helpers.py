@@ -1,11 +1,15 @@
+from collections import defaultdict, UserDict
 from collections.abc import Hashable, Iterable
 from copy import copy, deepcopy
+from dataclasses import dataclass
 import functools
+import gc
 import inspect
 from inspect import getmodule, isclass
 import locale as pkg_locale
 import operator
 import sys
+import traceback
 from types import GenericAlias, ModuleType, NoneType, UnionType
 from typing import _AnnotatedAlias  # type: ignore[attr-defined]
 from typing import _LiteralGenericAlias  # type: ignore[attr-defined]
@@ -17,14 +21,15 @@ from typing import (_SpecialForm,
                     cast,
                     ClassVar,
                     ForwardRef,
+                    Generic,
                     get_args,
                     get_origin,
                     Mapping,
-                    NamedTuple,
                     overload,
                     Protocol,
                     TypeVar,
                     Union)
+from weakref import WeakKeyDictionary, WeakValueDictionary
 
 from isort import place_module
 from isort.sections import STDLIB
@@ -33,9 +38,17 @@ from pydantic.generics import GenericModel
 from pydantic.typing import display_as_type
 from typing_inspect import get_generic_bases, is_generic_type
 
+from omnipy.api.protocols.private.util import HasContents, IsSnapshotWrapper
 from omnipy.api.typedefs import LocaleType, TypeForm
+from omnipy.util.contexts import setup_and_teardown_callback_context
+from omnipy.util.setdeque import SetDeque
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
+_ObjT = TypeVar('_ObjT', bound=object)
+_HasContentsT = TypeVar('_HasContentsT', bound=HasContents)
+_AnyKeyT = TypeVar('_AnyKeyT', bound=object)
+_ValT = TypeVar('_ValT', bound=object)
+_ContentsT = TypeVar('_ContentsT', bound=object)
 
 Dictable = Mapping[_KeyT, Any] | Iterable[tuple[_KeyT, Any]]
 
@@ -278,37 +291,417 @@ def generate_qualname(cls_name: str, model: Any) -> str:
     return f'{cls_name}[{fully_qual_model_name}]'
 
 
-class Snapshot(NamedTuple):
-    id: int
-    obj_copy: object
-
-
-class RestorableContents:
+class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
     def __init__(self) -> None:
-        self._last_snapshot: Snapshot | None = None
+        super().__init__()
+        self._cur_deepcopy_obj_id: int | None = None
+        self._cur_keep_alive_list: list[_ObjT] = []
+        self._keep_alive_dict: dict[int, _ObjT] = {}
+        self._sub_obj_ids: defaultdict[int, SetDeque[int]] = defaultdict(SetDeque)
 
-    def has_snapshot(self) -> bool:
-        return self._last_snapshot is not None
+    def all_are_empty(self, debug: bool = False) -> bool:
+        _all_are_empty = (
+            len(self) == 0 and len(self._keep_alive_dict) == 0 and len(self._sub_obj_ids) == 0
+            and self._cur_deepcopy_obj_id is None and len(self._cur_keep_alive_list) == 0)
 
-    def take_snapshot(self, obj: object):
+        if debug:
+            print()
+            print(f'RefCountMemoDict.all_are_empty(): {_all_are_empty}')
+            print('--------------------------------------------------')
+            print(f'len(self): {len(self)}')
+            print(f'len(self._keep_alive_dict): {len(self._keep_alive_dict)}')
+            print(f'len(self._sub_obj_ids): {len(self._sub_obj_ids)}')
+            print(f'self._cur_deepcopy_obj_id: {self._cur_deepcopy_obj_id}')
+            print(f'len(self._cur_keep_alive_list): {len(self._cur_keep_alive_list)}')
+
+            if len(self) > 0:
+                print('==================================================')
+                for key in self:
+                    print(f'Content id: {key} '
+                          f'[{sys.getrefcount(self[key])-1} refs, id={id(self[key])}]: '
+                          f'{repr(self[key])}')
+
+                for key in self:
+                    print('--------------------------------------------------')
+                    print(f'References for {key}: {repr(self[key])}')
+                    print('--------------------------------------------------')
+                    for i, ref in enumerate(gc.get_referrers(self[key])):
+                        try:
+                            print(f'[Reference {i}]')
+                            print(f'    Type: {type(ref)}')
+                            print(f'    ID: {id(ref)}')
+                            print(f'    Value: {repr(ref)}')
+                            print()
+
+                        except Exception as e:
+                            print(f'Error: {repr(e)}')
+                            pass
+                    del ref
+
+        return _all_are_empty
+
+    def clear(self):
+        super().clear()
+        self._keep_alive_dict.clear()
+        self._sub_obj_ids.clear()
+
+    def get_deepcopy_object_ids(self) -> SetDeque[int]:
+        return SetDeque(self._sub_obj_ids.keys())
+
+    def setup_deepcopy(self, obj):
+        assert self._cur_deepcopy_obj_id is None
+        assert len(self._cur_keep_alive_list) == 0
+
+        self._cur_deepcopy_obj_id = id(obj)
+
+        # Solution to test_ref_count_memo_dict_repeated_deepcopy_same_obj(), but not
+        # necessary for the current implementation (see comments on the test). Fix unnecessarily
+        # deletes shared fragments between the old and new deepcopies, and is thus disabled.
+        # Instead, there is a check to ensure that the current object has not already been
+        # deepcopied, which is the assumption behind disabling the fix
+
+        assert self._cur_deepcopy_obj_id not in self._sub_obj_ids
+
+    def keep_alive_after_deepcopy(self):
+        # old_sub_obj_ids = self._sub_obj_ids[self._cur_deepcopy_obj_id]
+        # assert len(old_sub_obj_ids) == len(self._cur_keep_alive_list)
+        #
+        # self._sub_obj_ids[self._cur_deepcopy_obj_id] = SetDeque()
+
+        while len(self._cur_keep_alive_list) > 0:
+            keep_alive_obj = self._cur_keep_alive_list.pop()
+
+            # id_keep_alive_obj = id(keep_alive_obj)
+            # assert id_keep_alive_obj in old_sub_obj_ids
+            # self._sub_obj_ids[self._cur_deepcopy_obj_id].append(id_keep_alive_obj)
+
+            if not self._is_atomic(keep_alive_obj):
+                self._keep_alive_dict[id(keep_alive_obj)] = keep_alive_obj
+            else:
+                self._keep_alive_dict[id(keep_alive_obj)] = None
+
+    def teardown_deepcopy(self):
+        # Also seems to be unnecessary now. This is for recovering from exceptions during deepcopy
+        # that would leave the memo dict in an inconsistent state. This should now be handled by
+        # SnapshotHolder.take_snapshot().
+        #
+        # for possibly_added_obj in self._sub_obj_ids[self._cur_deepcopy_obj_id]:
+        #     if possibly_added_obj in self and possibly_added_obj not in self._keep_alive_dict:
+        #         del self[possibly_added_obj]
+
+        if (self._cur_deepcopy_obj_id in self._sub_obj_ids
+                and self._cur_deepcopy_obj_id not in self._keep_alive_dict):
+            del self._sub_obj_ids[self._cur_deepcopy_obj_id]
+
+        self._cur_deepcopy_obj_id = None
+        self._cur_keep_alive_list = []
+
+    @staticmethod
+    def _is_atomic(obj: object) -> bool:
+        from copy import _deepcopy_atomic, _deepcopy_dispatch  # type: ignore[attr-defined]
         try:
-            snapshot_obj = deepcopy(obj)
-        except (TypeError, ValueError, ValidationError):
-            snapshot_obj = copy(obj)
-        self._last_snapshot = Snapshot(id(obj), snapshot_obj)
+            return type(obj) is tuple or _deepcopy_dispatch[type(obj)] is _deepcopy_atomic
+        except KeyError:
+            return False
 
-    def _get_not_empty_snapshot(self) -> Snapshot:
-        assert self.has_snapshot(), 'No snapshot has been taken yet'
-        return cast(Snapshot, self._last_snapshot)
+    def __setitem__(self, key, obj):
+        # try:
+        #     print(f'{key},{id(obj)}: {obj} [{type(obj)}]')
+        # except AttributeError:
+        #     print(f'{key},{id(obj)}: [{type(obj)}]')
+        #
+        # if isinstance(obj, dict):
+        #     print({k: id(v) for k, v in obj.items()})
 
-    def get_last_snapshot(self) -> object:
-        return self._get_not_empty_snapshot().obj_copy
+        if key != id(self):
+            if not self._is_atomic(obj):
+                self.data[key] = obj
+            self._register_key_as_sub_obj_of_cur_deepcopy_obj(key)
 
-    def last_snapshot_taken_of_same_obj(self, obj: object) -> bool:
-        return self._get_not_empty_snapshot().id == id(obj)
+    def __getitem__(self, key: int) -> _ObjT | list[_ObjT]:  # type: ignore[override]
+        if key == id(self):
+            return self._cur_keep_alive_list
+        else:
+            ret = super().__getitem__(key)
+            # print(f'Getting {key}')
+            self._register_key_as_sub_obj_of_cur_deepcopy_obj(key)
+            return ret
 
-    def differs_from_last_snapshot(self, obj: object) -> bool:
-        return not all_equals(self._get_not_empty_snapshot().obj_copy, obj)
+    def _register_key_as_sub_obj_of_cur_deepcopy_obj(self, key: int) -> None:
+        if self._cur_deepcopy_obj_id is not None:
+            self._sub_obj_ids[self._cur_deepcopy_obj_id].append(key)
+
+    def recursively_remove_deleted_objs(
+        self,
+        keys_for_deleted_objs: SetDeque[int],
+    ):
+        try:
+            # print(f'keys_for_deleted_objs: {keys_for_deleted_objs}')
+            # print(f'self.get_deepcopy_object_ids(): {self.get_deepcopy_object_ids()}')
+            keys_to_delete = self._remove_deleted_objs(keys_for_deleted_objs)
+        except Exception as e:
+            print(f'Error in recursively_remove_deleted_objs: {repr(e)}')
+            traceback.print_exc()
+            raise
+
+        # for deleted_key in deleted_keys:
+        #     if deleted_key in keys_for_deleted_objs:
+        #         keys_for_deleted_objs.remove(deleted_key)
+        keys_for_deleted_objs.clear()
+        keys_for_deleted_objs.extend(keys_to_delete)
+
+    def _remove_deleted_objs(self, keys_for_deleted_objs: SetDeque[int]) -> SetDeque[int]:
+        # keys_to_delete = SetDeque(key for key in keys_for_deleted_objs if key in self)
+        keys_to_delete = SetDeque[int](keys_for_deleted_objs)
+        # print(f'_remove_deleted_objs({keys_to_delete})')
+        # deleted_keys: SetDeque[int] = SetDeque()
+
+        while True:
+            any_keys_deleted_this_iteration = False
+            retry_keys: SetDeque[int] = SetDeque()
+            while len(keys_to_delete) > 0:
+                # print(f'len(keys_to_delete): {len(keys_to_delete)}')
+                # print(f'keys_to_delete: {keys_to_delete}')
+                key = keys_to_delete.popleft()
+
+                if key not in self.data:
+                    if key in self._keep_alive_dict:  # happens occasionally with e.g. tuples
+                        keys_to_delete = self._add_sub_obj_ids_to_deletion_keys(key, keys_to_delete)
+                        self._delete_memo_entry(key)
+                    continue
+
+                # obj = self.data[key]
+                # print(f'obj: {obj}')
+                ref_count = sys.getrefcount(self.data[key])
+                # print(f'{key}: {repr(self.data[key])} has {ref_count} references')
+                # for k, v in self.data.items():
+                #     print(f'{k}: {repr(v)}, id(val)={id(v)}')
+                # k = 0
+                # v = 0
+                ref_count_target = 2
+                # print(f'ref_count_target: {ref_count_target}')
+                # for i, ref in enumerate(gc.get_referrers(self.data[key])):
+                #     try:
+                #         print(f'Reference {i}')
+                #         print('------------')
+                #         print(f'{type(ref)}: {ref}')
+                #         print(*gc.get_referrers(ref))
+                #     except Exception as e:
+                #         print(f'Error: {repr(e)}')
+                #         pass
+                # del ref
+                # loc = locals()
+                # print(f'locals(): {loc}')
+                # del loc
+
+                if ref_count <= ref_count_target:
+                    # print(f'Now deleting {key}: {self.data[key]}')
+                    keys_to_delete = self._add_sub_obj_ids_to_deletion_keys(key, keys_to_delete)
+                    self._delete_memo_entry(key)
+                    any_keys_deleted_this_iteration = True
+                    # deleted_keys.append(key)
+                else:
+                    retry_keys.append(key)
+
+            keys_to_delete = SetDeque(key for key in retry_keys if key in self)
+            if not any_keys_deleted_this_iteration:
+                break
+
+        return keys_to_delete
+
+    def _add_sub_obj_ids_to_deletion_keys(self, key: int,
+                                          keys_to_delete: SetDeque[int]) -> SetDeque[int]:
+        if key in self._sub_obj_ids:
+            for i, sub_obj_id in enumerate(self._sub_obj_ids[key]):
+                if sub_obj_id != key and sub_obj_id not in keys_to_delete:
+                    # print(f'Adding {sub_obj_id} to keys_to_delete')
+                    keys_to_delete.insert(i, sub_obj_id)
+
+        return keys_to_delete
+
+    def _delete_memo_entry(self, key):
+        # print(f'Now deleting {key}: {self[key]}')
+        #
+        # print(f'memo_dict: {self}')
+        # print(f'keep_alive_dict: {self._keep_alive_dict}')
+        # print(f'sub_obj_ids: {self._sub_obj_ids}')
+
+        if key in self:
+            del self[key]
+        if key in self._keep_alive_dict:
+            del self._keep_alive_dict[key]
+        if key in self._sub_obj_ids:
+            del self._sub_obj_ids[key]
+
+        # print(f'Now deleted {key}')
+        #
+        # print(f'memo_dict: {self}')
+        # print(f'keep_alive_dict: {self._keep_alive_dict}')
+        # print(f'sub_obj_ids: {self._sub_obj_ids}')
+
+
+class KeyRef(list):
+    def __init__(self, obj: object) -> None:
+        super().__init__([id(obj)])
+
+    def __hash__(self) -> int:  # type: ignore[override]
+        return self[0]
+
+
+class WeakKeyRefContainer(Generic[_AnyKeyT, _ValT]):
+    def __init__(self) -> None:
+        self._key_dict: WeakValueDictionary[KeyRef, _AnyKeyT] = WeakValueDictionary()
+        self._value_dict: WeakKeyDictionary[KeyRef, _ValT] = WeakKeyDictionary()
+
+    def __contains__(self, key: _AnyKeyT) -> bool:
+        return KeyRef(key) in self._value_dict
+
+    def get(self, key: _AnyKeyT) -> _ValT | None:
+        key_ref = KeyRef(key)
+        if key_ref in self._value_dict:
+            return self._value_dict[key_ref]
+        else:
+            return None
+
+    def __getitem__(self, key: _AnyKeyT) -> _ValT:
+        key_ref = KeyRef(key)
+        if key_ref in self._value_dict:
+            return self._value_dict[key_ref]
+        else:
+            raise KeyError(f'{key} is not in {self.__class__.__name__}')
+
+    def __setitem__(self, key: _AnyKeyT, value: _ValT) -> None:
+        key_ref = KeyRef(key)
+        self._key_dict[key_ref] = key
+        self._value_dict[key_ref] = value
+
+    def __len__(self) -> int:
+        return len(self._value_dict)
+
+    def clear(self) -> None:
+        self._key_dict.clear()
+        self._value_dict.clear()
+
+
+@dataclass
+class SnapshotWrapper(Generic[_ObjT, _ContentsT]):
+    id: int
+    snapshot: _ContentsT
+
+    def taken_of_same_obj(self, obj: _ObjT) -> bool:
+        return self.id == id(obj)
+
+    def differs_from(self, obj: _ObjT) -> bool:
+        return not all_equals(self.snapshot, obj)
+
+
+obj_getattr = object.__getattribute__
+obj_setattr = object.__setattr__
+
+
+class SnapshotHolder(WeakKeyRefContainer[_HasContentsT,
+                                         IsSnapshotWrapper[_HasContentsT, _ContentsT]],
+                     Generic[_HasContentsT, _ContentsT]):
+    def __init__(self) -> None:
+        super().__init__()
+        self._deepcopy_memo = RefCountMemoDict[_ContentsT]()
+        self._deepcopy_content_ids_for_deleted_objs: SetDeque[int] = SetDeque()
+
+    def __setitem__(self, obj: _HasContentsT, value: IsSnapshotWrapper[_HasContentsT,
+                                                                       _ContentsT]) -> None:
+        raise TypeError(f"'{self.__class__.__name__}' object does not support item assignment")
+
+    def clear(self) -> None:
+        self._deepcopy_content_ids_for_deleted_objs.clear()
+        self._deepcopy_memo.clear()
+        super().clear()
+
+    def all_are_empty(self, debug: bool = False) -> bool:
+        _deepcopy_memo_all_are_empty = self._deepcopy_memo.all_are_empty(debug=debug)
+
+        _all_are_empty = (
+            len(self) == 0 and len(self._deepcopy_content_ids_for_deleted_objs) == 0
+            and _deepcopy_memo_all_are_empty)
+
+        if debug:
+            print()
+            print(f'SnapshotHolder.all_are_empty(): {_all_are_empty}')
+            print('-------------------------')
+            print(f'len(self): {len(self)}')
+            print(f'self.get_deepcopy_content_ids(): '
+                  f'{self.get_deepcopy_content_ids()}')
+            print(f'self.get_deepcopy_content_ids_scheduled_for_deletion(): '
+                  f'{self.get_deepcopy_content_ids_scheduled_for_deletion()}')
+            print(f'self._deepcopy_memo.all_are_empty(): {_deepcopy_memo_all_are_empty}')
+
+            if len(self) > 0:
+                print('=========================')
+                for key, val in self._value_dict.items():
+                    print(f'{key}: {repr(val)}')
+
+        return _all_are_empty
+
+    def get_deepcopy_content_ids(self) -> SetDeque[int]:
+        return self._deepcopy_memo.get_deepcopy_object_ids()
+
+    def get_deepcopy_content_ids_scheduled_for_deletion(self) -> SetDeque[int]:
+        return self._deepcopy_content_ids_for_deleted_objs
+
+    def schedule_deepcopy_content_ids_for_deletion(self, *keys: int) -> None:
+        for key in keys:
+            if key in self._deepcopy_memo.get_deepcopy_object_ids():
+                self._deepcopy_content_ids_for_deleted_objs.append(key)
+
+    def delete_scheduled_deepcopy_content_ids(self) -> None:
+        keys_for_deleted_objs = self._deepcopy_content_ids_for_deleted_objs
+        if len(keys_for_deleted_objs) > 0:
+            # self._deepcopy_content_ids_for_deleted_objs = SetDeque()
+            deepcopy_memo = obj_getattr(self, '_deepcopy_memo')
+            deepcopy_memo.recursively_remove_deleted_objs(keys_for_deleted_objs)
+
+    def take_snapshot_setup(self) -> None:
+        gc.disable()
+
+    def take_snapshot_teardown(self) -> None:
+        self.delete_scheduled_deepcopy_content_ids()
+        gc.enable()
+
+    def take_snapshot(self, obj: _HasContentsT) -> None:
+        try:
+            # Delete scheduled content in the deepcopy memo if the new object is reusing an old id.
+            # This deletion might not succeed, e.g. if the current snapshot holds a reference to the
+            # old object. In those case, setup_deepcopy() will raise an AssertionError, which should
+            # trigger a new attempt to deepcopy without the memo dict.
+
+            if id(obj.contents) in self.get_deepcopy_content_ids():
+                self.delete_scheduled_deepcopy_content_ids()
+
+            obj_copy: _ContentsT
+
+            with setup_and_teardown_callback_context(
+                    setup_func=self._deepcopy_memo.setup_deepcopy,
+                    setup_func_args=(obj.contents,),
+                    teardown_func=self._deepcopy_memo.teardown_deepcopy,
+            ):
+
+                obj_copy = deepcopy(obj.contents, self._deepcopy_memo)  # type: ignore[arg-type]
+                self._deepcopy_memo.keep_alive_after_deepcopy()
+        except (TypeError, ValueError, ValidationError, AssertionError) as exp:
+            print(f'Error in deepcopy with memo dict: {repr(exp)}. '
+                  f'Attempting deepcopy without memo dict.')
+            try:
+                obj_copy = deepcopy(obj.contents)
+            except (TypeError, ValueError, ValidationError, AssertionError) as exp:
+                print(f'Error in deepcopy without memo dict: {exp}. '
+                      f'Attempting simple copy.')
+                obj_copy = copy(obj.contents)
+
+        # Eventual old snapshot object is being kept alive until this point, but is scheduled for
+        # deletion after the next line. In many cases (but not all), this happens before
+        # take_snapshot_teardown() is called, which triggers deletion of any unreferenced
+        # fragments still kept alive in the memo dict.
+
+        super().__setitem__(obj, SnapshotWrapper(id(obj), obj_copy))
 
 
 def _is_internal_module(module: ModuleType, imported_modules: list[ModuleType]):

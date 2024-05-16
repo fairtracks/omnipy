@@ -35,10 +35,14 @@ from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass
 
 from omnipy.api.exceptions import ParamException
+from omnipy.api.protocols.private.util import IsSnapshotHolder, IsSnapshotWrapper
 from omnipy.api.typedefs import TypeForm
-from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
-from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
+from omnipy.data.helpers import get_special_methods_info_dict, MethodInfo
+from omnipy.util.contexts import (AttribHolder,
+                                  LastErrorHolder,
+                                  nothing,
+                                  setup_and_teardown_callback_context)
 from omnipy.util.decorators import add_callback_after_call, no_context
 from omnipy.util.helpers import (all_equals,
                                  all_type_variants,
@@ -55,7 +59,8 @@ from omnipy.util.helpers import (all_equals,
                                  is_union,
                                  remove_annotated_plus_optional_if_present,
                                  remove_forward_ref_notation,
-                                 RestorableContents)
+                                 SnapshotWrapper)
+from omnipy.util.setdeque import SetDeque
 from omnipy.util.tabulate import tabulate
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
@@ -132,8 +137,6 @@ def is_model_instance(obj: object) -> bool:
 # def orjson_dumps(v, *, default):
 #     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
 #     return orjson.dumps(v, default=default).decode()
-
-_restorable_content_cache: dict[int, RestorableContents] = {}
 
 
 class _ModelMetaclass(ModelMetaclass, DataClassBaseMeta):
@@ -290,12 +293,13 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         # TODO: See if it is possible to type Model mimicking of root type, e.g. with Protocol
         if inspect.isclass(outer_type_plain) or is_union(outer_type) or outer_type_plain is Literal:
-            for name, method_info in SPECIAL_METHODS_INFO.items():
-                if is_union(outer_type) or outer_type_plain is Literal:
-                    outer_types = get_args(outer_type)
-                else:
-                    outer_types = (outer_type_plain,)
-                for type_to_support in outer_types:
+            if is_union(outer_type) or outer_type_plain is Literal:
+                outer_types = get_args(outer_type)
+            else:
+                outer_types = (outer_type_plain,)
+
+            for name, method_info in get_special_methods_info_dict().items():
+                for type_to_support in reversed(outer_types):
                     if hasattr(type_to_support, name):
                         setattr(created_model,
                                 name,
@@ -391,7 +395,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             else:
                 raise
 
-        self._take_snapshot_of_validated_contents()  # initial snapshot
+        # self._take_snapshot_of_validated_contents()
 
         if not self.__class__.__doc__:
             self._set_standard_field_description()
@@ -400,8 +404,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         ...
 
     def __del__(self):
-        if id(self) in _restorable_content_cache:
-            del _restorable_content_cache[id(self)]
+        contents_id = id(self.contents)
+        # self.contents = Undefined
+        self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(contents_id)
 
     @staticmethod
     def _raise_no_model_exception() -> None:
@@ -443,14 +448,119 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
-    def validate_contents(self) -> None:
-        self._validate_and_set_contents(self.contents)
+    def validate_contents(self, restore_snapshot_if_interactive_and_invalid: bool = False) -> None:
+        reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
+        with reset_solution:
+            self._validate_and_set_value(self.contents, reset_solution=reset_solution)
 
-    def _validate_and_set_contents(self, new_contents: object) -> None:
-        self.contents = self._validate_contents_from_value(new_contents)
-        self._take_snapshot_of_validated_contents()
+    def _validate_and_set_value(
+            self,
+            new_contents: object,
+            reset_solution: ContextManager[None] | UndefinedType = Undefined) -> None:
 
-    def _validate_contents_from_value(self, value: object) -> _RootT:
+        old_contents_id = id(self.contents)
+
+        def _set_new_contents(contents: object) -> None:
+            if id(contents) != old_contents_id:
+                self.contents = contents
+
+        self._generic_validate_contents(
+            new_contents=new_contents,
+            reset_solution=reset_solution,
+            post_validation_func=_set_new_contents,
+        )
+
+    def _prepare_validation_reset_solution_take_snapshot_if_needed(
+        self,
+        /,
+    ) -> ContextManager[None]:
+        if self.config.interactive_mode:
+            needs_pre_validation = (not self.has_snapshot()
+                                    or not self.contents_validated_according_to_snapshot())
+            if needs_pre_validation:
+                reset_solution = self._get_reset_solution()
+                with reset_solution:
+                    validated_content = self._validate_contents_from_value(self.contents)
+                    if id(validated_content) != id(self.contents):
+                        self.contents = validated_content
+                    self._take_snapshot_of_validated_contents()
+
+        return self._get_reset_solution()
+
+    def _get_reset_solution(self) -> ContextManager[None]:
+        if self.config.interactive_mode and self.has_snapshot():
+            return self._get_revert_to_snapshot_reset_solution()
+        else:
+            return nothing()
+
+    def _get_revert_to_snapshot_reset_solution(self) -> ContextManager[None]:
+        prev_deepcopy_content_ids = SetDeque[int]()
+
+        def _setup():
+            prev_deepcopy_content_ids.extend(self.snapshot_holder.get_deepcopy_content_ids())
+
+        def _handle_exception():
+            new_deepcopy_content_ids = SetDeque[int](
+                self.snapshot_holder.get_deepcopy_content_ids())
+            new_deepcopy_content_ids.extend(prev_deepcopy_content_ids)
+            self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
+                *new_deepcopy_content_ids)
+            # self.contents = self.snapshot_holder.get_snapshot_deepcopy(self)
+            from copy import deepcopy
+            self.contents = deepcopy(self.snapshot)
+
+        return setup_and_teardown_callback_context(
+            setup_func=_setup,
+            exception_func=_handle_exception,
+        )
+
+    def _generic_validate_contents(
+        self,
+        /,
+        new_contents: object | UndefinedType = Undefined,
+        reset_solution: ContextManager[None] | UndefinedType = Undefined,
+        post_validation_func: Callable[[_RootT], None] | None = None,
+    ) -> None:
+
+        if reset_solution is Undefined:
+            reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
+            with (reset_solution):
+                # if pre_validation_func:
+                #     return_val = pre_validation_func(*pre_validation_func_args,
+                #                                      **pre_validation_func_kwargs)
+
+                # if self.config.interactive_mode and self.has_snapshot() \
+                #
+                # Following is incorrect, must compare new_contents with snapshot, as self.contents is not
+                # yet set
+                #         and self.contents_validated_according_to_snapshot():
+                #     return return_val
+
+                # if new_contents is Undefined and pre_validation_func:
+                #     new_contents = self.contents
+
+                if new_contents is not Undefined:
+                    validated_content = self._validate_contents_from_value(new_contents)
+                else:
+                    validated_content = new_contents
+            del reset_solution
+        else:
+            if new_contents is not Undefined:
+                validated_content = self._validate_contents_from_value(new_contents)
+            else:
+                validated_content = new_contents
+
+        if post_validation_func:
+            post_validation_func(validated_content)
+
+        if new_contents is not Undefined:
+            del new_contents
+            self._take_snapshot_of_validated_contents()
+
+    def _validate_contents_from_value(
+        self,
+        value: object,
+    ) -> _RootT:
         if is_model_instance(value):
             value = cast(Model[_RootT], value).to_data()
         elif is_non_omnipy_pydantic_model(value):
@@ -460,15 +570,40 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             raise validation_error
         return values[ROOT_KEY]
 
-    def _get_restorable_contents(self):
-        if not id(self) in _restorable_content_cache:
-            _restorable_content_cache[id(self)] = RestorableContents()
-        return _restorable_content_cache.get(id(self))
+    @property
+    def snapshot(self) -> _RootT:
+        snapshot_wrapper = self._get_snapshot_wrapper()
+        assert snapshot_wrapper.id == id(self)
+        return snapshot_wrapper.snapshot
 
-    def _take_snapshot_of_validated_contents(self):
-        interactive_mode = _is_interactive_mode()
-        if interactive_mode:
-            self._get_restorable_contents().take_snapshot(self.contents)
+    def has_snapshot(self) -> bool:
+        return self in self.snapshot_holder
+
+    def _get_snapshot_wrapper(self) -> IsSnapshotWrapper['Model', _RootT]:
+        assert self.has_snapshot(), 'No snapshot taken yet'
+        return self.snapshot_holder[self]
+
+    def snapshot_taken_of_same_model(self, model: 'Model') -> bool:
+        snapshot_wrapper = self._get_snapshot_wrapper()
+        return snapshot_wrapper.taken_of_same_obj(model)
+
+    def snapshot_differs_from_model(self, model: 'Model') -> bool:
+        snapshot_wrapper = self._get_snapshot_wrapper()
+        return snapshot_wrapper.differs_from(model.contents)
+
+    def contents_validated_according_to_snapshot(self) -> bool:
+        needs_validation = self.snapshot_differs_from_model(self) \
+                           or not self.snapshot_taken_of_same_model(self)
+        return not needs_validation
+
+    def _take_snapshot_of_validated_contents(self) -> None:
+        if self.config.interactive_mode:
+            with self.deepcopy_context(self.snapshot_holder.take_snapshot_setup,
+                                       self.snapshot_holder.take_snapshot_teardown):
+                self.snapshot_holder.take_snapshot(self)
+            # print(
+            #     f'SnapshotWrapper contents_id={id(self.contents)} -> {id(self.snapshot)}: {self.contents}'
+            # )
 
     @classmethod
     def _parse_data(cls, data: Any) -> _RootT:
@@ -562,7 +697,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         return super().dict(by_alias=True)[ROOT_KEY]
 
     def from_data(self, value: object) -> None:
-        self._validate_and_set_contents(value)
+        self._validate_and_set_value(value)
 
     def absorb_and_replace(self, other: 'Model'):
         self.from_data(other.to_data())
@@ -653,7 +788,15 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         else:
             if attr in ['contents']:
                 contents_prop = getattr(self.__class__, attr)
-                contents_prop.__set__(self, value)
+                old_contents_id = id(contents_prop.__get__(self))
+                is_new_contents = id(value) != old_contents_id
+
+                if is_new_contents:
+                    contents_prop.__set__(self, value)
+
+                    if self.config.interactive_mode and self.has_snapshot():
+                        self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
+                            old_contents_id)
             else:
                 if self._is_non_omnipy_pydantic_model():
                     self._special_method(
@@ -666,58 +809,45 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     def _special_method(  # noqa: C901
             self, name: str, info: MethodInfo, *args: object, **kwargs: object) -> object:
-        try:
-            method = self._getattr_from_contents_obj(name)
-        except AttributeError:
-            if name == '__len__':
-                raise TypeError(f"object of type '{self.__class__.__name__}' has no len()")
-            else:
-                raise
 
-        if info.state_changing:
-            restorable = self._get_restorable_contents()
-            reset_solution: ContextManager
+        if info.state_changing and self.config.interactive_mode:
+            # if not self.has_snapshot() or not self.contents_validated_according_to_snapshot():
+            #     # self.validate_contents(restore_snapshot_if_interactive_and_invalid=True)
+            #     self.validate_contents()
 
-            if _is_interactive_mode():
-                if restorable.has_snapshot() \
-                        and restorable.last_snapshot_taken_of_same_obj(self.contents) \
-                        and restorable.differs_from_last_snapshot(self.contents):
+            def _call_special_method(*inner_args: object, **inner_kwargs: object) -> object:
+                return_val = self._call_special_method(name, *inner_args, **inner_kwargs)
 
-                    # Current contents not validated
-                    reset_contents_to_last_snapshot = AttribHolder(
-                        self, 'contents', restorable.get_last_snapshot(), reset_to_other=True)
-                    with reset_contents_to_last_snapshot:
-                        validated_contents = self._validate_contents_from_value(self.contents)
+                if id(return_val) == id(self.contents):  # in-place operator, e.g. model += 1
+                    return_val = self
 
-                    reset_contents_to_validated_prev = AttribHolder(
-                        self, 'contents', validated_contents, reset_to_other=True)
-                    reset_solution = reset_contents_to_validated_prev
-                else:
-                    reset_contents_to_prev = AttribHolder(self, 'contents', copy_attr=True)
-                    reset_solution = reset_contents_to_prev
-            else:
-                reset_solution = nothing()
+                return return_val
 
+            def _set_new_contents(contents: object) -> None:
+                self.contents = contents
+
+            reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
             with reset_solution:
-                ret = method(*args, **kwargs)
-                if _is_interactive_mode():
-                    needs_validation = restorable.differs_from_last_snapshot(self.contents) \
-                        if restorable.has_snapshot() else True
-                else:
-                    needs_validation = True
-                if needs_validation:
-                    self.validate_contents()
+                ret = _call_special_method(*args, **kwargs)
+
+                self._generic_validate_contents(
+                    new_contents=self.contents,
+                    reset_solution=reset_solution,
+                    post_validation_func=_set_new_contents,
+                )
+
         elif name == '__iter__' and isinstance(self, Iterable):
             _per_element_model_generator = self._get_per_element_model_generator(
                 cast(Iterable, self.contents),
                 level_up_arg_idx=0,
             )
-
             return _per_element_model_generator()
         else:
-            ret = method(*args, **kwargs)
+            ret = self._call_special_method(name, *args, **kwargs)
+            if info.state_changing:
+                self.validate_contents()
 
-        if info.maybe_returns_same_type:
+        if id(ret) != id(self) and info.maybe_returns_same_type:
             level_up = False
             if name == '__getitem__':
                 assert len(args) == 1
@@ -729,6 +859,36 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             ret = self._convert_to_model_if_reasonable(ret, level_up=level_up, level_up_arg_idx=-1)
 
         return ret
+
+    def _call_special_method(self, name: str, *args: object, **kwargs: object) -> object:
+        try:
+            method = cast(Callable, self._getattr_from_contents_obj(name))
+        except AttributeError as e:
+            if name in ('__int__', '__bool__', '__float__', '__complex__'):
+                raise ValueError from e
+            if name == '__len__':
+                raise TypeError(f"object of type '{self.__class__.__name__}' has no len()")
+            else:
+                raise
+        try:
+            ret = method(*args, **kwargs)
+        except TypeError as type_exc:
+            try:
+                ret = self._call_method_with_model_converted_args(args, kwargs, method)
+            except ValidationError:
+                raise type_exc
+        if ret is NotImplemented:
+            try:
+                ret = self._call_method_with_model_converted_args(args, kwargs, method)
+            except ValidationError:
+                pass
+        return ret
+
+    def _call_method_with_model_converted_args(self, args, kwargs, method):
+        model_args = (self.__class__(arg).contents for arg in args)
+        model_kwargs = {k: self.__class__(v).contents for k, v in kwargs.items()}
+
+        return method(*model_args, **model_kwargs)
 
     def _get_per_element_model_generator(self,
                                          elements: Iterable | None,
@@ -750,7 +910,11 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         level_up_arg_idx: int = 1) -> ('Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] '
                                        '| Model[_ReturnT] | Model[_RootT] | _ReturnT'):
 
-        if not is_model_instance(ret):
+        if level_up and not self.config.dynamically_convert_elements_to_models:
+            ...
+        elif is_model_instance(ret):
+            ...
+        else:
             outer_type = self.outer_type(with_args=True)
             # For double Models, e.g. Model[Model[int]], where _get_real_contents() have already
             # skipped the outer Model to get the `ret`, we need to do the same to compare the value
@@ -806,19 +970,25 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def __getattr__(self, attr: str) -> Any:
         contents_attr = self._getattr_from_contents_obj(attr)
 
-        if _is_interactive_mode() and not self._is_non_omnipy_pydantic_model():
-            contents_holder_context = AttribHolder(self, 'contents', copy_attr=True)
+        # if self.config.interactive_mode and not self._is_non_omnipy_pydantic_model():
+        if self.config.interactive_mode:
+            is_property = False
+            if not self._is_non_omnipy_pydantic_model():
+                contents_cls_attr = self._getattr_from_contents_cls(attr)
+                is_property = isinstance(contents_cls_attr, property)
 
-            contents_cls_attr = self._getattr_from_contents_cls(attr)
+            reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
+            contents_attr = self._getattr_from_contents_obj(attr)
 
-            def _validate_contents(ret: Any):
-                self.validate_contents()
-                return ret
+            if not is_property and callable(contents_attr):
 
-            if not isinstance(contents_cls_attr, property) and callable(contents_attr):
+                def _validate_contents(ret: Any):
+                    self._validate_and_set_value(self.contents, reset_solution=reset_solution)
+                    return ret
+
                 contents_attr = add_callback_after_call(contents_attr,
                                                         _validate_contents,
-                                                        contents_holder_context)
+                                                        reset_solution)
 
         if attr in ('keys', 'values', 'items'):
             level_up_arg_idx: int | slice
@@ -1032,7 +1202,7 @@ class ParamModel(Model[_ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
             self._validate_and_set_contents_with_params(cast(_ParamRootT, self.contents), **kwargs)
 
     def _validate_and_set_contents_with_params(self, contents: _ParamRootT, **kwargs: _KwargValT):
-        self._validate_and_set_contents(DataWithParams(data=contents, params=kwargs))
+        self._validate_and_set_value(DataWithParams(data=contents, params=kwargs))
 
 
 _ParamModelT = TypeVar('_ParamModelT', bound='ParamModel')
@@ -1067,7 +1237,7 @@ class ListOfParamModel(ParamModel[list[_ParamModelT
             self,
             contents: list[_ParamModelT | DataWithParams[_ParamModelT, _KwargValT]],
             **kwargs: _KwargValT):
-        self._validate_and_set_contents([
+        self._validate_and_set_value([
             DataWithParams(data=cast(_ParamModelT, model).contents, params=kwargs)
             for model in contents
         ])

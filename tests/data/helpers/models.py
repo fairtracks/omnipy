@@ -20,7 +20,7 @@ class MyFloatObjModel(Model[MyFloatObject]):
         return self.contents.int_part + self.contents.float_part
 
     def from_data(self, value: float):
-        self._validate_and_set_contents(MyFloatObject(int_part=floor(value), float_part=value % 1))
+        self._validate_and_set_value(MyFloatObject(int_part=floor(value), float_part=value % 1))
 
 
 class StringToLength(Model[str]):
