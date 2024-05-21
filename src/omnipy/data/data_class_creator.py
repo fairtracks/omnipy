@@ -1,5 +1,5 @@
 from abc import ABCMeta
-from typing import Any
+from typing import Generic, TypeVar
 
 from omnipy.api.protocols.private.data import IsDataClassCreator
 from omnipy.api.protocols.private.util import IsSnapshotHolder
@@ -11,7 +11,7 @@ from omnipy.util.helpers import SnapshotHolder
 class DataClassCreator:
     def __init__(self) -> None:
         self._config: IsDataConfig = DataConfig()
-        self._snapshot_holder = SnapshotHolder[object, Any]()
+        self._snapshot_holder = SnapshotHolder[object, object]()
 
     def set_config(self, config: IsDataConfig) -> None:
         self._config = config
@@ -21,13 +21,13 @@ class DataClassCreator:
         return self._config
 
     @property
-    def snapshot_holder(self) -> IsSnapshotHolder[object, Any]:
+    def snapshot_holder(self) -> IsSnapshotHolder[object, object]:
         return self._snapshot_holder
 
 
 class DataClassBaseMeta(ABCMeta):
     """"""
-    _data_class_creator_obj = DataClassCreator()
+    _data_class_creator_obj: IsDataClassCreator = DataClassCreator()
 
     @property
     def data_class_creator(self) -> IsDataClassCreator:

@@ -742,12 +742,12 @@ def test_snapshot_deepcopy_reuse_objects() -> None:
     class MyMemoDeletingList(MyList):
         def __del__(self) -> None:
             if snapshot_holder is not None:
-                content_id = id(self.contents)
+                contents_id = id(self.contents)
                 # self_id = id(self)
                 self.data = []
                 try:
-                    # snapshot_holder.recursively_remove_deleted_obj_from_deepcopy_memo(content_id)
-                    snapshot_holder.keys_for_deleted_objs.append(content_id)
+                    # snapshot_holder.recursively_remove_deleted_obj_from_deepcopy_memo(contents_id)
+                    snapshot_holder.keys_for_deleted_objs.append(contents_id)
                 except (AttributeError) as exp:
                     print(exp)
                     print(snapshot_holder._deepcopy_memo)
@@ -795,7 +795,6 @@ def test_snapshot_deepcopy_reuse_objects() -> None:
 
     # snapshot_holder = SnapshotHolder[MyMemoDeletingList, list]()
     _inner_test_snapshot_deepcopy_reuse_objects(snapshot_holder)
-    gc.collect()
     assert len(snapshot_holder._deepcopy_memo) == 0
 
 

@@ -577,7 +577,7 @@ class Snapshot(Generic[_ObjT, _ContentT]):
     def taken_of_same_obj(self, obj: _ObjT) -> bool:
         return self.id == id(obj)
 
-    def differs_from(self, obj: _ObjT) -> bool:
+    def differs_from(self, obj: _ContentT) -> bool:
         return not all_equals(self.obj_copy, obj)
 
 

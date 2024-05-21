@@ -22,6 +22,7 @@ import pytest
 from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.api.typedefs import TypeForm
+from omnipy.data.data_class_creator import DataClassBase
 from omnipy.data.model import Model
 from omnipy.modules.general.typedefs import FrozenDict
 from omnipy.util.helpers import ensure_plain_type
@@ -1201,34 +1202,44 @@ def _assert_model_or_val(dyn_convert: bool,
 def test_snapshot_deepcopy_reuse_objects(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
     runtime.config.data.interactive_mode = True
 
-    inner = Model[list[int]]([2, 4])
-    middle = Model[list[int | Model[list[int]]]]([1, 3, inner])
-    outer = Model[list[int | Model[list[int | Model[list[int]]]]]]([0, middle, 5])
+    def _inner_test_snapshot_deepcopy_reuse_objects() -> None:
 
-    assert type(outer[1][-1]) == type(middle[-1]) == type(  # type: ignore[index]
-        inner) == Model[list[int]]
-    assert id(outer[1][-1]) == id(middle[-1]) == id(inner)  # type: ignore[index]
+        inner = Model[list[int]]([2, 4])
+        middle = Model[list[int | Model[list[int]]]]([1, 3, inner])
+        outer = Model[list[int | Model[list[int | Model[list[int]]]]]]([0, middle, 5])
 
-    assert type(outer.snapshot[1][-1]) == type(  # type: ignore[index]
-        middle.snapshot[-1]) == Model[list[int]]
-    assert id(outer.snapshot[1][-1]) == id(middle.snapshot[-1])  # type: ignore[index]
+        # assert len(Model[int]().snapshot_holder) == 3
+        # assert len(Model[int]().snapshot_holder._deepcopy_memo) == 3  # type: ignore[attr-defined]
 
-    assert type(outer[1][-1].contents) == type(middle[-1].contents) == type(  # type: ignore[index]
-        inner.contents) == list
-    assert id(outer[1][-1].contents) == id(middle[-1].contents) == id(  # type: ignore[index]
-        inner.contents)
+        assert type(outer[1][-1]) == type(middle[-1]) == type(  # type: ignore[index]
+            inner) == Model[list[int]]
+        assert id(outer[1][-1]) == id(middle[-1]) == id(inner)  # type: ignore[index]
 
-    assert type(outer.snapshot[1][-1].contents) == type(  # type: ignore[index]
-        middle.snapshot[-1].contents) == type(inner.snapshot) == list
-    assert id(outer.snapshot[1][-1].contents) == id(  # type: ignore[index]
-        middle.snapshot[-1].contents) == id(inner.snapshot)
+        assert type(outer.snapshot[1][-1]) == type(  # type: ignore[index]
+            middle.snapshot[-1]) == Model[list[int]]
+        assert id(outer.snapshot[1][-1]) == id(middle.snapshot[-1])  # type: ignore[index]
 
-    assert type(outer[1].contents) == type(middle.contents) == list  # type: ignore[index]
-    assert id(outer[1].contents) == id(middle.contents)  # type: ignore[index]
+        assert type(outer[1][-1].contents) == type(  # type: ignore[index]
+            middle[-1].contents) == type(  # type: ignore[index]
+                inner.contents) == list
+        assert id(outer[1][-1].contents) == id(middle[-1].contents) == id(  # type: ignore[index]
+            inner.contents)
 
-    assert type(outer.snapshot[1].contents) == type(  # type: ignore[attr-defined]
-        middle.snapshot) == list
-    assert id(outer.snapshot[1].contents) == id(middle.snapshot)  # type: ignore[attr-defined]
+        assert type(outer.snapshot[1][-1].contents) == type(  # type: ignore[index]
+            middle.snapshot[-1].contents) == type(inner.snapshot) == list
+        assert id(outer.snapshot[1][-1].contents) == id(  # type: ignore[index]
+            middle.snapshot[-1].contents) == id(inner.snapshot)
+
+        assert type(outer[1].contents) == type(middle.contents) == list  # type: ignore[index]
+        assert id(outer[1].contents) == id(middle.contents)  # type: ignore[index]
+
+        assert type(outer.snapshot[1].contents) == type(  # type: ignore[union-attr]
+            middle.snapshot) == list
+        assert id(outer.snapshot[1].contents) == id(middle.snapshot)  # type: ignore[union-attr]
+
+    _inner_test_snapshot_deepcopy_reuse_objects()
+    assert len(Model[int]().snapshot_holder) == 0
+    assert len(Model[int]().snapshot_holder._deepcopy_memo) == 0  # type: ignore[attr-defined]
 
 
 def test_snapshot_with_mimic_special_method_and_interactive_mode(
@@ -1238,7 +1249,7 @@ def test_snapshot_with_mimic_special_method_and_interactive_mode(
     model = Model[list[int]]([123])
 
     assert model.snapshot == model.contents == [123]
-    assert model.snapshot_taken_of_same_obj(model.contents) is True
+    assert model.snapshot_taken_of_same_model(model.contents) is True
     assert model.contents_validated is True
 
     first_snapshot_id = id(model.snapshot)
@@ -1248,7 +1259,7 @@ def test_snapshot_with_mimic_special_method_and_interactive_mode(
         model += ['abc']  # type: ignore[operator]
 
     assert model.snapshot == model.contents == [123]
-    assert model.snapshot_taken_of_same_obj(model.contents) is False
+    assert model.snapshot_taken_of_same_model(model.contents) is False
     assert model.contents_validated is False
 
     second_snapshot_id = id(model.snapshot)
@@ -1257,7 +1268,7 @@ def test_snapshot_with_mimic_special_method_and_interactive_mode(
     model += [456]  # type: ignore[operator]
 
     assert model.snapshot == model.contents == [123, 456]
-    assert model.snapshot_taken_of_same_obj(model.contents) is True
+    assert model.snapshot_taken_of_same_model(model.contents) is True
     assert model.contents_validated is True
 
     third_snapshot_id = id(model.snapshot)
@@ -1266,7 +1277,7 @@ def test_snapshot_with_mimic_special_method_and_interactive_mode(
     model.validate_contents()
 
     assert model.snapshot == model.contents == [123, 456]
-    assert model.snapshot_taken_of_same_obj(model.contents) is True
+    assert model.snapshot_taken_of_same_model(model.contents) is True
     assert model.contents_validated is True
 
     fourth_snapshot_id = id(model.snapshot)

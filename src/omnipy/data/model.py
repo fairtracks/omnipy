@@ -35,6 +35,7 @@ from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass
 
 from omnipy.api.exceptions import ParamException
+from omnipy.api.protocols.private.util import IsSnapshot, IsSnapshotHolder
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
@@ -65,6 +66,8 @@ _IterT = TypeVar('_IterT')
 _ReturnT = TypeVar('_ReturnT')
 _IdxT = TypeVar('_IdxT', bound=SupportsIndex)
 _RootT = TypeVar('_RootT', bound=object | None)
+_ObjT = TypeVar('_ObjT', bound=object)
+_ContentT = TypeVar("_ContentT", bound=object)
 
 ROOT_KEY = '__root__'
 
@@ -392,7 +395,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             else:
                 raise
 
-        self._take_snapshot_of_validated_contents(initial=True)
+        self._take_snapshot_of_validated_contents()
 
         if not self.__class__.__doc__:
             self._set_standard_field_description()
@@ -401,8 +404,13 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         ...
 
     def __del__(self):
-        if id(self) in _restorable_content_cache:
-            del _restorable_content_cache[id(self)]
+        if self in self.snapshot_holder:
+            contents_id = id(self.contents)
+            self.contents = Undefined
+            self.snapshot_holder.keys_for_deleted_objs.append(contents_id)
+
+        # if id(self) in _restorable_content_cache:
+        #     del _restorable_content_cache[id(self)]
 
     @staticmethod
     def _raise_no_model_exception() -> None:
@@ -476,24 +484,29 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         return _restorable_content_cache.get(id(self))
 
     @property
-    def snapshot(self) -> Snapshot:
-        return self._get_restorable_contents().get_last_snapshot()
+    def snapshot(self) -> _RootT:
+        snapshot: IsSnapshotHolder['Model', _RootT] = self.snapshot_holder[self]
+        assert snapshot.id == id(self)
+        return snapshot.obj_copy
 
-    def snapshot_taken_of_same_obj(self, obj: object) -> bool:
-        return self._get_restorable_contents().last_snapshot_taken_of_same_obj(obj)
+    def has_snapshot(self) -> bool:
+        return self in self.snapshot_holder
 
-    def differs_from_snapshot(self, obj: object) -> bool:
-        return self._get_restorable_contents().differs_from_last_snapshot(obj)
+    def snapshot_taken_of_same_model(self, model: 'Model') -> bool:
+        return self.snapshot.taken_of_same_obj(model)
+
+    def snapshot_differs_from_model(self, model: 'Model') -> bool:
+        return self.snapshot.differs_from(model.contents)
 
     @property
     def contents_validated(self) -> bool:
-        needs_validation = self.differs_from_snapshot(self.contents) \
-                           or not self.snapshot_taken_of_same_obj(self.contents)
+        needs_validation = self.snapshot_differs_from_model(self) \
+                           or not self.snapshot_taken_of_same_model(self)
         return not needs_validation
 
-    def _take_snapshot_of_validated_contents(self, initial: bool = False) -> None:
-        if initial or self.config.interactive_mode:
-            self._get_restorable_contents().take_snapshot(self.contents)
+    def _take_snapshot_of_validated_contents(self) -> None:
+        if self.config.interactive_mode:
+            self.snapshot_holder.take_snapshot(self)
             print(f'{id(self.contents)} -> {id(self.snapshot)}: {self.contents}')
 
     @classmethod
@@ -700,7 +713,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             reset_contents_to_prev = AttribHolder(self, 'contents', copy_attr=True)
             with reset_contents_to_prev:
                 ret = self._call_special_method(name, *args, **kwargs)
-                if self.differs_from_snapshot(self.contents):
+                if self.snapshot_differs_from_model(self.contents):
                     self.validate_contents()
 
         elif name == '__iter__' and isinstance(self, Iterable):

@@ -55,7 +55,7 @@ class IsSnapshot(Protocol[_ObjContraT, _ContentT]):
     def taken_of_same_obj(self, obj: _ObjContraT) -> bool:
         ...
 
-    def differs_from(self, obj: _ObjContraT) -> bool:
+    def differs_from(self, obj: _ContentT) -> bool:
         ...
 
 
@@ -63,4 +63,7 @@ class IsSnapshotHolder(IsWeakKeyRefContainer[HasContents[_ContentT], IsSnapshot[
                        Protocol[_ObjT, _ContentT]):
     """"""
     def take_snapshot(self, obj: HasContents[_ContentT]) -> None:
+        ...
+
+    def recursively_remove_deleted_obj_from_deepcopy_memo(self, key: int) -> None:
         ...
