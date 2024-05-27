@@ -404,10 +404,10 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         ...
 
     def __del__(self):
-        if self in self.snapshot_holder:
-            contents_id = id(self.contents)
-            self.contents = Undefined
-            self.snapshot_holder.keys_for_deleted_objs.append(contents_id)
+        # if self in self.snapshot_holder:
+        contents_id = id(self.contents)
+        self.contents = Undefined
+        self.snapshot_holder.keys_for_deleted_objs.append(contents_id)
 
         # if id(self) in _restorable_content_cache:
         #     del _restorable_content_cache[id(self)]

@@ -798,6 +798,38 @@ def test_snapshot_deepcopy_reuse_objects() -> None:
     assert len(snapshot_holder._deepcopy_memo) == 0
 
 
+def test_snapshot_holder_delete_and_clear() -> None:
+    snapshot_holder = SnapshotHolder[MyList, list]()
+
+    my_list = MyList([1, 3, 5])
+    my_list_2 = MyList([2, 4, 6])
+
+    snapshot_holder.take_snapshot(my_list)
+    snapshot_holder.take_snapshot(my_list_2)
+
+    assert len(snapshot_holder) == 2
+    assert len(snapshot_holder._deepcopy_memo) == 2
+    assert len(snapshot_holder._key_2_obj_copy_id) == 2
+    assert len(snapshot_holder._obj_copy_id_keys) == 2
+
+    snapshot_holder.keys_for_deleted_objs.append(id(my_list.contents))
+    print(id(my_list.contents))
+
+    assert len(snapshot_holder._deepcopy_memo) == 1
+    assert len(snapshot_holder._key_2_obj_copy_id) == 1
+    assert len(snapshot_holder._obj_copy_id_keys) == 1
+    assert len(snapshot_holder) == 1
+    assert len(snapshot_holder.keys_for_deleted_objs) == 0
+
+    snapshot_holder.clear()
+
+    assert len(snapshot_holder) == 0
+    assert len(snapshot_holder._deepcopy_memo) == 0
+    assert len(snapshot_holder._key_2_obj_copy_id) == 0
+    assert len(snapshot_holder._obj_copy_id_keys) == 0
+    assert len(snapshot_holder.keys_for_deleted_objs) == 0
+
+
 def test_get_calling_module_name() -> None:
     def local_call_get_calling_module_name() -> str | None:
         return get_calling_module_name()
