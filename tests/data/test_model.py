@@ -1,3 +1,4 @@
+import gc
 from math import floor
 import os
 from textwrap import dedent
@@ -218,6 +219,8 @@ def test_equality_with_pydantic_not_symmetric() -> None:
 
 
 def test_equality_with_pydantic_as_args() -> None:
+    Model.data_class_creator.snapshot_holder.clear()
+
     class PydanticModel(BaseModel):
         a: int = 0
 
@@ -1203,6 +1206,7 @@ def test_snapshot_deepcopy_reuse_objects(runtime: Annotated[IsRuntime, pytest.fi
     runtime.config.data.interactive_mode = True
 
     def _inner_test_snapshot_deepcopy_reuse_objects() -> None:
+        Model.data_class_creator.snapshot_holder.clear()
 
         inner = Model[list[int]]([2, 4])
         middle = Model[list[int | Model[list[int]]]]([1, 3, inner])
@@ -1237,9 +1241,28 @@ def test_snapshot_deepcopy_reuse_objects(runtime: Annotated[IsRuntime, pytest.fi
             middle.snapshot) == list
         assert id(outer.snapshot[1].contents) == id(middle.snapshot)  # type: ignore[union-attr]
 
+        gc.collect()
+
+        for ref in gc.get_referrers(outer):
+            try:
+                # pass
+                print(f'Referrer to outer {type(outer)}: {ref}')
+                # print(*gc.get_referrers(ref))
+
+                # print(
+                #     f"ref['obj_copy'][1].__dict__: {ref['obj_copy'][1].__dict__}, id={id(ref['obj_copy'][1].__dict__)}"
+                # )
+                # print(
+                #     f"ref['obj_copy'][1].data: {ref['obj_copy'][1].data}, id={id(ref['obj_copy'][1].data)}"
+                # )
+            except:
+                pass
+
     _inner_test_snapshot_deepcopy_reuse_objects()
-    assert len(Model[int]().snapshot_holder) == 0
-    assert len(Model[int]().snapshot_holder._deepcopy_memo) == 0  # type: ignore[attr-defined]
+
+    assert len(Model.data_class_creator.snapshot_holder) == 0
+    assert len(
+        Model.data_class_creator.snapshot_holder._deepcopy_memo) == 0  # type: ignore[attr-defined]
 
 
 def test_snapshot_with_mimic_special_method_and_interactive_mode(

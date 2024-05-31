@@ -23,6 +23,7 @@ from typing import (Annotated,
                     SupportsIndex,
                     TypeVar,
                     Union)
+import weakref
 
 from devtools import debug, PrettyFormat
 from pydantic import NoneIsNotAllowedError
@@ -67,7 +68,7 @@ _ReturnT = TypeVar('_ReturnT')
 _IdxT = TypeVar('_IdxT', bound=SupportsIndex)
 _RootT = TypeVar('_RootT', bound=object | None)
 _ObjT = TypeVar('_ObjT', bound=object)
-_ContentT = TypeVar("_ContentT", bound=object)
+_ContentsT = TypeVar("_ContentsT", bound=object)
 
 ROOT_KEY = '__root__'
 
@@ -400,17 +401,25 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         if not self.__class__.__doc__:
             self._set_standard_field_description()
 
+        weakref.finalize(self, self._finalize, id(self), id(self.contents), self.snapshot_holder)
+
     def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
         ...
 
-    def __del__(self):
-        # if self in self.snapshot_holder:
-        contents_id = id(self.contents)
-        self.contents = Undefined
-        self.snapshot_holder.keys_for_deleted_objs.append(contents_id)
+    @staticmethod
+    def _finalize(self_id: int, contents_id: int, snapshot_holder: IsSnapshotHolder):
+        print(f'Deleting self.id: {self_id} -> contents_id: {contents_id}')
+        snapshot_holder.keys_for_deleted_objs.append(contents_id)
 
-        # if id(self) in _restorable_content_cache:
-        #     del _restorable_content_cache[id(self)]
+    # def __del__(self):
+    #     # if self in self.snapshot_holder:
+    #     print(f'Deleting {id(self)} -> {id(self.contents)}')
+    #     contents_id = id(self.contents)
+    #     self.contents = Undefined
+    #     self.snapshot_holder.keys_for_deleted_objs.append(contents_id)
+
+    # if id(self) in _restorable_content_cache:
+    #     del _restorable_content_cache[id(self)]
 
     @staticmethod
     def _raise_no_model_exception() -> None:
@@ -485,7 +494,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     @property
     def snapshot(self) -> _RootT:
-        snapshot: IsSnapshotHolder['Model', _RootT] = self.snapshot_holder[self]
+        snapshot: IsSnapshot['Model', _RootT] = self.snapshot_holder[self]
         assert snapshot.id == id(self)
         return snapshot.obj_copy
 
@@ -507,7 +516,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def _take_snapshot_of_validated_contents(self) -> None:
         if self.config.interactive_mode:
             self.snapshot_holder.take_snapshot(self)
-            print(f'{id(self.contents)} -> {id(self.snapshot)}: {self.contents}')
+            print(
+                f'Snapshot contents_id={id(self.contents)} -> {id(self.snapshot)}: {self.contents}')
 
     @classmethod
     def _parse_data(cls, data: Any) -> _RootT:

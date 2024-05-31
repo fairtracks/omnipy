@@ -6,7 +6,7 @@ _ObjT = TypeVar('_ObjT', bound=object)
 _ObjContraT = TypeVar('_ObjContraT', contravariant=True, bound=object)
 _AnyKeyT = TypeVar('_AnyKeyT', contravariant=True, bound=object)
 _ValT = TypeVar('_ValT', bound=object)
-_ContentT = TypeVar("_ContentT", bound=object)
+_ContentsT = TypeVar("_ContentsT", bound=object)
 _ContentCovT = TypeVar("_ContentCovT", covariant=True, bound=object)
 _ContentContraT = TypeVar("_ContentContraT", contravariant=True, bound=object)
 
@@ -25,9 +25,13 @@ class IsCallableClass(Protocol[DecoratorClassT]):
         ...
 
 
-class HasContents(Protocol[_ContentCovT]):
+class HasContents(Protocol[_ContentsT]):
     @property
-    def contents(self) -> _ContentCovT:
+    def contents(self) -> _ContentsT:
+        ...
+
+    @contents.setter
+    def contents(self, value: _ContentsT) -> None:
         ...
 
 
@@ -48,22 +52,27 @@ class IsWeakKeyRefContainer(Protocol[_AnyKeyT, _ValT]):
         ...
 
 
-class IsSnapshot(Protocol[_ObjContraT, _ContentT]):
+class IsSnapshot(Protocol[_ObjContraT, _ContentsT]):
     id: int
-    obj_copy: _ContentT
+    obj_copy: _ContentsT
 
     def taken_of_same_obj(self, obj: _ObjContraT) -> bool:
         ...
 
-    def differs_from(self, obj: _ContentT) -> bool:
+    def differs_from(self, obj: _ObjContraT) -> bool:
         ...
 
 
-class IsSnapshotHolder(IsWeakKeyRefContainer[HasContents[_ContentT], IsSnapshot[_ObjT, _ContentT]],
-                       Protocol[_ObjT, _ContentT]):
+class IsSnapshotHolder(IsWeakKeyRefContainer[HasContents[_ContentsT], IsSnapshot[_ObjT,
+                                                                                 _ContentsT]],
+                       Protocol[_ObjT, _ContentsT]):
     """"""
-    def take_snapshot(self, obj: HasContents[_ContentT]) -> None:
+    def clear(self) -> None:
         ...
 
-    def recursively_remove_deleted_obj_from_deepcopy_memo(self, key: int) -> None:
+    def take_snapshot(self, obj: HasContents[_ContentsT]) -> None:
         ...
+
+    #
+    # def recursively_remove_deleted_obj_from_deepcopy_memo(self, key: int) -> None:
+    #     ...

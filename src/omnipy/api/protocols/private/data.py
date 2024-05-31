@@ -4,10 +4,10 @@ from omnipy.api.protocols.private.util import IsSnapshotHolder
 from omnipy.api.protocols.public.config import IsDataConfig
 
 _ObjT = TypeVar('_ObjT', bound=object)
-_ContentT = TypeVar("_ContentT", bound=object)
+_ContentsT = TypeVar("_ContentsT", bound=object)
 
 
-class IsDataClassCreator(Protocol[_ObjT, _ContentT]):
+class IsDataClassCreator(Protocol[_ObjT, _ContentsT]):
     """"""
     @property
     def config(self) -> IsDataConfig:
@@ -17,7 +17,7 @@ class IsDataClassCreator(Protocol[_ObjT, _ContentT]):
         ...
 
     @property
-    def snapshot_holder(self) -> IsSnapshotHolder[_ObjT, _ContentT]:
+    def snapshot_holder(self) -> IsSnapshotHolder[_ObjT, _ContentsT]:
         ...
 
 

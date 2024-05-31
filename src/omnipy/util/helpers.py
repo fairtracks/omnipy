@@ -9,7 +9,7 @@ from inspect import getmodule, isclass
 import locale as pkg_locale
 import operator
 import sys
-import types
+import traceback
 from types import GenericAlias, ModuleType, NoneType, UnionType
 from typing import _AnnotatedAlias  # type: ignore[attr-defined]
 from typing import _LiteralGenericAlias  # type: ignore[attr-defined]
@@ -34,13 +34,13 @@ from typing import (_SpecialForm,
                     Type,
                     TypeVar,
                     Union)
-import weakref
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
 from bidict import bidict
 from isort import place_module
 from isort.sections import STDLIB
 from pydantic import BaseModel, ValidationError
+from pydantic.fields import Undefined
 from pydantic.generics import GenericModel
 from pydantic.typing import display_as_type
 from typing_inspect import get_generic_bases, is_generic_type
@@ -50,9 +50,10 @@ from omnipy.api.typedefs import LocaleType, TypeForm
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
 _ObjT = TypeVar('_ObjT', bound=object)
+_HasContentsT = TypeVar('_HasContentsT', bound=HasContents)
 _AnyKeyT = TypeVar('_AnyKeyT', bound=object)
 _ValT = TypeVar('_ValT', bound=object)
-_ContentT = TypeVar('_ContentT', bound=object)
+_ContentsT = TypeVar('_ContentsT', bound=object)
 
 Dictable = Mapping[_KeyT, Any] | Iterable[tuple[_KeyT, Any]]
 
@@ -377,6 +378,10 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         # except TypeError:
         #     self._std_dict[key] = obj
 
+    def clear(self):
+        super().clear()
+        self._key_2_obj_id.clear()
+
     # def __getitem__(self, item):
     #     print(f'Getting {item}')
     #     ret = super().__getitem__(item)
@@ -414,72 +419,114 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
     ):
         print(f'Recursively removing deleted objects for {keys}...')
 
-        known_refcount_for_all_contained_objs_in_memo = defaultdict[int, int](lambda: 0)
-        self.get_known_refcount_for_all_contained_objs_in_memo(
-            *keys,
-            known_refcount_for_all_contained_objs_in_memo=
-            known_refcount_for_all_contained_objs_in_memo,
-            known_refcount_callback=known_references_callback)
-        print(known_refcount_for_all_contained_objs_in_memo)
-        self._remove_deleted_objs(known_refcount_for_all_contained_objs_in_memo)
+        try:
+            known_refcount_for_all_contained_objs_in_memo = defaultdict[int, int](lambda: 0)
+            self.get_known_refcount_for_all_contained_objs_in_memo(
+                *keys,
+                known_refcount_for_all_contained_objs_in_memo=
+                known_refcount_for_all_contained_objs_in_memo,
+                known_refcount_callback=known_references_callback)
+            print(known_refcount_for_all_contained_objs_in_memo)
+            self._remove_deleted_objs(list(known_refcount_for_all_contained_objs_in_memo.keys()))
+        except Exception as e:
+            print(f'Error in recursively_remove_deleted_objs: {repr(e)}')
+            traceback.print_exc()
+            raise
 
-    def _remove_deleted_objs(self, known_refcount_for_all_contained_objs_in_memo):
-        while True:
+    def _remove_deleted_objs(self, keys_to_delete: list[int]):
+        print(f'_remove_deleted_objs({keys_to_delete})')
+        self_keys = tuple(self.keys())
+
+        while len(keys_to_delete) > 0:
+            print(f'len(keys_to_delete): {len(keys_to_delete)}')
+            print(f'keys_to_delete: {keys_to_delete}')
+            gc.collect()  # Try to uncomment if memo dict is not cleared
+            key = keys_to_delete.pop(0)
+            obj = self.data[key]
+            print(f'obj: {obj}')
             # gc.collect()  # Try to uncomment if memo dict is not cleared
-            to_remove_keys = []
-            for key, known_ref_count in known_refcount_for_all_contained_objs_in_memo.items():
-                obj = self.data[key]
-                gc.collect()  # Try to uncomment if memo dict is not cleared
-                ref_count = sys.getrefcount(obj)
-                print(f'{obj} has {ref_count} references')
-                for k, v in self.data.items():
-                    print(f'{k}: {v}')
-                k = 0
-                v = 0
-                # ref_count_target = 4 if isinstance(obj, tuple) else 3
-                ref_count_target = 3
-                ref_count_target += known_ref_count
-                print(f'ref_count_target: {ref_count_target}')
-                # for ref in gc.get_referrers(obj):
-                #     try:
-                #         print(f'{type(ref)}: {ref}')
-                #         print(*gc.get_referrers(ref))
-                #
-                #         print(
-                #             f"ref['obj_copy'][1].__dict__: {ref['obj_copy'][1].__dict__}, id={id(ref['obj_copy'][1].__dict__)}"
-                #         )
-                #         print(
-                #             f"ref['obj_copy'][1].data: {ref['obj_copy'][1].data}, id={id(ref['obj_copy'][1].data)}"
-                #         )
-                #     except:
-                #         pass
-                # 3 references: the one in the memo dict, one in the gc, and obj
-                # +1 reference for tuples, as they are immutable
-                if ref_count <= ref_count_target:
-                    print(f'Removing {obj}')
-                    to_remove_keys.append(key)
-                    if hasattr(obj, '__dict__'):
-                        self_keys = tuple(self.keys())
-                        key_idx = self_keys.index(key)
-                        print(f'self_keys[key_idx+1]: {self_keys[key_idx+1]}')
-                        print(f'self[self_keys[key_idx+1]]: {self[self_keys[key_idx+1]]}')
-                        print(f'id(self[self_keys[key_idx+1]]): {id(self[self_keys[key_idx+1]])}')
-                        # obj_from_next_self = self[self_keys[key_idx + 1]]
-                        assert self[self_keys[key_idx + 1]] == obj.__dict__
-                        print(f"obj.__dict__['data']: {obj.__dict__['data']}")
-                        print(f"id(obj.__dict__['data']): {id(obj.__dict__['data'])}")
-                        print(f"id(obj.__dict__): {id(obj.__dict__)}")
-                        print(f'self._key_2_obj_id: {self._key_2_obj_id}')
-                        to_remove_keys.append(self._key_2_obj_id.inverse[id(self[self_keys[key_idx
-                                                                                           + 1]])])
-                    break
-            if to_remove_keys:
-                for key in to_remove_keys:
-                    del self[key]
-                    if key in known_refcount_for_all_contained_objs_in_memo:
-                        del known_refcount_for_all_contained_objs_in_memo[key]
-            else:
-                break
+            ref_count = sys.getrefcount(obj)
+            print(f'{obj} has {ref_count} references')
+            for k, v in self.data.items():
+                print(f'{k}: {v}')
+            k = 0
+            v = 0
+            # ref_count_target = 4 if isinstance(obj, tuple) else 3
+            ref_count_target = 3
+            # ref_count_target += known_ref_count
+            print(f'ref_count_target: {ref_count_target}')
+            for ref in gc.get_referrers(obj):
+                try:
+                    print(f'{type(ref)}: {ref}')
+                    print(*gc.get_referrers(ref))
+
+                    # print(
+                    #     f"ref['obj_copy'][1].__dict__: {ref['obj_copy'][1].__dict__}, id={id(ref['obj_copy'][1].__dict__)}"
+                    # )
+                    # print(
+                    #     f"ref['obj_copy'][1].data: {ref['obj_copy'][1].data}, id={id(ref['obj_copy'][1].data)}"
+                    # )
+                except:
+                    pass
+            # 3 references: the one in the memo dict, one in the gc, and obj
+            # +1 reference for tuples, as they are immutable
+            if ref_count <= ref_count_target:
+                key_idx = self_keys.index(key)
+                keys_to_delete = self._remove_obj(key, key_idx, self_keys, keys_to_delete)
+
+    def _remove_obj(self,
+                    key: int,
+                    key_idx: int,
+                    self_keys: tuple[int, ...],
+                    keys_to_delete: list[int],
+                    equal_obj: object = None) -> list[int]:
+        print(f'key: {key}')
+        print(f'key_idx: {key_idx}')
+        print(f'self_keys: {self_keys}')
+        print(f'keys_to_delete: {keys_to_delete}')
+        print(f'equal_obj: {equal_obj}')
+        print(f'memo_dict: {self}')
+
+        obj = self[key]
+        print(f'Removing {obj}')
+        print(f'id(obj): {id(obj)}')
+
+        obj_dict = getattr(obj, '__dict__', Undefined)
+        if obj_dict is not Undefined and key_idx + 1 < len(self_keys):
+            cur_key = self_keys[key_idx + 1]
+            if cur_key in self:
+                next_memo_obj = self[cur_key]
+                print(f'obj.__class__: {obj.__class__}')
+                print(f"id(obj_dict): {id(obj_dict)}")
+                print(f"cur_key: {cur_key}")
+                print(f"next_memo_obj: {next_memo_obj}")
+                print(f'self._key_2_obj_id: {self._key_2_obj_id}')
+
+                if isinstance(obj, BaseModel) and isinstance(
+                        next_memo_obj, dict) and '__fields_set__' in next_memo_obj:
+
+                    for i, (k, v) in enumerate(reversed(next_memo_obj.items())):
+                        print(f'{k}: {v} (key={self._key_2_obj_id.inverse[id(v)]})')
+                        keys_to_delete.insert(0, self._key_2_obj_id.inverse[id(v)])
+
+                    keys_to_delete.insert(0, cur_key)
+
+                elif next_memo_obj == obj_dict:
+                    keys_to_delete.insert(0, cur_key)
+
+        elif obj.__class__ is set and key_idx > 0:
+            cur_key = self_keys[key_idx - 1]
+            if cur_key in self:
+                prev_memo_obj = self[cur_key]
+                if isinstance(prev_memo_obj, list) and set(prev_memo_obj) == obj:
+                    keys_to_delete.insert(0, cur_key)
+
+        print(f'Now deleting {obj}')
+        del self[key]
+        del self._key_2_obj_id[key]
+        print(f'memo_dict: {self}')
+
+        return keys_to_delete
 
     # def _get_objects_in_memo_dict(self, *keys: int) -> dict[int, _ObjT]:
     #
@@ -568,69 +615,93 @@ class WeakKeyRefContainer(Generic[_AnyKeyT, _ValT]):
     def __len__(self) -> int:
         return len(self._value_dict)
 
+    def clear(self) -> None:
+        self._key_dict.clear()
+        self._value_dict.clear()
+
 
 @dataclass
-class Snapshot(Generic[_ObjT, _ContentT]):
+class Snapshot(Generic[_ObjT, _ContentsT]):
     id: int
-    obj_copy: _ContentT
+    obj_copy: _ContentsT
 
     def taken_of_same_obj(self, obj: _ObjT) -> bool:
         return self.id == id(obj)
 
-    def differs_from(self, obj: _ContentT) -> bool:
+    def differs_from(self, obj: _ObjT) -> bool:
         return not all_equals(self.obj_copy, obj)
 
 
-class SnapshotHolder(WeakKeyRefContainer[HasContents[_ContentT], IsSnapshot[_ObjT, _ContentT]],
-                     Generic[_ObjT, _ContentT]):
+obj_getattr = object.__getattribute__
+obj_setattr = object.__setattr__
+
+
+class SnapshotHolder(WeakKeyRefContainer[_HasContentsT, IsSnapshot[_HasContentsT, _ContentsT]],
+                     Generic[_HasContentsT, _ContentsT]):
     def __init__(self) -> None:
         super().__init__()
-        self._deepcopy_memo = RefCountMemoDict[_ContentT]()
-        self._key_2_obj_copy_id = dict[int, int]()
-        self._obj_copy_id_keys = defaultdict[int, list[int]](list[int])
+        self._deepcopy_memo = RefCountMemoDict[_ContentsT]()
+        # self._key_2_obj_copy_id = dict[int, int]()
+        # self._obj_copy_id_keys = defaultdict[int, list[int]](list[int])
         self.keys_for_deleted_objs: list[int] = []
 
-    def __setitem__(self, obj: HasContents[_ContentT], value: IsSnapshot[_ObjT, _ContentT]) -> None:
+    def __setitem__(self, obj: _HasContentsT, value: IsSnapshot[_HasContentsT, _ContentsT]) -> None:
         raise TypeError(f"'{self.__class__.__name__}' object does not support item assignment")
 
     def __getattribute__(self, name: str) -> Any:
-        keys_for_deleted_objs = object.__getattribute__(self, 'keys_for_deleted_objs')
-        if len(keys_for_deleted_objs) > 0:
-            print(f'keys_for_deleted_objs: {keys_for_deleted_objs}')
-            deepcopy_memo = object.__getattribute__(self, '_deepcopy_memo')
-            deepcopy_memo.recursively_remove_deleted_objs(*keys_for_deleted_objs)
-            object.__setattr__(self, 'keys_for_deleted_objs', [])
-        return object.__getattribute__(self, name)
+        _delete_scheduled = obj_getattr(self, '_delete_scheduled')
+        _delete_scheduled()
+        return obj_getattr(self, name)
 
-    def take_snapshot(self, obj: HasContents[_ContentT]) -> None:
+    def _delete_scheduled(self) -> None:
+        print(f"Deleting scheduled {len(obj_getattr(self, 'keys_for_deleted_objs'))} objects...")
+        keys_for_deleted_objs = obj_getattr(self, 'keys_for_deleted_objs')
+        if len(keys_for_deleted_objs) > 0:
+            obj_setattr(self, 'keys_for_deleted_objs', [])
+            deepcopy_memo = obj_getattr(self, '_deepcopy_memo')
+            deepcopy_memo.recursively_remove_deleted_objs(*keys_for_deleted_objs)
+
+    def clear(self):
+        self.keys_for_deleted_objs = []
+        self._deepcopy_memo.clear()
+        super().clear()
+
+    def take_snapshot(self, obj: _HasContentsT) -> None:
+        gc.collect()
+        self._delete_scheduled()
+        # from time import sleep
+        # sleep(1)
+        gc.disable()
         try:
-            obj_copy: _ContentT = deepcopy(obj.contents,
-                                           self._deepcopy_memo)  # type: ignore[arg-type]
+            # self.clear()
+            obj_copy: _ContentsT = deepcopy(obj.contents,
+                                            self._deepcopy_memo)  # type: ignore[arg-type]
         except (TypeError, ValueError, ValidationError) as exp:
             print(exp)
             obj_copy = copy(obj.contents)
+        gc.enable()
 
         key = id(obj)
         obj_copy_id = id(obj_copy)
 
         super().__setitem__(obj, Snapshot(key, obj_copy))
 
-        if key in self._key_2_obj_copy_id:
-            prev_obj_copy_id = self._key_2_obj_copy_id[key]
-            self._obj_copy_id_keys[prev_obj_copy_id].remove(key)
-        self._key_2_obj_copy_id[key] = obj_copy_id
-        self._obj_copy_id_keys[obj_copy_id].append(key)
+        # if key in self._key_2_obj_copy_id:
+        #     prev_obj_copy_id = self._key_2_obj_copy_id[key]
+        #     self._obj_copy_id_keys[prev_obj_copy_id].remove(key)
+        # self._key_2_obj_copy_id[key] = obj_copy_id
+        # self._obj_copy_id_keys[obj_copy_id].append(key)
 
-    def recursively_remove_deleted_obj_from_deepcopy_memo(self, key: int) -> None:
-        def _known_snapshot_references(obj_copy_id: int) -> int:
-            if obj_copy_id in self._obj_copy_id_keys:
-                return len(self._obj_copy_id_keys[obj_copy_id])
-            return 0
-
-        self._deepcopy_memo.recursively_remove_deleted_objs(
-            key,
-            known_references_callback=_known_snapshot_references,
-        )
+    # def recursively_remove_deleted_obj_from_deepcopy_memo(self, key: int) -> None:
+    #     def _known_snapshot_references(obj_copy_id: int) -> int:
+    #         # if obj_copy_id in self._obj_copy_id_keys:
+    #         #     return len(self._obj_copy_id_keys[obj_copy_id])
+    #         return 0
+    #
+    #     self._deepcopy_memo.recursively_remove_deleted_objs(
+    #         key,
+    #         known_references_callback=_known_snapshot_references,
+    #     )
 
 
 _memo: dict[int, object] = {}
