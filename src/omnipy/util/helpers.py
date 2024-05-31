@@ -1,3 +1,4 @@
+from abc import ABCMeta
 from collections import defaultdict, UserDict
 from collections.abc import Hashable, Iterable
 from copy import copy, deepcopy
@@ -437,42 +438,53 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         print(f'_remove_deleted_objs({keys_to_delete})')
         self_keys = tuple(self.keys())
 
-        while len(keys_to_delete) > 0:
-            print(f'len(keys_to_delete): {len(keys_to_delete)}')
-            print(f'keys_to_delete: {keys_to_delete}')
-            gc.collect()  # Try to uncomment if memo dict is not cleared
-            key = keys_to_delete.pop(0)
-            obj = self.data[key]
-            print(f'obj: {obj}')
-            # gc.collect()  # Try to uncomment if memo dict is not cleared
-            ref_count = sys.getrefcount(obj)
-            print(f'{obj} has {ref_count} references')
-            for k, v in self.data.items():
-                print(f'{k}: {v}')
-            k = 0
-            v = 0
-            # ref_count_target = 4 if isinstance(obj, tuple) else 3
-            ref_count_target = 3
-            # ref_count_target += known_ref_count
-            print(f'ref_count_target: {ref_count_target}')
-            for ref in gc.get_referrers(obj):
-                try:
-                    print(f'{type(ref)}: {ref}')
-                    print(*gc.get_referrers(ref))
+        while True:
+            any_keys_deleted = False
+            retry_keys = []
+            while len(keys_to_delete) > 0:
+                print(f'len(keys_to_delete): {len(keys_to_delete)}')
+                print(f'keys_to_delete: {keys_to_delete}')
+                gc.collect()  # Try to uncomment if memo dict is not cleared
+                key = keys_to_delete.pop(0)
+                obj = self.data[key]
+                print(f'obj: {obj}')
+                # gc.collect()  # Try to uncomment if memo dict is not cleared
+                ref_count = sys.getrefcount(obj)
+                print(f'{obj} has {ref_count} references')
+                for k, v in self.data.items():
+                    print(f'{k}: {v}')
+                k = 0
+                v = 0
+                # ref_count_target = 4 if isinstance(obj, tuple) else 3
+                ref_count_target = 3
+                # ref_count_target += known_ref_count
+                print(f'ref_count_target: {ref_count_target}')
+                for ref in gc.get_referrers(obj):
+                    try:
+                        print(f'{type(ref)}: {ref}')
+                        print(*gc.get_referrers(ref))
 
-                    # print(
-                    #     f"ref['obj_copy'][1].__dict__: {ref['obj_copy'][1].__dict__}, id={id(ref['obj_copy'][1].__dict__)}"
-                    # )
-                    # print(
-                    #     f"ref['obj_copy'][1].data: {ref['obj_copy'][1].data}, id={id(ref['obj_copy'][1].data)}"
-                    # )
-                except:
-                    pass
-            # 3 references: the one in the memo dict, one in the gc, and obj
-            # +1 reference for tuples, as they are immutable
-            if ref_count <= ref_count_target:
-                key_idx = self_keys.index(key)
-                keys_to_delete = self._remove_obj(key, key_idx, self_keys, keys_to_delete)
+                        # print(
+                        #     f"ref['obj_copy'][1].__dict__: {ref['obj_copy'][1].__dict__}, id={id(ref['obj_copy'][1].__dict__)}"
+                        # )
+                        # print(
+                        #     f"ref['obj_copy'][1].data: {ref['obj_copy'][1].data}, id={id(ref['obj_copy'][1].data)}"
+                        # )
+                    except:
+                        pass
+                # 3 references: the one in the memo dict, one in the gc, and obj
+                # +1 reference for tuples, as they are immutable
+                if ref_count <= ref_count_target:
+                    key_idx = self_keys.index(key)
+                    keys_to_delete = self._remove_obj(key, key_idx, self_keys, keys_to_delete)
+                    any_keys_deleted = True
+                else:
+                    retry_keys.append(key)
+
+            if any_keys_deleted:
+                keys_to_delete = retry_keys
+            else:
+                break
 
     def _remove_obj(self,
                     key: int,
@@ -575,6 +587,12 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
                 known_refcount_for_all_contained_objs_in_memo=
                 known_refcount_for_all_contained_objs_in_memo,
                 known_refcount_callback=known_refcount_callback)
+
+    def start_deepcopy(self, obj):
+        pass
+
+    def end_deepcopy(self, obj):
+        pass
 
 
 class KeyRef(list):

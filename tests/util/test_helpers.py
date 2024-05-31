@@ -10,6 +10,7 @@ from typing import (Annotated,
                     Generic,
                     get_args,
                     Iterator,
+                    KeysView,
                     Literal,
                     Optional,
                     overload,
@@ -615,46 +616,106 @@ class SomeObject:
     def __init__(self, name: str) -> None:
         self.name = name
 
+    def __eq__(self, other):
+        if isinstance(other, SomeObject):
+            return self.name == other.name
+        return False
+
 
 BasicType: TypeAlias = list | tuple | dict | set | str | float | int | complex | bool | SomeObject
 
 
-def test_ref_count_memo_dict_remember_builtins() -> None:
-    ref_count_memo_dict = RefCountMemoDict[BasicType]()
+def test_ref_count_memo_dict_keep_alive() -> None:
+    ref_count_memo_dict = RefCountMemoDict[Any]()
 
-    def _register_all_basic_objs_to_be_deleted_and_return_ids() -> set[int]:
-        basic_obj: BasicType
-        all_basic_objs: tuple[BasicType, ...] = (
+    def _register_all_basic_objs_to_be_deleted_and_return_ids() -> KeysView[int]:
+        tmp_obj: BasicType
+        all_memoized_basic_objs: list[BasicType] = [
             [1, 3, 5],
-            (1, 3, 5),
             {
                 1: 2, 3: 4
             },
-            {1, 3, 5},
+            {2, 4, 6},
+            SomeObject('some_object'),
+        ]
+        all_non_memoized_basic_objs: list[BasicType] = [
+            (1, 3, 5),
             'abc',
             3.14,
             42,
             3 + 4j,
             True,
-            SomeObject('some_object'),
-        )
+        ]
+        all_basic_objs = all_memoized_basic_objs + all_non_memoized_basic_objs
 
-        for basic_obj in all_basic_objs:
-            ref_count_memo_dict[id(basic_obj)] = copy(basic_obj)
+        all_memoized_basic_objs_copy: list[BasicType] = deepcopy(all_memoized_basic_objs)
+
+        assert isinstance(all_memoized_basic_objs_copy[2], set)
+        all_memoized_basic_objs_copy.append(list(all_memoized_basic_objs_copy[2]))
+
+        assert isinstance(all_memoized_basic_objs_copy[3], SomeObject)
+        all_memoized_basic_objs_copy.append(all_memoized_basic_objs_copy[3].__dict__)
+
+        all_basic_objs_copy: list[BasicType] = deepcopy(all_basic_objs)
+
+        memo_target: list[BasicType | list[BasicType]] = \
+            [all_basic_objs_copy[i:] for i in range(len(all_basic_objs_copy))] \
+            + all_memoized_basic_objs_copy
+
+        alive = []
+
+        class MySet(set):
+            def __deepcopy__(self, memo={}):
+                memo[id(self)] = self
+                self_list = list(self)
+                memo[id(self_list)] = self_list
+                alive.append(self_list)
+                return copy(self)
+
+            def __eq__(self, other):
+                if isinstance(other, set):
+                    return super().__eq__(other)
+                return False
+
+            def __reduce_ex__(self, protocol):
+                return (self.__class__, (list(self),), None)
+
+        all_basic_objs[2] = MySet(all_basic_objs[2])
+
+        # To test whether the RefCountMemoDict keeps the temporary objects alive, we need to
+        # make sure that new objects are not reusing the same memory locations, and thus the same
+        # ids as the old ones. Since the time of deletion by the python garbage controller is not
+        # deterministic (at least across different Python implementations), we run the same test
+        # multiple times to increase the likelihood of the objects being deleted and their
+        # memory locations being reused, given that the RefCountMemoDict is not keeping the
+        # objects alive.
+        for i in range(100):
+            ref_count_memo_dict.clear()
+            alive.clear()
+
+            for start_idx in range(len(all_basic_objs)):
+                tmp_obj = all_basic_objs[start_idx:]
+
+                ref_count_memo_dict.start_deepcopy(tmp_obj)
+                deepcopy(tmp_obj, ref_count_memo_dict)  # type: ignore[arg-type]
+                ref_count_memo_dict.end_deepcopy(tmp_obj)
+
+                alive.append(tmp_obj)
+
+            assert len(ref_count_memo_dict) == len(memo_target)
+
+            for value in ref_count_memo_dict.values():
+                assert value in memo_target
+
+            # for value in memo_target:
+            #     assert value in ref_count_memo_dict.values()
 
         del all_basic_objs
-
-        return set(ref_count_memo_dict.keys())
+        return ref_count_memo_dict.keys()
 
     all_basic_obj_ids = _register_all_basic_objs_to_be_deleted_and_return_ids()
-    assert len(all_basic_obj_ids) == 10
-
-    data: set[tuple] = set()
-
-    for i in range(1000):
-        new_tuple = (i,)
-        data.add(new_tuple)
-        assert (id(new_tuple) not in all_basic_obj_ids)
+    ref_count_memo_dict.recursively_remove_deleted_objs(*all_basic_obj_ids)
+    assert len(ref_count_memo_dict) == 0
 
 
 def test_ref_count_memo_dict_deepcopy_types() -> None:
