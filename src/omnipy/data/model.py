@@ -36,7 +36,7 @@ from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass
 
 from omnipy.api.exceptions import ParamException
-from omnipy.api.protocols.private.util import IsSnapshot, IsSnapshotHolder
+from omnipy.api.protocols.private.util import IsSnapshotHolder, IsSnapshotWrapper
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
@@ -58,7 +58,7 @@ from omnipy.util.helpers import (all_equals,
                                  remove_annotated_plus_optional_if_present,
                                  remove_forward_ref_notation,
                                  RestorableContents,
-                                 Snapshot)
+                                 SnapshotWrapper)
 from omnipy.util.tabulate import tabulate
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
@@ -396,7 +396,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             else:
                 raise
 
-        self._take_snapshot_of_validated_contents()
+        # self._take_snapshot_of_validated_contents()
 
         if not self.__class__.__doc__:
             self._set_standard_field_description()
@@ -408,15 +408,15 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     @staticmethod
     def _finalize(self_id: int, contents_id: int, snapshot_holder: IsSnapshotHolder):
-        print(f'Deleting self.id: {self_id} -> contents_id: {contents_id}')
-        snapshot_holder.keys_for_deleted_objs.append(contents_id)
+        # print(f'Deleting self.id: {self_id} -> contents_id: {contents_id}')
+        snapshot_holder.schedule_for_deletion(contents_id)
 
     # def __del__(self):
     #     # if self in self.snapshot_holder:
     #     print(f'Deleting {id(self)} -> {id(self.contents)}')
     #     contents_id = id(self.contents)
     #     self.contents = Undefined
-    #     self.snapshot_holder.keys_for_deleted_objs.append(contents_id)
+    #     self.snapshot_holder.schedule_for_deletion(contents_id)
 
     # if id(self) in _restorable_content_cache:
     #     del _restorable_content_cache[id(self)]
@@ -469,7 +469,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def _validate_and_set_value(self,
                                 new_contents: object,
                                 restore_snapshot_if_interactive_and_invalid: bool = False) -> None:
-        if restore_snapshot_if_interactive_and_invalid and self.config.interactive_mode:
+        if restore_snapshot_if_interactive_and_invalid \
+                and self.config.interactive_mode \
+                and self.has_snapshot():
             reset_solution = AttribHolder(self, 'contents', self.snapshot, reset_to_other=True)
         else:
             reset_solution = nothing()
@@ -494,30 +496,38 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     @property
     def snapshot(self) -> _RootT:
-        snapshot: IsSnapshot['Model', _RootT] = self.snapshot_holder[self]
-        assert snapshot.id == id(self)
-        return snapshot.obj_copy
+        snapshot_wrapper = self._get_snapshot_wrapper()
+        assert snapshot_wrapper.id == id(self)
+        return snapshot_wrapper.snapshot
 
     def has_snapshot(self) -> bool:
         return self in self.snapshot_holder
 
+    def _get_snapshot_wrapper(self) -> IsSnapshotWrapper['Model', _RootT]:
+        assert self.has_snapshot(), 'No snapshot taken yet'
+        return self.snapshot_holder[self]
+
     def snapshot_taken_of_same_model(self, model: 'Model') -> bool:
-        return self.snapshot.taken_of_same_obj(model)
+        snapshot_wrapper = self._get_snapshot_wrapper()
+        return snapshot_wrapper.taken_of_same_obj(model)
 
     def snapshot_differs_from_model(self, model: 'Model') -> bool:
-        return self.snapshot.differs_from(model.contents)
+        snapshot_wrapper = self._get_snapshot_wrapper()
+        return snapshot_wrapper.differs_from(model.contents)
 
-    @property
-    def contents_validated(self) -> bool:
+    def contents_validated_according_to_snapshot(self) -> bool:
         needs_validation = self.snapshot_differs_from_model(self) \
                            or not self.snapshot_taken_of_same_model(self)
         return not needs_validation
 
     def _take_snapshot_of_validated_contents(self) -> None:
         if self.config.interactive_mode:
-            self.snapshot_holder.take_snapshot(self)
-            print(
-                f'Snapshot contents_id={id(self.contents)} -> {id(self.snapshot)}: {self.contents}')
+            with self.deepcopy_context(self.snapshot_holder.take_snapshot_setup,
+                                       self.snapshot_holder.take_snapshot_cleanup):
+                self.snapshot_holder.take_snapshot(self)
+            # print(
+            #     f'SnapshotWrapper contents_id={id(self.contents)} -> {id(self.snapshot)}: {self.contents}'
+            # )
 
     @classmethod
     def _parse_data(cls, data: Any) -> _RootT:
@@ -716,14 +726,14 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def _special_method(  # noqa: C901
             self, name: str, info: MethodInfo, *args: object, **kwargs: object) -> object:
 
-        if info.state_changing and self.config.interactive_mode:
-            if not self.contents_validated:
+        if info.state_changing and self.config.interactive_mode and self.has_snapshot():
+            if not self.contents_validated_according_to_snapshot():
                 self.validate_contents(restore_snapshot_if_interactive_and_invalid=True)
 
             reset_contents_to_prev = AttribHolder(self, 'contents', copy_attr=True)
             with reset_contents_to_prev:
                 ret = self._call_special_method(name, *args, **kwargs)
-                if self.snapshot_differs_from_model(self.contents):
+                if self.snapshot_differs_from_model(self):
                     self.validate_contents()
 
         elif name == '__iter__' and isinstance(self, Iterable):
@@ -901,10 +911,11 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             and self.to_data() == cast(Model, other).to_data()  # last line is just in case
 
     def __repr__(self) -> str:
-        if self.config.interactive_mode and not _waiting_for_terminal_repr():
-            if get_calling_module_name() in INTERACTIVE_MODULES:
-                _waiting_for_terminal_repr(True)
-                return self._table_repr()
+        # if self.config.interactive_mode and not _waiting_for_terminal_repr():
+        #     if get_calling_module_name() in INTERACTIVE_MODULES:
+        #         _waiting_for_terminal_repr(True)
+        #         return self._table_repr()
+        return self._trad_repr()
         return self._trad_repr()
 
     def view(self):

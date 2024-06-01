@@ -9,6 +9,7 @@ _ValT = TypeVar('_ValT', bound=object)
 _ContentsT = TypeVar("_ContentsT", bound=object)
 _ContentCovT = TypeVar("_ContentCovT", covariant=True, bound=object)
 _ContentContraT = TypeVar("_ContentContraT", contravariant=True, bound=object)
+_HasContentsT = TypeVar('_HasContentsT', bound='HasContents')
 
 
 @runtime_checkable
@@ -25,6 +26,7 @@ class IsCallableClass(Protocol[DecoratorClassT]):
         ...
 
 
+@runtime_checkable
 class HasContents(Protocol[_ContentsT]):
     @property
     def contents(self) -> _ContentsT:
@@ -52,9 +54,9 @@ class IsWeakKeyRefContainer(Protocol[_AnyKeyT, _ValT]):
         ...
 
 
-class IsSnapshot(Protocol[_ObjContraT, _ContentsT]):
+class IsSnapshotWrapper(Protocol[_ObjContraT, _ContentsT]):
     id: int
-    obj_copy: _ContentsT
+    snapshot: _ContentsT
 
     def taken_of_same_obj(self, obj: _ObjContraT) -> bool:
         ...
@@ -63,14 +65,26 @@ class IsSnapshot(Protocol[_ObjContraT, _ContentsT]):
         ...
 
 
-class IsSnapshotHolder(IsWeakKeyRefContainer[HasContents[_ContentsT], IsSnapshot[_ObjT,
-                                                                                 _ContentsT]],
-                       Protocol[_ObjT, _ContentsT]):
+class IsSnapshotHolder(IsWeakKeyRefContainer[_HasContentsT,
+                                             IsSnapshotWrapper[_HasContentsT, _ContentsT]],
+                       Protocol[_HasContentsT, _ContentsT]):
     """"""
+    def schedule_for_deletion(self, key: int) -> None:
+        ...
+
+    def delete_scheduled(self) -> None:
+        ...
+
     def clear(self) -> None:
         ...
 
-    def take_snapshot(self, obj: HasContents[_ContentsT]) -> None:
+    def take_snapshot_setup(self) -> None:
+        ...
+
+    def take_snapshot_cleanup(self) -> None:
+        ...
+
+    def take_snapshot(self, obj: _HasContentsT) -> None:
         ...
 
     #

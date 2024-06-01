@@ -59,6 +59,52 @@ def test_data_class_creator_singular_mock(
     assert dataset_new.__class__.data_class_creator is data_class_creator
 
 
+def test_data_class_creator_deepcopy_context() -> None:
+    creator = DataClassCreator()
+
+    top_level_entry_func_calls = []
+    top_level_exit_func_calls = []
+
+    def top_lvl_entry_func():
+        top_level_entry_func_calls.append(True)
+
+    def top_lvl_exit_func():
+        top_level_exit_func_calls.append(True)
+
+    with creator.deepcopy_context(top_lvl_entry_func, top_lvl_exit_func) as first_level:
+        assert first_level == 1
+        assert len(top_level_entry_func_calls) == 1
+        assert len(top_level_exit_func_calls) == 0
+
+        with creator.deepcopy_context(top_lvl_entry_func, top_lvl_exit_func) as second_level:
+            assert second_level == 2
+            assert len(top_level_entry_func_calls) == 1
+            assert len(top_level_exit_func_calls) == 0
+
+        assert len(top_level_entry_func_calls) == 1
+        assert len(top_level_exit_func_calls) == 0
+
+    assert len(top_level_entry_func_calls) == 1
+    assert len(top_level_exit_func_calls) == 1
+
+    try:
+        with creator.deepcopy_context(top_lvl_entry_func, top_lvl_exit_func) as first_level:
+            assert first_level == 1
+            assert len(top_level_entry_func_calls) == 2
+            assert len(top_level_exit_func_calls) == 1
+
+            with creator.deepcopy_context(top_lvl_entry_func, top_lvl_exit_func) as second_level:
+                assert second_level == 2
+                assert len(top_level_entry_func_calls) == 2
+                assert len(top_level_exit_func_calls) == 1
+
+                raise RuntimeError('Something is wrong')
+
+    except RuntimeError:
+        assert len(top_level_entry_func_calls) == 2
+        assert len(top_level_exit_func_calls) == 2
+
+
 def test_data_class_creator_config_property_mock(
         teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
     _assert_property_is_singularly_mutable(

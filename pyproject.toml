@@ -43,6 +43,7 @@ humanize = "^4.9.0"
 httpx = "^0.26.0"
 pydantic = {version = "<2", extras = ["email"]}
 bidict = "^0.23.1"
+line-profiler-pycharm = "^1.1.0"
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"

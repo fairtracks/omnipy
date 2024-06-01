@@ -38,18 +38,18 @@ def test_nested_frozen_models(case: CaseInfo) -> None:
         for model_cls in case.model_classes_for_data_point(name):
             data = getattr(case.data_points, name)
 
-            print('\n---')
-            print(f'Field name: {name}')
-            print(f'Model class: {model_cls.__name__}')
-            print(f'Data input: {data}')
+            # print('\n---')
+            # print(f'Field name: {name}')
+            # print(f'Model class: {model_cls.__name__}')
+            # print(f'Data input: {data}')
 
             if case.data_point_should_fail(name):
                 with pytest.raises(ValidationError) as e:
                     model_cls(data)
-                print(f'Error: {e}')
+                # print(f'Error: {e}')
             else:
-
                 model_obj = model_cls(data)
-                print(f'repr(model_obj): {repr(model_obj)}')
-                print(f'model_obj.contents: {model_obj.contents}')
-                print(f'model_obj.to_data(): {model_obj.to_data()}')
+
+                # print(f'repr(model_obj): {repr(model_obj)}')
+                # print(f'model_obj.contents: {model_obj.contents}')
+                # print(f'model_obj.to_data(): {model_obj.to_data()}')
