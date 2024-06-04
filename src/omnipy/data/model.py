@@ -401,22 +401,21 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         if not self.__class__.__doc__:
             self._set_standard_field_description()
 
-        weakref.finalize(self, self._finalize, id(self), id(self.contents), self.snapshot_holder)
+        # weakref.finalize(self, self._finalize, id(self), id(self.contents), self.snapshot_holder)
 
     def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
         ...
 
-    @staticmethod
-    def _finalize(self_id: int, contents_id: int, snapshot_holder: IsSnapshotHolder):
-        # print(f'Deleting self.id: {self_id} -> contents_id: {contents_id}')
-        snapshot_holder.schedule_for_deletion(contents_id)
+    # @staticmethod
+    # def _finalize(self_id: int, contents_id: int, snapshot_holder: IsSnapshotHolder):
+    #     print(f'Deleting self.id: {self_id} -> contents_id: {contents_id}')
+    #     snapshot_holder.schedule_for_deletion(contents_id)
 
-    # def __del__(self):
-    #     # if self in self.snapshot_holder:
-    #     print(f'Deleting {id(self)} -> {id(self.contents)}')
-    #     contents_id = id(self.contents)
-    #     self.contents = Undefined
-    #     self.snapshot_holder.schedule_for_deletion(contents_id)
+    def __del__(self):
+        contents_id = id(self.contents)
+        # print(f'Deleting self.id: {id(self)} -> contents_id: {contents_id}')
+        # self.contents = Undefined
+        self.snapshot_holder.schedule_for_deletion(contents_id)
 
     # if id(self) in _restorable_content_cache:
     #     del _restorable_content_cache[id(self)]
@@ -470,8 +469,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                                 new_contents: object,
                                 restore_snapshot_if_interactive_and_invalid: bool = False) -> None:
         if restore_snapshot_if_interactive_and_invalid \
-                and self.config.interactive_mode \
-                and self.has_snapshot():
+                and self.config.interactive_mode:
             reset_solution = AttribHolder(self, 'contents', self.snapshot, reset_to_other=True)
         else:
             reset_solution = nothing()
@@ -726,7 +724,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def _special_method(  # noqa: C901
             self, name: str, info: MethodInfo, *args: object, **kwargs: object) -> object:
 
-        if info.state_changing and self.config.interactive_mode and self.has_snapshot():
+        if info.state_changing and self.config.interactive_mode:
             if not self.contents_validated_according_to_snapshot():
                 self.validate_contents(restore_snapshot_if_interactive_and_invalid=True)
 

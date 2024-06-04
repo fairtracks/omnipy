@@ -823,6 +823,7 @@ def test_dataset_of_pydantic_model() -> None:
     dataset['x'].children[0].value = 'abc'
     with pytest.raises(ValidationError):
         dataset['x'].validate_contents()
+    assert dataset['x'].children[0].value == 'abc'
 
     with pytest.raises(ValidationError):
         dataset['y'].children_omnipy[0].value = 'abc'

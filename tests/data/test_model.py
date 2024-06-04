@@ -1146,6 +1146,7 @@ def test_import_export_methods() -> None:
 
 def test_model_of_pydantic_model() -> None:
     model = MyPydanticModel({'@id': 1, 'children': [{'@id': 10, 'value': 1.23}]})
+
     assert model.id == 1
     assert len(model.children) == 1
     assert model.children[0].id == 10
@@ -1212,6 +1213,10 @@ def test_snapshot_deepcopy_reuse_objects(runtime: Annotated[IsRuntime, pytest.fi
         middle = Model[list[int | Model[list[int]]]]([1, 3, inner])
         outer = Model[list[int | Model[list[int | Model[list[int]]]]]]([0, middle, 5])
 
+        inner.validate_contents()
+        middle.validate_contents()
+        outer.validate_contents()
+
         # assert len(Model[int]().snapshot_holder) == 3
         # assert len(Model[int]().snapshot_holder._deepcopy_memo) == 3  # type: ignore[attr-defined]
 
@@ -1241,12 +1246,13 @@ def test_snapshot_deepcopy_reuse_objects(runtime: Annotated[IsRuntime, pytest.fi
             middle.snapshot) == list
         assert id(outer.snapshot[1].contents) == id(middle.snapshot)  # type: ignore[union-attr]
 
+        del outer
         gc.collect()
 
-        for ref in gc.get_referrers(outer):
+        for ref in gc.get_referrers(middle):
             try:
                 # pass
-                print(f'Referrer to outer {type(outer)}: {ref}')
+                print(f'Referrer to middle {type(middle)}: {ref}')
                 # print(*gc.get_referrers(ref))
 
                 # print(
@@ -1257,8 +1263,11 @@ def test_snapshot_deepcopy_reuse_objects(runtime: Annotated[IsRuntime, pytest.fi
                 # )
             except:
                 pass
+        del ref
 
     _inner_test_snapshot_deepcopy_reuse_objects()
+
+    gc.collect()
 
     snapshot_holder = Model.data_class_creator.snapshot_holder
     snapshot_holder.delete_scheduled()
@@ -1275,11 +1284,178 @@ def _assert_no_snapshot(model: Model):
         model.contents_validated_according_to_snapshot()
 
 
+def test_lazy_snapshot_not_triggered_by_set_contents(
+    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+    runtime.config.data.interactive_mode = True
+
+    model = Model[list[int]]([123])
+    _assert_no_snapshot(model)
+
+    model.contents = ['abc']  # type: ignore[list-item]
+    _assert_no_snapshot(model)
+
+    with pytest.raises(ValidationError):
+        model.validate_contents()
+    _assert_no_snapshot(model)
+
+    with pytest.raises(ValidationError):
+        model.validate_contents()
+    _assert_no_snapshot(model)
+
+    model.contents = [234]
+    _assert_no_snapshot(model)
+
+    model.validate_contents()
+    assert model.snapshot == model.contents == [234]
+
+
+def test_lazy_snapshot_not_triggered_by_state_keeping_operator(
+    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+    runtime.config.data.interactive_mode = True
+
+    model = Model[list[int]]([123])
+    _assert_no_snapshot(model)
+
+    res_model = model + [234]  # type: ignore[operator]
+
+    _assert_no_snapshot(model)
+    assert model.contents == [123]
+
+    _assert_no_snapshot(res_model)
+    assert res_model.contents == [123, 234]
+
+
+def test_lazy_snapshot_triggered_by_state_changing_operator(
+    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+    runtime.config.data.interactive_mode = True
+
+    model = Model[list[int]]([123])
+    _assert_no_snapshot(model)
+
+    with pytest.raises(ValidationError):
+        model += ['abc']  # type: ignore[operator]
+    assert model.snapshot == model.contents == [123]
+
+    model += [234]  # type: ignore[operator]
+    assert model.snapshot == model.contents == [123, 234]
+
+
+def test_lazy_snapshot_not_triggered_by_getitem(
+    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+    runtime.config.data.interactive_mode = True
+    runtime.config.data.dynamically_convert_elements_to_models = True
+
+    model = Model[list[int]]([123])
+    _assert_no_snapshot(model)
+
+    with pytest.raises(KeyError):
+        model[1]  # type: ignore[index]
+
+    _assert_no_snapshot(model)
+    assert model.contents == [123]
+
+    res_model = model[0]  # type: ignore[index]
+
+    _assert_no_snapshot(model)
+    assert model.contents == [123]
+
+    _assert_no_snapshot(res_model)
+    assert res_model.contents == 123
+
+
+def test_lazy_snapshot_triggered_by_setitem(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+    runtime.config.data.interactive_mode = True
+
+    model = Model[list[int]]([123])
+    _assert_no_snapshot(model)
+
+    with pytest.raises(ValidationError):
+        model[0] = ['abc']
+    assert model.snapshot == model.contents == [123]
+
+    model[0] = 234
+    assert model.snapshot == model.contents == [234]
+
+
+def test_lazy_snapshot_triggered_by_state_keeping_mimicked_methods(
+    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+    runtime.config.data.interactive_mode = True
+    runtime.config.data.dynamically_convert_elements_to_models = True
+
+    model = Model[list[int]]([123])
+    _assert_no_snapshot(model)
+
+    res_model = model.get(0)
+    assert model.snapshot == model.contents == [123]
+
+    _assert_no_snapshot(res_model)
+    assert res_model.contents == 123
+
+
+def test_lazy_snapshot_triggered_by_state_changing_mimicked_methods(
+    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+    runtime.config.data.interactive_mode = True
+    runtime.config.data.dynamically_convert_elements_to_models = True
+
+    model = Model[list[int]]([123])
+    _assert_no_snapshot(model)
+
+    with pytest.raises(ValidationError):
+        model.append('abc')
+    assert model.snapshot == model.contents == [123]
+
+    model.append(234)
+    assert model.snapshot == model.contents == [123, 234]
+
+
+def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_value_access(
+    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+    runtime.config.data.interactive_mode = True
+    runtime.config.data.dynamically_convert_elements_to_models = True
+
+    class SimplePydanticModel(BaseModel):
+        value: list[int]
+
+    model = Model[SimplePydanticModel](SimplePydanticModel(value=[123]))
+    _assert_no_snapshot(model)
+
+    res_model = model.value[0]
+    assert model.snapshot == model.contents == [123]
+
+    _assert_no_snapshot(res_model)
+    assert res_model.contents == 123
+
+
+def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_value_access(
+    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+    runtime.config.data.interactive_mode = True
+    runtime.config.data.dynamically_convert_elements_to_models = True
+
+    class SimplePydanticModel(BaseModel):
+        value: list[int]
+
+    model = Model[SimplePydanticModel](SimplePydanticModel(value=[123]))
+    _assert_no_snapshot(model)
+
+    with pytest.raises(ValidationError):
+        model.value = ['abc']
+    assert model.snapshot == model.contents == [123]
+
+    model.value = [234]
+    assert model.snapshot == model.contents == [234]
+
+    model.value.append(345)
+    assert model.snapshot == model.contents == [234, 345]
+
+
 def test_snapshot_with_mimic_special_method_and_interactive_mode(
     runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
     runtime.config.data.interactive_mode = True
 
     model = Model[list[int]]([123])
+
+    _assert_no_snapshot(model)
+    model.validate_contents()
 
     assert model.snapshot == model.contents == [123]
     assert model.snapshot_taken_of_same_model(model) is True
@@ -1360,7 +1536,7 @@ def test_mimic_special_method_no_interactive_mode(
     runtime.config.data.interactive_mode = True
     _assert_no_snapshot(model)
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(AssertionError):
         model.validate_contents(restore_snapshot_if_interactive_and_invalid=True)
 
     del model[1]
@@ -1418,15 +1594,15 @@ def test_mimic_simple_list_operations(
 
 # TODO: Implement automatic conversion for mimicked operations, to allow for e.g.
 #       `Model[int](1) + '1'`
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason="""
-Mimicking operators only supports the same types as the original type, e.g. `Model[int](1) + '1'`
-still raises TypeError. This is also true for two Model instances, e.g. 
-`Model[int](1) + Model[int](1)`. Should be relatively easy to support automatic validation of 
-arguments as the same Model if `NotImplemented` Exception is raised from the operator method, 
-e.g. `__add__()`.
-""")
+# @pytest.mark.skipif(
+#     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+#     reason="""
+# Mimicking operators only supports the same types as the original type, e.g. `Model[int](1) + '1'`
+# still raises TypeError. This is also true for two Model instances, e.g.
+# `Model[int](1) + Model[int](1)`. Should be relatively easy to support automatic validation of
+# arguments as the same Model if `NotImplemented` Exception is raised from the operator method,
+# e.g. `__add__()`.
+# """)
 @pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_simple_list_operator_with_convert_known_issue(
     runtime: Annotated[IsRuntime, pytest.fixture],
@@ -1441,10 +1617,24 @@ def test_mimic_simple_list_operator_with_convert_known_issue(
     _assert_model_or_val(dyn_convert, model[0], int, 42)  # type: ignore[index]
     _assert_model_or_val(dyn_convert, model, list[int], [42])
 
+    if dyn_convert:
+        with pytest.raises(ValidationError):
+            model[0] + 'abc'  # type: ignore[index]
+    else:
+        with pytest.raises(TypeError):
+            model[0] + 'abc'  # type: ignore[index]
+
+    model + ['42']  # type: ignore[operator]
+
+    _assert_model_or_val(dyn_convert, model, list[int], [42, 42])
+
+    with pytest.raises(ValidationError):
+        model + ['abc']  # type: ignore[operator]
+
     model[0] -= Model[int]('42')  # type: ignore[index]
 
     _assert_model_or_val(dyn_convert, model[0], int, 0)  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model, list[int], [0])
+    _assert_model_or_val(dyn_convert, model, list[int], [0, 42])
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
@@ -1937,41 +2127,41 @@ def test_mimic_operations_as_union_of_scalars() -> None:
 def test_mimic_operations_on_pydantic_models() -> None:
     T = TypeVar('T')
 
-    class MyPydanticModel(BaseModel):
+    class ParentPydanticModel(BaseModel):
         a: int = 0
 
-    class MyPydanticModelSubCls(MyPydanticModel):
+    class ChildPydanticModel(ParentPydanticModel):
         b: str = ''
 
-    class MyGenericPydanticModel(GenericModel, Generic[T]):
+    class GenericPydanticModel(GenericModel, Generic[T]):
         a: T | None = None
 
-    class MyGenericPydanticModelSubCls(MyGenericPydanticModel[int]):
+    class ChildGenericPydanticModel(GenericPydanticModel[int]):
         b: str = ''
 
-    my_pydantic_model = Model[MyPydanticModel]()
-    assert my_pydantic_model.a == 0
-    my_pydantic_model.a = 2
-    assert my_pydantic_model.a == 2
+    parent_pydantic_model = Model[ParentPydanticModel]()
+    assert parent_pydantic_model.a == 0
+    parent_pydantic_model.a = 2
+    assert parent_pydantic_model.a == 2
 
-    my_pydantic_model_sub = Model[MyPydanticModelSubCls]()
-    assert my_pydantic_model_sub.a == 0
-    assert my_pydantic_model_sub.b == ''
-    my_pydantic_model_sub.b = 'something'
-    assert my_pydantic_model_sub.b == 'something'
+    child_pydantic_model = Model[ChildPydanticModel]()
+    assert child_pydantic_model.a == 0
+    assert child_pydantic_model.b == ''
+    child_pydantic_model.b = 'something'
+    assert child_pydantic_model.b == 'something'
 
-    my_generic_pydantic_model = Model[MyGenericPydanticModel[str]]()
-    assert my_generic_pydantic_model.a is None
-    my_generic_pydantic_model.a = 'something'
-    assert my_generic_pydantic_model.a == 'something'
+    generic_pydantic_model = Model[GenericPydanticModel[str]]()
+    assert generic_pydantic_model.a is None
+    generic_pydantic_model.a = 'something'
+    assert generic_pydantic_model.a == 'something'
 
-    my_generic_pydantic_model_sub = Model[MyGenericPydanticModelSubCls]()
-    assert my_generic_pydantic_model_sub.a is None
-    my_generic_pydantic_model_sub.a = 2
-    assert my_generic_pydantic_model_sub.a == 2
-    assert my_generic_pydantic_model_sub.b == ''
-    my_generic_pydantic_model_sub.b = 'something'
-    assert my_generic_pydantic_model_sub.b == 'something'
+    child_generic_pydantic_model = Model[ChildGenericPydanticModel]()
+    assert child_generic_pydantic_model.a is None
+    child_generic_pydantic_model.a = 2
+    assert child_generic_pydantic_model.a == 2
+    assert child_generic_pydantic_model.b == ''
+    child_generic_pydantic_model.b = 'something'
+    assert child_generic_pydantic_model.b == 'something'
 
 
 # TODO: Add support in Model for mimicking the setting and deletion of properties

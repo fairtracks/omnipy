@@ -3,7 +3,7 @@ from collections import UserDict, UserList
 from copy import copy, deepcopy
 import gc
 import sys
-from types import MethodType, NoneType, UnionType
+from types import MappingProxyType, MethodType, NoneType, UnionType
 from typing import (Annotated,
                     Any,
                     ForwardRef,
@@ -485,10 +485,8 @@ def _assert_values_in_memo(memo: RefCountMemoDict,
                            all_ids: tuple[int, ...],
                            contained: tuple[bool, ...],
                            total_len: int) -> None:
-    print(all_ids)
     for id_, is_contained in zip(all_ids, contained):
         assert (id_ in memo) == is_contained
-        assert (id_ in memo._key_2_obj_id) == is_contained
     assert len(memo) == total_len
 
 
@@ -623,12 +621,10 @@ def test_ref_count_memo_dict_clear() -> None:
     ref_count_memo_dict[id(my_dict)] = my_dict
 
     assert len(ref_count_memo_dict) == 2
-    assert len(ref_count_memo_dict._key_2_obj_id) == 2
 
     ref_count_memo_dict.clear()
 
     assert len(ref_count_memo_dict) == 0
-    assert len(ref_count_memo_dict._key_2_obj_id) == 0
 
 
 class SomeObject:
@@ -956,22 +952,29 @@ def test_snapshots() -> None:
 def test_snapshot_deepcopy_reuse_objects() -> None:
     snapshot_holder = SnapshotHolder['MyMemoDeletingList', list | dict]()
 
-    def finalize(contents_id: int) -> None:
-        print(f'finalize() called for {contents_id}')
-        if snapshot_holder is not None:
-            # self_id = id(self)
-            # obj.contents = []
-            try:
-                # snapshot_holder.recursively_remove_deleted_obj_from_deepcopy_memo(contents_id)
-                snapshot_holder.schedule_for_deletion(contents_id)
-            except (AttributeError) as exp:
-                print(exp)
-                print(snapshot_holder._deepcopy_memo)
+    # def finalize(contents_id: int) -> None:
+    #     print(f'finalize() called for {contents_id}')
+    #     if snapshot_holder is not None:
+    #         # self_id = id(self)
+    #         # obj.contents = []
+    #         try:
+    #             # snapshot_holder.recursively_remove_deleted_obj_from_deepcopy_memo(contents_id)
+    #             snapshot_holder.schedule_for_deletion(contents_id)
+    #         except (AttributeError) as exp:
+    #             print(exp)
+    #             print(snapshot_holder._deepcopy_memo)
 
     class MyMemoDeletingList(MyList):
         def __init__(self, contents: list) -> None:
             super().__init__(contents)
-            weakref.finalize(self, finalize, contents_id=id(self.contents))
+            # weakref.finalize(self, finalize, contents_id=id(self.contents))
+
+        def __del__(self):
+            contents_id = id(self.contents)
+            # print(f'__del__ called for {contents_id}')
+            self.contents = Undefined
+            if snapshot_holder is not None:
+                snapshot_holder.schedule_for_deletion(contents_id)
 
     class MyPydanticModel(BaseModel):
         my_list: MyMemoDeletingList
@@ -1024,6 +1027,41 @@ def test_snapshot_deepcopy_reuse_objects() -> None:
     _inner_test_snapshot_deepcopy_reuse_objects(snapshot_holder)
     snapshot_holder.delete_scheduled()
     assert len(snapshot_holder._deepcopy_memo) == 0
+
+
+def test_snapshot_deepcopy_exception_cleanup() -> None:
+    class Dynamite:
+        def __deepcopy__(self, memo={}):
+            memo[id(memo)].append(self)
+            memo[id(self)] = copy(self)
+            raise RuntimeError('Boom!')
+
+    class DynamiteCrate(HasContentsMixin[Dynamite]):
+        def __init__(self, data: Dynamite) -> None:
+            self.data = data
+
+    snapshot_holder = SnapshotHolder[DynamiteCrate | MyList, Dynamite | list]()
+
+    my_list = MyList([1, 3, 5])
+    _take_snapshot(snapshot_holder, my_list)
+
+    assert len(snapshot_holder) == 1
+    assert len(snapshot_holder._deepcopy_memo) == 1
+    assert len(snapshot_holder._deepcopy_memo._keep_alive_dict) == 1
+    assert len(snapshot_holder._deepcopy_memo._cur_keep_alive_list) == 0
+    assert len(snapshot_holder._deepcopy_memo._sub_obj_ids) == 1
+
+    try:
+        dynamite_crate = DynamiteCrate(Dynamite())
+        _take_snapshot(snapshot_holder, dynamite_crate)
+    except RuntimeError:
+        pass
+
+    assert len(snapshot_holder) == 1
+    assert len(snapshot_holder._deepcopy_memo) == 1
+    assert len(snapshot_holder._deepcopy_memo._keep_alive_dict) == 1
+    assert len(snapshot_holder._deepcopy_memo._cur_keep_alive_list) == 0
+    assert len(snapshot_holder._deepcopy_memo._sub_obj_ids) == 1
 
 
 def test_snapshot_holder_delete_and_clear() -> None:

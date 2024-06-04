@@ -335,28 +335,6 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
 
         # Using dict for _sub_obj_ids contents instead of set to keep the order of insertion
         self._sub_obj_ids: defaultdict[int, dict[int, None]] = defaultdict(dict)
-        self._key_2_obj_id = bidict[int, int]()
-
-    # def __init__(self, dict=None, /, **kwargs) -> None:
-    #     self._std_dict: dict[int, _ObjT] = {}
-    #     self._weak_value_dict = WeakValueDictionary[int, _ObjT]()
-    #     if dict is not None:
-    #         self.update(dict)
-    #     if kwargs:
-    #         self.update(kwargs)
-    #
-    # def __setattr__(self, key, value):
-    #     if key == 'data':
-    #         self._std_dict.clear()
-    #         self._weak_value_dict.clear()
-    #         for k, v in value.items():
-    #             self[k] = v
-    #     super().__setattr__(key, value)
-    #
-    # def __getattr__(self, item):
-    #     if item == 'data':
-    #         return self._std_dict | dict(self._weak_value_dict.items())
-    #     return super().__getattr__(item)
 
     def start_deepcopy(self, obj):
         self._cur_deepcopy_obj_id = id(obj)
@@ -373,8 +351,6 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         while len(self._cur_keep_alive_list) > 0:
             keep_alive_obj = self._cur_keep_alive_list.pop(0)
             # if not isinstance(keep_alive_obj, HasContents):
-            # if id(obj) in self:
-            #     self._delete_memo_entry(id(obj))
             self._keep_alive_dict[id(keep_alive_obj)] = keep_alive_obj
         self._cur_deepcopy_obj_id = None
 
@@ -388,16 +364,12 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         #     print({k: id(v) for k, v in obj.items()})
 
         if key != id(self):
-            if type(obj) is tuple:
-                pass
             self.data[key] = obj
-            self._key_2_obj_id[key] = id(obj)
             if self._cur_deepcopy_obj_id is not None:
                 self._sub_obj_ids[self._cur_deepcopy_obj_id][key] = None
 
     def clear(self):
         super().clear()
-        self._key_2_obj_id.clear()
         self._keep_alive_dict.clear()
         self._sub_obj_ids.clear()
 
@@ -426,7 +398,7 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
             raise
 
     def _remove_deleted_objs(self, keys_to_delete: list[int]):
-        # print(f'_remove_deleted_objs({keys_to_delete})')
+        print(f'_remove_deleted_objs({keys_to_delete})')
         self_keys = tuple(self.keys())
 
         while True:
@@ -440,15 +412,15 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
                 if key not in self.data:
                     continue
 
-                obj = self.data[key]
+                # obj = self.data[key]
                 # print(f'obj: {obj}')
-                ref_count = sys.getrefcount(obj)
+                ref_count = sys.getrefcount(self.data[key])
                 # print(f'{obj} has {ref_count} references')
                 # for k, v in self.data.items():
                 #     print(f'{k}: {v}, id(val)={id(v)}')
                 # k = 0
                 # v = 0
-                ref_count_target = 3
+                ref_count_target = 2
                 # print(f'ref_count_target: {ref_count_target}')
                 # for i, ref in enumerate(gc.get_referrers(obj)):
                 #     try:
@@ -489,7 +461,7 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         # print(f'equal_obj: {equal_obj}')
         # print(f'memo_dict: {self}')
 
-        obj = self[key]
+        # obj = self[key]
         # print(f'Removing {obj}')
         # print(f'id(obj): {id(obj)}')
 
@@ -507,12 +479,10 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         # print(f'Now deleting {key}: {self[key]}')
         #
         # print(f'memo_dict: {self}')
-        # print(f'key_2_obj_id: {self._key_2_obj_id}')
         # print(f'keep_alive_dict: {self._keep_alive_dict}')
         # print(f'sub_obj_ids: {self._sub_obj_ids}')
 
         del self[key]
-        del self._key_2_obj_id[key]
         if key in self._keep_alive_dict:
             del self._keep_alive_dict[key]
         if key in self._sub_obj_ids:
@@ -521,7 +491,6 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         # print(f'Now deleted {key}')
         #
         # print(f'memo_dict: {self}')
-        # print(f'key_2_obj_id: {self._key_2_obj_id}')
         # print(f'keep_alive_dict: {self._keep_alive_dict}')
         # print(f'sub_obj_ids: {self._sub_obj_ids}')
 
