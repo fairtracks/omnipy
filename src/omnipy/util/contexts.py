@@ -2,8 +2,6 @@ from contextlib import AbstractContextManager, contextmanager
 from copy import deepcopy
 from typing import Callable, Iterator, ParamSpec
 
-from omnipy.util.helpers import all_equals
-
 # TODO: Consider refactoring as many as possible of the context managers (AbstractContextManager
 #       subclasses) to @contextmanager-decorated methods
 
@@ -95,6 +93,8 @@ class AttribHolder(AbstractContextManager):
 
     def __enter__(self):
         if hasattr(self._obj_or_cls, self._attr_name):
+            from omnipy.util.helpers import all_equals
+
             attr_value = getattr(self._obj_or_cls, self._attr_name)
 
             self._store_prev_attr = \
