@@ -3,7 +3,36 @@ from textwrap import dedent
 
 import pytest
 
-from omnipy.util.contexts import AttribHolder, LastErrorHolder, print_exception
+from omnipy.util.contexts import (AttribHolder,
+                                  LastErrorHolder,
+                                  print_exception,
+                                  setup_and_teardown_callback_context)
+
+
+def test_setup_and_teardown_callback_context() -> None:
+    state = []
+
+    def setup():
+        state.append(123)
+
+    def teardown():
+        assert state[0] == 123
+        del state[0]
+
+    with setup_and_teardown_callback_context(setup, teardown):
+        assert state == [123]
+
+    assert state == []
+
+    try:
+        with setup_and_teardown_callback_context(setup, teardown):
+            assert state == [123]
+
+            raise RuntimeError("Whoops! Something went wrong...")
+    except RuntimeError:
+        pass
+
+    assert state == []
 
 
 def test_capture_stdout_stderr(capsys: pytest.CaptureFixture) -> None:
