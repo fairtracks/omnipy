@@ -1,23 +1,33 @@
 from contextlib import AbstractContextManager, contextmanager
 from copy import deepcopy
-from typing import Callable, Iterator
+from typing import Callable, Iterator, ParamSpec
 
 from omnipy.util.helpers import all_equals
 
 # TODO: Consider refactoring as many as possible of the context managers (AbstractContextManager
 #       subclasses) to @contextmanager-decorated methods
 
+_SetupP = ParamSpec('_SetupP')
+_TeardownP = ParamSpec('_TeardownP')
+
 
 @contextmanager
 def setup_and_teardown_callback_context(
-    setup: Callable[[], None],
-    teardown: Callable[[], None],
+    *,
+    setup_func: Callable[_SetupP, None] | None = None,
+    setup_func_args: _SetupP.args = (),
+    setup_func_kwargs: _SetupP.kwargs = {},
+    teardown_func: Callable[_TeardownP, None] | None = None,
+    teardown_func_args: _TeardownP.args = (),
+    teardown_func_kwargs: _TeardownP.kwargs = {},
 ) -> Iterator[None]:
-    setup()
+    if setup_func is not None:
+        setup_func(*setup_func_args, **setup_func_kwargs)
     try:
         yield
     finally:
-        teardown()
+        if teardown_func is not None:
+            teardown_func(*teardown_func_args, **teardown_func_kwargs)
 
 
 class LastErrorHolder(AbstractContextManager):

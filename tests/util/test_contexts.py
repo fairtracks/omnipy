@@ -1,5 +1,6 @@
 import sys
 from textwrap import dedent
+from typing import Annotated, Callable, TypeAlias
 
 import pytest
 
@@ -8,29 +9,115 @@ from omnipy.util.contexts import (AttribHolder,
                                   print_exception,
                                   setup_and_teardown_callback_context)
 
+StateAndSetupTeardownFuncs: TypeAlias = tuple[list[int],
+                                              Callable[[int], None],
+                                              Callable[[int], None]]
 
-def test_setup_and_teardown_callback_context() -> None:
+
+@pytest.fixture
+def state_and_setup_teardown_funcs() -> StateAndSetupTeardownFuncs:
     state = []
+    default_num = 123
 
-    def setup():
-        state.append(123)
+    def setup(number: int = default_num):
+        state.append(number)
 
-    def teardown():
-        assert state[0] == 123
+    def teardown(number: int = default_num):
+        assert state[0] == number
         del state[0]
 
-    with setup_and_teardown_callback_context(setup, teardown):
+    return state, setup, teardown
+
+
+def test_setup_and_teardown_callback_context_no_args(
+        state_and_setup_teardown_funcs: Annotated[StateAndSetupTeardownFuncs,
+                                                  pytest.fixture]) -> None:
+    state, setup, teardown = state_and_setup_teardown_funcs
+
+    with setup_and_teardown_callback_context(
+            setup_func=setup,
+            teardown_func=teardown,
+    ):
         assert state == [123]
 
     assert state == []
 
-    try:
-        with setup_and_teardown_callback_context(setup, teardown):
-            assert state == [123]
 
+def test_setup_and_teardown_callback_context_with_exception(
+        state_and_setup_teardown_funcs: Annotated[StateAndSetupTeardownFuncs,
+                                                  pytest.fixture]) -> None:
+    state, setup, teardown = state_and_setup_teardown_funcs
+    try:
+        with setup_and_teardown_callback_context(
+                setup_func=setup,
+                teardown_func=teardown,
+        ):
+            assert state == [123]
             raise RuntimeError("Whoops! Something went wrong...")
     except RuntimeError:
         pass
+
+    assert state == []
+
+
+def test_setup_and_teardown_callback_context_args(
+        state_and_setup_teardown_funcs: Annotated[StateAndSetupTeardownFuncs,
+                                                  pytest.fixture]) -> None:
+    state, setup, teardown = state_and_setup_teardown_funcs
+
+    with setup_and_teardown_callback_context(
+            setup_func=setup,
+            setup_func_args=(234,),
+            teardown_func=teardown,
+            teardown_func_args=(234,),
+    ):
+        assert state == [234]
+
+    assert state == []
+
+
+def test_setup_and_teardown_callback_context_kwargs(
+        state_and_setup_teardown_funcs: Annotated[StateAndSetupTeardownFuncs,
+                                                  pytest.fixture]) -> None:
+    state, setup, teardown = state_and_setup_teardown_funcs
+
+    with setup_and_teardown_callback_context(
+            setup_func=setup,
+            setup_func_kwargs=dict(number=345),
+            teardown_func=teardown,
+            teardown_func_kwargs=dict(number=345),
+    ):
+        assert state == [345]
+
+    assert state == []
+
+
+def test_setup_and_teardown_callback_context_no_teardown_func(
+        state_and_setup_teardown_funcs: Annotated[StateAndSetupTeardownFuncs,
+                                                  pytest.fixture]) -> None:
+    state, setup, teardown = state_and_setup_teardown_funcs
+
+    with setup_and_teardown_callback_context(
+            setup_func=setup,
+            setup_func_args=(234,),
+    ):
+        assert state == [234]
+
+    assert state == [234]
+
+
+def test_setup_and_teardown_callback_context_no_setup_func(
+        state_and_setup_teardown_funcs: Annotated[StateAndSetupTeardownFuncs,
+                                                  pytest.fixture]) -> None:
+    state, setup, teardown = state_and_setup_teardown_funcs
+
+    state.append(234)
+
+    with setup_and_teardown_callback_context(
+            teardown_func=teardown,
+            teardown_func_args=(234,),
+    ):
+        assert state == [234]
 
     assert state == []
 
