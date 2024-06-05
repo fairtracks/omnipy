@@ -464,7 +464,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
     def validate_contents(self, restore_snapshot_if_interactive_and_invalid: bool = False) -> None:
-        self._validate_and_set_value(self.contents)
+        self._generic_validate_contents()
 
     def _validate_and_set_value(self, new_contents: object) -> None:
         old_contents_id = id(self.contents)
@@ -473,47 +473,65 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             if id(contents) != old_contents_id:
                 self.contents = contents
 
-        self._generic_validate_contents_from_value(
-            new_contents,
+        self._generic_validate_contents(
+            new_contents=new_contents,
             post_validation_func=_set_new_contents,
         )
 
-    def _generic_validate_contents_from_value(
+    def _generic_validate_contents(
         self,
-        value: object,
-        *args: _P.args,
+        /,
+        new_contents: object | UndefinedType = Undefined,
         pre_validation_func: Callable[_P, _ReturnT] | None = None,
-        post_validation_func: Callable[[_RootT], None]
-        | None = None,
-        **kwargs: _P.kwargs,
+        pre_validation_func_args: _P.args = (),
+        pre_validation_func_kwargs: _P.kwargs = {},
+        post_validation_func: Callable[[_RootT], None] | None = None,
     ) -> _ReturnT | None:
         return_val: _ReturnT | None = None
         # if restore_snapshot_if_interactive_and_invalid \
 
+        needs_pre_validation = False
+        old_contents_id = id(self.contents)
+
         if self.config.interactive_mode:
-            if not self.has_snapshot():
-                self._validate_contents_from_value(value)  # self.contents instead of value?
+            needs_pre_validation = (not self.has_snapshot()
+                                    or not self.contents_validated_according_to_snapshot())
+            if needs_pre_validation:
+                validated_content = self._validate_contents_from_value(self.contents)
+                if id(validated_content) != id(self.contents):
+                    self.contents = validated_content
                 self._take_snapshot_of_validated_contents()
             reset_solution = AttribHolder(self, 'contents', self.snapshot, reset_to_other=True)
         else:
             reset_solution = nothing()
         with (reset_solution):
             if pre_validation_func:
-                return_val = pre_validation_func(*args, **kwargs)
+                return_val = pre_validation_func(*pre_validation_func_args,
+                                                 **pre_validation_func_kwargs)
 
             # if self.config.interactive_mode and self.has_snapshot() \
             #
-            # Following is incorrect, must compare value with snapshot, as self.contents is not
+            # Following is incorrect, must compare new_contents with snapshot, as self.contents is not
             # yet set
             #         and self.contents_validated_according_to_snapshot():
             #     return return_val
 
-            validated_content = self._validate_contents_from_value(value)
+            if new_contents is Undefined and pre_validation_func:
+                new_contents = self.contents
 
-            if post_validation_func:
-                post_validation_func(validated_content)
+            if new_contents is not Undefined:
+                validated_content = self._validate_contents_from_value(new_contents)
+            else:
+                validated_content = new_contents
+        del reset_solution
 
+        if post_validation_func:
+            post_validation_func(validated_content)
+
+        if new_contents is not Undefined:
+            del new_contents
             self._take_snapshot_of_validated_contents()
+
         return return_val
 
     def _validate_contents_from_value(
@@ -784,12 +802,11 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             def _set_new_contents(contents: object) -> None:
                 self.contents = contents
 
-            ret = self._generic_validate_contents_from_value(
-                self.contents,
-                *args,
+            ret = self._generic_validate_contents(
                 pre_validation_func=_call_special_method,
-                post_validation_func=_set_new_contents,
-                **kwargs)
+                pre_validation_func_args=args,
+                pre_validation_func_kwargs=kwargs,
+                post_validation_func=_set_new_contents)
 
         elif name == '__iter__' and isinstance(self, Iterable):
             _per_element_model_generator = self._get_per_element_model_generator(
@@ -910,6 +927,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         contents_attr = self._getattr_from_contents_obj(attr)
 
         if self.config.interactive_mode and not self._is_non_omnipy_pydantic_model():
+            ## REVISE!
             contents_holder_context = AttribHolder(self, 'contents', copy_attr=True)
 
             contents_cls_attr = self._getattr_from_contents_cls(attr)

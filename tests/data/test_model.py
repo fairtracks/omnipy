@@ -1146,6 +1146,7 @@ def test_import_export_methods() -> None:
 
 
 def test_model_of_pydantic_model() -> None:
+    Model.data_class_creator.snapshot_holder.clear()
     assert len(Model.data_class_creator.snapshot_holder._deepcopy_memo) == 0
 
     model = MyPydanticModel({'@id': 1, 'children': [{'@id': 10, 'value': 1.23}]})
@@ -1224,6 +1225,8 @@ def _assert_model_or_val(dyn_convert: bool,
 def test_weakly_referenced_snapshot_after_validation(runtime: Annotated[IsRuntime, pytest.fixture],
                                                      interactive_mode: bool) -> None:
     runtime.config.data.interactive_mode = interactive_mode
+    Model.data_class_creator.snapshot_holder.clear()
+    assert len(Model.data_class_creator.snapshot_holder._deepcopy_memo) == 0
 
     model = Model[list[int]]([123])
     snapshot_holder = model.snapshot_holder
