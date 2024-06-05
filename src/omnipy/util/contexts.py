@@ -1,10 +1,23 @@
 from contextlib import AbstractContextManager, contextmanager
 from copy import deepcopy
+from typing import Callable, Iterator
 
 from omnipy.util.helpers import all_equals
 
 # TODO: Consider refactoring as many as possible of the context managers (AbstractContextManager
 #       subclasses) to @contextmanager-decorated methods
+
+
+@contextmanager
+def setup_and_teardown_callback_context(
+    setup: Callable[[], None],
+    teardown: Callable[[], None],
+) -> Iterator[None]:
+    setup()
+    try:
+        yield
+    finally:
+        teardown()
 
 
 class LastErrorHolder(AbstractContextManager):
