@@ -48,6 +48,7 @@ from typing_inspect import get_generic_bases, is_generic_type
 
 from omnipy.api.protocols.private.util import HasContents, IsSnapshotWrapper
 from omnipy.api.typedefs import LocaleType, TypeForm
+from omnipy.util.contexts import setup_and_teardown_callback_context
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
 _ObjT = TypeVar('_ObjT', bound=object)
@@ -336,10 +337,11 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         # Using dict for _sub_obj_ids contents instead of set to keep the order of insertion
         self._sub_obj_ids: defaultdict[int, dict[int, None]] = defaultdict(dict)
 
-    def start_deepcopy(self, obj):
-
+    def setup_deepcopy(self, obj):
         self._cur_deepcopy_obj_id = id(obj)
-        self._cur_keep_alive_list = []
+        # self._cur_keep_alive_list = []
+        assert len(self._cur_keep_alive_list) == 0
+
         if self._cur_deepcopy_obj_id in self._sub_obj_ids:
             for sub_obj_id in self._sub_obj_ids[self._cur_deepcopy_obj_id]:
                 if sub_obj_id in self._keep_alive_dict:
@@ -348,12 +350,21 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
 
         self._sub_obj_ids[self._cur_deepcopy_obj_id].clear()
 
-    def end_deepcopy(self, obj):
+    def keep_alive_after_deepcopy(self):
         while len(self._cur_keep_alive_list) > 0:
             keep_alive_obj = self._cur_keep_alive_list.pop(0)
-            # if not isinstance(keep_alive_obj, HasContents):
             self._keep_alive_dict[id(keep_alive_obj)] = keep_alive_obj
+
+    def teardown_deepcopy(self):
+        for possibly_added_obj in self._sub_obj_ids[self._cur_deepcopy_obj_id]:
+            if possibly_added_obj in self and possibly_added_obj not in self._keep_alive_dict:
+                del self[possibly_added_obj]
+
+        if self._cur_deepcopy_obj_id not in self._keep_alive_dict:
+            del self._sub_obj_ids[self._cur_deepcopy_obj_id]
+
         self._cur_deepcopy_obj_id = None
+        self._cur_keep_alive_list = []
 
     def __setitem__(self, key, obj):
         # try:
@@ -596,11 +607,15 @@ class SnapshotHolder(WeakKeyRefContainer[_HasContentsT,
 
     def take_snapshot(self, obj: _HasContentsT) -> None:
         try:
-            self._deepcopy_memo.start_deepcopy(obj.contents)
-            obj_copy: _ContentsT = deepcopy(obj.contents,
-                                            self._deepcopy_memo)  # type: ignore[arg-type]
-            self._deepcopy_memo.end_deepcopy(obj.contents)
-            # obj_copy: _ContentsT = deepcopy(obj.contents)  # type: ignore[arg-type]
+            with setup_and_teardown_callback_context(
+                    setup_func=self._deepcopy_memo.setup_deepcopy,
+                    setup_func_args=(obj.contents,),
+                    teardown_func=self._deepcopy_memo.teardown_deepcopy,
+            ):
+                obj_copy: _ContentsT = deepcopy(obj.contents,
+                                                self._deepcopy_memo)  # type: ignore[arg-type]
+                self._deepcopy_memo.keep_alive_after_deepcopy()
+                # obj_copy: _ContentsT = deepcopy(obj.contents)  # type: ignore[arg-type]
         except (TypeError, ValueError, ValidationError) as exp:
             print(exp)
             obj_copy = copy(obj.contents)

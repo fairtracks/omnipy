@@ -490,6 +490,13 @@ def _assert_values_in_memo(memo: RefCountMemoDict,
     assert len(memo) == total_len
 
 
+def _deepcopy_obj_with_memodict(ref_count_memo_dict: RefCountMemoDict, tmp_obj: object):
+    ref_count_memo_dict.setup_deepcopy(tmp_obj)
+    deepcopy(tmp_obj, ref_count_memo_dict)  # type: ignore[arg-type]
+    ref_count_memo_dict.keep_alive_after_deepcopy()
+    ref_count_memo_dict.teardown_deepcopy()
+
+
 def test_ref_count_memo_dict() -> None:
     # Note: WeakValueDictionary cannot be used here, as most basic types do not support weak refs.
 
@@ -528,9 +535,7 @@ def test_ref_count_memo_dict() -> None:
             print(f'a_list refcount: {sys.getrefcount(a_list)}')
 
             for obj in (a_list, c_set, b_tuple, d_dict, e_obj.contents, f_obj.contents):
-                ref_count_memo_dict.start_deepcopy(obj)
-                deepcopy(obj, ref_count_memo_dict)
-                ref_count_memo_dict.end_deepcopy(obj)
+                _deepcopy_obj_with_memodict(ref_count_memo_dict, obj)
 
             id_a = id(a_list)
             id_b = id(b_tuple)
@@ -715,9 +720,7 @@ def test_ref_count_memo_dict_deepcopy_keep_alive() -> None:
             for start_idx in range(len(all_basic_objs)):
                 tmp_obj = all_basic_objs[start_idx:]
 
-                ref_count_memo_dict.start_deepcopy(tmp_obj)
-                deepcopy(tmp_obj, ref_count_memo_dict)  # type: ignore[arg-type]
-                ref_count_memo_dict.end_deepcopy(tmp_obj)
+                _deepcopy_obj_with_memodict(ref_count_memo_dict, tmp_obj)
 
                 tmp_obj_ids.append(id(tmp_obj))
                 # alive.append(tmp_obj)
@@ -745,16 +748,13 @@ def test_ref_count_memo_dict_repeated_deepcopy_same_obj() -> None:
     b_list = [2, 4, 6]
     c_parent_list = [a_list, b_list]
 
-    ref_count_memo_dict.start_deepcopy(c_parent_list)
-    deepcopy(c_parent_list, ref_count_memo_dict)  # type: ignore[arg-type]
-    ref_count_memo_dict.end_deepcopy(c_parent_list)
+    _deepcopy_obj_with_memodict(ref_count_memo_dict, c_parent_list)
     # assert c_copy_1 == c_parent_list
 
     del c_parent_list[0]
 
-    ref_count_memo_dict.start_deepcopy(c_parent_list)
-    deepcopy(c_parent_list, ref_count_memo_dict)  # type: ignore[arg-type]
-    ref_count_memo_dict.end_deepcopy(c_parent_list)
+    _deepcopy_obj_with_memodict(ref_count_memo_dict, c_parent_list)
+
     # assert c_copy_2 == c_parent_list
 
     all_ids = (id(a_list), id(b_list), id(c_parent_list))
