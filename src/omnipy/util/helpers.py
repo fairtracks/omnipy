@@ -423,16 +423,16 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
                 # v = 0
                 ref_count_target = 2
                 # print(f'ref_count_target: {ref_count_target}')
-                for i, ref in enumerate(gc.get_referrers(self.data[key])):
-                    try:
-                        print(f'Reference {i}')
-                        print('------------')
-                        print(f'{type(ref)}: {ref}')
-                        print(*gc.get_referrers(ref))
-                    except Exception as e:
-                        print(f'Error: {repr(e)}')
-                        pass
-                del ref
+                # for i, ref in enumerate(gc.get_referrers(self.data[key])):
+                #     try:
+                #         print(f'Reference {i}')
+                #         print('------------')
+                #         print(f'{type(ref)}: {ref}')
+                #         print(*gc.get_referrers(ref))
+                #     except Exception as e:
+                #         print(f'Error: {repr(e)}')
+                #         pass
+                # del ref
                 # loc = locals()
                 # print(f'locals(): {loc}')
                 # del loc
