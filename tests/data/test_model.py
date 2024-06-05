@@ -1,3 +1,4 @@
+from copy import copy
 import gc
 from math import floor
 import os
@@ -1145,6 +1146,8 @@ def test_import_export_methods() -> None:
 
 
 def test_model_of_pydantic_model() -> None:
+    assert len(Model.data_class_creator.snapshot_holder._deepcopy_memo) == 0
+
     model = MyPydanticModel({'@id': 1, 'children': [{'@id': 10, 'value': 1.23}]})
 
     assert model.id == 1
@@ -1159,7 +1162,7 @@ def test_model_of_pydantic_model() -> None:
     model.children[0].value = '1.23'
     assert model.children[0].value == '1.23'
 
-    model.children_omnipy = model.children
+    model.children_omnipy = copy(model.children)
     model.children_omnipy[0].id = '11'
     assert model.children_omnipy[0].id == 11
 
@@ -1179,6 +1182,20 @@ def test_model_of_pydantic_model() -> None:
             '@id': 11, 'value': 1.23
         }]
     }
+
+    del model
+    gc.collect()
+    Model.data_class_creator.snapshot_holder.delete_scheduled()
+
+    assert len(Model.data_class_creator.snapshot_holder._deepcopy_memo) == 0
+
+
+def _assert_no_snapshot(model: Model):
+    assert model.has_snapshot() is False
+    with pytest.raises(AssertionError):
+        assert model.snapshot
+    with pytest.raises(AssertionError):
+        model.contents_validated_according_to_snapshot()
 
 
 def _assert_model(model: object, target_type: TypeForm, contents: object):
@@ -1201,6 +1218,130 @@ def _assert_model_or_val(dyn_convert: bool,
         _assert_model(model_or_val, target_type, contents)
     else:
         _assert_val(model_or_val, target_type, contents)
+
+
+@pytest.mark.parametrize('interactive_mode', [False, True])
+def test_weakly_referenced_snapshot_after_validation(runtime: Annotated[IsRuntime, pytest.fixture],
+                                                     interactive_mode: bool) -> None:
+    runtime.config.data.interactive_mode = interactive_mode
+
+    model = Model[list[int]]([123])
+    snapshot_holder = model.snapshot_holder
+
+    _assert_no_snapshot(model)
+    assert len(model.snapshot_holder) == 0
+
+    model.validate_contents()
+
+    if interactive_mode:
+        assert len(snapshot_holder) == 1
+        assert model.has_snapshot() is True
+        assert model.snapshot == model.contents
+        assert model.snapshot is not model.contents
+    else:
+        assert len(snapshot_holder) == 0
+        _assert_no_snapshot(model)
+
+    del model
+
+    assert len(snapshot_holder) == 0
+
+
+@pytest.mark.parametrize('interactive_mode', [False, True])
+def test_weakly_referenced_snapshot_deepcopy_memo_entry(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    interactive_mode: bool,
+) -> None:
+    runtime.config.data.interactive_mode = interactive_mode
+
+    model = Model[list[int]]([123])
+    snapshot_holder = model.snapshot_holder
+    deepcopy_memo = snapshot_holder._deepcopy_memo
+
+    assert len(deepcopy_memo) == 0
+
+    model.validate_contents()
+
+    if interactive_mode:
+        assert len(deepcopy_memo) == 1
+        entry_memo_key = tuple(deepcopy_memo.keys())[0]
+        assert deepcopy_memo[entry_memo_key] == model.contents
+        assert deepcopy_memo[entry_memo_key] is not model.contents
+        assert deepcopy_memo[entry_memo_key] == model.snapshot
+        assert deepcopy_memo[entry_memo_key] is model.snapshot
+    else:
+        assert len(deepcopy_memo) == 0
+
+    del model
+
+    assert len(deepcopy_memo) == (1 if interactive_mode else 0)
+    snapshot_holder.delete_scheduled()
+    assert len(snapshot_holder) == 0
+
+
+@pytest.mark.parametrize('interactive_mode', [False, True])
+def test_snapshot_deleted_with_new_content(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    interactive_mode: bool,
+) -> None:
+    runtime.config.data.interactive_mode = interactive_mode
+
+    model = Model[list[int]]([123])
+    model.validate_contents()
+
+    snapshot_holder = model.snapshot_holder
+
+    if interactive_mode:
+        assert len(snapshot_holder) == 1
+        old_snapshot_id = id(model.snapshot)
+
+    assert len(snapshot_holder) == (1 if interactive_mode else 0)
+
+    model.contents = [234]
+    model.validate_contents()
+
+    if interactive_mode:
+        assert len(snapshot_holder) == 1
+        assert id(model.snapshot) != old_snapshot_id
+    else:
+        assert len(snapshot_holder) == 0
+
+
+@pytest.mark.parametrize('interactive_mode', [False, True])
+def test_snapshot_deepcopy_memo_entry_deleted_with_new_content(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    interactive_mode: bool,
+) -> None:
+    runtime.config.data.interactive_mode = interactive_mode
+
+    model = Model[list[int]]([123])
+
+    deepcopy_memo = model.snapshot_holder._deepcopy_memo
+    deepcopy_memo.clear()
+    model.snapshot_holder.clear()
+
+    model.validate_contents()
+
+    # assert len(deepcopy_memo) == 0
+
+    if interactive_mode:
+        assert len(deepcopy_memo) == 1
+        old_entry_memo_key = tuple(deepcopy_memo.keys())[0]
+        old_deepcopy_memo_entry_id = id(deepcopy_memo[old_entry_memo_key])
+    else:
+        assert len(deepcopy_memo) == 0
+
+    model.contents = [234]
+    model.validate_contents()
+
+    if interactive_mode:
+        assert len(deepcopy_memo) == 1
+        entry_memo_key = tuple(deepcopy_memo.keys())[0]
+        assert entry_memo_key != old_entry_memo_key
+        deepcopy_memo_entry_id = id(deepcopy_memo[entry_memo_key])
+        assert deepcopy_memo_entry_id != old_deepcopy_memo_entry_id
+    else:
+        assert len(deepcopy_memo) == 0
 
 
 def test_snapshot_deepcopy_reuse_objects(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
@@ -1274,14 +1415,6 @@ def test_snapshot_deepcopy_reuse_objects(runtime: Annotated[IsRuntime, pytest.fi
 
     assert len(snapshot_holder) == 0
     assert len(snapshot_holder._deepcopy_memo) == 0  # type: ignore[attr-defined]
-
-
-def _assert_no_snapshot(model: Model):
-    assert model.has_snapshot() is False
-    with pytest.raises(AssertionError):
-        assert model.snapshot
-    with pytest.raises(AssertionError):
-        model.contents_validated_according_to_snapshot()
 
 
 def test_lazy_snapshot_not_triggered_by_set_contents(
@@ -1500,6 +1633,25 @@ def test_snapshot_with_mimic_special_method_and_interactive_mode(
 
     fourth_snapshot_id = id(model.snapshot)
     assert fourth_snapshot_id != third_snapshot_id
+
+
+@pytest.mark.parametrize('interactive_mode', [False, True])
+def test_repeated_validation_should_not_change_contents_or_snapshot(
+        runtime: Annotated[IsRuntime, pytest.fixture], interactive_mode: bool) -> None:
+    runtime.config.data.interactive_mode = interactive_mode
+
+    model = Model[list[int]]([123])
+
+    id_contents = None
+    id_snapshot = None
+
+    for i in range(2):
+        model.validate_contents()
+
+        if id_contents is not None:
+            assert id(model.contents) == id_contents
+        if interactive_mode and id_snapshot is not None:
+            assert id(model.snapshot) == id_snapshot
 
 
 def test_mimic_special_method_no_interactive_mode(

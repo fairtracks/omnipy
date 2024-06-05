@@ -337,6 +337,7 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         self._sub_obj_ids: defaultdict[int, dict[int, None]] = defaultdict(dict)
 
     def start_deepcopy(self, obj):
+
         self._cur_deepcopy_obj_id = id(obj)
         self._cur_keep_alive_list = []
         if self._cur_deepcopy_obj_id in self._sub_obj_ids:
@@ -398,7 +399,7 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
             raise
 
     def _remove_deleted_objs(self, keys_to_delete: list[int]):
-        print(f'_remove_deleted_objs({keys_to_delete})')
+        # print(f'_remove_deleted_objs({keys_to_delete})')
         self_keys = tuple(self.keys())
 
         while True:
@@ -415,14 +416,14 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
                 # obj = self.data[key]
                 # print(f'obj: {obj}')
                 ref_count = sys.getrefcount(self.data[key])
-                # print(f'{obj} has {ref_count} references')
+                # print(f'{self.data[key]} has {ref_count} references')
                 # for k, v in self.data.items():
                 #     print(f'{k}: {v}, id(val)={id(v)}')
                 # k = 0
                 # v = 0
                 ref_count_target = 2
                 # print(f'ref_count_target: {ref_count_target}')
-                # for i, ref in enumerate(gc.get_referrers(obj)):
+                # for i, ref in enumerate(gc.get_referrers(self.data[key])):
                 #     try:
                 #         print(f'Reference {i}')
                 #         print('------------')
@@ -569,7 +570,8 @@ class SnapshotHolder(WeakKeyRefContainer[_HasContentsT,
         raise TypeError(f"'{self.__class__.__name__}' object does not support item assignment")
 
     def schedule_for_deletion(self, key: int) -> None:
-        self._keys_for_deleted_objs.append(key)
+        if key in self._deepcopy_memo:
+            self._keys_for_deleted_objs.append(key)
 
     def delete_scheduled(self) -> None:
         keys_for_deleted_objs = obj_getattr(self, '_keys_for_deleted_objs')
@@ -587,7 +589,6 @@ class SnapshotHolder(WeakKeyRefContainer[_HasContentsT,
 
     def take_snapshot_setup(self) -> None:
         gc.disable()
-        self.delete_scheduled()
 
     def take_snapshot_cleanup(self) -> None:
         self.delete_scheduled()

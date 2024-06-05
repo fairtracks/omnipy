@@ -20,6 +20,7 @@ from typing import (Annotated,
                     Hashable,
                     Literal,
                     Optional,
+                    ParamSpec,
                     SupportsIndex,
                     TypeVar,
                     Union)
@@ -69,6 +70,8 @@ _IdxT = TypeVar('_IdxT', bound=SupportsIndex)
 _RootT = TypeVar('_RootT', bound=object | None)
 _ObjT = TypeVar('_ObjT', bound=object)
 _ContentsT = TypeVar("_ContentsT", bound=object)
+
+_P = ParamSpec('_P')
 
 ROOT_KEY = '__root__'
 
@@ -461,23 +464,62 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
     def validate_contents(self, restore_snapshot_if_interactive_and_invalid: bool = False) -> None:
-        self._validate_and_set_value(
-            self.contents,
-            restore_snapshot_if_interactive_and_invalid=restore_snapshot_if_interactive_and_invalid)
+        self._validate_and_set_value(self.contents)
 
-    def _validate_and_set_value(self,
-                                new_contents: object,
-                                restore_snapshot_if_interactive_and_invalid: bool = False) -> None:
-        if restore_snapshot_if_interactive_and_invalid \
-                and self.config.interactive_mode:
+    def _validate_and_set_value(self, new_contents: object) -> None:
+        old_contents_id = id(self.contents)
+
+        def _set_new_contents(contents: object) -> None:
+            if id(contents) != old_contents_id:
+                self.contents = contents
+
+        self._generic_validate_contents_from_value(
+            new_contents,
+            post_validation_func=_set_new_contents,
+        )
+
+    def _generic_validate_contents_from_value(
+        self,
+        value: object,
+        *args: _P.args,
+        pre_validation_func: Callable[_P, _ReturnT] | None = None,
+        post_validation_func: Callable[[_RootT], None]
+        | None = None,
+        **kwargs: _P.kwargs,
+    ) -> _ReturnT | None:
+        return_val: _ReturnT | None = None
+        # if restore_snapshot_if_interactive_and_invalid \
+
+        if self.config.interactive_mode:
+            if not self.has_snapshot():
+                self._validate_contents_from_value(value)  # self.contents instead of value?
+                self._take_snapshot_of_validated_contents()
             reset_solution = AttribHolder(self, 'contents', self.snapshot, reset_to_other=True)
         else:
             reset_solution = nothing()
-        with reset_solution:
-            self.contents = self._validate_contents_from_value(new_contents)
-        self._take_snapshot_of_validated_contents()
+        with (reset_solution):
+            if pre_validation_func:
+                return_val = pre_validation_func(*args, **kwargs)
 
-    def _validate_contents_from_value(self, value: object) -> _RootT:
+            # if self.config.interactive_mode and self.has_snapshot() \
+            #
+            # Following is incorrect, must compare value with snapshot, as self.contents is not
+            # yet set
+            #         and self.contents_validated_according_to_snapshot():
+            #     return return_val
+
+            validated_content = self._validate_contents_from_value(value)
+
+            if post_validation_func:
+                post_validation_func(validated_content)
+
+            self._take_snapshot_of_validated_contents()
+        return return_val
+
+    def _validate_contents_from_value(
+        self,
+        value: object,
+    ) -> _RootT:
         if is_model_instance(value):
             value = cast(Model[_RootT], value).to_data()
         elif is_non_omnipy_pydantic_model(value):
@@ -710,7 +752,14 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         else:
             if attr in ['contents']:
                 contents_prop = getattr(self.__class__, attr)
-                contents_prop.__set__(self, value)
+                old_contents_id = id(contents_prop.__get__(self))
+                is_new_contents = id(value) != old_contents_id
+
+                if is_new_contents:
+                    contents_prop.__set__(self, value)
+
+                    if self.config.interactive_mode and self.has_snapshot():
+                        self.snapshot_holder.schedule_for_deletion(old_contents_id)
             else:
                 if self._is_non_omnipy_pydantic_model():
                     self._special_method(
@@ -725,14 +774,22 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             self, name: str, info: MethodInfo, *args: object, **kwargs: object) -> object:
 
         if info.state_changing and self.config.interactive_mode:
-            if not self.contents_validated_according_to_snapshot():
-                self.validate_contents(restore_snapshot_if_interactive_and_invalid=True)
+            # if not self.has_snapshot() or not self.contents_validated_according_to_snapshot():
+            #     # self.validate_contents(restore_snapshot_if_interactive_and_invalid=True)
+            #     self.validate_contents()
 
-            reset_contents_to_prev = AttribHolder(self, 'contents', copy_attr=True)
-            with reset_contents_to_prev:
-                ret = self._call_special_method(name, *args, **kwargs)
-                if self.snapshot_differs_from_model(self):
-                    self.validate_contents()
+            def _call_special_method(*inner_args: object, **inner_kwargs: object) -> object:
+                return self._call_special_method(name, *inner_args, **inner_kwargs)
+
+            def _set_new_contents(contents: object) -> None:
+                self.contents = contents
+
+            ret = self._generic_validate_contents_from_value(
+                self.contents,
+                *args,
+                pre_validation_func=_call_special_method,
+                post_validation_func=_set_new_contents,
+                **kwargs)
 
         elif name == '__iter__' and isinstance(self, Iterable):
             _per_element_model_generator = self._get_per_element_model_generator(
@@ -745,7 +802,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             if info.state_changing:
                 self.validate_contents()
 
-        if info.maybe_returns_same_type:
+        if id(ret) == id(self.contents):  # for e.g. in-place operations
+            ret = self
+        elif info.maybe_returns_same_type:
             level_up = False
             if name == '__getitem__':
                 assert len(args) == 1
