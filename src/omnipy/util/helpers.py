@@ -337,6 +337,28 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         # Using dict for _sub_obj_ids contents instead of set to keep the order of insertion
         self._sub_obj_ids: defaultdict[int, dict[int, None]] = defaultdict(dict)
 
+    def all_is_empty(self) -> bool:
+
+        _all_is_empty = (
+            len(self) == 0 and len(self._keep_alive_dict) == 0 and len(self._sub_obj_ids) == 0
+            and self._cur_deepcopy_obj_id is None and len(self._cur_keep_alive_list) == 0)
+
+        print()
+        print(f'RefCountMemoDict.all_is_empty(): {_all_is_empty}')
+        print('-------------------------')
+        print(f'len(self): {len(self)}')
+        print(f'len(self._keep_alive_dict): {len(self._keep_alive_dict)}')
+        print(f'len(self._sub_obj_ids): {len(self._sub_obj_ids)}')
+        print(f'self._cur_deepcopy_obj_id: {self._cur_deepcopy_obj_id}')
+        print(f'len(self._cur_keep_alive_list): {len(self._cur_keep_alive_list)}')
+
+        return _all_is_empty
+
+    def clear(self):
+        super().clear()
+        self._keep_alive_dict.clear()
+        self._sub_obj_ids.clear()
+
     def setup_deepcopy(self, obj):
         self._cur_deepcopy_obj_id = id(obj)
         # self._cur_keep_alive_list = []
@@ -354,6 +376,14 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         while len(self._cur_keep_alive_list) > 0:
             keep_alive_obj = self._cur_keep_alive_list.pop(0)
             self._keep_alive_dict[id(keep_alive_obj)] = keep_alive_obj
+
+    @staticmethod
+    def _is_atomic(obj: object) -> bool:
+        from copy import _deepcopy_atomic, _deepcopy_dispatch
+        try:
+            return type(obj) is tuple or _deepcopy_dispatch[type(obj)] is _deepcopy_atomic
+        except KeyError:
+            return False
 
     def teardown_deepcopy(self):
         for possibly_added_obj in self._sub_obj_ids[self._cur_deepcopy_obj_id]:
@@ -375,15 +405,10 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         # if isinstance(obj, dict):
         #     print({k: id(v) for k, v in obj.items()})
 
-        if key != id(self):
+        if key != id(self) and not self._is_atomic(obj):
             self.data[key] = obj
             if self._cur_deepcopy_obj_id is not None:
                 self._sub_obj_ids[self._cur_deepcopy_obj_id][key] = None
-
-    def clear(self):
-        super().clear()
-        self._keep_alive_dict.clear()
-        self._sub_obj_ids.clear()
 
     def __getitem__(self, key: int) -> _ObjT | list[_ObjT]:  # type: ignore[override]
         if key == id(self):
@@ -397,24 +422,30 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
 
     def recursively_remove_deleted_objs(
         self,
-        *keys: int,
+        keys_for_deleted_objs: list[int],
         known_references_callback: Callable[[int], int] | None = None,
     ):
         # print(f'Recursively removing deleted objects for {keys}...')
 
         try:
-            self._remove_deleted_objs([key for key in keys if key in self])
+            deleted_keys: list[int] = []
+            self._remove_deleted_objs([key for key in keys_for_deleted_objs if key in self],
+                                      deleted_keys)
         except Exception as e:
             print(f'Error in recursively_remove_deleted_objs: {repr(e)}')
             traceback.print_exc()
             raise
 
-    def _remove_deleted_objs(self, keys_to_delete: list[int]):
+        for deleted_key in deleted_keys:
+            if deleted_key in keys_for_deleted_objs:
+                keys_for_deleted_objs.remove(deleted_key)
+
+    def _remove_deleted_objs(self, keys_to_delete: list[int], deleted_keys: list[int]) -> list[int]:
         # print(f'_remove_deleted_objs({keys_to_delete})')
         self_keys = tuple(self.keys())
 
         while True:
-            any_keys_deleted = False
+            any_keys_deleted_this_iteration = False
             retry_keys = []
             while len(keys_to_delete) > 0:
                 # print(f'len(keys_to_delete): {len(keys_to_delete)}')
@@ -451,14 +482,17 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
                 if ref_count <= ref_count_target:
                     key_idx = self_keys.index(key)
                     keys_to_delete = self._remove_obj(key, key_idx, self_keys, keys_to_delete)
-                    any_keys_deleted = True
+                    any_keys_deleted_this_iteration = True
+                    deleted_keys.append(key)
                 else:
                     retry_keys.append(key)
 
-            if any_keys_deleted:
+            if any_keys_deleted_this_iteration:
                 keys_to_delete = [key for key in retry_keys if key in self]
             else:
                 break
+
+        return deleted_keys
 
     def _remove_obj(self,
                     key: int,
@@ -580,6 +614,27 @@ class SnapshotHolder(WeakKeyRefContainer[_HasContentsT,
                                                                        _ContentsT]) -> None:
         raise TypeError(f"'{self.__class__.__name__}' object does not support item assignment")
 
+    def all_is_empty(self) -> bool:
+        _deepcopy_memo_all_is_empty = self._deepcopy_memo.all_is_empty()
+
+        _all_is_empty = (
+            len(self) == 0 and len(self._keys_for_deleted_objs) == 0
+            and _deepcopy_memo_all_is_empty)
+
+        print()
+        print(f'SnapshotHolder.all_is_empty(): {_all_is_empty}')
+        print('-------------------------')
+        print(f'len(self): {len(self)}')
+        print(f'len(self._keys_for_deleted_objs): {len(self._keys_for_deleted_objs)}')
+        print(f'self._deepcopy_memo.all_is_empty(): {_deepcopy_memo_all_is_empty}')
+
+        return _all_is_empty
+
+    def clear(self):
+        self._keys_for_deleted_objs = []
+        self._deepcopy_memo.clear()
+        super().clear()
+
     def schedule_for_deletion(self, key: int) -> None:
         if key in self._deepcopy_memo:
             self._keys_for_deleted_objs.append(key)
@@ -591,12 +646,7 @@ class SnapshotHolder(WeakKeyRefContainer[_HasContentsT,
             #     f"Deleting scheduled {len(obj_getattr(self, '_keys_for_deleted_objs'))} objects...")
             obj_setattr(self, '_keys_for_deleted_objs', [])
             deepcopy_memo = obj_getattr(self, '_deepcopy_memo')
-            deepcopy_memo.recursively_remove_deleted_objs(*keys_for_deleted_objs)
-
-    def clear(self):
-        self._keys_for_deleted_objs = []
-        self._deepcopy_memo.clear()
-        super().clear()
+            deepcopy_memo.recursively_remove_deleted_objs(keys_for_deleted_objs)
 
     def take_snapshot_setup(self) -> None:
         gc.disable()

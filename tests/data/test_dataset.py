@@ -779,6 +779,9 @@ def test_complex_models():
       }
     }''')  # noqa: Q001
 
+    dataset.snapshot_holder.delete_scheduled()
+    pass
+
 
 def test_dataset_model_class():
     assert Dataset[Model[int]]().get_model_class() == Model[int]

@@ -69,13 +69,16 @@ class IsSnapshotHolder(IsWeakKeyRefContainer[_HasContentsT,
                                              IsSnapshotWrapper[_HasContentsT, _ContentsT]],
                        Protocol[_HasContentsT, _ContentsT]):
     """"""
+    def is_empty(self) -> bool:
+        ...
+
+    def clear(self) -> None:
+        ...
+
     def schedule_for_deletion(self, key: int) -> None:
         ...
 
     def delete_scheduled(self) -> None:
-        ...
-
-    def clear(self) -> None:
         ...
 
     def take_snapshot_setup(self) -> None:
