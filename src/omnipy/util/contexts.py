@@ -17,6 +17,9 @@ def setup_and_teardown_callback_context(
     setup_func: Callable[_SetupP, None] | None = None,
     setup_func_args: _SetupP.args = (),
     setup_func_kwargs: _SetupP.kwargs = {},
+    exception_func: Callable[_TeardownP, None] | None = None,
+    exception_func_args: _TeardownP.args = (),
+    exception_func_kwargs: _TeardownP.kwargs = {},
     teardown_func: Callable[_TeardownP, None] | None = None,
     teardown_func_args: _TeardownP.args = (),
     teardown_func_kwargs: _TeardownP.kwargs = {},
@@ -25,6 +28,10 @@ def setup_and_teardown_callback_context(
         setup_func(*setup_func_args, **setup_func_kwargs)
     try:
         yield
+    except Exception:
+        if exception_func is not None:
+            exception_func(*exception_func_args, **exception_func_kwargs)
+        raise
     finally:
         if teardown_func is not None:
             teardown_func(*teardown_func_args, **teardown_func_kwargs)
