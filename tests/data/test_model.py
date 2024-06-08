@@ -364,7 +364,7 @@ def test_load_inconvertible_data() -> None:
 
     gc.collect()
     snapshot_holder = Model.data_class_creator.snapshot_holder
-    assert snapshot_holder.all_is_empty()
+    assert snapshot_holder.all_are_empty()
 
 
 def test_load_inconvertible_data_strict_type() -> None:
@@ -2838,7 +2838,7 @@ def test_list_of_parametrized_model() -> None:
 
     gc.collect()
     sh.delete_scheduled_deepcopy_content_ids()
-    assert sh.all_is_empty()
+    assert sh.all_are_empty()
 
 
 def test_list_of_parametrized_model_wrong_keyword() -> None:

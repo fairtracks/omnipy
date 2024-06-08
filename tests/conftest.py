@@ -98,12 +98,16 @@ def assert_snapshot_holder_and_deepcopy_memo_are_empty(
         snapshot_holder.delete_scheduled_deepcopy_content_ids()
         try:
             print('\nChecking if snapshot_holder and deepcopy_memo objects are empty...')
-            assert snapshot_holder.all_is_empty()
+            assert snapshot_holder.all_are_empty()
         except AssertionError:
             print('Not empty. Running garbage collection and trying again...')
             gc.collect()
             snapshot_holder.delete_scheduled_deepcopy_content_ids()
-            assert snapshot_holder.all_is_empty()
+
+            try:
+                assert snapshot_holder.all_are_empty()
+            except AssertionError:
+                assert snapshot_holder.all_are_empty(debug=True)
         finally:
             snapshot_holder.clear()
 

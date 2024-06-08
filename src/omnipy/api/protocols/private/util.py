@@ -74,7 +74,7 @@ class IsSnapshotHolder(IsWeakKeyRefContainer[_HasContentsT,
     def clear(self) -> None:
         ...
 
-    def all_is_empty(self) -> bool:
+    def all_are_empty(self, debug: bool = False) -> bool:
         ...
 
     def get_deepcopy_content_ids(self) -> IndexedSet[int]:

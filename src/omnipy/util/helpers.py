@@ -299,61 +299,54 @@ def generate_qualname(cls_name: str, model: Any) -> str:
     return f'{cls_name}[{fully_qual_model_name}]'
 
 
-# _deepcopy_dispatch: dict[type, Callable]
-# d: dict[type, Callable]
-#
-# # Copied from stdlib (python3.10/copy.py:180), update for new CPython versions
-# _deepcopy_dispatch = d = {}
-#
-#
-# def _deepcopy_atomic(x, memo):
-#     return x
-#
-#
-# d[type(None)] = _deepcopy_atomic
-# d[type(Ellipsis)] = _deepcopy_atomic
-# d[type(NotImplemented)] = _deepcopy_atomic
-# d[int] = _deepcopy_atomic
-# d[float] = _deepcopy_atomic
-# d[bool] = _deepcopy_atomic
-# d[complex] = _deepcopy_atomic
-# d[bytes] = _deepcopy_atomic
-# d[str] = _deepcopy_atomic
-# d[types.CodeType] = _deepcopy_atomic
-# d[type] = _deepcopy_atomic
-# d[range] = _deepcopy_atomic
-# d[types.BuiltinFunctionType] = _deepcopy_atomic
-# d[types.FunctionType] = _deepcopy_atomic
-# d[weakref.ref] = _deepcopy_atomic
-# d[property] = _deepcopy_atomic
-
-
 class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
     def __init__(self) -> None:
         super().__init__()
         self._cur_deepcopy_obj_id: int | None = None
         self._cur_keep_alive_list: list[_ObjT] = []
         self._keep_alive_dict: dict[int, _ObjT] = {}
-
-        # Using dict for _sub_obj_ids contents instead of set to keep the order of insertion
         self._sub_obj_ids: defaultdict[int, IndexedSet[int]] = defaultdict(IndexedSet)
 
-    def all_is_empty(self) -> bool:
-
-        _all_is_empty = (
+    def all_are_empty(self, debug: bool = False) -> bool:
+        _all_are_empty = (
             len(self) == 0 and len(self._keep_alive_dict) == 0 and len(self._sub_obj_ids) == 0
             and self._cur_deepcopy_obj_id is None and len(self._cur_keep_alive_list) == 0)
 
-        # print()
-        # print(f'RefCountMemoDict.all_is_empty(): {_all_is_empty}')
-        # print('-------------------------')
-        # print(f'len(self): {len(self)}')
-        # print(f'len(self._keep_alive_dict): {len(self._keep_alive_dict)}')
-        # print(f'len(self._sub_obj_ids): {len(self._sub_obj_ids)}')
-        # print(f'self._cur_deepcopy_obj_id: {self._cur_deepcopy_obj_id}')
-        # print(f'len(self._cur_keep_alive_list): {len(self._cur_keep_alive_list)}')
+        if debug:
+            print()
+            print(f'RefCountMemoDict.all_are_empty(): {_all_are_empty}')
+            print('--------------------------------------------------')
+            print(f'len(self): {len(self)}')
+            print(f'len(self._keep_alive_dict): {len(self._keep_alive_dict)}')
+            print(f'len(self._sub_obj_ids): {len(self._sub_obj_ids)}')
+            print(f'self._cur_deepcopy_obj_id: {self._cur_deepcopy_obj_id}')
+            print(f'len(self._cur_keep_alive_list): {len(self._cur_keep_alive_list)}')
 
-        return _all_is_empty
+            if len(self) > 0:
+                print('==================================================')
+                for key in self:
+                    print(
+                        f'Content id: {key} [{sys.getrefcount(self[key])-1} refs, id={id(self[key])}]: {self[key]}'
+                    )
+
+                for key in self:
+                    print('--------------------------------------------------')
+                    print(f'References for {key}: {self[key]}')
+                    print('--------------------------------------------------')
+                    for i, ref in enumerate(gc.get_referrers(self[key])):
+                        try:
+                            print(f'[Reference {i}]')
+                            print(f'    Type: {type(ref)}')
+                            print(f'    ID: {id(ref)}')
+                            print(f'    Value: {ref}')
+                            print()
+
+                        except Exception as e:
+                            print(f'Error: {repr(e)}')
+                            pass
+                    del ref
+
+        return _all_are_empty
 
     def clear(self):
         super().clear()
@@ -417,7 +410,7 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
 
     @staticmethod
     def _is_atomic(obj: object) -> bool:
-        from copy import _deepcopy_atomic, _deepcopy_dispatch
+        from copy import _deepcopy_atomic, _deepcopy_dispatch  # type: ignore[attr-defined]
         try:
             return type(obj) is tuple or _deepcopy_dispatch[type(obj)] is _deepcopy_atomic
         except KeyError:
@@ -633,23 +626,29 @@ class SnapshotHolder(WeakKeyRefContainer[_HasContentsT,
         self._deepcopy_memo.clear()
         super().clear()
 
-    def all_is_empty(self) -> bool:
-        _deepcopy_memo_all_is_empty = self._deepcopy_memo.all_is_empty()
+    def all_are_empty(self, debug: bool = False) -> bool:
+        _deepcopy_memo_all_are_empty = self._deepcopy_memo.all_are_empty(debug=debug)
 
-        _all_is_empty = (
+        _all_are_empty = (
             len(self) == 0 and len(self._deepcopy_content_ids_for_deleted_objs) == 0
-            and _deepcopy_memo_all_is_empty)
+            and _deepcopy_memo_all_are_empty)
 
-        # print()
-        # print(f'SnapshotHolder.all_is_empty(): {_all_is_empty}')
-        # print('-------------------------')
-        # print(f'len(self): {len(self)}')
-        # print(
-        #     f'len(self._deepcopy_content_ids_for_deleted_objs): {len(self._deepcopy_content_ids_for_deleted_objs)}'
-        # )
-        # print(f'self._deepcopy_memo.all_is_empty(): {_deepcopy_memo_all_is_empty}')
+        if debug:
+            print()
+            print(f'SnapshotHolder.all_are_empty(): {_all_are_empty}')
+            print('-------------------------')
+            print(f'len(self): {len(self)}')
+            print(
+                f'len(self._deepcopy_content_ids_for_deleted_objs): {len(self._deepcopy_content_ids_for_deleted_objs)}'
+            )
+            print(f'self._deepcopy_memo.all_are_empty(): {_deepcopy_memo_all_are_empty}')
 
-        return _all_is_empty
+            if len(self) > 0:
+                print('=========================')
+                for key, val in self._value_dict.items():
+                    print(f'{key}: {val}')
+
+        return _all_are_empty
 
     def get_deepcopy_content_ids(self) -> IndexedSet[int]:
         return self._deepcopy_memo.get_deepcopy_object_ids()

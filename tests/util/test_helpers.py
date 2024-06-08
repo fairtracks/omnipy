@@ -506,7 +506,7 @@ def test_ref_count_memo_dict_basics() -> None:
 
     ref_count_memo_dict.clear()
 
-    assert ref_count_memo_dict.all_is_empty()
+    assert ref_count_memo_dict.all_are_empty()
 
 
 def test_ref_count_memo_dict_atomic_types() -> None:
@@ -536,7 +536,7 @@ def test_ref_count_memo_dict_atomic_types() -> None:
 
     for obj in atomic_objs:
         ref_count_memo_dict[id(obj)] = obj
-        assert ref_count_memo_dict.all_is_empty()
+        assert ref_count_memo_dict.all_are_empty()
 
 
 def test_ref_count_memo_dict_non_atomic_types() -> None:
@@ -552,7 +552,7 @@ def test_ref_count_memo_dict_non_atomic_types() -> None:
         assert len(ref_count_memo_dict) == 1
 
         del ref_count_memo_dict[id(obj)]
-        assert ref_count_memo_dict.all_is_empty()
+        assert ref_count_memo_dict.all_are_empty()
 
 
 def _deepcopy_obj_with_memodict(ref_count_memo_dict: RefCountMemoDict, tmp_obj: object):
@@ -567,7 +567,7 @@ def test_ref_count_memo_dict_deepcopy_obj() -> None:
 
     assert len(ref_count_memo_dict) == 0
     assert ref_count_memo_dict.get_deepcopy_object_ids() == IndexedSet()
-    assert ref_count_memo_dict.all_is_empty()
+    assert ref_count_memo_dict.all_are_empty()
 
     my_list = [1, 2, 3]
     id_my_list = id(my_list)
@@ -576,20 +576,20 @@ def test_ref_count_memo_dict_deepcopy_obj() -> None:
 
     assert len(ref_count_memo_dict) == 1
     assert ref_count_memo_dict.get_deepcopy_object_ids() == IndexedSet((id_my_list,))
-    assert not ref_count_memo_dict.all_is_empty()
+    assert not ref_count_memo_dict.all_are_empty()
 
     id_my_list = id(my_list)
     del my_list
 
     assert len(ref_count_memo_dict) == 1
     assert ref_count_memo_dict.get_deepcopy_object_ids() == IndexedSet((id_my_list,))
-    assert not ref_count_memo_dict.all_is_empty()
+    assert not ref_count_memo_dict.all_are_empty()
 
     ref_count_memo_dict.recursively_remove_deleted_objs(IndexedSet((id_my_list,)))
 
     assert len(ref_count_memo_dict) == 0
     assert ref_count_memo_dict.get_deepcopy_object_ids() == IndexedSet()
-    assert ref_count_memo_dict.all_is_empty()
+    assert ref_count_memo_dict.all_are_empty()
 
 
 def test_ref_count_memo_dict_complex_object_deletion() -> None:
@@ -704,7 +704,7 @@ def test_ref_count_memo_dict_complex_object_deletion() -> None:
         total_len=0,
     )
 
-    assert ref_count_memo_dict.all_is_empty()
+    assert ref_count_memo_dict.all_are_empty()
 
 
 class SomeObject:
@@ -789,7 +789,7 @@ def test_ref_count_memo_dict_deepcopy_keep_alive() -> None:
     all_tmp_obj_ids = _register_all_basic_objs_to_be_deleted_and_return_ids()
     ref_count_memo_dict.recursively_remove_deleted_objs(all_tmp_obj_ids)
 
-    assert ref_count_memo_dict.all_is_empty()
+    assert ref_count_memo_dict.all_are_empty()
 
 
 def test_ref_count_memo_dict_deepcopy_tuple_of_list_keepalive() -> None:
@@ -803,7 +803,7 @@ def test_ref_count_memo_dict_deepcopy_tuple_of_list_keepalive() -> None:
     del tuple_of_list
     ref_count_memo_dict.recursively_remove_deleted_objs(IndexedSet((id_tuple_of_list,)))
 
-    assert ref_count_memo_dict.all_is_empty()
+    assert ref_count_memo_dict.all_are_empty()
 
 
 def test_ref_count_memo_dict_deepcopy_pydantic_model_with_parsing() -> None:
@@ -826,7 +826,7 @@ def test_ref_count_memo_dict_deepcopy_pydantic_model_with_parsing() -> None:
     del my_model
     ref_count_memo_dict.recursively_remove_deleted_objs(IndexedSet((id_my_model,)))
 
-    assert ref_count_memo_dict.all_is_empty()
+    assert ref_count_memo_dict.all_are_empty()
 
 
 @pytest.mark.skip(reason='Repeated deepcopy of the same object is not supported. Changes to the '
@@ -861,7 +861,7 @@ def test_ref_count_memo_dict_repeated_deepcopy_same_obj_not_needed() -> None:
     del a_list
 
     ref_count_memo_dict.recursively_remove_deleted_objs(IndexedSet((id_c_parent_list,)))
-    assert ref_count_memo_dict.all_is_empty()
+    assert ref_count_memo_dict.all_are_empty()
 
 
 class HasContentsMixin(Generic[_ContentsT]):
@@ -965,36 +965,36 @@ def _take_snapshot(snapshot_holder: IsSnapshotHolder, obj: HasContents) -> None:
     snapshot_holder.take_snapshot_teardown()
 
 
-def test_snapshot_holder_all_is_empty_and_clear() -> None:
+def test_snapshot_holder_all_are_empty_and_clear() -> None:
     snapshot_holder = SnapshotHolder[MyList, list]()
-    assert snapshot_holder.all_is_empty()
+    assert snapshot_holder.all_are_empty()
 
     my_list = MyList([123, 234])
 
     snapshot_holder.take_snapshot(my_list)
-    assert not snapshot_holder.all_is_empty()
+    assert not snapshot_holder.all_are_empty()
     assert len(snapshot_holder) == 1
 
     snapshot_holder.clear()
-    assert snapshot_holder.all_is_empty()
+    assert snapshot_holder.all_are_empty()
 
     my_other_list = MyList([234, 345])
 
     snapshot_holder.take_snapshot(my_other_list)
-    assert not snapshot_holder.all_is_empty()
+    assert not snapshot_holder.all_are_empty()
     assert len(snapshot_holder) == 1
 
     id_my_other_list_contents = id(my_other_list.contents)
 
     del my_other_list
 
-    assert not snapshot_holder.all_is_empty()
+    assert not snapshot_holder.all_are_empty()
     assert len(snapshot_holder) == 0
 
     snapshot_holder.schedule_deepcopy_content_ids_for_deletion(id_my_other_list_contents)
     snapshot_holder.delete_scheduled_deepcopy_content_ids()
 
-    assert snapshot_holder.all_is_empty()
+    assert snapshot_holder.all_are_empty()
 
     something_else = [2, 3, 4]
     snapshot_holder.take_snapshot(my_list)
@@ -1004,7 +1004,7 @@ def test_snapshot_holder_all_is_empty_and_clear() -> None:
     del my_list
     snapshot_holder.delete_scheduled_deepcopy_content_ids()
 
-    assert snapshot_holder.all_is_empty()
+    assert snapshot_holder.all_are_empty()
 
 
 #TODO: Refactor into smaller tests
@@ -1181,7 +1181,7 @@ def test_snapshot_deepcopy_exception_cleanup() -> None:
     snapshot_holder = SnapshotHolder[DynamiteCrate | MyList, Dynamite | list]()
 
     my_list = MyList([1, 3, 5])
-    assert snapshot_holder.all_is_empty()
+    assert snapshot_holder.all_are_empty()
 
     _take_snapshot(snapshot_holder, my_list)
 
