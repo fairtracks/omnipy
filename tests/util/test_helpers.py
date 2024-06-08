@@ -20,7 +20,8 @@ from typing import (Annotated,
                     Union)
 import weakref
 
-from pydantic import BaseModel
+from boltons.setutils import IndexedSet
+from pydantic import BaseModel, validator
 from pydantic.generics import GenericModel
 import pytest
 from typing_inspect import get_generic_type
@@ -488,39 +489,24 @@ def _assert_values_in_memo(memo: RefCountMemoDict,
                            total_len: int) -> None:
     for id_, is_contained in zip(all_ids, contained):
         assert (id_ in memo) == is_contained
+        assert (id_ in memo.get_deepcopy_object_ids()) == is_contained
     assert len(memo) == total_len
 
 
-def _deepcopy_obj_with_memodict(ref_count_memo_dict: RefCountMemoDict, tmp_obj: object):
-    ref_count_memo_dict.setup_deepcopy(tmp_obj)
-    deepcopy(tmp_obj, ref_count_memo_dict)  # type: ignore[arg-type]
-    ref_count_memo_dict.keep_alive_after_deepcopy()
-    ref_count_memo_dict.teardown_deepcopy()
-
-
-def test_ref_count_memo_dict_all_is_empty_and_clear() -> None:
+def test_ref_count_memo_dict_basics() -> None:
     ref_count_memo_dict: RefCountMemoDict = RefCountMemoDict()
 
-    assert ref_count_memo_dict.all_is_empty()
-    assert len(ref_count_memo_dict) == 0
-
     my_list = [1, 2, 3]
+    my_dict = {1: my_list, 2: 3}
 
-    _deepcopy_obj_with_memodict(ref_count_memo_dict, my_list)
+    ref_count_memo_dict[id(my_list)] = my_list
+    ref_count_memo_dict[id(my_dict)] = my_dict
 
-    assert not ref_count_memo_dict.all_is_empty()
-    assert len(ref_count_memo_dict) == 1
+    assert len(ref_count_memo_dict) == 2
 
-    id_my_list = id(my_list)
-    del my_list
-
-    assert not ref_count_memo_dict.all_is_empty()
-    assert len(ref_count_memo_dict) == 1
-
-    ref_count_memo_dict.recursively_remove_deleted_objs([id_my_list])
+    ref_count_memo_dict.clear()
 
     assert ref_count_memo_dict.all_is_empty()
-    assert len(ref_count_memo_dict) == 0
 
 
 def test_ref_count_memo_dict_atomic_types() -> None:
@@ -549,7 +535,6 @@ def test_ref_count_memo_dict_atomic_types() -> None:
     ]
 
     for obj in atomic_objs:
-        print(type(obj))
         ref_count_memo_dict[id(obj)] = obj
         assert ref_count_memo_dict.all_is_empty()
 
@@ -563,8 +548,6 @@ def test_ref_count_memo_dict_non_atomic_types() -> None:
     non_atomic_type_objs = [[1, 2, 3], {1: 2, 3: 4}, {2, 4, 6}, MyClass()]
 
     for obj in non_atomic_type_objs:
-        print(type(obj))
-
         ref_count_memo_dict[id(obj)] = obj
         assert len(ref_count_memo_dict) == 1
 
@@ -572,7 +555,44 @@ def test_ref_count_memo_dict_non_atomic_types() -> None:
         assert ref_count_memo_dict.all_is_empty()
 
 
-def test_ref_count_memo_dict_object_deletion() -> None:
+def _deepcopy_obj_with_memodict(ref_count_memo_dict: RefCountMemoDict, tmp_obj: object):
+    ref_count_memo_dict.setup_deepcopy(tmp_obj)
+    deepcopy(tmp_obj, ref_count_memo_dict)  # type: ignore[arg-type]
+    ref_count_memo_dict.keep_alive_after_deepcopy()
+    ref_count_memo_dict.teardown_deepcopy()
+
+
+def test_ref_count_memo_dict_deepcopy_obj() -> None:
+    ref_count_memo_dict: RefCountMemoDict = RefCountMemoDict()
+
+    assert len(ref_count_memo_dict) == 0
+    assert ref_count_memo_dict.get_deepcopy_object_ids() == IndexedSet()
+    assert ref_count_memo_dict.all_is_empty()
+
+    my_list = [1, 2, 3]
+    id_my_list = id(my_list)
+
+    _deepcopy_obj_with_memodict(ref_count_memo_dict, my_list)
+
+    assert len(ref_count_memo_dict) == 1
+    assert ref_count_memo_dict.get_deepcopy_object_ids() == IndexedSet((id_my_list,))
+    assert not ref_count_memo_dict.all_is_empty()
+
+    id_my_list = id(my_list)
+    del my_list
+
+    assert len(ref_count_memo_dict) == 1
+    assert ref_count_memo_dict.get_deepcopy_object_ids() == IndexedSet((id_my_list,))
+    assert not ref_count_memo_dict.all_is_empty()
+
+    ref_count_memo_dict.recursively_remove_deleted_objs(IndexedSet((id_my_list,)))
+
+    assert len(ref_count_memo_dict) == 0
+    assert ref_count_memo_dict.get_deepcopy_object_ids() == IndexedSet()
+    assert ref_count_memo_dict.all_is_empty()
+
+
+def test_ref_count_memo_dict_complex_object_deletion() -> None:
     # Note: WeakValueDictionary cannot be used here, as most basic types do not support weak refs.
 
     ref_count_memo_dict: RefCountMemoDict = RefCountMemoDict()
@@ -584,11 +604,11 @@ def test_ref_count_memo_dict_object_deletion() -> None:
         def __del__(self) -> None:
             contents_id = id(self.contents)
 
-            print(f'__del__() called for {self} (id(self.contents)={contents_id})')
-            print(ref_count_memo_dict)
+            # print(f'__del__() called for {self} (id(self.contents)={contents_id})')
+            # print(ref_count_memo_dict)
 
             self.contents = Undefined
-            ref_count_memo_dict.recursively_remove_deleted_objs([contents_id])
+            ref_count_memo_dict.recursively_remove_deleted_objs(IndexedSet((contents_id,)))
 
         def __repr__(self) -> str:
             return f'MyClass({self.contents})'
@@ -607,7 +627,6 @@ def test_ref_count_memo_dict_object_deletion() -> None:
             d_dict = {1: 2, 3: a_list}
             e_obj = MyClass({2: 4, 6: a_list})
             f_obj = MyClass({1: e_obj, 2: e_obj})
-            print(f'a_list refcount: {sys.getrefcount(a_list)}')
 
             for obj in (a_list, c_set, b_tuple, d_dict, e_obj.contents, f_obj.contents):
                 _deepcopy_obj_with_memodict(ref_count_memo_dict, obj)
@@ -640,15 +659,13 @@ def test_ref_count_memo_dict_object_deletion() -> None:
 
             # a_list was deleted, but is still referenced from d_dict and e_obj
             # b_tuple was deleted, but is not memoized
-            ref_count_memo_dict.recursively_remove_deleted_objs([id_a, id_b])
+            ref_count_memo_dict.recursively_remove_deleted_objs(IndexedSet((id_a, id_b)))
             _assert_values_in_memo(
                 ref_count_memo_dict,
                 all_ids,
                 contained=(True, False, True, True, True, True),
                 total_len=8,
             )
-
-            print('Returning from _inner_test_count_memo_dict()')
 
             return f_obj, all_ids
 
@@ -662,7 +679,7 @@ def test_ref_count_memo_dict_object_deletion() -> None:
         #     from anywhere else
         # e_obj was deleted when out of scope of_inner_test_count_memo_dict(), but f_obj still
         #     references it
-        ref_count_memo_dict.recursively_remove_deleted_objs([id_c, id_d])
+        ref_count_memo_dict.recursively_remove_deleted_objs(IndexedSet((id_c, id_d)))
         _assert_values_in_memo(
             ref_count_memo_dict,
             all_ids,
@@ -670,7 +687,6 @@ def test_ref_count_memo_dict_object_deletion() -> None:
             total_len=5,
         )
 
-        print('Returning from _outer_test_count_memo_dict()')
         return all_ids
 
     all_ids = _outer_test_count_memo_dict()
@@ -691,24 +707,6 @@ def test_ref_count_memo_dict_object_deletion() -> None:
     assert ref_count_memo_dict.all_is_empty()
 
 
-def test_ref_count_memo_dict_clear() -> None:
-    # Note: WeakValueDictionary cannot be used here, as most basic types do not support weak refs.
-
-    ref_count_memo_dict: RefCountMemoDict = RefCountMemoDict()
-
-    my_list = [1, 2, 3]
-    my_dict = {1: my_list, 2: 3}
-
-    ref_count_memo_dict[id(my_list)] = my_list
-    ref_count_memo_dict[id(my_dict)] = my_dict
-
-    assert len(ref_count_memo_dict) == 2
-
-    ref_count_memo_dict.clear()
-
-    assert ref_count_memo_dict.all_is_empty()
-
-
 class SomeObject:
     def __init__(self, name: str) -> None:
         self.name = name
@@ -725,7 +723,7 @@ BasicType: TypeAlias = list | tuple | dict | set | str | float | int | complex |
 def test_ref_count_memo_dict_deepcopy_keep_alive() -> None:
     ref_count_memo_dict = RefCountMemoDict[Any]()
 
-    def _register_all_basic_objs_to_be_deleted_and_return_ids() -> list[int]:
+    def _register_all_basic_objs_to_be_deleted_and_return_ids() -> IndexedSet[int]:
         tmp_obj: BasicType
         all_memoized_basic_objs: list[BasicType] = [
             [1, 3, 5],
@@ -759,27 +757,7 @@ def test_ref_count_memo_dict_deepcopy_keep_alive() -> None:
             [all_basic_objs_copy[i:] for i in range(len(all_basic_objs_copy))] \
             + all_memoized_basic_objs_copy
 
-        tmp_obj_ids: list[int] = []
-
-        # alive = []
-        #
-        # class MySet(set):
-        #     def __deepcopy__(self, memo={}):
-        #         memo[id(self)] = self
-        #         self_list = list(self)
-        #         memo[id(self_list)] = self_list
-        #         alive.append(self_list)
-        #         return copy(self)
-        #
-        #     def __eq__(self, other):
-        #         if isinstance(other, set):
-        #             return super().__eq__(other)
-        #         return False
-        #
-        #     def __reduce_ex__(self, protocol):
-        #         return (self.__class__, (list(self),), None)
-        #
-        # all_basic_objs[2] = MySet(all_basic_objs[2])
+        tmp_obj_ids: IndexedSet[int] = IndexedSet()
 
         # To test whether the RefCountMemoDict keeps the temporary objects alive, we need to
         # make sure that new objects are not reusing the same memory locations, and thus the same
@@ -792,23 +770,18 @@ def test_ref_count_memo_dict_deepcopy_keep_alive() -> None:
         for i in range(100):
             ref_count_memo_dict.clear()
             tmp_obj_ids.clear()
-            # alive.clear()
 
             for start_idx in range(len(all_basic_objs)):
                 tmp_obj = all_basic_objs[start_idx:]
 
                 _deepcopy_obj_with_memodict(ref_count_memo_dict, tmp_obj)
 
-                tmp_obj_ids.append(id(tmp_obj))
-                # alive.append(tmp_obj)
+                tmp_obj_ids.add(id(tmp_obj))
 
             assert len(ref_count_memo_dict) == len(memo_target)
 
             for value in ref_count_memo_dict.values():
                 assert value in memo_target
-
-            # for value in memo_target:
-            #     assert value in ref_count_memo_dict.values()
 
         del all_basic_objs
         return tmp_obj_ids
@@ -819,31 +792,75 @@ def test_ref_count_memo_dict_deepcopy_keep_alive() -> None:
     assert ref_count_memo_dict.all_is_empty()
 
 
-def test_ref_count_memo_dict_repeated_deepcopy_same_obj() -> None:
+def test_ref_count_memo_dict_deepcopy_tuple_of_list_keepalive() -> None:
+    ref_count_memo_dict = RefCountMemoDict[tuple]()
+
+    tuple_of_list: tuple[int, list[int | tuple[int, list]]] = (1, [2, (3, [])])
+    id_tuple_of_list = id(tuple_of_list)
+
+    _deepcopy_obj_with_memodict(ref_count_memo_dict, tuple_of_list)
+
+    del tuple_of_list
+    ref_count_memo_dict.recursively_remove_deleted_objs(IndexedSet((id_tuple_of_list,)))
+
+    assert ref_count_memo_dict.all_is_empty()
+
+
+def test_ref_count_memo_dict_deepcopy_pydantic_model_with_parsing() -> None:
+    ref_count_memo_dict = RefCountMemoDict[tuple]()
+    from omnipy import Model
+
+    class MyUpperStrModel(Model[str]):
+        @classmethod
+        def _parse_data(cls, v):
+            return v.upper()
+
+    class ListOfUpperStrModel(Model[list[MyUpperStrModel]]):
+        ...
+
+    my_model = ListOfUpperStrModel(['abc'])
+    id_my_model = id(my_model)
+
+    _deepcopy_obj_with_memodict(ref_count_memo_dict, id_my_model)
+
+    del my_model
+    ref_count_memo_dict.recursively_remove_deleted_objs(IndexedSet((id_my_model,)))
+
+    assert ref_count_memo_dict.all_is_empty()
+
+
+@pytest.mark.skip(reason='Repeated deepcopy of the same object is not supported. Changes to the '
+                  'object between deepcopies might result in fragments of the old object '
+                  'being kept alive. While there at least partial solutions to this '
+                  'problem commented out in the code, they are not needed in practice, as'
+                  'validation of Model.contents is always run before taking a snapshot if the '
+                  'contents has changed, returning a new object to be taken snapshot of. '
+                  'Then SnapshotHolder replaces the old snapshot with the new one, and the old '
+                  'snapshot is scheduled for deletion, in order to correctly remove all '
+                  'unreferenced fragments that are still being kept alive. The test is kept '
+                  'here for documentation purposes.')
+def test_ref_count_memo_dict_repeated_deepcopy_same_obj_not_needed() -> None:
     ref_count_memo_dict = RefCountMemoDict[Any]()
 
     a_list = [1, 3, 5]
     b_list = [2, 4, 6]
+    c_list = [3, 5, 7]
     c_parent_list = [a_list, b_list]
+    id_c_parent_list = id(c_parent_list)
 
     _deepcopy_obj_with_memodict(ref_count_memo_dict, c_parent_list)
-    # assert c_copy_1 == c_parent_list
 
     del c_parent_list[0]
+    c_parent_list.append(c_list)
 
     _deepcopy_obj_with_memodict(ref_count_memo_dict, c_parent_list)
 
-    # assert c_copy_2 == c_parent_list
-
-    all_ids = [id(a_list), id(b_list), id(c_parent_list)]
-
-    del a_list
-    del b_list
     del c_parent_list
-    # del c_copy_1
-    # del c_copy_2
+    del c_list
+    del b_list
+    del a_list
 
-    ref_count_memo_dict.recursively_remove_deleted_objs(all_ids)
+    ref_count_memo_dict.recursively_remove_deleted_objs(IndexedSet((id_c_parent_list,)))
     assert ref_count_memo_dict.all_is_empty()
 
 
@@ -945,7 +962,7 @@ def test_weak_key_ref_container_clear() -> None:
 def _take_snapshot(snapshot_holder: IsSnapshotHolder, obj: HasContents) -> None:
     snapshot_holder.take_snapshot_setup()
     snapshot_holder.take_snapshot(obj)
-    snapshot_holder.take_snapshot_cleanup()
+    snapshot_holder.take_snapshot_teardown()
 
 
 def test_snapshot_holder_all_is_empty_and_clear() -> None:
@@ -974,12 +991,23 @@ def test_snapshot_holder_all_is_empty_and_clear() -> None:
     assert not snapshot_holder.all_is_empty()
     assert len(snapshot_holder) == 0
 
-    snapshot_holder.schedule_for_deletion(id_my_other_list_contents)
-    snapshot_holder.delete_scheduled()
+    snapshot_holder.schedule_deepcopy_content_ids_for_deletion(id_my_other_list_contents)
+    snapshot_holder.delete_scheduled_deepcopy_content_ids()
+
+    assert snapshot_holder.all_is_empty()
+
+    something_else = [2, 3, 4]
+    snapshot_holder.take_snapshot(my_list)
+    snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
+        *[id(my_list.contents), id(something_else)])
+
+    del my_list
+    snapshot_holder.delete_scheduled_deepcopy_content_ids()
 
     assert snapshot_holder.all_is_empty()
 
 
+#TODO: Refactor into smaller tests
 def test_snapshots() -> None:
     snapshot_holder = SnapshotHolder[MyList | MyDict, list | dict]()
 
@@ -1069,7 +1097,7 @@ def test_snapshot_deepcopy_reuse_objects() -> None:
     #         # obj.contents = []
     #         try:
     #             # snapshot_holder.recursively_remove_deleted_obj_from_deepcopy_memo(contents_id)
-    #             snapshot_holder.schedule_for_deletion(contents_id)
+    #             snapshot_holder.schedule_deepcopy_content_ids_for_deletion(contents_id)
     #         except (AttributeError) as exp:
     #             print(exp)
     #             print(snapshot_holder._deepcopy_memo)
@@ -1084,7 +1112,7 @@ def test_snapshot_deepcopy_reuse_objects() -> None:
             # print(f'__del__ called for {contents_id}')
             self.contents = Undefined
             if snapshot_holder is not None:
-                snapshot_holder.schedule_for_deletion(contents_id)
+                snapshot_holder.schedule_deepcopy_content_ids_for_deletion(contents_id)
 
     class MyPydanticModel(BaseModel):
         my_list: MyMemoDeletingList
@@ -1135,8 +1163,8 @@ def test_snapshot_deepcopy_reuse_objects() -> None:
 
     # snapshot_holder = SnapshotHolder[MyMemoDeletingList, list]()
     _inner_test_snapshot_deepcopy_reuse_objects(snapshot_holder)
-    snapshot_holder.delete_scheduled()
-    assert len(snapshot_holder._deepcopy_memo) == 0
+    snapshot_holder.delete_scheduled_deepcopy_content_ids()
+    assert len(snapshot_holder.get_deepcopy_content_ids()) == 0
 
 
 def test_snapshot_deepcopy_exception_cleanup() -> None:
@@ -1153,13 +1181,13 @@ def test_snapshot_deepcopy_exception_cleanup() -> None:
     snapshot_holder = SnapshotHolder[DynamiteCrate | MyList, Dynamite | list]()
 
     my_list = MyList([1, 3, 5])
+    assert snapshot_holder.all_is_empty()
+
     _take_snapshot(snapshot_holder, my_list)
 
     assert len(snapshot_holder) == 1
-    assert len(snapshot_holder._deepcopy_memo) == 1
-    assert len(snapshot_holder._deepcopy_memo._keep_alive_dict) == 1
-    assert len(snapshot_holder._deepcopy_memo._cur_keep_alive_list) == 0
-    assert len(snapshot_holder._deepcopy_memo._sub_obj_ids) == 1
+    assert snapshot_holder.get_deepcopy_content_ids() == IndexedSet((id(my_list.contents),))
+    # assert len(snapshot_holder._deepcopy_memo._keep_alive_dict) == 1
 
     try:
         dynamite_crate = DynamiteCrate(Dynamite())
@@ -1168,44 +1196,106 @@ def test_snapshot_deepcopy_exception_cleanup() -> None:
         pass
 
     assert len(snapshot_holder) == 1
-    assert len(snapshot_holder._deepcopy_memo) == 1
-    assert len(snapshot_holder._deepcopy_memo._keep_alive_dict) == 1
-    assert len(snapshot_holder._deepcopy_memo._cur_keep_alive_list) == 0
-    assert len(snapshot_holder._deepcopy_memo._sub_obj_ids) == 1
+    assert snapshot_holder.get_deepcopy_content_ids() == IndexedSet((id(my_list.contents),))
+    # assert len(snapshot_holder._deepcopy_memo._keep_alive_dict) == 1
 
 
-def test_snapshot_holder_delete_and_clear() -> None:
+def test_snapshot_holder_deepcopy_memo_status_delete_and_clear() -> None:
     snapshot_holder = SnapshotHolder[MyList, list | dict]()
 
-    my_list = MyList([1, 3, 5])
-    my_list_2 = MyList([2, 4, 6])
+    my_first_list = MyList([1, 3, 5])
+    my_second_list = MyList([2, 4, 6])
+    my_third_list = MyList([my_second_list, my_second_list])
 
-    _take_snapshot(snapshot_holder, my_list)
-    _take_snapshot(snapshot_holder, my_list_2)
+    content_id_first_list = id(my_first_list.contents)
+    content_id_second_list = id(my_second_list.contents)
+    content_id_third_list = id(my_third_list.contents)
+
+    _take_snapshot(snapshot_holder, my_first_list)
+    _take_snapshot(snapshot_holder, my_third_list)
 
     assert len(snapshot_holder) == 2
-    assert len(snapshot_holder._deepcopy_memo) == 2
-    # assert len(snapshot_holder._key_2_obj_copy_id) == 2
-    # assert len(snapshot_holder._obj_copy_id_keys) == 2
+    assert snapshot_holder.get_deepcopy_content_ids() == IndexedSet((
+        content_id_first_list,
+        content_id_third_list,
+    ))
+    assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == IndexedSet()
 
-    snapshot_holder.schedule_for_deletion(id(my_list.contents))
-    print(id(my_list.contents))
-    del my_list
+    snapshot_holder.schedule_deepcopy_content_ids_for_deletion(content_id_first_list)
 
-    snapshot_holder.delete_scheduled()
-    assert len(snapshot_holder._deepcopy_memo) == 1
-    # assert len(snapshot_holder._key_2_obj_copy_id) == 1
-    # assert len(snapshot_holder._obj_copy_id_keys) == 1
+    assert len(snapshot_holder) == 2
+    assert snapshot_holder.get_deepcopy_content_ids() == IndexedSet((
+        content_id_first_list,
+        content_id_third_list,
+    ))
+    assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == IndexedSet(
+        (content_id_first_list,))
+
+    # Duplicates are ignored
+    snapshot_holder.schedule_deepcopy_content_ids_for_deletion(content_id_first_list)
+
+    assert len(snapshot_holder) == 2
+    assert snapshot_holder.get_deepcopy_content_ids() == IndexedSet((
+        content_id_first_list,
+        content_id_third_list,
+    ))
+    assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == IndexedSet(
+        (content_id_first_list,))
+
+    # Not deleted if there are still references to the content object. Object is still
+    # scheduled for deletion, just in case
+    snapshot_holder.delete_scheduled_deepcopy_content_ids()
+
+    assert len(snapshot_holder) == 2
+    assert snapshot_holder.get_deepcopy_content_ids() == IndexedSet((
+        content_id_first_list,
+        content_id_third_list,
+    ))
+    assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == IndexedSet(
+        (content_id_first_list,))
+
+    # Automatic deletion of snapshots from snapshot_holder, but no automatic deletion of
+    # objects from deepcopy_memo, even if already scheduled for deletion
+    del my_first_list
+
+    gc.collect()
+
     assert len(snapshot_holder) == 1
-    assert len(snapshot_holder._keys_for_deleted_objs) == 0
+    assert snapshot_holder.get_deepcopy_content_ids() == IndexedSet((
+        content_id_first_list,
+        content_id_third_list,
+    ))
+    assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == IndexedSet(
+        (content_id_first_list,))
+
+    # Delete scheduled object at controlled places
+    snapshot_holder.delete_scheduled_deepcopy_content_ids()
+
+    assert len(snapshot_holder) == 1
+    assert snapshot_holder.get_deepcopy_content_ids() == IndexedSet((content_id_third_list,))
+    assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == IndexedSet()
+
+    # Content ids for non-snapshot objects are ignored, even if cached in the deepcopy_memo, here
+    # as a result of deepcopy() of my_third_list
+    snapshot_holder.schedule_deepcopy_content_ids_for_deletion(content_id_second_list)
+
+    assert len(snapshot_holder) == 1
+    assert snapshot_holder.get_deepcopy_content_ids() == IndexedSet((content_id_third_list,))
+    assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == IndexedSet()
+
+    # Clear() should remove all snapshots, deepcopy_memo objects and scheduled deletions
+    snapshot_holder.schedule_deepcopy_content_ids_for_deletion(content_id_third_list)
+
+    assert len(snapshot_holder) == 1
+    assert snapshot_holder.get_deepcopy_content_ids() == IndexedSet((content_id_third_list,))
+    assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == IndexedSet(
+        (content_id_third_list,))
 
     snapshot_holder.clear()
 
     assert len(snapshot_holder) == 0
-    assert len(snapshot_holder._deepcopy_memo) == 0
-    # assert len(snapshot_holder._key_2_obj_copy_id) == 0
-    # assert len(snapshot_holder._obj_copy_id_keys) == 0
-    assert len(snapshot_holder._keys_for_deleted_objs) == 0
+    assert snapshot_holder.get_deepcopy_content_ids() == IndexedSet()
+    assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == IndexedSet()
 
 
 def test_get_calling_module_name() -> None:

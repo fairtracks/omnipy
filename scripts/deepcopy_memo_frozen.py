@@ -52,7 +52,7 @@ def run_nested_frozen_dicts_or_tuples_model() -> None:
     del v
 
     del nested_frozen_dicts_or_tuples_model
-    number_model.snapshot_holder.delete_scheduled()
+    number_model.snapshot_holder.delete_scheduled_deepcopy_content_ids()
     print(number_model.snapshot_holder._deepcopy_memo)
 
     assert len(number_model.snapshot_holder._deepcopy_memo) == 0

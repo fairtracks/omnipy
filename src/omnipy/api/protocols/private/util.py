@@ -1,5 +1,7 @@
 from typing import Callable, Protocol, runtime_checkable, TypeVar
 
+from boltons.setutils import IndexedSet
+
 from omnipy.api.typedefs import DecoratorClassT
 
 _ObjT = TypeVar('_ObjT', bound=object)
@@ -69,27 +71,29 @@ class IsSnapshotHolder(IsWeakKeyRefContainer[_HasContentsT,
                                              IsSnapshotWrapper[_HasContentsT, _ContentsT]],
                        Protocol[_HasContentsT, _ContentsT]):
     """"""
-    def is_empty(self) -> bool:
-        ...
-
     def clear(self) -> None:
         ...
 
-    def schedule_for_deletion(self, key: int) -> None:
+    def all_is_empty(self) -> bool:
         ...
 
-    def delete_scheduled(self) -> None:
+    def get_deepcopy_content_ids(self) -> IndexedSet[int]:
+        ...
+
+    def get_deepcopy_content_ids_scheduled_for_deletion(self) -> IndexedSet[int]:
+        ...
+
+    def schedule_deepcopy_content_ids_for_deletion(self, *keys: int) -> None:
+        ...
+
+    def delete_scheduled_deepcopy_content_ids(self) -> None:
         ...
 
     def take_snapshot_setup(self) -> None:
         ...
 
-    def take_snapshot_cleanup(self) -> None:
+    def take_snapshot_teardown(self) -> None:
         ...
 
     def take_snapshot(self, obj: _HasContentsT) -> None:
         ...
-
-    #
-    # def recursively_remove_deleted_obj_from_deepcopy_memo(self, key: int) -> None:
-    #     ...

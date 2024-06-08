@@ -779,7 +779,7 @@ def test_complex_models():
       }
     }''')  # noqa: Q001
 
-    dataset.snapshot_holder.delete_scheduled()
+    dataset.snapshot_holder.delete_scheduled_deepcopy_content_ids()
     pass
 
 

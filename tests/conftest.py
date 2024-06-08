@@ -1,10 +1,11 @@
 from datetime import datetime
+import gc
 import logging
 import os
 from pathlib import Path
 import shutil
 import tempfile
-from typing import Annotated, Generator, Type
+from typing import Annotated, Iterator, Type
 
 import pytest
 
@@ -15,7 +16,7 @@ from omnipy.data.data_class_creator import DataClassBaseMeta, DataClassCreator
 
 
 @pytest.fixture(scope='function')
-def teardown_rm_root_log_dir() -> Generator[None, None, None]:
+def teardown_rm_root_log_dir() -> Iterator[None]:
     root_log_config = RootLogConfig()
     log_dir_path = root_log_config.file_log_dir_path
     yield
@@ -24,7 +25,7 @@ def teardown_rm_root_log_dir() -> Generator[None, None, None]:
 
 
 @pytest.fixture(scope='function')
-def teardown_remove_root_log_handlers() -> Generator[None, None, None]:
+def teardown_remove_root_log_handlers() -> Iterator[None]:
     root_logger = logging.root
     num_root_log_handlers = len(root_logger.handlers)
     yield
@@ -34,19 +35,19 @@ def teardown_remove_root_log_handlers() -> Generator[None, None, None]:
 
 
 @pytest.fixture(scope='function')
-def tmp_dir_path() -> Generator[Path, None, None]:
+def tmp_dir_path() -> Iterator[Path]:
     with tempfile.TemporaryDirectory() as _tmp_dir_path:
         yield Path(_tmp_dir_path)
 
 
 @pytest.fixture(scope='function')
-def teardown_reset_job_creator() -> Generator[None, None, None]:
+def teardown_reset_job_creator() -> Iterator[None]:
     yield None
     JobBaseMeta._job_creator_obj = JobCreator()
 
 
 @pytest.fixture(scope='function')
-def teardown_reset_data_class_creator() -> Generator[None, None, None]:
+def teardown_reset_data_class_creator() -> Iterator[None]:
     yield None
     DataClassBaseMeta._data_class_creator_obj = DataClassCreator()
 
@@ -66,7 +67,7 @@ def runtime_cls(
 def runtime(
     runtime_cls: Annotated[Type[IsRuntime], pytest.fixture],
     tmp_dir_path: Annotated[Path, pytest.fixture],
-) -> Generator[IsRuntime, None, None]:
+) -> Iterator[None]:
     runtime = runtime_cls()
 
     runtime.config.reset_to_defaults()
@@ -86,3 +87,28 @@ def mock_datetime() -> datetime:
             return self._now
 
     return MockDatetime(2000, 1, 1)
+
+
+@pytest.fixture(scope='function')
+def assert_snapshot_holder_and_deepcopy_memo_are_empty(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> Iterator[None]:
+    snapshot_holder = runtime.objects.data_class_creator.snapshot_holder
+
+    def _assert_snapshot_holder_and_deepcopy_memo_are_empty():
+        snapshot_holder.delete_scheduled_deepcopy_content_ids()
+        try:
+            print('\nChecking if snapshot_holder and deepcopy_memo objects are empty...')
+            assert snapshot_holder.all_is_empty()
+        except AssertionError:
+            print('Not empty. Running garbage collection and trying again...')
+            gc.collect()
+            snapshot_holder.delete_scheduled_deepcopy_content_ids()
+            assert snapshot_holder.all_is_empty()
+        finally:
+            snapshot_holder.clear()
+
+    _assert_snapshot_holder_and_deepcopy_memo_are_empty()
+
+    yield
+
+    _assert_snapshot_holder_and_deepcopy_memo_are_empty()

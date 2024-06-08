@@ -26,6 +26,7 @@ from typing import (Annotated,
                     Union)
 import weakref
 
+from boltons.setutils import IndexedSet
 from devtools import debug, PrettyFormat
 from pydantic import NoneIsNotAllowedError
 from pydantic import Protocol as PydanticProtocol
@@ -41,7 +42,10 @@ from omnipy.api.protocols.private.util import IsSnapshotHolder, IsSnapshotWrappe
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
-from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
+from omnipy.util.contexts import (AttribHolder,
+                                  LastErrorHolder,
+                                  nothing,
+                                  setup_and_teardown_callback_context)
 from omnipy.util.decorators import add_callback_after_call, no_context
 from omnipy.util.helpers import (all_equals,
                                  all_type_variants,
@@ -412,13 +416,12 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     # @staticmethod
     # def _finalize(self_id: int, contents_id: int, snapshot_holder: IsSnapshotHolder):
     #     print(f'Deleting self.id: {self_id} -> contents_id: {contents_id}')
-    #     snapshot_holder.schedule_for_deletion(contents_id)
+    #     snapshot_holder.schedule_deepcopy_content_ids_for_deletion(contents_id)
 
     def __del__(self):
         contents_id = id(self.contents)
-        # print(f'Deleting self.id: {id(self)} -> contents_id: {contents_id}')
         # self.contents = Undefined
-        self.snapshot_holder.schedule_for_deletion(contents_id)
+        self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(contents_id)
 
     # if id(self) in _restorable_content_cache:
     #     del _restorable_content_cache[id(self)]
@@ -501,7 +504,27 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 if id(validated_content) != id(self.contents):
                     self.contents = validated_content
                 self._take_snapshot_of_validated_contents()
-            reset_solution = AttribHolder(self, 'contents', self.snapshot, reset_to_other=True)
+
+            prev_deepcopy_content_ids: IndexedSet[int] = IndexedSet()
+
+            def _setup():
+                prev_deepcopy_content_ids.update(self.snapshot_holder.get_deepcopy_content_ids())
+
+            def _handle_exception():
+                new_deepcopy_content_ids = (
+                    self.snapshot_holder.get_deepcopy_content_ids()
+                    & prev_deepcopy_content_ids)
+                self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
+                    *new_deepcopy_content_ids)
+                # self.contents = self.snapshot_holder.get_snapshot_deepcopy(self)
+                from copy import deepcopy
+                self.contents = deepcopy(self.snapshot)
+
+            reset_solution = setup_and_teardown_callback_context(
+                setup_func=_setup,
+                exception_func=_handle_exception,
+            )
+            # reset_solution = AttribHolder(self, 'contents', self.snapshot, reset_to_other=True)
         else:
             reset_solution = nothing()
         with (reset_solution):
@@ -581,7 +604,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def _take_snapshot_of_validated_contents(self) -> None:
         if self.config.interactive_mode:
             with self.deepcopy_context(self.snapshot_holder.take_snapshot_setup,
-                                       self.snapshot_holder.take_snapshot_cleanup):
+                                       self.snapshot_holder.take_snapshot_teardown):
                 self.snapshot_holder.take_snapshot(self)
             # print(
             #     f'SnapshotWrapper contents_id={id(self.contents)} -> {id(self.snapshot)}: {self.contents}'
@@ -777,7 +800,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                     contents_prop.__set__(self, value)
 
                     if self.config.interactive_mode and self.has_snapshot():
-                        self.snapshot_holder.schedule_for_deletion(old_contents_id)
+                        self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
+                            old_contents_id)
             else:
                 if self._is_non_omnipy_pydantic_model():
                     self._special_method(
