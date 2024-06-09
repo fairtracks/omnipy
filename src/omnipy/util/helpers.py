@@ -325,20 +325,20 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
             if len(self) > 0:
                 print('==================================================')
                 for key in self:
-                    print(
-                        f'Content id: {key} [{sys.getrefcount(self[key])-1} refs, id={id(self[key])}]: {self[key]}'
-                    )
+                    print(f'Content id: {key} '
+                          f'[{sys.getrefcount(self[key])-1} refs, id={id(self[key])}]: '
+                          f'{repr(self[key])}')
 
                 for key in self:
                     print('--------------------------------------------------')
-                    print(f'References for {key}: {self[key]}')
+                    print(f'References for {key}: {repr(self[key])}')
                     print('--------------------------------------------------')
                     for i, ref in enumerate(gc.get_referrers(self[key])):
                         try:
                             print(f'[Reference {i}]')
                             print(f'    Type: {type(ref)}')
                             print(f'    ID: {id(ref)}')
-                            print(f'    Value: {ref}')
+                            print(f'    Value: {repr(ref)}')
                             print()
 
                         except Exception as e:
@@ -448,6 +448,8 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         keys_for_deleted_objs: IndexedSet[int],
     ):
         try:
+            print(f'keys_for_deleted_objs: {keys_for_deleted_objs}')
+            print(f'self.get_deepcopy_object_ids(): {self.get_deepcopy_object_ids()}')
             keys_to_delete = self._remove_deleted_objs(keys_for_deleted_objs)
         except Exception as e:
             print(f'Error in recursively_remove_deleted_objs: {repr(e)}')
@@ -471,7 +473,7 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
             retry_keys: IndexedSet[int] = IndexedSet()
             while len(keys_to_delete) > 0:
                 # print(f'len(keys_to_delete): {len(keys_to_delete)}')
-                # print(f'keys_to_delete: {keys_to_delete}')
+                print(f'keys_to_delete: {keys_to_delete}')
                 key = keys_to_delete.pop(0)
 
                 if key not in self.data:
@@ -483,11 +485,11 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
                 # obj = self.data[key]
                 # print(f'obj: {obj}')
                 ref_count = sys.getrefcount(self.data[key])
-                # print(f'{self.data[key]} has {ref_count} references')
-                # for k, v in self.data.items():
-                #     print(f'{k}: {v}, id(val)={id(v)}')
-                # k = 0
-                # v = 0
+                print(f'{key}: {repr(self.data[key])} has {ref_count} references')
+                for k, v in self.data.items():
+                    print(f'{k}: {repr(v)}, id(val)={id(v)}')
+                k = 0
+                v = 0
                 ref_count_target = 2
                 # print(f'ref_count_target: {ref_count_target}')
                 # for i, ref in enumerate(gc.get_referrers(self.data[key])):
@@ -505,6 +507,7 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
                 # del loc
 
                 if ref_count <= ref_count_target:
+                    print(f'Now deleting {key}: {self.data[key]}')
                     keys_to_delete = self._add_sub_obj_ids_to_deletion_keys(key, keys_to_delete)
                     self._delete_memo_entry(key)
                     any_keys_deleted_this_iteration = True
@@ -638,15 +641,16 @@ class SnapshotHolder(WeakKeyRefContainer[_HasContentsT,
             print(f'SnapshotHolder.all_are_empty(): {_all_are_empty}')
             print('-------------------------')
             print(f'len(self): {len(self)}')
-            print(
-                f'len(self._deepcopy_content_ids_for_deleted_objs): {len(self._deepcopy_content_ids_for_deleted_objs)}'
-            )
+            print(f'self.get_deepcopy_content_ids(): '
+                  f'{self.get_deepcopy_content_ids()}')
+            print(f'self.get_deepcopy_content_ids_scheduled_for_deletion(): '
+                  f'{self.get_deepcopy_content_ids_scheduled_for_deletion()}')
             print(f'self._deepcopy_memo.all_are_empty(): {_deepcopy_memo_all_are_empty}')
 
             if len(self) > 0:
                 print('=========================')
                 for key, val in self._value_dict.items():
-                    print(f'{key}: {val}')
+                    print(f'{key}: {repr(val)}')
 
         return _all_are_empty
 

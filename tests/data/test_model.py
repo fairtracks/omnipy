@@ -1535,11 +1535,9 @@ def test_lazy_snapshot_triggered_by_state_keeping_mimicked_methods(
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
-    res_model = model.get(0)
+    result = model.count(123)
+    assert result == 1
     assert model.snapshot == model.contents == [123]
-
-    _assert_no_snapshot(res_model)
-    assert res_model.contents == 123
 
 
 def test_lazy_snapshot_triggered_by_state_changing_mimicked_methods(

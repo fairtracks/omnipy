@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import shutil
 import tempfile
-from typing import Annotated, Iterator, Type
+from typing import Annotated, Callable, Iterator, Type
 
 import pytest
 
@@ -91,7 +91,7 @@ def mock_datetime() -> datetime:
 
 @pytest.fixture(scope='function')
 def assert_snapshot_holder_and_deepcopy_memo_are_empty(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> Iterator[None]:
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> Callable[[], None]:
     snapshot_holder = runtime.objects.data_class_creator.snapshot_holder
 
     def _assert_snapshot_holder_and_deepcopy_memo_are_empty():
@@ -111,8 +111,17 @@ def assert_snapshot_holder_and_deepcopy_memo_are_empty(
         finally:
             snapshot_holder.clear()
 
-    _assert_snapshot_holder_and_deepcopy_memo_are_empty()
+    return _assert_snapshot_holder_and_deepcopy_memo_are_empty
+
+
+@pytest.fixture(scope='function')
+def assert_snapshot_holder_and_deepcopy_memo_are_empty_before_and_after(
+    assert_snapshot_holder_and_deepcopy_memo_are_empty: Annotated[Callable[[], None],
+                                                                  pytest.fixture]
+) -> Iterator[None]:
+
+    assert_snapshot_holder_and_deepcopy_memo_are_empty()
 
     yield
 
-    _assert_snapshot_holder_and_deepcopy_memo_are_empty()
+    assert_snapshot_holder_and_deepcopy_memo_are_empty()

@@ -22,7 +22,6 @@ from typing import (Annotated,
                     Optional,
                     ParamSpec,
                     SupportsIndex,
-                    TypeVar,
                     Union)
 import weakref
 
@@ -36,6 +35,7 @@ from pydantic.generics import GenericModel
 from pydantic.main import BaseModel, ModelMetaclass, validate_model
 from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass
+from typing_extensions import TypeVar
 
 from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.private.util import IsSnapshotHolder, IsSnapshotWrapper
@@ -71,9 +71,7 @@ _ValT = TypeVar('_ValT')
 _IterT = TypeVar('_IterT')
 _ReturnT = TypeVar('_ReturnT')
 _IdxT = TypeVar('_IdxT', bound=SupportsIndex)
-_RootT = TypeVar('_RootT', bound=object | None)
-_ObjT = TypeVar('_ObjT', bound=object)
-_ContentsT = TypeVar("_ContentsT", bound=object)
+_RootT = TypeVar('_RootT', bound=object | None, default=object)
 
 _P = ParamSpec('_P')
 
@@ -219,11 +217,13 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def _get_bound_if_typevar(cls,
                               model: type[_RootT] | TypeForm | TypeVar) -> type[_RootT] | TypeForm:
         if isinstance(model, TypeVar):
-            if model.__bound__ is None:
-                raise TypeError('The TypeVar "{}" needs to be bound to a '.format(model.__name__)
-                                + 'type that provides a default value when called')
+            if hasattr(model, '__default__') and model.__default__ is not None:
+                return model.__default__
             else:
-                return model.__bound__
+                raise TypeError(f'The TypeVar "{model.__name__}" needs to specify a default value. '
+                                f'This requires Python 3.13, but is supported in earlier versions '
+                                f'of Python by importing TypeVar from the library '
+                                f'"typing-extensions".')
         return model
 
     @classmethod
@@ -531,7 +531,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             if pre_validation_func:
                 return_val = pre_validation_func(*pre_validation_func_args,
                                                  **pre_validation_func_kwargs)
-
             # if self.config.interactive_mode and self.has_snapshot() \
             #
             # Following is incorrect, must compare new_contents with snapshot, as self.contents is not
@@ -729,6 +728,10 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             cls._get_root_type(outer=True, with_args=with_args), cls.__module__)
 
     @classmethod
+    def full_type(cls) -> TypeForm | None:
+        return cls.outer_type(with_args=True)
+
+    @classmethod
     def is_nested_type(cls) -> bool:
         return not cls.inner_type(with_args=True) == cls.outer_type(with_args=True)
 
@@ -814,6 +817,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     def _special_method(  # noqa: C901
             self, name: str, info: MethodInfo, *args: object, **kwargs: object) -> object:
+        print(f'Calling special method: {name}')
 
         if info.state_changing and self.config.interactive_mode:
             # if not self.has_snapshot() or not self.contents_validated_according_to_snapshot():
@@ -821,7 +825,12 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             #     self.validate_contents()
 
             def _call_special_method(*inner_args: object, **inner_kwargs: object) -> object:
-                return self._call_special_method(name, *inner_args, **inner_kwargs)
+                return_val = self._call_special_method(name, *inner_args, **inner_kwargs)
+
+                if id(return_val) == id(self.contents):  # in-place operator, e.g. model += 1
+                    return_val = self
+
+                return return_val
 
             def _set_new_contents(contents: object) -> None:
                 self.contents = contents
@@ -843,9 +852,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             if info.state_changing:
                 self.validate_contents()
 
-        if id(ret) == id(self.contents):  # for e.g. in-place operations
-            ret = self
-        elif info.maybe_returns_same_type:
+        if id(ret) != id(self) and info.maybe_returns_same_type:
             level_up = False
             if name == '__getitem__':
                 assert len(args) == 1
@@ -954,16 +961,44 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             ## REVISE!
             contents_holder_context = AttribHolder(self, 'contents', copy_attr=True)
 
-            contents_cls_attr = self._getattr_from_contents_cls(attr)
-
             def _validate_contents(ret: Any):
                 self.validate_contents()
                 return ret
+
+            contents_cls_attr = self._getattr_from_contents_cls(attr)
 
             if not isinstance(contents_cls_attr, property) and callable(contents_attr):
                 contents_attr = add_callback_after_call(contents_attr,
                                                         _validate_contents,
                                                         contents_holder_context)
+
+            #     ret = self._generic_validate_contents(
+            #         pre_validation_func=_call_special_method,
+            #         pre_validation_func_args=args,
+            #         pre_validation_func_kwargs=kwargs,
+            #         post_validation_func=_set_new_contents)
+            #
+            #     contents_attr = setup_and_teardown_callback_context(
+            #         setup_func=setup,
+            #         setup_func_kwargs=dict(number=75),
+            #         exception_func=exception,
+            #         exception_func_args=(100,),
+            #         teardown_func=teardown,
+            #         teardown_func_kwargs=dict(number=75),
+            #     )(
+            #         contents_attr)
+            #
+            # def _call_special_method(*inner_args: object, **inner_kwargs: object) -> object:
+            #     return self._call_special_method(name, *inner_args, **inner_kwargs)
+            #
+            # def _set_new_contents(contents: object) -> None:
+            #     self.contents = contents
+            #
+            # ret = self._generic_validate_contents(
+            #     pre_validation_func=_call_special_method,
+            #     pre_validation_func_args=args,
+            #     pre_validation_func_kwargs=kwargs,
+            #     post_validation_func=_set_new_contents)
 
         if attr in ('keys', 'values', 'items'):
             level_up_arg_idx: int | slice
@@ -1014,7 +1049,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         #     if get_calling_module_name() in INTERACTIVE_MODULES:
         #         _waiting_for_terminal_repr(True)
         #         return self._table_repr()
-        return self._trad_repr()
         return self._trad_repr()
 
     def view(self):
@@ -1104,8 +1138,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         return out
 
 
-_ParamRootT = TypeVar('_ParamRootT', bound=object | None)
-_KwargValT = TypeVar('_KwargValT', bound=object)
+_ParamRootT = TypeVar('_ParamRootT', default=object | None)
+_KwargValT = TypeVar('_KwargValT', default=object)
 
 
 class DataWithParams(GenericModel, Generic[_ParamRootT, _KwargValT]):
