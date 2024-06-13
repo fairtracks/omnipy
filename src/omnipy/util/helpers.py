@@ -448,8 +448,8 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         keys_for_deleted_objs: IndexedSet[int],
     ):
         try:
-            print(f'keys_for_deleted_objs: {keys_for_deleted_objs}')
-            print(f'self.get_deepcopy_object_ids(): {self.get_deepcopy_object_ids()}')
+            # print(f'keys_for_deleted_objs: {keys_for_deleted_objs}')
+            # print(f'self.get_deepcopy_object_ids(): {self.get_deepcopy_object_ids()}')
             keys_to_delete = self._remove_deleted_objs(keys_for_deleted_objs)
         except Exception as e:
             print(f'Error in recursively_remove_deleted_objs: {repr(e)}')
@@ -473,7 +473,7 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
             retry_keys: IndexedSet[int] = IndexedSet()
             while len(keys_to_delete) > 0:
                 # print(f'len(keys_to_delete): {len(keys_to_delete)}')
-                print(f'keys_to_delete: {keys_to_delete}')
+                # print(f'keys_to_delete: {keys_to_delete}')
                 key = keys_to_delete.pop(0)
 
                 if key not in self.data:
@@ -485,11 +485,11 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
                 # obj = self.data[key]
                 # print(f'obj: {obj}')
                 ref_count = sys.getrefcount(self.data[key])
-                print(f'{key}: {repr(self.data[key])} has {ref_count} references')
-                for k, v in self.data.items():
-                    print(f'{k}: {repr(v)}, id(val)={id(v)}')
-                k = 0
-                v = 0
+                # print(f'{key}: {repr(self.data[key])} has {ref_count} references')
+                # for k, v in self.data.items():
+                #     print(f'{k}: {repr(v)}, id(val)={id(v)}')
+                # k = 0
+                # v = 0
                 ref_count_target = 2
                 # print(f'ref_count_target: {ref_count_target}')
                 # for i, ref in enumerate(gc.get_referrers(self.data[key])):
@@ -507,7 +507,7 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
                 # del loc
 
                 if ref_count <= ref_count_target:
-                    print(f'Now deleting {key}: {self.data[key]}')
+                    # print(f'Now deleting {key}: {self.data[key]}')
                     keys_to_delete = self._add_sub_obj_ids_to_deletion_keys(key, keys_to_delete)
                     self._delete_memo_entry(key)
                     any_keys_deleted_this_iteration = True

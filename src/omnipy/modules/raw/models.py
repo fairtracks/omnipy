@@ -1,8 +1,12 @@
 import os
+from typing import Generic, get_args
 
+from pydantic import BaseModel
 from pydantic.generics import _generic_types_cache
+from typing_extensions import TypeVar
 
 from omnipy.data.model import DataWithParams, ListOfParamModel, Model, ParamModel
+from omnipy.modules.general.models import TypeVarStore
 
 
 class BytesModel(ParamModel[str | bytes, str]):
@@ -53,7 +57,41 @@ class JoinLinesModel(Model[list[str] | str]):
         return os.linesep.join(data)
 
 
-class SplitToItemsModel(ParamModel[str | list[str], bool | str]):
+class Params:
+    params: dict[str, object]
+
+    def __class_getitem__(cls, params: dict[str, object] = {}) -> 'Params':
+        cls.params = params
+        return cls
+
+
+ParamsT = TypeVar('ParamsT', default=Params)
+
+
+class SplitToItemsModel(Model[list[str] | str | TypeVarStore[ParamsT]], Generic[ParamsT]):
+    class Params(BaseModel):
+        strip: bool = True
+        strip_chars: str | None = None
+        delimiter: str = ','
+
+    @classmethod
+    def _parse_data(cls, data: list[str] | str | TypeVarStore[ParamsT]) -> list[str]:
+        if isinstance(data, list):
+            return data
+
+        params_typevar = get_args(get_args(cls.outer_type(with_args=True))[-1])[0]
+        params_dict = Model[params_typevar]().contents.params
+        params = cls.Params(**params_dict)
+
+        if params.strip:
+            data = data.strip(params.strip_chars)
+
+        items = data.split(params.delimiter)
+        data = [item.strip(params.strip_chars) for item in items] if params.strip else items
+        return data
+
+
+class SplitToItemsModel2(ParamModel[str | list[str], bool | str]):
     @classmethod
     def _parse_data(cls,
                     data: str | list[str],
@@ -75,7 +113,7 @@ class JoinItemsModel(ParamModel[list[str] | str, str]):
         return delimiter.join(data)
 
 
-class SplitLinesToColumnsModel(ListOfParamModel[SplitToItemsModel, bool | str]):
+class SplitLinesToColumnsModel(ListOfParamModel[SplitToItemsModel2, bool | str]):
     ...
 
 

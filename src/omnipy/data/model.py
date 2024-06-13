@@ -214,8 +214,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         # json_dumps = orjson_dumps
 
     @classmethod
-    def _get_bound_if_typevar(cls,
-                              model: type[_RootT] | TypeForm | TypeVar) -> type[_RootT] | TypeForm:
+    def _get_default_if_typevar(
+            cls, model: type[_RootT] | TypeForm | TypeVar) -> type[_RootT] | TypeForm:
         if isinstance(model, TypeVar):
             if hasattr(model, '__default__') and model.__default__ is not None:
                 return model.__default__
@@ -227,8 +227,18 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         return model
 
     @classmethod
+    def _get_default_factory_from_model(
+            cls, model: type[_RootT] | TypeForm | TypeVar) -> Callable[[], _RootT]:
+        default_val = cls._get_default_value_from_model(model)
+
+        def default_factory() -> _RootT:
+            return default_val
+
+        return default_factory
+
+    @classmethod
     def _get_default_value_from_model(cls, model: type[_RootT] | TypeForm | TypeVar) -> _RootT:
-        model = cls._get_bound_if_typevar(model)
+        model = cls._get_default_if_typevar(model)
         origin_type = get_origin(model)
         args = get_args(model)
 
@@ -259,19 +269,20 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         if origin_type is Literal:
             return args[0]
 
+        if origin_type is ForwardRef:
+            raise TypeError(f'Cannot instantiate model "{model}". ')
+
         return cast(_RootT, origin_type())
 
     @classmethod
     def _populate_root_field(cls, model: type[_RootT] | TypeVar) -> type[_RootT]:
-        default_val = cls._get_default_value_from_model(model)
 
-        def get_default_val() -> _RootT:
-            return default_val
+        default_factory = cls._get_default_factory_from_model(model)
 
         if ROOT_KEY in cls.__config__.fields:
-            cls.__config__.fields[ROOT_KEY]['default_factory'] = get_default_val  # type: ignore
+            cls.__config__.fields[ROOT_KEY]['default_factory'] = default_factory  # type: ignore
         else:
-            cls.__config__.fields[ROOT_KEY] = {'default_factory': get_default_val}  # type: ignore
+            cls.__config__.fields[ROOT_KEY] = {'default_factory': default_factory}  # type: ignore
 
         if not get_origin(model) == Annotated and not is_optional(model):
             model = cast(type[_RootT], Annotated[Optional[model], 'Fake Optional from Model'])
@@ -338,6 +349,14 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             model = cast(type[_RootT] | tuple[type[_RootT], Any], model)
 
         created_model = cast(Model, super().__class_getitem__(model))
+
+        if cls != Model:
+            try:
+                outer_type = created_model.outer_type(with_args=True)
+                root_field = created_model._get_root_field()
+                root_field.default_factory = cls._get_default_factory_from_model(outer_type)
+            except TypeError:  # E.g. if model type is ForwardRef
+                pass
 
         # As long as models are not created concurrently, setting the class members temporarily
         # should not have averse effects
@@ -817,7 +836,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     def _special_method(  # noqa: C901
             self, name: str, info: MethodInfo, *args: object, **kwargs: object) -> object:
-        print(f'Calling special method: {name}')
 
         if info.state_changing and self.config.interactive_mode:
             # if not self.has_snapshot() or not self.contents_validated_according_to_snapshot():
@@ -868,7 +886,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def _call_special_method(self, name: str, *args: object, **kwargs: object) -> object:
         try:
             method = self._getattr_from_contents_obj(name)
-        except AttributeError:
+        except AttributeError as e:
+            if name in ('__int__', '__bool__', '__float__', '__complex__'):
+                raise ValueError from e
             if name == '__len__':
                 raise TypeError(f"object of type '{self.__class__.__name__}' has no len()")
             else:
@@ -1051,6 +1071,10 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         #         return self._table_repr()
         return self._trad_repr()
 
+    def __hash__(self) -> int:
+        return self._special_method('__hash__',
+                                    MethodInfo(state_changing=False, maybe_returns_same_type=False))
+
     def view(self):
         from omnipy.modules.pandas.models import PandasModel
         return PandasModel(self).contents
@@ -1149,22 +1173,6 @@ class DataWithParams(GenericModel, Generic[_ParamRootT, _KwargValT]):
 
 class ParamModel(Model[_ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
                  Generic[_ParamRootT, _KwargValT]):
-    def __class_getitem__(  # type: ignore[override]
-        cls,
-        model: tuple[type[_ParamRootT], type[_KwargValT]]  # type: ignore[override]
-    ) -> 'ParamModel[_ParamRootT, _KwargValT]':
-        created_model = super().__class_getitem__(model)
-        outer_type = created_model._get_root_type(outer=True, with_args=True)
-        default_val = cls._get_default_value_from_model(outer_type)
-
-        def get_default_val() -> _ParamRootT | DataWithParams[_ParamRootT, _KwargValT]:
-            return default_val
-
-        root_field = created_model._get_root_field()
-        root_field.default_factory = get_default_val
-
-        return cast(ParamModel, created_model)
-
     def _init(self,
               super_kwargs: dict[str, _ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
               **kwargs: _KwargValT) -> None:

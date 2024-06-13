@@ -12,6 +12,7 @@ from omnipy.compute.task import Task, TaskTemplate
 from omnipy.data.dataset import Dataset, ListOfParamModelDataset, ParamDataset
 from omnipy.data.model import ListOfParamModel, Model, ParamModel
 from omnipy.hub.runtime import runtime
+from omnipy.modules.general.models import Chain2, Chain3, Chain4, Chain5, Chain6
 # from omnipy.util.helpers import recursive_module_import
 from omnipy.modules.general.tasks import convert_dataset, import_directory, split_dataset
 from omnipy.modules.isa import (flatten_isa_json,
@@ -89,6 +90,7 @@ from omnipy.modules.raw.models import (BytesModel,
                                        JoinColumnsToLinesModel,
                                        JoinItemsModel,
                                        JoinLinesModel,
+                                       Params,
                                        SplitLinesToColumnsModel,
                                        SplitToItemsModel,
                                        SplitToLinesModel,
@@ -196,6 +198,12 @@ __all__ = [
     'TableWithColNamesDataset',
     'TableOfPydanticRecordsModel',
     'TableWithColNamesModel',
+    'Params',
+    'Chain2',
+    'Chain3',
+    'Chain4',
+    'Chain5',
+    'Chain6',
     'import_directory',
     'split_dataset',
     'convert_dataset',

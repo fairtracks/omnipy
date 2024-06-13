@@ -1,4 +1,4 @@
-from typing import Generic, Hashable, TypeAlias
+from typing import Generic, get_args, Hashable, TypeAlias
 
 from typing_extensions import TypeVar
 
@@ -143,3 +143,57 @@ class NestedFrozenDictsModel(Model[_FrozenNoTuplesM[_KeyT, _ValT]], Generic[_Key
     Awaiting support for MappingProxyType in pydantic for the immutability to actually work.
     Also use as generic types awaits Python 3.13. Way ahead of the crowd here!
     """
+
+
+T = TypeVar('T')
+U = TypeVar('U', bound=Model, default=Model[object])
+V = TypeVar('V', bound=Model, default=Model[object])
+W = TypeVar('W', bound=Model, default=Model[object])
+X = TypeVar('X', bound=Model, default=Model[object])
+Y = TypeVar('Y', bound=Model, default=Model[object])
+Z = TypeVar('Z', bound=Model, default=Model[object])
+
+
+class TypeVarStore(Generic[T]):
+    def __init__(self, t: T) -> None:
+        raise ValueError()
+
+
+class ChainMixin:
+    @classmethod
+    def _parse_data(cls, data) -> object:
+        stores = get_args(cls.outer_type(with_args=True))[:-1]
+        for store in stores:
+            model = get_args(store)[0]
+            data = model(data)
+        return data
+
+
+class Chain2(ChainMixin, Model[TypeVarStore[U] | TypeVarStore[V] | object], Generic[U, V]):
+    ...
+
+
+class Chain3(ChainMixin,
+             Model[TypeVarStore[U] | TypeVarStore[V] | TypeVarStore[W] | object],
+             Generic[U, V, W]):
+    ...
+
+
+class Chain4(ChainMixin,
+             Model[TypeVarStore[U] | TypeVarStore[V] | TypeVarStore[W] | TypeVarStore[X] | object],
+             Generic[U, V, W, X]):
+    ...
+
+
+class Chain5(ChainMixin,
+             Model[TypeVarStore[U] | TypeVarStore[V] | TypeVarStore[W] | TypeVarStore[X]
+                   | TypeVarStore[Y] | object],
+             Generic[U, V, W, X, Y]):
+    ...
+
+
+class Chain6(ChainMixin,
+             Model[TypeVarStore[U] | TypeVarStore[V] | TypeVarStore[W] | TypeVarStore[X]
+                   | TypeVarStore[Y] | TypeVarStore[Z] | object],
+             Generic[U, V, W, X, Y, Z]):
+    ...

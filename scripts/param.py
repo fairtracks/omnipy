@@ -1,5 +1,7 @@
+from typing import Generic, get_args, get_origin, Literal
+
 from pydantic.fields import UndefinedType
-from typing_extensions import Generic, get_args, get_origin, Literal, TypeVar
+from typing_extensions import TypeVar
 
 from omnipy import Model
 
@@ -48,3 +50,11 @@ class D(Model[T], Generic[T]):
 
 
 D[Literal['asd']]()
+
+
+class Splitter(Model[list[str] | str | Model[T]], Generic[T]):
+    ...
+
+
+class A(Model[tuple[T, S]], Generic[T, S]):
+    ...
