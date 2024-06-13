@@ -46,6 +46,7 @@ bidict = "^0.23.1"
 line-profiler-pycharm = "^1.1.0"
 boltons = "^24.0.0"
 jupyter = "^1.0.0"
+collections-extended = "^2.0.2"
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"

@@ -25,7 +25,7 @@ from typing import (Annotated,
                     Union)
 import weakref
 
-from boltons.setutils import IndexedSet
+from collections_extended import setlist
 from devtools import debug, PrettyFormat
 from pydantic import NoneIsNotAllowedError
 from pydantic import Protocol as PydanticProtocol
@@ -524,7 +524,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                     self.contents = validated_content
                 self._take_snapshot_of_validated_contents()
 
-            prev_deepcopy_content_ids: IndexedSet[int] = IndexedSet()
+            prev_deepcopy_content_ids: setlist[int] = setlist()
 
             def _setup():
                 prev_deepcopy_content_ids.update(self.snapshot_holder.get_deepcopy_content_ids())

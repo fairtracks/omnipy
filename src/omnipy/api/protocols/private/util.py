@@ -1,6 +1,6 @@
 from typing import Callable, Protocol, runtime_checkable, TypeVar
 
-from boltons.setutils import IndexedSet
+from collections_extended import setlist
 
 from omnipy.api.typedefs import DecoratorClassT
 
@@ -77,10 +77,10 @@ class IsSnapshotHolder(IsWeakKeyRefContainer[_HasContentsT,
     def all_are_empty(self, debug: bool = False) -> bool:
         ...
 
-    def get_deepcopy_content_ids(self) -> IndexedSet[int]:
+    def get_deepcopy_content_ids(self) -> setlist[int]:
         ...
 
-    def get_deepcopy_content_ids_scheduled_for_deletion(self) -> IndexedSet[int]:
+    def get_deepcopy_content_ids_scheduled_for_deletion(self) -> setlist[int]:
         ...
 
     def schedule_deepcopy_content_ids_for_deletion(self, *keys: int) -> None:
