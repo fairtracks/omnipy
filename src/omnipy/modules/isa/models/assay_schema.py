@@ -22,12 +22,12 @@ class FieldType(Enum):
     Assay = 'Assay'
 
 
-class Materials(BaseModel):
+class _Materials(BaseModel):
     samples: Optional[List[sample_schema.IsaSampleModel]] = None
     otherMaterials: Optional[List[material_schema.IsaMaterialModel]] = None
 
 
-class MaterialsModel(Model[Materials]):
+class _MaterialsModel(Model[_Materials]):
     ...
 
 
@@ -44,7 +44,7 @@ class IsaAssayJsonSchema(BaseModel):
     technologyType: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = (None)
     technologyPlatform: Optional[str] = None
     dataFiles: Optional[List[data_schema.IsaDataModel]] = None
-    materials: Optional[MaterialsModel] = None
+    materials: Optional[_MaterialsModel] = None
     characteristicCategories: Optional[List[material_attribute_schema.IsaMaterialAttributeModel]] =\
         Field(
             None,

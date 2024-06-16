@@ -5,40 +5,38 @@ from pydantic import BaseModel
 from omnipy.data.model import Model
 
 from ..general.models import Chain3
-from ..json.models import (JsonCustomListModel,
-                           JsonDictM,
-                           JsonListM,
+from ..json.models import (JsonCustomDictModel,
+                           JsonCustomListModel,
                            JsonListOfDictsOfScalarsModel,
                            JsonListOfListsOfScalarsModel,
                            JsonListOfScalarsModel)
 from ..json.typedefs import JsonListOfDictsOfScalars
 from ..raw.models import SplitLinesToColumnsModel, SplitToLinesModel
 
+# class TableOfStrings(Model[list[dict[str, str]]]):
+#     ...
+#
+#
+# class JsonTableOfStrings(JsonCustomListModel[JsonCustomDictModel[str]]):
+#     ...
+#
+#
+# class TableOfStringsAndLists(Model[list[dict[str, str | list[str]]]]):
+#     ...
 
-class TableOfStrings(Model[list[dict[str, str]]]):
-    ...
 
-
-class JsonTableOfStrings(JsonListM[JsonDictM[str]]):
-    ...
-
-
-class TableOfStringsAndLists(Model[list[dict[str, str | list[str]]]]):
-    ...
-
-
+# TODO: Add a test for TableWithColNamesModel
 class TableWithColNamesModel(Model[JsonListOfDictsOfScalarsModel | JsonListOfListsOfScalarsModel]):
     @classmethod
-    def _parse_data(  # type: ignore[override]
-        cls,
-        data: JsonListOfDictsOfScalarsModel | JsonListOfListsOfScalarsModel
+    def _parse_data(
+        cls, data: JsonListOfDictsOfScalarsModel | JsonListOfListsOfScalarsModel
     ) -> JsonListOfDictsOfScalarsModel | JsonListOfDictsOfScalars:
         if len(data) > 0:
-            if isinstance(data[0], JsonListM):  # type: ignore[index]
-                first_row_as_colnames = JsonCustomListModel[str](data[0])  # type: ignore[index]
+            if isinstance(data[0].contents, list):
+                first_row_as_colnames = JsonCustomListModel[str](data[0])
                 first_row_as_colnames_data: list[str] = \
-                    first_row_as_colnames.to_data()  # type: ignore[assignment]
-                rows = data[1:]  # type: ignore[index]
+                    first_row_as_colnames.to_data()
+                rows = data[1:]
 
                 # if len(rows) == 0:
                 #     rows = [[None] * len(first_row_as_colnames)]
@@ -49,7 +47,7 @@ class TableWithColNamesModel(Model[JsonListOfDictsOfScalarsModel | JsonListOfLis
                     col_name in enumerate(first_row_as_colnames_data)
                 } for row in rows]
             else:
-                assert isinstance(data[0], JsonDictM)  # type: ignore[index]
+                assert isinstance(data[0].contents, dict)
                 return cast(JsonListOfDictsOfScalarsModel, data)
 
         return cast(JsonListOfDictsOfScalarsModel, data)

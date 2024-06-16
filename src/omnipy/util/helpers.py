@@ -3,6 +3,8 @@ from collections import defaultdict, UserDict
 from collections.abc import Hashable, Iterable
 from copy import copy, deepcopy
 from dataclasses import dataclass
+from importlib.abc import Loader
+from importlib.machinery import FileFinder, ModuleSpec
 import functools
 import gc
 import inspect
@@ -143,8 +145,8 @@ def ensure_plain_type(in_type: _SpecialForm) -> _SpecialForm:
 
 @overload
 def ensure_plain_type(
-    in_type: _LiteralGenericAlias | _UnionGenericAlias | _AnnotatedAlias
-) -> _LiteralSpecialForm | type:
+    in_type: _LiteralGenericAlias
+    | _UnionGenericAlias | _AnnotatedAlias) -> _LiteralSpecialForm | type:
     ...
 
 
@@ -191,8 +193,8 @@ def evaluate_any_forward_refs_if_possible(in_type: TypeForm,
 
 
 def all_type_variants(
-    in_type: type | GenericAlias | UnionType | _UnionGenericAlias
-) -> tuple[type | GenericAlias, ...]:
+    in_type: type | GenericAlias | UnionType
+    | _UnionGenericAlias) -> tuple[type | GenericAlias, ...]:
     if is_union(in_type):
         return get_args(in_type)
     else:
@@ -736,7 +738,38 @@ def _is_internal_module(module: ModuleType, imported_modules: list[ModuleType]):
     return module not in imported_modules and module.__name__.startswith('omnipy')
 
 
-def recursive_module_import(module: ModuleType, imported_modules: list[ModuleType] = []):
+def recursive_module_import_new(root_path: list[str],
+                                imported_modules: dict[str, ModuleType],
+                                excluded_set: set[str]):
+
+    import pkgutil
+
+    module_finder: FileFinder
+    module_name: str
+    is_pkg: bool
+
+    cur_excluded_prefix = ''
+
+    for module_finder, module_name, is_pkg in pkgutil.walk_packages(root_path):  # type: ignore
+        print(f'{module_name}: {is_pkg}')
+        if cur_excluded_prefix and module_name.startswith(cur_excluded_prefix):
+            continue
+        else:
+            cur_excluded_prefix = ''
+
+        if module_name in excluded_set:
+            cur_excluded_prefix = f'{module_name}.'
+            continue
+
+        module_spec: ModuleSpec | None = module_finder.find_spec(module_name)
+        if module_spec:
+            loader: Loader | None = module_spec.loader
+            if loader:
+                imported_modules[module_name] = loader.load_module(module_name)
+
+
+def recursive_module_import(module: ModuleType,
+                            imported_modules: list[ModuleType] = []) -> dict[str, object]:
     module_vars = vars(module)
     imported_modules.append(module)
 

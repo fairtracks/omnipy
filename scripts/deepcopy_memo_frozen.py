@@ -1,6 +1,7 @@
 from typing import TypeAlias
 
-from omnipy.modules.general.models import Model, NestedFrozenDictsOrTuplesModel
+from omnipy.modules.frozen.models import NestedFrozenDictsOrTuplesModel
+from omnipy.modules.general.models import Model
 from tests.modules.general.cases.raw.examples import (e_complex_key_dict,
                                                       e_int_key_dict,
                                                       e_none_key_dict,

@@ -57,7 +57,7 @@ def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> J
 
 @mypy_fix_task_template
 @TaskTemplate()
-def flatten_outer_level_of_all_data_files(
+def _flatten_outer_level_of_all_data_files(
         dataset: JsonListOfDictsDataset, id_key: str, ref_key: str,
         default_key: str) -> tuple[JsonListOfDictsOfScalarsDataset, JsonListOfDictsDataset]:
 

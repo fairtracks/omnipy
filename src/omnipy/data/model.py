@@ -41,7 +41,7 @@ from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.private.util import IsSnapshotHolder, IsSnapshotWrapper
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
-from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
+from omnipy.data.helpers import get_special_methods_info_dict, MethodInfo
 from omnipy.util.contexts import (AttribHolder,
                                   LastErrorHolder,
                                   nothing,
@@ -313,7 +313,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         # TODO: See if it is possible to type Model mimicking of root type, e.g. with Protocol
         if inspect.isclass(outer_type_plain) or is_union(outer_type) or outer_type_plain is Literal:
-            for name, method_info in SPECIAL_METHODS_INFO.items():
+            for name, method_info in get_special_methods_info_dict().items():
                 if is_union(outer_type) or outer_type_plain is Literal:
                     outer_types = get_args(outer_type)
                 else:

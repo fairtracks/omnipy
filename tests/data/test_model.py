@@ -25,7 +25,7 @@ from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.model import Model
-from omnipy.modules.general.typedefs import FrozenDict
+from omnipy.modules.frozen.typedefs import FrozenDict
 from omnipy.util.helpers import ensure_plain_type
 
 from .helpers.models import (DefaultStrModel,
@@ -987,7 +987,7 @@ def test_union_nested_model_classes_inner_forwardref_generic_list_of_none() -> N
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason="""
 Known issue that popped up in omnipy.modules.json.models. Might be solved by pydantic v2.
-Dropping JsonBaseModel (here: BaseModel) is one workaround as it (in contrast to JsonBaseDataset)
+Dropping JsonBaseModel (here: BaseModel) is one workaround as it (in contrast to _JsonBaseDataset)
 does not seem to be needed.
 """)
 def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_default_known_issue(

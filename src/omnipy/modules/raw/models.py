@@ -5,8 +5,8 @@ from pydantic import BaseModel
 from pydantic.generics import _generic_types_cache
 from typing_extensions import TypeVar
 
+from omnipy.data.helpers import Params, TypeVarStore
 from omnipy.data.model import DataWithParams, ListOfParamModel, Model, ParamModel
-from omnipy.modules.general.models import TypeVarStore
 
 
 class BytesModel(ParamModel[str | bytes, str]):
@@ -57,18 +57,10 @@ class JoinLinesModel(Model[list[str] | str]):
         return os.linesep.join(data)
 
 
-class Params:
-    params: dict[str, object]
-
-    def __class_getitem__(cls, params: dict[str, object] = {}) -> 'Params':
-        cls.params = params
-        return cls
-
-
 ParamsT = TypeVar('ParamsT', default=Params)
 
 
-class SplitToItemsModel(Model[list[str] | str | TypeVarStore[ParamsT]], Generic[ParamsT]):
+class SplitToItemsModelNew(Model[list[str] | str | TypeVarStore[ParamsT]], Generic[ParamsT]):
     class Params(BaseModel):
         strip: bool = True
         strip_chars: str | None = None
@@ -91,7 +83,7 @@ class SplitToItemsModel(Model[list[str] | str | TypeVarStore[ParamsT]], Generic[
         return data
 
 
-class SplitToItemsModel2(ParamModel[str | list[str], bool | str]):
+class SplitToItemsModel(ParamModel[str | list[str], bool | str]):
     @classmethod
     def _parse_data(cls,
                     data: str | list[str],
@@ -113,7 +105,7 @@ class JoinItemsModel(ParamModel[list[str] | str, str]):
         return delimiter.join(data)
 
 
-class SplitLinesToColumnsModel(ListOfParamModel[SplitToItemsModel2, bool | str]):
+class SplitLinesToColumnsModel(ListOfParamModel[SplitToItemsModel, bool | str]):
     ...
 
 

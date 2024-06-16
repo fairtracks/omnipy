@@ -6,14 +6,14 @@ from omnipy.compute.typing import mypy_fix_task_template
 from omnipy.data.dataset import Dataset, ModelT
 from omnipy.data.model import Model
 
-
-@mypy_fix_task_template
-@TaskTemplate()
-def cast_dataset(dataset: Dataset, cast_model: Callable[[], ModelT]) -> ModelT:
-    out_dataset: Dataset[ModelT] = Dataset[cast_model]()
-    for name, item in dataset.items():
-        out_dataset[name] = cast(cast_model, item.to_data())
-    return out_dataset
+#
+# @mypy_fix_task_template
+# @TaskTemplate()
+# def cast_dataset(dataset: Dataset, cast_model: Callable[[], ModelT]) -> ModelT:
+#     out_dataset: Dataset[ModelT] = Dataset[cast_model]()
+#     for name, item in dataset.items():
+#         out_dataset[name] = cast(cast_model, item.to_data())
+#     return out_dataset
 
 
 @mypy_fix_task_template

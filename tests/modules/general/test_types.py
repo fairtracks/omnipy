@@ -2,7 +2,7 @@ from types import MappingProxyType
 
 import pytest
 
-from omnipy.modules.general.typedefs import FrozenDict
+from omnipy.modules.frozen.typedefs import FrozenDict
 
 
 def test_frozendict_empty() -> None:

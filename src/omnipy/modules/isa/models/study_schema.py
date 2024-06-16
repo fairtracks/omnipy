@@ -29,13 +29,13 @@ class FieldType(Enum):
     Study = 'Study'
 
 
-class Materials(BaseModel):
+class _Materials(BaseModel):
     sources: Optional[List[source_schema.IsaSourceModel]] = None
     samples: Optional[List[sample_schema.IsaSampleModel]] = None
     otherMaterials: Optional[List[material_schema.IsaMaterialModel]] = None
 
 
-class MaterialsModel(Model[Materials]):
+class _MaterialsModel(Model[_Materials]):
     ...
 
 
@@ -58,7 +58,7 @@ class IsaStudySchema(BaseModel):
     studyDesignDescriptors: Optional[List[
         ontology_annotation_schema.IsaOntologyReferenceModel]] = None
     protocols: Optional[List[protocol_schema.IsaProtocolModel]] = None
-    materials: Optional[Materials] = None
+    materials: Optional[_Materials] = None
     processSequence: Optional[List[process_schema.IsaProcessOrProtocolApplicationModel]] = None
     assays: Optional[List[assay_schema.IsaAssayJsonModel]] = None
     factors: Optional[List[factor_schema.IsaFactorModel]] = None
