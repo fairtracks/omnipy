@@ -982,17 +982,14 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             return level_up_type_to_check
 
     def __getattr__(self, attr: str) -> Any:
-        contents_attr = self._getattr_from_contents_obj(attr)
-
         if self.config.interactive_mode and not self._is_non_omnipy_pydantic_model():
             ## REVISE!
             # contents_holder_context = AttribHolder(self, 'contents', copy_attr=True)
-
+            reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
+            contents_attr = self._getattr_from_contents_obj(attr)
             contents_cls_attr = self._getattr_from_contents_cls(attr)
 
             if not isinstance(contents_cls_attr, property) and callable(contents_attr):
-
-                reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
 
                 def _validate_contents(ret: Any):
                     self._generic_validate_contents(reset_solution=reset_solution)
@@ -1001,42 +998,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 contents_attr = add_callback_after_call(contents_attr,
                                                         _validate_contents,
                                                         reset_solution)
-            # with reset_solution:
-            #     ret = _call_special_method(*args, **kwargs)
-            #
-            #     self._generic_validate_contents(
-            #         new_contents=self.contents,
-            #         reset_solution=reset_solution,
-            #         post_validation_func=_set_new_contents,
-            #     )
-
-            #     ret = self._generic_validate_contents(
-            #         pre_validation_func=_call_special_method,
-            #         pre_validation_func_args=args,
-            #         pre_validation_func_kwargs=kwargs,
-            #         post_validation_func=_set_new_contents)
-            #
-            #     contents_attr = setup_and_teardown_callback_context(
-            #         setup_func=setup,
-            #         setup_func_kwargs=dict(number=75),
-            #         exception_func=exception,
-            #         exception_func_args=(100,),
-            #         teardown_func=teardown,
-            #         teardown_func_kwargs=dict(number=75),
-            #     )(
-            #         contents_attr)
-            #
-            # def _call_special_method(*inner_args: object, **inner_kwargs: object) -> object:
-            #     return self._call_special_method(name, *inner_args, **inner_kwargs)
-            #
-            # def _set_new_contents(contents: object) -> None:
-            #     self.contents = contents
-            #
-            # ret = self._generic_validate_contents(
-            #     pre_validation_func=_call_special_method,
-            #     pre_validation_func_args=args,
-            #     pre_validation_func_kwargs=kwargs,
-            #     post_validation_func=_set_new_contents)
+        else:
+            contents_attr = self._getattr_from_contents_obj(attr)
 
         if attr in ('keys', 'values', 'items'):
             level_up_arg_idx: int | slice
