@@ -43,8 +43,8 @@ def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
         if with_context:
             with with_context:
                 return _callback_after_call(decorated_func, *args, **kwargs)
-
-        return _callback_after_call(decorated_func, *args, **kwargs)
+        else:
+            return _callback_after_call(decorated_func, *args, **kwargs)
 
     return _inner
 

@@ -541,31 +541,35 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         new_contents: object | UndefinedType = Undefined,
         reset_solution: ContextManager[None] | UndefinedType = Undefined,
         post_validation_func: Callable[[_RootT], None] | None = None,
-    ) -> _ReturnT | None:
-        return_val: _ReturnT | None = None
+    ) -> None:
 
         if reset_solution is Undefined:
             reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
-        with (reset_solution):
-            # if pre_validation_func:
-            #     return_val = pre_validation_func(*pre_validation_func_args,
-            #                                      **pre_validation_func_kwargs)
+            with (reset_solution):
+                # if pre_validation_func:
+                #     return_val = pre_validation_func(*pre_validation_func_args,
+                #                                      **pre_validation_func_kwargs)
 
-            # if self.config.interactive_mode and self.has_snapshot() \
-            #
-            # Following is incorrect, must compare new_contents with snapshot, as self.contents is not
-            # yet set
-            #         and self.contents_validated_according_to_snapshot():
-            #     return return_val
+                # if self.config.interactive_mode and self.has_snapshot() \
+                #
+                # Following is incorrect, must compare new_contents with snapshot, as self.contents is not
+                # yet set
+                #         and self.contents_validated_according_to_snapshot():
+                #     return return_val
 
-            # if new_contents is Undefined and pre_validation_func:
-            #     new_contents = self.contents
+                # if new_contents is Undefined and pre_validation_func:
+                #     new_contents = self.contents
 
+                if new_contents is not Undefined:
+                    validated_content = self._validate_contents_from_value(new_contents)
+                else:
+                    validated_content = new_contents
+            del reset_solution
+        else:
             if new_contents is not Undefined:
                 validated_content = self._validate_contents_from_value(new_contents)
             else:
                 validated_content = new_contents
-        del reset_solution
 
         if post_validation_func:
             post_validation_func(validated_content)
@@ -573,8 +577,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         if new_contents is not Undefined:
             del new_contents
             self._take_snapshot_of_validated_contents()
-
-        return return_val
 
     def _validate_contents_from_value(
         self,
@@ -856,12 +858,13 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
             reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
             with reset_solution:
-                _call_special_method(*args, **kwargs)
+                ret = _call_special_method(*args, **kwargs)
 
-            ret = self._generic_validate_contents(
-                new_contents=self.contents,
-                post_validation_func=_set_new_contents,
-            )
+                self._generic_validate_contents(
+                    new_contents=self.contents,
+                    reset_solution=reset_solution,
+                    post_validation_func=_set_new_contents,
+                )
 
         elif name == '__iter__' and isinstance(self, Iterable):
             _per_element_model_generator = self._get_per_element_model_generator(
@@ -983,18 +986,29 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         if self.config.interactive_mode and not self._is_non_omnipy_pydantic_model():
             ## REVISE!
-            contents_holder_context = AttribHolder(self, 'contents', copy_attr=True)
-
-            def _validate_contents(ret: Any):
-                self.validate_contents()
-                return ret
+            # contents_holder_context = AttribHolder(self, 'contents', copy_attr=True)
 
             contents_cls_attr = self._getattr_from_contents_cls(attr)
 
             if not isinstance(contents_cls_attr, property) and callable(contents_attr):
+
+                reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
+
+                def _validate_contents(ret: Any):
+                    self._generic_validate_contents(reset_solution=reset_solution)
+                    return ret
+
                 contents_attr = add_callback_after_call(contents_attr,
                                                         _validate_contents,
-                                                        contents_holder_context)
+                                                        reset_solution)
+            # with reset_solution:
+            #     ret = _call_special_method(*args, **kwargs)
+            #
+            #     self._generic_validate_contents(
+            #         new_contents=self.contents,
+            #         reset_solution=reset_solution,
+            #         post_validation_func=_set_new_contents,
+            #     )
 
             #     ret = self._generic_validate_contents(
             #         pre_validation_func=_call_special_method,
