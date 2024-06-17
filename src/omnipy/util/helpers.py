@@ -373,6 +373,17 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         # if self._cur_deepcopy_obj_id in self._sub_obj_ids:
         #     self.recursively_remove_deleted_objs(setlist((self._cur_deepcopy_obj_id,)))
 
+        print(f'obj={repr(obj)}, id={self._cur_deepcopy_obj_id}')
+        print(f'self._sub_obj_ids: {self._sub_obj_ids}')
+        # from traceback import print_stack
+        # print_stack()
+        # self.all_are_empty(debug=True)
+        # print(
+        #     f'deepcopy_content_ids_scheduled_for_deletion: {repr(deepcopy_content_ids_scheduled_for_deletion)}'
+        # )
+        # if self._cur_deepcopy_obj_id in self._sub_obj_ids:
+        #     self._move_to_deleted_sub_obj_ids(self._cur_deepcopy_obj_id)
+
         assert self._cur_deepcopy_obj_id not in self._sub_obj_ids
         # self._sub_obj_ids[self._cur_deepcopy_obj_id].clear()
 
@@ -525,7 +536,6 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
 
     def _add_sub_obj_ids_to_deletion_keys(self, key: int,
                                           keys_to_delete: setlist[int]) -> setlist[int]:
-        sub_obj_ids: list[int] = []
         if key in self._sub_obj_ids:
             for i, sub_obj_id in enumerate(self._sub_obj_ids[key]):
                 if sub_obj_id != key and sub_obj_id not in keys_to_delete:
@@ -683,11 +693,15 @@ class SnapshotHolder(WeakKeyRefContainer[_HasContentsT,
 
     def take_snapshot(self, obj: _HasContentsT) -> None:
         try:
+            if id(obj.contents) in self.get_deepcopy_content_ids():
+                self.delete_scheduled_deepcopy_content_ids()
+
             with setup_and_teardown_callback_context(
                     setup_func=self._deepcopy_memo.setup_deepcopy,
                     setup_func_args=(obj.contents,),
                     teardown_func=self._deepcopy_memo.teardown_deepcopy,
             ):
+
                 obj_copy: _ContentsT = deepcopy(obj.contents,
                                                 self._deepcopy_memo)  # type: ignore[arg-type]
                 self._deepcopy_memo.keep_alive_after_deepcopy()

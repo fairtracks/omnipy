@@ -827,7 +827,7 @@ def test_dataset_of_pydantic_model() -> None:
     dataset['x'].children[0].value = 'abc'
     with pytest.raises(ValidationError):
         dataset['x'].validate_contents()
-    assert dataset['x'].children[0].value == 'abc'
+    assert dataset['x'].children[0].value == 1.23
 
     with pytest.raises(ValidationError):
         dataset['y'].children_omnipy[0].value = 'abc'
@@ -836,7 +836,7 @@ def test_dataset_of_pydantic_model() -> None:
         'x': {
             '@id': 1,
             'children': [{
-                '@id': 10, 'value': 'abc'
+                '@id': 10, 'value': 1.23
             }],
             'children_omnipy': [],
         },

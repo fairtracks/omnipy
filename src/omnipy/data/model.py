@@ -43,6 +43,7 @@ from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.helpers import get_special_methods_info_dict, MethodInfo
 from omnipy.util.contexts import (AttribHolder,
+                                  ignore_error,
                                   LastErrorHolder,
                                   nothing,
                                   setup_and_teardown_callback_context)
@@ -486,9 +487,14 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
     def validate_contents(self, restore_snapshot_if_interactive_and_invalid: bool = False) -> None:
-        self._generic_validate_contents()
+        reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
+        with reset_solution:
+            self._validate_and_set_value(self.contents, reset_solution=reset_solution)
 
-    def _validate_and_set_value(self, new_contents: object) -> None:
+    def _validate_and_set_value(
+            self,
+            new_contents: object,
+            reset_solution: ContextManager[None] | UndefinedType = Undefined) -> None:
         old_contents_id = id(self.contents)
 
         def _set_new_contents(contents: object) -> None:
@@ -497,6 +503,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         self._generic_validate_contents(
             new_contents=new_contents,
+            reset_solution=reset_solution,
             post_validation_func=_set_new_contents,
         )
 
@@ -508,32 +515,41 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             needs_pre_validation = (not self.has_snapshot()
                                     or not self.contents_validated_according_to_snapshot())
             if needs_pre_validation:
-                validated_content = self._validate_contents_from_value(self.contents)
-                if id(validated_content) != id(self.contents):
-                    self.contents = validated_content
-                self._take_snapshot_of_validated_contents()
+                reset_solution = self._get_reset_solution()
+                with reset_solution:
+                    validated_content = self._validate_contents_from_value(self.contents)
+                    if id(validated_content) != id(self.contents):
+                        self.contents = validated_content
+                    self._take_snapshot_of_validated_contents()
 
-            prev_deepcopy_content_ids: setlist[int] = setlist()
+        return self._get_reset_solution()
 
-            def _setup():
-                prev_deepcopy_content_ids.update(self.snapshot_holder.get_deepcopy_content_ids())
-
-            def _handle_exception():
-                new_deepcopy_content_ids = (
-                    self.snapshot_holder.get_deepcopy_content_ids()
-                    & prev_deepcopy_content_ids)
-                self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
-                    *new_deepcopy_content_ids)
-                # self.contents = self.snapshot_holder.get_snapshot_deepcopy(self)
-                from copy import deepcopy
-                self.contents = deepcopy(self.snapshot)
-
-            return setup_and_teardown_callback_context(
-                setup_func=_setup,
-                exception_func=_handle_exception,
-            )
+    def _get_reset_solution(self) -> ContextManager[None]:
+        if self.config.interactive_mode and self.has_snapshot():
+            return self._get_revert_to_snapshot_reset_solution()
         else:
             return nothing()
+
+    def _get_revert_to_snapshot_reset_solution(self) -> ContextManager[None]:
+        prev_deepcopy_content_ids: setlist[int] = setlist()
+
+        def _setup():
+            prev_deepcopy_content_ids.update(self.snapshot_holder.get_deepcopy_content_ids())
+
+        def _handle_exception():
+            new_deepcopy_content_ids = (
+                self.snapshot_holder.get_deepcopy_content_ids()
+                & prev_deepcopy_content_ids)
+            self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
+                *new_deepcopy_content_ids)
+            # self.contents = self.snapshot_holder.get_snapshot_deepcopy(self)
+            from copy import deepcopy
+            self.contents = deepcopy(self.snapshot)
+
+        return setup_and_teardown_callback_context(
+            setup_func=_setup,
+            exception_func=_handle_exception,
+        )
 
     def _generic_validate_contents(
         self,
@@ -982,24 +998,27 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             return level_up_type_to_check
 
     def __getattr__(self, attr: str) -> Any:
-        if self.config.interactive_mode and not self._is_non_omnipy_pydantic_model():
-            ## REVISE!
-            # contents_holder_context = AttribHolder(self, 'contents', copy_attr=True)
+        contents_attr = self._getattr_from_contents_obj(attr)
+
+        # if self.config.interactive_mode and not self._is_non_omnipy_pydantic_model():
+        if self.config.interactive_mode:
+            is_property = False
+            if not self._is_non_omnipy_pydantic_model():
+                contents_cls_attr = self._getattr_from_contents_cls(attr)
+                is_property = isinstance(contents_cls_attr, property)
+
             reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
             contents_attr = self._getattr_from_contents_obj(attr)
-            contents_cls_attr = self._getattr_from_contents_cls(attr)
 
-            if not isinstance(contents_cls_attr, property) and callable(contents_attr):
+            if not is_property and callable(contents_attr):
 
                 def _validate_contents(ret: Any):
-                    self._generic_validate_contents(reset_solution=reset_solution)
+                    self._validate_and_set_value(self.contents, reset_solution=reset_solution)
                     return ret
 
                 contents_attr = add_callback_after_call(contents_attr,
                                                         _validate_contents,
                                                         reset_solution)
-        else:
-            contents_attr = self._getattr_from_contents_obj(attr)
 
         if attr in ('keys', 'values', 'items'):
             level_up_arg_idx: int | slice
@@ -1021,19 +1040,19 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         return contents_attr
 
-    def _is_pure_pydantic_model(self):
+    def _is_pure_pydantic_model(self) -> bool:
         return is_pure_pydantic_model(self._get_real_contents())
 
-    def _is_non_omnipy_pydantic_model(self):
+    def _is_non_omnipy_pydantic_model(self) -> bool:
         return is_non_omnipy_pydantic_model(self._get_real_contents())
 
-    def _getattr_from_contents_obj(self, attr):
+    def _getattr_from_contents_obj(self, attr) -> object:
         return getattr(self._get_real_contents(), attr)
 
-    def _getattr_from_contents_cls(self, attr):
+    def _getattr_from_contents_cls(self, attr) -> object:
         return getattr(self._get_real_contents().__class__, attr)
 
-    def _get_real_contents(self):
+    def _get_real_contents(self) -> object:
         if is_model_instance(self.contents):
             return self.contents.contents
         else:

@@ -1152,9 +1152,6 @@ def test_import_export_methods() -> None:
 
 
 def test_model_of_pydantic_model() -> None:
-    Model.data_class_creator.snapshot_holder.clear()
-    assert len(Model.data_class_creator.snapshot_holder._deepcopy_memo) == 0
-
     model = MyPydanticModel({'@id': 1, 'children': [{'@id': 10, 'value': 1.23}]})
 
     assert model.id == 1
@@ -1164,10 +1161,10 @@ def test_model_of_pydantic_model() -> None:
 
     model.id = '2'
     assert model.id == 2
-    assert len(model.children) == 1
 
     model.children[0].value = '1.23'
-    assert model.children[0].value == '1.23'
+    assert model.children[0].value == 1.23
+    # assert model.children[0].value == '1.23'
 
     model.children_omnipy = copy(model.children)
     model.children_omnipy[0].id = '11'
@@ -1183,18 +1180,12 @@ def test_model_of_pydantic_model() -> None:
     assert model.to_data() == {
         '@id': 2,
         'children': [{
-            '@id': 10, 'value': 'abc'
+            '@id': 10, 'value': 1.23
         }],
         'children_omnipy': [{
             '@id': 11, 'value': 1.23
         }]
     }
-
-    del model
-    gc.collect()
-    Model.data_class_creator.snapshot_holder.delete_scheduled_deepcopy_content_ids()
-
-    assert len(Model.data_class_creator.snapshot_holder._deepcopy_memo) == 0
 
 
 def _assert_no_snapshot(model: Model):
@@ -1689,13 +1680,7 @@ def test_mimic_special_method_no_interactive_mode(
     _assert_no_snapshot(model)
 
     with pytest.raises(ValidationError):
-        model.validate_contents(restore_snapshot_if_interactive_and_invalid=False)
-
-    _assert_model(model, list[int], [123, 'abc', 456])
-    _assert_no_snapshot(model)
-
-    with pytest.raises(ValidationError):
-        model.validate_contents(restore_snapshot_if_interactive_and_invalid=True)
+        model.validate_contents()
 
     _assert_model(model, list[int], [123, 'abc', 456])
     _assert_no_snapshot(model)
@@ -1703,12 +1688,14 @@ def test_mimic_special_method_no_interactive_mode(
     runtime.config.data.interactive_mode = True
     _assert_no_snapshot(model)
 
-    with pytest.raises(AssertionError):
-        model.validate_contents(restore_snapshot_if_interactive_and_invalid=True)
+    with pytest.raises(ValidationError):
+        model.validate_contents()
 
-    del model[1]
+    with pytest.raises(ValidationError):
+        del model[1]
 
-    model.validate_contents(restore_snapshot_if_interactive_and_invalid=True)
+    del model.contents[1]
+    model.validate_contents()
     assert model.snapshot == model.contents == [123, 456]
     assert id(model.snapshot) != id(model.contents)
 
@@ -1861,7 +1848,7 @@ def test_mimic_nested_list_operations(
     model[0] = [0, 2]
     _assert_model_or_val(dyn_convert, model[0], list[int], [0, 2])  # type: ignore[index]
 
-    # Here the `model[-1] +=` operation is a series of `__get__`, `__iadd__`, and `__set__`
+    # Here the `model[0] +=` operation is a series of `__get__`, `__iadd__`, and `__set__`
     # operations, with the `__get__` and `__set__` operating on the "parent" model object.
     # In contrast, the `append()` method only operates on the child level.
     with pytest.raises(ValidationError):

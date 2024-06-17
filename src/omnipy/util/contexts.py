@@ -121,6 +121,14 @@ def nothing(*args, **kwds):
     yield None
 
 
+@contextmanager
+def ignore_error(*args, **kwds):
+    try:
+        yield None
+    except:
+        pass
+
+
 class PrintExceptionContext(AbstractContextManager):
     def __enter__(self):
         ...
