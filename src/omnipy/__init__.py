@@ -1,7 +1,6 @@
 __version__ = '0.15.12'
 
 import os
-import typing
 
 from omnipy.compute.flow import (DagFlow,
                                  DagFlowTemplate,
@@ -138,7 +137,6 @@ from omnipy.modules.tables.tasks import (remove_columns,
                                          transpose_columns_with_data_files)
 
 # if typing.TYPE_CHECKING:
-# if True:
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 

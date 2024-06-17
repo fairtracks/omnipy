@@ -3,13 +3,26 @@ from types import ModuleType
 
 from pydantic.utils import lenient_isinstance, lenient_issubclass
 
+# TODO: Finish implementation of dynamic __all__ generation. Possibly useful together with Poe the
+#       Poet (https://poethepoet.natn.io/poetry_plugin.html) for generating a fixed __all__ list as
+#       part of the build process. The goal for this functionality is to follow DRY principles and
+#       make sure new datasets, models, and jobs are exported. It is important to also allow export
+#       under development, either through running `poetry build` or through a
+#       `if not typing.TYPE_CHECKING` block or similar solution to allow dynamic __all__ generation
+#       for development (with omnipy imported through `pip install -e {PATH_TO_OMNIPY}`). The exact
+#       implementation is not yet decided, but the goal is to make the code the single source of
+#       truth for the exported elements of omnipy.
+
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 __all__: list[str] = []
 
 _all_element_names: set[str] = set()
 
 _exclude_modules: set[str] = {
-    '_dynamic_all', 'modules.frozen', 'modules.fairtracks', 'util.tabulate'
+    '_dynamic_all',
+    'modules.frozen',  # Recursive frozen models crashes mypy v1.10 + waiting for pydantic support
+    'modules.fairtracks',
+    'util.tabulate',
 }
 _exclude_attrs: set[str] = {'JobMixin', 'JobTemplateMixin'}
 

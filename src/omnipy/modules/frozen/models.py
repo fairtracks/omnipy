@@ -15,6 +15,11 @@ from .typedefs import FrozenDict
 # Note: see comments in omnipy.modules.json.models for more information on the basic organisation of
 #       nested models.
 
+# Note 2: currently crashes mypy (v1.10), probably due to recursive type aliases combined with
+#         TypeVars from typing_extensions (with default). Not urgent to fix, as this in any case
+#         awaits pydantic 2 and issue 6868 to be resolved. Keep out of __all__ until mypy issue
+#         is fixed in order to avoid crashes with pytest-mypy-plugins, e.g. "test_json_types.yml".
+
 #
 # Private models
 #
