@@ -370,22 +370,7 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         # Instead, there is a check to ensure that the current object has not already been
         # deepcopied, which is the assumption behind disabling the fix
 
-        # if self._cur_deepcopy_obj_id in self._sub_obj_ids:
-        #     self.recursively_remove_deleted_objs(setlist((self._cur_deepcopy_obj_id,)))
-
-        print(f'obj={repr(obj)}, id={self._cur_deepcopy_obj_id}')
-        print(f'self._sub_obj_ids: {self._sub_obj_ids}')
-        # from traceback import print_stack
-        # print_stack()
-        # self.all_are_empty(debug=True)
-        # print(
-        #     f'deepcopy_content_ids_scheduled_for_deletion: {repr(deepcopy_content_ids_scheduled_for_deletion)}'
-        # )
-        # if self._cur_deepcopy_obj_id in self._sub_obj_ids:
-        #     self._move_to_deleted_sub_obj_ids(self._cur_deepcopy_obj_id)
-
         assert self._cur_deepcopy_obj_id not in self._sub_obj_ids
-        # self._sub_obj_ids[self._cur_deepcopy_obj_id].clear()
 
     def keep_alive_after_deepcopy(self):
         # old_sub_obj_ids = self._sub_obj_ids[self._cur_deepcopy_obj_id]
