@@ -1390,22 +1390,6 @@ def test_snapshot_deepcopy_reuse_objects(runtime: Annotated[IsRuntime, pytest.fi
         del outer
         gc.collect()
 
-        for ref in gc.get_referrers(middle):
-            try:
-                # pass
-                print(f'Referrer to middle {type(middle)}: {ref}')
-                # print(*gc.get_referrers(ref))
-
-                # print(
-                #     f"ref['obj_copy'][1].__dict__: {ref['obj_copy'][1].__dict__}, id={id(ref['obj_copy'][1].__dict__)}"
-                # )
-                # print(
-                #     f"ref['obj_copy'][1].data: {ref['obj_copy'][1].data}, id={id(ref['obj_copy'][1].data)}"
-                # )
-            except:
-                pass
-        del ref
-
     _inner_test_snapshot_deepcopy_reuse_objects()
 
     gc.collect()
@@ -1415,6 +1399,17 @@ def test_snapshot_deepcopy_reuse_objects(runtime: Annotated[IsRuntime, pytest.fi
 
     assert len(snapshot_holder) == 0
     assert len(snapshot_holder._deepcopy_memo) == 0  # type: ignore[attr-defined]
+
+
+def test_snapshot_deepcopy_reuse_ids_crash(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+    runtime.config.data.interactive_mode = True
+
+    for i in range(50):
+        model_list = []
+        for j in range(50):
+            model = Model[list[int]]([])
+            model.validate_contents()
+            model_list.append(model)
 
 
 def test_lazy_snapshot_not_triggered_by_set_contents(
@@ -1440,14 +1435,6 @@ def test_lazy_snapshot_not_triggered_by_set_contents(
 
     model.validate_contents()
     assert model.snapshot == model.contents == [234]
-
-    # import gc
-    #
-    # for ref in gc.get_referrers(model):
-    #     try:
-    #         print(f'Referrer to model {model}: {ref}')
-    #     except:
-    #         pass
 
 
 def test_lazy_snapshot_not_triggered_by_state_keeping_operator(

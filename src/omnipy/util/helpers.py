@@ -678,8 +678,15 @@ class SnapshotHolder(WeakKeyRefContainer[_HasContentsT,
 
     def take_snapshot(self, obj: _HasContentsT) -> None:
         try:
+            # Delete scheduled content in the deepcopy memo if the new object is reusing an old id.
+            # This deletion might not succeed, e.g. if the current snapshot holds a reference to the
+            # old object. In those case, setup_deepcopy() will raise an AssertionError, which should
+            # trigger a new attempt to deepcopy without the memo dict.
+
             if id(obj.contents) in self.get_deepcopy_content_ids():
                 self.delete_scheduled_deepcopy_content_ids()
+
+            obj_copy: _ContentsT
 
             with setup_and_teardown_callback_context(
                     setup_func=self._deepcopy_memo.setup_deepcopy,
@@ -687,18 +694,23 @@ class SnapshotHolder(WeakKeyRefContainer[_HasContentsT,
                     teardown_func=self._deepcopy_memo.teardown_deepcopy,
             ):
 
-                obj_copy: _ContentsT = deepcopy(obj.contents,
-                                                self._deepcopy_memo)  # type: ignore[arg-type]
+                obj_copy = deepcopy(obj.contents, self._deepcopy_memo)  # type: ignore[arg-type]
                 self._deepcopy_memo.keep_alive_after_deepcopy()
-                # obj_copy: _ContentsT = deepcopy(obj.contents)  # type: ignore[arg-type]
-        except (TypeError, ValueError, ValidationError) as exp:
-            print(exp)
-            obj_copy = copy(obj.contents)
+        except (TypeError, ValueError, ValidationError, AssertionError) as exp:
+            print(f'Error in deepcopy with memo dict: {exp}. '
+                  f'Attempting deepcopy without memo dict.')
+            try:
+                obj_copy = deepcopy(obj.contents)
+            except (TypeError, ValueError, ValidationError, AssertionError) as exp:
+                print(f'Error in deepcopy without memo dict: {exp}. '
+                      f'Attempting simple copy.')
+                obj_copy = copy(obj.contents)
 
         # Eventual old snapshot object is being kept alive until this point, but is scheduled for
-        # deletion after the next line. In most cases (if not all), it seems that this happens
-        # before take_snapshot_teardown() is called, which triggers deletion of any unreferenced
+        # deletion after the next line. In many cases (but not all), this happens before
+        # take_snapshot_teardown() is called, which triggers deletion of any unreferenced
         # fragments still kept alive in the memo dict.
+
         super().__setitem__(obj, SnapshotWrapper(id(obj), obj_copy))
 
 
