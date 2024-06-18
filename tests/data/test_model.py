@@ -1188,7 +1188,10 @@ def test_model_of_pydantic_model() -> None:
     }
 
 
-def _assert_no_snapshot(model: Model):
+T = TypeVar('T', default=object)
+
+
+def _assert_no_snapshot(model: Model[T]):
     assert model.has_snapshot() is False
     with pytest.raises(AssertionError):
         assert model.snapshot
@@ -1540,16 +1543,19 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_v
     runtime.config.data.dynamically_convert_elements_to_models = True
 
     class SimplePydanticModel(BaseModel):
-        value: list[int]
+        value: Model[list[int]] = []
 
-    model = Model[SimplePydanticModel](SimplePydanticModel(value=[123]))
+    model = Model[SimplePydanticModel](SimplePydanticModel(value=[123]))  # type: ignore[arg-type]
     _assert_no_snapshot(model)
 
-    res_model = model.value[0]
-    assert model.snapshot == model.contents == [123]
+    # Just accessing a field of a pydantic model through __getattr__ is enough to trigger a snapshot
+    # of the parent
+    res_model = model.value
+    assert model.snapshot == model.contents \
+           == SimplePydanticModel(value=[123])  # type: ignore[arg-type]
 
     _assert_no_snapshot(res_model)
-    assert res_model.contents == 123
+    assert res_model.contents == [123]
 
 
 def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_value_access(
@@ -1558,20 +1564,78 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     runtime.config.data.dynamically_convert_elements_to_models = True
 
     class SimplePydanticModel(BaseModel):
-        value: list[int]
+        value: Model[list[int]] = []  # type: ignore[assignment]
 
-    model = Model[SimplePydanticModel](SimplePydanticModel(value=[123]))
+    model = Model[SimplePydanticModel](SimplePydanticModel(value=[123]))  # type: ignore[arg-type]
     _assert_no_snapshot(model)
 
+    # Trying to set the value of a field of a pydantic model also triggers a snapshot of the parent,
+    # which here is used to for value reset
     with pytest.raises(ValidationError):
         model.value = ['abc']
-    assert model.snapshot == model.contents == [123]
+    assert model.snapshot == model.contents \
+           == SimplePydanticModel(value=[123])  # type: ignore[arg-type]
 
+    # The value of the field of the pydantic model is not changed, so no snapshot is triggered for
+    # the child model.
+    #
+    # NB: Using model.contents.value instead of value consequently for asserts to not trigger a
+    # snapshot.
+    assert model.contents.value.contents == [123]
+    _assert_no_snapshot(model.contents.value)
+
+    # Trying to change the state of the child model in the field of a pydantic model triggers a
+    # snapshot of the child (as well as of the parent due to the field access)
+    with pytest.raises(ValidationError):
+        model.value[0] = 'abc'
+    assert model.snapshot == model.contents \
+           == SimplePydanticModel(value=[123])  # type: ignore[arg-type]
+    assert model.contents.value.snapshot == model.contents.value.contents == [123]
+
+    # Here the value of the field of the pydantic model is set to a new non-model value, which
+    # triggers validation and the creation of a new model to replace the old. The new model does not
+    # have a snapshot by default
     model.value = [234]
-    assert model.snapshot == model.contents == [234]
+    assert model.snapshot == model.contents \
+           == SimplePydanticModel(value=[234])  # type: ignore[arg-type]
+    assert model.contents.value.contents == [234]
+    _assert_no_snapshot(model.contents.value)
+
+    # Calling a method on the child model in the field of the pydantic model triggers a snapshot of
+    # the child (as well as of the parent due to the field access). The snapshot is used to revert
+    # from the incorrect state of the child model
+    with pytest.raises(ValidationError):
+        model.value.append('abc')
+    assert model.snapshot == model.contents \
+           == SimplePydanticModel(value=[234])  # type: ignore[arg-type]
+    assert model.contents.value.snapshot == model.contents.value.contents == [234]
+
+    # Calling a method on the child model in the field of the pydantic model triggers a snapshot of
+    # the child (as well as of the parent due to the field access). Since the child model is in a
+    # correct state, the value of the child model is updated, but validation creates a new list
+    # that replaces the old one as the child model contents, and a snapshot has been taken since all
+    # method calls are considered potentially state-changing. Since the parent model refers to the
+    # child model and not it's contents, the values accessible the parent module are also
+    # automatically updated. However, a snapshot is not taken (yet) for the parent model.
 
     model.value.append(345)
-    assert model.snapshot == model.contents == [234, 345]
+    assert model.contents == SimplePydanticModel(value=[234, 345])  # type: ignore[arg-type]
+    assert model.snapshot == SimplePydanticModel(value=[234])  # type: ignore[arg-type]
+
+    assert model.contents.value.snapshot == model.contents.value.contents == [234, 345]
+
+    # Validating the parent model triggers snapshots for the parent, but not the child model.
+    model.validate_contents()
+    assert model.snapshot == model.contents \
+           == SimplePydanticModel(value=[234, 345])  # type: ignore[arg-type]
+    assert model.contents.value.contents == [234, 345]
+    _assert_no_snapshot(model.contents.value)
+
+    # Validating the parent model triggers snapshots for both the parent and the child model.
+    model.value.validate_contents()
+    assert model.snapshot == model.contents \
+           == SimplePydanticModel(value=[234, 345])  # type: ignore[arg-type]
+    assert model.contents.value.snapshot == model.contents.value.contents == [234, 345]
 
 
 def test_snapshot_with_mimic_special_method_and_interactive_mode(
