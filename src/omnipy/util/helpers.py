@@ -1,4 +1,3 @@
-from abc import ABCMeta
 from collections import defaultdict, UserDict
 from collections.abc import Hashable, Iterable
 from copy import copy, deepcopy
@@ -21,30 +20,23 @@ from typing import _UnionGenericAlias  # type: ignore[attr-defined]
 from typing import (_SpecialForm,
                     Annotated,
                     Any,
-                    Callable,
                     cast,
                     ClassVar,
-                    Dict,
                     ForwardRef,
                     Generic,
                     get_args,
                     get_origin,
                     Mapping,
-                    NamedTuple,
                     overload,
                     Protocol,
-                    Sequence,
-                    Type,
                     TypeVar,
                     Union)
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
-from bidict import bidict
 from collections_extended import setlist
 from isort import place_module
 from isort.sections import STDLIB
 from pydantic import BaseModel, ValidationError
-from pydantic.fields import Undefined
 from pydantic.generics import GenericModel
 from pydantic.typing import display_as_type
 from typing_inspect import get_generic_bases, is_generic_type
@@ -697,7 +689,7 @@ class SnapshotHolder(WeakKeyRefContainer[_HasContentsT,
                 obj_copy = deepcopy(obj.contents, self._deepcopy_memo)  # type: ignore[arg-type]
                 self._deepcopy_memo.keep_alive_after_deepcopy()
         except (TypeError, ValueError, ValidationError, AssertionError) as exp:
-            print(f'Error in deepcopy with memo dict: {exp}. '
+            print(f'Error in deepcopy with memo dict: {repr(exp)}. '
                   f'Attempting deepcopy without memo dict.')
             try:
                 obj_copy = deepcopy(obj.contents)

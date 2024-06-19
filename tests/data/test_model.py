@@ -16,6 +16,7 @@ from typing import (Annotated,
                     TypeAlias,
                     Union)
 
+from collections_extended import setlist
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 from pydantic.generics import GenericModel
 import pytest
@@ -343,6 +344,20 @@ def test_parse_convertible_data() -> None:
     assert model_1 != model_3
     assert model_2 != model_4
     assert model_3 != model_4
+
+
+def test_parse_convertible_sequences() -> None:
+    model = Model[list[int]](range(5))
+    assert model.to_data() == [0, 1, 2, 3, 4]
+
+    model = Model[tuple[str, ...]](range(5))  # type: ignore[assignment]
+    assert model.to_data() == ('0', '1', '2', '3', '4')
+
+    with pytest.raises(ValidationError):
+        Model[list[str]]('abcde')
+
+    with pytest.raises(ValidationError):
+        Model[list[str]](b'abcde')
 
 
 def test_load_inconvertible_data() -> None:
@@ -1751,6 +1766,34 @@ def test_mimic_special_method_no_interactive_mode(
     assert id(model.snapshot) != id(model.contents)
 
 
+@pytest.mark.parametrize('interactive_mode', [False, True])
+def test_mimic_callable_with_exception(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    interactive_mode: bool,
+) -> None:
+    runtime.config.data.interactive_mode = interactive_mode
+
+    class MyClass:
+        def __init__(self, number: int = 0):
+            self.number = number
+
+        def operate_with_error(self):
+            self.number = -self.number
+            raise RuntimeError('Self-destruct in 3... 2... 1...')
+
+        def __eq__(self, other):
+            return self.number == other.number
+
+    model = Model[MyClass](MyClass(42))
+    with pytest.raises(RuntimeError):
+        model.operate_with_error()
+
+    if interactive_mode:
+        assert model.snapshot == model.contents == MyClass(42)
+    else:
+        assert model.contents == MyClass(-42)
+
+
 @pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_simple_list_operations(
     runtime: Annotated[IsRuntime, pytest.fixture],
@@ -1809,37 +1852,266 @@ def test_mimic_simple_list_operations(
 # e.g. `__add__()`.
 # """)
 @pytest.mark.parametrize('dyn_convert', [False, True])
-def test_mimic_simple_list_operator_with_convert_known_issue(
+def test_mimic_simple_list_operator_with_convert(
     runtime: Annotated[IsRuntime, pytest.fixture],
     dyn_convert: bool,
 ) -> None:
     runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
+    runtime.config.data.interactive_mode = True
 
     model = Model[list[int]]([0])
 
-    model[0] += '42'  # type: ignore[index]
+    #
+    # model.__getitem__, model.__setitem__, model.__radd__, model[0].__add__, model[0].__sub__
+    #
+
+    model[0] += Model[int]('42')  # type: ignore[index]
 
     _assert_model_or_val(dyn_convert, model[0], int, 42)  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model, list[int], [42])
+    _assert_model(model, list[int], [42])
 
     if dyn_convert:
-        with pytest.raises(ValidationError):
-            model[0] + 'abc'  # type: ignore[index]
+        # model[0] is dynamically converted to a Model[int] instance
+        model[0] += '42'  # type: ignore[index]
+
+        _assert_model(model[0], int, 84)  # type: ignore[index]
+        _assert_model(model, list[int], [84])
+
+        model[0] -= '42'  # type: ignore[index]
     else:
+        # model[0] is just an int
         with pytest.raises(TypeError):
-            model[0] + 'abc'  # type: ignore[index]
+            model[0] += '42'  # type: ignore[index]
 
-    model + ['42']  # type: ignore[operator]
+    with pytest.raises(SyntaxError):
+        eval("'42' += model[0]")
 
-    _assert_model_or_val(dyn_convert, model, list[int], [42, 42])
+    with pytest.raises(TypeError):
+        model[0] += 'abc'  # type: ignore[index]
 
+    _assert_model_or_val(dyn_convert, model[0], int, 42)  # type: ignore[index]
+    _assert_model(model, list[int], [42])
+
+    #
+    # model.__iadd__, model[0].__isub__
+    #
+
+    model += Model[list[int]](['42'])  # type: ignore[operator]
+    _assert_model(model, list[int], [42, 42])
+
+    model += ['42']  # type: ignore[operator]
+    _assert_model(model, list[int], [42, 42, 42])
+
+    with pytest.raises(SyntaxError):
+        eval("['42'] += model")
+
+    # No underlying TypeError, as any list can be added to a list. Exception is instead raised
+    # during the subsequent validation of the contents
     with pytest.raises(ValidationError):
-        model + ['abc']  # type: ignore[operator]
+        model += ['abc']  # type: ignore[operator]
 
-    model[0] -= Model[int]('42')  # type: ignore[index]
+    _assert_model(model, list[int], [42, 42, 42])
 
-    _assert_model_or_val(dyn_convert, model[0], int, 0)  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model, list[int], [0, 42])
+    #
+    # model.__getitem__, model[0].__sub__,  model[0].__rsub__
+    #
+
+    ret = model[0] - Model[int]('42')  # type: ignore[index]
+    _assert_model(ret, int, 0)
+
+    if dyn_convert:
+        # model[0] is dynamically converted to a Model[int] instance
+        ret = model[0] - '42'  # type: ignore[index]
+        _assert_model_or_val(dyn_convert, ret, int, 0)
+
+        ret = '42' - model[0]  # type: ignore[index]
+        _assert_model_or_val(dyn_convert, ret, int, 0)
+    else:
+        # model[0] is just an int
+        with pytest.raises(TypeError):
+            model[0] - '42'  # type: ignore[index]
+
+        with pytest.raises(TypeError):
+            '42' - model[0]  # type: ignore[index]
+
+    with pytest.raises(TypeError):
+        model[0] - 'abc'  # type: ignore[index]
+
+    with pytest.raises(TypeError):
+        'abc' - model[0]  # type: ignore[index]
+
+    #
+    # model.__add__,  model.__radd__
+    #
+
+    ret = model + Model[list[int]](['42'])  # type: ignore[operator]
+    _assert_model(ret, list[int], [42, 42, 42, 42])
+
+    ret = model + ['42']  # type: ignore[operator]
+    _assert_model(ret, list[int], [42, 42, 42, 42])
+
+    ret = ['42'] + model  # type: ignore[operator]
+    _assert_model(ret, list[int], [42, 42, 42, 42])
+
+    with pytest.raises(TypeError):
+        model + 'abc'  # type: ignore[operator]
+
+    with pytest.raises(TypeError):
+        'abc' + model  # type: ignore[operator]
+
+
+def test_mimic_sequence_convert_for_concat(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+    runtime.config.data.interactive_mode = True
+
+    class MySetList(setlist):
+        # Needed as setlist.__add__ does not follow best practices of returning NotImplemented
+        # which is needed for __radd__ to be called
+        def __add__(self, other: Model[setlist | list]) -> Model[setlist | list]:
+            try:
+                return super().__add__(other)
+            except TypeError:
+                return NotImplemented
+
+    # setlist is used as an example of non-builtin Sequence type. to_data() is needed (for now)
+    # to allow model conversion to list/tuple. Note that Model[setlist[int]](setlist((1,2)) did not
+    # for some reason work as expected, hence the [int] specialisation was removed from all models.
+
+    # TODO: Revise the need for to_data() method when explicit conversion types are supported
+    #       Should in this case be something like Model[setlist, list]
+
+    class SetListModel(Model[MySetList | list]):
+        @classmethod
+        def _parse_data(cls, data: MySetList | list) -> MySetList:
+            return MySetList(data)
+
+        def to_data(self) -> object:
+            return list(self.contents)
+
+    my_list = [1, 2, 3]
+    my_tuple = (4, 5, 6)
+    my_setlist = MySetList([7, 8, 9])
+
+    my_list_model = Model[list](my_list)
+    my_tuple_model = Model[tuple](my_tuple)
+    my_setlist_model = SetListModel(my_setlist)
+
+    #
+    # Raw object concatenation
+    #
+
+    with pytest.raises(TypeError):
+        my_list + my_tuple  # type: ignore[operator]
+
+    with pytest.raises(TypeError):
+        my_list + my_setlist
+
+    with pytest.raises(TypeError):
+        my_tuple + my_list  # type: ignore[operator]
+
+    with pytest.raises(TypeError):
+        my_tuple + my_setlist
+
+    with pytest.raises(TypeError):
+        my_setlist + my_list
+
+    with pytest.raises(TypeError):
+        my_setlist + my_tuple
+
+    #
+    # Model concatenation
+    #
+
+    _assert_model(
+        my_list_model + my_tuple_model,  # type: ignore[operator]
+        list,
+        [1, 2, 3, 4, 5, 6])
+    _assert_model(
+        my_list_model + my_setlist_model,  # type: ignore[operator]
+        list,
+        [1, 2, 3, 7, 8, 9])
+    _assert_model(
+        my_tuple_model + my_list_model,  # type: ignore[operator]
+        tuple,
+        (4, 5, 6, 1, 2, 3))
+    _assert_model(
+        my_tuple_model + my_setlist_model,  # type: ignore[operator]
+        tuple,
+        (4, 5, 6, 7, 8, 9))
+    _assert_model(
+        my_setlist_model + my_list_model,  # type: ignore[operator]
+        MySetList | list,
+        MySetList((7, 8, 9, 1, 2, 3)))
+    _assert_model(
+        my_setlist_model + my_tuple_model,  # type: ignore[operator]
+        MySetList | list,
+        MySetList((7, 8, 9, 4, 5, 6)))
+
+    #
+    # Model + raw object concatenation
+    #
+
+    _assert_model(
+        my_list_model + my_tuple,  # type: ignore[operator]
+        list,
+        [1, 2, 3, 4, 5, 6])
+    _assert_model(my_list_model + my_setlist, list, [1, 2, 3, 7, 8, 9])
+    _assert_model(
+        my_tuple_model + my_list,  # type: ignore[operator]
+        tuple,
+        (4, 5, 6, 1, 2, 3))
+    _assert_model(my_tuple_model + my_setlist, tuple, (4, 5, 6, 7, 8, 9))
+    _assert_model(
+        my_setlist_model + my_list,  # type: ignore[operator]
+        MySetList | list,
+        MySetList((7, 8, 9, 1, 2, 3)))
+    _assert_model(
+        my_setlist_model + my_tuple,  # type: ignore[operator]
+        MySetList | list,
+        MySetList((7, 8, 9, 4, 5, 6)))
+
+    #
+    # Raw object + Model concatenation
+    #
+
+    _assert_model(
+        my_list + my_tuple_model,  # type: ignore[operator]
+        tuple,
+        (1, 2, 3, 4, 5, 6))
+    _assert_model(
+        my_list + my_setlist_model,  # type: ignore[operator]
+        MySetList | list,
+        MySetList((1, 2, 3, 7, 8, 9)))
+    _assert_model(
+        my_tuple + my_list_model,  # type: ignore[operator]
+        list,
+        [4, 5, 6, 1, 2, 3])
+    _assert_model(
+        my_tuple + my_setlist_model,  # type: ignore[operator]
+        MySetList | list,
+        MySetList((4, 5, 6, 7, 8, 9)))
+    _assert_model(my_setlist + my_list_model, list, [7, 8, 9, 1, 2, 3])
+    _assert_model(my_setlist + my_tuple_model, tuple, (7, 8, 9, 4, 5, 6))
+
+
+@pytest.mark.parametrize('interactive_mode', [False, True])
+def test_mimic_concatenation_for_streaming(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    interactive_mode: bool,
+) -> None:
+    runtime.config.data.interactive_mode = interactive_mode
+
+    class UppercaseModel(Model[str]):
+        @classmethod
+        def _parse_data(cls, data: str) -> str:
+            return data.upper()
+
+    help = UppercaseModel('help')
+    assert help.contents == 'HELP'
+
+    stream = 'Can you ' + 'please ' + help + ' me?'
+    stream += " I've fallen and I can't get up!"
+
+    assert stream.contents == "CAN YOU PLEASE HELP ME? I'VE FALLEN AND I CAN'T GET UP!"
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
@@ -2273,7 +2545,7 @@ def test_mimic_doubly_nested_union_known_issue(
     _assert_model(dict_model[0], dict[str, str], {'0': 'zero'})  # type: ignore[index]
 
 
-def test_model_operations_as_scalars() -> None:
+def test_mimic_operations_as_scalars() -> None:
     int_model = Model[int](1)
 
     assert (int_model + 1).contents == 2  # type: ignore[operator, attr-defined]
@@ -2348,25 +2620,33 @@ def test_mimic_operations_on_pydantic_models() -> None:
     assert parent_pydantic_model.a == 0
     parent_pydantic_model.a = 2
     assert parent_pydantic_model.a == 2
+    parent_pydantic_model.a = '2'
+    assert parent_pydantic_model.a == 2
+    with pytest.raises(ValidationError):
+        parent_pydantic_model.a = 'abc'
 
     child_pydantic_model = Model[ChildPydanticModel]()
     assert child_pydantic_model.a == 0
     assert child_pydantic_model.b == ''
     child_pydantic_model.b = 'something'
     assert child_pydantic_model.b == 'something'
+    child_pydantic_model.b = 123
+    assert child_pydantic_model.b == '123'
 
-    generic_pydantic_model = Model[GenericPydanticModel[str]]()
+    generic_pydantic_model = Model[GenericPydanticModel[int]]()
     assert generic_pydantic_model.a is None
-    generic_pydantic_model.a = 'something'
-    assert generic_pydantic_model.a == 'something'
+    parent_pydantic_model.a = '2'
+    assert parent_pydantic_model.a == 2
+    with pytest.raises(ValidationError):
+        parent_pydantic_model.a = 'abc'
 
     child_generic_pydantic_model = Model[ChildGenericPydanticModel]()
     assert child_generic_pydantic_model.a is None
-    child_generic_pydantic_model.a = 2
+    child_generic_pydantic_model.a = '2'
     assert child_generic_pydantic_model.a == 2
     assert child_generic_pydantic_model.b == ''
-    child_generic_pydantic_model.b = 'something'
-    assert child_generic_pydantic_model.b == 'something'
+    child_generic_pydantic_model.b = 123
+    assert child_generic_pydantic_model.b == '123'
 
 
 # TODO: Add support in Model for mimicking the setting and deletion of properties

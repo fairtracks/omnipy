@@ -34,7 +34,7 @@ from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.main import BaseModel, ModelMetaclass, validate_model
 from pydantic.typing import display_as_type, is_none_type
-from pydantic.utils import lenient_isinstance, lenient_issubclass
+from pydantic.utils import lenient_isinstance, lenient_issubclass, sequence_like
 from typing_extensions import TypeVar
 
 from omnipy.api.exceptions import ParamException
@@ -47,7 +47,7 @@ from omnipy.util.contexts import (AttribHolder,
                                   LastErrorHolder,
                                   nothing,
                                   setup_and_teardown_callback_context)
-from omnipy.util.decorators import add_callback_after_call, no_context
+from omnipy.util.decorators import add_callback_after_call, add_callback_if_exception, no_context
 from omnipy.util.helpers import (all_equals,
                                  all_type_variants,
                                  ensure_plain_type,
@@ -314,17 +314,35 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         # TODO: See if it is possible to type Model mimicking of root type, e.g. with Protocol
         if inspect.isclass(outer_type_plain) or is_union(outer_type) or outer_type_plain is Literal:
+            if is_union(outer_type) or outer_type_plain is Literal:
+                outer_types = get_args(outer_type)
+            else:
+                outer_types = (outer_type_plain,)
+
             for name, method_info in get_special_methods_info_dict().items():
-                if is_union(outer_type) or outer_type_plain is Literal:
-                    outer_types = get_args(outer_type)
-                else:
-                    outer_types = (outer_type_plain,)
                 for type_to_support in outer_types:
                     if hasattr(type_to_support, name):
                         setattr(created_model,
                                 name,
                                 functools.partialmethod(cls._special_method, name, method_info))
                         break
+
+            def _radd_through_new_model_and_add(self, other):
+                try:
+                    other_model = self.__class__(other)
+                    return other_model.__add__(self)
+                except ValidationError:
+                    return NotImplemented
+
+            for type_to_support in outer_types:
+                if lenient_issubclass(type_to_support, Sequence) \
+                    and not hasattr(created_model, '__radd__') \
+                        and hasattr(created_model, '__add__'):
+
+                    setattr(created_model,
+                            '__radd__',
+                            functools.partialmethod(_radd_through_new_model_and_add))
+                    break
 
     def __class_getitem__(  # type: ignore[override]
         cls,
@@ -495,6 +513,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             self,
             new_contents: object,
             reset_solution: ContextManager[None] | UndefinedType = Undefined) -> None:
+
         old_contents_id = id(self.contents)
 
         def _set_new_contents(contents: object) -> None:
@@ -650,6 +669,19 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     @classmethod
     def _parse_data(cls, data: Any) -> _RootT:
         return data
+
+    @root_validator(pre=True)
+    def _generous_sequence_support(cls, root_obj: dict[str, _RootT | None]) -> Any:
+        if ROOT_KEY in root_obj:
+            value = root_obj[ROOT_KEY]
+            outer_type = cls.outer_type()
+            if lenient_issubclass(outer_type, Sequence) \
+                    and not lenient_isinstance(value, outer_type) \
+                    and isinstance(value, Sequence) \
+                    and not sequence_like(value) \
+                    and not any(isinstance(value, typ) for typ in (str, bytes)):
+                return {ROOT_KEY: [_ for _ in value]}
+        return root_obj
 
     @root_validator
     def _parse_root_object(cls, root_obj: dict[str, _RootT | None]) -> Any:
@@ -908,7 +940,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     def _call_special_method(self, name: str, *args: object, **kwargs: object) -> object:
         try:
-            method = self._getattr_from_contents_obj(name)
+            method = cast(Callable, self._getattr_from_contents_obj(name))
         except AttributeError as e:
             if name in ('__int__', '__bool__', '__float__', '__complex__'):
                 raise ValueError from e
@@ -916,9 +948,25 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 raise TypeError(f"object of type '{self.__class__.__name__}' has no len()")
             else:
                 raise
-
-        ret = method(*args, **kwargs)
+        try:
+            ret = method(*args, **kwargs)
+        except TypeError as type_exc:
+            try:
+                ret = self._call_method_with_model_converted_args(args, kwargs, method)
+            except ValidationError:
+                raise type_exc
+        if ret is NotImplemented:
+            try:
+                ret = self._call_method_with_model_converted_args(args, kwargs, method)
+            except ValidationError:
+                pass
         return ret
+
+    def _call_method_with_model_converted_args(self, args, kwargs, method):
+        model_args = (self.__class__(arg).contents for arg in args)
+        model_kwargs = {k: self.__class__(v).contents for k, v in kwargs.items()}
+
+        return method(*model_args, **model_kwargs)
 
     def _get_per_element_model_generator(self,
                                          elements: Iterable | None,

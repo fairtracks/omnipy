@@ -8,6 +8,7 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.api.enums import RunState
+from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.dataset import Dataset, MultiModelDataset
 
 from ....engine.helpers.functions import assert_job_state
@@ -25,7 +26,9 @@ def test_table_models() -> None:
         TableTemplate[MyOtherRecordSchema]([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
 
 
-def test_dataset_with_multiple_table_models():
+def test_dataset_with_multiple_table_models(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+    runtime.config.data.interactive_mode = True
+
     my_dataset = MultiModelDataset[GeneralTable]()
 
     my_dataset['a'] = [{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}]
@@ -38,9 +41,11 @@ def test_dataset_with_multiple_table_models():
     with pytest.raises(ValidationError):
         my_dataset.set_model('b', TableTemplate[MyRecordSchema])
     assert my_dataset.get_model('b') == GeneralTable
+    assert my_dataset['b'].to_data() == [{'b': 'df', 'c': True}, {'b': 'sg', 'c': False}]
 
     my_dataset.set_model('b', TableTemplate[MyOtherRecordSchema])
     assert my_dataset.get_model('b') == TableTemplate[MyOtherRecordSchema]
+    assert my_dataset['b'].to_data() == [{'b': 'df', 'c': 1}, {'b': 'sg', 'c': 0}]
 
     my_dataset.set_model('c', TableTemplate[MyOtherRecordSchema])
     assert my_dataset.get_model('c') == TableTemplate[MyOtherRecordSchema]
@@ -50,6 +55,7 @@ def test_dataset_with_multiple_table_models():
         my_dataset['c'] = [{'b': 'sd', 'd': False}, {'b': 'dd', 'd': False}]
     assert my_dataset['c'].contents == []
     my_dataset['c'] = [{'b': 'sd', 'c': False}, {'b': 'dd', 'c': False}]
+    assert my_dataset['c'].to_data() == [{'b': 'sd', 'c': 0}, {'b': 'dd', 'c': 0}]
 
     del my_dataset['b']
     assert my_dataset.get_model('b') == TableTemplate[MyOtherRecordSchema]
