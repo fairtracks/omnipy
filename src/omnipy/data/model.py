@@ -320,7 +320,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 outer_types = (outer_type_plain,)
 
             for name, method_info in get_special_methods_info_dict().items():
-                for type_to_support in outer_types:
+                for type_to_support in reversed(outer_types):
                     if hasattr(type_to_support, name):
                         setattr(created_model,
                                 name,
@@ -1113,10 +1113,10 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             and self.to_data() == cast(Model, other).to_data()  # last line is just in case
 
     def __repr__(self) -> str:
-        # if self.config.interactive_mode and not _waiting_for_terminal_repr():
-        #     if get_calling_module_name() in INTERACTIVE_MODULES:
-        #         _waiting_for_terminal_repr(True)
-        #         return self._table_repr()
+        if self.config.interactive_mode and not _waiting_for_terminal_repr():
+            if get_calling_module_name() in INTERACTIVE_MODULES:
+                _waiting_for_terminal_repr(True)
+                return self._table_repr()
         return self._trad_repr()
 
     def __hash__(self) -> int:
