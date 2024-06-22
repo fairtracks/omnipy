@@ -7,6 +7,13 @@ orchestration.
 
 # Updates
 
+- **June 22, 2024:** We're not very good at writing updates. Expect a larger update on an important 
+  and potentially groundbreaking new feature of Ommipy: the capability of model object to mimic behavior
+  of the modelled class – with the addition of snapshots and rollbacks. So e.g. `Model[list[int]]` is 
+  not just a run-time type-safe parser that contuniously makes sure that the elements in the list are,
+  in fact, integers; it can also be operated as a list using e.g. `.append()`, `.insert()` and concatenation
+  with the `+` operator; and furthermore: if you add a non-parseable element, say `"abc"` instead of
+  `"123"`, it will roll back the contents to the previous validated snapshot!
 - **Feb 3, 2023:** Documentation of the Omnipy API is still sparse. However, for examples of running
   code, please check out the [omnipy-examples repo](https://github.com/fairtracks/omnipy_examples).
 - **Dec 22, 2022:** Omnipy is the new name of the Python package formerly known as uniFAIR.
