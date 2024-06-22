@@ -14,7 +14,7 @@ orchestration.
   So e.g. `Model[list[int]]()` is not just a run-time typesafe parser that contuniously makes sure that the 
   elements in the list are, in fact, integers; the object can also be operated as a list using e.g. 
   `.append()`, `.insert()` and concatenation with the `+` operator; and furthermore: if you append a 
-  non-parseable element, say `"abc"` instead of `"123"`, it will roll back the contents to the previously 
+  unparseable element, say `"abc"` instead of `"123"`, it will roll back the contents to the previously 
   validated snapshot!
 - **Feb 3, 2023:** Documentation of the Omnipy API is still sparse. However, for examples of running
   code, please check out the [omnipy-examples repo](https://github.com/fairtracks/omnipy_examples).
