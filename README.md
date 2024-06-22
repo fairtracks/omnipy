@@ -11,7 +11,7 @@ orchestration.
   and potentially groundbreaking new feature of Ommipy: the capability of model objects to automatically 
   mimic behaviour of the modelled class – with the addition of snapshots and rollbacks.
 
-  So e.g. `Model[list[int]]()` is not just a run-time typesafe parser that contuniously makes sure that the 
+  So e.g. `Model[list[int]]()` is not just a run-time typesafe parser that continuously makes sure that the 
   elements in the list are, in fact, integers; the object can also be operated as a list using e.g. 
   `.append()`, `.insert()` and concatenation with the `+` operator; and furthermore: if you append an
   unparseable element, say `"abc"` instead of `"123"`, it will roll back the contents to the previously 
