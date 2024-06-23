@@ -1433,7 +1433,7 @@ def test_lazy_snapshot_triggered_by_state_changing_operator(
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(TypeError):
         model += ['abc']  # type: ignore[operator]
     assert model.snapshot == model.contents == [123]
 
@@ -1625,7 +1625,7 @@ def test_snapshot_with_mimic_special_method_and_interactive_mode(
     first_snapshot_id = id(model.snapshot)
     assert first_snapshot_id != id(model.contents)  # snapshot is copy of contents
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(TypeError):
         model += ['abc']  # type: ignore[operator]
 
     assert model.snapshot == model.contents == [123]
@@ -1689,21 +1689,28 @@ def test_mimic_special_method_no_interactive_mode(
     _assert_no_snapshot(model)
 
     with pytest.raises(ValidationError):
-        model += ['abc']  # type: ignore[operator]
+        model[0] = 'abc'
 
-    assert_model(model, list[int], [123, 'abc'])
+    assert_model(model, list[int], ['abc'])
     _assert_no_snapshot(model)
 
+    # Since 'abc' is not rolled back, validation of all contents fail, even though 456 validates
     with pytest.raises(ValidationError):
         model += [456]  # type: ignore[operator]
 
-    assert_model(model, list[int], [123, 'abc', 456])
+    assert_model(model, list[int], ['abc', 456])
     _assert_no_snapshot(model)
 
-    with pytest.raises(ValidationError):
-        model.validate_contents()
+    # The `+` operator is a special case in that Model provides a highly interoperable
+    # implementation on top of any existing support for the `+`operator in the modelled class.
+    # As a consequence of how this is implemented in Model, the contents in this case are not
+    # actually rolled back, as it might seem from the below code. Instead, a TypeError is raised
+    # before the new value is even added to the contents.
 
-    assert_model(model, list[int], [123, 'abc', 456])
+    with pytest.raises(TypeError):
+        model += ['abc']  # type: ignore[operator]
+
+    assert_model(model, list[int], ['abc', 456])
     _assert_no_snapshot(model)
 
     runtime.config.data.interactive_mode = True
@@ -1713,11 +1720,11 @@ def test_mimic_special_method_no_interactive_mode(
         model.validate_contents()
 
     with pytest.raises(ValidationError):
-        del model[1]
+        del model[0]
 
-    del model.contents[1]
+    del model.contents[0]
     model.validate_contents()
-    assert model.snapshot == model.contents == [123, 456]
+    assert model.snapshot == model.contents == [456]
     assert id(model.snapshot) != id(model.contents)
 
 
@@ -1860,9 +1867,7 @@ def test_mimic_simple_list_operator_with_convert(
     with pytest.raises(SyntaxError):
         eval("['42'] += model")
 
-    # No underlying TypeError, as any list can be added to a list. Exception is instead raised
-    # during the subsequent validation of the contents
-    with pytest.raises(ValidationError):
+    with pytest.raises(TypeError):
         model += ['abc']  # type: ignore[operator]
 
     assert_model(model, list[int], [42, 42, 42])
@@ -2039,7 +2044,7 @@ def test_mimic_sequence_convert_for_concat(runtime: Annotated[IsRuntime, pytest.
 
 
 @pytest.mark.parametrize('interactive_mode', [False, True])
-def test_mimic_concatenation_for_streaming(
+def test_mimic_concatenation_for_strings(
     runtime: Annotated[IsRuntime, pytest.fixture],
     interactive_mode: bool,
 ) -> None:
@@ -2056,7 +2061,113 @@ def test_mimic_concatenation_for_streaming(
     stream = 'Can you ' + 'please ' + help + ' me?'
     stream += " I've fallen and I can't get up!"
 
+    assert isinstance(stream, UppercaseModel)
     assert stream.contents == "CAN YOU PLEASE HELP ME? I'VE FALLEN AND I CAN'T GET UP!"
+
+
+@pytest.mark.parametrize('interactive_mode', [False, True])
+@pytest.mark.parametrize('dyn_convert', [False, True])
+def test_mimic_concatenation_for_converted_models(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    interactive_mode: bool,
+    dyn_convert: bool,
+) -> None:
+    runtime.config.data.interactive_mode = interactive_mode
+    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
+
+    class WordSplitterModel(Model[list[str] | str]):
+        @classmethod
+        def _parse_data(cls, data: list[str] | str) -> list[str]:
+            if isinstance(data, str):
+                return data.split()
+            return data
+
+    please_help = WordSplitterModel('please help')
+    assert please_help.contents == ['please', 'help']
+
+    stream = 'Can you ' + please_help + ' me?'
+    stream += "I've fallen"
+
+    assert isinstance(stream, WordSplitterModel)
+    assert stream.contents == "Can you please help me? I've fallen".split()
+
+    stream += ['and', 'I', "can't"] + ['get', 'up!']
+
+    assert isinstance(stream, WordSplitterModel)
+    assert stream.contents == [
+        'Can', 'you', 'please', 'help', 'me?', "I've", 'fallen', 'and', 'I', "can't", 'get', 'up!'
+    ]
+
+    new_stream = ['Someone', 'is', 'shouting:'] + stream + '- We should help them!'
+
+    assert isinstance(new_stream, WordSplitterModel)
+    if dyn_convert:
+        joined_str = ' '.join(new_stream.contents)
+    else:
+        joined_str = ' '.join(new_stream)
+    assert joined_str == ("Someone is shouting: Can you please help me? "
+                          "I've fallen and I can't get up! - We should help them!")
+
+    assert_model_or_val(dyn_convert, new_stream[5], str, 'please')
+
+    sentence = new_stream[3:8]
+    sentence.insert(2, 'pretty')
+
+    assert isinstance(sentence, WordSplitterModel)
+    assert sentence.contents == ['Can', 'you', 'pretty', 'please', 'help', 'me?']
+
+
+def test_mimic_iadd_and_radd_only_when_add_is_defined():
+    class IncorrectGrumpyNothingModel(Model[None]):
+        def __iadd__(self, other: object) -> 'IncorrectGrumpyNothingModel':
+            return self
+
+        def __radd__(self, other: object) -> 'IncorrectGrumpyNothingModel':
+            return self
+
+        def __getitem__(self, index: int) -> None:
+            raise RuntimeError('You get nothing!')
+
+    incorrect_model = IncorrectGrumpyNothingModel(None)
+    assert not hasattr(incorrect_model, '__add__')
+    assert not hasattr(incorrect_model, '__radd__')
+    assert not hasattr(incorrect_model, '__iadd__')
+
+    assert hasattr(incorrect_model, '__getitem__')
+    assert not hasattr(incorrect_model, '__setitem__')
+
+    with pytest.raises(RuntimeError):
+        incorrect_model[0]
+
+    class GrumpyNothingModel(Model[None]):
+        def __iadd__(self, other: object) -> 'IncorrectGrumpyNothingModel':
+            raise RuntimeError('I am ignored!')
+
+        def __add__(self, other: object) -> 'GrumpyNothingModel':
+            return self
+
+        def __radd__(self, other: object) -> 'IncorrectGrumpyNothingModel':
+            raise RuntimeError('Me too!')
+
+        def __getitem__(self, index: int) -> None:
+            raise RuntimeError('You still get nothing!')
+
+    model = GrumpyNothingModel(None)
+    assert hasattr(model, '__add__')
+    assert hasattr(model, '__radd__')
+    assert hasattr(model, '__iadd__')
+
+    assert 123 + model + "abc" == model
+    assert None + model + model == model
+
+    model += (_ for _ in globals())
+    assert model.contents is None
+
+    assert hasattr(model, '__getitem__')
+    assert not hasattr(incorrect_model, '__setitem__')
+
+    with pytest.raises(RuntimeError):
+        model[0]
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
@@ -2116,13 +2227,21 @@ def test_mimic_nested_list_operations(
     model[0] = [0, 2]
     assert_model_or_val(dyn_convert, model[0], list[int], [0, 2])  # type: ignore[index]
 
-    # Here the `model[0] +=` operation is a series of `__get__`, `__iadd__`, and `__set__`
-    # operations, with the `__get__` and `__set__` operating on the "parent" model object.
-    # In contrast, the `append()` method only operates on the child level.
-    with pytest.raises(ValidationError):
+    # Here the `model[0] +=` operation is a series of `__getitem__`, `__iadd__`, and `__setitem__`
+    # operations, with the `__getitem__` and `__setitem__` operating on the "parent" model object,
+    # causing ValidationError even when `dynamically_convert_elements_to_models` is disabled. When
+    # `dynamically_convert_elements_to_models` is enabled, a TypeError is raised in the __iadd__
+    # method instead before any values have even been added.
+    with pytest.raises(TypeError if dyn_convert else ValidationError):
         model[0] += ('a',)  # type: ignore[index]
     assert_model_or_val(dyn_convert, model[0], list[int], [0, 2])  # type: ignore[index]
 
+    # In contrast to the `+` operator, the `append()` method only operates on the child level
+    # (on the result of the `__getitem__()` call). When `dynamically_convert_elements_to_models` is
+    # disabled, this is simply a plain Python list (without any validation). When
+    # `dynamically_convert_elements_to_models` is enabled, however, the results of the
+    # `__getitem__()` call is automatically converted to a Model[int]() object, which then validates
+    # its contents.
     if dyn_convert:
         with pytest.raises(ValidationError):
             model[0].append('a')  # type: ignore[index]

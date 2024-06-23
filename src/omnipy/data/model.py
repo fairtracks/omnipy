@@ -313,8 +313,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 outer_types = (outer_type_plain,)
 
             for name, method_info in get_special_methods_info_dict().items():
-                for type_to_support in reversed(outer_types):
-                    if hasattr(type_to_support, name):
+                name_to_check = '__add__' if name in ('__iadd__', '__radd__') else name
+                for type_to_support in outer_types:
+                    if hasattr(type_to_support, name_to_check):
                         setattr(created_model,
                                 name,
                                 functools.partialmethod(cls._special_method, name, method_info))
@@ -852,7 +853,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             #     # self.validate_contents(restore_snapshot_if_interactive_and_invalid=True)
             #     self.validate_contents()
 
-            def _call_special_method(*inner_args: object, **inner_kwargs: object) -> object:
+            def _call_special_method_and_return_self_if_inplace(*inner_args: object,
+                                                                **inner_kwargs: object) -> object:
                 return_val = self._call_special_method(name, *inner_args, **inner_kwargs)
 
                 if id(return_val) == id(self.contents):  # in-place operator, e.g. model += 1
@@ -865,7 +867,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
             reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
             with reset_solution:
-                ret = _call_special_method(*args, **kwargs)
+                ret = _call_special_method_and_return_self_if_inplace(*args, **kwargs)
+                if ret is NotImplemented:
+                    return ret
 
                 self._generic_validate_contents(
                     new_contents=self.contents,
@@ -881,6 +885,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             return _per_element_model_generator()
         else:
             ret = self._call_special_method(name, *args, **kwargs)
+            if ret is NotImplemented:
+                return ret
+
             if info.state_changing:
                 self.validate_contents()
 
@@ -898,31 +905,74 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         return ret
 
     def _call_special_method(self, name: str, *args: object, **kwargs: object) -> object:
-        try:
-            method = cast(Callable, self._getattr_from_contents_obj(name))
-        except AttributeError as e:
-            if name in ('__int__', '__bool__', '__float__', '__complex__'):
-                raise ValueError from e
-            if name == '__len__':
-                raise TypeError(f"object of type '{self.__class__.__name__}' has no len()")
-            else:
-                raise
-        try:
-            ret = method(*args, **kwargs)
-        except TypeError as type_exc:
+        contents = self._get_real_contents()
+        has_add_method = hasattr(contents, '__add__')
+        has_iadd_method = hasattr(contents, '__iadd__')
+        has_radd_method = hasattr(contents, '__radd__')
+
+        if name == '__add__' and has_add_method:
+
+            def _add_new_other_model(other):
+                try:
+                    return contents.__add__(self.__class__(other).contents)
+                except ValidationError:
+                    return NotImplemented
+
+            return _add_new_other_model(*args, **kwargs)
+        elif name == '__iadd__' and (has_iadd_method or has_add_method):
+
+            def _iadd_new_other_model(other):
+                try:
+                    other_model_contents = self.__class__(other).contents
+                    if has_iadd_method:
+                        return contents.__iadd__(other_model_contents)
+                    else:
+                        self.contents = contents.__add__(other_model_contents)
+                        return self.contents
+                except ValidationError:
+                    return NotImplemented
+
+            return _iadd_new_other_model(*args, **kwargs)
+        elif name == '__radd__' and (has_radd_method or has_add_method):
+
+            def _radd_new_other_model(other):
+                try:
+                    other_model_contents = self.__class__(other).contents
+                    if has_radd_method:
+                        return contents.__radd__(other_model_contents)
+                    else:
+                        return self.__class__(other).contents.__add__(self.contents)
+                except ValidationError:
+                    return NotImplemented
+
+            return _radd_new_other_model(*args, **kwargs)
+        else:
             try:
-                ret = self._call_method_with_model_converted_args(args, kwargs, method)
-            except ValidationError:
-                raise type_exc
-        if ret is NotImplemented:
+                method = cast(Callable, self._getattr_from_contents_obj(name))
+            except AttributeError as e:
+                if name in ('__int__', '__bool__', '__float__', '__complex__'):
+                    raise ValueError from e
+                if name == '__len__':
+                    raise TypeError(f"object of type '{self.__class__.__name__}' has no len()")
+                else:
+                    raise
+
             try:
-                ret = self._call_method_with_model_converted_args(args, kwargs, method)
-            except ValidationError:
-                pass
+                ret = method(*args, **kwargs)
+            except TypeError as type_exc:
+                try:
+                    ret = self._call_method_with_model_converted_args(args, kwargs, method)
+                except ValidationError:
+                    raise type_exc
+            if ret is NotImplemented:
+                try:
+                    ret = self._call_method_with_model_converted_args(args, kwargs, method)
+                except ValidationError:
+                    pass
         return ret
 
     def _call_method_with_model_converted_args(self, args, kwargs, method):
-        model_args = (self.__class__(arg).contents for arg in args)
+        model_args = [self.__class__(arg).contents for arg in args]
         model_kwargs = {k: self.__class__(v).contents for k, v in kwargs.items()}
 
         return method(*model_args, **model_kwargs)
