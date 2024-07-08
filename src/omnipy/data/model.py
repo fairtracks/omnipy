@@ -39,7 +39,7 @@ from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.private.util import IsSnapshotHolder, IsSnapshotWrapper
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
-from omnipy.data.helpers import get_special_methods_info_dict, MethodInfo
+from omnipy.data.helpers import get_special_methods_info_dict, MethodInfo, YesNoMaybe
 from omnipy.util.contexts import (AttribHolder,
                                   LastErrorHolder,
                                   nothing,
@@ -306,20 +306,25 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         outer_type_plain = created_model._get_root_type(outer=True, with_args=False)
 
         # TODO: See if it is possible to type Model mimicking of root type, e.g. with Protocol
-        if inspect.isclass(outer_type_plain) or is_union(outer_type) or outer_type_plain is Literal:
+        if not lenient_issubclass(outer_type_plain, TypeVar):
             if is_union(outer_type) or outer_type_plain is Literal:
                 outer_types = get_args(outer_type)
             else:
                 outer_types = (outer_type_plain,)
 
             for name, method_info in get_special_methods_info_dict().items():
-                name_to_check = '__add__' if name in ('__iadd__', '__radd__') else name
+                names_to_check = (name, '__add__') if name in ('__iadd__', '__radd__') else (name,)
                 for type_to_support in outer_types:
-                    if hasattr(type_to_support, name_to_check):
-                        setattr(created_model,
-                                name,
-                                functools.partialmethod(cls._special_method, name, method_info))
-                        break
+                    for name_to_check in names_to_check:
+                        if hasattr(type_to_support, name_to_check):
+                            setattr(created_model,
+                                    name,
+                                    functools.partialmethod(cls._special_method, name, method_info))
+                            break
+                    else:
+                        continue
+                    # To let the inner break, also break the outer for loop
+                    break
 
     def __class_getitem__(  # type: ignore[override]
         cls,
@@ -542,6 +547,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         reset_solution: ContextManager[None] | UndefinedType = Undefined,
         post_validation_func: Callable[[_RootT], None] | None = None,
     ) -> None:
+        keep_alive_old_contents = self.contents  # To ensure old content ids are not reused
 
         if reset_solution is Undefined:
             reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
@@ -577,6 +583,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         if new_contents is not Undefined:
             del new_contents
             self._take_snapshot_of_validated_contents()
+
+        del keep_alive_old_contents
 
     def _validate_contents_from_value(
         self,
@@ -839,7 +847,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 if self._is_non_omnipy_pydantic_model():
                     self._special_method(
                         '__setattr__',
-                        MethodInfo(state_changing=True, maybe_returns_same_type=False),
+                        MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
                         attr,
                         value)
                 else:
@@ -891,7 +899,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             if info.state_changing:
                 self.validate_contents()
 
-        if id(ret) != id(self) and info.maybe_returns_same_type:
+        if id(ret) != id(self) and info.returns_same_type:
             level_up = False
             if name == '__getitem__':
                 assert len(args) == 1
@@ -900,52 +908,78 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
             # We can do this with some ease of mind as all the methods except '__getitem__' with
             # integer argument are supposed to possibly return a result of the same type.
-            ret = self._convert_to_model_if_reasonable(ret, level_up=level_up, level_up_arg_idx=-1)
+            ret = self._convert_to_model_if_reasonable(
+                ret,
+                level_up=level_up,
+                level_up_arg_idx=-1,
+                raise_validation_errors=(info.returns_same_type == YesNoMaybe.YES),
+            )
 
         return ret
 
     def _call_special_method(self, name: str, *args: object, **kwargs: object) -> object:
         contents = self._get_real_contents()
         has_add_method = hasattr(contents, '__add__')
-        has_iadd_method = hasattr(contents, '__iadd__')
         has_radd_method = hasattr(contents, '__radd__')
+        has_iadd_method = hasattr(contents, '__iadd__')
 
         if name == '__add__' and has_add_method:
 
-            def _add_new_other_model(other):
-                try:
-                    return contents.__add__(self.__class__(other).contents)
-                except ValidationError:
-                    return NotImplemented
+            def _add(other):
+                # try:
+                #     return contents.__add__(self.__class__(other).contents)
+                # except ValidationError:
+                return contents.__add__(other)
 
-            return _add_new_other_model(*args, **kwargs)
-        elif name == '__iadd__' and (has_iadd_method or has_add_method):
+            # return _add_new_other_model(*args, **kwargs)
+            method = _add
+            return self._call_single_arg_method_with_model_converted_other_first(
+                name, method, *args, **kwargs)
 
-            def _iadd_new_other_model(other):
-                try:
-                    other_model_contents = self.__class__(other).contents
-                    if has_iadd_method:
-                        return contents.__iadd__(other_model_contents)
-                    else:
-                        self.contents = contents.__add__(other_model_contents)
-                        return self.contents
-                except ValidationError:
-                    return NotImplemented
-
-            return _iadd_new_other_model(*args, **kwargs)
         elif name == '__radd__' and (has_radd_method or has_add_method):
 
-            def _radd_new_other_model(other):
-                try:
-                    other_model_contents = self.__class__(other).contents
-                    if has_radd_method:
-                        return contents.__radd__(other_model_contents)
-                    else:
-                        return self.__class__(other).contents.__add__(self.contents)
-                except ValidationError:
-                    return NotImplemented
+            def _radd(other):
+                if has_radd_method:
+                    return contents.__radd__(other)
+                else:
+                    return contents.__add__(other)
 
-            return _radd_new_other_model(*args, **kwargs)
+            def _radd_model_converted_other(other):
+                if has_radd_method:
+                    return contents.__radd__(self.__class__(other).contents)
+                else:
+                    return self.__class__(other).contents.__add__(self.contents)
+
+            method = _radd
+            model_converted_other_method = _radd_model_converted_other
+            return self._call_single_arg_method_with_model_converted_other_first(
+                name,
+                method,
+                *args,
+                model_converted_other_method=model_converted_other_method,
+                **kwargs,
+            )
+
+        elif name == '__iadd__' and (has_iadd_method or has_add_method):
+
+            def _iadd(other):
+                # try:
+                #     other_model_contents = self.__class__(other).contents
+                #     if has_iadd_method:
+                #         return contents.__iadd__(other_model_contents)
+                #     else:
+                #         self.contents = contents.__add__(other_model_contents)
+                #         return self.contents
+                # except ValidationError:
+                if has_iadd_method:
+                    return contents.__iadd__(other)
+                else:
+                    return contents.__add__(other)
+
+            # return _iadd_new_other_model(*args, **kwargs)
+            method = _iadd
+            return self._call_single_arg_method_with_model_converted_other_first(
+                name, method, *args, **kwargs)
         else:
             try:
                 method = cast(Callable, self._getattr_from_contents_obj(name))
@@ -955,27 +989,65 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 if name == '__len__':
                     raise TypeError(f"object of type '{self.__class__.__name__}' has no len()")
                 else:
-                    raise
+                    return NotImplemented
 
+            return self._call_method_with_unconverted_args_first(method, *args, **kwargs)
+
+    def _call_single_arg_method_with_model_converted_other_first(
+        self,
+        name: str,
+        method: Callable,
+        *args: object,
+        model_converted_other_method: Callable | None = None,
+        **kwargs: object,
+    ):
+        if len(args) != 1:
+            raise TypeError(f'expected 1 argument, got {len(args)}')
+
+        if len(kwargs) > 0:
+            raise TypeError(f'method {name} takes no keyword arguments')
+
+        arg = args[0]
+
+        try:
             try:
-                ret = method(*args, **kwargs)
-            except TypeError as type_exc:
-                try:
-                    ret = self._call_method_with_model_converted_args(args, kwargs, method)
-                except ValidationError:
-                    raise type_exc
-            if ret is NotImplemented:
-                try:
-                    ret = self._call_method_with_model_converted_args(args, kwargs, method)
-                except ValidationError:
-                    pass
+                if model_converted_other_method:
+                    return model_converted_other_method(arg)
+                else:
+                    return method(self.__class__(arg).contents, **kwargs)
+            except ValidationError:
+                return method(arg)
+        except TypeError:
+            return NotImplemented
+
+    def _call_method_with_unconverted_args_first(
+        self,
+        method: Callable,
+        *args: object,
+        **kwargs: object,
+    ):
+        try:
+            ret = method(*args, **kwargs)
+        except TypeError as type_exc:
+            try:
+                ret = self._call_method_with_model_converted_args(method, *args, **kwargs)
+            except ValidationError:
+                raise type_exc
+        if ret is NotImplemented:
+            try:
+                ret = self._call_method_with_model_converted_args(method, *args, **kwargs)
+            except ValidationError:
+                pass
         return ret
 
-    def _call_method_with_model_converted_args(self, args, kwargs, method):
+    def _call_method_with_model_converted_args(
+        self,
+        method: Callable,
+        *args: object,
+        **kwargs: object,
+    ):
         model_args = [self.__class__(arg).contents for arg in args]
-        model_kwargs = {k: self.__class__(v).contents for k, v in kwargs.items()}
-
-        return method(*model_args, **model_kwargs)
+        return method(*model_args, **kwargs)
 
     def _get_per_element_model_generator(self,
                                          elements: Iterable | None,
@@ -994,8 +1066,10 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         self,
         ret: Mapping[_KeyT, _ValT] | Iterable[_ValT] | _ReturnT | _RootT,
         level_up: bool = False,
-        level_up_arg_idx: int = 1) -> ('Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] '
-                                       '| Model[_ReturnT] | Model[_RootT] | _ReturnT'):
+        level_up_arg_idx: int = 1,
+        raise_validation_errors: bool = False,
+    ) -> ('Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] '
+          '| Model[_ReturnT] | Model[_RootT] | _ReturnT'):
 
         if level_up and not self.config.dynamically_convert_elements_to_models:
             ...
@@ -1016,7 +1090,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                                      remove_annotated_plus_optional_if_present(type_to_check))
                 for inner_type_to_check in all_type_variants(type_to_check):
                     plain_inner_type_to_check = ensure_plain_type(inner_type_to_check)
-                    if plain_inner_type_to_check in (ForwardRef, TypeVar, Literal, None):
+                    # if plain_inner_type_to_check in (ForwardRef, TypeVar, Literal, None):
+                    if plain_inner_type_to_check in (ForwardRef, TypeVar, None):
                         continue
 
                     if level_up:
@@ -1026,21 +1101,45 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                                     inner_type_args[level_up_arg_idx]):
                                 level_up_type_to_check = self._fix_tuple_type_from_args(
                                     level_up_type_to_check)
-                                if lenient_isinstance(ret,
-                                                      ensure_plain_type(level_up_type_to_check)):
+                                if self._is_instance_or_literal(
+                                        ret,
+                                        ensure_plain_type(level_up_type_to_check),
+                                        level_up_type_to_check,
+                                ):
                                     try:
                                         return Model[level_up_type_to_check](ret)  # type: ignore
-                                    except (ValidationError, TypeError):
+                                    except ValidationError:
+                                        if raise_validation_errors:
+                                            raise
+                                    except TypeError:
                                         pass
 
                     else:
-                        if lenient_isinstance(ret, plain_inner_type_to_check):
+                        if self._is_instance_or_literal(
+                                ret,
+                                plain_inner_type_to_check,
+                                inner_type_to_check,
+                        ):
                             try:
                                 return self.__class__(ret)
-                            except (ValidationError, TypeError):
+                            except ValidationError:
+                                if raise_validation_errors:
+                                    raise
+                            except TypeError:
                                 pass
 
         return cast(_ReturnT, ret)
+
+    @staticmethod
+    def _is_instance_or_literal(obj: object, plain_type: type, raw_type: type | GenericAlias):
+        if plain_type is Literal:
+            args = get_args(raw_type)
+            for arg in args:
+                if obj == arg:
+                    return True
+            return False
+        else:
+            return lenient_isinstance(obj, plain_type)
 
     def _fix_tuple_type_from_args(
         self, level_up_type_to_check: type | GenericAlias | tuple[type | GenericAlias, ...]
@@ -1129,8 +1228,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         return self._trad_repr()
 
     def __hash__(self) -> int:
-        return self._special_method('__hash__',
-                                    MethodInfo(state_changing=False, maybe_returns_same_type=False))
+        return self._special_method(
+            '__hash__', MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO))
 
     def view(self):
         from omnipy.modules.pandas.models import PandasModel

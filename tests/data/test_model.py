@@ -10,9 +10,11 @@ from typing import (Annotated,
                     cast,
                     ForwardRef,
                     Generic,
+                    get_args,
                     List,
                     Literal,
                     Optional,
+                    Protocol,
                     Type,
                     TypeAlias,
                     Union)
@@ -20,11 +22,12 @@ from typing import (Annotated,
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 from pydantic.generics import GenericModel
 import pytest
+import pytest_cases as pc
 from typing_extensions import TypeVar
 
 from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.public.hub import IsRuntime
-from omnipy.data.model import Model
+from omnipy.data.model import _RootT, Model
 from omnipy.util.setdeque import SetDeque
 
 from ..helpers.functions import assert_model, assert_model_or_val, assert_val  # type: ignore[misc]
@@ -174,7 +177,7 @@ def test_get_inner_outer_type() -> None:
     assert dict_of_strings_to_list_of_ints_model.inner_type(with_args=True) == list[int]
     assert dict_of_strings_to_list_of_ints_model.is_nested_type() is True
 
-    fake_optional_model = Model[Annotated[Optional[dict[str, list[int]]], 'Something']]()
+    fake_optional_model = Model[Annotated[Optional[dict[str, list[int]]], 'someone else']]()
     assert fake_optional_model.outer_type() == dict
     assert fake_optional_model.outer_type(with_args=True) == dict[str, list[int]]
     assert fake_optional_model.inner_type() == list
@@ -1377,12 +1380,19 @@ def test_snapshot_deepcopy_reuse_objects(runtime: Annotated[IsRuntime, pytest.fi
 def test_snapshot_deepcopy_reuse_ids_crash(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
     runtime.config.data.interactive_mode = True
 
-    for i in range(50):
-        model_list = []
-        for j in range(50):
-            model = Model[list[int]]([])
-            model.validate_contents()
-            model_list.append(model)
+    # for i in range(50):
+    #     model_list = []
+    #     for j in range(50):
+    #         model = Model[list[int]]([])
+    #         model.validate_contents()
+    #         model_list.append(model)
+
+    class MyModel(Model[list[list[int]]]):
+        ...
+
+    for j in range(50):
+        model = MyModel()
+        model.from_data([[i] for i in range(500)])
 
 
 def test_lazy_snapshot_not_triggered_by_set_contents(
@@ -1433,7 +1443,7 @@ def test_lazy_snapshot_triggered_by_state_changing_operator(
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(ValidationError):
         model += ['abc']  # type: ignore[operator]
     assert model.snapshot == model.contents == [123]
 
@@ -1625,7 +1635,7 @@ def test_snapshot_with_mimic_special_method_and_interactive_mode(
     first_snapshot_id = id(model.snapshot)
     assert first_snapshot_id != id(model.contents)  # snapshot is copy of contents
 
-    with pytest.raises(TypeError):
+    with pytest.raises(ValidationError):
         model += ['abc']  # type: ignore[operator]
 
     assert model.snapshot == model.contents == [123]
@@ -1701,16 +1711,10 @@ def test_mimic_special_method_no_interactive_mode(
     assert_model(model, list[int], ['abc', 456])
     _assert_no_snapshot(model)
 
-    # The `+` operator is a special case in that Model provides a highly interoperable
-    # implementation on top of any existing support for the `+`operator in the modelled class.
-    # As a consequence of how this is implemented in Model, the contents in this case are not
-    # actually rolled back, as it might seem from the below code. Instead, a TypeError is raised
-    # before the new value is even added to the contents.
-
-    with pytest.raises(TypeError):
+    with pytest.raises(ValidationError):
         model += ['abc']  # type: ignore[operator]
 
-    assert_model(model, list[int], ['abc', 456])
+    assert_model(model, list[int], ['abc', 456, 'abc'])
     _assert_no_snapshot(model)
 
     runtime.config.data.interactive_mode = True
@@ -1719,11 +1723,20 @@ def test_mimic_special_method_no_interactive_mode(
     with pytest.raises(ValidationError):
         model.validate_contents()
 
+    # Deletion is rolled back due as the model does not validate for the snapshot
     with pytest.raises(ValidationError):
         del model[0]
 
+    del model.contents[-1]
+
+    # Deletion is still rolled back due as the model still does not validate for the snapshot
+    with pytest.raises(ValidationError):
+        del model[0]
+
+    # Result of deletion now validates
     del model.contents[0]
     model.validate_contents()
+
     assert model.snapshot == model.contents == [456]
     assert id(model.snapshot) != id(model.contents)
 
@@ -1867,7 +1880,9 @@ def test_mimic_simple_list_operator_with_convert(
     with pytest.raises(SyntaxError):
         eval("['42'] += model")
 
-    with pytest.raises(TypeError):
+    # No underlying TypeError, as any list can be added to a list. Exception is instead raised
+    # during the subsequent validation of the contents
+    with pytest.raises(ValidationError):
         model += ['abc']  # type: ignore[operator]
 
     assert_model(model, list[int], [42, 42, 42])
@@ -2117,57 +2132,317 @@ def test_mimic_concatenation_for_converted_models(
     assert sentence.contents == ['Can', 'you', 'pretty', 'please', 'help', 'me?']
 
 
-def test_mimic_iadd_and_radd_only_when_add_is_defined():
-    class IncorrectGrumpyNothingModel(Model[None]):
-        def __iadd__(self, other: object) -> 'IncorrectGrumpyNothingModel':
+@pytest.mark.parametrize('interactive_mode', [False, True])
+@pytest.mark.parametrize('dyn_convert', [False, True])
+def test_mimic_concatenation_for_converted_models(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    interactive_mode: bool,
+    dyn_convert: bool,
+) -> None:
+    runtime.config.data.interactive_mode = interactive_mode
+    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
+
+
+def test_mimic_str_concat_iadd_and_radd_overrides_add_if_defined():
+    # Only __add__
+
+    class ConcatChallengedStr:
+        def __init__(self, data: str = ''):
+            self._data = data
+
+        def __repr__(self):
+            return self._data
+
+        def __eq__(self, other):
+            return self._data == other
+
+    class NarcissisticStr(ConcatChallengedStr):
+        def __add__(self, other: object) -> 'NarcissisticStr':
             return self
 
-        def __radd__(self, other: object) -> 'IncorrectGrumpyNothingModel':
-            return self
+    T = TypeVar('T', default=ConcatChallengedStr)
 
-        def __getitem__(self, index: int) -> None:
-            raise RuntimeError('You get nothing!')
+    class ConcatChallengedStrModel(Model[T | str], Generic[T]):
+        @classmethod
+        def _parse_data(cls, data: T | str) -> T:
+            union_type = cls.outer_type(with_args=True)
+            str_variant_type = get_args(union_type)[0]
+            if not isinstance(data, str_variant_type):
+                return str_variant_type(data)
+            return data
 
-    incorrect_model = IncorrectGrumpyNothingModel(None)
-    assert not hasattr(incorrect_model, '__add__')
-    assert not hasattr(incorrect_model, '__radd__')
-    assert not hasattr(incorrect_model, '__iadd__')
+    class NarcissisticStrModel(ConcatChallengedStrModel[NarcissisticStr]):
+        ...
 
-    assert hasattr(incorrect_model, '__getitem__')
-    assert not hasattr(incorrect_model, '__setitem__')
+    narcissistic_str_model = NarcissisticStrModel('Me and only me!')
+
+    new_narcissistic_str_model = narcissistic_str_model + 'I am also here...'
+    assert isinstance(new_narcissistic_str_model, NarcissisticStrModel)
+    assert narcissistic_str_model.contents == 'Me and only me!'
+
+    narcissistic_str_model += 'I am also here...'
+    assert narcissistic_str_model.contents == 'Me and only me!'
+
+    other_narcissistic_str_model = 'Me, me me!' + narcissistic_str_model
+    assert isinstance(other_narcissistic_str_model, NarcissisticStrModel)
+    assert other_narcissistic_str_model.contents == 'Me, me me!'
+
+    # Only __iadd__ and __radd__
+    class GrumpyStr(ConcatChallengedStr):
+        def __iadd__(self, other: object) -> 'GrumpyStr':
+            raise ValueError("Go away!")
+
+        def __radd__(self, other: object) -> 'GrumpyStr':
+            raise RuntimeError("Don't stand in front of me!")
+
+    class GrumpyStrModel(ConcatChallengedStrModel[GrumpyStr]):
+        ...
+
+    grumpy_str_model = GrumpyStrModel('Hrmpf!')
+
+    with pytest.raises(TypeError):
+        grumpy_str_model + 'Excuse me...'
+
+    with pytest.raises(ValueError):
+        grumpy_str_model += ('Sorry, but...')
 
     with pytest.raises(RuntimeError):
-        incorrect_model[0]
+        'I just wondered...?' + grumpy_str_model
 
-    class GrumpyNothingModel(Model[None]):
-        def __iadd__(self, other: object) -> 'IncorrectGrumpyNothingModel':
-            raise RuntimeError('I am ignored!')
+    # All of __add__, __iadd__ and __radd__
+    class GrumpyNarcissisticStr(GrumpyStr, NarcissisticStr):
+        ...
 
-        def __add__(self, other: object) -> 'GrumpyNothingModel':
-            return self
+    class GrumpyNarcissisticStrModel(ConcatChallengedStrModel[GrumpyNarcissisticStr]):
+        ...
 
-        def __radd__(self, other: object) -> 'IncorrectGrumpyNothingModel':
-            raise RuntimeError('Me too!')
+    grumpy_narcissistic_str_model = GrumpyNarcissisticStrModel('Me and only me! Hmrpf!')
 
-        def __getitem__(self, index: int) -> None:
-            raise RuntimeError('You still get nothing!')
+    new_grumpy_narcissistic_str_model = grumpy_narcissistic_str_model + 'And perhaps also me?'
+    assert isinstance(new_grumpy_narcissistic_str_model, GrumpyNarcissisticStrModel)
+    assert new_grumpy_narcissistic_str_model.contents == 'Me and only me! Hmrpf!'
 
-    model = GrumpyNothingModel(None)
-    assert hasattr(model, '__add__')
-    assert hasattr(model, '__radd__')
-    assert hasattr(model, '__iadd__')
-
-    assert 123 + model + "abc" == model
-    assert None + model + model == model
-
-    model += (_ for _ in globals())
-    assert model.contents is None
-
-    assert hasattr(model, '__getitem__')
-    assert not hasattr(incorrect_model, '__setitem__')
+    with pytest.raises(ValueError):
+        grumpy_narcissistic_str_model += ('Sorry, but...')
 
     with pytest.raises(RuntimeError):
-        model[0]
+        'I just wondered...?' + grumpy_narcissistic_str_model
+
+
+@pc.fixture
+@pc.parametrize('other_type_out', [False, True], ids=['same_type_out', 'other_type_out'])
+@pc.parametrize('other_type_in', [False, True], ids=['same_type_in', 'other_type_in'])
+@pc.parametrize('has_iadd', [False, True], ids=['no_iadd', 'has_iadd'])
+@pc.parametrize('has_radd', [False, True], ids=['no_radd', 'has_radd'])
+@pc.parametrize('has_add', [False, True], ids=['no_add', 'has_add'])
+def all_add_variants(has_add: bool,
+                     has_radd: bool,
+                     has_iadd: bool,
+                     other_type_in: bool,
+                     other_type_out: bool) -> tuple[bool, bool, bool, bool, bool]:
+    return has_add, has_radd, has_iadd, other_type_in, other_type_out
+
+
+class MyNumberBase:
+    def __init__(self, val: int = 1):
+        self.val = val
+
+    def __eq__(self, other: 'MyNumberBase') -> bool:  # type: ignore[override]
+        return self.val == other.val
+
+
+@pc.fixture
+def all_less_than_five_model_add_variants(all_add_variants: Annotated[
+    tuple[bool, bool, bool, bool, bool],
+    pytest.fixture,
+]):
+    has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
+
+    ENGLISH_TO_NUMBER = {'one': 1, 'two': 2, 'three': 3, 'four': 4}
+    NUMBER_TO_ENGLISH = {1: 'one', 2: 'two', 3: 'three', 4: 'four'}
+
+    class MyNumber(MyNumberBase):
+        ...
+
+    def _common_adder(self,
+                      adder_func: Callable[[MyNumber, MyNumber], MyNumber],
+                      other: MyNumber | str) -> MyNumber | str | NotImplementedType:
+        ret: MyNumber | str | NotImplementedType
+        if isinstance(other, str):
+            converted = ENGLISH_TO_NUMBER.get(other)
+            if other_type_in and converted is not None:
+                other = MyNumber(converted)
+            else:
+                return NotImplemented
+
+        ret = adder_func(self, other)
+
+        if other_type_out:
+            if ret.val in NUMBER_TO_ENGLISH:
+                return NUMBER_TO_ENGLISH[ret.val]
+            else:
+                return NotImplemented
+        else:
+            return ret
+
+    def _add(self, other: MyNumber | str) -> MyNumber | str | NotImplementedType:
+        def _add_func(self: MyNumber, other: MyNumber) -> MyNumber:
+            return MyNumber(self.val + other.val)
+
+        return _common_adder(self, _add_func, other)
+
+    def _radd(self, other: MyNumber | str) -> MyNumber | str | NotImplementedType:
+        def _radd_func(self: MyNumber, other: MyNumber) -> MyNumber:
+            return MyNumber(other.val + self.val)
+
+        return _common_adder(self, _radd_func, other)
+
+    def _iadd(self, other: MyNumber | str) -> MyNumber | str | NotImplementedType:
+        def _iadd_func(self: MyNumber, other: MyNumber) -> MyNumber:
+            self.val += other.val
+            return self
+
+        return _common_adder(self, _iadd_func, other)
+
+    if has_add:
+        setattr(MyNumber, '__add__', _add)
+
+    if has_radd:
+        setattr(MyNumber, '__radd__', _radd)
+
+    if has_iadd:
+        setattr(MyNumber, '__iadd__', _iadd)
+
+    class LessThanFiveModel(Model[MyNumber | int]):
+        @classmethod
+        def _parse_data(cls, data: MyNumber | int) -> MyNumber:
+            my_num = MyNumber(data) if isinstance(data, int) else data
+            assert my_num.val < 5
+            return my_num
+
+    return LessThanFiveModel(1)
+
+
+def test_mimic_add_concat_all_number_model_variants(
+    all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
+    all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
+):
+    has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
+    less_than_five_model = all_less_than_five_model_add_variants
+
+    assert less_than_five_model.contents.val == 1
+
+    if has_add:
+        with pytest.raises(TypeError):
+            less_than_five_model.__add__(1, 2)
+
+        with pytest.raises(TypeError):
+            less_than_five_model.__add__(1, no_such_kwarg=True)
+
+        res = less_than_five_model + ('three' if other_type_in else 3)  # type: ignore[operator]
+        if other_type_out:
+            assert res == 'four'
+        else:
+            assert res.contents.val == 4
+    else:
+        with pytest.raises(TypeError):
+            less_than_five_model + ('three' if other_type_in else 3)  # type: ignore[operator]
+
+
+def test_mimic_radd_concat_all_number_model_variants(
+    all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
+    all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
+):
+    has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
+    less_than_five_model = all_less_than_five_model_add_variants
+
+    assert less_than_five_model.contents.val == 1
+
+    if any((has_radd, has_add)):
+        with pytest.raises(TypeError):
+            less_than_five_model.__radd__(1, 2)
+
+        with pytest.raises(TypeError):
+            less_than_five_model.__radd__(1, no_such_kwarg=True)
+
+        res = ('two' if other_type_in else 2) + less_than_five_model  # type: ignore[operator]
+        if other_type_out:
+            assert res == 'three'
+        else:
+            assert res.contents.val == 3
+    else:
+        with pytest.raises(TypeError):
+            ('two' if other_type_in else 2) + less_than_five_model  # type: ignore[operator]
+
+
+def test_mimic_iadd_concat_all_number_model_variants(
+    all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
+    all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
+):
+    has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
+    less_than_five_model = all_less_than_five_model_add_variants
+
+    assert less_than_five_model.contents.val == 1
+
+    if any((has_iadd, has_add)):
+        with pytest.raises(TypeError):
+            less_than_five_model.__iadd__(1, 2)
+
+        with pytest.raises(TypeError):
+            less_than_five_model.__iadd__(1, no_such_kwarg=True)
+
+        if not other_type_out:
+            less_than_five_model += 'one' if other_type_in else 1  # type: ignore[operator]
+            assert less_than_five_model.contents.val == 2
+    else:
+        with pytest.raises(TypeError):
+            less_than_five_model += 'one' if other_type_in else 1  # type: ignore[operator]
+
+
+def test_mimic_model_validation_error_all_number_model_variants(
+    all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
+    all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
+):
+    has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
+    less_than_five_model = all_less_than_five_model_add_variants
+
+    assert less_than_five_model.contents.val == 1
+
+    # MyNumberBase.__add__() and variants does support adding 'four', but this breaks validation of
+    # LessThanFiveModel
+
+    if other_type_in:
+        if has_add:
+            with pytest.raises(TypeError if other_type_out else ValidationError):
+                less_than_five_model + 'four'  # type: ignore[operator]
+
+        if any((has_radd, has_add)):
+            with pytest.raises(TypeError if other_type_out else ValidationError):
+                'four' + less_than_five_model  # type: ignore[operator]
+
+        if any((has_iadd, has_add)):
+            with pytest.raises(TypeError if other_type_out else ValidationError):
+                less_than_five_model += 'four'  # type: ignore[operator]
+
+
+def test_mimic_exception_in_concat_method_all_number_model_variants(
+    all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
+    all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
+):
+    has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
+    less_than_five_model = all_less_than_five_model_add_variants
+
+    assert less_than_five_model.contents.val == 1
+
+    # MyNumberBase.__add__() and variants do not support adding 'five'
+    with pytest.raises(TypeError):
+        less_than_five_model + 'five'  # type: ignore[operator]
+
+    with pytest.raises(TypeError):
+        'five' + less_than_five_model  # type: ignore[operator]
+
+    with pytest.raises(TypeError):
+        less_than_five_model += 'five'  # type: ignore[operator]
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
@@ -2229,10 +2504,8 @@ def test_mimic_nested_list_operations(
 
     # Here the `model[0] +=` operation is a series of `__getitem__`, `__iadd__`, and `__setitem__`
     # operations, with the `__getitem__` and `__setitem__` operating on the "parent" model object,
-    # causing ValidationError even when `dynamically_convert_elements_to_models` is disabled. When
-    # `dynamically_convert_elements_to_models` is enabled, a TypeError is raised in the __iadd__
-    # method instead before any values have even been added.
-    with pytest.raises(TypeError if dyn_convert else ValidationError):
+    # causing ValidationError even when `dynamically_convert_elements_to_models` is disabled.
+    with pytest.raises(ValidationError):
         model[0] += ('a',)  # type: ignore[index]
     assert_model_or_val(dyn_convert, model[0], list[int], [0, 2])  # type: ignore[index]
 
@@ -2692,8 +2965,8 @@ def test_mimic_operations_on_pydantic_models() -> None:
     child_pydantic_model = Model[ChildPydanticModel]()
     assert child_pydantic_model.a == 0
     assert child_pydantic_model.b == ''
-    child_pydantic_model.b = 'something'
-    assert child_pydantic_model.b == 'something'
+    child_pydantic_model.b = 'someone else'
+    assert child_pydantic_model.b == 'someone else'
     child_pydantic_model.b = 123
     assert child_pydantic_model.b == '123'
 
@@ -2805,15 +3078,23 @@ def test_mimic_operations_on_literal_models() -> None:
         LiteralFiveModel().upper()
 
     assert LiteralTextModel().upper() == 'TEXT'
-    assert LiteralTextModel('text') + '.txt' == 'text.txt'
+
+    assert_model(LiteralTextModel('text') + '', Literal['text'], 'text')
+    assert_val(LiteralTextModel('text') + '.txt', str, 'text.txt')
+
+    # Here, LiteralTextModel.__add__() fails, while Model[str].__radd__() saves the day!
+    assert LiteralTextModel('text') + Model[str]('.txt') == Model[str]('text.txt')
+
     with pytest.raises(TypeError):
         LiteralTextModel() / 2
 
     assert LiteralFiveOrTextModel() + 5 == 10
     assert LiteralFiveOrTextModel('text').upper() == 'TEXT'
+
     with pytest.raises(AttributeError):
         LiteralFiveOrTextModel().upper()
-    with pytest.raises(AttributeError):
+
+    with pytest.raises(TypeError):
         LiteralFiveOrTextModel('text') / 2
 
 

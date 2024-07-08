@@ -712,6 +712,7 @@ def test_complex_models():
         dataset.from_data([(i, [0, i]) for i in range(0, 5)])  # noqa
 
     dataset.from_data([(i, [1, i]) for i in range(1, 5)])  # noqa
+    dataset.snapshot_holder.all_are_empty(debug=True)
     assert dataset['4'].contents == [4, 3, 2, 1]
 
     assert dataset.to_data() == {'1': [1], '2': [2, 1], '3': [3, 2, 1], '4': [4, 3, 2, 1]}

@@ -351,10 +351,10 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         return SetDeque(self._sub_obj_ids.keys())
 
     def setup_deepcopy(self, obj):
-        assert self._cur_deepcopy_obj_id is None
-        assert len(self._cur_keep_alive_list) == 0
-
-        self._cur_deepcopy_obj_id = id(obj)
+        assert self._cur_deepcopy_obj_id is None, \
+            f'self._cur_deepcopy_obj_id is not None, but {self._cur_deepcopy_obj_id}'
+        assert len(self._cur_keep_alive_list) == 0, \
+            f'len(self._cur_keep_alive_list) == {len(self._cur_keep_alive_list)} instead of 0'
 
         # Solution to test_ref_count_memo_dict_repeated_deepcopy_same_obj(), but not
         # necessary for the current implementation (see comments on the test). Fix unnecessarily
@@ -362,7 +362,12 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         # Instead, there is a check to ensure that the current object has not already been
         # deepcopied, which is the assumption behind disabling the fix
 
-        assert self._cur_deepcopy_obj_id not in self._sub_obj_ids
+        assert id(obj) not in self._sub_obj_ids, \
+            (f'Object with id: {id(obj)} already in deepcopy_memo. It has either already been '
+             f'deepcopied, or it is reusing the id of a deleted object which has not been deleted '
+             'from the deepcopy memo.')
+
+        self._cur_deepcopy_obj_id = id(obj)
 
     def keep_alive_after_deepcopy(self):
         # old_sub_obj_ids = self._sub_obj_ids[self._cur_deepcopy_obj_id]
@@ -391,8 +396,8 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         #     if possibly_added_obj in self and possibly_added_obj not in self._keep_alive_dict:
         #         del self[possibly_added_obj]
 
-        if (self._cur_deepcopy_obj_id in self._sub_obj_ids
-                and self._cur_deepcopy_obj_id not in self._keep_alive_dict):
+        if self._cur_deepcopy_obj_id and (self._cur_deepcopy_obj_id in self._sub_obj_ids and
+                                          self._cur_deepcopy_obj_id not in self._keep_alive_dict):
             del self._sub_obj_ids[self._cur_deepcopy_obj_id]
 
         self._cur_deepcopy_obj_id = None
@@ -683,15 +688,17 @@ class SnapshotHolder(WeakKeyRefContainer[_HasContentsT,
             with setup_and_teardown_callback_context(
                     setup_func=self._deepcopy_memo.setup_deepcopy,
                     setup_func_args=(obj.contents,),
+                    exception_func=self._deepcopy_memo.teardown_deepcopy,
                     teardown_func=self._deepcopy_memo.teardown_deepcopy,
             ):
 
                 obj_copy = deepcopy(obj.contents, self._deepcopy_memo)  # type: ignore[arg-type]
                 self._deepcopy_memo.keep_alive_after_deepcopy()
         except (TypeError, ValueError, ValidationError, AssertionError) as exp:
-            print(f'Error in deepcopy with memo dict: {repr(exp)}. '
+            print(f'Error in deepcopy with memo dict: {exp}. '
                   f'Attempting deepcopy without memo dict.')
             try:
+                # print(f'object contents after retry: {obj.contents}')
                 obj_copy = deepcopy(obj.contents)
             except (TypeError, ValueError, ValidationError, AssertionError) as exp:
                 print(f'Error in deepcopy without memo dict: {exp}. '
