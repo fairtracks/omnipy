@@ -7,7 +7,7 @@ def assert_model(model: object, target_type: TypeForm, contents: object):
     assert isinstance(model, Model)
     assert model.outer_type(with_args=True) == target_type, \
         f'{model.outer_type(with_args=True)} != {target_type}'
-    assert model.contents == contents
+    assert model.contents == contents, f'{model.contents} != {contents}'
 
 
 def assert_val(value: object, target_type: TypeForm, contents: object):
