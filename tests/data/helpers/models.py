@@ -70,3 +70,11 @@ class LiteralTextModel(Model[Literal['text']]):
 
 class LiteralFiveOrTextModel(Model[Literal[5, 'text']]):
     ...
+
+
+class MyNumberBase:
+    def __init__(self, val: int = 1):
+        self.val = val
+
+    def __eq__(self, other: 'MyNumberBase') -> bool:  # type: ignore[override]
+        return self.val == other.val
