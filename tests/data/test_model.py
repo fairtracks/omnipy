@@ -3,7 +3,7 @@ import gc
 from math import floor
 import os
 from textwrap import dedent
-from types import MappingProxyType, MethodType, NotImplementedType
+from types import MappingProxyType, NotImplementedType
 from typing import (Annotated,
                     Any,
                     Callable,
@@ -14,7 +14,6 @@ from typing import (Annotated,
                     List,
                     Literal,
                     Optional,
-                    Protocol,
                     Type,
                     TypeAlias,
                     Union)
@@ -27,7 +26,7 @@ from typing_extensions import TypeVar
 
 from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.public.hub import IsRuntime
-from omnipy.data.model import _RootT, Model
+from omnipy.data.model import Model
 from omnipy.util.setdeque import SetDeque
 
 from ..helpers.functions import assert_model, assert_model_or_val, assert_val  # type: ignore[misc]
@@ -38,6 +37,7 @@ from .helpers.models import (DefaultStrModel,
                              LiteralTextModel,
                              MyFloatObject,
                              MyFloatObjModel,
+                             MyNumberBase,
                              MyPydanticModel,
                              UpperStrModel)
 
@@ -2243,14 +2243,6 @@ def all_add_variants(has_add: bool,
     return has_add, has_radd, has_iadd, other_type_in, other_type_out
 
 
-class MyNumberBase:
-    def __init__(self, val: int = 1):
-        self.val = val
-
-    def __eq__(self, other: 'MyNumberBase') -> bool:  # type: ignore[override]
-        return self.val == other.val
-
-
 @pc.fixture
 def all_less_than_five_model_add_variants(all_add_variants: Annotated[
     tuple[bool, bool, bool, bool, bool],
@@ -2323,7 +2315,7 @@ def all_less_than_five_model_add_variants(all_add_variants: Annotated[
     return LessThanFiveModel(1)
 
 
-def test_mimic_add_concat_all_number_model_variants(
+def test_mimic_add_concat_all_less_than_five_model_add_variants(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
 ):
@@ -2349,7 +2341,7 @@ def test_mimic_add_concat_all_number_model_variants(
             less_than_five_model + ('three' if other_type_in else 3)  # type: ignore[operator]
 
 
-def test_mimic_radd_concat_all_number_model_variants(
+def test_mimic_radd_concat_all_less_than_five_model_add_variants(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
 ):
@@ -2375,7 +2367,7 @@ def test_mimic_radd_concat_all_number_model_variants(
             ('two' if other_type_in else 2) + less_than_five_model  # type: ignore[operator]
 
 
-def test_mimic_iadd_concat_all_number_model_variants(
+def test_mimic_iadd_concat_all_less_than_five_model_add_variants(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
 ):
@@ -2399,7 +2391,8 @@ def test_mimic_iadd_concat_all_number_model_variants(
             less_than_five_model += 'one' if other_type_in else 1  # type: ignore[operator]
 
 
-def test_mimic_model_validation_error_all_number_model_variants(
+# Logically covers cases such as `Model[list[int]]([123]) + ['abc']` (and '+' operator variants)
+def test_mimic_concat_less_than_five_model_add_variants_with_other_type_in_and_invalid_result(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
 ):
@@ -2408,24 +2401,26 @@ def test_mimic_model_validation_error_all_number_model_variants(
 
     assert less_than_five_model.contents.val == 1
 
+    if not other_type_in or not any((has_add, has_radd, has_iadd)):
+        pytest.skip('Not relevant combination for this test')
+
     # MyNumberBase.__add__() and variants does support adding 'four', but this breaks validation of
     # LessThanFiveModel
 
-    if other_type_in:
-        if has_add:
-            with pytest.raises(TypeError if other_type_out else ValidationError):
-                less_than_five_model + 'four'  # type: ignore[operator]
+    if has_add:
+        with pytest.raises(TypeError if other_type_out else ValidationError):
+            less_than_five_model + 'four'  # type: ignore[operator]
 
-        if any((has_radd, has_add)):
-            with pytest.raises(TypeError if other_type_out else ValidationError):
-                'four' + less_than_five_model  # type: ignore[operator]
+    if any((has_radd, has_add)):
+        with pytest.raises(TypeError if other_type_out else ValidationError):
+            'four' + less_than_five_model  # type: ignore[operator]
 
-        if any((has_iadd, has_add)):
-            with pytest.raises(TypeError if other_type_out else ValidationError):
-                less_than_five_model += 'four'  # type: ignore[operator]
+    if any((has_iadd, has_add)):
+        with pytest.raises(TypeError if other_type_out else ValidationError):
+            less_than_five_model += 'four'  # type: ignore[operator]
 
 
-def test_mimic_exception_in_concat_method_all_number_model_variants(
+def test_mimic_concat_all_less_than_five_model_add_variants_with_unsupported_input(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
 ):
