@@ -638,6 +638,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def _parse_data(cls, data: Any) -> _RootT:
         return data
 
+    # TODO: Expand _generous_sequence_support to support iterators, such as dict_keys. Also see if
+    #       it is possible to support general mappings in a similar way
     @root_validator(pre=True)
     def _generous_sequence_support(cls, root_obj: dict[str, _RootT | None]) -> Any:
         if ROOT_KEY in root_obj:
