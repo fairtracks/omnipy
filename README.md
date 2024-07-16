@@ -8,7 +8,7 @@ orchestration.
 # Updates
 
 - **June 22, 2024:** We're not very good at writing updates. Expect a larger update soon on an important 
-  and potentially groundbreaking new feature of Ommipy: the capability of model objects to automatically 
+  and potentially groundbreaking new feature of Omnipy: the capability of model objects to automatically 
   mimic behaviour of the modelled class – with the addition of snapshots and rollbacks.
 
   So e.g. `Model[list[int]]()` is not just a run-time typesafe parser that continuously makes sure that the 
