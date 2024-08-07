@@ -17,7 +17,6 @@ from typing import (Annotated,
                     TypeAlias,
                     Union)
 
-from bidict import bidict
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 from pydantic.generics import GenericModel
 import pytest
@@ -2273,7 +2272,8 @@ def all_less_than_five_model_add_variants(all_add_variants: Annotated[
 ]):
     has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
 
-    ENGLISH_TO_NUMBER = bidict({'one': 1, 'two': 2, 'three': 3, 'four': 4})
+    ENGLISH_TO_NUMBER = {'one': 1, 'two': 2, 'three': 3, 'four': 4}
+    NUMBER_TO_ENGLISH = {1: 'one', 2: 'two', 3: 'three', 4: 'four'}
 
     class MyNumber(MyNumberBase):
         ...
@@ -2292,8 +2292,8 @@ def all_less_than_five_model_add_variants(all_add_variants: Annotated[
         ret = adder_func(self, other)
 
         if other_type_out:
-            if ret.val in ENGLISH_TO_NUMBER.inverse:
-                return ENGLISH_TO_NUMBER.inverse[ret.val]
+            if ret.val in NUMBER_TO_ENGLISH:
+                return NUMBER_TO_ENGLISH[ret.val]
             else:
                 return NotImplemented
         else:
