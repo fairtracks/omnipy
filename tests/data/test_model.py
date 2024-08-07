@@ -3,7 +3,7 @@ import gc
 from math import floor
 import os
 from textwrap import dedent
-from types import MappingProxyType, NotImplementedType
+from types import MappingProxyType, MethodType, NotImplementedType
 from typing import (Annotated,
                     Any,
                     Callable,
@@ -3040,6 +3040,21 @@ def test_mimic_callable_property() -> None:
 
     model = Model[MyCallableHolder]()
     assert model.func.called is False
+
+
+def test_mimic_object_member_not_in_class() -> None:
+    class MyClass:
+        def __init__(self):
+            self.called = False
+
+    my_obj = MyClass()
+    my_obj.method = MethodType(  # type: ignore[attr-defined]
+        lambda self: setattr(self, 'called', True), my_obj)
+
+    model = Model[MyClass](my_obj)
+    assert model.called is False
+    model.method()
+    assert model.called is True
 
 
 def test_literal_model_defaults() -> None:

@@ -1161,9 +1161,10 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         # if self.config.interactive_mode and not self._is_non_omnipy_pydantic_model():
         if self.config.interactive_mode:
             is_property = False
-            if not self._is_non_omnipy_pydantic_model():
-                contents_cls_attr = self._getattr_from_contents_cls(attr)
-                is_property = isinstance(contents_cls_attr, property)
+            with suppress(AttributeError):
+                if not self._is_non_omnipy_pydantic_model():
+                    contents_cls_attr = self._getattr_from_contents_cls(attr)
+                    is_property = isinstance(contents_cls_attr, property)
 
             reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
             contents_attr = self._getattr_from_contents_obj(attr)
