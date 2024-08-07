@@ -1,8 +1,7 @@
 from typing import Callable, Protocol, runtime_checkable, TypeVar
 
-from collections_extended import setlist
-
 from omnipy.api.typedefs import DecoratorClassT
+from omnipy.util.setdeque import SetDeque
 
 _ObjT = TypeVar('_ObjT', bound=object)
 _ObjContraT = TypeVar('_ObjContraT', contravariant=True, bound=object)
@@ -77,10 +76,10 @@ class IsSnapshotHolder(IsWeakKeyRefContainer[_HasContentsT,
     def all_are_empty(self, debug: bool = False) -> bool:
         ...
 
-    def get_deepcopy_content_ids(self) -> setlist[int]:
+    def get_deepcopy_content_ids(self) -> SetDeque[int]:
         ...
 
-    def get_deepcopy_content_ids_scheduled_for_deletion(self) -> setlist[int]:
+    def get_deepcopy_content_ids_scheduled_for_deletion(self) -> SetDeque[int]:
         ...
 
     def schedule_deepcopy_content_ids_for_deletion(self, *keys: int) -> None:

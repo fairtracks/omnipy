@@ -3,7 +3,7 @@ import gc
 from math import floor
 import os
 from textwrap import dedent
-from types import MappingProxyType, NotImplementedType
+from types import MappingProxyType, MethodType, NotImplementedType
 from typing import (Annotated,
                     Any,
                     Callable,
@@ -18,7 +18,6 @@ from typing import (Annotated,
                     Union)
 
 from bidict import bidict
-from collections_extended import setlist
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 from pydantic.generics import GenericModel
 import pytest
@@ -29,6 +28,7 @@ from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.model import Model
 from omnipy.modules.frozen.typedefs import FrozenDict
+from omnipy.util.setdeque import SetDeque
 
 from ..helpers.functions import assert_model, assert_model_or_val, assert_val  # type: ignore[misc]
 from .helpers.models import (DefaultStrModel,
@@ -1961,37 +1961,27 @@ def test_mimic_simple_list_operator_with_convert(
 def test_mimic_sequence_convert_for_concat(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
     runtime.config.data.interactive_mode = True
 
-    class MySetList(setlist):
-        # Needed as setlist.__add__ does not follow best practices of returning NotImplemented
-        # which is needed for __radd__ to be called
-        def __add__(self, other: Model[setlist | list]) -> Model[setlist | list]:
-            try:
-                return super().__add__(other)
-            except TypeError:
-                return NotImplemented
-
-    # setlist is used as an example of non-builtin Sequence type. to_data() is needed (for now)
-    # to allow model conversion to list/tuple. Note that Model[setlist[int]](setlist((1,2)) did not
-    # for some reason work as expected, hence the [int] specialisation was removed from all models.
+    # SetDeque is used as an example of non-builtin Sequence type. to_data() is needed (for now)
+    # to allow model conversion to list/tuple.
 
     # TODO: Revise the need for to_data() method when explicit conversion types are supported
-    #       Should in this case be something like Model[setlist, list]
+    #       Should in this case be something like Model[SetDeque, list]
 
-    class SetListModel(Model[MySetList | list]):
+    class SetDequeModel(Model[SetDeque[int] | list[int]]):
         @classmethod
-        def _parse_data(cls, data: MySetList | list) -> MySetList:
-            return MySetList(data)
+        def _parse_data(cls, data: SetDeque[int] | list[int]) -> SetDeque[int]:
+            return SetDeque(data)
 
         def to_data(self) -> object:
             return list(self.contents)
 
     my_list = [1, 2, 3]
     my_tuple = (4, 5, 6)
-    my_setlist = MySetList([7, 8, 9])
+    my_setdeque: SetDeque[int] = SetDeque([7, 8, 9])
 
     my_list_model = Model[list](my_list)
     my_tuple_model = Model[tuple](my_tuple)
-    my_setlist_model = SetListModel(my_setlist)
+    my_setdeque_model = SetDequeModel(my_setdeque)
 
     #
     # Raw object concatenation
@@ -2001,19 +1991,19 @@ def test_mimic_sequence_convert_for_concat(runtime: Annotated[IsRuntime, pytest.
         my_list + my_tuple  # type: ignore[operator]
 
     with pytest.raises(TypeError):
-        my_list + my_setlist
+        my_list + my_setdeque  # type: ignore[operator]
 
     with pytest.raises(TypeError):
         my_tuple + my_list  # type: ignore[operator]
 
     with pytest.raises(TypeError):
-        my_tuple + my_setlist
+        my_tuple + my_setdeque  # type: ignore[operator]
 
     with pytest.raises(TypeError):
-        my_setlist + my_list
+        my_setdeque + my_list  # type: ignore[operator]
 
     with pytest.raises(TypeError):
-        my_setlist + my_tuple
+        my_setdeque + my_tuple  # type: ignore[operator]
 
     #
     # Model concatenation
@@ -2024,7 +2014,7 @@ def test_mimic_sequence_convert_for_concat(runtime: Annotated[IsRuntime, pytest.
         list,
         [1, 2, 3, 4, 5, 6])
     assert_model(
-        my_list_model + my_setlist_model,  # type: ignore[operator]
+        my_list_model + my_setdeque_model,  # type: ignore[operator]
         list,
         [1, 2, 3, 7, 8, 9])
     assert_model(
@@ -2032,17 +2022,17 @@ def test_mimic_sequence_convert_for_concat(runtime: Annotated[IsRuntime, pytest.
         tuple,
         (4, 5, 6, 1, 2, 3))
     assert_model(
-        my_tuple_model + my_setlist_model,  # type: ignore[operator]
+        my_tuple_model + my_setdeque_model,  # type: ignore[operator]
         tuple,
         (4, 5, 6, 7, 8, 9))
     assert_model(
-        my_setlist_model + my_list_model,  # type: ignore[operator]
-        MySetList | list,
-        MySetList((7, 8, 9, 1, 2, 3)))
+        my_setdeque_model + my_list_model,  # type: ignore[operator]
+        SetDeque[int] | list[int],
+        SetDeque((7, 8, 9, 1, 2, 3)))
     assert_model(
-        my_setlist_model + my_tuple_model,  # type: ignore[operator]
-        MySetList | list,
-        MySetList((7, 8, 9, 4, 5, 6)))
+        my_setdeque_model + my_tuple_model,  # type: ignore[operator]
+        SetDeque[int] | list[int],
+        SetDeque((7, 8, 9, 4, 5, 6)))
 
     #
     # Model + raw object concatenation
@@ -2052,20 +2042,20 @@ def test_mimic_sequence_convert_for_concat(runtime: Annotated[IsRuntime, pytest.
         my_list_model + my_tuple,  # type: ignore[operator]
         list,
         [1, 2, 3, 4, 5, 6])
-    assert_model(my_list_model + my_setlist, list, [1, 2, 3, 7, 8, 9])
+    assert_model(my_list_model + my_setdeque, list, [1, 2, 3, 7, 8, 9])  # type: ignore[operator]
     assert_model(
         my_tuple_model + my_list,  # type: ignore[operator]
         tuple,
         (4, 5, 6, 1, 2, 3))
-    assert_model(my_tuple_model + my_setlist, tuple, (4, 5, 6, 7, 8, 9))
+    assert_model(my_tuple_model + my_setdeque, tuple, (4, 5, 6, 7, 8, 9))  # type: ignore[operator]
     assert_model(
-        my_setlist_model + my_list,  # type: ignore[operator]
-        MySetList | list,
-        MySetList((7, 8, 9, 1, 2, 3)))
+        my_setdeque_model + my_list,  # type: ignore[operator]
+        SetDeque[int] | list[int],
+        SetDeque((7, 8, 9, 1, 2, 3)))
     assert_model(
-        my_setlist_model + my_tuple,  # type: ignore[operator]
-        MySetList | list,
-        MySetList((7, 8, 9, 4, 5, 6)))
+        my_setdeque_model + my_tuple,  # type: ignore[operator]
+        SetDeque[int] | list[int],
+        SetDeque((7, 8, 9, 4, 5, 6)))
 
     #
     # Raw object + Model concatenation
@@ -2076,19 +2066,19 @@ def test_mimic_sequence_convert_for_concat(runtime: Annotated[IsRuntime, pytest.
         tuple,
         (1, 2, 3, 4, 5, 6))
     assert_model(
-        my_list + my_setlist_model,  # type: ignore[operator]
-        MySetList | list,
-        MySetList((1, 2, 3, 7, 8, 9)))
+        my_list + my_setdeque_model,  # type: ignore[operator]
+        SetDeque[int] | list[int],
+        SetDeque((1, 2, 3, 7, 8, 9)))
     assert_model(
         my_tuple + my_list_model,  # type: ignore[operator]
         list,
         [4, 5, 6, 1, 2, 3])
     assert_model(
-        my_tuple + my_setlist_model,  # type: ignore[operator]
-        MySetList | list,
-        MySetList((4, 5, 6, 7, 8, 9)))
-    assert_model(my_setlist + my_list_model, list, [7, 8, 9, 1, 2, 3])
-    assert_model(my_setlist + my_tuple_model, tuple, (7, 8, 9, 4, 5, 6))
+        my_tuple + my_setdeque_model,  # type: ignore[operator]
+        SetDeque[int] | list[int],
+        SetDeque((4, 5, 6, 7, 8, 9)))
+    assert_model(my_setdeque + my_list_model, list, [7, 8, 9, 1, 2, 3])  # type: ignore[operator]
+    assert_model(my_setdeque + my_tuple_model, tuple, (7, 8, 9, 4, 5, 6))  # type: ignore[operator]
 
 
 @pytest.mark.parametrize('interactive_mode', [False, True])

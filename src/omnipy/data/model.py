@@ -26,7 +26,6 @@ from typing import (Annotated,
                     Union)
 import weakref
 
-from collections_extended import setlist
 from devtools import debug, PrettyFormat
 from pydantic import NoneIsNotAllowedError
 from pydantic import Protocol as PydanticProtocol
@@ -66,6 +65,7 @@ from omnipy.util.helpers import (all_equals,
                                  remove_forward_ref_notation,
                                  RestorableContents,
                                  SnapshotWrapper)
+from omnipy.util.setdeque import SetDeque
 from omnipy.util.tabulate import tabulate
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
@@ -557,15 +557,15 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             return nothing()
 
     def _get_revert_to_snapshot_reset_solution(self) -> ContextManager[None]:
-        prev_deepcopy_content_ids: setlist[int] = setlist()
+        prev_deepcopy_content_ids = SetDeque[int]()
 
         def _setup():
-            prev_deepcopy_content_ids.update(self.snapshot_holder.get_deepcopy_content_ids())
+            prev_deepcopy_content_ids.extend(self.snapshot_holder.get_deepcopy_content_ids())
 
         def _handle_exception():
-            new_deepcopy_content_ids = (
-                self.snapshot_holder.get_deepcopy_content_ids()
-                & prev_deepcopy_content_ids)
+            new_deepcopy_content_ids = SetDeque[int](
+                self.snapshot_holder.get_deepcopy_content_ids())
+            new_deepcopy_content_ids.extend(prev_deepcopy_content_ids)
             self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
                 *new_deepcopy_content_ids)
             # self.contents = self.snapshot_holder.get_snapshot_deepcopy(self)
