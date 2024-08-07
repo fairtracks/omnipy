@@ -208,6 +208,31 @@ def test_setdeque_add_iadd() -> None:
     assert setdeque_2 == SetDeque[str](['b', 'd', 'e', 'c', 'a'])
 
 
+def test_setdeque_add_iadd_other_types() -> None:
+    setdeque_empty = SetDeque[str]()
+
+    class OtherClass:
+        def __radd__(self, other):
+            return 42
+
+    with pytest.raises(TypeError):
+        setdeque_empty + 1  # type: ignore[operator]
+
+    with pytest.raises(TypeError):
+        setdeque_empty += 1  # type: ignore[arg-type]
+
+    assert setdeque_empty + OtherClass() == 42
+
+    with pytest.raises(TypeError):
+        setdeque_empty += OtherClass()  # type: ignore[arg-type]
+
+    with pytest.raises(TypeError):
+        setdeque_empty + 'abc'  # type: ignore[operator]
+
+    setdeque_empty += 'abc'
+    assert setdeque_empty == SetDeque[str](['a', 'b', 'c'])
+
+
 def test_setdeque_pop() -> None:
     setdeque = SetDeque[int]([1, 2, 3])
 
