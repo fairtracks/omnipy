@@ -1,5 +1,6 @@
 from collections import deque
 from contextlib import suppress
+from itertools import chain
 import sys
 from timeit import timeit
 
@@ -59,12 +60,12 @@ def _assert_len3_setdeque_unique_vals(setdeque: SetDeque[int]) -> None:
 
 
 def test_setdeque_init_getitem_iterator() -> None:
-    _assert_len3_setdeque_unique_vals(SetDeque[int]([1, 2, 3]))
-    _assert_len3_setdeque_unique_vals(SetDeque[int]([0, 1, 2, 3], maxlen=3))
-    _assert_len3_setdeque_unique_vals(SetDeque[int](range(1, 4)))
-    _assert_len3_setdeque_unique_vals(SetDeque[int](range(4), maxlen=3))
-    _assert_len3_setdeque_unique_vals(SetDeque[int]([1, 2, 3].__iter__()))
-    _assert_len3_setdeque_unique_vals(SetDeque[int]([0, 1, 2, 3].__iter__(), maxlen=3))
+    _assert_len3_setdeque_unique_vals(SetDeque[int]([1, 2, 3, 1, 2, 3]))
+    _assert_len3_setdeque_unique_vals(SetDeque[int]([0, 1, 2, 3, 0, 1, 2, 3], maxlen=3))
+    _assert_len3_setdeque_unique_vals(SetDeque[int](chain(range(1, 4), range(1, 4))))
+    _assert_len3_setdeque_unique_vals(SetDeque[int](chain(range(4), range(4)), maxlen=3))
+    _assert_len3_setdeque_unique_vals(SetDeque[int]([1, 2, 3, 1, 2, 3].__iter__()))
+    _assert_len3_setdeque_unique_vals(SetDeque[int]([0, 1, 2, 3, 0, 1, 2, 3].__iter__(), maxlen=3))
 
 
 def test_setdeque_appendleft() -> None:
