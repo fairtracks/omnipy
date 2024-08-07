@@ -3074,6 +3074,21 @@ def test_mimic_callable_property() -> None:
     assert model.func.called is False
 
 
+def test_mimic_object_member_not_in_class() -> None:
+    class MyClass:
+        def __init__(self):
+            self.called = False
+
+    my_obj = MyClass()
+    my_obj.method = MethodType(  # type: ignore[attr-defined]
+        lambda self: setattr(self, 'called', True), my_obj)
+
+    model = Model[MyClass](my_obj)
+    assert model.called is False
+    model.method()
+    assert model.called is True
+
+
 def test_literal_model_defaults() -> None:
     assert LiteralFiveModel().to_data() == 5
     assert LiteralFiveModel().outer_type(with_args=True) is Literal[5]
