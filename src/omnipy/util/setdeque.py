@@ -1,15 +1,16 @@
 from collections import deque
 from copy import copy
 import sys
-from typing import cast, Generic, Iterable, SupportsIndex
+from typing import cast, Generic, Iterable, SupportsIndex, TypeVar
 
-from omnipy.util.helpers import _ObjT
+_ObjT = TypeVar('_ObjT', bound=object)
 
 
 class SetDeque(deque, Generic[_ObjT]):
     def __init__(self, iterable: Iterable = (), maxlen: int | None = None):
-        super().__init__(iterable=iterable, maxlen=maxlen)
-        self._set = set(self.__iter__())
+        unique_ordered_els = dict.fromkeys(iterable).keys()
+        super().__init__(iterable=unique_ordered_els, maxlen=maxlen)
+        self._set: set[_ObjT] = set(self.__iter__())
 
     def _add_element(self, method_name: str, *args: object, el: _ObjT) -> bool:
         if el not in self._set:
