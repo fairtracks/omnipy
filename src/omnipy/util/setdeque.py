@@ -1,6 +1,7 @@
 from collections import deque
 from copy import copy
 import sys
+from types import NotImplementedType
 from typing import cast, Generic, Iterable, SupportsIndex, TypeVar
 
 _ObjT = TypeVar('_ObjT', bound=object)
@@ -86,13 +87,15 @@ class SetDeque(deque, Generic[_ObjT]):
             add_el_to_args=False,
         )
 
-    def __add__(self, other: Iterable[_ObjT]):
+    def __add__(self, __value: 'SetDeque[_ObjT]') -> 'SetDeque[_ObjT] | NotImplementedType':
+        if not isinstance(__value, SetDeque):
+            return NotImplemented  # type: ignore[unreachable]
         self_copy = copy(self)
-        self_copy.extend(other)
+        self_copy.extend(__value)
         return self_copy
 
-    def __iadd__(self, other: Iterable[_ObjT]):
-        self.extend(other)
+    def __iadd__(self, __value: Iterable[_ObjT]):  # type: ignore[misc]
+        self.extend(__value)
         return self
 
     def __eq__(self, __value: object):
