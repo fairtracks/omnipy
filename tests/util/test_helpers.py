@@ -1,27 +1,22 @@
-from abc import ABCMeta
 from collections import UserDict, UserList
 from copy import copy, deepcopy
 import gc
-import sys
-import types
-from types import CodeType, MappingProxyType, MethodType, NoneType, UnionType
+from types import MethodType, NoneType, UnionType
 from typing import (Annotated,
                     Any,
                     ForwardRef,
                     Generic,
                     get_args,
                     Iterator,
-                    KeysView,
                     Literal,
                     Optional,
-                    overload,
                     TypeAlias,
                     TypeVar,
                     Union)
 import weakref
 
 from collections_extended import setlist
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 from pydantic.generics import GenericModel
 import pytest
 from typing_inspect import get_generic_type
