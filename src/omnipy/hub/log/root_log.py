@@ -89,8 +89,8 @@ class RootLogObjects:
     def _configure_common_filters(self):
         class ExtractEngineFilter(logging.Filter):
             def filter(self, record):
-                record.engine = f"[{record.name.split('.')[0].upper()}]"
-                if len(record.engine) < 9:
+                record.engine = f"{record.name.split('.')[0].upper()}"
+                if len(record.engine) < 7:
                     record.engine += ' '
                 return True
 

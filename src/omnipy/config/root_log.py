@@ -14,7 +14,7 @@ def _get_log_path() -> str:
 
 @dataclass
 class RootLogConfig:
-    log_format_str: str = '{engine} {asctime} - {levelname}: {message} [{name}]'
+    log_format_str: str = '[{engine}] {asctime} - {levelname}: {message} ({name})'
     locale: LocaleType = pkg_locale.getlocale()
     log_to_stdout: bool = True
     log_to_stderr: bool = True
