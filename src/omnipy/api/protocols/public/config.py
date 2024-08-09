@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Protocol, TextIO
 
 from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
                               ConfigPersistOutputsOptions,
@@ -41,6 +41,8 @@ class IsRootLogConfig(Protocol):
     log_to_stdout: bool
     log_to_stderr: bool
     log_to_file: bool
+    stdout: TextIO
+    stderr: TextIO
     stdout_log_min_level: int
     stderr_log_min_level: int
     file_log_min_level: int

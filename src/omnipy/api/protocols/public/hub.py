@@ -1,5 +1,5 @@
 import logging
-from logging.handlers import TimedRotatingFileHandler
+from logging.handlers import RotatingFileHandler
 from typing import Protocol
 
 from omnipy.api.enums import EngineChoice
@@ -20,7 +20,7 @@ class IsRootLogObjects(Protocol):
     formatter: logging.Formatter | None = None
     stdout_handler: logging.StreamHandler | None = None
     stderr_handler: logging.StreamHandler | None = None
-    file_handler: TimedRotatingFileHandler | None = None
+    file_handler: RotatingFileHandler | None = None
 
     def set_config(self, config: IsRootLogConfig) -> None:
         ...
