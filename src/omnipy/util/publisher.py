@@ -2,6 +2,8 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Callable, DefaultDict
 
+from omnipy.api.protocols.public.hub import IsRuntime
+
 
 def _subscribers_factory():
     return defaultdict(list)
@@ -30,3 +32,14 @@ class DataPublisher:
         if key in self._subscriptions:
             for callback_fun in self._subscriptions[key]:
                 callback_fun(value)
+
+
+@dataclass
+class RuntimeEntryPublisher(DataPublisher):
+    _back: IsRuntime | None = field(default=None, init=False, repr=False)
+
+    def __setattr__(self, key, value):
+        super().__setattr__(key, value)
+
+        if hasattr(self, key) and not key.startswith('_') and self._back is not None:
+            self._back.reset_subscriptions()

@@ -11,14 +11,13 @@ from typing import Annotated, TextIO
 import pytest
 
 from omnipy.api.protocols.public.hub import IsRuntime
-from omnipy.api.typedefs import LocaleType
 from omnipy.config.root_log import RootLogConfig
 from omnipy.hub.log.root_log import RootLogObjects
 from omnipy.util.helpers import get_datetime_format
 
-from .helpers.functions import (assert_log_line_from_stream,
-                                format_datetime_obj,
-                                read_log_line_from_stream)
+from ..helpers.functions import (assert_log_line_from_stream,
+                                 format_datetime_obj,
+                                 read_log_line_from_stream)
 
 
 def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: Path):
