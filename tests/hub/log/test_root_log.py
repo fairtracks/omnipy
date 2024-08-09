@@ -23,7 +23,7 @@ def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: Path):
     assert isinstance(root_log, RootLogConfig)
     assert isinstance(root_log.locale, (str, tuple))
 
-    assert root_log.log_format_str == '{engine} {asctime} - {levelname}: {message} [{name}]'
+    assert root_log.log_format_str == '[{engine}] {asctime} - {levelname}: {message} ({name})'
     assert root_log.log_to_stdout is True
     assert root_log.log_to_stderr is True
     assert root_log.log_to_file is True
@@ -66,7 +66,7 @@ def _log_record_for_level(level: int, datetime_obj: datetime | None = None):
     test_logger = logging.getLogger('test.logger')
     record = test_logger.makeRecord(
         name=test_logger.name, level=level, fn='', lno=0, msg='my log msg', args=(), exc_info=None)
-    record.engine = '[TEST]'
+    record.engine = 'TEST'
     if datetime_obj:
         record.created = time.mktime(datetime_obj.timetuple())
     return record
@@ -83,7 +83,7 @@ def test_log_formatter(runtime: Annotated[IsRuntime, pytest.fixture]):
     formatted_record = formatter.format(record)
 
     formatted_time = fixed_datetime.strftime(get_datetime_format(locale))
-    assert formatted_record == f'[TEST] {formatted_time} - DEBUG: my log msg [test.logger]'
+    assert formatted_record == f'[TEST] {formatted_time} - DEBUG: my log msg (test.logger)'
 
 
 def test_log_formatter_date_localization(runtime: Annotated[IsRuntime, pytest.fixture]):
@@ -136,7 +136,7 @@ def _log_and_assert_log_line_from_stream(
         stream,
         level=logging.getLevelName(level),
         logger='tests.hub.test_root_log',
-        engine='[TESTS]',
+        engine='TESTS',
         datetime_str=datetime_obj.strftime(get_datetime_format(runtime.config.root_log.locale)),
     )
 
@@ -339,7 +339,7 @@ def test_daily_log_file_rotation(
                         log_file,
                         level='WARNING',
                         logger='tests.hub.test_root_log',
-                        engine='[TESTS]',
+                        engine='TESTS',
                         datetime_str=log_datetime.strftime(
                             get_datetime_format(runtime.config.root_log.locale)),
                         clear_stream=False,
