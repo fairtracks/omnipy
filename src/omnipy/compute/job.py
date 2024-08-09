@@ -13,7 +13,7 @@ from omnipy.api.protocols.private.util import IsCallableClass
 from omnipy.api.protocols.public.config import IsJobConfig
 from omnipy.compute.job_creator import JobBaseMeta
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
-from omnipy.log.mixin import LogMixin
+from omnipy.hub.log.mixin import LogMixin
 from omnipy.util.helpers import as_dictable, create_merged_dict
 from omnipy.util.mixin import DynamicMixinAcceptor
 

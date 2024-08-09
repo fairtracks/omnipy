@@ -69,8 +69,8 @@ def _assert_runtime_objects_default(objects: RuntimeObjects):
     from omnipy.data.data_class_creator import DataClassBase, DataClassCreator
     from omnipy.data.serializer import SerializerRegistry
     from omnipy.engine.local import LocalRunner
-    from omnipy.hub.root_log import RootLogObjects
-    from omnipy.log.registry import RunStateRegistry
+    from omnipy.hub.log.root_log import RootLogObjects
+    from omnipy.hub.registry import RunStateRegistry
     from omnipy.modules.prefect.engine.prefect import PrefectEngine
 
     assert isinstance(objects.job_creator, JobCreator)

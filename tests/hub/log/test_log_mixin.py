@@ -6,7 +6,7 @@ from typing import Annotated, Type
 import pytest
 import pytest_cases as pc
 
-from omnipy.log.mixin import LogMixin
+from omnipy.hub.log.mixin import LogMixin
 from omnipy.util.mixin import DynamicMixinAcceptor
 
 from .helpers.functions import assert_log_line_from_stream
@@ -49,5 +49,5 @@ def test_default_log(
         str_stream,
         msg='Log message',
         level='INFO',
-        logger='tests.log.test_log_mixin.MyClass',
+        logger='tests.hub.log.test_log_mixin.MyClass',
     )

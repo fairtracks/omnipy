@@ -11,7 +11,7 @@ from omnipy.api.protocols.public.compute import (IsDagFlowTemplate,
                                                  IsTaskTemplate)
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
-from omnipy.log.registry import RunStateRegistry
+from omnipy.hub.registry import RunStateRegistry
 
 from ....engine.conftest import all_engines
 from ....engine.helpers.classes import JobCase, JobType
