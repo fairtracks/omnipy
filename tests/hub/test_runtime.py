@@ -88,11 +88,11 @@ def _assert_runtime_objects_default(objects: RuntimeObjects):
     assert isinstance(objects.waiting_for_terminal_repr, bool)
 
 
-def test_config_default(teardown_rm_root_log_dir: Annotated[None, pytest.fixture]) -> None:
+def test_config_default() -> None:
     _assert_runtime_config_default(RuntimeConfig(), Path.cwd())
 
 
-def test_objects_default(teardown_rm_root_log_dir: Annotated[None, pytest.fixture]) -> None:
+def test_objects_default(teardown_rm_default_root_log_dir: Annotated[None, pytest.fixture]) -> None:
     _assert_runtime_objects_default(RuntimeObjects())
 
 

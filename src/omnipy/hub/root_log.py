@@ -75,11 +75,11 @@ class RootLogObjects:
 
     def _configure_file_handler(self) -> TimedRotatingFileHandler | None:
         if self._config.log_to_file:
-            log_dir_path = self._config.file_log_dir_path
+            log_file_path = self._config.file_log_path
+            log_dir_path = os.path.dirname(log_file_path)
             if not os.path.exists(log_dir_path):
                 os.makedirs(log_dir_path)
 
-            log_file_path = Path(log_dir_path).joinpath('omnipy.log')
             self.file_handler = TimedRotatingFileHandler(
                 log_file_path, when='d', interval=1, backupCount=7)
             self.file_handler.setLevel(self._config.file_log_min_level)

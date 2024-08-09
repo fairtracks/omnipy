@@ -31,7 +31,6 @@ def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: Path):
     assert root_log.stdout_log_min_level == logging.INFO
     assert root_log.stderr_log_min_level == logging.ERROR
     assert root_log.file_log_min_level == logging.WARNING
-    assert root_log.file_log_dir_path == str(dir_path / 'logs')
 
 
 def _log_record_for_level(level: int, datetime_obj: datetime | None = None):
@@ -84,6 +83,7 @@ def _assert_root_stdout_handler(root_stdout_handler: logging.StreamHandler | Non
     else:
         assert root_stdout_handler is None
 
+    assert root_log.file_log_path == str(dir_path / 'logs' / 'omnipy.log')
 
 def _assert_root_stderr_handler(root_stderr_handler: logging.StreamHandler | None,
                                 root_log_config: IsRootLogConfig):
