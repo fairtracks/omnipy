@@ -10,8 +10,8 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
-from omnipy.hub.entry import RuntimeEntryPublisher
 from omnipy.util.helpers import resolve
+from omnipy.util.publisher import RuntimeEntryPublisher
 
 from .. import prefect_flow, prefect_task, PrefectFlow, PrefectTask, task_input_hash
 

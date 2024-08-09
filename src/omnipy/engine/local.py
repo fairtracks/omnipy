@@ -8,7 +8,7 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
-from omnipy.hub.entry import RuntimeEntryPublisher
+from omnipy.util.publisher import RuntimeEntryPublisher
 
 
 @dataclass

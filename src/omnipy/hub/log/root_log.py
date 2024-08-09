@@ -6,9 +6,9 @@ import os
 
 from omnipy.api.protocols.public.config import IsRootLogConfig
 from omnipy.config.root_log import RootLogConfig
-from omnipy.hub.entry import RuntimeEntryPublisher
 from omnipy.hub.log.handlers import DailyRotatingFileHandler
 from omnipy.util.helpers import get_datetime_format
+from omnipy.util.publisher import RuntimeEntryPublisher
 
 
 @dataclass

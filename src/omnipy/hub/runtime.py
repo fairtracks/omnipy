@@ -21,11 +21,11 @@ from omnipy.config.job import JobConfig
 from omnipy.data.data_class_creator import DataClassBase
 from omnipy.data.serializer import SerializerRegistry
 from omnipy.engine.local import LocalRunner, LocalRunnerConfigEntryPublisher
-from omnipy.hub.entry import DataPublisher, RuntimeEntryPublisher
 from omnipy.hub.log.root_log import RootLogConfigEntryPublisher, RootLogObjects
 from omnipy.hub.registry import RunStateRegistry
 from omnipy.modules.prefect.engine.prefect import PrefectEngine, PrefectEngineConfigEntryPublisher
 from omnipy.util.helpers import called_from_omnipy_tests
+from omnipy.util.publisher import DataPublisher, RuntimeEntryPublisher
 
 
 def _job_creator_factory():
