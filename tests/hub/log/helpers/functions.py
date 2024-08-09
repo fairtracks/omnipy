@@ -1,5 +1,9 @@
+from datetime import datetime
 import os
 from typing import TextIO
+
+from omnipy.api.protocols.public.hub import IsRuntime
+from omnipy.util.helpers import get_datetime_format
 
 
 def read_log_lines_from_stream(stream: TextIO, clear_stream: bool = True) -> list[str]:
@@ -35,3 +39,7 @@ def assert_log_line_from_stream(
     assert logger in log_line if logger else True
     assert engine in log_line if engine else True
     assert datetime_str in log_line if datetime_str else True
+
+
+def format_datetime_obj(datetime_obj: datetime, runtime: IsRuntime):
+    return datetime_obj.strftime(get_datetime_format(runtime.config.root_log.locale))
