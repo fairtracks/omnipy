@@ -44,7 +44,7 @@ class IsRootLogConfig(Protocol):
     stdout_log_min_level: int
     stderr_log_min_level: int
     file_log_min_level: int
-    file_log_dir_path: str
+    file_log_path: str
 
 
 class IsOutputStorageBase(Protocol):

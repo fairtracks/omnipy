@@ -16,10 +16,11 @@ from omnipy.data.data_class_creator import DataClassBaseMeta, DataClassCreator
 
 
 @pytest.fixture(scope='function')
-def teardown_rm_root_log_dir() -> Iterator[None]:
+def teardown_rm_default_root_log_dir() -> Iterator[None]:
     root_log_config = RootLogConfig()
-    log_dir_path = root_log_config.file_log_dir_path
+    log_file_path = root_log_config.file_log_path
     yield
+    log_dir_path = os.path.dirname(log_file_path)
     if os.path.exists(log_dir_path):
         shutil.rmtree(log_dir_path)
 
@@ -54,7 +55,7 @@ def teardown_reset_data_class_creator() -> Iterator[None]:
 
 @pytest.fixture(scope='function')
 def runtime_cls(
-    teardown_rm_root_log_dir: Annotated[None, pytest.fixture],
+    teardown_rm_default_root_log_dir: Annotated[None, pytest.fixture],
     teardown_remove_root_log_handlers: Annotated[None, pytest.fixture],
     teardown_reset_job_creator: Annotated[None, pytest.fixture],
     teardown_reset_data_class_creator: Annotated[None, pytest.fixture],
@@ -72,7 +73,7 @@ def runtime(
 
     runtime.config.reset_to_defaults()
     runtime.config.job.output_storage.local.persist_data_dir_path = str(tmp_dir_path / 'outputs')
-    runtime.config.root_log.file_log_dir_path = str(tmp_dir_path / 'logs')
+    runtime.config.root_log.file_log_path = str(tmp_dir_path / 'logs' / 'omnipy.log')
 
     yield runtime
 

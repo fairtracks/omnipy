@@ -6,8 +6,8 @@ from pathlib import Path
 from omnipy.api.typedefs import LocaleType
 
 
-def _get_log_dir_path() -> str:
-    return str(Path.cwd() / 'logs')
+def _get_log_path() -> str:
+    return str(Path.cwd() / 'logs' / 'omnipy.log')
 
 
 @dataclass
@@ -20,4 +20,4 @@ class RootLogConfig:
     stdout_log_min_level: int = logging.INFO
     stderr_log_min_level: int = logging.ERROR
     file_log_min_level: int = logging.WARNING
-    file_log_dir_path: str = field(default_factory=_get_log_dir_path)
+    file_log_path: str = field(default_factory=_get_log_path)
