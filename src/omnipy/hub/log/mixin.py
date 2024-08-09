@@ -15,18 +15,5 @@ class LogMixin:
 
     def log(self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None):
         if self._logger is not None:
-            create_time = time.mktime(datetime_obj.timetuple()) if datetime_obj else time.time()
-            _former_log_record_factory = logging.getLogRecordFactory()
-            if _former_log_record_factory.__name__ != '_log_record_editor':
-
-                def _log_record_editor(*args, **kwargs):
-                    record = _former_log_record_factory(*args, **kwargs)
-                    record.created = create_time
-                    record.engine = f"[{record.name.split('.')[0].upper()}]"
-                    if len(record.engine) < 9:
-                        record.engine += ' '
-                    return record
-
-                logging.setLogRecordFactory(_log_record_editor)
-
-            self._logger.log(level, log_msg)
+            create_time = datetime_obj.timestamp() if datetime_obj else time.time()
+            self._logger.log(level, log_msg, extra=dict(timestamp=create_time))

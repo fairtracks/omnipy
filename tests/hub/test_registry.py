@@ -1,7 +1,6 @@
 from copy import copy
 from datetime import datetime, timedelta
 from io import StringIO
-import logging
 from time import sleep
 from typing import Annotated
 
@@ -9,6 +8,7 @@ import pytest
 
 from omnipy.api.enums import RunState
 from omnipy.api.protocols.public.compute import IsDagFlow, IsTask
+from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.hub.registry import RunStateRegistry
 
 from .log.helpers.functions import read_log_lines_from_stream
@@ -190,13 +190,15 @@ def test_same_unique_name_different_job(
 
 
 def test_state_change_logging(
-    str_stream: Annotated[StringIO, pytest.fixture],
-    stream_root_logger: Annotated[logging.Logger, pytest.fixture],
+    runtime: Annotated[IsRuntime, pytest.fixture],
     task_a: Annotated[IsTask, pytest.fixture],
     task_b: Annotated[IsTask, pytest.fixture],
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],
     dag_flow_b: Annotated[IsDagFlow, pytest.fixture],
 ):
+    my_stdout = StringIO()
+    runtime.config.root_log.stdout = my_stdout
+
     for job_a, job_b in [(task_a, task_b), (dag_flow_a, dag_flow_b)]:
         registry = RunStateRegistry()
 
@@ -212,7 +214,7 @@ def test_state_change_logging(
         for job, state in events:
             registry.set_job_state(job, state)
 
-        log_lines = read_log_lines_from_stream(str_stream)
+        log_lines = read_log_lines_from_stream(my_stdout)
 
         assert len(log_lines) == 6
 

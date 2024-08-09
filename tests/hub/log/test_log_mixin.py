@@ -6,6 +6,7 @@ from typing import Annotated, Type
 import pytest
 import pytest_cases as pc
 
+from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.hub.log.mixin import LogMixin
 from omnipy.util.mixin import DynamicMixinAcceptor
 
@@ -36,17 +37,18 @@ def case_my_class_as_dynamic_log_mixin_subclass() -> Type:
 
 @pc.parametrize_with_cases('my_class_with_log_mixin', cases='.')
 def test_default_log(
-    str_stream: Annotated[StringIO, pytest.fixture],
-    stream_root_logger: Annotated[logging.Logger, pytest.fixture],
+    runtime: Annotated[IsRuntime, pytest.fixture],
     my_class_with_log_mixin: Annotated[Type, pytest.fixture],
-    mock_log_mixin_datetime: Annotated[datetime, pytest.fixture],
 ):
+    my_stdout = StringIO()
+    runtime.config.root_log.stdout = my_stdout
+
     my_obj = my_class_with_log_mixin(42, False)
 
     my_obj.log('Log message', level=logging.INFO)
 
     assert_log_line_from_stream(
-        str_stream,
+        my_stdout,
         msg='Log message',
         level='INFO',
         logger='tests.hub.log.test_log_mixin.MyClass',
