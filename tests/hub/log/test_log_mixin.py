@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import StringIO
 import logging
 from typing import Annotated, Type
@@ -10,7 +10,7 @@ from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.hub.log.mixin import LogMixin
 from omnipy.util.mixin import DynamicMixinAcceptor
 
-from .helpers.functions import assert_log_line_from_stream
+from .helpers.functions import assert_log_line_from_stream, format_datetime_obj
 
 
 @pc.case(id='my_class_as_regular_log_mixin_subclass')
@@ -45,11 +45,17 @@ def test_default_log(
 
     my_obj = my_class_with_log_mixin(42, False)
 
-    my_obj.log('Log message', level=logging.INFO)
+    now = datetime.now()
 
-    assert_log_line_from_stream(
-        my_stdout,
-        msg='Log message',
-        level='INFO',
-        logger='tests.hub.log.test_log_mixin.MyClass',
-    )
+    for i in range(2):
+        my_obj.log(f'Log message {i}', level=logging.INFO, datetime_obj=now)
+
+        assert_log_line_from_stream(
+            my_stdout,
+            msg=f'Log message {i}',
+            level='INFO',
+            logger='tests.hub.log.test_log_mixin.MyClass',
+            datetime_str=format_datetime_obj(now, runtime),
+        )
+
+        now += timedelta(seconds=1)

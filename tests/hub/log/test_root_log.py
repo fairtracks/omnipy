@@ -16,7 +16,9 @@ from omnipy.config.root_log import RootLogConfig
 from omnipy.hub.log.root_log import RootLogObjects
 from omnipy.util.helpers import get_datetime_format
 
-from .helpers.functions import assert_log_line_from_stream, read_log_line_from_stream
+from .helpers.functions import (assert_log_line_from_stream,
+                                format_datetime_obj,
+                                read_log_line_from_stream)
 
 
 def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: Path):
@@ -100,14 +102,11 @@ def test_log_formatter_date_localization(runtime: Annotated[IsRuntime, pytest.fi
     formatted_log_entry = new_formatter.format(
         _log_record_for_level(logging.INFO, datetime_obj=fixed_datetime_now))
 
-    locale: LocaleType = runtime.config.root_log.locale
-    datetime_str = fixed_datetime_now.strftime(get_datetime_format(locale))
-
     assert_log_line_from_stream(
         StringIO(formatted_log_entry),
         level='INFO',
         logger='test.logger',
-        datetime_str=datetime_str,
+        datetime_str=format_datetime_obj(fixed_datetime_now, runtime),
     )
 
     runtime.config.root_log.locale = prev_locale
@@ -137,7 +136,7 @@ def _log_and_assert_log_line_from_stream(
         level=logging.getLevelName(level),
         logger='tests.hub.test_root_log',
         engine='TESTS',
-        datetime_str=datetime_obj.strftime(get_datetime_format(runtime.config.root_log.locale)),
+        datetime_str=format_datetime_obj(datetime_obj, runtime),
     )
 
 
@@ -340,7 +339,6 @@ def test_daily_log_file_rotation(
                         level='WARNING',
                         logger='tests.hub.test_root_log',
                         engine='TESTS',
-                        datetime_str=log_datetime.strftime(
-                            get_datetime_format(runtime.config.root_log.locale)),
+                        datetime_str=format_datetime_obj(log_datetime, runtime),
                         clear_stream=False,
                     )
