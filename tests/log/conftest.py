@@ -6,8 +6,6 @@ from typing import Annotated, Generator
 import pytest
 import pytest_cases as pc
 
-from omnipy.log.constants import OMNIPY_LOG_FORMAT_STR
-
 from ..engine.helpers.mocks import (MockDagFlow,
                                     MockDagFlowTemplate,
                                     MockJobRunnerSubclass,
@@ -30,12 +28,25 @@ def simple_root_logger() -> Generator[logging.Logger, None, None]:
 
 
 @pytest.fixture(scope='function')
+def root_log_format_string() -> str:
+    return '{asctime} - {levelname}: {message} ({name})'
+
+
+@pytest.fixture(scope='function')
+def root_log_datetime_fmt() -> str:
+    return '%a %b %e %X %Y'
+
+
+@pytest.fixture(scope='function')
 def stream_root_logger(
     str_stream: Annotated[StringIO, pytest.fixture],
     simple_root_logger: Annotated[logging.Logger, pytest.fixture],
+    root_log_format_string: Annotated[str, pytest.fixture],
+    root_log_datetime_fmt: Annotated[str, pytest.fixture],
 ) -> Generator[logging.Logger, None, None]:
     stream_handler = logging.StreamHandler(str_stream)
-    stream_handler.setFormatter(logging.Formatter(OMNIPY_LOG_FORMAT_STR))
+    stream_handler.setFormatter(
+        logging.Formatter(root_log_format_string, root_log_datetime_fmt, style='{'))
     simple_root_logger.addHandler(stream_handler)
     yield simple_root_logger
     simple_root_logger.removeHandler(stream_handler)

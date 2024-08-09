@@ -216,21 +216,21 @@ def test_state_change_logging(
 
         assert len(log_lines) == 6
 
-        assert log_lines[0] == f'INFO - ' \
-                               f'Initialized "{job_a.unique_name}" ' \
-                               f'(omnipy.log.registry.RunStateRegistry)'
-        assert log_lines[1] == f'INFO - ' \
-                               f'Started running "{job_a.unique_name}"... ' \
-                               f'(omnipy.log.registry.RunStateRegistry)'
-        assert log_lines[2] == f'INFO - ' \
-                               f'Initialized "{job_b.unique_name}" ' \
-                               f'(omnipy.log.registry.RunStateRegistry)'
-        assert log_lines[3] == f'INFO - ' \
-                               f'Finished running "{job_a.unique_name}"! ' \
-                               f'(omnipy.log.registry.RunStateRegistry)'
-        assert log_lines[4] == f'INFO - ' \
-                               f'Started running "{job_b.unique_name}"... ' \
-                               f'(omnipy.log.registry.RunStateRegistry)'
-        assert log_lines[5] == f'INFO - ' \
-                               f'Finished running "{job_b.unique_name}"! ' \
-                               f'(omnipy.log.registry.RunStateRegistry)'
+        assert log_lines[0].endswith('INFO: '
+                                     f'Initialized "{job_a.unique_name}" '
+                                     f'(omnipy.hub.registry.RunStateRegistry)')
+        assert log_lines[1].endswith(f'INFO: '
+                                     f'Started running "{job_a.unique_name}"... '
+                                     f'(omnipy.hub.registry.RunStateRegistry)')
+        assert log_lines[2].endswith(f'INFO: '
+                                     f'Initialized "{job_b.unique_name}" '
+                                     f'(omnipy.hub.registry.RunStateRegistry)')
+        assert log_lines[3].endswith(f'INFO: '
+                                     f'Finished running "{job_a.unique_name}"! '
+                                     f'(omnipy.hub.registry.RunStateRegistry)')
+        assert log_lines[4].endswith(f'INFO: '
+                                     f'Started running "{job_b.unique_name}"... '
+                                     f'(omnipy.hub.registry.RunStateRegistry)')
+        assert log_lines[5].endswith(f'INFO: '
+                                     f'Finished running "{job_b.unique_name}"! '
+                                     f'(omnipy.hub.registry.RunStateRegistry)')
