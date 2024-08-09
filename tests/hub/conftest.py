@@ -6,11 +6,11 @@ from typing import Annotated, Generator
 import pytest
 import pytest_cases as pc
 
-from ..engine.helpers.mocks import (MockDagFlow,
-                                    MockDagFlowTemplate,
-                                    MockJobRunnerSubclass,
-                                    MockTask,
-                                    MockTaskTemplate)
+from engine.helpers.mocks import (MockDagFlow,
+                                  MockDagFlowTemplate,
+                                  MockJobRunnerSubclass,
+                                  MockTask,
+                                  MockTaskTemplate)
 
 
 @pytest.fixture(scope='function')
@@ -105,11 +105,11 @@ def dag_flow_b(task_template_a, task_template_b) -> MockDagFlow:
 @pc.fixture(scope='function')
 def mock_log_mixin_datetime(
         mock_datetime: Annotated[datetime, pytest.fixture]) -> Generator[datetime, None, None]:
-    import omnipy.log.mixin
+    import omnipy.hub.log.mixin
 
-    prev_datetime = omnipy.log.mixin.datetime
-    omnipy.log.mixin.datetime = mock_datetime
+    prev_datetime = omnipy.hub.log.mixin.datetime
+    omnipy.hub.log.mixin.datetime = mock_datetime
 
     yield mock_datetime
 
-    omnipy.log.mixin.datetime = prev_datetime
+    omnipy.hub.log.mixin.datetime = prev_datetime

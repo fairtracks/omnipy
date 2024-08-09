@@ -4,7 +4,7 @@ from typing import DefaultDict
 
 from omnipy.api.enums import RunState, RunStateLogMessages
 from omnipy.api.protocols.private.compute.mixins import IsUniquelyNamedJob
-from omnipy.log.mixin import LogMixin
+from omnipy.hub.log.mixin import LogMixin
 
 
 class RunStateRegistry(LogMixin):

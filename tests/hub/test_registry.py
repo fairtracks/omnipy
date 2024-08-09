@@ -9,9 +9,9 @@ import pytest
 
 from omnipy.api.enums import RunState
 from omnipy.api.protocols.public.compute import IsDagFlow, IsTask
-from omnipy.log.registry import RunStateRegistry
+from omnipy.hub.registry import RunStateRegistry
 
-from .helpers.functions import read_log_lines_from_stream
+from .log.helpers.functions import read_log_lines_from_stream
 
 
 def test_job_state_transitions(
