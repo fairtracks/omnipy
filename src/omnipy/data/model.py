@@ -740,8 +740,22 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def to_data(self) -> object:
         return super().dict(by_alias=True)[ROOT_KEY]
 
+    def _empty_from_data(self, value: object) -> None:
+
+        from contextlib import contextmanager
+
+        @contextmanager
+        def _reset_to_default(*args, **kwds):
+            self.contents = self._get_default_value_from_model(self.full_type())
+            yield
+
+        self._validate_and_set_value(value, reset_solution=_reset_to_default())
+
     def from_data(self, value: object) -> None:
-        self._validate_and_set_value(value)
+        if self.contents == self._get_default_value_from_model(self.full_type()):
+            self._empty_from_data(value)
+        else:
+            self._validate_and_set_value(value)
 
     def absorb_and_replace(self, other: 'Model'):
         self.from_data(other.to_data())
