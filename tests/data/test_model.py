@@ -2656,16 +2656,15 @@ def test_mimic_list_and_dict_iterators(
 
     dict_model = Model[dict[int, str]]({0: 'abc', 1: 'bcd', 2: 'cde'})
 
+    assert tuple(dict_model.keys()) == (0, 1, 2)
+
     if dyn_convert:
-        assert tuple(dict_model.keys()) == (Model[int](0), Model[int](1), Model[int](2))
         assert tuple(dict_model.values()) == (Model[str]('abc'),
                                               Model[str]('bcd'),
                                               Model[str]('cde'))
-        assert tuple(dict_model.items()) == (Model[tuple[int, str]]((0, 'abc')),
-                                             Model[tuple[int, str]]((1, 'bcd')),
-                                             Model[tuple[int, str]]((2, 'cde')))
+        assert tuple(dict_model.items()) == ((0, Model[str]('abc')), (1, Model[str]('bcd')),
+                                             (2, Model[str]('cde')))
     else:
-        assert tuple(dict_model.keys()) == (0, 1, 2)
         assert tuple(dict_model.values()) == ('abc', 'bcd', 'cde')
         assert tuple(dict_model.items()) == ((0, 'abc'), (1, 'bcd'), (2, 'cde'))
 

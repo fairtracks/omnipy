@@ -888,9 +888,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 )
 
         elif name == '__iter__' and isinstance(self, Iterable):
-            _per_element_model_generator = self._get_per_element_model_generator(
+            _per_element_model_generator = self._get_convert_full_element_model_generator(
                 cast(Iterable, self.contents),
-                level_up_arg_idx=0,
+                level_up_type_arg_idx=0,
             )
             return _per_element_model_generator()
         else:
@@ -1051,18 +1051,31 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         model_args = [self.__class__(arg).contents for arg in args]
         return method(*model_args, **kwargs)
 
-    def _get_per_element_model_generator(self,
-                                         elements: Iterable | None,
-                                         level_up_arg_idx: int | slice) -> Callable[..., Generator]:
-        def _per_element_model_generator(elements=elements):
+    def _get_convert_full_element_model_generator(
+            self, elements: Iterable | None,
+            level_up_type_arg_idx: int | slice) -> Callable[..., Generator]:
+        def _convert_full_element_model_generator(elements=elements):
             for el in elements:
                 yield self._convert_to_model_if_reasonable(
                     el,
                     level_up=True,
-                    level_up_arg_idx=level_up_arg_idx,
+                    level_up_arg_idx=level_up_type_arg_idx,
                 )
 
-        return _per_element_model_generator
+        return _convert_full_element_model_generator
+
+    def _get_convert_element_value_model_generator(
+            self, elements: Iterable | None) -> Callable[..., Generator]:
+        def _convert_element_value_model_generator(elements=elements):
+            for el in elements:
+                yield (el[0],
+                       self._convert_to_model_if_reasonable(
+                           el[1],
+                           level_up=True,
+                           level_up_arg_idx=1,
+                       ))
+
+        return _convert_element_value_model_generator
 
     def _convert_to_model_if_reasonable(  # noqa: C901
         self,
@@ -1179,23 +1192,18 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                                                         _validate_contents,
                                                         reset_solution)
 
-        if attr in ('keys', 'values', 'items'):
+        if attr in ('values', 'items'):
             level_up_arg_idx: int | slice
             match attr:
-                case 'keys':
-                    level_up_arg_idx = 0
                 case 'values':
-                    level_up_arg_idx = 1
+                    _model_generator = self._get_convert_full_element_model_generator(
+                        None,
+                        level_up_type_arg_idx=1,
+                    )
                 case 'items':
-                    level_up_arg_idx = slice(None)
+                    _model_generator = self._get_convert_element_value_model_generator(None,)
 
-            _per_element_model_generator = self._get_per_element_model_generator(
-                None,
-                level_up_arg_idx=level_up_arg_idx,
-            )
-            contents_attr = add_callback_after_call(contents_attr,
-                                                    _per_element_model_generator,
-                                                    no_context)
+            contents_attr = add_callback_after_call(contents_attr, _model_generator, no_context)
 
         return contents_attr
 
