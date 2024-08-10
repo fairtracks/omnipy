@@ -1032,6 +1032,10 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 else:
                     return method(self.__class__(arg).contents, **kwargs)
             except ValidationError:
+                # TODO: Add debug logging for hidden validation and other exceptions e.g. when
+                #       concatenating `Model[int](123) + '234.'` (gives TypeError:
+                #       unsupported operand type(s) for +: 'Model[int]' and 'str'). ?
+                #       `Model[int](123) + '234'` works fine, returns `Model[int]('357')`.
                 return method(arg)
         except TypeError:
             return NotImplemented
