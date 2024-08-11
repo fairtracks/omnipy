@@ -4,7 +4,7 @@ from typing import cast
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
 from omnipy.data.dataset import Dataset
-from omnipy.data.model import Model
+from omnipy.data.model import Model, obj_or_model_contents_isinstance
 
 from .datasets import (JsonDataset,
                        JsonDictDataset,
@@ -41,11 +41,11 @@ def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> J
             if key not in output_dataset:
                 output_dataset[key] = []
 
-            if not type(val) == list:
+            if not obj_or_model_contents_isinstance(val, list):
                 val = JsonListModel([val])
 
             for item_index, val_item in enumerate(val):
-                if type(val_item) == dict:
+                if obj_or_model_contents_isinstance(val_item, dict):
                     output_dataset[key].append({id_key: f'{name}_{item_index}'})
                     assert id_key not in val_item
                     output_dataset[key][-1] |= val_item

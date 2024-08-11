@@ -13,15 +13,23 @@ from omnipy.modules.json.flows import (transpose_dict_of_dicts_2_list_of_dicts,
 from omnipy.modules.json.tasks import transpose_dicts_2_lists
 
 
-def test_transpose_empty_dicts_2_nothing(runtime: Annotated[IsRuntime, pytest.fixture]):
+@pytest.mark.parametrize('dyn_convert', [False, True])
+def test_transpose_empty_dicts_2_nothing(runtime: Annotated[IsRuntime, pytest.fixture],
+                                         dyn_convert: bool):
+    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
+
     out_dataset = transpose_dicts_2_lists.run(JsonDictDataset(dict(abc={}, bcd={})))
     assert type(out_dataset) is JsonListDataset
     assert out_dataset.to_data() == {}
 
 
+@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_transpose_dict_of_numbers_2_lists_of_numbers(
-        assert_snapshot_holder_and_deepcopy_memo_are_empty,
-        runtime: Annotated[IsRuntime, pytest.fixture]):
+    assert_snapshot_holder_and_deepcopy_memo_are_empty,
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    dyn_convert: bool,
+):
+    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
     in_dataset = JsonDictDataset(dict(abc={'a': 123}, bcd={'a': 456}))
     out_dataset_1 = transpose_dicts_2_lists.run(in_dataset)
@@ -34,8 +42,13 @@ def test_transpose_dict_of_numbers_2_lists_of_numbers(
     assert out_dataset_2.to_data() == {'a': [123, 456], 'b': [321], 'c': [654]}
 
 
-def test_transpose_dicts_of_various_2_lists_of_various(runtime: Annotated[IsRuntime,
-                                                                          pytest.fixture]):
+@pytest.mark.parametrize('dyn_convert', [False, True])
+def test_transpose_dicts_of_various_2_lists_of_various(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    dyn_convert: bool,
+):
+    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
+
     out_dataset = transpose_dicts_2_lists.run(
         JsonDictDataset(
             dict(
@@ -68,7 +81,13 @@ def test_transpose_dicts_of_various_2_lists_of_various(runtime: Annotated[IsRunt
     }
 
 
-def test_transpose_dict_of_dicts_2_list_of_dicts(runtime: Annotated[IsRuntime, pytest.fixture]):
+@pytest.mark.parametrize('dyn_convert', [False, True])
+def test_transpose_dict_of_dicts_2_list_of_dicts(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    dyn_convert: bool,
+):
+    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
+
     out_dataset = transpose_dict_of_dicts_2_list_of_dicts.run(
         JsonDictOfDictsDataset(
             dict(
@@ -107,8 +126,13 @@ def test_transpose_dict_of_dicts_2_list_of_dicts(runtime: Annotated[IsRuntime, p
     }
 
 
-def test_transpose_dicts_of_lists_of_dicts_2_lists_of_dicts(runtime: Annotated[IsRuntime,
-                                                                               pytest.fixture],):
+@pytest.mark.parametrize('dyn_convert', [False, True])
+def test_transpose_dicts_of_lists_of_dicts_2_lists_of_dicts(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    dyn_convert: bool,
+):
+    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
+
     out_dataset = transpose_dicts_of_lists_of_dicts_2_lists_of_dicts.run(
         JsonDictOfListsOfDictsDataset(
             dict(
