@@ -130,9 +130,13 @@ def _waiting_for_terminal_repr(new_value: bool | None = None) -> bool:
         return runtime.objects.waiting_for_terminal_repr
 
 
-def is_model_instance(obj: object) -> bool:
-    return lenient_isinstance(obj, Model) \
-        and not is_none_type(obj)  # Consequence of _ModelMetaclass hack
+def is_model_instance(__obj: object) -> bool:
+    return lenient_isinstance(__obj, Model) \
+        and not is_none_type(__obj)  # Consequence of _ModelMetaclass hack
+
+
+def obj_or_model_contents_isinstance(__obj: object, __class_or_tuple: type) -> bool:
+    return isinstance(__obj.contents if is_model_instance(__obj) else __obj, __class_or_tuple)
 
 
 # def orjson_dumps(v, *, default):
