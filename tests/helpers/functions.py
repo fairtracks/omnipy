@@ -13,7 +13,7 @@ def assert_model(model: object, target_type: TypeForm, contents: object):
 def assert_val(value: object, target_type: TypeForm, contents: object):
     assert not isinstance(value, Model)
     assert isinstance(value, ensure_plain_type(target_type))
-    assert value == contents
+    assert value == contents, f'{value} != {contents}'
 
 
 def assert_model_or_val(dyn_convert: bool,
