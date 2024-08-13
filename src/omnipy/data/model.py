@@ -1,6 +1,6 @@
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
-from contextlib import suppress
+from contextlib import contextmanager, suppress
 import functools
 import inspect
 import json
@@ -19,6 +19,7 @@ from typing import (Annotated,
                     get_args,
                     get_origin,
                     Hashable,
+                    Iterator,
                     Literal,
                     Optional,
                     SupportsIndex,
@@ -461,10 +462,22 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         Hack to allow overwriting of __iter__ method without compromising pydantic validation. Part
         of the pydantic API and not the Omnipy API.
         """
+        # TODO: Doublecheck if validate() method is still needed for pydantic v2
+
         _validate_cls_counts[cls.__name__] += 1
         if is_model_instance(value):
-            with AttribHolder(
-                    value, '__iter__', GenericModel.__iter__, switch_to_other=True, on_class=True):
+
+            @contextmanager
+            def temporary_set_value_iter_to_pydantic_method() -> Iterator[None]:
+                prev_iter = value.__class__.__iter__
+                value.__class__.__iter__ = GenericModel.__iter__
+
+                try:
+                    yield
+                finally:
+                    value.__class__.__iter__ = prev_iter
+
+            with temporary_set_value_iter_to_pydantic_method():
                 return super().validate(value)
         else:
             return super().validate(value)

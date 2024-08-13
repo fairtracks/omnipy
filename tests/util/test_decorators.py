@@ -2,7 +2,7 @@ from typing import Callable
 
 import pytest
 
-from omnipy.util.contexts import AttribHolder
+from omnipy.util.contexts import hold_and_reset_prev_attrib_value_context
 from omnipy.util.decorators import (add_callback_after_call,
                                     add_callback_if_exception,
                                     apply_decorator_to_property,
@@ -72,7 +72,8 @@ def test_callback_after_func_call_with_attrib_holder_error_in_func() -> None:
 
     my_a = A([1, 2, 3])
 
-    restore_numbers_context = AttribHolder(my_a, 'numbers', copy_attr=True)
+    restore_numbers_context = hold_and_reset_prev_attrib_value_context(
+        my_a, 'numbers', copy_attr=True)
     decorated_my_appender = add_callback_after_call(
         my_appender, my_callback_after_call, restore_numbers_context, my_a, y=0)
 
@@ -102,7 +103,8 @@ def test_callback_after_func_call_with_attrib_holder_error_in_callback_func() ->
     my_a = A([1, 2, 3])
     my_other_a = A([1, 2, 3])
 
-    restore_numbers_context = AttribHolder(my_a, 'numbers', copy_attr=True)
+    restore_numbers_context = hold_and_reset_prev_attrib_value_context(
+        my_a, 'numbers', copy_attr=True)
     decorated_my_appender = add_callback_after_call(
         my_appender, my_callback_after_call, restore_numbers_context, my_other_a, y=4)
 

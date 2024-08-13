@@ -16,6 +16,7 @@ from typing import (Annotated,
 import weakref
 
 from pydantic import BaseModel
+from pydantic.fields import Undefined
 from pydantic.generics import GenericModel
 import pytest
 from typing_inspect import get_generic_type
@@ -23,7 +24,6 @@ from typing_inspect import get_generic_type
 from omnipy.api.protocols.private.util import HasContents, IsSnapshotHolder
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-from omnipy.util.contexts import Undefined
 from omnipy.util.helpers import (all_type_variants,
                                  called_from_omnipy_tests,
                                  ensure_non_str_byte_iterable,
