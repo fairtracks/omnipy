@@ -1,12 +1,13 @@
 from dataclasses import fields
 import os
 from textwrap import dedent
-from typing import TypeAlias
+from typing import Annotated, TypeAlias
 
 from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
 
+from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.modules.json.models import (_JsonAnyDictM,
                                         _JsonAnyListM,
                                         _JsonDictM,
@@ -23,6 +24,7 @@ from omnipy.modules.json.models import (_JsonAnyDictM,
                                         JsonScalarModel)
 from omnipy.modules.json.typedefs import JsonScalar
 
+from ...helpers.functions import assert_model_or_val
 from ..helpers.classes import CaseInfo
 
 
@@ -131,15 +133,40 @@ def test_error_list_of_single_dict_with_two_elements():
 
 # TODO: Write tests for misc model operations relevant for JSON data. Try to avoid overlap with
 #       with test_model.
-def test_json_model_operations():
-    a = JsonDictModel({'a': 1, 'b': 2, 'c': 3})
-    a['c'] = 3
+@pytest.mark.parametrize('dyn_convert', [False, True])
+def test_json_model_operations(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    dyn_convert: bool,
+):
+    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
-    b = _JsonScalarM(1)
-    assert (b + 1).contents == 2
+    a = JsonListModel([1, 2, 3])
+    assert_model_or_val(dyn_convert, a[0], int, 1)
 
-    c = JsonScalarModel(1)
-    assert (c + 1).contents == 2
+    b = JsonModel([1, 2, 3])
+    assert_model_or_val(dyn_convert, b[0], int, 1)
+
+    c = JsonDictModel({'a': 1, 'b': 2, 'c': 3})
+    assert_model_or_val(dyn_convert, c['c'], int, 3)
+
+    c |= JsonDictModel({'b': 4, 'd': 5})
+    assert_model_or_val(dyn_convert, c['b'], int, 4)
+    assert_model_or_val(dyn_convert, c['c'], int, 3)
+    assert_model_or_val(dyn_convert, c['d'], int, 5)
+
+    d = JsonModel({'a': 1, 'b': 2, 'c': 3})
+    assert_model_or_val(dyn_convert, d['c'], int, 3)
+
+    d |= JsonModel({'b': 4, 'd': 5})
+    assert_model_or_val(dyn_convert, c['b'], int, 4)
+    assert_model_or_val(dyn_convert, c['c'], int, 3)
+    assert_model_or_val(dyn_convert, c['d'], int, 5)
+
+    e = _JsonScalarM(1)
+    assert (e + 1).contents == 2
+
+    f = JsonScalarModel(1)
+    assert (f + 1).contents == 2
 
 
 def test_json_known_bug():

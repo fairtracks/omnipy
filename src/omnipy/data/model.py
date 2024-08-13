@@ -41,7 +41,7 @@ from omnipy.api.protocols.private.util import IsSnapshotHolder, IsSnapshotWrappe
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.helpers import get_special_methods_info_dict, MethodInfo, YesNoMaybe
-from omnipy.util.contexts import (AttribHolder,
+from omnipy.util.contexts import (hold_and_reset_prev_attrib_value_context,
                                   LastErrorHolder,
                                   nothing,
                                   setup_and_teardown_callback_context)
@@ -1064,7 +1064,12 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         **kwargs: object,
     ):
         try:
-            ret = method(*args, **kwargs)
+            with hold_and_reset_prev_attrib_value_context(
+                    self.config,
+                    'dynamically_convert_elements_to_models',
+            ):
+                self.config.dynamically_convert_elements_to_models = False
+                ret = method(*args, **kwargs)
         except TypeError as type_exc:
             try:
                 ret = self._call_method_with_model_converted_args(method, *args, **kwargs)
@@ -1146,6 +1151,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
                     if level_up:
                         inner_type_args = get_args(inner_type_to_check)
+                        if len(inner_type_args) == 0:
+                            inner_type_args = (inner_type_to_check,)
                         if inner_type_args:
                             for level_up_type_to_check in all_type_variants(
                                     inner_type_args[level_up_arg_idx]):
