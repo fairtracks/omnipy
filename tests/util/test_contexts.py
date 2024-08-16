@@ -154,6 +154,32 @@ def test_setup_and_teardown_callback_context_only_teardown_func(state_and_callba
     assert state == []
 
 
+def test_setup_and_teardown_callback_context_as_decorator(state_and_callback_funcs) -> None:
+    state, setup, exception, teardown = state_and_callback_funcs
+
+    @setup_and_teardown_callback_context(
+        setup_func=setup,
+        setup_func_kwargs=dict(number=75),
+        exception_func=exception,
+        exception_func_args=(100,),
+        teardown_func=teardown,
+        teardown_func_kwargs=dict(number=75),
+    )
+    def in_range(max: int, min: int = 0) -> bool:
+        ok = min <= state[-1] <= max
+        if not ok:
+            raise RuntimeError(f'{state[-1]} not in range {min} to {max}')
+        return ok
+
+    assert in_range(100, min=50)
+    assert state == []
+
+    try:
+        assert in_range(200, min=100)
+    except RuntimeError:
+        assert state == [-100]
+
+
 def test_capture_stdout_stderr(capsys: pytest.CaptureFixture) -> None:
     print('To be or not to be, that is the question', end='')
     print('Something is rotten in the state of Denmark', end='', file=sys.stderr)
