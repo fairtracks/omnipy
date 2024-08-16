@@ -131,6 +131,55 @@ def test_error_list_of_single_dict_with_two_elements():
         assert a.to_data() == {'a': 'b'}
 
 
+# TODO: Revisit test_json_known_bug after pydantic v2 is supported.
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason=dedent("""\
+        Due to "feature" in pydantic v1:
+
+        ```
+        class MyDict(BaseModel):
+            dict_of_scalars: dict[str, int] = {'a': 123}
+            dict_of_dicts: dict[str, dict[str, int]] = {'a': {'x': 123}}
+
+        >>> MyDict(dict_of_scalars=[])
+        MyDict(dict_of_scalars={}, dict_of_dicts={'a': {'x': 123}})
+        >>> MyDict(dict_of_scalars={'a': []})
+        [...]
+        pydantic.error_wrappers.ValidationError: 1 validation error for MyDict
+        dict_of_scalars -> a
+          value is not a valid integer (type=type_error.integer)
+        >>> MyDict(dict_of_dicts={'a': []})
+        MyDict(dict_of_scalars={'a': 123}, dict_of_dicts={'a': {}})
+
+        Pydantic v2 fails all these validations.
+
+        While v1 behavior is consistent with the builtin dict (`dict([]) == {}`), it may cause 
+        hard-to-detect bugs. While Omnipy in general moves in the direction of as broadly 
+        interoperable parsing as possible, the stricter v2 behavior is in this case preferable. 
+    """))
+def test_error_dict_with_empty_list(runtime: Annotated[IsRuntime, pytest.fixture]):
+    dict_model = JsonDictModel()
+
+    with pytest.raises(ValidationError):
+        # A dict value of [] is interpreted by pydantic v1 as an empty dict
+        dict_model = []
+        assert dict_model.to_data() == {}
+
+    dict_of_scalars_model = JsonDictOfScalarsModel({'a': 123})
+
+    with pytest.raises(ValidationError):
+        # Setting an integer value of a nested dict to [] validates as expected
+        dict_of_scalars_model['a'] = []
+
+    dict_of_dicts_model = JsonDictOfDictsModel({'a': {'x': 123}})
+
+    with pytest.raises(ValidationError):
+        # However, setting the value of a nested dict of dicts to [] still fails
+        dict_of_dicts_model['a'] = []
+        assert dict_of_dicts_model.to_data() == {'a': {}}
+
+
 # TODO: Write tests for misc model operations relevant for JSON data. Try to avoid overlap with
 #       with test_model.
 
@@ -169,17 +218,6 @@ def test_json_model_operations(
     assert (f + 1).contents == 2
 
 
-def test_json_known_bug():
-    c = JsonDictOfDictsModel({'a': {'b': {'c': 123}}})
-
-    with pytest.raises(ValidationError):
-        c['a'] = [123, 434]
-
-    assert c.to_data() == {'a': {'b': {'c': 123}}}
-
-    c = JsonDictOfDictsModel({'a': {'b': {'c': 123}}})
-
-    # with pytest.raises(ValidationError):
-    c['a'] = []
-
-    assert c.to_data() == {'a': {}}
+def run():
+    from .cases import json_data
+    test_json_models(json_data.case_json_more_specific_types())
