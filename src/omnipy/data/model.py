@@ -1213,11 +1213,16 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def __getattr__(self, attr: str) -> Any:
         contents_attr = self._getattr_from_contents_obj(attr)
 
+        reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
+
+        if self._is_non_omnipy_pydantic_model():
+            if self._contents_obj_hasattr(attr):
+                self._validate_and_set_value(self.contents, reset_solution=reset_solution)
+
         is_property = False
         with suppress(AttributeError):
-            if not self._is_non_omnipy_pydantic_model():
-                contents_cls_attr = self._getattr_from_contents_cls(attr)
-                is_property = isinstance(contents_cls_attr, property)
+            contents_cls_attr = self._getattr_from_contents_cls(attr)
+            is_property = isinstance(contents_cls_attr, property)
 
         reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
         contents_attr = self._getattr_from_contents_obj(attr)
@@ -1247,11 +1252,11 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         return contents_attr
 
-    def _is_pure_pydantic_model(self) -> bool:
-        return is_pure_pydantic_model(self._get_real_contents())
-
     def _is_non_omnipy_pydantic_model(self) -> bool:
         return is_non_omnipy_pydantic_model(self._get_real_contents())
+
+    def _contents_obj_hasattr(self, attr) -> object:
+        return hasattr(self._get_real_contents(), attr)
 
     def _getattr_from_contents_obj(self, attr) -> object:
         return getattr(self._get_real_contents(), attr)
