@@ -8,12 +8,15 @@ from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
                               ConfigPersistOutputsOptions,
                               ConfigRestoreOutputsOptions,
                               EngineChoice)
-from omnipy.api.protocols.public.hub import IsRuntime
+from omnipy.api.protocols.public.hub import IsRuntime, IsRuntimeConfig
 from omnipy.config.data import DataConfig
-from omnipy.data.serializer import SerializerRegistry
+from omnipy.data.data_class_creator import DataClassBase
 from omnipy.hub.runtime import RuntimeConfig, RuntimeObjects
 
-from .helpers.mocks import (MockJobConfig,
+from .helpers.mocks import (MockDataClassCreator,
+                            MockDataClassCreator2,
+                            MockDataConfig,
+                            MockJobConfig,
                             MockJobCreator,
                             MockJobCreator2,
                             MockLocalRunner,
@@ -31,7 +34,7 @@ from .helpers.mocks import (MockJobConfig,
                             MockRunStateRegistry2)
 
 
-def _assert_runtime_config_default(config: RuntimeConfig, dir_path: str):
+def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
     from omnipy.config.job import JobConfig
 
@@ -46,53 +49,78 @@ def _assert_runtime_config_default(config: RuntimeConfig, dir_path: str):
            ConfigRestoreOutputsOptions.DISABLED
     assert config.job.output_storage.protocol == \
            ConfigOutputStorageProtocolOptions.LOCAL
-    assert config.job.output_storage.local.persist_data_dir_path == \
-           os.path.join(dir_path, 'outputs')
+    assert config.job.output_storage.local.persist_data_dir_path == str(dir_path / 'outputs')
     assert config.job.output_storage.s3.persist_data_dir_path == os.path.join('omnipy', 'outputs')
     assert config.job.output_storage.s3.endpoint_url == ''
     assert config.job.output_storage.s3.bucket_name == ''
     assert config.job.output_storage.s3.access_key == ''
     assert config.job.output_storage.s3.secret_key == ''
     assert config.data.interactive_mode is True
+    assert config.data.dynamically_convert_elements_to_models is False
     assert config.data.terminal_size_columns == 80
     assert config.data.terminal_size_lines == 24
     assert config.engine == EngineChoice.LOCAL
     assert config.prefect.use_cached_results is False
 
 
-def _assert_runtime_objects_default(objects: RuntimeObjects, config: RuntimeConfig):
+def _assert_runtime_objects_default(objects: RuntimeObjects):
     from omnipy.compute.job import JobBase
     from omnipy.compute.job_creator import JobCreator
+    from omnipy.data.data_class_creator import DataClassBase, DataClassCreator
+    from omnipy.data.serializer import SerializerRegistry
     from omnipy.engine.local import LocalRunner
+    from omnipy.hub.root_log import RootLogObjects
     from omnipy.log.registry import RunStateRegistry
     from omnipy.modules.prefect.engine.prefect import PrefectEngine
 
     assert isinstance(objects.job_creator, JobCreator)
     assert objects.job_creator is JobBase.job_creator
 
-    # TODO: add level "objects.engine" ?
+    assert isinstance(objects.data_class_creator, DataClassCreator)
+    assert objects.data_class_creator is DataClassBase.data_class_creator
+
     assert isinstance(objects.local, LocalRunner)
     assert isinstance(objects.prefect, PrefectEngine)
-
     assert isinstance(objects.registry, RunStateRegistry)
     assert isinstance(objects.serializers, SerializerRegistry)
 
+    assert isinstance(objects.root_log, RootLogObjects)
+    assert isinstance(objects.waiting_for_terminal_repr, bool)
+
 
 def test_config_default(teardown_rm_root_log_dir: Annotated[None, pytest.fixture]) -> None:
-    _assert_runtime_config_default(RuntimeConfig(), str(Path.cwd()))
+    _assert_runtime_config_default(RuntimeConfig(), Path.cwd())
 
 
 def test_objects_default(teardown_rm_root_log_dir: Annotated[None, pytest.fixture]) -> None:
-    _assert_runtime_objects_default(RuntimeObjects(), RuntimeConfig())
+    _assert_runtime_objects_default(RuntimeObjects())
 
 
-def test_default_config(runtime: Annotated[IsRuntime, pytest.fixture],
-                        tmp_dir_path: Annotated[str, pytest.fixture]) -> None:
+def test_default_runtime(runtime: Annotated[IsRuntime, pytest.fixture],
+                         tmp_dir_path: Annotated[Path, pytest.fixture]) -> None:
     assert isinstance(runtime.config, RuntimeConfig)
     assert isinstance(runtime.objects, RuntimeObjects)
 
     _assert_runtime_config_default(runtime.config, tmp_dir_path)
-    _assert_runtime_objects_default(runtime.objects, runtime.config)
+    _assert_runtime_objects_default(runtime.objects)
+
+
+def test_runtime_config_after_data_class_creator(
+        runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
+    DataClassBase.data_class_creator.config.dynamically_convert_elements_to_models = True
+    DataClassBase.data_class_creator.config.terminal_size_columns = 100
+
+    runtime = runtime_cls()
+
+    assert runtime.config.data.dynamically_convert_elements_to_models is True
+    assert runtime.config.data.terminal_size_columns == 100
+
+    runtime.config.reset_to_defaults()
+
+    _assert_runtime_config_default(runtime.config, Path.cwd())
+
+    assert DataClassBase.data_class_creator.config.dynamically_convert_elements_to_models is False
+    assert DataClassBase.data_class_creator.config.terminal_size_columns == 80
 
 
 def test_engines_subscribe_to_registry(
@@ -286,3 +314,31 @@ def test_job_creator_subscribe_to_job_config(
 
     runtime.objects.job_creator = MockJobCreator2()
     assert runtime.config.job is mock_job_config_2
+
+
+def test_data_class_creator_subscribe_to_data_config(
+        runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
+    mock_data_class_creator = MockDataClassCreator()
+    mock_data_config = MockDataConfig(interactive_mode=False)
+    runtime = runtime_cls(
+        objects=RuntimeObjects(data_class_creator=mock_data_class_creator),
+        config=RuntimeConfig(data=mock_data_config),
+    )
+    assert runtime.objects.data_class_creator.config is runtime.config.data is mock_data_config
+    assert runtime.objects.data_class_creator.config.interactive_mode is False
+
+    runtime.config.data.interactive_mode = True
+    assert runtime.objects.data_class_creator.config.interactive_mode is True
+
+    mock_data_config_2 = MockDataConfig(interactive_mode=False)
+    assert mock_data_config_2 is not mock_data_config
+    runtime.config.data = mock_data_config_2
+    assert runtime.objects.data_class_creator.config is runtime.config.data is mock_data_config_2
+    assert runtime.objects.data_class_creator.config.interactive_mode is False
+
+    runtime.objects.data_class_creator = MockDataClassCreator()
+    assert runtime.objects.data_class_creator.config is runtime.config.data is mock_data_config_2
+    assert runtime.objects.data_class_creator.config.interactive_mode is False
+
+    runtime.objects.data_class_creator = MockDataClassCreator2()
+    assert runtime.config.data is mock_data_config_2

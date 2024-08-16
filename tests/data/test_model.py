@@ -1239,6 +1239,7 @@ def test_mimic_simple_list_operator_with_convert_known_issue(
     dyn_convert: bool,
 ) -> None:
     runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
+    runtime.config.data.interactive_mode = True
 
     model = Model[list[int]]([0])
 

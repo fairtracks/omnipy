@@ -13,7 +13,7 @@ from omnipy.api.protocols.public.config import (IsEngineConfig,
 from omnipy.api.protocols.public.engine import IsTaskRunnerEngine
 
 
-class MockIsJobConfig(Protocol):
+class IsMockJobConfig(Protocol):
     persist_outputs: bool = True
     restore_outputs: bool = False
 
@@ -27,16 +27,37 @@ class MockJobConfig:
 class MockJobCreator:
     def __init__(self) -> None:
         self.engine: IsTaskRunnerEngine | None = None
-        self.config: MockIsJobConfig = MockJobConfig()
+        self.config: IsMockJobConfig = MockJobConfig()
 
     def set_engine(self, engine: IsTaskRunnerEngine) -> None:
         self.engine = engine
 
-    def set_config(self, config: MockIsJobConfig) -> None:
+    def set_config(self, config: IsMockJobConfig) -> None:
         self.config = config
 
 
 class MockJobCreator2(MockJobCreator):
+    ...
+
+
+class IsMockDataConfig(Protocol):
+    interactive_mode: bool = True
+
+
+@dataclass
+class MockDataConfig:
+    interactive_mode: bool = True
+
+
+class MockDataClassCreator:
+    def __init__(self) -> None:
+        self.config: IsMockDataConfig = MockDataConfig()
+
+    def set_config(self, config: IsMockDataConfig) -> None:
+        self.config = config
+
+
+class MockDataClassCreator2(MockDataClassCreator):
     ...
 
 

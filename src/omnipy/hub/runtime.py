@@ -3,6 +3,7 @@ from typing import Any
 
 from omnipy.api.enums import EngineChoice
 from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
+from omnipy.api.protocols.private.data import IsDataClassCreator
 from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.private.log import IsRunStateRegistry
 from omnipy.api.protocols.public.config import (IsDataConfig,
@@ -17,12 +18,13 @@ from omnipy.compute.job import JobBase
 from omnipy.config.data import DataConfig
 from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import JobConfig
+from omnipy.data.data_class_creator import DataClassBase
 from omnipy.data.serializer import SerializerRegistry
-from omnipy.engine.local import LocalRunner
+from omnipy.engine.local import LocalRunner, LocalRunnerConfigEntryPublisher
 from omnipy.hub.entry import DataPublisher, RuntimeEntryPublisher
 from omnipy.hub.root_log import RootLogConfigEntryPublisher, RootLogObjects
 from omnipy.log.registry import RunStateRegistry
-from omnipy.modules.prefect.engine.prefect import PrefectEngine
+from omnipy.modules.prefect.engine.prefect import PrefectEngine, PrefectEngineConfigEntryPublisher
 from omnipy.util.helpers import called_from_omnipy_tests
 
 
@@ -30,19 +32,43 @@ def _job_creator_factory():
     return JobBase.job_creator
 
 
+def _data_class_creator_factory():
+    return DataClassBase.data_class_creator
+
+
+def _data_config_factory():
+    return _data_class_creator_factory().config
+
+
 @dataclass
 class RuntimeConfig(RuntimeEntryPublisher):
     job: IsJobConfig = field(default_factory=JobConfig)
-    data: IsDataConfig = field(default_factory=DataConfig)
+    data: IsDataConfig = field(default_factory=_data_config_factory)
     engine: EngineChoice = EngineChoice.LOCAL
-    local: IsLocalRunnerConfig = field(default_factory=LocalRunnerConfig)
-    prefect: IsPrefectEngineConfig = field(default_factory=PrefectEngineConfig)
+    local: IsLocalRunnerConfig = field(default_factory=LocalRunnerConfigEntryPublisher)
+    prefect: IsPrefectEngineConfig = field(default_factory=PrefectEngineConfigEntryPublisher)
     root_log: IsRootLogConfig = field(default_factory=RootLogConfigEntryPublisher)
+
+    def reset_to_defaults(self) -> None:
+        prev_back = self._back
+        self._back = None
+
+        self.job = JobConfig()
+        self.data = DataConfig()
+        self.engine = EngineChoice.LOCAL
+        self.local = LocalRunnerConfigEntryPublisher()
+        self.prefect = PrefectEngineConfigEntryPublisher()
+        self.root_log = RootLogConfigEntryPublisher()
+
+        self._back = prev_back
+        if self._back is not None:
+            self._back.reset_subscriptions()
 
 
 @dataclass
 class RuntimeObjects(RuntimeEntryPublisher):
     job_creator: IsJobConfigHolder = field(default_factory=_job_creator_factory)
+    data_class_creator: IsDataClassCreator = field(default_factory=_data_class_creator_factory)
     local: IsEngine = field(default_factory=LocalRunner)
     prefect: IsEngine = field(default_factory=PrefectEngine)
     registry: IsRunStateRegistry = field(default_factory=RunStateRegistry)
@@ -59,10 +85,6 @@ class Runtime(DataPublisher):
     def __post_init__(self):
         super().__init__()
 
-        self.config._back = self
-        self.config.root_log._back = self
-        self.objects._back = self
-
         self.reset_subscriptions()
 
     def reset_subscriptions(self):
@@ -72,10 +94,14 @@ class Runtime(DataPublisher):
         This function unsubscribes all existing subscriptions and then sets up new subscriptions
         for the `config` and `objects` members.
         """
+
+        self.reset_backlinks()
+
         self.config.unsubscribe_all()
         self.objects.unsubscribe_all()
 
         self.config.subscribe('job', self.objects.job_creator.set_config)
+        self.config.subscribe('data', self.objects.data_class_creator.set_config)
         self.config.subscribe('local', self.objects.local.set_config)
         self.config.subscribe('prefect', self.objects.prefect.set_config)
         self.config.subscribe('root_log', self.objects.root_log.set_config)
@@ -89,6 +115,13 @@ class Runtime(DataPublisher):
 
         self.objects.subscribe('local', self._update_local_runner_config)
         self.objects.subscribe('prefect', self._update_prefect_engine_config)
+
+    def reset_backlinks(self):
+        self.config._back = self
+        self.config.local._back = self
+        self.config.prefect._back = self
+        self.config.root_log._back = self
+        self.objects._back = self
 
     def _get_engine_config(self, engine_choice: EngineChoice):
         return getattr(self.config, engine_choice)

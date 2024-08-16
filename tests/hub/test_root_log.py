@@ -20,7 +20,7 @@ from omnipy.util.helpers import get_datetime_format
 from ..log.helpers.functions import assert_log_lines_from_stream
 
 
-def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: str):
+def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: Path):
     assert isinstance(root_log, RootLogConfig)
     assert isinstance(root_log.locale, (str, tuple))
 
@@ -31,7 +31,7 @@ def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: str):
     assert root_log.stdout_log_min_level == logging.INFO
     assert root_log.stderr_log_min_level == logging.ERROR
     assert root_log.file_log_min_level == logging.WARNING
-    assert root_log.file_log_dir_path == os.path.join(dir_path, 'logs')
+    assert root_log.file_log_dir_path == str(dir_path / 'logs')
 
 
 def _log_record_for_level(level: int, datetime_obj: datetime | None = None):
@@ -130,7 +130,7 @@ def _assert_root_log_objects(
 
 
 def test_root_log_config_default(teardown_rm_root_log_dir: Annotated[None, pytest.fixture]) -> None:
-    _assert_root_log_config_default(RootLogConfig(), str(Path.cwd()))
+    _assert_root_log_config_default(RootLogConfig(), Path.cwd())
 
 
 def test_root_log_objects_default(
@@ -140,7 +140,7 @@ def test_root_log_objects_default(
 
 def test_runtime_root_log_config(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    tmp_dir_path: Annotated[str, pytest.fixture],
+    tmp_dir_path: Annotated[Path, pytest.fixture],
 ) -> None:
     assert isinstance(runtime.config.root_log, RootLogConfig)
     assert isinstance(runtime.objects.root_log, RootLogObjects)
@@ -150,7 +150,7 @@ def test_runtime_root_log_config(
 
 
 def test_root_log_config_dependencies(runtime: Annotated[IsRuntime, pytest.fixture],
-                                      tmp_dir_path: Annotated[str, pytest.fixture]) -> None:
+                                      tmp_dir_path: Annotated[Path, pytest.fixture]) -> None:
     runtime.config.root_log.log_to_stdout = False
     runtime.config.root_log.log_to_stderr = False
 
@@ -189,7 +189,7 @@ def test_root_log_config_dependencies(runtime: Annotated[IsRuntime, pytest.fixtu
 
     runtime.config.root_log.log_to_file = True
     runtime.config.root_log.file_log_min_level = logging.INFO
-    runtime.config.root_log.file_log_dir_path = str(Path(tmp_dir_path).joinpath('extra_level'))
+    runtime.config.root_log.file_log_dir_path = str(tmp_dir_path / 'extra_level')
 
     _assert_root_file_handler(runtime.objects.root_log.file_handler, runtime.config.root_log)
 

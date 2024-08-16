@@ -37,6 +37,7 @@ from pydantic.utils import lenient_isinstance, lenient_issubclass
 from omnipy.api.exceptions import ParamException
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.methodinfo import MethodInfo, SPECIAL_METHODS_INFO
+from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.util.contexts import AttribHolder, LastErrorHolder, nothing
 from omnipy.util.decorators import add_callback_after_call, no_context
 from omnipy.util.helpers import (all_equals,
@@ -101,11 +102,6 @@ def _cleanup_name_qualname_and_module(cls, created_model_or_dataset, model, orig
     created_model_or_dataset.__module__ = cls.__module__
 
 
-def _is_interactive_mode() -> bool:
-    from omnipy.hub.runtime import runtime
-    return runtime.config.data.interactive_mode if runtime else True
-
-
 def _get_terminal_size() -> os.terminal_size:
     from omnipy.hub.runtime import runtime
 
@@ -130,7 +126,7 @@ def _waiting_for_terminal_repr(new_value: bool | None = None) -> bool:
 
 def is_model_instance(obj: object) -> bool:
     return lenient_isinstance(obj, Model) \
-        and not is_none_type(obj)  # Consequence of MyModelMetaclass hack
+        and not is_none_type(obj)  # Consequence of _ModelMetaclass hack
 
 
 # def orjson_dumps(v, *, default):
@@ -140,7 +136,7 @@ def is_model_instance(obj: object) -> bool:
 _restorable_content_cache: dict[int, RestorableContents] = {}
 
 
-class MyModelMetaclass(ModelMetaclass):
+class _ModelMetaclass(ModelMetaclass, DataClassBaseMeta):
     # Hack to overcome bug in pydantic/fields.py (v1.10.13), lines 636-641:
     #
     # if origin is None or origin is CollectionsHashable:
@@ -154,14 +150,14 @@ class MyModelMetaclass(ModelMetaclass):
     # subfields, e.g. in `list[MyModel]` as `get_origin(MyModel) is None`. Here, we want allow_none
     # to be set to True so that Model is allowed to validate a None value.
     #
-    # TODO: Revisit the need for MyModelMetaclass hack in pydantic v2
+    # TODO: Revisit the need for _ModelMetaclass hack in pydantic v2
     def __instancecheck__(self, instance: Any) -> bool:
         if instance is None:
             return True
         return super().__instancecheck__(instance)
 
 
-class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
+class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetaclass):
     """
     A data model containing a value parsed according to the model.
 
@@ -869,7 +865,7 @@ class Model(GenericModel, Generic[_RootT], metaclass=MyModelMetaclass):
             and self.to_data() == cast(Model, other).to_data()  # last line is just in case
 
     def __repr__(self) -> str:
-        if _is_interactive_mode() and not _waiting_for_terminal_repr():
+        if self.config.interactive_mode and not _waiting_for_terminal_repr():
             if get_calling_module_name() in INTERACTIVE_MODULES:
                 _waiting_for_terminal_repr(True)
                 return self._table_repr()
