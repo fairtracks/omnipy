@@ -21,11 +21,11 @@ import pytest
 
 from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.public.hub import IsRuntime
-from omnipy.api.typedefs import TypeForm
 from omnipy.data.model import Model
 from omnipy.modules.general.typedefs import FrozenDict
 from omnipy.util.helpers import ensure_plain_type
 
+from ..helpers.functions import assert_model, assert_model_or_val, assert_val  # type: ignore[misc]
 from .helpers.models import (DefaultStrModel,
                              ListOfUpperStrModel,
                              LiteralFiveModel,
@@ -1176,28 +1176,6 @@ def test_model_of_pydantic_model() -> None:
     }
 
 
-def _assert_model(model: object, target_type: TypeForm, contents: object):
-    assert isinstance(model, Model)
-    assert model.outer_type(with_args=True) == target_type
-    assert model.contents == contents
-
-
-def _assert_val(value: object, target_type: TypeForm, contents: object):
-    assert not isinstance(value, Model)
-    assert isinstance(value, ensure_plain_type(target_type))
-    assert value == contents
-
-
-def _assert_model_or_val(dyn_convert: bool,
-                         model_or_val: object,
-                         target_type: TypeForm,
-                         contents: object):
-    if dyn_convert:
-        _assert_model(model_or_val, target_type, contents)
-    else:
-        _assert_val(model_or_val, target_type, contents)
-
-
 @pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_simple_list_operations(
     runtime: Annotated[IsRuntime, pytest.fixture],
@@ -1211,32 +1189,32 @@ def test_mimic_simple_list_operations(
     model.append(123)
     assert len(model) == 1
 
-    _assert_model(model, list[int], [123])
-    _assert_model_or_val(dyn_convert, model[0], int, 123)  # type: ignore[index]
+    assert_model(model, list[int], [123])
+    assert_model_or_val(dyn_convert, model[0], int, 123)  # type: ignore[index]
 
     model += [234, 345, 456]  # type: ignore[operator]
     assert len(model) == 4
 
-    _assert_model_or_val(dyn_convert, model[-1], int, 456)  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model[1:-1], list[int], [234, 345])  # type: ignore[index]
+    assert_model_or_val(dyn_convert, model[-1], int, 456)  # type: ignore[index]
+    assert_model(model[1:-1], list[int], [234, 345])  # type: ignore[index]
 
     assert tuple(reversed(model)) == (456, 345, 234, 123)
 
     model[2] = 432
     model[3] = '654'
 
-    _assert_model_or_val(dyn_convert, model[2], int, 432)  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model[3], int, 654)  # type: ignore[index]
+    assert_model_or_val(dyn_convert, model[2], int, 432)  # type: ignore[index]
+    assert_model_or_val(dyn_convert, model[3], int, 654)  # type: ignore[index]
 
     with pytest.raises(ValidationError):
         model[0] = 'bacon'
 
-    _assert_model_or_val(dyn_convert, model[1], int, 234)  # type: ignore[index]
+    assert_model_or_val(dyn_convert, model[1], int, 234)  # type: ignore[index]
 
     model[1] /= 2  # type: ignore[index]
 
-    _assert_model_or_val(dyn_convert, model[1], int, 117)  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model, list[int], [123, 117, 432, 654])
+    assert_model_or_val(dyn_convert, model[1], int, 117)  # type: ignore[index]
+    assert_model(model, list[int], [123, 117, 432, 654])
 
     assert model.index(432) == 2
 
@@ -1266,13 +1244,13 @@ def test_mimic_simple_list_operator_with_convert_known_issue(
 
     model[0] += '42'  # type: ignore[index]
 
-    _assert_model_or_val(dyn_convert, model[0], int, 42)  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model, list[int], [42])
+    assert_model_or_val(dyn_convert, model[0], int, 42)  # type: ignore[index]
+    assert_model_or_val(dyn_convert, model, list[int], [42])
 
     model[0] -= Model[int]('42')  # type: ignore[index]
 
-    _assert_model_or_val(dyn_convert, model[0], int, 0)  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model, list[int], [0])
+    assert_model_or_val(dyn_convert, model[0], int, 0)  # type: ignore[index]
+    assert_model_or_val(dyn_convert, model, list[int], [0])
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
@@ -1301,52 +1279,52 @@ def test_mimic_nested_list_operations(
 
     model[-1] = tuple(range(3))
 
-    _assert_model_or_val(dyn_convert, model, list[int | list[int]], [123, 234, [0, 1, 2]])
-    _assert_model_or_val(dyn_convert, model[0], int, 123)  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model[-1], list[int], [0, 1, 2])  # type: ignore[index]
+    assert_model(model, list[int | list[int]], [123, 234, [0, 1, 2]])
+    assert_model_or_val(dyn_convert, model[0], int, 123)  # type: ignore[index]
+    assert_model_or_val(dyn_convert, model[-1], list[int], [0, 1, 2])  # type: ignore[index]
 
     if dyn_convert:
         with pytest.raises(ValidationError):
             model[-1].append(tuple(range(3)))  # type: ignore[index]
 
         assert len(model[-1]) == 3  # type: ignore[index]
-        _assert_model(model[-1], list[int], [0, 1, 2])  # type: ignore[index]
-        _assert_model(model[-1][-1], int, 2)  # type: ignore[index]
+        assert_model(model[-1], list[int], [0, 1, 2])  # type: ignore[index]
+        assert_model(model[-1][-1], int, 2)  # type: ignore[index]
 
         with pytest.raises(ValidationError):
             model[-1][-1] = 'a'  # type: ignore[index]
 
-        _assert_model(model[-1][-1], int, 2)  # type: ignore[index]
+        assert_model(model[-1][-1], int, 2)  # type: ignore[index]
     else:
         model[-1].append(tuple(range(3)))  # type: ignore[index]
 
         assert len(model[-1]) == 4  # type: ignore[index]
-        _assert_val(model[-1], list, [0, 1, 2, (0, 1, 2)])  # type: ignore[index]
-        _assert_val(model[-1][-1], tuple, (0, 1, 2))  # type: ignore[index]
+        assert_val(model[-1], list, [0, 1, 2, (0, 1, 2)])  # type: ignore[index]
+        assert_val(model[-1][-1], tuple, (0, 1, 2))  # type: ignore[index]
 
         with pytest.raises(TypeError):  # tuple, not list
             model[-1][-1][-1] = 15  # type: ignore[index]
 
     model[0] = [0, 2]
-    _assert_model_or_val(dyn_convert, model[0], list[int], [0, 2])  # type: ignore[index]
+    assert_model_or_val(dyn_convert, model[0], list[int], [0, 2])  # type: ignore[index]
 
     # Here the `model[-1] +=` operation is a series of `__get__`, `__iadd__`, and `__set__`
     # operations, with the `__get__` and `__set__` operating on the "parent" model object.
     # In contrast, the `append()` method only operates on the child level.
     with pytest.raises(ValidationError):
         model[0] += ('a',)  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model[0], list[int], [0, 2])  # type: ignore[index]
+    assert_model_or_val(dyn_convert, model[0], list[int], [0, 2])  # type: ignore[index]
 
     if dyn_convert:
         with pytest.raises(ValidationError):
             model[0].append('a')  # type: ignore[index]
-        _assert_model(model[0], list[int], [0, 2])  # type: ignore[index]
+        assert_model(model[0], list[int], [0, 2])  # type: ignore[index]
     else:
         model[0].append('a')  # type: ignore[index]
-        _assert_val(model[0], list, [0, 2, 'a'])  # type: ignore[index]
+        assert_val(model[0], list, [0, 2, 'a'])  # type: ignore[index]
 
     two_as_bytes = model[0][-1].to_bytes(4, byteorder='little')  # type: ignore[index]
-    _assert_val(two_as_bytes, bytes, b'\x02\x00\x00\x00')
+    assert_val(two_as_bytes, bytes, b'\x02\x00\x00\x00')
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
@@ -1359,7 +1337,7 @@ def test_model_operations_as_dict(
     model = Model[dict[str, int]]({'abc': 123})
 
     assert len(model) == 1
-    _assert_model_or_val(dyn_convert, model['abc'], int, 123)  # type: ignore[index]
+    assert_model_or_val(dyn_convert, model['abc'], int, 123)  # type: ignore[index]
 
     model['abc'] = 321
     model['bcd'] = 234
@@ -1372,20 +1350,20 @@ def test_model_operations_as_dict(
     assert 'def' not in model  # type: ignore[operator]
 
     assert len(model) == 3
-    _assert_model_or_val(dyn_convert, model, dict[str, int], {'abc': 321, 'bcd': 234, 'cde': 345})
-    _assert_model_or_val(dyn_convert, model['abc'], int, 321)  # type: ignore[index]
+    assert_model(model, dict[str, int], {'abc': 321, 'bcd': 234, 'cde': 345})
+    assert_model_or_val(dyn_convert, model['abc'], int, 321)  # type: ignore[index]
 
     model.update({'def': 456, 'efg': 567})
     assert 'def' in model  # type: ignore[operator]
-    _assert_model_or_val(dyn_convert, model['def'], int, 456)  # type: ignore[index]
+    assert_model_or_val(dyn_convert, model['def'], int, 456)  # type: ignore[index]
 
     model |= {'efg': 765, 'ghi': 678}  # type: ignore[operator]
-    _assert_model_or_val(dyn_convert, model['efg'], int, 765)  # type: ignore[index]
+    assert_model_or_val(dyn_convert, model['efg'], int, 765)  # type: ignore[index]
 
     del model['bcd']
 
     other = {'abc': 321, 'cde': 345, 'def': 456, 'efg': 765, 'ghi': 678}
-    _assert_model_or_val(dyn_convert, model, dict[str, int], other)
+    assert_model(model, dict[str, int], other)
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
@@ -1408,14 +1386,14 @@ def test_mimic_nested_dict_operations(
 
     # empty list is parsed as empty dict in pydantic v1
     model['a'] = []
-    _assert_model_or_val(dyn_convert, model, dict[str, dict[int, int] | int], {'a': {}})
+    assert_model(model, dict[str, dict[int, int] | int], {'a': {}})
 
     with pytest.raises(ValidationError):
         model['a'] = {'abc': 'bce'}
 
     model['a'] = {'14': '456'}
-    _assert_model_or_val(dyn_convert, model, dict[str, dict[int, int] | int], {'a': {14: 456}})
-    _assert_model_or_val(dyn_convert, model['a'], dict[int, int], {14: 456})  # type: ignore[index]
+    assert_model(model, dict[str, dict[int, int] | int], {'a': {14: 456}})
+    assert_model_or_val(dyn_convert, model['a'], dict[int, int], {14: 456})  # type: ignore[index]
 
     if dyn_convert:
         submodel_a = model['a']  # type: ignore[index]
@@ -1424,7 +1402,7 @@ def test_mimic_nested_dict_operations(
             submodel_a.update({'14': '654', '15': {'a': 'b'}})
 
         assert len(submodel_a) == 1
-        _assert_model(submodel_a, dict[int, int], {14: 456})
+        assert_model(submodel_a, dict[int, int], {14: 456})
     else:
         subdict_a = model['a']  # type: ignore[index]
 
@@ -1432,7 +1410,7 @@ def test_mimic_nested_dict_operations(
         subdict_a.update({'14': '654', '15': {'a': 'b'}})
 
         assert len(subdict_a) == 2
-        _assert_val(subdict_a, dict, {14: 654, 15: {'a': 'b'}})
+        assert_val(subdict_a, dict, {14: 654, 15: {'a': 'b'}})
 
     # Changes above have all been made on copies, see
     # test_mimic_doubly_nested_nonmodel_containers_are_copies_known_issue()
@@ -1441,8 +1419,8 @@ def test_mimic_nested_dict_operations(
     # Same with updates directly on model['a']
     model['a'].update({'14': '654', '15': '333'})  # type: ignore[index]
     assert len(model['a']) == 1  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model['a'], dict[int, int], {14: 456})  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model, dict[str, dict[int, int] | int], {'a': {14: 456}})
+    assert_model_or_val(dyn_convert, model['a'], dict[int, int], {14: 456})  # type: ignore[index]
+    assert_model_or_val(dyn_convert, model, dict[str, dict[int, int] | int], {'a': {14: 456}})
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
@@ -1455,7 +1433,7 @@ def test_mimic_list_and_dict_iterators(
     list_model = Model[list[int]]([0, 1, 2])
 
     for i, el in enumerate(list_model):
-        _assert_model_or_val(dyn_convert, el, int, i)
+        assert_model_or_val(dyn_convert, el, int, i)
 
     dict_model = Model[dict[int, str]]({0: 'abc', 1: 'bcd', 2: 'cde'})
 
@@ -1466,7 +1444,7 @@ def test_mimic_list_and_dict_iterators(
                                          Model[tuple[int, str]]((2, 'cde')))
 
     for i, key in enumerate(dict_model):
-        _assert_model_or_val(dyn_convert, key, int, i)
+        assert_model_or_val(dyn_convert, key, int, i)
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
@@ -1477,24 +1455,24 @@ def test_mimic_doubly_nested_nonmodel_containers_are_copies_known_issue(
     runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
     list_model = Model[list[list[int]]]([[4]])
-    _assert_model_or_val(dyn_convert, list_model[0], list[int], [4])  # type: ignore[index]
+    assert_model_or_val(dyn_convert, list_model[0], list[int], [4])  # type: ignore[index]
 
     inner_list_model = list_model[0]  # type: ignore[index]
     inner_list_model.append(5)
 
-    _assert_model_or_val(dyn_convert, inner_list_model, list[int], [4, 5])
-    _assert_model_or_val(dyn_convert, list_model[0], list[int], [4])  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, list_model, list[list[int]], [[4]])
+    assert_model_or_val(dyn_convert, inner_list_model, list[int], [4, 5])
+    assert_model_or_val(dyn_convert, list_model[0], list[int], [4])  # type: ignore[index]
+    assert_model_or_val(dyn_convert, list_model, list[list[int]], [[4]])
 
     dict_model = Model[dict[int, dict[int, int]]]({0: {1: 1}})
-    _assert_model_or_val(dyn_convert, dict_model[0], dict[int, int], {1: 1})  # type: ignore[index]
+    assert_model_or_val(dyn_convert, dict_model[0], dict[int, int], {1: 1})  # type: ignore[index]
 
     inner_dict_model = dict_model[0]  # type: ignore[index]
     inner_dict_model.update({2: 2})
 
-    _assert_model_or_val(dyn_convert, inner_dict_model, dict[int, int], {1: 1, 2: 2})
-    _assert_model_or_val(dyn_convert, dict_model[0], dict[int, int], {1: 1})  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, dict_model, dict[int, dict[int, int]], {0: {1: 1}})
+    assert_model_or_val(dyn_convert, inner_dict_model, dict[int, int], {1: 1, 2: 2})
+    assert_model_or_val(dyn_convert, dict_model[0], dict[int, int], {1: 1})  # type: ignore[index]
+    assert_model_or_val(dyn_convert, dict_model, dict[int, dict[int, int]], {0: {1: 1}})
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
@@ -1522,27 +1500,27 @@ def test_mimic_nested_list_operations_with_model_subclass_containers(
         len(model[0])
 
     if dyn_convert:
-        _assert_model(
+        assert_model(
             model,
             list[MyListOrIntModel],
             [MyListOrIntModel(123), MyListOrIntModel(234), MyListOrIntModel([0, 1, 2])],
         )
-        _assert_model(
+        assert_model(
             model[-1],  # type: ignore[index]
             list[int] | int,
             [0, 1, 2],
         )
-        _assert_model(model[-1][-1], int, 2)  # type: ignore[index]
+        assert_model(model[-1][-1], int, 2)  # type: ignore[index]
     else:
-        _assert_val(model, list[MyListOrIntModel], [123, 234, [0, 1, 2]])
-        _assert_val(model[-1], MyListOrIntModel, [0, 1, 2])  # type: ignore[index]
-        _assert_val(model[-1][-1], int, 2)  # type: ignore[index]
+        assert_val(model, list[MyListOrIntModel], [123, 234, [0, 1, 2]])
+        assert_val(model[-1], MyListOrIntModel, [0, 1, 2])  # type: ignore[index]
+        assert_val(model[-1][-1], int, 2)  # type: ignore[index]
 
     class MyListDoubleModel(Model[Model[list[int]]]):
         ...
 
     double_model = MyListDoubleModel([123])
-    _assert_model_or_val(dyn_convert, double_model[0], int, 123)  # type: ignore[index]
+    assert_model_or_val(dyn_convert, double_model[0], int, 123)  # type: ignore[index]
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
@@ -1572,7 +1550,7 @@ def test_mimic_nested_dict_operations_with_model_containers(
         model['a'] = ['abc']
 
     model['a'] = []
-    _assert_model_or_val(dyn_convert, model['a'], SecondLvl, {})  # type: ignore[index]
+    assert_model(model['a'], SecondLvl, {})  # type: ignore[index]
 
     with pytest.raises(ValidationError):
         model['a'] = {'abc': 'bce'}
@@ -1580,8 +1558,8 @@ def test_mimic_nested_dict_operations_with_model_containers(
     model['a'] = {'14': '456'}
     assert model.to_data() == ({'a': {14: 456}})
 
-    _assert_model_or_val(dyn_convert, model, FirstLvl, {'a': Model[SecondLvl]({14: 456})})
-    _assert_model_or_val(dyn_convert, model['a'], SecondLvl, {14: 456})  # type: ignore[index]
+    assert_model(model, FirstLvl, {'a': Model[SecondLvl]({14: 456})})
+    assert_model(model['a'], SecondLvl, {14: 456})  # type: ignore[index]
 
     with pytest.raises(ValidationError):
         model['a'].update({'14': '654', '15': {'a': 'b'}})  # type: ignore[index]
@@ -1590,13 +1568,13 @@ def test_mimic_nested_dict_operations_with_model_containers(
         model['a'].update({'14': '654', '15': {'111': {1: 2}}})  # type: ignore[index]
 
     assert len(model['a']) == 1  # type: ignore[index]
-    _assert_model_or_val(dyn_convert, model, FirstLvl, {'a': Model[SecondLvl]({14: 456})})
+    assert_model(model, FirstLvl, {'a': Model[SecondLvl]({14: 456})})
 
     model['a'].update({'14': '654', '15': {'111': 4321}})  # type: ignore[index]
 
     assert len(model['a']) == 2  # type: ignore[index]
     contents_1 = {'a': Model[SecondLvl]({14: 654, 15: Model[ThirdLvl]({111: 4321})})}
-    _assert_model_or_val(dyn_convert, model, FirstLvl, contents_1)
+    assert_model(model, FirstLvl, contents_1)
 
     with pytest.raises(ValidationError):
         model['a'] |= {'16': {'a': 'b'}}  # type: ignore[index]
@@ -1614,7 +1592,7 @@ def test_mimic_nested_dict_operations_with_model_containers(
                 }),
             })
     }
-    _assert_model_or_val(dyn_convert, model, FirstLvl, contents_2)
+    assert_model(model, FirstLvl, contents_2)
 
     with pytest.raises(ValidationError):
         model['a'][15] |= {112: tuple(range(3))}  # type: ignore[index]
@@ -1638,7 +1616,7 @@ def test_mimic_nested_dict_operations_with_model_containers(
             }),
         })
     }
-    _assert_model_or_val(dyn_convert, model, FirstLvl, contents_3)
+    assert_model(model, FirstLvl, contents_3)
 
 
 def test_mimic_doubly_nested_union_known_issue(
@@ -1647,22 +1625,22 @@ def test_mimic_doubly_nested_union_known_issue(
     runtime.config.data.dynamically_convert_elements_to_models = True
 
     list_model = Model[list[list[int]] | list[list[str]]]([[4]])
-    _assert_model(list_model[0], list[int], [4])  # type: ignore[index]
+    assert_model(list_model[0], list[int], [4])  # type: ignore[index]
 
     with pytest.raises(ValidationError):
         list_model[0][0] = 'four'  # type: ignore[index]
 
     list_model[0] = ['four']
-    _assert_model(list_model[0], list[str], ['four'])  # type: ignore[index]
+    assert_model(list_model[0], list[str], ['four'])  # type: ignore[index]
 
     dict_model = Model[dict[int, dict[int, int]] | dict[int, dict[str, str]]]({0: {1: 1}})
-    _assert_model(dict_model[0], dict[int, int], {1: 1})  # type: ignore[index]
+    assert_model(dict_model[0], dict[int, int], {1: 1})  # type: ignore[index]
 
     with pytest.raises(ValidationError):
         dict_model[0][0] = 'zero'  # type: ignore[index]
 
     dict_model[0] = {0: 'zero'}
-    _assert_model(dict_model[0], dict[str, str], {'0': 'zero'})  # type: ignore[index]
+    assert_model(dict_model[0], dict[str, str], {'0': 'zero'})  # type: ignore[index]
 
 
 def test_model_operations_as_scalars() -> None:

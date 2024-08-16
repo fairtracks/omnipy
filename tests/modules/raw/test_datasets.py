@@ -1,10 +1,12 @@
 import os
 from textwrap import dedent
+from typing import Annotated
 
 from pydantic import ValidationError
 import pytest
 
-from omnipy.data.model import Model
+from omnipy.api.protocols.public.hub import IsRuntime
+from omnipy.data.model import DataWithParams, Model
 from omnipy.modules.raw.datasets import (BytesDataset,
                                          JoinColumnsToLinesDataset,
                                          JoinItemsDataset,
@@ -14,6 +16,8 @@ from omnipy.modules.raw.datasets import (BytesDataset,
                                          SplitToLinesDataset,
                                          StrDataset)
 from omnipy.modules.raw.models import JoinItemsModel, SplitToItemsModel
+
+from ...helpers.functions import assert_model, assert_model_or_val  # type: ignore[misc]
 
 
 def test_bytes_dataset():
@@ -47,8 +51,14 @@ def test_str_dataset():
         StrDataset(dict(a=b'\xe6\xf8\xe5'), encoding='my-encoding')
 
 
+@pytest.mark.parametrize('dyn_convert', [False, True])
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
-def test_split_to_and_join_lines_dataset(use_str_model: bool) -> None:
+def test_split_to_and_join_lines_dataset(
+    use_str_model: bool,
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    dyn_convert: bool,
+) -> None:
+    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
     raw_data = """\
         
         Alas, poor Yorick! I knew him, Horatio: a fellow
@@ -64,18 +74,24 @@ def test_split_to_and_join_lines_dataset(use_str_model: bool) -> None:
     data = Model[str](raw_data) if use_str_model else raw_data
 
     lines_stripped = SplitToLinesDataset(dict(monologue=data))
-    assert lines_stripped['monologue'][0].contents == (
-        'Alas, poor Yorick! I knew him, Horatio: a fellow')
+    assert_model_or_val(dyn_convert,
+                        lines_stripped['monologue'][0],
+                        str,
+                        'Alas, poor Yorick! I knew him, Horatio: a fellow')
 
     lines_unstripped = SplitToLinesDataset(dict(monologue=data), strip=False)
-    assert lines_unstripped['monologue'][0].contents == '        '
-    assert lines_unstripped['monologue'][1].contents == (
-        '        Alas, poor Yorick! I knew him, Horatio: a fellow')
-    assert lines_unstripped['monologue'][-1].contents == '        '
+    assert_model_or_val(dyn_convert, lines_unstripped['monologue'][0], str, '        ')
+    assert_model_or_val(dyn_convert,
+                        lines_unstripped['monologue'][1],
+                        str,
+                        '        Alas, poor Yorick! I knew him, Horatio: a fellow')
+    assert_model_or_val(dyn_convert, lines_unstripped['monologue'][-1], str, '        ')
 
     lines_stripped['last_lines'] = lines_stripped['monologue'][3:]
-    assert lines_stripped['last_lines'][-1].contents == (
-        'now, to mock your own grinning? quite chap-fallen.')
+    assert_model_or_val(dyn_convert,
+                        lines_stripped['last_lines'][-1],
+                        str,
+                        'now, to mock your own grinning? quite chap-fallen.')
 
     for data_file, lines in lines_stripped.items():
         lines_stripped[data_file] = lines[0:2]
