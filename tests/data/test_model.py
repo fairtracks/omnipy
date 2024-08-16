@@ -1,4 +1,3 @@
-from copy import copy
 import gc
 from math import floor
 import os
@@ -1735,13 +1734,13 @@ def test_mimic_special_method(
     with pytest.raises(ValidationError):
         model.validate_contents()
 
-    # Deletion is rolled back due as the model does not validate for the snapshot
+    # Deletion is rolled back as the model does not validate for the snapshot
     with pytest.raises(ValidationError):
-        del model[0]
+        del model[-1]
 
     del model.contents[-1]
 
-    # Deletion is still rolled back due as the model still does not validate for the snapshot
+    # Deletion is still rolled back as the model still does not validate for the snapshot
     with pytest.raises(ValidationError):
         del model[0]
 
@@ -1874,6 +1873,7 @@ def test_mimic_simple_dict_operations(
 
     other = {'abc': 321, 'cde': 345, 'def': 456, 'efg': 765, 'ghi': 678}
     assert_model(model, dict[str, int], other)
+
 
 # TODO: Implement automatic conversion for mimicked operations, to allow for e.g.
 #       `Model[int](1) + '1'`
@@ -3477,6 +3477,8 @@ def test_complex_nested_models() -> None:
 def test_pandas_dataframe_non_builtin_direct() -> None:
     # TODO: Using pandas here to test concept of non-builtin data structures. Switch to other
     #  example to remove dependency, to prepare splitting of pandas module to separate repo
+    #
+    # SetDeque() is a good candidate.
 
     import pandas as pd
 

@@ -2,11 +2,12 @@ from typing import Annotated
 
 import pytest
 
-from data.helpers.mocks import MockDataset, MockModel
 from omnipy.api.protocols.public.config import IsDataConfig
 from omnipy.config.data import DataConfig
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta, DataClassCreator
 from omnipy.util.helpers import SnapshotHolder
+
+from .helpers.mocks import MockDataset, MockModel
 
 
 def test_data_class_creator_init():
