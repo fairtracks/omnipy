@@ -40,6 +40,7 @@ from .helpers.models import (DefaultStrModel,
                              MyFloatObjModel,
                              MyNumberBase,
                              MyPydanticModel,
+                             PydanticChildModel,
                              PydanticParentModel,
                              UpperStrModel)
 
@@ -1148,8 +1149,13 @@ def test_import_export_methods() -> None:
 #     assert not isinstance(Model[int | str]('1'), str)
 
 
-def test_model_of_pydantic_model() -> None:
-    model = MyPydanticModel({'@id': 1, 'children': [{'@id': 10, 'value': 1.23}]})
+def test_model_of_pydantic_model_with_pydantic_model_children(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    model = MyPydanticModel[list[PydanticChildModel]]({
+        '@id': 1, 'children': [{
+            '@id': 10, 'value': 1.23
+        }]
+    })
 
     assert model.id == 1
     assert len(model.children) == 1
@@ -1159,29 +1165,63 @@ def test_model_of_pydantic_model() -> None:
     model.id = '2'
     assert model.id == 2
 
-    model.children[0].value = '1.23'
-    assert model.children[0].value == 1.23
-    # assert model.children[0].value == '1.23'
+    model.children[0].value = '2.46'
+    # Model is validated as 'children' attribute is accessed
+    assert model.children[0].value == 2.46
 
-    model.children_omnipy = copy(model.children)
-    model.children_omnipy[0].id = '11'
-    assert model.children_omnipy[0].id == 11
-
+    model.children[0].id = 'abc'
+    # Model is validated as 'children' attribute is accessed
     with pytest.raises(ValidationError):
-        model.children_omnipy[0].value = 'abc'
+        model.children
 
-    model.children[0].value = 'abc'
-    with pytest.raises(ValidationError):
-        model.validate_contents()
+    if not runtime.config.data.interactive_mode:
+        model.contents.children[0].id = 10
 
+    assert model.children[0].id == 10
+
+    model.children[0].id = 11
     assert model.to_data() == {
         '@id': 2,
         'children': [{
-            '@id': 10, 'value': 1.23
+            '@id': 11, 'value': 2.46
         }],
-        'children_omnipy': [{
-            '@id': 11, 'value': 1.23
+    }
+
+
+def test_model_of_pydantic_model_with_model_of_pydantic_model_children(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    model = MyPydanticModel[list[Model[PydanticChildModel]]]({
+        '@id': 1, 'children': [{
+            '@id': 10, 'value': 1.23
         }]
+    })
+
+    assert model.id == 1
+    assert len(model.children) == 1
+    assert model.children[0].id == 10
+    assert model.children[0].value == 1.23
+
+    model.id = '2'
+    assert model.id == 2
+
+    # When the child is an omnipy Model, it is validated when value is set
+    model.children[0].value = '2.46'
+    assert model.children[0].value == 2.46
+
+    with pytest.raises(ValidationError):
+        model.children[0].id = 'abc'
+
+    if not runtime.config.data.interactive_mode:
+        model.contents.children[0].id = 10
+
+    assert model.children[0].id == 10
+
+    model.children[0].id = 11
+    assert model.to_data() == {
+        '@id': 2,
+        'children': [{
+            '@id': 11, 'value': 2.46
+        }],
     }
 
 

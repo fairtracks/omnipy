@@ -1,11 +1,15 @@
 from dataclasses import dataclass
 from math import floor
 from types import NoneType
-from typing import Literal
+from typing import Generic, Literal
 
 from pydantic import BaseModel, Field
+from pydantic.generics import GenericModel
+from typing_extensions import TypeVar
 
 from omnipy.data.model import ListOfParamModel, Model, ParamModel
+
+ChildrenT = TypeVar("ChildT", default=list)
 
 
 @dataclass
@@ -50,13 +54,12 @@ class PydanticChildModel(BaseModel):
     value: float = 0
 
 
-class PydanticParentModel(BaseModel):
+class PydanticParentModel(GenericModel, Generic[ChildrenT]):
     id: int = Field(0, alias='@id')
-    children: list[PydanticChildModel] = []
-    children_omnipy: list[Model[PydanticChildModel]] = []
+    children: ChildrenT = []
 
 
-class MyPydanticModel(Model[PydanticParentModel]):
+class MyPydanticModel(Model[PydanticParentModel[ChildrenT]], Generic[ChildrenT]):
     ...
 
 

@@ -1,13 +1,14 @@
 import os
 from textwrap import dedent
 from types import NoneType
-from typing import Any, Generic, List, Optional, TypeAlias, Union
+from typing import Annotated, Any, Generic, List, Optional, TypeAlias, Union
 
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
 from typing_extensions import TypeVar
 
 from omnipy.api.exceptions import ParamException
+from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
@@ -15,7 +16,12 @@ from .helpers.datasets import (DefaultStrDataset,
                                ListOfUpperStrDataset,
                                MyFloatObjDataset,
                                UpperStrDataset)
-from .helpers.models import MyFloatObject, MyPydanticModel, StringToLength, UpperStrModel
+from .helpers.models import (MyFloatObject,
+                             MyPydanticModel,
+                             PydanticChildModel,
+                             PydanticParentModel,
+                             StringToLength,
+                             UpperStrModel)
 
 
 def test_no_model():
@@ -906,48 +912,79 @@ def test_dataset_switch_models_issue():
     dataset['a'], dataset['b'] = dataset['b'], dataset['a']
 
 
-def test_dataset_of_pydantic_model() -> None:
-    dataset = Dataset[MyPydanticModel](
-        x={
-            '@id': 1,
-            'children': [{
+def test_dataset_of_pydantic_model_with_pydantic_model_children(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    dataset = Dataset[MyPydanticModel[list[PydanticChildModel]]]({
+        'x': {
+            '@id': 1, 'children': [{
                 '@id': 10, 'value': 1.23
-            }],
-        },
-        y={
-            '@id': 2,
-            'children_omnipy': [{
-                '@id': 11, 'value': 2.34
-            }],
-        })
+            }]
+        }
+    })
+
     assert dataset['x'].id == 1
     assert len(dataset['x'].children) == 1
     assert dataset['x'].children[0].id == 10
-    assert dataset['y'].children_omnipy[0].value == 2.34
-
-    dataset['x'].children[0].value = 'abc'
-    with pytest.raises(ValidationError):
-        dataset['x'].validate_contents()
     assert dataset['x'].children[0].value == 1.23
 
-    with pytest.raises(ValidationError):
-        dataset['y'].children_omnipy[0].value = 'abc'
+    dataset['x'].id = '2'
+    assert dataset['x'].id == 2
 
-    assert dataset.to_data() == {
-        'x': {
-            '@id': 1,
-            'children': [{
-                '@id': 10, 'value': 1.23
-            }],
-            'children_omnipy': [],
-        },
+    dataset['x'].children[0].value = '2.46'
+    # Model is validated as 'children' attribute is accessed
+    assert dataset['x'].children[0].value == 2.46
+
+    dataset['x'].children[0].id = 'abc'
+    # Model is validated as 'children' attribute is accessed
+    with pytest.raises(ValidationError):
+        dataset['x'].children
+
+    if not runtime.config.data.interactive_mode:
+        dataset['x'].contents.children[0].id = 10
+
+    dataset['x'].children[0].id = 11
+    assert dataset['x'].to_data() == {
+        '@id': 2,
+        'children': [{
+            '@id': 11, 'value': 2.46
+        }],
+    }
+
+
+def test_dataset_of_pydantic_model_with_model_of_pydantic_model_children(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    dataset = Dataset[MyPydanticModel[list[Model[PydanticChildModel]]]]({
         'y': {
-            '@id': 2,
-            'children': [],
-            'children_omnipy': [{
-                '@id': 11, 'value': 2.34
-            }],
+            '@id': 1, 'children': [{
+                '@id': 10, 'value': 1.23
+            }]
         }
+    })
+
+    assert dataset['y'].id == 1
+    assert len(dataset['y'].children) == 1
+    assert dataset['y'].children[0].id == 10
+    assert dataset['y'].children[0].value == 1.23
+
+    dataset['y'].id = '2'
+    assert dataset['y'].id == 2
+
+    # When the child is an omnipy Model, it is validated when value is set
+    dataset['y'].children[0].value = '2.46'
+    assert dataset['y'].children[0].value == 2.46
+
+    with pytest.raises(ValidationError):
+        dataset['y'].children[0].id = 'abc'
+
+    if not runtime.config.data.interactive_mode:
+        dataset['y'].contents.children[0].id = 10
+
+    dataset['y'].children[0].id = 11
+    assert dataset['y'].to_data() == {
+        '@id': 2,
+        'children': [{
+            '@id': 11, 'value': 2.46
+        }],
     }
 
 
