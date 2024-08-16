@@ -1213,26 +1213,24 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def __getattr__(self, attr: str) -> Any:
         contents_attr = self._getattr_from_contents_obj(attr)
 
-        # if self.config.interactive_mode and not self._is_non_omnipy_pydantic_model():
-        if self.config.interactive_mode:
-            is_property = False
-            with suppress(AttributeError):
-                if not self._is_non_omnipy_pydantic_model():
-                    contents_cls_attr = self._getattr_from_contents_cls(attr)
-                    is_property = isinstance(contents_cls_attr, property)
+        is_property = False
+        with suppress(AttributeError):
+            if not self._is_non_omnipy_pydantic_model():
+                contents_cls_attr = self._getattr_from_contents_cls(attr)
+                is_property = isinstance(contents_cls_attr, property)
 
-            reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
-            contents_attr = self._getattr_from_contents_obj(attr)
+        reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
+        contents_attr = self._getattr_from_contents_obj(attr)
 
-            if not is_property and callable(contents_attr):
+        if callable(contents_attr) and not is_property:
 
-                def _validate_contents(ret: Any):
-                    self._validate_and_set_value(self.contents, reset_solution=reset_solution)
-                    return ret
+            def _validate_contents(ret: Any):
+                self._validate_and_set_value(self.contents, reset_solution=reset_solution)
+                return ret
 
-                contents_attr = add_callback_after_call(contents_attr,
-                                                        _validate_contents,
-                                                        reset_solution)
+            contents_attr = add_callback_after_call(contents_attr,
+                                                    _validate_contents,
+                                                    reset_solution)
 
         if attr in ('values', 'items'):
             level_up_arg_idx: int | slice
