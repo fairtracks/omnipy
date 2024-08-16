@@ -1,5 +1,6 @@
 from datetime import datetime
 import gc
+import itertools
 import logging
 import os
 from pathlib import Path
@@ -190,3 +191,36 @@ def assert_model_if_dyn_conv_else_val(
             assert_val(model_or_val, target_type, contents)
 
     return _assert_model_if_dyn_convert_else_val
+
+
+def pytest_collection_modifyitems(items):
+    integration_tests = []
+    mypy_tests = []
+    other_tests = []
+
+    def _is_mypy_test(item):
+        return item.__class__.__module__.startswith('pytest_mypy_plugins')
+
+    def _module_name(item):
+        return item.module.__name__
+
+    for mypy_test, tests_per_type in itertools.groupby(items, key=_is_mypy_test):
+        if mypy_test:
+            for test in tests_per_type:
+                test._nodeid = test.nodeid.replace('tests/', 'tests/@mypy-tests/')
+                mypy_tests.append(test)
+        else:
+            for module, tests_per_module in itertools.groupby(tests_per_type, key=_module_name):
+                if module.startswith('tests.integration'):
+                    for test in tests_per_module:
+                        test._nodeid = test.nodeid.replace('tests/', 'tests/@integration-tests/')
+                        integration_tests.append(test)
+                else:
+                    other_tests.extend(tests_per_module)
+
+    # For some unknown reason, pytest_mypy_plugins tests are much slower when running after other
+    # tests, in particular integration tests. Running time to be correlated to the number of
+    # previously run tests. Running pytest_mypy_plugins tests in the middle represents a tradeoff
+    # between total running time and the need to run unit tests first for optimal feedback loop
+    # when developing.
+    items[:] = other_tests + mypy_tests + integration_tests
