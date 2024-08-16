@@ -17,7 +17,7 @@ from .helpers.models import GeneralTable, MyOtherRecordSchema, MyRecordSchema, T
 
 
 # TODO: After Pydantic v2 support: Add "-> None" to all tests to open up for mypy syntax checking
-def test_table_models() -> None:
+def test_table_models(runtime: Annotated[None, pytest.fixture]) -> None:
     GeneralTable([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
 
     TableTemplate[MyRecordSchema]([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
@@ -26,9 +26,7 @@ def test_table_models() -> None:
         TableTemplate[MyOtherRecordSchema]([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
 
 
-def test_dataset_with_multiple_table_models(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    runtime.config.data.interactive_mode = True
-
+def test_dataset_with_multiple_table_models(runtime: Annotated[None, pytest.fixture]) -> None:
     my_dataset = MultiModelDataset[GeneralTable]()
 
     my_dataset['a'] = [{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}]

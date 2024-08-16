@@ -17,7 +17,8 @@ from omnipy.modules.raw.datasets import (BytesDataset,
                                          StrDataset)
 from omnipy.modules.raw.models import JoinItemsModel, SplitToItemsModel
 
-from ...helpers.functions import assert_model, assert_model_or_val  # type: ignore[misc]
+from ...helpers.functions import assert_model  # type: ignore[misc]
+from ...helpers.protocols import AssertModelOrValFunc
 
 
 def test_bytes_dataset():
@@ -51,14 +52,13 @@ def test_str_dataset():
         StrDataset(dict(a=b'\xe6\xf8\xe5'), encoding='my-encoding')
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
 def test_split_to_and_join_lines_dataset(
     use_str_model: bool,
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
+
 
     raw_data = """\
         
@@ -75,24 +75,21 @@ def test_split_to_and_join_lines_dataset(
     data = Model[str](raw_data) if use_str_model else raw_data
 
     lines_stripped = SplitToLinesDataset(dict(monologue=data))
-    assert_model_or_val(dyn_convert,
-                        lines_stripped['monologue'][0],
-                        str,
-                        'Alas, poor Yorick! I knew him, Horatio: a fellow')
+    assert_model_if_dyn_conv_else_val(lines_stripped['monologue'][0],
+                                      str,
+                                      'Alas, poor Yorick! I knew him, Horatio: a fellow')
 
     lines_unstripped = SplitToLinesDataset(dict(monologue=data), strip=False)
-    assert_model_or_val(dyn_convert, lines_unstripped['monologue'][0], str, '        ')
-    assert_model_or_val(dyn_convert,
-                        lines_unstripped['monologue'][1],
-                        str,
-                        '        Alas, poor Yorick! I knew him, Horatio: a fellow')
-    assert_model_or_val(dyn_convert, lines_unstripped['monologue'][-1], str, '        ')
+    assert_model_if_dyn_conv_else_val(lines_unstripped['monologue'][0], str, '        ')
+    assert_model_if_dyn_conv_else_val(lines_unstripped['monologue'][1],
+                                      str,
+                                      '        Alas, poor Yorick! I knew him, Horatio: a fellow')
+    assert_model_if_dyn_conv_else_val(lines_unstripped['monologue'][-1], str, '        ')
 
     lines_stripped['last_lines'] = lines_stripped['monologue'][3:]
-    assert_model_or_val(dyn_convert,
-                        lines_stripped['last_lines'][-1],
-                        str,
-                        'now, to mock your own grinning? quite chap-fallen.')
+    assert_model_if_dyn_conv_else_val(lines_stripped['last_lines'][-1],
+                                      str,
+                                      'now, to mock your own grinning? quite chap-fallen.')
 
     for data_file, lines in lines_stripped.items():
         lines_stripped[data_file] = lines[0:2]
@@ -120,14 +117,12 @@ def test_split_to_and_join_lines_dataset(
     }
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
 def test_split_to_and_join_items_dataset(
     use_str_model: bool,
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
     raw_data_tab_start = 'abc\t def \tghi\tjkl'
     data_tab_start = Model[str](raw_data_tab_start) if use_str_model else raw_data_tab_start
@@ -137,13 +132,13 @@ def test_split_to_and_join_items_dataset(
 
     items_stripped_tab = SplitToItemsDataset(dict(start=data_tab_start, end=data_tab_end))
     assert items_stripped_tab['start'].contents == ['abc', 'def', 'ghi', 'jkl']
-    assert_model_or_val(dyn_convert, items_stripped_tab['start'][1], str, 'def')
+    assert_model_if_dyn_conv_else_val(items_stripped_tab['start'][1], str, 'def')
     assert items_stripped_tab['end'][-2:].contents == ['vwx', 'yz']
 
     items_unstripped_tab = SplitToItemsDataset(
         dict(start=data_tab_start, end=data_tab_end), strip=False)
     assert items_unstripped_tab['start'].contents == ['abc', ' def ', 'ghi', 'jkl']
-    assert_model_or_val(dyn_convert, items_unstripped_tab['start'][1], str, ' def ')
+    assert_model_if_dyn_conv_else_val(items_unstripped_tab['start'][1], str, ' def ')
     assert items_unstripped_tab['end'][-2:].contents == ['vwx', 'yz ']
 
     data_comma_start = 'abc, def, ghi, jkl'
@@ -152,7 +147,7 @@ def test_split_to_and_join_items_dataset(
     items_stripped_comma = SplitToItemsDataset(
         dict(start=data_comma_start, end=data_comma_end), delimiter=',')
     assert items_stripped_comma['start'].contents == ['abc', 'def', 'ghi', 'jkl']
-    assert_model_or_val(dyn_convert, items_stripped_comma['start'][1], str, 'def')
+    assert_model_if_dyn_conv_else_val(items_stripped_comma['start'][1], str, 'def')
     assert items_stripped_comma['end'][-2:].contents == ['vwx', 'yz']
 
     for data_file, items in items_stripped_comma.items():
@@ -170,14 +165,12 @@ def test_split_to_and_join_items_dataset(
     assert comma_space_joined_items['end'][1:-1].contents == 'qr, st'
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
 def test_split_lines_to_columns_and_join_columns_to_lines_dataset(
     use_str_model: bool,
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
     raw_data_tab_fw = ['abc\t def \tghi\t jkl', 'mno\t pqr\tstu\t vwx', 'yz']
     data_tab_fw = [Model[str](_) for _ in raw_data_tab_fw] if use_str_model else raw_data_tab_fw
@@ -187,7 +180,7 @@ def test_split_lines_to_columns_and_join_columns_to_lines_dataset(
 
     cols_stripped_tab = SplitLinesToColumnsDataset(dict(forward=data_tab_fw, reverse=data_tab_rev))
     assert cols_stripped_tab['forward'][0].contents == ['abc', 'def', 'ghi', 'jkl']
-    assert_model_or_val(dyn_convert, cols_stripped_tab['forward'][0][1], str, 'def')
+    assert_model_if_dyn_conv_else_val(cols_stripped_tab['forward'][0][1], str, 'def')
     assert cols_stripped_tab['reverse'][1:2].contents \
            == [SplitToItemsModel(' nml\t kji\thgf\t edc')]
     assert cols_stripped_tab['reverse'][1:].to_data() \
@@ -196,7 +189,7 @@ def test_split_lines_to_columns_and_join_columns_to_lines_dataset(
     cols_unstripped_tab = SplitLinesToColumnsDataset(
         dict(forward=data_tab_fw, reverse=data_tab_rev), strip=False)
     assert cols_unstripped_tab['forward'][0].contents == ['abc', ' def ', 'ghi', ' jkl']
-    assert_model_or_val(dyn_convert, cols_unstripped_tab['forward'][0][1], str, ' def ')
+    assert_model_if_dyn_conv_else_val(cols_unstripped_tab['forward'][0][1], str, ' def ')
     assert cols_unstripped_tab['reverse'][1:2].contents \
            == [SplitToItemsModel(' nml\t kji\thgf\t edc', strip=False)]
     assert cols_unstripped_tab['reverse'][1:].to_data() \
@@ -213,7 +206,7 @@ def test_split_lines_to_columns_and_join_columns_to_lines_dataset(
     cols_stripped_comma = SplitLinesToColumnsDataset(
         dict(forward=data_comma_fw, reverse=data_comma_rev), delimiter=',')
     assert cols_stripped_comma['forward'][0].contents == ['abc', 'def', 'ghi', 'jkl']
-    assert_model_or_val(dyn_convert, cols_stripped_comma['forward'][0][1], str, 'def')
+    assert_model_if_dyn_conv_else_val(cols_stripped_comma['forward'][0][1], str, 'def')
     assert cols_stripped_comma['reverse'][1:2].contents == [
         SplitToItemsModel('nml, kji, hgf, edc', delimiter=',')
     ]

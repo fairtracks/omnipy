@@ -18,7 +18,7 @@ from omnipy.modules.raw.models import (BytesModel,
                                        SplitToLinesModel,
                                        StrModel)
 
-from ...helpers.functions import assert_model_or_val  # type: ignore[misc]
+from ...helpers.protocols import AssertModelOrValFunc  # type: ignore[misc]
 
 
 def test_bytes_model():
@@ -49,14 +49,13 @@ def test_str_model():
         StrModel(b'\xe6\xf8\xe5', encoding='my-encoding')
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
 def test_split_to_and_join_lines_model(
     use_str_model: bool,
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
+
 
     raw_data = """\
         
@@ -74,28 +73,25 @@ def test_split_to_and_join_lines_model(
     data = Model[str](raw_data) if use_str_model else raw_data
 
     lines_stripped = SplitToLinesModel(data)
-    assert_model_or_val(
-        dyn_convert,
+    assert_model_if_dyn_conv_else_val(
         lines_stripped[0],  # type: ignore[index]
         str,
         'Alas, poor Yorick! I knew him, Horatio: a fellow')
 
     lines_unstripped = SplitToLinesModel(data, strip=False)
-    assert_model_or_val(dyn_convert, lines_unstripped[0], str, '        ')  # type: ignore[index]
-    assert_model_or_val(
-        dyn_convert,
+    assert_model_if_dyn_conv_else_val(lines_unstripped[0], str, '        ')  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(
         lines_unstripped[1],  # type: ignore[index]
         str,
         '        Alas, poor Yorick! I knew him, Horatio: a fellow')
-    assert_model_or_val(dyn_convert, lines_unstripped[-1], str, '        ')  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(lines_unstripped[-1], str, '        ')  # type: ignore[index]
 
     last_lines = lines_stripped[3:]  # type: ignore[index]
     assert last_lines[0:2].contents == [
         'abhorred in my imagination it is! my gorge rises at',
         'it. Here hung those lips that I have kissed I know'
     ]
-    assert_model_or_val(
-        dyn_convert,
+    assert_model_if_dyn_conv_else_val(
         last_lines[-1],  # type: ignore[index]
         str,
         'now, to mock your own grinning? quite chap-fallen.')
@@ -112,14 +108,12 @@ def test_split_to_and_join_lines_model(
     assert JoinLinesModel(SplitToLinesModel(data, strip=False)).contents == raw_data
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
 def test_split_to_and_join_items_model(
     use_str_model: bool,
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
     raw_data_tab = 'abc\t def \tghi\tjkl'
 
@@ -128,12 +122,12 @@ def test_split_to_and_join_items_model(
     items_stripped_tab = SplitToItemsModel(data_tab)
     assert items_stripped_tab.contents == ['abc', 'def', 'ghi', 'jkl']
 
-    assert_model_or_val(dyn_convert, items_stripped_tab[1], str, 'def')  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(items_stripped_tab[1], str, 'def')  # type: ignore[index]
     assert items_stripped_tab[-2:].contents == ['ghi', 'jkl']  # type: ignore[index]
 
     items_unstripped_tab = SplitToItemsModel(data_tab, strip=False)
     assert items_unstripped_tab.contents == ['abc', ' def ', 'ghi', 'jkl']
-    assert_model_or_val(dyn_convert, items_unstripped_tab[1], str, ' def ')  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(items_unstripped_tab[1], str, ' def ')  # type: ignore[index]
     assert items_unstripped_tab[-2:].contents == ['ghi', 'jkl']  # type: ignore[index]
 
     raw_data_comma = 'abc, def, ghi, jkl'
@@ -142,7 +136,7 @@ def test_split_to_and_join_items_model(
 
     items_stripped_comma = SplitToItemsModel(data_comma, delimiter=',')
     assert items_stripped_comma.contents == ['abc', 'def', 'ghi', 'jkl']
-    assert_model_or_val(dyn_convert, items_stripped_comma[1], str, 'def')  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(items_stripped_comma[1], str, 'def')  # type: ignore[index]
     assert items_stripped_comma[-2:].contents == ['ghi', 'jkl']  # type: ignore[index]
 
     tab_joined_items = JoinItemsModel(items_stripped_tab[1:3])  # type: ignore[index]
@@ -155,14 +149,12 @@ def test_split_to_and_join_items_model(
     assert comma_space_joined_items[1:-1].contents == 'ef, gh'  # type: ignore[index]
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
 def test_split_to_and_join_items_new_model(
     use_str_model: bool,
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
     raw_data_tab = 'abc\t def \tghi\tjkl'
 
@@ -198,21 +190,19 @@ def test_split_to_and_join_items_new_model(
     assert comma_space_joined_items[1:-1].contents == 'ef, gh'  # type: ignore[index]
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
 def test_split_lines_to_columns_and_join_columns_to_lines_model(
     use_str_model: bool,
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
     raw_data_tab = ['abc\t def \tghi\t jkl', 'mno\t pqr\tstu\t vwx', 'yz']
     data_tab = [Model[str](line) for line in raw_data_tab] if use_str_model else raw_data_tab
 
     cols_stripped_tab = SplitLinesToColumnsModel(data_tab)
     assert cols_stripped_tab[0].contents == ['abc', 'def', 'ghi', 'jkl']  # type: ignore[index]
-    assert_model_or_val(dyn_convert, cols_stripped_tab[0][1], str, 'def')  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(cols_stripped_tab[0][1], str, 'def')  # type: ignore[index]
     assert cols_stripped_tab[1:2].contents == [  # type: ignore[index]
         SplitToItemsModel('mno\t pqr\tstu\t vwx')
     ]
@@ -222,7 +212,8 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
 
     cols_unstripped_tab = SplitLinesToColumnsModel(data_tab, strip=False)
     assert cols_unstripped_tab[0].contents == ['abc', ' def ', 'ghi', ' jkl']  # type: ignore[index]
-    assert_model_or_val(dyn_convert, cols_unstripped_tab[0][1], str, ' def ')  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(cols_unstripped_tab[0][1], str,
+                                      ' def ')  # type: ignore[index]
     assert cols_unstripped_tab[1:2].contents == [  # type: ignore[index]
         SplitToItemsModel('mno\t pqr\tstu\t vwx', strip=False)
     ]
@@ -238,7 +229,7 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
 
     cols_stripped_comma = SplitLinesToColumnsModel(data_comma, delimiter=',')
     assert cols_stripped_comma[0].contents == ['abc', 'def', 'ghi', 'jkl']  # type: ignore[index]
-    assert_model_or_val(dyn_convert, cols_stripped_comma[0][1], str, 'def')  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(cols_stripped_comma[0][1], str, 'def')  # type: ignore[index]
 
     assert cols_stripped_comma[1:2].contents == [  # type: ignore[index]
         SplitToItemsModel('mno, pqr, stu, vwx', delimiter=',')

@@ -7,6 +7,11 @@ from omnipy.api.enums import EngineChoice
 from omnipy.api.protocols.public.hub import IsRuntime
 
 
+@pytest.fixture(scope='function')
+def runtime(runtime_data_config_variants: Annotated[IsRuntime, pytest.fixture]) -> IsRuntime:
+    return runtime_data_config_variants
+
+
 @pc.fixture(scope='function')
 @pc.parametrize(engine=[EngineChoice.LOCAL, EngineChoice.PREFECT], ids=['local', 'prefect'])
 def runtime_all_engines(runtime: Annotated[IsRuntime, pytest.fixture], engine: str) -> None:

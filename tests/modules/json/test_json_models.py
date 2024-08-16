@@ -24,7 +24,7 @@ from omnipy.modules.json.models import (_JsonAnyDictM,
                                         JsonScalarModel)
 from omnipy.modules.json.typedefs import JsonScalar
 
-from ...helpers.functions import assert_model_or_val
+from ...helpers.protocols import AssertModelOrValFunc
 from ..helpers.classes import CaseInfo
 
 
@@ -133,34 +133,34 @@ def test_error_list_of_single_dict_with_two_elements():
 
 # TODO: Write tests for misc model operations relevant for JSON data. Try to avoid overlap with
 #       with test_model.
-@pytest.mark.parametrize('dyn_convert', [False, True])
+
+
 def test_json_model_operations(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ):
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
     a = JsonListModel([1, 2, 3])
-    assert_model_or_val(dyn_convert, a[0], int, 1)
+    assert_model_if_dyn_conv_else_val(a[0], int, 1)
 
     b = JsonModel([1, 2, 3])
-    assert_model_or_val(dyn_convert, b[0], int, 1)
+    assert_model_if_dyn_conv_else_val(b[0], int, 1)
 
     c = JsonDictModel({'a': 1, 'b': 2, 'c': 3})
-    assert_model_or_val(dyn_convert, c['c'], int, 3)
+    assert_model_if_dyn_conv_else_val(c['c'], int, 3)
 
     c |= JsonDictModel({'b': 4, 'd': 5})
-    assert_model_or_val(dyn_convert, c['b'], int, 4)
-    assert_model_or_val(dyn_convert, c['c'], int, 3)
-    assert_model_or_val(dyn_convert, c['d'], int, 5)
+    assert_model_if_dyn_conv_else_val(c['b'], int, 4)
+    assert_model_if_dyn_conv_else_val(c['c'], int, 3)
+    assert_model_if_dyn_conv_else_val(c['d'], int, 5)
 
     d = JsonModel({'a': 1, 'b': 2, 'c': 3})
-    assert_model_or_val(dyn_convert, d['c'], int, 3)
+    assert_model_if_dyn_conv_else_val(d['c'], int, 3)
 
     d |= JsonModel({'b': 4, 'd': 5})
-    assert_model_or_val(dyn_convert, c['b'], int, 4)
-    assert_model_or_val(dyn_convert, c['c'], int, 3)
-    assert_model_or_val(dyn_convert, c['d'], int, 5)
+    assert_model_if_dyn_conv_else_val(c['b'], int, 4)
+    assert_model_if_dyn_conv_else_val(c['c'], int, 3)
+    assert_model_if_dyn_conv_else_val(c['d'], int, 5)
 
     e = _JsonScalarM(1)
     assert (e + 1).contents == 2

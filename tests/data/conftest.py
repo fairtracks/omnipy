@@ -2,10 +2,10 @@ from typing import Annotated, Iterator
 
 import pytest
 
+from omnipy.api.protocols.public.hub import IsRuntime
+
 
 @pytest.fixture(scope='function', autouse=True)
-def autouse_assert_snapshot_holder_and_deepcopy_memo_is_empty(
-    assert_snapshot_holder_and_deepcopy_memo_are_empty_before_and_after: Annotated[Iterator[None],
-                                                                                   pytest.fixture]
-) -> Iterator[None]:
-    return assert_snapshot_holder_and_deepcopy_memo_are_empty_before_and_after
+def autouse_runtime_data_config_variants(
+        runtime_data_config_variants: Annotated[IsRuntime, pytest.fixture]) -> IsRuntime:
+    return runtime_data_config_variants

@@ -1,3 +1,5 @@
+import pytest
+
 from omnipy import Model
 from omnipy.api.typedefs import TypeForm
 from omnipy.util.helpers import ensure_plain_type
@@ -14,13 +16,3 @@ def assert_val(value: object, target_type: TypeForm, contents: object):
     assert not isinstance(value, Model)
     assert isinstance(value, ensure_plain_type(target_type))
     assert value == contents, f'{value} != {contents}'
-
-
-def assert_model_or_val(dyn_convert: bool,
-                        model_or_val: object,
-                        target_type: TypeForm,
-                        contents: object):
-    if dyn_convert:
-        assert_model(model_or_val, target_type, contents)
-    else:
-        assert_val(model_or_val, target_type, contents)

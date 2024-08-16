@@ -1,5 +1,8 @@
+from typing import Annotated
+
 import pytest
 
+from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.serializer import SerializerRegistry
 from omnipy.modules.json.serializers import JsonDatasetToTarFileSerializer
 from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
@@ -16,7 +19,7 @@ from .cases.datasets import (csv_dataset,
 
 
 @pytest.fixture
-def registry(assert_snapshot_holder_and_deepcopy_memo_are_empty_before_and_after):
+def registry(runtime: Annotated[IsRuntime, pytest.fixture]):
 
     registry = SerializerRegistry()
 

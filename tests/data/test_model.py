@@ -29,7 +29,8 @@ from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.model import is_model_instance, Model, obj_or_model_contents_isinstance
 from omnipy.util.setdeque import SetDeque
 
-from ..helpers.functions import assert_model, assert_model_or_val, assert_val  # type: ignore[misc]
+from ..helpers.functions import assert_model, assert_val
+from ..helpers.protocols import AssertModelOrValFunc
 from .helpers.models import (DefaultStrModel,
                              ListOfUpperStrModel,
                              LiteralFiveModel,
@@ -1195,10 +1196,9 @@ def _assert_no_snapshot(model: Model[T]):
         model.contents_validated_according_to_snapshot()
 
 
-@pytest.mark.parametrize('interactive_mode', [False, True])
-def test_weakly_referenced_snapshot_after_validation(runtime: Annotated[IsRuntime, pytest.fixture],
-                                                     interactive_mode: bool) -> None:
-    runtime.config.data.interactive_mode = interactive_mode
+def test_weakly_referenced_snapshot_after_validation(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+
     Model.data_class_creator.snapshot_holder.clear()
     assert len(Model.data_class_creator.snapshot_holder._deepcopy_memo) == 0
 
@@ -1210,7 +1210,7 @@ def test_weakly_referenced_snapshot_after_validation(runtime: Annotated[IsRuntim
 
     model.validate_contents()
 
-    if interactive_mode:
+    if runtime.config.data.interactive_mode:
         assert len(snapshot_holder) == 1
         assert model.has_snapshot() is True
         assert model.snapshot == model.contents
@@ -1224,12 +1224,8 @@ def test_weakly_referenced_snapshot_after_validation(runtime: Annotated[IsRuntim
     assert len(snapshot_holder) == 0
 
 
-@pytest.mark.parametrize('interactive_mode', [False, True])
 def test_weakly_referenced_snapshot_deepcopy_memo_entry(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    interactive_mode: bool,
-) -> None:
-    runtime.config.data.interactive_mode = interactive_mode
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
 
     model = Model[list[int]]([123])
     snapshot_holder = model.snapshot_holder
@@ -1239,7 +1235,7 @@ def test_weakly_referenced_snapshot_deepcopy_memo_entry(
 
     model.validate_contents()
 
-    if interactive_mode:
+    if runtime.config.data.interactive_mode:
         assert len(deepcopy_memo) == 1
         entry_memo_key = tuple(deepcopy_memo.keys())[0]
         assert deepcopy_memo[entry_memo_key] == model.contents
@@ -1251,45 +1247,35 @@ def test_weakly_referenced_snapshot_deepcopy_memo_entry(
 
     del model
 
-    assert len(deepcopy_memo) == (1 if interactive_mode else 0)
+    assert len(deepcopy_memo) == (1 if runtime.config.data.interactive_mode else 0)
     snapshot_holder.delete_scheduled_deepcopy_content_ids()
     assert len(snapshot_holder) == 0
 
 
-@pytest.mark.parametrize('interactive_mode', [False, True])
-def test_snapshot_deleted_with_new_content(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    interactive_mode: bool,
-) -> None:
-    runtime.config.data.interactive_mode = interactive_mode
-
+def test_snapshot_deleted_with_new_content(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
     model = Model[list[int]]([123])
     model.validate_contents()
 
     snapshot_holder = model.snapshot_holder
 
-    if interactive_mode:
+    if runtime.config.data.interactive_mode:
         assert len(snapshot_holder) == 1
         old_snapshot_id = id(model.snapshot)
 
-    assert len(snapshot_holder) == (1 if interactive_mode else 0)
+    assert len(snapshot_holder) == (1 if runtime.config.data.interactive_mode else 0)
 
     model.contents = [234]
     model.validate_contents()
 
-    if interactive_mode:
+    if runtime.config.data.interactive_mode:
         assert len(snapshot_holder) == 1
         assert id(model.snapshot) != old_snapshot_id
     else:
         assert len(snapshot_holder) == 0
 
 
-@pytest.mark.parametrize('interactive_mode', [False, True])
 def test_snapshot_deepcopy_memo_entry_deleted_with_new_content(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    interactive_mode: bool,
-) -> None:
-    runtime.config.data.interactive_mode = interactive_mode
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
 
     model = Model[list[int]]([123])
 
@@ -1301,7 +1287,7 @@ def test_snapshot_deepcopy_memo_entry_deleted_with_new_content(
 
     # assert len(deepcopy_memo) == 0
 
-    if interactive_mode:
+    if runtime.config.data.interactive_mode:
         assert len(deepcopy_memo) == 1
         old_entry_memo_key = tuple(deepcopy_memo.keys())[0]
         old_deepcopy_memo_entry_id = id(deepcopy_memo[old_entry_memo_key])
@@ -1311,7 +1297,7 @@ def test_snapshot_deepcopy_memo_entry_deleted_with_new_content(
     model.contents = [234]
     model.validate_contents()
 
-    if interactive_mode:
+    if runtime.config.data.interactive_mode:
         assert len(deepcopy_memo) == 1
         entry_memo_key = tuple(deepcopy_memo.keys())[0]
         assert entry_memo_key != old_entry_memo_key
@@ -1321,9 +1307,8 @@ def test_snapshot_deepcopy_memo_entry_deleted_with_new_content(
         assert len(deepcopy_memo) == 0
 
 
-def test_snapshot_deepcopy_reuse_objects(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    runtime.config.data.interactive_mode = True
-
+def test_snapshot_deepcopy_reuse_objects(
+        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
     def _inner_test_snapshot_deepcopy_reuse_objects() -> None:
         Model.data_class_creator.snapshot_holder.clear()
 
@@ -1378,8 +1363,8 @@ def test_snapshot_deepcopy_reuse_objects(runtime: Annotated[IsRuntime, pytest.fi
     assert len(snapshot_holder._deepcopy_memo) == 0  # type: ignore[attr-defined]
 
 
-def test_snapshot_deepcopy_reuse_ids_crash(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    runtime.config.data.interactive_mode = True
+def test_snapshot_deepcopy_reuse_ids_crash(
+        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
 
     # for i in range(50):
     #     model_list = []
@@ -1397,8 +1382,7 @@ def test_snapshot_deepcopy_reuse_ids_crash(runtime: Annotated[IsRuntime, pytest.
 
 
 def test_lazy_snapshot_not_triggered_by_set_contents(
-    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    runtime.config.data.interactive_mode = True
+        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
 
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -1422,8 +1406,7 @@ def test_lazy_snapshot_not_triggered_by_set_contents(
 
 
 def test_lazy_snapshot_not_triggered_by_state_keeping_operator(
-    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    runtime.config.data.interactive_mode = True
+        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
 
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -1438,8 +1421,7 @@ def test_lazy_snapshot_not_triggered_by_state_keeping_operator(
 
 
 def test_lazy_snapshot_triggered_by_state_changing_operator(
-    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    runtime.config.data.interactive_mode = True
+        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
 
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -1453,9 +1435,9 @@ def test_lazy_snapshot_triggered_by_state_changing_operator(
 
 
 def test_lazy_snapshot_not_triggered_by_getitem(
-    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    runtime.config.data.interactive_mode = True
-    runtime.config.data.dynamically_convert_elements_to_models = True
+    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
+    skip_test_if_not_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
+) -> None:
 
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -1475,8 +1457,8 @@ def test_lazy_snapshot_not_triggered_by_getitem(
     assert res_model.contents == 123
 
 
-def test_lazy_snapshot_triggered_by_setitem(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    runtime.config.data.interactive_mode = True
+def test_lazy_snapshot_triggered_by_setitem(
+        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
 
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -1490,9 +1472,7 @@ def test_lazy_snapshot_triggered_by_setitem(runtime: Annotated[IsRuntime, pytest
 
 
 def test_lazy_snapshot_triggered_by_state_keeping_mimicked_methods(
-    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    runtime.config.data.interactive_mode = True
-    runtime.config.data.dynamically_convert_elements_to_models = True
+        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
 
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -1503,9 +1483,7 @@ def test_lazy_snapshot_triggered_by_state_keeping_mimicked_methods(
 
 
 def test_lazy_snapshot_triggered_by_state_changing_mimicked_methods(
-    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    runtime.config.data.interactive_mode = True
-    runtime.config.data.dynamically_convert_elements_to_models = True
+        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
 
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -1519,10 +1497,7 @@ def test_lazy_snapshot_triggered_by_state_changing_mimicked_methods(
 
 
 def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_value_access(
-    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    runtime.config.data.interactive_mode = True
-    runtime.config.data.dynamically_convert_elements_to_models = True
-
+        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
     class SimplePydanticModel(BaseModel):
         value: Model[list[int]] = []
 
@@ -1540,10 +1515,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_v
 
 
 def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_value_access(
-    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    runtime.config.data.interactive_mode = True
-    runtime.config.data.dynamically_convert_elements_to_models = True
-
+        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
     class SimplePydanticModel(BaseModel):
         value: Model[list[int]] = []  # type: ignore[assignment]
 
@@ -1619,9 +1591,8 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     assert model.contents.value.snapshot == model.contents.value.contents == [234, 345]
 
 
-def test_snapshot_with_mimic_special_method_and_interactive_mode(
-    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    runtime.config.data.interactive_mode = True
+def test_snapshot_with_mimic_special_method(
+        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
 
     model = Model[list[int]]([123])
 
@@ -1673,10 +1644,8 @@ def test_snapshot_with_mimic_special_method_and_interactive_mode(
     assert fourth_snapshot_id != third_snapshot_id
 
 
-@pytest.mark.parametrize('interactive_mode', [False, True])
 def test_repeated_validation_should_not_change_contents_or_snapshot(
-        runtime: Annotated[IsRuntime, pytest.fixture], interactive_mode: bool) -> None:
-    runtime.config.data.interactive_mode = interactive_mode
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
 
     model = Model[list[int]]([123])
 
@@ -1688,13 +1657,15 @@ def test_repeated_validation_should_not_change_contents_or_snapshot(
 
         if id_contents is not None:
             assert id(model.contents) == id_contents
-        if interactive_mode and id_snapshot is not None:
+
+        if runtime.config.data.interactive_mode and id_snapshot is not None:
             assert id(model.snapshot) == id_snapshot
 
 
-def test_mimic_special_method_no_interactive_mode(
-    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    runtime.config.data.interactive_mode = False
+def test_mimic_special_method(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    skip_test_if_interactive_mode: Annotated[None, pytest.fixture],
+) -> None:
 
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -1742,13 +1713,7 @@ def test_mimic_special_method_no_interactive_mode(
     assert id(model.snapshot) != id(model.contents)
 
 
-@pytest.mark.parametrize('interactive_mode', [False, True])
-def test_mimic_callable_with_exception(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    interactive_mode: bool,
-) -> None:
-    runtime.config.data.interactive_mode = interactive_mode
-
+def test_mimic_callable_with_exception(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
     class MyClass:
         def __init__(self, number: int = 0):
             self.number = number
@@ -1764,18 +1729,15 @@ def test_mimic_callable_with_exception(
     with pytest.raises(RuntimeError):
         model.operate_with_error()
 
-    if interactive_mode:
+    if runtime.config.data.interactive_mode:
         assert model.snapshot == model.contents == MyClass(42)
     else:
         assert model.contents == MyClass(-42)
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_simple_list_operations(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
-) -> None:
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
+        runtime: Annotated[IsRuntime, pytest.fixture],
+        assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture]) -> None:
 
     model = Model[list[int]]()
     assert len(model) == 0
@@ -1784,12 +1746,12 @@ def test_mimic_simple_list_operations(
     assert len(model) == 1
 
     assert_model(model, list[int], [123])
-    assert_model_or_val(dyn_convert, model[0], int, 123)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[0], int, 123)  # type: ignore[index]
 
     model += [234, 345, 456]  # type: ignore[operator]
     assert len(model) == 4
 
-    assert_model_or_val(dyn_convert, model[-1], int, 456)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[-1], int, 456)  # type: ignore[index]
     assert_model(model[1:-1], list[int], [234, 345])  # type: ignore[index]
 
     assert tuple(reversed(model)) == (456, 345, 234, 123)
@@ -1797,17 +1759,21 @@ def test_mimic_simple_list_operations(
     model[2] = 432
     model[3] = '654'
 
-    assert_model_or_val(dyn_convert, model[2], int, 432)  # type: ignore[index]
-    assert_model_or_val(dyn_convert, model[3], int, 654)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[2], int, 432)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[3], int, 654)  # type: ignore[index]
 
     with pytest.raises(ValidationError):
         model[0] = 'bacon'
 
-    assert_model_or_val(dyn_convert, model[1], int, 234)  # type: ignore[index]
+    if not runtime.config.data.interactive_mode:
+        assert_model(model, list[int], ['bacon', 234, 432, 654])
+        model[0] = 123
+
+    assert_model_if_dyn_conv_else_val(model[1], int, 234)  # type: ignore[index]
 
     model[1] /= 2  # type: ignore[index]
 
-    assert_model_or_val(dyn_convert, model[1], int, 117)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[1], int, 117)  # type: ignore[index]
     assert_model(model, list[int], [123, 117, 432, 654])
 
     assert model.index(432) == 2
@@ -1815,6 +1781,52 @@ def test_mimic_simple_list_operations(
     assert model.pop() == 654
     assert len(model) == 3
 
+    del model[-1]
+    assert_model(model, list[int], [123, 117])
+
+    del model[0:2]
+    assert len(model) == 0
+
+
+def test_mimic_simple_dict_operations(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+
+    model = Model[dict[str, int]]({'abc': 123})
+
+    assert len(model) == 1
+    assert_model_if_dyn_conv_else_val(model['abc'], int, 123)  # type: ignore[index]
+
+    model['abc'] = 321
+    model['bcd'] = 234
+    model['cde'] = 345
+
+    with pytest.raises(ValidationError):
+        model['def'] = 'eggs'
+
+    if not runtime.config.data.interactive_mode:
+        assert 'def' in model
+        del model['def']
+
+    assert 'cde' in model  # type: ignore[operator]
+    assert 'def' not in model  # type: ignore[operator]
+
+    assert len(model) == 3
+    assert_model(model, dict[str, int], {'abc': 321, 'bcd': 234, 'cde': 345})
+    assert_model_if_dyn_conv_else_val(model['abc'], int, 321)  # type: ignore[index]
+
+    model.update({'def': 456, 'efg': 567})
+    assert 'def' in model  # type: ignore[operator]
+    assert_model_if_dyn_conv_else_val(model['def'], int, 456)  # type: ignore[index]
+
+    model |= {'efg': 765, 'ghi': 678}  # type: ignore[operator]
+    assert_model_if_dyn_conv_else_val(model['efg'], int, 765)  # type: ignore[index]
+
+    del model['bcd']
+
+    other = {'abc': 321, 'cde': 345, 'def': 456, 'efg': 765, 'ghi': 678}
+    assert_model(model, dict[str, int], other)
 
 # TODO: Implement automatic conversion for mimicked operations, to allow for e.g.
 #       `Model[int](1) + '1'`
@@ -1827,13 +1839,10 @@ def test_mimic_simple_list_operations(
 # arguments as the same Model if `NotImplemented` Exception is raised from the operator method,
 # e.g. `__add__()`.
 # """)
-@pytest.mark.parametrize('dyn_convert', [False, True])
-def test_mimic_simple_list_operator_with_convert(
+def test_mimic_simple_list_operator_with_auto_convert(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
-    runtime.config.data.interactive_mode = True
 
     model = Model[list[int]]([0])
 
@@ -1843,10 +1852,10 @@ def test_mimic_simple_list_operator_with_convert(
 
     model[0] += Model[int]('42')  # type: ignore[index]
 
-    assert_model_or_val(dyn_convert, model[0], int, 42)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[0], int, 42)  # type: ignore[index]
     assert_model(model, list[int], [42])
 
-    if dyn_convert:
+    if runtime.config.data.dynamically_convert_elements_to_models:
         # model[0] is dynamically converted to a Model[int] instance
         model[0] += '42'  # type: ignore[index]
 
@@ -1865,7 +1874,7 @@ def test_mimic_simple_list_operator_with_convert(
     with pytest.raises(TypeError):
         model[0] += 'abc'  # type: ignore[index]
 
-    assert_model_or_val(dyn_convert, model[0], int, 42)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[0], int, 42)  # type: ignore[index]
     assert_model(model, list[int], [42])
 
     #
@@ -1886,7 +1895,11 @@ def test_mimic_simple_list_operator_with_convert(
     with pytest.raises(ValidationError):
         model += ['abc']  # type: ignore[operator]
 
-    assert_model(model, list[int], [42, 42, 42])
+    if runtime.config.data.interactive_mode:
+        assert_model(model, list[int], [42, 42, 42])
+    else:
+        assert_model(model, list[int], [42, 42, 42, 'abc'])
+        del model[-1]
 
     #
     # model.__getitem__, model[0].__sub__,  model[0].__rsub__
@@ -1895,13 +1908,13 @@ def test_mimic_simple_list_operator_with_convert(
     ret = model[0] - Model[int]('42')  # type: ignore[index]
     assert_model(ret, int, 0)
 
-    if dyn_convert:
+    if runtime.config.data.dynamically_convert_elements_to_models:
         # model[0] is dynamically converted to a Model[int] instance
         ret = model[0] - '42'  # type: ignore[index]
-        assert_model_or_val(dyn_convert, ret, int, 0)
+        assert_model(ret, int, 0)
 
         ret = '42' - model[0]  # type: ignore[index]
-        assert_model_or_val(dyn_convert, ret, int, 0)
+        assert_model(ret, int, 0)
     else:
         # model[0] is just an int
         with pytest.raises(TypeError):
@@ -2059,13 +2072,7 @@ def test_mimic_sequence_convert_for_concat(runtime: Annotated[IsRuntime, pytest.
     assert_model(my_setdeque + my_tuple_model, tuple, (7, 8, 9, 4, 5, 6))  # type: ignore[operator]
 
 
-@pytest.mark.parametrize('interactive_mode', [False, True])
-def test_mimic_concatenation_for_strings(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    interactive_mode: bool,
-) -> None:
-    runtime.config.data.interactive_mode = interactive_mode
-
+def test_mimic_concatenation_for_strings(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
     class UppercaseModel(Model[str]):
         @classmethod
         def _parse_data(cls, data: str) -> str:
@@ -2081,16 +2088,10 @@ def test_mimic_concatenation_for_strings(
     assert stream.contents == "CAN YOU PLEASE HELP ME? I'VE FALLEN AND I CAN'T GET UP!"
 
 
-@pytest.mark.parametrize('interactive_mode', [False, True])
-@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_concatenation_for_converted_models(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    interactive_mode: bool,
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    runtime.config.data.interactive_mode = interactive_mode
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
-
     class WordSplitterModel(Model[list[str] | str]):
         @classmethod
         def _parse_data(cls, data: list[str] | str) -> list[str]:
@@ -2117,31 +2118,20 @@ def test_mimic_concatenation_for_converted_models(
     new_stream = ['Someone', 'is', 'shouting:'] + stream + '- We should help them!'
 
     assert isinstance(new_stream, WordSplitterModel)
-    if dyn_convert:
+    if runtime.config.data.dynamically_convert_elements_to_models:
         joined_str = ' '.join(new_stream.contents)
     else:
         joined_str = ' '.join(new_stream)
     assert joined_str == ("Someone is shouting: Can you please help me? "
                           "I've fallen and I can't get up! - We should help them!")
 
-    assert_model_or_val(dyn_convert, new_stream[5], str, 'please')
+    assert_model_if_dyn_conv_else_val(new_stream[5], str, 'please')
 
     sentence = new_stream[3:8]
     sentence.insert(2, 'pretty')
 
     assert isinstance(sentence, WordSplitterModel)
     assert sentence.contents == ['Can', 'you', 'pretty', 'please', 'help', 'me?']
-
-
-@pytest.mark.parametrize('interactive_mode', [False, True])
-@pytest.mark.parametrize('dyn_convert', [False, True])
-def test_mimic_concatenation_for_converted_models(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    interactive_mode: bool,
-    dyn_convert: bool,
-) -> None:
-    runtime.config.data.interactive_mode = interactive_mode
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
 
 def test_mimic_str_concat_iadd_and_radd_overrides_add_if_defined():
@@ -2441,13 +2431,10 @@ def test_mimic_concat_all_less_than_five_model_add_variants_with_unsupported_inp
         less_than_five_model += 'five'  # type: ignore[operator]
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_nested_list_operations(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
-
     model = Model[list[int | list[int]]]([123, 234, [345]])
 
     with pytest.raises(ValidationError):
@@ -2470,8 +2457,10 @@ def test_mimic_nested_list_operations(
     assert_model(model, list[int | list[int]], [123, 234, [0, 1, 2]])
     assert_model_or_val(dyn_convert, model[0], int, 123)  # type: ignore[index]
     assert_model_or_val(dyn_convert, model[-1], list[int], [0, 1, 2])  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[0], int, 123)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[-1], list[int], [0, 1, 2])  # type: ignore[index]
 
-    if dyn_convert:
+    if runtime.config.data.dynamically_convert_elements_to_models:
         with pytest.raises(ValidationError):
             model[-1].append(tuple(range(3)))  # type: ignore[index]
 
@@ -2481,7 +2470,6 @@ def test_mimic_nested_list_operations(
 
         with pytest.raises(ValidationError):
             model[-1][-1] = 'a'  # type: ignore[index]
-
         assert_model(model[-1][-1], int, 2)  # type: ignore[index]
     else:
         model[-1].append(tuple(range(3)))  # type: ignore[index]
@@ -2496,14 +2484,14 @@ def test_mimic_nested_list_operations(
         del model[-1][-1]  # type: ignore[index]
 
     model[0] = [0, 2]
-    assert_model_or_val(dyn_convert, model[0], list[int], [0, 2])  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[0], list[int], [0, 2])  # type: ignore[index]
 
     # Here the `model[0] +=` operation is a series of `__getitem__`, `__iadd__`, and `__setitem__`
     # operations, with the `__getitem__` and `__setitem__` operating on the "parent" model object,
     # causing ValidationError even when `dynamically_convert_elements_to_models` is disabled.
     with pytest.raises(ValidationError):
         model[0] += ('a',)  # type: ignore[index]
-    assert_model_or_val(dyn_convert, model[0], list[int], [0, 2])  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[0], list[int], [0, 2])  # type: ignore[index]
 
     # In contrast to the `+` operator, the `append()` method only operates on the child level
     # (on the result of the `__getitem__()` call). When `dynamically_convert_elements_to_models` is
@@ -2511,7 +2499,7 @@ def test_mimic_nested_list_operations(
     # `dynamically_convert_elements_to_models` is enabled, however, the results of the
     # `__getitem__()` call is automatically converted to a Model[int]() object, which then validates
     # its contents.
-    if dyn_convert:
+    if runtime.config.data.dynamically_convert_elements_to_models:
         with pytest.raises(ValidationError):
             model[0].append('a')  # type: ignore[index]
         assert_model(model[0], list[int], [0, 2])  # type: ignore[index]
@@ -2519,20 +2507,14 @@ def test_mimic_nested_list_operations(
         model[0].append('a')  # type: ignore[index]
         assert_val(model[0], list, [0, 2, 'a'])  # type: ignore[index]
 
-    if dyn_convert:
-        two_as_bytes = model[0][-1].to_bytes(4, byteorder='little')  # type: ignore[index]
-        assert_val(two_as_bytes, bytes, b'\x02\x00\x00\x00')
-    else:
-        with pytest.raises(AttributeError):
-            model[0][-1].to_bytes(4, byteorder='little')  # type: ignore[index]
+    two_as_bytes = model[0][-1].to_bytes(4, byteorder='little')  # type: ignore[index]
+    assert_val(two_as_bytes, bytes, b'\x02\x00\x00\x00')
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_dict_operations(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
     model = Model[dict[str, int]]({'abc': 123})
 
@@ -2566,13 +2548,10 @@ def test_mimic_dict_operations(
     assert_model(model, dict[str, int], other)
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_nested_dict_operations(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
-
     model = Model[dict[str, dict[int, int] | int]]({'a': {12: 234, 13: 345}})
 
     with pytest.raises(ValidationError):
@@ -2595,11 +2574,18 @@ def test_mimic_nested_dict_operations(
     assert_model(model, dict[str, dict[int, int] | int], {'a': {14: 456}})
     assert_model_or_val(dyn_convert, model['a'], dict[int, int], {14: 456})  # type: ignore[index]
 
-    if dyn_convert:
+    if runtime.config.data.dynamically_convert_elements_to_models:
         submodel_a = model['a']  # type: ignore[index]
 
         with pytest.raises(ValidationError):
             submodel_a.update({'14': '654', '15': {'a': 'b'}})
+
+        if not runtime.config.data.interactive_mode:
+            assert_model_if_dyn_conv_else_val( \
+                submodel_a, dict[int, int], {14: 456, '14': '654', '15': {'a': 'b'}})
+            del submodel_a['15']
+            assert_model_if_dyn_conv_else_val(submodel_a, dict[int, int], {14: 654})
+            submodel_a[14] = 456
 
         assert len(submodel_a) == 1
         assert_model(submodel_a, dict[int, int], {14: 456})
@@ -2643,23 +2629,21 @@ def test_mimic_nested_dict_operations(
                      }})
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_list_and_dict_iterators(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
     list_model = Model[list[int]]([0, 1, 2])
 
     for i, el in enumerate(list_model):
-        assert_model_or_val(dyn_convert, el, int, i)
+        assert_model_if_dyn_conv_else_val(el, int, i)
 
     dict_model = Model[dict[int, str]]({0: 'abc', 1: 'bcd', 2: 'cde'})
 
     assert tuple(dict_model.keys()) == (0, 1, 2)
 
-    if dyn_convert:
+    if runtime.config.data.dynamically_convert_elements_to_models:
         assert tuple(dict_model.values()) == (Model[str]('abc'),
                                               Model[str]('bcd'),
                                               Model[str]('cde'))
@@ -2670,25 +2654,23 @@ def test_mimic_list_and_dict_iterators(
         assert tuple(dict_model.items()) == ((0, 'abc'), (1, 'bcd'), (2, 'cde'))
 
     for i, key in enumerate(dict_model):
-        assert_model_or_val(dyn_convert, key, int, i)
+        assert_model_if_dyn_conv_else_val(key, int, i)
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
     list_model = Model[list[list[int]]]([[4]])
-    assert_model_or_val(dyn_convert, list_model[0], list[int], [4])  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(list_model[0], list[int], [4])  # type: ignore[index]
 
     inner_list = list_model[0]  # type: ignore[index]
     inner_list.append(5)
 
-    assert_model_or_val(dyn_convert, inner_list, list[int], [4, 5])
+    assert_model_if_dyn_conv_else_val(inner_list, list[int], [4, 5])
 
-    if dyn_convert:
+    if runtime.config.data.dynamically_convert_elements_to_models:
         # Dynamically converted nested containers are copies
         assert_model(list_model[0], list[int], [4])  # type: ignore[index]
         assert_model(list_model, list[list[int]], [[4]])
@@ -2698,14 +2680,14 @@ def test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue(
         assert_model(list_model, list[list[int]], [[4, 5]])
 
     dict_model = Model[dict[int, dict[int, int]]]({0: {1: 1}})
-    assert_model_or_val(dyn_convert, dict_model[0], dict[int, int], {1: 1})  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(dict_model[0], dict[int, int], {1: 1})  # type: ignore[index]
 
     inner_dict = dict_model[0]  # type: ignore[index]
     inner_dict.update({2: 2})
 
-    assert_model_or_val(dyn_convert, inner_dict, dict[int, int], {1: 1, 2: 2})
+    assert_model_if_dyn_conv_else_val(inner_dict, dict[int, int], {1: 1, 2: 2})
 
-    if dyn_convert:
+    if runtime.config.data.dynamically_convert_elements_to_models:
         assert_model(dict_model[0], dict[int, int], {1: 1})  # type: ignore[index]
         assert_model(dict_model, dict[int, dict[int, int]], {0: {1: 1}})
     else:
@@ -2713,15 +2695,12 @@ def test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue(
         assert_model(dict_model, dict[int, dict[int, int]], {0: {1: 1, 2: 2}})
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_nested_list_operations_with_model_subclass_containers(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     # See test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue()
     # Explicit Model containers fixes this issue.
-
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
     class MyListOrIntModel(Model[list[int] | int]):
         ...
@@ -2748,24 +2727,20 @@ def test_mimic_nested_list_operations_with_model_subclass_containers(
         [0, 1, 2],
     )
 
-    assert_model_or_val(dyn_convert, model[-1][-1], int, 2)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[-1][-1], int, 2)  # type: ignore[index]
 
     class MyListDoubleModel(Model[Model[list[int]]]):
         ...
 
     double_model = MyListDoubleModel([123])
-    assert_model_or_val(dyn_convert, double_model[0], int, 123)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(double_model[0], int, 123)  # type: ignore[index]
 
 
-@pytest.mark.parametrize('dyn_convert', [False, True])
 def test_mimic_nested_dict_operations_with_model_containers(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    dyn_convert: bool,
-) -> None:
+    runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+
     # See test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue()
     # Explicit Model containers fixes this issue.
-
-    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
     ThirdLvl: TypeAlias = dict[int, int]
     SecondLvl: TypeAlias = dict[int, Model[ThirdLvl] | int] | int
@@ -2800,6 +2775,12 @@ def test_mimic_nested_dict_operations_with_model_containers(
 
     with pytest.raises(ValidationError):
         model['a'].update({'14': '654', '15': {'111': {1: 2}}})  # type: ignore[index]
+
+    if not runtime.config.data.interactive_mode:
+        assert_model(model['a'], SecondLvl, {14: 456, '14': '654', '15': {'111': {1: 2}}})
+        del model['a']['15']
+        assert_model(model['a'], SecondLvl, {14: 654})
+        model['a'][14] = 456
 
     assert len(model['a']) == 1  # type: ignore[index]
     assert_model(model, FirstLvl, {'a': Model[SecondLvl]({14: 456})})

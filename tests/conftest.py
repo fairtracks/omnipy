@@ -8,11 +8,16 @@ import tempfile
 from typing import Annotated, Callable, Iterator, Type
 
 import pytest
+import pytest_cases as pc
 
 from omnipy.api.protocols.public.hub import IsRuntime
+from omnipy.api.typedefs import TypeForm
 from omnipy.compute.job_creator import JobBaseMeta, JobCreator
 from omnipy.config.root_log import RootLogConfig
 from omnipy.data.data_class_creator import DataClassBaseMeta, DataClassCreator
+
+from .helpers.functions import assert_model, assert_val
+from .helpers.protocols import AssertModelOrValFunc
 
 
 @pytest.fixture(scope='function')
@@ -68,7 +73,7 @@ def runtime_cls(
 def runtime(
     runtime_cls: Annotated[Type[IsRuntime], pytest.fixture],
     tmp_dir_path: Annotated[Path, pytest.fixture],
-) -> Iterator[None]:
+) -> Iterator[IsRuntime]:
     runtime = runtime_cls()
 
     runtime.config.reset_to_defaults()
@@ -91,22 +96,25 @@ def mock_datetime() -> datetime:
 
 
 @pytest.fixture(scope='function')
-def assert_snapshot_holder_and_deepcopy_memo_are_empty(
+def assert_empty_snapshot_holder_and_deepcopy_memo(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> Callable[[], None]:
     snapshot_holder = runtime.objects.data_class_creator.snapshot_holder
 
-    def _assert_snapshot_holder_and_deepcopy_memo_are_empty():
+    NOT_EMPTY_ERROR = 'Snapshot_holder and/or deepcopy_memo objects are{} not empty. '
+
+    def _assert_empty_snapshot_holder_and_deepcopy_memo():
         snapshot_holder.delete_scheduled_deepcopy_content_ids()
         try:
-            print('\nChecking if snapshot_holder and deepcopy_memo objects are empty...')
             assert snapshot_holder.all_are_empty()
         except AssertionError:
             try:
-                print('Not empty. Running garbage collection and trying again...')
+                print(f"\n{NOT_EMPTY_ERROR.format('')}"
+                      f'Running garbage collection and trying again...')
                 gc.collect()
                 snapshot_holder.delete_scheduled_deepcopy_content_ids()
             except AssertionError:
-                print('Not empty again. Running garbage collection and trying last time...')
+                print(f"\n{NOT_EMPTY_ERROR.format(' still')}"
+                      f'Running garbage collection and trying last time...')
                 gc.collect()
                 snapshot_holder.delete_scheduled_deepcopy_content_ids()
 
@@ -117,17 +125,68 @@ def assert_snapshot_holder_and_deepcopy_memo_are_empty(
             finally:
                 snapshot_holder.clear()
 
-    return _assert_snapshot_holder_and_deepcopy_memo_are_empty
+    return _assert_empty_snapshot_holder_and_deepcopy_memo
 
 
 @pytest.fixture(scope='function')
-def assert_snapshot_holder_and_deepcopy_memo_are_empty_before_and_after(
-    assert_snapshot_holder_and_deepcopy_memo_are_empty: Annotated[Callable[[], None],
-                                                                  pytest.fixture]
-) -> Iterator[None]:
+def assert_empty_snapshot_holder_and_deepcopy_memo_before_and_after(
+        assert_empty_snapshot_holder_and_deepcopy_memo: Callable[[], None]) -> Iterator[None]:
 
-    assert_snapshot_holder_and_deepcopy_memo_are_empty()
+    assert_empty_snapshot_holder_and_deepcopy_memo()
 
     yield
 
-    assert_snapshot_holder_and_deepcopy_memo_are_empty()
+    assert_empty_snapshot_holder_and_deepcopy_memo()
+
+
+@pc.fixture(scope='function')
+@pc.parametrize(**dict(interactive=[True, False], dyn_convert=[False, True]))
+def runtime_data_config_variants(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_empty_snapshot_holder_and_deepcopy_memo_before_and_after: Annotated[Callable[[], None],
+                                                                               pytest.fixture],
+    interactive: bool,
+    dyn_convert: bool,
+) -> IsRuntime:
+    runtime.config.data.interactive_mode = interactive
+    runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
+
+    return runtime
+
+
+@pytest.fixture(scope='function')
+def skip_test_if_interactive_mode(runtime: Annotated[IsRuntime, pytest.fixture]):
+    pass
+    if runtime.config.data.interactive_mode:
+        pytest.skip('This test only works without `interactive_mode`')
+
+
+@pytest.fixture(scope='function')
+def skip_test_if_not_interactive_mode(runtime: Annotated[IsRuntime, pytest.fixture]):
+    pass
+    if not runtime.config.data.interactive_mode:
+        pytest.skip('This test requires `interactive_mode`')
+
+
+@pytest.fixture(scope='function')
+def skip_test_if_not_dynamically_convert_elements_to_models(runtime: Annotated[IsRuntime,
+                                                                               pytest.fixture]):
+    pass
+    if not runtime.config.data.dynamically_convert_elements_to_models:
+        pytest.skip('This test requires `dynamically_convert_elements_to_models`')
+
+
+@pytest.fixture(scope='function')
+def assert_model_if_dyn_conv_else_val(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> AssertModelOrValFunc:
+    def _assert_model_if_dyn_convert_else_val(
+        model_or_val: object,
+        target_type: TypeForm,
+        contents: object,
+    ):
+        if runtime.config.data.dynamically_convert_elements_to_models:
+            assert_model(model_or_val, target_type, contents)  # type: ignore
+        else:
+            assert_val(model_or_val, target_type, contents)
+
+    return _assert_model_if_dyn_convert_else_val

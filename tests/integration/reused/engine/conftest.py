@@ -1,5 +1,6 @@
-from typing import Callable, Type
+from typing import Annotated, Callable, Type
 
+import pytest
 import pytest_cases as pc
 
 from omnipy.api.protocols.private.compute.job import IsJobTemplate
@@ -48,11 +49,14 @@ def no_engine_decorator(engine_decorator):
 
 @pc.fixture(scope='function')
 @pc.parametrize(
-    registry=[RunStateRegistry()],
+    registry_cls=[RunStateRegistry],
     ids=['registry'],
 )
-def run_state_registry(registry):
-    return registry
+def run_state_registry(
+    runtime: Annotated[None, pytest.fixture],
+    registry_cls: Type[IsRunStateRegistry],
+):
+    return registry_cls()
 
 
 @pc.fixture(scope='function')

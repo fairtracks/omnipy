@@ -238,7 +238,6 @@ def test_properties_output_storage_protocols_override_config(
 @pc.parametrize_with_cases('case_tmpl', cases='.cases.jobs', prefix='case_')
 def test_persist_and_restore(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    assert_snapshot_holder_and_deepcopy_memo_are_empty: Annotated[Iterator[None], pytest.fixture],
     case_tmpl: Annotated[FuncArgJobBase, pc.case],
 ) -> None:
     case_persist_tmpl = case_tmpl.refine(persist_outputs='enabled')
