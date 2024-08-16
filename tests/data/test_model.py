@@ -1745,6 +1745,13 @@ def test_mimic_simple_list_operations(
     model.append(123)
     assert len(model) == 1
 
+    with pytest.raises(ValidationError):
+        model.append('abc')
+
+    if not runtime.config.data.interactive_mode:
+        assert_model(model, list[int], [123, 'abc'])
+        del model[-1]
+
     assert_model(model, list[int], [123])
     assert_model_if_dyn_conv_else_val(model[0], int, 123)  # type: ignore[index]
 
@@ -2431,11 +2438,14 @@ def test_mimic_concat_all_less_than_five_model_add_variants_with_unsupported_inp
         less_than_five_model += 'five'  # type: ignore[operator]
 
 
-def test_mimic_nested_list_operations(
+def test_mimic_first_level_operations_on_nested_list(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     model = Model[list[int | list[int]]]([123, 234, [345]])
+
+    model[-1] = []
+    assert_model(model, list[int | list[int]], [123, 234, []])
 
     with pytest.raises(ValidationError):
         model[-1] = 'abc'
@@ -2452,11 +2462,36 @@ def test_mimic_nested_list_operations(
     with pytest.raises(ValidationError):
         model[-1] = ['abc', 'bce']
 
+
+def test_mimic_first_level_operations_on_nested_dict() -> None:
+    model = Model[dict[str, dict[int, int] | int]]({'a': {12: 234, 13: 345}})
+
+    # empty list is parsed as empty dict in pydantic v1
+    model['a'] = []
+    assert_model(model, dict[str, dict[int, int] | int], {'a': {}})
+
+    with pytest.raises(ValidationError):
+        model['a'] = 'abc'
+
+    with pytest.raises(ValidationError):
+        model['a'] = None
+
+    with pytest.raises(ValidationError):
+        model['a'] = ['abc']
+
+    with pytest.raises(ValidationError):
+        model['a'] = {'abc': 'bce'}
+
+
+def test_mimic_nested_list_operations_only_model_at_top(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+    model = Model[list[int | list[int]]]([123, 234, [345]])
+
     model[-1] = tuple(range(3))
 
     assert_model(model, list[int | list[int]], [123, 234, [0, 1, 2]])
-    assert_model_or_val(dyn_convert, model[0], int, 123)  # type: ignore[index]
-    assert_model_or_val(dyn_convert, model[-1], list[int], [0, 1, 2])  # type: ignore[index]
     assert_model_if_dyn_conv_else_val(model[0], int, 123)  # type: ignore[index]
     assert_model_if_dyn_conv_else_val(model[-1], list[int], [0, 1, 2])  # type: ignore[index]
 
@@ -2470,18 +2505,17 @@ def test_mimic_nested_list_operations(
 
         with pytest.raises(ValidationError):
             model[-1][-1] = 'a'  # type: ignore[index]
+        # model[-1] creates a new Model[list[int]] object each time, so changes do not propagate to
+        # parent. See `test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue`
+        model[-1][-1] = '3'  # type: ignore[index]
         assert_model(model[-1][-1], int, 2)  # type: ignore[index]
     else:
-        model[-1].append(tuple(range(3)))  # type: ignore[index]
-
-        assert len(model[-1]) == 4  # type: ignore[index]
-        assert_val(model[-1], list, [0, 1, 2, (0, 1, 2)])  # type: ignore[index]
-        assert_val(model[-1][-1], tuple, (0, 1, 2))  # type: ignore[index]
-
-        with pytest.raises(TypeError):  # tuple, not list
-            model[-1][-1][-1] = 15  # type: ignore[index]
-
-        del model[-1][-1]  # type: ignore[index]
+        # model[-1] is a regular list and not a model. Changes propagate as one would expect, but
+        # manual validation is needed.
+        model[-1][-1] = '3'  # type: ignore[index]
+        assert_val(model[-1][-1], str, '3')  # type: ignore[index]
+        model.validate_contents()
+        assert_val(model[-1][-1], int, 3)  # type: ignore[index]
 
     model[0] = [0, 2]
     assert_model_if_dyn_conv_else_val(model[0], list[int], [0, 2])  # type: ignore[index]
@@ -2491,88 +2525,91 @@ def test_mimic_nested_list_operations(
     # causing ValidationError even when `dynamically_convert_elements_to_models` is disabled.
     with pytest.raises(ValidationError):
         model[0] += ('a',)  # type: ignore[index]
+
+    if not runtime.config.data.dynamically_convert_elements_to_models and not runtime.config.data.interactive_mode:
+        assert_val(model[0], list[int], [0, 2, 'a'])  # type: ignore[index]
+        del model[0][-1]
     assert_model_if_dyn_conv_else_val(model[0], list[int], [0, 2])  # type: ignore[index]
 
     # In contrast to the `+` operator, the `append()` method only operates on the child level
     # (on the result of the `__getitem__()` call). When `dynamically_convert_elements_to_models` is
     # disabled, this is simply a plain Python list (without any validation). When
     # `dynamically_convert_elements_to_models` is enabled, however, the results of the
-    # `__getitem__()` call is automatically converted to a Model[int]() object, which then validates
-    # its contents.
+    # `__getitem__()` call is automatically converted to a new Model[int]() object, which then
+    # validates its contents.
     if runtime.config.data.dynamically_convert_elements_to_models:
         with pytest.raises(ValidationError):
             model[0].append('a')  # type: ignore[index]
+
+        # Validation error happens on the dynamically created submodel, which is then destroyed.
+        # This is the reason the value seems reverted even when interactive_mode is False...!
+        # See `test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue`
         assert_model(model[0], list[int], [0, 2])  # type: ignore[index]
     else:
         model[0].append('a')  # type: ignore[index]
-        assert_val(model[0], list, [0, 2, 'a'])  # type: ignore[index]
+        with pytest.raises(ValidationError):
+            model.validate_contents()
+
+        if not runtime.config.data.interactive_mode:
+            assert_val(model[0], list, [0, 2, 'a'])  # type: ignore[index]
+            del model[0][-1]
+        assert_val(model[0], list, [0, 2])  # type: ignore[index]
 
     two_as_bytes = model[0][-1].to_bytes(4, byteorder='little')  # type: ignore[index]
     assert_val(two_as_bytes, bytes, b'\x02\x00\x00\x00')
 
 
-def test_mimic_dict_operations(
+def test_mimic_nested_list_operations_models_at_all_levels(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
+    # Compare with `test_mimic_nested_dict_operations_only_model_at_top`. It is recommended to
+    # insert a model at every level except the last when working with nested structures.
 
-    model = Model[dict[str, int]]({'abc': 123})
+    NestedModelType: TypeAlias = list[int | Model[list[int]]]
+    model = Model[NestedModelType]([123, 234, [345]])
 
-    assert len(model) == 1
-    assert_model_or_val(dyn_convert, model['abc'], int, 123)  # type: ignore[index]
+    model[-1] = tuple(range(3))
 
-    model['abc'] = 321
-    model['bcd'] = 234
-    model['cde'] = 345
+    assert_model(model, NestedModelType, [123, 234, Model[list[int]]([0, 1, 2])])
+    assert_model_if_dyn_conv_else_val(model[0], int, 123)  # type: ignore[index]
+    assert_model(model[-1], list[int], [0, 1, 2])  # type: ignore[index]
+
+    model[-1][-1] = '3'  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[-1][-1], int, 3)  # type: ignore[index]
+
+    model[0] = [0, 2]
+    assert_model(model[0], list[int], [0, 2])  # type: ignore[index]
+
+    # The user do not have to care about the difference between the '+=' operator and the 'append' ,
+    # method, as in `test_mimic_nested_list_operations_only_model_at_top`
+    with pytest.raises(ValidationError):
+        model[0] += ('a',)  # type: ignore[index]
+
+    if not runtime.config.data.interactive_mode:
+        assert_model(model[0], list[int], [0, 2, 'a'])  # type: ignore[index]
+        del model[0][-1]
+
+    assert_model(model[0], list[int], [0, 2])  # type: ignore[index]
 
     with pytest.raises(ValidationError):
-        model['def'] = 'eggs'
+        model[0].append('a')  # type: ignore[index]
 
-    assert 'cde' in model  # type: ignore[operator]
-    assert 'def' not in model  # type: ignore[operator]
+    if not runtime.config.data.interactive_mode:
+        assert_model(model[0], list[int], [0, 2, 'a'])  # type: ignore[index]
+        del model[0][-1]
 
-    assert len(model) == 3
-    assert_model(model, dict[str, int], {'abc': 321, 'bcd': 234, 'cde': 345})
-    assert_model_or_val(dyn_convert, model['abc'], int, 321)  # type: ignore[index]
+    assert_model(model[0], list[int], [0, 2])  # type: ignore[index]
 
-    model.update({'def': 456, 'efg': 567})
-    assert 'def' in model  # type: ignore[operator]
-    assert_model_or_val(dyn_convert, model['def'], int, 456)  # type: ignore[index]
-
-    model |= {'efg': 765, 'ghi': 678}  # type: ignore[operator]
-    assert_model_or_val(dyn_convert, model['efg'], int, 765)  # type: ignore[index]
-
-    del model['bcd']
-
-    other = {'abc': 321, 'cde': 345, 'def': 456, 'efg': 765, 'ghi': 678}
-    assert_model(model, dict[str, int], other)
+    two_as_bytes = model[0][-1].to_bytes(4, byteorder='little')  # type: ignore[index]
+    assert_val(two_as_bytes, bytes, b'\x02\x00\x00\x00')
 
 
-def test_mimic_nested_dict_operations(
+def test_mimic_nested_dict_operations_only_model_at_top(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    model = Model[dict[str, dict[int, int] | int]]({'a': {12: 234, 13: 345}})
-
-    with pytest.raises(ValidationError):
-        model['a'] = 'abc'
-
-    with pytest.raises(ValidationError):
-        model['a'] = None
-
-    with pytest.raises(ValidationError):
-        model['a'] = ['abc']
-
-    # empty list is parsed as empty dict in pydantic v1
-    model['a'] = []
-    assert_model(model, dict[str, dict[int, int] | int], {'a': {}})
-
-    with pytest.raises(ValidationError):
-        model['a'] = {'abc': 'bce'}
-
-    model['a'] = {'14': '456'}
-    assert_model(model, dict[str, dict[int, int] | int], {'a': {14: 456}})
-    assert_model_or_val(dyn_convert, model['a'], dict[int, int], {14: 456})  # type: ignore[index]
+    model = Model[dict[str, dict[int, int] | int]]({'a': {14: 456}})
 
     if runtime.config.data.dynamically_convert_elements_to_models:
         submodel_a = model['a']  # type: ignore[index]
@@ -2615,18 +2652,36 @@ def test_mimic_nested_dict_operations(
         # Disabling dynamic conversion also allows for direct updates on model['a'], as normal, but
         # the values are still not validated
         model['a'].update({'14': '654', '15': '333'})  # type: ignore[index]
-        assert len(model['a']) == 3  # type: ignore[index]
+        assert_val(model['a'], dict, {14: 456, '14': '654', '15': '333'})
+        model.validate_contents()
+        assert_val(model['a'], dict, {14: 654, 15: 333})
 
-        assert_val(
-            model['a'],  # type: ignore[index]
-            dict[int, int],
-            {
-                14: 456, '14': '654', '15': '333'
-            })
-        assert_model(model,
-                     dict[str, dict[int, int] | int], {'a': {
-                         14: 456, '14': '654', '15': '333'
-                     }})
+
+def test_mimic_nested_dict_operations_models_at_all_levels(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+    # Compare with `test_mimic_nested_dict_operations_only_model_at_top`. It is recommended to
+    # insert a model at every level except the last when working with nested structures.
+
+    NestedModelType: TypeAlias = dict[str, Model[dict[int, int]] | int]
+    model = Model[NestedModelType]({'a': {14: 456}})
+
+    with pytest.raises(ValidationError):
+        model['a'].update({'14': '654', '15': {'a': 'b'}})
+
+    if not runtime.config.data.interactive_mode:
+        assert_model(model['a'], dict[int, int], {14: 456, '14': '654', '15': {'a': 'b'}})
+        del model['a']['15']
+        assert_model(model['a'], dict[int, int], {14: 654})
+        model['a'][14] = 456
+
+    assert_model(model['a'], dict[int, int], {14: 456})  # type: ignore[index]
+    assert_model(model, NestedModelType, {'a': Model[dict[int, int]]({14: 456})})
+
+    model['a'].update({'14': '654', '15': '333'})  # type: ignore[index]
+    assert_model(model['a'], dict[int, int], {14: 654, 15: 333})
+    assert_model(model, NestedModelType, {'a': Model[dict[int, int]]({14: 654, 15: 333})})
 
 
 def test_mimic_list_and_dict_iterators(

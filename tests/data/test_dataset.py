@@ -375,15 +375,118 @@ def test_repr():
            == "ParentGenericDataset[Union[Model[str], NumberModel]](a=Model[str]('abc'))"
 
 
-def test_basic_validation():
+def test_basic_validation(runtime: Annotated[IsRuntime, pytest.fixture]):
+    dataset = Dataset[Model[int]](data_file_1=123)
+
+    with pytest.raises(ValidationError):
+        dataset['data_file_1'] = 'abc'
+    assert dataset['data_file_1'].contents == 123
+
+    dataset['data_file_2'] = '234'
+    assert dataset['data_file_2'].contents == 234
+
+    dataset['data_file_1'] = '345'
+    assert dataset['data_file_1'].contents == 345
+
+
+def test_nested_validation_level_one(runtime: Annotated[IsRuntime, pytest.fixture]):
+    dataset = Dataset[Model[list[int]]](data_file_1=[123])
+
+    with pytest.raises(ValidationError):
+        dataset['data_file_1'][0] = 'abc'
+
+    if not runtime.config.data.interactive_mode:
+        assert dataset['data_file_1'].contents == ['abc']
+        dataset['data_file_1'][0] = '123'
+
+    assert dataset['data_file_1'].contents == [123]
+
+    dataset['data_file_2'] = ['234']
+    assert dataset['data_file_2'].contents == [234]
+
+    dataset['data_file_1'][0] = '345'
+    assert dataset['data_file_1'].contents == [345]
+
+
+def test_nested_validation_level_two_only_model_at_top(runtime: Annotated[IsRuntime,
+                                                                          pytest.fixture]):
+    dataset = Dataset[Model[list[list[int]]]](data_file_1=[[123]])
+
+    dataset['data_file_2'] = [['234']]
+    assert dataset['data_file_2'].contents == [[234]]
+
+    dataset['data_file_1'][0][0] = '345'
+    if runtime.config.data.dynamically_convert_elements_to_models:
+        # dataset['data_file_1'][0] is a new `Model[list[int]]` object containing a copy of the
+        # original list, so changes do not propagate to parents. See
+        # `test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue`
+        # in `test_model`.
+        assert dataset['data_file_1'].contents == [[123]]
+
+        # Instead setting the value one level up works
+        dataset['data_file_1'][0] = ['345']
+    else:
+        # dataset['data_file_1'][0] is the same `list[int]` as in the parent. Since it is not a
+        # Model object, it is not validated when set, and validation needs to be called manually,
+        # here directly on the dataset.
+        assert dataset['data_file_1'].contents == [['345']]
+        dataset['data_file_1'].validate_contents()
+
+    assert dataset['data_file_1'].contents == [[345]]
+
+    if runtime.config.data.dynamically_convert_elements_to_models:
+        # As `dataset['data_file_1'][0]` is a copy, changes are not propagated to parents. Thus,
+        # validation errors seems to reset the parents, regardless of the setting of
+        # `interactive_mode`. In fact, the parents were never changed.
+        with pytest.raises(ValidationError):
+            dataset['data_file_1'][0][0] = 'abc'
+    else:
+        dataset['data_file_1'][0][0] = 'abc'
+        with pytest.raises(ValidationError):
+            dataset['data_file_1'].validate_contents()
+
+        if not runtime.config.data.interactive_mode:
+            assert dataset['data_file_1'].contents == [['abc']]
+            dataset['data_file_1'][0][0] = 345
+
+    assert dataset['data_file_1'].contents == [[345]]
+
+
+def test_nested_validation_level_two_models_at_both_levels(runtime: Annotated[IsRuntime,
+                                                                              pytest.fixture]):
+    # Compare with test_nested_validation_level_two_only_model_at_top. It is recommended to insert
+    # a model at every level except the last when working with nested structures.
+
+    dataset = Dataset[Model[list[Model[list[int]]]]](data_file_1=[[123]])
+
+    dataset['data_file_2'] = [['234']]
+    assert dataset['data_file_2'][0].contents == [234]
+    assert dataset['data_file_2'].contents == [Model[list[int]]([234])]
+
+    dataset['data_file_1'][0][0] = '345'
+    assert dataset['data_file_1'][0].contents == [345]
+    assert dataset['data_file_1'].contents == [Model[list[int]]([345])]
+
+    with pytest.raises(ValidationError):
+        dataset['data_file_1'][0][0] = 'abc'
+
+    if not runtime.config.data.interactive_mode:
+        assert dataset['data_file_1'][0].contents == ['abc']
+        dataset['data_file_1'][0][0] = 345
+
+    assert dataset['data_file_1'][0].contents == [345]
+    assert dataset['data_file_1'].contents == [Model[list[int]]([345])]
+
+
+def test_validation_pydantic_types():
     dataset_1 = Dataset[Model[PositiveInt]]()
 
     dataset_1['data_file_1'] = 123
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError):
         dataset_1['data_file_2'] = -234
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError):
         Dataset[Model[list[StrictInt]]]([12.4, 11])  # noqa
 
 
