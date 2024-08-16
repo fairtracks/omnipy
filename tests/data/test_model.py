@@ -1,3 +1,4 @@
+from copy import copy
 import gc
 from math import floor
 import os
@@ -1143,6 +1144,7 @@ def test_import_export_methods() -> None:
 
 def test_model_of_pydantic_model() -> None:
     model = MyPydanticModel({'@id': 1, 'children': [{'@id': 10, 'value': 1.23}]})
+
     assert model.id == 1
     assert len(model.children) == 1
     assert model.children[0].id == 10
@@ -1150,12 +1152,12 @@ def test_model_of_pydantic_model() -> None:
 
     model.id = '2'
     assert model.id == 2
-    assert len(model.children) == 1
 
     model.children[0].value = '1.23'
-    assert model.children[0].value == '1.23'
+    assert model.children[0].value == 1.23
+    # assert model.children[0].value == '1.23'
 
-    model.children_omnipy = model.children
+    model.children_omnipy = copy(model.children)
     model.children_omnipy[0].id = '11'
     assert model.children_omnipy[0].id == 11
 
@@ -1169,7 +1171,7 @@ def test_model_of_pydantic_model() -> None:
     assert model.to_data() == {
         '@id': 2,
         'children': [{
-            '@id': 10, 'value': 'abc'
+            '@id': 10, 'value': 1.23
         }],
         'children_omnipy': [{
             '@id': 11, 'value': 1.23
@@ -1876,10 +1878,12 @@ def test_mimic_nested_list_operations(
         with pytest.raises(TypeError):  # tuple, not list
             model[-1][-1][-1] = 15  # type: ignore[index]
 
+        del model[-1][-1]  # type: ignore[index]
+
     model[0] = [0, 2]
     assert_model_or_val(dyn_convert, model[0], list[int], [0, 2])  # type: ignore[index]
 
-    # Here the `model[-1] +=` operation is a series of `__get__`, `__iadd__`, and `__set__`
+    # Here the `model[0] +=` operation is a series of `__get__`, `__iadd__`, and `__set__`
     # operations, with the `__get__` and `__set__` operating on the "parent" model object.
     # In contrast, the `append()` method only operates on the child level.
     with pytest.raises(ValidationError):
@@ -1894,12 +1898,16 @@ def test_mimic_nested_list_operations(
         model[0].append('a')  # type: ignore[index]
         assert_val(model[0], list, [0, 2, 'a'])  # type: ignore[index]
 
-    two_as_bytes = model[0][-1].to_bytes(4, byteorder='little')  # type: ignore[index]
-    assert_val(two_as_bytes, bytes, b'\x02\x00\x00\x00')
+    if dyn_convert:
+        two_as_bytes = model[0][-1].to_bytes(4, byteorder='little')  # type: ignore[index]
+        assert_val(two_as_bytes, bytes, b'\x02\x00\x00\x00')
+    else:
+        with pytest.raises(AttributeError):
+            model[0][-1].to_bytes(4, byteorder='little')  # type: ignore[index]
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
-def test_model_operations_as_dict(
+def test_mimic_dict_operations(
     runtime: Annotated[IsRuntime, pytest.fixture],
     dyn_convert: bool,
 ) -> None:
@@ -1974,24 +1982,44 @@ def test_mimic_nested_dict_operations(
 
         assert len(submodel_a) == 1
         assert_model(submodel_a, dict[int, int], {14: 456})
+
+        # Changes above have all been made on copies, see
+        # test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue()
+        assert len(model['a']) == 1  # type: ignore[index]
+
+        # Same with updates directly on model['a']
+        model['a'].update({'14': '654', '15': '333'})  # type: ignore[index]
+        assert len(model['a']) == 1  # type: ignore[index]
+
+        assert_model(model['a'], dict[int, int], {14: 456})  # type: ignore[index]
+        assert_model(model, dict[str, dict[int, int] | int], {'a': {14: 456}})
     else:
         subdict_a = model['a']  # type: ignore[index]
 
         # As model['a'] is not a Model, update() does not validate
         subdict_a.update({'14': '654', '15': {'a': 'b'}})
 
-        assert len(subdict_a) == 2
-        assert_val(subdict_a, dict, {14: 654, 15: {'a': 'b'}})
+        assert len(subdict_a) == 3
+        assert_val(subdict_a, dict, {14: 456, '14': '654', '15': {'a': 'b'}})
 
-    # Changes above have all been made on copies, see
-    # test_mimic_doubly_nested_nonmodel_containers_are_copies_known_issue()
-    assert len(model['a']) == 1  # type: ignore[index]
+        # With dynamic conversion disabled, subdict_a is not a copy
+        assert len(model['a']) == 3  # type: ignore[index]
 
-    # Same with updates directly on model['a']
-    model['a'].update({'14': '654', '15': '333'})  # type: ignore[index]
-    assert len(model['a']) == 1  # type: ignore[index]
-    assert_model_or_val(dyn_convert, model['a'], dict[int, int], {14: 456})  # type: ignore[index]
-    assert_model_or_val(dyn_convert, model, dict[str, dict[int, int] | int], {'a': {14: 456}})
+        # Disabling dynamic conversion also allows for direct updates on model['a'], as normal, but
+        # the values are still not validated
+        model['a'].update({'14': '654', '15': '333'})  # type: ignore[index]
+        assert len(model['a']) == 3  # type: ignore[index]
+
+        assert_val(
+            model['a'],  # type: ignore[index]
+            dict[int, int],
+            {
+                14: 456, '14': '654', '15': '333'
+            })
+        assert_model(model,
+                     dict[str, dict[int, int] | int], {'a': {
+                         14: 456, '14': '654', '15': '333'
+                     }})
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
@@ -2008,18 +2036,25 @@ def test_mimic_list_and_dict_iterators(
 
     dict_model = Model[dict[int, str]]({0: 'abc', 1: 'bcd', 2: 'cde'})
 
-    assert tuple(dict_model.keys()) == (Model[int](0), Model[int](1), Model[int](2))
-    assert tuple(dict_model.values()) == (Model[str]('abc'), Model[str]('bcd'), Model[str]('cde'))
-    assert tuple(dict_model.items()) == (Model[tuple[int, str]]((0, 'abc')),
-                                         Model[tuple[int, str]]((1, 'bcd')),
-                                         Model[tuple[int, str]]((2, 'cde')))
+    if dyn_convert:
+        assert tuple(dict_model.keys()) == (Model[int](0), Model[int](1), Model[int](2))
+        assert tuple(dict_model.values()) == (Model[str]('abc'),
+                                              Model[str]('bcd'),
+                                              Model[str]('cde'))
+        assert tuple(dict_model.items()) == (Model[tuple[int, str]]((0, 'abc')),
+                                             Model[tuple[int, str]]((1, 'bcd')),
+                                             Model[tuple[int, str]]((2, 'cde')))
+    else:
+        assert tuple(dict_model.keys()) == (0, 1, 2)
+        assert tuple(dict_model.values()) == ('abc', 'bcd', 'cde')
+        assert tuple(dict_model.items()) == ((0, 'abc'), (1, 'bcd'), (2, 'cde'))
 
     for i, key in enumerate(dict_model):
         assert_model_or_val(dyn_convert, key, int, i)
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
-def test_mimic_doubly_nested_nonmodel_containers_are_copies_known_issue(
+def test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue(
     runtime: Annotated[IsRuntime, pytest.fixture],
     dyn_convert: bool,
 ) -> None:
@@ -2028,22 +2063,34 @@ def test_mimic_doubly_nested_nonmodel_containers_are_copies_known_issue(
     list_model = Model[list[list[int]]]([[4]])
     assert_model_or_val(dyn_convert, list_model[0], list[int], [4])  # type: ignore[index]
 
-    inner_list_model = list_model[0]  # type: ignore[index]
-    inner_list_model.append(5)
+    inner_list = list_model[0]  # type: ignore[index]
+    inner_list.append(5)
 
-    assert_model_or_val(dyn_convert, inner_list_model, list[int], [4, 5])
-    assert_model_or_val(dyn_convert, list_model[0], list[int], [4])  # type: ignore[index]
-    assert_model_or_val(dyn_convert, list_model, list[list[int]], [[4]])
+    assert_model_or_val(dyn_convert, inner_list, list[int], [4, 5])
+
+    if dyn_convert:
+        # Dynamically converted nested containers are copies
+        assert_model(list_model[0], list[int], [4])  # type: ignore[index]
+        assert_model(list_model, list[list[int]], [[4]])
+    else:
+        # Without dynamic conversion, the nested containers are not copies
+        assert_val(list_model[0], list[int], [4, 5])  # type: ignore[index]
+        assert_model(list_model, list[list[int]], [[4, 5]])
 
     dict_model = Model[dict[int, dict[int, int]]]({0: {1: 1}})
     assert_model_or_val(dyn_convert, dict_model[0], dict[int, int], {1: 1})  # type: ignore[index]
 
-    inner_dict_model = dict_model[0]  # type: ignore[index]
-    inner_dict_model.update({2: 2})
+    inner_dict = dict_model[0]  # type: ignore[index]
+    inner_dict.update({2: 2})
 
-    assert_model_or_val(dyn_convert, inner_dict_model, dict[int, int], {1: 1, 2: 2})
-    assert_model_or_val(dyn_convert, dict_model[0], dict[int, int], {1: 1})  # type: ignore[index]
-    assert_model_or_val(dyn_convert, dict_model, dict[int, dict[int, int]], {0: {1: 1}})
+    assert_model_or_val(dyn_convert, inner_dict, dict[int, int], {1: 1, 2: 2})
+
+    if dyn_convert:
+        assert_model(dict_model[0], dict[int, int], {1: 1})  # type: ignore[index]
+        assert_model(dict_model, dict[int, dict[int, int]], {0: {1: 1}})
+    else:
+        assert_val(dict_model[0], dict[int, int], {1: 1, 2: 2})  # type: ignore[index]
+        assert_model(dict_model, dict[int, dict[int, int]], {0: {1: 1, 2: 2}})
 
 
 @pytest.mark.parametrize('dyn_convert', [False, True])
@@ -2051,8 +2098,8 @@ def test_mimic_nested_list_operations_with_model_subclass_containers(
     runtime: Annotated[IsRuntime, pytest.fixture],
     dyn_convert: bool,
 ) -> None:
-    # See test_mimic_doubly_nested_nonmodel_containers_are_copies_known_issue()
-    # Explicit Model containers fixed this issue.
+    # See test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue()
+    # Explicit Model containers fixes this issue.
 
     runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
@@ -2070,22 +2117,18 @@ def test_mimic_nested_list_operations_with_model_subclass_containers(
     with pytest.raises(TypeError):
         len(model[0])
 
-    if dyn_convert:
-        assert_model(
-            model,
-            list[MyListOrIntModel],
-            [MyListOrIntModel(123), MyListOrIntModel(234), MyListOrIntModel([0, 1, 2])],
-        )
-        assert_model(
-            model[-1],  # type: ignore[index]
-            list[int] | int,
-            [0, 1, 2],
-        )
-        assert_model(model[-1][-1], int, 2)  # type: ignore[index]
-    else:
-        assert_val(model, list[MyListOrIntModel], [123, 234, [0, 1, 2]])
-        assert_val(model[-1], MyListOrIntModel, [0, 1, 2])  # type: ignore[index]
-        assert_val(model[-1][-1], int, 2)  # type: ignore[index]
+    assert_model(
+        model,
+        list[MyListOrIntModel],
+        [MyListOrIntModel(123), MyListOrIntModel(234), MyListOrIntModel([0, 1, 2])],
+    )
+    assert_model(
+        model[-1],  # type: ignore[index]
+        list[int] | int,
+        [0, 1, 2],
+    )
+
+    assert_model_or_val(dyn_convert, model[-1][-1], int, 2)  # type: ignore[index]
 
     class MyListDoubleModel(Model[Model[list[int]]]):
         ...
@@ -2099,8 +2142,8 @@ def test_mimic_nested_dict_operations_with_model_containers(
     runtime: Annotated[IsRuntime, pytest.fixture],
     dyn_convert: bool,
 ) -> None:
-    # See test_mimic_doubly_nested_nonmodel_containers_are_copies_known_issue()
-    # Explicit Model containers fixed this issue.
+    # See test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue()
+    # Explicit Model containers fixes this issue.
 
     runtime.config.data.dynamically_convert_elements_to_models = dyn_convert
 
@@ -2214,7 +2257,7 @@ def test_mimic_doubly_nested_union_known_issue(
     assert_model(dict_model[0], dict[str, str], {'0': 'zero'})  # type: ignore[index]
 
 
-def test_model_operations_as_scalars() -> None:
+def test_mimic_operations_as_scalars() -> None:
     int_model = Model[int](1)
 
     assert (int_model + 1).contents == 2  # type: ignore[operator, attr-defined]
@@ -2273,41 +2316,49 @@ def test_mimic_operations_as_union_of_scalars() -> None:
 def test_mimic_operations_on_pydantic_models() -> None:
     T = TypeVar('T')
 
-    class MyPydanticModel(BaseModel):
+    class ParentPydanticModel(BaseModel):
         a: int = 0
 
-    class MyPydanticModelSubCls(MyPydanticModel):
+    class ChildPydanticModel(ParentPydanticModel):
         b: str = ''
 
-    class MyGenericPydanticModel(GenericModel, Generic[T]):
+    class GenericPydanticModel(GenericModel, Generic[T]):
         a: T | None = None
 
-    class MyGenericPydanticModelSubCls(MyGenericPydanticModel[int]):
+    class ChildGenericPydanticModel(GenericPydanticModel[int]):
         b: str = ''
 
-    my_pydantic_model = Model[MyPydanticModel]()
-    assert my_pydantic_model.a == 0
-    my_pydantic_model.a = 2
-    assert my_pydantic_model.a == 2
+    parent_pydantic_model = Model[ParentPydanticModel]()
+    assert parent_pydantic_model.a == 0
+    parent_pydantic_model.a = 2
+    assert parent_pydantic_model.a == 2
+    parent_pydantic_model.a = '2'
+    assert parent_pydantic_model.a == 2
+    with pytest.raises(ValidationError):
+        parent_pydantic_model.a = 'abc'
 
-    my_pydantic_model_sub = Model[MyPydanticModelSubCls]()
-    assert my_pydantic_model_sub.a == 0
-    assert my_pydantic_model_sub.b == ''
-    my_pydantic_model_sub.b = 'something'
-    assert my_pydantic_model_sub.b == 'something'
+    child_pydantic_model = Model[ChildPydanticModel]()
+    assert child_pydantic_model.a == 0
+    assert child_pydantic_model.b == ''
+    child_pydantic_model.b = 'something'
+    assert child_pydantic_model.b == 'something'
+    child_pydantic_model.b = 123
+    assert child_pydantic_model.b == '123'
 
-    my_generic_pydantic_model = Model[MyGenericPydanticModel[str]]()
-    assert my_generic_pydantic_model.a is None
-    my_generic_pydantic_model.a = 'something'
-    assert my_generic_pydantic_model.a == 'something'
+    generic_pydantic_model = Model[GenericPydanticModel[int]]()
+    assert generic_pydantic_model.a is None
+    parent_pydantic_model.a = '2'
+    assert parent_pydantic_model.a == 2
+    with pytest.raises(ValidationError):
+        parent_pydantic_model.a = 'abc'
 
-    my_generic_pydantic_model_sub = Model[MyGenericPydanticModelSubCls]()
-    assert my_generic_pydantic_model_sub.a is None
-    my_generic_pydantic_model_sub.a = 2
-    assert my_generic_pydantic_model_sub.a == 2
-    assert my_generic_pydantic_model_sub.b == ''
-    my_generic_pydantic_model_sub.b = 'something'
-    assert my_generic_pydantic_model_sub.b == 'something'
+    child_generic_pydantic_model = Model[ChildGenericPydanticModel]()
+    assert child_generic_pydantic_model.a is None
+    child_generic_pydantic_model.a = '2'
+    assert child_generic_pydantic_model.a == 2
+    assert child_generic_pydantic_model.b == ''
+    child_generic_pydantic_model.b = 123
+    assert child_generic_pydantic_model.b == '123'
 
 
 # TODO: Add support in Model for mimicking the setting and deletion of properties

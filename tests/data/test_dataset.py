@@ -831,7 +831,7 @@ def test_dataset_of_pydantic_model() -> None:
         'x': {
             '@id': 1,
             'children': [{
-                '@id': 10, 'value': 'abc'
+                '@id': 10, 'value': 1.23
             }],
             'children_omnipy': [],
         },

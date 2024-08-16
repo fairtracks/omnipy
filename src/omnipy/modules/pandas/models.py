@@ -32,10 +32,10 @@ class PandasModel(Model[pd.DataFrame | pd.Series]):
             return df.to_dict()
 
     def from_data(self, value: Iterable[Any]) -> None:
-        self._validate_and_set_contents(pd.DataFrame(value).convert_dtypes())
+        self._validate_and_set_value(pd.DataFrame(value).convert_dtypes())
 
     def from_json(self, value: str) -> None:
-        self._validate_and_set_contents(pd.read_json(value).convert_dtypes())
+        self._validate_and_set_value(pd.read_json(value).convert_dtypes())
 
 
 class PandasDataset(Dataset[PandasModel]):
