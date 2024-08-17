@@ -21,7 +21,6 @@ from typing import (Annotated,
                     Literal,
                     Optional,
                     SupportsIndex,
-                    TypeVar,
                     Union)
 
 from devtools import debug, PrettyFormat
@@ -32,7 +31,8 @@ from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.main import BaseModel, ModelMetaclass, validate_model
 from pydantic.typing import display_as_type, is_none_type
-from pydantic.utils import lenient_isinstance, lenient_issubclass
+from pydantic.utils import lenient_isinstance, lenient_issubclass, sequence_like
+from typing_extensions import TypeVar
 
 from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.private.util import IsSnapshotHolder, IsSnapshotWrapper
@@ -68,7 +68,7 @@ _ValT = TypeVar('_ValT')
 _IterT = TypeVar('_IterT')
 _ReturnT = TypeVar('_ReturnT')
 _IdxT = TypeVar('_IdxT', bound=SupportsIndex)
-_RootT = TypeVar('_RootT', bound=object | None)
+_RootT = TypeVar('_RootT', bound=object | None, default=object)
 
 ROOT_KEY = '__root__'
 
@@ -207,19 +207,31 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         # json_dumps = orjson_dumps
 
     @classmethod
-    def _get_bound_if_typevar(cls,
-                              model: type[_RootT] | TypeForm | TypeVar) -> type[_RootT] | TypeForm:
+    def _get_default_if_typevar(
+            cls, model: type[_RootT] | TypeForm | TypeVar) -> type[_RootT] | TypeForm:
         if isinstance(model, TypeVar):
-            if model.__bound__ is None:
-                raise TypeError('The TypeVar "{}" needs to be bound to a '.format(model.__name__)
-                                + 'type that provides a default value when called')
+            if hasattr(model, '__default__') and model.__default__ is not None:
+                return model.__default__
             else:
-                return model.__bound__
+                raise TypeError(f'The TypeVar "{model.__name__}" needs to specify a default value. '
+                                f'This requires Python 3.13, but is supported in earlier versions '
+                                f'of Python by importing TypeVar from the library '
+                                f'"typing-extensions".')
         return model
 
     @classmethod
+    def _get_default_factory_from_model(
+            cls, model: type[_RootT] | TypeForm | TypeVar) -> Callable[[], _RootT]:
+        default_val = cls._get_default_value_from_model(model)
+
+        def default_factory() -> _RootT:
+            return default_val
+
+        return default_factory
+
+    @classmethod
     def _get_default_value_from_model(cls, model: type[_RootT] | TypeForm | TypeVar) -> _RootT:
-        model = cls._get_bound_if_typevar(model)
+        model = cls._get_default_if_typevar(model)
         origin_type = get_origin(model)
         args = get_args(model)
 
@@ -254,15 +266,13 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     @classmethod
     def _populate_root_field(cls, model: type[_RootT] | TypeVar) -> type[_RootT]:
-        default_val = cls._get_default_value_from_model(model)
 
-        def get_default_val() -> _RootT:
-            return default_val
+        default_factory = cls._get_default_factory_from_model(model)
 
         if ROOT_KEY in cls.__config__.fields:
-            cls.__config__.fields[ROOT_KEY]['default_factory'] = get_default_val  # type: ignore
+            cls.__config__.fields[ROOT_KEY]['default_factory'] = default_factory  # type: ignore
         else:
-            cls.__config__.fields[ROOT_KEY] = {'default_factory': get_default_val}  # type: ignore
+            cls.__config__.fields[ROOT_KEY] = {'default_factory': default_factory}  # type: ignore
 
         if not get_origin(model) == Annotated and not is_optional(model):
             model = cast(type[_RootT], Annotated[Optional[model], 'Fake Optional from Model'])
@@ -1128,8 +1138,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         return out
 
 
-_ParamRootT = TypeVar('_ParamRootT', bound=object | None)
-_KwargValT = TypeVar('_KwargValT', bound=object)
+_ParamRootT = TypeVar('_ParamRootT', default=object | None)
+_KwargValT = TypeVar('_KwargValT', default=object)
 
 
 class DataWithParams(GenericModel, Generic[_ParamRootT, _KwargValT]):

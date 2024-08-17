@@ -1,4 +1,6 @@
-from typing import Generic, Type, TypeAlias, TypeVar
+from typing import Generic, Type, TypeAlias
+
+from typing_extensions import TypeVar
 
 from omnipy.data.model import Model
 
@@ -11,7 +13,9 @@ from .typedefs import JsonScalar
 # Basic building block models
 
 _JsonBaseT = TypeVar(
-    '_JsonBaseT', bound='JsonScalar | JsonListM | JsonDictM | JsonAnyListM | JsonAnyDictM')
+    '_JsonBaseT',
+    bound='JsonScalar | _JsonListM | _JsonDictM | _JsonAnyListM | _JsonAnyDictM',
+    default='JsonScalar')
 
 
 class JsonScalarM(Model[JsonScalar]):

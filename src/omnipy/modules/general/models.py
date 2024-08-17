@@ -1,4 +1,6 @@
-from typing import Generic, Hashable, TypeAlias, TypeVar
+from typing import Generic, Hashable, TypeAlias
+
+from typing_extensions import TypeVar
 
 from omnipy.data.model import Model
 from omnipy.util.helpers import is_iterable
@@ -48,10 +50,10 @@ class NotIterableExceptStrOrBytesModel(Model[object | None]):
 
 # Basic building block models
 
-_KeyT = TypeVar('_KeyT', bound=str | Hashable)
-_ValT = TypeVar('_ValT', bound=NotIterableExceptStrOrBytesModel | object)
+_KeyT = TypeVar('_KeyT', default=str | Hashable)
+_ValT = TypeVar('_ValT', default=NotIterableExceptStrOrBytesModel | object)
 
-_FrozenBaseT = TypeVar('_FrozenBaseT')
+_FrozenBaseT = TypeVar('_FrozenBaseT', default='_FrozenAnyUnion')
 
 # class _FrozenScalarM(NotIterableExceptStrOrBytesModel):
 #     ...

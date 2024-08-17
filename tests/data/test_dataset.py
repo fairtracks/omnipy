@@ -1,10 +1,11 @@
 import os
 from textwrap import dedent
 from types import NoneType
-from typing import Any, Generic, List, Optional, TypeAlias, TypeVar, Union
+from typing import Any, Generic, List, Optional, TypeAlias, Union
 
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
+from typing_extensions import TypeVar
 
 from omnipy.api.exceptions import ParamException
 from omnipy.data.dataset import Dataset
@@ -322,7 +323,7 @@ def test_equality_with_pydantic() -> None:
            Dataset[Model[EqualPydanticModel]]({'data_file_1': {'a': 1}})
 
 
-ChildT = TypeVar('ChildT', bound=object)
+ChildT = TypeVar('ChildT', default=object)
 
 
 class ParentGenericDataset(Dataset[Model[Optional[ChildT]]], Generic[ChildT]):
@@ -580,7 +581,7 @@ def test_generic_dataset_bound_typevar():
     # Note that the TypeVars for generic Model classes need to be bound to a type who in itself, or
     # whose origin_type produces a default value when called without parameters. Here, `ValT` is
     # bound to `int | str`, and `typing.get_origin(int | str)() == 0`.
-    _ModelValT = TypeVar('_ModelValT', bound=int | str)
+    _ModelValT = TypeVar('_ModelValT', bound=int | str, default=int)
 
     class MyListOfIntsOrStringsModel(Model[list[_ModelValT]], Generic[_ModelValT]):
         ...
@@ -680,7 +681,7 @@ def test_complex_models():
     # Generic model subclass
     #
 
-    ListT = TypeVar('ListT', bound=list)  # noqa
+    ListT = TypeVar('ListT', default=list)  # noqa
 
     class MyReversedListModel(Model[ListT], Generic[ListT]):
         # Commented out docstring, due to test_json_schema_generic_models_known_issue in test_model

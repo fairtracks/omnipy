@@ -14,12 +14,12 @@ from typing import (Annotated,
                     Optional,
                     Type,
                     TypeAlias,
-                    TypeVar,
                     Union)
 
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 from pydantic.generics import GenericModel
 import pytest
+from typing_extensions import TypeVar
 
 from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.public.hub import IsRuntime
@@ -910,7 +910,7 @@ def test_nested_model_classes_inner_generic_none_as_default() -> None:
     class MaybeNumberModel(Model[Optional[int]]):
         ...
 
-    BaseT = TypeVar('BaseT', bound=MaybeNumberModel)
+    BaseT = TypeVar('BaseT', default=MaybeNumberModel)
 
     class BaseModel(Model[BaseT], Generic[BaseT]):
         ...
@@ -925,7 +925,7 @@ def test_nested_model_classes_inner_optional_generic_none_as_default() -> None:
     class MaybeNumberModel(Model[Optional[int]]):
         ...
 
-    BaseT = TypeVar('BaseT', bound=Optional[MaybeNumberModel])
+    BaseT = TypeVar('BaseT', default=Optional[MaybeNumberModel])
 
     class BaseModel(Model[BaseT], Generic[BaseT]):
         ...
@@ -943,7 +943,7 @@ def test_union_nested_model_classes_inner_optional_generic_none_as_default() -> 
     class MaybeStringModel(Model[Optional[str]]):
         ...
 
-    BaseT = TypeVar('BaseT', bound=Union[MaybeNumberModel, MaybeStringModel])
+    BaseT = TypeVar('BaseT', default=Union[MaybeNumberModel, MaybeStringModel])
 
     class BaseModel(Model[BaseT], Generic[BaseT]):
         ...
@@ -955,7 +955,7 @@ def test_union_nested_model_classes_inner_optional_generic_none_as_default() -> 
 
 
 def test_union_nested_model_classes_inner_forwardref_generic_list_of_none() -> None:
-    BaseT = TypeVar('BaseT', bound=Union['ListModel', 'MaybeNumberModel'])
+    BaseT = TypeVar('BaseT', default=Union['ListModel', 'MaybeNumberModel'])
 
     class MaybeNumberModel(Model[Optional[int]]):
         ...
@@ -985,7 +985,7 @@ def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_defa
 ) -> None:
     MaybeNumber: TypeAlias = Optional[int]
 
-    BaseT = TypeVar('BaseT', bound=list | 'FullModel' | MaybeNumber)
+    BaseT = TypeVar('BaseT', default=list | 'FullModel' | MaybeNumber)
 
     class BaseModel(Model[BaseT], Generic[BaseT]):
         ...
@@ -1179,7 +1179,7 @@ def test_model_of_pydantic_model() -> None:
     }
 
 
-T = TypeVar('T', bound=object)
+T = TypeVar('T', default=object)
 
 
 def _assert_no_snapshot(model: Model[T]):
@@ -2471,7 +2471,7 @@ def test_model_copy() -> None:
 
 
 def test_json_schema_generic_model_one_level() -> None:
-    ListT = TypeVar('ListT', bound=list)
+    ListT = TypeVar('ListT', bound=list, default=list)
 
     # Note that the TypeVars need to be bound to a type who in itself, or whose origin_type
     # produces a default value when called without parameters. Here, `ListT` is bound to list,
