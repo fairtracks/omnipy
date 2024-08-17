@@ -2,10 +2,10 @@ from types import MappingProxyType
 
 import pytest
 
-from omnipy.modules.general.typedefs import FrozenDict
+from omnipy.modules.frozen.typedefs import FrozenDict
 
 
-def test_frozendict_empty():
+def test_frozendict_empty() -> None:
     empty_frozen_dict = FrozenDict()
 
     assert empty_frozen_dict == MappingProxyType({})
@@ -17,7 +17,7 @@ def test_frozendict_empty():
         assert empty_frozen_dict.update({'a': 'b'})
 
 
-def test_frozendict_simple():
+def test_frozendict_simple() -> None:
     simple_frozen_dict = FrozenDict({'a': 'b', 'c': 'd'})
 
     assert simple_frozen_dict == MappingProxyType({'a': 'b', 'c': 'd'})
@@ -34,7 +34,7 @@ def test_frozendict_simple():
     assert tuple_init_frozen_dict == simple_frozen_dict
 
 
-def test_nested_frozendict_mutable():
+def test_nested_frozendict_mutable() -> None:
     nested_frozen_dict = FrozenDict({'nested': {}})
 
     assert nested_frozen_dict == MappingProxyType({'nested': {}})
@@ -49,3 +49,12 @@ def test_nested_frozendict_mutable():
 
     nested_frozen_dict['nested']['a'] = 'b'
     assert nested_frozen_dict == MappingProxyType({'nested': {'a': 'b'}})
+
+
+def test_frozendict_repr() -> None:
+    simple_frozen_dict = FrozenDict({'a': 'b', 'c': 'd'})
+
+    assert repr(simple_frozen_dict) == "FrozenDict({'a': 'b', 'c': 'd'})"
+
+    del simple_frozen_dict.data
+    assert repr(simple_frozen_dict) == "FrozenDict()"

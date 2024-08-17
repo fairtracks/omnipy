@@ -4,7 +4,7 @@ from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
 
-from ..helpers.classes import CaseInfo
+from modules.helpers.classes import CaseInfo
 
 
 @pc.parametrize_with_cases('case', cases='.cases.frozen_data')
@@ -14,20 +14,20 @@ def test_nested_frozen_datasets(case: CaseInfo) -> None:
         for dataset_cls in case.dataset_classes_for_data_point(name):
             data = getattr(case.data_points, name)
 
-            print('\n---')
-            print(f'Field name: {name}')
-            print(f'Dataset class: {dataset_cls.__name__}')
-            print(f'Data input: {data}')
+            # print('\n---')
+            # print(f'Field name: {name}')
+            # print(f'Dataset class: {dataset_cls.__name__}')
+            # print(f'Data input: {data}')
 
             if case.data_point_should_fail(name):
                 with pytest.raises(ValidationError) as e:
                     dataset = dataset_cls()
                     dataset[name] = data
 
-                print(f'Error: {e}')
+                # print(f'Error: {e}')
             else:
                 dataset = dataset_cls()
                 dataset[name] = data
 
-                print(f'repr(dataset): {repr(dataset)}')
-                print(f'dataset.to_data(): {dataset.to_data()}')
+                # print(f'repr(dataset): {repr(dataset)}')
+                # print(f'dataset.to_data(): {dataset.to_data()}')

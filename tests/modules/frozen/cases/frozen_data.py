@@ -6,33 +6,32 @@ from typing import Type, TypeAlias
 import pytest
 import pytest_cases as pc
 
-from omnipy.modules.general.datasets import (NestedFrozenDictsDataset,
-                                             NestedFrozenDictsOrTuplesDataset,
-                                             NestedFrozenTuplesDataset)
-from omnipy.modules.general.models import (NestedFrozenDictsModel,
-                                           NestedFrozenDictsOrTuplesModel,
-                                           NestedFrozenTuplesModel)
-from omnipy.modules.general.typedefs import FrozenDict
-
-from ...helpers.classes import CaseInfo
-from .raw.examples import (e_complex_key_dict,
-                           e_int_key_dict,
-                           e_none_key_dict,
-                           ej_frozendict_iterable_scalar,
-                           ej_frozendict_iterable_scalar_empty,
-                           ej_frozendict_wrong_scalar,
-                           ej_tuple_iterable_scalar,
-                           ej_tuple_wrong_scalar,
-                           ej_type,
-                           f_complex,
-                           f_dict,
-                           f_frozendict,
-                           f_int,
-                           f_list,
-                           f_none,
-                           f_set,
-                           f_str,
-                           f_tuple)
+from modules.general.cases.raw.examples import (e_complex_key_dict,
+                                                e_int_key_dict,
+                                                e_none_key_dict,
+                                                ej_frozendict_iterable_scalar,
+                                                ej_frozendict_iterable_scalar_empty,
+                                                ej_frozendict_wrong_scalar,
+                                                ej_tuple_iterable_scalar,
+                                                ej_tuple_wrong_scalar,
+                                                ej_type,
+                                                f_complex,
+                                                f_dict,
+                                                f_frozendict,
+                                                f_int,
+                                                f_list,
+                                                f_none,
+                                                f_set,
+                                                f_str,
+                                                f_tuple)
+from modules.helpers.classes import CaseInfo
+from omnipy.modules.frozen.datasets import (NestedFrozenDictsDataset,
+                                            NestedFrozenDictsOrTuplesDataset,
+                                            NestedFrozenTuplesDataset)
+from omnipy.modules.frozen.models import (NestedFrozenDictsModel,
+                                          NestedFrozenDictsOrTuplesModel,
+                                          NestedFrozenTuplesModel)
+from omnipy.modules.frozen.typedefs import FrozenDict
 
 FSK: TypeAlias = int | str | complex  # for keys
 FSV: TypeAlias = None | int | str | complex  # for values

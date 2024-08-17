@@ -55,3 +55,6 @@ class FrozenDict(UserDict[_KeyT, _ValT], Generic[_KeyT, _ValT]):
                  **kwargs):
         super().__init__(unfrozen_dict, **kwargs)
         self.data: MappingProxyType[_KeyT, _ValT] = MappingProxyType(self.data)  # type: ignore
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.data if hasattr(self, 'data') else ''})"

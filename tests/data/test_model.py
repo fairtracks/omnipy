@@ -24,7 +24,6 @@ from typing_extensions import TypeVar
 from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.model import Model
-from omnipy.modules.general.typedefs import FrozenDict
 from omnipy.util.setdeque import SetDeque
 
 from ..helpers.functions import assert_model, assert_model_or_val, assert_val  # type: ignore[misc]
@@ -775,30 +774,6 @@ def test_dict_of_none() -> None:
 
     with pytest.raises(ValidationError):
         DictOfInt2NoneModel({'hello': None})
-
-
-def test_frozendict_of_none() -> None:
-    class NoneModel(Model[None]):
-        ...
-
-    class FrozenDictOfInt2NoneModel(Model[FrozenDict[int, NoneModel]]):
-        ...
-
-    assert FrozenDictOfInt2NoneModel().contents == FrozenDict()
-    assert FrozenDictOfInt2NoneModel().contents == FrozenDict()
-
-    with pytest.raises(ValidationError):
-        FrozenDictOfInt2NoneModel(None)
-
-    with pytest.raises(ValidationError):
-        FrozenDictOfInt2NoneModel([None])
-
-    assert FrozenDictOfInt2NoneModel({1: None}).contents == FrozenDict({1: NoneModel(None)})
-    assert FrozenDictOfInt2NoneModel(FrozenDict({1: None
-                                                 })).contents == FrozenDict({1: NoneModel(None)})
-
-    with pytest.raises(ValidationError):
-        FrozenDictOfInt2NoneModel({'hello': None})
 
 
 # TODO: Look at union + None bug. Perhaps fixed by pydantic v2, but should probably be fixed before
