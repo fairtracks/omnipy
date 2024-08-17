@@ -3,7 +3,38 @@ from typing import Callable
 import pytest
 
 from omnipy.util.contexts import AttribHolder
-from omnipy.util.decorators import add_callback_after_call, apply_decorator_to_property, no_context
+from omnipy.util.decorators import (add_callback_after_call,
+                                    add_callback_if_exception,
+                                    apply_decorator_to_property,
+                                    no_context)
+
+
+def test_exception_callback_with_args() -> None:
+    def concatenate(a: list[int], b: list[int]) -> list[int]:
+        if a == [42]:
+            raise ValueError('Not enough compute power')
+        if a == [666]:
+            raise RuntimeError('The End is Nigh!')
+        return a + b
+
+    def defensive_reverse_concatenator(a: list[int], b: list[int]) -> list[int]:
+        return list(b) + list(a)
+
+    concatenate_reverse_if_error = add_callback_if_exception(concatenate,
+                                                             defensive_reverse_concatenator)
+    assert concatenate_reverse_if_error([1, 2], [3, 4]) == [1, 2, 3, 4]
+    assert concatenate_reverse_if_error((1, 2), [3, 4]) == [3, 4, 1, 2]  # type: ignore[arg-type]
+    assert concatenate_reverse_if_error([42], [3, 4]) == [3, 4, 42]
+    assert concatenate_reverse_if_error([666], [3, 4]) == [3, 4, 666]
+
+    concatenate_reverse_if_error = add_callback_if_exception(concatenate,
+                                                             defensive_reverse_concatenator,
+                                                             (TypeError, ValueError))
+    assert concatenate_reverse_if_error([1, 2], [3, 4]) == [1, 2, 3, 4]
+    assert concatenate_reverse_if_error((1, 2), [3, 4]) == [3, 4, 1, 2]  # type: ignore[arg-type]
+    assert concatenate_reverse_if_error([42], [3, 4]) == [3, 4, 42]
+    with pytest.raises(RuntimeError):
+        assert concatenate_reverse_if_error([666], [3, 4])
 
 
 def test_callback_after_func_call() -> None:
