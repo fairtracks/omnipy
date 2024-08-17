@@ -342,6 +342,20 @@ def test_parse_convertible_data() -> None:
     assert model_3 != model_4
 
 
+def test_parse_convertible_sequences() -> None:
+    model = Model[list[int]](range(5))
+    assert model.to_data() == [0, 1, 2, 3, 4]
+
+    model = Model[tuple[str, ...]](range(5))  # type: ignore[assignment]
+    assert model.to_data() == ('0', '1', '2', '3', '4')
+
+    with pytest.raises(ValidationError):
+        Model[list[str]]('abcde')
+
+    with pytest.raises(ValidationError):
+        Model[list[str]](b'abcde')
+
+
 def test_load_inconvertible_data() -> None:
     class NumberModel(Model[int]):
         ...

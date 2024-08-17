@@ -619,6 +619,19 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def _parse_data(cls, data: Any) -> _RootT:
         return data
 
+    @root_validator(pre=True)
+    def _generous_sequence_support(cls, root_obj: dict[str, _RootT | None]) -> Any:
+        if ROOT_KEY in root_obj:
+            value = root_obj[ROOT_KEY]
+            outer_type = cls.outer_type()
+            if lenient_issubclass(outer_type, Sequence) \
+                    and not lenient_isinstance(value, outer_type) \
+                    and isinstance(value, Sequence) \
+                    and not sequence_like(value) \
+                    and not any(isinstance(value, typ) for typ in (str, bytes)):
+                return {ROOT_KEY: [_ for _ in value]}
+        return root_obj
+
     @root_validator
     def _parse_root_object(cls, root_obj: dict[str, _RootT | None]) -> Any:
         assert ROOT_KEY in root_obj
