@@ -16,7 +16,7 @@ from .cases.datasets import (csv_dataset,
 
 
 @pytest.fixture
-def registry():
+def registry(assert_snapshot_holder_and_deepcopy_memo_are_empty_before_and_after):
 
     registry = SerializerRegistry()
 

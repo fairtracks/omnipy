@@ -1,10 +1,11 @@
 from datetime import datetime
+import gc
 import logging
 import os
 from pathlib import Path
 import shutil
 import tempfile
-from typing import Annotated, Iterator, Type
+from typing import Annotated, Callable, Iterator, Type
 
 import pytest
 
@@ -86,3 +87,46 @@ def mock_datetime() -> datetime:
             return self._now
 
     return MockDatetime(2000, 1, 1)
+
+
+@pytest.fixture(scope='function')
+def assert_snapshot_holder_and_deepcopy_memo_are_empty(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> Callable[[], None]:
+    snapshot_holder = runtime.objects.data_class_creator.snapshot_holder
+
+    def _assert_snapshot_holder_and_deepcopy_memo_are_empty():
+        snapshot_holder.delete_scheduled_deepcopy_content_ids()
+        try:
+            print('\nChecking if snapshot_holder and deepcopy_memo objects are empty...')
+            assert snapshot_holder.all_are_empty()
+        except AssertionError:
+            try:
+                print('Not empty. Running garbage collection and trying again...')
+                gc.collect()
+                snapshot_holder.delete_scheduled_deepcopy_content_ids()
+            except AssertionError:
+                print('Not empty again. Running garbage collection and trying last time...')
+                gc.collect()
+                snapshot_holder.delete_scheduled_deepcopy_content_ids()
+
+                try:
+                    assert snapshot_holder.all_are_empty()
+                except AssertionError:
+                    assert snapshot_holder.all_are_empty(debug=True)
+            finally:
+                snapshot_holder.clear()
+
+    return _assert_snapshot_holder_and_deepcopy_memo_are_empty
+
+
+@pytest.fixture(scope='function')
+def assert_snapshot_holder_and_deepcopy_memo_are_empty_before_and_after(
+    assert_snapshot_holder_and_deepcopy_memo_are_empty: Annotated[Callable[[], None],
+                                                                  pytest.fixture]
+) -> Iterator[None]:
+
+    assert_snapshot_holder_and_deepcopy_memo_are_empty()
+
+    yield
+
+    assert_snapshot_holder_and_deepcopy_memo_are_empty()
