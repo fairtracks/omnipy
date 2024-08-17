@@ -334,7 +334,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
         else:
             raise RuntimeError('Model does not allow setting of extra attributes')
 
-    @root_validator()
+    @root_validator
     def _parse_root_object(cls, root_obj: dict[str, ModelT]) -> Any:  # noqa
         assert DATA_KEY in root_obj
         data_dict = root_obj[DATA_KEY]

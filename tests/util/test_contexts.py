@@ -1,6 +1,6 @@
 import sys
 from textwrap import dedent
-from typing import Annotated, Callable, TypeAlias
+from typing import Callable, TypeAlias
 
 import pytest
 

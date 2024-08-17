@@ -41,11 +41,11 @@ def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> J
             if key not in output_dataset:
                 output_dataset[key] = []
 
-            if not val.outer_type() == list:
+            if not type(val) == list:
                 val = JsonListModel([val])
 
             for item_index, val_item in enumerate(val):
-                if val_item.outer_type() == dict:
+                if type(val_item) == dict:
                     output_dataset[key].append({id_key: f'{name}_{item_index}'})
                     assert id_key not in val_item
                     output_dataset[key][-1] |= val_item

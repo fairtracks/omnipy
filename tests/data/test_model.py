@@ -777,7 +777,7 @@ def test_dict_of_none() -> None:
 
 
 # TODO: Look at union + None bug. Perhaps fixed by pydantic v2, but should probably be fixed before
-#       that
+#       that. Also example in test_mimic_nested_dict_operations_with_model_containers
 
 
 @pytest.mark.skipif(
