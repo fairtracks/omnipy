@@ -3,7 +3,7 @@ from typing import IO, Type
 from omnipy.api.protocols.public.data import IsDataset
 from omnipy.data.serializer import TarFileSerializer
 
-from .datasets import JsonBaseDataset, JsonDataset
+from .datasets import _JsonBaseDataset, JsonDataset
 from .models import JsonModel
 
 
@@ -12,7 +12,7 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer):
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         from ..isa.datasets import IsaJsonDataset
-        return isinstance(dataset, JsonBaseDataset) or isinstance(dataset, IsaJsonDataset)
+        return isinstance(dataset, _JsonBaseDataset) or isinstance(dataset, IsaJsonDataset)
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
@@ -23,7 +23,7 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer):
         return 'json'
 
     @classmethod
-    def serialize(cls, json_dataset: JsonBaseDataset) -> bytes | memoryview:
+    def serialize(cls, json_dataset: _JsonBaseDataset) -> bytes | memoryview:
         def json_encode_func(json_data: JsonModel) -> bytes:
             return json_data.json(indent=2).encode('utf8')
 

@@ -19,19 +19,17 @@ def test_transpose_empty_dicts_2_nothing(runtime: Annotated[IsRuntime, pytest.fi
     assert out_dataset.to_data() == {}
 
 
-def test_transpose_dict_of_numbers_2_lists_of_numbers(runtime: Annotated[IsRuntime,
-                                                                         pytest.fixture]):
-    out_dataset_1 = transpose_dicts_2_lists.run(
-        JsonDictDataset(dict(abc={'a': 123}, bcd={'a': 456})))
+def test_transpose_dict_of_numbers_2_lists_of_numbers(
+        assert_snapshot_holder_and_deepcopy_memo_are_empty,
+        runtime: Annotated[IsRuntime, pytest.fixture]):
+
+    in_dataset = JsonDictDataset(dict(abc={'a': 123}, bcd={'a': 456}))
+    out_dataset_1 = transpose_dicts_2_lists.run(in_dataset)
     assert type(out_dataset_1) is JsonListDataset
     assert out_dataset_1.to_data() == {'a': [123, 456]}
 
-    out_dataset_2 = transpose_dicts_2_lists.run(
-        JsonDictDataset(dict(abc={
-            'a': 123, 'b': 321
-        }, bcd={
-            'a': 456, 'c': 654
-        })))
+    in_dataset_2 = JsonDictDataset(dict(abc={'a': 123, 'b': 321}, bcd={'a': 456, 'c': 654}))
+    out_dataset_2 = transpose_dicts_2_lists.run(in_dataset_2)
     assert type(out_dataset_2) is JsonListDataset
     assert out_dataset_2.to_data() == {'a': [123, 456], 'b': [321], 'c': [654]}
 

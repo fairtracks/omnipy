@@ -5,8 +5,8 @@ from .datasets import (JsonDictOfDictsDataset,
                        JsonDictOfListsOfDictsDataset,
                        JsonListOfDictsDataset,
                        JsonListOfDictsOfScalarsDataset)
-from .tasks import (DEFAULT_KEY,
-                    flatten_outer_level_of_all_data_files,
+from .tasks import (_flatten_outer_level_of_all_data_files,
+                    DEFAULT_KEY,
                     ID_KEY,
                     REF_KEY,
                     transpose_dicts_2_lists)
@@ -25,7 +25,7 @@ def flatten_nested_json(
 
     while len(data_files_of_any_ds) > 0:
         data_files_of_scalar_records_ds, data_files_of_any_ds = \
-            flatten_outer_level_of_all_data_files(
+            _flatten_outer_level_of_all_data_files(
                 data_files_of_any_ds, id_key, ref_key, default_key)
 
         all_data_files_of_scalar_records_ds |= data_files_of_scalar_records_ds
