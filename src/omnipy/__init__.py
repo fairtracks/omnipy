@@ -11,6 +11,7 @@ from omnipy.compute.flow import (DagFlow,
 from omnipy.compute.task import Task, TaskTemplate
 from omnipy.data.dataset import Dataset, ListOfParamModelDataset, MultiModelDataset, ParamDataset
 from omnipy.data.model import ListOfParamModel, Model, ParamModel
+from omnipy.data.param import conf, ConfHolder, ConfT, ParamModelMixin
 from omnipy.hub.runtime import runtime
 from omnipy.modules.general.models import (Chain2,
                                            Chain3,
@@ -117,7 +118,6 @@ from omnipy.modules.raw.models import (BytesModel,
                                        JoinColumnsToLinesModel,
                                        JoinItemsModel,
                                        JoinLinesModel,
-                                       Params,
                                        SplitLinesToColumnsModel,
                                        SplitToItemsModel,
                                        SplitToItemsModelNew,

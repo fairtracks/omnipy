@@ -1,12 +1,11 @@
+from dataclasses import dataclass
 import os
-from typing import Generic, get_args
+from typing import Generic
 
-from pydantic import BaseModel
 from pydantic.generics import _generic_types_cache
-from typing_extensions import TypeVar
 
-from omnipy.data.helpers import Params, TypeVarStore
 from omnipy.data.model import DataWithParams, ListOfParamModel, Model, ParamModel
+from omnipy.data.param import ConfHolder, ConfT, ParamModelMixin
 
 
 class BytesModel(ParamModel[str | bytes, str]):
@@ -57,29 +56,29 @@ class JoinLinesModel(Model[list[str] | str]):
         return os.linesep.join(data)
 
 
-ParamsT = TypeVar('ParamsT', default=Params)
-
-
-class SplitToItemsModelNew(Model[list[str] | str | TypeVarStore[ParamsT]], Generic[ParamsT]):
-    class Params(BaseModel):
+class SplitToItemsModelNew(
+        Model[list[str] | str | ConfHolder[ConfT]],
+        ParamModelMixin['SplitToItemsModelNew.Params'],
+        Generic[ConfT],
+):
+    @dataclass
+    class Params:
         strip: bool = True
         strip_chars: str | None = None
-        delimiter: str = ','
+        delimiter: str = '\t'
 
     @classmethod
-    def _parse_data(cls, data: list[str] | str | TypeVarStore[ParamsT]) -> list[str]:
+    def _parse_data(cls, data: list[str] | str) -> list[str]:
         if isinstance(data, list):
             return data
 
-        params_typevar = get_args(get_args(cls.outer_type(with_args=True))[-1])[0]
-        params_dict = Model[params_typevar]().contents.params
-        params = cls.Params(**params_dict)
+        settings = cls._get_conf_settings()
 
-        if params.strip:
-            data = data.strip(params.strip_chars)
+        if settings.strip:
+            data = data.strip(settings.strip_chars)
 
-        items = data.split(params.delimiter)
-        data = [item.strip(params.strip_chars) for item in items] if params.strip else items
+        items = data.split(settings.delimiter)
+        data = [item.strip(settings.strip_chars) for item in items] if settings.strip else items
         return data
 
 

@@ -11,14 +11,6 @@ class TypeVarStore(Generic[T]):
         raise ValueError()
 
 
-class Params:
-    params: dict[str, object]
-
-    def __class_getitem__(cls, params: dict[str, object] = {}) -> 'Params':
-        cls.params = params
-        return cls
-
-
 class YesNoMaybe(IntEnum):
     NO = 0
     YES = 1

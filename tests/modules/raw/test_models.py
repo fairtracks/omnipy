@@ -6,8 +6,8 @@ from pydantic import ValidationError
 import pytest
 
 from omnipy.api.protocols.public.hub import IsRuntime
-from omnipy.data.helpers import Params
 from omnipy.data.model import Model
+from omnipy.data.param import conf
 from omnipy.modules.raw.models import (BytesModel,
                                        JoinColumnsToLinesModel,
                                        JoinItemsModel,
@@ -18,7 +18,7 @@ from omnipy.modules.raw.models import (BytesModel,
                                        SplitToLinesModel,
                                        StrModel)
 
-from ...helpers.protocols import AssertModelOrValFunc  # type: ignore[misc]
+from ...helpers.protocols import AssertModelOrValFunc
 
 
 def test_bytes_model():
@@ -91,10 +91,9 @@ def test_split_to_and_join_lines_model(
         'abhorred in my imagination it is! my gorge rises at',
         'it. Here hung those lips that I have kissed I know'
     ]
-    assert_model_if_dyn_conv_else_val(
-        last_lines[-1],  # type: ignore[index]
-        str,
-        'now, to mock your own grinning? quite chap-fallen.')
+    assert_model_if_dyn_conv_else_val(last_lines[-1],
+                                      str,
+                                      'now, to mock your own grinning? quite chap-fallen.')
 
     joined_lines = JoinLinesModel(last_lines[0:2])
     assert joined_lines.contents == dedent("""\
@@ -160,32 +159,35 @@ def test_split_to_and_join_items_new_model(
 
     data_tab = Model[str](raw_data_tab) if use_str_model else raw_data_tab
 
-    items_stripped_tab = SplitToItemsModelNew(data_tab)
+    items_stripped_tab: SplitToItemsModelNew = SplitToItemsModelNew(data_tab)
     assert items_stripped_tab.contents == ['abc', 'def', 'ghi', 'jkl']
 
-    assert_model_or_val(dyn_convert, items_stripped_tab[1], str, 'def')  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(items_stripped_tab[1], str, 'def')  # type: ignore[index]
     assert items_stripped_tab[-2:].contents == ['ghi', 'jkl']  # type: ignore[index]
 
-    items_unstripped_tab = SplitToItemsModelNew[Params[{'strip': False}]](data_tab)
+    split_conf = conf(SplitToItemsModelNew.Params)
+    items_unstripped_tab = \
+        SplitToItemsModelNew[split_conf(strip=False)](data_tab)  # type: ignore[operator, misc]
     assert items_unstripped_tab.contents == ['abc', ' def ', 'ghi', 'jkl']
-    assert_model_or_val(dyn_convert, items_unstripped_tab[1], str, ' def ')  # type: ignore[index]
-    assert items_unstripped_tab[-2:].contents == ['ghi', 'jkl']  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(items_unstripped_tab[1], str, ' def ')
+    assert items_unstripped_tab[-2:].contents == ['ghi', 'jkl']
 
     raw_data_comma = 'abc, def, ghi, jkl'
 
     data_comma = Model[str](raw_data_comma) if use_str_model else raw_data_comma
 
-    items_stripped_comma = SplitToItemsModelNew[Params[{'delimiter': ','}]](data_comma)
+    items_stripped_comma = \
+        SplitToItemsModelNew[split_conf(delimiter=',')](data_comma)  # type: ignore[operator, misc]
+
     assert items_stripped_comma.contents == ['abc', 'def', 'ghi', 'jkl']
-    assert_model_or_val(dyn_convert, items_stripped_comma[1], str, 'def')  # type: ignore[index]
-    assert items_stripped_comma[-2:].contents == ['ghi', 'jkl']  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(items_stripped_comma[1], str, 'def')
+    assert items_stripped_comma[-2:].contents == ['ghi', 'jkl']
 
     tab_joined_items = JoinItemsModel(items_stripped_tab[1:3])  # type: ignore[index]
     assert tab_joined_items.contents == 'def\tghi'
     assert tab_joined_items[1:-1].contents == 'ef\tgh'  # type: ignore[index]
 
-    comma_space_joined_items = JoinItemsModel(
-        items_stripped_comma[1:3], delimiter=', ')  # type: ignore[index]
+    comma_space_joined_items = JoinItemsModel(items_stripped_comma[1:3], delimiter=', ')
     assert comma_space_joined_items.contents == 'def, ghi'
     assert comma_space_joined_items[1:-1].contents == 'ef, gh'  # type: ignore[index]
 
@@ -212,8 +214,10 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
 
     cols_unstripped_tab = SplitLinesToColumnsModel(data_tab, strip=False)
     assert cols_unstripped_tab[0].contents == ['abc', ' def ', 'ghi', ' jkl']  # type: ignore[index]
-    assert_model_if_dyn_conv_else_val(cols_unstripped_tab[0][1], str,
-                                      ' def ')  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(
+        cols_unstripped_tab[0][1],  # type: ignore[index]
+        str,
+        ' def ')
     assert cols_unstripped_tab[1:2].contents == [  # type: ignore[index]
         SplitToItemsModel('mno\t pqr\tstu\t vwx', strip=False)
     ]
