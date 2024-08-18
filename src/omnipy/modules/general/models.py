@@ -1,7 +1,8 @@
-from typing import Generic, Hashable, TypeAlias
+from typing import Generic, get_args, Hashable, TypeAlias
 
 from typing_extensions import TypeVar
 
+from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model
 from omnipy.util.helpers import is_iterable
 
@@ -39,3 +40,50 @@ class NotIterableExceptStrOrBytesModel(Model[object | None]):
 #
 
 # General
+
+U = TypeVar('U', bound=Model, default=Model[object])
+V = TypeVar('V', bound=Model, default=Model[object])
+W = TypeVar('W', bound=Model, default=Model[object])
+X = TypeVar('X', bound=Model, default=Model[object])
+Y = TypeVar('Y', bound=Model, default=Model[object])
+Z = TypeVar('Z', bound=Model, default=Model[object])
+
+
+class ChainMixin:
+    @classmethod
+    def _parse_data(cls, data) -> object:
+        stores = get_args(cls.outer_type(with_args=True))[:-1]
+        for store in stores:
+            model = get_args(store)[0]
+            data = model(data)
+        return data
+
+
+class Chain2(ChainMixin, Model[TypeVarStore[U] | TypeVarStore[V] | object], Generic[U, V]):
+    ...
+
+
+class Chain3(ChainMixin,
+             Model[TypeVarStore[U] | TypeVarStore[V] | TypeVarStore[W] | object],
+             Generic[U, V, W]):
+    ...
+
+
+class Chain4(ChainMixin,
+             Model[TypeVarStore[U] | TypeVarStore[V] | TypeVarStore[W] | TypeVarStore[X] | object],
+             Generic[U, V, W, X]):
+    ...
+
+
+class Chain5(ChainMixin,
+             Model[TypeVarStore[U] | TypeVarStore[V] | TypeVarStore[W] | TypeVarStore[X]
+                   | TypeVarStore[Y] | object],
+             Generic[U, V, W, X, Y]):
+    ...
+
+
+class Chain6(ChainMixin,
+             Model[TypeVarStore[U] | TypeVarStore[V] | TypeVarStore[W] | TypeVarStore[X]
+                   | TypeVarStore[Y] | TypeVarStore[Z] | object],
+             Generic[U, V, W, X, Y, Z]):
+    ...
