@@ -8,6 +8,7 @@ from typing import (Annotated,
                     Any,
                     Callable,
                     cast,
+                    ForwardRef,
                     Generic,
                     List,
                     Literal,
@@ -114,6 +115,17 @@ def test_error_init() -> None:
 
     with pytest.raises(AssertionError):
         Model[int](__root__=123, other=234)
+
+
+def test_error_init_forwardref() -> None:
+    with pytest.raises(TypeError, match='Cannot instantiate model'):
+        Model[ForwardRef]()
+
+    with pytest.raises(TypeError, match='Cannot instantiate model'):
+        Model[ForwardRef('SomeClass')]()
+
+    class SomeClass:
+        ...
 
 
 def test_load() -> None:

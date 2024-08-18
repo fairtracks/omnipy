@@ -263,6 +263,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         if origin_type is Literal:
             return args[0]
 
+        if origin_type is ForwardRef or type(origin_type) is ForwardRef:
+            raise TypeError(f'Cannot instantiate model "{model}". ')
+
         return cast(_RootT, origin_type())
 
     @classmethod
@@ -1044,19 +1047,19 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         return contents_attr
 
-    def _is_pure_pydantic_model(self):
+    def _is_pure_pydantic_model(self) -> bool:
         return is_pure_pydantic_model(self._get_real_contents())
 
-    def _is_non_omnipy_pydantic_model(self):
+    def _is_non_omnipy_pydantic_model(self) -> bool:
         return is_non_omnipy_pydantic_model(self._get_real_contents())
 
-    def _getattr_from_contents_obj(self, attr):
+    def _getattr_from_contents_obj(self, attr) -> object:
         return getattr(self._get_real_contents(), attr)
 
-    def _getattr_from_contents_cls(self, attr):
+    def _getattr_from_contents_cls(self, attr) -> object:
         return getattr(self._get_real_contents().__class__, attr)
 
-    def _get_real_contents(self):
+    def _get_real_contents(self) -> object:
         if is_model_instance(self.contents):
             return self.contents.contents
         else:
@@ -1074,6 +1077,10 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 _waiting_for_terminal_repr(True)
                 return self._table_repr()
         return self._trad_repr()
+
+    def __hash__(self) -> int:
+        return self._special_method('__hash__',
+                                    MethodInfo(state_changing=False, maybe_returns_same_type=False))
 
     def view(self):
         from omnipy.modules.pandas.models import PandasModel
