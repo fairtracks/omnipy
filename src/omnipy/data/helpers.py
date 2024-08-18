@@ -1,4 +1,21 @@
-from typing import NamedTuple
+from typing import Generic, NamedTuple
+
+from typing_extensions import TypeVar
+
+T = TypeVar('T')
+
+
+class TypeVarStore(Generic[T]):
+    def __init__(self, t: T) -> None:
+        raise ValueError()
+
+
+class Params:
+    params: dict[str, object]
+
+    def __class_getitem__(cls, params: dict[str, object] = {}) -> 'Params':
+        cls.params = params
+        return cls
 
 
 class MethodInfo(NamedTuple):
