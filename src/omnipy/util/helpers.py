@@ -73,7 +73,7 @@ def create_merged_dict(dictable_1: Dictable[_KeyT],
 
 
 def remove_none_vals(**kwargs: object) -> dict[object, object]:
-    return {key: val for key, val in kwargs.items() if val is not None}
+    return {key: obj for key, obj in kwargs.items() if obj is not None}
 
 
 def get_datetime_format(locale: LocaleType | None = None) -> str:
@@ -86,8 +86,8 @@ def get_datetime_format(locale: LocaleType | None = None) -> str:
     return datetime_format
 
 
-async def resolve(val):
-    return await val if inspect.isawaitable(val) else val
+async def resolve(obj):
+    return await obj if inspect.isawaitable(obj) else obj
 
 
 def repr_max_len(data: object, max_len: int = 200):
@@ -712,9 +712,9 @@ def recursive_module_import(module: ModuleType, imported_modules: list[ModuleTyp
     module_vars = vars(module)
     imported_modules.append(module)
 
-    for val in module_vars.values():
-        if isclass(val):
-            for base_cls in val.__bases__:
+    for obj in module_vars.values():
+        if isclass(obj):
+            for base_cls in obj.__bases__:
                 base_cls_module = getmodule(base_cls)
                 if base_cls_module and _is_internal_module(base_cls_module, imported_modules):
                     module_vars = create_merged_dict(
