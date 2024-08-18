@@ -452,35 +452,39 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
             tar.extractall(path=directory)
             tar.close()
 
-    def load(self, path_or_url: str, by_file_suffix=False):
-        with TemporaryDirectory() as tmp_dir_path:
-            serializer_registry = self._get_serializer_registry()
+    def load(self, *path_or_urls: str, by_file_suffix=False):
+        for path_or_url in path_or_urls:
+            if is_model_instance(path_or_url):
+                path_or_url = path_or_url.contents
 
-            parsed_url = urlparse(path_or_url)
+            with TemporaryDirectory() as tmp_dir_path:
+                serializer_registry = self._get_serializer_registry()
 
-            if parsed_url.scheme in ['http', 'https']:
-                download_path = self._download_file(path_or_url, parsed_url.path, tmp_dir_path)
-                if download_path is None:
-                    return
-                tar_gz_file_path = self._ensure_tar_gz_file(download_path)
-            elif parsed_url.scheme in ['file', '']:
-                tar_gz_file_path = self._ensure_tar_gz_file(parsed_url.path)
-            elif self._is_windows_path(parsed_url):
-                tar_gz_file_path = self._ensure_tar_gz_file(path_or_url)
-            else:
-                raise ValueError(f'Unsupported scheme "{parsed_url.scheme}"')
+                parsed_url = urlparse(path_or_url)
 
-            if by_file_suffix:
-                loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_file_suffix(
-                    self, tar_gz_file_path, self)
-            else:
-                loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_dataset_cls(
-                    self, tar_gz_file_path, self)
-            if loaded_dataset is not None:
-                self.absorb(loaded_dataset)
-                return
-            else:
-                raise RuntimeError('Unable to load serializer')
+                if parsed_url.scheme in ['http', 'https']:
+                    download_path = self._download_file(path_or_url, parsed_url.path, tmp_dir_path)
+                    if download_path is None:
+                        continue
+                    tar_gz_file_path = self._ensure_tar_gz_file(download_path)
+                elif parsed_url.scheme in ['file', '']:
+                    tar_gz_file_path = self._ensure_tar_gz_file(parsed_url.path)
+                elif self._is_windows_path(parsed_url):
+                    tar_gz_file_path = self._ensure_tar_gz_file(path_or_url)
+                else:
+                    raise ValueError(f'Unsupported scheme "{parsed_url.scheme}"')
+
+                if by_file_suffix:
+                    loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_file_suffix(
+                        self, tar_gz_file_path, self)
+                else:
+                    loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_dataset_cls(
+                        self, tar_gz_file_path, self)
+                if loaded_dataset is not None:
+                    self.absorb(loaded_dataset)
+                    continue
+                else:
+                    raise RuntimeError('Unable to load serializer')
 
     @staticmethod
     def _is_windows_path(parsed_url: ParseResult) -> bool:
