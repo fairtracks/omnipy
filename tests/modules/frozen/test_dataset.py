@@ -4,7 +4,7 @@ from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
 
-from modules.helpers.classes import CaseInfo
+from ..helpers.classes import CaseInfo
 
 
 @pc.parametrize_with_cases('case', cases='.cases.frozen_data')

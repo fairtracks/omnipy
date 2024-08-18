@@ -4,9 +4,10 @@ from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
 
-from modules.helpers.classes import CaseInfo
 from omnipy.data.model import Model
 from omnipy.modules.frozen.typedefs import FrozenDict
+
+from ..helpers.classes import CaseInfo
 
 
 def test_frozendict_of_none() -> None:
