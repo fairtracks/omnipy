@@ -1,5 +1,6 @@
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
+from contextlib import suppress
 import functools
 import inspect
 import json
@@ -340,6 +341,12 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             model = cast(type[_RootT] | tuple[type[_RootT], Any], model)
 
         created_model = cast(Model, super().__class_getitem__(model))
+
+        if cls != Model:
+            with suppress(TypeError):  # E.g. if model type is ForwardRef
+                full_type = created_model.full_type()
+                root_field = created_model._get_root_field()
+                root_field.default_factory = cls._get_default_factory_from_model(full_type)
 
         # As long as models are not created concurrently, setting the class members temporarily
         # should not have averse effects
@@ -745,6 +752,10 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def outer_type(cls, with_args: bool = False) -> TypeForm | None:
         return evaluate_any_forward_refs_if_possible(
             cls._get_root_type(outer=True, with_args=with_args), cls.__module__)
+
+    @classmethod
+    def full_type(cls) -> TypeForm | None:
+        return cls.outer_type(with_args=True)
 
     @classmethod
     def is_nested_type(cls) -> bool:
@@ -1162,22 +1173,6 @@ class DataWithParams(GenericModel, Generic[_ParamRootT, _KwargValT]):
 
 class ParamModel(Model[_ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
                  Generic[_ParamRootT, _KwargValT]):
-    def __class_getitem__(  # type: ignore[override]
-        cls,
-        model: tuple[type[_ParamRootT], type[_KwargValT]]  # type: ignore[override]
-    ) -> 'ParamModel[_ParamRootT, _KwargValT]':
-        created_model = super().__class_getitem__(model)
-        outer_type = created_model._get_root_type(outer=True, with_args=True)
-        default_val = cls._get_default_value_from_model(outer_type)
-
-        def get_default_val() -> _ParamRootT | DataWithParams[_ParamRootT, _KwargValT]:
-            return default_val
-
-        root_field = created_model._get_root_field()
-        root_field.default_factory = get_default_val
-
-        return cast(ParamModel, created_model)
-
     def _init(self,
               super_kwargs: dict[str, _ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
               **kwargs: _KwargValT) -> None:
