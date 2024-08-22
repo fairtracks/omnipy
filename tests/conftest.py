@@ -14,6 +14,7 @@ import pytest_cases as pc
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.api.typedefs import TypeForm
 from omnipy.compute.job_creator import JobBaseMeta, JobCreator
+from omnipy.config.data import DataConfig
 from omnipy.config.root_log import RootLogConfig
 from omnipy.data.data_class_creator import DataClassBaseMeta, DataClassCreator
 
@@ -156,33 +157,42 @@ def runtime_data_config_variants(
 
 
 @pytest.fixture(scope='function')
-def skip_test_if_interactive_mode(runtime: Annotated[IsRuntime, pytest.fixture]):
+def skip_test_if_interactive_mode(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
     pass
     if runtime.config.data.interactive_mode:
         pytest.skip('This test only runs without `interactive_mode`')
 
 
 @pytest.fixture(scope='function')
-def skip_test_if_not_interactive_mode(runtime: Annotated[IsRuntime, pytest.fixture]):
+def skip_test_if_not_interactive_mode(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
     pass
     if not runtime.config.data.interactive_mode:
         pytest.skip('This test only runs with `interactive_mode`')
 
 
 @pytest.fixture(scope='function')
-def skip_test_if_dynamically_convert_elements_to_models(runtime: Annotated[IsRuntime,
-                                                                           pytest.fixture]):
+def skip_test_if_dynamically_convert_elements_to_models(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
     pass
     if runtime.config.data.dynamically_convert_elements_to_models:
         pytest.skip('This test only runs without `dynamically_convert_elements_to_models`')
 
 
 @pytest.fixture(scope='function')
-def skip_test_if_not_dynamically_convert_elements_to_models(runtime: Annotated[IsRuntime,
-                                                                               pytest.fixture]):
+def skip_test_if_not_dynamically_convert_elements_to_models(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
     pass
     if not runtime.config.data.dynamically_convert_elements_to_models:
         pytest.skip('This test only runs with `dynamically_convert_elements_to_models`')
+
+
+@pytest.fixture(scope='function')
+def skip_test_if_not_default_data_config_values(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    if any(
+            getattr(runtime.config.data, attr) != getattr(DataConfig, attr)
+            for attr in ('interactive_mode', 'dynamically_convert_elements_to_models')):
+        pytest.skip('This test only runs with default data config values')
 
 
 @pytest.fixture(scope='function')
