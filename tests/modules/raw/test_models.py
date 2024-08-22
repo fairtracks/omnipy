@@ -13,6 +13,7 @@ from omnipy.modules.raw.models import (BytesModel,
                                        JoinItemsModel,
                                        JoinLinesModel,
                                        SplitLinesToColumnsModel,
+                                       SplitLinesToColumnsModelNew,
                                        SplitToItemsModel,
                                        SplitToItemsModelNew,
                                        SplitToLinesModel,
@@ -221,9 +222,6 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
     assert cols_unstripped_tab[1:2].contents == [  # type: ignore[index]
         SplitToItemsModel('mno\t pqr\tstu\t vwx', strip=False)
     ]
-    assert cols_unstripped_tab[1:2].contents == [  # type: ignore[index]
-        SplitToItemsModel('mno\t pqr\tstu\t vwx', strip=False)
-    ]
     assert cols_unstripped_tab[1:].to_data() == [  # type: ignore[index]
         ['mno', ' pqr', 'stu', ' vwx'], ['yz']
     ]
@@ -252,3 +250,53 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
     assert joined_cols.contents == [JoinItemsModel('mno, pqr, stu, vwx'), JoinItemsModel('yz')]
     assert joined_cols[1:].contents == [JoinItemsModel('yz')]  # type: ignore[index]
     assert joined_cols.to_data() == ['mno, pqr, stu, vwx', 'yz']
+
+
+@pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
+def test_split_lines_to_columns_new_model(
+    use_str_model: bool,
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+
+    raw_data_tab = ['abc\t def \tghi\t jkl', 'mno\t pqr\tstu\t vwx', 'yz']
+    data_tab = [Model[str](line) for line in raw_data_tab] if use_str_model else raw_data_tab
+
+    cols_stripped_tab: SplitLinesToColumnsModelNew = SplitLinesToColumnsModelNew(data_tab)
+    assert_model_if_dyn_conv_else_val(
+        cols_stripped_tab[0],  # type: ignore[index]
+        list[str],
+        ['abc', 'def', 'ghi', 'jkl'])
+    assert_model_if_dyn_conv_else_val(cols_stripped_tab[0][1], str, 'def')  # type: ignore[index]
+    assert cols_stripped_tab[1:2].contents == [  # type: ignore[index]
+        ['mno', 'pqr', 'stu', 'vwx']
+    ]
+    assert cols_stripped_tab[1:].to_data() == [  # type: ignore[index]
+        ['mno', 'pqr', 'stu', 'vwx'], ['yz']
+    ]
+
+    cnf = conf(SplitLinesToColumnsModelNew.Params)
+
+    cols_unstripped_tab = \
+        SplitLinesToColumnsModelNew[cnf(strip=False)](data_tab)  # type: ignore[operator, misc]
+
+    assert_model_if_dyn_conv_else_val(
+        cols_unstripped_tab[0],
+        list[str],
+        ['abc', ' def ', 'ghi', ' jkl'],
+    )
+    assert_model_if_dyn_conv_else_val(cols_unstripped_tab[0][1], str, ' def ')
+    assert cols_unstripped_tab[1:2].contents == [['mno', ' pqr', 'stu', ' vwx']]
+    assert cols_unstripped_tab[1:].to_data() == [['mno', ' pqr', 'stu', ' vwx'], ['yz']]
+
+    raw_data_comma = ['abc, def, ghi, jkl', 'mno, pqr, stu, vwx', 'yz']
+    data_comma = [Model[str](line) for line in raw_data_comma] if use_str_model else raw_data_comma
+
+    cols_stripped_comma = \
+        SplitLinesToColumnsModelNew[cnf(delimiter=',')](data_comma)  # type: ignore[operator, misc]
+    assert_model_if_dyn_conv_else_val(cols_stripped_comma[0],
+                                      list[str], ['abc', 'def', 'ghi', 'jkl'])
+    assert_model_if_dyn_conv_else_val(cols_stripped_comma[0][1], str, 'def')
+
+    assert cols_stripped_comma[1:2].contents == [['mno', 'pqr', 'stu', 'vwx']]
+    assert cols_stripped_comma[1:].to_data() == [['mno', 'pqr', 'stu', 'vwx'], ['yz']]

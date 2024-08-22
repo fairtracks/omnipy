@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import os
-from typing import Generic
+from typing import cast, Generic
 
 from pydantic.generics import _generic_types_cache
 
@@ -56,11 +56,7 @@ class JoinLinesModel(Model[list[str] | str]):
         return os.linesep.join(data)
 
 
-class SplitToItemsModelNew(
-        Model[list[str] | str | ConfHolder[ConfT]],
-        ParamModelMixin['SplitToItemsModelNew.Params'],
-        Generic[ConfT],
-):
+class SplitToItemsMixin:
     @dataclass
     class Params:
         strip: bool = True
@@ -68,18 +64,27 @@ class SplitToItemsModelNew(
         delimiter: str = '\t'
 
     @classmethod
+    def _split_line(cls, data: str, settings: Params) -> list[str]:
+        if settings.strip:
+            data = data.strip(settings.strip_chars)
+
+        items = data.split(settings.delimiter)
+        return [item.strip(settings.strip_chars) for item in items] if settings.strip else items
+
+
+class SplitToItemsModelNew(  # type: ignore[misc]
+        Model[list[str] | str | ConfHolder[ConfT]],
+        SplitToItemsMixin,
+        ParamModelMixin['SplitToItemsMixin.Params'],
+        Generic[ConfT],
+):
+    @classmethod
     def _parse_data(cls, data: list[str] | str) -> list[str]:
         if isinstance(data, list):
             return data
 
         settings = cls._get_conf_settings()
-
-        if settings.strip:
-            data = data.strip(settings.strip_chars)
-
-        items = data.split(settings.delimiter)
-        data = [item.strip(settings.strip_chars) for item in items] if settings.strip else items
-        return data
+        return cls._split_line(data, settings)
 
 
 class SplitToItemsModel(ParamModel[str | list[str], bool | str]):
@@ -102,6 +107,21 @@ class JoinItemsModel(ParamModel[list[str] | str, str]):
             return data
 
         return delimiter.join(data)
+
+
+class SplitLinesToColumnsModelNew(  # type: ignore[misc]
+        Model[list[list[str]] | list[str] | list[StrModel] | ConfHolder[ConfT]],
+        SplitToItemsMixin,
+        ParamModelMixin['SplitToItemsMixin.Params'],
+        Generic[ConfT],
+):
+    @classmethod
+    def _parse_data(cls, data: list[list[str]] | list[str] | list[StrModel]) -> list[list[str]]:
+        if isinstance(data, list) and (len(data) == 0 or isinstance(data[0], list)):
+            return cast(list[list[str]], data)
+
+        settings = cls._get_conf_settings()
+        return [cls._split_line(cast(str, line), settings) for line in data]
 
 
 class SplitLinesToColumnsModel(ListOfParamModel[SplitToItemsModel, bool | str]):
