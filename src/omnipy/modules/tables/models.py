@@ -76,10 +76,14 @@ class PydanticRecordModel(Model[_PydanticModelT | JsonListOfScalarsModel],
                 return data
 
 
+# Hack to avoid pydantic issue. Not great
+config = conf(SplitLinesToColumnsModelNew.Params)
+
+
 class TableOfPydanticRecordsModel(
         Model[list[PydanticRecordModel[_PydanticModelT]]
               | Chain3[SplitToLinesModel,
-                       SplitLinesToColumnsModel,
+                       SplitLinesToColumnsModelNew[config()],
                        Model[list[PydanticRecordModel[_PydanticModelT]]]]],
         Generic[_PydanticModelT]):
     ...
