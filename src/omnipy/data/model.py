@@ -37,7 +37,7 @@ from pydantic.utils import lenient_isinstance, lenient_issubclass, sequence_like
 from typing_extensions import TypeVar
 
 from omnipy.api.exceptions import ParamException
-from omnipy.api.protocols.private.util import IsSnapshotHolder, IsSnapshotWrapper
+from omnipy.api.protocols.private.util import IsSnapshotWrapper
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.helpers import get_special_methods_info_dict, MethodInfo, YesNoMaybe
@@ -57,11 +57,9 @@ from omnipy.util.helpers import (all_equals,
                                  is_non_omnipy_pydantic_model,
                                  is_non_str_byte_iterable,
                                  is_optional,
-                                 is_pure_pydantic_model,
                                  is_union,
                                  remove_annotated_plus_optional_if_present,
-                                 remove_forward_ref_notation,
-                                 SnapshotWrapper)
+                                 remove_forward_ref_notation)
 from omnipy.util.setdeque import SetDeque
 from omnipy.util.tabulate import tabulate
 
@@ -665,9 +663,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             with self.deepcopy_context(self.snapshot_holder.take_snapshot_setup,
                                        self.snapshot_holder.take_snapshot_teardown):
                 self.snapshot_holder.take_snapshot(self)
-            # print(
-            #     f'SnapshotWrapper contents_id={id(self.contents)} -> {id(self.snapshot)}: {self.contents}'
-            # )
 
     @classmethod
     def _parse_data(cls, data: Any) -> _RootT:
