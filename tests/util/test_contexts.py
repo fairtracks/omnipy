@@ -5,7 +5,7 @@ from typing import Callable, TypeAlias
 
 import pytest
 
-from omnipy.util.contexts import (hold_and_reset_prev_attrib_value_context,
+from omnipy.util.contexts import (hold_and_reset_prev_attrib_value,
                                   LastErrorHolder,
                                   print_exception,
                                   setup_and_teardown_callback_context)
@@ -240,7 +240,7 @@ def test_with_last_error() -> None:
     assert 'a=4 is even' in str(exc_info.getrepr())
 
 
-def test_hold_and_reset_prev_attrib_value_context_at_teardown_and_exception() -> None:
+def test_hold_and_reset_prev_attrib_value_at_teardown_and_exception() -> None:
     class A:
         ...
 
@@ -250,23 +250,23 @@ def test_hold_and_reset_prev_attrib_value_context_at_teardown_and_exception() ->
 
     a = A()
     with pytest.raises(AttributeError):
-        with hold_and_reset_prev_attrib_value_context(a, 'num'):
+        with hold_and_reset_prev_attrib_value(a, 'num'):
             pass
 
     b = B(5)
-    with hold_and_reset_prev_attrib_value_context(b, 'num'):
+    with hold_and_reset_prev_attrib_value(b, 'num'):
         b.num = 7
     assert b.num == 5
 
     with suppress(RuntimeError):
         b.num = 5
-        with hold_and_reset_prev_attrib_value_context(b, 'num'):
+        with hold_and_reset_prev_attrib_value(b, 'num'):
             b.num = 7
             raise RuntimeError()
     assert b.num == 5
 
 
-def test_hold_and_reset_prev_attrib_value_context_at_exception_deepcopy() -> None:
+def test_hold_and_reset_prev_attrib_value_at_exception_deepcopy() -> None:
     class B:
         def __init__(self, numbers: list[list[int]]) -> None:
             self.numbers = numbers
@@ -274,7 +274,7 @@ def test_hold_and_reset_prev_attrib_value_context_at_exception_deepcopy() -> Non
     b = B([[5]])
 
     with suppress(RuntimeError):
-        with hold_and_reset_prev_attrib_value_context(b, 'numbers'):
+        with hold_and_reset_prev_attrib_value(b, 'numbers'):
             b.numbers[0][0] += 2
             assert b.numbers == [[7]]
             raise RuntimeError()
@@ -282,7 +282,7 @@ def test_hold_and_reset_prev_attrib_value_context_at_exception_deepcopy() -> Non
 
     with suppress(RuntimeError):
         b.numbers = [[5]]
-        with hold_and_reset_prev_attrib_value_context(b, 'numbers', copy_attr=True):
+        with hold_and_reset_prev_attrib_value(b, 'numbers', copy_attr=True):
             b.numbers[0][0] += 2
             assert b.numbers == [[7]]
             raise RuntimeError()

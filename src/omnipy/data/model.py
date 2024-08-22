@@ -41,7 +41,7 @@ from omnipy.api.protocols.private.util import IsSnapshotHolder, IsSnapshotWrappe
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.helpers import get_special_methods_info_dict, MethodInfo, YesNoMaybe
-from omnipy.util.contexts import (hold_and_reset_prev_attrib_value_context,
+from omnipy.util.contexts import (hold_and_reset_prev_attrib_value,
                                   LastErrorHolder,
                                   nothing,
                                   setup_and_teardown_callback_context)
@@ -1078,7 +1078,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         **kwargs: object,
     ):
         try:
-            with hold_and_reset_prev_attrib_value_context(
+            with hold_and_reset_prev_attrib_value(
                     self.config,
                     'dynamically_convert_elements_to_models',
             ):

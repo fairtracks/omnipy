@@ -55,7 +55,7 @@ class LastErrorHolder(AbstractContextManager):
 
 
 @contextmanager
-def hold_and_reset_prev_attrib_value_context(
+def hold_and_reset_prev_attrib_value(
     obj: object,
     attr_name: str,
     copy_attr: bool = False,
