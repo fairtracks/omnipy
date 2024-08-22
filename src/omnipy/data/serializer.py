@@ -9,6 +9,7 @@ from pydantic import ValidationError
 
 from omnipy.api.protocols.private.log import CanLog
 from omnipy.api.protocols.public.data import IsDataset, IsSerializer, IsTarFileSerializer
+from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 
 
 class Serializer(ABC):
@@ -95,7 +96,36 @@ class SerializerRegistry:
         return self._autodetect_serializer(dataset, self.tar_file_serializers)
 
     @classmethod
-    def _autodetect_serializer(cls, dataset, serializers):
+    def _autodetect_serializer(
+        cls,
+        dataset: IsDataset,
+        serializers: tuple[Type[IsSerializer], ...],
+    ) -> tuple[IsDataset, IsSerializer]:
+
+        from omnipy import runtime
+        if runtime:
+            with hold_and_reset_prev_attrib_value(
+                    runtime.config.data,
+                    'interactive_mode',
+            ):
+                with hold_and_reset_prev_attrib_value(
+                        runtime.config.data,
+                        'dynamically_convert_elements_to_models',
+                ):
+                    runtime.config.data.interactive_mode = False
+                    runtime.config.data.dynamically_convert_elements_to_models = False
+
+                    return cls._test_all_serializer_combos(dataset, serializers)
+        else:
+            return cls._test_all_serializer_combos(dataset, serializers)
+
+    @classmethod
+    def _test_all_serializer_combos(
+        self,
+        dataset: IsDataset,
+        serializers: tuple[Type[IsSerializer], ...],
+    ) -> tuple[IsDataset, IsSerializer]:
+
         # def _direct(dataset: Dataset, serializer: Serializer):
         #     new_dataset_cls = serializer.get_dataset_cls_for_new()
         #     new_dataset = new_dataset_cls(dataset)
