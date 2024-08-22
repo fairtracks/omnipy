@@ -2052,7 +2052,10 @@ def test_mimic_simple_list_operator_with_auto_convert(
         'abc' + model  # type: ignore[operator]
 
 
-def test_mimic_sequence_convert_for_concat(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+def test_mimic_sequence_convert_for_concat(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
+) -> None:
     runtime.config.data.interactive_mode = True
 
     # SetDeque is used as an example of non-builtin Sequence type. to_data() is needed (for now)
@@ -2175,7 +2178,10 @@ def test_mimic_sequence_convert_for_concat(runtime: Annotated[IsRuntime, pytest.
     assert_model(my_setdeque + my_tuple_model, tuple, (7, 8, 9, 4, 5, 6))  # type: ignore[operator]
 
 
-def test_mimic_concatenation_for_strings(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
+def test_mimic_concatenation_for_strings(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
+) -> None:
     class UppercaseModel(Model[str]):
         @classmethod
         def _parse_data(cls, data: str) -> str:
@@ -2194,6 +2200,7 @@ def test_mimic_concatenation_for_strings(runtime: Annotated[IsRuntime, pytest.fi
 def test_mimic_concatenation_for_converted_models(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ) -> None:
     class WordSplitterModel(Model[list[str] | str]):
         @classmethod
@@ -2237,7 +2244,8 @@ def test_mimic_concatenation_for_converted_models(
     assert sentence.contents == ['Can', 'you', 'pretty', 'please', 'help', 'me?']
 
 
-def test_mimic_str_concat_iadd_and_radd_overrides_add_if_defined():
+def test_mimic_str_concat_iadd_and_radd_overrides_add_if_defined(
+    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],):
     # Only __add__
 
     class ConcatChallengedStr:
@@ -2412,6 +2420,7 @@ def all_less_than_five_model_add_variants(all_add_variants: Annotated[
 def test_mimic_add_concat_all_less_than_five_model_add_variants(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
+    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ):
     has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
     less_than_five_model = all_less_than_five_model_add_variants
@@ -2438,6 +2447,7 @@ def test_mimic_add_concat_all_less_than_five_model_add_variants(
 def test_mimic_radd_concat_all_less_than_five_model_add_variants(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
+    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ):
     has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
     less_than_five_model = all_less_than_five_model_add_variants
@@ -2464,6 +2474,7 @@ def test_mimic_radd_concat_all_less_than_five_model_add_variants(
 def test_mimic_iadd_concat_all_less_than_five_model_add_variants(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
+    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ):
     has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
     less_than_five_model = all_less_than_five_model_add_variants
@@ -2489,6 +2500,7 @@ def test_mimic_iadd_concat_all_less_than_five_model_add_variants(
 def test_mimic_concat_less_than_five_model_add_variants_with_other_type_in_and_invalid_result(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
+    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ):
     has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
     less_than_five_model = all_less_than_five_model_add_variants
