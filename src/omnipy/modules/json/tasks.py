@@ -12,9 +12,10 @@ from .datasets import (JsonDataset,
                        JsonListOfDictsDataset,
                        JsonListOfDictsOfScalarsDataset)
 from .functions import flatten_outer_level_of_nested_record
-from .models import JsonListModel
-from .typedefs import (JsonDictOfListsOfDicts,
+from .typedefs import (JsonDict,
+                       JsonDictOfListsOfDicts,
                        JsonDictOfScalars,
+                       JsonList,
                        JsonListOfDicts,
                        JsonListOfDictsOfScalars)
 
@@ -34,15 +35,16 @@ def convert_dataset_string_to_json(dataset: Dataset[Model[str]]) -> JsonDataset:
 @mypy_fix_task_template
 @TaskTemplate()
 def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> JsonListDataset:
-    output_dataset = JsonListDataset()
+    input_dataset: dict[str, JsonDict] = dataset.to_data()
+    output_dataset: dict[str, JsonList] = {}
 
-    for name, item in dataset.items():
+    for name, item in input_dataset.items():
         for key, val in item.items():
             if key not in output_dataset:
                 output_dataset[key] = []
 
             if not obj_or_model_contents_isinstance(val, list):
-                val = JsonListModel([val])
+                val = [val]
 
             for item_index, val_item in enumerate(val):
                 if obj_or_model_contents_isinstance(val_item, dict):
@@ -52,7 +54,7 @@ def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> J
                 else:
                     output_dataset[key].append(val_item)
 
-    return output_dataset
+    return JsonListDataset(output_dataset)
 
 
 @mypy_fix_task_template
