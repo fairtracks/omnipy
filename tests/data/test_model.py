@@ -1148,79 +1148,135 @@ def test_import_export_methods() -> None:
 #     assert not isinstance(Model[int | str]('1'), str)
 
 
-def test_model_of_pydantic_model_with_pydantic_model_children(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    model = MyPydanticModel[list[PydanticChildModel]]({
-        '@id': 1, 'children': [{
-            '@id': 10, 'value': 1.23
-        }]
-    })
-
-    assert model.id == 1
-    assert len(model.children) == 1
-    assert model.children[0].id == 10
-    assert model.children[0].value == 1.23
-
-    model.id = '2'
-    assert model.id == 2
-
-    model.children[0].value = '2.46'
-    # Model is validated as 'children' attribute is accessed
-    assert model.children[0].value == 2.46
-
-    model.children[0].id = 'abc'
-    # Model is validated as 'children' attribute is accessed
-    with pytest.raises(ValidationError):
-        model.children
-
-    if not runtime.config.data.interactive_mode:
-        model.contents.children[0].id = 10
-
-    assert model.children[0].id == 10
-
-    model.children[0].id = 11
-    assert model.to_data() == {
-        '@id': 2,
-        'children': [{
-            '@id': 11, 'value': 2.46
-        }],
-    }
-
-
 def test_model_of_pydantic_model_with_model_of_pydantic_model_children(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    invalid_child_model = Model[PydanticChildModel]({'@id': 12, 'value': 2})
+    invalid_child_model.value = '2.22'
+    # Model is validated as top-level 'value' attribute is set
+    assert invalid_child_model.contents.value == 2.22
+
+    invalid_child_model.contents.value = '2.22'
+    # So we set the value to a string directly in the contents to set up the test
+    assert invalid_child_model.contents.value == '2.22'
+
+    # The __init__() of the child model, Model[PydanticChildModel], detects that the input value is
+    # another omnipy Model and revalidates it
     model = MyPydanticModel[list[Model[PydanticChildModel]]]({
-        '@id': 1, 'children': [{
-            '@id': 10, 'value': 1.23
-        }]
+        '@id': '1', 'children': [
+            {
+                '@id': '10', 'value': 1.23
+            },
+            invalid_child_model,
+        ]
     })
 
-    assert model.id == 1
-    assert len(model.children) == 1
-    assert model.children[0].id == 10
-    assert model.children[0].value == 1.23
+    assert model.contents.id == 1
+    assert len(model.contents.children) == 2
+    assert model.contents.children[0].id == 10
+    assert model.contents.children[1].value == 2.22
 
     model.id = '2'
-    assert model.id == 2
+    # Model is validated as top-level 'id' attribute is set
+    assert model.contents.id == 2
 
-    # When the child is an omnipy Model, it is validated when value is set
+    # When the child pydantic model is wrapped as an omnipy Model, it is also validated when value
+    # is set
     model.children[0].value = '2.46'
-    assert model.children[0].value == 2.46
+    assert model.contents.children[0].value == 2.46
 
     with pytest.raises(ValidationError):
         model.children[0].id = 'abc'
 
     if not runtime.config.data.interactive_mode:
+        # Manual reset of invalid change above
         model.contents.children[0].id = 10
-
     assert model.children[0].id == 10
 
     model.children[0].id = 11
     assert model.to_data() == {
-        '@id': 2,
-        'children': [{
-            '@id': 11, 'value': 2.46
-        }],
+        '@id': 2, 'children': [
+            {
+                '@id': 11, 'value': 2.46
+            },
+            {
+                '@id': 12, 'value': 2.22
+            },
+        ]
+    }
+
+
+def test_model_of_pydantic_model_with_pydantic_model_children(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+
+    invalid_child_model = PydanticChildModel(**{'@id': 12, 'value': 2})
+    invalid_child_model.value = '2.22'
+
+    model_1 = MyPydanticModel[list[PydanticChildModel]]({
+        '@id': '1', 'children': [
+            {
+                '@id': '10', 'value': 1.23
+            },
+            invalid_child_model,
+        ]
+    })
+
+    # Unlike an omnipy-wrapped pydantic model, the __init__() of a standard pydantic model does not
+    # revalidate other pydantic models provided as input. Also, the top-level omnipy Model does not
+    # detect that the input contains a nested pydantic model and does not revalidate it.
+    assert model_1.contents.children[1].value == '2.22'
+
+    # Validation can, however, be manually triggered by validate_contents()
+    model_1.validate_contents()
+    assert model_1.contents.children[1].value == 2.22
+
+    # Another workaround is to manually provide a pydantic model as input at the top lever, which
+    # will trigger revalidation of any  nested pydantic models
+    model_2 = MyPydanticModel[list[PydanticChildModel]](
+        PydanticParentModel(**{
+            '@id': '1', 'children': [
+                {
+                    '@id': '10', 'value': 1.23
+                },
+                invalid_child_model,
+            ]
+        }))
+
+    assert model_2.contents.id == 1
+    assert len(model_2.contents.children) == 2
+    assert model_2.contents.children[1].value == 2.22
+    assert model_2.contents.children[0].id == 10
+
+    model_2.id = '2'
+    # Model is validated as top-level 'id' attribute is set
+    assert model_2.contents.id == 2
+
+    model_2.children[0].value = '2.46'
+    # Model is not validated as child attributes are set (as Model does not know about the changes)
+    assert model_2.contents.children[0].value == '2.46'
+    # Model is instead validated as 'children' attribute is accessed
+    assert model_2.children[0].value == 2.46
+
+    model_2.children[0].id = 'abc'
+    # As validation is postponed, so is the raising of validation error, here as 'children'
+    # attribute is accessed
+    with pytest.raises(ValidationError):
+        model_2.children
+
+    if not runtime.config.data.interactive_mode:
+        # Manual reset of invalid change above
+        model_2.contents.children[0].id = 10
+    assert model_2.children[0].id == 10
+
+    model_2.children[0].id = 11
+    assert model_2.to_data() == {
+        '@id': 2, 'children': [
+            {
+                '@id': 11, 'value': 2.46
+            },
+            {
+                '@id': 12, 'value': 2.22
+            },
+        ]
     }
 
 

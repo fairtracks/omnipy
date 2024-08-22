@@ -408,21 +408,20 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
 
-        model_as_input = ROOT_KEY in super_kwargs and is_model_instance(super_kwargs[ROOT_KEY])
-        if model_as_input:
-            # Casting to _RootT now, will be validated in super()__init__()
-            super_kwargs[ROOT_KEY] = cast(_RootT, cast(Model, super_kwargs[ROOT_KEY]).to_data())
+        omnipy_or_pydantic_model_as_input = False
+        if ROOT_KEY in super_kwargs:
+            omnipy_or_pydantic_model_as_input, value = \
+                self._prepare_value_for_validation_if_model(super_kwargs[ROOT_KEY])
+            if omnipy_or_pydantic_model_as_input:
+                super_kwargs[ROOT_KEY] = cast(_RootT, value)
 
         self._init(super_kwargs, **kwargs)
 
         try:
-            # Pydantic validation of super_kwargs
-            _validate_cls_counts[self.__class__.__name__] += 1
-            super().__init__(**super_kwargs)
+            self._primary_validation(super_kwargs)
         except ValidationError:
-            if model_as_input:
-                super().__init__()
-                self.from_data(super_kwargs[ROOT_KEY])
+            if omnipy_or_pydantic_model_as_input:
+                self._secondary_validation_from_data(super_kwargs)
             else:
                 raise
 
@@ -430,6 +429,22 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         if not self.__class__.__doc__:
             self._set_standard_field_description()
+
+    def _primary_validation(self, super_kwargs):
+        # Pydantic validation of super_kwargs
+        _validate_cls_counts[self.__class__.__name__] += 1
+        super().__init__(**super_kwargs)
+
+    def _secondary_validation_from_data(self, super_kwargs):
+        super().__init__()
+        self.from_data(super_kwargs[ROOT_KEY])
+
+    def _prepare_value_for_validation_if_model(self, value: object) -> tuple[bool, object]:
+        if is_model_instance(value):
+            return True, cast(Model[_RootT], value).to_data()
+        elif is_non_omnipy_pydantic_model(value):
+            return True, cast(BaseModel, value).dict(by_alias=True)
+        return False, value
 
     def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
         ...
@@ -607,13 +622,12 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         self,
         value: object,
     ) -> _RootT:
-        if is_model_instance(value):
-            value = cast(Model[_RootT], value).to_data()
-        elif is_non_omnipy_pydantic_model(value):
-            value = cast(_RootT, cast(BaseModel, value).dict(by_alias=True))
+        _is_model, value = self._prepare_value_for_validation_if_model(value)
+
         values, fields_set, validation_error = validate_model(self.__class__, {ROOT_KEY: value})
         if validation_error:
             raise validation_error
+
         return values[ROOT_KEY]
 
     @property
