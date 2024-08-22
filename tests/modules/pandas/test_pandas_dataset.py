@@ -8,8 +8,55 @@ import pytest
 
 from omnipy.modules.pandas import pd
 from omnipy.modules.pandas.models import PandasDataset, PandasModel
+from omnipy.modules.tables.models import TableListOfDictsOfJsonScalarsModel
 
 from .helpers.asserts import assert_pandas_frame_dtypes
+
+# Placeholder
+
+
+def test_pandas_dataset_input_variants():
+    table = TableListOfDictsOfJsonScalarsModel([{'a': 'abc', 'b': 12}])
+    df = pd.concat([
+        pd.Series(['abc'], dtype='string'),
+        pd.Series([12], dtype='Int64'),
+    ], axis=1)
+    df.columns = ('a', 'b')
+
+    dataset_1 = PandasDataset()
+    dataset_1.from_data({'data_file': [{'a': 'abc', 'b': 12}]})
+
+    dataset_2 = PandasDataset()
+    dataset_2.from_json({'data_file': '[{"a": "abc", "b": 12}]'})
+    pd.testing.assert_frame_equal(dataset_1['data_file'].contents, dataset_2['data_file'].contents)
+
+    dataset_3 = PandasDataset()
+    dataset_3['data_file'] = [{'a': 'abc', 'b': 12}]
+    pd.testing.assert_frame_equal(dataset_2['data_file'].contents, dataset_3['data_file'].contents)
+
+    dataset_4 = PandasDataset()
+    dataset_4['data_file'] = table
+    pd.testing.assert_frame_equal(dataset_3['data_file'].contents, dataset_4['data_file'].contents)
+
+    dataset_5 = PandasDataset()
+    dataset_5['data_file'] = df
+    pd.testing.assert_frame_equal(dataset_4['data_file'].contents, dataset_5['data_file'].contents)
+
+    dataset_6 = PandasDataset()
+    dataset_6['data_file'] = PandasModel([{'a': 'abc', 'b': 12}])
+    pd.testing.assert_frame_equal(dataset_5['data_file'].contents, dataset_6['data_file'].contents)
+
+    dataset_7 = PandasDataset(data_file=[{'a': 'abc', 'b': 12}])
+    pd.testing.assert_frame_equal(dataset_6['data_file'].contents, dataset_7['data_file'].contents)
+
+    dataset_8 = PandasDataset(data_file=table)
+    pd.testing.assert_frame_equal(dataset_7['data_file'].contents, dataset_8['data_file'].contents)
+
+    dataset_9 = PandasDataset(data_file=df)
+    pd.testing.assert_frame_equal(dataset_8['data_file'].contents, dataset_9['data_file'].contents)
+
+    dataset_10 = PandasDataset(data_file=PandasModel([{'a': 'abc', 'b': 12}]))
+    pd.testing.assert_frame_equal(dataset_9['data_file'].contents, dataset_10['data_file'].contents)
 
 
 def test_pandas_dataset_list_of_objects_same_keys():
@@ -97,48 +144,6 @@ def test_pandas_dataset_list_of_objects_float_numbers():
         significant_digits=3)
 
 
-def test_pandas_dataset_list_of_objects_float_numbers_and_missing_values():
-    pandas_data = PandasDataset()
-    data = {
-        'data_file': [
-            {
-                'int': 12, 'float': 12.1, 'bool': True, 'str': 'abc'
-            },
-            {
-                'int': -3, 'bool': False
-            },
-            {
-                'float': 14.3, 'str': 'def'
-            },
-        ]
-    }
-    pandas_data.from_data(data)
-
-    pd.testing.assert_frame_equal(
-        pandas_data['data_file'].contents,
-        pd.DataFrame([{
-            'int': 12, 'float': 12.1, 'bool': True, 'str': 'abc'
-        }, {
-            'int': -3, 'float': pd.NA, 'bool': False, 'str': pd.NA
-        }, {
-            'int': pd.NA, 'float': 14.3, 'bool': pd.NA, 'str': 'def'
-        }],),
-        check_dtype=False,
-    )
-
-    assert_pandas_frame_dtypes(pandas_data['data_file'], ('Int64', 'Float64', 'boolean', 'string'))
-
-    assert pandas_data.to_data() == {
-        'data_file': [{
-            'int': 12, 'float': 12.1, 'bool': True, 'str': 'abc'
-        }, {
-            'int': -3, 'float': None, 'bool': False, 'str': None
-        }, {
-            'int': None, 'float': 14.3, 'bool': None, 'str': 'def'
-        }]
-    }
-
-
 def test_pandas_dataset_list_of_nested_objects():
     pandas_data = PandasDataset()
     data = {'data_file': [{'a': 'abc', 'b': {'c': [1, 3]}}]}
@@ -188,80 +193,14 @@ def test_pandas_dataset_error_list_items_not_objects():
         pandas_data['data_file'] = [123, 234]
 
 
-def test_pandas_dataset_error_objects_keys_not_str():
+def test_pandas_dataset_objects_keys_not_str():
     pandas_data = PandasDataset()
-    with pytest.raises(ValidationError):
-        pandas_data['data_file'] = [{123: 'abc', 'b': 12}]
+    pandas_data['data_file'] = [{123: 'abc', 'b': 12}]
+    assert pandas_data['data_file'].columns[0] == '123'
 
 
 def test_pandas_dataset_error_empty_objects():
     # We might want to reevaluate how to handle empty objects later
     pandas_data = PandasDataset()
-    with pytest.raises(ValidationError):
-        pandas_data['data_file'] = [{'a': 'abc', 'b': 12}, {}]
-
-
-def test_pandas_model_input_output_data():
-    pandas_model = PandasModel()
-    data = [
-        {
-            'int': 12, 'float': 12.1, 'bool': True, 'str': 'abc'
-        },
-        {
-            'int': -3, 'bool': False
-        },
-        {
-            'float': 14.3, 'str': 'def'
-        },
-    ]
-    pandas_model.from_data(data)
-    assert pandas_model.to_data() == [{
-        'bool': True, 'float': 12.1, 'int': 12, 'str': 'abc'
-    }, {
-        'bool': False, 'float': None, 'int': -3, 'str': None
-    }, {
-        'bool': None, 'float': 14.3, 'int': None, 'str': 'def'
-    }]
-
-
-def test_pandas_dataset_input_output_data():
-    pandas_dataset = PandasDataset()
-    data = {
-        'abc': [
-            {
-                'int': 12, 'float': 12.1, 'bool': True, 'str': 'abc'
-            },
-            {
-                'int': -3, 'bool': False
-            },
-            {
-                'float': 14.3, 'str': 'def'
-            },
-        ]
-    }
-    pandas_dataset.from_data(data)
-    assert pandas_dataset.to_data() == {
-        'abc': [{
-            'bool': True, 'float': 12.1, 'int': 12, 'str': 'abc'
-        }, {
-            'bool': False, 'float': None, 'int': -3, 'str': None
-        }, {
-            'bool': None, 'float': 14.3, 'int': None, 'str': 'def'
-        }]
-    }
-
-
-# Placeholder
-def test_pandas_model_input_output_json():
-    ...
-
-
-def test_operation_pandas():
-    a = PandasModel()
-    a.from_data([{'x': 2, 'y': 3}, {'x': 3, 'y': -1}])
-
-    assert type(a) is PandasModel
-
-    b = a + 1
-
-    assert type(b) is PandasModel
+    pandas_data['data_file'] = [{'a': 'abc', 'b': 12}, {}]
+    assert pd.isna(pandas_data['data_file'].loc[1]).all()

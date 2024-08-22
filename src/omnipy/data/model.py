@@ -689,7 +689,11 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         assert ROOT_KEY in root_obj
         value = root_obj[ROOT_KEY]
         value = cls._parse_none_value_with_root_type_if_model(value)
-        return {ROOT_KEY: cls._parse_data(value)}
+
+        config = cls.data_class_creator.config
+        with hold_and_reset_prev_attrib_value(config, 'dynamically_convert_elements_to_models'):
+            config.dynamically_convert_elements_to_models = False
+            return {ROOT_KEY: cls._parse_data(value)}
 
     # Partial workaround of https://github.com/pydantic/pydantic/issues/3836, together with
     # fake optional type hack.  See series of relevant tests in test_model.py
