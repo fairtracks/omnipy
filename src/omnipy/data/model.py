@@ -533,6 +533,10 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         /,
     ) -> ContextManager[None]:
         if self.config.interactive_mode:
+            # TODO: Lazy snapshotting causes unneeded double validation for data that is later
+            #       validated for snapshot. Perhaps add a dirty flag to snapshot that can be used to
+            #       determine if re-validation is needed? This can also help avoid equality tests, which
+            #       might be expensive for large data structures.
             needs_pre_validation = (not self.has_snapshot()
                                     or not self.contents_validated_according_to_snapshot())
             if needs_pre_validation:
