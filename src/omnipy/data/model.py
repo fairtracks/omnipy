@@ -1291,8 +1291,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def __eq__(self, other: object) -> bool:
         return is_model_instance(other) \
             and self.__class__ == other.__class__ \
-            and all_equals(self.contents, cast(Model, other).contents) \
-            and self.to_data() == cast(Model, other).to_data()  # last line is just in case
+            and all_equals(self.contents, cast(Model, other).contents)
+        # and self.to_data() == cast(Model, other).to_data()  # last line is just in case
 
     def __repr__(self) -> str:
         if self.config.interactive_mode and not _waiting_for_terminal_repr():
