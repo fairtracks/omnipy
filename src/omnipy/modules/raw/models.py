@@ -5,7 +5,7 @@ from typing import cast, Generic
 from pydantic.generics import _generic_types_cache
 
 from omnipy.data.model import DataWithParams, ListOfParamModel, Model, ParamModel
-from omnipy.data.param import ConfHolder, ConfT, ParamModelMixin
+from omnipy.data.param import bind_adjust_func, ParamsBase
 
 
 class BytesModel(ParamModel[str | bytes, str]):
@@ -58,33 +58,37 @@ class JoinLinesModel(Model[list[str] | str]):
 
 class SplitToItemsMixin:
     @dataclass
-    class Params:
+    class Params(ParamsBase):
         strip: bool = True
         strip_chars: str | None = None
         delimiter: str = '\t'
 
     @classmethod
-    def _split_line(cls, data: str, settings: Params) -> list[str]:
-        if settings.strip:
-            data = data.strip(settings.strip_chars)
+    def _split_line(cls, data: str) -> list[str]:
+        if cls.Params.strip:
+            data = data.strip(cls.Params.strip_chars)
 
-        items = data.split(settings.delimiter)
-        return [item.strip(settings.strip_chars) for item in items] if settings.strip else items
+        items = data.split(cls.Params.delimiter)
+        return [item.strip(cls.Params.strip_chars) for item in items] if cls.Params.strip else items
 
 
-class SplitToItemsModelNew(  # type: ignore[misc]
-        Model[list[str] | str | ConfHolder[ConfT]],
+class _SplitToItemsModelNew(
+        Model[list[str] | str],
         SplitToItemsMixin,
-        ParamModelMixin['SplitToItemsMixin.Params'],
-        Generic[ConfT],
 ):
     @classmethod
     def _parse_data(cls, data: list[str] | str) -> list[str]:
         if isinstance(data, list):
             return data
 
-        settings = cls._get_conf_settings()
-        return cls._split_line(data, settings)
+        return cls._split_line(data)
+
+
+class SplitToItemsModelNew(_SplitToItemsModelNew):
+    adjust = bind_adjust_func(
+        _SplitToItemsModelNew.clone_model_cls,
+        _SplitToItemsModelNew.Params,
+    )
 
 
 class SplitToItemsModel(ParamModel[str | list[str], bool | str]):
@@ -109,19 +113,23 @@ class JoinItemsModel(ParamModel[list[str] | str, str]):
         return delimiter.join(data)
 
 
-class SplitLinesToColumnsModelNew(  # type: ignore[misc]
-        Model[list[list[str]] | list[str] | list[StrModel] | ConfHolder[ConfT]],
+class _SplitLinesToColumnsModelNew(
+        Model[list[list[str]] | list[str] | list[StrModel]],
         SplitToItemsMixin,
-        ParamModelMixin['SplitToItemsMixin.Params'],
-        Generic[ConfT],
 ):
     @classmethod
     def _parse_data(cls, data: list[list[str]] | list[str] | list[StrModel]) -> list[list[str]]:
         if isinstance(data, list) and (len(data) == 0 or isinstance(data[0], list)):
             return cast(list[list[str]], data)
 
-        settings = cls._get_conf_settings()
-        return [cls._split_line(cast(str, line), settings) for line in data]
+        return [cls._split_line(cast(str, line)) for line in data]
+
+
+class SplitLinesToColumnsModelNew(_SplitLinesToColumnsModelNew):
+    adjust = bind_adjust_func(
+        _SplitLinesToColumnsModelNew.clone_model_cls,
+        _SplitLinesToColumnsModelNew.Params,
+    )
 
 
 class SplitLinesToColumnsModel(ListOfParamModel[SplitToItemsModel, bool | str]):

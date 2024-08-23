@@ -7,7 +7,6 @@ import pytest
 
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.model import Model
-from omnipy.data.param import conf
 from omnipy.modules.raw.models import (BytesModel,
                                        JoinColumnsToLinesModel,
                                        JoinItemsModel,
@@ -166,29 +165,31 @@ def test_split_to_and_join_items_new_model(
     assert_model_if_dyn_conv_else_val(items_stripped_tab[1], str, 'def')  # type: ignore[index]
     assert items_stripped_tab[-2:].contents == ['ghi', 'jkl']  # type: ignore[index]
 
-    split_conf = conf(SplitToItemsModelNew.Params)
-    items_unstripped_tab = \
-        SplitToItemsModelNew[split_conf(strip=False)](data_tab)  # type: ignore[operator, misc]
+    SplitToItemsNoStripModel = SplitToItemsModelNew.adjust('SplitToItemsNoStripModel', strip=False)
+
+    items_unstripped_tab = SplitToItemsNoStripModel(data_tab)
     assert items_unstripped_tab.contents == ['abc', ' def ', 'ghi', 'jkl']
-    assert_model_if_dyn_conv_else_val(items_unstripped_tab[1], str, ' def ')
-    assert items_unstripped_tab[-2:].contents == ['ghi', 'jkl']
+    assert_model_if_dyn_conv_else_val(items_unstripped_tab[1], str, ' def ')  # type: ignore[index]
+    assert items_unstripped_tab[-2:].contents == ['ghi', 'jkl']  # type: ignore[index]
 
     raw_data_comma = 'abc, def, ghi, jkl'
 
     data_comma = Model[str](raw_data_comma) if use_str_model else raw_data_comma
 
-    items_stripped_comma = \
-        SplitToItemsModelNew[split_conf(delimiter=',')](data_comma)  # type: ignore[operator, misc]
+    SplitToItemsByCommaModel = SplitToItemsModelNew.adjust(
+        'SplitToItemsByCommaModel', delimiter=',')
 
+    items_stripped_comma = SplitToItemsByCommaModel(data_comma)
     assert items_stripped_comma.contents == ['abc', 'def', 'ghi', 'jkl']
-    assert_model_if_dyn_conv_else_val(items_stripped_comma[1], str, 'def')
-    assert items_stripped_comma[-2:].contents == ['ghi', 'jkl']
+    assert_model_if_dyn_conv_else_val(items_stripped_comma[1], str, 'def')  # type: ignore[index]
+    assert items_stripped_comma[-2:].contents == ['ghi', 'jkl']  # type: ignore[index]
 
     tab_joined_items = JoinItemsModel(items_stripped_tab[1:3])  # type: ignore[index]
     assert tab_joined_items.contents == 'def\tghi'
     assert tab_joined_items[1:-1].contents == 'ef\tgh'  # type: ignore[index]
 
-    comma_space_joined_items = JoinItemsModel(items_stripped_comma[1:3], delimiter=', ')
+    comma_space_joined_items = JoinItemsModel(
+        items_stripped_comma[1:3], delimiter=', ')  # type: ignore[index]
     assert comma_space_joined_items.contents == 'def, ghi'
     assert comma_space_joined_items[1:-1].contents == 'ef, gh'  # type: ignore[index]
 
@@ -275,28 +276,43 @@ def test_split_lines_to_columns_new_model(
         ['mno', 'pqr', 'stu', 'vwx'], ['yz']
     ]
 
-    cnf = conf(SplitLinesToColumnsModelNew.Params)
+    SplitLinesToColumnsNoStripModel = SplitLinesToColumnsModelNew.adjust(
+        'SplitLinesToColumnsNoStripModel', strip=False)
 
-    cols_unstripped_tab = \
-        SplitLinesToColumnsModelNew[cnf(strip=False)](data_tab)  # type: ignore[operator, misc]
+    cols_unstripped_tab = SplitLinesToColumnsNoStripModel(data_tab)
 
     assert_model_if_dyn_conv_else_val(
-        cols_unstripped_tab[0],
+        cols_unstripped_tab[0],  # type: ignore[index]
         list[str],
         ['abc', ' def ', 'ghi', ' jkl'],
     )
-    assert_model_if_dyn_conv_else_val(cols_unstripped_tab[0][1], str, ' def ')
-    assert cols_unstripped_tab[1:2].contents == [['mno', ' pqr', 'stu', ' vwx']]
-    assert cols_unstripped_tab[1:].to_data() == [['mno', ' pqr', 'stu', ' vwx'], ['yz']]
+    assert_model_if_dyn_conv_else_val(
+        cols_unstripped_tab[0][1],  # type: ignore[index]
+        str,
+        ' def ',
+    )
+    assert cols_unstripped_tab[1:2].contents == [  # type: ignore[index]
+        ['mno', ' pqr', 'stu', ' vwx']
+    ]
+    assert cols_unstripped_tab[1:].to_data() == [  # type: ignore[index]
+        ['mno', ' pqr', 'stu', ' vwx'], ['yz']
+    ]
 
     raw_data_comma = ['abc, def, ghi, jkl', 'mno, pqr, stu, vwx', 'yz']
     data_comma = [Model[str](line) for line in raw_data_comma] if use_str_model else raw_data_comma
 
-    cols_stripped_comma = \
-        SplitLinesToColumnsModelNew[cnf(delimiter=',')](data_comma)  # type: ignore[operator, misc]
-    assert_model_if_dyn_conv_else_val(cols_stripped_comma[0],
-                                      list[str], ['abc', 'def', 'ghi', 'jkl'])
-    assert_model_if_dyn_conv_else_val(cols_stripped_comma[0][1], str, 'def')
+    SplitLinesToColumnsWithCommaModel = SplitLinesToColumnsModelNew.adjust(
+        'SplitLinesToColumnsNoStripModel', delimiter=',')
+    cols_stripped_comma = SplitLinesToColumnsWithCommaModel(data_comma)
+    assert_model_if_dyn_conv_else_val(
+        cols_stripped_comma[0],  # type: ignore[index] 
+        list[str],
+        ['abc', 'def', 'ghi', 'jkl'])
+    assert_model_if_dyn_conv_else_val(cols_stripped_comma[0][1], str, 'def')  # type: ignore[index]
 
-    assert cols_stripped_comma[1:2].contents == [['mno', 'pqr', 'stu', 'vwx']]
-    assert cols_stripped_comma[1:].to_data() == [['mno', 'pqr', 'stu', 'vwx'], ['yz']]
+    assert cols_stripped_comma[1:2].contents == [  # type: ignore[index]
+        ['mno', 'pqr', 'stu', 'vwx']
+    ]
+    assert cols_stripped_comma[1:].to_data() == [  # type: ignore[index]
+        ['mno', 'pqr', 'stu', 'vwx'], ['yz']
+    ]

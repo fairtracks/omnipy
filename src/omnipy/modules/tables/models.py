@@ -3,7 +3,6 @@ from typing import cast, Generic, get_args, TypeVar
 from pydantic import BaseModel
 
 from omnipy.data.model import Model
-from omnipy.data.param import conf
 
 from ..general.models import Chain3
 from ..json.models import JsonListOfScalarsModel
@@ -76,14 +75,10 @@ class PydanticRecordModel(Model[_PydanticModelT | JsonListOfScalarsModel],
                 return data
 
 
-# Hack to avoid pydantic issue. Not great
-config = conf(SplitLinesToColumnsModelNew.Params)
-
-
 class TableOfPydanticRecordsModel(
         Model[list[PydanticRecordModel[_PydanticModelT]]
               | Chain3[SplitToLinesModel,
-                       SplitLinesToColumnsModelNew[config()],
+                       SplitLinesToColumnsModelNew,
                        Model[list[PydanticRecordModel[_PydanticModelT]]]]],
         Generic[_PydanticModelT]):
     ...

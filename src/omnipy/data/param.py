@@ -1,49 +1,12 @@
 from copy import deepcopy
-from dataclasses import dataclass
-from typing import Any, Callable, cast, Concatenate, Generic, get_args, ParamSpec, Protocol
+from typing import Any, Callable, cast, Concatenate, ParamSpec
 
 from pydantic import BaseModel
 from pydantic.main import create_model, ModelMetaclass, validate_model
 from typing_extensions import TypeVar
 
-ParamsT = TypeVar('ParamsT')
+ModelT = TypeVar('ModelT')
 ParamsP = ParamSpec('ParamsP')
-
-
-class Conf(Protocol[ParamsT]):
-    settings: ParamsT
-
-
-def conf(param_cls: Callable[ParamsP, ParamsT]) -> Callable[ParamsP, type[Conf[ParamsT]]]:
-    def _conf(*args: ParamsP.args, **kwargs: ParamsP.kwargs) -> type[Conf[ParamsT]]:
-        # Factory for new _Conf classes. Needed to allow the classes to have individual settings
-        class _Conf(Conf[ParamsT]):
-            settings = param_cls(**kwargs)
-
-        return _Conf
-
-    return _conf
-
-
-class ParamModelMixin(Generic[ParamsT]):
-    @dataclass
-    class Params:
-        ...
-
-    @classmethod
-    def _get_conf_settings(cls) -> ParamsT:
-        conf_t = get_args(get_args(cls.full_type())[-1])[0]
-        if isinstance(conf_t, TypeVar):
-            conf_t = conf(cls.Params)()
-        return conf_t.settings
-
-
-ConfT = TypeVar('ConfT', bound=type[Conf])
-
-
-class ConfHolder(Generic[ConfT]):
-    def __init__(self, conf: ConfT) -> None:
-        raise ValueError()
 
 
 class ParamsMeta(ModelMetaclass):
@@ -111,9 +74,6 @@ class ParamsBase(BaseModel, metaclass=ParamsMeta):
                 field_name: (cls.__fields__[field_name].outer_type_, field_info) for field_name,
                 field_info in all_field_infos.items()
             })
-
-
-ModelT = TypeVar('ModelT')
 
 
 def bind_adjust_func(
