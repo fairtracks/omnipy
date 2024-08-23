@@ -10,7 +10,7 @@ from typing_extensions import TypeVar
 from omnipy.data.model import ListOfParamModel, Model, ParamModel
 from omnipy.data.param import bind_adjust_func, ParamsBase
 
-ChildrenT = TypeVar("ChildT", default=list)
+ChildrenT = TypeVar("ChildrenT", bound=list)
 
 
 @dataclass
