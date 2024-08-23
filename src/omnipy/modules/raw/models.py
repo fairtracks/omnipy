@@ -57,7 +57,7 @@ class JoinLinesModel(Model[list[str] | str]):
 
 
 class SplitToItemsMixin:
-    @dataclass
+    @dataclass(kw_only=True)
     class Params(ParamsBase):
         strip: bool = True
         strip_chars: str | None = None

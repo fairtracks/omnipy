@@ -81,6 +81,9 @@ def bind_adjust_func(
     params_cls: Callable[ParamsP, Any],
 ) -> Callable[Concatenate[str, ParamsP], type[ModelT]]:
     def _func(model_name: str, *args: ParamsP.args, **kwargs: ParamsP.kwargs) -> type[ModelT]:
+        if len(args) > 0:
+            raise AttributeError(f'Positional arguments are not supported for '
+                                 f'{params_cls.__module__}.{params_cls.__name__}')
         new_model = clone_model_func(model_name)
         new_model.Params = params_cls.copy_and_adjust(  # type: ignore[attr-defined]
             'Params',

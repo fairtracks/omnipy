@@ -11,7 +11,7 @@ from omnipy.data.param import ParamsBase
 
 def test_params_parameter_lookup(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    @dataclass
+    @dataclass(kw_only=True)
     class MyParams(ParamsBase):
         my_int: int = 123
         my_str: str = "abc"
@@ -28,7 +28,7 @@ def test_params_parameter_lookup(
 
 def test_params_parameter_value_is_read_only(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    @dataclass
+    @dataclass(kw_only=True)
     class MyParams(ParamsBase):
         my_int: int = 123
         my_str: str = "abc"
@@ -44,7 +44,7 @@ def test_params_parameter_value_is_read_only(
 
 def test_params_default_value_validation(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    @dataclass
+    @dataclass(kw_only=True)
     class MyClass:
         def __init__(self, a: int):
             self.a = a
@@ -54,7 +54,7 @@ def test_params_default_value_validation(
 
     with pytest.raises(ValidationError):
 
-        @dataclass
+        @dataclass(kw_only=True)
         class MyFailingParams(ParamsBase):
             my_int: int = '123'  # type: ignore[assignment]
             my_str: str = 456  # type: ignore[assignment]
@@ -62,7 +62,7 @@ def test_params_default_value_validation(
 
     my_default_obj = MyClass(123)
 
-    @dataclass
+    @dataclass(kw_only=True)
     class MyParams(ParamsBase):
         my_int: int = '123'  # type: ignore[assignment]
         my_str: str = 456  # type: ignore[assignment]
@@ -93,7 +93,7 @@ def test_params_default_value_validation_known_issue(
 
     with pytest.raises(ValidationError):
 
-        @dataclass
+        @dataclass(kw_only=True)
         class MyFailingParams(ParamsBase):
             my_obj: MyClass = None  # type: ignore[assignment]
 
@@ -102,10 +102,10 @@ def test_params_no_default_value(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     with pytest.raises(ValueError):
 
-        @dataclass
+        @dataclass(kw_only=True)
         class MyParams(ParamsBase):
-            my_int: int = 123
             my_str: str
+            my_int: int = 123
 
     class MyParamsWithNone(ParamsBase):
         my_none: None = None
@@ -114,7 +114,7 @@ def test_params_no_default_value(
 
 def test_params_validation(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    @dataclass
+    @dataclass(kw_only=True)
     class MyParams(ParamsBase):
         my_int: int = 123
         my_str: str = "abc"
@@ -137,7 +137,7 @@ def test_params_copy_and_adjust(
 
     my_default_obj = MyClass(123)
 
-    @dataclass
+    @dataclass(kw_only=True)
     class MyParams(ParamsBase):
         my_int_or_float: int | float = 123
         my_str_or_none: str | None = None
@@ -173,3 +173,6 @@ def test_params_copy_and_adjust(
 
     with pytest.raises(ValidationError):
         MyParams.copy_and_adjust('MyFailingParams', my_int_or_float='abc', my_str_or_none='abc')
+
+    with pytest.raises(TypeError):
+        MyParams.copy_and_adjust('MyFailingParams', 456)  # type: ignore[call-arg]

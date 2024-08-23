@@ -3623,6 +3623,9 @@ def test_parametrized_model_new() -> None:
     upper_model.from_json('"foobar"')
     assert upper_model.contents == 'FOOBAR'
 
+    with pytest.raises(AttributeError):
+        ParamStrModel.adjust('MyUpperStrModel', True)  # type: ignore[misc]
+
 
 def test_parametrized_model_wrong_keyword() -> None:
     with pytest.raises(ParamException):
