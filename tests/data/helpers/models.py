@@ -8,6 +8,7 @@ from pydantic.generics import GenericModel
 from typing_extensions import TypeVar
 
 from omnipy.data.model import ListOfParamModel, Model, ParamModel
+from omnipy.data.param import bind_adjust_func, ParamsBase
 
 ChildrenT = TypeVar("ChildT", default=list)
 
@@ -31,6 +32,23 @@ class StringToLength(Model[str]):
     @classmethod
     def _parse_data(cls, data: str) -> int:
         return len(data)
+
+
+class _ParamStrModel(Model[str]):
+    @dataclass(kw_only=True)
+    class Params(ParamsBase):
+        upper: bool = False
+
+    @classmethod
+    def _parse_data(cls, data: str) -> str:
+        return data.upper() if cls.Params.upper else data
+
+
+class ParamStrModel(_ParamStrModel):
+    adjust = bind_adjust_func(
+        _ParamStrModel.clone_model_cls,
+        _ParamStrModel.Params,
+    )
 
 
 class UpperStrModel(ParamModel[str, bool]):

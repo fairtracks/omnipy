@@ -69,6 +69,7 @@ _IterT = TypeVar('_IterT')
 _ReturnT = TypeVar('_ReturnT')
 _IdxT = TypeVar('_IdxT', bound=SupportsIndex)
 _RootT = TypeVar('_RootT', bound=object | None, default=object)
+_ModelT = TypeVar('_ModelT')
 
 ROOT_KEY = '__root__'
 
@@ -451,6 +452,11 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         contents_id = id(self.contents)
         # self.contents = Undefined
         self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(contents_id)
+
+    @classmethod
+    def clone_model_cls(cls: type[_ModelT], model_name: str) -> type[_ModelT]:
+        new_model: type[_ModelT] = type(model_name, (cls,), {})
+        return new_model
 
     @staticmethod
     def _raise_no_model_exception() -> None:

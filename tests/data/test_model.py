@@ -39,6 +39,7 @@ from .helpers.models import (DefaultStrModel,
                              MyFloatObjModel,
                              MyNumberBase,
                              MyPydanticModel,
+                             ParamStrModel,
                              PydanticChildModel,
                              PydanticParentModel,
                              UpperStrModel)
@@ -3595,6 +3596,32 @@ def test_parametrized_model() -> None:
 
     model.from_json('"foobar"', upper=True)
     assert model.contents == 'FOOBAR'
+
+
+def test_parametrized_model_new() -> None:
+    assert ParamStrModel().contents == ''
+    # assert ParamStrModel().is_param_model()
+    assert ParamStrModel('foo').contents == 'foo'
+
+    asd = ParamStrModel.adjust
+    # reveal_type(asd)
+    MyUpperStrModel = ParamStrModel.adjust('MyUpperStrModel', upper=True)
+    assert MyUpperStrModel('bar').contents == 'BAR'
+
+    model = ParamStrModel()
+
+    model.from_data('foo')
+    assert model.contents == 'foo'
+
+    upper_model = MyUpperStrModel()
+    upper_model.from_data('bar')
+    assert upper_model.contents == 'BAR'
+
+    model.from_json('"foobar"')
+    assert model.contents == 'foobar'
+
+    upper_model.from_json('"foobar"')
+    assert upper_model.contents == 'FOOBAR'
 
 
 def test_parametrized_model_wrong_keyword() -> None:
