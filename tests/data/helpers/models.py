@@ -34,7 +34,21 @@ class StringToLength(Model[str]):
         return len(data)
 
 
-class _ParamStrModel(Model[str]):
+class UppercaseModel(Model[str]):
+    @classmethod
+    def _parse_data(cls, data: str) -> str:
+        return data.upper()
+
+
+class WordSplitterModel(Model[list[str] | str]):
+    @classmethod
+    def _parse_data(cls, data: list[str] | str) -> list[str]:
+        if isinstance(data, str):
+            return data.split()
+        return data
+
+
+class _ParamUpperStrModel(Model[str]):
     @dataclass(kw_only=True)
     class Params(ParamsBase):
         upper: bool = False
@@ -44,10 +58,10 @@ class _ParamStrModel(Model[str]):
         return data.upper() if cls.Params.upper else data
 
 
-class ParamStrModel(_ParamStrModel):
+class ParamUpperStrModel(_ParamUpperStrModel):
     adjust = bind_adjust_func(
-        _ParamStrModel.clone_model_cls,
-        _ParamStrModel.Params,
+        _ParamUpperStrModel.clone_model_cls,
+        _ParamUpperStrModel.Params,
     )
 
 

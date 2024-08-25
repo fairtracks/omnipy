@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 import gc
 from math import floor
 import os
@@ -39,10 +40,12 @@ from .helpers.models import (DefaultStrModel,
                              MyFloatObjModel,
                              MyNumberBase,
                              MyPydanticModel,
-                             ParamStrModel,
+                             ParamUpperStrModel,
                              PydanticChildModel,
                              PydanticParentModel,
-                             UpperStrModel)
+                             UppercaseModel,
+                             UpperStrModel,
+                             WordSplitterModel)
 
 
 def test_no_model_known_issue() -> None:
@@ -2183,10 +2186,6 @@ def test_mimic_concatenation_for_strings(
     runtime: Annotated[IsRuntime, pytest.fixture],
     skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ) -> None:
-    class UppercaseModel(Model[str]):
-        @classmethod
-        def _parse_data(cls, data: str) -> str:
-            return data.upper()
 
     help = UppercaseModel('help')
     assert help.contents == 'HELP'
@@ -2201,14 +2200,7 @@ def test_mimic_concatenation_for_strings(
 def test_mimic_concatenation_for_converted_models(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
-    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ) -> None:
-    class WordSplitterModel(Model[list[str] | str]):
-        @classmethod
-        def _parse_data(cls, data: list[str] | str) -> list[str]:
-            if isinstance(data, str):
-                return data.split()
-            return data
 
     please_help = WordSplitterModel('please help')
     assert please_help.contents == ['please', 'help']
@@ -2219,14 +2211,16 @@ def test_mimic_concatenation_for_converted_models(
     assert isinstance(stream, WordSplitterModel)
     assert stream.contents == "Can you please help me? I've fallen".split()
 
-    stream += ['and', 'I', "can't"] + ['get', 'up!']
+    stream += ['and'] + ['I']
+    stream += UppercaseModel("can't get up!")
 
     assert isinstance(stream, WordSplitterModel)
     assert stream.contents == [
-        'Can', 'you', 'please', 'help', 'me?', "I've", 'fallen', 'and', 'I', "can't", 'get', 'up!'
+        'Can', 'you', 'please', 'help', 'me?', "I've", 'fallen', 'and', 'I', "CAN'T", 'GET', 'UP!'
     ]
 
-    new_stream = ['Someone', 'is', 'shouting:'] + stream + '- We should help them!'
+    new_stream = ['Someone', 'is', 'shouting:'] + stream + (
+        UppercaseModel('- We should') + ' help them!')
 
     assert isinstance(new_stream, WordSplitterModel)
     if runtime.config.data.dynamically_convert_elements_to_models:
@@ -2234,7 +2228,7 @@ def test_mimic_concatenation_for_converted_models(
     else:
         joined_str = ' '.join(new_stream)
     assert joined_str == ("Someone is shouting: Can you please help me? "
-                          "I've fallen and I can't get up! - We should help them!")
+                          "I've fallen and I CAN'T GET UP! - WE SHOULD HELP THEM!")
 
     assert_model_if_dyn_conv_else_val(new_stream[5], str, 'please')
 
@@ -2243,6 +2237,48 @@ def test_mimic_concatenation_for_converted_models(
 
     assert isinstance(sentence, WordSplitterModel)
     assert sentence.contents == ['Can', 'you', 'pretty', 'please', 'help', 'me?']
+
+
+def test_mimic_concatenation_for_converted_models_with_incompatible_contents_except_to_data(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+    class MyList(Generic[T]):
+        def __init__(self, *args: T):
+            self.data = list(args)
+
+        def __repr__(self) -> str:
+            return f'MyList({self.data.__repr__()})'
+
+        def __add__(self, other: object) -> 'MyList[T] | NotImplementedType':
+            if type(other) == MyList:
+                return MyList(*self.data + other.data)
+            return NotImplemented
+
+    assert not issubclass(MyList, list)
+    assert not issubclass(MyList, Sequence)
+
+    class MyListOfUppercaseModel(Model[MyList[UppercaseModel] | WordSplitterModel]):
+        @classmethod
+        def _parse_data(cls,
+                        data: MyList[UppercaseModel] | WordSplitterModel) -> MyList[UppercaseModel]:
+            if isinstance(data, WordSplitterModel):
+                return MyList(*(UppercaseModel(word) for word in data.contents))
+            return data
+
+        # A custom to_data() method is needed to allow for compatibility
+        def to_data(self) -> object:
+            return [el.to_data() for el in self.contents.data]
+
+    MyListOfUppercaseModel(MyList(UppercaseModel('Can'), UppercaseModel('you')))
+
+    # contents of WordSplitterModel are compatible with MyListOfUppercaseModel
+    stream = MyListOfUppercaseModel('Can you please') + WordSplitterModel('be silent!')
+    assert stream.to_data() == ['CAN', 'YOU', 'PLEASE', 'BE', 'SILENT!']
+
+    # contents of MyListOfUppercaseModel are incompatible with WordSplitterModel
+    stream = WordSplitterModel('We will, we will') + MyListOfUppercaseModel('rock you!')
+    assert stream.to_data() == ['We', 'will,', 'we', 'will', 'ROCK', 'YOU!']
 
 
 def test_mimic_str_concat_iadd_and_radd_overrides_add_if_defined(
@@ -3599,16 +3635,16 @@ def test_parametrized_model() -> None:
 
 
 def test_parametrized_model_new() -> None:
-    assert ParamStrModel().contents == ''
-    # assert ParamStrModel().is_param_model()
-    assert ParamStrModel('foo').contents == 'foo'
+    assert ParamUpperStrModel().contents == ''
+    # assert ParamUpperStrModel().is_param_model()
+    assert ParamUpperStrModel('foo').contents == 'foo'
 
-    asd = ParamStrModel.adjust
+    asd = ParamUpperStrModel.adjust
     # reveal_type(asd)
-    MyUpperStrModel = ParamStrModel.adjust('MyUpperStrModel', upper=True)
+    MyUpperStrModel = ParamUpperStrModel.adjust('MyUpperStrModel', upper=True)
     assert MyUpperStrModel('bar').contents == 'BAR'
 
-    model = ParamStrModel()
+    model = ParamUpperStrModel()
 
     model.from_data('foo')
     assert model.contents == 'foo'
@@ -3624,7 +3660,7 @@ def test_parametrized_model_new() -> None:
     assert upper_model.contents == 'FOOBAR'
 
     with pytest.raises(AttributeError):
-        ParamStrModel.adjust('MyUpperStrModel', True)  # type: ignore[misc]
+        ParamUpperStrModel.adjust('MyUpperStrModel', True)  # type: ignore[misc]
 
 
 def test_parametrized_model_wrong_keyword() -> None:
