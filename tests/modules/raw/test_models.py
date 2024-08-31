@@ -26,11 +26,13 @@ def test_bytes_model():
     assert BytesModel(b'\xc3\xa6\xc3\xb8\xc3\xa5').contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
     assert BytesModel('').contents == b''
     assert BytesModel('æøå').contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
-    assert BytesModel('æøå', encoding='utf-8').contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
-    assert BytesModel('æøå', encoding='latin-1').contents == b'\xe6\xf8\xe5'
 
+    BytesModelLatin1 = BytesModel.adjust('BytesModelLatin1', encoding='latin-1')
+    assert BytesModelLatin1('æøå').contents == b'\xe6\xf8\xe5'
+
+    BytesModelMyEncoding = BytesModel.adjust('BytesModelMyEncoding', encoding='my-encoding')
     with pytest.raises(LookupError):
-        BytesModel('æøå', encoding='my-encoding')
+        BytesModelMyEncoding('æøå')
 
 
 def test_str_model():
@@ -38,15 +40,22 @@ def test_str_model():
     assert StrModel('æøå').contents == 'æøå'
     assert StrModel(b'').contents == ''
     assert StrModel(b'\xc3\xa6\xc3\xb8\xc3\xa5').contents == 'æøå'
-    assert StrModel(b'\xc3\xa6\xc3\xb8\xc3\xa5', encoding='utf-8').contents == 'æøå'
-    assert StrModel(b'\xe6\xf8\xe5', encoding='latin-1').contents == 'æøå'
-    assert StrModel(b'\xef\xbb\xbfsomething', encoding='utf-8-sig').contents == 'something'
 
     with pytest.raises(ValidationError):
-        StrModel(b'\xe6\xf8\xe5', encoding='utf-8')
+        StrModel(b'\xe6\xf8\xe5')
 
+    StrModelLatin1 = StrModel.adjust('StrModelLatin1', encoding='latin-1')
+    assert StrModelLatin1(b'\xe6\xf8\xe5').contents == 'æøå'
+
+    StrModelUtf8Sig = StrModel.adjust('StrModelUtf8Sig', encoding='utf-8-sig')
+    assert StrModelUtf8Sig(b'\xef\xbb\xbfsomething').contents == 'something'
+
+    with pytest.raises(ValidationError):
+        StrModelUtf8Sig(b'\xe6\xf8\xe5')
+
+    StrModelMyEncoding = StrModel.adjust('StrModelMyEncoding', encoding='my-encoding')
     with pytest.raises(LookupError):
-        StrModel(b'\xe6\xf8\xe5', encoding='my-encoding')
+        StrModelMyEncoding(b'\xe6\xf8\xe5')
 
 
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])

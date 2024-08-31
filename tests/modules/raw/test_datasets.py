@@ -27,12 +27,16 @@ def test_bytes_dataset():
         dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
     assert BytesDataset(dict(a=''))['a'].contents == b''
     assert BytesDataset(dict(a='æøå'))['a'].contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
-    assert BytesDataset(
-        dict(a='æøå'), encoding='utf-8')['a'].contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
-    assert BytesDataset(dict(a='æøå'), encoding='latin-1')['a'].contents == b'\xe6\xf8\xe5'
+    assert BytesDataset(dict(a='æøå'))['a'].contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
 
+    BytesDatasetLatin1 = BytesDataset.adjust(
+        'BytesDatasetLatin1', 'BytesModelLatin1', encoding='latin-1')
+    assert BytesDatasetLatin1(dict(a='æøå'))['a'].contents == b'\xe6\xf8\xe5'
+
+    BytesDatasetMyEncoding = BytesDataset.adjust(
+        'BytesDatasetMyEncoding', 'BytesModelMyEncoding', encoding='my-encoding')
     with pytest.raises(LookupError):
-        BytesDataset(dict(a='æøå'), encoding='my-encoding')
+        BytesDatasetMyEncoding(dict(a='æøå'))
 
 
 def test_str_dataset():
@@ -40,16 +44,23 @@ def test_str_dataset():
     assert StrDataset(dict(a='æøå'))['a'].contents == 'æøå'
     assert StrDataset(dict(a=b''))['a'].contents == ''
     assert StrDataset(dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].contents == 'æøå'
-    assert StrDataset(dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'), encoding='utf-8')['a'].contents == 'æøå'
-    assert StrDataset(dict(a=b'\xe6\xf8\xe5'), encoding='latin-1')['a'].contents == 'æøå'
-    assert StrDataset(
-        dict(a=b'\xef\xbb\xbfsomething'), encoding='utf-8-sig')['a'].contents == 'something'
 
     with pytest.raises(ValidationError):
-        StrDataset(dict(a=b'\xe6\xf8\xe5'), encoding='utf-8')
+        StrDataset(dict(a=b'\xe6\xf8\xe5'))
 
+    StrDatasetLatin1 = StrDataset.adjust('StrDatasetLatin1', 'StrModelLatin1', encoding='latin-1')
+    assert StrDatasetLatin1(dict(a=b'\xe6\xf8\xe5'))['a'].contents == 'æøå'
+
+    StrDatasetUtf8Sig = StrDataset.adjust(
+        'StrDatasetUtf8Sig', 'StrModelUtf8Sig', encoding='utf-8-sig')
+    assert StrDatasetUtf8Sig(dict(a=b'\xef\xbb\xbfsomething'))['a'].contents == 'something'
+    with pytest.raises(ValidationError):
+        StrDatasetUtf8Sig(dict(a=b'\xe6\xf8\xe5'))
+
+    StrDatasetMyEncoding = StrDataset.adjust(
+        'StrDatasetMyEncoding', 'StrModelMyEncoding', encoding='my-encoding')
     with pytest.raises(LookupError):
-        StrDataset(dict(a=b'\xe6\xf8\xe5'), encoding='my-encoding')
+        StrDatasetMyEncoding(dict(a=b'\xe6\xf8\xe5'))
 
 
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])

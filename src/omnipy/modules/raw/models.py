@@ -1,39 +1,51 @@
 from dataclasses import dataclass
 import os
-from typing import cast, Generic
+from typing import cast
 
-from pydantic.generics import _generic_types_cache
-
-from omnipy.data.model import DataWithParams, ListOfParamModel, Model, ParamModel
+from omnipy.data.model import ListOfParamModel, Model, ParamModel
 from omnipy.data.param import bind_adjust_func, ParamsBase
 
 
-class BytesModel(ParamModel[str | bytes, str]):
+class _EncodingParamsMixin:
+    @dataclass(kw_only=True)
+    class Params(ParamsBase):
+        encoding: str = 'utf-8'
+
+
+class _BytesModel(Model[str | bytes], _EncodingParamsMixin):
     @classmethod
-    def _parse_data(cls, data: str | bytes, encoding: str = 'utf-8') -> bytes:
+    def _parse_data(cls, data: str | bytes) -> bytes:
         if isinstance(data, bytes):
             return data
 
-        return data.encode(encoding)
-
-    ...
+        return data.encode(cls.Params.encoding)
 
 
-# Workaround for https://github.com/pydantic/pydantic/issues/4519
-# (which is also not fixed in pydantic v2)
-del _generic_types_cache[(ParamModel, (str | bytes, str), ())]
-del _generic_types_cache[(DataWithParams, (str | bytes, str), ())]
+class BytesModel(_BytesModel):
+    adjust = bind_adjust_func(
+        _BytesModel.clone_model_cls,
+        _EncodingParamsMixin.Params,
+    )
 
 
-class StrModel(ParamModel[bytes | str, str]):
+class _StrModel(Model[bytes | str], _EncodingParamsMixin):
+    Params = _EncodingParamsMixin.Params
+
     @classmethod
-    def _parse_data(cls, data: bytes | str, encoding: str = 'utf-8') -> str:
+    def _parse_data(cls, data: bytes | str) -> str:
         if isinstance(data, str):
             return data
 
-        return data.decode(encoding)
+        return data.decode(cls.Params.encoding)
 
     ...
+
+
+class StrModel(_StrModel):
+    adjust = bind_adjust_func(
+        _StrModel.clone_model_cls,
+        _EncodingParamsMixin.Params,
+    )
 
 
 class SplitToLinesModel(ParamModel[str | list[str], bool]):

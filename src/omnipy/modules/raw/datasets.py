@@ -1,4 +1,9 @@
+from typing import Generic
+
+from typing_extensions import TypeVar
+
 from omnipy.data.dataset import Dataset, ListOfParamModelDataset, ParamDataset
+from omnipy.data.param import bind_adjust_dataset_func
 
 from .models import (BytesModel,
                      JoinColumnsToLinesModel,
@@ -9,13 +14,32 @@ from .models import (BytesModel,
                      SplitToLinesModel,
                      StrModel)
 
+BytesModelT = TypeVar('BytesModelT', default=BytesModel)
+StrModelT = TypeVar('StrModelT', default=StrModel)
 
-class BytesDataset(ParamDataset[BytesModel, str]):
+
+class _BytesDataset(Dataset[BytesModelT], Generic[BytesModelT]):
     ...
 
 
-class StrDataset(ParamDataset[StrModel, str]):
+class BytesDataset(_BytesDataset[BytesModelT], Generic[BytesModelT]):
+    adjust = bind_adjust_dataset_func(
+        _BytesDataset[BytesModelT].clone_dataset_cls,
+        BytesModel,
+        BytesModel.Params,
+    )
+
+
+class _StrDataset(Dataset[StrModelT], Generic[StrModelT]):
     ...
+
+
+class StrDataset(_StrDataset[StrModelT], Generic[StrModelT]):
+    adjust = bind_adjust_dataset_func(
+        _StrDataset[StrModelT].clone_dataset_cls,
+        StrModel,
+        StrModel.Params,
+    )
 
 
 class SplitToLinesDataset(ParamDataset[SplitToLinesModel, bool]):
