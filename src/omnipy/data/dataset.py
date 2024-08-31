@@ -37,6 +37,7 @@ from omnipy.data.model import (_cleanup_name_qualname_and_module,
                                Model,
                                ParamModel)
 from omnipy.util.helpers import (get_calling_module_name,
+                                 get_default_if_typevar,
                                  is_iterable,
                                  is_optional,
                                  is_strict_subclass,
@@ -145,6 +146,9 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
         if cls == Dataset and not is_optional(model):  # TODO: Handle MultiModelDataset??
             model = Annotated[Optional[model], 'Fake Optional from Dataset']
 
+        if isinstance(model, TypeVar):
+            model = get_default_if_typevar(model)
+
         created_dataset = super().__class_getitem__(model)
 
         _cleanup_name_qualname_and_module(cls, created_dataset, model, orig_model)
@@ -188,9 +192,10 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
                 "Not allowed to combine 'data' with other keyword arguments"
             super_kwargs[DATA_KEY] = data
 
+        model_cls = self.get_model_class()
         if kwargs:
             if DATA_KEY not in super_kwargs:
-                assert not self.get_model_class().is_param_model(), \
+                assert isinstance(model_cls, TypeVar) or not model_cls.is_param_model(), \
                     ('If any keyword arguments are defined, parametrized datasets require at least '
                      'one positional argument in the __init__ method (typically providing the data '
                      'in the form of a dict from name to content for each data file).')
@@ -198,7 +203,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
                 super_kwargs[DATA_KEY] = kwargs
                 kwargs = {}
 
-        if self.get_model_class() == ModelT:
+        if model_cls == ModelT:
             self._raise_no_model_exception()
 
         dataset_as_input = DATA_KEY in super_kwargs \

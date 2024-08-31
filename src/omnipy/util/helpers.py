@@ -184,6 +184,18 @@ def evaluate_any_forward_refs_if_possible(in_type: TypeForm,
     return in_type
 
 
+def get_default_if_typevar(typ_: type[_ObjT] | TypeForm | TypeVar) -> type[_ObjT] | TypeForm:
+    if isinstance(typ_, TypeVar):
+        if hasattr(typ_, '__default__') and typ_.__default__ is not None:
+            return typ_.__default__
+        else:
+            raise TypeError(f'The TypeVar "{typ_.__name__}" needs to specify a default value. '
+                            f'This requires Python 3.13, but is supported in earlier versions '
+                            f'of Python by importing TypeVar from the library '
+                            f'"typing-extensions".')
+    return typ_
+
+
 def all_type_variants(
     in_type: type | GenericAlias | UnionType | _UnionGenericAlias
 ) -> tuple[type | GenericAlias, ...]:

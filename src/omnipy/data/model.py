@@ -212,19 +212,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         # json_dumps = orjson_dumps
 
     @classmethod
-    def _get_default_if_typevar(
-            cls, model: type[_RootT] | TypeForm | TypeVar) -> type[_RootT] | TypeForm:
-        if isinstance(model, TypeVar):
-            if hasattr(model, '__default__') and model.__default__ is not None:
-                return model.__default__
-            else:
-                raise TypeError(f'The TypeVar "{model.__name__}" needs to specify a default value. '
-                                f'This requires Python 3.13, but is supported in earlier versions '
-                                f'of Python by importing TypeVar from the library '
-                                f'"typing-extensions".')
-        return model
-
-    @classmethod
     def _get_default_factory_from_model(
             cls, model: type[_RootT] | TypeForm | TypeVar) -> Callable[[], _RootT]:
         default_val = cls._get_default_value_from_model(model)
@@ -236,7 +223,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     @classmethod
     def _get_default_value_from_model(cls, model: type[_RootT] | TypeForm | TypeVar) -> _RootT:
-        model = cls._get_default_if_typevar(model)
+        model = get_default_if_typevar(model)
         origin_type = get_origin(model)
         args = get_args(model)
 
