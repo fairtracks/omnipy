@@ -15,6 +15,7 @@ from omnipy.data.model import Model
 from .helpers.datasets import (DefaultStrDataset,
                                ListOfUpperStrDataset,
                                MyFloatObjDataset,
+                               ParamUpperStrDataset,
                                UpperStrDataset)
 from .helpers.models import (MyFloatObject,
                              MyPydanticModel,
@@ -940,6 +941,40 @@ def test_parametrized_dataset():
         UpperStrDataset(dict(x='bar'), upper=True)['upper']
     with pytest.raises(AssertionError):
         assert UpperStrDataset(x='bar', upper=True)
+
+
+def test_parametrized_dataset_new() -> None:
+    assert ParamUpperStrDataset(x='foo')['x'].contents == 'foo'
+
+    MyUpperStrDataset = ParamUpperStrDataset.adjust(
+        'MyUpperStrDataset',
+        'MyUpperStrModel',
+        upper=True,
+    )
+    assert MyUpperStrDataset(dict(x='foo', y='bar')).to_data() == dict(x='FOO', y='BAR')
+
+    dataset = MyUpperStrDataset()
+    dataset['x'] = 'foo'
+    assert dataset['x'].contents == 'FOO'
+
+    dataset.from_data(dict(y='bar', z='foobar'))
+    assert dataset.to_data() == dict(x='FOO', y='BAR', z='FOOBAR')
+
+    dataset.from_data(dict(y='bar', z='foobar'), update=False)
+    assert dataset.to_data() == dict(y='BAR', z='FOOBAR')
+
+    dataset.from_json(dict(x='"foo"'))
+    assert dataset.to_data() == dict(x='FOO', y='BAR', z='FOOBAR')
+
+    dataset.from_json(dict(x='"foobar"'), update=False)
+    assert dataset.to_data() == dict(x='FOOBAR')
+
+    with pytest.raises(AttributeError):
+        ParamUpperStrDataset.adjust(
+            'MyUpperStrDataset',
+            'MyUpperStrModel',
+            True,
+        )
 
 
 def test_parametrized_dataset_wrong_keyword() -> None:

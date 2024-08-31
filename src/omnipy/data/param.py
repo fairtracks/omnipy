@@ -6,6 +6,7 @@ from pydantic.main import create_model, ModelMetaclass, validate_model
 from typing_extensions import TypeVar
 
 ModelT = TypeVar('ModelT')
+DatasetT = TypeVar('DatasetT')
 ParamsP = ParamSpec('ParamsP')
 
 
@@ -84,11 +85,36 @@ def bind_adjust_func(
         if len(args) > 0:
             raise AttributeError(f'Positional arguments are not supported for '
                                  f'{params_cls.__module__}.{params_cls.__name__}')
-        new_model = clone_model_func(model_name)
-        new_model.Params = params_cls.copy_and_adjust(  # type: ignore[attr-defined]
+        new_model_cls = clone_model_func(model_name)
+        new_model_cls.Params = params_cls.copy_and_adjust(  # type: ignore[attr-defined]
             'Params',
             **kwargs,
         )
-        return new_model
+        return new_model_cls
+
+    return _func
+
+
+def bind_adjust_dataset_func(
+    clone_dataset_func: Callable[..., type[DatasetT]],
+    model_cls: type[ModelT],
+    params_cls: Callable[ParamsP, Any],
+) -> Callable[Concatenate[str, str, ParamsP], type[DatasetT]]:
+    def _func(dataset_name: str, model_name: str, *args: ParamsP.args,
+              **kwargs: ParamsP.kwargs) -> type[DatasetT]:
+        if len(args) > 0:
+            raise AttributeError(f'Positional arguments are not supported for '
+                                 f'{params_cls.__module__}.{params_cls.__name__}')
+        new_model_cls: type[ModelT] = cast(
+            type[ModelT],
+            model_cls.adjust(model_name, **kwargs),  # type: ignore[attr-defined]
+        )
+
+        new_dataset_cls = clone_dataset_func(dataset_name, new_model_cls)
+        new_model_cls.Params = params_cls.copy_and_adjust(  # type: ignore[attr-defined]
+            'Params',
+            **kwargs,
+        )
+        return new_dataset_cls
 
     return _func

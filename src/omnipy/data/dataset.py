@@ -48,6 +48,8 @@ from omnipy.util.tabulate import tabulate
 from omnipy.util.web import download_file_to_memory
 
 ModelT = TypeVar('ModelT', bound=Model)
+_DatasetT = TypeVar('_DatasetT')
+
 DATA_KEY = 'data'
 
 # def orjson_dumps(v, *, default):
@@ -229,6 +231,20 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
 
     def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
         ...
+
+    @classmethod
+    def clone_dataset_cls(cls: type[_DatasetT],
+                          new_dataset_cls_name: str,
+                          model_cls: type | None = None) -> type[_DatasetT]:
+        # TODO: Update `model_cls` type to `type[IsModel] | None` when IsModel is defined
+        if model_cls:
+            generic_dataset_cls = cls.__bases__[0]
+            new_base_cls = generic_dataset_cls[model_cls]
+        else:
+            new_base_cls = cls
+
+        new_dataset_cls: type[_DatasetT] = type(new_dataset_cls_name, (new_base_cls,), {})
+        return new_dataset_cls
 
     @classmethod
     def _get_data_field(cls) -> ModelField:
