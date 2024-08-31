@@ -21,8 +21,9 @@ def state_and_callback_funcs() -> StateAndSetupTeardownFuncs:
     state = []
     default_num = 123
 
-    def setup(number: int = default_num):
+    def setup(number: int = default_num) -> int:
         state.append(number)
+        return number
 
     def exception(number: int = default_num):
         state.append(-number)
@@ -41,7 +42,8 @@ def test_setup_and_teardown_callback_context_no_args(state_and_callback_funcs) -
             setup_func=setup,
             exception_func=exception,
             teardown_func=teardown,
-    ):
+    ) as number:
+        assert number == 123
         assert state == [123]
 
     assert state == []
@@ -55,7 +57,8 @@ def test_setup_and_teardown_callback_context_with_exception(state_and_callback_f
                 setup_func=setup,
                 exception_func=exception,
                 teardown_func=teardown,
-        ):
+        ) as number:
+            assert number == 123
             assert state == [123]
             raise RuntimeError("Whoops! Something went wrong...")
     except RuntimeError:
@@ -75,7 +78,8 @@ def test_setup_and_teardown_callback_context_args_with_exception(state_and_callb
                 exception_func_args=(234,),
                 teardown_func=teardown,
                 teardown_func_args=(234,),
-        ):
+        ) as number:
+            assert number == 234
             assert state == [234]
             raise RuntimeError("Whoops! Something went wrong...")
     except RuntimeError:
@@ -96,7 +100,8 @@ def test_setup_and_teardown_callback_context_kwargs_with_exception(
                 exception_func_kwargs=dict(number=345),
                 teardown_func=teardown,
                 teardown_func_kwargs=dict(number=345),
-        ):
+        ) as number:
+            assert number == 345
             assert state == [345]
             raise RuntimeError("Whoops! Something went wrong...")
     except RuntimeError:
@@ -112,7 +117,8 @@ def test_setup_and_teardown_callback_context_only_setup_func(state_and_callback_
         with setup_and_teardown_callback_context(
                 setup_func=setup,
                 setup_func_args=(234,),
-        ):
+        ) as number:
+            assert number == 234
             assert state == [234]
             raise RuntimeError("Whoops! Something went wrong...")
     except RuntimeError:
@@ -128,7 +134,8 @@ def test_setup_and_teardown_callback_context_only_exception_func(state_and_callb
         with setup_and_teardown_callback_context(
                 exception_func=exception,
                 exception_func_args=(234,),
-        ):
+        ) as number:
+            assert number is None
             assert state == []
             raise RuntimeError("Whoops! Something went wrong...")
     except RuntimeError:
@@ -146,7 +153,8 @@ def test_setup_and_teardown_callback_context_only_teardown_func(state_and_callba
         with setup_and_teardown_callback_context(
                 teardown_func=teardown,
                 teardown_func_args=(234,),
-        ):
+        ) as number:
+            assert number is None
             assert state == [234]
             raise RuntimeError("Whoops! Something went wrong...")
     except RuntimeError:
