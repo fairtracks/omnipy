@@ -245,9 +245,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         origin_type = get_origin(model)
         args = get_args(model)
 
-        if origin_type is Annotated:
-            model = remove_annotated_plus_optional_if_present(model)
-            return cls._get_default_value_from_model(model)
+        # if origin_type is Annotated:
+        #     model = remove_annotated_plus_optional_if_present(model)
+        #     return cls._get_default_value_from_model(model)
 
         if origin_type in (None, ()):
             origin_type = model
@@ -841,8 +841,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                                        value: _RootT | None,
                                        root_field: ModelField,
                                        root_type: TypeForm) -> _RootT:
-        if get_origin(root_type) is Annotated:
-            root_type = remove_annotated_plus_optional_if_present(root_type)
+        # if get_origin(root_type) is Annotated:
+        #     root_type = remove_annotated_plus_optional_if_present(root_type)
 
         if get_origin(root_type) is Union:
             last_error_holder = LastErrorHolder()
@@ -975,7 +975,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def _get_root_type(cls, outer: bool, with_args: bool) -> TypeForm | None:
         root_field = cls._get_root_field()
         root_type = root_field.outer_type_ if outer else root_field.type_
-        root_type = remove_annotated_plus_optional_if_present(root_type)
+        # root_type = remove_annotated_plus_optional_if_present(root_type)
         return root_type if with_args else ensure_plain_type(root_type)
 
     # @classmethod
@@ -1291,51 +1291,49 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 outer_type = cast(Model, outer_type).outer_type(with_args=True)
 
             for type_to_check in all_type_variants(outer_type):
-                # TODO: Remove inner_type_to_check loop when Annotated hack is removed with
-                #       pydantic v2
-                type_to_check = cast(type | GenericAlias,
-                                     remove_annotated_plus_optional_if_present(type_to_check))
-                for inner_type_to_check in all_type_variants(type_to_check):
-                    plain_inner_type_to_check = ensure_plain_type(inner_type_to_check)
-                    # if plain_inner_type_to_check in (ForwardRef, TypeVar, Literal, None):
-                    if plain_inner_type_to_check in (ForwardRef, TypeVar, None):
-                        continue
+                # type_to_check = cast(type | GenericAlias,
+                #                      remove_annotated_plus_optional_if_present(type_to_check))
+                # for inner_type_to_check in all_type_variants(type_to_check):
+                plain_type_to_check = ensure_plain_type(type_to_check)
+                # if plain_type_to_check in (ForwardRef, TypeVar, Literal, None):
+                if plain_type_to_check in (ForwardRef, TypeVar, None):
+                    continue
 
-                    if level_up:
-                        inner_type_args = get_args(inner_type_to_check)
-                        if len(inner_type_args) == 0:
-                            inner_type_args = (inner_type_to_check,)
-                        if inner_type_args:
-                            for level_up_type_to_check in all_type_variants(
-                                    inner_type_args[level_up_arg_idx]):
-                                level_up_type_to_check = self._fix_tuple_type_from_args(
-                                    level_up_type_to_check)
-                                if self._is_instance_or_literal(
-                                        ret,
-                                        ensure_plain_type(level_up_type_to_check),
-                                        level_up_type_to_check,
-                                ):
-                                    try:
-                                        return Model[level_up_type_to_check](ret)  # type: ignore
-                                    except ValidationError:
-                                        if raise_validation_errors:
-                                            raise
-                                    except TypeError:
-                                        pass
+                if level_up:
+                    type_args = get_args(type_to_check)
+                    if len(type_args) == 0:
+                        type_args = (type_to_check,)
+                    if type_args:
+                        for level_up_type_to_check in all_type_variants(
+                                type_args[level_up_arg_idx]):
+                            level_up_type_to_check = self._fix_tuple_type_from_args(
+                                level_up_type_to_check)
+                            if self._is_instance_or_literal(
+                                    ret,
+                                    ensure_plain_type(level_up_type_to_check),
+                                    level_up_type_to_check,
+                            ):
+                                try:
+                                    return Model[level_up_type_to_check](ret)  # type: ignore
+                                except ValidationError:
+                                    if raise_validation_errors:
+                                        raise
+                                except TypeError:
+                                    pass
 
-                    else:
-                        if self._is_instance_or_literal(
-                                ret,
-                                plain_inner_type_to_check,
-                                inner_type_to_check,
-                        ):
-                            try:
-                                return self.__class__(ret)
-                            except ValidationError:
-                                if raise_validation_errors:
-                                    raise
-                            except TypeError:
-                                pass
+                else:
+                    if self._is_instance_or_literal(
+                            ret,
+                            plain_type_to_check,
+                            type_to_check,
+                    ):
+                        try:
+                            return self.__class__(ret)
+                        except ValidationError:
+                            if raise_validation_errors:
+                                raise
+                        except TypeError:
+                            pass
 
         return cast(_ReturnT, ret)
 
