@@ -11,6 +11,22 @@ class TypeVarStore(Generic[T]):
         raise ValueError()
 
 
+class TypeVarStore1(TypeVarStore[T], Generic[T]):
+    ...
+
+
+class TypeVarStore2(TypeVarStore[T], Generic[T]):
+    ...
+
+
+class TypeVarStore3(TypeVarStore[T], Generic[T]):
+    ...
+
+
+class TypeVarStore4(TypeVarStore[T], Generic[T]):
+    ...
+
+
 class YesNoMaybe(IntEnum):
     NO = 0
     YES = 1

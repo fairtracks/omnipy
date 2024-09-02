@@ -1,9 +1,10 @@
-from typing import Generic, get_args, Hashable, TypeAlias
+from typing import Any, Generic, get_args, Hashable, TypeAlias
 
+from pydantic.utils import lenient_isinstance
 from typing_extensions import TypeVar
 
-from omnipy.data.helpers import TypeVarStore
-from omnipy.data.model import Model
+from omnipy.data.helpers import TypeVarStore1, TypeVarStore2, TypeVarStore3, TypeVarStore4
+from omnipy.data.model import is_model_instance, Model
 from omnipy.util.helpers import is_iterable
 
 
@@ -51,39 +52,46 @@ Z = TypeVar('Z', bound=Model, default=Model[object])
 
 class ChainMixin:
     @classmethod
-    def _parse_data(cls, data) -> object:
-        stores = get_args(cls.outer_type(with_args=True))[:-1]
-        for store in stores:
-            model = get_args(store)[0]
+    def _parse_data(cls, data: object) -> object:
+        type_args = get_args(cls.outer_type(with_args=True))
+        store_models = [get_args(store)[0] for store in type_args[1:-1]]
+        all_models = [type_args[0]] + store_models + [type_args[-1]]
+        all_models.reverse()
+
+        if isinstance(data, all_models[-1]):
+            return data
+
+        assert isinstance(data, all_models[0]), \
+            f'Expected data of type {all_models[0]}, got {type(data)}'
+
+        for model in all_models[1:]:
             data = model(data)
         return data
 
 
-class Chain2(ChainMixin, Model[TypeVarStore[U] | TypeVarStore[V] | object], Generic[U, V]):
+class Chain2(ChainMixin, Model[V | U], Generic[U, V]):
     ...
 
 
-class Chain3(ChainMixin,
-             Model[TypeVarStore[U] | TypeVarStore[V] | TypeVarStore[W] | object],
-             Generic[U, V, W]):
+class Chain3(ChainMixin, Model[W | TypeVarStore1[V] | U], Generic[U, V, W]):
     ...
 
 
-class Chain4(ChainMixin,
-             Model[TypeVarStore[U] | TypeVarStore[V] | TypeVarStore[W] | TypeVarStore[X] | object],
-             Generic[U, V, W, X]):
+class Chain4(ChainMixin, Model[X | TypeVarStore2[W] | TypeVarStore1[V] | U], Generic[U, V, W, X]):
     ...
 
 
-class Chain5(ChainMixin,
-             Model[TypeVarStore[U] | TypeVarStore[V] | TypeVarStore[W] | TypeVarStore[X]
-                   | TypeVarStore[Y] | object],
-             Generic[U, V, W, X, Y]):
+class Chain5(
+        ChainMixin,
+        Model[Y | TypeVarStore3[X] | TypeVarStore2[W] | TypeVarStore1[V] | U],
+        Generic[U, V, W, X, Y],
+):
     ...
 
 
-class Chain6(ChainMixin,
-             Model[TypeVarStore[U] | TypeVarStore[V] | TypeVarStore[W] | TypeVarStore[X]
-                   | TypeVarStore[Y] | TypeVarStore[Z] | object],
-             Generic[U, V, W, X, Y, Z]):
+class Chain6(
+        ChainMixin,
+        Model[Z | TypeVarStore4[Y] | TypeVarStore3[X] | TypeVarStore2[W] | TypeVarStore1[V] | U],
+        Generic[U, V, W, X, Y, Z],
+):
     ...

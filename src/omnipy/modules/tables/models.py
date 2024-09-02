@@ -58,13 +58,14 @@ class TableWithColNamesModel(Model[TableListOfDictsOfJsonScalarsModel
         return tuple(col_names.keys())
 
 
-_PydanticModelT = TypeVar('_PydanticModelT', bound=BaseModel)
+_PydanticBaseModelT = TypeVar('_PydanticBaseModelT', bound=BaseModel)
+_PydanticRecordT = TypeVar('_PydanticRecordT', bound=BaseModel)
 
 
-class PydanticRecordModel(Model[_PydanticModelT | JsonListOfScalarsModel],
-                          Generic[_PydanticModelT]):
+class PydanticRecordModel(Model[_PydanticBaseModelT | JsonListOfScalarsModel],
+                          Generic[_PydanticBaseModelT]):
     @classmethod
-    def _parse_data(cls, data: _PydanticModelT | JsonListOfScalarsModel) -> _PydanticModelT:
+    def _parse_data(cls, data: _PydanticBaseModelT | JsonListOfScalarsModel) -> _PydanticBaseModelT:
         match data:
             case JsonListOfScalarsModel():
                 pydantic_model = get_args(cls.outer_type(with_args=True))[0]
@@ -75,10 +76,8 @@ class PydanticRecordModel(Model[_PydanticModelT | JsonListOfScalarsModel],
                 return data
 
 
-class TableOfPydanticRecordsModel(
-        Model[list[PydanticRecordModel[_PydanticModelT]]
-              | Chain3[SplitToLinesModel,
-                       SplitLinesToColumnsModelNew,
-                       Model[list[PydanticRecordModel[_PydanticModelT]]]]],
-        Generic[_PydanticModelT]):
+class TableOfPydanticRecordsModel(Chain3[SplitToLinesModel,
+                                         SplitLinesToColumnsModelNew,
+                                         Model[list[PydanticRecordModel[_PydanticRecordT]]]],
+                                  Generic[_PydanticRecordT]):
     ...

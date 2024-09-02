@@ -343,11 +343,10 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 names_to_check = (name, '__add__') if name in ('__iadd__', '__radd__') else (name,)
                 for type_to_support in outer_types:
                     for name_to_check in names_to_check:
-                        if hasattr(type_to_support, name_to_check):
-                            setattr(created_model,
-                                    name,
-                                    functools.partialmethod(cls._special_method, name, method_info))
-                            break
+                        setattr(created_model,
+                                name,
+                                functools.partialmethod(cls._special_method, name, method_info))
+                        break
                     else:
                         continue
                     # To let the inner break, also break the outer for loop
