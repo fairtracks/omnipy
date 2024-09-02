@@ -29,7 +29,7 @@ from devtools import debug, PrettyFormat
 from pydantic import NoneIsNotAllowedError
 from pydantic import Protocol as PydanticProtocol
 from pydantic import root_validator, ValidationError
-from pydantic.fields import ModelField, Undefined, UndefinedType
+from pydantic.fields import DeferredType, ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.main import BaseModel, ModelMetaclass, validate_model
 from pydantic.typing import display_as_type, is_none_type
@@ -55,12 +55,14 @@ from omnipy.util.helpers import (all_equals,
                                  get_default_if_typevar,
                                  get_first_item,
                                  has_items,
+                                 is_annotated_plus_optional,
                                  is_non_omnipy_pydantic_model,
                                  is_non_str_byte_iterable,
                                  is_optional,
                                  is_union,
                                  remove_annotated_plus_optional_if_present,
-                                 remove_forward_ref_notation)
+                                 remove_forward_ref_notation,
+                                 remove_optional_if_present)
 from omnipy.util.setdeque import SetDeque
 from omnipy.util.tabulate import tabulate
 
@@ -360,6 +362,50 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         cls._prepare_cls_members_to_mimic_model(created_model)
 
         return created_model
+
+    @classmethod
+    def _wrap_with_annotated_optional(cls, model):
+        if not get_origin(model) == Annotated \
+                and not is_optional(model) \
+                and not is_none_type(model):
+            prepared_model = cast(type[_RootT],
+                                  Annotated[Optional[model], 'Fake Optional from Model'])
+        else:
+            prepared_model = cast(type[_RootT], model)
+        return prepared_model
+
+    @classmethod
+    def _add_annotated_optional_hack_to_model(cls, model: 'Model'):
+        root_field = model._get_root_field()
+        if root_field:
+            model = root_field.outer_type_
+            if not get_origin(model) == Annotated \
+                    and not is_optional(model) \
+                    and not is_none_type(model):
+                # if not get_origin(model) == Annotated and not is_optional(model):
+                root_field.outer_type_ = Annotated[Optional[model], 'Fake Optional from Model']
+                root_field.type_ = Optional[model]
+                root_field.annotation = root_field.outer_type_
+                cls.__annotations__[ROOT_KEY] = root_field.outer_type_
+
+    @classmethod
+    def _remove_annotated_optional_hack_from_model(cls, model: 'Model', recursive: bool = False):
+        root_field = model._get_root_field()
+        if root_field:
+            cls._remove_annotated_optional_hack_from_field(root_field, recursive=recursive)
+            model.__annotations__[ROOT_KEY] = root_field.outer_type_
+
+    @classmethod
+    def _remove_annotated_optional_hack_from_field(cls, field: ModelField, recursive: bool = False):
+        if is_annotated_plus_optional(field.outer_type_):
+            field.outer_type_ = remove_annotated_plus_optional_if_present(field.outer_type_)
+            field.type_ = remove_optional_if_present(field.type_)
+            if not isinstance(field.annotation, DeferredType):
+                field.annotation = field.outer_type_
+        if field.sub_fields and recursive:
+            for sub_field in field.sub_fields:
+                if sub_field:
+                    cls._remove_annotated_optional_hack_from_field(sub_field, recursive=recursive)
 
     def __new__(cls, value: Any | UndefinedType = Undefined, **kwargs):
         model_not_specified = ROOT_KEY not in cls.__fields__

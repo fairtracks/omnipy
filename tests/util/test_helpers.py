@@ -41,6 +41,7 @@ from omnipy.util.helpers import (all_type_variants,
                                  is_union,
                                  RefCountMemoDict,
                                  remove_annotated_plus_optional_if_present,
+                                 remove_optional_if_present,
                                  SnapshotHolder,
                                  SnapshotWrapper,
                                  transfer_generic_args_to_cls,
@@ -464,6 +465,8 @@ def test_remove_annotated_optional_if_present() -> None:
     assert remove_annotated_plus_opt(Annotated[Union[str, list[int]], 'something']) == \
            Union[str, list[int]]
 
+    assert remove_annotated_plus_opt(Annotated[None, 'something']) == NoneType
+    assert remove_annotated_plus_opt(Annotated[NoneType, 'something']) == NoneType
     assert remove_annotated_plus_opt(Annotated[str | None, 'something']) == str
     assert remove_annotated_plus_opt(Annotated[Union[str, None], 'something']) == str
     assert remove_annotated_plus_opt(Annotated[Optional[str], 'something']) == str
@@ -476,6 +479,25 @@ def test_remove_annotated_optional_if_present() -> None:
            Union[str, list[int]]
     assert remove_annotated_plus_opt(Annotated[Optional[str | list[int]],
                                                'something']) == Union[str, list[int]]
+
+
+def test_remove_optional_if_present() -> None:
+    assert remove_optional_if_present(str) == str
+    assert remove_optional_if_present(str | list[int]) == str | list[int]
+    assert remove_optional_if_present(str | list[int] | None) == Union[str, list[int]]
+
+    assert remove_optional_if_present(Union[str, list[int]]) == Union[str, list[int]]
+    assert remove_optional_if_present(Union[str, list[int], None]) == Union[str, list[int]]
+    assert remove_optional_if_present(Optional[Union[str, list[int]]]) == Union[str, list[int]]
+
+    assert remove_optional_if_present(str | None) == str
+    assert remove_optional_if_present(Union[str, None]) == str
+    assert remove_optional_if_present(Optional[str]) == str
+
+    assert remove_optional_if_present(str | list[int] | None) == Union[str, list[int]]
+    assert remove_optional_if_present(Union[str, list[int], None]) == Union[str, list[int]]
+    assert remove_optional_if_present(Optional[Union[str, list[int]]]) == Union[str, list[int]]
+    assert remove_optional_if_present(Optional[str | list[int]]) == Union[str, list[int]]
 
 
 def _assert_values_in_memo(memo: RefCountMemoDict,

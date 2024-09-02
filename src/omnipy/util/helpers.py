@@ -282,16 +282,41 @@ class IsDataclass(Protocol):
     __dataclass_fields__: ClassVar[dict]
 
 
+def is_annotated_plus_optional(type_or_class: TypeForm) -> bool:
+    if get_origin(type_or_class) == Annotated:
+        type_or_class = get_args(type_or_class)[0]
+        if is_optional(type_or_class):
+            return True
+    return False
+
+
 def remove_annotated_plus_optional_if_present(type_or_class: TypeForm) -> TypeForm:
     if get_origin(type_or_class) == Annotated:
         type_or_class = get_args(type_or_class)[0]
         if is_optional(type_or_class):
-            args = get_args(type_or_class)
-            if len(args) == 2:
-                type_or_class = args[0]
-            else:
-                type_or_class = Union[args[:-1]]
+            type_or_class = remove_optional_if_present(type_or_class)
     return type_or_class
+
+
+def remove_optional_if_present(type_or_class: TypeForm) -> TypeForm:
+    if is_optional(type_or_class):
+        type_or_class_args = get_args(type_or_class)
+        if len(type_or_class_args) == 2:
+            ret = type_or_class_args[0]
+        else:
+            ret = Union[type_or_class_args[:-1]]
+        return ret
+    return type_or_class
+
+
+def remove_annotated_optional_hack_from_model(model):
+    root_field = model._get_root_field()
+    if is_annotated_plus_optional(root_field.outer_type_):
+        root_field.outer_type_ = remove_annotated_plus_optional_if_present(root_field.outer_type_)
+        root_field.type_ = remove_optional_if_present(root_field.type_)
+        if not isinstance(root_field.annotation, DeferredType):
+            root_field.annotation = root_field.outer_type_
+        model.__annotations__[ROOT_KEY] = root_field.outer_type_
 
 
 def remove_forward_ref_notation(type_str: str):
