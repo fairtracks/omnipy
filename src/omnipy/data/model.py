@@ -1321,29 +1321,23 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             return level_up_type_to_check
 
     def __getattr__(self, attr: str) -> Any:
-        contents_attr = self._getattr_from_contents_obj(attr)
-
-        reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
-
         if self._is_non_omnipy_pydantic_model():
+            reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
+
             if self._contents_obj_hasattr(attr):
                 self._validate_and_set_value(self.contents, reset_solution=reset_solution)
 
-        is_property = False
-        with suppress(AttributeError):
-            contents_cls_attr = self._getattr_from_contents_cls(attr)
-            is_property = isinstance(contents_cls_attr, property)
-
-        reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
         contents_attr = self._getattr_from_contents_obj(attr)
 
-        if callable(contents_attr) and not is_property:
+        if inspect.isroutine(contents_attr):
+            reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
+            new_contents_attr = self._getattr_from_contents_obj(attr)
 
             def _validate_contents(ret: Any):
                 self._validate_and_set_value(self.contents, reset_solution=reset_solution)
                 return ret
 
-            contents_attr = add_callback_after_call(contents_attr,
+            contents_attr = add_callback_after_call(new_contents_attr,
                                                     _validate_contents,
                                                     reset_solution)
 
