@@ -1,17 +1,19 @@
+from collections import deque
 from copy import deepcopy
 from functools import reduce
 from io import StringIO
 from itertools import chain
 from operator import add, ior
 import os
-from typing import TypeVar
 
 from chardet import UniversalDetector
+from typing_extensions import TypeVar
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
 from omnipy.data.dataset import Dataset, Model
 
+from ...util.setdeque import SetDeque
 from .datasets import StrDataset
 from .protocols import IsModifyAllLinesCallable, IsModifyContentsCallable, IsModifyEachLineCallable
 
@@ -82,18 +84,21 @@ def modify_all_lines(
     return os.linesep.join(modified_lines)
 
 
-_ModelT = TypeVar('_ModelT', bound=Model)
+_SequenceModelT = TypeVar('_SequenceModelT', default=Model[str | bytes | list | tuple | deque])
 
 
 @mypy_fix_task_template
 @TaskTemplate()
-def concat_all(dataset: Dataset[_ModelT]) -> _ModelT:
+def concat_all(dataset: Dataset[_SequenceModelT]) -> _SequenceModelT:
     return reduce(add, (val for val in dataset.values()))
 
 
+_UniqueModelT = TypeVar('_UniqueModelT', default=Model[dict | set | SetDeque])
+
+
 @mypy_fix_task_template
 @TaskTemplate()
-def union_all(dataset: Dataset[_ModelT]) -> _ModelT:
+def union_all(dataset: Dataset[_UniqueModelT]) -> _UniqueModelT:
     all_vals = tuple(val for val in dataset.values())
     assert len(all_vals) > 0
     first_val = deepcopy(all_vals[0])
