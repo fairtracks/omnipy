@@ -31,8 +31,12 @@ class NotIterableExceptStrOrBytesModel(Model[object | None]):
     """
     @classmethod
     def _parse_data(cls, data: object) -> object:
+        if isinstance(data, NotIterableExceptStrOrBytesModel):
+            return data
+
         assert isinstance(data, str) or isinstance(data, bytes) or not is_iterable(data), \
             f'Data of type {type(data)} is iterable'
+
         return data
 
 

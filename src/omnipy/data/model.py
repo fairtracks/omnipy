@@ -869,8 +869,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 return cast(_RootT,
                             value if is_model_instance(value) else root_type.parse_obj(value))
         if value is None:
-            none_default = root_field.default_factory() is None if root_field.default_factory \
-                else root_field.default is None
+            default_value = root_field.get_default()
+            none_default = default_value is None or (is_model_instance(default_value)
+                                                     and default_value.contents is None)
             root_type_is_none = is_none_type(root_type)
             root_type_is_optional = get_origin(root_type) is Union \
                 and any(is_none_type(arg) for arg in get_args(root_type))
