@@ -21,7 +21,7 @@ aiostream = "^0.4.5"
 #greenlet = "2.0.2"
 inflection = "^0.5.1"
 pandas = "<2.2"
-prefect = "<2.14"
+prefect = ">2.13.2,<2.14"
 pytest-asyncio = "^0.20.2"
 pytest-cases = "^3.6.13"
 requests = "^2.25.1"
@@ -42,6 +42,7 @@ objsize = "^0.7.0"
 humanize = "^4.9.0"
 httpx = "^0.26.0"
 pydantic = {version = "<2", extras = ["email"]}
+griffe = "<1"
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"
