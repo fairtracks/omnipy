@@ -42,7 +42,7 @@ class MethodInfo(NamedTuple):
 # (https://docs.python.org/3.10/reference/datamodel.html)
 _SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
     # 3.3.1. Basic customization ############################################
-    '__bool__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    # '__bool__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     # 3.3.7. Emulating container types ######################################
     '__len__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     '__length_hint__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
@@ -114,6 +114,8 @@ _SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
     '__trunc__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.MAYBE),
     '__floor__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.MAYBE),
     '__ceil__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.MAYBE),
+    # - Hash and other standard methods ----------------------------------
+    '__hash__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
 }
 
 

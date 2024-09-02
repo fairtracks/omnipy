@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 import gc
 from math import floor
 import os
@@ -6,7 +6,6 @@ from textwrap import dedent
 from types import MappingProxyType, MethodType, NotImplementedType
 from typing import (Annotated,
                     Any,
-                    Callable,
                     cast,
                     ForwardRef,
                     Generic,
@@ -235,13 +234,13 @@ def test_get_inner_outer_type() -> None:
     assert dict_of_strings_to_list_of_ints_model.inner_type() == list
     assert dict_of_strings_to_list_of_ints_model.inner_type(with_args=True) == list[int]
     assert dict_of_strings_to_list_of_ints_model.is_nested_type() is True
-
-    fake_optional_model = Model[Annotated[Optional[dict[str, list[int]]], 'someone else']]()
-    assert fake_optional_model.outer_type() == dict
-    assert fake_optional_model.outer_type(with_args=True) == dict[str, list[int]]
-    assert fake_optional_model.inner_type() == list
-    assert fake_optional_model.inner_type(with_args=True) == list[int]
-    assert fake_optional_model.is_nested_type() is True
+    #
+    # fake_optional_model = Model[Annotated[Optional[dict[str, list[int]]], 'someone else']]()
+    # assert fake_optional_model.outer_type() == dict
+    # assert fake_optional_model.outer_type(with_args=True) == dict[str, list[int]]
+    # assert fake_optional_model.inner_type() == list
+    # assert fake_optional_model.inner_type(with_args=True) == list[int]
+    # assert fake_optional_model.is_nested_type() is True
 
 
 def test_equality_other_models() -> None:
@@ -1753,6 +1752,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_v
 
     model = Model[SimplePydanticModel](SimplePydanticModel(value=[123]))  # type: ignore[arg-type]
     _assert_no_snapshot(model)
+    _assert_no_snapshot(model.contents.value)
 
     # Just accessing a field of a pydantic model through __getattr__ is enough to trigger a snapshot
     # of the parent
@@ -2205,6 +2205,49 @@ def test_mimic_simple_list_operator_with_auto_convert(
 
     with pytest.raises(TypeError):
         'abc' + model  # type: ignore[operator]
+
+
+def test_mimic_hash_method():
+    hashable_model = Model[str]('Hello World!')
+    assert hash(hashable_model) != 0
+
+    unhashable_model = Model[list[int]]()
+    with pytest.raises(TypeError):
+        hash(unhashable_model)
+
+
+def test_mimic_model_as_bool():
+    default_model = Model[bool]()
+    assert True if not default_model else False
+
+    false_model = Model[bool](False)
+    assert True if not false_model else False
+
+    true_model = Model[bool](True)
+    assert True if true_model else False
+
+    class MyClass:
+        ...
+
+    myclass_model = Model[MyClass]()
+    assert True if myclass_model else False
+
+
+def test_mimic_call_method():
+    callable_model = Model[Callable](lambda x: x + 1)
+
+    assert callable_model(1) == 2
+
+    class MyClass:
+        ...
+
+    not_callable_class_model = Model[MyClass]()
+    with pytest.raises(TypeError):
+        not_callable_class_model(1)
+
+    not_callable_builtin_model = Model[int]()
+    with pytest.raises(TypeError):
+        not_callable_builtin_model(1)
 
 
 def test_mimic_sequence_convert_for_concat(

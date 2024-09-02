@@ -1,5 +1,5 @@
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import contextmanager, suppress
 import functools
 import inspect
@@ -10,7 +10,6 @@ from textwrap import dedent
 from types import GenericAlias, ModuleType, NoneType, UnionType
 from typing import (Annotated,
                     Any,
-                    Callable,
                     cast,
                     ContextManager,
                     ForwardRef,
@@ -272,6 +271,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         if origin_type is Literal:
             return args[0]
+
+        if origin_type is Callable:
+            return cast(_RootT, lambda: None)
 
         if origin_type is ForwardRef or type(origin_type) is ForwardRef:
             raise TypeError(f'Cannot instantiate model "{model}". ')
@@ -1167,7 +1169,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             try:
                 method = cast(Callable, self._getattr_from_contents_obj(name))
             except AttributeError as e:
-                if name in ('__int__', '__bool__', '__float__', '__complex__'):
+                if name in ('__int__', '__float__', '__complex__'):
                     raise ValueError from e
                 if name == '__len__':
                     raise TypeError(f"object of type '{self.__class__.__name__}' has no len()")
@@ -1427,9 +1429,20 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 return self._table_repr()
         return self._trad_repr()
 
-    def __hash__(self) -> int:
+    def __bool__(self):
+        if self._get_real_contents():
+            return True
+        else:
+            return False
+
+    def __call__(self, *args: object, **kwargs: object) -> object:
+        if not hasattr(self._get_real_contents(), '__call__'):
+            raise TypeError(f"'{self.__class__.__name__}' object is not callable")
         return self._special_method(
-            '__hash__', MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO))
+            '__call__',
+            MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
+            *args,
+            **kwargs)
 
     def view(self):
         from omnipy.modules.pandas.models import PandasModel
