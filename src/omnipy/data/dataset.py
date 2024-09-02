@@ -35,6 +35,7 @@ from omnipy.util.tabulate import tabulate
 from omnipy.util.web import download_file_to_memory
 
 ModelT = TypeVar('ModelT', bound=Model)
+GeneralModelT = TypeVar('GeneralModelT', bound=Model)
 _DatasetT = TypeVar('_DatasetT')
 
 DATA_KEY = 'data'
@@ -100,6 +101,8 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
     """
     class Config:
         validate_assignment = True
+
+        # TODO: Use json serializer package from the pydantic config instead of 'json'
 
         # json_loads = orjson.loads
         # json_dumps = orjson_dumps
@@ -577,10 +580,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
         return ret
 
 
-# TODO: Use json serializer package from the pydantic config instead of 'json'
-
-
-class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
+class MultiModelDataset(Dataset[GeneralModelT], Generic[GeneralModelT]):
     """
         Variant of Dataset that allows custom models to be set on individual data files
 
@@ -588,9 +588,9 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
         custom models.
     """
 
-    _custom_field_models: dict[str, ModelT] = PrivateAttr(default={})
+    _custom_field_models: dict[str, GeneralModelT] = PrivateAttr(default={})
 
-    def set_model(self, data_file: str, model: ModelT) -> None:
+    def set_model(self, data_file: str, model: GeneralModelT) -> None:
         try:
             self._custom_field_models[data_file] = model
             if data_file in self.data:
@@ -601,7 +601,7 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
             del self._custom_field_models[data_file]
             raise
 
-    def get_model(self, data_file: str) -> ModelT:
+    def get_model(self, data_file: str) -> GeneralModelT:
         if data_file in self._custom_field_models:
             return self._custom_field_models[data_file]
         else:
@@ -615,7 +615,7 @@ class MultiModelDataset(Dataset[ModelT], Generic[ModelT]):
             data_obj = self._to_data_if_model(self.data[data_file])
             parsed_data = self._to_data_if_model(model(data_obj))
             self.data[data_file] = parsed_data
-        super()._validate(data_file)  # validates all data according to ModelT
+        super()._validate(data_file)  # validates all data according to ModelNewT
 
     @staticmethod
     def _to_data_if_model(data_obj: Any):
