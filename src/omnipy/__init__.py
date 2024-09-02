@@ -11,7 +11,7 @@ from omnipy.compute.flow import (DagFlow,
 from omnipy.compute.task import Task, TaskTemplate
 from omnipy.data.dataset import Dataset, ListOfParamModelDataset, MultiModelDataset, ParamDataset
 from omnipy.data.model import ListOfParamModel, Model, ParamModel
-from omnipy.data.param import bind_adjust_model_func, ParamsBase
+from omnipy.data.param import bind_adjust_dataset_func, bind_adjust_model_func, ParamsBase
 from omnipy.hub.runtime import runtime
 from omnipy.modules.general.models import (Chain2,
                                            Chain3,
@@ -132,11 +132,16 @@ from omnipy.modules.raw.tasks import (concat_all,
                                       union_all)
 from omnipy.modules.tables.datasets import TableOfPydanticRecordsDataset, TableWithColNamesDataset
 from omnipy.modules.tables.models import (PydanticRecordModel,
+                                          TableDictOfDictsOfJsonScalarsModel,
+                                          TableDictOfListsOfJsonScalarsModel,
+                                          TableListOfDictsOfJsonScalarsModel,
+                                          TableListOfListsOfJsonScalarsModel,
                                           TableOfPydanticRecordsModel,
                                           TableWithColNamesModel)
 from omnipy.modules.tables.tasks import (remove_columns,
                                          rename_col_names,
                                          transpose_columns_with_data_files)
+from omnipy.util.contexts import print_exception
 
 # if typing.TYPE_CHECKING:
 
@@ -256,8 +261,13 @@ __all__ = [
     'PydanticRecordModel',
     'TableOfPydanticRecordsModel',
     'TableWithColNamesModel',
+    'TableDictOfDictsOfJsonScalarsModel',
+    'TableDictOfListsOfJsonScalarsModel',
+    'TableListOfDictsOfJsonScalarsModel',
+    'TableListOfListsOfJsonScalarsModel',
     'ParamsBase',
     'bind_adjust_model_func',
+    'bind_adjust_dataset_func',
     'NotIterableExceptStrOrBytesModel',
     'Chain2',
     'Chain3',
@@ -288,5 +298,6 @@ __all__ = [
     'union_all',
     'remove_columns',
     'rename_col_names',
-    'transpose_columns_with_data_files'
+    'transpose_columns_with_data_files',
+    'print_exception',
 ]
