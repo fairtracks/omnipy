@@ -134,7 +134,12 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
                                 + 'omnipy Dataset models must be a specialization of the omnipy '
                                 'Model class.')
 
-        created_dataset = super().__class_getitem__(model)
+            created_dataset = super().__class_getitem__(model)
+        else:
+            if isinstance(model, TypeVar):
+                params = get_default_if_typevar(model)
+
+            created_dataset = super().__class_getitem__(params)
 
         _cleanup_name_qualname_and_module(cls, created_dataset, orig_model)
 
