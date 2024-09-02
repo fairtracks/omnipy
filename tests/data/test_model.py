@@ -18,7 +18,7 @@ from typing import (Annotated,
                     TypeAlias,
                     Union)
 
-from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
+from pydantic import BaseModel, ConfigError, PositiveInt, StrictInt, ValidationError
 from pydantic.generics import GenericModel
 import pytest
 import pytest_cases as pc
@@ -47,6 +47,7 @@ from .helpers.models import (DefaultStrModel,
                              UpperStrModel,
                              WordSplitterModel)
 
+T = TypeVar('T', default=object)
 
 def test_no_model_known_issue() -> None:
     # Correctly instantiating a model in the beginning of the test implicitly tests whether
@@ -126,15 +127,61 @@ def test_error_init() -> None:
         Model[int](__root__=123, other=234)
 
 
-def test_error_init_forwardref() -> None:
+def test_error_class_init_forwardref() -> None:
     with pytest.raises(TypeError, match='Cannot instantiate model'):
         Model[ForwardRef]()
 
-    with pytest.raises(TypeError, match='Cannot instantiate model'):
-        Model[ForwardRef('SomeClass')]()
+    with pytest.raises(NameError):
+        Model[ForwardRef('SomeClass')]  # type: ignore[misc]
+
+    with pytest.raises(NameError):
+        Model['SomeClass']
 
     class SomeClass:
         ...
+
+    Model.update_forward_refs(SomeClass=SomeClass)
+
+    with pytest.raises(NameError):
+        Model[ForwardRef('SomeClass')]  # type: ignore[misc]
+
+    with pytest.raises(NameError):
+        Model['SomeClass']
+
+
+def test_error_class_init_generic_with_forwardref() -> None:
+    class MyGenericModel(Model[T], Generic[T]):
+        ...
+
+    with pytest.raises(NameError):
+        MyGenericModel[ForwardRef('SomeClass')]  # type: ignore[misc]
+
+    with pytest.raises(NameError):
+        MyGenericModel['SomeClass']
+
+
+def test_class_init_generic_hack_with_forwardref() -> None:
+    class MyGenericModel(Model[T | None], Generic[T]):
+        ...
+
+    MyForwardRefModel: TypeAlias = \
+        MyGenericModel[ForwardRef('SomeClass')]  # type: ignore[misc, valid-type]
+    MyForwardRefStrModel: TypeAlias = MyGenericModel['SomeClass']
+
+    class SomeClass:
+        ...
+
+    with pytest.raises(ConfigError):
+        MyForwardRefModel()
+
+    with pytest.raises(ConfigError):
+        MyForwardRefStrModel()
+
+    MyForwardRefModel.update_forward_refs(SomeClass=SomeClass)
+    MyForwardRefModel()
+
+    MyForwardRefStrModel.update_forward_refs(SomeClass=SomeClass)
+    MyForwardRefStrModel()
 
 
 def test_load() -> None:
@@ -1282,9 +1329,6 @@ def test_model_of_pydantic_model_with_pydantic_model_children(
             },
         ]
     }
-
-
-T = TypeVar('T', default=object)
 
 
 def _assert_no_snapshot(model: Model[T]):
