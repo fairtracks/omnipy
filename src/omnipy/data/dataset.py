@@ -251,24 +251,18 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
         model_type = cls._get_data_field().type_
         return model_type
 
-    # TODO: Update _raise_no_model_exception() text. Model is now a requirement
     @staticmethod
     def _raise_no_model_exception() -> None:
         raise TypeError(
-            'Note: The Dataset class requires a concrete model to be specified as '
+            'Note: The Dataset class requires a Model class (or a subclass) to be specified as '
             'a type hierarchy within brackets either directly, e.g.:\n\n'
-            '\tmodel = Dataset[list[int]]()\n\n'
+            '\tmodel = Dataset[Model[list[int]]]()\n\n'
             'or indirectly in a subclass definition, e.g.:\n\n'
-            '\tclass MyNumberListDataset(Dataset[list[int]]): ...\n\n'
-            'In both cases, the use of the Model class or a subclass is encouraged if anything '
-            'other than the simplest cases, e.g.:\n\n'
+            '\tclass MyNumberListDataset(Dataset[Model[list[int]]]): ...\n\n'
+            'For anything other than the simplest cases, the definition of Model and Dataset '
+            'subclasses is encouraged , e.g.:\n\n'
             '\tclass MyNumberListModel(Model[list[int]]): ...\n'
-            '\tclass MyDataset(Dataset[MyNumberListModel]): ...\n\n'
-            'Usage of Dataset without a type specification results in this exception. '
-            'Similar use of the Model class do not currently result in an exception, only '
-            'a warning message the first time this is done. However, this is just a '
-            '"poor man\'s exception" due to complex technicalities in that class. Please '
-            'explicitly specify types in both cases. ')
+            '\tclass MyDataset(Dataset[MyNumberListModel]): ...\n\n')
 
     def _set_standard_field_description(self) -> None:
         self.__fields__[DATA_KEY].field_info.description = self._get_standard_field_description()
