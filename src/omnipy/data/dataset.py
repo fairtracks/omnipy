@@ -4,18 +4,7 @@ import json
 import os
 import tarfile
 from tempfile import TemporaryDirectory
-from typing import (Annotated,
-                    Any,
-                    Callable,
-                    cast,
-                    Generic,
-                    get_args,
-                    get_origin,
-                    Iterator,
-                    Optional,
-                    Type,
-                    TypeAlias,
-                    TypeVar)
+from typing import Any, Callable, cast, Generic, get_args, Iterator, Type, TypeAlias
 from urllib.parse import ParseResult, urlparse
 
 import humanize
@@ -26,6 +15,7 @@ from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.main import ModelMetaclass
 from pydantic.utils import lenient_isinstance, lenient_issubclass
+from typing_extensions import TypeVar
 
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.model import (_cleanup_name_qualname_and_module,
@@ -39,10 +29,7 @@ from omnipy.data.model import (_cleanup_name_qualname_and_module,
 from omnipy.util.helpers import (get_calling_module_name,
                                  get_default_if_typevar,
                                  is_iterable,
-                                 is_optional,
-                                 is_strict_subclass,
                                  is_union,
-                                 remove_annotated_plus_optional_if_present,
                                  remove_forward_ref_notation)
 from omnipy.util.tabulate import tabulate
 from omnipy.util.web import download_file_to_memory
@@ -113,43 +100,39 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
     """
     class Config:
         validate_assignment = True
+
         # json_loads = orjson.loads
         # json_dumps = orjson_dumps
 
     data: dict[str, ModelT] = Field(default={})
 
-    def __class_getitem__(cls, model: ModelT) -> ModelT:
+    def __class_getitem__(
+        cls,
+        params: type[ModelT] | tuple[type[ModelT]] | tuple[type[ModelT], Any] | TypeVar
+        | tuple[TypeVar, ...],
+    ) -> 'type[Dataset[type[ModelT]]]':
         # TODO: change model type to params: Type[Any] | tuple[Type[Any], ...]
         #       as in GenericModel.
 
-        # For now, only singular model types are allowed. These lines are needed for
-        # interoperability with pydantic GenericModel, which internally stores the model
-        # as a tuple:
-        if isinstance(model, tuple) and len(model) == 1:
-            model = model[0]
+        # These lines are needed for interoperability with pydantic GenericModel, which internally
+        # stores the model as a len(1) tuple
+        model = params[0] if isinstance(params, tuple) and len(params) == 1 else params
 
         orig_model = model
 
-        model = cls._origmodel_if_annotated_optional(model)
-        args = get_args(model)
+        if cls == Dataset:
+            args = get_args(model)
 
-        if is_union(model) and len(args) == 2 and lenient_issubclass(args[1], DataWithParams):
-            model_to_check = args[0]
-        else:
-            model_to_check = model
+            if is_union(model) and len(args) == 2 and lenient_issubclass(args[1], DataWithParams):
+                model_to_check = args[0]
+            else:
+                model_to_check = model
 
-        if not isinstance(model_to_check, TypeVar) \
-                and not lenient_issubclass(model_to_check, Model) \
-                and not is_strict_subclass(cls, Dataset):
-            raise TypeError('Invalid model: {}! '.format(model_to_check)
-                            + 'omnipy Dataset models must be a specialization of the omnipy '
-                            'Model class.')
-
-        if cls == Dataset and not is_optional(model):  # TODO: Handle MultiModelDataset??
-            model = Annotated[Optional[model], 'Fake Optional from Dataset']
-
-        if isinstance(model, TypeVar):
-            model = get_default_if_typevar(model)
+            if not isinstance(model_to_check, TypeVar) \
+                    and not lenient_issubclass(model_to_check, Model):
+                raise TypeError('Invalid model: {}! '.format(model_to_check)
+                                + 'omnipy Dataset models must be a specialization of the omnipy '
+                                'Model class.')
 
         created_dataset = super().__class_getitem__(model)
 
@@ -216,10 +199,10 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
         self._init(super_kwargs, **kwargs)
 
         try:
-            GenericModel.__init__(self, **super_kwargs)
+            super().__init__(**super_kwargs)
         except ValidationError:
             if dataset_as_input:
-                GenericModel.__init__(self)
+                super().__init__()
                 self.from_data(super_kwargs[DATA_KEY])
             else:
                 raise
@@ -258,15 +241,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
         :return: The concrete Model class used for all data files in the dataset
         """
         model_type = cls._get_data_field().type_
-        return cls._origmodel_if_annotated_optional(model_type)
-
-    @classmethod
-    def _origmodel_if_annotated_optional(cls, model):
-        if get_origin(model) is Annotated:
-            model = remove_annotated_plus_optional_if_present(model)
-            if is_union(model):
-                model = get_args(model)[0]
-        return model
+        return model_type
 
     # TODO: Update _raise_no_model_exception() text. Model is now a requirement
     @staticmethod
