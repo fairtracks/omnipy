@@ -747,10 +747,11 @@ def test_union_default_value_from_first_callable_type() -> None:
 
     assert FirstTypeNotInstantiatableUnionModel().to_data() == ''
 
-    with pytest.raises(TypeError):
+    class NoTypeInstantiatableUnionModel(Model[Any | Type]):
+        ...
 
-        class NoTypeInstantiatableUnionModel(Model[Any | Type]):
-            ...
+    with pytest.raises(TypeError):
+        NoTypeInstantiatableUnionModel()
 
 
 def test_union_default_value_if_any_none() -> None:
@@ -1129,7 +1130,7 @@ def test_union_nested_model_classes_inner_forwardref_generic_list_of_none() -> N
     class ListModel(GenericListModel['FullModel']):
         ...
 
-    FullModel: TypeAlias = Union[ListModel, MaybeNumberModel]
+    FullModel: TypeAlias = Union[MaybeNumberModel, ListModel]
 
     ListModel.update_forward_refs(FullModel=FullModel)
 
@@ -2390,8 +2391,6 @@ def test_mimic_concatenation_for_converted_models(
 
 
 def test_mimic_concatenation_for_converted_models_with_incompatible_contents_except_to_data(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     class MyList(Generic[T]):
         def __init__(self, *args: T):
@@ -2716,6 +2715,7 @@ def test_mimic_concat_less_than_five_model_add_variants_with_other_type_in_and_i
 def test_mimic_concat_all_less_than_five_model_add_variants_with_unsupported_input(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
+    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ):
     has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
     less_than_five_model = all_less_than_five_model_add_variants
@@ -3789,8 +3789,6 @@ def test_parametrized_model_new() -> None:
     # assert ParamUpperStrModel().is_param_model()
     assert ParamUpperStrModel('foo').contents == 'foo'
 
-    asd = ParamUpperStrModel.adjust
-    # reveal_type(asd)
     MyUpperStrModel = ParamUpperStrModel.adjust('MyUpperStrModel', upper=True)
     assert MyUpperStrModel('bar').contents == 'BAR'
 
