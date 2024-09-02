@@ -323,11 +323,10 @@ def remove_forward_ref_notation(type_str: str):
     return type_str.replace("ForwardRef('", '').replace("')", '')
 
 
-def generate_qualname(cls_name: str, model: Any) -> str:
-    m_module = model.__module__ if hasattr(model, '__module__') else ''
-    m_module_prefix = f'{m_module}.' if m_module and place_module(m_module) != STDLIB else ''
-    fully_qual_model_name = f'{m_module_prefix}{display_as_type(model)}'
-    return f'{cls_name}[{fully_qual_model_name}]'
+def format_classname_with_params(cls_name: str, params_str: str) -> str:
+    # with suppress(ValueError):
+    #     cls_name = cls_name[:cls_name.index('[')]
+    return f"{cls_name}[{params_str}]"
 
 
 class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):

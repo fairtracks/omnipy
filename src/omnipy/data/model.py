@@ -50,7 +50,7 @@ from omnipy.util.helpers import (all_equals,
                                  all_type_variants,
                                  ensure_plain_type,
                                  evaluate_any_forward_refs_if_possible,
-                                 generate_qualname,
+                                 format_classname_with_params,
                                  get_calling_module_name,
                                  get_default_if_typevar,
                                  get_first_item,
@@ -96,19 +96,35 @@ def debug_get_total_validate_count() -> int:
     return sum(val for key, val in _validate_cls_counts.items())
 
 
-def _cleanup_name_qualname_and_module(cls, created_model_or_dataset, model, orig_model):
-    if isinstance(model, str):  # ForwardRef
-        created_model_or_dataset.__name__ = f'{cls.__name__}[{model}]'
-        created_model_or_dataset.__qualname__ = created_model_or_dataset.__name__
-    else:
-        if created_model_or_dataset.__name__.startswith(f'{cls.__name__}[') \
-                and get_origin(model) is Annotated:
-            created_model_or_dataset.__name__ = f'{cls.__name__}[{display_as_type(orig_model)}]'
-            created_model_or_dataset.__qualname__ = generate_qualname(cls.__qualname__, orig_model)
+def _cleanup_name_qualname_and_module(
+    cls: type[DataClassBase],
+    model_or_dataset: type[DataClassBase],
+    orig_model: TypeForm,
+) -> None:
+    def _display_as_type(model: TypeForm):
+        if isinstance(model, str):  # ForwardRef
+            return model
+        elif isinstance(model, ForwardRef):
+            return model.__forward_arg__
+        elif isinstance(model, tuple):
+            return ', '.join(_display_as_type(arg) for arg in model)
+        elif is_union(model):
+            return ' | '.join(_display_as_type(arg) for arg in get_args(model))
+        elif len(get_args(model)) > 0:
+            return (f"{_display_as_type(get_origin(model))}"
+                    f"[{', '.join(_display_as_type(arg) for arg in get_args(model))}]")
+        elif isinstance(model, TypeVar):
+            return str(model)
         else:
-            created_model_or_dataset.__qualname__ = generate_qualname(cls.__qualname__, model)
+            with suppress(AttributeError):
+                return model.__name__
+            return str(model)
 
-    created_model_or_dataset.__module__ = cls.__module__
+    params_str = _display_as_type(orig_model)
+
+    model_or_dataset.__name__ = format_classname_with_params(cls.__name__, params_str)
+    model_or_dataset.__qualname__ = format_classname_with_params(cls.__qualname__, params_str)
+    model_or_dataset.__module__ = cls.__module__
 
 
 def _get_terminal_size() -> os.terminal_size:
@@ -382,7 +398,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         #       level in pydantic 2.0 (when it is released)
 
         if created_model is not cls:
-            _cleanup_name_qualname_and_module(cls, created_model, model, orig_model)
+            _cleanup_name_qualname_and_module(cls, created_model, orig_model)
 
         if not isinstance(model, TypeVar):
             cls._prepare_cls_members_to_mimic_model(created_model)

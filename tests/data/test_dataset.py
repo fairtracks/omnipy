@@ -15,14 +15,11 @@ from omnipy.data.model import Model
 from .helpers.datasets import (DefaultStrDataset,
                                ListOfUpperStrDataset,
                                MyFloatObjDataset,
+                               MyFwdRefDataset,
+                               MyNestedFwdRefDataset,
                                ParamUpperStrDataset,
                                UpperStrDataset)
-from .helpers.models import (MyFloatObject,
-                             MyPydanticModel,
-                             PydanticChildModel,
-                             PydanticParentModel,
-                             StringToLength,
-                             UpperStrModel)
+from .helpers.models import MyFloatObject, NumberModel, StringToLength, UpperStrModel
 
 
 def test_no_model():
@@ -330,36 +327,30 @@ def test_equality_with_pydantic() -> None:
            Dataset[Model[EqualPydanticModel]]({'data_file_1': {'a': 1}})
 
 
-ChildT = TypeVar('ChildT', default=object)
+def test_name_qualname_and_module():
+    assert Dataset[Model[int]].__name__ == 'Dataset[Model[int]]'
+    assert Dataset[Model[int]].__qualname__ == 'Dataset[Model[int]]'
+    assert Dataset[Model[int]].__module__ == 'omnipy.data.dataset'
 
+    assert Dataset[Model[Model[int]]].__name__ == 'Dataset[Model[Model[int]]]'
+    assert Dataset[Model[Model[int]]].__qualname__ == 'Dataset[Model[Model[int]]]'
+    assert Dataset[Model[Model[int]]].__module__ == 'omnipy.data.dataset'
 
-class ParentGenericDataset(Dataset[Model[Optional[ChildT]]], Generic[ChildT]):
-    ...
+    assert Dataset[Model[dict[str, str]]].__name__ == 'Dataset[Model[dict[str, str]]]'
+    assert Dataset[Model[dict[str, str]]].__qualname__ == 'Dataset[Model[dict[str, str]]]'
+    assert Dataset[Model[dict[str, str]]].__module__ == 'omnipy.data.dataset'
 
+    assert MyFwdRefDataset.__name__ == 'MyGenericDataset[NumberModel]'
+    assert MyFwdRefDataset.__qualname__ == 'CBA.MyGenericDataset[NumberModel]'
+    assert MyFwdRefDataset.__module__ == 'tests.data.helpers.datasets'
 
-ParentDataset: TypeAlias = ParentGenericDataset['NumberModel']
-ParentDatasetNested: TypeAlias = ParentGenericDataset[Union[Model[str], 'NumberModel']]
-
-
-class NumberModel(Model[int]):
-    ...
-
-
-ParentDataset.update_forward_refs(NumberModel=NumberModel)
-ParentDatasetNested.update_forward_refs(NumberModel=NumberModel)
-
-
-def test_qualname():
-    assert Model[int].__qualname__ == 'Model[int]'
-    assert Model[Model[int]].__qualname__ == 'Model[omnipy.data.model.Model[int]]'
-    assert ParentDataset.__qualname__ == 'ParentGenericDataset[NumberModel]'
-    assert ParentDatasetNested.__qualname__ \
-           == 'ParentGenericDataset[Union[Model[str], NumberModel]]'
+    assert MyNestedFwdRefDataset.__name__ == 'MyGenericDataset[str | NumberModel]'
+    assert MyNestedFwdRefDataset.__qualname__ == 'CBA.MyGenericDataset[str | NumberModel]'
+    assert MyNestedFwdRefDataset.__module__ == 'tests.data.helpers.datasets'
 
 
 def test_repr():
-    assert repr(Dataset[Model[int]]) == \
-           "<class 'omnipy.data.dataset.Dataset[omnipy.data.model.Model[int]]'>"
+    assert repr(Dataset[Model[int]]) == "<class 'omnipy.data.dataset.Dataset[Model[int]]'>"
     assert repr(Dataset[Model[int]](a=5, b=7)) == 'Dataset[Model[int]](a=5, b=7)'
     assert repr(Dataset[Model[int]]({'a': 5, 'b': 7})) == 'Dataset[Model[int]](a=5, b=7)'
     assert repr(Dataset[Model[int]](data={'a': 5, 'b': 7})) == 'Dataset[Model[int]](a=5, b=7)'
@@ -367,19 +358,19 @@ def test_repr():
     assert repr(Dataset[Model[int]](data=[('a', 5), ('b', 7)])) == 'Dataset[Model[int]](a=5, b=7)'
 
     assert repr(Dataset[Model[Model[int]]]) \
-           == "<class 'omnipy.data.dataset.Dataset[omnipy.data.model.Model[Model[int]]]'>"
+           == "<class 'omnipy.data.dataset.Dataset[Model[Model[int]]]'>"
     assert repr(Dataset[Model[Model[int]]](a=Model[int](5))) \
            == 'Dataset[Model[Model[int]]](a=Model[int](5))'
 
-    assert repr(ParentDataset) \
-           == "<class 'tests.data.test_dataset.ParentGenericDataset[NumberModel]'>"
-    assert repr(ParentDataset(a=NumberModel(5))) \
-           == 'ParentGenericDataset[NumberModel](a=NumberModel(5))'
+    assert repr(MyFwdRefDataset) \
+           == "<class 'tests.data.helpers.datasets.CBA.MyGenericDataset[NumberModel]'>"
+    assert repr(MyFwdRefDataset(a=NumberModel(5))) \
+           == 'MyGenericDataset[NumberModel](a=NumberModel(5))'
 
-    assert repr(ParentDatasetNested) == ("<class 'tests.data.test_dataset.ParentGenericDataset"
-                                         "[Union[Model[str], NumberModel]]'>")
-    assert repr(ParentDatasetNested(a='abc')) \
-           == "ParentGenericDataset[Union[Model[str], NumberModel]](a=Model[str]('abc'))"
+    assert repr(MyNestedFwdRefDataset) == \
+        "<class 'tests.data.helpers.datasets.CBA.MyGenericDataset[str | NumberModel]'>"
+
+    assert repr(MyNestedFwdRefDataset(a='abc')) == "MyGenericDataset[str | NumberModel](a='abc')"
 
 
 def test_basic_validation(runtime: Annotated[IsRuntime, pytest.fixture]):

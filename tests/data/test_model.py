@@ -31,15 +31,19 @@ from omnipy.util.setdeque import SetDeque
 
 from ..helpers.functions import assert_model, assert_val
 from ..helpers.protocols import AssertModelOrValFunc
-from .helpers.models import (DefaultStrModel,
+from .helpers.models import (CBA,
+                             DefaultStrModel,
                              ListOfUpperStrModel,
                              LiteralFiveModel,
                              LiteralFiveOrTextModel,
                              LiteralTextModel,
                              MyFloatObject,
                              MyFloatObjModel,
+                             MyFwdRefModel,
+                             MyNestedFwdRefModel,
                              MyNumberBase,
                              MyPydanticModel,
+                             NumberModel,
                              ParamUpperStrModel,
                              PydanticChildModel,
                              PydanticParentModel,
@@ -48,6 +52,8 @@ from .helpers.models import (DefaultStrModel,
                              WordSplitterModel)
 
 T = TypeVar('T', default=object)
+U = TypeVar('U', default=object)
+
 
 def test_no_model_known_issue() -> None:
     # Correctly instantiating a model in the beginning of the test implicitly tests whether
@@ -319,30 +325,127 @@ def test_equality_with_pydantic_as_args() -> None:
     assert MyModel(a=1) != MyInherited(a=1)
 
 
-ChildT = TypeVar('ChildT', bound=object)
+def test_name_qualname_and_module() -> None:
+    assert Model.__name__ == 'Model'
+    assert Model.__qualname__ == 'Model'
+    assert Model.__module__ == 'omnipy.data.model'
 
-
-class ParentGenericModel(Model[Optional[ChildT]], Generic[ChildT]):
-    ...
-
-
-ParentModel: TypeAlias = ParentGenericModel['NumberModel']
-ParentModelNested: TypeAlias = ParentGenericModel[Union[str, 'NumberModel']]
-
-
-class NumberModel(Model[int]):
-    ...
-
-
-ParentModel.update_forward_refs(NumberModel=NumberModel)
-ParentModelNested.update_forward_refs(NumberModel=NumberModel)
-
-
-def test_qualname() -> None:
+    assert Model[int].__name__ == 'Model[int]'
     assert Model[int].__qualname__ == 'Model[int]'
-    assert Model[Model[int]].__qualname__ == 'Model[omnipy.data.model.Model[int]]'
-    assert ParentModel.__qualname__ == 'ParentGenericModel[NumberModel]'
-    assert ParentModelNested.__qualname__ == 'ParentGenericModel[Union[str, NumberModel]]'
+    assert Model[int].__module__ == 'omnipy.data.model'
+
+    assert Model[Model[None]].__name__ == 'Model[Model[None]]'
+    assert Model[Model[None]].__qualname__ == 'Model[Model[None]]'
+    assert Model[Model[None]].__module__ == 'omnipy.data.model'
+
+    assert Model[dict[str, Model[None]]].__name__ == 'Model[dict[str, Model[None]]]'
+    assert Model[dict[str, Model[None]]].__qualname__ == 'Model[dict[str, Model[None]]]'
+    assert Model[dict[str, Model[None]]].__module__ == 'omnipy.data.model'
+
+    assert Model[list[T]][int].__name__ == 'Model[list[~T]][int]'
+    assert Model[list[T]][int].__qualname__ == 'Model[list[~T]][int]'
+    assert Model[list[T]][int].__module__ == 'omnipy.data.model'
+
+    ABC_PREFIX = 'test_name_qualname_and_module.<locals>.ABC.'
+    DEF_PREFIX = 'test_name_qualname_and_module.<locals>.DEF.'
+
+    class ABC:
+        class MyModel(Model[list[T]], Generic[T]):
+            ...
+
+        assert MyModel.__name__ == 'MyModel'
+        assert MyModel.__qualname__ == ABC_PREFIX + 'MyModel'
+
+        assert MyModel[int].__name__ == 'MyModel[int]'
+        assert MyModel[int].__qualname__ == ABC_PREFIX + 'MyModel[int]'
+
+        assert MyModel[U].__name__ == 'MyModel[~U]'
+        assert MyModel[U].__qualname__ == ABC_PREFIX + 'MyModel[~U]'
+
+        assert MyModel.__module__ == 'tests.data.test_model'
+
+    class DEF:
+        class MyTupleModel(ABC.MyModel[tuple[T, U]], Generic[T, U]):
+            ...
+
+        assert MyTupleModel.__name__ == 'MyTupleModel'
+        assert MyTupleModel.__qualname__ == DEF_PREFIX + 'MyTupleModel'
+
+        assert MyTupleModel[int, str].__name__ == 'MyTupleModel[int, str]'
+        assert MyTupleModel[int, str].__qualname__ == DEF_PREFIX + 'MyTupleModel[int, str]'
+
+        assert MyTupleModel.__module__ == 'tests.data.test_model'
+
+    assert ABC.MyModel[int].__name__ == 'MyModel[int]'
+    assert ABC.MyModel[int].__qualname__ == ABC_PREFIX + 'MyModel[int]'
+
+    assert ABC.MyModel[ABC.MyModel[int]].__name__ == 'MyModel[MyModel[int]]'
+    assert ABC.MyModel[ABC.MyModel[int]].__qualname__ == ABC_PREFIX + 'MyModel[MyModel[int]]'
+
+    assert ABC.MyModel[Union[str, ABC.MyModel[str | int]]].__name__ == \
+           'MyModel[str | MyModel[str | int]]'
+    assert ABC.MyModel[Union[str, ABC.MyModel[str | int]]].__qualname__ == \
+           ABC_PREFIX + 'MyModel[str | MyModel[str | int]]'
+
+    assert ABC.MyModel[ABC.MyModel[Union[str, int]] | str].__name__ == \
+           'MyModel[MyModel[str | int] | str]'
+    assert ABC.MyModel[ABC.MyModel[str | int] | str].__qualname__ == \
+           ABC_PREFIX + 'MyModel[MyModel[str | int] | str]'
+
+    assert DEF.MyTupleModel[int, str].__name__ == 'MyTupleModel[int, str]'
+    assert DEF.MyTupleModel[int, str].__qualname__ == DEF_PREFIX + 'MyTupleModel[int, str]'
+
+    assert DEF.MyTupleModel[int, ABC.MyModel[str]].__name__ == \
+           'MyTupleModel[int, MyModel[str]]'
+    assert DEF.MyTupleModel[int, ABC.MyModel[str]].__qualname__ == \
+           (DEF_PREFIX + 'MyTupleModel[int, MyModel[str]]')
+
+    assert MyFwdRefModel.__name__ == 'MyGenericModel[NumberModel]'
+    assert MyFwdRefModel.__qualname__ == 'CBA.MyGenericModel[NumberModel]'
+    assert MyFwdRefModel.__module__ == 'tests.data.helpers.models'
+
+    assert MyNestedFwdRefModel.__name__ == 'MyGenericModel[str | NumberModel]'
+    assert MyNestedFwdRefModel.__qualname__ == 'CBA.MyGenericModel[str | NumberModel]'
+    assert MyNestedFwdRefModel.__module__ == 'tests.data.helpers.models'
+
+    assert (CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__name__ ==
+            'MyGenericModel[ABC.MyModel[int]]')
+    assert (CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__qualname__ ==
+            'CBA.MyGenericModel[ABC.MyModel[int]]')
+    assert (CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__module__ ==
+            'tests.data.helpers.models')
+
+    assert (CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__name__ ==
+            'MyGenericModel[Union[str, ABC.MyModel[int]]]')
+    assert (CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__qualname__ ==
+            'CBA.MyGenericModel[Union[str, ABC.MyModel[int]]]')
+    assert (CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__module__ ==
+            'tests.data.helpers.models')
+
+
+# TODO: Revisit with pydantic v2. Expected to change
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason="""
+Known issue due to bug in pydantic v1 where a generic model defined with some TypeVar(s)  
+parametrized with the exact same TypeVar(s) are assumed to be the same model:
+
+    https://github.com/pydantic/pydantic/blob/5ebcdc13b83fba5da34ad9b0f008f7b4faf89396/pydantic/generics.py#L110
+    
+This causes issues if generic models inherit from each other while having the same TypeVar(s).
+TypeVar(s) in Python are bound only within the scope of a class or function, so the same TypeVar(s)
+in different classes should not be assumed to be the same.
+
+For now, the only consequence of the bug that we are aware of is that the `__name__` and 
+`__qualname__` of the models are slightly incorrect and will not print the TypeVars. However, 
+worse consequences might be hidden in the code.
+""")
+def test_name_qualname_reuse_typevar_known_issue() -> None:
+    class MyModel(Model[T], Generic[T]):
+        ...
+
+    assert MyModel[T].__name__ == 'MyModel[~T]'
+    assert MyModel[T].__qualname__ == 'MyModel[~T]'
 
 
 def test_repr() -> None:
@@ -350,15 +453,18 @@ def test_repr() -> None:
     assert repr(Model[int](5)) == 'Model[int](5)'
 
     assert repr(Model[Model[int]]) \
-           == "<class 'omnipy.data.model.Model[omnipy.data.model.Model[int]]'>"
+           == "<class 'omnipy.data.model.Model[Model[int]]'>"
     assert repr(Model[Model[int]](Model[int](5))) == 'Model[Model[int]](Model[int](5))'
 
-    assert repr(ParentModel) == "<class 'tests.data.test_model.ParentGenericModel[NumberModel]'>"
-    assert repr(ParentModel(NumberModel(5))) == 'ParentGenericModel[NumberModel](NumberModel(5))'
+    assert repr(MyFwdRefModel) == \
+           "<class 'tests.data.helpers.models.CBA.MyGenericModel[NumberModel]'>"
+    assert repr(MyFwdRefModel(NumberModel(5))) == \
+           'MyGenericModel[NumberModel](NumberModel(5))'
 
-    assert repr(ParentModelNested
-                ) == "<class 'tests.data.test_model.ParentGenericModel[Union[str, NumberModel]]'>"
-    assert repr(ParentModelNested('abc')) == "ParentGenericModel[Union[str, NumberModel]]('abc')"
+    assert repr(MyNestedFwdRefModel) == \
+           "<class 'tests.data.helpers.models.CBA.MyGenericModel[str | NumberModel]'>"
+    assert repr(MyNestedFwdRefModel('abc')) == \
+           "MyGenericModel[str | NumberModel]('abc')"
 
 
 def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model]) -> bool:

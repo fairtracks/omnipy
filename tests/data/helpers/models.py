@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from math import floor
 from types import NoneType
-from typing import Generic, Literal
+from typing import Generic, Literal, Optional, TypeAlias
 
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
@@ -10,6 +10,7 @@ from typing_extensions import TypeVar
 from omnipy.data.model import ListOfParamModel, Model, ParamModel
 from omnipy.data.param import bind_adjust_func, ParamsBase
 
+ChildT = TypeVar('ChildT', bound=object)
 ChildrenT = TypeVar("ChildrenT", bound=list)
 
 
@@ -46,6 +47,23 @@ class WordSplitterModel(Model[list[str] | str]):
         if isinstance(data, str):
             return data.split()
         return data
+
+
+class CBA:
+    class MyGenericModel(Model[Optional[ChildT]], Generic[ChildT]):
+        ...
+
+
+MyFwdRefModel: TypeAlias = CBA.MyGenericModel['NumberModel']
+MyNestedFwdRefModel: TypeAlias = CBA.MyGenericModel['str | NumberModel']
+
+
+class NumberModel(Model[int]):
+    ...
+
+
+MyFwdRefModel.update_forward_refs(NumberModel=NumberModel)
+MyNestedFwdRefModel.update_forward_refs(NumberModel=NumberModel)
 
 
 class _ParamUpperStrModel(Model[str]):

@@ -153,7 +153,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
 
         created_dataset = super().__class_getitem__(model)
 
-        _cleanup_name_qualname_and_module(cls, created_dataset, model, orig_model)
+        _cleanup_name_qualname_and_module(cls, created_dataset, orig_model)
 
         return created_dataset
 
