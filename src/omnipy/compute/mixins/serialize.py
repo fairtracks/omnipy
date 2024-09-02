@@ -199,7 +199,7 @@ class SerializerFuncJobBaseMixin:
     def _all_job_output_file_paths_in_reverse_order_for_last_run(
             persist_data_dir_path: Path, job_name: str) -> Generator[Path, None, None]:
 
-        sorted_date_dirs = iter(sorted(os.listdir(persist_data_dir_path)))
+        sorted_date_dirs = iter(reversed(sorted(os.listdir(persist_data_dir_path))))
 
         try:
             last_dir = next(sorted_date_dirs)
