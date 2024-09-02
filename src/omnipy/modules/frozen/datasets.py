@@ -1,22 +1,20 @@
-from typing import Generic, Hashable, TypeVar
+from typing import Generic
 
 from omnipy.data.dataset import Dataset
 from omnipy.modules.frozen.models import (NestedFrozenDictsModel,
                                           NestedFrozenDictsOrTuplesModel,
                                           NestedFrozenTuplesModel)
-
-_KeyT = TypeVar('_KeyT', bound=Hashable)
-_ScT = TypeVar('_ScT')
+from omnipy.modules.frozen.typedefs import KeyT, ValT
 
 
-class NestedFrozenTuplesDataset(Dataset[NestedFrozenTuplesModel[_ScT]], Generic[_ScT]):
+class NestedFrozenDictsOrTuplesDataset(Dataset[NestedFrozenDictsOrTuplesModel[KeyT, ValT]],
+                                       Generic[KeyT, ValT]):
     ...
 
 
-class NestedFrozenDictsDataset(Dataset[NestedFrozenDictsModel[_KeyT, _ScT]], Generic[_KeyT, _ScT]):
+class NestedFrozenTuplesDataset(Dataset[NestedFrozenTuplesModel[ValT]], Generic[ValT]):
     ...
 
 
-class NestedFrozenDictsOrTuplesDataset(Dataset[NestedFrozenDictsOrTuplesModel[_KeyT, _ScT]],
-                                       Generic[_KeyT, _ScT]):
+class NestedFrozenDictsDataset(Dataset[NestedFrozenDictsModel[KeyT, ValT]], Generic[KeyT, ValT]):
     ...

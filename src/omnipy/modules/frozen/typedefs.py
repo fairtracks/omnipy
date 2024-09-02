@@ -1,14 +1,18 @@
 from collections import UserDict
 from types import MappingProxyType
-from typing import Generic, Hashable, Sequence, TypeVar
+from typing import Generic, Hashable, Sequence
 
-_KeyT = TypeVar('_KeyT', bound=Hashable)
-_ValT = TypeVar('_ValT')
+from typing_extensions import TypeVar
+
+from omnipy import NotIterableExceptStrOrBytesModel
+
+KeyT = TypeVar('KeyT', default=str | Hashable)
+ValT = TypeVar('ValT', bound=NotIterableExceptStrOrBytesModel | object, default=None)
 
 
 # Unfortunately, MappingProxyType is declared as a final class, which means it cannot be subclassed.
 # Inheriting from UserDict is a workaround.
-class FrozenDict(UserDict[_KeyT, _ValT], Generic[_KeyT, _ValT]):
+class FrozenDict(UserDict[KeyT, ValT], Generic[KeyT, ValT]):
     """
     FrozenDict works exactly like a dict except that it cannot be modified after initialisation:
 
@@ -50,11 +54,11 @@ class FrozenDict(UserDict[_KeyT, _ValT], Generic[_KeyT, _ValT]):
         NestedFrozenDictsModel, NestedTuplesModel and NestedFrozenCollectionsModel.
     """
     def __init__(self,
-                 unfrozen_dict: dict[_KeyT, _ValT] | Sequence[tuple[_KeyT, _ValT]] | None = None,
+                 unfrozen_dict: dict[KeyT, ValT] | Sequence[tuple[KeyT, ValT]] | None = None,
                  /,
                  **kwargs):
         super().__init__(unfrozen_dict, **kwargs)
-        self.data: MappingProxyType[_KeyT, _ValT] = MappingProxyType(self.data)  # type: ignore
+        self.data: MappingProxyType[KeyT, ValT] = MappingProxyType(self.data)  # type: ignore
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.data if hasattr(self, 'data') else ''})"
