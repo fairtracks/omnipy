@@ -40,7 +40,7 @@ from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.private.util import IsSnapshotWrapper
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
-from omnipy.data.helpers import get_special_methods_info_dict, MethodInfo, YesNoMaybe
+from omnipy.data.helpers import get_special_methods_info_dict, MethodInfo, TypeVarStore, YesNoMaybe
 from omnipy.util.contexts import (hold_and_reset_prev_attrib_value,
                                   LastErrorHolder,
                                   nothing,
@@ -265,34 +265,51 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     @classmethod
     def _populate_root_field(cls, model: type[_RootT] | TypeVar) -> type[_RootT]:
 
-        default_factory = cls._get_default_factory_from_model(model)
+        all_typevars = True
+        # for submodel in all_type_variants(remove_annotated_plus_optional_if_present(model)):
+        for submodel in all_type_variants(model):
+            # submodel = remove_annotated_plus_optional_if_present(submodel)
+            if not lenient_isinstance(submodel, TypeVar) \
+                    and not get_origin(submodel) is TypeVarStore \
+                    and not lenient_issubclass(get_origin(submodel), TypeVarStore):
+                all_typevars = False
+                break
 
-        if ROOT_KEY in cls.__config__.fields:
-            cls.__config__.fields[ROOT_KEY]['default_factory'] = default_factory  # type: ignore
-        else:
-            cls.__config__.fields[ROOT_KEY] = {'default_factory': default_factory}  # type: ignore
+        # def _prepare_root_config_field():
+        #     ...
+        #     cls.__config__.fields[ROOT_KEY] = {'default_factory': lambda: None}
+        #
+        # def _delete_root_config_field():
+        #     if ROOT_KEY in cls.__config__.fields:
+        #         del cls.__config__.fields[ROOT_KEY]
 
-        if not get_origin(model) == Annotated and not is_optional(model):
-            model = cast(type[_RootT], Annotated[Optional[model], 'Fake Optional from Model'])
-        model = cast(type[_RootT], model)  # casting away fake optionals and TypeVar
+        prepared_model = cls._wrap_with_annotated_optional(model)
 
+        # with setup_and_teardown_callback_context(
+        #         setup_func=_prepare_root_config_field,
+        #         exception_func=_delete_root_config_field,
+        #         teardown_func=_delete_root_config_field,
+        # ):
         data_field = ModelField.infer(
             name=ROOT_KEY,
-            value=Undefined,
-            annotation=model,
+            value=None,
+            annotation=prepared_model,
             class_validators=None,
             config=cls.__config__)
 
+        if not all_typevars:
+            data_field.field_info.extra['orig_model'] = model
         cls.__fields__[ROOT_KEY] = data_field
-        cls.__annotations__[ROOT_KEY] = model
+        cls.__annotations__[ROOT_KEY] = prepared_model
 
         return model
 
     @classmethod
     def _depopulate_root_field(cls):
-        del cls.__config__.fields[ROOT_KEY]
-        del cls.__fields__[ROOT_KEY]
-        del cls.__annotations__[ROOT_KEY]
+        if ROOT_KEY in cls.__fields__:
+            del cls.__fields__[ROOT_KEY]
+        if ROOT_KEY in cls.__annotations__:
+            del cls.__annotations__[ROOT_KEY]
 
     @classmethod
     def _prepare_cls_members_to_mimic_model(cls, created_model: 'Model[type[_RootT]]') -> None:
@@ -322,14 +339,13 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     def __class_getitem__(  # type: ignore[override]
         cls,
-        model: type[_RootT] | tuple[type[_RootT]] | tuple[type[_RootT], Any] | TypeVar
+        params: type[_RootT] | tuple[type[_RootT]] | tuple[type[_RootT], Any] | TypeVar
+        | tuple[TypeVar, ...],
     ) -> 'Model[type[_RootT]]':
 
-        # For now, only singular model types are allowed. These lines are needed for
-        # interoperability with pydantic GenericModel, which internally stores the model
-        # as a tuple:
-        if isinstance(model, tuple) and len(model) == 1:
-            model = model[0]
+        # These lines are needed for interoperability with pydantic GenericModel, which internally
+        # stores the model as a len(1) tuple
+        model = params[0] if isinstance(params, tuple) and len(params) == 1 else params
 
         orig_model: type[_RootT] | tuple[type[_RootT], Any] | TypeVar = model
 
@@ -338,28 +354,38 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         # the actual type. The following issue in mypy seems relevant:
         # https://github.com/python/mypy/issues/3737 (as well as linked issues)
         if cls == Model:  # Only for the base Model class
-            model = cls._populate_root_field(cast(type[_RootT], model))
+            model_prepare = setup_and_teardown_callback_context(
+                setup_func=cls._populate_root_field,
+                setup_func_args=(model,),
+                exception_func=cls._depopulate_root_field,
+                teardown_func=cls._depopulate_root_field,
+            )
+            with model_prepare as prepared_model:
+                created_model = cast(Model, super().__class_getitem__(prepared_model))
+
+                cls._remove_annotated_optional_hack_from_model(created_model)
         else:
-            # Other subtypes do not support TypeVar anyway
-            model = cast(type[_RootT] | tuple[type[_RootT], Any], model)
+            cls._add_annotated_optional_hack_to_model(cls)
 
-        created_model = cast(Model, super().__class_getitem__(model))
+            created_model = cast(Model, super().__class_getitem__(params))
 
-        if cls != Model:
-            with suppress(TypeError):  # E.g. if model type is ForwardRef
-                full_type = created_model.full_type()
-                root_field = created_model._get_root_field()
-                root_field.default_factory = cls._get_default_factory_from_model(full_type)
+            cls._remove_annotated_optional_hack_from_model(cls)
+            cls._remove_annotated_optional_hack_from_model(created_model)
+
+            # only ParamModel = can be deleted?, or all Generic Models?
+            root_field = created_model._get_root_field()
+            root_field.default_factory = lambda: Undefined
 
         # As long as models are not created concurrently, setting the class members temporarily
         # should not have averse effects
         # TODO: Check if we can move to explicit definition of __root__ field at the object
         #       level in pydantic 2.0 (when it is released)
-        if cls == Model:
-            cls._depopulate_root_field()
 
-        _cleanup_name_qualname_and_module(cls, created_model, model, orig_model)
-        cls._prepare_cls_members_to_mimic_model(created_model)
+        if created_model is not cls:
+            _cleanup_name_qualname_and_module(cls, created_model, model, orig_model)
+
+        if not isinstance(model, TypeVar):
+            cls._prepare_cls_members_to_mimic_model(created_model)
 
         return created_model
 
@@ -440,6 +466,15 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 num_root_vals += 1
 
         assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
+
+        root_field = self._get_root_field()
+
+        if 'orig_model' in root_field.field_info.extra:
+            orig_model = root_field.field_info.extra['orig_model']
+            default_factory = self.__class__._get_default_factory_from_model(orig_model)
+        else:
+            default_factory = self.__class__._get_default_factory_from_model(self.full_type())
+        root_field.default_factory = default_factory
 
         omnipy_or_pydantic_model_as_input = False
         if ROOT_KEY in super_kwargs:
@@ -900,6 +935,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     @classmethod
     def to_json_schema(cls, pretty=True) -> str:
         schema = cls.schema()
+        if 'orig_model' in schema:
+            del schema['orig_model']
 
         if pretty:
             return cls._pretty_print_json(schema)

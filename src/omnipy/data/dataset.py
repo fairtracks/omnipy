@@ -438,6 +438,11 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
             result[key] = val
         result['title'] = schema['title']
         result['definitions'] = schema['definitions']
+
+        for model_desc in result['definitions'].values():
+            if 'orig_model' in model_desc:
+                del model_desc['orig_model']
+
         if pretty:
             return cls._pretty_print_json(result)
         else:
