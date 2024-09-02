@@ -186,7 +186,7 @@ def evaluate_any_forward_refs_if_possible(in_type: TypeForm,
 
 def get_default_if_typevar(typ_: type[_ObjT] | TypeForm | TypeVar) -> type[_ObjT] | TypeForm:
     if isinstance(typ_, TypeVar):
-        if hasattr(typ_, '__default__') and typ_.__default__ is not None:
+        if hasattr(typ_, '__default__'):
             return typ_.__default__
         else:
             raise TypeError(f'The TypeVar "{typ_.__name__}" needs to specify a default value. '

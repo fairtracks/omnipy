@@ -587,10 +587,50 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     @classmethod
     def update_forward_refs(cls, **localns: Any) -> None:
-        """
-        Try to update ForwardRefs on fields based on this Model, globalns and localns.
-        """
-        super().update_forward_refs(**localns)
+        def _identify_all_forward_refs_in_model_field(field: ModelField,
+                                                      all_forward_refs: list[ForwardRef] = []):
+            if field:
+                if field.outer_type_.__class__ == ForwardRef:
+                    all_forward_refs.append(field.outer_type_)
+                if field.type_.__class__ == ForwardRef:
+                    all_forward_refs.append(field.type_)
+                if field.sub_fields:
+                    for sub_f in field.sub_fields:
+                        _identify_all_forward_refs_in_model_field(sub_f, all_forward_refs)
+            return all_forward_refs
+
+        import sys
+        if cls.__module__ in sys.modules:
+            globalns = sys.modules[cls.__module__].__dict__.copy()
+        else:
+            globalns = {}
+
+        root_field = cls._get_root_field()
+        new_localns = localns.copy()
+        for forward_ref in _identify_all_forward_refs_in_model_field(root_field):
+            type_name = forward_ref.__forward_arg__
+            typ_ = localns.get(type_name)
+            if not typ_:
+                typ_ = globalns.get(type_name)
+            if typ_:
+                new_localns[type_name] = cls._wrap_with_annotated_optional(typ_)
+
+        super().update_forward_refs(**new_localns)
+
+        # cls._add_annotated_optional_hack_to_model(cls)
+        # super().update_forward_refs(**localns)
+        cls._remove_annotated_optional_hack_from_model(cls, recursive=True)
+
+        root_field = cls._get_root_field()
+        if root_field:
+            assert root_field.allow_none
+
+            # if root_field.sub_fields and not (is_union(root_field.outer_type_) or get_origin(root_field.outer_type_) in [list, dict]):
+            if root_field.sub_fields and not (get_origin(root_field.outer_type_) in [list, dict]):
+                # if root_field.sub_fields:
+                for sub_field in root_field.sub_fields:
+                    if sub_field.type_.__class__ is not ForwardRef:
+                        ...
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
