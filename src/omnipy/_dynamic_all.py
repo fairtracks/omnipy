@@ -3,6 +3,8 @@ from types import ModuleType
 
 from pydantic.utils import lenient_isinstance, lenient_issubclass
 
+import omnipy
+
 # TODO: Finish implementation of dynamic __all__ generation. Possibly useful together with Poe the
 #       Poet (https://poethepoet.natn.io/poetry_plugin.html) for generating a fixed __all__ list as
 #       part of the build process. The goal for this functionality is to follow DRY principles and
@@ -38,9 +40,10 @@ if not __all__:
     from .compute.job import JobTemplateMixin
     from .compute.task import Task, TaskTemplate
     from .data.dataset import Dataset, ListOfParamModelDataset, MultiModelDataset, ParamDataset
-    from .data.helpers import Params
     from .data.model import ListOfParamModel, Model, ParamModel
+    from .data.param import bind_adjust_dataset_func, bind_adjust_model_func, ParamsBase
     from .hub.runtime import runtime
+    from .util.contexts import print_exception
     from .util.helpers import recursive_module_import_new
 
     __all__ = [
@@ -57,12 +60,17 @@ if not __all__:
         'ParamDataset',
         'ListOfParamModelDataset',
         'MultiModelDataset',
-        'Params',
+        'ParamsBase',
+        'bind_adjust_model_func',
+        'bind_adjust_dataset_func',
         'Model',
         'ParamModel',
-        'ListOfParamModel'
+        'ListOfParamModel',
+        'print_exception',
     ]
     _all_element_names = set(__all__)
+
+    _omnipy_all = set(omnipy.__all__)
 
     recursive_module_import_new([ROOT_DIR], _all_modules, _exclude_modules)
 
@@ -76,9 +84,15 @@ if not __all__:
                 if lenient_issubclass(val, Model) \
                         or lenient_issubclass(val, Dataset) \
                         or lenient_isinstance(val, JobTemplateMixin):
+                    print(f'Adding {attr}')
                     _all_element_names.add(attr)
                     globals()[attr] = val
                     __all__.append(attr)
+
+    print(f'Missing elements in omnipy.__init__(): {_all_element_names - _omnipy_all}')
+    print(
+        f'Missing elements in hardcoded __all__ in _dynamic_all(): {_omnipy_all - _all_element_names}'
+    )
 
     del JobTemplateMixin
 

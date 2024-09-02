@@ -756,7 +756,7 @@ def recursive_module_import_new(root_path: list[str],
     cur_excluded_prefix = ''
 
     for module_finder, module_name, is_pkg in pkgutil.walk_packages(root_path):  # type: ignore
-        print(f'{module_name}: {is_pkg}')
+        # print(f'{module_name}: {is_pkg}')
         if cur_excluded_prefix and module_name.startswith(cur_excluded_prefix):
             continue
         else:
