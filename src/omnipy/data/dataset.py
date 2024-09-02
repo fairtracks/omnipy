@@ -564,7 +564,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
             ((i,
               k,
               type(v).__name__,
-              v.__len__() if hasattr(v, '__len__') else 'N/A',
+              len(v) if hasattr(v, '__len__') else 'N/A',
               humanize.naturalsize(objsize.get_deep_size(v)))
              for i, (k, v) in enumerate(self.items())),
             ('#', 'Data file name', 'Type', 'Length', 'Size (in memory)'),

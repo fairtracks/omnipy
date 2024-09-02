@@ -540,9 +540,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(contents_id)
 
     @classmethod
-    def clone_model_cls(cls: type[_ModelT], model_name: str) -> type[_ModelT]:
-        new_model: type[_ModelT] = type(model_name, (cls,), {})
-        return new_model
+    def clone_model_cls(cls: type[_ModelT], new_model_cls_name: str) -> type[_ModelT]:
+        new_model_cls: type[_ModelT] = type(new_model_cls_name, (cls,), {})
+        return new_model_cls
 
     @staticmethod
     def _raise_no_model_exception() -> None:
