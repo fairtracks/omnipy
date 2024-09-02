@@ -8,7 +8,7 @@ from pydantic.generics import GenericModel
 from typing_extensions import TypeVar
 
 from omnipy.data.model import ListOfParamModel, Model, ParamModel
-from omnipy.data.param import bind_adjust_func, ParamsBase
+from omnipy.data.param import bind_adjust_model_func, ParamsBase
 
 ChildT = TypeVar('ChildT', bound=object)
 ChildrenT = TypeVar("ChildrenT", bound=list)
@@ -77,7 +77,7 @@ class _ParamUpperStrModel(Model[str]):
 
 
 class ParamUpperStrModel(_ParamUpperStrModel):
-    adjust = bind_adjust_func(
+    adjust = bind_adjust_model_func(
         _ParamUpperStrModel.clone_model_cls,
         _ParamUpperStrModel.Params,
     )

@@ -11,7 +11,7 @@ from omnipy.compute.flow import (DagFlow,
 from omnipy.compute.task import Task, TaskTemplate
 from omnipy.data.dataset import Dataset, ListOfParamModelDataset, MultiModelDataset, ParamDataset
 from omnipy.data.model import ListOfParamModel, Model, ParamModel
-from omnipy.data.param import bind_adjust_func, ParamsBase
+from omnipy.data.param import bind_adjust_model_func, ParamsBase
 from omnipy.hub.runtime import runtime
 from omnipy.modules.general.models import (Chain2,
                                            Chain3,
@@ -257,7 +257,7 @@ __all__ = [
     'TableOfPydanticRecordsModel',
     'TableWithColNamesModel',
     'ParamsBase',
-    'bind_adjust_func',
+    'bind_adjust_model_func',
     'NotIterableExceptStrOrBytesModel',
     'Chain2',
     'Chain3',

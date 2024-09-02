@@ -3,7 +3,7 @@ import os
 from typing import cast
 
 from omnipy.data.model import ListOfParamModel, Model, ParamModel
-from omnipy.data.param import bind_adjust_func, ParamsBase
+from omnipy.data.param import bind_adjust_model_func, ParamsBase
 
 
 class _EncodingParamsMixin:
@@ -22,7 +22,7 @@ class _BytesModel(Model[str | bytes], _EncodingParamsMixin):
 
 
 class BytesModel(_BytesModel):
-    adjust = bind_adjust_func(
+    adjust = bind_adjust_model_func(
         _BytesModel.clone_model_cls,
         _EncodingParamsMixin.Params,
     )
@@ -42,7 +42,7 @@ class _StrModel(Model[bytes | str], _EncodingParamsMixin):
 
 
 class StrModel(_StrModel):
-    adjust = bind_adjust_func(
+    adjust = bind_adjust_model_func(
         _StrModel.clone_model_cls,
         _EncodingParamsMixin.Params,
     )
@@ -97,7 +97,7 @@ class _SplitToItemsModelNew(
 
 
 class SplitToItemsModelNew(_SplitToItemsModelNew):
-    adjust = bind_adjust_func(
+    adjust = bind_adjust_model_func(
         _SplitToItemsModelNew.clone_model_cls,
         _SplitToItemsModelNew.Params,
     )
@@ -138,7 +138,7 @@ class _SplitLinesToColumnsModelNew(
 
 
 class SplitLinesToColumnsModelNew(_SplitLinesToColumnsModelNew):
-    adjust = bind_adjust_func(
+    adjust = bind_adjust_model_func(
         _SplitLinesToColumnsModelNew.clone_model_cls,
         _SplitLinesToColumnsModelNew.Params,
     )

@@ -77,7 +77,7 @@ class ParamsBase(BaseModel, metaclass=ParamsMeta):
             })
 
 
-def bind_adjust_func(
+def bind_adjust_model_func(
     clone_model_func: Callable[..., type[ModelT]],
     params_cls: Callable[ParamsP, Any],
 ) -> Callable[Concatenate[str, ParamsP], type[ModelT]]:
