@@ -309,16 +309,6 @@ def remove_optional_if_present(type_or_class: TypeForm) -> TypeForm:
     return type_or_class
 
 
-def remove_annotated_optional_hack_from_model(model):
-    root_field = model._get_root_field()
-    if is_annotated_plus_optional(root_field.outer_type_):
-        root_field.outer_type_ = remove_annotated_plus_optional_if_present(root_field.outer_type_)
-        root_field.type_ = remove_optional_if_present(root_field.type_)
-        if not isinstance(root_field.annotation, DeferredType):
-            root_field.annotation = root_field.outer_type_
-        model.__annotations__[ROOT_KEY] = root_field.outer_type_
-
-
 def remove_forward_ref_notation(type_str: str):
     return type_str.replace("ForwardRef('", '').replace("')", '')
 
