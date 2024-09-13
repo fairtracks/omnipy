@@ -1,8 +1,10 @@
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import contextmanager, suppress
+from copy import deepcopy
 import functools
 import inspect
+from itertools import chain
 import json
 import os
 import shutil
@@ -28,18 +30,19 @@ from devtools import debug, PrettyFormat
 from pydantic import NoneIsNotAllowedError
 from pydantic import Protocol as PydanticProtocol
 from pydantic import root_validator, ValidationError
-from pydantic.fields import DeferredType, ModelField, Undefined, UndefinedType
+from pydantic.error_wrappers import ErrorWrapper
+from pydantic.fields import Field, ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.main import BaseModel, ModelMetaclass, validate_model
-from pydantic.typing import display_as_type, is_none_type
+from pydantic.typing import is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass, sequence_like
-from typing_extensions import TypeVar
+from typing_extensions import get_original_bases, MutableSequence, TypeVar
 
-from omnipy.api.exceptions import ParamException
+from omnipy.api.exceptions import ParamException, OmnipyNoneIsNotAllowedError
 from omnipy.api.protocols.private.util import IsSnapshotWrapper
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
-from omnipy.data.helpers import get_special_methods_info_dict, MethodInfo, TypeVarStore, YesNoMaybe
+from omnipy.data.helpers import get_special_methods_info_dict, MethodInfo, YesNoMaybe
 from omnipy.util.contexts import (hold_and_reset_prev_attrib_value,
                                   LastErrorHolder,
                                   nothing,
@@ -54,14 +57,11 @@ from omnipy.util.helpers import (all_equals,
                                  get_default_if_typevar,
                                  get_first_item,
                                  has_items,
-                                 is_annotated_plus_optional,
                                  is_non_omnipy_pydantic_model,
                                  is_non_str_byte_iterable,
                                  is_optional,
                                  is_union,
-                                 remove_annotated_plus_optional_if_present,
-                                 remove_forward_ref_notation,
-                                 remove_optional_if_present)
+                                 remove_forward_ref_notation)
 from omnipy.util.setdeque import SetDeque
 from omnipy.util.tabulate import tabulate
 
@@ -70,7 +70,7 @@ _ValT = TypeVar('_ValT')
 _IterT = TypeVar('_IterT')
 _ReturnT = TypeVar('_ReturnT')
 _IdxT = TypeVar('_IdxT', bound=SupportsIndex)
-_RootT = TypeVar('_RootT', bound=object | None, default=object)
+_RootT = TypeVar('_RootT')
 _ModelT = TypeVar('_ModelT')
 
 ROOT_KEY = '__root__'
@@ -153,6 +153,11 @@ def is_model_instance(__obj: object) -> bool:
         and not is_none_type(__obj)  # Consequence of _ModelMetaclass hack
 
 
+def is_model_subclass(__cls: TypeForm) -> bool:
+    return lenient_issubclass(__cls, Model) \
+        and not is_none_type(__cls)  # Consequence of _ModelMetaclass hack
+
+
 def obj_or_model_contents_isinstance(__obj: object, __class_or_tuple: type) -> bool:
     return isinstance(__obj.contents if is_model_instance(__obj) else __obj, __class_or_tuple)
 
@@ -219,7 +224,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     See also docs of the Dataset class for more usage examples.
     """
 
-    __root__: _RootT | None
+    __root__: _RootT = Field(default_factory=lambda: Undefined)
 
     class Config:
         arbitrary_types_allowed = True
@@ -245,9 +250,10 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         origin_type = get_origin(model)
         args = get_args(model)
 
-        # if origin_type is Annotated:
-        #     model = remove_annotated_plus_optional_if_present(model)
-        #     return cls._get_default_value_from_model(model)
+        if origin_type is Annotated:
+            model = args[0]
+            origin_type = get_origin(model)
+            args = get_args(model)
 
         if origin_type in (None, ()):
             origin_type = model
@@ -281,55 +287,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         return cast(_RootT, origin_type())
 
     @classmethod
-    def _populate_root_field(cls, model: type[_RootT] | TypeVar) -> type[_RootT]:
-
-        all_typevars = True
-        # for submodel in all_type_variants(remove_annotated_plus_optional_if_present(model)):
-        for submodel in all_type_variants(model):
-            # submodel = remove_annotated_plus_optional_if_present(submodel)
-            if not lenient_isinstance(submodel, TypeVar) \
-                    and not get_origin(submodel) is TypeVarStore \
-                    and not lenient_issubclass(get_origin(submodel), TypeVarStore):
-                all_typevars = False
-                break
-
-        # def _prepare_root_config_field():
-        #     ...
-        #     cls.__config__.fields[ROOT_KEY] = {'default_factory': lambda: None}
-        #
-        # def _delete_root_config_field():
-        #     if ROOT_KEY in cls.__config__.fields:
-        #         del cls.__config__.fields[ROOT_KEY]
-
-        prepared_model = cls._wrap_with_annotated_optional(model)
-
-        # with setup_and_teardown_callback_context(
-        #         setup_func=_prepare_root_config_field,
-        #         exception_func=_delete_root_config_field,
-        #         teardown_func=_delete_root_config_field,
-        # ):
-        data_field = ModelField.infer(
-            name=ROOT_KEY,
-            value=None,
-            annotation=prepared_model,
-            class_validators=None,
-            config=cls.__config__)
-
-        if not all_typevars:
-            data_field.field_info.extra['orig_model'] = model
-        cls.__fields__[ROOT_KEY] = data_field
-        cls.__annotations__[ROOT_KEY] = prepared_model
-
-        return model
-
-    @classmethod
-    def _depopulate_root_field(cls):
-        if ROOT_KEY in cls.__fields__:
-            del cls.__fields__[ROOT_KEY]
-        if ROOT_KEY in cls.__annotations__:
-            del cls.__annotations__[ROOT_KEY]
-
-    @classmethod
     def _prepare_cls_members_to_mimic_model(cls, created_model: 'Model[type[_RootT]]') -> None:
         outer_type = created_model._get_root_type(outer=True, with_args=True)
         outer_type_plain = created_model._get_root_type(outer=True, with_args=False)
@@ -360,7 +317,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         | tuple[TypeVar, ...],
     ) -> 'Model[type[_RootT]]':
 
-        # These lines are needed for interoperability with pydantic GenericModel, which internally
+        # This line is needed for interoperability with pydantic GenericModel, which internally
         # stores the model as a len(1) tuple
         model = params[0] if isinstance(params, tuple) and len(params) == 1 else params
 
@@ -370,28 +327,18 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         # is needed due to the inability of typing/pydantic to provide a dynamic default based on
         # the actual type. The following issue in mypy seems relevant:
         # https://github.com/python/mypy/issues/3737 (as well as linked issues)
-        if cls == Model:  # Only for the base Model class
-            model_prepare = setup_and_teardown_callback_context(
-                setup_func=cls._populate_root_field,
-                setup_func_args=(model,),
-                exception_func=cls._depopulate_root_field,
-                teardown_func=cls._depopulate_root_field,
-            )
-            with model_prepare as prepared_model:
-                created_model = cast(Model, super().__class_getitem__(prepared_model))
 
-                cls._remove_annotated_optional_hack_from_model(created_model)
-        else:
-            cls._add_annotated_optional_hack_to_model(cls)
+        created_model = cast(Model, super().__class_getitem__(model if cls == Model else params))
 
-            created_model = cast(Model, super().__class_getitem__(params))
+        created_model._get_root_field().field_info = deepcopy(
+            created_model._get_root_field().field_info)
 
-            cls._remove_annotated_optional_hack_from_model(cls)
-            cls._remove_annotated_optional_hack_from_model(created_model)
+        if cls is Model and orig_model is not _RootT:
+            created_model._get_root_field().field_info.extra = {'orig_model': orig_model}
 
-            # only ParamModel = can be deleted?, or all Generic Models?
-            root_field = created_model._get_root_field()
-            root_field.default_factory = lambda: Undefined
+        created_model._inherit_first_orig_model_in_bases_if_missing()
+
+        cls._recursively_set_allow_none(created_model._get_root_field())
 
         # As long as models are not created concurrently, setting the class members temporarily
         # should not have averse effects
@@ -407,54 +354,54 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         return created_model
 
     @classmethod
-    def _wrap_with_annotated_optional(cls, model):
-        if not get_origin(model) == Annotated \
-                and not is_optional(model) \
-                and not is_none_type(model):
-            prepared_model = cast(type[_RootT],
-                                  Annotated[Optional[model], 'Fake Optional from Model'])
-        else:
-            prepared_model = cast(type[_RootT], model)
-        return prepared_model
+    def _recursively_set_allow_none(cls, field: ModelField) -> None:
+        if field.sub_fields:
+            if is_union(field.outer_type_):
+                if any(_.allow_none for _ in field.sub_fields):
+                    field.allow_none = True
 
-    @classmethod
-    def _add_annotated_optional_hack_to_model(cls, model: 'Model'):
-        root_field = model._get_root_field()
-        if root_field:
-            model = root_field.outer_type_
-            if not get_origin(model) == Annotated \
-                    and not is_optional(model) \
-                    and not is_none_type(model):
-                # if not get_origin(model) == Annotated and not is_optional(model):
-                root_field.outer_type_ = Annotated[Optional[model], 'Fake Optional from Model']
-                root_field.type_ = Optional[model]
-                root_field.annotation = root_field.outer_type_
-                cls.__annotations__[ROOT_KEY] = root_field.outer_type_
-
-    @classmethod
-    def _remove_annotated_optional_hack_from_model(cls, model: 'Model', recursive: bool = False):
-        root_field = model._get_root_field()
-        if root_field:
-            cls._remove_annotated_optional_hack_from_field(root_field, recursive=recursive)
-            model.__annotations__[ROOT_KEY] = root_field.outer_type_
-
-    @classmethod
-    def _remove_annotated_optional_hack_from_field(cls, field: ModelField, recursive: bool = False):
-        if is_annotated_plus_optional(field.outer_type_):
-            field.outer_type_ = remove_annotated_plus_optional_if_present(field.outer_type_)
-            field.type_ = remove_optional_if_present(field.type_)
-            if not isinstance(field.annotation, DeferredType):
-                field.annotation = field.outer_type_
-        if field.sub_fields and recursive:
             for sub_field in field.sub_fields:
-                if sub_field:
-                    cls._remove_annotated_optional_hack_from_field(sub_field, recursive=recursive)
+                cls._recursively_set_allow_none(sub_field)
+        if field.key_field:
+            if is_union(field.key_field.outer_type_):
+                if any(_.allow_none for _ in field.key_field.sub_fields):
+                    field.key_field.allow_none = True
 
-    def __new__(cls, value: Any | UndefinedType = Undefined, **kwargs):
+            if field.key_field.sub_fields:
+                for sub_field in field.key_field.sub_fields:
+                    cls._recursively_set_allow_none(sub_field)
+
+    @classmethod
+    def _inherit_first_orig_model_in_bases_if_missing(cls):
+        if cls is not Model:
+            for orig_base in get_original_bases(cls):
+                if isinstance(orig_base, _ModelMetaclass) and orig_base.__concrete__:
+                    orig_base._inherit_first_orig_model_in_bases_if_missing()
+                    orig_model = orig_base.get_orig_model()
+                    if orig_model is not Undefined:
+                        cls.set_orig_model(orig_model)
+                        break
+
+    def __new__(
+        cls,
+        *args: Any,
+        **kwargs: Any,
+    ) -> 'Model[_RootT]':
         model_not_specified = ROOT_KEY not in cls.__fields__
         if model_not_specified:
             cls._raise_no_model_exception()
+
         return super().__new__(cls)
+
+    @classmethod
+    def get_orig_model(cls) -> type[_RootT] | UndefinedType:
+        if cls.__fields__[ROOT_KEY].field_info and cls.__fields__[ROOT_KEY].field_info.extra:
+            return cls.__fields__[ROOT_KEY].field_info.extra.get('orig_model', Undefined)
+        return Undefined
+
+    @classmethod
+    def set_orig_model(cls, orig_model: type[_RootT]) -> None:
+        cls.__fields__[ROOT_KEY].field_info.extra['orig_model'] = orig_model
 
     # TODO: Allow e.g. Model[str](Model[int](5)) == Model[str](Model[int](5).contents).
     #       Should then work the same as dataset
@@ -484,19 +431,20 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
 
-        root_field = self._get_root_field()
-
-        if 'orig_model' in root_field.field_info.extra:
-            orig_model = root_field.field_info.extra['orig_model']
-            default_factory = self.__class__._get_default_factory_from_model(orig_model)
-        else:
+        if self._get_root_field().default_factory() is Undefined:
             default_factory = self.__class__._get_default_factory_from_model(self.full_type())
-        root_field.default_factory = default_factory
+            self._get_root_field().default_factory = default_factory
 
         omnipy_or_pydantic_model_as_input = False
         if ROOT_KEY in super_kwargs:
-            omnipy_or_pydantic_model_as_input, value = \
-                self._prepare_value_for_validation_if_model(super_kwargs[ROOT_KEY])
+            try:
+                omnipy_or_pydantic_model_as_input, value = \
+                    self._prepare_value_for_validation_if_model(super_kwargs[ROOT_KEY])
+            except Exception as exc:
+                val_exc = ValueError(f'Failed to prepare value for validation: {exc}')
+                raise ValidationError(
+                    [ErrorWrapper(exc, loc=ROOT_KEY), ErrorWrapper(val_exc, loc=ROOT_KEY)],
+                    self.__class__)
             if omnipy_or_pydantic_model_as_input:
                 super_kwargs[ROOT_KEY] = cast(_RootT, value)
 
@@ -509,8 +457,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 self._secondary_validation_from_data(super_kwargs)
             else:
                 raise
-
-        # self._take_snapshot_of_validated_contents()
 
         if not self.__class__.__doc__:
             self._set_standard_field_description()
@@ -536,7 +482,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     def __del__(self):
         contents_id = id(self.contents)
-        # self.contents = Undefined
         self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(contents_id)
 
     @classmethod
@@ -589,50 +534,23 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     @classmethod
     def update_forward_refs(cls, **localns: Any) -> None:
-        def _identify_all_forward_refs_in_model_field(field: ModelField,
-                                                      all_forward_refs: list[ForwardRef] = []):
-            if field:
-                if field.outer_type_.__class__ == ForwardRef:
-                    all_forward_refs.append(field.outer_type_)
-                if field.type_.__class__ == ForwardRef:
-                    all_forward_refs.append(field.type_)
-                if field.sub_fields:
-                    for sub_f in field.sub_fields:
-                        _identify_all_forward_refs_in_model_field(sub_f, all_forward_refs)
-            return all_forward_refs
+        prev_outer_type = cls._get_root_field().outer_type_
+        prev_type = cls._get_root_field().type_
 
-        import sys
-        if cls.__module__ in sys.modules:
-            globalns = sys.modules[cls.__module__].__dict__.copy()
-        else:
-            globalns = {}
+        super().update_forward_refs(**localns)
 
-        root_field = cls._get_root_field()
-        new_localns = localns.copy()
-        for forward_ref in _identify_all_forward_refs_in_model_field(root_field):
-            type_name = forward_ref.__forward_arg__
-            typ_ = localns.get(type_name)
-            if not typ_:
-                typ_ = globalns.get(type_name)
-            if typ_:
-                new_localns[type_name] = cls._wrap_with_annotated_optional(typ_)
+        calling_module = get_calling_module_name()
+        cls._get_root_field().outer_type_ = evaluate_any_forward_refs_if_possible(
+            prev_outer_type, calling_module, **localns)
+        cls._get_root_field().type_ = evaluate_any_forward_refs_if_possible(
+            prev_type, calling_module, **localns)
+        cls.set_orig_model(
+            evaluate_any_forward_refs_if_possible(cls.get_orig_model(), calling_module, **localns))
+        cls.__annotations__[ROOT_KEY] = evaluate_any_forward_refs_if_possible(
+            cls.__annotations__[ROOT_KEY], calling_module, **localns)
 
-        super().update_forward_refs(**new_localns)
+        cls._recursively_set_allow_none(cls._get_root_field())
 
-        # cls._add_annotated_optional_hack_to_model(cls)
-        # super().update_forward_refs(**localns)
-        cls._remove_annotated_optional_hack_from_model(cls, recursive=True)
-
-        root_field = cls._get_root_field()
-        if root_field:
-            assert root_field.allow_none
-
-            # if root_field.sub_fields and not (is_union(root_field.outer_type_) or get_origin(root_field.outer_type_) in [list, dict]):
-            if root_field.sub_fields and not (get_origin(root_field.outer_type_) in [list, dict]):
-                # if root_field.sub_fields:
-                for sub_field in root_field.sub_fields:
-                    if sub_field.type_.__class__ is not ForwardRef:
-                        ...
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
@@ -718,20 +636,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         if reset_solution is Undefined:
             reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
             with (reset_solution):
-                # if pre_validation_func:
-                #     return_val = pre_validation_func(*pre_validation_func_args,
-                #                                      **pre_validation_func_kwargs)
-
-                # if self.config.interactive_mode and self.has_snapshot() \
-                #
-                # Following is incorrect, must compare new_contents with snapshot, as self.contents is not
-                # yet set
-                #         and self.contents_validated_according_to_snapshot():
-                #     return return_val
-
-                # if new_contents is Undefined and pre_validation_func:
-                #     new_contents = self.contents
-
                 if new_contents is not Undefined:
                     validated_content = self._validate_contents_from_value(new_contents)
                 else:
@@ -819,69 +723,108 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def _parse_root_object(cls, root_obj: dict[str, _RootT | None]) -> Any:
         assert ROOT_KEY in root_obj
         value = root_obj[ROOT_KEY]
-        value = cls._parse_none_value_with_root_type_if_model(value)
+        value = cls._parse_none_value_according_to_model(value, root_model=cls)
 
         config = cls.data_class_creator.config
         with hold_and_reset_prev_attrib_value(config, 'dynamically_convert_elements_to_models'):
             config.dynamically_convert_elements_to_models = False
             return {ROOT_KEY: cls._parse_data(value)}
 
-    # Partial workaround of https://github.com/pydantic/pydantic/issues/3836, together with
-    # fake optional type hack.  See series of relevant tests in test_model.py
-    # starting with test_nested_model_classes_none_as_default().
-    @classmethod
-    def _parse_none_value_with_root_type_if_model(cls, value: _RootT | None) -> _RootT:
-        root_field: ModelField = cls._get_root_field()
-        root_type = cast(TypeForm, root_field.type_)
-        value = cls._parse_with_root_type_if_model(value, root_field, root_type)
-        return value
+    # Partial workaround of https://github.com/pydantic/pydantic/issues/3836 and similar bugs,
+    # together withhacks setting allow_none=True (_ModelMetaclass and _recursively_set_allow_none).
+    # See series of relevant tests in test_model.py starting with  test_list_of_none_variants().
 
     @classmethod
-    def _parse_with_root_type_if_model(cls,
-                                       value: _RootT | None,
-                                       root_field: ModelField,
-                                       root_type: TypeForm) -> _RootT:
-        # if get_origin(root_type) is Annotated:
-        #     root_type = remove_annotated_plus_optional_if_present(root_type)
+    def _parse_none_value_according_to_model(
+        cls,
+        value: _RootT | None,
+        root_model: 'Model',
+    ) -> _RootT:
 
-        if get_origin(root_type) is Union:
-            last_error_holder = LastErrorHolder()
-            for arg in get_args(root_type):
-                with last_error_holder:
-                    return cls._parse_with_root_type_if_model(value, root_field, arg)
-            last_error_holder.raise_derived(NoneIsNotAllowedError())
+        outer_type = root_model.outer_type(with_args=True)
+        plain_outer_type = root_model.outer_type(with_args=False)
+        outer_type_args = get_args(outer_type)
 
-        if lenient_issubclass(root_type, Model):
-            root_type = cast(Model[_RootT], root_type)
-            if root_field.outer_type_ != root_type:
-                outer_type = get_origin(root_field.outer_type_)
-                if lenient_issubclass(outer_type, Sequence) and lenient_isinstance(value, Sequence):
-                    seq_value = cast(Sequence, value)
-                    return outer_type(
-                        val if is_model_instance(val) else root_type.parse_obj(val)
-                        for val in seq_value)
-                elif lenient_issubclass(outer_type, Mapping) and lenient_isinstance(value, Mapping):
-                    map_value = cast(Mapping, value)
+        inner_key_type = outer_type_args[0] if lenient_issubclass(
+            plain_outer_type, Mapping) and outer_type_args else Undefined
+        inner_val_type = root_model.inner_type(with_args=True)
 
-                    return outer_type({
-                        key: val if is_model_instance(val) else root_type.parse_obj(val)
-                        for (key, val) in map_value.items()
+        if is_model_subclass(outer_type):
+            return outer_type(value)
+
+        def _split_to_union_variants(type_: TypeForm) -> tuple[TypeForm]:
+            return get_args(type_) if is_union(type_) else (type_,)
+
+        def _supports_none(type_: TypeForm) -> bool:
+            return is_none_type(type_) or is_optional(type_) or type_ in (object, Any)
+
+        def _parse_none_value(inner_union_types: tuple[TypeForm]) -> bool:
+            for type_ in inner_union_types:
+                if is_model_subclass(type_):
+                    return type_(cls._parse_none_value_according_to_model(None, type_))
+                elif _supports_none(type_):
+                    return None
+            raise OmnipyNoneIsNotAllowedError()
+
+        if root_model.is_nested_type():
+            inner_val_union_types = _split_to_union_variants(inner_val_type)
+
+            # Mutable sequences or variable tuples
+            if lenient_issubclass(plain_outer_type,
+                                  (MutableSequence, tuple)) and lenient_isinstance(
+                                      value, plain_outer_type):
+                if any(is_model_subclass(_) or _supports_none(_) for _ in inner_val_union_types):
+                    return plain_outer_type(
+                        _parse_none_value(inner_val_union_types) if val is None else val
+                        for val in value)
+
+            # Mappings
+            if lenient_issubclass(plain_outer_type, Mapping) and lenient_isinstance(
+                    value, Mapping) and outer_type_args:
+
+                inner_key_union_types = _split_to_union_variants(inner_key_type)
+
+                if any(
+                        is_model_subclass(_) or _supports_none(_)
+                        for _ in chain(inner_key_union_types, inner_val_union_types)):
+                    return plain_outer_type({
+                        _parse_none_value(inner_key_union_types) if key is None else key:
+                            _parse_none_value(inner_val_union_types) if val is None else val
+                        for key,
+                        val in value.items()
                     })
-            else:
-                return cast(_RootT,
-                            value if is_model_instance(value) else root_type.parse_obj(value))
-        if value is None:
-            default_value = root_field.get_default()
-            none_default = default_value is None or (is_model_instance(default_value)
-                                                     and default_value.contents is None)
-            root_type_is_none = is_none_type(root_type)
-            root_type_is_optional = get_origin(root_type) is Union \
-                and any(is_none_type(arg) for arg in get_args(root_type))
-            supports_none = none_default or root_type_is_none or root_type_is_optional
-            if not supports_none:
-                raise NoneIsNotAllowedError()
-            value = cast(_RootT, value)
 
+            if lenient_isinstance(outer_type, TypeVar):
+                return _parse_none_value(inner_val_union_types)
+
+            if value is None:
+                raise NoneIsNotAllowedError()
+
+        else:
+            tuple_of_union_variant_types = [_split_to_union_variants(_) for _ in outer_type_args]
+            flattened_union_variant_types = [
+                type_ for union_variant_types in tuple_of_union_variant_types
+                for type_ in union_variant_types
+            ]
+            if any(is_model_subclass(type_) or _supports_none(type_) \
+                   for type_ in flattened_union_variant_types):
+
+                # Fixed tuples
+                if lenient_issubclass(plain_outer_type, tuple) and lenient_isinstance(
+                        value, tuple) and outer_type_args:
+                    assert len(value) == len(
+                        outer_type_args) and outer_type_args[-1] is not Ellipsis
+                    return plain_outer_type(
+                        _parse_none_value(tuple_of_union_variant_types[i]) if val is None else val
+                        for i,
+                        val in enumerate(value))
+
+                # Unions
+                elif is_union(plain_outer_type):
+                    if value is None:
+                        return _parse_none_value(flattened_union_variant_types)
+                    else:
+                        return value
         return value
 
     @property
@@ -939,17 +882,15 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         self.contents = new_model.contents
 
     @classmethod
-    def inner_type(cls, with_args: bool = False) -> TypeForm | None:
-        return evaluate_any_forward_refs_if_possible(
-            cls._get_root_type(outer=False, with_args=with_args), cls.__module__)
+    def inner_type(cls, with_args: bool = False) -> TypeForm:
+        return cls._get_root_type(outer=False, with_args=with_args)
 
     @classmethod
-    def outer_type(cls, with_args: bool = False) -> TypeForm | None:
-        return evaluate_any_forward_refs_if_possible(
-            cls._get_root_type(outer=True, with_args=with_args), cls.__module__)
+    def outer_type(cls, with_args: bool = False) -> TypeForm:
+        return cls._get_root_type(outer=True, with_args=with_args)
 
     @classmethod
-    def full_type(cls) -> TypeForm | None:
+    def full_type(cls) -> TypeForm:
         return cls.outer_type(with_args=True)
 
     @classmethod
@@ -957,6 +898,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         return not cls.inner_type(with_args=True) == cls.outer_type(with_args=True)
 
     @classmethod
+    # Refactor: Remove is_param_model
     def is_param_model(cls) -> bool:
         if cls.outer_type() is list:
             type_to_check = cls.inner_type(with_args=True)
@@ -972,10 +914,18 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         return cast(ModelField, cls.__fields__.get(ROOT_KEY))
 
     @classmethod
-    def _get_root_type(cls, outer: bool, with_args: bool) -> TypeForm | None:
+    def _get_root_type(cls, outer: bool, with_args: bool) -> TypeForm:
         root_field = cls._get_root_field()
         root_type = root_field.outer_type_ if outer else root_field.type_
-        # root_type = remove_annotated_plus_optional_if_present(root_type)
+
+        orig_model = cls.get_orig_model()
+        if orig_model != Undefined:
+            if not is_optional(root_type) and is_optional(orig_model):
+                if outer:
+                    root_type = Optional[root_type]
+                else:
+                    root_type = Optional[root_field.outer_type_]
+
         return root_type if with_args else ensure_plain_type(root_type)
 
     # @classmethod
@@ -1148,20 +1098,11 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         elif name == '__iadd__' and (has_iadd_method or has_add_method):
 
             def _iadd(other):
-                # try:
-                #     other_model_contents = self.__class__(other).contents
-                #     if has_iadd_method:
-                #         return contents.__iadd__(other_model_contents)
-                #     else:
-                #         self.contents = contents.__add__(other_model_contents)
-                #         return self.contents
-                # except ValidationError:
                 if has_iadd_method:
                     return contents.__iadd__(other)
                 else:
                     return contents.__add__(other)
 
-            # return _iadd_new_other_model(*args, **kwargs)
             method = _iadd
             return self._call_single_arg_method_with_model_converted_other_first(
                 name, method, *args, **kwargs)
@@ -1291,11 +1232,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 outer_type = cast(Model, outer_type).outer_type(with_args=True)
 
             for type_to_check in all_type_variants(outer_type):
-                # type_to_check = cast(type | GenericAlias,
-                #                      remove_annotated_plus_optional_if_present(type_to_check))
-                # for inner_type_to_check in all_type_variants(type_to_check):
                 plain_type_to_check = ensure_plain_type(type_to_check)
-                # if plain_type_to_check in (ForwardRef, TypeVar, Literal, None):
                 if plain_type_to_check in (ForwardRef, TypeVar, None):
                     continue
 
@@ -1562,7 +1499,6 @@ class ParamModel(Model[_ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
         else:
             data = root_val
 
-        # data = cls._parse_none_value_with_root_type_if_model(data)
         try:
             return {ROOT_KEY: cls._parse_data(data, **params)}
         except TypeError as exc:

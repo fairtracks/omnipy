@@ -37,7 +37,7 @@ from isort import place_module
 from isort.sections import STDLIB
 from pydantic import BaseModel, ValidationError
 from pydantic.generics import GenericModel
-from pydantic.typing import display_as_type
+from pydantic.typing import is_none_type
 from typing_inspect import get_generic_bases, is_generic_type
 
 from omnipy.api.protocols.private.util import HasContents, IsSnapshotWrapper
@@ -167,7 +167,8 @@ def evaluate_any_forward_refs_if_possible(in_type: TypeForm,
         else:
             globalns = {}
         try:
-            return cast(type | GenericAlias, in_type._evaluate(globalns, localns, frozenset()))
+            return cast(type | GenericAlias,
+                        in_type._evaluate(globalns, localns if localns else locals(), frozenset()))
         except NameError:
             pass
     else:
@@ -282,40 +283,11 @@ class IsDataclass(Protocol):
     __dataclass_fields__: ClassVar[dict]
 
 
-def is_annotated_plus_optional(type_or_class: TypeForm) -> bool:
-    if get_origin(type_or_class) == Annotated:
-        type_or_class = get_args(type_or_class)[0]
-        if is_optional(type_or_class):
-            return True
-    return False
-
-
-def remove_annotated_plus_optional_if_present(type_or_class: TypeForm) -> TypeForm:
-    if get_origin(type_or_class) == Annotated:
-        type_or_class = get_args(type_or_class)[0]
-        if is_optional(type_or_class):
-            type_or_class = remove_optional_if_present(type_or_class)
-    return type_or_class
-
-
-def remove_optional_if_present(type_or_class: TypeForm) -> TypeForm:
-    if is_optional(type_or_class):
-        type_or_class_args = get_args(type_or_class)
-        if len(type_or_class_args) == 2:
-            ret = type_or_class_args[0]
-        else:
-            ret = Union[type_or_class_args[:-1]]
-        return ret
-    return type_or_class
-
-
 def remove_forward_ref_notation(type_str: str):
     return type_str.replace("ForwardRef('", '').replace("')", '')
 
 
 def format_classname_with_params(cls_name: str, params_str: str) -> str:
-    # with suppress(ValueError):
-    #     cls_name = cls_name[:cls_name.index('[')]
     return f"{cls_name}[{params_str}]"
 
 

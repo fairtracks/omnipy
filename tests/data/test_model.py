@@ -3,7 +3,7 @@ import gc
 from math import floor
 import os
 from textwrap import dedent
-from types import MappingProxyType, MethodType, NotImplementedType
+from types import MappingProxyType, MethodType, NotImplementedType, UnionType
 from typing import (Annotated,
                     Any,
                     cast,
@@ -25,6 +25,7 @@ from typing_extensions import TypeVar
 
 from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.public.hub import IsRuntime
+from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import is_model_instance, Model, obj_or_model_contents_isinstance
 from omnipy.util.setdeque import SetDeque
 
@@ -132,54 +133,33 @@ def test_error_init() -> None:
         Model[int](__root__=123, other=234)
 
 
-def test_error_class_init_forwardref() -> None:
+def test_class_init_forwardref(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    class MyForwardRefNoNameModel(Model[ForwardRef]):
+        ...
+
     with pytest.raises(TypeError, match='Cannot instantiate model'):
-        Model[ForwardRef]()
+        MyForwardRefNoNameModel()
 
-    with pytest.raises(NameError):
-        Model[ForwardRef('SomeClass')]  # type: ignore[misc]
-
-    with pytest.raises(NameError):
-        Model['SomeClass']
-
-    class SomeClass:
+    class MyForwardRefModel(Model[ForwardRef('SomeClass')]):  # type: ignore[misc]
         ...
 
-    Model.update_forward_refs(SomeClass=SomeClass)
-
-    with pytest.raises(NameError):
-        Model[ForwardRef('SomeClass')]  # type: ignore[misc]
-
-    with pytest.raises(NameError):
-        Model['SomeClass']
-
-
-def test_error_class_init_generic_with_forwardref() -> None:
-    class MyGenericModel(Model[T], Generic[T]):
+    class MyForwardRefStrModel(Model['SomeClass']):
         ...
 
-    with pytest.raises(NameError):
-        MyGenericModel[ForwardRef('SomeClass')]  # type: ignore[misc]
-
-    with pytest.raises(NameError):
-        MyGenericModel['SomeClass']
-
-
-def test_class_init_generic_hack_with_forwardref() -> None:
-    class MyGenericModel(Model[T | None], Generic[T]):
-        ...
-
-    MyForwardRefModel: TypeAlias = \
-        MyGenericModel[ForwardRef('SomeClass')]  # type: ignore[misc, valid-type]
-    MyForwardRefStrModel: TypeAlias = MyGenericModel['SomeClass']
-
-    class SomeClass:
-        ...
-
-    with pytest.raises(ConfigError):
+    with pytest.raises(TypeError, match='Cannot instantiate model'):
         MyForwardRefModel()
 
-    with pytest.raises(ConfigError):
+    with pytest.raises(TypeError, match='Cannot instantiate model'):
+        MyForwardRefStrModel()
+
+    class SomeClass:
+        ...
+
+    with pytest.raises(TypeError, match='Cannot instantiate model'):
+        MyForwardRefModel()
+
+    with pytest.raises(TypeError, match='Cannot instantiate model'):
         MyForwardRefStrModel()
 
     MyForwardRefModel.update_forward_refs(SomeClass=SomeClass)
@@ -187,6 +167,65 @@ def test_class_init_generic_hack_with_forwardref() -> None:
 
     MyForwardRefStrModel.update_forward_refs(SomeClass=SomeClass)
     MyForwardRefStrModel()
+
+
+def test_class_init_generic_with_forwardref(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    class MyGenericModel(Model[T], Generic[T]):
+        ...
+
+    with pytest.raises(TypeError, match='Cannot instantiate model'):
+        MyGenericModel[ForwardRef('SomeClass')]()  # type: ignore[misc, operator]
+
+    with pytest.raises(TypeError, match='Cannot instantiate model'):
+        MyGenericModel['SomeClass']()
+
+    class SomeClass:
+        ...
+
+    MyGenericModel[ForwardRef('SomeClass')].update_forward_refs(  # type: ignore[misc]
+        SomeClass=SomeClass)
+    MyGenericModel[ForwardRef('SomeClass')]()  # type: ignore[misc, operator]
+
+    MyGenericModel['SomeClass'].update_forward_refs(SomeClass=SomeClass)
+    MyGenericModel['SomeClass']()
+
+
+def test_class_init_recursive_model_through_generic_hack_with_forwardref(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    with pytest.raises(RuntimeError):
+
+        class MyRecursiveModel(Model[list['MyRecursiveModel']]):
+            ...
+
+    with pytest.raises(RuntimeError):
+
+        class MyNewRecursiveModel(Model[list['MyOtherRecursiveModel'] | None]):
+            ...
+
+        class MyOtherRecursiveModel(Model[MyNewRecursiveModel]):
+            ...
+
+    with pytest.raises(RuntimeError):
+
+        class MyNewerRecursiveModel(Model[list['MyNewerForwardRefAlias'] | None]):
+            ...
+
+        MyNewerForwardRefAlias: TypeAlias = MyNewerRecursiveModel
+
+    class MyGenericListModel(Model[list[T | None]], Generic[T]):
+        ...
+
+    class MyNewestForwardRefModel(MyGenericListModel['MyNewestForwardRefAlias']):
+        ...
+
+    MyNewestForwardRefAlias: TypeAlias = MyNewestForwardRefModel
+
+    with pytest.raises(ConfigError):
+        MyNewestForwardRefModel([MyNewestForwardRefModel([MyNewestForwardRefModel()])])
+    MyNewestForwardRefModel.update_forward_refs(MyNewestForwardRefAlias=MyNewestForwardRefAlias)
+
+    MyNewestForwardRefModel([MyNewestForwardRefModel([MyNewestForwardRefModel()])])
 
 
 def test_load() -> None:
@@ -234,13 +273,34 @@ def test_get_inner_outer_type() -> None:
     assert dict_of_strings_to_list_of_ints_model.inner_type() == list
     assert dict_of_strings_to_list_of_ints_model.inner_type(with_args=True) == list[int]
     assert dict_of_strings_to_list_of_ints_model.is_nested_type() is True
-    #
-    # fake_optional_model = Model[Annotated[Optional[dict[str, list[int]]], 'someone else']]()
-    # assert fake_optional_model.outer_type() == dict
-    # assert fake_optional_model.outer_type(with_args=True) == dict[str, list[int]]
-    # assert fake_optional_model.inner_type() == list
-    # assert fake_optional_model.inner_type(with_args=True) == list[int]
-    # assert fake_optional_model.is_nested_type() is True
+
+    tuple_of_different_types_model = Model[tuple[int, str, float]]()
+    assert tuple_of_different_types_model.outer_type() == tuple
+    assert tuple_of_different_types_model.outer_type(with_args=True) == tuple[int, str, float]
+    assert tuple_of_different_types_model.inner_type() == tuple
+    assert tuple_of_different_types_model.inner_type(with_args=True) == tuple[int, str, float]
+    assert tuple_of_different_types_model.is_nested_type() is False
+
+    union_of_different_types_model = Model[int | str | float]()
+    assert union_of_different_types_model.outer_type() == UnionType
+    assert union_of_different_types_model.outer_type(with_args=True) == int | str | float
+    assert union_of_different_types_model.inner_type() == UnionType
+    assert union_of_different_types_model.inner_type(with_args=True) == int | str | float
+    assert union_of_different_types_model.is_nested_type() is False
+
+    outer_optional_model = Model[dict[str, list[int]] | None]()
+    assert outer_optional_model.outer_type() == UnionType
+    assert outer_optional_model.outer_type(with_args=True) == dict[str, list[int]] | None
+    assert outer_optional_model.inner_type() == UnionType
+    assert outer_optional_model.inner_type(with_args=True) == dict[str, list[int]] | None
+    assert outer_optional_model.is_nested_type() is False
+
+    inner_optional_model = Model[dict[str, Optional[list[int]]]]()
+    assert inner_optional_model.outer_type() == dict
+    assert inner_optional_model.outer_type(with_args=True) == dict[str, list[int] | None]
+    assert inner_optional_model.inner_type() == UnionType
+    assert inner_optional_model.inner_type(with_args=True) == list[int] | None
+    assert inner_optional_model.is_nested_type() is True
 
 
 def test_equality_other_models() -> None:
@@ -856,6 +916,18 @@ def test_nested_union_default_value() -> None:
     assert NestedUnionWithSingleTypeTuple().to_data() == ('',)
 
 
+def test_nested_annotated_default_value() -> None:
+    class MyIntModel(Model[Annotated[int, 'This is my cool integer model']]):
+        ...
+
+    assert MyIntModel().to_data() == 0
+
+    class MyIntListModel(Model[Annotated[list[int], 'This is my awesome integer list model']]):
+        ...
+
+    assert MyIntListModel().to_data() == []
+
+
 def test_none_allowed() -> None:
     class NoneModel(Model[None]):
         ...
@@ -878,7 +950,19 @@ def test_none_allowed() -> None:
     class MaybeNumberModelUnionNew(Model[int | None]):
         ...
 
-    for model_cls in [MaybeNumberModelOptional, MaybeNumberModelUnion, MaybeNumberModelUnionNew]:
+    class MaybeNumberModelSubclass(MaybeNumberModelUnionNew):
+        ...
+
+    class MaybeNumberWrapperModel(Model[MaybeNumberModelUnionNew]):
+        ...
+
+    for model_cls in [
+            MaybeNumberModelOptional,
+            MaybeNumberModelUnion,
+            MaybeNumberModelUnionNew,
+            MaybeNumberModelSubclass,
+            MaybeNumberWrapperModel,
+    ]:
         assert model_cls().to_data() is None
         assert model_cls(None).to_data() is None
         assert model_cls(13).to_data() == 13
@@ -901,51 +985,124 @@ def test_none_not_allowed() -> None:
             model_cls(None)
 
 
-def test_list_of_none() -> None:
-    class NoneModel(Model[None]):
+@pc.fixture(scope='function')
+@pc.parametrize(
+    'none_variant, none_variant_target_contents',
+    (
+        (None, None),
+        (Model[None], Model[None](None)),
+        (int | None, None),
+        (list[int] | None, None),
+        (Model[None] | int, Model[None](None)),
+        (Model[None] | dict[int, int], Model[None](None)),
+        (Model[int | None], Model[int | None](None)),
+        (Model[list[int] | None], Model[list[int] | None](None)),
+    ),
+    ids=[
+        'None',
+        'Model[None]',
+        'int | None',
+        'list[int] | None',
+        'Model[None] | int',
+        'Model[None] | dict[int, int]',
+        'Model[int | None]',
+        'Model[list[int] | None]',
+    ],
+)
+def none_variant_and_target_contents(
+    none_variant: None | type[Model],
+    none_variant_target_contents: None | Model,
+) -> tuple[None | type[Model], None | Model]:
+    return none_variant, none_variant_target_contents
+
+
+def test_list_of_none_variants(
+    none_variant_and_target_contents: Annotated[tuple[None | type[Model], None | Model],
+                                                pc.fixture],
+) -> None:
+    none_variant, none_variant_target_contents = none_variant_and_target_contents
+
+    class ListOfNoneVariantModel(Model[list[none_variant]]):  # type: ignore[valid-type]
         ...
 
-    class ListOfNoneModel(Model[list[NoneModel]]):
-        ...
-
-    assert ListOfNoneModel().contents == []
-    assert ListOfNoneModel([]).contents == []
+    assert ListOfNoneVariantModel().contents == []
+    assert ListOfNoneVariantModel([]).contents == []
 
     with pytest.raises(ValidationError):
-        ListOfNoneModel(None)
+        ListOfNoneVariantModel(None)
 
-    assert ListOfNoneModel((None,)).contents == [NoneModel(None)]
-    assert ListOfNoneModel([None]).contents == [NoneModel(None)]
-
-    with pytest.raises(ValidationError):
-        ListOfNoneModel({1: None})
-
-
-def test_tuple_of_none() -> None:
-    class NoneModel(Model[None]):
-        ...
-
-    class TupleOfNoneModel(Model[tuple[NoneModel, ...]]):
-        ...
-
-    assert TupleOfNoneModel().contents == ()
-    assert TupleOfNoneModel(()).contents == ()
+    assert ListOfNoneVariantModel((None,)).contents == [none_variant_target_contents]
+    assert ListOfNoneVariantModel([None]).contents == [none_variant_target_contents]
 
     with pytest.raises(ValidationError):
-        TupleOfNoneModel(None)
-
-    assert TupleOfNoneModel((None,)).contents == (NoneModel(None),)
-    assert TupleOfNoneModel([None]).contents == (NoneModel(None),)
-
-    with pytest.raises(ValidationError):
-        TupleOfNoneModel({1: None})
+        ListOfNoneVariantModel({1: None})
 
 
-def test_dict_of_none() -> None:
-    class NoneModel(Model[None]):
+def test_variable_tuple_of_none_variants(
+    none_variant_and_target_contents: Annotated[tuple[None | type[Model], None | Model],
+                                                pc.fixture],
+) -> None:
+    none_variant, none_variant_target_contents = none_variant_and_target_contents
+
+    class VariableTupleOfNoneModel(Model[tuple[none_variant, ...]]):  # type: ignore[valid-type]
         ...
 
-    class DictOfInt2NoneModel(Model[dict[int, NoneModel]]):
+    assert VariableTupleOfNoneModel().contents == ()
+    assert VariableTupleOfNoneModel(()).contents == ()
+
+    with pytest.raises(ValidationError):
+        VariableTupleOfNoneModel(None)
+
+    assert VariableTupleOfNoneModel((None,)).contents == (none_variant_target_contents,)
+    assert VariableTupleOfNoneModel([None]).contents == (none_variant_target_contents,)
+
+    with pytest.raises(ValidationError):
+        VariableTupleOfNoneModel({1: None})
+
+
+def test_fixed_tuple_of_none_variants(
+    none_variant_and_target_contents: Annotated[tuple[None | type[Model], None | Model],
+                                                pc.fixture],
+) -> None:
+    none_variant, none_variant_target_contents = none_variant_and_target_contents
+
+    class FixedTupleOfNoneModel(Model[tuple[none_variant,
+                                            none_variant]]):  # type: ignore[valid-type]
+        ...
+
+    target_contents = (none_variant_target_contents, none_variant_target_contents)
+
+    assert FixedTupleOfNoneModel().contents == target_contents
+
+    with pytest.raises(ValidationError):
+        assert FixedTupleOfNoneModel(())
+
+    with pytest.raises(ValidationError):
+        FixedTupleOfNoneModel(None)
+
+    with pytest.raises(ValidationError):
+        FixedTupleOfNoneModel((None,))
+
+    with pytest.raises(ValidationError):
+        FixedTupleOfNoneModel([None])
+
+    assert FixedTupleOfNoneModel((None, None)).contents == target_contents
+    assert FixedTupleOfNoneModel([None, None]).contents == target_contents
+
+    with pytest.raises(ValidationError):
+        FixedTupleOfNoneModel([None, 'None'])
+
+    with pytest.raises(ValidationError):
+        FixedTupleOfNoneModel({1: None})
+
+
+def test_dict_of_none_variants_as_val(
+    none_variant_and_target_contents: Annotated[tuple[None | type[Model], None | Model],
+                                                pc.fixture],
+) -> None:
+    none_variant, none_variant_target_contents = none_variant_and_target_contents
+
+    class DictOfInt2NoneModel(Model[dict[int, none_variant]]):  # type: ignore[valid-type]
         ...
 
     assert DictOfInt2NoneModel().contents == {}
@@ -957,11 +1114,114 @@ def test_dict_of_none() -> None:
     with pytest.raises(ValidationError):
         DictOfInt2NoneModel([None])
 
-    assert DictOfInt2NoneModel({1: None}).contents == {1: NoneModel(None)}
-    assert DictOfInt2NoneModel(MappingProxyType({1: None})).contents == {1: NoneModel(None)}
+    assert DictOfInt2NoneModel({1: None}).contents == {1: none_variant_target_contents}
+    assert DictOfInt2NoneModel(MappingProxyType({1: None})).contents == {
+        1: none_variant_target_contents
+    }
+
+    with pytest.raises(ValidationError):
+        DictOfInt2NoneModel({None: 1})
 
     with pytest.raises(ValidationError):
         DictOfInt2NoneModel({'hello': None})
+
+
+def test_dict_of_none_variants_as_key(
+    none_variant_and_target_contents: Annotated[tuple[None | type[Model], None | Model],
+                                                pc.fixture],
+) -> None:
+    none_variant, none_variant_target_contents = none_variant_and_target_contents
+
+    class DictOfNone2IntModel(Model[dict[none_variant, int]]):  # type: ignore[valid-type]
+        ...
+
+    assert DictOfNone2IntModel().contents == {}
+    assert DictOfNone2IntModel({}).contents == {}
+
+    with pytest.raises(ValidationError):
+        DictOfNone2IntModel(None)
+
+    with pytest.raises(ValidationError):
+        DictOfNone2IntModel([None])
+
+    assert DictOfNone2IntModel({None: 1}).contents == {none_variant_target_contents: 1}
+    assert DictOfNone2IntModel(MappingProxyType({None: 1})).contents == {
+        none_variant_target_contents: 1
+    }
+
+    with pytest.raises(ValidationError):
+        DictOfNone2IntModel({1: None})
+
+    with pytest.raises(ValidationError):
+        DictOfNone2IntModel({None: 'hello'})
+
+
+def test_dict_of_none_variants_as_val_and_key(
+    none_variant_and_target_contents: Annotated[tuple[None | type[Model], None | Model],
+                                                pc.fixture],
+) -> None:
+    none_variant, none_variant_target_contents = none_variant_and_target_contents
+
+    class DictOfNone2NoneModel(Model[dict[none_variant, none_variant]]):  # type: ignore[valid-type]
+        ...
+
+    assert DictOfNone2NoneModel().contents == {}
+    assert DictOfNone2NoneModel({}).contents == {}
+
+    with pytest.raises(ValidationError):
+        DictOfNone2NoneModel(None)
+
+    with pytest.raises(ValidationError):
+        DictOfNone2NoneModel([None])
+
+    assert DictOfNone2NoneModel({
+        None: None
+    }).contents == {
+        none_variant_target_contents: none_variant_target_contents
+    }
+    assert DictOfNone2NoneModel(MappingProxyType({None: None})).contents == {
+        none_variant_target_contents: none_variant_target_contents
+    }
+
+    with pytest.raises(ValidationError):
+        DictOfNone2NoneModel({'hello': None})
+
+    with pytest.raises(ValidationError):
+        DictOfNone2NoneModel({None: 'hello'})
+
+
+def test_union_of_none_variants(
+    none_variant_and_target_contents: Annotated[tuple[None | type[Model], None | Model],
+                                                pc.fixture],
+) -> None:
+    none_variant, none_variant_target_contents = none_variant_and_target_contents
+
+    class UnionOfNoneModel(Model[none_variant | int]):  # type: ignore[valid-type]
+        ...
+
+    assert UnionOfNoneModel().contents == none_variant_target_contents
+
+    # with pytest.raises(ValidationError):
+    #     assert UnionOfNoneModel({})
+
+    assert UnionOfNoneModel(None).contents == none_variant_target_contents
+
+    with pytest.raises(ValidationError):
+        UnionOfNoneModel((None,))
+
+    with pytest.raises(ValidationError):
+        UnionOfNoneModel([None])
+
+    with pytest.raises(ValidationError):
+        UnionOfNoneModel([None, None])
+
+    assert UnionOfNoneModel(123).contents == 123
+
+    with pytest.raises(ValidationError):
+        UnionOfNoneModel('None')
+
+    with pytest.raises(ValidationError):
+        UnionOfNoneModel({1: None})
 
 
 # TODO: Look at union + None bug. Perhaps fixed by pydantic v2, but should probably be fixed before
@@ -978,65 +1238,58 @@ def test_model_union_none_known_issue() -> None:
 
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason='Current pydantic v1 hack requires nested types like list and dict to explicitly'
-    'include Optional in their arguments to support parsing of None when the level of '
-    'nesting is 2 or more')
-def test_doubly_nested_list_and_dict_of_none_model_known_issue() -> None:
-    class NoneModel(Model[None]):
+    reason=dedent("""
+        Current pydantic v1 None hack do not support deeply nested lists or dicts (when the
+        level of nesting is 2 or more"""),
+)
+def test_doubly_nested_list_and_dict_of_none_variants_known_issue(
+    none_variant_and_target_contents: Annotated[tuple[None | type[Model], None | Model],
+                                                pc.fixture],
+) -> None:
+    none_variant, none_variant_target_contents = none_variant_and_target_contents
+
+    class ListOfListOfNoneVariant(Model[list[list[none_variant]]]):  # type: ignore[valid-type]
         ...
 
-    class ListOfListOfNoneModel(Model[list[list[NoneModel]]]):
+    assert ListOfListOfNoneVariant() == ListOfListOfNoneVariant([])
+    assert ListOfListOfNoneVariant([]) == ListOfListOfNoneVariant([])
+
+    with pytest.raises(ValidationError):
+        ListOfListOfNoneVariant(None)
+
+    with pytest.raises(ValidationError):
+        ListOfListOfNoneVariant([None])
+
+    assert ListOfListOfNoneVariant([[None]
+                                    ]) == ListOfListOfNoneVariant([[none_variant_target_contents]])
+
+    with pytest.raises(ValidationError):
+        ListOfListOfNoneVariant([{1: None}])
+
+    class DictOfInt2DictOfInt2NoneVariant(Model[dict[
+            int,
+            dict[
+                int,
+                none_variant_target_contents,  # type: ignore[valid-type]
+            ]]]):
         ...
 
-    # Workaround
-    # class ListOfListOfNoneModel(Model[list[list[Optional[NoneModel]]]]):
-    #     ...
-
-    assert ListOfListOfNoneModel() == ListOfListOfNoneModel([])
-    assert ListOfListOfNoneModel([]) == ListOfListOfNoneModel([])
+    DictOfInt2DictOfInt2NoneVariant()
 
     with pytest.raises(ValidationError):
-        ListOfListOfNoneModel(None)
+        DictOfInt2DictOfInt2NoneVariant(None)
 
     with pytest.raises(ValidationError):
-        ListOfListOfNoneModel([None])
-
-    # Workaround fails with this
-    assert ListOfListOfNoneModel([[None]]) == ListOfListOfNoneModel([[NoneModel(None)]])
-
-    # Workaround assert
-    # assert ListOfListOfNoneModel([[None]]).contents == [[None]]
+        DictOfInt2DictOfInt2NoneVariant([None])
 
     with pytest.raises(ValidationError):
-        ListOfListOfNoneModel([{1: None}])
+        DictOfInt2DictOfInt2NoneVariant({1: None})
 
-    class DictOfDictOfInt2NoneModel(Model[dict[int, dict[int, NoneModel]]]):
-        ...
-
-    # Workaround
-    # class DictOfDictOfInt2NoneModel(Model[dict[int, dict[int, Optional[NoneModel]]]]):
-    #     ...
-
-    DictOfDictOfInt2NoneModel()
+    assert DictOfInt2DictOfInt2NoneVariant({1: {2: None}}) == \
+        DictOfInt2DictOfInt2NoneVariant({1: {2: none_variant_target_contents}})
 
     with pytest.raises(ValidationError):
-        DictOfDictOfInt2NoneModel(None)
-
-    with pytest.raises(ValidationError):
-        DictOfDictOfInt2NoneModel([None])
-
-    with pytest.raises(ValidationError):
-        DictOfDictOfInt2NoneModel({1: None})
-
-    # Workaround fails with this
-    assert DictOfDictOfInt2NoneModel({1: {2: None}}) == \
-        DictOfDictOfInt2NoneModel({1: {2: NoneModel(None)}})
-
-    # Workaround assert
-    # assert DictOfDictOfInt2NoneModel({1: {2: None}}).contents == {1: {2: None}}
-
-    with pytest.raises(ValidationError):
-        DictOfDictOfInt2NoneModel({1: {'hello': None}})
+        DictOfInt2DictOfInt2NoneVariant({1: {'hello': None}})
 
 
 # Simpler working test added to illustrate more complex fails related to pydantic issue:
@@ -1069,34 +1322,23 @@ def test_nested_model_classes_none_as_default() -> None:
 
 # Simpler working test added to illustrate more complex fails related to pydantic issue:
 # https://github.com/pydantic/pydantic/issues/3836
-def test_nested_model_classes_inner_generic_none_as_default() -> None:
-    class MaybeNumberModel(Model[Optional[int]]):
-        ...
-
-    BaseT = TypeVar('BaseT', default=MaybeNumberModel)
-
-    class BaseModel(Model[BaseT], Generic[BaseT]):
-        ...
-
-    class OuterMaybeNumberModel(BaseModel[MaybeNumberModel]):
-        ...
-
-    assert OuterMaybeNumberModel().contents == MaybeNumberModel(None)
 
 
-def test_nested_model_classes_inner_optional_generic_none_as_default() -> None:
-    class MaybeNumberModel(Model[Optional[int]]):
-        ...
+def test_nested_model_classes_inner_generic_none_as_default(
+    none_variant_and_target_contents: Annotated[tuple[None | type[Model], None | Model],
+                                                pc.fixture],
+) -> None:
+    none_variant, none_variant_target_contents = none_variant_and_target_contents
 
-    BaseT = TypeVar('BaseT', default=Optional[MaybeNumberModel])
+    BaseT = TypeVar('BaseT')
 
     class BaseModel(Model[BaseT], Generic[BaseT]):
         ...
 
-    class OuterMaybeNumberModel(BaseModel[MaybeNumberModel]):
+    class OuterMaybeNumberModel(BaseModel[none_variant]):
         ...
 
-    assert OuterMaybeNumberModel().contents == MaybeNumberModel(None)
+    assert OuterMaybeNumberModel().contents == none_variant_target_contents
 
 
 def test_union_nested_model_classes_inner_optional_generic_none_as_default() -> None:
@@ -1117,11 +1359,13 @@ def test_union_nested_model_classes_inner_optional_generic_none_as_default() -> 
     assert OuterMaybeNumberModel().contents == MaybeNumberModel(None)
 
 
-def test_union_nested_model_classes_inner_forwardref_generic_list_of_none() -> None:
-    BaseT = TypeVar('BaseT', default=Union['ListModel', 'MaybeNumberModel'])
+def test_union_nested_model_classes_inner_forwardref_generic_list_of_none(
+    none_variant_and_target_contents: Annotated[tuple[None | type[Model], None | Model],
+                                                pc.fixture],
+) -> None:
+    none_variant, none_variant_target_contents = none_variant_and_target_contents
 
-    class MaybeNumberModel(Model[Optional[int]]):
-        ...
+    BaseT = TypeVar('BaseT')
 
     class GenericListModel(Model[list[BaseT]], Generic[BaseT]):
         ...
@@ -1129,12 +1373,16 @@ def test_union_nested_model_classes_inner_forwardref_generic_list_of_none() -> N
     class ListModel(GenericListModel['FullModel']):
         ...
 
-    FullModel: TypeAlias = Union[MaybeNumberModel, ListModel]
+    FullModel: TypeAlias = Union[none_variant, ListModel]
 
     ListModel.update_forward_refs(FullModel=FullModel)
 
     assert ListModel().contents == []
-    assert ListModel([None]).contents == [MaybeNumberModel(None)]
+    assert ListModel([None]).contents == [none_variant_target_contents]
+    assert ListModel([[None]]).contents == [ListModel([none_variant_target_contents])]
+
+    with pytest.raises(ValidationError):
+        ListModel(None)
 
 
 @pytest.mark.skipif(
@@ -1169,6 +1417,82 @@ def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_defa
     ListModel.update_forward_refs(FullModel=FullModel)
 
     assert ListModel().contents == []
+
+
+def test_recursive_list_model_with_none() -> None:
+    class MyMaybeNumbersModel(Model[None | int]):
+        ...
+
+    class MyGenericListModel(Model[list[T]], Generic[T]):
+        ...
+
+    class MyListModel(MyGenericListModel['MyMaybeNumberOrListAlias']):
+        ...
+
+    MyMaybeNumberOrListAlias: TypeAlias = MyMaybeNumbersModel | MyListModel
+
+    MyListModel.update_forward_refs(MyMaybeNumberOrListAlias=MyMaybeNumberOrListAlias)
+
+    with pytest.raises(ValidationError):
+        MyListModel(None)
+
+    assert MyListModel([None]).contents == [MyMaybeNumbersModel(None)]
+
+    assert MyListModel([[None, 3], None]).contents == [
+        MyListModel([MyMaybeNumbersModel(None), MyMaybeNumbersModel(3)]), MyMaybeNumbersModel(None)
+    ]
+
+
+def test_recursive_generic_tuple_model_with_none() -> None:
+    class MyGenericScalarModel(Model[T], Generic[T]):
+        ...
+
+    class MyGenericOnlyTuplesAndScalarsModel(
+            Model[tuple[TypeVarStore[T]
+                        | ForwardRef('MyGenericOnlyTuplesAndScalarsAlias[T]'), ...]],
+            Generic[T]):
+        ...
+
+    MyGenericOnlyTuplesAndScalarsAlias: TypeAlias = \
+        MyGenericScalarModel[T] | MyGenericOnlyTuplesAndScalarsModel[T]
+
+    MyGenericOnlyTuplesAndScalarsModel.update_forward_refs(
+        MyGenericOnlyTuplesAndScalarsAlias=MyGenericOnlyTuplesAndScalarsAlias)
+
+    class MyOnlyTuplesAndIntsModel(Model[MyGenericOnlyTuplesAndScalarsModel[int]]):
+        ...
+
+    with pytest.raises(ValidationError):
+        MyOnlyTuplesAndIntsModel(None)
+
+    with pytest.raises(ValidationError):
+        MyOnlyTuplesAndIntsModel([None])
+
+    with pytest.raises(ValidationError):
+        MyOnlyTuplesAndIntsModel([[1, None], 2])
+
+    assert MyOnlyTuplesAndIntsModel([[1, 2], 3]).contents == \
+           MyGenericOnlyTuplesAndScalarsModel[int](
+             (MyGenericOnlyTuplesAndScalarsModel[int](
+                 (MyGenericScalarModel[int](1),
+                  MyGenericScalarModel[int](2))),
+              MyGenericScalarModel[int](3)))
+
+    class MyOnlyTuplesAndNoneModel(Model[MyGenericOnlyTuplesAndScalarsModel[None]]):
+        ...
+
+    with pytest.raises(ValidationError):
+        MyOnlyTuplesAndNoneModel(None)
+
+    assert MyOnlyTuplesAndNoneModel([None]).contents == \
+           MyGenericOnlyTuplesAndScalarsModel[None]((MyGenericScalarModel[None](None),))
+
+    assert MyOnlyTuplesAndNoneModel([[None, None], None]).contents == \
+           MyGenericOnlyTuplesAndScalarsModel[None](
+             (MyGenericOnlyTuplesAndScalarsModel[None](
+                 (MyGenericScalarModel[None](None),
+                  MyGenericScalarModel[None](None))),
+              MyGenericScalarModel[None](None)))
 
 
 def test_import_export_methods() -> None:
