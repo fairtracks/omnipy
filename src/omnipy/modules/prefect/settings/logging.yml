@@ -60,9 +60,10 @@ handlers:
             log.flow_run_name: magenta
             log.flow_name: bold magenta
 
-    api:
-        level: 0
-        class: prefect.logging.handlers.APILogHandler
+# For some reason, makes the integration tests wait indefinitely
+#    api:
+#        level: 0
+#        class: prefect.logging.handlers.APILogHandler
 
 
     debug:
