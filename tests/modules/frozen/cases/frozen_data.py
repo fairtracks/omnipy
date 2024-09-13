@@ -9,8 +9,8 @@ import pytest_cases as pc
 from modules.general.cases.raw.examples import (e_complex_key_dict,
                                                 e_int_key_dict,
                                                 e_none_key_dict,
-                                                ej_frozendict_iterable_scalar,
-                                                ej_frozendict_iterable_scalar_empty,
+                                                ej_frozendict_iter_scalar,
+                                                ej_frozendict_iter_scalar_empty,
                                                 ej_frozendict_wrong_scalar,
                                                 ej_tuple_iterable_scalar,
                                                 ej_tuple_wrong_scalar,
@@ -28,9 +28,9 @@ from modules.helpers.classes import CaseInfo
 from omnipy.modules.frozen.datasets import (NestedFrozenDictsDataset,
                                             NestedFrozenDictsOrTuplesDataset,
                                             NestedFrozenTuplesDataset)
-from omnipy.modules.frozen.models import (NestedFrozenDictsModel,
-                                          NestedFrozenDictsOrTuplesModel,
-                                          NestedFrozenTuplesModel)
+from omnipy.modules.frozen.models import (NestedFrozenDictsOrTuplesModel,
+                                          NestedFrozenOnlyDictsModel,
+                                          NestedFrozenOnlyTuplesModel)
 from omnipy.modules.frozen.typedefs import FrozenDict
 
 FSK: TypeAlias = int | str | complex  # for keys
@@ -52,6 +52,8 @@ def case_test_frozen_tuples() -> CaseInfo:
         err_ft_type: Type = ej_type
         ft_tuple: tuple[FSV, ...] = f_tuple  # Orig: err_l_tuple. Here obviously supported
         err_ft_tuple_iterable_scalar: tuple = ej_tuple_iterable_scalar
+        ftnp_tuple_wrong_scalar: tuple = ej_tuple_wrong_scalar
+        err_ftp_tuple_wrong_scalar: tuple = ej_tuple_wrong_scalar
         err_ft_frozendict: FrozenDict[FSK, FSV] = (
             field(default_factory=lambda: FrozenDict[FSK, FSV](f_frozendict)))
         ft_list: list[FSV] = field(default_factory=lambda: list(f_list))  # parsing to tuple
@@ -61,8 +63,16 @@ def case_test_frozen_tuples() -> CaseInfo:
 
     return CaseInfo(
         name='test_frozen_tuples',
-        prefix2model_classes={'ft': (NestedFrozenTuplesModel, NestedFrozenTuplesModel[FSV])},
-        prefix2dataset_classes={'ft': (NestedFrozenTuplesDataset, NestedFrozenTuplesDataset[FSV])},
+        prefix2model_classes={
+            'ft_': (NestedFrozenOnlyTuplesModel, NestedFrozenOnlyTuplesModel[FSV]),
+            'ftnp_': (NestedFrozenOnlyTuplesModel,),
+            'ftp_': (NestedFrozenOnlyTuplesModel[FSV],),
+        },
+        prefix2dataset_classes={
+            'ft_': (NestedFrozenTuplesDataset, NestedFrozenTuplesDataset[FSV]),
+            'ftnp_': (NestedFrozenTuplesDataset,),
+            'ftp_': (NestedFrozenTuplesDataset[FSV],),
+        },
         data_points=FrozenTuplesDataPoints(),
     )
 
@@ -79,7 +89,7 @@ def case_test_frozen_tuples_no_type_args() -> CaseInfo:
 
     return CaseInfo(
         name='test_frozen_tuples_no_type_args',
-        prefix2model_classes={'ft': (NestedFrozenTuplesModel,)},
+        prefix2model_classes={'ft': (NestedFrozenOnlyTuplesModel,)},
         prefix2dataset_classes={'ft': (NestedFrozenTuplesDataset,)},
         data_points=FrozenTuplesNoTypeArgsDataPoints(),
     )
@@ -103,7 +113,14 @@ def case_frozen_dicts() -> CaseInfo:
         fd_frozendict: FrozenDict[FSK, FSV] = (
             field(default_factory=lambda: FrozenDict[FSK, FSV](f_frozendict)))
         err_fd_frozendict_iterable_scalar: FrozenDict[FSK, FSV] = (
-            field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_iterable_scalar)))
+            field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_iter_scalar)))
+        err_fd_frozendict_iterable_scalar_empty: FrozenDict[FSK, FSV] = (
+            field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_iter_scalar_empty)))
+        fdnp_frozendict_wrong_scalar: FrozenDict[FSK, FSV] = (
+            field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_wrong_scalar)))
+        err_fdp_frozendict_wrong_scalar: FrozenDict[FSK, FSV] = (
+            field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_wrong_scalar)))
+
         err_fd_list: list[FSV] = field(default_factory=lambda: list(f_list))
         fd_dict: dict[str, FSV] = field(default_factory=lambda: dict(f_dict))
 
@@ -118,9 +135,15 @@ def case_frozen_dicts() -> CaseInfo:
 
     return CaseInfo(
         name='test_frozen_dicts',
-        prefix2model_classes={'fd': (NestedFrozenDictsModel, NestedFrozenDictsModel[FSK, FSV])},
+        prefix2model_classes={
+            'fd_': (NestedFrozenOnlyDictsModel, NestedFrozenOnlyDictsModel[FSK, FSV]),
+            'fdnp_': (NestedFrozenOnlyDictsModel,),
+            'fdp_': (NestedFrozenOnlyDictsModel[FSK, FSV],)
+        },
         prefix2dataset_classes={
-            'fd': (NestedFrozenDictsDataset, NestedFrozenDictsDataset[FSK, FSV])
+            'fd_': (NestedFrozenDictsDataset, NestedFrozenDictsDataset[FSK, FSV]),
+            'fdnp_': (NestedFrozenDictsDataset,),
+            'fdp_': (NestedFrozenDictsDataset[FSK, FSV],),
         },
         data_points=FrozenDictsDataPoints(),
     )
@@ -138,7 +161,8 @@ def case_frozen_dicts_or_tuples() -> CaseInfo:
         ftd_int: int = f_int
         ftd_str: str = f_str
         ftd_complex: complex = f_complex
-        # ftd_type: Type = ej_type
+        ftdnp_type: Type = ej_type
+        err_ftdp_type: Type = ej_type
 
         ftd_tuple: tuple[FSV, ...] = f_tuple
         ftd_frozendict: FrozenDict[FSK, FSV] = (
@@ -159,59 +183,16 @@ def case_frozen_dicts_or_tuples() -> CaseInfo:
     return CaseInfo(
         name='test_frozen_dicts_or_tuples',
         prefix2model_classes={
-            'ftd': (NestedFrozenDictsOrTuplesModel, NestedFrozenDictsOrTuplesModel[FSK, FSV])
+            'ftd_': (NestedFrozenDictsOrTuplesModel, NestedFrozenDictsOrTuplesModel[FSK, FSV]),
+            'ftdnp_': (NestedFrozenDictsOrTuplesModel,),
+            'ftdp_': (NestedFrozenDictsOrTuplesModel[FSK, FSV],),
         },
         prefix2dataset_classes={
-            'ftd': (NestedFrozenDictsOrTuplesDataset, NestedFrozenDictsOrTuplesDataset[FSK, FSV])
+            'ftd_': (NestedFrozenDictsOrTuplesDataset, NestedFrozenDictsOrTuplesDataset[FSK, FSV]),
+            'ftdnp_': (NestedFrozenDictsOrTuplesDataset,),
+            'ftdp_': (NestedFrozenDictsOrTuplesDataset[FSK, FSV],),
         },
         data_points=FrozenDictsOrTuplesDataPoints(),
-    )
-
-
-@pc.case(id='test_frozen_dicts_or_tuples_no_type_args', tags=[])
-def case_frozen_dicts_or_tuples_no_type_args() -> CaseInfo:
-    @dataclass
-    class FrozenDictsOrTuplesNoTypeArgsDataPoints:
-        #
-        # NestedFrozenDictsOrTuplesModel
-        #
-
-        ftd_type: Type = ej_type
-
-    return CaseInfo(
-        name='test_frozen_dicts_or_tuples_no_type_args',
-        prefix2model_classes={'ftd': (NestedFrozenDictsOrTuplesModel,)},
-        prefix2dataset_classes={'ftd': (NestedFrozenDictsOrTuplesDataset,)},
-        data_points=FrozenDictsOrTuplesNoTypeArgsDataPoints(),
-    )
-
-
-# TODO: Revisit case_frozen_dicts_or_tuples_known_issue(), case_nested_frozen_tuples_known_issue(),
-#       case_nested_frozen_dicts_known_issue() with Python 3.13. Should be fixable by PEP649 and
-#       support for this in pydantic.
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason=dedent("""\
-      Known issue due to failure of getting access to TypeAlias as string from runtime pydantic,
-      here, the `_FrozenNoDictsUnion` TypeAlias. Stops propagation of the type variables to the
-      `_FrozenScalarM` class. Same issue as case_nested_frozen_tuples_known_issue() and
-      case_nested_frozen_dicts_known_issue().
-      """))
-@pc.case(id='test_frozen_dicts_or_tuples_known_issue', tags=[])
-def case_frozen_dicts_or_tuples_known_issue() -> CaseInfo:
-    @dataclass
-    class FrozenDictsOrTuplesKnownIssueDataPoints:
-        #
-        # NestedFrozenDictsOrTuplesModel[FSK, FSV]
-        #
-
-        ftd_type: Type = ej_type
-
-    return CaseInfo(
-        name='test_frozen_dicts_or_tuples_known_issue',
-        prefix2model_classes={'ftd': (NestedFrozenDictsOrTuplesModel[FSK, FSV],)},
-        prefix2dataset_classes={'ftd': (NestedFrozenDictsOrTuplesDataset[FSK, FSV])},
-        data_points=FrozenDictsOrTuplesKnownIssueDataPoints(),
     )
 
 
@@ -280,12 +261,12 @@ def case_nested_frozen_dicts_or_tuples() -> CaseInfo:
     return CaseInfo(
         name='test_nested_frozen_dicts_or_tuples',
         prefix2model_classes={
-            'nft': (NestedFrozenDictsOrTuplesModel, NestedFrozenDictsOrTuplesModel[FSK, FSV]),
-            'nfd': (NestedFrozenDictsOrTuplesModel, NestedFrozenDictsOrTuplesModel[FSK, FSV]),
+            'nft_': (NestedFrozenDictsOrTuplesModel, NestedFrozenDictsOrTuplesModel[FSK, FSV]),
+            'nfd_': (NestedFrozenDictsOrTuplesModel, NestedFrozenDictsOrTuplesModel[FSK, FSV]),
         },
         prefix2dataset_classes={
-            'nft': (NestedFrozenDictsOrTuplesDataset, NestedFrozenDictsOrTuplesDataset[FSK, FSV]),
-            'nfd': (NestedFrozenDictsOrTuplesDataset, NestedFrozenDictsOrTuplesDataset[FSK, FSV]),
+            'nft_': (NestedFrozenDictsOrTuplesDataset, NestedFrozenDictsOrTuplesDataset[FSK, FSV]),
+            'nfd_': (NestedFrozenDictsOrTuplesDataset, NestedFrozenDictsOrTuplesDataset[FSK, FSV]),
         },
         data_points=NestedFrozenDictsOrTuplesDataPoints(),
     )
@@ -300,30 +281,38 @@ def case_nested_frozen_tuples() -> CaseInfo:
         # NestedFrozenTuplesModel, NestedFrozenTuplesModel[FSV]
         #
 
-        n_frozen_tuples_list_of_none: list[None] = \
+        nft_list_of_none: list[None] = \
             field(default_factory=lambda: [f_none])
-        err_n_frozen_tuples_dict_of_none: dict[str, None] = \
+        err_nft_dict_of_none: dict[str, None] = \
             field(default_factory=lambda: {'a': f_none})
-        n_frozen_tuples_two_levels: list[FSV | list[FSV]] = \
+        nftnp_tuple_wrong_scalar: tuple = ej_tuple_wrong_scalar
+        err_nftp_tuple_wrong_scalar: tuple = ej_tuple_wrong_scalar
+        nft_two_levels: list[FSV | list[FSV]] = \
             field(default_factory=lambda: list(f_list + [list(f_list)]))
-        n_frozen_tuples_three_levels: list[FSV | list[FSV | list[FSV]]] = \
+        nft_three_levels: list[FSV | list[FSV | list[FSV]]] = \
             field(default_factory=lambda: list(f_list + [list(f_list), [list(f_list)]]))
-        err_n_frozen_tuples_with_dict_of_none_level_two: list[dict[str, None]] = \
+        err_nft_with_dict_of_none_level_two: list[dict[str, None]] = \
             field(default_factory=lambda: [{'a': f_none}])
-        err_n_frozen_tuples_with_dict_level_two: list[FSV | dict[str, FSV]] = \
+        err_nft_with_dict_level_two: list[FSV | dict[str, FSV]] = \
             field(default_factory=lambda: list(f_list + [dict(f_dict)]))
-        err_n_frozen_tuples_with_dict_level_three: list[FSV | list[FSV | dict[str, FSV]]] = \
+        err_nft_with_dict_level_three: list[FSV | list[FSV | dict[str, FSV]]] = \
             field(default_factory=lambda: list(f_list + [list(f_list + [dict(f_dict)])]))
-        n_frozen_tuples_with_wrong_scalar_level_three: list[FSV | list[FSV | dict[str, FSV]]] = \
+        nftnp_with_wrong_scalar_level_three: list[FSV | list[FSV | dict[str, FSV]]] = \
+            field(default_factory=lambda: list(f_list + [list(f_list + [ej_tuple_wrong_scalar])]))
+        err_nftp_with_wrong_scalar_level_three: list[FSV | list[FSV | dict[str, FSV]]] = \
             field(default_factory=lambda: list(f_list + [list(f_list + [ej_tuple_wrong_scalar])]))
 
     return CaseInfo(
         name='test_nested_frozen_tuples',
         prefix2model_classes={
-            'n_frozen_tuples': (NestedFrozenTuplesModel, NestedFrozenTuplesModel[FSV])
+            'nft_': (NestedFrozenOnlyTuplesModel, NestedFrozenOnlyTuplesModel[FSV]),
+            'nftnp_': (NestedFrozenOnlyTuplesModel,),
+            'nftp_': (NestedFrozenOnlyTuplesModel[FSV],),
         },
         prefix2dataset_classes={
-            'n_frozen_tuples': (NestedFrozenTuplesDataset, NestedFrozenTuplesDataset[FSV])
+            'nft_': (NestedFrozenTuplesDataset, NestedFrozenTuplesDataset[FSV]),
+            'nftnp_': (NestedFrozenTuplesDataset,),
+            'nftp_': (NestedFrozenTuplesDataset[FSV],),
         },
         data_points=NestedFrozenTuplesDataPoints(),
     )
@@ -338,140 +327,38 @@ def case_nested_frozen_dicts() -> CaseInfo:
         # NestedFrozenDictsModel, NestedFrozenDictsModel[FSK, FSV]
         #
 
-        err_n_frozen_dicts_list_of_none: list[None] = \
+        err_nfd_list_of_none: list[None] = \
             field(default_factory=lambda: [f_none])
-        n_frozen_dicts_dict_of_none: dict[str, None] = \
+        nfd_dict_of_none: dict[str, None] = \
             field(default_factory=lambda: {'a': f_none})
-        n_frozen_dicts_two_levels: dict[str, dict[str, FSV]] = \
+        nfd_two_levels: dict[str, dict[str, FSV]] = \
             field(default_factory=lambda: {'a': dict(f_dict), 'b': dict(f_dict)})
-        n_frozen_dicts_three_levels: dict[str, dict[str, FSV | dict[str, FSV]]] = \
+        nfd_three_levels: dict[str, dict[str, FSV | dict[str, FSV]]] = \
             field(default_factory=lambda: {'a': dict(f_dict), 'b': {'x': dict(f_dict)}})
-        err_n_frozen_dicts_with_list_of_none_level_two: dict[str, list[None]] = \
+        err_nfd_with_list_of_none_level_two: dict[str, list[None]] = \
             field(default_factory=lambda: {'a': [f_none]})
-        err_n_frozen_dicts_with_list_level_two: dict[str, dict[str, FSV] | list[FSV]] = \
+        err_nfd_with_list_level_two: dict[str, dict[str, FSV] | list[FSV]] = \
             field(default_factory=lambda: {'a': dict(f_dict), 'b': list(f_list)})
-        err_n_frozen_dicts_with_list_level_three: dict[str, dict[str, FSV | list[FSV]]] = \
+        err_nfd_with_list_level_three: dict[str, dict[str, FSV | list[FSV]]] = \
             field(default_factory=lambda: {'a': dict(f_dict), 'b': {'x': list(f_list)}})
+        nfdnp_with_wrong_scalar_level_three: dict[str, dict[str, FSV | list[FSV]]] = \
+            field(default_factory=lambda:
+            {'a': dict(f_dict), 'b': {'x': ej_frozendict_wrong_scalar}})
+        err_nfdp_with_wrong_scalar_level_three: dict[str, dict[str, FSV | list[FSV]]] = \
+            field(default_factory=lambda:
+            {'a': dict(f_dict), 'b': {'x': ej_frozendict_wrong_scalar}})
 
     return CaseInfo(
         name='test_nested_frozen_dicts',
         prefix2model_classes={
-            'n_frozen_dicts': (NestedFrozenDictsModel, NestedFrozenDictsModel[FSK, FSV])
+            'nfd_': (NestedFrozenOnlyDictsModel, NestedFrozenOnlyDictsModel[FSK, FSV]),
+            'nfdnp_': (NestedFrozenOnlyDictsModel,),
+            'nfdp_': (NestedFrozenOnlyDictsModel[FSK, FSV],),
         },
         prefix2dataset_classes={
-            'n_frozen_dicts': (NestedFrozenDictsDataset, NestedFrozenDictsDataset[FSK, FSV]),
+            'nfd_': (NestedFrozenDictsDataset, NestedFrozenDictsDataset[FSK, FSV]),
+            'nfdnp_': (NestedFrozenDictsDataset,),
+            'nfdp_': (NestedFrozenDictsDataset[FSK, FSV],),
         },
         data_points=NestedFrozenDictsDataPoints(),
-    )
-
-
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason=dedent("""\
-      Known issue due to failure of getting access to TypeAlias as string from runtime pydantic,
-      here, the `_FrozenNoDictsUnion` TypeAlias. Stops propagation of the type variables to the
-      `_FrozenScalarM` class. Same issue as case_frozen_dicts_or_tuples_known_issue() and
-      case_nested_frozen_dicts_known_issue().
-      """))
-@pc.case(id='test_(nested)_frozen_tuples_known_issue', tags=[])
-def case_nested_frozen_tuples_known_issue() -> CaseInfo:
-    @dataclass
-    class NestedFrozenTuplesKnownIssueDataPoints:
-        #
-        # NestedFrozenTuplesModel[FSV]
-        #
-
-        err_ft_tuple_wrong_scalar: tuple = ej_tuple_wrong_scalar
-        err_n_frozen_tuples_with_wrong_scalar_level_three: list[FSV | list[FSV | dict[str, FSV]]] \
-            = field(default_factory=lambda: list(f_list + [list(f_list + [ej_tuple_wrong_scalar])]))
-
-    return CaseInfo(
-        name='test_(nested)_frozen_tuples_known_issue',
-        prefix2model_classes={
-            'ft': (NestedFrozenTuplesModel[FSV],),
-            'n_frozen_tuples': (NestedFrozenTuplesModel[FSV],)
-        },
-        prefix2dataset_classes={'ft': ()},
-        data_points=NestedFrozenTuplesKnownIssueDataPoints(),
-    )
-
-
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason=dedent("""\
-      Here the outer tuple is empty, generating an empty dict. Should be fixed in pydantic v2.
-      """))
-@pc.case(id='test_(nested)_frozen_dicts_no_type_args_known_issue', tags=[])
-def case_frozen_dicts_no_type_args_known_issue() -> CaseInfo:
-    @dataclass
-    class NestedFrozenDictsNoTypeArgsKnownIssueDataPoints:
-        #
-        # NestedFrozenDictsModel
-        #
-
-        # Note: Works as it should, only here to not fail case_nested_frozen_dicts until
-        #       NestedFrozenDictsModel[FSK, FSV] is fixed.
-        fd_frozendict_wrong_scalar: FrozenDict = \
-            field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_wrong_scalar))
-        n_frozen_dicts_with_wrong_scalar_level_three: dict[str, dict[str, FSV | list[FSV]]] = \
-            field(default_factory=lambda:
-                  {'a': dict(f_dict), 'b': {'x': ej_frozendict_wrong_scalar}})
-
-        # TODO: Check if pydantic v2 fixes this. Real error due to init of dict by (here empty)
-        #  sequence of tuples. Same error in case_frozen_dicts_known_issue below
-        err_fd_frozendict_iterable_scalar_empty: FrozenDict = \
-            field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_iterable_scalar_empty))
-
-    return CaseInfo(
-        name='test_(nested)_frozen_dicts_no_type_args_known_issue',
-        prefix2model_classes={
-            'fd': (NestedFrozenDictsModel,),
-            'n_frozen_dicts': (NestedFrozenDictsModel,),
-        },
-        prefix2dataset_classes={
-            'fd': (NestedFrozenDictsDataset,),
-            'n_frozen_dicts': (NestedFrozenDictsDataset,),
-        },
-        data_points=NestedFrozenDictsNoTypeArgsKnownIssueDataPoints(),
-    )
-
-
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason=dedent("""\
-      Known issue due to failure of getting access to TypeAlias as string from runtime pydantic,
-      here, the `_FrozenNoDictsUnion` TypeAlias. Stops propagation of the type variables to the
-      `_FrozenScalarM` class. Same issue as case_frozen_dicts_or_tuples_known_issue() and
-      case_nested_frozen_tuples_known_issue().
-      """))
-@pc.case(id='test_(nested)_frozen_dicts_known_issue', tags=[])
-def case_nested_frozen_dicts_known_issue() -> CaseInfo:
-    @dataclass
-    class NestedFrozenDictsKnownIssueDataPoints:
-        #
-        # NestedFrozenDictsModel[FSK, FSV]
-        #
-
-        # Due to issues propagating type arguments to `_FrozenScalarM`.
-        err_fd_frozendict_wrong_scalar: FrozenDict = \
-            field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_wrong_scalar))
-        err_n_frozen_dicts_with_wrong_scalar_level_three: dict[str, dict[str, FSV | list[FSV]]] = \
-            field(default_factory=lambda:
-                  {'a': dict(f_dict), 'b': {'x': ej_frozendict_wrong_scalar}})
-
-        # Same error as in case_frozen_dicts_no_type_args_known_issue
-        err_fd_frozendict_iterable_scalar_empty: FrozenDict = \
-            field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_iterable_scalar_empty))
-
-    return CaseInfo(
-        name='test_(nested)_frozen_dicts_known_issue',
-        prefix2model_classes={
-            'fd': (NestedFrozenDictsModel[FSK, FSV],),
-            'n_frozen_dicts': (NestedFrozenDictsModel[FSK, FSV],)
-        },
-        prefix2dataset_classes={
-            'fd': (NestedFrozenDictsDataset[FSK, FSV],),
-            'n_frozen_dicts': (NestedFrozenDictsDataset[FSK, FSV],)
-        },
-        data_points=NestedFrozenDictsKnownIssueDataPoints(),
     )

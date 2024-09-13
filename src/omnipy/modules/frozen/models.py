@@ -1,12 +1,12 @@
-from typing import Generic, Hashable, TypeAlias
+from types import MappingProxyType
+from typing import Generic, TypeAlias
 
-from typing_extensions import TypeVar
+from typing_extensions import ForwardRef, TypeVar
 
+from omnipy.data.helpers import DoubleTypeVarStore, TypeVarStore
 from omnipy.data.model import Model
-
-from ...data.helpers import TypeVarStore
-from ..general.models import NotIterableExceptStrOrBytesModel
-from .typedefs import FrozenDict, KeyT, ValT
+from omnipy.modules.frozen.typedefs import FrozenDict, KeyT, ValT
+from omnipy.modules.general.models import NotIterableExceptStrOrBytesModel
 
 # TODO: Follow pydantic topic https://github.com/pydantic/pydantic/issues/6868 on MappingProxyType.
 #       Used way too much energy to implement (and test) recursive frozen models, only to discover
@@ -25,27 +25,26 @@ from .typedefs import FrozenDict, KeyT, ValT
 # Private models
 #
 
-# Basic building block models
-
-_FrozenBaseT = TypeVar('_FrozenBaseT', default='_FrozenAnyUnion')
-
-# class _FrozenScalarM(NotIterableExceptStrOrBytesModel):
-#     ...
-
 
 class _FrozenScalarM(Model[ValT], Generic[ValT]):
     _parse_data = NotIterableExceptStrOrBytesModel._parse_data
 
 
-class _FrozenTupleBaseM(Model[tuple[_FrozenBaseT, ...]], Generic[_FrozenBaseT]):
+class _FrozenScalarWithTwoParamsM(Model[ValT], Generic[KeyT, ValT]):
     ...
 
 
-class _FrozenDictBaseM(Model[FrozenDict[KeyT, _FrozenBaseT]], Generic[KeyT, _FrozenBaseT]):
-    ...
+# class _FrozenTupleBaseM(Model[tuple[_FrozenBaseT, ...]], Generic[_FrozenBaseT]):
+#     ...
+
+# class _FrozenDictBaseM(Model[FrozenDict[KeyT, _FrozenBaseT]], Generic[KeyT, _FrozenBaseT]):
+#     ...
 
 
-class _FrozenTupleM(_FrozenTupleBaseM['_FrozenAnyUnion'], Generic[ValT]):
+class _FrozenTupleM(Model[tuple[DoubleTypeVarStore[KeyT, ValT]
+                                | ForwardRef('_FrozenAnyUnion[KeyT, ValT]'),
+                                ...]],
+                    Generic[KeyT, ValT]):
     ...
 
 
@@ -54,11 +53,17 @@ class _FrozenTupleM(_FrozenTupleBaseM['_FrozenAnyUnion'], Generic[ValT]):
 #     ...
 
 
-class _FrozenDictM(_FrozenDictBaseM[str | Hashable, '_FrozenAnyUnion'], Generic[KeyT, ValT]):
-    ...
+class _FrozenDictM(Model[FrozenDict[KeyT, TypeVarStore[ValT]
+                                    | ForwardRef('_FrozenAnyUnion')]],
+                   Generic[KeyT, ValT]):
+    def to_data(self) -> dict[KeyT, ValT]:
+        to_data = super().to_data()
+        return MappingProxyType({key: val.to_data() for key, val in to_data.items()})
 
 
-class _FrozenNoDictsM(_FrozenTupleBaseM['_FrozenNoDictsUnion'], Generic[ValT]):
+class _FrozenNoDictsM(Model[tuple[TypeVarStore[ValT]
+                                  | ForwardRef('_FrozenNoDictsUnion[ValT]'), ...]],
+                      Generic[ValT]):
     ...
 
 
@@ -66,22 +71,35 @@ class _FrozenNoDictsM(_FrozenTupleBaseM['_FrozenNoDictsUnion'], Generic[ValT]):
 #     ...
 
 
-class _FrozenNoTuplesM(_FrozenDictBaseM[str | Hashable, '_FrozenNoTuplesUnion'],
+class _FrozenNoTuplesM(Model[FrozenDict[KeyT,
+                                        DoubleTypeVarStore[KeyT, ValT]
+                                        | ForwardRef('_FrozenNoTuplesUnion')]],
                        Generic[KeyT, ValT]):
-    ...
+    def to_data(self) -> dict[KeyT, ValT]:
+        to_data = super().to_data()
+        return MappingProxyType({key: val.to_data() for key, val in to_data.items()})
 
 
 # TypeAliases
 
 _FrozenAnyUnion: TypeAlias = \
-    TypeVarStore[KeyT] | _FrozenScalarM[ValT]| _FrozenTupleM[ValT] | _FrozenDictM[KeyT, ValT]
-_FrozenNoDictsUnion: TypeAlias = _FrozenNoDictsM[ValT] | _FrozenScalarM[ValT]
-_FrozenNoTuplesUnion: TypeAlias = _FrozenNoTuplesM[KeyT, ValT] | _FrozenScalarM[ValT]
+    DoubleTypeVarStore[KeyT, ValT] | _FrozenScalarM[ValT] | _FrozenTupleM[KeyT, ValT] | _FrozenDictM[KeyT, ValT]
+_FrozenTupleM.update_forward_refs()
+_FrozenDictM.update_forward_refs()
+_FrozenNoDictsUnion: TypeAlias = TypeVarStore[ValT] | _FrozenScalarM[ValT] | _FrozenNoDictsM[ValT]
+_FrozenNoTuplesUnion: TypeAlias = DoubleTypeVarStore[
+    KeyT, ValT] | _FrozenScalarM[ValT] | _FrozenNoTuplesM[KeyT, ValT]
+
+
+class _FrozenAnyUnionM(Model[_FrozenAnyUnion[KeyT, ValT]], Generic[KeyT, ValT]):
+    ...
+
 
 # Basic models needs to update their forward_refs with type aliases declared above
 
 _FrozenTupleM.update_forward_refs()
 _FrozenDictM.update_forward_refs()
+_FrozenAnyUnionM.update_forward_refs()
 _FrozenNoDictsM.update_forward_refs()
 _FrozenNoTuplesM.update_forward_refs()
 
@@ -90,7 +108,7 @@ _FrozenNoTuplesM.update_forward_refs()
 #
 
 
-class NestedFrozenDictsOrTuplesModel(Model[_FrozenAnyUnion], Generic[KeyT, ValT]):
+class NestedFrozenDictsOrTuplesModel(Model[_FrozenAnyUnionM[KeyT, ValT]], Generic[KeyT, ValT]):
     """
     Recursive model for nested immutable containers (FrozenDict and tuples). Not functional.
 
@@ -99,7 +117,7 @@ class NestedFrozenDictsOrTuplesModel(Model[_FrozenAnyUnion], Generic[KeyT, ValT]
     """
 
 
-class NestedFrozenTuplesModel(Model[_FrozenNoDictsM[ValT]], Generic[ValT]):
+class NestedFrozenOnlyTuplesModel(Model[_FrozenNoDictsM[ValT]], Generic[ValT]):
     """
     Recursive model for nested tuples.
 
@@ -108,7 +126,7 @@ class NestedFrozenTuplesModel(Model[_FrozenNoDictsM[ValT]], Generic[ValT]):
     """
 
 
-class NestedFrozenDictsModel(Model[_FrozenNoTuplesM[KeyT, ValT]], Generic[KeyT, ValT]):
+class NestedFrozenOnlyDictsModel(Model[_FrozenNoTuplesM[KeyT, ValT]], Generic[KeyT, ValT]):
     """
     Recursive model for nested FrozenDicts.
 

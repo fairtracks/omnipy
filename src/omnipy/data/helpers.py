@@ -4,10 +4,16 @@ from typing import Generic, NamedTuple
 from typing_extensions import TypeVar
 
 T = TypeVar('T')
+U = TypeVar('U')
 
 
 class TypeVarStore(Generic[T]):
     def __init__(self, t: T) -> None:
+        raise ValueError()
+
+
+class DoubleTypeVarStore(Generic[T, U]):
+    def __init__(self, t: T | U) -> None:
         raise ValueError()
 
 

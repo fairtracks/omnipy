@@ -7,7 +7,8 @@ from typing_extensions import TypeVar
 from omnipy import NotIterableExceptStrOrBytesModel
 
 KeyT = TypeVar('KeyT', default=str | Hashable)
-ValT = TypeVar('ValT', bound=NotIterableExceptStrOrBytesModel | object, default=None)
+ValT = TypeVar(
+    'ValT', bound=NotIterableExceptStrOrBytesModel, default=NotIterableExceptStrOrBytesModel)
 
 
 # Unfortunately, MappingProxyType is declared as a final class, which means it cannot be subclassed.

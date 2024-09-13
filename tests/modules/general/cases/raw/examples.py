@@ -11,8 +11,8 @@ f_tuple = (f_none, f_int, f_str, f_complex)
 ej_tuple_iterable_scalar = (f_int, f_str, {})
 ej_tuple_wrong_scalar = (f_int, f_str, ej_type)
 f_frozendict = FrozenDict({'a': f_none, 1: f_int, 1 + 2j: f_str, 'd': f_complex})
-ej_frozendict_iterable_scalar = {'a': f_none, 1: f_int, 1 + 2j: f_str, 'd': (1, 2)}
-ej_frozendict_iterable_scalar_empty = {'a': f_none, 1: f_int, 1 + 2j: f_str, 'd': ()}
+ej_frozendict_iter_scalar = {'a': f_none, 1: f_int, 1 + 2j: f_str, 'd': (1, 2)}
+ej_frozendict_iter_scalar_empty = {'a': f_none, 1: f_int, 1 + 2j: f_str, 'd': ()}
 ej_frozendict_wrong_scalar = {'a': f_none, 'b': f_int, 'c': f_str, 'd': ej_type}
 f_set = {f_none, f_int, f_str, f_complex}
 
