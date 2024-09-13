@@ -303,7 +303,7 @@ def test_is_union() -> None:
     assert is_union(Union[Union[str, int], None]) is True
     assert is_union(Union[Union[str, None], int]) is True
 
-    assert is_union(Union[str, int] | None) is True  # type: ignore[operator]
+    assert is_union(Union[str, int] | None) is True
     assert is_union(Union[str, None] | int) is True
     assert is_union(Union) is True
 
@@ -320,6 +320,7 @@ def test_is_optional() -> None:
     assert is_optional(Union[str, NoneType]) is True
     assert is_optional(str | None) is True
     assert is_optional(str | NoneType) is True
+    assert is_optional(str | Literal[None]) is True
 
     assert is_optional(str | int) is False
     assert is_optional(Union[str, int]) is False
@@ -328,25 +329,35 @@ def test_is_optional() -> None:
 
     assert is_optional(Union[str, int, None]) is True
     assert is_optional(Union[str, int, NoneType]) is True
+    assert is_optional(Union[str, int, Literal[None]]) is True
     assert is_optional(Union[str, None, int]) is True
     assert is_optional(Union[str, NoneType, int]) is True
+    assert is_optional(Union[str, Literal[None], int]) is True
 
     assert is_optional(Union[Union[str, int], None]) is True
     assert is_optional(Union[Union[str, int], NoneType]) is True
-    assert is_optional(Union[Union[str, NoneType], int]) is True
+    assert is_optional(Union[Union[str, int], Literal[None]]) is True
     assert is_optional(Union[Union[str, None], int]) is True
+    assert is_optional(Union[Union[str, NoneType], int]) is True
+    assert is_optional(Union[Union[str, Literal[None]], int]) is True
 
-    assert is_optional(Union[str, int] | None) is True  # type: ignore[operator]
-    assert is_optional(Union[str, int] | NoneType) is True  # type: ignore[operator]
-    assert is_optional(Union[str, NoneType] | int) is True
+    assert is_optional(Union[str, int] | None) is True
+    assert is_optional(Union[str, int] | NoneType) is True
+    assert is_optional(Union[str, int] | Literal[None]) is True
     assert is_optional(Union[str, None] | int) is True
+    assert is_optional(Union[str, NoneType] | int) is True
+    assert is_optional(Union[str, Literal[None]] | int) is True
 
     assert is_optional(str | int | None) is True
     assert is_optional(str | int | NoneType) is True
+    assert is_optional(str | int | Literal[None]) is True
     assert is_optional(str | None | int) is True
     assert is_optional(str | NoneType | int) is True
+    assert is_optional(str | Literal[None] | int) is True
 
     assert is_optional(None) is False
+    assert is_optional(NoneType) is False
+    assert is_optional(Literal[None]) is False
 
 
 def test_is_strict_subclass() -> None:

@@ -236,7 +236,7 @@ def is_union(cls_or_type: type | UnionType | None | object) -> bool:
 
 
 def is_optional(cls_or_type: type | UnionType | None | object) -> bool:
-    return is_union(cls_or_type) and type(None) in get_args(cls_or_type)
+    return is_union(cls_or_type) and any(is_none_type(arg) for arg in get_args(cls_or_type))
 
 
 def all_equals(first, second) -> bool:
