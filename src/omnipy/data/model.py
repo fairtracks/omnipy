@@ -38,7 +38,7 @@ from pydantic.typing import is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass, sequence_like
 from typing_extensions import get_original_bases, MutableSequence, TypeVar
 
-from omnipy.api.exceptions import ParamException, OmnipyNoneIsNotAllowedError
+from omnipy.api.exceptions import OmnipyNoneIsNotAllowedError, ParamException
 from omnipy.api.protocols.private.util import IsSnapshotWrapper
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta

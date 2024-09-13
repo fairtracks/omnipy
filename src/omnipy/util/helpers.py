@@ -33,8 +33,6 @@ from typing import (_SpecialForm,
                     Union)
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
-from isort import place_module
-from isort.sections import STDLIB
 from pydantic import BaseModel, ValidationError
 from pydantic.generics import GenericModel
 from pydantic.typing import is_none_type

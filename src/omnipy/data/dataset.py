@@ -242,14 +242,13 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
         return cast(ModelField, cls.__fields__.get(DATA_KEY))
 
     @classmethod
-    def get_model_class(cls) -> Type[Model]:
+    def get_model_class(cls) -> type[Model] | None:
         """
         Returns the concrete Model class used for all data files in the dataset, e.g.:
         `Model[list[int]]`
         :return: The concrete Model class used for all data files in the dataset
         """
-        model_type = cls._get_data_field().type_
-        return model_type
+        return cls._get_data_field().type_
 
     @staticmethod
     def _raise_no_model_exception() -> None:

@@ -4,7 +4,7 @@ from typing import Generic, Hashable, Sequence
 
 from typing_extensions import TypeVar
 
-from omnipy import NotIterableExceptStrOrBytesModel
+from ..general.models import NotIterableExceptStrOrBytesModel
 
 KeyT = TypeVar('KeyT', default=str | Hashable)
 ValT = TypeVar(

@@ -772,7 +772,6 @@ def test_ref_count_memo_dict_deepcopy_tuple_of_list_keepalive() -> None:
 
 def test_ref_count_memo_dict_deepcopy_pydantic_model_with_parsing() -> None:
     ref_count_memo_dict = RefCountMemoDict[tuple]()
-    from omnipy import Model
 
     class MyUpperStrModel(Model[str]):
         @classmethod

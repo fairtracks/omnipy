@@ -2,9 +2,9 @@ from typing import Annotated
 
 import pytest
 
-from omnipy import PandasModel
 from omnipy.modules.json.typedefs import JsonListOfDictsOfScalars
 from omnipy.modules.pandas import pd
+from omnipy.modules.pandas.models import PandasModel
 
 
 @pytest.fixture

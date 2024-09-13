@@ -65,9 +65,9 @@ _JsonAnyUnion: TypeAlias = JsonScalar | _JsonAnyListM | _JsonAnyDictM
 _JsonOnlyListsUnion: TypeAlias = JsonScalar | _JsonOnlyListsM
 _JsonOnlyDictsUnion: TypeAlias = JsonScalar | _JsonOnlyDictsM
 
-_JsonListOfScalarsM: TypeAlias = _JsonListM[JsonScalar]
+_JsonListOfScalars: TypeAlias = _JsonListM[JsonScalar]
 
-_JsonDictOfScalarsM: TypeAlias = _JsonDictM[JsonScalar]
+_JsonDictOfScalars: TypeAlias = _JsonDictM[JsonScalar]
 
 # Basic models needs to update their forward_refs with type aliases declared above
 
@@ -184,7 +184,7 @@ class JsonListModel(Model[_JsonAnyListM]):
     """
 
 
-class JsonListOfScalarsModel(Model[_JsonListOfScalarsM]):
+class JsonListOfScalarsModel(Model[_JsonListOfScalars]):
     ...
 
 
@@ -192,7 +192,7 @@ class JsonListOfListsModel(Model[_JsonListM[_JsonAnyListM]]):
     ...
 
 
-class JsonListOfListsOfScalarsModel(Model[_JsonListM[_JsonListOfScalarsM]]):
+class JsonListOfListsOfScalarsModel(Model[_JsonListM[_JsonListOfScalars]]):
     ...
 
 
@@ -200,7 +200,7 @@ class JsonListOfDictsModel(Model[_JsonListM[_JsonAnyDictM]]):
     ...
 
 
-class JsonListOfDictsOfScalarsModel(Model[_JsonListM[_JsonDictOfScalarsM]]):
+class JsonListOfDictsOfScalarsModel(Model[_JsonListM[_JsonDictOfScalars]]):
     ...
 
 
@@ -238,7 +238,7 @@ class JsonDictModel(Model[_JsonAnyDictM]):
     """
 
 
-class JsonDictOfScalarsModel(Model[_JsonDictOfScalarsM]):
+class JsonDictOfScalarsModel(Model[_JsonDictOfScalars]):
     ...
 
 
@@ -246,7 +246,7 @@ class JsonDictOfListsModel(Model[_JsonDictM[_JsonAnyListM]]):
     ...
 
 
-class JsonDictOfListsOfScalarsModel(Model[_JsonDictM[_JsonListOfScalarsM]]):
+class JsonDictOfListsOfScalarsModel(Model[_JsonDictM[_JsonListOfScalars]]):
     ...
 
 
@@ -254,7 +254,7 @@ class JsonDictOfDictsModel(Model[_JsonDictM[_JsonAnyDictM]]):
     ...
 
 
-class JsonDictOfDictsOfScalarsModel(Model[_JsonDictM[_JsonDictOfScalarsM]]):
+class JsonDictOfDictsOfScalarsModel(Model[_JsonDictM[_JsonDictOfScalars]]):
     ...
 
 

@@ -102,7 +102,7 @@ class SerializerRegistry:
         serializers: tuple[Type[IsSerializer], ...],
     ) -> tuple[IsDataset, IsSerializer]:
 
-        from omnipy import runtime
+        from omnipy.hub.runtime import runtime
         if runtime:
             with hold_and_reset_prev_attrib_value(
                     runtime.config.data,

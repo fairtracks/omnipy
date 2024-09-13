@@ -1,4 +1,6 @@
-from typing import Generic, TypeVar
+from typing import Generic
+
+from typing_extensions import TypeVar
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
@@ -29,7 +31,7 @@ from .models import (JsonDictModel,
 # TODO: call omnipy modules something else than modules, to distinguish from Python modules.
 #       Perhaps plugins?
 #
-_JsonModelT = TypeVar('_JsonModelT', bound=Model)
+_JsonModelT = TypeVar('_JsonModelT', bound=Model, default=JsonModel)
 
 
 class _JsonBaseDataset(Dataset[_JsonModelT], Generic[_JsonModelT]):

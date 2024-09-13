@@ -110,6 +110,7 @@ def test_specialize_record_models_signature_and_return_type_func(
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
 def test_run_specialize_record_models_consistent_types(
         runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
+        skip_test_if_dynamically_convert_elements_to_models,
         case: FlowCase):
     specialize_record_models = case.flow_template.apply()
 

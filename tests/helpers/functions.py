@@ -1,7 +1,7 @@
 import pytest
 
-from omnipy import Model
 from omnipy.api.typedefs import TypeForm
+from omnipy.data.model import Model
 from omnipy.util.helpers import ensure_plain_type
 
 

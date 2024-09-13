@@ -2,7 +2,7 @@ from typing import Generic
 
 from typing_extensions import TypeVar
 
-from omnipy import Model
+from omnipy.data.model import Model
 
 T = TypeVar('T')
 
