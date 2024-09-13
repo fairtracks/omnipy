@@ -55,7 +55,7 @@ T = TypeVar('T', default=object)
 U = TypeVar('U', default=object)
 
 
-def test_no_model_known_issue() -> None:
+def test_no_model() -> None:
     # Correctly instantiating a model in the beginning of the test implicitly tests whether
     # creating a model sets the field-related class members of Model, such that a later object
     # instantiation without a specified model reuses the previous fields. This which would have
@@ -482,21 +482,21 @@ def test_name_qualname_and_module() -> None:
             'tests.data.helpers.models')
 
 
-# TODO: Revisit with pydantic v2. Expected to change
+# TODO: Revisit test_name_qualname_reuse_typevar_known_issue with pydantic v2. Expected to change
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason="""
-Known issue due to bug in pydantic v1 where a generic model defined with some TypeVar(s)  
+Known issue due to bug in pydantic v1 where a generic model defined with some TypeVar(s)
 parametrized with the exact same TypeVar(s) are assumed to be the same model:
 
     https://github.com/pydantic/pydantic/blob/5ebcdc13b83fba5da34ad9b0f008f7b4faf89396/pydantic/generics.py#L110
-    
+
 This causes issues if generic models inherit from each other while having the same TypeVar(s).
 TypeVar(s) in Python are bound only within the scope of a class or function, so the same TypeVar(s)
 in different classes should not be assumed to be the same.
 
-For now, the only consequence of the bug that we are aware of is that the `__name__` and 
-`__qualname__` of the models are slightly incorrect and will not print the TypeVars. However, 
+For now, the only consequence of the bug that we are aware of is that the `__name__` and
+`__qualname__` of the models are slightly incorrect and will not print the TypeVars. However,
 worse consequences might be hidden in the code.
 """)
 def test_name_qualname_reuse_typevar_known_issue() -> None:
@@ -767,18 +767,7 @@ def test_nested_annotated_union_default_not_defined_by_first_type_known_issue() 
     assert StrFirstAnnotatedUnionModelNew().to_data() == ''
 
 
-# TODO: Revisit
-#       test_optional_v1_hack_nested_annotated_union_default_not_defined_by_first_type_known_issue
-#       with pydantic v2 and/or new versions of Python
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason="""
-Same issue as in test_nested_union_default_not_defined_by_first_type_known_issue, however made
-more common by "pydantic v1"-related hack in Model (in omnipy), where adding Annotater[Optional]
-to all models have added two levels to the type nesting.
-""")
-def test_optional_v1_hack_nested_annotated_union_default_not_defined_by_first_type_known_issue(
-) -> None:
+def test_nested_annotated_union_default_not_defined_by_first_type() -> None:
     class IntFirstUnionModel(Model[Union[int, str]]):
         ...
 
@@ -825,18 +814,7 @@ def test_union_default_value_if_any_none() -> None:
     assert NoneSecondUnionModel().to_data() is None
 
 
-# TODO: Revisit test_optional_v1_hack_parsing_independent_on_union_type_order_known_issue with
-#       pydantic v2 and/or new versions of Python
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason="""
-Same as test_optional_v1_hack_nested_annotated_union_default_not_defined_by_first_type_known_issue,
-however in this case also cause issue for parsing. Smart union makes this rare. One example where
-this pops up is parsing strings to int or float. There is no reason to always choose one over the
-other, so the order decides. The "pydantic v1"-related hack in Model (in omnipy), adding
-Annotater[Optional] to all models, triggers type caching in the typing package.
-""")
-def test_optional_v1_hack_parsing_independent_on_union_type_order_known_issue() -> None:
+def test_parsing_independent_on_union_type_order() -> None:
     class FloatIntUnionModel(Model[Union[float, int]]):
         ...
 
@@ -978,7 +956,10 @@ def test_none_not_allowed() -> None:
     class IntDictModel(Model[dict[int, int]]):
         ...
 
-    for model_cls in [IntListModel, IntDictModel]:
+    class IntOrFloatModel(Model[int | float]):
+        ...
+
+    for model_cls in [IntListModel, IntDictModel, IntOrFloatModel]:
         assert cast(Model, model_cls()).to_data() is not None
 
         with pytest.raises(ValidationError):
@@ -1201,9 +1182,6 @@ def test_union_of_none_variants(
 
     assert UnionOfNoneModel().contents == none_variant_target_contents
 
-    # with pytest.raises(ValidationError):
-    #     assert UnionOfNoneModel({})
-
     assert UnionOfNoneModel(None).contents == none_variant_target_contents
 
     with pytest.raises(ValidationError):
@@ -1222,18 +1200,6 @@ def test_union_of_none_variants(
 
     with pytest.raises(ValidationError):
         UnionOfNoneModel({1: None})
-
-
-# TODO: Look at union + None bug. Perhaps fixed by pydantic v2, but should probably be fixed before
-#       that. Also example in test_mimic_nested_dict_operations_with_model_containers
-
-
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason='Known issue, unknown why. Most probably related to pydantic v1 hack')
-def test_model_union_none_known_issue() -> None:
-    with pytest.raises(ValidationError):
-        Model[int | float](None)
 
 
 @pytest.mark.skipif(
@@ -1385,34 +1351,27 @@ def test_union_nested_model_classes_inner_forwardref_generic_list_of_none(
         ListModel(None)
 
 
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason="""
-Known issue that popped up in omnipy.modules.json.models. Might be solved by pydantic v2.
-Dropping JsonBaseModel (here: BaseModel) is one workaround as it (in contrast to _JsonBaseDataset)
-does not seem to be needed.
-""")
-def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_default_known_issue(
+def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_default(
+    none_variant_and_target_contents: Annotated[tuple[None | type[Model], None | Model],
+                                                pc.fixture],
 ) -> None:
-    MaybeNumber: TypeAlias = Optional[int]
+    none_variant = none_variant_and_target_contents[0]
 
-    BaseT = TypeVar('BaseT', default=list | 'FullModel' | MaybeNumber)
+    BaseT = TypeVar('BaseT', default=None)
 
     class BaseModel(Model[BaseT], Generic[BaseT]):
         ...
 
-    class MaybeNumberModel(BaseModel[MaybeNumber]):
+    class NoneVariantModel(BaseModel[none_variant]):
         ...
 
-    # Problem is here. Default value of list[BaseT] is [], while default value of
-    # BaseModel[list[BaseT]] is None
     class GenericListModel(BaseModel[list[BaseT]], Generic[BaseT]):
         ...
 
     class ListModel(GenericListModel['FullModel']):
         ...
 
-    FullModel: TypeAlias = ListModel | MaybeNumberModel
+    FullModel: TypeAlias = ListModel | NoneVariantModel
 
     ListModel.update_forward_refs(FullModel=FullModel)
 
@@ -3168,7 +3127,7 @@ def test_mimic_nested_list_operations_only_model_at_top(
         with pytest.raises(ValidationError):
             model[-1][-1] = 'a'  # type: ignore[index]
         # model[-1] creates a new Model[list[int]] object each time, so changes do not propagate to
-        # parent. See `test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue`
+        # parent. See `test_mimic_doubly_nested_dyn_converted_containers_are_copies`
         model[-1][-1] = '3'  # type: ignore[index]
         assert_model(model[-1][-1], int, 2)  # type: ignore[index]
     else:
@@ -3205,7 +3164,7 @@ def test_mimic_nested_list_operations_only_model_at_top(
 
         # Validation error happens on the dynamically created submodel, which is then destroyed.
         # This is the reason the value seems reverted even when interactive_mode is False...!
-        # See `test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue`
+        # See `test_mimic_doubly_nested_dyn_converted_containers_are_copies`
         assert_model(model[0], list[int], [0, 2])  # type: ignore[index]
     else:
         model[0].append('a')  # type: ignore[index]
@@ -3290,7 +3249,7 @@ def test_mimic_nested_dict_operations_only_model_at_top(
         assert_model(submodel_a, dict[int, int], {14: 456})
 
         # Changes above have all been made on copies, see
-        # test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue()
+        # test_mimic_doubly_nested_dyn_converted_containers_are_copies()
         assert len(model['a']) == 1  # type: ignore[index]
 
         # Same with updates directly on model['a']
@@ -3374,7 +3333,7 @@ def test_mimic_list_and_dict_iterators(
         assert_model_if_dyn_conv_else_val(key, int, i)
 
 
-def test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue(
+def test_mimic_doubly_nested_dyn_converted_containers_are_copies(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
@@ -3416,7 +3375,7 @@ def test_mimic_nested_list_operations_with_model_subclass_containers(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    # See test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue()
+    # See test_mimic_doubly_nested_dyn_converted_containers_are_copies()
     # Explicit Model containers fixes this issue.
 
     class MyListOrIntModel(Model[list[int] | int]):
@@ -3456,7 +3415,7 @@ def test_mimic_nested_list_operations_with_model_subclass_containers(
 def test_mimic_nested_dict_operations_with_model_containers(
     runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
 
-    # See test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue()
+    # See test_mimic_doubly_nested_dyn_converted_containers_are_copies()
     # Explicit Model containers fixes this issue.
 
     ThirdLvl: TypeAlias = dict[int, int]
@@ -3467,10 +3426,8 @@ def test_mimic_nested_dict_operations_with_model_containers(
     with pytest.raises(ValidationError):
         model['a'] = 'abc'
 
-    # See test_model_union_none_known_issue()
-    #
-    # with pytest.raises(ValidationError):
-    #     model['a'] = None
+    with pytest.raises(ValidationError):
+        model['a'] = None
 
     with pytest.raises(ValidationError):
         model['a'] = ['abc']
@@ -3551,8 +3508,7 @@ def test_mimic_nested_dict_operations_with_model_containers(
     assert_model(model, FirstLvl, contents_3)
 
 
-def test_mimic_doubly_nested_union_known_issue(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+def test_mimic_doubly_nested_union(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
 
     runtime.config.data.dynamically_convert_elements_to_models = True
 

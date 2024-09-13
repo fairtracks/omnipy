@@ -18,10 +18,6 @@ _JsonBaseT = TypeVar(
     default='JsonScalar')
 
 
-class _JsonScalarM(Model[JsonScalar]):
-    ...
-
-
 class _JsonListM(Model[list[_JsonBaseT]], Generic[_JsonBaseT]):
     ...
 
@@ -120,7 +116,7 @@ class JsonModel(Model[_JsonAnyUnion]):
 
 # Scalars
 
-JsonScalarModel: TypeAlias = _JsonScalarM
+JsonScalarModel: TypeAlias = Model[JsonScalar]
 """
 JsonScalarModel is a limited JSON model supporting only scalar JSON content, e.g. the basic
 types: `None`, `int`, `float`, `str`, and `bool`. Lists and dicts (or "objects") are not

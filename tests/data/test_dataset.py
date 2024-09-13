@@ -417,7 +417,7 @@ def test_nested_validation_level_two_only_model_at_top(runtime: Annotated[IsRunt
     if runtime.config.data.dynamically_convert_elements_to_models:
         # dataset['data_file_1'][0] is a new `Model[list[int]]` object containing a copy of the
         # original list, so changes do not propagate to parents. See
-        # `test_mimic_doubly_nested_dyn_converted_containers_are_copies_known_issue`
+        # `test_mimic_doubly_nested_dyn_converted_containers_are_copies`
         # in `test_model`.
         assert dataset['data_file_1'].contents == [[123]]
 
