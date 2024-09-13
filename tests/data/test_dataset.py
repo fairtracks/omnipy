@@ -772,11 +772,13 @@ def test_complex_models():
         """
         @classmethod
         def _parse_data(cls, data: list[PositiveInt]) -> list[PositiveInt]:
-            if not data:
-                return []
-            else:
-                assert len(data) == 2
+            if len(data) == 0:
+                return data
+            if len(data) == 2:
                 return list(range(data[0], data[1] + 1))
+            else:
+                assert data == list(range(data[0], data[-1] + 1))
+                return data
 
     #
     # Generic model subclass
@@ -796,8 +798,6 @@ def test_complex_models():
         # """
         @classmethod
         def _parse_data(cls, data: list) -> list:
-            if isinstance(data, Model):
-                data = data.to_data()
             return list(reversed(sorted(data)))
 
     #

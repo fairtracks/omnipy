@@ -4044,10 +4044,16 @@ def test_complex_nested_models() -> None:
 
     roman_numerals = ('I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X')
 
+    # TODO: As part of redesign of parse methods in Model, consider to make sure that parsers where
+    #       the typing allows output can be directly funnelled back as input, but which still change
+    #       the data, can be revalidated without altering the state. An example of such a Model is
+    #       the RomanNumeral Model below, given that the if statement where removed.
     class RomanNumeral(Model[str]):
         """A roman numeral"""
         @classmethod
         def _parse_data(cls, data: str) -> str:
+            if data in roman_numerals:
+                return data
             number = int(data)
             assert 0 < number <= 10
             return roman_numerals[number - 1]
