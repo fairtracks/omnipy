@@ -1,13 +1,12 @@
 from dataclasses import dataclass
 from math import floor
-from types import NoneType
 from typing import Generic, Literal, Optional, TypeAlias
 
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
 from typing_extensions import TypeVar
 
-from omnipy.data.model import ListOfParamModel, Model, ParamModel
+from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, ParamsBase
 
 ChildT = TypeVar('ChildT', bound=object)
@@ -83,20 +82,21 @@ class ParamUpperStrModel(_ParamUpperStrModel):
     )
 
 
-class UpperStrModel(ParamModel[str, bool]):
+class _DefaultStrModel(Model[None | str]):
+    @dataclass(kw_only=True)
+    class Params(ParamsBase):
+        default: str = 'default'
+
     @classmethod
-    def _parse_data(cls, data: str, upper: bool = False) -> str:
-        return data.upper() if upper else data
+    def _parse_data(cls, data: None) -> str:
+        return cls.Params.default if data is None else data
 
 
-class ListOfUpperStrModel(ListOfParamModel[UpperStrModel, bool]):
-    ...
-
-
-class DefaultStrModel(ParamModel[NoneType | str, str]):
-    @classmethod
-    def _parse_data(cls, data: NoneType, default: str = 'default') -> str:
-        return default if data is None else data
+class DefaultStrModel(_DefaultStrModel):
+    adjust = bind_adjust_model_func(
+        _DefaultStrModel.clone_model_cls,
+        _DefaultStrModel.Params,
+    )
 
 
 class PydanticChildModel(BaseModel):

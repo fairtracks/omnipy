@@ -424,10 +424,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             num_root_vals += 1
 
         if kwargs:
-            if num_root_vals == 0 or not self.is_param_model():
-                super_kwargs[ROOT_KEY] = cast(_RootT, kwargs)
-                kwargs = {}
-                num_root_vals += 1
+            super_kwargs[ROOT_KEY] = cast(_RootT, kwargs)
+            kwargs = {}
+            num_root_vals += 1
 
         assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
 
@@ -896,18 +895,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     @classmethod
     def is_nested_type(cls) -> bool:
         return not cls.inner_type(with_args=True) == cls.outer_type(with_args=True)
-
-    @classmethod
-    # Refactor: Remove is_param_model
-    def is_param_model(cls) -> bool:
-        if cls.outer_type() is list:
-            type_to_check = cls.inner_type(with_args=True)
-        else:
-            type_to_check = cls.outer_type(with_args=True)
-        args = get_args(type_to_check)
-        return is_union(type_to_check) \
-            and len(args) >= 2 \
-            and lenient_issubclass(args[-1], DataWithParams)
 
     @classmethod
     def _get_root_field(cls) -> ModelField:
@@ -1464,101 +1451,3 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         _waiting_for_terminal_repr(False)
 
         return out
-
-
-_ParamRootT = TypeVar('_ParamRootT', default=object | None)
-_KwargValT = TypeVar('_KwargValT', default=object)
-
-
-class DataWithParams(GenericModel, Generic[_ParamRootT, _KwargValT]):
-    data: _ParamRootT
-    params: dict[str, _KwargValT]
-
-
-class ParamModel(Model[_ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
-                 Generic[_ParamRootT, _KwargValT]):
-    def _init(self,
-              super_kwargs: dict[str, _ParamRootT | DataWithParams[_ParamRootT, _KwargValT]],
-              **kwargs: _KwargValT) -> None:
-        if kwargs and ROOT_KEY in super_kwargs:
-            assert not isinstance(super_kwargs[ROOT_KEY], DataWithParams)
-            super_kwargs[ROOT_KEY] = DataWithParams(
-                data=cast(_ParamRootT, super_kwargs[ROOT_KEY]), params=kwargs)
-
-    @root_validator
-    def _parse_root_object(
-            cls, root_obj: dict[str, _ParamRootT | DataWithParams[_ParamRootT, _KwargValT]]) -> Any:
-        assert ROOT_KEY in root_obj
-        root_val = root_obj[ROOT_KEY]
-
-        params: dict[str, _KwargValT] = {}
-
-        if isinstance(root_val, DataWithParams):
-            data = root_val.data
-            params = root_val.params
-        else:
-            data = root_val
-
-        try:
-            return {ROOT_KEY: cls._parse_data(data, **params)}
-        except TypeError as exc:
-            import inspect
-            for key in params.keys():
-                if key not in inspect.signature(cls._parse_data).parameters:
-                    raise ParamException(exc) from None
-            raise exc
-
-    @classmethod
-    def _parse_data(cls, data: _ParamRootT, **params: _KwargValT) -> _ParamRootT:
-        return data
-
-    def from_data(self, value: object, **kwargs: _KwargValT) -> None:
-        super().from_data(value)
-        if kwargs:
-            self._validate_and_set_contents_with_params(cast(_ParamRootT, self.contents), **kwargs)
-
-    def from_json(self, json_contents: str, **kwargs: _KwargValT) -> None:
-        super().from_json(json_contents)
-        if kwargs:
-            self._validate_and_set_contents_with_params(cast(_ParamRootT, self.contents), **kwargs)
-
-    def _validate_and_set_contents_with_params(self, contents: _ParamRootT, **kwargs: _KwargValT):
-        self._validate_and_set_value(DataWithParams(data=contents, params=kwargs))
-
-
-_ParamModelT = TypeVar('_ParamModelT', bound='ParamModel')
-
-
-class ListOfParamModel(ParamModel[list[_ParamModelT
-                                       | DataWithParams[_ParamModelT, _KwargValT]],
-                                  _KwargValT],
-                       Generic[_ParamModelT, _KwargValT]):
-    def _init(
-            self,
-            super_kwargs: dict[  # type: ignore[override]
-                str,
-                list[_ParamModelT
-                     | DataWithParams[_ParamModelT, _KwargValT]]],
-            **kwargs: _KwargValT) -> None:
-        if kwargs and ROOT_KEY in super_kwargs:
-
-            def _convert_if_model(data: _ParamModelT) -> _ParamModelT:
-                if is_model_instance(data):
-                    # Casting to _ParamModelT now, will be validated in super()__init__()
-                    return cast(_ParamModelT, cast(Model, data).to_data())
-                else:
-                    return data
-
-            root_val = cast(list[_ParamModelT], super_kwargs[ROOT_KEY])
-            super_kwargs[ROOT_KEY] = [
-                DataWithParams(data=_convert_if_model(el), params=kwargs) for el in root_val
-            ]
-
-    def _validate_and_set_contents_with_params(
-            self,
-            contents: list[_ParamModelT | DataWithParams[_ParamModelT, _KwargValT]],
-            **kwargs: _KwargValT):
-        self._validate_and_set_value([
-            DataWithParams(data=cast(_ParamModelT, model).contents, params=kwargs)
-            for model in contents
-        ])

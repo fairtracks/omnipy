@@ -7,7 +7,7 @@ from omnipy.data.model import Model
 from ..general.models import Chain3
 from ..json.models import JsonListOfScalarsModel
 from ..json.typedefs import JsonScalar
-from ..raw.models import SplitLinesToColumnsModelNew, SplitToLinesModel
+from ..raw.models import SplitLinesToColumnsModel, SplitToLinesModel
 
 
 class TableListOfListsOfJsonScalarsModel(Model[list[list[JsonScalar]]]):
@@ -77,7 +77,7 @@ class PydanticRecordModel(Model[_PydanticBaseModelT | JsonListOfScalarsModel],
 
 
 class TableOfPydanticRecordsModel(Chain3[SplitToLinesModel,
-                                         SplitLinesToColumnsModelNew,
+                                         SplitLinesToColumnsModel,
                                          Model[list[PydanticRecordModel[_PydanticRecordT]]]],
                                   Generic[_PydanticRecordT]):
     ...

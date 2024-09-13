@@ -2,15 +2,11 @@ from typing import Generic, Optional, TypeAlias
 
 from typing_extensions import TypeVar
 
-from omnipy.data.dataset import Dataset, ListOfParamModelDataset, ParamDataset
+from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_dataset_func
 
-from .models import (DefaultStrModel,
-                     ListOfUpperStrModel,
-                     MyFloatObjModel,
-                     ParamUpperStrModel,
-                     UpperStrModel)
+from .models import DefaultStrModel, MyFloatObjModel, ParamUpperStrModel
 
 ChildT = TypeVar('ChildT', default=object)
 
@@ -35,11 +31,6 @@ class NumberModel(Model[int]):
 MyFwdRefDataset.update_forward_refs(NumberModel=NumberModel)
 MyNestedFwdRefDataset.update_forward_refs(NumberModel=NumberModel)
 
-
-class UpperStrDataset(ParamDataset[UpperStrModel, bool]):
-    ...
-
-
 ParamUpperStrModelT = TypeVar('ParamUpperStrModelT', default=ParamUpperStrModel)
 
 
@@ -47,18 +38,24 @@ class _ParamUpperStrDataset(Dataset[ParamUpperStrModelT], Generic[ParamUpperStrM
     ...
 
 
-class ParamUpperStrDataset(_ParamUpperStrDataset[ParamUpperStrModelT],
-                           Generic[ParamUpperStrModelT]):
+class ParamUpperStrDataset(_ParamUpperStrDataset[ParamUpperStrModel]):
     adjust = bind_adjust_dataset_func(
-        _ParamUpperStrDataset[ParamUpperStrModelT].clone_dataset_cls,
+        _ParamUpperStrDataset[ParamUpperStrModel].clone_dataset_cls,
         ParamUpperStrModel,
         ParamUpperStrModel.Params,
     )
 
 
-class DefaultStrDataset(ParamDataset[DefaultStrModel, bool]):
+DefaultStrModelT = TypeVar('DefaultStrModelT', default=DefaultStrModel)
+
+
+class _DefaultStrDataset(Dataset[DefaultStrModelT], Generic[DefaultStrModelT]):
     ...
 
 
-class ListOfUpperStrDataset(ListOfParamModelDataset[ListOfUpperStrModel, bool]):
-    ...
+class DefaultStrDataset(_DefaultStrDataset[DefaultStrModel]):
+    adjust = bind_adjust_dataset_func(
+        _DefaultStrDataset[DefaultStrModel].clone_dataset_cls,
+        DefaultStrModel,
+        DefaultStrModel.Params,
+    )

@@ -9,8 +9,8 @@ from omnipy.compute.flow import (DagFlow,
                                  LinearFlow,
                                  LinearFlowTemplate)
 from omnipy.compute.task import Task, TaskTemplate
-from omnipy.data.dataset import Dataset, ListOfParamModelDataset, MultiModelDataset, ParamDataset
-from omnipy.data.model import ListOfParamModel, Model, ParamModel
+from omnipy.data.dataset import Dataset, MultiModelDataset
+from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_dataset_func, bind_adjust_model_func, ParamsBase
 from omnipy.hub.runtime import runtime
 from omnipy.modules.general.models import (Chain2,
@@ -119,9 +119,7 @@ from omnipy.modules.raw.models import (BytesModel,
                                        JoinItemsModel,
                                        JoinLinesModel,
                                        SplitLinesToColumnsModel,
-                                       SplitLinesToColumnsModelNew,
                                        SplitToItemsModel,
-                                       SplitToItemsModelNew,
                                        SplitToLinesModel,
                                        StrModel)
 from omnipy.modules.raw.tasks import (concat_all,
@@ -143,8 +141,6 @@ from omnipy.modules.tables.tasks import (remove_columns,
                                          transpose_columns_with_data_files)
 from omnipy.util.contexts import print_exception
 
-# if typing.TYPE_CHECKING:
-
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 __all__ = [
@@ -158,12 +154,8 @@ __all__ = [
     'Task',
     'TaskTemplate',
     'Dataset',
-    'ParamDataset',
-    'ListOfParamModelDataset',
     'MultiModelDataset',
     'Model',
-    'ParamModel',
-    'ListOfParamModel',
     'FlattenedIsaJsonDataset',
     'FlattenedIsaJsonModel',
     'IsaJsonModel',
@@ -250,10 +242,8 @@ __all__ = [
     'SplitToLinesModel',
     'JoinLinesModel',
     'SplitToItemsModel',
-    'SplitToItemsModelNew',
     'JoinItemsModel',
     'SplitLinesToColumnsModel',
-    'SplitLinesToColumnsModelNew',
     'JoinColumnsToLinesModel',
     'StrModel',
     'TableOfPydanticRecordsDataset',

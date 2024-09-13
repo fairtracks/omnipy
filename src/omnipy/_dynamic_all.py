@@ -39,8 +39,8 @@ if not __all__:
                                LinearFlowTemplate)
     from .compute.job import JobTemplateMixin
     from .compute.task import Task, TaskTemplate
-    from .data.dataset import Dataset, ListOfParamModelDataset, MultiModelDataset, ParamDataset
-    from .data.model import ListOfParamModel, Model, ParamModel
+    from .data.dataset import Dataset, MultiModelDataset
+    from .data.model import Model
     from .data.param import bind_adjust_dataset_func, bind_adjust_model_func, ParamsBase
     from .hub.runtime import runtime
     from .util.contexts import print_exception
@@ -57,15 +57,11 @@ if not __all__:
         'Task',
         'TaskTemplate',
         'Dataset',
-        'ParamDataset',
-        'ListOfParamModelDataset',
         'MultiModelDataset',
         'ParamsBase',
         'bind_adjust_model_func',
         'bind_adjust_dataset_func',
         'Model',
-        'ParamModel',
-        'ListOfParamModel',
         'print_exception',
     ]
     _all_element_names = set(__all__)

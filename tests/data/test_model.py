@@ -23,7 +23,6 @@ import pytest
 import pytest_cases as pc
 from typing_extensions import TypeVar
 
-from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import is_model_instance, Model, obj_or_model_contents_isinstance
@@ -33,7 +32,6 @@ from ..helpers.functions import assert_model, assert_val
 from ..helpers.protocols import AssertModelOrValFunc
 from .helpers.models import (CBA,
                              DefaultStrModel,
-                             ListOfUpperStrModel,
                              LiteralFiveModel,
                              LiteralFiveOrTextModel,
                              LiteralTextModel,
@@ -48,7 +46,6 @@ from .helpers.models import (CBA,
                              PydanticChildModel,
                              PydanticParentModel,
                              UppercaseModel,
-                             UpperStrModel,
                              WordSplitterModel)
 
 T = TypeVar('T', default=object)
@@ -4093,29 +4090,7 @@ def test_pandas_dataframe_non_builtin_direct() -> None:
 
 
 def test_parametrized_model() -> None:
-    assert UpperStrModel().contents == ''
-    assert UpperStrModel().is_param_model()
-    assert UpperStrModel('foo').contents == 'foo'
-    assert UpperStrModel('bar', upper=True).contents == 'BAR'
-
-    model = UpperStrModel()
-
-    model.from_data('foo')
-    assert model.contents == 'foo'
-
-    model.from_data('bar', upper=True)
-    assert model.contents == 'BAR'
-
-    model.from_json('"foobar"')
-    assert model.contents == 'foobar'
-
-    model.from_json('"foobar"', upper=True)
-    assert model.contents == 'FOOBAR'
-
-
-def test_parametrized_model_new() -> None:
     assert ParamUpperStrModel().contents == ''
-    # assert ParamUpperStrModel().is_param_model()
     assert ParamUpperStrModel('foo').contents == 'foo'
 
     MyUpperStrModel = ParamUpperStrModel.adjust('MyUpperStrModel', upper=True)
@@ -4137,72 +4112,28 @@ def test_parametrized_model_new() -> None:
     assert upper_model.contents == 'FOOBAR'
 
     with pytest.raises(AttributeError):
-        ParamUpperStrModel.adjust('MyUpperStrModel', True)  # type: ignore[misc]
+        ParamUpperStrModel.adjust('MyUpperStrModel', True)
 
 
 def test_parametrized_model_wrong_keyword() -> None:
-    with pytest.raises(ParamException):
-        UpperStrModel('bar', supper=True)
-
-    model = UpperStrModel()
-
-    with pytest.raises(ParamException):
-        model.from_data('bar', supper=True)
-
-    with pytest.raises(ParamException):
-        model.from_json('"foobar"', supper=True)
+    with pytest.raises(KeyError):
+        ParamUpperStrModel.adjust('ParamSupperStrModel', supper=True)
 
 
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason='ParamModel does not support None values yet. Wait until pydantic v2 removes the'
-    'Annotated hack to simplify implementation')
 def test_parametrized_model_with_none() -> None:
     with pytest.raises(ValidationError):
-        UpperStrModel(None)
+        ParamUpperStrModel(None)
+
+    MyUpperStrModel = ParamUpperStrModel.adjust('MyUpperStrModel', upper=True)
+
     with pytest.raises(ValidationError):
-        UpperStrModel(None, upper=True)
+        MyUpperStrModel(None)
 
     assert DefaultStrModel(None).contents == 'default'
-    assert DefaultStrModel(None, default='other').contents == 'other'
 
+    DefaultOtherStrModel = DefaultStrModel.adjust('DefaultOtherStrModel', default='other')
 
-def test_list_of_parametrized_model() -> None:
-    assert ListOfUpperStrModel().contents == []
-    assert ListOfUpperStrModel().is_param_model()
-    assert ListOfUpperStrModel(['foo']).contents == [UpperStrModel('foo')]
-    assert ListOfUpperStrModel(['foo']).to_data() == ['foo']
-    assert ListOfUpperStrModel(['foo', 'bar'], upper=True).contents \
-           == [UpperStrModel('foo', upper=True), UpperStrModel('bar', upper=True)]
-    assert ListOfUpperStrModel(['foo', 'bar'], upper=True).to_data() == ['FOO', 'BAR']
-
-    model = ListOfUpperStrModel()
-
-    model.from_data(['foo'])
-    assert model.contents == [UpperStrModel('foo', upper=False)]
-
-    model.from_data(['foo'], upper=True)
-    model.append('bar')
-    assert model.contents == [UpperStrModel('foo', upper=True), UpperStrModel('bar', upper=False)]
-
-    model.from_json('["foo", "bar"]')
-    assert model.contents == [UpperStrModel('foo', upper=False), UpperStrModel('bar', upper=False)]
-
-    model.from_json('["foo", "bar"]', upper=True)
-    assert model.contents == [UpperStrModel('foo', upper=True), UpperStrModel('bar', upper=True)]
-
-
-def test_list_of_parametrized_model_wrong_keyword() -> None:
-    with pytest.raises(ParamException):
-        ListOfUpperStrModel(['bar'], supper=True)
-
-    model = ListOfUpperStrModel()
-
-    with pytest.raises(ParamException):
-        model.from_data(['bar'], supper=True)
-
-    with pytest.raises(ParamException):
-        model.from_json('["foobar"]', supper=True)
+    assert DefaultOtherStrModel(None).contents == 'other'
 
 
 def test_is_model_instance() -> None:

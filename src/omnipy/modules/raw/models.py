@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import os
 from typing import cast
 
-from omnipy.data.model import ListOfParamModel, Model, ParamModel
+from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, ParamsBase
 
 
@@ -12,9 +12,9 @@ class _EncodingParamsMixin:
         encoding: str = 'utf-8'
 
 
-class _BytesModel(Model[str | bytes], _EncodingParamsMixin):
+class _BytesModel(Model[bytes | str], _EncodingParamsMixin):
     @classmethod
-    def _parse_data(cls, data: str | bytes) -> bytes:
+    def _parse_data(cls, data: bytes | str) -> bytes:
         if isinstance(data, bytes):
             return data
 
@@ -28,11 +28,11 @@ class BytesModel(_BytesModel):
     )
 
 
-class _StrModel(Model[bytes | str], _EncodingParamsMixin):
+class _StrModel(Model[str | bytes], _EncodingParamsMixin):
     Params = _EncodingParamsMixin.Params
 
     @classmethod
-    def _parse_data(cls, data: bytes | str) -> str:
+    def _parse_data(cls, data: str | bytes) -> str:
         if isinstance(data, str):
             return data
 
@@ -48,27 +48,38 @@ class StrModel(_StrModel):
     )
 
 
-class SplitToLinesModel(ParamModel[str | list[str], bool]):
+class _SplitToLinesModel(Model[list[str] | str]):
+    @dataclass(kw_only=True)
+    class Params(ParamsBase):
+        strip: bool = True
+
     @classmethod
-    def _parse_data(cls, data: str | list[str], strip: bool = True) -> list[str]:
+    def _parse_data(cls, data: list[str] | str) -> list[str]:
         if isinstance(data, list):
             return data
 
-        if strip:
+        if cls.Params.strip:
             data = data.strip()
         lines = data.split(os.linesep)
-        return [line.strip() for line in lines] if strip else lines
+        return [line.strip() for line in lines] if cls.Params.strip else lines
 
 
-class JoinLinesModel(Model[list[str] | str]):
+class SplitToLinesModel(_SplitToLinesModel):
+    adjust = bind_adjust_model_func(
+        _SplitToLinesModel.clone_model_cls,
+        _SplitToLinesModel.Params,
+    )
+
+
+class JoinLinesModel(Model[str | list[str]]):
     @classmethod
-    def _parse_data(cls, data: list[str] | str) -> str:
+    def _parse_data(cls, data: str | list[str]) -> str:
         if isinstance(data, str):
             return data
         return os.linesep.join(data)
 
 
-class SplitToItemsMixin:
+class _SplitToItemsMixin:
     @dataclass(kw_only=True)
     class Params(ParamsBase):
         strip: bool = True
@@ -84,9 +95,9 @@ class SplitToItemsMixin:
         return [item.strip(cls.Params.strip_chars) for item in items] if cls.Params.strip else items
 
 
-class _SplitToItemsModelNew(
+class _SplitToItemsModel(
         Model[list[str] | str],
-        SplitToItemsMixin,
+        _SplitToItemsMixin,
 ):
     @classmethod
     def _parse_data(cls, data: list[str] | str) -> list[str]:
@@ -96,38 +107,16 @@ class _SplitToItemsModelNew(
         return cls._split_line(data)
 
 
-class SplitToItemsModelNew(_SplitToItemsModelNew):
+class SplitToItemsModel(_SplitToItemsModel):
     adjust = bind_adjust_model_func(
-        _SplitToItemsModelNew.clone_model_cls,
-        _SplitToItemsModelNew.Params,
+        _SplitToItemsModel.clone_model_cls,
+        _SplitToItemsModel.Params,
     )
 
 
-class SplitToItemsModel(ParamModel[str | list[str], bool | str]):
-    @classmethod
-    def _parse_data(cls,
-                    data: str | list[str],
-                    strip: bool = True,
-                    delimiter: str = '\t') -> list[str]:
-        if isinstance(data, list):
-            return data
-
-        items = data.split(delimiter)
-        return [item.strip() for item in items] if strip else items
-
-
-class JoinItemsModel(ParamModel[list[str] | str, str]):
-    @classmethod
-    def _parse_data(cls, data: list[str] | str, delimiter: str = '\t') -> str:
-        if isinstance(data, str):
-            return data
-
-        return delimiter.join(data)
-
-
-class _SplitLinesToColumnsModelNew(
+class _SplitLinesToColumnsModel(
         Model[list[list[str]] | list[str] | list[StrModel]],
-        SplitToItemsMixin,
+        _SplitToItemsMixin,
 ):
     @classmethod
     def _parse_data(cls, data: list[list[str]] | list[str] | list[StrModel]) -> list[list[str]]:
@@ -137,16 +126,55 @@ class _SplitLinesToColumnsModelNew(
         return [cls._split_line(cast(str, line)) for line in data]
 
 
-class SplitLinesToColumnsModelNew(_SplitLinesToColumnsModelNew):
+class SplitLinesToColumnsModel(_SplitLinesToColumnsModel):
     adjust = bind_adjust_model_func(
-        _SplitLinesToColumnsModelNew.clone_model_cls,
-        _SplitLinesToColumnsModelNew.Params,
+        _SplitLinesToColumnsModel.clone_model_cls,
+        _SplitLinesToColumnsModel.Params,
     )
 
 
-class SplitLinesToColumnsModel(ListOfParamModel[SplitToItemsModel, bool | str]):
+class _JoinItemsMixin:
+    @dataclass(kw_only=True)
+    class Params(ParamsBase):
+        delimiter: str = '\t'
+
+    @classmethod
+    def _join_items(cls, data: list[str]) -> str:
+        return cls.Params.delimiter.join(data)
+
+
+class _JoinItemsModel(Model[str | list[str]], _JoinItemsMixin):
+    @classmethod
+    def _parse_data(cls, data: str | list[str]) -> str:
+        if isinstance(data, str):
+            return data
+
+        return cls._join_items(data)
+
     ...
 
 
-class JoinColumnsToLinesModel(ListOfParamModel[JoinItemsModel, str]):
-    ...
+class JoinItemsModel(_JoinItemsModel):
+    adjust = bind_adjust_model_func(
+        _JoinItemsModel.clone_model_cls,
+        _JoinItemsModel.Params,
+    )
+
+
+class _JoinColumnsToLinesModel(
+        Model[list[str] | list[list[str]]],
+        _JoinItemsMixin,
+):
+    @classmethod
+    def _parse_data(cls, data: list[str] | list[list[str]]) -> list[str]:
+        if isinstance(data, list) and (len(data) == 0 or not isinstance(data[0], list)):
+            return cast(list[str], data)
+
+        return [cls._join_items(cast(list[str], cols)) for cols in data]
+
+
+class JoinColumnsToLinesModel(_JoinColumnsToLinesModel):
+    adjust = bind_adjust_model_func(
+        _JoinColumnsToLinesModel.clone_model_cls,
+        _JoinColumnsToLinesModel.Params,
+    )

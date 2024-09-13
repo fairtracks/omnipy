@@ -13,13 +13,11 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
 from .helpers.datasets import (DefaultStrDataset,
-                               ListOfUpperStrDataset,
                                MyFloatObjDataset,
                                MyFwdRefDataset,
                                MyNestedFwdRefDataset,
-                               ParamUpperStrDataset,
-                               UpperStrDataset)
-from .helpers.models import MyFloatObject, NumberModel, StringToLength, UpperStrModel
+                               ParamUpperStrDataset)
+from .helpers.models import MyFloatObject, NumberModel, StringToLength
 
 
 def test_no_model():
@@ -907,34 +905,7 @@ def test_dataset_switch_models_issue():
 # TODO: Add unit tests for MultiModelDataset
 
 
-def test_parametrized_dataset():
-    assert UpperStrDataset(dict(x='foo'))['x'].contents == 'foo'
-    assert UpperStrDataset(dict(x='bar'), upper=True)['x'].contents == 'BAR'
-    assert UpperStrDataset(dict(x='foo', y='bar'), upper=True).to_data() == dict(x='FOO', y='BAR')
-
-    dataset = UpperStrDataset()
-    dataset['x'] = 'foo'
-    assert dataset['x'].contents == 'foo'
-
-    dataset.from_data(dict(y='bar', z='foobar'), upper=True)
-    assert dataset.to_data() == dict(x='foo', y='BAR', z='FOOBAR')
-
-    dataset.from_data(dict(y='bar', z='foobar'), update=False)
-    assert dataset.to_data() == dict(y='bar', z='foobar')
-
-    dataset.from_json(dict(x='"foo"'), upper=True)
-    assert dataset.to_data() == dict(x='FOO', y='bar', z='foobar')
-
-    dataset.from_json(dict(x='"foo"'), update=False)
-    assert dataset.to_data() == dict(x='foo')
-
-    with pytest.raises(KeyError):
-        UpperStrDataset(dict(x='bar'), upper=True)['upper']
-    with pytest.raises(AssertionError):
-        assert UpperStrDataset(x='bar', upper=True)
-
-
-def test_parametrized_dataset_new() -> None:
+def test_parametrized_dataset() -> None:
     assert ParamUpperStrDataset(x='foo')['x'].contents == 'foo'
 
     MyUpperStrDataset = ParamUpperStrDataset.adjust(
@@ -969,74 +940,29 @@ def test_parametrized_dataset_new() -> None:
 
 
 def test_parametrized_dataset_wrong_keyword() -> None:
-    with pytest.raises(ParamException):
-        UpperStrDataset(dict(x='bar'), supper=True)
-
-    dataset = UpperStrDataset()
-
-    with pytest.raises(ParamException):
-        dataset.from_data(dict(x='bar'), supper=True)
-
-    with pytest.raises(ParamException):
-        dataset.from_json(dict(x='"foobar"'), supper=True)
+    with pytest.raises(KeyError):
+        ParamUpperStrDataset.adjust('ParamSupperStrDataset', 'ParamSupperStrModel', supper=True)
 
 
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason='ParamDataset does not support None values yet. Wait until pydantic v2 removes the'
-    'Annotated hack to simplify implementation')
-def test_parametrized_dataset_with_none():
+def test_parametrized_dataset_with_none() -> None:
     with pytest.raises(ValidationError):
-        UpperStrDataset(dict(x=None))
+        ParamUpperStrDataset(dict(x=None))
+
+    MyUpperStrDataset = ParamUpperStrDataset.adjust(
+        'MyUpperStrDataset',
+        'MyUpperStrModel',
+        upper=True,
+    )
+
     with pytest.raises(ValidationError):
-        UpperStrDataset(dict(x=None), upper=True)
+        MyUpperStrDataset(dict(x=None))
 
     assert DefaultStrDataset(dict(x=None))['x'].contents == 'default'
-    assert DefaultStrDataset(dict(x=None), default='other')['x'].contents == 'other'
 
+    DefaultOtherStrDataset = DefaultStrDataset.adjust(
+        'DefaultOtherStrDataset',
+        'DefaultOtherStrModel',
+        default='other',
+    )
 
-def test_list_of_parametrized_model_dataset():
-    assert ListOfUpperStrDataset(dict(x=['foo']))['x'].contents == [UpperStrModel('foo')]
-    assert ListOfUpperStrDataset(dict(x=['foo']))['x'].to_data() == ['foo']
-
-    dataset_1 = ListOfUpperStrDataset(dict(x=['foo', 'bar'], y=['foobar']), upper=True)
-    assert dataset_1['x'].contents \
-           == [UpperStrModel('foo', upper=True), UpperStrModel('bar', upper=True)]
-    assert dataset_1.to_data() == {'x': ['FOO', 'BAR'], 'y': ['FOOBAR']}
-
-    dataset_2 = ListOfUpperStrDataset()
-    dataset_2['x'] = ['foo']
-    assert dataset_2['x'].contents == [UpperStrModel('foo')]
-
-    dataset_2.from_data(dict(x=['foo']))
-    assert dataset_2.to_data() == dict(x=['foo'])
-
-    dataset_2.from_data(dict(y=['foo', 'bar'], z=['foobar']), upper=True)
-    assert dataset_2.to_data() == dict(x=['foo'], y=['FOO', 'BAR'], z=['FOOBAR'])
-
-    dataset_2.from_data(dict(y=['foo', 'bar'], z=['foobar']), update=False)
-    assert dataset_2.to_data() == dict(y=['foo', 'bar'], z=['foobar'])
-
-    dataset_2.from_json(dict(x='["foo", "bar"]'), upper=True)
-    assert dataset_2.to_data() == dict(x=['FOO', 'BAR'], y=['foo', 'bar'], z=['foobar'])
-
-    dataset_2.from_json(dict(x='["foo", "bar"]'), update=False)
-    assert dataset_2.to_data() == dict(x=['foo', 'bar'])
-
-    with pytest.raises(KeyError):
-        ListOfUpperStrDataset(dict(x=['bar']), upper=True)['upper']
-    with pytest.raises(AssertionError):
-        assert ListOfUpperStrDataset(x=['bar'], upper=True)
-
-
-def test_list_of_parametrized_model_wrong_keyword() -> None:
-    with pytest.raises(ParamException):
-        ListOfUpperStrDataset(dict(x=['bar']), supper=True)
-
-    dataset = ListOfUpperStrDataset()
-
-    with pytest.raises(ParamException):
-        dataset.from_data(dict(x=['bar']), supper=True)
-
-    with pytest.raises(ParamException):
-        dataset.from_json(dict(x='["foobar"]'), supper=True)
+    assert DefaultOtherStrDataset(dict(x=None))['x'].contents == 'other'

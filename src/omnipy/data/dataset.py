@@ -4,7 +4,7 @@ import json
 import os
 import tarfile
 from tempfile import TemporaryDirectory
-from typing import Any, Callable, cast, Generic, get_args, Iterator, Type, TypeAlias
+from typing import Any, Callable, cast, Generic, Iterator
 from urllib.parse import ParseResult, urlparse
 
 import humanize
@@ -20,16 +20,12 @@ from typing_extensions import TypeVar
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.model import (_cleanup_name_qualname_and_module,
                                _waiting_for_terminal_repr,
-                               DataWithParams,
                                INTERACTIVE_MODULES,
                                is_model_instance,
-                               ListOfParamModel,
-                               Model,
-                               ParamModel)
+                               Model)
 from omnipy.util.helpers import (get_calling_module_name,
                                  get_default_if_typevar,
                                  is_iterable,
-                                 is_union,
                                  remove_forward_ref_notation)
 from omnipy.util.tabulate import tabulate
 from omnipy.util.web import download_file_to_memory
@@ -124,16 +120,9 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
         orig_model = model
 
         if cls == Dataset:
-            args = get_args(model)
-
-            if is_union(model) and len(args) == 2 and lenient_issubclass(args[1], DataWithParams):
-                model_to_check = args[0]
-            else:
-                model_to_check = model
-
-            if not isinstance(model_to_check, TypeVar) \
-                    and not lenient_issubclass(model_to_check, Model):
-                raise TypeError('Invalid model: {}! '.format(model_to_check)
+            if not isinstance(model, TypeVar) \
+                    and not lenient_issubclass(model, Model):
+                raise TypeError('Invalid model: {}! '.format(model)
                                 + 'omnipy Dataset models must be a specialization of the omnipy '
                                 'Model class.')
 
@@ -185,14 +174,8 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
                 "Not allowed to combine 'data' with other keyword arguments"
             super_kwargs[DATA_KEY] = data
 
-        # model_cls = self.get_model_class()
         if kwargs:
             if DATA_KEY not in super_kwargs:
-                #         assert isinstance(model_cls, TypeVar) or not model_cls.is_param_model(), \
-                #             ('If any keyword arguments are defined, parametrized datasets require at least '
-                #              'one positional argument in the __init__ method (typically providing the data '
-                #              'in the form of a dict from name to content for each data file).')
-                #
                 super_kwargs[DATA_KEY] = kwargs
                 kwargs = {}
 
@@ -615,81 +598,3 @@ class MultiModelDataset(Dataset[GeneralModelT], Generic[GeneralModelT]):
         if is_model_instance(data_obj):
             data_obj = data_obj.to_data()
         return data_obj
-
-
-_KwargValT = TypeVar('_KwargValT', bound=object)
-_ParamModelT = TypeVar('_ParamModelT', bound=ParamModel)
-_ListOfParamModelT = TypeVar('_ListOfParamModelT', bound=ListOfParamModel)
-
-ParamModelSuperKwargsType: TypeAlias = \
-    dict[str, dict[str, _ParamModelT | DataWithParams[_ParamModelT, _KwargValT]]]
-
-
-class ParamDataset(Dataset[_ParamModelT | DataWithParams[_ParamModelT, _KwargValT]],
-                   Generic[_ParamModelT, _KwargValT]):
-    def _init(self, super_kwargs: ParamModelSuperKwargsType, **kwargs: _KwargValT) -> None:
-        if kwargs and DATA_KEY in super_kwargs:
-
-            def _convert_if_model(data: _ParamModelT) -> _ParamModelT:
-                if is_model_instance(data):
-                    # Casting to _ParamModelT now, will be validated in super()__init__()
-                    return cast(_ParamModelT, cast(Model, data).to_data())
-                else:
-                    return data
-
-            data_in = cast(dict[str, _ParamModelT], super_kwargs[DATA_KEY])
-            super_kwargs[DATA_KEY] = {
-                key: DataWithParams(data=_convert_if_model(val), params=kwargs)
-                for (key, val) in data_in.items()
-            }
-
-    def from_data(self,
-                  data: dict[str, Any] | Iterator[tuple[str, Any]],
-                  update: bool = True,
-                  **kwargs: _KwargValT) -> None:
-        if kwargs:
-
-            def callback_func(model: ModelT, contents: Any):
-                model.from_data(contents, **kwargs)
-
-            self._from_dict_with_callback(data, update, callback_func)
-        else:
-            super().from_data(data, update=update)
-
-    def from_json(self,
-                  data: Mapping[str, str] | Iterable[tuple[str, str]],
-                  update: bool = True,
-                  **kwargs: _KwargValT) -> None:
-        if kwargs:
-
-            def callback_func(model: ModelT, contents: Any):
-                model.from_json(contents, **kwargs)
-
-            self._from_dict_with_callback(data, update, callback_func)
-        else:
-            super().from_json(data, update=update)
-
-
-class ListOfParamModelDataset(ParamDataset[_ListOfParamModelT, _KwargValT],
-                              Generic[_ListOfParamModelT, _KwargValT]):
-    def _init(self,
-              super_kwargs: dict[str,
-                                 dict[str,
-                                      ListOfParamModel[_ParamModelT, _KwargValT]
-                                      | list[DataWithParams[_ParamModelT, _KwargValT]]]],
-              **kwargs: _KwargValT) -> None:
-        if kwargs and DATA_KEY in super_kwargs:
-
-            def _convert_if_model(data: _ParamModelT) -> _ParamModelT:
-                if is_model_instance(data):
-                    # Casting to _ParamModelT now, will be validated in super()__init__()
-                    return cast(_ParamModelT, cast(Model, data).to_data())
-                else:
-                    return data
-
-            data_in = cast(dict[str, list[_ParamModelT]], super_kwargs[DATA_KEY])
-
-            super_kwargs[DATA_KEY] = {
-                key: [DataWithParams(data=_convert_if_model(el), params=kwargs) for el in val]
-                for (key, val) in data_in.items()
-            }
