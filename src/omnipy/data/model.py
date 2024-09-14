@@ -22,6 +22,7 @@ from typing import (Annotated,
                     Hashable,
                     Iterator,
                     Literal,
+                    NamedTuple,
                     Optional,
                     SupportsIndex,
                     Union)
@@ -85,6 +86,9 @@ INTERACTIVE_MODULES = [
 ]
 
 _validate_cls_counts: defaultdict[str, int] = defaultdict(int)
+
+ResetSolutionTuple = NamedTuple('ResetSolutionTuple', [('reset_solution', ContextManager[None]),
+                                                       ('snapshot_taken', bool)])
 
 
 def debug_get_sorted_validate_counts() -> dict[str, int]:
@@ -562,15 +566,14 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
-    def validate_contents(self, restore_snapshot_if_interactive_and_invalid: bool = False) -> None:
-        reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
-        with reset_solution:
-            self._validate_and_set_value(self.contents, reset_solution=reset_solution)
+    def validate_contents(self) -> None:
+        self._validate_and_set_value(self.contents)
 
     def _validate_and_set_value(
-            self,
-            new_contents: object,
-            reset_solution: ContextManager[None] | UndefinedType = Undefined) -> None:
+        self,
+        new_contents: object,
+        reset_solution: ContextManager[None] | None = None,
+    ) -> None:
 
         old_contents_id = id(self.contents)
 
@@ -580,14 +583,15 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         self._generic_validate_contents(
             new_contents=new_contents,
-            reset_solution=reset_solution,
+            outer_reset_solution=reset_solution,
             post_validation_func=_set_new_contents,
         )
 
-    def _prepare_validation_reset_solution_take_snapshot_if_needed(
+    def _prepare_reset_solution_take_snapshot_if_needed(
         self,
         /,
-    ) -> ContextManager[None]:
+    ) -> ResetSolutionTuple:
+        snapshot_taken = False
         if self.config.interactive_mode:
             # TODO: Lazy snapshotting causes unneeded double validation for data that is later
             #       validated for snapshot. Perhaps add a dirty flag to snapshot that can be used to
@@ -596,14 +600,16 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             needs_pre_validation = (not self.has_snapshot()
                                     or not self.contents_validated_according_to_snapshot())
             if needs_pre_validation:
-                reset_solution = self._get_reset_solution()
-                with reset_solution:
-                    validated_content = self._validate_contents_from_value(self.contents)
-                    if id(validated_content) != id(self.contents):
-                        self.contents = validated_content
-                    self._take_snapshot_of_validated_contents()
+                internal_reset_solution = self._get_reset_solution()
+                with internal_reset_solution:
+                    self._validate_and_set_value(
+                        self.contents, reset_solution=internal_reset_solution)
+                    snapshot_taken = True
 
-        return self._get_reset_solution()
+        return ResetSolutionTuple(
+            reset_solution=self._get_reset_solution(),
+            snapshot_taken=snapshot_taken,
+        )
 
     def _get_reset_solution(self) -> ContextManager[None]:
         if self.config.interactive_mode and self.has_snapshot():
@@ -635,32 +641,31 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def _generic_validate_contents(
         self,
         /,
-        new_contents: object | UndefinedType = Undefined,
-        reset_solution: ContextManager[None] | UndefinedType = Undefined,
+        new_contents: object,
+        outer_reset_solution: ContextManager[None] | None = None,
         post_validation_func: Callable[[_RootT], None] | None = None,
     ) -> None:
         keep_alive_old_contents = self.contents  # To ensure old content ids are not reused
 
-        if reset_solution is Undefined:
-            reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
-            with (reset_solution):
-                if new_contents is not Undefined:
-                    validated_content = self._validate_contents_from_value(new_contents)
-                else:
-                    validated_content = new_contents
-            del reset_solution
+        inner_reset_solution: ContextManager[None]
+        if outer_reset_solution:
+            inner_reset_solution = nothing()
         else:
-            if new_contents is not Undefined:
-                validated_content = self._validate_contents_from_value(new_contents)
-            else:
-                validated_content = new_contents
+            validating_self = new_contents is self.contents
+            reset_solution_tuple = self._prepare_reset_solution_take_snapshot_if_needed()
+            if validating_self and reset_solution_tuple.snapshot_taken:
+                return
+            inner_reset_solution = reset_solution_tuple.reset_solution
 
-        if post_validation_func:
-            post_validation_func(validated_content)
+        with (inner_reset_solution):
+            validated_contents = self._validate_contents_from_value(new_contents)
 
-        if new_contents is not Undefined:
-            del new_contents
-            self._take_snapshot_of_validated_contents()
+            if post_validation_func:
+                post_validation_func(validated_contents)
+        del inner_reset_solution
+
+        del new_contents
+        self._take_snapshot_of_validated_contents()
 
         del keep_alive_old_contents
 
@@ -998,19 +1003,15 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
                 return return_val
 
-            def _set_new_contents(contents: object) -> None:
-                self.contents = contents
-
-            reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
+            reset_solution = self._prepare_reset_solution_take_snapshot_if_needed().reset_solution
             with reset_solution:
                 ret = _call_special_method_and_return_self_if_inplace(*args, **kwargs)
                 if ret is NotImplemented:
                     return ret
 
-                self._generic_validate_contents(
+                self._validate_and_set_value(
                     new_contents=self.contents,
                     reset_solution=reset_solution,
-                    post_validation_func=_set_new_contents,
                 )
 
         elif name == '__iter__' and isinstance(self, Iterable):
@@ -1291,16 +1292,13 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             return level_up_type_to_check
 
     def __getattr__(self, attr: str) -> Any:
-        if self._is_non_omnipy_pydantic_model():
-            reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
-
-            if self._contents_obj_hasattr(attr):
-                self._validate_and_set_value(self.contents, reset_solution=reset_solution)
+        if self._is_non_omnipy_pydantic_model() and self._contents_obj_hasattr(attr):
+            self._validate_and_set_value(self.contents)
 
         contents_attr = self._getattr_from_contents_obj(attr)
 
         if inspect.isroutine(contents_attr):
-            reset_solution = self._prepare_validation_reset_solution_take_snapshot_if_needed()
+            reset_solution = self._prepare_reset_solution_take_snapshot_if_needed().reset_solution
             new_contents_attr = self._getattr_from_contents_obj(attr)
 
             def _validate_contents(ret: Any):
