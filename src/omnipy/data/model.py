@@ -37,7 +37,7 @@ from typing_extensions import get_original_bases, TypeVar
 from omnipy.api.protocols.private.util import IsSnapshotWrapper
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
-from omnipy.data.hacks import parse_none_value_according_to_model
+from omnipy.data.hacks import parse_none_according_to_model
 from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  get_special_methods_info_dict,
                                  get_terminal_size,
@@ -650,7 +650,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def _parse_root_object(cls, root_obj: dict[str, _RootT | None]) -> Any:
         assert ROOT_KEY in root_obj
         value = root_obj[ROOT_KEY]
-        value = parse_none_value_according_to_model(value, root_model=cls)
+        value = parse_none_according_to_model(value, root_model=cls)
 
         config = cls.data_class_creator.config
         with hold_and_reset_prev_attrib_value(config, 'dynamically_convert_elements_to_models'):
