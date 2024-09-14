@@ -1,4 +1,6 @@
 from collections.abc import Callable, Sequence
+from copy import copy, deepcopy
+from dataclasses import dataclass
 import gc
 from math import floor
 import os
@@ -548,6 +550,56 @@ def test_issubclass_and_isinstance() -> None:
         ...
 
     assert _issubclass_and_isinstance(MyStrList, Model[list])
+
+
+@pc.parametrize(
+    'copy_func',
+    [lambda model: model.copy(), lambda model: model.copy(deep=False), copy],
+    ids=['model.copy()', 'model.copy(deep=False)', 'copy.copy()'],
+)
+def test_copy(copy_func: Callable[[Model], Model]) -> None:
+    model = Model[list[list[int]]]([[123], [456]])
+
+    model_copy = copy_func(model)
+
+    assert model_copy is not model
+    assert model_copy == model
+
+    assert model_copy.contents is not model.contents
+    assert model_copy.contents == model.contents
+
+    assert model_copy.contents[0] is model.contents[0]
+    assert model_copy.contents[1] is model.contents[1]
+
+    assert not model_copy.has_snapshot()
+
+    assert model_copy.__fields_set__ == {'__root__'}
+
+
+@pc.parametrize(
+    'deepcopy_func',
+    [lambda model: model.copy(deep=True), deepcopy],
+    ids=['model.copy(deep=True)', 'copy.deepcopy()'],
+)
+def test_deepcopy(deepcopy_func: Callable[[Model], Model]) -> None:
+    model = Model[list[list[int]]]([[123], [456]])
+
+    model_deepcopy = deepcopy_func(model)
+
+    assert model_deepcopy is not model
+    assert model_deepcopy == model
+
+    assert model_deepcopy.contents is not model.contents
+    assert model_deepcopy.contents == model.contents
+
+    assert model_deepcopy.contents[0] is not model.contents[0]
+    assert model_deepcopy.contents[0] == model.contents[0]
+    assert model_deepcopy.contents[1] is not model.contents[1]
+    assert model_deepcopy.contents[1] == model.contents[1]
+
+    assert not model_deepcopy.has_snapshot()
+
+    assert model_deepcopy.__fields_set__ == {'__root__'}
 
 
 def test_parse_convertible_data() -> None:
@@ -3757,11 +3809,6 @@ def test_mimic_operations_on_literal_models() -> None:
 
     with pytest.raises(TypeError):
         LiteralFiveOrTextModel('text') / 2
-
-
-@pytest.mark.skipif(os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1', reason='Not implemented')
-def test_model_copy() -> None:
-    ...
 
 
 def test_json_schema_generic_model_one_level() -> None:

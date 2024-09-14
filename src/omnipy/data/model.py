@@ -1,7 +1,7 @@
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import contextmanager, suppress
-from copy import deepcopy
+from copy import copy, deepcopy
 import functools
 import inspect
 from itertools import chain
@@ -482,6 +482,15 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def __del__(self):
         contents_id = id(self.contents)
         self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(contents_id)
+
+    def __copy__(self):
+        return self.copy(deep=False)
+
+    def copy(self, *, deep: bool = False, **kwargs) -> 'Model[_RootT]':
+        pydantic_copy = GenericModel.copy(self, deep=deep, **kwargs)
+        if not deep:
+            pydantic_copy.__dict__[ROOT_KEY] = pydantic_copy.__dict__[ROOT_KEY].copy()
+        return pydantic_copy
 
     @classmethod
     def clone_model_cls(cls: type[_ModelT], new_model_cls_name: str) -> type[_ModelT]:

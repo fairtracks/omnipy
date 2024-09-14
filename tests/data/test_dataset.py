@@ -1,10 +1,11 @@
-import os
+from copy import copy, deepcopy
 from textwrap import dedent
 from types import NoneType
-from typing import Annotated, Any, Generic, List, Optional, TypeAlias, Union
+from typing import Annotated, Any, Callable, Generic, List, Optional, Union
 
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
+import pytest_cases as pc
 from typing_extensions import TypeVar
 
 from omnipy.api.exceptions import ParamException
@@ -369,6 +370,62 @@ def test_repr():
         "<class 'tests.data.helpers.datasets.CBA.MyGenericDataset[str | NumberModel]'>"
 
     assert repr(MyNestedFwdRefDataset(a='abc')) == "MyGenericDataset[str | NumberModel](a='abc')"
+
+
+@pc.parametrize(
+    'copy_func',
+    [lambda dataset: dataset.copy(), lambda dataset: dataset.copy(deep=False), copy],
+    ids=['dataset.copy()', 'dataset.copy(deep=False)', 'copy.copy()'],
+)
+def test_copy(copy_func: Callable[[Dataset], Dataset]) -> None:
+    dataset = Dataset[Model[list[int]]](data_file_1=[123], data_file_2=[456])
+
+    dataset_copy = copy_func(dataset)
+
+    assert dataset_copy is not dataset
+    assert dataset_copy == dataset
+
+    assert dataset_copy.data is not dataset.data
+    assert dataset_copy.data == dataset.data
+
+    assert dataset_copy['data_file_1'] is dataset['data_file_1']
+    assert dataset_copy['data_file_2'] is dataset['data_file_2']
+
+    assert dataset_copy['data_file_1'].contents is dataset['data_file_1'].contents
+    assert dataset_copy['data_file_2'].contents is dataset['data_file_2'].contents
+
+    assert dataset_copy.__fields_set__ == {'data'}
+
+
+@pc.parametrize(
+    'deepcopy_func',
+    [lambda dataset: dataset.copy(deep=True), deepcopy],
+    ids=['dataset.copy(deep=True)', 'copy.deepcopy()'],
+)
+def test_deepcopy(deepcopy_func: Callable[[Dataset], Dataset]) -> None:
+    dataset = Dataset[Model[list[int]]](data_file_1=[123], data_file_2=[456])
+
+    dataset_deepcopy = deepcopy_func(dataset)
+
+    assert dataset_deepcopy is not dataset
+    assert dataset_deepcopy == dataset
+
+    assert dataset_deepcopy.data is not dataset.data
+    assert dataset_deepcopy.data == dataset.data
+
+    assert dataset_deepcopy['data_file_1'] is not dataset['data_file_1']
+    assert dataset_deepcopy['data_file_1'] == dataset['data_file_1']
+
+    assert dataset_deepcopy['data_file_2'] is not dataset['data_file_2']
+    assert dataset_deepcopy['data_file_2'] == dataset['data_file_2']
+
+    assert dataset_deepcopy['data_file_1'].contents is not dataset['data_file_1'].contents
+    assert dataset_deepcopy['data_file_1'].contents == dataset['data_file_1'].contents
+
+    assert dataset_deepcopy['data_file_2'].contents is not dataset['data_file_2'].contents
+    assert dataset_deepcopy['data_file_2'].contents == dataset['data_file_2'].contents
+
+    assert dataset_deepcopy.__fields_set__ == {'data'}
 
 
 def test_basic_validation(runtime: Annotated[IsRuntime, pytest.fixture]):

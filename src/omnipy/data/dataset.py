@@ -206,6 +206,21 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
     def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
         ...
 
+    # TODO: Revise with pydantic v2: __deepcopy__ is not defined for Dataset and Model, as it is not
+    #       supported by pydantic v1. BaseModel.copy(deep=True) does not support a deepcopy memo.
+    #       So we instead make use of the builtin support for deepcopy, which seems to work fine.
+    #       However, __deepcopy__ in pydantic v2 is probably more efficient due to the memo and
+    #       the Rust backend.
+
+    def __copy__(self):
+        return self.copy(deep=False)
+
+    def copy(self, *, deep: bool = False, **kwargs) -> 'Dataset[ModelT]':
+        pydantic_copy = GenericModel.copy(self, deep=deep, **kwargs)
+        if not deep:
+            pydantic_copy.__dict__[DATA_KEY] = pydantic_copy.__dict__[DATA_KEY].copy()
+        return pydantic_copy
+
     @classmethod
     def clone_dataset_cls(cls: type[_DatasetT],
                           new_dataset_cls_name: str,
