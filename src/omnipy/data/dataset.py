@@ -18,11 +18,11 @@ from pydantic.utils import lenient_isinstance, lenient_issubclass
 from typing_extensions import TypeVar
 
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
-from omnipy.data.model import (_cleanup_name_qualname_and_module,
-                               _waiting_for_terminal_repr,
-                               INTERACTIVE_MODULES,
-                               is_model_instance,
-                               Model)
+from omnipy.data.helpers import (cleanup_name_qualname_and_module,
+                                 INTERACTIVE_MODULES,
+                                 is_model_instance,
+                                 waiting_for_terminal_repr)
+from omnipy.data.model import Model
 from omnipy.util.helpers import (get_calling_module_name,
                                  get_default_if_typevar,
                                  is_iterable,
@@ -133,7 +133,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
 
             created_dataset = super().__class_getitem__(params)
 
-        _cleanup_name_qualname_and_module(cls, created_dataset, orig_model)
+        cleanup_name_qualname_and_module(cls, created_dataset, orig_model)
 
         return created_dataset
 
@@ -547,9 +547,9 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
         return [(k, v.contents) for k, v in self.data.items()]
 
     def __repr__(self):
-        if self.config.interactive_mode and not _waiting_for_terminal_repr():
+        if self.config.interactive_mode and not waiting_for_terminal_repr():
             if get_calling_module_name() in INTERACTIVE_MODULES:
-                _waiting_for_terminal_repr(True)
+                waiting_for_terminal_repr(True)
                 return self._table_repr()
         return self._trad_repr()
 
@@ -567,7 +567,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
             ('#', 'Data file name', 'Type', 'Length', 'Size (in memory)'),
             tablefmt='rounded_outline',
         )
-        _waiting_for_terminal_repr(False)
+        waiting_for_terminal_repr(False)
         return ret
 
 

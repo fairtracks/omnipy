@@ -1,13 +1,10 @@
-from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from copy import copy, deepcopy
 import functools
 import inspect
-from itertools import chain
 import json
 import os
-import shutil
 from textwrap import dedent
 from types import GenericAlias, ModuleType, NoneType, UnionType
 from typing import (Annotated,
@@ -22,13 +19,11 @@ from typing import (Annotated,
                     Hashable,
                     Iterator,
                     Literal,
-                    NamedTuple,
                     Optional,
                     SupportsIndex,
                     Union)
 
 from devtools import debug, PrettyFormat
-from pydantic import NoneIsNotAllowedError
 from pydantic import Protocol as PydanticProtocol
 from pydantic import root_validator, ValidationError
 from pydantic.error_wrappers import ErrorWrapper
@@ -37,13 +32,22 @@ from pydantic.generics import GenericModel
 from pydantic.main import BaseModel, ModelMetaclass, validate_model
 from pydantic.typing import is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass, sequence_like
-from typing_extensions import get_original_bases, MutableSequence, TypeVar
+from typing_extensions import get_original_bases, TypeVar
 
-from omnipy.api.exceptions import OmnipyNoneIsNotAllowedError
 from omnipy.api.protocols.private.util import IsSnapshotWrapper
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
-from omnipy.data.helpers import get_special_methods_info_dict, MethodInfo, YesNoMaybe
+from omnipy.data.hacks import parse_none_value_according_to_model
+from omnipy.data.helpers import (cleanup_name_qualname_and_module,
+                                 get_special_methods_info_dict,
+                                 get_terminal_size,
+                                 INTERACTIVE_MODULES,
+                                 is_model_instance,
+                                 MethodInfo,
+                                 ResetSolutionTuple,
+                                 validate_cls_counts,
+                                 waiting_for_terminal_repr,
+                                 YesNoMaybe)
 from omnipy.util.contexts import (hold_and_reset_prev_attrib_value,
                                   LastErrorHolder,
                                   nothing,
@@ -53,7 +57,6 @@ from omnipy.util.helpers import (all_equals,
                                  all_type_variants,
                                  ensure_plain_type,
                                  evaluate_any_forward_refs_if_possible,
-                                 format_classname_with_params,
                                  get_calling_module_name,
                                  get_default_if_typevar,
                                  get_first_item,
@@ -77,98 +80,6 @@ _ModelT = TypeVar('_ModelT')
 ROOT_KEY = '__root__'
 
 # TODO: Refactor Dataset and Model using mixins (including below functions)
-INTERACTIVE_MODULES = [
-    '__main__',
-    'IPython.lib.pretty',
-    'IPython.core.interactiveshell',
-    '_pydevd_bundle.pydevd_asyncio_utils',
-    '_pydevd_bundle.pydevd_exec2',
-]
-
-_validate_cls_counts: defaultdict[str, int] = defaultdict(int)
-
-ResetSolutionTuple = NamedTuple('ResetSolutionTuple', [('reset_solution', ContextManager[None]),
-                                                       ('snapshot_taken', bool)])
-
-
-def debug_get_sorted_validate_counts() -> dict[str, int]:
-    return dict(reversed(sorted(_validate_cls_counts.items(), key=lambda item: item[1])))
-
-
-def debug_get_total_validate_count() -> int:
-    return sum(val for key, val in _validate_cls_counts.items())
-
-
-def _cleanup_name_qualname_and_module(
-    cls: type[DataClassBase],
-    model_or_dataset: type[DataClassBase],
-    orig_model: TypeForm,
-) -> None:
-    def _display_as_type(model: TypeForm):
-        if isinstance(model, str):  # ForwardRef
-            return model
-        elif isinstance(model, ForwardRef):
-            return model.__forward_arg__
-        elif isinstance(model, tuple):
-            return ', '.join(_display_as_type(arg) for arg in model)
-        elif is_union(model):
-            return ' | '.join(_display_as_type(arg) for arg in get_args(model))
-        elif len(get_args(model)) > 0:
-            return (f"{_display_as_type(get_origin(model))}"
-                    f"[{', '.join(_display_as_type(arg) for arg in get_args(model))}]")
-        elif isinstance(model, TypeVar):
-            return str(model)
-        else:
-            with suppress(AttributeError):
-                return model.__name__
-            return str(model)
-
-    params_str = _display_as_type(orig_model)
-
-    model_or_dataset.__name__ = format_classname_with_params(cls.__name__, params_str)
-    model_or_dataset.__qualname__ = format_classname_with_params(cls.__qualname__, params_str)
-    model_or_dataset.__module__ = cls.__module__
-
-
-def _get_terminal_size() -> os.terminal_size:
-    from omnipy.hub.runtime import runtime
-
-    shutil_terminal_size = shutil.get_terminal_size()
-    columns = runtime.config.data.terminal_size_columns if runtime else shutil_terminal_size.columns
-    lines = runtime.config.data.terminal_size_lines if runtime else shutil_terminal_size.lines
-
-    return os.terminal_size((columns, lines))
-
-
-def _waiting_for_terminal_repr(new_value: bool | None = None) -> bool:
-    from omnipy.hub.runtime import runtime
-    if runtime is None:
-        return False
-
-    if new_value is not None:
-        runtime.objects.waiting_for_terminal_repr = new_value
-        return new_value
-    else:
-        return runtime.objects.waiting_for_terminal_repr
-
-
-def is_model_instance(__obj: object) -> bool:
-    return lenient_isinstance(__obj, Model) \
-        and not is_none_type(__obj)  # Consequence of _ModelMetaclass hack
-
-
-def is_model_subclass(__cls: TypeForm) -> bool:
-    return lenient_issubclass(__cls, Model) \
-        and not is_none_type(__cls)  # Consequence of _ModelMetaclass hack
-
-
-def obj_or_model_contents_isinstance(__obj: object, __class_or_tuple: type) -> bool:
-    return isinstance(__obj.contents if is_model_instance(__obj) else __obj, __class_or_tuple)
-
-
-# def orjson_dumps(v, *, default):
-#     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
-#     return orjson.dumps(v, default=default).decode()
 
 
 class _ModelMetaclass(ModelMetaclass, DataClassBaseMeta):
@@ -350,7 +261,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         #       level in pydantic 2.0 (when it is released)
 
         if created_model is not cls:
-            _cleanup_name_qualname_and_module(cls, created_model, orig_model)
+            cleanup_name_qualname_and_module(cls, created_model, orig_model)
 
         if not isinstance(model, TypeVar):
             cls._prepare_cls_members_to_mimic_model(created_model)
@@ -466,7 +377,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     def _primary_validation(self, super_kwargs):
         # Pydantic validation of super_kwargs
-        _validate_cls_counts[self.__class__.__name__] += 1
+        validate_cls_counts[self.__class__.__name__] += 1
         super().__init__(**super_kwargs)
 
     def _secondary_validation_from_data(self, super_kwargs):
@@ -526,7 +437,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         """
         # TODO: Doublecheck if validate() method is still needed for pydantic v2
 
-        _validate_cls_counts[cls.__name__] += 1
+        validate_cls_counts[cls.__name__] += 1
         if is_model_instance(value):
 
             @contextmanager
@@ -739,109 +650,12 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
     def _parse_root_object(cls, root_obj: dict[str, _RootT | None]) -> Any:
         assert ROOT_KEY in root_obj
         value = root_obj[ROOT_KEY]
-        value = cls._parse_none_value_according_to_model(value, root_model=cls)
+        value = parse_none_value_according_to_model(value, root_model=cls)
 
         config = cls.data_class_creator.config
         with hold_and_reset_prev_attrib_value(config, 'dynamically_convert_elements_to_models'):
             config.dynamically_convert_elements_to_models = False
             return {ROOT_KEY: cls._parse_data(value)}
-
-    # Partial workaround of https://github.com/pydantic/pydantic/issues/3836 and similar bugs,
-    # together withhacks setting allow_none=True (_ModelMetaclass and _recursively_set_allow_none).
-    # See series of relevant tests in test_model.py starting with  test_list_of_none_variants().
-
-    @classmethod
-    def _parse_none_value_according_to_model(
-        cls,
-        value: _RootT | None,
-        root_model: 'Model',
-    ) -> _RootT:
-
-        outer_type = root_model.outer_type(with_args=True)
-        plain_outer_type = root_model.outer_type(with_args=False)
-        outer_type_args = get_args(outer_type)
-
-        inner_key_type = outer_type_args[0] if lenient_issubclass(
-            plain_outer_type, Mapping) and outer_type_args else Undefined
-        inner_val_type = root_model.inner_type(with_args=True)
-
-        if is_model_subclass(outer_type):
-            return outer_type(value)
-
-        def _split_to_union_variants(type_: TypeForm) -> tuple[TypeForm]:
-            return get_args(type_) if is_union(type_) else (type_,)
-
-        def _supports_none(type_: TypeForm) -> bool:
-            return is_none_type(type_) or is_optional(type_) or type_ in (object, Any)
-
-        def _parse_none_value(inner_union_types: tuple[TypeForm]) -> bool:
-            for type_ in inner_union_types:
-                if is_model_subclass(type_):
-                    return type_(cls._parse_none_value_according_to_model(None, type_))
-                elif _supports_none(type_):
-                    return None
-            raise OmnipyNoneIsNotAllowedError()
-
-        if root_model.is_nested_type():
-            inner_val_union_types = _split_to_union_variants(inner_val_type)
-
-            # Mutable sequences or variable tuples
-            if lenient_issubclass(plain_outer_type,
-                                  (MutableSequence, tuple)) and lenient_isinstance(
-                                      value, plain_outer_type):
-                if any(is_model_subclass(_) or _supports_none(_) for _ in inner_val_union_types):
-                    return plain_outer_type(
-                        _parse_none_value(inner_val_union_types) if val is None else val
-                        for val in value)
-
-            # Mappings
-            if lenient_issubclass(plain_outer_type, Mapping) and lenient_isinstance(
-                    value, Mapping) and outer_type_args:
-
-                inner_key_union_types = _split_to_union_variants(inner_key_type)
-
-                if any(
-                        is_model_subclass(_) or _supports_none(_)
-                        for _ in chain(inner_key_union_types, inner_val_union_types)):
-                    return plain_outer_type({
-                        _parse_none_value(inner_key_union_types) if key is None else key:
-                            _parse_none_value(inner_val_union_types) if val is None else val
-                        for key,
-                        val in value.items()
-                    })
-
-            if lenient_isinstance(outer_type, TypeVar):
-                return _parse_none_value(inner_val_union_types)
-
-            if value is None:
-                raise NoneIsNotAllowedError()
-
-        else:
-            tuple_of_union_variant_types = [_split_to_union_variants(_) for _ in outer_type_args]
-            flattened_union_variant_types = [
-                type_ for union_variant_types in tuple_of_union_variant_types
-                for type_ in union_variant_types
-            ]
-            if any(is_model_subclass(type_) or _supports_none(type_) \
-                   for type_ in flattened_union_variant_types):
-
-                # Fixed tuples
-                if lenient_issubclass(plain_outer_type, tuple) and lenient_isinstance(
-                        value, tuple) and outer_type_args:
-                    assert len(value) == len(
-                        outer_type_args) and outer_type_args[-1] is not Ellipsis
-                    return plain_outer_type(
-                        _parse_none_value(tuple_of_union_variant_types[i]) if val is None else val
-                        for i,
-                        val in enumerate(value))
-
-                # Unions
-                elif is_union(plain_outer_type):
-                    if value is None:
-                        return _parse_none_value(flattened_union_variant_types)
-                    else:
-                        return value
-        return value
 
     @property
     def contents(self) -> _RootT:
@@ -1352,9 +1166,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         # and self.to_data() == cast(Model, other).to_data()  # last line is just in case
 
     def __repr__(self) -> str:
-        if self.config.interactive_mode and not _waiting_for_terminal_repr():
+        if self.config.interactive_mode and not waiting_for_terminal_repr():
             if get_calling_module_name() in INTERACTIVE_MODULES:
-                _waiting_for_terminal_repr(True)
+                waiting_for_terminal_repr(True)
                 return self._table_repr()
         return self._trad_repr()
 
@@ -1392,7 +1206,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         # tabulate.PRESERVE_WHITESPACE = True  # Does not seem to work together with 'maxcolwidths'
 
-        terminal_size = _get_terminal_size()
+        terminal_size = get_terminal_size()
         header_column_width = len('(bottom')
         num_columns = 2
         table_chars_width = 3 * num_columns + 1
@@ -1455,6 +1269,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 tablefmt='rounded_grid',
             )
 
-        _waiting_for_terminal_repr(False)
+        waiting_for_terminal_repr(False)
 
         return out

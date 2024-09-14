@@ -26,8 +26,8 @@ import pytest_cases as pc
 from typing_extensions import TypeVar
 
 from omnipy.api.protocols.public.hub import IsRuntime
-from omnipy.data.helpers import TypeVarStore
-from omnipy.data.model import is_model_instance, Model, obj_or_model_contents_isinstance
+from omnipy.data.helpers import is_model_instance, obj_or_model_contents_isinstance, TypeVarStore
+from omnipy.data.model import Model
 from omnipy.util.setdeque import SetDeque
 
 from ..helpers.functions import assert_model, assert_val

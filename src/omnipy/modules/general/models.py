@@ -3,8 +3,12 @@ from typing import Any, Generic, get_args, Hashable, TypeAlias
 from pydantic.utils import lenient_isinstance
 from typing_extensions import TypeVar
 
-from omnipy.data.helpers import TypeVarStore1, TypeVarStore2, TypeVarStore3, TypeVarStore4
-from omnipy.data.model import is_model_instance, Model
+from omnipy.data.helpers import (is_model_instance,
+                                 TypeVarStore1,
+                                 TypeVarStore2,
+                                 TypeVarStore3,
+                                 TypeVarStore4)
+from omnipy.data.model import Model
 from omnipy.util.helpers import is_iterable
 
 

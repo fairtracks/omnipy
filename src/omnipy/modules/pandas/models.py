@@ -2,9 +2,10 @@ from collections.abc import Iterable
 from typing import Any
 
 from omnipy.data.dataset import Dataset
-from omnipy.data.model import is_model_instance, Model
+from omnipy.data.model import Model
 
 from . import pd
+from ...data.helpers import is_model_instance
 from ..tables.models import TableListOfDictsOfJsonScalarsModel
 
 

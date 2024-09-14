@@ -1,7 +1,17 @@
+from collections import defaultdict
+from contextlib import suppress
 from enum import IntEnum
-from typing import Generic, NamedTuple
+import os
+import shutil
+from typing import ContextManager, ForwardRef, Generic, get_args, get_origin, NamedTuple
 
+from pydantic.typing import is_none_type
+from pydantic.utils import lenient_isinstance, lenient_issubclass
 from typing_extensions import TypeVar
+
+from omnipy.api.typedefs import TypeForm
+from omnipy.data.data_class_creator import DataClassBase
+from omnipy.util.helpers import format_classname_with_params, is_union
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -127,3 +137,97 @@ _SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
 
 def get_special_methods_info_dict() -> dict[str, MethodInfo]:
     return _SPECIAL_METHODS_INFO_DICT
+
+
+INTERACTIVE_MODULES = [
+    '__main__',
+    'IPython.lib.pretty',
+    'IPython.core.interactiveshell',
+    '_pydevd_bundle.pydevd_asyncio_utils',
+    '_pydevd_bundle.pydevd_exec2',
+]
+validate_cls_counts: defaultdict[str, int] = defaultdict(int)
+ResetSolutionTuple = NamedTuple('ResetSolutionTuple', [('reset_solution', ContextManager[None]),
+                                                       ('snapshot_taken', bool)])
+
+
+def debug_get_sorted_validate_counts() -> dict[str, int]:
+    return dict(reversed(sorted(validate_cls_counts.items(), key=lambda item: item[1])))
+
+
+def debug_get_total_validate_count() -> int:
+    return sum(val for key, val in validate_cls_counts.items())
+
+
+def cleanup_name_qualname_and_module(
+    cls: type[DataClassBase],
+    model_or_dataset: type[DataClassBase],
+    orig_model: TypeForm,
+) -> None:
+    def _display_as_type(model: TypeForm):
+        if isinstance(model, str):  # ForwardRef
+            return model
+        elif isinstance(model, ForwardRef):
+            return model.__forward_arg__
+        elif isinstance(model, tuple):
+            return ', '.join(_display_as_type(arg) for arg in model)
+        elif is_union(model):
+            return ' | '.join(_display_as_type(arg) for arg in get_args(model))
+        elif len(get_args(model)) > 0:
+            return (f"{_display_as_type(get_origin(model))}"
+                    f"[{', '.join(_display_as_type(arg) for arg in get_args(model))}]")
+        elif isinstance(model, TypeVar):
+            return str(model)
+        else:
+            with suppress(AttributeError):
+                return model.__name__
+            return str(model)
+
+    params_str = _display_as_type(orig_model)
+
+    model_or_dataset.__name__ = format_classname_with_params(cls.__name__, params_str)
+    model_or_dataset.__qualname__ = format_classname_with_params(cls.__qualname__, params_str)
+    model_or_dataset.__module__ = cls.__module__
+
+
+def get_terminal_size() -> os.terminal_size:
+    from omnipy.hub.runtime import runtime
+
+    shutil_terminal_size = shutil.get_terminal_size()
+    columns = runtime.config.data.terminal_size_columns if runtime else shutil_terminal_size.columns
+    lines = runtime.config.data.terminal_size_lines if runtime else shutil_terminal_size.lines
+
+    return os.terminal_size((columns, lines))
+
+
+def waiting_for_terminal_repr(new_value: bool | None = None) -> bool:
+    from omnipy.hub.runtime import runtime
+    if runtime is None:
+        return False
+
+    if new_value is not None:
+        runtime.objects.waiting_for_terminal_repr = new_value
+        return new_value
+    else:
+        return runtime.objects.waiting_for_terminal_repr
+
+
+def is_model_instance(__obj: object) -> bool:
+    from omnipy.data.model import Model
+    return lenient_isinstance(__obj, Model) \
+        and not is_none_type(__obj)  # Consequence of _ModelMetaclass hack
+
+
+def is_model_subclass(__cls: TypeForm) -> bool:
+    from omnipy.data.model import Model
+    return lenient_issubclass(__cls, Model) \
+        and not is_none_type(__cls)  # Consequence of _ModelMetaclass hack
+
+
+def obj_or_model_contents_isinstance(__obj: object, __class_or_tuple: type) -> bool:
+    return isinstance(__obj.contents if is_model_instance(__obj) else __obj, __class_or_tuple)
+
+
+# def orjson_dumps(v, *, default):
+#     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
+#     return orjson.dumps(v, default=default).decode()
