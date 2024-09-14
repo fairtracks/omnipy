@@ -171,7 +171,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
 
         if data != Undefined:
             assert len(kwargs) == 0, \
-                "Not allowed to combine 'data' with other keyword arguments"
+                f"Not allowed to combine '{DATA_KEY}' with other keyword arguments"
             super_kwargs[DATA_KEY] = data
 
         if kwargs:
@@ -408,7 +408,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
     def to_json_schema(cls, pretty=True) -> str | dict[str, str]:
         result = {}
         schema = cls.schema()
-        for key, val in schema['properties']['data'].items():
+        for key, val in schema['properties'][DATA_KEY].items():
             result[key] = val
         result['title'] = schema['title']
         result['definitions'] = schema['definitions']

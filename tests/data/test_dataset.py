@@ -8,7 +8,6 @@ import pytest
 import pytest_cases as pc
 from typing_extensions import TypeVar
 
-from omnipy.api.exceptions import ParamException
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model

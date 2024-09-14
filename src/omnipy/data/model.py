@@ -38,7 +38,7 @@ from pydantic.typing import is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass, sequence_like
 from typing_extensions import get_original_bases, MutableSequence, TypeVar
 
-from omnipy.api.exceptions import OmnipyNoneIsNotAllowedError, ParamException
+from omnipy.api.exceptions import OmnipyNoneIsNotAllowedError
 from omnipy.api.protocols.private.util import IsSnapshotWrapper
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
@@ -988,9 +988,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             self, name: str, info: MethodInfo, *args: object, **kwargs: object) -> object:
 
         if info.state_changing and self.config.interactive_mode:
-            # if not self.has_snapshot() or not self.contents_validated_according_to_snapshot():
-            #     # self.validate_contents(restore_snapshot_if_interactive_and_invalid=True)
-            #     self.validate_contents()
 
             def _call_special_method_and_return_self_if_inplace(*inner_args: object,
                                                                 **inner_kwargs: object) -> object:

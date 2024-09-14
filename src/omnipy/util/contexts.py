@@ -74,7 +74,7 @@ def hold_and_reset_prev_attrib_value(
 
 
 @contextmanager
-def nothing(*args, **kwds):
+def nothing(*args, **kwds) -> Iterator[None]:
     yield None
 
 
