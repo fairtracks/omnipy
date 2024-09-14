@@ -69,6 +69,9 @@ def record_schema_factory(data_file: str,
     class Config(BaseConfig):
         extra = Extra.forbid
 
+    # For real-world implementation config.dynamically_convert_elements_to_models must be forced
+    # to False here.
+
     return create_model(
         data_file,
         __base__=RecordSchemaBase,
