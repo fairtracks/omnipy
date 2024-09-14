@@ -660,6 +660,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         with (inner_reset_solution):
             validated_contents = self._validate_contents_from_value(new_contents)
 
+            if validated_contents is new_contents:
+                validated_contents = copy(validated_contents)
+
             if post_validation_func:
                 post_validation_func(validated_contents)
         del inner_reset_solution

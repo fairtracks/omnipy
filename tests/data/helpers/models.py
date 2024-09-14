@@ -9,15 +9,10 @@ from typing_extensions import TypeVar
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, ParamsBase
 
+from .classes import MyFloatObject
+
 ChildT = TypeVar('ChildT', bound=object)
 ChildrenT = TypeVar("ChildrenT", bound=list)
-
-
-@dataclass
-class MyFloatObject:
-    int_part: int = 0
-    float_part: float = 0.0
-    precision: int = 4
 
 
 class MyFloatObjModel(Model[MyFloatObject]):
@@ -123,11 +118,3 @@ class LiteralTextModel(Model[Literal['text']]):
 
 class LiteralFiveOrTextModel(Model[Literal[5, 'text']]):
     ...
-
-
-class MyNumberBase:
-    def __init__(self, val: int = 1):
-        self.val = val
-
-    def __eq__(self, other: 'MyNumberBase') -> bool:  # type: ignore[override]
-        return self.val == other.val

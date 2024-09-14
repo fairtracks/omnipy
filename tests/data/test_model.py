@@ -32,16 +32,15 @@ from omnipy.util.setdeque import SetDeque
 
 from ..helpers.functions import assert_model, assert_val
 from ..helpers.protocols import AssertModelOrValFunc
+from .helpers.classes import MyFloatObject, MyList, MyNumberBase
 from .helpers.models import (CBA,
                              DefaultStrModel,
                              LiteralFiveModel,
                              LiteralFiveOrTextModel,
                              LiteralTextModel,
-                             MyFloatObject,
                              MyFloatObjModel,
                              MyFwdRefModel,
                              MyNestedFwdRefModel,
-                             MyNumberBase,
                              MyPydanticModel,
                              NumberModel,
                              ParamUpperStrModel,
@@ -1833,32 +1832,68 @@ def test_weakly_referenced_snapshot_deepcopy_memo_entry(
     assert len(snapshot_holder) == 0
 
 
-def test_snapshot_deleted_with_new_content(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    model = Model[list[int]]([123])
+@dataclass
+class ModelCase:
+    new_model_func: Callable[[], Model]
+    deepcopy_memo_count: int
+    contents_modify_func: Callable[[Any], None]
+    target_contents: Any
+
+
+@pc.fixture(scope='function')
+@pc.parametrize(
+    'case',
+    [
+        ModelCase(
+            new_model_func=lambda: Model[list[int]]([123]),
+            deepcopy_memo_count=1,
+            contents_modify_func=lambda contents: contents.append(234),
+            target_contents=[123, 234],
+        ),
+        ModelCase(
+            new_model_func=lambda: Model[MyList](MyList(123)),
+            deepcopy_memo_count=3,
+            contents_modify_func=lambda contents: contents.__iadd__(MyList(234)),
+            target_contents=MyList(123, 234),
+        ),
+    ],
+    ids=['Model[list[int]]', 'Model[MyList]'],
+)
+def model_case(case: ModelCase,) -> ModelCase:
+    return case
+
+
+def test_snapshot_deleted_with_new_content(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    model_case: Annotated[ModelCase, pc.fixture],
+) -> None:
+    model = model_case.new_model_func()
+
     model.validate_contents()
 
-    snapshot_holder = model.snapshot_holder
+    assert len(model.snapshot_holder) == (1 if runtime.config.data.interactive_mode else 0)
 
     if runtime.config.data.interactive_mode:
-        assert len(snapshot_holder) == 1
         old_snapshot_id = id(model.snapshot)
+        old_contents_id = id(model.contents)
 
-    assert len(snapshot_holder) == (1 if runtime.config.data.interactive_mode else 0)
-
-    model.contents = [234]
+    model_case.contents_modify_func(model.contents)
     model.validate_contents()
 
+    assert len(model.snapshot_holder) == (1 if runtime.config.data.interactive_mode else 0)
+
     if runtime.config.data.interactive_mode:
-        assert len(snapshot_holder) == 1
         assert id(model.snapshot) != old_snapshot_id
-    else:
-        assert len(snapshot_holder) == 0
+        assert id(model.contents) != old_contents_id
+
+    assert model.contents == model_case.target_contents
 
 
 def test_snapshot_deepcopy_memo_entry_deleted_with_new_content(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-
-    model = Model[list[int]]([123])
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    model_case: Annotated[ModelCase, pc.fixture],
+) -> None:
+    model = model_case.new_model_func()
 
     deepcopy_memo = model.snapshot_holder._deepcopy_memo
     deepcopy_memo.clear()
@@ -1866,26 +1901,27 @@ def test_snapshot_deepcopy_memo_entry_deleted_with_new_content(
 
     model.validate_contents()
 
-    # assert len(deepcopy_memo) == 0
+    assert len(deepcopy_memo) == (
+        model_case.deepcopy_memo_count if runtime.config.data.interactive_mode else 0)
 
     if runtime.config.data.interactive_mode:
-        assert len(deepcopy_memo) == 1
         old_entry_memo_key = tuple(deepcopy_memo.keys())[0]
         old_deepcopy_memo_entry_id = id(deepcopy_memo[old_entry_memo_key])
-    else:
-        assert len(deepcopy_memo) == 0
 
-    model.contents = [234]
+    model_case.contents_modify_func(model.contents)
     model.validate_contents()
 
+    assert len(deepcopy_memo) == (
+        model_case.deepcopy_memo_count if runtime.config.data.interactive_mode else 0)
+
     if runtime.config.data.interactive_mode:
-        assert len(deepcopy_memo) == 1
         entry_memo_key = tuple(deepcopy_memo.keys())[0]
         assert entry_memo_key != old_entry_memo_key
+
         deepcopy_memo_entry_id = id(deepcopy_memo[entry_memo_key])
         assert deepcopy_memo_entry_id != old_deepcopy_memo_entry_id
-    else:
-        assert len(deepcopy_memo) == 0
+
+    assert model.contents == model_case.target_contents
 
 
 def test_snapshot_deepcopy_reuse_objects(
@@ -2767,18 +2803,6 @@ def test_mimic_concatenation_for_converted_models(
 
 def test_mimic_concatenation_for_converted_models_with_incompatible_contents_except_to_data(
 ) -> None:
-    class MyList(Generic[T]):
-        def __init__(self, *args: T):
-            self.data = list(args)
-
-        def __repr__(self) -> str:
-            return f'MyList({self.data.__repr__()})'
-
-        def __add__(self, other: object) -> 'MyList[T] | NotImplementedType':
-            if type(other) == MyList:
-                return MyList(*self.data + other.data)
-            return NotImplemented
-
     assert not issubclass(MyList, list)
     assert not issubclass(MyList, Sequence)
 
@@ -3745,9 +3769,27 @@ def test_mimic_callable_property() -> None:
     assert model.func.called is False
 
 
-def test_mimic_object_member_not_in_class() -> None:
+# TODO: Revisit test_mimic_object_member_not_in_class_known_issue() is mimicking of __setattr__ is
+#       implemented. Libraries like Pandas might also graft methods onto instances such as
+#       DataFrames, which will not currently work with Omnipy. Dynamically added member variables
+#       that are not bound methods do work, however.
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason="""
+Known issue due to validation of the model contents before the calling of the method when
+interactive_mode is set to True. Since the method is grafted onto the specific model instance, it
+is bound to that instance only. However, validation shallow-copies the instance, including the
+method, but does not rebind the method to the new instance. The result is that the method is
+called on the old instance, and not the new one.
+
+Conclusion: avoid grafting methods onto models instances. Dynamically grafting methods is in any
+case an advanced operation and does not follow Python best practices. Grafting instance variables
+or unbound methods should work as expected, see test_mimic_dynamically_bound_instance_variable.
+""")
+def test_mimic_dynamically_bound_instance_method_known_issue(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
     class MyClass:
-        def __init__(self):
+        def __init__(self) -> None:
             self.called = False
 
     my_obj = MyClass()
@@ -3756,8 +3798,34 @@ def test_mimic_object_member_not_in_class() -> None:
 
     model = Model[MyClass](my_obj)
     assert model.called is False
+
     model.method()
-    assert model.called is True
+
+    if runtime.config.data.interactive_mode:
+        assert (my_obj.called, model.called) == (False, True)
+    else:
+        assert (my_obj.called, model.called) == (True, True)
+
+
+def test_mimic_dynamically_bound_instance_variable(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    class MyClass:
+        def toggle_if_available(self) -> None:
+            if hasattr(self, 'toggle'):
+                self.toggle = not self.toggle  # type: ignore[has-type]
+
+    my_obj = MyClass()
+    my_obj.toggle = False
+
+    model = Model[MyClass](my_obj)
+    assert model.toggle is False
+
+    model.toggle_if_available()
+
+    if runtime.config.data.interactive_mode:
+        assert (my_obj.toggle, model.toggle) == (False, True)
+    else:
+        assert (my_obj.toggle, model.toggle) == (True, True)
 
 
 def test_literal_model_defaults() -> None:

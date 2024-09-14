@@ -12,12 +12,13 @@ from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
+from .helpers.classes import MyFloatObject
 from .helpers.datasets import (DefaultStrDataset,
                                MyFloatObjDataset,
                                MyFwdRefDataset,
                                MyNestedFwdRefDataset,
                                ParamUpperStrDataset)
-from .helpers.models import MyFloatObject, NumberModel, StringToLength
+from .helpers.models import NumberModel, StringToLength
 
 
 def test_no_model():
