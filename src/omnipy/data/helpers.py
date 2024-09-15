@@ -148,8 +148,11 @@ INTERACTIVE_MODULES = [
     '_pydevd_bundle.pydevd_exec2',
 ]
 validate_cls_counts: defaultdict[str, int] = defaultdict(int)
-ResetSolutionTuple = NamedTuple('ResetSolutionTuple', [('reset_solution', ContextManager[None]),
-                                                       ('snapshot_taken', bool)])
+
+
+class ResetSolutionTuple(NamedTuple):
+    reset_solution: ContextManager[None]
+    snapshot_taken: bool
 
 
 def debug_get_sorted_validate_counts() -> dict[str, int]:

@@ -29,6 +29,7 @@ from typing import (_SpecialForm,
                     Mapping,
                     overload,
                     Protocol,
+                    TypeGuard,
                     TypeVar,
                     Union)
 from weakref import WeakKeyDictionary, WeakValueDictionary
@@ -49,6 +50,8 @@ _HasContentsT = TypeVar('_HasContentsT', bound=HasContents)
 _AnyKeyT = TypeVar('_AnyKeyT', bound=object)
 _ValT = TypeVar('_ValT', bound=object)
 _ContentsT = TypeVar('_ContentsT', bound=object)
+
+T = TypeVar('T')
 
 Dictable = Mapping[_KeyT, Any] | Iterable[tuple[_KeyT, Any]]
 
@@ -204,9 +207,9 @@ def all_type_variants(
         return (cast(type | GenericAlias, in_type),)
 
 
-def is_iterable(obj: object) -> bool:
+def is_iterable(obj: Iterable[T] | T) -> TypeGuard[Iterable[T]]:
     try:
-        iter(obj)  # type: ignore[call-overload]
+        iter(obj)  # type: ignore[arg-type]
         return True
     except TypeError:
         return False
