@@ -37,7 +37,7 @@ from typing_extensions import get_original_bases, TypeVar
 from omnipy.api.protocols.private.util import IsSnapshotWrapper
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
-from omnipy.data.hacks import parse_none_according_to_model
+from omnipy.data.missing import parse_none_according_to_model
 from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  get_special_methods_info_dict,
                                  get_terminal_size,

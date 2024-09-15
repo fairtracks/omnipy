@@ -23,7 +23,7 @@ def parse_none_according_to_model(value: _RootT, root_model) -> _RootT:  # IsMod
     outer_args = get_args(outer_type)
 
     if is_model_subclass(outer_type):
-        return outer_type(value)
+        return _parse_none_in_model(outer_type, value)
 
     if root_model.is_nested_type():
         inner_val_type = root_model.inner_type(with_args=True)
@@ -58,6 +58,10 @@ def parse_none_according_to_model(value: _RootT, root_model) -> _RootT:  # IsMod
                 return _parse_none_in_union(flattened_union_variant_types, value)
 
     return value
+
+
+def _parse_none_in_model(outer_type, value):
+    return outer_type(value)
 
 
 def _split_to_union_variants(type_: TypeForm) -> tuple[TypeForm]:
