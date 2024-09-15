@@ -263,6 +263,141 @@ def test_get_items_with_tuple_or_list() -> None:
         dataset[[0, 3]]
 
 
+def test_set_item_with_int_and_slice() -> None:
+    dataset = Dataset[Model[int]](data_file_1=123, data_file_2=456, data_file_3=789)
+    dataset[0] = 321
+    assert len(dataset) == 3
+    assert dataset['data_file_1'] == Model[int](321)
+
+    dataset[-1] = 987
+    assert len(dataset) == 3
+    assert dataset['data_file_3'] == Model[int](987)
+
+    with pytest.raises(IndexError):
+        dataset[3] = 1234
+
+    with pytest.raises(ValidationError):
+        dataset[2] = {'data_file_3': 1234}
+
+    dataset[0:2] = {'new_data_file': 123123, 'other_data_file': '456456'}
+
+    with pytest.raises(TypeError):
+        dataset[0:1] = 321321
+
+    assert tuple(dataset.items()) == (
+        ('new_data_file', Model[int](123123)),
+        ('other_data_file', Model[int](456456)),
+        ('data_file_3', Model[int](987)),
+    )
+
+    dataset[-1:] = {'new_data_file': 987987, 'other_data_file': 1001}
+    assert len(dataset) == 4
+    assert dataset['new_data_file_2'] == Model[int](987987)
+    assert dataset['other_data_file_2'] == Model[int](1001)
+
+    dataset[:] = (11, 22, 33, 44)
+    assert len(dataset) == 4
+    assert dataset['new_data_file'] == Model[int](11)
+    assert dataset['other_data_file'] == Model[int](22)
+    assert dataset['new_data_file_2'] == Model[int](33)
+    assert dataset['other_data_file_2'] == Model[int](44)
+
+    dataset[1:1] = (55, 66)
+    assert len(dataset) == 6
+    assert dataset['_untitled'] == Model[int](55)
+    assert dataset['_untitled_2'] == Model[int](66)
+
+    dataset[3:5] = (77,)
+    assert len(dataset) == 5
+    assert dataset['other_data_file'] == Model[int](77)
+
+    dataset[100:200] = (99,)
+    assert len(dataset) == 6
+    assert dataset['_untitled_3'] == Model[int](99)
+
+    assert tuple(dataset.items()) == (
+        ('new_data_file', Model[int](11)),
+        ('_untitled', Model[int](55)),
+        ('_untitled_2', Model[int](66)),
+        ('other_data_file', Model[int](77)),
+        ('other_data_file_2', Model[int](44)),
+        ('_untitled_3', Model[int](99)),
+    )
+
+    dataset[1:1] = ()
+
+    assert len(dataset) == 6
+
+    dataset.clear()
+    dataset[:] = (1, 2)
+
+    assert tuple(dataset.items()) == (
+        ('_untitled', Model[int](1)),
+        ('_untitled_2', Model[int](2)),
+    )
+
+    dataset.clear()
+    dataset[1:1] = {'data_file_1': 1, 'data_file_2': 2}
+
+    assert tuple(dataset.items()) == (
+        ('data_file_1', Model[int](1)),
+        ('data_file_2', Model[int](2)),
+    )
+
+
+def test_set_items_with_tuple_or_list() -> None:
+    dataset = Dataset[Model[int]](data_file_1=123, data_file_2=456, data_file_3=789)
+
+    with pytest.raises(TypeError):
+        dataset[[1]] = 654
+
+    dataset[[1]] = (654,)
+    assert len(dataset) == 3
+    assert dataset['data_file_2'] == Model[int](654)
+
+    dataset[0, 'data_file_3'] = (321, 987)
+    assert len(dataset) == 3
+    assert dataset['data_file_1'] == Model[int](321)
+    assert dataset['data_file_3'] == Model[int](987)
+
+    with pytest.raises(IndexError):
+        dataset[1, 3] = (222, 444)
+
+    dataset[('data_file_4',)] = (444, 555)
+    assert tuple(dataset.items()) == (
+        ('data_file_1', Model[int](321)),
+        ('data_file_2', Model[int](654)),
+        ('data_file_3', Model[int](987)),
+        ('data_file_4', Model[int](444)),
+        ('_untitled', Model[int](555)),
+    )
+
+    dataset[1, 'data_file_3', 3] = {'new_data_file': 666, 'other_data_file': 777}
+    assert tuple(dataset.items()) == (
+        ('data_file_1', Model[int](321)),
+        ('new_data_file', Model[int](666)),
+        ('other_data_file', Model[int](777)),
+        ('_untitled', Model[int](555)),
+    )
+
+    dataset[()] = (777, 888)
+    assert tuple(dataset.items()) == (
+        ('data_file_1', Model[int](321)),
+        ('new_data_file', Model[int](666)),
+        ('other_data_file', Model[int](777)),
+        ('_untitled', Model[int](555)),
+        ('_untitled_2', Model[int](777)),
+        ('_untitled_3', Model[int](888)),
+    )
+
+    dataset[()] = ()
+    assert len(dataset) == 6
+
+    dataset[[]] = (999,)
+    assert len(dataset) == 7
+    assert dataset['_untitled_4'] == dataset[-1] == Model[int](999)
+
+
 def test_equality() -> None:
     assert Dataset[Model[list[int]]]({'data_file_1': [1, 2, 3], 'data_file_2': [1.0, 2.0, 3.0]}) \
            == Dataset[Model[list[int]]]({'data_file_1': [1.0, 2.0, 3.0], 'data_file_2': [1, 2, 3]})
@@ -867,7 +1002,7 @@ def test_complex_models():
     with pytest.raises(ValidationError):
         dataset.from_data([(i, [0, i]) for i in range(0, 5)])  # noqa
 
-    dataset.from_data([(i, [1, i]) for i in range(1, 5)])  # noqa
+    dataset.from_data([(str(i), [1, i]) for i in range(1, 5)])  # noqa
     dataset.snapshot_holder.all_are_empty(debug=True)
     assert dataset['4'].contents == [4, 3, 2, 1]
 

@@ -4,7 +4,7 @@ import json
 import os
 import tarfile
 from tempfile import TemporaryDirectory
-from typing import Any, Callable, cast, Generic, Iterator
+from typing import Any, Callable, cast, Generic, Iterator, MutableMapping
 from urllib.parse import ParseResult, urlparse
 
 import humanize
@@ -23,6 +23,12 @@ from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  is_model_instance,
                                  waiting_for_terminal_repr)
 from omnipy.data.model import Model
+from omnipy.data.selector import (create_updated_mapping,
+                                  Index2DataItemsType,
+                                  Key2DataItemType,
+                                  prepare_selected_items_with_iterable_data,
+                                  prepare_selected_items_with_mapping_data,
+                                  select_keys)
 from omnipy.util.helpers import (get_calling_module_name,
                                  get_default_if_typevar,
                                  is_iterable,
@@ -272,40 +278,73 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
                 'particular specialization of the Model class. Both main classes are wrapping '
                 'the excellent Python package named `pydantic`.')
 
-    def __setitem__(self, data_file: str, data_obj: Any) -> None:
-        has_prev_value = data_file in self.data
-        prev_value = self.data.get(data_file)
+    def __getitem__(self, selector: str | int | slice | Iterable[str | int]) -> Any:
+        selected_keys = select_keys(selector, self.data)
 
-        try:
-            self.data[data_file] = data_obj
-            self._validate(data_file)
-        except:  # noqa
-            if has_prev_value:
-                self.data[data_file] = prev_value
+        if selected_keys.singular:
+            return self.data[selected_keys.keys[0]]
+        else:
+            return self.__class__({key: self.data[key] for key in selected_keys.keys})
+
+    def __setitem__(
+        self,
+        selector: str | int | slice | Iterable[str | int],
+        data_obj: dict[str, ModelT] | Iterable[ModelT] | ModelT,
+    ) -> None:
+        selected_keys = select_keys(selector, self.data)
+
+        if selected_keys.singular:
+            self._set_data_file_and_validate(selected_keys.keys[0], cast(ModelT, data_obj))
+        else:
+            key_2_data_item: Key2DataItemType[ModelT]
+            index_2_data_items: Index2DataItemsType[ModelT]
+
+            if isinstance(data_obj, MutableMapping):
+                key_2_data_item, index_2_data_items = \
+                    prepare_selected_items_with_mapping_data(
+                        selected_keys.keys, selected_keys.last_index, data_obj,)
+
+            elif is_iterable(data_obj):
+                key_2_data_item, index_2_data_items = \
+                    prepare_selected_items_with_iterable_data(
+                        selected_keys.keys, selected_keys.last_index, tuple(data_obj), self.data)
+
             else:
-                del self.data[data_file]
+                raise TypeError('Data object must be a mapping or an iterable')
+
+            self._update_selected_items_with_data_items(key_2_data_item, index_2_data_items)
+
+    def _update_selected_items_with_data_items(
+        self,
+        key_2_data_item: Key2DataItemType[ModelT],
+        index_2_data_item: Index2DataItemsType[ModelT],
+    ) -> None:
+
+        updated_mapping = create_updated_mapping(self.data, key_2_data_item, index_2_data_item)
+        self._replace_data_with_mapping(updated_mapping)
+
+    def _replace_data_with_mapping(self, updated_mapping):
+        prev_data = self.data
+        try:
+            self.absorb_and_replace(self.__class__(updated_mapping))
+        except Exception:
+            self.data = prev_data
             raise
 
-    def __getitem__(self, selector: str | int | slice | Iterable[str | int]) -> Any:
-        if isinstance(selector, str):
-            if selector in self.data:
-                return self.data[selector]
-            else:
-                return self.data[selector]
-        else:
-            data_keys = tuple(self.data.keys())
+    def _set_data_file_and_validate(self, key: str, val: ModelT) -> None:
+        has_prev_value = key in self.data
+        if has_prev_value:
+            prev_value = self.data[key]
 
-            if isinstance(selector, int):
-                return self.data[data_keys[selector]]
-            elif isinstance(selector, slice):
-                return self.__class__({key: self.data[key] for key in data_keys[selector]})
-            elif is_iterable(selector):
-                selected_keys = [data_keys[_] if isinstance(_, int) else _ for _ in selector]
-                return self.__class__({key: self.data[key] for key in selected_keys})
+        try:
+            self.data[key] = val
+            self._validate(key)
+        except Exception:
+            if has_prev_value:
+                self.data[key] = prev_value
             else:
-                raise KeyError(
-                    'Selector is of incorrect type. Must be a string, a positive integer,'
-                    'or a slice (e.g. `dataset[2:5]`).')
+                del self.data[key]
+            raise
 
     @classmethod
     def update_forward_refs(cls, **localns: Any) -> None:
