@@ -41,13 +41,15 @@ if not __all__:
     from .compute.task import Task, TaskTemplate
     from .data.dataset import Dataset, MultiModelDataset
     from .data.model import Model
-    from .data.param import bind_adjust_dataset_func, bind_adjust_model_func, ParamsBase
+    from .data.param import (bind_adjust_dataset_func,
+                             bind_adjust_model_func,
+                             params_dataclass,
+                             ParamsBase)
     from .hub.runtime import runtime
     from .util.contexts import print_exception
     from .util.helpers import recursive_module_import_new
 
     __all__ = [
-        'runtime',
         'DagFlow',
         'DagFlowTemplate',
         'FuncFlow',
@@ -58,10 +60,12 @@ if not __all__:
         'TaskTemplate',
         'Dataset',
         'MultiModelDataset',
-        'ParamsBase',
+        'Model',
         'bind_adjust_model_func',
         'bind_adjust_dataset_func',
-        'Model',
+        'params_dataclass',
+        'ParamsBase',
+        'runtime',
         'print_exception',
     ]
     _all_element_names = set(__all__)

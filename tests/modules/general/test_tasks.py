@@ -1,11 +1,13 @@
-from dataclasses import dataclass
 from typing import Generic
 
 from typing_extensions import TypeVar
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-from omnipy.data.param import bind_adjust_dataset_func, bind_adjust_model_func, ParamsBase
+from omnipy.data.param import (bind_adjust_dataset_func,
+                               bind_adjust_model_func,
+                               params_dataclass,
+                               ParamsBase)
 from omnipy.modules.general.tasks import convert_dataset
 
 
@@ -18,7 +20,7 @@ class IntModel(Model[int]):
 
 
 class _RoundedIntModel(Model[float | int]):
-    @dataclass(kw_only=True)
+    @params_dataclass
     class Params(ParamsBase):
         round_to_nearest: bool = False
 

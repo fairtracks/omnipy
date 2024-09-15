@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from math import floor
 from typing import Generic, Literal, Optional, TypeAlias
 
@@ -7,7 +6,7 @@ from pydantic.generics import GenericModel
 from typing_extensions import TypeVar
 
 from omnipy.data.model import Model
-from omnipy.data.param import bind_adjust_model_func, ParamsBase
+from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
 
 from .classes import MyFloatObject
 
@@ -61,7 +60,7 @@ MyNestedFwdRefModel.update_forward_refs(NumberModel=NumberModel)
 
 
 class _ParamUpperStrModel(Model[str]):
-    @dataclass(kw_only=True)
+    @params_dataclass
     class Params(ParamsBase):
         upper: bool = False
 
@@ -78,7 +77,7 @@ class ParamUpperStrModel(_ParamUpperStrModel):
 
 
 class _DefaultStrModel(Model[None | str]):
-    @dataclass(kw_only=True)
+    @params_dataclass
     class Params(ParamsBase):
         default: str = 'default'
 

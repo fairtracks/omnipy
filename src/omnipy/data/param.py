@@ -118,3 +118,11 @@ def bind_adjust_dataset_func(
         return new_dataset_cls
 
     return _func
+
+
+@dataclass_transform(kw_only_default=True)
+def params_dataclass(cls: type[ParamsT]) -> type[ParamsT]:
+    def wrap(cls):
+        return dataclass(cls, kw_only=True)
+
+    return wrap(cls)

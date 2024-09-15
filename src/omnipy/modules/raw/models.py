@@ -1,13 +1,12 @@
-from dataclasses import dataclass
 import os
 from typing import cast
 
 from omnipy.data.model import Model
-from omnipy.data.param import bind_adjust_model_func, ParamsBase
+from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
 
 
 class _EncodingParamsMixin:
-    @dataclass(kw_only=True)
+    @params_dataclass
     class Params(ParamsBase):
         encoding: str = 'utf-8'
 
@@ -49,7 +48,7 @@ class StrModel(_StrModel):
 
 
 class _SplitToLinesModel(Model[list[str] | str]):
-    @dataclass(kw_only=True)
+    @params_dataclass
     class Params(ParamsBase):
         strip: bool = True
 
@@ -80,7 +79,7 @@ class JoinLinesModel(Model[str | list[str]]):
 
 
 class _SplitToItemsMixin:
-    @dataclass(kw_only=True)
+    @params_dataclass
     class Params(ParamsBase):
         strip: bool = True
         strip_chars: str | None = None
@@ -134,7 +133,7 @@ class SplitLinesToColumnsModel(_SplitLinesToColumnsModel):
 
 
 class _JoinItemsMixin:
-    @dataclass(kw_only=True)
+    @params_dataclass
     class Params(ParamsBase):
         delimiter: str = '\t'
 

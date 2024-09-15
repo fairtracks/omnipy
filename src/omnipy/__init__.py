@@ -11,7 +11,10 @@ from omnipy.compute.flow import (DagFlow,
 from omnipy.compute.task import Task, TaskTemplate
 from omnipy.data.dataset import Dataset, MultiModelDataset
 from omnipy.data.model import Model
-from omnipy.data.param import bind_adjust_dataset_func, bind_adjust_model_func, ParamsBase
+from omnipy.data.param import (bind_adjust_dataset_func,
+                               bind_adjust_model_func,
+                               params_dataclass,
+                               ParamsBase)
 from omnipy.hub.runtime import runtime
 from omnipy.modules.general.models import (Chain2,
                                            Chain3,
@@ -255,9 +258,10 @@ __all__ = [
     'TableDictOfListsOfJsonScalarsModel',
     'TableListOfDictsOfJsonScalarsModel',
     'TableListOfListsOfJsonScalarsModel',
-    'ParamsBase',
     'bind_adjust_model_func',
     'bind_adjust_dataset_func',
+    'params_dataclass',
+    'ParamsBase',
     'NotIterableExceptStrOrBytesModel',
     'Chain2',
     'Chain3',
