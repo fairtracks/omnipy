@@ -595,12 +595,19 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
     def _trad_repr(self) -> str:
         return super().__repr__()
 
+    @classmethod
+    def _len_if_available(cls, obj: Any) -> int | str:
+        try:
+            return len(obj)
+        except TypeError:
+            return 'N/A'
+
     def _table_repr(self) -> str:
         ret = tabulate(
             ((i,
               k,
               type(v).__name__,
-              len(v) if hasattr(v, '__len__') else 'N/A',
+              self._len_if_available(v),
               humanize.naturalsize(objsize.get_deep_size(v)))
              for i, (k, v) in enumerate(self.items())),
             ('#', 'Data file name', 'Type', 'Length', 'Size (in memory)'),
