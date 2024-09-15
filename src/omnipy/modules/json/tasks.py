@@ -4,9 +4,9 @@ from typing import cast
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
 from omnipy.data.dataset import Dataset
+from omnipy.data.helpers import obj_or_model_contents_isinstance
 from omnipy.data.model import Model
 
-from ...data.helpers import obj_or_model_contents_isinstance
 from .datasets import (JsonDataset,
                        JsonDictDataset,
                        JsonListDataset,

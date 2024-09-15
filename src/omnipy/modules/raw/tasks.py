@@ -12,8 +12,8 @@ from typing_extensions import TypeVar
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
 from omnipy.data.dataset import Dataset, Model
+from omnipy.util.setdeque import SetDeque
 
-from ...util.setdeque import SetDeque
 from .datasets import StrDataset
 from .protocols import IsModifyAllLinesCallable, IsModifyContentsCallable, IsModifyEachLineCallable
 

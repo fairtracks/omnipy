@@ -37,18 +37,22 @@ class TableWithColNamesModel(Model[TableListOfDictsOfJsonScalarsModel
             if isinstance(data[0], list):  # type: ignore[index]
                 first_row_as_colnames = Model[list[str]](data[0])  # type: ignore[index]
                 first_row_as_colnames_data: list[str] = \
-                    first_row_as_colnames.to_data()
+                    first_row_as_colnames.to_data()  # type: ignore[assignment]
 
-                return [{
-                    col_name: row[i] if i < len(row) else None for i,
-                    col_name in enumerate(first_row_as_colnames_data)
-                } for j,
-                        row in enumerate(data) if j > 0]
+                return cls._convert_list_of_lists_to_list_of_dicts(data, first_row_as_colnames_data)
             else:
                 assert isinstance(data[0], dict)  # type: ignore[index]
                 return cast(TableListOfDictsOfJsonScalarsModel, data)
 
         return cast(TableListOfDictsOfJsonScalarsModel, data)
+
+    @classmethod
+    def _convert_list_of_lists_to_list_of_dicts(cls, data, first_row_as_colnames_data):
+        return [{
+            col_name: row[i] if i < len(row) else None for i,
+            col_name in enumerate(first_row_as_colnames_data)
+        } for j,
+                row in enumerate(data) if j > 0]
 
     @property
     def col_names(self) -> tuple[str]:
