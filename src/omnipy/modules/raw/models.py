@@ -87,11 +87,15 @@ class _SplitToItemsMixin:
 
     @classmethod
     def _split_line(cls, data: str) -> list[str]:
-        if cls.Params.strip:
-            data = data.strip(cls.Params.strip_chars)
+        strip = cls.Params.strip
+        strip_chars = cls.Params.strip_chars
+        delimiter = cls.Params.delimiter
 
-        items = data.split(cls.Params.delimiter)
-        return [item.strip(cls.Params.strip_chars) for item in items] if cls.Params.strip else items
+        if strip:
+            data = data.strip(strip_chars)
+
+        items = data.split(delimiter)
+        return [item.strip(strip_chars) for item in items] if strip else items
 
 
 class _SplitToItemsModel(
