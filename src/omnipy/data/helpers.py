@@ -1,6 +1,7 @@
 from collections import defaultdict
 from contextlib import suppress
 from enum import IntEnum
+import functools
 import os
 import shutil
 from typing import ContextManager, ForwardRef, Generic, get_args, get_origin, NamedTuple
@@ -218,6 +219,7 @@ def is_model_instance(__obj: object) -> bool:
         and not is_none_type(__obj)  # Consequence of _ModelMetaclass hack
 
 
+@functools.cache
 def is_model_subclass(__cls: TypeForm) -> bool:
     from omnipy.data.model import Model
     return lenient_issubclass(__cls, Model) \

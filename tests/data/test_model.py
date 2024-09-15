@@ -4229,6 +4229,9 @@ def test_parametrized_model() -> None:
     with pytest.raises(AttributeError):
         ParamUpperStrModel.adjust('MyUpperStrModel', True)
 
+    MyLowerStrModel = ParamUpperStrModel.adjust('MyLowerStrModel', upper=False)
+    assert MyLowerStrModel('bar').contents == 'bar'
+
 
 def test_parametrized_model_wrong_keyword() -> None:
     with pytest.raises(KeyError):

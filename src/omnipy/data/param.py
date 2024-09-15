@@ -1,12 +1,15 @@
 from copy import deepcopy
+from dataclasses import dataclass
+import functools
 from typing import Any, Callable, cast, Concatenate, ParamSpec
 
 from pydantic import BaseModel
 from pydantic.main import create_model, ModelMetaclass, validate_model
-from typing_extensions import TypeVar
+from typing_extensions import dataclass_transform, TypeVar
 
 ModelT = TypeVar('ModelT')
 DatasetT = TypeVar('DatasetT')
+ParamsT = TypeVar('ParamsT')
 ParamsP = ParamSpec('ParamsP')
 
 
@@ -36,11 +39,15 @@ class ParamsMeta(ModelMetaclass):
     def __getattr__(cls, attr: str) -> object:
         model_cls = cast(type[BaseModel], cls)
         if attr in model_cls.__fields__:
-            if model_cls.__fields__[attr].default_factory is not None:
-                return model_cls.__fields__[attr].default_factory()  # type: ignore[misc]
-            else:
-                return model_cls.__fields__[attr].default
+            return cls._get_param_value(attr, model_cls)
         raise AttributeError(f"{model_cls.__name__}.{attr} is not defined")
+
+    @functools.cache
+    def _get_param_value(cls, attr, model_cls):
+        if model_cls.__fields__[attr].default_factory is not None:
+            return model_cls.__fields__[attr].default_factory()
+        else:
+            return model_cls.__fields__[attr].default
 
     def __setattr__(cls, attr: str, value: object) -> None:
         model_cls = cast(type[BaseModel], cls)

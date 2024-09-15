@@ -203,8 +203,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     @classmethod
     def _prepare_cls_members_to_mimic_model(cls, created_model: 'Model[type[_RootT]]') -> None:
-        outer_type = created_model._get_root_type(outer=True, with_args=True)
-        outer_type_plain = created_model._get_root_type(outer=True, with_args=False)
+        outer_type = created_model.outer_type(with_args=True)
+        outer_type_plain = created_model.outer_type(with_args=False)
 
         # TODO: See if it is possible to type Model mimicking of root type, e.g. with Protocol
         if not lenient_issubclass(outer_type_plain, TypeVar):
@@ -296,6 +296,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                     if orig_model is not Undefined:
                         cls.set_orig_model(orig_model)
                         break
+
+            cls._clean_type_caches()
 
     def __new__(
         cls,
@@ -476,6 +478,8 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
+
+        cls._clean_type_caches()
 
     def validate_contents(self) -> None:
         self._validate_and_set_value(self.contents)
@@ -712,20 +716,31 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         self.contents = new_model.contents
 
     @classmethod
+    @functools.cache
     def inner_type(cls, with_args: bool = False) -> TypeForm:
         return cls._get_root_type(outer=False, with_args=with_args)
 
     @classmethod
+    @functools.cache
     def outer_type(cls, with_args: bool = False) -> TypeForm:
         return cls._get_root_type(outer=True, with_args=with_args)
 
     @classmethod
+    @functools.cache
     def full_type(cls) -> TypeForm:
         return cls.outer_type(with_args=True)
 
     @classmethod
+    @functools.cache
     def is_nested_type(cls) -> bool:
         return not cls.inner_type(with_args=True) == cls.outer_type(with_args=True)
+
+    @classmethod
+    def _clean_type_caches(cls):
+        cls.outer_type.cache_clear()
+        cls.inner_type.cache_clear()
+        cls.full_type.cache_clear()
+        cls.is_nested_type.cache_clear()
 
     @classmethod
     def _get_root_field(cls) -> ModelField:

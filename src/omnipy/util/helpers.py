@@ -230,11 +230,13 @@ def get_first_item(iterable: Iterable[object]) -> object:
         return item
 
 
+@functools.cache
 def is_union(cls_or_type: type | UnionType | None | object) -> bool:
     union_types = [Union, UnionType]
     return cls_or_type in union_types or get_origin(cls_or_type) in union_types
 
 
+@functools.cache
 def is_optional(cls_or_type: type | UnionType | None | object) -> bool:
     return is_union(cls_or_type) and any(is_none_type(arg) for arg in get_args(cls_or_type))
 
@@ -250,6 +252,7 @@ def all_equals(first, second) -> bool:
         return equals
 
 
+@functools.cache
 def is_strict_subclass(
         __cls: type,
         __class_or_tuple: type | UnionType | tuple[type | UnionType | tuple[Any, ...], ...]
