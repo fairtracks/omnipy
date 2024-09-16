@@ -325,8 +325,14 @@ def test_set_item_with_int_and_slice() -> None:
     )
 
     dataset[1:1] = ()
+    assert len(dataset) == 6
+
+    with pytest.raises(ValidationError):
+        dataset[1:3] = (123, 'def')
 
     assert len(dataset) == 6
+    assert dataset['_untitled'] == Model[int](55)
+    assert dataset['_untitled_2'] == Model[int](66)
 
     dataset.clear()
     dataset[:] = (1, 2)
