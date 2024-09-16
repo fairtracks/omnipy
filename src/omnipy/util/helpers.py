@@ -167,8 +167,10 @@ def evaluate_any_forward_refs_if_possible(in_type: TypeForm,
         else:
             globalns = {}
         try:
-            return cast(type | GenericAlias,
-                        in_type._evaluate(globalns, localns if localns else locals(), frozenset()))
+            return cast(
+                type | GenericAlias,
+                in_type._evaluate(
+                    globalns, localns if localns else locals(), recursive_guard=set()))
         except NameError:
             pass
     else:
