@@ -25,7 +25,7 @@ class ParamsMeta(ModelMetaclass):
 
             default_vals[field.name] = field.get_default()
             if default_vals[field.name] is None and not field.allow_none:
-                raise ValueError(f"{model_cls.__name__}.{field.name} must have a default value")
+                raise ValueError(f'{model_cls.__name__}.{field.name} must have a default value')
 
         values, fields_set, validation_error = \
             validate_model(model_cls, input_data={k: v for k, v in default_vals.items()})
@@ -40,7 +40,7 @@ class ParamsMeta(ModelMetaclass):
         model_cls = cast(type[BaseModel], cls)
         if attr in model_cls.__fields__:
             return cls._get_param_value(attr, model_cls)
-        raise AttributeError(f"{model_cls.__name__}.{attr} is not defined")
+        raise AttributeError(f'{model_cls.__name__}.{attr} is not defined')
 
     @functools.cache
     def _get_param_value(cls, attr, model_cls):
@@ -52,9 +52,9 @@ class ParamsMeta(ModelMetaclass):
     def __setattr__(cls, attr: str, value: object) -> None:
         model_cls = cast(type[BaseModel], cls)
         if attr in model_cls.__fields__:
-            raise AttributeError(f"{model_cls.__name__}.{attr} is read-only")
+            raise AttributeError(f'{model_cls.__name__}.{attr} is read-only')
         elif not attr.startswith('_'):
-            raise AttributeError(f"{model_cls.__name__}.{attr} is not defined")
+            raise AttributeError(f'{model_cls.__name__}.{attr} is not defined')
         super().__setattr__(attr, value)
 
 
@@ -64,7 +64,7 @@ class ParamsBase(BaseModel, metaclass=ParamsMeta):
         smart_union = True
 
     def __new__(cls, *args: object, **kwargs: object) -> None:  # type: ignore[misc]
-        raise RuntimeError(f"{cls.__name__} cannot be instantiated")
+        raise RuntimeError(f'{cls.__name__} cannot be instantiated')
 
     @classmethod
     def copy_and_adjust(cls, model_name: str, **kwargs: object) -> type['ParamsBase']:

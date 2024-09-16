@@ -291,7 +291,7 @@ def remove_forward_ref_notation(type_str: str):
 
 
 def format_classname_with_params(cls_name: str, params_str: str) -> str:
-    return f"{cls_name}[{params_str}]"
+    return f'{cls_name}[{params_str}]'
 
 
 class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):

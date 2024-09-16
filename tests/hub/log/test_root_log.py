@@ -318,7 +318,7 @@ def test_daily_log_file_rotation(
             if j == 0:
                 log_file_path_to_check = log_file_path
             else:
-                log_file_path_to_check = f"{log_file_path}.{j}"
+                log_file_path_to_check = f'{log_file_path}.{j}'
 
                 if j % 2 == 0:
                     # Simulates that omnipy is running for two days at a time, and then restarted.

@@ -134,7 +134,7 @@ class SetDeque(deque, Generic[_ObjT]):
                 arg = args[0]
                 arg_repr = f"[{arg.__name__ if hasattr(arg, '__name__') else repr(arg)}]"
         maxlen_repr = f', maxlen={self.maxlen}' if self.maxlen is not None else ''
-        return f"{self.__class__.__name__}{arg_repr}({list(self)}{maxlen_repr})"
+        return f'{self.__class__.__name__}{arg_repr}({list(self)}{maxlen_repr})'
 
     def __sizeof__(self):
         return super().__sizeof__() + sys.getsizeof(self._set)

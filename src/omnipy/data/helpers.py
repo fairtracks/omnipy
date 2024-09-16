@@ -178,7 +178,7 @@ def cleanup_name_qualname_and_module(
         elif is_union(model):
             return ' | '.join(_display_as_type(arg) for arg in get_args(model))
         elif len(get_args(model)) > 0:
-            return (f"{_display_as_type(get_origin(model))}"
+            return (f'{_display_as_type(get_origin(model))}'
                     f"[{', '.join(_display_as_type(arg) for arg in get_args(model))}]")
         elif isinstance(model, TypeVar):
             return str(model)
