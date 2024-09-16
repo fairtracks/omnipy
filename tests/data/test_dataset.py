@@ -345,6 +345,15 @@ def test_set_item_with_int_and_slice() -> None:
     )
 
 
+def test_set_items_with_immutable_sequence_data() -> None:
+    dataset = Dataset[Model[str]](data_file_1='abc', data_file_2='def', data_file_3='ghi')
+
+    with pytest.raises(TypeError):
+        dataset[0:1] = 'jkl'  # type: ignore[assignment]
+
+    assert len(dataset) == 3
+
+
 def test_set_items_with_tuple_or_list() -> None:
     dataset = Dataset[Model[int]](data_file_1=123, data_file_2=456, data_file_3=789)
 

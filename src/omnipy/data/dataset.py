@@ -320,7 +320,7 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
                     prepare_selected_items_with_mapping_data(
                         selected_keys.keys, selected_keys.last_index, data_obj,)
 
-            elif is_iterable(data_obj):
+            elif is_iterable(data_obj) and not isinstance(data_obj, (str, bytes)):
                 key_2_data_item, index_2_data_items = \
                     prepare_selected_items_with_iterable_data(
                         selected_keys.keys, selected_keys.last_index, tuple(data_obj), self.data)
