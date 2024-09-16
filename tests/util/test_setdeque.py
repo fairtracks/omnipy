@@ -1,4 +1,5 @@
 from collections import deque
+from contextlib import suppress  # noqa: F401
 from itertools import chain
 import sys
 from timeit import timeit

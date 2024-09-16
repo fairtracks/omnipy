@@ -203,7 +203,7 @@ def test_print_exception(capsys: pytest.CaptureFixture) -> None:
         'a' + 1  # type: ignore
 
     captured = capsys.readouterr()
-    assert captured.out == "TypeError: can only concatenate str (not 'int') to str"
+    assert captured.out == 'TypeError: can only concatenate str (not "int") to str'
 
     with print_exception:
         raise NotImplementedError(
