@@ -1,5 +1,6 @@
 from collections import UserDict
 from collections.abc import Iterable, Mapping
+from copy import copy
 import json
 import os
 import tarfile
@@ -285,6 +286,21 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
             return self.data[selected_keys.keys[0]]
         else:
             return self.__class__({key: self.data[key] for key in selected_keys.keys})
+
+    def __delitem__(self, selector: str | int | slice | Iterable[str | int]) -> Any:
+        selected_keys = select_keys(selector, self.data)
+
+        if selected_keys.singular:
+            del self.data[selected_keys.keys[0]]
+        else:
+            prev_data = copy(self.data)
+
+            try:
+                for key in selected_keys.keys:
+                    del self.data[key]
+            except Exception:
+                self.data = prev_data
+                raise
 
     def __setitem__(
         self,

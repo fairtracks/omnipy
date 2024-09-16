@@ -398,6 +398,86 @@ def test_set_items_with_tuple_or_list() -> None:
     assert dataset['_untitled_4'] == dataset[-1] == Model[int](999)
 
 
+def test_del_item_with_str() -> None:
+    dataset = Dataset[Model[int]](data_file_1=123, data_file_2=456, data_file_3=789)
+
+    del dataset['data_file_1']
+    assert tuple(dataset.items()) == (
+        ('data_file_2', Model[int](456)),
+        ('data_file_3', Model[int](789)),
+    )
+
+    with pytest.raises(KeyError):
+        del dataset['data_file_1']
+
+
+def test_del_item_with_int_and_slice() -> None:
+    dataset = Dataset[Model[int]](
+        data_file_1=123, data_file_2=234, data_file_3=345, data_file_4=456, data_file_5=567)
+
+    del dataset[0]
+    assert tuple(dataset.items()) == (
+        ('data_file_2', Model[int](234)),
+        ('data_file_3', Model[int](345)),
+        ('data_file_4', Model[int](456)),
+        ('data_file_5', Model[int](567)),
+    )
+
+    with pytest.raises(IndexError):
+        del dataset[4]
+
+    del dataset[1:3]
+    assert tuple(dataset.items()) == (
+        ('data_file_2', Model[int](234)),
+        ('data_file_5', Model[int](567)),
+    )
+
+    del dataset[-1:]
+    assert tuple(dataset.items()) == (('data_file_2', Model[int](234)),)
+
+    del dataset[0:0]
+    assert len(dataset) == 1
+
+    del dataset[:]
+    assert len(dataset) == 0
+
+
+def test_del_items_with_tuple_or_list() -> None:
+    dataset = Dataset[Model[int]](
+        data_file_1=123, data_file_2=234, data_file_3=345, data_file_4=456, data_file_5=567)
+
+    del dataset[()]
+    assert len(dataset) == 5
+
+    del dataset[[]]
+    assert len(dataset) == 5
+
+    del dataset[
+        0,
+    ]
+    assert tuple(dataset.items()) == (
+        ('data_file_2', Model[int](234)),
+        ('data_file_3', Model[int](345)),
+        ('data_file_4', Model[int](456)),
+        ('data_file_5', Model[int](567)),
+    )
+
+    del dataset[0, 2]
+    assert tuple(dataset.items()) == (
+        ('data_file_3', Model[int](345)),
+        ('data_file_5', Model[int](567)),
+    )
+
+    with pytest.raises(IndexError):
+        del dataset[0, 3]
+
+    with pytest.raises(KeyError):
+        del dataset[0, 'data_file_4']
+
+    del dataset[[0, 'data_file_5']]
+    assert len(dataset) == 0
+
+
 def test_equality() -> None:
     assert Dataset[Model[list[int]]]({'data_file_1': [1, 2, 3], 'data_file_2': [1.0, 2.0, 3.0]}) \
            == Dataset[Model[list[int]]]({'data_file_1': [1.0, 2.0, 3.0], 'data_file_2': [1, 2, 3]})
