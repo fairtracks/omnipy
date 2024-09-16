@@ -1,7 +1,7 @@
 import os
 from typing import Annotated
 
-from pydantic import ValidationError
+from pydantic import ValidationError, BaseModel
 from pydantic.fields import Field
 import pytest
 
@@ -43,13 +43,9 @@ def test_params_parameter_value_is_read_only(
 
 def test_params_default_value_validation(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    @params_dataclass
-    class MyClass:
-        def __init__(self, a: int):
-            self.a = a
-
-        def __eq__(self, other: object) -> bool:
-            return isinstance(other, MyClass) and self.a == other.a
+    class MyPydanticModel(BaseModel):
+        a: str
+        b: int
 
     with pytest.raises(ValidationError):
 
@@ -57,20 +53,18 @@ def test_params_default_value_validation(
         class MyFailingParams(ParamsBase):
             my_int: int = '123'  # type: ignore[assignment]
             my_str: str = 456  # type: ignore[assignment]
-            my_obj: MyClass = 123  # type: ignore[assignment]
+            my_model: type[BaseModel] = 123  # type: ignore[assignment]
 
-    my_default_obj = MyClass(123)
 
     @params_dataclass
     class MyParams(ParamsBase):
         my_int: int = '123'  # type: ignore[assignment]
         my_str: str = 456  # type: ignore[assignment]
-        my_obj: MyClass = my_default_obj
+        my_model: type[BaseModel] = MyPydanticModel
 
     assert MyParams.my_int == 123
     assert MyParams.my_str == '456'
-    assert MyParams.my_obj == my_default_obj
-    assert MyParams.my_obj is not my_default_obj
+    assert MyParams.my_model is MyPydanticModel
 
     with pytest.raises(ValueError):
 
@@ -127,48 +121,43 @@ def test_params_validation(
 
 def test_params_copy_and_adjust(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    class MyClass:
-        def __init__(self, a: int):
-            self.a = a
-
-        def __eq__(self, other: object) -> bool:
-            return isinstance(other, MyClass) and self.a == other.a
-
-    my_default_obj = MyClass(123)
+    class MyPydanticModel(BaseModel):
+        a: str
+        b: int
 
     @params_dataclass
     class MyParams(ParamsBase):
         my_int_or_float: int | float = 123
         my_str_or_none: str | None = None
-        my_obj: MyClass = my_default_obj
+        my_model: type[BaseModel] = MyPydanticModel
 
     MyNewParams = MyParams.copy_and_adjust('MyNewParams')
     assert MyNewParams.__name__ == 'MyNewParams'
     assert MyNewParams.my_int_or_float == 123
-    assert MyNewParams.my_str_or_none == None
-    assert MyNewParams.my_obj == my_default_obj
-    assert MyNewParams.my_obj is not my_default_obj
+    assert MyNewParams.my_str_or_none is None
+    assert MyNewParams.my_model is MyPydanticModel
 
-    MyOtherParams = MyParams.copy_and_adjust('MyThirdParams', my_int_or_float=456)
-    assert MyOtherParams.__name__ == 'MyThirdParams'
+    MyOtherParams = MyParams.copy_and_adjust('MyOtherParams', my_int_or_float=456)
+    assert MyOtherParams.__name__ == 'MyOtherParams'
     assert MyOtherParams.my_int_or_float == 456
     assert MyOtherParams.my_str_or_none is None
-    assert MyOtherParams.my_obj == my_default_obj
-    assert MyOtherParams.my_obj is not my_default_obj
+    assert MyOtherParams.my_model is MyPydanticModel
 
-    my_new_obj = MyClass(234)
+    class MyOtherPydanticModel(BaseModel):
+        x: str
+        y: int
+
     MyThirdParams = MyParams.copy_and_adjust(
         'MyThirdParams',
         my_int_or_float=456.3,
         my_str_or_none=789,
-        my_obj=my_new_obj,
+        my_model=MyOtherPydanticModel,
     )
     assert MyThirdParams.__name__ == 'MyThirdParams'
     assert MyThirdParams.my_int_or_float == 456.3
     assert MyThirdParams.my_str_or_none == '789'
-    assert MyThirdParams.my_obj == my_new_obj
-    assert MyThirdParams.my_obj is not my_new_obj
-    assert MyParams.my_obj == my_default_obj
+    assert MyThirdParams.my_model is MyOtherPydanticModel
+    assert MyParams.my_model == MyPydanticModel
 
     with pytest.raises(ValidationError):
         MyParams.copy_and_adjust('MyFailingParams', my_int_or_float='abc', my_str_or_none='abc')
