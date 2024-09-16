@@ -63,9 +63,7 @@ def test_split_to_and_join_lines_model(
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
 
-
     raw_data = """\
-        
         Alas, poor Yorick! I knew him, Horatio: a fellow
         of infinite jest, of most excellent fancy: he hath
         borne me on his back a thousand times; and now, how

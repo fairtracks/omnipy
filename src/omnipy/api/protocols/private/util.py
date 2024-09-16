@@ -7,9 +7,9 @@ _ObjT = TypeVar('_ObjT', bound=object)
 _ObjContraT = TypeVar('_ObjContraT', contravariant=True, bound=object)
 _AnyKeyT = TypeVar('_AnyKeyT', contravariant=True, bound=object)
 _ValT = TypeVar('_ValT', bound=object)
-_ContentsT = TypeVar("_ContentsT", bound=object)
-_ContentCovT = TypeVar("_ContentCovT", covariant=True, bound=object)
-_ContentContraT = TypeVar("_ContentContraT", contravariant=True, bound=object)
+_ContentsT = TypeVar('_ContentsT', bound=object)
+_ContentCovT = TypeVar('_ContentCovT', covariant=True, bound=object)
+_ContentContraT = TypeVar('_ContentContraT', contravariant=True, bound=object)
 _HasContentsT = TypeVar('_HasContentsT', bound='HasContents')
 
 

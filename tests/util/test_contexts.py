@@ -60,7 +60,7 @@ def test_setup_and_teardown_callback_context_with_exception(state_and_callback_f
         ) as number:
             assert number == 123
             assert state == [123]
-            raise RuntimeError("Whoops! Something went wrong...")
+            raise RuntimeError('Whoops! Something went wrong...')
     except RuntimeError:
         pass
 
@@ -81,7 +81,7 @@ def test_setup_and_teardown_callback_context_args_with_exception(state_and_callb
         ) as number:
             assert number == 234
             assert state == [234]
-            raise RuntimeError("Whoops! Something went wrong...")
+            raise RuntimeError('Whoops! Something went wrong...')
     except RuntimeError:
         pass
 
@@ -103,7 +103,7 @@ def test_setup_and_teardown_callback_context_kwargs_with_exception(
         ) as number:
             assert number == 345
             assert state == [345]
-            raise RuntimeError("Whoops! Something went wrong...")
+            raise RuntimeError('Whoops! Something went wrong...')
     except RuntimeError:
         pass
 
@@ -120,7 +120,7 @@ def test_setup_and_teardown_callback_context_only_setup_func(state_and_callback_
         ) as number:
             assert number == 234
             assert state == [234]
-            raise RuntimeError("Whoops! Something went wrong...")
+            raise RuntimeError('Whoops! Something went wrong...')
     except RuntimeError:
         pass
 
@@ -137,7 +137,7 @@ def test_setup_and_teardown_callback_context_only_exception_func(state_and_callb
         ) as number:
             assert number is None
             assert state == []
-            raise RuntimeError("Whoops! Something went wrong...")
+            raise RuntimeError('Whoops! Something went wrong...')
     except RuntimeError:
         pass
 
@@ -156,7 +156,7 @@ def test_setup_and_teardown_callback_context_only_teardown_func(state_and_callba
         ) as number:
             assert number is None
             assert state == [234]
-            raise RuntimeError("Whoops! Something went wrong...")
+            raise RuntimeError('Whoops! Something went wrong...')
     except RuntimeError:
         pass
 
@@ -203,7 +203,7 @@ def test_print_exception(capsys: pytest.CaptureFixture) -> None:
         'a' + 1  # type: ignore
 
     captured = capsys.readouterr()
-    assert captured.out == 'TypeError: can only concatenate str (not "int") to str'
+    assert captured.out == "TypeError: can only concatenate str (not 'int') to str"
 
     with print_exception:
         raise NotImplementedError(

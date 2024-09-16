@@ -615,7 +615,7 @@ def test_ref_count_memo_dict_complex_object_deletion() -> None:
             all_ids = (id_a, id_b, id_c, id_d, id_e_c, id_f_c)
 
             assert ref_count_memo_dict[id_a] == a_list
-            assert not id_b in ref_count_memo_dict  # tuples are not memoized
+            assert id_b not in ref_count_memo_dict  # tuples are not memoized
             assert ref_count_memo_dict[id_c] == c_set
             assert ref_count_memo_dict[id_d] == d_dict
             assert ref_count_memo_dict[id_e_c] == e_obj.contents
@@ -981,7 +981,7 @@ def test_snapshot_holder_all_are_empty_and_clear() -> None:
     assert snapshot_holder.all_are_empty()
 
 
-#TODO: Refactor into smaller tests
+# TODO: Refactor into smaller tests
 def test_snapshots() -> None:
     snapshot_holder = SnapshotHolder[MyList | MyDict, list | dict]()
 
@@ -1105,33 +1105,33 @@ def test_snapshot_deepcopy_reuse_objects() -> None:
         _take_snapshot(snapshot_holder, middle)
         _take_snapshot(snapshot_holder, inner)
 
-        assert type(outer[1].my_list[-1]) == type(middle[-1]) == type(inner) == MyMemoDeletingList
+        assert type(outer[1].my_list[-1]) is type(middle[-1]) is type(inner) is MyMemoDeletingList
         assert id(outer[1].my_list[-1]) == id(middle[-1]) == id(inner)
 
         assert type(snapshot_holder[outer].snapshot[1].my_list[-1]) \
-               == type(snapshot_holder[middle].snapshot[-1]) \
-               == MyMemoDeletingList
+               is type(snapshot_holder[middle].snapshot[-1]) \
+               is MyMemoDeletingList
         assert id(snapshot_holder[outer].snapshot[1].my_list[-1]) \
                == id(snapshot_holder[middle].snapshot[-1])
 
-        assert type(outer[1].my_list[-1].contents) == type(middle[-1].contents) == type(
-            inner.contents) == list
+        assert type(outer[1].my_list[-1].contents) is type(middle[-1].contents) is type(
+            inner.contents) is list
         assert id(outer[1].my_list[-1].contents) == id(middle[-1].contents) == id(inner.contents)
 
         assert type(snapshot_holder[outer].snapshot[1].my_list[-1].contents) \
-               == type(snapshot_holder[middle].snapshot[-1].contents) \
-               == type(snapshot_holder[inner].snapshot) \
-               == list
+               is type(snapshot_holder[middle].snapshot[-1].contents) \
+               is type(snapshot_holder[inner].snapshot) \
+               is list
         assert id(snapshot_holder[outer].snapshot[1].my_list[-1].contents) \
                == id(snapshot_holder[middle].snapshot[-1].contents) \
                == id(snapshot_holder[inner].snapshot)
 
-        assert type(outer[1].my_list.contents) == type(middle.contents) == list
+        assert type(outer[1].my_list.contents) is type(middle.contents) is list
         assert id(outer[1].my_list.contents) == id(middle.contents)
 
         assert type(snapshot_holder[outer].snapshot[1].my_list.contents) \
-               == type(snapshot_holder[middle].snapshot) \
-               == list
+               is type(snapshot_holder[middle].snapshot) \
+               is list
         assert id(snapshot_holder[outer].snapshot[1].my_list.contents) \
                == id(snapshot_holder[middle].snapshot)
 

@@ -16,7 +16,6 @@ from omnipy.modules.raw.datasets import (BytesDataset,
                                          SplitToLinesDataset,
                                          StrDataset)
 
-from ...helpers.functions import assert_model  # type: ignore[misc]
 from ...helpers.protocols import AssertModelOrValFunc
 
 

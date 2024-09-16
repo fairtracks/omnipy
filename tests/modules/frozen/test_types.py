@@ -57,4 +57,4 @@ def test_frozendict_repr() -> None:
     assert repr(simple_frozen_dict) == "FrozenDict({'a': 'b', 'c': 'd'})"
 
     del simple_frozen_dict.data
-    assert repr(simple_frozen_dict) == "FrozenDict()"
+    assert repr(simple_frozen_dict) == 'FrozenDict()'

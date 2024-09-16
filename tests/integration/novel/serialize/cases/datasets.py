@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 import pandas
 import pytest
 
@@ -59,18 +61,18 @@ def json_nested_table_dataset() -> JsonDataset:
 @pytest.fixture
 def json_table_as_str_dataset() -> Dataset[Model[str]]:
     _json_table_as_str_dataset = Dataset[Model[str]]()
-    _json_table_as_str_dataset['json_table_a'] = """
+    _json_table_as_str_dataset['json_table_a'] = dedent("""
     [
         {"firstname": "John", "lastname": "Doe", "age": 46},
         {"firstname": "Jane", "lastname": "Doe", "age": 42},
         {"firstname": "Mr.", "lastname": "Miyagi", "age": 82}
-    ]"""[1:]
-    _json_table_as_str_dataset['json_table_b'] = """
+    ]""")
+    _json_table_as_str_dataset['json_table_b'] = dedent("""
     [
         {"fruit": "apple", "taste": "sweet"},
         {"fruit": "orange", "taste": "sweet and sour"},
         {"fruit": "lemon", "taste": "sour"}
-    ]"""[1:]
+    ]""")
     return _json_table_as_str_dataset
 
 

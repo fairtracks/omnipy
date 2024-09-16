@@ -1,5 +1,4 @@
 from datetime import datetime
-import logging
 from logging import getLogger, INFO, Logger
 import time
 

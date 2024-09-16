@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Iterable, Mapping, MutableMapping, TypeAlias
+from typing import Iterable, MutableMapping, TypeAlias
 
 from typing_extensions import TypeVar
 

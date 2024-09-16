@@ -280,8 +280,8 @@ def test_nested_frozen_models(case: CaseInfo) -> None:
                 with pytest.raises(ValidationError):
                     model_cls(data)
             else:
-                print(data)
-                model_obj = model_cls(data)
+                model_cls(data)
+                # model_obj = model_cls(data)
 
                 # print(f'repr(model_obj): {repr(model_obj)}')
                 # print(f'model_obj.contents: {model_obj.contents}')

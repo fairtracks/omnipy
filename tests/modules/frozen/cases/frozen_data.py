@@ -1,9 +1,6 @@
 from dataclasses import dataclass, field
-import os
-from textwrap import dedent
 from typing import Type, TypeAlias
 
-import pytest
 import pytest_cases as pc
 
 from modules.general.cases.raw.examples import (e_complex_key_dict,
@@ -341,12 +338,18 @@ def case_nested_frozen_dicts() -> CaseInfo:
             field(default_factory=lambda: {'a': dict(f_dict), 'b': list(f_list)})
         err_nfd_with_list_level_three: dict[str, dict[str, FSV | list[FSV]]] = \
             field(default_factory=lambda: {'a': dict(f_dict), 'b': {'x': list(f_list)}})
-        nfdnp_with_wrong_scalar_level_three: dict[str, dict[str, FSV | list[FSV]]] = \
-            field(default_factory=lambda:
-            {'a': dict(f_dict), 'b': {'x': ej_frozendict_wrong_scalar}})
-        err_nfdp_with_wrong_scalar_level_three: dict[str, dict[str, FSV | list[FSV]]] = \
-            field(default_factory=lambda:
-            {'a': dict(f_dict), 'b': {'x': ej_frozendict_wrong_scalar}})
+        nfdnp_with_wrong_scalar_level_three: dict[str, dict[str, FSV | list[FSV]]] = field(
+            default_factory=lambda: {
+                'a': dict(f_dict), 'b': {
+                    'x': ej_frozendict_wrong_scalar
+                }
+            })
+        err_nfdp_with_wrong_scalar_level_three: dict[str, dict[str, FSV | list[FSV]]] = field(
+            default_factory=lambda: {
+                'a': dict(f_dict), 'b': {
+                    'x': ej_frozendict_wrong_scalar
+                }
+            })
 
     return CaseInfo(
         name='test_nested_frozen_dicts',

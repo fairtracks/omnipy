@@ -1,7 +1,7 @@
 import os
 from typing import Annotated
 
-from pydantic import ValidationError, BaseModel
+from pydantic import BaseModel, ValidationError
 from pydantic.fields import Field
 import pytest
 
@@ -13,10 +13,10 @@ def test_params_parameter_lookup(
     @params_dataclass
     class MyParams(ParamsBase):
         my_int: int = 123
-        my_str: str = "abc"
+        my_str: str = 'abc'
 
     assert MyParams.my_int == 123
-    assert MyParams.my_str == "abc"
+    assert MyParams.my_str == 'abc'
 
     with pytest.raises(AttributeError):
         MyParams.something_else
@@ -30,7 +30,7 @@ def test_params_parameter_value_is_read_only(
     @params_dataclass
     class MyParams(ParamsBase):
         my_int: int = 123
-        my_str: str = "abc"
+        my_str: str = 'abc'
 
     with pytest.raises(AttributeError):
         MyParams.my_int = 456
@@ -54,7 +54,6 @@ def test_params_default_value_validation(
             my_int: int = '123'  # type: ignore[assignment]
             my_str: str = 456  # type: ignore[assignment]
             my_model: type[BaseModel] = 123  # type: ignore[assignment]
-
 
     @params_dataclass
     class MyParams(ParamsBase):
@@ -110,7 +109,7 @@ def test_params_validation(
     @params_dataclass
     class MyParams(ParamsBase):
         my_int: int = 123
-        my_str: str = "abc"
+        my_str: str = 'abc'
 
     with pytest.raises(RuntimeError):
         MyParams()

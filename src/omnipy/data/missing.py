@@ -43,19 +43,18 @@ def parse_none_according_to_model(value: _RootT, root_model) -> _RootT:  # IsMod
             raise OmnipyNoneIsNotAllowedError()
 
     else:
-        union_variant_types = _split_outer_type_to_union_variants(outer_args)
-        flattened_union_variant_types = _flatten_two_level_tuple(union_variant_types)
+        union_variants = _split_outer_type_to_union_variants(outer_args)
+        flattened_union_variants = _flatten_two_level_tuple(union_variants)
 
-        if any(is_model_subclass(type_) or _supports_none(type_) \
-               for type_ in flattened_union_variant_types):
+        if any(is_model_subclass(tp_) or _supports_none(tp_) for tp_ in flattened_union_variants):
 
             # Fixed tuples
             if _outer_type_and_value_are_of_types(plain_outer_type, value, tuple) and outer_args:
-                return _parse_none_in_fixed_tuple(plain_outer_type, union_variant_types, value)
+                return _parse_none_in_fixed_tuple(plain_outer_type, union_variants, value)
 
             # Unions
             if is_union(plain_outer_type):
-                return _parse_none_in_union(flattened_union_variant_types, value)
+                return _parse_none_in_union(flattened_union_variants, value)
 
     return value
 
@@ -81,8 +80,9 @@ def _supports_none(type_: TypeForm) -> bool:
 
 
 def _outer_type_and_value_are_of_types(plain_outer_type, value, *types):
-    return any(lenient_issubclass(plain_outer_type, type_) and lenient_isinstance(value, type_) \
-               for type_ in types)
+    return any(
+        lenient_issubclass(plain_outer_type, type_) and lenient_isinstance(value, type_)
+        for type_ in types)
 
 
 def _parse_none_in_mutable_sequence_or_tuple(plain_outer_type, inner_val_type, value):
@@ -101,7 +101,8 @@ def _parse_none_in_mapping(plain_outer_type, outer_type_args, inner_val_type, va
         plain_outer_type, Mapping) and outer_type_args else Undefined
     inner_key_union_types = _split_to_union_variants(inner_key_type)
 
-    if any(is_model_subclass(_) or _supports_none(_) \
+    if any(
+            is_model_subclass(_) or _supports_none(_)
             for _ in chain(inner_key_union_types, inner_val_union_types)):
         return plain_outer_type({
             _parse_none_in_types(inner_key_union_types) if key is None else key:

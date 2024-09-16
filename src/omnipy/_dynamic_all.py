@@ -76,7 +76,7 @@ if not __all__:
 
     for module_name, module in _all_modules.items():
         for attr in dir(module):
-            if not attr.startswith('_') and not attr in _all_element_names:
+            if not attr.startswith('_') and attr not in _all_element_names:
                 val = getattr(module, attr)
                 if attr in _exclude_attrs:
                     continue
@@ -90,20 +90,7 @@ if not __all__:
                     __all__.append(attr)
 
     print(f'Missing elements in omnipy.__init__(): {_all_element_names - _omnipy_all}')
-    print(
-        f'Missing elements in hardcoded __all__ in _dynamic_all(): {_omnipy_all - _all_element_names}'
-    )
+    print(f'Missing elements in hardcoded __all__ in _dynamic_all(): '
+          f'{_omnipy_all - _all_element_names}')
 
     del JobTemplateMixin
-
-# from omnipy import __all__ as prev_all
-#
-# prev_all_set = set(prev_all)
-#
-# print(f'__all__: {__all__}')
-# print(
-#     f'_all_element_names - prev_all: {[_ for _ in __all__ if _ in (_all_element_names - prev_all_set)]}'
-# )
-# print(
-#     f'prev_all - _all_element_names: {[_ for _ in prev_all if _ in (prev_all_set - _all_element_names)]}'
-# )

@@ -18,7 +18,6 @@ from typing import _LiteralGenericAlias  # type: ignore[attr-defined]
 from typing import _LiteralSpecialForm  # type: ignore[attr-defined]
 from typing import _UnionGenericAlias  # type: ignore[attr-defined]
 from typing import (_SpecialForm,
-                    Annotated,
                     Any,
                     cast,
                     ClassVar,
@@ -322,7 +321,7 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
                 print('==================================================')
                 for key in self:
                     print(f'Content id: {key} '
-                          f'[{sys.getrefcount(self[key])-1} refs, id={id(self[key])}]: '
+                          f'[{sys.getrefcount(self[key]) - 1} refs, id={id(self[key])}]: '
                           f'{repr(self[key])}')
 
                 for key in self:
@@ -398,8 +397,9 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         #     if possibly_added_obj in self and possibly_added_obj not in self._keep_alive_dict:
         #         del self[possibly_added_obj]
 
-        if self._cur_deepcopy_obj_id and (self._cur_deepcopy_obj_id in self._sub_obj_ids and
-                                          self._cur_deepcopy_obj_id not in self._keep_alive_dict):
+        if self._cur_deepcopy_obj_id and \
+                (self._cur_deepcopy_obj_id in self._sub_obj_ids
+                 and self._cur_deepcopy_obj_id not in self._keep_alive_dict):
             del self._sub_obj_ids[self._cur_deepcopy_obj_id]
 
         self._cur_deepcopy_obj_id = None

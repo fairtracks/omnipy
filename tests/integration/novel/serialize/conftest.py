@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from .cases.datasets import (csv_dataset,
                              json_dataset,
                              json_nested_table_dataset,

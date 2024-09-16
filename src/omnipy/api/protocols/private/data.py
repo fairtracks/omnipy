@@ -4,7 +4,7 @@ from omnipy.api.protocols.private.util import IsSnapshotHolder
 from omnipy.api.protocols.public.config import IsDataConfig
 
 _ObjT = TypeVar('_ObjT', bound=object)
-_ContentsT = TypeVar("_ContentsT", bound=object)
+_ContentsT = TypeVar('_ContentsT', bound=object)
 
 
 class IsDataClassCreator(Protocol[_ObjT, _ContentsT]):

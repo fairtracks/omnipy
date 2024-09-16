@@ -1,7 +1,7 @@
 from types import MappingProxyType
 from typing import Generic, TypeAlias
 
-from typing_extensions import ForwardRef, TypeVar
+from typing_extensions import ForwardRef
 
 from omnipy.data.helpers import DoubleTypeVarStore, TypeVarStore
 from omnipy.data.model import Model
@@ -83,7 +83,8 @@ class _FrozenNoTuplesM(Model[FrozenDict[KeyT,
 # TypeAliases
 
 _FrozenAnyUnion: TypeAlias = \
-    DoubleTypeVarStore[KeyT, ValT] | _FrozenScalarM[ValT] | _FrozenTupleM[KeyT, ValT] | _FrozenDictM[KeyT, ValT]
+    DoubleTypeVarStore[KeyT, ValT] | _FrozenScalarM[ValT] \
+    | _FrozenTupleM[KeyT, ValT] | _FrozenDictM[KeyT, ValT]
 _FrozenTupleM.update_forward_refs()
 _FrozenDictM.update_forward_refs()
 _FrozenNoDictsUnion: TypeAlias = TypeVarStore[ValT] | _FrozenScalarM[ValT] | _FrozenNoDictsM[ValT]

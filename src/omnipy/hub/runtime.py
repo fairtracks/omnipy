@@ -16,7 +16,6 @@ from omnipy.api.protocols.public.data import IsSerializerRegistry
 from omnipy.api.protocols.public.hub import IsRootLogObjects, IsRuntimeConfig, IsRuntimeObjects
 from omnipy.compute.job import JobBase
 from omnipy.config.data import DataConfig
-from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import JobConfig
 from omnipy.data.data_class_creator import DataClassBase
 from omnipy.data.serializer import SerializerRegistry

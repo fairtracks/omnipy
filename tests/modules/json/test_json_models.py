@@ -40,11 +40,11 @@ def test_json_models(case: CaseInfo) -> None:
             # print(f'Data input: {data}')
 
             if case.data_point_should_fail(name):
-                with pytest.raises(ValidationError) as e:
+                with pytest.raises(ValidationError):
                     model_cls(data)
                 # print(f'Error: {e}')
             else:
-                model_obj = model_cls(data)
+                model_obj = model_cls(data)  # noqa: F841
 
                 # print(f'repr(model_obj): {repr(model_obj)}')
                 # print(f'model_obj.contents: {model_obj.contents}')

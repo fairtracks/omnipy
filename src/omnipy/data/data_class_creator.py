@@ -1,6 +1,6 @@
 from abc import ABCMeta
 from contextlib import contextmanager
-from typing import Callable, ContextManager, Generic, Iterator, TypeVar
+from typing import Callable, ContextManager, Iterator
 
 from omnipy.api.protocols.private.data import IsDataClassCreator
 from omnipy.api.protocols.private.util import IsSnapshotHolder

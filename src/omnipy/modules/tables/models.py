@@ -48,11 +48,15 @@ class TableWithColNamesModel(Model[TableListOfDictsOfJsonScalarsModel
 
     @classmethod
     def _convert_list_of_lists_to_list_of_dicts(cls, data, first_row_as_colnames_data):
-        return [{
-            col_name: row[i] if i < len(row) else None for i,
-            col_name in enumerate(first_row_as_colnames_data)
-        } for j,
-                row in enumerate(data) if j > 0]
+        # TODO: Fix auto-formatting. Current setting is relatively ugly many places
+        return [
+            {
+                col_name: (row[i] if i < len(row) else None)
+                for (i, col_name) in enumerate(first_row_as_colnames_data)
+            }
+            for (j, row) in enumerate(data)  # noqa: E126
+            if j > 0
+        ]
 
     @property
     def col_names(self) -> tuple[str]:

@@ -2,7 +2,6 @@ from typing import Annotated
 
 import pytest
 
-from omnipy.api.protocols.public.config import IsDataConfig
 from omnipy.config.data import DataConfig
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta, DataClassCreator
 from omnipy.util.helpers import SnapshotHolder

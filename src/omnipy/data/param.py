@@ -21,7 +21,7 @@ class ParamsMeta(ModelMetaclass):
         default_vals = {}
         for field in model_cls.__fields__.values():
             if field.default_factory is not None:
-                raise ValueError(f"Default factory is not supported for Params classes")
+                raise ValueError('Default factory is not supported for Params classes')
 
             default_vals[field.name] = field.get_default()
             if default_vals[field.name] is None and not field.allow_none:

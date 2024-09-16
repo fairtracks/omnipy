@@ -20,7 +20,7 @@ def test_nested_frozen_datasets(case: CaseInfo) -> None:
             # print(f'Data input: {data}')
 
             if case.data_point_should_fail(name):
-                with pytest.raises(ValidationError) as e:
+                with pytest.raises(ValidationError):  # as e:
                     dataset = dataset_cls()
                     dataset[name] = data
 

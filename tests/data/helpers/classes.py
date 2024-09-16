@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from types import NotImplementedType
 from typing import Generic
 
 from typing_extensions import TypeVar
@@ -21,18 +22,18 @@ class MyList(Generic[T]):
         return f'MyList({self.data.__repr__()})'
 
     def __add__(self, other: object) -> 'MyList[T] | NotImplementedType':
-        if type(other) == MyList:
+        if type(other) is MyList:
             return MyList(*self.data + other.data)
         return NotImplemented
 
     def __iadd__(self, other: object) -> 'MyList[T] | NotImplementedType':
-        if type(other) == MyList:
+        if type(other) is MyList:
             self.data += other.data
             return self
         return NotImplemented
 
     def __eq__(self, other: object) -> bool:
-        if type(other) == MyList:
+        if type(other) is MyList:
             return self.data == other.data
         return False
 

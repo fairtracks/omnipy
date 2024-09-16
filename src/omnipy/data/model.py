@@ -160,7 +160,10 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         return default_factory
 
     @classmethod
-    def _get_default_value_from_model(cls, model: type[_RootT] | TypeForm | TypeVar) -> _RootT:
+    def _get_default_value_from_model(  # noqa: C901
+            cls,
+            model: type[_RootT] | TypeForm | TypeVar,
+    ) -> _RootT:
         model = get_default_if_typevar(model)
         origin_type = get_origin(model)
         args = get_args(model)
@@ -322,7 +325,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     # TODO: Allow e.g. Model[str](Model[int](5)) == Model[str](Model[int](5).contents).
     #       Should then work the same as dataset
-    def __init__(
+    def __init__(  # noqa: C901
         self,
         value: Any | UndefinedType = Undefined,
         *,
@@ -509,9 +512,9 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         snapshot_taken = False
         if self.config.interactive_mode:
             # TODO: Lazy snapshotting causes unneeded double validation for data that is later
-            #       validated for snapshot. Perhaps add a dirty flag to snapshot that can be used to
-            #       determine if re-validation is needed? This can also help avoid equality tests, which
-            #       might be expensive for large data structures.
+            #       validated for snapshot. Perhaps add a dirty flag to snapshot that can be used
+            #       to determine if re-validation is needed? This can also help avoid equality
+            #       tests, which might be expensive for large data structures.
             needs_pre_validation = (not self.has_snapshot()
                                     or not self.contents_validated_according_to_snapshot())
             if needs_pre_validation:
@@ -622,7 +625,7 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
     def contents_validated_according_to_snapshot(self) -> bool:
         needs_validation = self.snapshot_differs_from_model(self) \
-                           or not self.snapshot_taken_of_same_model(self)
+            or not self.snapshot_taken_of_same_model(self)
         return not needs_validation
 
     def _take_snapshot_of_validated_contents(self) -> None:
@@ -878,7 +881,12 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
 
         return ret
 
-    def _call_special_method(self, name: str, *args: object, **kwargs: object) -> object:
+    def _call_special_method(  # noqa: C901
+            self,
+            name: str,
+            *args: object,
+            **kwargs: object,
+    ) -> object:
         contents = self._get_real_contents()
         has_add_method = hasattr(contents, '__add__')
         has_radd_method = hasattr(contents, '__radd__')
@@ -1027,12 +1035,14 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             self, elements: Iterable | None) -> Callable[..., Generator]:
         def _convert_element_value_model_generator(elements=elements):
             for el in elements:
-                yield (el[0],
-                       self._convert_to_model_if_reasonable(
-                           el[1],
-                           level_up=True,
-                           level_up_arg_idx=1,
-                       ))
+                yield (
+                    el[0],
+                    self._convert_to_model_if_reasonable(
+                        el[1],
+                        level_up=True,
+                        level_up_arg_idx=1,
+                    ),
+                )
 
         return _convert_element_value_model_generator
 
@@ -1142,7 +1152,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                                                     reset_solution)
 
         if attr in ('values', 'items'):
-            level_up_arg_idx: int | slice
             match attr:
                 case 'values':
                     _model_generator = self._get_convert_full_element_model_generator(

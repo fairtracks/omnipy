@@ -1,9 +1,9 @@
 import os
-from typing import Callable, cast, Type, TypeVar
+from typing import Type, TypeVar
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.compute.typing import mypy_fix_task_template
-from omnipy.data.dataset import Dataset, ModelT
+from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
 #

@@ -1,4 +1,4 @@
-from typing import Annotated, Iterator
+from typing import Annotated
 
 import pytest
 

@@ -151,7 +151,7 @@ def test_table_of_pydantic_records_model_from_str() -> None:
     class TableOfNameRecordsModel(TableOfPydanticRecordsModel[NameRecord]):
         pass
 
-    table = TableOfNameRecordsModel("John\tDoe\nJane\tDoe")
+    table = TableOfNameRecordsModel('John\tDoe\nJane\tDoe')
 
     assert len(table.contents) == 2
     assert isinstance(table.contents[0], PydanticRecordModel)

@@ -8,7 +8,6 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.api.enums import RunState
-from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.dataset import Dataset, MultiModelDataset
 
 from ....engine.helpers.functions import assert_job_state

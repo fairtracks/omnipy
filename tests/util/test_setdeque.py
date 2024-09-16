@@ -1,5 +1,4 @@
 from collections import deque
-from contextlib import suppress
 from itertools import chain
 import sys
 from timeit import timeit

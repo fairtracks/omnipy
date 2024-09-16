@@ -11,7 +11,7 @@ from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBa
 from .classes import MyFloatObject
 
 ChildT = TypeVar('ChildT', bound=object)
-ChildrenT = TypeVar("ChildrenT", bound=list)
+ChildrenT = TypeVar('ChildrenT', bound=list)
 
 
 class MyFloatObjModel(Model[MyFloatObject]):
