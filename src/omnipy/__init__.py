@@ -98,7 +98,9 @@ from omnipy.modules.json.models import (JsonCustomDictModel,
                                         JsonOnlyDictsModel,
                                         JsonOnlyListsModel,
                                         JsonScalarModel)
-from omnipy.modules.json.tasks import convert_dataset_string_to_json, transpose_dicts_2_lists
+from omnipy.modules.json.tasks import (convert_dataset_string_to_json,
+                                       transpose_dicts_2_lists,
+                                       transpose_dicts_2_lists_old)
 from omnipy.modules.pandas.models import (ListOfPandasDatasetsWithSameNumberOfFiles,
                                           PandasDataset,
                                           PandasModel)
@@ -275,6 +277,7 @@ __all__ = [
     'flatten_nested_json',
     'convert_dataset_string_to_json',
     'transpose_dicts_2_lists',
+    'transpose_dicts_2_lists_old',
     'transpose_dict_of_dicts_2_list_of_dicts',
     'transpose_dicts_of_lists_of_dicts_2_lists_of_dicts',
     'concat_dataframes_across_datasets',

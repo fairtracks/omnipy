@@ -60,6 +60,29 @@ def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> J
 
 @mypy_fix_task_template
 @TaskTemplate()
+def transpose_dicts_2_lists_old(dataset: JsonDictDataset, id_key: str = ID_KEY) -> JsonListDataset:
+    output_dataset = JsonListDataset()
+    output_data = defaultdict(list)
+
+    for name, item in dataset.items():
+        for key, val in item.to_data().items():
+            if not isinstance(val, list):
+                val = [val]
+
+            for item_index, val_item in enumerate(val):
+                if isinstance(val_item, dict):
+                    data = {id_key: f'{name}_{item_index}'}
+                    assert id_key not in val_item
+                    data |= val_item
+                else:
+                    data = val_item
+                output_data[key].append(data)
+    output_dataset |= output_data
+    return output_dataset
+
+
+@mypy_fix_task_template
+@TaskTemplate()
 def _flatten_outer_level_of_all_data_files(
         dataset: JsonListOfDictsDataset, id_key: str, ref_key: str,
         default_key: str) -> tuple[JsonListOfDictsOfScalarsDataset, JsonListOfDictsDataset]:
