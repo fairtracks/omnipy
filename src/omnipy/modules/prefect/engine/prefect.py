@@ -83,7 +83,12 @@ class PrefectEngine(TaskRunnerEngine,
 
     def _init_flow(self, flow: IsFlow, call_func: Callable) -> Any:
         assert isinstance(self._config, PrefectEngineConfig)
-        flow_kwargs = dict(name=flow.name,)
+        flow_kwargs = dict(
+            name=flow.name,
+            # persist_result=True,
+            result_storage='nird-minio',
+            result_storage_key=flow.name,
+            result_serializer='pickle')
         if flow.has_coroutine_func():
 
             @prefect_flow(**flow_kwargs)
