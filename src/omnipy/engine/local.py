@@ -43,13 +43,9 @@ class LocalRunner(TaskRunnerEngine,
         return self.default_dag_flow_run_decorator(flow)(*args, **kwargs)
 
     def _init_func_flow(self, func_flow: IsFuncFlow, call_func: Callable) -> object:
-        pass
+        return call_func
 
-    def _run_func_flow(self,
-                       state: Any,
-                       func_flow: IsFuncFlow,
-                       call_func: Callable,
-                       *args,
-                       **kwargs) -> Any:
+    def _run_func_flow(self, state: Any, func_flow: IsFuncFlow, *args, **kwargs) -> Any:
+        call_func = state
         with func_flow.flow_context:
             return call_func(*args, **kwargs)

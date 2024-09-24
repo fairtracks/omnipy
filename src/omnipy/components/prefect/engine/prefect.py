@@ -6,11 +6,11 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
-from omnipy.shared.protocols.compute.job import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.shared.protocols.compute.job import IsDagFlow, IsFlow, IsFuncFlow, IsLinearFlow, IsTask
 from omnipy.shared.protocols.config import IsPrefectEngineConfig
 from omnipy.util.helpers import resolve
 
-from .. import prefect_flow, prefect_task, PrefectFlow, PrefectTask, task_input_hash
+from .. import prefect_flow, prefect_task, PrefectTask, task_input_hash
 
 
 class PrefectEngine(TaskRunnerEngine,
@@ -40,15 +40,15 @@ class PrefectEngine(TaskRunnerEngine,
         if task.has_coroutine_func():
 
             @prefect_task(**task_kwargs)
-            async def run_task(*inner_args, **inner_kwargs):
+            async def _task(*inner_args, **inner_kwargs):
                 return await call_func(*inner_args, **inner_kwargs)
         else:
 
             @prefect_task(**task_kwargs)
-            def run_task(*inner_args, **inner_kwargs):
+            def _task(*inner_args, **inner_kwargs):
                 return call_func(*inner_args, **inner_kwargs)
 
-        return run_task
+        return _task
 
     def _run_task(self, state: PrefectTask, task: IsTask, call_func: Callable, *args,
                   **kwargs) -> Any:
@@ -63,104 +63,59 @@ class PrefectEngine(TaskRunnerEngine,
             if task.has_coroutine_func():
 
                 @prefect_flow(**flow_kwargs)
-                async def task_flow(*inner_args, **inner_kwargs):
+                async def _task_flow(*inner_args, **inner_kwargs):
                     return await resolve(_prefect_task(*inner_args, **inner_kwargs))
             else:
 
                 @prefect_flow(**flow_kwargs)
-                def task_flow(*inner_args, **inner_kwargs):
+                def _task_flow(*inner_args, **inner_kwargs):
                     return _prefect_task(*inner_args, **inner_kwargs)
 
-            return task_flow(*args, **kwargs)
+            return _task_flow(*args, **kwargs)
 
-    # LinearFlowRunnerEngine
-    def _init_linear_flow(self, linear_flow: IsLinearFlow) -> Any:
+    def _init_flow(self, flow: IsFlow, call_func: Callable) -> Any:
         assert isinstance(self._config, PrefectEngineConfig)
-        flow_kwargs = dict(name=linear_flow.name,)
-        call_func = self.default_linear_flow_run_decorator(linear_flow)
-
-        if linear_flow.has_coroutine_func():
+        flow_kwargs = dict(name=flow.name,)
+        if flow.has_coroutine_func():
 
             @prefect_flow(**flow_kwargs)
-            async def run_linear_flow(*inner_args, **inner_kwargs):
-                with linear_flow.flow_context:
+            async def _flow(*inner_args, **inner_kwargs):
+                with flow.flow_context:
                     return await resolve(call_func(*inner_args, **inner_kwargs))
         else:
 
             @prefect_flow(**flow_kwargs)
-            def run_linear_flow(*inner_args, **inner_kwargs):
-                with linear_flow.flow_context:
+            def _flow(*inner_args, **inner_kwargs):
+                with flow.flow_context:
                     return call_func(*inner_args, **inner_kwargs)
 
-        return run_linear_flow
+        return _flow
+
+    def _run_flow(self, state: Any, flow: IsFlow, *args, **kwargs) -> Any:
+        _prefect_flow = state
+        return _prefect_flow(*args, **kwargs)
+
+    # LinearFlowRunnerEngine
+    def _init_linear_flow(self, linear_flow: IsLinearFlow) -> Any:
+        call_func = self.default_linear_flow_run_decorator(linear_flow)
+        return self._init_flow(linear_flow, call_func)
 
     def _run_linear_flow(self, state: Any, linear_flow: IsLinearFlow, *args, **kwargs) -> Any:
-
-        _prefect_flow = state
-
-        return _prefect_flow(*args, **kwargs)
+        return self._run_flow(state, linear_flow, *args, **kwargs)
 
     # DagFlowRunnerEngine
 
     def _init_dag_flow(self, dag_flow: IsDagFlow) -> Any:
-
-        assert isinstance(self._config, PrefectEngineConfig)
-        flow_kwargs = dict(name=dag_flow.name,)
         call_func = self.default_dag_flow_run_decorator(dag_flow)
+        return self._init_flow(dag_flow, call_func)
 
-        if dag_flow.has_coroutine_func():
-
-            @prefect_flow(**flow_kwargs)
-            async def run_dag_flow(*inner_args, **inner_kwargs):
-                with dag_flow.flow_context:
-                    return await resolve(call_func(*inner_args, **inner_kwargs))
-        else:
-
-            @prefect_flow(**flow_kwargs)
-            def run_dag_flow(*inner_args, **inner_kwargs):
-                with dag_flow.flow_context:
-                    return call_func(*inner_args, **inner_kwargs)
-
-        return run_dag_flow
-
-    def _run_dag_flow(self, state: PrefectFlow, flow: IsDagFlow, *args, **kwargs) -> Any:
-
-        _prefect_flow = state
-
-        return _prefect_flow(*args, **kwargs)
+    def _run_dag_flow(self, state: Any, dag_flow: IsDagFlow, *args, **kwargs) -> Any:
+        return self._run_flow(state, dag_flow, *args, **kwargs)
 
     # FuncFlowRunnerEngine
 
     def _init_func_flow(self, func_flow: IsFuncFlow, call_func: Callable) -> object:
+        return self._init_flow(func_flow, call_func)
 
-        assert isinstance(self._config, PrefectEngineConfig)
-        flow_kwargs = dict(name=func_flow.name,)
-
-        if func_flow.has_coroutine_func():
-
-            @prefect_flow(**flow_kwargs)
-            async def run_func_flow(*inner_args, **inner_kwargs):
-                with func_flow.flow_context:
-                    return await resolve(call_func(*inner_args, **inner_kwargs))
-        else:
-
-            @prefect_flow(**flow_kwargs)
-            def run_func_flow(*inner_args, **inner_kwargs):
-                with func_flow.flow_context:
-                    return call_func(*inner_args, **inner_kwargs)
-
-        return run_func_flow
-
-    def _run_func_flow(self,
-                       state: Any,
-                       func_flow: IsFuncFlow,
-                       call_func: Callable,
-                       *args,
-                       **kwargs) -> Any:
-
-        _prefect_flow = state
-
-        return _prefect_flow(*args, **kwargs)
-
-
-# TODO: Refactor redundant code
+    def _run_func_flow(self, state: Any, func_flow: IsFuncFlow, *args, **kwargs) -> Any:
+        return self._run_flow(state, func_flow, *args, **kwargs)
