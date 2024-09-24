@@ -1,6 +1,9 @@
 from dataclasses import dataclass, field
+import os
+from textwrap import dedent
 from typing import Type, TypeAlias
 
+import pytest
 import pytest_cases as pc
 
 from omnipy.components._frozen.datasets import (NestedFrozenDictsDataset,
@@ -23,6 +26,8 @@ from .raw.examples import (e_complex_key_dict,
                            ej_type,
                            f_complex,
                            f_dict,
+                           f_empty_frozendict,
+                           f_empty_tuple,
                            f_frozendict,
                            f_int,
                            f_list,
@@ -112,12 +117,12 @@ def case_frozen_dicts() -> CaseInfo:
             field(default_factory=lambda: FrozenDict[FSK, FSV](f_frozendict)))
         err_fd_frozendict_iterable_scalar: FrozenDict[FSK, FSV] = (
             field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_iter_scalar)))
-        err_fd_frozendict_iterable_scalar_empty: FrozenDict[FSK, FSV] = (
-            field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_iter_scalar_empty)))
         fdnp_frozendict_wrong_scalar: FrozenDict[FSK, FSV] = (
             field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_wrong_scalar)))
         err_fdp_frozendict_wrong_scalar: FrozenDict[FSK, FSV] = (
             field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_wrong_scalar)))
+        fd_empty_frozendict: FrozenDict[FSK, FSV] = (
+            field(default_factory=lambda: FrozenDict[FSK, FSV](f_empty_frozendict)))
 
         err_fd_list: list[FSV] = field(default_factory=lambda: list(f_list))
         fd_dict: dict[str, FSV] = field(default_factory=lambda: dict(f_dict))
@@ -142,6 +147,41 @@ def case_frozen_dicts() -> CaseInfo:
             'fd_': (NestedFrozenDictsDataset, NestedFrozenDictsDataset[FSK, FSV]),
             'fdnp_': (NestedFrozenDictsDataset,),
             'fdp_': (NestedFrozenDictsDataset[FSK, FSV],),
+        },
+        data_points=FrozenDictsDataPoints(),
+    )
+
+
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason=dedent("""\
+        Same issue as test_json_models__test_error_dict_with_empty_list_known_issue() and
+        frozen_data::test_nested_frozen_dicts_known_issue() due to pydantic v1 parsing an empty
+        list/tuple as an empty dict.
+
+        While v1 behavior is consistent with the builtin dict (`dict([]) == {}`), it may cause
+        hard-to-detect bugs. While Omnipy in general moves in the direction of as broadly
+        interoperable parsing as possible, the stricter v2 behavior is in this case preferable.
+    """))
+@pc.case(id='test_frozen_dicts_known_issue', tags=[])
+def case_frozen_dicts_known_issue() -> CaseInfo:
+    @dataclass
+    class FrozenDictsDataPoints:
+        #
+        # NestedFrozenDictsModel, NestedFrozenDictsModel[FSK, FSV]
+        #
+
+        err_fd_empty_tuple: tuple[FSV, ...] = f_empty_tuple
+        err_fd_frozendict_iterable_scalar_empty: FrozenDict[FSK, FSV] = (
+            field(default_factory=lambda: FrozenDict[FSK, FSV](ej_frozendict_iter_scalar_empty)))
+
+    return CaseInfo(
+        name='test_frozen_dicts_known_issue',
+        prefix2model_classes={
+            'fd_': (NestedFrozenOnlyDictsModel, NestedFrozenOnlyDictsModel[FSK, FSV]),
+        },
+        prefix2dataset_classes={
+            'fd_': (NestedFrozenDictsDataset, NestedFrozenDictsDataset[FSK, FSV]),
         },
         data_points=FrozenDictsDataPoints(),
     )
@@ -339,16 +379,22 @@ def case_nested_frozen_dicts() -> CaseInfo:
             field(default_factory=lambda: {'a': dict(f_dict), 'b': list(f_list)})
         err_nfd_with_list_level_three: dict[str, dict[str, FSV | list[FSV]]] = \
             field(default_factory=lambda: {'a': dict(f_dict), 'b': {'x': list(f_list)}})
-        nfdnp_with_wrong_scalar_level_three: dict[str, dict[str, FSV | list[FSV]]] = field(
+        nfdnp_with_wrong_scalar_level_three: dict[str, dict[str, FSV | dict[str, FSV]]] = field(
             default_factory=lambda: {
                 'a': dict(f_dict), 'b': {
                     'x': ej_frozendict_wrong_scalar
                 }
             })
-        err_nfdp_with_wrong_scalar_level_three: dict[str, dict[str, FSV | list[FSV]]] = field(
+        err_nfdp_with_wrong_scalar_level_three: dict[str, dict[str, FSV | dict[str, FSV]]] = field(
             default_factory=lambda: {
                 'a': dict(f_dict), 'b': {
                     'x': ej_frozendict_wrong_scalar
+                }
+            })
+        nfd_empty_frozendict_level_three: dict[str, dict[str, FSV | dict[str, FSV]]] = field(
+            default_factory=lambda: {
+                'a': dict(f_dict), 'b': {
+                    'x': f_empty_frozendict
                 }
             })
 
@@ -363,6 +409,41 @@ def case_nested_frozen_dicts() -> CaseInfo:
             'nfd_': (NestedFrozenDictsDataset, NestedFrozenDictsDataset[FSK, FSV]),
             'nfdnp_': (NestedFrozenDictsDataset,),
             'nfdp_': (NestedFrozenDictsDataset[FSK, FSV],),
+        },
+        data_points=NestedFrozenDictsDataPoints(),
+    )
+
+
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason=dedent("""\
+        Same issue as test_json_models__test_error_dict_with_empty_list_known_issue() and
+        frozen_data::test_frozen_dicts_known_issue() due to pydantic v1 parsing an empty
+        list/tuple as an empty dict.
+
+        While v1 behavior is consistent with the builtin dict (`dict([]) == {}`), it may cause
+        hard-to-detect bugs. While Omnipy in general moves in the direction of as broadly
+        interoperable parsing as possible, the stricter v2 behavior is in this case preferable.
+    """))
+@pc.case(id='test_nested_frozen_dicts_known_issue', tags=[])
+def case_nested_frozen_dicts_known_issue() -> CaseInfo:
+    @dataclass
+    class NestedFrozenDictsDataPoints:
+
+        #
+        # NestedFrozenDictsModel, NestedFrozenDictsModel[FSK, FSV]
+        #
+
+        err_nfd_empty_tuple_level_three: dict[str, dict[str, FSV | tuple[FSV, ...]]] = \
+            field(default_factory=lambda: {'a': dict(f_dict), 'b': {'x': f_empty_tuple}})
+
+    return CaseInfo(
+        name='test_nested_frozen_dicts_known_issue',
+        prefix2model_classes={
+            'nfd_': (NestedFrozenOnlyDictsModel, NestedFrozenOnlyDictsModel[FSK, FSV]),
+        },
+        prefix2dataset_classes={
+            'nfd_': (NestedFrozenDictsDataset, NestedFrozenDictsDataset[FSK, FSV]),
         },
         data_points=NestedFrozenDictsDataPoints(),
     )

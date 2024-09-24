@@ -58,7 +58,12 @@ def parse_none_according_to_model(value: _RootT, root_model) -> _RootT:  # IsMod
 
 
 def _parse_none_in_model(outer_type, value):
-    return outer_type(value) if value is None else value
+    # Not exactly sure which is the best solution. Both seem to work. The latter option should be
+    # more general, but potentially slower
+    #
+    # return outer_type(value) if value is None else value
+
+    return outer_type(value) if type(value) is not outer_type else value
 
 
 def _split_to_union_variants(type_: TypeForm) -> tuple[TypeForm]:
