@@ -106,7 +106,7 @@ class LinearFlowRunnerEngine(JobRunnerEngine):
         job_callback_accept_decorator(_linear_flow_decorator)
 
     @staticmethod
-    def default_linear_flow_run_decorator(linear_flow: IsLinearFlow) -> Any:
+    def default_linear_flow_run_decorator(linear_flow: IsLinearFlow) -> Callable:
         def _inner_run_linear_flow(*args: object, **kwargs: object):
 
             result = None
@@ -150,7 +150,7 @@ class DagFlowRunnerEngine(JobRunnerEngine):
         job_callback_accept_decorator(_dag_flow_decorator)
 
     @staticmethod
-    def default_dag_flow_run_decorator(dag_flow: IsDagFlow) -> Any:  # noqa: C901
+    def default_dag_flow_run_decorator(dag_flow: IsDagFlow) -> Callable:  # noqa: C901
         def _inner_run_dag_flow(*args: object, **kwargs: object):
             results = {}
             result = None
@@ -206,7 +206,7 @@ class FuncFlowRunnerEngine(JobRunnerEngine):
             def _func_flow_runner_call_func(*args: object, **kwargs: object) -> Any:
                 self._register_job_state(func_flow, RunState.RUNNING)
                 with func_flow.flow_context:
-                    flow_result = self._run_func_flow(state, func_flow, call_func, *args, **kwargs)
+                    flow_result = self._run_func_flow(state, func_flow, *args, **kwargs)
                     return self._decorate_result_with_job_finalization_detector(
                         func_flow, flow_result)
 
@@ -219,10 +219,5 @@ class FuncFlowRunnerEngine(JobRunnerEngine):
         ...
 
     @abstractmethod
-    def _run_func_flow(self,
-                       state: Any,
-                       func_flow: IsFuncFlow,
-                       call_func: Callable,
-                       *args,
-                       **kwargs) -> Any:
+    def _run_func_flow(self, state: Any, func_flow: IsFuncFlow, *args, **kwargs) -> Any:
         ...
