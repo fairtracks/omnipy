@@ -87,7 +87,7 @@ class PrefectEngine(TaskRunnerEngine,
             name=flow.name,
             # persist_result=True,
             result_storage='nird-minio',
-            result_storage_key=flow.name,
+            # result_storage_key=flow.name,
             result_serializer='pickle')
         if flow.has_coroutine_func():
 
