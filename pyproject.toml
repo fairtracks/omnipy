@@ -43,6 +43,7 @@ humanize = "^4.9.0"
 httpx = "^0.26.0"
 pydantic = {version = "<2", extras = ["email"]}
 griffe = "<1"
+prefect-aws = "<0.5"
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"

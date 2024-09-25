@@ -83,12 +83,15 @@ class PrefectEngine(TaskRunnerEngine,
 
     def _init_flow(self, flow: IsFlow, call_func: Callable) -> Any:
         assert isinstance(self._config, PrefectEngineConfig)
+        from prefect_aws.s3 import S3Bucket
+        s3_bucket_block = S3Bucket.load('minio')
+
         flow_kwargs = dict(
             name=flow.name,
-            # persist_result=True,
-            result_storage='nird-minio',
+            persist_result=True,
+            result_storage=s3_bucket_block,
             # result_storage_key=flow.name,
-            result_serializer='pickle')
+            result_serializer='json')
         if flow.has_coroutine_func():
 
             @prefect_flow(**flow_kwargs)
