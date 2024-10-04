@@ -18,7 +18,7 @@ from typing_extensions import TypeVar
 
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.helpers import cleanup_name_qualname_and_module, is_model_instance
-from omnipy.data.mixins.repr_detector import DatasetDisplayMixin
+from omnipy.data.mixins.display import DatasetDisplayMixin
 from omnipy.data.model import Model
 from omnipy.data.selector import (create_updated_mapping,
                                   Index2DataItemsType,

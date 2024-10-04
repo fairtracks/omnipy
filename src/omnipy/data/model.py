@@ -42,7 +42,7 @@ from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  validate_cls_counts,
                                  YesNoMaybe)
 from omnipy.data.missing import parse_none_according_to_model
-from omnipy.data.mixins.repr_detector import ModelDisplayMixin
+from omnipy.data.mixins.display import ModelDisplayMixin
 from omnipy.util.contexts import (hold_and_reset_prev_attrib_value,
                                   LastErrorHolder,
                                   nothing,
