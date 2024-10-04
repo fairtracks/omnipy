@@ -43,6 +43,7 @@ humanize = "^4.9.0"
 httpx = "^0.26.0"
 pydantic = {version = "<2", extras = ["email"]}
 griffe = "<1"
+ipython = ">=7.34.0"
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"
@@ -54,7 +55,6 @@ pandas-stubs = "^2.1.1.230928"
 pre-commit = "^3.8.0"
 pytest-mypy-plugins = "^3.1.2"
 devtools = "^0.12.2"
-ipython = "^8.18.1"
 mypy = "^1.11.2"
 
 [tool.poetry.group.docs.dependencies]

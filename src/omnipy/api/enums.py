@@ -48,13 +48,6 @@ class EngineChoice(str, Enum):
     PREFECT = 'prefect'
 
 
-class DataReprState(str, Enum):
-    """"""
-    REPR_FROM_CONSOLE = 'from_terminal'
-    REPR_NOT_FROM_CONSOLE = 'not_from_terminal'
-    UNKNOWN = 'unknown'
-
-
 class RunState(IntEnum):
     """"""
     INITIALIZED = 1

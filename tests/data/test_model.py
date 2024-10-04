@@ -525,6 +525,13 @@ def test_repr() -> None:
            "MyGenericModel[str | NumberModel]('abc')"
 
 
+def test_repr_pretty() -> None:
+    a = Model[list[int]]([123])
+    from IPython.lib.pretty import pretty
+
+    pretty([a])
+
+
 def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model]) -> bool:
     is_subclass = issubclass(model_cls_a, model_cls_b)
 

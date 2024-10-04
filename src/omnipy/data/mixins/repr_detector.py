@@ -1,72 +1,136 @@
 from abc import ABCMeta, abstractmethod
-import readline
-from typing import cast
+import inspect
+import os
+from textwrap import dedent
+from types import ModuleType
+from typing import Any, cast
 
-from IPython import get_ipython
+from devtools import debug, PrettyFormat
+import humanize
+from IPython.display import display
+from IPython.lib.pretty import RepresentationPrinter
+import objsize
+from pydantic.generics import GenericModel
 
-from omnipy.api.enums import DataReprState
-from omnipy.api.exceptions import ShouldNotOccurException
-from omnipy.api.protocols.private.data import IsDataClassBase
 from omnipy.data.data_class_creator import DataClassBase
-from omnipy.util.contexts import hold_and_reset_prev_attrib_value
-from omnipy.util.helpers import is_unreserved_identifier
+from omnipy.util.helpers import get_first_item, has_items, is_non_str_byte_iterable
+from omnipy.util.tabulate import tabulate
 
 
-class ReprDetectorMixin(metaclass=ABCMeta):
-    def __repr__(self) -> str:
-        match cast(IsDataClassBase, self).repr_state:
-            case DataReprState.UNKNOWN:
-                with hold_and_reset_prev_attrib_value(self, 'repr_state'):
-                    if cast(
-                            IsDataClassBase, self
-                    ).config.interactive_mode and self._repr_is_from_self_enter_in_console():
-                        self.repr_state = DataReprState.REPR_FROM_CONSOLE
-                    else:
-                        self.repr_state = DataReprState.REPR_NOT_FROM_CONSOLE
-                    return repr(self)
-            case DataReprState.REPR_FROM_CONSOLE:
-                return self._fancy_repr()
-            case DataReprState.REPR_NOT_FROM_CONSOLE:
-                return super().__repr__()
-            case _:
-                raise ShouldNotOccurException()
-
-    def _repr_is_from_self_enter_in_console(self) -> bool:
-        last_command = self._get_last_interactive_console_command()
-        if last_command and is_unreserved_identifier(last_command):
-            console_globals = self._get_globals_from_console_frame()
-            if last_command in console_globals and isinstance(console_globals[last_command],
-                                                              DataClassBase):
-                return True
-        return False
-
-    @classmethod
-    def _get_last_interactive_console_command(cls) -> str | None:
-        command = readline.get_history_item(readline.get_current_history_length())
-        if not command:
-            ipython = get_ipython()
-            if ipython is not None:
-                command = ipython.history_manager.input_hist_raw[-1]
-        return command
-
-    @classmethod
-    def _get_globals_from_console_frame(cls) -> dict[str, object]:
-        from IPython import get_ipython
-        ipython = get_ipython()
-        if ipython is not None:
-            return ipython.user_ns
+class BaseDisplayMixin(metaclass=ABCMeta):
+    def _repr_pretty_(self, p: RepresentationPrinter, cycle: bool) -> None:
+        if cycle:
+            p.text(f'{cast(GenericModel, self).__repr_name__()}(...)')
         else:
-            import inspect
-            frame = inspect.currentframe()
-            while frame is not None:
-                if frame.f_code.co_name == '<module>':
-                    return frame.f_globals
-                frame = frame.f_back
-        return {}
+            if len(p.stack) == 1:
+                p.text(self.pretty_repr())
+            else:
+                p.text(self.__repr__())
 
     @abstractmethod
-    def _fancy_repr(self) -> str:
+    def pretty_repr(self) -> str:
         ...
 
-    def view(self) -> None:
-        print(self._fancy_repr())
+    def display(self) -> None:
+        display(self)
+
+
+class ModelDisplayMixin(BaseDisplayMixin):
+    def pretty_repr(self) -> str:
+        from omnipy.data.dataset import Dataset, Model
+
+        outer_type = cast(Model, self).outer_type()
+        if inspect.isclass(outer_type) and issubclass(outer_type, Dataset):
+            return cast(Dataset, self.contents).pretty_repr()
+
+        # tabulate.PRESERVE_WHITESPACE = True  # Does not seem to work together with 'maxcolwidths'
+
+        terminal_size_cols = cast(DataClassBase, self).config.terminal_size_columns
+        terminal_size_lines = cast(DataClassBase, self).config.terminal_size_lines
+
+        header_column_width = len('(bottom')
+        num_columns = 2
+        table_chars_width = 3 * num_columns + 1
+        data_column_width = terminal_size_cols - table_chars_width - header_column_width
+
+        data_indent = 2
+        extra_space_due_to_escaped_chars = 12
+
+        debug_module = cast(ModuleType, inspect.getmodule(debug))
+        debug_module.pformat = PrettyFormat(  # type: ignore[attr-defined]
+            indent_step=data_indent,
+            simple_cutoff=20,
+            width=data_column_width - data_indent - extra_space_due_to_escaped_chars,
+            yield_from_generators=True,
+        )
+
+        structure = str(debug.format(self))
+        structure_lines = structure.splitlines()
+        new_structure_lines = dedent(os.linesep.join(structure_lines[1:])).splitlines()
+        if new_structure_lines[0].startswith('self: '):
+            new_structure_lines[0] = new_structure_lines[0][5:]
+        max_section_height = (terminal_size_lines - 8) // 2
+        structure_len = len(new_structure_lines)
+
+        def _is_table():
+            data = self.to_data()
+            if is_non_str_byte_iterable(data) and has_items(data):
+                first_level_item = get_first_item(data)
+                if is_non_str_byte_iterable(first_level_item) and has_items(first_level_item):
+                    second_level_item = get_first_item(first_level_item)
+                    if not is_non_str_byte_iterable(second_level_item):
+                        return True
+            return False
+
+        if structure_len > max_section_height * 2 + 1:
+            top_structure_end = max_section_height
+            bottom_structure_start = structure_len - max_section_height
+
+            top_structure = os.linesep.join(new_structure_lines[:top_structure_end])
+            bottom_structure = os.linesep.join(new_structure_lines[bottom_structure_start:])
+
+            out = tabulate(
+                (
+                    ('#', self.__class__.__name__),
+                    (os.linesep.join(str(i) for i in range(top_structure_end)), top_structure),
+                    (os.linesep.join(str(i) for i in range(bottom_structure_start, structure_len)),
+                     bottom_structure),
+                ),
+                maxcolwidths=[header_column_width, data_column_width],
+                tablefmt='rounded_grid',
+            )
+        else:
+            out = tabulate(
+                (
+                    ('#', self.__class__.__name__),
+                    (os.linesep.join(str(i) for i in range(structure_len)),
+                     os.linesep.join(new_structure_lines)),
+                ),
+                maxcolwidths=[header_column_width, data_column_width],
+                tablefmt='rounded_grid',
+            )
+
+        return out
+
+
+class DatasetDisplayMixin(BaseDisplayMixin):
+    def pretty_repr(self) -> str:
+        from omnipy.data.dataset import Dataset
+
+        return tabulate(
+            ((i,
+              k,
+              type(v).__name__,
+              self._len_if_available(v),
+              humanize.naturalsize(objsize.get_deep_size(v)))
+             for i, (k, v) in enumerate(cast(Dataset, self).items())),
+            ('#', 'Data file name', 'Type', 'Length', 'Size (in memory)'),
+            tablefmt='rounded_outline',
+        )
+
+    @classmethod
+    def _len_if_available(cls, obj: Any) -> int | str:
+        try:
+            return len(obj)
+        except TypeError:
+            return 'N/A'

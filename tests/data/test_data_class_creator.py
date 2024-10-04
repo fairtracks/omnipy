@@ -2,7 +2,6 @@ from typing import Annotated
 
 import pytest
 
-from omnipy.api.enums import DataReprState
 from omnipy.config.data import DataConfig
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta, DataClassCreator
 from omnipy.util.helpers import SnapshotHolder
@@ -113,16 +112,6 @@ def test_config_property_mutable_from_data_class_creator(
         set_property_from_data_class=False,
         new_val=DataConfig(interactive_mode=False),
         property_setter='set_config',
-    )
-
-
-def test_repr_state_property_mutable_from_data_class(
-        teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
-    _assert_property_is_singularly_mutable(
-        property='repr_state',
-        property_type=DataReprState,
-        set_property_from_data_class=True,
-        new_val=DataReprState.REPR_FROM_CONSOLE,
     )
 
 

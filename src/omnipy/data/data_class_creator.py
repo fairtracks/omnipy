@@ -2,7 +2,6 @@ from abc import ABCMeta
 from contextlib import contextmanager
 from typing import Callable, ContextManager, Iterator
 
-from omnipy.api.enums import DataReprState
 from omnipy.api.protocols.private.data import IsDataClassCreator
 from omnipy.api.protocols.private.util import HasContents, IsSnapshotHolder
 from omnipy.api.protocols.public.config import IsDataConfig
@@ -15,7 +14,6 @@ class DataClassCreator:
         self._config: IsDataConfig = DataConfig()
         self._snapshot_holder = SnapshotHolder[HasContents, object]()
         self._deepcopy_context_level = 0
-        self._repr_state: DataReprState = DataReprState.UNKNOWN
 
     @property
     def config(self) -> IsDataConfig:
@@ -23,14 +21,6 @@ class DataClassCreator:
 
     def set_config(self, config: IsDataConfig) -> None:
         self._config = config
-
-    @property
-    def repr_state(self) -> DataReprState:
-        return self._repr_state
-
-    @repr_state.setter
-    def repr_state(self, repr_state: DataReprState) -> None:
-        self._repr_state = repr_state
 
     @property
     def snapshot_holder(self) -> IsSnapshotHolder[HasContents, object]:
@@ -76,14 +66,6 @@ class DataClassBase(metaclass=DataClassBaseMeta):
     @property
     def config(self) -> IsDataConfig:
         return self.__class__.data_class_creator.config
-
-    @property
-    def repr_state(self) -> DataReprState:
-        return self.__class__.data_class_creator.repr_state
-
-    @repr_state.setter
-    def repr_state(self, repr_state: DataReprState) -> None:
-        self.__class__.data_class_creator.repr_state = repr_state
 
     @property
     def snapshot_holder(self) -> IsSnapshotHolder[HasContents, object]:

@@ -4,9 +4,7 @@ from copy import copy, deepcopy
 import functools
 import inspect
 import json
-import os
-from textwrap import dedent
-from types import GenericAlias, ModuleType, NoneType, UnionType
+from types import GenericAlias, NoneType, UnionType
 from typing import (Annotated,
                     Any,
                     cast,
@@ -23,7 +21,6 @@ from typing import (Annotated,
                     SupportsIndex,
                     Union)
 
-from devtools import debug, PrettyFormat
 from pydantic import Protocol as PydanticProtocol
 from pydantic import root_validator, ValidationError
 from pydantic.error_wrappers import ErrorWrapper
@@ -45,7 +42,7 @@ from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  validate_cls_counts,
                                  YesNoMaybe)
 from omnipy.data.missing import parse_none_according_to_model
-from omnipy.data.mixins.repr_detector import ReprDetectorMixin
+from omnipy.data.mixins.repr_detector import ModelDisplayMixin
 from omnipy.util.contexts import (hold_and_reset_prev_attrib_value,
                                   LastErrorHolder,
                                   nothing,
@@ -57,15 +54,11 @@ from omnipy.util.helpers import (all_equals,
                                  evaluate_any_forward_refs_if_possible,
                                  get_calling_module_name,
                                  get_default_if_typevar,
-                                 get_first_item,
-                                 has_items,
                                  is_non_omnipy_pydantic_model,
-                                 is_non_str_byte_iterable,
                                  is_optional,
                                  is_union,
                                  remove_forward_ref_notation)
 from omnipy.util.setdeque import SetDeque
-from omnipy.util.tabulate import tabulate
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
 _ValT = TypeVar('_ValT')
@@ -102,7 +95,7 @@ class _ModelMetaclass(DataClassBaseMeta, ModelMetaclass):
 
 
 class Model(
-        ReprDetectorMixin,
+        ModelDisplayMixin,
         DataClassBase,
         GenericModel,
         Generic[_RootT],
@@ -1214,77 +1207,3 @@ class Model(
 
     def __repr_args__(self):
         return [(None, self.contents)]
-
-    def _fancy_repr(self) -> str:
-        from omnipy.data.dataset import Dataset
-
-        outer_type = self.outer_type()
-        if inspect.isclass(outer_type) and issubclass(outer_type, Dataset):
-            return cast(Dataset, self.contents)._fancy_repr()
-
-        # tabulate.PRESERVE_WHITESPACE = True  # Does not seem to work together with 'maxcolwidths'
-
-        header_column_width = len('(bottom')
-        num_columns = 2
-        table_chars_width = 3 * num_columns + 1
-        terminal_size_cols = self.config.terminal_size_columns
-        data_column_width = terminal_size_cols - table_chars_width - header_column_width
-
-        data_indent = 2
-        extra_space_due_to_escaped_chars = 12
-
-        debug_module = cast(ModuleType, inspect.getmodule(debug))
-        debug_module.pformat = PrettyFormat(  # type: ignore[attr-defined]
-            indent_step=data_indent,
-            simple_cutoff=20,
-            width=data_column_width - data_indent - extra_space_due_to_escaped_chars,
-            yield_from_generators=True,
-        )
-
-        structure = str(debug.format(self))
-        structure_lines = structure.splitlines()
-        new_structure_lines = dedent(os.linesep.join(structure_lines[1:])).splitlines()
-        if new_structure_lines[0].startswith('self: '):
-            new_structure_lines[0] = new_structure_lines[0][5:]
-        max_section_height = (self.config.terminal_size_lines - 8) // 2
-        structure_len = len(new_structure_lines)
-
-        def _is_table():
-            data = self.to_data()
-            if is_non_str_byte_iterable(data) and has_items(data):
-                first_level_item = get_first_item(data)
-                if is_non_str_byte_iterable(first_level_item) and has_items(first_level_item):
-                    second_level_item = get_first_item(first_level_item)
-                    if not is_non_str_byte_iterable(second_level_item):
-                        return True
-            return False
-
-        if structure_len > max_section_height * 2 + 1:
-            top_structure_end = max_section_height
-            bottom_structure_start = structure_len - max_section_height
-
-            top_structure = os.linesep.join(new_structure_lines[:top_structure_end])
-            bottom_structure = os.linesep.join(new_structure_lines[bottom_structure_start:])
-
-            out = tabulate(
-                (
-                    ('#', self.__class__.__name__),
-                    (os.linesep.join(str(i) for i in range(top_structure_end)), top_structure),
-                    (os.linesep.join(str(i) for i in range(bottom_structure_start, structure_len)),
-                     bottom_structure),
-                ),
-                maxcolwidths=[header_column_width, data_column_width],
-                tablefmt='rounded_grid',
-            )
-        else:
-            out = tabulate(
-                (
-                    ('#', self.__class__.__name__),
-                    (os.linesep.join(str(i) for i in range(structure_len)),
-                     os.linesep.join(new_structure_lines)),
-                ),
-                maxcolwidths=[header_column_width, data_column_width],
-                tablefmt='rounded_grid',
-            )
-
-        return out

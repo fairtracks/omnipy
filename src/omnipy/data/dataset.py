@@ -8,8 +8,6 @@ from tempfile import TemporaryDirectory
 from typing import Any, Callable, cast, Generic, Iterator, MutableMapping
 from urllib.parse import ParseResult, urlparse
 
-import humanize
-import objsize
 # from orjson import orjson
 from pydantic import Field, PrivateAttr, root_validator, ValidationError
 from pydantic.fields import ModelField, Undefined, UndefinedType
@@ -20,7 +18,7 @@ from typing_extensions import TypeVar
 
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.helpers import cleanup_name_qualname_and_module, is_model_instance
-from omnipy.data.mixins.repr_detector import ReprDetectorMixin
+from omnipy.data.mixins.repr_detector import DatasetDisplayMixin
 from omnipy.data.model import Model
 from omnipy.data.selector import (create_updated_mapping,
                                   Index2DataItemsType,
@@ -29,7 +27,6 @@ from omnipy.data.selector import (create_updated_mapping,
                                   prepare_selected_items_with_mapping_data,
                                   select_keys)
 from omnipy.util.helpers import get_default_if_typevar, is_iterable, remove_forward_ref_notation
-from omnipy.util.tabulate import tabulate
 from omnipy.util.web import download_file_to_memory
 
 ModelT = TypeVar('ModelT', bound=Model)
@@ -51,7 +48,7 @@ class _DatasetMetaclass(DataClassBaseMeta, ModelMetaclass):
 
 
 class Dataset(
-        ReprDetectorMixin,
+        DatasetDisplayMixin,
         DataClassBase,
         GenericModel,
         Generic[ModelT],
@@ -606,25 +603,6 @@ class Dataset(
 
     def __repr_args__(self):
         return [(k, v.contents) for k, v in self.data.items()]
-
-    @classmethod
-    def _len_if_available(cls, obj: Any) -> int | str:
-        try:
-            return len(obj)
-        except TypeError:
-            return 'N/A'
-
-    def _fancy_repr(self) -> str:
-        return tabulate(
-            ((i,
-              k,
-              type(v).__name__,
-              self._len_if_available(v),
-              humanize.naturalsize(objsize.get_deep_size(v)))
-             for i, (k, v) in enumerate(self.items())),
-            ('#', 'Data file name', 'Type', 'Length', 'Size (in memory)'),
-            tablefmt='rounded_outline',
-        )
 
 
 class MultiModelDataset(Dataset[GeneralModelT], Generic[GeneralModelT]):
