@@ -2,8 +2,9 @@ from abc import ABCMeta
 from contextlib import contextmanager
 from typing import Callable, ContextManager, Iterator
 
+from omnipy.api.enums import DataReprState
 from omnipy.api.protocols.private.data import IsDataClassCreator
-from omnipy.api.protocols.private.util import IsSnapshotHolder
+from omnipy.api.protocols.private.util import HasContents, IsSnapshotHolder
 from omnipy.api.protocols.public.config import IsDataConfig
 from omnipy.config.data import DataConfig
 from omnipy.util.helpers import SnapshotHolder
@@ -12,18 +13,27 @@ from omnipy.util.helpers import SnapshotHolder
 class DataClassCreator:
     def __init__(self) -> None:
         self._config: IsDataConfig = DataConfig()
-        self._snapshot_holder = SnapshotHolder[object, object]()
+        self._snapshot_holder = SnapshotHolder[HasContents, object]()
         self._deepcopy_context_level = 0
-
-    def set_config(self, config: IsDataConfig) -> None:
-        self._config = config
+        self._repr_state: DataReprState = DataReprState.UNKNOWN
 
     @property
     def config(self) -> IsDataConfig:
         return self._config
 
+    def set_config(self, config: IsDataConfig) -> None:
+        self._config = config
+
     @property
-    def snapshot_holder(self) -> IsSnapshotHolder[object, object]:
+    def repr_state(self) -> DataReprState:
+        return self._repr_state
+
+    @repr_state.setter
+    def repr_state(self, repr_state: DataReprState) -> None:
+        self._repr_state = repr_state
+
+    @property
+    def snapshot_holder(self) -> IsSnapshotHolder[HasContents, object]:
         return self._snapshot_holder
 
     def deepcopy_context(
@@ -68,7 +78,15 @@ class DataClassBase(metaclass=DataClassBaseMeta):
         return self.__class__.data_class_creator.config
 
     @property
-    def snapshot_holder(self) -> IsSnapshotHolder:
+    def repr_state(self) -> DataReprState:
+        return self.__class__.data_class_creator.repr_state
+
+    @repr_state.setter
+    def repr_state(self, repr_state: DataReprState) -> None:
+        self.__class__.data_class_creator.repr_state = repr_state
+
+    @property
+    def snapshot_holder(self) -> IsSnapshotHolder[HasContents, object]:
         return self.__class__.data_class_creator.snapshot_holder
 
     def deepcopy_context(

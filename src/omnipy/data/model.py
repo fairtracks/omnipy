@@ -40,14 +40,13 @@ from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  get_special_methods_info_dict,
                                  get_terminal_size,
-                                 INTERACTIVE_MODULES,
                                  is_model_instance,
                                  MethodInfo,
                                  ResetSolutionTuple,
                                  validate_cls_counts,
-                                 waiting_for_terminal_repr,
                                  YesNoMaybe)
 from omnipy.data.missing import parse_none_according_to_model
+from omnipy.data.mixins.repr_detector import ReprDetectorMixin
 from omnipy.util.contexts import (hold_and_reset_prev_attrib_value,
                                   LastErrorHolder,
                                   nothing,
@@ -82,7 +81,7 @@ ROOT_KEY = '__root__'
 # TODO: Refactor Dataset and Model using mixins (including below functions)
 
 
-class _ModelMetaclass(ModelMetaclass, DataClassBaseMeta):
+class _ModelMetaclass(DataClassBaseMeta, ModelMetaclass):
     # Hack to overcome bug in pydantic/fields.py (v1.10.13), lines 636-641:
     #
     # if origin is None or origin is CollectionsHashable:
@@ -103,7 +102,13 @@ class _ModelMetaclass(ModelMetaclass, DataClassBaseMeta):
         return super().__instancecheck__(instance)
 
 
-class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetaclass):
+class Model(
+        ReprDetectorMixin,
+        DataClassBase,
+        GenericModel,
+        Generic[_RootT],
+        metaclass=_ModelMetaclass,
+):
     """
     A data model containing a value parsed according to the model.
 
@@ -803,26 +808,30 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
         if attr in ['__module__'] + list(self.__dict__.keys()) and attr not in [ROOT_KEY]:
             super().__setattr__(attr, value)
         else:
-            if attr in ['contents']:
-                contents_prop = getattr(self.__class__, attr)
-                old_contents_id = id(contents_prop.__get__(self))
-                is_new_contents = id(value) != old_contents_id
+            match (attr):
+                case 'contents':
+                    contents_prop = getattr(self.__class__, attr)
+                    old_contents_id = id(contents_prop.__get__(self))
+                    is_new_contents = id(value) != old_contents_id
 
-                if is_new_contents:
-                    contents_prop.__set__(self, value)
+                    if is_new_contents:
+                        contents_prop.__set__(self, value)
 
-                    if self.config.interactive_mode and self.has_snapshot():
-                        self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
-                            old_contents_id)
-            else:
-                if self._is_non_omnipy_pydantic_model():
-                    self._special_method(
-                        '__setattr__',
-                        MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
-                        attr,
-                        value)
-                else:
-                    raise RuntimeError('Model does not allow setting of extra attributes')
+                        if self.config.interactive_mode and self.has_snapshot():
+                            self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
+                                old_contents_id)
+                case 'repr_state':
+                    prop = getattr(self.__class__, attr)
+                    prop.__set__(self, value)
+                case _:
+                    if self._is_non_omnipy_pydantic_model():
+                        self._special_method(
+                            '__setattr__',
+                            MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
+                            attr,
+                            value)
+                    else:
+                        raise RuntimeError('Model does not allow setting of extra attributes')
 
     def _special_method(  # noqa: C901
             self, name: str, info: MethodInfo, *args: object, **kwargs: object) -> object:
@@ -1189,13 +1198,6 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             and all_equals(self.contents, cast(Model, other).contents)
         # and self.to_data() == cast(Model, other).to_data()  # last line is just in case
 
-    def __repr__(self) -> str:
-        if self.config.interactive_mode and not waiting_for_terminal_repr():
-            if get_calling_module_name() in INTERACTIVE_MODULES:
-                waiting_for_terminal_repr(True)
-                return self._table_repr()
-        return self._trad_repr()
-
     def __bool__(self):
         if self._get_real_contents():
             return True
@@ -1211,22 +1213,15 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
             *args,
             **kwargs)
 
-    def view(self):
-        from omnipy.modules.pandas.models import PandasModel
-        return PandasModel(self).contents
-
-    def _trad_repr(self) -> str:
-        return super().__repr__()
-
     def __repr_args__(self):
         return [(None, self.contents)]
 
-    def _table_repr(self) -> str:
+    def _fancy_repr(self) -> str:
         from omnipy.data.dataset import Dataset
 
         outer_type = self.outer_type()
         if inspect.isclass(outer_type) and issubclass(outer_type, Dataset):
-            return cast(Dataset, self.contents)._table_repr()
+            return cast(Dataset, self.contents)._fancy_repr()
 
         # tabulate.PRESERVE_WHITESPACE = True  # Does not seem to work together with 'maxcolwidths'
 
@@ -1292,7 +1287,5 @@ class Model(GenericModel, Generic[_RootT], DataClassBase, metaclass=_ModelMetacl
                 maxcolwidths=[header_column_width, data_column_width],
                 tablefmt='rounded_grid',
             )
-
-        waiting_for_terminal_repr(False)
 
         return out

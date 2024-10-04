@@ -1,9 +1,10 @@
 from typing import Callable, ContextManager, Protocol, TypeVar
 
-from omnipy.api.protocols.private.util import IsSnapshotHolder
+from omnipy.api.enums import DataReprState
+from omnipy.api.protocols.private.util import HasContents, IsSnapshotHolder
 from omnipy.api.protocols.public.config import IsDataConfig
 
-_ObjT = TypeVar('_ObjT', bound=object)
+_ObjT = TypeVar('_ObjT', bound=HasContents)
 _ContentsT = TypeVar('_ContentsT', bound=object)
 
 
@@ -14,6 +15,14 @@ class IsDataClassCreator(Protocol[_ObjT, _ContentsT]):
         ...
 
     def set_config(self, config: IsDataConfig) -> None:
+        ...
+
+    @property
+    def repr_state(self) -> DataReprState:
+        ...
+
+    @repr_state.setter
+    def repr_state(self, repr_state: DataReprState) -> None:
         ...
 
     @property
@@ -36,4 +45,15 @@ class IsDataClassBase(Protocol):
 
     @property
     def config(self) -> IsDataConfig:
+        ...
+
+    def set_repr_state(self, repr_state: DataReprState) -> None:
+        ...
+
+    @property
+    def repr_state(self) -> DataReprState:
+        ...
+
+    @repr_state.setter
+    def repr_state(self, repr_state: DataReprState) -> None:
         ...

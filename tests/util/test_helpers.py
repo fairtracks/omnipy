@@ -39,6 +39,7 @@ from omnipy.util.helpers import (all_type_variants,
                                  is_pure_pydantic_model,
                                  is_strict_subclass,
                                  is_union,
+                                 is_unreserved_identifier,
                                  RefCountMemoDict,
                                  SnapshotHolder,
                                  SnapshotWrapper,
@@ -456,6 +457,15 @@ def test_is_pydantic_model() -> None:
     assert not is_non_omnipy_pydantic_model(Model[PydanticModel]())
     assert not is_non_omnipy_pydantic_model(Dataset[Model[PydanticModel]]())
     assert not is_non_omnipy_pydantic_model('model')
+
+
+def test_is_unreserved_identifier():
+    assert is_unreserved_identifier('MyClass') is True
+    assert is_unreserved_identifier('myobj_1') is True
+    assert is_unreserved_identifier('123_a') is False
+    assert is_unreserved_identifier('abc def') is False
+    assert is_unreserved_identifier('class') is False
+    assert is_unreserved_identifier('match') is False
 
 
 def _assert_values_in_memo(memo: RefCountMemoDict,

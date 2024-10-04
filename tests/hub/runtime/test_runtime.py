@@ -85,7 +85,6 @@ def _assert_runtime_objects_default(objects: RuntimeObjects):
     assert isinstance(objects.serializers, SerializerRegistry)
 
     assert isinstance(objects.root_log, RootLogObjects)
-    assert isinstance(objects.waiting_for_terminal_repr, bool)
 
 
 def test_config_default() -> None:

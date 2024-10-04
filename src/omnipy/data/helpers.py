@@ -140,13 +140,6 @@ def get_special_methods_info_dict() -> dict[str, MethodInfo]:
     return _SPECIAL_METHODS_INFO_DICT
 
 
-INTERACTIVE_MODULES = [
-    '__main__',
-    'IPython.lib.pretty',
-    'IPython.core.interactiveshell',
-    '_pydevd_bundle.pydevd_asyncio_utils',
-    '_pydevd_bundle.pydevd_exec2',
-]
 validate_cls_counts: defaultdict[str, int] = defaultdict(int)
 
 
@@ -202,18 +195,6 @@ def get_terminal_size() -> os.terminal_size:
     lines = runtime.config.data.terminal_size_lines if runtime else shutil_terminal_size.lines
 
     return os.terminal_size((columns, lines))
-
-
-def waiting_for_terminal_repr(new_value: bool | None = None) -> bool:
-    from omnipy.hub.runtime import runtime
-    if runtime is None:
-        return False
-
-    if new_value is not None:
-        runtime.objects.waiting_for_terminal_repr = new_value
-        return new_value
-    else:
-        return runtime.objects.waiting_for_terminal_repr
 
 
 def is_model_instance(__obj: object) -> bool:

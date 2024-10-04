@@ -8,6 +8,7 @@ import functools
 import gc
 import inspect
 from inspect import getmodule, isclass
+from keyword import iskeyword, issoftkeyword
 import locale as pkg_locale
 import operator
 import sys
@@ -286,6 +287,10 @@ def is_non_omnipy_pydantic_model(obj: object):
 
 class IsDataclass(Protocol):
     __dataclass_fields__: ClassVar[dict]
+
+
+def is_unreserved_identifier(identifier: str) -> bool:
+    return identifier.isidentifier() and not iskeyword(identifier) and not issoftkeyword(identifier)
 
 
 def remove_forward_ref_notation(type_str: str):

@@ -19,10 +19,8 @@ from pydantic.utils import lenient_isinstance, lenient_issubclass
 from typing_extensions import TypeVar
 
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
-from omnipy.data.helpers import (cleanup_name_qualname_and_module,
-                                 INTERACTIVE_MODULES,
-                                 is_model_instance,
-                                 waiting_for_terminal_repr)
+from omnipy.data.helpers import cleanup_name_qualname_and_module, is_model_instance
+from omnipy.data.mixins.repr_detector import ReprDetectorMixin
 from omnipy.data.model import Model
 from omnipy.data.selector import (create_updated_mapping,
                                   Index2DataItemsType,
@@ -30,10 +28,7 @@ from omnipy.data.selector import (create_updated_mapping,
                                   prepare_selected_items_with_iterable_data,
                                   prepare_selected_items_with_mapping_data,
                                   select_keys)
-from omnipy.util.helpers import (get_calling_module_name,
-                                 get_default_if_typevar,
-                                 is_iterable,
-                                 remove_forward_ref_notation)
+from omnipy.util.helpers import get_default_if_typevar, is_iterable, remove_forward_ref_notation
 from omnipy.util.tabulate import tabulate
 from omnipy.util.web import download_file_to_memory
 
@@ -51,11 +46,17 @@ DATA_KEY = 'data'
 #       BaseModel.copy()
 
 
-class _DatasetMetaclass(ModelMetaclass, DataClassBaseMeta):
+class _DatasetMetaclass(DataClassBaseMeta, ModelMetaclass):
     ...
 
 
-class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=_DatasetMetaclass):
+class Dataset(
+        ReprDetectorMixin,
+        DataClassBase,
+        GenericModel,
+        Generic[ModelT],
+        UserDict,
+        metaclass=_DatasetMetaclass):
     """
     Dict-based container of data files that follow a specific Model
 
@@ -381,6 +382,9 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
     def __setattr__(self, attr: str, value: Any) -> None:
         if attr in self.__dict__ or attr == DATA_KEY or attr.startswith('__'):
             super().__setattr__(attr, value)
+        elif attr == 'repr_state':
+            prop = getattr(self.__class__, attr)
+            prop.__set__(self, value)
         else:
             raise RuntimeError('Model does not allow setting of extra attributes')
 
@@ -603,16 +607,6 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
     def __repr_args__(self):
         return [(k, v.contents) for k, v in self.data.items()]
 
-    def __repr__(self):
-        if self.config.interactive_mode and not waiting_for_terminal_repr():
-            if get_calling_module_name() in INTERACTIVE_MODULES:
-                waiting_for_terminal_repr(True)
-                return self._table_repr()
-        return self._trad_repr()
-
-    def _trad_repr(self) -> str:
-        return super().__repr__()
-
     @classmethod
     def _len_if_available(cls, obj: Any) -> int | str:
         try:
@@ -620,8 +614,8 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
         except TypeError:
             return 'N/A'
 
-    def _table_repr(self) -> str:
-        ret = tabulate(
+    def _fancy_repr(self) -> str:
+        return tabulate(
             ((i,
               k,
               type(v).__name__,
@@ -631,8 +625,6 @@ class Dataset(GenericModel, Generic[ModelT], UserDict, DataClassBase, metaclass=
             ('#', 'Data file name', 'Type', 'Length', 'Size (in memory)'),
             tablefmt='rounded_outline',
         )
-        waiting_for_terminal_repr(False)
-        return ret
 
 
 class MultiModelDataset(Dataset[GeneralModelT], Generic[GeneralModelT]):

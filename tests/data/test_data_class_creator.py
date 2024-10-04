@@ -2,6 +2,7 @@ from typing import Annotated
 
 import pytest
 
+from omnipy.api.enums import DataReprState
 from omnipy.config.data import DataConfig
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta, DataClassCreator
 from omnipy.util.helpers import SnapshotHolder
@@ -9,7 +10,7 @@ from omnipy.util.helpers import SnapshotHolder
 from .helpers.mocks import MockDataset, MockModel
 
 
-def test_data_class_creator_init():
+def test_init():
     with pytest.raises(TypeError):
         DataClassCreator('something')  # noqa
 
@@ -19,7 +20,7 @@ def test_data_class_creator_init():
     assert data_class_creator_1 != data_class_creator_2
 
 
-def test_data_class_creator_set_config() -> None:
+def test_set_config() -> None:
     data_class_creator = DataClassCreator()
     assert data_class_creator.config == DataConfig()
 
@@ -31,8 +32,7 @@ def test_data_class_creator_set_config() -> None:
     assert data_class_creator.config == new_data_config
 
 
-def test_data_class_creator_singular_mock(
-        teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
+def test_singular_mock(teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
 
     assert isinstance(DataClassBase.data_class_creator, DataClassCreator)
 
@@ -59,7 +59,7 @@ def test_data_class_creator_singular_mock(
     assert dataset_new.__class__.data_class_creator is data_class_creator
 
 
-def test_data_class_creator_deepcopy_context() -> None:
+def test_deepcopy_context() -> None:
     creator = DataClassCreator()
 
     top_level_entry_func_calls = []
@@ -105,17 +105,28 @@ def test_data_class_creator_deepcopy_context() -> None:
         assert len(top_level_exit_func_calls) == 2
 
 
-def test_data_class_creator_config_property_mock(
+def test_config_property_mutable_from_data_class_creator(
         teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
     _assert_property_is_singularly_mutable(
         property='config',
-        property_setter='set_config',
         property_type=DataConfig,
+        set_property_from_data_class=False,
         new_val=DataConfig(interactive_mode=False),
+        property_setter='set_config',
     )
 
 
-def test_data_class_creator_snapshot_holder_property_mock(
+def test_repr_state_property_mutable_from_data_class(
+        teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
+    _assert_property_is_singularly_mutable(
+        property='repr_state',
+        property_type=DataReprState,
+        set_property_from_data_class=True,
+        new_val=DataReprState.REPR_FROM_CONSOLE,
+    )
+
+
+def test_snapshot_holder_property_immutable(
         teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
     _assert_property_is_singularly_immutable(
         property='snapshot_holder',
@@ -124,9 +135,10 @@ def test_data_class_creator_snapshot_holder_property_mock(
 
 
 def _assert_property_is_singularly_mutable(property: str,
-                                           property_setter: str,
                                            property_type: type,
-                                           new_val: object):
+                                           set_property_from_data_class: bool,
+                                           new_val: object,
+                                           property_setter: str | None = None) -> None:
     data_classes = (MockDataset, MockModel, DataClassBase)
     data_objects = (MockDataset(), MockModel())
     initial_val = getattr(DataClassBase.data_class_creator, property)
@@ -135,8 +147,19 @@ def _assert_property_is_singularly_mutable(property: str,
     _assert_property_in_classes(data_classes, property, initial_val)
     _assert_property_in_objects(data_objects, property, initial_val)
 
-    set_property_method = getattr(MockDataset.data_class_creator, property_setter)
-    set_property_method(new_val)
+    if set_property_from_data_class:
+        assert property_setter is None
+        for data_obj in data_objects:
+            setattr(data_obj, property, new_val)
+    else:
+        assert property_setter is not None
+        for data_cls in data_classes:
+            with pytest.raises(AttributeError):
+                set_property_method = getattr(data_cls, property_setter)
+                set_property_method(new_val)
+
+            set_property_method = getattr(data_cls.data_class_creator, property_setter)
+            set_property_method(new_val)
 
     _assert_property_in_classes(data_classes, property, new_val)
     _assert_property_in_objects(data_objects, property, new_val)
@@ -146,10 +169,6 @@ def _assert_property_is_singularly_mutable(property: str,
     assert new_data_objects[1] is not data_objects[1]
 
     _assert_property_in_objects(new_data_objects, property, new_val)
-
-    assert not hasattr(MockDataset, property_setter)
-    assert not hasattr(MockModel, property_setter)
-    assert not hasattr(DataClassBase, property_setter)
 
 
 def _assert_property_is_singularly_immutable(property: str, property_type: type):
