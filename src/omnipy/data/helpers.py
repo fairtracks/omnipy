@@ -2,8 +2,6 @@ from collections import defaultdict
 from contextlib import suppress
 from enum import IntEnum
 import functools
-import os
-import shutil
 from typing import ContextManager, ForwardRef, Generic, get_args, get_origin, NamedTuple
 
 from pydantic.typing import is_none_type
@@ -185,16 +183,6 @@ def cleanup_name_qualname_and_module(
     model_or_dataset.__name__ = format_classname_with_params(cls.__name__, params_str)
     model_or_dataset.__qualname__ = format_classname_with_params(cls.__qualname__, params_str)
     model_or_dataset.__module__ = cls.__module__
-
-
-def get_terminal_size() -> os.terminal_size:
-    from omnipy.hub.runtime import runtime
-
-    shutil_terminal_size = shutil.get_terminal_size()
-    columns = runtime.config.data.terminal_size_columns if runtime else shutil_terminal_size.columns
-    lines = runtime.config.data.terminal_size_lines if runtime else shutil_terminal_size.lines
-
-    return os.terminal_size((columns, lines))
 
 
 def is_model_instance(__obj: object) -> bool:

@@ -39,7 +39,6 @@ from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  get_special_methods_info_dict,
-                                 get_terminal_size,
                                  is_model_instance,
                                  MethodInfo,
                                  ResetSolutionTuple,
@@ -1225,11 +1224,11 @@ class Model(
 
         # tabulate.PRESERVE_WHITESPACE = True  # Does not seem to work together with 'maxcolwidths'
 
-        terminal_size = get_terminal_size()
         header_column_width = len('(bottom')
         num_columns = 2
         table_chars_width = 3 * num_columns + 1
-        data_column_width = terminal_size.columns - table_chars_width - header_column_width
+        terminal_size_cols = self.config.terminal_size_columns
+        data_column_width = terminal_size_cols - table_chars_width - header_column_width
 
         data_indent = 2
         extra_space_due_to_escaped_chars = 12
@@ -1247,7 +1246,7 @@ class Model(
         new_structure_lines = dedent(os.linesep.join(structure_lines[1:])).splitlines()
         if new_structure_lines[0].startswith('self: '):
             new_structure_lines[0] = new_structure_lines[0][5:]
-        max_section_height = (terminal_size.lines - 8) // 2
+        max_section_height = (self.config.terminal_size_lines - 8) // 2
         structure_len = len(new_structure_lines)
 
         def _is_table():
