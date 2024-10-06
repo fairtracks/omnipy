@@ -34,7 +34,7 @@ class MockJobSubclass(JobMixin, JobBase):
     def _get_job_template_subcls_for_revise(cls) -> Type[MockJobTemplateSubclass]:
         return MockJobTemplateSubclass
 
-    def _call_job(self, *args: object, **kwargs: object) -> object:
+    async def _call_job(self, *args: object, **kwargs: object) -> object:
         ...
 
 
@@ -281,14 +281,14 @@ class AssertSameTimeOfCurFlowRunJobBaseMixin:
     def reset_persisted_time_of_cur_toplevel_flow_run(cls) -> None:
         cls._persisted_time_of_cur_toplevel_flow_run.clear()
 
-    def _call_func(self, *args: object, **kwargs: object) -> object:
+    async def _call_func(self, *args: object, **kwargs: object) -> object:
         if self.persisted_time_of_cur_toplevel_flow_run:
             assert self.persisted_time_of_cur_toplevel_flow_run == \
                    self.time_of_cur_toplevel_flow_run
         else:
             self._persisted_time_of_cur_toplevel_flow_run.append(self.time_of_cur_toplevel_flow_run)
 
-        return super()._call_func(*args, **kwargs)
+        return await super()._call_func(*args, **kwargs)
 
 
 class IsMockTaskTemplateAssertSameTimeOfCurFlowRun(

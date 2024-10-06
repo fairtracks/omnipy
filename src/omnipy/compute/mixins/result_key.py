@@ -17,9 +17,9 @@ class ResultKeyFuncJobBaseMixin:
     def result_key(self) -> str | None:
         return self._result_key
 
-    def _call_job(self, *args: object, **kwargs: object) -> object:
+    async def _call_job(self, *args: object, **kwargs: object) -> object:
         super_as_job_base = cast(IsJobBase, super())
-        result = super_as_job_base._call_job(*args, **kwargs)
+        result = await super_as_job_base._call_job(*args, **kwargs)
 
         if self._result_key:
             return {self._result_key: result}

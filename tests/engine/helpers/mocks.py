@@ -55,8 +55,8 @@ class MockTask:
     def __call__(self, *args: object, **kwargs: object) -> Any:
         return self._call_func(*args, **kwargs)
 
-    def _call_func(self, *args: object, **kwargs: object) -> Any:
-        return self._func(*args, **kwargs)
+    async def _call_func(self, *args: object, **kwargs: object) -> Any:
+        return await self._func(*args, **kwargs)
 
     def has_coroutine_func(self) -> bool:
         return asyncio.iscoroutinefunction(self._func)

@@ -33,7 +33,7 @@ class ParamsFuncJobBaseMixin:
     def param_key_map(self) -> MappingProxyType[str, str]:
         return MappingProxyType(self._param_key_mapper.key_map)
 
-    def _call_job(self, *args: object, **kwargs: object) -> object:
+    async def _call_job(self, *args: object, **kwargs: object) -> object:
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
         self_as_signature_func_job_base_mixin = cast(SignatureFuncJobBaseMixin, self)
 
@@ -47,7 +47,9 @@ class ParamsFuncJobBaseMixin:
                     tuple(set(kwargs.keys()) - set(mapped_kwargs.keys()))))
 
             super_as_job_base = cast(IsJobBase, super())
-            result = super_as_job_base._call_job(*args, **mapped_fixed_params, **mapped_kwargs)
+            result = await super_as_job_base._call_job(*args,
+                                                       **mapped_fixed_params,
+                                                       **mapped_kwargs)
 
         except TypeError as e:
             if str(e).startswith('Incorrect job function arguments'):

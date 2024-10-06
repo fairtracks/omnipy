@@ -164,7 +164,7 @@ class JobBase(LogMixin, DynamicMixinAcceptor, metaclass=JobBaseMeta):
 
         raise TypeError(f"'{self.__class__.__name__}' object is not callable. Try .run() method")
 
-    def _call_job(self, *args: object, **kwargs: object) -> object:
+    async def _call_job(self, *args: object, **kwargs: object) -> object:
         pass
 
     def _check_engine(self, engine_protocol: Type):
@@ -229,11 +229,11 @@ class JobMixin(DynamicMixinAcceptor):
         update_wrapper(job_template, self, updated=[])
         return job_template
 
-    def __call__(self, *args: object, **kwargs: object) -> object:
+    async def __call__(self, *args: object, **kwargs: object) -> object:
         self_as_job_base = cast(IsJobBase, self)
 
         try:
-            return self_as_job_base._call_job(*args, **kwargs)
+            return await self_as_job_base._call_job(*args, **kwargs)
         except Exception as e:
             self_as_job_base.log(str(e), level=logging.ERROR)
             raise

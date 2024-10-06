@@ -3,6 +3,7 @@ from typing import Callable
 
 from omnipy.api.typedefs import GeneralDecorator
 from omnipy.compute.job import JobBase
+from omnipy.compute.mixins.auto_async import AutoAsyncJobBaseMixin
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.iterate import IterateFuncJobBaseMixin
 from omnipy.compute.mixins.params import ParamsFuncJobBaseMixin
@@ -20,17 +21,17 @@ class PlainFuncArgJobBase(JobBase):
     def has_coroutine_func(self) -> bool:
         return asyncio.iscoroutinefunction(self._job_func)
 
-    def _call_job(self, *args: object, **kwargs: object) -> object:
+    async def _call_job(self, *args: object, **kwargs: object) -> object:
         """To be overloaded by mixins"""
-        return self._call_func(*args, **kwargs)
+        return await self._call_func(*args, **kwargs)
 
-    def _call_func(self, *args: object, **kwargs: object) -> object:
+    async def _call_func(self, *args: object, **kwargs: object) -> object:
         """
         To be decorated by job runners and mixins that need early application. Should not
         be overloaded using inheritance. The method _accept_call_func_decorator accepts
         decorators.
         """
-        return self._job_func(*args, **kwargs)
+        return await self._job_func(*args, **kwargs)
 
     def _accept_call_func_decorator(self, call_func_decorator: GeneralDecorator) -> None:
         self._call_func = call_func_decorator(self._call_func)  # type:ignore
@@ -41,6 +42,7 @@ class FuncArgJobBase(PlainFuncArgJobBase):
     ...
 
 
+FuncArgJobBase.accept_mixin(AutoAsyncJobBaseMixin)
 FuncArgJobBase.accept_mixin(SignatureFuncJobBaseMixin)
 FuncArgJobBase.accept_mixin(IterateFuncJobBaseMixin)
 FuncArgJobBase.accept_mixin(SerializerFuncJobBaseMixin)

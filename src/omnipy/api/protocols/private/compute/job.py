@@ -60,7 +60,7 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol):
     def _call_job_template(self, *args: object, **kwargs: object) -> object:
         ...
 
-    def _call_job(self, *args: object, **kwargs: object) -> object:
+    async def _call_job(self, *args: object, **kwargs: object) -> object:
         ...
 
 
@@ -74,7 +74,7 @@ class IsJob(IsJobBase, Protocol):
     def create_job(cls, *args: object, **kwargs: object) -> 'IsJob':
         ...
 
-    def __call__(self, *args: object, **kwargs: object) -> object:
+    async def __call__(self, *args: object, **kwargs: object) -> object:
         ...
 
     def _apply_engine_decorator(self, engine: IsEngine) -> None:

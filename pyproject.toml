@@ -44,6 +44,9 @@ httpx = "^0.26.0"
 pydantic = {version = "<2", extras = ["email"]}
 griffe = "<1"
 ipython = ">=7.34.0"
+aiohttp = "^3.10.6"
+tenacity = "^9.0.0"
+anyio = {extras = ["trio"], version = "^4.6.0"}
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"
@@ -56,6 +59,7 @@ pre-commit = "^3.8.0"
 pytest-mypy-plugins = "^3.1.2"
 devtools = "^0.12.2"
 mypy = "^1.11.2"
+pytest-aiohttp = "^1.0.5"
 
 [tool.poetry.group.docs.dependencies]
 portray = {git = "https://github.com/HeinrichAD/portray.git"}

@@ -1,5 +1,6 @@
 from typing import Generic
 
+from aiohttp import web
 from typing_extensions import TypeVar
 
 from omnipy.data.dataset import Dataset
@@ -84,3 +85,17 @@ def test_convert_dataset_with_params() -> None:
     ints = convert_dataset.run(floats, dataset_cls=RoundToNearestIntDataset)
     assert isinstance(ints, RoundToNearestIntDataset)
     assert ints.to_data() == dict(a=1, b=4)
+
+
+async def text_endpoint(request):
+    return web.Response(body='I kjøleskapet hjemme er det øl!'.encode('utf-8'))
+
+
+def create_app():
+    app = web.Application()
+    app.router.add_route('GET', '/text', text_endpoint)
+    return app
+
+
+def test_get_endpoint_data() -> None:
+    ...
