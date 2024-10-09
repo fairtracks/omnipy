@@ -10,7 +10,8 @@ from omnipy.modules.json.datasets import (JsonDictDataset,
                                           JsonListOfDictsDataset)
 from omnipy.modules.json.flows import (transpose_dict_of_dicts_2_list_of_dicts,
                                        transpose_dicts_of_lists_of_dicts_2_lists_of_dicts)
-from omnipy.modules.json.tasks import transpose_dicts_2_lists
+from omnipy.modules.json.tasks import (create_dict_of_dicts_from_list_of_dicts,
+                                       transpose_dicts_2_lists)
 
 
 def test_transpose_empty_dicts_2_nothing(runtime: Annotated[IsRuntime, pytest.fixture]):
@@ -65,6 +66,34 @@ def test_transpose_dicts_of_various_2_lists_of_various(runtime: Annotated[IsRunt
         }],
         'b': [1, 2, 3, 4, 5, 6],
         'c': [654]
+    }
+
+
+def test_create_dict_of_dicts_from_list_of_dicts():
+    in_dataset = JsonListOfDictsDataset(
+        abc=[{
+            'name': 'abc_0', 'x': 33.2, 'y': 14.5
+        }, {
+            'name': 'abc_1', 'x': 9.2, 'y': 21.3
+        }],
+        bcd=[{
+            'name': 'bcd_0', 'x': 2.34, 'y': 3.3
+        }])
+    out_dataset = create_dict_of_dicts_from_list_of_dicts.run(
+        in_dataset, field_whose_values_will_be_new_keys='name')
+    assert out_dataset.to_data() == {
+        'abc': {
+            'abc_0': {
+                'x': 33.2, 'y': 14.5
+            }, 'abc_1': {
+                'x': 9.2, 'y': 21.3
+            }
+        },
+        'bcd': {
+            'bcd_0': {
+                'x': 2.34, 'y': 3.3
+            }
+        }
     }
 
 

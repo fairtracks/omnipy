@@ -1,4 +1,5 @@
 from collections import defaultdict
+from copy import copy
 from typing import cast
 
 from omnipy.compute.task import TaskTemplate
@@ -13,6 +14,7 @@ from .datasets import (JsonDataset,
                        JsonListOfDictsDataset,
                        JsonListOfDictsOfScalarsDataset)
 from .functions import flatten_outer_level_of_nested_record
+from .models import JsonDictOfDictsModel, JsonListOfDictsModel
 from .typedefs import (JsonDict,
                        JsonDictOfListsOfDicts,
                        JsonDictOfScalars,
@@ -56,6 +58,22 @@ def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> J
                     output_dataset[key].append(val_item)
 
     return JsonListDataset(output_dataset)
+
+
+@TaskTemplate(iterate_over_data_files=True)
+def create_dict_of_dicts_from_list_of_dicts(
+        list_of_dicts: JsonListOfDictsModel,
+        field_whose_values_will_be_new_keys: str) -> JsonDictOfDictsModel:
+    output_dict = {}
+    for item in list_of_dicts:
+        item_copy = copy(item.contents)
+        new_key = item_copy[field_whose_values_will_be_new_keys]
+        del item_copy[field_whose_values_will_be_new_keys]
+        output_dict[new_key] = item_copy
+    return output_dict
+
+
+# TODO: Somehow fix so that we do not need to call Model.contents within a task
 
 
 @mypy_fix_task_template

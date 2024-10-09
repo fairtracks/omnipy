@@ -1,5 +1,6 @@
 from typing import Generic, get_args
 
+from pydantic import HttpUrl
 from typing_extensions import TypeVar
 
 from omnipy.data.helpers import TypeVarStore1, TypeVarStore2, TypeVarStore3, TypeVarStore4
@@ -97,4 +98,8 @@ class Chain6(
         Model[Z | TypeVarStore4[Y] | TypeVarStore3[X] | TypeVarStore2[W] | TypeVarStore1[V] | U],
         Generic[U, V, W, X, Y, Z],
 ):
+    ...
+
+
+class HttpUrlModel(Model[HttpUrl | None]):
     ...
