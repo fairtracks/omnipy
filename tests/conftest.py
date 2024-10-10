@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import tempfile
 from typing import Annotated, Callable, Iterator, Type
+from unittest import mock
 
 import pytest
 import pytest_cases as pc
@@ -242,3 +243,25 @@ def pytest_collection_modifyitems(items):
     # between total running time and the need to run unit tests first for optimal feedback loop
     # when developing.
     items[:] = other_tests + mypy_tests + integration_tests
+
+
+@pc.fixture(scope='function')
+def mock_windows_linesep() -> Iterator[None]:
+    with mock.patch('os.linesep', new='\r\n'):
+        yield
+
+
+@pc.fixture(scope='function')
+def mock_unix_mac_linesep() -> Iterator[None]:
+    with mock.patch('os.linesep', new='\n'):
+        yield
+
+
+@pc.fixture(scope='function')
+@pc.parametrize(
+    'linesep_variant',
+    [mock_unix_mac_linesep, mock_windows_linesep],
+    ids=['unix_mac_linesep', 'windows_linesep'],
+)
+def mock_linesep_variants(linesep_variant: Annotated[Iterator[None], pc.fixture]) -> Iterator[None]:
+    yield
