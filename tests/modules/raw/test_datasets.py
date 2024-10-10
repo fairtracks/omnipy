@@ -1,9 +1,10 @@
 import os
 from textwrap import dedent
-from typing import Annotated
+from typing import Annotated, Iterator
 
 from pydantic import ValidationError
 import pytest
+import pytest_cases as pc
 
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.model import Model
@@ -64,6 +65,7 @@ def test_str_dataset() -> None:
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
 def test_split_to_and_join_lines_dataset(
     use_str_model: bool,
+    mock_linesep_variants: Annotated[Iterator[None], pc.fixture],
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
@@ -122,11 +124,21 @@ def test_split_to_and_join_lines_dataset(
 
     assert joined_lines['last_lines'][:joined_lines['last_lines'].index(' ')].contents == 'abhorred'
     assert JoinLinesDataset(SplitToLinesDataset(dict(monologue=data))).to_data() == {
-        'monologue': os.linesep.join([line.strip() for line in raw_data.strip().split(os.linesep)])
+        'monologue': '\n'.join([line.strip() for line in raw_data.strip().split('\n')])
     }
     assert JoinLinesDataset(SplitToLinesNoStripDataset(dict(monologue=data))).to_data() == {
         'monologue': raw_data
     }
+
+    JoinLinesByOsLinesepDataset = JoinLinesDataset.adjust(
+        'JoinLinesByOsLinesepDataset', 'JoinLinesByOsLinesepModel', delimiter=os.linesep)
+
+    os_linesep_joined_lines = JoinLinesByOsLinesepDataset(lines_stripped)
+
+    assert os_linesep_joined_lines['last_lines'].contents == os.linesep.join([
+        'abhorred in my imagination it is! my gorge rises at',
+        'it. Here hung those lips that I have kissed I know'
+    ])
 
 
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
@@ -136,17 +148,17 @@ def test_split_to_and_join_items_dataset(
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
 
-    raw_data_tab_start = 'abc\t def \tghi\tjkl'
-    data_tab_start = Model[str](raw_data_tab_start) if use_str_model else raw_data_tab_start
+    raw_data_comma_start = 'abc, def ,ghi,jkl'
+    data_comma_start = Model[str](raw_data_comma_start) if use_str_model else raw_data_comma_start
 
-    raw_data_tab_end = 'mno\t pqr \tstu\tvwx\tyz '
-    data_tab_end = Model[str](raw_data_tab_end) if use_str_model else raw_data_tab_end
+    raw_data_comma_end = 'mno, pqr ,stu,vwx,yz '
+    data_comma_end = Model[str](raw_data_comma_end) if use_str_model else raw_data_comma_end
 
-    items_stripped_tab = SplitToItemsDataset(dict(start=data_tab_start, end=data_tab_end))
+    items_stripped_comma = SplitToItemsDataset(dict(start=data_comma_start, end=data_comma_end))
 
-    assert items_stripped_tab['start'].contents == ['abc', 'def', 'ghi', 'jkl']
-    assert_model_if_dyn_conv_else_val(items_stripped_tab['start'][1], str, 'def')
-    assert items_stripped_tab['end'][-2:].contents == ['vwx', 'yz']
+    assert items_stripped_comma['start'].contents == ['abc', 'def', 'ghi', 'jkl']
+    assert_model_if_dyn_conv_else_val(items_stripped_comma['start'][1], str, 'def')
+    assert items_stripped_comma['end'][-2:].contents == ['vwx', 'yz']
 
     SplitToItemsNoStripDataset = SplitToItemsDataset.adjust(
         'SplitToItemsNoStripDataset',
@@ -154,45 +166,42 @@ def test_split_to_and_join_items_dataset(
         strip=False,
     )
 
-    items_unstripped_tab = SplitToItemsNoStripDataset(dict(start=data_tab_start, end=data_tab_end))
-
-    assert items_unstripped_tab['start'].contents == ['abc', ' def ', 'ghi', 'jkl']
-    assert_model_if_dyn_conv_else_val(items_unstripped_tab['start'][1], str, ' def ')
-    assert items_unstripped_tab['end'][-2:].contents == ['vwx', 'yz ']
-
-    data_comma_start = 'abc, def, ghi, jkl'
-    data_comma_end = 'mno, pqr, stu, vwx, yz'
-
-    SplitToItemsByCommaDataset = SplitToItemsDataset.adjust(
-        'SplitToItemsByCommaDataset',
-        'SplitToItemsByCommaModel',
-        delimiter=',',
-    )
-
-    items_stripped_comma = SplitToItemsByCommaDataset(
+    items_unstripped_comma = SplitToItemsNoStripDataset(
         dict(start=data_comma_start, end=data_comma_end))
 
-    assert items_stripped_comma['start'].contents == ['abc', 'def', 'ghi', 'jkl']
-    assert_model_if_dyn_conv_else_val(items_stripped_comma['start'][1], str, 'def')
-    assert items_stripped_comma['end'][-2:].contents == ['vwx', 'yz']
+    assert items_unstripped_comma['start'].contents == ['abc', ' def ', 'ghi', 'jkl']
+    assert_model_if_dyn_conv_else_val(items_unstripped_comma['start'][1], str, ' def ')
+    assert items_unstripped_comma['end'][-2:].contents == ['vwx', 'yz ']
 
-    for data_file, items in items_stripped_comma.items():
-        items_stripped_comma[data_file] = items[1:3]
+    data_tab_start = 'abc\t def \tghi\tjkl'
+    data_tab_end = 'mno\t pqr \tstu\tvwx\tyz '
+
+    SplitToItemsByTabDataset = SplitToItemsDataset.adjust(
+        'SplitToItemsByTabDataset',
+        'SplitToItemsByTabModel',
+        delimiter='\t',
+    )
+
+    items_stripped_tab = SplitToItemsByTabDataset(dict(start=data_tab_start, end=data_tab_end))
+
+    assert items_stripped_tab['start'].contents == ['abc', 'def', 'ghi', 'jkl']
+    assert_model_if_dyn_conv_else_val(items_stripped_tab['start'][1], str, 'def')
+    assert items_stripped_tab['end'][-2:].contents == ['vwx', 'yz']
 
     for data_file, items in items_stripped_tab.items():
         items_stripped_tab[data_file] = items[1:3]
 
-    tab_joined_items = JoinItemsDataset(items_stripped_comma)
-    assert tab_joined_items['start'].contents == 'def\tghi'
-    assert tab_joined_items['end'][1:-1].contents == 'qr\tst'
+    comma_joined_items = JoinItemsDataset(items_stripped_tab)
+    assert comma_joined_items['start'].contents == 'def,ghi'
+    assert comma_joined_items['end'][1:-1].contents == 'qr,st'
 
-    JoinItemsByCommaDataset = JoinItemsDataset.adjust(
-        'JoinItemsByCommaDataset',
-        'JoinItemsByCommaModel',
+    JoinItemsByCommaSpaceDataset = JoinItemsDataset.adjust(
+        'JoinItemsByCommaSpaceDataset',
+        'JoinItemsByCommaSpaceModel',
         delimiter=', ',
     )
 
-    comma_space_joined_items = JoinItemsByCommaDataset(items_stripped_tab)
+    comma_space_joined_items = JoinItemsByCommaSpaceDataset(items_stripped_tab)
 
     assert comma_space_joined_items['start'].contents == 'def, ghi'
     assert comma_space_joined_items['end'][1:-1].contents == 'qr, st'
