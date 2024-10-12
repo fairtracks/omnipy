@@ -1,4 +1,6 @@
-from typing import cast
+from typing import Callable, cast, Generic, TypeAlias
+
+from typing_extensions import TypeVar
 
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
@@ -204,4 +206,57 @@ class JoinColumnsToLinesModel(_JoinItemsByTabParamsMixin, _JoinSubitemsToItemsMo
     adjust = bind_adjust_model_func(
         _JoinSubitemsToItemsModel.clone_model_cls,
         _JoinItemsByTabParamsMixin.Params,
+    )
+
+
+NestedStrListT = TypeVar(
+    'NestedStrListT', default=str | list['NestedStrListT'])  # type: ignore[misc]
+
+NestedStrList: TypeAlias = list['StrOrNestedStrList']
+StrOrNestedStrList: TypeAlias = str | NestedStrList
+
+
+class _NestedSplitToItemsModel(Model[list[NestedStrListT] | str], Generic[NestedStrListT]):
+    @params_dataclass
+    class Params(ParamsBase):
+        delimiters: tuple[str, ...] = ()
+
+    @classmethod
+    def _split_data_according_to_delimiters(cls,
+                                            data: StrOrNestedStrList,
+                                            level: int = 0) -> NestedStrList:
+        split_data = cast(
+            NestedStrList,
+            data.split(cls.Params.delimiters[level]) if isinstance(data, str) else data)
+
+        num_delimiters = len(cls.Params.delimiters)
+        next_level = level + 1
+        if num_delimiters > next_level:
+            return [
+                cls._split_data_according_to_delimiters(item, level=next_level)
+                for item in split_data
+            ]
+        else:
+            if num_delimiters == 0:
+                assert isinstance(data, str), 'Data must be a string if no delimiters are provided.'
+            else:
+                assert not any(isinstance(item, list) for item in data), \
+                    (f'Data is nested higher than permitted by the number of delimiters in '
+                     f'Params (={num_delimiters}).')
+
+        return split_data
+
+    @classmethod
+    def _parse_data(cls, data: StrOrNestedStrList) -> list[NestedStrListT] | str:
+        if len(cls.Params.delimiters) == 0 and isinstance(data, str):
+            return data
+        else:
+            return cast(list[NestedStrListT] | str, cls._split_data_according_to_delimiters(data))
+
+
+class NestedSplitToItemsModel(_NestedSplitToItemsModel):
+    adjust = bind_adjust_model_func(
+        cast(Callable[..., type[_NestedSplitToItemsModel]],
+             _NestedSplitToItemsModel.clone_model_cls),
+        _NestedSplitToItemsModel.Params,
     )
