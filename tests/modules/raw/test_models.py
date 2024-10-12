@@ -6,7 +6,6 @@ from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.model import Model
 from omnipy.modules.raw.models import (BytesModel,
                                        JoinColumnsToLinesModel,
@@ -61,7 +60,6 @@ def test_str_model():
 def test_split_to_and_join_lines_model(
     use_str_model: bool,
     mock_linesep_variants: Annotated[Iterator[None], pc.fixture],
-    runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
 
@@ -129,7 +127,6 @@ def test_split_to_and_join_lines_model(
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
 def test_split_to_and_join_items_model(
     use_str_model: bool,
-    runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
 
@@ -176,7 +173,6 @@ def test_split_to_and_join_items_model(
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
 def test_split_lines_to_columns_and_join_columns_to_lines_model(
     use_str_model: bool,
-    runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
 
