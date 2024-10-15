@@ -12,6 +12,7 @@ from omnipy.modules.raw.models import (BytesModel,
                                        JoinColumnsToLinesModel,
                                        JoinItemsModel,
                                        JoinLinesModel,
+                                       NestedJoinItemsModel,
                                        NestedSplitToItemsModel,
                                        SplitLinesToColumnsModel,
                                        SplitToItemsModel,
@@ -258,13 +259,14 @@ class PreSplitEnum(str, Enum):
     FALSE = 'False'
     LEVEL_1 = 'level_1'
     LEVEL_2 = 'level_2'
-    MIXED = 'mixed'
+    MIXED_1_2 = 'mixed_1_2'
+    LEVEL_3 = 'level_3'
 
 
-SplittableDataType: TypeAlias = (
-    str | list[str] | list[list[str]] | list[str | list[str]] | Model[str] | Model[list[str]]
-    | Model[list[list[str]]]
-    | Model[list[str | list[str]]])
+SplittableDataType: TypeAlias = (str | list[str] | list[list[str]] | list[str | list[str]]
+                                 | list[list[list[str]]] | Model[str] | Model[list[str]]
+                                 | Model[list[list[str]]]
+                                 | Model[list[str | list[str]]]) | Model[list[list[list[str]]]]
 
 SplittableDataReturnType: TypeAlias = tuple[
     PreSplitEnum,
@@ -279,7 +281,8 @@ SplittableDataReturnType: TypeAlias = tuple[
         PreSplitEnum.FALSE,
         PreSplitEnum.LEVEL_1,
         PreSplitEnum.LEVEL_2,
-        PreSplitEnum.MIXED,
+        PreSplitEnum.MIXED_1_2,
+        PreSplitEnum.LEVEL_3,
     ],
     use_model=[False, True],
 )
@@ -292,36 +295,49 @@ def splittable_data(
 
     if not pre_split == PreSplitEnum.FALSE:
         split_data = raw_data.split(';')
+        doubly_split_data = [item.split('&') for item in split_data]
         match (pre_split):
             case PreSplitEnum.LEVEL_1:
                 data = Model[list[str]](split_data) if use_model else split_data
             case PreSplitEnum.LEVEL_2:
-                doubly_split_data = [item.split('&') for item in split_data]
                 data = Model[list[list[str]]](doubly_split_data) if use_model else doubly_split_data
-            case PreSplitEnum.MIXED:
+            case PreSplitEnum.MIXED_1_2:
                 mixed_split_data: list[str | list[str]] = [split_data[0].split('&'), split_data[1]]
                 data = Model[list[str
                                   | list[str]]](mixed_split_data) if use_model else mixed_split_data
+            case PreSplitEnum.LEVEL_3:
+                triply_split_data = [[item.split('=') for item in x] for x in doubly_split_data]
+                data = Model[list[list[list[str]]]](
+                    triply_split_data) if use_model else triply_split_data
     else:
         data = Model[str](raw_data) if use_model else raw_data
 
     return pre_split, raw_data, data
 
 
-def test_nested_split_and_join_items_model_default(
+def _assert_empty_model(model_cls: type[Model], default_value: object) -> None:
+    empty_model: Model
+    for empty_model in [model_cls(), model_cls(''), model_cls([])]:
+        assert empty_model.contents == empty_model.to_data() == default_value
+
+
+def test_nested_split_to_items_model_default(
         splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+
+    _assert_empty_model(NestedSplitToItemsModel, '')
 
     pre_split, raw_data, data = splittable_data
 
     if pre_split == PreSplitEnum.FALSE:
         default_no_split = NestedSplitToItemsModel(data)
         assert default_no_split.contents == default_no_split.to_data() == raw_data
-    else:
+
+    elif pre_split == PreSplitEnum.LEVEL_1:
         with pytest.raises(ValidationError):
             NestedSplitToItemsModel(data)
 
 
-def test_nested_split_and_join_items_model_one_level(
+def test_nested_split_to_items_model_one_level(
         splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
 
     pre_split, raw_data, data = splittable_data
@@ -330,6 +346,8 @@ def test_nested_split_and_join_items_model_one_level(
         'OneLevelNestedSplitToItemsModel',
         delimiters=(';',),
     )
+
+    _assert_empty_model(OneLevelNestedSplitToItemsModel, [])
 
     if pre_split in [PreSplitEnum.FALSE, PreSplitEnum.LEVEL_1]:
         top_level_split = OneLevelNestedSplitToItemsModel(data)
@@ -341,7 +359,7 @@ def test_nested_split_and_join_items_model_one_level(
             OneLevelNestedSplitToItemsModel(data)
 
 
-def test_nested_split_and_join_items_model_two_levels(
+def test_nested_split_to_items_model_two_levels(
         splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
 
     pre_split, raw_data, data = splittable_data
@@ -351,14 +369,20 @@ def test_nested_split_and_join_items_model_two_levels(
         delimiters=(';', '&'),
     )
 
-    two_level_split = TwoLevelNestedSplitToItemsModel(data)
-    assert two_level_split.contents == two_level_split.to_data() == [
-        ['abc=def', 'ghi=jkl', 'pqr=stu', 'xyz=123'],
-        ['x=1', 'y=2'],
-    ]
+    _assert_empty_model(TwoLevelNestedSplitToItemsModel, [])
+
+    if pre_split != PreSplitEnum.LEVEL_3:
+        two_level_split = TwoLevelNestedSplitToItemsModel(data)
+        assert two_level_split.contents == two_level_split.to_data() == [
+            ['abc=def', 'ghi=jkl', 'pqr=stu', 'xyz=123'],
+            ['x=1', 'y=2'],
+        ]
+    else:
+        with pytest.raises(ValidationError):
+            TwoLevelNestedSplitToItemsModel(data)
 
 
-def test_nested_split_and_join_items_model_three_levels(
+def test_nested_split_to_items_model_three_levels(
         splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
 
     pre_split, raw_data, data = splittable_data
@@ -368,8 +392,162 @@ def test_nested_split_and_join_items_model_three_levels(
         delimiters=(';', '&', '='),
     )
 
+    _assert_empty_model(ThreeLevelNestedSplitToItemsModel, [])
+
     three_level_split = ThreeLevelNestedSplitToItemsModel(data)
     assert three_level_split.contents == three_level_split.to_data() == [
         [['abc', 'def'], ['ghi', 'jkl'], ['pqr', 'stu'], ['xyz', '123']],
         [['x', '1'], ['y', '2']],
     ]
+
+
+def test_nested_split_to_items_model_mixed_levels() -> None:
+    VarSpecNestedSplitToItemsModel = NestedSplitToItemsModel.adjust(
+        'VarSpecNestedSplitToItemsModel',
+        delimiters=(';', '='),
+    )
+
+    with pytest.raises(ValidationError):
+        VarSpecNestedSplitToItemsModel('a=1;b=2;c')
+    with pytest.raises(ValidationError):
+        VarSpecNestedSplitToItemsModel(['a=1', 'b=2', 'c'])
+    with pytest.raises(ValidationError):
+        VarSpecNestedSplitToItemsModel(['a=1', 'b=2', ['c']])
+
+    assert VarSpecNestedSplitToItemsModel('a=1;b=2;c=3').to_data() == \
+        [['a', '1'], ['b', '2'], ['c', '3']]
+    assert VarSpecNestedSplitToItemsModel(['a=1', 'b=2', 'c=3']).to_data() == \
+        [['a', '1'], ['b', '2'], ['c', '3']]
+    assert VarSpecNestedSplitToItemsModel(['a=1', 'b=2', ['c', '3']]).to_data() == \
+        [['a', '1'], ['b', '2'], ['c', '3']]
+
+
+def test_nested_split_to_items_model_parse_to_str() -> None:
+    ThreeLevelNestedSplitToItemsModel = NestedSplitToItemsModel.adjust(
+        'ThreeLevelNestedSplitToItemsModel',
+        delimiters=(';', '&', '='),
+    )
+
+    data = [
+        [
+            [1, 2.0],
+            [2, 4.0],
+        ],
+        [[3, 6.0]],
+    ]
+    split_model = ThreeLevelNestedSplitToItemsModel(data)
+    assert split_model.contents == split_model.to_data() == [
+        [
+            ['1', '2.0'],
+            ['2', '4.0'],
+        ],
+        [['3', '6.0']],
+    ]
+
+
+def test_nested_join_items_model_default(
+        splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+
+    _assert_empty_model(NestedJoinItemsModel, '')
+
+    pre_split, raw_data, data = splittable_data
+
+    if pre_split == PreSplitEnum.FALSE:
+        default_no_join = NestedJoinItemsModel(data)
+        assert default_no_join.contents == default_no_join.to_data() == raw_data
+
+    elif pre_split == PreSplitEnum.LEVEL_1:
+        with pytest.raises(ValidationError):
+            NestedJoinItemsModel(data)
+
+
+def test_nested_join_items_model_one_level(
+        splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+
+    pre_split, raw_data, data = splittable_data
+
+    OneLevelNestedJoinItemsModel = NestedJoinItemsModel.adjust(
+        'OneLevelNestedJoinItemsModel',
+        delimiters=(';',),
+    )
+
+    _assert_empty_model(OneLevelNestedJoinItemsModel, '')
+
+    if pre_split in [PreSplitEnum.FALSE, PreSplitEnum.LEVEL_1]:
+        top_level_join = OneLevelNestedJoinItemsModel(data)
+        assert top_level_join.contents == top_level_join.to_data() == raw_data
+    else:
+        with pytest.raises(ValidationError):
+            OneLevelNestedJoinItemsModel(data)
+
+
+def test_nested_join_items_model_two_levels(
+        splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+
+    pre_split, raw_data, data = splittable_data
+
+    TwoLevelNestedJoinItemsModel = NestedJoinItemsModel.adjust(
+        'TwoLevelNestedJoinItemsModel',
+        delimiters=(';', '&'),
+    )
+
+    _assert_empty_model(TwoLevelNestedJoinItemsModel, '')
+
+    if pre_split != PreSplitEnum.LEVEL_3:
+        two_level_join = TwoLevelNestedJoinItemsModel(data)
+        assert two_level_join.contents == two_level_join.to_data() == raw_data
+    else:
+        with pytest.raises(ValidationError):
+            TwoLevelNestedJoinItemsModel(data)
+
+
+def test_nested_join_items_model_three_levels(
+        splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+
+    pre_split, raw_data, data = splittable_data
+
+    ThreeLevelNestedJoinItemsModel = NestedJoinItemsModel.adjust(
+        'TwoLevelNestedJoinItemsModel',
+        delimiters=(';', '&', '='),
+    )
+
+    _assert_empty_model(ThreeLevelNestedJoinItemsModel, '')
+
+    three_level_join = ThreeLevelNestedJoinItemsModel(data)
+    assert three_level_join.contents == three_level_join.to_data() == raw_data
+
+
+def test_nested_join_items_model_mixed_levels() -> None:
+    VarSpecNestedJoinItemsModel = NestedJoinItemsModel.adjust(
+        'VarSpecNestedJoinItemsModel',
+        delimiters=(';', '='),
+    )
+
+    with pytest.raises(ValidationError):
+        VarSpecNestedJoinItemsModel('a=1;b=2;c')
+    with pytest.raises(ValidationError):
+        VarSpecNestedJoinItemsModel(['a=1', 'b=2', 'c'])
+    with pytest.raises(ValidationError):
+        VarSpecNestedJoinItemsModel([['a', '1'], ['b', '2'], ['c']])
+
+    assert (VarSpecNestedJoinItemsModel(['a=1;b=2;c=3']).to_data() == 'a=1;b=2;c=3')
+    assert (VarSpecNestedJoinItemsModel(['a=1', 'b=2', 'c=3']).to_data() == 'a=1;b=2;c=3')
+    assert (VarSpecNestedJoinItemsModel([['a', '1'], ['b', 2], ['c',
+                                                                '3']]).to_data() == 'a=1;b=2;c=3')
+
+
+def test_nested_join_items_model_parse_to_str() -> None:
+    ThreeLevelNestedJoinItemsModel = NestedJoinItemsModel.adjust(
+        'ThreeLevelNestedJoinItemsModel',
+        delimiters=(';', '&', '='),
+    )
+
+    data = [
+        [
+            [1, 2.0],
+            [2, 4.0],
+        ],
+        [[3, 6.0]],
+    ]
+    joined_model = ThreeLevelNestedJoinItemsModel(data)
+    assert joined_model.contents == joined_model.to_data() == '1=2.0&2=4.0;3=6.0'
