@@ -1,7 +1,7 @@
 from enum import Enum
 import os
 from textwrap import dedent
-from typing import Annotated, Iterator, TypeAlias
+from typing import Annotated, Callable, Iterator, TypeAlias
 
 from pydantic import ValidationError
 import pytest
@@ -12,6 +12,7 @@ from omnipy.modules.raw.models import (BytesModel,
                                        JoinColumnsToLinesModel,
                                        JoinItemsModel,
                                        JoinLinesModel,
+                                       MatchItemsModel,
                                        NestedJoinItemsModel,
                                        NestedSplitToItemsModel,
                                        SplitLinesToColumnsModel,
@@ -551,3 +552,71 @@ def test_nested_join_items_model_parse_to_str() -> None:
     ]
     joined_model = ThreeLevelNestedJoinItemsModel(data)
     assert joined_model.contents == joined_model.to_data() == '1=2.0&2=4.0;3=6.0'
+
+
+def test_match_items_model_default() -> None:
+    data = ('abc', 123, 13.0)
+
+    matched_model = MatchItemsModel(data)
+    assert matched_model.contents == matched_model.to_data() == ['abc', '123', '13.0']
+
+
+def test_match_items_model_one_func() -> None:
+    match_comments_func: Callable[[str], bool] = lambda x: x.startswith('#')
+
+    data = ['# comment 1', 'line 1', '# comment 2', 'line 2']
+
+    MatchCommentsModel = MatchItemsModel.adjust(
+        'FilterCommentsModel', match_functions=(match_comments_func,), invert_matches=False)
+
+    matched_model = MatchCommentsModel(data)
+    assert matched_model.contents == matched_model.to_data() == ['# comment 1', '# comment 2']
+
+    FilterCommentsModel = MatchItemsModel.adjust(
+        'FilterCommentsModel', match_functions=(match_comments_func,), invert_matches=True)
+
+    filtered_model = FilterCommentsModel(data)
+    assert filtered_model.contents == filtered_model.to_data() == ['line 1', 'line 2']
+
+
+def test_match_items_model_two_funcs() -> None:
+    match_lowercase_func: Callable[[str], bool] = lambda x: x.islower()
+    match_alphanum_func: Callable[[str], bool] = lambda x: x.isalnum()
+
+    data = ['abc123', 'ABC123', 'xyz-123', 'XYZ-123']
+
+    MatchLowerCaseAndAlphaNumModel = MatchItemsModel.adjust(
+        'FilterCommentsModel',
+        match_functions=(match_lowercase_func, match_alphanum_func),
+        invert_matches=False,
+        match_all=True)
+
+    matched_model = MatchLowerCaseAndAlphaNumModel(data)
+    assert matched_model.contents == matched_model.to_data() == ['abc123']
+
+    MatchLowerCaseOrAlphaNumModel = MatchItemsModel.adjust(
+        'FilterCommentsModel',
+        match_functions=(match_lowercase_func, match_alphanum_func),
+        invert_matches=False,
+        match_all=False)
+
+    matched_model = MatchLowerCaseOrAlphaNumModel(data)
+    assert matched_model.contents == matched_model.to_data() == ['abc123', 'ABC123', 'xyz-123']
+
+    FilterLowerCaseAndAlphaNumModel = MatchItemsModel.adjust(
+        'FilterCommentsModel',
+        match_functions=(match_lowercase_func, match_alphanum_func),
+        invert_matches=True,
+        match_all=True)
+
+    matched_model = FilterLowerCaseAndAlphaNumModel(data)
+    assert matched_model.contents == matched_model.to_data() == ['ABC123', 'xyz-123', 'XYZ-123']
+
+    FilterLowerCaseOrAlphaNumModel = MatchItemsModel.adjust(
+        'FilterCommentsModel',
+        match_functions=(match_lowercase_func, match_alphanum_func),
+        invert_matches=True,
+        match_all=False)
+
+    matched_model = FilterLowerCaseOrAlphaNumModel(data)
+    assert matched_model.contents == matched_model.to_data() == ['XYZ-123']

@@ -335,3 +335,37 @@ class NestedJoinItemsModel(_NestedJoinItemsModel):
         cast(Callable[..., type[_NestedJoinItemsModel]], _NestedJoinItemsModel.clone_model_cls),
         _NestedItemsParamsMixin.Params,
     )
+
+
+# TODO: Make MatchItemsModel Generic. Generics are currently not supported by Parametrized Models.
+
+
+class _MatchItemsModel(Model[list[str]]):
+    @params_dataclass
+    class Params(ParamsBase):
+        match_functions: tuple[Callable[[str], bool], ...] = ()
+        invert_matches: bool = False
+        match_all: bool = True
+
+    @classmethod
+    def _parse_data(cls, data: list[str]) -> list[str]:
+        match_functions = cls.Params.match_functions
+        invert_matches = cls.Params.invert_matches
+
+        if len(match_functions) == 0:
+            return data
+
+        logic_operator = all if cls.Params.match_all else any
+
+        return [
+            item for item in data
+            if (logic_operator(match_func(item) for match_func in match_functions) is True)
+            ^ invert_matches
+        ]
+
+
+class MatchItemsModel(_MatchItemsModel):
+    adjust = bind_adjust_model_func(
+        _MatchItemsModel.clone_model_cls,
+        _MatchItemsModel.Params,
+    )
