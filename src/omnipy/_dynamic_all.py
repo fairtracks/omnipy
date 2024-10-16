@@ -26,7 +26,13 @@ _exclude_modules: set[str] = {
     'modules.fairtracks',
     'util.tabulate',
 }
-_exclude_attrs: set[str] = {'JobMixin', 'JobTemplateMixin'}
+_exclude_attrs: set[str] = {
+    'JobMixin',
+    'JobTemplateMixin',
+    'ListOfNestedStrModel',
+    'SplitItemsToSubitemsModel',
+    'JoinSubitemsToItemsModel',
+}
 
 _all_modules: dict[str, ModuleType] = {}
 

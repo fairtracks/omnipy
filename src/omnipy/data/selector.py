@@ -158,8 +158,8 @@ def make_unique_key(key: str, mapping: MappingType[T]) -> str:
 
 
 def is_duplicate_name(key: str) -> bool:
-    splitted_key = key.rsplit('_', 1)
-    return len(splitted_key) == 2 and splitted_key[1].isdigit()
+    split_key = key.rsplit('_', 1)
+    return len(split_key) == 2 and split_key[1].isdigit()
 
 
 def increase_duplicate_count(key: str) -> str:
