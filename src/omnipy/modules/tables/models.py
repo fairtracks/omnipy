@@ -77,8 +77,21 @@ class PydanticRecordModel(Model[_PydanticBaseModelT | JsonListOfScalarsModel],
         match data:
             case JsonListOfScalarsModel():
                 pydantic_model = get_args(cls.outer_type(with_args=True))[0]
-                headers = pydantic_model.__fields__.keys()
-                assert len(headers) == len(data), f'{len(headers)} != {len(data)}'
+                headers = pydantic_model.__fields__
+
+                num_required_fields = -1
+                for i, header_field in enumerate(headers.values()):
+                    if not header_field.required:
+                        if num_required_fields == -1:
+                            num_required_fields = i
+                        continue
+                    elif num_required_fields != -1 and i > num_required_fields:
+                        raise ValueError('Required fields must not come after optional fields')
+
+                assert len(headers) >= len(data) >= num_required_fields, \
+                    (f'Incorrect number of data elements: '
+                     f'{len(headers)} >= {len(data)} >= {num_required_fields}')
+
                 return pydantic_model(**dict(zip(headers, data)))
             case _:
                 return data
