@@ -4,7 +4,28 @@ from pydantic import BaseModel
 
 from omnipy.data.dataset import Dataset
 
-from .models import TableOfPydanticRecordsModel, TableWithColNamesModel
+from .models import (TableDictOfDictsOfJsonScalarsModel,
+                     TableDictOfListsOfJsonScalarsModel,
+                     TableListOfDictsOfJsonScalarsModel,
+                     TableListOfListsOfJsonScalarsModel,
+                     TableOfPydanticRecordsModel,
+                     TableWithColNamesModel)
+
+
+class TableListOfListsOfJsonScalarsDataset(Dataset[TableListOfListsOfJsonScalarsModel]):
+    ...
+
+
+class TableListOfDictsOfJsonScalarsDataset(Dataset[TableListOfDictsOfJsonScalarsModel]):
+    ...
+
+
+class TableDictOfDictsOfJsonScalarsDataset(Dataset[TableDictOfDictsOfJsonScalarsModel]):
+    ...
+
+
+class TableDictOfListsOfJsonScalarsDataset(Dataset[TableDictOfListsOfJsonScalarsModel]):
+    ...
 
 
 class TableWithColNamesDataset(Dataset[TableWithColNamesModel]):
