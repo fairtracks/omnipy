@@ -102,9 +102,9 @@ def test_table_of_pydantic_records_model_from_list_of_dicts() -> None:
         },
     ])
 
-    assert len(table.contents) == 2
-    assert isinstance(table.contents[0], PydanticRecordModel)
-    assert isinstance(table.contents[1], PydanticRecordModel)
+    assert len(table) == 2
+    assert isinstance(table[0], PydanticRecordModel)
+    assert isinstance(table[1], PydanticRecordModel)
 
     assert table.to_data() == [
         {
@@ -129,9 +129,9 @@ def test_table_of_pydantic_records_model_from_list_of_lists() -> None:
         ['Jane', 'Doe'],
     ])
 
-    assert len(table.contents) == 2
-    assert isinstance(table.contents[0], PydanticRecordModel)
-    assert isinstance(table.contents[1], PydanticRecordModel)
+    assert len(table) == 2
+    assert isinstance(table[0], PydanticRecordModel)
+    assert isinstance(table[1], PydanticRecordModel)
 
     assert table.to_data() == [
         {
@@ -153,9 +153,9 @@ def test_table_of_pydantic_records_model_from_str() -> None:
 
     table = TableOfNameRecordsModel('John\tDoe\nJane\tDoe')
 
-    assert len(table.contents) == 2
-    assert isinstance(table.contents[0], PydanticRecordModel)
-    assert isinstance(table.contents[1], PydanticRecordModel)
+    assert len(table) == 2
+    assert isinstance(table[0], PydanticRecordModel)
+    assert isinstance(table[1], PydanticRecordModel)
 
     assert table.to_data() == [
         {
@@ -165,3 +165,47 @@ def test_table_of_pydantic_records_model_from_str() -> None:
             'firstname': 'Jane', 'lastname': 'Doe'
         },
     ]
+
+
+def test_table_of_pydantic_records_model_with_optional_fields_not_last() -> None:
+    class OptionalNotLastRecord(BaseModel):
+        firstname: str
+        lastname: str | None = None
+        age: int
+
+    class TableOfOptionalNotLastRecord(TableOfPydanticRecordsModel[OptionalNotLastRecord]):
+        ...
+
+    with pytest.raises(ValidationError):
+        TableOfOptionalNotLastRecord('Tarzan\t42\nJane\t37')
+
+
+def test_table_of_pydantic_records_model_with_optional_fields_last() -> None:
+    class NameRecord(BaseModel):
+        firstname: str
+        lastname: str
+        age: int | None = None
+
+    class TableOfNameRecordsModel(TableOfPydanticRecordsModel[NameRecord]):
+        ...
+
+    table = TableOfNameRecordsModel('John\tDoe\nJane\tDoe\t37')
+
+    assert len(table) == 2
+    assert isinstance(table[0], PydanticRecordModel)  # type: ignore[index]
+    assert isinstance(table[1], PydanticRecordModel)  # type: ignore[index]
+
+    assert table.to_data() == [
+        {
+            'firstname': 'John', 'lastname': 'Doe', 'age': None
+        },
+        {
+            'firstname': 'Jane', 'lastname': 'Doe', 'age': 37
+        },
+    ]
+
+    with pytest.raises(ValidationError):
+        TableOfNameRecordsModel('Tarzan')
+
+    with pytest.raises(ValidationError):
+        TableOfNameRecordsModel('John\tDoe\t37\textra')
