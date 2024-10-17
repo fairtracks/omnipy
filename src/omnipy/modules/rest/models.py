@@ -107,6 +107,9 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
             if val is not None
         })
 
+    def __add__(self, other: str) -> 'HttpUrlModel':
+        return HttpUrlModel(str(self) + other)
+
     def to_data(self) -> str:
         return str(self.contents)
 
