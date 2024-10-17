@@ -1,3 +1,4 @@
+from pathlib import PurePosixPath
 from typing import cast, Iterable
 from urllib.parse import unquote
 
@@ -41,6 +42,18 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
         return self.to_data()
 
 
+class UrlPathModel(Model[PurePosixPath | str]):
+    @classmethod
+    def _parse_data(cls, data: PurePosixPath | str) -> PurePosixPath:
+        return PurePosixPath(data) if isinstance(data, str) else data
+
+    def to_data(self) -> str:
+        return str(self.contents)
+
+    def __str__(self) -> str:
+        return str(self.contents)
+
+
 DEFAULT_PORTS = {80, 443}
 
 
@@ -51,7 +64,7 @@ class UrlDataclassModel(BaseModel):
     password: str | None = None
     host: str | None = None
     port: int | None = None
-    path: str | None = None
+    path: UrlPathModel | None = None
     query: QueryParamsModel = Field(default_factory=QueryParamsModel)
     fragment: str | None = None
 
