@@ -1,19 +1,13 @@
-from enum import Enum
+from typing import cast, Iterable
+from urllib.parse import unquote
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
+from pydantic_core import Url
 
 from omnipy.data.model import Model
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 
 from ..raw.models import NestedJoinItemsModel, NestedSplitToItemsModel
-
-
-class HostType(str, Enum):
-    DOMAIN = 'domain'
-    INTERNATIONAL_DOMAIN = 'int_domain'
-    IPv4 = 'ipv4'
-    IPv6 = 'ipv6'
-
 
 QueryParamsSplitterModel = NestedSplitToItemsModel.adjust(
     'QueryParamsSplitterModel', delimiters=('&', '='))
@@ -34,39 +28,54 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
         assert all(len(param) == 2 for param in params_list), \
             (f'Each parameter must have 2 elements only: [key, value]. '
              f'Incorrect parameter list: {params_list}')
-        return dict(params_list)
+        return dict(cast(Iterable[tuple[str, str]], params_list))
 
     def to_data(self) -> str:
         with hold_and_reset_prev_attrib_value(self.config,
                                               'dynamically_convert_elements_to_models'):
             self.config.dynamically_convert_elements_to_models = False
-            return QueryParamsJoinerModel(tuple(self.contents.items())).to_data()
+            contents_as_tuple = tuple(cast(dict[str, str], self.contents).items())
+            return QueryParamsJoinerModel(contents_as_tuple).to_data()  # type: ignore[return-value]
 
     def __str__(self) -> str:
         return self.to_data()
 
 
+DEFAULT_PORTS = {80, 443}
+
+
 class UrlDataclassModel(BaseModel):
     # Mutable fields
     scheme: str
-    user: str | None = None
+    username: str | None = None
     password: str | None = None
     host: str | None = None
+    port: int | None = None
     path: str | None = None
     query: QueryParamsModel = Field(default_factory=QueryParamsModel)
     fragment: str | None = None
 
-    # Immutable fields
-    tld: str | None = None  # Top-level domain
-    host_type: HostType = HostType.DOMAIN
-    port: int | None = None
-
     def __str__(self) -> str:
-        return HttpUrl.build(
-            **{
-                k: str(v) if k != 'query' else v for k,
-                v in self.dict().items() if k not in HttpUrl.hidden_parts and v is not None
-            })
+        kwargs: dict[str, str | int] = {}
+        for key, val in self.dict().items():
+            if val is None:
+                continue
+            match key:
+                case 'port':
+                    if val in DEFAULT_PORTS:
+                        continue
+                    kwargs[key] = val
+                case 'path':
+                    # Fix for second problem described in
+                    # https://github.com/pydantic/pydantic/issues/7186#issuecomment-1912791497
+                    kwargs[key] = val.lstrip('/')
+                case 'query':
+                    if val:
+                        kwargs[key] = str(val)
+                case _:
+                    kwargs[key] = val
+
+        return str(Url.build(**kwargs))  # type: ignore[arg-type]
 
 
 class HttpUrlModel(Model[UrlDataclassModel | str]):
@@ -75,12 +84,28 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
         assert data, 'URL must be specified at init'
 
         # For validation only
-        url_model = Model[HttpUrl | None](
-            str(data) if isinstance(data, UrlDataclassModel) else data)
+        url_obj = Url(str(data) if isinstance(data, UrlDataclassModel) else data)
 
-        field_names = UrlDataclassModel.__fields__.keys()
-        parts = {key: getattr(url_model.contents, key) for key in field_names}
-        return UrlDataclassModel(**{key: val for key, val in parts.items() if val is not None})
+        parts: dict[str, str | int | None] = {}
+        for key in UrlDataclassModel.__fields__.keys():
+            match key:
+                case 'scheme':
+                    val = url_obj.scheme
+                    assert val in {'http', 'https'}, f'Unsupported scheme: {val}'
+                    parts[key] = val
+                case 'host':
+                    parts[key] = url_obj.unicode_host()
+                case 'username' | 'password' | 'path' | 'query' | 'fragment':
+                    val = getattr(url_obj, key)
+                    parts[key] = unquote(val) if val is not None else None
+                case _:
+                    parts[key] = getattr(url_obj, key)
+
+        return UrlDataclassModel(**{
+            key: val  # type: ignore[arg-type]
+            for key, val in parts.items()
+            if val is not None
+        })
 
     def to_data(self) -> str:
         return str(self.contents)
