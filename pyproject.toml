@@ -44,6 +44,7 @@ httpx = "^0.26.0"
 pydantic = {version = "<2", extras = ["email"]}
 griffe = "<1"
 ipython = ">=7.34.0"
+pydantic-core = "^2.24.2"
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"
