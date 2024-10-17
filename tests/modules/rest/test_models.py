@@ -1,3 +1,4 @@
+from pathlib import PurePosixPath
 from typing import Annotated
 
 from pydantic import ValidationError
@@ -6,7 +7,7 @@ import pytest
 from helpers.protocols import AssertModelOrValFunc
 from omnipy import Model
 from omnipy.api.protocols.public.hub import IsRuntime
-from omnipy.modules.rest.models import HttpUrlModel, QueryParamsModel
+from omnipy.modules.rest.models import HttpUrlModel, QueryParamsModel, UrlPathModel
 
 
 def test_query_params_model():
@@ -20,6 +21,21 @@ def test_query_params_model():
 
     with pytest.raises(ValidationError):
         QueryParamsModel('a=1=b')
+
+
+def test_url_path_model():
+    path = UrlPathModel('/abc/def')
+    assert path.contents == PurePosixPath('/abc/def')
+    assert path.to_data() == str(path) == '/abc/def'
+
+    path /= 'ghi'
+    assert path.contents == PurePosixPath('/abc/def/ghi')
+    assert path.to_data() == str(path) == '/abc/def/ghi'
+
+    new_path = path / PurePosixPath('jkl', 'mno')
+    assert new_path.contents == PurePosixPath('/abc/def/ghi/jkl/mno')
+    assert new_path.to_data() == str(new_path) == '/abc/def/ghi/jkl/mno'
+    assert new_path.parts == ('/', 'abc', 'def', 'ghi', 'jkl', 'mno')
 
 
 def test_http_url_model_validation_errors():
@@ -41,7 +57,7 @@ def test_http_url_model_parse_only_hostname():
     assert url.password is None
     assert url.host == 'abc.net'
     assert url.port == 80
-    assert url.path == '/'
+    assert url.path == UrlPathModel('/')
     assert url.query == QueryParamsModel()
     assert url.fragment is None
 
@@ -56,7 +72,7 @@ def test_http_url_model_parse_all_fields():
     assert url.password == 'pass'
     assert url.host == 'abc.net'
     assert url.port == 8080
-    assert url.path == '/def'
+    assert url.path == UrlPathModel('/def')
     assert url.query == QueryParamsModel(dict(ghi='jkl'))
     assert url.fragment == 'mno'
 
@@ -74,7 +90,7 @@ def test_http_url_model_url_escape():
     def _assert_fields(url: HttpUrlModel):
         assert url.username == 'bø'
         assert url.password == 'bø'
-        assert url.path == '/def æ/jkl'
+        assert url.path == UrlPathModel('/def æ/jkl')
         assert url.query == QueryParamsModel(dict(mnø='pqr å'))
         assert url.fragment == 'vwx yz'
 
@@ -96,13 +112,13 @@ def test_http_url_model_modify_direct_fields(runtime: Annotated[IsRuntime, pytes
     url.username = 'user'
     url.password = 'pass'
     url.host = 'cba.net'
-    url.path = '/def/ghi'
+    url.path /= 'ghi'
     url.query = 'jkl=mno&pqr=stu'
     url.fragment = 'anchor'
 
     assert url.to_data() == str(url) == 'https://user:pass@cba.net/def/ghi?jkl=mno&pqr=stu#anchor'
 
-    url.query |= {'xyz': '123'}
+    url.query |= {'xyz': '123'}  # type: ignore[operator]
 
     assert url.to_data() == str(
         url) == 'https://user:pass@cba.net/def/ghi?jkl=mno&pqr=stu&xyz=123#anchor'
