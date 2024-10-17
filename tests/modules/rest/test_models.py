@@ -3,6 +3,7 @@ from typing import Annotated
 from pydantic import ValidationError
 import pytest
 
+from helpers.protocols import AssertModelOrValFunc
 from omnipy import Model
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.modules.rest.models import HttpUrlModel, QueryParamsModel
@@ -21,7 +22,7 @@ def test_query_params_model():
         QueryParamsModel('a=1=b')
 
 
-def test_http_model_validation_errors():
+def test_http_url_model_validation_errors():
     with pytest.raises(ValidationError):
         HttpUrlModel()
 
@@ -32,7 +33,7 @@ def test_http_model_validation_errors():
         HttpUrlModel('file:///abc/def')
 
 
-def test_http_model_parse_only_hostname():
+def test_http_url_model_parse_only_hostname():
     url = HttpUrlModel('http://abc.net')
 
     assert url.scheme == 'http'
@@ -47,7 +48,7 @@ def test_http_model_parse_only_hostname():
     assert url.to_data() == str(url) == 'http://abc.net/'
 
 
-def test_http_model_parse_all_fields():
+def test_http_url_model_parse_all_fields():
     url = HttpUrlModel('https://user:pass@abc.net:8080/def?ghi=jkl#mno')
 
     assert url.scheme == 'https'
@@ -62,14 +63,14 @@ def test_http_model_parse_all_fields():
     assert url.to_data() == str(url) == 'https://user:pass@abc.net:8080/def?ghi=jkl#mno'
 
 
-def test_http_model_parse_international_domains():
+def test_http_url_model_parse_international_domains():
     for domain in ('https://www.example.珠宝/', 'https://www.example.xn--pbt977c/'):
         url = HttpUrlModel(domain)
         assert url.host == 'www.example.珠宝'
         assert url.to_data() == str(url) == 'https://www.example.xn--pbt977c/'
 
 
-def test_http_model_url_escape():
+def test_http_url_model_url_escape():
     def _assert_fields(url: HttpUrlModel):
         assert url.username == 'bø'
         assert url.password == 'bø'
@@ -89,7 +90,7 @@ def test_http_model_url_escape():
         == 'https://b%C3%B8:b%C3%B8@abc.net/def%20%C3%A6/jkl?mn%C3%B8=pqr%20%C3%A5#vwx%20yz'
 
 
-def test_http_model_modify_direct_fields(runtime: Annotated[IsRuntime, pytest.fixture]):
+def test_http_url_model_modify_direct_fields(runtime: Annotated[IsRuntime, pytest.fixture]):
     url = HttpUrlModel('http://abc.net/def')
     url.scheme = 'https'
     url.username = 'user'
@@ -117,7 +118,7 @@ def test_http_model_modify_direct_fields(runtime: Annotated[IsRuntime, pytest.fi
         url) == 'https://user:pass@cba.net/def/ghi?jkl=mno&pqr=stu&xyz=123#anchor'
 
 
-def test_http_model_modify_port():
+def test_http_url_model_modify_port():
     url = HttpUrlModel('http://abc.net/def')
     assert url.port == 80
 
@@ -153,16 +154,20 @@ def test_http_model_modify_port():
     assert url.to_data() == str(url) == 'https://abc.net/def'
 
 
-def test_http_model_query_params():
+def test_http_url_model_query_params(
+        assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture]):
     url = HttpUrlModel('http://abc.net/def')
 
-    # TODO: When type-dependent conversion is implemented, make QueryParamsModel convertable to both
+    # TODO: When type-dependent conversion is implemented, make QueryParamsModel convertible to both
     #       str and dict[str, str] types
     # Model[dict[str, str]](url.query).contents = {}
     Model[str](url.query).contents = ''
 
     url.query |= {'jkl': 'mno'}
     url.query['pqr'] = 123
+
+    assert_model_if_dyn_conv_else_val(url.query['jkl'], str, 'mno')
+    assert_model_if_dyn_conv_else_val(url.query['pqr'], str, '123')
     assert url.query.contents == {'jkl': 'mno', 'pqr': '123'}
 
     # Model[dict[str, str]](url.query).contents = {'jkl': 'mno', 'pqr': '123'}
@@ -174,6 +179,36 @@ def test_http_model_query_params():
     del url.query['jkl']
 
     # Model[dict[str, str]](url.query).contents = {'pqr': '123', '456': 'abc'}
+    assert_model_if_dyn_conv_else_val(url.query['pqr'], str, '123')
+    assert_model_if_dyn_conv_else_val(url.query['456'], str, 'abc')
     Model[str](url.query).contents = 'pqr=123&456=abc'
 
     assert url.to_data() == str(url) == 'http://abc.net/def?pqr=123&456=abc'
+
+
+def test_http_url_model_add_operator(
+        assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture]):
+    url = HttpUrlModel('http://abc.net')
+
+    url += 'path/to/file'
+    assert url.to_data() == str(url) == 'http://abc.net/path/to/file'
+
+    new_url = url + '?query=string'
+    assert url.to_data() == str(url) == 'http://abc.net/path/to/file'
+    assert new_url.to_data() == str(new_url) == 'http://abc.net/path/to/file?query=string'
+
+    new_url += ' is longer'
+    assert_model_if_dyn_conv_else_val(new_url.query['query'], str, 'string is longer')
+    assert new_url.to_data() == str(new_url) \
+           == 'http://abc.net/path/to/file?query=string%20is%20longer'
+
+    new_url += '#fragment'
+    assert new_url.fragment == 'fragment'
+    assert new_url.to_data() == str(new_url) \
+           == 'http://abc.net/path/to/file?query=string%20is%20longer#fragment'
+
+    with pytest.raises(TypeError):
+        '#fragment' + new_url  # type: ignore[operator]
+
+    with pytest.raises(TypeError):
+        url + new_url  # type: ignore[operator]
