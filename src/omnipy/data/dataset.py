@@ -13,12 +13,15 @@ from pydantic import Field, PrivateAttr, root_validator, ValidationError
 from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.main import ModelMetaclass
-from pydantic.utils import lenient_isinstance, lenient_issubclass
+from pydantic.utils import lenient_isinstance
 from typing_extensions import TypeVar
 
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
-from omnipy.data.helpers import cleanup_name_qualname_and_module, is_model_instance
+from omnipy.data.helpers import (cleanup_name_qualname_and_module,
+                                 is_model_instance,
+                                 is_model_subclass)
 from omnipy.data.mixins.display import DatasetDisplayMixin
+from omnipy.data.mixins.pending import PendingDatasetMixin
 from omnipy.data.model import Model
 from omnipy.data.selector import (create_updated_mapping,
                                   Index2DataItemsType,
@@ -49,6 +52,7 @@ class _DatasetMetaclass(DataClassBaseMeta, ModelMetaclass):
 
 class Dataset(
         DatasetDisplayMixin,
+        PendingDatasetMixin,
         DataClassBase,
         GenericModel,
         Generic[ModelT],
@@ -102,6 +106,7 @@ class Dataset(
     """
     class Config:
         validate_assignment = True
+        arbitrary_types_allowed = True
 
         # TODO: Use json serializer package from the pydantic config instead of 'json'
 
@@ -118,15 +123,11 @@ class Dataset(
         # TODO: change model type to params: Type[Any] | tuple[Type[Any], ...]
         #       as in GenericModel.
 
-        # These lines are needed for interoperability with pydantic GenericModel, which internally
-        # stores the model as a len(1) tuple
-        model = params[0] if isinstance(params, tuple) and len(params) == 1 else params
-
+        model = cls._clean_params(params)
         orig_model = model
 
         if cls == Dataset:
-            if not isinstance(model, TypeVar) \
-                    and not lenient_issubclass(model, Model):
+            if not isinstance(model, TypeVar) and not is_model_subclass(model):
                 raise TypeError('Invalid model: {}! '.format(model)
                                 + 'omnipy Dataset models must be a specialization of the omnipy '
                                 'Model class.')
@@ -138,9 +139,22 @@ class Dataset(
 
             created_dataset = super().__class_getitem__(params)
 
+        cls._recursively_set_allow_none(created_dataset._get_data_field())
+
         cleanup_name_qualname_and_module(cls, created_dataset, orig_model)
 
         return created_dataset
+
+    @classmethod
+    def _clean_params(
+        cls,
+        params: type[ModelT] | tuple[type[ModelT]] | tuple[type[ModelT], Any] | TypeVar
+        | tuple[TypeVar, ...]
+    ) -> type[ModelT] | tuple[type[ModelT], Any] | TypeVar | tuple[TypeVar, ...]:
+        # These lines are needed for interoperability with pydantic GenericModel, which internally
+        # stores the model as a len(1) tuple
+        cleaned_params = params[0] if isinstance(params, tuple) and len(params) == 1 else params
+        return super()._clean_params(cleaned_params)
 
     def __init__(  # noqa: C901
         self,
@@ -251,7 +265,7 @@ class Dataset(
         `Model[list[int]]`
         :return: The concrete Model class used for all data files in the dataset
         """
-        return cls._get_data_field().type_
+        return cls._clean_params(cls._get_data_field().type_)
 
     @staticmethod
     def _raise_no_model_exception() -> None:
@@ -277,13 +291,18 @@ class Dataset(
                 'particular specialization of the Model class. Both main classes are wrapping '
                 'the excellent Python package named `pydantic`.')
 
+    def _check_value(self, value: Any) -> Any:
+        return super()._check_value(value)
+
     def __getitem__(self, selector: str | int | slice | Iterable[str | int]) -> Any:
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
-            return self.data[selected_keys.keys[0]]
+            value = self.data[selected_keys.keys[0]]
         else:
-            return self.__class__({key: self.data[key] for key in selected_keys.keys})
+            value = self.__class__({key: self.data[key] for key in selected_keys.keys})
+
+        return self._check_value(value)
 
     def __delitem__(self, selector: str | int | slice | Iterable[str | int]) -> Any:
         selected_keys = select_keys(selector, self.data)
@@ -396,7 +415,10 @@ class Dataset(
         return {DATA_KEY: data_dict}
 
     def to_data(self) -> dict[str, Any]:
-        return GenericModel.dict(self, by_alias=True).get(DATA_KEY)
+        return {
+            key: self._check_value(val) for key,
+            val in GenericModel.dict(self, by_alias=True).get(DATA_KEY).items()
+        }
 
     def from_data(self,
                   data: dict[str, Any] | Iterator[tuple[str, Any]],

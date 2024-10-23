@@ -205,3 +205,12 @@ def obj_or_model_contents_isinstance(__obj: object, __class_or_tuple: type) -> b
 # def orjson_dumps(v, *, default):
 #     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
 #     return orjson.dumps(v, default=default).decode()
+
+
+class PendingData:
+    def __init__(self, job_name: str):
+        self._job_name = job_name
+
+    @property
+    def job_name(self) -> str:
+        return self._job_name

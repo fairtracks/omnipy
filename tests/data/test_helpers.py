@@ -1,0 +1,79 @@
+from typing import Literal
+
+from pydantic import ValidationError
+import pytest
+
+from omnipy.data.helpers import is_model_instance, obj_or_model_contents_isinstance, PendingData
+from omnipy.data.model import Model
+
+from .helpers.models import PydanticParentModel
+
+
+def test_is_model_instance() -> None:
+    assert not is_model_instance(123)
+    assert is_model_instance(Model[int](123))
+    assert not is_model_instance(None)
+    assert is_model_instance(Model[None](None))
+    assert not is_model_instance(PydanticParentModel)
+
+
+def test_obj_or_model_contents_isinstance_for_regular_objects() -> None:
+    assert obj_or_model_contents_isinstance(123, int)
+    assert obj_or_model_contents_isinstance('abc', str)
+    assert obj_or_model_contents_isinstance([1, 2, 3], list)
+
+    assert not obj_or_model_contents_isinstance(123, list)
+    assert not obj_or_model_contents_isinstance('abc', int)
+    assert not obj_or_model_contents_isinstance([1, 2, 3], str)
+
+    assert obj_or_model_contents_isinstance(123, (list, int))
+    assert obj_or_model_contents_isinstance('abc', (int, str))
+    assert obj_or_model_contents_isinstance([1, 2, 3], (str, list))
+
+    assert obj_or_model_contents_isinstance(123, list | int)
+    assert obj_or_model_contents_isinstance('abc', int | str)
+    assert obj_or_model_contents_isinstance([1, 2, 3], str | list)
+
+    with pytest.raises(TypeError):
+        obj_or_model_contents_isinstance('abc', Literal['abc'])
+
+    with pytest.raises(TypeError):
+        obj_or_model_contents_isinstance([1, 2, 3], list[int])
+
+
+def test_obj_or_model_contents_isinstance_for_models() -> None:
+    assert obj_or_model_contents_isinstance(Model[int](123), int)
+    assert obj_or_model_contents_isinstance(Model[str]('abc'), str)
+    assert obj_or_model_contents_isinstance(Model[list[int]]([1, 2, 3]), list)
+
+    assert not obj_or_model_contents_isinstance(Model[int](123), list)
+    assert not obj_or_model_contents_isinstance(Model[str]('abc'), int)
+    assert not obj_or_model_contents_isinstance(Model[list[int]]([1, 2, 3]), str)
+
+    assert obj_or_model_contents_isinstance(Model[int](123), (list, int))
+    assert obj_or_model_contents_isinstance(Model[str]('abc'), (int, str))
+    assert obj_or_model_contents_isinstance(Model[list[int]]([1, 2, 3]), (str, list))
+
+    assert obj_or_model_contents_isinstance(Model[int](123), list | int)
+    assert obj_or_model_contents_isinstance(Model[str]('abc'), int | str)
+    assert obj_or_model_contents_isinstance(Model[list[int]]([1, 2, 3]), str | list)
+
+    with pytest.raises(TypeError):
+        assert obj_or_model_contents_isinstance(Model[Literal['abc']]('abc'), Literal['abc'])
+
+    with pytest.raises(TypeError):
+        assert obj_or_model_contents_isinstance(Model[list[int]]([1, 2, 3]), list[int])
+
+
+def test_pending_data() -> None:
+    with pytest.raises(TypeError):
+        PendingData()  # type: ignore[call-arg]
+
+    pending_data = PendingData('my_task')
+    assert pending_data.job_name == 'my_task'
+
+    with pytest.raises(AttributeError):
+        pending_data.job_name = 'my_other_task'  # type: ignore[misc]
+
+    with pytest.raises(ValidationError):
+        Model[str](pending_data)

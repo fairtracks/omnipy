@@ -269,24 +269,6 @@ class Model(
         return created_model
 
     @classmethod
-    def _recursively_set_allow_none(cls, field: ModelField) -> None:
-        if field.sub_fields:
-            if is_union(field.outer_type_):
-                if any(_.allow_none for _ in field.sub_fields):
-                    field.allow_none = True
-
-            for sub_field in field.sub_fields:
-                cls._recursively_set_allow_none(sub_field)
-        if field.key_field:
-            if is_union(field.key_field.outer_type_):
-                if any(_.allow_none for _ in field.key_field.sub_fields):
-                    field.key_field.allow_none = True
-
-            if field.key_field.sub_fields:
-                for sub_field in field.key_field.sub_fields:
-                    cls._recursively_set_allow_none(sub_field)
-
-    @classmethod
     def _inherit_first_orig_model_in_bases_if_missing(cls):
         if cls is not Model:
             for orig_base in get_original_bases(cls):

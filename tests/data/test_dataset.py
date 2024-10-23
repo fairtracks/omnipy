@@ -8,8 +8,10 @@ import pytest
 import pytest_cases as pc
 from typing_extensions import TypeVar
 
+from omnipy.api.exceptions import PendingDataError
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.dataset import Dataset
+from omnipy.data.helpers import PendingData
 from omnipy.data.model import Model
 
 from .helpers.classes import MyFloatObject
@@ -1187,6 +1189,63 @@ def test_dataset_switch_models_issue():
 
     dataset = Dataset[Model[Model[list[int]]]]({'a': [123], 'b': [234]})
     dataset['a'], dataset['b'] = dataset['b'], dataset['a']
+
+
+def _assert_pending_data_error(dataset: Dataset):
+    with pytest.raises(PendingDataError):
+        [_ for _ in dataset.values()]
+
+    with pytest.raises(PendingDataError):
+        [_ for _ in dataset.items()]
+
+    with pytest.raises(PendingDataError):
+        dataset['new_data']
+
+    with pytest.raises(PendingDataError):
+        dict(dataset)
+
+    with pytest.raises(PendingDataError):
+        Dataset[Model[str]](dataset)
+
+
+def test_dataset_pending_data():
+    dataset = Dataset[Model[str]]()
+
+    dataset['old_data'] = 'This is some existing data'
+    dataset['new_data'] = PendingData('my_task')
+
+    assert len(dataset) == 2
+    assert list(dataset.keys()) == ['old_data', 'new_data']
+    _assert_pending_data_error(dataset)
+
+    pending_data = dataset.pending_data
+    assert isinstance(pending_data, Dataset)
+    assert pending_data.get_model_class() == Model[str]
+    assert len(pending_data) == 1
+    assert list(pending_data.keys()) == ['new_data']
+    _assert_pending_data_error(pending_data)
+
+    available_data = dataset.available_data
+    assert len(available_data) == 1
+    assert isinstance(available_data, Dataset)
+    assert available_data.get_model_class() == Model[str]
+    assert len(available_data) == 1
+    assert list(available_data.keys()) == ['old_data']
+
+    assert list(available_data.values()) == [Model[str]('This is some existing data')]
+    assert list(available_data.items()) == [('old_data', Model[str]('This is some existing data'))]
+
+    dataset['new_data'] = 'New data is now available'
+    assert len(dataset.pending_data) == 0
+    assert len(dataset.available_data) == 2
+
+    available_data = dataset.available_data
+    assert list(available_data.keys()) == ['old_data', 'new_data']
+    assert list(available_data.values()) == [
+        Model[str]('This is some existing data'), Model[str]('New data is now available')
+    ]
+    assert list(available_data.items()) == [('old_data', Model[str]('This is some existing data')),
+                                            ('new_data', Model[str]('New data is now available'))]
 
 
 # TODO: Add unit tests for MultiModelDataset
