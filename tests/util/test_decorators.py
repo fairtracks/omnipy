@@ -6,6 +6,7 @@ from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 from omnipy.util.decorators import (add_callback_after_call,
                                     add_callback_if_exception,
                                     apply_decorator_to_property,
+                                    call_super_if_available,
                                     no_context)
 
 
@@ -185,3 +186,42 @@ def test_apply_decorator_to_property():
 
     assert data_deleter.data is None
     assert call_counter == [7]
+
+
+def test_call_super_if_available() -> None:
+    class MyClassWithoutSuper:
+        @call_super_if_available(call_super_before_method=True)
+        def my_method(self, number: int) -> int:
+            return number + 1
+
+        @call_super_if_available(call_super_before_method=False)
+        def my_other_method(self, number: int) -> int:
+            return number + 1
+
+        @call_super_if_available(call_super_before_method=False)
+        @classmethod
+        def my_class_method(cls, number: int) -> int:
+            return number + 1
+
+    assert MyClassWithoutSuper().my_method(1) == 2
+    assert MyClassWithoutSuper().my_other_method(1) == 2
+    assert MyClassWithoutSuper.my_class_method(1) == 2
+
+    class MyClassWithSuper(MyClassWithoutSuper):
+        @call_super_if_available(call_super_before_method=True)
+        def my_method(self, number: int) -> int:
+            return number * 10
+
+        @call_super_if_available(call_super_before_method=False)
+        def my_other_method(self, number: int) -> int:
+            return number * 10
+
+        @call_super_if_available(call_super_before_method=False)
+        @classmethod
+        def my_class_method(cls, number: int) -> int:
+            return number * 5
+
+    #
+    assert MyClassWithSuper().my_method(1) == 20
+    assert MyClassWithSuper().my_other_method(1) == 11
+    assert MyClassWithSuper.my_class_method(1) == 6
