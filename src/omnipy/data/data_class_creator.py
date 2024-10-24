@@ -7,7 +7,9 @@ from pydantic.fields import ModelField
 from omnipy.api.protocols.private.data import IsDataClassCreator
 from omnipy.api.protocols.private.util import HasContents, IsSnapshotHolder
 from omnipy.api.protocols.public.config import IsDataConfig
+from omnipy.api.typedefs import TypeForm
 from omnipy.config.data import DataConfig
+from omnipy.util.decorators import call_super_if_available
 from omnipy.util.helpers import is_union, SnapshotHolder
 
 
@@ -61,6 +63,13 @@ class DataClassBaseMeta(ABCMeta):
 
 
 class DataClassBase(metaclass=DataClassBaseMeta):
+    @call_super_if_available(call_super_before_method=False)
+    @classmethod
+    def _prepare_params(cls, params: TypeForm) -> TypeForm:
+        # This line is needed for interoperability with pydantic GenericModel, which internally
+        # stores the model as a len(1) tuple
+        return params[0] if isinstance(params, tuple) and len(params) == 1 else params
+
     @classmethod
     def _recursively_set_allow_none(cls, field: ModelField) -> None:
         if field.sub_fields:

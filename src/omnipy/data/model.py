@@ -232,9 +232,7 @@ class Model(
         | tuple[TypeVar, ...],
     ) -> 'Model[type[_RootT]]':
 
-        # This line is needed for interoperability with pydantic GenericModel, which internally
-        # stores the model as a len(1) tuple
-        model = params[0] if isinstance(params, tuple) and len(params) == 1 else params
+        model = cls._prepare_params(params)
 
         orig_model: type[_RootT] | tuple[type[_RootT], Any] | TypeVar = model
 
