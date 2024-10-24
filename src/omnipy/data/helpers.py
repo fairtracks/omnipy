@@ -211,3 +211,9 @@ def obj_or_model_contents_isinstance(__obj: object, __class_or_tuple: type) -> b
 @dataclass(frozen=True)
 class PendingData:
     job_name: str
+
+
+@dataclass(frozen=True)
+class FailedData:
+    job_name: str
+    exception: Exception

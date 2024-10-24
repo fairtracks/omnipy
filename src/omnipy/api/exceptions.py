@@ -15,3 +15,7 @@ class OmnipyNoneIsNotAllowedError(NoneIsNotAllowedError):
 
 class PendingDataError(Exception):
     ...
+
+
+class FailedDataError(Exception):
+    ...

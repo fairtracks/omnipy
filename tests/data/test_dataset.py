@@ -8,10 +8,10 @@ import pytest
 import pytest_cases as pc
 from typing_extensions import TypeVar
 
-from omnipy.api.exceptions import PendingDataError
+from omnipy.api.exceptions import FailedDataError, PendingDataError
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.dataset import Dataset
-from omnipy.data.helpers import PendingData
+from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
 
 from .helpers.classes import MyFloatObject
@@ -1191,61 +1191,118 @@ def test_dataset_switch_models_issue():
     dataset['a'], dataset['b'] = dataset['b'], dataset['a']
 
 
-def _assert_pending_data_error(dataset: Dataset):
-    with pytest.raises(PendingDataError):
+def _assert_no_access_data_exceptions(dataset: Dataset,
+                                      model_cls: type,
+                                      keys: list[str],
+                                      values: list) -> None:
+    assert len(keys) == len(values) == len(dataset)
+    model_values = [model_cls(value) for value in values]
+    assert [_ for _ in dataset.values()] == model_values
+    assert [_ for _ in dataset.items()] == list(zip(keys, model_values))
+    for i, key in enumerate(keys):
+        assert dataset[key] == model_values[i]
+    assert dict(dataset) == dict(zip(keys, model_values))
+    assert Dataset[Model[str]](dataset) == dataset
+
+
+def _assert_access_data_exception(dataset: Dataset, exception_cls: type[Exception],
+                                  keys: list[str]) -> None:
+    with pytest.raises(exception_cls):
         [_ for _ in dataset.values()]
 
-    with pytest.raises(PendingDataError):
+    with pytest.raises(exception_cls):
         [_ for _ in dataset.items()]
 
-    with pytest.raises(PendingDataError):
-        dataset['new_data']
+    with pytest.raises(exception_cls):
+        for key in keys:
+            dataset[key]
 
-    with pytest.raises(PendingDataError):
+    with pytest.raises(exception_cls):
         dict(dataset)
 
-    with pytest.raises(PendingDataError):
+    with pytest.raises(exception_cls):
         Dataset[Model[str]](dataset)
 
 
-def test_dataset_pending_data():
+def _assert_dataset(
+    dataset: Dataset,
+    model_cls: type,
+    keys: list[str],
+    error_cls: type[Exception] | None,
+    values: list | None = None,
+) -> None:
+    assert len(dataset) == len(keys)
+    assert isinstance(dataset, Dataset)
+    assert dataset.get_model_class() == model_cls
+    assert list(dataset.keys()) == keys
+    if error_cls is None:
+        assert values is not None
+        _assert_no_access_data_exceptions(dataset, model_cls, keys, values)
+    else:
+        _assert_access_data_exception(dataset, error_cls, keys)
+
+
+def test_dataset_pending_and_failed_data() -> None:
     dataset = Dataset[Model[str]]()
 
-    dataset['old_data'] = 'This is some existing data'
+    dataset['old_data'] = 'Existing data'
+    _assert_dataset(dataset, Model[str], ['old_data'], None, ['Existing data'])
+
     dataset['new_data'] = PendingData('my_task')
+    _assert_dataset(dataset, Model[str], ['old_data', 'new_data'], PendingDataError)
+    _assert_dataset(dataset.pending_data, Model[str], ['new_data'], PendingDataError)
+    _assert_dataset(dataset.available_data, Model[str], ['old_data'], None, ['Existing data'])
+    _assert_dataset(dataset.failed_data, Model[str], [], None, [])
 
-    assert len(dataset) == 2
-    assert list(dataset.keys()) == ['old_data', 'new_data']
-    _assert_pending_data_error(dataset)
+    dataset['newer_data'] = PendingData('my_other_task')
+    _assert_dataset(dataset, Model[str], ['old_data', 'new_data', 'newer_data'], PendingDataError)
+    _assert_dataset(dataset.pending_data, Model[str], ['new_data', 'newer_data'], PendingDataError)
+    _assert_dataset(dataset.available_data, Model[str], ['old_data'], None, ['Existing data'])
+    _assert_dataset(dataset.failed_data, Model[str], [], None, [])
 
-    pending_data = dataset.pending_data
-    assert isinstance(pending_data, Dataset)
-    assert pending_data.get_model_class() == Model[str]
-    assert len(pending_data) == 1
-    assert list(pending_data.keys()) == ['new_data']
-    _assert_pending_data_error(pending_data)
+    dataset['new_data'] = FailedData('my_task', RuntimeError('Something went wrong'))
+    _assert_dataset(dataset, Model[str], ['old_data', 'new_data', 'newer_data'], FailedDataError)
+    _assert_dataset(dataset.pending_data, Model[str], ['newer_data'], PendingDataError)
+    _assert_dataset(dataset.available_data, Model[str], ['old_data'], None, ['Existing data'])
+    _assert_dataset(dataset.failed_data, Model[str], ['new_data'], FailedDataError)
 
-    available_data = dataset.available_data
-    assert len(available_data) == 1
-    assert isinstance(available_data, Dataset)
-    assert available_data.get_model_class() == Model[str]
-    assert len(available_data) == 1
-    assert list(available_data.keys()) == ['old_data']
+    dataset['newer_data'] = FailedData('my_other_task', ValueError('Something else went wrong'))
+    _assert_dataset(dataset, Model[str], ['old_data', 'new_data', 'newer_data'], FailedDataError)
+    _assert_dataset(dataset.pending_data, Model[str], [], None, [])
+    _assert_dataset(dataset.available_data, Model[str], ['old_data'], None, ['Existing data'])
+    _assert_dataset(dataset.failed_data, Model[str], ['new_data', 'newer_data'], FailedDataError)
 
-    assert list(available_data.values()) == [Model[str]('This is some existing data')]
-    assert list(available_data.items()) == [('old_data', Model[str]('This is some existing data'))]
+    dataset['newer_data'] = PendingData('my_retry_task')
+    _assert_dataset(dataset, Model[str], ['old_data', 'new_data', 'newer_data'], FailedDataError)
+    _assert_dataset(dataset.pending_data, Model[str], ['newer_data'], PendingDataError)
+    _assert_dataset(dataset.available_data, Model[str], ['old_data'], None, ['Existing data'])
+    _assert_dataset(dataset.failed_data, Model[str], ['new_data'], FailedDataError)
 
-    dataset['new_data'] = 'New data is now available'
-    assert len(dataset.pending_data) == 0
-    assert len(dataset.available_data) == 2
+    dataset['new_data'] = 'Fixed data'
+    _assert_dataset(dataset, Model[str], ['old_data', 'new_data', 'newer_data'], PendingDataError)
+    _assert_dataset(dataset.pending_data, Model[str], ['newer_data'], PendingDataError)
+    _assert_dataset(dataset.available_data,
+                    Model[str], ['old_data', 'new_data'],
+                    None, ['Existing data', 'Fixed data'])
+    _assert_dataset(dataset.failed_data, Model[str], [], None, [])
 
-    available_data = dataset.available_data
-    assert list(available_data.keys()) == ['old_data', 'new_data']
-    assert list(available_data.values()) == [
-        Model[str]('This is some existing data'), Model[str]('New data is now available')
-    ]
-    assert list(available_data.items()) == [('old_data', Model[str]('This is some existing data')),
-                                            ('new_data', Model[str]('New data is now available'))]
+    dataset['newer_data'] = 'Retried data'
+    _assert_dataset(
+        dataset,
+        Model[str],
+        ['old_data', 'new_data', 'newer_data'],
+        None,
+        ['Existing data', 'Fixed data', 'Retried data'],
+    )
+    _assert_dataset(dataset.pending_data, Model[str], [], None, [])
+    _assert_dataset(
+        dataset.available_data,
+        Model[str],
+        ['old_data', 'new_data', 'newer_data'],
+        None,
+        ['Existing data', 'Fixed data', 'Retried data'],
+    )
+    _assert_dataset(dataset.failed_data, Model[str], [], None, [])
 
 
 # TODO: Add unit tests for MultiModelDataset

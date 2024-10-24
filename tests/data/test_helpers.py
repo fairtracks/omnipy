@@ -3,7 +3,10 @@ from typing import Literal
 from pydantic import ValidationError
 import pytest
 
-from omnipy.data.helpers import is_model_instance, obj_or_model_contents_isinstance, PendingData
+from omnipy.data.helpers import (FailedData,
+                                 is_model_instance,
+                                 obj_or_model_contents_isinstance,
+                                 PendingData)
 from omnipy.data.model import Model
 
 from .helpers.models import PydanticParentModel
@@ -73,7 +76,24 @@ def test_pending_data() -> None:
     assert pending_data.job_name == 'my_task'
 
     with pytest.raises(AttributeError):
-        pending_data.job_name = 'my_other_task'  # type: ignore[misc]
+        pending_data.job_name = 'my_other_task'
 
     with pytest.raises(ValidationError):
         Model[str](pending_data)
+
+
+def test_failed_data() -> None:
+    with pytest.raises(TypeError):
+        FailedData()  # type: ignore[call-arg]
+
+    exception = RuntimeError('Some error')
+    error_data = FailedData('my_task', exception)
+    assert error_data.job_name == 'my_task'
+    assert error_data.exception is exception
+
+    with pytest.raises(AttributeError):
+        error_data.job_name = 'my_other_task'
+        error_data.exception = Exception('other errors')
+
+    with pytest.raises(ValidationError):
+        Model[str](error_data)
