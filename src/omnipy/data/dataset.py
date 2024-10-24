@@ -129,20 +129,16 @@ class Dataset(
         orig_model = cls._clean_model(model)
 
         if cls == Dataset:
-            if not isinstance(model, TypeVar) and not is_model_subclass(model):
-                raise TypeError('Invalid model: {}! '.format(model)
+            if not isinstance(orig_model, TypeVar) and not is_model_subclass(orig_model):
+                raise TypeError('Invalid model: {}! '.format(orig_model)
                                 + 'omnipy Dataset models must be a specialization of the omnipy '
                                 'Model class.')
-
-            created_dataset = super().__class_getitem__(model)
         else:
-            if isinstance(model, TypeVar):
-                params = get_default_if_typevar(model)
+            if isinstance(orig_model, TypeVar):
+                model = get_default_if_typevar(orig_model)
 
-            created_dataset = super().__class_getitem__(params)
-
+        created_dataset = super().__class_getitem__(model)
         cls._recursively_set_allow_none(created_dataset._get_data_field())
-
         cleanup_name_qualname_and_module(cls, created_dataset, orig_model)
 
         return created_dataset
@@ -281,14 +277,11 @@ class Dataset(
 
     @classmethod
     def _get_standard_field_description(cls) -> str:
-        return ('This class represents a data in the `omnipy` Python package and contains '
+        return ('This class represents a dataset in the `omnipy` Python package and contains '
                 'a set of named data items that follows the same data model. '
                 'It is a statically typed specialization of the Dataset class according to a '
                 'particular specialization of the Model class. Both main classes are wrapping '
                 'the excellent Python package named `pydantic`.')
-
-    def _check_value(self, value: Any) -> Any:
-        return super()._check_value(value)
 
     def __getitem__(self, selector: str | int | slice | Iterable[str | int]) -> Any:
         selected_keys = select_keys(selector, self.data)
@@ -299,6 +292,10 @@ class Dataset(
             value = self.__class__({key: self.data[key] for key in selected_keys.keys})
 
         return self._check_value(value)
+
+    @call_super_if_available(call_super_before_method=True)
+    def _check_value(self, value: Any) -> Any:
+        return value
 
     def __delitem__(self, selector: str | int | slice | Iterable[str | int]) -> Any:
         selected_keys = select_keys(selector, self.data)
@@ -479,12 +476,13 @@ class Dataset(
     #     return self.__class__.create_from_json, (self.to_json(),)
 
     @classmethod
-    def to_json_schema(cls, pretty=True) -> str | dict[str, str]:
+    def to_json_schema(cls, pretty: bool = True) -> str | dict[str, str]:
         result = {}
-        schema = cls.schema()
+        clean_dataset = super(Dataset, Dataset).__class_getitem__(cls.get_model_class())
+        schema = clean_dataset.schema()
         for key, val in schema['properties'][DATA_KEY].items():
             result[key] = val
-        result['title'] = schema['title']
+        result['title'] = cls.__name__
         result['definitions'] = schema['definitions']
 
         for model_desc in result['definitions'].values():

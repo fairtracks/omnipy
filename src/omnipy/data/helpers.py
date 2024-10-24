@@ -1,5 +1,6 @@
 from collections import defaultdict
 from contextlib import suppress
+from dataclasses import dataclass
 from enum import IntEnum
 import functools
 from typing import ContextManager, ForwardRef, Generic, get_args, get_origin, NamedTuple
@@ -207,10 +208,6 @@ def obj_or_model_contents_isinstance(__obj: object, __class_or_tuple: type) -> b
 #     return orjson.dumps(v, default=default).decode()
 
 
+@dataclass(frozen=True)
 class PendingData:
-    def __init__(self, job_name: str):
-        self._job_name = job_name
-
-    @property
-    def job_name(self) -> str:
-        return self._job_name
+    job_name: str
