@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+import functools
 import inspect
 import os
 from textwrap import dedent
@@ -13,6 +14,7 @@ import objsize
 from pydantic.generics import GenericModel
 
 from omnipy.data.data_class_creator import DataClassBase
+from omnipy.data.helpers import PendingData
 from omnipy.util.helpers import get_first_item, has_items, is_non_str_byte_iterable
 from omnipy.util.tabulate import tabulate
 
@@ -33,6 +35,9 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
     def display(self) -> None:
         display(self)
+
+    def __str__(self) -> str:
+        return repr(self)
 
 
 class ModelDisplayMixin(BaseDisplayMixin):
@@ -118,15 +123,23 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         from omnipy.data.dataset import Dataset
 
         return tabulate(
-            ((i,
-              k,
-              type(v).__name__,
-              self._len_if_available(v),
-              humanize.naturalsize(objsize.get_deep_size(v)))
-             for i, (k, v) in enumerate(cast(Dataset, self).items())),
+            ((
+                i,
+                k,
+                self._type_str(v),
+                self._len_if_available(v),
+                self._obj_size_if_available(v),
+            ) for i, (k, v) in enumerate(cast(Dataset, self).data.items())),
             ('#', 'Data file name', 'Type', 'Length', 'Size (in memory)'),
             tablefmt='rounded_outline',
         )
+
+    @classmethod
+    def _type_str(cls, obj: Any) -> str:
+        if isinstance(obj, PendingData):
+            return f'{obj.job_name}() -> Data pending...'
+        else:
+            return type(obj).__name__
 
     @classmethod
     def _len_if_available(cls, obj: Any) -> int | str:
@@ -134,3 +147,18 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             return len(obj)
         except TypeError:
             return 'N/A'
+
+    @classmethod
+    def _obj_size_if_available(cls, obj: Any) -> str:
+        if isinstance(obj, PendingData):
+            return 'N/A'
+        else:
+            try:
+                cached_obj_size_func = functools.cache(cls._obj_size)
+                return cached_obj_size_func(obj)
+            except TypeError:
+                return cls._obj_size(obj)
+
+    @staticmethod
+    def _obj_size(obj: Any) -> str:
+        return humanize.naturalsize(objsize.get_deep_size(obj))

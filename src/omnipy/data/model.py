@@ -932,6 +932,9 @@ class Model(
                 else:
                     return NotImplemented
 
+            if name == '__hash__' and method is None:
+                raise TypeError(f'unhashable type: {self.__class__.__name__}')
+
             return self._call_method_with_unconverted_args_first(method, *args, **kwargs)
 
     def _call_single_arg_method_with_model_converted_other_first(
