@@ -44,15 +44,77 @@ def kwargs_func(**kwargs: object) -> str:
     return repr(kwargs)
 
 
-def all_data_files_plus_str_func(dataset: Dataset[Model[int]], number: int) -> Dataset[Model[str]]:
+def all_int_dataset_plus_int_return_str_dataset_func(
+    dataset: Dataset[Model[int]],
+    number: int,
+) -> Dataset[Model[str]]:
     out_dataset = Dataset[Model[str]]()
     for title, data_file in dataset.items():
         out_dataset[title] = data_file + number
     return out_dataset
 
 
-def single_data_file_plus_str_func(data_number: Model[int], number: int) -> str:
+async def async_all_int_dataset_plus_int_return_str_dataset_func(
+        dataset: Dataset[Model[int]], number: int) -> Dataset[Model[str]]:
+    await asyncio.sleep(0.1)
+    return all_int_dataset_plus_int_return_str_dataset_func(dataset, number)
+
+
+def single_int_model_plus_int_return_str_model_func(
+    data_number: Model[int],
+    number: int,
+) -> Model[str]:
+    return str(data_number.contents + number)
+
+
+def single_int_plus_int_return_str_func(data_number: int, number: int) -> str:
     return str(data_number + number)
+
+
+def single_int_plus_int_return_str_model_with_output_str_dataset_func(
+    data_number: int,
+    number: int,
+    output_dataset: Dataset[Model[str]],
+) -> Model[str]:
+    return str(data_number + number)
+
+
+def single_int_plus_int_return_str_with_output_int_dataset_func(
+    data_number: int,
+    number: int,
+    output_dataset: Dataset[Model[int]],
+) -> str:
+    return str(data_number + number)
+
+
+async def async_single_int_model_plus_int_return_str_model_func(
+    data_number: Model[int],
+    number: int,
+) -> Model[str]:
+    await asyncio.sleep(random() / 10.0)
+    return str(data_number.contents + number)
+
+
+async def async_single_int_plus_int_return_str_func(data_number: int, number: int) -> str:
+    await asyncio.sleep(random() / 10.0)
+    return str(data_number + number)
+
+
+async def async_single_int_plus_int_return_str_model_with_output_str_dataset_func(
+    data_number: int,
+    number: int,
+    output_dataset: Dataset[Model[str]],
+) -> Model[str]:
+    await asyncio.sleep(random() / 10.0)
+    return str(data_number + number)
+
+
+async def async_single_int_plus_future_int_return_str_func(
+    data_number: int,
+    number: asyncio.Future[int],
+) -> str:
+    await number
+    return str(data_number + number.result())
 
 
 async def async_sleep_random_time_func() -> float:

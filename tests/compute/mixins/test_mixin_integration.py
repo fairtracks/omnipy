@@ -4,18 +4,18 @@ from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
-from ..cases.raw.functions import (all_data_files_plus_str_func,
+from ..cases.raw.functions import (all_int_dataset_plus_int_return_str_dataset_func,
                                    power_m1_func,
-                                   single_data_file_plus_str_func)
+                                   single_int_model_plus_int_return_str_model_func)
 from ..helpers.classes import CustomStrDataset
 
 
 def test_iterate_over_data_files_func_signature() -> None:
     all_plus_no_iter_template = TaskTemplate(iterate_over_data_files=False)(
-        all_data_files_plus_str_func)
+        all_int_dataset_plus_int_return_str_dataset_func)
 
     all_plus_iter_template = TaskTemplate(iterate_over_data_files=True)(
-        single_data_file_plus_str_func)
+        single_int_model_plus_int_return_str_model_func)
 
     for task_template in (all_plus_no_iter_template, all_plus_iter_template):
         for task_obj in task_template, task_template.apply():
@@ -29,10 +29,10 @@ def test_iterate_over_data_files_func_signature() -> None:
             assert task_obj.return_type is Dataset[Model[str]]
 
 
-def test_iterate_over_data_files_func_signature_custom_dataset_type() -> None:
+def test_iterate_over_data_files_func_signature_output_dataset_cls() -> None:
     all_plus_iter_template = TaskTemplate(
-        iterate_over_data_files=True, return_dataset_cls=CustomStrDataset)(
-            single_data_file_plus_str_func)
+        iterate_over_data_files=True, output_dataset_cls=CustomStrDataset)(
+            single_int_model_plus_int_return_str_model_func)
 
     for task_obj in all_plus_iter_template, all_plus_iter_template.apply():
         assert task_obj.param_signatures == {
@@ -45,21 +45,68 @@ def test_iterate_over_data_files_func_signature_custom_dataset_type() -> None:
         assert task_obj.return_type is CustomStrDataset
 
 
+def test_iterate_over_data_files_func_signature_output_dataset_param() -> None:
+    all_plus_iter_template = TaskTemplate(
+        iterate_over_data_files=True,
+        output_dataset_param='output_dataset',
+    )(
+        single_int_model_plus_int_return_str_model_func)
+
+    for task_obj in all_plus_iter_template, all_plus_iter_template.apply():
+        assert task_obj.param_signatures == {
+            'dataset':
+                Parameter(
+                    'dataset', Parameter.POSITIONAL_OR_KEYWORD, annotation=Dataset[Model[int]]),
+            'number':
+                Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
+            'output_dataset':
+                Parameter(
+                    'output_dataset',
+                    Parameter.POSITIONAL_OR_KEYWORD,
+                    annotation=Dataset[Model[str]])
+        }
+        assert task_obj.return_type is Dataset[Model[str]]
+
+
+def test_iterate_over_data_files_func_signature_output_dataset_param_and_cls() -> None:
+    all_plus_iter_template = TaskTemplate(
+        iterate_over_data_files=True,
+        output_dataset_param='output_dataset',
+        output_dataset_cls=CustomStrDataset,
+    )(
+        single_int_model_plus_int_return_str_model_func)
+
+    for task_obj in all_plus_iter_template, all_plus_iter_template.apply():
+        assert task_obj.param_signatures == {
+            'dataset':
+                Parameter(
+                    'dataset', Parameter.POSITIONAL_OR_KEYWORD, annotation=Dataset[Model[int]]),
+            'number':
+                Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
+            'output_dataset':
+                Parameter(
+                    'output_dataset', Parameter.POSITIONAL_OR_KEYWORD, annotation=CustomStrDataset)
+        }
+        assert task_obj.return_type is CustomStrDataset
+
+
 def test_iterate_over_data_files() -> None:
     task_template_cls = TaskTemplate(iterate_over_data_files=True)
-    single_data_file_plus_str_template = task_template_cls(single_data_file_plus_str_func)
+    single_data_file_plus_str_template = task_template_cls(
+        single_int_model_plus_int_return_str_model_func)
 
     dataset = Dataset[Model[int]]({'a': 5, 'b': -2})
     assert single_data_file_plus_str_template.run(dataset, number=2) == \
            Dataset[Model[str]]({'a': '7', 'b': '0'})
 
 
-def test_iterate_over_data_files_return_dataset_cls() -> None:
+def test_iterate_over_data_files_output_dataset_cls() -> None:
     task_template_cls = TaskTemplate(
         iterate_over_data_files=True,
-        return_dataset_cls=CustomStrDataset,
+        output_dataset_cls=CustomStrDataset,
     )
-    single_data_file_plus_str_template = task_template_cls(single_data_file_plus_str_func)
+    single_data_file_plus_str_template = task_template_cls(
+        single_int_model_plus_int_return_str_model_func)
 
     dataset = Dataset[Model[int]]({'a': 5, 'b': -2})
     assert single_data_file_plus_str_template.run(dataset, number=2) == \
@@ -73,7 +120,8 @@ def test_iterate_over_data_files_param() -> None:
         iterate_over_data_files=True,
     )
 
-    single_data_file_plus_str_template = task_template_cls(single_data_file_plus_str_func)
+    single_data_file_plus_str_template = task_template_cls(
+        single_int_model_plus_int_return_str_model_func)
 
     dataset = Dataset[Model[int]]({'a': 5, 'b': -2})
     assert single_data_file_plus_str_template.run(data_numbers=dataset) == \

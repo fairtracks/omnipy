@@ -107,7 +107,11 @@ class IsFuncArgJobBase(IsJob, Protocol):
         ...
 
     @property
-    def return_dataset_cls(self) -> type[IsDataset]:
+    def output_dataset_param(self) -> str | None:
+        ...
+
+    @property
+    def output_dataset_cls(self) -> type[IsDataset] | None:
         ...
 
     @property
@@ -179,7 +183,8 @@ class IsFuncArgJobTemplateCallable(Protocol[
         self,
         name: str | None = None,
         iterate_over_data_files: bool = False,
-        return_dataset_cls: type[IsDataset] | None = None,
+        output_dataset_param: str | None = None,
+        output_dataset_cls: type[IsDataset] | None = None,
         auto_async: bool = True,
         persist_outputs: PersistOutputsOptions | None = None,
         restore_outputs: RestoreOutputsOptions | None = None,
@@ -198,7 +203,8 @@ class IsFuncArgJobTemplate(IsJobTemplate, IsFuncArgJobBase, Protocol[JobTemplate
                update: bool = True,
                name: str | None = None,
                iterate_over_data_files: bool = False,
-               return_dataset_cls: type[IsDataset] | None = None,
+               output_dataset_param: str | None = None,
+               output_dataset_cls: type[IsDataset] | None = None,
                auto_async: bool = True,
                persist_outputs: PersistOutputsOptions | None = None,
                restore_outputs: RestoreOutputsOptions | None = None,
@@ -232,7 +238,8 @@ class IsTaskTemplateArgsJobTemplateCallable(Protocol[TaskTemplateContraT, JobTem
         *task_templates: TaskTemplateContraT,
         name: str | None = None,
         iterate_over_data_files: bool = False,
-        return_dataset_cls: type[IsDataset] | None = None,
+        output_dataset_param: str | None = None,
+        output_dataset_cls: type[IsDataset] | None = None,
         auto_async: bool = True,
         persist_outputs: PersistOutputsOptions | None = None,
         restore_outputs: RestoreOutputsOptions | None = None,
@@ -253,7 +260,8 @@ class IsTaskTemplateArgsJobTemplate(IsFuncArgJobTemplate[JobTemplateT, JobT],
                update: bool = True,
                name: str | None = None,
                iterate_over_data_files: bool = False,
-               return_dataset_cls: type[IsDataset] | None = None,
+               output_dataset_param: str | None = None,
+               output_dataset_cls: type[IsDataset] | None = None,
                auto_async: bool = True,
                fixed_params: Mapping[str, object] | None = None,
                param_key_map: Mapping[str, str] | None = None,

@@ -19,7 +19,7 @@ from .protocols import IsModifyAllLinesCallable, IsModifyContentsCallable, IsMod
 
 
 @mypy_fix_task_template
-@TaskTemplate(iterate_over_data_files=True, return_dataset_cls=StrDataset)
+@TaskTemplate(iterate_over_data_files=True, output_dataset_cls=StrDataset)
 def decode_bytes(data: Model[bytes], encoding: str | None = None) -> str:
     if encoding is None:
         detector = UniversalDetector()

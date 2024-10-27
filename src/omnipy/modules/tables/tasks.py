@@ -30,7 +30,7 @@ def remove_columns(json_dataset: JsonListOfDictsDataset,
 
 
 @mypy_fix_task_template
-@TaskTemplate(iterate_over_data_files=True, return_dataset_cls=TableWithColNamesDataset)
+@TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TableWithColNamesDataset)
 def rename_col_names(data_file: TableWithColNamesModel,
                      prev2new_keymap: dict[str, str]) -> TableWithColNamesModel:
     return TableWithColNamesModel([{
