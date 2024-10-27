@@ -16,7 +16,7 @@ class IsMixin(Protocol):
 
 class DynamicMixinAcceptor:
     # Constants
-    WITH_MIXINS_CLS_PREFIX = 'WithMixins'
+    WITH_MIXINS_CLS_SUFFIX = 'WithMixins'
 
     # Declarations needed by mypy
     _orig_class: Type
@@ -57,8 +57,8 @@ class DynamicMixinAcceptor:
         skip_bases = {'DynamicMixinAcceptor'}
 
         for base in base_list:
-            if base.__name__.endswith(cls.WITH_MIXINS_CLS_PREFIX):
-                skip_bases.add(base.__name__[:-len(cls.WITH_MIXINS_CLS_PREFIX)])
+            if base.__name__.endswith(cls.WITH_MIXINS_CLS_SUFFIX):
+                skip_bases.add(base.__name__[:-len(cls.WITH_MIXINS_CLS_SUFFIX)])
 
         cleaned_base_list = [
             base for base in base_list
@@ -133,7 +133,7 @@ class DynamicMixinAcceptor:
         cls.__init__.__signature__ = cls._orig_init_signature
 
     def __new__(cls, *args, **kwargs):
-        if not cls.__name__.endswith(cls.WITH_MIXINS_CLS_PREFIX):
+        if not cls.__name__.endswith(cls.WITH_MIXINS_CLS_SUFFIX):
             cls_with_mixins = cls._create_subcls_inheriting_from_mixins_and_orig_cls()
             obj = super(cls, cls_with_mixins).__new__(cls_with_mixins, *args, **kwargs)
 
@@ -155,7 +155,7 @@ class DynamicMixinAcceptor:
 
             for base in cls_with_mixins.__mro__:
                 if base == cls \
-                        or base.__name__.endswith(cls.WITH_MIXINS_CLS_PREFIX) \
+                        or base.__name__.endswith(cls.WITH_MIXINS_CLS_SUFFIX) \
                         or base.__init__ is object.__init__:
                     continue
 
@@ -184,7 +184,7 @@ class DynamicMixinAcceptor:
                     base.__init__(self, **mixin_kwargs)
 
         cls_bases = list(get_bases(cls))
-        if not cls.__name__.endswith(cls.WITH_MIXINS_CLS_PREFIX):
+        if not cls.__name__.endswith(cls.WITH_MIXINS_CLS_SUFFIX):
             cls_bases = list(cls._mixin_classes) + cls_bases
 
         cls_bases_with_mixins = []
@@ -202,7 +202,7 @@ class DynamicMixinAcceptor:
             return ns
 
         cls_with_mixins = types.new_class(
-            f'{cls.__name__}{cls.WITH_MIXINS_CLS_PREFIX}',
+            f'{cls.__name__}{cls.WITH_MIXINS_CLS_SUFFIX}',
             tuple([cls] + cls_bases_with_mixins),
             {},
             fill_ns,

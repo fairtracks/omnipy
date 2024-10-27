@@ -38,8 +38,8 @@ class NameJobBaseMixin:
             return None
 
         class_name = self.__class__.__name__
-        if class_name.endswith(DynamicMixinAcceptor.WITH_MIXINS_CLS_PREFIX):
-            class_name = class_name[:-len(DynamicMixinAcceptor.WITH_MIXINS_CLS_PREFIX)]
+        if class_name.endswith(DynamicMixinAcceptor.WITH_MIXINS_CLS_SUFFIX):
+            class_name = class_name[:-len(DynamicMixinAcceptor.WITH_MIXINS_CLS_SUFFIX)]
 
         class_name_snake_case = underscore(class_name)
         return slugify(f'{class_name_snake_case}-{self._name}-{generate_slug(2)}')

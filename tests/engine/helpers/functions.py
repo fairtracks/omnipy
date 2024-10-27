@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 from time import sleep
-from typing import Awaitable, Callable, cast, Type
+from typing import Callable, cast, Type
 
 from omnipy.api.enums import RunState
 from omnipy.api.protocols.private.compute.job import IsJob
@@ -76,7 +76,7 @@ def get_sync_assert_results_wait_a_bit_func(job: IsJob):
 
 
 def get_async_assert_results_wait_a_bit_func(job: IsJob):
-    async def async_assert_results_wait_a_bit(seconds: float) -> Awaitable:
+    async def async_assert_results_wait_a_bit(seconds: float) -> None:
         assert await resolve(job(seconds)) == seconds
 
     return async_assert_results_wait_a_bit

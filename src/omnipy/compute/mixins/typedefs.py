@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Protocol, TypeAlias
 
 from typing_extensions import TypeVar
 
@@ -9,9 +9,9 @@ InputT = TypeVar('InputT', default=object)
 ModelInputT = TypeVar('ModelInputT', default=Model)
 ReturnT = TypeVar('ReturnT', default=object)
 ModelReturnT = TypeVar('ModelReturnT', default=Model)
-InputTypeT = InputT | ModelInputT
-InputDatasetT = Dataset[Model[InputT]] | Dataset[ModelInputT]
-ReturnDatasetT = Dataset[Model[ReturnT]] | Dataset[ModelReturnT]
+InputTypeT: TypeAlias = InputT | ModelInputT
+InputDatasetT: TypeAlias = Dataset[Model[InputT]] | Dataset[ModelInputT]
+ReturnDatasetT: TypeAlias = Dataset[Model[ReturnT]] | Dataset[ModelReturnT]
 
 
 class IsIterateInnerCallable(Protocol):
