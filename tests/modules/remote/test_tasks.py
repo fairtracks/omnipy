@@ -4,9 +4,9 @@ from aiohttp import web
 import pytest
 
 from helpers.protocols import AssertModelOrValFunc
-from omnipy.modules.rest.datasets import HttpUrlDataset
-from omnipy.modules.rest.models import HttpUrlModel
-from omnipy.modules.rest.tasks import get_json_from_api_endpoint
+from omnipy.modules.remote.datasets import HttpUrlDataset
+from omnipy.modules.remote.models import HttpUrlModel
+from omnipy.modules.remote.tasks import get_json_from_api_endpoint
 
 
 async def text_endpoint(request: web.Request) -> web.Response:

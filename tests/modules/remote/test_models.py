@@ -7,7 +7,7 @@ import pytest
 from helpers.protocols import AssertModelOrValFunc
 from omnipy import Model
 from omnipy.api.protocols.public.hub import IsRuntime
-from omnipy.modules.rest.models import HttpUrlModel, QueryParamsModel, UrlPathModel
+from omnipy.modules.remote.models import HttpUrlModel, QueryParamsModel, UrlPathModel
 
 
 def test_query_params_model():
