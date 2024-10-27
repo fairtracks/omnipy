@@ -1,3 +1,7 @@
+import asyncio
+from random import random
+import time
+
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
@@ -49,3 +53,15 @@ def all_data_files_plus_str_func(dataset: Dataset[Model[int]], number: int) -> D
 
 def single_data_file_plus_str_func(data_number: Model[int], number: int) -> str:
     return str(data_number + number)
+
+
+async def async_sleep_random_time_func() -> float:
+    seconds: float = random() / 10
+    await asyncio.sleep(seconds)
+    return seconds
+
+
+def sync_sleep_random_time_func() -> float:
+    seconds: float = random() / 10
+    time.sleep(seconds)
+    return seconds

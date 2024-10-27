@@ -1,4 +1,3 @@
-import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Callable, Type
@@ -68,7 +67,7 @@ class PrefectEngine(TaskRunnerEngine,
         else:
             flow_kwargs = dict(name=task.name)
 
-            if asyncio.iscoroutinefunction(_prefect_task):
+            if task.has_coroutine_func():
 
                 @prefect_flow(**flow_kwargs)
                 async def task_flow(*inner_args, **inner_kwargs):

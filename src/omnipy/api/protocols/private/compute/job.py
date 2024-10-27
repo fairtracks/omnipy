@@ -110,6 +110,10 @@ class IsFuncArgJobBase(IsJob, Protocol):
         ...
 
     @property
+    def auto_async(self) -> bool:
+        ...
+
+    @property
     def persist_outputs(self) -> PersistOutputsOptions | None:
         ...
 
@@ -175,6 +179,7 @@ class IsFuncArgJobTemplateCallable(Protocol[
         name: str | None = None,
         iterate_over_data_files: bool = False,
         return_dataset_cls: type[IsDataset] | None = None,
+        auto_async: bool = True,
         persist_outputs: PersistOutputsOptions | None = None,
         restore_outputs: RestoreOutputsOptions | None = None,
         result_key: str | None = None,
@@ -193,6 +198,7 @@ class IsFuncArgJobTemplate(IsJobTemplate, IsFuncArgJobBase, Protocol[JobTemplate
                name: str | None = None,
                iterate_over_data_files: bool = False,
                return_dataset_cls: type[IsDataset] | None = None,
+               auto_async: bool = True,
                persist_outputs: PersistOutputsOptions | None = None,
                restore_outputs: RestoreOutputsOptions | None = None,
                result_key: str | None = None,
@@ -226,6 +232,7 @@ class IsTaskTemplateArgsJobTemplateCallable(Protocol[TaskTemplateContraT, JobTem
         name: str | None = None,
         iterate_over_data_files: bool = False,
         return_dataset_cls: type[IsDataset] | None = None,
+        auto_async: bool = True,
         persist_outputs: PersistOutputsOptions | None = None,
         restore_outputs: RestoreOutputsOptions | None = None,
         result_key: str | None = None,
@@ -246,6 +253,7 @@ class IsTaskTemplateArgsJobTemplate(IsFuncArgJobTemplate[JobTemplateT, JobT],
                name: str | None = None,
                iterate_over_data_files: bool = False,
                return_dataset_cls: type[IsDataset] | None = None,
+               auto_async: bool = True,
                fixed_params: Mapping[str, object] | None = None,
                param_key_map: Mapping[str, str] | None = None,
                result_key: str | None = None,
