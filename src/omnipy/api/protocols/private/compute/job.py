@@ -1,4 +1,5 @@
 from datetime import datetime
+from inspect import BoundArguments
 from types import MappingProxyType
 from typing import Any, Callable, Mapping, Protocol, Type
 
@@ -152,7 +153,7 @@ class IsFuncArgJobBase(IsJob, Protocol):
     def has_coroutine_func(self) -> bool:
         ...
 
-    def get_call_args(self, *args: object, **kwargs: object) -> dict[str, object]:
+    def get_bound_args(self, *args: object, **kwargs: object) -> BoundArguments:
         ...
 
 

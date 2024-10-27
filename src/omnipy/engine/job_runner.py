@@ -157,7 +157,7 @@ class DagFlowRunnerEngine(JobRunnerEngine):
             with dag_flow.flow_context:
                 for i, job in enumerate(dag_flow.task_templates):
                     if i == 0:
-                        results = dag_flow.get_call_args(*args, **kwargs)
+                        results = dag_flow.get_bound_args(*args, **kwargs).arguments
 
                     param_keys = set(inspect.signature(job).parameters.keys())
 

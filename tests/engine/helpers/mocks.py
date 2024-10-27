@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import update_wrapper
 import inspect
+from inspect import BoundArguments
 from typing import Any, Callable, Type
 
 from inflection import underscore
@@ -72,8 +73,8 @@ class MockTask:
     def _accept_call_func_decorator(self, call_func_decorator: GeneralDecorator) -> None:
         self._func = call_func_decorator(self._func)
 
-    def get_call_args(self, *args: object, **kwargs: object) -> dict[str, object]:
-        return self._func_signature.bind(*args, **kwargs).arguments
+    def get_bound_args(self, *args: object, **kwargs: object) -> BoundArguments:
+        return self._func_signature.bind(*args, **kwargs)
 
 
 @callable_decorator_cls

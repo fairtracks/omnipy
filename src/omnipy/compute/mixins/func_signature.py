@@ -37,5 +37,7 @@ class SignatureFuncJobBaseMixin:
         self._func_signature = new_signature
         self.__signature__ = new_signature
 
-    def get_call_args(self, *args: object, **kwargs: object) -> dict[str, object]:
-        return self._func_signature.bind(*args, **kwargs).arguments
+    def get_bound_args(self, *args: object, **kwargs: object) -> inspect.BoundArguments:
+        bound_args = self._func_signature.bind(*args, **kwargs)
+        bound_args.apply_defaults()
+        return bound_args
