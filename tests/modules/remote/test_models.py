@@ -51,28 +51,30 @@ def test_url_path_model():
 
 def test_http_url_model_validation_errors():
     with pytest.raises(ValidationError):
-        HttpUrlModel()
-
-    with pytest.raises(ValidationError):
         HttpUrlModel('/abc/def')
 
     with pytest.raises(ValidationError):
         HttpUrlModel('file:///abc/def')
 
 
-def test_http_url_model_parse_only_hostname():
-    url = HttpUrlModel('http://abc.net')
+def test_http_url_model_default_localhost():
+    url = HttpUrlModel()
 
     assert url.scheme == 'http'
     assert url.username is None
     assert url.password is None
-    assert url.host == 'abc.net'
+    assert url.host == 'localhost'
     assert url.port == 80
     assert url.path == UrlPathModel('/')
     assert url.query == QueryParamsModel()
     assert url.fragment is None
 
-    assert url.to_data() == str(url) == 'http://abc.net/'
+    assert url.to_data() == str(url) == 'http://localhost/'
+
+    https_url = HttpUrlModel('https://')
+    assert https_url.scheme == 'https'
+    assert https_url.port == 443
+    assert https_url.to_data() == str(https_url) == 'https://localhost/'
 
 
 def test_http_url_model_parse_all_fields():

@@ -66,7 +66,7 @@ class UrlDataclassModel(BaseModel):
     scheme: str
     username: str | None = None
     password: str | None = None
-    host: str | None = None
+    host: str = 'localhost'
     port: int | None = None
     path: UrlPathModel | None = None
     query: QueryParamsModel = Field(default_factory=QueryParamsModel)
@@ -98,8 +98,10 @@ class UrlDataclassModel(BaseModel):
 class HttpUrlModel(Model[UrlDataclassModel | str]):
     @classmethod
     def _parse_data(cls, data: UrlDataclassModel | str) -> UrlDataclassModel:
-        assert data, 'URL must be specified at init'
-
+        if data == '':
+            data = 'http://localhost/'
+        if data == 'https://':
+            data = 'https://localhost/'
         # For validation only
         url_obj = Url(str(data) if isinstance(data, UrlDataclassModel) else data)
 
