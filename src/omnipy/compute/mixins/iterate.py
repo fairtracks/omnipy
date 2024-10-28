@@ -4,7 +4,7 @@ import inspect
 from inspect import Parameter, signature
 from typing import Any, Callable, cast, Coroutine
 
-from omnipy.api.protocols.private.compute.job import IsPlainFuncArgJobBase
+from omnipy.api.protocols.private.compute.job import IsJobBase, IsPlainFuncArgJobBase
 from omnipy.api.protocols.public.data import IsDataset
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.typedefs import (InputDatasetT,
@@ -12,7 +12,7 @@ from omnipy.compute.mixins.typedefs import (InputDatasetT,
                                             IsIterateInnerCallable,
                                             ReturnDatasetT)
 from omnipy.data.dataset import Dataset
-from omnipy.data.helpers import is_model_subclass, PendingData
+from omnipy.data.helpers import FailedData, is_model_subclass, PendingData
 from omnipy.data.model import Model
 
 # Functions
@@ -38,23 +38,9 @@ def _create_dataset_cls(data_file_type: InputTypeT) -> type[IsDataset]:
         return Dataset[Model[data_file_type]]  # type: ignore[return-value, valid-type]
 
 
-def _create_task(
-    coro: Coroutine[ReturnDatasetT, Any, Any],
-    output_dataset: Dataset,
-    title: str,
-) -> asyncio.Task[ReturnDatasetT]:
-    def _done_callback(task: asyncio.Task, output_dataset: Dataset, title: str):
-        output_dataset[title] = task.result()
-
-    task = asyncio.create_task(coro)
-    done_callback_for_title = functools.partial(
-        _done_callback, output_dataset=output_dataset, title=title)
-    task.add_done_callback(done_callback_for_title)
-
-    return task
-
-
 # Classes
+
+# TODO: Data files -> data items throughout, e.g. iterate_over_data_items??
 
 
 class IterateFuncJobBaseMixin:
@@ -127,14 +113,14 @@ class IterateFuncJobBaseMixin:
 
                         tasks = []
                         for title, data_file in dataset.items():
-                            output_dataset[title] = PendingData(job_name=job_func.__name__)
+                            output_dataset[title] = self._create_pending_data()
                             data_arg = self._prepare_data_arg(data_file)
                             coro = cast(Coroutine, inner_func(data_arg, *args, **kwargs))
 
-                            task = _create_task(coro, output_dataset, title)
+                            task = self._create_task(coro, output_dataset, title)
                             tasks.append(task)
 
-                        await asyncio.gather(*tasks)
+                        await asyncio.gather(*tasks, return_exceptions=True)
 
                         return output_dataset
 
@@ -223,6 +209,41 @@ class IterateFuncJobBaseMixin:
 
     def _prepare_data_arg(self, data_file):
         return data_file if is_model_subclass(self._input_dataset_type) else data_file.contents
+
+    def _create_pending_data(self):
+        self_as_job_base = cast(IsJobBase, self)
+        return PendingData(
+            job_name=self_as_job_base.name,
+            job_unique_name=self_as_job_base.unique_name,
+        )
+
+    def _create_failed_data(self, exception: BaseException):
+        self_as_job_base = cast(IsJobBase, self)
+        return FailedData(
+            job_name=self_as_job_base.name,
+            job_unique_name=self_as_job_base.unique_name,
+            exception=exception,
+        )
+
+    def _create_task(
+        self,
+        coro: Coroutine[ReturnDatasetT, Any, Any],
+        output_dataset: Dataset,
+        title: str,
+    ) -> asyncio.Task[ReturnDatasetT]:
+        def _done_callback(task: asyncio.Task, output_dataset: Dataset, title: str):
+            exception = task.exception()
+            if exception is not None:
+                output_dataset[title] = self._create_failed_data(exception)
+            else:
+                output_dataset[title] = task.result()
+
+        task = asyncio.create_task(coro)
+        done_callback_for_title = functools.partial(
+            _done_callback, output_dataset=output_dataset, title=title)
+        task.add_done_callback(done_callback_for_title)
+
+        return task
 
     @property
     def iterate_over_data_files(self) -> bool:

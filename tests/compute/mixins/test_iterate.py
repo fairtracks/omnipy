@@ -201,6 +201,19 @@ async def test_iterate_over_data_files_await_future_task(case: IterateDataFilesC
     future_number = case.args[0]
     future_number.set_result(2)
 
+    if case.fail_after_awaiting_future_int:
+        while len(output_dataset.failed_data) != 3:
+            await asyncio.sleep(0.1)
+
     returned_dataset = await _ensure_dataset_await_if_task(case, dataset_or_task)
 
-    assert returned_dataset.to_data() == dict(a=5, b=7, c=0)
+    if case.fail_after_awaiting_future_int:
+        failed_task_details = returned_dataset.failed_task_details()
+        assert len(failed_task_details) == 3
+        for failed_data in failed_task_details.values():
+            assert type(failed_data.exception) is RuntimeError
+        assert failed_task_details['a'].job_name \
+               == failed_task_details['b'].job_name \
+               == failed_task_details['c'].job_name
+    else:
+        assert returned_dataset.to_data() == dict(a=5, b=7, c=0)

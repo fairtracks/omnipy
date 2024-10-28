@@ -7,6 +7,7 @@ import pytest_cases as pc
 from .raw.functions import (all_int_dataset_plus_int_return_str_dataset_func,
                             async_all_int_dataset_plus_int_return_str_dataset_func,
                             async_single_int_model_plus_int_return_str_model_func,
+                            async_single_int_plus_future_int_fail_func,
                             async_single_int_plus_future_int_return_str_func,
                             async_single_int_plus_int_return_str_func,
                             async_single_int_plus_int_return_str_model_with_output_str_dataset_func,
@@ -22,12 +23,13 @@ class IterateDataFilesCase:
     args: tuple[Any, ...]
     kwargs: dict[str, Any]
     func_is_async: bool
-    func_second_arg_is_future: bool
-    func_has_output_dataset_param: bool
     iterate_over_data_files: bool
-    fail_with_output_dataset_param: bool
-    fail_with_output_dataset_cls_is_int: bool
-    fail_with_output_dataset_param_and_cls_is_int: bool
+    func_second_arg_is_future: bool = False
+    func_has_output_dataset_param: bool = False
+    fail_with_output_dataset_param: bool = False
+    fail_with_output_dataset_cls_is_int: bool = False
+    fail_with_output_dataset_param_and_cls_is_int: bool = False
+    fail_after_awaiting_future_int: bool = False
 
 
 @pc.case(
@@ -40,8 +42,6 @@ def case_sync_all_int_dataset_plus_int_return_str_dataset_func() -> IterateDataF
         args=(2,),
         kwargs={},
         func_is_async=False,
-        func_second_arg_is_future=False,
-        func_has_output_dataset_param=False,
         iterate_over_data_files=False,
         fail_with_output_dataset_param=True,
         fail_with_output_dataset_cls_is_int=True,
@@ -59,8 +59,6 @@ def case_async_all_int_dataset_plus_int_return_str_dataset_func() -> IterateData
         args=(2,),
         kwargs={},
         func_is_async=True,
-        func_second_arg_is_future=False,
-        func_has_output_dataset_param=False,
         iterate_over_data_files=False,
         fail_with_output_dataset_param=True,
         fail_with_output_dataset_cls_is_int=True,
@@ -85,12 +83,7 @@ def case_sync_single_int_model_plus_int_return_str_model_func() -> IterateDataFi
         args=(2,),
         kwargs={},
         func_is_async=False,
-        func_second_arg_is_future=False,
-        func_has_output_dataset_param=False,
         iterate_over_data_files=True,
-        fail_with_output_dataset_param=False,
-        fail_with_output_dataset_cls_is_int=False,
-        fail_with_output_dataset_param_and_cls_is_int=False,
     )
 
 
@@ -111,12 +104,7 @@ def case_sync_single_int_plus_int_return_str_func() -> IterateDataFilesCase:
         args=(2,),
         kwargs={},
         func_is_async=False,
-        func_second_arg_is_future=False,
-        func_has_output_dataset_param=False,
         iterate_over_data_files=True,
-        fail_with_output_dataset_param=False,
-        fail_with_output_dataset_cls_is_int=False,
-        fail_with_output_dataset_param_and_cls_is_int=False,
     )
 
 
@@ -131,11 +119,8 @@ def case_sync_single_int_plus_int_return_str_model_with_output_str_dataset_func(
         args=(2,),
         kwargs={},
         func_is_async=False,
-        func_second_arg_is_future=False,
-        func_has_output_dataset_param=True,
         iterate_over_data_files=True,
-        fail_with_output_dataset_param=False,
-        fail_with_output_dataset_cls_is_int=False,
+        func_has_output_dataset_param=True,
         fail_with_output_dataset_param_and_cls_is_int=True,
     )
 
@@ -150,12 +135,9 @@ def case_sync_single_int_plus_int_return_str_with_output_int_dataset_func() -> I
         args=(2,),
         kwargs={},
         func_is_async=False,
-        func_second_arg_is_future=False,
-        func_has_output_dataset_param=True,
         iterate_over_data_files=True,
+        func_has_output_dataset_param=True,
         fail_with_output_dataset_param=True,
-        fail_with_output_dataset_cls_is_int=False,
-        fail_with_output_dataset_param_and_cls_is_int=False,
     )
 
 
@@ -176,12 +158,7 @@ def case_async_single_int_model_plus_int_return_str_model_func() -> IterateDataF
         args=(2,),
         kwargs={},
         func_is_async=True,
-        func_second_arg_is_future=False,
-        func_has_output_dataset_param=False,
         iterate_over_data_files=True,
-        fail_with_output_dataset_param=False,
-        fail_with_output_dataset_cls_is_int=False,
-        fail_with_output_dataset_param_and_cls_is_int=False,
     )
 
 
@@ -202,12 +179,7 @@ def case_async_single_int_plus_int_return_str_func() -> IterateDataFilesCase:
         args=(2,),
         kwargs={},
         func_is_async=True,
-        func_second_arg_is_future=False,
-        func_has_output_dataset_param=False,
         iterate_over_data_files=True,
-        fail_with_output_dataset_param=False,
-        fail_with_output_dataset_cls_is_int=False,
-        fail_with_output_dataset_param_and_cls_is_int=False,
     )
 
 
@@ -222,11 +194,9 @@ def case_async_single_int_plus_int_return_str_model_with_output_str_dataset_func
         args=(2,),
         kwargs={},
         func_is_async=True,
-        func_second_arg_is_future=False,
-        func_has_output_dataset_param=True,
         iterate_over_data_files=True,
+        func_has_output_dataset_param=True,
         fail_with_output_dataset_param=True,
-        fail_with_output_dataset_cls_is_int=False,
         fail_with_output_dataset_param_and_cls_is_int=True,
     )
 
@@ -243,10 +213,24 @@ def case_async_single_int_plus_future_int_return_str_func() -> IterateDataFilesC
         args=(number_future,),
         kwargs={},
         func_is_async=True,
-        func_second_arg_is_future=True,
-        func_has_output_dataset_param=False,
         iterate_over_data_files=True,
-        fail_with_output_dataset_param=False,
-        fail_with_output_dataset_cls_is_int=False,
-        fail_with_output_dataset_param_and_cls_is_int=False,
+        func_second_arg_is_future=True,
+    )
+
+
+@pc.case(
+    id='async_single_int_plus_future_int_fail_func',
+    tags=['async', 'function', 'iterate', 'await_number_future'],
+)
+def case_async_single_int_plus_future_int_fail_func() -> IterateDataFilesCase:
+    loop = asyncio.get_event_loop()
+    number_future = loop.create_future()
+    return IterateDataFilesCase(
+        task_func=async_single_int_plus_future_int_fail_func,
+        args=(number_future,),
+        kwargs={},
+        func_is_async=True,
+        iterate_over_data_files=True,
+        func_second_arg_is_future=True,
+        fail_after_awaiting_future_int=True,
     )

@@ -117,6 +117,14 @@ async def async_single_int_plus_future_int_return_str_func(
     return str(data_number + number.result())
 
 
+async def async_single_int_plus_future_int_fail_func(
+    data_number: int,
+    number: asyncio.Future[int],
+) -> str:
+    await number
+    raise RuntimeError('Boom!')
+
+
 async def async_sleep_random_time_func() -> float:
     seconds: float = random() / 10
     await asyncio.sleep(seconds)
