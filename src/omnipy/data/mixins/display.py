@@ -14,7 +14,7 @@ import objsize
 from pydantic.generics import GenericModel
 
 from omnipy.data.data_class_creator import DataClassBase
-from omnipy.data.helpers import PendingData
+from omnipy.data.helpers import FailedData, PendingData
 from omnipy.util.helpers import get_first_item, has_items, is_non_str_byte_iterable
 from omnipy.util.tabulate import tabulate
 
@@ -137,7 +137,9 @@ class DatasetDisplayMixin(BaseDisplayMixin):
     @classmethod
     def _type_str(cls, obj: Any) -> str:
         if isinstance(obj, PendingData):
-            return f'{obj.job_name}() -> Data pending...'
+            return f'{obj.job_name} -> Data pending...'
+        elif isinstance(obj, FailedData):
+            return f'{obj.job_name} -> {obj.exception.__class__.__name__}: {obj.exception}'
         else:
             return type(obj).__name__
 
