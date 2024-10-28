@@ -34,31 +34,42 @@ class TaskDatasetMixin:
             return model
 
     @property
-    def available_data(self: HasData) -> IsDataset[type[ModelT]]:
-        copy = self.__class__()
+    def available_data(self) -> IsDataset[type[ModelT]]:
+        self_with_data = cast(HasData, self)
+        copy = cast(HasData, self.__class__())
         copy.data = {
             key: val for key,
-            val in self.data.items() if not isinstance(val, (PendingData, FailedData))
+            val in self_with_data.data.items() if not isinstance(val, (PendingData, FailedData))
         }
         return cast(IsDataset[type[ModelT]], copy)
 
     @property
-    def pending_data(self: HasData) -> IsDataset[type[ModelT]]:
-        copy = self.__class__()
-        copy.data = {key: val for key, val in self.data.items() if isinstance(val, PendingData)}
+    def pending_data(self) -> IsDataset[type[ModelT]]:
+        self_with_data = cast(HasData, self)
+        copy = cast(HasData, self.__class__())
+        copy.data = {
+            key: val for key, val in self_with_data.data.items() if isinstance(val, PendingData)
+        }
         return cast(IsDataset[type[ModelT]], copy)
 
     @property
-    def failed_data(self: HasData) -> IsDataset[type[ModelT]]:
-        copy = self.__class__()
-        copy.data = {key: val for key, val in self.data.items() if isinstance(val, FailedData)}
+    def failed_data(self) -> IsDataset[type[ModelT]]:
+        self_with_data = cast(HasData, self)
+        copy = cast(HasData, self.__class__())
+        copy.data = {
+            key: val for key, val in self_with_data.data.items() if isinstance(val, FailedData)
+        }
         return cast(IsDataset[type[ModelT]], copy)
 
-    def pending_task_details(self: HasData) -> dict[str, PendingData]:
-        return {key: val for key, val in self.data.items() if isinstance(val, PendingData)}
+    def pending_task_details(self) -> dict[str, PendingData]:
+        self_with_data = cast(HasData, self)
+        return {
+            key: val for key, val in self_with_data.data.items() if isinstance(val, PendingData)
+        }
 
-    def failed_task_details(self: HasData) -> dict[str, FailedData]:
-        return {key: val for key, val in self.data.items() if isinstance(val, FailedData)}
+    def failed_task_details(self) -> dict[str, FailedData]:
+        self_with_data = cast(HasData, self)
+        return {key: val for key, val in self_with_data.data.items() if isinstance(val, FailedData)}
 
     @call_super_if_available(call_super_before_method=True)
     def _check_value(self, value: Any) -> Any:

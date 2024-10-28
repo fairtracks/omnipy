@@ -229,10 +229,4 @@ class FailedData:
 
 
 class HasData(Protocol):
-    @property
-    def data(self) -> dict[str, Any | PendingData | FailedData]:
-        ...
-
-    @data.setter
-    def data(self, value: dict[str, Any | PendingData | FailedData]) -> None:
-        ...
+    data: dict[str, Any | PendingData | FailedData]
