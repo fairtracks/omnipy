@@ -218,13 +218,13 @@ def obj_or_model_contents_isinstance(__obj: object, __class_or_tuple: type) -> b
 @dataclass(frozen=True, kw_only=True)
 class PendingData:
     job_name: str
-    job_unique_name: str
+    job_unique_name: str = ''
 
 
 @dataclass(frozen=True, kw_only=True)
 class FailedData:
     job_name: str
-    job_unique_name: str
+    job_unique_name: str = ''
     exception: BaseException
 
 
