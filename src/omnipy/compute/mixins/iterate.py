@@ -232,11 +232,14 @@ class IterateFuncJobBaseMixin:
         title: str,
     ) -> asyncio.Task[ReturnDatasetT]:
         def _done_callback(task: asyncio.Task, output_dataset: Dataset, title: str):
-            exception = task.exception()
-            if exception is not None:
-                output_dataset[title] = self._create_failed_data(exception)
+            if task.cancelled():
+                output_dataset[title] = self._create_failed_data(RuntimeError('Task was cancelled'))
             else:
-                output_dataset[title] = task.result()
+                exception = task.exception()
+                if exception is not None:
+                    output_dataset[title] = self._create_failed_data(exception)
+                else:
+                    output_dataset[title] = task.result()
 
         task = asyncio.create_task(coro)
         done_callback_for_title = functools.partial(

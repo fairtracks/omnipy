@@ -182,7 +182,9 @@ async def test_iterate_over_data_files_with_output_dataset_param_and_cls_is_int_
 
 @pc.parametrize_with_cases(
     'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'await_number_future'])
-async def test_iterate_over_data_files_await_future_task(case: IterateDataFilesCase) -> None:
+@pc.parametrize('cancel_tasks', (False, True), ids=('run_tasks', 'cancel_tasks'))
+async def test_iterate_over_data_files_await_future_task(case: IterateDataFilesCase,
+                                                         cancel_tasks: bool) -> None:
 
     task_template = TaskTemplate(
         iterate_over_data_files=case.iterate_over_data_files,
@@ -193,27 +195,44 @@ async def test_iterate_over_data_files_await_future_task(case: IterateDataFilesC
     dataset = Dataset[Model[int]](dict(a=3, b=5, c=-2))
 
     output_dataset = Dataset[Model[int]]()
-    dataset_or_task = _run_task_template(case, task_template, dataset, output_dataset)
+    task: asyncio.Task = _run_task_template(case, task_template, dataset, output_dataset)
 
     assert case.func_second_arg_is_future
     while len(output_dataset.pending_data) != 3:
-        await asyncio.sleep(0.1)
-    future_number = case.args[0]
-    future_number.set_result(2)
+        await asyncio.sleep(0.01)
 
-    if case.fail_after_awaiting_future_int:
-        while len(output_dataset.failed_data) != 3:
-            await asyncio.sleep(0.1)
-
-    returned_dataset = await _ensure_dataset_await_if_task(case, dataset_or_task)
-
-    if case.fail_after_awaiting_future_int:
-        failed_task_details = returned_dataset.failed_task_details()
-        assert len(failed_task_details) == 3
-        for failed_data in failed_task_details.values():
-            assert type(failed_data.exception) is RuntimeError
-        assert failed_task_details['a'].job_name \
-               == failed_task_details['b'].job_name \
-               == failed_task_details['c'].job_name
+    if cancel_tasks:
+        task.cancel()
+        await asyncio.sleep(0.01)
     else:
-        assert returned_dataset.to_data() == dict(a=5, b=7, c=0)
+        future_number = case.args[0]
+        future_number.set_result(2)
+
+    if case.fail_after_awaiting_future_int or cancel_tasks:
+        while len(output_dataset.failed_data) != 3:
+            await asyncio.sleep(0.01)
+
+    if cancel_tasks:
+        _assert_all_failed_data(output_dataset, RuntimeError)
+        with pytest.raises(asyncio.CancelledError):
+            await task
+    else:
+        returned_dataset = await task
+
+        if case.fail_after_awaiting_future_int:
+            _assert_all_failed_data(returned_dataset, RuntimeError)
+        else:
+            assert returned_dataset.to_data() == dict(a=5, b=7, c=0)
+
+
+def _assert_all_failed_data(
+    returned_dataset: Dataset[Model[int]],
+    exception_cls: type[BaseException],
+) -> None:
+    failed_task_details = returned_dataset.failed_task_details()
+    assert len(failed_task_details) == len(returned_dataset)
+    for failed_data in failed_task_details.values():
+        assert type(failed_data.exception) is exception_cls
+    assert failed_task_details['a'].job_name \
+           == failed_task_details['b'].job_name \
+           == failed_task_details['c'].job_name
