@@ -3,7 +3,14 @@ from contextlib import suppress
 from dataclasses import dataclass
 from enum import IntEnum
 import functools
-from typing import ContextManager, ForwardRef, Generic, get_args, get_origin, NamedTuple
+from typing import (Any,
+                    ContextManager,
+                    ForwardRef,
+                    Generic,
+                    get_args,
+                    get_origin,
+                    NamedTuple,
+                    Protocol)
 
 from pydantic.typing import is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass
@@ -208,12 +215,24 @@ def obj_or_model_contents_isinstance(__obj: object, __class_or_tuple: type) -> b
 #     return orjson.dumps(v, default=default).decode()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class PendingData:
     job_name: str
+    job_unique_name: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class FailedData:
     job_name: str
-    exception: Exception
+    job_unique_name: str
+    exception: BaseException
+
+
+class HasData(Protocol):
+    @property
+    def data(self) -> dict[str, Any | PendingData | FailedData]:
+        ...
+
+    @data.setter
+    def data(self, value: dict[str, Any | PendingData | FailedData]) -> None:
+        ...

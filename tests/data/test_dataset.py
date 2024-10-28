@@ -1248,31 +1248,41 @@ def test_dataset_pending_and_failed_data() -> None:
     dataset['old_data'] = 'Existing data'
     _assert_dataset(dataset, Model[str], ['old_data'], None, ['Existing data'])
 
-    dataset['new_data'] = PendingData('my_task')
+    dataset['new_data'] = PendingData(job_name='my_task', job_unique_name='my_task-daffodil-crab')
     _assert_dataset(dataset, Model[str], ['old_data', 'new_data'], PendingDataError)
     _assert_dataset(dataset.pending_data, Model[str], ['new_data'], PendingDataError)
     _assert_dataset(dataset.available_data, Model[str], ['old_data'], None, ['Existing data'])
     _assert_dataset(dataset.failed_data, Model[str], [], None, [])
 
-    dataset['newer_data'] = PendingData('my_other_task')
+    dataset['newer_data'] = PendingData(
+        job_name='my_other_task', job_unique_name='my-other-task-defiant-starling')
     _assert_dataset(dataset, Model[str], ['old_data', 'new_data', 'newer_data'], PendingDataError)
     _assert_dataset(dataset.pending_data, Model[str], ['new_data', 'newer_data'], PendingDataError)
     _assert_dataset(dataset.available_data, Model[str], ['old_data'], None, ['Existing data'])
     _assert_dataset(dataset.failed_data, Model[str], [], None, [])
 
-    dataset['new_data'] = FailedData('my_task', RuntimeError('Something went wrong'))
+    dataset['new_data'] = FailedData(
+        job_name='my_task',
+        job_unique_name='my_task-daffodil-crab',
+        exception=RuntimeError('Something went wrong'),
+    )
     _assert_dataset(dataset, Model[str], ['old_data', 'new_data', 'newer_data'], FailedDataError)
     _assert_dataset(dataset.pending_data, Model[str], ['newer_data'], PendingDataError)
     _assert_dataset(dataset.available_data, Model[str], ['old_data'], None, ['Existing data'])
     _assert_dataset(dataset.failed_data, Model[str], ['new_data'], FailedDataError)
 
-    dataset['newer_data'] = FailedData('my_other_task', ValueError('Something else went wrong'))
+    dataset['newer_data'] = FailedData(
+        job_name='my_other_task',
+        job_unique_name='my-other-task-defiant-starling',
+        exception=ValueError('Something else went wrong'),
+    )
     _assert_dataset(dataset, Model[str], ['old_data', 'new_data', 'newer_data'], FailedDataError)
     _assert_dataset(dataset.pending_data, Model[str], [], None, [])
     _assert_dataset(dataset.available_data, Model[str], ['old_data'], None, ['Existing data'])
     _assert_dataset(dataset.failed_data, Model[str], ['new_data', 'newer_data'], FailedDataError)
 
-    dataset['newer_data'] = PendingData('my_retry_task')
+    dataset['newer_data'] = PendingData(
+        job_name='my_retry_task', job_unique_name='my-retry-task-mustard-coyote')
     _assert_dataset(dataset, Model[str], ['old_data', 'new_data', 'newer_data'], FailedDataError)
     _assert_dataset(dataset.pending_data, Model[str], ['newer_data'], PendingDataError)
     _assert_dataset(dataset.available_data, Model[str], ['old_data'], None, ['Existing data'])
@@ -1303,6 +1313,65 @@ def test_dataset_pending_and_failed_data() -> None:
         ['Existing data', 'Fixed data', 'Retried data'],
     )
     _assert_dataset(dataset.failed_data, Model[str], [], None, [])
+
+
+def test_dataset_pending_and_failed_data_extract_details() -> None:
+    dataset = Dataset[Model[str]]()
+
+    dataset['data_1'] = 'Existing data'
+    assert dataset.pending_task_details() == dataset.pending_data.pending_task_details() == {}
+    assert dataset.failed_task_details() == dataset.failed_data.pending_task_details() == {}
+    assert dataset.available_data.pending_task_details() == {}
+    assert dataset.available_data.failed_task_details() == {}
+
+    pending_data_2 = PendingData(job_name='my_task', job_unique_name='my_task-daffodil-crab')
+    dataset['data_2'] = pending_data_2
+    assert dataset.pending_task_details() == dataset.pending_data.pending_task_details() == {
+        'data_2': pending_data_2
+    }
+    assert dataset.failed_task_details() == dataset.failed_data.pending_task_details() == {}
+    assert dataset.available_data.pending_task_details() == {}
+    assert dataset.available_data.failed_task_details() == {}
+
+    failed_data_3 = FailedData(
+        job_name='my_task',
+        job_unique_name='my_task-daffodil-crab',
+        exception=RuntimeError('Boom!'),
+    )
+    dataset['data_3'] = failed_data_3
+    assert dataset.pending_task_details() == dataset.pending_data.pending_task_details() == {
+        'data_2': pending_data_2
+    }
+    assert dataset.failed_task_details() == dataset.failed_data.failed_task_details() == {
+        'data_3': failed_data_3
+    }
+    assert dataset.available_data.pending_task_details() == {}
+    assert dataset.available_data.failed_task_details() == {}
+
+    pending_data_3 = PendingData(
+        job_name='my_retry_task', job_unique_name='my-retry-task-mustard-coyote')
+    dataset['data_3'] = pending_data_3
+    assert dataset.pending_task_details() == dataset.pending_data.pending_task_details() == {
+        'data_2': pending_data_2,
+        'data_3': pending_data_3,
+    }
+    assert dataset.failed_task_details() == dataset.failed_data.failed_task_details() == {}
+    assert dataset.available_data.pending_task_details() == {}
+    assert dataset.available_data.failed_task_details() == {}
+
+    failed_data_2 = FailedData(
+        job_name='my_task',
+        job_unique_name='my_task-daffodil-crab',
+        exception=RuntimeError('Boom!'),
+    )
+    dataset['data_2'] = failed_data_2
+    dataset['data_3'] = 'Fixed data'
+    assert dataset.pending_task_details() == dataset.pending_data.pending_task_details() == {}
+    assert dataset.failed_task_details() == dataset.failed_data.failed_task_details() == {
+        'data_2': failed_data_2
+    }
+    assert dataset.available_data.pending_task_details() == {}
+    assert dataset.available_data.failed_task_details() == {}
 
 
 # TODO: Add unit tests for MultiModelDataset

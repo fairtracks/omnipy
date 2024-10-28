@@ -22,7 +22,7 @@ from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  is_model_instance,
                                  is_model_subclass)
 from omnipy.data.mixins.display import DatasetDisplayMixin
-from omnipy.data.mixins.pending import PendingDatasetMixin
+from omnipy.data.mixins.task import TaskDatasetMixin
 from omnipy.data.model import Model
 from omnipy.data.selector import (create_updated_mapping,
                                   Index2DataItemsType,
@@ -54,7 +54,7 @@ class _DatasetMetaclass(DataClassBaseMeta, ModelMetaclass):
 
 class Dataset(
         DatasetDisplayMixin,
-        PendingDatasetMixin,
+        TaskDatasetMixin,
         DataClassBase,
         GenericModel,
         Generic[ModelT],

@@ -72,11 +72,13 @@ def test_pending_data() -> None:
     with pytest.raises(TypeError):
         PendingData()  # type: ignore[call-arg]
 
-    pending_data = PendingData('my_task')
+    pending_data = PendingData(job_name='my_task', job_unique_name='my-task-nostalgic-labradoodle')
     assert pending_data.job_name == 'my_task'
+    assert pending_data.job_unique_name == 'my-task-nostalgic-labradoodle'
 
     with pytest.raises(AttributeError):
         pending_data.job_name = 'my_other_task'
+        pending_data.job_unique_name = 'my-task-nostalgic-poodle'
 
     with pytest.raises(ValidationError):
         Model[str](pending_data)
@@ -87,12 +89,18 @@ def test_failed_data() -> None:
         FailedData()  # type: ignore[call-arg]
 
     exception = RuntimeError('Some error')
-    error_data = FailedData('my_task', exception)
+    error_data = FailedData(
+        job_name='my_task',
+        job_unique_name='my-task-nostalgic-poodle',
+        exception=exception,
+    )
     assert error_data.job_name == 'my_task'
+    assert error_data.job_unique_name == 'my-task-nostalgic-poodle'
     assert error_data.exception is exception
 
     with pytest.raises(AttributeError):
         error_data.job_name = 'my_other_task'
+        error_data.job_unique_name = 'my-other-task-nostalgic-labradoodle'
         error_data.exception = Exception('other errors')
 
     with pytest.raises(ValidationError):

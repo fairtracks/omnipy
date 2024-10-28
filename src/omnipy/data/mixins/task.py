@@ -1,11 +1,11 @@
-from typing import Any, get_args
+from typing import Any, cast, get_args
 
 from typing_extensions import TypeVar
 
 from omnipy.api.exceptions import FailedDataError, PendingDataError
 from omnipy.api.protocols.public.data import IsDataset
 from omnipy.api.typedefs import TypeForm
-from omnipy.data.helpers import FailedData, is_model_subclass, PendingData
+from omnipy.data.helpers import FailedData, HasData, is_model_subclass, PendingData
 from omnipy.util.decorators import call_super_if_available
 from omnipy.util.helpers import is_union
 
@@ -14,7 +14,7 @@ ModelT = TypeVar('ModelT')
 T = TypeVar('T')
 
 
-class PendingDatasetMixin:
+class TaskDatasetMixin:
     @call_super_if_available(call_super_before_method=True)
     @classmethod
     def _prepare_params(cls, params: TypeForm) -> TypeForm:
@@ -34,25 +34,31 @@ class PendingDatasetMixin:
             return model
 
     @property
-    def pending_data(self) -> IsDataset[type[ModelT]]:
-        copy = self.__class__()
-        copy.data = {key: val for key, val in self.data.items() if isinstance(val, PendingData)}
-        return copy
-
-    @property
-    def available_data(self) -> IsDataset[type[ModelT]]:
+    def available_data(self: HasData) -> IsDataset[type[ModelT]]:
         copy = self.__class__()
         copy.data = {
             key: val for key,
             val in self.data.items() if not isinstance(val, (PendingData, FailedData))
         }
-        return copy
+        return cast(IsDataset[type[ModelT]], copy)
 
     @property
-    def failed_data(self) -> IsDataset[type[ModelT]]:
+    def pending_data(self: HasData) -> IsDataset[type[ModelT]]:
+        copy = self.__class__()
+        copy.data = {key: val for key, val in self.data.items() if isinstance(val, PendingData)}
+        return cast(IsDataset[type[ModelT]], copy)
+
+    @property
+    def failed_data(self: HasData) -> IsDataset[type[ModelT]]:
         copy = self.__class__()
         copy.data = {key: val for key, val in self.data.items() if isinstance(val, FailedData)}
-        return copy
+        return cast(IsDataset[type[ModelT]], copy)
+
+    def pending_task_details(self: HasData) -> dict[str, PendingData]:
+        return {key: val for key, val in self.data.items() if isinstance(val, PendingData)}
+
+    def failed_task_details(self: HasData) -> dict[str, FailedData]:
+        return {key: val for key, val in self.data.items() if isinstance(val, FailedData)}
 
     @call_super_if_available(call_super_before_method=True)
     def _check_value(self, value: Any) -> Any:
