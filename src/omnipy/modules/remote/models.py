@@ -53,6 +53,10 @@ class UrlPathModel(Model[PurePosixPath | str]):
     def __str__(self) -> str:
         return str(self.contents)
 
+    def __floordiv__(self, other):
+        self.contents /= other
+        return self
+
 
 DEFAULT_PORTS = {80, 443}
 

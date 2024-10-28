@@ -24,6 +24,9 @@ def test_query_params_model():
 
 
 def test_url_path_model():
+    empty_path = UrlPathModel()
+    assert empty_path.contents == PurePosixPath('.')
+
     path = UrlPathModel('/abc/def')
     assert path.contents == PurePosixPath('/abc/def')
     assert path.to_data() == str(path) == '/abc/def'
@@ -36,6 +39,14 @@ def test_url_path_model():
     assert new_path.contents == PurePosixPath('/abc/def/ghi/jkl/mno')
     assert new_path.to_data() == str(new_path) == '/abc/def/ghi/jkl/mno'
     assert new_path.parts == ('/', 'abc', 'def', 'ghi', 'jkl', 'mno')
+
+    with pytest.raises(TypeError):
+        path /= 'jkl' / 'mno'
+
+    path // 'jkl' // 'mno'
+    assert path.contents == PurePosixPath('/abc/def/ghi/jkl/mno')
+    assert path.to_data() == str(path) == '/abc/def/ghi/jkl/mno'
+    assert path.parts == ('/', 'abc', 'def', 'ghi', 'jkl', 'mno')
 
 
 def test_http_url_model_validation_errors():
