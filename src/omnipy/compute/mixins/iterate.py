@@ -42,6 +42,13 @@ def _create_dataset_cls(data_file_type: InputTypeT) -> type[IsDataset]:
 
 # TODO: Data files -> data items throughout, e.g. iterate_over_data_items??
 
+# TODO: Add a parameter to allow for "async for" iteration over data items, awaiting each
+#       call of the underlying asynchronous function instead of running all calls concurrently,
+#       as is currently implemented. This would be useful for cases where the processing of
+#       each data item needs to be done sequentially, e.g. when the processing involves
+#       modifying a shared resource that cannot be accessed concurrently. This would still
+#       allow asynchronous processing of the job as a whole, e.g. in context of other jobs.
+
 
 class IterateFuncJobBaseMixin:
     def __init__(  # noqa: C901
