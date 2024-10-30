@@ -32,6 +32,8 @@ _exclude_attrs: set[str] = {
     'ListOfNestedStrModel',
     'SplitItemsToSubitemsModel',
     'JoinSubitemsToItemsModel',
+    'QueryParamsJoinerModel',
+    'QueryParamsSplitterModel',
 }
 
 _all_modules: dict[str, ModuleType] = {}

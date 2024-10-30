@@ -134,6 +134,11 @@ from omnipy.modules.raw.tasks import (concat_all,
                                       modify_datafile_contents,
                                       modify_each_line,
                                       union_all)
+from omnipy.modules.remote.datasets import HttpUrlDataset
+from omnipy.modules.remote.models import HttpUrlModel, QueryParamsModel, UrlPathModel
+from omnipy.modules.remote.tasks import (get_bytes_from_api_endpoint,
+                                         get_json_from_api_endpoint,
+                                         get_str_from_api_endpoint)
 from omnipy.modules.tables.datasets import (TableDictOfDictsOfJsonScalarsDataset,
                                             TableDictOfListsOfJsonScalarsDataset,
                                             TableListOfDictsOfJsonScalarsDataset,
@@ -306,6 +311,13 @@ __all__ = [
     'modify_each_line',
     'concat_all',
     'union_all',
+    'QueryParamsModel',
+    'HttpUrlModel',
+    'UrlPathModel',
+    'HttpUrlDataset',
+    'get_bytes_from_api_endpoint',
+    'get_json_from_api_endpoint',
+    'get_str_from_api_endpoint',
     'create_row_index_from_column',
     'remove_columns',
     'rename_col_names',

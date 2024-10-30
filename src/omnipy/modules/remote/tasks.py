@@ -2,8 +2,12 @@ from typing import AsyncGenerator
 
 from aiohttp import ClientResponse, ClientSession
 
-from ... import BytesDataset, BytesModel, JsonDataset, StrDataset, StrModel, TaskTemplate
+from omnipy.compute.task import TaskTemplate
+
+from ..json.datasets import JsonDataset
 from ..json.models import JsonModel
+from ..raw.datasets import BytesDataset, StrDataset
+from ..raw.models import BytesModel, StrModel
 from .models import HttpUrlModel
 
 
