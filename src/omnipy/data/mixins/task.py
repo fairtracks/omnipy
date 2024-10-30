@@ -77,6 +77,7 @@ class TaskDatasetMixin:
             raise PendingDataError(f'Dataset is still awaiting data from job "{value.job_name}"')
         elif isinstance(value, FailedData):
             raise FailedDataError(
-                f'Job "{value.job_name}" failed to return data: {repr(value.exception)}')
+                f'Job "{value.job_name}" failed to return data: {repr(value.exception)}'
+            ) from value.exception
 
         return value
