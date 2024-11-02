@@ -1,6 +1,6 @@
 from copy import copy, deepcopy
 from textwrap import dedent
-from types import NoneType
+from types import MappingProxyType, NoneType
 from typing import Annotated, Any, Callable, Generic, List, Optional, Union
 
 from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
@@ -95,14 +95,34 @@ def test_init_dataset_as_input():
     assert tuple_of_ints_dataset.to_data() == {'x': (4, 2), 'y': (1, 4, 6)}
 
 
-def test_init_converting_dataset_as_input():
+def test_init_models_as_input():
+    assert Dataset[Model[int]](a=Model[float](4.5), b=Model[str]('5')).to_data() == {'a': 4, 'b': 5}
+
+    tuple_of_ints_dataset = Dataset[Model[tuple[int, ...]]](
+        x=Model[list[float]]([4.5, 2.3]), y=Model[list[float]]([1.3, 4.2, 6.7]))
+    assert tuple_of_ints_dataset.to_data() == {'x': (4, 2), 'y': (1, 4, 6)}
+
+
+def test_init_converting_dataset_or_models_as_input():
     my_float_dataset = MyFloatObjDataset()
     my_float_dataset.from_data(dict(x=4.5, y=3.25))
     assert my_float_dataset['x'].contents == MyFloatObject(int_part=4, float_part=0.5)
     assert my_float_dataset.to_data() == {'x': 4.5, 'y': 3.25}
 
     assert Dataset[Model[float]](my_float_dataset)['x'].contents == 4.5
+    assert Dataset[Model[float]](my_float_dataset.items())['x'].contents == 4.5
+    assert Dataset[Model[float]]({k: v for k, v in my_float_dataset.items()})['x'].contents == 4.5
+    assert Dataset[Model[float]](MappingProxyType({
+        k: v for k, v in my_float_dataset.items()
+    }))['x'].contents == 4.5
+
     assert MyFloatObjDataset(Dataset[Model[float]](x=4.5, y=3.25)).to_data() == {
+        'x': 4.5, 'y': 3.25
+    }
+    assert MyFloatObjDataset(
+        x=Model[float](4.5),
+        y=Model[float](3.25),
+    ).to_data() == {
         'x': 4.5, 'y': 3.25
     }
 
@@ -772,7 +792,7 @@ def test_validation_pydantic_types():
         dataset_1['data_file_2'] = -234
 
     with pytest.raises(ValidationError):
-        Dataset[Model[list[StrictInt]]]([12.4, 11])  # noqa
+        Dataset[Model[list[StrictInt]]](x=[12.4, 11])  # noqa
 
 
 def test_import_and_export():

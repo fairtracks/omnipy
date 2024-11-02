@@ -1,11 +1,11 @@
 from collections import UserDict
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, MutableMapping
 from copy import copy
 import json
 import os
 import tarfile
 from tempfile import TemporaryDirectory
-from typing import Any, Callable, cast, Generic, Iterator, MutableMapping
+from typing import Any, Callable, cast, Generic, Iterator
 from urllib.parse import ParseResult, urlparse
 
 # from orjson import orjson
@@ -13,7 +13,6 @@ from pydantic import Field, PrivateAttr, root_validator, ValidationError
 from pydantic.fields import ModelField, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.main import ModelMetaclass
-from pydantic.utils import lenient_isinstance
 from typing_extensions import TypeVar
 
 from omnipy.api.typedefs import TypeForm
@@ -190,20 +189,41 @@ class Dataset(
                 super_kwargs[DATA_KEY] = kwargs
                 kwargs = {}
 
-        if self.get_model_class() == ModelT:
+        model_cls = self.get_model_class()
+        if model_cls == ModelT:  # type: ignore[misc]
             self._raise_no_model_exception()
 
-        dataset_as_input = DATA_KEY in super_kwargs \
-            and lenient_isinstance(super_kwargs[DATA_KEY], Dataset)
-        if dataset_as_input:
-            super_kwargs[DATA_KEY] = super_kwargs[DATA_KEY].to_data()
+        model_or_dataset_as_input = False
+        if DATA_KEY in super_kwargs:
+            done = False
+            while not done:
+                match super_kwargs[DATA_KEY]:
+                    case Dataset():
+                        model_or_dataset_as_input = True
+                        super_kwargs[DATA_KEY] = cast(Dataset, super_kwargs[DATA_KEY]).to_data()
+                        done = True
+                    case MutableMapping():
+                        mapping_value = cast(MutableMapping, super_kwargs[DATA_KEY])
+                        for key, val in mapping_value.items():
+                            if is_model_instance(val):
+                                model_or_dataset_as_input = True
+                                mapping_value[key] = model_cls(val)
+                        done = True
+                    case Iterable():
+                        try:
+                            super_kwargs[DATA_KEY] = dict(cast(Iterable, super_kwargs[DATA_KEY]))
+                        except TypeError as e:
+                            raise TypeError('Data object must be a mapping or an iterable of '
+                                            '(key, val) pairs') from e
+                    case _:
+                        done = True
 
         self._init(super_kwargs, **kwargs)
 
         try:
             super().__init__(**super_kwargs)
         except ValidationError:
-            if dataset_as_input:
+            if model_or_dataset_as_input:
                 super().__init__()
                 self.from_data(super_kwargs[DATA_KEY])
             else:
@@ -251,7 +271,7 @@ class Dataset(
         return cast(ModelField, cls.__fields__.get(DATA_KEY))
 
     @classmethod
-    def get_model_class(cls) -> type[Model] | None:
+    def get_model_class(cls) -> type[Model]:
         """
         Returns the concrete Model class used for all data files in the dataset, e.g.:
         `Model[list[int]]`
