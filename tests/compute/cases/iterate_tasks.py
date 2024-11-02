@@ -9,6 +9,7 @@ from .raw.functions import (all_int_dataset_plus_int_return_str_dataset_func,
                             async_single_int_model_plus_int_return_str_model_func,
                             async_single_int_plus_future_int_fail_func,
                             async_single_int_plus_future_int_return_str_func,
+                            async_single_int_plus_future_return_alphanum_string_func,
                             async_single_int_plus_int_return_str_func,
                             async_single_int_plus_int_return_str_model_with_output_str_dataset_func,
                             single_int_model_plus_int_return_str_model_func,
@@ -30,6 +31,7 @@ class IterateDataFilesCase:
     fail_with_output_dataset_cls_is_int: bool = False
     fail_with_output_dataset_param_and_cls_is_int: bool = False
     fail_after_awaiting_future_int: bool = False
+    fail_parsing_when_output_dataset_is_int: bool = False
 
 
 @pc.case(
@@ -181,6 +183,27 @@ def case_async_single_int_plus_int_return_str_func() -> IterateDataFilesCase:
         func_is_async=True,
         iterate_over_data_files=True,
     )
+
+
+@pc.case(
+    id='async_single_int_plus_future_return_alphanum_string_func',
+    tags=[
+        'async',
+        'function',
+        'iterate',
+        'no_output_dataset',
+        'str_output_dataset',
+        'int_output_dataset'
+    ],
+)
+def case_async_single_int_plus_future_return_alphanum_string_func() -> IterateDataFilesCase:
+    return IterateDataFilesCase(
+        task_func=async_single_int_plus_future_return_alphanum_string_func,
+        args=(2,),
+        kwargs={},
+        func_is_async=True,
+        iterate_over_data_files=True,
+        fail_parsing_when_output_dataset_is_int=True)
 
 
 @pc.case(

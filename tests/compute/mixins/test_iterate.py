@@ -1,5 +1,6 @@
 import asyncio
 
+from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
 
@@ -109,6 +110,13 @@ async def _ensure_dataset_await_if_task(case, dataset_or_task):
     return returned_dataset
 
 
+def _assert_str_result(case, returned_dataset):
+    if case.fail_parsing_when_output_dataset_is_int:
+        assert returned_dataset.to_data() == dict(a='Answer: 5', b='Answer: 7', c='Answer: 0')
+    else:
+        assert returned_dataset.to_data() == dict(a='5', b='7', c='0')
+
+
 @pc.parametrize_with_cases('case', cases='..cases.iterate_tasks', has_tag=['no_output_dataset'])
 async def test_iterate_over_data_files_task(case: IterateDataFilesCase) -> None:
 
@@ -120,7 +128,7 @@ async def test_iterate_over_data_files_task(case: IterateDataFilesCase) -> None:
     dataset_or_task = _run_task_template(case, task_template, dataset)
     returned_dataset = await _ensure_dataset_await_if_task(case, dataset_or_task)
 
-    assert returned_dataset.to_data() == dict(a='5', b='7', c='0')
+    _assert_str_result(case, returned_dataset)
 
 
 @pc.parametrize_with_cases(
@@ -139,7 +147,7 @@ async def test_iterate_over_data_files_with_output_dataset_param_task(
     dataset_or_task = _run_task_template(case, task_template, dataset, output_dataset)
     returned_dataset = await _ensure_dataset_await_if_task(case, dataset_or_task)
 
-    assert returned_dataset.to_data() == dict(a='5', b='7', c='0')
+    _assert_str_result(case, returned_dataset)
 
 
 @pc.parametrize_with_cases(
@@ -157,7 +165,10 @@ async def test_iterate_over_data_files_with_output_dataset_cls_is_int_task(
     dataset_or_task = _run_task_template(case, task_template, dataset)
     returned_dataset = await _ensure_dataset_await_if_task(case, dataset_or_task)
 
-    assert returned_dataset.to_data() == dict(a=5, b=7, c=0)
+    if case.fail_parsing_when_output_dataset_is_int:
+        _assert_all_failed_data(returned_dataset, ValidationError)
+    else:
+        assert returned_dataset.to_data() == dict(a=5, b=7, c=0)
 
 
 @pc.parametrize_with_cases(
@@ -177,7 +188,10 @@ async def test_iterate_over_data_files_with_output_dataset_param_and_cls_is_int_
     dataset_or_task = _run_task_template(case, task_template, dataset, output_dataset)
     returned_dataset = await _ensure_dataset_await_if_task(case, dataset_or_task)
 
-    assert returned_dataset.to_data() == dict(a=5, b=7, c=0)
+    if case.fail_parsing_when_output_dataset_is_int:
+        _assert_all_failed_data(returned_dataset, ValidationError)
+    else:
+        assert returned_dataset.to_data() == dict(a=5, b=7, c=0)
 
 
 @pc.parametrize_with_cases(

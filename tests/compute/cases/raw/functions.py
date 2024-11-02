@@ -100,6 +100,14 @@ async def async_single_int_plus_int_return_str_func(data_number: int, number: in
     return str(data_number + number)
 
 
+async def async_single_int_plus_future_return_alphanum_string_func(
+    data_number: int,
+    number: int,
+) -> str:
+    await asyncio.sleep(random() / 10.0)
+    return f'Answer: {data_number + number}'
+
+
 async def async_single_int_plus_int_return_str_model_with_output_str_dataset_func(
     data_number: int,
     number: int,

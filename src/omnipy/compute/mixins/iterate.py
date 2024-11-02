@@ -246,7 +246,10 @@ class IterateFuncJobBaseMixin:
                 if exception is not None:
                     output_dataset[title] = self._create_failed_data(exception)
                 else:
-                    output_dataset[title] = task.result()
+                    try:
+                        output_dataset[title] = task.result()
+                    except Exception as e:
+                        output_dataset[title] = self._create_failed_data(e)
 
         task = asyncio.create_task(coro)
         done_callback_for_title = functools.partial(
