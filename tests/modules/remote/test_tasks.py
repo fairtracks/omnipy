@@ -79,16 +79,13 @@ async def timeout_lyrics_endpoint(request: web.Request) -> web.Response:
     global _request_counts_per_url
     url = str(request.url)
     _request_counts_per_url[url] += 1
-    print(f'Request count: {_request_counts_per_url[url]}')
-    print('URL:', request.url)
     if _request_counts_per_url[url] % 3 == 0:
         data = await _get_lyrics(url)
-        print('Data:', data)
         return web.json_response(data)
     else:
         await asyncio.sleep(0.01)
         return web.Response(
-            text='Timeout',
+            text='Error',
             status=random.choice((408, 425, 429, 500, 502, 503, 504)),
         )
 
@@ -107,13 +104,13 @@ async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:
 
 @pc.fixture(scope='function')
 async def lyrics_server_url(
-        lyrics_server: Annotated[TestServer, pytest.fixture]) -> AsyncGenerator[str, None]:
+        lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
     yield str(lyrics_server.make_url('/lyrics'))
 
 
 @pc.fixture(scope='function')
 async def timeout_lyrics_server_url(
-        lyrics_server: Annotated[TestServer, pytest.fixture]) -> AsyncGenerator[str, None]:
+        lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
     yield str(lyrics_server.make_url('/timeout_lyrics'))
 
 

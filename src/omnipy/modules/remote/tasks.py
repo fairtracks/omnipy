@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import AsyncGenerator
+from typing import AsyncGenerator, cast
 
 from aiohttp import ClientResponse, ClientSession
 from aiohttp_retry import ExponentialRetry, FibonacciRetry, JitterRetry, RandomRetry, RetryClient
@@ -14,20 +14,20 @@ from .models import HttpUrlModel
 
 
 class BackoffStrategy(str, Enum):
-    FIBONACCI = 'fibonacci'
     EXPONENTIAL = 'exponential'
     JITTER = 'jitter'
+    FIBONACCI = 'fibonacci'
     RANDOM = 'random'
 
 
 DEFAULT_RETRIES = 5
-DEFAULT_BACKOFF_STRATEGY = BackoffStrategy.FIBONACCI
+DEFAULT_BACKOFF_STRATEGY = BackoffStrategy.EXPONENTIAL
 DEFAULT_RETRY_STATUSES = (408, 425, 429, 500, 502, 503, 504)
 
 BACKOFF_STRATEGY_2_RETRY_CLS = {
-    BackoffStrategy.FIBONACCI: FibonacciRetry,
     BackoffStrategy.EXPONENTIAL: ExponentialRetry,
     BackoffStrategy.JITTER: JitterRetry,
+    BackoffStrategy.FIBONACCI: FibonacciRetry,
     BackoffStrategy.RANDOM: RandomRetry,
 }
 
@@ -46,6 +46,7 @@ def _get_retry_client(
     retry_attempts: int,
     retry_backoff_strategy: BackoffStrategy,
 ) -> RetryClient:
+
     retry_cls = BACKOFF_STRATEGY_2_RETRY_CLS[retry_backoff_strategy]
     retry_options = retry_cls(
         attempts=retry_attempts,
@@ -95,7 +96,7 @@ async def get_json_from_api_endpoint(
             retry_attempts,
             retry_backoff_strategy,
     ):
-        async for response in _call_get(url, retry_session):
+        async for response in _call_get(url, cast(ClientSession, retry_session)):
             return JsonModel(await response.json(content_type=None))
 
 
@@ -113,7 +114,7 @@ async def get_str_from_api_endpoint(
             retry_attempts,
             retry_backoff_strategy,
     ):
-        async for response in _call_get(url, retry_session):
+        async for response in _call_get(url, cast(ClientSession, retry_session)):
             return StrModel(await response.text())
 
 
@@ -131,5 +132,5 @@ async def get_bytes_from_api_endpoint(
             retry_attempts,
             retry_backoff_strategy,
     ):
-        async for response in _call_get(url, retry_session):
+        async for response in _call_get(url, cast(ClientSession, retry_session)):
             return BytesModel(await response.read())
