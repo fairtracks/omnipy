@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+from io import StringIO
 from typing import Any
 
 from omnipy.data.dataset import Dataset
@@ -44,7 +45,7 @@ class PandasModel(Model[pd.DataFrame | pd.Series | TableListOfDictsOfJsonScalars
         self._validate_and_set_value(self._from_iterable(value))
 
     def from_json(self, value: str) -> None:
-        self._validate_and_set_value(pd.read_json(value).convert_dtypes())
+        self._validate_and_set_value(pd.read_json(StringIO(value)).convert_dtypes())
 
 
 class PandasDataset(Dataset[PandasModel]):
