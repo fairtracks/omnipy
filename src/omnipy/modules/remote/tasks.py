@@ -1,6 +1,8 @@
+from enum import Enum
 from typing import AsyncGenerator
 
 from aiohttp import ClientResponse, ClientSession
+from aiohttp_retry import ExponentialRetry, FibonacciRetry, JitterRetry, RandomRetry, RetryClient
 
 from omnipy.compute.task import TaskTemplate
 
@@ -11,6 +13,25 @@ from ..raw.models import BytesModel, StrModel
 from .models import HttpUrlModel
 
 
+class BackoffStrategy(str, Enum):
+    FIBONACCI = 'fibonacci'
+    EXPONENTIAL = 'exponential'
+    JITTER = 'jitter'
+    RANDOM = 'random'
+
+
+DEFAULT_RETRIES = 5
+DEFAULT_BACKOFF_STRATEGY = BackoffStrategy.FIBONACCI
+DEFAULT_RETRY_STATUSES = (408, 425, 429, 500, 502, 503, 504)
+
+BACKOFF_STRATEGY_2_RETRY_CLS = {
+    BackoffStrategy.FIBONACCI: FibonacciRetry,
+    BackoffStrategy.EXPONENTIAL: ExponentialRetry,
+    BackoffStrategy.JITTER: JitterRetry,
+    BackoffStrategy.RANDOM: RandomRetry,
+}
+
+
 async def _call_get(url: HttpUrlModel,
                     session: ClientSession) -> AsyncGenerator[ClientResponse, None]:
     async with session.get(str(url)) as response:
@@ -19,39 +40,96 @@ async def _call_get(url: HttpUrlModel,
         yield response
 
 
-async def _ensure_session(session: ClientSession | None) -> AsyncGenerator[ClientSession, None]:
-    if session:
-        yield session
+def _get_retry_client(
+    client_session: ClientSession | None,
+    retry_http_statuses: tuple[int, ...],
+    retry_attempts: int,
+    retry_backoff_strategy: BackoffStrategy,
+) -> RetryClient:
+    retry_cls = BACKOFF_STRATEGY_2_RETRY_CLS[retry_backoff_strategy]
+    retry_options = retry_cls(
+        attempts=retry_attempts,
+        statuses=retry_http_statuses,
+        retry_all_server_errors=False,
+    )
+    return RetryClient(
+        client_session=client_session,
+        retry_options=retry_options,
+    )
+
+
+async def _ensure_retry_session(
+    client_session: ClientSession | None,
+    retry_http_statuses: tuple[int, ...],
+    retry_attempts: int,
+    retry_backoff_strategy: BackoffStrategy,
+) -> AsyncGenerator[RetryClient, None]:
+    if client_session:
+        yield _get_retry_client(
+            client_session,
+            retry_http_statuses,
+            retry_attempts,
+            retry_backoff_strategy,
+        )
     else:
         async with ClientSession() as tmp_session:
-            yield tmp_session
+            yield _get_retry_client(
+                tmp_session,
+                retry_http_statuses,
+                retry_attempts,
+                retry_backoff_strategy,
+            )
 
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=JsonDataset)
 async def get_json_from_api_endpoint(
     url: HttpUrlModel,
-    session: ClientSession | None = None,
+    client_session: ClientSession | None = None,
+    retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
+    retry_attempts: int = DEFAULT_RETRIES,
+    retry_backoff_strategy: BackoffStrategy = DEFAULT_BACKOFF_STRATEGY,
 ) -> JsonModel:
-    async for session in _ensure_session(session):
-        async for response in _call_get(url, session):
+    async for retry_session in _ensure_retry_session(
+            client_session,
+            retry_http_statuses,
+            retry_attempts,
+            retry_backoff_strategy,
+    ):
+        async for response in _call_get(url, retry_session):
             return JsonModel(await response.json(content_type=None))
 
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=StrDataset)
 async def get_str_from_api_endpoint(
     url: HttpUrlModel,
-    session: ClientSession | None = None,
+    client_session: ClientSession | None = None,
+    retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
+    retry_attempts: int = DEFAULT_RETRIES,
+    retry_backoff_strategy: BackoffStrategy = DEFAULT_BACKOFF_STRATEGY,
 ) -> StrModel:
-    async for session in _ensure_session(session):
-        async for response in _call_get(url, session):
+    async for retry_session in _ensure_retry_session(
+            client_session,
+            retry_http_statuses,
+            retry_attempts,
+            retry_backoff_strategy,
+    ):
+        async for response in _call_get(url, retry_session):
             return StrModel(await response.text())
 
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=BytesDataset)
 async def get_bytes_from_api_endpoint(
     url: HttpUrlModel,
-    session: ClientSession | None = None,
+    client_session: ClientSession | None = None,
+    retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
+    retry_attempts: int = DEFAULT_RETRIES,
+    retry_backoff_strategy: BackoffStrategy = DEFAULT_BACKOFF_STRATEGY,
 ) -> BytesModel:
-    async for session in _ensure_session(session):
-        async for response in _call_get(url, session):
+    async for retry_session in _ensure_retry_session(
+            client_session,
+            retry_http_statuses,
+            retry_attempts,
+            retry_backoff_strategy,
+    ):
+        async for response in _call_get(url, retry_session):
             return BytesModel(await response.read())

@@ -1,8 +1,11 @@
 import asyncio
+from collections import defaultdict
+import random
 from typing import Annotated, AsyncGenerator
 
 import aiohttp
 from aiohttp import web
+from aiohttp.test_utils import TestServer
 import pytest
 import pytest_cases as pc
 
@@ -15,8 +18,8 @@ from omnipy.modules.remote.datasets import HttpUrlDataset
 from omnipy.modules.remote.models import HttpUrlModel
 
 
-async def lyrics_endpoint(request: web.Request) -> web.Response:
-    url = HttpUrlModel(str(request.url))
+async def _get_lyrics(url: str):
+    url = HttpUrlModel(url)
     match url.query.get('song'):
         case 'Her kommer vinteren':
             data = dict(
@@ -61,29 +64,68 @@ async def lyrics_endpoint(request: web.Request) -> web.Response:
                     'Faen som det regner ute',
                     'Jeg lurer på om det er i natt det begynner å snø',
                 ])
+    return data
 
+
+async def lyrics_endpoint(request: web.Request) -> web.Response:
+    data = await _get_lyrics(str(request.url))
     return web.json_response(data)
+
+
+_request_counts_per_url: defaultdict[str, int] = defaultdict(int)
+
+
+async def timeout_lyrics_endpoint(request: web.Request) -> web.Response:
+    global _request_counts_per_url
+    url = str(request.url)
+    _request_counts_per_url[url] += 1
+    print(f'Request count: {_request_counts_per_url[url]}')
+    print('URL:', request.url)
+    if _request_counts_per_url[url] % 3 == 0:
+        data = await _get_lyrics(url)
+        print('Data:', data)
+        return web.json_response(data)
+    else:
+        await asyncio.sleep(0.01)
+        return web.Response(
+            text='Timeout',
+            status=random.choice((408, 425, 429, 500, 502, 503, 504)),
+        )
 
 
 def create_app() -> web.Application:
     app = web.Application()
     app.router.add_route('GET', '/lyrics', lyrics_endpoint)
+    app.router.add_route('GET', '/timeout_lyrics', timeout_lyrics_endpoint)
     return app
 
 
-@pytest.fixture(scope='function')
-async def lyrics_server_url(aiohttp_server) -> AsyncGenerator[str, None]:
-    server = await aiohttp_server(create_app())
-    server_url = server.make_url('/lyrics')
-    yield str(server_url)
+@pc.fixture(scope='function')
+async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:
+    yield await aiohttp_server(create_app())
 
 
-@pytest.fixture(scope='function')
-def query_urls(lyrics_server_url: Annotated[str, pytest.fixture]) -> HttpUrlDataset:
+@pc.fixture(scope='function')
+async def lyrics_server_url(
+        lyrics_server: Annotated[TestServer, pytest.fixture]) -> AsyncGenerator[str, None]:
+    yield str(lyrics_server.make_url('/lyrics'))
+
+
+@pc.fixture(scope='function')
+async def timeout_lyrics_server_url(
+        lyrics_server: Annotated[TestServer, pytest.fixture]) -> AsyncGenerator[str, None]:
+    yield str(lyrics_server.make_url('/timeout_lyrics'))
+
+
+@pc.fixture(scope='function')
+@pc.parametrize(
+    'server_url', [lyrics_server_url, timeout_lyrics_server_url],
+    ids=['no_connection_issues', 'timeout_issues'])
+def query_urls(server_url: str) -> HttpUrlDataset:
     urls = HttpUrlDataset()
     for key, song in dict(jokke='Her kommer vinteren', odd='Blues fra Oslo Ø',
                           delillos='1984', delillos_2='Arne').items():
-        urls[key] = HttpUrlModel(str(lyrics_server_url))
+        urls[key] = HttpUrlModel(str(server_url))
         urls[key].query['song'] = song
     return urls
 
@@ -130,9 +172,9 @@ async def test_get_from_api_endpoint_with_session(
     case: RequestTypeCase,
 ) -> None:
 
-    async with aiohttp.ClientSession() as session:
-        task1 = case.job.run(query_urls[:2], session=session)
-        task2 = case.job.run(query_urls[2:], session=session)
+    async with aiohttp.ClientSession() as client_session:
+        task1 = case.job.run(query_urls[:2], client_session=client_session)
+        task2 = case.job.run(query_urls[2:], client_session=client_session)
         results = await asyncio.gather(task1, task2)
         data = results[0] | results[1]
 
