@@ -48,6 +48,11 @@ def test_url_path_model():
     assert path.to_data() == str(path) == '/abc/def/ghi/jkl/mno'
     assert path.parts == ('/', 'abc', 'def', 'ghi', 'jkl', 'mno')
 
+    path += 'pqr'
+    assert path.contents == PurePosixPath('/abc/def/ghi/jkl/mnopqr')
+    assert path.to_data() == str(path) == '/abc/def/ghi/jkl/mnopqr'
+    assert path.parts == ('/', 'abc', 'def', 'ghi', 'jkl', 'mnopqr')
+
 
 def test_http_url_model_validation_errors():
     with pytest.raises(ValidationError):
