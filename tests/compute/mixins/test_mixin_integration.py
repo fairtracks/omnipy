@@ -62,7 +62,8 @@ def test_iterate_over_data_files_func_signature_output_dataset_param() -> None:
             'output_dataset':
                 Parameter(
                     'output_dataset',
-                    Parameter.POSITIONAL_OR_KEYWORD,
+                    Parameter.KEYWORD_ONLY,
+                    default=None,
                     annotation=Dataset[Model[str]])
         }
         assert task_obj.return_type is Dataset[Model[str]]
@@ -85,7 +86,10 @@ def test_iterate_over_data_files_func_signature_output_dataset_param_and_cls() -
                 Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
             'output_dataset':
                 Parameter(
-                    'output_dataset', Parameter.POSITIONAL_OR_KEYWORD, annotation=CustomStrDataset)
+                    'output_dataset',
+                    Parameter.KEYWORD_ONLY,
+                    default=None,
+                    annotation=CustomStrDataset)
         }
         assert task_obj.return_type is CustomStrDataset
 

@@ -178,7 +178,8 @@ class IterateFuncJobBaseMixin:
             else:
                 output_dataset_param = Parameter(
                     name=self._output_dataset_param,
-                    kind=Parameter.POSITIONAL_OR_KEYWORD,
+                    kind=Parameter.KEYWORD_ONLY,
+                    default=None,
                     annotation=output_dataset_cls,
                 )
                 rest_params = rest_params + [output_dataset_param]
@@ -200,19 +201,28 @@ class IterateFuncJobBaseMixin:
         self_as_signature_func_job_base_mixin = cast(SignatureFuncJobBaseMixin, self)
 
         if self._output_dataset_param:
+            if self._output_dataset_param_in_func and self._output_dataset_param not in kwargs:
+                kwargs = kwargs.copy()
+                kwargs[self._output_dataset_param] = cast(
+                    Dataset, self_as_signature_func_job_base_mixin.return_type())
+
             bound_args = self_as_signature_func_job_base_mixin.get_bound_args(
                 dataset, *args, **kwargs)
-            output_dataset: Dataset = bound_args.arguments[self._output_dataset_param]
+            output_dataset: Dataset | None = bound_args.arguments[self._output_dataset_param]
 
-            if self._output_dataset_param_in_func:
-                return_args = bound_args.args[1:]
-            else:
-                return_args = bound_args.args[1:-1]
-
-            return output_dataset, return_args, bound_args.kwargs
+            return_args = bound_args.args[1:]
+            return_kwargs = bound_args.kwargs
+            if not self._output_dataset_param_in_func:
+                return_kwargs.pop(self._output_dataset_param)
         else:
+            output_dataset = None
+            return_args = args
+            return_kwargs = kwargs
+
+        if output_dataset is None:
             output_dataset = cast(Dataset, self_as_signature_func_job_base_mixin.return_type())
-            return output_dataset, args, kwargs
+
+        return output_dataset, return_args, return_kwargs
 
     def _prepare_data_arg(self, data_file):
         return data_file if is_model_subclass(self._input_dataset_type) else data_file.contents

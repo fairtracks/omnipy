@@ -12,6 +12,7 @@ from .raw.functions import (all_int_dataset_plus_int_return_str_dataset_func,
                             async_single_int_plus_future_return_alphanum_string_func,
                             async_single_int_plus_int_return_str_func,
                             async_single_int_plus_int_return_str_model_with_output_str_dataset_func,
+                            single_int_model_plus_default_int_pair_return_str_model_func,
                             single_int_model_plus_int_return_str_model_func,
                             single_int_plus_int_return_str_func,
                             single_int_plus_int_return_str_model_with_output_str_dataset_func,
@@ -84,6 +85,28 @@ def case_sync_single_int_model_plus_int_return_str_model_func() -> IterateDataFi
         task_func=single_int_model_plus_int_return_str_model_func,
         args=(2,),
         kwargs={},
+        func_is_async=False,
+        iterate_over_data_files=True,
+    )
+
+
+@pc.case(
+    id='sync_single_int_model_plus_default_int_pair_return_str_model_func',
+    tags=[
+        'sync',
+        'function',
+        'iterate',
+        'no_output_dataset',
+        'str_output_dataset',
+        'int_output_dataset'
+    ],
+)
+def case_sync_single_int_model_plus_default_int_pair_return_str_model_func(
+) -> IterateDataFilesCase:
+    return IterateDataFilesCase(
+        task_func=single_int_model_plus_default_int_pair_return_str_model_func,
+        args=(1,),
+        kwargs={'other_number': 1},
         func_is_async=False,
         iterate_over_data_files=True,
     )

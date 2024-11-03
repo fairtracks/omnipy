@@ -133,6 +133,24 @@ async def test_iterate_over_data_files_task(case: IterateDataFilesCase) -> None:
 
 @pc.parametrize_with_cases(
     'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'str_output_dataset'])
+async def test_iterate_over_data_files_with_default_output_dataset_param_task(
+        case: IterateDataFilesCase) -> None:
+
+    task_template = TaskTemplate(
+        iterate_over_data_files=case.iterate_over_data_files,
+        output_dataset_param='output_dataset')(
+            case.task_func)
+
+    dataset = Dataset[Model[int]](dict(a=3, b=5, c=-2))
+
+    dataset_or_task = _run_task_template(case, task_template, dataset)
+    returned_dataset = await _ensure_dataset_await_if_task(case, dataset_or_task)
+
+    _assert_str_result(case, returned_dataset)
+
+
+@pc.parametrize_with_cases(
+    'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'str_output_dataset'])
 async def test_iterate_over_data_files_with_output_dataset_param_task(
         case: IterateDataFilesCase) -> None:
 
