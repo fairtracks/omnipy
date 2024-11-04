@@ -1,12 +1,12 @@
 import asyncio
 from datetime import datetime
-from typing import Any, cast, Coroutine
+from types import TracebackType
+from typing import cast
 
 from aiohttp import ClientSession, TraceConfig
 from aiolimiter import AsyncLimiter
 
-DEFAULT_REQUESTS_PER_TIME_PERIOD = 60
-DEFAULT_TIME_PERIOD_IN_SECS = 60
+from omnipy.api.protocols.private.util import IsRateLimitingClientSession
 
 
 class RateLimitingClientSession(ClientSession):
@@ -14,10 +14,7 @@ class RateLimitingClientSession(ClientSession):
     A ClientSession that limits the number of requests made per time period, allowing an initial
     burst of requests to go through before rate limiting kicks in for the rest.
     """
-    def __init__(self,
-                 requests_per_time_period: float = DEFAULT_REQUESTS_PER_TIME_PERIOD,
-                 time_period_in_secs: float = DEFAULT_TIME_PERIOD_IN_SECS,
-                 *args,
+    def __init__(self, requests_per_time_period: float, time_period_in_secs: float, *args,
                  **kwargs) -> None:
         trace_config = TraceConfig()
         trace_config.on_request_start.append(self._limit_request)
@@ -70,5 +67,13 @@ class RateLimitingClientSession(ClientSession):
     def requests_per_second(self) -> float:
         return self._requests_per_time_period / self._time_period_in_secs
 
-    def __aenter__(self) -> 'Coroutine[Any, Any, RateLimitingClientSession]':
-        return cast('Coroutine[Any, Any, RateLimitingClientSession]', super().__aenter__())
+    async def __aenter__(self) -> IsRateLimitingClientSession:  # type: ignore[override]
+        return cast(IsRateLimitingClientSession, await super().__aenter__())
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        await super().__aexit__(exc_type, exc_val, exc_tb)
