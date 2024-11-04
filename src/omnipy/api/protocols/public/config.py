@@ -23,7 +23,7 @@ class IsPrefectEngineConfig(IsEngineConfig, Protocol):
 
 class IsJobConfig(Protocol):
     """"""
-    output_storage: 'IsOutputStorage'
+    output_storage: 'IsOutputStorageConfig'
 
 
 class IsDataConfig(Protocol):
@@ -49,24 +49,24 @@ class IsRootLogConfig(Protocol):
     file_log_path: str
 
 
-class IsOutputStorageBase(Protocol):
+class IsOutputStorageConfigBase(Protocol):
     persist_data_dir_path: str
 
 
-class IsLocalOutputStorage(IsOutputStorageBase, Protocol):
+class IsLocalOutputStorageConfig(IsOutputStorageConfigBase, Protocol):
     ...
 
 
-class IsS3OutputStorage(IsOutputStorageBase, Protocol):
+class IsS3OutputStorageConfig(IsOutputStorageConfigBase, Protocol):
     endpoint_url: str
     access_key: str
     secret_key: str
     bucket_name: str
 
 
-class IsOutputStorage(Protocol):
+class IsOutputStorageConfig(Protocol):
     persist_outputs: ConfigPersistOutputsOptions
     restore_outputs: ConfigRestoreOutputsOptions
     protocol: ConfigOutputStorageProtocolOptions
-    local: IsLocalOutputStorage
-    s3: IsS3OutputStorage
+    local: IsLocalOutputStorageConfig
+    s3: IsS3OutputStorageConfig

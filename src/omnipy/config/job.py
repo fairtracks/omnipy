@@ -5,9 +5,9 @@ from pathlib import Path
 from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
                               ConfigPersistOutputsOptions,
                               ConfigRestoreOutputsOptions)
-from omnipy.api.protocols.public.config import (IsLocalOutputStorage,
-                                                IsOutputStorage,
-                                                IsS3OutputStorage)
+from omnipy.api.protocols.public.config import (IsLocalOutputStorageConfig,
+                                                IsOutputStorageConfig,
+                                                IsS3OutputStorageConfig)
 
 
 def _get_persist_data_dir_path() -> str:
@@ -15,12 +15,12 @@ def _get_persist_data_dir_path() -> str:
 
 
 @dataclass
-class LocalOutputStorage:
+class LocalOutputStorageConfig:
     persist_data_dir_path: str = field(default_factory=_get_persist_data_dir_path)
 
 
 @dataclass
-class S3OutputStorage:
+class S3OutputStorageConfig:
     persist_data_dir_path: str = os.path.join('omnipy', 'outputs')
     endpoint_url: str = ''
     bucket_name: str = ''
@@ -29,16 +29,16 @@ class S3OutputStorage:
 
 
 @dataclass
-class OutputStorage:
+class OutputStorageConfig:
     persist_outputs: ConfigPersistOutputsOptions = \
         ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
     restore_outputs: ConfigRestoreOutputsOptions = \
         ConfigRestoreOutputsOptions.DISABLED
     protocol: ConfigOutputStorageProtocolOptions = ConfigOutputStorageProtocolOptions.LOCAL
-    local: IsLocalOutputStorage = field(default_factory=LocalOutputStorage)
-    s3: IsS3OutputStorage = field(default_factory=S3OutputStorage)
+    local: IsLocalOutputStorageConfig = field(default_factory=LocalOutputStorageConfig)
+    s3: IsS3OutputStorageConfig = field(default_factory=S3OutputStorageConfig)
 
 
 @dataclass
 class JobConfig:
-    output_storage: IsOutputStorage = field(default_factory=OutputStorage)
+    output_storage: IsOutputStorageConfig = field(default_factory=OutputStorageConfig)
