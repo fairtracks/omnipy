@@ -1,10 +1,12 @@
+from collections import defaultdict
 import os
 from pathlib import Path
 from typing import Annotated, Type
 
 import pytest
 
-from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
+from omnipy.api.enums import (BackoffStrategy,
+                              ConfigOutputStorageProtocolOptions,
                               ConfigPersistOutputsOptions,
                               ConfigRestoreOutputsOptions,
                               EngineChoice)
@@ -59,6 +61,12 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.data.dynamically_convert_elements_to_models is False
     assert config.data.terminal_size_columns == 80
     assert config.data.terminal_size_lines == 24
+    assert config.data.http_defaults.requests_per_time_period == 60
+    assert config.data.http_defaults.time_period_in_secs == 60
+    assert config.data.http_defaults.retry_http_statuses == (408, 425, 429, 500, 502, 503, 504)
+    assert config.data.http_defaults.retry_attempts == 5
+    assert config.data.http_defaults.retry_backoff_strategy == BackoffStrategy.EXPONENTIAL
+    assert isinstance(config.data.http_config_for_url_prefix, defaultdict)
     assert config.engine == EngineChoice.LOCAL
     assert config.prefect.use_cached_results is False
 
@@ -102,6 +110,15 @@ def test_default_runtime(runtime: Annotated[IsRuntime, pytest.fixture],
 
     _assert_runtime_config_default(runtime.config, tmp_dir_path)
     _assert_runtime_objects_default(runtime.objects)
+
+
+def test_data_config_http_config_for_url_prefix_default(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    assert runtime.config.data.http_config_for_url_prefix['http://myserver.com']\
+        .requests_per_time_period == 60
+    runtime.config.data.http_defaults.requests_per_time_period = 30
+    assert runtime.config.data.http_config_for_url_prefix['http://myserver.com']\
+        .requests_per_time_period == 60
 
 
 def test_runtime_config_after_data_class_creator(

@@ -1,9 +1,9 @@
-from enum import Enum
 from typing import AsyncGenerator, cast
 
 from aiohttp import ClientResponse, ClientSession
 from aiohttp_retry import ExponentialRetry, FibonacciRetry, JitterRetry, RandomRetry, RetryClient
 
+from omnipy.api.enums import BackoffStrategy
 from omnipy.compute.task import TaskTemplate
 
 from ..json.datasets import JsonDataset
@@ -11,14 +11,6 @@ from ..json.models import JsonModel
 from ..raw.datasets import BytesDataset, StrDataset
 from ..raw.models import BytesModel, StrModel
 from .models import HttpUrlModel
-
-
-class BackoffStrategy(str, Enum):
-    EXPONENTIAL = 'exponential'
-    JITTER = 'jitter'
-    FIBONACCI = 'fibonacci'
-    RANDOM = 'random'
-
 
 DEFAULT_RETRIES = 5
 DEFAULT_BACKOFF_STRATEGY = BackoffStrategy.EXPONENTIAL

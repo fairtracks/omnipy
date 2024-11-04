@@ -65,3 +65,10 @@ class RunStateLogMessages(str, Enum):
     INITIALIZED = 'Initialized "{}"'
     RUNNING = 'Started running "{}"...'
     FINISHED = 'Finished running "{}"!'
+
+
+class BackoffStrategy(str, Enum):
+    EXPONENTIAL = 'exponential'
+    JITTER = 'jitter'
+    FIBONACCI = 'fibonacci'
+    RANDOM = 'random'

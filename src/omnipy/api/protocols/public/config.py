@@ -1,6 +1,8 @@
+from collections import defaultdict
 from typing import Protocol, TextIO
 
-from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
+from omnipy.api.enums import (BackoffStrategy,
+                              ConfigOutputStorageProtocolOptions,
                               ConfigPersistOutputsOptions,
                               ConfigRestoreOutputsOptions)
 from omnipy.api.typedefs import LocaleType
@@ -32,6 +34,17 @@ class IsDataConfig(Protocol):
     dynamically_convert_elements_to_models: bool
     terminal_size_columns: int
     terminal_size_lines: int
+    http_defaults: 'IsHttpConfig'
+    http_config_for_url_prefix: defaultdict[str, 'IsHttpConfig']
+
+
+class IsHttpConfig(Protocol):
+    """"""
+    requests_per_time_period: float
+    time_period_in_secs: float
+    retry_http_statuses: tuple[int, ...]
+    retry_attempts: int
+    retry_backoff_strategy: BackoffStrategy
 
 
 class IsRootLogConfig(Protocol):
