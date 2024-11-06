@@ -133,7 +133,7 @@ def _assert_query_results(assert_model_if_dyn_conv_else_val, case: RequestTypeCa
         case omnipy.StrDataset | omnipy.BytesDataset:
             json_data = JsonDataset()
             json_data.from_json(data.to_data())
-        case omnipy.JsonDataset:
+        case omnipy.JsonDataset | omnipy.JsonDictDataset:
             json_data = data
         case _:
             raise ShouldNotOccurException()

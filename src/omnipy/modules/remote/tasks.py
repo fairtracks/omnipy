@@ -2,14 +2,17 @@ from typing import AsyncGenerator, cast
 
 from aiohttp import ClientResponse, ClientSession
 from aiohttp_retry import ExponentialRetry, FibonacciRetry, JitterRetry, RandomRetry, RetryClient
+from typing_extensions import TypeVar
 
 from omnipy.api.enums import BackoffStrategy
 from omnipy.compute.task import TaskTemplate
+from omnipy.data.dataset import Dataset
 
 from ..json.datasets import JsonDataset
 from ..json.models import JsonModel
 from ..raw.datasets import BytesDataset, StrDataset
 from ..raw.models import BytesModel, StrModel
+from .datasets import HttpUrlDataset
 from .models import HttpUrlModel
 
 DEFAULT_RETRIES = 5
@@ -126,3 +129,16 @@ async def get_bytes_from_api_endpoint(
     ):
         async for response in _call_get(url, cast(ClientSession, retry_session)):
             return BytesModel(await response.read())
+
+
+JsonDatasetT = TypeVar('JsonDatasetT', bound=Dataset)
+
+
+@TaskTemplate()
+async def load_urls_into_new_dataset(
+    urls: HttpUrlDataset,
+    dataset_cls: type[JsonDatasetT] = JsonDataset,
+) -> JsonDatasetT:
+    dataset = dataset_cls()
+    await dataset.load(urls)
+    return dataset
