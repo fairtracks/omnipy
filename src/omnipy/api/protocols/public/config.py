@@ -35,7 +35,7 @@ class IsDataConfig(Protocol):
     terminal_size_columns: int
     terminal_size_lines: int
     http_defaults: 'IsHttpConfig'
-    http_config_for_url_prefix: defaultdict[str, 'IsHttpConfig']
+    http_config_for_host: defaultdict[str, 'IsHttpConfig']
 
 
 class IsHttpConfig(Protocol):

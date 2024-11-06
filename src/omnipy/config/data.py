@@ -28,8 +28,8 @@ class DataConfig:
     terminal_size_columns: int = _terminal_size.columns
     terminal_size_lines: int = _terminal_size.lines
     http_defaults: IsHttpConfig = field(default_factory=HttpConfig)
-    http_config_for_url_prefix: defaultdict[str, IsHttpConfig] = field(
+    http_config_for_host: defaultdict[str, IsHttpConfig] = field(
         default_factory=lambda: defaultdict(HttpConfig))
 
     def __post_init__(self):
-        self.http_config_for_url_prefix = defaultdict(lambda: copy(self.http_defaults))
+        self.http_config_for_host = defaultdict(lambda: copy(self.http_defaults))

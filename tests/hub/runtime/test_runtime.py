@@ -66,7 +66,7 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.data.http_defaults.retry_http_statuses == (408, 425, 429, 500, 502, 503, 504)
     assert config.data.http_defaults.retry_attempts == 5
     assert config.data.http_defaults.retry_backoff_strategy == BackoffStrategy.EXPONENTIAL
-    assert isinstance(config.data.http_config_for_url_prefix, defaultdict)
+    assert isinstance(config.data.http_config_for_host, defaultdict)
     assert config.engine == EngineChoice.LOCAL
     assert config.prefect.use_cached_results is False
 
@@ -112,12 +112,14 @@ def test_default_runtime(runtime: Annotated[IsRuntime, pytest.fixture],
     _assert_runtime_objects_default(runtime.objects)
 
 
-def test_data_config_http_config_for_url_prefix_default(
+def test_data_config_http_config_for_host_default(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    assert runtime.config.data.http_config_for_url_prefix['http://myserver.com']\
+    assert runtime.config.data.http_config_for_host['myserver.com']\
         .requests_per_time_period == 60
     runtime.config.data.http_defaults.requests_per_time_period = 30
-    assert runtime.config.data.http_config_for_url_prefix['http://myserver.com']\
+    assert runtime.config.data.http_config_for_host['myotherserver.com']\
+        .requests_per_time_period == 30
+    assert runtime.config.data.http_config_for_host['myserver.com']\
         .requests_per_time_period == 60
 
 
