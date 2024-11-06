@@ -1,3 +1,4 @@
+import asyncio
 from collections import defaultdict, UserDict
 from collections.abc import Hashable, Iterable
 from copy import copy, deepcopy
@@ -796,3 +797,16 @@ def called_from_omnipy_tests() -> bool:
                 and 'omnipy/tests' in module.__file__:
             return True
     return False
+
+
+def get_event_loop_and_check_if_loop_is_running() -> tuple[asyncio.AbstractEventLoop | None, bool]:
+    loop_is_running: bool
+    loop: asyncio.AbstractEventLoop | None = None
+
+    try:
+        loop = asyncio.get_event_loop()
+        loop_is_running = loop.is_running()
+    except RuntimeError:
+        loop_is_running = False
+
+    return loop, loop_is_running
