@@ -16,17 +16,17 @@ class RequestTypeCase:
     dataset_cls: type[Dataset]
 
 
-@pc.case
+@pc.case(tags='supports_external_session')
 def case_get_json_from_api_endpoint() -> RequestTypeCase:
     return RequestTypeCase(get_json_from_api_endpoint, dict(), JsonDataset)
 
 
-@pc.case
+@pc.case(tags='supports_external_session')
 def case_get_str_from_api_endpoint() -> RequestTypeCase:
     return RequestTypeCase(get_str_from_api_endpoint, dict(), StrDataset)
 
 
-@pc.case
+@pc.case(tags='supports_external_session')
 def case_get_bytes_from_api_endpoint() -> RequestTypeCase:
     return RequestTypeCase(get_bytes_from_api_endpoint, dict(), BytesDataset)
 
@@ -43,3 +43,6 @@ def case_load_urls_into_new_dataset_other_dataset_cls() -> RequestTypeCase:
         dict(dataset_cls=JsonDictDataset),
         JsonDictDataset,
     )
+
+
+# TODO: Add test for synchronous task `load_urls_into_new_dataset`

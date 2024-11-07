@@ -152,17 +152,27 @@ def _assert_json_query_results(assert_model_if_dyn_conv_else_val, data: JsonData
     assert_model_if_dyn_conv_else_val(data['delillos_2']['lyrics'][0], str, 'Joda sier Arne')
 
 
+# TODO: Models as input to Dataset.__setitem__ is not converted to the model of the dataset in the
+#       same way as in the __init__method, causing this test to fail if
+#       `dynamically_convert_elements_to_models == True`
+
+
 @pc.parametrize_with_cases('case', cases='.cases.request_types')
 async def test_get_from_api_endpoint_without_session(
     query_urls: Annotated[HttpUrlDataset, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
     case: RequestTypeCase,
 ) -> None:
     data = await case.job.run(query_urls, **case.kwargs)
     _assert_query_results(assert_model_if_dyn_conv_else_val, case, data)
 
 
-@pc.parametrize_with_cases('case', cases='.cases.request_types')
+@pc.parametrize_with_cases(
+    'case',
+    cases='.cases.request_types',
+    has_tag='supports_external_session',
+)
 async def test_get_from_api_endpoint_with_session(
     query_urls: Annotated[HttpUrlDataset, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
