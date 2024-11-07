@@ -135,10 +135,20 @@ JsonDatasetT = TypeVar('JsonDatasetT', bound=Dataset)
 
 
 @TaskTemplate()
-async def load_urls_into_new_dataset(
+async def async_load_urls_into_new_dataset(
     urls: HttpUrlDataset,
     dataset_cls: type[JsonDatasetT] = JsonDataset,
 ) -> JsonDatasetT:
     dataset = dataset_cls()
     await dataset.load(urls)
+    return dataset
+
+
+@TaskTemplate()
+def load_urls_into_new_dataset(
+    urls: HttpUrlDataset,
+    dataset_cls: type[JsonDatasetT] = JsonDataset,
+) -> JsonDatasetT:
+    dataset = dataset_cls()
+    dataset.load(urls)
     return dataset

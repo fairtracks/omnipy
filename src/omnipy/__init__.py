@@ -136,7 +136,8 @@ from omnipy.modules.raw.tasks import (concat_all,
                                       union_all)
 from omnipy.modules.remote.datasets import HttpUrlDataset
 from omnipy.modules.remote.models import HttpUrlModel, QueryParamsModel, UrlPathModel
-from omnipy.modules.remote.tasks import (get_bytes_from_api_endpoint,
+from omnipy.modules.remote.tasks import (async_load_urls_into_new_dataset,
+                                         get_bytes_from_api_endpoint,
                                          get_json_from_api_endpoint,
                                          get_str_from_api_endpoint,
                                          load_urls_into_new_dataset)
@@ -319,6 +320,7 @@ __all__ = [
     'get_bytes_from_api_endpoint',
     'get_json_from_api_endpoint',
     'get_str_from_api_endpoint',
+    'async_load_urls_into_new_dataset',
     'load_urls_into_new_dataset',
     'create_row_index_from_column',
     'remove_columns',

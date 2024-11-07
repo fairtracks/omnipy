@@ -3,10 +3,10 @@ from dataclasses import dataclass
 import pytest_cases as pc
 
 from omnipy import BytesDataset, Dataset, JsonDataset, JsonDictDataset, StrDataset, TaskTemplate
-from omnipy.modules.remote.tasks import (get_bytes_from_api_endpoint,
+from omnipy.modules.remote.tasks import (async_load_urls_into_new_dataset,
+                                         get_bytes_from_api_endpoint,
                                          get_json_from_api_endpoint,
-                                         get_str_from_api_endpoint,
-                                         load_urls_into_new_dataset)
+                                         get_str_from_api_endpoint)
 
 
 @dataclass
@@ -33,13 +33,13 @@ def case_get_bytes_from_api_endpoint() -> RequestTypeCase:
 
 @pc.case
 def case_load_urls_into_new_dataset_default_json() -> RequestTypeCase:
-    return RequestTypeCase(load_urls_into_new_dataset, dict(), JsonDataset)
+    return RequestTypeCase(async_load_urls_into_new_dataset, dict(), JsonDataset)
 
 
 @pc.case
 def case_load_urls_into_new_dataset_other_dataset_cls() -> RequestTypeCase:
     return RequestTypeCase(
-        load_urls_into_new_dataset,
+        async_load_urls_into_new_dataset,
         dict(dataset_cls=JsonDictDataset),
         JsonDictDataset,
     )
