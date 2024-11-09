@@ -92,7 +92,8 @@ async def get_json_from_api_endpoint(
             retry_backoff_strategy,
     ):
         async for response in _call_get(url, cast(ClientSession, retry_session)):
-            return JsonModel(await response.json(content_type=None))
+            output_data = JsonModel(await response.json(content_type=None))
+    return output_data
 
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=StrDataset)
@@ -110,7 +111,8 @@ async def get_str_from_api_endpoint(
             retry_backoff_strategy,
     ):
         async for response in _call_get(url, cast(ClientSession, retry_session)):
-            return StrModel(await response.text())
+            output_data = StrModel(await response.text())
+    return output_data
 
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=BytesDataset)
@@ -128,7 +130,8 @@ async def get_bytes_from_api_endpoint(
             retry_backoff_strategy,
     ):
         async for response in _call_get(url, cast(ClientSession, retry_session)):
-            return BytesModel(await response.read())
+            output_data = BytesModel(await response.read())
+    return output_data
 
 
 JsonDatasetT = TypeVar('JsonDatasetT', bound=Dataset)

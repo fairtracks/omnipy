@@ -43,6 +43,7 @@ GeneralModelT = TypeVar('GeneralModelT', bound=Model)
 _DatasetT = TypeVar('_DatasetT')
 
 DATA_KEY = 'data'
+ASYNC_LOAD_SLEEP_TIME = 0.05
 
 # def orjson_dumps(v, *, default):
 #     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
@@ -588,19 +589,22 @@ class Dataset(
 
         async def load_all():
             tasks = []
-            client_sessions = {}
-            for host in hosts:
-                client_sessions[host] = RateLimitingClientSession(
-                    self.config.http_config_for_host[host].requests_per_time_period,
-                    self.config.http_config_for_host[host].time_period_in_secs)
 
-            for host, indices in hosts.items():
-                task = (
-                    get_json_from_api_endpoint.refine(output_dataset_param='output_dataset').run(
-                        http_url_dataset[indices],
-                        client_session=client_sessions[host],
-                        output_dataset=self))
-                tasks.append(task)
+            for host in hosts:
+                async with RateLimitingClientSession(
+                        self.config.http_config_for_host[host].requests_per_time_period,
+                        self.config.http_config_for_host[host].time_period_in_secs
+                ) as client_session:
+                    indices = hosts[host]
+                    task = (
+                        get_json_from_api_endpoint.refine(
+                            output_dataset_param='output_dataset').run(
+                                http_url_dataset[indices],
+                                client_session=client_session,
+                                output_dataset=self))
+                    tasks.append(task)
+                    while not task.done():
+                        await asyncio.sleep(ASYNC_LOAD_SLEEP_TIME)
 
             await asyncio.gather(*tasks)
             return self
