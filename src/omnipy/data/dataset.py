@@ -227,18 +227,23 @@ class Dataset(
         self._init(super_kwargs, **kwargs)
 
         try:
-            super().__init__(**super_kwargs)
+            self._primary_validation(super_kwargs)
         except ValidationError:
             if model_or_dataset_as_input:
-                super().__init__()
-                self.from_data(super_kwargs[DATA_KEY])
+                self._secondary_validation_from_data(super_kwargs)
             else:
                 raise
 
-        UserDict.__init__(self, self.data)  # noqa
-
         if not self.__doc__:
             self._set_standard_field_description()
+
+    def _primary_validation(self, super_kwargs):
+        # Pydantic validation of super_kwargs
+        super().__init__(**super_kwargs)
+
+    def _secondary_validation_from_data(self, super_kwargs):
+        super().__init__()
+        self.from_data(super_kwargs[DATA_KEY])
 
     def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
         ...
@@ -390,7 +395,7 @@ class Dataset(
 
         try:
             self.data[key] = val
-            self._validate(key)
+            self._validate_data_file(key)
         except Exception:
             if has_prev_value:
                 self.data[key] = prev_value
@@ -408,7 +413,14 @@ class Dataset(
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
-    def _validate(self, _data_file: str) -> None:
+    def _validate_data_file(self, _data_file: str) -> None:
+        val = self.data[_data_file]
+        if is_model_instance(val):
+            self.data[_data_file] = self.get_model_class()(val)
+        else:
+            self._force_full_validation()
+
+    def _force_full_validation(self):
         self.data = self.data  # Triggers pydantic validation, as validate_assignment=True
 
     def __iter__(self) -> Iterator:
@@ -461,7 +473,7 @@ class Dataset(
         for data_file, contents in data.items():
             new_model = model_cls()
             callback_func(new_model, contents)
-            self[data_file] = new_model
+            self.data[data_file] = new_model
 
     def absorb(self, other: 'Dataset'):
         self.from_data(other.to_data(), update=True)
@@ -706,7 +718,7 @@ class MultiModelDataset(Dataset[GeneralModelT], Generic[GeneralModelT]):
         try:
             self._custom_field_models[data_file] = model
             if data_file in self.data:
-                self._validate(data_file)
+                self._validate_data_file(data_file)
             else:
                 self.data[data_file] = model()
         except ValidationError:
@@ -719,7 +731,19 @@ class MultiModelDataset(Dataset[GeneralModelT], Generic[GeneralModelT]):
         else:
             return self.get_model_class()
 
-    def _validate(self, data_file: str) -> None:
+    def from_data(self,
+                  data: dict[str, Any] | Iterator[tuple[str, Any]],
+                  update: bool = True) -> None:
+        super().from_data(data, update)
+        for data_file in self:
+            self._validate_data_file_according_to_custom_field_model(data_file)
+        self._force_full_validation()
+
+    def _validate_data_file(self, data_file: str) -> None:
+        self._validate_data_file_according_to_custom_field_model(data_file)
+        self._force_full_validation()
+
+    def _validate_data_file_according_to_custom_field_model(self, data_file: str):
         if data_file in self._custom_field_models:
             model = self._custom_field_models[data_file]
             if not is_model_instance(model):
@@ -727,7 +751,6 @@ class MultiModelDataset(Dataset[GeneralModelT], Generic[GeneralModelT]):
             data_obj = self._to_data_if_model(self.data[data_file])
             parsed_data = self._to_data_if_model(model(data_obj))
             self.data[data_file] = parsed_data
-        super()._validate(data_file)  # validates all data according to ModelNewT
 
     @staticmethod
     def _to_data_if_model(data_obj: Any):

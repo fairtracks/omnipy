@@ -20,7 +20,7 @@ from .helpers.datasets import (DefaultStrDataset,
                                MyFwdRefDataset,
                                MyNestedFwdRefDataset,
                                ParamUpperStrDataset)
-from .helpers.models import NumberModel, StringToLength
+from .helpers.models import MyFloatObjModel, NumberModel, StringToLength
 
 
 def test_no_model():
@@ -433,6 +433,19 @@ def test_set_items_with_tuple_or_list() -> None:
     dataset[[]] = (999,)
     assert len(dataset) == 7
     assert dataset['_untitled_4'] == dataset[-1] == Model[int](999)
+
+
+def test_set_item_converting_models_as_input():
+    float_model = Model[float](4.5)
+    my_float_model = MyFloatObjModel(MyFloatObject(int_part=4, float_part=0.5))
+
+    float_dataset = Dataset[Model[float]]()
+    float_dataset['x'] = my_float_model
+    assert float_dataset['x'].contents == 4.5
+
+    my_float_dataset = MyFloatObjDataset()
+    my_float_dataset['x'] = float_model
+    assert my_float_dataset['x'].contents == MyFloatObject(int_part=4, float_part=0.5)
 
 
 def test_del_item_with_str() -> None:
