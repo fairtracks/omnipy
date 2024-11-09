@@ -300,8 +300,6 @@ class Model(
     def set_orig_model(cls, orig_model: type[_RootT]) -> None:
         cls.__fields__[ROOT_KEY].field_info.extra['orig_model'] = orig_model
 
-    # TODO: Allow e.g. Model[str](Model[int](5)) == Model[str](Model[int](5).contents).
-    #       Should then work the same as dataset
     def __init__(  # noqa: C901
         self,
         value: Any | UndefinedType = Undefined,
