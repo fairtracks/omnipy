@@ -1,5 +1,6 @@
 site_name: Omnipy
 repo_url: https://github.com/fairtracks/omnipy
+site_url: https://omnipy.readthedocs.io/
 theme:
   name: material
   custom_dir: docs/overrides
