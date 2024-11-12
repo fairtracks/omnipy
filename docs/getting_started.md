@@ -1,65 +1,157 @@
-## Getting started
+## Overview
 
-The design of Omnipy centers around two types of object, those related to data, and those related to
-compute. The following two sections will introduce the basic concepts of each.
+_(In this section we assume that you have read the ["Python typing"](./python_typing.md) section or 
+have an overview of the concepts presented there)._
 
-### Data
+The design of Omnipy centers around two submodules, the `omnipy.data` submodule used to describe 
+data structures and manage datasets, and the `omnipy.compute` submodule, which is focused on 
+defining tasks and flows that together make up a simple code-oriented solution to define data flows
+that can be deployed either locally or on remote compute resources.
 
-They Data objects centers around the Dataset class, which to a large degree operates as the Python
-builtin `dict`, with the limitation that only strings are supported as keys. Contrary to the builtin
-dicts, however, the values of a `Dataset` object is guaranteed to follow a particular type. This is
-defined through using the `Model` class as a type argument to `Dataset`, while the actual type
-guarantees are declared as a type argument to the `Model` class, e.g. `Dataset[Model[str]]`. This
-Dataset variant is then operates as `dict[str, str]` with one important difference: the type
-annotations of a builtin `dict` are not enforced at runtime. A `Datase[Model[str]]` object on the
-other hand is guaranteed to only contain strings. This has important consequences for the fail
-safety of code:
+The following two sections will introduce the basic concepts of each of these submodules.
 
-```python
-# types are not enforced
-my_dict: dict[str, str] = {'a': 'foo', 1: 'bar', 'c': 42}
+## `omnipy.data`
 
-# failures can occurr at any time
-for key, val in my_dict.items():
-    my_dict[key] = key + '_' + my_dict[key]
-```
+The `omnipy.data` submodule is the foundation of the Omnipy library. It is built around the concept
+of data models and datasets, which are used to define and manage data structures in a way that 
+guarantees data integrity and type safety – while allowing easy scalability. The two core classes
+are the `Model` and `Dataset` classes.
 
-Here, the code in the for-loop can fail at any time due to bad data. In this example an exception is
-raised in the second iteration due to the calculation: `1 + 'bar'`, which illegal in Python. Using
-an omnipy Dataset, on the other hand, data is checked upfront. One the Dataset object is created,
-the contents are guaranteed to follow the data model. Sudden failures due to unexpected types of
-data will not occurr:
+### Model
 
-```python
-from omnipy import Dataset, Model
+The Model class is the most basic building block of the Omnipy library. It is a generic class that
+has several important features:
 
-# failures can happen here
-my_dataset = Dataset[Model[str]]({'a': 'foo', 1: 'bar', 'c': 42})
 
-# for loop is guaranteed to finish once started
-for key, val in my_dataset.items():
-    my_dict[key] = key + '_' + my_dict[key]
-```
+#### Omnipy makes use of Python type hinting to  define structured data models
 
-The above code illustrates another important feature of Omnipy datasets: data is "parsed, not
-validated". This means that instead of failing hard and fast when there is a mismatch between the
-data type and the guaranteed data model (following the concept of "validation*), standard Python
-conversions (for example allowing `int("5") == 5`) are instead honored if relevant. In the code
-example above, `my_dataset` would thus be *parsed* to `{'a': 'foo', '1': 'bar', 'c': '42'})` instead
-of failing. Note that the parsing of the keys is done by the Dataset object, while the Model
-objects (one per dataset value) are responsible for parsing of the values.
-
-Data models can be defined on all levels of complexity, ranging from very generic to highly
-specialised, e.g.:
+To define a data model, simply provide a type hint as a type parameter to the Model class.
+For example, to define a data model that represents a list of integers, you would write:
 
 ```python
 from omnipy import Model
-from typing import Union
-Model[object](set(1, 2, 3)).contents == set(1, 2, 3)
-Model[list[Union[str, int]]]([1, 'abc', 2.3]).contents == [1, 'abc', 2]
+
+int_list_model = Model[list[int]]([1,2,3])
 ```
 
-One particular useful set of data models that comes predefined with Omnipy is the JSON models,
-implemented as Model subclasses and respective Dataset subclasses. The most general variant of this
-is the `JsonModel` and the `JsonDataset` which are defined recursively and as such able to
-represent any JSON content.
+As `Model` are standard python classes, you can easily subclass them to reuse common data models
+and/or define other model-specific functionality, e.g.:
+
+```python
+from omnipy import Model
+
+class IntListModel(Model[list[int]]): ...
+
+int_list_data = IntListModel([-1, 0, 1, 2, 3])
+print(int_list_data)  # prints: IntListModel([-1, 0, 1, 2, 3])
+```
+
+As in `Pydantic`, the `Model` class can de defined to contain other `Model` classes, e.g.:
+
+```python
+class NestedModel(Model[dict[str, IntListModel]]): ...
+
+nested_data = NestedModel({'a': [-1, 2, 4], 'b': [-4, 5, 6]})
+print(nested_data)  # prints: NestedModel({'a': IntListModel([-1, 2, 4]), 'b': IntListModel([-4, 5, 6])})
+
+```
+
+
+
+#### "Parse, don't validate" with Omnipy Model objects
+
+While `pydantic` is focusing mostly on data validation, Omnipy `Model` objects are designed to 
+be parsers, rather than just validators. (Please read _Technical note #2: "Parse, don't validate"_ 
+on the [FAIRtracks.net website](https://fairtracks.net/fair/#fair-07-transformation) for more info
+about this concept).
+
+As in the non-strict mode of `pydantic`, the `Model` class will automatically parse input data to 
+comply to the data model, e.g.:
+
+```python
+int_list_data = IntListModel(['-1', 0, '1', 2, '3'])
+print(int_list_data)  # prints: IntListModel([-1, 0, 1, 2, 3])
+```
+
+Note that some of the data elements in the list above were strings. The `Model` class will
+automatically parse these strings to integers as long as the string can be converted to
+an integer through builtin Python casting (e.g. `int('-1') == -1`). Instead of failing hard and 
+fast when there is a mismatch between the data type and the guaranteed data model (following the 
+concept of "validation"), standard Python conversions are instead honored if relevant. A parser
+follow the general programming guideline to allow as varied input data as possible, while producing
+a guaranteed consistent output.
+
+More complex parsing can be achieved by overriding the `_parse_data` class method in a subclass of 
+`Model`, e.g.:
+
+```python
+from omnipy import Model
+
+class OnlyPosIntListModel(Model[list[int]]):
+    @classmethod
+    def _parse_data(cls, data: list[int]) -> list[int]:
+        return [i for i in data if i > 0]
+
+pos_int_list_data = OnlyPosIntListModel([-1,0,1,2,3])
+print(pos_int_list_data)  # prints: OnlyPositiveIntListModel([1, 2, 3])
+```
+
+Note that the implementation of parse methods will be simplified in a future version of Omnipy,
+e.g. by using a `@parse` decorator:
+
+```python
+from omnipy import Model, parse
+
+class OnlyPosIntListModel(Model[list[int]]):
+    @parse
+    def filter_positive_integers(data: list[int]) -> list[int]:
+        return [i for i in data if i > 0]
+```
+
+#### Model objects provide snapshots and automatic rollbacks
+
+If an Omnipy `Model` model contains invalid data, a `ValidationError` will be raised. However, since
+the model object is now in an invalid state, Omnipy will automatically roll back the contents to the
+last validated snapshot. As a consequence, a model object will always contain valid data, even after
+an invalid operation, e.g.:
+
+```python
+from omnipy import Model
+
+class IntListModel(Model[list[int]]): ...
+
+int_list_data = IntListModel([1, 2, 3])
+try:
+    int_list_data[1] = 'abc'  # raises a ValidationError
+except ValidationError:
+    print(int_list_data)  # prints: IntListModel([1, 2, 3])
+```
+
+This functionality is especially useful when users are working with Omnipy in an interactive session
+such as a [Jupyter notebook](https://jupyter.org/) or in the Python console, where it is easy to 
+make mistakes and cumbersome to rerun code. Hence, the snapshot and rollback feature of Omnipy 
+`Model` objects can be disabled through the `interactive_mode` configuration, e.g.:
+
+```python
+from omnipy import Model
+
+Model.config.interactive_mode = False
+```
+
+Or equivalently:
+
+```python
+from omnipy import runtime
+
+runtime.config.data.interactive_mode = False
+```
+
+#### Model objects can be operated as the modelled class
+
+One potentially groundbreaking feature of Omnipy is the capability of model objects to automatically
+mimic behaviour of the modelled class. A `Model` object  So e.g.
+`Model[list[int]]()` is not just a run-time typesafe parser that continuously makes sure that the
+elements in the list are, in fact, integers; the object can also be operated as a list using e.g.
+`.append()`, `.insert()` and concatenation with the `+` operator; and furthermore: if you append an
+unparseable element, say `"abc"` instead of `"123"`, it will roll back the contents to the previously
+validated snapshot.
