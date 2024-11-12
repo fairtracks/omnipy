@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import gc
 from math import floor
 import os
-import sys
 from textwrap import dedent
 from types import MappingProxyType, MethodType, NotImplementedType, UnionType
 from typing import (Annotated,
@@ -1458,26 +1457,31 @@ def test_recursive_list_model_with_none() -> None:
     ]
 
 
+# TODO: Revisit test_recursive_dict_model_with_none with new Python versions supporting PEP695 and
+#       pydantic v2
+
+
 def test_recursive_generic_tuple_model_with_none() -> None:
     class MyGenericScalarModel(Model[T], Generic[T]):
         ...
 
-    if sys.version_info >= (3, 12):
+    # if sys.version_info >= (3, 12):
 
-        class MyGenericOnlyTuplesAndScalarsModel(
-                Model[tuple[TypeVarStore[T]
-                            | ForwardRef('MyGenericOnlyTuplesAndScalarsAlias'), ...]],
-                Generic[T]):
-            ...
-    else:
-        # This for some reason cause a TypeError in Python 3.12. Probably related to PEP695,
-        # However new type syntax crashes pydantic.
-        class MyGenericOnlyTuplesAndScalarsModel(
-                Model[tuple[TypeVarStore[T]
-                            | ForwardRef('MyGenericOnlyTuplesAndScalarsAlias[T]'),
-                            ...]],
-                Generic[T]):
-            ...
+    class MyGenericOnlyTuplesAndScalarsModel(
+            Model[tuple[TypeVarStore[T]
+                        | ForwardRef('MyGenericOnlyTuplesAndScalarsAlias'), ...]],
+            Generic[T]):
+        ...
+
+    # else:
+    #     # This for some reason cause a TypeError in Python 3.12. Probably related to PEP695,
+    #     # However new type syntax crashes pydantic.
+    #     class MyGenericOnlyTuplesAndScalarsModel(
+    #             Model[tuple[TypeVarStore[T]
+    #                         | ForwardRef('MyGenericOnlyTuplesAndScalarsAlias[T]'),
+    #                         ...]],
+    #             Generic[T]):
+    #         ...
 
     MyGenericOnlyTuplesAndScalarsAlias: TypeAlias = \
         MyGenericScalarModel[T] | MyGenericOnlyTuplesAndScalarsModel[T]
