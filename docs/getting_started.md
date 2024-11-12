@@ -3,7 +3,7 @@
 The design of Omnipy centers around two types of object, those related to data, and those related to
 compute. The following two sections will introduce the basic concepts of each.
 
-# Data
+### Data
 
 They Data objects centers around the Dataset class, which to a large degree operates as the Python
 builtin `dict`, with the limitation that only strings are supported as keys. Contrary to the builtin

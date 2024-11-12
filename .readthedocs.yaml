@@ -20,5 +20,9 @@ build:
       # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
       - poetry install --with docs
 
-      # Generate documentation
-      - LC_ALL=C python scripts/generate_portray_docs.py for_readthedocs
+      # Generate code documentation skeleton
+      - LC_ALL=C python scripts/gen_ref_pages.py
+
+
+mkdocs:
+  configuration: mkdocs.yml

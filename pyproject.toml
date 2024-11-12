@@ -69,11 +69,12 @@ pymdown-extensions = "^10.0.1"
 hug = {git = "https://github.com/hugapi/hug.git", branch="develop"}
 
 mkdocs = "^1.5.3"
-mkdocstrings = {extras = ["python"], version = "^0.23.0"}
+mkdocstrings = {version = ">=0.26.1", extras=["python"]}
 mkdocs-gen-files = "^0.5.0"
 mkdocs-literate-nav = "^0.6.1"
 mkdocs-section-index = "^0.3.8"
 mkdocs-material = "^9.4.6"
+mdx-truly-sane-lists = "^1.3"
 
 [build-system]
 requires = ["poetry-core"]
@@ -184,3 +185,8 @@ directory = "."
 
 [tool.portray.pdocs]
 template_dir = "docs/templates/pdocs"
+
+[project]
+dependencies = [
+    "mkdocstrings[python]>=0.18",
+]

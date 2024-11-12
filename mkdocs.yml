@@ -1,15 +1,16 @@
 site_name: Omnipy
+repo_url: https://github.com/fairtracks/omnipy
 theme:
   name: material
   custom_dir: docs/overrides
-#  features:
-#    - content.code.annotation
-#    - navigation.tabs
-#    - search.highlight
-#    - toc.integrate
   language: en
   palette:
     - scheme: omnipy
+  features:
+    - content.code.annotation
+    - navigation.tabs
+    - search.highlight
+    - toc.integrate
 extra_css:
   - stylesheets/extra.css
 markdown_extensions:
@@ -24,12 +25,17 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - mdx_truly_sane_lists
 #  - attr_list
 #  - footnotes
 #  - md_in_html
 
 nav:
 - Omnipy: index.md
+- Install: install.md
+- Getting started: getting_started.md
+- Contributing: contributing.md
+- Release notes: release_notes.md
 - Code Reference: reference/
 
 plugins:

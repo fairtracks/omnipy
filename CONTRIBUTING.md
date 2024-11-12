@@ -9,6 +9,7 @@
   a Python environment with:
 
   - `conda create -n omnipy python=3.10`
+  - `conda activate omnipy`
 
 - Install Poetry (and follow the instructions to add poetry to your PATH):
   - `curl -sSL https://install.python-poetry.org | python3 -`
