@@ -1,6 +1,4 @@
-## Introduction to Python type hints
-
-### Duck typing in Python
+## The Duck Test
 
 The concept of "duck-typing" is a central concept in Python. The name comes from the 
 [Duck test](https://en.wikipedia.org/wiki/Duck_test):
@@ -17,6 +15,8 @@ in 1739:
 The duck was designed to look like it ate a mixture of water and grain, digested the food, and then 
 excreted the remains. In reality, the duck excreted a pre-made mixture of bread crumbs and green dye 
 in a process that was not connected to the ingestion process.
+
+## Python – a duck-typed language
 
 Similarly, in Python, the type of an object is determined dynamically - by its behavior - rather 
 than by definition. This is in contrast to 
@@ -42,7 +42,7 @@ This has in particular been a problem when working with large code bases, and es
 are working with code that you did not write yourself. For this reason, many professional developers
 argue for making use of programming languages with static typing in larger projects.
 
-### Python type hints
+## Type hints allow static type checking in Python
 
 Python 3.5 introduced a new feature called "type hints" that allows you to specify the type of
 variables, function arguments, and return values. Type hints, or type annotations, do not change
@@ -135,7 +135,7 @@ following code will e.g. run without errors, but fail in static type checkers:
 Pair([1, 2], [3, 4]).add()  # returns [1, 2, 3, 4]
 ```
 
-### Using type hints for static typing at runtime
+## Pydantic use type hints for data validation at runtime
 
 While Python type hints were developed for static type checking, several libraries have been
 developed that allow for the use of type hints for static typing at runtime. One such library is
@@ -212,11 +212,17 @@ my_list.append('foo')
 MyListOfInts.validate({'x': my_list})  # raises a ValidationError
 ```
 
-In contrast, the `Model` class in the `omnipy` library is designed to support general-purpose static 
-typing at runtime in a more straightforward and dependable way. In a default configuration, a data
-object created from a `Model` object is guaranteed to follow the data model, and changes to the data
-will continuously be validated against the model. Also, any type of data structure is directly 
-supported, not just record-type data structures. An list of integers can be defined as follows:
+## Omnipy builds on Pydantic to seamlessly support static typing at runtime
+
+`Omnipy` builds on top of the `pydantic` library and adopts it to meet the unmet challenges arising 
+from data wrangling and interoperability in general. Compared to `pydantic.BaseModel`, the `Model` 
+class in the `omnipy` library is designed to support general-purpose static typing at runtime in a 
+more straightforward and dependable way. In a default configuration, a data object created from a 
+`Model` object is guaranteed to follow the data model, and changes to the data will continuously 
+be validated against the model. Also, any type of data structure is directly supported, not just 
+record-type data structures. 
+
+A list of integers can be defined as follows as a `Model` object in `Omnipy`:
 
 ```python
 from omnipy import Model
@@ -232,7 +238,13 @@ possible exactly due to the "duck typing" nature of Python. The `Model` object i
 "duck" that looks, swims, and quacks like the data type it wraps. At the same time, the `Model` 
 object guarantees that the data it contains will always follow the data model. 
 
+## Omnipy provides the best of both Dynamic and Static typing
+
 For the first time in `Python` history (as far as we know), the `omnipy` brings the best of both 
-worlds to the Python developer: the dynamics of Python duck typing with the safety of static typing 
-at runtime. For more information on how to use the `Model` class and the rest of the `omnipy` 
+worlds to the Python developer: 
+
+- The dynamics of Python duck typing
+- The safety and reusability from static typing at runtime.
+
+For more information on how to use the `Model` class and the rest of the `omnipy` 
 library, please continue onwards to the ["Getting started"](./getting_started.md) section.

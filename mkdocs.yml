@@ -34,8 +34,8 @@ markdown_extensions:
 nav:
 - Omnipy: index.md
 - Install: install.md
+- Python typing: python_typing.md
 - Getting started: getting_started.md
-- Intro to Python typing: python_typing.md
 - Contributing: contributing.md
 - Release notes: release_notes.md
 - Code Reference: reference/
