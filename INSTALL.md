@@ -6,14 +6,14 @@
 
 
 ## Run example scripts:
-  - Install `omnipy-examples`:
-    - `pip install omnipy-examples`
-  - Example script:
-    - `omnipy-examples isajson`
-  - For help on the command line interface:
-    - `omnipy-examples --help`
-  - For help on a particular example:
-    - `omnipy-examples isajson --help`
+- Install `omnipy-examples`:
+  - `pip install omnipy-examples`
+- Example script:
+  - `omnipy-examples isajson`
+- For help on the command line interface:
+  - `omnipy-examples --help`
+- For help on a particular example:
+  - `omnipy-examples isajson --help`
 
 ### Output of flow runs
 
