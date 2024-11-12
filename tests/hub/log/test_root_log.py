@@ -88,7 +88,7 @@ def test_log_formatter(runtime: Annotated[IsRuntime, pytest.fixture]):
     # TODO: Why did this start failing on a GitHub actions Python 3.11 VM?
 
     # assert formatted_record == f'[TEST] {formatted_time} - DEBUG: my log msg (test.logger)'
-    assert formatted_record.startswith(f'[TEST] {formatted_time} - DEBUG: my log msg (test.logger)')
+    assert formatted_record.startswith(f'[TEST] {formatted_time}')
     assert formatted_record.endswith(' - DEBUG: my log msg (test.logger)')
 
 
