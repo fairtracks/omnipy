@@ -4,10 +4,11 @@ from typing import Annotated
 from pydantic import ValidationError
 import pytest
 
-from helpers.protocols import AssertModelOrValFunc
 from omnipy import Model
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.modules.remote.models import HttpUrlModel, QueryParamsModel, UrlPathModel
+
+from ...helpers.protocols import AssertModelOrValFunc
 
 
 def test_query_params_model():

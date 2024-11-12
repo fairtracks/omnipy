@@ -9,13 +9,14 @@ from aiohttp.test_utils import TestServer
 import pytest
 import pytest_cases as pc
 
-from helpers.protocols import AssertModelOrValFunc
-from modules.remote.cases.request_types import RequestTypeCase
 import omnipy
 from omnipy import Dataset, JsonDataset
 from omnipy.api.exceptions import ShouldNotOccurException
 from omnipy.modules.remote.datasets import HttpUrlDataset
 from omnipy.modules.remote.models import HttpUrlModel
+
+from ...helpers.protocols import AssertModelOrValFunc
+from .cases.request_types import RequestTypeCase
 
 
 async def _get_lyrics(url: str):

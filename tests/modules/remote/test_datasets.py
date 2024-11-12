@@ -2,8 +2,9 @@ from typing import Annotated
 
 import pytest
 
-from helpers.protocols import AssertModelOrValFunc
 from omnipy.modules.remote.datasets import HttpUrlDataset
+
+from ...helpers.protocols import AssertModelOrValFunc
 
 
 def test_http_url_dataset(
