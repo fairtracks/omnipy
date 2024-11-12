@@ -35,6 +35,7 @@ nav:
 - Omnipy: index.md
 - Install: install.md
 - Getting started: getting_started.md
+- Intro to Python typing: python_typing.md
 - Contributing: contributing.md
 - Release notes: release_notes.md
 - Code Reference: reference/
