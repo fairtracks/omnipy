@@ -21,7 +21,7 @@ build:
       - poetry install --with docs
 
       # Generate code documentation skeleton
-      - LC_ALL=C python scripts/gen_ref_pages.py
+      - LC_ALL=C python docs/gen_ref_pages.py
 
 
 mkdocs:
