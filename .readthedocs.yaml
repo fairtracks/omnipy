@@ -8,21 +8,16 @@ build:
   os: "ubuntu-22.04"
   tools:
     python: "3.10"
-  commands:
+  jobs:
+    post_create_environment:
       # Install poetry
       # https://python-poetry.org/docs/#installing-manually
-      - pip install poetry==1.6.1
-
-      # Tell poetry to not use a virtual environment
-      - poetry config virtualenvs.create false
-
+      - python -m pip install poetry==1.7.1
+    post_install:
       # Install dependencies with 'docs' dependency group
       # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
-      - poetry install --with docs
-
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry install --with docs
       # Generate code documentation skeleton
       - LC_ALL=C python docs/gen_ref_pages.py
-
-
 mkdocs:
   configuration: mkdocs.yml
