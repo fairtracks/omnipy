@@ -18,6 +18,6 @@ build:
       # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry install --with docs
       # Generate code documentation skeleton
-      - LC_ALL=C python docs/gen_ref_pages.py
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python docs/gen_ref_pages.py
 mkdocs:
   configuration: mkdocs.yml
