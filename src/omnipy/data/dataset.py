@@ -563,9 +563,17 @@ class Dataset(
             tar.close()
 
     def load(self,
-             paths_or_urls: 'str | Iterable[str] | HttpUrlModel | HttpUrlDataset',
-             by_file_suffix: bool = False) -> list[asyncio.Task] | None:
+             paths_or_urls: 'str | Iterable[str] | HttpUrlModel | HttpUrlDataset '
+             '| Mapping[str, str | HttpUrlModel] | None' = None,
+             by_file_suffix: bool = False,
+             **kwargs: 'str | HttpUrlModel') -> list[asyncio.Task] | None:
         from omnipy import HttpUrlDataset, HttpUrlModel
+
+        if paths_or_urls is None:
+            assert len(kwargs) > 0, 'No paths or urls specified'
+            paths_or_urls = kwargs
+        else:
+            assert len(kwargs) == 0, 'No keyword arguments allowed when paths_or_urls is specified'
 
         match paths_or_urls:
             case HttpUrlDataset():
@@ -580,6 +588,17 @@ class Dataset(
                 except ValidationError:
                     return self._load_paths([paths_or_urls], by_file_suffix)
                 return self._load_http_urls(http_url_dataset)
+
+            case Mapping():
+                try:
+                    http_url_dataset = HttpUrlDataset(paths_or_urls)
+                except ValidationError as exp:
+                    raise NotImplementedError(
+                        'Loading files with specified keys is not yet '
+                        'implemented, as only tar.gz file import is '
+                        'supported until serializers have been refactored.') from exp
+                return self._load_http_urls(http_url_dataset)
+
             case Iterable():
                 try:
                     path_or_url_iterable = cast(Iterable[str], paths_or_urls)
