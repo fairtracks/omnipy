@@ -2,6 +2,15 @@ __version__ = '0.17.2'
 
 import os
 
+from omnipy.api.enums import (BackoffStrategy,
+                              ConfigOutputStorageProtocolOptions,
+                              ConfigPersistOutputsOptions,
+                              ConfigRestoreOutputsOptions,
+                              EngineChoice,
+                              OutputStorageProtocolOptions,
+                              PersistOutputsOptions,
+                              RestoreOutputsOptions,
+                              RunState)
 from omnipy.compute.flow import (DagFlow,
                                  DagFlowTemplate,
                                  FuncFlow,
@@ -168,6 +177,15 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 __all__ = [
     'runtime',
+    'BackoffStrategy',
+    'ConfigOutputStorageProtocolOptions',
+    'ConfigPersistOutputsOptions',
+    'ConfigRestoreOutputsOptions',
+    'EngineChoice',
+    'OutputStorageProtocolOptions',
+    'PersistOutputsOptions',
+    'RestoreOutputsOptions',
+    'RunState',
     'DagFlow',
     'DagFlowTemplate',
     'FuncFlow',
