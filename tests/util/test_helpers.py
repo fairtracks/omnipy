@@ -19,7 +19,6 @@ from pydantic import BaseModel
 from pydantic.fields import Undefined
 from pydantic.generics import GenericModel
 import pytest
-from typing_inspect import get_generic_type
 
 from omnipy.api.protocols.private.util import HasContents, IsSnapshotHolder
 from omnipy.data.dataset import Dataset
@@ -31,6 +30,7 @@ from omnipy.util.helpers import (all_type_variants,
                                  evaluate_any_forward_refs_if_possible,
                                  get_calling_module_name,
                                  get_first_item,
+                                 get_parametrized_type,
                                  has_items,
                                  is_iterable,
                                  is_non_omnipy_pydantic_model,
@@ -59,29 +59,29 @@ class MyGenericDict(dict[T, U], Generic[T, U]):
 def test_transfer_generic_params_to_new_generic_cls() -> None:
     init_dict = MyGenericDict[str, int]({'a': 123})
 
-    assert get_args(get_generic_type(init_dict)) == (str, int)
+    assert get_args(get_parametrized_type(init_dict)) == (str, int)
 
     class MyDict(dict[T, U]):
         ...
 
     my_dict = MyDict({'b': 234})
 
-    assert get_args(get_generic_type(my_dict)) == ()
+    assert get_args(get_parametrized_type(my_dict)) == ()
 
-    my_typed_dict_cls = transfer_generic_args_to_cls(MyDict, get_generic_type(init_dict))
+    my_typed_dict_cls = transfer_generic_args_to_cls(MyDict, get_parametrized_type(init_dict))
 
     my_typed_dict = my_typed_dict_cls({'b': 234})
 
-    assert get_args(get_generic_type(my_typed_dict)) == (str, int)
+    assert get_args(get_parametrized_type(my_typed_dict)) == (str, int)
 
 
 def test_do_not_transfer_generic_params_to_non_generic_cls() -> None:
     my_int = 123
-    my_int_cls = transfer_generic_args_to_cls(int, get_generic_type(my_int))
+    my_int_cls = transfer_generic_args_to_cls(int, get_parametrized_type(my_int))
 
     my_typed_int = my_int_cls(123)
 
-    assert get_args(get_generic_type(my_typed_int)) == ()
+    assert get_args(get_parametrized_type(my_typed_int)) == ()
 
 
 def test_ensure_plain_type() -> None:

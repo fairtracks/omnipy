@@ -38,7 +38,6 @@ from weakref import WeakKeyDictionary, WeakValueDictionary
 from pydantic import BaseModel, ValidationError
 from pydantic.generics import GenericModel
 from pydantic.typing import is_none_type
-from typing_inspect import get_generic_bases, is_generic_type
 
 from omnipy.api.protocols.private.util import HasContents, IsSnapshotWrapper
 from omnipy.api.typedefs import LocaleType, TypeForm
@@ -99,8 +98,8 @@ def repr_max_len(data: object, max_len: int = 200):
     return f'{repr_str[:max_len]}...' if len(repr_str) > max_len else repr_str
 
 
-def get_bases(cls):
-    return get_generic_bases(cls) if is_generic_type(cls) else cls.__bases__
+def get_parametrized_type(obj: object):
+    return getattr(obj, '__orig_class__', type(obj))
 
 
 def generic_aware_issubclass_ignore_args(cls, cls_or_tuple):

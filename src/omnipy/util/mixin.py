@@ -3,9 +3,9 @@ import inspect
 import types
 from typing import DefaultDict, Protocol, Type
 
-from omnipy.util.helpers import (generic_aware_issubclass_ignore_args,
-                                 get_bases,
-                                 transfer_generic_args_to_cls)
+from typing_extensions import get_original_bases
+
+from omnipy.util.helpers import generic_aware_issubclass_ignore_args, transfer_generic_args_to_cls
 
 
 class IsMixin(Protocol):
@@ -30,7 +30,7 @@ class DynamicMixinAcceptor:
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
 
-        if DynamicMixinAcceptor in get_bases(cls) and cls.__init__ is object.__init__:
+        if DynamicMixinAcceptor in get_original_bases(cls) and cls.__init__ is object.__init__:
             raise TypeError(
                 'Dynamic mixin acceptor class is required to define a __init__() method.')
 
@@ -133,6 +133,7 @@ class DynamicMixinAcceptor:
         cls.__init__.__signature__ = cls._orig_init_signature
 
     def __new__(cls, *args, **kwargs):
+        print(cls.__name__)
         if not cls.__name__.endswith(cls.WITH_MIXINS_CLS_SUFFIX):
             cls_with_mixins = cls._create_subcls_inheriting_from_mixins_and_orig_cls()
             obj = super(cls, cls_with_mixins).__new__(cls_with_mixins, *args, **kwargs)
@@ -183,7 +184,7 @@ class DynamicMixinAcceptor:
                     # print(f'Calling... {base.__name__}(kwargs={mixin_kwargs})')
                     base.__init__(self, **mixin_kwargs)
 
-        cls_bases = list(get_bases(cls))
+        cls_bases = list(get_original_bases(cls))
         if not cls.__name__.endswith(cls.WITH_MIXINS_CLS_SUFFIX):
             cls_bases = list(cls._mixin_classes) + cls_bases
 
