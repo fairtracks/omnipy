@@ -102,3 +102,23 @@ class TableOfPydanticRecordsModel(Chain3[SplitToLinesModel,
                                          Model[list[PydanticRecordModel[_PydanticRecordT]]]],
                                   Generic[_PydanticRecordT]):
     ...
+
+
+class TsvTableModel(Chain3[
+        SplitToLinesModel,
+        SplitLinesToColumnsModel,
+        TableWithColNamesModel,
+]):
+    ...
+
+
+SplitLinesToColumnsByCommaModel = SplitLinesToColumnsModel.adjust(
+    'SplitLinesToColumnsByCommaModel', delimiter=',')
+
+
+class CsvTableModel(Chain3[
+        SplitToLinesModel,
+        SplitLinesToColumnsByCommaModel,
+        TableWithColNamesModel,
+]):
+    ...

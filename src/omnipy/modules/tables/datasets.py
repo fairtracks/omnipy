@@ -4,12 +4,14 @@ from pydantic import BaseModel
 
 from omnipy.data.dataset import Dataset
 
-from .models import (TableDictOfDictsOfJsonScalarsModel,
+from .models import (CsvTableModel,
+                     TableDictOfDictsOfJsonScalarsModel,
                      TableDictOfListsOfJsonScalarsModel,
                      TableListOfDictsOfJsonScalarsModel,
                      TableListOfListsOfJsonScalarsModel,
                      TableOfPydanticRecordsModel,
-                     TableWithColNamesModel)
+                     TableWithColNamesModel,
+                     TsvTableModel)
 
 
 class TableListOfListsOfJsonScalarsDataset(Dataset[TableListOfListsOfJsonScalarsModel]):
@@ -42,4 +44,12 @@ _PydanticModelT = TypeVar('_PydanticModelT', bound=BaseModel)
 
 class TableOfPydanticRecordsDataset(Dataset[TableOfPydanticRecordsModel[_PydanticModelT]],
                                     Generic[_PydanticModelT]):
+    ...
+
+
+class TsvTableDataset(Dataset[TsvTableModel]):
+    ...
+
+
+class CsvTableDataset(Dataset[CsvTableModel]):
     ...
