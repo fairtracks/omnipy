@@ -33,9 +33,9 @@ def _check_job_func_parameters(job_func: Callable) -> None:
 
 def _create_dataset_cls(data_file_type: InputTypeT) -> type[IsDataset]:
     if is_model_subclass(data_file_type):
-        return Dataset[data_file_type]  # type: ignore[return-value, valid-type]
+        return Dataset[data_file_type]  # type: ignore[valid-type]
     else:
-        return Dataset[Model[data_file_type]]  # type: ignore[return-value, valid-type]
+        return Dataset[Model[data_file_type]]  # type: ignore[valid-type]
 
 
 # Classes
