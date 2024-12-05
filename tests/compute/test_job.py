@@ -9,9 +9,9 @@ from omnipy.compute.job_creator import JobCreator
 
 from .conftest import MockJobClasses
 from .helpers.functions import assert_updated_wrapper
-from .helpers.mocks import (_CommandMockJobTemplate,
-                            CommandMockJob,
+from .helpers.mocks import (CommandMockJob,
                             CommandMockJobTemplate,
+                            CommandMockJobTemplateCore,
                             IsCommandMockJob,
                             IsCommandMockJobTemplate,
                             IsMockJob,
@@ -299,7 +299,7 @@ def _assert_immutable_command_mock_job_properties(
 
 def test_subclass_tmpl() -> None:
     cmd_tmpl = CommandMockJobTemplate('erase')(mock_cmd_func)
-    assert isinstance(cmd_tmpl, _CommandMockJobTemplate)
+    assert isinstance(cmd_tmpl, CommandMockJobTemplateCore)
 
     assert cmd_tmpl.uppercase is False
     assert cmd_tmpl.params == {}
@@ -313,7 +313,7 @@ def test_subclass_tmpl() -> None:
 def test_subclass_apply(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
     cmd_tmpl = CommandMockJobTemplate(
         'erase', uppercase=True, params={'what': 'all'})(mock_cmd_func,)
-    assert isinstance(cmd_tmpl, _CommandMockJobTemplate)
+    assert isinstance(cmd_tmpl, CommandMockJobTemplateCore)
     assert cmd_tmpl.engine_decorator_applied is False
 
     cmd = cmd_tmpl.apply()
@@ -339,7 +339,7 @@ def test_subclass_apply_revise() -> None:
 
     cmd_tmpl_revised = cmd.revise()
     assert_updated_wrapper(cmd_tmpl_revised, cmd)
-    assert isinstance(cmd_tmpl_revised, _CommandMockJobTemplate)
+    assert isinstance(cmd_tmpl_revised, CommandMockJobTemplateCore)
 
     assert cmd.uppercase is False
     assert cmd_tmpl_revised.params == {'what': 'nothing'}
@@ -359,7 +359,7 @@ def test_subclass_refine_empty() -> None:
 
     cmd_tmpl_refined = cmd_tmpl.refine()
     assert_updated_wrapper(cmd_tmpl_refined, cmd_tmpl)
-    assert isinstance(cmd_tmpl_refined, _CommandMockJobTemplate)
+    assert isinstance(cmd_tmpl_refined, CommandMockJobTemplateCore)
     assert cmd_tmpl_refined is not cmd_tmpl
     assert cmd_tmpl_refined == cmd_tmpl
 

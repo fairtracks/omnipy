@@ -4,15 +4,15 @@ from typing import Annotated, cast, Generator
 import pytest
 import pytest_cases as pc
 
-from omnipy.compute.flow import (_DagFlowTemplate,
-                                 _FuncFlowTemplate,
-                                 _LinearFlowTemplate,
-                                 DagFlow,
+from omnipy.compute.flow import (DagFlow,
                                  DagFlowTemplate,
+                                 DagFlowTemplateCore,
                                  FuncFlow,
                                  FuncFlowTemplate,
+                                 FuncFlowTemplateCore,
                                  LinearFlow,
-                                 LinearFlowTemplate)
+                                 LinearFlowTemplate,
+                                 LinearFlowTemplateCore)
 from omnipy.compute.job import JobBase
 
 from .helpers.classes import (AnyFlowClsTuple,
@@ -65,7 +65,7 @@ def linear_flow_cls_tuple() -> FlowClsTuple[type[LinearFlow], SingleTaskLinearFl
     return FlowClsTuple(
         flow_cls=LinearFlow,
         flow_tmpl_cls=LinearFlowTemplate,
-        assert_flow_tmpl_cls=_LinearFlowTemplate,
+        assert_flow_tmpl_cls=LinearFlowTemplateCore,
     )
 
 
@@ -74,7 +74,7 @@ def dag_flow_cls_tuple() -> FlowClsTuple[type[DagFlow], SingleTaskDagFlowTemplat
     return FlowClsTuple(
         flow_cls=DagFlow,
         flow_tmpl_cls=DagFlowTemplate,
-        assert_flow_tmpl_cls=_DagFlowTemplate,
+        assert_flow_tmpl_cls=DagFlowTemplateCore,
     )
 
 
@@ -83,7 +83,7 @@ def func_flow_cls_tuple() -> FlowClsTuple[type[FuncFlow], FuncFlowTemplateCallab
     return FlowClsTuple(
         flow_cls=FuncFlow,
         flow_tmpl_cls=FuncFlowTemplate,
-        assert_flow_tmpl_cls=_FuncFlowTemplate,
+        assert_flow_tmpl_cls=FuncFlowTemplateCore,
     )
 
 

@@ -18,12 +18,12 @@ from .cases.flows import FlowCase
 from .cases.raw.functions import data_import_func, empty_dict_func, format_to_string_func
 from .helpers.classes import AnyFlowClsTuple, FuncArgFlowClsTuple, TaskTemplateArgFlowClsTuple
 from .helpers.functions import assert_flow_or_flow_template, assert_updated_wrapper
-from .helpers.mocks import (_MockTaskTemplateAssertSameTimeOfCurFlowRun,
-                            IsMockTaskTemplateAssertSameTimeOfCurFlowRun,
+from .helpers.mocks import (IsMockTaskTemplateAssertSameTimeOfCurFlowRun,
                             MockFlowTemplateSubclass,
                             MockJobTemplateSubclass,
                             MockLocalRunner,
-                            MockTaskTemplateAssertSameTimeOfCurFlowRun)
+                            MockTaskTemplateAssertSameTimeOfCurFlowRun,
+                            MockTaskTemplateAssertSameTimeOfCurFlowRunCore)
 
 MockJobClasses = tuple[Type[JobBase], Type[JobTemplateMixin], Type[JobMixin]]
 
@@ -362,8 +362,9 @@ def test_dynamic_dag_flow_by_returned_dict(
 
 
 def mypy_fix_mock_task_template_assert_same_time(
-        mock_task_template_assert_same_time: object) -> _MockTaskTemplateAssertSameTimeOfCurFlowRun:
-    return cast(_MockTaskTemplateAssertSameTimeOfCurFlowRun, mock_task_template_assert_same_time)
+        mock_task_template_assert_same_time: object
+) -> MockTaskTemplateAssertSameTimeOfCurFlowRunCore:
+    return cast(MockTaskTemplateAssertSameTimeOfCurFlowRunCore, mock_task_template_assert_same_time)
 
 
 def test_time_of_multi_level_flow_run_flow_cls_tuple(

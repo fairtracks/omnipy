@@ -247,12 +247,12 @@ class IsCommandMockJob(IsCommandMockJobBase,
         ...
 
 
-class _CommandMockJobTemplate(CommandMockInit[CallP, RetT],
-                              JobTemplateMixin[IsCommandMockJobTemplate[CallP, RetT],
-                                               IsCommandMockJob[CallP, RetT],
-                                               CallP,
-                                               RetT],
-                              Generic[CallP, RetT]):
+class CommandMockJobTemplateCore(CommandMockInit[CallP, RetT],
+                                 JobTemplateMixin[IsCommandMockJobTemplate[CallP, RetT],
+                                                  IsCommandMockJob[CallP, RetT],
+                                                  CallP,
+                                                  RetT],
+                                 Generic[CallP, RetT]):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsCommandMockJob[CallP, RetT]]:
         return cast(type[IsCommandMockJob[CallP, RetT]], CommandMockJob[CallP, RetT])
@@ -270,16 +270,16 @@ def command_mock_job_template_as_callable_decorator(
 
 
 def to_command_mock_task_template_init_protocol(
-    decorated_cls: Callable[Concatenate[Callable[CallP, RetT], InitP], _CommandMockJobTemplate]
+    decorated_cls: Callable[Concatenate[Callable[CallP, RetT], InitP], CommandMockJobTemplateCore]
 ) -> HasCommandMockJobTemplateInit[IsCommandMockJobTemplate[CallP, RetT], CallP, RetT]:
     return cast(HasCommandMockJobTemplateInit[IsCommandMockJobTemplate[CallP, RetT], CallP, RetT],
                 decorated_cls)
 
 
-_CommandMockJobTemplate.accept_mixin(CommandMockParamMixin)
+CommandMockJobTemplateCore.accept_mixin(CommandMockParamMixin)
 
 CommandMockJobTemplate = command_mock_job_template_as_callable_decorator(
-    to_command_mock_task_template_init_protocol(_CommandMockJobTemplate))
+    to_command_mock_task_template_init_protocol(CommandMockJobTemplateCore))
 
 
 class CommandMockJob(CommandMockInit[CallP, RetT],
@@ -504,7 +504,7 @@ class IsMockTaskAssertSameTimeOfCurFlowRun(
     """"""
 
 
-class _MockTaskTemplateAssertSameTimeOfCurFlowRun(
+class MockTaskTemplateAssertSameTimeOfCurFlowRunCore(
         FuncArgJobBase[IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT],
                        IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT],
                        CallP,
@@ -536,7 +536,7 @@ def mock_task_template_as_callable_decorator(
 
 def to_mock_task_template_init_protocol(
     decorated_cls: Callable[Concatenate[Callable[CallP, RetT], InitP],
-                            _MockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT]]
+                            MockTaskTemplateAssertSameTimeOfCurFlowRunCore[CallP, RetT]]
 ) -> HasFuncArgJobTemplateInit[
         IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT], CallP, RetT]:
     return cast(
@@ -548,10 +548,10 @@ def to_mock_task_template_init_protocol(
         decorated_cls)
 
 
-_MockTaskTemplateAssertSameTimeOfCurFlowRun.accept_mixin(AssertSameTimeOfCurFlowRunJobBaseMixin)
+MockTaskTemplateAssertSameTimeOfCurFlowRunCore.accept_mixin(AssertSameTimeOfCurFlowRunJobBaseMixin)
 
 MockTaskTemplateAssertSameTimeOfCurFlowRun = mock_task_template_as_callable_decorator(
-    to_mock_task_template_init_protocol(_MockTaskTemplateAssertSameTimeOfCurFlowRun))
+    to_mock_task_template_init_protocol(MockTaskTemplateAssertSameTimeOfCurFlowRunCore))
 
 
 class MockTaskAssertSameTimeOfCurFlowRun(

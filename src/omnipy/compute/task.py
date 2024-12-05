@@ -21,10 +21,14 @@ class TaskBase:
     ...
 
 
-class _TaskTemplate(FuncArgJobBase[IsTaskTemplate[CallP, RetT], IsTask[CallP, RetT], CallP, RetT],
-                    JobTemplateMixin[IsTaskTemplate[CallP, RetT], IsTask[CallP, RetT], CallP, RetT],
-                    TaskBase,
-                    Generic[CallP, RetT]):
+class TaskTemplateCore(FuncArgJobBase[IsTaskTemplate[CallP, RetT], IsTask[CallP, RetT], CallP,
+                                      RetT],
+                       JobTemplateMixin[IsTaskTemplate[CallP, RetT],
+                                        IsTask[CallP, RetT],
+                                        CallP,
+                                        RetT],
+                       TaskBase,
+                       Generic[CallP, RetT]):
     """"""
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsTask[CallP, RetT]]:
@@ -41,15 +45,16 @@ def task_template_as_callable_decorator(
 
 
 def to_task_template_init_protocol(
-    decorated_cls: Callable[Concatenate[Callable[CallP, RetT], InitP], _TaskTemplate[CallP, RetT]]
+    decorated_cls: Callable[Concatenate[Callable[CallP, RetT], InitP],
+                            TaskTemplateCore[CallP, RetT]]
 ) -> HasFuncArgJobTemplateInit[IsTaskTemplate[CallP, RetT], CallP, RetT]:
     return cast(HasFuncArgJobTemplateInit[IsTaskTemplate[CallP, RetT], CallP, RetT], decorated_cls)
 
 
-TaskTemplate = task_template_as_callable_decorator(to_task_template_init_protocol(_TaskTemplate))
+TaskTemplate = task_template_as_callable_decorator(to_task_template_init_protocol(TaskTemplateCore))
 # Only works with mypy, not pyright or PyCharm
 #
-# TaskTemplate = callable_decorator_cls(to_task_template_init_protocol(_TaskTemplate))
+# TaskTemplate = callable_decorator_cls(to_task_template_init_protocol(TaskTemplateCore))
 
 
 class Task(JobMixin[IsTaskTemplate[CallP, RetT], IsTask[CallP, RetT], CallP, RetT],

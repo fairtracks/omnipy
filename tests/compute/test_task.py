@@ -4,7 +4,7 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.api.exceptions import JobStateException
-from omnipy.compute.task import _TaskTemplate, Task, TaskTemplate
+from omnipy.compute.task import Task, TaskTemplate, TaskTemplateCore
 
 from .cases.raw.functions import format_to_string_func, power_m1_func
 from .cases.tasks import TaskCase
@@ -14,7 +14,7 @@ from .helpers.mocks import MockLocalRunner
 
 def test_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
     task_template = TaskTemplate()(format_to_string_func)
-    assert isinstance(task_template, _TaskTemplate)
+    assert isinstance(task_template, TaskTemplateCore)
     assert_updated_wrapper(task_template, format_to_string_func)
 
     with pytest.raises(TypeError):

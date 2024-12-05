@@ -7,14 +7,14 @@ from omnipy.api.protocols.public.compute import (IsDagFlowTemplate,
                                                  IsFuncFlowTemplate,
                                                  IsLinearFlowTemplate,
                                                  IsTaskTemplate)
-from omnipy.compute.flow import (_DagFlowTemplate,
-                                 _FuncFlowTemplate,
-                                 _LinearFlowTemplate,
-                                 DagFlow,
+from omnipy.compute.flow import (DagFlow,
+                                 DagFlowTemplateCore,
                                  FuncFlow,
                                  FuncFlowTemplate,
-                                 LinearFlow)
-from omnipy.compute.task import _TaskTemplate, Task, TaskTemplate
+                                 FuncFlowTemplateCore,
+                                 LinearFlow,
+                                 LinearFlowTemplateCore)
+from omnipy.compute.task import Task, TaskTemplate, TaskTemplateCore
 
 from .helpers.mocks import MockLocalRunner
 
@@ -28,7 +28,8 @@ def test_task_template_as_decorator(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_one_template: IsTaskTemplate,
 ) -> None:
-    assert isinstance(plus_one_template, _TaskTemplate)  # noqa  # Pycharm static type checker bug
+    assert isinstance(plus_one_template,
+                      TaskTemplateCore)  # noqa  # Pycharm static type checker bug
     assert plus_one_template.name == 'plus_one'  # noqa  # Pycharm static type checker bug
 
     plus_one = plus_one_template.apply()  # noqa  # Pycharm static type checker bug
@@ -47,7 +48,7 @@ def test_linear_flow_template_as_decorator(
     plus_five_template: IsLinearFlowTemplate,
 ) -> None:
 
-    assert isinstance(plus_five_template, _LinearFlowTemplate)
+    assert isinstance(plus_five_template, LinearFlowTemplateCore)
     assert plus_five_template.name == 'plus_five'
 
     plus_five = plus_five_template.apply()
@@ -66,7 +67,7 @@ def test_dag_flow_template_as_decorator(
     plus_five_template: IsDagFlowTemplate,
 ) -> None:
 
-    assert isinstance(plus_five_template, _DagFlowTemplate)
+    assert isinstance(plus_five_template, DagFlowTemplateCore)
     assert plus_five_template.name == 'plus_five'
 
     plus_five = plus_five_template.apply()
@@ -90,7 +91,7 @@ def test_func_flow_template_as_decorator(
     plus_y_template: IsFuncFlowTemplate,
 ) -> None:
 
-    assert isinstance(plus_y_template, _FuncFlowTemplate)
+    assert isinstance(plus_y_template, FuncFlowTemplateCore)
     assert plus_y_template.name == 'plus_y'
 
     plus_y = plus_y_template.apply()

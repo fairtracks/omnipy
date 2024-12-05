@@ -31,16 +31,16 @@ class FlowBase:
     ...
 
 
-class _LinearFlowTemplate(TaskTemplateArgsJobBase[IsLinearFlowTemplate[CallP, RetT],
-                                                  IsLinearFlow[CallP, RetT],
-                                                  CallP,
-                                                  RetT],
-                          JobTemplateMixin[IsLinearFlowTemplate[CallP, RetT],
-                                           IsLinearFlow[CallP, RetT],
-                                           CallP,
-                                           RetT],
-                          FlowBase,
-                          Generic[CallP, RetT]):
+class LinearFlowTemplateCore(TaskTemplateArgsJobBase[IsLinearFlowTemplate[CallP, RetT],
+                                                     IsLinearFlow[CallP, RetT],
+                                                     CallP,
+                                                     RetT],
+                             JobTemplateMixin[IsLinearFlowTemplate[CallP, RetT],
+                                              IsLinearFlow[CallP, RetT],
+                                              CallP,
+                                              RetT],
+                             FlowBase,
+                             Generic[CallP, RetT]):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsLinearFlow[CallP, RetT]]:
         return cast(type[IsLinearFlow[CallP, RetT]], LinearFlow[CallP, RetT])
@@ -57,7 +57,7 @@ def linear_flow_template_as_callable_decorator(
 
 def to_linear_flow_template_init_protocol(
     decorated_cls: Callable[Concatenate[Callable[CallP, RetT], InitP],
-                            _LinearFlowTemplate[CallP, RetT]]
+                            LinearFlowTemplateCore[CallP, RetT]]
 ) -> HasTaskTemplateArgsJobTemplateInit[
         IsLinearFlowTemplate[CallP, RetT], IsTaskTemplate, CallP, RetT]:
     return cast(
@@ -69,7 +69,7 @@ def to_linear_flow_template_init_protocol(
 
 
 LinearFlowTemplate = linear_flow_template_as_callable_decorator(
-    to_linear_flow_template_init_protocol(_LinearFlowTemplate))
+    to_linear_flow_template_init_protocol(LinearFlowTemplateCore))
 
 
 class LinearFlow(JobMixin[IsLinearFlowTemplate[CallP, RetT], IsLinearFlow[CallP, RetT], CallP,
@@ -91,16 +91,16 @@ class LinearFlow(JobMixin[IsLinearFlowTemplate[CallP, RetT], IsLinearFlow[CallP,
         return cast(type[IsLinearFlowTemplate[CallP, RetT]], LinearFlowTemplate)
 
 
-class _DagFlowTemplate(TaskTemplateArgsJobBase[IsDagFlowTemplate[CallP, RetT],
-                                               IsDagFlow[CallP, RetT],
-                                               CallP,
-                                               RetT],
-                       JobTemplateMixin[IsDagFlowTemplate[CallP, RetT],
-                                        IsDagFlow[CallP, RetT],
-                                        CallP,
-                                        RetT],
-                       FlowBase,
-                       Generic[CallP, RetT]):
+class DagFlowTemplateCore(TaskTemplateArgsJobBase[IsDagFlowTemplate[CallP, RetT],
+                                                  IsDagFlow[CallP, RetT],
+                                                  CallP,
+                                                  RetT],
+                          JobTemplateMixin[IsDagFlowTemplate[CallP, RetT],
+                                           IsDagFlow[CallP, RetT],
+                                           CallP,
+                                           RetT],
+                          FlowBase,
+                          Generic[CallP, RetT]):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsDagFlow[CallP, RetT]]:
         return cast(type[IsDagFlow[CallP, RetT]], DagFlow[CallP, RetT])
@@ -117,7 +117,7 @@ def dag_flow_template_as_callable_decorator(
 
 def to_dag_flow_template_init_protocol(
     decorated_cls: Callable[Concatenate[Callable[CallP, RetT], InitP],
-                            _DagFlowTemplate[CallP, RetT]]
+                            DagFlowTemplateCore[CallP, RetT]]
 ) -> HasTaskTemplateArgsJobTemplateInit[IsDagFlowTemplate[CallP, RetT], IsTaskTemplate, CallP,
                                         RetT]:
     return cast(
@@ -129,7 +129,7 @@ def to_dag_flow_template_init_protocol(
 
 
 DagFlowTemplate = dag_flow_template_as_callable_decorator(
-    to_dag_flow_template_init_protocol(_DagFlowTemplate))
+    to_dag_flow_template_init_protocol(DagFlowTemplateCore))
 
 
 class DagFlow(JobMixin[IsDagFlowTemplate[CallP, RetT], IsDagFlow[CallP, RetT], CallP, RetT],
@@ -150,16 +150,16 @@ class DagFlow(JobMixin[IsDagFlowTemplate[CallP, RetT], IsDagFlow[CallP, RetT], C
         return cast(type[IsDagFlowTemplate[CallP, RetT]], DagFlowTemplate)
 
 
-class _FuncFlowTemplate(FuncArgJobBase[IsFuncFlowTemplate[CallP, RetT],
-                                       IsFuncFlow[CallP, RetT],
-                                       CallP,
-                                       RetT],
-                        JobTemplateMixin[IsFuncFlowTemplate[CallP, RetT],
-                                         IsFuncFlow[CallP, RetT],
-                                         CallP,
-                                         RetT],
-                        FlowBase,
-                        Generic[CallP, RetT]):
+class FuncFlowTemplateCore(FuncArgJobBase[IsFuncFlowTemplate[CallP, RetT],
+                                          IsFuncFlow[CallP, RetT],
+                                          CallP,
+                                          RetT],
+                           JobTemplateMixin[IsFuncFlowTemplate[CallP, RetT],
+                                            IsFuncFlow[CallP, RetT],
+                                            CallP,
+                                            RetT],
+                           FlowBase,
+                           Generic[CallP, RetT]):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsFuncFlow[CallP, RetT]]:
         return cast(type[IsFuncFlow[CallP, RetT]], FuncFlow[CallP, RetT])
@@ -176,14 +176,14 @@ def func_flow_template_as_callable_decorator(
 
 def to_func_flow_template_init_protocol(
     decorated_cls: Callable[Concatenate[Callable[CallP, RetT], InitP],
-                            _FuncFlowTemplate[CallP, RetT]]
+                            FuncFlowTemplateCore[CallP, RetT]]
 ) -> HasFuncArgJobTemplateInit[IsFuncFlowTemplate[CallP, RetT], CallP, RetT]:
     return cast(HasFuncArgJobTemplateInit[IsFuncFlowTemplate[CallP, RetT], CallP, RetT],
                 decorated_cls)
 
 
 FuncFlowTemplate = func_flow_template_as_callable_decorator(
-    to_func_flow_template_init_protocol(_FuncFlowTemplate))
+    to_func_flow_template_init_protocol(FuncFlowTemplateCore))
 
 
 class FuncFlow(JobMixin[IsFuncFlowTemplate[CallP, RetT], IsFuncFlow[CallP, RetT], CallP, RetT],
