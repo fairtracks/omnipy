@@ -32,8 +32,8 @@ class DynamicMixinAcceptor:
     @classmethod
     def _get_mixin_init_kwarg_params(cls) -> dict[str, inspect.Parameter]:
         return {
-            key: param for param_dict in cls._init_params_per_mixin_cls.values() for key,
-            param in param_dict.items()
+            key: param for param_dict in cls._init_params_per_mixin_cls.values()
+            for key, param in param_dict.items()
         }
 
     @property

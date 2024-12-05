@@ -106,8 +106,8 @@ def _parse_none_in_mapping(plain_outer_type, outer_type_args, inner_val_type, va
             for _ in chain(inner_key_union_types, inner_val_union_types)):
         return plain_outer_type({
             _parse_none_in_types(inner_key_union_types) if key is None else key:
-                _parse_none_in_types(inner_val_union_types) if val is None else val for key,
-            val in value.items()
+                _parse_none_in_types(inner_val_union_types) if val is None else val
+            for key, val in value.items()
         })
     return value
 
@@ -120,8 +120,8 @@ def _parse_none_in_typevar(inner_val_type):
 
 def _parse_none_in_fixed_tuple(plain_outer_type, tuple_of_union_variant_types, value):
     return plain_outer_type(
-        _parse_none_in_types(tuple_of_union_variant_types[i]) if val is None else val for i,
-        val in enumerate(value))
+        _parse_none_in_types(tuple_of_union_variant_types[i]) if val is None else val
+        for i, val in enumerate(value))
 
 
 def _parse_none_in_union(flattened_union_variant_types, value):

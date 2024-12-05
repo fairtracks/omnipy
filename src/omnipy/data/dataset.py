@@ -447,8 +447,8 @@ class Dataset(
 
     def to_data(self) -> dict[str, Any]:
         return {
-            key: self._check_value(val) for key,
-            val in GenericModel.dict(self, by_alias=True).get(DATA_KEY).items()
+            key: self._check_value(val)
+            for key, val in GenericModel.dict(self, by_alias=True).get(DATA_KEY).items()
         }
 
     def from_data(self,

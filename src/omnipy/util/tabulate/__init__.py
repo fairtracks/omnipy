@@ -169,13 +169,13 @@ def _html_row_with_attrs(celltag, unsafe, cell_values, colwidths, colaligns):
     }
     if unsafe:
         values_with_attrs = [
-            "<{0}{1}>{2}</{0}>".format(celltag, alignment.get(a, ""), c) for c,
-            a in zip(cell_values, colaligns)
+            "<{0}{1}>{2}</{0}>".format(celltag, alignment.get(a, ""), c)
+            for c, a in zip(cell_values, colaligns)
         ]
     else:
         values_with_attrs = [
-            "<{0}{1}>{2}</{0}>".format(celltag, alignment.get(a, ""), htmlescape(c)) for c,
-            a in zip(cell_values, colaligns)
+            "<{0}{1}>{2}</{0}>".format(celltag, alignment.get(a, ""), htmlescape(c))
+            for c, a in zip(cell_values, colaligns)
         ]
     rowhtml = "<tr>{}</tr>".format("".join(values_with_attrs).rstrip())
     if celltag == "th":  # it's a header row, create a new table header
@@ -191,8 +191,8 @@ def _moin_row_with_attrs(celltag, cell_values, colwidths, colaligns, header=""):
         "decimal": '<style="text-align: right;">',
     }
     values_with_attrs = [
-        "{}{} {} ".format(celltag, alignment.get(a, ""), header + c + header) for c,
-        a in zip(cell_values, colaligns)
+        "{}{} {} ".format(celltag, alignment.get(a, ""), header + c + header)
+        for c, a in zip(cell_values, colaligns)
     ]
     return "".join(values_with_attrs) + "||"
 
@@ -1162,8 +1162,9 @@ def _align_column(
             # wcswidth and _visible_width don't count invisible characters;
             # padfn doesn't need to apply another correction
             padded_strings = [
-                "\n".join([padfn(w, s) for s, w in zip((ms.splitlines() or ms), mw)]) for ms,
-                mw in zip(strings, visible_widths)
+                "\n".join([padfn(w, s)
+                           for s, w in zip((ms.splitlines() or ms), mw)])
+                for ms, mw in zip(strings, visible_widths)
             ]
     else:  # single-line cell values
         if not enable_widechars and not has_invisible:
@@ -2163,11 +2164,9 @@ def tabulate(
         missing_vals = list(missingval)
         if len(missing_vals) < len(cols):
             missing_vals.extend((len(cols) - len(missing_vals)) * [_DEFAULT_MISSINGVAL])
-    cols = [[_format(v, ct, fl_fmt, int_fmt, miss_v, has_invisible) for v in c] for c,
-            ct,
-            fl_fmt,
-            int_fmt,
-            miss_v in zip(cols, coltypes, float_formats, int_formats, missing_vals)]
+    cols = [[_format(v, ct, fl_fmt, int_fmt, miss_v,
+                     has_invisible) for v in c] for c, ct, fl_fmt, int_fmt, miss_v in zip(
+                         cols, coltypes, float_formats, int_formats, missing_vals)]
 
     # align columns
     # first set global alignment
@@ -2189,9 +2188,8 @@ def tabulate(
                 aligns[idx] = align
     minwidths = ([width_fn(h) + min_padding for h in headers] if headers else [0] * len(cols))
     cols = [
-        _align_column(c, a, minw, has_invisible, enable_widechars, is_multiline) for c,
-        a,
-        minw in zip(cols, aligns, minwidths)
+        _align_column(c, a, minw, has_invisible, enable_widechars, is_multiline)
+        for c, a, minw in zip(cols, aligns, minwidths)
     ]
 
     aligns_headers = None
@@ -2220,9 +2218,8 @@ def tabulate(
                     aligns_headers[hidx] = align
         minwidths = [max(minw, max(width_fn(cl) for cl in c)) for minw, c in zip(minwidths, t_cols)]
         headers = [
-            _align_header(h, a, minw, width_fn(h), is_multiline, width_fn) for h,
-            a,
-            minw in zip(headers, aligns_headers, minwidths)
+            _align_header(h, a, minw, width_fn(h), is_multiline, width_fn)
+            for h, a, minw in zip(headers, aligns_headers, minwidths)
         ]
         rows = list(zip(*cols))
     else:
