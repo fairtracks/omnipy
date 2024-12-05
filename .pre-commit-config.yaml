@@ -25,7 +25,7 @@ repos:
       - id: yapf
         name: "yapf (check)"
         additional_dependencies: [toml]
-        args: [ '--style', 'pyproject.toml', '--parallel', '--diff' ]
+        args: [ '--style', 'pyproject.toml', '--diff' ]
         stages: [ manual ]
         types: [ python ]
   - repo: https://github.com/pycqa/isort
