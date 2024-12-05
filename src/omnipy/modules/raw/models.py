@@ -49,18 +49,21 @@ class StrModel(_StrModel):
     )
 
 
-class _SplitToItemsMixin:
+class _SplitToItemsParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
         strip: bool = True
         strip_chars: str | None = None
         delimiter: str = ','
 
+
+class _SplitToItemsMixin:
     @classmethod
     def _split_line(cls, data: str) -> list[str]:
-        strip = cls.Params.strip
-        strip_chars = cls.Params.strip_chars
-        delimiter = cls.Params.delimiter
+        Params = cast(type[_SplitToItemsParamsMixin], cls).Params
+        strip = Params.strip
+        strip_chars = Params.strip_chars
+        delimiter = Params.delimiter
 
         if strip:
             data = data.strip(strip_chars)
@@ -69,10 +72,7 @@ class _SplitToItemsMixin:
         return [item.strip(strip_chars) for item in items] if strip else items
 
 
-class _SplitToItemsModel(
-        Model[list[str] | str],
-        _SplitToItemsMixin,
-):
+class _SplitToItemsModel(Model[list[str] | str], _SplitToItemsMixin):
     @classmethod
     def _parse_data(cls, data: list[str] | str) -> list[str]:
         if isinstance(data, list):
@@ -81,10 +81,10 @@ class _SplitToItemsModel(
         return cls._split_line(data)
 
 
-class SplitToItemsModel(_SplitToItemsModel):
+class SplitToItemsModel(_SplitToItemsParamsMixin, _SplitToItemsModel):
     adjust = bind_adjust_model_func(
         _SplitToItemsModel.clone_model_cls,
-        _SplitToItemsModel.Params,
+        _SplitToItemsParamsMixin.Params,
     )
 
 
@@ -115,10 +115,10 @@ class _SplitItemsToSubitemsModel(
         return [cls._split_line(cast(str, line)) for line in data]
 
 
-class SplitItemsToSubitemsModel(_SplitItemsToSubitemsModel):
+class SplitItemsToSubitemsModel(_SplitToItemsParamsMixin, _SplitItemsToSubitemsModel):
     adjust = bind_adjust_model_func(
         _SplitItemsToSubitemsModel.clone_model_cls,
-        _SplitItemsToSubitemsModel.Params,
+        _SplitToItemsParamsMixin.Params,
     )
 
 
@@ -137,14 +137,16 @@ class SplitLinesToColumnsModel(_SplitLinesToColumnsParamsMixin, _SplitItemsToSub
     )
 
 
-class _JoinItemsMixin:
+class _JoinItemsParamMixin:
     @params_dataclass
     class Params(ParamsBase):
         delimiter: str = ','
 
+
+class _JoinItemsMixin:
     @classmethod
     def _join_items(cls, data: list[str]) -> str:
-        return cls.Params.delimiter.join(data)
+        return cast(_JoinItemsParamMixin, cls).Params.delimiter.join(data)
 
 
 class _JoinItemsModel(Model[str | list[str]], _JoinItemsMixin):
@@ -158,10 +160,10 @@ class _JoinItemsModel(Model[str | list[str]], _JoinItemsMixin):
     ...
 
 
-class JoinItemsModel(_JoinItemsModel):
+class JoinItemsModel(_JoinItemsParamMixin, _JoinItemsModel):
     adjust = bind_adjust_model_func(
         _JoinItemsModel.clone_model_cls,
-        _JoinItemsModel.Params,
+        _JoinItemsParamMixin.Params,
     )
 
 
@@ -190,10 +192,10 @@ class _JoinSubitemsToItemsModel(
         return [cls._join_items(cast(list[str], cols)) for cols in data]
 
 
-class JoinSubitemsToItemsModel(_JoinSubitemsToItemsModel):
+class JoinSubitemsToItemsModel(_JoinItemsParamMixin, _JoinSubitemsToItemsModel):
     adjust = bind_adjust_model_func(
         _JoinSubitemsToItemsModel.clone_model_cls,
-        _JoinSubitemsToItemsModel.Params,
+        _JoinItemsParamMixin.Params,
     )
 
 
