@@ -32,7 +32,6 @@ from omnipy.util.helpers import (get_default_if_typevar,
                                  get_event_loop_and_check_if_loop_is_running,
                                  is_iterable,
                                  remove_forward_ref_notation)
-from omnipy.util.web import download_file_to_memory
 
 if TYPE_CHECKING:
     from omnipy.modules.remote.datasets import HttpUrlDataset
@@ -665,20 +664,6 @@ class Dataset(
                 continue
             else:
                 raise RuntimeError('Unable to load from serializer')
-
-    @staticmethod
-    def _download_file(url: str, path: str, tmp_dir_path: str) -> str | None:
-        print(f'Downloading {url}...')
-        data = download_file_to_memory(url)
-
-        if data is None:
-            print(f'Failed to download file from {url}')
-            return None
-
-        download_path = os.path.join(tmp_dir_path, os.path.basename(path))
-        with open(download_path, 'wb') as out_file:
-            out_file.write(data)
-        return download_path
 
     @staticmethod
     def _ensure_tar_gz_file(path: str):
