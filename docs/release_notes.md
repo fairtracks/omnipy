@@ -1,3 +1,12 @@
+## Omnipy v0.17.2
+
+_Release date: Nov 9, 2024_
+
+### Bug fixes in v0.17.2
+
+- Fixed an inconsistency between `Dataset.__init__()` and `Dataset.__setitem__()` methods. Directly
+  setting dataset items now converts Models using `to_data()` +`from_data()`.
+
 ## Omnipy v0.17.1
 
 _Release date: Nov 9, 2024_
