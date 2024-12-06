@@ -1,3 +1,11 @@
+## Omnipy v0.17.1
+
+_Release date: Nov 9, 2024_
+
+### Bug fixes in v0.17.1
+
+- Fixed incorrect (lack of) closing of client sessions in asynchronous download tasks
+
 ## Omnipy v0.17.0
 
 _Release date: Nov 7, 2024_
