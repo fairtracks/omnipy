@@ -112,6 +112,15 @@ class LinearFlowRunnerEngine(JobRunnerEngine):
             result = None
             with linear_flow.flow_context:
                 for i, job in enumerate(linear_flow.task_templates):
+                    # run_kwargs = kwargs if i == 0 else {}
+                    # if job.has_coroutine_func():
+                    #     async def resolve_async_job(*inner_args, **inner_kwargs):
+                    #         return await resolve(job(*inner_args, **inner_kwargs))
+                    #
+                    #     return resolve_async_job(*args, **run_kwargs)
+                    # # TODO: Better handling of kwargs
+                    # result = job(*args, **run_kwargs)
+
                     # TODO: Better handling of kwargs
                     if i == 0:
                         result = job(*args, **kwargs)
