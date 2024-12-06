@@ -31,17 +31,17 @@ efficient manner.
   A new model, `HttpUrlModel`, has been added to support dynamic building of URLs from parts. It is
   more flexible than other similar solutions in the standard Python library, `Pydantic`, or other
   libraries, supporting the following features:
-    - All parts can be easily edited at any time, using built-in types such as `dict` and `Path`
-    - Automatic data type conversion _(generic Omnipy feature)_
-    - Continuous validation after each change _(generic Omnipy feature)_
-    - Error recovery: revert to last valid snapshot after invalid change _(generic Omnipy feature)_
-    - Whenever the `HttpUrlModel` object is converted to a string, i.e. by insertion into a
-      `StrModel` / `StrDataset` or being used to fetch data, the URL string is automatically
-      constructed from the parts.
-    - Builds on top of [`Url`](https://docs.pydantic.dev/2.0/usage/types/urls/) from
-      `pydantic_core`, which provides basic validation, URL encoding as well as
-      [punycode](https://en.wikipedia.org/wiki/Punycode) encoding of international domain names for
-      [increased security](https://www.xudongz.com/blog/2017/idn-phishing/)
+  - All parts can be easily edited at any time, using built-in types such as `dict` and `Path`
+  - Automatic data type conversion _(generic Omnipy feature)_
+  - Continuous validation after each change _(generic Omnipy feature)_
+  - Error recovery: revert to last valid snapshot after invalid change _(generic Omnipy feature)_
+  - Whenever the `HttpUrlModel` object is converted to a string, i.e. by insertion into a
+    `StrModel` / `StrDataset` or being used to fetch data, the URL string is automatically
+    constructed from the parts.
+  - Builds on top of [`Url`](https://docs.pydantic.dev/2.0/usage/types/urls/) from
+    `pydantic_core`, which provides basic validation, URL encoding as well as
+    [punycode](https://en.wikipedia.org/wiki/Punycode) encoding of international domain names for
+    [increased security](https://www.xudongz.com/blog/2017/idn-phishing/)
 
   With the `HttpUrlDataset`, dynamic URLs are scaled up to operate in batch mode, e.g. for building
   URLs for repeated API calls to be fetched concurrently and asynchronously.
@@ -68,14 +68,14 @@ efficient manner.
   Through the new `auto_async` job modifier, Omnipy now automatically detects whether the code is
   being run in an asynchronous runtime environment, such as a Jupyter notebook, and adjusts the
   execution of asynchronous tasks accordingly:
-    - Technically, if `auto_async` is set to `True` (the default), the existing event loop is
-      detected and used to run an asynchronous Omnipy `Task` as an `asyncio.Task`, allowing tasks to
-      be run in the background if run from, _e.g._, a Jupyter notebook.
-    - If no event loop is detected, Omnipy will create a new event loop and close it after the task
-      is finished, allowing the task to be run synchronously in a regular Python script, or from the
-      console.
-    - The `auto_async` feature alleviates the complexity of running asynchronous tasks in different
-      environments, and simplifies the combined use of asynchronous and synchronous tasks.
+  - Technically, if `auto_async` is set to `True` (the default), the existing event loop is detected
+    and used to run an asynchronous Omnipy `Task` as an `asyncio.Task`, allowing tasks to be run in
+    the background if run from, _e.g._, a Jupyter notebook.
+  - If no event loop is detected, Omnipy will create a new event loop and close it after the task is
+    finished, allowing the task to be run synchronously in a regular Python script, or from the
+    console.
+  - The `auto_async` feature alleviates the complexity of running asynchronous tasks in different
+    environments, and simplifies the combined use of asynchronous and synchronous tasks.
 
   _**Note 1:** Omnipy is yet to support asynchronous flows, so asynchronous tasks currently need to
   be run independently._
@@ -95,41 +95,41 @@ efficient manner.
   is implemented in the new `get_*_from_api_endpoint` tasks (where `*` is `json`,
   `bytes`, or `str`), built on top of the asynchronous `aiohttp` library, and supports the following
   features:
-    - Automatic retry of HTTP requests, building on the `aiohttp_retry` library. Retries are
-      configurable to retry for particular HTTP response codes, to retry a specified number of times
-      and to use a specified algorithm to calculate the delay between retries.
-    - Rate limiting of HTTP requests, building on the `aiolimiter` library. Rate limiting is
-      configurable to limit the number of requests per time period, and to specify the time period
-      used for calculation, indirectly also controlling the burst size. Adding to what is provided
-      by the `aiolimiter` library, Omnipy ensures that the maximum rate limit is not exceeded also
-      for the initial burst of requests.
-    - Automatic reset of rate limiter counting and delays for subsequent batches of requests
-    - Retries and rate limiting are configured individually for each domain. Omnipy ensures that
-      HTTP requests in the same batch (e.g. provided in the same `HttpUrlDataset`) are coordinated
-      according to their domain.
-    - The default values for retries and rate limiting are set to reasonable values, so that this
-      functionality is provided seamlessly for the users. However, these default values can be
-      easily be changed if needed.
-    - `Dataset.load()` now supports lists and dicts of paths or URLs (strings or `HttpUrlModel`
-      objects) as input, as well as `HttpUrlDataset` objects.
-    - Due to the asynchronous nature of the `get_*_from_api_endpoint` tasks, users in an
-      asynchronous environment such as Jupyter Notebook can inspect the status of the download tasks
-      while the download is in progress by inspecting the `Dataset` object.
+  - Automatic retry of HTTP requests, building on the `aiohttp_retry` library. Retries are
+    configurable to retry for particular HTTP response codes, to retry a specified number of times
+    and to use a specified algorithm to calculate the delay between retries.
+  - Rate limiting of HTTP requests, building on the `aiolimiter` library. Rate limiting is
+    configurable to limit the number of requests per time period, and to specify the time period
+    used for calculation, indirectly also controlling the burst size. Adding to what is provided by
+    the `aiolimiter` library, Omnipy ensures that the maximum rate limit is not exceeded also for
+    the initial burst of requests.
+  - Automatic reset of rate limiter counting and delays for subsequent batches of requests
+  - Retries and rate limiting are configured individually for each domain. Omnipy ensures that HTTP
+    requests in the same batch (e.g. provided in the same `HttpUrlDataset`) are coordinated
+    according to their domain.
+  - The default values for retries and rate limiting are set to reasonable values, so that this
+    functionality is provided seamlessly for the users. However, these default values can be easily
+    be changed if needed.
+  - `Dataset.load()` now supports lists and dicts of paths or URLs (strings or `HttpUrlModel`
+    objects) as input, as well as `HttpUrlDataset` objects.
+  - Due to the asynchronous nature of the `get_*_from_api_endpoint` tasks, users in an asynchronous
+    environment such as Jupyter Notebook can inspect the status of the download tasks while the
+    download is in progress by inspecting the `Dataset` object.
 
 
 - **Other new features / bug fixes / refactorings**
-    - Refactored Model and Dataset __repr__ to make use of IPython pretty printer. Drops support for
-      plain Python console for automatic pretty prints
-    - Implemented NestedSplitToItemsModel and NestedJoinItemsModel for parsing nested structures of
-      any level to/from strings (e.g. `"param1=true&param2=42"`)
-    - Implemented MatchItemsModel, which allows for filtering of items in a list based on a
-      user-defined functions
-    - Implemented task `create_row_index_from_column()` and basic table datasets
-    - Added support for optional fields in `PydanticRecordModel`
-    - Fixed lack of `to_data()` conversion when importing mappings and iterators of models to a
-      dataset
-    - Refactored models and datasets for split and join, to reduce duplication and allow adjustments
-      of params for all.
+  - Refactored Model and Dataset __repr__ to make use of IPython pretty printer. Drops support for
+    plain Python console for automatic pretty prints
+  - Implemented NestedSplitToItemsModel and NestedJoinItemsModel for parsing nested structures of
+    any level to/from strings (e.g. `"param1=true&param2=42"`)
+  - Implemented MatchItemsModel, which allows for filtering of items in a list based on a
+    user-defined functions
+  - Implemented task `create_row_index_from_column()` and basic table datasets
+  - Added support for optional fields in `PydanticRecordModel`
+  - Fixed lack of `to_data()` conversion when importing mappings and iterators of models to a
+    dataset
+  - Refactored models and datasets for split and join, to reduce duplication and allow adjustments
+    of params for all.
 
 ## Omnipy v0.16.1
 
@@ -208,17 +208,17 @@ issues with Python 3.12._
 
 
 - **Improved automatic conversion**
-    - Mimicked operations now autoconvert the outputs, e.g. `Model[int](5) + 5 == Model[int](10)`.
-    - Iterators and other sequence-like types such as range generators are now automatically
-      recognized and converted sequence types such as `list` and `tuple`.
-    - `PandasModel` and `PandasDataset` now support other models and datasets as input during
-      initialisation.
+  - Mimicked operations now autoconvert the outputs, e.g. `Model[int](5) + 5 == Model[int](10)`.
+  - Iterators and other sequence-like types such as range generators are now automatically
+    recognized and converted sequence types such as `list` and `tuple`.
+  - `PandasModel` and `PandasDataset` now support other models and datasets as input during
+    initialisation.
 
 
 - **Improvements of model validation**
-    - Internals of validation functionality in the Model class has been harmonised and simplified.
-    - Mimicked methods/attributes are validated also when interactive_mode=False
-    - Pydantic models are validated before accessing attributes
+  - Internals of validation functionality in the Model class has been harmonised and simplified.
+  - Mimicked methods/attributes are validated also when interactive_mode=False
+  - Pydantic models are validated before accessing attributes
 
 
 - **Better handling of `None` values**  
@@ -230,20 +230,19 @@ issues with Python 3.12._
 
 
 - **Other new features**
-    - Support for Python 3.12 and Prefect 2.20
-    - Better support for forward references
-    - Caching of type-related function calls such as Model.outer_type(), further improving
-      efficiency
-    - Dataset.load() now supports lists of paths or URLs as input
-    - Implementation of a SetDeque util class for speedup of various features, including model
-      snapshots
-    - Support default values for `TypeVar`, through `typing_extensions` (otherwise a Python 3.13
-      feature)
-    - Refactoring of root log, fixing issues with a stuck timestamp when running flows
-    - Reimplemented and fixed `__name__`, `__qualname__`, and `__repr__` for Model and Dataset
-    - Implemented support for `__call__()`, and `__bool__()` for Models
-    - Implemented `copy()` for Model and Dataset
-    - Implemented flexible `__setitem__` and `__delitem__` for Dataset, supporting indexing by ints,
-      slices and tuples.
-    - A ton of smaller bug fixes, new tests and code cleanup. Some refactoring, especially of new
-      snapshot functionality, is postponed to later versions.
+  - Support for Python 3.12 and Prefect 2.20
+  - Better support for forward references
+  - Caching of type-related function calls such as Model.outer_type(), further improving efficiency
+  - Dataset.load() now supports lists of paths or URLs as input
+  - Implementation of a SetDeque util class for speedup of various features, including model
+    snapshots
+  - Support default values for `TypeVar`, through `typing_extensions` (otherwise a Python 3.13
+    feature)
+  - Refactoring of root log, fixing issues with a stuck timestamp when running flows
+  - Reimplemented and fixed `__name__`, `__qualname__`, and `__repr__` for Model and Dataset
+  - Implemented support for `__call__()`, and `__bool__()` for Models
+  - Implemented `copy()` for Model and Dataset
+  - Implemented flexible `__setitem__` and `__delitem__` for Dataset, supporting indexing by ints,
+    slices and tuples.
+  - A ton of smaller bug fixes, new tests and code cleanup. Some refactoring, especially of new
+    snapshot functionality, is postponed to later versions.
