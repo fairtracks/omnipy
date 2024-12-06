@@ -1,3 +1,66 @@
+# Omnipy v0.18.0
+
+_Release date: Nov 7, 2024_
+
+v0.18.0 of Omnipy another **huge** release in terms of code line modifications, but not so much in
+terms of new features. The main new feature is, however, a very important one - the ability to make
+use of static type analysers like `pyright` to provide code-completion and/or validation of `Omnipy`
+tasks and flows. Also, Omnipy documentation is starting to receive some love!
+
+### New features in v0.18.0
+
+- **Extensive update to type hints for tasks and flows, supporting code auto-completion**
+
+  - The type hints for tasks and flows have been updated to provide better support for code
+    auto-completion. This includes typing the class decorator factory `callable_decorator_cls` in a
+    way that is currently supported by major static analysis tools, including `mypy`, `pyright` and
+    `Pycharm`.
+  - Type hints now include generics for the parameters and return type of decorated functions. This
+    allows for better type checking and code completion of tasks and flows.
+  - Job modifiers are now properly supported with type hints for the `__call__` method of task and
+    flow templates.
+  - Code completion has been tested in `PyCharm` and `Jupyter notebook` using `Pyright` language
+    server, which is now the recommended auto-completion setup. `Pycharm` basic auto-completion does
+    not correctly support the new `Python` type hint features needed for auto-completion.
+  - A large number of type hint issues have been fixed.
+  - Type hint updates are massive, and spans the entire code base, but with a focus on the
+    `compute` module and it's tests.
+
+
+- **Moved document generation to `mkdocs` and `mkdocstrings`**
+
+  - The documentation has been moved from `portray` to `mkdocs` and `mkdocstrings`. This change was
+    made due to the lack of updates from `portray`. The new setup allows for more flexibility and
+    control over the documentation, and provides a more stable and future-proof solution.
+  - Reference documentation is yet to be cleaned up and updated to the new format.
+
+
+- **Started writing general documentation**
+
+  - The documentation has been updated with a new section on Python typing, describing a historical
+    and conceptual background for Omnipy's new take on typing in Python. The description starts with
+    the traditional `duck typing` of Python, moved through `type 
+  annotations` for static analysis and `pydantic` take on making use of type annotation for runtime
+    validation. The section ends with a description of how `Omnipy` extends the functionality of
+    `pydantic` to provide the safety and predictability of static typing functionality within the
+    context of the flexible type dynamics possible in Python.
+  - Added general section describing the `Model` class, and how it is used to define data models as
+    parsers in Omnipy, as well as snapshots, automatic rollback, functional mimicking, and other
+    features of the `Model` class.
+
+
+- **Other new features / bug fixes / refactorings**
+  - Allow Dataset.load() of urls with specified keys
+  - Added TsvTableModel, TsvTableDataset, CsvTableModel, and CsvTableDataset
+  - Fixed inheritance of Params classes for a few join/split Models in the `raw` module
+  - Fixed a number of issues with the CI workflows:
+    - Fixed test code that caused crashes in Python particular Python versions.
+    - Fix for strange time formatting issue in the Python 3.11 VM
+    - Decreased `run_time_min` for `test_rate_limiting_client_session` due to new and more efficient
+      version of `aiolimiter`
+    - Updated pre-commit tools.
+    - Removed parallel run of yapf checks to fix strange issue with `yapf` and `pickle`
+
 ## Omnipy v0.17.2
 
 _Release date: Nov 9, 2024_
