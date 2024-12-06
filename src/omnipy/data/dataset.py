@@ -388,6 +388,11 @@ class Dataset(
             prev_value = self.data[key]
 
         try:
+            # if is_model_instance(val):
+            #     self.data[key] = self.get_model_class()(val)
+            # else:
+            #     self.data[key] = val
+
             self.data[key] = val
             self._validate(key)
         except Exception:
