@@ -1,6 +1,6 @@
 # Omnipy v0.18.0
 
-_Release date: Nov 7, 2024_
+_Release date: Dec 6, 2024_
 
 v0.18.0 of Omnipy another **huge** release in terms of code line modifications, but not so much in
 terms of new features. The main new feature is, however, a very important one - the ability to make
