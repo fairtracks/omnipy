@@ -3,12 +3,12 @@ from inspect import Parameter
 import os
 from typing import Annotated
 
-from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
 
 from omnipy.api.enums import RunState
 from omnipy.data.dataset import Dataset, MultiModelDataset
+from omnipy.util.pydantic import ValidationError
 
 from ....engine.helpers.functions import assert_job_state
 from .cases.flows import FlowCase

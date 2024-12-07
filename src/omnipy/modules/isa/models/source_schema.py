@@ -5,9 +5,8 @@
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Extra, Field
-
 from omnipy.data.model import Model
+import omnipy.util.pydantic as pyd
 
 from . import comment_schema, material_attribute_value_schema
 
@@ -16,15 +15,15 @@ class FieldType(Enum):
     Source = 'Source'
 
 
-class IsaSourceSchema(BaseModel):
+class IsaSourceSchema(pyd.BaseModel):
     class Config:
-        extra = Extra.forbid
+        extra = pyd.Extra.forbid
         use_enum_values = True
         use_enum_values = True
 
-    field_id: Optional[str] = Field(None, alias='@id')
-    field_context: Optional[str] = Field(None, alias='@context')
-    field_type: Optional[FieldType] = Field(None, alias='@type')
+    field_id: Optional[str] = pyd.Field(None, alias='@id')
+    field_context: Optional[str] = pyd.Field(None, alias='@context')
+    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
     name: Optional[str] = None
     characteristics: Optional[List[
         material_attribute_value_schema.IsaMaterialAttributeValueModel]] = None

@@ -3,7 +3,6 @@ import os
 from textwrap import dedent
 from typing import Annotated, Callable, Iterator, TypeAlias
 
-from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
 
@@ -19,6 +18,7 @@ from omnipy.modules.raw.models import (BytesModel,
                                        SplitToItemsModel,
                                        SplitToLinesModel,
                                        StrModel)
+from omnipy.util.pydantic import ValidationError
 
 from ...helpers.protocols import AssertModelOrValFunc
 

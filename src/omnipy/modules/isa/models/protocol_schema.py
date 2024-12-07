@@ -5,14 +5,13 @@
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Extra, Field
-
 from omnipy.data.model import Model
+import omnipy.util.pydantic as pyd
 
 from . import comment_schema, ontology_annotation_schema, protocol_parameter_schema
 
 
-class Component(BaseModel):
+class Component(pyd.BaseModel):
     componentName: Optional[str] = None
     componentType: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = (None)
     comments: Optional[List[comment_schema.IsaCommentModel]] = None
@@ -22,14 +21,14 @@ class FieldType(Enum):
     Protocol = 'Protocol'
 
 
-class IsaProtocolSchema(BaseModel):
+class IsaProtocolSchema(pyd.BaseModel):
     class Config:
-        extra = Extra.forbid
+        extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = Field(None, alias='@id')
-    field_context: Optional[str] = Field(None, alias='@context')
-    field_type: Optional[FieldType] = Field(None, alias='@type')
+    field_id: Optional[str] = pyd.Field(None, alias='@id')
+    field_context: Optional[str] = pyd.Field(None, alias='@context')
+    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
     name: Optional[str] = None
     protocolType: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = None
     description: Optional[str] = None

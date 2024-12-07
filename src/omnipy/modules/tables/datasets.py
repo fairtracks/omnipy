@@ -1,8 +1,7 @@
 from typing import Generic, TypeVar
 
-from pydantic import BaseModel
-
 from omnipy.data.dataset import Dataset
+import omnipy.util.pydantic as pyd
 
 from .models import (CsvTableModel,
                      TableDictOfDictsOfJsonScalarsModel,
@@ -39,7 +38,7 @@ class TableWithColNamesDataset(Dataset[TableWithColNamesModel]):
         return tuple(col_names.keys())
 
 
-_PydanticModelT = TypeVar('_PydanticModelT', bound=BaseModel)
+_PydanticModelT = TypeVar('_PydanticModelT', bound=pyd.BaseModel)
 
 
 class TableOfPydanticRecordsDataset(Dataset[TableOfPydanticRecordsModel[_PydanticModelT]],

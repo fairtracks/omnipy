@@ -5,9 +5,8 @@
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Extra, Field
-
 from omnipy.data.model import Model
+import omnipy.util.pydantic as pyd
 
 from . import ontology_annotation_schema
 
@@ -16,14 +15,14 @@ class FieldType(Enum):
     MaterialAttribute = 'MaterialAttribute'
 
 
-class IsaMaterialAttributeSchema(BaseModel):
+class IsaMaterialAttributeSchema(pyd.BaseModel):
     class Config:
-        extra = Extra.forbid
+        extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = Field(None, alias='@id')
-    field_context: Optional[str] = Field(None, alias='@context')
-    field_type: Optional[FieldType] = Field(None, alias='@type')
+    field_id: Optional[str] = pyd.Field(None, alias='@id')
+    field_context: Optional[str] = pyd.Field(None, alias='@context')
+    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
     characteristicType: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = None
 
 

@@ -6,9 +6,8 @@ from datetime import date, datetime
 from enum import Enum
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, constr, Extra, Field, validator
-
 from omnipy.data.model import Model
+import omnipy.util.pydantic as pyd
 
 from . import (assay_schema,
                comment_schema,
@@ -29,7 +28,7 @@ class FieldType(Enum):
     Study = 'Study'
 
 
-class _Materials(BaseModel):
+class _Materials(pyd.BaseModel):
     sources: Optional[List[source_schema.IsaSourceModel]] = None
     samples: Optional[List[sample_schema.IsaSampleModel]] = None
     otherMaterials: Optional[List[material_schema.IsaMaterialModel]] = None
@@ -39,20 +38,20 @@ class _MaterialsModel(Model[_Materials]):
     ...
 
 
-class IsaStudySchema(BaseModel):
+class IsaStudySchema(pyd.BaseModel):
     class Config:
-        extra = Extra.forbid
+        extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = Field(None, alias='@id')
-    field_context: Optional[str] = Field(None, alias='@context')
-    field_type: Optional[FieldType] = Field(None, alias='@type')
+    field_id: Optional[str] = pyd.Field(None, alias='@id')
+    field_context: Optional[str] = pyd.Field(None, alias='@context')
+    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
     filename: Optional[str] = None
     identifier: Optional[str] = None
     title: Optional[str] = None
     description: Optional[str] = None
-    submissionDate: Optional[Union[datetime, date, constr(max_length=0)]] = None
-    publicReleaseDate: Optional[Union[datetime, date, constr(max_length=0)]] = None
+    submissionDate: Optional[Union[datetime, date, pyd.constr(max_length=0)]] = None
+    publicReleaseDate: Optional[Union[datetime, date, pyd.constr(max_length=0)]] = None
     publications: Optional[List[publication_schema.IsaPublicationModel]] = None
     people: Optional[List[person_schema.IsaPersonModel]] = None
     studyDesignDescriptors: Optional[List[
@@ -64,19 +63,19 @@ class IsaStudySchema(BaseModel):
     factors: Optional[List[factor_schema.IsaFactorModel]] = None
     characteristicCategories: Optional[List[
         material_attribute_schema.IsaMaterialAttributeModel]] = \
-        Field(
+        pyd.Field(
             None,
             description='List of all the characteristics categories (or material attributes) '
                         'defined in the study, used to avoid duplication of their declaration '
                         'when each material_attribute_value is created. ')
     unitCategories: Optional[List[ontology_annotation_schema.IsaOntologyReferenceModel]] = \
-        Field(
+        pyd.Field(
             None,
             description='List of all the units defined in the study, used to avoid duplication '
                         'of their declaration when each value is created. ')
     comments: Optional[List[comment_schema.IsaCommentModel]] = None
 
-    _date_to_iso_format = validator(
+    _date_to_iso_format = pyd.validator(
         'submissionDate', 'publicReleaseDate', allow_reuse=True)(
             date_to_iso_format)
 

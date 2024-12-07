@@ -11,18 +11,18 @@ import humanize
 from IPython.display import display
 from IPython.lib.pretty import RepresentationPrinter
 import objsize
-from pydantic.generics import GenericModel
 
 from omnipy.data.data_class_creator import DataClassBase
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.util.helpers import get_first_item, has_items, is_non_str_byte_iterable
+import omnipy.util.pydantic as pyd
 from omnipy.util.tabulate import tabulate
 
 
 class BaseDisplayMixin(metaclass=ABCMeta):
     def _repr_pretty_(self, p: RepresentationPrinter, cycle: bool) -> None:
         if cycle:
-            p.text(f'{cast(GenericModel, self).__repr_name__()}(...)')
+            p.text(f'{cast(pyd.GenericModel, self).__repr_name__()}(...)')
         else:
             if len(p.stack) == 1:
                 p.text(self.pretty_repr())

@@ -2,7 +2,6 @@ import os
 from textwrap import dedent
 from typing import Annotated, Iterator
 
-from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
 
@@ -16,6 +15,7 @@ from omnipy.modules.raw.datasets import (BytesDataset,
                                          SplitToItemsDataset,
                                          SplitToLinesDataset,
                                          StrDataset)
+from omnipy.util.pydantic import ValidationError
 
 from ...helpers.protocols import AssertModelOrValFunc
 

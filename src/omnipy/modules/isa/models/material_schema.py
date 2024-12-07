@@ -4,9 +4,8 @@
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Extra, Field
-
 from omnipy.data.model import Model
+import omnipy.util.pydantic as pyd
 
 from . import comment_schema, material_attribute_value_schema
 
@@ -20,14 +19,14 @@ class Type(Enum):
     Labeled_Extract_Name = 'Labeled Extract Name'
 
 
-class IsaMaterialSchema(BaseModel):
+class IsaMaterialSchema(pyd.BaseModel):
     class Config:
-        extra = Extra.forbid
+        extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = Field(None, alias='@id')
-    field_context: Optional[str] = Field(None, alias='@context')
-    field_type: Optional[FieldType] = Field(None, alias='@type')
+    field_id: Optional[str] = pyd.Field(None, alias='@id')
+    field_context: Optional[str] = pyd.Field(None, alias='@context')
+    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
     name: Optional[str] = None
     type: Optional[Type] = None
     characteristics: Optional[List[

@@ -21,14 +21,6 @@ from typing import (Annotated,
                     SupportsIndex,
                     Union)
 
-from pydantic import Protocol as PydanticProtocol
-from pydantic import root_validator, ValidationError
-from pydantic.error_wrappers import ErrorWrapper
-from pydantic.fields import Field, ModelField, Undefined, UndefinedType
-from pydantic.generics import GenericModel
-from pydantic.main import BaseModel, ModelMetaclass, validate_model
-from pydantic.typing import is_none_type
-from pydantic.utils import lenient_isinstance, lenient_issubclass, sequence_like
 from typing_extensions import get_original_bases, TypeVar
 
 from omnipy.api.protocols.private.util import IsSnapshotWrapper
@@ -58,6 +50,14 @@ from omnipy.util.helpers import (all_equals,
                                  is_optional,
                                  is_union,
                                  remove_forward_ref_notation)
+from omnipy.util.pydantic import (is_none_type,
+                                  lenient_isinstance,
+                                  lenient_issubclass,
+                                  Undefined,
+                                  UndefinedType,
+                                  ValidationError)
+# from orjson import orjson
+import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
@@ -73,7 +73,7 @@ ROOT_KEY = '__root__'
 # TODO: Refactor Dataset and Model using mixins (including below functions)
 
 
-class _ModelMetaclass(DataClassBaseMeta, ModelMetaclass):
+class _ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
     # Hack to overcome bug in pydantic/fields.py (v1.10.13), lines 636-641:
     #
     # if origin is None or origin is CollectionsHashable:
@@ -97,7 +97,7 @@ class _ModelMetaclass(DataClassBaseMeta, ModelMetaclass):
 class Model(
         ModelDisplayMixin,
         DataClassBase,
-        GenericModel,
+        pyd.GenericModel,
         Generic[_RootT],
         metaclass=_ModelMetaclass,
 ):
@@ -136,7 +136,7 @@ class Model(
     See also docs of the Dataset class for more usage examples.
     """
 
-    __root__: _RootT = Field(default_factory=lambda: Undefined)
+    __root__: _RootT = pyd.Field(default_factory=lambda: Undefined)
 
     class Config:
         arbitrary_types_allowed = True
@@ -337,7 +337,7 @@ class Model(
             except Exception as exc:
                 val_exc = ValueError(f'Failed to prepare value for validation: {exc}')
                 raise ValidationError(
-                    [ErrorWrapper(exc, loc=ROOT_KEY), ErrorWrapper(val_exc, loc=ROOT_KEY)],
+                    [pyd.ErrorWrapper(exc, loc=ROOT_KEY), pyd.ErrorWrapper(val_exc, loc=ROOT_KEY)],
                     self.__class__)
             if omnipy_or_pydantic_model_as_input:
                 super_kwargs[ROOT_KEY] = cast(_RootT, value)
@@ -368,7 +368,7 @@ class Model(
         if is_model_instance(value):
             return True, cast(Model[_RootT], value).to_data()
         elif is_non_omnipy_pydantic_model(value):
-            return True, cast(BaseModel, value).dict(by_alias=True)
+            return True, cast(pyd.BaseModel, value).dict(by_alias=True)
         return False, value
 
     def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
@@ -382,7 +382,7 @@ class Model(
         return self.copy(deep=False)
 
     def copy(self, *, deep: bool = False, **kwargs) -> 'Model[_RootT]':
-        pydantic_copy = GenericModel.copy(self, deep=deep, **kwargs)
+        pydantic_copy = pyd.GenericModel.copy(self, deep=deep, **kwargs)
         if not deep:
             pydantic_copy.__dict__[ROOT_KEY] = pydantic_copy.__dict__[ROOT_KEY].copy()
         return pydantic_copy
@@ -423,7 +423,7 @@ class Model(
             @contextmanager
             def temporary_set_value_iter_to_pydantic_method() -> Iterator[None]:
                 prev_iter = value.__class__.__iter__
-                value.__class__.__iter__ = GenericModel.__iter__
+                value.__class__.__iter__ = pyd.GenericModel.__iter__
 
                 try:
                     yield
@@ -569,9 +569,9 @@ class Model(
         self,
         value: object,
     ) -> _RootT:
-        _is_model, value = self._prepare_value_for_validation_if_model(value)
+        _, value = self._prepare_value_for_validation_if_model(value)
 
-        values, fields_set, validation_error = validate_model(self.__class__, {ROOT_KEY: value})
+        values, _, validation_error = pyd.validate_model(self.__class__, {ROOT_KEY: value})
         if validation_error:
             raise validation_error
 
@@ -615,7 +615,7 @@ class Model(
 
     # TODO: Expand _generous_sequence_support to support iterators, such as dict_keys. Also see if
     #       it is possible to support general mappings in a similar way
-    @root_validator(pre=True)
+    @pyd.root_validator(pre=True)
     def _generous_sequence_support(cls, root_obj: dict[str, _RootT | None]) -> Any:
         if ROOT_KEY in root_obj:
             value = root_obj[ROOT_KEY]
@@ -623,12 +623,12 @@ class Model(
             if lenient_issubclass(outer_type, Sequence) \
                     and not lenient_isinstance(value, outer_type) \
                     and isinstance(value, Sequence) \
-                    and not sequence_like(value) \
+                    and not pyd.sequence_like(value) \
                     and not any(isinstance(value, typ) for typ in (str, bytes)):
                 return {ROOT_KEY: [_ for _ in value]}
         return root_obj
 
-    @root_validator
+    @pyd.root_validator
     def _parse_root_object(cls, root_obj: dict[str, _RootT | None]) -> Any:
         assert ROOT_KEY in root_obj
         value = root_obj[ROOT_KEY]
@@ -690,7 +690,7 @@ class Model(
             return json_content
 
     def from_json(self, json_contents: str) -> None:
-        new_model = self.parse_raw(json_contents, proto=PydanticProtocol.json)
+        new_model = self.parse_raw(json_contents, proto=pyd.Protocol.json)
         self.contents = new_model.contents
 
     @classmethod
@@ -721,8 +721,8 @@ class Model(
         cls.is_nested_type.cache_clear()
 
     @classmethod
-    def _get_root_field(cls) -> ModelField:
-        return cast(ModelField, cls.__fields__.get(ROOT_KEY))
+    def _get_root_field(cls) -> pyd.ModelField:
+        return cast(pyd.ModelField, cls.__fields__.get(ROOT_KEY))
 
     @classmethod
     def _get_root_type(cls, outer: bool, with_args: bool) -> TypeForm:

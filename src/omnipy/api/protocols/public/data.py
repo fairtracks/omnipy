@@ -1,8 +1,7 @@
 from typing import Any, Callable, IO, Iterator, Protocol, Sized, Type, TypeVar
 
-from pydantic.fields import Undefined, UndefinedType
-
 from omnipy.api.protocols.private.log import CanLog
+from omnipy.util.pydantic import Undefined, UndefinedType
 
 _ModelT = TypeVar('_ModelT')
 

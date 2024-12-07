@@ -6,9 +6,8 @@ from datetime import date, datetime
 from enum import Enum
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, constr, Extra, Field, validator
-
 from omnipy.data.model import Model
+import omnipy.util.pydantic as pyd
 
 from . import (comment_schema,
                data_schema,
@@ -24,20 +23,20 @@ class FieldType(Enum):
     Process = 'Process'
 
 
-class IsaProcessOrProtocolApplicationSchema(BaseModel):
+class IsaProcessOrProtocolApplicationSchema(pyd.BaseModel):
     class Config:
-        extra = Extra.forbid
+        extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = Field(None, alias='@id')
-    field_context: Optional[str] = Field(None, alias='@context')
-    field_type: Optional[FieldType] = Field(None, alias='@type')
+    field_id: Optional[str] = pyd.Field(None, alias='@id')
+    field_context: Optional[str] = pyd.Field(None, alias='@context')
+    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
     name: Optional[str] = None
     executesProtocol: Optional[protocol_schema.IsaProtocolModel] = None
     parameterValues: Optional[List[
         process_parameter_value_schema.IsaProcessParameterValueModel]] = None
     performer: Optional[str] = None
-    date: Optional[Union[datetime, date, constr(max_length=0)]] = None
+    date: Optional[Union[datetime, date, pyd.constr(max_length=0)]] = None
     previousProcess: Optional['IsaProcessOrProtocolApplicationModel'] = None
     nextProcess: Optional['IsaProcessOrProtocolApplicationModel'] = None
     inputs: Optional[List[Union[
@@ -53,7 +52,7 @@ class IsaProcessOrProtocolApplicationSchema(BaseModel):
     ]]] = None
     comments: Optional[List[comment_schema.IsaCommentModel]] = None
 
-    _date_to_iso_format = validator('date', allow_reuse=True)(date_to_iso_format)
+    _date_to_iso_format = pyd.validator('date', allow_reuse=True)(date_to_iso_format)
 
 
 class IsaProcessOrProtocolApplicationModel(Model[IsaProcessOrProtocolApplicationSchema]):

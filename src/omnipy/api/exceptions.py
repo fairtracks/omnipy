@@ -1,4 +1,4 @@
-from pydantic import NoneIsNotAllowedError
+import omnipy.util.pydantic as pyd
 
 
 class JobStateException(Exception):
@@ -9,7 +9,7 @@ class ShouldNotOccurException(Exception):
     ...
 
 
-class OmnipyNoneIsNotAllowedError(NoneIsNotAllowedError):
+class OmnipyNoneIsNotAllowedError(pyd.NoneIsNotAllowedError):
     msg_template = '[Omnipy] none is not an allowed value'
 
 

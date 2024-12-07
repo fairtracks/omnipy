@@ -2,11 +2,11 @@ from pathlib import PurePosixPath
 from typing import cast, Iterable
 from urllib.parse import unquote
 
-from pydantic import BaseModel, Field
 from pydantic_core import Url
 
 from omnipy.data.model import Model
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
+import omnipy.util.pydantic as pyd
 
 from ..raw.models import NestedJoinItemsModel, NestedSplitToItemsModel
 
@@ -64,7 +64,7 @@ class UrlPathModel(Model[PurePosixPath | str]):
 DEFAULT_PORTS = {80, 443}
 
 
-class UrlDataclassModel(BaseModel):
+class UrlDataclassModel(pyd.BaseModel):
     # Mutable fields
     scheme: str
     username: str | None = None
@@ -72,7 +72,7 @@ class UrlDataclassModel(BaseModel):
     host: str = 'localhost'
     port: int | None = None
     path: UrlPathModel | None = None
-    query: QueryParamsModel = Field(default_factory=QueryParamsModel)
+    query: QueryParamsModel = pyd.Field(default_factory=QueryParamsModel)
     fragment: str | None = None
 
     def __str__(self) -> str:

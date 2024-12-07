@@ -2,8 +2,6 @@ from abc import ABCMeta
 from contextlib import contextmanager
 from typing import Callable, ContextManager, Iterator
 
-from pydantic.fields import ModelField
-
 from omnipy.api.protocols.private.data import IsDataClassCreator
 from omnipy.api.protocols.private.util import HasContents, IsSnapshotHolder
 from omnipy.api.protocols.public.config import IsDataConfig
@@ -11,6 +9,7 @@ from omnipy.api.typedefs import TypeForm
 from omnipy.config.data import DataConfig
 from omnipy.util.decorators import call_super_if_available
 from omnipy.util.helpers import is_union, SnapshotHolder
+import omnipy.util.pydantic as pyd
 
 
 class DataClassCreator:
@@ -71,7 +70,7 @@ class DataClassBase(metaclass=DataClassBaseMeta):
         return params[0] if isinstance(params, tuple) and len(params) == 1 else params
 
     @classmethod
-    def _recursively_set_allow_none(cls, field: ModelField) -> None:
+    def _recursively_set_allow_none(cls, field: pyd.ModelField) -> None:
         if field.sub_fields:
             if is_union(field.outer_type_):
                 if any(_.allow_none for _ in field.sub_fields):

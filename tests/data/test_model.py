@@ -19,8 +19,6 @@ from typing import (Annotated,
                     TypeAlias,
                     Union)
 
-from pydantic import BaseModel, ConfigError, PositiveInt, StrictInt, ValidationError
-from pydantic.generics import GenericModel
 import pytest
 import pytest_cases as pc
 from typing_extensions import TypeVar
@@ -28,6 +26,8 @@ from typing_extensions import TypeVar
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model
+from omnipy.util.pydantic import ValidationError
+import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 from ..helpers.functions import assert_model, assert_val
@@ -219,7 +219,7 @@ def test_class_init_recursive_model_through_generic_hack_with_forwardref(
 
     MyNewestForwardRefAlias: TypeAlias = MyNewestForwardRefModel
 
-    with pytest.raises(ConfigError):
+    with pytest.raises(pyd.ConfigError):
         MyNewestForwardRefModel([MyNewestForwardRefModel([MyNewestForwardRefModel()])])
     MyNewestForwardRefModel.update_forward_refs(MyNewestForwardRefAlias=MyNewestForwardRefAlias)
 
@@ -311,7 +311,7 @@ def test_equality_other_models() -> None:
 
     # Equality is dependent on the datatype/model, in contrast to pydantic.
     # Relevant issue: https://github.com/pydantic/pydantic/pull/3066
-    assert Model[int](1) != Model[PositiveInt](1)
+    assert Model[int](1) != Model[pyd.PositiveInt](1)
 
     assert Model[list[int]]([1, 2, 3]) == Model[list[int]]([1.0, 2.0, 3.0])
     assert Model[list[int]]([1, 2, 3]) != Model[list[float]]([1.0, 2.0, 3.0])
@@ -333,7 +333,7 @@ def test_complex_equality() -> None:
 
 # TODO: Revisit with pydantic v2. Expected to change
 def test_equality_with_pydantic_not_symmetric() -> None:
-    class RootPydanticInt(BaseModel):
+    class RootPydanticInt(pyd.BaseModel):
         __root__: int
 
     class MyInt(Model[int]):
@@ -349,10 +349,10 @@ def test_equality_with_pydantic_not_symmetric() -> None:
 
 
 def test_equality_with_pydantic_as_args() -> None:
-    class PydanticModel(BaseModel):
+    class PydanticModel(pyd.BaseModel):
         a: int = 0
 
-    class OtherPydanticModel(BaseModel):
+    class OtherPydanticModel(pyd.BaseModel):
         a: float = 0
 
     assert PydanticModel(a=1) == OtherPydanticModel(a=1)
@@ -660,7 +660,7 @@ def test_load_inconvertible_data() -> None:
 
 
 def test_load_inconvertible_data_strict_type() -> None:
-    class StrictNumberModel(Model[StrictInt]):
+    class StrictNumberModel(Model[pyd.StrictInt]):
         ...
 
     model = StrictNumberModel()
@@ -2126,7 +2126,7 @@ def test_lazy_snapshot_triggered_by_state_changing_mimicked_methods(
 
 def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_value_access(
         skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
-    class SimplePydanticModel(BaseModel):
+    class SimplePydanticModel(pyd.BaseModel):
         value: Model[list[int]] = []
 
     model = Model[SimplePydanticModel](SimplePydanticModel(value=[123]))  # type: ignore[arg-type]
@@ -2145,7 +2145,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_v
 
 def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_value_access(
         skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
-    class SimplePydanticModel(BaseModel):
+    class SimplePydanticModel(pyd.BaseModel):
         value: Model[list[int]] = []  # type: ignore[assignment]
 
     model = Model[SimplePydanticModel](SimplePydanticModel(value=[123]))  # type: ignore[arg-type]
@@ -3678,13 +3678,13 @@ def test_mimic_operations_as_union_of_scalars() -> None:
 def test_mimic_operations_on_pydantic_models() -> None:
     T = TypeVar('T')
 
-    class ParentPydanticModel(BaseModel):
+    class ParentPydanticModel(pyd.BaseModel):
         a: int = 0
 
     class ChildPydanticModel(ParentPydanticModel):
         b: str = ''
 
-    class GenericPydanticModel(GenericModel, Generic[T]):
+    class GenericPydanticModel(pyd.GenericModel, Generic[T]):
         a: T | None = None
 
     class ChildGenericPydanticModel(GenericPydanticModel[int]):
@@ -4032,7 +4032,7 @@ def test_custom_parser_to_other_type() -> None:
 
 
 def test_nested_model() -> None:
-    class DictToListOfPositiveInts(Model[dict[PositiveInt, list[PositiveInt]]]):
+    class DictToListOfPositiveInts(Model[dict[pyd.PositiveInt, list[pyd.PositiveInt]]]):
         """This model is perfect for a mapping product numbers to factor lists"""
 
     model_1 = DictToListOfPositiveInts()
@@ -4089,12 +4089,12 @@ def test_nested_model() -> None:
 
 
 def test_complex_nested_models() -> None:
-    class ProductFactorsTuple(Model[tuple[PositiveInt, list[PositiveInt]]]):
+    class ProductFactorsTuple(Model[tuple[pyd.PositiveInt, list[pyd.PositiveInt]]]):
         """This model maps a single product to its product_factors, including validation"""
         @classmethod
         def _parse_data(
-                cls, data: tuple[PositiveInt,
-                                 list[PositiveInt]]) -> tuple[PositiveInt, list[PositiveInt]]:
+            cls, data: tuple[pyd.PositiveInt, list[pyd.PositiveInt]]
+        ) -> tuple[pyd.PositiveInt, list[pyd.PositiveInt]]:
             from functools import reduce
             from operator import mul
 

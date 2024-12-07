@@ -15,9 +15,6 @@ from typing import (Annotated,
                     Union)
 import weakref
 
-from pydantic import BaseModel
-from pydantic.fields import Undefined
-from pydantic.generics import GenericModel
 import pytest
 
 from omnipy.api.protocols.private.util import HasContents, IsSnapshotHolder
@@ -45,6 +42,8 @@ from omnipy.util.helpers import (all_type_variants,
                                  SnapshotWrapper,
                                  transfer_generic_args_to_cls,
                                  WeakKeyRefContainer)
+from omnipy.util.pydantic import Undefined
+import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 T = TypeVar('T')
@@ -403,18 +402,18 @@ def test_is_strict_subclass() -> None:
 
 
 def test_is_pydantic_model() -> None:
-    class PydanticModel(BaseModel):
+    class PydanticModel(pyd.BaseModel):
         ...
 
     T = TypeVar('T')
 
-    class GenericPydanticModel(GenericModel, Generic[T]):
+    class GenericPydanticModel(pyd.GenericModel, Generic[T]):
         ...
 
     class Mixin:
         ...
 
-    class MultiInheritModel(BaseModel, Mixin):
+    class MultiInheritModel(pyd.BaseModel, Mixin):
         ...
 
     class PydanticModelSubclass(PydanticModel):
@@ -426,14 +425,14 @@ def test_is_pydantic_model() -> None:
     class OmnipyModelSubclass(Model[int]):
         ...
 
-    class MultiInheritOmnipyAndPydanticModel(Model[int], BaseModel):
+    class MultiInheritOmnipyAndPydanticModel(Model[int], pyd.BaseModel):
         ...
 
-    class MultiInheritOmnipyAndGenericPydanticModel(Model[int], GenericModel, Generic[T]):
+    class MultiInheritOmnipyAndGenericPydanticModel(Model[int], pyd.GenericModel, Generic[T]):
         ...
 
     assert is_pure_pydantic_model(PydanticModel())
-    assert not is_pure_pydantic_model(BaseModel())
+    assert not is_pure_pydantic_model(pyd.BaseModel())
     assert not is_pure_pydantic_model(GenericPydanticModel())
     assert not is_pure_pydantic_model(MultiInheritModel())
     assert not is_pure_pydantic_model(PydanticModelSubclass())
@@ -446,7 +445,7 @@ def test_is_pydantic_model() -> None:
     assert not is_pure_pydantic_model('model')
 
     assert is_non_omnipy_pydantic_model(PydanticModel())
-    assert not is_non_omnipy_pydantic_model(BaseModel())
+    assert not is_non_omnipy_pydantic_model(pyd.BaseModel())
     assert is_non_omnipy_pydantic_model(GenericPydanticModel())
     assert is_non_omnipy_pydantic_model(MultiInheritModel())
     assert is_non_omnipy_pydantic_model(PydanticModelSubclass())
@@ -1098,7 +1097,7 @@ def test_snapshot_deepcopy_reuse_objects() -> None:
             if snapshot_holder is not None:
                 snapshot_holder.schedule_deepcopy_content_ids_for_deletion(contents_id)
 
-    class MyPydanticModel(BaseModel):
+    class MyPydanticModel(pyd.BaseModel):
         my_list: MyMemoDeletingList
 
         class Config:

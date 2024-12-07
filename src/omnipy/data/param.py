@@ -3,9 +3,9 @@ from dataclasses import dataclass
 import functools
 from typing import Any, Callable, cast, Concatenate, ParamSpec
 
-from pydantic import BaseModel
-from pydantic.main import create_model, ModelMetaclass, validate_model
 from typing_extensions import dataclass_transform, TypeVar
+
+import omnipy.util.pydantic as pyd
 
 ModelT = TypeVar('ModelT')
 DatasetT = TypeVar('DatasetT')
@@ -13,11 +13,11 @@ ParamsT = TypeVar('ParamsT')
 ParamsP = ParamSpec('ParamsP')
 
 
-class ParamsMeta(ModelMetaclass):
+class ParamsMeta(pyd.ModelMetaclass):
     def __init__(cls, name: str, bases: tuple[type, ...], namespace: dict[str, object]) -> None:
         super().__init__(name, bases, namespace)
 
-        model_cls = cast(type[BaseModel], cls)
+        model_cls = cast(type[pyd.BaseModel], cls)
         default_vals = {}
         for field in model_cls.__fields__.values():
             if field.default_factory is not None:
@@ -28,7 +28,7 @@ class ParamsMeta(ModelMetaclass):
                 raise ValueError(f'{model_cls.__name__}.{field.name} must have a default value')
 
         values, fields_set, validation_error = \
-            validate_model(model_cls, input_data={k: v for k, v in default_vals.items()})
+            pyd.validate_model(model_cls, input_data={k: v for k, v in default_vals.items()})
 
         if validation_error:
             raise validation_error
@@ -37,7 +37,7 @@ class ParamsMeta(ModelMetaclass):
             model_cls.__fields__[key].default = value
 
     def __getattr__(cls, attr: str) -> object:
-        model_cls = cast(type[BaseModel], cls)
+        model_cls = cast(type[pyd.BaseModel], cls)
         if attr in model_cls.__fields__:
             return cls._get_param_value(attr, model_cls)
         raise AttributeError(f'{model_cls.__name__}.{attr} is not defined')
@@ -50,7 +50,7 @@ class ParamsMeta(ModelMetaclass):
             return model_cls.__fields__[attr].default
 
     def __setattr__(cls, attr: str, value: object) -> None:
-        model_cls = cast(type[BaseModel], cls)
+        model_cls = cast(type[pyd.BaseModel], cls)
         if attr in model_cls.__fields__:
             raise AttributeError(f'{model_cls.__name__}.{attr} is read-only')
         elif not attr.startswith('_'):
@@ -58,7 +58,7 @@ class ParamsMeta(ModelMetaclass):
         super().__setattr__(attr, value)
 
 
-class ParamsBase(BaseModel, metaclass=ParamsMeta):
+class ParamsBase(pyd.BaseModel, metaclass=ParamsMeta):
     class Config:
         arbitrary_types_allowed = True
         smart_union = True
@@ -75,7 +75,7 @@ class ParamsBase(BaseModel, metaclass=ParamsMeta):
         for key, value in kwargs.items():
             all_field_infos[key].default = value
 
-        return create_model(  # type: ignore[call-overload]
+        return pyd.create_model(  # type: ignore[call-overload]
             model_name,
             __base__=ParamsBase,
             **{

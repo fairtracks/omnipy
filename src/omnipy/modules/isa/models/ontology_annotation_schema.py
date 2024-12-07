@@ -5,9 +5,8 @@
 from enum import Enum
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, Extra, Field
-
 from omnipy.data.model import Model
+import omnipy.util.pydantic as pyd
 
 from . import comment_schema
 
@@ -16,16 +15,16 @@ class FieldType(Enum):
     OntologyAnnotation = 'OntologyAnnotation'
 
 
-class IsaOntologyReferenceSchema(BaseModel):
+class IsaOntologyReferenceSchema(pyd.BaseModel):
     class Config:
-        extra = Extra.forbid
+        extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = Field(None, alias='@id')
-    field_context: Optional[str] = Field(None, alias='@context')
-    field_type: Optional[FieldType] = Field(None, alias='@type')
+    field_id: Optional[str] = pyd.Field(None, alias='@id')
+    field_context: Optional[str] = pyd.Field(None, alias='@context')
+    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
     annotationValue: Optional[Union[str, float]] = None
-    termSource: Optional[str] = Field(
+    termSource: Optional[str] = pyd.Field(
         None,
         description='The abbreviated ontology name. It should correspond to one of the sources as '
         'specified in the ontologySourceReference section of the Investigation.',

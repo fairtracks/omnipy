@@ -5,9 +5,8 @@
 from enum import Enum
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, Extra, Field
-
 from omnipy.data.model import Model
+import omnipy.util.pydantic as pyd
 
 from . import comment_schema, factor_schema, ontology_annotation_schema
 
@@ -16,14 +15,14 @@ class FieldType(Enum):
     FactorValue = 'FactorValue'
 
 
-class IsaFactorValueSchema(BaseModel):
+class IsaFactorValueSchema(pyd.BaseModel):
     class Config:
-        extra = Extra.forbid
+        extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = Field(None, alias='@id')
-    field_context: Optional[str] = Field(None, alias='@context')
-    field_type: Optional[FieldType] = Field(None, alias='@type')
+    field_id: Optional[str] = pyd.Field(None, alias='@id')
+    field_context: Optional[str] = pyd.Field(None, alias='@context')
+    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
     category: Optional[factor_schema.IsaFactorModel] = None
     value: Optional[Union[ontology_annotation_schema.IsaOntologyReferenceModel, str, float]] = None
     unit: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = None

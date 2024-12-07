@@ -1,11 +1,12 @@
-from pydantic import BaseModel, ValidationError
 import pytest
 
 from omnipy.modules.tables.models import PydanticRecordModel, TableOfPydanticRecordsModel
+from omnipy.util.pydantic import ValidationError
+import omnipy.util.pydantic as pyd
 
 
 def test_pydantic_record_model_all_required() -> None:
-    class NameRecord(BaseModel):
+    class NameRecord(pyd.BaseModel):
         firstname: str
         lastname: str
 
@@ -33,7 +34,7 @@ def test_pydantic_record_model_all_required() -> None:
 
 
 def test_pydantic_record_model_optional() -> None:
-    class NameRecordOptionalLastName(BaseModel):
+    class NameRecordOptionalLastName(pyd.BaseModel):
         firstname: str
         lastname: str | None = None
 
@@ -54,7 +55,7 @@ def test_pydantic_record_model_optional() -> None:
 
 
 def test_pydantic_record_model_extra_fields_config() -> None:
-    class NameRecordNoExtraFields(BaseModel):
+    class NameRecordNoExtraFields(pyd.BaseModel):
         firstname: str
         lastname: str | None = None
 
@@ -67,7 +68,7 @@ def test_pydantic_record_model_extra_fields_config() -> None:
     with pytest.raises(ValidationError):
         NameRecordNoExtraFieldsModel(firstname='Tarzan', title='King of Apes')
 
-    class NameRecordExtraFields(BaseModel):
+    class NameRecordExtraFields(pyd.BaseModel):
         firstname: str
         lastname: str | None = None
 
@@ -86,7 +87,7 @@ def test_pydantic_record_model_extra_fields_config() -> None:
 
 
 def test_table_of_pydantic_records_model_from_list_of_dicts() -> None:
-    class NameRecord(BaseModel):
+    class NameRecord(pyd.BaseModel):
         firstname: str
         lastname: str
 
@@ -117,7 +118,7 @@ def test_table_of_pydantic_records_model_from_list_of_dicts() -> None:
 
 
 def test_table_of_pydantic_records_model_from_list_of_lists() -> None:
-    class NameRecord(BaseModel):
+    class NameRecord(pyd.BaseModel):
         firstname: str
         lastname: str
 
@@ -144,7 +145,7 @@ def test_table_of_pydantic_records_model_from_list_of_lists() -> None:
 
 
 def test_table_of_pydantic_records_model_from_str() -> None:
-    class NameRecord(BaseModel):
+    class NameRecord(pyd.BaseModel):
         firstname: str
         lastname: str
 
@@ -168,7 +169,7 @@ def test_table_of_pydantic_records_model_from_str() -> None:
 
 
 def test_table_of_pydantic_records_model_with_optional_fields_not_last() -> None:
-    class OptionalNotLastRecord(BaseModel):
+    class OptionalNotLastRecord(pyd.BaseModel):
         firstname: str
         lastname: str | None = None
         age: int
@@ -181,7 +182,7 @@ def test_table_of_pydantic_records_model_with_optional_fields_not_last() -> None
 
 
 def test_table_of_pydantic_records_model_with_optional_fields_last() -> None:
-    class NameRecord(BaseModel):
+    class NameRecord(pyd.BaseModel):
         firstname: str
         lastname: str
         age: int | None = None

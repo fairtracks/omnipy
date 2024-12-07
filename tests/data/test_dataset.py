@@ -3,7 +3,6 @@ from textwrap import dedent
 from types import MappingProxyType, NoneType
 from typing import Annotated, Any, Callable, Generic, List, Optional, Union
 
-from pydantic import BaseModel, PositiveInt, StrictInt, ValidationError
 import pytest
 import pytest_cases as pc
 from typing_extensions import TypeVar
@@ -13,6 +12,8 @@ from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
+from omnipy.util.pydantic import ValidationError
+import omnipy.util.pydantic as pyd
 
 from .helpers.classes import MyFloatObject
 from .helpers.datasets import (DefaultStrDataset,
@@ -578,10 +579,10 @@ def test_complex_equality() -> None:
 
 
 def test_equality_with_pydantic() -> None:
-    class PydanticModel(BaseModel):
+    class PydanticModel(pyd.BaseModel):
         a: int = 0
 
-    class EqualPydanticModel(BaseModel):
+    class EqualPydanticModel(pyd.BaseModel):
         a: int = 0
 
     assert Dataset[Model[PydanticModel]]({'data_file_1': {'a': 1}}) == \
@@ -797,7 +798,7 @@ def test_nested_validation_level_two_models_at_both_levels(runtime: Annotated[Is
 
 
 def test_validation_pydantic_types():
-    dataset_1 = Dataset[Model[PositiveInt]]()
+    dataset_1 = Dataset[Model[pyd.PositiveInt]]()
 
     dataset_1['data_file_1'] = 123
 
@@ -805,7 +806,7 @@ def test_validation_pydantic_types():
         dataset_1['data_file_2'] = -234
 
     with pytest.raises(ValidationError):
-        Dataset[Model[list[StrictInt]]](x=[12.4, 11])  # noqa
+        Dataset[Model[list[pyd.StrictInt]]](x=[12.4, 11])  # noqa
 
 
 def test_import_and_export():
@@ -1086,12 +1087,12 @@ def test_complex_models():
     # Model subclass
     #
 
-    class MyRangeList(Model[list[PositiveInt]]):
+    class MyRangeList(Model[list[pyd.PositiveInt]]):
         """
         Transforms a pair of min and max ints to an inclusive range
         """
         @classmethod
-        def _parse_data(cls, data: list[PositiveInt]) -> list[PositiveInt]:
+        def _parse_data(cls, data: list[pyd.PositiveInt]) -> list[pyd.PositiveInt]:
             if len(data) == 0:
                 return data
             if len(data) == 2:

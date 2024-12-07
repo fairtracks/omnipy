@@ -1,7 +1,6 @@
 from dataclasses import fields
 from types import MappingProxyType
 
-from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
 
@@ -12,6 +11,7 @@ from omnipy.modules.frozen.models import (_FrozenAnyUnionM,
                                           NestedFrozenOnlyDictsModel,
                                           NestedFrozenOnlyTuplesModel)
 from omnipy.modules.frozen.typedefs import FrozenDict
+from omnipy.util.pydantic import ValidationError
 
 from ..helpers.classes import CaseInfo
 

@@ -1,16 +1,15 @@
 import typing
 from typing import Generic, Mapping, Type, TypeVar
 
-from pydantic import BaseConfig, BaseModel, create_model, Extra
-
 from omnipy.data.model import Model
+import omnipy.util.pydantic as pyd
 
 # Types
 
 
-class RecordSchemaBase(BaseModel):
+class RecordSchemaBase(pyd.BaseModel):
     class Config:
-        extra = Extra.forbid
+        extra = pyd.Extra.forbid
 
 
 # TODO: Revisit RecordT typing with pydantic v2 and/or new versions of mypy and python
@@ -66,13 +65,13 @@ class RecordSchemaDef(Model[RecordSchemaDefType]):
 
 def record_schema_factory(data_file: str,
                           record_schema_def: RecordSchemaDefType) -> Type[RecordSchemaBase]:
-    class Config(BaseConfig):
-        extra = Extra.forbid
+    class Config(pyd.BaseConfig):
+        extra = pyd.Extra.forbid
 
     # For real-world implementation config.dynamically_convert_elements_to_models must be forced
     # to False here.
 
-    return create_model(
+    return pyd.create_model(
         data_file,
         __base__=RecordSchemaBase,
         **{

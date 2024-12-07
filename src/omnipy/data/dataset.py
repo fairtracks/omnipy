@@ -7,10 +7,6 @@ import os
 import tarfile
 from typing import Any, Callable, cast, Generic, Iterator, TYPE_CHECKING
 
-from pydantic import Field, PrivateAttr, root_validator, ValidationError
-from pydantic.fields import ModelField, Undefined, UndefinedType
-from pydantic.generics import GenericModel
-from pydantic.main import ModelMetaclass
 from typing_extensions import TypeVar
 
 from omnipy.api.typedefs import TypeForm
@@ -32,6 +28,8 @@ from omnipy.util.helpers import (get_default_if_typevar,
                                  get_event_loop_and_check_if_loop_is_running,
                                  is_iterable,
                                  remove_forward_ref_notation)
+from omnipy.util.pydantic import Undefined, UndefinedType, ValidationError
+import omnipy.util.pydantic as pyd
 
 if TYPE_CHECKING:
     from omnipy.modules.remote.datasets import HttpUrlDataset
@@ -49,10 +47,10 @@ ASYNC_LOAD_SLEEP_TIME = 0.05
 #     return orjson.dumps(v, default=default).decode()
 
 # TODO: implement copy(), __copy__() and __deepcopy__() for Dataset and Model, making use of
-#       BaseModel.copy()
+#       pyd.BaseModel.copy()
 
 
-class _DatasetMetaclass(DataClassBaseMeta, ModelMetaclass):
+class _DatasetMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
     ...
 
 
@@ -60,7 +58,7 @@ class Dataset(
         DatasetDisplayMixin,
         TaskDatasetMixin,
         DataClassBase,
-        GenericModel,
+        pyd.GenericModel,
         Generic[ModelT],
         UserDict,
         metaclass=_DatasetMetaclass):
@@ -119,7 +117,7 @@ class Dataset(
         # json_loads = orjson.loads
         # json_dumps = orjson_dumps
 
-    data: dict[str, ModelT] = Field(default={})
+    data: dict[str, ModelT] = pyd.Field(default={})
 
     def __class_getitem__(
         cls,
@@ -257,7 +255,7 @@ class Dataset(
         return self.copy(deep=False)
 
     def copy(self, *, deep: bool = False, **kwargs) -> 'Dataset[ModelT]':
-        pydantic_copy = GenericModel.copy(self, deep=deep, **kwargs)
+        pydantic_copy = pyd.GenericModel.copy(self, deep=deep, **kwargs)
         if not deep:
             pydantic_copy.__dict__[DATA_KEY] = pydantic_copy.__dict__[DATA_KEY].copy()
         return pydantic_copy
@@ -277,8 +275,8 @@ class Dataset(
         return new_dataset_cls
 
     @classmethod
-    def _get_data_field(cls) -> ModelField:
-        return cast(ModelField, cls.__fields__.get(DATA_KEY))
+    def _get_data_field(cls) -> pyd.ModelField:
+        return cast(pyd.ModelField, cls.__fields__.get(DATA_KEY))
 
     @classmethod
     def get_model_class(cls) -> type[Model]:
@@ -434,7 +432,7 @@ class Dataset(
         else:
             raise RuntimeError('Model does not allow setting of extra attributes')
 
-    @root_validator
+    @pyd.root_validator
     def _parse_root_object(cls, root_obj: dict[str, ModelT]) -> Any:  # noqa
         assert DATA_KEY in root_obj
         data_dict = root_obj[DATA_KEY]
@@ -447,7 +445,7 @@ class Dataset(
     def to_data(self) -> dict[str, Any]:
         return {
             key: self._check_value(val)
-            for key, val in GenericModel.dict(self, by_alias=True).get(DATA_KEY).items()
+            for key, val in pyd.GenericModel.dict(self, by_alias=True).get(DATA_KEY).items()
         }
 
     def from_data(self,
@@ -716,7 +714,7 @@ class MultiModelDataset(Dataset[GeneralModelT], Generic[GeneralModelT]):
         custom models.
     """
 
-    _custom_field_models: dict[str, GeneralModelT] = PrivateAttr(default={})
+    _custom_field_models: dict[str, GeneralModelT] = pyd.PrivateAttr(default={})
 
     def set_model(self, data_file: str, model: GeneralModelT) -> None:
         try:

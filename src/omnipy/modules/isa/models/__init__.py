@@ -1,6 +1,5 @@
-from pydantic import BaseModel, Extra
-
 from omnipy.data.model import Model
+import omnipy.util.pydantic as pyd
 
 from ...json.models import JsonListOfDictsOfScalarsModel
 from ..models.investigation_schema import IsaInvestigationModel, IsaInvestigationSchema
@@ -8,9 +7,9 @@ from ..models.investigation_schema import IsaInvestigationModel, IsaInvestigatio
 ISA_JSON_MODEL_TOP_LEVEL_KEY: str = 'investigation'
 
 
-class IsaTopLevelSchema(BaseModel):
+class IsaTopLevelSchema(pyd.BaseModel):
     class Config:
-        extra = Extra.forbid
+        extra = pyd.Extra.forbid
         use_enum_values = True
 
     investigation: IsaInvestigationModel | None = None

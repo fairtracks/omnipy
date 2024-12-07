@@ -1,6 +1,5 @@
 from typing import Literal
 
-from pydantic import ValidationError
 import pytest
 
 from omnipy.data.helpers import (FailedData,
@@ -8,6 +7,7 @@ from omnipy.data.helpers import (FailedData,
                                  obj_or_model_contents_isinstance,
                                  PendingData)
 from omnipy.data.model import Model
+from omnipy.util.pydantic import ValidationError
 
 from .helpers.models import PydanticParentModel
 

@@ -1,9 +1,8 @@
 import os
 from types import ModuleType
 
-from pydantic.utils import lenient_isinstance, lenient_issubclass
-
 import omnipy
+from omnipy.util.pydantic import lenient_isinstance, lenient_issubclass
 
 # TODO: Finish implementation of dynamic __all__ generation. Possibly useful together with Poe the
 #       Poet (https://poethepoet.natn.io/poetry_plugin.html) for generating a fixed __all__ list as

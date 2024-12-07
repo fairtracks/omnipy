@@ -3,12 +3,12 @@ import os
 
 from deepdiff import DeepDiff
 import numpy as np
-from pydantic import ValidationError
 import pytest
 
 from omnipy.modules.pandas import pd
 from omnipy.modules.pandas.models import PandasDataset, PandasModel
 from omnipy.modules.tables.models import TableListOfDictsOfJsonScalarsModel
+from omnipy.util.pydantic import ValidationError
 
 from .helpers.asserts import assert_pandas_frame_dtypes
 

@@ -1,12 +1,11 @@
 from math import floor
 from typing import Generic, Literal, Optional, TypeAlias
 
-from pydantic import BaseModel, Field
-from pydantic.generics import GenericModel
 from typing_extensions import TypeVar
 
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
+import omnipy.util.pydantic as pyd
 
 from .classes import MyFloatObject
 
@@ -93,13 +92,13 @@ class DefaultStrModel(_DefaultStrModel):
     )
 
 
-class PydanticChildModel(BaseModel):
-    id: int = Field(0, alias='@id')
+class PydanticChildModel(pyd.BaseModel):
+    id: int = pyd.Field(0, alias='@id')
     value: float = 0
 
 
-class PydanticParentModel(GenericModel, Generic[ChildrenT]):
-    id: int = Field(0, alias='@id')
+class PydanticParentModel(pyd.GenericModel, Generic[ChildrenT]):
+    id: int = pyd.Field(0, alias='@id')
     children: ChildrenT = []
 
 

@@ -3,7 +3,6 @@ import os
 from textwrap import dedent
 from typing import Annotated, TypeAlias
 
-from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
 
@@ -22,6 +21,7 @@ from omnipy.modules.json.models import (_JsonAnyDictM,
                                         JsonModel,
                                         JsonScalarModel)
 from omnipy.modules.json.typedefs import JsonScalar
+from omnipy.util.pydantic import ValidationError
 
 from ...helpers.protocols import AssertModelOrValFunc
 from ..helpers.classes import CaseInfo
@@ -129,7 +129,7 @@ def test_error_list_of_single_dict_with_two_elements_known_issue():
         Due to "feature" in pydantic v1:
 
         ```
-        class MyDict(BaseModel):
+        class MyDict(pyd.BaseModel):
             dict_of_scalars: dict[str, int] = {'a': 123}
             dict_of_dicts: dict[str, dict[str, int]] = {'a': {'x': 123}}
 

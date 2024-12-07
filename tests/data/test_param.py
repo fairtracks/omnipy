@@ -1,11 +1,11 @@
 import os
 from typing import Annotated
 
-from pydantic import BaseModel, ValidationError
-from pydantic.fields import Field
 import pytest
 
 from omnipy.data.param import params_dataclass, ParamsBase
+from omnipy.util.pydantic import ValidationError
+import omnipy.util.pydantic as pyd
 
 
 def test_params_parameter_lookup(
@@ -43,7 +43,7 @@ def test_params_parameter_value_is_read_only(
 
 def test_params_default_value_validation(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    class MyPydanticModel(BaseModel):
+    class MyPydanticModel(pyd.BaseModel):
         a: str
         b: int
 
@@ -53,13 +53,13 @@ def test_params_default_value_validation(
         class MyFailingParams(ParamsBase):
             my_int: int = '123'  # type: ignore[assignment]
             my_str: str = 456  # type: ignore[assignment]
-            my_model: type[BaseModel] = 123  # type: ignore[assignment]
+            my_model: type[pyd.BaseModel] = 123  # type: ignore[assignment]
 
     @params_dataclass
     class MyParams(ParamsBase):
         my_int: int = '123'  # type: ignore[assignment]
         my_str: str = 456  # type: ignore[assignment]
-        my_model: type[BaseModel] = MyPydanticModel
+        my_model: type[pyd.BaseModel] = MyPydanticModel
 
     assert MyParams.my_int == 123
     assert MyParams.my_str == '456'
@@ -68,7 +68,7 @@ def test_params_default_value_validation(
     with pytest.raises(ValueError):
 
         class MyDefaultFactoryParams(ParamsBase):
-            my_id: int = Field(default_factory=lambda: 123)
+            my_id: int = pyd.Field(default_factory=lambda: 123)
 
 
 # TODO: Check if test_params_default_value_validation_known_issue can be removed after pydantic v2
@@ -120,7 +120,7 @@ def test_params_validation(
 
 def test_params_copy_and_adjust(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    class MyPydanticModel(BaseModel):
+    class MyPydanticModel(pyd.BaseModel):
         a: str
         b: int
 
@@ -128,7 +128,7 @@ def test_params_copy_and_adjust(
     class MyParams(ParamsBase):
         my_int_or_float: int | float = 123
         my_str_or_none: str | None = None
-        my_model: type[BaseModel] = MyPydanticModel
+        my_model: type[pyd.BaseModel] = MyPydanticModel
 
     MyNewParams = MyParams.copy_and_adjust('MyNewParams')
     assert MyNewParams.__name__ == 'MyNewParams'
@@ -142,7 +142,7 @@ def test_params_copy_and_adjust(
     assert MyOtherParams.my_str_or_none is None
     assert MyOtherParams.my_model is MyPydanticModel
 
-    class MyOtherPydanticModel(BaseModel):
+    class MyOtherPydanticModel(pyd.BaseModel):
         x: str
         y: int
 

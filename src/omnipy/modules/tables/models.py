@@ -1,8 +1,7 @@
 from typing import cast, Generic, get_args, TypeVar
 
-from pydantic import BaseModel
-
 from omnipy.data.model import Model
+import omnipy.util.pydantic as pyd
 
 from ..general.models import Chain3
 from ..json.models import JsonListOfScalarsModel
@@ -66,14 +65,13 @@ class TableWithColNamesModel(Model[TableListOfDictsOfJsonScalarsModel
         return tuple(col_names.keys())
 
 
-_PydanticBaseModelT = TypeVar('_PydanticBaseModelT', bound=BaseModel)
-_PydanticRecordT = TypeVar('_PydanticRecordT', bound=BaseModel)
+_PydBaseModelT = TypeVar('_PydBaseModelT', bound=pyd.BaseModel)
+_PydRecordT = TypeVar('_PydRecordT', bound=pyd.BaseModel)
 
 
-class PydanticRecordModel(Model[_PydanticBaseModelT | JsonListOfScalarsModel],
-                          Generic[_PydanticBaseModelT]):
+class PydanticRecordModel(Model[_PydBaseModelT | JsonListOfScalarsModel], Generic[_PydBaseModelT]):
     @classmethod
-    def _parse_data(cls, data: _PydanticBaseModelT | JsonListOfScalarsModel) -> _PydanticBaseModelT:
+    def _parse_data(cls, data: _PydBaseModelT | JsonListOfScalarsModel) -> _PydBaseModelT:
         match data:
             case JsonListOfScalarsModel():
                 pydantic_model = get_args(cls.outer_type(with_args=True))[0]
@@ -99,8 +97,8 @@ class PydanticRecordModel(Model[_PydanticBaseModelT | JsonListOfScalarsModel],
 
 class TableOfPydanticRecordsModel(Chain3[SplitToLinesModel,
                                          SplitLinesToColumnsModel,
-                                         Model[list[PydanticRecordModel[_PydanticRecordT]]]],
-                                  Generic[_PydanticRecordT]):
+                                         Model[list[PydanticRecordModel[_PydRecordT]]]],
+                                  Generic[_PydRecordT]):
     ...
 
 

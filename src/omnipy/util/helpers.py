@@ -35,13 +35,11 @@ from typing import (_SpecialForm,
                     Union)
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
-from pydantic import BaseModel, ValidationError
-from pydantic.generics import GenericModel
-from pydantic.typing import is_none_type
-
 from omnipy.api.protocols.private.util import HasContents, IsSnapshotWrapper
 from omnipy.api.typedefs import LocaleType, TypeForm
 from omnipy.util.contexts import setup_and_teardown_callback_context
+from omnipy.util.pydantic import is_none_type, ValidationError
+import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
@@ -271,7 +269,7 @@ def is_strict_subclass(
 
 
 def is_pure_pydantic_model(obj: object):
-    return type(obj).__bases__ == (BaseModel,)
+    return type(obj).__bases__ == (pyd.BaseModel,)
 
 
 def is_non_omnipy_pydantic_model(obj: object):
@@ -279,8 +277,8 @@ def is_non_omnipy_pydantic_model(obj: object):
     from omnipy.data.model import Model
 
     mro = type(obj).__mro__
-    return mro[0] != BaseModel \
-        and (BaseModel in mro or GenericModel in mro) \
+    return mro[0] != pyd.BaseModel \
+        and (pyd.BaseModel in mro or pyd.GenericModel in mro) \
         and Model not in mro \
         and Dataset not in mro
 

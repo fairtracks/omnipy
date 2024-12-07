@@ -1,12 +1,12 @@
 from pathlib import PurePosixPath
 from typing import Annotated
 
-from pydantic import ValidationError
 import pytest
 
 from omnipy import Model
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.modules.remote.models import HttpUrlModel, QueryParamsModel, UrlPathModel
+from omnipy.util.pydantic import ValidationError
 
 from ...helpers.protocols import AssertModelOrValFunc
 

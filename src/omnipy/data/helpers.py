@@ -12,13 +12,12 @@ from typing import (Any,
                     NamedTuple,
                     Protocol)
 
-from pydantic.typing import is_none_type
-from pydantic.utils import lenient_isinstance, lenient_issubclass
 from typing_extensions import TypeVar
 
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase
 from omnipy.util.helpers import format_classname_with_params, is_union
+from omnipy.util.pydantic import is_none_type, lenient_isinstance, lenient_issubclass
 
 T = TypeVar('T')
 U = TypeVar('U')

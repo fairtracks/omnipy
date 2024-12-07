@@ -1,7 +1,7 @@
-from pydantic import ValidationError
 import pytest
 
 from omnipy.modules.json.datasets import JsonDataset
+from omnipy.util.pydantic import ValidationError
 
 
 def test_json_dataset_array_of_objects_same_keys():

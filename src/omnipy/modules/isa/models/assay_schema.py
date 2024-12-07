@@ -5,9 +5,8 @@
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Extra, Field
-
 from omnipy.data.model import Model
+import omnipy.util.pydantic as pyd
 
 from . import (comment_schema,
                data_schema,
@@ -22,7 +21,7 @@ class FieldType(Enum):
     Assay = 'Assay'
 
 
-class _Materials(BaseModel):
+class _Materials(pyd.BaseModel):
     samples: Optional[List[sample_schema.IsaSampleModel]] = None
     otherMaterials: Optional[List[material_schema.IsaMaterialModel]] = None
 
@@ -31,14 +30,14 @@ class _MaterialsModel(Model[_Materials]):
     ...
 
 
-class IsaAssayJsonSchema(BaseModel):
+class IsaAssayJsonSchema(pyd.BaseModel):
     class Config:
-        extra = Extra.forbid
+        extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = Field(None, alias='@id')
-    field_context: Optional[str] = Field(None, alias='@context')
-    field_type: Optional[FieldType] = Field(None, alias='@type')
+    field_id: Optional[str] = pyd.Field(None, alias='@id')
+    field_context: Optional[str] = pyd.Field(None, alias='@context')
+    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
     filename: Optional[str] = None
     measurementType: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = (None)
     technologyType: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = (None)
@@ -46,13 +45,13 @@ class IsaAssayJsonSchema(BaseModel):
     dataFiles: Optional[List[data_schema.IsaDataModel]] = None
     materials: Optional[_MaterialsModel] = None
     characteristicCategories: Optional[List[material_attribute_schema.IsaMaterialAttributeModel]] =\
-        Field(
+        pyd.Field(
             None,
             description='List of all the characteristics categories (or material attributes) '
             'defined in the study, used to avoid duplication of their declaration '
             'when each material_attribute_value is created. ')
     unitCategories: Optional[List[ontology_annotation_schema.IsaOntologyReferenceModel]] = \
-        Field(
+        pyd.Field(
             None,
             description='List of all the unitsdefined in the study, used to avoid duplication '
                         'of their declaration when each value is created. ')

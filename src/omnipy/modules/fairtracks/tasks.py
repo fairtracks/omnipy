@@ -1,16 +1,15 @@
 from collections.abc import Iterable
 
-from pydantic import constr, PositiveInt
-
 from omnipy.compute.task import TaskTemplate
+import omnipy.util.pydantic as pyd
 
 from ..json.datasets import JsonDataset
 from .functions import encode_api
 
 
 @TaskTemplate()
-def import_dataset_from_encode(endpoints: Iterable[constr(min_length=1)],
-                               max_data_item_count: PositiveInt) -> JsonDataset:
+def import_dataset_from_encode(endpoints: Iterable[pyd.constr(min_length=1)],
+                               max_data_item_count: pyd.PositiveInt) -> JsonDataset:
     dataset = JsonDataset()
     for endpoint in endpoints:
         dataset[endpoint] = encode_api(

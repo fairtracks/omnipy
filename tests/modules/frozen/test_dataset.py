@@ -1,8 +1,9 @@
 from dataclasses import fields
 
-from pydantic import ValidationError
 import pytest
 import pytest_cases as pc
+
+from omnipy.util.pydantic import ValidationError
 
 from ..helpers.classes import CaseInfo
 
