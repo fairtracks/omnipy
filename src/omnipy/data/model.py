@@ -18,7 +18,6 @@ from typing import (Annotated,
                     Iterator,
                     Literal,
                     Optional,
-                    SupportsIndex,
                     Union)
 
 from typing_extensions import get_original_bases, TypeVar
@@ -62,9 +61,7 @@ from omnipy.util.setdeque import SetDeque
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
 _ValT = TypeVar('_ValT')
-_IterT = TypeVar('_IterT')
 _ReturnT = TypeVar('_ReturnT')
-_IdxT = TypeVar('_IdxT', bound=SupportsIndex)
 _RootT = TypeVar('_RootT')
 _ModelT = TypeVar('_ModelT')
 
