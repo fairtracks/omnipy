@@ -1,15 +1,16 @@
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import Callable, DefaultDict
 
 from omnipy.api.protocols.public.hub import IsRuntime
+import omnipy.util.pydantic as pyd
 
 
 def _subscribers_factory():
     return defaultdict(list)
 
 
-@dataclass
+@pyd.dataclass
 class DataPublisher:
     _self_subscriptions: list[Callable[..., None]] = field(
         default_factory=list, init=False, repr=False)
@@ -73,7 +74,7 @@ class DataPublisher:
             self._call_all_subscribers(attr_name, value)
 
 
-@dataclass
+@pyd.dataclass
 class RuntimeEntryPublisher(DataPublisher):
     _back: IsRuntime | None = field(default=None, init=False, repr=False)
 

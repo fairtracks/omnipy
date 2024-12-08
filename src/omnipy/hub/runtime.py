@@ -10,7 +10,6 @@ from omnipy.api.protocols.public.config import (IsDataConfig,
                                                 IsEngineConfig,
                                                 IsJobConfig,
                                                 IsLocalRunnerConfig,
-                                                IsPrefectEngineConfig,
                                                 IsRootLogConfig)
 from omnipy.api.protocols.public.data import IsSerializerRegistry
 from omnipy.api.protocols.public.hub import IsRootLogObjects, IsRuntimeConfig, IsRuntimeObjects
@@ -27,6 +26,7 @@ from omnipy.hub.registry import RunStateRegistry
 from omnipy.modules.prefect.engine.prefect import PrefectEngine
 from omnipy.util.helpers import called_from_omnipy_tests
 from omnipy.util.publisher import DataPublisher, RuntimeEntryPublisher
+import omnipy.util.pydantic as pyd
 
 
 def _job_creator_factory():
@@ -41,13 +41,13 @@ def _data_config_factory():
     return _data_class_creator_factory().config
 
 
-@dataclass
+@pyd.dataclass(config=pyd.ConfigDict(arbitrary_types_allowed=True))
 class RuntimeConfig(RuntimeEntryPublisher):
     job: IsJobConfig = field(default_factory=JobConfig)
     data: IsDataConfig = field(default_factory=_data_config_factory)
     engine: EngineChoice = EngineChoice.LOCAL
     local: IsLocalRunnerConfig = field(default_factory=LocalRunnerConfig)
-    prefect: IsPrefectEngineConfig = field(default_factory=PrefectEngineConfig)
+    prefect: IsEngineConfig = field(default_factory=PrefectEngineConfig)
     root_log: IsRootLogConfig = field(default_factory=RootLogConfig)
 
     def reset_to_defaults(self) -> None:

@@ -1,6 +1,6 @@
 import logging
 from logging.handlers import RotatingFileHandler
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from omnipy.api.enums import EngineChoice
 from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
@@ -16,6 +16,7 @@ from omnipy.api.protocols.public.config import (IsDataConfig,
 from omnipy.api.protocols.public.data import IsSerializerRegistry
 
 
+@runtime_checkable
 class IsRootLogObjects(Protocol):
     """"""
     formatter: logging.Formatter | None = None
@@ -31,6 +32,7 @@ class IsRootLogObjects(Protocol):
         ...
 
 
+@runtime_checkable
 class IsRuntimeConfig(IsDataPublisher, Protocol):
     """"""
     job: IsJobConfig
@@ -53,6 +55,7 @@ class IsRuntimeConfig(IsDataPublisher, Protocol):
         ...
 
 
+@runtime_checkable
 class IsRuntimeObjects(IsDataPublisher, Protocol):
     """"""
 
@@ -75,6 +78,7 @@ class IsRuntimeObjects(IsDataPublisher, Protocol):
         ...
 
 
+@runtime_checkable
 class IsRuntime(Protocol):
     """"""
     config: IsRuntimeConfig

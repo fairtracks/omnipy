@@ -1,18 +1,18 @@
-from dataclasses import dataclass
+import omnipy.util.pydantic as pyd
 
 from omnipy.util.publisher import DataPublisher
 
 
-@dataclass
+@pyd.dataclass
 class EngineConfig(DataPublisher):
     ...
 
 
-@dataclass
+@pyd.dataclass
 class LocalRunnerConfig(EngineConfig):
     ...
 
 
-@dataclass
+@pyd.dataclass
 class PrefectEngineConfig(EngineConfig):
     use_cached_results: bool = False

@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import field
 import logging
 from logging import StreamHandler
 from logging.handlers import RotatingFileHandler
@@ -8,9 +8,10 @@ from omnipy.api.protocols.public.config import IsRootLogConfig
 from omnipy.config.root_log import RootLogConfig
 from omnipy.hub.log.handlers import DailyRotatingFileHandler
 from omnipy.util.helpers import get_datetime_format
+import omnipy.util.pydantic as pyd
 
 
-@dataclass
+@pyd.dataclass(config=pyd.ConfigDict(arbitrary_types_allowed=True))
 class RootLogObjects:
     _config: IsRootLogConfig = field(init=False, repr=False, default_factory=RootLogConfig)
 
