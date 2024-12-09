@@ -2,12 +2,25 @@ from typing import Annotated, Callable
 
 import pytest
 
-from .helpers.mocks import MockDataPublisher, MockSubscriberCls
+from .helpers.mocks import (MockAttrSubscriberCls,
+                            MockConfigSubscriberCls,
+                            MockDataPublisher,
+                            MockParentConfigSubscriberCls)
 
 
 @pytest.fixture(scope='function')
-def subscriber_obj() -> MockSubscriberCls:
-    return MockSubscriberCls()
+def attr_subscriber() -> MockAttrSubscriberCls:
+    return MockAttrSubscriberCls()
+
+
+@pytest.fixture(scope='function')
+def config_subscriber() -> MockConfigSubscriberCls:
+    return MockConfigSubscriberCls()
+
+
+@pytest.fixture(scope='function')
+def parent_config_subscriber() -> MockParentConfigSubscriberCls:
+    return MockParentConfigSubscriberCls()
 
 
 @pytest.fixture(scope='function')
@@ -25,15 +38,15 @@ def list_appender_subscriber_func(
 
 
 @pytest.fixture(scope='function')
-def mock_config_publisher_with_subscribers(
-    subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
+def mock_config_publisher_with_attr_subscribers(
+    attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
 ) -> MockDataPublisher:
 
     config = MockDataPublisher()
 
-    config.subscribe('foo', subscriber_obj.set_foo)
-    config.subscribe('text', list_appender_subscriber_func)
-    config.subscribe('text', subscriber_obj.set_text)
+    config.subscribe_attr('foo', attr_subscriber.set_foo)
+    config.subscribe_attr('text', list_appender_subscriber_func)
+    config.subscribe_attr('text', attr_subscriber.set_text)
 
     return config

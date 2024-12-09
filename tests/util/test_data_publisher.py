@@ -2,186 +2,314 @@ from typing import Annotated, Callable
 
 import pytest
 
-from .helpers.mocks import MockDataPublisher, MockFoo, MockSubscriberCls
+from .helpers.mocks import (MockAttrSubscriberCls,
+                            MockConfigSubscriberCls,
+                            MockDataPublisher,
+                            MockDataPublisherGrandParent,
+                            MockDataPublisherParent,
+                            MockFoo,
+                            MockParentConfigSubscriberCls)
 
 
-def test_init_default() -> None:
+def test_subscribe_attr_defaults(
+    text_list: Annotated[list[str], pytest.fixture],
+    attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
+    list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
+) -> None:
+
     config = MockDataPublisher()
+
     assert config.foo is None
     assert config.text == 'bar'
     assert config.number == 42
 
-
-def test_init_params() -> None:
-    foo = MockFoo()
-    config = MockDataPublisher(foo=foo, text='foobar', number=1)
-    assert config.foo is foo
-    assert config.text == 'foobar'
-    assert config.number == 1
-
-
-def test_unregistered_subscribers(
-    text_list: Annotated[list[str], pytest.fixture],
-    subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
-    list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
-) -> None:
-
-    assert subscriber_obj.foo is None
-    assert subscriber_obj.text == ''
+    assert attr_subscriber.foo is None
+    assert attr_subscriber.text == ''
     assert text_list == []
 
+    config.subscribe_attr('foo', attr_subscriber.set_foo)
+    config.subscribe_attr('text', list_appender_subscriber_func)
+    config.subscribe_attr('text', attr_subscriber.set_text)
 
-def test_subscribe_defaults(
-    text_list: Annotated[list[str], pytest.fixture],
-    subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
-    list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
-) -> None:
-
-    config = MockDataPublisher()
-
-    config.subscribe('foo', subscriber_obj.set_foo)
-    config.subscribe('text', list_appender_subscriber_func)
-    config.subscribe('text', subscriber_obj.set_text)
-
-    assert subscriber_obj.foo is None
-    assert subscriber_obj.text == 'bar'
+    assert attr_subscriber.foo is None
+    assert attr_subscriber.text == 'bar'
     assert text_list == ['bar']
 
 
-def test_subscribe_init_values(
+def test_subscribe_attr_init_values(
     text_list: Annotated[list[str], pytest.fixture],
-    subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
+    attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
 ) -> None:
 
     foo = MockFoo()
     config = MockDataPublisher(foo=foo, text='foobar', number=0)
 
-    config.subscribe('foo', subscriber_obj.set_foo)
-    config.subscribe('text', list_appender_subscriber_func)
-    config.subscribe('text', subscriber_obj.set_text)
+    assert config.foo is foo
+    assert config.text == 'foobar'
+    assert config.number == 0
 
-    assert subscriber_obj.foo is foo
-    assert subscriber_obj.text == 'foobar'
+    assert attr_subscriber.foo is None
+    assert attr_subscriber.text == ''
+    assert text_list == []
+
+    config.subscribe_attr('foo', attr_subscriber.set_foo)
+    config.subscribe_attr('text', list_appender_subscriber_func)
+    config.subscribe_attr('text', attr_subscriber.set_text)
+
+    assert attr_subscriber.foo is foo
+    assert attr_subscriber.text == 'foobar'
     assert text_list == ['foobar']
 
 
-def test_fail_subscribe_incorrect_config_item(
-    subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
-    mock_config_publisher_with_subscribers: Annotated[MockDataPublisher, pytest.fixture],
+def test_fail_subscribe_attr_incorrect_config_item(
+    attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
+    mock_config_publisher_with_attr_subscribers: Annotated[MockDataPublisher, pytest.fixture],
 ) -> None:
 
-    config = mock_config_publisher_with_subscribers
+    config = mock_config_publisher_with_attr_subscribers
 
     with pytest.raises(AttributeError):
-        config.subscribe('bar', subscriber_obj.set_foo)
+        config.subscribe_attr('bar', attr_subscriber.set_foo)
 
 
-def test_fail_subscribe_private_config_item(
-    subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
-    mock_config_publisher_with_subscribers: Annotated[MockDataPublisher, pytest.fixture],
+def test_fail_subscribe_attr_private_config_item(
+    attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
+    mock_config_publisher_with_attr_subscribers: Annotated[MockDataPublisher, pytest.fixture],
 ) -> None:
 
-    config = mock_config_publisher_with_subscribers
+    config = mock_config_publisher_with_attr_subscribers
 
     with pytest.raises(AttributeError):
-        config.subscribe('_subscriptions', subscriber_obj.set_foo)
+        config.subscribe_attr('_subscriptions', attr_subscriber.set_foo)
 
 
-def test_setattr_no_subscribers(
-    text_list: Annotated[list[str], pytest.fixture],
-    subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
-    list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
-    mock_config_publisher_with_subscribers: Annotated[MockDataPublisher, pytest.fixture],
+def test_subscribe_attr_setattr_no_subscribers(
+    attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
+    mock_config_publisher_with_attr_subscribers: Annotated[MockDataPublisher, pytest.fixture],
 ) -> None:
 
-    config = mock_config_publisher_with_subscribers
+    config = mock_config_publisher_with_attr_subscribers
 
-    config.number = 0
+    config.number = 5
 
-    assert subscriber_obj.foo is None
-    assert subscriber_obj.text == 'bar'
-    assert text_list == ['bar']
+    assert attr_subscriber.number == 10
 
 
-def test_setattr_single_subscriber(
+def test_subscribe_attr_setattr_single_subscriber(
     text_list: Annotated[list[str], pytest.fixture],
-    subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
-    list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
-    mock_config_publisher_with_subscribers: Annotated[MockDataPublisher, pytest.fixture],
+    attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
+    mock_config_publisher_with_attr_subscribers: Annotated[MockDataPublisher, pytest.fixture],
 ) -> None:
 
-    config = mock_config_publisher_with_subscribers
+    config = mock_config_publisher_with_attr_subscribers
+
+    other_foo = MockFoo()
+    attr_subscriber.set_foo(other_foo)
 
     foo = MockFoo()
     config.foo = foo
 
-    assert subscriber_obj.foo is config.foo is foo
+    assert attr_subscriber.foo is config.foo is foo
 
     foobar = MockFoo()
     config.foo = foobar
 
-    assert subscriber_obj.foo is config.foo is foobar
-
-    assert subscriber_obj.text == 'bar'
-    assert text_list == ['bar']
+    assert attr_subscriber.foo is config.foo is foobar
 
 
-def test_setattr_two_subscribers(
+def test_subscribe_attr_setattr_two_subscribers(
     text_list: Annotated[list[str], pytest.fixture],
-    subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
-    list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
-    mock_config_publisher_with_subscribers: Annotated[MockDataPublisher, pytest.fixture],
+    attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
+    mock_config_publisher_with_attr_subscribers: Annotated[MockDataPublisher, pytest.fixture],
 ) -> None:
 
-    config = mock_config_publisher_with_subscribers
+    config = mock_config_publisher_with_attr_subscribers
 
+    attr_subscriber.text = 'other'
+    text_list.append('other')
     config.text = 'foobar'
 
-    assert subscriber_obj.text == 'foobar'
-    assert text_list == ['bar', 'foobar']
+    assert attr_subscriber.text == 'foobar'
+    assert text_list == ['bar', 'other', 'foobar']
 
     config.text = ''
 
-    assert subscriber_obj.text == ''
-    assert text_list == ['bar', 'foobar', '']
+    assert attr_subscriber.text == ''
+    assert text_list == ['bar', 'other', 'foobar', '']
 
-    assert subscriber_obj.foo is config.foo is None
+    assert attr_subscriber.foo is config.foo is None
+
+
+def test_subscribe_defaults(
+        config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
+
+    config = MockDataPublisher()
+
+    assert config_subscriber.config is not config
+
+    config.subscribe(config_subscriber.set_config)
+
+    assert config_subscriber.config is config
+    assert config_subscriber.config.foo is None
+    assert config_subscriber.config.text == 'bar'
+
+
+def test_subscribe_init_values(
+        config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
+
+    foo = MockFoo()
+    config = MockDataPublisher(foo=foo, text='foobar', number=0)
+
+    assert config_subscriber.config is not config
+
+    config.subscribe(config_subscriber.set_config)
+
+    assert config_subscriber.config is config
+    assert config_subscriber.config.foo is foo
+    assert config_subscriber.config.text == 'foobar'
+
+
+def test_subscribe_setattr_with_subscriber(
+        config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
+
+    config = MockDataPublisher()
+    config.subscribe(config_subscriber.set_config)
+
+    other_foo = MockFoo()
+    config_subscriber.config = MockDataPublisher(foo=other_foo, text='foobar', number=0)
+
+    foo = MockFoo()
+    config.foo = foo
+
+    assert config_subscriber.config.foo is config.foo is foo
+
+    foobar = MockFoo()
+    config.foo = foobar
+
+    assert config_subscriber.config.foo is config.foo is foobar
+
+
+def test_parent_subscribe_attr_defaults(
+        config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
+
+    parent = MockDataPublisherParent()
+
+    assert config_subscriber.config.foo is None
+    assert config_subscriber.config.text == ''
+
+    parent.subscribe_attr('config', config_subscriber.set_config)
+
+    assert config_subscriber.config is parent.config
+
+    assert config_subscriber.config.foo is None
+    assert config_subscriber.config.text == 'bar'
+
+
+def test_parent_subscribe_attr_with_subscriber(
+        config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
+
+    parent = MockDataPublisherParent()
+    parent.subscribe_attr('config', config_subscriber.set_config)
+
+    other_foo = MockFoo()
+    config_subscriber.config = MockDataPublisher(foo=other_foo, text='foobar', number=0)
+
+    foo = MockFoo()
+    parent.config.foo = foo
+
+    assert config_subscriber.config.foo is parent.config.foo is foo
+
+    foobar = MockFoo()
+    parent.config.foo = foobar
+
+    assert config_subscriber.config.foo is parent.config.foo is foobar
+
+
+def test_nested_parent_subscribe_attr_defaults(
+        parent_config_subscriber: Annotated[MockParentConfigSubscriberCls, pytest.fixture]) -> None:
+
+    grandparent = MockDataPublisherGrandParent()
+
+    assert parent_config_subscriber.parent_config is not grandparent.parent_config
+
+    assert parent_config_subscriber.parent_config.config.foo is None
+    assert parent_config_subscriber.parent_config.config.text == ''
+
+    grandparent.subscribe_attr('parent_config', parent_config_subscriber.set_parent_config)
+
+    assert parent_config_subscriber.parent_config is grandparent.parent_config
+
+    assert parent_config_subscriber.parent_config.config.foo is None
+    assert parent_config_subscriber.parent_config.config.text == 'bar'
+
+
+def test_nested_parent_subscribe_attr_with_subscriber(
+        parent_config_subscriber: Annotated[MockParentConfigSubscriberCls, pytest.fixture]) -> None:
+
+    grandparent = MockDataPublisherGrandParent()
+    grandparent.subscribe_attr('parent_config', parent_config_subscriber.set_parent_config)
+
+    parent_config_subscriber.parent_config = MockDataPublisherParent()
+    other_foo = MockFoo()
+    parent_config_subscriber.parent_config.config = MockDataPublisher(
+        foo=other_foo, text='foobar', number=0)
+
+    foo = MockFoo()
+    grandparent.parent_config.config.foo = foo
+
+    assert parent_config_subscriber.parent_config.config.foo \
+           is grandparent.parent_config.config.foo is foo
+
+    foobar = MockFoo()
+    grandparent.parent_config.config.foo = foobar
+
+    assert parent_config_subscriber.parent_config.config.foo \
+           is grandparent.parent_config.config.foo is foobar
 
 
 def test_unsubscribe_all(
     text_list: Annotated[list[str], pytest.fixture],
-    subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
+    attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
+    config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
-    mock_config_publisher_with_subscribers: Annotated[MockDataPublisher, pytest.fixture],
 ) -> None:
 
-    config = mock_config_publisher_with_subscribers
+    config = MockDataPublisher()
+
+    config.subscribe_attr('foo', attr_subscriber.set_foo)
+    config.subscribe_attr('text', list_appender_subscriber_func)
+    config.subscribe_attr('text', attr_subscriber.set_text)
+    config.subscribe(config_subscriber.set_config)
 
     config.unsubscribe_all()
+
+    config_subscriber.config = MockDataPublisher()
     config.foo = MockFoo()
     config.text = 'foobar'
 
-    assert subscriber_obj.foo is None
-    assert subscriber_obj.text == 'bar'
+    assert attr_subscriber.foo is None
+    assert attr_subscriber.text == 'bar'
     assert text_list == ['bar']
 
+    assert config_subscriber.config.foo is None
 
-def test_change_subscribers_no_effect(
+
+def test_change_subscribers_revert(
     text_list: Annotated[list[str], pytest.fixture],
-    subscriber_obj: Annotated[MockSubscriberCls, pytest.fixture],
+    attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
-    mock_config_publisher_with_subscribers: Annotated[MockDataPublisher, pytest.fixture],
+    mock_config_publisher_with_attr_subscribers: Annotated[MockDataPublisher, pytest.fixture],
 ) -> None:
 
-    config = mock_config_publisher_with_subscribers
+    config = mock_config_publisher_with_attr_subscribers
 
     foo = MockFoo()
-    subscriber_obj.set_foo(foo)
+    attr_subscriber.set_foo(foo)
     list_appender_subscriber_func('foobar')
 
-    assert subscriber_obj.foo is foo
-    assert subscriber_obj.text == 'bar'
+    assert attr_subscriber.foo is foo
+    assert attr_subscriber.text == 'bar'
     assert text_list == ['bar', 'foobar']
     assert config.foo is None
     assert config.text == 'bar'
@@ -189,6 +317,6 @@ def test_change_subscribers_no_effect(
     config.foo = config.foo
     config.text = config.text
 
-    assert subscriber_obj.foo is None
-    assert subscriber_obj.text == 'bar'
+    assert attr_subscriber.foo is None
+    assert attr_subscriber.text == 'bar'
     assert text_list == ['bar', 'foobar', 'bar']

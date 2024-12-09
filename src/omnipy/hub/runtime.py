@@ -98,28 +98,45 @@ class Runtime(DataPublisher):
         self.config.unsubscribe_all()
         self.objects.unsubscribe_all()
 
-        self.config.subscribe('job', self.objects.job_creator.set_config)
-        self.config.subscribe('data', self.objects.data_class_creator.set_config)
-        self.config.subscribe('local', self.objects.local.set_config)
-        self.config.subscribe('prefect', self.objects.prefect.set_config)
-        self.config.subscribe('root_log', self.objects.root_log.set_config)
+        # Makes sure that the config references in the runtime objects always refer to the related
+        # config in runtime, even when:
+        #
+        # 1. The runtime config is replaced with a new config object, or
+        # 2. The runtime object is replaced with a new runtime object, or
+        # 3. Both of the above
+        #
+        # This might e.g. happen due to the use of  mock objects for testing, or if the config is
+        # reloaded from a file.
 
-        self.config.subscribe('local', self._update_job_creator_engine)
-        self.config.subscribe('prefect', self._update_job_creator_engine)
-        self.config.subscribe('engine', self._update_job_creator_engine)
+        self.config.subscribe_attr('job', self.objects.job_creator.set_config)
+        self.config.subscribe_attr('data', self.objects.data_class_creator.set_config)
+        self.config.subscribe_attr('local', self.objects.local.set_config)
+        self.config.subscribe_attr('prefect', self.objects.prefect.set_config)
+        self.config.subscribe_attr('root_log', self.objects.root_log.set_config)
 
-        self.objects.subscribe('registry', self.objects.local.set_registry)
-        self.objects.subscribe('registry', self.objects.prefect.set_registry)
+        # Makes sure that the registry references in the job runners always refer to the registry
+        # object in runtime, even when one or both of the objects are replaced with new objects.
+        self.objects.subscribe_attr('registry', self.objects.local.set_registry)
+        self.objects.subscribe_attr('registry', self.objects.prefect.set_registry)
 
-        self.objects.subscribe('local', self._update_local_runner_config)
-        self.objects.subscribe('prefect', self._update_prefect_engine_config)
+        # Makes sure that the engine used by the job creator is always the one specified in the
+        # 'engine' config item in runtime
+        self.config.subscribe_attr('local', self._update_job_creator_engine)
+        self.config.subscribe_attr('prefect', self._update_job_creator_engine)
+        self.config.subscribe_attr('engine', self._update_job_creator_engine)
+
+        # Makes sure that the local and prefect engine configs are always reloaded when the local
+        # or prefect engine objects are replaced with new engine objects. This is necessary because
+        # the `get_config_cls()` method of the engine objects define the classes of the respective
+        # engine config objects to be used. If an engine object is replaced with a new engine that
+        # require a different engine config class than is currently used, the config object will be
+        # replaced with a new default config object of the correct type.
+        self.objects.subscribe_attr('local', self._update_local_runner_config)
+        self.objects.subscribe_attr('prefect', self._update_prefect_engine_config)
 
     def reset_backlinks(self):
-        self.config._back = self
-        self.config.local._back = self
-        self.config.prefect._back = self
-        self.config.root_log._back = self
-        self.objects._back = self
+        self.config._back = self  # pyright: ignore [reportAttributeAccessIssue]
+        self.objects._back = self  # pyright: ignore [reportAttributeAccessIssue]
 
     def _get_engine_config(self, engine_choice: EngineChoice):
         return getattr(self.config, engine_choice)
