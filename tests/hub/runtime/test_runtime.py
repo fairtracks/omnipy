@@ -18,13 +18,14 @@ from omnipy.compute.job_creator import JobCreator
 from omnipy.config.data import DataConfig
 from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import JobConfig
+from omnipy.config.root_log import RootLogConfig
 from omnipy.data.data_class_creator import DataClassBase, DataClassCreator
 from omnipy.data.serializer import SerializerRegistry
-from omnipy.engine.local import LocalRunner, LocalRunnerConfigEntryPublisher
-from omnipy.hub.log.root_log import RootLogConfigEntryPublisher, RootLogObjects
+from omnipy.engine.local import LocalRunner
+from omnipy.hub.log.root_log import RootLogObjects
 from omnipy.hub.registry import RunStateRegistry
 from omnipy.hub.runtime import RuntimeConfig, RuntimeObjects
-from omnipy.modules.prefect.engine.prefect import PrefectEngine, PrefectEngineConfigEntryPublisher
+from omnipy.modules.prefect.engine.prefect import PrefectEngine
 
 from .helpers.mocks import (MockLocalRunner,
                             MockLocalRunnerConfig,
@@ -162,21 +163,21 @@ def test_init_runtime_config_after_job_creator(
         ),
         (
             ('config', 'local'),
-            LocalRunnerConfigEntryPublisher,
+            LocalRunnerConfig,
             ('objects', 'local'),
             LocalRunner,
             'config',
         ),
         (
             ('config', 'prefect'),
-            PrefectEngineConfigEntryPublisher,
+            PrefectEngineConfig,
             ('objects', 'prefect'),
             PrefectEngine,
             'config',
         ),
         (
             ('config', 'root_log'),
-            RootLogConfigEntryPublisher,
+            RootLogConfig,
             ('objects', 'root_log'),
             RootLogObjects,
             'config',
@@ -298,16 +299,8 @@ def test_job_creator_subscribes_to_selected_engine(
 @pc.parametrize(
     'engine_name, engine_cls, config_cls, mock_engine_cls, mock_config_class',
     [
-        ('local',
-         LocalRunner,
-         LocalRunnerConfigEntryPublisher,
-         MockLocalRunner,
-         MockLocalRunnerConfig),
-        ('prefect',
-         PrefectEngine,
-         PrefectEngineConfigEntryPublisher,
-         MockPrefectEngine,
-         MockPrefectEngineConfig),
+        ('local', LocalRunner, LocalRunnerConfig, MockLocalRunner, MockLocalRunnerConfig),
+        ('prefect', PrefectEngine, PrefectEngineConfig, MockPrefectEngine, MockPrefectEngineConfig),
     ],
     ids=['local', 'prefect'])
 def test_new_engine_object_updates_engine_config_if_needed(

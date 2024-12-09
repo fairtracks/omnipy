@@ -8,6 +8,7 @@ from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
 from omnipy.api.protocols.public.config import (IsLocalOutputStorageConfig,
                                                 IsOutputStorageConfig,
                                                 IsS3OutputStorageConfig)
+from omnipy.util.publisher import DataPublisher
 
 
 def _get_persist_data_dir_path() -> str:
@@ -15,12 +16,12 @@ def _get_persist_data_dir_path() -> str:
 
 
 @dataclass
-class LocalOutputStorageConfig:
+class LocalOutputStorageConfig(DataPublisher):
     persist_data_dir_path: str = field(default_factory=_get_persist_data_dir_path)
 
 
 @dataclass
-class S3OutputStorageConfig:
+class S3OutputStorageConfig(DataPublisher):
     persist_data_dir_path: str = os.path.join('omnipy', 'outputs')
     endpoint_url: str = ''
     bucket_name: str = ''
@@ -29,7 +30,7 @@ class S3OutputStorageConfig:
 
 
 @dataclass
-class OutputStorageConfig:
+class OutputStorageConfig(DataPublisher):
     persist_outputs: ConfigPersistOutputsOptions = \
         ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
     restore_outputs: ConfigRestoreOutputsOptions = \
@@ -40,5 +41,5 @@ class OutputStorageConfig:
 
 
 @dataclass
-class JobConfig:
+class JobConfig(DataPublisher):
     output_storage: IsOutputStorageConfig = field(default_factory=OutputStorageConfig)

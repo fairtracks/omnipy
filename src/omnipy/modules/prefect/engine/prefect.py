@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Callable, Type
 
@@ -10,14 +9,8 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
 from omnipy.util.helpers import resolve
-from omnipy.util.publisher import RuntimeEntryPublisher
 
 from .. import prefect_flow, prefect_task, PrefectFlow, PrefectTask, task_input_hash
-
-
-@dataclass
-class PrefectEngineConfigEntryPublisher(PrefectEngineConfig, RuntimeEntryPublisher):
-    ...
 
 
 class PrefectEngine(TaskRunnerEngine,
@@ -33,12 +26,12 @@ class PrefectEngine(TaskRunnerEngine,
 
     @classmethod
     def get_config_cls(cls) -> Type[IsPrefectEngineConfig]:
-        return PrefectEngineConfigEntryPublisher
+        return PrefectEngineConfig
 
     # TaskRunnerEngine
 
     def _init_task(self, task: IsTask, call_func: Callable) -> PrefectTask:
-        assert isinstance(self._config, PrefectEngineConfigEntryPublisher)
+        assert isinstance(self._config, PrefectEngineConfig)
         task_kwargs = dict(
             name=task.name,
             cache_key_fn=task_input_hash if self._config.use_cached_results else None,

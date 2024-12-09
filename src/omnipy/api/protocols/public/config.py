@@ -5,10 +5,11 @@ from omnipy.api.enums import (BackoffStrategy,
                               ConfigOutputStorageProtocolOptions,
                               ConfigPersistOutputsOptions,
                               ConfigRestoreOutputsOptions)
+from omnipy.api.protocols.private.util import IsDataPublisher
 from omnipy.api.typedefs import LocaleType
 
 
-class IsEngineConfig(Protocol):
+class IsEngineConfig(IsDataPublisher, Protocol):
     """"""
     ...
 
@@ -23,12 +24,12 @@ class IsPrefectEngineConfig(IsEngineConfig, Protocol):
     use_cached_results: bool = False
 
 
-class IsJobConfig(Protocol):
+class IsJobConfig(IsDataPublisher, Protocol):
     """"""
     output_storage: 'IsOutputStorageConfig'
 
 
-class IsDataConfig(Protocol):
+class IsDataConfig(IsDataPublisher, Protocol):
     """"""
     interactive_mode: bool
     dynamically_convert_elements_to_models: bool
@@ -38,7 +39,7 @@ class IsDataConfig(Protocol):
     http_config_for_host: defaultdict[str, 'IsHttpConfig']
 
 
-class IsHttpConfig(Protocol):
+class IsHttpConfig(IsDataPublisher, Protocol):
     """"""
     requests_per_time_period: float
     time_period_in_secs: float
@@ -47,7 +48,7 @@ class IsHttpConfig(Protocol):
     retry_backoff_strategy: BackoffStrategy
 
 
-class IsRootLogConfig(Protocol):
+class IsRootLogConfig(IsDataPublisher, Protocol):
     """"""
     log_format_str: str
     locale: LocaleType
@@ -62,7 +63,7 @@ class IsRootLogConfig(Protocol):
     file_log_path: str
 
 
-class IsOutputStorageConfigBase(Protocol):
+class IsOutputStorageConfigBase(IsDataPublisher, Protocol):
     persist_data_dir_path: str
 
 
@@ -77,7 +78,7 @@ class IsS3OutputStorageConfig(IsOutputStorageConfigBase, Protocol):
     bucket_name: str
 
 
-class IsOutputStorageConfig(Protocol):
+class IsOutputStorageConfig(IsDataPublisher, Protocol):
     persist_outputs: ConfigPersistOutputsOptions
     restore_outputs: ConfigRestoreOutputsOptions
     protocol: ConfigOutputStorageProtocolOptions

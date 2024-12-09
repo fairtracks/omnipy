@@ -5,12 +5,13 @@ import shutil
 
 from omnipy.api.enums import BackoffStrategy
 from omnipy.api.protocols.public.config import IsHttpConfig
+from omnipy.util.publisher import DataPublisher
 
 _terminal_size = shutil.get_terminal_size()
 
 
 @dataclass
-class HttpConfig:
+class HttpConfig(DataPublisher):
     # For RateLimitingClientSession helper class
     requests_per_time_period: float = 60
     time_period_in_secs: float = 60
@@ -22,7 +23,7 @@ class HttpConfig:
 
 
 @dataclass
-class DataConfig:
+class DataConfig(DataPublisher):
     interactive_mode: bool = True
     dynamically_convert_elements_to_models: bool = False
     terminal_size_columns: int = _terminal_size.columns

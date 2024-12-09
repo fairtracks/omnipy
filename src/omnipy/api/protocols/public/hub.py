@@ -7,6 +7,7 @@ from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
 from omnipy.api.protocols.private.data import IsDataClassCreator
 from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.private.log import IsRunStateRegistry
+from omnipy.api.protocols.private.util import IsDataPublisher
 from omnipy.api.protocols.public.config import (IsDataConfig,
                                                 IsJobConfig,
                                                 IsLocalRunnerConfig,
@@ -30,7 +31,7 @@ class IsRootLogObjects(Protocol):
         ...
 
 
-class IsRuntimeConfig(Protocol):
+class IsRuntimeConfig(IsDataPublisher, Protocol):
     """"""
     job: IsJobConfig
     data: IsDataConfig
@@ -52,7 +53,7 @@ class IsRuntimeConfig(Protocol):
         ...
 
 
-class IsRuntimeObjects(Protocol):
+class IsRuntimeObjects(IsDataPublisher, Protocol):
     """"""
 
     job_creator: IsJobConfigHolder

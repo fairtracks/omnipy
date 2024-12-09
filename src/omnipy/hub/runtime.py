@@ -16,13 +16,15 @@ from omnipy.api.protocols.public.data import IsSerializerRegistry
 from omnipy.api.protocols.public.hub import IsRootLogObjects, IsRuntimeConfig, IsRuntimeObjects
 from omnipy.compute.job import JobBase
 from omnipy.config.data import DataConfig
+from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import JobConfig
+from omnipy.config.root_log import RootLogConfig
 from omnipy.data.data_class_creator import DataClassBase
 from omnipy.data.serializer import SerializerRegistry
-from omnipy.engine.local import LocalRunner, LocalRunnerConfigEntryPublisher
-from omnipy.hub.log.root_log import RootLogConfigEntryPublisher, RootLogObjects
+from omnipy.engine.local import LocalRunner
+from omnipy.hub.log.root_log import RootLogObjects
 from omnipy.hub.registry import RunStateRegistry
-from omnipy.modules.prefect.engine.prefect import PrefectEngine, PrefectEngineConfigEntryPublisher
+from omnipy.modules.prefect.engine.prefect import PrefectEngine
 from omnipy.util.helpers import called_from_omnipy_tests
 from omnipy.util.publisher import DataPublisher, RuntimeEntryPublisher
 
@@ -44,9 +46,9 @@ class RuntimeConfig(RuntimeEntryPublisher):
     job: IsJobConfig = field(default_factory=JobConfig)
     data: IsDataConfig = field(default_factory=_data_config_factory)
     engine: EngineChoice = EngineChoice.LOCAL
-    local: IsLocalRunnerConfig = field(default_factory=LocalRunnerConfigEntryPublisher)
-    prefect: IsPrefectEngineConfig = field(default_factory=PrefectEngineConfigEntryPublisher)
-    root_log: IsRootLogConfig = field(default_factory=RootLogConfigEntryPublisher)
+    local: IsLocalRunnerConfig = field(default_factory=LocalRunnerConfig)
+    prefect: IsPrefectEngineConfig = field(default_factory=PrefectEngineConfig)
+    root_log: IsRootLogConfig = field(default_factory=RootLogConfig)
 
     def reset_to_defaults(self) -> None:
         prev_back = self._back
@@ -55,9 +57,9 @@ class RuntimeConfig(RuntimeEntryPublisher):
         self.job = JobConfig()
         self.data = DataConfig()
         self.engine = EngineChoice.LOCAL
-        self.local = LocalRunnerConfigEntryPublisher()
-        self.prefect = PrefectEngineConfigEntryPublisher()
-        self.root_log = RootLogConfigEntryPublisher()
+        self.local = LocalRunnerConfig()
+        self.prefect = PrefectEngineConfig()
+        self.root_log = RootLogConfig()
 
         self._back = prev_back
         if self._back is not None:

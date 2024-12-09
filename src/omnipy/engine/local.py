@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Any, Callable, Type
 
 from omnipy.api.protocols.public.compute import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
@@ -8,12 +7,6 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
-from omnipy.util.publisher import RuntimeEntryPublisher
-
-
-@dataclass
-class LocalRunnerConfigEntryPublisher(LocalRunnerConfig, RuntimeEntryPublisher):
-    ...
 
 
 class LocalRunner(TaskRunnerEngine,
@@ -29,7 +22,7 @@ class LocalRunner(TaskRunnerEngine,
 
     @classmethod
     def get_config_cls(cls) -> Type[IsLocalRunnerConfig]:
-        return LocalRunnerConfigEntryPublisher
+        return LocalRunnerConfig
 
     def _init_task(self, task: IsTask, call_func: Callable) -> Any:
         ...

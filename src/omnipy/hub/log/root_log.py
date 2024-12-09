@@ -8,18 +8,11 @@ from omnipy.api.protocols.public.config import IsRootLogConfig
 from omnipy.config.root_log import RootLogConfig
 from omnipy.hub.log.handlers import DailyRotatingFileHandler
 from omnipy.util.helpers import get_datetime_format
-from omnipy.util.publisher import RuntimeEntryPublisher
-
-
-@dataclass
-class RootLogConfigEntryPublisher(RootLogConfig, RuntimeEntryPublisher):
-    ...
 
 
 @dataclass
 class RootLogObjects:
-    _config: IsRootLogConfig = field(
-        init=False, repr=False, default_factory=RootLogConfigEntryPublisher)
+    _config: IsRootLogConfig = field(init=False, repr=False, default_factory=RootLogConfig)
 
     formatter: logging.Formatter | None = None
     stdout_handler: StreamHandler | None = None

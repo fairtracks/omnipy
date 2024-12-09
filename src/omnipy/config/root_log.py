@@ -6,6 +6,7 @@ import sys
 from typing import TextIO
 
 from omnipy.api.typedefs import LocaleType
+from omnipy.util.publisher import DataPublisher
 
 
 def _get_log_path() -> str:
@@ -13,7 +14,7 @@ def _get_log_path() -> str:
 
 
 @dataclass
-class RootLogConfig:
+class RootLogConfig(DataPublisher):
     log_format_str: str = '[{engine}] {asctime} - {levelname}: {message} ({name})'
     locale: LocaleType = pkg_locale.getlocale()
     log_to_stdout: bool = True

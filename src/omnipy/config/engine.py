@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 
+from omnipy.util.publisher import DataPublisher
+
 
 @dataclass
-class EngineConfig:
+class EngineConfig(DataPublisher):
     ...
 
 
