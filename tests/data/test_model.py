@@ -1847,7 +1847,7 @@ def test_weakly_referenced_snapshot_deepcopy_memo_entry(
 class ModelCase:
     new_model_func: Callable[[], Model]
     deepcopy_memo_count: int
-    contents_modify_func: Callable[[Any], None]
+    contents_modify_func: Callable[..., None]
     target_contents: Any
 
 

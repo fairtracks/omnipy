@@ -23,8 +23,8 @@ class FlowCase(Generic[CallP, RetT]):
     flow_template: IsLinearFlowTemplate | IsDagFlowTemplate | IsFuncFlowTemplate
     args: tuple[Any, ...]
     kwargs: dict[str, Any]
-    assert_results_func: Callable[[Any], None]
-    # assert_signature_and_return_type_func: Callable[[Any], None]
+    assert_results_func: Callable[..., None]
+    # assert_signature_and_return_type_func: Callable[..., None]
 
 
 # TODO: Add assert_signature_and_return_type_func

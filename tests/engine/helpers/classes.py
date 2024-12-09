@@ -27,7 +27,7 @@ ReturnT = TypeVar('ReturnT')
 class JobCase(Generic[ArgT, ReturnT]):
     name: str
     job_func: Callable[[ArgT], ReturnT]
-    run_and_assert_results_func: Callable[[Any], None] | Awaitable[Callable[[Any], None]]
+    run_and_assert_results_func: Callable[..., None] | Awaitable[Callable[..., None]]
     job_type: JobType | None = None
     job: IsJob | None = None
 

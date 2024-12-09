@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Callable, DefaultDict
+from typing import Callable, DefaultDict
 
 from omnipy.api.protocols.public.hub import IsRuntime
 
@@ -11,9 +11,9 @@ def _subscribers_factory():
 
 @dataclass
 class DataPublisher:
-    _self_subscriptions: list[Callable[[Any], None]] = field(
+    _self_subscriptions: list[Callable[..., None]] = field(
         default_factory=list, init=False, repr=False)
-    _attr_subscriptions: DefaultDict[str, list[Callable[[Any], None]]] = \
+    _attr_subscriptions: DefaultDict[str, list[Callable[..., None]]] = \
         field(default_factory=_subscribers_factory, init=False, repr=False)
 
     def subscribe_attr(self, attr_name: str, callback_fun: Callable[..., None]):

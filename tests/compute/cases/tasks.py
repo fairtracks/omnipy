@@ -27,8 +27,8 @@ class TaskCase(Generic[CallP, RetT]):
     task_func: Callable[CallP, RetT]
     args: tuple[Any, ...]
     kwargs: dict[str, Any]
-    assert_results_func: Callable[[Any], None]
-    assert_signature_and_return_type_func: Callable[[Any], None]
+    assert_results_func: Callable[..., None]
+    assert_signature_and_return_type_func: Callable[..., None]
 
 
 @pc.case(

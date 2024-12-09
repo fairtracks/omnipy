@@ -90,7 +90,7 @@ class IsTarFileSerializer(IsSerializer, Protocol):
     @classmethod
     def create_tarfile_from_dataset(cls,
                                     dataset: IsDataset,
-                                    data_encode_func: Callable[[Any], bytes | memoryview]) -> bytes:
+                                    data_encode_func: Callable[..., bytes | memoryview]) -> bytes:
         """"""
         ...
 
