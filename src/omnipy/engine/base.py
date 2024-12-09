@@ -46,3 +46,11 @@ class Engine(ABC):
 
     def set_registry(self, registry: IsRunStateRegistry | None) -> None:
         self._registry = registry
+
+    @property
+    def config(self) -> IsEngineConfig:
+        return self._config
+
+    @property
+    def registry(self) -> IsRunStateRegistry | None:
+        return self._registry

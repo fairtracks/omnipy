@@ -25,6 +25,10 @@ class IsRootLogObjects(Protocol):
     def set_config(self, config: IsRootLogConfig) -> None:
         ...
 
+    @property
+    def config(self) -> IsRootLogConfig:
+        ...
+
 
 class IsRuntimeConfig(Protocol):
     """"""
@@ -35,19 +39,16 @@ class IsRuntimeConfig(Protocol):
     prefect: IsPrefectEngineConfig
     root_log: IsRootLogConfig
 
-    def __init__(
-            self,
-            job: IsJobConfig | None = None,  # noqa
-            data: IsDataConfig | None = None,  # noqa
-            engine: EngineChoice = EngineChoice.LOCAL,  # noqa
-            local: IsLocalRunnerConfig | None = None,  # noqa
-            prefect: IsPrefectEngineConfig | None = None,  # noqa
-            root_log: IsRootLogConfig | None = None,  # noqa
-            *args: object,
-            **kwargs: object) -> None:
+    def __init__(self,
+                 job: IsJobConfig,
+                 data: IsDataConfig,
+                 engine: EngineChoice,
+                 local: IsLocalRunnerConfig,
+                 prefect: IsPrefectEngineConfig,
+                 root_log: IsRootLogConfig) -> None:
         ...
 
-    def reset_to_defaults(self):
+    def reset_to_defaults(self) -> None:
         ...
 
 
@@ -62,17 +63,14 @@ class IsRuntimeObjects(Protocol):
     serializers: IsSerializerRegistry
     root_log: IsRootLogObjects
 
-    def __init__(
-            self,
-            job_creator: IsJobConfigHolder | None = None,  # noqa
-            data_class_creator: IsDataClassCreator | None = None,  # noqa
-            local: IsEngine | None = None,  # noqa
-            prefect: IsEngine | None = None,  # noqa
-            registry: IsRunStateRegistry | None = None,  # noqa
-            serializers: IsSerializerRegistry | None = None,  # noqa
-            root_log: IsRootLogObjects | None = None,  # noqa
-            *args: object,
-            **kwargs: object) -> None:
+    def __init__(self,
+                 job_creator: IsJobConfigHolder,
+                 data_class_creator: IsDataClassCreator,
+                 local: IsEngine,
+                 prefect: IsEngine,
+                 registry: IsRunStateRegistry,
+                 serializers: IsSerializerRegistry,
+                 root_log: IsRootLogObjects) -> None:
         ...
 
 

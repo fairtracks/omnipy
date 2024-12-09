@@ -33,6 +33,10 @@ class RootLogObjects:
         self._config = config
         self._configure_all_objects()
 
+    @property
+    def config(self) -> IsRootLogConfig:
+        return self._config
+
     def _configure_all_objects(self):
         self._remove_all_handlers_from_root_logger()
 

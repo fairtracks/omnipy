@@ -19,3 +19,11 @@ class IsEngine(Protocol):
 
     def set_registry(self, registry: IsRunStateRegistry | None) -> None:
         ...
+
+    @property
+    def config(self) -> IsEngineConfig:
+        ...
+
+    @property
+    def registry(self) -> IsRunStateRegistry | None:
+        ...

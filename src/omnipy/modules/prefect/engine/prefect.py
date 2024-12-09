@@ -33,12 +33,12 @@ class PrefectEngine(TaskRunnerEngine,
 
     @classmethod
     def get_config_cls(cls) -> Type[IsPrefectEngineConfig]:
-        return PrefectEngineConfig
+        return PrefectEngineConfigEntryPublisher
 
     # TaskRunnerEngine
 
     def _init_task(self, task: IsTask, call_func: Callable) -> PrefectTask:
-        assert isinstance(self._config, PrefectEngineConfig)
+        assert isinstance(self._config, PrefectEngineConfigEntryPublisher)
         task_kwargs = dict(
             name=task.name,
             cache_key_fn=task_input_hash if self._config.use_cached_results else None,
