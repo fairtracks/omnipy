@@ -1,4 +1,3 @@
-from dataclasses import dataclass, field
 from typing import Any
 
 from omnipy.api.enums import EngineChoice
@@ -10,6 +9,7 @@ from omnipy.api.protocols.public.config import (IsDataConfig,
                                                 IsEngineConfig,
                                                 IsJobConfig,
                                                 IsLocalRunnerConfig,
+                                                IsPrefectEngineConfig,
                                                 IsRootLogConfig)
 from omnipy.api.protocols.public.data import IsSerializerRegistry
 from omnipy.api.protocols.public.hub import IsRootLogObjects, IsRuntimeConfig, IsRuntimeObjects
@@ -41,14 +41,13 @@ def _data_config_factory():
     return _data_class_creator_factory().config
 
 
-@pyd.dataclass(config=pyd.ConfigDict(arbitrary_types_allowed=True))
 class RuntimeConfig(RuntimeEntryPublisher):
-    job: IsJobConfig = field(default_factory=JobConfig)
-    data: IsDataConfig = field(default_factory=_data_config_factory)
+    job: IsJobConfig = pyd.Field(default_factory=JobConfig)
+    data: IsDataConfig = pyd.Field(default_factory=_data_config_factory)
     engine: EngineChoice = EngineChoice.LOCAL
-    local: IsLocalRunnerConfig = field(default_factory=LocalRunnerConfig)
-    prefect: IsEngineConfig = field(default_factory=PrefectEngineConfig)
-    root_log: IsRootLogConfig = field(default_factory=RootLogConfig)
+    local: IsLocalRunnerConfig = pyd.Field(default_factory=LocalRunnerConfig)
+    prefect: IsPrefectEngineConfig = pyd.Field(default_factory=PrefectEngineConfig)
+    root_log: IsRootLogConfig = pyd.Field(default_factory=RootLogConfig)
 
     def reset_to_defaults(self) -> None:
         prev_back = self._back
@@ -66,28 +65,31 @@ class RuntimeConfig(RuntimeEntryPublisher):
             self._back.reset_subscriptions()
 
 
-@dataclass
 class RuntimeObjects(RuntimeEntryPublisher):
-    job_creator: IsJobConfigHolder = field(default_factory=_job_creator_factory)
-    data_class_creator: IsDataClassCreator = field(default_factory=_data_class_creator_factory)
-    local: IsEngine = field(default_factory=LocalRunner)
-    prefect: IsEngine = field(default_factory=PrefectEngine)
-    registry: IsRunStateRegistry = field(default_factory=RunStateRegistry)
-    serializers: IsSerializerRegistry = field(default_factory=SerializerRegistry)
-    root_log: IsRootLogObjects = field(default_factory=RootLogObjects)
+    job_creator: IsJobConfigHolder = pyd.Field(default_factory=_job_creator_factory)
+    data_class_creator: IsDataClassCreator = pyd.Field(default_factory=_data_class_creator_factory)
+    local: IsEngine = pyd.Field(default_factory=LocalRunner)
+    prefect: IsEngine = pyd.Field(default_factory=PrefectEngine)
+    registry: IsRunStateRegistry = pyd.Field(default_factory=RunStateRegistry)
+    serializers: IsSerializerRegistry = pyd.Field(default_factory=SerializerRegistry)
+    root_log: IsRootLogObjects = pyd.Field(default_factory=RootLogObjects)
 
 
-@dataclass
 class Runtime(DataPublisher):
-    config: IsRuntimeConfig = field(default_factory=RuntimeConfig)
-    objects: IsRuntimeObjects = field(default_factory=RuntimeObjects)
+    config: IsRuntimeConfig = pyd.Field(default_factory=RuntimeConfig)
+    objects: IsRuntimeObjects = pyd.Field(default_factory=RuntimeObjects)
 
-    def __post_init__(self):
-        super().__init__()
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
 
         self.reset_subscriptions()
 
-    def reset_subscriptions(self):
+    # def __post_init__(self):
+    #     super().__init__()
+    #
+    #     self.reset_subscriptions()
+
+    def reset_subscriptions(self, data=None, **kwargs):
         """
         Resets all subscriptions for the current instance.
 
@@ -99,7 +101,6 @@ class Runtime(DataPublisher):
 
         self.config.unsubscribe_all()
         self.objects.unsubscribe_all()
-
         # Makes sure that the config references in the runtime objects always refer to the related
         # config in runtime, even when:
         #
@@ -135,6 +136,8 @@ class Runtime(DataPublisher):
         # replaced with a new default config object of the correct type.
         self.objects.subscribe_attr('local', self._update_local_runner_config)
         self.objects.subscribe_attr('prefect', self._update_prefect_engine_config)
+
+        # self.subscribe_attr('config', self.reset_subscriptions, do_callback=False)
 
     def reset_backlinks(self):
         self.config._back = self  # pyright: ignore [reportAttributeAccessIssue]

@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import cast, Generic, Protocol
 
 from typing_extensions import TypeVar
 
 from omnipy.api.protocols.private.log import IsRunStateRegistry
 from omnipy.api.protocols.public.config import IsEngineConfig
+from omnipy.util.publisher import DataPublisher
 
 EngineConfigT = TypeVar('EngineConfigT', bound=IsEngineConfig)
 
@@ -28,8 +28,7 @@ class MockEngine(ABC, Generic[EngineConfigT]):
         self.registry = registry
 
 
-@dataclass
-class MockLocalRunnerConfig:
+class MockLocalRunnerConfig(DataPublisher):
     backend_verbose: bool = True
 
 
@@ -47,8 +46,7 @@ class MockLocalRunner(MockEngine[IsMockLocalRunnerConfig]):
         return cast(IsMockLocalRunnerConfig, self._config)
 
 
-@dataclass
-class MockPrefectEngineConfig:
+class MockPrefectEngineConfig(DataPublisher):
     server_url: str = ''
     use_cached_results: bool = False
 

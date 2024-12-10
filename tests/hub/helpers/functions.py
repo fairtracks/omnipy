@@ -1,12 +1,12 @@
 from datetime import datetime
+from io import TextIOBase
 import os
-from typing import TextIO
 
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.util.helpers import get_datetime_format
 
 
-def read_log_lines_from_stream(stream: TextIO, clear_stream: bool = True) -> list[str]:
+def read_log_lines_from_stream(stream: TextIOBase, clear_stream: bool = True) -> list[str]:
     stream.seek(0)
     log_lines = [line.rstrip(os.linesep) for line in stream.readlines()]
     stream.seek(0)
@@ -15,7 +15,7 @@ def read_log_lines_from_stream(stream: TextIO, clear_stream: bool = True) -> lis
     return log_lines
 
 
-def read_log_line_from_stream(stream: TextIO, clear_stream: bool = True) -> str:
+def read_log_line_from_stream(stream: TextIOBase, clear_stream: bool = True) -> str:
     log_lines = read_log_lines_from_stream(stream, clear_stream)
     if len(log_lines) == 1:
         return log_lines[0]

@@ -1,5 +1,4 @@
 from collections import defaultdict
-from dataclasses import field
 from typing import Callable, DefaultDict
 
 from omnipy.api.protocols.public.hub import IsRuntime
@@ -10,14 +9,19 @@ def _subscribers_factory():
     return defaultdict(list)
 
 
-@pyd.dataclass
-class DataPublisher:
-    _self_subscriptions: list[Callable[..., None]] = field(
-        default_factory=list, init=False, repr=False)
-    _attr_subscriptions: DefaultDict[str, list[Callable[..., None]]] = \
-        field(default_factory=_subscribers_factory, init=False, repr=False)
+class DataPublisher(pyd.BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        validate_assignment = True
 
-    def subscribe_attr(self, attr_name: str, callback_fun: Callable[..., None]):
+    _self_subscriptions: list[Callable[..., None]] = pyd.PrivateAttr(default_factory=list)
+    _attr_subscriptions: DefaultDict[str, list[Callable[..., None]]] = \
+        pyd.PrivateAttr(default_factory=_subscribers_factory)
+
+    def subscribe_attr(self,
+                       attr_name: str,
+                       callback_fun: Callable[..., None],
+                       do_callback: bool = True):
         if not hasattr(self, attr_name):
             raise AttributeError(f'No attribute named "{attr_name}"')
         elif attr_name.startswith('_'):
@@ -25,7 +29,8 @@ class DataPublisher:
         else:
             self._attr_subscriptions[attr_name].append(callback_fun)
             attr = getattr(self, attr_name)
-            callback_fun(attr)
+            if do_callback:
+                callback_fun(attr)
 
             if isinstance(attr, DataPublisher):
                 attr.subscribe(callback_fun, do_callback=False)
@@ -40,7 +45,7 @@ class DataPublisher:
 
             return _callback_for_child_publisher_attr
 
-        for attr_name in self.__dataclass_fields__.keys():
+        for attr_name in self.__class__.__fields__.keys():
             if not attr_name.startswith('_'):
                 attr = getattr(self, attr_name)
                 if isinstance(attr, DataPublisher):
@@ -74,9 +79,8 @@ class DataPublisher:
             self._call_all_subscribers(attr_name, value)
 
 
-@pyd.dataclass
 class RuntimeEntryPublisher(DataPublisher):
-    _back: IsRuntime | None = field(default=None, init=False, repr=False)
+    _back: IsRuntime | None = pyd.PrivateAttr(default=None)
 
     def __setattr__(self, attr_name: str, value: object) -> None:
         new_value = hasattr(self, attr_name) and getattr(self, attr_name) is not value

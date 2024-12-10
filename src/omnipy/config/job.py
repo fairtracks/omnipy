@@ -1,4 +1,3 @@
-from dataclasses import field
 import os
 from pathlib import Path
 
@@ -16,12 +15,10 @@ def _get_persist_data_dir_path() -> str:
     return str(Path.cwd().joinpath(Path('outputs')))
 
 
-@pyd.dataclass
 class LocalOutputStorageConfig(DataPublisher):
-    persist_data_dir_path: str = field(default_factory=_get_persist_data_dir_path)
+    persist_data_dir_path: str = pyd.Field(default_factory=_get_persist_data_dir_path)
 
 
-@pyd.dataclass
 class S3OutputStorageConfig(DataPublisher):
     persist_data_dir_path: str = os.path.join('omnipy', 'outputs')
     endpoint_url: str = ''
@@ -30,17 +27,15 @@ class S3OutputStorageConfig(DataPublisher):
     secret_key: str = ''
 
 
-@pyd.dataclass
 class OutputStorageConfig(DataPublisher):
     persist_outputs: ConfigPersistOutputsOptions = \
         ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
     restore_outputs: ConfigRestoreOutputsOptions = \
         ConfigRestoreOutputsOptions.DISABLED
     protocol: ConfigOutputStorageProtocolOptions = ConfigOutputStorageProtocolOptions.LOCAL
-    local: LocalOutputStorageConfig = field(default_factory=LocalOutputStorageConfig)
-    s3: S3OutputStorageConfig = field(default_factory=S3OutputStorageConfig)
+    local: IsLocalOutputStorageConfig = pyd.Field(default_factory=LocalOutputStorageConfig)
+    s3: IsS3OutputStorageConfig = pyd.Field(default_factory=S3OutputStorageConfig)
 
 
-@pyd.dataclass
 class JobConfig(DataPublisher):
-    output_storage: OutputStorageConfig = field(default_factory=OutputStorageConfig)
+    output_storage: IsOutputStorageConfig = pyd.Field(default_factory=OutputStorageConfig)

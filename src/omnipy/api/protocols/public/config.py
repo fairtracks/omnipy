@@ -1,5 +1,6 @@
 from collections import defaultdict
-from typing import Protocol, runtime_checkable, TextIO
+from io import TextIOBase
+from typing import Protocol, runtime_checkable
 
 from omnipy.api.enums import (BackoffStrategy,
                               ConfigOutputStorageProtocolOptions,
@@ -62,8 +63,8 @@ class IsRootLogConfig(IsDataPublisher, Protocol):
     log_to_stdout: bool
     log_to_stderr: bool
     log_to_file: bool
-    stdout: TextIO
-    stderr: TextIO
+    stdout: TextIOBase
+    stderr: TextIOBase
     stdout_log_min_level: int
     stderr_log_min_level: int
     file_log_min_level: int

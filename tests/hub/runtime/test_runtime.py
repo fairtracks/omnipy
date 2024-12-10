@@ -317,8 +317,8 @@ def test_new_engine_object_updates_engine_config_if_needed(
     def _get_engine_object() -> IsEngineConfig:
         return getattr(runtime.objects, engine_name)
 
-    def _set_engine_object(value) -> IsEngineConfig:
-        return setattr(runtime.objects, engine_name, value)
+    def _set_engine_object(value) -> None:
+        setattr(runtime.objects, engine_name, value)
 
     assert isinstance(_get_engine_object(), engine_cls)
     assert isinstance(_get_engine_config(), config_cls)
