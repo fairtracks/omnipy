@@ -34,19 +34,19 @@ class DataPublisher(pyd.BaseModel):
     def subscribe(self, callback_fun: Callable[..., None], do_callback: bool = True) -> None:
         self._self_subscriptions.append(callback_fun)
 
-        def _get_callback_for_child_publisher_attr(
+        def _get_attr_callback_for_publisher_child(
                 attr_name: str) -> Callable[[DataPublisher], None]:
-            def _callback_for_child_publisher_attr(value: object) -> None:
+            def _attr_callback_for_publisher_child(value: object) -> None:
                 self._call_all_subscribers(attr_name, value)
 
-            return _callback_for_child_publisher_attr
+            return _attr_callback_for_publisher_child
 
         for attr_name in self.__class__.__fields__.keys():
             if not attr_name.startswith('_'):
                 attr = getattr(self, attr_name)
                 if isinstance(attr, DataPublisher):
                     attr.subscribe(
-                        _get_callback_for_child_publisher_attr(attr_name), do_callback=False)
+                        _get_attr_callback_for_publisher_child(attr_name), do_callback=False)
 
         if do_callback:
             callback_fun(self)
