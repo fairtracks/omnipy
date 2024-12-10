@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from omnipy.api.enums import EngineChoice
 from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
@@ -163,4 +163,7 @@ class Runtime(DataPublisher):
         self.objects.job_creator.set_engine(self._get_engine(self.config.engine))
 
 
-runtime: 'Runtime | None' = None if called_from_omnipy_tests() else Runtime()
+if TYPE_CHECKING:
+    runtime: 'Runtime' = Runtime()
+else:
+    runtime: 'Runtime | None' = None if called_from_omnipy_tests() else Runtime()
