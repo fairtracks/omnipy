@@ -5,7 +5,7 @@ from typing_extensions import TypeVar
 
 from omnipy.api.protocols.private.log import IsRunStateRegistry
 from omnipy.api.protocols.public.config import IsEngineConfig
-from omnipy.util.publisher import DataPublisher
+from omnipy.config import ConfigBase
 
 EngineConfigT = TypeVar('EngineConfigT', bound=IsEngineConfig)
 
@@ -28,7 +28,7 @@ class MockEngine(ABC, Generic[EngineConfigT]):
         self.registry = registry
 
 
-class MockLocalRunnerConfig(DataPublisher):
+class MockLocalRunnerConfig(ConfigBase):
     backend_verbose: bool = True
 
 
@@ -46,7 +46,7 @@ class MockLocalRunner(MockEngine[IsMockLocalRunnerConfig]):
         return cast(IsMockLocalRunnerConfig, self._config)
 
 
-class MockPrefectEngineConfig(DataPublisher):
+class MockPrefectEngineConfig(ConfigBase):
     server_url: str = ''
     use_cached_results: bool = False
 

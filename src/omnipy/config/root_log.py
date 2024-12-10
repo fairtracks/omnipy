@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 
 from omnipy.api.typedefs import LocaleType
-from omnipy.util.publisher import DataPublisher
+from omnipy.config import ConfigBase
 import omnipy.util.pydantic as pyd
 
 
@@ -13,7 +13,7 @@ def _get_log_path() -> str:
     return str(Path.cwd() / 'logs' / 'omnipy.log')
 
 
-class RootLogConfig(DataPublisher):
+class RootLogConfig(ConfigBase):
     log_format_str: str = '[{engine}] {asctime} - {levelname}: {message} ({name})'
     locale: LocaleType = pkg_locale.getlocale()
     log_to_stdout: bool = True

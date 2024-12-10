@@ -14,6 +14,7 @@ from omnipy.api.protocols.public.config import (IsDataConfig,
 from omnipy.api.protocols.public.data import IsSerializerRegistry
 from omnipy.api.protocols.public.hub import IsRootLogObjects, IsRuntimeConfig, IsRuntimeObjects
 from omnipy.compute.job import JobBase
+from omnipy.config import ConfigBase
 from omnipy.config.data import DataConfig
 from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import JobConfig
@@ -41,7 +42,7 @@ def _data_config_factory():
     return _data_class_creator_factory().config
 
 
-class RuntimeConfig(RuntimeEntryPublisher):
+class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
     job: IsJobConfig = pyd.Field(default_factory=JobConfig)
     data: IsDataConfig = pyd.Field(default_factory=_data_config_factory)
     engine: EngineChoice = EngineChoice.LOCAL
@@ -65,7 +66,7 @@ class RuntimeConfig(RuntimeEntryPublisher):
             self._back.reset_subscriptions()
 
 
-class RuntimeObjects(RuntimeEntryPublisher):
+class RuntimeObjects(RuntimeEntryPublisher, DataPublisher):
     job_creator: IsJobConfigHolder = pyd.Field(default_factory=_job_creator_factory)
     data_class_creator: IsDataClassCreator = pyd.Field(default_factory=_data_class_creator_factory)
     local: IsEngine = pyd.Field(default_factory=LocalRunner)

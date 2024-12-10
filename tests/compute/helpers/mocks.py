@@ -32,9 +32,9 @@ from omnipy.api.protocols.public.engine import IsTaskRunnerEngine
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.mixins.flow_context import FlowContextJobMixin
+from omnipy.config import ConfigBase
 from omnipy.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
 from omnipy.util.callable_decorator import callable_decorator_cls
-from omnipy.util.publisher import DataPublisher
 
 JobTemplateT = TypeVar('JobTemplateT', covariant=True)
 JobT = TypeVar('JobT', covariant=True)
@@ -442,7 +442,7 @@ class MockLocalRunner:
         job_callback_accept_decorator(_func_flow_decorator)
 
 
-class MockJobConfig(DataPublisher):
+class MockJobConfig(ConfigBase):
     persist_outputs: bool = True
     restore_outputs: bool = False
 

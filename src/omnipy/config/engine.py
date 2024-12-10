@@ -1,7 +1,7 @@
-from omnipy.util.publisher import DataPublisher
+from omnipy.config import ConfigBase
 
 
-class EngineConfig(DataPublisher):
+class EngineConfig(ConfigBase):
     ...
 
 
