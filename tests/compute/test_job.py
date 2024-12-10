@@ -251,7 +251,7 @@ def _assert_prop_getattr_job(job_obj, in_job_obj, property, val):
 
 
 def test_equal_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
-    JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, _Job = mock_job_classes  # noqa
 
     my_job_tmpl = JobTemplate()
     my_job_tmpl_2 = JobTemplate()

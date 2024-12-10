@@ -400,6 +400,14 @@ class MockLocalRunner:
     def set_registry(self, registry: IsRunStateRegistry | None) -> None:
         ...
 
+    @property
+    def config(self) -> IsEngineConfig:
+        ...
+
+    @property
+    def registry(self) -> IsRunStateRegistry | None:
+        ...
+
     def apply_task_decorator(self, task: IsTask, job_callback_accept_decorator: Callable) -> None:
         def _task_decorator(call_func: Callable) -> Callable:
             def _call_func(*args: object, **kwargs: object) -> Any:
