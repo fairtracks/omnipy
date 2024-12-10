@@ -1,5 +1,6 @@
 from pydantic import BaseConfig  # noqa
 from pydantic import BaseModel  # noqa
+from pydantic import ConfigDict  # noqa
 from pydantic import ConfigError  # noqa
 from pydantic import conint  # noqa
 from pydantic import constr  # noqa
@@ -15,6 +16,7 @@ from pydantic import root_validator  # noqa
 from pydantic import StrictInt  # noqa
 from pydantic import ValidationError  # noqa
 from pydantic import validator  # noqa
+from pydantic.dataclasses import dataclass  # noqa
 from pydantic.error_wrappers import ErrorWrapper  # noqa
 from pydantic.fields import ModelField, Undefined, UndefinedType  # noqa
 from pydantic.generics import GenericModel  # noqa

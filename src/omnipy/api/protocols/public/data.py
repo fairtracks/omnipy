@@ -1,4 +1,4 @@
-from typing import Any, Callable, IO, Iterator, Protocol, Sized, Type, TypeVar
+from typing import Any, Callable, IO, Iterator, Protocol, runtime_checkable, Sized, Type, TypeVar
 
 from omnipy.api.protocols.private.log import CanLog
 from omnipy.util.pydantic import Undefined, UndefinedType
@@ -105,6 +105,7 @@ class IsTarFileSerializer(IsSerializer, Protocol):
         ...
 
 
+@runtime_checkable
 class IsSerializerRegistry(Protocol):
     """"""
     def __init__(self) -> None:

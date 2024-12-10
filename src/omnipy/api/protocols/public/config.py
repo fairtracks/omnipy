@@ -1,5 +1,6 @@
 from collections import defaultdict
-from typing import Protocol, TextIO
+from io import TextIOBase
+from typing import Protocol, runtime_checkable
 
 from omnipy.api.enums import (BackoffStrategy,
                               ConfigOutputStorageProtocolOptions,
@@ -9,26 +10,31 @@ from omnipy.api.protocols.private.util import IsDataPublisher
 from omnipy.api.typedefs import LocaleType
 
 
+@runtime_checkable
 class IsEngineConfig(IsDataPublisher, Protocol):
     """"""
     ...
 
 
+@runtime_checkable
 class IsLocalRunnerConfig(IsEngineConfig, Protocol):
     """"""
     ...
 
 
+@runtime_checkable
 class IsPrefectEngineConfig(IsEngineConfig, Protocol):
     """"""
     use_cached_results: bool = False
 
 
+@runtime_checkable
 class IsJobConfig(IsDataPublisher, Protocol):
     """"""
     output_storage: 'IsOutputStorageConfig'
 
 
+@runtime_checkable
 class IsDataConfig(IsDataPublisher, Protocol):
     """"""
     interactive_mode: bool
@@ -39,6 +45,7 @@ class IsDataConfig(IsDataPublisher, Protocol):
     http_config_for_host: defaultdict[str, 'IsHttpConfig']
 
 
+@runtime_checkable
 class IsHttpConfig(IsDataPublisher, Protocol):
     """"""
     requests_per_time_period: float
@@ -48,6 +55,7 @@ class IsHttpConfig(IsDataPublisher, Protocol):
     retry_backoff_strategy: BackoffStrategy
 
 
+@runtime_checkable
 class IsRootLogConfig(IsDataPublisher, Protocol):
     """"""
     log_format_str: str
@@ -55,22 +63,25 @@ class IsRootLogConfig(IsDataPublisher, Protocol):
     log_to_stdout: bool
     log_to_stderr: bool
     log_to_file: bool
-    stdout: TextIO
-    stderr: TextIO
+    stdout: TextIOBase
+    stderr: TextIOBase
     stdout_log_min_level: int
     stderr_log_min_level: int
     file_log_min_level: int
     file_log_path: str
 
 
+@runtime_checkable
 class IsOutputStorageConfigBase(IsDataPublisher, Protocol):
     persist_data_dir_path: str
 
 
+@runtime_checkable
 class IsLocalOutputStorageConfig(IsOutputStorageConfigBase, Protocol):
     ...
 
 
+@runtime_checkable
 class IsS3OutputStorageConfig(IsOutputStorageConfigBase, Protocol):
     endpoint_url: str
     access_key: str
@@ -78,6 +89,7 @@ class IsS3OutputStorageConfig(IsOutputStorageConfigBase, Protocol):
     bucket_name: str
 
 
+@runtime_checkable
 class IsOutputStorageConfig(IsDataPublisher, Protocol):
     persist_outputs: ConfigPersistOutputsOptions
     restore_outputs: ConfigRestoreOutputsOptions

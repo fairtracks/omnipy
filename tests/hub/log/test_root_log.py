@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
-from io import StringIO
+from io import StringIO, TextIOBase
 import logging
 from logging.handlers import RotatingFileHandler
 import os
 from pathlib import Path
 import sys
 import time
-from typing import Annotated, TextIO
+from typing import Annotated
 
 import pytest
 
@@ -131,7 +131,7 @@ def _log_and_assert_log_line_from_stream(
         runtime: IsRuntime,
         logger: logging.Logger,
         level: int,
-        stream: TextIO,
+        stream: TextIOBase,
         datetime_obj: datetime = datetime.now(),
 ):
     logger.log(level, 'Test log message', extra={'timestamp': datetime_obj.timestamp()})
@@ -144,7 +144,7 @@ def _log_and_assert_log_line_from_stream(
     )
 
 
-def _log_and_assert_no_stream_output(logger: logging.Logger, level: int, stream: TextIO):
+def _log_and_assert_no_stream_output(logger: logging.Logger, level: int, stream: TextIOBase):
     logger.log(level, 'Test log message')
     assert read_log_line_from_stream(stream) == ''
 

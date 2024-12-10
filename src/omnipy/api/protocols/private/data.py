@@ -1,4 +1,4 @@
-from typing import Callable, ContextManager, Protocol, TypeVar
+from typing import Callable, ContextManager, Protocol, runtime_checkable, TypeVar
 
 from omnipy.api.protocols.private.util import HasContents, IsSnapshotHolder
 from omnipy.api.protocols.public.config import IsDataConfig
@@ -7,6 +7,7 @@ _ObjT = TypeVar('_ObjT', bound=HasContents)
 _ContentsT = TypeVar('_ContentsT', bound=object)
 
 
+@runtime_checkable
 class IsDataClassCreator(Protocol[_ObjT, _ContentsT]):
     """"""
     @property
@@ -28,6 +29,7 @@ class IsDataClassCreator(Protocol[_ObjT, _ContentsT]):
         ...
 
 
+@runtime_checkable
 class IsDataClassBase(Protocol):
     """"""
     @property

@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from datetime import datetime
 from types import MappingProxyType
 from typing import (Any,
@@ -35,6 +34,7 @@ from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.mixins.flow_context import FlowContextJobMixin
 from omnipy.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
 from omnipy.util.callable_decorator import callable_decorator_cls
+from omnipy.util.publisher import DataPublisher
 
 JobTemplateT = TypeVar('JobTemplateT', covariant=True)
 JobT = TypeVar('JobT', covariant=True)
@@ -442,8 +442,7 @@ class MockLocalRunner:
         job_callback_accept_decorator(_func_flow_decorator)
 
 
-@dataclass
-class MockJobConfig:
+class MockJobConfig(DataPublisher):
     persist_outputs: bool = True
     restore_outputs: bool = False
 

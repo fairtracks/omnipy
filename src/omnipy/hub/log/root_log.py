@@ -1,25 +1,27 @@
-from dataclasses import dataclass, field
 import logging
 from logging import StreamHandler
 from logging.handlers import RotatingFileHandler
 import os
+from typing import Any
 
 from omnipy.api.protocols.public.config import IsRootLogConfig
 from omnipy.config.root_log import RootLogConfig
 from omnipy.hub.log.handlers import DailyRotatingFileHandler
 from omnipy.util.helpers import get_datetime_format
+from omnipy.util.publisher import DataPublisher
+import omnipy.util.pydantic as pyd
 
 
-@dataclass
-class RootLogObjects:
-    _config: IsRootLogConfig = field(init=False, repr=False, default_factory=RootLogConfig)
+class RootLogObjects(DataPublisher):
+    _config: IsRootLogConfig = pyd.PrivateAttr(default_factory=RootLogConfig)
 
     formatter: logging.Formatter | None = None
     stdout_handler: StreamHandler | None = None
     stderr_handler: StreamHandler | None = None
     file_handler: RotatingFileHandler | None = None
 
-    def __post_init__(self):
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
         self._configure_all_objects()
 
     def set_config(self, config: IsRootLogConfig):

@@ -1,6 +1,6 @@
 from datetime import datetime
 from logging import INFO, Logger
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from omnipy.api.enums import RunState
 from omnipy.api.protocols.private.compute.mixins import IsUniquelyNamedJob
@@ -16,6 +16,7 @@ class CanLog(Protocol):
         ...
 
 
+@runtime_checkable
 class IsRunStateRegistry(Protocol):
     """"""
     def __init__(self) -> None:

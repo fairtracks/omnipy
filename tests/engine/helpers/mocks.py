@@ -1,6 +1,5 @@
 import asyncio
 from contextlib import AbstractContextManager
-from dataclasses import dataclass
 from datetime import datetime
 from functools import update_wrapper
 import inspect
@@ -22,6 +21,7 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       TaskRunnerEngine)
 from omnipy.modules.prefect import generate_slug
 from omnipy.util.callable_decorator import callable_decorator_cls
+from omnipy.util.publisher import DataPublisher
 
 
 class MockJobCreator(AbstractContextManager):
@@ -157,8 +157,7 @@ class MockFuncFlowTemplate(MockFuncFlow, MockTaskTemplate):
         return func_flow
 
 
-@dataclass
-class MockEngineConfig:
+class MockEngineConfig(DataPublisher):
     backend_verbose: bool = True
 
 
@@ -259,8 +258,7 @@ class MockJobRunnerSubclass(TaskRunnerEngine,
         return result
 
 
-@dataclass
-class MockRunStateRegistryConfig:
+class MockRunStateRegistryConfig(DataPublisher):
     verbose: bool = True
 
 

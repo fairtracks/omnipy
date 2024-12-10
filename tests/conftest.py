@@ -191,7 +191,7 @@ def skip_test_if_not_dynamically_convert_elements_to_models(
 def skip_test_if_not_default_data_config_values(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
     if any(
-            getattr(runtime.config.data, attr) != getattr(DataConfig, attr)
+            getattr(runtime.config.data, attr) != getattr(DataConfig(), attr)
             for attr in ('interactive_mode', 'dynamically_convert_elements_to_models')):
         pytest.skip('This test only runs with default data config values')
 
