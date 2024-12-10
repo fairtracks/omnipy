@@ -807,3 +807,17 @@ def get_event_loop_and_check_if_loop_is_running() -> tuple[asyncio.AbstractEvent
         loop_is_running = False
 
     return loop, loop_is_running
+
+
+def running_in_ipython() -> bool:
+    try:
+        return get_ipython().__class__.__name__ == 'TerminalInteractiveShell'
+    except NameError:
+        return False
+
+
+def running_in_jupyter() -> bool:
+    try:
+        return get_ipython().__class__.__name__ == 'ZMQInteractiveShell'
+    except NameError:
+        return False
