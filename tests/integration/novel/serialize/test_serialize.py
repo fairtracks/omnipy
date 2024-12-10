@@ -16,11 +16,11 @@ from omnipy.compute.task import FuncArgJobBase
 @pc.parametrize_with_cases('case_tmpl', cases='.cases.jobs', has_tag='task', prefix='case_config_')
 def test_all_properties_pytest_default_config(case_tmpl) -> None:
     for job_obj in case_tmpl, case_tmpl.apply():
-        assert job_obj.persist_outputs is None
-        assert job_obj.will_persist_outputs is PersistOutputsOptions.DISABLED
-        assert job_obj.restore_outputs is None
+        assert job_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG
+        assert job_obj.will_persist_outputs is PersistOutputsOptions.ENABLED
+        assert job_obj.restore_outputs is RestoreOutputsOptions.FOLLOW_CONFIG
         assert job_obj.will_restore_outputs is RestoreOutputsOptions.DISABLED
-        assert job_obj.output_storage_protocol is None
+        assert job_obj.output_storage_protocol is OutputStorageProtocolOptions.FOLLOW_CONFIG
         assert job_obj.output_storage_protocol_to_use is OutputStorageProtocolOptions.LOCAL
 
 
