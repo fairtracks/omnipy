@@ -34,6 +34,10 @@ def _job_creator_factory():
     return JobBase.job_creator
 
 
+def _job_config_factory():
+    return _job_creator_factory().config
+
+
 def _data_class_creator_factory():
     return DataClassBase.data_class_creator
 
@@ -43,7 +47,7 @@ def _data_config_factory():
 
 
 class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
-    job: IsJobConfig = pyd.Field(default_factory=JobConfig)
+    job: IsJobConfig = pyd.Field(default_factory=_job_config_factory)
     data: IsDataConfig = pyd.Field(default_factory=_data_config_factory)
     engine: EngineChoice = EngineChoice.LOCAL
     local: IsLocalRunnerConfig = pyd.Field(default_factory=LocalRunnerConfig)

@@ -14,7 +14,6 @@ from omnipy.api.protocols.public.config import IsJobConfig
 from omnipy.api.protocols.public.data import IsDataset, IsSerializerRegistry
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.name import NameJobBaseMixin
-from omnipy.config.job import JobConfig
 from omnipy.data.dataset import Dataset
 from omnipy.modules import get_serializer_registry
 
@@ -35,33 +34,24 @@ class SerializerFuncJobBaseMixin:
 
         # TODO: Possibly reimplement logic using a state machine, e.g. "transitions" package
         if persist_outputs is None:
-            self._persist_outputs = PersistOpts.FOLLOW_CONFIG if self._has_job_config else None
+            self._persist_outputs = PersistOpts.FOLLOW_CONFIG
         else:
             self._persist_outputs = PersistOpts(persist_outputs)
 
         if restore_outputs is None:
-            self._restore_outputs = RestoreOpts.FOLLOW_CONFIG if self._has_job_config else None
+            self._restore_outputs = RestoreOpts.FOLLOW_CONFIG
         else:
             self._restore_outputs = RestoreOpts(restore_outputs)
 
         if output_storage_protocol is None:
-            self._output_storage_protocol = \
-                ProtocolOpts.FOLLOW_CONFIG if self._has_job_config else None
+            self._output_storage_protocol = ProtocolOpts.FOLLOW_CONFIG
         else:
             self._output_storage_protocol = ProtocolOpts(output_storage_protocol)
 
     @property
-    def _has_job_config(self) -> bool:
-        self_as_job_base = cast(IsJobBase, self)
-        return self_as_job_base.config is not None
-
-    @property
     def _job_config(self) -> IsJobConfig:
         self_as_job_base = cast(IsJobBase, self)
-        if self_as_job_base.config is None:
-            return JobConfig()
-        else:
-            return self_as_job_base.config
+        return self_as_job_base.config
 
     def _log(self, msg: str) -> None:
         self_as_job_base = cast(IsJobBase, self)
@@ -86,7 +76,7 @@ class SerializerFuncJobBaseMixin:
 
     @property
     def will_persist_outputs(self) -> PersistOutputsOptions:
-        if not self._has_job_config or self._persist_outputs is not PersistOpts.FOLLOW_CONFIG:
+        if self._persist_outputs is not PersistOpts.FOLLOW_CONFIG:
             return self._persist_outputs if self._persist_outputs is not None \
                 else PersistOpts.DISABLED
         else:
@@ -108,7 +98,7 @@ class SerializerFuncJobBaseMixin:
 
     @property
     def will_restore_outputs(self) -> RestoreOutputsOptions:
-        if not self._has_job_config or self._restore_outputs is not RestoreOpts.FOLLOW_CONFIG:
+        if self._restore_outputs is not RestoreOpts.FOLLOW_CONFIG:
             return self._restore_outputs if self._restore_outputs is not None \
                 else RestoreOpts.DISABLED
         else:
@@ -121,8 +111,7 @@ class SerializerFuncJobBaseMixin:
 
     @property
     def output_storage_protocol_to_use(self) -> OutputStorageProtocolOptions:
-        if not self._has_job_config \
-                or self._output_storage_protocol is not ProtocolOpts.FOLLOW_CONFIG:
+        if self._output_storage_protocol is not ProtocolOpts.FOLLOW_CONFIG:
             return self._output_storage_protocol if self._output_storage_protocol is not None \
                 else ProtocolOpts.LOCAL
         else:

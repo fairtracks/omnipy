@@ -5,12 +5,13 @@ from datetime import datetime
 from omnipy.api.protocols.private.compute.job_creator import IsJobCreator
 from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.public.config import IsJobConfig
+from omnipy.config.job import JobConfig
 
 
 class JobCreator(AbstractContextManager):
     def __init__(self) -> None:
         self._engine: IsEngine | None = None
-        self._config: IsJobConfig | None = None
+        self._config: IsJobConfig = JobConfig()
         self._nested_context_level: int = 0
         self._time_of_cur_toplevel_nested_context_run: datetime | None = None
 
@@ -37,7 +38,7 @@ class JobCreator(AbstractContextManager):
         return self._engine
 
     @property
-    def config(self) -> IsJobConfig | None:
+    def config(self) -> IsJobConfig:
         return self._config
 
     @property

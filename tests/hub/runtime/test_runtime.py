@@ -123,19 +123,19 @@ def test_init_runtime_config_after_data_class_creator(
     assert DataClassBase.data_class_creator.config.dynamically_convert_elements_to_models is False
 
 
-@pytest.mark.skipif(os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1', reason="""Postponed for now""")
 def test_init_runtime_config_after_job_creator(
         runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
 
-    JobBase.job_creator.config.output_storage.persist_outputs = 'disabled'
+    JobBase.job_creator.config.output_storage.persist_outputs = ConfigPersistOutputsOptions.DISABLED
     runtime = runtime_cls()
 
-    assert runtime.config.job.output_storage.persist_outputs == 'disabled'
+    assert runtime.config.job.output_storage.persist_outputs == ConfigPersistOutputsOptions.DISABLED
 
     runtime.config.reset_to_defaults()
 
     _assert_runtime_config_default(runtime.config, Path.cwd())
-    assert runtime.config.job.output_storage.persist_outputs == 'all'
+    assert runtime.config.job.output_storage.persist_outputs \
+           == ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
 
 
 @pc.parametrize(

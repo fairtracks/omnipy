@@ -1,6 +1,7 @@
 import pytest
 
 from omnipy.compute.job_creator import JobCreator
+from omnipy.config.job import JobConfig
 
 from .helpers.mocks import MockJobConfig, MockLocalRunner
 
@@ -31,7 +32,7 @@ def test_job_creator_set_config() -> None:
     mock_job_config = MockJobConfig()
     job_creator = JobCreator()
 
-    assert job_creator.config is None
+    assert isinstance(job_creator.config, JobConfig)
     with pytest.raises(AttributeError):
         job_creator.config = mock_job_config  # type: ignore[misc, assignment]
 
@@ -50,7 +51,7 @@ def test_job_creator_engine_not_singular() -> None:
     assert job_creator_2.engine is None
 
     job_creator_1.set_config(mock_job_config)  # type: ignore[arg-type]
-    assert job_creator_2.config is None
+    assert isinstance(job_creator_2.config, JobConfig)
 
 
 def test_job_creator_nested_context_level() -> None:

@@ -6,6 +6,7 @@ import pytest
 from omnipy.api.exceptions import JobStateException
 from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.job_creator import JobCreator
+from omnipy.config.job import JobConfig
 
 from .conftest import MockJobClasses
 from .helpers.functions import assert_updated_wrapper
@@ -129,7 +130,7 @@ def test_job_creator_properties_mock(
             PropertyTest(
                 property='config',
                 enter_exit=False,
-                default_val=None,
+                default_val=JobConfig(),
                 val=mock_job_config,
                 in_job_base=True,
                 in_job_template=True,
@@ -224,18 +225,18 @@ def _assert_prop_getattr_job_subcls(job_cls: type,
                                     val: object):
 
     job_cls_as_job_base_cls = cast(type[JobBase], job_cls)
-    assert getattr(job_cls_as_job_base_cls.job_creator, property) is val
+    assert getattr(job_cls_as_job_base_cls.job_creator, property) == val
     _assert_prop_getattr_cls(job_cls, in_job_obj, property, val)
 
     if job_obj:
         job_obj_as_job_base = cast(JobBase, job_obj)
-        assert getattr(job_obj_as_job_base.__class__.job_creator, property) is val
+        assert getattr(job_obj_as_job_base.__class__.job_creator, property) == val
         if at_obj_level:
             _assert_prop_getattr_job(job_obj, in_job_obj, property, val)
             _assert_prop_getattr_cls(job_obj.__class__, in_job_obj, property, val)
 
 
-def _assert_prop_getattr_cls(job_cls, in_job_obj, property, val):
+def _assert_prop_getattr_cls(job_cls, in_job_obj, property, _val):
     if in_job_obj:
         assert hasattr(job_cls, property)
     else:
@@ -244,7 +245,7 @@ def _assert_prop_getattr_cls(job_cls, in_job_obj, property, val):
 
 def _assert_prop_getattr_job(job_obj, in_job_obj, property, val):
     if in_job_obj:
-        assert getattr(job_obj, property) is val
+        assert getattr(job_obj, property) == val
     else:
         assert not hasattr(job_obj, property)
 

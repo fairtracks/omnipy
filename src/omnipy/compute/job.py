@@ -29,7 +29,7 @@ class JobBase(
         return self.__class__.job_creator
 
     @property
-    def config(self) -> IsJobConfig | None:
+    def config(self) -> IsJobConfig:
         return self.__class__.job_creator.config
 
     @property

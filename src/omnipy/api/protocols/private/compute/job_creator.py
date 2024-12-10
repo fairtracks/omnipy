@@ -10,7 +10,7 @@ from omnipy.api.protocols.public.config import IsJobConfig
 class IsJobConfigHolder(Protocol):
     """"""
     @property
-    def config(self) -> IsJobConfig | None:
+    def config(self) -> IsJobConfig:
         ...
 
     @property

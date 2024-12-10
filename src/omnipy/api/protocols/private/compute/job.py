@@ -33,7 +33,7 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol[JobTemplateT, JobT, CallP, 
         ...
 
     @property
-    def config(self) -> IsJobConfig | None:
+    def config(self) -> IsJobConfig:
         ...
 
     @property
