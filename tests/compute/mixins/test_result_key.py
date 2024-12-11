@@ -3,12 +3,9 @@ from typing import Annotated
 from pydantic.fields import Undefined
 import pytest
 
-from omnipy.api.protocols.public.compute import IsDagFlowTemplate, IsTaskTemplate
+from omnipy.api.protocols.public.compute import IsDagFlowTemplate
 from omnipy.compute.flow import FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
-from omnipy.compute.typing import (mypy_fix_func_flow_template,
-                                   mypy_fix_linear_flow_template,
-                                   mypy_fix_task_template)
 from omnipy.data.model import Model
 
 from ..cases.raw.functions import power_m1_func
@@ -17,7 +14,7 @@ from ..helpers.mocks import MockLocalRunner
 
 def test_property_result_key_default_task() -> None:
 
-    power_m1_template = mypy_fix_task_template(TaskTemplate()(power_m1_func))
+    power_m1_template = TaskTemplate()(power_m1_func)
 
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.result_key is Undefined
@@ -27,7 +24,7 @@ def test_property_result_key_default_task() -> None:
     assert power_m1(4, 2) == 15
     assert not power_m1.has_result_key
 
-    power_m1_template = mypy_fix_task_template(TaskTemplate(result_key=None)(power_m1_func))
+    power_m1_template = TaskTemplate(result_key=None)(power_m1_func)
 
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.result_key is None
@@ -36,8 +33,7 @@ def test_property_result_key_default_task() -> None:
 
 def test_property_result_key_task() -> None:
 
-    power_m1_template = mypy_fix_task_template(
-        TaskTemplate(result_key='i_have_the_power')(power_m1_func))
+    power_m1_template = TaskTemplate(result_key='i_have_the_power')(power_m1_func)
 
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.result_key == 'i_have_the_power'
@@ -50,13 +46,14 @@ def test_property_result_key_task() -> None:
 def test_dag_flow_result_selector_key(
         my_double_power_m1_dag_flow: Annotated[IsDagFlowTemplate, pytest.fixture]) -> None:
 
-    assert my_double_power_m1_dag_flow.dag_flow_result_selector_key == None
+    assert my_double_power_m1_dag_flow.dag_flow_result_selector_key is None
     assert my_double_power_m1_dag_flow.run(4, 2) == 15
 
-    my_dpm1_dag_flow_first_task_fixed_last_task_with_other_result_key = my_double_power_m1_dag_flow.refine(
-        my_double_power_m1_dag_flow.task_templates[0].refine(result_key='number'),
-        my_double_power_m1_dag_flow.task_templates[1].refine(result_key='other'),
-    )
+    my_dpm1_dag_flow_first_task_fixed_last_task_with_other_result_key = \
+        my_double_power_m1_dag_flow.refine(
+            my_double_power_m1_dag_flow.task_templates[0].refine(result_key='number'),
+            my_double_power_m1_dag_flow.task_templates[1].refine(result_key='other'),
+        )
 
     assert my_dpm1_dag_flow_first_task_fixed_last_task_with_other_result_key.run(4, 2) == {
         'other': 244
@@ -96,29 +93,34 @@ def test_dag_flow_result_selector_key_is_none(
 
     assert my_dpm1_dag_flow_no_selector_key.run(4, 2) == {'dataset': 15}
 
-    my_dpm1_dag_flow_fix_first_task_result_no_selector_key = my_dpm1_dag_flow_no_selector_key.refine(
-        my_dpm1_dag_flow_no_selector_key.task_templates[0].refine(result_key='number'),
-        my_double_power_m1_dag_flow.task_templates[1],
-    )
+    my_dpm1_dag_flow_fix_first_task_result_no_selector_key \
+        = my_dpm1_dag_flow_no_selector_key.refine(
+            my_dpm1_dag_flow_no_selector_key.task_templates[0].refine(result_key='number'),
+            my_double_power_m1_dag_flow.task_templates[1],
+        )
 
     assert my_dpm1_dag_flow_fix_first_task_result_no_selector_key.run(4, 2) == {
         'number': 15, 'dataset': 224
     }
 
-    my_dpm1_dag_flow_fixed_no_result_or_selector_keys = my_dpm1_dag_flow_fix_first_task_result_no_selector_key.refine(
-        my_dpm1_dag_flow_fix_first_task_result_no_selector_key.task_templates[0],
-        my_dpm1_dag_flow_fix_first_task_result_no_selector_key.task_templates[1].refine(
-            result_key=None),
-    )
+    my_dpm1_dag_flow_fixed_no_result_or_selector_keys \
+        = my_dpm1_dag_flow_fix_first_task_result_no_selector_key.refine(
+            my_dpm1_dag_flow_fix_first_task_result_no_selector_key.task_templates[0],
+            my_dpm1_dag_flow_fix_first_task_result_no_selector_key.task_templates[1].refine(
+                result_key=None),
+        )
 
     assert my_dpm1_dag_flow_fixed_no_result_or_selector_keys.run(4, 2) == {
         'number': 15, 'power_m1_func': 224
     }
 
-    my_dpm1_dag_flow_unfixed_no_result_or_selector_keys = my_dpm1_dag_flow_fixed_no_result_or_selector_keys.refine(
-        my_dpm1_dag_flow_fixed_no_result_or_selector_keys.task_templates[0].refine(result_key=None),
-        my_dpm1_dag_flow_fixed_no_result_or_selector_keys.task_templates[1],
-    )
+    my_dpm1_dag_flow_unfixed_no_result_or_selector_keys \
+        = my_dpm1_dag_flow_fixed_no_result_or_selector_keys.refine(
+            my_dpm1_dag_flow_fixed_no_result_or_selector_keys.task_templates[0].refine(
+                result_key=None,
+            ),
+            my_dpm1_dag_flow_fixed_no_result_or_selector_keys.task_templates[1],
+        )
 
     assert my_dpm1_dag_flow_unfixed_no_result_or_selector_keys.run(4, 2) == {'power_m1_func': 15}
 
@@ -265,14 +267,13 @@ def test_default_result_key_for_dag_jobs_overrides(
 
 def test_default_result_key_for_dag_jobs_ignored_for_other_job_types(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]):
-    my_power_m1_task_template = mypy_fix_task_template(
-        TaskTemplate(default_result_key_for_dag_jobs='blabla')(power_m1_func))
+    my_power_m1_task_template = TaskTemplate(default_result_key_for_dag_jobs='blabla')(
+        power_m1_func)
     assert my_power_m1_task_template.run(4, 2) == 15
 
     fixed_power_of_two_m1_task_template = my_power_m1_task_template.refine(
         fixed_params=dict(exponent=2))
 
-    @mypy_fix_linear_flow_template
     @LinearFlowTemplate(
         fixed_power_of_two_m1_task_template,
         fixed_power_of_two_m1_task_template,
@@ -282,7 +283,6 @@ def test_default_result_key_for_dag_jobs_ignored_for_other_job_types(
 
     assert my_double_power_of_two_m1_linear_flow.run(4) == 224
 
-    @mypy_fix_func_flow_template
     @FuncFlowTemplate(default_result_key_for_dag_jobs='blabla')
     def my_double_power_m1_func_flow(number: int | Model[int], exponent: int):
         first_result = my_power_m1_task_template(number, exponent)

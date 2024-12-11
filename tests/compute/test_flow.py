@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from datetime import datetime
-from typing import Annotated, Callable, cast, Type
+from typing import Annotated, Callable, Type
 
 import pytest
 import pytest_cases as pc
@@ -22,8 +22,7 @@ from .helpers.mocks import (IsMockTaskTemplateAssertSameTimeOfCurFlowRun,
                             MockFlowTemplateSubclass,
                             MockJobTemplateSubclass,
                             MockLocalRunner,
-                            MockTaskTemplateAssertSameTimeOfCurFlowRun,
-                            MockTaskTemplateAssertSameTimeOfCurFlowRunCore)
+                            MockTaskTemplateAssertSameTimeOfCurFlowRun)
 
 MockJobClasses = tuple[Type[JobBase], Type[JobTemplateMixin], Type[JobMixin]]
 
@@ -359,12 +358,6 @@ def test_dynamic_dag_flow_by_returned_dict(
 
     dag_flow = dag_flow_tmpl.apply()
     assert dag_flow() == 84
-
-
-def mypy_fix_mock_task_template_assert_same_time(
-        mock_task_template_assert_same_time: object
-) -> MockTaskTemplateAssertSameTimeOfCurFlowRunCore:
-    return cast(MockTaskTemplateAssertSameTimeOfCurFlowRunCore, mock_task_template_assert_same_time)
 
 
 def test_time_of_multi_level_flow_run_flow_cls_tuple(
