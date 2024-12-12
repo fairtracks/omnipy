@@ -314,10 +314,10 @@ class _Model(
 
     def __init__(  # noqa: C901
         self,
-        value: Any | UndefinedType = Undefined,
+        value: _RootT | object | UndefinedType = Undefined,
         *,
-        __root__: Any | UndefinedType = Undefined,
-        **kwargs: Any,
+        __root__: _RootT | object | UndefinedType = Undefined,
+        **kwargs: _RootT | object,
     ) -> None:
         super_kwargs: dict[str, _RootT] = {}
         num_root_vals = 0
