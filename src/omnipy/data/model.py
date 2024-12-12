@@ -18,6 +18,9 @@ from typing import (Annotated,
                     Iterator,
                     Literal,
                     Optional,
+                    overload,
+                    TYPE_CHECKING,
+                    TypeAlias,
                     Union)
 
 from typing_extensions import get_original_bases, TypeVar
@@ -62,6 +65,8 @@ from omnipy.util.setdeque import SetDeque
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
 _ValT = TypeVar('_ValT')
+_ValT2 = TypeVar('_ValT2')
+
 _ReturnT = TypeVar('_ReturnT')
 _RootT = TypeVar('_RootT')
 _ModelT = TypeVar('_ModelT')
@@ -72,6 +77,15 @@ ROOT_KEY = '__root__'
 
 
 class _ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
+    def __new__(mcs, name, bases, namespace, **kwargs):
+        if name in ['_Model', '_PandasModel']:
+            name = name[1:]
+            if '__name__' in namespace:
+                namespace['__name__'] = name
+            if '__qualname__' in namespace:
+                namespace['__qualname__'] = name
+        return super().__new__(mcs, name, bases, namespace, **kwargs)
+
     # Hack to overcome bug in pydantic/fields.py (v1.10.13), lines 636-641:
     #
     # if origin is None or origin is CollectionsHashable:
@@ -92,7 +106,7 @@ class _ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
         return super().__instancecheck__(instance)
 
 
-class Model(
+class _Model(
         ModelDisplayMixin,
         DataClassBase,
         pyd.GenericModel,
@@ -281,7 +295,7 @@ class Model(
         cls,
         *args: Any,
         **kwargs: Any,
-    ) -> 'Model[_RootT]':
+    ) -> '_Model[_RootT]':
         model_not_specified = ROOT_KEY not in cls.__fields__
         if model_not_specified:
             cls._raise_no_model_exception()
@@ -1195,3 +1209,126 @@ class Model(
 
     def __repr_args__(self):
         return [(None, self.contents)]
+
+
+if TYPE_CHECKING:  # noqa: C901
+
+    class Model(_Model[_RootT], Generic[_RootT]):
+        @overload
+        def __new__(
+            cls: 'type[Model[int]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model_int':
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[float]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model_float':
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[bool]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model_bool':
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[str]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model_str':
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[list[_ValT]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model_list[_ValT]':
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[tuple[_ValT, ...]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model_tuple_same[_ValT]':
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[tuple[_ValT, _ValT2]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model_tuple_two_diff[_ValT, _ValT2]':
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[dict[_KeyT, _ValT]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model_dict[_KeyT, _ValT]':
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[_RootT]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model[_RootT]':
+            ...
+
+        # @overload
+        def __new__(
+            cls,
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model':
+            ...
+
+        # def __new__(
+        #     cls,
+        #     *args: Any,
+        #     **kwargs: Any,
+        # ) -> '_Model':
+        #     ...
+    class Model_int(int, _Model[int]):
+        ...
+
+    class Model_float(_Model[float], float):
+        ...
+
+    class Model_bool(_Model[bool], bool):  # type: ignore[misc]
+        ...
+
+    class Model_str(_Model[str], str):  # type: ignore[misc]
+        ...
+
+    class Model_list(_Model[list[_ValT]], list[_ValT], Generic[_ValT]):  # type: ignore[misc]
+        ...
+
+    class Model_tuple_same(_Model[tuple[_ValT, ...]], tuple[_ValT, ...], Generic[_ValT]):
+        ...
+
+    class Model_tuple_two_diff(_Model[tuple[_ValT, _ValT2]],
+                               tuple[_ValT, _ValT2],
+                               Generic[_ValT, _ValT2]):
+        ...
+
+    class Model_dict(  # type: ignore[misc]
+            _Model[dict[_KeyT, _ValT]],
+            dict[_KeyT, _ValT],
+            Generic[_KeyT, _ValT],
+    ):
+        ...
+else:
+
+    Model: TypeAlias = _Model

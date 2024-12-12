@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from io import StringIO
-from typing import Any
+from typing import Any, TYPE_CHECKING, TypeAlias
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import is_model_instance
@@ -10,7 +10,7 @@ from . import pd
 from ..tables.models import TableListOfDictsOfJsonScalarsModel
 
 
-class PandasModel(Model[pd.DataFrame | pd.Series | TableListOfDictsOfJsonScalarsModel]):
+class _PandasModel(Model[pd.DataFrame | pd.Series | TableListOfDictsOfJsonScalarsModel]):
     @classmethod
     def _parse_data(
         cls, data: pd.DataFrame | pd.Series | TableListOfDictsOfJsonScalarsModel
@@ -46,6 +46,23 @@ class PandasModel(Model[pd.DataFrame | pd.Series | TableListOfDictsOfJsonScalars
 
     def from_json(self, value: str) -> None:
         self._validate_and_set_value(pd.read_json(StringIO(value)).convert_dtypes())
+
+
+if TYPE_CHECKING:
+
+    class PandasModel(_PandasModel):
+        def __new__(
+            cls,
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'PandasDataFrameModel':
+            ...
+
+    class PandasDataFrameModel(PandasModel, pd.DataFrame):
+        ...
+else:
+
+    PandasModel: TypeAlias = _PandasModel
 
 
 class PandasDataset(Dataset[PandasModel]):
