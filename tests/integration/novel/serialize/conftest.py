@@ -7,9 +7,11 @@ from .cases.datasets import (csv_dataset,
                              json_table_as_str_dataset,
                              json_table_dataset,
                              pandas_dataset,
+                             pydantic_dataset,
                              python_dataset,
                              str_dataset,
-                             str_unicode_dataset)
+                             str_unicode_dataset,
+                             two_level_pydantic_dataset)
 from .cases.functions import (csv_func,
                               json_func,
                               json_nested_table_func,
@@ -17,6 +19,8 @@ from .cases.functions import (csv_func,
                               json_table_as_str_func,
                               json_table_func,
                               pandas_func,
+                              pydantic_func,
                               python_func,
                               str_func,
-                              str_unicode_func)
+                              str_unicode_func,
+                              two_level_pydantic_func)

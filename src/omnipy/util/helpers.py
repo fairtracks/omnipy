@@ -12,6 +12,7 @@ from inspect import getmodule, isclass
 from keyword import iskeyword, issoftkeyword
 import locale as pkg_locale
 import operator
+from pathlib import Path
 import sys
 import traceback
 from types import GenericAlias, ModuleType, NoneType, UnionType
@@ -821,3 +822,9 @@ def running_in_jupyter() -> bool:
         return get_ipython().__class__.__name__ == 'ZMQInteractiveShell'
     except NameError:
         return False
+
+
+def ensure_path_obj(dir_path: Path | str) -> Path:
+    if isinstance(dir_path, str):
+        dir_path = Path(dir_path)
+    return dir_path

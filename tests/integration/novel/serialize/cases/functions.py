@@ -8,6 +8,8 @@ from omnipy.modules.json.datasets import JsonDataset
 from omnipy.modules.pandas.models import PandasDataset
 from omnipy.modules.raw.datasets import StrDataset
 
+from .models import PydanticModel, TwoLevelPydanticModel
+
 
 @pytest.fixture
 def pandas_func(
@@ -97,3 +99,23 @@ def python_func(
         return python_dataset
 
     return _python_dataset
+
+
+@pytest.fixture
+def pydantic_func(
+    pydantic_dataset: Annotated[Dataset[Model[PydanticModel]], pytest.fixture]
+) -> Callable[[], Dataset[Model[PydanticModel]]]:
+    def _pydantic_dataset() -> Dataset[Model[PydanticModel]]:
+        return pydantic_dataset
+
+    return _pydantic_dataset
+
+
+@pytest.fixture
+def two_level_pydantic_func(
+    two_level_pydantic_dataset: Annotated[Dataset[Model[TwoLevelPydanticModel]], pytest.fixture]
+) -> Callable[[], Dataset[Model[TwoLevelPydanticModel]]]:
+    def _two_level_pydantic_dataset() -> Dataset[Model[TwoLevelPydanticModel]]:
+        return two_level_pydantic_dataset
+
+    return _two_level_pydantic_dataset

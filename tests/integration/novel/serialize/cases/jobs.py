@@ -105,3 +105,24 @@ def fail_case_python_task_tmpl(python_func) -> IsTaskTemplate:
 @pc.case(tags=['flow'])
 def fail_case_python_flow_tmpl(python_func) -> IsLinearFlowTemplate:
     return LinearFlowTemplate(fail_case_python_task_tmpl(python_func))(python_func)
+
+
+@pc.case(tags=['task'])
+def case_pydantic_task_tmpl(pydantic_func) -> IsTaskTemplate:
+    return TaskTemplate()(pydantic_func)
+
+
+@pc.case(tags=['flow'])
+def case_pydantic_flow_tmpl(pydantic_func) -> IsLinearFlowTemplate:
+    return LinearFlowTemplate(case_pydantic_task_tmpl(pydantic_func))(pydantic_func)
+
+
+@pc.case(tags=['task'])
+def case_two_level_pydantic_task_tmpl(two_level_pydantic_func) -> IsTaskTemplate:
+    return TaskTemplate()(two_level_pydantic_func)
+
+
+@pc.case(tags=['flow'])
+def case_two_level_pydantic_flow_tmpl(two_level_pydantic_func) -> IsLinearFlowTemplate:
+    return LinearFlowTemplate(case_two_level_pydantic_task_tmpl(two_level_pydantic_func))(
+        two_level_pydantic_func)

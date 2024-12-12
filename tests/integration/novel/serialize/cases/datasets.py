@@ -9,6 +9,8 @@ from omnipy.modules.json.datasets import JsonDataset
 from omnipy.modules.pandas.models import PandasDataset
 from omnipy.modules.raw.datasets import StrDataset
 
+from .models import PydanticModel, TwoLevelPydanticModel
+
 
 @pytest.fixture
 def pandas_dataset() -> PandasDataset:
@@ -122,3 +124,25 @@ def python_dataset() -> Dataset[Model[object]]:
     _python_dataset['python_a'] = [{'a': 1, 'b': [2, 3, 4], 'c': {'yes': True, 'no': False}}]
     _python_dataset['python_b'] = lambda x: x + 1
     return _python_dataset
+
+
+@pytest.fixture
+def pydantic_dataset() -> Dataset[Model[PydanticModel]]:
+    _pydantic_dataset = Dataset[Model[PydanticModel]]()
+    _pydantic_dataset['pydantic_a'] = dict(number=3, string='three')
+    _pydantic_dataset['pydantic_b'] = dict(number=5, string='five')
+    return _pydantic_dataset
+
+
+@pytest.fixture
+def two_level_pydantic_dataset() -> Dataset[Model[TwoLevelPydanticModel]]:
+    _two_level_pydantic_dataset = Dataset[Model[TwoLevelPydanticModel]]()
+    _two_level_pydantic_dataset['two_level_pydantic_a'] = dict(
+        a=dict(number=3, string='three'),
+        b=dict(number=4, string='four'),
+    )
+    _two_level_pydantic_dataset['two_level_pydantic_b'] = dict(
+        a=dict(number=4, string='four'),
+        b=dict(number=5, string='five'),
+    )
+    return _two_level_pydantic_dataset

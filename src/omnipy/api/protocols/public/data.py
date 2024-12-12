@@ -1,7 +1,9 @@
 from abc import abstractmethod
 from collections.abc import Sized
+from pathlib import Path
 from typing import (AbstractSet,
                     Any,
+                    BinaryIO,
                     Callable,
                     Hashable,
                     IO,
@@ -313,7 +315,36 @@ class IsMultiModelDataset(IsDataset[_ModelT], Protocol[_ModelT]):
         ...
 
 
-class IsSerializer(Protocol):
+class CanSerialize(Protocol[RootT]):
+    @classmethod
+    def serialize_to_bytes(cls, dataset: IsDataset[IsModel[RootT]]) -> BinaryIO:
+        ...
+
+    @classmethod
+    def deserialize_from_bytes(cls, data: BinaryIO) -> IsDataset[IsModel[RootT]]:
+        ...
+
+    @classmethod
+    def serialize_to_directory(cls, dataset: IsDataset[IsModel[RootT]],
+                               dir_path: Path | str) -> None:
+        ...
+
+    @classmethod
+    def deserialize_from_directory(cls, dir_path: Path | str) -> IsDataset[IsModel[RootT]]:
+        ...
+
+
+class IsDataEncoder(Protocol[RootT]):
+    @classmethod
+    def encode_data(cls, dataset_key: str, data: RootT) -> bytes:
+        ...
+
+    @classmethod
+    def decode_data(cls, dataset_key: str, encoded_data: bytes) -> RootT:
+        ...
+
+
+class SupportsGeneralSerializerQueries(Protocol):
     """"""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
@@ -327,13 +358,12 @@ class IsSerializer(Protocol):
     def get_output_file_suffix(cls) -> str:
         ...
 
-    @classmethod
-    def serialize(cls, dataset: IsDataset) -> bytes | memoryview:
-        ...
 
-    @classmethod
-    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> IsDataset:
-        ...
+class IsSerializer(IsDataEncoder[RootT],
+                   CanSerialize[RootT],
+                   SupportsGeneralSerializerQueries,
+                   Protocol[RootT]):
+    ...
 
 
 class IsTarFileSerializer(IsSerializer, Protocol):
