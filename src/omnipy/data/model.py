@@ -642,6 +642,11 @@ class Model(
 
     @contents.setter
     def contents(self, value: _RootT) -> None:
+        """
+        Sets the contents of the model. Note: in contrast to the `__init__()`, `from_data()` and
+        `from_json()` methods, the contents are not validated automatically. To validate the
+        contents, call the `validate_contents()` method explicitly.
+        """
         super().__setattr__(ROOT_KEY, value)
 
     def dict(self, *args, **kwargs) -> dict[str, object]:
@@ -702,8 +707,8 @@ class Model(
 
     @classmethod
     @functools.cache
-    def full_type(cls) -> TypeForm:
-        return cls.outer_type(with_args=True)
+    def full_type(cls) -> type[_RootT]:
+        return cast(type[_RootT], cls.outer_type(with_args=True))
 
     @classmethod
     @functools.cache

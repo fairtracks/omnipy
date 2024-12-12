@@ -1,6 +1,7 @@
 from collections.abc import Callable, Sequence
 from copy import copy, deepcopy
 from dataclasses import dataclass
+from datetime import datetime
 import gc
 from math import floor
 import os
@@ -23,6 +24,7 @@ import pytest
 import pytest_cases as pc
 from typing_extensions import TypeVar
 
+from omnipy.api.protocols.public.data import IsModel
 from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model
@@ -32,7 +34,7 @@ from omnipy.util.setdeque import SetDeque
 
 from ..helpers.functions import assert_model, assert_val
 from ..helpers.protocols import AssertModelOrValFunc
-from .helpers.classes import MyFloatObject, MyList, MyNumberBase
+from .helpers.classes import MyFloatObject, MyList, MyNumberBase, MyPath
 from .helpers.models import (CBA,
                              DefaultStrModel,
                              LiteralFiveModel,
@@ -1560,6 +1562,7 @@ def test_import_export_methods() -> None:
 
     model_dict = Model[dict]()
     model_dict.from_json('{"a": 2}')
+    assert model_dict.contents == {'a': 2}
     assert model_dict.to_data() == {'a': 2}
 
     model_dict.contents = {'b': 3}
@@ -2362,6 +2365,24 @@ def test_mimic_callable_with_exception(runtime: Annotated[IsRuntime, pytest.fixt
         assert model.snapshot == model.contents == MyClass(42)
     else:
         assert model.contents == MyClass(-42)
+
+
+def test_mimic_validation_failure_recovery_with_interactive_mode(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    model = Model[list[int]]([12])
+    assert model.contents == [12]
+
+    runtime.config.data.interactive_mode = False
+    with pytest.raises(ValidationError):
+        model.append('abc')
+    assert model.contents == [12, 'abc']
+
+    del model[-1]
+    model.validate_contents()
+    runtime.config.data.interactive_mode = True
+    with pytest.raises(ValidationError):
+        model.append('abc')
+    assert model.contents == [12]
 
 
 def test_mimic_simple_list_operations(
@@ -4217,6 +4238,106 @@ def test_pandas_dataframe_non_builtin_direct() -> None:
         model_2.contents,
         dataframe,
     )
+
+
+def test_non_builtin_model_with_parser() -> None:
+    class PathModelWithParser(Model[MyPath | str]):
+        @classmethod
+        def _parse_data(cls, data: MyPath | str) -> MyPath:
+            if isinstance(data, str):
+                return MyPath(data)
+            return data
+
+        def to_data(self) -> str:
+            return str(self.contents)
+
+        def __str__(self):
+            return str(self.contents)
+
+    _assert_path_model(PathModelWithParser)
+
+    str_path = PathModelWithParser('tests/data')
+    assert isinstance(str_path.contents, MyPath)
+    assert str_path.contents == MyPath('tests/data')
+    assert str_path.to_data() == 'tests/data'
+    assert str(str_path) == 'tests/data'
+
+    int_path = PathModelWithParser(123)
+    assert int_path.contents == MyPath('123')
+    assert int_path.to_data() == '123'
+    assert str(int_path) == '123'
+
+
+def test_non_builtin_model_with_from_data() -> None:
+    class PathModelWithFromData(Model[MyPath]):
+        def from_data(self, value: MyPath | str) -> None:
+            if isinstance(value, str):
+                self._validate_and_set_value(MyPath(value))
+            else:
+                self._validate_and_set_value(value)
+
+        def to_data(self) -> str:
+            return str(self.contents)
+
+        def __str__(self):
+            return str(self.contents)
+
+    _assert_path_model(PathModelWithFromData)
+
+    with pytest.raises(ValidationError):
+        PathModelWithFromData('tests/data')
+
+    with pytest.raises(ValidationError):
+        PathModelWithFromData(123)
+
+
+def _assert_path_model(PathModel: type[IsModel[MyPath]]) -> None:
+    path = PathModel()
+    assert isinstance(path.contents, MyPath)
+    assert path.contents == MyPath()
+    assert path.to_data() == '.'
+    assert str(path) == '.'
+    path.from_data('tests/data')
+    assert isinstance(path.contents, MyPath)
+    assert path.contents == MyPath('tests/data')
+    new_path = path / 'test_model.py'
+    assert isinstance(new_path, PathModel)
+    assert new_path.contents == MyPath('tests/data/test_model.py')
+    assert str(new_path) == 'tests/data/test_model.py'
+
+
+def test_non_builtin_model_with_custom_default_value() -> None:
+    # Hack to provide a custom default value for models where calling the root type without
+    # arguments does not produce a default value.
+    class DefaultDatetime(datetime):
+        def __new__(cls, *args, **kwargs):
+            if len(args) == 0:
+                return datetime.min
+            return datetime.__new__(datetime, *args, **kwargs)
+
+    class DatetimeModel(Model[DefaultDatetime | datetime | str]):
+        @classmethod
+        def _parse_data(cls, data: datetime | str) -> datetime:
+            if isinstance(data, str):
+                return datetime.fromisoformat(data)
+            return data
+
+    event_time = datetime(year=2024, month=5, day=17, hour=8)
+
+    model = DatetimeModel()
+    assert isinstance(model.contents, datetime)
+    assert model.contents == datetime.min
+    assert model.to_data() == datetime.min
+
+    model.from_data('2024-05-17T08:00:00')
+    assert isinstance(model.contents, datetime)
+    assert model.contents == event_time
+    assert model.to_data() == event_time
+
+    model.from_data(event_time)
+    assert isinstance(model.contents, datetime)
+    assert model.contents == event_time
+    assert model.to_data() == event_time
 
 
 def test_parametrized_model() -> None:

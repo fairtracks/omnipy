@@ -226,9 +226,13 @@ def test_more_dict_methods_with_parsing():
         Dataset[Model[str]](data_file_1='321', data_file_2='321')
 
     assert len(dataset) == 3
+    assert 'data_file_2' in dataset
+    assert 'data_file_3' in dataset
+    assert 'data_file_4' in dataset
 
     dataset.pop('data_file_3')
     assert len(dataset) == 2
+    assert 'data_file_3' not in dataset
 
     # UserDict() implementation of popitem pops items FIFO contrary of the LIFO specified
     # in the standard library: https://docs.python.org/3/library/stdtypes.html#dict.popitem
@@ -969,7 +973,7 @@ def test_generic_dataset_unbound_typevar():
     # TypeVars used for generic Model classes (see test_generic_dataset_bound_typevar() below).
     # Here the TypeVar is used to specialize `tuple` and `list`, not `Model`, and does not need to
     # be bound.
-    _DatasetValT = TypeVar('DatasetValT')
+    _DatasetValT = TypeVar('_DatasetValT')
 
     class MyTupleOrListDataset(Dataset[Model[tuple[_DatasetValT, ...] | list[_DatasetValT]]],
                                Generic[_DatasetValT]):

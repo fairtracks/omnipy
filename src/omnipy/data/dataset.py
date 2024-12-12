@@ -5,10 +5,11 @@ from copy import copy
 import json
 import os
 import tarfile
-from typing import Any, Callable, cast, Generic, Iterator, TYPE_CHECKING
+from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKING
 
 from typing_extensions import TypeVar
 
+from omnipy.api.protocols.public.data import IsModel, IsMultiModelDataset
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.helpers import (cleanup_name_qualname_and_module,
@@ -35,8 +36,8 @@ if TYPE_CHECKING:
     from omnipy.modules.remote.datasets import HttpUrlDataset
     from omnipy.modules.remote.models import HttpUrlModel
 
-ModelT = TypeVar('ModelT', bound=Model)
-GeneralModelT = TypeVar('GeneralModelT', bound=Model)
+ModelT = TypeVar('ModelT', bound=IsModel)
+GeneralModelT = TypeVar('GeneralModelT', bound=IsModel)
 _DatasetT = TypeVar('_DatasetT')
 
 DATA_KEY = 'data'
@@ -279,7 +280,7 @@ class Dataset(
         return cast(pyd.ModelField, cls.__fields__.get(DATA_KEY))
 
     @classmethod
-    def get_model_class(cls) -> type[Model]:
+    def get_model_class(cls) -> type[ModelT]:
         """
         Returns the concrete Model class used for all data files in the dataset, e.g.:
         `Model[list[int]]`
@@ -311,7 +312,16 @@ class Dataset(
                 'particular specialization of the Model class. Both main classes are wrapping '
                 'the excellent Python package named `pydantic`.')
 
-    def __getitem__(self, selector: str | int | slice | Iterable[str | int]) -> Any:
+    @overload
+    def __getitem__(self, selector: str | int) -> ModelT:
+        ...
+
+    @overload
+    def __getitem__(self, selector: slice | Iterable[str | int]) -> 'Dataset[ModelT]':
+        ...
+
+    def __getitem__(
+            self, selector: str | int | slice | Iterable[str | int]) -> 'ModelT | Dataset[ModelT]':
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
@@ -325,7 +335,7 @@ class Dataset(
     def _check_value(self, value: Any) -> Any:
         return value
 
-    def __delitem__(self, selector: str | int | slice | Iterable[str | int]) -> Any:
+    def __delitem__(self, selector: str | int | slice | Iterable[str | int]) -> None:
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
@@ -340,28 +350,42 @@ class Dataset(
                 self.data = prev_data
                 raise
 
+    @overload
+    def __setitem__(self, selector: str | int, data_obj: object) -> None:
+        ...
+
+    @overload
+    def __setitem__(self,
+                    selector: slice | Iterable[str | int],
+                    data_obj: Mapping[str, object] | Iterable[object]) -> None:
+        ...
+
     def __setitem__(
         self,
         selector: str | int | slice | Iterable[str | int],
-        data_obj: dict[str, ModelT] | Iterable[ModelT] | ModelT,
+        data_obj: object | Mapping[str, object] | Iterable[object],
     ) -> None:
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
             self._set_data_file_and_validate(selected_keys.keys[0], cast(ModelT, data_obj))
         else:
-            key_2_data_item: Key2DataItemType[ModelT]
-            index_2_data_items: Index2DataItemsType[ModelT]
+            key_2_data_item: Key2DataItemType[object]
+            index_2_data_items: Index2DataItemsType[object]
 
             if isinstance(data_obj, MutableMapping):
                 key_2_data_item, index_2_data_items = \
                     prepare_selected_items_with_mapping_data(
-                        selected_keys.keys, selected_keys.last_index, data_obj,)
+                        selected_keys.keys, selected_keys.last_index,
+                        cast(Mapping[str, object], data_obj),
+                    )
 
             elif is_iterable(data_obj) and not isinstance(data_obj, (str, bytes)):
                 key_2_data_item, index_2_data_items = \
                     prepare_selected_items_with_iterable_data(
-                        selected_keys.keys, selected_keys.last_index, tuple(data_obj), self.data)
+                        selected_keys.keys, selected_keys.last_index, tuple(data_obj),
+                        cast(Mapping[str, object], self.data),
+                    )
 
             else:
                 raise TypeError('Data object must be a mapping or an iterable')
@@ -370,14 +394,16 @@ class Dataset(
 
     def _update_selected_items_with_data_items(
         self,
-        key_2_data_item: Key2DataItemType[ModelT],
-        index_2_data_item: Index2DataItemsType[ModelT],
+        key_2_data_item: Key2DataItemType[object],
+        index_2_data_item: Index2DataItemsType[object],
     ) -> None:
 
-        updated_mapping = create_updated_mapping(self.data, key_2_data_item, index_2_data_item)
+        updated_mapping = create_updated_mapping(
+            cast(MutableMapping[str, object], self.data), key_2_data_item,
+            index_2_data_item)  # pyright: ignore [reportUndefinedVariable]
         self._replace_data_with_mapping(updated_mapping)
 
-    def _replace_data_with_mapping(self, updated_mapping):
+    def _replace_data_with_mapping(self, updated_mapping: MutableMapping[str, object]) -> None:
         prev_data = self.data
         try:
             self.absorb_and_replace(self.__class__(updated_mapping))
@@ -689,7 +715,7 @@ class Dataset(
         from omnipy.modules import get_serializer_registry
         return get_serializer_registry()
 
-    def as_multi_model_dataset(self) -> 'MultiModelDataset[ModelT]':
+    def as_multi_model_dataset(self) -> 'IsMultiModelDataset[ModelT]':
         multi_model_dataset = MultiModelDataset[self.get_model_class()]()
         for data_file in self:
             multi_model_dataset.data[data_file] = self.data[data_file]
@@ -714,9 +740,12 @@ class MultiModelDataset(Dataset[GeneralModelT], Generic[GeneralModelT]):
         custom models.
     """
 
-    _custom_field_models: dict[str, GeneralModelT] = pyd.PrivateAttr(default={})
+    # Custom field models should really be a subtype of ModelT, however this is currently not
+    # checkable in the type system. Instead, we rely on the _validate method to ensure that the
+    # custom field models are valid.
+    _custom_field_models: dict[str, type[IsModel]] = pyd.PrivateAttr(default={})
 
-    def set_model(self, data_file: str, model: GeneralModelT) -> None:
+    def set_model(self, data_file: str, model: type[IsModel]) -> None:
         try:
             self._custom_field_models[data_file] = model
             if data_file in self.data:
@@ -727,7 +756,7 @@ class MultiModelDataset(Dataset[GeneralModelT], Generic[GeneralModelT]):
             del self._custom_field_models[data_file]
             raise
 
-    def get_model(self, data_file: str) -> GeneralModelT:
+    def get_model(self, data_file: str) -> type[IsModel]:
         if data_file in self._custom_field_models:
             return self._custom_field_models[data_file]
         else:

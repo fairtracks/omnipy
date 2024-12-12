@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Iterable, MutableMapping, TypeAlias
+from typing import Iterable, Mapping, MutableMapping, TypeAlias
 
 from typing_extensions import TypeVar
 
@@ -53,7 +53,7 @@ def select_keys(selector: str | int | slice | Iterable[str | int],
 def prepare_selected_items_with_mapping_data(
     keys: tuple[str, ...],
     last_index: int,
-    data_obj: MappingType[T],
+    data_obj: Mapping[str, T],
 ) -> tuple[Key2DataItemType[T], Index2DataItemsType[T]]:
 
     data_obj_keys = tuple(data_obj.keys())
@@ -78,7 +78,7 @@ def prepare_selected_items_with_iterable_data(
     keys: tuple[str, ...],
     last_index: int,
     data_obj: tuple[T, ...],
-    mapping: MappingType[T],
+    mapping: Mapping[str, T],
 ) -> tuple[Key2DataItemType[T], Index2DataItemsType[T]]:
 
     key_2_data_item: Key2DataItemType[T] = {}
