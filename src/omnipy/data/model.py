@@ -46,6 +46,7 @@ from omnipy.util.helpers import (all_equals,
                                  get_calling_module_name,
                                  get_default_if_typevar,
                                  is_non_omnipy_pydantic_model,
+                                 is_non_str_byte_iterable,
                                  is_optional,
                                  is_union,
                                  remove_forward_ref_notation)
@@ -848,7 +849,7 @@ class Model(
             level_up = False
             if name == '__getitem__':
                 assert len(args) == 1
-                if not isinstance(args[0], slice):
+                if not isinstance(args[0], slice) and not is_non_str_byte_iterable(args[0]):
                     level_up = True
 
             # We can do this with some ease of mind as all the methods except '__getitem__' with
@@ -1129,7 +1130,11 @@ class Model(
 
             def _validate_contents(ret: Any):
                 self._validate_and_set_value(self.contents, reset_solution=reset_solution)
-                return ret
+                return self._convert_to_model_if_reasonable(
+                    ret,
+                    level_up=False,
+                    raise_validation_errors=False,
+                )
 
             contents_attr = add_callback_after_call(new_contents_attr,
                                                     _validate_contents,

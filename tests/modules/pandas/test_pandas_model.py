@@ -97,3 +97,25 @@ def test_operation_pandas():
     b = a + 1
 
     assert type(b) is PandasModel
+
+
+def test_method_pandas():
+    a = PandasModel()
+    a.from_data([{'x': 2, 'y': 3}, {'x': 3, 'y': -1}])
+
+    assert type(a) is PandasModel
+
+    b = a.abs()
+
+    assert type(b) is PandasModel
+
+
+def test_col_select_pandas():
+    a = PandasModel()
+    a.from_data([{'x': 2, 'y': 3, 'z': 2}, {'x': 3, 'y': -1, 'z': 3}])
+
+    assert type(a) is PandasModel
+
+    b = a[['x', 'y']]
+
+    assert type(b) is PandasModel
