@@ -9,7 +9,7 @@ from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKI
 
 from typing_extensions import TypeVar
 
-from omnipy.api.protocols.public.data import IsModel, IsMultiModelDataset
+from omnipy.api.protocols.public.data import IsDataset, IsModel, IsMultiModelDataset
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.helpers import (cleanup_name_qualname_and_module,
@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from omnipy.modules.remote.models import HttpUrlModel
 
 ModelT = TypeVar('ModelT', bound=IsModel)
+NewModelT = TypeVar('NewModelT', bound=IsModel)
 GeneralModelT = TypeVar('GeneralModelT', bound=IsModel)
 _DatasetT = TypeVar('_DatasetT')
 
@@ -259,21 +260,20 @@ class Dataset(
         pydantic_copy = pyd.GenericModel.copy(self, deep=deep, **kwargs)
         if not deep:
             pydantic_copy.__dict__[DATA_KEY] = pydantic_copy.__dict__[DATA_KEY].copy()
-        return pydantic_copy
+        return cast(Dataset[ModelT], pydantic_copy)
 
     @classmethod
     def clone_dataset_cls(cls: type[_DatasetT],
                           new_dataset_cls_name: str,
-                          model_cls: type | None = None) -> type[_DatasetT]:
-        # TODO: Update `model_cls` type to `type[IsModel] | None` when IsModel is defined
+                          model_cls: type[NewModelT] | None = None) -> type[IsDataset[NewModelT]]:
         if model_cls:
             generic_dataset_cls = cls.__bases__[0]
             new_base_cls = generic_dataset_cls[model_cls]
         else:
             new_base_cls = cls
 
-        new_dataset_cls: type[_DatasetT] = type(new_dataset_cls_name, (new_base_cls,), {})
-        return new_dataset_cls
+        new_dataset_cls = type(new_dataset_cls_name, (new_base_cls,), {})
+        return cast(type[IsDataset[NewModelT]], new_dataset_cls)
 
     @classmethod
     def _get_data_field(cls) -> pyd.ModelField:
