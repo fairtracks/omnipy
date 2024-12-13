@@ -14,7 +14,6 @@ from typing import (Annotated,
                     Generic,
                     get_args,
                     get_origin,
-                    Hashable,
                     Iterator,
                     Literal,
                     Optional,
@@ -37,6 +36,7 @@ from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  YesNoMaybe)
 from omnipy.data.missing import parse_none_according_to_model
 from omnipy.data.mixins.display import ModelDisplayMixin
+from omnipy.data.typedefs import KeyT, ValT, ValT2
 from omnipy.util.contexts import (hold_and_reset_prev_attrib_value,
                                   LastErrorHolder,
                                   nothing,
@@ -62,10 +62,6 @@ from omnipy.util.pydantic import (is_none_type,
 # from orjson import orjson
 import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque
-
-_KeyT = TypeVar('_KeyT', bound=Hashable)
-_ValT = TypeVar('_ValT')
-_ValT2 = TypeVar('_ValT2')
 
 _ReturnT = TypeVar('_ReturnT')
 _RootT = TypeVar('_RootT')
@@ -1047,11 +1043,11 @@ class _Model(
 
     def _convert_to_model_if_reasonable(  # noqa: C901
         self,
-        ret: Mapping[_KeyT, _ValT] | Iterable[_ValT] | _ReturnT | _RootT,
+        ret: Mapping[KeyT, ValT] | Iterable[ValT] | _ReturnT | _RootT,
         level_up: bool = False,
         level_up_arg_idx: int = 1,
         raise_validation_errors: bool = False,
-    ) -> ('Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] '
+    ) -> ('Model[KeyT] | Model[ValT] | Model[tuple[KeyT, ValT]] '
           '| Model[_ReturnT] | Model[_RootT] | _ReturnT'):
 
         if level_up and not self.config.dynamically_convert_elements_to_models:
@@ -1214,20 +1210,29 @@ class _Model(
 if TYPE_CHECKING:  # noqa: C901
 
     class Model(_Model[_RootT], Generic[_RootT]):
-        @overload
-        def __new__(
-            cls: 'type[Model[int]]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> 'Model_int':
-            ...
+        from .mimic_models import (Model_bool,
+                                   Model_dict,
+                                   Model_float,
+                                   Model_int,
+                                   Model_list,
+                                   Model_str,
+                                   Model_tuple_all_same,
+                                   Model_tuple_pair)
 
         @overload
         def __new__(
             cls: 'type[Model[float]]',
             *args: Any,
             **kwargs: Any,
-        ) -> 'Model_float':
+        ) -> Model_float:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[int]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> Model_int:
             ...
 
         @overload
@@ -1235,7 +1240,7 @@ if TYPE_CHECKING:  # noqa: C901
             cls: 'type[Model[bool]]',
             *args: Any,
             **kwargs: Any,
-        ) -> 'Model_bool':
+        ) -> Model_bool:
             ...
 
         @overload
@@ -1243,39 +1248,39 @@ if TYPE_CHECKING:  # noqa: C901
             cls: 'type[Model[str]]',
             *args: Any,
             **kwargs: Any,
-        ) -> 'Model_str':
+        ) -> Model_str:
             ...
 
         @overload
         def __new__(
-            cls: 'type[Model[list[_ValT]]]',
+            cls: 'type[Model[list[ValT]]]',
             *args: Any,
             **kwargs: Any,
-        ) -> 'Model_list[_ValT]':
+        ) -> Model_list[ValT]:
             ...
 
         @overload
         def __new__(
-            cls: 'type[Model[tuple[_ValT, ...]]]',
+            cls: 'type[Model[tuple[ValT, ValT2]]]',
             *args: Any,
             **kwargs: Any,
-        ) -> 'Model_tuple_same[_ValT]':
+        ) -> Model_tuple_pair[ValT, ValT2]:
             ...
 
         @overload
         def __new__(
-            cls: 'type[Model[tuple[_ValT, _ValT2]]]',
+            cls: 'type[Model[tuple[ValT, ...]]]',
             *args: Any,
             **kwargs: Any,
-        ) -> 'Model_tuple_two_diff[_ValT, _ValT2]':
+        ) -> Model_tuple_all_same[ValT]:
             ...
 
         @overload
         def __new__(
-            cls: 'type[Model[dict[_KeyT, _ValT]]]',
+            cls: 'type[Model[dict[KeyT, ValT]]]',
             *args: Any,
             **kwargs: Any,
-        ) -> 'Model_dict[_KeyT, _ValT]':
+        ) -> Model_dict[KeyT, ValT]:
             ...
 
         @overload
@@ -1286,49 +1291,12 @@ if TYPE_CHECKING:  # noqa: C901
         ) -> 'Model[_RootT]':
             ...
 
-        # @overload
         def __new__(
             cls,
             *args: Any,
             **kwargs: Any,
         ) -> 'Model':
             ...
-
-        # def __new__(
-        #     cls,
-        #     *args: Any,
-        #     **kwargs: Any,
-        # ) -> '_Model':
-        #     ...
-    class Model_int(int, _Model[int]):
-        ...
-
-    class Model_float(_Model[float], float):
-        ...
-
-    class Model_bool(_Model[bool], bool):  # type: ignore[misc]
-        ...
-
-    class Model_str(_Model[str], str):  # type: ignore[misc]
-        ...
-
-    class Model_list(_Model[list[_ValT]], list[_ValT], Generic[_ValT]):  # type: ignore[misc]
-        ...
-
-    class Model_tuple_same(_Model[tuple[_ValT, ...]], tuple[_ValT, ...], Generic[_ValT]):
-        ...
-
-    class Model_tuple_two_diff(_Model[tuple[_ValT, _ValT2]],
-                               tuple[_ValT, _ValT2],
-                               Generic[_ValT, _ValT2]):
-        ...
-
-    class Model_dict(  # type: ignore[misc]
-            _Model[dict[_KeyT, _ValT]],
-            dict[_KeyT, _ValT],
-            Generic[_KeyT, _ValT],
-    ):
-        ...
 else:
 
     Model: TypeAlias = _Model

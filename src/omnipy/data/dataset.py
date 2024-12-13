@@ -312,6 +312,95 @@ class Dataset(
                 'particular specialization of the Model class. Both main classes are wrapping '
                 'the excellent Python package named `pydantic`.')
 
+    if TYPE_CHECKING:  # noqa: C901
+
+        # The code below is a hack needed because ofa fundamental limitation of the current Python
+        # typing syntax. There is no way (that we know of) to tell the type checkers that Model
+        # objects can mimic the functionality of their type arguments, say that a Model[list] can
+        # mimic a list. What we were aiming to do as a lesser hack was to tell to the type checkers
+        # that the Model objects can be considered as inheriting from both the Model class
+        # and the type argument class, e.g. Model[list] and list, but in a general way, using type
+        # variables. As a workaround, we have to overload the Model.__new__ and Dataset.__getitem__
+        # methods for the most important types.
+
+        from omnipy.data.mimic_models import (Model_bool,
+                                              Model_dict,
+                                              Model_float,
+                                              Model_int,
+                                              Model_list,
+                                              Model_str,
+                                              Model_tuple_all_same,
+                                              Model_tuple_pair)
+        from omnipy.data.typedefs import KeyT, ValT, ValT2
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[Model[float]]',
+            selector: str | int,
+        ) -> Model_float:
+            ...
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[Model[int]]',
+            selector: str | int,
+        ) -> Model_int:
+            ...
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[Model[bool]]',
+            selector: str | int,
+        ) -> Model_bool:
+            ...
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[Model[str]]',
+            selector: str | int,
+        ) -> Model_str:
+            ...
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[Model[list[ValT]]]',
+            selector: str | int,
+        ) -> Model_list[ValT]:
+            ...
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[Model[tuple[ValT, ValT2]]]',
+            selector: str | int,
+        ) -> Model_tuple_pair[ValT, ValT2]:
+            ...
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[Model[tuple[ValT, ...]]]',
+            selector: str | int,
+        ) -> Model_tuple_all_same[ValT]:
+            ...
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[Model[dict[KeyT, ValT]]]',
+            selector: str | int,
+        ) -> Model_dict[KeyT, ValT]:
+            ...
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[ModelT]',
+            selector: str | int,
+        ) -> ModelT:
+            ...
+
+    # The only thing that should really be needed – if Python type hints would have able to describe
+    # that Model objects can dynamically inherit from their type arguments. This would at least go
+    # some way towards what we really want, which is a way to describe exactly the way Model objects
+    # mimic the functionality of their type arguments.
+
     @overload
     def __getitem__(self, selector: str | int) -> ModelT:
         ...
