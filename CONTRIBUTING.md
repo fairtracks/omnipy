@@ -4,9 +4,8 @@
 
 ### Install Python, Poetry and dependencies
 
-- Make sure that you have Python v3 available from your path. Installation
-  of this depends on your local setup. If you are using Conda, you can e.g. install
-  a Python environment with:
+- Make sure that you have Python v3 available from your path. Installation of this depends on your
+  local setup. If you are using Conda, you can e.g. install a Python environment with:
 
   - `conda create -n omnipy python=3.10`
   - `conda activate omnipy`
@@ -20,7 +19,6 @@
 - Install dependencies:
   - `poetry install --with dev --with docs`
 
-
 ### Poetry commands to update dependencies
 
 - Update all dependencies:
@@ -33,14 +31,14 @@
   the pip cache of poetry:
   - `poetry cache clear pypi --all`
 
-
 ### Running tests
 
 - To run all tests, type:
   - `pytest --mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process`
 
 - If you are repeatedly running tests on the command line, e.g.:
-  - `export PYTEST_ARGS="--mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process"`
+  -
+  `export PYTEST_ARGS="--mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process"`
   - Using `zsh`, which is default shell on Mac:
     - `pytest $=PYTEST_ARGS tests`
   - Using `bash`:
@@ -65,6 +63,18 @@
   - Using `bash`:
     - `eval pytest $PYTEST_ARGS tests/modules/json/test_json_types.yml::test_json_scalar`
 
+## Note on Python type checkers
+
+Omnipy aims to support both `mypy` and `pyright` type checkers. The reason is that `mypy`
+is considered the standard type checker in the Python community, but it only works as a static type
+checker, while `pyright` can be configured for use in automatic code completion in editors, which is
+very useful for development. The `pyright` type checker is also the one that is used by the `vscode`
+editor, which is the most popular editor for Python development. The
+`PyCharm` editor has its own type checker, which is not advanced enough to handle the typing of
+`Omnipy` and therefore (as of Dec 2024) should not be used. Luckily, there is a `pyright` plugin for
+`PyCharm` which supports using `pyright` for code completion.
+
+Information on how to configure `pyright` for `PyCharm` and `JupyterLab` will be added here soon.
 
 ### Configure PyCharm project for Omnipy
 
@@ -80,7 +90,7 @@
     - Make sure that "Install packages from pyproject.toml" is checked
     - Under "Poetry Executable", paste the path to the Poetry binary
     - Click "OK"
-  
+
   - Select "Project structure"
     - Make sure that the "src" directory is selected under "Source Folders"
 
@@ -93,21 +103,22 @@
 
 #### Setting up test configurations
 
-  - From Run menu (in menubar) or configuration popup (by the triangle icon):
-    - Select "Edit Configurations..."
-      - Click "+" to add new configuration, select "Python tests"->"pytest"
-        - Name: `pytest in tests`
-        - Script path: select "tests" directory
-        - Additional arguments: `--mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process`
-        - Click OK
-      - Repeat for other subprojects/test modules as needed, e.g. `pytest in tests.modules` (path=`...tests/modules`)
+- From Run menu (in menubar) or configuration popup (by the triangle icon):
+  - Select "Edit Configurations..."
+    - Click "+" to add new configuration, select "Python tests"->"pytest"
+      - Name: `pytest in tests`
+      - Script path: select "tests" directory
+      - Additional arguments:
+        `--mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process`
+      - Click OK
+    - Repeat for other subprojects/test modules as needed, e.g. `pytest in tests.modules` (path=
+      `...tests/modules`)
 
 #### For automatic formatting and linting
 
-The setup for automatic formatting and linting is rather complex. The main alternative is to use 
+The setup for automatic formatting and linting is rather complex. The main alternative is to use
 black, which is easier to set up, but it does not have as many options and the main omnipy developer
-is opinionated against the default black setup. The yapf config is not fully
-defined. 
+is opinionated against the default black setup. The yapf config is not fully defined.
 
 - To install git hooks that automagically format and lint before every commit:
   - `pre-commit install`
@@ -123,7 +134,7 @@ defined.
 
 - Install the following plugins:
   - File Expander (to view compressed files as a folder structure)
-  - CSV Editor (to edit CSV files as tables. Only needed in Community edition of PyCharm, similar 
+  - CSV Editor (to edit CSV files as tables. Only needed in Community edition of PyCharm, similar
     functionality is included in the Professional version)
 
 #### For mypy support in PyCharm
@@ -131,7 +142,7 @@ defined.
 - In PyCharm, install "Mypy" plugin (not "Mypy (Official)")
   - `which mypy` to get path to mypy binary
   - In the PyCharm settings for the mypy plugin:
-    - Select the mypy binary 
+    - Select the mypy binary
     - Select `pyproject.toml` as the mypy config file
 - In PyCharm Preferences/Settings->Editor->Inspections, uncheck the following:
   - "Incorrect type"
