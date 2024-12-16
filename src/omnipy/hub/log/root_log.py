@@ -4,6 +4,9 @@ from logging.handlers import RotatingFileHandler
 import os
 from typing import Any
 
+from rich.console import Console
+from rich.logging import RichHandler
+
 from omnipy.api.protocols.public.config import IsRootLogConfig
 from omnipy.config import ConfigBase
 from omnipy.config.root_log import RootLogConfig
@@ -16,8 +19,8 @@ class RootLogObjects(ConfigBase):
     _config: IsRootLogConfig = pyd.PrivateAttr(default_factory=RootLogConfig)
 
     formatter: logging.Formatter | None = None
-    stdout_handler: StreamHandler | None = None
-    stderr_handler: StreamHandler | None = None
+    stdout_handler: StreamHandler | RichHandler | None = None
+    stderr_handler: StreamHandler | RichHandler | None = None
     file_handler: RotatingFileHandler | None = None
 
     def __init__(self, **data: Any) -> None:
@@ -59,7 +62,9 @@ class RootLogObjects(ConfigBase):
                 def filter(self, record):
                     return record.levelno < config.stderr_log_min_level
 
-            self.stdout_handler = StreamHandler(self._config.stdout)
+            # self.stdout_handler = StreamHandler(self._config.stdout)
+            console = Console(file=self._config.stdout, color_system='truecolor')
+            self.stdout_handler = RichHandler(console=console)
             self.stdout_handler.setLevel(self._config.stdout_log_min_level)
             if self._config.log_to_stderr:
                 self.stdout_handler.addFilter(StdErrBasedMaxLevelFilter())
@@ -68,7 +73,9 @@ class RootLogObjects(ConfigBase):
 
     def _configure_stderr_handler(self) -> None:
         if self._config.log_to_stderr:
-            self.stderr_handler = StreamHandler(self._config.stderr)
+            # self.stderr_handler = StreamHandler(self._config.stderr)
+            console = Console(file=self._config.stderr, color_system='truecolor')
+            self.stderr_handler = RichHandler(console=console)
             self.stderr_handler.setLevel(self._config.stderr_log_min_level)
         else:
             self.stderr_handler = None
