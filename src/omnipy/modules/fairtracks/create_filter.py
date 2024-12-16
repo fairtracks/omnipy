@@ -13,6 +13,7 @@ from omnipy.compute.task import TaskTemplate
 from omnipy.modules.json.datasets import JsonDataset, JsonDictOfDictsOfScalarsDataset
 from omnipy.modules.json.models import JsonDictOfDictsOfScalarsModel, JsonModel
 from omnipy.modules.json.typedefs import JsonScalar
+from omnipy.modules.remote.models import HttpUrlModel
 
 #########################################################
 # user parameters
@@ -35,6 +36,12 @@ PROJECTS_ENDPT = 'https://api.gdc.cancer.gov/projects'
 ###########################################################
 # step1: get total number of TCGA projects (program.name)
 ###########################################################
+
+
+def create_gdc_api_url(endpoint: str) -> HttpUrlModel:
+    url = HttpUrlModel(TOP_LEVEL_URL)
+    url.path // endpoint
+    return url
 
 
 class Content(BaseModel):
