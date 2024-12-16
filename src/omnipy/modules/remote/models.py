@@ -1,6 +1,6 @@
 from pathlib import PurePosixPath
-from typing import cast, Iterable
-from urllib.parse import unquote
+from typing import cast, TypeGuard
+from urllib.parse import quote, unquote
 
 from pydantic_core import Url
 
@@ -19,6 +19,14 @@ QueryParamsJoinerModel = NestedJoinItemsModel.adjust(
 
 class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tuple[str, ...] | str]):
     @classmethod
+    def _validate_tuple_of_pairs(
+        cls, params_list: list[str | list[str | list[object]]] | str
+    ) -> TypeGuard[list[tuple[str, str]]]:
+        # The validated type is really a list of lists of two items, but we can't express that with
+        # Python type hints, so we use a list of tuple pairs instead.
+        return all(len(param) == 2 for param in params_list)
+
+    @classmethod
     def _parse_data(
         cls, data: dict[str, str] | tuple[tuple[str, str], ...] | tuple[str, ...] | str
     ) -> dict[str, str]:
@@ -26,17 +34,20 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
             return data
 
         params_list = QueryParamsSplitterModel(data).contents
-        assert all(len(param) == 2 for param in params_list), \
+        assert cls._validate_tuple_of_pairs(params_list), \
             (f'Each parameter must have 2 elements only: [key, value]. '
              f'Incorrect parameter list: {params_list}')
-        return dict(cast(Iterable[tuple[str, str]], params_list))
+
+        return dict((unquote(key), unquote(val)) for key, val in params_list)
 
     def to_data(self) -> str:
         with hold_and_reset_prev_attrib_value(self.config,
                                               'dynamically_convert_elements_to_models'):
             self.config.dynamically_convert_elements_to_models = False
-            contents_as_tuple = tuple(cast(dict[str, str], self.contents).items())
-            return QueryParamsJoinerModel(contents_as_tuple).to_data()  # type: ignore[return-value]
+            assert isinstance(self.contents, dict)
+            url_encoded_contents = tuple(
+                (quote(key), quote(val)) for key, val in self.contents.items())
+            return cast(str, QueryParamsJoinerModel(url_encoded_contents).to_data())
 
     def __str__(self) -> str:
         return self.to_data()
@@ -71,7 +82,7 @@ class UrlDataclassModel(pyd.BaseModel):
     password: str | None = None
     host: str = 'localhost'
     port: int | None = None
-    path: UrlPathModel | None = None
+    path: UrlPathModel = pyd.Field(default_factory=UrlPathModel)
     query: QueryParamsModel = pyd.Field(default_factory=QueryParamsModel)
     fragment: str | None = None
 
@@ -88,7 +99,8 @@ class UrlDataclassModel(pyd.BaseModel):
                 case 'path':
                     # Fix for second problem described in
                     # https://github.com/pydantic/pydantic/issues/7186#issuecomment-1912791497
-                    kwargs[key] = val.lstrip('/')
+                    if val != '.':
+                        kwargs[key] = val.lstrip('/')
                 case 'query':
                     if val:
                         kwargs[key] = str(val)
@@ -117,7 +129,7 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
                     parts[key] = val
                 case 'host':
                     parts[key] = url_obj.unicode_host()
-                case 'username' | 'password' | 'path' | 'query' | 'fragment':
+                case 'username' | 'password' | 'path' | 'fragment':
                     val = getattr(url_obj, key)
                     parts[key] = unquote(val) if val is not None else None
                 case _:

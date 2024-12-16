@@ -24,6 +24,19 @@ def test_query_params_model():
         QueryParamsModel('a=1=b')
 
 
+def test_query_params_model_split_before_url_decode():
+    params = QueryParamsModel(str(QueryParamsModel(a='1', b='2')))
+    assert params.contents == {'a': '1', 'b': '2'}
+    params = QueryParamsModel(str(QueryParamsModel(a='=', b='&')))
+    assert params.contents == {'a': '=', 'b': '&'}
+
+    params = QueryParamsModel('a=b%3D3')
+    assert params.contents == {'a': 'b=3'}
+
+    params = QueryParamsModel('a=b%3D3%26c%3D1')
+    assert params.contents == {'a': 'b=3&c=1'}
+
+
 def test_url_path_model():
     empty_path = UrlPathModel()
     assert empty_path.contents == PurePosixPath('.')
