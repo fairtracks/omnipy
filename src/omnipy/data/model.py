@@ -25,6 +25,7 @@ from typing import (Annotated,
 from typing_extensions import get_original_bases, TypeVar
 
 from omnipy.api.protocols.private.util import IsSnapshotWrapper
+from omnipy.api.protocols.public.data import IsModel
 from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.helpers import (cleanup_name_qualname_and_module,
@@ -65,7 +66,7 @@ from omnipy.util.setdeque import SetDeque
 
 _ReturnT = TypeVar('_ReturnT')
 _RootT = TypeVar('_RootT')
-_ModelT = TypeVar('_ModelT')
+_ModelT = TypeVar('_ModelT', bound=IsModel)
 
 ROOT_KEY = '__root__'
 
@@ -1281,6 +1282,14 @@ if TYPE_CHECKING:  # noqa: C901
             *args: Any,
             **kwargs: Any,
         ) -> Model_dict[KeyT, ValT]:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[_ModelT]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> '_ModelT':
             ...
 
         @overload

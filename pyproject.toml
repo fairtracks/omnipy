@@ -170,6 +170,7 @@ disallow_untyped_decorators = false
 
 [tool.pyright]
 reportFunctionMemberAccess = 'warning'
+reportUnusedExpression = 'none'
 
 [tool.pytest.ini_options]
 addopts = "--tb=native"

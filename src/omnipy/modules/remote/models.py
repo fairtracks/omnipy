@@ -1,5 +1,5 @@
 from pathlib import PurePosixPath
-from typing import cast, TypeGuard
+from typing import cast, TYPE_CHECKING, TypeAlias, TypeGuard
 from urllib.parse import quote, unquote
 
 from pydantic_core import Url
@@ -17,7 +17,8 @@ QueryParamsJoinerModel = NestedJoinItemsModel.adjust(
     'QueryParamsJoinerModel', delimiters=('&', '='))
 
 
-class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tuple[str, ...] | str]):
+class _QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tuple[str, ...] | str]
+                        ):
     @classmethod
     def _validate_tuple_of_pairs(
         cls, params_list: list[str | list[str | list[object]]] | str
@@ -53,7 +54,16 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
         return self.to_data()
 
 
-class UrlPathModel(Model[PurePosixPath | str]):
+if TYPE_CHECKING:
+
+    class QueryParamsModel(_QueryParamsModel, dict):
+        ...
+
+else:
+    QueryParamsModel: TypeAlias = _QueryParamsModel
+
+
+class _UrlPathModel(Model[PurePosixPath | str]):
     @classmethod
     def _parse_data(cls, data: PurePosixPath | str) -> PurePosixPath:
         return PurePosixPath(data) if isinstance(data, str) else data
@@ -71,6 +81,14 @@ class UrlPathModel(Model[PurePosixPath | str]):
     def __add__(self, other):
         return UrlPathModel(str(self) + other)
 
+
+if TYPE_CHECKING:
+
+    class UrlPathModel(_UrlPathModel, PurePosixPath):
+        ...
+
+else:
+    UrlPathModel: TypeAlias = _UrlPathModel
 
 DEFAULT_PORTS = {80, 443}
 
@@ -110,7 +128,7 @@ class UrlDataclassModel(pyd.BaseModel):
         return str(Url.build(**kwargs))  # type: ignore[arg-type]
 
 
-class HttpUrlModel(Model[UrlDataclassModel | str]):
+class _HttpUrlModel(Model[UrlDataclassModel | str]):
     @classmethod
     def _parse_data(cls, data: UrlDataclassModel | str) -> UrlDataclassModel:
         if data == '':
@@ -149,3 +167,11 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
 
     def __str__(self) -> str:
         return str(self.contents)
+
+
+if TYPE_CHECKING:
+
+    class HttpUrlModel(_HttpUrlModel, UrlDataclassModel):
+        ...
+else:
+    HttpUrlModel: TypeAlias = _HttpUrlModel
