@@ -1,4 +1,44 @@
-# Omnipy v0.18.0
+## Omnipy v0.19.0
+
+_Release date: Dec 17, 2024_
+
+The v0.19.0 release of Omnipy follows the focus from v0.18.0 on supporting code completion and/or
+validation by static type analysers like `pyright` and `mypy`. In particular, this release improves
+type analysis of `Omnipy` configs, as well as Model objects, specifically basic support for typing
+that Model objects can mimic the functionality of its type arguments.
+
+### New features in v0.19.0
+
+- **Omnipy configs have transitioned from basic dataclasses to pydantic BaseModel. Refactoring of
+  related functionality**
+
+  - Cleaned up pydantic imports
+  - Refactored functionality for otherwise decoupled objects to subscribe to changes in runtime
+    objects and configs. Refactored tests for specific subscriptions.
+  - Switched type of config classes from Python dataclasses to Pydantic BaseModels
+  - `JobCreator` now always has a `JobConfig` instance, even if runtime is not created yet. If so,
+    runtime later adopts the existing JobConfig instance
+
+
+- **Improved typing of core classes to improve validation and/or auto-completion using static type
+  analysers**
+
+  - Improved and fixed typing for `Dataset` and `Model`
+  - Improved typing of `Dataset.clone_dataset_cls()`. Cleanup
+  - Hack to let pyright (and possibly other type checkers) allow autocomplete for mimicking ops
+    believing that Models also inherit from their type arguments
+  - Adding root type as type hint for `Model.__init__()`, in addition to object
+  - Added type hint overload hack also to `Dataset.__getitem__()`. Fixed and reorganised the type
+    hint hacks for `Model` and `Dataset`
+  - Added note on Python type checkers
+
+
+- **Other new features / bug fixes / refactorings**
+  - Better support for keeping Pandas DataFrames (and other types) inside a Model after operations
+  - Added convenience functions to detect IPython and Jupyter Notebooks
+  - Bugfix in `QueryParamsModel` for URL-encoded parameters that encode `&` or `=`
+
+## Omnipy v0.18.0
 
 _Release date: Dec 6, 2024_
 
