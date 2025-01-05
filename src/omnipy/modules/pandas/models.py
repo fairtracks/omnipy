@@ -6,13 +6,17 @@ from omnipy.data.helpers import is_model_instance
 from omnipy.data.model import Model
 
 from . import pd
-from ..tables.models import TableListOfDictsOfJsonScalarsModel
+from ..tables.models import (TableDictOfDictsOfJsonScalarsModel,
+                             TableDictOfListsOfJsonScalarsModel,
+                             TableListOfDictsOfJsonScalarsModel,
+                             TableListOfListsOfJsonScalarsModel)
 
 __all__ = ['PandasModel']
 
 
-class PandasModel(Model[pd.DataFrame | pd.Series | TableListOfDictsOfJsonScalarsModel]):
-
+class PandasModel(Model[pd.DataFrame | pd.Series | TableListOfListsOfJsonScalarsModel
+                        | TableListOfDictsOfJsonScalarsModel | TableDictOfDictsOfJsonScalarsModel
+                        | TableDictOfListsOfJsonScalarsModel]):
     if TYPE_CHECKING:
 
         def __new__(cls, *args: Any, **kwargs: Any) -> 'PandasModel_DataFrame':
