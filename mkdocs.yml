@@ -10,6 +10,7 @@ theme:
   features:
     - content.code.annotation
     - navigation.tabs
+    - navigation.sections
     - search.highlight
     - toc.integrate
 extra_css:
@@ -40,6 +41,9 @@ nav:
 - Release notes: release_notes.md
 - Code Reference: reference/
 
+watch:
+  - src
+
 plugins:
 - search
 - gen-files:
@@ -53,9 +57,17 @@ plugins:
       python:
         paths: [ src ]
         options:
+          filters:
+            - "!^_"
+            - "^__"
+            - "!^__all__"
+            - "!^pyd"
+          heading_level: 1
           show_root_heading: true
           show_if_no_docstring: true
-          show_submodules: true
+          show_symbol_type_heading: true
+          show_symbol_type_toc: true
+          summary: true
           show_signature_annotations: true
           separate_signature: true
-          inherited_members: true
+          signature_crossrefs: true

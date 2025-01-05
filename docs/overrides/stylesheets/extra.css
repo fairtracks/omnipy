@@ -1,33 +1,126 @@
-[data-md-color-scheme="omnipy"] {
-  --md-typeset-a-color:                #2C7A26  ;
-  --md-primary-fg-color:               #B89E1D;
-  --md-primary-fg-color--light:        #E3C225;
-  --md-primary-fg-color--dark:         #947F18;
-  --md-accent-fg-color:                #289421;
-  --md-accent-fg-color--transparent:   #2894211A;
-}
+  [data-md-color-scheme="omnipy"] {
+    --md-typeset-a-color:                #55762f;
+    --md-primary-fg-color: #5b4f0e;
+    --md-accent-fg-color:                #7a8528;
+
+    --doc-symbol-parameter-fg-color: #848285;
+    --doc-symbol-attribute-fg-color: #6278a1;
+    --doc-symbol-function-fg-color: #a64112;
+    --doc-symbol-method-fg-color: #bd663E;
+    --doc-symbol-class-fg-color: #55762f;
+    --doc-symbol-module-fg-color: #5b4f0e;
+
+    --doc-symbol-parameter-bg-color: #8482851a;
+    --doc-symbol-attribute-bg-color: #6278a11a;
+    --doc-symbol-function-bg-color: #a641121a;
+    --doc-symbol-method-bg-color: #bd663E1a;
+    --doc-symbol-class-bg-color: #55762f1a;
+    --doc-symbol-module-bg-color: #5b4f0e1a;
+  }
 
 /* Orange: #B84714 #BD7555 */
 
 :root > * {
   --md-code-hl-number-color:   #7D4A14;
   --md-code-hl-special-color: #BD663E;
-  --md-code-hl-function-color: #A64112  ;
+  --md-code-hl-function-color: #A64112;
   --md-code-hl-constant-color: #848285;
   --md-code-hl-keyword-color: #6278A1;
+}
+code.doc-symbol-parameter::after {
+  content: "param";
+}
+
+code.doc-symbol-attribute::after {
+  content: "attr";
+}
+
+code.doc-symbol-function::after {
+  content: "func";
+}
+
+code.doc-symbol-method::after {
+  content: "method";
+}
+
+code.doc-symbol-class::after {
+  content: "class";
+}
+
+code.doc-symbol-module::after {
+  content: "module";
 }
 
 .md-typeset .admonition.source,
 .md-typeset details.source {
-  border-color: #0C6106 ;
+  border-color: #55762f ;
 }
 .md-typeset .source > .admonition-title,
 .md-typeset .source > summary {
-  background-color: #0C61061A;
+  background-color: #55762f1A;
 }
 .md-typeset .source > .admonition-title::before,
 .md-typeset .source > summary::before {
-  background-color: #0C6106;
+  background-color: #55762f;
   -webkit-mask-image: var(--md-admonition-icon--example);
           mask-image: var(--md-admonition-icon--example);
+}
+
+.md-typeset h1 {
+  padding: 0.5em;
+  margin: 0;
+  font-weight: 400;
+  background-color: #d8d7ce;
+  padding: 0.5em;
+}
+
+.md-typeset h1 code {
+  background-color: #d8d7ce;
+}
+
+.md-typeset h2 {
+  background-color: #e3d071;
+  padding: 0.4em;
+}
+
+.md-typeset h2 code {
+  background-color: #e3d071;
+}
+
+
+.md-typeset table:not([class]) {
+    font-size: 0.9em;
+}
+
+
+/*
+From https://mkdocstrings.github.io/python/usage/customization/#syntax-highlight-in-signatures
+*/
+
+/* Indentation. */
+div.doc-contents:not(.first) {
+  padding-left: 25px;
+  border-left: .05rem solid var(--md-typeset-table-color);
+}
+
+/* Mark external links as such. */
+a.external::after,
+a.autorefs-external::after {
+  /* https://primer.style/octicons/arrow-up-right-24 */
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.25 15.5a.75.75 0 00.75-.75v-9a.75.75 0 00-.75-.75h-9a.75.75 0 000 1.5h7.19L6.22 16.72a.75.75 0 101.06 1.06L17.5 7.56v7.19c0 .414.336.75.75.75z"></path></svg>');
+  -webkit-mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.25 15.5a.75.75 0 00.75-.75v-9a.75.75 0 00-.75-.75h-9a.75.75 0 000 1.5h7.19L6.22 16.72a.75.75 0 101.06 1.06L17.5 7.56v7.19c0 .414.336.75.75.75z"></path></svg>');
+  content: ' ';
+
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+
+  height: 1em;
+  width: 1em;
+  background-color: currentColor;
+}
+
+a.external:hover::after,
+a.autorefs-external:hover::after {
+  background-color: var(--md-accent-fg-color);
 }

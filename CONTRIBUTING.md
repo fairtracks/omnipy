@@ -37,8 +37,9 @@
   - `pytest --mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process`
 
 - If you are repeatedly running tests on the command line, e.g.:
-  -
-  `export PYTEST_ARGS="--mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process"`
+  - ```
+    export PYTEST_ARGS="--mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process"
+    ```
   - Using `zsh`, which is default shell on Mac:
     - `pytest $=PYTEST_ARGS tests`
   - Using `bash`:

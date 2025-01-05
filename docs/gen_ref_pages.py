@@ -1,12 +1,21 @@
-"""Generate the code reference pages."""
-
 from pathlib import Path
 
 import mkdocs_gen_files
 
+IGNORED_PATHS = [
+    'src/omnipy/_dynamic_all.py',
+    'src/omnipy/util/tabulate/__init__.py',
+]
+
 nav = mkdocs_gen_files.Nav()
 
 for path in sorted(Path('src').rglob('*.py')):
+    print(f'Processing {path}')
+
+    if str(path) in IGNORED_PATHS:
+        print(f'Skipping {path}')
+        continue
+
     module_path = path.relative_to('src').with_suffix('')
     doc_path = path.relative_to('src').with_suffix('.md')
     full_doc_path = Path('reference', doc_path)
@@ -25,6 +34,11 @@ for path in sorted(Path('src').rglob('*.py')):
     with mkdocs_gen_files.open(full_doc_path, 'w') as fd:
         identifier = '.'.join(parts)
         print('::: ' + identifier, file=fd)
+
+        # if str(path) == 'src/omnipy/__init__.py':
+        #     print('    options:', file=fd)
+        # print('      members:', file=fd)
+        # print('        - runtime', file=fd)
 
     mkdocs_gen_files.set_edit_path(full_doc_path, Path('../') / path)
 
