@@ -1,5 +1,5 @@
 from pathlib import PurePosixPath
-from typing import cast, TYPE_CHECKING, TypeAlias, TypeGuard
+from typing import Any, cast, TYPE_CHECKING, TypeGuard
 from urllib.parse import quote, unquote
 
 from pydantic_core import Url
@@ -10,6 +10,13 @@ import omnipy.util.pydantic as pyd
 
 from ..raw.models import NestedJoinItemsModel, NestedSplitToItemsModel
 
+__all__ = [
+    'QueryParamsModel',
+    'UrlPathModel',
+    'UrlDataclassModel',
+    'HttpUrlModel',
+]
+
 QueryParamsSplitterModel = NestedSplitToItemsModel.adjust(
     'QueryParamsSplitterModel', delimiters=('&', '='))
 
@@ -17,8 +24,12 @@ QueryParamsJoinerModel = NestedJoinItemsModel.adjust(
     'QueryParamsJoinerModel', delimiters=('&', '='))
 
 
-class _QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tuple[str, ...] | str]
-                        ):
+class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tuple[str, ...] | str]):
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args: Any, **kwargs: Any) -> 'QueryParamsModel_dict':
+            ...
+
     @classmethod
     def _validate_tuple_of_pairs(
         cls, params_list: list[str | list[str | list[object]]] | str
@@ -56,14 +67,16 @@ class _QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tup
 
 if TYPE_CHECKING:
 
-    class QueryParamsModel(_QueryParamsModel, dict):
+    class QueryParamsModel_dict(QueryParamsModel, dict):
         ...
 
-else:
-    QueryParamsModel: TypeAlias = _QueryParamsModel
 
+class UrlPathModel(Model[PurePosixPath | str]):
+    if TYPE_CHECKING:
 
-class _UrlPathModel(Model[PurePosixPath | str]):
+        def __new__(cls, *args: Any, **kwargs: Any) -> 'UrlPathModel_PurePosixPath':
+            ...
+
     @classmethod
     def _parse_data(cls, data: PurePosixPath | str) -> PurePosixPath:
         return PurePosixPath(data) if isinstance(data, str) else data
@@ -84,11 +97,9 @@ class _UrlPathModel(Model[PurePosixPath | str]):
 
 if TYPE_CHECKING:
 
-    class UrlPathModel(_UrlPathModel, PurePosixPath):
+    class UrlPathModel_PurePosixPath(UrlPathModel, PurePosixPath):
         ...
 
-else:
-    UrlPathModel: TypeAlias = _UrlPathModel
 
 DEFAULT_PORTS = {80, 443}
 
@@ -100,8 +111,15 @@ class UrlDataclassModel(pyd.BaseModel):
     password: str | None = None
     host: str = 'localhost'
     port: int | None = None
-    path: UrlPathModel = pyd.Field(default_factory=UrlPathModel)
-    query: QueryParamsModel = pyd.Field(default_factory=QueryParamsModel)
+
+    if TYPE_CHECKING:
+        path: UrlPathModel_PurePosixPath = pyd.Field(default_factory=UrlPathModel)
+        query: QueryParamsModel_dict = pyd.Field(default_factory=QueryParamsModel)
+
+    else:
+        path: UrlPathModel = pyd.Field(default_factory=UrlPathModel)
+        query: QueryParamsModel = pyd.Field(default_factory=QueryParamsModel)
+
     fragment: str | None = None
 
     def __str__(self) -> str:
@@ -128,7 +146,12 @@ class UrlDataclassModel(pyd.BaseModel):
         return str(Url.build(**kwargs))  # type: ignore[arg-type]
 
 
-class _HttpUrlModel(Model[UrlDataclassModel | str]):
+class HttpUrlModel(Model[UrlDataclassModel | str]):
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args: Any, **kwargs: Any) -> 'HttpUrlModel_UrlDataclassModel':
+            ...
+
     @classmethod
     def _parse_data(cls, data: UrlDataclassModel | str) -> UrlDataclassModel:
         if data == '':
@@ -171,7 +194,5 @@ class _HttpUrlModel(Model[UrlDataclassModel | str]):
 
 if TYPE_CHECKING:
 
-    class HttpUrlModel(_HttpUrlModel, UrlDataclassModel):
+    class HttpUrlModel_UrlDataclassModel(HttpUrlModel, UrlDataclassModel):
         ...
-else:
-    HttpUrlModel: TypeAlias = _HttpUrlModel

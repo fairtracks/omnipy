@@ -395,15 +395,16 @@ class Dataset(
             selector: str | int,
         ) -> ModelT:
             ...
+    else:
 
-    # The only thing that should really be needed – if Python type hints would have able to describe
-    # that Model objects can dynamically inherit from their type arguments. This would at least go
-    # some way towards what we really want, which is a way to describe exactly the way Model objects
-    # mimic the functionality of their type arguments.
+        # The only thing that should really be needed – if Python type hints would have able to
+        # describe that Model objects can dynamically inherit from their type arguments. This would
+        # at least go some way towards what we really want, which is a way to describe exactly the
+        # way Model objects mimic the functionality of their type arguments.
 
-    @overload
-    def __getitem__(self, selector: str | int) -> ModelT:
-        ...
+        @overload
+        def __getitem__(self: 'Dataset[ModelT]', selector: str | int) -> ModelT:
+            ...
 
     @overload
     def __getitem__(self, selector: slice | Iterable[str | int]) -> 'Dataset[ModelT]':

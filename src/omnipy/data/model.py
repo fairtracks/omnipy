@@ -19,7 +19,6 @@ from typing import (Annotated,
                     Optional,
                     overload,
                     TYPE_CHECKING,
-                    TypeAlias,
                     Union)
 
 from typing_extensions import get_original_bases, TypeVar
@@ -74,15 +73,6 @@ ROOT_KEY = '__root__'
 
 
 class _ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
-    def __new__(mcs, name, bases, namespace, **kwargs):
-        if name in ['_Model', '_PandasModel']:
-            name = name[1:]
-            if '__name__' in namespace:
-                namespace['__name__'] = name
-            if '__qualname__' in namespace:
-                namespace['__qualname__'] = name
-        return super().__new__(mcs, name, bases, namespace, **kwargs)
-
     # Hack to overcome bug in pydantic/fields.py (v1.10.13), lines 636-641:
     #
     # if origin is None or origin is CollectionsHashable:
@@ -103,7 +93,7 @@ class _ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
         return super().__instancecheck__(instance)
 
 
-class _Model(
+class Model(
         ModelDisplayMixin,
         DataClassBase,
         pyd.GenericModel,
@@ -288,16 +278,114 @@ class _Model(
 
             cls._clean_type_caches()
 
-    def __new__(
-        cls,
-        *args: Any,
-        **kwargs: Any,
-    ) -> '_Model[_RootT]':
-        model_not_specified = ROOT_KEY not in cls.__fields__
-        if model_not_specified:
-            cls._raise_no_model_exception()
+    if TYPE_CHECKING:  # noqa: C901
+        from .mimic_models import (Model_bool,
+                                   Model_dict,
+                                   Model_float,
+                                   Model_int,
+                                   Model_list,
+                                   Model_str,
+                                   Model_tuple_all_same,
+                                   Model_tuple_pair)
 
-        return super().__new__(cls)
+        @overload
+        def __new__(
+            cls: 'type[Model[float]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> Model_float:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[int]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> Model_int:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[bool]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> Model_bool:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[str]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> Model_str:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[list[ValT]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> Model_list[ValT]:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[tuple[ValT, ValT2]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> Model_tuple_pair[ValT, ValT2]:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[tuple[ValT, ...]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> Model_tuple_all_same[ValT]:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[dict[KeyT, ValT]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> Model_dict[KeyT, ValT]:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[_ModelT]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> '_ModelT':
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[_RootT]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model[_RootT]':
+            ...
+
+        def __new__(
+            cls,
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model':
+            ...
+    else:
+
+        def __new__(
+            cls,
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model[_RootT]':
+            model_not_specified = ROOT_KEY not in cls.__fields__
+            if model_not_specified:
+                cls._raise_no_model_exception()
+
+            return super().__new__(cls)
 
     @classmethod
     def get_orig_model(cls) -> type[_RootT] | UndefinedType:
@@ -1206,106 +1294,3 @@ class _Model(
 
     def __repr_args__(self):
         return [(None, self.contents)]
-
-
-if TYPE_CHECKING:  # noqa: C901
-
-    class Model(_Model[_RootT], Generic[_RootT]):
-        from .mimic_models import (Model_bool,
-                                   Model_dict,
-                                   Model_float,
-                                   Model_int,
-                                   Model_list,
-                                   Model_str,
-                                   Model_tuple_all_same,
-                                   Model_tuple_pair)
-
-        @overload
-        def __new__(
-            cls: 'type[Model[float]]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> Model_float:
-            ...
-
-        @overload
-        def __new__(
-            cls: 'type[Model[int]]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> Model_int:
-            ...
-
-        @overload
-        def __new__(
-            cls: 'type[Model[bool]]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> Model_bool:
-            ...
-
-        @overload
-        def __new__(
-            cls: 'type[Model[str]]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> Model_str:
-            ...
-
-        @overload
-        def __new__(
-            cls: 'type[Model[list[ValT]]]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> Model_list[ValT]:
-            ...
-
-        @overload
-        def __new__(
-            cls: 'type[Model[tuple[ValT, ValT2]]]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> Model_tuple_pair[ValT, ValT2]:
-            ...
-
-        @overload
-        def __new__(
-            cls: 'type[Model[tuple[ValT, ...]]]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> Model_tuple_all_same[ValT]:
-            ...
-
-        @overload
-        def __new__(
-            cls: 'type[Model[dict[KeyT, ValT]]]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> Model_dict[KeyT, ValT]:
-            ...
-
-        @overload
-        def __new__(
-            cls: 'type[_ModelT]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> '_ModelT':
-            ...
-
-        @overload
-        def __new__(
-            cls: 'type[Model[_RootT]]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> 'Model[_RootT]':
-            ...
-
-        def __new__(
-            cls,
-            *args: Any,
-            **kwargs: Any,
-        ) -> 'Model':
-            ...
-else:
-
-    Model: TypeAlias = _Model

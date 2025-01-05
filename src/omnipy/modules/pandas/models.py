@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from io import StringIO
-from typing import Any, TYPE_CHECKING, TypeAlias
+from typing import Any, TYPE_CHECKING
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import is_model_instance
@@ -9,8 +9,16 @@ from omnipy.data.model import Model
 from . import pd
 from ..tables.models import TableListOfDictsOfJsonScalarsModel
 
+__all__ = ['PandasModel']
 
-class _PandasModel(Model[pd.DataFrame | pd.Series | TableListOfDictsOfJsonScalarsModel]):
+
+class PandasModel(Model[pd.DataFrame | pd.Series | TableListOfDictsOfJsonScalarsModel]):
+
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args: Any, **kwargs: Any) -> 'PandasModel_DataFrame':
+            ...
+
     @classmethod
     def _parse_data(
         cls, data: pd.DataFrame | pd.Series | TableListOfDictsOfJsonScalarsModel
@@ -50,19 +58,8 @@ class _PandasModel(Model[pd.DataFrame | pd.Series | TableListOfDictsOfJsonScalar
 
 if TYPE_CHECKING:
 
-    class PandasModel(_PandasModel):
-        def __new__(
-            cls,
-            *args: Any,
-            **kwargs: Any,
-        ) -> 'PandasDataFrameModel':
-            ...
-
-    class PandasDataFrameModel(PandasModel, pd.DataFrame):
+    class PandasModel_DataFrame(PandasModel, pd.DataFrame):
         ...
-else:
-
-    PandasModel: TypeAlias = _PandasModel
 
 
 class PandasDataset(Dataset[PandasModel]):
