@@ -775,11 +775,11 @@ class Model(
 
         self._validate_and_set_value(value, reset_solution=_reset_to_default())
 
-    def from_data(self, value: object) -> None:
+    def from_data(self, data: Any) -> None:
         if self.contents == self._get_default_value_from_model(self.full_type()):
-            self._empty_from_data(value)
+            self._empty_from_data(data)
         else:
-            self._validate_and_set_value(value)
+            self._validate_and_set_value(data)
 
     def absorb_and_replace(self, other: 'Model'):
         self.from_data(other.to_data())

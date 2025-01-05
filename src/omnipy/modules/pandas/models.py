@@ -52,11 +52,11 @@ class PandasModel(Model[pd.DataFrame | pd.Series | TableListOfListsOfJsonScalars
         elif isinstance(df, pd.Series):
             return df.to_dict()
 
-    def from_data(self, value: Iterable) -> None:
-        self._validate_and_set_value(self._from_iterable(value))
+    def from_data(self, data: Iterable) -> None:
+        self._validate_and_set_value(self._from_iterable(data))
 
-    def from_json(self, value: str) -> None:
-        self._validate_and_set_value(pd.read_json(StringIO(value)).convert_dtypes())
+    def from_json(self, json_contents: str) -> None:
+        self._validate_and_set_value(pd.read_json(StringIO(json_contents)).convert_dtypes())
 
 
 if TYPE_CHECKING:
