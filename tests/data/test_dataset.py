@@ -814,15 +814,6 @@ def test_validation_pydantic_types():
         Dataset[Model[list[pyd.StrictInt]]](x=[12.4, 11])  # noqa
 
 
-# TODO: Fix issue in Dataset.test_import_and_export() and
-#       Dataset.test_import_export_custom_parser_to_other_type() that arose after _Model hack
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason="""
-TODO: Change from Model to _Model caused this test to fail, due to `cls.__name__` becoming
-"Dataset[~ModelT][~ModelT] ... [~ModelT][Model[dict[str, str]]]. Only appears when running
-a test suite, not if this is the only test run.
-""")
 def test_import_and_export():
     dataset = Dataset[Model[dict[str, str]]]()
 

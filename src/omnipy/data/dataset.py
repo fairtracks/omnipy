@@ -260,7 +260,7 @@ class Dataset(
         pydantic_copy = pyd.GenericModel.copy(self, deep=deep, **kwargs)
         if not deep:
             pydantic_copy.__dict__[DATA_KEY] = pydantic_copy.__dict__[DATA_KEY].copy()
-        return cast(Dataset[ModelT], pydantic_copy)
+        return pydantic_copy  # pyright: ignore [reportReturnType]
 
     @classmethod
     def clone_dataset_cls(cls: type[_DatasetT],
