@@ -7,8 +7,9 @@ from omnipy.data.model import Model
 
 from . import pd
 from ..general.models import NotIterableExceptStrOrBytesModel
+from .datasets import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset
 from .helpers import extract_common_colnames
-from .models import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset, PandasModel
+from .models import PandasModel
 
 
 @TaskTemplate()

@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from omnipy.modules.pandas.models import PandasDataset
+from omnipy.modules.pandas.datasets import PandasDataset
 from omnipy.modules.pandas.serializers import PandasDatasetToTarFileSerializer
 
 from ...data.helpers.functions import assert_tar_file_contents

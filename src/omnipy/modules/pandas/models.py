@@ -2,7 +2,6 @@ from collections.abc import Iterable
 from io import StringIO
 from typing import Any, TYPE_CHECKING
 
-from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import is_model_instance
 from omnipy.data.model import Model
 
@@ -60,14 +59,3 @@ if TYPE_CHECKING:
 
     class PandasModel_DataFrame(PandasModel, pd.DataFrame):
         ...
-
-
-class PandasDataset(Dataset[PandasModel]):
-    ...
-
-
-class ListOfPandasDatasetsWithSameNumberOfFiles(Model[list[PandasDataset]]):
-    @classmethod
-    def _parse_data(cls, dataset_list: list[PandasDataset]) -> Any:
-        assert len(dataset_list) >= 2
-        assert all(len(dataset) for dataset in dataset_list)

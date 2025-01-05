@@ -5,7 +5,7 @@ import pytest
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.modules.json.datasets import JsonDataset
-from omnipy.modules.pandas.models import PandasDataset
+from omnipy.modules.pandas.datasets import PandasDataset
 from omnipy.modules.raw.datasets import StrDataset
 
 

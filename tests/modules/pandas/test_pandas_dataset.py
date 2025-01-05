@@ -6,7 +6,8 @@ import numpy as np
 import pytest
 
 from omnipy.modules.pandas import pd
-from omnipy.modules.pandas.models import PandasDataset, PandasModel
+from omnipy.modules.pandas.datasets import PandasDataset
+from omnipy.modules.pandas.models import PandasModel
 from omnipy.modules.tables.models import TableListOfDictsOfJsonScalarsModel
 from omnipy.util.pydantic import ValidationError
 

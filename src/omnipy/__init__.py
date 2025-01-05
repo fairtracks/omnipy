@@ -108,9 +108,8 @@ from omnipy.modules.json.models import (JsonCustomDictModel,
                                         JsonOnlyListsModel,
                                         JsonScalarModel)
 from omnipy.modules.json.tasks import convert_dataset_string_to_json, transpose_dicts_2_lists
-from omnipy.modules.pandas.models import (ListOfPandasDatasetsWithSameNumberOfFiles,
-                                          PandasDataset,
-                                          PandasModel)
+from omnipy.modules.pandas.datasets import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset
+from omnipy.modules.pandas.models import PandasModel
 from omnipy.modules.pandas.tasks import (cartesian_product,
                                          concat_dataframes_across_datasets,
                                          convert_dataset_csv_to_pandas,
@@ -268,8 +267,8 @@ __all__ = [
     'JsonOnlyDictsModel',
     'JsonOnlyListsModel',
     'JsonScalarModel',
-    'ListOfPandasDatasetsWithSameNumberOfFiles',
     'PandasModel',
+    'ListOfPandasDatasetsWithSameNumberOfFiles',
     'PandasDataset',
     'BytesDataset',
     'SplitToLinesDataset',

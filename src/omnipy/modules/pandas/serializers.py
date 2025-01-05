@@ -5,7 +5,7 @@ from omnipy.api.protocols.public.data import IsDataset
 from omnipy.data.serializer import TarFileSerializer
 
 from . import pd
-from .models import PandasDataset
+from .datasets import PandasDataset
 
 
 class PandasDatasetToTarFileSerializer(TarFileSerializer):
