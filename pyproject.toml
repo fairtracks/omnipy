@@ -180,14 +180,6 @@ testpaths = [
 ]
 asyncio_mode = "auto"
 
-
-[tool.portray]
-docs_dir = "docs/portray"
-directory = "."
-
-[tool.portray.pdocs]
-template_dir = "docs/templates/pdocs"
-
 [project]
 dependencies = [
     "mkdocstrings[python]>=0.18",
