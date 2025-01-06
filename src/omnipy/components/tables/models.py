@@ -110,6 +110,8 @@ class TsvTableModel(Chain3[
     ...
 
 
+# TODO: Implement SplitLinesToColumnsByCommaModel properly in parallel to SplitLinesToColumnsModel
+
 SplitLinesToColumnsByCommaModel = SplitLinesToColumnsModel.adjust(
     'SplitLinesToColumnsByCommaModel', delimiter=',')
 
