@@ -6,7 +6,14 @@ IGNORED_PATHS = [
     'src/omnipy/_dynamic_all.py',
 ]
 
+INHERIT_MEMBERS_PATHS = ['src/omnipy/shared/protocols/']
+
 nav = mkdocs_gen_files.Nav()
+
+
+def _any_matching_paths(target_path: Path, match_path_list: list[str]) -> bool:
+    return any(str(target_path).startswith(path) for path in match_path_list)
+
 
 for path in sorted(Path('src').rglob('*.py')):
     print(f'Processing {path}')
@@ -17,7 +24,7 @@ for path in sorted(Path('src').rglob('*.py')):
 
     parts = list(module_path.parts)
 
-    if str(path) in IGNORED_PATHS or any(
+    if _any_matching_paths(path, IGNORED_PATHS) or any(
             part.startswith('_') and not part.startswith('__') for part in parts):
         print(f'Skipping {path}')
         continue
@@ -35,10 +42,9 @@ for path in sorted(Path('src').rglob('*.py')):
         identifier = '.'.join(parts)
         print('::: ' + identifier, file=fd)
 
-        # if str(path) == 'src/omnipy/__init__.py':
-        #     print('    options:', file=fd)
-        # print('      members:', file=fd)
-        # print('        - runtime', file=fd)
+        if _any_matching_paths(path, INHERIT_MEMBERS_PATHS):
+            print('    options:', file=fd)
+            print('      inherited_members: true', file=fd)
 
     mkdocs_gen_files.set_edit_path(full_doc_path, Path('../') / path)
 
