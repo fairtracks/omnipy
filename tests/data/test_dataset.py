@@ -12,9 +12,9 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
 from omnipy.shared.exceptions import FailedDataError, PendingDataError
-from omnipy.shared.protocols.hub import IsRuntime
-from omnipy.util.pydantic import ValidationError
-import omnipy.util.pydantic as pyd
+from omnipy.shared.protocols.hub.runtime import IsRuntime
+from omnipy.util._pydantic import ValidationError
+import omnipy.util._pydantic as pyd
 
 from .helpers.classes import MyFloatObject
 from .helpers.datasets import (DefaultStrDataset,
@@ -981,10 +981,10 @@ def test_generic_dataset_unbound_typevar():
     # TypeVars used for generic Model classes (see test_generic_dataset_bound_typevar() below).
     # Here the TypeVar is used to specialize `tuple` and `list`, not `Model`, and does not need to
     # be bound.
-    _DatasetValT = TypeVar('_DatasetValT')
+    DatasetValT = TypeVar('DatasetValT')
 
-    class MyTupleOrListDataset(Dataset[Model[tuple[_DatasetValT, ...] | list[_DatasetValT]]],
-                               Generic[_DatasetValT]):
+    class MyTupleOrListDataset(Dataset[Model[tuple[DatasetValT, ...] | list[DatasetValT]]],
+                               Generic[DatasetValT]):
         ...
 
     # Without further restrictions
@@ -1015,16 +1015,16 @@ def test_generic_dataset_bound_typevar():
     # Note that the TypeVars for generic Model classes need to be bound to a type who in itself, or
     # whose origin_type produces a default value when called without parameters. Here, `ValT` is
     # bound to `int | str`, and `typing.get_origin(int | str)() == 0`.
-    _ModelValT = TypeVar('_ModelValT', bound=int | str, default=int)
+    ModelValT = TypeVar('ModelValT', bound=int | str, default=int)
 
-    class MyListOfIntsOrStringsModel(Model[list[_ModelValT]], Generic[_ModelValT]):
+    class MyListOfIntsOrStringsModel(Model[list[ModelValT]], Generic[ModelValT]):
         ...
 
     # Since we in this case are just passing on the TypeVar to the Model, mypy will complain if the
     # TypeVar is also not bound for the Dataset, however Dataset in itself do not require the
     # TypeVar to be bound (see test_generic_dataset_unbound_typevar() above).
-    class MyListOfIntsOrStringsDataset(Dataset[MyListOfIntsOrStringsModel[_ModelValT]],
-                                       Generic[_ModelValT]):
+    class MyListOfIntsOrStringsDataset(Dataset[MyListOfIntsOrStringsModel[ModelValT]],
+                                       Generic[ModelValT]):
         ...
 
     assert MyListOfIntsOrStringsDataset().to_data() == {}
@@ -1055,16 +1055,16 @@ def test_generic_dataset_bound_typevar():
 
 def test_generic_dataset_two_typevars():
     # Here the TypeVars do not need to be bound, as they are used to specialize `dict`, not `Model`.
-    _KeyT = TypeVar('_KeyT')
-    _ValT = TypeVar('_ValT')
+    KeyT = TypeVar('KeyT')
+    ValT = TypeVar('ValT')
 
-    class MyFilledDictModel(Model[dict[_KeyT, _ValT]], Generic[_KeyT, _ValT]):
+    class MyFilledDictModel(Model[dict[KeyT, ValT]], Generic[KeyT, ValT]):
         @classmethod
-        def _parse_data(cls, data: dict[_KeyT, _ValT]) -> Any:
+        def _parse_data(cls, data: dict[KeyT, ValT]) -> Any:
             assert len(data) > 0
             return data
 
-    class MyFilledDictDataset(Dataset[MyFilledDictModel[_KeyT, _ValT]], Generic[_KeyT, _ValT]):
+    class MyFilledDictDataset(Dataset[MyFilledDictModel[KeyT, ValT]], Generic[KeyT, ValT]):
         ...
 
     # Without further restrictions

@@ -3,13 +3,13 @@ from typing import Type, TypeAlias
 
 import pytest_cases as pc
 
-from omnipy.components.frozen.datasets import (NestedFrozenDictsDataset,
-                                               NestedFrozenDictsOrTuplesDataset,
-                                               NestedFrozenTuplesDataset)
-from omnipy.components.frozen.models import (NestedFrozenDictsOrTuplesModel,
-                                             NestedFrozenOnlyDictsModel,
-                                             NestedFrozenOnlyTuplesModel)
-from omnipy.components.frozen.typedefs import FrozenDict
+from omnipy.components._frozen.datasets import (NestedFrozenDictsDataset,
+                                                NestedFrozenDictsOrTuplesDataset,
+                                                NestedFrozenTuplesDataset)
+from omnipy.components._frozen.models import (NestedFrozenDictsOrTuplesModel,
+                                              NestedFrozenOnlyDictsModel,
+                                              NestedFrozenOnlyTuplesModel)
+from omnipy.components._frozen.typedefs import FrozenDict
 
 from ...helpers.classes import CaseInfo
 from .raw.examples import (e_complex_key_dict,

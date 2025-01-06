@@ -10,7 +10,7 @@ from omnipy.components.json.datasets import (JsonDictDataset,
 from omnipy.components.json.flows import (transpose_dict_of_dicts_2_list_of_dicts,
                                           transpose_dicts_of_lists_of_dicts_2_lists_of_dicts)
 from omnipy.components.json.tasks import transpose_dicts_2_lists
-from omnipy.shared.protocols.hub import IsRuntime
+from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 
 def test_transpose_empty_dicts_2_nothing(runtime: Annotated[IsRuntime, pytest.fixture]):

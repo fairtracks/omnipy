@@ -7,7 +7,7 @@ from omnipy.data.helpers import (FailedData,
                                  obj_or_model_contents_isinstance,
                                  PendingData)
 from omnipy.data.model import Model
-from omnipy.util.pydantic import ValidationError
+from omnipy.util._pydantic import ValidationError
 
 from .helpers.models import PydanticParentModel
 

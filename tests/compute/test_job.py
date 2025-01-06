@@ -3,8 +3,8 @@ from typing import Annotated, cast, NamedTuple
 
 import pytest
 
-from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
-from omnipy.compute.job_creator import JobCreator
+from omnipy.compute._job import JobBase, JobMixin, JobTemplateMixin
+from omnipy.compute._job_creator import JobCreator
 from omnipy.config.job import JobConfig
 from omnipy.shared.exceptions import JobStateException
 

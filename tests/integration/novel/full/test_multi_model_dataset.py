@@ -6,9 +6,10 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from omnipy.data.dataset import Dataset, MultiModelDataset
+from omnipy import MultiModelDataset
+from omnipy.data.dataset import Dataset
 from omnipy.shared.enums import RunState
-from omnipy.util.pydantic import ValidationError
+from omnipy.util._pydantic import ValidationError
 
 from ....engine.helpers.functions import assert_job_state
 from .cases.flows import FlowCase

@@ -23,7 +23,11 @@ from typing import (Annotated,
 
 from typing_extensions import get_original_bases, TypeVar
 
-from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
+from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
+from omnipy.data._missing import parse_none_according_to_model
+from omnipy.data._mixins.display import ModelDisplayMixin
+from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
+from omnipy.data.constants import ROOT_KEY
 from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  get_special_methods_info_dict,
                                  is_model_instance,
@@ -31,12 +35,17 @@ from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  ResetSolutionTuple,
                                  validate_cls_counts,
                                  YesNoMaybe)
-from omnipy.data.missing import parse_none_according_to_model
-from omnipy.data.mixins.display import ModelDisplayMixin
-from omnipy.data.typedefs import KeyT, ValT, ValT2
-from omnipy.shared.protocols._util import IsSnapshotWrapper
 from omnipy.shared.protocols.data import IsModel
+from omnipy.shared.protocols.util import IsSnapshotWrapper
 from omnipy.shared.typedefs import TypeForm
+from omnipy.util._pydantic import (is_none_type,
+                                   lenient_isinstance,
+                                   lenient_issubclass,
+                                   Undefined,
+                                   UndefinedType,
+                                   ValidationError)
+# from orjson import orjson
+import omnipy.util._pydantic as pyd
 from omnipy.util.contexts import (hold_and_reset_prev_attrib_value,
                                   LastErrorHolder,
                                   nothing,
@@ -53,21 +62,11 @@ from omnipy.util.helpers import (all_equals,
                                  is_optional,
                                  is_union,
                                  remove_forward_ref_notation)
-from omnipy.util.pydantic import (is_none_type,
-                                  lenient_isinstance,
-                                  lenient_issubclass,
-                                  Undefined,
-                                  UndefinedType,
-                                  ValidationError)
-# from orjson import orjson
-import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 _ReturnT = TypeVar('_ReturnT')
 _RootT = TypeVar('_RootT')
 _ModelT = TypeVar('_ModelT', bound=IsModel)
-
-ROOT_KEY = '__root__'
 
 # TODO: Refactor Dataset and Model using mixins (including below functions)
 
@@ -279,14 +278,14 @@ class Model(
             cls._clean_type_caches()
 
     if TYPE_CHECKING:  # noqa: C901
-        from .mimic_models import (Model_bool,
-                                   Model_dict,
-                                   Model_float,
-                                   Model_int,
-                                   Model_list,
-                                   Model_str,
-                                   Model_tuple_all_same,
-                                   Model_tuple_pair)
+        from ._mimic_models import (Model_bool,
+                                    Model_dict,
+                                    Model_float,
+                                    Model_int,
+                                    Model_list,
+                                    Model_str,
+                                    Model_tuple_all_same,
+                                    Model_tuple_pair)
 
         @overload
         def __new__(
@@ -322,34 +321,34 @@ class Model(
 
         @overload
         def __new__(
-            cls: 'type[Model[list[ValT]]]',
+            cls: 'type[Model[list[_ValT]]]',
             *args: Any,
             **kwargs: Any,
-        ) -> Model_list[ValT]:
+        ) -> Model_list[_ValT]:
             ...
 
         @overload
         def __new__(
-            cls: 'type[Model[tuple[ValT, ValT2]]]',
+            cls: 'type[Model[tuple[_ValT, _ValT2]]]',
             *args: Any,
             **kwargs: Any,
-        ) -> Model_tuple_pair[ValT, ValT2]:
+        ) -> Model_tuple_pair[_ValT, _ValT2]:
             ...
 
         @overload
         def __new__(
-            cls: 'type[Model[tuple[ValT, ...]]]',
+            cls: 'type[Model[tuple[_ValT, ...]]]',
             *args: Any,
             **kwargs: Any,
-        ) -> Model_tuple_all_same[ValT]:
+        ) -> Model_tuple_all_same[_ValT]:
             ...
 
         @overload
         def __new__(
-            cls: 'type[Model[dict[KeyT, ValT]]]',
+            cls: 'type[Model[dict[_KeyT, _ValT]]]',
             *args: Any,
             **kwargs: Any,
-        ) -> Model_dict[KeyT, ValT]:
+        ) -> Model_dict[_KeyT, _ValT]:
             ...
 
         @overload
@@ -1132,11 +1131,11 @@ class Model(
 
     def _convert_to_model_if_reasonable(  # noqa: C901
         self,
-        ret: Mapping[KeyT, ValT] | Iterable[ValT] | _ReturnT | _RootT,
+        ret: Mapping[_KeyT, _ValT] | Iterable[_ValT] | _ReturnT | _RootT,
         level_up: bool = False,
         level_up_arg_idx: int = 1,
         raise_validation_errors: bool = False,
-    ) -> ('Model[KeyT] | Model[ValT] | Model[tuple[KeyT, ValT]] '
+    ) -> ('Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] '
           '| Model[_ReturnT] | Model[_RootT] | _ReturnT'):
 
         if level_up and not self.config.dynamically_convert_elements_to_models:

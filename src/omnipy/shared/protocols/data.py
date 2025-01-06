@@ -1,6 +1,6 @@
 from typing import (Any,
                     Callable,
-                    Hashable,
+                    ContextManager,
                     IO,
                     Iterable,
                     Iterator,
@@ -11,18 +11,14 @@ from typing import (Any,
                     Type,
                     TypeVar)
 
-from omnipy.shared.protocols._hub import CanLog
 from omnipy.shared.protocols.builtins import IsMutableMapping
-from omnipy.util.pydantic import Undefined, UndefinedType
+from omnipy.shared.protocols.config import IsDataConfig
+from omnipy.shared.protocols.hub.log import CanLog
+from omnipy.shared.protocols.util import HasContents, IsSnapshotHolder
+from omnipy.util._pydantic import Undefined, UndefinedType
 
 _RootT = TypeVar('_RootT', covariant=True)
 _ModelT = TypeVar('_ModelT', bound='IsModel')
-KeyT = TypeVar('KeyT')
-KeyContraT = TypeVar('KeyContraT', bound=Hashable, contravariant=True)
-ValT = TypeVar('ValT')
-ValCoT = TypeVar('ValCoT', covariant=True)
-
-RootT = TypeVar('RootT')
 
 
 @runtime_checkable
@@ -209,4 +205,30 @@ class IsSerializerRegistry(Protocol):
                                                      log_obj: CanLog,
                                                      tar_file_path: str,
                                                      to_dataset: IsDataset) -> IsDataset | None:
+        ...
+
+
+_ObjT = TypeVar('_ObjT', bound=HasContents)
+_ContentsT = TypeVar('_ContentsT', bound=object)
+
+
+@runtime_checkable
+class IsDataClassCreator(Protocol[_ObjT, _ContentsT]):
+    """"""
+    @property
+    def config(self) -> IsDataConfig:
+        ...
+
+    def set_config(self, config: IsDataConfig) -> None:
+        ...
+
+    @property
+    def snapshot_holder(self) -> IsSnapshotHolder[_ObjT, _ContentsT]:
+        ...
+
+    def deepcopy_context(
+        self,
+        top_level_entry_func: Callable[[], None],
+        top_level_exit_func: Callable[[], None],
+    ) -> ContextManager[int]:
         ...

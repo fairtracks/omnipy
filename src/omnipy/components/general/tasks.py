@@ -6,8 +6,8 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
 # @TaskTemplate()
-# def cast_dataset(dataset: Dataset, cast_model: Callable[[], ModelT]) -> ModelT:
-#     out_dataset: Dataset[ModelT] = Dataset[cast_model]()
+# def cast_dataset(dataset: Dataset, cast_model: Callable[[], _ModelT]) -> _ModelT:
+#     out_dataset: Dataset[_ModelT] = Dataset[cast_model]()
 #     for name, item in dataset.items():
 #         out_dataset[name] = cast(cast_model, item.to_data())
 #     return out_dataset

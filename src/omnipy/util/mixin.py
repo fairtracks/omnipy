@@ -7,11 +7,10 @@ from typing_extensions import get_original_bases, Self
 
 from omnipy.util.helpers import generic_aware_issubclass_ignore_args, transfer_generic_args_to_cls
 
+WITH_MIXINS_CLS_SUFFIX = 'WithMixins'
+
 
 class DynamicMixinAcceptor:
-    # Constants
-    WITH_MIXINS_CLS_SUFFIX = 'WithMixins'
-
     # Declarations needed by mypy
     _orig_class: Type
     _orig_init_signature: inspect.Signature
@@ -48,8 +47,8 @@ class DynamicMixinAcceptor:
         skip_bases = {'DynamicMixinAcceptor'}
 
         for base in base_list:
-            if base.__name__.endswith(cls.WITH_MIXINS_CLS_SUFFIX):
-                skip_bases.add(base.__name__[:-len(cls.WITH_MIXINS_CLS_SUFFIX)])
+            if base.__name__.endswith(WITH_MIXINS_CLS_SUFFIX):
+                skip_bases.add(base.__name__[:-len(WITH_MIXINS_CLS_SUFFIX)])
 
         cleaned_base_list = [
             base for base in base_list
@@ -124,7 +123,7 @@ class DynamicMixinAcceptor:
         cls.__init__.__signature__ = cls._orig_init_signature
 
     def __new__(cls, *args, **kwargs):
-        if not cls.__name__.endswith(cls.WITH_MIXINS_CLS_SUFFIX):
+        if not cls.__name__.endswith(WITH_MIXINS_CLS_SUFFIX):
             cls_with_mixins = cls._create_subcls_inheriting_from_mixins_and_orig_cls()
             obj = super(cls, cls_with_mixins).__new__(cls_with_mixins, *args, **kwargs)
 
@@ -146,7 +145,7 @@ class DynamicMixinAcceptor:
 
             for base in cls_with_mixins.__mro__:
                 if base == cls \
-                        or base.__name__.endswith(cls.WITH_MIXINS_CLS_SUFFIX) \
+                        or base.__name__.endswith(WITH_MIXINS_CLS_SUFFIX) \
                         or base.__init__ is object.__init__:
                     continue
 
@@ -175,7 +174,7 @@ class DynamicMixinAcceptor:
                     base.__init__(self, **mixin_kwargs)
 
         cls_bases = list(get_original_bases(cls))
-        if not cls.__name__.endswith(cls.WITH_MIXINS_CLS_SUFFIX):
+        if not cls.__name__.endswith(WITH_MIXINS_CLS_SUFFIX):
             cls_bases = list(cls._mixin_classes) + cls_bases
 
         cls_bases_with_mixins = []
@@ -193,7 +192,7 @@ class DynamicMixinAcceptor:
             return ns
 
         cls_with_mixins: type[Self] = types.new_class(
-            f'{cls.__name__}{cls.WITH_MIXINS_CLS_SUFFIX}',
+            f'{cls.__name__}{WITH_MIXINS_CLS_SUFFIX}',
             tuple([cls] + cls_bases_with_mixins),
             {},
             fill_ns,

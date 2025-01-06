@@ -35,11 +35,11 @@ from typing import (_SpecialForm,
                     Union)
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
-from omnipy.shared.protocols._util import HasContents, IsSnapshotWrapper
+from omnipy.shared.protocols.util import HasContents, IsSnapshotWrapper
 from omnipy.shared.typedefs import LocaleType, TypeForm
+from omnipy.util._pydantic import is_none_type, ValidationError
+import omnipy.util._pydantic as pyd
 from omnipy.util.contexts import setup_and_teardown_callback_context
-from omnipy.util.pydantic import is_none_type, ValidationError
-import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
@@ -48,8 +48,6 @@ _HasContentsT = TypeVar('_HasContentsT', bound=HasContents)
 _AnyKeyT = TypeVar('_AnyKeyT', bound=object)
 _ValT = TypeVar('_ValT', bound=object)
 _ContentsT = TypeVar('_ContentsT', bound=object)
-
-T = TypeVar('T')
 
 Dictable = Mapping[_KeyT, Any] | Iterable[tuple[_KeyT, Any]]
 
@@ -207,7 +205,7 @@ def all_type_variants(
         return (cast(type | GenericAlias, in_type),)
 
 
-def is_iterable(obj: Iterable[T] | T) -> TypeGuard[Iterable[T]]:
+def is_iterable(obj: Iterable[_ObjT] | _ObjT) -> TypeGuard[Iterable[_ObjT]]:
     try:
         iter(obj)  # type: ignore[arg-type]
         return True

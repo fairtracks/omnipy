@@ -7,17 +7,17 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.components.prefect.engine.prefect import PrefectEngine
-from omnipy.compute.job import JobBase
-from omnipy.compute.job_creator import JobCreator
+from omnipy.compute._job import JobBase
+from omnipy.compute._job_creator import JobCreator
 from omnipy.config.data import DataConfig
 from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import JobConfig
 from omnipy.config.root_log import RootLogConfig
-from omnipy.data.data_class_creator import DataClassBase, DataClassCreator
+from omnipy.data._data_class_creator import DataClassBase, DataClassCreator
 from omnipy.data.serializer import SerializerRegistry
 from omnipy.engine.local import LocalRunner
-from omnipy.hub.log.root_log import RootLogObjects
-from omnipy.hub.registry import RunStateRegistry
+from omnipy.hub._registry import RunStateRegistry
+from omnipy.hub.log._root_log import RootLogObjects
 from omnipy.hub.runtime import RuntimeConfig, RuntimeObjects
 from omnipy.shared.enums import (BackoffStrategy,
                                  ConfigOutputStorageProtocolOptions,
@@ -25,7 +25,7 @@ from omnipy.shared.enums import (BackoffStrategy,
                                  ConfigRestoreOutputsOptions,
                                  EngineChoice)
 from omnipy.shared.protocols.config import IsEngineConfig
-from omnipy.shared.protocols.hub import IsRuntime, IsRuntimeConfig
+from omnipy.shared.protocols.hub.runtime import IsRuntime, IsRuntimeConfig
 
 from .helpers.mocks import (MockLocalRunner,
                             MockLocalRunnerConfig,

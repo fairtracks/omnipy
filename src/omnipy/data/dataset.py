@@ -9,40 +9,47 @@ from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKI
 
 from typing_extensions import TypeVar
 
-from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
+from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
+from omnipy.data._mixins.display import DatasetDisplayMixin
+from omnipy.data._mixins.task import TaskDatasetMixin
+from omnipy.data._selector import (create_updated_mapping,
+                                   Index2DataItemsType,
+                                   Key2DataItemType,
+                                   prepare_selected_items_with_iterable_data,
+                                   prepare_selected_items_with_mapping_data,
+                                   select_keys)
+from omnipy.data.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
 from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  is_model_instance,
                                  is_model_subclass)
-from omnipy.data.mixins.display import DatasetDisplayMixin
-from omnipy.data.mixins.task import TaskDatasetMixin
 from omnipy.data.model import Model
-from omnipy.data.selector import (create_updated_mapping,
-                                  Index2DataItemsType,
-                                  Key2DataItemType,
-                                  prepare_selected_items_with_iterable_data,
-                                  prepare_selected_items_with_mapping_data,
-                                  select_keys)
 from omnipy.shared.protocols.data import IsDataset, IsModel, IsMultiModelDataset
 from omnipy.shared.typedefs import TypeForm
+from omnipy.util._pydantic import Undefined, UndefinedType, ValidationError
+import omnipy.util._pydantic as pyd
 from omnipy.util.decorators import call_super_if_available
 from omnipy.util.helpers import (get_default_if_typevar,
                                  get_event_loop_and_check_if_loop_is_running,
                                  is_iterable,
                                  remove_forward_ref_notation)
-from omnipy.util.pydantic import Undefined, UndefinedType, ValidationError
-import omnipy.util.pydantic as pyd
 
 if TYPE_CHECKING:
     from omnipy.components.remote.datasets import HttpUrlDataset
     from omnipy.components.remote.models import HttpUrlModel
+    from omnipy.data._mimic_models import (Model_bool,
+                                           Model_dict,
+                                           Model_float,
+                                           Model_int,
+                                           Model_list,
+                                           Model_str,
+                                           Model_tuple_all_same,
+                                           Model_tuple_pair)
+    from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
 
-ModelT = TypeVar('ModelT', bound=IsModel)
-NewModelT = TypeVar('NewModelT', bound=IsModel)
-GeneralModelT = TypeVar('GeneralModelT', bound=IsModel)
+_ModelT = TypeVar('_ModelT', bound=IsModel)
+_NewModelT = TypeVar('_NewModelT', bound=IsModel)
+_GeneralModelT = TypeVar('_GeneralModelT', bound=IsModel)
 _DatasetT = TypeVar('_DatasetT')
-
-DATA_KEY = 'data'
-ASYNC_LOAD_SLEEP_TIME = 0.05
 
 # def orjson_dumps(v, *, default):
 #     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
@@ -61,7 +68,7 @@ class Dataset(
         TaskDatasetMixin,
         DataClassBase,
         pyd.GenericModel,
-        Generic[ModelT],
+        Generic[_ModelT],
         UserDict,
         metaclass=_DatasetMetaclass):
     """
@@ -119,13 +126,13 @@ class Dataset(
         # json_loads = orjson.loads
         # json_dumps = orjson_dumps
 
-    data: dict[str, ModelT] = pyd.Field(default={})
+    data: dict[str, _ModelT] = pyd.Field(default={})
 
     def __class_getitem__(
         cls,
-        params: type[ModelT] | tuple[type[ModelT]] | tuple[type[ModelT], Any] | TypeVar
+        params: type[_ModelT] | tuple[type[_ModelT]] | tuple[type[_ModelT], Any] | TypeVar
         | tuple[TypeVar, ...],
-    ) -> 'type[Dataset[type[ModelT]]]':
+    ) -> 'type[Dataset[type[_ModelT]]]':
         # TODO: change model type to params: Type[Any] | tuple[Type[Any], ...]
         #       as in GenericModel.
 
@@ -195,7 +202,7 @@ class Dataset(
                 kwargs = {}
 
         model_cls = self.get_model_class()
-        if model_cls == ModelT:  # type: ignore[misc]
+        if model_cls == _ModelT:  # type: ignore[misc]
             self._raise_no_model_exception()
 
         model_or_dataset_as_input = False
@@ -256,7 +263,7 @@ class Dataset(
     def __copy__(self):
         return self.copy(deep=False)
 
-    def copy(self, *, deep: bool = False, **kwargs) -> 'Dataset[ModelT]':
+    def copy(self, *, deep: bool = False, **kwargs) -> 'Dataset[_ModelT]':
         pydantic_copy = pyd.GenericModel.copy(self, deep=deep, **kwargs)
         if not deep:
             pydantic_copy.__dict__[DATA_KEY] = pydantic_copy.__dict__[DATA_KEY].copy()
@@ -265,7 +272,7 @@ class Dataset(
     @classmethod
     def clone_dataset_cls(cls: type[_DatasetT],
                           new_dataset_cls_name: str,
-                          model_cls: type[NewModelT] | None = None) -> type[IsDataset[NewModelT]]:
+                          model_cls: type[_NewModelT] | None = None) -> type[IsDataset[_NewModelT]]:
         if model_cls:
             generic_dataset_cls = cls.__bases__[0]
             new_base_cls = generic_dataset_cls[model_cls]
@@ -273,14 +280,14 @@ class Dataset(
             new_base_cls = cls
 
         new_dataset_cls = type(new_dataset_cls_name, (new_base_cls,), {})
-        return cast(type[IsDataset[NewModelT]], new_dataset_cls)
+        return cast(type[IsDataset[_NewModelT]], new_dataset_cls)
 
     @classmethod
     def _get_data_field(cls) -> pyd.ModelField:
         return cast(pyd.ModelField, cls.__fields__.get(DATA_KEY))
 
     @classmethod
-    def get_model_class(cls) -> type[ModelT]:
+    def get_model_class(cls) -> type[_ModelT]:
         """
         Returns the concrete Model class used for all data files in the dataset, e.g.:
         `Model[list[int]]`
@@ -323,16 +330,6 @@ class Dataset(
         # variables. As a workaround, we have to overload the Model.__new__ and Dataset.__getitem__
         # methods for the most important types.
 
-        from omnipy.data.mimic_models import (Model_bool,
-                                              Model_dict,
-                                              Model_float,
-                                              Model_int,
-                                              Model_list,
-                                              Model_str,
-                                              Model_tuple_all_same,
-                                              Model_tuple_pair)
-        from omnipy.data.typedefs import KeyT, ValT, ValT2
-
         @overload
         def __getitem__(
             self: 'Dataset[Model[float]]',
@@ -363,37 +360,37 @@ class Dataset(
 
         @overload
         def __getitem__(
-            self: 'Dataset[Model[list[ValT]]]',
+            self: 'Dataset[Model[list[_ValT]]]',
             selector: str | int,
-        ) -> Model_list[ValT]:
+        ) -> Model_list[_ValT]:
             ...
 
         @overload
         def __getitem__(
-            self: 'Dataset[Model[tuple[ValT, ValT2]]]',
+            self: 'Dataset[Model[tuple[_ValT, _ValT2]]]',
             selector: str | int,
-        ) -> Model_tuple_pair[ValT, ValT2]:
+        ) -> Model_tuple_pair[_ValT, _ValT2]:
             ...
 
         @overload
         def __getitem__(
-            self: 'Dataset[Model[tuple[ValT, ...]]]',
+            self: 'Dataset[Model[tuple[_ValT, ...]]]',
             selector: str | int,
-        ) -> Model_tuple_all_same[ValT]:
+        ) -> Model_tuple_all_same[_ValT]:
             ...
 
         @overload
         def __getitem__(
-            self: 'Dataset[Model[dict[KeyT, ValT]]]',
+            self: 'Dataset[Model[dict[_KeyT, _ValT]]]',
             selector: str | int,
-        ) -> Model_dict[KeyT, ValT]:
+        ) -> Model_dict[_KeyT, _ValT]:
             ...
 
         @overload
         def __getitem__(
-            self: 'Dataset[ModelT]',
+            self: 'Dataset[_ModelT]',
             selector: str | int,
-        ) -> ModelT:
+        ) -> _ModelT:
             ...
     else:
 
@@ -403,15 +400,16 @@ class Dataset(
         # way Model objects mimic the functionality of their type arguments.
 
         @overload
-        def __getitem__(self: 'Dataset[ModelT]', selector: str | int) -> ModelT:
+        def __getitem__(self: 'Dataset[_ModelT]', selector: str | int) -> _ModelT:
             ...
 
     @overload
-    def __getitem__(self, selector: slice | Iterable[str | int]) -> 'Dataset[ModelT]':
+    def __getitem__(self, selector: slice | Iterable[str | int]) -> 'Dataset[_ModelT]':
         ...
 
     def __getitem__(
-            self, selector: str | int | slice | Iterable[str | int]) -> 'ModelT | Dataset[ModelT]':
+            self,
+            selector: str | int | slice | Iterable[str | int]) -> '_ModelT | Dataset[_ModelT]':
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
@@ -458,7 +456,7 @@ class Dataset(
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
-            self._set_data_file_and_validate(selected_keys.keys[0], cast(ModelT, data_obj))
+            self._set_data_file_and_validate(selected_keys.keys[0], cast(_ModelT, data_obj))
         else:
             key_2_data_item: Key2DataItemType[object]
             index_2_data_items: Index2DataItemsType[object]
@@ -501,7 +499,7 @@ class Dataset(
             self.data = prev_data
             raise
 
-    def _set_data_file_and_validate(self, key: str, val: ModelT) -> None:
+    def _set_data_file_and_validate(self, key: str, val: _ModelT) -> None:
         has_prev_value = key in self.data
         if has_prev_value:
             prev_value = self.data[key]
@@ -549,7 +547,7 @@ class Dataset(
             raise RuntimeError('Model does not allow setting of extra attributes')
 
     @pyd.root_validator
-    def _parse_root_object(cls, root_obj: dict[str, ModelT]) -> Any:  # noqa
+    def _parse_root_object(cls, root_obj: dict[str, _ModelT]) -> Any:  # noqa
         assert DATA_KEY in root_obj
         data_dict = root_obj[DATA_KEY]
         model = cls.get_model_class()
@@ -567,7 +565,7 @@ class Dataset(
     def from_data(self,
                   data: dict[str, Any] | Iterator[tuple[str, Any]],
                   update: bool = True) -> None:
-        def callback_func(model: ModelT, contents: Any):
+        def callback_func(model: _ModelT, contents: Any):
             model.from_data(contents)
 
         self._from_dict_with_callback(data, update, callback_func)
@@ -604,7 +602,7 @@ class Dataset(
     def from_json(self,
                   data: Mapping[str, str] | Iterable[tuple[str, str]],
                   update: bool = True) -> None:
-        def callback_func(model: ModelT, contents: Any):
+        def callback_func(model: _ModelT, contents: Any):
             model.from_json(contents)
 
         self._from_dict_with_callback(data, update, callback_func)
@@ -805,7 +803,7 @@ class Dataset(
         from omnipy.components import get_serializer_registry
         return get_serializer_registry()
 
-    def as_multi_model_dataset(self) -> 'IsMultiModelDataset[ModelT]':
+    def as_multi_model_dataset(self) -> 'IsMultiModelDataset[_ModelT]':
         multi_model_dataset = MultiModelDataset[self.get_model_class()]()
         for data_file in self:
             multi_model_dataset.data[data_file] = self.data[data_file]
@@ -822,7 +820,7 @@ class Dataset(
         return [(k, v.contents) if is_model_instance(v) else (k, v) for k, v in self.data.items()]
 
 
-class MultiModelDataset(Dataset[GeneralModelT], Generic[GeneralModelT]):
+class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
     """
         Variant of Dataset that allows custom models to be set on individual data files
 
@@ -830,7 +828,7 @@ class MultiModelDataset(Dataset[GeneralModelT], Generic[GeneralModelT]):
         custom models.
     """
 
-    # Custom field models should really be a subtype of ModelT, however this is currently not
+    # Custom field models should really be a subtype of _ModelT, however this is currently not
     # checkable in the type system. Instead, we rely on the _validate method to ensure that the
     # custom field models are valid.
     _custom_field_models: dict[str, type[IsModel]] = pyd.PrivateAttr(default={})

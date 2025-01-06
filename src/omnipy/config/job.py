@@ -8,7 +8,7 @@ from omnipy.shared.enums import (ConfigOutputStorageProtocolOptions,
 from omnipy.shared.protocols.config import (IsLocalOutputStorageConfig,
                                             IsOutputStorageConfig,
                                             IsS3OutputStorageConfig)
-import omnipy.util.pydantic as pyd
+import omnipy.util._pydantic as pyd
 
 
 def _get_persist_data_dir_path() -> str:

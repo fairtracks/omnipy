@@ -6,7 +6,7 @@ from omnipy.components.general.models import (Chain2,
                                               Chain5,
                                               Chain6,
                                               NotIterableExceptStrOrBytesModel)
-from omnipy.util.pydantic import ValidationError
+from omnipy.util._pydantic import ValidationError
 
 from .helpers.models import MyList, MyListModel, RotateOneCharModel, SplitCharsModel
 

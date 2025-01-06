@@ -45,15 +45,15 @@ class NotIterableExceptStrOrBytesModel(Model[object | None]):
 
 # General
 
-U = TypeVar('U', bound=Model, default=Model[object])
-V = TypeVar('V', bound=Model, default=Model[object])
-W = TypeVar('W', bound=Model, default=Model[object])
-X = TypeVar('X', bound=Model, default=Model[object])
-Y = TypeVar('Y', bound=Model, default=Model[object])
-Z = TypeVar('Z', bound=Model, default=Model[object])
+_U = TypeVar('_U', bound=Model, default=Model[object])
+_V = TypeVar('_V', bound=Model, default=Model[object])
+_W = TypeVar('_W', bound=Model, default=Model[object])
+_X = TypeVar('_X', bound=Model, default=Model[object])
+_Y = TypeVar('_Y', bound=Model, default=Model[object])
+_Z = TypeVar('_Z', bound=Model, default=Model[object])
 
 
-class ChainMixin:
+class _ChainMixin:
     @classmethod
     def _parse_data(cls, data: object) -> object:
         type_args = get_args(cls.outer_type(with_args=True))
@@ -72,29 +72,32 @@ class ChainMixin:
         return data
 
 
-class Chain2(ChainMixin, Model[V | U], Generic[U, V]):
+class Chain2(_ChainMixin, Model[_V | _U], Generic[_U, _V]):
     ...
 
 
-class Chain3(ChainMixin, Model[W | TypeVarStore1[V] | U], Generic[U, V, W]):
+class Chain3(_ChainMixin, Model[_W | TypeVarStore1[_V] | _U], Generic[_U, _V, _W]):
     ...
 
 
-class Chain4(ChainMixin, Model[X | TypeVarStore2[W] | TypeVarStore1[V] | U], Generic[U, V, W, X]):
+class Chain4(_ChainMixin,
+             Model[_X | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
+             Generic[_U, _V, _W, _X]):
     ...
 
 
 class Chain5(
-        ChainMixin,
-        Model[Y | TypeVarStore3[X] | TypeVarStore2[W] | TypeVarStore1[V] | U],
-        Generic[U, V, W, X, Y],
+        _ChainMixin,
+        Model[_Y | TypeVarStore3[_X] | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
+        Generic[_U, _V, _W, _X, _Y],
 ):
     ...
 
 
 class Chain6(
-        ChainMixin,
-        Model[Z | TypeVarStore4[Y] | TypeVarStore3[X] | TypeVarStore2[W] | TypeVarStore1[V] | U],
-        Generic[U, V, W, X, Y, Z],
+        _ChainMixin,
+        Model[_Z | TypeVarStore4[_Y] | TypeVarStore3[_X] | TypeVarStore2[_W] | TypeVarStore1[_V]
+              | _U],
+        Generic[_U, _V, _W, _X, _Y, _Z],
 ):
     ...

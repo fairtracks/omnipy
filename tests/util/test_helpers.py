@@ -19,7 +19,9 @@ import pytest
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-from omnipy.shared.protocols._util import HasContents, IsSnapshotHolder
+from omnipy.shared.protocols.util import HasContents, IsSnapshotHolder
+from omnipy.util._pydantic import Undefined
+import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import (all_type_variants,
                                  called_from_omnipy_tests,
                                  ensure_non_str_byte_iterable,
@@ -42,13 +44,11 @@ from omnipy.util.helpers import (all_type_variants,
                                  SnapshotWrapper,
                                  transfer_generic_args_to_cls,
                                  WeakKeyRefContainer)
-from omnipy.util.pydantic import Undefined
-import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 T = TypeVar('T')
 U = TypeVar('U')
-_ContentsT = TypeVar('_ContentsT', bound=object)
+ContentsT = TypeVar('ContentsT', bound=object)
 
 
 class MyGenericDict(dict[T, U], Generic[T, U]):
@@ -847,13 +847,13 @@ def test_ref_count_memo_dict_repeated_deepcopy_same_obj_not_needed() -> None:
     assert ref_count_memo_dict.all_are_empty()
 
 
-class HasContentsMixin(Generic[_ContentsT]):
+class HasContentsMixin(Generic[ContentsT]):
     @property
-    def contents(self) -> _ContentsT:
+    def contents(self) -> ContentsT:
         return self.data
 
     @contents.setter
-    def contents(self, value: _ContentsT) -> None:
+    def contents(self, value: ContentsT) -> None:
         self.data = value
 
     #

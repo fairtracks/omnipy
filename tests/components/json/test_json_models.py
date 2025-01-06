@@ -20,8 +20,8 @@ from omnipy.components.json.models import (_JsonAnyDictM,
                                            JsonModel,
                                            JsonScalarModel)
 from omnipy.components.json.typedefs import JsonScalar
-from omnipy.shared.protocols.hub import IsRuntime
-from omnipy.util.pydantic import ValidationError
+from omnipy.shared.protocols.hub.runtime import IsRuntime
+from omnipy.util._pydantic import ValidationError
 
 from ...helpers.protocols import AssertModelOrValFunc
 from ..helpers.classes import CaseInfo

@@ -4,14 +4,14 @@ from types import MappingProxyType
 import pytest
 import pytest_cases as pc
 
-from omnipy.components.frozen.models import (_FrozenAnyUnionM,
-                                             _FrozenScalarM,
-                                             NestedFrozenDictsOrTuplesModel,
-                                             NestedFrozenOnlyDictsModel,
-                                             NestedFrozenOnlyTuplesModel)
-from omnipy.components.frozen.typedefs import FrozenDict
+from omnipy.components._frozen.models import (_FrozenAnyUnionM,
+                                              _FrozenScalarM,
+                                              NestedFrozenDictsOrTuplesModel,
+                                              NestedFrozenOnlyDictsModel,
+                                              NestedFrozenOnlyTuplesModel)
+from omnipy.components._frozen.typedefs import FrozenDict
 from omnipy.data.model import Model
-from omnipy.util.pydantic import ValidationError
+from omnipy.util._pydantic import ValidationError
 
 from ..helpers.classes import CaseInfo
 

@@ -1,7 +1,7 @@
 import sys
 from typing import Any, IO, Type
 
-from omnipy.data.data_class_creator import DataClassBase
+from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import Serializer, TarFileSerializer

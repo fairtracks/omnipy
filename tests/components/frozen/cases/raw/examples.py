@@ -1,4 +1,4 @@
-from omnipy.components.frozen.typedefs import FrozenDict
+from omnipy.components._frozen.typedefs import FrozenDict
 
 f_none = None
 f_int = 123

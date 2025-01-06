@@ -3,7 +3,7 @@ from typing import Annotated
 import pytest
 
 from omnipy.config.data import DataConfig
-from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta, DataClassCreator
+from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta, DataClassCreator
 from omnipy.util.helpers import SnapshotHolder
 
 from .helpers.mocks import MockDataset, MockModel

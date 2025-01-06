@@ -1,7 +1,7 @@
 from typing import Generic, TypeVar
 
 from omnipy.data.dataset import Dataset
-import omnipy.util.pydantic as pyd
+import omnipy.util._pydantic as pyd
 
 from .models import (CsvTableModel,
                      TableDictOfDictsOfJsonScalarsModel,

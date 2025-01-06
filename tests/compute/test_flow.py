@@ -5,14 +5,14 @@ from typing import Annotated, Callable, cast, Type
 import pytest
 import pytest_cases as pc
 
+from omnipy.compute._job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
-from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.task import TaskTemplate
 from omnipy.shared.exceptions import JobStateException
-from omnipy.shared.protocols._compute.job import IsFuncArgJobTemplate
-from omnipy.shared.protocols.compute import (IsDagFlowTemplate,
-                                             IsFuncFlowTemplate,
-                                             IsLinearFlowTemplate)
+from omnipy.shared.protocols.compute._job import IsFuncArgJobTemplate
+from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
+                                                 IsFuncFlowTemplate,
+                                                 IsLinearFlowTemplate)
 
 from .cases.flows import FlowCase
 from .cases.raw.functions import data_import_func, empty_dict_func, format_to_string_func

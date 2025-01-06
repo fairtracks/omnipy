@@ -12,14 +12,13 @@ from ..json.datasets import JsonDataset
 from ..json.models import JsonModel
 from ..raw.datasets import BytesDataset, StrDataset
 from ..raw.models import BytesModel, StrModel
+from .constants import DEFAULT_BACKOFF_STRATEGY, DEFAULT_RETRIES, DEFAULT_RETRY_STATUSES
 from .datasets import HttpUrlDataset
 from .models import HttpUrlModel
 
-DEFAULT_RETRIES = 5
-DEFAULT_BACKOFF_STRATEGY = BackoffStrategy.EXPONENTIAL
-DEFAULT_RETRY_STATUSES = (408, 425, 429, 500, 502, 503, 504)
+_JsonDatasetT = TypeVar('_JsonDatasetT', bound=Dataset)
 
-BACKOFF_STRATEGY_2_RETRY_CLS = {
+_BACKOFF_STRATEGY_2_RETRY_CLS = {
     BackoffStrategy.EXPONENTIAL: ExponentialRetry,
     BackoffStrategy.JITTER: JitterRetry,
     BackoffStrategy.FIBONACCI: FibonacciRetry,
@@ -42,7 +41,7 @@ def _get_retry_client(
     retry_backoff_strategy: BackoffStrategy,
 ) -> RetryClient:
 
-    retry_cls = BACKOFF_STRATEGY_2_RETRY_CLS[retry_backoff_strategy]
+    retry_cls = _BACKOFF_STRATEGY_2_RETRY_CLS[retry_backoff_strategy]
     retry_options = retry_cls(
         attempts=retry_attempts,
         statuses=retry_http_statuses,
@@ -134,14 +133,11 @@ async def get_bytes_from_api_endpoint(
     return output_data
 
 
-JsonDatasetT = TypeVar('JsonDatasetT', bound=Dataset)
-
-
 @TaskTemplate()
 async def async_load_urls_into_new_dataset(
     urls: HttpUrlDataset,
-    dataset_cls: type[JsonDatasetT] = JsonDataset,
-) -> JsonDatasetT:
+    dataset_cls: type[_JsonDatasetT] = JsonDataset,
+) -> _JsonDatasetT:
     dataset = dataset_cls()
     await dataset.load(urls)
     return dataset
@@ -150,8 +146,8 @@ async def async_load_urls_into_new_dataset(
 @TaskTemplate()
 def load_urls_into_new_dataset(
     urls: HttpUrlDataset,
-    dataset_cls: type[JsonDatasetT] = JsonDataset,
-) -> JsonDatasetT:
+    dataset_cls: type[_JsonDatasetT] = JsonDataset,
+) -> _JsonDatasetT:
     dataset = dataset_cls()
     dataset.load(urls)
     return dataset

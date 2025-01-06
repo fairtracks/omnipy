@@ -3,13 +3,13 @@ from typing import Callable, Generic, ParamSpec, TypeAlias, TypeVar
 from typing_extensions import NamedTuple
 
 from omnipy import DagFlow, FuncFlow, LinearFlow
-from omnipy.compute.job import JobTemplateMixin
+from omnipy.compute._job import JobTemplateMixin
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-from omnipy.shared.protocols.compute import (IsDagFlowTemplate,
-                                             IsFuncFlowTemplate,
-                                             IsLinearFlowTemplate,
-                                             IsTaskTemplate)
+from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
+                                                 IsFuncFlowTemplate,
+                                                 IsLinearFlowTemplate,
+                                                 IsTaskTemplate)
 
 CallP = ParamSpec('CallP')
 RetT = TypeVar('RetT')

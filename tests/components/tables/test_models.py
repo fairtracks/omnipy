@@ -1,8 +1,8 @@
 import pytest
 
 from omnipy.components.tables.models import PydanticRecordModel, TableOfPydanticRecordsModel
-from omnipy.util.pydantic import ValidationError
-import omnipy.util.pydantic as pyd
+from omnipy.util._pydantic import ValidationError
+import omnipy.util._pydantic as pyd
 
 
 def test_pydantic_record_model_all_required() -> None:

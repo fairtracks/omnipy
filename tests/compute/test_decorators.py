@@ -11,10 +11,10 @@ from omnipy.compute.flow import (DagFlow,
                                  LinearFlow,
                                  LinearFlowTemplateCore)
 from omnipy.compute.task import Task, TaskTemplate, TaskTemplateCore
-from omnipy.shared.protocols.compute import (IsDagFlowTemplate,
-                                             IsFuncFlowTemplate,
-                                             IsLinearFlowTemplate,
-                                             IsTaskTemplate)
+from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
+                                                 IsFuncFlowTemplate,
+                                                 IsLinearFlowTemplate,
+                                                 IsTaskTemplate)
 
 from .helpers.mocks import MockLocalRunner
 

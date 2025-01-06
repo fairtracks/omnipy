@@ -4,6 +4,7 @@ from typing import Annotated, cast, Generator
 import pytest
 import pytest_cases as pc
 
+from omnipy.compute._job import JobBase
 from omnipy.compute.flow import (DagFlow,
                                  DagFlowTemplate,
                                  DagFlowTemplateCore,
@@ -13,7 +14,6 @@ from omnipy.compute.flow import (DagFlow,
                                  LinearFlow,
                                  LinearFlowTemplate,
                                  LinearFlowTemplateCore)
-from omnipy.compute.job import JobBase
 
 from .helpers.classes import (AnyFlowClsTuple,
                               FlowClsTuple,
@@ -48,16 +48,16 @@ def mock_local_runner(
 @pytest.fixture(scope='function')
 def mock_job_datetime(
         mock_datetime: Annotated[datetime, pytest.fixture]) -> Generator[datetime, None, None]:
-    import omnipy.compute.job_creator
+    import omnipy.compute._job_creator
 
-    prev_datetime = omnipy.compute.job_creator.datetime
-    omnipy.compute.job_creator.datetime = mock_datetime  # type: ignore[misc, assignment]
+    prev_datetime = omnipy.compute._job_creator.datetime
+    omnipy.compute._job_creator.datetime = mock_datetime  # type: ignore[misc, assignment]
 
     mock_datetime.now()
 
     yield mock_datetime
 
-    omnipy.compute.job_creator.datetime = prev_datetime  # type: ignore[misc]
+    omnipy.compute._job_creator.datetime = prev_datetime  # type: ignore[misc]
 
 
 @pc.fixture(scope='function')

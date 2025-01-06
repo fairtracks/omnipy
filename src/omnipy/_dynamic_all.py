@@ -2,7 +2,7 @@ import os
 from types import ModuleType
 
 import omnipy
-from omnipy.util.pydantic import lenient_isinstance, lenient_issubclass
+from omnipy.util._pydantic import lenient_isinstance, lenient_issubclass
 
 # TODO: Finish implementation of dynamic __all__ generation. Possibly useful together with Poe the
 #       Poet (https://poethepoet.natn.io/poetry_plugin.html) for generating a fixed __all__ list as
@@ -21,8 +21,8 @@ _all_element_names: set[str] = set()
 
 _exclude_modules: set[str] = {
     '_dynamic_all',
-    'components.frozen',  # Recursive frozen models crashes mypy v1.10 + wait for pydantic support
-    'components.fairtracks',
+    'components._frozen',  # Recursive frozen models crashes mypy v1.10 + wait for pydantic support
+    'components._fairtracks',
 }
 _exclude_attrs: set[str] = {
     'JobMixin',
@@ -37,13 +37,13 @@ _exclude_attrs: set[str] = {
 _all_modules: dict[str, ModuleType] = {}
 
 if not __all__:
+    from .compute._job import JobTemplateMixin
     from .compute.flow import (DagFlow,
                                DagFlowTemplate,
                                FuncFlow,
                                FuncFlowTemplate,
                                LinearFlow,
                                LinearFlowTemplate)
-    from .compute.job import JobTemplateMixin
     from .compute.task import Task, TaskTemplate
     from .data.dataset import Dataset, MultiModelDataset
     from .data.model import Model

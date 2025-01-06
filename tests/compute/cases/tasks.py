@@ -7,7 +7,7 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.data.model import Model
-from omnipy.shared.protocols.compute import IsTask, IsTaskTemplate
+from omnipy.shared.protocols.compute.job import IsTask, IsTaskTemplate
 
 from .raw.functions import (action_func_no_params,
                             action_func_with_params,

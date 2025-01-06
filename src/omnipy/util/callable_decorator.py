@@ -4,16 +4,15 @@ from typing import Callable, cast, Concatenate, ParamSpec, TypeVar
 
 from omnipy.shared.protocols._util import IsCallableParamAfterSelf
 
-InitP = ParamSpec('InitP')
-CallP = ParamSpec('CallP')
-RetT = TypeVar('RetT', contravariant=True)
-
-DecoratedT = TypeVar('DecoratedT')
+_InitP = ParamSpec('_InitP')
+_CallP = ParamSpec('_CallP')
+_RetT = TypeVar('_RetT', contravariant=True)
+_DecoratedT = TypeVar('_DecoratedT')
 
 
 def callable_decorator_cls(  # noqa: C901
-    cls: Callable[Concatenate[Callable[CallP, RetT], InitP], DecoratedT]) -> \
-        Callable[InitP, Callable[[Callable[CallP, RetT]], DecoratedT]]:
+    cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP], _DecoratedT]) -> \
+        Callable[_InitP, Callable[[Callable[_CallP, _RetT]], _DecoratedT]]:
     """
     "Meta-decorator" that allows any class to function as a decorator for a callable.
 
@@ -29,7 +28,7 @@ def callable_decorator_cls(  # noqa: C901
         cls._wrapped_call: Callable = cast(  # type: ignore[attr-defined, misc]
             Callable, cls.__call__)  # type: ignore[operator]
 
-    def _forward_call_to_obj_if_callable(self, *args: object, **kwargs: object) -> DecoratedT:
+    def _forward_call_to_obj_if_callable(self, *args: object, **kwargs: object) -> _DecoratedT:
         """
         __call__ method at the class level which forward the call to instance-level call methods,
         if present (hardcoded as '_obj_call()'). This is needed due to the peculiarity that Python
@@ -65,7 +64,7 @@ def callable_decorator_cls(  # noqa: C901
 
     _wrapped_new: Callable = cls.__new__
 
-    def _new_wrapper(cls, *args: object, **kwargs: object) -> DecoratedT:
+    def _new_wrapper(cls, *args: object, **kwargs: object) -> _DecoratedT:
         if _wrapped_new is object.__new__:
             obj = _wrapped_new(cls)
         else:
@@ -79,14 +78,14 @@ def callable_decorator_cls(  # noqa: C901
         def _init_wrapper(self, *args: object, **kwargs: object) -> None:
             args_list = list(args)
 
-            def _init(callable_arg: Callable[CallP, RetT]) -> None:
+            def _init(callable_arg: Callable[_CallP, _RetT]) -> None:
                 _wrapped_init(self, callable_arg, *args_list, **kwargs)
                 update_wrapper(self, callable_arg, updated=[])
 
             if len(args_list) == 1 and _real_callable(args_list[0]):
                 # If no parentheses used in the decoration syntax (e.g. @decorator)
                 # then decorate the callable directly
-                _callable_arg = cast(Callable[CallP, RetT], args_list[0])
+                _callable_arg = cast(Callable[_CallP, _RetT], args_list[0])
                 args_list.pop(0)
                 _init(_callable_arg)
             else:
@@ -95,7 +94,7 @@ def callable_decorator_cls(  # noqa: C901
                 # class-level __call__ method. When this method is called, the provided
                 # _callable_arg is decorated.
                 def _init_as_obj_call_method(
-                        self, _callable_arg: Callable[CallP, RetT]) -> DecoratedT:  # noqa
+                        self, _callable_arg: Callable[_CallP, _RetT]) -> _DecoratedT:  # noqa
                     _init(_callable_arg)
                     del self._obj_call
                     return self
@@ -110,4 +109,4 @@ def callable_decorator_cls(  # noqa: C901
 
     setattr(cls, '__new__', _new_wrapper)
 
-    return cast(Callable[InitP, Callable[[Callable[CallP, RetT]], DecoratedT]], cls)
+    return cast(Callable[_InitP, Callable[[Callable[_CallP, _RetT]], _DecoratedT]], cls)

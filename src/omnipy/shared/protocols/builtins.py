@@ -1,14 +1,15 @@
 from abc import abstractmethod
-from typing import AbstractSet, Any, Iterable, Iterator, Mapping, overload, Protocol, Sized
+from typing import AbstractSet, Any, Iterable, Iterator, Mapping, overload, Protocol, Sized, TypeVar
 
-from omnipy.shared.protocols.data import KeyT, ValCoT, ValT
+_KeyT = TypeVar('_KeyT')
+_ValCovT = TypeVar('_ValCovT', covariant=True)
 
 
-class SupportsKeysAndGetItem(Protocol[KeyT, ValCoT]):
-    def keys(self) -> Iterable[KeyT]:
+class SupportsKeysAndGetItem(Protocol[_KeyT, _ValCovT]):
+    def keys(self) -> Iterable[_KeyT]:
         ...
 
-    def __getitem__(self, __key: KeyT) -> ValCoT:
+    def __getitem__(self, __key: _KeyT) -> _ValCovT:
         ...
 
 
@@ -60,37 +61,40 @@ class IsSet(Protocol):
         ...
 
 
-class IsMapping(Protocol[KeyT, ValT]):
+_ValT = TypeVar('_ValT')
+
+
+class IsMapping(Protocol[_KeyT, _ValT]):
     """
     IsMapping is a protocol with the same interface as the abstract class Mapping.
     It is the protocol of a generic container for associating key/value pairs.
     """
     @abstractmethod
-    def __getitem__(self, key: KeyT) -> ValT:
+    def __getitem__(self, key: _KeyT) -> _ValT:
         raise KeyError
 
-    def get(self, key: KeyT, /) -> ValT | None:
+    def get(self, key: _KeyT, /) -> _ValT | None:
         """
         D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.
         """
         ...
 
-    def __contains__(self, key: KeyT) -> bool:
+    def __contains__(self, key: _KeyT) -> bool:
         ...
 
-    def keys(self) -> 'IsKeysView[KeyT]':
+    def keys(self) -> 'IsKeysView[_KeyT]':
         """
         D.keys() -> a set-like object providing a view on D's keys
         """
         ...
 
-    def items(self) -> 'IsItemsView[KeyT, ValT]':
+    def items(self) -> 'IsItemsView[_KeyT, _ValT]':
         """
         D.items() -> a set-like object providing a view on D's items
         """
         ...
 
-    def values(self) -> 'IsValuesView[ValT]':
+    def values(self) -> 'IsValuesView[_ValT]':
         """
         D.values() -> an object providing a view on D's values
         """
@@ -108,31 +112,31 @@ class IsMappingView(Sized, Protocol):
         ...
 
 
-class IsKeysView(IsMappingView, Protocol[KeyT]):
-    def __contains__(self, key: KeyT) -> bool:
+class IsKeysView(IsMappingView, Protocol[_KeyT]):
+    def __contains__(self, key: _KeyT) -> bool:
         ...
 
-    def __iter__(self) -> Iterator[KeyT]:
-        ...
-
-
-class IsItemsView(IsMappingView, Protocol[KeyT, ValT]):
-    def __contains__(self, item: tuple[KeyT, ValT]) -> bool:
-        ...
-
-    def __iter__(self) -> Iterator[tuple[KeyT, ValT]]:
+    def __iter__(self) -> Iterator[_KeyT]:
         ...
 
 
-class IsValuesView(IsMappingView, Protocol[ValT]):
-    def __contains__(self, value: ValT) -> bool:
+class IsItemsView(IsMappingView, Protocol[_KeyT, _ValT]):
+    def __contains__(self, item: tuple[_KeyT, _ValT]) -> bool:
         ...
 
-    def __iter__(self) -> Iterator[ValT]:
+    def __iter__(self) -> Iterator[tuple[_KeyT, _ValT]]:
         ...
 
 
-class IsMutableMapping(IsMapping[KeyT, ValT], Protocol[KeyT, ValT]):
+class IsValuesView(IsMappingView, Protocol[_ValT]):
+    def __contains__(self, value: _ValT) -> bool:
+        ...
+
+    def __iter__(self) -> Iterator[_ValT]:
+        ...
+
+
+class IsMutableMapping(IsMapping[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
     """
     IsMutableMapping is a protocol with the same interface as the abstract class MutableMapping.
     It is the protocol of a generic mutable container for associating key/value pairs.
@@ -140,21 +144,21 @@ class IsMutableMapping(IsMapping[KeyT, ValT], Protocol[KeyT, ValT]):
     def __setitem__(
         self,
         selector: str | int | slice | Iterable[str | int],
-        data_obj: ValT | Mapping[str, ValT] | Iterable[ValT],
+        data_obj: _ValT | Mapping[str, _ValT] | Iterable[_ValT],
     ) -> None:
         ...
 
-    def __delitem__(self, key: KeyT) -> None:
+    def __delitem__(self, key: _KeyT) -> None:
         ...
 
-    def pop(self, key: KeyT, /) -> ValT:
+    def pop(self, key: _KeyT, /) -> _ValT:
         """
         D.pop(k[,d]) -> v, remove specified key and return the corresponding value.
         If key is not found, d is returned if given, otherwise KeyError is raised.
         """
         ...
 
-    def popitem(self) -> tuple[KeyT, ValT]:
+    def popitem(self) -> tuple[_KeyT, _ValT]:
         """
         D.popitem() -> (k, v), remove and return some (key, value) pair
            as a 2-tuple; but raise KeyError if D is empty.
@@ -168,18 +172,18 @@ class IsMutableMapping(IsMapping[KeyT, ValT], Protocol[KeyT, ValT]):
         ...
 
     @overload
-    def update(self, other: SupportsKeysAndGetItem[KeyT, ValT], /, **kwargs: ValT) -> None:
+    def update(self, other: SupportsKeysAndGetItem[_KeyT, _ValT], /, **kwargs: _ValT) -> None:
         ...
 
     @overload
-    def update(self, other: Iterable[tuple[KeyT, ValT]], /, **kwargs: ValT) -> None:
+    def update(self, other: Iterable[tuple[_KeyT, _ValT]], /, **kwargs: _ValT) -> None:
         ...
 
     @overload
-    def update(self, /, **kwargs: ValT) -> None:
+    def update(self, /, **kwargs: _ValT) -> None:
         ...
 
-    def update(self, other: Any = None, /, **kwargs: ValT) -> None:
+    def update(self, other: Any = None, /, **kwargs: _ValT) -> None:
         """
         D.update([E, ]**F) -> None.  Update D from mapping/iterable E and F.
         If E present and has a .keys() method, does:     for k in E: D[k] = E[k]
@@ -188,7 +192,7 @@ class IsMutableMapping(IsMapping[KeyT, ValT], Protocol[KeyT, ValT]):
         """
         ...
 
-    def setdefault(self, key: KeyT, default: ValT, /):
+    def setdefault(self, key: _KeyT, default: _ValT, /):
         """
         D.setdefault(k[,d]) -> D.get(k,d), also set D[k]=d if k not in D
         """

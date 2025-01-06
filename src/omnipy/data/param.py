@@ -5,15 +5,15 @@ from typing import Any, Callable, cast, Concatenate, ParamSpec
 
 from typing_extensions import dataclass_transform, TypeVar
 
-import omnipy.util.pydantic as pyd
+import omnipy.util._pydantic as pyd
 
-ModelT = TypeVar('ModelT')
-DatasetT = TypeVar('DatasetT')
-ParamsT = TypeVar('ParamsT')
-ParamsP = ParamSpec('ParamsP')
+_ModelT = TypeVar('_ModelT')
+_DatasetT = TypeVar('_DatasetT')
+_ParamsT = TypeVar('_ParamsT')
+_ParamsP = ParamSpec('_ParamsP')
 
 
-class ParamsMeta(pyd.ModelMetaclass):
+class _ParamsMeta(pyd.ModelMetaclass):
     def __init__(cls, name: str, bases: tuple[type, ...], namespace: dict[str, object]) -> None:
         super().__init__(name, bases, namespace)
 
@@ -58,7 +58,7 @@ class ParamsMeta(pyd.ModelMetaclass):
         super().__setattr__(attr, value)
 
 
-class ParamsBase(pyd.BaseModel, metaclass=ParamsMeta):
+class ParamsBase(pyd.BaseModel, metaclass=_ParamsMeta):
     class Config:
         arbitrary_types_allowed = True
         smart_union = True
@@ -85,10 +85,10 @@ class ParamsBase(pyd.BaseModel, metaclass=ParamsMeta):
 
 
 def bind_adjust_model_func(
-    clone_model_func: Callable[..., type[ModelT]],
-    params_cls: Callable[ParamsP, Any],
-) -> Callable[Concatenate[str, ParamsP], type[ModelT]]:
-    def _func(model_name: str, *args: ParamsP.args, **kwargs: ParamsP.kwargs) -> type[ModelT]:
+    clone_model_func: Callable[..., type[_ModelT]],
+    params_cls: Callable[_ParamsP, Any],
+) -> Callable[Concatenate[str, _ParamsP], type[_ModelT]]:
+    def _func(model_name: str, *args: _ParamsP.args, **kwargs: _ParamsP.kwargs) -> type[_ModelT]:
         if len(args) > 0:
             raise AttributeError(f'Positional arguments are not supported for '
                                  f'{params_cls.__module__}.{params_cls.__name__}')
@@ -103,17 +103,17 @@ def bind_adjust_model_func(
 
 
 def bind_adjust_dataset_func(
-    clone_dataset_func: Callable[..., type[DatasetT]],
-    model_cls: type[ModelT],
-    params_cls: Callable[ParamsP, Any],
-) -> Callable[Concatenate[str, str, ParamsP], type[DatasetT]]:
-    def _func(dataset_name: str, model_name: str, *args: ParamsP.args,
-              **kwargs: ParamsP.kwargs) -> type[DatasetT]:
+    clone_dataset_func: Callable[..., type[_DatasetT]],
+    model_cls: type[_ModelT],
+    params_cls: Callable[_ParamsP, Any],
+) -> Callable[Concatenate[str, str, _ParamsP], type[_DatasetT]]:
+    def _func(dataset_name: str, model_name: str, *args: _ParamsP.args,
+              **kwargs: _ParamsP.kwargs) -> type[_DatasetT]:
         if len(args) > 0:
             raise AttributeError(f'Positional arguments are not supported for '
                                  f'{params_cls.__module__}.{params_cls.__name__}')
-        new_model_cls: type[ModelT] = cast(
-            type[ModelT],
+        new_model_cls: type[_ModelT] = cast(
+            type[_ModelT],
             model_cls.adjust(model_name, **kwargs),  # type: ignore[attr-defined]
         )
 
@@ -128,7 +128,7 @@ def bind_adjust_dataset_func(
 
 
 @dataclass_transform(kw_only_default=True)
-def params_dataclass(cls: type[ParamsT]) -> type[ParamsT]:
+def params_dataclass(cls: type[_ParamsT]) -> type[_ParamsT]:
     def wrap(cls):
         return dataclass(cls, kw_only=True)
 

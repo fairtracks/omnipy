@@ -14,38 +14,52 @@ from typing import (Any,
 
 from typing_extensions import TypeVar
 
-from omnipy.data.data_class_creator import DataClassBase
+from omnipy.data._data_class_creator import DataClassBase
 from omnipy.shared.typedefs import TypeForm
+from omnipy.util._pydantic import is_none_type, lenient_isinstance, lenient_issubclass
 from omnipy.util.helpers import format_classname_with_params, is_union
-from omnipy.util.pydantic import is_none_type, lenient_isinstance, lenient_issubclass
 
-T = TypeVar('T')
-U = TypeVar('U')
+__all__ = [
+    'TypeVarStore1',
+    'TypeVarStore2',
+    'TypeVarStore3',
+    'TypeVarStore4',
+    'DoubleTypeVarStore',
+    'is_model_instance',
+    'is_model_subclass',
+    'obj_or_model_contents_isinstance',
+    'PendingData',
+    'FailedData',
+    'HasData',
+]
+
+_T = TypeVar('_T')
+_U = TypeVar('_U')
 
 
-class TypeVarStore(Generic[T]):
-    def __init__(self, t: T) -> None:
+class TypeVarStore(Generic[_T]):
+    def __init__(self, t: _T) -> None:
         raise ValueError()
 
 
-class DoubleTypeVarStore(Generic[T, U]):
-    def __init__(self, t: T | U) -> None:
+class DoubleTypeVarStore(Generic[_T, _U]):
+    def __init__(self, t: _T | _U) -> None:
         raise ValueError()
 
 
-class TypeVarStore1(TypeVarStore[T], Generic[T]):
+class TypeVarStore1(TypeVarStore[_T], Generic[_T]):
     ...
 
 
-class TypeVarStore2(TypeVarStore[T], Generic[T]):
+class TypeVarStore2(TypeVarStore[_T], Generic[_T]):
     ...
 
 
-class TypeVarStore3(TypeVarStore[T], Generic[T]):
+class TypeVarStore3(TypeVarStore[_T], Generic[_T]):
     ...
 
 
-class TypeVarStore4(TypeVarStore[T], Generic[T]):
+class TypeVarStore4(TypeVarStore[_T], Generic[_T]):
     ...
 
 

@@ -5,7 +5,7 @@ from typing_extensions import TypeVar
 
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
-import omnipy.util.pydantic as pyd
+import omnipy.util._pydantic as pyd
 
 from .classes import MyFloatObject
 

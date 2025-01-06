@@ -6,22 +6,19 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import obj_or_model_contents_isinstance
 from omnipy.data.model import Model
 
+from ._functions import flatten_outer_level_of_nested_record
+from .constants import ID_KEY
 from .datasets import (JsonDataset,
                        JsonDictDataset,
                        JsonListDataset,
                        JsonListOfDictsDataset,
                        JsonListOfDictsOfScalarsDataset)
-from .functions import flatten_outer_level_of_nested_record
 from .typedefs import (JsonDict,
                        JsonDictOfListsOfDicts,
                        JsonDictOfScalars,
                        JsonList,
                        JsonListOfDicts,
                        JsonListOfDictsOfScalars)
-
-ID_KEY = '_omnipy_id'
-REF_KEY = '_omnipy_ref'
-DEFAULT_KEY = '__root__'
 
 
 @TaskTemplate()

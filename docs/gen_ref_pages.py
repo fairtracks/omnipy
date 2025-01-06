@@ -6,7 +6,12 @@ IGNORED_PATHS = [
     'src/omnipy/_dynamic_all.py',
 ]
 
-INHERIT_MEMBERS_PATHS = ['src/omnipy/shared/protocols/']
+INHERIT_MEMBERS_PATHS = [
+    'src/omnipy/shared/protocols/',
+    'src/omnipy/compute/',
+    'src/omnipy/data/',
+    'src/omnipy/engine/',
+]
 
 nav = mkdocs_gen_files.Nav()
 

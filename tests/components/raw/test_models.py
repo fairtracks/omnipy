@@ -18,7 +18,7 @@ from omnipy.components.raw.models import (BytesModel,
                                           SplitToLinesModel,
                                           StrModel)
 from omnipy.data.model import Model
-from omnipy.util.pydantic import ValidationError
+from omnipy.util._pydantic import ValidationError
 
 from ...helpers.protocols import AssertModelOrValFunc
 

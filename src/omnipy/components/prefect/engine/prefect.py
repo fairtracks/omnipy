@@ -6,7 +6,7 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
-from omnipy.shared.protocols.compute import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.shared.protocols.compute.job import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
 from omnipy.shared.protocols.config import IsPrefectEngineConfig
 from omnipy.util.helpers import resolve
 

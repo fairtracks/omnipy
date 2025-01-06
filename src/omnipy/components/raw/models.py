@@ -212,12 +212,12 @@ class JoinColumnsToLinesModel(_JoinItemsByTabParamsMixin, _JoinSubitemsToItemsMo
     )
 
 
-NestedStrWithListModelsT = TypeVar(
-    'NestedStrWithListModelsT', bound='NestedStrWithListModels', default='str')
+_NestedStrWithListModelsT = TypeVar(
+    '_NestedStrWithListModelsT', bound='NestedStrWithListModels', default='str')
 
 
-class ListOfNestedStrModel(Model[list[NestedStrWithListModelsT]],
-                           Generic[NestedStrWithListModelsT]):
+class ListOfNestedStrModel(Model[list[_NestedStrWithListModelsT]],
+                           Generic[_NestedStrWithListModelsT]):
     ...
 
 
@@ -225,8 +225,8 @@ NestedStrWithListModels: TypeAlias = str | ListOfNestedStrModel
 
 ListOfNestedStrModel.update_forward_refs()
 
-NestedStrNoListModelsT = TypeVar(
-    'NestedStrNoListModelsT', default=str | list['NestedStrNoListModelsT'])  # type: ignore[misc]
+_NestedStrNoListModelsT = TypeVar(
+    '_NestedStrNoListModelsT', default=str | list['_NestedStrNoListModelsT'])  # type: ignore[misc]
 
 
 class _NestedItemsParamsMixin:
@@ -237,7 +237,7 @@ class _NestedItemsParamsMixin:
     @classmethod
     def _split_data_according_to_delimiters(cls,
                                             data: NestedStrWithListModels,
-                                            level: int = 0) -> str | list[NestedStrNoListModelsT]:
+                                            level: int = 0) -> str | list[_NestedStrNoListModelsT]:
 
         raw_data = cast(str | list[NestedStrWithListModels],
                         data if isinstance(data, str) else data.contents)
@@ -270,7 +270,7 @@ class _NestedItemsParamsMixin:
                 cls._split_data_according_to_delimiters(item, level=next_level)
                 for item in split_data
             ]
-            return cast(list[NestedStrNoListModelsT], split_data_no_list_models)
+            return cast(list[_NestedStrNoListModelsT], split_data_no_list_models)
         else:
             if num_delimiters == 0:
                 assert isinstance(data, str), \
@@ -280,15 +280,15 @@ class _NestedItemsParamsMixin:
                     (f'Data is nested higher than permitted by the number of delimiters in '
                      f'Params (={num_delimiters}).')
 
-        return cast(list[NestedStrNoListModelsT], split_data)
+        return cast(list[_NestedStrNoListModelsT], split_data)
 
 
-class _NestedSplitToItemsModel(Model[list[NestedStrNoListModelsT] | str],
-                               Generic[NestedStrNoListModelsT],
+class _NestedSplitToItemsModel(Model[list[_NestedStrNoListModelsT] | str],
+                               Generic[_NestedStrNoListModelsT],
                                _NestedItemsParamsMixin):
     @classmethod
-    def _parse_data(cls,
-                    data: list[NestedStrNoListModelsT] | str) -> list[NestedStrNoListModelsT] | str:
+    def _parse_data(
+            cls, data: list[_NestedStrNoListModelsT] | str) -> list[_NestedStrNoListModelsT] | str:
         str_parsed_data = Model[NestedStrWithListModels](data).contents
         return cls._split_data_according_to_delimiters(str_parsed_data)
 
@@ -301,12 +301,12 @@ class NestedSplitToItemsModel(_NestedSplitToItemsModel):
     )
 
 
-class _NestedJoinItemsModel(Model[str | list[NestedStrNoListModelsT]],
-                            Generic[NestedStrNoListModelsT],
+class _NestedJoinItemsModel(Model[str | list[_NestedStrNoListModelsT]],
+                            Generic[_NestedStrNoListModelsT],
                             _NestedItemsParamsMixin):
     @classmethod
     def _join_data_according_to_delimiters(cls,
-                                           data: str | list[NestedStrNoListModelsT],
+                                           data: str | list[_NestedStrNoListModelsT],
                                            level: int = 0) -> str:
         if isinstance(data, str):
             return data
@@ -317,7 +317,7 @@ class _NestedJoinItemsModel(Model[str | list[NestedStrNoListModelsT]],
         if num_delimiters > next_level:
             raw_data = [
                 cls._join_data_according_to_delimiters(
-                    cast(str | list[NestedStrNoListModelsT], item), level=next_level)
+                    cast(str | list[_NestedStrNoListModelsT], item), level=next_level)
                 for item in data
             ]
         else:
@@ -326,7 +326,7 @@ class _NestedJoinItemsModel(Model[str | list[NestedStrNoListModelsT]],
         return cls.Params.delimiters[level].join(raw_data) if len(raw_data) > 0 else ''
 
     @classmethod
-    def _parse_data(cls, data: str | list[NestedStrNoListModelsT]) -> str:
+    def _parse_data(cls, data: str | list[_NestedStrNoListModelsT]) -> str:
         str_parsed_data = Model[NestedStrWithListModels](data).contents
         return cls._join_data_according_to_delimiters(
             cls._split_data_according_to_delimiters(str_parsed_data))

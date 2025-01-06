@@ -5,8 +5,8 @@ from urllib.parse import quote, unquote
 from pydantic_core import Url
 
 from omnipy.data.model import Model
+import omnipy.util._pydantic as pyd
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
-import omnipy.util.pydantic as pyd
 
 from ..raw.models import NestedJoinItemsModel, NestedSplitToItemsModel
 

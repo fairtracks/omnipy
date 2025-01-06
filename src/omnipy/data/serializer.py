@@ -3,15 +3,13 @@ from io import BytesIO
 import os
 import tarfile
 from tarfile import TarInfo
-from typing import Any, Callable, cast, IO, ParamSpec, Type
+from typing import Any, Callable, cast, IO, Type
 
 from omnipy.data.helpers import HasData
-from omnipy.shared.protocols._hub import CanLog
 from omnipy.shared.protocols.data import IsDataset, IsSerializer, IsTarFileSerializer
+from omnipy.shared.protocols.hub.log import CanLog
+from omnipy.util._pydantic import ValidationError
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
-from omnipy.util.pydantic import ValidationError
-
-LogP = ParamSpec('LogP')
 
 
 class Serializer(ABC):

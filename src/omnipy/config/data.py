@@ -5,7 +5,7 @@ from typing import Any
 from omnipy.config import ConfigBase
 from omnipy.shared.enums import BackoffStrategy
 from omnipy.shared.protocols.config import IsHttpConfig
-import omnipy.util.pydantic as pyd
+import omnipy.util._pydantic as pyd
 
 _terminal_size = shutil.get_terminal_size()
 

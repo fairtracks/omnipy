@@ -16,16 +16,16 @@ from .models import (BytesModel,
                      SplitToLinesModel,
                      StrModel)
 
-BytesModelT = TypeVar('BytesModelT', default=BytesModel)
-StrModelT = TypeVar('StrModelT', default=StrModel)
-SplitToItemsModelT = TypeVar('SplitToItemsModelT', default=SplitToItemsModel)
-JoinItemsModelT = TypeVar('JoinItemsModelT', default=JoinItemsModel)
-SplitItemsToSubitemsModelT = TypeVar(
-    'SplitItemsToSubitemsModelT', default=SplitItemsToSubitemsModel)
-JoinSubitemsToItemsModelT = TypeVar('JoinSubitemsToItemsModelT', default=JoinSubitemsToItemsModel)
+_BytesModelT = TypeVar('_BytesModelT', default=BytesModel)
+_StrModelT = TypeVar('_StrModelT', default=StrModel)
+_SplitToItemsModelT = TypeVar('_SplitToItemsModelT', default=SplitToItemsModel)
+_JoinItemsModelT = TypeVar('_JoinItemsModelT', default=JoinItemsModel)
+_SplitItemsToSubitemsModelT = TypeVar(
+    '_SplitItemsToSubitemsModelT', default=SplitItemsToSubitemsModel)
+_JoinSubitemsToItemsModelT = TypeVar('_JoinSubitemsToItemsModelT', default=JoinSubitemsToItemsModel)
 
 
-class _BytesDataset(Dataset[BytesModelT], Generic[BytesModelT]):
+class _BytesDataset(Dataset[_BytesModelT], Generic[_BytesModelT]):
     ...
 
 
@@ -37,7 +37,7 @@ class BytesDataset(_BytesDataset[BytesModel]):
     )
 
 
-class _StrDataset(Dataset[StrModelT], Generic[StrModelT]):
+class _StrDataset(Dataset[_StrModelT], Generic[_StrModelT]):
     ...
 
 
@@ -49,7 +49,7 @@ class StrDataset(_StrDataset[StrModel]):
     )
 
 
-class _SplitToItemsDataset(Dataset[SplitToItemsModelT], Generic[SplitToItemsModelT]):
+class _SplitToItemsDataset(Dataset[_SplitToItemsModelT], Generic[_SplitToItemsModelT]):
     ...
 
 
@@ -69,7 +69,7 @@ class SplitToLinesDataset(_SplitToItemsDataset[SplitToLinesModel]):
     )
 
 
-class _JoinItemsDataset(Dataset[JoinItemsModelT], Generic[JoinItemsModelT]):
+class _JoinItemsDataset(Dataset[_JoinItemsModelT], Generic[_JoinItemsModelT]):
     ...
 
 
@@ -89,8 +89,8 @@ class JoinLinesDataset(_JoinItemsDataset[JoinLinesModel]):
     )
 
 
-class _SplitItemsToSubitemsDataset(Dataset[SplitItemsToSubitemsModelT],
-                                   Generic[SplitItemsToSubitemsModelT]):
+class _SplitItemsToSubitemsDataset(Dataset[_SplitItemsToSubitemsModelT],
+                                   Generic[_SplitItemsToSubitemsModelT]):
     ...
 
 
@@ -102,8 +102,8 @@ class SplitLinesToColumnsDataset(_SplitItemsToSubitemsDataset[SplitLinesToColumn
     )
 
 
-class _JoinSubitemsToItemsDataset(Dataset[JoinSubitemsToItemsModelT],
-                                  Generic[JoinSubitemsToItemsModelT]):
+class _JoinSubitemsToItemsDataset(Dataset[_JoinSubitemsToItemsModelT],
+                                  Generic[_JoinSubitemsToItemsModelT]):
     ...
 
 

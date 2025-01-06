@@ -1,5 +1,6 @@
+from omnipy import MultiModelDataset
 from omnipy.compute.task import TaskTemplate
-from omnipy.data.dataset import Dataset, MultiModelDataset
+from omnipy.data.dataset import Dataset
 
 from ...helpers.models import GeneralTable, record_schema_factory, RecordSchemaDef, TableTemplate
 

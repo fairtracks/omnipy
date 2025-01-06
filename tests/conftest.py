@@ -12,11 +12,11 @@ from unittest import mock
 import pytest
 import pytest_cases as pc
 
-from omnipy.compute.job_creator import JobBaseMeta, JobCreator
+from omnipy.compute._job_creator import JobBaseMeta, JobCreator
 from omnipy.config.data import DataConfig
 from omnipy.config.root_log import RootLogConfig
-from omnipy.data.data_class_creator import DataClassBaseMeta, DataClassCreator
-from omnipy.shared.protocols.hub import IsRuntime
+from omnipy.data._data_class_creator import DataClassBaseMeta, DataClassCreator
+from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.shared.typedefs import TypeForm
 
 from .helpers.functions import assert_model, assert_val

@@ -11,8 +11,8 @@ from typing import Annotated
 import pytest
 
 from omnipy.config.root_log import RootLogConfig
-from omnipy.hub.log.root_log import RootLogObjects
-from omnipy.shared.protocols.hub import IsRuntime
+from omnipy.hub.log._root_log import RootLogObjects
+from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util.helpers import get_datetime_format
 
 from ..helpers.functions import (assert_log_line_from_stream,

@@ -1,8 +1,8 @@
 from collections import defaultdict
 from typing import Callable, DefaultDict
 
-from omnipy.shared.protocols.hub import IsRuntime
-import omnipy.util.pydantic as pyd
+from omnipy.shared.protocols.hub.runtime import IsRuntime
+import omnipy.util._pydantic as pyd
 
 
 def _subscribers_factory():

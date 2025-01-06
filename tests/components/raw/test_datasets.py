@@ -14,8 +14,8 @@ from omnipy.components.raw.datasets import (BytesDataset,
                                             SplitToLinesDataset,
                                             StrDataset)
 from omnipy.data.model import Model
-from omnipy.shared.protocols.hub import IsRuntime
-from omnipy.util.pydantic import ValidationError
+from omnipy.shared.protocols.hub.runtime import IsRuntime
+from omnipy.util._pydantic import ValidationError
 
 from ...helpers.protocols import AssertModelOrValFunc
 
