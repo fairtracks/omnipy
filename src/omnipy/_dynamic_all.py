@@ -1,8 +1,19 @@
+from enum import Enum
 import os
 from types import ModuleType
 
 import omnipy
 from omnipy.util._pydantic import lenient_isinstance, lenient_issubclass
+
+from . import (BackoffStrategy,
+               ConfigOutputStorageProtocolOptions,
+               ConfigPersistOutputsOptions,
+               ConfigRestoreOutputsOptions,
+               EngineChoice,
+               OutputStorageProtocolOptions,
+               PersistOutputsOptions,
+               RestoreOutputsOptions,
+               RunState)
 
 # TODO: Finish implementation of dynamic __all__ generation. Possibly useful together with Poe the
 #       Poet (https://poethepoet.natn.io/poetry_plugin.html) for generating a fixed __all__ list as
@@ -73,6 +84,15 @@ if not __all__:
         'ParamsBase',
         'runtime',
         'print_exception',
+        'RestoreOutputsOptions',
+        'ConfigRestoreOutputsOptions',
+        'PersistOutputsOptions',
+        'BackoffStrategy',
+        'OutputStorageProtocolOptions',
+        'ConfigPersistOutputsOptions',
+        'ConfigOutputStorageProtocolOptions',
+        'RunState',
+        'EngineChoice',
     ]
     _all_element_names = set(__all__)
 
@@ -84,12 +104,13 @@ if not __all__:
         for attr in dir(module):
             if not attr.startswith('_') and attr not in _all_element_names:
                 val = getattr(module, attr)
-                if attr in _exclude_attrs:
+                if attr in _exclude_attrs or not val.__class__.__module__.startswith('omnipy'):
                     continue
 
                 if lenient_issubclass(val, Model) \
                         or lenient_issubclass(val, Dataset) \
-                        or lenient_isinstance(val, JobTemplateMixin):
+                        or lenient_isinstance(val, JobTemplateMixin) \
+                        or lenient_issubclass(val, Enum):
                     print(f'Adding {attr}')
                     _all_element_names.add(attr)
                     globals()[attr] = val
