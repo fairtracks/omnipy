@@ -2,7 +2,7 @@ from typing import Annotated
 
 import pytest
 
-from omnipy.api.protocols.public.hub import IsRuntime
+from omnipy.shared.protocols.public.hub import IsRuntime
 
 
 @pytest.fixture(scope='function', autouse=True)

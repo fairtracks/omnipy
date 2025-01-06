@@ -4,9 +4,9 @@ import pandas as pd
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.components.pandas.models import PandasModel
 from omnipy.components.pandas.tasks import cartesian_product, join_tables
+from omnipy.shared.protocols.public.hub import IsRuntime
 
 from .cases.tablepairs import TablePairCase
 from .helpers.functions import convert_testcase_table_to_dataframe, get_target_as_pandas_model

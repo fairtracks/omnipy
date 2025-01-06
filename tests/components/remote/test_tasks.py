@@ -11,9 +11,9 @@ import pytest_cases as pc
 
 import omnipy
 from omnipy import Dataset, JsonDataset
-from omnipy.api.exceptions import ShouldNotOccurException
 from omnipy.components.remote.datasets import HttpUrlDataset
 from omnipy.components.remote.models import HttpUrlModel
+from omnipy.shared.exceptions import ShouldNotOccurException
 
 from ...helpers.protocols import AssertModelOrValFunc
 from .cases.request_types import RequestTypeCase

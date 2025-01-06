@@ -2,9 +2,9 @@ from collections import defaultdict
 import shutil
 from typing import Any
 
-from omnipy.api.enums import BackoffStrategy
-from omnipy.api.protocols.public.config import IsHttpConfig
 from omnipy.config import ConfigBase
+from omnipy.shared.enums import BackoffStrategy
+from omnipy.shared.protocols.public.config import IsHttpConfig
 import omnipy.util.pydantic as pyd
 
 _terminal_size = shutil.get_terminal_size()

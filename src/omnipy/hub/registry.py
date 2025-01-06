@@ -2,9 +2,9 @@ from collections import defaultdict
 from datetime import datetime
 from typing import DefaultDict
 
-from omnipy.api.enums import RunState, RunStateLogMessages
-from omnipy.api.protocols.private.compute.mixins import IsUniquelyNamedJob
 from omnipy.hub.log.mixin import LogMixin
+from omnipy.shared.enums import RunState, RunStateLogMessages
+from omnipy.shared.protocols.private.compute.mixins import IsUniquelyNamedJob
 
 
 class RunStateRegistry(LogMixin):

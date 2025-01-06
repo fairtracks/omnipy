@@ -1,13 +1,13 @@
 from datetime import timedelta
 from typing import Any, Callable, Type
 
-from omnipy.api.protocols.public.compute import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
-from omnipy.api.protocols.public.config import IsPrefectEngineConfig
 from omnipy.config.engine import PrefectEngineConfig
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
+from omnipy.shared.protocols.public.compute import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.shared.protocols.public.config import IsPrefectEngineConfig
 from omnipy.util.helpers import resolve
 
 from .. import prefect_flow, prefect_task, PrefectFlow, PrefectTask, task_input_hash

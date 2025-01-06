@@ -1,11 +1,11 @@
 from datetime import datetime
 from typing import ParamSpec, Protocol, TypeVar
 
-from omnipy.api.protocols.private.compute.job import (IsFuncArgJob,
-                                                      IsFuncArgJobTemplate,
-                                                      IsTaskTemplateArgsJob,
-                                                      IsTaskTemplateArgsJobTemplate)
-from omnipy.api.protocols.private.compute.mixins import IsNestedContext
+from omnipy.shared.protocols.private.compute.job import (IsFuncArgJob,
+                                                         IsFuncArgJobTemplate,
+                                                         IsTaskTemplateArgsJob,
+                                                         IsTaskTemplateArgsJobTemplate)
+from omnipy.shared.protocols.private.compute.mixins import IsNestedContext
 
 CallP = ParamSpec('CallP')
 RetT = TypeVar('RetT')

@@ -6,7 +6,6 @@ from typing import Annotated, TypeAlias
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.components.json.models import (_JsonAnyDictM,
                                            _JsonAnyListM,
                                            _JsonDictM,
@@ -21,6 +20,7 @@ from omnipy.components.json.models import (_JsonAnyDictM,
                                            JsonModel,
                                            JsonScalarModel)
 from omnipy.components.json.typedefs import JsonScalar
+from omnipy.shared.protocols.public.hub import IsRuntime
 from omnipy.util.pydantic import ValidationError
 
 from ...helpers.protocols import AssertModelOrValFunc

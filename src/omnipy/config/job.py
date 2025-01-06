@@ -1,13 +1,13 @@
 import os
 from pathlib import Path
 
-from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
-                              ConfigPersistOutputsOptions,
-                              ConfigRestoreOutputsOptions)
-from omnipy.api.protocols.public.config import (IsLocalOutputStorageConfig,
-                                                IsOutputStorageConfig,
-                                                IsS3OutputStorageConfig)
 from omnipy.config import ConfigBase
+from omnipy.shared.enums import (ConfigOutputStorageProtocolOptions,
+                                 ConfigPersistOutputsOptions,
+                                 ConfigRestoreOutputsOptions)
+from omnipy.shared.protocols.public.config import (IsLocalOutputStorageConfig,
+                                                   IsOutputStorageConfig,
+                                                   IsS3OutputStorageConfig)
 import omnipy.util.pydantic as pyd
 
 

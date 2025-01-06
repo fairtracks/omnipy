@@ -2,18 +2,18 @@ import logging
 from logging.handlers import RotatingFileHandler
 from typing import Protocol, runtime_checkable
 
-from omnipy.api.enums import EngineChoice
-from omnipy.api.protocols.private.compute.job_creator import IsJobConfigHolder
-from omnipy.api.protocols.private.data import IsDataClassCreator
-from omnipy.api.protocols.private.engine import IsEngine
-from omnipy.api.protocols.private.log import IsRunStateRegistry
-from omnipy.api.protocols.private.util import IsDataPublisher
-from omnipy.api.protocols.public.config import (IsDataConfig,
-                                                IsJobConfig,
-                                                IsLocalRunnerConfig,
-                                                IsPrefectEngineConfig,
-                                                IsRootLogConfig)
-from omnipy.api.protocols.public.data import IsSerializerRegistry
+from omnipy.shared.enums import EngineChoice
+from omnipy.shared.protocols.private.compute.job_creator import IsJobConfigHolder
+from omnipy.shared.protocols.private.data import IsDataClassCreator
+from omnipy.shared.protocols.private.engine import IsEngine
+from omnipy.shared.protocols.private.log import IsRunStateRegistry
+from omnipy.shared.protocols.private.util import IsDataPublisher
+from omnipy.shared.protocols.public.config import (IsDataConfig,
+                                                   IsJobConfig,
+                                                   IsLocalRunnerConfig,
+                                                   IsPrefectEngineConfig,
+                                                   IsRootLogConfig)
+from omnipy.shared.protocols.public.data import IsSerializerRegistry
 
 
 @runtime_checkable

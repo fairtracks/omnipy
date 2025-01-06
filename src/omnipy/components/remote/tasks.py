@@ -4,9 +4,9 @@ from aiohttp import ClientResponse, ClientSession
 from aiohttp_retry import ExponentialRetry, FibonacciRetry, JitterRetry, RandomRetry, RetryClient
 from typing_extensions import TypeVar
 
-from omnipy.api.enums import BackoffStrategy
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
+from omnipy.shared.enums import BackoffStrategy
 
 from ..json.datasets import JsonDataset
 from ..json.models import JsonModel

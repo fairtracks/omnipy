@@ -6,8 +6,8 @@ from typing import Any, Callable, Generic, ParamSpec, TypeVar
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.protocols.public.compute import IsTask, IsTaskTemplate
 from omnipy.data.model import Model
+from omnipy.shared.protocols.public.compute import IsTask, IsTaskTemplate
 
 from .raw.functions import (action_func_no_params,
                             action_func_with_params,

@@ -3,8 +3,8 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.enums import EngineChoice
-from omnipy.api.protocols.public.hub import IsRuntime
+from omnipy.shared.enums import EngineChoice
+from omnipy.shared.protocols.public.hub import IsRuntime
 
 
 @pytest.fixture(scope='function')

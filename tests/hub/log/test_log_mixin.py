@@ -6,8 +6,8 @@ from typing import Annotated, Type
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.hub.log.mixin import LogMixin
+from omnipy.shared.protocols.public.hub import IsRuntime
 from omnipy.util.mixin import DynamicMixinAcceptor
 
 from ..helpers.functions import assert_log_line_from_stream, format_datetime_obj

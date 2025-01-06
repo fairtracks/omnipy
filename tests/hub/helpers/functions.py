@@ -2,7 +2,7 @@ from datetime import datetime
 from io import TextIOBase
 import os
 
-from omnipy.api.protocols.public.hub import IsRuntime
+from omnipy.shared.protocols.public.hub import IsRuntime
 from omnipy.util.helpers import get_datetime_format
 
 

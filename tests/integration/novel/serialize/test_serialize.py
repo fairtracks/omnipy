@@ -3,14 +3,14 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.enums import (ConfigOutputStorageProtocolOptions,
-                              ConfigPersistOutputsOptions,
-                              ConfigRestoreOutputsOptions,
-                              OutputStorageProtocolOptions,
-                              PersistOutputsOptions,
-                              RestoreOutputsOptions)
-from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.compute.task import FuncArgJobBase
+from omnipy.shared.enums import (ConfigOutputStorageProtocolOptions,
+                                 ConfigPersistOutputsOptions,
+                                 ConfigRestoreOutputsOptions,
+                                 OutputStorageProtocolOptions,
+                                 PersistOutputsOptions,
+                                 RestoreOutputsOptions)
+from omnipy.shared.protocols.public.hub import IsRuntime
 
 
 @pc.parametrize_with_cases('case_tmpl', cases='.cases.jobs', has_tag='task', prefix='case_config_')

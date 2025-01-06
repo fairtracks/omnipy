@@ -4,12 +4,12 @@ from typing import Any, Callable, Generic, ParamSpec, TypeVar
 
 import pytest_cases as pc
 
-from omnipy.api.protocols.public.compute import (IsDagFlowTemplate,
-                                                 IsFuncFlowTemplate,
-                                                 IsLinearFlowTemplate,
-                                                 IsTaskTemplate)
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
+from omnipy.shared.protocols.public.compute import (IsDagFlowTemplate,
+                                                    IsFuncFlowTemplate,
+                                                    IsLinearFlowTemplate,
+                                                    IsTaskTemplate)
 
 from .tasks import TaskCase
 

@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Callable, DefaultDict
 
-from omnipy.api.protocols.public.hub import IsRuntime
+from omnipy.shared.protocols.public.hub import IsRuntime
 import omnipy.util.pydantic as pyd
 
 

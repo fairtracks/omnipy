@@ -17,9 +17,9 @@ import weakref
 
 import pytest
 
-from omnipy.api.protocols.private.util import HasContents, IsSnapshotHolder
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
+from omnipy.shared.protocols.private.util import HasContents, IsSnapshotHolder
 from omnipy.util.helpers import (all_type_variants,
                                  called_from_omnipy_tests,
                                  ensure_non_str_byte_iterable,

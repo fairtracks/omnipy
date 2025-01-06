@@ -2,10 +2,10 @@ from abc import ABCMeta
 from contextlib import AbstractContextManager
 from datetime import datetime
 
-from omnipy.api.protocols.private.compute.job_creator import IsJobCreator
-from omnipy.api.protocols.private.engine import IsEngine
-from omnipy.api.protocols.public.config import IsJobConfig
 from omnipy.config.job import JobConfig
+from omnipy.shared.protocols.private.compute.job_creator import IsJobCreator
+from omnipy.shared.protocols.private.engine import IsEngine
+from omnipy.shared.protocols.public.config import IsJobConfig
 
 
 class JobCreator(AbstractContextManager):

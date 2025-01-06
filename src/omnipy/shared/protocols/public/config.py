@@ -2,12 +2,12 @@ from collections import defaultdict
 from io import TextIOBase
 from typing import Protocol, runtime_checkable
 
-from omnipy.api.enums import (BackoffStrategy,
-                              ConfigOutputStorageProtocolOptions,
-                              ConfigPersistOutputsOptions,
-                              ConfigRestoreOutputsOptions)
-from omnipy.api.protocols.private.util import IsDataPublisher
-from omnipy.api.typedefs import LocaleType
+from omnipy.shared.enums import (BackoffStrategy,
+                                 ConfigOutputStorageProtocolOptions,
+                                 ConfigPersistOutputsOptions,
+                                 ConfigRestoreOutputsOptions)
+from omnipy.shared.protocols.private.util import IsDataPublisher
+from omnipy.shared.typedefs import LocaleType
 
 
 @runtime_checkable

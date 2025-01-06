@@ -6,7 +6,7 @@ from typing import cast
 from aiohttp import ClientSession, TraceConfig
 from aiolimiter import AsyncLimiter
 
-from omnipy.api.protocols.private.util import IsRateLimitingClientSession
+from omnipy.shared.protocols.private.util import IsRateLimitingClientSession
 
 
 class RateLimitingClientSession(ClientSession):

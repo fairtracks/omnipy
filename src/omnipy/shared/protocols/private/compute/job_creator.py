@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Protocol, runtime_checkable
 
-from omnipy.api.protocols.private.compute.mixins import IsNestedContext
-from omnipy.api.protocols.private.engine import IsEngine
-from omnipy.api.protocols.public.config import IsJobConfig
+from omnipy.shared.protocols.private.compute.mixins import IsNestedContext
+from omnipy.shared.protocols.private.engine import IsEngine
+from omnipy.shared.protocols.public.config import IsJobConfig
 
 
 @runtime_checkable

@@ -5,15 +5,15 @@ import logging
 from types import MappingProxyType
 from typing import Any, Callable, cast, Generic, Hashable, ParamSpec, Type, TypeVar
 
-from omnipy.api.exceptions import JobStateException, ShouldNotOccurException
-from omnipy.api.protocols.private.compute.job import IsJob, IsJobBase, IsJobTemplate
-from omnipy.api.protocols.private.compute.job_creator import IsJobCreator
-from omnipy.api.protocols.private.engine import IsEngine
-from omnipy.api.protocols.public.config import IsJobConfig
-from omnipy.api.typedefs import JobT, JobTemplateT
 from omnipy.compute.job_creator import JobBaseMeta
 from omnipy.compute.mixins.name import NameJobBaseMixin, NameJobMixin
 from omnipy.hub.log.mixin import LogMixin
+from omnipy.shared.exceptions import JobStateException, ShouldNotOccurException
+from omnipy.shared.protocols.private.compute.job import IsJob, IsJobBase, IsJobTemplate
+from omnipy.shared.protocols.private.compute.job_creator import IsJobCreator
+from omnipy.shared.protocols.private.engine import IsEngine
+from omnipy.shared.protocols.public.config import IsJobConfig
+from omnipy.shared.typedefs import JobT, JobTemplateT
 from omnipy.util.helpers import as_dictable, create_merged_dict
 from omnipy.util.mixin import DynamicMixinAcceptor
 

@@ -3,19 +3,19 @@ import os
 from pathlib import Path
 from typing import cast, Generator, Type
 
-from omnipy.api.enums import ConfigPersistOutputsOptions as ConfigPersistOpts
-from omnipy.api.enums import ConfigRestoreOutputsOptions as ConfigRestoreOpts
-from omnipy.api.enums import (OutputStorageProtocolOptions,
-                              PersistOutputsOptions,
-                              RestoreOutputsOptions)
-from omnipy.api.protocols.private.compute.job import IsJob, IsJobBase
-from omnipy.api.protocols.public.compute import IsFlow
-from omnipy.api.protocols.public.config import IsJobConfig
-from omnipy.api.protocols.public.data import IsDataset, IsSerializerRegistry
 from omnipy.components import get_serializer_registry
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.name import NameJobBaseMixin
 from omnipy.data.dataset import Dataset
+from omnipy.shared.enums import ConfigPersistOutputsOptions as ConfigPersistOpts
+from omnipy.shared.enums import ConfigRestoreOutputsOptions as ConfigRestoreOpts
+from omnipy.shared.enums import (OutputStorageProtocolOptions,
+                                 PersistOutputsOptions,
+                                 RestoreOutputsOptions)
+from omnipy.shared.protocols.private.compute.job import IsJob, IsJobBase
+from omnipy.shared.protocols.public.compute import IsFlow
+from omnipy.shared.protocols.public.config import IsJobConfig
+from omnipy.shared.protocols.public.data import IsDataset, IsSerializerRegistry
 
 PersistOpts = PersistOutputsOptions
 RestoreOpts = RestoreOutputsOptions

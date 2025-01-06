@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from omnipy.api.typedefs import TypeForm
+from omnipy.shared.typedefs import TypeForm
 
 
 class AssertModelOrValFunc(Protocol):

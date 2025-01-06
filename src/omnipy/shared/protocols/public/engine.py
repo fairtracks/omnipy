@@ -1,7 +1,7 @@
 from typing import Callable, Protocol, runtime_checkable
 
-from omnipy.api.protocols.private.engine import IsEngine
-from omnipy.api.protocols.public.compute import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.shared.protocols.private.engine import IsEngine
+from omnipy.shared.protocols.public.compute import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
 
 
 @runtime_checkable

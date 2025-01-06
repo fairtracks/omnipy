@@ -1,7 +1,6 @@
 import asyncio
 from typing import Callable, Generic, ParamSpec, TypeVar
 
-from omnipy.api.typedefs import GeneralDecorator, JobT, JobTemplateT
 from omnipy.compute.job import JobBase
 from omnipy.compute.mixins.auto_async import AutoAsyncJobBaseMixin
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
@@ -9,6 +8,7 @@ from omnipy.compute.mixins.iterate import IterateFuncJobBaseMixin
 from omnipy.compute.mixins.params import ParamsFuncJobBaseMixin
 from omnipy.compute.mixins.result_key import ResultKeyFuncJobBaseMixin
 from omnipy.compute.mixins.serialize import SerializerFuncJobBaseMixin
+from omnipy.shared.typedefs import GeneralDecorator, JobT, JobTemplateT
 
 CallP = ParamSpec('CallP')
 RetT = TypeVar('RetT')

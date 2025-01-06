@@ -2,10 +2,10 @@ from typing import Any, cast, get_args
 
 from typing_extensions import TypeVar
 
-from omnipy.api.exceptions import FailedDataError, PendingDataError
-from omnipy.api.protocols.public.data import IsDataset
-from omnipy.api.typedefs import TypeForm
 from omnipy.data.helpers import FailedData, HasData, is_model_subclass, PendingData
+from omnipy.shared.exceptions import FailedDataError, PendingDataError
+from omnipy.shared.protocols.public.data import IsDataset
+from omnipy.shared.typedefs import TypeForm
 from omnipy.util.decorators import call_super_if_available
 from omnipy.util.helpers import is_union
 

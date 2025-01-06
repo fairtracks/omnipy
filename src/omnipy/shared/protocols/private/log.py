@@ -2,8 +2,8 @@ from datetime import datetime
 from logging import INFO, Logger
 from typing import Protocol, runtime_checkable
 
-from omnipy.api.enums import RunState
-from omnipy.api.protocols.private.compute.mixins import IsUniquelyNamedJob
+from omnipy.shared.enums import RunState
+from omnipy.shared.protocols.private.compute.mixins import IsUniquelyNamedJob
 
 
 class CanLog(Protocol):

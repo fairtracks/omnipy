@@ -2,9 +2,9 @@ from contextlib import AbstractContextManager
 from datetime import datetime
 from typing import cast
 
-from omnipy.api.protocols.private.compute.job import IsJob
-from omnipy.api.protocols.private.compute.mixins import IsNestedContext
 from omnipy.compute.job import JobBase
+from omnipy.shared.protocols.private.compute.job import IsJob
+from omnipy.shared.protocols.private.compute.mixins import IsNestedContext
 
 
 class FlowContextJobMixin:

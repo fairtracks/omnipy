@@ -8,8 +8,8 @@ from aiostream.stream import enumerate as aenumerate
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.enums import RunState
-from omnipy.api.protocols.private.compute.job import IsJob
+from omnipy.shared.enums import RunState
+from omnipy.shared.protocols.private.compute.job import IsJob
 from omnipy.util.helpers import resolve
 
 from ..helpers.classes import JobCase

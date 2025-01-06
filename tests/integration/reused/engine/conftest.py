@@ -3,16 +3,16 @@ from typing import Annotated, Callable, Type
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.protocols.private.compute.job import IsJobTemplate
-from omnipy.api.protocols.private.engine import IsEngine
-from omnipy.api.protocols.private.log import IsRunStateRegistry
-from omnipy.api.protocols.public.compute import (IsDagFlowTemplate,
-                                                 IsFuncFlowTemplate,
-                                                 IsLinearFlowTemplate,
-                                                 IsTaskTemplate)
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
 from omnipy.hub.registry import RunStateRegistry
+from omnipy.shared.protocols.private.compute.job import IsJobTemplate
+from omnipy.shared.protocols.private.engine import IsEngine
+from omnipy.shared.protocols.private.log import IsRunStateRegistry
+from omnipy.shared.protocols.public.compute import (IsDagFlowTemplate,
+                                                    IsFuncFlowTemplate,
+                                                    IsLinearFlowTemplate,
+                                                    IsTaskTemplate)
 
 from ....engine.conftest import all_engines
 from ....engine.helpers.classes import JobCase, JobType

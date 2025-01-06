@@ -5,21 +5,21 @@ from typing import Any, Callable, Iterable, Mapping, ParamSpec, Protocol, runtim
 
 from typing_extensions import TypeVar
 
-from omnipy.api.enums import (OutputStorageProtocolOptions,
-                              PersistOutputsOptions,
-                              RestoreOutputsOptions)
-from omnipy.api.protocols.private.compute.job_creator import IsJobCreator
-from omnipy.api.protocols.private.compute.mixins import IsUniquelyNamedJob
-from omnipy.api.protocols.private.engine import IsEngine
-from omnipy.api.protocols.private.log import CanLog
-from omnipy.api.protocols.public.config import IsJobConfig
-from omnipy.api.protocols.public.data import IsDataset
-from omnipy.api.typedefs import (GeneralDecorator,
-                                 JobT,
-                                 JobTemplateT,
-                                 TaskTemplateContraT,
-                                 TaskTemplateCovT,
-                                 TaskTemplateT)
+from omnipy.shared.enums import (OutputStorageProtocolOptions,
+                                 PersistOutputsOptions,
+                                 RestoreOutputsOptions)
+from omnipy.shared.protocols.private.compute.job_creator import IsJobCreator
+from omnipy.shared.protocols.private.compute.mixins import IsUniquelyNamedJob
+from omnipy.shared.protocols.private.engine import IsEngine
+from omnipy.shared.protocols.private.log import CanLog
+from omnipy.shared.protocols.public.config import IsJobConfig
+from omnipy.shared.protocols.public.data import IsDataset
+from omnipy.shared.typedefs import (GeneralDecorator,
+                                    JobT,
+                                    JobTemplateT,
+                                    TaskTemplateContraT,
+                                    TaskTemplateCovT,
+                                    TaskTemplateT)
 
 CallP = ParamSpec('CallP')
 RetCovT = TypeVar('RetCovT', covariant=True)

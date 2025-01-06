@@ -1,8 +1,8 @@
 import pytest_cases as pc
 
-from omnipy.api.protocols.public.compute import IsLinearFlowTemplate, IsTaskTemplate
 from omnipy.compute.flow import LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
+from omnipy.shared.protocols.public.compute import IsLinearFlowTemplate, IsTaskTemplate
 
 
 @pc.case(tags=['task'])

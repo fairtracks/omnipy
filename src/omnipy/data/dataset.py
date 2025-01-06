@@ -9,8 +9,6 @@ from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKI
 
 from typing_extensions import TypeVar
 
-from omnipy.api.protocols.public.data import IsDataset, IsModel, IsMultiModelDataset
-from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  is_model_instance,
@@ -24,6 +22,8 @@ from omnipy.data.selector import (create_updated_mapping,
                                   prepare_selected_items_with_iterable_data,
                                   prepare_selected_items_with_mapping_data,
                                   select_keys)
+from omnipy.shared.protocols.public.data import IsDataset, IsModel, IsMultiModelDataset
+from omnipy.shared.typedefs import TypeForm
 from omnipy.util.decorators import call_super_if_available
 from omnipy.util.helpers import (get_default_if_typevar,
                                  get_event_loop_and_check_if_loop_is_running,

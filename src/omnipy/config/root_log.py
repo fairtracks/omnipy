@@ -4,8 +4,8 @@ import logging
 from pathlib import Path
 import sys
 
-from omnipy.api.typedefs import LocaleType
 from omnipy.config import ConfigBase
+from omnipy.shared.typedefs import LocaleType
 import omnipy.util.pydantic as pyd
 
 

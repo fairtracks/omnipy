@@ -5,7 +5,6 @@ from typing import Annotated, Iterator
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.components.raw.datasets import (BytesDataset,
                                             JoinColumnsToLinesDataset,
                                             JoinItemsDataset,
@@ -15,6 +14,7 @@ from omnipy.components.raw.datasets import (BytesDataset,
                                             SplitToLinesDataset,
                                             StrDataset)
 from omnipy.data.model import Model
+from omnipy.shared.protocols.public.hub import IsRuntime
 from omnipy.util.pydantic import ValidationError
 
 from ...helpers.protocols import AssertModelOrValFunc

@@ -3,12 +3,12 @@ from typing import Annotated
 import pytest
 
 from omnipy import Dataset, JsonDataset, Model, PandasDataset, StrDataset
-from omnipy.api.protocols.public.data import IsSerializerRegistry
-from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.components.json.serializers import JsonDatasetToTarFileSerializer
 from omnipy.components.pandas.serializers import PandasDatasetToTarFileSerializer
 from omnipy.components.raw.serializers import RawStrDatasetToTarFileSerializer
 from omnipy.data.serializer import SerializerRegistry
+from omnipy.shared.protocols.public.data import IsSerializerRegistry
+from omnipy.shared.protocols.public.hub import IsRuntime
 
 
 @pytest.fixture

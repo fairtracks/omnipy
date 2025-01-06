@@ -3,10 +3,6 @@ from typing import Annotated, Callable
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.protocols.public.compute import (IsDagFlowTemplate,
-                                                 IsFuncFlowTemplate,
-                                                 IsLinearFlowTemplate,
-                                                 IsTaskTemplate)
 from omnipy.compute.flow import (DagFlow,
                                  DagFlowTemplateCore,
                                  FuncFlow,
@@ -15,6 +11,10 @@ from omnipy.compute.flow import (DagFlow,
                                  LinearFlow,
                                  LinearFlowTemplateCore)
 from omnipy.compute.task import Task, TaskTemplate, TaskTemplateCore
+from omnipy.shared.protocols.public.compute import (IsDagFlowTemplate,
+                                                    IsFuncFlowTemplate,
+                                                    IsLinearFlowTemplate,
+                                                    IsTaskTemplate)
 
 from .helpers.mocks import MockLocalRunner
 

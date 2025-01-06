@@ -9,18 +9,22 @@ from typing import Any, Callable, Type
 from inflection import underscore
 from slugify import slugify
 
-from omnipy.api.enums import RunState
-from omnipy.api.protocols.private.compute.job import IsJob
-from omnipy.api.protocols.private.engine import IsEngine
-from omnipy.api.protocols.public.compute import IsDagFlow, IsFlow, IsFuncFlow, IsLinearFlow, IsTask
-from omnipy.api.protocols.public.config import IsEngineConfig
-from omnipy.api.typedefs import GeneralDecorator
 from omnipy.components.prefect import generate_slug
 from omnipy.config import ConfigBase
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
+from omnipy.shared.enums import RunState
+from omnipy.shared.protocols.private.compute.job import IsJob
+from omnipy.shared.protocols.private.engine import IsEngine
+from omnipy.shared.protocols.public.compute import (IsDagFlow,
+                                                    IsFlow,
+                                                    IsFuncFlow,
+                                                    IsLinearFlow,
+                                                    IsTask)
+from omnipy.shared.protocols.public.config import IsEngineConfig
+from omnipy.shared.typedefs import GeneralDecorator
 from omnipy.util.callable_decorator import callable_decorator_cls
 
 

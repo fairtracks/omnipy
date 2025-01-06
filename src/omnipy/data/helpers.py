@@ -14,8 +14,8 @@ from typing import (Any,
 
 from typing_extensions import TypeVar
 
-from omnipy.api.typedefs import TypeForm
 from omnipy.data.data_class_creator import DataClassBase
+from omnipy.shared.typedefs import TypeForm
 from omnipy.util.helpers import format_classname_with_params, is_union
 from omnipy.util.pydantic import is_none_type, lenient_isinstance, lenient_issubclass
 

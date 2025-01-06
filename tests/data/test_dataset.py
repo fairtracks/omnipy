@@ -8,11 +8,11 @@ import pytest
 import pytest_cases as pc
 from typing_extensions import TypeVar
 
-from omnipy.api.exceptions import FailedDataError, PendingDataError
-from omnipy.api.protocols.public.hub import IsRuntime
 from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
+from omnipy.shared.exceptions import FailedDataError, PendingDataError
+from omnipy.shared.protocols.public.hub import IsRuntime
 from omnipy.util.pydantic import ValidationError
 import omnipy.util.pydantic as pyd
 

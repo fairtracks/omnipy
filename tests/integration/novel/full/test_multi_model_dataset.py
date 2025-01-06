@@ -6,8 +6,8 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.enums import RunState
 from omnipy.data.dataset import Dataset, MultiModelDataset
+from omnipy.shared.enums import RunState
 from omnipy.util.pydantic import ValidationError
 
 from ....engine.helpers.functions import assert_job_state

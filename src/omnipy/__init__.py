@@ -2,15 +2,6 @@ __version__ = '0.19.0'
 
 import os
 
-from omnipy.api.enums import (BackoffStrategy,
-                              ConfigOutputStorageProtocolOptions,
-                              ConfigPersistOutputsOptions,
-                              ConfigRestoreOutputsOptions,
-                              EngineChoice,
-                              OutputStorageProtocolOptions,
-                              PersistOutputsOptions,
-                              RestoreOutputsOptions,
-                              RunState)
 from omnipy.components.general.models import (Chain2,
                                               Chain3,
                                               Chain4,
@@ -173,6 +164,15 @@ from omnipy.data.param import (bind_adjust_dataset_func,
                                params_dataclass,
                                ParamsBase)
 from omnipy.hub.runtime import runtime
+from omnipy.shared.enums import (BackoffStrategy,
+                                 ConfigOutputStorageProtocolOptions,
+                                 ConfigPersistOutputsOptions,
+                                 ConfigRestoreOutputsOptions,
+                                 EngineChoice,
+                                 OutputStorageProtocolOptions,
+                                 PersistOutputsOptions,
+                                 RestoreOutputsOptions,
+                                 RunState)
 from omnipy.util.contexts import print_exception
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))

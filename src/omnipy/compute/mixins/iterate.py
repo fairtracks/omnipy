@@ -4,8 +4,6 @@ import inspect
 from inspect import Parameter, signature
 from typing import Any, Callable, cast, Coroutine
 
-from omnipy.api.protocols.private.compute.job import IsJobBase, IsPlainFuncArgJobBase
-from omnipy.api.protocols.public.data import IsDataset
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.typedefs import (InputDatasetT,
                                             InputTypeT,
@@ -14,6 +12,8 @@ from omnipy.compute.mixins.typedefs import (InputDatasetT,
 from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import FailedData, is_model_subclass, PendingData
 from omnipy.data.model import Model
+from omnipy.shared.protocols.private.compute.job import IsJobBase, IsPlainFuncArgJobBase
+from omnipy.shared.protocols.public.data import IsDataset
 
 # Functions
 

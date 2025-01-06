@@ -3,10 +3,10 @@ import asyncio
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.protocols.public.compute import IsTaskTemplate
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
+from omnipy.shared.protocols.public.compute import IsTaskTemplate
 from omnipy.util.pydantic import ValidationError
 
 from ..cases.iterate_tasks import IterateDataFilesCase

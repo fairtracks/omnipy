@@ -2,12 +2,12 @@ from typing import Callable, cast, Generic, ParamSpec, TypeVar
 
 from typing_extensions import Concatenate
 
-from omnipy.api.protocols.private.compute.job import HasFuncArgJobTemplateInit
-from omnipy.api.protocols.private.engine import IsEngine
-from omnipy.api.protocols.public.compute import IsTask, IsTaskTemplate
-from omnipy.api.protocols.public.engine import IsTaskRunnerEngine
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import JobMixin, JobTemplateMixin
+from omnipy.shared.protocols.private.compute.job import HasFuncArgJobTemplateInit
+from omnipy.shared.protocols.private.engine import IsEngine
+from omnipy.shared.protocols.public.compute import IsTask, IsTaskTemplate
+from omnipy.shared.protocols.public.engine import IsTaskRunnerEngine
 from omnipy.util.callable_decorator import callable_decorator_cls
 
 InitP = ParamSpec('InitP')

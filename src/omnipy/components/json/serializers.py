@@ -1,7 +1,7 @@
 from typing import IO, Type
 
-from omnipy.api.protocols.public.data import IsDataset
 from omnipy.data.serializer import TarFileSerializer
+from omnipy.shared.protocols.public.data import IsDataset
 
 from .datasets import _JsonBaseDataset, JsonDataset
 from .models import JsonModel

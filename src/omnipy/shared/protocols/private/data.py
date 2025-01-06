@@ -1,7 +1,7 @@
 from typing import Callable, ContextManager, Protocol, runtime_checkable, TypeVar
 
-from omnipy.api.protocols.private.util import HasContents, IsSnapshotHolder
-from omnipy.api.protocols.public.config import IsDataConfig
+from omnipy.shared.protocols.private.util import HasContents, IsSnapshotHolder
+from omnipy.shared.protocols.public.config import IsDataConfig
 
 _ObjT = TypeVar('_ObjT', bound=HasContents)
 _ContentsT = TypeVar('_ContentsT', bound=object)

@@ -2,9 +2,9 @@ from typing import Callable, Generic, ParamSpec
 
 from typing_extensions import TypeVar
 
-from omnipy.api.protocols.public.compute import IsTaskTemplate
-from omnipy.api.typedefs import JobT, JobTemplateT
 from omnipy.compute.func_job import FuncArgJobBase
+from omnipy.shared.protocols.public.compute import IsTaskTemplate
+from omnipy.shared.typedefs import JobT, JobTemplateT
 
 # TODO: Update TaskTemplateArgsJobBase typing to also allow sub-flows
 

@@ -6,13 +6,6 @@ from typing import Annotated, Type
 import pytest
 import pytest_cases as pc
 
-from omnipy.api.enums import (BackoffStrategy,
-                              ConfigOutputStorageProtocolOptions,
-                              ConfigPersistOutputsOptions,
-                              ConfigRestoreOutputsOptions,
-                              EngineChoice)
-from omnipy.api.protocols.public.config import IsEngineConfig
-from omnipy.api.protocols.public.hub import IsRuntime, IsRuntimeConfig
 from omnipy.components.prefect.engine.prefect import PrefectEngine
 from omnipy.compute.job import JobBase
 from omnipy.compute.job_creator import JobCreator
@@ -26,6 +19,13 @@ from omnipy.engine.local import LocalRunner
 from omnipy.hub.log.root_log import RootLogObjects
 from omnipy.hub.registry import RunStateRegistry
 from omnipy.hub.runtime import RuntimeConfig, RuntimeObjects
+from omnipy.shared.enums import (BackoffStrategy,
+                                 ConfigOutputStorageProtocolOptions,
+                                 ConfigPersistOutputsOptions,
+                                 ConfigRestoreOutputsOptions,
+                                 EngineChoice)
+from omnipy.shared.protocols.public.config import IsEngineConfig
+from omnipy.shared.protocols.public.hub import IsRuntime, IsRuntimeConfig
 
 from .helpers.mocks import (MockLocalRunner,
                             MockLocalRunnerConfig,
