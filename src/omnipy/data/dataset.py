@@ -22,7 +22,7 @@ from omnipy.data.selector import (create_updated_mapping,
                                   prepare_selected_items_with_iterable_data,
                                   prepare_selected_items_with_mapping_data,
                                   select_keys)
-from omnipy.shared.protocols.public.data import IsDataset, IsModel, IsMultiModelDataset
+from omnipy.shared.protocols.data import IsDataset, IsModel, IsMultiModelDataset
 from omnipy.shared.typedefs import TypeForm
 from omnipy.util.decorators import call_super_if_available
 from omnipy.util.helpers import (get_default_if_typevar,

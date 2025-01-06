@@ -3,7 +3,7 @@ import inspect
 from types import MappingProxyType
 from typing import cast
 
-from omnipy.shared.protocols.private.compute.job import IsPlainFuncArgJobBase
+from omnipy.shared.protocols._compute.job import IsPlainFuncArgJobBase
 
 
 class SignatureFuncJobBaseMixin:

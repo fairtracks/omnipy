@@ -6,21 +6,21 @@ from typing import Callable, cast, Type
 from omnipy.compute.job import JobBase
 from omnipy.engine.base import Engine
 from omnipy.shared.enums import RunState
-from omnipy.shared.protocols.private.compute.job import IsJob
-from omnipy.shared.protocols.private.engine import IsEngine
-from omnipy.shared.protocols.private.log import IsRunStateRegistry
-from omnipy.shared.protocols.public.compute import (IsDagFlow,
-                                                    IsDagFlowTemplate,
-                                                    IsFlowTemplate,
-                                                    IsFuncFlowTemplate,
-                                                    IsLinearFlow,
-                                                    IsLinearFlowTemplate,
-                                                    IsTask,
-                                                    IsTaskTemplate)
-from omnipy.shared.protocols.public.engine import (IsDagFlowRunnerEngine,
-                                                   IsFuncFlowRunnerEngine,
-                                                   IsLinearFlowRunnerEngine,
-                                                   IsTaskRunnerEngine)
+from omnipy.shared.protocols._compute.job import IsJob
+from omnipy.shared.protocols._engine import IsEngine
+from omnipy.shared.protocols._hub import IsRunStateRegistry
+from omnipy.shared.protocols.compute import (IsDagFlow,
+                                             IsDagFlowTemplate,
+                                             IsFlowTemplate,
+                                             IsFuncFlowTemplate,
+                                             IsLinearFlow,
+                                             IsLinearFlowTemplate,
+                                             IsTask,
+                                             IsTaskTemplate)
+from omnipy.shared.protocols.engine import (IsDagFlowRunnerEngine,
+                                            IsFuncFlowRunnerEngine,
+                                            IsLinearFlowRunnerEngine,
+                                            IsTaskRunnerEngine)
 from omnipy.util.helpers import resolve
 
 from .classes import JobCase, JobType

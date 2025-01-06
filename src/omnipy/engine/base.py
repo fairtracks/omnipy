@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Type
 
-from omnipy.shared.protocols.private.log import IsRunStateRegistry
-from omnipy.shared.protocols.public.config import IsEngineConfig
+from omnipy.shared.protocols._hub import IsRunStateRegistry
+from omnipy.shared.protocols.config import IsEngineConfig
 
 
 class Engine(ABC):

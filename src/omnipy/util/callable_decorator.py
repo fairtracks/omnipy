@@ -2,7 +2,7 @@ from functools import update_wrapper
 from types import MethodWrapperType
 from typing import Callable, cast, Concatenate, ParamSpec, TypeVar
 
-from omnipy.shared.protocols.private.util import IsCallableParamAfterSelf
+from omnipy.shared.protocols._util import IsCallableParamAfterSelf
 
 InitP = ParamSpec('InitP')
 CallP = ParamSpec('CallP')

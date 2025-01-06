@@ -4,11 +4,11 @@ import pytest_cases as pc
 
 from omnipy.components.prefect.engine.prefect import PrefectEngine
 from omnipy.engine.local import LocalRunner
-from omnipy.shared.protocols.private.compute.job import IsJobTemplate
-from omnipy.shared.protocols.private.engine import IsEngine
-from omnipy.shared.protocols.private.log import IsRunStateRegistry
-from omnipy.shared.protocols.public.compute import IsFlowTemplate, IsTaskTemplate
-from omnipy.shared.protocols.public.engine import IsTaskRunnerEngine
+from omnipy.shared.protocols._compute.job import IsJobTemplate
+from omnipy.shared.protocols._engine import IsEngine
+from omnipy.shared.protocols._hub import IsRunStateRegistry
+from omnipy.shared.protocols.compute import IsFlowTemplate, IsTaskTemplate
+from omnipy.shared.protocols.engine import IsTaskRunnerEngine
 
 from .helpers.classes import JobCase, JobRunnerStateChecker, JobType
 from .helpers.functions import update_job_case_with_job

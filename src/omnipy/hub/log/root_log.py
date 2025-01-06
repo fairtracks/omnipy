@@ -7,7 +7,7 @@ from typing import Any
 from omnipy.config import ConfigBase
 from omnipy.config.root_log import RootLogConfig
 from omnipy.hub.log.handlers import DailyRotatingFileHandler
-from omnipy.shared.protocols.public.config import IsRootLogConfig
+from omnipy.shared.protocols.config import IsRootLogConfig
 from omnipy.util.helpers import get_datetime_format
 import omnipy.util.pydantic as pyd
 

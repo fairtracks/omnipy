@@ -1,4 +1,3 @@
-from types import TracebackType
 from typing import Callable, Protocol, runtime_checkable
 
 from typing_extensions import TypeVar
@@ -98,25 +97,4 @@ class IsSnapshotHolder(IsWeakKeyRefContainer[_HasContentsT,
         ...
 
     def take_snapshot(self, obj: _HasContentsT) -> None:
-        ...
-
-
-class IsRateLimitingClientSession(Protocol):
-    """"""
-    @property
-    def requests_per_second(self) -> float:
-        ...
-
-    async def __aenter__(self) -> 'IsRateLimitingClientSession':
-        ...
-
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> None:
-        ...
-
-    async def close(self) -> None:
         ...

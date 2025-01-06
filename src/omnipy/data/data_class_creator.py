@@ -3,9 +3,9 @@ from contextlib import contextmanager
 from typing import Callable, ContextManager, Iterator
 
 from omnipy.config.data import DataConfig
-from omnipy.shared.protocols.private.data import IsDataClassCreator
-from omnipy.shared.protocols.private.util import HasContents, IsSnapshotHolder
-from omnipy.shared.protocols.public.config import IsDataConfig
+from omnipy.shared.protocols._data import IsDataClassCreator
+from omnipy.shared.protocols._util import HasContents, IsSnapshotHolder
+from omnipy.shared.protocols.config import IsDataConfig
 from omnipy.shared.typedefs import TypeForm
 from omnipy.util.decorators import call_super_if_available
 from omnipy.util.helpers import is_union, SnapshotHolder

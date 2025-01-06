@@ -8,12 +8,12 @@ from typing_extensions import TypeVar
 from omnipy.shared.enums import (OutputStorageProtocolOptions,
                                  PersistOutputsOptions,
                                  RestoreOutputsOptions)
-from omnipy.shared.protocols.private.compute.job_creator import IsJobCreator
-from omnipy.shared.protocols.private.compute.mixins import IsUniquelyNamedJob
-from omnipy.shared.protocols.private.engine import IsEngine
-from omnipy.shared.protocols.private.log import CanLog
-from omnipy.shared.protocols.public.config import IsJobConfig
-from omnipy.shared.protocols.public.data import IsDataset
+from omnipy.shared.protocols._compute.job_creator import IsJobCreator
+from omnipy.shared.protocols._compute.mixins import IsUniquelyNamedJob
+from omnipy.shared.protocols._engine import IsEngine
+from omnipy.shared.protocols._hub import CanLog
+from omnipy.shared.protocols.config import IsJobConfig
+from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.typedefs import (GeneralDecorator,
                                     JobT,
                                     JobTemplateT,

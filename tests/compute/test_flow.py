@@ -9,10 +9,10 @@ from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTem
 from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.task import TaskTemplate
 from omnipy.shared.exceptions import JobStateException
-from omnipy.shared.protocols.private.compute.job import IsFuncArgJobTemplate
-from omnipy.shared.protocols.public.compute import (IsDagFlowTemplate,
-                                                    IsFuncFlowTemplate,
-                                                    IsLinearFlowTemplate)
+from omnipy.shared.protocols._compute.job import IsFuncArgJobTemplate
+from omnipy.shared.protocols.compute import (IsDagFlowTemplate,
+                                             IsFuncFlowTemplate,
+                                             IsLinearFlowTemplate)
 
 from .cases.flows import FlowCase
 from .cases.raw.functions import data_import_func, empty_dict_func, format_to_string_func

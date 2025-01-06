@@ -5,9 +5,9 @@ from omnipy.config import ConfigBase
 from omnipy.shared.enums import (ConfigOutputStorageProtocolOptions,
                                  ConfigPersistOutputsOptions,
                                  ConfigRestoreOutputsOptions)
-from omnipy.shared.protocols.public.config import (IsLocalOutputStorageConfig,
-                                                   IsOutputStorageConfig,
-                                                   IsS3OutputStorageConfig)
+from omnipy.shared.protocols.config import (IsLocalOutputStorageConfig,
+                                            IsOutputStorageConfig,
+                                            IsS3OutputStorageConfig)
 import omnipy.util.pydantic as pyd
 
 

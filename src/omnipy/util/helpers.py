@@ -35,7 +35,7 @@ from typing import (_SpecialForm,
                     Union)
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
-from omnipy.shared.protocols.private.util import HasContents, IsSnapshotWrapper
+from omnipy.shared.protocols._util import HasContents, IsSnapshotWrapper
 from omnipy.shared.typedefs import LocaleType, TypeForm
 from omnipy.util.contexts import setup_and_teardown_callback_context
 from omnipy.util.pydantic import is_none_type, ValidationError

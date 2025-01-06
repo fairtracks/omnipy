@@ -10,7 +10,7 @@ from omnipy.shared.enums import (ConfigOutputStorageProtocolOptions,
                                  OutputStorageProtocolOptions,
                                  PersistOutputsOptions,
                                  RestoreOutputsOptions)
-from omnipy.shared.protocols.public.hub import IsRuntime
+from omnipy.shared.protocols.hub import IsRuntime
 
 
 @pc.parametrize_with_cases('case_tmpl', cases='.cases.jobs', has_tag='task', prefix='case_config_')

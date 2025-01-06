@@ -26,8 +26,8 @@ from typing_extensions import TypeVar
 
 from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model
-from omnipy.shared.protocols.public.data import IsModel
-from omnipy.shared.protocols.public.hub import IsRuntime
+from omnipy.shared.protocols.data import IsModel
+from omnipy.shared.protocols.hub import IsRuntime
 from omnipy.util.pydantic import ValidationError
 import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque

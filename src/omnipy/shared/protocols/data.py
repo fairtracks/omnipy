@@ -14,7 +14,7 @@ from typing import (AbstractSet,
                     Type,
                     TypeVar)
 
-from omnipy.shared.protocols.private.log import CanLog
+from omnipy.shared.protocols._hub import CanLog
 from omnipy.util.pydantic import Undefined, UndefinedType
 
 _RootT = TypeVar('_RootT', covariant=True)

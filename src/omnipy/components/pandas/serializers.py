@@ -2,7 +2,7 @@ from io import BytesIO
 from typing import Any, IO, Type
 
 from omnipy.data.serializer import TarFileSerializer
-from omnipy.shared.protocols.public.data import IsDataset
+from omnipy.shared.protocols.data import IsDataset
 
 from . import pd
 from .datasets import PandasDataset

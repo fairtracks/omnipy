@@ -8,8 +8,8 @@ import pytest
 
 from omnipy.hub.registry import RunStateRegistry
 from omnipy.shared.enums import RunState
-from omnipy.shared.protocols.public.compute import IsDagFlow, IsTask
-from omnipy.shared.protocols.public.hub import IsRuntime
+from omnipy.shared.protocols.compute import IsDagFlow, IsTask
+from omnipy.shared.protocols.hub import IsRuntime
 
 from ...engine.helpers.mocks import (MockDagFlow,
                                      MockDagFlowTemplate,

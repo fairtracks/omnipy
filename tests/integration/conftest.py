@@ -4,7 +4,7 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.shared.enums import EngineChoice
-from omnipy.shared.protocols.public.hub import IsRuntime
+from omnipy.shared.protocols.hub import IsRuntime
 
 
 @pytest.fixture(scope='function')

@@ -1,7 +1,7 @@
 from typing import Protocol, runtime_checkable, Type
 
-from omnipy.shared.protocols.private.log import IsRunStateRegistry
-from omnipy.shared.protocols.public.config import IsEngineConfig
+from omnipy.shared.protocols._hub import IsRunStateRegistry
+from omnipy.shared.protocols.config import IsEngineConfig
 
 
 @runtime_checkable

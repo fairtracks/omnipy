@@ -2,7 +2,7 @@ import asyncio
 from inspect import iscoroutinefunction
 from typing import Callable, cast, Coroutine
 
-from omnipy.shared.protocols.private.compute.job import IsJobBase
+from omnipy.shared.protocols._compute.job import IsJobBase
 from omnipy.util.helpers import get_event_loop_and_check_if_loop_is_running
 
 

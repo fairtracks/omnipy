@@ -11,15 +11,16 @@ nav = mkdocs_gen_files.Nav()
 for path in sorted(Path('src').rglob('*.py')):
     print(f'Processing {path}')
 
-    if str(path) in IGNORED_PATHS:
-        print(f'Skipping {path}')
-        continue
-
     module_path = path.relative_to('src').with_suffix('')
     doc_path = path.relative_to('src').with_suffix('.md')
     full_doc_path = Path('reference', doc_path)
 
     parts = list(module_path.parts)
+
+    if str(path) in IGNORED_PATHS or any(
+            part.startswith('_') and not part.startswith('__') for part in parts):
+        print(f'Skipping {path}')
+        continue
 
     if parts[-1] == '__init__':
         parts = parts[:-1]

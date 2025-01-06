@@ -24,8 +24,8 @@ from omnipy.shared.enums import (BackoffStrategy,
                                  ConfigPersistOutputsOptions,
                                  ConfigRestoreOutputsOptions,
                                  EngineChoice)
-from omnipy.shared.protocols.public.config import IsEngineConfig
-from omnipy.shared.protocols.public.hub import IsRuntime, IsRuntimeConfig
+from omnipy.shared.protocols.config import IsEngineConfig
+from omnipy.shared.protocols.hub import IsRuntime, IsRuntimeConfig
 
 from .helpers.mocks import (MockLocalRunner,
                             MockLocalRunnerConfig,

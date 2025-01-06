@@ -6,7 +6,7 @@ from omnipy.shared.enums import (BackoffStrategy,
                                  ConfigOutputStorageProtocolOptions,
                                  ConfigPersistOutputsOptions,
                                  ConfigRestoreOutputsOptions)
-from omnipy.shared.protocols.private.util import IsDataPublisher
+from omnipy.shared.protocols._util import IsDataPublisher
 from omnipy.shared.typedefs import LocaleType
 
 

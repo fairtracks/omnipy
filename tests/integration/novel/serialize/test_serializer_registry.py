@@ -7,8 +7,8 @@ from omnipy.components.json.serializers import JsonDatasetToTarFileSerializer
 from omnipy.components.pandas.serializers import PandasDatasetToTarFileSerializer
 from omnipy.components.raw.serializers import RawStrDatasetToTarFileSerializer
 from omnipy.data.serializer import SerializerRegistry
-from omnipy.shared.protocols.public.data import IsSerializerRegistry
-from omnipy.shared.protocols.public.hub import IsRuntime
+from omnipy.shared.protocols.data import IsSerializerRegistry
+from omnipy.shared.protocols.hub import IsRuntime
 
 
 @pytest.fixture

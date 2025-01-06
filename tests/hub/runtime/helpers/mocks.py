@@ -4,8 +4,8 @@ from typing import cast, Generic, Protocol
 from typing_extensions import TypeVar
 
 from omnipy.config import ConfigBase
-from omnipy.shared.protocols.private.log import IsRunStateRegistry
-from omnipy.shared.protocols.public.config import IsEngineConfig
+from omnipy.shared.protocols._hub import IsRunStateRegistry
+from omnipy.shared.protocols.config import IsEngineConfig
 
 EngineConfigT = TypeVar('EngineConfigT', bound=IsEngineConfig)
 

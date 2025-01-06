@@ -3,7 +3,7 @@ from typing import Any, IO, Type
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import TarFileSerializer
-from omnipy.shared.protocols.public.data import IsDataset
+from omnipy.shared.protocols.data import IsDataset
 from omnipy.util.helpers import all_type_variants
 
 

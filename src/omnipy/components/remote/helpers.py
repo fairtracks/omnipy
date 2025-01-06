@@ -6,8 +6,6 @@ from typing import cast
 from aiohttp import ClientSession, TraceConfig
 from aiolimiter import AsyncLimiter
 
-from omnipy.shared.protocols.private.util import IsRateLimitingClientSession
-
 
 class RateLimitingClientSession(ClientSession):
     """
@@ -67,8 +65,8 @@ class RateLimitingClientSession(ClientSession):
     def requests_per_second(self) -> float:
         return self._requests_per_time_period / self._time_period_in_secs
 
-    async def __aenter__(self) -> IsRateLimitingClientSession:  # type: ignore[override]
-        return cast(IsRateLimitingClientSession, await super().__aenter__())
+    async def __aenter__(self) -> 'RateLimitingClientSession':
+        return cast(RateLimitingClientSession, await super().__aenter__())
 
     async def __aexit__(
         self,

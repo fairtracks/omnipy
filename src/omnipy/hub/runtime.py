@@ -13,18 +13,18 @@ from omnipy.engine.local import LocalRunner
 from omnipy.hub.log.root_log import RootLogObjects
 from omnipy.hub.registry import RunStateRegistry
 from omnipy.shared.enums import EngineChoice
-from omnipy.shared.protocols.private.compute.job_creator import IsJobConfigHolder
-from omnipy.shared.protocols.private.data import IsDataClassCreator
-from omnipy.shared.protocols.private.engine import IsEngine
-from omnipy.shared.protocols.private.log import IsRunStateRegistry
-from omnipy.shared.protocols.public.config import (IsDataConfig,
-                                                   IsEngineConfig,
-                                                   IsJobConfig,
-                                                   IsLocalRunnerConfig,
-                                                   IsPrefectEngineConfig,
-                                                   IsRootLogConfig)
-from omnipy.shared.protocols.public.data import IsSerializerRegistry
-from omnipy.shared.protocols.public.hub import IsRootLogObjects, IsRuntimeConfig, IsRuntimeObjects
+from omnipy.shared.protocols._compute.job_creator import IsJobConfigHolder
+from omnipy.shared.protocols._data import IsDataClassCreator
+from omnipy.shared.protocols._engine import IsEngine
+from omnipy.shared.protocols._hub import IsRunStateRegistry
+from omnipy.shared.protocols.config import (IsDataConfig,
+                                            IsEngineConfig,
+                                            IsJobConfig,
+                                            IsLocalRunnerConfig,
+                                            IsPrefectEngineConfig,
+                                            IsRootLogConfig)
+from omnipy.shared.protocols.data import IsSerializerRegistry
+from omnipy.shared.protocols.hub import IsRootLogObjects, IsRuntimeConfig, IsRuntimeObjects
 from omnipy.util.helpers import called_from_omnipy_tests
 from omnipy.util.publisher import DataPublisher, RuntimeEntryPublisher
 import omnipy.util.pydantic as pyd

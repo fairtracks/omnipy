@@ -3,9 +3,9 @@ from contextlib import AbstractContextManager
 from datetime import datetime
 
 from omnipy.config.job import JobConfig
-from omnipy.shared.protocols.private.compute.job_creator import IsJobCreator
-from omnipy.shared.protocols.private.engine import IsEngine
-from omnipy.shared.protocols.public.config import IsJobConfig
+from omnipy.shared.protocols._compute.job import IsJobCreator
+from omnipy.shared.protocols._engine import IsEngine
+from omnipy.shared.protocols.config import IsJobConfig
 
 
 class JobCreator(AbstractContextManager):

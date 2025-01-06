@@ -1,4 +1,4 @@
-from omnipy.shared.protocols.public.data import IsSerializerRegistry
+from omnipy.shared.protocols.data import IsSerializerRegistry
 
 
 def register_serializers(registry: IsSerializerRegistry):

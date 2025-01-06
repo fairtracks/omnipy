@@ -3,7 +3,7 @@ from logging import INFO, Logger
 from typing import Protocol, runtime_checkable
 
 from omnipy.shared.enums import RunState
-from omnipy.shared.protocols.private.compute.mixins import IsUniquelyNamedJob
+from omnipy.shared.protocols._compute.mixins import IsUniquelyNamedJob
 
 
 class CanLog(Protocol):

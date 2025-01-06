@@ -12,10 +12,10 @@ from omnipy.shared.enums import ConfigRestoreOutputsOptions as ConfigRestoreOpts
 from omnipy.shared.enums import (OutputStorageProtocolOptions,
                                  PersistOutputsOptions,
                                  RestoreOutputsOptions)
-from omnipy.shared.protocols.private.compute.job import IsJob, IsJobBase
-from omnipy.shared.protocols.public.compute import IsFlow
-from omnipy.shared.protocols.public.config import IsJobConfig
-from omnipy.shared.protocols.public.data import IsDataset, IsSerializerRegistry
+from omnipy.shared.protocols._compute.job import IsJob, IsJobBase
+from omnipy.shared.protocols.compute import IsFlow
+from omnipy.shared.protocols.config import IsJobConfig
+from omnipy.shared.protocols.data import IsDataset, IsSerializerRegistry
 
 PersistOpts = PersistOutputsOptions
 RestoreOpts = RestoreOutputsOptions

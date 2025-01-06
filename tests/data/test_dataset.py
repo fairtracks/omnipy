@@ -12,7 +12,7 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
 from omnipy.shared.exceptions import FailedDataError, PendingDataError
-from omnipy.shared.protocols.public.hub import IsRuntime
+from omnipy.shared.protocols.hub import IsRuntime
 from omnipy.util.pydantic import ValidationError
 import omnipy.util.pydantic as pyd
 

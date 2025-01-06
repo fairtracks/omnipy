@@ -6,8 +6,8 @@ from typing import Any, Awaitable, Callable, cast
 
 from omnipy.engine.base import Engine
 from omnipy.shared.enums import RunState
-from omnipy.shared.protocols.private.compute.job import IsJob
-from omnipy.shared.protocols.public.compute import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.shared.protocols._compute.job import IsJob
+from omnipy.shared.protocols.compute import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
 
 
 class JobRunnerEngine(Engine, ABC):

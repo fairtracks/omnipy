@@ -6,19 +6,19 @@ from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import JobMixin, JobTemplateMixin
 from omnipy.compute.mixins.flow_context import FlowContextJobMixin
 from omnipy.compute.tasklist_job import TaskTemplateArgsJobBase
-from omnipy.shared.protocols.private.compute.job import (HasFuncArgJobTemplateInit,
-                                                         HasTaskTemplateArgsJobTemplateInit)
-from omnipy.shared.protocols.private.engine import IsEngine
-from omnipy.shared.protocols.public.compute import (IsDagFlow,
-                                                    IsDagFlowTemplate,
-                                                    IsFuncFlow,
-                                                    IsFuncFlowTemplate,
-                                                    IsLinearFlow,
-                                                    IsLinearFlowTemplate,
-                                                    IsTaskTemplate)
-from omnipy.shared.protocols.public.engine import (IsDagFlowRunnerEngine,
-                                                   IsFuncFlowRunnerEngine,
-                                                   IsLinearFlowRunnerEngine)
+from omnipy.shared.protocols._compute.job import (HasFuncArgJobTemplateInit,
+                                                  HasTaskTemplateArgsJobTemplateInit)
+from omnipy.shared.protocols._engine import IsEngine
+from omnipy.shared.protocols.compute import (IsDagFlow,
+                                             IsDagFlowTemplate,
+                                             IsFuncFlow,
+                                             IsFuncFlowTemplate,
+                                             IsLinearFlow,
+                                             IsLinearFlowTemplate,
+                                             IsTaskTemplate)
+from omnipy.shared.protocols.engine import (IsDagFlowRunnerEngine,
+                                            IsFuncFlowRunnerEngine,
+                                            IsLinearFlowRunnerEngine)
 from omnipy.util.callable_decorator import callable_decorator_cls
 
 InitP = ParamSpec('InitP')

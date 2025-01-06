@@ -4,10 +4,10 @@ from typing_extensions import Concatenate
 
 from omnipy.compute.func_job import FuncArgJobBase
 from omnipy.compute.job import JobMixin, JobTemplateMixin
-from omnipy.shared.protocols.private.compute.job import HasFuncArgJobTemplateInit
-from omnipy.shared.protocols.private.engine import IsEngine
-from omnipy.shared.protocols.public.compute import IsTask, IsTaskTemplate
-from omnipy.shared.protocols.public.engine import IsTaskRunnerEngine
+from omnipy.shared.protocols._compute.job import HasFuncArgJobTemplateInit
+from omnipy.shared.protocols._engine import IsEngine
+from omnipy.shared.protocols.compute import IsTask, IsTaskTemplate
+from omnipy.shared.protocols.engine import IsTaskRunnerEngine
 from omnipy.util.callable_decorator import callable_decorator_cls
 
 InitP = ParamSpec('InitP')

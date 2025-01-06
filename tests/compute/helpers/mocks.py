@@ -19,21 +19,21 @@ from omnipy.compute.job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.mixins.flow_context import FlowContextJobMixin
 from omnipy.config import ConfigBase
 from omnipy.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
-from omnipy.shared.protocols.private.compute.job import (HasFuncArgJobTemplateInit,
-                                                         IsFuncArgJob,
-                                                         IsFuncArgJobTemplate,
-                                                         IsJob,
-                                                         IsJobTemplate)
-from omnipy.shared.protocols.private.engine import IsEngine
-from omnipy.shared.protocols.private.log import IsRunStateRegistry
-from omnipy.shared.protocols.public.compute import (IsDagFlow,
-                                                    IsFlow,
-                                                    IsFlowTemplate,
-                                                    IsFuncFlow,
-                                                    IsLinearFlow,
-                                                    IsTask)
-from omnipy.shared.protocols.public.config import IsEngineConfig
-from omnipy.shared.protocols.public.engine import IsTaskRunnerEngine
+from omnipy.shared.protocols._compute.job import (HasFuncArgJobTemplateInit,
+                                                  IsFuncArgJob,
+                                                  IsFuncArgJobTemplate,
+                                                  IsJob,
+                                                  IsJobTemplate)
+from omnipy.shared.protocols._engine import IsEngine
+from omnipy.shared.protocols._hub import IsRunStateRegistry
+from omnipy.shared.protocols.compute import (IsDagFlow,
+                                             IsFlow,
+                                             IsFlowTemplate,
+                                             IsFuncFlow,
+                                             IsLinearFlow,
+                                             IsTask)
+from omnipy.shared.protocols.config import IsEngineConfig
+from omnipy.shared.protocols.engine import IsTaskRunnerEngine
 from omnipy.util.callable_decorator import callable_decorator_cls
 
 JobTemplateT = TypeVar('JobTemplateT', covariant=True)

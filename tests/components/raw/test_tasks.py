@@ -5,7 +5,7 @@ import pytest
 from omnipy.components.raw.tasks import decode_bytes
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-from omnipy.shared.protocols.public.hub import IsRuntime
+from omnipy.shared.protocols.hub import IsRuntime
 
 
 def test_decode_bytes(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:

@@ -5,7 +5,7 @@ import pytest
 
 from omnipy import Model
 from omnipy.components.remote.models import HttpUrlModel, QueryParamsModel, UrlPathModel
-from omnipy.shared.protocols.public.hub import IsRuntime
+from omnipy.shared.protocols.hub import IsRuntime
 from omnipy.util.pydantic import ValidationError
 
 from ...helpers.protocols import AssertModelOrValFunc

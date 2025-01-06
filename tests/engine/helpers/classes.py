@@ -3,13 +3,13 @@ from enum import Enum
 from typing import Any, Awaitable, Callable, Generic, Type, TypeVar
 
 from omnipy.shared.enums import RunState
-from omnipy.shared.protocols.private.compute.job import IsJob
-from omnipy.shared.protocols.private.log import IsRunStateRegistry
-from omnipy.shared.protocols.public.compute import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
-from omnipy.shared.protocols.public.config import IsEngineConfig
-from omnipy.shared.protocols.public.engine import (IsDagFlowRunnerEngine,
-                                                   IsFuncFlowRunnerEngine,
-                                                   IsTaskRunnerEngine)
+from omnipy.shared.protocols._compute.job import IsJob
+from omnipy.shared.protocols._hub import IsRunStateRegistry
+from omnipy.shared.protocols.compute import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.shared.protocols.config import IsEngineConfig
+from omnipy.shared.protocols.engine import (IsDagFlowRunnerEngine,
+                                            IsFuncFlowRunnerEngine,
+                                            IsTaskRunnerEngine)
 
 
 class JobType(Enum):
