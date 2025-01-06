@@ -179,8 +179,3 @@ testpaths = [
     "tests",
 ]
 asyncio_mode = "auto"
-
-[project]
-dependencies = [
-    "mkdocstrings[python]>=0.18",
-]
