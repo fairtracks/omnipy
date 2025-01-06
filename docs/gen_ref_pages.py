@@ -4,7 +4,6 @@ import mkdocs_gen_files
 
 IGNORED_PATHS = [
     'src/omnipy/_dynamic_all.py',
-    'src/omnipy/util/tabulate/__init__.py',
 ]
 
 nav = mkdocs_gen_files.Nav()

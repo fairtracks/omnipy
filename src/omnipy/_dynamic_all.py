@@ -23,7 +23,6 @@ _exclude_modules: set[str] = {
     '_dynamic_all',
     'modules.frozen',  # Recursive frozen models crashes mypy v1.10 + waiting for pydantic support
     'modules.fairtracks',
-    'util.tabulate',
 }
 _exclude_attrs: set[str] = {
     'JobMixin',

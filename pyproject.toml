@@ -48,6 +48,7 @@ pydantic-core = "^2.24.2"
 aiohttp = "^3.10.6"
 aiohttp-retry = "^2.9.0"
 aiolimiter = "^1.1.0"
+tabulated = "^0.10.0"
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"

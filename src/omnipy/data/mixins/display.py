@@ -11,12 +11,12 @@ import humanize
 from IPython.display import display
 from IPython.lib.pretty import RepresentationPrinter
 import objsize
+from tabulate import tabulate
 
 from omnipy.data.data_class_creator import DataClassBase
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.util.helpers import get_first_item, has_items, is_non_str_byte_iterable
 import omnipy.util.pydantic as pyd
-from omnipy.util.tabulate import tabulate
 
 
 class BaseDisplayMixin(metaclass=ABCMeta):
