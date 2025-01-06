@@ -15,12 +15,12 @@ from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.public.compute import IsDagFlow, IsFlow, IsFuncFlow, IsLinearFlow, IsTask
 from omnipy.api.protocols.public.config import IsEngineConfig
 from omnipy.api.typedefs import GeneralDecorator
+from omnipy.components.prefect import generate_slug
 from omnipy.config import ConfigBase
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
-from omnipy.modules.prefect import generate_slug
 from omnipy.util.callable_decorator import callable_decorator_cls
 
 

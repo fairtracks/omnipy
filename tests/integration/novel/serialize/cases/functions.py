@@ -2,11 +2,11 @@ from typing import Annotated, Callable
 
 import pytest
 
+from omnipy.components.json.datasets import JsonDataset
+from omnipy.components.pandas.datasets import PandasDataset
+from omnipy.components.raw.datasets import StrDataset
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-from omnipy.modules.json.datasets import JsonDataset
-from omnipy.modules.pandas.datasets import PandasDataset
-from omnipy.modules.raw.datasets import StrDataset
 
 
 @pytest.fixture

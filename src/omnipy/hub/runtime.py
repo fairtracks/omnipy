@@ -13,6 +13,7 @@ from omnipy.api.protocols.public.config import (IsDataConfig,
                                                 IsRootLogConfig)
 from omnipy.api.protocols.public.data import IsSerializerRegistry
 from omnipy.api.protocols.public.hub import IsRootLogObjects, IsRuntimeConfig, IsRuntimeObjects
+from omnipy.components.prefect.engine.prefect import PrefectEngine
 from omnipy.compute.job import JobBase
 from omnipy.config import ConfigBase
 from omnipy.config.data import DataConfig
@@ -24,7 +25,6 @@ from omnipy.data.serializer import SerializerRegistry
 from omnipy.engine.local import LocalRunner
 from omnipy.hub.log.root_log import RootLogObjects
 from omnipy.hub.registry import RunStateRegistry
-from omnipy.modules.prefect.engine.prefect import PrefectEngine
 from omnipy.util.helpers import called_from_omnipy_tests
 from omnipy.util.publisher import DataPublisher, RuntimeEntryPublisher
 import omnipy.util.pydantic as pyd

@@ -7,8 +7,8 @@ from omnipy.api.protocols.private.engine import IsEngine
 from omnipy.api.protocols.private.log import IsRunStateRegistry
 from omnipy.api.protocols.public.compute import IsFlowTemplate, IsTaskTemplate
 from omnipy.api.protocols.public.engine import IsTaskRunnerEngine
+from omnipy.components.prefect.engine.prefect import PrefectEngine
 from omnipy.engine.local import LocalRunner
-from omnipy.modules.prefect.engine.prefect import PrefectEngine
 
 from .helpers.classes import JobCase, JobRunnerStateChecker, JobType
 from .helpers.functions import update_job_case_with_job

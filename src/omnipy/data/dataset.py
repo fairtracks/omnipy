@@ -33,8 +33,8 @@ from omnipy.util.pydantic import Undefined, UndefinedType, ValidationError
 import omnipy.util.pydantic as pyd
 
 if TYPE_CHECKING:
-    from omnipy.modules.remote.datasets import HttpUrlDataset
-    from omnipy.modules.remote.models import HttpUrlModel
+    from omnipy.components.remote.datasets import HttpUrlDataset
+    from omnipy.components.remote.models import HttpUrlModel
 
 ModelT = TypeVar('ModelT', bound=IsModel)
 NewModelT = TypeVar('NewModelT', bound=IsModel)
@@ -725,8 +725,8 @@ class Dataset(
                                 f'{type(paths_or_urls)} is not supported.')
 
     def _load_http_urls(self, http_url_dataset: 'HttpUrlDataset') -> list[asyncio.Task]:
-        from omnipy.modules.remote.helpers import RateLimitingClientSession
-        from omnipy.modules.remote.tasks import get_json_from_api_endpoint
+        from omnipy.components.remote.helpers import RateLimitingClientSession
+        from omnipy.components.remote.tasks import get_json_from_api_endpoint
         hosts: defaultdict[str, list[int]] = defaultdict(list)
         for i, url in enumerate(http_url_dataset.values()):
             hosts[url.host].append(i)
@@ -802,7 +802,7 @@ class Dataset(
 
     @staticmethod
     def _get_serializer_registry():
-        from omnipy.modules import get_serializer_registry
+        from omnipy.components import get_serializer_registry
         return get_serializer_registry()
 
     def as_multi_model_dataset(self) -> 'IsMultiModelDataset[ModelT]':

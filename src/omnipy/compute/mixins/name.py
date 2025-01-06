@@ -3,7 +3,7 @@ from typing import Callable, cast
 from inflection import underscore
 from slugify import slugify
 
-from omnipy.modules.prefect import generate_slug
+from omnipy.components.prefect import generate_slug
 from omnipy.util.mixin import DynamicMixinAcceptor
 
 

@@ -11,6 +11,154 @@ from omnipy.api.enums import (BackoffStrategy,
                               PersistOutputsOptions,
                               RestoreOutputsOptions,
                               RunState)
+from omnipy.components.general.models import (Chain2,
+                                              Chain3,
+                                              Chain4,
+                                              Chain5,
+                                              Chain6,
+                                              NotIterableExceptStrOrBytesModel)
+from omnipy.components.general.tasks import convert_dataset, import_directory, split_dataset
+from omnipy.components.isa import (flatten_isa_json,
+                                   FlattenedIsaJsonDataset,
+                                   FlattenedIsaJsonModel,
+                                   IsaJsonDataset,
+                                   IsaJsonModel)
+from omnipy.components.isa.models import IsaInvestigationModel, IsaTopLevelModel
+from omnipy.components.isa.models.assay_schema import IsaAssayJsonModel
+from omnipy.components.isa.models.comment_schema import IsaCommentModel
+from omnipy.components.isa.models.data_schema import IsaDataModel
+from omnipy.components.isa.models.factor_schema import IsaFactorModel
+from omnipy.components.isa.models.factor_value_schema import IsaFactorValueModel
+from omnipy.components.isa.models.material_attribute_schema import IsaMaterialAttributeModel
+from omnipy.components.isa.models.material_attribute_value_schema import \
+    IsaMaterialAttributeValueModel
+from omnipy.components.isa.models.material_schema import IsaMaterialModel
+from omnipy.components.isa.models.ontology_annotation_schema import IsaOntologyReferenceModel
+from omnipy.components.isa.models.ontology_source_reference_schema import \
+    IsaOntologySourceReferenceModel
+from omnipy.components.isa.models.organization_schema import IsaOrganizationModel
+from omnipy.components.isa.models.person_schema import IsaPersonModel
+from omnipy.components.isa.models.process_parameter_value_schema import \
+    IsaProcessParameterValueModel
+from omnipy.components.isa.models.process_schema import IsaProcessOrProtocolApplicationModel
+from omnipy.components.isa.models.protocol_parameter_schema import IsaProtocolParameterModel
+from omnipy.components.isa.models.protocol_schema import IsaProtocolModel
+from omnipy.components.isa.models.publication_schema import IsaPublicationModel
+from omnipy.components.isa.models.sample_schema import IsaSampleModel
+from omnipy.components.isa.models.source_schema import IsaSourceModel
+from omnipy.components.isa.models.study_group import IsaStudyGroupModel
+from omnipy.components.isa.models.study_schema import IsaStudyModel
+from omnipy.components.json.datasets import (JsonDataset,
+                                             JsonDictDataset,
+                                             JsonDictOfDictsDataset,
+                                             JsonDictOfDictsOfScalarsDataset,
+                                             JsonDictOfListsDataset,
+                                             JsonDictOfListsOfDictsDataset,
+                                             JsonDictOfListsOfScalarsDataset,
+                                             JsonDictOfNestedListsDataset,
+                                             JsonDictOfScalarsDataset,
+                                             JsonListDataset,
+                                             JsonListOfDictsDataset,
+                                             JsonListOfDictsOfScalarsDataset,
+                                             JsonListOfListsDataset,
+                                             JsonListOfListsOfScalarsDataset,
+                                             JsonListOfNestedDictsDataset,
+                                             JsonListOfScalarsDataset,
+                                             JsonNestedDictsDataset,
+                                             JsonNestedListsDataset,
+                                             JsonOnlyDictsDataset,
+                                             JsonOnlyListsDataset,
+                                             JsonScalarDataset)
+from omnipy.components.json.flows import (flatten_nested_json,
+                                          transpose_dict_of_dicts_2_list_of_dicts,
+                                          transpose_dicts_of_lists_of_dicts_2_lists_of_dicts)
+from omnipy.components.json.models import (JsonCustomDictModel,
+                                           JsonCustomListModel,
+                                           JsonDictModel,
+                                           JsonDictOfDictsModel,
+                                           JsonDictOfDictsOfScalarsModel,
+                                           JsonDictOfListsModel,
+                                           JsonDictOfListsOfDictsModel,
+                                           JsonDictOfListsOfScalarsModel,
+                                           JsonDictOfNestedListsModel,
+                                           JsonDictOfScalarsModel,
+                                           JsonListModel,
+                                           JsonListOfDictsModel,
+                                           JsonListOfDictsOfScalarsModel,
+                                           JsonListOfListsModel,
+                                           JsonListOfListsOfScalarsModel,
+                                           JsonListOfNestedDictsModel,
+                                           JsonListOfScalarsModel,
+                                           JsonModel,
+                                           JsonNestedDictsModel,
+                                           JsonNestedListsModel,
+                                           JsonOnlyDictsModel,
+                                           JsonOnlyListsModel,
+                                           JsonScalarModel)
+from omnipy.components.json.tasks import convert_dataset_string_to_json, transpose_dicts_2_lists
+from omnipy.components.pandas.datasets import (ListOfPandasDatasetsWithSameNumberOfFiles,
+                                               PandasDataset)
+from omnipy.components.pandas.models import PandasModel
+from omnipy.components.pandas.tasks import (cartesian_product,
+                                            concat_dataframes_across_datasets,
+                                            convert_dataset_csv_to_pandas,
+                                            convert_dataset_list_of_dicts_to_pandas,
+                                            convert_dataset_pandas_to_csv,
+                                            extract_columns_as_files,
+                                            join_tables)
+from omnipy.components.raw.datasets import (BytesDataset,
+                                            JoinColumnsToLinesDataset,
+                                            JoinItemsDataset,
+                                            JoinLinesDataset,
+                                            SplitLinesToColumnsDataset,
+                                            SplitToItemsDataset,
+                                            SplitToLinesDataset,
+                                            StrDataset)
+from omnipy.components.raw.models import (BytesModel,
+                                          JoinColumnsToLinesModel,
+                                          JoinItemsModel,
+                                          JoinLinesModel,
+                                          MatchItemsModel,
+                                          NestedJoinItemsModel,
+                                          NestedSplitToItemsModel,
+                                          SplitLinesToColumnsModel,
+                                          SplitToItemsModel,
+                                          SplitToLinesModel,
+                                          StrModel)
+from omnipy.components.raw.tasks import (concat_all,
+                                         decode_bytes,
+                                         modify_all_lines,
+                                         modify_datafile_contents,
+                                         modify_each_line,
+                                         union_all)
+from omnipy.components.remote.datasets import HttpUrlDataset
+from omnipy.components.remote.models import HttpUrlModel, QueryParamsModel, UrlPathModel
+from omnipy.components.remote.tasks import (async_load_urls_into_new_dataset,
+                                            get_bytes_from_api_endpoint,
+                                            get_json_from_api_endpoint,
+                                            get_str_from_api_endpoint,
+                                            load_urls_into_new_dataset)
+from omnipy.components.tables.datasets import (CsvTableDataset,
+                                               TableDictOfDictsOfJsonScalarsDataset,
+                                               TableDictOfListsOfJsonScalarsDataset,
+                                               TableListOfDictsOfJsonScalarsDataset,
+                                               TableListOfListsOfJsonScalarsDataset,
+                                               TableOfPydanticRecordsDataset,
+                                               TableWithColNamesDataset,
+                                               TsvTableDataset)
+from omnipy.components.tables.models import (CsvTableModel,
+                                             PydanticRecordModel,
+                                             TableDictOfDictsOfJsonScalarsModel,
+                                             TableDictOfListsOfJsonScalarsModel,
+                                             TableListOfDictsOfJsonScalarsModel,
+                                             TableListOfListsOfJsonScalarsModel,
+                                             TableOfPydanticRecordsModel,
+                                             TableWithColNamesModel,
+                                             TsvTableModel)
+from omnipy.components.tables.tasks import (create_row_index_from_column,
+                                            remove_columns,
+                                            rename_col_names,
+                                            transpose_columns_with_data_files)
 from omnipy.compute.flow import (DagFlow,
                                  DagFlowTemplate,
                                  FuncFlow,
@@ -25,151 +173,6 @@ from omnipy.data.param import (bind_adjust_dataset_func,
                                params_dataclass,
                                ParamsBase)
 from omnipy.hub.runtime import runtime
-from omnipy.modules.general.models import (Chain2,
-                                           Chain3,
-                                           Chain4,
-                                           Chain5,
-                                           Chain6,
-                                           NotIterableExceptStrOrBytesModel)
-from omnipy.modules.general.tasks import convert_dataset, import_directory, split_dataset
-from omnipy.modules.isa import (flatten_isa_json,
-                                FlattenedIsaJsonDataset,
-                                FlattenedIsaJsonModel,
-                                IsaJsonDataset,
-                                IsaJsonModel)
-from omnipy.modules.isa.models import IsaInvestigationModel, IsaTopLevelModel
-from omnipy.modules.isa.models.assay_schema import IsaAssayJsonModel
-from omnipy.modules.isa.models.comment_schema import IsaCommentModel
-from omnipy.modules.isa.models.data_schema import IsaDataModel
-from omnipy.modules.isa.models.factor_schema import IsaFactorModel
-from omnipy.modules.isa.models.factor_value_schema import IsaFactorValueModel
-from omnipy.modules.isa.models.material_attribute_schema import IsaMaterialAttributeModel
-from omnipy.modules.isa.models.material_attribute_value_schema import IsaMaterialAttributeValueModel
-from omnipy.modules.isa.models.material_schema import IsaMaterialModel
-from omnipy.modules.isa.models.ontology_annotation_schema import IsaOntologyReferenceModel
-from omnipy.modules.isa.models.ontology_source_reference_schema import \
-    IsaOntologySourceReferenceModel
-from omnipy.modules.isa.models.organization_schema import IsaOrganizationModel
-from omnipy.modules.isa.models.person_schema import IsaPersonModel
-from omnipy.modules.isa.models.process_parameter_value_schema import IsaProcessParameterValueModel
-from omnipy.modules.isa.models.process_schema import IsaProcessOrProtocolApplicationModel
-from omnipy.modules.isa.models.protocol_parameter_schema import IsaProtocolParameterModel
-from omnipy.modules.isa.models.protocol_schema import IsaProtocolModel
-from omnipy.modules.isa.models.publication_schema import IsaPublicationModel
-from omnipy.modules.isa.models.sample_schema import IsaSampleModel
-from omnipy.modules.isa.models.source_schema import IsaSourceModel
-from omnipy.modules.isa.models.study_group import IsaStudyGroupModel
-from omnipy.modules.isa.models.study_schema import IsaStudyModel
-from omnipy.modules.json.datasets import (JsonDataset,
-                                          JsonDictDataset,
-                                          JsonDictOfDictsDataset,
-                                          JsonDictOfDictsOfScalarsDataset,
-                                          JsonDictOfListsDataset,
-                                          JsonDictOfListsOfDictsDataset,
-                                          JsonDictOfListsOfScalarsDataset,
-                                          JsonDictOfNestedListsDataset,
-                                          JsonDictOfScalarsDataset,
-                                          JsonListDataset,
-                                          JsonListOfDictsDataset,
-                                          JsonListOfDictsOfScalarsDataset,
-                                          JsonListOfListsDataset,
-                                          JsonListOfListsOfScalarsDataset,
-                                          JsonListOfNestedDictsDataset,
-                                          JsonListOfScalarsDataset,
-                                          JsonNestedDictsDataset,
-                                          JsonNestedListsDataset,
-                                          JsonOnlyDictsDataset,
-                                          JsonOnlyListsDataset,
-                                          JsonScalarDataset)
-from omnipy.modules.json.flows import (flatten_nested_json,
-                                       transpose_dict_of_dicts_2_list_of_dicts,
-                                       transpose_dicts_of_lists_of_dicts_2_lists_of_dicts)
-from omnipy.modules.json.models import (JsonCustomDictModel,
-                                        JsonCustomListModel,
-                                        JsonDictModel,
-                                        JsonDictOfDictsModel,
-                                        JsonDictOfDictsOfScalarsModel,
-                                        JsonDictOfListsModel,
-                                        JsonDictOfListsOfDictsModel,
-                                        JsonDictOfListsOfScalarsModel,
-                                        JsonDictOfNestedListsModel,
-                                        JsonDictOfScalarsModel,
-                                        JsonListModel,
-                                        JsonListOfDictsModel,
-                                        JsonListOfDictsOfScalarsModel,
-                                        JsonListOfListsModel,
-                                        JsonListOfListsOfScalarsModel,
-                                        JsonListOfNestedDictsModel,
-                                        JsonListOfScalarsModel,
-                                        JsonModel,
-                                        JsonNestedDictsModel,
-                                        JsonNestedListsModel,
-                                        JsonOnlyDictsModel,
-                                        JsonOnlyListsModel,
-                                        JsonScalarModel)
-from omnipy.modules.json.tasks import convert_dataset_string_to_json, transpose_dicts_2_lists
-from omnipy.modules.pandas.datasets import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset
-from omnipy.modules.pandas.models import PandasModel
-from omnipy.modules.pandas.tasks import (cartesian_product,
-                                         concat_dataframes_across_datasets,
-                                         convert_dataset_csv_to_pandas,
-                                         convert_dataset_list_of_dicts_to_pandas,
-                                         convert_dataset_pandas_to_csv,
-                                         extract_columns_as_files,
-                                         join_tables)
-from omnipy.modules.raw.datasets import (BytesDataset,
-                                         JoinColumnsToLinesDataset,
-                                         JoinItemsDataset,
-                                         JoinLinesDataset,
-                                         SplitLinesToColumnsDataset,
-                                         SplitToItemsDataset,
-                                         SplitToLinesDataset,
-                                         StrDataset)
-from omnipy.modules.raw.models import (BytesModel,
-                                       JoinColumnsToLinesModel,
-                                       JoinItemsModel,
-                                       JoinLinesModel,
-                                       MatchItemsModel,
-                                       NestedJoinItemsModel,
-                                       NestedSplitToItemsModel,
-                                       SplitLinesToColumnsModel,
-                                       SplitToItemsModel,
-                                       SplitToLinesModel,
-                                       StrModel)
-from omnipy.modules.raw.tasks import (concat_all,
-                                      decode_bytes,
-                                      modify_all_lines,
-                                      modify_datafile_contents,
-                                      modify_each_line,
-                                      union_all)
-from omnipy.modules.remote.datasets import HttpUrlDataset
-from omnipy.modules.remote.models import HttpUrlModel, QueryParamsModel, UrlPathModel
-from omnipy.modules.remote.tasks import (async_load_urls_into_new_dataset,
-                                         get_bytes_from_api_endpoint,
-                                         get_json_from_api_endpoint,
-                                         get_str_from_api_endpoint,
-                                         load_urls_into_new_dataset)
-from omnipy.modules.tables.datasets import (CsvTableDataset,
-                                            TableDictOfDictsOfJsonScalarsDataset,
-                                            TableDictOfListsOfJsonScalarsDataset,
-                                            TableListOfDictsOfJsonScalarsDataset,
-                                            TableListOfListsOfJsonScalarsDataset,
-                                            TableOfPydanticRecordsDataset,
-                                            TableWithColNamesDataset,
-                                            TsvTableDataset)
-from omnipy.modules.tables.models import (CsvTableModel,
-                                          PydanticRecordModel,
-                                          TableDictOfDictsOfJsonScalarsModel,
-                                          TableDictOfListsOfJsonScalarsModel,
-                                          TableListOfDictsOfJsonScalarsModel,
-                                          TableListOfListsOfJsonScalarsModel,
-                                          TableOfPydanticRecordsModel,
-                                          TableWithColNamesModel,
-                                          TsvTableModel)
-from omnipy.modules.tables.tasks import (create_row_index_from_column,
-                                         remove_columns,
-                                         rename_col_names,
-                                         transpose_columns_with_data_files)
 from omnipy.util.contexts import print_exception
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))

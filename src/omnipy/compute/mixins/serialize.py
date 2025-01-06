@@ -12,10 +12,10 @@ from omnipy.api.protocols.private.compute.job import IsJob, IsJobBase
 from omnipy.api.protocols.public.compute import IsFlow
 from omnipy.api.protocols.public.config import IsJobConfig
 from omnipy.api.protocols.public.data import IsDataset, IsSerializerRegistry
+from omnipy.components import get_serializer_registry
 from omnipy.compute.mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute.mixins.name import NameJobBaseMixin
 from omnipy.data.dataset import Dataset
-from omnipy.modules import get_serializer_registry
 
 PersistOpts = PersistOutputsOptions
 RestoreOpts = RestoreOutputsOptions

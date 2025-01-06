@@ -2,7 +2,7 @@ from pathlib import Path
 import sys
 
 project_dir = Path(__file__).parent.parent.parent.parent.parent
-omnipy_json_dir = project_dir / 'src' / 'omnipy' / 'modules' / 'json'
+omnipy_json_dir = project_dir / 'src' / 'omnipy' / 'components' / 'json'
 prev_sys_path = sys.path
 sys.path = [omnipy_json_dir.as_posix()]
 
