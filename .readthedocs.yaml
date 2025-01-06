@@ -12,7 +12,7 @@ build:
     post_create_environment:
       # Install poetry
       # https://python-poetry.org/docs/#installing-manually
-      - python -m pip install poetry==1.7.1
+      - python -m pip install poetry==2.0
     post_install:
       # Install dependencies with 'docs' dependency group
       # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
