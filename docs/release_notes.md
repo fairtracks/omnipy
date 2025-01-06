@@ -1,3 +1,51 @@
+## Omnipy v0.20.0
+
+_Release date: Jan 6, 2024_
+
+Omnipy v0.20.0 has focused on improving the documentation and code structure of the project, as well
+as fixing a few bugs from the v0.90 release.
+
+A previous attempt to configure a reference documentation auto-build solution based on the
+(seemingly unmaintained) [portray](https://github.com/timothycrosley/portray) library has now been
+abandoned in favor of [mkdocstrings](https://mkdocstrings.github.io/). In v0.20.0, the documentation
+setup has been completely overhauled to support a clean and readable structure. While the new system
+might be slightly less flexible, it is more standardised and seems to require less custom code to
+support the basic features needed by Omnipy.
+
+### New features in v0.20.0
+
+- **Finalized transition of documentation to `mkdocstrings`, including massive code reorganization**
+
+  - Fixed bug causing the documentation build to fail
+  - Consistent styling, including an updated color scheme and improved readability
+  - Specified a large number of code elements as private (i.e. of interest mostly to core `Omnipy`
+    developers), and thus excluded from the documentation. This moves the reference documentation
+    from the previous confused and unintelligible mess to a clear and understandable structure.
+  - As part of the reorganization, the previous `omnipy.modules` submodule has been renamed to
+    `omnipy.components`, and the `omnipy.api` submodule has been renamed to `omnipy.shared`.
+  - Auto-generated documentation now supports including inherited members on a per-module basis. The
+    default settings have been adjusted to what makes most sense for each submodule.
+  - Removed outdated code from the previous `portray`-based solution.
+  - Misc smaller reorganizations and cleanups.
+  - Docstrings and general documentation are still mostly missing, but will be a priority for the
+    next few releases.
+
+
+- **Updated dependency management**
+  - Updated to use [Poetry](https://python-poetry.org/) v2.0.0 (released Jan 5!), including
+    restructure of `pyproject.toml` file in accordance
+    with [PEP 508](https://peps.python.org/pep-0508/).
+  - Replaced embedded [tabulate](https://pypi.org/project/tabulate/) package with
+    the [tabulated](https://pypi.org/project/tabulated/) fork. The `tabulate` package was previously
+    included with the Omnipy source code in order to provide for non-released bug fixes that are
+    included in the `tabulated` fork). The current plan is to move completely away from `tabulate`.
+
+
+- **Smaller bug fixes and improvements**
+  - Fixed `test_dataset::test_import_and_export` issue introduced in v0.19.0
+  - PandasModel.__init__() now converts from all four types of tables supported by Omnipy
+  - Refactored away `_Model` and similar private classes added in the v0.19.0 auto-complete hack
+
 ## Omnipy v0.19.0
 
 _Release date: Dec 17, 2024_
