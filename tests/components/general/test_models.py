@@ -62,6 +62,17 @@ def test_concat_chain2_model_with_to_data_conversion():
     assert stream.to_data() == ['a', 'b', 'c', 'd', 'e', 'f']
 
 
+# TODO: When Model conversion types have been implemented, improve Chain models to parse on main
+#       type instead of last in chain, which causes confusion, like in
+#       test_chain2_seems_like_wrong_order.
+#
+# def test_chain2_seems_like_wrong_order():
+#     class IntThenStrModel(Chain2[Model[int], Model[str]]):
+#         ...
+#
+#     assert IntThenStrModel(3.4).contents == '3'
+
+
 def test_chain3_model():
     class RotateOneAndSplitCharsToMyListModel(Chain3[
             RotateOneCharModel,
