@@ -1,0 +1,34 @@
+{
+    "continuousHinting": true,
+    "suppressContinuousHintingIn": [
+        "Comment",
+        "BlockComment",
+        "LineComment",
+        "String"
+    ],
+    "suppressTriggerCharacterIn": [
+        "Comment",
+        "BlockComment",
+        "LineComment",
+        "String"
+    ],
+    "waitForBusyKernel": true,
+    "theme": "vscode",
+    "kernelCompletionsFirst": false,
+    "caseSensitive": true,
+    "includePerfectMatches": true,
+    "preFilterMatches": true,
+    "labelExtra": "auto",
+    "layout": "side-by-side",
+    "typesMap": {
+        "<unknown>": "Kernel",
+        "instance": "Value",
+        "path": "File",
+        "param": "Variable",
+        "missing": "Constant",
+        "nothing": "Constant",
+        "undefinitializer": "Constant",
+        "base.devnull": "Constant"
+    },
+    "disable": false
+}

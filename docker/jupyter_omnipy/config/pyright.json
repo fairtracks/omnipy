@@ -1,0 +1,14 @@
+{
+  "LanguageServerManager": {
+    "language_servers": {
+      "pyright-language": {
+        "version": 2,
+        "argv": ["pyright-langserver", "--stdio"],
+        "languages": ["python"],
+        "serverSettings": {
+           "python.analysis.useLibraryCodeForTypes": true
+        }
+      }
+    }
+  }
+}
