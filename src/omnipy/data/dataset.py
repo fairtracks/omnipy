@@ -725,7 +725,7 @@ class Dataset(
 
     def _load_http_urls(self, http_url_dataset: 'HttpUrlDataset') -> list[asyncio.Task]:
         from omnipy.components.remote.helpers import RateLimitingClientSession
-        from omnipy.components.remote.tasks import get_json_from_api_endpoint
+        from omnipy.components.remote.tasks import get_auto_from_api_endpoint
         hosts: defaultdict[str, list[int]] = defaultdict(list)
         for i, url in enumerate(http_url_dataset.values()):
             hosts[url.host].append(i)
@@ -739,7 +739,7 @@ class Dataset(
                         self.config.http_config_for_host[host].time_period_in_secs
                 ) as client_session:
                     indices = hosts[host]
-                    ret = get_json_from_api_endpoint.refine(
+                    ret = get_auto_from_api_endpoint.refine(
                         output_dataset_param='output_dataset').run(
                             http_url_dataset[indices],
                             client_session=client_session,
