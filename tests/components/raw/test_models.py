@@ -16,6 +16,8 @@ from omnipy.components.raw.models import (BytesModel,
                                           SplitLinesToColumnsModel,
                                           SplitToItemsModel,
                                           SplitToLinesModel,
+                                          StrictBytesModel,
+                                          StrictStrModel,
                                           StrModel)
 from omnipy.data.model import Model
 from omnipy.util._pydantic import ValidationError
@@ -35,6 +37,17 @@ def test_bytes_model() -> None:
     BytesModelMyEncoding = BytesModel.adjust('BytesModelMyEncoding', encoding='my-encoding')
     with pytest.raises(LookupError):
         BytesModelMyEncoding('æøå')
+
+
+def test_strict_bytes_model() -> None:
+    assert StrictBytesModel(b'').contents == b''
+    assert StrictBytesModel(b'\xc3\xa6\xc3\xb8\xc3\xa5').contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
+
+    with pytest.raises(ValidationError):
+        StrictBytesModel('')
+
+    with pytest.raises(ValidationError):
+        StrictBytesModel('æøå')
 
 
 def test_str_model():
@@ -58,6 +71,17 @@ def test_str_model():
     StrModelMyEncoding = StrModel.adjust('StrModelMyEncoding', encoding='my-encoding')
     with pytest.raises(LookupError):
         StrModelMyEncoding(b'\xe6\xf8\xe5')
+
+
+def test_strict_str_model():
+    assert StrictStrModel('').contents == ''
+    assert StrictStrModel('æøå').contents == 'æøå'
+
+    with pytest.raises(ValidationError):
+        StrictStrModel(b'')
+
+    with pytest.raises(ValidationError):
+        StrictStrModel(b'\xc3\xa6\xc3\xb8\xc3\xa5')
 
 
 @pc.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])

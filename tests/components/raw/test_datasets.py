@@ -12,7 +12,9 @@ from omnipy.components.raw.datasets import (BytesDataset,
                                             SplitLinesToColumnsDataset,
                                             SplitToItemsDataset,
                                             SplitToLinesDataset,
-                                            StrDataset)
+                                            StrDataset,
+                                            StrictBytesDataset,
+                                            StrictStrDataset)
 from omnipy.data.model import Model
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util._pydantic import ValidationError
@@ -38,6 +40,18 @@ def test_bytes_dataset() -> None:
         BytesDatasetMyEncoding(dict(a='æøå'))
 
 
+def test_strict_bytes_dataset() -> None:
+    assert StrictBytesDataset(dict(a=b''))['a'].contents == b''
+    assert StrictBytesDataset(
+        dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
+
+    with pytest.raises(ValidationError):
+        StrictBytesDataset(dict(a=''))
+
+    with pytest.raises(ValidationError):
+        StrictBytesDataset(dict(a='æøå'))
+
+
 def test_str_dataset() -> None:
     assert StrDataset(dict(a=''))['a'].contents == ''
     assert StrDataset(dict(a='æøå'))['a'].contents == 'æøå'
@@ -60,6 +74,17 @@ def test_str_dataset() -> None:
         'StrDatasetMyEncoding', 'StrModelMyEncoding', encoding='my-encoding')
     with pytest.raises(LookupError):
         StrDatasetMyEncoding(dict(a=b'\xe6\xf8\xe5'))
+
+
+def test_strict_str_dataset() -> None:
+    assert StrictStrDataset(dict(a=''))['a'].contents == ''
+    assert StrictStrDataset(dict(a='æøå'))['a'].contents == 'æøå'
+
+    with pytest.raises(ValidationError):
+        StrictStrDataset(dict(a=b''))
+
+    with pytest.raises(ValidationError):
+        StrictStrDataset(dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))
 
 
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])

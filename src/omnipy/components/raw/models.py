@@ -5,6 +5,7 @@ from typing_extensions import TypeVar
 from omnipy.data.helpers import obj_or_model_contents_isinstance
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
+import omnipy.util._pydantic as pyd
 
 
 class _EncodingParamsMixin:
@@ -29,6 +30,10 @@ class BytesModel(_BytesModel):
     )
 
 
+class StrictBytesModel(Model[pyd.StrictBytes]):
+    ...
+
+
 class _StrModel(Model[str | bytes], _EncodingParamsMixin):
     Params = _EncodingParamsMixin.Params
 
@@ -47,6 +52,10 @@ class StrModel(_StrModel):
         _StrModel.clone_model_cls,
         _EncodingParamsMixin.Params,
     )
+
+
+class StrictStrModel(Model[pyd.StrictStr]):
+    ...
 
 
 class _SplitToItemsParamsMixin:

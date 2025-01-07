@@ -13,7 +13,9 @@ from pydantic import PositiveInt  # noqa
 from pydantic import PrivateAttr  # noqa
 from pydantic import Protocol  # noqa
 from pydantic import root_validator  # noqa
+from pydantic import StrictBytes  # noqa
 from pydantic import StrictInt  # noqa
+from pydantic import StrictStr  # noqa
 from pydantic import ValidationError  # noqa
 from pydantic import validator  # noqa
 from pydantic.dataclasses import dataclass  # noqa

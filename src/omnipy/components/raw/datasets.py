@@ -14,6 +14,8 @@ from .models import (BytesModel,
                      SplitLinesToColumnsModel,
                      SplitToItemsModel,
                      SplitToLinesModel,
+                     StrictBytesModel,
+                     StrictStrModel,
                      StrModel)
 
 _BytesModelT = TypeVar('_BytesModelT', default=BytesModel)
@@ -37,6 +39,10 @@ class BytesDataset(_BytesDataset[BytesModel]):
     )
 
 
+class StrictBytesDataset(Dataset[StrictBytesModel]):
+    ...
+
+
 class _StrDataset(Dataset[_StrModelT], Generic[_StrModelT]):
     ...
 
@@ -47,6 +53,10 @@ class StrDataset(_StrDataset[StrModel]):
         StrModel,
         StrModel.Params,
     )
+
+
+class StrictStrDataset(Dataset[StrictStrModel]):
+    ...
 
 
 class _SplitToItemsDataset(Dataset[_SplitToItemsModelT], Generic[_SplitToItemsModelT]):
