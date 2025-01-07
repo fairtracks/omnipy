@@ -6,7 +6,6 @@ import aiohttp.web_response
 import pytest
 import pytest_cases as pc
 
-from helpers.functions import assert_model
 import omnipy
 from omnipy import (AutoResponseContentsDataset,
                     BytesDataset,
@@ -15,6 +14,7 @@ from omnipy import (AutoResponseContentsDataset,
                     Model,
                     StrDataset)
 
+from ...helpers.functions import assert_model
 from ...helpers.protocols import AssertModelOrValFunc
 from .cases.request_types import RequestTypeCase
 from .conftest import EndpointCase
