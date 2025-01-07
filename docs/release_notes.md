@@ -1,3 +1,17 @@
+## Omnipy v0.20.1
+
+_Release date: Jan 7, 2024_
+
+### New features in v0.20.1
+
+- Improved speed of JSON-heavy operations by removing unneeded model creation
+- Refactor Prefect engine to remove redundant code
+- Fix to run `dataset.load()` from sync tasks (e.g. bed in omnipy_examples)
+- Added `StrictStrModel`, `StrictBytesModel` and related `-Dataset` classes
+- Implemented `AutoResponseContentsModel` (and `-Dataset`) for automatic decoding of response
+  contents based on content type
+- Implemented `get_auto_from_api_endpoint()` and deployed in `Dataset.load()`
+
 ## Omnipy v0.20.0
 
 _Release date: Jan 6, 2024_
