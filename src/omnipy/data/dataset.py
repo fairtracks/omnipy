@@ -2,6 +2,7 @@ import asyncio
 from collections import defaultdict, UserDict
 from collections.abc import Iterable, Mapping, MutableMapping
 from copy import copy
+import inspect
 import json
 import os
 import tarfile
@@ -738,13 +739,20 @@ class Dataset(
                         self.config.http_config_for_host[host].time_period_in_secs
                 ) as client_session:
                     indices = hosts[host]
-                    task = (
-                        get_json_from_api_endpoint.refine(
-                            output_dataset_param='output_dataset').run(
-                                http_url_dataset[indices],
-                                client_session=client_session,
-                                output_dataset=self))
+                    ret = get_json_from_api_endpoint.refine(
+                        output_dataset_param='output_dataset').run(
+                            http_url_dataset[indices],
+                            client_session=client_session,
+                            output_dataset=self)
+
+                    if not isinstance(ret, asyncio.Task):
+                        assert inspect.iscoroutine(ret)
+                        task = asyncio.create_task(ret)
+                    else:
+                        task = ret
+
                     tasks.append(task)
+
                     while not task.done():
                         await asyncio.sleep(ASYNC_LOAD_SLEEP_TIME)
 
