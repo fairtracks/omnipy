@@ -1,9 +1,4 @@
-<style>
-  h1 {
-    display: none;
-  }
-</style>
-![Omnypy logo](https://fairtracks.net/_nuxt/img/9a84303.webp)
+![Omnipy logo](https://fairtracks.net/_nuxt/img/9a84303.webp)
 
 Omnipy is a high level Python library for type-driven data wrangling and scalable workflow
 orchestration.
@@ -12,18 +7,19 @@ orchestration.
 
 ## Updates
 
-- **June 22, 2024:** We're not very good at writing updates. Expect a larger update soon on an important 
-  and potentially groundbreaking new feature of Omnipy: the capability of model objects to automatically 
-  mimic behaviour of the modelled class – with the addition of snapshots and rollbacks.
-  So e.g. `Model[list[int]]()` is not just a run-time typesafe parser that continuously makes sure that the 
-  elements in the list are, in fact, integers; the object can also be operated as a list using e.g. 
-  `.append()`, `.insert()` and concatenation with the `+` operator; and furthermore: if you append an
-  unparseable element, say `"abc"` instead of `"123"`, it will roll back the contents to the previously 
-  validated snapshot!
+- **June 22, 2024:** We're not very good at writing updates. Expect a larger update soon on an
+  important and potentially groundbreaking new feature of Omnipy: the capability of model objects to
+  automatically mimic behaviour of the modelled class – with the addition of snapshots and
+  rollbacks. So e.g. `Model[list[int]]()` is not just a run-time typesafe parser that continuously
+  makes sure that the elements in the list are, in fact, integers; the object can also be operated
+  as a list using e.g.
+  `.append()`, `.insert()` and concatenation with the `+` operator; and furthermore: if you append
+  an unparseable element, say `"abc"` instead of `"123"`, it will roll back the contents to the
+  previously validated snapshot!
 - **Feb 3, 2023:** Documentation of the Omnipy API is still sparse. However, for examples of running
   code, please check out the [omnipy-examples repo](https://github.com/fairtracks/omnipy_examples).
 - **Dec 22, 2022:** Omnipy is the new name of the Python package formerly known as uniFAIR.
-  _We are very grateful to Dr. Jamin Chen, who gracefully transferred ownership of the (mostly 
+  _We are very grateful to Dr. Jamin Chen, who gracefully transferred ownership of the (mostly
   unused) "omnipy" name in PyPI to us!__
 
 ## Generic functionality
@@ -39,10 +35,10 @@ of fields and contexts beyond life science, including day-to-day research scenar
 
 ## Data wrangling in day-to-day research
 
-Researchers in life science and other data-centric fields
-often need to extract, manipulate and integrate data and/or metadata from different sources, such as
-repositories, databases or flat files. Much research time is spent on trivial and not-so-trivial
-details of such ["data wrangling"](https://en.wikipedia.org/wiki/Data_wrangling):
+Researchers in life science and other data-centric fields often need to extract, manipulate and
+integrate data and/or metadata from different sources, such as repositories, databases or flat
+files. Much research time is spent on trivial and not-so-trivial details of
+such ["data wrangling"](https://en.wikipedia.org/wiki/Data_wrangling):
 
 - reformat data structures
 - clean up errors
@@ -74,16 +70,16 @@ restriction of only allowing BigBED files"_).
 
 ## Data types as contracts
 
-Omnipy _tasks_ (single steps) or _flows_ (workflows) are defined as
-transformations from specific _input_ data models to specific _output_ data models.
+Omnipy _tasks_ (single steps) or _flows_ (workflows) are defined as transformations from specific
+_input_ data models to specific _output_ data models.
 [pydantic](https://pydantic-docs.helpmanual.io/)-based parsing guarantees that the input and output
 data always follows the data models (i.e. data types). Thus, the data models defines "contracts"
 that simplifies reuse of tasks and flows in a _mix-and-match_ fashion.
 
 ## Catalog of common processing steps
 
-Omnipy is built from the ground up to be modular. We aim
-to provide a catalog of commonly useful functionality ranging from:
+Omnipy is built from the ground up to be modular. We aim to provide a catalog of commonly useful
+functionality ranging from:
 
 - data import from REST API endpoints, common flat file formats, database dumps, etc.
 - flattening of complex, nested JSON structures
@@ -110,30 +106,29 @@ out the transformations needed to wrangle data into the required shape.
 
 ## Rerun only when needed
 
-When piecing together a custom flow in Omnipy, the user has persistent
-access to the state of the data at every step of the process. Persistent intermediate data allows
-for caching of tasks based on the input data and parameters. Hence, if the input data and parameters
-of a task does not change between runs, the task is not rerun. This is particularly useful for
-importing from REST API endpoints, as a flow can be continuously rerun without taxing the remote
-server; data import will only carried out in the initial iteration or when the REST API signals that
-the data has changed.
+When piecing together a custom flow in Omnipy, the user has persistent access to the state of the
+data at every step of the process. Persistent intermediate data allows for caching of tasks based on
+the input data and parameters. Hence, if the input data and parameters of a task does not change
+between runs, the task is not rerun. This is particularly useful for importing from REST API
+endpoints, as a flow can be continuously rerun without taxing the remote server; data import will
+only carried out in the initial iteration or when the REST API signals that the data has changed.
 
 ## Scale up with external compute resources
 
-In the case of large datasets, the researcher can set
-up a flow based on a representative sample of the full dataset, in a size that is suited for running
-locally on, say, a laptop. Once the flow has produced the correct output on the sample data, the
-operation can be seamlessly scaled up to the full dataset and sent off in
+In the case of large datasets, the researcher can set up a flow based on a representative sample of
+the full dataset, in a size that is suited for running locally on, say, a laptop. Once the flow has
+produced the correct output on the sample data, the operation can be seamlessly scaled up to the
+full dataset and sent off in
 [software containers](https://www.docker.com/resources/what-container/) to run on external compute
-resources, using e.g. [Kubernetes](https://kubernetes.io/). Such offloaded flows
-can be easily monitored using a web GUI.
+resources, using e.g. [Kubernetes](https://kubernetes.io/). Such offloaded flows can be easily
+monitored using a web GUI.
 
 ![Working with Omnipy directly from an Integrated Development Environment (IDE)](https://fairtracks.net/_nuxt/img/f9be071-1440.png)
 
 ## Industry-standard ETL backbone
 
-Offloading of flows to external compute resources is provided by
-the integration of Omnipy with a workflow engine based on the [Prefect](https://www.prefect.io/)
+Offloading of flows to external compute resources is provided by the integration of Omnipy with a
+workflow engine based on the [Prefect](https://www.prefect.io/)
 Python package. Prefect is an industry-leading platform for dataflow automation and orchestration
 that brings a [series of powerful features](https://www.prefect.io/opensource/) to Omnipy:
 
@@ -151,8 +146,8 @@ that brings a [series of powerful features](https://www.prefect.io/opensource/) 
 
 ## Pluggable workflow engines
 
-It is also possible to integrate Omnipy with other workflow
-backends by implementing new workflow engine plugins. This is relatively easy to do, as the core
-architecture of Omnipy allows the user to easily switch the workflow engine at runtime. Omnipy
-supports both traditional DAG-based and the more _avant garde_ code-based definition of flows. Two
-workflow engines are currently supported: _local_ and _prefect_.
+It is also possible to integrate Omnipy with other workflow backends by implementing new workflow
+engine plugins. This is relatively easy to do, as the core architecture of Omnipy allows the user to
+easily switch the workflow engine at runtime. Omnipy supports both traditional DAG-based and the
+more _avant garde_ code-based definition of flows. Two workflow engines are currently supported:
+_local_ and _prefect_.
