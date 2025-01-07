@@ -16,8 +16,7 @@ from omnipy import (AutoResponseContentsDataset,
 
 from ...helpers.functions import assert_model
 from ...helpers.protocols import AssertModelOrValFunc
-from .cases.request_types import RequestTypeCase
-from .conftest import EndpointCase
+from .helpers.classes import EndpointCase, RequestTypeCase
 
 
 def _assert_query_results(assert_model_if_dyn_conv_else_val,

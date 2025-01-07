@@ -6,10 +6,11 @@ from typing import Annotated, AsyncGenerator
 
 from aiohttp import web
 from aiohttp.test_utils import TestServer
-from attr import dataclass
 import pytest_cases as pc
 
 from omnipy import HttpUrlDataset, HttpUrlModel, JsonModel, Model, StrictBytesModel, StrictStrModel
+
+from .helpers.classes import EndpointCase
 
 
 async def _get_lyrics(url: str):
@@ -130,12 +131,6 @@ async def lyrics_json_server_url(
 async def timeout_lyrics_server_url(
         lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
     yield str(lyrics_server.make_url('/timeout_lyrics'))
-
-
-@dataclass
-class EndpointCase:
-    query_urls: HttpUrlDataset
-    auto_model_type: type[Model]
 
 
 @pc.fixture(scope='function')

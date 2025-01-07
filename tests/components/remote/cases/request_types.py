@@ -1,11 +1,9 @@
-from dataclasses import dataclass
 from typing import Annotated
 
 import pytest
 import pytest_cases as pc
 
-from components.remote.conftest import EndpointCase
-from omnipy import BytesDataset, Dataset, JsonDataset, StrDataset, TaskTemplate
+from omnipy import BytesDataset, Dataset, JsonDataset, StrDataset
 from omnipy.components.remote.datasets import AutoResponseContentsDataset
 from omnipy.components.remote.tasks import (async_load_urls_into_new_dataset,
                                             get_auto_from_api_endpoint,
@@ -14,13 +12,7 @@ from omnipy.components.remote.tasks import (async_load_urls_into_new_dataset,
                                             get_str_from_api_endpoint,
                                             load_urls_into_new_dataset)
 
-
-@dataclass
-class RequestTypeCase:
-    is_async: bool
-    job: TaskTemplate
-    kwargs: dict[str, object]
-    dataset_cls: type[Dataset]
+from ..helpers.classes import EndpointCase, RequestTypeCase
 
 
 @pc.case(tags='supports_external_session')
