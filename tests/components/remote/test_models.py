@@ -3,8 +3,13 @@ from typing import Annotated
 
 import pytest
 
-from omnipy import Model
-from omnipy.components.remote.models import HttpUrlModel, QueryParamsModel, UrlPathModel
+from omnipy import JsonModel, Model
+from omnipy.components.raw.models import StrictBytesModel, StrictStrModel
+from omnipy.components.remote.models import (AutoResponseContentsModel,
+                                             HttpUrlModel,
+                                             QueryParamsModel,
+                                             ResponseContentsPydModel,
+                                             UrlPathModel)
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util._pydantic import ValidationError
 
@@ -260,3 +265,17 @@ def test_http_url_model_add_operator(
 
     with pytest.raises(TypeError):
         url + new_url  # type: ignore[operator]
+
+
+def test_auto_response_contents_model() -> None:
+    model = AutoResponseContentsModel(
+        ResponseContentsPydModel(content_type='text/plain', response='abc'))
+    assert model.contents == StrictStrModel('abc')
+
+    model = AutoResponseContentsModel(
+        ResponseContentsPydModel(content_type='application/octet-stream', response=b'abc'))
+    assert model.contents == StrictBytesModel(b'abc')
+
+    model = AutoResponseContentsModel(
+        ResponseContentsPydModel(content_type='application/json', response='abc'))
+    assert model.contents == JsonModel('abc')

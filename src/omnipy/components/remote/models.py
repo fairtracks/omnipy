@@ -2,13 +2,19 @@ from pathlib import PurePosixPath
 from typing import Any, cast, TYPE_CHECKING, TypeGuard
 from urllib.parse import quote, unquote
 
+from aiohttp.helpers import MimeType, parse_mimetype
+from pydantic import BaseModel
 from pydantic_core import Url
 
 from omnipy.data.model import Model
-import omnipy.util._pydantic as pyd
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 
-from ..raw.models import NestedJoinItemsModel, NestedSplitToItemsModel
+from ...util import _pydantic as pyd
+from ..json.models import JsonModel
+from ..raw.models import (NestedJoinItemsModel,
+                          NestedSplitToItemsModel,
+                          StrictBytesModel,
+                          StrictStrModel)
 
 __all__ = [
     'QueryParamsModel',
@@ -196,3 +202,56 @@ if TYPE_CHECKING:
 
     class HttpUrlModel_UrlDataclassModel(HttpUrlModel, UrlDataclassModel):
         ...
+
+
+class ModelFriendlyMimeType(BaseModel):
+    type: str
+    subtype: str
+    suffix: str
+    parameters: tuple[tuple[str, str], ...]
+
+
+class ResponseContentsPydModel(pyd.BaseModel):
+    content_type: ModelFriendlyMimeType | str
+    response: object
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    @pyd.validator('content_type')
+    def parse_content_type(cls,
+                           contents_type: ModelFriendlyMimeType | str) -> ModelFriendlyMimeType:
+        if isinstance(contents_type, ModelFriendlyMimeType):
+            return contents_type
+
+        mime_type: MimeType = parse_mimetype(contents_type)
+        return ModelFriendlyMimeType(
+            type=mime_type.type,
+            subtype=mime_type.subtype,
+            suffix=mime_type.suffix,
+            parameters=tuple(mime_type.parameters.items()),
+        )
+
+
+class AutoResponseContentsModel(Model[ResponseContentsPydModel | StrictBytesModel | StrictStrModel
+                                      | JsonModel]):
+    class Config:
+        smart_union = False
+
+    @classmethod
+    def _parse_data(
+        cls, data: ResponseContentsPydModel | StrictBytesModel | StrictStrModel | JsonModel
+    ) -> StrictBytesModel | StrictStrModel | JsonModel:
+        if isinstance(data, ResponseContentsPydModel):
+            assert isinstance(data.content_type, ModelFriendlyMimeType)
+
+            mimetype_tuple = (data.content_type.type, data.content_type.subtype)
+            match mimetype_tuple:
+                case ('application', 'json'):
+                    return JsonModel(data.response)
+                case ('text', 'plain'):
+                    return StrictStrModel(data.response)
+                case ('application', 'octet-stream') | _:
+                    return StrictBytesModel(data.response)
+        else:
+            return data
