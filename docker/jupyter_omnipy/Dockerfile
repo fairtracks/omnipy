@@ -42,3 +42,5 @@ RUN fix-permissions $CONDA_DIR && \
     fix-permissions /opt/conda/etc/jupyter
 
 WORKDIR $HOME
+
+RUN cd work && ln -s ../shared && cd ..
