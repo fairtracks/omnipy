@@ -24,6 +24,7 @@ RUN jupyter-labextension enable @jupyter-lsp/jupyterlab-lsp
 RUN jupyter server extension enable jupyterlab_lsp
 RUN jupyter server extension enable jupyter_lsp
 
+RUN mkdir shared
 RUN mkdir -p .jupyter/lab/user-settings/\@jupyter-lsp/jupyterlab-lsp
 RUN mkdir -p .jupyter/lab/user-settings/\@jupyterlab/completer-extension
 RUN mkdir -p .jupyter/lab/user-settings/\@jupyterlab/apputils-extension
