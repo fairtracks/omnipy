@@ -5,6 +5,6 @@
         "CompletionProvider:kernel": 550
     },
     "providerTimeout": 1000,
-    "showDocumentationPanel": true,
+    "showDocumentationPanel": false,
     "autoCompletion": true
 }
