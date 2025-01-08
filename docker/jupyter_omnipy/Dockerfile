@@ -19,7 +19,7 @@ RUN mamba install python=3.12 ipykernel ipywidgets -y && mamba clean -ay
 RUN pip install omnipy omnipy_examples itables
 RUN ipython kernel install --user --name=omnipy --display-name Omnipy
 
-SHELL ["conda", "run", "--no-capture-output", "-n", "base", "/bin/bash", "-c"]
+SHELL ["/bin/sh", "-c"]
 
 RUN jupyter-labextension enable @jupyter-lsp/jupyterlab-lsp
 RUN jupyter server extension enable jupyterlab_lsp
