@@ -17,7 +17,6 @@ SHELL ["conda", "run", "--no-capture-output", "-n", "omnipy", "/bin/bash", "-c"]
 
 RUN mamba install python=3.12 ipykernel ipywidgets -y && mamba clean -ay
 RUN pip install omnipy omnipy_examples itables
-RUN ipython kernel install --user --name=omnipy --display-name Omnipy
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
