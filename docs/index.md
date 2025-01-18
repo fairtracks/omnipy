@@ -20,3 +20,15 @@
 /// html | div.indented_paragraphs
 --8<-- "readme.md:10:94"
 ///
+
+/// html | div.left_column
+--8<-- "readme.md:95:"
+///
+
+/// html | div.right_column
+--8<-- "parse_dont_validate.md"
+///
+
+/// html | div.clear
+///
+

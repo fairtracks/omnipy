@@ -161,6 +161,21 @@ p:has(img) {
 .left_border {
   border-left: solid #4C3E39 2px
 }
+
+.left_column {
+  float: left;
+  width: 50%;
+}
+
+.right_column {
+  float: right;
+  width: 50%;
+}
+
+.clear {
+  clear: both;
+}
+
 .indented_paragraphs p:has(strong) {
   margin-bottom: 0;
 }
