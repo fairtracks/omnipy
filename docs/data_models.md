@@ -1,29 +1,10 @@
-## Overview
-
-_(In this section we assume that you have read the ["Python typing"](./python_typing.md) section or 
-have an overview of the concepts presented there)._
-
-The design of Omnipy centers around two submodules, the `omnipy.data` submodule used to describe 
-data structures and manage datasets, and the `omnipy.compute` submodule, which is focused on 
-defining tasks and flows that together make up a simple code-oriented solution to define data flows
-that can be deployed either locally or on remote compute resources.
-
-The following two sections will introduce the basic concepts of each of these submodules.
-
-## `omnipy.data`
-
-The `omnipy.data` submodule is the foundation of the Omnipy library. It is built around the concept
-of data models and datasets, which are used to define and manage data structures in a way that 
-guarantees data integrity and type safety – while allowing easy scalability. The two core classes
-are the `Model` and `Dataset` classes.
-
-### Model
+## Models parse and operate on structured data
 
 The Model class is the most basic building block of the Omnipy library. It is a generic class that
 has several important features:
 
 
-#### Omnipy makes use of Python type hinting to  define structured data models
+### Omnipy makes use of Python type hinting to  define structured data models
 
 To define a data model, simply provide a type hint as a type parameter to the Model class.
 For example, to define a data model that represents a list of integers, you would write:
@@ -58,7 +39,7 @@ print(nested_data)  # prints: NestedModel({'a': IntListModel([-1, 2, 4]), 'b': I
 
 
 
-#### "Parse, don't validate" with Omnipy Model objects
+### "Parse, don't validate" with Omnipy Model objects
 
 While `pydantic` is focusing mostly on data validation, Omnipy `Model` objects are designed to 
 be parsers, rather than just validators. (Please read _Technical note #2: "Parse, don't validate"_ 
@@ -108,7 +89,7 @@ class OnlyPosIntListModel(Model[list[int]]):
         return [i for i in data if i > 0]
 ```
 
-#### Model objects provide snapshots and automatic rollbacks
+### Model objects provide snapshots and automatic rollbacks
 
 If an Omnipy `Model` model contains invalid data, a `ValidationError` will be raised. However, since
 the model object is now in an invalid state, Omnipy will automatically roll back the contents to the
@@ -146,7 +127,7 @@ from omnipy import runtime
 runtime.config.data.interactive_mode = False
 ```
 
-#### Model objects can be operated as the modelled class
+### Model objects can be operated as the modelled class
 
 One potentially groundbreaking feature of Omnipy is the capability of model objects to automatically
 mimic behaviour of the modelled class. A `Model` object  So e.g.
