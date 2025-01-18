@@ -18,11 +18,11 @@
 ///
 
 /// html | div.indented_paragraphs
---8<-- "readme.md:10:94"
+--8<-- "readme.md:10:59"
 ///
 
 /// html | div.left_column
---8<-- "readme.md:95:"
+--8<-- "readme.md:60:"
 ///
 
 /// html | div.right_column

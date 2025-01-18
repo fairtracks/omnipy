@@ -8,89 +8,55 @@ Omnipy is a type-driven Python library for:
 
 ![Conceptual overview of Omnipy](images/omnipy-overview-comics-style.png)
 
-
 ## Why use Omnipy?
 
-**Model-centric dataflows instead of tool-centric workflows**
+**Dataflows, Not Workflows**
 
-Automated workflows often rely on command-line tools and intermediate files. For data pipelines,
-this approach often adds unnecessary complexity and rigidity. Omnipy dataflows operate directly on
-data — whether in memory or serialized to standard formats like JSON or CSV. By
-extending [Pydantic](https://docs.pydantic.dev/) models, Omnipy simplifies parsing, conversion, and
-serialization of data based on explicit, structured data models.
+Traditional workflows rely on command-line tools and intermediate files, adding complexity to data
+pipelines. Omnipy replaces this with dataflows that operate directly in memory or on standard
+formats like JSON or CSV. Built on [Pydantic](https://docs.pydantic.dev/) models, Omnipy enhances
+data parsing, conversion, and serialization for structured data processing.
 
-**For data wrangling, you should parse, not validate!**
+**"It's Static Typing!"… "It's Dynamic!"… "It's Omnipy!"**
 
-While [Pydantic v2](https://pydantic.dev/articles/pydantic-v2#strict-mode-) started a transition
-from being a ["parsing library"](https://github.com/pydantic/pydantic/issues/578) towards stricter
-validation of input data, Omnipy moves in the opposite direction. Following the well-known
-[Robustness Principle](https://devopedia.org/postel-s-law), Omnipy data models aims to be _"liberal
-in what you accept, and conservative in what you send"_. Real-world data is messy and being too 
-pedantic in data input cause many unnecessary errors in data pipelines. However, once data is
-parsed into an Omnipy model, it is guaranteed to follow the model's structure. The Robustness
-Principle has recently been reiterated in the context of type-driven software design as the slogan
+Omnipy blends Python’s dynamic typing with runtime type safety. Models behave like native Python
+structures while ensuring type guarantees without the rigidity of static typing. Defined in Python,
+Omnipy models can be as general or specific as needed.
+
+**Parse, Don’t Validate**
+
+Strict validation often breaks pipelines when data is messy. Inspired by
 ["Parse, don't validate"](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/),
-(explained in detail [below](#parse-dont-validate)).
+Omnipy eagerly parses input into structured models that retain integrity throughout the pipeline.
+This approach aligns with the [Robustness Principle](https://devopedia.org/postel-s-law): _"be
+liberal in what you accept, and conservative in what you send!"_
 
-**"It's static typing!"… "It's dynamic!"… "No, it's Omnipy!"**
+**Self-Constraining Data Models**
 
-Omnipy leverages a combination of the traditional dynamic typing of Python with the newer type hint
-syntax _applied at runtime_. This combination ensures that potentially messy data are 
-liberally parsed and transformed to conform to user-specified output models, but without 
-the hassle of static typing at compile time. Indeed, Omnipy models are designed to operate as 
-drop-in replacements for regular dynamic Python types, but with guaranteed type adherence at 
-runtime. Omnipy models are defined in Python code, with the flexibility to be as general or
-specific as needed, and can make use of standard Python patterns like inheritance and composition.
+Omnipy models aren’t just one-time validators. A `Model[list[int]]()` behaves like a list but
+ensures its elements are always integers. Every modification parses data to enforce integrity,
+rolling back invalid operations automatically.
 
-**Omnipy models ensures data integrity as self-constraining data structures**
+**Omnify Your Data Pipelines**
 
-In most other libraries (including Pydantic), parsing/validation is mainly an one-time operation. 
-In contrast, Omnipy models continue to parse and transform data as they are operated on. 
-Omnipy models mimic the behavior of the data structures they wrap. For example,
-`Model[list[int]]()` is not just a run-time typesafe parser that continuously makes sure that the 
-elements in the list are, in fact, integers; the object can also be operated as a list using e.g.
-`.append()`, `.insert()` and concatenation with the `+` operator. Furthermore, if you append
-an unparseable element, say `"abc"` instead of `"123"`, it will roll back the contents to a 
-previously validated snapshot!
+Omnipy invites you to ["omnify"](https://www.websters1913.com/words/Omnify) pipelines — break them
+into reusable, universal components. By defining dataflows and tasks with structured input and
+output models, Omnipy simplifies reuse and promotes good coding practices, improving maintainability
+as projects grow.
 
-**"Omnified" data models, ETL tasks and dataflows encourage reuse of interoperable components**
+**Catalog of Components for Interoperability**
 
-["Omnify"](https://www.websters1913.com/words/Omnify) is a now-obsolete english word that means
-"to render/make universal". Omnipy encourages developers to "omnify" their data pipelines, i.e. by
-splitting them into smaller elements that can be universalised for reuse in other context, or
-replaced with elements that have already been "omnified". Data transformations and other ETL 
-tasks in Omnipy are clearly defined in terms of the data model of the data they accept as input and the data
-model of the outputs. Dataflows are hierarchically comprised of tasks and subflows, also defined in
-terms of data models. Data models can be defined in terms of their internal data structure; 
-parsing and conversion methods; and serializations. This puzzle-piece approach simplifies 
-reuse of data models, ETL tasks and dataflows, and aids in the development of robust,
-interoperable data pipelines.
+Omnipy includes components for tasks like asynchronous API requests with rate limiting, parsing JSON
+or tabular data, and flattening nested data into relational tables. Integration with REST APIs and
+data wrangling/analysis tools like [Pandas](https://pandas.pydata.org/) simplifies interoperability
+across diverse systems. Expect the catalog to grow as the community expands!
 
-**Catalog of Omnipy components for common data models, processing steps and tool integrations**
+**Built to Scale**
 
-Omnipy comes with a catalog of modular components for common data wrangling tasks and tool
-integrations, including support for parsing and transformation of JSON, text and tabular data;
-scalable asynchronous requests to REST APIs with integrated support for rate limiting and retries;
-flattening of nested data structures into relational tables; automated data mapping; and seamless
-integration with data analytics tools like [Pandas](https://pandas.pydata.org/). Expect the catalog
-of components to grow as the Omnipy community expands!
-
-**Modular, maintainable and scalable.**
-
-Omnipy is built from the ground up to be modular at every level. The modular structure encourages
-good coding practices such as decoupling, design by contract, and separation of concerns. Batch
-processing of data is made easy through the use of a hierarchical 'Dataset' structure that
-encapsulates data and metadata, and which can be mapped to file directories or compressed
-equivalents through hassle-free batch parsing and serialization. Dataflows can be easily scaled up
-to run on external compute resources, and can be monitored and controlled through a web GUI. The
-integration with the [Prefect](https://www.prefect.io/) dataflow engine provides a robust and
-scalable backbone for dataflow orchestration.
-
-**Perfect for AI.**
-
-The usefulness and correctness of AI/machine learning models depend on the quality of the data they
-are trained on. Omnipy dataflows simplifies correct parsing and transformation of data before being
-fed into AI models, thereby improving the quality of the models.
+Omnipy’s hierarchical `Dataset` structure simplifies batch processing of directory-based data,
+including parsing, serialization, and metadata handling. With
+built-in [Prefect](https://www.prefect.io/) support, Omnipy scales seamlessly from local experiments
+to distributed deployment, meeting the demands of projects large and small.
 
 ## Generic functionality
 
