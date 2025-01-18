@@ -1,7 +1,7 @@
 [project]
 name = "omnipy"
 version = "0.20.1"
-description = "Omnipy is a high level Python library for type-driven data wrangling and scalable workflow orchestration (under development)"
+description = "Omnipy is a type-driven Python library for data conversion, parsing and wrangling; tool and web service interoperability; and scalable dataflow orchestration"
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
 license = { file = "LICENSE" }

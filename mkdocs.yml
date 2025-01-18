@@ -25,8 +25,10 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      base_path: ["docs"]
   - pymdownx.superfences
+  - pymdownx.blocks.html
   - mdx_truly_sane_lists
 #  - attr_list
 #  - footnotes
