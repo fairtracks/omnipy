@@ -1,21 +1,21 @@
   [data-md-color-scheme="omnipy"] {
-    --md-typeset-a-color:                #55762f;
-    --md-primary-fg-color: #5b4f0e;
-    --md-accent-fg-color:                #7a8528;
+    --md-typeset-a-color:                #326B69;
+    --md-primary-fg-color: #193635;
+    --md-accent-fg-color:                #4FA8A5;
 
     --doc-symbol-parameter-fg-color: #848285;
     --doc-symbol-attribute-fg-color: #6278a1;
     --doc-symbol-function-fg-color: #a64112;
     --doc-symbol-method-fg-color: #bd663E;
-    --doc-symbol-class-fg-color: #55762f;
-    --doc-symbol-module-fg-color: #5b4f0e;
+    --doc-symbol-class-fg-color: #326B69;
+    --doc-symbol-module-fg-color: #193635;
 
     --doc-symbol-parameter-bg-color: #8482851a;
     --doc-symbol-attribute-bg-color: #6278a11a;
     --doc-symbol-function-bg-color: #a641121a;
     --doc-symbol-method-bg-color: #bd663E1a;
-    --doc-symbol-class-bg-color: #55762f1a;
-    --doc-symbol-module-bg-color: #5b4f0e1a;
+    --doc-symbol-class-bg-color: #326B691a;
+    --doc-symbol-module-bg-color: #1936351a;
   }
 
 /* Orange: #B84714 #BD7555 */
@@ -53,25 +53,24 @@ code.doc-symbol-module::after {
 
 .md-typeset .admonition.source,
 .md-typeset details.source {
-  border-color: #55762f ;
+  border-color: #326B69 ;
 }
 .md-typeset .source > .admonition-title,
 .md-typeset .source > summary {
-  background-color: #55762f1A;
+  background-color: #326B691A;
 }
 .md-typeset .source > .admonition-title::before,
 .md-typeset .source > summary::before {
-  background-color: #55762f;
+  background-color: #326B69;
   -webkit-mask-image: var(--md-admonition-icon--example);
           mask-image: var(--md-admonition-icon--example);
 }
 
 .md-typeset h1 {
-  padding: 0.5em;
   margin: 0;
   font-weight: 400;
   background-color: #d8d7ce;
-  padding: 0.5em;
+  padding: 0.3em 0.6em 0.3em 0.6em;
 }
 
 .md-typeset h1 code {
@@ -80,16 +79,25 @@ code.doc-symbol-module::after {
 
 .md-typeset h2 {
   background-color: #e3d071;
-  padding: 0.4em;
+  padding: 0.2em 0.6em 0.2em 0.6em;
+  margin: 0;
 }
 
 .md-typeset h2 code {
   background-color: #e3d071;
 }
 
-
 .md-typeset table:not([class]) {
     font-size: 0.9em;
+}
+
+.md-typeset ol, .md-typeset ul {
+  margin-top: 0.5em !important;
+  margin-bottom: 0.5em !important;
+}
+
+.md-typeset ol li, .md-typeset ul li {
+  margin-bottom: 0 !important;
 }
 
 
