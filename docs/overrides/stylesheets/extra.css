@@ -80,7 +80,11 @@ code.doc-symbol-module::after {
 .md-typeset h2 {
   background-color: #e3d071;
   padding: 0.2em 0.6em 0.2em 0.6em;
-  margin: 0;
+  margin: 1em 0 0 0;
+}
+
+.md-typeset h1 + h2 {
+  margin: 0.5em 0 0 0;
 }
 
 .md-typeset h2 code {
@@ -133,16 +137,37 @@ a.autorefs-external:hover::after {
   background-color: var(--md-accent-fg-color);
 }
 
-
-
 .center {
   display: flex;
   align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: start;
 }
 
-.center p:has(img), .center div {
-  padding: 0.5em 2em 0.5em 2em;
+.center p:has(img) {
+  padding: 0em 0em 0.5em 0em;
+}
+
+.center div {
+  padding: 0.5em 0em 0em 0em;
+}
+
+@media only screen and (min-width: 800px) {
+  .center {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .left_border {
+    border-left: solid #4C3E39 2px
+  }
+
+
+  .center p:has(img), .center div {
+    padding: 0.5em 2em 0.5em 2em;
+  }
 }
 
 .center p, .center div {
@@ -156,10 +181,6 @@ a.autorefs-external:hover::after {
 p:has(img) {
     line-height: 0;
     margin: 2em 0 2em 0;
-}
-
-.left_border {
-  border-left: solid #4C3E39 2px
 }
 
 .left_column {
@@ -181,7 +202,7 @@ p:has(img) {
 }
 
 .indented_paragraphs p:not(:has(strong)) {
-  padding-left: 3em;
+  padding-left: 2.5em;
   margin-top: 0;
 }
 
