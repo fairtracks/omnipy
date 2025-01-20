@@ -2,7 +2,7 @@
 name = "omnipy"
 version = "0.20.1"
 description = "Omnipy is a type-driven Python library for data conversion, parsing and wrangling; tool and web service interoperability; and scalable dataflow orchestration"
-readme = "README.md"
+readme = "docs/readme.md"
 requires-python = ">=3.10,<3.13"
 license = { file = "LICENSE" }
 authors = [{name="Sveinung Gundersen"}, {name="Joshua Baskaran"}, {name="Federico Bianchini"}, {name="Jeanne Chèneby"}, {name="Ahmed Ghanem"},{name="Pável Vázquez"}]
