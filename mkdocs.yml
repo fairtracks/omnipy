@@ -36,7 +36,6 @@ markdown_extensions:
 
 nav:
 - Omnipy: index.md
-- Install: install.md
 - Python typing: python_typing.md
 - Data models: data_models.md
 - Contributing: contributing.md

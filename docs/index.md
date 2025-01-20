@@ -18,17 +18,8 @@
 ///
 
 /// html | div.indented_paragraphs
---8<-- "readme.md:10:59"
+--8<-- "readme.md:10:61"
 ///
 
-/// html | div.left_column
---8<-- "readme.md:60:"
-///
-
-/// html | div.right_column
---8<-- "parse_dont_validate.md"
-///
-
-/// html | div.clear
-///
+--8<-- "readme.md:62:"
 
