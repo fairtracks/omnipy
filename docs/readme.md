@@ -81,15 +81,14 @@ pip install omnipy
 
 The output will by default appear in the `data` directory, with a timestamp. 
 
-  - It is recommended to install a file viewer that are capable of browsing tar.gz files. 
-    For instance, the "File Expander" plugin in PyCharm is excellent for this.
-  - To unpack the compressed files of a run on the command line 
-    (just make sure to replace the datetime string from this example): 
+- It is recommended to install a file viewer that are capable of browsing tar.gz files. 
+  For instance, the "File Expander" plugin in PyCharm is excellent for this.
+- To unpack the compressed files of a run on the command line 
+  (just make sure to replace the datetime string from this example):
+  ```
+  for f in $(ls data/2023_02_03-12_51_51/*.tar.gz); do mkdir ${f%.tar.gz}; tar xfzv $f -C ${f%.tar.gz}; done
+  ```
 
-```
-for f in $(ls data/2023_02_03-12_51_51/*.tar.gz); do mkdir ${f%.tar.gz}; tar xfzv $f -C ${f%.tar.gz}; done
-```
-    
 ### Run with the Prefect engine
 
 Omnipy is integrated with the powerful [Prefect](https://prefect.io) dataflow orchestration library.
