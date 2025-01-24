@@ -62,9 +62,24 @@ to distributed deployment, meeting the demands of projects large and small.
 
 ## Installing Omnipy
 
-```
-pip install omnipy
-```
+1. Create and activate a virtual environment for your project.
+
+    > TIP:
+    > - If you need help with setting up a virtual environment, check out the relevant section in
+    >   the [FastAPI documentation](https://fastapi.tiangolo.com/virtual-environments/).
+    >   _(Please note that Omnipy does not depend on FastAPI, it is just that their documentation is 
+    >   excellent!)_
+    > - If you are using Omnipy in a [Jupyter notebook](https://jupyter.org/), you can most likely 
+    >   skip this step. 
+
+2. Install Omnipy using:
+    ```bash
+    pip install omnipy
+    ```
+
+## Getting started
+
+Text to come soon.
 
 
 ## Running example scripts
