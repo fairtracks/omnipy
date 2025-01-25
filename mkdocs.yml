@@ -8,6 +8,7 @@ theme:
   palette:
     - scheme: omnipy
   logo: images/omnipy-puzzle-piece-logo-white.png
+  favicon: images/favicon.png
   features:
     - content.code.copy
     - content.code.annotation
