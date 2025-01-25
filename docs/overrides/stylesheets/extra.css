@@ -66,6 +66,10 @@ code.doc-symbol-module::after {
           mask-image: var(--md-admonition-icon--example);
 }
 
+.md-header__ellipsis {
+  display:none
+}
+
 .md-typeset h1 {
   margin: 0;
   font-weight: 400;
