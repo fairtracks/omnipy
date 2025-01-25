@@ -62,7 +62,20 @@ to distributed deployment, meeting the demands of projects large and small.
 
 ## Installing Omnipy
 
-1. Create and activate a virtual environment for your project.
+1. Make sure that your Python version is between `3.10` and `3.12` (Python `3.13` is not yet 
+   supported), e.g.:
+
+    ```bash
+    $ python --version
+    Python 3.10.14
+    ```
+
+2. Create and activate a virtual environment for your project, e.g.:
+
+    ```bash
+    $ python -m venv myproject
+    $ source myproject/bin/activate
+    ```
 
     > TIP:
     > - If you need help with setting up a virtual environment, check out the relevant section in
@@ -74,7 +87,7 @@ to distributed deployment, meeting the demands of projects large and small.
 
 2. Install Omnipy using:
     ```bash
-    pip install omnipy
+    $ pip install omnipy
     ```
 
 ## Getting started
