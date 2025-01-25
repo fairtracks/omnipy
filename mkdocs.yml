@@ -1,6 +1,9 @@
 site_name: Omnipy
+site_description: Omnipy is a type-driven Python library for data conversion, parsing and wrangling;
+                  tool and web service interoperability; and scalable dataflow orchestration
 repo_url: https://github.com/fairtracks/omnipy
 site_url: https://omnipy.readthedocs.io/
+
 theme:
   name: material
   custom_dir: docs/overrides
@@ -13,9 +16,12 @@ theme:
     - content.code.copy
     - content.code.annotation
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
+    - navigation.tracking
     - search.highlight
     - toc.integrate
+    - toc.follow
 extra_css:
   - stylesheets/extra.css
 markdown_extensions:
