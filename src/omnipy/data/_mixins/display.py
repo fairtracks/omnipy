@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 import functools
 import inspect
 import os
+import re
 from textwrap import dedent
 from types import ModuleType
 from typing import Any, cast
@@ -69,13 +70,11 @@ class ModelDisplayMixin(BaseDisplayMixin):
             yield_from_generators=True,
         )
 
-        structure = str(debug.format(self))
+        structure = self._fixup_pretty_print(str(debug.format(self.to_data())))
         structure_lines = structure.splitlines()
-        new_structure_lines = dedent(os.linesep.join(structure_lines[1:])).splitlines()
-        if new_structure_lines[0].startswith('self: '):
-            new_structure_lines[0] = new_structure_lines[0][5:]
+
         max_section_height = (terminal_size_lines - 8) // 2
-        structure_len = len(new_structure_lines)
+        structure_len = len(structure_lines)
 
         def _is_table():
             data = self.to_data()
@@ -91,8 +90,8 @@ class ModelDisplayMixin(BaseDisplayMixin):
             top_structure_end = max_section_height
             bottom_structure_start = structure_len - max_section_height
 
-            top_structure = os.linesep.join(new_structure_lines[:top_structure_end])
-            bottom_structure = os.linesep.join(new_structure_lines[bottom_structure_start:])
+            top_structure = os.linesep.join(structure_lines[:top_structure_end])
+            bottom_structure = os.linesep.join(structure_lines[bottom_structure_start:])
 
             out = tabulate(
                 (
@@ -109,13 +108,26 @@ class ModelDisplayMixin(BaseDisplayMixin):
                 (
                     ('#', self.__class__.__name__),
                     (os.linesep.join(str(i) for i in range(structure_len)),
-                     os.linesep.join(new_structure_lines)),
+                     os.linesep.join(structure_lines)),
                 ),
                 maxcolwidths=[header_column_width, data_column_width],
                 tablefmt='rounded_grid',
             )
 
         return out
+
+    def _fixup_pretty_print(self, structure):
+        # Split into lines and remove the first line
+        structure_lines = structure.splitlines()[1:]
+
+        # Remove 'self: ' from the second line (now the first line)
+        structure_lines[0] = re.sub(r'^(\s+)self\S*: ', '\\1', structure_lines[0])
+
+        # Remove extra debug output from the last line
+        structure_lines[-1] = re.sub(r'\(\S+\) (len=\d+)?$', '', structure_lines[-1])
+
+        # Join and dedent the lines
+        return dedent(os.linesep.join(structure_lines))
 
 
 class DatasetDisplayMixin(BaseDisplayMixin):
