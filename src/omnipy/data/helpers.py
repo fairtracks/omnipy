@@ -2,7 +2,6 @@ from collections import defaultdict
 from contextlib import suppress
 from dataclasses import dataclass
 from enum import IntEnum
-import functools
 from typing import (Any,
                     ContextManager,
                     ForwardRef,
@@ -16,7 +15,6 @@ from typing_extensions import TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.shared.typedefs import TypeForm
-from omnipy.util._pydantic import is_none_type, lenient_isinstance, lenient_issubclass
 from omnipy.util.helpers import format_classname_with_params, is_union
 
 __all__ = [
@@ -25,9 +23,6 @@ __all__ = [
     'TypeVarStore3',
     'TypeVarStore4',
     'DoubleTypeVarStore',
-    'is_model_instance',
-    'is_model_subclass',
-    'obj_or_model_contents_isinstance',
     'PendingData',
     'FailedData',
     'HasData',
@@ -204,23 +199,6 @@ def cleanup_name_qualname_and_module(
     model_or_dataset.__name__ = format_classname_with_params(cls.__name__, params_str)
     model_or_dataset.__qualname__ = format_classname_with_params(cls.__qualname__, params_str)
     model_or_dataset.__module__ = cls.__module__
-
-
-def is_model_instance(__obj: object) -> bool:
-    from omnipy.data.model import Model
-    return lenient_isinstance(__obj, Model) \
-        and not is_none_type(__obj)  # Consequence of _ModelMetaclass hack
-
-
-@functools.cache
-def is_model_subclass(__cls: TypeForm) -> bool:
-    from omnipy.data.model import Model
-    return lenient_issubclass(__cls, Model) \
-        and not is_none_type(__cls)  # Consequence of _ModelMetaclass hack
-
-
-def obj_or_model_contents_isinstance(__obj: object, __class_or_tuple: type) -> bool:
-    return isinstance(__obj.contents if is_model_instance(__obj) else __obj, __class_or_tuple)
 
 
 # def orjson_dumps(v, *, default):

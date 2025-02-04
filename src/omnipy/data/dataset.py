@@ -20,10 +20,9 @@ from omnipy.data._selector import (create_updated_mapping,
                                    prepare_selected_items_with_mapping_data,
                                    select_keys)
 from omnipy.data.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
-from omnipy.data.helpers import (cleanup_name_qualname_and_module,
-                                 is_model_instance,
-                                 is_model_subclass)
+from omnipy.data.helpers import cleanup_name_qualname_and_module
 from omnipy.data.model import Model
+from omnipy.data.typechecks import is_model_instance, is_model_subclass
 from omnipy.shared.protocols.data import IsDataset, IsModel, IsMultiModelDataset
 from omnipy.shared.typedefs import TypeForm
 from omnipy.util._pydantic import Undefined, UndefinedType, ValidationError

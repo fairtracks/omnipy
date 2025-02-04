@@ -2,7 +2,8 @@ from typing import Any, cast, get_args
 
 from typing_extensions import TypeVar
 
-from omnipy.data.helpers import FailedData, HasData, is_model_subclass, PendingData
+from omnipy.data.helpers import FailedData, HasData, PendingData
+from omnipy.data.typechecks import is_model_subclass
 from omnipy.shared.exceptions import FailedDataError, PendingDataError
 from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.typedefs import TypeForm

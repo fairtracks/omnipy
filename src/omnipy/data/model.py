@@ -30,11 +30,11 @@ from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
 from omnipy.data.constants import ROOT_KEY
 from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  get_special_methods_info_dict,
-                                 is_model_instance,
                                  MethodInfo,
                                  ResetSolutionTuple,
                                  validate_cls_counts,
                                  YesNoMaybe)
+from omnipy.data.typechecks import is_model_instance
 from omnipy.shared.protocols.data import IsModel
 from omnipy.shared.protocols.util import IsSnapshotWrapper
 from omnipy.shared.typedefs import TypeForm

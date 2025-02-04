@@ -2,9 +2,9 @@ from typing import Callable, cast, Generic, TypeAlias
 
 from typing_extensions import TypeVar
 
-from omnipy.data.helpers import obj_or_model_contents_isinstance
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
+from omnipy.data.typechecks import obj_or_model_contents_isinstance
 import omnipy.util._pydantic as pyd
 
 
