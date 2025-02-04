@@ -109,6 +109,16 @@ def test_data_config_http_config_for_host_default(
         .requests_per_time_period == 60
 
 
+def test_data_config_reset_to_terminal_size(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    os.environ['COLUMNS'] = '100'
+    os.environ['LINES'] = '50'
+    runtime.config.data.terminal_size_columns = 80
+    runtime.config.data.terminal_size_lines = 24
+    runtime.config.data.reset_to_terminal_size()
+    assert runtime.config.data.terminal_size_columns == 100
+    assert runtime.config.data.terminal_size_lines == 50
+
+
 def test_init_runtime_config_after_data_class_creator(
         runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
 

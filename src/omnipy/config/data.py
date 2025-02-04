@@ -7,8 +7,6 @@ from omnipy.shared.enums import BackoffStrategy
 from omnipy.shared.protocols.config import IsHttpConfig
 import omnipy.util._pydantic as pyd
 
-_terminal_size = shutil.get_terminal_size()
-
 
 class HttpConfig(ConfigBase):
     # For RateLimitingClientSession helper class
@@ -24,8 +22,9 @@ class HttpConfig(ConfigBase):
 class DataConfig(ConfigBase):
     interactive_mode: bool = True
     dynamically_convert_elements_to_models: bool = False
-    terminal_size_columns: int = _terminal_size.columns
-    terminal_size_lines: int = _terminal_size.lines
+    terminal_size_columns: int = pyd.Field(
+        default_factory=lambda: shutil.get_terminal_size().columns)
+    terminal_size_lines: int = pyd.Field(default_factory=lambda: shutil.get_terminal_size().lines)
     http_defaults: IsHttpConfig = pyd.Field(default_factory=HttpConfig)
     http_config_for_host: defaultdict[str, IsHttpConfig] = pyd.Field(
         default_factory=lambda: defaultdict(HttpConfig))
@@ -35,3 +34,8 @@ class DataConfig(ConfigBase):
                              _http_config_for_host: defaultdict[str, HttpConfig],
                              values: dict[str, Any]) -> defaultdict[str, HttpConfig]:
         return defaultdict(lambda: values['http_defaults'].copy())
+
+    def reset_to_terminal_size(self) -> None:
+        terminal_size = shutil.get_terminal_size()
+        self.terminal_size_columns = terminal_size.columns
+        self.terminal_size_lines = terminal_size.lines
