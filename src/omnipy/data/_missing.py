@@ -3,7 +3,7 @@ from typing import Any, get_args, Mapping, MutableSequence
 
 from typing_extensions import TypeVar
 
-from omnipy.data.helpers import is_model_subclass
+from omnipy.data.typechecks import is_model_subclass
 from omnipy.shared.exceptions import OmnipyNoneIsNotAllowedError
 from omnipy.shared.typedefs import TypeForm
 from omnipy.util._pydantic import is_none_type, lenient_isinstance, lenient_issubclass, Undefined

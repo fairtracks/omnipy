@@ -2,8 +2,8 @@ from collections.abc import Iterable
 from io import StringIO
 from typing import Any, TYPE_CHECKING
 
-from omnipy.data.helpers import is_model_instance
 from omnipy.data.model import Model
+from omnipy.data.typechecks import is_model_instance
 
 from . import pd
 from ..tables.models import (TableDictOfDictsOfJsonScalarsModel,

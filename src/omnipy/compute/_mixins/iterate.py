@@ -10,8 +10,9 @@ from omnipy.compute._mixins.typedefs import (_InputDatasetT,
                                              _ReturnDatasetT,
                                              IsIterateInnerCallable)
 from omnipy.data.dataset import Dataset
-from omnipy.data.helpers import FailedData, is_model_subclass, PendingData
+from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
+from omnipy.data.typechecks import is_model_subclass
 from omnipy.shared.protocols.compute._job import IsJobBase, IsPlainFuncArgJobBase
 from omnipy.shared.protocols.data import IsDataset
 

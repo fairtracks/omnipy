@@ -2,11 +2,9 @@ from typing import Literal
 
 import pytest
 
-from omnipy.data.helpers import (FailedData,
-                                 is_model_instance,
-                                 obj_or_model_contents_isinstance,
-                                 PendingData)
+from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
+from omnipy.data.typechecks import is_model_instance, obj_or_model_contents_isinstance
 from omnipy.util._pydantic import ValidationError
 
 from .helpers.models import PydanticParentModel
