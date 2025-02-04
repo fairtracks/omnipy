@@ -44,6 +44,9 @@ class IsDataConfig(IsDataPublisher, Protocol):
     http_defaults: 'IsHttpConfig'
     http_config_for_host: defaultdict[str, 'IsHttpConfig']
 
+    def reset_to_terminal_size(self) -> None:
+        ...
+
 
 @runtime_checkable
 class IsHttpConfig(IsDataPublisher, Protocol):
