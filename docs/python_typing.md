@@ -247,4 +247,4 @@ worlds to the Python developer:
 - The safety and reusability from static typing at runtime.
 
 For more information on how to use the `Model` class and the rest of the `omnipy` 
-library, please continue onwards to the ["Data models"](./data_models) section.
+library, please continue onwards to the ["Data models"](data_models.md) section.

@@ -12,6 +12,8 @@ theme:
     - scheme: omnipy
   logo: images/omnipy-puzzle-piece-logo-white.png
   favicon: images/favicon.png
+#  icon:
+#    annotation: material/arrow-right-circle
   features:
     - content.code.copy
     - content.code.annotation
@@ -37,11 +39,12 @@ markdown_extensions:
       base_path: ["docs"]
   - pymdownx.superfences
   - pymdownx.blocks.html
+#  - pymdownx.blocks.tab
   - mdx_truly_sane_lists
   - callouts
 #  - attr_list
-#  - footnotes
 #  - md_in_html
+#  - footnotes
 
 nav:
 - Omnipy: index.md
