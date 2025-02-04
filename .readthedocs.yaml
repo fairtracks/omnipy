@@ -8,9 +8,9 @@ build:
   os: "ubuntu-22.04"
   tools:
     python: "3.10"
+  apt_packages:
+    - language-pack-en
   jobs:
-    post_system_dependencies:
-      - apt-get install -y language-pack-en
     post_create_environment:
       # Install poetry
       # https://python-poetry.org/docs/#installing-manually
