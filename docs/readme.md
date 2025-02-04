@@ -92,8 +92,24 @@ to distributed deployment, meeting the demands of projects large and small.
 
 ## Getting started
 
-Text to come soon.
+To define an Omnipy data model, simply concretize the generic `Model` class by specifying a 
+data type in brackets, e.g. `Model[list[int]]`.
 
+The following creates a data model of a list of integers, and parses some data into that model:
+
+```pycon exec="1" source="console"
+>>> from omnipy import Model
+>>> data = (123, '234', 345.0)  # Note that the input data is a tuple of mixed types
+>>> data_as_list_of_ints = Model[list[int]](data)
+>>> data_as_list_of_ints  # The data is now parsed into a list of integers
+```
+
+```pycon exec="1" result="console"
+>>> from omnipy import Model
+>>> print(Model[list[int]]((123, '234', 345.0)).pretty_repr())
+```
+ 
+More text to come soon...
 
 ## Running example scripts
 - Install `omnipy-examples`:

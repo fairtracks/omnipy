@@ -23,6 +23,7 @@ theme:
     - toc.integrate
     - toc.follow
 extra_css:
+  - https://cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/hack.css
   - stylesheets/extra.css
 markdown_extensions:
 #  - pymdownx.details
@@ -61,6 +62,7 @@ plugins:
 - literate-nav:
     nav_file: SUMMARY.md
 - section-index
+- markdown-exec
 - mkdocstrings:
     handlers:
       python:

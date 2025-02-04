@@ -1,7 +1,12 @@
-  [data-md-color-scheme="omnipy"] {
-    --md-typeset-a-color:                #326B69;
+:root {
+  --md-code-font: Hack;
+  -webkit-font-smoothing: auto;
+}
+
+[data-md-color-scheme="omnipy"] {
+    --md-typeset-a-color: #326B69;
     --md-primary-fg-color: #193635;
-    --md-accent-fg-color:                #4FA8A5;
+    --md-accent-fg-color: #4FA8A5;
 
     --doc-symbol-parameter-fg-color: #848285;
     --doc-symbol-attribute-fg-color: #6278a1;
@@ -24,8 +29,9 @@
   --md-code-hl-number-color:   #7D4A14;
   --md-code-hl-special-color: #BD663E;
   --md-code-hl-function-color: #A64112;
-  --md-code-hl-constant-color: #848285;
+  --md-code-hl-constant-color: #666666;
   --md-code-hl-keyword-color: #6278A1;
+  --md-code-hl-generic-color: #333333;
 }
 code.doc-symbol-parameter::after {
   content: "param";
@@ -68,6 +74,31 @@ code.doc-symbol-module::after {
 
 .md-header__ellipsis {
   display:none
+}
+
+/* Remove bottom margin for top code box of two consecutive code boxes  */
+.md-typeset div:has(+ div > pre) > pre {
+  margin-bottom: 0;
+}
+
+/* Remove top margin for bottom code box of two consecutive code boxes  */
+.md-typeset div:has(> pre) + div > pre  {
+  margin-top: 0;
+}
+
+/* Remove "copy code" button for bottom code box of two consecutive code boxes  */
+.md-typeset div:has(> pre) + div > pre > button  {
+  display: none;
+}
+
+/* Improve mono font by removing thinning of fonts */
+.md-typeset code {
+  -webkit-font-smoothing: auto;
+}
+
+/* Improve mono font line art by removing gaps between lines */
+.md-typeset div:has(> pre) + div > pre > code  {
+  line-height: normal;
 }
 
 .md-typeset h1 {
