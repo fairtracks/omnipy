@@ -92,8 +92,9 @@ code.doc-symbol-module::after {
 }
 
 /* Improve mono font by removing thinning of fonts */
-.md-typeset code {
+.md-typeset pre>code {
   -webkit-font-smoothing: auto;
+  scrollbar-width: none;
 }
 
 /* Improve mono font line art by removing gaps between lines */
