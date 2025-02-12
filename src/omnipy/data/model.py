@@ -735,6 +735,8 @@ class Model(
             config.dynamically_convert_elements_to_models = False
             return {ROOT_KEY: cls._parse_data(value)}
 
+    # TODO: Rename Model.contents to Model.content as it may be a single value, while "contents"
+    #       implies a countable collection of values
     @property
     def contents(self) -> _RootT:
         return cast(_RootT, self.__dict__.get(ROOT_KEY))
