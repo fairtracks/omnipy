@@ -213,31 +213,29 @@ def _adjusted_multi_line_pretty_repr(
     return repr_str
 
 
-def pretty_repr(
-    data: object,
-    indent_tab_size: int = _DEFAULT_INDENT_TAB_SIZE,
-    max_width: int = _DEFAULT_MAX_WIDTH,
-    height: int = _DEFAULT_HEIGHT,
-    pretty_printer: PrettyPrinterLib = _DEFAULT_PRETTY_PRINTER,
-    debug_mode: bool = False,
-) -> str:
-    if is_model_instance(data) and not debug_mode:
-        data = data.to_data()
+def pretty_repr_of_draft(draft: DraftOutput,) -> DraftTextOutput:
+    if draft.frame.dims.width is None or draft.frame.dims.height is None:
+        raise ValueError(f'Both frame dimensions must be defined: {draft.frame.dims}')
+
+    if is_model_instance(draft.content) and not draft.config.debug_mode:
+        data = draft.content.to_data()
+    else:
+        data = draft.content
 
     full_repr = _basic_pretty_repr(
         data,
-        indent_tab_size=indent_tab_size,
-        max_line_width=max_width,
-        max_container_width=max_width,
-        pretty_printer=pretty_printer,
+        indent_tab_size=draft.config.indent_tab_size,
+        max_line_width=draft.frame.dims.width,
+        max_container_width=draft.frame.dims.width,
+        pretty_printer=draft.config.pretty_printer,
     )
     if _is_nested_structure(data, full_repr):
-        return _adjusted_multi_line_pretty_repr(
+        full_repr = _adjusted_multi_line_pretty_repr(
             data,
             repr_str=full_repr,
-            indent_tab_size=indent_tab_size,
-            max_width=max_width,
-            height=height,
-            pretty_printer=pretty_printer,
+            indent_tab_size=draft.config.indent_tab_size,
+            max_width=draft.frame.dims.width,
+            height=draft.frame.dims.height,
+            pretty_printer=draft.config.pretty_printer,
         )
-    return full_repr
+    return DraftTextOutput(full_repr, frame=draft.frame, config=draft.config)

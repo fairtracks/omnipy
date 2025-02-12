@@ -12,7 +12,7 @@ from omnipy.data._display import (DefinedDimensions,
                                   DraftTextOutput,
                                   Frame,
                                   OutputConfig,
-                                  pretty_repr,
+                                  pretty_repr_of_draft,
                                   PrettyPrinterLib)
 from omnipy.data.model import Model
 
@@ -347,24 +347,42 @@ def _harmonize(output: str) -> str:
     return re.sub(r',(\n *[\]\}\)])', '\\1', output)
 
 
-def _assert_pretty_repr(
-    pretty_printer: PrettyPrinterLib,
+def _assert_pretty_repr_of_draft(
     data: object,
     expected_output: str,
-    **kwargs,
+    frame: Frame | None = None,
+    config: OutputConfig | None = None,
 ) -> None:
-    assert _harmonize(pretty_repr(data, pretty_printer=pretty_printer, **kwargs)) == expected_output
+    if frame is None:
+        frame = Frame(Dimensions(width=80, height=24))
+
+    kwargs = _create_draft_output_kwargs(frame, config)
+    in_draft = DraftOutput(data, **kwargs)
+
+    out_draft: DraftTextOutput = pretty_repr_of_draft(in_draft)
+
+    assert _harmonize(out_draft.content) == expected_output
+
+
+def test_pretty_repr_of_draft_init_frame_required(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    with pytest.raises(ValueError):
+        pretty_repr_of_draft(DraftOutput(1))
+
+    out_draft: DraftTextOutput = pretty_repr_of_draft(DraftOutput(1, Frame(Dimensions(80, 24))))
+    assert out_draft.content == '1'
 
 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
-def test_pretty_repr_multi_line_if_nested(
+def test_pretty_repr_of_draft_multi_line_if_nested(
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     pretty_printer: PrettyPrinterLib,
 ) -> None:
-    _assert_pretty_repr(pretty_printer, 1, '1')
-    _assert_pretty_repr(pretty_printer, [1, 2, 3], '[1, 2, 3]')
-    _assert_pretty_repr(
-        pretty_printer,
+    config = OutputConfig(pretty_printer=pretty_printer)
+
+    _assert_pretty_repr_of_draft(1, '1', config=config)
+    _assert_pretty_repr_of_draft([1, 2, 3], '[1, 2, 3]', config=config)
+    _assert_pretty_repr_of_draft(
         [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         dedent("""\
         [
@@ -372,10 +390,10 @@ def test_pretty_repr_multi_line_if_nested(
           [4, 5, 6],
           [7, 8, 9]
         ]"""),
+        config=config,
     )
-    _assert_pretty_repr(pretty_printer, {1: 2, 3: 4}, '{1: 2, 3: 4}')
-    _assert_pretty_repr(
-        pretty_printer,
+    _assert_pretty_repr_of_draft({1: 2, 3: 4}, '{1: 2, 3: 4}', config=config)
+    _assert_pretty_repr_of_draft(
         [{
             1: 2, 3: 4
         }],
@@ -386,9 +404,9 @@ def test_pretty_repr_multi_line_if_nested(
             3: 4
           }
         ]"""),
+        config=config,
     )
-    _assert_pretty_repr(
-        pretty_printer,
+    _assert_pretty_repr_of_draft(
         [[1, 2, 3], [()], [[4, 5, 6], [7, 8, 9]]],
         dedent("""\
         [
@@ -399,17 +417,17 @@ def test_pretty_repr_multi_line_if_nested(
             [7, 8, 9]
           ]
         ]"""),
+        config=config,
     )
 
 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
-def test_pretty_repr_indent(
+def test_pretty_repr_of_draft_indent(
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     pretty_printer: PrettyPrinterLib,
 ) -> None:
 
-    _assert_pretty_repr(
-        pretty_printer,
+    _assert_pretty_repr_of_draft(
         [[1, 2, 3], [[4, 5, 6], [7, 8, 9]]],
         dedent("""\
         [
@@ -419,19 +437,19 @@ def test_pretty_repr_indent(
                 [7, 8, 9]
             ]
         ]"""),
-        indent_tab_size=4,
+        config=OutputConfig(indent_tab_size=4, pretty_printer=pretty_printer),
     )
 
 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
-def test_pretty_repr_max_width(
+def test_pretty_repr_of_draft_in_frame(
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     pretty_printer: PrettyPrinterLib,
 ) -> None:
+    config = OutputConfig(pretty_printer=pretty_printer)
 
     data_1 = [[1, 2], [[3, 4, 5, 6], [7, 8, 9]]]
-    _assert_pretty_repr(
-        pretty_printer,
+    _assert_pretty_repr_of_draft(
         data_1,
         dedent("""\
         [
@@ -441,11 +459,10 @@ def test_pretty_repr_max_width(
             [7, 8, 9]
           ]
         ]"""),
-        max_width=17,
-        height=7,
+        frame=Frame(Dimensions(17, 7)),
+        config=config,
     )
-    _assert_pretty_repr(
-        pretty_printer,
+    _assert_pretty_repr_of_draft(
         data_1,
         dedent("""\
         [
@@ -460,8 +477,8 @@ def test_pretty_repr_max_width(
             [7, 8, 9]
           ]
         ]"""),
-        max_width=16,
-        height=12,
+        frame=Frame(Dimensions(16, 12)),
+        config=config,
     )
 
     data_2 = [{
@@ -481,8 +498,7 @@ def test_pretty_repr_max_width(
         }
     }]
 
-    _assert_pretty_repr(
-        pretty_printer,
+    _assert_pretty_repr_of_draft(
         data_2,
         dedent("""\
         [
@@ -495,11 +511,10 @@ def test_pretty_repr_max_width(
             }
           }
         ]"""),
-        max_width=150,
-        height=9,
+        frame=Frame(Dimensions(150, 9)),
+        config=config,
     )
-    _assert_pretty_repr(
-        pretty_printer,
+    _assert_pretty_repr_of_draft(
         data_2,
         dedent("""\
         [
@@ -514,12 +529,11 @@ def test_pretty_repr_max_width(
             }
           }
         ]"""),
-        max_width=149,
-        height=9,
+        frame=Frame(Dimensions(149, 9)),
+        config=config,
     )
 
-    _assert_pretty_repr(
-        pretty_printer,
+    _assert_pretty_repr_of_draft(
         data_2,
         dedent("""\
         [
@@ -543,13 +557,13 @@ def test_pretty_repr_max_width(
             }
           }
         ]"""),
-        max_width=37,
-        height=21,
+        frame=Frame(Dimensions(37, 21)),
+        config=config,
     )
 
 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
-def test_pretty_repr_models(
+def test_pretty_repr_of_draft_models(
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     pretty_printer: PrettyPrinterLib,
 ) -> None:
@@ -559,19 +573,17 @@ def test_pretty_repr_models(
     class ListOfListsOfIntsModel(Model[list[ListOfIntsModel]]):
         ...
 
-    _assert_pretty_repr(
-        pretty_printer,
+    _assert_pretty_repr_of_draft(
         ListOfListsOfIntsModel([[1, 2, 3], [4, 5, 6]]),
         dedent("""\
         [
           [1, 2, 3],
           [4, 5, 6]
         ]"""),
-        debug_mode=False,
+        config=OutputConfig(debug_mode=False, pretty_printer=pretty_printer),
     )
 
-    _assert_pretty_repr(
-        pretty_printer,
+    _assert_pretty_repr_of_draft(
         ListOfListsOfIntsModel([[1, 2, 3], [4, 5, 6]]),
         dedent("""\
         ListOfListsOfIntsModel(
@@ -584,7 +596,7 @@ def test_pretty_repr_models(
             )
           ]
         )"""),
-        debug_mode=True,
+        config=OutputConfig(debug_mode=True, pretty_printer=pretty_printer),
     )
 
 
@@ -597,8 +609,9 @@ strings ('(...)', '[...]', or '{...}') are present in the input data, the adjust
 confused.
 """)
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
-def test_pretty_repr_multi_line_if_nested_known_issue(
+def test_pretty_repr_of_draft_multi_line_if_nested_known_issue(
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     pretty_printer: PrettyPrinterLib,
 ) -> None:
-    _assert_pretty_repr(pretty_printer, [1, 2, '[...]'], "[1, 2, '[...]']")
+    config = OutputConfig(pretty_printer=pretty_printer)
+    _assert_pretty_repr_of_draft([1, 2, '[...]'], "[1, 2, '[...]']", config=config)
