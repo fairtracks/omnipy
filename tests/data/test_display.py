@@ -8,6 +8,7 @@ import pytest
 from omnipy.data._display import (DefinedDimensions,
                                   Dimensions,
                                   DimensionsFit,
+                                  Frame,
                                   OutputConfig,
                                   pretty_repr,
                                   PrettyPrinterLib)
@@ -217,6 +218,18 @@ def test_fail_output_config_no_positional_parameters(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     with pytest.raises(TypeError):
         OutputConfig(2, True)  # type: ignore
+
+
+def test_frame(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    frame = Frame()
+    assert frame.dims.width is None
+    assert frame.dims.height is None
+
+    dims = Dimensions(10, 20)
+
+    frame = Frame(dims)
+    assert frame.dims is dims
 
 
 def _harmonize(output: str) -> str:

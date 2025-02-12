@@ -9,6 +9,7 @@ from omnipy.data.typechecks import is_model_instance
 from omnipy.util._pydantic import (ConfigDict,
                                    dataclass,
                                    Extra,
+                                   Field,
                                    NonNegativeInt,
                                    validate_arguments,
                                    validator)
@@ -64,6 +65,11 @@ class OutputConfig:
     indent_tab_size: NonNegativeInt = 2
     debug_mode: bool = False
     pretty_printer: PrettyPrinterLib = PrettyPrinterLib.RICH
+
+
+@dataclass
+class Frame:
+    dims: Dimensions = Field(default_factory=Dimensions)
 
 
 _DEFAULT_INDENT_TAB_SIZE = 2
