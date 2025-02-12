@@ -59,6 +59,13 @@ class PrettyPrinterLib(str, Enum):
     RICH = 'rich'
 
 
+@dataclass(kw_only=True, config=ConfigDict(extra=Extra.forbid))
+class OutputConfig:
+    indent_tab_size: NonNegativeInt = 2
+    debug_mode: bool = False
+    pretty_printer: PrettyPrinterLib = PrettyPrinterLib.RICH
+
+
 _DEFAULT_INDENT_TAB_SIZE = 2
 _DEFAULT_MAX_WIDTH = 80
 _DEFAULT_HEIGHT = 24
