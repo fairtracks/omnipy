@@ -19,6 +19,7 @@ from pydantic import (BaseConfig,
                       StrictBytes,
                       StrictInt,
                       StrictStr,
+                      validate_arguments,
                       ValidationError,
                       validator)
 from pydantic.dataclasses import dataclass

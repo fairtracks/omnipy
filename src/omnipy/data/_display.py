@@ -6,7 +6,12 @@ from devtools import PrettyFormat
 from rich.pretty import pretty_repr as rich_pretty_repr
 
 from omnipy.data.typechecks import is_model_instance
-from omnipy.util._pydantic import ConfigDict, dataclass, Extra, NonNegativeInt, validator
+from omnipy.util._pydantic import (ConfigDict,
+                                   dataclass,
+                                   Extra,
+                                   NonNegativeInt,
+                                   validate_arguments,
+                                   validator)
 
 
 @dataclass(config=ConfigDict(extra=Extra.forbid))
@@ -25,6 +30,28 @@ class DefinedDimensions(Dimensions):
         if v is None:
             raise ValueError('Dimension value cannot be None')
         return v
+
+
+@dataclass(frozen=True)
+class DimensionsFit:
+    width: bool | None = None
+    height: bool | None = None
+
+    @validate_arguments
+    def __init__(self, dims: DefinedDimensions, frame_dims: Dimensions):
+        assert dims.width is not None and dims.height is not None
+        if frame_dims.width is not None:
+            object.__setattr__(self, 'width', dims.width <= frame_dims.width)
+        if dims.height is not None and frame_dims.height is not None:
+            object.__setattr__(self, 'height', dims.height <= frame_dims.height)
+
+    # TODO: With Pydantic v2, use @computed_field for DimensionsFit.both
+    @property
+    def both(self):
+        if self.width is None or self.height is None:
+            return None
+        else:
+            return self.width and self.height
 
 
 class PrettyPrinterLib(str, Enum):
