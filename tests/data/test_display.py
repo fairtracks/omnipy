@@ -5,8 +5,80 @@ from typing import Annotated
 
 import pytest
 
-from omnipy.data._display import pretty_repr, PrettyPrinterLib
+from omnipy.data._display import DefinedDimensions, Dimensions, pretty_repr, PrettyPrinterLib
 from omnipy.data.model import Model
+
+
+def _assert_dimensions(dims_cls: type[Dimensions], width: int | None, height: int | None) -> None:
+    dims = dims_cls(width, height)
+    assert dims.width == width
+    assert dims.height == height
+
+
+def test_dimensions(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    _assert_dimensions(Dimensions, None, None)
+    _assert_dimensions(Dimensions, 10, None)
+    _assert_dimensions(Dimensions, None, 20)
+    _assert_dimensions(Dimensions, 10, 20)
+    _assert_dimensions(Dimensions, 0, 0)
+    _assert_dimensions(Dimensions, 10, 0)
+    _assert_dimensions(Dimensions, 0, 20)
+    _assert_dimensions(Dimensions, 10, 20)
+
+
+def test_defined_dimensions(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    _assert_dimensions(DefinedDimensions, 10, 20)
+    _assert_dimensions(DefinedDimensions, 0, 0)
+    _assert_dimensions(DefinedDimensions, 10, 0)
+    _assert_dimensions(DefinedDimensions, 0, 20)
+    _assert_dimensions(DefinedDimensions, 10, 20)
+
+
+def test_fail_defined_dimensions_if_none(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    with pytest.raises(ValueError):
+        DefinedDimensions(None, None)
+
+    with pytest.raises(ValueError):
+        DefinedDimensions(10, None)
+
+    with pytest.raises(ValueError):
+        DefinedDimensions(None, 20)
+
+
+@pytest.mark.parametrize('dims_cls', [Dimensions, DefinedDimensions])
+def test_fail_dimensions_if_negative(
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+    dims_cls: type[Dimensions],
+) -> None:
+    with pytest.raises(ValueError):
+        dims_cls(-1, None)
+
+    with pytest.raises(ValueError):
+        dims_cls(-1, 0)
+
+    with pytest.raises(ValueError):
+        dims_cls(None, -1)
+
+    with pytest.raises(ValueError):
+        dims_cls(0, -1)
+
+    with pytest.raises(ValueError):
+        dims_cls(-1, -1)
+
+
+@pytest.mark.parametrize('dims_cls', [Dimensions, DefinedDimensions])
+def test_fail_dimensions_if_extra_param(
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+    dims_cls: type[Dimensions],
+) -> None:
+    with pytest.raises(TypeError):
+        dims_cls(10, 20, 30)  # type: ignore
+
+    with pytest.raises(TypeError):
+        dims_cls(10, 20, extra=30)  # type: ignore
 
 
 def _harmonize(output: str) -> str:

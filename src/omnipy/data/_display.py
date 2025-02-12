@@ -6,6 +6,25 @@ from devtools import PrettyFormat
 from rich.pretty import pretty_repr as rich_pretty_repr
 
 from omnipy.data.typechecks import is_model_instance
+from omnipy.util._pydantic import ConfigDict, dataclass, Extra, NonNegativeInt, validator
+
+
+@dataclass(config=ConfigDict(extra=Extra.forbid))
+class Dimensions:
+    width: NonNegativeInt | None = None
+    height: NonNegativeInt | None = None
+
+
+@dataclass(config=ConfigDict(extra=Extra.forbid))
+class DefinedDimensions(Dimensions):
+    # width: NonNegativeInt | None = None
+    # height: NonNegativeInt | None = None
+
+    @validator('width', 'height')
+    def no_none_values(cls, v):
+        if v is None:
+            raise ValueError('Dimension value cannot be None')
+        return v
 
 
 class PrettyPrinterLib(str, Enum):
