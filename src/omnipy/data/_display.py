@@ -1,9 +1,10 @@
 from enum import Enum
 import re
-from typing import NamedTuple
+from typing import Generic, NamedTuple
 
 from devtools import PrettyFormat
 from rich.pretty import pretty_repr as rich_pretty_repr
+from typing_extensions import TypeVar
 
 from omnipy.data.typechecks import is_model_instance
 from omnipy.util._pydantic import (ConfigDict,
@@ -70,6 +71,39 @@ class OutputConfig:
 @dataclass
 class Frame:
     dims: Dimensions = Field(default_factory=Dimensions)
+
+
+ContentT = TypeVar('ContentT', bound=object)
+
+
+@dataclass
+class DraftOutput(Generic[ContentT]):
+    content: ContentT
+    frame: Frame = Field(default_factory=Frame)
+    config: OutputConfig = Field(default_factory=OutputConfig)
+
+
+@dataclass
+class DraftTextOutput(DraftOutput[str]):
+    content: str
+
+    @property
+    def _width(self):
+        if len(self.content) == 0:
+            return 0
+        return max(len(line) for line in self.content.splitlines())
+
+    @property
+    def _height(self):
+        return len(self.content.splitlines())
+
+    @property
+    def dims(self) -> DefinedDimensions:
+        return DefinedDimensions(width=self._width, height=self._height)
+
+    @property
+    def within_frame(self) -> DimensionsFit:
+        return DimensionsFit(self.dims, self.frame.dims)
 
 
 _DEFAULT_INDENT_TAB_SIZE = 2
