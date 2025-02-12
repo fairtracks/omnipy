@@ -24,14 +24,11 @@ class Dimensions:
 
 @dataclass(config=ConfigDict(extra=Extra.forbid))
 class DefinedDimensions(Dimensions):
-    # width: NonNegativeInt | None = None
-    # height: NonNegativeInt | None = None
-
     @validator('width', 'height')
-    def no_none_values(cls, v):
-        if v is None:
+    def no_none_values(cls, value: NonNegativeInt | None):
+        if value is None:
             raise ValueError('Dimension value cannot be None')
-        return v
+        return value
 
 
 @dataclass(frozen=True)
@@ -106,12 +103,6 @@ class DraftTextOutput(DraftOutput[str]):
         return DimensionsFit(self.dims, self.frame.dims)
 
 
-_DEFAULT_INDENT_TAB_SIZE = 2
-_DEFAULT_MAX_WIDTH = 80
-_DEFAULT_HEIGHT = 24
-_DEFAULT_PRETTY_PRINTER: PrettyPrinterLib = PrettyPrinterLib.DEVTOOLS
-
-
 class ReprMeasures(NamedTuple):
     num_lines: int
     max_line_width: int
@@ -150,10 +141,10 @@ def _is_nested_structure(data, full_repr):
 
 def _basic_pretty_repr(
     data: object,
-    indent_tab_size: int = _DEFAULT_INDENT_TAB_SIZE,
-    max_line_width: int = _DEFAULT_MAX_WIDTH,
-    max_container_width: int = _DEFAULT_MAX_WIDTH,
-    pretty_printer: PrettyPrinterLib = _DEFAULT_PRETTY_PRINTER,
+    indent_tab_size: int,
+    max_line_width: int,
+    max_container_width: int,
+    pretty_printer: PrettyPrinterLib,
 ) -> str:
     match pretty_printer:
         case PrettyPrinterLib.RICH:
@@ -171,7 +162,11 @@ def _basic_pretty_repr(
             return pf(data)
 
 
-def _get_delta_line_width(pretty_printer: PrettyPrinterLib, measures: ReprMeasures) -> int:
+def _get_reflow_delta_line_width(pretty_printer: PrettyPrinterLib, measures: ReprMeasures) -> int:
+    """
+    Return the number of characters to subtract from the max_line_width in order to trigger a reflow
+    of the pretty_repr output with smaller width.
+    """
     if measures.num_lines == 1 and pretty_printer == PrettyPrinterLib.RICH:
         return 2
     return 1
@@ -200,12 +195,12 @@ def _adjusted_multi_line_pretty_repr(
         else:
             prev_max_container_width = measures.max_container_width
 
-        delta_line_width = _get_delta_line_width(pretty_printer, measures)
+        reflow_delta_line_width = _get_reflow_delta_line_width(pretty_printer, measures)
 
         repr_str = _basic_pretty_repr(
             data,
             indent_tab_size=indent_tab_size,
-            max_line_width=measures.max_line_width - delta_line_width,
+            max_line_width=measures.max_line_width - reflow_delta_line_width,
             max_container_width=measures.max_container_width - 1,
             pretty_printer=pretty_printer,
         )
