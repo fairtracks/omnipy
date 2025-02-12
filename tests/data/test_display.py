@@ -1,13 +1,15 @@
 import os
 import re
 from textwrap import dedent
-from typing import Annotated
+from typing import Annotated, TypedDict
 
 import pytest
 
 from omnipy.data._display import (DefinedDimensions,
                                   Dimensions,
                                   DimensionsFit,
+                                  DraftOutput,
+                                  DraftTextOutput,
                                   Frame,
                                   OutputConfig,
                                   pretty_repr,
@@ -230,6 +232,115 @@ def test_frame(
 
     frame = Frame(dims)
     assert frame.dims is dims
+
+
+class _DraftOutputKwArgs(TypedDict, total=False):
+    frame: Frame
+    config: OutputConfig
+
+
+def _create_draft_output_kwargs(
+    frame: Frame | None = None,
+    config: OutputConfig | None = None,
+) -> _DraftOutputKwArgs:
+    kwargs = _DraftOutputKwArgs()
+
+    if frame is not None:
+        kwargs['frame'] = frame
+
+    if config is not None:
+        kwargs['config'] = config
+
+    return kwargs
+
+
+def _assert_draft_output(
+    content: object,
+    frame: Frame | None = None,
+    config: OutputConfig | None = None,
+) -> None:
+    kwargs = _create_draft_output_kwargs(frame, config)
+
+    draft = DraftOutput(content, **kwargs)
+
+    assert draft.content is content
+
+    if frame is not None:
+        assert draft.frame is frame
+    else:
+        assert draft.frame == Frame()
+
+    if config is not None:
+        assert draft.config is config
+    else:
+        assert draft.config == OutputConfig()
+
+
+def test_draft_output(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    _assert_draft_output([1, 2, 3])
+    _assert_draft_output([1, 2, 3], frame=Frame(Dimensions(10, 20)))
+    _assert_draft_output([1, 2, 3], config=OutputConfig(indent_tab_size=4))
+    _assert_draft_output([1, 2, 3],
+                         frame=Frame(Dimensions(10, 20)),
+                         config=OutputConfig(indent_tab_size=4))
+
+    _assert_draft_output('Some text')
+    _assert_draft_output({'a': 1, 'b': 2})
+    _assert_draft_output(None)
+
+
+def _assert_draft_text_output(
+    output: str,
+    width: int,
+    height: int,
+    frame_width: int | None = None,
+    frame_height: int | None = None,
+    fits_width: bool | None = None,
+    fits_height: bool | None = None,
+    fits_both: bool | None = None,
+) -> None:
+    draft = DraftTextOutput(output, frame=Frame(Dimensions(frame_width, frame_height)))
+    assert draft.dims.width == width
+    assert draft.dims.height == height
+    assert draft.frame.dims.width == frame_width
+    assert draft.frame.dims.height == frame_height
+
+    dims_fit = draft.within_frame
+    assert dims_fit.width == fits_width
+    assert dims_fit.height == fits_height
+    assert dims_fit.both == fits_both
+
+
+def test_draft_text_output_within_frame(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    out = 'Some output\nAnother line'
+    _assert_draft_text_output(
+        out, 12, 2, None, None, fits_width=None, fits_height=None, fits_both=None)
+    _assert_draft_text_output(
+        out, 12, 2, 12, None, fits_width=True, fits_height=None, fits_both=None)
+    _assert_draft_text_output(
+        out, 12, 2, None, 2, fits_width=None, fits_height=True, fits_both=None)
+    _assert_draft_text_output(out, 12, 2, 12, 2, fits_width=True, fits_height=True, fits_both=True)
+    _assert_draft_text_output(
+        out, 12, 2, 11, None, fits_width=False, fits_height=None, fits_both=None)
+    _assert_draft_text_output(
+        out, 12, 2, None, 1, fits_width=None, fits_height=False, fits_both=None)
+    _assert_draft_text_output(
+        out, 12, 2, 12, 1, fits_width=True, fits_height=False, fits_both=False)
+    _assert_draft_text_output(
+        out, 12, 2, 11, 2, fits_width=False, fits_height=True, fits_both=False)
+    _assert_draft_text_output(
+        out, 12, 2, 11, 1, fits_width=False, fits_height=False, fits_both=False)
+
+
+def test_draft_text_output_frame_empty(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    _assert_draft_text_output('', 0, 0, None, None, None, None, None)
+    _assert_draft_text_output('', 0, 0, 0, None, True, None, None)
+    _assert_draft_text_output('', 0, 0, None, 0, None, True, None)
+    _assert_draft_text_output('', 0, 0, 0, 0, True, True, True)
 
 
 def _harmonize(output: str) -> str:
