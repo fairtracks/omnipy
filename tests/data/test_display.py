@@ -352,6 +352,8 @@ def _assert_pretty_repr_of_draft(
     expected_output: str,
     frame: Frame | None = None,
     config: OutputConfig | None = None,
+    within_frame_width: bool = True,
+    within_frame_height: bool = True,
 ) -> None:
     if frame is None:
         frame = Frame(Dimensions(width=80, height=24))
@@ -362,6 +364,8 @@ def _assert_pretty_repr_of_draft(
     out_draft: DraftTextOutput = pretty_repr_of_draft(in_draft)
 
     assert _harmonize(out_draft.content) == expected_output
+    assert out_draft.within_frame.width is within_frame_width
+    assert out_draft.within_frame.height is within_frame_height
 
 
 def test_pretty_repr_of_draft_init_frame_required(
@@ -481,7 +485,10 @@ def test_pretty_repr_of_draft_in_frame(
         config=config,
     )
 
-    data_2 = [{
+
+@pytest.fixture
+def geometry_data() -> list:
+    return [{
         'geometry': {
             'location': {
                 'lng': 77.2295097, 'lat': 28.612912
@@ -498,44 +505,10 @@ def test_pretty_repr_of_draft_in_frame(
         }
     }]
 
-    _assert_pretty_repr_of_draft(
-        data_2,
-        dedent("""\
-        [
-          {
-            'geometry': {
-              'location': {'lng': 77.2295097, 'lat': 28.612912},
-              'viewport': {'northeast': {'lng': 77.2308586802915, 'lat': 28.6142609802915}, \
-'southwest': {'lng': 77.22816071970848, 'lat': 28.6115630197085}},
-              'location_type': 'APPROXIMATE'
-            }
-          }
-        ]"""),
-        frame=Frame(Dimensions(150, 9)),
-        config=config,
-    )
-    _assert_pretty_repr_of_draft(
-        data_2,
-        dedent("""\
-        [
-          {
-            'geometry': {
-              'location': {'lng': 77.2295097, 'lat': 28.612912},
-              'viewport': {
-                'northeast': {'lng': 77.2308586802915, 'lat': 28.6142609802915},
-                'southwest': {'lng': 77.22816071970848, 'lat': 28.6115630197085}
-              },
-              'location_type': 'APPROXIMATE'
-            }
-          }
-        ]"""),
-        frame=Frame(Dimensions(149, 9)),
-        config=config,
-    )
 
-    _assert_pretty_repr_of_draft(
-        data_2,
-        dedent("""\
+@pytest.fixture
+def geometry_data_thinnest_repr() -> str:
+    return dedent("""\
         [
           {
             'geometry': {
@@ -556,9 +529,106 @@ def test_pretty_repr_of_draft_in_frame(
               'location_type': 'APPROXIMATE'
             }
           }
+        ]""")
+
+
+@pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
+def test_pretty_repr_of_draft_approximately_in_frame(
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+    geometry_data: Annotated[list, pytest.fixture],
+    geometry_data_thinnest_repr: Annotated[str, pytest.fixture],
+    pretty_printer: PrettyPrinterLib,
+) -> None:
+    config = OutputConfig(pretty_printer=pretty_printer)
+
+    _assert_pretty_repr_of_draft(
+        geometry_data,
+        dedent("""\
+        [
+          {
+            'geometry': {
+              'location': {'lng': 77.2295097, 'lat': 28.612912},
+              'viewport': {'northeast': {'lng': 77.2308586802915, 'lat': 28.6142609802915}, \
+'southwest': {'lng': 77.22816071970848, 'lat': 28.6115630197085}},
+              'location_type': 'APPROXIMATE'
+            }
+          }
         ]"""),
+        frame=Frame(Dimensions(150, 9)),
+        config=config,
+        within_frame_width=True,
+        within_frame_height=True,
+    )
+    _assert_pretty_repr_of_draft(
+        geometry_data,
+        dedent("""\
+        [
+          {
+            'geometry': {
+              'location': {'lng': 77.2295097, 'lat': 28.612912},
+              'viewport': {
+                'northeast': {'lng': 77.2308586802915, 'lat': 28.6142609802915},
+                'southwest': {'lng': 77.22816071970848, 'lat': 28.6115630197085}
+              },
+              'location_type': 'APPROXIMATE'
+            }
+          }
+        ]"""),
+        frame=Frame(Dimensions(149, 9)),
+        config=config,
+        within_frame_width=True,
+        within_frame_height=False,
+    )
+
+    _assert_pretty_repr_of_draft(
+        geometry_data,
+        geometry_data_thinnest_repr,
         frame=Frame(Dimensions(37, 21)),
         config=config,
+    )
+
+    _assert_pretty_repr_of_draft(
+        geometry_data,
+        geometry_data_thinnest_repr,
+        frame=Frame(Dimensions(35, 21)),
+        config=config,
+        within_frame_width=False,
+        within_frame_height=True,
+    )
+
+    if pretty_printer == PrettyPrinterLib.RICH:
+        _assert_pretty_repr_of_draft(
+            geometry_data,
+            geometry_data_thinnest_repr,
+            frame=Frame(Dimensions(10, 10)),
+            config=config,
+            within_frame_width=False,
+            within_frame_height=False,
+        )
+
+
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason=dedent("""\
+        The devtools pretty printer does not work when the required frame is thinner than the
+        maximum indentation of the formatter output."""),
+)
+@pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS])
+def test_pretty_repr_of_draft_approximately_in_frame_known_issue_devtools(
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+    geometry_data: Annotated[list, pytest.fixture],
+    geometry_data_thinnest_repr: Annotated[str, pytest.fixture],
+    pretty_printer: PrettyPrinterLib,
+) -> None:
+    config = OutputConfig(pretty_printer=pretty_printer)
+
+    _assert_pretty_repr_of_draft(
+        geometry_data,
+        geometry_data_thinnest_repr,
+        frame=Frame(Dimensions(10, 10)),
+        config=config,
+        within_frame_width=False,
+        within_frame_height=False,
     )
 
 
@@ -602,12 +672,12 @@ def test_pretty_repr_of_draft_models(
 
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason="""
-The implementation of multi-line adjustment of pretty_repr detects whether the data representation
-is nested by counting abbreviations of nested containers by the rich library. If such abbreviation
-strings ('(...)', '[...]', or '{...}') are present in the input data, the adjustment algorithm gets
-confused.
-""")
+    reason=dedent("""\
+        The implementation of multi-line adjustment of pretty_repr detects whether the data
+        representation is nested by counting abbreviations of nested containers by the rich library.
+        If such abbreviation strings ('(...)', '[...]', or '{...}') are present in the input data,
+        the adjustment algorithm gets confused."""),
+)
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
 def test_pretty_repr_of_draft_multi_line_if_nested_known_issue(
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
