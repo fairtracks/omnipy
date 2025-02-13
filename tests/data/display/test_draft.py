@@ -107,11 +107,28 @@ def test_fail_defined_frame_if_not_defined_dimensions(
     with pytest.raises(ValueError):
         DefinedFrame(Dimensions(10, 20))  # type: ignore[arg-type]
 
+
+def test_defined_frame_from_frame(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    frame = Frame(Dimensions(10, 20))
+    defined_frame = DefinedFrame.from_frame(frame)
+
+    assert defined_frame.dims is not frame.dims
+    assert isinstance(defined_frame.dims, DefinedDimensions)
+    assert defined_frame.dims.width == frame.dims.width
+    assert defined_frame.dims.height == frame.dims.height
+
+
+def test_fail_defined_frame_from_frame_if_not_width_and_height(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     with pytest.raises(ValueError):
-        DefinedFrame(Dimensions(10, None))
+        DefinedFrame.from_frame(Frame(Dimensions(None, None)))
 
     with pytest.raises(ValueError):
-        DefinedFrame(Dimensions(None, 20))
+        DefinedFrame.from_frame(Frame(Dimensions(10, None)))
+
+    with pytest.raises(ValueError):
+        DefinedFrame.from_frame(Frame(Dimensions(None, 20)))
 
 
 class _DraftOutputKwArgs(TypedDict, total=False):
@@ -184,7 +201,7 @@ def test_framed_draft_output(
     frame = Frame(Dimensions(20, 10))
     framed_draft = FramedDraftOutput(
         'Some text',
-        frame=frame,
+        frame=DefinedFrame.from_frame(frame),
         config=OutputConfig(indent_tab_size=4),
     )
 

@@ -32,9 +32,13 @@ class DefinedFrame(Frame[DefinedDimensions]):
 
     dims: DefinedDimensions = Field(default_factory=_default_dims)
 
-
-ContentT = TypeVar('ContentT', bound=object)
-FrameT = TypeVar('FrameT', bound=object)
+    @classmethod
+    def from_frame(cls, frame: Frame[Dimensions]) -> 'DefinedFrame':
+        return DefinedFrame(
+            dims=DefinedDimensions(
+                width=frame.dims.width,
+                height=frame.dims.height,
+            ))
 
 
 @dataclass
