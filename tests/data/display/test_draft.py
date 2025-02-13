@@ -4,7 +4,7 @@ from typing import Annotated, TypedDict
 import pytest
 
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.draft import DraftOutput, DraftTextOutput, Frame, OutputConfig
+from omnipy.data._display.draft import DraftMonospacedOutput, DraftOutput, Frame, OutputConfig
 from omnipy.data._display.enum import PrettyPrinterLib
 from omnipy.data._display.pretty import pretty_repr_of_draft
 
@@ -144,7 +144,7 @@ def test_draft_output(
     _assert_draft_output(None)
 
 
-def _assert_draft_text_output(
+def _assert_draft_monospaced_output(
     output: str,
     width: int,
     height: int,
@@ -154,7 +154,7 @@ def _assert_draft_text_output(
     fits_height: bool | None = None,
     fits_both: bool | None = None,
 ) -> None:
-    draft = DraftTextOutput(output, frame=Frame(Dimensions(frame_width, frame_height)))
+    draft = DraftMonospacedOutput(output, frame=Frame(Dimensions(frame_width, frame_height)))
     assert draft.dims.width == width
     assert draft.dims.height == height
     assert draft.frame.dims.width == frame_width
@@ -166,35 +166,36 @@ def _assert_draft_text_output(
     assert dims_fit.both == fits_both
 
 
-def test_draft_text_output_within_frame(
+def test_draft_monospaced_output_within_frame(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
     out = 'Some output\nAnother line'
-    _assert_draft_text_output(
+    _assert_draft_monospaced_output(
         out, 12, 2, None, None, fits_width=None, fits_height=None, fits_both=None)
-    _assert_draft_text_output(
+    _assert_draft_monospaced_output(
         out, 12, 2, 12, None, fits_width=True, fits_height=None, fits_both=None)
-    _assert_draft_text_output(
+    _assert_draft_monospaced_output(
         out, 12, 2, None, 2, fits_width=None, fits_height=True, fits_both=None)
-    _assert_draft_text_output(out, 12, 2, 12, 2, fits_width=True, fits_height=True, fits_both=True)
-    _assert_draft_text_output(
+    _assert_draft_monospaced_output(
+        out, 12, 2, 12, 2, fits_width=True, fits_height=True, fits_both=True)
+    _assert_draft_monospaced_output(
         out, 12, 2, 11, None, fits_width=False, fits_height=None, fits_both=None)
-    _assert_draft_text_output(
+    _assert_draft_monospaced_output(
         out, 12, 2, None, 1, fits_width=None, fits_height=False, fits_both=None)
-    _assert_draft_text_output(
+    _assert_draft_monospaced_output(
         out, 12, 2, 12, 1, fits_width=True, fits_height=False, fits_both=False)
-    _assert_draft_text_output(
+    _assert_draft_monospaced_output(
         out, 12, 2, 11, 2, fits_width=False, fits_height=True, fits_both=False)
-    _assert_draft_text_output(
+    _assert_draft_monospaced_output(
         out, 12, 2, 11, 1, fits_width=False, fits_height=False, fits_both=False)
 
 
-def test_draft_text_output_frame_empty(
+def test_draft_monospaced_output_frame_empty(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    _assert_draft_text_output('', 0, 0, None, None, None, None, None)
-    _assert_draft_text_output('', 0, 0, 0, None, True, None, None)
-    _assert_draft_text_output('', 0, 0, None, 0, None, True, None)
-    _assert_draft_text_output('', 0, 0, 0, 0, True, True, True)
+    _assert_draft_monospaced_output('', 0, 0, None, None, None, None, None)
+    _assert_draft_monospaced_output('', 0, 0, 0, None, True, None, None)
+    _assert_draft_monospaced_output('', 0, 0, None, 0, None, True, None)
+    _assert_draft_monospaced_output('', 0, 0, 0, 0, True, True, True)
 
 
 def _harmonize(output: str) -> str:
@@ -215,7 +216,7 @@ def _assert_pretty_repr_of_draft(
     kwargs = _create_draft_output_kwargs(frame, config)
     in_draft = DraftOutput(data, **kwargs)
 
-    out_draft: DraftTextOutput = pretty_repr_of_draft(in_draft)
+    out_draft: DraftMonospacedOutput = pretty_repr_of_draft(in_draft)
 
     assert _harmonize(out_draft.content) == expected_output
     assert out_draft.within_frame.width is within_frame_width

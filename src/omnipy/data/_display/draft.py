@@ -31,7 +31,7 @@ class DraftOutput(Generic[ContentT]):
 
 
 @dataclass
-class DraftTextOutput(DraftOutput[str]):
+class DraftMonospacedOutput(DraftOutput[str]):
     content: str
 
     @property
