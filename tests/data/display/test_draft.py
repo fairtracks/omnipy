@@ -2,8 +2,13 @@ from typing import Annotated, TypedDict
 
 import pytest
 
-from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.draft import DraftMonospacedOutput, DraftOutput, Frame, OutputConfig
+from omnipy.data._display.dimensions import DefinedDimensions, Dimensions
+from omnipy.data._display.draft import (DefinedFrame,
+                                        DraftMonospacedOutput,
+                                        DraftOutput,
+                                        Frame,
+                                        FramedDraftOutput,
+                                        OutputConfig)
 from omnipy.data._display.enum import PrettyPrinterLib
 
 
@@ -86,6 +91,37 @@ def test_frame(
     assert frame.dims is dims
 
 
+def test_defined_frame(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    defined_dims = DefinedDimensions(10, 20)
+    frame = DefinedFrame(defined_dims)
+
+    assert frame.dims is defined_dims
+
+    dims = Dimensions(10, 20)
+    new_frame = DefinedFrame(dims)
+
+    assert new_frame.dims is not dims
+    assert type(new_frame.dims) is DefinedDimensions
+    assert new_frame.dims is not defined_dims
+    assert new_frame.dims == defined_dims
+
+
+def test_fail_defined_frame_if_not_defined_dimensions(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    with pytest.raises(ValueError):
+        DefinedFrame()
+
+    with pytest.raises(ValueError):
+        DefinedFrame(Dimensions(None, None))
+
+    with pytest.raises(ValueError):
+        DefinedFrame(Dimensions(10, None))
+
+    with pytest.raises(ValueError):
+        DefinedFrame(Dimensions(None, 20))
+
+
 class _DraftOutputKwArgs(TypedDict, total=False):
     frame: Frame
     config: OutputConfig
@@ -110,10 +146,11 @@ def _assert_draft_output(
     content: object,
     frame: Frame | None = None,
     config: OutputConfig | None = None,
+    draft_cls: type[DraftOutput] = DraftOutput,
 ) -> None:
     kwargs = _create_draft_output_kwargs(frame, config)
 
-    draft = DraftOutput(content, **kwargs)
+    draft = draft_cls(content, **kwargs)
 
     assert draft.content is content
 
@@ -134,12 +171,49 @@ def test_draft_output(
     _assert_draft_output([1, 2, 3], frame=Frame(Dimensions(10, 20)))
     _assert_draft_output([1, 2, 3], config=OutputConfig(indent_tab_size=4))
     _assert_draft_output([1, 2, 3],
-                         frame=Frame(Dimensions(10, 20)),
+                         frame=Frame(Dimensions(20, 10)),
                          config=OutputConfig(indent_tab_size=4))
 
     _assert_draft_output('Some text')
     _assert_draft_output({'a': 1, 'b': 2})
     _assert_draft_output(None)
+
+
+def test_framed_draft_output(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    _assert_draft_output(
+        {
+            'a': 1, 'b': 2
+        },
+        frame=DefinedFrame(DefinedDimensions(10, 20)),
+        draft_cls=FramedDraftOutput,
+    )
+
+    frame = Frame(Dimensions(20, 10))
+    framed_draft = FramedDraftOutput(
+        'Some text',
+        frame=frame,
+        config=OutputConfig(indent_tab_size=4),
+    )
+
+    assert framed_draft.content == 'Some text'
+    assert framed_draft.frame is not frame
+    assert type(framed_draft.frame) is DefinedFrame
+    assert framed_draft.frame.dims is not frame.dims
+    assert framed_draft.frame.dims.width == frame.dims.width
+    assert framed_draft.frame.dims.height == frame.dims.height
+
+
+def test_fail_draft_framed_output_without_frame(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    with pytest.raises(ValueError):
+        FramedDraftOutput({'a': 1, 'b': 2})
+
+    with pytest.raises(ValueError):
+        FramedDraftOutput('Some text', config=OutputConfig(indent_tab_size=4))
+
+    with pytest.raises(ValueError):
+        FramedDraftOutput('Some text', frame=Frame(Dimensions(10, None)))
 
 
 def _assert_draft_monospaced_output(

@@ -1,6 +1,6 @@
 from typing import ClassVar, Generic
 
-from pydantic import ConfigDict, Extra, Field, NonNegativeInt
+from pydantic import ConfigDict, Extra, Field, NonNegativeInt, validator
 from pydantic.dataclasses import dataclass
 from typing_extensions import TypeVar
 
@@ -16,23 +16,49 @@ class OutputConfig:
     pretty_printer: PrettyPrinterLib = PrettyPrinterLib.RICH
 
 
+DimensionsT = TypeVar('DimensionsT', bound=Dimensions)
+
+
 @dataclass
-class Frame:
-    dims: Dimensions = Field(default_factory=Dimensions)
+class Frame(Generic[DimensionsT]):
+    dims: DimensionsT = Field(default_factory=Dimensions)
+
+
+@dataclass
+class DefinedFrame(Frame[DefinedDimensions | Dimensions]):
+    dims: DefinedDimensions | Dimensions = Field(default_factory=DefinedDimensions)
+
+    @validator('dims')
+    def _has_width_and_height(cls, dims: DefinedDimensions | Dimensions) -> DefinedDimensions:
+        if not isinstance(dims, DefinedDimensions):
+            dims = DefinedDimensions(dims.width, dims.height)
+        return dims
 
 
 ContentT = TypeVar('ContentT', bound=object)
+FrameT = TypeVar('FrameT', bound=object)
 
 
 @dataclass
-class DraftOutput(Generic[ContentT]):
+class DraftOutput(Generic[ContentT, FrameT]):
     content: ContentT
-    frame: Frame = Field(default_factory=Frame)
+    frame: FrameT = Field(default_factory=Frame)
     config: OutputConfig = Field(default_factory=OutputConfig)
 
 
 @dataclass
-class DraftMonospacedOutput(DraftOutput[str]):
+class FramedDraftOutput(DraftOutput[ContentT, DefinedFrame | Frame], Generic[ContentT]):
+    frame: DefinedFrame | Frame = Field(default_factory=DefinedFrame)
+
+    @validator('frame')
+    def _has_defined_frame(cls, dims: DefinedFrame | Frame) -> DefinedFrame:
+        if not isinstance(dims, DefinedFrame):
+            dims = DefinedFrame(dims.dims)
+        return dims
+
+
+@dataclass
+class DraftMonospacedOutput(DraftOutput[str, Frame]):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
     content: str
 
