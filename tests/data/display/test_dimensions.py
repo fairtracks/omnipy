@@ -35,13 +35,13 @@ def test_defined_dimensions(
 def test_fail_defined_dimensions_if_none(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     with pytest.raises(ValueError):
-        DefinedDimensions(None, None)
+        DefinedDimensions(None, None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        DefinedDimensions(10, None)
+        DefinedDimensions(10, None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        DefinedDimensions(None, 20)
+        DefinedDimensions(None, 20)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize('dims_cls', [Dimensions, DefinedDimensions])
@@ -77,8 +77,8 @@ def test_fail_dimensions_if_extra_param(
         dims_cls(10, 20, extra=30)  # type: ignore
 
 
-def _assert_within_frame(width: int | None,
-                         height: int | None,
+def _assert_within_frame(width: int,
+                         height: int,
                          frame_width: int | None,
                          frame_height: int | None,
                          fits_width: bool | None,

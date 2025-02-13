@@ -81,7 +81,7 @@ def test_fail_output_config_no_positional_parameters(
 
 def test_frame(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    frame = Frame()
+    frame: Frame = Frame()
     assert frame.dims.width is None
     assert frame.dims.height is None
 
