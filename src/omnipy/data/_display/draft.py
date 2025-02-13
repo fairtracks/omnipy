@@ -1,4 +1,4 @@
-from typing import Generic
+from typing import ClassVar, Generic
 
 from pydantic import ConfigDict, Extra, Field, NonNegativeInt
 from pydantic.dataclasses import dataclass
@@ -6,6 +6,7 @@ from typing_extensions import TypeVar
 
 from omnipy.data._display.dimensions import DefinedDimensions, Dimensions, DimensionsFit
 from omnipy.data._display.enum import PrettyPrinterLib
+from omnipy.data._display.helpers import UnicodeCharWidthMap
 
 
 @dataclass(kw_only=True, config=ConfigDict(extra=Extra.forbid))
@@ -32,13 +33,15 @@ class DraftOutput(Generic[ContentT]):
 
 @dataclass
 class DraftMonospacedOutput(DraftOutput[str]):
+    _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
     content: str
 
     @property
     def _width(self):
-        if len(self.content) == 0:
-            return 0
-        return max(len(line) for line in self.content.splitlines())
+        def _line_len(line: str) -> int:
+            return sum(self._char_width_map[c] for c in line)
+
+        return max((_line_len(line) for line in self.content.splitlines()), default=0)
 
     @property
     def _height(self):
