@@ -7,9 +7,9 @@ from omnipy.data._display.enum import PrettyPrinterLib
 from omnipy.data._display.helpers import UnicodeCharWidthMap
 from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt
 
-DimensionsT = TypeVar('DimensionsT', bound=Dimensions)
+DimensionsT = TypeVar('DimensionsT', bound=Dimensions, default=Dimensions, covariant=True)
 ContentT = TypeVar('ContentT', bound=object)
-FrameT = TypeVar('FrameT', bound='Frame')
+FrameT = TypeVar('FrameT', bound='Frame', default='Frame', covariant=True)
 
 
 @dataclass(kw_only=True, config=ConfigDict(extra=Extra.forbid))
@@ -34,6 +34,9 @@ class DefinedFrame(Frame[DefinedDimensions]):
 
     @classmethod
     def from_frame(cls, frame: Frame[Dimensions]) -> 'DefinedFrame':
+        if frame.dims.width is None or frame.dims.height is None:
+            raise ValueError(f'Both frame dimensions must be defined: {frame.dims}')
+
         return DefinedFrame(
             dims=DefinedDimensions(
                 width=frame.dims.width,
@@ -54,7 +57,7 @@ class FramedDraftOutput(DraftOutput[ContentT, DefinedFrame], Generic[ContentT]):
 
 
 @dataclass
-class DraftMonospacedOutput(DraftOutput[str, Frame]):
+class DraftMonospacedOutput(DraftOutput[str, FrameT], Generic[FrameT]):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
     content: str
 
@@ -76,3 +79,7 @@ class DraftMonospacedOutput(DraftOutput[str, Frame]):
     @property
     def within_frame(self) -> DimensionsFit:
         return DimensionsFit(self.dims, self.frame.dims)
+
+
+class FramedDraftMonospacedOutput(FramedDraftOutput[str], DraftMonospacedOutput[DefinedFrame]):
+    pass
