@@ -114,7 +114,7 @@ def _adjusted_multi_line_pretty_repr(
     return repr_str
 
 
-def pretty_repr_of_draft(draft: DraftOutput,) -> DraftMonospacedOutput:
+def pretty_repr_of_draft_output(draft: DraftOutput,) -> DraftMonospacedOutput:
     if draft.frame.dims.width is None or draft.frame.dims.height is None:
         raise ValueError(f'Both frame dimensions must be defined: {draft.frame.dims}')
 

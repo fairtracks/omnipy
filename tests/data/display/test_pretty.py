@@ -8,7 +8,7 @@ import pytest
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.draft import DraftMonospacedOutput, DraftOutput, Frame, OutputConfig
 from omnipy.data._display.enum import PrettyPrinterLib
-from omnipy.data._display.pretty import pretty_repr_of_draft
+from omnipy.data._display.pretty import pretty_repr_of_draft_output
 from omnipy.data.model import Model
 
 from .test_draft import _create_draft_output_kwargs
@@ -17,9 +17,9 @@ from .test_draft import _create_draft_output_kwargs
 def test_pretty_repr_of_draft_init_frame_required(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     with pytest.raises(ValueError):
-        pretty_repr_of_draft(DraftOutput(1))
+        pretty_repr_of_draft_output(DraftOutput(1))
 
-    out_draft: DraftMonospacedOutput = pretty_repr_of_draft(
+    out_draft: DraftMonospacedOutput = pretty_repr_of_draft_output(
         DraftOutput(1, Frame(Dimensions(80, 24))))
     assert out_draft.content == '1'
 
@@ -352,7 +352,7 @@ def _assert_pretty_repr_of_draft(
     kwargs = _create_draft_output_kwargs(frame, config)
     in_draft = DraftOutput(data, **kwargs)
 
-    out_draft: DraftMonospacedOutput = pretty_repr_of_draft(in_draft)
+    out_draft: DraftMonospacedOutput = pretty_repr_of_draft_output(in_draft)
 
     assert _harmonize(out_draft.content) == expected_output
     assert out_draft.within_frame.width is within_frame_width
