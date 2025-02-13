@@ -94,26 +94,18 @@ def test_frame(
 def test_defined_frame(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     defined_dims = DefinedDimensions(10, 20)
-    frame = DefinedFrame(defined_dims)
+    defined_frame = DefinedFrame(defined_dims)
 
-    assert frame.dims is defined_dims
-
-    dims = Dimensions(10, 20)
-    new_frame = DefinedFrame(dims)
-
-    assert new_frame.dims is not dims
-    assert type(new_frame.dims) is DefinedDimensions
-    assert new_frame.dims is not defined_dims
-    assert new_frame.dims == defined_dims
+    assert defined_frame.dims is defined_dims
 
 
 def test_fail_defined_frame_if_not_defined_dimensions(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         DefinedFrame()
 
     with pytest.raises(ValueError):
-        DefinedFrame(Dimensions(None, None))
+        DefinedFrame(Dimensions(10, 20))  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
         DefinedFrame(Dimensions(10, None))
@@ -206,14 +198,14 @@ def test_framed_draft_output(
 
 def test_fail_draft_framed_output_without_frame(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         FramedDraftOutput({'a': 1, 'b': 2})
 
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         FramedDraftOutput('Some text', config=OutputConfig(indent_tab_size=4))
 
     with pytest.raises(ValueError):
-        FramedDraftOutput('Some text', frame=Frame(Dimensions(10, None)))
+        FramedDraftOutput('Some text', frame=Frame(Dimensions(10, None)))  # type: ignore[arg-type]
 
 
 def _assert_draft_monospaced_output(
