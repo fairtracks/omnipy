@@ -33,7 +33,8 @@ dependencies = [
 "aiohttp-retry (>=2.9.0,<3)",
 "aiolimiter (>=1.1.0,<2)",
 "tabulated (>=0.10.0,<1)",
-"rich (>=13.9.4,<14.0.0)"
+"rich (>=13.9.4,<14.0.0)",
+"bitarray (>=3.0.0,<4.0.0)"
 ]
 
 [tool.poetry.group.dev.dependencies]
