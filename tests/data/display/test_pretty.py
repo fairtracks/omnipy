@@ -6,7 +6,7 @@ import pytest
 
 from data.display.test_draft import _assert_pretty_repr_of_draft
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.draft import DraftOutput, DraftTextOutput, Frame, OutputConfig
+from omnipy.data._display.draft import DraftMonospacedOutput, DraftOutput, Frame, OutputConfig
 from omnipy.data._display.enum import PrettyPrinterLib
 from omnipy.data._display.pretty import pretty_repr_of_draft
 from omnipy.data.model import Model
@@ -17,7 +17,8 @@ def test_pretty_repr_of_draft_init_frame_required(
     with pytest.raises(ValueError):
         pretty_repr_of_draft(DraftOutput(1))
 
-    out_draft: DraftTextOutput = pretty_repr_of_draft(DraftOutput(1, Frame(Dimensions(80, 24))))
+    out_draft: DraftMonospacedOutput = pretty_repr_of_draft(
+        DraftOutput(1, Frame(Dimensions(80, 24))))
     assert out_draft.content == '1'
 
 

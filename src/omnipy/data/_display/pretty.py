@@ -4,7 +4,7 @@ from typing import NamedTuple
 from devtools import PrettyFormat
 from rich.pretty import pretty_repr as rich_pretty_repr
 
-from omnipy.data._display.draft import DraftOutput, DraftTextOutput
+from omnipy.data._display.draft import DraftMonospacedOutput, DraftOutput
 from omnipy.data._display.enum import PrettyPrinterLib
 from omnipy.data.typechecks import is_model_instance
 
@@ -114,7 +114,7 @@ def _adjusted_multi_line_pretty_repr(
     return repr_str
 
 
-def pretty_repr_of_draft(draft: DraftOutput,) -> DraftTextOutput:
+def pretty_repr_of_draft(draft: DraftOutput,) -> DraftMonospacedOutput:
     if draft.frame.dims.width is None or draft.frame.dims.height is None:
         raise ValueError(f'Both frame dimensions must be defined: {draft.frame.dims}')
 
@@ -139,4 +139,4 @@ def pretty_repr_of_draft(draft: DraftOutput,) -> DraftTextOutput:
             height=draft.frame.dims.height,
             pretty_printer=draft.config.pretty_printer,
         )
-    return DraftTextOutput(full_repr, frame=draft.frame, config=draft.config)
+    return DraftMonospacedOutput(full_repr, frame=draft.frame, config=draft.config)
