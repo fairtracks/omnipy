@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Generic
 
 from pydantic import ConfigDict, Extra, Field, NonNegativeInt
@@ -6,11 +5,7 @@ from pydantic.dataclasses import dataclass
 from typing_extensions import TypeVar
 
 from omnipy.data._display.dimensions import DefinedDimensions, Dimensions, DimensionsFit
-
-
-class PrettyPrinterLib(str, Enum):
-    DEVTOOLS = 'devtools'
-    RICH = 'rich'
+from omnipy.data._display.enum import PrettyPrinterLib
 
 
 @dataclass(kw_only=True, config=ConfigDict(extra=Extra.forbid))
