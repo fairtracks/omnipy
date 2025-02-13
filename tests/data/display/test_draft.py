@@ -1,4 +1,3 @@
-import re
 from typing import Annotated, TypedDict
 
 import pytest
@@ -6,7 +5,6 @@ import pytest
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.draft import DraftMonospacedOutput, DraftOutput, Frame, OutputConfig
 from omnipy.data._display.enum import PrettyPrinterLib
-from omnipy.data._display.pretty import pretty_repr_of_draft
 
 
 def test_output_config(
@@ -208,28 +206,3 @@ def test_draft_monospaced_output_variable_width_chars(
 
     # Soft hyphen character is zero-width
     _assert_draft_monospaced_output('hyphe\xad\nnate', 5, 2)
-
-
-def _harmonize(output: str) -> str:
-    return re.sub(r',(\n *[\]\}\)])', '\\1', output)
-
-
-def _assert_pretty_repr_of_draft(
-    data: object,
-    expected_output: str,
-    frame: Frame | None = None,
-    config: OutputConfig | None = None,
-    within_frame_width: bool = True,
-    within_frame_height: bool = True,
-) -> None:
-    if frame is None:
-        frame = Frame(Dimensions(width=80, height=24))
-
-    kwargs = _create_draft_output_kwargs(frame, config)
-    in_draft = DraftOutput(data, **kwargs)
-
-    out_draft: DraftMonospacedOutput = pretty_repr_of_draft(in_draft)
-
-    assert _harmonize(out_draft.content) == expected_output
-    assert out_draft.within_frame.width is within_frame_width
-    assert out_draft.within_frame.height is within_frame_height
