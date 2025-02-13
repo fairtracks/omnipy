@@ -4,7 +4,8 @@ from typing import NamedTuple
 from devtools import PrettyFormat
 from rich.pretty import pretty_repr as rich_pretty_repr
 
-from omnipy.data._display.draft import DraftOutput, DraftTextOutput, PrettyPrinterLib
+from omnipy.data._display.draft import DraftOutput, DraftTextOutput
+from omnipy.data._display.enum import PrettyPrinterLib
 from omnipy.data.typechecks import is_model_instance
 
 

@@ -6,11 +6,8 @@ import pytest
 
 from data.display.test_draft import _assert_pretty_repr_of_draft
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.draft import (DraftOutput,
-                                        DraftTextOutput,
-                                        Frame,
-                                        OutputConfig,
-                                        PrettyPrinterLib)
+from omnipy.data._display.draft import DraftOutput, DraftTextOutput, Frame, OutputConfig
+from omnipy.data._display.enum import PrettyPrinterLib
 from omnipy.data._display.pretty import pretty_repr_of_draft
 from omnipy.data.model import Model
 
