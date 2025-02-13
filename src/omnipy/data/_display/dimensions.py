@@ -1,5 +1,9 @@
-from pydantic import ConfigDict, Extra, NonNegativeInt, validate_arguments, validator
-from pydantic.dataclasses import dataclass
+from omnipy.util._pydantic import (ConfigDict,
+                                   dataclass,
+                                   Extra,
+                                   NonNegativeInt,
+                                   validate_arguments,
+                                   validator)
 
 
 @dataclass(config=ConfigDict(extra=Extra.forbid))

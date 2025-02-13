@@ -1,12 +1,11 @@
 from typing import ClassVar, Generic
 
-from pydantic import ConfigDict, Extra, Field, NonNegativeInt, validator
-from pydantic.dataclasses import dataclass
 from typing_extensions import TypeVar
 
 from omnipy.data._display.dimensions import DefinedDimensions, Dimensions, DimensionsFit
 from omnipy.data._display.enum import PrettyPrinterLib
 from omnipy.data._display.helpers import UnicodeCharWidthMap
+from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt, validator
 
 
 @dataclass(kw_only=True, config=ConfigDict(extra=Extra.forbid))

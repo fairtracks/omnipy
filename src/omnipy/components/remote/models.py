@@ -3,10 +3,9 @@ from typing import Any, cast, TYPE_CHECKING, TypeGuard
 from urllib.parse import quote, unquote
 
 from aiohttp.helpers import MimeType, parse_mimetype
-from pydantic import BaseModel
-from pydantic_core import Url
 
 from omnipy.data.model import Model
+from omnipy.util._pydantic import BaseModel, Url
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 
 from ...util import _pydantic as pyd

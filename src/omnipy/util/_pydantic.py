@@ -29,3 +29,4 @@ from pydantic.generics import GenericModel
 from pydantic.main import ModelMetaclass, validate_model
 from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass, sequence_like
+from pydantic_core import Url
