@@ -9,7 +9,12 @@ from omnipy.util._pydantic import (ConfigDict,
                                    NonNegativeInt,
                                    validate_arguments)
 
-NumberT = TypeVar('NumberT', bound=NonNegativeInt | None)
+NumberT = TypeVar(
+    'NumberT',
+    bound=NonNegativeInt | None,
+    default=NonNegativeInt | None,
+    covariant=True,
+)
 
 
 @dataclass(config=ConfigDict(extra=Extra.forbid))

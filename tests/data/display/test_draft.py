@@ -7,6 +7,7 @@ from omnipy.data._display.draft import (DefinedFrame,
                                         DraftMonospacedOutput,
                                         DraftOutput,
                                         Frame,
+                                        FramedDraftMonospacedOutput,
                                         FramedDraftOutput,
                                         OutputConfig)
 from omnipy.data._display.enum import PrettyPrinterLib
@@ -234,8 +235,19 @@ def _assert_draft_monospaced_output(
     fits_width: bool | None = None,
     fits_height: bool | None = None,
     fits_both: bool | None = None,
+    draft_cls: type[DraftMonospacedOutput] = DraftMonospacedOutput,
 ) -> None:
-    draft = DraftMonospacedOutput(output, frame=Frame(Dimensions(frame_width, frame_height)))
+    draft: DraftMonospacedOutput
+    if draft_cls is DraftMonospacedOutput:
+        draft = DraftMonospacedOutput(output, frame=Frame(Dimensions(frame_width, frame_height)))
+    else:
+        assert draft_cls is FramedDraftMonospacedOutput
+        assert frame_width is not None and frame_height is not None
+        draft = FramedDraftMonospacedOutput(
+            output,
+            frame=DefinedFrame(DefinedDimensions(frame_width, frame_height)),
+        )
+
     assert draft.dims.width == width
     assert draft.dims.height == height
     assert draft.frame.dims.width == frame_width
@@ -277,6 +289,41 @@ def test_draft_monospaced_output_frame_empty(
     _assert_draft_monospaced_output('', 0, 0, 0, None, True, None, None)
     _assert_draft_monospaced_output('', 0, 0, None, 0, None, True, None)
     _assert_draft_monospaced_output('', 0, 0, 0, 0, True, True, True)
+
+
+def test_framed_draft_monospaced_output_within_frame(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    out = 'Some output\nAnother line'
+    _assert_draft_monospaced_output(
+        out, 12, 2, 12, 2, True, True, True, draft_cls=FramedDraftMonospacedOutput)
+    _assert_draft_monospaced_output(
+        out, 12, 2, 12, 1, True, False, False, draft_cls=FramedDraftMonospacedOutput)
+    _assert_draft_monospaced_output(
+        out, 12, 2, 11, 2, False, True, False, draft_cls=FramedDraftMonospacedOutput)
+    _assert_draft_monospaced_output(
+        out, 12, 2, 11, 1, False, False, False, draft_cls=FramedDraftMonospacedOutput)
+
+
+def test_fail_framed_draft_monospaced_output_no_width_height(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    with pytest.raises(ValueError):
+        FramedDraftMonospacedOutput(
+            'Some text',
+            frame=Frame(Dimensions(None, None)),  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(ValueError):
+        FramedDraftMonospacedOutput(
+            'Some text',
+            frame=Frame(Dimensions(10, None)),  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(ValueError):
+        FramedDraftMonospacedOutput(
+            'Some text',
+            frame=Frame(Dimensions(None, 20)),  # type: ignore[arg-type]
+        )
 
 
 def test_draft_monospaced_output_variable_width_chars(
