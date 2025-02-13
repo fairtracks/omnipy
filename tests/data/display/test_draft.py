@@ -198,6 +198,18 @@ def test_draft_monospaced_output_frame_empty(
     _assert_draft_monospaced_output('', 0, 0, 0, 0, True, True, True)
 
 
+def test_draft_monospaced_output_variable_width_chars(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    # Mandarin Chinese characters are double-width
+    _assert_draft_monospaced_output('北京', 4, 1)
+
+    # Null character is zero-width
+    _assert_draft_monospaced_output('\0北京\n北京', 4, 2)
+
+    # Soft hyphen character is zero-width
+    _assert_draft_monospaced_output('hyphe\xad\nnate', 5, 2)
+
+
 def _harmonize(output: str) -> str:
     return re.sub(r',(\n *[\]\}\)])', '\\1', output)
 
