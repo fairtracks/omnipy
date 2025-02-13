@@ -5,7 +5,11 @@ from typing_extensions import TypeVar
 from omnipy.data._display.dimensions import DefinedDimensions, Dimensions, DimensionsFit
 from omnipy.data._display.enum import PrettyPrinterLib
 from omnipy.data._display.helpers import UnicodeCharWidthMap
-from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt, validator
+from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt
+
+DimensionsT = TypeVar('DimensionsT', bound=Dimensions)
+ContentT = TypeVar('ContentT', bound=object)
+FrameT = TypeVar('FrameT', bound='Frame')
 
 
 @dataclass(kw_only=True, config=ConfigDict(extra=Extra.forbid))
@@ -15,23 +19,18 @@ class OutputConfig:
     pretty_printer: PrettyPrinterLib = PrettyPrinterLib.RICH
 
 
-DimensionsT = TypeVar('DimensionsT', bound=Dimensions)
-
-
 @dataclass
 class Frame(Generic[DimensionsT]):
     dims: DimensionsT = Field(default_factory=Dimensions)
 
 
 @dataclass
-class DefinedFrame(Frame[DefinedDimensions | Dimensions]):
-    dims: DefinedDimensions | Dimensions = Field(default_factory=DefinedDimensions)
+class DefinedFrame(Frame[DefinedDimensions]):
+    @staticmethod
+    def _default_dims() -> DefinedDimensions:
+        raise TypeError("Attribute 'dims' must be defined at initialization")
 
-    @validator('dims')
-    def _has_width_and_height(cls, dims: DefinedDimensions | Dimensions) -> DefinedDimensions:
-        if not isinstance(dims, DefinedDimensions):
-            dims = DefinedDimensions(dims.width, dims.height)
-        return dims
+    dims: DefinedDimensions = Field(default_factory=_default_dims)
 
 
 ContentT = TypeVar('ContentT', bound=object)
@@ -46,14 +45,8 @@ class DraftOutput(Generic[ContentT, FrameT]):
 
 
 @dataclass
-class FramedDraftOutput(DraftOutput[ContentT, DefinedFrame | Frame], Generic[ContentT]):
-    frame: DefinedFrame | Frame = Field(default_factory=DefinedFrame)
-
-    @validator('frame')
-    def _has_defined_frame(cls, dims: DefinedFrame | Frame) -> DefinedFrame:
-        if not isinstance(dims, DefinedFrame):
-            dims = DefinedFrame(dims.dims)
-        return dims
+class FramedDraftOutput(DraftOutput[ContentT, DefinedFrame], Generic[ContentT]):
+    frame: DefinedFrame = Field(default_factory=DefinedFrame)
 
 
 @dataclass

@@ -1,24 +1,31 @@
+from typing import Generic
+
+from typing_extensions import TypeVar
+
 from omnipy.util._pydantic import (ConfigDict,
                                    dataclass,
                                    Extra,
+                                   Field,
                                    NonNegativeInt,
-                                   validate_arguments,
-                                   validator)
+                                   validate_arguments)
+
+NumberT = TypeVar('NumberT', bound=NonNegativeInt | None)
 
 
 @dataclass(config=ConfigDict(extra=Extra.forbid))
-class Dimensions:
-    width: NonNegativeInt | None = None
-    height: NonNegativeInt | None = None
+class Dimensions(Generic[NumberT]):
+    width: NumberT = Field(default=None)
+    height: NumberT = Field(default=None)
 
 
 @dataclass(config=ConfigDict(extra=Extra.forbid))
-class DefinedDimensions(Dimensions):
-    @validator('width', 'height')
-    def no_none_values(cls, value: NonNegativeInt | None):
-        if value is None:
-            raise ValueError('Dimension value cannot be None')
-        return value
+class DefinedDimensions(Dimensions[NonNegativeInt]):
+    @staticmethod
+    def _default_number() -> NonNegativeInt:
+        raise TypeError("Attributes 'width' and 'height' must be defined at initialization")
+
+    width: NonNegativeInt = Field(default_factory=_default_number)
+    height: NonNegativeInt = Field(default_factory=_default_number)
 
 
 @dataclass(frozen=True)
