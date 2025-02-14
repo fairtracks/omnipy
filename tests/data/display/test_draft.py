@@ -96,7 +96,8 @@ def _assert_frame(
         dims = Dimensions()
     else:
         frame = Frame(dims)
-        assert frame.dims is dims
+
+    assert frame.dims is not dims
     assert frame.dims == dims
 
     assert frame_has_width(frame) is exp_frame_has_width
@@ -211,15 +212,16 @@ def _assert_draft_output(
 
     if frame is None:
         frame = Frame()
-    else:
-        assert draft.frame is frame
 
     if config is None:
         config = OutputConfig()
-    else:
-        assert draft.content is content
 
+    assert draft.content is content
+
+    assert draft.frame is not frame
     assert draft.frame == frame
+
+    assert draft.config is not config
     assert draft.config == config
 
 

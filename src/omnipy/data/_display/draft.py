@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from typing import ClassVar, Generic, TypeAlias
 
 from typing_extensions import TypeIs, TypeVar
@@ -11,7 +12,7 @@ from omnipy.data._display.dimensions import (Dimensions,
                                              WidthT)
 from omnipy.data._display.enum import PrettyPrinterLib
 from omnipy.data._display.helpers import UnicodeCharWidthMap
-from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt
+from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt, validator
 
 ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)
 FrameT = TypeVar('FrameT', bound='AnyFrame', default='AnyFrame')
@@ -27,6 +28,10 @@ class OutputConfig:
 @dataclass
 class Frame(Generic[WidthT, HeightT]):
     dims: Dimensions[WidthT, HeightT] = Field(default_factory=Dimensions)
+
+    @validator('dims', pre=True)
+    def _copy_dims(cls, dims: Dimensions[WidthT, HeightT]) -> Dimensions[WidthT, HeightT]:
+        return Dimensions(dims.width, dims.height)
 
 
 GeneralFrame: TypeAlias = Frame[NonNegativeInt | None, NonNegativeInt | None]
@@ -54,6 +59,14 @@ class DraftOutput(Generic[ContentT, FrameT]):
     content: ContentT
     frame: FrameT = Field(default_factory=Frame)
     config: OutputConfig = Field(default_factory=OutputConfig)
+
+    @validator('frame', pre=True)
+    def _copy_frame(cls, frame: Frame) -> Frame:
+        return Frame(dims=frame.dims)
+
+    @validator('config', pre=True)
+    def _copy_config(cls, config: OutputConfig) -> OutputConfig:
+        return OutputConfig(**asdict(config))
 
 
 @dataclass
