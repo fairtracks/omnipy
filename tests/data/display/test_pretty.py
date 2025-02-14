@@ -5,9 +5,11 @@ from typing import Annotated, TypedDict
 
 import pytest
 
+from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.draft import DraftMonospacedOutput, DraftOutput, Frame, OutputConfig
+from omnipy.data._display.draft import DraftMonospacedOutput, DraftOutput
 from omnipy.data._display.enum import PrettyPrinterLib
+from omnipy.data._display.frame import Frame
 from omnipy.data._display.pretty import pretty_repr_of_draft_output
 from omnipy.data.model import Model
 
