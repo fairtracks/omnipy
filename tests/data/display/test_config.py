@@ -2,8 +2,7 @@ from typing import Annotated
 
 import pytest
 
-from omnipy.data._display.config import OutputConfig
-from omnipy.data._display.enum import PrettyPrinterLib
+from omnipy.data._display.config import OutputConfig, PrettyPrinterLib
 
 
 def test_output_config(
