@@ -9,6 +9,8 @@ from omnipy.data._display.draft import ContentT, DraftMonospacedOutput, DraftOut
 from omnipy.data._display.frame import frame_has_width_and_height, FrameWithWidthAndHeight
 from omnipy.data.typechecks import is_model_instance
 
+MAX_WIDTH = 2**16 - 1
+
 
 class ReprMeasures(NamedTuple):
     num_lines: int
@@ -40,22 +42,35 @@ def _is_nested_structure(draft: DraftOutput) -> bool:
 
 def _basic_pretty_repr(
     draft: DraftOutput[ContentT, FrameT],
-    max_line_width: int,
-    max_container_width: int,
+    max_line_width: int | None,
+    max_container_width: int | None,
 ) -> DraftMonospacedOutput[FrameT]:
     match draft.config.pretty_printer:
         case PrettyPrinterLib.RICH:
-            repr_str = rich_pretty_repr(
-                draft.content,
-                indent_size=draft.config.indent_tab_size,
-                max_width=max_line_width + 1,
-            )
+            if max_line_width is None:
+                repr_str = rich_pretty_repr(
+                    draft.content,
+                    indent_size=draft.config.indent_tab_size,
+                )
+            else:
+                repr_str = rich_pretty_repr(
+                    draft.content,
+                    indent_size=draft.config.indent_tab_size,
+                    max_width=max_line_width + 1,
+                )
         case PrettyPrinterLib.DEVTOOLS:
-            pf = PrettyFormat(
-                indent_step=draft.config.indent_tab_size,
-                simple_cutoff=max_container_width,
-                width=max_line_width + 1,
-            )
+            if max_line_width is not None and max_container_width is not None:
+                pf = PrettyFormat(
+                    indent_step=draft.config.indent_tab_size,
+                    simple_cutoff=max_container_width,
+                    width=max_line_width + 1,
+                )
+            else:
+                pf = PrettyFormat(
+                    indent_step=draft.config.indent_tab_size,
+                    simple_cutoff=MAX_WIDTH,
+                    width=MAX_WIDTH,
+                )
             repr_str = pf(draft.content)
 
     return DraftMonospacedOutput(
