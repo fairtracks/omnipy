@@ -194,7 +194,7 @@ def test_pretty_repr_of_draft_in_frame(
         within_frame_height=True,
     )
 
-    excepted_output_width_16 = dedent("""\
+    excepted_output_width_13 = dedent("""\
         [
           [1, 2],
           [
@@ -208,9 +208,20 @@ def test_pretty_repr_of_draft_in_frame(
           ]
         ]""")
 
+    # Increasing the frame height  adjusts the pretty print layout to make it more proportional to
+    # the frame width vs height ratio. This is primarily to avoid long one-liners.
     _assert_pretty_repr_of_draft(
         data,
-        excepted_output_width_16,
+        excepted_output_width_13,
+        frame=Frame(Dimensions(17, 14)),
+        config=config,
+        within_frame_width=True,
+        within_frame_height=True,
+    )
+
+    _assert_pretty_repr_of_draft(
+        data,
+        excepted_output_width_13,
         frame=Frame(Dimensions(16, None)),
         config=config,
         within_frame_width=True,
@@ -219,7 +230,7 @@ def test_pretty_repr_of_draft_in_frame(
 
     _assert_pretty_repr_of_draft(
         data,
-        excepted_output_width_16,
+        excepted_output_width_13,
         frame=Frame(Dimensions(16, 12)),
         config=config,
         within_frame_width=True,
@@ -228,7 +239,7 @@ def test_pretty_repr_of_draft_in_frame(
 
     _assert_pretty_repr_of_draft(
         data,
-        excepted_output_width_16,
+        excepted_output_width_13,
         frame=Frame(Dimensions(16, 11)),
         config=config,
         within_frame_width=True,
