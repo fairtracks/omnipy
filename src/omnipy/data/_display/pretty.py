@@ -60,18 +60,35 @@ def _basic_pretty_repr(
                 )
         case PrettyPrinterLib.DEVTOOLS:
             if max_line_width is not None and max_container_width is not None:
-                pf = PrettyFormat(
-                    indent_step=draft.config.indent_tab_size,
-                    simple_cutoff=max_container_width,
-                    width=max_line_width + 1,
-                )
+                while True:
+                    pf = PrettyFormat(
+                        indent_step=draft.config.indent_tab_size,
+                        simple_cutoff=max_container_width,
+                        width=max_line_width + 1,
+                    )
+                    try:
+                        repr_str = pf(draft.content)
+                    except ValueError as e:
+                        text_match = re.search(r'invalid width (-\d+)', str(e))
+                        if text_match:
+                            internal_width = int(text_match.group(1))
+                            delta_width = -internal_width + 1
+                            max_line_width += delta_width
+                            max_container_width += delta_width
+                            continue
+                        if re.search(r'range\(\) arg 3 must not be zero', str(e)):
+                            max_line_width += 1
+                            max_container_width += 1
+                            continue
+                        raise
+                    break
             else:
                 pf = PrettyFormat(
                     indent_step=draft.config.indent_tab_size,
                     simple_cutoff=MAX_WIDTH,
                     width=MAX_WIDTH,
                 )
-            repr_str = pf(draft.content)
+                repr_str = pf(draft.content)
 
     return DraftMonospacedOutput(
         repr_str,
@@ -138,8 +155,8 @@ def pretty_repr_of_draft_output(
     )
 
     if frame_has_width_and_height(mono_draft.frame):
-
-        if _is_nested_structure(draft) or not mono_draft.within_frame.width:
+        if (_is_nested_structure(draft)
+                or not mono_draft.within_frame.width) and mono_draft.within_frame.height:
             mono_draft = _adjusted_multi_line_pretty_repr(
                 draft,
                 DraftMonospacedOutput(
