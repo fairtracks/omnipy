@@ -33,7 +33,7 @@ def _any_abbrev_containers(repr_str: str) -> bool:
     return bool(re.search(r'\[...\]|\(...\)|\{...\}', repr_str))
 
 
-def _is_nested_structure(draft: DraftOutput) -> bool:
+def _is_nested_structure(draft: DraftOutput[ContentT, FrameT]) -> bool:
     only_1st_level_repr = rich_pretty_repr(draft.content, max_depth=1)
     if _any_abbrev_containers(only_1st_level_repr):
         return True
@@ -129,7 +129,6 @@ def _adjusted_multi_line_pretty_repr(
 
         reflow_delta_line_width = _get_reflow_delta_line_width(draft.config.pretty_printer,
                                                                mono_draft.dims.height)
-
         mono_draft = _basic_pretty_repr(
             DraftOutput(draft.content, frame=mono_draft.frame, config=draft.config),
             max_line_width=mono_draft.dims.width - reflow_delta_line_width,
