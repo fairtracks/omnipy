@@ -12,15 +12,7 @@ from omnipy.data._display.frame import Frame
 from omnipy.data._display.pretty import pretty_repr_of_draft_output
 from omnipy.data.model import Model
 
-
-def test_pretty_repr_of_draft_init_frame_required(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    with pytest.raises(ValueError):
-        pretty_repr_of_draft_output(DraftOutput(1))  # type: ignore[arg-type]
-
-    out_draft: DraftMonospacedOutput = pretty_repr_of_draft_output(
-        DraftOutput(1, Frame(Dimensions(80, 24))))
-    assert out_draft.content == '1'
+DEFAULT_FRAME = Frame(Dimensions(80, 24))
 
 
 def _harmonize(output: str) -> str:
@@ -37,13 +29,12 @@ def _assert_pretty_repr_of_draft(
     expected_output: str,
     frame: Frame | None = None,
     config: OutputConfig | None = None,
-    within_frame_width: bool = True,
-    within_frame_height: bool = True,
+    within_frame_width: bool | None = None,
+    within_frame_height: bool | None = None,
 ) -> None:
-    if frame is None:
-        frame = Frame(Dimensions(width=80, height=24))
-
-    kwargs = _DraftOutputKwArgs(frame=frame)
+    kwargs = _DraftOutputKwArgs()
+    if frame is not None:
+        kwargs['frame'] = frame
     if config is not None:
         kwargs['config'] = config
 
@@ -64,7 +55,15 @@ def test_pretty_repr_of_draft_multi_line_if_nested(
     config = OutputConfig(pretty_printer=pretty_printer)
 
     _assert_pretty_repr_of_draft(1, '1', config=config)
+
     _assert_pretty_repr_of_draft([1, 2, 3], '[1, 2, 3]', config=config)
+
+    _assert_pretty_repr_of_draft(
+        [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+        '[[1, 2, 3], [4, 5, 6], [7, 8, 9]]',
+        config=config,
+    )
+
     _assert_pretty_repr_of_draft(
         [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
         dedent("""\
@@ -73,9 +72,16 @@ def test_pretty_repr_of_draft_multi_line_if_nested(
           [4, 5, 6],
           [7, 8, 9]
         ]"""),
+        frame=DEFAULT_FRAME,
         config=config,
+        within_frame_width=True,
+        within_frame_height=True,
     )
+
     _assert_pretty_repr_of_draft({1: 2, 3: 4}, '{1: 2, 3: 4}', config=config)
+
+    _assert_pretty_repr_of_draft([{1: 2, 3: 4}], '[{1: 2, 3: 4}]', config=config)
+
     _assert_pretty_repr_of_draft(
         [{
             1: 2, 3: 4
@@ -87,8 +93,18 @@ def test_pretty_repr_of_draft_multi_line_if_nested(
             3: 4
           }
         ]"""),
+        frame=DEFAULT_FRAME,
+        config=config,
+        within_frame_width=True,
+        within_frame_height=True,
+    )
+
+    _assert_pretty_repr_of_draft(
+        [[1, 2, 3], [()], [[4, 5, 6], [7, 8, 9]]],
+        '[[1, 2, 3], [()], [[4, 5, 6], [7, 8, 9]]]',
         config=config,
     )
+
     _assert_pretty_repr_of_draft(
         [[1, 2, 3], [()], [[4, 5, 6], [7, 8, 9]]],
         dedent("""\
@@ -100,7 +116,10 @@ def test_pretty_repr_of_draft_multi_line_if_nested(
             [7, 8, 9]
           ]
         ]"""),
+        frame=DEFAULT_FRAME,
         config=config,
+        within_frame_width=True,
+        within_frame_height=True,
     )
 
 
@@ -120,7 +139,13 @@ def test_pretty_repr_of_draft_indent(
                 [7, 8, 9]
             ]
         ]"""),
-        config=OutputConfig(indent_tab_size=4, pretty_printer=pretty_printer),
+        frame=DEFAULT_FRAME,
+        config=OutputConfig(
+            indent_tab_size=4,
+            pretty_printer=pretty_printer,
+        ),
+        within_frame_width=True,
+        within_frame_height=True,
     )
 
 
@@ -144,6 +169,8 @@ def test_pretty_repr_of_draft_in_frame(
         ]"""),
         frame=Frame(Dimensions(17, 7)),
         config=config,
+        within_frame_width=True,
+        within_frame_height=True,
     )
     _assert_pretty_repr_of_draft(
         data_1,
@@ -162,6 +189,8 @@ def test_pretty_repr_of_draft_in_frame(
         ]"""),
         frame=Frame(Dimensions(16, 12)),
         config=config,
+        within_frame_width=True,
+        within_frame_height=True,
     )
 
 
@@ -238,6 +267,7 @@ def test_pretty_repr_of_draft_approximately_in_frame(
         within_frame_width=True,
         within_frame_height=True,
     )
+
     _assert_pretty_repr_of_draft(
         geometry_data,
         dedent("""\
@@ -264,6 +294,8 @@ def test_pretty_repr_of_draft_approximately_in_frame(
         geometry_data_thinnest_repr,
         frame=Frame(Dimensions(37, 21)),
         config=config,
+        within_frame_width=True,
+        within_frame_height=True,
     )
 
     _assert_pretty_repr_of_draft(
@@ -329,7 +361,10 @@ def test_pretty_repr_of_draft_models(
           [1, 2, 3],
           [4, 5, 6]
         ]"""),
+        frame=DEFAULT_FRAME,
         config=OutputConfig(debug_mode=False, pretty_printer=pretty_printer),
+        within_frame_width=True,
+        within_frame_height=True,
     )
 
     _assert_pretty_repr_of_draft(
@@ -345,7 +380,10 @@ def test_pretty_repr_of_draft_models(
             )
           ]
         )"""),
+        frame=DEFAULT_FRAME,
         config=OutputConfig(debug_mode=True, pretty_printer=pretty_printer),
+        within_frame_width=True,
+        within_frame_height=True,
     )
 
 
@@ -360,6 +398,8 @@ def test_pretty_repr_of_draft_variable_char_weight(
         "['北京', '€450']",
         frame=Frame(Dimensions(16, 1)),
         config=OutputConfig(pretty_printer=pretty_printer),
+        within_frame_width=True,
+        within_frame_height=True,
     )
 
     _assert_pretty_repr_of_draft(
@@ -371,6 +411,8 @@ def test_pretty_repr_of_draft_variable_char_weight(
         ]"""),
         frame=Frame(Dimensions(15, 4)),
         config=OutputConfig(pretty_printer=pretty_printer),
+        within_frame_width=True,
+        within_frame_height=True,
     )
 
 
