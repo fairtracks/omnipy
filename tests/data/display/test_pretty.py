@@ -5,12 +5,8 @@ from typing import Annotated, TypedDict
 
 import pytest
 
-from omnipy.data._display.dimensions import DefinedDimensions
-from omnipy.data._display.draft import (DefinedFrame,
-                                        DraftMonospacedOutput,
-                                        DraftOutput,
-                                        FramedDraftOutput,
-                                        OutputConfig)
+from omnipy.data._display.dimensions import Dimensions
+from omnipy.data._display.draft import DraftMonospacedOutput, DraftOutput, Frame, OutputConfig
 from omnipy.data._display.enum import PrettyPrinterLib
 from omnipy.data._display.pretty import pretty_repr_of_draft_output
 from omnipy.data.model import Model
@@ -22,7 +18,7 @@ def test_pretty_repr_of_draft_init_frame_required(
         pretty_repr_of_draft_output(DraftOutput(1))  # type: ignore[arg-type]
 
     out_draft: DraftMonospacedOutput = pretty_repr_of_draft_output(
-        FramedDraftOutput(1, DefinedFrame(DefinedDimensions(80, 24))))
+        DraftOutput(1, Frame(Dimensions(80, 24))))
     assert out_draft.content == '1'
 
 
@@ -30,27 +26,27 @@ def _harmonize(output: str) -> str:
     return re.sub(r',(\n *[\]\}\)])', '\\1', output)
 
 
-class _FramedDraftOutputKwArgs(TypedDict, total=False):
-    frame: DefinedFrame
+class _DraftOutputKwArgs(TypedDict, total=False):
+    frame: Frame
     config: OutputConfig
 
 
 def _assert_pretty_repr_of_draft(
     data: object,
     expected_output: str,
-    frame: DefinedFrame | None = None,
+    frame: Frame | None = None,
     config: OutputConfig | None = None,
     within_frame_width: bool = True,
     within_frame_height: bool = True,
 ) -> None:
     if frame is None:
-        frame = DefinedFrame(DefinedDimensions(width=80, height=24))
+        frame = Frame(Dimensions(width=80, height=24))
 
-    kwargs = _FramedDraftOutputKwArgs(frame=frame)
+    kwargs = _DraftOutputKwArgs(frame=frame)
     if config is not None:
         kwargs['config'] = config
 
-    in_draft = FramedDraftOutput(data, **kwargs)
+    in_draft = DraftOutput(data, **kwargs)
 
     out_draft: DraftMonospacedOutput = pretty_repr_of_draft_output(in_draft)
 
@@ -145,7 +141,7 @@ def test_pretty_repr_of_draft_in_frame(
             [7, 8, 9]
           ]
         ]"""),
-        frame=DefinedFrame(DefinedDimensions(17, 7)),
+        frame=Frame(Dimensions(17, 7)),
         config=config,
     )
     _assert_pretty_repr_of_draft(
@@ -163,7 +159,7 @@ def test_pretty_repr_of_draft_in_frame(
             [7, 8, 9]
           ]
         ]"""),
-        frame=DefinedFrame(DefinedDimensions(16, 12)),
+        frame=Frame(Dimensions(16, 12)),
         config=config,
     )
 
@@ -236,7 +232,7 @@ def test_pretty_repr_of_draft_approximately_in_frame(
             }
           }
         ]"""),
-        frame=DefinedFrame(DefinedDimensions(150, 9)),
+        frame=Frame(Dimensions(150, 9)),
         config=config,
         within_frame_width=True,
         within_frame_height=True,
@@ -256,7 +252,7 @@ def test_pretty_repr_of_draft_approximately_in_frame(
             }
           }
         ]"""),
-        frame=DefinedFrame(DefinedDimensions(149, 9)),
+        frame=Frame(Dimensions(149, 9)),
         config=config,
         within_frame_width=True,
         within_frame_height=False,
@@ -265,14 +261,14 @@ def test_pretty_repr_of_draft_approximately_in_frame(
     _assert_pretty_repr_of_draft(
         geometry_data,
         geometry_data_thinnest_repr,
-        frame=DefinedFrame(DefinedDimensions(37, 21)),
+        frame=Frame(Dimensions(37, 21)),
         config=config,
     )
 
     _assert_pretty_repr_of_draft(
         geometry_data,
         geometry_data_thinnest_repr,
-        frame=DefinedFrame(DefinedDimensions(35, 21)),
+        frame=Frame(Dimensions(35, 21)),
         config=config,
         within_frame_width=False,
         within_frame_height=True,
@@ -282,7 +278,7 @@ def test_pretty_repr_of_draft_approximately_in_frame(
         _assert_pretty_repr_of_draft(
             geometry_data,
             geometry_data_thinnest_repr,
-            frame=DefinedFrame(DefinedDimensions(10, 10)),
+            frame=Frame(Dimensions(10, 10)),
             config=config,
             within_frame_width=False,
             within_frame_height=False,
@@ -307,7 +303,7 @@ def test_pretty_repr_of_draft_approximately_in_frame_known_issue_devtools(
     _assert_pretty_repr_of_draft(
         geometry_data,
         geometry_data_thinnest_repr,
-        frame=DefinedFrame(DefinedDimensions(10, 10)),
+        frame=Frame(Dimensions(10, 10)),
         config=config,
         within_frame_width=False,
         within_frame_height=False,
@@ -361,7 +357,7 @@ def test_pretty_repr_of_draft_variable_char_weight(
     _assert_pretty_repr_of_draft(
         ['北京', '€450'],
         "['北京', '€450']",
-        frame=DefinedFrame(DefinedDimensions(16, 1)),
+        frame=Frame(Dimensions(16, 1)),
         config=OutputConfig(pretty_printer=pretty_printer),
     )
 
@@ -372,7 +368,7 @@ def test_pretty_repr_of_draft_variable_char_weight(
           '北京',
           '€450'
         ]"""),
-        frame=DefinedFrame(DefinedDimensions(15, 4)),
+        frame=Frame(Dimensions(15, 4)),
         config=OutputConfig(pretty_printer=pretty_printer),
     )
 

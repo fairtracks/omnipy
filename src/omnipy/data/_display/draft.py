@@ -1,15 +1,20 @@
-from typing import ClassVar, Generic
+from typing import ClassVar, Generic, TypeAlias
 
-from typing_extensions import TypeVar
+from typing_extensions import TypeIs, TypeVar
 
-from omnipy.data._display.dimensions import DefinedDimensions, Dimensions, DimensionsFit
+from omnipy.data._display.dimensions import (Dimensions,
+                                             DimensionsFit,
+                                             has_height,
+                                             has_width,
+                                             has_width_and_height,
+                                             HeightT,
+                                             WidthT)
 from omnipy.data._display.enum import PrettyPrinterLib
 from omnipy.data._display.helpers import UnicodeCharWidthMap
 from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt
 
-DimensionsT = TypeVar('DimensionsT', bound=Dimensions, default=Dimensions, covariant=True)
-ContentT = TypeVar('ContentT', bound=object)
-FrameT = TypeVar('FrameT', bound='Frame', default='Frame', covariant=True)
+ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)
+FrameT = TypeVar('FrameT', bound='AnyFrame', default='AnyFrame')
 
 
 @dataclass(kw_only=True, config=ConfigDict(extra=Extra.forbid))
@@ -20,28 +25,28 @@ class OutputConfig:
 
 
 @dataclass
-class Frame(Generic[DimensionsT]):
-    dims: DimensionsT = Field(default_factory=Dimensions)
+class Frame(Generic[WidthT, HeightT]):
+    dims: Dimensions[WidthT, HeightT] = Field(default_factory=Dimensions)
 
 
-@dataclass
-class DefinedFrame(Frame[DefinedDimensions]):
-    @staticmethod
-    def _default_dims() -> DefinedDimensions:
-        raise TypeError("Attribute 'dims' must be defined at initialization")
+GeneralFrame: TypeAlias = Frame[NonNegativeInt | None, NonNegativeInt | None]
+UndefinedFrame: TypeAlias = Frame[None, None]
+FrameWithWidth: TypeAlias = Frame[NonNegativeInt, NonNegativeInt | None]
+FrameWithHeight: TypeAlias = Frame[NonNegativeInt | None, NonNegativeInt]
+FrameWithWidthAndHeight: TypeAlias = Frame[NonNegativeInt, NonNegativeInt]
+AnyFrame: TypeAlias = GeneralFrame | FrameWithWidth | FrameWithHeight | FrameWithWidthAndHeight
 
-    dims: DefinedDimensions = Field(default_factory=_default_dims)
 
-    @classmethod
-    def from_frame(cls, frame: Frame[Dimensions]) -> 'DefinedFrame':
-        if frame.dims.width is None or frame.dims.height is None:
-            raise ValueError(f'Both frame dimensions must be defined: {frame.dims}')
+def frame_has_width(frame: AnyFrame) -> TypeIs[FrameWithWidth | FrameWithWidthAndHeight]:
+    return has_width(frame.dims)
 
-        return DefinedFrame(
-            dims=DefinedDimensions(
-                width=frame.dims.width,
-                height=frame.dims.height,
-            ))
+
+def frame_has_height(frame: AnyFrame) -> TypeIs[FrameWithHeight | FrameWithWidthAndHeight]:
+    return has_height(frame.dims)
+
+
+def frame_has_width_and_height(frame: AnyFrame) -> TypeIs[FrameWithWidthAndHeight]:
+    return has_width_and_height(frame.dims)
 
 
 @dataclass
@@ -52,34 +57,25 @@ class DraftOutput(Generic[ContentT, FrameT]):
 
 
 @dataclass
-class FramedDraftOutput(DraftOutput[ContentT, DefinedFrame], Generic[ContentT]):
-    frame: DefinedFrame = Field(default_factory=DefinedFrame)
-
-
-@dataclass
 class DraftMonospacedOutput(DraftOutput[str, FrameT], Generic[FrameT]):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
     content: str
 
     @property
-    def _width(self):
+    def _width(self) -> NonNegativeInt:
         def _line_len(line: str) -> int:
             return sum(self._char_width_map[c] for c in line)
 
         return max((_line_len(line) for line in self.content.splitlines()), default=0)
 
     @property
-    def _height(self):
+    def _height(self) -> NonNegativeInt:
         return len(self.content.splitlines())
 
     @property
-    def dims(self) -> DefinedDimensions:
-        return DefinedDimensions(width=self._width, height=self._height)
+    def dims(self) -> Dimensions[NonNegativeInt, NonNegativeInt]:
+        return Dimensions(width=self._width, height=self._height)
 
     @property
     def within_frame(self) -> DimensionsFit:
         return DimensionsFit(self.dims, self.frame.dims)
-
-
-class FramedDraftMonospacedOutput(FramedDraftOutput[str], DraftMonospacedOutput[DefinedFrame]):
-    pass

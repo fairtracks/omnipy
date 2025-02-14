@@ -1,6 +1,6 @@
 from typing import Generic
 
-from typing_extensions import TypeVar
+from typing_extensions import TypeAlias, TypeIs, TypeVar
 
 from omnipy.util._pydantic import (ConfigDict,
                                    dataclass,
@@ -9,28 +9,46 @@ from omnipy.util._pydantic import (ConfigDict,
                                    NonNegativeInt,
                                    validate_arguments)
 
-NumberT = TypeVar(
-    'NumberT',
+WidthT = TypeVar(
+    'WidthT',
+    bound=NonNegativeInt | None,
+    default=NonNegativeInt | None,
+    covariant=True,
+)
+
+HeightT = TypeVar(
+    'HeightT',
     bound=NonNegativeInt | None,
     default=NonNegativeInt | None,
     covariant=True,
 )
 
 
-@dataclass(config=ConfigDict(extra=Extra.forbid))
-class Dimensions(Generic[NumberT]):
-    width: NumberT = Field(default=None)
-    height: NumberT = Field(default=None)
+@dataclass(config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
+class Dimensions(Generic[WidthT, HeightT]):
+    width: WidthT = Field(default=None)
+    height: HeightT = Field(default=None)
 
 
-@dataclass(config=ConfigDict(extra=Extra.forbid))
-class DefinedDimensions(Dimensions[NonNegativeInt]):
-    @staticmethod
-    def _default_number() -> NonNegativeInt:
-        raise TypeError("Attributes 'width' and 'height' must be defined at initialization")
+UndefinedDimensions: TypeAlias = Dimensions[None, None]
+GeneralDimensions: TypeAlias = Dimensions[NonNegativeInt | None, NonNegativeInt | None]
+DimensionsWithWidth: TypeAlias = Dimensions[NonNegativeInt, NonNegativeInt | None]
+DimensionsWithHeight: TypeAlias = Dimensions[NonNegativeInt | None, NonNegativeInt]
+DimensionsWithWidthAndHeight: TypeAlias = Dimensions[NonNegativeInt, NonNegativeInt]
+AnyDimensions: TypeAlias = (
+    GeneralDimensions | DimensionsWithWidth | DimensionsWithHeight | DimensionsWithWidthAndHeight)
 
-    width: NonNegativeInt = Field(default_factory=_default_number)
-    height: NonNegativeInt = Field(default_factory=_default_number)
+
+def has_width(dims: AnyDimensions) -> TypeIs[DimensionsWithWidth | DimensionsWithWidthAndHeight]:
+    return dims.width is not None
+
+
+def has_height(dims: AnyDimensions) -> TypeIs[DimensionsWithHeight | DimensionsWithWidthAndHeight]:
+    return dims.height is not None
+
+
+def has_width_and_height(dims: AnyDimensions) -> TypeIs[DimensionsWithWidthAndHeight]:
+    return has_width(dims) and has_height(dims)
 
 
 @dataclass(frozen=True)
@@ -39,7 +57,7 @@ class DimensionsFit:
     height: bool | None = None
 
     @validate_arguments
-    def __init__(self, dims: DefinedDimensions, frame_dims: Dimensions):
+    def __init__(self, dims: DimensionsWithWidthAndHeight, frame_dims: Dimensions):
         assert dims.width is not None and dims.height is not None
         if frame_dims.width is not None:
             object.__setattr__(self, 'width', dims.width <= frame_dims.width)
