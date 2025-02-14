@@ -156,25 +156,45 @@ def test_pretty_repr_of_draft_in_frame(
 ) -> None:
     config = OutputConfig(pretty_printer=pretty_printer)
 
-    data_1 = [[1, 2], [[3, 4, 5, 6], [7, 8, 9]]]
+    data = [[1, 2], [[3, 4, 5, 6], [7, 8, 9]]]
+
     _assert_pretty_repr_of_draft(
-        data_1,
-        dedent("""\
+        data,
+        '[[1, 2], [[3, 4, 5, 6], [7, 8, 9]]]',
+        frame=Frame(Dimensions(None, 7)),
+        config=config,
+        within_frame_width=None,
+        within_frame_height=True,
+    )
+
+    excepted_output_width_17 = dedent("""\
         [
           [1, 2],
           [
             [3, 4, 5, 6],
             [7, 8, 9]
           ]
-        ]"""),
+        ]""")
+
+    _assert_pretty_repr_of_draft(
+        data,
+        excepted_output_width_17,
+        frame=Frame(Dimensions(17, None)),
+        config=config,
+        within_frame_width=True,
+        within_frame_height=None,
+    )
+
+    _assert_pretty_repr_of_draft(
+        data,
+        excepted_output_width_17,
         frame=Frame(Dimensions(17, 7)),
         config=config,
         within_frame_width=True,
         within_frame_height=True,
     )
-    _assert_pretty_repr_of_draft(
-        data_1,
-        dedent("""\
+
+    excepted_output_width_16 = dedent("""\
         [
           [1, 2],
           [
@@ -186,11 +206,33 @@ def test_pretty_repr_of_draft_in_frame(
             ],
             [7, 8, 9]
           ]
-        ]"""),
+        ]""")
+
+    _assert_pretty_repr_of_draft(
+        data,
+        excepted_output_width_16,
+        frame=Frame(Dimensions(16, None)),
+        config=config,
+        within_frame_width=True,
+        within_frame_height=None,
+    )
+
+    _assert_pretty_repr_of_draft(
+        data,
+        excepted_output_width_16,
         frame=Frame(Dimensions(16, 12)),
         config=config,
         within_frame_width=True,
         within_frame_height=True,
+    )
+
+    _assert_pretty_repr_of_draft(
+        data,
+        excepted_output_width_16,
+        frame=Frame(Dimensions(16, 11)),
+        config=config,
+        within_frame_width=True,
+        within_frame_height=False,
     )
 
 
