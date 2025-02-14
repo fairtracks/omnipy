@@ -1,5 +1,11 @@
-from omnipy.data._display.enum import PrettyPrinterLib
+from enum import Enum
+
 from omnipy.util._pydantic import ConfigDict, dataclass, Extra, NonNegativeInt
+
+
+class PrettyPrinterLib(str, Enum):
+    DEVTOOLS = 'devtools'
+    RICH = 'rich'
 
 
 @dataclass(kw_only=True, config=ConfigDict(extra=Extra.forbid))
