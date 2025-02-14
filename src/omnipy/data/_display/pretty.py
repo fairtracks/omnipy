@@ -4,7 +4,12 @@ from typing import NamedTuple
 from devtools import PrettyFormat
 from rich.pretty import pretty_repr as rich_pretty_repr
 
-from omnipy.data._display.draft import FramedDraftMonospacedOutput, FramedDraftOutput
+from omnipy.data._display.draft import (ContentT,
+                                        DraftMonospacedOutput,
+                                        DraftOutput,
+                                        frame_has_width_and_height,
+                                        FrameT,
+                                        FrameWithWidthAndHeight)
 from omnipy.data._display.enum import PrettyPrinterLib
 from omnipy.data.typechecks import is_model_instance
 
@@ -30,7 +35,7 @@ def _any_abbrev_containers(repr_str: str) -> bool:
     return bool(re.search(r'\[...\]|\(...\)|\{...\}', repr_str))
 
 
-def _is_nested_structure(draft: FramedDraftOutput) -> bool:
+def _is_nested_structure(draft: DraftOutput) -> bool:
     only_1st_level_repr = rich_pretty_repr(draft.content, max_depth=1)
     if _any_abbrev_containers(only_1st_level_repr):
         return True
@@ -38,10 +43,10 @@ def _is_nested_structure(draft: FramedDraftOutput) -> bool:
 
 
 def _basic_pretty_repr(
-    draft: FramedDraftOutput,
+    draft: DraftOutput[ContentT, FrameT],
     max_line_width: int,
     max_container_width: int,
-) -> FramedDraftMonospacedOutput:
+) -> DraftMonospacedOutput[FrameT]:
     match draft.config.pretty_printer:
         case PrettyPrinterLib.RICH:
             repr_str = rich_pretty_repr(
@@ -57,7 +62,7 @@ def _basic_pretty_repr(
             )
             repr_str = pf(draft.content)
 
-    return FramedDraftMonospacedOutput(
+    return DraftMonospacedOutput(
         repr_str,
         frame=draft.frame,
         config=draft.config,
@@ -75,15 +80,16 @@ def _get_reflow_delta_line_width(pretty_printer: PrettyPrinterLib, height: int) 
 
 
 def _adjusted_multi_line_pretty_repr(
-    draft: FramedDraftOutput,
-    mono_draft: FramedDraftMonospacedOutput,
-):
+    draft: DraftOutput[ContentT, FrameT],
+    mono_draft: DraftMonospacedOutput[FrameWithWidthAndHeight],
+) -> DraftMonospacedOutput[FrameT]:
+    # assert has_width_and_height(draft.frame.dims)
     prev_max_container_width = None
-    width_to_height_ratio = draft.frame.dims.width / draft.frame.dims.height
+    width_to_height_ratio = mono_draft.frame.dims.width / mono_draft.frame.dims.height
 
     while True:
         max_container_width = _max_container_width(mono_draft.content.splitlines())
-        if (draft.frame.dims.width >= mono_draft.dims.width
+        if (mono_draft.frame.dims.width >= mono_draft.dims.width
                 and mono_draft.dims.height * width_to_height_ratio >= mono_draft.dims.width):
             break
 
@@ -97,30 +103,35 @@ def _adjusted_multi_line_pretty_repr(
                                                                mono_draft.dims.height)
 
         mono_draft = _basic_pretty_repr(
-            draft,
+            DraftOutput(draft.content, frame=mono_draft.frame, config=draft.config),
             max_line_width=mono_draft.dims.width - reflow_delta_line_width,
             max_container_width=max_container_width - 1,
         )
 
-    return mono_draft
+    return DraftMonospacedOutput(mono_draft.content, frame=draft.frame, config=draft.config)
 
 
-def pretty_repr_of_draft_output(in_draft: FramedDraftOutput) -> FramedDraftMonospacedOutput:
+def pretty_repr_of_draft_output(
+        in_draft: DraftOutput[ContentT, FrameT]) -> DraftMonospacedOutput[FrameT]:
     if is_model_instance(in_draft.content) and not in_draft.config.debug_mode:
         data = in_draft.content.to_data()
     else:
         data = in_draft.content
 
-    draft = FramedDraftOutput(data, frame=in_draft.frame, config=in_draft.config)
+    draft = DraftOutput(data, frame=in_draft.frame, config=in_draft.config)
 
-    mono_draft: FramedDraftMonospacedOutput = _basic_pretty_repr(
+    mono_draft = _basic_pretty_repr(
         draft,
         max_line_width=draft.frame.dims.width,
         max_container_width=draft.frame.dims.width,
     )
-    if _is_nested_structure(draft) or not mono_draft.within_frame.width:
-        mono_draft = _adjusted_multi_line_pretty_repr(
-            draft,
-            mono_draft,
-        )
+
+    if frame_has_width_and_height(mono_draft.frame):
+
+        if _is_nested_structure(draft) or not mono_draft.within_frame.width:
+            mono_draft = _adjusted_multi_line_pretty_repr(
+                draft,
+                DraftMonospacedOutput(
+                    mono_draft.content, frame=mono_draft.frame, config=draft.config),
+            )
     return mono_draft

@@ -1,80 +1,152 @@
-from typing import Annotated
+from typing import Annotated, TypedDict
 
 import pytest
 
-from omnipy.data._display.dimensions import DefinedDimensions, Dimensions, DimensionsFit
+from omnipy.data._display.dimensions import (AnyDimensions,
+                                             Dimensions,
+                                             DimensionsFit,
+                                             DimensionsWithHeight,
+                                             DimensionsWithWidth,
+                                             DimensionsWithWidthAndHeight,
+                                             has_height,
+                                             has_width,
+                                             has_width_and_height,
+                                             UndefinedDimensions)
 
 
-def _assert_dimensions(dims_cls: type[Dimensions], width: int | None, height: int | None) -> None:
-    dims = dims_cls(width, height)
+class _WidthAndHeightKwargs(TypedDict, total=False):
+    width: int | None
+    height: int | None
+
+
+def _assert_dimensions(
+    width: int | None,
+    height: int | None,
+    exp_has_width: bool,
+    exp_has_height: bool,
+    exp_has_width_and_height: bool,
+) -> None:
+    kwargs = _WidthAndHeightKwargs()
+
+    if width is not None:
+        kwargs['width'] = width
+
+    if height is not None:
+        kwargs['height'] = height
+
+    dims = Dimensions(**kwargs)
+
     assert dims.width == width
     assert dims.height == height
+
+    assert has_width(dims) is exp_has_width
+    assert has_height(dims) is exp_has_height
+    assert has_width_and_height(dims) is exp_has_width_and_height
+
+    # Static type checkers SHOULD raise errors here
+    try:
+        dims.width += 1  # type: ignore[operator]
+        dims.height += 1  # type: ignore[operator]
+    except TypeError:
+        pass
+
+    # Static type checkers SHOULD NOT raise errors here
+    if has_width(dims):
+        dims.width += 1
+
+    if has_height(dims):
+        dims.height += 1
+
+    if has_width_and_height(dims):
+        dims.width += 1
+        dims.height += 1
 
 
 def test_dimensions(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    _assert_dimensions(Dimensions, None, None)
-    _assert_dimensions(Dimensions, 10, None)
-    _assert_dimensions(Dimensions, None, 20)
-    _assert_dimensions(Dimensions, 10, 20)
-    _assert_dimensions(Dimensions, 0, 0)
-    _assert_dimensions(Dimensions, 10, 0)
-    _assert_dimensions(Dimensions, 0, 20)
-    _assert_dimensions(Dimensions, 10, 20)
+    _assert_dimensions(None, None, False, False, False)
+    _assert_dimensions(10, None, True, False, False)
+    _assert_dimensions(None, 20, False, True, False)
+    _assert_dimensions(10, 20, True, True, True)
+    _assert_dimensions(0, 0, True, True, True)
+    _assert_dimensions(10, 0, True, True, True)
+    _assert_dimensions(0, 20, True, True, True)
+    _assert_dimensions(10, 20, True, True, True)
 
 
-def test_defined_dimensions(
+def test_dimension_types(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    _assert_dimensions(DefinedDimensions, 10, 20)
-    _assert_dimensions(DefinedDimensions, 0, 0)
-    _assert_dimensions(DefinedDimensions, 10, 0)
-    _assert_dimensions(DefinedDimensions, 0, 20)
-    _assert_dimensions(DefinedDimensions, 10, 20)
+    def undefined_dims_func(dims: UndefinedDimensions) -> None:
+        ...
+
+    def dims_with_widths_func(dims: DimensionsWithWidth) -> None:
+        ...
+
+    def dims_with_heights_func(dims: DimensionsWithHeight) -> None:
+        ...
+
+    def dims_with_width_and_height_func(dims: DimensionsWithWidthAndHeight) -> None:
+        ...
+
+    def any_dims_func(dims: AnyDimensions) -> None:
+        ...
+
+    # Static type checkers SHOULD NOT raise errors here
+    undefined_dims_func(Dimensions(None, None))
+    any_dims_func(Dimensions(None, None))
+
+    dims_with_widths_func(Dimensions(10, None))
+    any_dims_func(Dimensions(10, None))
+
+    dims_with_heights_func(Dimensions(None, 20))
+    any_dims_func(Dimensions(None, 20))
+
+    dims_with_widths_func(Dimensions(10, 20))
+    dims_with_heights_func(Dimensions(10, 20))
+    dims_with_width_and_height_func(Dimensions(10, 20))
+    any_dims_func(Dimensions(10, 20))
+
+    # Static type checkers SHOULD raise errors here
+    dims_with_widths_func(Dimensions(None, None))  # type: ignore[arg-type]
+    dims_with_heights_func(Dimensions(None, None))  # type: ignore[arg-type]
+    dims_with_width_and_height_func(Dimensions(None, None))  # type: ignore[arg-type]
+
+    undefined_dims_func(Dimensions(10, None))  # type: ignore[arg-type]
+    dims_with_heights_func(Dimensions(10, None))  # type: ignore[arg-type]
+    dims_with_width_and_height_func(Dimensions(10, None))  # type: ignore[arg-type]
+
+    undefined_dims_func(Dimensions(None, 20))  # type: ignore[arg-type]
+    dims_with_widths_func(Dimensions(None, 20))  # type: ignore[arg-type]
+    dims_with_width_and_height_func(Dimensions(None, 20))  # type: ignore[arg-type]
+
+    undefined_dims_func(Dimensions(10, 20))  # type: ignore[arg-type]
 
 
-def test_fail_defined_dimensions_if_none(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    with pytest.raises(ValueError):
-        DefinedDimensions(None, None)  # type: ignore[arg-type]
-
-    with pytest.raises(ValueError):
-        DefinedDimensions(10, None)  # type: ignore[arg-type]
-
-    with pytest.raises(ValueError):
-        DefinedDimensions(None, 20)  # type: ignore[arg-type]
-
-
-@pytest.mark.parametrize('dims_cls', [Dimensions, DefinedDimensions])
 def test_fail_dimensions_if_negative(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-    dims_cls: type[Dimensions],
-) -> None:
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     with pytest.raises(ValueError):
-        dims_cls(-1, None)
+        Dimensions(-1, None)
 
     with pytest.raises(ValueError):
-        dims_cls(-1, 0)
+        Dimensions(-1, 0)
 
     with pytest.raises(ValueError):
-        dims_cls(None, -1)
+        Dimensions(None, -1)
 
     with pytest.raises(ValueError):
-        dims_cls(0, -1)
+        Dimensions(0, -1)
 
     with pytest.raises(ValueError):
-        dims_cls(-1, -1)
+        Dimensions(-1, -1)
 
 
-@pytest.mark.parametrize('dims_cls', [Dimensions, DefinedDimensions])
 def test_fail_dimensions_if_extra_param(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-    dims_cls: type[Dimensions],
-) -> None:
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     with pytest.raises(TypeError):
-        dims_cls(10, 20, 30)  # type: ignore
+        Dimensions(10, 20, 30)  # type: ignore
 
     with pytest.raises(TypeError):
-        dims_cls(10, 20, extra=30)  # type: ignore
+        Dimensions(10, 20, extra=30)  # type: ignore
 
 
 def _assert_within_frame(width: int,
@@ -84,7 +156,7 @@ def _assert_within_frame(width: int,
                          fits_width: bool | None,
                          fits_height: bool | None,
                          fits_both: bool | None):
-    fit = DimensionsFit(DefinedDimensions(width, height), Dimensions(frame_width, frame_height))
+    fit = DimensionsFit(Dimensions(width, height), Dimensions(frame_width, frame_height))
     assert fit.width is fits_width
     assert fit.height is fits_height
     assert fit.both is fits_both
@@ -131,7 +203,7 @@ def test_fail_dimensions_fit_direct_init_vals(
 # noinspection PyDataclass
 def test_dimensions_fit_immutable_properties(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    fit = DimensionsFit(DefinedDimensions(10, 10), Dimensions(10, 10))
+    fit = DimensionsFit(Dimensions(10, 10), Dimensions(10, 10))
 
     with pytest.raises(AttributeError):
         fit.width = False  # type: ignore
