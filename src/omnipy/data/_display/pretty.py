@@ -5,8 +5,9 @@ from devtools import PrettyFormat
 from rich.pretty import pretty_repr as rich_pretty_repr
 
 from omnipy.data._display.config import PrettyPrinterLib
+from omnipy.data._display.dimensions import Proportionally
 from omnipy.data._display.draft import ContentT, DraftMonospacedOutput, DraftOutput, FrameT
-from omnipy.data._display.frame import frame_has_width, frame_has_width_and_height, FrameWithWidth
+from omnipy.data._display.frame import frame_has_width, FrameWithWidth
 from omnipy.data.typechecks import is_model_instance
 
 MAX_WIDTH = 2**16 - 1
@@ -102,20 +103,13 @@ def _adjusted_multi_line_pretty_repr(
 ) -> DraftMonospacedOutput[FrameT]:
     # assert has_width_and_height(draft.frame.dims)
     prev_max_container_width = None
-    if frame_has_width_and_height(mono_draft.frame):
-        width_to_height_ratio = mono_draft.frame.dims.width / mono_draft.frame.dims.height
-    else:
-        width_to_height_ratio = None
 
     while True:
-        max_container_width = mono_draft.max_container_width
-        if mono_draft.frame.dims.width >= mono_draft.dims.width:
-            if width_to_height_ratio is not None:
-                if mono_draft.dims.height * width_to_height_ratio >= mono_draft.dims.width:
-                    break
-            else:
-                break
+        fit = mono_draft.within_frame
+        if fit.width and fit.proportionality is not Proportionally.WIDER:
+            break
 
+        max_container_width = mono_draft.max_container_width
         if (prev_max_container_width is not None
                 and prev_max_container_width <= max_container_width):
             break
