@@ -1,4 +1,5 @@
 from dataclasses import asdict
+import re
 from typing import ClassVar, Generic
 
 from typing_extensions import TypeVar
@@ -34,11 +35,15 @@ class DraftMonospacedOutput(DraftOutput[str, FrameT], Generic[FrameT]):
     content: str
 
     @property
+    def _content_lines(self) -> list[str]:
+        return self.content.splitlines()
+
+    @property
     def _width(self) -> NonNegativeInt:
         def _line_len(line: str) -> int:
             return sum(self._char_width_map[c] for c in line)
 
-        return max((_line_len(line) for line in self.content.splitlines()), default=0)
+        return max((_line_len(line) for line in self._content_lines), default=0)
 
     @property
     def _height(self) -> NonNegativeInt:
@@ -51,3 +56,14 @@ class DraftMonospacedOutput(DraftOutput[str, FrameT], Generic[FrameT]):
     @property
     def within_frame(self) -> DimensionsFit:
         return DimensionsFit(self.dims, self.frame.dims)
+
+    @property
+    def max_container_width(self) -> NonNegativeInt:
+        def _max_container_length_in_line(line):
+            # Find all containers in the line using regex
+            containers = re.findall(r'\{.*\}|\[.*\]|\(.*\)', line)
+            # Return the length of the longest container, or 0 if none are found
+            return max((len(container) for container in containers), default=0)
+
+        # Calculate the maximum container width across all lines
+        return max((_max_container_length_in_line(line) for line in self._content_lines), default=0)
