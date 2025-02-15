@@ -18,17 +18,6 @@ class ReprMeasures(NamedTuple):
     max_container_width: int
 
 
-def _max_container_width(repr_lines: list[str]) -> int:
-    def _max_container_length_in_line(line):
-        # Find all containers in the line using regex
-        containers = re.findall(r'\{.*\}|\[.*\]|\(.*\)', line)
-        # Return the length of the longest container, or 0 if none are found
-        return max((len(container) for container in containers), default=0)
-
-    # Calculate the maximum container width across all lines
-    return max((_max_container_length_in_line(line) for line in repr_lines), default=0)
-
-
 def _any_abbrev_containers(repr_str: str) -> bool:
     return bool(re.search(r'\[...\]|\(...\)|\{...\}', repr_str))
 
@@ -119,7 +108,7 @@ def _adjusted_multi_line_pretty_repr(
         width_to_height_ratio = None
 
     while True:
-        max_container_width = _max_container_width(mono_draft.content.splitlines())
+        max_container_width = mono_draft.max_container_width
         if mono_draft.frame.dims.width >= mono_draft.dims.width:
             if width_to_height_ratio is not None:
                 if mono_draft.dims.height * width_to_height_ratio >= mono_draft.dims.width:

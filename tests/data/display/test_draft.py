@@ -1,3 +1,4 @@
+from textwrap import dedent
 from typing import Annotated, TypedDict
 
 import pytest
@@ -178,3 +179,29 @@ def test_draft_monospaced_output_variable_width_chars(
 
     # Soft hyphen character is zero-width
     _assert_draft_monospaced_output('hyphe\xad\nnate', 5, 2)
+
+
+def test_draft_monospaced_output_max_container_width(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    assert DraftMonospacedOutput('').max_container_width == 0
+    assert DraftMonospacedOutput('(1, 2, 3)').max_container_width == 9
+    assert DraftMonospacedOutput(dedent("""(
+      [1, 2],
+      1234567
+    )"""),).max_container_width == 6
+    assert DraftMonospacedOutput(dedent("""(
+      [1, 2],
+      {'asd': 1234567}
+    )"""),).max_container_width == 16
+    assert DraftMonospacedOutput(
+        dedent("""(
+      [
+        1,
+        2
+      ],
+      {
+        'asd':
+        1234567
+      }
+    )"""),).max_container_width == 0
