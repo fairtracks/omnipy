@@ -7,13 +7,13 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions, DimensionsFit
 from omnipy.data._display.frame import AnyFrame, Frame
 from omnipy.data._display.helpers import UnicodeCharWidthMap
-from omnipy.util._pydantic import dataclass, Field, NonNegativeInt, validator
+from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt, validator
 
 ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)
 FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame)
 
 
-@dataclass
+@dataclass(config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
 class DraftOutput(Generic[ContentT, FrameT]):
     content: ContentT
     frame: FrameT = Field(default_factory=Frame)
@@ -28,7 +28,7 @@ class DraftOutput(Generic[ContentT, FrameT]):
         return OutputConfig(**asdict(config))
 
 
-@dataclass
+@dataclass(config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
 class DraftMonospacedOutput(DraftOutput[str, FrameT], Generic[FrameT]):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
     content: str

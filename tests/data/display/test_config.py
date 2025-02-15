@@ -23,18 +23,27 @@ def test_output_config(
     assert config.pretty_printer is PrettyPrinterLib.RICH
 
 
-def test_output_config_mutable_properties(
+def test_output_config_validate_assignments(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     config = OutputConfig(indent_tab_size=4, debug_mode=True)
 
     config.indent_tab_size = 3
     assert config.indent_tab_size == 3
 
+    with pytest.raises(ValueError):
+        config.indent_tab_size = 'abc'  # type: ignore[assignment]
+
     config.debug_mode = False
     assert config.debug_mode is False
 
+    with pytest.raises(ValueError):
+        config.debug_mode = None  # type: ignore[assignment]
+
     config.pretty_printer = PrettyPrinterLib.DEVTOOLS
     assert config.pretty_printer is PrettyPrinterLib.DEVTOOLS
+
+    with pytest.raises(ValueError):
+        config.pretty_printer = 'something'  # type: ignore[assignment]
 
 
 def test_fail_output_config_if_invalid_params(

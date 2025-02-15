@@ -8,7 +8,7 @@ class PrettyPrinterLib(str, Enum):
     DEVTOOLS = 'devtools'
 
 
-@dataclass(kw_only=True, config=ConfigDict(extra=Extra.forbid))
+@dataclass(kw_only=True, config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
 class OutputConfig:
     indent_tab_size: NonNegativeInt = 2
     debug_mode: bool = False

@@ -62,6 +62,30 @@ def test_draft_output(
     _assert_draft_output(None, Frame(Dimensions(20, 10)), OutputConfig(indent_tab_size=4))
 
 
+def test_draft_output_validate_assignments(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    draft = DraftOutput('Some text')
+
+    draft.content = [1, 2, 3]  # type: ignore[assignment]
+    assert draft.content == [1, 2, 3]
+
+    frame = Frame(Dimensions(10, 20))
+    draft.frame = frame
+    assert draft.frame is not frame
+    assert draft.frame == frame
+
+    with pytest.raises(AttributeError):
+        draft.frame = 123  # type: ignore[assignment]
+
+    config = OutputConfig(indent_tab_size=4)
+    draft.config = config
+    assert draft.config is not config
+    assert draft.config == config
+
+    with pytest.raises(ValueError):
+        draft.config = 'abc'  # type: ignore[assignment]
+
+
 def _assert_draft_monospaced_output(
     output: str,
     width: int,
@@ -107,6 +131,33 @@ def test_draft_monospaced_output_within_frame(
         out, 12, 2, 11, 2, fits_width=False, fits_height=True, fits_both=False)
     _assert_draft_monospaced_output(
         out, 12, 2, 11, 1, fits_width=False, fits_height=False, fits_both=False)
+
+
+def test_draft_monospaced_output_validate_assignments(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    draft = DraftMonospacedOutput('Some text')
+
+    draft.content = 'Some other text'
+    assert draft.content == 'Some other text'
+
+    with pytest.raises(ValueError):
+        draft.content = [1, 2, 3]  # type: ignore[assignment]
+
+    frame = Frame(Dimensions(10, 20))
+    draft.frame = frame
+    assert draft.frame is not frame
+    assert draft.frame == frame
+
+    with pytest.raises(AttributeError):
+        draft.frame = 123  # type: ignore[assignment]
+
+    config = OutputConfig(indent_tab_size=4)
+    draft.config = config
+    assert draft.config is not config
+    assert draft.config == config
+
+    with pytest.raises(ValueError):
+        draft.config = 'abc'  # type: ignore[assignment]
 
 
 def test_draft_monospaced_output_frame_empty(

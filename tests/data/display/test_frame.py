@@ -109,3 +109,25 @@ def test_frame_types(
     frame_with_width_and_height_func(Frame(Dimensions(None, 20)))  # type: ignore[arg-type]
 
     undefined_frame_func(Frame(Dimensions(10, 20)))  # type: ignore[arg-type]
+
+
+def test_frame_validate_assignments(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    frame = Frame()
+
+    dims = Dimensions(10, 20)
+    frame.dims = dims
+    assert frame.dims is not dims
+    assert frame.dims == dims
+
+    with pytest.raises(AttributeError):
+        frame.dims = 123  # type: ignore[assignment]
+
+
+def test_fail_frame_if_extra_param(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    with pytest.raises(TypeError):
+        Frame(Dimensions(), 123)  # type: ignore
+
+    with pytest.raises(TypeError):
+        Frame(Dimensions(), extra=30)  # type: ignore
