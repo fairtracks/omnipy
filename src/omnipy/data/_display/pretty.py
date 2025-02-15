@@ -58,7 +58,7 @@ def _basic_pretty_repr(
                     try:
                         repr_str = pf(draft.content)
                     except ValueError as e:
-                        text_match = re.search(r'invalid width (-\d+)', str(e))
+                        text_match = re.search(r'invalid width (-?\d+)', str(e))
                         if text_match:
                             internal_width = int(text_match.group(1))
                             delta_width = -internal_width + 1
