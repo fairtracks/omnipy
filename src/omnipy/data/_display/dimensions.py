@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Generic
 
 from typing_extensions import TypeIs, TypeVar
@@ -51,18 +52,43 @@ def has_width_and_height(dims: AnyDimensions) -> TypeIs[DimensionsWithWidthAndHe
     return has_width(dims) and has_height(dims)
 
 
+class Proportionally(str, Enum):
+    THINNER = 'thinner'
+    SAME = 'same'
+    WIDER = 'wider'
+
+
 @dataclass(frozen=True)
 class DimensionsFit:
     width: bool | None = None
     height: bool | None = None
+    proportionality: Proportionally | None = None
 
     @validate_arguments
     def __init__(self, dims: DimensionsWithWidthAndHeight, frame_dims: Dimensions):
         assert dims.width is not None and dims.height is not None
+
         if frame_dims.width is not None:
             object.__setattr__(self, 'width', dims.width <= frame_dims.width)
-        if dims.height is not None and frame_dims.height is not None:
+
+        if frame_dims.height is not None:
             object.__setattr__(self, 'height', dims.height <= frame_dims.height)
+
+        if frame_dims.width not in [None, 0] and frame_dims.height not in [None, 0]:
+            object.__setattr__(self,
+                               'proportionality',
+                               self._calculate_proportionality(dims, frame_dims))
+
+    def _calculate_proportionality(self, dims, frame_dims) -> Proportionally:
+        frame_width_height_ratio = frame_dims.width / frame_dims.height
+        proportional_width = dims.height * frame_width_height_ratio
+
+        if proportional_width < dims.width:
+            return Proportionally.WIDER
+        elif proportional_width == dims.width:
+            return Proportionally.SAME
+        else:
+            return Proportionally.THINNER
 
     # TODO: With Pydantic v2, use @computed_field for DimensionsFit.both
     @property

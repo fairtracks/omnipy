@@ -11,6 +11,7 @@ from omnipy.data._display.dimensions import (AnyDimensions,
                                              has_height,
                                              has_width,
                                              has_width_and_height,
+                                             Proportionally,
                                              UndefinedDimensions)
 
 
@@ -229,3 +230,22 @@ def test_dimensions_fit_immutable_properties(
 
     with pytest.raises(AttributeError):
         fit.both = False  # type: ignore
+
+
+def test_dimensions_fit_proportionality(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    def proportionally_wider(a, frame):
+        return a.height * frame.width / frame.height < a.width
+
+    Dims = Dimensions
+
+    assert DimensionsFit(Dims(10, 10), Dims(20, 20)).proportionality is Proportionally.SAME
+    assert DimensionsFit(Dims(10, 11), Dims(20, 20)).proportionality is Proportionally.THINNER
+    assert DimensionsFit(Dims(11, 10), Dims(20, 20)).proportionality is Proportionally.WIDER
+    assert DimensionsFit(Dims(11, 10), Dims(21, 20)).proportionality is Proportionally.WIDER
+    assert DimensionsFit(Dims(11, 10), Dims(22, 20)).proportionality is Proportionally.SAME
+    assert DimensionsFit(Dims(11, 10), Dims(22, 19)).proportionality is Proportionally.THINNER
+
+    assert DimensionsFit(Dims(10, 10), Dims(None, None)).proportionality is None
+    assert DimensionsFit(Dims(10, 10), Dims(None, 20)).proportionality is None
+    assert DimensionsFit(Dims(10, 10), Dims(10, None)).proportionality is None
