@@ -1,4 +1,4 @@
-from typing import Generic, TypeAlias
+from typing import Generic
 
 from typing_extensions import TypeIs
 
@@ -20,12 +20,12 @@ class Frame(Generic[WidthT, HeightT]):
         return Dimensions(dims.width, dims.height)
 
 
-GeneralFrame: TypeAlias = Frame[NonNegativeInt | None, NonNegativeInt | None]
-UndefinedFrame: TypeAlias = Frame[None, None]
-FrameWithWidth: TypeAlias = Frame[NonNegativeInt, NonNegativeInt | None]
-FrameWithHeight: TypeAlias = Frame[NonNegativeInt | None, NonNegativeInt]
-FrameWithWidthAndHeight: TypeAlias = Frame[NonNegativeInt, NonNegativeInt]
-AnyFrame: TypeAlias = GeneralFrame | FrameWithWidth | FrameWithHeight | FrameWithWidthAndHeight
+GeneralFrame = Frame[NonNegativeInt | None, NonNegativeInt | None]
+UndefinedFrame = Frame[None, None]
+FrameWithWidth = Frame[NonNegativeInt, NonNegativeInt | None]
+FrameWithHeight = Frame[NonNegativeInt | None, NonNegativeInt]
+FrameWithWidthAndHeight = Frame[NonNegativeInt, NonNegativeInt]
+AnyFrame = GeneralFrame | FrameWithWidth | FrameWithHeight | FrameWithWidthAndHeight
 
 
 def frame_has_width(frame: AnyFrame) -> TypeIs[FrameWithWidth | FrameWithWidthAndHeight]:

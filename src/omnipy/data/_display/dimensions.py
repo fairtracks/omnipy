@@ -1,6 +1,6 @@
 from typing import Generic
 
-from typing_extensions import TypeAlias, TypeIs, TypeVar
+from typing_extensions import TypeIs, TypeVar
 
 from omnipy.util._pydantic import (ConfigDict,
                                    dataclass,
@@ -30,12 +30,12 @@ class Dimensions(Generic[WidthT, HeightT]):
     height: HeightT = Field(default=None)
 
 
-UndefinedDimensions: TypeAlias = Dimensions[None, None]
-GeneralDimensions: TypeAlias = Dimensions[NonNegativeInt | None, NonNegativeInt | None]
-DimensionsWithWidth: TypeAlias = Dimensions[NonNegativeInt, NonNegativeInt | None]
-DimensionsWithHeight: TypeAlias = Dimensions[NonNegativeInt | None, NonNegativeInt]
-DimensionsWithWidthAndHeight: TypeAlias = Dimensions[NonNegativeInt, NonNegativeInt]
-AnyDimensions: TypeAlias = (
+UndefinedDimensions = Dimensions[None, None]
+GeneralDimensions = Dimensions[NonNegativeInt | None, NonNegativeInt | None]
+DimensionsWithWidth = Dimensions[NonNegativeInt, NonNegativeInt | None]
+DimensionsWithHeight = Dimensions[NonNegativeInt | None, NonNegativeInt]
+DimensionsWithWidthAndHeight = Dimensions[NonNegativeInt, NonNegativeInt]
+AnyDimensions = (
     GeneralDimensions | DimensionsWithWidth | DimensionsWithHeight | DimensionsWithWidthAndHeight)
 
 
