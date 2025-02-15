@@ -1,5 +1,4 @@
 import re
-from typing import NamedTuple
 
 from devtools import PrettyFormat
 from rich.pretty import pretty_repr as rich_pretty_repr
@@ -13,20 +12,14 @@ from omnipy.data.typechecks import is_model_instance
 MAX_WIDTH = 2**16 - 1
 
 
-class ReprMeasures(NamedTuple):
-    num_lines: int
-    max_line_width: int
-    max_container_width: int
-
-
-def _any_abbrev_containers(repr_str: str) -> bool:
-    return bool(re.search(r'\[...\]|\(...\)|\{...\}', repr_str))
-
-
 def _is_nested_structure(draft: DraftOutput[ContentT, FrameT]) -> bool:
+    def _any_abbrev_containers(repr_str: str) -> bool:
+        return bool(re.search(r'\[...\]|\(...\)|\{...\}', repr_str))
+
     only_1st_level_repr = rich_pretty_repr(draft.content, max_depth=1)
     if _any_abbrev_containers(only_1st_level_repr):
         return True
+
     return False
 
 
@@ -101,7 +94,6 @@ def _adjusted_multi_line_pretty_repr(
     draft: DraftOutput[ContentT, FrameT],
     mono_draft: DraftMonospacedOutput[FrameWithWidth],
 ) -> DraftMonospacedOutput[FrameT]:
-    # assert has_width_and_height(draft.frame.dims)
     prev_max_container_width = None
 
     while True:
