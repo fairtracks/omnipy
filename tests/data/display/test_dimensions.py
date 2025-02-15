@@ -140,6 +140,22 @@ def test_fail_dimensions_if_negative(
         Dimensions(-1, -1)
 
 
+def test_dimensions_validate_assignments(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    dims: Dimensions = Dimensions(height=10)
+
+    # TODO: Check why dims is type narrowed to `Dimensions[None, int]` here in Pyright
+    dims.width = 10  # pyright: ignore [reportAttributeAccessIssue]
+
+    with pytest.raises(ValueError):
+        dims.width = -1  # pyright: ignore [reportAttributeAccessIssue]
+
+    dims.height = None  # pyright: ignore [reportAttributeAccessIssue]
+
+    with pytest.raises(ValueError):
+        dims.height = 'None'  # type: ignore[assignment]
+
+
 def test_fail_dimensions_if_extra_param(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     with pytest.raises(TypeError):

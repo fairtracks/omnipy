@@ -8,10 +8,10 @@ from omnipy.data._display.dimensions import (Dimensions,
                                              has_width_and_height,
                                              HeightT,
                                              WidthT)
-from omnipy.util._pydantic import dataclass, Field, NonNegativeInt, validator
+from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt, validator
 
 
-@dataclass
+@dataclass(config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
 class Frame(Generic[WidthT, HeightT]):
     dims: Dimensions[WidthT, HeightT] = Field(default_factory=Dimensions)
 
