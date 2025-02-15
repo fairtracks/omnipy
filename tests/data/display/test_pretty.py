@@ -293,122 +293,11 @@ def geometry_data_thinnest_repr() -> str:
         ]""")
 
 
-@pytest.fixture
-def geometry_data_thinnest_devtools_repr() -> str:
-    return dedent("""\
-        [
-          {
-            'geometry': {
-              'location': {
-                'lng': 77.2295097,
-                'lat': 28.612912
-              },
-              'viewport': {
-                'northeast': {
-                  'lng': (
-                    7
-                    7
-                    .
-                    2
-                    3
-                    0
-                    8
-                    5
-                    8
-                    6
-                    8
-                    0
-                    2
-                    9
-                    1
-                    5
-                  ),
-                  'lat': (
-                    2
-                    8
-                    .
-                    6
-                    1
-                    4
-                    2
-                    6
-                    0
-                    9
-                    8
-                    0
-                    2
-                    9
-                    1
-                    5
-                  )
-                },
-                'southwest': {
-                  'lng': (
-                    7
-                    7
-                    .
-                    2
-                    2
-                    8
-                    1
-                    6
-                    0
-                    7
-                    1
-                    9
-                    7
-                    0
-                    8
-                    4
-                    8
-                  ),
-                  'lat': (
-                    2
-                    8
-                    .
-                    6
-                    1
-                    1
-                    5
-                    6
-                    3
-                    0
-                    1
-                    9
-                    7
-                    0
-                    8
-                    5
-                  )
-                }
-              },
-              (
-                'lo'
-                'ca'
-                'ti'
-                'on'
-                '_t'
-                'yp'
-                'e'
-              ): (
-                'AP'
-                'PR'
-                'OX'
-                'IM'
-                'AT'
-                'E'
-              )
-            }
-          }
-        ]""")
-
-
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
 def test_pretty_repr_of_draft_approximately_in_frame(
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     geometry_data: Annotated[list, pytest.fixture],
     geometry_data_thinnest_repr: Annotated[str, pytest.fixture],
-    geometry_data_thinnest_devtools_repr: Annotated[str, pytest.fixture],
     pretty_printer: PrettyPrinterLib,
 ) -> None:
     config = OutputConfig(pretty_printer=pretty_printer)
@@ -471,25 +360,38 @@ def test_pretty_repr_of_draft_approximately_in_frame(
         within_frame_height=True,
     )
 
-    match (pretty_printer):
-        case (PrettyPrinterLib.RICH):
-            _assert_pretty_repr_of_draft(
-                geometry_data,
-                geometry_data_thinnest_repr,
-                frame=Frame(Dimensions(10, 10)),
-                config=config,
-                within_frame_width=False,
-                within_frame_height=False,
-            )
-        case (PrettyPrinterLib.DEVTOOLS):
-            _assert_pretty_repr_of_draft(
-                geometry_data,
-                geometry_data_thinnest_devtools_repr,
-                frame=Frame(Dimensions(10, 10)),
-                config=config,
-                within_frame_width=False,
-                within_frame_height=False,
-            )
+    if pretty_printer == PrettyPrinterLib.RICH:
+        _assert_pretty_repr_of_draft(
+            geometry_data,
+            geometry_data_thinnest_repr,
+            frame=Frame(Dimensions(10, 10)),
+            config=config,
+            within_frame_width=False,
+            within_frame_height=False,
+        )
+
+
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason=dedent("""\
+        The devtools pretty printer inconsequently prints very thin output only for the last part of
+        the output, without the logic of this being apparent. The output differ from using the
+        `rich` pretty printer."""),
+)
+def test_pretty_repr_of_draft_partly_thin_output_known_issue(
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+    geometry_data: Annotated[list, pytest.fixture],
+    geometry_data_thinnest_repr: Annotated[str, pytest.fixture],
+) -> None:
+
+    _assert_pretty_repr_of_draft(
+        geometry_data,
+        geometry_data_thinnest_repr,
+        frame=Frame(Dimensions(10, 10)),
+        config=OutputConfig(pretty_printer=PrettyPrinterLib.DEVTOOLS),
+        within_frame_width=False,
+        within_frame_height=False,
+    )
 
 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
