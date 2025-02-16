@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import asdict
 import re
+from typing import cast
 
 from devtools import PrettyFormat
 from pydantic import NonNegativeInt
@@ -18,7 +19,7 @@ MAX_WIDTH = 2**16 - 1
 
 class PrettyPrinter(ABC):
     @abstractmethod
-    def should_reduce_width_for_new_try(
+    def no_width_change_since_last_print(
         self,
         mono_draft: DraftMonospacedOutput[FrameWithWidth],
     ) -> bool:
@@ -69,14 +70,14 @@ class RichPrettyPrinter(PrettyPrinter):
     def __init__(self) -> None:
         self._prev_mono_draft_width: NonNegativeInt | None = None
 
-    def should_reduce_width_for_new_try(
+    def no_width_change_since_last_print(
         self,
         mono_draft: DraftMonospacedOutput[FrameWithWidth],
     ) -> bool:
         if self._prev_mono_draft_width is None:
-            return True
+            return False
         else:
-            return self._prev_mono_draft_width > mono_draft.dims.width
+            return self._prev_mono_draft_width <= mono_draft.dims.width
 
     def _calculate_frame_with_reduced_width(
         self,
@@ -115,19 +116,19 @@ class DevtoolsPrettyPrinter(PrettyPrinter):
         self._prev_mono_draft_width: NonNegativeInt | None = None
         self._prev_max_container_width: NonNegativeInt | None = None
 
-    def should_reduce_width_for_new_try(
+    def no_width_change_since_last_print(
         self,
         mono_draft: DraftMonospacedOutput[FrameWithWidth],
     ) -> bool:
         if self._prev_mono_draft_width is None or self._prev_max_container_width is None:
-            return True
+            return False
         else:
             # Sanity check
             assert self._prev_mono_draft_width is not None
             assert self._prev_max_container_width is not None
 
-            return (self._prev_mono_draft_width > mono_draft.dims.width
-                    or self._prev_max_container_width > mono_draft.max_container_width_across_lines)
+            return self._prev_mono_draft_width <= mono_draft.dims.width \
+                and self._prev_max_container_width <= mono_draft.max_container_width_across_lines
 
     def _calculate_frame_with_reduced_width(
         self,
@@ -200,22 +201,22 @@ def _reduce_width_until_proportional_with_frame(
         if fit.width and fit.proportionality is not Proportionally.WIDER:
             break
 
-        if not pretty_printer.should_reduce_width_for_new_try(cur_mono_draft):
+        if pretty_printer.no_width_change_since_last_print(cur_mono_draft):
             break
 
         draft_for_print: DraftOutput[object, FrameWithWidth] = \
             pretty_printer.prepare_draft_for_print_with_reduced_width_requirements(
-            draft, cur_mono_draft,)
+                draft,
+                cur_mono_draft,
+        )
 
         printed_mono_draft = pretty_printer.print_draft(draft_for_print)
+
+        # To maintain original frame and constraints
         cur_mono_draft.content = printed_mono_draft.content
 
-    return DraftMonospacedOutput(
-        cur_mono_draft.content,
-        frame=draft.frame,
-        constraints=draft.constraints,
-        config=draft.config,
-    )
+    # Even though FrameT is FrameWithWidth at this point, static type checkers don't know that
+    return cast(DraftMonospacedOutput[FrameT], cur_mono_draft)
 
 
 def _get_pretty_printer(draft: DraftOutput[object, FrameT]) -> PrettyPrinter:
@@ -231,8 +232,8 @@ def _prepare_content(in_draft: DraftOutput[object, FrameT]) -> DraftOutput[objec
         data = in_draft.content.to_data()
     else:
         data = in_draft.content
-
-    return DraftOutput(data, frame=in_draft.frame, config=in_draft.config)
+    draft = DraftOutput(data, frame=in_draft.frame, config=in_draft.config)
+    return draft
 
 
 def _should_adjust(
@@ -241,7 +242,6 @@ def _should_adjust(
 ) -> bool:
     if mono_draft.within_frame.height is False:
         return False
-
     return not mono_draft.within_frame.width or _is_nested_structure(draft)
 
 
@@ -252,7 +252,6 @@ def _is_nested_structure(draft: DraftOutput[object, FrameT]) -> bool:
     only_1st_level_repr = rich_pretty_repr(draft.content, max_depth=1)
     if _any_abbrev_containers(only_1st_level_repr):
         return True
-
     return False
 
 
@@ -261,16 +260,11 @@ def pretty_repr_of_draft_output(
 
     pretty_printer = _get_pretty_printer(in_draft)
     draft = _prepare_content(in_draft)
-    mono_draft = pretty_printer.print_draft(draft)
+    printed_draft = pretty_printer.print_draft(draft)
 
-    if frame_has_width(mono_draft.frame) and _should_adjust(draft, mono_draft):
-        mono_draft = _reduce_width_until_proportional_with_frame(
-            pretty_printer,
-            draft,
-            DraftMonospacedOutput(
-                mono_draft.content,
-                frame=mono_draft.frame,
-                constraints=mono_draft.constraints,
-                config=mono_draft.config),
-        )
-    return mono_draft
+    if frame_has_width(printed_draft.frame):
+        mono_draft = cast(DraftMonospacedOutput[FrameWithWidth], printed_draft)
+        if _should_adjust(draft, mono_draft):
+            return _reduce_width_until_proportional_with_frame(pretty_printer, draft, mono_draft)
+
+    return printed_draft
