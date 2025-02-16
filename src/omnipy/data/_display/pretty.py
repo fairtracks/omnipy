@@ -101,7 +101,7 @@ def _adjusted_multi_line_pretty_repr(
         if fit.width and fit.proportionality is not Proportionally.WIDER:
             break
 
-        max_container_width = mono_draft.max_container_width
+        max_container_width = mono_draft.max_container_width_across_lines
         if (prev_max_container_width is not None
                 and prev_max_container_width <= max_container_width):
             break
