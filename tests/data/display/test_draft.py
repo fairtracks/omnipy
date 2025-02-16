@@ -4,6 +4,7 @@ from typing import Annotated, TypedDict
 import pytest
 
 from omnipy.data._display.config import OutputConfig
+from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.draft import DraftMonospacedOutput, DraftOutput
 from omnipy.data._display.frame import Frame
@@ -16,12 +17,16 @@ class _DraftOutputKwArgs(TypedDict, total=False):
 
 def _create_draft_output_kwargs(
     frame: Frame | None = None,
+    constraints: Constraints | None = None,
     config: OutputConfig | None = None,
 ) -> _DraftOutputKwArgs:
     kwargs = _DraftOutputKwArgs()
 
     if frame is not None:
         kwargs['frame'] = frame
+
+    if constraints is not None:
+        kwargs['constraints'] = constraints
 
     if config is not None:
         kwargs['config'] = config
@@ -32,13 +37,17 @@ def _create_draft_output_kwargs(
 def _assert_draft_output(
     content: object,
     frame: Frame | None,
+    constraints: Constraints | None,
     config: OutputConfig | None,
 ) -> None:
-    kwargs = _create_draft_output_kwargs(frame, config)
+    kwargs = _create_draft_output_kwargs(frame, constraints, config)
     draft = DraftOutput(content, **kwargs)
 
     if frame is None:
         frame = Frame()
+
+    if constraints is None:
+        constraints = Constraints()
 
     if config is None:
         config = OutputConfig()
@@ -48,19 +57,30 @@ def _assert_draft_output(
     assert draft.frame is not frame
     assert draft.frame == frame
 
+    assert draft.constraints is not constraints
+    assert draft.constraints == constraints
+
     assert draft.config is not config
     assert draft.config == config
 
 
 def test_draft_output(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    _assert_draft_output('Some text', None, None)
-    _assert_draft_output([1, 2, 3], Frame(Dimensions(None, None)), None)
-    _assert_draft_output([1, 2, 3], Frame(Dimensions(10, None)), None)
-    _assert_draft_output([1, 2, 3], Frame(Dimensions(None, 20)), None)
-    _assert_draft_output([1, 2, 3], Frame(Dimensions(10, 20)), None)
-    _assert_draft_output({'a': 1, 'b': 2}, None, OutputConfig(indent_tab_size=4))
-    _assert_draft_output(None, Frame(Dimensions(20, 10)), OutputConfig(indent_tab_size=4))
+    _assert_draft_output('Some text', None, None, None)
+    _assert_draft_output([1, 2, 3], Frame(Dimensions(None, None)), None, None)
+    _assert_draft_output([1, 2, 3], Frame(Dimensions(10, None)), None, None)
+    _assert_draft_output([1, 2, 3], Frame(Dimensions(None, 20)), None, None)
+    _assert_draft_output([1, 2, 3], Frame(Dimensions(10, 20)), None, None)
+    _assert_draft_output(None, None, None, OutputConfig(indent_tab_size=4))
+
+    output = {'a': 1, 'b': 2}
+    _assert_draft_output(output, None, Constraints(container_width_per_line_limit=10), None)
+    _assert_draft_output(
+        output,
+        Frame(Dimensions(20, 10)),
+        Constraints(container_width_per_line_limit=10),
+        OutputConfig(indent_tab_size=4),
+    )
 
 
 def test_draft_output_validate_assignments(
@@ -78,6 +98,14 @@ def test_draft_output_validate_assignments(
     with pytest.raises(AttributeError):
         draft.frame = 123  # type: ignore[assignment]
 
+    constraints = Constraints(container_width_per_line_limit=10)
+    draft.constraints = constraints
+    assert draft.constraints is not constraints
+    assert draft.constraints == constraints
+
+    with pytest.raises(ValueError):
+        draft.constraints = 'abc'
+
     config = OutputConfig(indent_tab_size=4)
     draft.config = config
     assert draft.config is not config
@@ -85,6 +113,16 @@ def test_draft_output_validate_assignments(
 
     with pytest.raises(ValueError):
         draft.config = 'abc'  # type: ignore[assignment]
+
+
+def test_draft_output_constraints_satisfaction(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    draft = DraftOutput('Some text')
+    assert draft.satisfies.container_width_per_line_limit is None
+
+    draft = DraftOutput('Some text', constraints=Constraints(container_width_per_line_limit=10))
+    assert draft.satisfies.container_width_per_line_limit is False
 
 
 def _assert_draft_monospaced_output(
@@ -181,19 +219,19 @@ def test_draft_monospaced_output_variable_width_chars(
     _assert_draft_monospaced_output('hyphe\xad\nnate', 5, 2)
 
 
-def test_draft_monospaced_output_max_container_width(
+def test_draft_monospaced_output_max_container_width_across_lines(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
-    assert DraftMonospacedOutput('').max_container_width == 0
-    assert DraftMonospacedOutput('(1, 2, 3)').max_container_width == 9
+    assert DraftMonospacedOutput('').max_container_width_across_lines == 0
+    assert DraftMonospacedOutput('(1, 2, 3)').max_container_width_across_lines == 9
     assert DraftMonospacedOutput(dedent("""(
       [1, 2],
       1234567
-    )"""),).max_container_width == 6
+    )"""),).max_container_width_across_lines == 6
     assert DraftMonospacedOutput(dedent("""(
       [1, 2],
       {'asd': 1234567}
-    )"""),).max_container_width == 16
+    )"""),).max_container_width_across_lines == 16
     assert DraftMonospacedOutput(
         dedent("""(
       [
@@ -204,4 +242,33 @@ def test_draft_monospaced_output_max_container_width(
         'asd':
         1234567
       }
-    )"""),).max_container_width == 0
+    )"""),).max_container_width_across_lines == 0
+
+
+def test_draft_monospaced_output_constraints_satisfaction(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    out = dedent("""(
+      [1, 2],
+      {'asd': 1234567}
+    )""")
+
+    assert DraftMonospacedOutput(out).max_container_width_across_lines == 16
+    assert DraftMonospacedOutput(out).satisfies.container_width_per_line_limit is None
+
+    draft = DraftMonospacedOutput(out, constraints=Constraints(container_width_per_line_limit=17))
+    assert draft.satisfies.container_width_per_line_limit is True
+
+    draft = DraftMonospacedOutput(out, constraints=Constraints(container_width_per_line_limit=16))
+    assert draft.satisfies.container_width_per_line_limit is True
+
+    constraints_15 = Constraints(container_width_per_line_limit=15)
+    draft = DraftMonospacedOutput(out, constraints=constraints_15)
+    assert draft.satisfies.container_width_per_line_limit is False
+
+    out_shorter = dedent("""(
+      [1, 2],
+      {'asd': 123456}
+    )""")
+    draft = DraftMonospacedOutput(out_shorter, constraints=constraints_15)
+    assert draft.satisfies.container_width_per_line_limit is True

@@ -5,6 +5,7 @@ from typing import ClassVar, Generic
 from typing_extensions import TypeVar
 
 from omnipy.data._display.config import OutputConfig
+from omnipy.data._display.constraints import Constraints, ConstraintsSatisfaction
 from omnipy.data._display.dimensions import Dimensions, DimensionsFit
 from omnipy.data._display.frame import AnyFrame, Frame
 from omnipy.data._display.helpers import UnicodeCharWidthMap
@@ -18,15 +19,24 @@ FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame)
 class DraftOutput(Generic[ContentT, FrameT]):
     content: ContentT
     frame: FrameT = Field(default_factory=Frame)
+    constraints: Constraints = Field(default_factory=Constraints)
     config: OutputConfig = Field(default_factory=OutputConfig)
 
     @validator('frame', pre=True)
     def _copy_frame(cls, frame: Frame) -> Frame:
         return Frame(dims=frame.dims)
 
+    @validator('constraints', pre=True)
+    def _copy_constraints(cls, constraints: Constraints) -> Constraints:
+        return Constraints(**asdict(constraints))
+
     @validator('config', pre=True)
     def _copy_config(cls, config: OutputConfig) -> OutputConfig:
         return OutputConfig(**asdict(config))
+
+    @property
+    def satisfies(self) -> ConstraintsSatisfaction:
+        return ConstraintsSatisfaction(self.constraints)
 
 
 @dataclass(config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
@@ -58,12 +68,19 @@ class DraftMonospacedOutput(DraftOutput[str, FrameT], Generic[FrameT]):
         return DimensionsFit(self.dims, self.frame.dims)
 
     @property
-    def max_container_width(self) -> NonNegativeInt:
-        def _max_container_length_in_line(line):
+    def max_container_width_across_lines(self) -> NonNegativeInt:
+        def _max_container_width_in_line(line):
             # Find all containers in the line using regex
             containers = re.findall(r'\{.*\}|\[.*\]|\(.*\)', line)
             # Return the length of the longest container, or 0 if none are found
             return max((len(container) for container in containers), default=0)
 
         # Calculate the maximum container width across all lines
-        return max((_max_container_length_in_line(line) for line in self._content_lines), default=0)
+        return max((_max_container_width_in_line(line) for line in self._content_lines), default=0)
+
+    @property
+    def satisfies(self) -> ConstraintsSatisfaction:
+        return ConstraintsSatisfaction(
+            self.constraints,
+            max_container_width_across_lines=self.max_container_width_across_lines,
+        )
