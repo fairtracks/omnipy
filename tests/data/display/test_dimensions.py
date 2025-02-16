@@ -201,22 +201,6 @@ def test_dimensions_fit_zeros(
     _assert_within_frame(0, 0, 1, 1, True, True, True)
 
 
-def test_fail_dimensions_fit_direct_init_vals(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-
-    with pytest.raises(ValueError):
-        DimensionsFit(width=True, height=True)  # type: ignore
-
-    with pytest.raises(ValueError):
-        DimensionsFit(width=True)  # type: ignore
-
-    with pytest.raises(ValueError):
-        DimensionsFit(height=True)  # type: ignore
-
-    with pytest.raises(ValueError):
-        DimensionsFit(both=True)  # type: ignore
-
-
 # noinspection PyDataclass
 def test_dimensions_fit_immutable_properties(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:

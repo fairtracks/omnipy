@@ -3,12 +3,7 @@ from typing import Generic
 
 from typing_extensions import TypeIs, TypeVar
 
-from omnipy.util._pydantic import (ConfigDict,
-                                   dataclass,
-                                   Extra,
-                                   Field,
-                                   NonNegativeInt,
-                                   validate_arguments)
+from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt
 
 WidthT = TypeVar(
     'WidthT',
@@ -58,26 +53,22 @@ class Proportionally(str, Enum):
     WIDER = 'wider'
 
 
-@dataclass(frozen=True)
 class DimensionsFit:
-    width: bool | None = None
-    height: bool | None = None
-    proportionality: Proportionally | None = None
-
-    @validate_arguments
     def __init__(self, dims: DimensionsWithWidthAndHeight, frame_dims: Dimensions):
-        assert dims.width is not None and dims.height is not None
+        assert has_width_and_height(dims)
+
+        self._width: bool | None = None
+        self._height: bool | None = None
+        self._proportionality: Proportionally | None = None
 
         if frame_dims.width is not None:
-            object.__setattr__(self, 'width', dims.width <= frame_dims.width)
+            self._width = dims.width <= frame_dims.width
 
         if frame_dims.height is not None:
-            object.__setattr__(self, 'height', dims.height <= frame_dims.height)
+            self._height = dims.height <= frame_dims.height
 
         if frame_dims.width not in [None, 0] and frame_dims.height not in [None, 0]:
-            object.__setattr__(self,
-                               'proportionality',
-                               self._calculate_proportionality(dims, frame_dims))
+            self._proportionality = self._calculate_proportionality(dims, frame_dims)
 
     def _calculate_proportionality(self, dims, frame_dims) -> Proportionally:
         frame_width_height_ratio = frame_dims.width / frame_dims.height
@@ -90,7 +81,18 @@ class DimensionsFit:
         else:
             return Proportionally.THINNER
 
-    # TODO: With Pydantic v2, use @computed_field for DimensionsFit.both
+    @property
+    def width(self):
+        return self._width
+
+    @property
+    def height(self):
+        return self._height
+
+    @property
+    def proportionality(self):
+        return self._proportionality
+
     @property
     def both(self):
         if self.width is None or self.height is None:
