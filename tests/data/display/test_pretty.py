@@ -360,24 +360,16 @@ def test_pretty_repr_of_draft_approximately_in_frame(
         within_frame_height=True,
     )
 
-    if pretty_printer == PrettyPrinterLib.RICH:
-        _assert_pretty_repr_of_draft(
-            geometry_data,
-            geometry_data_thinnest_repr,
-            frame=Frame(Dimensions(10, 10)),
-            config=config,
-            within_frame_width=False,
-            within_frame_height=False,
-        )
+    _assert_pretty_repr_of_draft(
+        geometry_data,
+        geometry_data_thinnest_repr,
+        frame=Frame(Dimensions(10, 10)),
+        config=config,
+        within_frame_width=False,
+        within_frame_height=False,
+    )
 
 
-@pytest.mark.skipif(
-    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason=dedent("""\
-        The devtools pretty printer inconsequently prints very thin output only for the last part of
-        the output, without the logic of this being apparent. The output differ from using the
-        `rich` pretty printer."""),
-)
 def test_pretty_repr_of_draft_partly_thin_output_known_issue(
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     geometry_data: Annotated[list, pytest.fixture],
@@ -473,7 +465,10 @@ def test_pretty_repr_of_draft_variable_char_weight(
         The implementation of multi-line adjustment of pretty_repr detects whether the data
         representation is nested by counting abbreviations of nested containers by the rich library.
         If such abbreviation strings ('(...)', '[...]', or '{...}') are present in the input data,
-        the adjustment algorithm gets confused."""),
+        the adjustment algorithm gets confused.
+
+        Since the content here is not really nested, it should have been printed as a single line.
+        """),
 )
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
 def test_pretty_repr_of_draft_multi_line_if_nested_known_issue(
@@ -481,4 +476,11 @@ def test_pretty_repr_of_draft_multi_line_if_nested_known_issue(
     pretty_printer: PrettyPrinterLib,
 ) -> None:
     config = OutputConfig(pretty_printer=pretty_printer)
-    _assert_pretty_repr_of_draft([1, 2, '[...]'], "[1, 2, '[...]']", config=config)
+    _assert_pretty_repr_of_draft(
+        [1, 2, '[...]'],
+        "[1, 2, '[...]']",
+        frame=DEFAULT_FRAME,
+        config=config,
+        within_frame_width=True,
+        within_frame_height=True,
+    )
