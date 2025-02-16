@@ -1,18 +1,251 @@
+from abc import ABC, abstractmethod
+from dataclasses import asdict
 import re
 
 from devtools import PrettyFormat
+from pydantic import NonNegativeInt
 from rich.pretty import pretty_repr as rich_pretty_repr
 
 from omnipy.data._display.config import PrettyPrinterLib
-from omnipy.data._display.dimensions import Proportionally
-from omnipy.data._display.draft import ContentT, DraftMonospacedOutput, DraftOutput, FrameT
-from omnipy.data._display.frame import frame_has_width, FrameWithWidth
+from omnipy.data._display.constraints import Constraints
+from omnipy.data._display.dimensions import Dimensions, Proportionally
+from omnipy.data._display.draft import DraftMonospacedOutput, DraftOutput, FrameT
+from omnipy.data._display.frame import Frame, frame_has_width, FrameWithWidth
 from omnipy.data.typechecks import is_model_instance
 
 MAX_WIDTH = 2**16 - 1
 
 
-def _is_nested_structure(draft: DraftOutput[ContentT, FrameT]) -> bool:
+class PrettyPrinter(ABC):
+    @abstractmethod
+    def should_reduce_width_for_new_try(
+        self,
+        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+    ) -> bool:
+        pass
+
+    def prepare_draft_for_print_with_reduced_width_requirements(
+        self,
+        draft: DraftOutput[object, FrameT],
+        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+    ) -> DraftOutput[object, FrameWithWidth]:
+        new_frame = self._calculate_frame_with_reduced_width(mono_draft)
+        new_constraints = self._calculate_constraints_with_reduced_width(mono_draft)
+        return DraftOutput(
+            draft.content,
+            frame=new_frame,
+            constraints=new_constraints,
+            config=draft.config,
+        )
+
+    @abstractmethod
+    def _calculate_frame_with_reduced_width(
+        self,
+        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+    ) -> FrameWithWidth:
+        pass
+
+    @abstractmethod
+    def _calculate_constraints_with_reduced_width(
+        self,
+        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+    ) -> Constraints:
+        pass
+
+    def print_draft(self, draft: DraftOutput[object, FrameT]) -> DraftMonospacedOutput[FrameT]:
+        return DraftMonospacedOutput(
+            self._print_draft_to_str(draft),
+            frame=draft.frame,
+            constraints=draft.constraints,
+            config=draft.config,
+        )
+
+    @abstractmethod
+    def _print_draft_to_str(self, draft: DraftOutput[object, FrameT]) -> str:
+        pass
+
+
+class RichPrettyPrinter(PrettyPrinter):
+    def __init__(self) -> None:
+        self._prev_mono_draft_width: NonNegativeInt | None = None
+
+    def should_reduce_width_for_new_try(
+        self,
+        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+    ) -> bool:
+        if self._prev_mono_draft_width is None:
+            return True
+        else:
+            return self._prev_mono_draft_width > mono_draft.dims.width
+
+    def _calculate_frame_with_reduced_width(
+        self,
+        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+    ) -> FrameWithWidth:
+        self._prev_mono_draft_width = mono_draft.dims.width
+
+        if mono_draft.dims.height == 1:
+            frame_width = mono_draft.dims.width - 2
+        else:
+            frame_width = mono_draft.dims.width - 1
+
+        return Frame(Dimensions(width=frame_width, height=mono_draft.frame.dims.height))
+
+    def _calculate_constraints_with_reduced_width(
+        self,
+        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+    ) -> Constraints:
+        return mono_draft.constraints
+
+    def _print_draft_to_str(self, draft: DraftOutput[object, FrameT]) -> str:
+        if draft.frame.dims.width is not None:
+            max_width = draft.frame.dims.width + 1
+        else:
+            max_width = MAX_WIDTH
+
+        return rich_pretty_repr(
+            draft.content,
+            indent_size=draft.config.indent_tab_size,
+            max_width=max_width,
+        )
+
+
+class DevtoolsPrettyPrinter(PrettyPrinter):
+    def __init__(self) -> None:
+        self._prev_mono_draft_width: NonNegativeInt | None = None
+        self._prev_max_container_width: NonNegativeInt | None = None
+
+    def should_reduce_width_for_new_try(
+        self,
+        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+    ) -> bool:
+        if self._prev_mono_draft_width is None or self._prev_max_container_width is None:
+            return True
+        else:
+            # Sanity check
+            assert self._prev_mono_draft_width is not None
+            assert self._prev_max_container_width is not None
+
+            return (self._prev_mono_draft_width > mono_draft.dims.width
+                    or self._prev_max_container_width > mono_draft.max_container_width_across_lines)
+
+    def _calculate_frame_with_reduced_width(
+        self,
+        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+    ) -> FrameWithWidth:
+        self._prev_mono_draft_width = mono_draft.dims.width
+
+        return Frame(
+            Dimensions(
+                width=mono_draft.dims.width - 1,
+                height=mono_draft.frame.dims.height,
+            ))
+
+    def _calculate_constraints_with_reduced_width(
+        self,
+        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+    ) -> Constraints:
+        self._prev_max_container_width = mono_draft.max_container_width_across_lines
+
+        prev_constraints_kwargs = asdict(mono_draft.constraints)
+        prev_constraints_kwargs['container_width_per_line_limit'] = \
+            max(mono_draft.max_container_width_across_lines - 1, 0)
+        return Constraints(**prev_constraints_kwargs)
+
+    def _print_draft_to_str(self, draft: DraftOutput[object, FrameT]) -> str:
+        if draft.constraints.container_width_per_line_limit is not None:
+            simple_cutoff = draft.constraints.container_width_per_line_limit
+        else:
+            simple_cutoff = MAX_WIDTH
+
+        if draft.frame.dims.width is not None:
+            width = draft.frame.dims.width + 1
+        else:
+            width = MAX_WIDTH
+
+        while True:
+            pf = PrettyFormat(
+                indent_step=draft.config.indent_tab_size,
+                simple_cutoff=simple_cutoff,
+                width=width,
+            )
+
+            try:
+                return pf(draft.content)
+            except ValueError as e:
+                text_match = re.search(r'invalid width (-?\d+)', str(e))
+
+                if text_match:
+                    internal_width = int(text_match.group(1))
+                    delta_width = -internal_width + 1
+                    simple_cutoff += delta_width
+                    width += delta_width
+                    continue
+
+                if re.search(r'range\(\) arg 3 must not be zero', str(e)):
+                    simple_cutoff += 1
+                    width += 1
+                    continue
+                raise
+
+
+def _reduce_width_until_proportional_with_frame(
+    pretty_printer: PrettyPrinter,
+    draft: DraftOutput[object, FrameT],
+    cur_mono_draft: DraftMonospacedOutput[FrameWithWidth],
+) -> DraftMonospacedOutput[FrameT]:
+
+    while True:
+        fit = cur_mono_draft.within_frame
+        if fit.width and fit.proportionality is not Proportionally.WIDER:
+            break
+
+        if not pretty_printer.should_reduce_width_for_new_try(cur_mono_draft):
+            break
+
+        draft_for_print: DraftOutput[object, FrameWithWidth] = \
+            pretty_printer.prepare_draft_for_print_with_reduced_width_requirements(
+            draft, cur_mono_draft,)
+
+        printed_mono_draft = pretty_printer.print_draft(draft_for_print)
+        cur_mono_draft.content = printed_mono_draft.content
+
+    return DraftMonospacedOutput(
+        cur_mono_draft.content,
+        frame=draft.frame,
+        constraints=draft.constraints,
+        config=draft.config,
+    )
+
+
+def _get_pretty_printer(draft: DraftOutput[object, FrameT]) -> PrettyPrinter:
+    match draft.config.pretty_printer:
+        case PrettyPrinterLib.RICH:
+            return RichPrettyPrinter()
+        case PrettyPrinterLib.DEVTOOLS:
+            return DevtoolsPrettyPrinter()
+
+
+def _prepare_content(in_draft: DraftOutput[object, FrameT]) -> DraftOutput[object, FrameT]:
+    if is_model_instance(in_draft.content) and not in_draft.config.debug_mode:
+        data = in_draft.content.to_data()
+    else:
+        data = in_draft.content
+
+    return DraftOutput(data, frame=in_draft.frame, config=in_draft.config)
+
+
+def _should_adjust(
+    draft: DraftOutput[object, FrameT],
+    mono_draft: DraftMonospacedOutput[FrameWithWidth],
+) -> bool:
+    if mono_draft.within_frame.height is False:
+        return False
+
+    return not mono_draft.within_frame.width or _is_nested_structure(draft)
+
+
+def _is_nested_structure(draft: DraftOutput[object, FrameT]) -> bool:
     def _any_abbrev_containers(repr_str: str) -> bool:
         return bool(re.search(r'\[...\]|\(...\)|\{...\}', repr_str))
 
@@ -23,124 +256,21 @@ def _is_nested_structure(draft: DraftOutput[ContentT, FrameT]) -> bool:
     return False
 
 
-def _basic_pretty_repr(
-    draft: DraftOutput[ContentT, FrameT],
-    max_line_width: int | None,
-    max_container_width: int | None,
-) -> DraftMonospacedOutput[FrameT]:
-    match draft.config.pretty_printer:
-        case PrettyPrinterLib.RICH:
-            if max_line_width is None:
-                repr_str = rich_pretty_repr(
-                    draft.content,
-                    indent_size=draft.config.indent_tab_size,
-                )
-            else:
-                repr_str = rich_pretty_repr(
-                    draft.content,
-                    indent_size=draft.config.indent_tab_size,
-                    max_width=max_line_width + 1,
-                )
-        case PrettyPrinterLib.DEVTOOLS:
-            if max_line_width is not None and max_container_width is not None:
-                while True:
-                    pf = PrettyFormat(
-                        indent_step=draft.config.indent_tab_size,
-                        simple_cutoff=max_container_width,
-                        width=max_line_width + 1,
-                    )
-                    try:
-                        repr_str = pf(draft.content)
-                    except ValueError as e:
-                        text_match = re.search(r'invalid width (-?\d+)', str(e))
-                        if text_match:
-                            internal_width = int(text_match.group(1))
-                            delta_width = -internal_width + 1
-                            max_line_width += delta_width
-                            max_container_width += delta_width
-                            continue
-                        if re.search(r'range\(\) arg 3 must not be zero', str(e)):
-                            max_line_width += 1
-                            max_container_width += 1
-                            continue
-                        raise
-                    break
-            else:
-                pf = PrettyFormat(
-                    indent_step=draft.config.indent_tab_size,
-                    simple_cutoff=MAX_WIDTH,
-                    width=MAX_WIDTH,
-                )
-                repr_str = pf(draft.content)
-
-    return DraftMonospacedOutput(
-        repr_str,
-        frame=draft.frame,
-        config=draft.config,
-    )
-
-
-def _get_reflow_delta_line_width(pretty_printer: PrettyPrinterLib, height: int) -> int:
-    """
-    Return the number of characters to subtract from the max_line_width in order to trigger a reflow
-    of the pretty_repr output with smaller width.
-    """
-    if height == 1 and pretty_printer == PrettyPrinterLib.RICH:
-        return 2
-    return 1
-
-
-def _adjusted_multi_line_pretty_repr(
-    draft: DraftOutput[ContentT, FrameT],
-    mono_draft: DraftMonospacedOutput[FrameWithWidth],
-) -> DraftMonospacedOutput[FrameT]:
-    prev_max_container_width = None
-
-    while True:
-        fit = mono_draft.within_frame
-        if fit.width and fit.proportionality is not Proportionally.WIDER:
-            break
-
-        max_container_width = mono_draft.max_container_width_across_lines
-        if (prev_max_container_width is not None
-                and prev_max_container_width <= max_container_width):
-            break
-        else:
-            prev_max_container_width = max_container_width
-
-        reflow_delta_line_width = _get_reflow_delta_line_width(draft.config.pretty_printer,
-                                                               mono_draft.dims.height)
-        mono_draft = _basic_pretty_repr(
-            DraftOutput(draft.content, frame=mono_draft.frame, config=draft.config),
-            max_line_width=mono_draft.dims.width - reflow_delta_line_width,
-            max_container_width=max_container_width - 1,
-        )
-
-    return DraftMonospacedOutput(mono_draft.content, frame=draft.frame, config=draft.config)
-
-
 def pretty_repr_of_draft_output(
-        in_draft: DraftOutput[ContentT, FrameT]) -> DraftMonospacedOutput[FrameT]:
-    if is_model_instance(in_draft.content) and not in_draft.config.debug_mode:
-        data = in_draft.content.to_data()
-    else:
-        data = in_draft.content
+        in_draft: DraftOutput[object, FrameT]) -> DraftMonospacedOutput[FrameT]:
 
-    draft = DraftOutput(data, frame=in_draft.frame, config=in_draft.config)
+    pretty_printer = _get_pretty_printer(in_draft)
+    draft = _prepare_content(in_draft)
+    mono_draft = pretty_printer.print_draft(draft)
 
-    mono_draft = _basic_pretty_repr(
-        draft,
-        max_line_width=draft.frame.dims.width,
-        max_container_width=draft.frame.dims.width,
-    )
-
-    if frame_has_width(mono_draft.frame):
-        if (_is_nested_structure(draft)
-                or not mono_draft.within_frame.width) \
-                and mono_draft.within_frame.height in (True, None):
-            mono_draft = _adjusted_multi_line_pretty_repr(
-                draft,
-                DraftMonospacedOutput(
-                    mono_draft.content, frame=mono_draft.frame, config=draft.config),
-            )
+    if frame_has_width(mono_draft.frame) and _should_adjust(draft, mono_draft):
+        mono_draft = _reduce_width_until_proportional_with_frame(
+            pretty_printer,
+            draft,
+            DraftMonospacedOutput(
+                mono_draft.content,
+                frame=mono_draft.frame,
+                constraints=mono_draft.constraints,
+                config=mono_draft.config),
+        )
     return mono_draft
