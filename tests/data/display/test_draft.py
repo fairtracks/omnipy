@@ -12,6 +12,7 @@ from omnipy.data._display.frame import Frame
 
 class _DraftOutputKwArgs(TypedDict, total=False):
     frame: Frame
+    constraints: Constraints
     config: OutputConfig
 
 
@@ -172,31 +173,22 @@ def test_draft_monospaced_output_within_frame(
         out, 12, 2, 11, 1, fits_width=False, fits_height=False, fits_both=False)
 
 
-def test_draft_monospaced_output_validate_assignments(
+def test_draft_monospaced_output_immutable_properties(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
     draft = DraftMonospacedOutput('Some text')
 
-    draft.content = 'Some other text'
-    assert draft.content == 'Some other text'
+    with pytest.raises(AttributeError):
+        draft.content = 'Some other text'
 
-    with pytest.raises(ValueError):
-        draft.content = [1, 2, 3]  # type: ignore[assignment]
+    with pytest.raises(AttributeError):
+        draft.frame = Frame()
 
-    frame = Frame(Dimensions(10, 20))
-    draft.frame = frame
-    assert draft.frame is not frame
-    assert draft.frame == frame
+    with pytest.raises(AttributeError):
+        draft.constraints = Constraints()
 
-    with pytest.raises(ValueError):
-        draft.frame = 123  # type: ignore[assignment]
-
-    config = OutputConfig(indent_tab_size=4)
-    draft.config = config
-    assert draft.config is not config
-    assert draft.config == config
-
-    with pytest.raises(ValueError):
-        draft.config = 'abc'  # type: ignore[assignment]
+    with pytest.raises(AttributeError):
+        draft.config = OutputConfig()
 
 
 def test_draft_monospaced_output_frame_empty(

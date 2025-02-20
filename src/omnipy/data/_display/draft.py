@@ -1,4 +1,5 @@
 from dataclasses import asdict
+from functools import cached_property
 import re
 from typing import ClassVar, Generic
 
@@ -39,35 +40,46 @@ class DraftOutput(Generic[ContentT, FrameT]):
         return ConstraintsSatisfaction(self.constraints)
 
 
-@dataclass(config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
+@dataclass(init=False, config=ConfigDict(extra=Extra.forbid, validate_all=True))
 class DraftMonospacedOutput(DraftOutput[str, FrameT], Generic[FrameT]):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
     content: str
 
-    @property
+    def __init__(self, content: str, frame=None, constraints=None, config=None):
+        object.__setattr__(self, 'content', content)
+        object.__setattr__(self, 'frame', frame or Frame())
+        object.__setattr__(self, 'constraints', constraints or Constraints())
+        object.__setattr__(self, 'config', config or OutputConfig())
+
+    def __setattr__(self, key, value):
+        if key in ['content', 'frame', 'constraints', 'config']:
+            raise AttributeError(f'Field "{key}" is immutable')
+        return super().__setattr__(key, value)
+
+    @cached_property
     def _content_lines(self) -> list[str]:
         return self.content.splitlines()
 
-    @property
+    @cached_property
     def _width(self) -> NonNegativeInt:
         def _line_len(line: str) -> int:
             return sum(self._char_width_map[c] for c in line)
 
         return max((_line_len(line) for line in self._content_lines), default=0)
 
-    @property
+    @cached_property
     def _height(self) -> NonNegativeInt:
         return len(self.content.splitlines())
 
-    @property
+    @cached_property
     def dims(self) -> Dimensions[NonNegativeInt, NonNegativeInt]:
         return Dimensions(width=self._width, height=self._height)
 
-    @property
+    @cached_property
     def within_frame(self) -> DimensionsFit:
         return DimensionsFit(self.dims, self.frame.dims)
 
-    @property
+    @cached_property
     def max_container_width_across_lines(self) -> NonNegativeInt:
         def _max_container_width_in_line(line):
             # Find all containers in the line using regex
@@ -78,8 +90,8 @@ class DraftMonospacedOutput(DraftOutput[str, FrameT], Generic[FrameT]):
         # Calculate the maximum container width across all lines
         return max((_max_container_width_in_line(line) for line in self._content_lines), default=0)
 
-    @property
-    def satisfies(self) -> ConstraintsSatisfaction:
+    @cached_property
+    def satisfies(self) -> ConstraintsSatisfaction:  # pyright: ignore
         return ConstraintsSatisfaction(
             self.constraints,
             max_container_width_across_lines=self.max_container_width_across_lines,
