@@ -3,11 +3,13 @@ from typing import Annotated
 import pytest
 
 from omnipy.data._display.config import (HighContrastLightColorStyles,
+                                         HorizontalOverflowMode,
                                          LowerContrastDarkColorStyles,
                                          OutputConfig,
                                          PrettyPrinterLib,
                                          SpecialColorStyles,
-                                         SyntaxLanguage)
+                                         SyntaxLanguage,
+                                         VerticalOverflowMode)
 
 
 def test_output_config(
@@ -18,12 +20,16 @@ def test_output_config(
         pretty_printer=PrettyPrinterLib.DEVTOOLS,
         language=SyntaxLanguage.JSON,
         color_style=LowerContrastDarkColorStyles.ONE_DARK,
+        horizontal_overflow_mode=HorizontalOverflowMode.CROP,
+        vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
     )
+
     assert config.indent_tab_size == 4
     assert config.debug_mode is True
     assert config.pretty_printer is PrettyPrinterLib.DEVTOOLS
     assert config.language is SyntaxLanguage.JSON
     assert config.color_style is LowerContrastDarkColorStyles.ONE_DARK
+    assert config.horizontal_overflow_mode is HorizontalOverflowMode.CROP
 
     config = OutputConfig(
         indent_tab_size=0,
@@ -31,12 +37,16 @@ def test_output_config(
         pretty_printer='rich',  # type: ignore[arg-type]
         language='xml',
         color_style='xcode',
+        horizontal_overflow_mode='ellipsis',  # type: ignore[arg-type]
+        vertical_overflow_mode='crop_bottom',  # type: ignore[arg-type]
     )
     assert config.indent_tab_size == 0
     assert config.debug_mode is False
     assert config.pretty_printer is PrettyPrinterLib.RICH
     assert config.language is SyntaxLanguage.XML
     assert config.color_style is HighContrastLightColorStyles.XCODE
+    assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
+    assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
 
 
 def test_output_config_validate_assignments(
@@ -55,7 +65,7 @@ def test_output_config_validate_assignments(
     with pytest.raises(ValueError):
         config.debug_mode = None  # type: ignore[assignment]
 
-    config.pretty_printer = PrettyPrinterLib.DEVTOOLS
+    config.pretty_printer = 'devtools'  # type: ignore[assignment]
     assert config.pretty_printer is PrettyPrinterLib.DEVTOOLS
 
     with pytest.raises(ValueError):
@@ -84,6 +94,18 @@ def test_output_config_validate_assignments(
     with pytest.raises(ValueError):
         config.color_style = '123'
 
+    config.horizontal_overflow_mode = 'ellipsis'  # type: ignore[assignment]
+    assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
+
+    with pytest.raises(ValueError):
+        config.horizontal_overflow_mode = 'abc'  # type: ignore[assignment]
+
+    config.vertical_overflow_mode = 'crop_top'  # type: ignore[assignment]
+    assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_TOP
+
+    with pytest.raises(ValueError):
+        config.vertical_overflow_mode = 'abc'  # type: ignore[assignment]
+
 
 def test_fail_output_config_if_invalid_params(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
@@ -91,16 +113,22 @@ def test_fail_output_config_if_invalid_params(
         OutputConfig(indent_tab_size=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(indent_tab_size=None)  # type: ignore
+        OutputConfig(indent_tab_size=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(debug_mode=None)  # type: ignore
+        OutputConfig(debug_mode=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(pretty_printer=None)  # type: ignore
+        OutputConfig(pretty_printer=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
         OutputConfig(language='xyz')
+
+    with pytest.raises(ValueError):
+        OutputConfig(color_style='red')
+
+    with pytest.raises(ValueError):
+        OutputConfig(horizontal_overflow_mode=None)  # type: ignore[arg-type]
 
 
 def test_output_config_default_values(
@@ -111,6 +139,8 @@ def test_output_config_default_values(
     assert config.pretty_printer is PrettyPrinterLib.RICH
     assert config.language is SyntaxLanguage.PYTHON
     assert config.color_style is SpecialColorStyles.ANSI_LIGHT
+    assert config.horizontal_overflow_mode is HorizontalOverflowMode.WORD_WRAP
+    assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
 
 
 def test_fail_output_config_if_extra_params(

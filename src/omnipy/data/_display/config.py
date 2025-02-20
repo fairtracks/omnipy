@@ -128,6 +128,23 @@ allowing the user to specify imported or custom styles not present in these enum
 """
 
 
+class HorizontalOverflowMode(str, Enum):
+    """
+    Horizontal overflow modes for the console output.
+    """
+    ELLIPSIS = 'ellipsis'
+    CROP = 'crop'
+    WORD_WRAP = 'word_wrap'
+
+
+class VerticalOverflowMode(str, Enum):
+    """
+    Vertical overflow modes for the console output.
+    """
+    CROP_TOP = 'crop_top'
+    CROP_BOTTOM = 'crop_bottom'
+
+
 @dataclass(kw_only=True, config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
 class OutputConfig:
     indent_tab_size: NonNegativeInt = 2
@@ -135,6 +152,8 @@ class OutputConfig:
     pretty_printer: PrettyPrinterLib = PrettyPrinterLib.RICH
     language: SyntaxLanguage | str | None = SyntaxLanguage.PYTHON
     color_style: ColorStyles | str | None = SpecialColorStyles.ANSI_LIGHT
+    horizontal_overflow_mode: HorizontalOverflowMode = HorizontalOverflowMode.WORD_WRAP
+    vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.CROP_BOTTOM
 
     @validator('language')
     def validate_language(cls, value: SyntaxLanguage | str | None) -> SyntaxLanguage | str | None:
