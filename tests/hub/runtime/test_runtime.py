@@ -117,6 +117,8 @@ def test_data_config_reset_to_terminal_size(runtime: Annotated[IsRuntime, pytest
     runtime.config.data.reset_to_terminal_size()
     assert runtime.config.data.terminal_size_columns == 100
     assert runtime.config.data.terminal_size_lines == 50
+    os.environ.pop('COLUMNS')
+    os.environ.pop('LINES')
 
 
 def test_init_runtime_config_after_data_class_creator(
