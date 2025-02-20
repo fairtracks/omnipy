@@ -198,3 +198,46 @@ def test_bw_stylized_output_to_terminal(
         [\x1b[1m123\x1b[0m, 
         \x1b[1m234\x1b[0m]})
         """)  # noqa: W291
+
+
+def test_colorized_output_to_terminal(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    content = "MyClass({'abc': [123, 234]})"
+
+    output = StylizedMonospacedOutput(content)
+    for _ in range(2):
+        assert output.colorized.terminal == (
+            "\x1b[49mMyClass({\x1b[0m\x1b[33;49m'\x1b[0m\x1b[33;49mabc\x1b[0m\x1b[33;49m'"
+            '\x1b[0m\x1b[49m: [\x1b[0m\x1b[34;49m123\x1b[0m\x1b[49m, \x1b[0m\x1b[34;49m234'
+            '\x1b[0m\x1b[49m]})\x1b[0m\n')
+
+    output = StylizedMonospacedOutput(
+        content,
+        config=OutputConfig(color_style=LowerContrastLightColorStyles.MURPHY,),
+    )
+    for _ in range(2):
+        assert output.colorized.terminal == (
+            '\x1b[38;2;0;0;0;49mMyClass\x1b[0m\x1b[38;2;0;0;0;49m(\x1b[0m\x1b[38;2;0;0;0;49m{'
+            "\x1b[0m\x1b[38;2;0;0;0;49m'\x1b[0m\x1b[38;2;0;0;0;49mabc\x1b[0m\x1b[38;2;0;0;0;49m'"
+            '\x1b[0m\x1b[38;2;0;0;0;49m:\x1b[0m\x1b[38;2;0;0;0;49m \x1b[0m\x1b[38;2;0;0;0;49m['
+            '\x1b[0m\x1b[1;38;2;102;102;255;49m123\x1b[0m\x1b[38;2;0;0;0;49m,'
+            '\x1b[0m\x1b[38;2;0;0;0;49m \x1b[0m\x1b[1;38;2;102;102;255;49m234'
+            '\x1b[0m\x1b[38;2;0;0;0;49m]\x1b[0m\x1b[38;2;0;0;0;49m}\x1b[0m\x1b[38;2;0;0;0;49m)'
+            '\x1b[0m\n')
+
+    output = StylizedMonospacedOutput(
+        content,
+        frame=Frame(Dimensions(9, 3)),
+        config=OutputConfig(
+            color_style=LowerContrastLightColorStyles.MURPHY,
+            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
+            vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
+        ))
+    assert output.colorized.terminal == (
+        "\x1b[38;2;0;0;0;49m'\x1b[0m\x1b[38;2;0;0;0;49mabc\x1b[0m\x1b[38;2;0;0;0;49m'"
+        '\x1b[0m\x1b[38;2;0;0;0;49m:\x1b[0m\x1b[38;2;0;0;0;49m \x1b[0m\n'
+        '\x1b[38;2;0;0;0;49m[\x1b[0m\x1b[1;38;2;102;102;255;49m123'
+        '\x1b[0m\x1b[38;2;0;0;0;49m,\x1b[0m\x1b[38;2;0;0;0;49m \x1b[0m\n'
+        '\x1b[1;38;2;102;102;255;49m234\x1b[0m\x1b[38;2;0;0;0;49m]'
+        '\x1b[0m\x1b[38;2;0;0;0;49m}\x1b[0m\x1b[38;2;0;0;0;49m)\x1b[0m\n')
