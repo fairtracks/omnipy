@@ -80,7 +80,8 @@ def test_plain_output_to_terminal(
     content = "MyClass({'abc': [123, 234]})"
 
     output = StylizedMonospacedOutput(content)
-    assert output.plain.to_terminal() == "MyClass({'abc': [123, 234]})\n"
+    for _ in range(2):
+        assert output.plain.terminal == "MyClass({'abc': [123, 234]})\n"
     assert output.within_frame.width is None
     assert output.within_frame.height is None
 
@@ -91,7 +92,7 @@ def test_plain_output_to_terminal(
             color_style=LowerContrastLightColorStyles.MURPHY,
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
     )
-    assert output.plain.to_terminal() == dedent("""\
+    assert output.plain.terminal == dedent("""\
         MyClass({'abc': [123,
         234]})
         """)
@@ -105,7 +106,7 @@ def test_plain_output_to_terminal(
             color_style=LowerContrastLightColorStyles.MURPHY,
             horizontal_overflow_mode=HorizontalOverflowMode.ELLIPSIS),
     )
-    assert output.plain.to_terminal() == "MyClass({'abc': [123…\n"
+    assert output.plain.terminal == "MyClass({'abc': [123…\n"
     assert output.within_frame.width is True
     assert output.within_frame.height is None
 
@@ -116,7 +117,7 @@ def test_plain_output_to_terminal(
             color_style=LowerContrastLightColorStyles.MURPHY,
             horizontal_overflow_mode=HorizontalOverflowMode.CROP),
     )
-    assert output.plain.to_terminal() == "MyClass({'abc': [123,\n"
+    assert output.plain.terminal == "MyClass({'abc': [123,\n"
     assert output.within_frame.width is True
     assert output.within_frame.height is None
 
@@ -127,7 +128,7 @@ def test_plain_output_to_terminal(
             color_style=LowerContrastLightColorStyles.MURPHY,
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
     )
-    assert output.plain.to_terminal() == dedent("""\
+    assert output.plain.terminal == dedent("""\
         MyClass({
         'abc': 
         [123, 
@@ -144,7 +145,7 @@ def test_plain_output_to_terminal(
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
             vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
         ))
-    assert output.plain.to_terminal() == dedent("""\
+    assert output.plain.terminal == dedent("""\
         MyClass({
         'abc': 
         """)  # noqa: W291
@@ -159,7 +160,7 @@ def test_plain_output_to_terminal(
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
             vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
         ))
-    assert output.plain.to_terminal() == dedent("""\
+    assert output.plain.terminal == dedent("""\
         [123, 
         234]})
         """)  # noqa: W291
