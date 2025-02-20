@@ -95,7 +95,7 @@ def test_draft_output_validate_assignments(
     assert draft.frame is not frame
     assert draft.frame == frame
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         draft.frame = 123  # type: ignore[assignment]
 
     constraints = Constraints(container_width_per_line_limit=10)
@@ -187,7 +187,7 @@ def test_draft_monospaced_output_validate_assignments(
     assert draft.frame is not frame
     assert draft.frame == frame
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         draft.frame = 123  # type: ignore[assignment]
 
     config = OutputConfig(indent_tab_size=4)

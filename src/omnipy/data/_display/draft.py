@@ -12,7 +12,7 @@ from omnipy.data._display.helpers import UnicodeCharWidthMap
 from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt, validator
 
 ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)
-FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame)
+FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
 
 
 @dataclass(config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
@@ -22,15 +22,15 @@ class DraftOutput(Generic[ContentT, FrameT]):
     constraints: Constraints = Field(default_factory=Constraints)
     config: OutputConfig = Field(default_factory=OutputConfig)
 
-    @validator('frame', pre=True)
+    @validator('frame')
     def _copy_frame(cls, frame: Frame) -> Frame:
         return Frame(dims=frame.dims)
 
-    @validator('constraints', pre=True)
+    @validator('constraints')
     def _copy_constraints(cls, constraints: Constraints) -> Constraints:
         return Constraints(**asdict(constraints))
 
-    @validator('config', pre=True)
+    @validator('config')
     def _copy_config(cls, config: OutputConfig) -> OutputConfig:
         return OutputConfig(**asdict(config))
 
