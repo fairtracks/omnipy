@@ -46,8 +46,10 @@ class OutputVariant:
 
     @cached_property
     def terminal(self) -> str:
-        print_ansi_styles = self._output_mode != OutputMode.PLAIN
-        text = self._console.export_text(clear=False, styles=print_ansi_styles)
+        if self._output_mode is OutputMode.PLAIN:
+            text = self._console.export_text(clear=False, styles=False)
+        else:
+            text = self._console.end_capture()
         return self._vertical_crop(text)
 
 
@@ -126,6 +128,8 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
 
         overflow = self._get_console_overload()
         soft_wrap = True if self.frame.dims.width is None else False
+        if output_mode is OutputMode.BW_STYLIZED:
+            console.begin_capture()
         console.print(self._stylized_content, overflow=overflow, soft_wrap=soft_wrap)
 
         return console
@@ -135,6 +139,15 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
         return OutputVariant(
             self._console(OutputMode.PLAIN),
             OutputMode.PLAIN,
+            self.frame.dims.height,
+            self.config.vertical_overflow_mode,
+        )
+
+    @cached_property
+    def bw_stylized(self) -> OutputVariant:
+        return OutputVariant(
+            self._console(OutputMode.BW_STYLIZED),
+            OutputMode.BW_STYLIZED,
             self.frame.dims.height,
             self.config.vertical_overflow_mode,
         )
