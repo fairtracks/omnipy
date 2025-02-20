@@ -46,10 +46,11 @@ class OutputVariant:
 
     @cached_property
     def terminal(self) -> str:
-        if self._output_mode is OutputMode.PLAIN:
-            text = self._console.export_text(clear=False, styles=False)
-        else:
+        if self._output_mode is OutputMode.BW_STYLIZED:
             text = self._console.end_capture()
+        else:
+            ansi_output = self._output_mode is OutputMode.COLORIZED
+            text = self._console.export_text(clear=False, styles=ansi_output)
         return self._vertical_crop(text)
 
 
@@ -121,8 +122,8 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
             file=StringIO(),
             width=width,
             height=height,
-            color_system='truecolor' if output_mode is OutputMode.COLORIZED else 'standard',
-            no_color=False if output_mode is OutputMode.COLORIZED else True,
+            color_system='truecolor',
+            no_color=True if output_mode is OutputMode.BW_STYLIZED else False,
             record=True,
         )
 
@@ -148,6 +149,15 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
         return OutputVariant(
             self._console(OutputMode.BW_STYLIZED),
             OutputMode.BW_STYLIZED,
+            self.frame.dims.height,
+            self.config.vertical_overflow_mode,
+        )
+
+    @cached_property
+    def colorized(self) -> OutputVariant:
+        return OutputVariant(
+            self._console(OutputMode.COLORIZED),
+            OutputMode.COLORIZED,
             self.frame.dims.height,
             self.config.vertical_overflow_mode,
         )
