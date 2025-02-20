@@ -6,6 +6,7 @@ from omnipy.data._display.config import (HighContrastLightColorStyles,
                                          LowerContrastDarkColorStyles,
                                          OutputConfig,
                                          PrettyPrinterLib,
+                                         SpecialColorStyles,
                                          SyntaxLanguage)
 
 
@@ -109,7 +110,7 @@ def test_output_config_default_values(
     assert config.debug_mode is False
     assert config.pretty_printer is PrettyPrinterLib.RICH
     assert config.language is SyntaxLanguage.PYTHON
-    assert config.color_style is HighContrastLightColorStyles.DEFAULT
+    assert config.color_style is SpecialColorStyles.ANSI_LIGHT
 
 
 def test_fail_output_config_if_extra_params(
