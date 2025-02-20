@@ -121,8 +121,8 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
             file=StringIO(),
             width=width,
             height=height,
-            color_system='truecolor' if output_mode == OutputMode.COLORIZED else 'standard',
-            no_color=False if output_mode == OutputMode.COLORIZED else True,
+            color_system='truecolor' if output_mode is OutputMode.COLORIZED else 'standard',
+            no_color=False if output_mode is OutputMode.COLORIZED else True,
             record=True,
         )
 

@@ -122,7 +122,7 @@ def test_plain_output_to_terminal(
     assert output.within_frame.height is None
 
     output = StylizedMonospacedOutput(
-        "MyClass({'abc': [123, 234]})",
+        content,
         frame=Frame(Dimensions(9, 20)),
         config=OutputConfig(
             color_style=LowerContrastLightColorStyles.MURPHY,
@@ -138,7 +138,7 @@ def test_plain_output_to_terminal(
     assert output.within_frame.height is True
 
     output = StylizedMonospacedOutput(
-        "MyClass({'abc': [123, 234]})",
+        content,
         frame=Frame(Dimensions(9, 2)),
         config=OutputConfig(
             color_style=LowerContrastLightColorStyles.MURPHY,
@@ -153,7 +153,7 @@ def test_plain_output_to_terminal(
     assert output.within_frame.height is True
 
     output = StylizedMonospacedOutput(
-        "MyClass({'abc': [123, 234]})",
+        content,
         frame=Frame(Dimensions(9, 2)),
         config=OutputConfig(
             color_style=LowerContrastLightColorStyles.MURPHY,
