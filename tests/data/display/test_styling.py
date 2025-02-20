@@ -166,3 +166,35 @@ def test_plain_output_to_terminal(
         """)  # noqa: W291
     assert output.within_frame.width is True
     assert output.within_frame.height is True
+
+
+def test_bw_stylized_output_to_terminal(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    content = "MyClass({'abc': [123, 234]})"
+
+    output = StylizedMonospacedOutput(content)
+    for _ in range(2):
+        assert output.bw_stylized.terminal == "MyClass({'abc': [123, 234]})\n"
+
+    output = StylizedMonospacedOutput(
+        content,
+        config=OutputConfig(color_style=LowerContrastLightColorStyles.MURPHY,),
+    )
+    for _ in range(2):
+        assert output.bw_stylized.terminal \
+               == "MyClass({'abc': [\x1b[1m123\x1b[0m, \x1b[1m234\x1b[0m]})\n"
+
+    output = StylizedMonospacedOutput(
+        content,
+        frame=Frame(Dimensions(9, 3)),
+        config=OutputConfig(
+            color_style=LowerContrastLightColorStyles.MURPHY,
+            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
+            vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
+        ))
+    assert output.bw_stylized.terminal == dedent("""\
+        'abc': 
+        [\x1b[1m123\x1b[0m, 
+        \x1b[1m234\x1b[0m]})
+        """)  # noqa: W291
