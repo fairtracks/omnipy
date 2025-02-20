@@ -36,6 +36,15 @@ class SyntaxLanguage(str, Enum):
     TEX = 'tex'
 
 
+class SpecialColorStyles(str, Enum):
+    """
+    Color styles that make use of the ANSI color settings in the terminal instead of overriding with
+    a predefined color style.
+    """
+    ANSI_DARK = 'ansi_dark'
+    ANSI_LIGHT = 'ansi_light'
+
+
 class HighContrastLightColorStyles(str, Enum):
     """
     High contrast light color styles for syntax highlighting, provided by the Pygments library.
@@ -109,7 +118,8 @@ class LowerContrastDarkColorStyles(str, Enum):
 
 
 ColorStyles = (
-    HighContrastLightColorStyles | HighContrastDarkColorStyles | LowerContrastLightColorStyles
+    SpecialColorStyles | HighContrastLightColorStyles | HighContrastDarkColorStyles
+    | LowerContrastLightColorStyles
     | LowerContrastDarkColorStyles)
 """
 All color styles for syntax highlighting, provided by the Pygments library.
@@ -124,7 +134,7 @@ class OutputConfig:
     debug_mode: bool = False
     pretty_printer: PrettyPrinterLib = PrettyPrinterLib.RICH
     language: SyntaxLanguage | str | None = SyntaxLanguage.PYTHON
-    color_style: ColorStyles | str | None = HighContrastLightColorStyles.DEFAULT
+    color_style: ColorStyles | str | None = SpecialColorStyles.ANSI_LIGHT
 
     @validator('language')
     def validate_language(cls, value: SyntaxLanguage | str | None) -> SyntaxLanguage | str | None:
