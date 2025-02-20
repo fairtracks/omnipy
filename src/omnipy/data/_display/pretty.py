@@ -7,14 +7,12 @@ from devtools import PrettyFormat
 from pydantic import NonNegativeInt
 from rich.pretty import pretty_repr as rich_pretty_repr
 
-from omnipy.data._display.config import PrettyPrinterLib
+from omnipy.data._display.config import MAX_TERMINAL_SIZE, PrettyPrinterLib
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions, Proportionally
 from omnipy.data._display.draft import DraftMonospacedOutput, DraftOutput, FrameT
 from omnipy.data._display.frame import Frame, frame_has_width, FrameWithWidth
 from omnipy.data.typechecks import is_model_instance
-
-MAX_WIDTH = 2**16 - 1
 
 
 class PrettyPrinter(ABC):
@@ -102,7 +100,7 @@ class RichPrettyPrinter(PrettyPrinter):
         if draft.frame.dims.width is not None:
             max_width = draft.frame.dims.width + 1
         else:
-            max_width = MAX_WIDTH
+            max_width = MAX_TERMINAL_SIZE
 
         return rich_pretty_repr(
             draft.content,
@@ -157,12 +155,12 @@ class DevtoolsPrettyPrinter(PrettyPrinter):
         if draft.constraints.container_width_per_line_limit is not None:
             simple_cutoff = draft.constraints.container_width_per_line_limit
         else:
-            simple_cutoff = MAX_WIDTH
+            simple_cutoff = MAX_TERMINAL_SIZE
 
         if draft.frame.dims.width is not None:
             width = draft.frame.dims.width + 1
         else:
-            width = MAX_WIDTH
+            width = MAX_TERMINAL_SIZE
 
         while True:
             pf = PrettyFormat(
