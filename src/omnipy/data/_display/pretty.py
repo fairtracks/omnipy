@@ -51,16 +51,19 @@ class PrettyPrinter(ABC):
     ) -> Constraints:
         pass
 
-    def print_draft(self, draft: DraftOutput[object, FrameT]) -> DraftMonospacedOutput[FrameT]:
+    def print_draft(
+        self,
+        draft: DraftOutput[object, FrameT],
+    ) -> DraftMonospacedOutput[FrameT]:
         return DraftMonospacedOutput(
-            self._print_draft_to_str(draft),
+            self.print_draft_to_str(draft),
             frame=draft.frame,
             constraints=draft.constraints,
             config=draft.config,
         )
 
     @abstractmethod
-    def _print_draft_to_str(self, draft: DraftOutput[object, FrameT]) -> str:
+    def print_draft_to_str(self, draft: DraftOutput[object, FrameT]) -> str:
         pass
 
 
@@ -96,7 +99,7 @@ class RichPrettyPrinter(PrettyPrinter):
     ) -> Constraints:
         return mono_draft.constraints
 
-    def _print_draft_to_str(self, draft: DraftOutput[object, FrameT]) -> str:
+    def print_draft_to_str(self, draft: DraftOutput[object, FrameT]) -> str:
         if draft.frame.dims.width is not None:
             max_width = draft.frame.dims.width + 1
         else:
@@ -151,7 +154,7 @@ class DevtoolsPrettyPrinter(PrettyPrinter):
             max(mono_draft.max_container_width_across_lines - 1, 0)
         return Constraints(**prev_constraints_kwargs)
 
-    def _print_draft_to_str(self, draft: DraftOutput[object, FrameT]) -> str:
+    def print_draft_to_str(self, draft: DraftOutput[object, FrameT]) -> str:
         if draft.constraints.container_width_per_line_limit is not None:
             simple_cutoff = draft.constraints.container_width_per_line_limit
         else:
@@ -208,10 +211,13 @@ def _reduce_width_until_proportional_with_frame(
                 cur_mono_draft,
         )
 
-        printed_mono_draft = pretty_printer.print_draft(draft_for_print)
-
         # To maintain original frame and constraints
-        cur_mono_draft.content = printed_mono_draft.content
+        cur_mono_draft = DraftMonospacedOutput(
+            pretty_printer.print_draft_to_str(draft_for_print),
+            frame=cur_mono_draft.frame,
+            constraints=cur_mono_draft.constraints,
+            config=cur_mono_draft.config,
+        )
 
     # Even though FrameT is FrameWithWidth at this point, static type checkers don't know that
     return cast(DraftMonospacedOutput[FrameT], cur_mono_draft)
