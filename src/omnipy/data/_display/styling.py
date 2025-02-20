@@ -44,7 +44,8 @@ class OutputVariant:
             case VerticalOverflowMode.CROP_TOP:
                 return ''.join(lines[-self._frame_height:])
 
-    def to_terminal(self) -> str:
+    @cached_property
+    def terminal(self) -> str:
         print_ansi_styles = self._output_mode != OutputMode.PLAIN
         text = self._console.export_text(clear=False, styles=print_ansi_styles)
         return self._vertical_crop(text)
@@ -140,4 +141,4 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
 
     @cached_property
     def _content_lines(self) -> list[str]:
-        return self.plain.to_terminal().splitlines()
+        return self.plain.terminal.splitlines()
