@@ -5,6 +5,8 @@ from pygments.styles import get_style_by_name
 
 from omnipy.util._pydantic import ConfigDict, dataclass, Extra, NonNegativeInt, validator
 
+MAX_TERMINAL_SIZE = 2**16 - 1
+
 
 class PrettyPrinterLib(str, Enum):
     RICH = 'rich'
