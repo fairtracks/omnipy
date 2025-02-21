@@ -144,14 +144,37 @@ def _fill_full_html_template(style: str, data: str) -> str:
 
 @pc.case(id='plain-full-html', tags=['expectations'])
 def case_expectations_plain_full_html() -> OutputPropertyExpectations:
-    _fill_full_html_template(
-        style=dedent("""
-            body {
-                color: #000000;
-                background-color: #ffffff;
-            }"""),
-        data='<span class="r1">MyClass({&#x27;abc&#x27;: [123, 234]})</span>',
+    body_style = dedent("""
+        body {
+            color: #000000;
+            background-color: #ffffff;
+        }""")
+
+    return OutputPropertyExpectations(
+        get_output_property=lambda output: output.plain.html,
+        expected_outputs=[
+            _fill_full_html_template(
+                style=body_style,
+                data='MyClass({&#x27;abc&#x27;: [123, 234]})',
+            ),
+            _fill_full_html_template(
+                style=body_style,
+                data='MyClass({&#x27;abc&#x27;: [123, 234]})',
+            ),
+            _fill_full_html_template(
+                style=body_style,
+                data=dedent("""\
+                    MyClass({
+                    &#x27;abc&#x27;: 
+                    [123, 
+                    234]})"""),  # noqa: W291
+            ),
+        ],
     )
+
+
+@pc.case(id='bw-stylized-full-html', tags=['expectations'])
+def case_expectations_bw_stylized_full_html() -> OutputPropertyExpectations:
     body_style = dedent("""
         body {
             color: #000000;
@@ -160,7 +183,7 @@ def case_expectations_plain_full_html() -> OutputPropertyExpectations:
     bold_plus_body_style = '.r2 {font-weight: bold}' + body_style
 
     return OutputPropertyExpectations(
-        get_output_property=lambda output: output.plain.html,
+        get_output_property=lambda output: output.bw_stylized.html,
         expected_outputs=[
             _fill_full_html_template(
                 style=body_style,
