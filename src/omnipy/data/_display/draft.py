@@ -69,7 +69,7 @@ class DraftMonospacedOutput(DraftOutput[str, FrameT], Generic[FrameT]):
 
     @cached_property
     def _height(self) -> NonNegativeInt:
-        return len(self.content.splitlines())
+        return len(self._content_lines)
 
     @cached_property
     def dims(self) -> Dimensions[NonNegativeInt, NonNegativeInt]:
