@@ -190,8 +190,8 @@ def case_expectations_plain_html_tag() -> OutputPropertyExpectations:
     return OutputPropertyExpectations(
         get_output_property=lambda output: output.plain.html_tag,
         expected_outputs=[
-            _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})',),
-            _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})',),
+            _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})'),
+            _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})'),
             _fill_html_tag_template(
                 data=dedent("""\
                     MyClass({
@@ -245,11 +245,11 @@ def case_expectations_bw_stylized_html_tag() -> OutputPropertyExpectations:
     return OutputPropertyExpectations(
         get_output_property=lambda output: output.bw_stylized.html_tag,
         expected_outputs=[
-            _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})',),
+            _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})'),
             _fill_html_tag_template(
                 data=('MyClass({&#x27;abc&#x27;: ['
                       '<span style="font-weight: bold">123</span>, '
-                      '<span style="font-weight: bold">234</span>]})'),),
+                      '<span style="font-weight: bold">234</span>]})')),
             _fill_html_tag_template(
                 data=dedent("""\
                     MyClass({
@@ -310,5 +310,51 @@ def case_expectations_colorized_html_page() -> OutputPropertyExpectations:
                     <span class="r1">[</span><span class="r2">123</span><span class="r1">, </span>
                     <span class="r2">234</span><span class="r1">]})</span>"""),
             ),
+        ],
+    )
+
+
+@pc.case(id='colorized-html-tag', tags=['expectations'])
+def case_expectations_colorized_html_tag() -> OutputPropertyExpectations:
+    return OutputPropertyExpectations(
+        get_output_property=lambda output: output.colorized.html_tag,
+        expected_outputs=[
+            _fill_html_tag_template(
+                data=('<span style="background-color: #ffffff">MyClass({</span>'
+                      '<span style="color: #808000; text-decoration-color: #808000; '
+                      'background-color: #ffffff">&#x27;abc&#x27;</span>'
+                      '<span style="background-color: #ffffff">: [</span>'
+                      '<span style="color: #000080; text-decoration-color: #000080; '
+                      'background-color: #ffffff">123</span>'
+                      '<span style="background-color: #ffffff">, </span>'
+                      '<span style="color: #000080; text-decoration-color: #000080; '
+                      'background-color: #ffffff">234</span>'
+                      '<span style="background-color: #ffffff">]})</span>')),
+            _fill_html_tag_template(
+                data=('<span style="color: #000000; text-decoration-color: #000000; '
+                      'background-color: #ffffff">MyClass({&#x27;abc&#x27;: [</span>'
+                      '<span style="color: #6666ff; text-decoration-color: #6666ff; '
+                      'background-color: #ffffff; font-weight: bold">123</span>'
+                      '<span style="color: #000000; text-decoration-color: #000000; '
+                      'background-color: #ffffff">, </span>'
+                      '<span style="color: #6666ff; text-decoration-color: #6666ff; '
+                      'background-color: #ffffff; font-weight: bold">234</span>'
+                      '<span style="color: #000000; text-decoration-color: #000000; '
+                      'background-color: #ffffff">]})</span>')),
+            _fill_html_tag_template(
+                data=('<span style="color: #000000; text-decoration-color: #000000; '
+                      'background-color: #ffffff">MyClass({</span>\n'
+                      '<span style="color: #000000; text-decoration-color: #000000; '
+                      'background-color: #ffffff">&#x27;abc&#x27;: </span>\n'
+                      '<span style="color: #000000; text-decoration-color: #000000; '
+                      'background-color: #ffffff">[</span>'
+                      '<span style="color: #6666ff; text-decoration-color: #6666ff; '
+                      'background-color: #ffffff; font-weight: bold">123</span>'
+                      '<span style="color: #000000; text-decoration-color: #000000; '
+                      'background-color: #ffffff">, </span>\n'
+                      '<span style="color: #6666ff; text-decoration-color: #6666ff; '
+                      'background-color: #ffffff; font-weight: bold">234</span>'
+                      '<span style="color: #000000; text-decoration-color: #000000; '
+                      'background-color: #ffffff">]})</span>')),
         ],
     )
