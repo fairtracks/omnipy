@@ -2,6 +2,7 @@ from copy import copy
 from enum import Enum
 from functools import cached_property
 from io import StringIO
+import re
 from typing import Callable, ClassVar, Generic, Iterable, overload
 
 from rich.console import Console, OverflowMethod
@@ -53,6 +54,21 @@ class OutputVariant:
             case VerticalOverflowMode.CROP_TOP:
                 return ''.join(lines[-self._frame_height:])
 
+    def _vertical_crop_matches(self, matches: re.Match) -> str:
+        start_code_tag = matches.group(1)
+        code_content = matches.group(2)
+        end_code_tag = matches.group(3)
+
+        return start_code_tag + self._vertical_crop(code_content) + end_code_tag
+
+    def _vertical_crop_html(self, html: str) -> str:
+        return re.sub(
+            r'(<code[^>]*>)([\S\s]*)(</code>)',
+            self._vertical_crop_matches,
+            html,
+            re.MULTILINE,
+        )
+
     @cached_property
     def terminal(self) -> str:
         ansi_output = self._output_mode is not OutputMode.PLAIN
@@ -68,13 +84,15 @@ class OutputVariant:
     @cached_property
     def html_page(self) -> str:
         console = self._prepare_html_export()
-        return console.export_html(clear=False)
+        html = console.export_html(clear=False)
+        return self._vertical_crop_html(html)
 
     @cached_property
     def html_tag(self) -> str:
         console = self._prepare_html_export()
-        return console.export_html(
+        html = console.export_html(
             clear=False, code_format=self._HTML_TAG_TEMPLATE, inline_styles=True)
+        return self._vertical_crop_html(html)
 
     def _prepare_html_export(self) -> Console:
         if self._output_mode is OutputMode.PLAIN:

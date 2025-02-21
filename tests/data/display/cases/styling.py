@@ -176,7 +176,6 @@ def case_expectations_plain_html_page() -> OutputPropertyExpectations:
             _fill_html_page_template(
                 style=body_style,
                 data=dedent("""\
-                    MyClass({
                     &#x27;abc&#x27;: 
                     [123, 
                     234]})"""),  # noqa: W291
@@ -194,7 +193,6 @@ def case_expectations_plain_html_tag() -> OutputPropertyExpectations:
             _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})'),
             _fill_html_tag_template(
                 data=dedent("""\
-                    MyClass({
                     &#x27;abc&#x27;: 
                     [123, 
                     234]})"""),  # noqa: W291
@@ -231,7 +229,6 @@ def case_expectations_bw_stylized_html_page() -> OutputPropertyExpectations:
             _fill_html_page_template(
                 style=bold_style + body_style,
                 data=dedent("""\
-                    <span class="r1">MyClass({</span>
                     <span class="r1">&#x27;abc&#x27;: </span>
                     <span class="r1">[</span><span class="r2">123</span><span class="r1">, </span>
                     <span class="r2">234</span><span class="r1">]})</span>"""),
@@ -252,7 +249,6 @@ def case_expectations_bw_stylized_html_tag() -> OutputPropertyExpectations:
                       '<span style="font-weight: bold">234</span>]})')),
             _fill_html_tag_template(
                 data=dedent("""\
-                    MyClass({
                     &#x27;abc&#x27;: 
                     [<span style="font-weight: bold">123</span>, 
                     <span style="font-weight: bold">234</span>]})"""),  # noqa: W291
@@ -305,7 +301,6 @@ def case_expectations_colorized_html_page() -> OutputPropertyExpectations:
             _fill_html_page_template(
                 style=murphy_style + body_style,
                 data=dedent("""\
-                    <span class="r1">MyClass({</span>
                     <span class="r1">&#x27;abc&#x27;: </span>
                     <span class="r1">[</span><span class="r2">123</span><span class="r1">, </span>
                     <span class="r2">234</span><span class="r1">]})</span>"""),
@@ -343,8 +338,6 @@ def case_expectations_colorized_html_tag() -> OutputPropertyExpectations:
                       'background-color: #ffffff">]})</span>')),
             _fill_html_tag_template(
                 data=('<span style="color: #000000; text-decoration-color: #000000; '
-                      'background-color: #ffffff">MyClass({</span>\n'
-                      '<span style="color: #000000; text-decoration-color: #000000; '
                       'background-color: #ffffff">&#x27;abc&#x27;: </span>\n'
                       '<span style="color: #000000; text-decoration-color: #000000; '
                       'background-color: #ffffff">[</span>'
