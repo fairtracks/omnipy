@@ -183,3 +183,19 @@ def test_output_properties_of_stylized_output(
     output = StylizedMonospacedOutput(content, frame=frame, config=config)
     for _ in range(2):
         assert get_output_property(output) == expected_output
+
+
+def test_stylized_output_console_recording_not_deleted_by_filtering(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    content = 'Hello, World!'
+
+    output = StylizedMonospacedOutput(content)
+    assert output.plain.html_tag != ''
+    assert output.bw_stylized.terminal != ''
+    assert output.colorized.terminal != ''
+
+    output = StylizedMonospacedOutput(content)
+    assert output.bw_stylized.terminal != ''
+    assert output.plain.terminal != ''
+    assert output.colorized.terminal != ''

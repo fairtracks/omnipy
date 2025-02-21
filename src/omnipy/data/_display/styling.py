@@ -1,3 +1,4 @@
+from copy import copy
 from enum import Enum
 from functools import cached_property
 from io import StringIO
@@ -55,27 +56,32 @@ class OutputVariant:
     @cached_property
     def terminal(self) -> str:
         ansi_output = self._output_mode is not OutputMode.PLAIN
-        if self._output_mode is OutputMode.BW_STYLIZED:
-            self._remove_color_from_console_recording()
-        text = self._console.export_text(clear=False, styles=ansi_output)
+        console = self._prepare_terminal_export()
+        text = console.export_text(clear=False, styles=ansi_output)
         return self._vertical_crop(text)
+
+    def _prepare_terminal_export(self) -> Console:
+        if self._output_mode is OutputMode.BW_STYLIZED:
+            return self._remove_color_from_console_recording()
+        return self._console
 
     @cached_property
     def html_page(self) -> str:
-        self._prepare_html_export()
-        return self._console.export_html(clear=False)
+        console = self._prepare_html_export()
+        return console.export_html(clear=False)
 
     @cached_property
     def html_tag(self) -> str:
-        self._prepare_html_export()
-        return self._console.export_html(
+        console = self._prepare_html_export()
+        return console.export_html(
             clear=False, code_format=self._HTML_TAG_TEMPLATE, inline_styles=True)
 
-    def _prepare_html_export(self):
+    def _prepare_html_export(self) -> Console:
         if self._output_mode is OutputMode.PLAIN:
-            self._remove_styling_from_console_recording()
+            return self._remove_styling_from_console_recording()
         if self._output_mode is OutputMode.BW_STYLIZED:
-            self._remove_color_from_console_recording()
+            return self._remove_color_from_console_recording()
+        return self._console
 
     # Hacks to remove color and strip styles from the console record buffer, making use of
     # private methods in the rich library. These are needed to prevent the stylized output from
@@ -84,16 +90,18 @@ class OutputVariant:
     def _apply_filter_to_console_recording(
         self,
         filter_func: Callable[[list[Segment]], Iterable[Segment]],
-    ) -> None:
+    ) -> Console:
+        new_console = copy(self._console)
         with self._console._record_buffer_lock:
-            self._console._record_buffer = \
+            new_console._record_buffer = \
                 filter_func(self._console._record_buffer)  # type: ignore[assignment]
+        return new_console
 
-    def _remove_color_from_console_recording(self) -> None:
-        self._apply_filter_to_console_recording(Segment.remove_color)
+    def _remove_color_from_console_recording(self) -> Console:
+        return self._apply_filter_to_console_recording(Segment.remove_color)
 
-    def _remove_styling_from_console_recording(self) -> None:
-        self._apply_filter_to_console_recording(Segment.strip_styles)
+    def _remove_styling_from_console_recording(self) -> Console:
+        return self._apply_filter_to_console_recording(Segment.strip_styles)
 
 
 @dataclass(config=ConfigDict(extra=Extra.forbid, validate_all=True))
