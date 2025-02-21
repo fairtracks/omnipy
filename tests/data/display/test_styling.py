@@ -4,7 +4,6 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from data.display.cases.styling import OutputPropertyExpectations, OutputTestCaseSetup
 from omnipy.data._display.config import (HorizontalOverflowMode,
                                          OutputConfig,
                                          SyntaxLanguage,
@@ -14,6 +13,8 @@ from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.draft import DraftMonospacedOutput
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.styling import StylizedMonospacedOutput
+
+from .cases.styling import OutputPropertyExpectations, OutputTestCaseSetup
 
 
 def test_stylized_output_init(
