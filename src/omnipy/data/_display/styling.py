@@ -1,7 +1,7 @@
 from enum import Enum
 from functools import cached_property
 from io import StringIO
-from typing import Generic, overload
+from typing import Callable, Generic, Iterable, overload
 
 from rich.console import Console, OverflowMethod
 from rich.segment import Segment
@@ -55,19 +55,29 @@ class OutputVariant:
 
     @cached_property
     def html(self) -> str:
-        if self._output_mode is not OutputMode.COLORIZED:
+        if self._output_mode is OutputMode.PLAIN:
+            self._remove_styling_from_console_recording()
+        if self._output_mode is OutputMode.BW_STYLIZED:
             self._remove_color_from_console_recording()
         return self._console.export_html(clear=False)
 
-    def _remove_color_from_console_recording(self) -> None:
-        """
-        Hack to remove color from the console record buffer, making use of private methods in the
-        rich library. This is needed to prevent the colorized output from being displayed in the
-        HTML output.
-        """
+    # Hacks to remove color and strip styles from the console record buffer, making use of
+    # private methods in the rich library. These are needed to prevent the stylized output from
+    # being displayed in the HTML output, as the library provides no other ways to do this.
+
+    def _apply_filter_to_console_recording(
+        self,
+        filter_func: Callable[[list[Segment]], Iterable[Segment]],
+    ) -> None:
         with self._console._record_buffer_lock:
-            colorless_buffer = Segment.remove_color(self._console._record_buffer)
-            self._console._record_buffer = colorless_buffer  # type: ignore[assignment]
+            self._console._record_buffer = \
+                filter_func(self._console._record_buffer)  # type: ignore[assignment]
+
+    def _remove_color_from_console_recording(self) -> None:
+        self._apply_filter_to_console_recording(Segment.remove_color)
+
+    def _remove_styling_from_console_recording(self) -> None:
+        self._apply_filter_to_console_recording(Segment.strip_styles)
 
 
 @dataclass(config=ConfigDict(extra=Extra.forbid, validate_all=True))
