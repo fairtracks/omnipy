@@ -2,9 +2,10 @@ from textwrap import dedent
 from typing import Annotated
 
 import pytest
+import pytest_cases as pc
 
+from data.display.cases.styling import OutputPropertyExpectations, OutputTestCaseSetup
 from omnipy.data._display.config import (HorizontalOverflowMode,
-                                         LowerContrastLightColorStyles,
                                          OutputConfig,
                                          SyntaxLanguage,
                                          VerticalOverflowMode)
@@ -74,23 +75,15 @@ def test_stylized_output_immutable_properties(
         output.config = OutputConfig()
 
 
-def test_plain_output_to_terminal(
+def test_stylized_output_overflow_modes(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
     content = "MyClass({'abc': [123, 234]})"
 
-    output = StylizedMonospacedOutput(content)
-    for _ in range(2):
-        assert output.plain.terminal == "MyClass({'abc': [123, 234]})\n"
-    assert output.within_frame.width is None
-    assert output.within_frame.height is None
-
     output = StylizedMonospacedOutput(
         content,
         frame=Frame(Dimensions(21, None)),
-        config=OutputConfig(
-            color_style=LowerContrastLightColorStyles.MURPHY,
-            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
+        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
     )
     assert output.plain.terminal == dedent("""\
         MyClass({'abc': [123,
@@ -102,9 +95,7 @@ def test_plain_output_to_terminal(
     output = StylizedMonospacedOutput(
         content,
         frame=Frame(Dimensions(21, None)),
-        config=OutputConfig(
-            color_style=LowerContrastLightColorStyles.MURPHY,
-            horizontal_overflow_mode=HorizontalOverflowMode.ELLIPSIS),
+        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.ELLIPSIS),
     )
     assert output.plain.terminal == "MyClass({'abc': [123…\n"
     assert output.within_frame.width is True
@@ -113,9 +104,7 @@ def test_plain_output_to_terminal(
     output = StylizedMonospacedOutput(
         content,
         frame=Frame(Dimensions(21, None)),
-        config=OutputConfig(
-            color_style=LowerContrastLightColorStyles.MURPHY,
-            horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
     )
     assert output.plain.terminal == "MyClass({'abc': [123,\n"
     assert output.within_frame.width is True
@@ -124,9 +113,7 @@ def test_plain_output_to_terminal(
     output = StylizedMonospacedOutput(
         content,
         frame=Frame(Dimensions(9, 20)),
-        config=OutputConfig(
-            color_style=LowerContrastLightColorStyles.MURPHY,
-            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
+        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
     )
     assert output.plain.terminal == dedent("""\
         MyClass({
@@ -141,7 +128,6 @@ def test_plain_output_to_terminal(
         content,
         frame=Frame(Dimensions(9, 2)),
         config=OutputConfig(
-            color_style=LowerContrastLightColorStyles.MURPHY,
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
             vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
         ))
@@ -156,7 +142,6 @@ def test_plain_output_to_terminal(
         content,
         frame=Frame(Dimensions(9, 2)),
         config=OutputConfig(
-            color_style=LowerContrastLightColorStyles.MURPHY,
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
             vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
         ))
@@ -168,153 +153,18 @@ def test_plain_output_to_terminal(
     assert output.within_frame.height is True
 
 
-def test_bw_stylized_output_to_terminal(
+@pc.parametrize_with_cases('output_test_case_setup', cases='.cases.styling', has_tag='setup')
+@pc.parametrize_with_cases(
+    'output_prop_expectations', cases='.cases.styling', has_tag='expectations')
+def test_output_properties_of_stylized_output(
+        output_test_case_setup: Annotated[OutputTestCaseSetup, pc.fixture],
+        output_prop_expectations: Annotated[OutputPropertyExpectations, pc.fixture],
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
-    content = "MyClass({'abc': [123, 234]})"
+    case_index, content, frame, config = output_test_case_setup
+    get_output_property, expected_outputs = output_prop_expectations
+    expected_output = expected_outputs[case_index]
 
-    output = StylizedMonospacedOutput(content)
+    output = StylizedMonospacedOutput(content, frame=frame, config=config)
     for _ in range(2):
-        assert output.bw_stylized.terminal == "MyClass({'abc': [123, 234]})\n"
-
-    output = StylizedMonospacedOutput(
-        content,
-        config=OutputConfig(color_style=LowerContrastLightColorStyles.MURPHY,),
-    )
-    for _ in range(2):
-        assert output.bw_stylized.terminal \
-               == "MyClass({'abc': [\x1b[1m123\x1b[0m, \x1b[1m234\x1b[0m]})\n"
-
-    output = StylizedMonospacedOutput(
-        content,
-        frame=Frame(Dimensions(9, 3)),
-        config=OutputConfig(
-            color_style=LowerContrastLightColorStyles.MURPHY,
-            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
-            vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
-        ))
-    assert output.bw_stylized.terminal == dedent("""\
-        'abc': 
-        [\x1b[1m123\x1b[0m, 
-        \x1b[1m234\x1b[0m]})
-        """)  # noqa: W291
-
-
-def test_colorized_output_to_terminal(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-
-    content = "MyClass({'abc': [123, 234]})"
-
-    output = StylizedMonospacedOutput(content)
-    for _ in range(2):
-        assert output.colorized.terminal == (
-            "\x1b[49mMyClass({\x1b[0m\x1b[33;49m'\x1b[0m\x1b[33;49mabc\x1b[0m\x1b[33;49m'"
-            '\x1b[0m\x1b[49m: [\x1b[0m\x1b[34;49m123\x1b[0m\x1b[49m, \x1b[0m\x1b[34;49m234'
-            '\x1b[0m\x1b[49m]})\x1b[0m\n')
-
-    output = StylizedMonospacedOutput(
-        content,
-        config=OutputConfig(color_style=LowerContrastLightColorStyles.MURPHY,),
-    )
-    for _ in range(2):
-        assert output.colorized.terminal == (
-            '\x1b[38;2;0;0;0;49mMyClass\x1b[0m\x1b[38;2;0;0;0;49m(\x1b[0m\x1b[38;2;0;0;0;49m{'
-            "\x1b[0m\x1b[38;2;0;0;0;49m'\x1b[0m\x1b[38;2;0;0;0;49mabc\x1b[0m\x1b[38;2;0;0;0;49m'"
-            '\x1b[0m\x1b[38;2;0;0;0;49m:\x1b[0m\x1b[38;2;0;0;0;49m \x1b[0m\x1b[38;2;0;0;0;49m['
-            '\x1b[0m\x1b[1;38;2;102;102;255;49m123\x1b[0m\x1b[38;2;0;0;0;49m,'
-            '\x1b[0m\x1b[38;2;0;0;0;49m \x1b[0m\x1b[1;38;2;102;102;255;49m234'
-            '\x1b[0m\x1b[38;2;0;0;0;49m]\x1b[0m\x1b[38;2;0;0;0;49m}\x1b[0m\x1b[38;2;0;0;0;49m)'
-            '\x1b[0m\n')
-
-    output = StylizedMonospacedOutput(
-        content,
-        frame=Frame(Dimensions(9, 3)),
-        config=OutputConfig(
-            color_style=LowerContrastLightColorStyles.MURPHY,
-            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
-            vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
-        ))
-    assert output.colorized.terminal == (
-        "\x1b[38;2;0;0;0;49m'\x1b[0m\x1b[38;2;0;0;0;49mabc\x1b[0m\x1b[38;2;0;0;0;49m'"
-        '\x1b[0m\x1b[38;2;0;0;0;49m:\x1b[0m\x1b[38;2;0;0;0;49m \x1b[0m\n'
-        '\x1b[38;2;0;0;0;49m[\x1b[0m\x1b[1;38;2;102;102;255;49m123'
-        '\x1b[0m\x1b[38;2;0;0;0;49m,\x1b[0m\x1b[38;2;0;0;0;49m \x1b[0m\n'
-        '\x1b[1;38;2;102;102;255;49m234\x1b[0m\x1b[38;2;0;0;0;49m]'
-        '\x1b[0m\x1b[38;2;0;0;0;49m}\x1b[0m\x1b[38;2;0;0;0;49m)\x1b[0m\n')
-
-
-FULL_HTML_TEMPLATE = dedent("""\
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <meta charset="UTF-8">
-    <style>
-    {style}
-    </style>
-    </head>
-    <body>
-        <pre style="font-family:{font_family}"><code style="font-family:inherit">{data}
-    </code></pre>
-    </body>
-    </html>
-    """)
-
-
-def test_plain_output_to_html(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-
-    content = "MyClass({'abc': [123, 234]})"
-
-    font_family = "Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"
-
-    style = dedent("""
-        body {
-            color: #000000;
-            background-color: #ffffff;
-        }""")
-    data = '<span class="r1">MyClass({&#x27;abc&#x27;: [123, 234]})</span>'
-    expected_output = FULL_HTML_TEMPLATE.format(style=style, font_family=font_family, data=data)
-
-    output = StylizedMonospacedOutput(content)
-    for _ in range(2):
-        assert output.plain.html == expected_output
-
-    style = dedent("""\
-        .r2 {font-weight: bold}
-        body {
-            color: #000000;
-            background-color: #ffffff;
-        }""")
-    data = ('<span class="r1">MyClass({&#x27;abc&#x27;: [</span><span class="r2">123</span>'
-            '<span class="r1">, </span><span class="r2">234</span><span class="r1">]})</span>')
-    expected_output = FULL_HTML_TEMPLATE.format(style=style, font_family=font_family, data=data)
-
-    output = StylizedMonospacedOutput(
-        content,
-        config=OutputConfig(color_style=LowerContrastLightColorStyles.MURPHY,),
-    )
-    for _ in range(2):
-        assert output.plain.html == expected_output
-
-    style = dedent("""\
-        .r2 {font-weight: bold}
-        body {
-            color: #000000;
-            background-color: #ffffff;
-        }""")
-    data = dedent("""\
-        <span class="r1">MyClass({</span>
-        <span class="r1">&#x27;abc&#x27;: </span>
-        <span class="r1">[</span><span class="r2">123</span><span class="r1">, </span>
-        <span class="r2">234</span><span class="r1">]})</span>""")
-    expected_output = FULL_HTML_TEMPLATE.format(style=style, font_family=font_family, data=data)
-
-    output = StylizedMonospacedOutput(
-        content,
-        frame=Frame(Dimensions(9, 3)),
-        config=OutputConfig(
-            color_style=LowerContrastLightColorStyles.MURPHY,
-            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
-            vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
-        ))
-    assert output.plain.html == expected_output
+        assert get_output_property(output) == expected_output
