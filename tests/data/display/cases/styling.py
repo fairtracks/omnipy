@@ -175,12 +175,13 @@ def case_expectations_plain_full_html() -> OutputPropertyExpectations:
 
 @pc.case(id='bw-stylized-full-html', tags=['expectations'])
 def case_expectations_bw_stylized_full_html() -> OutputPropertyExpectations:
+    bold_style = '.r2 {font-weight: bold}'
+
     body_style = dedent("""
         body {
             color: #000000;
             background-color: #ffffff;
         }""")
-    bold_plus_body_style = '.r2 {font-weight: bold}' + body_style
 
     return OutputPropertyExpectations(
         get_output_property=lambda output: output.bw_stylized.html,
@@ -190,7 +191,7 @@ def case_expectations_bw_stylized_full_html() -> OutputPropertyExpectations:
                 data='<span class="r1">MyClass({&#x27;abc&#x27;: [123, 234]})</span>',
             ),
             _fill_full_html_template(
-                style=bold_plus_body_style,
+                style=bold_style + body_style,
                 data=('<span class="r1">MyClass({&#x27;abc&#x27;: [</span>'
                       '<span class="r2">123</span>'
                       '<span class="r1">, </span>'
@@ -198,7 +199,60 @@ def case_expectations_bw_stylized_full_html() -> OutputPropertyExpectations:
                       '<span class="r1">]})</span>'),
             ),
             _fill_full_html_template(
-                style=bold_plus_body_style,
+                style=bold_style + body_style,
+                data=dedent("""\
+                    <span class="r1">MyClass({</span>
+                    <span class="r1">&#x27;abc&#x27;: </span>
+                    <span class="r1">[</span><span class="r2">123</span><span class="r1">, </span>
+                    <span class="r2">234</span><span class="r1">]})</span>"""),
+            ),
+        ],
+    )
+
+
+@pc.case(id='colorized-full-html', tags=['expectations'])
+def case_expectations_colorized_full_html() -> OutputPropertyExpectations:
+    ansi_light_style = '\n'.join([
+        '.r1 {background-color: #ffffff}',
+        '.r2 {color: #808000; text-decoration-color: #808000; background-color: #ffffff}',
+        '.r3 {color: #000080; text-decoration-color: #000080; background-color: #ffffff}',
+    ])
+
+    murphy_style = '\n'.join([
+        '.r1 {color: #000000; text-decoration-color: #000000; background-color: #ffffff}',
+        ('.r2 {color: #6666ff; text-decoration-color: #6666ff; background-color: #ffffff; '
+         'font-weight: bold}'),
+    ])
+
+    body_style = dedent("""
+            body {
+                color: #000000;
+                background-color: #ffffff;
+            }""")
+
+    return OutputPropertyExpectations(
+        get_output_property=lambda output: output.colorized.html,
+        expected_outputs=[
+            _fill_full_html_template(
+                style=ansi_light_style + body_style,
+                data=('<span class="r1">MyClass({</span>'
+                      '<span class="r2">&#x27;abc&#x27;</span>'
+                      '<span class="r1">: [</span>'
+                      '<span class="r3">123</span>'
+                      '<span class="r1">, </span>'
+                      '<span class="r3">234</span>'
+                      '<span class="r1">]})</span>'),
+            ),
+            _fill_full_html_template(
+                style=murphy_style + body_style,
+                data=('<span class="r1">MyClass({&#x27;abc&#x27;: [</span>'
+                      '<span class="r2">123</span>'
+                      '<span class="r1">, </span>'
+                      '<span class="r2">234</span>'
+                      '<span class="r1">]})</span>'),
+            ),
+            _fill_full_html_template(
+                style=murphy_style + body_style,
                 data=dedent("""\
                     <span class="r1">MyClass({</span>
                     <span class="r1">&#x27;abc&#x27;: </span>
