@@ -1,7 +1,6 @@
 from enum import Enum
 from functools import cached_property
 from io import StringIO
-from textwrap import dedent
 from typing import Callable, ClassVar, Generic, Iterable, overload
 
 from rich.console import Console, OverflowMethod
@@ -22,12 +21,12 @@ class OutputMode(str, Enum):
 
 
 class OutputVariant:
-    _HTML_TAG_TEMPLATE: ClassVar[str] = dedent("""\
-        <pre style="font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
-            <code style="font-family:inherit">
-                {code}    </code>
-        </pre>
-        """)
+    _HTML_TAG_TEMPLATE: ClassVar[str] = (
+        """<pre style="font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">"""
+        '<code style="font-family:inherit">'
+        '{code}'
+        '</code>'
+        '</pre>')
 
     def __init__(self,
                  console: Console,
