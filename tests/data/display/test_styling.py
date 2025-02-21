@@ -79,76 +79,90 @@ def test_stylized_output_immutable_properties(
 def test_stylized_output_overflow_modes(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
-    content = "MyClass({'abc': [123, 234]})"
+    content = ("[MyClass({'abc': [123, 234]}),\n"
+               " MyClass({'def': [345, 456]})]")
 
     output = StylizedMonospacedOutput(
         content,
-        frame=Frame(Dimensions(21, None)),
+        frame=Frame(Dimensions(22, None)),
         config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
     )
     assert output.plain.terminal == dedent("""\
-        MyClass({'abc': [123,
-        234]})
+        [MyClass({'abc': [123,
+        234]}),
+         MyClass({'def': [345,
+        456]})]
         """)
     assert output.within_frame.width is True
     assert output.within_frame.height is None
 
     output = StylizedMonospacedOutput(
         content,
-        frame=Frame(Dimensions(21, None)),
+        frame=Frame(Dimensions(22, None)),
         config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.ELLIPSIS),
     )
-    assert output.plain.terminal == "MyClass({'abc': [123…\n"
+    assert output.plain.terminal == dedent("""\
+        [MyClass({'abc': [123…
+         MyClass({'def': [345…
+        """)
     assert output.within_frame.width is True
     assert output.within_frame.height is None
 
     output = StylizedMonospacedOutput(
         content,
-        frame=Frame(Dimensions(21, None)),
+        frame=Frame(Dimensions(22, None)),
         config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
     )
-    assert output.plain.terminal == "MyClass({'abc': [123,\n"
+    assert output.plain.terminal == dedent("""\
+        [MyClass({'abc': [123,
+         MyClass({'def': [345,
+        """)
     assert output.within_frame.width is True
     assert output.within_frame.height is None
 
     output = StylizedMonospacedOutput(
         content,
-        frame=Frame(Dimensions(9, 20)),
+        frame=Frame(Dimensions(10, 8)),
         config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
     )
     assert output.plain.terminal == dedent("""\
-        MyClass({
+        [MyClass({
         'abc': 
         [123, 
-        234]})
+        234]}),
+         MyClass({
+        'def': 
+        [345, 
+        456]})]
         """)  # noqa: W291
     assert output.within_frame.width is True
     assert output.within_frame.height is True
 
     output = StylizedMonospacedOutput(
         content,
-        frame=Frame(Dimensions(9, 2)),
+        frame=Frame(Dimensions(10, 4)),
         config=OutputConfig(
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
             vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
         ))
     assert output.plain.terminal == dedent("""\
-        MyClass({
+        [MyClass({
         'abc': 
+        [123, 
+        234]}),
         """)  # noqa: W291
     assert output.within_frame.width is True
     assert output.within_frame.height is True
 
     output = StylizedMonospacedOutput(
         content,
-        frame=Frame(Dimensions(9, 2)),
+        frame=Frame(Dimensions(10, 1)),
         config=OutputConfig(
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
             vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
         ))
     assert output.plain.terminal == dedent("""\
-        [123, 
-        234]})
+        456]})]
         """)  # noqa: W291
     assert output.within_frame.width is True
     assert output.within_frame.height is True
