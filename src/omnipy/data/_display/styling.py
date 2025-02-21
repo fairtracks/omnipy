@@ -1,7 +1,8 @@
 from enum import Enum
 from functools import cached_property
 from io import StringIO
-from typing import Callable, Generic, Iterable, overload
+from textwrap import dedent
+from typing import Callable, ClassVar, Generic, Iterable, overload
 
 from rich.console import Console, OverflowMethod
 from rich.segment import Segment
@@ -21,6 +22,13 @@ class OutputMode(str, Enum):
 
 
 class OutputVariant:
+    _HTML_TAG_TEMPLATE: ClassVar[str] = dedent("""\
+        <pre style="font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">
+            <code style="font-family:inherit">
+                {code}    </code>
+        </pre>
+        """)
+
     def __init__(self,
                  console: Console,
                  output_mode: OutputMode,
@@ -54,12 +62,21 @@ class OutputVariant:
         return self._vertical_crop(text)
 
     @cached_property
-    def html(self) -> str:
+    def html_page(self) -> str:
+        self._prepare_html_export()
+        return self._console.export_html(clear=False)
+
+    @cached_property
+    def html_tag(self) -> str:
+        self._prepare_html_export()
+        return self._console.export_html(
+            clear=False, code_format=self._HTML_TAG_TEMPLATE, inline_styles=True)
+
+    def _prepare_html_export(self):
         if self._output_mode is OutputMode.PLAIN:
             self._remove_styling_from_console_recording()
         if self._output_mode is OutputMode.BW_STYLIZED:
             self._remove_color_from_console_recording()
-        return self._console.export_html(clear=False)
 
     # Hacks to remove color and strip styles from the console record buffer, making use of
     # private methods in the rich library. These are needed to prevent the stylized output from
