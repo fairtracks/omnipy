@@ -1,4 +1,4 @@
-from typing import Annotated, NamedTuple
+from typing import Annotated
 
 import pandas as pd
 import pytest
@@ -10,11 +10,6 @@ from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 from .cases.tablepairs import TablePairCase
 from .helpers.functions import convert_testcase_table_to_dataframe, get_target_as_pandas_model
-
-
-class TableJoinTest(NamedTuple):
-    type: str
-    attr: str
 
 
 @pc.parametrize_with_cases('case', cases='.cases.tablepairs', has_tag='join')
