@@ -241,3 +241,80 @@ def test_colorized_output_to_terminal(
         '\x1b[0m\x1b[38;2;0;0;0;49m,\x1b[0m\x1b[38;2;0;0;0;49m \x1b[0m\n'
         '\x1b[1;38;2;102;102;255;49m234\x1b[0m\x1b[38;2;0;0;0;49m]'
         '\x1b[0m\x1b[38;2;0;0;0;49m}\x1b[0m\x1b[38;2;0;0;0;49m)\x1b[0m\n')
+
+
+FULL_HTML_TEMPLATE = dedent("""\
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    {style}
+    </style>
+    </head>
+    <body>
+        <pre style="font-family:{font_family}"><code style="font-family:inherit">{data}
+    </code></pre>
+    </body>
+    </html>
+    """)
+
+
+def test_plain_output_to_html(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    content = "MyClass({'abc': [123, 234]})"
+
+    font_family = "Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"
+
+    style = dedent("""
+        body {
+            color: #000000;
+            background-color: #ffffff;
+        }""")
+    data = '<span class="r1">MyClass({&#x27;abc&#x27;: [123, 234]})</span>'
+    expected_output = FULL_HTML_TEMPLATE.format(style=style, font_family=font_family, data=data)
+
+    output = StylizedMonospacedOutput(content)
+    for _ in range(2):
+        assert output.plain.html == expected_output
+
+    style = dedent("""\
+        .r2 {font-weight: bold}
+        body {
+            color: #000000;
+            background-color: #ffffff;
+        }""")
+    data = ('<span class="r1">MyClass({&#x27;abc&#x27;: [</span><span class="r2">123</span>'
+            '<span class="r1">, </span><span class="r2">234</span><span class="r1">]})</span>')
+    expected_output = FULL_HTML_TEMPLATE.format(style=style, font_family=font_family, data=data)
+
+    output = StylizedMonospacedOutput(
+        content,
+        config=OutputConfig(color_style=LowerContrastLightColorStyles.MURPHY,),
+    )
+    for _ in range(2):
+        assert output.plain.html == expected_output
+
+    style = dedent("""\
+        .r2 {font-weight: bold}
+        body {
+            color: #000000;
+            background-color: #ffffff;
+        }""")
+    data = dedent("""\
+        <span class="r1">MyClass({</span>
+        <span class="r1">&#x27;abc&#x27;: </span>
+        <span class="r1">[</span><span class="r2">123</span><span class="r1">, </span>
+        <span class="r2">234</span><span class="r1">]})</span>""")
+    expected_output = FULL_HTML_TEMPLATE.format(style=style, font_family=font_family, data=data)
+
+    output = StylizedMonospacedOutput(
+        content,
+        frame=Frame(Dimensions(9, 3)),
+        config=OutputConfig(
+            color_style=LowerContrastLightColorStyles.MURPHY,
+            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
+            vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
+        ))
+    assert output.plain.html == expected_output
