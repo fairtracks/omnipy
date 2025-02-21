@@ -143,13 +143,11 @@ def _fill_html_page_template(style: str, data: str) -> str:
 
 
 def _fill_html_tag_template(data: str) -> str:
-    HTML_TAG_TEMPLATE = dedent("""\
-        <pre style="font-family:{font_family}">
-            <code style="font-family:inherit">
-                {data}
-            </code>
-        </pre>
-        """)
+    HTML_TAG_TEMPLATE = ('<pre style="font-family:{font_family}">'
+                         '<code style="font-family:inherit">'
+                         '{data}\n'
+                         '</code>'
+                         '</pre>')
 
     font_family = "Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"
 
@@ -237,6 +235,27 @@ def case_expectations_bw_stylized_html_page() -> OutputPropertyExpectations:
                     <span class="r1">&#x27;abc&#x27;: </span>
                     <span class="r1">[</span><span class="r2">123</span><span class="r1">, </span>
                     <span class="r2">234</span><span class="r1">]})</span>"""),
+            ),
+        ],
+    )
+
+
+@pc.case(id='bw-stylized-html-tag', tags=['expectations'])
+def case_expectations_bw_stylized_html_tag() -> OutputPropertyExpectations:
+    return OutputPropertyExpectations(
+        get_output_property=lambda output: output.bw_stylized.html_tag,
+        expected_outputs=[
+            _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})',),
+            _fill_html_tag_template(
+                data=('MyClass({&#x27;abc&#x27;: ['
+                      '<span style="font-weight: bold">123</span>, '
+                      '<span style="font-weight: bold">234</span>]})'),),
+            _fill_html_tag_template(
+                data=dedent("""\
+                    MyClass({
+                    &#x27;abc&#x27;: 
+                    [<span style="font-weight: bold">123</span>, 
+                    <span style="font-weight: bold">234</span>]})"""),  # noqa: W291
             ),
         ],
     )
