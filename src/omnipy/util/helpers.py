@@ -3,10 +3,10 @@ from collections import defaultdict, UserDict
 from collections.abc import Hashable, Iterable
 from copy import copy, deepcopy
 from dataclasses import dataclass
-from importlib.abc import Loader
-from importlib.machinery import FileFinder, ModuleSpec
 import functools
 import gc
+from importlib.abc import Loader
+from importlib.machinery import FileFinder, ModuleSpec
 import inspect
 from inspect import getmodule, isclass
 from keyword import iskeyword, issoftkeyword
