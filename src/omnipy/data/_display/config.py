@@ -150,25 +150,23 @@ class OutputConfig:
     indent_tab_size: NonNegativeInt = 2
     debug_mode: bool = False
     pretty_printer: PrettyPrinterLib = PrettyPrinterLib.RICH
-    language: SyntaxLanguage | str | None = SyntaxLanguage.PYTHON
-    color_style: ColorStyles | str | None = SpecialColorStyles.ANSI_LIGHT
+    language: SyntaxLanguage | str = SyntaxLanguage.PYTHON
+    color_style: ColorStyles | str = SpecialColorStyles.ANSI_LIGHT
     horizontal_overflow_mode: HorizontalOverflowMode = HorizontalOverflowMode.WORD_WRAP
     vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.CROP_BOTTOM
 
     @validator('language')
-    def validate_language(cls, value: SyntaxLanguage | str | None) -> SyntaxLanguage | str | None:
-        if value is None:
-            return None
+    def validate_language(cls, value: SyntaxLanguage | str) -> SyntaxLanguage | str:
         if isinstance(value, SyntaxLanguage):
             return value
-        if get_lexer_by_name(value):
+        elif get_lexer_by_name(value):
             return value
+        raise ValueError(f'Invalid syntax language: {value}')
 
     @validator('color_style')
-    def validate_color_style(cls, value: ColorStyles | str | None) -> ColorStyles | str | None:
-        if value is None:
-            return None
+    def validate_color_style(cls, value: ColorStyles | str) -> ColorStyles | str:
         if isinstance(value, ColorStyles):
             return value
-        if get_style_by_name(value):
+        elif get_style_by_name(value):
             return value
+        raise ValueError(f'Invalid syntax language: {value}')

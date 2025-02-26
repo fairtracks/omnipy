@@ -71,18 +71,12 @@ def test_output_config_validate_assignments(
     with pytest.raises(ValueError):
         config.pretty_printer = 'something'  # type: ignore[assignment]
 
-    config.language = None
-    assert config.language is None
-
     # Any language string supported by the pygments library should be accepted
     config.language = 'c++'
     assert config.language == 'c++'
 
     with pytest.raises(ValueError):
         config.language = '123'
-
-    config.color_style = None
-    assert config.color_style is None
 
     # Any color style string supported by the pygments library should be accepted
     # Note: the lilypond color style is for use with the lilypond music notation software and as
