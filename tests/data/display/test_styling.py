@@ -7,6 +7,7 @@ import pytest_cases as pc
 
 from omnipy.data._display.config import (HorizontalOverflowMode,
                                          OutputConfig,
+                                         SpecialColorStyles,
                                          SyntaxLanguage,
                                          VerticalOverflowMode)
 from omnipy.data._display.constraints import Constraints
@@ -34,7 +35,7 @@ def test_stylized_output_init(
         constraints=Constraints(),
         config=OutputConfig(
             language=SyntaxLanguage.PYTHON,
-            color_style=None,
+            color_style=SpecialColorStyles.ANSI_LIGHT,
         ),
     )
 
