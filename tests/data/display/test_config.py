@@ -2,9 +2,9 @@ from typing import Annotated
 
 import pytest
 
-from omnipy.data._display.config import (HighContrastLightColorStyles,
+from omnipy.data._display.config import (DarkLowContrastColorStyles,
                                          HorizontalOverflowMode,
-                                         LowerContrastDarkColorStyles,
+                                         LightHighContrastColorStyles,
                                          OutputConfig,
                                          PrettyPrinterLib,
                                          SpecialColorStyles,
@@ -19,7 +19,7 @@ def test_output_config(
         debug_mode=True,
         pretty_printer=PrettyPrinterLib.DEVTOOLS,
         language=SyntaxLanguage.JSON,
-        color_style=LowerContrastDarkColorStyles.ONE_DARK,
+        color_style=DarkLowContrastColorStyles.ONE_DARK,
         horizontal_overflow_mode=HorizontalOverflowMode.CROP,
         vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
     )
@@ -28,7 +28,7 @@ def test_output_config(
     assert config.debug_mode is True
     assert config.pretty_printer is PrettyPrinterLib.DEVTOOLS
     assert config.language is SyntaxLanguage.JSON
-    assert config.color_style is LowerContrastDarkColorStyles.ONE_DARK
+    assert config.color_style is DarkLowContrastColorStyles.ONE_DARK
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.CROP
 
     config = OutputConfig(
@@ -44,7 +44,7 @@ def test_output_config(
     assert config.debug_mode is False
     assert config.pretty_printer is PrettyPrinterLib.RICH
     assert config.language is SyntaxLanguage.XML
-    assert config.color_style is HighContrastLightColorStyles.XCODE
+    assert config.color_style is LightHighContrastColorStyles.XCODE
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
 

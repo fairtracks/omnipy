@@ -4,7 +4,7 @@ from typing import Callable, NamedTuple
 import pytest_cases as pc
 
 from omnipy.data._display.config import (HorizontalOverflowMode,
-                                         LowerContrastLightColorStyles,
+                                         LightLowContrastColorStyles,
                                          OutputConfig,
                                          VerticalOverflowMode)
 from omnipy.data._display.dimensions import Dimensions
@@ -42,7 +42,7 @@ def case_setup_no_frame_color_config() -> OutputTestCaseSetup:
     return OutputTestCaseSetup(
         case_index=1,
         content="MyClass({'abc': [123, 234]})",
-        config=OutputConfig(color_style=LowerContrastLightColorStyles.MURPHY),
+        config=OutputConfig(color_style=LightLowContrastColorStyles.MURPHY),
     )
 
 
@@ -53,7 +53,7 @@ def case_setup_small_frame_color_and_overflow_config() -> OutputTestCaseSetup:
         content="MyClass({'abc': [123, 234]})",
         frame=Frame(Dimensions(9, 3)),
         config=OutputConfig(
-            color_style=LowerContrastLightColorStyles.MURPHY,
+            color_style=LightLowContrastColorStyles.MURPHY,
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
             vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
         ),
