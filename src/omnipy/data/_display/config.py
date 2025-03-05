@@ -435,7 +435,8 @@ class OutputConfig:
     debug_mode: bool = False
     pretty_printer: PrettyPrinterLib = PrettyPrinterLib.RICH
     language: SyntaxLanguage | str = SyntaxLanguage.PYTHON
-    color_style: ColorStyles | str = SpecialColorStyles.ANSI_LIGHT
+    color_style: ColorStyles | str = SpecialColorStyles.ANSI_DARK
+    transparent_background: bool = True
     horizontal_overflow_mode: HorizontalOverflowMode = HorizontalOverflowMode.WORD_WRAP
     vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.CROP_BOTTOM
 
