@@ -210,9 +210,9 @@ def test_output_properties_of_stylized_output(
         output_prop_expectations: Annotated[OutputPropertyExpectations, pc.fixture],
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
-    case_index, content, frame, config = output_test_case_setup
+    case_id, content, frame, config = output_test_case_setup
     get_output_property, expected_outputs = output_prop_expectations
-    expected_output = expected_outputs[case_index]
+    expected_output = expected_outputs[case_id]
 
     output = StylizedMonospacedOutput(content, frame=frame, config=config)
     for _ in range(2):
