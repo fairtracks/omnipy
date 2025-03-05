@@ -132,7 +132,7 @@ def test_output_config_default_values(
     assert config.debug_mode is False
     assert config.pretty_printer is PrettyPrinterLib.RICH
     assert config.language is SyntaxLanguage.PYTHON
-    assert config.color_style is SpecialColorStyles.ANSI_LIGHT
+    assert config.color_style is SpecialColorStyles.ANSI_DARK
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.WORD_WRAP
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
 
