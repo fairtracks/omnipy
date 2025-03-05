@@ -3,15 +3,15 @@ from enum import Enum
 from functools import cached_property
 from io import StringIO
 import re
+from textwrap import dedent
 from typing import Callable, ClassVar, Generic, Iterable, overload
 
 from rich.console import Console, OverflowMethod
 from rich.segment import Segment
+from rich.style import Style
 from rich.syntax import Syntax
 
-from omnipy.data._display.config import (HorizontalOverflowMode,
-                                         MAX_TERMINAL_SIZE,
-                                         VerticalOverflowMode)
+from omnipy.data._display.config import HorizontalOverflowMode, VerticalOverflowMode
 from omnipy.data._display.draft import DraftMonospacedOutput, FrameT
 from omnipy.util._pydantic import ConfigDict, dataclass, Extra
 
@@ -23,12 +23,47 @@ class OutputMode(str, Enum):
 
 
 class OutputVariant:
-    _HTML_TAG_TEMPLATE: ClassVar[str] = (
-        """<pre style="font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">"""
-        '<code style="font-family:inherit">'
-        '{code}'
-        '</code>'
-        '</pre>')
+    _FONT_FAMILY_LIST: ClassVar[tuple[str, ...]] = (
+        'CommitMonoOmnipy',
+        'Menlo',
+        'DejaVu Sans Mono',
+        'Consolas',
+        'Courier New',
+        'monospace',
+    )
+    _FONT_FAMILY_STR: ClassVar[str] = ', '.join(f"'{_}'" for _ in _FONT_FAMILY_LIST)
+    _FONT_WEIGHT: ClassVar[int] = 450
+    _FONT_SIZE: ClassVar[int] = 14
+    _LINE_HEIGHT: ClassVar[float] = 1.35
+
+    _HTML_TAG_TEMPLATE: ClassVar[str] = ('<pre style="'
+                                         f'font-family: {_FONT_FAMILY_STR}; '
+                                         f'font-weight: {_FONT_WEIGHT}; '
+                                         f'font-size: {_FONT_SIZE}px; '
+                                         f'line-height: {_LINE_HEIGHT}">'
+                                         '<code style="font-family:inherit">'
+                                         '{code}'
+                                         '</code>'
+                                         '</pre>')
+
+    _HTML_PAGE_TEMPLATE: ClassVar[str] = dedent(f"""\
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <style>
+              {{stylesheet}}
+              body {{{{
+                color: {{foreground}};
+                background-color: {{background}};
+              }}}}
+            </style>
+          </head>
+          <body>
+            {_HTML_TAG_TEMPLATE}
+          </body>
+        </html>
+        """)
 
     def __init__(self,
                  console: Console,
@@ -84,7 +119,7 @@ class OutputVariant:
     @cached_property
     def html_page(self) -> str:
         console = self._prepare_html_export()
-        html = console.export_html(clear=False)
+        html = console.export_html(clear=False, code_format=self._HTML_PAGE_TEMPLATE)
         return self._vertical_crop_html(html)
 
     @cached_property
@@ -154,14 +189,23 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
     @cached_property
     def _stylized_content(self) -> Syntax:
         color_style = self.config.color_style
-        style_name = color_style.value if isinstance(color_style, Enum) else 'default'
+        style_name = color_style.value if isinstance(color_style, Enum) else color_style
         word_wrap = self.config.horizontal_overflow_mode == HorizontalOverflowMode.WORD_WRAP
+
+        # Workaround to remove the background color from the theme, as setting
+        # background_color='default' (the official solution,
+        # see https://github.com/Textualize/rich/issues/284#issuecomment-694947144)
+        # does not work for HTML content.
+        theme = Syntax.get_theme(style_name)
+        if self.config.transparent_background:
+            theme._background_color = None  # type: ignore[attr-defined]
+            theme._background_style = Style()  # type: ignore[attr-defined]
 
         return Syntax(
             self.content,
             'python',
-            theme=style_name,
-            background_color='default',
+            theme=theme,
+            # background_color='default' if self.config.transparent_background else None,
             word_wrap=word_wrap,
         )
 
@@ -169,10 +213,15 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
         frame_width = self.frame.dims.width
         frame_height = self.frame.dims.height
 
-        return (
-            frame_width if frame_width is not None else MAX_TERMINAL_SIZE,
-            frame_height if frame_height is not None else MAX_TERMINAL_SIZE,
-        )
+        if frame_width is None or frame_height is None:
+            draft = DraftMonospacedOutput(self.content)
+
+            if frame_width is None:
+                frame_width = draft.dims.width
+            if frame_height is None:
+                frame_height = draft.dims.height
+
+        return frame_width, frame_height
 
     def _get_console_overload(self) -> OverflowMethod | None:
         match (self.config.horizontal_overflow_mode):
