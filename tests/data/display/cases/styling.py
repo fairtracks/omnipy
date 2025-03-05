@@ -1,5 +1,5 @@
 from textwrap import dedent
-from typing import Callable, NamedTuple
+from typing import Annotated, Callable, NamedTuple
 
 import pytest_cases as pc
 
@@ -14,6 +14,16 @@ from omnipy.data._display.styling import StylizedMonospacedOutput
 # Classes
 
 
+class OutputTestCase(NamedTuple):
+    content: str
+    frame: Frame
+    config: OutputConfig
+    get_output_property: Callable[[StylizedMonospacedOutput], str]
+    expected_output: str
+    expected_within_frame_width: bool | None
+    expected_within_frame_height: bool | None
+
+
 class OutputTestCaseSetup(NamedTuple):
     case_id: str
     content: str
@@ -23,10 +33,139 @@ class OutputTestCaseSetup(NamedTuple):
 
 class OutputPropertyExpectations(NamedTuple):
     get_output_property: Callable[[StylizedMonospacedOutput], str]
-    expected_outputs: dict[str, str]
+    expected_output: dict[str, str]
 
 
 # Output test cases
+
+
+@pc.case(id='word_wrap_horizontal', tags=['overflow_modes'])
+def case_word_wrap_horizontal(
+    common_content: Annotated[str, pc.fixture],
+    output_format_accessor: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture],
+) -> OutputTestCase:
+    return OutputTestCase(
+        content=common_content,
+        frame=Frame(Dimensions(22, None)),
+        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
+        get_output_property=output_format_accessor,
+        expected_output=dedent("""\
+            [MyClass({'abc': [123,
+            234]}),
+             MyClass({'def': [345,
+            456]})]
+            """),
+        expected_within_frame_width=True,
+        expected_within_frame_height=None,
+    )
+
+
+@pc.case(id='ellipsis_horizontal', tags=['overflow_modes'])
+def case_ellipsis_horizontal(
+    common_content: Annotated[str, pc.fixture],
+    output_format_accessor: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture],
+) -> OutputTestCase:
+    return OutputTestCase(
+        content=common_content,
+        frame=Frame(Dimensions(22, None)),
+        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.ELLIPSIS),
+        get_output_property=output_format_accessor,
+        expected_output=dedent("""\
+            [MyClass({'abc': [123…
+             MyClass({'def': [345…
+            """),
+        expected_within_frame_width=True,
+        expected_within_frame_height=None,
+    )
+
+
+@pc.case(id='crop_horizontal', tags=['overflow_modes'])
+def case_crop_horizontal(
+    common_content: Annotated[str, pc.fixture],
+    output_format_accessor: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture],
+) -> OutputTestCase:
+    return OutputTestCase(
+        content=common_content,
+        frame=Frame(Dimensions(22, None)),
+        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+        get_output_property=output_format_accessor,
+        expected_output=dedent("""\
+            [MyClass({'abc': [123,
+             MyClass({'def': [345,
+            """),
+        expected_within_frame_width=True,
+        expected_within_frame_height=None,
+    )
+
+
+@pc.case(id='word_wrap_both_dimensions', tags=['overflow_modes'])
+def case_word_wrap_both_dimensions(
+    common_content: Annotated[str, pc.fixture],
+    output_format_accessor: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture],
+) -> OutputTestCase:
+    return OutputTestCase(
+        content=common_content,
+        frame=Frame(Dimensions(10, 8)),
+        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
+        get_output_property=output_format_accessor,
+        expected_output=dedent("""\
+            [MyClass({
+            'abc': 
+            [123, 
+            234]}),
+             MyClass({
+            'def': 
+            [345, 
+            456]})]
+            """),  # noqa: W291
+        expected_within_frame_width=True,
+        expected_within_frame_height=True,
+    )
+
+
+@pc.case(id='word_wrap_crop_bottom', tags=['overflow_modes'])
+def case_word_wrap_crop_bottom(
+    common_content: Annotated[str, pc.fixture],
+    output_format_accessor: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture],
+) -> OutputTestCase:
+    return OutputTestCase(
+        content=common_content,
+        frame=Frame(Dimensions(10, 4)),
+        config=OutputConfig(
+            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
+            vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
+        ),
+        get_output_property=output_format_accessor,
+        expected_output=dedent("""\
+            [MyClass({
+            'abc': 
+            [123, 
+            234]}),
+            """),  # noqa: W291
+        expected_within_frame_width=True,
+        expected_within_frame_height=True,
+    )
+
+
+@pc.case(id='word_wrap_crop_top', tags=['overflow_modes'])
+def case_word_wrap_crop_top(
+    common_content: Annotated[str, pc.fixture],
+    output_format_accessor: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture],
+) -> OutputTestCase:
+    return OutputTestCase(
+        content=common_content,
+        frame=Frame(Dimensions(10, 1)),
+        config=OutputConfig(
+            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
+            vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
+        ),
+        get_output_property=output_format_accessor,
+        expected_output=dedent("""\
+            456]})]
+            """),  # noqa: W291
+        expected_within_frame_width=True,
+        expected_within_frame_height=True,
+    )
 
 
 @pc.parametrize('transparent_background', [False, True])
@@ -71,11 +210,13 @@ def case_setup_small_frame_color_and_overflow_config(
 # Output property expectations per output test case
 
 
-@pc.case(id='plain-terminal', tags=['expectations'])
-def case_expectations_plain_terminal() -> OutputPropertyExpectations:
+@pc.case(id='plain-terminal-output', tags=['expectations'])
+def case_expectations_plain_terminal(
+    plain_terminal: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture]
+) -> OutputPropertyExpectations:
     return OutputPropertyExpectations(
-        get_output_property=lambda output: output.plain.terminal,
-        expected_outputs={
+        get_output_property=plain_terminal,
+        expected_output={
             'no-frame-no-color': "MyClass({'abc': [123, 234]})\n",
             'no-frame-no-color-no-bg': "MyClass({'abc': [123, 234]})\n",
             'no-frame-w-color': "MyClass({'abc': [123, 234]})\n",
@@ -90,11 +231,13 @@ def case_expectations_plain_terminal() -> OutputPropertyExpectations:
     )
 
 
-@pc.case(id='bw-stylized-terminal', tags=['expectations'])
-def case_expectations_bw_stylized_terminal() -> OutputPropertyExpectations:
+@pc.case(id='bw-stylized-terminal-output', tags=['expectations'])
+def case_expectations_bw_stylized_terminal(
+    bw_stylized_terminal: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture]
+) -> OutputPropertyExpectations:
     return OutputPropertyExpectations(
-        get_output_property=lambda output: output.bw_stylized.terminal,
-        expected_outputs={
+        get_output_property=bw_stylized_terminal,
+        expected_output={
             'no-frame-no-color':
                 "MyClass({'abc': [123, 234]})\n",
             'no-frame-no-color-no-bg':
@@ -113,11 +256,13 @@ def case_expectations_bw_stylized_terminal() -> OutputPropertyExpectations:
     )
 
 
-@pc.case(id='colorized-terminal', tags=['expectations'])
-def case_expectations_colorized_terminal() -> OutputPropertyExpectations:
+@pc.case(id='colorized-terminal-output', tags=['expectations'])
+def case_expectations_colorized_terminal(
+    colorized_terminal: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture]
+) -> OutputPropertyExpectations:
     return OutputPropertyExpectations(
-        get_output_property=lambda output: output.colorized.terminal,
-        expected_outputs={
+        get_output_property=colorized_terminal,
+        expected_output={
             'no-frame-no-color':
                 ("MyClass({\x1b[33m'\x1b[0m\x1b[33mabc\x1b[0m\x1b[33m'\x1b[0m: [\x1b[94m123"
                  '\x1b[0m, \x1b[94m234\x1b[0m]})\n'),
@@ -232,11 +377,13 @@ def _fill_html_tag_template(data: str) -> str:
     return HTML_TAG_TEMPLATE.format(font_style=_FONT_STYLE, data=data)
 
 
-@pc.case(id='plain-html-tag', tags=['expectations'])
-def case_expectations_plain_html_tag() -> OutputPropertyExpectations:
+@pc.case(id='plain-html-tag-output', tags=['expectations'])
+def case_expectations_plain_html_tag(
+    plain_html_tag: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture]
+) -> OutputPropertyExpectations:
     return OutputPropertyExpectations(
-        get_output_property=lambda output: output.plain.html_tag,
-        expected_outputs={
+        get_output_property=plain_html_tag,
+        expected_output={
             'no-frame-no-color':
                 _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})'),
             'no-frame-no-color-no-bg':
@@ -257,11 +404,13 @@ def case_expectations_plain_html_tag() -> OutputPropertyExpectations:
     )
 
 
-@pc.case(id='bw-stylized-html-tag', tags=['expectations'])
-def case_expectations_bw_stylized_html_tag() -> OutputPropertyExpectations:
+@pc.case(id='bw-stylized-html-tag-output', tags=['expectations'])
+def case_expectations_bw_stylized_html_tag(
+    bw_stylized_html_tag: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture]
+) -> OutputPropertyExpectations:
     return OutputPropertyExpectations(
-        get_output_property=lambda output: output.bw_stylized.html_tag,
-        expected_outputs={
+        get_output_property=bw_stylized_html_tag,
+        expected_output={
             'no-frame-no-color':
                 _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})'),
             'no-frame-no-color-no-bg':
@@ -290,11 +439,13 @@ def case_expectations_bw_stylized_html_tag() -> OutputPropertyExpectations:
     )
 
 
-@pc.case(id='colorized-html-tag', tags=['expectations'])
-def case_expectations_colorized_html_tag() -> OutputPropertyExpectations:
+@pc.case(id='colorized-html-tag-output', tags=['expectations'])
+def case_expectations_colorized_html_tag(
+    colorized_html_tag: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture]
+) -> OutputPropertyExpectations:
     return OutputPropertyExpectations(
-        get_output_property=lambda output: output.colorized.html_tag,
-        expected_outputs={
+        get_output_property=colorized_html_tag,
+        expected_output={
             'no-frame-no-color':
                 _fill_html_tag_template(
                     data=(
@@ -379,8 +530,10 @@ def case_expectations_colorized_html_tag() -> OutputPropertyExpectations:
     )
 
 
-@pc.case(id='plain-html-page', tags=['expectations'])
-def case_expectations_plain_html_page() -> OutputPropertyExpectations:
+@pc.case(id='plain-html-page-output', tags=['expectations'])
+def case_expectations_plain_html_page(
+    plain_html_page: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture]
+) -> OutputPropertyExpectations:
     body_style = """
       body {
         color: #000000;
@@ -388,8 +541,8 @@ def case_expectations_plain_html_page() -> OutputPropertyExpectations:
       }"""
 
     return OutputPropertyExpectations(
-        get_output_property=lambda output: output.plain.html_page,
-        expected_outputs={
+        get_output_property=plain_html_page,
+        expected_output={
             'no-frame-no-color':
                 _fill_html_page_template(
                     style=body_style,
@@ -424,8 +577,10 @@ def case_expectations_plain_html_page() -> OutputPropertyExpectations:
     )
 
 
-@pc.case(id='bw-stylized-html-page', tags=['expectations'])
-def case_expectations_bw_stylized_html_page() -> OutputPropertyExpectations:
+@pc.case(id='bw-stylized-html-page-output', tags=['expectations'])
+def case_expectations_bw_stylized_html_page(
+    bw_stylized_html_page: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture]
+) -> OutputPropertyExpectations:
     bold_style = '.r2 {font-weight: bold}'
 
     body_style = """
@@ -435,8 +590,8 @@ def case_expectations_bw_stylized_html_page() -> OutputPropertyExpectations:
       }"""
 
     return OutputPropertyExpectations(
-        get_output_property=lambda output: output.bw_stylized.html_page,
-        expected_outputs={
+        get_output_property=bw_stylized_html_page,
+        expected_output={
             'no-frame-no-color':
                 _fill_html_page_template(
                     style=body_style,
@@ -498,8 +653,10 @@ def case_expectations_bw_stylized_html_page() -> OutputPropertyExpectations:
     )
 
 
-@pc.case(id='colorized-html-page', tags=['expectations'])
-def case_expectations_colorized_html_page() -> OutputPropertyExpectations:
+@pc.case(id='colorized-html-page-output', tags=['expectations'])
+def case_expectations_colorized_html_page(
+    colorized_html_page: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture]
+) -> OutputPropertyExpectations:
     ansi_light_style_no_bg = '\n'.join([
         '.r1 {color: #808000; text-decoration-color: #808000}',
         '.r2 {color: #0000ff; text-decoration-color: #0000ff}',
@@ -533,8 +690,8 @@ def case_expectations_colorized_html_page() -> OutputPropertyExpectations:
       }"""
 
     return OutputPropertyExpectations(
-        get_output_property=lambda output: output.colorized.html_page,
-        expected_outputs={
+        get_output_property=colorized_html_page,
+        expected_output={
             'no-frame-no-color':
                 _fill_html_page_template(
                     style=ansi_light_style_no_bg + body_style,
