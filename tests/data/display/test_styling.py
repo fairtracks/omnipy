@@ -1,22 +1,17 @@
 import re
-from textwrap import dedent
 from typing import Annotated, Callable
 
 import pytest
 import pytest_cases as pc
 
-from omnipy.data._display.config import (HorizontalOverflowMode,
-                                         OutputConfig,
-                                         SpecialColorStyles,
-                                         SyntaxLanguage,
-                                         VerticalOverflowMode)
+from omnipy.data._display.config import OutputConfig, SpecialColorStyles, SyntaxLanguage
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.draft import DraftMonospacedOutput
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.styling import StylizedMonospacedOutput
 
-from .cases.styling import OutputPropertyExpectations, OutputTestCaseSetup
+from .cases.styling import OutputPropertyExpectations, OutputTestCase, OutputTestCaseSetup
 
 
 def test_stylized_output_init(
@@ -105,101 +100,18 @@ def _prepare_output(
     return _strip_ansi(_strip_html(get_output_property(output)))
 
 
-@pc.parametrize_with_cases(
-    'output_prop_expectations', cases='.cases.styling', has_tag='expectations')
+@pc.parametrize_with_cases('case', cases='.cases.styling', has_tag='overflow_modes')
 def test_stylized_output_overflow_modes(
-        output_prop_expectations: Annotated[OutputPropertyExpectations, pc.fixture],
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    case: OutputTestCase,
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
 
-    get_output_property, _ = output_prop_expectations
+    output = StylizedMonospacedOutput(case.content, frame=case.frame, config=case.config)
+    processed_output = _prepare_output(output, case.get_output_property)
 
-    content = ("[MyClass({'abc': [123, 234]}),\n"
-               " MyClass({'def': [345, 456]})]")
-
-    output = StylizedMonospacedOutput(
-        content,
-        frame=Frame(Dimensions(22, None)),
-        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
-    )
-    assert _prepare_output(output, get_output_property) == dedent("""\
-        [MyClass({'abc': [123,
-        234]}),
-         MyClass({'def': [345,
-        456]})]
-        """)
-    assert output.within_frame.width is True
-    assert output.within_frame.height is None
-
-    output = StylizedMonospacedOutput(
-        content,
-        frame=Frame(Dimensions(22, None)),
-        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.ELLIPSIS),
-    )
-    assert _prepare_output(output, get_output_property) == dedent("""\
-        [MyClass({'abc': [123…
-         MyClass({'def': [345…
-        """)
-    assert output.within_frame.width is True
-    assert output.within_frame.height is None
-
-    output = StylizedMonospacedOutput(
-        content,
-        frame=Frame(Dimensions(22, None)),
-        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
-    )
-    assert _prepare_output(output, get_output_property) == dedent("""\
-        [MyClass({'abc': [123,
-         MyClass({'def': [345,
-        """)
-    assert output.within_frame.width is True
-    assert output.within_frame.height is None
-
-    output = StylizedMonospacedOutput(
-        content,
-        frame=Frame(Dimensions(10, 8)),
-        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
-    )
-    assert _prepare_output(output, get_output_property) == dedent("""\
-        [MyClass({
-        'abc': 
-        [123, 
-        234]}),
-         MyClass({
-        'def': 
-        [345, 
-        456]})]
-        """)  # noqa: W291
-    assert output.within_frame.width is True
-    assert output.within_frame.height is True
-
-    output = StylizedMonospacedOutput(
-        content,
-        frame=Frame(Dimensions(10, 4)),
-        config=OutputConfig(
-            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
-            vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
-        ))
-    assert _prepare_output(output, get_output_property) == dedent("""\
-        [MyClass({
-        'abc': 
-        [123, 
-        234]}),
-        """)  # noqa: W291
-    assert output.within_frame.width is True
-    assert output.within_frame.height is True
-
-    output = StylizedMonospacedOutput(
-        content,
-        frame=Frame(Dimensions(10, 1)),
-        config=OutputConfig(
-            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
-            vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
-        ))
-    assert _prepare_output(output, get_output_property) == dedent("""\
-        456]})]
-        """)  # noqa: W291
-    assert output.within_frame.width is True
-    assert output.within_frame.height is True
+    assert processed_output == case.expected_output
+    assert output.within_frame.width is case.expected_within_frame_width
+    assert output.within_frame.height is case.expected_within_frame_height
 
 
 @pc.parametrize_with_cases('output_test_case_setup', cases='.cases.styling', has_tag='setup')
