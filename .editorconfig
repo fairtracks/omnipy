@@ -1,0 +1,5 @@
+[*.py]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+quote_type = single
