@@ -98,8 +98,8 @@ def case_crop_horizontal(
     )
 
 
-@pc.case(id='word_wrap_both_dimensions', tags=['overflow_modes'])
-def case_word_wrap_both_dimensions(
+@pc.case(id='word_wrap_small_frame', tags=['overflow_modes'])
+def case_word_wrap_small_frame(
     common_content: Annotated[str, pc.fixture],
     output_format_accessor: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture],
 ) -> OutputTestCase:
