@@ -190,6 +190,8 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
     def _stylized_content(self) -> Syntax:
         color_style = self.config.color_style
         style_name = color_style.value if isinstance(color_style, Enum) else color_style
+        lexer = self.config.language
+        lexer_name = lexer.value if isinstance(lexer, Enum) else lexer
         word_wrap = self.config.horizontal_overflow_mode == HorizontalOverflowMode.WORD_WRAP
 
         # Workaround to remove the background color from the theme, as setting
@@ -203,7 +205,7 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
 
         return Syntax(
             self.content,
-            'python',
+            lexer=lexer_name,
             theme=theme,
             # background_color='default' if self.config.transparent_background else None,
             word_wrap=word_wrap,

@@ -131,6 +131,25 @@ def test_output_properties_of_stylized_output(
         assert get_output_property(output) == expected_output
 
 
+def test_stylized_output_json_syntax(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    json_content = '{"values": [1, 2, 3], "nested": {"key": true}}'
+
+    output = StylizedMonospacedOutput(
+        json_content, config=OutputConfig(language=SyntaxLanguage.JSON))
+
+    assert output.content == json_content
+    assert output.config.language == SyntaxLanguage.JSON
+
+    # Checking that the plain output is unchanged (except for the trailing newline)
+    assert output.plain.terminal == json_content + '\n'
+
+    # Checking that 'true' is recognized as a keyword in the colorized terminal and HTML outputs
+    assert '\x1b[94mtrue\x1b[0m' in output.colorized.terminal
+    assert ('<span style="color: #0000ff; text-decoration-color: #0000ff">true</span>'
+            in output.colorized.html_tag)
+
+
 def test_stylized_output_console_recording_not_deleted_by_filtering(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
