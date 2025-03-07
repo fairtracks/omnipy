@@ -8,10 +8,11 @@ from typing import Callable, ClassVar, Generic, Iterable, Literal, overload
 
 from pygments.token import Token
 from rich.color import Color
+from rich.color_triplet import ColorTriplet
 from rich.console import Console, OverflowMethod
 from rich.segment import Segment
 from rich.style import Style
-from rich.syntax import Syntax
+from rich.syntax import Syntax, SyntaxTheme
 from rich.terminal_theme import DEFAULT_TERMINAL_THEME, TerminalTheme
 
 from omnipy.data._display.config import HorizontalOverflowMode, VerticalOverflowMode
@@ -85,8 +86,32 @@ class OutputVariant:
     def __init__(self, output: 'StylizedMonospacedOutput', output_mode: OutputMode) -> None:
         self._output = output
         self._config = output.config
+        self._color_style_name = extract_value_if_enum(self._config.color_style)
         self._frame = output.frame
         self._output_mode = output_mode
+
+    # Hacks to remove color and strip styles from the console record buffer, making use of
+    # private methods in the rich library. These are needed to prevent the stylized output from
+    # being displayed in the HTML output, as the library provides no other ways to do this.
+
+    def _apply_filter_to_console_recording(
+        self,
+        console: Console,
+        filter_func: Callable[[list[Segment]], Iterable[Segment]],
+    ) -> Console:
+        new_console = copy(console)
+        with console._record_buffer_lock:
+            new_console._record_buffer = \
+                filter_func(console._record_buffer)  # type: ignore[assignment]
+        return new_console
+
+    def _remove_all_color_from_console_recording(self, console: Console) -> Console:
+        return self._apply_filter_to_console_recording(console, Segment.remove_color)
+
+    def _remove_styling_from_console_recording(self, console: Console) -> Console:
+        return self._apply_filter_to_console_recording(console, Segment.strip_styles)
+
+    # Vertical cropping methods for terminal and HTML output
 
     def _vertical_crop(self, text: str) -> str:
         if self._frame.dims.height is None:
@@ -117,31 +142,37 @@ class OutputVariant:
             re.MULTILINE,
         )
 
-    @cached_property
-    def terminal(self) -> str:
-        ansi_output = self._output_mode is not OutputMode.PLAIN
-        console = self._prepare_terminal_export()
-        text = console.export_text(clear=False, styles=ansi_output)
-        return self._vertical_crop(text)
+    # Terminal output
 
-    def _prepare_terminal_export(self) -> Console:
+    def _prepare_terminal_console_according_to_output_mode(self) -> Console:
         console_terminal = self._output._console_terminal
 
         if self._output_mode is OutputMode.BW_STYLIZED:
             return self._remove_all_color_from_console_recording(console_terminal)
+
         return console_terminal
 
     @cached_property
-    def html_page(self) -> str:
-        console = self._prepare_html_export()
-        html = console.export_html(
-            clear=False, theme=self._get_terminal_theme(), code_format=self._HTML_PAGE_TEMPLATE)
-        return self._vertical_crop_html(html)
+    def terminal(self) -> str:
+        ansi_output = self._output_mode is not OutputMode.PLAIN
+        console = self._prepare_terminal_console_according_to_output_mode()
+        text = console.export_text(clear=False, styles=ansi_output)
+        return self._vertical_crop(text)
 
-    @cached_property
-    def html_tag(self) -> str:
-        console_html = self._prepare_html_export()
+    # HTML output
 
+    def _prepare_html_console_according_to_output_mode(self) -> Console:
+        console_html = self._output._console_html
+
+        if self._output_mode is OutputMode.PLAIN:
+            return self._remove_styling_from_console_recording(console_html)
+
+        if self._output_mode is OutputMode.BW_STYLIZED:
+            return self._remove_all_color_from_console_recording(console_html)
+
+        return console_html
+
+    def _prepare_html_tag_template(self):
         if self._output_mode == OutputMode.COLORIZED:
             if self._config.transparent_background:
                 css_color_style = self._CSS_COLOR_STYLE_TEMPLATE_FG_ONLY
@@ -153,69 +184,102 @@ class OutputVariant:
         html_tag_template = self._HTML_TAG_TEMPLATE.format(
             font_style=self._CSS_DEFAULT_FONT_STYLE, color_style=css_color_style, code='{code}')
 
-        html = console_html.export_html(
-            clear=False,
-            theme=self._get_terminal_theme(),
-            code_format=html_tag_template,
-            inline_styles=True)
-        return self._vertical_crop_html(html)
+        return html_tag_template
 
-    def _prepare_html_export(self) -> Console:
-        console_html = self._output._console_html
-
-        if self._output_mode is OutputMode.PLAIN:
-            return self._remove_styling_from_console_recording(console_html)
-        if self._output_mode is OutputMode.BW_STYLIZED:
-            return self._remove_all_color_from_console_recording(console_html)
-        return console_html
-
-    # Hacks to remove color and strip styles from the console record buffer, making use of
-    # private methods in the rich library. These are needed to prevent the stylized output from
-    # being displayed in the HTML output, as the library provides no other ways to do this.
-
-    def _apply_filter_to_console_recording(
-        self,
-        console: Console,
-        filter_func: Callable[[list[Segment]], Iterable[Segment]],
-    ) -> Console:
-        new_console = copy(console)
-        with console._record_buffer_lock:
-            new_console._record_buffer = \
-                filter_func(console._record_buffer)  # type: ignore[assignment]
-        return new_console
-
-    def _remove_all_color_from_console_recording(self, console: Console) -> Console:
-        return self._apply_filter_to_console_recording(console, Segment.remove_color)
-
-    def _remove_styling_from_console_recording(self, console: Console) -> Console:
-        return self._apply_filter_to_console_recording(console, Segment.strip_styles)
-
-    def _get_terminal_theme(self) -> TerminalTheme:
+    def _calculate_fg_color(self, syntax_theme: SyntaxTheme) -> ColorTriplet:
         ANSI_FG_COLOR_MAP = {'ansi_light': 'black', 'ansi_dark': 'bright_white'}
-        terminal_theme = DEFAULT_TERMINAL_THEME
+
+        syntax_theme_fg_color = syntax_theme.get_style_for_token(Token).color
+
+        if syntax_theme_fg_color is None and self._color_style_name in ANSI_FG_COLOR_MAP:
+            syntax_theme_fg_color = Color.parse(ANSI_FG_COLOR_MAP[self._color_style_name])
+
+        assert syntax_theme_fg_color is not None
+
+        return syntax_theme_fg_color.get_truecolor(foreground=True)
+
+    def _calculate_bg_color(self,
+                            syntax_theme: SyntaxTheme,
+                            style_fg_color: ColorTriplet,
+                            for_html_page: bool) -> ColorTriplet | None:
+        def _auto_detect_bw_background_color(style_fg_color: ColorTriplet) -> Color:
+            """
+            Auto-detects a black or bright white background color based on the luminance of the
+            foreground color (i.e. whether the style is light or dark).
+            """
+            fg_luminance = sum(style_fg_color) / 3
+            return Color.parse('black' if fg_luminance > 127.5 else 'bright_white')
+
+        syntax_theme_bg_color = syntax_theme.get_background_style().bgcolor
+
+        # If the background color is not set in the theme, we need to auto-detect it as black or
+        # bright white based on the luminance of the foreground color, to support both light and
+        # dark color styles.
+        #
+        # In addition, a transparent background for a full HTML page output will in practice be a
+        # bright white background, so we instead also autodetect a black or bright white background
+        # color also in this case.
+        if syntax_theme_bg_color is None \
+                or (for_html_page and self._config.transparent_background):
+            syntax_theme_bg_color = _auto_detect_bw_background_color(style_fg_color)
+
+        if syntax_theme_bg_color is not None:
+            return syntax_theme_bg_color.get_truecolor(foreground=False)
+        else:
+            return None
+
+    def _prepare_color_theme(self, for_html_page: bool) -> TerminalTheme:
+        """
+        Prepares the color theme for the HTML export, confusingly called a "terminal theme" in the
+        rich library. The "terminal theme" is used to set the foreground and background colors for
+        the HTML output, as well as converting from ANSI to RGB colors, if needed (for e.g.
+        "ansi_dark" and "ansi_light" color styles).
+
+        :param for_html_page: if used for a full HTML page output, the background color is set to
+                              black or bright white, depending on the luminance of the foreground
+                              color.
+
+        :return: the "terminal theme" to use for the HTML export.
+        """
+        theme = DEFAULT_TERMINAL_THEME
 
         if self._output_mode is OutputMode.COLORIZED:
-            terminal_theme = copy(terminal_theme)
-            style_name = extract_value_if_enum(self._config.color_style)
+            theme = copy(theme)
 
-            syntax_theme = Syntax.get_theme(style_name)
+            syntax_theme = Syntax.get_theme(self._color_style_name)
+            style_fg_color = self._calculate_fg_color(syntax_theme)
+            style_bg_color = self._calculate_bg_color(syntax_theme, style_fg_color, for_html_page)
 
-            syntax_theme_fg_color = syntax_theme.get_style_for_token(Token).color
-            if syntax_theme_fg_color is None and style_name in ANSI_FG_COLOR_MAP:
-                syntax_theme_fg_color = Color.parse(ANSI_FG_COLOR_MAP[style_name])
-            assert syntax_theme_fg_color is not None
-            terminal_theme.foreground_color = syntax_theme_fg_color.get_truecolor(foreground=True)
+            theme.foreground_color = style_fg_color
+            if style_bg_color is not None:
+                theme.background_color = style_bg_color
 
-            syntax_theme_bg_color = syntax_theme.get_background_style().bgcolor
-            if syntax_theme_bg_color is None or self._config.transparent_background:
-                fg_luminance = sum(terminal_theme.foreground_color) / 3
-                syntax_theme_bg_color = \
-                    Color.parse('black' if fg_luminance > 127.5 else 'bright_white')
-            if syntax_theme_bg_color is not None:
-                terminal_theme.background_color = syntax_theme_bg_color.get_truecolor(
-                    foreground=False)
+        return theme
 
-        return terminal_theme
+    @cached_property
+    def html_tag(self) -> str:
+        console_html = self._prepare_html_console_according_to_output_mode()
+
+        html = console_html.export_html(
+            clear=False,
+            theme=self._prepare_color_theme(for_html_page=False),
+            code_format=self._prepare_html_tag_template(),
+            inline_styles=True)
+        html_cropped = self._vertical_crop_html(html)
+
+        return html_cropped
+
+    @cached_property
+    def html_page(self) -> str:
+        console = self._prepare_html_console_according_to_output_mode()
+
+        html = console.export_html(
+            clear=False,
+            theme=self._prepare_color_theme(for_html_page=True),
+            code_format=self._HTML_PAGE_TEMPLATE)
+        html_cropped = self._vertical_crop_html(html)
+
+        return html_cropped
 
 
 @dataclass(config=ConfigDict(extra=Extra.forbid, validate_all=True))
