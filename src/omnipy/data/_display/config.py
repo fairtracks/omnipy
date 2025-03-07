@@ -3,7 +3,12 @@ from enum import Enum
 from pygments.lexers import get_lexer_by_name
 from pygments.styles import get_style_by_name
 
-from omnipy.util._pydantic import ConfigDict, dataclass, Extra, NonNegativeInt, validator
+from omnipy.util._pydantic import (ConfigDict,
+                                   dataclass,
+                                   Extra,
+                                   NonNegativeFloat,
+                                   NonNegativeInt,
+                                   validator)
 
 MAX_TERMINAL_SIZE = 2**16 - 1
 
@@ -34,6 +39,14 @@ class SyntaxLanguage(str, Enum):
     NUMPY = 'numpy'
     SPARQL = 'sparql'
     TEX = 'tex'
+
+
+class ConsoleColorSystem(str, Enum):
+    AUTO = 'auto'
+    ANSI_16 = 'standard'
+    ANSI_256 = '256'
+    ANSI_RGB = 'truecolor'
+    WINDOWS_LEGACY = 'windows'
 
 
 class SpecialColorStyles(str, Enum):
@@ -435,8 +448,20 @@ class OutputConfig:
     debug_mode: bool = False
     pretty_printer: PrettyPrinterLib = PrettyPrinterLib.RICH
     language: SyntaxLanguage | str = SyntaxLanguage.PYTHON
+    console_color_system: ConsoleColorSystem = ConsoleColorSystem.AUTO
     color_style: ColorStyles | str = SpecialColorStyles.ANSI_DARK
     transparent_background: bool = True
+    html_font_family_list: tuple[str, ...] = (
+        'CommitMonoOmnipy',
+        'Menlo',
+        'DejaVu Sans Mono',
+        'Consolas',
+        'Courier New',
+        'monospace',
+    )
+    html_font_weight: NonNegativeInt | None = 450
+    html_font_size: NonNegativeInt | None = 14
+    html_line_height: NonNegativeFloat | None = 1.35
     horizontal_overflow_mode: HorizontalOverflowMode = HorizontalOverflowMode.WORD_WRAP
     vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.CROP_BOTTOM
 
