@@ -194,6 +194,10 @@ class OutputVariant:
         if syntax_theme_fg_color is None and self._color_style_name in ANSI_FG_COLOR_MAP:
             syntax_theme_fg_color = Color.parse(ANSI_FG_COLOR_MAP[self._color_style_name])
 
+        # Currently, the rich library defaults to a black foreground color if the token color is not
+        # set for a pygments style. However, this may change in the future, so we need to check for
+        # this case defensively. All color styles currently defined for Omnipy should have a token
+        # color set.
         assert syntax_theme_fg_color is not None
 
         return syntax_theme_fg_color.get_truecolor(foreground=True)
