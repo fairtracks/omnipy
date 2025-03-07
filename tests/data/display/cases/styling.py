@@ -170,10 +170,10 @@ def case_word_wrap_crop_top(
 
 
 @pc.parametrize('transparent_background', [False, True])
-@pc.case(id='no-frame-no-color', tags=['setup'])
+@pc.case(id='no-frame-default-color', tags=['setup'])
 def case_setup_no_frame_or_configs(transparent_background: bool) -> OutputTestCaseSetup:
     return OutputTestCaseSetup(
-        case_id='no-frame-no-color' + ('-no-bg' if transparent_background else ''),
+        case_id='no-frame-default-color' + ('-no-bg' if transparent_background else ''),
         content="MyClass({'abc': [123, 234]})",
         config=OutputConfig(transparent_background=transparent_background),
     )
@@ -218,8 +218,8 @@ def case_expectations_plain_terminal(
     return OutputPropertyExpectations(
         get_output_property=plain_terminal,
         expected_output={
-            'no-frame-no-color': "MyClass({'abc': [123, 234]})\n",
-            'no-frame-no-color-no-bg': "MyClass({'abc': [123, 234]})\n",
+            'no-frame-default-color': "MyClass({'abc': [123, 234]})\n",
+            'no-frame-default-color-no-bg': "MyClass({'abc': [123, 234]})\n",
             'no-frame-light-color': "MyClass({'abc': [123, 234]})\n",
             'no-frame-light-color-no-bg': "MyClass({'abc': [123, 234]})\n",
             'w-frame-dark-color-w-wrap': ("'abc':   \n"
@@ -239,9 +239,9 @@ def case_expectations_bw_stylized_terminal(
     return OutputPropertyExpectations(
         get_output_property=bw_stylized_terminal,
         expected_output={
-            'no-frame-no-color':
+            'no-frame-default-color':
                 "MyClass({'abc': [123, 234]})\n",
-            'no-frame-no-color-no-bg':
+            'no-frame-default-color-no-bg':
                 "MyClass({'abc': [123, 234]})\n",
             'no-frame-light-color':
                 "MyClass({'abc': [\x1b[1m123\x1b[0m, \x1b[1m234\x1b[0m]})\n",
@@ -264,10 +264,10 @@ def case_expectations_colorized_terminal(
     return OutputPropertyExpectations(
         get_output_property=colorized_terminal,
         expected_output={
-            'no-frame-no-color':
+            'no-frame-default-color':
                 ("MyClass({\x1b[33m'\x1b[0m\x1b[33mabc\x1b[0m\x1b[33m'\x1b[0m: [\x1b[94m123"
                  '\x1b[0m, \x1b[94m234\x1b[0m]})\n'),
-            'no-frame-no-color-no-bg':
+            'no-frame-default-color-no-bg':
                 ("MyClass({\x1b[33m'\x1b[0m\x1b[33mabc\x1b[0m\x1b[33m'\x1b[0m: [\x1b[94m123"
                  '\x1b[0m, \x1b[94m234\x1b[0m]})\n'),
             'no-frame-light-color': ('\x1b[38;2;0;0;0;48;2;255;255;255mMyClass'
@@ -385,9 +385,9 @@ def case_expectations_plain_html_tag(
     return OutputPropertyExpectations(
         get_output_property=plain_html_tag,
         expected_output={
-            'no-frame-no-color':
+            'no-frame-default-color':
                 _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})'),
-            'no-frame-no-color-no-bg':
+            'no-frame-default-color-no-bg':
                 _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})'),
             'no-frame-light-color':
                 _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})'),
@@ -412,9 +412,9 @@ def case_expectations_bw_stylized_html_tag(
     return OutputPropertyExpectations(
         get_output_property=bw_stylized_html_tag,
         expected_output={
-            'no-frame-no-color':
+            'no-frame-default-color':
                 _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})'),
-            'no-frame-no-color-no-bg':
+            'no-frame-default-color-no-bg':
                 _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})'),
             'no-frame-light-color':
                 _fill_html_tag_template(
@@ -445,7 +445,7 @@ def case_expectations_colorized_html_tag(
     return OutputPropertyExpectations(
         get_output_property=colorized_html_tag,
         expected_output={
-            'no-frame-no-color':
+            'no-frame-default-color':
                 _fill_html_tag_template(
                     data=(
                         'MyClass({'
@@ -454,7 +454,7 @@ def case_expectations_colorized_html_tag(
                         '<span style="color: #0000ff; text-decoration-color: #0000ff">123</span>, '
                         '<span style="color: #0000ff; text-decoration-color: #0000ff">234</span>]})'
                     )),
-            'no-frame-no-color-no-bg':
+            'no-frame-default-color-no-bg':
                 _fill_html_tag_template(
                     data=(
                         'MyClass({'
@@ -546,12 +546,12 @@ def case_expectations_plain_html_page(
     return OutputPropertyExpectations(
         get_output_property=plain_html_page,
         expected_output={
-            'no-frame-no-color':
+            'no-frame-default-color':
                 _fill_html_page_template(
                     style=body_style,
                     data='MyClass({&#x27;abc&#x27;: [123, 234]})',
                 ),
-            'no-frame-no-color-no-bg':
+            'no-frame-default-color-no-bg':
                 _fill_html_page_template(
                     style=body_style,
                     data='MyClass({&#x27;abc&#x27;: [123, 234]})',
@@ -595,7 +595,7 @@ def case_expectations_bw_stylized_html_page(
     return OutputPropertyExpectations(
         get_output_property=bw_stylized_html_page,
         expected_output={
-            'no-frame-no-color':
+            'no-frame-default-color':
                 _fill_html_page_template(
                     style=body_style,
                     data=('MyClass({'
@@ -603,7 +603,7 @@ def case_expectations_bw_stylized_html_page(
                           '<span class="r1">123</span>, '
                           '<span class="r1">234</span>]})'),
                 ),
-            'no-frame-no-color-no-bg':
+            'no-frame-default-color-no-bg':
                 _fill_html_page_template(
                     style=body_style,
                     data=('MyClass({'
@@ -696,7 +696,7 @@ def case_expectations_colorized_html_page(
     return OutputPropertyExpectations(
         get_output_property=colorized_html_page,
         expected_output={
-            'no-frame-no-color':
+            'no-frame-default-color':
                 _fill_html_page_template(
                     style=ansi_light_style_no_bg + body_style,
                     data=('MyClass({'
@@ -704,7 +704,7 @@ def case_expectations_colorized_html_page(
                           '<span class="r2">123</span>, '
                           '<span class="r2">234</span>]})'),
                 ),
-            'no-frame-no-color-no-bg':
+            'no-frame-default-color-no-bg':
                 _fill_html_page_template(
                     style=ansi_light_style_no_bg + body_style,
                     data=('MyClass({'
