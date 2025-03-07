@@ -19,6 +19,10 @@ from omnipy.data._display.draft import DraftMonospacedOutput, FrameT
 from omnipy.util._pydantic import ConfigDict, dataclass, Extra
 
 
+def extract_value_if_enum(conf_item: Enum | str) -> str:
+    return conf_item.value if isinstance(conf_item, Enum) else conf_item
+
+
 class OutputMode(str, Enum):
     PLAIN = 'plain'
     BW_STYLIZED = 'bw_stylized'
@@ -78,38 +82,25 @@ class OutputVariant:
         </html>
         """)
 
-    # Refactor to take StylizedMonospacedOutput as input, in order to lazify console creation, and
-    # avoid creating the console twice (once for terminal and once for HTML) if not needed. Will
-    # also simplify the signature.
-    def __init__(self,
-                 console_terminal: Console,
-                 console_html: Console,
-                 output_mode: OutputMode,
-                 style_name: str,
-                 transparent_background: bool,
-                 frame_height: int | None,
-                 vertical_overflow_mode: VerticalOverflowMode) -> None:
-        self._console_terminal = console_terminal
-        self._console_html = console_html
+    def __init__(self, output: 'StylizedMonospacedOutput', output_mode: OutputMode) -> None:
+        self._output = output
+        self._config = output.config
+        self._frame = output.frame
         self._output_mode = output_mode
-        self._style_name = style_name
-        self._transparent_background = transparent_background
-        self._frame_height = frame_height
-        self._vertical_overflow_mode = vertical_overflow_mode
 
     def _vertical_crop(self, text: str) -> str:
-        if self._frame_height is None:
+        if self._frame.dims.height is None:
             return text
 
         lines = text.splitlines(keepends=True)
-        if len(lines) <= self._frame_height:
+        if len(lines) <= self._frame.dims.height:
             return text
 
-        match (self._vertical_overflow_mode):
+        match self._config.vertical_overflow_mode:
             case VerticalOverflowMode.CROP_BOTTOM:
-                return ''.join(lines[:self._frame_height])
+                return ''.join(lines[:self._frame.dims.height])
             case VerticalOverflowMode.CROP_TOP:
-                return ''.join(lines[-self._frame_height:])
+                return ''.join(lines[-self._frame.dims.height:])
 
     def _vertical_crop_matches(self, matches: re.Match) -> str:
         start_code_tag = matches.group(1)
@@ -134,9 +125,11 @@ class OutputVariant:
         return self._vertical_crop(text)
 
     def _prepare_terminal_export(self) -> Console:
+        console_terminal = self._output._console_terminal
+
         if self._output_mode is OutputMode.BW_STYLIZED:
-            return self._remove_all_color_from_console_recording(self._console_terminal)
-        return self._console_terminal
+            return self._remove_all_color_from_console_recording(console_terminal)
+        return console_terminal
 
     @cached_property
     def html_page(self) -> str:
@@ -147,10 +140,10 @@ class OutputVariant:
 
     @cached_property
     def html_tag(self) -> str:
-        console = self._prepare_html_export()
+        console_html = self._prepare_html_export()
 
         if self._output_mode == OutputMode.COLORIZED:
-            if self._transparent_background:
+            if self._config.transparent_background:
                 css_color_style = self._CSS_COLOR_STYLE_TEMPLATE_FG_ONLY
             else:
                 css_color_style = self._CSS_COLOR_STYLE_TEMPLATE_FG_AND_BG
@@ -160,7 +153,7 @@ class OutputVariant:
         html_tag_template = self._HTML_TAG_TEMPLATE.format(
             font_style=self._CSS_DEFAULT_FONT_STYLE, color_style=css_color_style, code='{code}')
 
-        html = console.export_html(
+        html = console_html.export_html(
             clear=False,
             theme=self._get_terminal_theme(),
             code_format=html_tag_template,
@@ -168,11 +161,13 @@ class OutputVariant:
         return self._vertical_crop_html(html)
 
     def _prepare_html_export(self) -> Console:
+        console_html = self._output._console_html
+
         if self._output_mode is OutputMode.PLAIN:
-            return self._remove_styling_from_console_recording(self._console_html)
+            return self._remove_styling_from_console_recording(console_html)
         if self._output_mode is OutputMode.BW_STYLIZED:
-            return self._remove_all_color_from_console_recording(self._console_html)
-        return self._console_html
+            return self._remove_all_color_from_console_recording(console_html)
+        return console_html
 
     # Hacks to remove color and strip styles from the console record buffer, making use of
     # private methods in the rich library. These are needed to prevent the stylized output from
@@ -196,24 +191,23 @@ class OutputVariant:
         return self._apply_filter_to_console_recording(console, Segment.strip_styles)
 
     def _get_terminal_theme(self) -> TerminalTheme:
-
-        ansi_fg_color_map = {'ansi_light': 'black', 'ansi_dark': 'bright_white'}
-
+        ANSI_FG_COLOR_MAP = {'ansi_light': 'black', 'ansi_dark': 'bright_white'}
         terminal_theme = DEFAULT_TERMINAL_THEME
 
         if self._output_mode is OutputMode.COLORIZED:
             terminal_theme = copy(terminal_theme)
+            style_name = extract_value_if_enum(self._config.color_style)
 
-            syntax_theme = Syntax.get_theme(self._style_name)
+            syntax_theme = Syntax.get_theme(style_name)
 
             syntax_theme_fg_color = syntax_theme.get_style_for_token(Token).color
-            if syntax_theme_fg_color is None and self._style_name in ansi_fg_color_map:
-                syntax_theme_fg_color = Color.parse(ansi_fg_color_map[self._style_name])
+            if syntax_theme_fg_color is None and style_name in ANSI_FG_COLOR_MAP:
+                syntax_theme_fg_color = Color.parse(ANSI_FG_COLOR_MAP[style_name])
             assert syntax_theme_fg_color is not None
             terminal_theme.foreground_color = syntax_theme_fg_color.get_truecolor(foreground=True)
 
             syntax_theme_bg_color = syntax_theme.get_background_style().bgcolor
-            if syntax_theme_bg_color is None or self._transparent_background:
+            if syntax_theme_bg_color is None or self._config.transparent_background:
                 fg_luminance = sum(terminal_theme.foreground_color) / 3
                 syntax_theme_bg_color = \
                     Color.parse('black' if fg_luminance > 127.5 else 'bright_white')
@@ -253,13 +247,9 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
 
         super().__init__(str_content, frame, constraints, config)
 
-    @staticmethod
-    def _extract_value_if_enum(conf_item: Enum | str) -> str:
-        return conf_item.value if isinstance(conf_item, Enum) else conf_item
-
     def _get_stylized_content_common(self, remove_bg_color: bool) -> Syntax:
-        style_name = self._extract_value_if_enum(self.config.color_style)
-        lexer_name = self._extract_value_if_enum(self.config.language)
+        style_name = extract_value_if_enum(self.config.color_style)
+        lexer_name = extract_value_if_enum(self.config.language)
         word_wrap = self.config.horizontal_overflow_mode == HorizontalOverflowMode.WORD_WRAP
 
         # Workaround to remove the background color from the theme, as setting
@@ -349,39 +339,15 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
 
     @cached_property
     def plain(self) -> OutputVariant:
-        return OutputVariant(
-            self._console_terminal,
-            self._console_html,
-            OutputMode.PLAIN,
-            self._extract_value_if_enum(self.config.color_style),
-            self.config.transparent_background,
-            self.frame.dims.height,
-            self.config.vertical_overflow_mode,
-        )
+        return OutputVariant(self, OutputMode.PLAIN)
 
     @cached_property
     def bw_stylized(self) -> OutputVariant:
-        return OutputVariant(
-            self._console_terminal,
-            self._console_html,
-            OutputMode.BW_STYLIZED,
-            self._extract_value_if_enum(self.config.color_style),
-            self.config.transparent_background,
-            self.frame.dims.height,
-            self.config.vertical_overflow_mode,
-        )
+        return OutputVariant(self, OutputMode.BW_STYLIZED)
 
     @cached_property
     def colorized(self) -> OutputVariant:
-        return OutputVariant(
-            self._console_terminal,
-            self._console_html,
-            OutputMode.COLORIZED,
-            self._extract_value_if_enum(self.config.color_style),
-            self.config.transparent_background,
-            self.frame.dims.height,
-            self.config.vertical_overflow_mode,
-        )
+        return OutputVariant(self, OutputMode.COLORIZED)
 
     @cached_property
     def _content_lines(self) -> list[str]:
