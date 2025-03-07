@@ -345,7 +345,7 @@ def case_expectations_colorized_terminal(
 
 _FONT_STYLE = (
     "font-family: 'CommitMonoOmnipy', 'Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', "
-    "'monospace'; font-weight: 450; font-size: 14px; line-height: 1.35")
+    "'monospace'; font-weight: 450; font-size: 14px; line-height: 1.35; ")
 
 
 def _fill_html_page_template(style: str, data: str) -> str:
@@ -359,7 +359,7 @@ def _fill_html_page_template(style: str, data: str) -> str:
             </style>
           </head>
           <body>
-            <pre style="{font_style}"><code style="font-family:inherit">{data}
+            <pre><code style="{font_style}">{data}
         </code></pre>
           </body>
         </html>
@@ -368,14 +368,14 @@ def _fill_html_page_template(style: str, data: str) -> str:
     return HTML_PAGE_TEMPLATE.format(style=style, font_style=_FONT_STYLE, data=data)
 
 
-def _fill_html_tag_template(data: str) -> str:
-    HTML_TAG_TEMPLATE = ('<pre style="{font_style}">'
-                         '<code style="font-family:inherit">'
+def _fill_html_tag_template(data: str, color_style: str = '') -> str:
+    HTML_TAG_TEMPLATE = ('<pre>'
+                         '<code style="{font_style}{color_style}">'
                          '{data}\n'
                          '</code>'
                          '</pre>')
 
-    return HTML_TAG_TEMPLATE.format(font_style=_FONT_STYLE, data=data)
+    return HTML_TAG_TEMPLATE.format(font_style=_FONT_STYLE, color_style=color_style, data=data)
 
 
 @pc.case(id='plain-html-tag-output', tags=['expectations'])
@@ -394,9 +394,9 @@ def case_expectations_plain_html_tag(
             'no-frame-light-color-no-bg':
                 _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})'),
             'w-frame-dark-color-w-wrap':
-                _fill_html_tag_template(data=('&#x27;abc&#x27;:   \n'
-                                              '[123,    \n'
-                                              '234]})   '),),
+                _fill_html_tag_template(data=('&#x27;abc&#x27;: \n'
+                                              '[123, \n'
+                                              '234]})'),),
             'w-frame-dark-color-w-wrap-no-bg':
                 _fill_html_tag_template(data=('&#x27;abc&#x27;: \n'
                                               '[123, \n'
@@ -427,9 +427,9 @@ def case_expectations_bw_stylized_html_tag(
                           '<span style="font-weight: bold">123</span>, '
                           '<span style="font-weight: bold">234</span>]})')),
             'w-frame-dark-color-w-wrap':
-                _fill_html_tag_template(data=('&#x27;abc&#x27;:   \n'
-                                              '[123,    \n'
-                                              '234]})   '),),
+                _fill_html_tag_template(data=('&#x27;abc&#x27;: \n'
+                                              '[123, \n'
+                                              '234]})'),),
             'w-frame-dark-color-w-wrap-no-bg':
                 _fill_html_tag_template(data=('&#x27;abc&#x27;: \n'
                                               '[123, \n'
@@ -442,6 +442,14 @@ def case_expectations_bw_stylized_html_tag(
 def case_expectations_colorized_html_tag(
     colorized_html_tag: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture]
 ) -> OutputPropertyExpectations:
+
+    ansi_dark_color_style_with_bg = 'color: #ffffff; background-color: #000000; '
+    ansi_dark_color_style_no_bg = 'color: #ffffff; '
+    murphy_light_color_style_with_bg = 'color: #000000; background-color: #ffffff; '
+    murphy_light_color_style_no_bg = 'color: #000000; '
+    zenburn_dark_color_style_with_bg = 'color: #dcdccc; background-color: #3f3f3f; '
+    zenburn_dark_color_style_no_bg = 'color: #dcdccc; '
+
     return OutputPropertyExpectations(
         get_output_property=colorized_html_tag,
         expected_output={
@@ -453,7 +461,9 @@ def case_expectations_colorized_html_tag(
                         '&#x27;abc&#x27;</span>: ['
                         '<span style="color: #0000ff; text-decoration-color: #0000ff">123</span>, '
                         '<span style="color: #0000ff; text-decoration-color: #0000ff">234</span>]})'
-                    )),
+                    ),
+                    color_style=ansi_dark_color_style_with_bg,
+                ),
             'no-frame-default-color-no-bg':
                 _fill_html_tag_template(
                     data=(
@@ -462,72 +472,70 @@ def case_expectations_colorized_html_tag(
                         '&#x27;abc&#x27;</span>: ['
                         '<span style="color: #0000ff; text-decoration-color: #0000ff">123</span>, '
                         '<span style="color: #0000ff; text-decoration-color: #0000ff">234</span>]})'
-                    )),
+                    ),
+                    color_style=ansi_dark_color_style_no_bg,
+                ),
             'no-frame-light-color':
                 _fill_html_tag_template(
-                    data=('<span style="color: #000000; text-decoration-color: #000000; '
-                          'background-color: #ffffff">MyClass({</span>'
-                          '<span style="color: #000000; text-decoration-color: #000000; '
-                          'background-color: #e0e0ff">&#x27;abc&#x27;</span>'
-                          '<span style="color: #000000; text-decoration-color: #000000; '
-                          'background-color: #ffffff">: [</span>'
-                          '<span style="color: #6666ff; text-decoration-color: #6666ff; '
-                          'background-color: #ffffff; font-weight: bold">123</span>'
-                          '<span style="color: #000000; text-decoration-color: #000000; '
-                          'background-color: #ffffff">, </span>'
-                          '<span style="color: #6666ff; text-decoration-color: #6666ff; '
-                          'background-color: #ffffff; font-weight: bold">234</span>'
-                          '<span style="color: #000000; text-decoration-color: #000000; '
-                          'background-color: #ffffff">]})</span>')),
+                    data=(
+                        '<span style="color: #000000; text-decoration-color: #000000">'
+                        'MyClass({</span>'
+                        '<span style="color: #000000; text-decoration-color: #000000; '
+                        'background-color: #e0e0ff">&#x27;abc&#x27;</span>'
+                        '<span style="color: #000000; text-decoration-color: #000000">: [</span>'
+                        '<span style="color: #6666ff; text-decoration-color: #6666ff; '
+                        'font-weight: bold">123</span>'
+                        '<span style="color: #000000; text-decoration-color: #000000">, </span>'
+                        '<span style="color: #6666ff; text-decoration-color: #6666ff; '
+                        'font-weight: bold">234</span>'
+                        '<span style="color: #000000; text-decoration-color: #000000">]})</span>'),
+                    color_style=murphy_light_color_style_with_bg,
+                ),
             'no-frame-light-color-no-bg':
                 _fill_html_tag_template(
-                    data=('<span style="color: #000000; text-decoration-color: #000000">'
-                          'MyClass({</span>'
-                          '<span style="color: #000000; text-decoration-color: #000000; '
-                          'background-color: #e0e0ff">&#x27;abc&#x27;</span>'
-                          '<span style="color: #000000; text-decoration-color: #000000">: [</span>'
-                          '<span style="color: #6666ff; text-decoration-color: #6666ff; '
-                          'font-weight: bold">123</span>'
-                          '<span style="color: #000000; text-decoration-color: #000000">, </span>'
-                          '<span style="color: #6666ff; text-decoration-color: #6666ff; '
-                          'font-weight: bold">234</span>'
-                          '<span style="color: #000000; text-decoration-color: #000000">]})</span>')
+                    data=(
+                        '<span style="color: #000000; text-decoration-color: #000000">'
+                        'MyClass({</span>'
+                        '<span style="color: #000000; text-decoration-color: #000000; '
+                        'background-color: #e0e0ff">&#x27;abc&#x27;</span>'
+                        '<span style="color: #000000; text-decoration-color: #000000">: [</span>'
+                        '<span style="color: #6666ff; text-decoration-color: #6666ff; '
+                        'font-weight: bold">123</span>'
+                        '<span style="color: #000000; text-decoration-color: #000000">, </span>'
+                        '<span style="color: #6666ff; text-decoration-color: #6666ff; '
+                        'font-weight: bold">234</span>'
+                        '<span style="color: #000000; text-decoration-color: #000000">]})</span>'),
+                    color_style=murphy_light_color_style_no_bg,
                 ),
             'w-frame-dark-color-w-wrap':
                 _fill_html_tag_template(
-                    data=('<span style="color: #cc9393; text-decoration-color: #cc9393; '
-                          'background-color: #3f3f3f">&#x27;abc&#x27;</span>'
-                          '<span style="color: #f0efd0; text-decoration-color: #f0efd0; '
-                          'background-color: #3f3f3f">:</span>'
-                          '<span style="color: #dcdccc; text-decoration-color: #dcdccc; '
-                          'background-color: #3f3f3f"> </span>'
-                          '<span style="background-color: #3f3f3f">  </span>\n'
-                          '<span style="color: #f0efd0; text-decoration-color: #f0efd0; '
-                          'background-color: #3f3f3f">[</span>'
-                          '<span style="color: #8cd0d3; text-decoration-color: #8cd0d3; '
-                          'background-color: #3f3f3f">123</span>'
-                          '<span style="color: #f0efd0; text-decoration-color: #f0efd0; '
-                          'background-color: #3f3f3f">,</span>'
-                          '<span style="color: #dcdccc; text-decoration-color: #dcdccc; '
-                          'background-color: #3f3f3f"> </span>'
-                          '<span style="background-color: #3f3f3f">   </span>\n'
-                          '<span style="color: #8cd0d3; text-decoration-color: #8cd0d3; '
-                          'background-color: #3f3f3f">234</span>'
-                          '<span style="color: #f0efd0; text-decoration-color: #f0efd0; '
-                          'background-color: #3f3f3f">]})</span>'
-                          '<span style="background-color: #3f3f3f">   </span>')),
+                    data=(
+                        '<span style="color: #cc9393; text-decoration-color: #cc9393">'
+                        '&#x27;abc&#x27;</span>'
+                        '<span style="color: #f0efd0; text-decoration-color: #f0efd0">:</span>'
+                        '<span style="color: #dcdccc; text-decoration-color: #dcdccc"> </span>\n'
+                        '<span style="color: #f0efd0; text-decoration-color: #f0efd0">[</span>'
+                        '<span style="color: #8cd0d3; text-decoration-color: #8cd0d3">123</span>'
+                        '<span style="color: #f0efd0; text-decoration-color: #f0efd0">,</span>'
+                        '<span style="color: #dcdccc; text-decoration-color: #dcdccc"> </span>\n'
+                        '<span style="color: #8cd0d3; text-decoration-color: #8cd0d3">234</span>'
+                        '<span style="color: #f0efd0; text-decoration-color: #f0efd0">]})</span>'),
+                    color_style=zenburn_dark_color_style_with_bg,
+                ),
             'w-frame-dark-color-w-wrap-no-bg':
                 _fill_html_tag_template(
-                    data=('<span style="color: #cc9393; text-decoration-color: #cc9393">'
-                          '&#x27;abc&#x27;</span>'
-                          '<span style="color: #f0efd0; text-decoration-color: #f0efd0">:</span>'
-                          '<span style="color: #dcdccc; text-decoration-color: #dcdccc"> </span>\n'
-                          '<span style="color: #f0efd0; text-decoration-color: #f0efd0">[</span>'
-                          '<span style="color: #8cd0d3; text-decoration-color: #8cd0d3">123</span>'
-                          '<span style="color: #f0efd0; text-decoration-color: #f0efd0">,</span>'
-                          '<span style="color: #dcdccc; text-decoration-color: #dcdccc"> </span>\n'
-                          '<span style="color: #8cd0d3; text-decoration-color: #8cd0d3">234</span>'
-                          '<span style="color: #f0efd0; text-decoration-color: #f0efd0">]})</span>')
+                    data=(
+                        '<span style="color: #cc9393; text-decoration-color: #cc9393">'
+                        '&#x27;abc&#x27;</span>'
+                        '<span style="color: #f0efd0; text-decoration-color: #f0efd0">:</span>'
+                        '<span style="color: #dcdccc; text-decoration-color: #dcdccc"> </span>\n'
+                        '<span style="color: #f0efd0; text-decoration-color: #f0efd0">[</span>'
+                        '<span style="color: #8cd0d3; text-decoration-color: #8cd0d3">123</span>'
+                        '<span style="color: #f0efd0; text-decoration-color: #f0efd0">,</span>'
+                        '<span style="color: #dcdccc; text-decoration-color: #dcdccc"> </span>\n'
+                        '<span style="color: #8cd0d3; text-decoration-color: #8cd0d3">234</span>'
+                        '<span style="color: #f0efd0; text-decoration-color: #f0efd0">]})</span>'),
+                    color_style=zenburn_dark_color_style_no_bg,
                 ),
         },
     )
@@ -537,7 +545,7 @@ def case_expectations_colorized_html_tag(
 def case_expectations_plain_html_page(
     plain_html_page: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture]
 ) -> OutputPropertyExpectations:
-    body_style = """
+    bw_light_body_style = """
       body {
         color: #000000;
         background-color: #ffffff;
@@ -548,34 +556,38 @@ def case_expectations_plain_html_page(
         expected_output={
             'no-frame-default-color':
                 _fill_html_page_template(
-                    style=body_style,
+                    style=bw_light_body_style,
                     data='MyClass({&#x27;abc&#x27;: [123, 234]})',
                 ),
             'no-frame-default-color-no-bg':
                 _fill_html_page_template(
-                    style=body_style,
+                    style=bw_light_body_style,
                     data='MyClass({&#x27;abc&#x27;: [123, 234]})',
                 ),
             'no-frame-light-color':
                 _fill_html_page_template(
-                    style=body_style,
+                    style=bw_light_body_style,
                     data='MyClass({&#x27;abc&#x27;: [123, 234]})',
                 ),
             'no-frame-light-color-no-bg':
                 _fill_html_page_template(
-                    style=body_style,
+                    style=bw_light_body_style,
                     data='MyClass({&#x27;abc&#x27;: [123, 234]})',
                 ),
             'w-frame-dark-color-w-wrap':
                 _fill_html_page_template(
-                    style=body_style, data=('&#x27;abc&#x27;:   \n'
-                                            '[123,    \n'
-                                            '234]})   ')),
+                    style=bw_light_body_style,
+                    data=('&#x27;abc&#x27;: \n'
+                          '[123, \n'
+                          '234]})'),
+                ),
             'w-frame-dark-color-w-wrap-no-bg':
                 _fill_html_page_template(
-                    style=body_style, data=('&#x27;abc&#x27;: \n'
-                                            '[123, \n'
-                                            '234]})')),
+                    style=bw_light_body_style,
+                    data=('&#x27;abc&#x27;: \n'
+                          '[123, \n'
+                          '234]})'),
+                ),
         },
     )
 
@@ -586,7 +598,7 @@ def case_expectations_bw_stylized_html_page(
 ) -> OutputPropertyExpectations:
     bold_style = '.r2 {font-weight: bold}'
 
-    body_style = """
+    bw_light_body_style = """
       body {
         color: #000000;
         background-color: #ffffff;
@@ -597,7 +609,7 @@ def case_expectations_bw_stylized_html_page(
         expected_output={
             'no-frame-default-color':
                 _fill_html_page_template(
-                    style=body_style,
+                    style=bw_light_body_style,
                     data=('MyClass({'
                           '<span class="r1">&#x27;abc&#x27;</span>: ['
                           '<span class="r1">123</span>, '
@@ -605,7 +617,7 @@ def case_expectations_bw_stylized_html_page(
                 ),
             'no-frame-default-color-no-bg':
                 _fill_html_page_template(
-                    style=body_style,
+                    style=bw_light_body_style,
                     data=('MyClass({'
                           '<span class="r1">&#x27;abc&#x27;</span>: ['
                           '<span class="r1">123</span>, '
@@ -613,7 +625,7 @@ def case_expectations_bw_stylized_html_page(
                 ),
             'no-frame-light-color':
                 _fill_html_page_template(
-                    style=bold_style + body_style,
+                    style=bold_style + bw_light_body_style,
                     data=('<span class="r1">MyClass({&#x27;abc&#x27;: [</span>'
                           '<span class="r2">123</span>'
                           '<span class="r1">, </span>'
@@ -622,7 +634,7 @@ def case_expectations_bw_stylized_html_page(
                 ),
             'no-frame-light-color-no-bg':
                 _fill_html_page_template(
-                    style=bold_style + body_style,
+                    style=bold_style + bw_light_body_style,
                     data=('<span class="r1">MyClass({&#x27;abc&#x27;: [</span>'
                           '<span class="r2">123</span>'
                           '<span class="r1">, </span>'
@@ -631,17 +643,14 @@ def case_expectations_bw_stylized_html_page(
                 ),
             'w-frame-dark-color-w-wrap':
                 _fill_html_page_template(
-                    style=body_style,
-                    data=('<span class="r1">&#x27;abc&#x27;: </span>'
-                          '<span class="r1">  </span>\n'
-                          '<span class="r1">[123, </span>'
-                          '<span class="r1">   </span>\n'
-                          '<span class="r1">234]})</span>'
-                          '<span class="r1">   </span>'),
+                    style=bw_light_body_style,
+                    data=('<span class="r1">&#x27;abc&#x27;: </span>\n'
+                          '<span class="r1">[123, </span>\n'
+                          '<span class="r1">234]})</span>'),
                 ),
             'w-frame-dark-color-w-wrap-no-bg':
                 _fill_html_page_template(
-                    style=body_style,
+                    style=bw_light_body_style,
                     data=('<span class="r1">&#x27;abc&#x27;: </span>\n'
                           '<span class="r1">[123, </span>\n'
                           '<span class="r1">234]})</span>'),
@@ -654,43 +663,46 @@ def case_expectations_bw_stylized_html_page(
 def case_expectations_colorized_html_page(
     colorized_html_page: Annotated[Callable[[StylizedMonospacedOutput], str], pc.fixture]
 ) -> OutputPropertyExpectations:
-    ansi_light_style_no_bg = '\n'.join([
+    ansi_dark_style = '\n'.join([
         '.r1 {color: #808000; text-decoration-color: #808000}',
         '.r2 {color: #0000ff; text-decoration-color: #0000ff}',
     ])
 
-    murphy_style_with_bg = '\n'.join([
-        '.r1 {color: #000000; text-decoration-color: #000000; background-color: #ffffff}',
-        '.r2 {color: #000000; text-decoration-color: #000000; background-color: #e0e0ff}',
-        ('.r3 {color: #6666ff; text-decoration-color: #6666ff; background-color: #ffffff; '
-         'font-weight: bold}'),
-    ])
-
-    murphy_style_no_bg = '\n'.join([
+    murphy_light_style = '\n'.join([
         '.r1 {color: #000000; text-decoration-color: #000000}',
         '.r2 {color: #000000; text-decoration-color: #000000; background-color: #e0e0ff}',
         '.r3 {color: #6666ff; text-decoration-color: #6666ff; font-weight: bold}',
     ])
 
-    zenburn_style_with_bg = '\n'.join([
-        '.r1 {color: #dcdccc; text-decoration-color: #dcdccc; background-color: #3f3f3f}',
-        '.r2 {color: #f0efd0; text-decoration-color: #f0efd0; background-color: #3f3f3f}',
-        '.r3 {color: #cc9393; text-decoration-color: #cc9393; background-color: #3f3f3f}',
-        '.r4 {background-color: #3f3f3f}',
-        '.r5 {color: #8cd0d3; text-decoration-color: #8cd0d3; background-color: #3f3f3f}',
-    ])
-
-    zenburn_style_no_bg = '\n'.join([
+    zenburn_dark_style_no_bg = '\n'.join([
         '.r1 {color: #dcdccc; text-decoration-color: #dcdccc}',
         '.r2 {color: #f0efd0; text-decoration-color: #f0efd0}',
         '.r3 {color: #cc9393; text-decoration-color: #cc9393}',
         '.r4 {color: #8cd0d3; text-decoration-color: #8cd0d3}',
     ])
 
-    body_style = """
+    ansi_dark_body_style = """
+      body {
+        color: #ffffff;
+        background-color: #000000;
+      }"""
+
+    murphy_light_body_style = """
       body {
         color: #000000;
         background-color: #ffffff;
+      }"""
+
+    zenburn_dark_body_style_with_bg = """
+      body {
+        color: #dcdccc;
+        background-color: #3f3f3f;
+      }"""
+
+    zenburn_dark_body_style_no_bg = """
+      body {
+        color: #dcdccc;
+        background-color: #000000;
       }"""
 
     return OutputPropertyExpectations(
@@ -698,7 +710,7 @@ def case_expectations_colorized_html_page(
         expected_output={
             'no-frame-default-color':
                 _fill_html_page_template(
-                    style=ansi_light_style_no_bg + body_style,
+                    style=ansi_dark_style + ansi_dark_body_style,
                     data=('MyClass({'
                           '<span class="r1">&#x27;abc&#x27;</span>: ['
                           '<span class="r2">123</span>, '
@@ -706,7 +718,7 @@ def case_expectations_colorized_html_page(
                 ),
             'no-frame-default-color-no-bg':
                 _fill_html_page_template(
-                    style=ansi_light_style_no_bg + body_style,
+                    style=ansi_dark_style + ansi_dark_body_style,
                     data=('MyClass({'
                           '<span class="r1">&#x27;abc&#x27;</span>: ['
                           '<span class="r2">123</span>, '
@@ -714,7 +726,7 @@ def case_expectations_colorized_html_page(
                 ),
             'no-frame-light-color':
                 _fill_html_page_template(
-                    style=murphy_style_with_bg + body_style,
+                    style=murphy_light_style + murphy_light_body_style,
                     data=('<span class="r1">MyClass({</span>'
                           '<span class="r2">&#x27;abc&#x27;</span>'
                           '<span class="r1">: [</span>'
@@ -725,7 +737,7 @@ def case_expectations_colorized_html_page(
                 ),
             'no-frame-light-color-no-bg':
                 _fill_html_page_template(
-                    style=murphy_style_no_bg + body_style,
+                    style=murphy_light_style + murphy_light_body_style,
                     data=('<span class="r1">MyClass({</span>'
                           '<span class="r2">&#x27;abc&#x27;</span>'
                           '<span class="r1">: [</span>'
@@ -736,23 +748,20 @@ def case_expectations_colorized_html_page(
                 ),
             'w-frame-dark-color-w-wrap':
                 _fill_html_page_template(
-                    style=zenburn_style_with_bg + body_style,
+                    style=zenburn_dark_style_no_bg + zenburn_dark_body_style_with_bg,
                     data=('<span class="r3">&#x27;abc&#x27;</span>'
                           '<span class="r2">:</span>'
-                          '<span class="r1"> </span>'
-                          '<span class="r4">  </span>\n'
+                          '<span class="r1"> </span>\n'
                           '<span class="r2">[</span>'
-                          '<span class="r5">123</span>'
+                          '<span class="r4">123</span>'
                           '<span class="r2">,</span>'
-                          '<span class="r1"> </span>'
-                          '<span class="r4">   </span>\n'
-                          '<span class="r5">234</span>'
-                          '<span class="r2">]})</span>'
-                          '<span class="r4">   </span>'),
+                          '<span class="r1"> </span>\n'
+                          '<span class="r4">234</span>'
+                          '<span class="r2">]})</span>'),
                 ),
             'w-frame-dark-color-w-wrap-no-bg':
                 _fill_html_page_template(
-                    style=zenburn_style_no_bg + body_style,
+                    style=zenburn_dark_style_no_bg + zenburn_dark_body_style_no_bg,
                     data=('<span class="r3">&#x27;abc&#x27;</span>'
                           '<span class="r2">:</span>'
                           '<span class="r1"> </span>\n'
