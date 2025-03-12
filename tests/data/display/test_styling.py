@@ -123,12 +123,11 @@ def test_output_properties_of_stylized_output(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
     case_id, content, frame, config = output_test_case_setup
-    get_output_property, expected_outputs = output_prop_expectations
-    expected_output = expected_outputs[case_id]
+    get_output_property, expected_output_for_case_id = output_prop_expectations
 
     output = StylizedMonospacedOutput(content, frame=frame, config=config)
     for _ in range(2):
-        assert get_output_property(output) == expected_output
+        assert get_output_property(output) == expected_output_for_case_id(case_id)
 
 
 def test_stylized_output_json_syntax(
