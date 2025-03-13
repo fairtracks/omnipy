@@ -22,10 +22,10 @@ def test_output_config(
         language=SyntaxLanguage.JSON,
         console_color_system=ConsoleColorSystem.ANSI_RGB,
         color_style=DarkLowContrastColorStyles.ONE_DARK,
-        html_font_family_list=('Menlo', 'monospace'),
-        html_font_size=16,
-        html_font_weight=400,
-        html_line_height=1.0,
+        css_font_families=('Menlo', 'monospace'),
+        css_font_size=16,
+        css_font_weight=400,
+        css_line_height=1.0,
         horizontal_overflow_mode=HorizontalOverflowMode.CROP,
         vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
     )
@@ -36,10 +36,10 @@ def test_output_config(
     assert config.language is SyntaxLanguage.JSON
     assert config.console_color_system is ConsoleColorSystem.ANSI_RGB
     assert config.color_style is DarkLowContrastColorStyles.ONE_DARK
-    assert config.html_font_family_list == ('Menlo', 'monospace')
-    assert config.html_font_size == 16
-    assert config.html_font_weight == 400
-    assert config.html_line_height == 1.0
+    assert config.css_font_families == ('Menlo', 'monospace')
+    assert config.css_font_size == 16
+    assert config.css_font_weight == 400
+    assert config.css_line_height == 1.0
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.CROP
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_TOP
 
@@ -50,10 +50,10 @@ def test_output_config(
         language='xml',
         console_color_system='256',  # type: ignore[arg-type]
         color_style='xcode',
-        html_font_family_list=[],  # type: ignore[arg-type]
-        html_font_size='16',  # type: ignore[arg-type]
-        html_font_weight='400',  # type: ignore[arg-type]
-        html_line_height='1',  # type: ignore[arg-type]
+        css_font_families=[],  # type: ignore[arg-type]
+        css_font_size='16',  # type: ignore[arg-type]
+        css_font_weight='400',  # type: ignore[arg-type]
+        css_line_height='1',  # type: ignore[arg-type]
         horizontal_overflow_mode='ellipsis',  # type: ignore[arg-type]
         vertical_overflow_mode='crop_bottom',  # type: ignore[arg-type]
     )
@@ -63,21 +63,21 @@ def test_output_config(
     assert config.language is SyntaxLanguage.XML
     assert config.console_color_system is ConsoleColorSystem.ANSI_256
     assert config.color_style is LightHighContrastColorStyles.XCODE
-    assert config.html_font_family_list == ()
-    assert config.html_font_size == 16
-    assert config.html_font_weight == 400
-    assert config.html_line_height == 1.0
+    assert config.css_font_families == ()
+    assert config.css_font_size == 16
+    assert config.css_font_weight == 400
+    assert config.css_line_height == 1.0
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
 
     config = OutputConfig(
-        html_font_weight=None,
-        html_font_size=None,
-        html_line_height=None,
+        css_font_weight=None,
+        css_font_size=None,
+        css_line_height=None,
     )
-    assert config.html_font_size is None
-    assert config.html_font_weight is None
-    assert config.html_line_height is None
+    assert config.css_font_size is None
+    assert config.css_font_weight is None
+    assert config.css_line_height is None
 
 
 def test_output_config_validate_assignments(
@@ -125,29 +125,29 @@ def test_output_config_validate_assignments(
     with pytest.raises(ValueError):
         config.color_style = '123'
 
-    config.html_font_family_list = ['Menlo', 'monospace']  # type: ignore[assignment]
-    assert config.html_font_family_list == ('Menlo', 'monospace')
+    config.css_font_families = ['Menlo', 'monospace']  # type: ignore[assignment]
+    assert config.css_font_families == ('Menlo', 'monospace')
 
     with pytest.raises(ValueError):
-        config.html_font_family_list = 'monospace'  # type: ignore[assignment]
+        config.css_font_families = 'monospace'  # type: ignore[assignment]
 
-    config.html_font_size = '18'  # type: ignore[assignment]
-    assert config.html_font_size == 18
-
-    with pytest.raises(ValueError):
-        config.html_font_size = 'abc'  # type: ignore[assignment]
-
-    config.html_font_weight = '500'  # type: ignore[assignment]
-    assert config.html_font_weight == 500
+    config.css_font_size = '18'  # type: ignore[assignment]
+    assert config.css_font_size == 18
 
     with pytest.raises(ValueError):
-        config.html_font_weight = 'abc'  # type: ignore[assignment]
+        config.css_font_size = 'abc'  # type: ignore[assignment]
 
-    config.html_line_height = '1.5'  # type: ignore[assignment]
-    assert config.html_line_height == 1.5
+    config.css_font_weight = '500'  # type: ignore[assignment]
+    assert config.css_font_weight == 500
 
     with pytest.raises(ValueError):
-        config.html_line_height = 'abc'  # type: ignore[assignment]
+        config.css_font_weight = 'abc'  # type: ignore[assignment]
+
+    config.css_line_height = '1.5'  # type: ignore[assignment]
+    assert config.css_line_height == 1.5
+
+    with pytest.raises(ValueError):
+        config.css_line_height = 'abc'  # type: ignore[assignment]
 
     config.horizontal_overflow_mode = 'ellipsis'  # type: ignore[assignment]
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
@@ -186,16 +186,16 @@ def test_fail_output_config_if_invalid_params(
         OutputConfig(color_style='red')
 
     with pytest.raises(ValueError):
-        OutputConfig(html_font_family_list=None)  # type: ignore[arg-type]
+        OutputConfig(css_font_families=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(html_font_weight=-1)
+        OutputConfig(css_font_weight=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(html_font_weight=-1)
+        OutputConfig(css_font_weight=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(html_font_weight=-1)
+        OutputConfig(css_font_weight=-1)
 
     with pytest.raises(ValueError):
         OutputConfig(horizontal_overflow_mode=None)  # type: ignore[arg-type]
@@ -213,7 +213,7 @@ def test_output_config_default_values(
     assert config.language is SyntaxLanguage.PYTHON
     assert config.console_color_system is ConsoleColorSystem.AUTO
     assert config.color_style is SpecialColorStyles.ANSI_DARK
-    assert config.html_font_family_list == (
+    assert config.css_font_families == (
         'CommitMonoOmnipy',
         'Menlo',
         'DejaVu Sans Mono',
@@ -221,9 +221,9 @@ def test_output_config_default_values(
         'Courier New',
         'monospace',
     )
-    assert config.html_font_size == 14
-    assert config.html_font_weight == 450
-    assert config.html_line_height == 1.35
+    assert config.css_font_size == 14
+    assert config.css_font_weight == 450
+    assert config.css_line_height == 1.35
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.WORD_WRAP
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
 

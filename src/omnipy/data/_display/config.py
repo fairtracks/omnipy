@@ -451,7 +451,7 @@ class OutputConfig:
     console_color_system: ConsoleColorSystem = ConsoleColorSystem.AUTO
     color_style: ColorStyles | str = SpecialColorStyles.ANSI_DARK
     transparent_background: bool = True
-    html_font_family_list: tuple[str, ...] = (
+    css_font_families: tuple[str, ...] = (
         'CommitMonoOmnipy',
         'Menlo',
         'DejaVu Sans Mono',
@@ -459,9 +459,9 @@ class OutputConfig:
         'Courier New',
         'monospace',
     )
-    html_font_size: NonNegativeInt | None = 14
-    html_font_weight: NonNegativeInt | None = 450
-    html_line_height: NonNegativeFloat | None = 1.35
+    css_font_size: NonNegativeInt | None = 14
+    css_font_weight: NonNegativeInt | None = 450
+    css_line_height: NonNegativeFloat | None = 1.35
     horizontal_overflow_mode: HorizontalOverflowMode = HorizontalOverflowMode.WORD_WRAP
     vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.CROP_BOTTOM
 
