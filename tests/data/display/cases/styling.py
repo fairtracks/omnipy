@@ -12,6 +12,7 @@ from omnipy.data._display.config import (ConsoleColorSystem,
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.styling import StylizedMonospacedOutput
+from omnipy.util._pydantic import NonNegativeFloat, NonNegativeInt
 
 # Classes
 
@@ -182,13 +183,31 @@ def case_setup_no_frame_or_configs(transparent_background: bool) -> OutputTestCa
     )
 
 
+@pc.parametrize(
+    'css_font_families, css_font_size, css_font_weight, css_line_height',
+    [[[], None, None, None], [[], None, 500, 1.0], [('monospace',), 15, 600, 1.1]],
+    ids=['no-fonts', 'font-styling-only', 'full-font-conf'])
 @pc.parametrize('transparent_background', [False, True])
 @pc.case(id='no-frame-light-color', tags=['setup'])
-def case_setup_no_frame_color_config(transparent_background: bool) -> OutputTestCaseSetup:
+def case_setup_no_frame_color_config(css_font_families: tuple[str, ...],
+                                     css_font_size: NonNegativeInt | None,
+                                     css_font_weight: NonNegativeInt | None,
+                                     css_line_height: NonNegativeFloat | None,
+                                     transparent_background: bool) -> OutputTestCaseSetup:
+    case_id = 'no-frame-light-color' \
+              + ('-no-fonts' if css_font_weight is None else '') \
+              + ('-font-styling-only' if css_font_weight == 500 else '') \
+              + ('-full-font-conf' if css_font_families == ('monospace',) else '') \
+              + ('-no-bg' if transparent_background else '')
+
     return OutputTestCaseSetup(
-        case_id='no-frame-light-color' + ('-no-bg' if transparent_background else ''),
+        case_id=case_id,
         content="MyClass({'abc': [123, 234]})",
         config=OutputConfig(
+            css_font_families=css_font_families,
+            css_font_size=css_font_size,
+            css_font_weight=css_font_weight,
+            css_line_height=css_line_height,
             console_color_system=ConsoleColorSystem.ANSI_RGB,
             color_style=LightLowContrastColorStyles.MURPHY,
             transparent_background=transparent_background),
@@ -230,8 +249,12 @@ def case_expectations_plain_terminal(
         match case_id:
             case 'no-frame-default-color' \
                  | 'no-frame-default-color-no-bg' \
-                 | 'no-frame-light-color' \
-                 | 'no-frame-light-color-no-bg':
+                 | 'no-frame-light-color-no-fonts' \
+                 | 'no-frame-light-color-font-styling-only' \
+                 | 'no-frame-light-color-full-font-conf' \
+                 | 'no-frame-light-color-no-fonts-no-bg' \
+                 | 'no-frame-light-color-font-styling-only-no-bg' \
+                 | 'no-frame-light-color-full-font-conf-no-bg':
                 return "MyClass({'abc': [123, 234]})\n"
             case 'w-frame-dark-color-w-wrap-auto' \
                  | 'w-frame-dark-color-w-wrap-256' \
@@ -262,8 +285,12 @@ def case_expectations_bw_stylized_terminal(
             case 'no-frame-default-color' \
                  | 'no-frame-default-color-no-bg':
                 return "MyClass({'abc': [123, 234]})\n"
-            case 'no-frame-light-color' \
-                 | 'no-frame-light-color-no-bg':
+            case 'no-frame-light-color-no-fonts' \
+                 | 'no-frame-light-color-font-styling-only' \
+                 | 'no-frame-light-color-full-font-conf' \
+                 | 'no-frame-light-color-no-fonts-no-bg' \
+                 | 'no-frame-light-color-font-styling-only-no-bg' \
+                 | 'no-frame-light-color-full-font-conf-no-bg':
                 return "MyClass({'abc': [\x1b[1m123\x1b[0m, \x1b[1m234\x1b[0m]})\n"
             case 'w-frame-dark-color-w-wrap-auto' \
                  | 'w-frame-dark-color-w-wrap-256' \
@@ -296,7 +323,9 @@ def case_expectations_colorized_terminal(
                  | 'no-frame-default-color-no-bg':
                 return ("MyClass({\x1b[33m'\x1b[0m\x1b[33mabc\x1b[0m\x1b[33m'\x1b[0m: [\x1b[94m123"
                         '\x1b[0m, \x1b[94m234\x1b[0m]})\n')
-            case 'no-frame-light-color':
+            case 'no-frame-light-color-no-fonts' \
+                 | 'no-frame-light-color-font-styling-only' \
+                 | 'no-frame-light-color-full-font-conf':
                 return ('\x1b[38;2;0;0;0;48;2;255;255;255mMyClass'
                         '\x1b[0m\x1b[38;2;0;0;0;48;2;255;255;255m('
                         '\x1b[0m\x1b[38;2;0;0;0;48;2;255;255;255m{'
@@ -314,7 +343,9 @@ def case_expectations_colorized_terminal(
                         '\x1b[0m\x1b[38;2;0;0;0;48;2;255;255;255m}'
                         '\x1b[0m\x1b[38;2;0;0;0;48;2;255;255;255m)'
                         '\x1b[0m\n')
-            case 'no-frame-light-color-no-bg':
+            case 'no-frame-light-color-no-fonts-no-bg' \
+                 | 'no-frame-light-color-font-styling-only-no-bg' \
+                 | 'no-frame-light-color-full-font-conf-no-bg':
                 return ('\x1b[38;2;0;0;0mMyClass'
                         '\x1b[0m\x1b[38;2;0;0;0m('
                         '\x1b[0m\x1b[38;2;0;0;0m{'
@@ -423,12 +454,42 @@ def case_expectations_colorized_terminal(
     )
 
 
-_FONT_STYLE = (
-    "font-family: 'CommitMonoOmnipy', 'Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', "
-    "'monospace'; font-size: 14px; font-weight: 450; line-height: 1.35; ")
+def _get_font_style_by_case_id(case_id: str | None) -> str:
+    DEFAULT_FONT_STYLE = (
+        "font-family: 'CommitMonoOmnipy', 'Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', "
+        "'monospace'; font-size: 14px; font-weight: 450; line-height: 1.35; ")
+
+    FONT_STYLING_ONLY = 'font-weight: 500; line-height: 1.0; '
+
+    FULL_FONT_CONF = ("font-family: 'monospace'; font-size: 15px; "
+                      'font-weight: 600; line-height: 1.1; ')
+
+    match (case_id):
+        case str(case_id) if 'no-fonts' in case_id:
+            return ''
+        case str(case_id) if 'font-styling-only' in case_id:
+            return FONT_STYLING_ONLY
+        case str(case_id) if 'full-font-conf' in case_id:
+            return FULL_FONT_CONF
+        case _:
+            return DEFAULT_FONT_STYLE
 
 
-def _fill_html_page_template(style: str, data: str) -> str:
+def _fill_html_tag_template(data: str, color_style: str = '', case_id: str | None = None) -> str:
+    HTML_TAG_TEMPLATE = ('<pre>'
+                         '<code style="{font_style}{color_style}">'
+                         '{data}\n'
+                         '</code>'
+                         '</pre>')
+
+    return HTML_TAG_TEMPLATE.format(
+        font_style=_get_font_style_by_case_id(case_id),
+        color_style=color_style,
+        data=data,
+    )
+
+
+def _fill_html_page_template(style: str, data: str, case_id: str | None = None) -> str:
     HTML_PAGE_TEMPLATE = dedent("""\
         <!DOCTYPE html>
         <html>
@@ -445,17 +506,11 @@ def _fill_html_page_template(style: str, data: str) -> str:
         </html>
         """)
 
-    return HTML_PAGE_TEMPLATE.format(style=style, font_style=_FONT_STYLE, data=data)
-
-
-def _fill_html_tag_template(data: str, color_style: str = '') -> str:
-    HTML_TAG_TEMPLATE = ('<pre>'
-                         '<code style="{font_style}{color_style}">'
-                         '{data}\n'
-                         '</code>'
-                         '</pre>')
-
-    return HTML_TAG_TEMPLATE.format(font_style=_FONT_STYLE, color_style=color_style, data=data)
+    return HTML_PAGE_TEMPLATE.format(
+        style=style,
+        font_style=_get_font_style_by_case_id(case_id),
+        data=data,
+    )
 
 
 @pc.case(id='plain-html-tag-output', tags=['expectations'])
@@ -466,9 +521,16 @@ def case_expectations_plain_html_tag(
         match case_id:
             case 'no-frame-default-color' \
                  | 'no-frame-default-color-no-bg' \
-                 | 'no-frame-light-color' \
-                 | 'no-frame-light-color-no-bg':
-                return _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})')
+                 | 'no-frame-light-color-no-fonts' \
+                 | 'no-frame-light-color-font-styling-only' \
+                 | 'no-frame-light-color-full-font-conf' \
+                 | 'no-frame-light-color-no-fonts-no-bg' \
+                 | 'no-frame-light-color-font-styling-only-no-bg' \
+                 | 'no-frame-light-color-full-font-conf-no-bg':
+                return _fill_html_tag_template(
+                    data='MyClass({&#x27;abc&#x27;: [123, 234]})',
+                    case_id=case_id,
+                )
             case 'w-frame-dark-color-w-wrap-auto' \
                  | 'w-frame-dark-color-w-wrap-256' \
                  | 'w-frame-dark-color-w-wrap-truecolor' \
@@ -493,13 +555,21 @@ def case_expectations_bw_stylized_html_tag(
 ) -> OutputPropertyExpectations:
     def _expected_output_for_case_id(case_id: str) -> str:
         match case_id:
-            case 'no-frame-default-color' | 'no-frame-default-color-no-bg':
+            case 'no-frame-default-color' \
+                 | 'no-frame-default-color-no-bg':
                 return _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})')
-            case 'no-frame-light-color' | 'no-frame-light-color-no-bg':
+            case 'no-frame-light-color-no-fonts' \
+                 | 'no-frame-light-color-font-styling-only' \
+                 | 'no-frame-light-color-full-font-conf' \
+                 | 'no-frame-light-color-no-fonts-no-bg' \
+                 | 'no-frame-light-color-font-styling-only-no-bg' \
+                 | 'no-frame-light-color-full-font-conf-no-bg':
                 return _fill_html_tag_template(
                     data=('MyClass({&#x27;abc&#x27;: ['
                           '<span style="font-weight: bold">123</span>, '
-                          '<span style="font-weight: bold">234</span>]})'))
+                          '<span style="font-weight: bold">234</span>]})'),
+                    case_id=case_id,
+                )
             case 'w-frame-dark-color-w-wrap-auto' \
                  | 'w-frame-dark-color-w-wrap-256' \
                  | 'w-frame-dark-color-w-wrap-truecolor' \
@@ -574,15 +644,21 @@ def case_expectations_colorized_html_tag(
                     data=no_frame_default_color_exp_output,
                     color_style=ansi_dark_color_style_no_bg,
                 )
-            case 'no-frame-light-color':
+            case 'no-frame-light-color-no-fonts' \
+                 | 'no-frame-light-color-font-styling-only' \
+                 | 'no-frame-light-color-full-font-conf':
                 return _fill_html_tag_template(
                     data=no_frame_light_color_exp_output,
                     color_style=murphy_light_color_style_with_bg,
+                    case_id=case_id,
                 )
-            case 'no-frame-light-color-no-bg':
+            case 'no-frame-light-color-no-fonts-no-bg' \
+                 | 'no-frame-light-color-font-styling-only-no-bg' \
+                 | 'no-frame-light-color-full-font-conf-no-bg':
                 return _fill_html_tag_template(
                     data=no_frame_light_color_exp_output,
                     color_style=murphy_light_color_style_no_bg,
+                    case_id=case_id,
                 )
             case 'w-frame-dark-color-w-wrap-auto' \
                  | 'w-frame-dark-color-w-wrap-256' \
@@ -621,15 +697,18 @@ def case_expectations_plain_html_page(
         match case_id:
             case 'no-frame-default-color' \
                  | 'no-frame-default-color-no-bg' \
-                 | 'no-frame-light-color' \
-                 | 'no-frame-light-color-no-bg':
+                 | 'no-frame-light-color-no-fonts' \
+                 | 'no-frame-light-color-font-styling-only' \
+                 | 'no-frame-light-color-full-font-conf' \
+                 | 'no-frame-light-color-no-fonts-no-bg' \
+                 | 'no-frame-light-color-font-styling-only-no-bg' \
+                 | 'no-frame-light-color-full-font-conf-no-bg':
                 return _fill_html_page_template(
                     style=bw_light_body_style,
                     data='MyClass({&#x27;abc&#x27;: [123, 234]})',
+                    case_id=case_id,
                 )
-            case 'no-frame-light-color' \
-                 | 'no-frame-light-color-no-bg' \
-                 | 'w-frame-dark-color-w-wrap-auto' \
+            case 'w-frame-dark-color-w-wrap-auto' \
                  | 'w-frame-dark-color-w-wrap-256' \
                  | 'w-frame-dark-color-w-wrap-truecolor'\
                  | 'w-frame-dark-color-w-wrap-auto-no-bg' \
@@ -664,7 +743,8 @@ def case_expectations_bw_stylized_html_page(
 
     def _expected_output_for_case_id(case_id: str) -> str:
         match case_id:
-            case 'no-frame-default-color' | 'no-frame-default-color-no-bg':
+            case 'no-frame-default-color' \
+                 | 'no-frame-default-color-no-bg':
                 return _fill_html_page_template(
                     style=bw_light_body_style,
                     data=('MyClass({'
@@ -672,7 +752,12 @@ def case_expectations_bw_stylized_html_page(
                           '<span class="r1">123</span>, '
                           '<span class="r1">234</span>]})'),
                 )
-            case 'no-frame-light-color' | 'no-frame-light-color-no-bg':
+            case 'no-frame-light-color-no-fonts' \
+                 | 'no-frame-light-color-font-styling-only' \
+                 | 'no-frame-light-color-full-font-conf' \
+                 | 'no-frame-light-color-no-fonts-no-bg' \
+                 | 'no-frame-light-color-font-styling-only-no-bg' \
+                 | 'no-frame-light-color-full-font-conf-no-bg':
                 return _fill_html_page_template(
                     style=bold_style + bw_light_body_style,
                     data=('<span class="r1">MyClass({&#x27;abc&#x27;: [</span>'
@@ -680,6 +765,7 @@ def case_expectations_bw_stylized_html_page(
                           '<span class="r1">, </span>'
                           '<span class="r2">234</span>'
                           '<span class="r1">]})</span>'),
+                    case_id=case_id,
                 )
             case 'w-frame-dark-color-w-wrap-auto' \
                  | 'w-frame-dark-color-w-wrap-256' \
@@ -773,15 +859,22 @@ def case_expectations_colorized_html_page(
 
     def _expected_output_for_case_id(case_id: str) -> str:
         match case_id:
-            case 'no-frame-default-color' | 'no-frame-default-color-no-bg':
+            case 'no-frame-default-color' \
+                 | 'no-frame-default-color-no-bg':
                 return _fill_html_page_template(
                     style=ansi_dark_style + ansi_dark_body_style,
                     data=no_frame_default_color_exp_output,
                 )
-            case 'no-frame-light-color' | 'no-frame-light-color-no-bg':
+            case 'no-frame-light-color-no-fonts' \
+                 | 'no-frame-light-color-font-styling-only' \
+                 | 'no-frame-light-color-full-font-conf' \
+                 | 'no-frame-light-color-no-fonts-no-bg' \
+                 | 'no-frame-light-color-font-styling-only-no-bg' \
+                 | 'no-frame-light-color-full-font-conf-no-bg':
                 return _fill_html_page_template(
                     style=murphy_light_style + murphy_light_body_style,
                     data=no_frame_light_color_exp_output,
+                    case_id=case_id,
                 )
             case 'w-frame-dark-color-w-wrap-auto' \
                  | 'w-frame-dark-color-w-wrap-256' \
