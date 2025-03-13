@@ -33,28 +33,15 @@ class OutputMode(str, Enum):
 
 
 class OutputVariant:
-    _FONT_FAMILY_LIST: ClassVar[tuple[str, ...]] = (
-        'CommitMonoOmnipy',
-        'Menlo',
-        'DejaVu Sans Mono',
-        'Consolas',
-        'Courier New',
-        'monospace',
-    )
-    _FONT_FAMILY_STR: ClassVar[str] = ', '.join(f"'{_}'" for _ in _FONT_FAMILY_LIST)
-    _FONT_SIZE: ClassVar[int] = 14
-    _FONT_WEIGHT: ClassVar[int] = 450
-    _LINE_HEIGHT: ClassVar[float] = 1.35
-
     _CSS_COLOR_STYLE_TEMPLATE_FG_AND_BG: ClassVar[str] = ('color: {foreground}; '
                                                           'background-color: {background}; ')
 
     _CSS_COLOR_STYLE_TEMPLATE_FG_ONLY: ClassVar[str] = 'color: {foreground}; '
 
-    _CSS_DEFAULT_FONT_STYLE: ClassVar[str] = (f'font-family: {_FONT_FAMILY_STR}; '
-                                              f'font-size: {_FONT_SIZE}px; '
-                                              f'font-weight: {_FONT_WEIGHT}; '
-                                              f'line-height: {_LINE_HEIGHT}; ')
+    _CSS_FONT_FAMILIES_TEMPLATE: ClassVar[str] = 'font-family: {font_family_str}; '
+    _CSS_FONT_SIZE_TEMPLATE: ClassVar[str] = 'font-size: {font_size}px; '
+    _CSS_FONT_WEIGHT_TEMPLATE: ClassVar[str] = 'font-weight: {font_weight}; '
+    _CSS_LINE_HEIGHT_TEMPLATE: ClassVar[str] = 'line-height: {line_height}; '
 
     _HTML_TAG_TEMPLATE: ClassVar[str] = ('<pre>'
                                          '<code style="'
@@ -64,7 +51,7 @@ class OutputVariant:
                                          '</code>'
                                          '</pre>')
 
-    _HTML_PAGE_TEMPLATE: ClassVar[str] = dedent(f"""\
+    _HTML_PAGE_TEMPLATE: ClassVar[str] = dedent("""\
         <!DOCTYPE html>
         <html>
           <head>
@@ -78,9 +65,7 @@ class OutputVariant:
             </style>
           </head>
           <body>
-            {_HTML_TAG_TEMPLATE.format(font_style=_CSS_DEFAULT_FONT_STYLE,
-                                       color_style='',
-                                       code='{code}')}
+            {html_tag_template}
           </body>
         </html>
         """)
@@ -174,6 +159,26 @@ class OutputVariant:
 
         return console_html
 
+    def _prepare_css_font_style(self):
+        font_style = ''
+
+        if self._config.css_font_families:
+            font_style += self._CSS_FONT_FAMILIES_TEMPLATE.format(font_family_str=', '.join(
+                f"'{_}'" for _ in self._config.css_font_families))
+
+        if self._config.css_font_size:
+            font_style += self._CSS_FONT_SIZE_TEMPLATE.format(font_size=self._config.css_font_size)
+
+        if self._config.css_font_weight:
+            font_style += self._CSS_FONT_WEIGHT_TEMPLATE.format(
+                font_weight=self._config.css_font_weight)
+
+        if self._config.css_line_height:
+            font_style += self._CSS_LINE_HEIGHT_TEMPLATE.format(
+                line_height=self._config.css_line_height)
+
+        return font_style
+
     def _prepare_html_tag_template(self):
         if self._output_mode == OutputMode.COLORIZED:
             if self._config.transparent_background:
@@ -184,9 +189,20 @@ class OutputVariant:
             css_color_style = ''
 
         html_tag_template = self._HTML_TAG_TEMPLATE.format(
-            font_style=self._CSS_DEFAULT_FONT_STYLE, color_style=css_color_style, code='{code}')
+            font_style=self._prepare_css_font_style(), color_style=css_color_style, code='{code}')
 
         return html_tag_template
+
+    def _prepare_html_page_template(self):
+        html_tag_template = self._HTML_TAG_TEMPLATE.format(
+            font_style=self._prepare_css_font_style(),
+            color_style='',
+            code='{code}',
+        )
+
+        html_page_template = self._HTML_PAGE_TEMPLATE.format(html_tag_template=html_tag_template)
+
+        return html_page_template
 
     def _calculate_fg_color(self, syntax_theme: SyntaxTheme) -> ColorTriplet:
         ANSI_FG_COLOR_MAP = {'ansi_light': 'black', 'ansi_dark': 'bright_white'}
@@ -267,8 +283,8 @@ class OutputVariant:
         console_html = self._prepare_html_console_according_to_output_mode()
 
         html = console_html.export_html(
-            clear=False,
             theme=self._prepare_color_theme(for_html_page=False),
+            clear=False,
             code_format=self._prepare_html_tag_template(),
             inline_styles=True)
         html_cropped = self._vertical_crop_html(html)
@@ -282,7 +298,8 @@ class OutputVariant:
         html = console.export_html(
             clear=False,
             theme=self._prepare_color_theme(for_html_page=True),
-            code_format=self._HTML_PAGE_TEMPLATE)
+            code_format=self._prepare_html_page_template(),
+        )
         html_cropped = self._vertical_crop_html(html)
 
         return html_cropped
