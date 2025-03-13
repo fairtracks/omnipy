@@ -42,8 +42,8 @@ class OutputVariant:
         'monospace',
     )
     _FONT_FAMILY_STR: ClassVar[str] = ', '.join(f"'{_}'" for _ in _FONT_FAMILY_LIST)
-    _FONT_WEIGHT: ClassVar[int] = 450
     _FONT_SIZE: ClassVar[int] = 14
+    _FONT_WEIGHT: ClassVar[int] = 450
     _LINE_HEIGHT: ClassVar[float] = 1.35
 
     _CSS_COLOR_STYLE_TEMPLATE_FG_AND_BG: ClassVar[str] = ('color: {foreground}; '
@@ -52,8 +52,8 @@ class OutputVariant:
     _CSS_COLOR_STYLE_TEMPLATE_FG_ONLY: ClassVar[str] = 'color: {foreground}; '
 
     _CSS_DEFAULT_FONT_STYLE: ClassVar[str] = (f'font-family: {_FONT_FAMILY_STR}; '
-                                              f'font-weight: {_FONT_WEIGHT}; '
                                               f'font-size: {_FONT_SIZE}px; '
+                                              f'font-weight: {_FONT_WEIGHT}; '
                                               f'line-height: {_LINE_HEIGHT}; ')
 
     _HTML_TAG_TEMPLATE: ClassVar[str] = ('<pre>'

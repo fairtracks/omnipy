@@ -425,7 +425,7 @@ def case_expectations_colorized_terminal(
 
 _FONT_STYLE = (
     "font-family: 'CommitMonoOmnipy', 'Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', "
-    "'monospace'; font-weight: 450; font-size: 14px; line-height: 1.35; ")
+    "'monospace'; font-size: 14px; font-weight: 450; line-height: 1.35; ")
 
 
 def _fill_html_page_template(style: str, data: str) -> str:
