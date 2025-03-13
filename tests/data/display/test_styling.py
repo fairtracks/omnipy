@@ -4,7 +4,10 @@ from typing import Annotated, Callable
 import pytest
 import pytest_cases as pc
 
-from omnipy.data._display.config import OutputConfig, SpecialColorStyles, SyntaxLanguage
+from omnipy.data._display.config import (ConsoleColorSystem,
+                                         OutputConfig,
+                                         SpecialColorStyles,
+                                         SyntaxLanguage)
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.draft import DraftMonospacedOutput
@@ -135,7 +138,9 @@ def test_stylized_output_json_syntax(
     json_content = '{"values": [1, 2, 3], "nested": {"key": true}}'
 
     output = StylizedMonospacedOutput(
-        json_content, config=OutputConfig(language=SyntaxLanguage.JSON))
+        json_content,
+        config=OutputConfig(
+            language=SyntaxLanguage.JSON, console_color_system=ConsoleColorSystem.ANSI_RGB))
 
     assert output.content == json_content
     assert output.config.language == SyntaxLanguage.JSON

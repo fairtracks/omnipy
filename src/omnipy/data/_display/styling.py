@@ -4,7 +4,7 @@ from functools import cached_property
 from io import StringIO
 import re
 from textwrap import dedent
-from typing import Callable, ClassVar, Generic, Iterable, Literal, overload
+from typing import Callable, ClassVar, Generic, Iterable, overload
 
 from pygments.token import Token
 from rich.color import Color
@@ -15,7 +15,9 @@ from rich.style import Style
 from rich.syntax import Syntax, SyntaxTheme
 from rich.terminal_theme import DEFAULT_TERMINAL_THEME, TerminalTheme
 
-from omnipy.data._display.config import HorizontalOverflowMode, VerticalOverflowMode
+from omnipy.data._display.config import (ConsoleColorSystem,
+                                         HorizontalOverflowMode,
+                                         VerticalOverflowMode)
 from omnipy.data._display.draft import DraftMonospacedOutput, FrameT
 from omnipy.util._pydantic import ConfigDict, dataclass, Extra
 
@@ -154,9 +156,9 @@ class OutputVariant:
 
     @cached_property
     def terminal(self) -> str:
-        ansi_output = self._output_mode is not OutputMode.PLAIN
         console = self._prepare_terminal_console_according_to_output_mode()
-        text = console.export_text(clear=False, styles=ansi_output)
+        plain_output = self._output_mode is OutputMode.PLAIN or console._color_system is None
+        text = console.export_text(clear=False, styles=not plain_output)
         return self._vertical_crop(text)
 
     # HTML output
@@ -315,6 +317,22 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
 
         super().__init__(str_content, frame, constraints, config)
 
+    @staticmethod
+    def _clean_rich_style_caches():
+        """
+        Clears object-level caches of the Style class in the Rich library to ensure that the current
+        color system is used to render the output. This is needed as the Style caches do not take
+        the current color system into account.
+
+        """
+
+        # The cache of the '_add()' method is the main cache causing issues
+        Style._add.cache_clear()
+
+        # However, we clean these caches as well to be sure
+        Style.get_html_style.cache_clear()
+        Style.clear_meta_and_links.cache_clear()
+
     def _get_stylized_content_common(self, remove_bg_color: bool) -> Syntax:
         style_name = extract_value_if_enum(self.config.color_style)
         lexer_name = extract_value_if_enum(self.config.language)
@@ -325,6 +343,9 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
         # see https://github.com/Textualize/rich/issues/284#issuecomment-694947144)
         # does not work for HTML content.
         theme = Syntax.get_theme(style_name)
+
+        self._clean_rich_style_caches()
+
         if remove_bg_color:
             theme._background_color = None  # type: ignore[attr-defined]
             theme._background_style = Style()  # type: ignore[attr-defined]
@@ -339,10 +360,12 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
 
     @cached_property
     def _stylized_content_terminal(self) -> Syntax:
-        if self.config.transparent_background:
+        if self.config.transparent_background \
+                and self.config.console_color_system is ConsoleColorSystem.ANSI_RGB:
             return self._stylized_content_html
         else:
-            return self._get_stylized_content_common(remove_bg_color=False)
+            return self._get_stylized_content_common(
+                remove_bg_color=self.config.transparent_background)
 
     @cached_property
     def _stylized_content_html(self) -> Syntax:
@@ -374,7 +397,7 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
     def _get_console_common(
         self,
         stylized_content: Syntax,
-        color_system: Literal['auto', 'standard', '256', 'truecolor', 'windows'],
+        console_color_system: ConsoleColorSystem,
     ) -> Console:
         width, height = self._get_console_frame_width_and_height()
 
@@ -382,7 +405,7 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
             file=StringIO(),
             width=width,
             height=height,
-            color_system=color_system,
+            color_system=console_color_system.value,
             record=True,
         )
 
@@ -394,16 +417,21 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
 
     @cached_property
     def _console_terminal(self) -> Console:
-        color_system: Literal['truecolor'] = 'truecolor'  # placeholder for config
+        console_color_system = self.config.console_color_system
 
-        if self.config.transparent_background and color_system == 'truecolor':
+        if (self.config.transparent_background
+                and console_color_system is ConsoleColorSystem.ANSI_RGB):
             return self._console_html
-        return self._get_console_common(self._stylized_content_terminal, color_system)
+
+        return self._get_console_common(self._stylized_content_terminal, console_color_system)
 
     @cached_property
     def _console_html(self) -> Console:
         # Color system is hard-coded to 'truecolor' for HTML output
-        return self._get_console_common(self._stylized_content_html, color_system='truecolor')
+        return self._get_console_common(
+            self._stylized_content_html,
+            console_color_system=ConsoleColorSystem.ANSI_RGB,
+        )
 
     @cached_property
     def plain(self) -> OutputVariant:

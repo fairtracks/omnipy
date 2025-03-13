@@ -3,7 +3,8 @@ from typing import Annotated, Callable, NamedTuple
 
 import pytest_cases as pc
 
-from omnipy.data._display.config import (DarkLowContrastColorStyles,
+from omnipy.data._display.config import (ConsoleColorSystem,
+                                         DarkLowContrastColorStyles,
                                          HorizontalOverflowMode,
                                          LightLowContrastColorStyles,
                                          OutputConfig,
@@ -175,7 +176,9 @@ def case_setup_no_frame_or_configs(transparent_background: bool) -> OutputTestCa
     return OutputTestCaseSetup(
         case_id='no-frame-default-color' + ('-no-bg' if transparent_background else ''),
         content="MyClass({'abc': [123, 234]})",
-        config=OutputConfig(transparent_background=transparent_background),
+        config=OutputConfig(
+            console_color_system=ConsoleColorSystem.ANSI_RGB,
+            transparent_background=transparent_background),
     )
 
 
@@ -186,20 +189,28 @@ def case_setup_no_frame_color_config(transparent_background: bool) -> OutputTest
         case_id='no-frame-light-color' + ('-no-bg' if transparent_background else ''),
         content="MyClass({'abc': [123, 234]})",
         config=OutputConfig(
+            console_color_system=ConsoleColorSystem.ANSI_RGB,
             color_style=LightLowContrastColorStyles.MURPHY,
             transparent_background=transparent_background),
     )
 
 
+@pc.parametrize('color_system',
+                [ConsoleColorSystem.AUTO, ConsoleColorSystem.ANSI_256, ConsoleColorSystem.ANSI_RGB])
 @pc.parametrize('transparent_background', [False, True])
 @pc.case(id='w-frame-dark-color-w-wrap', tags=['setup'])
 def case_setup_small_frame_color_and_overflow_config(
-        transparent_background: bool) -> OutputTestCaseSetup:
+        color_system: ConsoleColorSystem, transparent_background: bool) -> OutputTestCaseSetup:
+
+    case_id = f'w-frame-dark-color-w-wrap-{color_system.value}' + \
+              ('-no-bg' if transparent_background else '')
+
     return OutputTestCaseSetup(
-        case_id='w-frame-dark-color-w-wrap' + ('-no-bg' if transparent_background else ''),
+        case_id=case_id,
         content="MyClass({'abc': [123, 234]})",
         frame=Frame(Dimensions(9, 3)),
         config=OutputConfig(
+            console_color_system=color_system,
             color_style=DarkLowContrastColorStyles.ZENBURN,
             transparent_background=transparent_background,
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
@@ -217,14 +228,19 @@ def case_expectations_plain_terminal(
 ) -> OutputPropertyExpectations:
     def _expected_output_for_case_id(case_id: str) -> str:
         match case_id:
-            case 'no-frame-default-color' | 'no-frame-default-color-no-bg' \
-                 | 'no-frame-light-color' | 'no-frame-light-color-no-bg':
+            case 'no-frame-default-color' \
+                 | 'no-frame-default-color-no-bg' \
+                 | 'no-frame-light-color' \
+                 | 'no-frame-light-color-no-bg':
                 return "MyClass({'abc': [123, 234]})\n"
-            case 'w-frame-dark-color-w-wrap':
+            case 'w-frame-dark-color-w-wrap-auto' \
+                 | 'w-frame-dark-color-w-wrap-256' \
+                 | 'w-frame-dark-color-w-wrap-truecolor':
                 return ("'abc':   \n"
                         '[123,    \n'
                         '234]})   \n')
-            case 'w-frame-dark-color-w-wrap-no-bg':
+            case 'w-frame-dark-color-w-wrap-auto-no-bg' | 'w-frame-dark-color-w-wrap-256-no-bg' \
+                    | 'w-frame-dark-color-w-wrap-truecolor-no-bg':
                 return ("'abc': \n"
                         '[123, \n'
                         '234]})\n')
@@ -243,15 +259,21 @@ def case_expectations_bw_stylized_terminal(
 ) -> OutputPropertyExpectations:
     def _expected_output_for_case_id(case_id: str) -> str:
         match case_id:
-            case 'no-frame-default-color' | 'no-frame-default-color-no-bg':
+            case 'no-frame-default-color' \
+                 | 'no-frame-default-color-no-bg':
                 return "MyClass({'abc': [123, 234]})\n"
-            case 'no-frame-light-color' | 'no-frame-light-color-no-bg':
+            case 'no-frame-light-color' \
+                 | 'no-frame-light-color-no-bg':
                 return "MyClass({'abc': [\x1b[1m123\x1b[0m, \x1b[1m234\x1b[0m]})\n"
-            case 'w-frame-dark-color-w-wrap':
+            case 'w-frame-dark-color-w-wrap-auto' \
+                 | 'w-frame-dark-color-w-wrap-256' \
+                 | 'w-frame-dark-color-w-wrap-truecolor':
                 return ("'abc':   \n"
                         '[123,    \n'
                         '234]})   \n')
-            case 'w-frame-dark-color-w-wrap-no-bg':
+            case 'w-frame-dark-color-w-wrap-auto-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-256-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-truecolor-no-bg':
                 return ("'abc': \n"
                         '[123, \n'
                         '234]})\n')
@@ -270,7 +292,8 @@ def case_expectations_colorized_terminal(
 ) -> OutputPropertyExpectations:
     def _expected_output_for_case_id(case_id: str) -> str:
         match case_id:
-            case 'no-frame-default-color' | 'no-frame-default-color-no-bg':
+            case 'no-frame-default-color' \
+                 | 'no-frame-default-color-no-bg':
                 return ("MyClass({\x1b[33m'\x1b[0m\x1b[33mabc\x1b[0m\x1b[33m'\x1b[0m: [\x1b[94m123"
                         '\x1b[0m, \x1b[94m234\x1b[0m]})\n')
             case 'no-frame-light-color':
@@ -309,7 +332,31 @@ def case_expectations_colorized_terminal(
                         '\x1b[0m\x1b[38;2;0;0;0m}'
                         '\x1b[0m\x1b[38;2;0;0;0m)'
                         '\x1b[0m\n')
-            case 'w-frame-dark-color-w-wrap':
+            case 'w-frame-dark-color-w-wrap-auto':
+                return ("'abc':   \n"
+                        '[123,    \n'
+                        '234]})   \n')
+            case 'w-frame-dark-color-w-wrap-256':
+                return ("\x1b[38;5;174;48;5;237m'"
+                        '\x1b[0m\x1b[38;5;174;48;5;237mabc'
+                        "\x1b[0m\x1b[38;5;174;48;5;237m'"
+                        '\x1b[0m\x1b[38;5;230;48;5;237m:'
+                        '\x1b[0m\x1b[38;5;188;48;5;237m '
+                        '\x1b[0m\x1b[48;5;237m  '
+                        '\x1b[0m\n'
+                        '\x1b[38;5;230;48;5;237m['
+                        '\x1b[0m\x1b[38;5;116;48;5;237m123'
+                        '\x1b[0m\x1b[38;5;230;48;5;237m,'
+                        '\x1b[0m\x1b[38;5;188;48;5;237m '
+                        '\x1b[0m\x1b[48;5;237m   '
+                        '\x1b[0m\n'
+                        '\x1b[38;5;116;48;5;237m234'
+                        '\x1b[0m\x1b[38;5;230;48;5;237m]'
+                        '\x1b[0m\x1b[38;5;230;48;5;237m}'
+                        '\x1b[0m\x1b[38;5;230;48;5;237m)'
+                        '\x1b[0m\x1b[48;5;237m   '
+                        '\x1b[0m\n')
+            case 'w-frame-dark-color-w-wrap-truecolor':
                 return ("\x1b[38;2;204;147;147;48;2;63;63;63m'"
                         '\x1b[0m\x1b[38;2;204;147;147;48;2;63;63;63mabc'
                         "\x1b[0m\x1b[38;2;204;147;147;48;2;63;63;63m'"
@@ -329,7 +376,28 @@ def case_expectations_colorized_terminal(
                         '\x1b[0m\x1b[38;2;240;239;208;48;2;63;63;63m)'
                         '\x1b[0m\x1b[48;2;63;63;63m   '
                         '\x1b[0m\n')
-            case 'w-frame-dark-color-w-wrap-no-bg':
+            case 'w-frame-dark-color-w-wrap-auto-no-bg':
+                return ("'abc': \n"
+                        '[123, \n'
+                        '234]})\n')
+            case 'w-frame-dark-color-w-wrap-256-no-bg':
+                return ("\x1b[38;5;174m'"
+                        '\x1b[0m\x1b[38;5;174mabc'
+                        "\x1b[0m\x1b[38;5;174m'"
+                        '\x1b[0m\x1b[38;5;230m:'
+                        '\x1b[0m\x1b[38;5;188m '
+                        '\x1b[0m\n'
+                        '\x1b[38;5;230m[\x1b['
+                        '0m\x1b[38;5;116m123'
+                        '\x1b[0m\x1b[38;5;230m,'
+                        '\x1b[0m\x1b[38;5;188m '
+                        '\x1b[0m\n'
+                        '\x1b[38;5;116m234'
+                        '\x1b[0m\x1b[38;5;230m]'
+                        '\x1b[0m\x1b[38;5;230m}'
+                        '\x1b[0m\x1b[38;5;230m)'
+                        '\x1b[0m\n')
+            case 'w-frame-dark-color-w-wrap-truecolor-no-bg':
                 return ("\x1b[38;2;204;147;147m'"
                         '\x1b[0m\x1b[38;2;204;147;147mabc'
                         "\x1b[0m\x1b[38;2;204;147;147m'"
@@ -396,10 +464,17 @@ def case_expectations_plain_html_tag(
 ) -> OutputPropertyExpectations:
     def _expected_output_for_case_id(case_id: str) -> str:
         match case_id:
-            case 'no-frame-default-color' | 'no-frame-default-color-no-bg' \
-                    | 'no-frame-light-color' | 'no-frame-light-color-no-bg':
+            case 'no-frame-default-color' \
+                 | 'no-frame-default-color-no-bg' \
+                 | 'no-frame-light-color' \
+                 | 'no-frame-light-color-no-bg':
                 return _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})')
-            case 'w-frame-dark-color-w-wrap' | 'w-frame-dark-color-w-wrap-no-bg':
+            case 'w-frame-dark-color-w-wrap-auto' \
+                 | 'w-frame-dark-color-w-wrap-256' \
+                 | 'w-frame-dark-color-w-wrap-truecolor' \
+                 | 'w-frame-dark-color-w-wrap-auto-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-256-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-truecolor-no-bg':
                 return _fill_html_tag_template(data=('&#x27;abc&#x27;: \n'
                                                      '[123, \n'
                                                      '234]})'))
@@ -425,7 +500,12 @@ def case_expectations_bw_stylized_html_tag(
                     data=('MyClass({&#x27;abc&#x27;: ['
                           '<span style="font-weight: bold">123</span>, '
                           '<span style="font-weight: bold">234</span>]})'))
-            case 'w-frame-dark-color-w-wrap' | 'w-frame-dark-color-w-wrap-no-bg':
+            case 'w-frame-dark-color-w-wrap-auto' \
+                 | 'w-frame-dark-color-w-wrap-256' \
+                 | 'w-frame-dark-color-w-wrap-truecolor' \
+                 | 'w-frame-dark-color-w-wrap-auto-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-256-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-truecolor-no-bg':
                 return _fill_html_tag_template(data=('&#x27;abc&#x27;: \n'
                                                      '[123, \n'
                                                      '234]})'))
@@ -504,12 +584,16 @@ def case_expectations_colorized_html_tag(
                     data=no_frame_light_color_exp_output,
                     color_style=murphy_light_color_style_no_bg,
                 )
-            case 'w-frame-dark-color-w-wrap':
+            case 'w-frame-dark-color-w-wrap-auto' \
+                 | 'w-frame-dark-color-w-wrap-256' \
+                 | 'w-frame-dark-color-w-wrap-truecolor':
                 return _fill_html_tag_template(
                     data=w_frame_dark_color_exp_output,
                     color_style=zenburn_dark_color_style_with_bg,
                 )
-            case 'w-frame-dark-color-w-wrap-no-bg':
+            case 'w-frame-dark-color-w-wrap-auto-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-256-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-truecolor-no-bg':
                 return _fill_html_tag_template(
                     data=w_frame_dark_color_exp_output,
                     color_style=zenburn_dark_color_style_no_bg,
@@ -535,13 +619,22 @@ def case_expectations_plain_html_page(
 
     def _expected_output_for_case_id(case_id: str) -> str:
         match case_id:
-            case 'no-frame-default-color' | 'no-frame-default-color-no-bg' \
-                    | 'no-frame-light-color' | 'no-frame-light-color-no-bg':
+            case 'no-frame-default-color' \
+                 | 'no-frame-default-color-no-bg' \
+                 | 'no-frame-light-color' \
+                 | 'no-frame-light-color-no-bg':
                 return _fill_html_page_template(
                     style=bw_light_body_style,
                     data='MyClass({&#x27;abc&#x27;: [123, 234]})',
                 )
-            case 'w-frame-dark-color-w-wrap' | 'w-frame-dark-color-w-wrap-no-bg':
+            case 'no-frame-light-color' \
+                 | 'no-frame-light-color-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-auto' \
+                 | 'w-frame-dark-color-w-wrap-256' \
+                 | 'w-frame-dark-color-w-wrap-truecolor'\
+                 | 'w-frame-dark-color-w-wrap-auto-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-256-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-truecolor-no-bg':
                 return _fill_html_page_template(
                     style=bw_light_body_style,
                     data=('&#x27;abc&#x27;: \n'
@@ -588,7 +681,12 @@ def case_expectations_bw_stylized_html_page(
                           '<span class="r2">234</span>'
                           '<span class="r1">]})</span>'),
                 )
-            case 'w-frame-dark-color-w-wrap' | 'w-frame-dark-color-w-wrap-no-bg':
+            case 'w-frame-dark-color-w-wrap-auto' \
+                 | 'w-frame-dark-color-w-wrap-256' \
+                 | 'w-frame-dark-color-w-wrap-truecolor'\
+                 | 'w-frame-dark-color-w-wrap-auto-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-256-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-truecolor-no-bg':
                 return _fill_html_page_template(
                     style=bw_light_body_style,
                     data=('<span class="r1">&#x27;abc&#x27;: </span>\n'
@@ -685,12 +783,16 @@ def case_expectations_colorized_html_page(
                     style=murphy_light_style + murphy_light_body_style,
                     data=no_frame_light_color_exp_output,
                 )
-            case 'w-frame-dark-color-w-wrap':
+            case 'w-frame-dark-color-w-wrap-auto' \
+                 | 'w-frame-dark-color-w-wrap-256' \
+                 | 'w-frame-dark-color-w-wrap-truecolor':
                 return _fill_html_page_template(
                     style=zenburn_dark_style_no_bg + zenburn_dark_body_style_with_bg,
                     data=w_frame_dark_color_exp_output,
                 )
-            case 'w-frame-dark-color-w-wrap-no-bg':
+            case 'w-frame-dark-color-w-wrap-auto-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-256-no-bg' \
+                 | 'w-frame-dark-color-w-wrap-truecolor-no-bg':
                 return _fill_html_page_template(
                     style=zenburn_dark_style_no_bg + zenburn_dark_body_style_no_bg,
                     data=w_frame_dark_color_exp_output,
