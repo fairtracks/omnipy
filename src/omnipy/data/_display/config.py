@@ -459,8 +459,8 @@ class OutputConfig:
         'Courier New',
         'monospace',
     )
-    html_font_weight: NonNegativeInt | None = 450
     html_font_size: NonNegativeInt | None = 14
+    html_font_weight: NonNegativeInt | None = 450
     html_line_height: NonNegativeFloat | None = 1.35
     horizontal_overflow_mode: HorizontalOverflowMode = HorizontalOverflowMode.WORD_WRAP
     vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.CROP_BOTTOM

@@ -23,8 +23,8 @@ def test_output_config(
         console_color_system=ConsoleColorSystem.ANSI_RGB,
         color_style=DarkLowContrastColorStyles.ONE_DARK,
         html_font_family_list=('Menlo', 'monospace'),
-        html_font_weight=400,
         html_font_size=16,
+        html_font_weight=400,
         html_line_height=1.0,
         horizontal_overflow_mode=HorizontalOverflowMode.CROP,
         vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
@@ -37,8 +37,8 @@ def test_output_config(
     assert config.console_color_system is ConsoleColorSystem.ANSI_RGB
     assert config.color_style is DarkLowContrastColorStyles.ONE_DARK
     assert config.html_font_family_list == ('Menlo', 'monospace')
-    assert config.html_font_weight == 400
     assert config.html_font_size == 16
+    assert config.html_font_weight == 400
     assert config.html_line_height == 1.0
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.CROP
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_TOP
@@ -51,8 +51,8 @@ def test_output_config(
         console_color_system='256',  # type: ignore[arg-type]
         color_style='xcode',
         html_font_family_list=[],  # type: ignore[arg-type]
-        html_font_weight='400',  # type: ignore[arg-type]
         html_font_size='16',  # type: ignore[arg-type]
+        html_font_weight='400',  # type: ignore[arg-type]
         html_line_height='1',  # type: ignore[arg-type]
         horizontal_overflow_mode='ellipsis',  # type: ignore[arg-type]
         vertical_overflow_mode='crop_bottom',  # type: ignore[arg-type]
@@ -64,8 +64,8 @@ def test_output_config(
     assert config.console_color_system is ConsoleColorSystem.ANSI_256
     assert config.color_style is LightHighContrastColorStyles.XCODE
     assert config.html_font_family_list == ()
-    assert config.html_font_weight == 400
     assert config.html_font_size == 16
+    assert config.html_font_weight == 400
     assert config.html_line_height == 1.0
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
@@ -75,8 +75,8 @@ def test_output_config(
         html_font_size=None,
         html_line_height=None,
     )
-    assert config.html_font_weight is None
     assert config.html_font_size is None
+    assert config.html_font_weight is None
     assert config.html_line_height is None
 
 
@@ -131,17 +131,17 @@ def test_output_config_validate_assignments(
     with pytest.raises(ValueError):
         config.html_font_family_list = 'monospace'  # type: ignore[assignment]
 
-    config.html_font_weight = '500'  # type: ignore[assignment]
-    assert config.html_font_weight == 500
-
-    with pytest.raises(ValueError):
-        config.html_font_weight = 'abc'  # type: ignore[assignment]
-
     config.html_font_size = '18'  # type: ignore[assignment]
     assert config.html_font_size == 18
 
     with pytest.raises(ValueError):
         config.html_font_size = 'abc'  # type: ignore[assignment]
+
+    config.html_font_weight = '500'  # type: ignore[assignment]
+    assert config.html_font_weight == 500
+
+    with pytest.raises(ValueError):
+        config.html_font_weight = 'abc'  # type: ignore[assignment]
 
     config.html_line_height = '1.5'  # type: ignore[assignment]
     assert config.html_line_height == 1.5
@@ -221,8 +221,8 @@ def test_output_config_default_values(
         'Courier New',
         'monospace',
     )
-    assert config.html_font_weight == 450
     assert config.html_font_size == 14
+    assert config.html_font_weight == 450
     assert config.html_line_height == 1.35
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.WORD_WRAP
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
