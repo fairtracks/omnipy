@@ -58,7 +58,10 @@ class SpecialColorStyles(str, Enum):
     """
     ANSI_DARK = 'ansi_dark'
     ANSI_LIGHT = 'ansi_light'
-    OMNIPY_TOKYO_CITY_TERMINAL_LIGHT = 'omnipy-tokyo-city-terminal-light'
+    OMNIPY_SELENIZED_BLACK = 'omnipy-selenized-black'
+    OMNIPY_SELENIZED_DARK = 'omnipy-selenized-dark'
+    OMNIPY_SELENIZED_LIGHT = 'omnipy-selenized-light'
+    OMNIPY_SELENIZED_WHITE = 'omnipy-selenized-white'
 
 
 class DarkHighContrastColorStyles(str, Enum):
