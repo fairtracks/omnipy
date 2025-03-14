@@ -9,7 +9,7 @@ from omnipy.data._display.config import (DarkHighContrastColorStyles,
                                          LightHighContrastColorStyles,
                                          LightLowContrastColorStyles,
                                          OutputConfig,
-                                         SpecialColorStyles)
+                                         RecommendedColorStyles)
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.draft import DraftMonospacedOutput, DraftOutput
 from omnipy.data._display.frame import Frame
@@ -41,7 +41,7 @@ inputs = [
 ]
 
 styles = []
-for style_enum in (SpecialColorStyles,
+for style_enum in (RecommendedColorStyles,
                    DarkHighContrastColorStyles,
                    DarkLowContrastColorStyles,
                    LightHighContrastColorStyles,

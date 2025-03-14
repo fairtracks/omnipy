@@ -6,7 +6,7 @@ import pytest_cases as pc
 
 from omnipy.data._display.config import (ConsoleColorSystem,
                                          OutputConfig,
-                                         SpecialColorStyles,
+                                         RecommendedColorStyles,
                                          SyntaxLanguage)
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
@@ -33,7 +33,7 @@ def test_stylized_output_init(
         constraints=Constraints(),
         config=OutputConfig(
             language=SyntaxLanguage.PYTHON,
-            color_style=SpecialColorStyles.ANSI_LIGHT,
+            color_style=RecommendedColorStyles.ANSI_LIGHT,
         ),
     )
 
