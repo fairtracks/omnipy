@@ -1,5 +1,6 @@
 from typing import Annotated
 
+import pygments.styles
 import pytest
 
 from omnipy.data._display.config import (ConsoleColorSystem,
@@ -238,3 +239,11 @@ def test_fail_output_config_no_positional_parameters(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     with pytest.raises(TypeError):
         OutputConfig(2, True)  # type: ignore
+
+
+def test_config_autoimport_base16_color_style(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    style_name = 'tb16-zenburn'
+    OutputConfig(color_style=style_name)  # To trigger the auto-import
+    pygments_style = pygments.styles.get_style_by_name(style_name)
+    assert pygments_style.background_color == '#383838'

@@ -2,7 +2,9 @@ from enum import Enum
 
 from pygments.lexers import get_lexer_by_name
 from pygments.styles import get_style_by_name
+from pygments.util import ClassNotFound
 
+from omnipy.data._display.styles.dynamic_styles import install_base16_theme
 from omnipy.util._pydantic import (ConfigDict,
                                    dataclass,
                                    Extra,
@@ -466,17 +468,32 @@ class OutputConfig:
     vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.CROP_BOTTOM
 
     @validator('language')
-    def validate_language(cls, value: SyntaxLanguage | str) -> SyntaxLanguage | str:
-        if isinstance(value, SyntaxLanguage):
-            return value
-        elif get_lexer_by_name(value):
-            return value
-        raise ValueError(f'Invalid syntax language: {value}')
+    def validate_language(cls, language: SyntaxLanguage | str) -> SyntaxLanguage | str:
+        try:
+            if isinstance(language, SyntaxLanguage):
+                return language
+            elif get_lexer_by_name(language):
+                return language
+            else:
+                raise ValueError(f'Invalid syntax language: {language}')
+        except ClassNotFound as exp:
+            raise ValueError(f'Invalid syntax language: {language}') from exp
 
     @validator('color_style')
-    def validate_color_style(cls, value: ColorStyles | str) -> ColorStyles | str:
-        if isinstance(value, ColorStyles):
-            return value
-        elif get_style_by_name(value):
-            return value
-        raise ValueError(f'Invalid syntax language: {value}')
+    def validate_color_style(cls, color_style: ColorStyles | str) -> ColorStyles | str:
+        try:
+            if isinstance(color_style, SpecialColorStyles):
+                return color_style
+            elif isinstance(color_style, ColorStyles):
+                try:
+                    get_style_by_name(color_style.value)
+                except ClassNotFound:
+                    install_base16_theme(color_style.value)
+                    get_style_by_name(color_style.value)
+                return color_style
+            elif get_style_by_name(color_style):
+                return color_style
+            else:
+                raise ValueError(f'Invalid color style: {color_style}')
+        except ClassNotFound as exp:
+            raise ValueError(f'Invalid color style: {color_style}') from exp

@@ -1,4 +1,5 @@
 import asyncio
+from functools import cache
 
 import aiohttp
 from inflection import dasherize, underscore
@@ -73,6 +74,7 @@ def _capitalize_words(text: str) -> str:
     return ' '.join(word.capitalize() for word in text.split())
 
 
+@cache
 def __getattr__(attr: str) -> type[Style]:
     try:
         if attr.startswith(_STYLE_CLS_NAME_BASE16_PREFIX) and attr.endswith(_STYLE_CLS_NAME_SUFFIX):
