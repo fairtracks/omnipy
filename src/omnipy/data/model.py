@@ -277,6 +277,9 @@ class Model(
 
             cls._clean_type_caches()
 
+    # TODO: Add TYPE_CHECKING override for __iter__ method, as BaseModel.__iter__() iterates over
+    #       tuples. E.g. `for item in Model[list[int]]([1,2,3]): reveal_type(item)` should reveal
+    #       type `int` instead of `tuple[str, Any]`.
     if TYPE_CHECKING:  # noqa: C901
         from ._mimic_models import (Model_bool,
                                     Model_dict,
