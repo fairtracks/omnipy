@@ -1,3 +1,4 @@
+# import asyncio
 from collections import defaultdict
 
 from inflection import underscore
@@ -30,6 +31,7 @@ async def get_github_repo_urls(owner: str, repo: str, branch: str, path: str,
 
 
 async def get_all_tinted_themes() -> defaultdict[tuple[bool, str], list[str]]:
+    # `pip install color-contrast` to run
     from color_contrast import AccessibilityLevel, check_contrast
 
     all_theme_urls = await get_github_repo_urls('tinted-theming',
@@ -50,7 +52,8 @@ async def get_all_tinted_themes() -> defaultdict[tuple[bool, str], list[str]]:
 
 
 # themes_per_variant = asyncio.run(get_all_tinted_themes())
-
+#
+# print(themes_per_variant)
 # Per Feb 23, 2025, the output of this script is:
 themes_per_variant = {
     (True, 'dark'): [
@@ -342,7 +345,7 @@ for key, value in themes_per_variant.items():
         print(f"{enum_constant} = '{pygments_theme_name}'")
         pyproject_lines.append(f'"{pygments_theme_name}"'
                                f' = "omnipy.data._display.styles.dynamic_styles:'
-                               f'{_create_base_16_class_name_from_theme_key(name)}"')
+                               f'{_create_base_16_class_name_from_theme_key(pygments_theme_name)}"')
 
 for line in sorted(pyproject_lines):
     print(line)
