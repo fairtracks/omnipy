@@ -18,7 +18,7 @@ from rich.terminal_theme import DEFAULT_TERMINAL_THEME, TerminalTheme
 from omnipy.data._display.config import (ConsoleColorSystem,
                                          HorizontalOverflowMode,
                                          VerticalOverflowMode)
-from omnipy.data._display.draft import DraftMonospacedOutput, FrameT
+from omnipy.data._display.panel import DraftMonospacedOutput, FrameT
 from omnipy.util._pydantic import ConfigDict, dataclass, Extra
 
 
