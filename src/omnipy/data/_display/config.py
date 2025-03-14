@@ -1,4 +1,5 @@
 from enum import Enum
+from textwrap import dedent
 
 from pygments.lexers import get_lexer_by_name
 from pygments.styles import get_style_by_name
@@ -16,17 +17,37 @@ MAX_TERMINAL_SIZE = 2**16 - 1
 
 
 class PrettyPrinterLib(str, Enum):
+    """
+    Supported libraries for pretty printing of Python data structures.
+
+    For most data structures, the outputs are more or less the same.
+    However, the RICH library formats the width of the output on a per-item
+    basis, while the DEVTOOLS library formats the width of the output based
+    on the maximum width of the output. This means that the RICH library
+    will in many cases produce a more compact output, which is typically
+    recommended.
+
+    The libraries are:
+    - `RICH`: The Rich library (https://rich.readthedocs.io/en/stable/).
+        This is the default value.
+    - `DEVTOOLS`: The Python Devtools library
+        (https://python-devtools.helpmanual.io/). Included for future
+        testing for data types such as numpy arrays, but might become
+        deprecated in the future.
+    """
     RICH = 'rich'
     DEVTOOLS = 'devtools'
 
 
 class SyntaxLanguage(str, Enum):
     """
-    A selected subset of the languages supported by the Pygments library
-    (https://pygments.org/languages/), assumed to be the ones most relevant for Omnipy. All
-    parameters accepting a syntax language should also accept a string with the name of the
-    language, allowing the user to specify a language not present in this enum.
+    Supported languages for syntax recognition and highlighting.
+
+    A selected subset of the lexer languages supported by the Pygments
+    library (https://pygments.org/languages/), assumed to be the ones most
+    relevant for Omnipy.
     """
+
     PYTHON = 'python'
     JSON = 'json'
     JSON_LD = 'json-ld'
@@ -44,6 +65,23 @@ class SyntaxLanguage(str, Enum):
 
 
 class ConsoleColorSystem(str, Enum):
+    """
+    Supported console color systems for syntax highlighting.
+
+    The color systems map to the color systems provided by the Rich library
+    (https://rich.readthedocs.io/en/stable/console.html#color-systems).
+    The names have been slightly modified to be more descriptive.
+
+    The color systems are:
+    - `AUTO`: The default color system, which is automatically detected
+        based on the terminal capabilities. This is the default value.
+    - `ANSI_16`: The standard ANSI color system, which supports 16 colors.
+    - `ANSI_256`: The extended ANSI color system, which supports 256 colors.
+    - `ANSI_RGB`: The truecolor ANSI color system, which supports 16 million
+        colors. Most modern terminals support this color system.
+    - `WINDOWS_LEGACY`: The legacy Windows color system, for backwards
+        compatibility with older Windows terminals.
+    """
     AUTO = 'auto'
     ANSI_16 = 'standard'
     ANSI_256 = '256'
@@ -53,8 +91,46 @@ class ConsoleColorSystem(str, Enum):
 
 class RecommendedColorStyles(str, Enum):
     """
-    Color styles that make use of the ANSI color settings in the terminal instead of overriding with
-    a predefined color style.
+    Recommended color styles for syntax highlighting, provided through the
+    Pygments and Rich libraries.
+
+    The Omnipy Selenized styles are based on the Selenized color scheme by
+    Jan Warchoł (https://github.com/jan-warchol/selenized).
+
+    Features:
+    - Easy on the eyes.
+    - Beautiful, vibrant and easily distinguishable accent colors.
+    - Great readability and better compatibility with Web Content
+      Accessibility Guidelines.
+
+    The Omnipy adaptations features slightly less contrast for comment
+    colors, which is offset by the use of italics to make them stand out.
+    These color styles work well with transparent backgrounds to blend in
+    with the current terminal theme. For best results, you should change
+    the background color of the terminal (or the complete color theme) to
+    align with the Omnipy Selenized styles.
+
+    The Omnipy Selenized styles are available in four variants:
+    - Black: A slightly soft dark theme with an almost black background,
+             suitable also on a fully black background
+    - Dark: A dark theme on a dark bluish background,
+            a bit harsh on a fully black background
+    - Light: A soft light theme on an off-white background,
+             suitable also on a fully white background for a softer feel
+    - White: A light theme on a fully white background
+
+    The ANSI color settings from the Rich library are set as default out of
+    pragmatism, as they make use of the predefined colors of the terminal
+    instead of overriding with a predefined color style. The ANSI dark
+    variant seems to be slightly more readable across both light and dark
+    terminal themes. However, if you are using a light theme, you may want
+    to use the light variant of the ANSI color style.
+
+    The ANSI color styles are provided to make Omnipy work ok on a wider
+    range of terminals, but they are not recommended for use in the long
+    run. For best results, you should switch to the light or white variants
+    of the Omnipy Selenized styles, or to another color style of your
+    choice.
     """
     ANSI_DARK = 'ansi_dark'
     ANSI_LIGHT = 'ansi_light'
@@ -64,10 +140,32 @@ class RecommendedColorStyles(str, Enum):
     OMNIPY_SELENIZED_WHITE = 'omnipy-selenized-white'
 
 
+_GENERAL_COLOR_STYLE_DOCSTRING = dedent("""
+    All color styles are provided through the Pygments library. See
+    the Pygment docs for an overview of the Pygment-included styles:
+    https://pygments.org/styles/
+
+    The "TB16" prefix indicates that the style is based on the Base16 color
+    framework and auto-imported from the [color scheme repository]
+    (https://github.com/tinted-theming/schemes) of the [Tinted Theming]
+    (https://github.com/tinted-theming) project. The Base16 color framework
+    was designed by Chris Kempson (https://github.com/chriskempson/base16).
+
+    For a gallery of the "Tinted Theming" Base16 color schemes, see
+    https://tinted-theming.github.io/tinted-gallery/.
+
+    The mapping of the Base16 color framework onto the Pygments library is
+    Omnipy-specific, and available as the function
+    `get_styles_from_base16_colors()` in the
+    `omnipy.data._display.styles.dynamic_styles` module.
+    """)
+
+
 class DarkHighContrastColorStyles(str, Enum):
-    """
-    High contrast dark color styles for syntax highlighting, provided by the Pygments library.
-    """
+    __doc__ = dedent("""
+        High contrast dark color styles for syntax highlighting.
+        """) + _GENERAL_COLOR_STYLE_DOCSTRING
+
     GITHUB_DARK = 'github-dark'
     LIGHTBULB = 'lightbulb'
     MONOKAI = 'monokai'
@@ -251,9 +349,10 @@ class DarkHighContrastColorStyles(str, Enum):
 
 
 class DarkLowContrastColorStyles(str, Enum):
-    """
-    Lower contrast dark color styles for syntax highlighting, provided by the Pygments library.
-    """
+    __doc__ = dedent("""
+        Lower contrast dark color styles for syntax highlighting.
+        """) + _GENERAL_COLOR_STYLE_DOCSTRING
+
     COFFEE = 'coffee'
     DRACULA = 'dracula'
     FRUITY = 'fruity'
@@ -289,9 +388,10 @@ class DarkLowContrastColorStyles(str, Enum):
 
 
 class LightHighContrastColorStyles(str, Enum):
-    """
-    High contrast light color styles for syntax highlighting, provided by the Pygments library.
-    """
+    __doc__ = dedent("""
+        High contrast light color styles for syntax highlighting.
+        """) + _GENERAL_COLOR_STYLE_DOCSTRING
+
     BW = 'bw'
     DEFAULT = 'default'
     SAS = 'sas'
@@ -372,9 +472,10 @@ class LightHighContrastColorStyles(str, Enum):
 
 
 class LightLowContrastColorStyles(str, Enum):
-    """
-    Lower contrast light color styles for syntax highlighting, provided by the Pygments library.
-    """
+    __doc__ = dedent("""
+        Lower contrast dark color styles for syntax highlighting.
+        """) + _GENERAL_COLOR_STYLE_DOCSTRING
+
     ABAP = 'abap'
     ALGOL = 'algol'
     ALGOL_NU = 'algol_nu'
@@ -423,16 +524,19 @@ AllColorStyles = _get_all_color_styles()
 ColorStyles = (
     RecommendedColorStyles | DarkHighContrastColorStyles | DarkLowContrastColorStyles
     | LightHighContrastColorStyles | LightLowContrastColorStyles)
-"""
-All color styles for syntax highlighting, provided by the Pygments library.
-All parameters accepting a color style should also accept a string with the name of the style,
-allowing the user to specify imported or custom styles not present in these enums.
-"""
 
 
 class HorizontalOverflowMode(str, Enum):
     """
-    Horizontal overflow modes for the console output.
+    Horizontal overflow modes for the output.
+
+    The horizontal overflow modes are:
+    - `ELLIPSIS`: Adds an ellipsis (...) at the end of the line if it
+        exceeds the width.
+    - `CROP`: Crops the line to fit within the width, without adding an
+        ellipsis.
+    - `WORD_WRAP`: Wraps the line to the next line if it exceeds the
+        width, breaking according to the specified syntax language.
     """
     ELLIPSIS = 'ellipsis'
     CROP = 'crop'
@@ -441,7 +545,12 @@ class HorizontalOverflowMode(str, Enum):
 
 class VerticalOverflowMode(str, Enum):
     """
-    Vertical overflow modes for the console output.
+    Vertical overflow modes for the output.
+
+    The vertical overflow modes are:
+    - `CROP_TOP`: Crops the top of the output if it exceeds the height.
+    - `CROP_BOTTOM`: Crops the bottom of the output if it exceeds the
+        height.
     """
     CROP_TOP = 'crop_top'
     CROP_BOTTOM = 'crop_bottom'
@@ -449,6 +558,61 @@ class VerticalOverflowMode(str, Enum):
 
 @dataclass(kw_only=True, config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
 class OutputConfig:
+    """
+    Configuration of data formatting for DraftOutput (and subclasses).
+
+    This class manages all aspects of output rendering, including syntax
+    highlighting, color schemes, font settings, and overflow behavior for
+    both terminal and HTML output. It is intended to be used for a specific
+    instance of DraftOutput, and not as a global configuration.
+
+    Args:
+        indent_tab_size (NonNegativeInt): Number of spaces to use for each
+            indentation level.
+        debug_mode (bool): When True, enables additional debugging
+            information in the output, such as the hierarchy of the Model
+            objects.
+        pretty_printer (PrettyPrinterLib): Library to use for pretty
+            printing (rich or devtools).
+        language (SyntaxLanguage | str): Syntax language for code
+            highlighting. Supported lexers are defined in SyntaxLanguage.
+            For non-supported styles, the user can specify a string with the
+            Pygments lexer name. For this to work, the lexer must be
+            registered in the Pygments library.
+        console_color_system (ConsoleColorSystem): Color system to use for
+            terminal output. The default is AUTO, which automatically
+            detects the color system based on particular environment
+            variables. If color capabilities are not detected, the output
+            will be in black and white. If the color system of a modern
+            consoles/terminal is not auto-detected (which is the case for
+            e.g. the PyCharm console), the user might want to set the color
+            system manually to ANSI_RGB to force color output.
+        color_style (ColorStyles | str): Color style/theme for syntax
+            highlighting. Supported styles are defined in AllColorStyles.
+            For non-supported languages, the user can specify a string with
+            the Pygments style name. For this to work, the style must be
+            registered in the Pygments library.
+        transparent_background (bool): If True, uses transparent background
+            for the output. In the case of terminal output, the background
+            color will be the current background color of the terminal. For
+            HTML output, the background color will be automatically set to
+            pure black or pure white, depending on the luminosity of the
+            foreground color.
+        css_font_families (Tuple[str, ...]): Font families to use in HTML
+            output, in order of preference (empty tuple for browser
+            default).
+        css_font_size (NonNegativeInt | None): Font size in pixels for HTML
+            output (None for browser default).
+        css_font_weight (NonNegativeInt | None): Font weight for HTML
+            output (None for browser default).
+        css_line_height (NonNegativeFloat | None): Line height multiplier
+            for HTML output (None for browser default).
+        horizontal_overflow_mode (HorizontalOverflowMode): How to handle
+            text that exceeds the width.
+        vertical_overflow_mode (VerticalOverflowMode): How to handle text
+            that exceeds the height.
+    """
+
     indent_tab_size: NonNegativeInt = 2
     debug_mode: bool = False
     pretty_printer: PrettyPrinterLib = PrettyPrinterLib.RICH
