@@ -51,7 +51,7 @@ class ConsoleColorSystem(str, Enum):
     WINDOWS_LEGACY = 'windows'
 
 
-class SpecialColorStyles(str, Enum):
+class RecommendedColorStyles(str, Enum):
     """
     Color styles that make use of the ANSI color settings in the terminal instead of overriding with
     a predefined color style.
@@ -408,7 +408,7 @@ class LightLowContrastColorStyles(str, Enum):
 
 def _get_all_color_styles() -> dict[str, str]:
     all_color_styles = {}
-    for style_set in (SpecialColorStyles,
+    for style_set in (RecommendedColorStyles,
                       DarkHighContrastColorStyles,
                       DarkLowContrastColorStyles,
                       LightHighContrastColorStyles,
@@ -421,7 +421,7 @@ def _get_all_color_styles() -> dict[str, str]:
 AllColorStyles = _get_all_color_styles()
 
 ColorStyles = (
-    SpecialColorStyles | DarkHighContrastColorStyles | DarkLowContrastColorStyles
+    RecommendedColorStyles | DarkHighContrastColorStyles | DarkLowContrastColorStyles
     | LightHighContrastColorStyles | LightLowContrastColorStyles)
 """
 All color styles for syntax highlighting, provided by the Pygments library.
@@ -454,7 +454,7 @@ class OutputConfig:
     pretty_printer: PrettyPrinterLib = PrettyPrinterLib.RICH
     language: SyntaxLanguage | str = SyntaxLanguage.PYTHON
     console_color_system: ConsoleColorSystem = ConsoleColorSystem.AUTO
-    color_style: ColorStyles | str = SpecialColorStyles.ANSI_DARK
+    color_style: ColorStyles | str = RecommendedColorStyles.ANSI_DARK
     transparent_background: bool = True
     css_font_families: tuple[str, ...] = (
         'CommitMonoOmnipy',
@@ -485,7 +485,7 @@ class OutputConfig:
     @validator('color_style')
     def validate_color_style(cls, color_style: ColorStyles | str) -> ColorStyles | str:
         try:
-            if isinstance(color_style, SpecialColorStyles):
+            if isinstance(color_style, RecommendedColorStyles):
                 return color_style
             elif isinstance(color_style, ColorStyles):
                 try:

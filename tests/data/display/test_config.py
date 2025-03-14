@@ -9,7 +9,7 @@ from omnipy.data._display.config import (ConsoleColorSystem,
                                          LightHighContrastColorStyles,
                                          OutputConfig,
                                          PrettyPrinterLib,
-                                         SpecialColorStyles,
+                                         RecommendedColorStyles,
                                          SyntaxLanguage,
                                          VerticalOverflowMode)
 
@@ -213,7 +213,7 @@ def test_output_config_default_values(
     assert config.pretty_printer is PrettyPrinterLib.RICH
     assert config.language is SyntaxLanguage.PYTHON
     assert config.console_color_system is ConsoleColorSystem.AUTO
-    assert config.color_style is SpecialColorStyles.ANSI_DARK
+    assert config.color_style is RecommendedColorStyles.ANSI_DARK
     assert config.css_font_families == (
         'CommitMonoOmnipy',
         'Menlo',
