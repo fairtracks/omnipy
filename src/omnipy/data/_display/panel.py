@@ -1,7 +1,7 @@
 from dataclasses import asdict
 from functools import cached_property
 import re
-from typing import ClassVar, Generic
+from typing import cast, ClassVar, Generic
 
 from typing_extensions import TypeVar
 
@@ -16,16 +16,30 @@ ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)
 FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
 
 
-@dataclass(config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
-class DraftOutput(Generic[ContentT, FrameT]):
-    content: ContentT
-    frame: FrameT = Field(default_factory=Frame)
-    constraints: Constraints = Field(default_factory=Constraints)
-    config: OutputConfig = Field(default_factory=OutputConfig)
+@dataclass(init=False, config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
+class Panel(Generic[FrameT]):
+    """Base panel class that only contains frame information."""
+    frame: FrameT
+
+    def __init__(self, frame: FrameT | None = None):
+        self.frame = frame or cast(FrameT, Frame())
 
     @validator('frame')
     def _copy_frame(cls, frame: Frame) -> Frame:
         return Frame(dims=frame.dims)
+
+
+@dataclass(init=False, config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
+class DraftOutput(Panel[FrameT], Generic[ContentT, FrameT]):
+    content: ContentT
+    constraints: Constraints = Field(default_factory=Constraints)
+    config: OutputConfig = Field(default_factory=OutputConfig)
+
+    def __init__(self, content: ContentT, frame=None, constraints=None, config=None):
+        object.__setattr__(self, 'content', content)
+        object.__setattr__(self, 'frame', frame or Frame())
+        object.__setattr__(self, 'constraints', constraints or Constraints())
+        object.__setattr__(self, 'config', config or OutputConfig())
 
     @validator('constraints')
     def _copy_constraints(cls, constraints: Constraints) -> Constraints:
@@ -44,12 +58,6 @@ class DraftOutput(Generic[ContentT, FrameT]):
 class DraftMonospacedOutput(DraftOutput[str, FrameT], Generic[FrameT]):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
     content: str
-
-    def __init__(self, content: str, frame=None, constraints=None, config=None):
-        object.__setattr__(self, 'content', content)
-        object.__setattr__(self, 'frame', frame or Frame())
-        object.__setattr__(self, 'constraints', constraints or Constraints())
-        object.__setattr__(self, 'config', config or OutputConfig())
 
     def __setattr__(self, key, value):
         if key in ['content', 'frame', 'constraints', 'config']:

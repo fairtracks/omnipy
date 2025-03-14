@@ -11,8 +11,8 @@ from omnipy.data._display.config import (DarkHighContrastColorStyles,
                                          OutputConfig,
                                          RecommendedColorStyles)
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.draft import DraftMonospacedOutput, DraftOutput
 from omnipy.data._display.frame import Frame
+from omnipy.data._display.panel import DraftMonospacedOutput, DraftOutput
 from omnipy.data._display.pretty import pretty_repr_of_draft_output
 from omnipy.data._display.styling import StylizedMonospacedOutput
 from omnipy.data.typechecks import is_model_instance
