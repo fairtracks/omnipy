@@ -11,7 +11,7 @@ from omnipy.data._display.config import (ConsoleColorSystem,
                                          VerticalOverflowMode)
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.data._display.styling import StylizedMonospacedOutput
+from omnipy.data._display.panel.styling import StylizedMonospacedOutput
 from omnipy.util._pydantic import NonNegativeFloat, NonNegativeInt
 
 # Classes
@@ -326,23 +326,22 @@ def case_expectations_colorized_terminal(
             case 'no-frame-light-color-no-fonts' \
                  | 'no-frame-light-color-font-styling-only' \
                  | 'no-frame-light-color-full-font-conf':
-                return ('\x1b[38;2;0;0;0;48;2;255;255;255mMyClass'
-                        '\x1b[0m\x1b[38;2;0;0;0;48;2;255;255;255m('
-                        '\x1b[0m\x1b[38;2;0;0;0;48;2;255;255;255m{'
-                        "\x1b[0m\x1b[38;2;0;0;0;48;2;224;224;255m'"
-                        '\x1b[0m\x1b[38;2;0;0;0;48;2;224;224;255mabc'
-                        "\x1b[0m\x1b[38;2;0;0;0;48;2;224;224;255m'"
-                        '\x1b[0m\x1b[38;2;0;0;0;48;2;255;255;255m:'
-                        '\x1b[0m\x1b[38;2;0;0;0;48;2;255;255;255m '
-                        '\x1b[0m\x1b[38;2;0;0;0;48;2;255;255;255m['
-                        '\x1b[0m\x1b[1;38;2;102;102;255;48;2;255;255;255m123'
-                        '\x1b[0m\x1b[38;2;0;0;0;48;2;255;255;255m,'
-                        '\x1b[0m\x1b[38;2;0;0;0;48;2;255;255;255m '
-                        '\x1b[0m\x1b[1;38;2;102;102;255;48;2;255;255;255m234'
-                        '\x1b[0m\x1b[38;2;0;0;0;48;2;255;255;255m]'
-                        '\x1b[0m\x1b[38;2;0;0;0;48;2;255;255;255m}'
-                        '\x1b[0m\x1b[38;2;0;0;0;48;2;255;255;255m)'
-                        '\x1b[0m\n')
+                return ('\x1b[38;2;0;0;0;48;2;255;255;255mMyClass\x1b[0m'
+                        '\x1b[38;2;0;0;0;48;2;255;255;255m(\x1b[0m'
+                        '\x1b[38;2;0;0;0;48;2;255;255;255m{\x1b[0m'
+                        "\x1b[38;2;0;0;0;48;2;224;224;255m'\x1b[0m"
+                        '\x1b[38;2;0;0;0;48;2;224;224;255mabc\x1b[0m'
+                        "\x1b[38;2;0;0;0;48;2;224;224;255m'\x1b[0m"
+                        '\x1b[38;2;0;0;0;48;2;255;255;255m:\x1b[0m'
+                        '\x1b[38;2;0;0;0;48;2;255;255;255m \x1b[0m'
+                        '\x1b[38;2;0;0;0;48;2;255;255;255m[\x1b[0m'
+                        '\x1b[1;38;2;102;102;255;48;2;255;255;255m123\x1b[0m'
+                        '\x1b[38;2;0;0;0;48;2;255;255;255m,\x1b[0m'
+                        '\x1b[38;2;0;0;0;48;2;255;255;255m \x1b[0m'
+                        '\x1b[1;38;2;102;102;255;48;2;255;255;255m234\x1b[0m'
+                        '\x1b[38;2;0;0;0;48;2;255;255;255m]\x1b[0m'
+                        '\x1b[38;2;0;0;0;48;2;255;255;255m}\x1b[0m'
+                        '\x1b[38;2;0;0;0;48;2;255;255;255m)\x1b[0m\n')
             case 'no-frame-light-color-no-fonts-no-bg' \
                  | 'no-frame-light-color-font-styling-only-no-bg' \
                  | 'no-frame-light-color-full-font-conf-no-bg':

@@ -1,11 +1,11 @@
+from dataclasses import dataclass
 from typing import Annotated
 
-from attr import dataclass
 import pytest
 
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.layout import Layout
-from omnipy.data._display.panel import Panel
+from omnipy.data._display.panel.draft import Panel
 
 
 @dataclass

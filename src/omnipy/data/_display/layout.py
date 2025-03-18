@@ -2,7 +2,7 @@ from collections import UserDict
 from typing import Iterator
 
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.panel import Panel
+from omnipy.data._display.panel.draft import Panel
 
 
 class Grid:

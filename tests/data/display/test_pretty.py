@@ -8,7 +8,7 @@ import pytest
 from omnipy.data._display.config import OutputConfig, PrettyPrinterLib
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.data._display.panel import DraftMonospacedOutput, DraftOutput
+from omnipy.data._display.panel.draft import DraftMonospacedOutput, DraftOutput
 from omnipy.data._display.pretty import pretty_repr_of_draft_output
 from omnipy.data.model import Model
 
