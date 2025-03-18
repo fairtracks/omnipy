@@ -11,8 +11,8 @@ from omnipy.data._display.config import (ConsoleColorSystem,
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.data._display.panel import DraftMonospacedOutput
-from omnipy.data._display.styling import StylizedMonospacedOutput
+from omnipy.data._display.panel.draft import DraftMonospacedOutput
+from omnipy.data._display.panel.styling import StylizedMonospacedOutput
 
 from .cases.styling import OutputPropertyExpectations, OutputTestCase, OutputTestCaseSetup
 

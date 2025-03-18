@@ -1,32 +1,19 @@
 from dataclasses import asdict
 from functools import cached_property
 import re
-from typing import cast, ClassVar, Generic
+from typing import ClassVar, Generic
 
 from typing_extensions import TypeVar
 
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints, ConstraintsSatisfaction
 from omnipy.data._display.dimensions import Dimensions, DimensionsFit
-from omnipy.data._display.frame import AnyFrame, Frame
+from omnipy.data._display.frame import Frame
 from omnipy.data._display.helpers import UnicodeCharWidthMap
+from omnipy.data._display.panel.base import FrameT, Panel
 from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt, validator
 
 ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)
-FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
-
-
-@dataclass(init=False, config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
-class Panel(Generic[FrameT]):
-    """Base panel class that only contains frame information."""
-    frame: FrameT
-
-    def __init__(self, frame: FrameT | None = None):
-        self.frame = frame or cast(FrameT, Frame())
-
-    @validator('frame')
-    def _copy_frame(cls, frame: Frame) -> Frame:
-        return Frame(dims=frame.dims)
 
 
 @dataclass(init=False, config=ConfigDict(extra=Extra.forbid, validate_assignment=True))

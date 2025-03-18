@@ -12,9 +12,9 @@ from omnipy.data._display.config import (DarkHighContrastColorStyles,
                                          RecommendedColorStyles)
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.data._display.panel import DraftMonospacedOutput, DraftOutput
+from omnipy.data._display.panel.draft import DraftMonospacedOutput, DraftOutput
+from omnipy.data._display.panel.styling import StylizedMonospacedOutput
 from omnipy.data._display.pretty import pretty_repr_of_draft_output
-from omnipy.data._display.styling import StylizedMonospacedOutput
 from omnipy.data.typechecks import is_model_instance
 
 
@@ -34,7 +34,7 @@ inputs = [
     Inputs(path='donuts.json', lexer='json', data_type=str, debug=False),
     Inputs(path='donuts.json', lexer='python', data_type=JsonModel, debug=True),
     Inputs(
-        path='../../src/omnipy/data/_display/styling.py',
+        path='../../src/omnipy/data/_display/panel/styling.py',
         lexer='python',
         data_type=str,
         debug=False),

@@ -18,7 +18,8 @@ from rich.terminal_theme import DEFAULT_TERMINAL_THEME, TerminalTheme
 from omnipy.data._display.config import (ConsoleColorSystem,
                                          HorizontalOverflowMode,
                                          VerticalOverflowMode)
-from omnipy.data._display.panel import DraftMonospacedOutput, FrameT
+from omnipy.data._display.panel.base import FrameT, OutputMode, OutputVariant
+from omnipy.data._display.panel.draft import DraftMonospacedOutput
 from omnipy.util._pydantic import ConfigDict, dataclass, Extra
 
 
@@ -26,13 +27,7 @@ def extract_value_if_enum(conf_item: Enum | str) -> str:
     return conf_item.value if isinstance(conf_item, Enum) else conf_item
 
 
-class OutputMode(str, Enum):
-    PLAIN = 'plain'
-    BW_STYLIZED = 'bw_stylized'
-    COLORIZED = 'colorized'
-
-
-class OutputVariant:
+class StylizedMonospacedOutputVariant(OutputVariant):
     _CSS_COLOR_STYLE_TEMPLATE_FG_AND_BG: ClassVar[str] = ('color: {foreground}; '
                                                           'background-color: {background}; ')
 
@@ -452,15 +447,15 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
 
     @cached_property
     def plain(self) -> OutputVariant:
-        return OutputVariant(self, OutputMode.PLAIN)
+        return StylizedMonospacedOutputVariant(self, OutputMode.PLAIN)
 
     @cached_property
     def bw_stylized(self) -> OutputVariant:
-        return OutputVariant(self, OutputMode.BW_STYLIZED)
+        return StylizedMonospacedOutputVariant(self, OutputMode.BW_STYLIZED)
 
     @cached_property
     def colorized(self) -> OutputVariant:
-        return OutputVariant(self, OutputMode.COLORIZED)
+        return StylizedMonospacedOutputVariant(self, OutputMode.COLORIZED)
 
     @cached_property
     def _content_lines(self) -> list[str]:

@@ -10,7 +10,8 @@ from omnipy.data._display.config import MAX_TERMINAL_SIZE, PrettyPrinterLib
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions, Proportionally
 from omnipy.data._display.frame import Frame, frame_has_width, FrameWithWidth
-from omnipy.data._display.panel import DraftMonospacedOutput, DraftOutput, FrameT
+from omnipy.data._display.panel.base import FrameT
+from omnipy.data._display.panel.draft import DraftMonospacedOutput, DraftOutput
 from omnipy.data.typechecks import is_model_instance
 from omnipy.util._pydantic import NonNegativeInt
 

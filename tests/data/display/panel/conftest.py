@@ -2,7 +2,7 @@ from typing import Annotated, Callable
 
 import pytest_cases as pc
 
-from omnipy.data._display.styling import StylizedMonospacedOutput
+from omnipy.data._display.panel.styling import StylizedMonospacedOutput
 
 
 @pc.fixture
