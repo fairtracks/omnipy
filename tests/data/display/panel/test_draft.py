@@ -105,7 +105,7 @@ def test_draft_output_validate_assignments(
     assert draft.constraints == constraints
 
     with pytest.raises(ValueError):
-        draft.constraints = 'abc'
+        draft.constraints = 'abc'  # type: ignore[assignment]
 
     config = OutputConfig(indent_tab_size=4)
     draft.config = config

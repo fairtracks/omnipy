@@ -1,7 +1,7 @@
 from collections import UserDict
 from typing import Iterator
 
-from omnipy.data._display.dimensions import Dimensions
+from omnipy.data._display.dimensions import DimensionsWithWidthAndHeight
 from omnipy.data._display.panel.draft import Panel
 
 
@@ -11,9 +11,10 @@ class Grid:
         self._layout = layout
 
     @property
-    def dims(self) -> Dimensions:
+    def dims(self) -> DimensionsWithWidthAndHeight:
         """Return the dimensions of the grid (width, height)."""
-        return Dimensions(width=len(self._layout), height=1)
+        return DimensionsWithWidthAndHeight(
+            width=len(self._layout), height=1 if len(self._layout) > 0 else 0)
 
     def __getitem__(self, key: tuple[int, int]) -> str:
         """Get panel from the grid at specific coordinates."""
