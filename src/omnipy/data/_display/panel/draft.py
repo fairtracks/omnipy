@@ -1,8 +1,9 @@
 from dataclasses import asdict
 from functools import cached_property
 import re
-from typing import ClassVar, Generic
+from typing import cast, ClassVar, Generic
 
+from rich.table import Table
 from typing_extensions import TypeVar
 
 from omnipy.data._display.config import OutputConfig
@@ -23,10 +24,10 @@ class DraftOutput(Panel[FrameT], Generic[ContentT, FrameT]):
     config: OutputConfig = Field(default_factory=OutputConfig)
 
     def __init__(self, content: ContentT, frame=None, constraints=None, config=None):
-        object.__setattr__(self, 'content', content)
-        object.__setattr__(self, 'frame', frame or Frame())
-        object.__setattr__(self, 'constraints', constraints or Constraints())
-        object.__setattr__(self, 'config', config or OutputConfig())
+        self.content = content
+        self.frame = frame or cast(FrameT, Frame())
+        self.constraints = constraints or Constraints()
+        self.config = config or OutputConfig()
 
     @validator('constraints')
     def _copy_constraints(cls, constraints: Constraints) -> Constraints:
@@ -44,7 +45,13 @@ class DraftOutput(Panel[FrameT], Generic[ContentT, FrameT]):
 @dataclass(init=False, config=ConfigDict(extra=Extra.forbid, validate_all=True))
 class DraftMonospacedOutput(DraftOutput[str, FrameT], Generic[FrameT]):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
-    content: str
+    content: str | Table
+
+    def __init__(self, content: ContentT, frame=None, constraints=None, config=None):
+        object.__setattr__(self, 'content', content)
+        object.__setattr__(self, 'frame', frame or Frame())
+        object.__setattr__(self, 'constraints', constraints or Constraints())
+        object.__setattr__(self, 'config', config or OutputConfig())
 
     def __setattr__(self, key, value):
         if key in ['content', 'frame', 'constraints', 'config']:
