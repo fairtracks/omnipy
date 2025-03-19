@@ -15,6 +15,23 @@ class SimpleLayoutCase:
     second_panel: Panel
 
 
+def test_empty_layout(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    """Test grid properties for an empty layout."""
+    layout = Layout()
+
+    # Check contents
+    assert len(layout) == 0
+    assert list(layout) == []
+
+    # Check grid dimensions
+    assert layout.grid.dims == Dimensions(width=0, height=0)
+
+    # Check that accessing any grid position raises IndexError
+    with pytest.raises(IndexError):
+        layout.grid[0, 0]
+
+
 @pytest.fixture
 def simple_layout() -> SimpleLayoutCase:
     """Create a layout with two panels for testing."""
