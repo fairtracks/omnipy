@@ -103,6 +103,34 @@ def _prepare_output(
     return _strip_ansi(_strip_html(get_output_property(output)))
 
 
+def test_stylized_monospaced_output_with_empty_input(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    # Test with empty string
+    empty_output = StylizedMonospacedOutput('')
+
+    assert empty_output.content == ''
+    assert empty_output.plain.terminal == ''  # Just a newline
+    assert empty_output.plain.html_tag.strip().endswith('></code></pre>')  # Empty but valid HTML
+
+    # Test with whitespace only
+    whitespace_output = StylizedMonospacedOutput('  \n  ')
+
+    assert whitespace_output.content == '  \n  '
+    assert whitespace_output.plain.terminal == '  \n  \n'
+
+    # Verify dimensions
+    assert empty_output.dims.width == 0
+    assert empty_output.dims.height == 0
+
+    assert whitespace_output.dims.width == 2
+    assert whitespace_output.dims.height == 2  # Two lines
+
+    # Test with frame to ensure no errors
+    framed_empty = StylizedMonospacedOutput('', frame=Frame(Dimensions(10, 5)))
+
+    assert framed_empty.within_frame.width is True
+
+
 @pc.parametrize_with_cases('case', cases='.cases.styling', has_tag='overflow_modes')
 def test_stylized_output_overflow_modes(
     case: OutputTestCase,

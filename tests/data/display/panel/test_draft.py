@@ -126,6 +126,38 @@ def test_draft_output_constraints_satisfaction(
     assert draft.satisfies.container_width_per_line_limit is False
 
 
+def test_draft_output_with_empty_content(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    # Test with empty string
+    empty_string_draft = DraftOutput('')
+
+    assert empty_string_draft.content == ''
+    assert empty_string_draft.frame == Frame()
+    assert empty_string_draft.constraints == Constraints()
+    assert empty_string_draft.config == OutputConfig()
+
+    # Test with None
+    none_draft = DraftOutput(None)
+
+    assert none_draft.content is None
+
+    # Test with empty collections
+    empty_list_draft = DraftOutput([])
+    empty_dict_draft = DraftOutput({})
+    empty_tuple_draft = DraftOutput(())
+
+    assert empty_list_draft.content == []
+    assert empty_dict_draft.content == {}
+    assert empty_tuple_draft.content == ()
+
+    # Test with empty content and frame
+    framed_empty_draft = DraftOutput('', frame=Frame(Dimensions(10, 5)))
+
+    assert framed_empty_draft.frame.dims.width == 10
+    assert framed_empty_draft.frame.dims.height == 5
+    assert framed_empty_draft.content == ''
+
+
 def _assert_draft_monospaced_output(
     output: str,
     width: int,
@@ -264,3 +296,34 @@ def test_draft_monospaced_output_constraints_satisfaction(
     )""")
     draft = DraftMonospacedOutput(out_shorter, constraints=constraints_15)
     assert draft.satisfies.container_width_per_line_limit is True
+
+
+def test_draft_monospaced_output_with_empty_content(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    # Test with empty string
+    empty_draft = DraftMonospacedOutput('')
+
+    assert empty_draft.content == ''
+    assert empty_draft.dims.width == 0
+    assert empty_draft.dims.height == 0
+
+    # Test with only whitespace
+    whitespace_draft = DraftMonospacedOutput('  \n  ')
+
+    assert whitespace_draft.content == '  \n  '
+    assert whitespace_draft.dims.width == 2
+    assert whitespace_draft.dims.height == 2
+
+    # Test empty content with frame
+    framed_empty_draft = DraftMonospacedOutput('', frame=Frame(Dimensions(10, 5)))
+
+    assert framed_empty_draft.within_frame.width is True
+    assert framed_empty_draft.within_frame.height is True
+    assert framed_empty_draft.within_frame.both is True
+
+    # Test empty content with constraints
+    constrained_empty_draft = DraftMonospacedOutput(
+        '', constraints=Constraints(container_width_per_line_limit=10))
+
+    assert constrained_empty_draft.satisfies.container_width_per_line_limit is True
+    assert constrained_empty_draft.max_container_width_across_lines == 0
