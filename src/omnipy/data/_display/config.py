@@ -543,6 +543,18 @@ class HorizontalOverflowMode(str, Enum):
     WORD_WRAP = 'word_wrap'
 
 
+class LayoutStyle(str, Enum):
+    """
+    Visual style for the layout of the output.
+
+    The layout styles are:
+    - `TABLE`: The output is displayed as a simple table grid
+    - `PANELS`: The output is displayed as a set of panels
+    """
+    TABLE_GRID = 'table_grid'
+    PANELS = 'panels'
+
+
 class VerticalOverflowMode(str, Enum):
     """
     Vertical overflow modes for the output.
@@ -611,6 +623,8 @@ class OutputConfig:
             text that exceeds the width.
         vertical_overflow_mode (VerticalOverflowMode): How to handle text
             that exceeds the height.
+        layout_style (LayoutStyle): Visual styles for the layout of the
+            output.
     """
 
     indent_tab_size: NonNegativeInt = 2
@@ -633,6 +647,7 @@ class OutputConfig:
     css_line_height: NonNegativeFloat | None = 1.35
     horizontal_overflow_mode: HorizontalOverflowMode = HorizontalOverflowMode.WORD_WRAP
     vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.CROP_BOTTOM
+    layout_style: LayoutStyle = LayoutStyle.TABLE_GRID
 
     @validator('language')
     def validate_language(cls, language: SyntaxLanguage | str) -> SyntaxLanguage | str:

@@ -6,6 +6,7 @@ import pytest
 from omnipy.data._display.config import (ConsoleColorSystem,
                                          DarkLowContrastColorStyles,
                                          HorizontalOverflowMode,
+                                         LayoutStyle,
                                          LightHighContrastColorStyles,
                                          OutputConfig,
                                          PrettyPrinterLib,
@@ -29,6 +30,7 @@ def test_output_config(
         css_line_height=1.0,
         horizontal_overflow_mode=HorizontalOverflowMode.CROP,
         vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
+        layout_style=LayoutStyle.PANELS,
     )
 
     assert config.indent_tab_size == 4
@@ -43,6 +45,7 @@ def test_output_config(
     assert config.css_line_height == 1.0
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.CROP
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_TOP
+    assert config.layout_style is LayoutStyle.PANELS
 
     config = OutputConfig(
         indent_tab_size='4',  # type: ignore[arg-type]
@@ -57,6 +60,7 @@ def test_output_config(
         css_line_height='1',  # type: ignore[arg-type]
         horizontal_overflow_mode='ellipsis',  # type: ignore[arg-type]
         vertical_overflow_mode='crop_bottom',  # type: ignore[arg-type]
+        layout_style='table_grid',  # type: ignore[arg-type]
     )
     assert config.indent_tab_size == 4
     assert config.debug_mode is True
@@ -70,6 +74,7 @@ def test_output_config(
     assert config.css_line_height == 1.0
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
+    assert config.layout_style is LayoutStyle.TABLE_GRID
 
     config = OutputConfig(
         css_font_weight=None,
@@ -162,6 +167,12 @@ def test_output_config_validate_assignments(
     with pytest.raises(ValueError):
         config.vertical_overflow_mode = 'abc'  # type: ignore[assignment]
 
+    config.layout_style = 'panels'  # type: ignore[assignment]
+    assert config.layout_style is LayoutStyle.PANELS
+
+    with pytest.raises(ValueError):
+        config.layout_style = 'abc'
+
 
 def test_fail_output_config_if_invalid_params(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
@@ -204,6 +215,9 @@ def test_fail_output_config_if_invalid_params(
     with pytest.raises(ValueError):
         OutputConfig(vertical_overflow_mode=None)  # type: ignore[arg-type]
 
+    with pytest.raises(ValueError):
+        OutputConfig(layout_style=None)  # type: ignore[arg-type]
+
 
 def test_output_config_default_values(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
@@ -227,6 +241,7 @@ def test_output_config_default_values(
     assert config.css_line_height == 1.35
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.WORD_WRAP
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
+    assert config.layout_style is LayoutStyle.TABLE_GRID
 
 
 def test_fail_output_config_if_extra_params(
