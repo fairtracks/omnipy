@@ -8,7 +8,7 @@ import pytest
 from omnipy.data._display.config import OutputConfig, PrettyPrinterLib
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.data._display.panel.draft import DraftMonospacedOutput, DraftOutput
+from omnipy.data._display.panel.draft import DraftPanel, ReflowedTextDraftPanel
 from omnipy.data._display.pretty import pretty_repr_of_draft_output
 from omnipy.data.model import Model
 
@@ -38,13 +38,13 @@ def _assert_pretty_repr_of_draft(
     if config is not None:
         kwargs['config'] = config
 
-    in_draft = DraftOutput(data, **kwargs)
+    in_draft_panel = DraftPanel(data, **kwargs)
 
-    out_draft: DraftMonospacedOutput = pretty_repr_of_draft_output(in_draft)
+    out_draft_panel: ReflowedTextDraftPanel = pretty_repr_of_draft_output(in_draft_panel)
 
-    assert _harmonize(out_draft.content) == expected_output
-    assert out_draft.within_frame.width is within_frame_width
-    assert out_draft.within_frame.height is within_frame_height
+    assert _harmonize(out_draft_panel.content) == expected_output
+    assert out_draft_panel.within_frame.width is within_frame_width
+    assert out_draft_panel.within_frame.height is within_frame_height
 
 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])

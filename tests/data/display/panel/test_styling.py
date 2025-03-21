@@ -11,23 +11,23 @@ from omnipy.data._display.config import (ConsoleColorSystem,
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
-from omnipy.data._display.panel.draft import DraftMonospacedOutput
-from omnipy.data._display.panel.styling import StylizedMonospacedOutput
+from omnipy.data._display.panel.draft import ReflowedTextDraftPanel
+from omnipy.data._display.panel.styling import SyntaxStylizedTextPanel
 
 from .cases.styling import OutputPropertyExpectations, OutputTestCase, OutputTestCaseSetup
 
 
-def test_stylized_output_init(
+def test_syntax_stylized_text_panel_init(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
-    output = StylizedMonospacedOutput('[123, 234, 345]',)
+    stylized_text_panel = SyntaxStylizedTextPanel('[123, 234, 345]',)
 
-    assert output.content == '[123, 234, 345]'
-    assert output.constraints == Constraints()
-    assert output.config == OutputConfig()
-    assert output.frame == empty_frame()
+    assert stylized_text_panel.content == '[123, 234, 345]'
+    assert stylized_text_panel.frame == empty_frame()
+    assert stylized_text_panel.constraints == Constraints()
+    assert stylized_text_panel.config == OutputConfig()
 
-    draft = DraftMonospacedOutput(
+    reflowed_text_panel = ReflowedTextDraftPanel(
         '[123, 234, 345]',
         frame=Frame(Dimensions(10, 10)),
         constraints=Constraints(),
@@ -37,43 +37,43 @@ def test_stylized_output_init(
         ),
     )
 
-    output = StylizedMonospacedOutput(draft)
+    stylized_reflowed_text_panel = SyntaxStylizedTextPanel(reflowed_text_panel)
 
-    assert output.content == '[123, 234, 345]'
-    assert output.frame is not draft.frame
-    assert output.frame == draft.frame
-    assert output.constraints is not draft.constraints
-    assert output.constraints == draft.constraints
-    assert output.config is not draft.config
-    assert output.config == draft.config
+    assert stylized_reflowed_text_panel.content == '[123, 234, 345]'
+    assert stylized_reflowed_text_panel.frame is not reflowed_text_panel.frame
+    assert stylized_reflowed_text_panel.frame == reflowed_text_panel.frame
+    assert stylized_reflowed_text_panel.constraints is not reflowed_text_panel.constraints
+    assert stylized_reflowed_text_panel.constraints == reflowed_text_panel.constraints
+    assert stylized_reflowed_text_panel.config is not reflowed_text_panel.config
+    assert stylized_reflowed_text_panel.config == reflowed_text_panel.config
 
 
-def test_fail_stylized_output_if_extra_params(
+def test_fail_syntax_stylized_text_panel_if_extra_params(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
     with pytest.raises(TypeError):
-        StylizedMonospacedOutput('[123, 234, 345]', extra=123)  # type: ignore[call-overload]
+        SyntaxStylizedTextPanel('[123, 234, 345]', extra=123)  # type: ignore[call-overload]
 
-    output = StylizedMonospacedOutput('[123, 234, 345]')
-    output.extra = 123
+    text_panel = SyntaxStylizedTextPanel('[123, 234, 345]')
+    text_panel.extra = 123
 
 
-def test_stylized_output_immutable_properties(
+def test_syntax_stylized_text_panel_immutable_properties(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
-    output = StylizedMonospacedOutput('[123, 234, 345]',)
+    text_panel = SyntaxStylizedTextPanel('[123, 234, 345]',)
 
     with pytest.raises(AttributeError):
-        output.content = '[234, 345, 456]'
+        text_panel.content = '[234, 345, 456]'
 
     with pytest.raises(AttributeError):
-        output.frame = empty_frame()
+        text_panel.frame = empty_frame()
 
     with pytest.raises(AttributeError):
-        output.constraints = Constraints()
+        text_panel.constraints = Constraints()
 
     with pytest.raises(AttributeError):
-        output.config = OutputConfig()
+        text_panel.config = OutputConfig()
 
 
 def _strip_html(html: str) -> str:
@@ -96,59 +96,59 @@ def _strip_ansi(text: str) -> str:
     return re.sub(r'\x1b\[[^m]+m', '', text)
 
 
-def _prepare_output(
-    output: StylizedMonospacedOutput,
-    get_output_property: Callable[[StylizedMonospacedOutput], str],
+def _prepare_panel(
+    text_panel: SyntaxStylizedTextPanel,
+    get_output_property: Callable[[SyntaxStylizedTextPanel], str],
 ) -> str:
-    return _strip_ansi(_strip_html(get_output_property(output)))
+    return _strip_ansi(_strip_html(get_output_property(text_panel)))
 
 
-def test_stylized_monospaced_output_with_empty_input(
+def test_stylized_monospaced_panel_with_empty_input(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    # Test with empty string
-    empty_output = StylizedMonospacedOutput('')
+    stylized_empty_text_panel = SyntaxStylizedTextPanel('')
 
-    assert empty_output.content == ''
-    assert empty_output.plain.terminal == ''  # Just a newline
-    assert empty_output.plain.html_tag.strip().endswith('></code></pre>')  # Empty but valid HTML
+    assert stylized_empty_text_panel.content == ''
+    assert stylized_empty_text_panel.plain.terminal == ''  # Just a newline
+    assert stylized_empty_text_panel.plain.html_tag.strip().endswith(
+        '></code></pre>')  # Empty but valid HTML
 
     # Test with whitespace only
-    whitespace_output = StylizedMonospacedOutput('  \n  ')
+    stylized_whitespace_panel = SyntaxStylizedTextPanel('  \n  ')
 
-    assert whitespace_output.content == '  \n  '
-    assert whitespace_output.plain.terminal == '  \n  \n'
+    assert stylized_whitespace_panel.content == '  \n  '
+    assert stylized_whitespace_panel.plain.terminal == '  \n  \n'
 
     # Verify dimensions
-    assert empty_output.dims.width == 0
-    assert empty_output.dims.height == 0
+    assert stylized_empty_text_panel.dims.width == 0
+    assert stylized_empty_text_panel.dims.height == 0
 
-    assert whitespace_output.dims.width == 2
-    assert whitespace_output.dims.height == 2  # Two lines
+    assert stylized_whitespace_panel.dims.width == 2
+    assert stylized_whitespace_panel.dims.height == 2  # Two lines
 
     # Test with frame to ensure no errors
-    framed_empty = StylizedMonospacedOutput('', frame=Frame(Dimensions(10, 5)))
+    framed_stylized_empty_text_panel = SyntaxStylizedTextPanel('', frame=Frame(Dimensions(10, 5)))
 
-    assert framed_empty.within_frame.width is True
+    assert framed_stylized_empty_text_panel.within_frame.width is True
 
 
 @pc.parametrize_with_cases('case', cases='.cases.styling', has_tag='overflow_modes')
-def test_stylized_output_overflow_modes(
+def test_syntax_stylized_text_panel_overflow_modes(
     case: OutputTestCase,
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
 ) -> None:
 
-    output = StylizedMonospacedOutput(case.content, frame=case.frame, config=case.config)
-    processed_output = _prepare_output(output, case.get_output_property)
+    text_panel = SyntaxStylizedTextPanel(case.content, frame=case.frame, config=case.config)
+    processed_text_panel = _prepare_panel(text_panel, case.get_output_property)
 
-    assert processed_output == case.expected_output
-    assert output.within_frame.width is case.expected_within_frame_width
-    assert output.within_frame.height is case.expected_within_frame_height
+    assert processed_text_panel == case.expected_output
+    assert text_panel.within_frame.width is case.expected_within_frame_width
+    assert text_panel.within_frame.height is case.expected_within_frame_height
 
 
 @pc.parametrize_with_cases('output_test_case_setup', cases='.cases.styling', has_tag='setup')
 @pc.parametrize_with_cases(
     'output_prop_expectations', cases='.cases.styling', has_tag='expectations')
-def test_output_properties_of_stylized_output(
+def test_output_properties_of_syntax_stylized_text_panel(
         output_test_case_setup: Annotated[OutputTestCaseSetup, pc.fixture],
         output_prop_expectations: Annotated[OutputPropertyExpectations, pc.fixture],
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
@@ -156,43 +156,43 @@ def test_output_properties_of_stylized_output(
     case_id, content, frame, config = output_test_case_setup
     get_output_property, expected_output_for_case_id = output_prop_expectations
 
-    output = StylizedMonospacedOutput(content, frame=frame, config=config)
+    text_panel = SyntaxStylizedTextPanel(content, frame=frame, config=config)
     for _ in range(2):
-        assert get_output_property(output) == expected_output_for_case_id(case_id)
+        assert get_output_property(text_panel) == expected_output_for_case_id(case_id)
 
 
-def test_stylized_output_json_syntax(
+def test_syntax_stylized_text_panel_json(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     json_content = '{"values": [1, 2, 3], "nested": {"key": true}}'
 
-    output = StylizedMonospacedOutput(
+    text_panel = SyntaxStylizedTextPanel(
         json_content,
         config=OutputConfig(
             language=SyntaxLanguage.JSON, console_color_system=ConsoleColorSystem.ANSI_RGB))
 
-    assert output.content == json_content
-    assert output.config.language == SyntaxLanguage.JSON
+    assert text_panel.content == json_content
+    assert text_panel.config.language == SyntaxLanguage.JSON
 
     # Checking that the plain output is unchanged (except for the trailing newline)
-    assert output.plain.terminal == json_content + '\n'
+    assert text_panel.plain.terminal == json_content + '\n'
 
     # Checking that 'true' is recognized as a keyword in the colorized terminal and HTML outputs
-    assert '\x1b[94mtrue\x1b[0m' in output.colorized.terminal
+    assert '\x1b[94mtrue\x1b[0m' in text_panel.colorized.terminal
     assert ('<span style="color: #0000ff; text-decoration-color: #0000ff">true</span>'
-            in output.colorized.html_tag)
+            in text_panel.colorized.html_tag)
 
 
-def test_stylized_output_console_recording_not_deleted_by_filtering(
+def test_syntax_stylized_text_panel_console_recording_not_deleted_by_filtering(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
     content = 'Hello, World!'
 
-    output = StylizedMonospacedOutput(content)
-    assert output.plain.html_tag != ''
-    assert output.bw_stylized.terminal != ''
-    assert output.colorized.terminal != ''
+    text_panel = SyntaxStylizedTextPanel(content)
+    assert text_panel.plain.html_tag != ''
+    assert text_panel.bw_stylized.terminal != ''
+    assert text_panel.colorized.terminal != ''
 
-    output = StylizedMonospacedOutput(content)
-    assert output.bw_stylized.terminal != ''
-    assert output.plain.terminal != ''
-    assert output.colorized.terminal != ''
+    text_panel = SyntaxStylizedTextPanel(content)
+    assert text_panel.bw_stylized.terminal != ''
+    assert text_panel.plain.terminal != ''
+    assert text_panel.colorized.terminal != ''
