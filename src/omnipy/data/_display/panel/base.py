@@ -3,16 +3,15 @@ from enum import Enum
 from functools import cached_property
 from typing import cast, Generic
 
-from pydantic import ConfigDict, Extra, validator
-from pydantic.dataclasses import dataclass
 from typing_extensions import TypeVar
 
 from omnipy.data._display.frame import AnyFrame, empty_frame, Frame
+import omnipy.util._pydantic as pyd
 
 FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
 
 
-@dataclass(init=False, config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
+@pyd.dataclass(init=False, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))
 class Panel(Generic[FrameT]):
     """Base panel class that only contains frame information."""
     frame: FrameT
@@ -20,7 +19,7 @@ class Panel(Generic[FrameT]):
     def __init__(self, frame: FrameT | None = None):
         self.frame = frame or cast(FrameT, empty_frame())
 
-    @validator('frame')
+    @pyd.validator('frame')
     def _copy_frame(cls, frame: Frame) -> Frame:
         return Frame(dims=frame.dims)
 

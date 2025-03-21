@@ -2,7 +2,7 @@ from functools import cached_property
 
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
 from omnipy.data._display.panel.base import FullyRenderedPanel, OutputMode, OutputVariant, Panel
-from omnipy.util import _pydantic as pyd
+import omnipy.util._pydantic as pyd
 
 
 @pyd.dataclass(init=False)

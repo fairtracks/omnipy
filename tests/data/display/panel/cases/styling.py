@@ -12,7 +12,7 @@ from omnipy.data._display.config import (ConsoleColorSystem,
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.panel.styling import SyntaxStylizedTextPanel
-from omnipy.util._pydantic import NonNegativeFloat, NonNegativeInt
+import omnipy.util._pydantic as pyd
 
 # Classes
 
@@ -192,9 +192,9 @@ def case_syntax_styling_setup_no_frame_or_configs(
 @pc.case(id='no-frame-light-color', tags=['setup', 'syntax_styling'])
 def case_syntax_styling_setup_no_frame_color_config(
         css_font_families: tuple[str, ...],
-        css_font_size: NonNegativeInt | None,
-        css_font_weight: NonNegativeInt | None,
-        css_line_height: NonNegativeFloat | None,
+        css_font_size: pyd.NonNegativeInt | None,
+        css_font_weight: pyd.NonNegativeInt | None,
+        css_line_height: pyd.NonNegativeFloat | None,
         transparent_background: bool) -> OutputTestCaseSetup:
     case_id = 'no-frame-light-color' \
               + ('-no-fonts' if css_font_weight is None else '') \

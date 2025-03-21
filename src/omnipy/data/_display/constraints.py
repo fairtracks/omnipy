@@ -1,11 +1,12 @@
-from omnipy.util._pydantic import ConfigDict, dataclass, Extra, NonNegativeInt
+import omnipy.util._pydantic as pyd
 
 
-@dataclass(kw_only=True, config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
+@pyd.dataclass(
+    kw_only=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))
 class Constraints:
     """Constraints for display of content."""
 
-    container_width_per_line_limit: NonNegativeInt | None = None
+    container_width_per_line_limit: pyd.NonNegativeInt | None = None
     """
     Limit of character width for any Python container (e.g. list, tuple, dict, object) per line.
     Used internally in DevtoolsPrettyPrinter to manage the `simple_cutoff` parameter.

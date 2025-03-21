@@ -13,7 +13,7 @@ from omnipy.data._display.frame import Frame, frame_has_width, FrameWithWidth
 from omnipy.data._display.panel.base import FrameT
 from omnipy.data._display.panel.draft import DraftPanel, ReflowedTextDraftPanel
 from omnipy.data.typechecks import is_model_instance
-from omnipy.util._pydantic import NonNegativeInt
+import omnipy.util._pydantic as pyd
 
 
 class PrettyPrinter(ABC):
@@ -70,7 +70,7 @@ class PrettyPrinter(ABC):
 
 class RichPrettyPrinter(PrettyPrinter):
     def __init__(self) -> None:
-        self._prev_reflowed_text_panel_width: NonNegativeInt | None = None
+        self._prev_reflowed_text_panel_width: pyd.NonNegativeInt | None = None
 
     def no_width_change_since_last_print(
         self,
@@ -115,8 +115,8 @@ class RichPrettyPrinter(PrettyPrinter):
 
 class DevtoolsPrettyPrinter(PrettyPrinter):
     def __init__(self) -> None:
-        self._prev_reflowed_text_panel_width: NonNegativeInt | None = None
-        self._prev_max_container_width: NonNegativeInt | None = None
+        self._prev_reflowed_text_panel_width: pyd.NonNegativeInt | None = None
+        self._prev_max_container_width: pyd.NonNegativeInt | None = None
 
     def no_width_change_since_last_print(
         self,

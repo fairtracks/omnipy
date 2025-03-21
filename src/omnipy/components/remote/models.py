@@ -5,10 +5,9 @@ from urllib.parse import quote, unquote
 from aiohttp.helpers import MimeType, parse_mimetype
 
 from omnipy.data.model import Model
-from omnipy.util._pydantic import BaseModel, Url
+import omnipy.util._pydantic as pyd
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 
-from ...util import _pydantic as pyd
 from ..json.models import JsonModel
 from ..raw.models import (NestedJoinItemsModel,
                           NestedSplitToItemsModel,
@@ -148,7 +147,7 @@ class UrlDataclassModel(pyd.BaseModel):
                 case _:
                     kwargs[key] = val
 
-        return str(Url.build(**kwargs))  # type: ignore[arg-type]
+        return str(pyd.Url.build(**kwargs))  # type: ignore[arg-type]
 
 
 class HttpUrlModel(Model[UrlDataclassModel | str]):
@@ -164,7 +163,7 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
         if data == 'https://':
             data = 'https://localhost/'
         # For validation only
-        url_obj = Url(str(data) if isinstance(data, UrlDataclassModel) else data)
+        url_obj = pyd.Url(str(data) if isinstance(data, UrlDataclassModel) else data)
 
         parts: dict[str, str | int | None] = {}
         for key in UrlDataclassModel.__fields__.keys():
@@ -203,7 +202,7 @@ if TYPE_CHECKING:
         ...
 
 
-class ModelFriendlyMimeType(BaseModel):
+class ModelFriendlyMimeType(pyd.BaseModel):
     type: str
     subtype: str
     suffix: str
