@@ -12,8 +12,8 @@ from omnipy.data._display.config import (DarkHighContrastColorStyles,
                                          RecommendedColorStyles)
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.data._display.panel.draft import DraftMonospacedOutput, DraftOutput
-from omnipy.data._display.panel.styling import StylizedMonospacedOutput
+from omnipy.data._display.panel.draft import DraftPanel, ReflowedTextDraftPanel
+from omnipy.data._display.panel.styling import SyntaxStylizedTextPanel
 from omnipy.data._display.pretty import pretty_repr_of_draft_output
 from omnipy.data.typechecks import is_model_instance
 
@@ -77,16 +77,16 @@ for input in inputs:
                 debug_mode=input.debug,
             )
             if is_model_instance(data):
-                draft = DraftOutput(data, frame=frame, config=config)
-                mono_draft = pretty_repr_of_draft_output(draft)
+                draft_panel = DraftPanel(data, frame=frame, config=config)
+                reflowed_text_panel = pretty_repr_of_draft_output(draft_panel)
             else:
-                mono_draft = DraftMonospacedOutput(data, frame=frame, config=config)
+                reflowed_text_panel = ReflowedTextDraftPanel(data, frame=frame, config=config)
 
-            output = StylizedMonospacedOutput(mono_draft)
+            stylized_text_panel = SyntaxStylizedTextPanel(reflowed_text_panel)
 
             out_base_name = f"{input_name}_{style.name.replace('-', '_')}_{transparency_label}.html"
             out_file_name = f'{dirname}/{out_base_name}'
             print(out_file_name)
 
             with open(f'{out_file_name}', 'w') as output_file:
-                output_file.write(output.colorized.html_page)
+                output_file.write(stylized_text_panel.colorized.html_page)

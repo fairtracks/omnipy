@@ -18,7 +18,7 @@ ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)
 
 
 @dataclass(init=False, config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
-class DraftOutput(Panel[FrameT], Generic[ContentT, FrameT]):
+class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
     content: ContentT
     constraints: Constraints = Field(default_factory=Constraints)
     config: OutputConfig = Field(default_factory=OutputConfig)
@@ -43,7 +43,7 @@ class DraftOutput(Panel[FrameT], Generic[ContentT, FrameT]):
 
 
 @dataclass(init=False, config=ConfigDict(extra=Extra.forbid, validate_all=True))
-class DraftMonospacedOutput(DraftOutput[str, FrameT], Generic[FrameT]):
+class ReflowedTextDraftPanel(DraftPanel[str, FrameT], Generic[FrameT]):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
     content: str | Table
 

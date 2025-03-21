@@ -19,7 +19,7 @@ from omnipy.data._display.config import (ConsoleColorSystem,
                                          HorizontalOverflowMode,
                                          VerticalOverflowMode)
 from omnipy.data._display.panel.base import FrameT, OutputMode, OutputVariant
-from omnipy.data._display.panel.draft import DraftMonospacedOutput
+from omnipy.data._display.panel.draft import ReflowedTextDraftPanel
 from omnipy.util._pydantic import ConfigDict, dataclass, Extra
 
 
@@ -65,7 +65,7 @@ class StylizedMonospacedOutputVariant(OutputVariant):
         </html>
         """)
 
-    def __init__(self, output: 'StylizedMonospacedOutput', output_mode: OutputMode) -> None:
+    def __init__(self, output: 'SyntaxStylizedTextPanel', output_mode: OutputMode) -> None:
         self._output = output
         self._config = output.config
         self._color_style_name = extract_value_if_enum(self._config.color_style)
@@ -301,9 +301,9 @@ class StylizedMonospacedOutputVariant(OutputVariant):
 
 
 @dataclass(config=ConfigDict(extra=Extra.forbid, validate_all=True))
-class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
+class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
     @overload
-    def __init__(self, content: DraftMonospacedOutput[FrameT]):
+    def __init__(self, content: ReflowedTextDraftPanel[FrameT]):
         ...
 
     @overload
@@ -311,11 +311,11 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
         ...
 
     def __init__(self,
-                 content: str | DraftMonospacedOutput[FrameT],
+                 content: str | ReflowedTextDraftPanel[FrameT],
                  frame=None,
                  constraints=None,
                  config=None):
-        if isinstance(content, DraftMonospacedOutput):
+        if isinstance(content, ReflowedTextDraftPanel):
             assert frame is None
             assert constraints is None
             assert config is None
@@ -388,7 +388,7 @@ class StylizedMonospacedOutput(DraftMonospacedOutput[FrameT], Generic[FrameT]):
         frame_height = self.frame.dims.height
 
         if frame_width is None or frame_height is None:
-            draft = DraftMonospacedOutput(self.content)
+            draft = ReflowedTextDraftPanel(self.content)
 
             if frame_width is None:
                 frame_width = draft.dims.width

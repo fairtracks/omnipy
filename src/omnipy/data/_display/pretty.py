@@ -11,7 +11,7 @@ from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions, Proportionally
 from omnipy.data._display.frame import Frame, frame_has_width, FrameWithWidth
 from omnipy.data._display.panel.base import FrameT
-from omnipy.data._display.panel.draft import DraftMonospacedOutput, DraftOutput
+from omnipy.data._display.panel.draft import DraftPanel, ReflowedTextDraftPanel
 from omnipy.data.typechecks import is_model_instance
 from omnipy.util._pydantic import NonNegativeInt
 
@@ -20,161 +20,162 @@ class PrettyPrinter(ABC):
     @abstractmethod
     def no_width_change_since_last_print(
         self,
-        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+        reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> bool:
         pass
 
     def prepare_draft_for_print_with_reduced_width_requirements(
         self,
-        draft: DraftOutput[object, FrameT],
-        mono_draft: DraftMonospacedOutput[FrameWithWidth],
-    ) -> DraftOutput[object, FrameWithWidth]:
-        new_frame = self._calculate_frame_with_reduced_width(mono_draft)
-        new_constraints = self._calculate_constraints_with_reduced_width(mono_draft)
-        return DraftOutput(
-            draft.content,
+        draft_panel: DraftPanel[object, FrameT],
+        reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
+    ) -> DraftPanel[object, FrameWithWidth]:
+        new_frame = self._calculate_frame_with_reduced_width(reflowed_text_panel)
+        new_constraints = self._calculate_constraints_with_reduced_width(reflowed_text_panel)
+        return DraftPanel(
+            draft_panel.content,
             frame=new_frame,
             constraints=new_constraints,
-            config=draft.config,
+            config=draft_panel.config,
         )
 
     @abstractmethod
     def _calculate_frame_with_reduced_width(
         self,
-        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+        reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> FrameWithWidth:
         pass
 
     @abstractmethod
     def _calculate_constraints_with_reduced_width(
         self,
-        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+        reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> Constraints:
         pass
 
     def print_draft(
         self,
-        draft: DraftOutput[object, FrameT],
-    ) -> DraftMonospacedOutput[FrameT]:
-        return DraftMonospacedOutput(
-            self.print_draft_to_str(draft),
-            frame=draft.frame,
-            constraints=draft.constraints,
-            config=draft.config,
+        draft_panel: DraftPanel[object, FrameT],
+    ) -> ReflowedTextDraftPanel[FrameT]:
+        return ReflowedTextDraftPanel(
+            self.print_draft_to_str(draft_panel),
+            frame=draft_panel.frame,
+            constraints=draft_panel.constraints,
+            config=draft_panel.config,
         )
 
     @abstractmethod
-    def print_draft_to_str(self, draft: DraftOutput[object, FrameT]) -> str:
+    def print_draft_to_str(self, draft_panel: DraftPanel[object, FrameT]) -> str:
         pass
 
 
 class RichPrettyPrinter(PrettyPrinter):
     def __init__(self) -> None:
-        self._prev_mono_draft_width: NonNegativeInt | None = None
+        self._prev_reflowed_text_panel_width: NonNegativeInt | None = None
 
     def no_width_change_since_last_print(
         self,
-        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+        reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> bool:
-        if self._prev_mono_draft_width is None:
+        if self._prev_reflowed_text_panel_width is None:
             return False
         else:
-            return self._prev_mono_draft_width <= mono_draft.dims.width
+            return self._prev_reflowed_text_panel_width <= reflowed_text_panel.dims.width
 
     def _calculate_frame_with_reduced_width(
         self,
-        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+        reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> FrameWithWidth:
-        self._prev_mono_draft_width = mono_draft.dims.width
+        self._prev_reflowed_text_panel_width = reflowed_text_panel.dims.width
 
-        if mono_draft.dims.height == 1:
-            frame_width = mono_draft.dims.width - 2
+        if reflowed_text_panel.dims.height == 1:
+            frame_width = reflowed_text_panel.dims.width - 2
         else:
-            frame_width = mono_draft.dims.width - 1
+            frame_width = reflowed_text_panel.dims.width - 1
 
-        return Frame(Dimensions(width=frame_width, height=mono_draft.frame.dims.height))
+        return Frame(Dimensions(width=frame_width, height=reflowed_text_panel.frame.dims.height))
 
     def _calculate_constraints_with_reduced_width(
         self,
-        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+        reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> Constraints:
-        return mono_draft.constraints
+        return reflowed_text_panel.constraints
 
-    def print_draft_to_str(self, draft: DraftOutput[object, FrameT]) -> str:
-        if draft.frame.dims.width is not None:
-            max_width = draft.frame.dims.width + 1
+    def print_draft_to_str(self, draft_panel: DraftPanel[object, FrameT]) -> str:
+        if draft_panel.frame.dims.width is not None:
+            max_width = draft_panel.frame.dims.width + 1
         else:
             max_width = MAX_TERMINAL_SIZE
 
         return rich_pretty_repr(
-            draft.content,
-            indent_size=draft.config.indent_tab_size,
+            draft_panel.content,
+            indent_size=draft_panel.config.indent_tab_size,
             max_width=max_width,
         )
 
 
 class DevtoolsPrettyPrinter(PrettyPrinter):
     def __init__(self) -> None:
-        self._prev_mono_draft_width: NonNegativeInt | None = None
+        self._prev_reflowed_text_panel_width: NonNegativeInt | None = None
         self._prev_max_container_width: NonNegativeInt | None = None
 
     def no_width_change_since_last_print(
         self,
-        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+        reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> bool:
-        if self._prev_mono_draft_width is None or self._prev_max_container_width is None:
+        if self._prev_reflowed_text_panel_width is None or self._prev_max_container_width is None:
             return False
         else:
             # Sanity check
-            assert self._prev_mono_draft_width is not None
+            assert self._prev_reflowed_text_panel_width is not None
             assert self._prev_max_container_width is not None
 
-            return self._prev_mono_draft_width <= mono_draft.dims.width \
-                and self._prev_max_container_width <= mono_draft.max_container_width_across_lines
+            return ((self._prev_reflowed_text_panel_width <= reflowed_text_panel.dims.width)
+                    and (self._prev_max_container_width
+                         <= reflowed_text_panel.max_container_width_across_lines))
 
     def _calculate_frame_with_reduced_width(
         self,
-        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+        reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> FrameWithWidth:
-        self._prev_mono_draft_width = mono_draft.dims.width
+        self._prev_reflowed_text_panel_width = reflowed_text_panel.dims.width
 
         return Frame(
             Dimensions(
-                width=mono_draft.dims.width - 1,
-                height=mono_draft.frame.dims.height,
+                width=reflowed_text_panel.dims.width - 1,
+                height=reflowed_text_panel.frame.dims.height,
             ))
 
     def _calculate_constraints_with_reduced_width(
         self,
-        mono_draft: DraftMonospacedOutput[FrameWithWidth],
+        reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> Constraints:
-        self._prev_max_container_width = mono_draft.max_container_width_across_lines
+        self._prev_max_container_width = reflowed_text_panel.max_container_width_across_lines
 
-        prev_constraints_kwargs = asdict(mono_draft.constraints)
+        prev_constraints_kwargs = asdict(reflowed_text_panel.constraints)
         prev_constraints_kwargs['container_width_per_line_limit'] = \
-            max(mono_draft.max_container_width_across_lines - 1, 0)
+            max(reflowed_text_panel.max_container_width_across_lines - 1, 0)
         return Constraints(**prev_constraints_kwargs)
 
-    def print_draft_to_str(self, draft: DraftOutput[object, FrameT]) -> str:
-        if draft.constraints.container_width_per_line_limit is not None:
-            simple_cutoff = draft.constraints.container_width_per_line_limit
+    def print_draft_to_str(self, draft_panel: DraftPanel[object, FrameT]) -> str:
+        if draft_panel.constraints.container_width_per_line_limit is not None:
+            simple_cutoff = draft_panel.constraints.container_width_per_line_limit
         else:
             simple_cutoff = MAX_TERMINAL_SIZE
 
-        if draft.frame.dims.width is not None:
-            width = draft.frame.dims.width + 1
+        if draft_panel.frame.dims.width is not None:
+            width = draft_panel.frame.dims.width + 1
         else:
             width = MAX_TERMINAL_SIZE
 
         while True:
             pf = PrettyFormat(
-                indent_step=draft.config.indent_tab_size,
+                indent_step=draft_panel.config.indent_tab_size,
                 simple_cutoff=simple_cutoff,
                 width=width,
             )
 
             try:
-                return pf(draft.content)
+                return pf(draft_panel.content)
             except ValueError as e:
                 text_match = re.search(r'invalid width (-?\d+)', str(e))
 
@@ -194,82 +195,84 @@ class DevtoolsPrettyPrinter(PrettyPrinter):
 
 def _reduce_width_until_proportional_with_frame(
     pretty_printer: PrettyPrinter,
-    draft: DraftOutput[object, FrameT],
-    cur_mono_draft: DraftMonospacedOutput[FrameWithWidth],
-) -> DraftMonospacedOutput[FrameT]:
+    draft_panel: DraftPanel[object, FrameT],
+    cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
+) -> ReflowedTextDraftPanel[FrameT]:
 
     while True:
-        fit = cur_mono_draft.within_frame
+        fit = cur_reflowed_text_panel.within_frame
         if fit.width and fit.proportionality is not Proportionally.WIDER:
             break
 
-        if pretty_printer.no_width_change_since_last_print(cur_mono_draft):
+        if pretty_printer.no_width_change_since_last_print(cur_reflowed_text_panel):
             break
 
-        draft_for_print: DraftOutput[object, FrameWithWidth] = \
+        draft_for_print: DraftPanel[object, FrameWithWidth] = \
             pretty_printer.prepare_draft_for_print_with_reduced_width_requirements(
-                draft,
-                cur_mono_draft,
+                draft_panel,
+                cur_reflowed_text_panel,
         )
 
         # To maintain original frame and constraints
-        cur_mono_draft = DraftMonospacedOutput(
+        cur_reflowed_text_panel = ReflowedTextDraftPanel(
             pretty_printer.print_draft_to_str(draft_for_print),
-            frame=cur_mono_draft.frame,
-            constraints=cur_mono_draft.constraints,
-            config=cur_mono_draft.config,
+            frame=cur_reflowed_text_panel.frame,
+            constraints=cur_reflowed_text_panel.constraints,
+            config=cur_reflowed_text_panel.config,
         )
 
     # Even though FrameT is FrameWithWidth at this point, static type checkers don't know that
-    return cast(DraftMonospacedOutput[FrameT], cur_mono_draft)
+    return cast(ReflowedTextDraftPanel[FrameT], cur_reflowed_text_panel)
 
 
-def _get_pretty_printer(draft: DraftOutput[object, FrameT]) -> PrettyPrinter:
-    match draft.config.pretty_printer:
+def _get_pretty_printer(draft_panel: DraftPanel[object, FrameT]) -> PrettyPrinter:
+    match draft_panel.config.pretty_printer:
         case PrettyPrinterLib.RICH:
             return RichPrettyPrinter()
         case PrettyPrinterLib.DEVTOOLS:
             return DevtoolsPrettyPrinter()
 
 
-def _prepare_content(in_draft: DraftOutput[object, FrameT]) -> DraftOutput[object, FrameT]:
+def _prepare_content(in_draft: DraftPanel[object, FrameT]) -> DraftPanel[object, FrameT]:
     if is_model_instance(in_draft.content) and not in_draft.config.debug_mode:
         data = in_draft.content.to_data()
     else:
         data = in_draft.content
-    draft = DraftOutput(data, frame=in_draft.frame, config=in_draft.config)
-    return draft
+    draft_panel = DraftPanel(data, frame=in_draft.frame, config=in_draft.config)
+    return draft_panel
 
 
 def _should_adjust(
-    draft: DraftOutput[object, FrameT],
-    mono_draft: DraftMonospacedOutput[FrameWithWidth],
+    draft_panel: DraftPanel[object, FrameT],
+    reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
 ) -> bool:
-    if mono_draft.within_frame.height is False:
+    if reflowed_text_panel.within_frame.height is False:
         return False
-    return not mono_draft.within_frame.width or _is_nested_structure(draft)
+    return not reflowed_text_panel.within_frame.width or _is_nested_structure(draft_panel)
 
 
-def _is_nested_structure(draft: DraftOutput[object, FrameT]) -> bool:
+def _is_nested_structure(draft_panel: DraftPanel[object, FrameT]) -> bool:
     def _any_abbrev_containers(repr_str: str) -> bool:
         return bool(re.search(r'\[...\]|\(...\)|\{...\}', repr_str))
 
-    only_1st_level_repr = rich_pretty_repr(draft.content, max_depth=1)
+    only_1st_level_repr = rich_pretty_repr(draft_panel.content, max_depth=1)
     if _any_abbrev_containers(only_1st_level_repr):
         return True
     return False
 
 
 def pretty_repr_of_draft_output(
-        in_draft: DraftOutput[object, FrameT]) -> DraftMonospacedOutput[FrameT]:
+        in_draft_panel: DraftPanel[object, FrameT]) -> ReflowedTextDraftPanel[FrameT]:
 
-    pretty_printer = _get_pretty_printer(in_draft)
-    draft = _prepare_content(in_draft)
-    printed_draft = pretty_printer.print_draft(draft)
+    pretty_printer = _get_pretty_printer(in_draft_panel)
+    draft_panel = _prepare_content(in_draft_panel)
+    printed_draft_panel = pretty_printer.print_draft(draft_panel)
 
-    if frame_has_width(printed_draft.frame):
-        mono_draft = cast(DraftMonospacedOutput[FrameWithWidth], printed_draft)
-        if _should_adjust(draft, mono_draft):
-            return _reduce_width_until_proportional_with_frame(pretty_printer, draft, mono_draft)
+    if frame_has_width(printed_draft_panel.frame):
+        reflowed_text_panel = cast(ReflowedTextDraftPanel[FrameWithWidth], printed_draft_panel)
+        if _should_adjust(draft_panel, reflowed_text_panel):
+            return _reduce_width_until_proportional_with_frame(pretty_printer,
+                                                               draft_panel,
+                                                               reflowed_text_panel)
 
-    return printed_draft
+    return printed_draft_panel
