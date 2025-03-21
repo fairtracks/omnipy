@@ -5,7 +5,9 @@ import pytest
 
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.layout import Layout
-from omnipy.data._display.panel.draft import Panel
+from omnipy.data._display.panel.base import Panel
+
+from .panel.helpers.classes import MockPanel
 
 
 @dataclass
@@ -36,8 +38,8 @@ def test_empty_layout(
 def simple_layout() -> SimpleLayoutCase:
     """Create a layout with two panels for testing."""
     layout = Layout()
-    first_panel = Panel()
-    second_panel = Panel()
+    first_panel = MockPanel()
+    second_panel = MockPanel()
 
     layout['first'] = first_panel
     layout['second'] = second_panel
@@ -98,7 +100,7 @@ def test_layout_insertion_and_deletion(
     """Test insertion and deletion of panels in the layout."""
     case = simple_layout
 
-    third_panel = Panel()
+    third_panel = MockPanel()
     case.layout['third'] = third_panel
 
     # Test insertion
@@ -147,17 +149,17 @@ def test_layout_default_methods(
     # Test get() method
     assert case.layout.get('first') is case.first_panel
     assert case.layout.get('missing') is None
-    other_panel = Panel()
+    other_panel = MockPanel()
     assert case.layout.get('missing', other_panel) is other_panel
 
     # Test setdefault()
-    third_panel = Panel()
+    third_panel = MockPanel()
     result = case.layout.setdefault('third', third_panel)
     assert case.layout['third'] is third_panel
     assert result is third_panel
 
     # Test setdefault() with existing key
-    result = case.layout.setdefault('first', Panel())
+    result = case.layout.setdefault('first', MockPanel())
     assert case.layout['first'] is case.first_panel
     assert result is case.first_panel  # Should return existing value
 
@@ -170,33 +172,33 @@ def test_layout_update_methods_and_operators(
     case = simple_layout
 
     # Test update() with another dict
-    new_third_panel = Panel()
-    fourth_panel = Panel()
+    new_third_panel = MockPanel()
+    fourth_panel = MockPanel()
     case.layout.update({'third': new_third_panel, 'fourth': fourth_panel})
     assert case.layout['third'] is new_third_panel
     assert case.layout['fourth'] is fourth_panel
 
     # Test update() with keyword arguments
-    fifth_panel = Panel()
+    fifth_panel = MockPanel()
     case.layout.update(fifth=fifth_panel)
     assert case.layout['fifth'] is fifth_panel
 
     # Test update() with iterable of key-value pairs
-    sixth_panel = Panel()
+    sixth_panel = MockPanel()
     iterable = [('sixth', sixth_panel)]
     case.layout.update(iterable)
     assert case.layout['sixth'] is sixth_panel
 
     # Test |= operator
-    new_sixth_panel = Panel()
-    seventh_panel = Panel()
+    new_sixth_panel = MockPanel()
+    seventh_panel = MockPanel()
     case.layout |= {'sixth': new_sixth_panel, 'seventh': seventh_panel}
     assert case.layout['sixth'] is new_sixth_panel
     assert case.layout['seventh'] is seventh_panel
 
     # Test | operator
-    new_seventh_panel = Panel()
-    eighth_panel = Panel()
+    new_seventh_panel = MockPanel()
+    eighth_panel = MockPanel()
     other_dict = {'seventh': new_seventh_panel, 'eighth': eighth_panel}
     combined = case.layout | other_dict
     assert combined['seventh'] is new_seventh_panel
@@ -219,7 +221,7 @@ def test_layout_dict_comparison(
     assert dict(case.layout) == same_dict
 
     # Check with different content
-    different_dict = {'first': case.first_panel, 'different': Panel()}
+    different_dict = {'first': case.first_panel, 'different': MockPanel()}
     assert dict(case.layout) != different_dict
 
 
@@ -236,7 +238,7 @@ def test_layout_dict_copy_and_clear(
     assert layout_copy is not case.layout
 
     # Modifying copy shouldn't affect original
-    new_panel = Panel()
+    new_panel = MockPanel()
     layout_copy['new'] = new_panel
     assert 'new' in layout_copy
     assert 'new' not in case.layout
@@ -285,7 +287,7 @@ def test_layout_simple_grid_insert_and_delete(
     """Test simple grid queries."""
     case = simple_layout
 
-    third_panel = Panel()
+    third_panel = MockPanel()
     case.layout['third'] = third_panel
 
     assert case.layout.grid.dims == Dimensions(width=3, height=1)
