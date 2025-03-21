@@ -7,7 +7,7 @@ from pydantic import ConfigDict, Extra, validator
 from pydantic.dataclasses import dataclass
 from typing_extensions import TypeVar
 
-from omnipy.data._display.frame import AnyFrame, Frame
+from omnipy.data._display.frame import AnyFrame, empty_frame, Frame
 
 FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
 
@@ -18,7 +18,7 @@ class Panel(Generic[FrameT]):
     frame: FrameT
 
     def __init__(self, frame: FrameT | None = None):
-        self.frame = frame or cast(FrameT, Frame())
+        self.frame = frame or cast(FrameT, empty_frame())
 
     @validator('frame')
     def _copy_frame(cls, frame: Frame) -> Frame:

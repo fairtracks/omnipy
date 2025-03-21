@@ -4,6 +4,7 @@ import pytest
 
 from omnipy.data._display.dimensions import AnyDimensions, Dimensions
 from omnipy.data._display.frame import (AnyFrame,
+                                        empty_frame,
                                         Frame,
                                         frame_has_height,
                                         frame_has_width,
@@ -21,8 +22,8 @@ def _assert_frame(
     exp_frame_has_width_and_height: bool,
 ) -> None:
     if dims is None:
-        frame = Frame()
-        dims = Dimensions()
+        frame = empty_frame()
+        dims = Dimensions(width=None, height=None)
     else:
         frame = Frame(dims)
 
@@ -54,8 +55,8 @@ def _assert_frame(
 
 def test_frame(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    frame: Frame = Frame()
-    assert frame.dims == Dimensions()
+    frame: Frame = empty_frame()
+    assert frame.dims == Dimensions(width=None, height=None)
 
     _assert_frame(None, False, False, False)
     _assert_frame(Dimensions(10, None), True, False, False)
@@ -113,7 +114,7 @@ def test_frame_types(
 
 def test_frame_validate_assignments(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    frame = Frame()
+    frame = empty_frame()
 
     dims = Dimensions(10, 20)
     frame.dims = dims

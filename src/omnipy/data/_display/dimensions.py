@@ -3,7 +3,7 @@ from typing import Generic
 
 from typing_extensions import TypeIs, TypeVar
 
-from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt
+from omnipy.util._pydantic import ConfigDict, dataclass, Extra, NonNegativeInt
 
 WidthT = TypeVar(
     'WidthT',
@@ -22,8 +22,8 @@ HeightT = TypeVar(
 
 @dataclass(config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
 class Dimensions(Generic[WidthT, HeightT]):
-    width: WidthT = Field(default=None)
-    height: HeightT = Field(default=None)
+    width: WidthT
+    height: HeightT
 
 
 UndefinedDimensions = Dimensions[None, None]

@@ -29,11 +29,9 @@ def _assert_dimensions(
 ) -> None:
     kwargs = _WidthAndHeightKwargs()
 
-    if width is not None:
-        kwargs['width'] = width
+    kwargs['width'] = width
 
-    if height is not None:
-        kwargs['height'] = height
+    kwargs['height'] = height
 
     dims = Dimensions(**kwargs)
 
@@ -143,7 +141,7 @@ def test_fail_dimensions_if_negative(
 
 def test_dimensions_validate_assignments(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    dims: Dimensions = Dimensions(height=10)
+    dims: Dimensions = Dimensions(width=None, height=10)
 
     # TODO: Check why dims is type narrowed to `Dimensions[None, int]` here in Pyright
     dims.width = 10  # pyright: ignore [reportAttributeAccessIssue]

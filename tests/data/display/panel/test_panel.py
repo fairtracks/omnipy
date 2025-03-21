@@ -1,12 +1,12 @@
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.frame import Frame
+from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.panel.draft import Panel
 
 
 def test_panel():
     # Test with default frame
     panel = Panel()
-    assert panel.frame == Frame()
+    assert panel.frame == empty_frame()
 
     # Test with custom frame
     custom_frame = Frame(Dimensions(width=10, height=20))

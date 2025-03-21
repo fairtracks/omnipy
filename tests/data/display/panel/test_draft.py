@@ -6,7 +6,7 @@ import pytest
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.frame import Frame
+from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.panel.draft import DraftMonospacedOutput, DraftOutput
 
 
@@ -45,7 +45,7 @@ def _assert_draft_output(
     draft = DraftOutput(content, **kwargs)
 
     if frame is None:
-        frame = Frame()
+        frame = empty_frame()
 
     if constraints is None:
         constraints = Constraints()
@@ -132,9 +132,9 @@ def test_draft_output_with_empty_content(
     empty_string_draft = DraftOutput('')
 
     assert empty_string_draft.content == ''
-    assert empty_string_draft.frame == Frame()
     assert empty_string_draft.constraints == Constraints()
     assert empty_string_draft.config == OutputConfig()
+    assert empty_string_draft.frame == empty_frame()
 
     # Test with None
     none_draft = DraftOutput(None)
@@ -214,7 +214,7 @@ def test_draft_monospaced_output_immutable_properties(
         draft.content = 'Some other text'
 
     with pytest.raises(AttributeError):
-        draft.frame = Frame()
+        draft.frame = empty_frame()
 
     with pytest.raises(AttributeError):
         draft.constraints = Constraints()
