@@ -1,9 +1,9 @@
 from enum import Enum
 from textwrap import dedent
 
-from pygments.lexers import get_lexer_by_name
-from pygments.styles import get_style_by_name
-from pygments.util import ClassNotFound
+import pygments.lexers
+import pygments.styles
+import pygments.util
 
 from omnipy.data._display.styles.dynamic_styles import install_base16_theme
 from omnipy.util._pydantic import (ConfigDict,
@@ -654,11 +654,11 @@ class OutputConfig:
         try:
             if isinstance(language, SyntaxLanguage):
                 return language
-            elif get_lexer_by_name(language):
+            elif pygments.lexers.get_lexer_by_name(language):
                 return language
             else:
                 raise ValueError(f'Invalid syntax language: {language}')
-        except ClassNotFound as exp:
+        except pygments.util.ClassNotFound as exp:
             raise ValueError(f'Invalid syntax language: {language}') from exp
 
     @validator('color_style')
@@ -668,14 +668,14 @@ class OutputConfig:
                 return color_style
             elif isinstance(color_style, ColorStyles):
                 try:
-                    get_style_by_name(color_style.value)
-                except ClassNotFound:
+                    pygments.styles.get_style_by_name(color_style.value)
+                except pygments.util.ClassNotFound:
                     install_base16_theme(color_style.value)
-                    get_style_by_name(color_style.value)
+                    pygments.styles.get_style_by_name(color_style.value)
                 return color_style
-            elif get_style_by_name(color_style):
+            elif pygments.styles.get_style_by_name(color_style):
                 return color_style
             else:
                 raise ValueError(f'Invalid color style: {color_style}')
-        except ClassNotFound as exp:
+        except pygments.util.ClassNotFound as exp:
             raise ValueError(f'Invalid color style: {color_style}') from exp

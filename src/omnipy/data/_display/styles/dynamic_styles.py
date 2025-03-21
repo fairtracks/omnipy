@@ -3,7 +3,7 @@ from functools import cache
 
 import aiohttp
 from inflection import dasherize, underscore
-from pygments.style import Style
+import pygments.style
 import pygments.styles
 from ruamel.yaml import YAML
 
@@ -16,7 +16,7 @@ _STYLE_CLS_NAME_SUFFIX = 'Style'
 _THEME_KEY_BASE16_PREFIX = 'tb16-'
 
 
-class TintedBase16Style(Style):
+class TintedBase16Style(pygments.style.Style):
     name: str
     author: str
     variant: str
@@ -75,7 +75,7 @@ def _capitalize_words(text: str) -> str:
 
 
 @cache
-def __getattr__(attr: str) -> type[Style]:
+def __getattr__(attr: str) -> type[pygments.style.Style]:
     try:
         if attr.startswith(_STYLE_CLS_NAME_BASE16_PREFIX) and attr.endswith(_STYLE_CLS_NAME_SUFFIX):
             stripped_name = attr[len(_STYLE_CLS_NAME_BASE16_PREFIX):-len(_STYLE_CLS_NAME_SUFFIX)]
