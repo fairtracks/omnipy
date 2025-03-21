@@ -22,9 +22,10 @@ import rich.text
 from omnipy.data._display.config import (ConsoleColorSystem,
                                          HorizontalOverflowMode,
                                          VerticalOverflowMode)
+from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
 from omnipy.data._display.panel.base import FrameT, OutputMode, OutputVariant
 from omnipy.data._display.panel.draft import ReflowedTextDraftPanel
-from omnipy.util._pydantic import ConfigDict, dataclass, Extra
+from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field
 
 
 def extract_value_if_enum(conf_item: Enum | str) -> str:
@@ -309,8 +310,11 @@ class StylizedMonospacedOutputVariant(OutputVariant):
         return html_cropped
 
 
-@dataclass(config=ConfigDict(extra=Extra.forbid, validate_all=True))
+@dataclass(init=False, config=ConfigDict(extra=Extra.forbid, validate_all=True))
 class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
+    _init_dims: DimensionsWithWidthAndHeight = Field(
+        default_factory=lambda: Dimensions(width=0, height=0))
+
     @overload
     def __init__(self, content: ReflowedTextDraftPanel[FrameT]):
         ...
@@ -338,6 +342,11 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
 
         super().__init__(str_content, frame, constraints, config)
 
+        if isinstance(content, ReflowedTextDraftPanel):
+            self._init_dims = content.dims
+        else:
+            self._init_dims = ReflowedTextDraftPanel(str_content).dims
+
     @staticmethod
     def _clean_rich_style_caches():
         """
@@ -363,8 +372,6 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
         # background_color='default' (the official solution,
         # see https://github.com/Textualize/rich/issues/284#issuecomment-694947144)
         # does not work for HTML content.
-
-        self._clean_rich_style_caches()
         theme = rich.syntax.Syntax.get_theme(style_name)
 
         if remove_bg_color:
@@ -401,12 +408,10 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
         frame_height = self.frame.dims.height
 
         if frame_width is None or frame_height is None:
-            draft = ReflowedTextDraftPanel(self.content)
-
             if frame_width is None:
-                frame_width = draft.dims.width
+                frame_width = self._init_dims.width
             if frame_height is None:
-                frame_height = draft.dims.height
+                frame_height = self._init_dims.height
 
         return frame_width, frame_height
 
