@@ -25,7 +25,7 @@ from omnipy.data._display.config import (ConsoleColorSystem,
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
 from omnipy.data._display.panel.base import FrameT, OutputMode, OutputVariant
 from omnipy.data._display.panel.draft import ReflowedTextDraftPanel
-from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field
+import omnipy.util._pydantic as pyd
 
 
 def extract_value_if_enum(conf_item: Enum | str) -> str:
@@ -310,9 +310,9 @@ class StylizedMonospacedOutputVariant(OutputVariant):
         return html_cropped
 
 
-@dataclass(init=False, config=ConfigDict(extra=Extra.forbid, validate_all=True))
+@pyd.dataclass(init=False, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
 class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
-    _init_dims: DimensionsWithWidthAndHeight = Field(
+    _init_dims: DimensionsWithWidthAndHeight = pyd.Field(
         default_factory=lambda: Dimensions(width=0, height=0))
 
     @overload

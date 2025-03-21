@@ -11,16 +11,16 @@ from omnipy.data._display.dimensions import Dimensions, DimensionsFit
 from omnipy.data._display.frame import empty_frame
 from omnipy.data._display.helpers import UnicodeCharWidthMap
 from omnipy.data._display.panel.base import FrameT, Panel
-from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt, validator
+import omnipy.util._pydantic as pyd
 
 ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)
 
 
-@dataclass(init=False, config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
+@pyd.dataclass(init=False, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))
 class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
     content: ContentT
-    constraints: Constraints = Field(default_factory=Constraints)
-    config: OutputConfig = Field(default_factory=OutputConfig)
+    constraints: Constraints = pyd.Field(default_factory=Constraints)
+    config: OutputConfig = pyd.Field(default_factory=OutputConfig)
 
     def __init__(self, content: ContentT, frame=None, constraints=None, config=None):
         self.content = content
@@ -28,11 +28,11 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
         self.constraints = constraints or Constraints()
         self.config = config or OutputConfig()
 
-    @validator('constraints')
+    @pyd.validator('constraints')
     def _copy_constraints(cls, constraints: Constraints) -> Constraints:
         return Constraints(**asdict(constraints))
 
-    @validator('config')
+    @pyd.validator('config')
     def _copy_config(cls, config: OutputConfig) -> OutputConfig:
         return OutputConfig(**asdict(config))
 
@@ -41,7 +41,7 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
         return ConstraintsSatisfaction(self.constraints)
 
 
-@dataclass(init=False, config=ConfigDict(extra=Extra.forbid, validate_all=True))
+@pyd.dataclass(init=False, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
 class ReflowedTextDraftPanel(DraftPanel[str, FrameT], Generic[FrameT]):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
     content: str
@@ -62,18 +62,18 @@ class ReflowedTextDraftPanel(DraftPanel[str, FrameT], Generic[FrameT]):
         return self.content.splitlines()
 
     @cached_property
-    def _width(self) -> NonNegativeInt:
+    def _width(self) -> pyd.NonNegativeInt:
         def _line_len(line: str) -> int:
             return sum(self._char_width_map[c] for c in line)
 
         return max((_line_len(line) for line in self._content_lines), default=0)
 
     @cached_property
-    def _height(self) -> NonNegativeInt:
+    def _height(self) -> pyd.NonNegativeInt:
         return len(self._content_lines)
 
     @cached_property
-    def dims(self) -> Dimensions[NonNegativeInt, NonNegativeInt]:
+    def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
         return Dimensions(width=self._width, height=self._height)
 
     @cached_property
@@ -81,7 +81,7 @@ class ReflowedTextDraftPanel(DraftPanel[str, FrameT], Generic[FrameT]):
         return DimensionsFit(self.dims, self.frame.dims)
 
     @cached_property
-    def max_container_width_across_lines(self) -> NonNegativeInt:
+    def max_container_width_across_lines(self) -> pyd.NonNegativeInt:
         def _max_container_width_in_line(line):
             # Find all containers in the line using regex
             containers = re.findall(r'\{.*\}|\[.*\]|\(.*\)', line)

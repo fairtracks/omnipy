@@ -1,8 +1,9 @@
-from pydantic import BaseModel
 import pygments.token
 
+import omnipy.util._pydantic as pyd
 
-class Base16Colors(BaseModel):
+
+class Base16Colors(pyd.BaseModel):
     base00: str
     base01: str
     base02: str
@@ -21,7 +22,7 @@ class Base16Colors(BaseModel):
     base0F: str
 
 
-class Base16Theme(BaseModel):
+class Base16Theme(pyd.BaseModel):
     name: str
     author: str
     variant: str

@@ -6,12 +6,7 @@ import pygments.styles
 import pygments.util
 
 from omnipy.data._display.styles.dynamic_styles import install_base16_theme
-from omnipy.util._pydantic import (ConfigDict,
-                                   dataclass,
-                                   Extra,
-                                   NonNegativeFloat,
-                                   NonNegativeInt,
-                                   validator)
+import omnipy.util._pydantic as pyd
 
 MAX_TERMINAL_SIZE = 2**16 - 1
 
@@ -568,7 +563,8 @@ class VerticalOverflowMode(str, Enum):
     CROP_BOTTOM = 'crop_bottom'
 
 
-@dataclass(kw_only=True, config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
+@pyd.dataclass(
+    kw_only=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))
 class OutputConfig:
     """
     Configuration of data formatting for DraftOutput (and subclasses).
@@ -627,7 +623,7 @@ class OutputConfig:
             output.
     """
 
-    indent_tab_size: NonNegativeInt = 2
+    indent_tab_size: pyd.NonNegativeInt = 2
     debug_mode: bool = False
     pretty_printer: PrettyPrinterLib = PrettyPrinterLib.RICH
     language: SyntaxLanguage | str = SyntaxLanguage.PYTHON
@@ -642,14 +638,14 @@ class OutputConfig:
         'Courier New',
         'monospace',
     )
-    css_font_size: NonNegativeInt | None = 14
-    css_font_weight: NonNegativeInt | None = 450
-    css_line_height: NonNegativeFloat | None = 1.35
+    css_font_size: pyd.NonNegativeInt | None = 14
+    css_font_weight: pyd.NonNegativeInt | None = 450
+    css_line_height: pyd.NonNegativeFloat | None = 1.35
     horizontal_overflow_mode: HorizontalOverflowMode = HorizontalOverflowMode.WORD_WRAP
     vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.CROP_BOTTOM
     layout_style: LayoutStyle = LayoutStyle.TABLE_GRID
 
-    @validator('language')
+    @pyd.validator('language')
     def validate_language(cls, language: SyntaxLanguage | str) -> SyntaxLanguage | str:
         try:
             if isinstance(language, SyntaxLanguage):
@@ -661,7 +657,7 @@ class OutputConfig:
         except pygments.util.ClassNotFound as exp:
             raise ValueError(f'Invalid syntax language: {language}') from exp
 
-    @validator('color_style')
+    @pyd.validator('color_style')
     def validate_color_style(cls, color_style: ColorStyles | str) -> ColorStyles | str:
         try:
             if isinstance(color_style, RecommendedColorStyles):

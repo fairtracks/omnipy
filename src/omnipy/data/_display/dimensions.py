@@ -3,34 +3,34 @@ from typing import Generic
 
 from typing_extensions import TypeIs, TypeVar
 
-from omnipy.util._pydantic import ConfigDict, dataclass, Extra, NonNegativeInt
+import omnipy.util._pydantic as pyd
 
 WidthT = TypeVar(
     'WidthT',
-    bound=NonNegativeInt | None,
-    default=NonNegativeInt | None,
+    bound=pyd.NonNegativeInt | None,
+    default=pyd.NonNegativeInt | None,
     covariant=True,
 )
 
 HeightT = TypeVar(
     'HeightT',
-    bound=NonNegativeInt | None,
-    default=NonNegativeInt | None,
+    bound=pyd.NonNegativeInt | None,
+    default=pyd.NonNegativeInt | None,
     covariant=True,
 )
 
 
-@dataclass(config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
+@pyd.dataclass(config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))
 class Dimensions(Generic[WidthT, HeightT]):
     width: WidthT
     height: HeightT
 
 
 UndefinedDimensions = Dimensions[None, None]
-GeneralDimensions = Dimensions[NonNegativeInt | None, NonNegativeInt | None]
-DimensionsWithWidth = Dimensions[NonNegativeInt, NonNegativeInt | None]
-DimensionsWithHeight = Dimensions[NonNegativeInt | None, NonNegativeInt]
-DimensionsWithWidthAndHeight = Dimensions[NonNegativeInt, NonNegativeInt]
+GeneralDimensions = Dimensions[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]
+DimensionsWithWidth = Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt | None]
+DimensionsWithHeight = Dimensions[pyd.NonNegativeInt | None, pyd.NonNegativeInt]
+DimensionsWithWidthAndHeight = Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]
 AnyDimensions = (
     GeneralDimensions | DimensionsWithWidth | DimensionsWithHeight | DimensionsWithWidthAndHeight)
 
