@@ -3,7 +3,6 @@ from functools import cached_property
 import re
 from typing import cast, ClassVar, Generic
 
-from rich.table import Table
 from typing_extensions import TypeVar
 
 from omnipy.data._display.config import OutputConfig
@@ -45,7 +44,7 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
 @dataclass(init=False, config=ConfigDict(extra=Extra.forbid, validate_all=True))
 class ReflowedTextDraftPanel(DraftPanel[str, FrameT], Generic[FrameT]):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
-    content: str | Table
+    content: str
 
     def __init__(self, content: ContentT, frame=None, constraints=None, config=None):
         object.__setattr__(self, 'content', content)

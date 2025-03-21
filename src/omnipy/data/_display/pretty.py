@@ -4,7 +4,7 @@ import re
 from typing import cast
 
 from devtools import PrettyFormat
-from rich.pretty import pretty_repr as rich_pretty_repr
+import rich.pretty
 
 from omnipy.data._display.config import MAX_TERMINAL_SIZE, PrettyPrinterLib
 from omnipy.data._display.constraints import Constraints
@@ -106,7 +106,7 @@ class RichPrettyPrinter(PrettyPrinter):
         else:
             max_width = MAX_TERMINAL_SIZE
 
-        return rich_pretty_repr(
+        return rich.pretty.pretty_repr(
             draft_panel.content,
             indent_size=draft_panel.config.indent_tab_size,
             max_width=max_width,
@@ -255,7 +255,7 @@ def _is_nested_structure(draft_panel: DraftPanel[object, FrameT]) -> bool:
     def _any_abbrev_containers(repr_str: str) -> bool:
         return bool(re.search(r'\[...\]|\(...\)|\{...\}', repr_str))
 
-    only_1st_level_repr = rich_pretty_repr(draft_panel.content, max_depth=1)
+    only_1st_level_repr = rich.pretty.pretty_repr(draft_panel.content, max_depth=1)
     if _any_abbrev_containers(only_1st_level_repr):
         return True
     return False

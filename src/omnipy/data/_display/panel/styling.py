@@ -6,14 +6,18 @@ import re
 from textwrap import dedent
 from typing import Callable, ClassVar, Generic, Iterable, overload
 
-from pygments.token import Token
-from rich.color import Color
-from rich.color_triplet import ColorTriplet
-from rich.console import Console, OverflowMethod
-from rich.segment import Segment
-from rich.style import Style
-from rich.syntax import Syntax, SyntaxTheme
-from rich.terminal_theme import DEFAULT_TERMINAL_THEME, TerminalTheme
+import pygments.token
+import rich.box
+import rich.color
+import rich.color_triplet
+import rich.console
+import rich.panel
+import rich.segment
+import rich.style
+import rich.syntax
+import rich.table
+import rich.terminal_theme
+import rich.text
 
 from omnipy.data._display.config import (ConsoleColorSystem,
                                          HorizontalOverflowMode,
@@ -78,20 +82,22 @@ class StylizedMonospacedOutputVariant(OutputVariant):
 
     def _apply_filter_to_console_recording(
         self,
-        console: Console,
-        filter_func: Callable[[list[Segment]], Iterable[Segment]],
-    ) -> Console:
+        console: rich.console.Console,
+        filter_func: Callable[[list[rich.segment.Segment]], Iterable[rich.segment.Segment]],
+    ) -> rich.console.Console:
         new_console = copy(console)
         with console._record_buffer_lock:
             new_console._record_buffer = \
                 filter_func(console._record_buffer)  # type: ignore[assignment]
         return new_console
 
-    def _remove_all_color_from_console_recording(self, console: Console) -> Console:
-        return self._apply_filter_to_console_recording(console, Segment.remove_color)
+    def _remove_all_color_from_console_recording(
+            self, console: rich.console.Console) -> rich.console.Console:
+        return self._apply_filter_to_console_recording(console, rich.segment.Segment.remove_color)
 
-    def _remove_styling_from_console_recording(self, console: Console) -> Console:
-        return self._apply_filter_to_console_recording(console, Segment.strip_styles)
+    def _remove_styling_from_console_recording(
+            self, console: rich.console.Console) -> rich.console.Console:
+        return self._apply_filter_to_console_recording(console, rich.segment.Segment.strip_styles)
 
     # Vertical cropping methods for terminal and HTML output
 
@@ -126,7 +132,7 @@ class StylizedMonospacedOutputVariant(OutputVariant):
 
     # Terminal output
 
-    def _prepare_terminal_console_according_to_output_mode(self) -> Console:
+    def _prepare_terminal_console_according_to_output_mode(self) -> rich.console.Console:
         console_terminal = self._output._console_terminal
 
         if self._output_mode is OutputMode.BW_STYLIZED:
@@ -143,7 +149,7 @@ class StylizedMonospacedOutputVariant(OutputVariant):
 
     # HTML output
 
-    def _prepare_html_console_according_to_output_mode(self) -> Console:
+    def _prepare_html_console_according_to_output_mode(self) -> rich.console.Console:
         console_html = self._output._console_html
 
         if self._output_mode is OutputMode.PLAIN:
@@ -199,13 +205,15 @@ class StylizedMonospacedOutputVariant(OutputVariant):
 
         return html_page_template
 
-    def _calculate_fg_color(self, syntax_theme: SyntaxTheme) -> ColorTriplet:
+    def _calculate_fg_color(
+            self, syntax_theme: rich.syntax.SyntaxTheme) -> rich.color_triplet.ColorTriplet:
         ANSI_FG_COLOR_MAP = {'ansi_light': 'black', 'ansi_dark': 'bright_white'}
 
-        syntax_theme_fg_color = syntax_theme.get_style_for_token(Token).color
+        syntax_theme_fg_color = syntax_theme.get_style_for_token(pygments.token.Token).color
 
         if syntax_theme_fg_color is None and self._color_style_name in ANSI_FG_COLOR_MAP:
-            syntax_theme_fg_color = Color.parse(ANSI_FG_COLOR_MAP[self._color_style_name])
+            syntax_theme_fg_color = rich.color.Color.parse(
+                ANSI_FG_COLOR_MAP[self._color_style_name])
 
         # Currently, the rich library defaults to a black foreground color if the token color is not
         # set for a pygments style. However, this may change in the future, so we need to check for
@@ -216,16 +224,17 @@ class StylizedMonospacedOutputVariant(OutputVariant):
         return syntax_theme_fg_color.get_truecolor(foreground=True)
 
     def _calculate_bg_color(self,
-                            syntax_theme: SyntaxTheme,
-                            style_fg_color: ColorTriplet,
-                            for_html_page: bool) -> ColorTriplet | None:
-        def _auto_detect_bw_background_color(style_fg_color: ColorTriplet) -> Color:
+                            syntax_theme: rich.syntax.SyntaxTheme,
+                            style_fg_color: rich.color_triplet.ColorTriplet,
+                            for_html_page: bool) -> rich.color_triplet.ColorTriplet | None:
+        def _auto_detect_bw_background_color(
+                style_fg_color: rich.color_triplet.ColorTriplet) -> rich.color.Color:
             """
             Auto-detects a black or bright white background color based on the luminance of the
             foreground color (i.e. whether the style is light or dark).
             """
             fg_luminance = sum(style_fg_color) / 3
-            return Color.parse('black' if fg_luminance > 127.5 else 'bright_white')
+            return rich.color.Color.parse('black' if fg_luminance > 127.5 else 'bright_white')
 
         syntax_theme_bg_color = syntax_theme.get_background_style().bgcolor
 
@@ -245,7 +254,7 @@ class StylizedMonospacedOutputVariant(OutputVariant):
         else:
             return None
 
-    def _prepare_color_theme(self, for_html_page: bool) -> TerminalTheme:
+    def _prepare_color_theme(self, for_html_page: bool) -> rich.terminal_theme.TerminalTheme:
         """
         Prepares the color theme for the HTML export, confusingly called a "terminal theme" in the
         rich library. The "terminal theme" is used to set the foreground and background colors for
@@ -258,12 +267,12 @@ class StylizedMonospacedOutputVariant(OutputVariant):
 
         :return: the "terminal theme" to use for the HTML export.
         """
-        theme = DEFAULT_TERMINAL_THEME
+        theme = rich.terminal_theme.DEFAULT_TERMINAL_THEME
 
         if self._output_mode is OutputMode.COLORIZED:
             theme = copy(theme)
 
-            syntax_theme = Syntax.get_theme(self._color_style_name)
+            syntax_theme = rich.syntax.Syntax.get_theme(self._color_style_name)
             style_fg_color = self._calculate_fg_color(syntax_theme)
             style_bg_color = self._calculate_bg_color(syntax_theme, style_fg_color, for_html_page)
 
@@ -339,13 +348,13 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
         """
 
         # The cache of the '_add()' method is the main cache causing issues
-        Style._add.cache_clear()
+        rich.style.Style._add.cache_clear()
 
         # However, we clean these caches as well to be sure
-        Style.get_html_style.cache_clear()
-        Style.clear_meta_and_links.cache_clear()
+        rich.style.Style.get_html_style.cache_clear()
+        rich.style.Style.clear_meta_and_links.cache_clear()
 
-    def _get_stylized_content_common(self, remove_bg_color: bool) -> Syntax:
+    def _get_stylized_content_common(self, remove_bg_color: bool) -> rich.console.RenderableType:
         style_name = extract_value_if_enum(self.config.color_style)
         lexer_name = extract_value_if_enum(self.config.language)
         word_wrap = self.config.horizontal_overflow_mode == HorizontalOverflowMode.WORD_WRAP
@@ -354,15 +363,15 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
         # background_color='default' (the official solution,
         # see https://github.com/Textualize/rich/issues/284#issuecomment-694947144)
         # does not work for HTML content.
-        theme = Syntax.get_theme(style_name)
 
         self._clean_rich_style_caches()
+        theme = rich.syntax.Syntax.get_theme(style_name)
 
         if remove_bg_color:
             theme._background_color = None  # type: ignore[attr-defined]
-            theme._background_style = Style()  # type: ignore[attr-defined]
+            theme._background_style = rich.style.Style()  # type: ignore[attr-defined]
 
-        return Syntax(
+        return rich.syntax.Syntax(
             self.content,
             lexer=lexer_name,
             theme=theme,
@@ -371,7 +380,9 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
         )
 
     @cached_property
-    def _stylized_content_terminal(self) -> Syntax:
+    def _stylized_content_terminal(self) -> rich.console.RenderableType:
+        self._clean_rich_style_caches()
+
         if self.config.transparent_background \
                 and self.config.console_color_system is ConsoleColorSystem.ANSI_RGB:
             return self._stylized_content_html
@@ -380,7 +391,9 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
                 remove_bg_color=self.config.transparent_background)
 
     @cached_property
-    def _stylized_content_html(self) -> Syntax:
+    def _stylized_content_html(self) -> rich.console.RenderableType:
+        self._clean_rich_style_caches()
+
         return self._get_stylized_content_common(remove_bg_color=True)
 
     def _get_console_frame_width_and_height(self) -> tuple[int, int]:
@@ -397,7 +410,7 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
 
         return frame_width, frame_height
 
-    def _get_console_overload(self) -> OverflowMethod | None:
+    def _get_console_overload(self) -> rich.console.OverflowMethod | None:
         match (self.config.horizontal_overflow_mode):
             case HorizontalOverflowMode.ELLIPSIS:
                 return 'ellipsis'
@@ -408,12 +421,12 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
 
     def _get_console_common(
         self,
-        stylized_content: Syntax,
+        stylized_content: rich.syntax.Syntax,
         console_color_system: ConsoleColorSystem,
-    ) -> Console:
+    ) -> rich.console.Console:
         width, height = self._get_console_frame_width_and_height()
 
-        console = Console(
+        console = rich.console.Console(
             file=StringIO(),
             width=width,
             height=height,
@@ -428,7 +441,7 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
         return console
 
     @cached_property
-    def _console_terminal(self) -> Console:
+    def _console_terminal(self) -> rich.console.Console:
         console_color_system = self.config.console_color_system
 
         if (self.config.transparent_background
@@ -438,7 +451,7 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
         return self._get_console_common(self._stylized_content_terminal, console_color_system)
 
     @cached_property
-    def _console_html(self) -> Console:
+    def _console_html(self) -> rich.console.Console:
         # Color system is hard-coded to 'truecolor' for HTML output
         return self._get_console_common(
             self._stylized_content_html,

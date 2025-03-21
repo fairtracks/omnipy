@@ -29,12 +29,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from pygments.style import Style
+import pygments.style
 
 from .helpers import Base16Colors, get_styles_from_base16_colors
 
 
-class OmnipySelenizedBlackStyle(Style):
+class OmnipySelenizedBlackStyle(pygments.style.Style):
     name = 'omnipy-selenized-black'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
     variant = 'dark'
@@ -63,7 +63,7 @@ class OmnipySelenizedBlackStyle(Style):
     styles = get_styles_from_base16_colors(_palette)
 
 
-class OmnipySelenizedDarkStyle(Style):
+class OmnipySelenizedDarkStyle(pygments.style.Style):
     name = 'omnipy-selenized-dark'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
     variant = 'dark'
@@ -92,7 +92,7 @@ class OmnipySelenizedDarkStyle(Style):
     styles = get_styles_from_base16_colors(_palette)
 
 
-class OmnipySelenizedLightStyle(Style):
+class OmnipySelenizedLightStyle(pygments.style.Style):
     name = 'omnipy-selenized-light'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
     variant = 'light'
@@ -121,7 +121,7 @@ class OmnipySelenizedLightStyle(Style):
     styles = get_styles_from_base16_colors(_palette)
 
 
-class OmnipySelenizedWhiteStyle(Style):
+class OmnipySelenizedWhiteStyle(pygments.style.Style):
     name = 'omnipy-selenized-white'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
     variant = 'light'
