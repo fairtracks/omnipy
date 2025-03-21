@@ -8,16 +8,20 @@ from omnipy.data._display.dimensions import (Dimensions,
                                              has_width_and_height,
                                              HeightT,
                                              WidthT)
-from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt, validator
+from omnipy.util._pydantic import ConfigDict, dataclass, Extra, NonNegativeInt, validator
 
 
 @dataclass(config=ConfigDict(extra=Extra.forbid, validate_assignment=True))
 class Frame(Generic[WidthT, HeightT]):
-    dims: Dimensions[WidthT, HeightT] = Field(default_factory=Dimensions)
+    dims: Dimensions[WidthT, HeightT]
 
     @validator('dims', pre=True)
     def _copy_dims(cls, dims: Dimensions[WidthT, HeightT]) -> Dimensions[WidthT, HeightT]:
         return Dimensions(dims.width, dims.height)
+
+
+def empty_frame() -> Frame[None, None]:
+    return Frame(Dimensions(width=None, height=None))
 
 
 GeneralFrame = Frame[NonNegativeInt | None, NonNegativeInt | None]

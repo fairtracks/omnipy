@@ -10,7 +10,7 @@ from omnipy.data._display.config import (ConsoleColorSystem,
                                          SyntaxLanguage)
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.frame import Frame
+from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.panel.draft import DraftMonospacedOutput
 from omnipy.data._display.panel.styling import StylizedMonospacedOutput
 
@@ -23,9 +23,9 @@ def test_stylized_output_init(
     output = StylizedMonospacedOutput('[123, 234, 345]',)
 
     assert output.content == '[123, 234, 345]'
-    assert output.frame == Frame()
     assert output.constraints == Constraints()
     assert output.config == OutputConfig()
+    assert output.frame == empty_frame()
 
     draft = DraftMonospacedOutput(
         '[123, 234, 345]',
@@ -67,7 +67,7 @@ def test_stylized_output_immutable_properties(
         output.content = '[234, 345, 456]'
 
     with pytest.raises(AttributeError):
-        output.frame = Frame()
+        output.frame = empty_frame()
 
     with pytest.raises(AttributeError):
         output.constraints = Constraints()

@@ -9,7 +9,7 @@ from typing_extensions import TypeVar
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints, ConstraintsSatisfaction
 from omnipy.data._display.dimensions import Dimensions, DimensionsFit
-from omnipy.data._display.frame import Frame
+from omnipy.data._display.frame import empty_frame
 from omnipy.data._display.helpers import UnicodeCharWidthMap
 from omnipy.data._display.panel.base import FrameT, Panel
 from omnipy.util._pydantic import ConfigDict, dataclass, Extra, Field, NonNegativeInt, validator
@@ -25,7 +25,7 @@ class DraftOutput(Panel[FrameT], Generic[ContentT, FrameT]):
 
     def __init__(self, content: ContentT, frame=None, constraints=None, config=None):
         self.content = content
-        self.frame = frame or cast(FrameT, Frame())
+        self.frame = frame or cast(FrameT, empty_frame())
         self.constraints = constraints or Constraints()
         self.config = config or OutputConfig()
 
@@ -49,7 +49,7 @@ class DraftMonospacedOutput(DraftOutput[str, FrameT], Generic[FrameT]):
 
     def __init__(self, content: ContentT, frame=None, constraints=None, config=None):
         object.__setattr__(self, 'content', content)
-        object.__setattr__(self, 'frame', frame or Frame())
+        object.__setattr__(self, 'frame', frame or empty_frame())
         object.__setattr__(self, 'constraints', constraints or Constraints())
         object.__setattr__(self, 'config', config or OutputConfig())
 
