@@ -1,7 +1,11 @@
 from functools import cached_property
 
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
-from omnipy.data._display.panel.base import FullyRenderedPanel, OutputMode, OutputVariant, Panel
+from omnipy.data._display.panel.base import (DimsAwarePanel,
+                                             FullyRenderedPanel,
+                                             OutputMode,
+                                             OutputVariant,
+                                             Panel)
 import omnipy.util._pydantic as pyd
 
 
@@ -16,17 +20,9 @@ class MockPanel(Panel):
     def render_next_stage(self) -> Panel:
         return MockPanelStage2(self.contents)
 
-    def is_fully_rendered(self) -> bool:
-        return False
-
-    @cached_property
-    def dims(self) -> DimensionsWithWidthAndHeight:
-        split_lines = self.contents.split('\n')
-        return Dimensions(width=max(len(line) for line in split_lines), height=len(split_lines))
-
 
 @pyd.dataclass(init=False)
-class MockPanelStage2(MockPanel):
+class MockPanelStage2(DimsAwarePanel, MockPanel):
     @pyd.validator('contents')
     def words_into_lines(cls, contents: str) -> str:
         return '\n'.join(contents.split())
@@ -34,8 +30,10 @@ class MockPanelStage2(MockPanel):
     def render_next_stage(self) -> Panel:
         return MockPanelStage3(contents=self.contents)
 
-    def is_fully_rendered(self) -> bool:
-        return False
+    @cached_property
+    def dims(self) -> DimensionsWithWidthAndHeight:
+        split_lines = self.contents.split('\n')
+        return Dimensions(width=max(len(line) for line in split_lines), height=len(split_lines))
 
 
 class MockOutputVariant(OutputVariant):

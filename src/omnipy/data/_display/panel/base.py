@@ -3,8 +3,9 @@ from enum import Enum
 from functools import cached_property
 from typing import cast, Generic
 
-from typing_extensions import TypeVar
+from typing_extensions import TypeIs, TypeVar
 
+from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import AnyFrame, empty_frame, Frame
 import omnipy.util._pydantic as pyd
 
@@ -22,6 +23,18 @@ class Panel(Generic[FrameT]):
     @pyd.validator('frame')
     def _copy_frame(cls, frame: Frame) -> Frame:
         return Frame(dims=frame.dims)
+
+    @abstractmethod
+    def render_next_stage(self) -> 'Panel[FrameT]':
+        ...
+
+
+def panel_is_dims_aware(panel: Panel[FrameT]) -> TypeIs['DimsAwarePanel[FrameT]']:
+    return isinstance(panel, DimsAwarePanel)
+
+
+def panel_is_fully_rendered(panel: Panel[FrameT]) -> TypeIs['FullyRenderedPanel[FrameT]']:
+    return isinstance(panel, FullyRenderedPanel)
 
 
 class OutputMode(str, Enum):
@@ -53,4 +66,44 @@ class OutputVariant(ABC):
         """
         Returns a representation of the output as an independent HTML page,
         for viewing in a web browser.
+        """
+
+
+class DimsAwarePanel(Panel[FrameT], Generic[FrameT]):
+    @cached_property
+    @abstractmethod
+    def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
+        ...
+
+
+class FullyRenderedPanel(DimsAwarePanel[FrameT], Generic[FrameT]):
+    def render_next_stage(self) -> Panel[FrameT]:
+        raise NotImplementedError('This panel is fully rendered.')
+
+    @cached_property
+    @abstractmethod
+    def plain(self) -> OutputVariant:
+        """
+        Returns an OutputVariant object serving plain text representations
+        of the output, without any styling or color. The output is also
+        cropped to fit the frame dimensions.
+        """
+
+    @cached_property
+    @abstractmethod
+    def bw_stylized(self) -> OutputVariant:
+        """
+        Returns an OutputVariant object serving a black-and-white stylized
+        representation of the output, allowing formatting such as bold or
+        italic, but with no color. The output is also cropped to fit the
+        frame dimensions.
+        """
+
+    @cached_property
+    @abstractmethod
+    def colorized(self) -> OutputVariant:
+        """
+        Returns an OutputVariant object serving a colorized representation
+        of the output, with color and styling. The output is also cropped
+        to fit the frame dimensions.
         """

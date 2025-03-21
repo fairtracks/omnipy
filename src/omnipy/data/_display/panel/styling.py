@@ -23,7 +23,13 @@ from omnipy.data._display.config import (ConsoleColorSystem,
                                          HorizontalOverflowMode,
                                          VerticalOverflowMode)
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
-from omnipy.data._display.panel.base import FrameT, OutputMode, OutputVariant
+from omnipy.data._display.layout import Layout
+from omnipy.data._display.panel.base import (FrameT,
+                                             FullyRenderedPanel,
+                                             OutputMode,
+                                             OutputVariant,
+                                             Panel,
+                                             panel_is_fully_rendered)
 from omnipy.data._display.panel.draft import ReflowedTextDraftPanel
 import omnipy.util._pydantic as pyd
 
@@ -426,7 +432,7 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
 
     def _get_console_common(
         self,
-        stylized_content: rich.syntax.Syntax,
+        stylized_content: rich.console.RenderableType,
         console_color_system: ConsoleColorSystem,
     ) -> rich.console.Console:
         width, height = self._get_console_frame_width_and_height()
@@ -478,3 +484,51 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
     @cached_property
     def _content_lines(self) -> list[str]:
         return self.plain.terminal.splitlines()
+
+
+@pyd.dataclass(
+    config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True, arbitrary_types_allowed=True))
+class StylizedLayoutPanel(SyntaxStylizedTextPanel[FrameT], Generic[FrameT]):
+    layout: Layout = pyd.Field(default_factory=Layout)
+
+    def __init__(self, layout: Layout, frame=None, constraints=None, config=None):
+        object.__setattr__(self, 'layout', layout)
+        super().__init__('', frame, constraints, config)
+
+    @pyd.validator('layout', pre=True)
+    def _copy_layout(cls, layout: Layout) -> Layout:
+        return layout.copy()
+
+    def __setattr__(self, key, value):
+        if key in ['layout']:
+            raise AttributeError(f'Field "{key}" is immutable')
+        return super().__setattr__(key, value)
+
+    def _get_stylized_content_common(self, remove_bg_color: bool) -> rich.console.RenderableType:
+        fully_rendered_panels: dict[str, FullyRenderedPanel] = {}
+        remaining_panels: dict[str, Panel] = self.layout.data.copy()
+
+        while len(remaining_panels) > 0:
+            newly_rendered_panels = {}
+            for key, panel in remaining_panels.items():
+                if panel_is_fully_rendered(panel):
+                    fully_rendered_panels[key] = panel
+                else:
+                    newly_rendered_panels[key] = panel.render_next_stage()
+
+            remaining_panels = newly_rendered_panels
+
+        if fully_rendered_panels:
+            self._init_dims = Dimensions(
+                width=(sum(panel.dims.width for panel in fully_rendered_panels.values())
+                       + len(fully_rendered_panels) * 3 + 1),
+                height=max(panel.dims.height for panel in fully_rendered_panels.values()) + 2,
+            )
+
+        table = rich.table.Table(show_header=False, box=rich.box.ROUNDED)
+        keys = (self.layout.grid[(0, i)] for i in range(self.layout.grid.dims.width))
+        strings = (
+            rich.text.Text.from_ansi(fully_rendered_panels[key].colorized.terminal) for key in keys)
+        table.add_row(*strings)
+
+        return table

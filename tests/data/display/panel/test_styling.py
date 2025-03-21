@@ -1,20 +1,24 @@
 import re
+from textwrap import dedent
 from typing import Annotated, Callable
 
 import pytest
 import pytest_cases as pc
 
 from omnipy.data._display.config import (ConsoleColorSystem,
+                                         LayoutStyle,
                                          OutputConfig,
                                          RecommendedColorStyles,
                                          SyntaxLanguage)
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
+from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.draft import ReflowedTextDraftPanel
-from omnipy.data._display.panel.styling import SyntaxStylizedTextPanel
+from omnipy.data._display.panel.styling import StylizedLayoutPanel, SyntaxStylizedTextPanel
 
 from .cases.styling import OutputPropertyExpectations, OutputTestCase, OutputTestCaseSetup
+from .helpers.classes import MockPanel
 
 
 def test_syntax_stylized_text_panel_init(
@@ -196,3 +200,122 @@ def test_syntax_stylized_text_panel_console_recording_not_deleted_by_filtering(
     assert text_panel.bw_stylized.terminal != ''
     assert text_panel.plain.terminal != ''
     assert text_panel.colorized.terminal != ''
+
+
+def test_stylized_layout_panel_init(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    layout = Layout()
+    layout['panel'] = MockPanel(contents='Some Content')
+    layout_panel = StylizedLayoutPanel(layout)
+
+    assert layout_panel.content == ''
+    assert layout_panel.layout is not layout
+    assert layout_panel.layout == layout
+    assert layout_panel.frame == empty_frame()
+    assert layout_panel.constraints == Constraints()
+    assert layout_panel.config == OutputConfig()
+
+    frame = Frame(Dimensions(10, 10))
+    config = OutputConfig(layout_style=LayoutStyle.PANELS)
+    constraints = Constraints()
+    configured_layout_panel = StylizedLayoutPanel(
+        layout,
+        frame=frame,
+        config=config,
+        constraints=constraints,
+    )
+
+    assert configured_layout_panel.content == ''
+    assert configured_layout_panel.layout == layout
+    assert configured_layout_panel.frame is not frame
+    assert configured_layout_panel.frame == frame
+    assert configured_layout_panel.constraints is not constraints
+    assert configured_layout_panel.constraints == constraints
+    assert configured_layout_panel.config is not config
+    assert configured_layout_panel.config == config
+
+
+def test_fail_stylized_layout_panel_if_extra_params(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    with pytest.raises(TypeError):
+        StylizedLayoutPanel(Layout(), extra=123)  # type: ignore[call-arg]
+
+    layout_panel = StylizedLayoutPanel(Layout())
+    layout_panel.extra = 123
+
+
+def test_stylized_layout_panel_immutable_properties(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    layout_panel = StylizedLayoutPanel(Layout())
+
+    with pytest.raises(AttributeError):
+        layout_panel.content = '[234, 345, 456]'
+
+    with pytest.raises(AttributeError):
+        layout_panel.layout = Layout()
+
+    with pytest.raises(AttributeError):
+        layout_panel.frame = empty_frame()
+
+    with pytest.raises(AttributeError):
+        layout_panel.constraints = Constraints()
+
+    with pytest.raises(AttributeError):
+        layout_panel.config = OutputConfig()
+
+
+def test_stylized_layout_panel_basic_grid(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    from omnipy.data._display.layout import Layout
+    from omnipy.data._display.panel.styling import StylizedLayoutPanel
+
+    # Create a simple layout with mock panels
+    layout = Layout()
+    layout['first'] = MockPanel(contents='Panel_1 Content')
+    layout['second'] = MockPanel(contents='Panel_2 Content')
+
+    # Create stylized output with default config (should use Table grid)
+    layout_panel = StylizedLayoutPanel(
+        layout, config=OutputConfig(console_color_system=ConsoleColorSystem.ANSI_RGB))
+
+    # Check terminal output
+    assert layout_panel.plain.terminal == dedent("""\
+        ╭─────────┬─────────╮
+        │ Panel_1 │ Panel_2 │
+        │ Content │ Content │
+        ╰─────────┴─────────╯
+        """)
+
+    assert layout_panel.bw_stylized.terminal == dedent("""\
+        ╭─────────┬─────────╮
+        │ \x1b[1mPanel_1\x1b[0m │ \x1b[1mPanel_2\x1b[0m │
+        │ \x1b[1mContent\x1b[0m │ \x1b[1mContent\x1b[0m │
+        ╰─────────┴─────────╯
+        """)
+
+    assert layout_panel.colorized.terminal == dedent("""\
+        ╭─────────┬─────────╮
+        │ \x1b[1;34mPanel_1\x1b[0m │ \x1b[1;34mPanel_2\x1b[0m │
+        │ \x1b[1;34mContent\x1b[0m │ \x1b[1;34mContent\x1b[0m │
+        ╰─────────┴─────────╯
+        """)
+
+
+def test_stylized_layout_panel_empty_layout(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    from omnipy.data._display.layout import Layout
+    from omnipy.data._display.panel.styling import StylizedLayoutPanel
+
+    # Create an empty layout
+    layout = Layout()
+
+    # Create stylized output
+    layout_panel = StylizedLayoutPanel(layout)
+
+    # Verify the output is empty or as expected
+    terminal_output = layout_panel.plain.terminal
+    assert terminal_output == ''  # Adjust this based on expected behavior for empty layout
