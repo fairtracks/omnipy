@@ -1,7 +1,7 @@
 from functools import cached_property
 
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
-from omnipy.data._display.panel.base import (DimsAwarePanel,
+from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              FullyRenderedPanel,
                                              OutputMode,
                                              OutputVariant,
@@ -22,7 +22,7 @@ class MockPanel(Panel):
 
 
 @pyd.dataclass(init=False)
-class MockPanelStage2(DimsAwarePanel, MockPanel):
+class MockPanelStage2(DimensionsAwarePanel, MockPanel):
     @pyd.validator('contents')
     def words_into_lines(cls, contents: str) -> str:
         return '\n'.join(contents.split())

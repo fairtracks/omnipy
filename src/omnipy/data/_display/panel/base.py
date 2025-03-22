@@ -29,8 +29,8 @@ class Panel(Generic[FrameT]):
         ...
 
 
-def panel_is_dims_aware(panel: Panel[FrameT]) -> TypeIs['DimsAwarePanel[FrameT]']:
-    return isinstance(panel, DimsAwarePanel)
+def panel_is_dims_aware(panel: Panel[FrameT]) -> TypeIs['DimensionsAwarePanel[FrameT]']:
+    return isinstance(panel, DimensionsAwarePanel)
 
 
 def panel_is_fully_rendered(panel: Panel[FrameT]) -> TypeIs['FullyRenderedPanel[FrameT]']:
@@ -69,14 +69,14 @@ class OutputVariant(ABC):
         """
 
 
-class DimsAwarePanel(Panel[FrameT], Generic[FrameT]):
+class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
     @cached_property
     @abstractmethod
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
         ...
 
 
-class FullyRenderedPanel(DimsAwarePanel[FrameT], Generic[FrameT]):
+class FullyRenderedPanel(DimensionsAwarePanel[FrameT], Generic[FrameT]):
     def render_next_stage(self) -> Panel[FrameT]:
         raise NotImplementedError('This panel is fully rendered.')
 
