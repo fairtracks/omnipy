@@ -19,7 +19,6 @@ class SimpleLayoutCase:
 
 def test_empty_layout(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    """Test grid properties for an empty layout."""
     layout = Layout()
 
     # Check contents

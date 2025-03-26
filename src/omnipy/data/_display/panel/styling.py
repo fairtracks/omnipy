@@ -479,6 +479,11 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[AnyFrame]):
 
     @cached_property
     def _content_lines(self) -> list[str]:
+        """
+        Returns the plain sting output of the panel as a list of lines.
+        This is used in DraftPanel to calculate the dimensions of the panel,
+        as well as other statistics.
+        """
         return self.plain.terminal.splitlines()
 
 

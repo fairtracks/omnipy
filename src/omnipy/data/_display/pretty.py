@@ -238,7 +238,8 @@ def _prepare_content(in_draft: DraftPanel[object, FrameT]) -> DraftPanel[object,
         data = in_draft.content.to_data()
     else:
         data = in_draft.content
-    draft_panel = DraftPanel(data, frame=in_draft.frame, config=in_draft.config)
+    draft_panel: DraftPanel[object, FrameT] = DraftPanel(
+        data, frame=in_draft.frame, config=in_draft.config)
     return draft_panel
 
 
