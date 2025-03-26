@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any
 
 import pygments.styles
 import pytest
@@ -51,9 +51,14 @@ def test_output_config(
         indent_tab_size='4',  # type: ignore[arg-type]
         debug_mode='yes',  # type: ignore[arg-type]
         pretty_printer='rich',  # type: ignore[arg-type]
-        language='xml',
+        # Any language string supported by the pygments library should be accepted
+        language='c++',
         console_color_system='256',  # type: ignore[arg-type]
-        color_style='xcode',
+        # Any color style string supported by the pygments library should be accepted
+        # Note: the lilypond color style is for use with the lilypond music notation software and as
+        #       thus excluded from the list of valid color styles in Omnipy, but it is still a valid
+        #       color style in the Pygments library.
+        color_style='lilypond',
         css_font_families=[],  # type: ignore[arg-type]
         css_font_size='16',  # type: ignore[arg-type]
         css_font_weight='400',  # type: ignore[arg-type]
@@ -65,9 +70,9 @@ def test_output_config(
     assert config.indent_tab_size == 4
     assert config.debug_mode is True
     assert config.pretty_printer is PrettyPrinterLib.RICH
-    assert config.language is SyntaxLanguage.XML
+    assert config.language == 'c++'
     assert config.console_color_system is ConsoleColorSystem.ANSI_256
-    assert config.color_style is LightHighContrastColorStyles.XCODE
+    assert config.color_style == 'lilypond'
     assert config.css_font_families == ()
     assert config.css_font_size == 16
     assert config.css_font_weight == 400
@@ -86,92 +91,109 @@ def test_output_config(
     assert config.css_line_height is None
 
 
-def test_output_config_validate_assignments(
+def test_output_config_hashable(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    config = OutputConfig(indent_tab_size=4, debug_mode=True)
+    config_1 = OutputConfig()
 
-    config.indent_tab_size = 3
-    assert config.indent_tab_size == 3
+    config_2 = OutputConfig()
+    assert hash(config_1) == hash(config_2)
 
-    with pytest.raises(ValueError):
-        config.indent_tab_size = 'abc'  # type: ignore[assignment]
+    config_settings: list[dict[str, Any]] = [
+        {
+            'indent_tab_size': 4
+        },
+        {
+            'debug_mode': True
+        },
+        {
+            'pretty_printer': PrettyPrinterLib.DEVTOOLS
+        },
+        {
+            'language': SyntaxLanguage.XML
+        },
+        {
+            'console_color_system': ConsoleColorSystem.ANSI_256
+        },
+        {
+            'color_style': LightHighContrastColorStyles.XCODE
+        },
+        {
+            'css_font_families': ()
+        },
+        {
+            'css_font_size': 16
+        },
+        {
+            'css_font_weight': 400
+        },
+        {
+            'css_line_height': 1.0
+        },
+        {
+            'horizontal_overflow_mode': HorizontalOverflowMode.ELLIPSIS
+        },
+        {
+            'vertical_overflow_mode': VerticalOverflowMode.CROP_TOP
+        },
+        {
+            'layout_style': LayoutStyle.PANELS
+        },
+    ]
 
-    config.debug_mode = False
-    assert config.debug_mode is False
+    prev_hash = hash(config_1)
+    for setting in config_settings:
+        config_3 = OutputConfig(**setting)
+        config_4 = OutputConfig(**setting)
 
-    with pytest.raises(ValueError):
-        config.debug_mode = None  # type: ignore[assignment]
+        assert hash(config_3) != prev_hash
+        assert hash(config_3) == hash(config_4)
 
-    config.pretty_printer = 'devtools'  # type: ignore[assignment]
-    assert config.pretty_printer is PrettyPrinterLib.DEVTOOLS
+        prev_hash = hash(config_3)
 
-    with pytest.raises(ValueError):
-        config.pretty_printer = 'something'  # type: ignore[assignment]
 
-    # Any language string supported by the pygments library should be accepted
-    config.language = 'c++'
-    assert config.language == 'c++'
+# noinspection PyDataclass
+def test_fail_output_config_no_assignments(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    config = OutputConfig()
 
-    with pytest.raises(ValueError):
-        config.language = '123'
+    with pytest.raises(AttributeError):
+        config.indent_tab_size = 3  # type: ignore[misc]
 
-    config.console_color_system = 'windows'  # type: ignore[assignment]
-    assert config.console_color_system is ConsoleColorSystem.WINDOWS_LEGACY
+    with pytest.raises(AttributeError):
+        config.debug_mode = False  # type: ignore[misc]
 
-    with pytest.raises(ValueError):
-        config.console_color_system = 'abc'  # type: ignore[assignment]
+    with pytest.raises(AttributeError):
+        config.pretty_printer = PrettyPrinterLib.DEVTOOLS  # type: ignore[misc]
 
-    # Any color style string supported by the pygments library should be accepted
-    # Note: the lilypond color style is for use with the lilypond music notation software and as
-    #       thus excluded from the list of valid color styles in Omnipy, but it is still a valid
-    #       color style in the Pygments library.
-    config.color_style = 'lilypond'
-    assert config.color_style == 'lilypond'
+    with pytest.raises(AttributeError):
+        config.language = SyntaxLanguage.XML  # type: ignore[misc]
 
-    with pytest.raises(ValueError):
-        config.color_style = '123'
+    with pytest.raises(AttributeError):
+        config.console_color_system = ConsoleColorSystem.WINDOWS_LEGACY  # type: ignore[misc]
 
-    config.css_font_families = ['Menlo', 'monospace']  # type: ignore[assignment]
-    assert config.css_font_families == ('Menlo', 'monospace')
+    with pytest.raises(AttributeError):
+        config.color_style = DarkLowContrastColorStyles.GRUVBOX_DARK  # type: ignore[misc]
 
-    with pytest.raises(ValueError):
-        config.css_font_families = 'monospace'  # type: ignore[assignment]
+    with pytest.raises(AttributeError):
+        config.css_font_families = ('Menlo', 'monospace')  # type: ignore[misc]
 
-    config.css_font_size = '18'  # type: ignore[assignment]
-    assert config.css_font_size == 18
+    with pytest.raises(AttributeError):
+        config.css_font_size = 18  # type: ignore[misc]
 
-    with pytest.raises(ValueError):
-        config.css_font_size = 'abc'  # type: ignore[assignment]
+    with pytest.raises(AttributeError):
+        config.css_font_weight = 500  # type: ignore[misc]
 
-    config.css_font_weight = '500'  # type: ignore[assignment]
-    assert config.css_font_weight == 500
+    with pytest.raises(AttributeError):
+        config.css_line_height = 1.5  # type: ignore[misc]
 
-    with pytest.raises(ValueError):
-        config.css_font_weight = 'abc'  # type: ignore[assignment]
+    with pytest.raises(AttributeError):
+        config.horizontal_overflow_mode = HorizontalOverflowMode.ELLIPSIS  # type: ignore[misc]
 
-    config.css_line_height = '1.5'  # type: ignore[assignment]
-    assert config.css_line_height == 1.5
+    with pytest.raises(AttributeError):
+        config.vertical_overflow_mode = VerticalOverflowMode.CROP_TOP  # type: ignore[misc]
 
-    with pytest.raises(ValueError):
-        config.css_line_height = 'abc'  # type: ignore[assignment]
-
-    config.horizontal_overflow_mode = 'ellipsis'  # type: ignore[assignment]
-    assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
-
-    with pytest.raises(ValueError):
-        config.horizontal_overflow_mode = 'abc'  # type: ignore[assignment]
-
-    config.vertical_overflow_mode = 'crop_top'  # type: ignore[assignment]
-    assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_TOP
-
-    with pytest.raises(ValueError):
-        config.vertical_overflow_mode = 'abc'  # type: ignore[assignment]
-
-    config.layout_style = 'panels'  # type: ignore[assignment]
-    assert config.layout_style is LayoutStyle.PANELS
-
-    with pytest.raises(ValueError):
-        config.layout_style = 'abc'
+    with pytest.raises(AttributeError):
+        config.layout_style = LayoutStyle.PANELS  # type: ignore[misc]
 
 
 def test_fail_output_config_if_invalid_params(

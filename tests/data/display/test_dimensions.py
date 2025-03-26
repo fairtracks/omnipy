@@ -44,21 +44,21 @@ def _assert_dimensions(
 
     # Static type checkers SHOULD raise errors here
     try:
-        dims.width += 1  # type: ignore[operator]
-        dims.height += 1  # type: ignore[operator]
+        _a: int = dims.width  # type: ignore[assignment]  # noqa: F841
+        _b: int = dims.height  # type: ignore[assignment]  # noqa: F841
     except TypeError:
         pass
 
     # Static type checkers SHOULD NOT raise errors here
     if has_width(dims):
-        dims.width += 1
+        _c: int = dims.width  # noqa: F841
 
     if has_height(dims):
-        dims.height += 1
+        _d: int = dims.height  # noqa: F841
 
     if has_width_and_height(dims):
-        dims.width += 1
-        dims.height += 1
+        _e: int = dims.width  # noqa: F841
+        _f: int = dims.height  # noqa: F841
 
 
 def test_dimensions(
@@ -139,20 +139,33 @@ def test_fail_dimensions_if_negative(
         Dimensions(-1, -1)
 
 
-def test_dimensions_validate_assignments(
+def test_dimensions_hashable(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    dims_1 = Dimensions(None, None)
+    dims_2 = Dimensions(None, None)
+    dims_3 = Dimensions(10, None)
+    dims_4 = Dimensions(None, 20)
+    dims_5 = Dimensions(10, 20)
+
+    assert hash(dims_1) == hash(dims_2)
+    assert hash(dims_1) != hash(dims_3) != hash(dims_4) != hash(dims_5)
+
+    dims_6 = Dimensions(10, 20)
+
+    assert hash(dims_5) == hash(dims_6)
+
+
+# noinspection PyDataclass
+def test_fail_dimensions_no_assignments(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     dims: Dimensions = Dimensions(width=None, height=10)
 
-    # TODO: Check why dims is type narrowed to `Dimensions[None, int]` here in Pyright
-    dims.width = 10  # pyright: ignore [reportAttributeAccessIssue]
+    with pytest.raises(AttributeError):
+        # TODO: Check why dims is type narrowed to `Dimensions[None, int]` here in Pyright
+        dims.width = 10  # type: ignore[misc]
 
-    with pytest.raises(ValueError):
-        dims.width = -1  # pyright: ignore [reportAttributeAccessIssue]
-
-    dims.height = None  # pyright: ignore [reportAttributeAccessIssue]
-
-    with pytest.raises(ValueError):
-        dims.height = 'None'  # type: ignore[assignment]
+    with pytest.raises(AttributeError):
+        dims.height = None  # type: ignore[misc]
 
 
 def test_fail_dimensions_if_extra_param(

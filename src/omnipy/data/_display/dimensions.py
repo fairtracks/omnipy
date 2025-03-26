@@ -20,7 +20,7 @@ HeightT = TypeVar(
 )
 
 
-@pyd.dataclass(config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))
+@pyd.dataclass(frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))
 class Dimensions(Generic[WidthT, HeightT]):
     width: WidthT
     height: HeightT

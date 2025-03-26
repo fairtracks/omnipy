@@ -2,7 +2,10 @@ import omnipy.util._pydantic as pyd
 
 
 @pyd.dataclass(
-    kw_only=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))
+    kw_only=True,
+    frozen=True,
+    config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True),
+)
 class Constraints:
     """Constraints for display of content."""
 
