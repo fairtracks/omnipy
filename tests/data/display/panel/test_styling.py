@@ -1,6 +1,6 @@
 import re
 from textwrap import dedent
-from typing import Annotated, Callable
+from typing import Annotated
 
 import pytest
 import pytest_cases as pc
@@ -17,7 +17,10 @@ from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.draft import ReflowedTextDraftPanel
 from omnipy.data._display.panel.styling import StylizedLayoutPanel, SyntaxStylizedTextPanel
 
-from .cases.styling import OutputPropertyExpectations, OutputTestCase, OutputTestCaseSetup
+from .cases.styling import (OutputPropertyType,
+                            PanelOutputPropertyExpectations,
+                            PanelOutputTestCase,
+                            PanelOutputTestCaseSetup)
 from .helpers.classes import MockPanel
 
 
@@ -102,7 +105,7 @@ def _strip_ansi(text: str) -> str:
 
 def _prepare_panel(
     text_panel: SyntaxStylizedTextPanel,
-    get_output_property: Callable[[SyntaxStylizedTextPanel], str],
+    get_output_property: OutputPropertyType,
 ) -> str:
     return _strip_ansi(_strip_html(get_output_property(text_panel)))
 
@@ -137,7 +140,7 @@ def test_stylized_monospaced_panel_with_empty_input(
 
 @pc.parametrize_with_cases('case', cases='.cases.styling', has_tag='overflow_modes')
 def test_syntax_stylized_text_panel_overflow_modes(
-    case: OutputTestCase,
+    case: PanelOutputTestCase,
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
 ) -> None:
 
@@ -153,8 +156,8 @@ def test_syntax_stylized_text_panel_overflow_modes(
 @pc.parametrize_with_cases(
     'output_prop_expectations', cases='.cases.styling', has_tag='expectations')
 def test_output_properties_of_syntax_stylized_text_panel(
-        output_test_case_setup: Annotated[OutputTestCaseSetup, pc.fixture],
-        output_prop_expectations: Annotated[OutputPropertyExpectations, pc.fixture],
+        output_test_case_setup: Annotated[PanelOutputTestCaseSetup, pc.fixture],
+        output_prop_expectations: Annotated[PanelOutputPropertyExpectations, pc.fixture],
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
     case_id, content, frame, config = output_test_case_setup

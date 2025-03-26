@@ -1,5 +1,5 @@
 from textwrap import dedent
-from typing import Annotated, Callable, NamedTuple
+from typing import Annotated, Callable, NamedTuple, TypeAlias
 
 import pytest_cases as pc
 
@@ -14,28 +14,32 @@ from omnipy.data._display.frame import Frame
 from omnipy.data._display.panel.styling import SyntaxStylizedTextPanel
 import omnipy.util._pydantic as pyd
 
+# Type aliases
+
+OutputPropertyType: TypeAlias = Callable[[SyntaxStylizedTextPanel], str]
+
 # Classes
 
 
-class OutputTestCase(NamedTuple):
+class PanelOutputTestCase(NamedTuple):
     content: str
     frame: Frame
     config: OutputConfig
-    get_output_property: Callable[[SyntaxStylizedTextPanel], str]
+    get_output_property: OutputPropertyType
     expected_output: str
     expected_within_frame_width: bool | None
     expected_within_frame_height: bool | None
 
 
-class OutputTestCaseSetup(NamedTuple):
+class PanelOutputTestCaseSetup(NamedTuple):
     case_id: str
     content: str
     frame: Frame | None = None
     config: OutputConfig | None = None
 
 
-class OutputPropertyExpectations(NamedTuple):
-    get_output_property: Callable[[SyntaxStylizedTextPanel], str]
+class PanelOutputPropertyExpectations(NamedTuple):
+    get_output_property: OutputPropertyType
     expected_output_for_case_id: Callable[[str], str]
 
 
@@ -45,9 +49,9 @@ class OutputPropertyExpectations(NamedTuple):
 @pc.case(id='word_wrap_horizontal', tags=['overflow_modes'])
 def case_word_wrap_horizontal(
     common_content: Annotated[str, pc.fixture],
-    output_format_accessor: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture],
-) -> OutputTestCase:
-    return OutputTestCase(
+    output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
+) -> PanelOutputTestCase:
+    return PanelOutputTestCase(
         content=common_content,
         frame=Frame(Dimensions(22, None)),
         config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
@@ -66,9 +70,9 @@ def case_word_wrap_horizontal(
 @pc.case(id='ellipsis_horizontal', tags=['overflow_modes'])
 def case_ellipsis_horizontal(
     common_content: Annotated[str, pc.fixture],
-    output_format_accessor: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture],
-) -> OutputTestCase:
-    return OutputTestCase(
+    output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
+) -> PanelOutputTestCase:
+    return PanelOutputTestCase(
         content=common_content,
         frame=Frame(Dimensions(22, None)),
         config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.ELLIPSIS),
@@ -85,9 +89,9 @@ def case_ellipsis_horizontal(
 @pc.case(id='crop_horizontal', tags=['overflow_modes'])
 def case_crop_horizontal(
     common_content: Annotated[str, pc.fixture],
-    output_format_accessor: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture],
-) -> OutputTestCase:
-    return OutputTestCase(
+    output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
+) -> PanelOutputTestCase:
+    return PanelOutputTestCase(
         content=common_content,
         frame=Frame(Dimensions(22, None)),
         config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
@@ -104,9 +108,9 @@ def case_crop_horizontal(
 @pc.case(id='word_wrap_small_frame', tags=['overflow_modes'])
 def case_word_wrap_small_frame(
     common_content: Annotated[str, pc.fixture],
-    output_format_accessor: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture],
-) -> OutputTestCase:
-    return OutputTestCase(
+    output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
+) -> PanelOutputTestCase:
+    return PanelOutputTestCase(
         content=common_content,
         frame=Frame(Dimensions(10, 8)),
         config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
@@ -129,9 +133,9 @@ def case_word_wrap_small_frame(
 @pc.case(id='word_wrap_crop_bottom', tags=['overflow_modes'])
 def case_word_wrap_crop_bottom(
     common_content: Annotated[str, pc.fixture],
-    output_format_accessor: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture],
-) -> OutputTestCase:
-    return OutputTestCase(
+    output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
+) -> PanelOutputTestCase:
+    return PanelOutputTestCase(
         content=common_content,
         frame=Frame(Dimensions(10, 4)),
         config=OutputConfig(
@@ -153,9 +157,9 @@ def case_word_wrap_crop_bottom(
 @pc.case(id='word_wrap_crop_top', tags=['overflow_modes'])
 def case_word_wrap_crop_top(
     common_content: Annotated[str, pc.fixture],
-    output_format_accessor: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture],
-) -> OutputTestCase:
-    return OutputTestCase(
+    output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
+) -> PanelOutputTestCase:
+    return PanelOutputTestCase(
         content=common_content,
         frame=Frame(Dimensions(10, 1)),
         config=OutputConfig(
@@ -174,8 +178,8 @@ def case_word_wrap_crop_top(
 @pc.parametrize('transparent_background', [False, True])
 @pc.case(id='no-frame-default-color', tags=['setup', 'syntax_styling'])
 def case_syntax_styling_setup_no_frame_or_configs(
-        transparent_background: bool) -> OutputTestCaseSetup:
-    return OutputTestCaseSetup(
+        transparent_background: bool) -> PanelOutputTestCaseSetup:
+    return PanelOutputTestCaseSetup(
         case_id='no-frame-default-color' + ('-no-bg' if transparent_background else ''),
         content="MyClass({'abc': [123, 234]})",
         config=OutputConfig(
@@ -195,14 +199,14 @@ def case_syntax_styling_setup_no_frame_color_config(
         css_font_size: pyd.NonNegativeInt | None,
         css_font_weight: pyd.NonNegativeInt | None,
         css_line_height: pyd.NonNegativeFloat | None,
-        transparent_background: bool) -> OutputTestCaseSetup:
+        transparent_background: bool) -> PanelOutputTestCaseSetup:
     case_id = 'no-frame-light-color' \
               + ('-no-fonts' if css_font_weight is None else '') \
               + ('-font-styling-only' if css_font_weight == 500 else '') \
               + ('-full-font-conf' if css_font_families == ('monospace',) else '') \
               + ('-no-bg' if transparent_background else '')
 
-    return OutputTestCaseSetup(
+    return PanelOutputTestCaseSetup(
         case_id=case_id,
         content="MyClass({'abc': [123, 234]})",
         config=OutputConfig(
@@ -221,12 +225,12 @@ def case_syntax_styling_setup_no_frame_color_config(
 @pc.parametrize('transparent_background', [False, True])
 @pc.case(id='w-frame-dark-color-w-wrap', tags=['setup', 'syntax_styling'])
 def case_syntax_styling_setup_small_frame_color_and_overflow_config(
-        color_system: ConsoleColorSystem, transparent_background: bool) -> OutputTestCaseSetup:
+        color_system: ConsoleColorSystem, transparent_background: bool) -> PanelOutputTestCaseSetup:
 
     case_id = f'w-frame-dark-color-w-wrap-{color_system.value}' + \
               ('-no-bg' if transparent_background else '')
 
-    return OutputTestCaseSetup(
+    return PanelOutputTestCaseSetup(
         case_id=case_id,
         content="MyClass({'abc': [123, 234]})",
         frame=Frame(Dimensions(9, 3)),
@@ -245,8 +249,8 @@ def case_syntax_styling_setup_small_frame_color_and_overflow_config(
 
 @pc.case(id='plain-terminal-output', tags=['expectations', 'syntax_styling'])
 def case_syntax_styling_expectations_plain_terminal(
-    plain_terminal: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture]
-) -> OutputPropertyExpectations:
+    plain_terminal: Annotated[OutputPropertyType, pc.fixture]
+) -> PanelOutputPropertyExpectations:
     def _expected_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-default-color' \
@@ -272,7 +276,7 @@ def case_syntax_styling_expectations_plain_terminal(
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
-    return OutputPropertyExpectations(
+    return PanelOutputPropertyExpectations(
         get_output_property=plain_terminal,
         expected_output_for_case_id=_expected_output_for_case_id,
     )
@@ -280,8 +284,8 @@ def case_syntax_styling_expectations_plain_terminal(
 
 @pc.case(id='bw-stylized-terminal-output', tags=['expectations', 'syntax_styling'])
 def case_syntax_styling_expectations_bw_stylized_terminal(
-    bw_stylized_terminal: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture]
-) -> OutputPropertyExpectations:
+    bw_stylized_terminal: Annotated[OutputPropertyType, pc.fixture]
+) -> PanelOutputPropertyExpectations:
     def _expected_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-default-color' \
@@ -309,7 +313,7 @@ def case_syntax_styling_expectations_bw_stylized_terminal(
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
-    return OutputPropertyExpectations(
+    return PanelOutputPropertyExpectations(
         get_output_property=bw_stylized_terminal,
         expected_output_for_case_id=_expected_output_for_case_id,
     )
@@ -317,8 +321,8 @@ def case_syntax_styling_expectations_bw_stylized_terminal(
 
 @pc.case(id='colorized-terminal-output', tags=['expectations', 'syntax_styling'])
 def case_syntax_styling_expectations_colorized_terminal(
-    colorized_terminal: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture]
-) -> OutputPropertyExpectations:
+    colorized_terminal: Annotated[OutputPropertyType, pc.fixture]
+) -> PanelOutputPropertyExpectations:
     def _expected_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-default-color' \
@@ -449,7 +453,7 @@ def case_syntax_styling_expectations_colorized_terminal(
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
-    return OutputPropertyExpectations(
+    return PanelOutputPropertyExpectations(
         get_output_property=colorized_terminal,
         expected_output_for_case_id=_expected_output_for_case_id,
     )
@@ -516,8 +520,8 @@ def _fill_html_page_template(style: str, data: str, case_id: str | None = None) 
 
 @pc.case(id='plain-html-tag-output', tags=['expectations', 'syntax_styling'])
 def case_syntax_styling_expectations_plain_html_tag(
-    plain_html_tag: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture]
-) -> OutputPropertyExpectations:
+    plain_html_tag: Annotated[OutputPropertyType, pc.fixture]
+) -> PanelOutputPropertyExpectations:
     def _expected_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-default-color' \
@@ -544,7 +548,7 @@ def case_syntax_styling_expectations_plain_html_tag(
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
-    return OutputPropertyExpectations(
+    return PanelOutputPropertyExpectations(
         get_output_property=plain_html_tag,
         expected_output_for_case_id=_expected_output_for_case_id,
     )
@@ -552,8 +556,8 @@ def case_syntax_styling_expectations_plain_html_tag(
 
 @pc.case(id='bw-stylized-html-tag-output', tags=['expectations', 'syntax_styling'])
 def case_syntax_styling_expectations_bw_stylized_html_tag(
-    bw_stylized_html_tag: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture]
-) -> OutputPropertyExpectations:
+    bw_stylized_html_tag: Annotated[OutputPropertyType, pc.fixture]
+) -> PanelOutputPropertyExpectations:
     def _expected_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-default-color' \
@@ -583,7 +587,7 @@ def case_syntax_styling_expectations_bw_stylized_html_tag(
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
-    return OutputPropertyExpectations(
+    return PanelOutputPropertyExpectations(
         get_output_property=bw_stylized_html_tag,
         expected_output_for_case_id=_expected_output_for_case_id,
     )
@@ -591,8 +595,8 @@ def case_syntax_styling_expectations_bw_stylized_html_tag(
 
 @pc.case(id='colorized-html-tag-output', tags=['expectations', 'syntax_styling'])
 def case_syntax_styling_expectations_colorized_html_tag(
-    colorized_html_tag: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture]
-) -> OutputPropertyExpectations:
+    colorized_html_tag: Annotated[OutputPropertyType, pc.fixture]
+) -> PanelOutputPropertyExpectations:
 
     no_frame_default_color_exp_output = (
         'MyClass({'
@@ -678,7 +682,7 @@ def case_syntax_styling_expectations_colorized_html_tag(
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
-    return OutputPropertyExpectations(
+    return PanelOutputPropertyExpectations(
         get_output_property=colorized_html_tag,
         expected_output_for_case_id=_expected_output_for_case_id,
     )
@@ -686,8 +690,8 @@ def case_syntax_styling_expectations_colorized_html_tag(
 
 @pc.case(id='plain-html-page-output', tags=['expectations', 'syntax_styling'])
 def case_syntax_styling_expectations_plain_html_page(
-    plain_html_page: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture]
-) -> OutputPropertyExpectations:
+    plain_html_page: Annotated[OutputPropertyType, pc.fixture]
+) -> PanelOutputPropertyExpectations:
     bw_light_body_style = """
       body {
         color: #000000;
@@ -724,7 +728,7 @@ def case_syntax_styling_expectations_plain_html_page(
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
-    return OutputPropertyExpectations(
+    return PanelOutputPropertyExpectations(
         get_output_property=plain_html_page,
         expected_output_for_case_id=_expected_output_for_case_id,
     )
@@ -732,8 +736,8 @@ def case_syntax_styling_expectations_plain_html_page(
 
 @pc.case(id='bw-stylized-html-page-output', tags=['expectations', 'syntax_styling'])
 def case_syntax_styling_expectations_bw_stylized_html_page(
-    bw_stylized_html_page: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture]
-) -> OutputPropertyExpectations:
+    bw_stylized_html_page: Annotated[OutputPropertyType, pc.fixture]
+) -> PanelOutputPropertyExpectations:
     bold_style = '.r2 {font-weight: bold}'
 
     bw_light_body_style = """
@@ -783,7 +787,7 @@ def case_syntax_styling_expectations_bw_stylized_html_page(
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
-    return OutputPropertyExpectations(
+    return PanelOutputPropertyExpectations(
         get_output_property=bw_stylized_html_page,
         expected_output_for_case_id=_expected_output_for_case_id,
     )
@@ -791,8 +795,8 @@ def case_syntax_styling_expectations_bw_stylized_html_page(
 
 @pc.case(id='colorized-html-page-output', tags=['expectations', 'syntax_styling'])
 def case_syntax_styling_expectations_colorized_html_page(
-    colorized_html_page: Annotated[Callable[[SyntaxStylizedTextPanel], str], pc.fixture]
-) -> OutputPropertyExpectations:
+    colorized_html_page: Annotated[OutputPropertyType, pc.fixture]
+) -> PanelOutputPropertyExpectations:
     ansi_dark_style = '\n'.join([
         '.r1 {color: #808000; text-decoration-color: #808000}',
         '.r2 {color: #0000ff; text-decoration-color: #0000ff}',
@@ -894,7 +898,7 @@ def case_syntax_styling_expectations_colorized_html_page(
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
-    return OutputPropertyExpectations(
+    return PanelOutputPropertyExpectations(
         get_output_property=colorized_html_page,
         expected_output_for_case_id=_expected_output_for_case_id,
     )
