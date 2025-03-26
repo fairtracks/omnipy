@@ -247,9 +247,8 @@ def test_stylized_layout_panel_init(
     layout['panel'] = MockPanel(contents='Some Content')
     layout_panel = StylizedLayoutPanel(layout)
 
-    assert layout_panel.content == ''
-    assert layout_panel.layout is not layout
-    assert layout_panel.layout == layout
+    assert layout_panel.content is not layout
+    assert layout_panel.content == layout
     assert layout_panel.frame == empty_frame()
     assert layout_panel.constraints == Constraints()
     assert layout_panel.config == OutputConfig()
@@ -264,8 +263,7 @@ def test_stylized_layout_panel_init(
         constraints=constraints,
     )
 
-    assert configured_layout_panel.content == ''
-    assert configured_layout_panel.layout == layout
+    assert configured_layout_panel.content == layout
     assert configured_layout_panel.frame is not frame
     assert configured_layout_panel.frame == frame
     assert configured_layout_panel.constraints is not constraints
@@ -287,19 +285,16 @@ def test_stylized_layout_panel_immutable_properties(
     layout_panel = StylizedLayoutPanel(Layout())
 
     with pytest.raises(AttributeError):
-        layout_panel.content = '[234, 345, 456]'
+        layout_panel.content = Layout()  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        layout_panel.layout = Layout()
+        layout_panel.frame = empty_frame()  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        layout_panel.frame = empty_frame()
+        layout_panel.constraints = Constraints()  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        layout_panel.constraints = Constraints()
-
-    with pytest.raises(AttributeError):
-        layout_panel.config = OutputConfig()
+        layout_panel.config = OutputConfig()  # type: ignore[misc]
 
 
 @pc.parametrize_with_cases(
