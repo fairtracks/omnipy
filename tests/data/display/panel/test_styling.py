@@ -55,32 +55,57 @@ def test_syntax_stylized_text_panel_init(
     assert stylized_reflowed_text_panel.config == reflowed_text_panel.config
 
 
+# noinspection PyDataclass
+def test_syntax_stylized_text_panel_hashable(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    panel_1 = SyntaxStylizedTextPanel('')
+    panel_2 = SyntaxStylizedTextPanel('')
+
+    assert hash(panel_1) == hash(panel_2)
+
+    panel_3 = SyntaxStylizedTextPanel('[123, 234, 345]')
+    panel_4 = SyntaxStylizedTextPanel('', frame=Frame(Dimensions(width=10, height=20)))
+    panel_5 = SyntaxStylizedTextPanel('', constraints=Constraints(container_width_per_line_limit=9))
+    panel_6 = SyntaxStylizedTextPanel('', config=OutputConfig(indent_tab_size=4))
+
+    assert hash(panel_1) != hash(panel_3) != hash(panel_4) != hash(panel_5) != hash(panel_6)
+
+    panel_7 = SyntaxStylizedTextPanel('[123, 234, 345]')
+    panel_8 = SyntaxStylizedTextPanel('', frame=Frame(Dimensions(width=10, height=20)))
+    panel_9 = SyntaxStylizedTextPanel('', constraints=Constraints(container_width_per_line_limit=9))
+    panel_10 = SyntaxStylizedTextPanel('', config=OutputConfig(indent_tab_size=4))
+
+    assert hash(panel_3) == hash(panel_7)
+    assert hash(panel_4) == hash(panel_8)
+    assert hash(panel_5) == hash(panel_9)
+    assert hash(panel_6) == hash(panel_10)
+
+
 def test_fail_syntax_stylized_text_panel_if_extra_params(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
     with pytest.raises(TypeError):
         SyntaxStylizedTextPanel('[123, 234, 345]', extra=123)  # type: ignore[call-overload]
 
-    text_panel = SyntaxStylizedTextPanel('[123, 234, 345]')
-    text_panel.extra = 123
 
-
-def test_syntax_stylized_text_panel_immutable_properties(
+def test_syntax_stylized_text_panel_no_assignments(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
     text_panel = SyntaxStylizedTextPanel('[123, 234, 345]',)
 
     with pytest.raises(AttributeError):
-        text_panel.content = '[234, 345, 456]'
+        text_panel.content = '[234, 345, 456]'  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        text_panel.frame = empty_frame()
+        text_panel.frame = Frame(Dimensions(10, 20))  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        text_panel.constraints = Constraints()
+        text_panel.constraints = Constraints(  # type: ignore[misc]
+            container_width_per_line_limit=10)
 
     with pytest.raises(AttributeError):
-        text_panel.config = OutputConfig()
+        text_panel.config = OutputConfig()  # type: ignore[misc]
 
 
 def _strip_html(html: str) -> str:

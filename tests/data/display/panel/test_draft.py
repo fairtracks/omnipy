@@ -68,13 +68,13 @@ def _assert_draft_panel(
 def test_draft_panel(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     _assert_draft_panel('Some text', None, None, None)
-    _assert_draft_panel([1, 2, 3], Frame(Dimensions(None, None)), None, None)
-    _assert_draft_panel([1, 2, 3], Frame(Dimensions(10, None)), None, None)
-    _assert_draft_panel([1, 2, 3], Frame(Dimensions(None, 20)), None, None)
-    _assert_draft_panel([1, 2, 3], Frame(Dimensions(10, 20)), None, None)
+    _assert_draft_panel((1, 2, 3), Frame(Dimensions(None, None)), None, None)
+    _assert_draft_panel((1, 2, 3), Frame(Dimensions(10, None)), None, None)
+    _assert_draft_panel((1, 2, 3), Frame(Dimensions(None, 20)), None, None)
+    _assert_draft_panel((1, 2, 3), Frame(Dimensions(10, 20)), None, None)
     _assert_draft_panel(None, None, None, OutputConfig(indent_tab_size=4))
 
-    output = {'a': 1, 'b': 2}
+    output = ('a', 'b', (1, 2, 3))
     _assert_draft_panel(output, None, Constraints(container_width_per_line_limit=10), None)
     _assert_draft_panel(
         output,
@@ -84,36 +84,59 @@ def test_draft_panel(
     )
 
 
-def test_draft_panel_validate_assignments(
+def test_draft_panel_hashable(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    draft_panel_1 = DraftPanel('')
+    draft_panel_2 = DraftPanel('')
+
+    assert hash(draft_panel_1) == hash(draft_panel_2)
+
+    draft_panel_3 = DraftPanel('Some text')
+    draft_panel_4 = DraftPanel('', frame=Frame(Dimensions(10, 20)))
+    draft_panel_5 = DraftPanel('', constraints=Constraints(container_width_per_line_limit=10))
+    draft_panel_6 = DraftPanel('', config=OutputConfig(indent_tab_size=4))
+
+    assert hash(draft_panel_1) != hash(draft_panel_3) != hash(draft_panel_4) != hash(
+        draft_panel_5) != hash(draft_panel_6)
+
+    draft_panel_7 = DraftPanel('Some text')
+    draft_panel_8 = DraftPanel('', frame=Frame(Dimensions(10, 20)))
+    draft_panel_9 = DraftPanel('', constraints=Constraints(container_width_per_line_limit=10))
+    draft_panel_10 = DraftPanel('', config=OutputConfig(indent_tab_size=4))
+
+    assert hash(draft_panel_3) == hash(draft_panel_7)
+    assert hash(draft_panel_4) == hash(draft_panel_8)
+    assert hash(draft_panel_5) == hash(draft_panel_9)
+    assert hash(draft_panel_6) == hash(draft_panel_10)
+
+
+def test_draft_panel_mutable_not_hashable(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    # Test with mutable content
+    mutable_content = [1, 2, 3]
+    draft_panel = DraftPanel(mutable_content)
+
+    with pytest.raises(TypeError):
+        hash(draft_panel)  # Ensure hash is computed
+
+
+# noinspection PyDataclass
+def test_fail_draft_panel_no_assignments(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     draft_panel = DraftPanel('Some text')
 
-    draft_panel.content = [1, 2, 3]  # type: ignore[assignment]
-    assert draft_panel.content == [1, 2, 3]
+    with pytest.raises(AttributeError):
+        draft_panel.content = [1, 2, 3]  # type: ignore[misc]
 
-    frame = Frame(Dimensions(10, 20))
-    draft_panel.frame = frame
-    assert draft_panel.frame is not frame
-    assert draft_panel.frame == frame
+    with pytest.raises(AttributeError):
+        draft_panel.frame = Frame(Dimensions(10, 20))  # type: ignore[misc]
 
-    with pytest.raises(ValueError):
-        draft_panel.frame = 123  # type: ignore[assignment]
+    with pytest.raises(AttributeError):
+        draft_panel.constraints = Constraints(  # type: ignore[misc]
+            container_width_per_line_limit=10)
 
-    constraints = Constraints(container_width_per_line_limit=10)
-    draft_panel.constraints = constraints
-    assert draft_panel.constraints is not constraints
-    assert draft_panel.constraints == constraints
-
-    with pytest.raises(ValueError):
-        draft_panel.constraints = 'abc'  # type: ignore[assignment]
-
-    config = OutputConfig(indent_tab_size=4)
-    draft_panel.config = config
-    assert draft_panel.config is not config
-    assert draft_panel.config == config
-
-    with pytest.raises(ValueError):
-        draft_panel.config = 'abc'  # type: ignore[assignment]
+    with pytest.raises(AttributeError):
+        draft_panel.config = OutputConfig(indent_tab_size=4)  # type: ignore[misc]
 
 
 def test_draft_panel_constraints_satisfaction(
@@ -207,22 +230,58 @@ def test_reflowed_text_draft_panel_within_frame(
         out, 12, 2, 11, 1, fits_width=False, fits_height=False, fits_both=False)
 
 
-def test_reflowed_text_draft_panel_immutable_properties(
+def test_reflowed_text_draft_panel_hashable(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    draft_panel_1 = ReflowedTextDraftPanel('')
+    draft_panel_2 = ReflowedTextDraftPanel('')
+
+    assert hash(draft_panel_1) == hash(draft_panel_2)
+
+    draft_panel_3 = ReflowedTextDraftPanel('Some text')
+    draft_panel_4 = ReflowedTextDraftPanel('', frame=Frame(Dimensions(10, 20)))
+    draft_panel_5 = ReflowedTextDraftPanel(
+        '', constraints=Constraints(container_width_per_line_limit=10))
+    draft_panel_6 = ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4))
+
+    assert hash(draft_panel_1) != hash(draft_panel_3) != hash(draft_panel_4) != hash(
+        draft_panel_5) != hash(draft_panel_6)
+
+    draft_panel_7 = ReflowedTextDraftPanel('Some text')
+    draft_panel_8 = ReflowedTextDraftPanel('', frame=Frame(Dimensions(10, 20)))
+    draft_panel_9 = ReflowedTextDraftPanel(
+        '', constraints=Constraints(container_width_per_line_limit=10))
+    draft_panel_10 = ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4))
+
+    assert hash(draft_panel_3) == hash(draft_panel_7)
+    assert hash(draft_panel_4) == hash(draft_panel_8)
+    assert hash(draft_panel_5) == hash(draft_panel_9)
+    assert hash(draft_panel_6) == hash(draft_panel_10)
+
+
+def test_fail_reflowed_text_draft_panel_if_extra_params(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
+    with pytest.raises(TypeError):
+        ReflowedTextDraftPanel('[123, 234, 345]', extra=123)  # type: ignore[call-arg]
+
+
+# noinspection PyDataclass
+def test_fail_reflowed_text_draft_panel_no_assignments(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
     reflowed_text_panel = ReflowedTextDraftPanel('Some text')
 
     with pytest.raises(AttributeError):
-        reflowed_text_panel.content = 'Some other text'
+        reflowed_text_panel.content = 'Some other text'  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        reflowed_text_panel.frame = empty_frame()
+        reflowed_text_panel.frame = empty_frame()  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        reflowed_text_panel.constraints = Constraints()
+        reflowed_text_panel.constraints = Constraints()  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        reflowed_text_panel.config = OutputConfig()
+        reflowed_text_panel.config = OutputConfig()  # type: ignore[misc]
 
 
 def test_reflowed_text_draft_panel_frame_empty(

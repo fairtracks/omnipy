@@ -12,13 +12,17 @@ import omnipy.util._pydantic as pyd
 FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
 
 
-@pyd.dataclass(init=False, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))
+@pyd.dataclass(
+    init=False,
+    frozen=True,
+    config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True),
+)
 class Panel(Generic[FrameT]):
     """Base panel class that only contains frame information."""
     frame: FrameT
 
     def __init__(self, frame: FrameT | None = None):
-        self.frame = frame or cast(FrameT, empty_frame())
+        object.__setattr__(self, 'frame', frame or cast(FrameT, empty_frame()))
 
     @pyd.validator('frame')
     def _copy_frame(cls, frame: Frame) -> Frame:

@@ -316,11 +316,12 @@ class StylizedMonospacedOutputVariant(OutputVariant):
         return html_cropped
 
 
-@pyd.dataclass(init=False, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
+@pyd.dataclass(
+    init=False,
+    frozen=True,
+    config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True),
+)
 class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
-    _init_dims: DimensionsWithWidthAndHeight = pyd.Field(
-        default_factory=lambda: Dimensions(width=0, height=0))
-
     @overload
     def __init__(self, content: ReflowedTextDraftPanel[FrameT]):
         ...
@@ -347,11 +348,6 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
             str_content = content
 
         super().__init__(str_content, frame, constraints, config)
-
-        if isinstance(content, ReflowedTextDraftPanel):
-            self._init_dims = content.dims
-        else:
-            self._init_dims = ReflowedTextDraftPanel(str_content).dims
 
     @staticmethod
     def _clean_rich_style_caches():
@@ -409,17 +405,23 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
 
         return self._get_stylized_content_common(remove_bg_color=True)
 
-    def _get_console_frame_width_and_height(self) -> tuple[int, int]:
-        frame_width = self.frame.dims.width
-        frame_height = self.frame.dims.height
+    def _get_console_dimensions_from_content(self) -> DimensionsWithWidthAndHeight:
+        if isinstance(self.content, ReflowedTextDraftPanel):
+            return self.content.dims
+        else:
+            return ReflowedTextDraftPanel(self.content).dims
 
-        if frame_width is None or frame_height is None:
-            if frame_width is None:
-                frame_width = self._init_dims.width
-            if frame_height is None:
-                frame_height = self._init_dims.height
+    @cached_property
+    def _console_dimensions(self) -> DimensionsWithWidthAndHeight:
+        console_width = self.frame.dims.width
+        console_height = self.frame.dims.height
 
-        return frame_width, frame_height
+        if console_width is None or console_height is None:
+            console_dims = self._get_console_dimensions_from_content()
+            if console_width is None:
+                console_width = console_dims.width
+            if console_height is None:
+                console_height = console_dims.height
 
     def _get_console_overload(self) -> rich.console.OverflowMethod | None:
         match (self.config.horizontal_overflow_mode):
@@ -439,8 +441,8 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
 
         console = rich.console.Console(
             file=StringIO(),
-            width=width,
-            height=height,
+            width=self._console_dimensions.width,
+            height=self._console_dimensions.height,
             color_system=console_color_system.value,
             record=True,
         )
@@ -487,11 +489,17 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[FrameT], Generic[FrameT]):
 
 
 @pyd.dataclass(
-    config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True, arbitrary_types_allowed=True))
+    frozen=True,
+    config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True, arbitrary_types_allowed=True),
+)
 class StylizedLayoutPanel(SyntaxStylizedTextPanel[FrameT], Generic[FrameT]):
     layout: Layout = pyd.Field(default_factory=Layout)
 
-    def __init__(self, layout: Layout, frame=None, constraints=None, config=None):
+    def __init__(self,
+                 layout: Layout,
+                 frame: object = None,
+                 constraints: object = None,
+                 config: object = None) -> None:
         object.__setattr__(self, 'layout', layout)
         super().__init__('', frame, constraints, config)
 
@@ -499,10 +507,26 @@ class StylizedLayoutPanel(SyntaxStylizedTextPanel[FrameT], Generic[FrameT]):
     def _copy_layout(cls, layout: Layout) -> Layout:
         return layout.copy()
 
-    def __setattr__(self, key, value):
-        if key in ['layout']:
-            raise AttributeError(f'Field "{key}" is immutable')
-        return super().__setattr__(key, value)
+
+    @cached_property
+    def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
+        dimensions_aware_panels = self.layout.render_until_dimensions_aware()
+        if dimensions_aware_panels:
+            return Dimensions(
+                width=(sum(panel.dims.width for panel in dimensions_aware_panels.values())
+                       + len(dimensions_aware_panels) * 3 + 1),
+                height=max(panel.dims.height for panel in dimensions_aware_panels.values()) + 2,
+            )
+        else:
+            return Dimensions(width=0, height=0)
+
+    # For now. Later refactor inheritance to remove this
+    @cached_property
+    def max_container_width_across_lines(self) -> pyd.NonNegativeInt:
+        return 0
+
+    def _get_console_dimensions_from_content(self) -> DimensionsWithWidthAndHeight:
+        return self.dims
 
     def _get_stylized_content_common(self, remove_bg_color: bool) -> rich.console.RenderableType:
         fully_rendered_panels: dict[str, FullyRenderedPanel] = {}
