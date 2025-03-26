@@ -51,6 +51,29 @@ def simple_layout() -> SimpleLayoutCase:
     )
 
 
+def test_layout_hashable(
+    simple_layout: Annotated[SimpleLayoutCase, pytest.fixture],
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
+    layout_1 = Layout()
+    layout_2 = Layout()
+
+    assert hash(layout_1) == hash(layout_2)
+
+    layout_3 = Layout()
+    layout_3['first'] = MockPanel()
+
+    layout_4 = Layout()
+    layout_4['first'] = MockPanel()
+
+    assert hash(layout_1) != hash(layout_3)
+    assert hash(layout_3) == hash(layout_4)
+
+    layout_4['first'] = MockPanel('contents')
+
+    assert hash(layout_3) != hash(layout_4)
+
+
 def test_basic_layout_dict_operations(
     simple_layout: Annotated[SimpleLayoutCase, pytest.fixture],
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
