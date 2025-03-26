@@ -11,7 +11,7 @@ from omnipy.data._display.dimensions import (Dimensions,
 import omnipy.util._pydantic as pyd
 
 
-@pyd.dataclass(config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))
+@pyd.dataclass(frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))
 class Frame(Generic[WidthT, HeightT]):
     dims: Dimensions[WidthT, HeightT]
 

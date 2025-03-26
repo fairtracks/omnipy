@@ -29,15 +29,25 @@ def test_fail_constraints_it_invalid_params(
         Constraints(container_width_per_line_limit='None')  # type: ignore[arg-type]
 
 
-def test_constraints_validate_assignments(
+def test_constraints_hashable(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    constraints_1 = Constraints()
+    constraints_2 = Constraints()
+    constraints_3 = Constraints(container_width_per_line_limit=40)
+    constraints_4 = Constraints(container_width_per_line_limit=40)
+
+    assert hash(constraints_1) == hash(constraints_2)
+    assert hash(constraints_1) != hash(constraints_3)
+    assert hash(constraints_3) == hash(constraints_4)
+
+
+# noinspection PyDataclass
+def test_fail_constraints_no_assignments(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     constraints = Constraints()
 
-    constraints.container_width_per_line_limit = 50
-    assert constraints.container_width_per_line_limit == 50
-
-    with pytest.raises(ValueError):
-        constraints.container_width_per_line_limit = -1
+    with pytest.raises(AttributeError):
+        constraints.container_width_per_line_limit = 50  # type: ignore[misc]
 
 
 def test_constraints_satisfaction(

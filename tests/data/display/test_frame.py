@@ -36,21 +36,21 @@ def _assert_frame(
 
     # Static type checkers SHOULD raise errors here
     try:
-        frame.dims.width += 1  # type: ignore[operator]
-        frame.dims.height += 1  # type: ignore[operator]
+        _a: int = frame.dims.width  # type: ignore[assignment]  # noqa: F841
+        _b: int = frame.dims.height  # type: ignore[assignment]  # noqa: F841
     except TypeError:
         pass
 
     # Static type checkers SHOULD NOT raise errors here
     if frame_has_width(frame):
-        frame.dims.width += 1
+        _c: int = frame.dims.width  # noqa: F841
 
     if frame_has_height(frame):
-        frame.dims.height += 1
+        _d: int = frame.dims.height  # noqa: F841
 
     if frame_has_width_and_height(frame):
-        frame.dims.width += 1
-        frame.dims.height += 1
+        _e: int = frame.dims.width  # noqa: F841
+        _f: int = frame.dims.height  # noqa: F841
 
 
 def test_frame(
@@ -112,17 +112,28 @@ def test_frame_types(
     undefined_frame_func(Frame(Dimensions(10, 20)))  # type: ignore[arg-type]
 
 
-def test_frame_validate_assignments(
+def test_frame_hashable(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    frame_1 = empty_frame()
+    frame_2 = empty_frame()
+    frame_3 = Frame(Dimensions(None, 20))
+    frame_4 = Frame(Dimensions(10, None))
+    frame_5 = Frame(Dimensions(10, 20))
+
+    assert hash(frame_1) == hash(frame_2)
+    assert hash(frame_1) != hash(frame_3) != hash(frame_4) != hash(frame_5)
+
+    frame_6 = Frame(Dimensions(10, 20))
+
+    assert hash(frame_5) == hash(frame_6)
+
+
+def test_fail_frame_no_assignments(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     frame = empty_frame()
 
-    dims = Dimensions(10, 20)
-    frame.dims = dims
-    assert frame.dims is not dims
-    assert frame.dims == dims
-
     with pytest.raises(AttributeError):
-        frame.dims = 123  # type: ignore[assignment]
+        frame.dims = Dimensions(10, 20)  # type: ignore[misc]
 
 
 def test_fail_frame_if_extra_param(
