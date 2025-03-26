@@ -1,5 +1,4 @@
 import re
-from textwrap import dedent
 from typing import Annotated
 
 import pytest
@@ -163,7 +162,11 @@ def test_stylized_monospaced_panel_with_empty_input(
     assert framed_stylized_empty_text_panel.within_frame.width is True
 
 
-@pc.parametrize_with_cases('case', cases='.cases.styling', has_tag='overflow_modes')
+@pc.parametrize_with_cases(
+    'case',
+    cases='.cases.styling',
+    has_tag=('overflow_modes', 'syntax_styling'),
+)
 def test_syntax_stylized_text_panel_overflow_modes(
     case: PanelOutputTestCase,
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
@@ -177,15 +180,22 @@ def test_syntax_stylized_text_panel_overflow_modes(
     assert text_panel.within_frame.height is case.expected_within_frame_height
 
 
-@pc.parametrize_with_cases('output_test_case_setup', cases='.cases.styling', has_tag='setup')
 @pc.parametrize_with_cases(
-    'output_prop_expectations', cases='.cases.styling', has_tag='expectations')
+    'output_test_case_setup',
+    cases='.cases.styling',
+    has_tag=('setup', 'syntax_styling'),
+)
+@pc.parametrize_with_cases(
+    'output_prop_expectations',
+    cases='.cases.styling',
+    has_tag=('expectations', 'syntax_styling'),
+)
 def test_output_properties_of_syntax_stylized_text_panel(
         output_test_case_setup: Annotated[PanelOutputTestCaseSetup, pc.fixture],
         output_prop_expectations: Annotated[PanelOutputPropertyExpectations, pc.fixture],
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
-    case_id, content, frame, config = output_test_case_setup
+    case_id, content, _, frame, config = output_test_case_setup
     get_output_property, expected_output_for_case_id = output_prop_expectations
 
     text_panel = SyntaxStylizedTextPanel(content, frame=frame, config=config)
@@ -270,9 +280,6 @@ def test_fail_stylized_layout_panel_if_extra_params(
     with pytest.raises(TypeError):
         StylizedLayoutPanel(Layout(), extra=123)  # type: ignore[call-arg]
 
-    layout_panel = StylizedLayoutPanel(Layout())
-    layout_panel.extra = 123
-
 
 def test_stylized_layout_panel_immutable_properties(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
@@ -295,42 +302,27 @@ def test_stylized_layout_panel_immutable_properties(
         layout_panel.config = OutputConfig()
 
 
-def test_stylized_layout_panel_basic_grid(
+@pc.parametrize_with_cases(
+    'output_test_case_setup',
+    cases='.cases.styling',
+    has_tag=('setup', 'layout_styling'),
+)
+@pc.parametrize_with_cases(
+    'output_prop_expectations',
+    cases='.cases.styling',
+    has_tag=('expectations', 'layout_styling'),
+)
+def test_output_properties_of_stylized_layout_panel(
+        output_test_case_setup: Annotated[PanelOutputTestCaseSetup, pc.fixture],
+        output_prop_expectations: Annotated[PanelOutputPropertyExpectations, pc.fixture],
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
-    from omnipy.data._display.layout import Layout
-    from omnipy.data._display.panel.styling import StylizedLayoutPanel
+    case_id, _, layout, frame, config = output_test_case_setup
+    get_output_property, expected_output_for_case_id = output_prop_expectations
 
-    # Create a simple layout with mock panels
-    layout = Layout()
-    layout['first'] = MockPanel(contents='Panel_1 Content')
-    layout['second'] = MockPanel(contents='Panel_2 Content')
-
-    # Create stylized output with default config (should use Table grid)
-    layout_panel = StylizedLayoutPanel(
-        layout, config=OutputConfig(console_color_system=ConsoleColorSystem.ANSI_RGB))
-
-    # Check terminal output
-    assert layout_panel.plain.terminal == dedent("""\
-        ╭─────────┬─────────╮
-        │ Panel_1 │ Panel_2 │
-        │ Content │ Content │
-        ╰─────────┴─────────╯
-        """)
-
-    assert layout_panel.bw_stylized.terminal == dedent("""\
-        ╭─────────┬─────────╮
-        │ \x1b[1mPanel_1\x1b[0m │ \x1b[1mPanel_2\x1b[0m │
-        │ \x1b[1mContent\x1b[0m │ \x1b[1mContent\x1b[0m │
-        ╰─────────┴─────────╯
-        """)
-
-    assert layout_panel.colorized.terminal == dedent("""\
-        ╭─────────┬─────────╮
-        │ \x1b[1;34mPanel_1\x1b[0m │ \x1b[1;34mPanel_2\x1b[0m │
-        │ \x1b[1;34mContent\x1b[0m │ \x1b[1;34mContent\x1b[0m │
-        ╰─────────┴─────────╯
-        """)
+    layout_panel = StylizedLayoutPanel(layout, frame=frame, config=config)
+    for _ in range(2):
+        assert get_output_property(layout_panel) == expected_output_for_case_id(case_id)
 
 
 def test_stylized_layout_panel_empty_layout(

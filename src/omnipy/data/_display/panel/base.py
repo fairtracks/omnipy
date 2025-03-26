@@ -9,7 +9,7 @@ from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import AnyFrame, empty_frame, Frame
 import omnipy.util._pydantic as pyd
 
-FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
+FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame)
 
 
 @pyd.dataclass(
@@ -33,11 +33,11 @@ class Panel(Generic[FrameT]):
         ...
 
 
-def panel_is_dims_aware(panel: Panel[FrameT]) -> TypeIs['DimensionsAwarePanel[FrameT]']:
+def panel_is_dimensions_aware(panel: Panel) -> TypeIs['DimensionsAwarePanel']:
     return isinstance(panel, DimensionsAwarePanel)
 
 
-def panel_is_fully_rendered(panel: Panel[FrameT]) -> TypeIs['FullyRenderedPanel[FrameT]']:
+def panel_is_fully_rendered(panel: Panel) -> TypeIs['FullyRenderedPanel']:
     return isinstance(panel, FullyRenderedPanel)
 
 
@@ -73,15 +73,15 @@ class OutputVariant(ABC):
         """
 
 
-class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
+class DimensionsAwarePanel(Panel):
     @cached_property
     @abstractmethod
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
         ...
 
 
-class FullyRenderedPanel(DimensionsAwarePanel[FrameT], Generic[FrameT]):
-    def render_next_stage(self) -> Panel[FrameT]:
+class FullyRenderedPanel(DimensionsAwarePanel):
+    def render_next_stage(self) -> Panel:
         raise NotImplementedError('This panel is fully rendered.')
 
     @cached_property

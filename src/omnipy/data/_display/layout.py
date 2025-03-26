@@ -1,8 +1,16 @@
 from collections import UserDict
-from typing import Iterator
+from typing import Callable, Iterator, Mapping
+
+from typing_extensions import TypeIs, TypeVar
 
 from omnipy.data._display.dimensions import DimensionsWithWidthAndHeight
+from omnipy.data._display.panel.base import (DimensionsAwarePanel,
+                                             FullyRenderedPanel,
+                                             panel_is_dimensions_aware,
+                                             panel_is_fully_rendered)
 from omnipy.data._display.panel.draft import Panel
+
+PanelT = TypeVar('PanelT', bound=Panel)
 
 
 class Grid:
@@ -54,3 +62,28 @@ class Layout(UserDict[str, Panel]):
 
     def __hash__(self) -> int:
         return hash((tuple(self.data.keys()), tuple(self.data.values())))
+
+    def _render_until_criteria_holds(
+            self, criteria: Callable[[Panel], TypeIs[PanelT]]) -> Mapping[str, PanelT]:
+        finished_panels: dict[str, PanelT] = {}
+        remaining_panels: dict[str, Panel] = self.data.copy()
+
+        while len(remaining_panels) > 0:
+            newly_rendered_panels = {}
+            for key, panel in remaining_panels.items():
+                if criteria(panel):
+                    finished_panels[key] = panel
+                else:
+                    newly_rendered_panels[key] = panel.render_next_stage()
+
+            remaining_panels = newly_rendered_panels
+
+        return finished_panels
+
+    def render_until_dimensions_aware(self) -> Mapping[str, DimensionsAwarePanel]:
+        """Render all panels in the layout until they have calculated their dimensions."""
+        return self._render_until_criteria_holds(panel_is_dimensions_aware)
+
+    def render_fully(self) -> Mapping[str, FullyRenderedPanel]:
+        """Render all panels in the layout until they are fully rendered."""
+        return self._render_until_criteria_holds(panel_is_fully_rendered)
