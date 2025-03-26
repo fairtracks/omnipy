@@ -1,9 +1,10 @@
+from abc import ABC, abstractmethod
 from copy import copy
 from functools import cache, cached_property
 from io import StringIO
 import re
 from textwrap import dedent
-from typing import Callable, ClassVar, Iterable, overload, TypeAlias
+from typing import Callable, ClassVar, Generic, Iterable, overload, TypeAlias
 
 import rich.box
 import rich.color
@@ -16,6 +17,7 @@ import rich.syntax
 import rich.table
 import rich.terminal_theme
 import rich.text
+from typing_extensions import override
 
 from omnipy.data._display.config import (ColorStyles,
                                          ConsoleColorSystem,
@@ -25,8 +27,8 @@ from omnipy.data._display.config import (ColorStyles,
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.layout import Layout
-from omnipy.data._display.panel.base import OutputMode, OutputVariant
-from omnipy.data._display.panel.draft import ReflowedTextDraftPanel
+from omnipy.data._display.panel.base import DimensionsAwarePanel, OutputMode, OutputVariant
+from omnipy.data._display.panel.draft import ContentT, DraftPanel, FrameT, ReflowedTextDraftPanel
 from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_style,
                                                 calculate_bg_color_triplet_from_color_style,
                                                 calculate_fg_color_from_color_style,
@@ -38,7 +40,7 @@ import omnipy.util._pydantic as pyd
 StylizedRichTypes: TypeAlias = rich.syntax.Syntax | rich.panel.Panel | rich.table.Table
 
 
-class StylizedMonospacedOutputVariant(OutputVariant):
+class StylizedMonospacedOutputVariant(OutputVariant, Generic[ContentT, FrameT]):
     _CSS_COLOR_STYLE_TEMPLATE_FG_AND_BG: ClassVar[str] = ('color: {foreground}; '
                                                           'background-color: {background}; ')
 
@@ -76,7 +78,7 @@ class StylizedMonospacedOutputVariant(OutputVariant):
         </html>
         """)
 
-    def __init__(self, output: 'SyntaxStylizedTextPanel', output_mode: OutputMode) -> None:
+    def __init__(self, output: 'StylizedPanel[ContentT, FrameT]', output_mode: OutputMode) -> None:
         self._output = output
         self._config = output.config
         self._frame = output.frame
@@ -277,39 +279,7 @@ class StylizedMonospacedOutputVariant(OutputVariant):
         return html_cropped
 
 
-@pyd.dataclass(
-    init=False,
-    frozen=True,
-    config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True),
-)
-class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[AnyFrame]):
-    @overload
-    def __init__(self, content: ReflowedTextDraftPanel[AnyFrame]):
-        ...
-
-    @overload
-    def __init__(self, content: str, frame=None, constraints=None, config=None):
-        ...
-
-    def __init__(self,
-                 content: str | ReflowedTextDraftPanel[AnyFrame],
-                 frame=None,
-                 constraints=None,
-                 config=None):
-        if isinstance(content, ReflowedTextDraftPanel):
-            assert frame is None
-            assert constraints is None
-            assert config is None
-
-            str_content = content.content
-            frame = content.frame
-            constraints = content.constraints
-            config = content.config
-        else:
-            str_content = content
-
-        super().__init__(str_content, frame, constraints, config)
-
+class StylizedPanel(DraftPanel[ContentT, FrameT], Generic[ContentT, FrameT], ABC):
     @staticmethod
     def _clean_rich_style_caches():
         """
@@ -326,71 +296,29 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[AnyFrame]):
         rich.style.Style.get_html_style.cache_clear()
         rich.style.Style.clear_meta_and_links.cache_clear()
 
-    @staticmethod
-    @cache
-    def _get_stylized_content_common(
-        content: str,
-        console_color_system: ConsoleColorSystem,  # Only used for hashing
-        console_color_style: ColorStyles | str,
-        language: SyntaxLanguage | str,
-        horizontal_overflow_mode: HorizontalOverflowMode,
-        remove_bg_color: bool,
-    ) -> rich.syntax.Syntax:
-        style_name = extract_value_if_enum(console_color_style)
-        lexer_name = extract_value_if_enum(language)
-        word_wrap = horizontal_overflow_mode == HorizontalOverflowMode.WORD_WRAP
-
-        # Workaround to remove the background color from the theme, as setting
-        # background_color='default' (the official solution,
-        # see https://github.com/Textualize/rich/issues/284#issuecomment-694947144)
-        # does not work for HTML content.
-        theme = rich.syntax.Syntax.get_theme(style_name)
-
-        if remove_bg_color:
-            theme._background_color = None  # type: ignore[attr-defined]
-            theme._background_style = rich.style.Style()  # type: ignore[attr-defined]
-
-        return rich.syntax.Syntax(
-            content,
-            lexer=lexer_name,
-            theme=theme,
-            # background_color='default' if self.config.transparent_background else None,
-            word_wrap=word_wrap,
-        )
-
     @cached_property
     def _stylized_content_terminal(self) -> StylizedRichTypes:
         self._clean_rich_style_caches()
-
-        return self._get_stylized_content_common(
-            content=self.content,
-            console_color_system=self.config.console_color_system,
-            console_color_style=self.config.color_style,
-            language=self.config.language,
-            horizontal_overflow_mode=self.config.horizontal_overflow_mode,
-            remove_bg_color=self.config.transparent_background,
-        )
+        return self._stylized_content_terminal_impl()
 
     @cached_property
     def _stylized_content_html(self) -> StylizedRichTypes:
         self._clean_rich_style_caches()
+        return self._stylized_content_html_impl()
 
-        return self._get_stylized_content_common(
-            content=self.content,
-            # Color system is hard-coded to 'truecolor' for HTML output
-            console_color_system=ConsoleColorSystem.ANSI_RGB,
-            console_color_style=self.config.color_style,
-            language=self.config.language,
-            horizontal_overflow_mode=self.config.horizontal_overflow_mode,
-            # The HTML background color is set for the entire tag/page, so
-            # we need to remove the background color for each element
-            remove_bg_color=True)
+    @abstractmethod
+    def _stylized_content_terminal_impl(self) -> StylizedRichTypes:
+        """
+        Returns the stylized content for the terminal output. This is a
+        placeholder method to be overridden by subclasses.
+        """
 
-    def _get_console_dimensions_from_content(self) -> DimensionsWithWidthAndHeight:
-        if isinstance(self.content, ReflowedTextDraftPanel):
-            return self.content.dims
-        else:
-            return ReflowedTextDraftPanel(self.content).dims
+    @abstractmethod
+    def _stylized_content_html_impl(self) -> StylizedRichTypes:
+        """
+        Returns the stylized content for the HTML output. This is a
+        placeholder method to be overridden by subclasses.
+        """
 
     @cached_property
     def _console_dimensions(self) -> DimensionsWithWidthAndHeight:
@@ -405,6 +333,13 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[AnyFrame]):
                 console_height = console_dims.height
 
         return Dimensions(width=console_width, height=console_height)
+
+    @abstractmethod
+    def _get_console_dimensions_from_content(self) -> DimensionsWithWidthAndHeight:
+        """
+        Returns the dimensions of the console output. This is a
+        placeholder method to be overridden by subclasses.
+        """
 
     @staticmethod
     @cache
@@ -477,7 +412,105 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[AnyFrame]):
     def colorized(self) -> OutputVariant:
         return StylizedMonospacedOutputVariant(self, OutputMode.COLORIZED)
 
+
+@pyd.dataclass(
+    init=False,
+    frozen=True,
+    config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True),
+)
+class SyntaxStylizedTextPanel(StylizedPanel[str, AnyFrame], ReflowedTextDraftPanel[AnyFrame]):
+    @overload
+    def __init__(self, content: ReflowedTextDraftPanel[AnyFrame]):
+        ...
+
+    @overload
+    def __init__(self, content: str, frame=None, constraints=None, config=None):
+        ...
+
+    def __init__(self,
+                 content: str | ReflowedTextDraftPanel[AnyFrame],
+                 frame=None,
+                 constraints=None,
+                 config=None):
+        if isinstance(content, ReflowedTextDraftPanel):
+            assert frame is None
+            assert constraints is None
+            assert config is None
+
+            str_content = content.content
+            frame = content.frame
+            constraints = content.constraints
+            config = content.config
+        else:
+            str_content = content
+
+        super().__init__(str_content, frame, constraints, config)
+
+    @staticmethod
+    @cache
+    def _get_stylized_content_common(
+        content: str,
+        console_color_system: ConsoleColorSystem,  # Only used for hashing
+        console_color_style: ColorStyles | str,
+        language: SyntaxLanguage | str,
+        horizontal_overflow_mode: HorizontalOverflowMode,
+        remove_bg_color: bool,
+    ) -> rich.syntax.Syntax:
+        style_name = extract_value_if_enum(console_color_style)
+        lexer_name = extract_value_if_enum(language)
+        word_wrap = horizontal_overflow_mode == HorizontalOverflowMode.WORD_WRAP
+
+        # Workaround to remove the background color from the theme, as setting
+        # background_color='default' (the official solution,
+        # see https://github.com/Textualize/rich/issues/284#issuecomment-694947144)
+        # does not work for HTML content.
+        theme = rich.syntax.Syntax.get_theme(style_name)
+
+        if remove_bg_color:
+            theme._background_color = None  # type: ignore[attr-defined]
+            theme._background_style = rich.style.Style()  # type: ignore[attr-defined]
+
+        return rich.syntax.Syntax(
+            content,
+            lexer=lexer_name,
+            theme=theme,
+            # background_color='default' if self.config.transparent_background else None,
+            word_wrap=word_wrap,
+        )
+
+    @override
+    def _stylized_content_terminal_impl(self) -> StylizedRichTypes:
+        return self._get_stylized_content_common(
+            content=self.content,
+            console_color_system=self.config.console_color_system,
+            console_color_style=self.config.color_style,
+            language=self.config.language,
+            horizontal_overflow_mode=self.config.horizontal_overflow_mode,
+            remove_bg_color=self.config.transparent_background,
+        )
+
+    @override
+    def _stylized_content_html_impl(self) -> StylizedRichTypes:
+        return self._get_stylized_content_common(
+            content=self.content,
+            # Color system is hard-coded to 'truecolor' for HTML output
+            console_color_system=ConsoleColorSystem.ANSI_RGB,
+            console_color_style=self.config.color_style,
+            language=self.config.language,
+            horizontal_overflow_mode=self.config.horizontal_overflow_mode,
+            # The HTML background color is set for the entire tag/page, so
+            # we need to remove the background color for each element
+            remove_bg_color=True)
+
+    @override
+    def _get_console_dimensions_from_content(self) -> DimensionsWithWidthAndHeight:
+        if isinstance(self.content, ReflowedTextDraftPanel):
+            return self.content.dims
+        else:
+            return ReflowedTextDraftPanel(self.content).dims
+
     @cached_property
+    @override
     def _content_lines(self) -> list[str]:
         """
         Returns the plain sting output of the panel as a list of lines.
@@ -488,27 +521,19 @@ class SyntaxStylizedTextPanel(ReflowedTextDraftPanel[AnyFrame]):
 
 
 @pyd.dataclass(
+    init=False,
     frozen=True,
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True, arbitrary_types_allowed=True),
 )
-class StylizedLayoutPanel(SyntaxStylizedTextPanel):
-    layout: Layout = pyd.Field(default_factory=Layout)
-
-    def __init__(self,
-                 layout: Layout,
-                 frame: object = None,
-                 constraints: object = None,
-                 config: object = None) -> None:
-        object.__setattr__(self, 'layout', layout)
-        super().__init__('', frame, constraints, config)
-
-    @pyd.validator('layout', pre=True)
-    def _copy_layout(cls, layout: Layout) -> Layout:
-        return layout.copy()
+class StylizedLayoutPanel(DimensionsAwarePanel, StylizedPanel[Layout, AnyFrame]):
+    @pyd.validator('content', pre=True)
+    def _copy_content(cls, content: Layout) -> Layout:
+        return content.copy()
 
     @cached_property
+    @override
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
-        dimensions_aware_panels = self.layout.render_until_dimensions_aware()
+        dimensions_aware_panels = self.content.render_until_dimensions_aware()
         if dimensions_aware_panels:
             return Dimensions(
                 width=(sum(panel.dims.width for panel in dimensions_aware_panels.values())
@@ -518,11 +543,7 @@ class StylizedLayoutPanel(SyntaxStylizedTextPanel):
         else:
             return Dimensions(width=0, height=0)
 
-    # For now. Later refactor inheritance to remove this
-    @cached_property
-    def max_container_width_across_lines(self) -> pyd.NonNegativeInt:
-        return 0
-
+    @override
     def _get_console_dimensions_from_content(self) -> DimensionsWithWidthAndHeight:
         return self.dims
 
@@ -554,24 +575,20 @@ class StylizedLayoutPanel(SyntaxStylizedTextPanel):
 
         return table
 
-    @property
-    def _stylized_content_terminal(self) -> StylizedRichTypes:
-        self._clean_rich_style_caches()
-
+    @override
+    def _stylized_content_terminal_impl(self) -> StylizedRichTypes:
         return self._get_stylized_layout_common(
-            layout=self.layout,
+            layout=self.content,
             console_color_system=self.config.console_color_system,
             color_style=self.config.color_style,
             transparent_background=self.config.transparent_background,
             force_autodetect_bg_color=ForceAutodetect.NEVER,
         )
 
-    @property
-    def _stylized_content_html(self) -> StylizedRichTypes:
-        self._clean_rich_style_caches()
-
+    @override
+    def _stylized_content_html_impl(self) -> StylizedRichTypes:
         return self._get_stylized_layout_common(
-            layout=self.layout,
+            layout=self.content,
             console_color_system=ConsoleColorSystem.ANSI_RGB,
             color_style=self.config.color_style,
             transparent_background=self.config.transparent_background,

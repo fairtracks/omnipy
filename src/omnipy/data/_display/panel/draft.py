@@ -1,14 +1,13 @@
 from dataclasses import asdict
 from functools import cached_property
 import re
-from typing import cast, ClassVar, Generic
+from typing import ClassVar, Generic
 
 from typing_extensions import TypeVar
 
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints, ConstraintsSatisfaction
 from omnipy.data._display.dimensions import Dimensions, DimensionsFit
-from omnipy.data._display.frame import empty_frame
 from omnipy.data._display.helpers import UnicodeCharWidthMap
 from omnipy.data._display.panel.base import FrameT, Panel
 import omnipy.util._pydantic as pyd
@@ -28,9 +27,9 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
 
     def __init__(self, content: ContentT, frame=None, constraints=None, config=None):
         object.__setattr__(self, 'content', content)
-        object.__setattr__(self, 'frame', frame or cast(FrameT, empty_frame()))
         object.__setattr__(self, 'constraints', constraints or Constraints())
         object.__setattr__(self, 'config', config or OutputConfig())
+        super().__init__(frame=frame)
 
     @pyd.validator('constraints')
     def _copy_constraints(cls, constraints: Constraints) -> Constraints:
@@ -49,13 +48,6 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
     init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
 class ReflowedTextDraftPanel(DraftPanel[str, FrameT], Generic[FrameT]):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
-    content: str
-
-    def __init__(self, content: ContentT, frame=None, constraints=None, config=None):
-        object.__setattr__(self, 'content', content)
-        object.__setattr__(self, 'frame', frame or empty_frame())
-        object.__setattr__(self, 'constraints', constraints or Constraints())
-        object.__setattr__(self, 'config', config or OutputConfig())
 
     @cached_property
     def _content_lines(self) -> list[str]:
