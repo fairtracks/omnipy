@@ -16,17 +16,21 @@ import omnipy.util._pydantic as pyd
 ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)
 
 
-@pyd.dataclass(init=False, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))
+@pyd.dataclass(
+    init=False,
+    frozen=True,
+    config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True),
+)
 class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
     content: ContentT
     constraints: Constraints = pyd.Field(default_factory=Constraints)
     config: OutputConfig = pyd.Field(default_factory=OutputConfig)
 
     def __init__(self, content: ContentT, frame=None, constraints=None, config=None):
-        self.content = content
-        self.frame = frame or cast(FrameT, empty_frame())
-        self.constraints = constraints or Constraints()
-        self.config = config or OutputConfig()
+        object.__setattr__(self, 'content', content)
+        object.__setattr__(self, 'frame', frame or cast(FrameT, empty_frame()))
+        object.__setattr__(self, 'constraints', constraints or Constraints())
+        object.__setattr__(self, 'config', config or OutputConfig())
 
     @pyd.validator('constraints')
     def _copy_constraints(cls, constraints: Constraints) -> Constraints:
@@ -41,7 +45,8 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
         return ConstraintsSatisfaction(self.constraints)
 
 
-@pyd.dataclass(init=False, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
+@pyd.dataclass(
+    init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
 class ReflowedTextDraftPanel(DraftPanel[str, FrameT], Generic[FrameT]):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
     content: str
@@ -51,11 +56,6 @@ class ReflowedTextDraftPanel(DraftPanel[str, FrameT], Generic[FrameT]):
         object.__setattr__(self, 'frame', frame or empty_frame())
         object.__setattr__(self, 'constraints', constraints or Constraints())
         object.__setattr__(self, 'config', config or OutputConfig())
-
-    def __setattr__(self, key, value):
-        if key in ['content', 'frame', 'constraints', 'config']:
-            raise AttributeError(f'Field "{key}" is immutable')
-        return super().__setattr__(key, value)
 
     @cached_property
     def _content_lines(self) -> list[str]:
