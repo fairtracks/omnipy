@@ -51,3 +51,6 @@ class Layout(UserDict[str, Panel]):
     def grid(self) -> Grid:
         """Return a Grid object for coordinate-based access."""
         return self._grid
+
+    def __hash__(self) -> int:
+        return hash((tuple(self.data.keys()), tuple(self.data.values())))
