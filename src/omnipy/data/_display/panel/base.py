@@ -5,7 +5,7 @@ from typing import cast, Generic
 
 from typing_extensions import TypeIs, TypeVar
 
-from omnipy.data._display.dimensions import Dimensions
+from omnipy.data._display.dimensions import Dimensions, DimensionsFit
 from omnipy.data._display.frame import AnyFrame, empty_frame, Frame
 import omnipy.util._pydantic as pyd
 
@@ -78,6 +78,10 @@ class DimensionsAwarePanel(Panel):
     @abstractmethod
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
         ...
+
+    @cached_property
+    def within_frame(self) -> DimensionsFit:
+        return DimensionsFit(self.dims, self.frame.dims)
 
 
 class FullyRenderedPanel(DimensionsAwarePanel):

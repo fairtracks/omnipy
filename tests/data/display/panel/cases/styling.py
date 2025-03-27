@@ -25,11 +25,13 @@ OutputPropertyType: TypeAlias = Callable[[SyntaxStylizedTextPanel | StylizedLayo
 
 
 class PanelOutputTestCase(NamedTuple):
-    content: str
-    frame: Frame
-    config: OutputConfig
+    content: str | Layout
+    frame: Frame | None
+    config: OutputConfig | None
     get_output_property: OutputPropertyType
     expected_output: str
+    expected_dims_width: int
+    expected_dims_height: int
     expected_within_frame_width: bool | None
     expected_within_frame_height: bool | None
 
@@ -66,6 +68,8 @@ def case_syntax_styling_word_wrap_horizontal(
              MyClass({'def': [345,
             456]})]
             """),
+        expected_dims_width=22,
+        expected_dims_height=4,
         expected_within_frame_width=True,
         expected_within_frame_height=None,
     )
@@ -73,11 +77,11 @@ def case_syntax_styling_word_wrap_horizontal(
 
 @pc.case(id='ellipsis_horizontal', tags=['overflow_modes', 'syntax_styling'])
 def case_syntax_styling_ellipsis_horizontal(
-    common_content: Annotated[str, pc.fixture],
+    common_text_content: Annotated[str, pc.fixture],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> PanelOutputTestCase:
     return PanelOutputTestCase(
-        content=common_content,
+        content=common_text_content,
         frame=Frame(Dimensions(22, None)),
         config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.ELLIPSIS),
         get_output_property=output_format_accessor,
@@ -85,6 +89,8 @@ def case_syntax_styling_ellipsis_horizontal(
             [MyClass({'abc': [123…
              MyClass({'def': [345…
             """),
+        expected_dims_width=22,
+        expected_dims_height=2,
         expected_within_frame_width=True,
         expected_within_frame_height=None,
     )
@@ -92,11 +98,11 @@ def case_syntax_styling_ellipsis_horizontal(
 
 @pc.case(id='crop_horizontal', tags=['overflow_modes', 'syntax_styling'])
 def case_syntax_styling_crop_horizontal(
-    common_content: Annotated[str, pc.fixture],
+    common_text_content: Annotated[str, pc.fixture],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> PanelOutputTestCase:
     return PanelOutputTestCase(
-        content=common_content,
+        content=common_text_content,
         frame=Frame(Dimensions(22, None)),
         config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
         get_output_property=output_format_accessor,
@@ -104,6 +110,8 @@ def case_syntax_styling_crop_horizontal(
             [MyClass({'abc': [123,
              MyClass({'def': [345,
             """),
+        expected_dims_width=22,
+        expected_dims_height=2,
         expected_within_frame_width=True,
         expected_within_frame_height=None,
     )
@@ -111,11 +119,11 @@ def case_syntax_styling_crop_horizontal(
 
 @pc.case(id='word_wrap_small_frame', tags=['overflow_modes', 'syntax_styling'])
 def case_syntax_styling_word_wrap_small_frame(
-    common_content: Annotated[str, pc.fixture],
+    common_text_content: Annotated[str, pc.fixture],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> PanelOutputTestCase:
     return PanelOutputTestCase(
-        content=common_content,
+        content=common_text_content,
         frame=Frame(Dimensions(10, 8)),
         config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
         get_output_property=output_format_accessor,
@@ -129,6 +137,8 @@ def case_syntax_styling_word_wrap_small_frame(
             [345, 
             456]})]
             """),  # noqa: W291
+        expected_dims_width=10,
+        expected_dims_height=8,
         expected_within_frame_width=True,
         expected_within_frame_height=True,
     )
@@ -136,11 +146,11 @@ def case_syntax_styling_word_wrap_small_frame(
 
 @pc.case(id='word_wrap_crop_bottom', tags=['overflow_modes', 'syntax_styling'])
 def case_syntax_styling_word_wrap_crop_bottom(
-    common_content: Annotated[str, pc.fixture],
+    common_text_content: Annotated[str, pc.fixture],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> PanelOutputTestCase:
     return PanelOutputTestCase(
-        content=common_content,
+        content=common_text_content,
         frame=Frame(Dimensions(10, 4)),
         config=OutputConfig(
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
@@ -153,6 +163,8 @@ def case_syntax_styling_word_wrap_crop_bottom(
             [123, 
             234]}),
             """),  # noqa: W291
+        expected_dims_width=10,
+        expected_dims_height=4,
         expected_within_frame_width=True,
         expected_within_frame_height=True,
     )
@@ -160,11 +172,11 @@ def case_syntax_styling_word_wrap_crop_bottom(
 
 @pc.case(id='word_wrap_crop_top', tags=['overflow_modes', 'syntax_styling'])
 def case_syntax_styling_word_wrap_crop_top(
-    common_content: Annotated[str, pc.fixture],
+    common_text_content: Annotated[str, pc.fixture],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> PanelOutputTestCase:
     return PanelOutputTestCase(
-        content=common_content,
+        content=common_text_content,
         frame=Frame(Dimensions(10, 1)),
         config=OutputConfig(
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
@@ -174,6 +186,8 @@ def case_syntax_styling_word_wrap_crop_top(
         expected_output=dedent("""\
             456]})]
             """),  # noqa: W291
+        expected_dims_width=7,
+        expected_dims_height=1,
         expected_within_frame_width=True,
         expected_within_frame_height=True,
     )
@@ -905,6 +919,25 @@ def case_syntax_styling_expectations_colorized_html_page(
     return PanelOutputPropertyExpectations(
         get_output_property=colorized_html_page,
         expected_output_for_case_id=_expected_output_for_case_id,
+    )
+
+
+@pc.case(id='single_panel_no_frame', tags=['grids_and_frames', 'layout_styling'])
+def case_layout_styling_single_panel_no_frame(
+        output_format_accessor: Annotated[OutputPropertyType, pc.fixture]) -> PanelOutputTestCase:
+    return PanelOutputTestCase(
+        content=Layout({'panel': MockPanel(content='Some Content')}),
+        frame=None,
+        config=None,
+        get_output_property=output_format_accessor,
+        expected_output=('╭─────────╮\n'
+                         '│ Some    │\n'
+                         '│ Content │\n'
+                         '╰─────────╯\n'),
+        expected_dims_width=11,
+        expected_dims_height=4,
+        expected_within_frame_width=None,
+        expected_within_frame_height=None,
     )
 
 

@@ -12,6 +12,12 @@ def common_content() -> str:
 
 
 @pc.fixture
+def common_text_content() -> str:
+    return ("[MyClass({'abc': [123, 234]}),\n"
+            " MyClass({'def': [345, 456]})]")
+
+
+@pc.fixture
 def plain_terminal() -> Callable[[SyntaxStylizedTextPanel | StylizedLayoutPanel], str]:
     return lambda output: output.plain.terminal
 

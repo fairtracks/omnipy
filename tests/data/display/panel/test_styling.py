@@ -88,6 +88,7 @@ def test_fail_syntax_stylized_text_panel_if_extra_params(
         SyntaxStylizedTextPanel('[123, 234, 345]', extra=123)  # type: ignore[call-overload]
 
 
+# noinspection PyDataclass
 def test_syntax_stylized_text_panel_no_assignments(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
@@ -176,6 +177,8 @@ def test_syntax_stylized_text_panel_overflow_modes(
     processed_text_panel = _prepare_panel(text_panel, case.get_output_property)
 
     assert processed_text_panel == case.expected_output
+    assert text_panel.dims.width == case.expected_dims_width
+    assert text_panel.dims.height == case.expected_dims_height
     assert text_panel.within_frame.width is case.expected_within_frame_width
     assert text_panel.within_frame.height is case.expected_within_frame_height
 
@@ -244,7 +247,7 @@ def test_stylized_layout_panel_init(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
     layout = Layout()
-    layout['panel'] = MockPanel(contents='Some Content')
+    layout['panel'] = MockPanel(content='Some Content')
     layout_panel = StylizedLayoutPanel(layout)
 
     assert layout_panel.content is not layout
@@ -279,6 +282,7 @@ def test_fail_stylized_layout_panel_if_extra_params(
         StylizedLayoutPanel(Layout(), extra=123)  # type: ignore[call-arg]
 
 
+# noinspection PyDataclass
 def test_stylized_layout_panel_immutable_properties(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
@@ -295,6 +299,26 @@ def test_stylized_layout_panel_immutable_properties(
 
     with pytest.raises(AttributeError):
         layout_panel.config = OutputConfig()  # type: ignore[misc]
+
+
+@pc.parametrize_with_cases(
+    'case',
+    cases='.cases.styling',
+    has_tag=('grids_and_frames', 'layout_styling'),
+)
+def test_syntax_layout_panel_grids_and_frames(
+    case: PanelOutputTestCase,
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
+
+    layout_panel = StylizedLayoutPanel(case.content, frame=case.frame, config=case.config)
+    processed_text_panel = _prepare_panel(layout_panel, case.get_output_property)
+
+    assert processed_text_panel == case.expected_output
+    assert layout_panel.dims.width == case.expected_dims_width
+    assert layout_panel.dims.height == case.expected_dims_height
+    assert layout_panel.within_frame.width is case.expected_within_frame_width
+    assert layout_panel.within_frame.height is case.expected_within_frame_height
 
 
 @pc.parametrize_with_cases(
