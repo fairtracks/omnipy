@@ -7,9 +7,9 @@ from typing_extensions import TypeVar
 
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints, ConstraintsSatisfaction
-from omnipy.data._display.dimensions import Dimensions, DimensionsFit
+from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.helpers import UnicodeCharWidthMap
-from omnipy.data._display.panel.base import FrameT, Panel
+from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, Panel
 import omnipy.util._pydantic as pyd
 
 ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)
@@ -46,7 +46,7 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
 
 @pyd.dataclass(
     init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
-class ReflowedTextDraftPanel(DraftPanel[str, FrameT], Generic[FrameT]):
+class ReflowedTextDraftPanel(DimensionsAwarePanel, DraftPanel[str, FrameT], Generic[FrameT]):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
 
     @cached_property
@@ -67,10 +67,6 @@ class ReflowedTextDraftPanel(DraftPanel[str, FrameT], Generic[FrameT]):
     @cached_property
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
         return Dimensions(width=self._width, height=self._height)
-
-    @cached_property
-    def within_frame(self) -> DimensionsFit:
-        return DimensionsFit(self.dims, self.frame.dims)
 
     @cached_property
     def max_container_width_across_lines(self) -> pyd.NonNegativeInt:
