@@ -922,12 +922,22 @@ def case_syntax_styling_expectations_colorized_html_page(
     )
 
 
-@pc.case(id='single_panel_no_frame', tags=['grids_and_frames', 'layout_styling'])
+@pc.parametrize(
+    'frame, expected_within_frame_width, expected_within_frame_height', (
+        (None, None, None),
+        (Frame(Dimensions(width=15, height=5)), True, True),
+    ),
+    ids=('no_frame', 'larger_frame'))
+@pc.case(id='single_panel', tags=['grids_and_frames', 'layout_styling'])
 def case_layout_styling_single_panel_no_frame(
-        output_format_accessor: Annotated[OutputPropertyType, pc.fixture]) -> PanelOutputTestCase:
+    frame: Frame | None,
+    output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
+    expected_within_frame_width: bool | None,
+    expected_within_frame_height: bool | None,
+) -> PanelOutputTestCase:
     return PanelOutputTestCase(
         content=Layout({'panel': MockPanel(content='Some Content')}),
-        frame=None,
+        frame=frame,
         config=None,
         get_output_property=output_format_accessor,
         expected_output=('╭─────────╮\n'
@@ -936,8 +946,8 @@ def case_layout_styling_single_panel_no_frame(
                          '╰─────────╯\n'),
         expected_dims_width=11,
         expected_dims_height=4,
-        expected_within_frame_width=None,
-        expected_within_frame_height=None,
+        expected_within_frame_width=expected_within_frame_width,
+        expected_within_frame_height=expected_within_frame_height,
     )
 
 
