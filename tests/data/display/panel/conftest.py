@@ -1,9 +1,8 @@
-from typing import Annotated, Callable
+from typing import Annotated
 
 import pytest_cases as pc
 
-from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
-from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
+from .helpers import OutputPropertyType
 
 
 @pc.fixture
@@ -19,47 +18,47 @@ def common_text_content() -> str:
 
 
 @pc.fixture
-def plain_terminal() -> Callable[[SyntaxStylizedTextPanel | StylizedLayoutPanel], str]:
+def plain_terminal() -> OutputPropertyType:
     return lambda output: output.plain.terminal
 
 
 @pc.fixture
-def plain_html_tag() -> Callable[[SyntaxStylizedTextPanel | StylizedLayoutPanel], str]:
+def plain_html_tag() -> OutputPropertyType:
     return lambda output: output.plain.html_tag
 
 
 @pc.fixture
-def plain_html_page() -> Callable[[SyntaxStylizedTextPanel | StylizedLayoutPanel], str]:
+def plain_html_page() -> OutputPropertyType:
     return lambda output: output.plain.html_page
 
 
 @pc.fixture
-def bw_stylized_terminal() -> Callable[[SyntaxStylizedTextPanel | StylizedLayoutPanel], str]:
+def bw_stylized_terminal() -> OutputPropertyType:
     return lambda output: output.bw_stylized.terminal
 
 
 @pc.fixture
-def bw_stylized_html_tag() -> Callable[[SyntaxStylizedTextPanel | StylizedLayoutPanel], str]:
+def bw_stylized_html_tag() -> OutputPropertyType:
     return lambda output: output.bw_stylized.html_tag
 
 
 @pc.fixture
-def bw_stylized_html_page() -> Callable[[SyntaxStylizedTextPanel | StylizedLayoutPanel], str]:
+def bw_stylized_html_page() -> OutputPropertyType:
     return lambda output: output.bw_stylized.html_page
 
 
 @pc.fixture
-def colorized_terminal() -> Callable[[SyntaxStylizedTextPanel | StylizedLayoutPanel], str]:
+def colorized_terminal() -> OutputPropertyType:
     return lambda output: output.colorized.terminal
 
 
 @pc.fixture
-def colorized_html_tag() -> Callable[[SyntaxStylizedTextPanel | StylizedLayoutPanel], str]:
+def colorized_html_tag() -> OutputPropertyType:
     return lambda output: output.colorized.html_tag
 
 
 @pc.fixture
-def colorized_html_page() -> Callable[[SyntaxStylizedTextPanel | StylizedLayoutPanel], str]:
+def colorized_html_page() -> OutputPropertyType:
     return lambda output: output.colorized.html_page
 
 
@@ -77,8 +76,6 @@ def colorized_html_page() -> Callable[[SyntaxStylizedTextPanel | StylizedLayoutP
                     colorized_html_page
                 ])
 def output_format_accessor(
-    getter_func: Annotated[Callable[[SyntaxStylizedTextPanel | StylizedLayoutPanel], str],
-                           pc.fixture]
-) -> Callable[[SyntaxStylizedTextPanel | StylizedLayoutPanel], str]:
+        getter_func: Annotated[OutputPropertyType, pc.fixture]) -> OutputPropertyType:
     """Parametrized fixture that provides access to all output format accessors."""
     return getter_func

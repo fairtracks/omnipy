@@ -1,13 +1,8 @@
-import re
 from typing import Annotated
 
 import pytest
 import pytest_cases as pc
 
-from data.display.panel.cases.styling import (OutputPropertyType,
-                                              PanelOutputPropertyExpectations,
-                                              PanelOutputTestCase,
-                                              PanelOutputTestCaseSetup)
 from omnipy.data._display.config import (ConsoleColorSystem,
                                          OutputConfig,
                                          RecommendedColorStyles,
@@ -17,6 +12,11 @@ from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
+
+from .helpers import (PanelOutputPropertyExpectations,
+                      PanelOutputTestCase,
+                      PanelOutputTestCaseSetup,
+                      prepare_panel)
 
 
 def test_syntax_stylized_text_panel_init(
@@ -104,33 +104,6 @@ def test_syntax_stylized_text_panel_no_assignments(
         text_panel.config = OutputConfig()  # type: ignore[misc]
 
 
-def _strip_html(html: str) -> str:
-    matches = re.findall(r'<code[^>]*>([\S\s]*)</code>', html, re.MULTILINE)
-    if not matches:
-        return html
-
-    code_no_tags = re.sub(r'<[^>]+>', '', matches[0])
-
-    def _to_char(match: re.Match) -> str:
-        import sys
-        byte_as_str = match[1]
-        return int(byte_as_str, 16).to_bytes(length=1, byteorder=sys.byteorder).decode()
-
-    code_no_escapes = re.sub(r'&#x(\d+);', _to_char, code_no_tags)
-    return code_no_escapes
-
-
-def _strip_ansi(text: str) -> str:
-    return re.sub(r'\x1b\[[^m]+m', '', text)
-
-
-def _prepare_panel(
-    text_panel: SyntaxStylizedTextPanel,
-    get_output_property: OutputPropertyType,
-) -> str:
-    return _strip_ansi(_strip_html(get_output_property(text_panel)))
-
-
 def test_stylized_monospaced_panel_with_empty_input(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     stylized_empty_text_panel = SyntaxStylizedTextPanel('')
@@ -161,7 +134,7 @@ def test_stylized_monospaced_panel_with_empty_input(
 
 @pc.parametrize_with_cases(
     'case',
-    cases='.cases.styling',
+    cases='.cases.text_styling',
     has_tag=('overflow_modes', 'syntax_styling'),
 )
 def test_syntax_stylized_text_panel_overflow_modes(
@@ -170,7 +143,7 @@ def test_syntax_stylized_text_panel_overflow_modes(
 ) -> None:
 
     text_panel = SyntaxStylizedTextPanel(case.content, frame=case.frame, config=case.config)
-    processed_text_panel = _prepare_panel(text_panel, case.get_output_property)
+    processed_text_panel = prepare_panel(text_panel, case.get_output_property)
 
     assert processed_text_panel == case.expected_output
     assert text_panel.dims.width == case.expected_dims_width
@@ -181,12 +154,12 @@ def test_syntax_stylized_text_panel_overflow_modes(
 
 @pc.parametrize_with_cases(
     'output_test_case_setup',
-    cases='.cases.styling',
+    cases='.cases.text_styling',
     has_tag=('setup', 'syntax_styling'),
 )
 @pc.parametrize_with_cases(
     'output_prop_expectations',
-    cases='.cases.styling',
+    cases='.cases.text_styling',
     has_tag=('expectations', 'syntax_styling'),
 )
 def test_output_properties_of_syntax_stylized_text_panel(
@@ -194,7 +167,7 @@ def test_output_properties_of_syntax_stylized_text_panel(
         output_prop_expectations: Annotated[PanelOutputPropertyExpectations, pc.fixture],
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
-    case_id, content, _, frame, config = output_test_case_setup
+    case_id, content, frame, config = output_test_case_setup
     get_output_property, expected_output_for_case_id = output_prop_expectations
 
     text_panel = SyntaxStylizedTextPanel(content, frame=frame, config=config)

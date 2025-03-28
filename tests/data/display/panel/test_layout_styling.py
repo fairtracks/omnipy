@@ -3,17 +3,18 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from data.display.helpers.classes import MockPanel
-from data.display.panel.cases.styling import (PanelOutputPropertyExpectations,
-                                              PanelOutputTestCase,
-                                              PanelOutputTestCaseSetup)
-from data.display.panel.test_text_styling import _prepare_panel
 from omnipy.data._display.config import LayoutStyle, OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
+
+from ..helpers.classes import MockPanel
+from .helpers import (PanelOutputPropertyExpectations,
+                      PanelOutputTestCase,
+                      PanelOutputTestCaseSetup,
+                      prepare_panel)
 
 
 def test_stylized_layout_panel_init(
@@ -76,16 +77,16 @@ def test_stylized_layout_panel_immutable_properties(
 
 @pc.parametrize_with_cases(
     'case',
-    cases='.cases.styling',
+    cases='.cases.layout_styling',
     has_tag=('grids_and_frames', 'layout_styling'),
 )
 def test_syntax_layout_panel_grids_and_frames(
-    case: PanelOutputTestCase,
+    case: PanelOutputTestCase[Layout],
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
 ) -> None:
 
     layout_panel = StylizedLayoutPanel(case.content, frame=case.frame, config=case.config)
-    processed_text_panel = _prepare_panel(layout_panel, case.get_output_property)
+    processed_text_panel = prepare_panel(layout_panel, case.get_output_property)
 
     assert processed_text_panel == case.expected_output
     assert layout_panel.dims.width == case.expected_dims_width
@@ -96,12 +97,12 @@ def test_syntax_layout_panel_grids_and_frames(
 
 @pc.parametrize_with_cases(
     'output_test_case_setup',
-    cases='.cases.styling',
+    cases='.cases.layout_styling',
     has_tag=('setup', 'layout_styling'),
 )
 @pc.parametrize_with_cases(
     'output_prop_expectations',
-    cases='.cases.styling',
+    cases='.cases.layout_styling',
     has_tag=('expectations', 'layout_styling'),
 )
 def test_output_properties_of_stylized_layout_panel(
@@ -109,10 +110,10 @@ def test_output_properties_of_stylized_layout_panel(
         output_prop_expectations: Annotated[PanelOutputPropertyExpectations, pc.fixture],
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
-    case_id, _, layout, frame, config = output_test_case_setup
+    case_id, content, frame, config = output_test_case_setup
     get_output_property, expected_output_for_case_id = output_prop_expectations
 
-    layout_panel = StylizedLayoutPanel(layout, frame=frame, config=config)
+    layout_panel = StylizedLayoutPanel(content, frame=frame, config=config)
     for _ in range(2):
         assert get_output_property(layout_panel) == expected_output_for_case_id(case_id)
 
