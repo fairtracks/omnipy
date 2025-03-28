@@ -5,9 +5,9 @@ from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHe
 from omnipy.data._display.frame import AnyFrame, empty_frame
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              FullyRenderedPanel,
-                                             OutputMode,
                                              OutputVariant,
                                              Panel)
+from omnipy.data._display.panel.styling.output import OutputMode
 import omnipy.util._pydantic as pyd
 
 
@@ -28,6 +28,16 @@ class MockPanelStage2(DimensionsAwarePanel, MockPanel):
     @pyd.validator('content')
     def words_into_lines(cls, content: str) -> str:
         return '\n'.join(content.split())
+
+    #
+    # def words_into_lines(cls, content: str, values: dict[str, object]) -> str:
+    #     lines = content.split()
+    #     frame = cast(AnyFrame, values.get('frame'))
+    #     if frame is not None:
+    #         cropped_lines = [line[:frame.dims.width] for line in lines[:frame.dims.height]]
+    #         return '\n'.join(cropped_lines)
+    #     else:
+    #         return '\n'.join(lines)
 
     def render_next_stage(self) -> Panel:
         return MockPanelStage3(content=self.content)

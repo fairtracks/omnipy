@@ -7,9 +7,9 @@ from omnipy.data._display.dimensions import DimensionsWithWidthAndHeight
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              FullyRenderedPanel,
+                                             Panel,
                                              panel_is_dimensions_aware,
                                              panel_is_fully_rendered)
-from omnipy.data._display.panel.draft import Panel
 
 PanelT = TypeVar('PanelT', bound=Panel)
 

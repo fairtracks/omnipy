@@ -4,7 +4,7 @@ import pytest
 
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
-from omnipy.data._display.panel.draft import Panel
+from omnipy.data._display.panel.base import Panel
 
 
 def test_panel(skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],):

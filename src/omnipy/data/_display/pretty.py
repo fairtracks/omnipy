@@ -11,7 +11,8 @@ from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions, Proportionally
 from omnipy.data._display.frame import Frame, frame_has_width, FrameWithWidth
 from omnipy.data._display.panel.base import FrameT
-from omnipy.data._display.panel.draft import DraftPanel, ReflowedTextDraftPanel
+from omnipy.data._display.panel.draft.base import DraftPanel
+from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data.typechecks import is_model_instance
 import omnipy.util._pydantic as pyd
 

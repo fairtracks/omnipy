@@ -2,7 +2,8 @@ from typing import Annotated, Callable
 
 import pytest_cases as pc
 
-from omnipy.data._display.panel.styling import StylizedLayoutPanel, SyntaxStylizedTextPanel
+from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
+from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 
 
 @pc.fixture
