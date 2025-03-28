@@ -6,7 +6,9 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
+from omnipy.data._display.panel.base import FrameT, Panel
 from omnipy.data._display.panel.draft.base import DraftPanel
+from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 
 
 class _DraftOutputKwArgs(TypedDict, total=False):
@@ -179,3 +181,38 @@ def test_draft_panel_with_empty_content(
     assert framed_empty_draft_panel.frame.dims.width == 10
     assert framed_empty_draft_panel.frame.dims.height == 5
     assert framed_empty_draft_panel.content == ''
+
+
+def _assert_next_stage_panel(draft_panel: DraftPanel[object, FrameT],
+                             next_stage: Panel[FrameT],
+                             next_stage_panel_cls: type[DraftPanel[object, FrameT]],
+                             expected_content: str) -> None:
+    assert isinstance(next_stage, next_stage_panel_cls)
+    assert next_stage.content == expected_content
+    assert next_stage.frame == draft_panel.frame
+    assert next_stage.constraints == draft_panel.constraints
+    assert next_stage.config == draft_panel.config
+
+
+def test_draft_panel_render_next_stage(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    draft_panel = DraftPanel('Some text')
+    _assert_next_stage_panel(
+        draft_panel,
+        draft_panel.render_next_stage(),
+        ReflowedTextDraftPanel,
+        "'Some text'",
+    )
+
+    draft_panel_complex = DraftPanel(
+        (1, 2, 3),
+        frame=Frame(Dimensions(3, 5)),
+        constraints=Constraints(container_width_per_line_limit=10),
+        config=OutputConfig(indent_tab_size=1),
+    )
+    _assert_next_stage_panel(
+        draft_panel_complex,
+        draft_panel_complex.render_next_stage(),
+        ReflowedTextDraftPanel,
+        '(\n 1,\n 2,\n 3\n)',
+    )

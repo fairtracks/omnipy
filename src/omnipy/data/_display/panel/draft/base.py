@@ -38,3 +38,7 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
     @property
     def satisfies(self) -> ConstraintsSatisfaction:
         return ConstraintsSatisfaction(self.constraints)
+
+    def render_next_stage(self) -> 'Panel[FrameT]':
+        from omnipy.data._display.pretty import pretty_repr_of_draft_output
+        return pretty_repr_of_draft_output(self)
