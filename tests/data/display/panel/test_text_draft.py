@@ -7,7 +7,9 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
+from omnipy.data._display.panel.base import FrameT, Panel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
+from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 
 
 def _assert_reflowed_text_draft_panel(
@@ -216,3 +218,37 @@ def test_reflowed_text_draft_panel_with_empty_content(
 
     assert constrained_reflowed_empty_text_panel.satisfies.container_width_per_line_limit is True
     assert constrained_reflowed_empty_text_panel.max_container_width_across_lines == 0
+
+
+def _assert_next_stage_panel(
+    reflowed_text_panel: ReflowedTextDraftPanel[FrameT],
+    next_stage: Panel[FrameT],
+    next_stage_panel_cls: type[ReflowedTextDraftPanel[FrameT]],
+) -> None:
+    assert isinstance(next_stage, next_stage_panel_cls)
+    assert next_stage.content == reflowed_text_panel.content
+    assert next_stage.frame == reflowed_text_panel.frame
+    assert next_stage.constraints == reflowed_text_panel.constraints
+    assert next_stage.config == reflowed_text_panel.config
+
+
+def test_draft_panel_render_next_stage(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    reflowed_text_panel = ReflowedTextDraftPanel('Some text')
+    _assert_next_stage_panel(
+        reflowed_text_panel,
+        reflowed_text_panel.render_next_stage(),
+        SyntaxStylizedTextPanel,
+    )
+
+    reflowed_text_panel_complex = ReflowedTextDraftPanel(
+        '(1, 2, 3)',
+        frame=Frame(Dimensions(9, 1)),
+        constraints=Constraints(container_width_per_line_limit=10),
+        config=OutputConfig(indent_tab_size=1),
+    )
+    _assert_next_stage_panel(
+        reflowed_text_panel_complex,
+        reflowed_text_panel_complex.render_next_stage(),
+        SyntaxStylizedTextPanel,
+    )

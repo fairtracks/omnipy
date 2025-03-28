@@ -5,7 +5,7 @@ from typing import ClassVar, Generic
 from omnipy.data._display.constraints import ConstraintsSatisfaction
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.helpers import UnicodeCharWidthMap
-from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT
+from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, Panel
 from omnipy.data._display.panel.draft.base import DraftPanel
 import omnipy.util._pydantic as pyd
 
@@ -52,3 +52,7 @@ class ReflowedTextDraftPanel(DimensionsAwarePanel[FrameT], DraftPanel[str, Frame
             self.constraints,
             max_container_width_across_lines=self.max_container_width_across_lines,
         )
+
+    def render_next_stage(self) -> 'Panel[FrameT]':
+        from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
+        return SyntaxStylizedTextPanel(self)
