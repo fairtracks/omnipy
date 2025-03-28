@@ -25,7 +25,9 @@ from omnipy.data._display.config import (ColorStyles,
                                          SyntaxLanguage,
                                          VerticalOverflowMode)
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
-from omnipy.data._display.frame import AnyFrame
+#                                              has_height,
+#                                              has_width)
+# from omnipy.data._display.frame import AnyFrame, Frame, FrameWithWidthAndHeight
 from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.base import DimensionsAwarePanel, OutputMode, OutputVariant
 from omnipy.data._display.panel.draft import ContentT, DraftPanel, FrameT, ReflowedTextDraftPanel
@@ -418,9 +420,11 @@ class StylizedPanel(DraftPanel[ContentT, FrameT], Generic[ContentT, FrameT], ABC
     frozen=True,
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True),
 )
-class SyntaxStylizedTextPanel(StylizedPanel[str, AnyFrame], ReflowedTextDraftPanel[AnyFrame]):
+class SyntaxStylizedTextPanel(StylizedPanel[str, FrameT],
+                              ReflowedTextDraftPanel[FrameT],
+                              Generic[FrameT]):
     @overload
-    def __init__(self, content: ReflowedTextDraftPanel[AnyFrame]):
+    def __init__(self, content: ReflowedTextDraftPanel[FrameT]):
         ...
 
     @overload
@@ -428,7 +432,7 @@ class SyntaxStylizedTextPanel(StylizedPanel[str, AnyFrame], ReflowedTextDraftPan
         ...
 
     def __init__(self,
-                 content: str | ReflowedTextDraftPanel[AnyFrame],
+                 content: str | ReflowedTextDraftPanel[FrameT],
                  frame=None,
                  constraints=None,
                  config=None):
@@ -525,7 +529,7 @@ class SyntaxStylizedTextPanel(StylizedPanel[str, AnyFrame], ReflowedTextDraftPan
     frozen=True,
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True, arbitrary_types_allowed=True),
 )
-class StylizedLayoutPanel(DimensionsAwarePanel, StylizedPanel[Layout, AnyFrame]):
+class StylizedLayoutPanel(DimensionsAwarePanel[FrameT], StylizedPanel[Layout, FrameT]):
     @pyd.validator('content', pre=True)
     def _copy_content(cls, content: Layout) -> Layout:
         return content.copy()
