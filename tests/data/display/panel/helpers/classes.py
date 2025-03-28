@@ -2,9 +2,8 @@ from functools import cached_property
 from typing import cast
 
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
-from omnipy.data._display.frame import empty_frame
+from omnipy.data._display.frame import AnyFrame, empty_frame
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
-                                             FrameT,
                                              FullyRenderedPanel,
                                              OutputMode,
                                              OutputVariant,
@@ -16,9 +15,9 @@ import omnipy.util._pydantic as pyd
 class MockPanel(Panel):
     content: str = ''
 
-    def __init__(self, content: str = '', frame: FrameT | None = None) -> None:
+    def __init__(self, content: str = '', frame: AnyFrame | None = None) -> None:
         object.__setattr__(self, 'content', content)
-        object.__setattr__(self, 'frame', frame or cast(FrameT, empty_frame()))
+        object.__setattr__(self, 'frame', frame or cast(AnyFrame, empty_frame()))
 
     def render_next_stage(self) -> Panel:
         return MockPanelStage2(self.content)

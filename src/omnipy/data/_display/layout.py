@@ -4,6 +4,7 @@ from typing import Callable, Iterator, Mapping
 from typing_extensions import TypeIs, TypeVar
 
 from omnipy.data._display.dimensions import DimensionsWithWidthAndHeight
+from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              FullyRenderedPanel,
                                              panel_is_dimensions_aware,
@@ -80,10 +81,10 @@ class Layout(UserDict[str, Panel]):
 
         return finished_panels
 
-    def render_until_dimensions_aware(self) -> Mapping[str, DimensionsAwarePanel]:
+    def render_until_dimensions_aware(self) -> Mapping[str, DimensionsAwarePanel[AnyFrame]]:
         """Render all panels in the layout until they have calculated their dimensions."""
         return self._render_until_criteria_holds(panel_is_dimensions_aware)
 
-    def render_fully(self) -> Mapping[str, FullyRenderedPanel]:
+    def render_fully(self) -> Mapping[str, FullyRenderedPanel[AnyFrame]]:
         """Render all panels in the layout until they are fully rendered."""
         return self._render_until_criteria_holds(panel_is_fully_rendered)

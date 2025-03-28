@@ -21,11 +21,11 @@ def _assert_frame(
     exp_frame_has_height: bool,
     exp_frame_has_width_and_height: bool,
 ) -> None:
-    if dims is None:
+    if dims is not None:
+        frame = Frame(dims)
+    else:
         frame = empty_frame()
         dims = Dimensions(width=None, height=None)
-    else:
-        frame = Frame(dims)
 
     assert frame.dims is not dims
     assert frame.dims == dims

@@ -9,7 +9,7 @@ from omnipy.data._display.dimensions import Dimensions, DimensionsFit
 from omnipy.data._display.frame import AnyFrame, empty_frame, Frame
 import omnipy.util._pydantic as pyd
 
-FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame)
+FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
 
 
 @pyd.dataclass(
@@ -73,7 +73,7 @@ class OutputVariant(ABC):
         """
 
 
-class DimensionsAwarePanel(Panel):
+class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
     @cached_property
     @abstractmethod
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
@@ -84,8 +84,8 @@ class DimensionsAwarePanel(Panel):
         return DimensionsFit(self.dims, self.frame.dims)
 
 
-class FullyRenderedPanel(DimensionsAwarePanel):
-    def render_next_stage(self) -> Panel:
+class FullyRenderedPanel(DimensionsAwarePanel[FrameT], Generic[FrameT]):
+    def render_next_stage(self) -> DimensionsAwarePanel[FrameT]:
         raise NotImplementedError('This panel is fully rendered.')
 
     @cached_property

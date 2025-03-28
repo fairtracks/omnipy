@@ -46,7 +46,8 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
 
 @pyd.dataclass(
     init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
-class ReflowedTextDraftPanel(DimensionsAwarePanel, DraftPanel[str, FrameT], Generic[FrameT]):
+class ReflowedTextDraftPanel(DimensionsAwarePanel[FrameT], DraftPanel[str, FrameT],
+                             Generic[FrameT]):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
 
     @cached_property
