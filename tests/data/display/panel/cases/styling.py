@@ -3,7 +3,6 @@ from typing import Annotated, Callable, NamedTuple, TypeAlias
 
 import pytest_cases as pc
 
-from data.display.panel.helpers.classes import MockPanel
 from omnipy.data._display.config import (ConsoleColorSystem,
                                          DarkHighContrastColorStyles,
                                          DarkLowContrastColorStyles,
@@ -14,8 +13,11 @@ from omnipy.data._display.config import (ConsoleColorSystem,
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.layout import Layout
-from omnipy.data._display.panel.styling import StylizedLayoutPanel, SyntaxStylizedTextPanel
+from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
+from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 import omnipy.util._pydantic as pyd
+
+from ...helpers.classes import MockPanel
 
 # Type aliases
 
@@ -949,6 +951,26 @@ def case_layout_styling_single_panel_no_frame(
         expected_within_frame_width=expected_within_frame_width,
         expected_within_frame_height=expected_within_frame_height,
     )
+
+
+#
+# @pc.case(id='single_panel', tags=['grids_and_frames', 'layout_styling'])
+# def case_layout_styling_single_panel_smaller_frame(
+#     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],) -> PanelOutputTestCase:
+#     return PanelOutputTestCase(
+#         content=Layout({'panel': MockPanel(content='Some Content')}),
+#         frame=Frame(Dimensions(width=10, height=3)),
+#         config=None,
+#         get_output_property=output_format_accessor,
+#         expected_output=('╭─────────╮\n'
+#                          '│ Some    │\n'
+#                          '│ Content │\n'
+#                          '╰─────────╯\n'),
+#         expected_dims_width=11,
+#         expected_dims_height=4,
+#         expected_within_frame_width=True,
+#         expected_within_frame_height=True,
+#     )
 
 
 @pc.parametrize('transparent_background', [False, True])

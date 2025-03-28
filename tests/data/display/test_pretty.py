@@ -8,7 +8,8 @@ import pytest
 from omnipy.data._display.config import OutputConfig, PrettyPrinterLib
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.data._display.panel.draft import DraftPanel, ReflowedTextDraftPanel
+from omnipy.data._display.panel.draft.base import DraftPanel
+from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.pretty import pretty_repr_of_draft_output
 from omnipy.data.model import Model
 

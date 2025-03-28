@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from enum import Enum
 from functools import cached_property
 from typing import cast, Generic
 
@@ -10,6 +9,32 @@ from omnipy.data._display.frame import AnyFrame, empty_frame, Frame
 import omnipy.util._pydantic as pyd
 
 FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
+
+
+class OutputVariant(ABC):
+    @cached_property
+    @abstractmethod
+    def terminal(self) -> str:
+        """
+        Returns the terminal representation of the output, encoded according
+        to the current console color system.
+        """
+
+    @cached_property
+    @abstractmethod
+    def html_tag(self) -> str:
+        """
+        Returns a representation of the output as an HTML tag for inclusion
+        in a web page.
+        """
+
+    @cached_property
+    @abstractmethod
+    def html_page(self) -> str:
+        """
+        Returns a representation of the output as an independent HTML page,
+        for viewing in a web browser.
+        """
 
 
 @pyd.dataclass(
@@ -39,38 +64,6 @@ def panel_is_dimensions_aware(panel: Panel) -> TypeIs['DimensionsAwarePanel']:
 
 def panel_is_fully_rendered(panel: Panel) -> TypeIs['FullyRenderedPanel']:
     return isinstance(panel, FullyRenderedPanel)
-
-
-class OutputMode(str, Enum):
-    PLAIN = 'plain'
-    BW_STYLIZED = 'bw_stylized'
-    COLORIZED = 'colorized'
-
-
-class OutputVariant(ABC):
-    @cached_property
-    @abstractmethod
-    def terminal(self) -> str:
-        """
-        Returns the terminal representation of the output, encoded according
-        to the current console color system.
-        """
-
-    @cached_property
-    @abstractmethod
-    def html_tag(self) -> str:
-        """
-        Returns a representation of the output as an HTML tag for inclusion
-        in a web page.
-        """
-
-    @cached_property
-    @abstractmethod
-    def html_page(self) -> str:
-        """
-        Returns a representation of the output as an independent HTML page,
-        for viewing in a web browser.
-        """
 
 
 class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
