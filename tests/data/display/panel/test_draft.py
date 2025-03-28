@@ -5,7 +5,7 @@ import pytest
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.frame import empty_frame, Frame
+from omnipy.data._display.frame import empty_frame, Frame, UndefinedFrame
 from omnipy.data._display.panel.base import FrameT, Panel
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
@@ -127,7 +127,7 @@ def test_fail_draft_panel_no_assignments(
     draft_panel = DraftPanel('Some text')
 
     with pytest.raises(AttributeError):
-        draft_panel.content = [1, 2, 3]  # type: ignore[misc]
+        draft_panel.content = [1, 2, 3]  # type: ignore[misc, assignment]
 
     with pytest.raises(AttributeError):
         draft_panel.frame = Frame(Dimensions(10, 20))  # type: ignore[misc]
@@ -153,6 +153,7 @@ def test_draft_panel_constraints_satisfaction(
 
 def test_draft_panel_with_empty_content(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+
     # Test with empty string
     empty_string_draft_panel = DraftPanel('')
 
@@ -167,9 +168,9 @@ def test_draft_panel_with_empty_content(
     assert none_draft_panel.content is None
 
     # Test with empty collections
-    empty_list_draft_panel = DraftPanel([])
-    empty_dict_draft_panel = DraftPanel({})
-    empty_tuple_draft_panel = DraftPanel(())
+    empty_list_draft_panel: DraftPanel[list, UndefinedFrame] = DraftPanel([])
+    empty_dict_draft_panel: DraftPanel[dict, UndefinedFrame] = DraftPanel({})
+    empty_tuple_draft_panel: DraftPanel[tuple, UndefinedFrame] = DraftPanel(())
 
     assert empty_list_draft_panel.content == []
     assert empty_dict_draft_panel.content == {}
