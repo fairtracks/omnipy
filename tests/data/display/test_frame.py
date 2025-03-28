@@ -128,12 +128,13 @@ def test_frame_hashable(
     assert hash(frame_5) == hash(frame_6)
 
 
+# noinspection PyDataclass
 def test_fail_frame_no_assignments(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     frame = empty_frame()
 
     with pytest.raises(AttributeError):
-        frame.dims = Dimensions(10, 20)  # type: ignore[misc]
+        frame.dims = Dimensions(10, 20)  # type: ignore[misc, arg-type]
 
 
 def test_fail_frame_if_extra_param(
