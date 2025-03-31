@@ -27,7 +27,7 @@ class _DraftOutputKwArgs(TypedDict, total=False):
 
 def _assert_pretty_repr_of_draft(
     data: object,
-    expected_output: str,
+    exp_output: str,
     frame: Frame | None = None,
     config: OutputConfig | None = None,
     within_frame_width: bool | None = None,
@@ -43,7 +43,7 @@ def _assert_pretty_repr_of_draft(
 
     out_draft_panel: ReflowedTextDraftPanel = pretty_repr_of_draft_output(in_draft_panel)
 
-    assert _harmonize(out_draft_panel.content) == expected_output
+    assert _harmonize(out_draft_panel.content) == exp_output
     assert out_draft_panel.within_frame.width is within_frame_width
     assert out_draft_panel.within_frame.height is within_frame_height
 
