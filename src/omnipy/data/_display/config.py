@@ -644,7 +644,7 @@ class OutputConfig:
     css_font_size: pyd.NonNegativeInt | None = 14
     css_font_weight: pyd.NonNegativeInt | None = 450
     css_line_height: pyd.NonNegativeFloat | None = 1.35
-    horizontal_overflow_mode: HorizontalOverflowMode = HorizontalOverflowMode.WORD_WRAP
+    horizontal_overflow_mode: HorizontalOverflowMode = HorizontalOverflowMode.ELLIPSIS
     vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.CROP_BOTTOM
     layout_style: LayoutStyle = LayoutStyle.TABLE_GRID
 

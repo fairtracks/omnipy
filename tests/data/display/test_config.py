@@ -261,7 +261,7 @@ def test_output_config_default_values(
     assert config.css_font_size == 14
     assert config.css_font_weight == 450
     assert config.css_line_height == 1.35
-    assert config.horizontal_overflow_mode is HorizontalOverflowMode.WORD_WRAP
+    assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
     assert config.layout_style is LayoutStyle.TABLE_GRID
 
