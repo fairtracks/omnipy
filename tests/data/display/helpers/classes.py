@@ -20,25 +20,11 @@ class MockPanel(Panel):
         object.__setattr__(self, 'frame', frame or cast(AnyFrame, empty_frame()))
 
     def render_next_stage(self) -> Panel:
-        return MockPanelStage2(self.content)
+        return MockPanelStage2('\n'.join(self.content.split()))
 
 
 @pyd.dataclass(init=False, frozen=True)
 class MockPanelStage2(DimensionsAwarePanel, MockPanel):
-    @pyd.validator('content')
-    def words_into_lines(cls, content: str) -> str:
-        return '\n'.join(content.split())
-
-    #
-    # def words_into_lines(cls, content: str, values: dict[str, object]) -> str:
-    #     lines = content.split()
-    #     frame = cast(AnyFrame, values.get('frame'))
-    #     if frame is not None:
-    #         cropped_lines = [line[:frame.dims.width] for line in lines[:frame.dims.height]]
-    #         return '\n'.join(cropped_lines)
-    #     else:
-    #         return '\n'.join(lines)
-
     def render_next_stage(self) -> Panel:
         return MockPanelStage3(content=self.content)
 
