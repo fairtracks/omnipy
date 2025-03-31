@@ -2,7 +2,7 @@ from typing import Annotated
 
 import pytest_cases as pc
 
-from .helpers import OutputPropertyType
+from .helpers import FrameVariant, OutputPropertyType
 
 
 @pc.fixture
@@ -79,3 +79,17 @@ def output_format_accessor(
         getter_func: Annotated[OutputPropertyType, pc.fixture]) -> OutputPropertyType:
     """Parametrized fixture that provides access to all output format accessors."""
     return getter_func
+
+
+@pc.fixture(scope='function')
+@pc.parametrize(
+    'frame_variant',
+    (
+        FrameVariant(True, False),
+        FrameVariant(False, True),
+        FrameVariant(True, True),
+    ),
+    ids=('only_width', 'only_height', 'standard'),
+)
+def per_frame_variant(frame_variant: FrameVariant) -> FrameVariant:
+    return frame_variant

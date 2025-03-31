@@ -14,16 +14,37 @@ import rich.syntax
 import rich.table
 import rich.terminal_theme
 import rich.text
+from typing_extensions import override, TypeVar
 
 from omnipy.data._display.config import ConsoleColorSystem, HorizontalOverflowMode
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
-from omnipy.data._display.panel.base import OutputVariant
-from omnipy.data._display.panel.draft.base import ContentT, DraftPanel, FrameT
+from omnipy.data._display.panel.base import FullyRenderedPanel, OutputVariant
+from omnipy.data._display.panel.draft.base import ContentT, FrameT
+from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
+import omnipy.util._pydantic as pyd
 
 StylizedRichTypes: TypeAlias = rich.syntax.Syntax | rich.panel.Panel | rich.table.Table
 
+PanelT = TypeVar('PanelT', bound=MonospacedDraftPanel)
 
-class StylizedPanel(DraftPanel[ContentT, FrameT], Generic[ContentT, FrameT], ABC):
+
+@pyd.dataclass(
+    init=False,
+    frozen=True,
+    config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True, arbitrary_types_allowed=True),
+)
+class StylizedMonospacedPanel(
+        FullyRenderedPanel[FrameT],
+        MonospacedDraftPanel[ContentT, FrameT],
+        Generic[PanelT, ContentT, FrameT],
+        ABC,
+):
+    _panel_calculated_dims: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
+
+    def __init__(self, panel: MonospacedDraftPanel[ContentT, FrameT]):
+        super().__init__(panel.content, panel.frame, panel.constraints, panel.config)
+        object.__setattr__(self, '_panel_calculated_dims', panel.dims)
+
     @staticmethod
     def _clean_rich_style_caches():
         """
@@ -69,21 +90,21 @@ class StylizedPanel(DraftPanel[ContentT, FrameT], Generic[ContentT, FrameT], ABC
         console_width = self.frame.dims.width
         console_height = self.frame.dims.height
 
-        if console_width is None or console_height is None:
-            console_dims = self._get_console_dimensions_from_content()
-            if console_width is None:
-                console_width = console_dims.width
-            if console_height is None:
-                console_height = console_dims.height
+        console_dims = self._panel_calculated_dims
+
+        if console_width is None:
+            console_width = console_dims.width
+        if console_height is None:
+            console_height = console_dims.height
+
+        # Hack to allow rich.console to output newline contents when
+        # width == 0
+        if console_dims.width == 0 \
+                and console_width == 0 \
+                and console_height > 0:
+            console_width = 1
 
         return Dimensions(width=console_width, height=console_height)
-
-    @abstractmethod
-    def _get_console_dimensions_from_content(self) -> DimensionsWithWidthAndHeight:
-        """
-        Returns the dimensions of the console output. This is a
-        placeholder method to be overridden by subclasses.
-        """
 
     @staticmethod
     @cache
@@ -145,16 +166,28 @@ class StylizedPanel(DraftPanel[ContentT, FrameT], Generic[ContentT, FrameT], ABC
         )
 
     @cached_property
-    @abstractmethod
+    @override
+    def _content_lines(self) -> list[str]:
+        """
+        Returns the plain terminal output of the panel as a list of lines.
+        Here, as compared to output should end with a
+        """
+        return self.plain.terminal.splitlines()
+
+    @cached_property
     def plain(self) -> OutputVariant:
-        ...
+        from omnipy.data._display.panel.styling.output import (OutputMode,
+                                                               VerticalCroppingOutputVariant)
+        return VerticalCroppingOutputVariant(self, OutputMode.PLAIN)
 
     @cached_property
-    @abstractmethod
     def bw_stylized(self) -> OutputVariant:
-        ...
+        from omnipy.data._display.panel.styling.output import (OutputMode,
+                                                               VerticalCroppingOutputVariant)
+        return VerticalCroppingOutputVariant(self, OutputMode.BW_STYLIZED)
 
     @cached_property
-    @abstractmethod
     def colorized(self) -> OutputVariant:
-        ...
+        from omnipy.data._display.panel.styling.output import (OutputMode,
+                                                               VerticalCroppingOutputVariant)
+        return VerticalCroppingOutputVariant(self, OutputMode.COLORIZED)

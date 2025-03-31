@@ -1,4 +1,4 @@
-from typing import Annotated, TypedDict
+from typing import Annotated
 
 import pytest
 
@@ -10,75 +10,29 @@ from omnipy.data._display.panel.base import FrameT, Panel
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 
-
-class _DraftOutputKwArgs(TypedDict, total=False):
-    frame: Frame
-    constraints: Constraints
-    config: OutputConfig
+from .helpers import assert_draft_panel_subcls
 
 
-def _create_draft_panel_kwargs(
-    frame: Frame | None = None,
-    constraints: Constraints | None = None,
-    config: OutputConfig | None = None,
-) -> _DraftOutputKwArgs:
-    kwargs = _DraftOutputKwArgs()
-
-    if frame is not None:
-        kwargs['frame'] = frame
-
-    if constraints is not None:
-        kwargs['constraints'] = constraints
-
-    if config is not None:
-        kwargs['config'] = config
-
-    return kwargs
-
-
-def _assert_draft_panel(
-    content: object,
-    frame: Frame | None,
-    constraints: Constraints | None,
-    config: OutputConfig | None,
-) -> None:
-    kwargs = _create_draft_panel_kwargs(frame, constraints, config)
-    draft_panel = DraftPanel(content, **kwargs)
-
-    if frame is None:
-        frame = empty_frame()
-
-    if constraints is None:
-        constraints = Constraints()
-
-    if config is None:
-        config = OutputConfig()
-
-    assert draft_panel.content is content
-
-    assert draft_panel.frame is not frame
-    assert draft_panel.frame == frame
-
-    assert draft_panel.constraints is not constraints
-    assert draft_panel.constraints == constraints
-
-    assert draft_panel.config is not config
-    assert draft_panel.config == config
-
-
-def test_draft_panel(
+def test_draft_panel_init(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    _assert_draft_panel('Some text', None, None, None)
-    _assert_draft_panel((1, 2, 3), Frame(Dimensions(None, None)), None, None)
-    _assert_draft_panel((1, 2, 3), Frame(Dimensions(10, None)), None, None)
-    _assert_draft_panel((1, 2, 3), Frame(Dimensions(None, 20)), None, None)
-    _assert_draft_panel((1, 2, 3), Frame(Dimensions(10, 20)), None, None)
-    _assert_draft_panel(None, None, None, OutputConfig(indent_tab_size=4))
+    assert_draft_panel_subcls(DraftPanel, 'Some text', None, None, None)
+    assert_draft_panel_subcls(DraftPanel, (1, 2, 3), Frame(Dimensions(None, None)), None, None)
+    assert_draft_panel_subcls(DraftPanel, (1, 2, 3), Frame(Dimensions(10, None)), None, None)
+    assert_draft_panel_subcls(DraftPanel, (1, 2, 3), Frame(Dimensions(None, 20)), None, None)
+    assert_draft_panel_subcls(DraftPanel, (1, 2, 3), Frame(Dimensions(10, 20)), None, None)
+    assert_draft_panel_subcls(DraftPanel, None, None, None, OutputConfig(indent_tab_size=4))
 
-    output = ('a', 'b', (1, 2, 3))
-    _assert_draft_panel(output, None, Constraints(container_width_per_line_limit=10), None)
-    _assert_draft_panel(
-        output,
+    content = ('a', 'b', (1, 2, 3))
+    assert_draft_panel_subcls(
+        DraftPanel,
+        content,
+        None,
+        Constraints(container_width_per_line_limit=10),
+        None,
+    )
+    assert_draft_panel_subcls(
+        DraftPanel,
+        content,
         Frame(Dimensions(20, 10)),
         Constraints(container_width_per_line_limit=10),
         OutputConfig(indent_tab_size=4),

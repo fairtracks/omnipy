@@ -3,37 +3,26 @@ import re
 from typing import ClassVar, Generic
 
 from omnipy.data._display.constraints import ConstraintsSatisfaction
-from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.helpers import UnicodeCharWidthMap
-from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, Panel
-from omnipy.data._display.panel.draft.base import DraftPanel
+from omnipy.data._display.panel.base import FrameT, FullyRenderedPanel
+from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 import omnipy.util._pydantic as pyd
 
 
 @pyd.dataclass(
     init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
-class ReflowedTextDraftPanel(DimensionsAwarePanel[FrameT], DraftPanel[str, FrameT],
-                             Generic[FrameT]):
+class ReflowedTextDraftPanel(
+        MonospacedDraftPanel[str, FrameT],
+        Generic[FrameT],
+):
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
 
     @cached_property
     def _content_lines(self) -> list[str]:
-        return self.content.splitlines()
-
-    @cached_property
-    def _width(self) -> pyd.NonNegativeInt:
-        def _line_len(line: str) -> int:
-            return sum(self._char_width_map[c] for c in line)
-
-        return max((_line_len(line) for line in self._content_lines), default=0)
-
-    @cached_property
-    def _height(self) -> pyd.NonNegativeInt:
-        return len(self._content_lines)
-
-    @cached_property
-    def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
-        return Dimensions(width=self._width, height=self._height)
+        # Typical repr output should not end with newline. Hence, a regular split on newline is
+        # correct behaviour. An empty string is the split into a list of one element. If
+        # splitlines() had been used, the list would be empty.
+        return self.content.split('\n')
 
     @cached_property
     def max_container_width_across_lines(self) -> pyd.NonNegativeInt:
@@ -53,6 +42,7 @@ class ReflowedTextDraftPanel(DimensionsAwarePanel[FrameT], DraftPanel[str, Frame
             max_container_width_across_lines=self.max_container_width_across_lines,
         )
 
-    def render_next_stage(self) -> 'Panel[FrameT]':
+    def render_next_stage(self) -> 'FullyRenderedPanel[FrameT]':
         from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
-        return SyntaxStylizedTextPanel(self)
+        panel: SyntaxStylizedTextPanel[FrameT] = SyntaxStylizedTextPanel(self)
+        return panel

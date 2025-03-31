@@ -1,5 +1,7 @@
 from copy import copy
 from enum import Enum
+from functools import cached_property
+import re
 from textwrap import dedent
 from typing import Callable, ClassVar, Generic, Iterable
 
@@ -7,12 +9,13 @@ import rich.console
 import rich.segment
 import rich.terminal_theme
 
+from omnipy.data._display.config import VerticalOverflowMode
 from omnipy.data._display.panel.base import FrameT, OutputVariant
 from omnipy.data._display.panel.draft.base import ContentT
 from omnipy.data._display.panel.helpers import (calculate_bg_color_triplet_from_color_style,
                                                 calculate_fg_color_triplet_from_color_style,
                                                 ForceAutodetect)
-from omnipy.data._display.panel.styling.base import StylizedPanel
+from omnipy.data._display.panel.styling.base import PanelT, StylizedMonospacedPanel
 
 
 class OutputMode(str, Enum):
@@ -21,7 +24,7 @@ class OutputMode(str, Enum):
     COLORIZED = 'colorized'
 
 
-class CommonOutputVariant(OutputVariant, Generic[ContentT, FrameT]):
+class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
     _CSS_COLOR_STYLE_TEMPLATE_FG_AND_BG: ClassVar[str] = ('color: {foreground}; '
                                                           'background-color: {background}; ')
 
@@ -59,7 +62,9 @@ class CommonOutputVariant(OutputVariant, Generic[ContentT, FrameT]):
         </html>
         """)
 
-    def __init__(self, output: 'StylizedPanel[ContentT, FrameT]', output_mode: OutputMode) -> None:
+    def __init__(self,
+                 output: 'StylizedMonospacedPanel[PanelT, ContentT, FrameT]',
+                 output_mode: OutputMode) -> None:
         self._output = output
         self._config = output.config
         self._frame = output.frame
@@ -220,3 +225,52 @@ class CommonOutputVariant(OutputVariant, Generic[ContentT, FrameT]):
             theme=self._prepare_color_theme_for_html(force_autodetect=force_autodetect),
             code_format=self._prepare_html_page_template(),
         )
+
+
+class VerticalCroppingOutputVariant(
+        CommonOutputVariant[PanelT, ContentT, FrameT],
+        Generic[PanelT, ContentT, FrameT],
+):
+    def _vertical_crop(self, text: str) -> str:
+        if self._frame.dims.height is None:
+            return text
+
+        lines = text.splitlines(keepends=True)
+        if len(lines) <= self._frame.dims.height:
+            return text
+
+        match self._config.vertical_overflow_mode:
+            case VerticalOverflowMode.CROP_BOTTOM:
+                return ''.join(lines[:self._frame.dims.height])
+            case VerticalOverflowMode.CROP_TOP:
+                return ''.join(lines[-self._frame.dims.height:])
+
+    def _crop_matches(self, matches: re.Match) -> str:
+        start_code_tag = matches.group(1)
+        code_content = matches.group(2)
+        end_code_tag = matches.group(3)
+
+        return start_code_tag + self._crop(code_content) + end_code_tag
+
+    def _crop_html(self, html: str) -> str:
+        return re.sub(
+            r'(<code[^>]*>)([\S\s]*)(</code>)',
+            self._crop_matches,
+            html,
+            re.MULTILINE,
+        )
+
+    def _crop(self, output: str) -> str:
+        return self._vertical_crop(output)
+
+    @cached_property
+    def terminal(self) -> str:
+        return self._crop(self._terminal)
+
+    @cached_property
+    def html_tag(self) -> str:
+        return self._crop_html(self._html_tag)
+
+    @cached_property
+    def html_page(self) -> str:
+        return self._crop_html(self._html_page)

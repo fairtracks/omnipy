@@ -2,62 +2,48 @@ from textwrap import dedent
 from typing import Annotated
 
 import pytest
+import pytest_cases as pc
 
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
-from omnipy.data._display.panel.base import FrameT, Panel
+from omnipy.data._display.panel.base import FrameT, FullyRenderedPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 
-
-def _assert_reflowed_text_draft_panel(
-    output: str,
-    width: int,
-    height: int,
-    frame_width: int | None = None,
-    frame_height: int | None = None,
-    fits_width: bool | None = None,
-    fits_height: bool | None = None,
-    fits_both: bool | None = None,
-) -> None:
-    reflowed_text_panel = ReflowedTextDraftPanel(
-        output, frame=Frame(Dimensions(frame_width, frame_height)))
-
-    assert reflowed_text_panel.dims.width == width
-    assert reflowed_text_panel.dims.height == height
-    assert reflowed_text_panel.frame.dims.width == frame_width
-    assert reflowed_text_panel.frame.dims.height == frame_height
-
-    dims_fit = reflowed_text_panel.within_frame
-    assert dims_fit.width == fits_width
-    assert dims_fit.height == fits_height
-    assert dims_fit.both == fits_both
+from .helpers import (apply_frame_variant_to_test_case,
+                      assert_dims_aware_panel,
+                      assert_draft_panel_subcls,
+                      OutputPropertyType,
+                      PanelOutputFrameVariantTestCase)
 
 
-def test_reflowed_text_draft_panel_within_frame(
+def test_reflowed_text_draft_panel_init(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    panel_cls = ReflowedTextDraftPanel
+    assert_draft_panel_subcls(panel_cls, 'Some text', None, None, None)
+    assert_draft_panel_subcls(panel_cls, '(1, 2, 3)', Frame(Dimensions(None, None)), None, None)
+    assert_draft_panel_subcls(panel_cls, '(1, 2, 3)', Frame(Dimensions(10, None)), None, None)
+    assert_draft_panel_subcls(panel_cls, '(1, 2, 3)', Frame(Dimensions(None, 20)), None, None)
+    assert_draft_panel_subcls(panel_cls, '(1, 2, 3)', Frame(Dimensions(10, 20)), None, None)
+    assert_draft_panel_subcls(panel_cls, '{}', None, None, OutputConfig(indent_tab_size=4))
 
-    out = 'Some output\nAnother line'
-    _assert_reflowed_text_draft_panel(
-        out, 12, 2, None, None, fits_width=None, fits_height=None, fits_both=None)
-    _assert_reflowed_text_draft_panel(
-        out, 12, 2, 12, None, fits_width=True, fits_height=None, fits_both=None)
-    _assert_reflowed_text_draft_panel(
-        out, 12, 2, None, 2, fits_width=None, fits_height=True, fits_both=None)
-    _assert_reflowed_text_draft_panel(
-        out, 12, 2, 12, 2, fits_width=True, fits_height=True, fits_both=True)
-    _assert_reflowed_text_draft_panel(
-        out, 12, 2, 11, None, fits_width=False, fits_height=None, fits_both=None)
-    _assert_reflowed_text_draft_panel(
-        out, 12, 2, None, 1, fits_width=None, fits_height=False, fits_both=None)
-    _assert_reflowed_text_draft_panel(
-        out, 12, 2, 12, 1, fits_width=True, fits_height=False, fits_both=False)
-    _assert_reflowed_text_draft_panel(
-        out, 12, 2, 11, 2, fits_width=False, fits_height=True, fits_both=False)
-    _assert_reflowed_text_draft_panel(
-        out, 12, 2, 11, 1, fits_width=False, fits_height=False, fits_both=False)
+    content = "('a', 'b', (1, 2, 3))"
+    assert_draft_panel_subcls(
+        panel_cls,
+        content,
+        None,
+        Constraints(container_width_per_line_limit=10),
+        None,
+    )
+    assert_draft_panel_subcls(
+        panel_cls,
+        content,
+        Frame(Dimensions(20, 10)),
+        Constraints(container_width_per_line_limit=10),
+        OutputConfig(indent_tab_size=4),
+    )
 
 
 def test_reflowed_text_draft_panel_hashable(
@@ -114,24 +100,38 @@ def test_fail_reflowed_text_draft_panel_no_assignments(
         reflowed_text_panel.config = OutputConfig()  # type: ignore[misc]
 
 
-def test_reflowed_text_draft_panel_frame_empty(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    _assert_reflowed_text_draft_panel('', 0, 0, None, None, None, None, None)
-    _assert_reflowed_text_draft_panel('', 0, 0, 0, None, True, None, None)
-    _assert_reflowed_text_draft_panel('', 0, 0, None, 0, None, True, None)
-    _assert_reflowed_text_draft_panel('', 0, 0, 0, 0, True, True, True)
+@pc.parametrize_with_cases(
+    'case',
+    cases='.cases.text_basics',
+    has_tag=('dimensions', 'syntax_text'),
+)
+def test_reflowed_text_draft_panel_basics_dimensions(
+    case: PanelOutputFrameVariantTestCase[str],
+    output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
+    frame_case = apply_frame_variant_to_test_case(case, crop_to_frame=False)
+
+    text_panel = ReflowedTextDraftPanel(case.content, frame=frame_case.frame, config=case.config)
+    assert_dims_aware_panel(
+        text_panel,
+        exp_dims=frame_case.exp_dims,
+        exp_frame=frame_case.frame,
+        exp_within_frame=frame_case.exp_within_frame,
+    )
 
 
 def test_reflowed_text_draft_panel_variable_width_chars(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     # Mandarin Chinese characters are double-width
-    _assert_reflowed_text_draft_panel('北京', 4, 1)
+    assert_dims_aware_panel(ReflowedTextDraftPanel('北京'), Dimensions(width=4, height=1))
 
     # Null character is zero-width
-    _assert_reflowed_text_draft_panel('\0北京\n北京', 4, 2)
+    assert_dims_aware_panel(ReflowedTextDraftPanel('\0北京\n北京'), Dimensions(width=4, height=2))
 
     # Soft hyphen character is zero-width
-    _assert_reflowed_text_draft_panel('hyphe\xad\nnate', 5, 2)
+    assert_dims_aware_panel(
+        ReflowedTextDraftPanel('hyphe\xad\nnate'), Dimensions(width=5, height=2))
 
 
 def test_reflowed_text_draft_panel_max_container_width_across_lines(
@@ -189,41 +189,10 @@ def test_reflowed_text_draft_panel_constraints_satisfaction(
     assert draft.satisfies.container_width_per_line_limit is True
 
 
-def test_reflowed_text_draft_panel_with_empty_content(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    # Test with empty string
-    reflowed_empty_text_panel = ReflowedTextDraftPanel('')
-
-    assert reflowed_empty_text_panel.content == ''
-    assert reflowed_empty_text_panel.dims.width == 0
-    assert reflowed_empty_text_panel.dims.height == 0
-
-    # Test with only whitespace
-    reflowed_whitespace_panel = ReflowedTextDraftPanel('  \n  ')
-
-    assert reflowed_whitespace_panel.content == '  \n  '
-    assert reflowed_whitespace_panel.dims.width == 2
-    assert reflowed_whitespace_panel.dims.height == 2
-
-    # Test empty content with frame
-    framed_reflowed_empty_text_panel = ReflowedTextDraftPanel('', frame=Frame(Dimensions(10, 5)))
-
-    assert framed_reflowed_empty_text_panel.within_frame.width is True
-    assert framed_reflowed_empty_text_panel.within_frame.height is True
-    assert framed_reflowed_empty_text_panel.within_frame.both is True
-
-    # Test empty content with constraints
-    constrained_reflowed_empty_text_panel = ReflowedTextDraftPanel(
-        '', constraints=Constraints(container_width_per_line_limit=10))
-
-    assert constrained_reflowed_empty_text_panel.satisfies.container_width_per_line_limit is True
-    assert constrained_reflowed_empty_text_panel.max_container_width_across_lines == 0
-
-
 def _assert_next_stage_panel(
     reflowed_text_panel: ReflowedTextDraftPanel[FrameT],
-    next_stage: Panel[FrameT],
-    next_stage_panel_cls: type[ReflowedTextDraftPanel[FrameT]],
+    next_stage: FullyRenderedPanel[FrameT],
+    next_stage_panel_cls: type[SyntaxStylizedTextPanel[FrameT]],
 ) -> None:
     assert isinstance(next_stage, next_stage_panel_cls)
     assert next_stage.content == reflowed_text_panel.content

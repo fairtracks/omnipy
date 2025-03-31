@@ -1,4 +1,4 @@
-from functools import cache, cached_property
+from functools import cache
 from typing import Generic
 
 import rich.box
@@ -8,30 +8,14 @@ import rich.text
 from typing_extensions import override
 
 from omnipy.data._display.config import ColorStyles, ConsoleColorSystem
-from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
 from omnipy.data._display.layout import Layout
-from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, OutputVariant
-from omnipy.data._display.panel.draft.base import ContentT
+from omnipy.data._display.panel.base import FrameT
+from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_style,
                                                 calculate_fg_color_from_color_style,
                                                 ForceAutodetect)
-from omnipy.data._display.panel.styling.base import StylizedPanel, StylizedRichTypes
-from omnipy.data._display.panel.styling.output import CommonOutputVariant, OutputMode
+from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.util import _pydantic as pyd
-
-
-class StylizedLayoutOutputVariant(CommonOutputVariant[ContentT, FrameT], Generic[ContentT, FrameT]):
-    @cached_property
-    def terminal(self) -> str:
-        return self._terminal
-
-    @cached_property
-    def html_tag(self) -> str:
-        return self._html_tag
-
-    @cached_property
-    def html_page(self) -> str:
-        return self._html_page
 
 
 @pyd.dataclass(
@@ -39,27 +23,13 @@ class StylizedLayoutOutputVariant(CommonOutputVariant[ContentT, FrameT], Generic
     frozen=True,
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True, arbitrary_types_allowed=True),
 )
-class StylizedLayoutPanel(DimensionsAwarePanel[FrameT], StylizedPanel[Layout, FrameT]):
+class StylizedLayoutPanel(
+        StylizedMonospacedPanel[ResizedLayoutDraftPanel, Layout, FrameT],
+        Generic[FrameT],
+):
     @pyd.validator('content', pre=True)
     def _copy_content(cls, content: Layout) -> Layout:
         return content.copy()
-
-    @cached_property
-    @override
-    def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
-        dimensions_aware_panels = self.content.render_until_dimensions_aware()
-        if dimensions_aware_panels:
-            return Dimensions(
-                width=(sum(panel.dims.width for panel in dimensions_aware_panels.values())
-                       + len(dimensions_aware_panels) * 3 + 1),
-                height=max(panel.dims.height for panel in dimensions_aware_panels.values()) + 2,
-            )
-        else:
-            return Dimensions(width=0, height=0)
-
-    @override
-    def _get_console_dimensions_from_content(self) -> DimensionsWithWidthAndHeight:
-        return self.dims
 
     @staticmethod
     @cache
@@ -108,15 +78,3 @@ class StylizedLayoutPanel(DimensionsAwarePanel[FrameT], StylizedPanel[Layout, Fr
             transparent_background=self.config.transparent_background,
             force_autodetect_bg_color=ForceAutodetect.NEVER,
         )
-
-    @cached_property
-    def plain(self) -> OutputVariant:
-        return StylizedLayoutOutputVariant(self, OutputMode.PLAIN)
-
-    @cached_property
-    def bw_stylized(self) -> OutputVariant:
-        return StylizedLayoutOutputVariant(self, OutputMode.BW_STYLIZED)
-
-    @cached_property
-    def colorized(self) -> OutputVariant:
-        return StylizedLayoutOutputVariant(self, OutputMode.COLORIZED)

@@ -5,7 +5,7 @@ from typing_extensions import TypeVar
 
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints, ConstraintsSatisfaction
-from omnipy.data._display.panel.base import FrameT, Panel
+from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, Panel
 from omnipy.util import _pydantic as pyd
 
 ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)
@@ -39,6 +39,6 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
     def satisfies(self) -> ConstraintsSatisfaction:
         return ConstraintsSatisfaction(self.constraints)
 
-    def render_next_stage(self) -> 'Panel[FrameT]':
+    def render_next_stage(self) -> 'DimensionsAwarePanel[FrameT]':
         from omnipy.data._display.pretty import pretty_repr_of_draft_output
         return pretty_repr_of_draft_output(self)

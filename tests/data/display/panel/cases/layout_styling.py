@@ -8,67 +8,13 @@ from data.display.panel.cases.text_styling import _fill_html_page_template, _fil
 from omnipy.data._display.config import (ConsoleColorSystem,
                                          DarkHighContrastColorStyles,
                                          OutputConfig)
-from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.frame import Frame
 from omnipy.data._display.layout import Layout
 
-from ..helpers import (OutputPropertyType,
-                       PanelOutputPropertyExpectations,
-                       PanelOutputTestCase,
-                       PanelOutputTestCaseSetup)
-
-
-@pc.parametrize(
-    'frame, expected_within_frame_width, expected_within_frame_height', (
-        (None, None, None),
-        (Frame(Dimensions(width=15, height=5)), True, True),
-    ),
-    ids=('no_frame', 'larger_frame'))
-@pc.case(id='single_panel', tags=['grids_and_frames', 'layout_styling'])
-def case_layout_styling_single_panel_no_frame(
-    frame: Frame | None,
-    output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
-    expected_within_frame_width: bool | None,
-    expected_within_frame_height: bool | None,
-) -> PanelOutputTestCase[Layout]:
-    return PanelOutputTestCase(
-        content=Layout({'panel': MockPanel(content='Some Content')}),
-        frame=frame,
-        config=None,
-        get_output_property=output_format_accessor,
-        expected_output=('╭─────────╮\n'
-                         '│ Some    │\n'
-                         '│ Content │\n'
-                         '╰─────────╯\n'),
-        expected_dims_width=11,
-        expected_dims_height=4,
-        expected_within_frame_width=expected_within_frame_width,
-        expected_within_frame_height=expected_within_frame_height,
-    )
-
-
-#
-# @pc.case(id='single_panel', tags=['grids_and_frames', 'layout_styling'])
-# def case_layout_styling_single_panel_smaller_frame(
-#     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],) -> PanelOutputTestCase:
-#     return PanelOutputTestCase(
-#         content=Layout({'panel': MockPanel(content='Some Content')}),
-#         frame=Frame(Dimensions(width=10, height=3)),
-#         config=None,
-#         get_output_property=output_format_accessor,
-#         expected_output=('╭─────────╮\n'
-#                          '│ Some    │\n'
-#                          '│ Content │\n'
-#                          '╰─────────╯\n'),
-#         expected_dims_width=11,
-#         expected_dims_height=4,
-#         expected_within_frame_width=True,
-#         expected_within_frame_height=True,
-#     )
+from ..helpers import OutputPropertyType, PanelOutputPropertyExpectations, PanelOutputTestCaseSetup
 
 
 @pc.parametrize('transparent_background', [False, True])
-@pc.case(id='no-frame-dark-color', tags=['setup', 'layout_styling'])
+@pc.case(id='no-frame-dark-color', tags=['setup', 'layout'])
 def case_layout_styling_setup_no_frame_or_configs(
         transparent_background: bool) -> PanelOutputTestCaseSetup[Layout]:
     # Create a simple layout with mock panels
@@ -87,7 +33,7 @@ def case_layout_styling_setup_no_frame_or_configs(
     )
 
 
-@pc.case(id='plain-terminal-output', tags=['expectations', 'layout_styling'])
+@pc.case(id='plain-terminal-output', tags=['expectations', 'layout'])
 def case_layout_styling_expectations_plain_terminal(
         plain_terminal: Annotated[OutputPropertyType,
                                   pc.fixture]) -> PanelOutputPropertyExpectations:
@@ -110,7 +56,7 @@ def case_layout_styling_expectations_plain_terminal(
     )
 
 
-@pc.case(id='bw-stylized-terminal-output', tags=['expectations', 'layout_styling'])
+@pc.case(id='bw-stylized-terminal-output', tags=['expectations', 'layout'])
 def case_layout_styling_expectations_bw_stylized_terminal(
     bw_stylized_terminal: Annotated[OutputPropertyType,
                                     pc.fixture]) -> PanelOutputPropertyExpectations:
@@ -133,7 +79,7 @@ def case_layout_styling_expectations_bw_stylized_terminal(
     )
 
 
-@pc.case(id='colorized-terminal-output', tags=['expectations', 'layout_styling'])
+@pc.case(id='colorized-terminal-output', tags=['expectations', 'layout'])
 def case_layout_styling_expectations_colorized_terminal(
     colorized_terminal: Annotated[OutputPropertyType,
                                   pc.fixture]) -> PanelOutputPropertyExpectations:
@@ -167,7 +113,7 @@ def case_layout_styling_expectations_colorized_terminal(
     )
 
 
-@pc.case(id='plain-html-tag-output', tags=['expectations', 'layout_styling'])
+@pc.case(id='plain-html-tag-output', tags=['expectations', 'layout'])
 def case_layout_styling_expectations_plain_html_tag(
         plain_html_tag: Annotated[OutputPropertyType,
                                   pc.fixture]) -> PanelOutputPropertyExpectations:
@@ -190,7 +136,7 @@ def case_layout_styling_expectations_plain_html_tag(
     )
 
 
-@pc.case(id='bw-stylized-html-tag-output', tags=['expectations', 'layout_styling'])
+@pc.case(id='bw-stylized-html-tag-output', tags=['expectations', 'layout'])
 def case_layout_styling_expectations_bw_stylized_html_tag(
     bw_stylized_html_tag: Annotated[OutputPropertyType,
                                     pc.fixture]) -> PanelOutputPropertyExpectations:
@@ -215,7 +161,7 @@ def case_layout_styling_expectations_bw_stylized_html_tag(
     )
 
 
-@pc.case(id='colorized-html-tag-output', tags=['expectations', 'layout_styling'])
+@pc.case(id='colorized-html-tag-output', tags=['expectations', 'layout'])
 def case_layout_styling_expectations_colorized_html_tag(
     colorized_html_tag: Annotated[OutputPropertyType,
                                   pc.fixture]) -> PanelOutputPropertyExpectations:
@@ -285,7 +231,7 @@ def case_layout_styling_expectations_colorized_html_tag(
     )
 
 
-@pc.case(id='plain-html-page-output', tags=['expectations', 'layout_styling'])
+@pc.case(id='plain-html-page-output', tags=['expectations', 'layout'])
 def case_layout_styling_expectations_plain_html_page(
         plain_html_page: Annotated[OutputPropertyType,
                                    pc.fixture]) -> PanelOutputPropertyExpectations:
@@ -315,7 +261,7 @@ def case_layout_styling_expectations_plain_html_page(
     )
 
 
-@pc.case(id='bw-stylized-html-page-output', tags=['expectations', 'layout_styling'])
+@pc.case(id='bw-stylized-html-page-output', tags=['expectations', 'layout'])
 def case_layout_styling_expectations_bw_stylized_html_page(
     bw_stylized_html_page: Annotated[OutputPropertyType, pc.fixture]
 ) -> PanelOutputPropertyExpectations:
@@ -353,7 +299,7 @@ def case_layout_styling_expectations_bw_stylized_html_page(
     )
 
 
-@pc.case(id='colorized-html-page-output', tags=['expectations', 'layout_styling'])
+@pc.case(id='colorized-html-page-output', tags=['expectations', 'layout'])
 def case_layout_styling_expectations_colorized_html_page(
     colorized_html_page: Annotated[OutputPropertyType,
                                    pc.fixture]) -> PanelOutputPropertyExpectations:
