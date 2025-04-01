@@ -1,32 +1,36 @@
 from functools import cached_property
-from typing import cast
 
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
-from omnipy.data._display.frame import AnyFrame, empty_frame
-from omnipy.data._display.panel.base import (DimensionsAwarePanel,
-                                             FullyRenderedPanel,
-                                             OutputVariant,
-                                             Panel)
+from omnipy.data._display.frame import AnyFrame
+from omnipy.data._display.panel.base import DimensionsAwarePanel, FullyRenderedPanel, OutputVariant
+from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.styling.output import OutputMode
 import omnipy.util._pydantic as pyd
 
 
 @pyd.dataclass(init=False, frozen=True)
-class MockPanel(Panel):
-    content: str = ''
+class MockPanel(DraftPanel[str, AnyFrame]):
+    def __init__(self, content: str = '', frame=None, constraints=None, config=None):
+        super().__init__(content=content, frame=frame, constraints=constraints, config=config)
 
-    def __init__(self, content: str = '', frame: AnyFrame | None = None) -> None:
-        object.__setattr__(self, 'content', content)
-        object.__setattr__(self, 'frame', frame or cast(AnyFrame, empty_frame()))
-
-    def render_next_stage(self) -> Panel:
-        return MockPanelStage2('\n'.join(self.content.split()))
+    def render_next_stage(self) -> 'DimensionsAwarePanel[AnyFrame]':
+        return MockPanelStage2(
+            '\n'.join(self.content.split()),
+            frame=self.frame,
+            constraints=self.constraints,
+            config=self.config,
+        )
 
 
 @pyd.dataclass(init=False, frozen=True)
 class MockPanelStage2(DimensionsAwarePanel, MockPanel):
-    def render_next_stage(self) -> Panel:
-        return MockPanelStage3(content=self.content)
+    def render_next_stage(self) -> FullyRenderedPanel[AnyFrame]:
+        return MockPanelStage3(
+            content=self.content,
+            frame=self.frame,
+            constraints=self.constraints,
+            config=self.config,
+        )
 
     @cached_property
     def dims(self) -> DimensionsWithWidthAndHeight:

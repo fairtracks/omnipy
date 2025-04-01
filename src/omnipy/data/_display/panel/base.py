@@ -78,7 +78,7 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
 
 
 class FullyRenderedPanel(DimensionsAwarePanel[FrameT], Generic[FrameT]):
-    def render_next_stage(self) -> DimensionsAwarePanel[FrameT]:
+    def render_next_stage(self) -> 'FullyRenderedPanel[FrameT]':
         raise NotImplementedError('This panel is fully rendered.')
 
     @cached_property

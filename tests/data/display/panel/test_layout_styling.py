@@ -139,3 +139,10 @@ def test_output_properties_of_stylized_layout_panel(
     layout_panel = StylizedLayoutPanel(ResizedLayoutDraftPanel(content, frame=frame, config=config))
     for _ in range(2):
         assert get_output_property(layout_panel) == expected_output_for_case_id(case_id)
+
+
+def test_fail_stylized_layout_panel_render_next_stage(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    layout_panel = StylizedLayoutPanel(ResizedLayoutDraftPanel(Layout()))
+    with pytest.raises(NotImplementedError):
+        layout_panel.render_next_stage()

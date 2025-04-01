@@ -9,7 +9,7 @@ from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
 from omnipy.data._display.frame import empty_frame, Frame, FrameWithWidthAndHeight
 from omnipy.data._display.layout import Layout
-from omnipy.data._display.panel.base import DimensionsAwarePanel
+from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, Panel
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
@@ -224,6 +224,23 @@ def assert_dims_aware_panel(
         f'{dims_fit.height} != {exp_within_frame.height}'
     assert dims_fit.both == exp_within_frame.both, \
         f'{dims_fit.both} != {exp_within_frame.both}'
+
+
+def assert_next_stage_panel(
+    this_panel: DraftPanel[object, FrameT],
+    next_stage: Panel[FrameT],
+    next_stage_panel_cls: type[DraftPanel[object, FrameT]],
+    exp_content: object,
+) -> None:
+    assert isinstance(next_stage, next_stage_panel_cls)
+    assert next_stage.content == exp_content, \
+        f'{next_stage.content} != {exp_content}'
+    assert next_stage.frame == this_panel.frame, \
+        f'{next_stage.frame} != {this_panel.frame}'
+    assert next_stage.constraints == this_panel.constraints, \
+        f'{next_stage.constraints} != {this_panel.constraints}'
+    assert next_stage.config == this_panel.config, \
+        f'{next_stage.config} != {this_panel.config}'
 
 
 def _strip_html(html: str) -> str:

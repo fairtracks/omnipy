@@ -230,3 +230,10 @@ def test_syntax_stylized_text_panel_console_recording_not_deleted_by_filtering(
     assert text_panel.bw_stylized.terminal != ''
     assert text_panel.plain.terminal != ''
     assert text_panel.colorized.terminal != ''
+
+
+def test_fail_stylized_layout_panel_render_next_stage(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    layout_panel = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('Some content'))
+    with pytest.raises(NotImplementedError):
+        layout_panel.render_next_stage()

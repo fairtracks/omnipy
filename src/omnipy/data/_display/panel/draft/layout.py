@@ -5,7 +5,7 @@ from typing_extensions import override
 
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.layout import Layout
-from omnipy.data._display.panel.base import FrameT
+from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.shared.exceptions import ShouldNotOccurException
 import omnipy.util._pydantic as pyd
@@ -33,3 +33,7 @@ class ResizedLayoutDraftPanel(
     @cached_property
     def _content_lines(self) -> list[str]:
         raise ShouldNotOccurException()
+
+    def render_next_stage(self) -> 'DimensionsAwarePanel[FrameT]':
+        from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
+        return StylizedLayoutPanel(self)

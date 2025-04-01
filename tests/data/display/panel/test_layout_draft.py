@@ -8,13 +8,14 @@ from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.layout import Layout
-from omnipy.data._display.panel.base import FrameT, Panel
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
+from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 
 from ..helpers.classes import MockPanel
 from .helpers import (apply_frame_variant_to_test_case,
                       assert_dims_aware_panel,
                       assert_draft_panel_subcls,
+                      assert_next_stage_panel,
                       OutputPropertyType,
                       PanelOutputFrameVariantTestCase)
 
@@ -121,36 +122,28 @@ def test_resized_layout_draft_panel_basics_dimensions(
     )
 
 
-def _assert_next_stage_panel(
-    resized_layout_panel: ResizedLayoutDraftPanel[FrameT],
-    next_stage: Panel[FrameT],
-    next_stage_panel_cls: type[ResizedLayoutDraftPanel[FrameT]],
-) -> None:
-    assert isinstance(next_stage, next_stage_panel_cls)
-    assert next_stage.content == resized_layout_panel.content
-    assert next_stage.frame == resized_layout_panel.frame
-    assert next_stage.constraints == resized_layout_panel.constraints
-    assert next_stage.config == resized_layout_panel.config
+def test_draft_panel_render_next_stage(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    resized_layout_panel = ResizedLayoutDraftPanel(Layout(panel=MockPanel('Some text')))
+    assert_next_stage_panel(
+        this_panel=resized_layout_panel,
+        next_stage=resized_layout_panel.render_next_stage(),
+        next_stage_panel_cls=StylizedLayoutPanel,
+        exp_content=resized_layout_panel.content,
+    )
 
-
-#
-# def test_draft_panel_render_next_stage(
-#         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-#     resized_layout_panel = ResizedLayoutDraftPanel('Some text')
-#     _assert_next_stage_panel(
-#         resized_layout_panel,
-#         resized_layout_panel.render_next_stage(),
-#         StylizedLayoutPanel,
-#     )
-#
-#     resized_layout_panel_complex = ResizedLayoutDraftPanel(
-#         '(1, 2, 3)',
-#         frame=Frame(Dimensions(9, 1)),
-#         constraints=Constraints(container_width_per_line_limit=10),
-#         config=OutputConfig(indent_tab_size=1),
-#     )
-#     _assert_next_stage_panel(
-#         resized_layout_panel_complex,
-#         resized_layout_panel_complex.render_next_stage(),
-#         StylizedLayoutPanel,
-#     )
+    resized_layout_panel_complex = ResizedLayoutDraftPanel(
+        Layout(
+            first=MockPanel('Some text'),
+            second=MockPanel('Some other text'),
+        ),
+        frame=Frame(Dimensions(9, 5)),
+        constraints=Constraints(container_width_per_line_limit=10),
+        config=OutputConfig(indent_tab_size=1),
+    )
+    assert_next_stage_panel(
+        this_panel=resized_layout_panel_complex,
+        next_stage=resized_layout_panel_complex.render_next_stage(),
+        next_stage_panel_cls=StylizedLayoutPanel,
+        exp_content=resized_layout_panel_complex.content,
+    )

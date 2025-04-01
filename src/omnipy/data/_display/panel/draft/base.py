@@ -1,10 +1,11 @@
 from dataclasses import asdict
-from typing import Generic
+from typing import cast, Generic
 
 from typing_extensions import TypeVar
 
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints, ConstraintsSatisfaction
+from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, Panel
 from omnipy.util import _pydantic as pyd
 
@@ -40,5 +41,10 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
         return ConstraintsSatisfaction(self.constraints)
 
     def render_next_stage(self) -> 'DimensionsAwarePanel[FrameT]':
-        from omnipy.data._display.pretty import pretty_repr_of_draft_output
-        return pretty_repr_of_draft_output(self)
+        if isinstance(self.content, Layout):
+            from omnipy.data._display.flow import flow_layout_subpanels_inside_frame
+            layout_panel = cast('DraftPanel[Layout, FrameT]', self)
+            return flow_layout_subpanels_inside_frame(layout_panel)
+        else:
+            from omnipy.data._display.pretty import pretty_repr_of_draft_output
+            return pretty_repr_of_draft_output(self)

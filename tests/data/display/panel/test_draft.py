@@ -6,11 +6,13 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame, UndefinedFrame
-from omnipy.data._display.panel.base import FrameT, Panel
+from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel
+from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 
-from .helpers import assert_draft_panel_subcls
+from ..helpers.classes import MockPanel, MockPanelStage2
+from .helpers import assert_draft_panel_subcls, assert_next_stage_panel
 
 
 def test_draft_panel_init(
@@ -138,25 +140,14 @@ def test_draft_panel_with_empty_content(
     assert framed_empty_draft_panel.content == ''
 
 
-def _assert_next_stage_panel(draft_panel: DraftPanel[object, FrameT],
-                             next_stage: Panel[FrameT],
-                             next_stage_panel_cls: type[DraftPanel[object, FrameT]],
-                             expected_content: str) -> None:
-    assert isinstance(next_stage, next_stage_panel_cls)
-    assert next_stage.content == expected_content
-    assert next_stage.frame == draft_panel.frame
-    assert next_stage.constraints == draft_panel.constraints
-    assert next_stage.config == draft_panel.config
-
-
-def test_draft_panel_render_next_stage(
+def test_draft_panel_render_next_stage_with_repr(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     draft_panel = DraftPanel('Some text')
-    _assert_next_stage_panel(
-        draft_panel,
-        draft_panel.render_next_stage(),
-        ReflowedTextDraftPanel,
-        "'Some text'",
+    assert_next_stage_panel(
+        this_panel=draft_panel,
+        next_stage=draft_panel.render_next_stage(),
+        next_stage_panel_cls=ReflowedTextDraftPanel,
+        exp_content="'Some text'",
     )
 
     draft_panel_complex = DraftPanel(
@@ -165,9 +156,42 @@ def test_draft_panel_render_next_stage(
         constraints=Constraints(container_width_per_line_limit=10),
         config=OutputConfig(indent_tab_size=1),
     )
-    _assert_next_stage_panel(
-        draft_panel_complex,
-        draft_panel_complex.render_next_stage(),
-        ReflowedTextDraftPanel,
-        '(\n 1,\n 2,\n 3\n)',
+    assert_next_stage_panel(
+        this_panel=draft_panel_complex,
+        next_stage=draft_panel_complex.render_next_stage(),
+        next_stage_panel_cls=ReflowedTextDraftPanel,
+        exp_content='(\n 1,\n 2,\n 3\n)',
+    )
+
+
+def test_draft_panel_render_next_stage_with_layout(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    draft_panel = DraftPanel(Layout())
+    assert_next_stage_panel(
+        this_panel=draft_panel,
+        next_stage=draft_panel.render_next_stage(),
+        next_stage_panel_cls=ResizedLayoutDraftPanel,
+        exp_content=Layout(),
+    )
+
+    draft_panel_complex = DraftPanel(
+        Layout(tuple=MockPanel('(1, 2, 3)'), text=MockPanel('Here is some text')),
+        frame=Frame(Dimensions(19, 5)),
+        constraints=Constraints(container_width_per_line_limit=10),
+        config=OutputConfig(indent_tab_size=1),
+    )
+    assert_next_stage_panel(
+        this_panel=draft_panel_complex,
+        next_stage=draft_panel_complex.render_next_stage(),
+        next_stage_panel_cls=ResizedLayoutDraftPanel,
+        exp_content=Layout(
+            tuple=MockPanelStage2(
+                '(1,\n2,\n3)',
+                frame=Frame(Dimensions(6, 3)),
+            ),
+            text=MockPanelStage2(
+                'Here\nis\nsome\ntext',
+                frame=Frame(Dimensions(6, 3)),
+            ),
+        ),
     )
