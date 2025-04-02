@@ -97,19 +97,55 @@ data type in brackets, e.g. `Model[list[int]]`.
 
 The following creates a data model of a list of integers, and parses some data into that model:
 
-```pycon exec="1" source="console"
+```pycon exec="1" session="greet" source="console"
 >>> from omnipy import Model
 >>> data = (123, '234', 345.0)  # Note that the input data is a tuple of mixed types
 >>> data_as_list_of_ints = Model[list[int]](data)
 >>> data_as_list_of_ints  # The data is now parsed into a list of integers
 ```
 
-```pycon exec="1" result="console"
->>> from omnipy import Model
->>> print(Model[list[int]]((123, '234', 345.0)).pretty_repr())
+```pycon exec="1" session="greet" result="console"
+>>> print(data_as_list_of_ints.pretty_repr())
 ```
  
-More text to come soon...
+Omnipy Models are self-constraining, meaning that they will always ensure that the data 
+they contain is of the correct type. For example, if you try to append a string to the 
+list of integers, it will raise an error:
+
+```pycon
+>>> data_as_list_of_ints.append('abc')  # This will raise an error
+```
+
+```pycon exec="1" session="greet" result="console"
+>>> try:
+>>>     data_as_list_of_ints.append('abc')
+>>> except Exception as err:
+>>>     print(err)
+```
+
+Importantly, Omnipy models automatically reverts to snapshots after an error occurs, 
+allowing you to retry the operation without having to re-parse the data, continuing
+from where you left off. This is particularly useful when working with large dataflows,
+as it allows you to handle errors gracefully without losing your progress.
+
+```pycon exec="1" session="greet" source="console"
+>>> data_as_list_of_ints
+```
+
+```pycon exec="1" session="greet" result="console"
+>>> print(data_as_list_of_ints.pretty_repr())
+```
+
+```pycon exec="1" session="greet" source="console"
+>>> data_as_list_of_ints.append('456')
+>>> data_as_list_of_ints
+```
+
+```pycon exec="1" session="greet" result="console"
+>>> print(data_as_list_of_ints.pretty_repr())
+```
+
+More to come soon...
 
 ## Running example scripts
 - Install `omnipy-examples`:
