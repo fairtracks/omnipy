@@ -11,14 +11,13 @@ from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 
-from ..helpers.classes import MockPanel
+from ..helpers.classes import MockPanel, MockPanelStage3
 from .helpers import (apply_frame_variant_to_test_case,
                       assert_dims_aware_panel,
-                      frame_smaller_than_dims,
-                      FrameVariant,
                       OutputPropertyType,
-                      PanelOutputFrameVariantTestCase,
+                      PanelFrameVariantTestCase,
                       PanelOutputPropertyExpectations,
+                      PanelOutputTestCase,
                       PanelOutputTestCaseSetup,
                       strip_all_styling_from_panel_output)
 
@@ -26,12 +25,11 @@ from .helpers import (apply_frame_variant_to_test_case,
 def test_stylized_layout_panel_init(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
-    layout = Layout()
+    layout: Layout = Layout()
     layout['panel'] = MockPanel(content='Some Content')
     layout_panel = StylizedLayoutPanel(ResizedLayoutDraftPanel(layout))
 
     assert layout_panel.content is not layout
-    assert layout_panel.content == layout
     assert layout_panel.frame == empty_frame()
     assert layout_panel.constraints == Constraints()
     assert layout_panel.config == OutputConfig()
@@ -47,7 +45,8 @@ def test_stylized_layout_panel_init(
             constraints=constraints,
         ))
 
-    assert configured_layout_panel.content == layout
+    assert configured_layout_panel.content is not layout
+    assert isinstance(configured_layout_panel.content['panel'], MockPanelStage3)
     assert configured_layout_panel.frame is not frame
     assert configured_layout_panel.frame == frame
     assert configured_layout_panel.constraints is not constraints
@@ -60,7 +59,7 @@ def test_fail_stylized_layout_panel_if_extra_params(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
     with pytest.raises(TypeError):
-        StylizedLayoutPanel(Layout(), extra=123)  # type: ignore[call-arg]
+        StylizedLayoutPanel(ResizedLayoutDraftPanel(Layout()), extra=123)  # type: ignore[call-arg]
 
 
 # noinspection PyDataclass
@@ -85,37 +84,35 @@ def test_stylized_layout_panel_immutable_properties(
 @pc.parametrize_with_cases(
     'case',
     cases='.cases.layout_basics',
-    has_tag=('dimensions', 'layout'),
+    has_tag=('dims_and_edge_cases', 'layout'),
 )
-def test_stylized_layout_panel_basics_dims_and_output(
-    case: PanelOutputFrameVariantTestCase[Layout],
+def test_stylized_layout_panel_basic_dims_and_edge_cases(
+    case: PanelOutputTestCase[Layout] | PanelFrameVariantTestCase[Layout],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
 ) -> None:
-    crop_to_frame = frame_smaller_than_dims(case.frame, case.exp_dims)
-    frame_case = apply_frame_variant_to_test_case(case, crop_to_frame)
+    if isinstance(case, PanelFrameVariantTestCase):
+        case = apply_frame_variant_to_test_case(case, stylized_stage=True)
 
     layout_panel = StylizedLayoutPanel(
         ResizedLayoutDraftPanel(
             case.content,
-            frame=frame_case.frame,
+            frame=case.frame,
             config=case.config,
         ))
     assert_dims_aware_panel(
         layout_panel,
-        exp_dims=frame_case.exp_dims,
-        exp_frame=frame_case.frame,
-        exp_within_frame=frame_case.exp_within_frame,
+        exp_dims=case.exp_dims,
+        exp_frame=case.frame,
+        exp_within_frame=case.exp_within_frame,
     )
 
-    if case.frame_variant == FrameVariant(True, True):
-        processed_text_panel = strip_all_styling_from_panel_output(layout_panel,
-                                                                   output_format_accessor)
-        assert processed_text_panel == (
-            case.cropping_frame_exp_output if crop_to_frame else case.exp_output)
-
-
-22
+    if case.exp_output is not None:
+        processed_text_panel = strip_all_styling_from_panel_output(
+            layout_panel,
+            output_format_accessor,
+        )
+        assert processed_text_panel == case.exp_output
 
 
 @pc.parametrize_with_cases(

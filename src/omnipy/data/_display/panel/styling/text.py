@@ -13,7 +13,7 @@ from omnipy.data._display.panel.base import FrameT, OutputVariant
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.helpers import extract_value_if_enum
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
-from omnipy.data._display.panel.styling.output import OutputMode, VerticalCroppingOutputVariant
+from omnipy.data._display.panel.styling.output import OutputMode, VerticalTextCroppingOutputVariant
 from omnipy.util import _pydantic as pyd
 
 
@@ -83,13 +83,16 @@ class SyntaxStylizedTextPanel(
             remove_bg_color=True)
 
     @cached_property
+    @override
     def plain(self) -> OutputVariant:
-        return VerticalCroppingOutputVariant(self, OutputMode.PLAIN)
+        return VerticalTextCroppingOutputVariant(self, OutputMode.PLAIN)
 
     @cached_property
+    @override
     def bw_stylized(self) -> OutputVariant:
-        return VerticalCroppingOutputVariant(self, OutputMode.BW_STYLIZED)
+        return VerticalTextCroppingOutputVariant(self, OutputMode.BW_STYLIZED)
 
     @cached_property
+    @override
     def colorized(self) -> OutputVariant:
-        return VerticalCroppingOutputVariant(self, OutputMode.COLORIZED)
+        return VerticalTextCroppingOutputVariant(self, OutputMode.COLORIZED)

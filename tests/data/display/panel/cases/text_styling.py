@@ -34,7 +34,7 @@ def case_syntax_styling_word_wrap_horizontal(
             456]})]
             """),
         exp_dims=Dimensions(width=22, height=4),
-        exp_within_frame=WithinFrameExp(width=True, height=None),
+        exp_within_frame=WithinFrameExp(width=True, height=None, both=None),
     )
 
 
@@ -50,7 +50,7 @@ def case_syntax_styling_ellipsis_horizontal(
              MyClass({'def': [345…
             """),
         exp_dims=Dimensions(width=22, height=2),
-        exp_within_frame=WithinFrameExp(width=True, height=None),
+        exp_within_frame=WithinFrameExp(width=True, height=None, both=None),
     )
 
 
@@ -66,7 +66,7 @@ def case_syntax_styling_crop_horizontal(
              MyClass({'def': [345,
             """),
         exp_dims=Dimensions(width=22, height=2),
-        exp_within_frame=WithinFrameExp(width=True, height=None),
+        exp_within_frame=WithinFrameExp(width=True, height=None, both=None),
     )
 
 
@@ -88,7 +88,7 @@ def case_syntax_styling_word_wrap_small_frame(
             456]})]
             """),  # noqa: W291
         exp_dims=Dimensions(width=10, height=8),
-        exp_within_frame=WithinFrameExp(width=True, height=True),
+        exp_within_frame=WithinFrameExp(width=True, height=True, both=None),
     )
 
 
@@ -109,7 +109,7 @@ def case_syntax_styling_word_wrap_crop_bottom(
             234]}),
             """),  # noqa: W291
         exp_dims=Dimensions(width=10, height=4),
-        exp_within_frame=WithinFrameExp(width=True, height=True),
+        exp_within_frame=WithinFrameExp(width=True, height=True, both=True),
     )
 
 
@@ -127,7 +127,7 @@ def case_syntax_styling_word_wrap_crop_top(
             456]})]
             """),  # noqa: W291
         exp_dims=Dimensions(width=7, height=1),
-        exp_within_frame=WithinFrameExp(width=True, height=True),
+        exp_within_frame=WithinFrameExp(width=True, height=True, both=True),
     )
 
 

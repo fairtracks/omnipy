@@ -15,10 +15,8 @@ from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 
 from .helpers import (apply_frame_variant_to_test_case,
                       assert_dims_aware_panel,
-                      frame_smaller_than_dims,
-                      FrameVariant,
                       OutputPropertyType,
-                      PanelOutputFrameVariantTestCase,
+                      PanelFrameVariantTestCase,
                       PanelOutputPropertyExpectations,
                       PanelOutputTestCase,
                       PanelOutputTestCaseSetup,
@@ -94,7 +92,7 @@ def test_fail_syntax_stylized_text_panel_if_extra_params(
 
     with pytest.raises(TypeError):
         SyntaxStylizedTextPanel(
-            ReflowedTextDraftPanel('[123, 234, 345]'), extra=123)  # type: ignore[call-overload]
+            ReflowedTextDraftPanel('[123, 234, 345]'), extra=123)  # type: ignore[call-arg]
 
 
 # noinspection PyDataclass
@@ -120,15 +118,14 @@ def test_syntax_stylized_text_panel_no_assignments(
 @pc.parametrize_with_cases(
     'case',
     cases='.cases.text_basics',
-    has_tag=('dimensions', 'syntax_text'),
+    has_tag=('dims_and_edge_cases', 'syntax_text'),
 )
-def test_syntax_stylized_text_panel_basics_dims_and_output(
-    case: PanelOutputFrameVariantTestCase[str],
+def test_syntax_stylized_text_panel_basic_dims_and_edge_cases(
+    case: PanelFrameVariantTestCase[str],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
 ) -> None:
-    crop_to_frame = frame_smaller_than_dims(case.frame, case.exp_dims)
-    frame_case = apply_frame_variant_to_test_case(case, crop_to_frame)
+    frame_case = apply_frame_variant_to_test_case(case, stylized_stage=True)
 
     text_panel = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel(case.content, frame=frame_case.frame, config=case.config))
@@ -139,13 +136,12 @@ def test_syntax_stylized_text_panel_basics_dims_and_output(
         exp_within_frame=frame_case.exp_within_frame,
     )
 
-    if case.frame_variant == FrameVariant(True, True):
+    if frame_case.exp_output is not None:
         processed_text_panel = strip_all_styling_from_panel_output(
             text_panel,
             output_format_accessor,
         )
-        assert processed_text_panel == case.cropping_frame_exp_output \
-            if crop_to_frame else case.exp_output
+        assert processed_text_panel == frame_case.exp_output
 
 
 @pc.parametrize_with_cases(

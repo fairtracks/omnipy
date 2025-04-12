@@ -1,10 +1,9 @@
 from collections import UserDict
-from typing import Callable, Iterator, Mapping
+from typing import Callable, Generic, Iterator, Mapping
 
 from typing_extensions import TypeIs, TypeVar
 
 from omnipy.data._display.dimensions import DimensionsWithWidthAndHeight
-from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              FullyRenderedPanel,
                                              Panel,
@@ -12,6 +11,7 @@ from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              panel_is_fully_rendered)
 
 PanelT = TypeVar('PanelT', bound=Panel)
+RenderedPanelT = TypeVar('RenderedPanelT', bound=Panel)
 
 
 class Grid:
@@ -41,7 +41,7 @@ class Grid:
         return keys[y]
 
 
-class Layout(UserDict[str, Panel]):
+class Layout(UserDict[str, PanelT], Generic[PanelT]):
     """A class representing a layout of panels.
 
     This class inherits from `UserDict` to provide a dictionary-like
@@ -65,12 +65,12 @@ class Layout(UserDict[str, Panel]):
         return hash((tuple(self.data.keys()), tuple(self.data.values())))
 
     def _render_until_criteria_holds(
-            self, criteria: Callable[[Panel], TypeIs[PanelT]]) -> Mapping[str, PanelT]:
-        finished_panels: dict[str, PanelT] = {}
-        remaining_panels: dict[str, Panel] = self.data.copy()
+            self, criteria: Callable[[Panel], TypeIs[RenderedPanelT]]) -> dict[str, RenderedPanelT]:
+        finished_panels: dict[str, RenderedPanelT] = {}
+        remaining_panels: dict[str, Panel] = self.data.copy()  # type: ignore[assignment]
 
         while len(remaining_panels) > 0:
-            newly_rendered_panels = {}
+            newly_rendered_panels: dict[str, Panel] = {}
             for key, panel in remaining_panels.items():
                 if criteria(panel):
                     finished_panels[key] = panel
@@ -81,10 +81,10 @@ class Layout(UserDict[str, Panel]):
 
         return finished_panels
 
-    def render_until_dimensions_aware(self) -> Mapping[str, DimensionsAwarePanel[AnyFrame]]:
+    def render_until_dimensions_aware(self) -> dict[str, DimensionsAwarePanel]:
         """Render all panels in the layout until they have calculated their dimensions."""
         return self._render_until_criteria_holds(panel_is_dimensions_aware)
 
-    def render_fully(self) -> Mapping[str, FullyRenderedPanel[AnyFrame]]:
+    def render_fully(self) -> Mapping[str, FullyRenderedPanel]:
         """Render all panels in the layout until they are fully rendered."""
         return self._render_until_criteria_holds(panel_is_fully_rendered)

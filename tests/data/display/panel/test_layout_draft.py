@@ -11,32 +11,38 @@ from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 
-from ..helpers.classes import MockPanel
+from ..helpers.classes import MockPanel, MockPanelStage3
 from .helpers import (apply_frame_variant_to_test_case,
                       assert_dims_aware_panel,
                       assert_draft_panel_subcls,
                       assert_next_stage_panel,
                       OutputPropertyType,
-                      PanelOutputFrameVariantTestCase)
+                      PanelFrameVariantTestCase)
 
 
 def test_resized_layout_draft_panel_init(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     panel_cls = ResizedLayoutDraftPanel
-    assert_draft_panel_subcls(panel_cls, Layout(), None, None, None)
+    assert_draft_panel_subcls(panel_cls, Layout(), None, None, None, content_is_identical=False)
 
-    layout = Layout(abc=MockPanel('Some text'))
-    assert_draft_panel_subcls(panel_cls, layout, Frame(Dimensions(None, None)), None, None)
-    assert_draft_panel_subcls(panel_cls, layout, Frame(Dimensions(10, None)), None, None)
-    assert_draft_panel_subcls(panel_cls, layout, Frame(Dimensions(None, 20)), None, None)
-    assert_draft_panel_subcls(panel_cls, layout, Frame(Dimensions(10, 20)), None, None)
-    assert_draft_panel_subcls(panel_cls, layout, None, None, OutputConfig(indent_tab_size=4))
+    layout: Layout = Layout(abc=MockPanel('Some text'))
+    assert_draft_panel_subcls(
+        panel_cls, layout, Frame(Dimensions(None, None)), None, None, content_is_identical=False)
+    assert_draft_panel_subcls(
+        panel_cls, layout, Frame(Dimensions(10, None)), None, None, content_is_identical=False)
+    assert_draft_panel_subcls(
+        panel_cls, layout, Frame(Dimensions(None, 20)), None, None, content_is_identical=False)
+    assert_draft_panel_subcls(
+        panel_cls, layout, Frame(Dimensions(10, 20)), None, None, content_is_identical=False)
+    assert_draft_panel_subcls(
+        panel_cls, layout, None, None, OutputConfig(indent_tab_size=4), content_is_identical=False)
     assert_draft_panel_subcls(
         panel_cls,
         layout,
         None,
         Constraints(container_width_per_line_limit=10),
         None,
+        content_is_identical=False,
     )
     assert_draft_panel_subcls(
         panel_cls,
@@ -44,6 +50,7 @@ def test_resized_layout_draft_panel_init(
         Frame(Dimensions(20, 10)),
         Constraints(container_width_per_line_limit=10),
         OutputConfig(indent_tab_size=4),
+        content_is_identical=False,
     )
 
 
@@ -104,16 +111,17 @@ def test_fail_resized_layout_draft_panel_no_assignments(
 @pc.parametrize_with_cases(
     'case',
     cases='.cases.layout_basics',
-    has_tag=('dimensions', 'layout'),
+    has_tag=('dims_and_edge_cases', 'layout'),
 )
-def test_resized_layout_draft_panel_basics_dimensions(
-    case: PanelOutputFrameVariantTestCase[Layout],
+def test_resized_layout_draft_panel_basic_dims_and_edge_cases(
+    case: PanelFrameVariantTestCase[Layout],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
 ) -> None:
-    frame_case = apply_frame_variant_to_test_case(case, crop_to_frame=False)
+    frame_case = apply_frame_variant_to_test_case(case, stylized_stage=False)
 
     text_panel = ResizedLayoutDraftPanel(case.content, frame=frame_case.frame, config=case.config)
+
     assert_dims_aware_panel(
         text_panel,
         exp_dims=frame_case.exp_dims,
@@ -129,7 +137,7 @@ def test_draft_panel_render_next_stage(
         this_panel=resized_layout_panel,
         next_stage=resized_layout_panel.render_next_stage(),
         next_stage_panel_cls=StylizedLayoutPanel,
-        exp_content=resized_layout_panel.content,
+        exp_content=Layout(panel=MockPanelStage3('Some text')),
     )
 
     resized_layout_panel_complex = ResizedLayoutDraftPanel(
@@ -137,7 +145,7 @@ def test_draft_panel_render_next_stage(
             first=MockPanel('Some text'),
             second=MockPanel('Some other text'),
         ),
-        frame=Frame(Dimensions(9, 5)),
+        frame=Frame(Dimensions(16, 5)),
         constraints=Constraints(container_width_per_line_limit=10),
         config=OutputConfig(indent_tab_size=1),
     )
@@ -145,5 +153,9 @@ def test_draft_panel_render_next_stage(
         this_panel=resized_layout_panel_complex,
         next_stage=resized_layout_panel_complex.render_next_stage(),
         next_stage_panel_cls=StylizedLayoutPanel,
-        exp_content=resized_layout_panel_complex.content,
+        # Frame width is set to just enough to make the text wrap to
+        # individual lines per word.
+        exp_content=Layout(
+            first=MockPanelStage3('Some\ntext', frame=Frame(Dimensions(8, None))),
+            second=MockPanelStage3('Some\nother\ntext', frame=Frame(Dimensions(9, None)))),
     )

@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from copy import copy
 from enum import Enum
 from functools import cached_property
@@ -227,24 +228,10 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
         )
 
 
-class VerticalCroppingOutputVariant(
+class CroppingOutputVariant(
         CommonOutputVariant[PanelT, ContentT, FrameT],
         Generic[PanelT, ContentT, FrameT],
 ):
-    def _vertical_crop(self, text: str) -> str:
-        if self._frame.dims.height is None:
-            return text
-
-        lines = text.splitlines(keepends=True)
-        if len(lines) <= self._frame.dims.height:
-            return text
-
-        match self._config.vertical_overflow_mode:
-            case VerticalOverflowMode.CROP_BOTTOM:
-                return ''.join(lines[:self._frame.dims.height])
-            case VerticalOverflowMode.CROP_TOP:
-                return ''.join(lines[-self._frame.dims.height:])
-
     def _crop_matches(self, matches: re.Match) -> str:
         start_code_tag = matches.group(1)
         code_content = matches.group(2)
@@ -260,8 +247,9 @@ class VerticalCroppingOutputVariant(
             re.MULTILINE,
         )
 
+    @abstractmethod
     def _crop(self, output: str) -> str:
-        return self._vertical_crop(output)
+        ...
 
     @cached_property
     def terminal(self) -> str:
@@ -274,3 +262,46 @@ class VerticalCroppingOutputVariant(
     @cached_property
     def html_page(self) -> str:
         return self._crop_html(self._html_page)
+
+
+class VerticalTextCroppingOutputVariant(
+        CroppingOutputVariant[PanelT, ContentT, FrameT],
+        Generic[PanelT, ContentT, FrameT],
+):
+    def _crop(self, output: str) -> str:
+        if self._frame.dims.height is None:
+            return output
+
+        lines = output.splitlines(keepends=True)
+        if len(lines) <= self._frame.dims.height:
+            return output
+
+        match self._config.vertical_overflow_mode:
+            case VerticalOverflowMode.CROP_BOTTOM:
+                return ''.join(lines[:self._frame.dims.height])
+            case VerticalOverflowMode.CROP_TOP:
+                return ''.join(lines[-self._frame.dims.height:])
+
+
+class TableCroppingOutputVariant(
+        CroppingOutputVariant[PanelT, ContentT, FrameT],
+        Generic[PanelT, ContentT, FrameT],
+):
+    def _crop(self, output: str) -> str:
+        lines = output.splitlines(keepends=True)
+        uncropped_width = max((len(line) for line in lines), default=0)
+        uncropped_height = len(lines)
+
+        if (uncropped_width > 1 and uncropped_height) and \
+                (getattr(self._frame.dims, 'width') == 1
+                 or getattr(self._frame.dims, 'height') == 1):
+            return '…'
+
+        if self._frame.dims.height is None:
+            return output
+
+        if len(lines) <= self._frame.dims.height:
+            return output
+
+        cropped_lines = lines[:self._frame.dims.height - 1] + [lines[-1]]
+        return ''.join(cropped_lines)

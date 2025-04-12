@@ -58,11 +58,11 @@ class Panel(Generic[FrameT]):
         ...
 
 
-def panel_is_dimensions_aware(panel: Panel) -> TypeIs['DimensionsAwarePanel']:
+def panel_is_dimensions_aware(panel: 'Panel') -> TypeIs['DimensionsAwarePanel']:
     return isinstance(panel, DimensionsAwarePanel)
 
 
-def panel_is_fully_rendered(panel: Panel) -> TypeIs['FullyRenderedPanel']:
+def panel_is_fully_rendered(panel: 'Panel') -> TypeIs['FullyRenderedPanel']:
     return isinstance(panel, FullyRenderedPanel)
 
 

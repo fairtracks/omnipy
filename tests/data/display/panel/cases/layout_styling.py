@@ -8,6 +8,8 @@ from data.display.panel.cases.text_styling import _fill_html_page_template, _fil
 from omnipy.data._display.config import (ConsoleColorSystem,
                                          DarkHighContrastColorStyles,
                                          OutputConfig)
+from omnipy.data._display.dimensions import Dimensions
+from omnipy.data._display.frame import Frame
 from omnipy.data._display.layout import Layout
 
 from ..helpers import OutputPropertyType, PanelOutputPropertyExpectations, PanelOutputTestCaseSetup
@@ -19,8 +21,10 @@ def case_layout_styling_setup_no_frame_or_configs(
         transparent_background: bool) -> PanelOutputTestCaseSetup[Layout]:
     # Create a simple layout with mock panels
     layout = Layout()
-    layout['first'] = MockPanel(content='Panel_1 Content')
-    layout['second'] = MockPanel(content='Panel_2 Content')
+    layout['first'] = MockPanel(
+        content='Panel_1 Content', frame=Frame(Dimensions(width=7, height=2)))
+    layout['second'] = MockPanel(
+        content='Panel_2 Content', frame=Frame(Dimensions(width=7, height=2)))
 
     # Create stylized output with default config (should use Table grid)
     return PanelOutputTestCaseSetup(

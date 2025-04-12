@@ -1,4 +1,4 @@
-from functools import cache
+from functools import cache, cached_property
 from typing import Generic
 
 import rich.box
@@ -9,12 +9,16 @@ from typing_extensions import override
 
 from omnipy.data._display.config import ColorStyles, ConsoleColorSystem
 from omnipy.data._display.layout import Layout
-from omnipy.data._display.panel.base import FrameT
+from omnipy.data._display.panel.base import (DimensionsAwarePanel,
+                                             FrameT,
+                                             FullyRenderedPanel,
+                                             OutputVariant)
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_style,
                                                 calculate_fg_color_from_color_style,
                                                 ForceAutodetect)
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
+from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingOutputVariant
 from omnipy.util import _pydantic as pyd
 
 
@@ -24,12 +28,19 @@ from omnipy.util import _pydantic as pyd
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True, arbitrary_types_allowed=True),
 )
 class StylizedLayoutPanel(
-        StylizedMonospacedPanel[ResizedLayoutDraftPanel, Layout, FrameT],
+        StylizedMonospacedPanel[ResizedLayoutDraftPanel[FrameT], Layout, FrameT],
         Generic[FrameT],
 ):
     @pyd.validator('content', pre=True)
     def _copy_content(cls, content: Layout) -> Layout:
         return content.copy()
+
+    @pyd.validator('content', pre=True)
+    def render_panels_fully(
+        cls,
+        content: Layout[DimensionsAwarePanel],
+    ) -> Layout[FullyRenderedPanel]:
+        return Layout(**content.render_fully())
 
     @staticmethod
     @cache
@@ -49,12 +60,10 @@ class StylizedLayoutPanel(
                 color_style, force_autodetect=force_autodetect_bg_color)
         table_style = rich.style.Style(color=style_fg_color, bgcolor=style_bg_color)
 
-        fully_rendered_panels = layout.render_fully()
-
         table = rich.table.Table(show_header=False, box=rich.box.ROUNDED, style=table_style)
         keys = (layout.grid[(0, i)] for i in range(layout.grid.dims.width))
         strings = (
-            rich.text.Text.from_ansi(fully_rendered_panels[key].colorized.terminal) for key in keys)
+            rich.text.Text.from_ansi(layout[key].colorized.terminal, no_wrap=True) for key in keys)
         table.add_row(*strings)
 
         return table
@@ -78,3 +87,18 @@ class StylizedLayoutPanel(
             transparent_background=self.config.transparent_background,
             force_autodetect_bg_color=ForceAutodetect.NEVER,
         )
+
+    @cached_property
+    @override
+    def plain(self) -> OutputVariant:
+        return TableCroppingOutputVariant(self, OutputMode.PLAIN)
+
+    @cached_property
+    @override
+    def bw_stylized(self) -> OutputVariant:
+        return TableCroppingOutputVariant(self, OutputMode.BW_STYLIZED)
+
+    @cached_property
+    @override
+    def colorized(self) -> OutputVariant:
+        return TableCroppingOutputVariant(self, OutputMode.COLORIZED)

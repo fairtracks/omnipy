@@ -25,7 +25,7 @@ import omnipy.util._pydantic as pyd
 
 StylizedRichTypes: TypeAlias = rich.syntax.Syntax | rich.panel.Panel | rich.table.Table
 
-PanelT = TypeVar('PanelT', bound=MonospacedDraftPanel)
+PanelT = TypeVar('PanelT', bound=MonospacedDraftPanel, covariant=True)
 
 
 @pyd.dataclass(
@@ -175,19 +175,16 @@ class StylizedMonospacedPanel(
         return self.plain.terminal.splitlines()
 
     @cached_property
+    @abstractmethod
     def plain(self) -> OutputVariant:
-        from omnipy.data._display.panel.styling.output import (OutputMode,
-                                                               VerticalCroppingOutputVariant)
-        return VerticalCroppingOutputVariant(self, OutputMode.PLAIN)
+        ...
 
     @cached_property
+    @abstractmethod
     def bw_stylized(self) -> OutputVariant:
-        from omnipy.data._display.panel.styling.output import (OutputMode,
-                                                               VerticalCroppingOutputVariant)
-        return VerticalCroppingOutputVariant(self, OutputMode.BW_STYLIZED)
+        ...
 
     @cached_property
+    @abstractmethod
     def colorized(self) -> OutputVariant:
-        from omnipy.data._display.panel.styling.output import (OutputMode,
-                                                               VerticalCroppingOutputVariant)
-        return VerticalCroppingOutputVariant(self, OutputMode.COLORIZED)
+        ...

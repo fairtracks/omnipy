@@ -16,7 +16,7 @@ from .helpers import (apply_frame_variant_to_test_case,
                       assert_draft_panel_subcls,
                       assert_next_stage_panel,
                       OutputPropertyType,
-                      PanelOutputFrameVariantTestCase)
+                      PanelFrameVariantTestCase)
 
 
 def test_reflowed_text_draft_panel_init(
@@ -103,14 +103,14 @@ def test_fail_reflowed_text_draft_panel_no_assignments(
 @pc.parametrize_with_cases(
     'case',
     cases='.cases.text_basics',
-    has_tag=('dimensions', 'syntax_text'),
+    has_tag=('dims_and_edge_cases', 'syntax_text'),
 )
-def test_reflowed_text_draft_panel_basics_dimensions(
-    case: PanelOutputFrameVariantTestCase[str],
+def test_reflowed_text_draft_panel_basic_dims_and_edge_cases(
+    case: PanelFrameVariantTestCase[str],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
 ) -> None:
-    frame_case = apply_frame_variant_to_test_case(case, crop_to_frame=False)
+    frame_case = apply_frame_variant_to_test_case(case, stylized_stage=False)
 
     text_panel = ReflowedTextDraftPanel(case.content, frame=frame_case.frame, config=case.config)
     assert_dims_aware_panel(
