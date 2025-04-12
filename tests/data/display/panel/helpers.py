@@ -119,94 +119,101 @@ class PanelFrameVariantTestCase(Generic[ContentT, FrameT]):
     exp_stylized_dims_only_height: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
         default=pyd.Undefined)
 
-    def __post_init__(self):  # noqa: C901
-        if self.exp_output is pyd.Undefined:
-            self.exp_output = self.frame_case.exp_output
-        if self.exp_output is pyd.Undefined:
-            self.exp_output = self.exp_output_no_frame
+    def __post_init__(self):
+        def _resolve_to_first_defined(*values):
+            """Helper to resolve the first non-Undefined value."""
+            for value in values:
+                if value is not pyd.Undefined:
+                    return value
+            return pyd.Undefined
 
-        if self.exp_dims is pyd.Undefined:
-            self.exp_dims = self.frame_case.exp_dims
+        # General fields
+        self.exp_output = _resolve_to_first_defined(
+            self.frame_case.exp_output,
+            self.exp_output,
+            self.exp_output_no_frame,
+        )
+        self.exp_dims = _resolve_to_first_defined(
+            self.frame_case.exp_dims,
+            self.exp_dims,
+        )
+        self.exp_resized_dims = _resolve_to_first_defined(
+            self.frame_case.exp_resized_dims,
+            self.exp_resized_dims,
+            self.exp_dims,
+            self.exp_dims_no_frame,
+        )
+        self.exp_stylized_dims = _resolve_to_first_defined(
+            self.frame_case.exp_stylized_dims,
+            self.exp_stylized_dims,
+            self.exp_dims,
+            self.exp_dims_no_frame,
+        )
 
-        if self.exp_resized_dims is pyd.Undefined:
-            self.exp_resized_dims = self.frame_case.exp_resized_dims
-        if self.exp_resized_dims is pyd.Undefined:
-            self.exp_resized_dims = self.exp_dims
-        if self.exp_resized_dims is pyd.Undefined:
-            self.exp_resized_dims = self.exp_dims_no_frame
         assert not isinstance(self.exp_resized_dims, pyd.UndefinedType)
-
-        if self.exp_stylized_dims is pyd.Undefined:
-            self.exp_stylized_dims = self.frame_case.exp_stylized_dims
-        if self.exp_stylized_dims is pyd.Undefined:
-            self.exp_stylized_dims = self.exp_dims
-        if self.exp_stylized_dims is pyd.Undefined:
-            self.exp_stylized_dims = self.exp_dims_no_frame
         assert not isinstance(self.exp_stylized_dims, pyd.UndefinedType)
 
-        if self.exp_output_only_width is pyd.Undefined:
-            self.exp_output_only_width = self.frame_case.exp_output_only_width
-        if self.exp_output_only_width is pyd.Undefined:
-            self.exp_output_only_width = self.exp_output
-        if self.exp_output_only_width is pyd.Undefined:
-            self.exp_output_only_width = self.exp_output_no_frame
-
-        if self.exp_dims_only_width is pyd.Undefined:
-            self.exp_dims_only_width = self.frame_case.exp_dims_only_width
-        if self.exp_dims_only_width is pyd.Undefined:
-            self.exp_dims_only_width = self.exp_dims
-
-        if self.exp_resized_dims_only_width is pyd.Undefined:
-            self.exp_resized_dims_only_width = self.frame_case.exp_resized_dims_only_width
-        if self.exp_resized_dims_only_width is pyd.Undefined:
-            self.exp_resized_dims_only_width = self.exp_dims_only_width
-        if self.exp_resized_dims_only_width is pyd.Undefined:
-            self.exp_resized_dims_only_width = Dimensions(
+        # "Only width" fields
+        self.exp_output_only_width = _resolve_to_first_defined(
+            self.frame_case.exp_output_only_width,
+            self.exp_output_only_width,
+            self.exp_output,
+            self.exp_output_no_frame,
+        )
+        self.exp_dims_only_width = _resolve_to_first_defined(
+            self.frame_case.exp_dims_only_width,
+            self.exp_dims_only_width,
+            self.exp_dims,
+        )
+        self.exp_resized_dims_only_width = _resolve_to_first_defined(
+            self.frame_case.exp_resized_dims_only_width,
+            self.exp_resized_dims_only_width,
+            self.exp_dims_only_width,
+            Dimensions(
                 width=self.exp_resized_dims.width,
                 height=self.exp_dims_no_frame.height,
-            )
-
-        if self.exp_stylized_dims_only_width is pyd.Undefined:
-            self.exp_stylized_dims_only_width = self.frame_case.exp_stylized_dims_only_width
-        if self.exp_stylized_dims_only_width is pyd.Undefined:
-            self.exp_stylized_dims_only_width = self.exp_dims_only_width
-        if self.exp_stylized_dims_only_width is pyd.Undefined:
-            self.exp_stylized_dims_only_width = Dimensions(
+            ),
+        )
+        self.exp_stylized_dims_only_width = _resolve_to_first_defined(
+            self.frame_case.exp_stylized_dims_only_width,
+            self.exp_stylized_dims_only_width,
+            self.exp_dims_only_width,
+            Dimensions(
                 width=self.exp_stylized_dims.width,
                 height=self.exp_dims_no_frame.height,
-            )
+            ),
+        )
 
-        if self.exp_output_only_height is pyd.Undefined:
-            self.exp_output_only_height = self.frame_case.exp_output_only_height
-        if self.exp_output_only_height is pyd.Undefined:
-            self.exp_output_only_height = self.exp_output
-        if self.exp_output_only_height is pyd.Undefined:
-            self.exp_output_only_height = self.exp_output_no_frame
-
-        if self.exp_dims_only_height is pyd.Undefined:
-            self.exp_dims_only_height = self.frame_case.exp_dims_only_height
-        if self.exp_dims_only_height is pyd.Undefined:
-            self.exp_dims_only_height = self.exp_dims
-
-        if self.exp_resized_dims_only_height is pyd.Undefined:
-            self.exp_resized_dims_only_height = self.frame_case.exp_resized_dims_only_height
-        if self.exp_resized_dims_only_height is pyd.Undefined:
-            self.exp_resized_dims_only_height = self.exp_dims_only_height
-        if self.exp_resized_dims_only_height is pyd.Undefined:
-            self.exp_resized_dims_only_height = Dimensions(
+        # "Only height" fields
+        self.exp_output_only_height = _resolve_to_first_defined(
+            self.frame_case.exp_output_only_height,
+            self.exp_output_only_height,
+            self.exp_output,
+            self.exp_output_no_frame,
+        )
+        self.exp_dims_only_height = _resolve_to_first_defined(
+            self.frame_case.exp_dims_only_height,
+            self.exp_dims_only_height,
+            self.exp_dims,
+        )
+        self.exp_resized_dims_only_height = _resolve_to_first_defined(
+            self.frame_case.exp_resized_dims_only_height,
+            self.exp_resized_dims_only_height,
+            self.exp_dims_only_height,
+            Dimensions(
                 width=self.exp_dims_no_frame.width,
                 height=self.exp_resized_dims.height,
-            )
-
-        if self.exp_stylized_dims_only_height is pyd.Undefined:
-            self.exp_stylized_dims_only_height = self.frame_case.exp_stylized_dims_only_height
-        if self.exp_stylized_dims_only_height is pyd.Undefined:
-            self.exp_stylized_dims_only_height = self.exp_dims_only_height
-        if self.exp_stylized_dims_only_height is pyd.Undefined:
-            self.exp_stylized_dims_only_height = Dimensions(
+            ),
+        )
+        self.exp_stylized_dims_only_height = _resolve_to_first_defined(
+            self.frame_case.exp_stylized_dims_only_height,
+            self.exp_stylized_dims_only_height,
+            self.exp_dims_only_height,
+            Dimensions(
                 width=self.exp_dims_no_frame.width,
                 height=self.exp_stylized_dims.height,
-            )
+            ),
+        )
 
 
 class PanelOutputTestCase(NamedTuple, Generic[ContentT]):
