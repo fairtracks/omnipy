@@ -16,10 +16,10 @@ from .helpers import (apply_frame_variant_to_test_case,
                       assert_dims_aware_panel,
                       OutputPropertyType,
                       PanelFrameVariantTestCase,
-                      PanelOutputPropertyExpectations,
                       PanelOutputTestCase,
-                      PanelOutputTestCaseSetup,
-                      strip_all_styling_from_panel_output)
+                      strip_all_styling_from_panel_output,
+                      StylizedPanelOutputExpectations,
+                      StylizedPanelTestCaseSetup)
 
 
 def test_stylized_layout_panel_init(
@@ -107,12 +107,12 @@ def test_stylized_layout_panel_basic_dims_and_edge_cases(
         exp_within_frame=case.exp_within_frame,
     )
 
-    if case.exp_output is not None:
+    if case.exp_plain_output is not None:
         processed_text_panel = strip_all_styling_from_panel_output(
             layout_panel,
             output_format_accessor,
         )
-        assert processed_text_panel == case.exp_output
+        assert processed_text_panel == case.exp_plain_output
 
 
 @pc.parametrize_with_cases(
@@ -126,16 +126,16 @@ def test_stylized_layout_panel_basic_dims_and_edge_cases(
     has_tag=('expectations', 'layout'),
 )
 def test_output_properties_of_stylized_layout_panel(
-        output_test_case_setup: Annotated[PanelOutputTestCaseSetup, pc.fixture],
-        output_prop_expectations: Annotated[PanelOutputPropertyExpectations, pc.fixture],
+        output_test_case_setup: Annotated[StylizedPanelTestCaseSetup, pc.fixture],
+        output_prop_expectations: Annotated[StylizedPanelOutputExpectations, pc.fixture],
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
     case_id, content, frame, config = output_test_case_setup
-    get_output_property, expected_output_for_case_id = output_prop_expectations
+    get_output_property, exp_plain_output_for_case_id = output_prop_expectations
 
     layout_panel = StylizedLayoutPanel(ResizedLayoutDraftPanel(content, frame=frame, config=config))
     for _ in range(2):
-        assert get_output_property(layout_panel) == expected_output_for_case_id(case_id)
+        assert get_output_property(layout_panel) == exp_plain_output_for_case_id(case_id)
 
 
 def test_fail_stylized_layout_panel_render_next_stage(

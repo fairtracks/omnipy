@@ -17,10 +17,10 @@ from .helpers import (apply_frame_variant_to_test_case,
                       assert_dims_aware_panel,
                       OutputPropertyType,
                       PanelFrameVariantTestCase,
-                      PanelOutputPropertyExpectations,
                       PanelOutputTestCase,
-                      PanelOutputTestCaseSetup,
-                      strip_all_styling_from_panel_output)
+                      strip_all_styling_from_panel_output,
+                      StylizedPanelOutputExpectations,
+                      StylizedPanelTestCaseSetup)
 
 
 def test_syntax_stylized_text_panel_init(
@@ -136,12 +136,12 @@ def test_syntax_stylized_text_panel_basic_dims_and_edge_cases(
         exp_within_frame=frame_case.exp_within_frame,
     )
 
-    if frame_case.exp_output is not None:
+    if frame_case.exp_plain_output is not None:
         processed_text_panel = strip_all_styling_from_panel_output(
             text_panel,
             output_format_accessor,
         )
-        assert processed_text_panel == frame_case.exp_output
+        assert processed_text_panel == frame_case.exp_plain_output
 
 
 @pc.parametrize_with_cases(
@@ -159,7 +159,7 @@ def test_syntax_stylized_text_panel_overflow_modes(
         ReflowedTextDraftPanel(case.content, frame=case.frame, config=case.config))
     processed_text_panel = strip_all_styling_from_panel_output(text_panel, output_format_accessor)
 
-    assert processed_text_panel == case.exp_output
+    assert processed_text_panel == case.exp_plain_output
     assert text_panel.dims.width == case.exp_dims.width
     assert text_panel.dims.height == case.exp_dims.height
     assert text_panel.within_frame.width is case.exp_within_frame.width
@@ -177,17 +177,17 @@ def test_syntax_stylized_text_panel_overflow_modes(
     has_tag=('expectations', 'syntax_text'),
 )
 def test_output_properties_of_syntax_stylized_text_panel(
-        output_test_case_setup: Annotated[PanelOutputTestCaseSetup, pc.fixture],
-        output_prop_expectations: Annotated[PanelOutputPropertyExpectations, pc.fixture],
+        output_test_case_setup: Annotated[StylizedPanelTestCaseSetup, pc.fixture],
+        output_prop_expectations: Annotated[StylizedPanelOutputExpectations, pc.fixture],
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
     case_id, content, frame, config = output_test_case_setup
-    get_output_property, expected_output_for_case_id = output_prop_expectations
+    get_output_property, exp_plain_output_for_case_id = output_prop_expectations
 
     text_panel = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel(content, frame=frame, config=config))
     for _ in range(2):
-        assert get_output_property(text_panel) == expected_output_for_case_id(case_id)
+        assert get_output_property(text_panel) == exp_plain_output_for_case_id(case_id)
 
 
 def test_syntax_stylized_text_panel_json(
