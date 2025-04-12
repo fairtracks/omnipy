@@ -1,7 +1,7 @@
 import os
 import re
 from textwrap import dedent
-from typing import Annotated, TypedDict
+from typing import Annotated
 
 import pytest
 
@@ -13,16 +13,13 @@ from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.pretty import pretty_repr_of_draft_output
 from omnipy.data.model import Model
 
+from .panel.helpers import DraftPanelKwArgs
+
 DEFAULT_FRAME = Frame(Dimensions(80, 24))
 
 
 def _harmonize(output: str) -> str:
     return re.sub(r',(\n *[\]\}\)])', '\\1', output)
-
-
-class _DraftOutputKwArgs(TypedDict, total=False):
-    frame: Frame
-    config: OutputConfig
 
 
 def _assert_pretty_repr_of_draft(
@@ -33,7 +30,7 @@ def _assert_pretty_repr_of_draft(
     within_frame_width: bool | None = None,
     within_frame_height: bool | None = None,
 ) -> None:
-    kwargs = _DraftOutputKwArgs()
+    kwargs = DraftPanelKwArgs()
     if frame is not None:
         kwargs['frame'] = frame
     if config is not None:

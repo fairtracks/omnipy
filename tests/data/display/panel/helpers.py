@@ -21,6 +21,12 @@ ContentT = TypeVar('ContentT', bound=str | Layout)
 # Classes
 
 
+class DraftPanelKwArgs(TypedDict, total=False):
+    frame: Frame
+    constraints: Constraints
+    config: OutputConfig
+
+
 class FrameVariant(NamedTuple):
     use_frame_width: bool
     use_frame_height: bool
@@ -43,10 +49,6 @@ class FrameTestCase(NamedTuple):
     exp_within_frame: WithinFrameExpCase
 
 
-class DraftOutputKwArgs(TypedDict, total=False):
-    frame: Frame
-    constraints: Constraints
-    config: OutputConfig
 
 
 class PanelOutputTestCase(NamedTuple, Generic[ContentT]):
@@ -149,8 +151,8 @@ def create_draft_panel_kwargs(
     frame: Frame | None = None,
     constraints: Constraints | None = None,
     config: OutputConfig | None = None,
-) -> DraftOutputKwArgs:
-    kwargs = DraftOutputKwArgs()
+) -> DraftPanelKwArgs:
+    kwargs = DraftPanelKwArgs()
 
     if frame is not None:
         kwargs['frame'] = frame
