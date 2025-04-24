@@ -1,5 +1,6 @@
 from typing import Annotated
 
+from pydantic import ValidationError
 import pytest
 
 from omnipy.data._display.dimensions import AnyDimensions, Dimensions
@@ -64,6 +65,34 @@ def test_frame(
     _assert_frame(Dimensions(10, 20), True, True, True)
 
 
+def test_frame_fixed_dims(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    no_dims_frame: Frame = empty_frame()
+    assert no_dims_frame.fixed_dims is False
+
+    width_only_frame = Frame(Dimensions(10, None))
+    assert width_only_frame.fixed_dims is True
+
+    width_only_not_fixed_frame = Frame(Dimensions(10, None), fixed_dims=False)
+    assert width_only_not_fixed_frame.fixed_dims is False
+
+    height_only_frame = Frame(Dimensions(None, 20))
+    assert height_only_frame.fixed_dims is True
+
+    height_only_not_fixed_frame = Frame(Dimensions(None, 20), fixed_dims=False)
+    assert height_only_not_fixed_frame.fixed_dims is False
+
+    both_dims_frame = Frame(Dimensions(10, 20))
+    assert both_dims_frame.fixed_dims is True
+
+    both_dims_not_fixed_frame = Frame(Dimensions(10, 20), fixed_dims=False)
+    assert both_dims_not_fixed_frame.fixed_dims is False
+
+    with pytest.raises(ValidationError):
+        # fixed_dims should not be True if both width and height are None
+        Frame(Dimensions(None, None), fixed_dims=True)
+
+
 def test_frame_types(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     def undefined_frame_func(dims: UndefinedFrame) -> None:
@@ -124,8 +153,9 @@ def test_frame_hashable(
     assert hash(frame_1) != hash(frame_3) != hash(frame_4) != hash(frame_5)
 
     frame_6 = Frame(Dimensions(10, 20))
+    frame_7 = Frame(Dimensions(10, 20), fixed_dims=False)
 
-    assert hash(frame_5) == hash(frame_6)
+    assert hash(frame_5) == hash(frame_6) != hash(frame_7)
 
 
 # noinspection PyDataclass
@@ -135,6 +165,9 @@ def test_fail_frame_no_assignments(
 
     with pytest.raises(AttributeError):
         frame.dims = Dimensions(10, 20)  # type: ignore[misc, arg-type]
+
+    with pytest.raises(AttributeError):
+        frame.fixed_dims = False  # type: ignore[misc, arg-type]
 
 
 def test_fail_frame_if_extra_param(
