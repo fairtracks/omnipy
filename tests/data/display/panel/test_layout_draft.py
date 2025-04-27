@@ -11,7 +11,7 @@ from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 
-from ..helpers.classes import MockPanel, MockPanelStage3
+from ..helpers.classes import MockPanel, MockPanelStage2, MockPanelStage3
 from .helpers import (apply_frame_variant_to_test_case,
                       assert_dims_aware_panel,
                       assert_draft_panel_subcls,
@@ -156,4 +156,22 @@ def test_draft_panel_render_next_stage(
         exp_content=Layout(
             first=MockPanelStage3('Some\ntext', frame=Frame(Dimensions(4, None))),
             second=MockPanelStage3('Some\nother\ntext', frame=Frame(Dimensions(5, None)))),
+    )
+
+    resized_layout_panel_complex = ResizedLayoutDraftPanel(
+        Layout(
+            first=MockPanelStage2('Some\ntext'),
+            second=MockPanel('Some other text'),
+        ),
+        frame=Frame(Dimensions(21, 5)),
+        constraints=Constraints(container_width_per_line_limit=10),
+        config=OutputConfig(indent_tab_size=1),
+    )
+    assert_next_stage_panel(
+        this_panel=resized_layout_panel_complex,
+        next_stage=resized_layout_panel_complex.render_next_stage(),
+        next_stage_panel_cls=StylizedLayoutPanel,
+        exp_content=Layout(
+            first=MockPanelStage3('Some\ntext'),
+            second=MockPanelStage3('Some other\ntext', frame=Frame(Dimensions(10, None)))),
     )

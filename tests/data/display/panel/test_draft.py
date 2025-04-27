@@ -5,7 +5,7 @@ import pytest
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.frame import empty_frame, Frame, UndefinedFrame
+from omnipy.data._display.frame import empty_frame, Frame, FrameWithWidthAndHeight, UndefinedFrame
 from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
@@ -191,6 +191,57 @@ def test_draft_panel_render_next_stage_with_layout(
             ),
             text=MockPanelStage2(
                 'Here is\nsome\ntext',
+                frame=Frame(Dimensions(7, 3)),
+            ),
+        ),
+    )
+
+    draft_panel_half_framed: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
+        Layout(
+            tuple=MockPanel('(1, 2, 3)', frame=Frame(Dimensions(9, 1))),
+            text=MockPanel('Here is some text')),
+        frame=Frame(Dimensions(20, 5)),
+        constraints=Constraints(container_width_per_line_limit=10),
+        config=OutputConfig(indent_tab_size=1),
+    )
+    assert_next_stage_panel(
+        this_panel=draft_panel_half_framed,
+        next_stage=draft_panel_half_framed.render_next_stage(),
+        next_stage_panel_cls=ResizedLayoutDraftPanel,
+        exp_content=Layout(
+            tuple=MockPanelStage2(
+                '(1, 2, 3)',
+                frame=Frame(Dimensions(9, 1)),
+            ),
+            text=MockPanelStage2(
+                'Here\nis\nsome\ntext',
+                frame=Frame(Dimensions(4, 3)),
+            ),
+        ),
+    )
+
+    draft_panel_half_rendered: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
+        Layout(
+            tuple=MockPanelStage2('(1,\n2,\n3)'),
+            text1=MockPanel('Here is some text'),
+            text2=MockPanel('Here is some other text'),
+        ),
+        frame=Frame(Dimensions(24, 5)),
+        constraints=Constraints(container_width_per_line_limit=10),
+        config=OutputConfig(indent_tab_size=1),
+    )
+    assert_next_stage_panel(
+        this_panel=draft_panel_half_rendered,
+        next_stage=draft_panel_half_rendered.render_next_stage(),
+        next_stage_panel_cls=ResizedLayoutDraftPanel,
+        exp_content=Layout(
+            tuple=MockPanelStage2('(1,\n2,\n3)'),
+            text1=MockPanelStage2(
+                'Here\nis\nsome\ntext',
+                frame=Frame(Dimensions(4, 3)),
+            ),
+            text2=MockPanelStage2(
+                'Here is\nsome\nother\ntext',
                 frame=Frame(Dimensions(7, 3)),
             ),
         ),
