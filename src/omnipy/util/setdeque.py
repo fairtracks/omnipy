@@ -89,7 +89,7 @@ class SetDeque(deque, Generic[_ObjT]):
 
     def __add__(self, __value: 'SetDeque[_ObjT]') -> 'SetDeque[_ObjT] | NotImplementedType':
         if not isinstance(__value, SetDeque):
-            return NotImplemented  # type: ignore[unreachable]
+            return NotImplemented
         self_copy = copy(self)
         self_copy.extend(__value)
         return self_copy
@@ -129,7 +129,7 @@ class SetDeque(deque, Generic[_ObjT]):
         from typing import get_args
         arg_repr = ''
         if hasattr(self, '__orig_class__'):
-            args = get_args(self.__orig_class__)
+            args = get_args(self.__orig_class__)  # pyright: ignore [reportAttributeAccessIssue]
             if len(args) == 1:
                 arg = args[0]
                 arg_repr = f"[{arg.__name__ if hasattr(arg, '__name__') else repr(arg)}]"

@@ -47,8 +47,7 @@ def test_transfer_generic_params_to_new_generic_cls() -> None:
     assert get_args(get_parametrized_type(my_dict)) == ()
 
     my_typed_dict_cls = transfer_generic_args_to_cls(MyDict, get_parametrized_type(init_dict))
-
-    my_typed_dict = my_typed_dict_cls({'b': 234})
+    my_typed_dict = my_typed_dict_cls({'b': 234})  # type: ignore
 
     assert get_args(get_parametrized_type(my_typed_dict)) == (str, int)
 

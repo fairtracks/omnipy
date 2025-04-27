@@ -24,6 +24,7 @@ from typing import (_SpecialForm,
                     Mapping,
                     overload,
                     Protocol,
+                    TypeAlias,
                     TypeGuard,
                     Union)
 
@@ -35,7 +36,7 @@ import omnipy.util._pydantic as pyd
 _KeyT = TypeVar('_KeyT', bound=Hashable)
 _ObjT = TypeVar('_ObjT', bound=object)
 
-Dictable = Mapping[_KeyT, Any] | Iterable[tuple[_KeyT, Any]]
+Dictable: TypeAlias = Mapping[_KeyT, Any] | Iterable[tuple[_KeyT, Any]]
 
 
 def as_dictable(obj: object) -> Dictable | None:
@@ -51,8 +52,14 @@ def as_dictable(obj: object) -> Dictable | None:
 
 def create_merged_dict(dictable_1: Dictable[_KeyT],
                        dictable_2: Dictable[_KeyT]) -> dict[_KeyT, Any]:
-    merged_dict = dictable_1 if isinstance(dictable_1, dict) else dict(dictable_1)
-    dict_2 = dictable_2 if isinstance(dictable_2, dict) else dict(dictable_2)
+    merged_dict = cast(
+        dict[_KeyT, Any],
+        dictable_1 if isinstance(dictable_1, dict) else dict(dictable_1),
+    )
+    dict_2 = cast(
+        dict[_KeyT, Any],
+        dictable_2 if isinstance(dictable_2, dict) else dict(dictable_2),
+    )
     merged_dict |= dict_2
     return merged_dict
 
@@ -153,7 +160,7 @@ def evaluate_any_forward_refs_if_possible(in_type: TypeForm,
             return cast(
                 type | GenericAlias,
                 in_type._evaluate(
-                    globalns, localns if localns else locals(), recursive_guard=set()))
+                    globalns, localns if localns else locals(), recursive_guard=frozenset()))
         except NameError:
             pass
     else:
@@ -208,7 +215,8 @@ def ensure_non_str_byte_iterable(value):
 
 
 def has_items(obj: object) -> bool:
-    return hasattr(obj, '__len__') and obj.__len__() > 0
+    return hasattr(obj, '__len__') \
+        and obj.__len__() > 0  # pyright: ignore [reportAttributeAccessIssue]
 
 
 def get_first_item(iterable: Iterable[object]) -> object:
@@ -232,7 +240,8 @@ def all_equals(first, second) -> bool:
     equals = first == second
     if is_iterable(equals):
         if hasattr(equals, 'all') and callable(getattr(equals, 'all')):
-            return equals.all(None)  # works for both pandas and numpy
+            # Works for both pandas and numpy
+            return equals.all(None)  # pyright: ignore [reportAttributeAccessIssue]
         else:
             return all(equals)
     else:
@@ -295,12 +304,12 @@ def recursive_module_import_new(root_path: list[str],
 
     module_finder: FileFinder
     module_name: str
-    is_pkg: bool
+    _is_pkg: bool
 
     cur_excluded_prefix = ''
 
-    for module_finder, module_name, is_pkg in pkgutil.walk_packages(root_path):  # type: ignore
-        # print(f'{module_name}: {is_pkg}')
+    for module_finder, module_name, _is_pkg in pkgutil.walk_packages(root_path):  # type: ignore
+        # print(f'{module_name}: {_is_pkg}')
         if cur_excluded_prefix and module_name.startswith(cur_excluded_prefix):
             continue
         else:
@@ -374,13 +383,15 @@ def get_event_loop_and_check_if_loop_is_running() -> tuple[asyncio.AbstractEvent
 
 def running_in_ipython() -> bool:
     try:
-        return get_ipython().__class__.__name__ == 'TerminalInteractiveShell'
+        ipython = get_ipython()  # type: ignore[name-defined]
+        return ipython.__class__.__name__ == 'TerminalInteractiveShell'
     except NameError:
         return False
 
 
 def running_in_jupyter() -> bool:
     try:
-        return get_ipython().__class__.__name__ == 'ZMQInteractiveShell'
+        ipython = get_ipython()  # type: ignore[name-defined]
+        return ipython.__class__.__name__ == 'ZMQInteractiveShell'
     except NameError:
         return False
