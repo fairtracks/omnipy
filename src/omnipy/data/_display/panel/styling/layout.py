@@ -8,6 +8,7 @@ import rich.text
 from typing_extensions import override
 
 from omnipy.data._display.config import ColorStyles, ConsoleColorSystem
+from omnipy.data._display.dimensions import has_width
 from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              FrameT,
@@ -35,6 +36,26 @@ class StylizedLayoutPanel(
     def _copy_content(cls, content: Layout) -> Layout:
         return content.copy()
 
+    # @cached_property
+    # def _console_dimensions(self) -> DimensionsWithWidthAndHeight:
+    #     console_dims = super()._console_dimensions
+    #
+    #     frame_dims = self.frame.dims
+    #     if has_width(frame_dims) and frame_dims.width <= self.content.grid.dims.width:
+    #         # Too small for the rich console to crop nicely, e.g.:
+    #         # ┌┬┬┬
+    #         # ││││
+    #         # └┴┴┴
+    #         # Instead, we set console width to #grid width + 1 and do the
+    #         # cropping ourselves, in TableCroppingOutputVariant.
+    #         #
+    #         # EDIT: On second thought, perhaps cutting the edges is
+    #         # better, as in indicates that the table has more columns...?
+    #         #
+    #         return Dimensions(width=self.content.grid.dims.width + 1, height=console_dims.height)
+    #     else:
+    #         return console_dims
+
     @pyd.validator('content', pre=True)
     def render_panels_fully(
         cls,
@@ -61,10 +82,19 @@ class StylizedLayoutPanel(
         table_style = rich.style.Style(color=style_fg_color, bgcolor=style_bg_color)
 
         table = rich.table.Table(show_header=False, box=rich.box.ROUNDED, style=table_style)
-        keys = (layout.grid[(0, i)] for i in range(layout.grid.dims.width))
+        keys = list(layout.grid[(0, i)] for i in range(layout.grid.dims.width))
         strings = (
             rich.text.Text.from_ansi(layout[key].colorized.terminal, no_wrap=True) for key in keys)
-        table.add_row(*strings)
+
+        for key in keys:
+            panel = layout[key]
+            if panel.frame.fixed_width and has_width(panel.frame.dims):
+                column_width = panel.frame.dims.width
+            else:
+                column_width = None
+            table.add_column(width=column_width)
+
+        table.add_row(*strings, style=table_style)
 
         return table
 

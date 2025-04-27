@@ -5,7 +5,8 @@ from typing import ClassVar, Generic
 from omnipy.data._display.constraints import ConstraintsSatisfaction
 from omnipy.data._display.helpers import UnicodeCharWidthMap
 from omnipy.data._display.panel.base import FrameT, FullyRenderedPanel
-from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
+from omnipy.data._display.panel.draft.monospaced import (crop_content_lines_for_resizing,
+                                                         MonospacedDraftPanel)
 import omnipy.util._pydantic as pyd
 
 
@@ -22,7 +23,9 @@ class ReflowedTextDraftPanel(
         # Typical repr output should not end with newline. Hence, a regular split on newline is
         # correct behaviour. An empty string is the split into a list of one element. If
         # splitlines() had been used, the list would be empty.
-        return self.content.split('\n')
+        all_content_lines = self.content.split('\n')
+
+        return crop_content_lines_for_resizing(all_content_lines, self.frame)
 
     @cached_property
     def max_container_width_across_lines(self) -> pyd.NonNegativeInt:
