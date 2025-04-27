@@ -42,11 +42,19 @@ class StylizedMonospacedPanel(
         Generic[PanelT, ContentT, FrameT],
         ABC,
 ):
-    _panel_calculated_dims: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
+    # TODO: Return to _panel_calculated_dims when Pydantic 2.0 is released
+    #
+    # Pydantic 1.10 emits a RuntimeWarning for dataclasses with private
+    # fields (starting with '_')
+    # See https://github.com/pydantic/pydantic/issues/2816
+    # _panel_calculated_dims: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
+
+    panel_calculated_dims: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
 
     def __init__(self, panel: MonospacedDraftPanel[ContentT, FrameT]):
         super().__init__(panel.content, panel.frame, panel.constraints, panel.config)
-        object.__setattr__(self, '_panel_calculated_dims', panel.dims)
+        # object.__setattr__(self, '_panel_calculated_dims', panel.dims)
+        object.__setattr__(self, 'panel_calculated_dims', panel.dims)
 
     @staticmethod
     def _clean_rich_style_caches():
@@ -91,7 +99,7 @@ class StylizedMonospacedPanel(
     @cached_property
     def _console_dimensions(self) -> DimensionsWithWidthAndHeight:
         frame_dims = self.frame.dims
-        panel_dims = self._panel_calculated_dims
+        panel_dims = self.panel_calculated_dims
 
         console_width = frame_dims.width if has_width(frame_dims) else panel_dims.width
         console_height = frame_dims.height if has_height(frame_dims) else panel_dims.height
@@ -105,7 +113,7 @@ class StylizedMonospacedPanel(
         Hack to allow rich.console to output newline contents when
         width == 0
         """
-        panel_dims = self._panel_calculated_dims
+        panel_dims = self.panel_calculated_dims
         if panel_dims.width == 0 and console_dims.width == 0 and console_dims.height > 0:
             return Dimensions(width=1, height=console_dims.height)
 
