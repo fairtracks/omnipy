@@ -4,19 +4,21 @@ from enum import Enum
 from functools import cached_property
 import re
 from textwrap import dedent
-from typing import Callable, ClassVar, Generic, Iterable
+from typing import Callable, ClassVar, Generic, Iterable, NamedTuple
 
 import rich.console
 import rich.segment
 import rich.terminal_theme
 
 from omnipy.data._display.config import VerticalOverflowMode
+from omnipy.data._display.dimensions import has_height, has_width
 from omnipy.data._display.panel.base import FrameT, OutputVariant
 from omnipy.data._display.panel.draft.base import ContentT
 from omnipy.data._display.panel.helpers import (calculate_bg_color_triplet_from_color_style,
                                                 calculate_fg_color_triplet_from_color_style,
                                                 ForceAutodetect)
 from omnipy.data._display.panel.styling.base import PanelT, StylizedMonospacedPanel
+from omnipy.util.helpers import extract_newline, max_newline_stripped_width, strip_and_split_newline
 
 
 class OutputMode(str, Enum):
@@ -228,80 +230,208 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
         )
 
 
+class StylizedItem(NamedTuple):
+    span_start: str
+    content: str
+    span_end: str
+
+
 class CroppingOutputVariant(
         CommonOutputVariant[PanelT, ContentT, FrameT],
         Generic[PanelT, ContentT, FrameT],
 ):
-    def _crop_matches(self, matches: re.Match) -> str:
+    def _crop_top_level_html(self, html: str) -> str:
+        return re.sub(
+            r'(<code[^>]*>)([\S\s]*)(</code>)',
+            self._manage_top_level_html_matches,
+            html,
+        )
+
+    def _manage_top_level_html_matches(self, matches: re.Match) -> str:
         start_code_tag = matches.group(1)
         code_content = matches.group(2)
         end_code_tag = matches.group(3)
 
-        return start_code_tag + self._crop(code_content) + end_code_tag
+        return start_code_tag + self._crop_html_code(code_content) + end_code_tag
 
-    def _crop_html(self, html: str) -> str:
-        return re.sub(
-            r'(<code[^>]*>)([\S\s]*)(</code>)',
-            self._crop_matches,
-            html,
-            re.MULTILINE,
+    def _crop_html_code(self, code_html: str) -> str:
+        return self._crop_stylized_output_common(
+            code_html,
+            split_regexp=r'(<span[^>]*>[^<]*</span>)',
+            findall_regexp=r'^(<span[^>]*>)?([^<]*)(</span>)?$',
         )
 
+    def _crop_stylized_text(self, code_html: str) -> str:
+        return self._crop_stylized_output_common(
+            code_html,
+            split_regexp=r'((?:\x1b\[[^m]*m)*[^\x1b]*(?:\x1b\[[^m]*m)*)',
+            findall_regexp=r'^((?:\x1b\[[^m]*m)*)([^\x1b]*)((?:\x1b\[[^m]*m)*)$',
+        )
+
+    def _crop_stylized_output_common(
+        self,
+        output: str,
+        split_regexp: str,
+        findall_regexp: str,
+    ) -> str:
+        lines = self._split_to_lines_and_crop_virtually(output)
+        cropped_lines = []
+        text_lines = []
+        items_per_line: list[list[StylizedItem]] = []
+
+        for line in lines:
+            split_line = re.split(split_regexp, line)
+
+            items: list[StylizedItem] = []
+            for item_str in split_line:
+                items.append(StylizedItem(*re.findall(findall_regexp, item_str)[0]))
+
+            items_per_line.append(items)
+            text_lines.append(''.join(item.content for item in items))
+
+        text_lines, _exited_early = self._crop_lines_horizontally(text_lines)
+
+        for i, cropped_text_line in enumerate(text_lines):
+            cropped_line = ''
+            items = items_per_line[i]
+
+            for item in items:
+                cropped_content = ''
+                for char in item.content:
+                    if _exited_early:  # e.g. returned ['…\n']
+                        stripped_line, newline = strip_and_split_newline(cropped_text_line)
+                        # Extracts the content of the cropped text line to reuse styling
+                        cropped_content += stripped_line
+                        # Retains newline to allow matching with remaining chars/items
+                        cropped_text_line = newline
+                    if cropped_text_line.startswith(char):
+                        cropped_content += char
+                        cropped_text_line = cropped_text_line[1:]
+
+                cropped_line += item.span_start + cropped_content + item.span_end
+            cropped_lines.append(cropped_line)
+
+        return ''.join(cropped_lines)
+
+    def _crop_text(self, output: str) -> str:
+        if self._output_mode is OutputMode.PLAIN:
+            lines = self._split_to_lines_and_crop_virtually(output)
+            lines, _exited_early = self._crop_lines_horizontally(lines)
+            return ''.join(lines)
+        else:
+            return self._crop_stylized_text(output)
+
+    def _split_to_lines_and_crop_virtually(self, output):
+        lines = output.splitlines(keepends=True)
+        uncropped_height = len(lines)
+        return self._crop_lines_vertically(lines, uncropped_height)
+
+    def _crop_lines_horizontally(self, lines: list[str]) -> tuple[list[str], bool]:
+        uncropped_width = max_newline_stripped_width(lines)
+        exited_early = False
+
+        cropped_lines = []
+        for line in lines:
+            cropped_line, more = self._crop_line_horizontally(line, uncropped_width)
+            cropped_lines.append(cropped_line)
+            if not more:
+                exited_early = True
+                break
+
+        return cropped_lines, exited_early
+
     @abstractmethod
-    def _crop(self, output: str) -> str:
+    def _crop_lines_vertically(
+        self,
+        lines: list[str],
+        uncropped_height: int,
+    ) -> list[str]:
+        ...
+
+    @abstractmethod
+    def _crop_line_horizontally(
+        self,
+        line: str,
+        uncropped_width: int,
+    ) -> tuple[str, bool]:
         ...
 
     @cached_property
     def terminal(self) -> str:
-        return self._crop(self._terminal)
+        return self._crop_text(self._terminal)
 
     @cached_property
     def html_tag(self) -> str:
-        return self._crop_html(self._html_tag)
+        return self._crop_top_level_html(self._html_tag)
 
     @cached_property
     def html_page(self) -> str:
-        return self._crop_html(self._html_page)
+        return self._crop_top_level_html(self._html_page)
 
 
 class VerticalTextCroppingOutputVariant(
         CroppingOutputVariant[PanelT, ContentT, FrameT],
         Generic[PanelT, ContentT, FrameT],
 ):
-    def _crop(self, output: str) -> str:
-        if self._frame.dims.height is None:
-            return output
-
-        lines = output.splitlines(keepends=True)
-        if len(lines) <= self._frame.dims.height:
-            return output
+    def _crop_lines_vertically(
+        self,
+        lines: list[str],
+        uncropped_height: int,
+    ) -> list[str]:
+        if not has_height(self._frame.dims) or uncropped_height <= self._frame.dims.height:
+            return lines
 
         match self._config.vertical_overflow_mode:
             case VerticalOverflowMode.CROP_BOTTOM:
-                return ''.join(lines[:self._frame.dims.height])
+                return lines[:self._frame.dims.height]
             case VerticalOverflowMode.CROP_TOP:
-                return ''.join(lines[-self._frame.dims.height:])
+                return lines[-self._frame.dims.height:]
+
+    def _crop_line_horizontally(
+        self,
+        line: str,
+        uncropped_width: int,
+    ) -> tuple[str, bool]:
+        return line, True
 
 
 class TableCroppingOutputVariant(
         CroppingOutputVariant[PanelT, ContentT, FrameT],
         Generic[PanelT, ContentT, FrameT],
 ):
-    def _crop(self, output: str) -> str:
-        lines = output.splitlines(keepends=True)
-        uncropped_width = max((len(line) for line in lines), default=0)
-        uncropped_height = len(lines)
+    def _crop_lines_vertically(
+        self,
+        lines: list[str],
+        uncropped_height: int,
+    ) -> list[str]:
+        if not has_height(self._frame.dims) or uncropped_height <= self._frame.dims.height:
+            return lines
 
-        if (uncropped_width > 1 and uncropped_height) and \
-                (getattr(self._frame.dims, 'width') == 1
-                 or getattr(self._frame.dims, 'height') == 1):
-            return '…'
+        if self._frame.dims.height == 0:
+            return []
 
-        if self._frame.dims.height is None:
-            return output
+        return lines[:self._frame.dims.height - 1] + [lines[-1]]
 
-        if len(lines) <= self._frame.dims.height:
-            return output
+    def _crop_line_horizontally(
+        self,
+        line: str,
+        uncropped_width: int,
+    ) -> tuple[str, bool]:
 
-        cropped_lines = lines[:self._frame.dims.height - 1] + [lines[-1]]
-        return ''.join(cropped_lines)
+        # Checks if width or height is 1, and if so returns '…' or '' (depending on uncropped_width)
+        # Code is placed only here and not in _crop_lines_vertically to simplify logic for cropping
+        # of HTML text
+        if (has_width(self._frame.dims) and self._frame.dims.width == 1
+                or has_height(self._frame.dims) and self._frame.dims.height == 1):
+            newline = extract_newline(line)
+            if uncropped_width >= 1:
+                return '…' + newline, False
+            else:
+                return '' + newline, False
+
+        if not has_width(self._frame.dims) or uncropped_width <= self._frame.dims.width:
+            return line, True
+
+        line_stripped, newline = strip_and_split_newline(line)
+        line_stripped_and_cropped = line_stripped[:self._frame.dims.width - 1] + line_stripped[-1:]
+        return line_stripped_and_cropped + newline, True

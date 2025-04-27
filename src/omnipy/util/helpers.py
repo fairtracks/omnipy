@@ -395,3 +395,21 @@ def running_in_jupyter() -> bool:
         return ipython.__class__.__name__ == 'ZMQInteractiveShell'
     except NameError:
         return False
+
+
+def strip_newline(line: str) -> str:
+    return line.rstrip('\n').rstrip('\r')
+
+
+def strip_and_split_newline(line: str) -> tuple[str, str]:
+    line_stripped = strip_newline(line)
+    newline = line[len(line_stripped):]
+    return line_stripped, newline
+
+
+def extract_newline(line: str) -> str:
+    return strip_and_split_newline(line)[1]
+
+
+def max_newline_stripped_width(lines: list[str]) -> int:
+    return max((len(strip_newline(line)) for line in lines), default=0)
