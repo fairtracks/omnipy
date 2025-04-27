@@ -46,7 +46,7 @@ def get_styles_from_base16_colors(
         pygments.token.Operator.Word: 'italic ' + base16_colors.base0C,
         pygments.token.Keyword: base16_colors.base0E,
         pygments.token.Keyword.Type: base16_colors.base0A,
-        pygments.token.Keyword.Constant: base16_colors.base09,
+        pygments.token.Keyword.Constant: 'bold ' + base16_colors.base0A,
         pygments.token.Keyword.Namespace: 'italic',
         pygments.token.Keyword.Pseudo: base16_colors.base0C,
         pygments.token.Name: base16_colors.base05,

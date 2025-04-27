@@ -4,6 +4,7 @@
 		"type": "donut",
 		"name": "Cake",
 		"ppu": 0.55,
+		"good": true,
 		"batters":
 			{
 				"batter":
@@ -30,6 +31,7 @@
 		"type": "donut",
 		"name": "Raised",
 		"ppu": 0.55,
+		"good": false,
 		"batters":
 			{
 				"batter":
@@ -51,6 +53,7 @@
 		"type": "donut",
 		"name": "Old Fashioned",
 		"ppu": 0.55,
+		"good": null,
 		"batters":
 			{
 				"batter":
