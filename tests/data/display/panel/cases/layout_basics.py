@@ -16,12 +16,16 @@ from ..helpers import FrameTestCase, FrameVariant, PanelFrameVariantTestCase
     (
         FrameTestCase(frame=None),
         FrameTestCase(frame=Frame(Dimensions(width=5, height=5))),
+        # Normally, height=1 outputs a single ellipsis character,
+        # signalling more content. However, an empty layout has no
+        # content, so the output is always empty.
         FrameTestCase(frame=Frame(Dimensions(width=0, height=1))),
         FrameTestCase(
             frame=Frame(Dimensions(width=0, height=0)),
             exp_plain_output='',
             exp_stylized_dims=Dimensions(width=0, height=0),
             exp_plain_output_only_width='\n',
+            exp_stylized_dims_only_width=Dimensions(width=0, height=1),
         ),
     ),
     ids=(
@@ -66,12 +70,16 @@ def case_layout_no_panels(
             exp_plain_output_only_width=('╭╮\n'
                                          '││\n'
                                          '╰╯\n'),
+            exp_resized_dims_only_width=Dimensions(width=4, height=3),
+            exp_stylized_dims_only_width=Dimensions(width=2, height=3),
             exp_plain_output_only_height=('╭──╮\n'
                                           '╰──╯\n'),
+            exp_resized_dims_only_height=Dimensions(width=4, height=2),
+            exp_stylized_dims_only_height=Dimensions(width=4, height=2),
         ),
         FrameTestCase(
             frame=Frame(Dimensions(width=1, height=3)),
-            exp_plain_output='…',
+            exp_plain_output='…\n',
             # Cropping to a frame with width=1 crops to a single ellipsis
             # character, hence height is also cropped to 1, independent of
             # the height of the frame
@@ -93,7 +101,7 @@ def case_layout_no_panels(
         ),
         FrameTestCase(
             frame=Frame(Dimensions(width=4, height=1)),
-            exp_plain_output='…',
+            exp_plain_output='…\n',
             # Cropping to a frame with height=1 crops to a single ellipsis
             # character, hence width is also cropped to 1, independent of
             # the width of the frame
@@ -106,7 +114,7 @@ def case_layout_no_panels(
                                          '╰──╯\n'),
             exp_stylized_dims_only_width=Dimensions(width=4, height=3),
             # For the 'only height' case, the width needs to be explicitly
-            # set to 1, overriding the "default" non-cropped height of 4 set
+            # set to 1, overriding the "default" non-cropped height of 3 set
             # globally for the test by the `exp_dims_no_frame` parameter
             # below.
             exp_stylized_dims_only_height=Dimensions(width=1, height=1),

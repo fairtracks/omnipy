@@ -170,6 +170,7 @@ class PanelFrameVariantTestCase(Generic[ContentT, FrameT]):
             self.frame_case.exp_resized_dims_only_width,
             self.exp_resized_dims_only_width,
             self.exp_dims_all_stages_only_width,
+            self.frame_case.exp_resized_dims,
             Dimensions(
                 width=self.exp_resized_dims.width,
                 height=self.exp_dims_all_stages_no_frame.height,
@@ -179,6 +180,7 @@ class PanelFrameVariantTestCase(Generic[ContentT, FrameT]):
             self.frame_case.exp_stylized_dims_only_width,
             self.exp_stylized_dims_only_width,
             self.exp_dims_all_stages_only_width,
+            self.frame_case.exp_stylized_dims,
             Dimensions(
                 width=self.exp_stylized_dims.width,
                 height=self.exp_dims_all_stages_no_frame.height,
@@ -201,6 +203,7 @@ class PanelFrameVariantTestCase(Generic[ContentT, FrameT]):
             self.frame_case.exp_resized_dims_only_height,
             self.exp_resized_dims_only_height,
             self.exp_dims_all_stages_only_height,
+            self.frame_case.exp_resized_dims,
             Dimensions(
                 width=self.exp_dims_all_stages_no_frame.width,
                 height=self.exp_resized_dims.height,
@@ -210,6 +213,7 @@ class PanelFrameVariantTestCase(Generic[ContentT, FrameT]):
             self.frame_case.exp_stylized_dims_only_height,
             self.exp_stylized_dims_only_height,
             self.exp_dims_all_stages_only_height,
+            self.frame_case.exp_stylized_dims,
             Dimensions(
                 width=self.exp_dims_all_stages_no_frame.width,
                 height=self.exp_stylized_dims.height,

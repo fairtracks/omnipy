@@ -121,11 +121,14 @@ def test_syntax_stylized_text_panel_no_assignments(
     has_tag=('dims_and_edge_cases', 'syntax_text'),
 )
 def test_syntax_stylized_text_panel_basic_dims_and_edge_cases(
-    case: PanelFrameVariantTestCase[str],
+    case: PanelFrameVariantTestCase[str] | PanelOutputTestCase[str],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
     skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
 ) -> None:
-    frame_case = apply_frame_variant_to_test_case(case, stylized_stage=True)
+    if isinstance(case, PanelFrameVariantTestCase):
+        frame_case = apply_frame_variant_to_test_case(case, stylized_stage=True)
+    else:
+        frame_case = case
 
     text_panel = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel(case.content, frame=frame_case.frame, config=case.config))
