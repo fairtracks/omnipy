@@ -31,6 +31,7 @@ GeneralDimensions = Dimensions[pyd.NonNegativeInt | None, pyd.NonNegativeInt | N
 DimensionsWithWidth = Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt | None]
 DimensionsWithHeight = Dimensions[pyd.NonNegativeInt | None, pyd.NonNegativeInt]
 DimensionsWithWidthAndHeight = Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]
+DimensionsWithWidthOrHeight = DimensionsWithWidth | DimensionsWithHeight
 AnyDimensions = (
     GeneralDimensions | DimensionsWithWidth | DimensionsWithHeight | DimensionsWithWidthAndHeight)
 
@@ -45,6 +46,10 @@ def has_height(dims: AnyDimensions) -> TypeIs[DimensionsWithHeight | DimensionsW
 
 def has_width_and_height(dims: AnyDimensions) -> TypeIs[DimensionsWithWidthAndHeight]:
     return has_width(dims) and has_height(dims)
+
+
+def has_width_or_height(dims: AnyDimensions) -> TypeIs[DimensionsWithWidthOrHeight]:
+    return has_width(dims) or has_height(dims)
 
 
 class Proportionally(str, Enum):
