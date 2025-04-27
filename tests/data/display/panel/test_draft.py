@@ -5,7 +5,11 @@ import pytest
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.frame import empty_frame, Frame, FrameWithWidthAndHeight, UndefinedFrame
+from omnipy.data._display.frame import (AnyFrame,
+                                        empty_frame,
+                                        Frame,
+                                        FrameWithWidthAndHeight,
+                                        UndefinedFrame)
 from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
@@ -166,7 +170,7 @@ def test_draft_panel_render_next_stage_with_repr(
 
 def test_draft_panel_render_next_stage_with_layout(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    draft_panel = DraftPanel(Layout())
+    draft_panel: DraftPanel[Layout, AnyFrame] = DraftPanel(Layout())
     assert_next_stage_panel(
         this_panel=draft_panel,
         next_stage=draft_panel.render_next_stage(),
@@ -174,7 +178,7 @@ def test_draft_panel_render_next_stage_with_layout(
         exp_content=Layout(),
     )
 
-    draft_panel_complex = DraftPanel(
+    draft_panel_complex: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
         Layout(tuple=MockPanel('(1, 2, 3)'), text=MockPanel('Here is some text')),
         frame=Frame(Dimensions(21, 5)),
         constraints=Constraints(container_width_per_line_limit=10),

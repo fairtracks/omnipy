@@ -82,19 +82,19 @@ class DimensionsFit:
             return Proportionally.THINNER
 
     @property
-    def width(self):
+    def width(self) -> bool | None:
         return self._width
 
     @property
-    def height(self):
+    def height(self) -> bool | None:
         return self._height
 
     @property
-    def proportionality(self):
+    def proportionality(self) -> Proportionally | None:
         return self._proportionality
 
     @property
-    def both(self):
+    def both(self) -> bool | None:
         if self.width is None or self.height is None:
             return None
         else:
