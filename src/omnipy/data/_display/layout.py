@@ -79,7 +79,7 @@ class Layout(UserDict[str, PanelT], Generic[PanelT]):
 
             remaining_panels = newly_rendered_panels
 
-        return finished_panels
+        return {key: finished_panels[key] for key in self.data.keys()}
 
     def render_until_dimensions_aware(self) -> dict[str, DimensionsAwarePanel]:
         """Render all panels in the layout until they have calculated their dimensions."""
