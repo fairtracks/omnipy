@@ -68,29 +68,56 @@ def test_frame(
 def test_frame_fixed_dims(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     no_dims_frame: Frame = empty_frame()
-    assert no_dims_frame.fixed_dims is False
+    assert no_dims_frame.fixed_width is False
+    assert no_dims_frame.fixed_height is False
 
     width_only_frame = Frame(Dimensions(10, None))
-    assert width_only_frame.fixed_dims is True
+    assert width_only_frame.fixed_width is True
+    assert width_only_frame.fixed_height is False
 
-    width_only_not_fixed_frame = Frame(Dimensions(10, None), fixed_dims=False)
-    assert width_only_not_fixed_frame.fixed_dims is False
+    width_only_frame_not_fixed = Frame(Dimensions(10, None), fixed_width=False)
+    assert width_only_frame_not_fixed.fixed_width is False
+    assert width_only_frame_not_fixed.fixed_height is False
 
     height_only_frame = Frame(Dimensions(None, 20))
-    assert height_only_frame.fixed_dims is True
+    assert height_only_frame.fixed_width is False
+    assert height_only_frame.fixed_height is True
 
-    height_only_not_fixed_frame = Frame(Dimensions(None, 20), fixed_dims=False)
-    assert height_only_not_fixed_frame.fixed_dims is False
+    height_only_frame_not_fixed = Frame(Dimensions(None, 20), fixed_height=False)
+    assert height_only_frame_not_fixed.fixed_width is False
+    assert height_only_frame_not_fixed.fixed_height is False
 
     both_dims_frame = Frame(Dimensions(10, 20))
-    assert both_dims_frame.fixed_dims is True
+    assert both_dims_frame.fixed_width is True
+    assert both_dims_frame.fixed_height is True
 
-    both_dims_not_fixed_frame = Frame(Dimensions(10, 20), fixed_dims=False)
-    assert both_dims_not_fixed_frame.fixed_dims is False
+    both_dims_frame_width_not_fixed = Frame(Dimensions(10, 20), fixed_width=False)
+    assert both_dims_frame_width_not_fixed.fixed_width is False
+    assert both_dims_frame_width_not_fixed.fixed_height is True
+
+    both_dims_frame_width_not_fixed = Frame(Dimensions(10, 20), fixed_height=False)
+    assert both_dims_frame_width_not_fixed.fixed_width is True
+    assert both_dims_frame_width_not_fixed.fixed_height is False
+
+    both_dims_frame_width_not_fixed = Frame(
+        Dimensions(10, 20), fixed_width=False, fixed_height=False)
+    assert both_dims_frame_width_not_fixed.fixed_width is False
+    assert both_dims_frame_width_not_fixed.fixed_height is False
+
+
+def test_fail_frame_fixed_dims_if_none(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    with pytest.raises(ValidationError):
+        Frame(Dimensions(None, None), fixed_width=True)
 
     with pytest.raises(ValidationError):
-        # fixed_dims should not be True if both width and height are None
-        Frame(Dimensions(None, None), fixed_dims=True)
+        Frame(Dimensions(None, None), fixed_height=True)
+
+    with pytest.raises(ValidationError):
+        Frame(Dimensions(10, None), fixed_height=True)
+
+    with pytest.raises(ValidationError):
+        Frame(Dimensions(None, 20), fixed_width=True)
 
 
 def test_frame_types(
@@ -153,9 +180,15 @@ def test_frame_hashable(
     assert hash(frame_1) != hash(frame_3) != hash(frame_4) != hash(frame_5)
 
     frame_6 = Frame(Dimensions(10, 20))
-    frame_7 = Frame(Dimensions(10, 20), fixed_dims=False)
 
-    assert hash(frame_5) == hash(frame_6) != hash(frame_7)
+    assert hash(frame_5) == hash(frame_6)
+
+    frame_7 = Frame(Dimensions(10, 20), fixed_width=True, fixed_height=True)
+    frame_8 = Frame(Dimensions(10, 20), fixed_width=True, fixed_height=False)
+    frame_9 = Frame(Dimensions(10, 20), fixed_width=False, fixed_height=True)
+    frame_10 = Frame(Dimensions(10, 20), fixed_width=False, fixed_height=False)
+
+    assert hash(frame_6) == hash(frame_7) != hash(frame_8) != hash(frame_9) != hash(frame_10)
 
 
 # noinspection PyDataclass
@@ -167,7 +200,10 @@ def test_fail_frame_no_assignments(
         frame.dims = Dimensions(10, 20)  # type: ignore[misc, arg-type]
 
     with pytest.raises(AttributeError):
-        frame.fixed_dims = False  # type: ignore[misc, arg-type]
+        frame.fixed_width = False  # type: ignore[misc]
+
+    with pytest.raises(AttributeError):
+        frame.fixed_height = False  # type: ignore[misc]
 
 
 def test_fail_frame_if_extra_param(

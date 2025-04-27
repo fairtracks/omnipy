@@ -51,7 +51,11 @@ class Panel(Generic[FrameT]):
 
     @pyd.validator('frame')
     def _copy_frame(cls, frame: Frame) -> Frame:
-        return Frame(dims=frame.dims)
+        return Frame(
+            dims=frame.dims,
+            fixed_width=frame.fixed_width,
+            fixed_height=frame.fixed_height,
+        )
 
     @abstractmethod
     def render_next_stage(self) -> 'Panel[FrameT]':
