@@ -153,9 +153,7 @@ def test_draft_panel_render_next_stage(
         this_panel=resized_layout_panel_complex,
         next_stage=resized_layout_panel_complex.render_next_stage(),
         next_stage_panel_cls=StylizedLayoutPanel,
-        # Frame width is set to just enough to make the text wrap to
-        # individual lines per word.
         exp_content=Layout(
-            first=MockPanelStage3('Some\ntext', frame=Frame(Dimensions(8, None))),
-            second=MockPanelStage3('Some\nother\ntext', frame=Frame(Dimensions(9, None)))),
+            first=MockPanelStage3('Some\ntext', frame=Frame(Dimensions(4, None))),
+            second=MockPanelStage3('Some\nother\ntext', frame=Frame(Dimensions(5, None)))),
     )

@@ -176,7 +176,7 @@ def test_draft_panel_render_next_stage_with_layout(
 
     draft_panel_complex = DraftPanel(
         Layout(tuple=MockPanel('(1, 2, 3)'), text=MockPanel('Here is some text')),
-        frame=Frame(Dimensions(20, 5)),
+        frame=Frame(Dimensions(21, 5)),
         constraints=Constraints(container_width_per_line_limit=10),
         config=OutputConfig(indent_tab_size=1),
     )
@@ -187,7 +187,7 @@ def test_draft_panel_render_next_stage_with_layout(
         exp_content=Layout(
             tuple=MockPanelStage2(
                 '(1, 2,\n3)',
-                frame=Frame(Dimensions(7, 3)),
+                frame=Frame(Dimensions(6, 2)),
             ),
             text=MockPanelStage2(
                 'Here is\nsome\ntext',

@@ -2,7 +2,10 @@ from typing import Annotated
 
 import pytest_cases as pc
 
-from omnipy.data._display.config import HorizontalOverflowMode, OutputConfig, VerticalOverflowMode
+from omnipy.data._display.config import (ConsoleColorSystem,
+                                         HorizontalOverflowMode,
+                                         OutputConfig,
+                                         VerticalOverflowMode)
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
 from omnipy.data._display.layout import Layout
@@ -218,50 +221,136 @@ def case_layout_single_panel(
     'frame_case',
     (
         FrameTestCase(frame=None),
-        FrameTestCase(frame=Frame(Dimensions(width=21, height=5))),
-        FrameTestCase(frame=Frame(Dimensions(width=20, height=4))),
-        # Reduce panels with smallest height first. Do not create wider
-        # table than needed
+        FrameTestCase(frame=Frame(Dimensions(width=31, height=4))),
+        FrameTestCase(frame=Frame(Dimensions(width=30, height=3))),
+        # Width-resizable panels:
+        # - First
+        # - Second
+        #
+        # Priority:
+        # 1. All width-resizable panels have equal height
+        # 2. All width-resizable panels have no or equal frame widths
+        # 3. First panel is wider
+        #
+        # Resize widest panel first if every thing else is the same.
+        # Do not create wider table than needed
         FrameTestCase(
-            frame=Frame(Dimensions(width=18, height=5)),
-            exp_plain_output=('╭──────┬────────╮\n'
-                              '│ Some │ (1, 2, │\n'
-                              '│ text │ 3)     │\n'
-                              '╰──────┴────────╯\n'),
-            exp_dims_all_stages=Dimensions(width=17, height=4),
+            frame=Frame(Dimensions(width=29, height=4)),
+            exp_plain_output=('╭───────────┬───────────╮\n'
+                              '│ Some text │ (1, 2, 3) │\n'
+                              '│ here      │           │\n'
+                              '╰───────────┴───────────╯\n'),
+            exp_dims_all_stages=Dimensions(width=25, height=4),
         ),
         # No change, but frame is now exact size again
         FrameTestCase(
-            frame=Frame(Dimensions(width=17, height=5)),
+            frame=Frame(Dimensions(width=25, height=4)),
+            exp_plain_output=('╭───────────┬───────────╮\n'
+                              '│ Some text │ (1, 2, 3) │\n'
+                              '│ here      │           │\n'
+                              '╰───────────┴───────────╯\n'),
+            exp_dims_all_stages=Dimensions(width=25, height=4),
+        ),
+        # Width-resizable panels:
+        # - First
+        # - Second
+        #
+        # Priority:
+        # 1. Second panel has lower height
+        FrameTestCase(
+            frame=Frame(Dimensions(width=24, height=4)),
+            exp_plain_output=('╭───────────┬────────╮\n'
+                              '│ Some text │ (1, 2, │\n'
+                              '│ here      │ 3)     │\n'
+                              '╰───────────┴────────╯\n'),
+            exp_dims_all_stages=Dimensions(width=22, height=4),
+        ),
+        # Width-resizable panels:
+        # - First
+        # - Second
+        #
+        # Priority:
+        # 1. All width-resizable panels have equal height
+        # 2. First panel has wider frame
+        #
+        # First panel height is not extended due to fixed height frame.
+        # With the first frame reduced, there is now room in the frame for
+        # the second panel to return to its original size.
+        FrameTestCase(
+            frame=Frame(Dimensions(width=21, height=4)),
+            exp_plain_output=('╭──────┬───────────╮\n'
+                              '│ Some │ (1, 2, 3) │\n'
+                              '│ text │           │\n'
+                              '╰──────┴───────────╯\n'),
+            exp_dims_all_stages=Dimensions(width=20, height=4),
+        ),
+        # First panel is longer width-resizable, since the text in the first
+        # panel cannot be soft-wrapped more than what has already been done.
+        #
+        # Width-resizable panels:
+        # - Second
+        #
+        # Priority:
+        # 1. Second panel has lower height per definition (being the only
+        #    width-resizable panel left)
+        FrameTestCase(
+            frame=Frame(Dimensions(width=19, height=4)),
             exp_plain_output=('╭──────┬────────╮\n'
                               '│ Some │ (1, 2, │\n'
                               '│ text │ 3)     │\n'
                               '╰──────┴────────╯\n'),
             exp_dims_all_stages=Dimensions(width=17, height=4),
         ),
-        # Still no loss of characters in second panel
+        # Width-resizable panels:
+        # - Second
+        #
+        # Priority:
+        # 1. Second panel has lower height per definition (being the only
+        #    width-resizable panel left)
+        #
+        # Slight rearrangement of the text in the second panel saves one
+        # character
         FrameTestCase(
-            frame=Frame(Dimensions(width=14, height=5)),
+            frame=Frame(Dimensions(width=16, height=4)),
+            exp_plain_output=('╭──────┬───────╮\n'
+                              '│ Some │ (1,   │\n'
+                              '│ text │ 2, 3) │\n'
+                              '╰──────┴───────╯\n'),
+            exp_dims_all_stages=Dimensions(width=16, height=4),
+        ),
+        # Width-resizable panels:
+        # - Second
+        #
+        # Priority:
+        # 1. Second panel has lower height per definition (being the only
+        #    width-resizable panel left)
+        FrameTestCase(
+            frame=Frame(Dimensions(width=15, height=5)),
             exp_plain_output=('╭──────┬─────╮\n'
                               '│ Some │ (1, │\n'
                               '│ text │ 2,  │\n'
                               '│      │ 3)  │\n'
                               '╰──────┴─────╯\n'),
             exp_dims_all_stages=Dimensions(width=14, height=5),
-            # Cropping to a frame with width=14 and height=None expands the
-            # height of the second panel to 5, one character more than the
+            # Cropping to a frame with width=15 and height=None expands the
+            # height of the second panel to 5, two lines more than the
             # height when no frame cropping is applied, as described by the
-            # "default" `exp_dims_no_frame=Dimensions(width=20, height=4)`
+            # "default" `exp_dims_no_frame=Dimensions(width=30, height=3)`
             # parameter set globally for the test (see below). Hence, the
-            # heightmust be specifically set to 5 here.
-            exp_dims_all_stages_only_width=Dimensions(width=14, height=5),
+            # height must be specifically set to 5 here.
+            # exp_dims_all_stages_only_width=Dimensions(width=14, height=5),
             # However, if only the height of the frame is set, then no
             # cropping is applied. Hence, we need to reiterate the "default"
             # `exp_dims_no_frame` dimensions for the 'only height' case
-            exp_dims_all_stages_only_height=Dimensions(width=20, height=4),
+            # exp_dims_all_stages_only_height=Dimensions(width=30, height=3),
         ),
-        # Will lose characters in both panels - choose the one with largest
-        # number of characters )excluding whitespace=
+        # Width-resizable panels:
+        #   (none left)
+        #
+        # Priority:
+        # 1. All width-resizable panels have equal height
+        # 2. All width-resizable panels have no or equal frame widths
+        # 3. First panel is wider
         FrameTestCase(
             frame=Frame(Dimensions(width=13, height=5)),
             exp_plain_output=('╭─────┬─────╮\n'
@@ -274,28 +363,232 @@ def case_layout_single_panel(
             # specifically set to 5 here for the 'only width' case, while
             # the "default" `exp_dims_no_frame` dimensions are reiterated
             # for the 'only height' case
-            exp_dims_all_stages_only_width=Dimensions(width=13, height=5),
-            exp_dims_all_stages_only_height=Dimensions(width=20, height=4),
+            # exp_dims_all_stages_only_width=Dimensions(width=13, height=5),
+            # exp_dims_all_stages_only_height=Dimensions(width=30, height=3),
+        ),
+        # Width-resizable panels:
+        #   (none left)
+        #
+        # Priority:
+        # 1. All width-resizable panels have equal height
+        # 2. All width-resizable panels have no or equal frame widths
+        # 3. Both panels have equal width
+        # 4. With everything else being equal, reduce last panel first
+        #
+        # TODO: Consider alternative logic for panel prioritization
+        # - Reduce second panel due to loss of fewer characters
+        FrameTestCase(
+            frame=Frame(Dimensions(width=12, height=5)),
+            exp_plain_output=('╭─────┬────╮\n'
+                              '│ Som │ (1 │\n'
+                              '│ tex │ 2, │\n'
+                              '│     │ 3) │\n'
+                              '╰─────┴────╯\n'),
+            exp_dims_all_stages=Dimensions(width=12, height=5),
+            # As explained for the width=14 case above, the height must be
+            # specifically set to 5 here for the 'only width' case, while
+            # the "default" `exp_dims_no_frame` dimensions are reiterated
+            # for the 'only height' case
+            # exp_dims_all_stages_only_width=Dimensions(width=12, height=5),
+            # exp_dims_all_stages_only_height=Dimensions(width=30, height=3),
+        ),
+        # Width-resizable panels:
+        #   (none left)
+        #
+        # Priority:
+        # 1. All width-resizable panels have equal height
+        # 2. All width-resizable panels have no or equal frame widths
+        # 3. First panel is wider
+        FrameTestCase(
+            frame=Frame(Dimensions(width=11, height=5)),
+            exp_plain_output=('╭────┬────╮\n'
+                              '│ So │ (1 │\n'
+                              '│ te │ 2, │\n'
+                              '│    │ 3) │\n'
+                              '╰────┴────╯\n'),
+            exp_dims_all_stages=Dimensions(width=11, height=5),
+            # As explained for the width=14 case above, the height must be
+            # specifically set to 5 here for the 'only width' case, while
+            # the "default" `exp_dims_no_frame` dimensions are reiterated
+            # for the 'only height' case
+            # exp_dims_all_stages_only_width=Dimensions(width=11, height=5),
+            # exp_dims_all_stages_only_height=Dimensions(width=30, height=3),
+        ),
+        # Width-resizable panels:
+        #   (none left)
+        #
+        # Priority:
+        # 1. All width-resizable panels have equal height
+        # 2. All width-resizable panels have no or equal frame widths
+        # 3. Both panels have equal width
+        # 4. With everything else being equal, reduce last panel first
+        #
+        # Alternative logic for panel prioritization?
+        # - Reduce first panel due to loss of fewer characters
+        FrameTestCase(
+            frame=Frame(Dimensions(width=10, height=5)),
+            exp_plain_output=('╭────┬───╮\n'
+                              '│ So │ ( │\n'
+                              '│ te │ 2 │\n'
+                              '│    │ 3 │\n'
+                              '╰────┴───╯\n'),
+            exp_dims_all_stages=Dimensions(width=10, height=5),
+            # As explained for the width=14 case above, the height must be
+            # specifically set to 5 here for the 'only width' case, while
+            # the "default" `exp_dims_no_frame` dimensions are reiterated
+            # for the 'only height' case
+            # exp_dims_all_stages_only_width=Dimensions(width=10, height=5),
+            # exp_dims_all_stages_only_height=Dimensions(width=30, height=3),
+        ),
+        # Width-resizable panels:
+        #   (none left)
+        #
+        # Priority:
+        # 1. All width-resizable panels have equal height
+        # 2. All width-resizable panels have no or equal frame widths
+        # 3. First panel is wider
+        FrameTestCase(
+            frame=Frame(Dimensions(width=9, height=5)),
+            exp_plain_output=('╭───┬───╮\n'
+                              '│ S │ ( │\n'
+                              '│ t │ 2 │\n'
+                              '│   │ 3 │\n'
+                              '╰───┴───╯\n'),
+            exp_dims_all_stages=Dimensions(width=9, height=5),
+            # As explained for the width=14 case above, the height must be
+            # specifically set to 5 here for the 'only width' case, while
+            # the "default" `exp_dims_no_frame` dimensions are reiterated
+            # for the 'only height' case
+            # exp_dims_all_stages_only_width=Dimensions(width=9, height=5),
+            # exp_dims_all_stages_only_height=Dimensions(width=30, height=3),
+        ),
+        # Width-resizable panels:
+        #   (none left)
+        #
+        # Priority:
+        # 1. All width-resizable panels have equal height
+        # 2. All width-resizable panels have no or equal frame widths
+        # 3. Both panels have equal width
+        # 4. With everything else being equal, reduce last panel first
+        #
+        # Alternative logic for panel prioritization?
+        # - Reduce first panel due to loss of fewer characters
+        FrameTestCase(
+            frame=Frame(Dimensions(width=8, height=4)),
+            exp_plain_output=('╭───┬──╮\n'
+                              '│ S │  │\n'
+                              '│ t │  │\n'
+                              '╰───┴──╯\n'),
+            # Cropping width to 8 no longer expands the height of the second
+            # panel to 5, as the second panel is now empty. Hence, we do not
+            # need to overload the dimensions for the 'only width' and
+            # 'only height' cases
+            exp_dims_all_stages=Dimensions(width=8, height=4),
+            exp_resized_dims_only_width=Dimensions(width=8, height=5),
+        ),
+        # Only one panel left with content
+        FrameTestCase(
+            frame=Frame(Dimensions(width=7, height=3)),
+            exp_plain_output=('╭──┬──╮\n'
+                              '│  │  │\n'
+                              '╰──┴──╯\n'),
+            exp_dims_all_stages=Dimensions(width=7, height=3),
+            exp_resized_dims_only_width=Dimensions(width=7, height=5),
+        ),
+        # All things being equal, reduce the rightmost panel
+        FrameTestCase(
+            frame=Frame(Dimensions(width=6, height=3)),
+            exp_plain_output=('╭──┬─╮\n'
+                              '│  │ │\n'
+                              '╰──┴─╯\n'),
+            exp_resized_dims=Dimensions(width=7, height=3),
+            exp_resized_dims_only_width=Dimensions(width=7, height=5),
+            exp_stylized_dims=Dimensions(width=6, height=3),
+        ),
+        # Reduce the widest panel
+        FrameTestCase(
+            frame=Frame(Dimensions(width=5, height=3)),
+            exp_plain_output=('╭─┬─╮\n'
+                              '│ │ │\n'
+                              '╰─┴─╯\n'),
+            exp_resized_dims=Dimensions(width=7, height=3),
+            exp_resized_dims_only_width=Dimensions(width=7, height=5),
+            exp_stylized_dims=Dimensions(width=5, height=3),
+        ),
+        # Reduce the rightmost panel
+        FrameTestCase(
+            frame=Frame(Dimensions(width=4, height=3)),
+            exp_plain_output=('╭─┬╮\n'
+                              '│ ││\n'
+                              '╰─┴╯\n'),
+            exp_resized_dims=Dimensions(width=7, height=3),
+            exp_resized_dims_only_width=Dimensions(width=7, height=5),
+            exp_stylized_dims=Dimensions(width=4, height=3),
+        ),
+        # Reduce the widest panel
+        FrameTestCase(
+            frame=Frame(Dimensions(width=3, height=3)),
+            exp_plain_output=('╭┬╮\n'
+                              '│││\n'
+                              '╰┴╯\n'),
+            exp_resized_dims=Dimensions(width=7, height=3),
+            exp_resized_dims_only_width=Dimensions(width=7, height=5),
+            exp_stylized_dims=Dimensions(width=3, height=3),
+        ),
+        # Remove the rightmost panel border
+        FrameTestCase(
+            frame=Frame(Dimensions(width=2, height=3)),
+            exp_plain_output=('╭┬\n'
+                              '││\n'
+                              '╰┴\n'),
+            exp_resized_dims=Dimensions(width=7, height=3),
+            exp_resized_dims_only_width=Dimensions(width=7, height=5),
+            exp_stylized_dims=Dimensions(width=2, height=3),
+        ),
+        # Width 1 => ellipsis
+        FrameTestCase(
+            frame=Frame(Dimensions(width=1, height=3)),
+            exp_plain_output='…\n',
+            exp_resized_dims=Dimensions(width=7, height=3),
+            exp_resized_dims_only_width=Dimensions(width=7, height=5),
+            exp_stylized_dims=Dimensions(width=1, height=1),
         ),
     ),
     ids=(
         'no_frame',
         'larger_frame',
         'exact_frame',
-        'width_18_frame',
-        'width_17_frame',
-        'width_14_frame',
+        'width_29_frame',
+        'width_25_frame',
+        'width_24_frame',
+        'width_21_frame',
+        'width_19_frame',
+        'width_16_frame',
+        'width_15_frame',
         'width_13_frame',
+        'width_12_frame',
+        'width_11_frame',
+        'width_10_frame',
+        'width_9_frame',
+        'width_8_frame',
+        'width_7_frame',
+        'width_6_frame',
+        'width_5_frame',
+        'width_4_frame',
+        'width_3_frame',
+        'width_2_frame',
+        'width_1_frame',
     ),
 )
-@pc.case(id='two_panels_with_dims', tags=['dims_and_edge_cases', 'layout'])
-def case_layout_two_panels_with_dims(
+@pc.case(id='two_panels_one_with_fixed_dims', tags=['dims_and_edge_cases', 'layout'])
+def case_layout_two_panels_one_next_stage_with_fixed_dims(
     frame_case: FrameTestCase[FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(
-            first=MockPanel(content='Some text', frame=Frame(Dimensions(width=4, height=2))),
+            first=MockPanel(
+                content='Some text here', frame=Frame(Dimensions(width=None, height=2))),
             second=MockPanel(content='(1, 2, 3)'),
         ),
         frame=frame_case.frame,
@@ -305,20 +598,19 @@ def case_layout_two_panels_with_dims(
             # and vertical overflow modes.
             horizontal_overflow_mode=HorizontalOverflowMode.CROP,
             vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
+            console_color_system=ConsoleColorSystem.ANSI_RGB,
+            transparent_background=False,
         ),
-        exp_plain_output_no_frame=('╭──────┬───────────╮\n'
-                                   '│ Some │ (1, 2, 3) │\n'
-                                   '│ text │           │\n'
-                                   '╰──────┴───────────╯\n'),
-        exp_dims_all_stages_no_frame=Dimensions(width=20, height=4),
-        # The height is not reduced in any cases, hence there is no
-        # cropping in the 'only height' variant of any case. Thus, the
-        # 'only_height' parameters are set globally for the entire test
-        exp_plain_output_only_height=('╭──────┬───────────╮\n'
-                                      '│ Some │ (1, 2, 3) │\n'
-                                      '│ text │           │\n'
-                                      '╰──────┴───────────╯\n'),
-        exp_dims_all_stages_only_height=Dimensions(width=20, height=4),
+        exp_plain_output_no_frame=('╭────────────────┬───────────╮\n'
+                                   '│ Some text here │ (1, 2, 3) │\n'
+                                   '╰────────────────┴───────────╯\n'),
+        exp_dims_all_stages_no_frame=Dimensions(width=30, height=3),
+        # No test cases reduce frame height. Thus, the 'only_height'
+        # parameters are set globally for the entire test.
+        exp_plain_output_only_height=('╭────────────────┬───────────╮\n'
+                                      '│ Some text here │ (1, 2, 3) │\n'
+                                      '╰────────────────┴───────────╯\n'),
+        exp_dims_all_stages_only_height=Dimensions(width=30, height=3),
         frame_case=frame_case,
         frame_variant=per_frame_variant,
     )
