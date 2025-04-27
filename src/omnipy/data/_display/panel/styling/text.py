@@ -30,6 +30,7 @@ class SyntaxStylizedTextPanel(
     @cache
     def _get_stylized_content_common(
         content: str,
+        tab_size: int,
         console_color_system: ConsoleColorSystem,  # Only used for hashing
         console_color_style: ColorStyles | str,
         language: SyntaxLanguage | str,
@@ -56,12 +57,14 @@ class SyntaxStylizedTextPanel(
             theme=theme,
             # background_color='default' if self.config.transparent_background else None,
             word_wrap=word_wrap,
+            tab_size=tab_size,
         )
 
     @override
     def _stylized_content_terminal_impl(self) -> StylizedRichTypes:
         return self._get_stylized_content_common(
             content=self.content,
+            tab_size=self.config.tab_size,
             console_color_system=self.config.console_color_system,
             console_color_style=self.config.color_style,
             language=self.config.language,
@@ -73,6 +76,7 @@ class SyntaxStylizedTextPanel(
     def _stylized_content_html_impl(self) -> StylizedRichTypes:
         return self._get_stylized_content_common(
             content=self.content,
+            tab_size=self.config.tab_size,
             # Color system is hard-coded to 'truecolor' for HTML output
             console_color_system=ConsoleColorSystem.ANSI_RGB,
             console_color_style=self.config.color_style,

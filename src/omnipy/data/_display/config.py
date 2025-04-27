@@ -578,6 +578,7 @@ class OutputConfig:
     instance of DraftOutput, and not as a global configuration.
 
     Args:
+        tab_size (NonNegativeInt): Number of spaces to use for each tab
         indent_tab_size (NonNegativeInt): Number of spaces to use for each
             indentation level.
         debug_mode (bool): When True, enables additional debugging
@@ -626,6 +627,7 @@ class OutputConfig:
             output.
     """
 
+    tab_size: pyd.NonNegativeInt = 4
     indent_tab_size: pyd.NonNegativeInt = 2
     debug_mode: bool = False
     pretty_printer: PrettyPrinterLib = PrettyPrinterLib.RICH

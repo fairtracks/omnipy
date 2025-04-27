@@ -144,6 +144,38 @@ def test_syntax_stylized_text_panel_basic_dims_and_edge_cases(
         assert processed_text_panel == frame_case.exp_plain_output
 
 
+def test_syntax_stylized_text_panel_variable_width_chars(
+        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    def _get_plain_terminal_output_from_contents(
+            contents: str,
+            config: OutputConfig = OutputConfig(),
+    ) -> str:
+        return SyntaxStylizedTextPanel(ReflowedTextDraftPanel(
+            contents,
+            config=config,
+        )).plain.terminal
+
+    # Mandarin Chinese characters are double-width
+    assert _get_plain_terminal_output_from_contents('北京') == '北京\n'
+
+    # Null character is zero-width
+    assert _get_plain_terminal_output_from_contents('\0北京\n北京') == '\x00北京\n北京\n'
+
+    # Soft hyphen character is zero-width
+    assert _get_plain_terminal_output_from_contents('hyphe\xad\nnate') == 'hyphe\xad\nnate\n'
+
+    # Tab character width depends on context
+    assert _get_plain_terminal_output_from_contents('\ta') == '    a\n'
+    assert _get_plain_terminal_output_from_contents(' a\tb') == ' a  b\n'
+    assert _get_plain_terminal_output_from_contents('abcd  \te') == 'abcd    e\n'
+
+    # Tab character width also depends on config
+    config = OutputConfig(tab_size=6)
+    assert _get_plain_terminal_output_from_contents('\ta', config) == '      a\n'
+    assert _get_plain_terminal_output_from_contents(' a\tb', config) == ' a    b\n'
+    assert _get_plain_terminal_output_from_contents('abcd  \te', config) == 'abcd        e\n'
+
+
 @pc.parametrize_with_cases(
     'case',
     cases='.cases.text_styling',

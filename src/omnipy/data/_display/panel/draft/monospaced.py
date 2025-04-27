@@ -27,7 +27,14 @@ class MonospacedDraftPanel(
     @cached_property
     def _width(self) -> pyd.NonNegativeInt:
         def _line_len(line: str) -> int:
-            return sum(self._char_width_map[c] for c in line)
+            tab_size = self.config.tab_size
+            line_len = 0
+            for c in line:
+                if c == '\t':
+                    line_len += tab_size - (line_len % tab_size)
+                else:
+                    line_len += self._char_width_map[c]
+            return line_len
 
         return max((_line_len(line) for line in self._content_lines), default=0)
 

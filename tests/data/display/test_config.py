@@ -18,6 +18,7 @@ from omnipy.data._display.config import (ConsoleColorSystem,
 def test_output_config(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     config = OutputConfig(
+        tab_size=2,
         indent_tab_size=4,
         debug_mode=True,
         pretty_printer=PrettyPrinterLib.DEVTOOLS,
@@ -33,6 +34,7 @@ def test_output_config(
         layout_style=LayoutStyle.PANELS,
     )
 
+    assert config.tab_size == 2
     assert config.indent_tab_size == 4
     assert config.debug_mode is True
     assert config.pretty_printer is PrettyPrinterLib.DEVTOOLS
@@ -48,6 +50,7 @@ def test_output_config(
     assert config.layout_style is LayoutStyle.PANELS
 
     config = OutputConfig(
+        tab_size='2',  # type: ignore[arg-type]
         indent_tab_size='4',  # type: ignore[arg-type]
         debug_mode='yes',  # type: ignore[arg-type]
         pretty_printer='rich',  # type: ignore[arg-type]
@@ -67,6 +70,7 @@ def test_output_config(
         vertical_overflow_mode='crop_bottom',  # type: ignore[arg-type]
         layout_style='table_grid',  # type: ignore[arg-type]
     )
+    assert config.tab_size == 2
     assert config.indent_tab_size == 4
     assert config.debug_mode is True
     assert config.pretty_printer is PrettyPrinterLib.RICH
@@ -99,6 +103,9 @@ def test_output_config_hashable(
     assert hash(config_1) == hash(config_2)
 
     config_settings: list[dict[str, Any]] = [
+        {
+            'tab_size': 2
+        },
         {
             'indent_tab_size': 4
         },
@@ -157,6 +164,9 @@ def test_fail_output_config_no_assignments(
     config = OutputConfig()
 
     with pytest.raises(AttributeError):
+        config.tab_size = 3  # type: ignore[misc]
+
+    with pytest.raises(AttributeError):
         config.indent_tab_size = 3  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
@@ -198,6 +208,12 @@ def test_fail_output_config_no_assignments(
 
 def test_fail_output_config_if_invalid_params(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    with pytest.raises(ValueError):
+        OutputConfig(tab_size=-1)
+
+    with pytest.raises(ValueError):
+        OutputConfig(tab_size=None)
+
     with pytest.raises(ValueError):
         OutputConfig(indent_tab_size=-1)
 
@@ -244,6 +260,7 @@ def test_fail_output_config_if_invalid_params(
 def test_output_config_default_values(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     config = OutputConfig()
+    assert config.tab_size == 4
     assert config.indent_tab_size == 2
     assert config.debug_mode is False
     assert config.pretty_printer is PrettyPrinterLib.RICH

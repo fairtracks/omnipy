@@ -133,6 +133,25 @@ def test_reflowed_text_draft_panel_variable_width_chars(
     assert_dims_aware_panel(
         ReflowedTextDraftPanel('hyphe\xad\nnate'), Dimensions(width=5, height=2))
 
+    # Tab character width depends on context
+    assert_dims_aware_panel(ReflowedTextDraftPanel('\tc'), Dimensions(width=5, height=1))
+    assert_dims_aware_panel(ReflowedTextDraftPanel(' a\tb'), Dimensions(width=5, height=1))
+    assert_dims_aware_panel(ReflowedTextDraftPanel('abcd  \te'), Dimensions(width=9, height=1))
+
+    # Tab character width also depends on config
+    assert_dims_aware_panel(
+        ReflowedTextDraftPanel('\tc', config=OutputConfig(tab_size=6)),
+        Dimensions(width=7, height=1),
+    )
+    assert_dims_aware_panel(
+        ReflowedTextDraftPanel(' a\tb', config=OutputConfig(tab_size=6)),
+        Dimensions(width=7, height=1),
+    )
+    assert_dims_aware_panel(
+        ReflowedTextDraftPanel('abcd  \te', config=OutputConfig(tab_size=6)),
+        Dimensions(width=13, height=1),
+    )
+
 
 def test_reflowed_text_draft_panel_max_container_width_across_lines(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
