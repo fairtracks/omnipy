@@ -17,7 +17,10 @@ import rich.text
 from typing_extensions import override, TypeVar
 
 from omnipy.data._display.config import ConsoleColorSystem, HorizontalOverflowMode
-from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
+from omnipy.data._display.dimensions import (Dimensions,
+                                             DimensionsWithWidthAndHeight,
+                                             has_height,
+                                             has_width)
 from omnipy.data._display.panel.base import FullyRenderedPanel, OutputVariant
 from omnipy.data._display.panel.draft.base import ContentT, FrameT
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
@@ -87,24 +90,26 @@ class StylizedMonospacedPanel(
 
     @cached_property
     def _console_dimensions(self) -> DimensionsWithWidthAndHeight:
-        console_width = self.frame.dims.width
-        console_height = self.frame.dims.height
+        frame_dims = self.frame.dims
+        panel_dims = self._panel_calculated_dims
 
-        console_dims = self._panel_calculated_dims
+        console_width = frame_dims.width if has_width(frame_dims) else panel_dims.width
+        console_height = frame_dims.height if has_height(frame_dims) else panel_dims.height
 
-        if console_width is None:
-            console_width = console_dims.width
-        if console_height is None:
-            console_height = console_dims.height
+        return self._apply_console_newline_hack(
+            Dimensions(width=console_width, height=console_height))
 
-        # Hack to allow rich.console to output newline contents when
-        # width == 0
-        if console_dims.width == 0 \
-                and console_width == 0 \
-                and console_height > 0:
-            console_width = 1
+    def _apply_console_newline_hack(
+            self, console_dims: DimensionsWithWidthAndHeight) -> DimensionsWithWidthAndHeight:
+        """
+        Hack to allow rich.console to output newline contents when
+        width == 0
+        """
+        panel_dims = self._panel_calculated_dims
+        if panel_dims.width == 0 and console_dims.width == 0 and console_dims.height > 0:
+            return Dimensions(width=1, height=console_dims.height)
 
-        return Dimensions(width=console_width, height=console_height)
+        return console_dims
 
     @staticmethod
     @cache
