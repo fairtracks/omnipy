@@ -3,13 +3,13 @@ from contextlib import contextmanager
 from typing import Callable, ContextManager, Iterator
 
 from omnipy.config.data import DataConfig
+from omnipy.data.snapshot import SnapshotHolder
 from omnipy.shared.protocols.config import IsDataConfig
-from omnipy.shared.protocols.data import IsDataClassCreator
-from omnipy.shared.protocols.util import HasContents, IsSnapshotHolder
+from omnipy.shared.protocols.data import HasContents, IsDataClassCreator, IsSnapshotHolder
 from omnipy.shared.typedefs import TypeForm
 import omnipy.util._pydantic as pyd
 from omnipy.util.decorators import call_super_if_available
-from omnipy.util.helpers import is_union, SnapshotHolder
+from omnipy.util.helpers import is_union
 
 
 class DataClassCreator:

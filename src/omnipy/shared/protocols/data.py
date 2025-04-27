@@ -8,17 +8,23 @@ from typing import (Any,
                     overload,
                     Protocol,
                     runtime_checkable,
-                    Type,
-                    TypeVar)
+                    Type)
 
+from typing_extensions import TypeVar
+
+from omnipy.shared.protocols._util import IsWeakKeyRefContainer
 from omnipy.shared.protocols.builtins import IsMutableMapping
 from omnipy.shared.protocols.config import IsDataConfig
 from omnipy.shared.protocols.hub.log import CanLog
-from omnipy.shared.protocols.util import HasContents, IsSnapshotHolder
-from omnipy.util._pydantic import Undefined, UndefinedType
+import omnipy.util._pydantic as pyd
+from omnipy.util.setdeque import SetDeque
 
 _RootT = TypeVar('_RootT', covariant=True)
 _ModelT = TypeVar('_ModelT', bound='IsModel')
+
+ContentsT = TypeVar('ContentsT', bound=object)
+HasContentsT = TypeVar('HasContentsT', bound='HasContents')
+ObjContraT = TypeVar('ObjContraT', contravariant=True, bound=object)
 
 
 @runtime_checkable
@@ -35,9 +41,9 @@ class IsDataset(IsMutableMapping[str, _ModelT], Protocol[_ModelT]):
     """
     def __init__(
         self,
-        value: dict[str, object] | Iterator[tuple[str, object]] | UndefinedType = Undefined,
+        value: dict[str, object] | Iterator[tuple[str, object]] | pyd.UndefinedType = pyd.Undefined,
         *,
-        data: dict[str, object] | UndefinedType = Undefined,
+        data: dict[str, object] | pyd.UndefinedType = pyd.Undefined,
         **input_data: object,
     ) -> None:
         ...
@@ -208,12 +214,62 @@ class IsSerializerRegistry(Protocol):
         ...
 
 
-_ObjT = TypeVar('_ObjT', bound=HasContents)
-_ContentsT = TypeVar('_ContentsT', bound=object)
+@runtime_checkable
+class HasContents(Protocol[ContentsT]):
+    @property
+    def contents(self) -> ContentsT:
+        ...
+
+    @contents.setter
+    def contents(self, value: ContentsT) -> None:
+        ...
+
+
+class IsSnapshotWrapper(Protocol[ObjContraT, ContentsT]):
+    id: int
+    snapshot: ContentsT
+
+    def taken_of_same_obj(self, obj: ObjContraT) -> bool:
+        ...
+
+    def differs_from(self, obj: ObjContraT) -> bool:
+        ...
+
+
+class IsSnapshotHolder(IsWeakKeyRefContainer[HasContentsT,
+                                             IsSnapshotWrapper[HasContentsT, ContentsT]],
+                       Protocol[HasContentsT, ContentsT]):
+    """"""
+    def clear(self) -> None:
+        ...
+
+    def all_are_empty(self, debug: bool = False) -> bool:
+        ...
+
+    def get_deepcopy_content_ids(self) -> SetDeque[int]:
+        ...
+
+    def get_deepcopy_content_ids_scheduled_for_deletion(self) -> SetDeque[int]:
+        ...
+
+    def schedule_deepcopy_content_ids_for_deletion(self, *keys: int) -> None:
+        ...
+
+    def delete_scheduled_deepcopy_content_ids(self) -> None:
+        ...
+
+    def take_snapshot_setup(self) -> None:
+        ...
+
+    def take_snapshot_teardown(self) -> None:
+        ...
+
+    def take_snapshot(self, obj: HasContentsT) -> None:
+        ...
 
 
 @runtime_checkable
-class IsDataClassCreator(Protocol[_ObjT, _ContentsT]):
+class IsDataClassCreator(Protocol[HasContentsT, ContentsT]):
     """"""
     @property
     def config(self) -> IsDataConfig:
@@ -223,7 +279,7 @@ class IsDataClassCreator(Protocol[_ObjT, _ContentsT]):
         ...
 
     @property
-    def snapshot_holder(self) -> IsSnapshotHolder[_ObjT, _ContentsT]:
+    def snapshot_holder(self) -> IsSnapshotHolder[HasContentsT, ContentsT]:
         ...
 
     def deepcopy_context(

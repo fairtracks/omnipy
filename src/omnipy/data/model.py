@@ -35,8 +35,7 @@ from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  validate_cls_counts,
                                  YesNoMaybe)
 from omnipy.data.typechecks import is_model_instance
-from omnipy.shared.protocols.data import IsModel
-from omnipy.shared.protocols.util import IsSnapshotWrapper
+from omnipy.shared.protocols.data import IsModel, IsSnapshotWrapper
 from omnipy.shared.typedefs import TypeForm
 from omnipy.util._pydantic import (is_none_type,
                                    lenient_isinstance,
