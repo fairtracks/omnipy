@@ -34,22 +34,22 @@ class ResizedLayoutDraftPanel(
         dim_aware_layout: Layout[DimensionsAwarePanel[AnyFrame]]
         prev_layout_dims: DimensionsWithWidthAndHeight | None = None
 
-        no_reflow_panel_keys: set[str] = set()
+        no_resize_panel_keys: set[str] = set()
         for key, draft_panel in content.items():
             if draft_panel.frame.fixed_width is True or panel_is_dimensions_aware(draft_panel):
-                no_reflow_panel_keys.add(key)
+                no_resize_panel_keys.add(key)
 
-        prev_no_reflow_panel_keys = no_reflow_panel_keys.copy()
+        prev_no_reflow_panel_keys = no_resize_panel_keys.copy()
 
         while True:
             dim_aware_layout = Layout(**dim_aware_panels)
             layout_dims = cls._calc_table_layout_dims(dim_aware_layout)
             if layout_dims == prev_layout_dims \
-                    and no_reflow_panel_keys == prev_no_reflow_panel_keys:
+                    and no_resize_panel_keys == prev_no_reflow_panel_keys:
                 break
 
             prev_layout_dims = layout_dims
-            prev_no_reflow_panel_keys = no_reflow_panel_keys.copy()
+            prev_no_reflow_panel_keys = no_resize_panel_keys.copy()
 
             frame_dims = cast(Frame, values['frame']).dims
             delta_width = layout_dims.width - frame_dims.width \
@@ -71,8 +71,8 @@ class ResizedLayoutDraftPanel(
                     and panel.frame.fixed_height \
                     else panel.dims.height
 
-                return (float('inf') if key in no_reflow_panel_keys else panel_height,
-                        float('inf') if key in no_reflow_panel_keys else
+                return (float('inf') if key in no_resize_panel_keys else panel_height,
+                        float('inf') if key in no_resize_panel_keys else
                         (-panel.frame.dims.width if has_width(panel.frame.dims) else -float('inf')),
                         -cls._panel_dims_if_cropped(panel).width,
                         -i)
@@ -140,28 +140,29 @@ class ResizedLayoutDraftPanel(
                         constraints=draft_panel.constraints,
                         config=draft_panel.config,
                     )
-                    new_dim_aware_panel: DimensionsAwarePanel[
+                    resized_panel: DimensionsAwarePanel[
                         AnyFrame] = new_draft_panel.render_next_stage()
 
                     prev_cropped_dims = cls._panel_dims_if_cropped(dim_aware_panels[key])
-                    new_cropped_dims = cls._panel_dims_if_cropped(new_dim_aware_panel)
+                    new_cropped_dims = cls._panel_dims_if_cropped(resized_panel)
 
-                    if key not in no_reflow_panel_keys:
+                    if key not in no_resize_panel_keys:
                         prev_frame_dims = dim_aware_panels[key].frame.dims
-                        if new_dim_aware_panel.dims.width == dim_aware_panels[key].dims.width:
-                            if has_width(new_dim_aware_panel.frame.dims) and \
+                        if delta_width and delta_width > 0 \
+                                and resized_panel.dims.width == dim_aware_panels[key].dims.width:
+                            if has_width(resized_panel.frame.dims) and \
                                     has_width(prev_frame_dims) and \
-                                    new_dim_aware_panel.frame.dims.width < prev_frame_dims.width:
-                                no_reflow_panel_keys.add(key)
+                                    resized_panel.frame.dims.width < prev_frame_dims.width:
+                                no_resize_panel_keys.add(key)
                                 break
                     else:
                         if new_cropped_dims.width > prev_cropped_dims.width:
-                            no_reflow_panel_keys.remove(key)
+                            no_resize_panel_keys.remove(key)
 
                     if new_cropped_dims == prev_cropped_dims:
                         continue
 
-                    dim_aware_panels[key] = new_dim_aware_panel
+                    dim_aware_panels[key] = resized_panel
                     break
 
         for key, panel in dim_aware_panels.items():

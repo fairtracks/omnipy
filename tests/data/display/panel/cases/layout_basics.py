@@ -441,8 +441,9 @@ def case_layout_single_panel_stage_2_fixed_dims(
                               '╰──────┴───────────╯\n'),
             exp_dims_all_stages=Dimensions(width=20, height=4),
         ),
-        # First panel is longer width-resizable, since the text in the first
-        # panel cannot be soft-wrapped more than what has already been done.
+        # First panel is no longer width-resizable, since the text in the
+        # first panel cannot be soft-wrapped more than what has already been
+        # done.
         #
         # Width-resizable panels:
         # - Second
