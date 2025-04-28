@@ -28,6 +28,7 @@ ContentT = TypeVar('ContentT', bound=str | Layout)
 
 class DraftPanelKwArgs(TypedDict, total=False):
     frame: Frame
+    title: str
     constraints: Constraints
     config: OutputConfig
 
@@ -96,6 +97,7 @@ class PanelFrameVariantTestCase(Generic[ContentT, FrameT]):
     exp_dims_all_stages_no_frame: DimensionsWithWidthAndHeight
     frame_case: FrameTestCase[FrameT]
     frame_variant: FrameVariant
+    title: str = ''
 
     exp_plain_output: str | None | pyd.UndefinedType = field(default=pyd.Undefined)
     exp_dims_all_stages: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
@@ -229,11 +231,13 @@ class PanelOutputTestCase(NamedTuple, Generic[ContentT]):
     exp_plain_output: str | None
     exp_dims: DimensionsWithWidthAndHeight
     exp_within_frame: WithinFrameExp
+    title: str = ''
 
 
 class StylizedPanelTestCaseSetup(NamedTuple, Generic[ContentT]):
     case_id: str
     content: ContentT
+    title: str = ''
     frame: Frame | None = None
     config: OutputConfig | None = None
 
@@ -339,6 +343,7 @@ def apply_frame_variant_to_test_case(
 
 def create_draft_panel_kwargs(
     frame: Frame | None = None,
+    title: str = '',
     constraints: Constraints | None = None,
     config: OutputConfig | None = None,
 ) -> DraftPanelKwArgs:
@@ -346,6 +351,9 @@ def create_draft_panel_kwargs(
 
     if frame is not None:
         kwargs['frame'] = frame
+
+    if title != '':
+        kwargs['title'] = title
 
     if constraints is not None:
         kwargs['constraints'] = constraints
@@ -359,12 +367,13 @@ def create_draft_panel_kwargs(
 def assert_draft_panel_subcls(
     panel_cls: type[DraftPanel],
     content: object,
-    frame: Frame | None,
-    constraints: Constraints | None,
-    config: OutputConfig | None,
+    frame: Frame | None = None,
+    title: str = '',
+    constraints: Constraints | None = None,
+    config: OutputConfig | None = None,
     content_is_identical: bool = True,
 ) -> None:
-    kwargs = create_draft_panel_kwargs(frame, constraints, config)
+    kwargs = create_draft_panel_kwargs(frame, title, constraints, config)
     draft_panel = panel_cls(content, **kwargs)
 
     if frame is None:
@@ -383,6 +392,8 @@ def assert_draft_panel_subcls(
 
     assert draft_panel.frame is not frame
     assert draft_panel.frame == frame, f'{draft_panel.frame} != {frame}'
+
+    assert draft_panel.title == title, f'{draft_panel.title} != {title}'
 
     assert draft_panel.constraints is not constraints
     assert draft_panel.constraints == constraints, f'{draft_panel.constraints} != {constraints}'
@@ -433,6 +444,8 @@ def assert_next_stage_panel(
         f'{next_stage.content} != {exp_content}'
     assert next_stage.frame == this_panel.frame, \
         f'{next_stage.frame} != {this_panel.frame}'
+    assert next_stage.title == this_panel.title, \
+        f'{next_stage.title} != {this_panel.title}'
     assert next_stage.constraints == this_panel.constraints, \
         f'{next_stage.constraints} != {this_panel.constraints}'
     assert next_stage.config == this_panel.config, \

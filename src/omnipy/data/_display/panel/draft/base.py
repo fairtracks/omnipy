@@ -22,11 +22,11 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
     constraints: Constraints = pyd.Field(default_factory=Constraints)
     config: OutputConfig = pyd.Field(default_factory=OutputConfig)
 
-    def __init__(self, content: ContentT, frame=None, constraints=None, config=None):
+    def __init__(self, content: ContentT, title='', frame=None, constraints=None, config=None):
         object.__setattr__(self, 'content', content)
         object.__setattr__(self, 'constraints', constraints or Constraints())
         object.__setattr__(self, 'config', config or OutputConfig())
-        super().__init__(frame=frame)
+        super().__init__(title=title, frame=frame)
 
     @pyd.validator('constraints')
     def _copy_constraints(cls, constraints: Constraints) -> Constraints:

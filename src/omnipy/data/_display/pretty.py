@@ -34,6 +34,7 @@ class PrettyPrinter(ABC):
         new_constraints = self._calculate_constraints_with_reduced_width(reflowed_text_panel)
         return DraftPanel(
             draft_panel.content,
+            title=draft_panel.title,
             frame=new_frame,
             constraints=new_constraints,
             config=draft_panel.config,
@@ -59,6 +60,7 @@ class PrettyPrinter(ABC):
     ) -> ReflowedTextDraftPanel[FrameT]:
         return ReflowedTextDraftPanel(
             self.print_draft_to_str(draft_panel),
+            title=draft_panel.title,
             frame=draft_panel.frame,
             constraints=draft_panel.constraints,
             config=draft_panel.config,
@@ -217,6 +219,7 @@ def _reduce_width_until_proportional_with_frame(
         # To maintain original frame and constraints
         cur_reflowed_text_panel = ReflowedTextDraftPanel(
             pretty_printer.print_draft_to_str(draft_for_print),
+            title=cur_reflowed_text_panel.title,
             frame=cur_reflowed_text_panel.frame,
             constraints=cur_reflowed_text_panel.constraints,
             config=cur_reflowed_text_panel.config,
@@ -241,6 +244,7 @@ def _prepare_content(in_draft: DraftPanel[object, FrameT]) -> DraftPanel[object,
         data = in_draft.content
     draft_panel: DraftPanel[object, FrameT] = DraftPanel(
         data,
+        title=in_draft.title,
         frame=in_draft.frame,
         constraints=in_draft.constraints,
         config=in_draft.config,

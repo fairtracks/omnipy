@@ -97,6 +97,7 @@ def test_stylized_layout_panel_basic_dims_and_edge_cases(
     layout_panel = StylizedLayoutPanel(
         ResizedLayoutDraftPanel(
             case.content,
+            title=case.title,
             frame=case.frame,
             config=case.config,
         ))
@@ -130,10 +131,16 @@ def test_output_properties_of_stylized_layout_panel(
         output_prop_expectations: Annotated[StylizedPanelOutputExpectations, pc.fixture],
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
-    case_id, content, frame, config = output_test_case_setup
+    case_id, content, title, frame, config = output_test_case_setup
     get_output_property, exp_plain_output_for_case_id = output_prop_expectations
 
-    layout_panel = StylizedLayoutPanel(ResizedLayoutDraftPanel(content, frame=frame, config=config))
+    layout_panel = StylizedLayoutPanel(
+        ResizedLayoutDraftPanel(
+            content,
+            title=title,
+            frame=frame,
+            config=config,
+        ))
     for _ in range(2):
         assert get_output_property(layout_panel) == exp_plain_output_for_case_id(case_id)
 

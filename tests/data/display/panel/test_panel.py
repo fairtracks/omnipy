@@ -15,18 +15,21 @@ class SimplePanel(Panel):
 def test_panel(skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],):
     # Test with default frame
     panel = SimplePanel()
+    assert panel.title == ''
     assert panel.frame == empty_frame()
 
-    # Test with custom frame with fixed dimensions (by default)
+    # Test with custom frame with title and fixed dimensions (by default)
     custom_frame_fixed = Frame(Dimensions(width=10, height=20))
-    panel = SimplePanel(frame=custom_frame_fixed)
+    panel = SimplePanel(title='My panel', frame=custom_frame_fixed)
+    assert panel.title == 'My panel'
     assert panel.frame is not custom_frame_fixed  # Should be a copy, not the same object
     assert panel.frame == custom_frame_fixed  # But should be equal in value
 
     # Test with custom frame without fixed dimensions
     custom_frame_not_fixed = Frame(
         Dimensions(width=10, height=20), fixed_width=False, fixed_height=False)
-    panel = SimplePanel(frame=custom_frame_not_fixed)
+    panel = SimplePanel(title='My other panel', frame=custom_frame_not_fixed)
+    assert panel.title == 'My other panel'
     assert panel.frame is not custom_frame_not_fixed  # Should be a copy, not the same object
     assert panel.frame == custom_frame_not_fixed  # But should be equal in value
 
@@ -55,13 +58,21 @@ def test_panel_hashable(skip_test_if_not_default_data_config_values: Annotated[N
 
     assert hash(panel_6) == hash(panel_7) != hash(panel_8) != hash(panel_9) != hash(panel_10)
 
+    panel_11 = SimplePanel(title='My panel')
+    panel_12 = SimplePanel(title='My other panel')
+
+    assert hash(panel_2) != hash(panel_11) != hash(panel_12)
+
 
 # noinspection PyDataclass
 def test_fail_panel_no_assignments(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]):
 
     panel = SimplePanel()
-    new_frame = Frame(Dimensions(width=30, height=40))
 
+    with pytest.raises(AttributeError):
+        panel.title = 'My panel'  # type: ignore[misc]
+
+    new_frame = Frame(Dimensions(width=30, height=40))
     with pytest.raises(AttributeError):
         panel.frame = new_frame  # type: ignore[misc]

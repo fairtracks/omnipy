@@ -59,6 +59,7 @@ def flow_layout_subpanels_inside_frame(
 
     return ResizedLayoutDraftPanel(
         Layout(**new_layout),
+        title=layout_panel.title,
         frame=layout_panel.frame,
         constraints=layout_panel.constraints,
         config=layout_panel.config,

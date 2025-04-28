@@ -23,56 +23,62 @@ from .helpers import (apply_frame_variant_to_test_case,
 def test_reflowed_text_draft_panel_init(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
     panel_cls = ReflowedTextDraftPanel
-    assert_draft_panel_subcls(panel_cls, 'Some text', None, None, None)
-    assert_draft_panel_subcls(panel_cls, '(1, 2, 3)', Frame(Dimensions(None, None)), None, None)
-    assert_draft_panel_subcls(panel_cls, '(1, 2, 3)', Frame(Dimensions(10, None)), None, None)
-    assert_draft_panel_subcls(panel_cls, '(1, 2, 3)', Frame(Dimensions(None, 20)), None, None)
-    assert_draft_panel_subcls(panel_cls, '(1, 2, 3)', Frame(Dimensions(10, 20)), None, None)
-    assert_draft_panel_subcls(panel_cls, '{}', None, None, OutputConfig(indent_tab_size=4))
+    assert_draft_panel_subcls(panel_cls, 'Some text')
+    assert_draft_panel_subcls(
+        panel_cls, '(1, 2, 3)', title='UnboundPanel', frame=Frame(Dimensions(None, None)))
+    assert_draft_panel_subcls(
+        panel_cls, '(1, 2, 3)', title='WidthBoundPanel', frame=Frame(Dimensions(10, None)))
+    assert_draft_panel_subcls(
+        panel_cls, '(1, 2, 3)', title='HeightBoundPanel', frame=Frame(Dimensions(None, 20)))
+    assert_draft_panel_subcls(
+        panel_cls, '(1, 2, 3)', title='BoundPanel', frame=Frame(Dimensions(10, 20)))
+    assert_draft_panel_subcls(
+        panel_cls, '{}', title='EmptyDictPanel', config=OutputConfig(indent_tab_size=4))
 
     content = "('a', 'b', (1, 2, 3))"
     assert_draft_panel_subcls(
         panel_cls,
         content,
-        None,
-        Constraints(container_width_per_line_limit=10),
-        None,
+        constraints=Constraints(container_width_per_line_limit=10),
     )
     assert_draft_panel_subcls(
         panel_cls,
         content,
-        Frame(Dimensions(20, 10)),
-        Constraints(container_width_per_line_limit=10),
-        OutputConfig(indent_tab_size=4),
+        title='AllPanel',
+        frame=Frame(Dimensions(20, 10)),
+        constraints=Constraints(container_width_per_line_limit=10),
+        config=OutputConfig(indent_tab_size=4),
     )
 
 
 def test_reflowed_text_draft_panel_hashable(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    draft_panel_1 = ReflowedTextDraftPanel('')
-    draft_panel_2 = ReflowedTextDraftPanel('')
+    panel_1 = ReflowedTextDraftPanel('')
+    panel_2 = ReflowedTextDraftPanel('')
 
-    assert hash(draft_panel_1) == hash(draft_panel_2)
+    assert hash(panel_1) == hash(panel_2)
 
-    draft_panel_3 = ReflowedTextDraftPanel('Some text')
-    draft_panel_4 = ReflowedTextDraftPanel('', frame=Frame(Dimensions(10, 20)))
-    draft_panel_5 = ReflowedTextDraftPanel(
+    panel_3 = ReflowedTextDraftPanel('Some text')
+    panel_4 = ReflowedTextDraftPanel('', title='Some panel')
+    panel_5 = ReflowedTextDraftPanel('', frame=Frame(Dimensions(10, 20)))
+    panel_6 = ReflowedTextDraftPanel('', constraints=Constraints(container_width_per_line_limit=10))
+    panel_7 = ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4))
+
+    assert hash(panel_1) != hash(panel_3) != hash(panel_4) != hash(panel_5) != hash(panel_6) \
+           != hash(panel_7)
+
+    panel_8 = ReflowedTextDraftPanel('Some text')
+    panel_9 = ReflowedTextDraftPanel('', title='Some panel')
+    panel_10 = ReflowedTextDraftPanel('', frame=Frame(Dimensions(10, 20)))
+    panel_11 = ReflowedTextDraftPanel(
         '', constraints=Constraints(container_width_per_line_limit=10))
-    draft_panel_6 = ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4))
+    panel_12 = ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4))
 
-    assert hash(draft_panel_1) != hash(draft_panel_3) != hash(draft_panel_4) != hash(
-        draft_panel_5) != hash(draft_panel_6)
-
-    draft_panel_7 = ReflowedTextDraftPanel('Some text')
-    draft_panel_8 = ReflowedTextDraftPanel('', frame=Frame(Dimensions(10, 20)))
-    draft_panel_9 = ReflowedTextDraftPanel(
-        '', constraints=Constraints(container_width_per_line_limit=10))
-    draft_panel_10 = ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4))
-
-    assert hash(draft_panel_3) == hash(draft_panel_7)
-    assert hash(draft_panel_4) == hash(draft_panel_8)
-    assert hash(draft_panel_5) == hash(draft_panel_9)
-    assert hash(draft_panel_6) == hash(draft_panel_10)
+    assert hash(panel_3) == hash(panel_8)
+    assert hash(panel_4) == hash(panel_9)
+    assert hash(panel_5) == hash(panel_10)
+    assert hash(panel_6) == hash(panel_11)
+    assert hash(panel_7) == hash(panel_12)
 
 
 def test_fail_reflowed_text_draft_panel_if_extra_params(
@@ -90,6 +96,9 @@ def test_fail_reflowed_text_draft_panel_no_assignments(
 
     with pytest.raises(AttributeError):
         reflowed_text_panel.content = 'Some other text'  # type: ignore[misc]
+
+    with pytest.raises(AttributeError):
+        reflowed_text_panel.title = 'My panel'  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
         reflowed_text_panel.frame = empty_frame()  # type: ignore[misc]
@@ -116,7 +125,12 @@ def test_reflowed_text_draft_panel_basic_dims_and_edge_cases(
     else:
         frame_case = case
 
-    text_panel = ReflowedTextDraftPanel(case.content, frame=frame_case.frame, config=case.config)
+    text_panel = ReflowedTextDraftPanel(
+        case.content,
+        title=case.title,
+        frame=frame_case.frame,
+        config=case.config,
+    )
     assert_dims_aware_panel(
         text_panel,
         exp_dims=frame_case.exp_dims,
@@ -267,6 +281,7 @@ def test_draft_panel_render_next_stage(
 
     reflowed_text_panel_complex = ReflowedTextDraftPanel(
         '(1, 2, 3)',
+        title='My panel',
         frame=Frame(Dimensions(9, 1)),
         constraints=Constraints(container_width_per_line_limit=10),
         config=OutputConfig(indent_tab_size=1),

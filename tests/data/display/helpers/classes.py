@@ -14,8 +14,14 @@ import omnipy.util._pydantic as pyd
 
 @pyd.dataclass(init=False, frozen=True)
 class MockPanel(DraftPanel[str, AnyFrame]):
-    def __init__(self, content: str = '', frame=None, constraints=None, config=None):
-        super().__init__(content=content, frame=frame, constraints=constraints, config=config)
+    def __init__(self, content: str = '', frame=None, title='', constraints=None, config=None):
+        super().__init__(
+            content=content,
+            frame=frame,
+            title=title,
+            constraints=constraints,
+            config=config,
+        )
 
     def render_next_stage(self) -> 'DimensionsAwarePanel[AnyFrame]':
         frame_width = self.frame.dims.width if self.frame else None
@@ -23,6 +29,7 @@ class MockPanel(DraftPanel[str, AnyFrame]):
             return MockPanelStage2(
                 content=self.content,
                 frame=self.frame,
+                title=self.title,
                 constraints=self.constraints,
                 config=self.config,
             )
@@ -30,6 +37,7 @@ class MockPanel(DraftPanel[str, AnyFrame]):
             return MockPanelStage2(
                 '\n'.join(soft_wrap_words(self.content.split(), frame_width)),
                 frame=self.frame,
+                title=self.title,
                 constraints=self.constraints,
                 config=self.config,
             )
@@ -41,6 +49,7 @@ class MockPanelStage2(DimensionsAwarePanel, MockPanel):
         return MockPanelStage3(
             content=self.content,
             frame=self.frame,
+            title=self.title,
             constraints=self.constraints,
             config=self.config,
         )

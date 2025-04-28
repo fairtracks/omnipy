@@ -21,54 +21,61 @@ from .helpers import assert_draft_panel_subcls, assert_next_stage_panel
 
 def test_draft_panel_init(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    assert_draft_panel_subcls(DraftPanel, 'Some text', None, None, None)
-    assert_draft_panel_subcls(DraftPanel, (1, 2, 3), Frame(Dimensions(None, None)), None, None)
-    assert_draft_panel_subcls(DraftPanel, (1, 2, 3), Frame(Dimensions(10, None)), None, None)
-    assert_draft_panel_subcls(DraftPanel, (1, 2, 3), Frame(Dimensions(None, 20)), None, None)
-    assert_draft_panel_subcls(DraftPanel, (1, 2, 3), Frame(Dimensions(10, 20)), None, None)
-    assert_draft_panel_subcls(DraftPanel, None, None, None, OutputConfig(indent_tab_size=4))
+    assert_draft_panel_subcls(DraftPanel, 'Some text')
+    assert_draft_panel_subcls(
+        DraftPanel, (1, 2, 3), title='UnboundPanel', frame=Frame(Dimensions(None, None)))
+    assert_draft_panel_subcls(
+        DraftPanel, (1, 2, 3), title='WidthBoundPanel', frame=Frame(Dimensions(10, None)))
+    assert_draft_panel_subcls(
+        DraftPanel, (1, 2, 3), title='HeightBoundPanel', frame=Frame(Dimensions(None, 20)))
+    assert_draft_panel_subcls(
+        DraftPanel, (1, 2, 3), title='BoundPanel', frame=Frame(Dimensions(10, 20)))
+    assert_draft_panel_subcls(
+        DraftPanel, None, title='NonePanel', config=OutputConfig(indent_tab_size=4))
 
     content = ('a', 'b', (1, 2, 3))
     assert_draft_panel_subcls(
         DraftPanel,
         content,
-        None,
-        Constraints(container_width_per_line_limit=10),
-        None,
+        constraints=Constraints(container_width_per_line_limit=10),
     )
     assert_draft_panel_subcls(
         DraftPanel,
         content,
-        Frame(Dimensions(20, 10)),
-        Constraints(container_width_per_line_limit=10),
-        OutputConfig(indent_tab_size=4),
+        title='AllPanel',
+        frame=Frame(Dimensions(20, 10)),
+        constraints=Constraints(container_width_per_line_limit=10),
+        config=OutputConfig(indent_tab_size=4),
     )
 
 
 def test_draft_panel_hashable(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    draft_panel_1 = DraftPanel('')
-    draft_panel_2 = DraftPanel('')
+    panel_1 = DraftPanel('')
+    panel_2 = DraftPanel('')
 
-    assert hash(draft_panel_1) == hash(draft_panel_2)
+    assert hash(panel_1) == hash(panel_2)
 
-    draft_panel_3 = DraftPanel('Some text')
-    draft_panel_4 = DraftPanel('', frame=Frame(Dimensions(10, 20)))
-    draft_panel_5 = DraftPanel('', constraints=Constraints(container_width_per_line_limit=10))
-    draft_panel_6 = DraftPanel('', config=OutputConfig(indent_tab_size=4))
+    panel_3 = DraftPanel('Some text')
+    panel_4 = DraftPanel('', title='My panel')
+    panel_5 = DraftPanel('', frame=Frame(Dimensions(10, 20)))
+    panel_6 = DraftPanel('', constraints=Constraints(container_width_per_line_limit=10))
+    panel_7 = DraftPanel('', config=OutputConfig(indent_tab_size=4))
 
-    assert hash(draft_panel_1) != hash(draft_panel_3) != hash(draft_panel_4) != hash(
-        draft_panel_5) != hash(draft_panel_6)
+    assert hash(panel_1) != hash(panel_3) != hash(panel_4) != hash(panel_5) \
+           != hash(panel_6) != hash(panel_7)
 
-    draft_panel_7 = DraftPanel('Some text')
-    draft_panel_8 = DraftPanel('', frame=Frame(Dimensions(10, 20)))
-    draft_panel_9 = DraftPanel('', constraints=Constraints(container_width_per_line_limit=10))
-    draft_panel_10 = DraftPanel('', config=OutputConfig(indent_tab_size=4))
+    panel_8 = DraftPanel('Some text')
+    panel_9 = DraftPanel('', title='My panel')
+    panel_10 = DraftPanel('', frame=Frame(Dimensions(10, 20)))
+    panel_11 = DraftPanel('', constraints=Constraints(container_width_per_line_limit=10))
+    panel_12 = DraftPanel('', config=OutputConfig(indent_tab_size=4))
 
-    assert hash(draft_panel_3) == hash(draft_panel_7)
-    assert hash(draft_panel_4) == hash(draft_panel_8)
-    assert hash(draft_panel_5) == hash(draft_panel_9)
-    assert hash(draft_panel_6) == hash(draft_panel_10)
+    assert hash(panel_3) == hash(panel_8)
+    assert hash(panel_4) == hash(panel_9)
+    assert hash(panel_5) == hash(panel_10)
+    assert hash(panel_6) == hash(panel_11)
+    assert hash(panel_7) == hash(panel_12)
 
 
 def test_draft_panel_mutable_not_hashable(
@@ -88,6 +95,9 @@ def test_fail_draft_panel_no_assignments(
 
     with pytest.raises(AttributeError):
         draft_panel.content = [1, 2, 3]  # type: ignore[misc, assignment]
+
+    with pytest.raises(AttributeError):
+        draft_panel.title = 'Some title'  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
         draft_panel.frame = Frame(Dimensions(10, 20))  # type: ignore[misc]
@@ -118,6 +128,7 @@ def test_draft_panel_with_empty_content(
     empty_string_draft_panel = DraftPanel('')
 
     assert empty_string_draft_panel.content == ''
+    assert empty_string_draft_panel.title == ''
     assert empty_string_draft_panel.frame == empty_frame()
     assert empty_string_draft_panel.constraints == Constraints()
     assert empty_string_draft_panel.config == OutputConfig()
@@ -136,7 +147,7 @@ def test_draft_panel_with_empty_content(
     assert empty_dict_draft_panel.content == {}
     assert empty_tuple_draft_panel.content == ()
 
-    # Test with empty content and frame
+    # Test with empty content and frame with fixed dimensions
     framed_empty_draft_panel = DraftPanel('', frame=Frame(Dimensions(10, 5)))
 
     assert framed_empty_draft_panel.frame.dims.width == 10
@@ -156,6 +167,7 @@ def test_draft_panel_render_next_stage_with_repr(
 
     draft_panel_complex = DraftPanel(
         (1, 2, 3),
+        title='My text panel',
         frame=Frame(Dimensions(3, 5)),
         constraints=Constraints(container_width_per_line_limit=10),
         config=OutputConfig(indent_tab_size=1),
@@ -179,7 +191,11 @@ def test_draft_panel_render_next_stage_with_layout(
     )
 
     draft_panel_complex: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
-        Layout(tuple=MockPanel('(1, 2, 3)'), text=MockPanel('Here is some text')),
+        Layout(
+            tuple=MockPanel('(1, 2, 3)', title='Tuple panel'),
+            text=MockPanel('Here is some text', title='Text panel'),
+        ),
+        title='My layout panel',
         frame=Frame(Dimensions(21, 5)),
         constraints=Constraints(container_width_per_line_limit=10),
         config=OutputConfig(indent_tab_size=1),
@@ -191,10 +207,12 @@ def test_draft_panel_render_next_stage_with_layout(
         exp_content=Layout(
             tuple=MockPanelStage2(
                 '(1, 2,\n3)',
+                title='Tuple panel',
                 frame=Frame(Dimensions(6, 2)),
             ),
             text=MockPanelStage2(
                 'Here is\nsome\ntext',
+                title='Text panel',
                 frame=Frame(Dimensions(7, 3)),
             ),
         ),
@@ -202,8 +220,16 @@ def test_draft_panel_render_next_stage_with_layout(
 
     draft_panel_half_framed: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
         Layout(
-            tuple=MockPanel('(1, 2, 3)', frame=Frame(Dimensions(9, 1))),
-            text=MockPanel('Here is some text')),
+            tuple=MockPanel(
+                '(1, 2, 3)',
+                title='Framed tuple panel',
+                frame=Frame(Dimensions(9, 1)),
+            ),
+            text=MockPanel(
+                'Here is some text',
+                title='Text panel',
+            ),
+        ),
         frame=Frame(Dimensions(20, 5)),
         constraints=Constraints(container_width_per_line_limit=10),
         config=OutputConfig(indent_tab_size=1),
@@ -215,10 +241,12 @@ def test_draft_panel_render_next_stage_with_layout(
         exp_content=Layout(
             tuple=MockPanelStage2(
                 '(1, 2, 3)',
+                title='Framed tuple panel',
                 frame=Frame(Dimensions(9, 1)),
             ),
             text=MockPanelStage2(
                 'Here\nis\nsome\ntext',
+                title='Text panel',
                 frame=Frame(Dimensions(4, 3)),
             ),
         ),
@@ -226,9 +254,9 @@ def test_draft_panel_render_next_stage_with_layout(
 
     draft_panel_half_rendered: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
         Layout(
-            tuple=MockPanelStage2('(1,\n2,\n3)'),
-            text1=MockPanel('Here is some text'),
-            text2=MockPanel('Here is some other text'),
+            tuple=MockPanelStage2('(1,\n2,\n3)', title='Stage 2 tuple panel'),
+            text1=MockPanel('Here is some text', title='Text panel 1'),
+            text2=MockPanel('Here is some other text', title='Text panel 2'),
         ),
         frame=Frame(Dimensions(24, 5)),
         constraints=Constraints(container_width_per_line_limit=10),
@@ -239,13 +267,18 @@ def test_draft_panel_render_next_stage_with_layout(
         next_stage=draft_panel_half_rendered.render_next_stage(),
         next_stage_panel_cls=ResizedLayoutDraftPanel,
         exp_content=Layout(
-            tuple=MockPanelStage2('(1,\n2,\n3)'),
+            tuple=MockPanelStage2(
+                '(1,\n2,\n3)',
+                title='Stage 2 tuple panel',
+            ),
             text1=MockPanelStage2(
                 'Here\nis\nsome\ntext',
+                title='Text panel 1',
                 frame=Frame(Dimensions(4, 3)),
             ),
             text2=MockPanelStage2(
                 'Here is\nsome\nother\ntext',
+                title='Text panel 2',
                 frame=Frame(Dimensions(7, 3)),
             ),
         ),

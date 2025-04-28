@@ -29,12 +29,14 @@ def test_syntax_stylized_text_panel_init(
     stylized_text_panel = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('[123, 234, 345]'),)
 
     assert stylized_text_panel.content == '[123, 234, 345]'
+    assert stylized_text_panel.title == ''
     assert stylized_text_panel.frame == empty_frame()
     assert stylized_text_panel.constraints == Constraints()
     assert stylized_text_panel.config == OutputConfig()
 
     reflowed_text_panel = ReflowedTextDraftPanel(
         '[123, 234, 345]',
+        title='Some title',
         frame=Frame(Dimensions(10, 10)),
         constraints=Constraints(),
         config=OutputConfig(
@@ -46,6 +48,7 @@ def test_syntax_stylized_text_panel_init(
     stylized_reflowed_text_panel = SyntaxStylizedTextPanel(reflowed_text_panel)
 
     assert stylized_reflowed_text_panel.content == '[123, 234, 345]'
+    assert stylized_reflowed_text_panel.title == 'Some title'
     assert stylized_reflowed_text_panel.frame is not reflowed_text_panel.frame
     assert stylized_reflowed_text_panel.frame == reflowed_text_panel.frame
     assert stylized_reflowed_text_panel.constraints is not reflowed_text_panel.constraints
@@ -64,27 +67,31 @@ def test_syntax_stylized_text_panel_hashable(
     assert hash(panel_1) == hash(panel_2)
 
     panel_3 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('[123, 234, 345]'))
-    panel_4 = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel('', frame=Frame(Dimensions(width=10, height=20))))
+    panel_4 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('', title='Some title'))
     panel_5 = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel('', constraints=Constraints(container_width_per_line_limit=9)))
-    panel_6 = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4)))
-
-    assert hash(panel_1) != hash(panel_3) != hash(panel_4) != hash(panel_5) != hash(panel_6)
-
-    panel_7 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('[123, 234, 345]'))
-    panel_8 = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel('', frame=Frame(Dimensions(width=10, height=20))))
-    panel_9 = SyntaxStylizedTextPanel(
+    panel_6 = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel('', constraints=Constraints(container_width_per_line_limit=9)))
-    panel_10 = SyntaxStylizedTextPanel(
+    panel_7 = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4)))
 
-    assert hash(panel_3) == hash(panel_7)
-    assert hash(panel_4) == hash(panel_8)
-    assert hash(panel_5) == hash(panel_9)
-    assert hash(panel_6) == hash(panel_10)
+    assert hash(panel_1) != hash(panel_3) != hash(panel_4) != hash(panel_5) != hash(panel_6) \
+           != hash(panel_7)
+
+    panel_8 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('[123, 234, 345]'))
+    panel_9 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('', title='Some title'))
+    panel_10 = SyntaxStylizedTextPanel(
+        ReflowedTextDraftPanel('', frame=Frame(Dimensions(width=10, height=20))))
+    panel_11 = SyntaxStylizedTextPanel(
+        ReflowedTextDraftPanel('', constraints=Constraints(container_width_per_line_limit=9)))
+    panel_12 = SyntaxStylizedTextPanel(
+        ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4)))
+
+    assert hash(panel_3) == hash(panel_8)
+    assert hash(panel_4) == hash(panel_9)
+    assert hash(panel_5) == hash(panel_10)
+    assert hash(panel_6) == hash(panel_11)
+    assert hash(panel_7) == hash(panel_12)
 
 
 def test_fail_syntax_stylized_text_panel_if_extra_params(
@@ -103,6 +110,9 @@ def test_syntax_stylized_text_panel_no_assignments(
 
     with pytest.raises(AttributeError):
         text_panel.content = '[234, 345, 456]'  # type: ignore[misc]
+
+    with pytest.raises(AttributeError):
+        text_panel.title = 'My panel'  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
         text_panel.frame = Frame(Dimensions(10, 20))  # type: ignore[misc]
@@ -216,11 +226,11 @@ def test_output_properties_of_syntax_stylized_text_panel(
         output_prop_expectations: Annotated[StylizedPanelOutputExpectations, pc.fixture],
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
-    case_id, content, frame, config = output_test_case_setup
+    case_id, content, title, frame, config = output_test_case_setup
     get_output_property, exp_plain_output_for_case_id = output_prop_expectations
 
     text_panel = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel(content, frame=frame, config=config))
+        ReflowedTextDraftPanel(content, title=title, frame=frame, config=config))
     for _ in range(2):
         assert get_output_property(text_panel) == exp_plain_output_for_case_id(case_id)
 

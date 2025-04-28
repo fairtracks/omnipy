@@ -136,6 +136,7 @@ class ResizedLayoutDraftPanel(
                         draft_panel):
                     new_draft_panel = draft_panel.__class__(
                         content=draft_panel.content,
+                        title=draft_panel.title,
                         frame=new_panel_frame,
                         constraints=draft_panel.constraints,
                         config=draft_panel.config,

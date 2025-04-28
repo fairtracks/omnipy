@@ -49,7 +49,13 @@ class StylizedMonospacedPanel(
     input_panel_dims_if_cropped: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
 
     def __init__(self, panel: MonospacedDraftPanel[ContentT, FrameT]):
-        super().__init__(panel.content, panel.frame, panel.constraints, panel.config)
+        super().__init__(
+            panel.content,
+            title=panel.title,
+            frame=panel.frame,
+            constraints=panel.constraints,
+            config=panel.config,
+        )
         # object.__setattr__(self, '_input_panel_dims_if_cropped', panel.dims_if_cropped)
         object.__setattr__(self, 'input_panel_dims_if_cropped', panel.dims_if_cropped)
 

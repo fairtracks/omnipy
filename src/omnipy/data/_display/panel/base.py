@@ -47,10 +47,12 @@ class OutputVariant(ABC):
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True),
 )
 class Panel(Generic[FrameT]):
-    """Base panel class that only contains frame information."""
+    """Base panel class that contains frame and title"""
+    title: str
     frame: FrameT
 
-    def __init__(self, frame: FrameT | None = None):
+    def __init__(self, title: str = '', frame: FrameT | None = None):
+        object.__setattr__(self, 'title', title)
         object.__setattr__(self, 'frame', frame or cast(FrameT, empty_frame()))
 
     @pyd.validator('frame')
