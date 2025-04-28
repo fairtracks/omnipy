@@ -157,6 +157,49 @@ def test_reflowed_text_draft_panel_variable_width_chars(
     )
 
 
+#
+# def test_reflowed_text_draft_panel_visible_char_coverage(
+#         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+#     panel = ReflowedTextDraftPanel('', frame=Frame(Dimensions(width=6, height=3)))
+#     assert panel.visible_char_coverage() == 0
+#
+#     # Test without a frame
+#     panel = ReflowedTextDraftPanel('Line 1\nLine 2\nLine 3',)
+#     assert panel.visible_char_coverage() == 18
+#
+#     # Ignore whitespace at beginning and end of line
+#     panel = ReflowedTextDraftPanel('  Line 1\t\n    Line 2  \n  Line 3 ',)
+#     assert panel.visible_char_coverage() == 18
+#
+#     # Test with a frame that fits multiple lines of text
+#     panel = ReflowedTextDraftPanel(
+#         '  Line 1\t\n    Line 2  \n  Line 3 ', frame=Frame(Dimensions(width=6, height=3)))
+#     assert panel.visible_char_coverage() == 18  # 6 chars per line * 3 lines
+#
+#     # Test with a frame that truncates multi-line text vertically
+#     panel = ReflowedTextDraftPanel(
+#         '  Line 1\t\n    Line 2  \n  Line 3 ', frame=Frame(Dimensions(width=6, height=2)))
+#     assert panel.visible_char_coverage() == 12  # 6 chars per line * 2 lines
+#
+#     # Test with a frame that truncates multi-line text both horizontally and
+#     # vertically
+#     panel = ReflowedTextDraftPanel(
+#         '  Line 1\t\n    Line 2  \n  Line 3 ', frame=Frame(Dimensions(width=5, height=2)))
+#     assert panel.visible_char_coverage() == 12  # 6 chars per line * 2 lines
+#
+#     # Test with Asian characters (double-width), rounding down
+#     panel = ReflowedTextDraftPanel('\t北京欢迎你  ', frame=Frame(Dimensions(width=8, height=1)))
+#     assert panel.visible_char_coverage() == 6  # 3 double-width chars (2 + 1)
+#
+#     # Test with Asian characters and multiple lines
+#     panel = ReflowedTextDraftPanel('北京欢\n  迎你\n  上海', frame=Frame(Dimensions(width=8, height=2)))
+#     assert panel.visible_char_coverage() == 12  # 8 chars (line 1) + 4 chars (line 2)
+#
+#     # Test with mixed content (Asian and English characters)
+#     panel = ReflowedTextDraftPanel('Hello 北京', frame=Frame(Dimensions(width=10, height=1)))
+#     assert panel.visible_char_coverage() == 10  # 5 English + 2 double-width Asian chars
+
+
 def test_reflowed_text_draft_panel_max_container_width_across_lines(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
 
