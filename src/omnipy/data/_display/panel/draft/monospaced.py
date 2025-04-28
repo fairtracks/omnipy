@@ -50,11 +50,11 @@ class MonospacedDraftPanel(
 
 @dataclass
 class LineStats:
-    line_width: pyd.NonNegativeInt = 0
-    char_count: pyd.NonNegativeInt = 0
+    line_width: int = 0
+    char_count: int = 0
     overflow: bool = False
 
-    def register_char(self, char_width: pyd.NonNegativeInt):
+    def register_char(self, char_width: int):
         self.line_width += char_width
         self.char_count += 1
 
@@ -64,7 +64,7 @@ def _calc_line_stats(
     line: str,
     tab_size: int,
     char_width_map: UnicodeCharWidthMap,
-    width_limit: pyd.NonNegativeInt | None = None,
+    width_limit: int | None = None,
 ) -> LineStats:
     if char_width_map.only_single_width_chars(line):
         return LineStats(

@@ -11,7 +11,6 @@ from omnipy.data._display.config import (ConsoleColorSystem,
                                          VerticalOverflowMode)
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-import omnipy.util._pydantic as pyd
 
 from ..helpers import (OutputPropertyType,
                        PanelOutputTestCase,
@@ -152,9 +151,9 @@ def case_syntax_styling_setup_no_frame_or_configs(
 @pc.case(id='no-frame-light-color', tags=['setup', 'syntax_text'])
 def case_syntax_styling_setup_no_frame_color_config(
         css_font_families: tuple[str, ...],
-        css_font_size: pyd.NonNegativeInt | None,
-        css_font_weight: pyd.NonNegativeInt | None,
-        css_line_height: pyd.NonNegativeFloat | None,
+        css_font_size: int | None,
+        css_font_weight: int | None,
+        css_line_height: float | None,
         transparent_background: bool) -> StylizedPanelTestCaseSetup[str]:
     case_id = 'no-frame-light-color' \
               + ('-no-fonts' if css_font_weight is None else '') \

@@ -32,7 +32,7 @@ class ReflowedTextDraftPanel(
         return all_content_lines
 
     @cached_property
-    def max_container_width_across_lines(self) -> pyd.NonNegativeInt:
+    def max_container_width_across_lines(self) -> int:
         def _max_container_width_in_line(line):
             # Find all containers in the line using regex
             containers = re.findall(r'\{.*\}|\[.*\]|\(.*\)', line)
