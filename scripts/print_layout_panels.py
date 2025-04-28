@@ -1,0 +1,159 @@
+from omnipy import JsonModel
+from omnipy.data._display.config import (DarkHighContrastColorStyles,
+                                         DarkLowContrastColorStyles,
+                                         RecommendedColorStyles)
+from omnipy.data._display.frame import Dimensions, Frame
+from omnipy.data._display.panel.draft.base import DraftPanel, Layout, OutputConfig
+from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
+
+json = """[
+         {
+             "id": "0001",
+             "type": "donut",
+             "name": "Cake",
+             "ppu": 0.55,
+             "batters":
+                 {
+                     "batter":
+                         [
+                             {"id": "1001", "type": "Regular"},
+                             {"id": "1002", "type": "Chocolate"},
+                             {"id": "1003", "type": "Blueberry"},
+                             {"id": "1004", "type": "Devil's Food"}
+                         ]
+                 },
+             "topping":
+                 [
+                     {"id": "5001", "type": "None"},
+                     {"id": "5002", "type": "Glazed"},
+                     {"id": "5005", "type": "Sugar"},
+                     {"id": "5007", "type": "Powdered Sugar"},
+                     {"id": "5006", "type": "Chocolate with Sprinkles"},
+                     {"id": "5003", "type": "Chocolate"},
+                     {"id": "5004", "type": "Maple"}
+                 ]
+         },
+         {
+             "id": "0002",
+             "type": "donut",
+             "name": "Raised",
+             "ppu": 0.55,
+             "batters":
+                 {
+                     "batter":
+                         [
+                             {"id": "1001", "type": "Regular"}
+                         ]
+                 },
+             "topping":
+                 [
+                     {"id": "5001", "type": "None"},
+                     {"id": "5002", "type": "Glazed"},
+                     {"id": "5005", "type": "Sugar"},
+                     {"id": "5003", "type": "Chocolate"},
+                     {"id": "5004", "type": "Maple"}
+                 ]
+         },
+         {
+             "id": "0003",
+             "type": "donut",
+             "name": "Old Fashioned",
+             "ppu": 0.55,
+             "batters":
+                 {
+                     "batter":
+                         [
+                             {"id": "1001", "type": "Regular"}
+                         ]
+                 },
+             "topping":
+                 [
+                     {"id": "5001", "type": "None"},
+                     {"id": "5002", "type": "Glazed"},
+                     {"id": "5005", "type": "Sugar"},
+                     {"id": "5003", "type": "Chocolate"},
+                     {"id": "5004", "type": "Maple"}
+                 ]
+         },
+         {
+             "id": "0003",
+             "type": "donut",
+             "name": "Old Fashioned",
+             "ppu": 0.55,
+             "batters":
+                 {
+                     "batter":
+                         [
+                             {"id": "1001", "type": "Regular"},
+                             {"id": "1002", "type": "Chocolate"}
+                         ]
+                 },
+             "topping":
+                 [
+                     {"id": "5001", "type": "None"},
+                     {"id": "5002", "type": "Glazed"},
+                     {"id": "5003", "type": "Chocolate"},
+                     {"id": "5004", "type": "Maple"}
+                 ]
+         }
+     ]"""
+
+tsv = """Username\tIdentifier\tFirst name\tLast name
+booker12\t9012\tRachel\tBooker
+grey07\t2070\tLaura\tGrey
+johnson81\t4081\tCraig\tJohnson
+jenkins46\t9346\tMary\tJenkins
+smith79\t5079\tJamie\tSmith
+"""
+
+config = OutputConfig(
+    console_color_system='truecolor',
+    color_style=RecommendedColorStyles.OMNIPY_SELENIZED_WHITE,
+    transparent_background=False,
+    language='python',
+    debug_mode=False)
+config1 = OutputConfig(
+    console_color_system='truecolor',
+    color_style=DarkHighContrastColorStyles.TB16_BLACK_METAL_KHOLD,
+    transparent_background=False,
+    language='python',
+    debug_mode=False)
+config2 = OutputConfig(
+    console_color_system='truecolor',
+    color_style=DarkHighContrastColorStyles.TB16_STELLA,
+    transparent_background=False,
+    language='python',
+    debug_mode=False)
+config3 = OutputConfig(
+    console_color_system='truecolor',
+    color_style=RecommendedColorStyles.OMNIPY_SELENIZED_BLACK,
+    transparent_background=True,
+    language='python',
+    debug_mode=False,
+    pretty_printer='rich',
+    tab_size=12)
+config4 = OutputConfig(
+    console_color_system='truecolor',
+    color_style=DarkLowContrastColorStyles.TB16_TAROT,
+    transparent_background=False,
+    language='json',
+    debug_mode=False)
+
+
+def print_with_config(json, tsv, config1, config2, config3, width, height):
+    j = JsonModel()
+    j.from_json(json)
+    layout = Layout(
+        first=DraftPanel(j[0], config=config1),
+        second=ReflowedTextDraftPanel(json, config=config2),
+        third=ReflowedTextDraftPanel(tsv, config=config3),
+        fourth=DraftPanel(j[2], config=config3))
+    p = DraftPanel(layout, frame=Frame(Dimensions(width, height)), config=config3)
+    print(p.render_next_stage().render_next_stage().colorized.terminal)
+    return p
+
+
+print_with_config(json, tsv, config1, config4, config3, 220, 91)
+print_with_config(json, tsv, config1, config4, config3, 180, 91)
+print_with_config(json, tsv, config1, config4, config3, 100, 91)
+print_with_config(json, tsv, config1, config4, config3, 40, 21)
