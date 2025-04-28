@@ -212,7 +212,7 @@ def test_fail_output_config_if_invalid_params(
         OutputConfig(tab_size=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(tab_size=None)
+        OutputConfig(tab_size=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
         OutputConfig(indent_tab_size=-1)
