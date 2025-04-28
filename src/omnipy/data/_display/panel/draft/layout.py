@@ -182,18 +182,7 @@ class ResizedLayoutDraftPanel(
     @cache
     def _panel_dims_if_cropped(
             panel: DimensionsAwarePanel[AnyFrame]) -> DimensionsWithWidthAndHeight:
-
-        if has_width(panel.frame.dims):
-            cropped_width = min(panel.frame.dims.width, panel.dims.width)
-        else:
-            cropped_width = panel.dims.width
-
-        if has_height(panel.frame.dims):
-            cropped_height = min(panel.frame.dims.height, panel.dims.height)
-        else:
-            cropped_height = panel.dims.height
-
-        return Dimensions(width=cropped_width, height=cropped_height)
+        return panel.dims_if_cropped
 
     @staticmethod
     @cache

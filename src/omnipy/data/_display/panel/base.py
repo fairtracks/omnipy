@@ -4,7 +4,11 @@ from typing import cast, Generic
 
 from typing_extensions import TypeIs, TypeVar
 
-from omnipy.data._display.dimensions import Dimensions, DimensionsFit
+from omnipy.data._display.dimensions import (Dimensions,
+                                             DimensionsFit,
+                                             DimensionsWithWidthAndHeight,
+                                             has_height,
+                                             has_width)
 from omnipy.data._display.frame import AnyFrame, empty_frame, Frame
 import omnipy.util._pydantic as pyd
 
@@ -70,11 +74,36 @@ def panel_is_fully_rendered(panel: 'Panel') -> TypeIs['FullyRenderedPanel']:
     return isinstance(panel, FullyRenderedPanel)
 
 
+def dims_if_cropped(
+    dims: DimensionsWithWidthAndHeight,
+    frame: AnyFrame,
+) -> DimensionsWithWidthAndHeight:
+    if has_width(frame.dims):
+        cropped_width = min(frame.dims.width, dims.width)
+    else:
+        cropped_width = dims.width
+
+    if has_height(frame.dims):
+        cropped_height = min(frame.dims.height, dims.height)
+    else:
+        cropped_height = dims.height
+
+    return Dimensions(width=cropped_width, height=cropped_height)
+
+
 class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
     @cached_property
     @abstractmethod
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
         ...
+
+    @cached_property
+    def dims_if_cropped(self,) -> DimensionsWithWidthAndHeight:
+        """
+        Returns the dimensions of the panel, cropped to fit within the
+        frame dimensions.
+        """
+        return dims_if_cropped(self.dims, self.frame)
 
     @cached_property
     def within_frame(self) -> DimensionsFit:

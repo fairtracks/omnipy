@@ -2,6 +2,7 @@ from abc import abstractmethod
 from copy import copy
 from enum import Enum
 from functools import cached_property
+import html
 import re
 from textwrap import dedent
 from typing import Callable, ClassVar, Generic, Iterable, NamedTuple
@@ -71,6 +72,7 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
         self._output = output
         self._config = output.config
         self._frame = output.frame
+        self._input_panel_dims_if_cropped = output.input_panel_dims_if_cropped
         self._output_mode = output_mode
 
     # Hacks to remove color and strip styles from the console record buffer, making use of
@@ -259,6 +261,7 @@ class CroppingOutputVariant(
             code_html,
             split_regexp=r'(<span[^>]*>[^<]*</span>)',
             findall_regexp=r'^(<span[^>]*>)?([^<]*)(</span>)?$',
+            unescape_html=True,
         )
 
     def _crop_stylized_text(self, code_html: str) -> str:
@@ -266,6 +269,7 @@ class CroppingOutputVariant(
             code_html,
             split_regexp=r'((?:\x1b\[[^m]*m)*[^\x1b]*(?:\x1b\[[^m]*m)*)',
             findall_regexp=r'^((?:\x1b\[[^m]*m)*)([^\x1b]*)((?:\x1b\[[^m]*m)*)$',
+            unescape_html=False,
         )
 
     def _crop_stylized_output_common(
@@ -273,6 +277,7 @@ class CroppingOutputVariant(
         output: str,
         split_regexp: str,
         findall_regexp: str,
+        unescape_html: bool,
     ) -> str:
         lines = self._split_to_lines_and_crop_virtually(output)
         cropped_lines = []
@@ -287,13 +292,21 @@ class CroppingOutputVariant(
                 items.append(StylizedItem(*re.findall(findall_regexp, item_str)[0]))
 
             items_per_line.append(items)
-            text_lines.append(''.join(item.content for item in items))
+            text_line = ''.join(item.content for item in items)
+
+            if unescape_html:
+                text_line = html.unescape(text_line)
+
+            text_lines.append(text_line)
 
         text_lines, _exited_early = self._crop_lines_horizontally(text_lines)
 
         for i, cropped_text_line in enumerate(text_lines):
             cropped_line = ''
             items = items_per_line[i]
+
+            if unescape_html:
+                cropped_text_line = html.escape(cropped_text_line)
 
             for item in items:
                 cropped_content = ''
@@ -369,7 +382,7 @@ class CroppingOutputVariant(
         return self._crop_top_level_html(self._html_page)
 
 
-class VerticalTextCroppingOutputVariant(
+class TextCroppingOutputVariant(
         CroppingOutputVariant[PanelT, ContentT, FrameT],
         Generic[PanelT, ContentT, FrameT],
 ):
@@ -392,6 +405,13 @@ class VerticalTextCroppingOutputVariant(
         line: str,
         uncropped_width: int,
     ) -> tuple[str, bool]:
+        line_content, newline = strip_and_split_newline(line)
+        # To enforce cropping at the "resize" stage, e.g.
+        # crop_content_for_tab_and_double_width_chars(), even in the
+        # presence of StylizedMonospacedPanel._apply_console_newline_hack()
+        if len(line_content) > self._input_panel_dims_if_cropped.width:
+            return line_content[:self._input_panel_dims_if_cropped.width] + newline, True
+
         return line, True
 
 

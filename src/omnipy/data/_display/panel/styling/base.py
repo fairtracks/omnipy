@@ -17,11 +17,8 @@ import rich.text
 from typing_extensions import override, TypeVar
 
 from omnipy.data._display.config import ConsoleColorSystem, HorizontalOverflowMode
-from omnipy.data._display.dimensions import (Dimensions,
-                                             DimensionsWithWidthAndHeight,
-                                             has_height,
-                                             has_width)
-from omnipy.data._display.panel.base import FullyRenderedPanel, OutputVariant
+from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
+from omnipy.data._display.panel.base import dims_if_cropped, FullyRenderedPanel, OutputVariant
 from omnipy.data._display.panel.draft.base import ContentT, FrameT
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 import omnipy.util._pydantic as pyd
@@ -42,19 +39,19 @@ class StylizedMonospacedPanel(
         Generic[PanelT, ContentT, FrameT],
         ABC,
 ):
-    # TODO: Return to _panel_calculated_dims when Pydantic 2.0 is released
+    # TODO: Return to _input_panel_dims_if_cropped when Pydantic 2.0 is released
     #
     # Pydantic 1.10 emits a RuntimeWarning for dataclasses with private
     # fields (starting with '_')
     # See https://github.com/pydantic/pydantic/issues/2816
-    # _panel_calculated_dims: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
+    # _input_panel_dims_if_croppeds: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
 
-    panel_calculated_dims: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
+    input_panel_dims_if_cropped: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
 
     def __init__(self, panel: MonospacedDraftPanel[ContentT, FrameT]):
         super().__init__(panel.content, panel.frame, panel.constraints, panel.config)
-        # object.__setattr__(self, '_panel_calculated_dims', panel.dims)
-        object.__setattr__(self, 'panel_calculated_dims', panel.dims)
+        # object.__setattr__(self, '_input_panel_dims_if_cropped', panel.dims_if_cropped)
+        object.__setattr__(self, 'input_panel_dims_if_cropped', panel.dims_if_cropped)
 
     @staticmethod
     def _clean_rich_style_caches():
@@ -98,14 +95,8 @@ class StylizedMonospacedPanel(
 
     @cached_property
     def _console_dimensions(self) -> DimensionsWithWidthAndHeight:
-        frame_dims = self.frame.dims
-        panel_dims = self.panel_calculated_dims
-
-        console_width = frame_dims.width if has_width(frame_dims) else panel_dims.width
-        console_height = frame_dims.height if has_height(frame_dims) else panel_dims.height
-
-        return self._apply_console_newline_hack(
-            Dimensions(width=console_width, height=console_height))
+        input_panel_dims = self.input_panel_dims_if_cropped
+        return self._apply_console_newline_hack(dims_if_cropped(input_panel_dims, self.frame))
 
     def _apply_console_newline_hack(
             self, console_dims: DimensionsWithWidthAndHeight) -> DimensionsWithWidthAndHeight:
@@ -113,8 +104,7 @@ class StylizedMonospacedPanel(
         Hack to allow rich.console to output newline contents when
         width == 0
         """
-        panel_dims = self.panel_calculated_dims
-        if panel_dims.width == 0 and console_dims.width == 0 and console_dims.height > 0:
+        if console_dims.width == 0 and console_dims.height > 0:
             return Dimensions(width=1, height=console_dims.height)
 
         return console_dims
@@ -183,7 +173,6 @@ class StylizedMonospacedPanel(
     def _content_lines(self) -> list[str]:
         """
         Returns the plain terminal output of the panel as a list of lines.
-        Here, as compared to output should end with a
         """
         return self.plain.terminal.splitlines()
 

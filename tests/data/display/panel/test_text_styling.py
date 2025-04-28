@@ -164,8 +164,8 @@ def test_syntax_stylized_text_panel_variable_width_chars(
     # Null character is zero-width
     assert _get_plain_terminal_output_from_contents('\0北京\n北京') == '\x00北京\n北京\n'
 
-    # Soft hyphen character is zero-width
-    assert _get_plain_terminal_output_from_contents('hyphe\xad\nnate') == 'hyphe\xad\nnate\n'
+    # Soft hyphen character is zero-width and removed if it appears at the end of a line
+    assert _get_plain_terminal_output_from_contents('hyphe\xad\nnate') == 'hyphe\nnate\n'
 
     # Tab character width depends on context
     assert _get_plain_terminal_output_from_contents('\ta') == '    a\n'

@@ -3,10 +3,11 @@ import re
 
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight, has_height
 from omnipy.data._display.frame import AnyFrame, Frame
-from omnipy.data._display.helpers import soft_wrap_words
+from omnipy.data._display.helpers import soft_wrap_words, UnicodeCharWidthMap
 from omnipy.data._display.panel.base import DimensionsAwarePanel, FullyRenderedPanel, OutputVariant
 from omnipy.data._display.panel.draft.base import DraftPanel
-from omnipy.data._display.panel.draft.monospaced import crop_content_lines_for_resizing
+from omnipy.data._display.panel.draft.monospaced import (crop_content_lines_for_resizing,
+                                                         crop_content_with_extra_wide_chars)
 from omnipy.data._display.panel.styling.output import OutputMode
 import omnipy.util._pydantic as pyd
 
@@ -47,7 +48,14 @@ class MockPanelStage2(DimensionsAwarePanel, MockPanel):
     @cached_property
     def _content_lines(self) -> list[str]:
         all_content_lines = self.content.split('\n')
-        return crop_content_lines_for_resizing(all_content_lines, self.frame)
+        all_content_lines = crop_content_lines_for_resizing(all_content_lines, self.frame)
+        all_content_lines = crop_content_with_extra_wide_chars(
+            all_content_lines,
+            self.frame,
+            self.config,
+            UnicodeCharWidthMap(),
+        )
+        return all_content_lines
 
     @cached_property
     def dims(self) -> DimensionsWithWidthAndHeight:

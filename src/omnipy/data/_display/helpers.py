@@ -1,4 +1,5 @@
 from rich._cell_widths import CELL_WIDTHS
+from rich.cells import _is_single_cell_widths
 
 from omnipy.util.range_lookup import RangeLookup
 
@@ -25,6 +26,14 @@ class UnicodeCharWidthMap:
         if unicode_index in self._chars_with_width_2:
             return 2
         return 1
+
+    @staticmethod
+    def only_single_width_chars(line: str) -> bool:
+        return _is_single_cell_widths(line)
+
+    def __hash__(self) -> int:
+        # No state, so we can use a constant hash
+        return hash('UnicodeCharWidthMap')
 
 
 def soft_wrap_words(words: list[str], max_width: int) -> list[str]:

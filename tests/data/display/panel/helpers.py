@@ -46,6 +46,7 @@ class WithinFrameExp(NamedTuple):
 @dataclass
 class FrameTestCase(Generic[FrameT]):
     frame: FrameT | None
+    config: OutputConfig | None = None
 
     exp_plain_output: str | None | pyd.UndefinedType = field(default=pyd.Undefined)
     exp_dims_all_stages: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
@@ -288,7 +289,10 @@ def apply_frame_variant_to_test_case(
     else:
         match case.frame_variant:
             case True, False:  # only width
-                frame_only_width = Frame(Dimensions(width=case.frame.dims.width, height=None))
+                frame_only_width = Frame(
+                    Dimensions(width=case.frame.dims.width, height=None),
+                    fixed_width=case.frame.fixed_width,
+                )
 
                 exp_dims_only_width = case.exp_stylized_dims_only_width if stylized_stage \
                     else case.exp_resized_dims_only_width
@@ -302,7 +306,10 @@ def apply_frame_variant_to_test_case(
                     exp_within_frame=get_exp_within_frame(frame_only_width, exp_dims_only_width),
                 )
             case False, True:  # only height
-                frame_only_height = Frame(Dimensions(width=None, height=case.frame.dims.height))
+                frame_only_height = Frame(
+                    Dimensions(width=None, height=case.frame.dims.height),
+                    fixed_height=case.frame.fixed_height,
+                )
 
                 exp_dims_only_height = case.exp_stylized_dims_only_height if stylized_stage \
                     else case.exp_resized_dims_only_height

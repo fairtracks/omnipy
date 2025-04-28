@@ -2,6 +2,7 @@ from typing import Annotated
 
 import pytest_cases as pc
 
+from omnipy.data._display.config import HorizontalOverflowMode, OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
 
@@ -178,3 +179,377 @@ def case_syntax_text_simple_text(
         frame_case=frame_case,
         frame_variant=per_frame_variant,
     )
+
+
+@pc.parametrize(
+    'frame_case',
+    (
+        FrameTestCase(frame=None),
+        FrameTestCase(frame=Frame(Dimensions(width=4, height=1), fixed_width=False)),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=3, height=1), fixed_width=False),
+            exp_plain_output='北…\n',
+            exp_dims_all_stages=Dimensions(width=3, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=3, height=1)),
+            exp_plain_output='北…\n',
+            # The frame is fixed width, so the cropping logic for
+            # double-width characters is not applied in the "reflowing"
+            # stage. Hence, the width is not reduced until the "styling"
+            # stage.
+            exp_stylized_dims=Dimensions(width=3, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=3, height=1), fixed_width=False),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output='北\n',
+            exp_dims_all_stages=Dimensions(width=2, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=3, height=1)),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output='北 \n',
+            # The frame is fixed width, so the cropping logic for
+            # double-width characters is not applied in the "reflowing"
+            # stage. The rich library adds a space at the end in the
+            # "styling" stage to ensure exact text width.
+            exp_stylized_dims=Dimensions(width=3, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=2, height=1), fixed_width=False),
+            exp_plain_output='…\n',
+            exp_dims_all_stages=Dimensions(width=1, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=2, height=1)),
+            exp_plain_output=' …\n',
+            # The frame is fixed width, so the cropping logic for
+            # double-width characters is not applied in the "reflowing"
+            # stage. The rich library adds a space at the beginning in the
+            # "styling" stage to ensure exact text width.
+            exp_stylized_dims=Dimensions(width=2, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=2, height=1), fixed_width=False),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output='北\n',
+            exp_dims_all_stages=Dimensions(width=2, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=2, height=1)),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output='北\n',
+            # The frame is fixed width, so the cropping logic for
+            # double-width characters is not applied in the "reflowing"
+            # stage. Hence, the width is not reduced until the "styling"
+            # stage.
+            exp_stylized_dims=Dimensions(width=2, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=1, height=1), fixed_width=False),
+            exp_plain_output='…\n',
+            exp_dims_all_stages=Dimensions(width=1, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=1, height=1)),
+            exp_plain_output='…\n',
+            # The frame is fixed width, so the cropping logic for
+            # double-width characters is not applied in the "reflowing"
+            # stage. Hence, the width is not reduced until the "styling"
+            # stage.
+            exp_stylized_dims=Dimensions(width=1, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=1, height=1), fixed_width=False),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output='\n',
+            exp_dims_all_stages=Dimensions(width=0, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=1, height=1)),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output=' \n',
+            # The frame is fixed width, so the cropping logic for
+            # double-width characters is not applied in the "reflowing"
+            # stage. The rich library adds a space at the end in the
+            # "styling" stage to ensure exact text width.
+            exp_stylized_dims=Dimensions(width=1, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=0, height=1), fixed_width=False),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output='\n',
+            # Frame width is zero, which shortcuts the cropping logic for
+            # double-width characters in the "reflowing" stage. Hence, the
+            # width is not reduced until the "styling" stage.
+            exp_stylized_dims=Dimensions(width=0, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=0, height=1)),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output='\n',
+            # Frame width is both zero and fixed. Both shortcuts the
+            # cropping logic for double-width characters in the "reflowing"
+            # stage. Hence, the width is not reduced until the "styling"
+            # stage.
+            exp_stylized_dims=Dimensions(width=0, height=1),
+        ),
+    ),
+    ids=(
+        'no_frame',
+        'exact_frame',
+        'smaller_odd_width_frame_ellipsis',
+        'smaller_odd_width_fixed_frame_ellipsis',
+        'smaller_odd_width_frame_crop',
+        'smaller_odd_width_fixed_frame_crop',
+        'smaller_even_width_frame_ellipsis',
+        'smaller_even_width_fixed_frame_ellipsis',
+        'smaller_even_width_frame_crop',
+        'smaller_even_width_fixed_frame_crop',
+        'single_width_frame_ellipsis',
+        'single_width_fixed_frame_ellipsis',
+        'single_width_frame_crop',
+        'single_width_fixed_frame_crop',
+        'no_width_frame_ellipsis',
+        'no_width_fixed_frame_ellipsis',
+    ),
+)
+@pc.case(id='double_width_chars', tags=['dims_and_edge_cases', 'syntax_text'])
+def case_syntax_text_double_width_chars(
+    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    per_frame_variant: Annotated[FrameVariant, pc.fixture],
+) -> PanelFrameVariantTestCase[str]:
+    return PanelFrameVariantTestCase(
+        # Mandarin Chinese characters are double-width
+        content='北京',
+        frame=frame_case.frame,
+        config=frame_case.config,
+        exp_plain_output_no_frame='北京\n',
+        exp_dims_all_stages_no_frame=Dimensions(width=4, height=1),
+        exp_plain_output_only_height='北京\n',
+        exp_dims_all_stages_only_height=Dimensions(width=4, height=1),
+        frame_case=frame_case,
+        frame_variant=per_frame_variant,
+    )
+
+
+@pc.parametrize(
+    'frame_case',
+    (
+        FrameTestCase(frame=None),
+        FrameTestCase(frame=Frame(Dimensions(width=5, height=1), fixed_width=False)),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=4, height=1), fixed_width=False),
+            exp_plain_output=' a…\n',
+            exp_dims_all_stages=Dimensions(width=3, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=4, height=1)),
+            exp_plain_output=' a …\n',
+            # The frame is fixed width, so the cropping logic for
+            # tab characters is not applied in the "reflowing" stage.
+            # The rich library adds a space before the ellipsis in the
+            # "styling" stage to ensure exact text width.
+            exp_stylized_dims=Dimensions(width=4, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=4, height=1), fixed_width=False),
+            config=OutputConfig(tab_size=3),
+            exp_plain_output=' a b\n',
+            # No cropping needed
+            exp_dims_all_stages=Dimensions(width=4, height=1),
+            exp_plain_output_only_height=' a b\n',
+            exp_dims_all_stages_only_height=Dimensions(width=4, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=4, height=1)),
+            config=OutputConfig(tab_size=3),
+            exp_plain_output=' a b\n',
+            # No cropping needed
+            exp_dims_all_stages=Dimensions(width=4, height=1),
+            exp_plain_output_only_height=' a b\n',
+            exp_dims_all_stages_only_height=Dimensions(width=4, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=4, height=1), fixed_width=False),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output=' a\n',
+            exp_dims_all_stages=Dimensions(width=2, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=4, height=1)),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output=' a  \n',
+            # The frame is fixed width, so the cropping logic for
+            # tab characters is not applied in the "reflowing" stage.
+            # The rich library adds whitespace in the "styling" stage to
+            # ensure exact text width.
+            exp_stylized_dims=Dimensions(width=4, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=3, height=1), fixed_width=False),
+            exp_plain_output=' a…\n',
+            exp_dims_all_stages=Dimensions(width=3, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=3, height=1)),
+            exp_plain_output=' a…\n',
+            # The frame is fixed width, so the cropping logic for
+            # tab characters is not applied in the "reflowing" stage.
+            # Hence, the width is not reduced until the "styling" stage.
+            exp_stylized_dims=Dimensions(width=3, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=3, height=1), fixed_width=False),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output=' a\n',
+            exp_dims_all_stages=Dimensions(width=2, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=3, height=1)),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output=' a \n',
+            # The frame is fixed width, so the cropping logic for
+            # tab characters is not applied in the "reflowing" stage.
+            # The rich library adds whitespace in the "styling" stage to
+            # ensure exact text width.
+            exp_stylized_dims=Dimensions(width=3, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=2, height=1), fixed_width=False),
+            exp_plain_output=' …\n',
+            # The space in the beginning is part of the content, hence it
+            # is not removed.
+            exp_dims_all_stages=Dimensions(width=2, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=2, height=1)),
+            exp_plain_output=' …\n',
+            # The frame is fixed width, so the cropping logic for
+            # tab characters is not applied in the "reflowing" stage.
+            # Hence, the width is not reduced until the "styling" stage.
+            exp_stylized_dims=Dimensions(width=2, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=2, height=1), fixed_width=False),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output=' a\n',
+            exp_dims_all_stages=Dimensions(width=2, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=2, height=1)),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output=' a\n',
+            # The frame is fixed width, so the cropping logic for
+            # tab characters is not applied in the "reflowing" stage.
+            # Hence, the width is not reduced until the "styling" stage.
+            exp_stylized_dims=Dimensions(width=2, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=0, height=1), fixed_width=False),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output='\n',
+            # Frame width is zero, which shortcuts the cropping logic for
+            # tab characters in the "reflowing" stage. Hence, the width is
+            # not reduced until the "styling" stage.
+            exp_stylized_dims=Dimensions(width=0, height=1),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=0, height=1)),
+            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            exp_plain_output='\n',
+            # Frame width is both zero and fixed. Both shortcuts the
+            # cropping logic for tab characters in the "reflowing" stage.
+            # Hence, the width is not reduced until the "styling" stage.
+            exp_stylized_dims=Dimensions(width=0, height=1),
+        ),
+    ),
+    ids=(
+        'no_frame',
+        'exact_frame',
+        'smaller_even_width_frame_ellipsis',
+        'smaller_even_width_fixed_frame_ellipsis',
+        'smaller_even_width_frame_ellipsis_tab_size_3',
+        'smaller_even_width_fixed_frame_ellipsis_tab_size_3',
+        'smaller_even_width_frame_crop',
+        'smaller_even_width_fixed_frame_crop',
+        'smaller_odd_width_frame_ellipsis',
+        'smaller_odd_width_fixed_frame_ellipsis',
+        'smaller_odd_width_frame_crop',
+        'smaller_odd_width_fixed_frame_crop',
+        'width_two_frame_ellipsis',
+        'width_two_fixed_frame_ellipsis',
+        'width_two_frame_crop',
+        'width_two_fixed_frame_crop',
+        'no_width_frame_ellipsis',
+        'no_width_fixed_frame_ellipsis',
+    ),
+)
+@pc.case(id='tab_char', tags=['dims_and_edge_cases', 'syntax_text'])
+def case_syntax_text_tab_char(
+    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    per_frame_variant: Annotated[FrameVariant, pc.fixture],
+) -> PanelFrameVariantTestCase[str]:
+    return PanelFrameVariantTestCase(
+        # Tab character width depends on context, filling the spaces until
+        # the next tab stop (4 chars by default)
+        content=' a\tb',
+        frame=frame_case.frame,
+        config=frame_case.config,
+        exp_plain_output_no_frame=' a  b\n',
+        exp_dims_all_stages_no_frame=Dimensions(width=5, height=1),
+        exp_plain_output_only_height=' a  b\n',
+        exp_dims_all_stages_only_height=Dimensions(width=5, height=1),
+        frame_case=frame_case,
+        frame_variant=per_frame_variant,
+    )
+
+
+# # Mandarin Chinese characters are double-width
+#   assert_dims_aware_panel(ReflowedTextDraftPanel('北京'), Dimensions(width=4, height=1))
+#
+#   # Null character is zero-width
+#   assert_dims_aware_panel(ReflowedTextDraftPanel('\0北京\n北京'), Dimensions(width=4, height=2))
+#
+#   # Soft hyphen character is zero-width
+#   assert_dims_aware_panel(
+#       ReflowedTextDraftPanel('hyphe\xad\nnate'), Dimensions(width=5, height=2))
+#
+#   # Tab character width depends on context
+#   assert_dims_aware_panel(ReflowedTextDraftPanel('\tc'), Dimensions(width=5, height=1))
+#   assert_dims_aware_panel(ReflowedTextDraftPanel(' a\tb'), Dimensions(width=5, height=1))
+#   assert_dims_aware_panel(ReflowedTextDraftPanel('abcd  \te'), Dimensions(width=9, height=1))
+#
+#   # Tab character width also depends on config
+#   assert_dims_aware_panel(
+#       ReflowedTextDraftPanel('\tc', config=OutputConfig(tab_size=6)),
+#       Dimensions(width=7, height=1),
+#   )
+#   assert_dims_aware_panel(
+#       ReflowedTextDraftPanel(' a\tb', config=OutputConfig(tab_size=6)),
+#       Dimensions(width=7, height=1),
+#   )
+#   assert_dims_aware_panel(
+#       ReflowedTextDraftPanel('abcd  \te', config=OutputConfig(tab_size=6)),
+#       Dimensions(width=13, height=1),
+#   )
+#
+# ('北京') == '北京\n'
+#
+#     # Null character is zero-width
+#     assert _get_plain_terminal_output_from_contents('\0北京\n北京') == '\x00北京\n北京\n'
+#
+#     # Soft hyphen character is zero-width
+#     assert _get_plain_terminal_output_from_contents('hyphe\xad\nnate') == 'hyphe\xad\nnate\n'
+#
+#     # Tab character width depends on context
+#     assert _get_plain_terminal_output_from_contents('\ta') == '    a\n'
+#     assert _get_plain_terminal_output_from_contents(' a\tb') == ' a  b\n'
+#     assert _get_plain_terminal_output_from_contents('abcd  \te') == 'abcd    e\n'
+#
+#     # Tab character width also depends on config
+#     config = OutputConfig(tab_size=6)
+#     assert _get_plain_terminal_output_from_contents('\ta', config) == '      a\n'
+#     assert _get_plain_terminal_output_from_contents(' a\tb', config) == ' a    b\n'
+#     assert _get_plain_terminal_output_from_contents('abcd  \te', config) == 'abcd        e\n'
