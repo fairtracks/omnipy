@@ -23,6 +23,21 @@ class ResizedLayoutDraftPanel(
         MonospacedDraftPanel[Layout[DimensionsAwarePanel[AnyFrame]], FrameT],
         Generic[FrameT],
 ):
+    @classmethod
+    def _create_new_resized_panel(
+        cls,
+        draft_panel_basis: DraftPanel,
+        frame: Frame,
+    ) -> DimensionsAwarePanel[AnyFrame]:
+        new_draft_panel = draft_panel_basis.__class__(
+            content=draft_panel_basis.content,
+            title=draft_panel_basis.title,
+            frame=frame,
+            constraints=draft_panel_basis.constraints,
+            config=draft_panel_basis.config,
+        )
+        return new_draft_panel.render_next_stage()
+
     @pyd.validator('content', pre=True)
     def resize_panels_to_fit_frame(  # noqa: C901
         cls,
@@ -100,20 +115,21 @@ class ResizedLayoutDraftPanel(
             print(f'min_frame_width: {min_frame_width}')
 
             for key in panel_priority:
-                draft_panel = content[key]
+                cur_draft_panel = content[key]
+                cur_dim_aware_panel = dim_aware_panels[key]
 
-                frame_width = dim_aware_panels[key].frame.dims.width
-                frame_height = dim_aware_panels[key].frame.dims.height
-                draft_fixed_width = draft_panel.frame.fixed_width
-                draft_fixed_height = draft_panel.frame.fixed_height
+                frame_width = cur_dim_aware_panel.frame.dims.width
+                frame_height = cur_dim_aware_panel.frame.dims.height
+                draft_fixed_width = cur_draft_panel.frame.fixed_width
+                draft_fixed_height = cur_draft_panel.frame.fixed_height
 
                 if delta_width:
-                    frame_width = cls._panel_dims_if_cropped(dim_aware_panels[key]).width
+                    frame_width = cls._panel_dims_if_cropped(cur_dim_aware_panel).width
                     frame_width_delta = (-1) if delta_width > 0 else -delta_width
                     frame_width = max(frame_width + frame_width_delta, min_frame_width)
 
-                    if draft_fixed_width is True and has_width(draft_panel.frame.dims):
-                        frame_width = min(frame_width, draft_panel.frame.dims.width)
+                    if draft_fixed_width is True and has_width(cur_draft_panel.frame.dims):
+                        frame_width = min(frame_width, cur_draft_panel.frame.dims.width)
 
                 if delta_height:
                     frame_height = cls._panel_dims_if_cropped(dim_aware_panels[key]).height
@@ -124,36 +140,31 @@ class ResizedLayoutDraftPanel(
                         if frame_height >= -frame_height_delta:
                             frame_height += frame_height_delta
 
-                        if draft_fixed_height is True and has_height(draft_panel.frame.dims):
-                            frame_height = min(frame_height, draft_panel.frame.dims.height)
+                        if draft_fixed_height is True and has_height(cur_draft_panel.frame.dims):
+                            frame_height = min(frame_height, cur_draft_panel.frame.dims.height)
 
                 new_panel_frame = Frame(
                     dims=Dimensions(width=frame_width, height=frame_height),
                     fixed_width=draft_fixed_width,
                     fixed_height=draft_fixed_height,
                 )
-                if new_panel_frame != dim_aware_panels[key].frame and not panel_is_dimensions_aware(
-                        draft_panel):
-                    new_draft_panel = draft_panel.__class__(
-                        content=draft_panel.content,
-                        title=draft_panel.title,
-                        frame=new_panel_frame,
-                        constraints=draft_panel.constraints,
-                        config=draft_panel.config,
+                if new_panel_frame != cur_dim_aware_panel.frame \
+                        and not panel_is_dimensions_aware(cur_draft_panel):
+                    resized_panel = cls._create_new_resized_panel(
+                        cur_draft_panel,
+                        new_panel_frame,
                     )
-                    resized_panel: DimensionsAwarePanel[
-                        AnyFrame] = new_draft_panel.render_next_stage()
 
-                    prev_cropped_dims = cls._panel_dims_if_cropped(dim_aware_panels[key])
+                    prev_cropped_dims = cls._panel_dims_if_cropped(cur_dim_aware_panel)
                     new_cropped_dims = cls._panel_dims_if_cropped(resized_panel)
 
                     if key not in no_resize_panel_keys:
-                        prev_frame_dims = dim_aware_panels[key].frame.dims
+                        prev_frame_dims = cur_dim_aware_panel.frame.dims
                         if delta_width and delta_width > 0 \
-                                and resized_panel.dims.width == dim_aware_panels[key].dims.width:
-                            if has_width(resized_panel.frame.dims) and \
+                                and resized_panel.dims.width == cur_dim_aware_panel.dims.width:
+                            if has_width(new_panel_frame.dims) and \
                                     has_width(prev_frame_dims) and \
-                                    resized_panel.frame.dims.width < prev_frame_dims.width:
+                                    new_panel_frame.dims.width < prev_frame_dims.width:
                                 no_resize_panel_keys.add(key)
                                 break
                     else:
