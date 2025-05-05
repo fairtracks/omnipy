@@ -1,12 +1,7 @@
-from typing import Annotated
-
-import pytest
-
 from omnipy.data._display.helpers import soft_wrap_words, UnicodeCharWidthMap
 
 
-def test_unicode_char_width_map(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_unicode_char_width_map() -> None:
     map = UnicodeCharWidthMap()
     assert map['\0'] == 0
     assert map['\x1f'] == 0

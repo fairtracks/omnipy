@@ -14,6 +14,7 @@ from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 from ..helpers.classes import MockPanel, MockPanelStage3
 from .helpers import (apply_frame_variant_to_test_case,
                       assert_dims_aware_panel,
+                      FrameVariant,
                       OutputPropertyType,
                       PanelFrameVariantTestCase,
                       PanelOutputTestCase,
@@ -22,8 +23,7 @@ from .helpers import (apply_frame_variant_to_test_case,
                       StylizedPanelTestCaseSetup)
 
 
-def test_stylized_layout_panel_init(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_stylized_layout_panel_init() -> None:
 
     layout: Layout = Layout()
     layout['panel'] = MockPanel(content='Some Content')
@@ -55,16 +55,14 @@ def test_stylized_layout_panel_init(
     assert configured_layout_panel.config == config
 
 
-def test_fail_stylized_layout_panel_if_extra_params(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_stylized_layout_panel_if_extra_params() -> None:
 
     with pytest.raises(TypeError):
         StylizedLayoutPanel(ResizedLayoutDraftPanel(Layout()), extra=123)  # type: ignore[call-arg]
 
 
 # noinspection PyDataclass
-def test_stylized_layout_panel_immutable_properties(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_stylized_layout_panel_immutable_properties() -> None:
 
     layout_panel = StylizedLayoutPanel(ResizedLayoutDraftPanel(Layout()))
 
@@ -88,10 +86,14 @@ def test_stylized_layout_panel_immutable_properties(
 )
 def test_stylized_layout_panel_basic_dims_and_edge_cases(
     case: PanelOutputTestCase[Layout] | PanelFrameVariantTestCase[Layout],
+    plain_terminal: Annotated[OutputPropertyType, pc.fixture],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
 ) -> None:
     if isinstance(case, PanelFrameVariantTestCase):
+        if case.frame_variant != FrameVariant(True, True) \
+                and output_format_accessor != plain_terminal:
+            pytest.skip('Skip test combination to increase test efficiency.')
+
         case = apply_frame_variant_to_test_case(case, stylized_stage=True)
 
     layout_panel = StylizedLayoutPanel(
@@ -127,9 +129,9 @@ def test_stylized_layout_panel_basic_dims_and_edge_cases(
     has_tag=('expectations', 'layout'),
 )
 def test_output_properties_of_stylized_layout_panel(
-        output_test_case_setup: Annotated[StylizedPanelTestCaseSetup, pc.fixture],
-        output_prop_expectations: Annotated[StylizedPanelOutputExpectations, pc.fixture],
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    output_test_case_setup: Annotated[StylizedPanelTestCaseSetup, pc.fixture],
+    output_prop_expectations: Annotated[StylizedPanelOutputExpectations, pc.fixture],
+) -> None:
 
     case_id, content, title, frame, config = output_test_case_setup
     get_output_property, exp_plain_output_for_case_id = output_prop_expectations
@@ -145,8 +147,7 @@ def test_output_properties_of_stylized_layout_panel(
         assert get_output_property(layout_panel) == exp_plain_output_for_case_id(case_id)
 
 
-def test_fail_stylized_layout_panel_render_next_stage(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_stylized_layout_panel_render_next_stage() -> None:
     layout_panel = StylizedLayoutPanel(ResizedLayoutDraftPanel(Layout()))
     with pytest.raises(NotImplementedError):
         layout_panel.render_next_stage()

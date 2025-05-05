@@ -20,6 +20,9 @@ from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 
 from ....helpers.functions import get_pip_installed_packages
 
+# mypy: disable-error-code="attr-defined"
+# pyright: reportAttributeAccessIssue=none
+
 
 @pc.fixture
 def example_base16_theme_yaml() -> str:
@@ -122,7 +125,6 @@ async def my_base2_endpoint_url(
 
 
 async def test_fetch_base16_theme(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     my_base16_endpoint_url: Annotated[str, pytest.fixture],
     example_base16_theme: Annotated[Base16Theme, pytest.fixture],
 ) -> None:
@@ -131,9 +133,7 @@ async def test_fetch_base16_theme(
 
 
 async def test_fail_incorrect_system_fetch_base2_theme(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-    my_base2_endpoint_url: Annotated[str, pytest.fixture],
-) -> None:
+        my_base2_endpoint_url: Annotated[str, pytest.fixture]) -> None:
     with pytest.raises(ValueError):
         await fetch_base16_theme(my_base2_endpoint_url)
 
@@ -151,10 +151,7 @@ def _assert_example_base16_style(TintedBase16Example_1Style: type[pygments.style
     assert TintedBase16Example_1Style.styles[pygments.token.Text] == example_theme.palette.base05
 
 
-def test_create_dynamic_style_class(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-    example_base16_theme: Annotated[Base16Theme, pytest.fixture],
-):
+def test_create_dynamic_style_class(example_base16_theme: Annotated[Base16Theme, pytest.fixture]):
     TintedBase16Example_1Style = create_dynamic_base16_style_class(
         'tb16-example-1',
         example_base16_theme,
@@ -163,9 +160,7 @@ def test_create_dynamic_style_class(
 
 
 def test_fail_create_dynamic_style_class_incorrect_theme_suffix(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-    example_base16_theme: Annotated[Base16Theme, pytest.fixture],
-):
+        example_base16_theme: Annotated[Base16Theme, pytest.fixture]) -> None:
     with pytest.raises(AssertionError):
         create_dynamic_base16_style_class('my-example-1', example_base16_theme)
 
@@ -183,7 +178,6 @@ def _setup_base16_download_url(my_base16_endpoint_url: str) -> Iterator[None]:
 
 
 def test_auto_create_dynamic_style_class_at_import(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     example_base16_theme: Annotated[Base16Theme, pytest.fixture],
     my_base16_endpoint_url: Annotated[str, pytest.fixture],
 ):
@@ -193,7 +187,6 @@ def test_auto_create_dynamic_style_class_at_import(
 
 
 def test_install_base16_theme(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     example_base16_theme: Annotated[Base16Theme, pytest.fixture],
     my_base16_endpoint_url: Annotated[str, pytest.fixture],
 ):
@@ -206,7 +199,6 @@ def test_install_base16_theme(
 
 
 def test_fail_install_base16_theme_incorrect_theme_suffix(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     example_base16_theme: Annotated[Base16Theme, pytest.fixture],
     my_base16_endpoint_url: Annotated[str, pytest.fixture],
 ):
@@ -216,7 +208,6 @@ def test_fail_install_base16_theme_incorrect_theme_suffix(
 
 
 def test_fail_import_missing(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     example_base16_theme: Annotated[Base16Theme, pytest.fixture],
     my_base16_endpoint_url: Annotated[str, pytest.fixture],
 ):
@@ -228,9 +219,7 @@ def test_fail_import_missing(
             from omnipy.data._display.styles.dynamic_styles import something_else  # noqa
 
 
-def test_omnipy_style_import(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-
+def test_omnipy_style_import() -> None:
     # To make sure the tests only run when the omnipy package is installed, which is required for
     # the styles to be registered with the pygments package. This is needed as the tests might be
     # run in a development environment where the omnipy package is not installed.
@@ -247,8 +236,7 @@ def test_omnipy_style_import(
             pygments.styles.get_style_by_name(style)
 
 
-def test_dynamic_style_import(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_dynamic_style_import() -> None:
     installable_styles = [style for style in AllColorStyles.values() if style.startswith('tb16-')]
 
     for style in random.sample(installable_styles, 3):

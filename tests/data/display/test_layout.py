@@ -16,8 +16,7 @@ class SimpleLayoutCase:
     second_panel: Panel
 
 
-def test_empty_layout(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_empty_layout() -> None:
     layout = Layout()
 
     # Check contents
@@ -49,10 +48,7 @@ def simple_layout() -> SimpleLayoutCase:
     )
 
 
-def test_layout_hashable(
-    simple_layout: Annotated[SimpleLayoutCase, pytest.fixture],
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+def test_layout_hashable(simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
     layout_1 = Layout()
     layout_2 = Layout()
 
@@ -73,9 +69,7 @@ def test_layout_hashable(
 
 
 def test_basic_layout_dict_operations(
-    simple_layout: Annotated[SimpleLayoutCase, pytest.fixture],
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+        simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
     """Test basic layout operations: adding, retrieving, counting and containment."""
     case = simple_layout
 
@@ -92,10 +86,7 @@ def test_basic_layout_dict_operations(
     assert 'third' not in case.layout
 
 
-def test_layout_iteration(
-    simple_layout: Annotated[SimpleLayoutCase, pytest.fixture],
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+def test_layout_iteration(simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
     """Test various ways of iterating over the layout panels."""
     case = simple_layout
 
@@ -115,9 +106,7 @@ def test_layout_iteration(
 
 
 def test_layout_insertion_and_deletion(
-    simple_layout: Annotated[SimpleLayoutCase, pytest.fixture],
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+        simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
     """Test insertion and deletion of panels in the layout."""
     case = simple_layout
 
@@ -157,10 +146,7 @@ def test_layout_insertion_and_deletion(
     assert len(case.layout) == 0
 
 
-def test_layout_default_methods(
-    simple_layout: Annotated[SimpleLayoutCase, pytest.fixture],
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+def test_layout_default_methods(simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
     """
     Test common dictionary methods:  get() and setdefault()
     as well as binary operations.
@@ -186,9 +172,7 @@ def test_layout_default_methods(
 
 
 def test_layout_update_methods_and_operators(
-    simple_layout: Annotated[SimpleLayoutCase, pytest.fixture],
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+        simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
     """Test update() and binary operators."""
     case = simple_layout
 
@@ -228,10 +212,7 @@ def test_layout_update_methods_and_operators(
     assert len(case.layout) == 7
 
 
-def test_layout_dict_comparison(
-    simple_layout: Annotated[SimpleLayoutCase, pytest.fixture],
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+def test_layout_dict_comparison(simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
     """Test dictionary comparison operations."""
     case = simple_layout
 
@@ -247,9 +228,7 @@ def test_layout_dict_comparison(
 
 
 def test_layout_dict_copy_and_clear(
-    simple_layout: Annotated[SimpleLayoutCase, pytest.fixture],
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+        simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
     """Test copy() and clear() methods."""
     case = simple_layout
 
@@ -275,9 +254,7 @@ def test_layout_dict_copy_and_clear(
 
 
 def test_layout_simple_grid_queries(
-    simple_layout: Annotated[SimpleLayoutCase, pytest.fixture],
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+        simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
     """Test simple grid queries."""
     case = simple_layout
 
@@ -302,9 +279,7 @@ def test_layout_simple_grid_queries(
 
 
 def test_layout_simple_grid_insert_and_delete(
-    simple_layout: Annotated[SimpleLayoutCase, pytest.fixture],
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+        simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
     """Test simple grid queries."""
     case = simple_layout
 

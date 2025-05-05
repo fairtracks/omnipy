@@ -1,5 +1,3 @@
-from typing import Annotated
-
 import pytest
 
 from omnipy.data._display.config import OutputConfig
@@ -19,8 +17,7 @@ from ..helpers.classes import MockPanel, MockPanelStage2
 from .helpers import assert_draft_panel_subcls, assert_next_stage_panel
 
 
-def test_draft_panel_init(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_draft_panel_init() -> None:
     assert_draft_panel_subcls(DraftPanel, 'Some text')
     assert_draft_panel_subcls(
         DraftPanel, (1, 2, 3), title='UnboundPanel', frame=Frame(Dimensions(None, None)))
@@ -49,8 +46,7 @@ def test_draft_panel_init(
     )
 
 
-def test_draft_panel_hashable(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_draft_panel_hashable() -> None:
     panel_1 = DraftPanel('')
     panel_2 = DraftPanel('')
 
@@ -78,8 +74,7 @@ def test_draft_panel_hashable(
     assert hash(panel_7) == hash(panel_12)
 
 
-def test_draft_panel_mutable_not_hashable(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_draft_panel_mutable_not_hashable() -> None:
     # Test with mutable content
     mutable_content = [1, 2, 3]
     draft_panel = DraftPanel(mutable_content)
@@ -89,8 +84,7 @@ def test_draft_panel_mutable_not_hashable(
 
 
 # noinspection PyDataclass
-def test_fail_draft_panel_no_assignments(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_draft_panel_no_assignments() -> None:
     draft_panel = DraftPanel('Some text')
 
     with pytest.raises(AttributeError):
@@ -110,8 +104,7 @@ def test_fail_draft_panel_no_assignments(
         draft_panel.config = OutputConfig(indent_tab_size=4)  # type: ignore[misc]
 
 
-def test_draft_panel_constraints_satisfaction(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_draft_panel_constraints_satisfaction() -> None:
 
     draft_panel = DraftPanel('Some text')
     assert draft_panel.satisfies.container_width_per_line_limit is None
@@ -121,8 +114,7 @@ def test_draft_panel_constraints_satisfaction(
     assert draft_panel.satisfies.container_width_per_line_limit is False
 
 
-def test_draft_panel_with_empty_content(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_draft_panel_with_empty_content() -> None:
 
     # Test with empty string
     empty_string_draft_panel = DraftPanel('')
@@ -155,8 +147,7 @@ def test_draft_panel_with_empty_content(
     assert framed_empty_draft_panel.content == ''
 
 
-def test_draft_panel_render_next_stage_with_repr(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_draft_panel_render_next_stage_with_repr() -> None:
     draft_panel = DraftPanel('Some text')
     assert_next_stage_panel(
         this_panel=draft_panel,
@@ -180,8 +171,7 @@ def test_draft_panel_render_next_stage_with_repr(
     )
 
 
-def test_draft_panel_render_next_stage_with_layout(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_draft_panel_render_next_stage_with_layout() -> None:
     draft_panel: DraftPanel[Layout, AnyFrame] = DraftPanel(Layout())
     assert_next_stage_panel(
         this_panel=draft_panel,

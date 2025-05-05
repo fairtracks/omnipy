@@ -1,5 +1,3 @@
-from typing import Annotated
-
 import pytest
 
 from omnipy.data._display.dimensions import Dimensions
@@ -12,7 +10,7 @@ class SimplePanel(Panel):
         return self
 
 
-def test_panel(skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],):
+def test_panel():
     # Test with default frame
     panel = SimplePanel()
     assert panel.title == ''
@@ -34,8 +32,7 @@ def test_panel(skip_test_if_not_default_data_config_values: Annotated[None, pyte
     assert panel.frame == custom_frame_not_fixed  # But should be equal in value
 
 
-def test_panel_hashable(skip_test_if_not_default_data_config_values: Annotated[None,
-                                                                               pytest.fixture],):
+def test_panel_hashable():
     panel_1 = SimplePanel()
     panel_2 = SimplePanel()
 
@@ -65,14 +62,13 @@ def test_panel_hashable(skip_test_if_not_default_data_config_values: Annotated[N
 
 
 # noinspection PyDataclass
-def test_fail_panel_no_assignments(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]):
+def test_fail_panel_no_assignments():
 
     panel = SimplePanel()
 
     with pytest.raises(AttributeError):
-        panel.title = 'My panel'  # type: ignore[misc]
+        panel.title = 'My panel'  # pyright: ignore [reportAttributeAccessIssue]
 
     new_frame = Frame(Dimensions(width=30, height=40))
     with pytest.raises(AttributeError):
-        panel.frame = new_frame  # type: ignore[misc]
+        panel.frame = new_frame  # pyright: ignore [reportAttributeAccessIssue]

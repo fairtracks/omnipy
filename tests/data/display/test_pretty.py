@@ -46,10 +46,7 @@ def _assert_pretty_repr_of_draft(
 
 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
-def test_pretty_repr_of_draft_multi_line_if_nested(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-    pretty_printer: PrettyPrinterLib,
-) -> None:
+def test_pretty_repr_of_draft_multi_line_if_nested(pretty_printer: PrettyPrinterLib) -> None:
     config = OutputConfig(pretty_printer=pretty_printer)
 
     _assert_pretty_repr_of_draft(1, '1', config=config)
@@ -122,10 +119,7 @@ def test_pretty_repr_of_draft_multi_line_if_nested(
 
 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
-def test_pretty_repr_of_draft_indent(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-    pretty_printer: PrettyPrinterLib,
-) -> None:
+def test_pretty_repr_of_draft_indent(pretty_printer: PrettyPrinterLib) -> None:
 
     _assert_pretty_repr_of_draft(
         [[1, 2, 3], [[4, 5, 6], [7, 8, 9]]],
@@ -148,10 +142,7 @@ def test_pretty_repr_of_draft_indent(
 
 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
-def test_pretty_repr_of_draft_in_frame(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-    pretty_printer: PrettyPrinterLib,
-) -> None:
+def test_pretty_repr_of_draft_in_frame(pretty_printer: PrettyPrinterLib) -> None:
     config = OutputConfig(pretty_printer=pretty_printer)
 
     data = [[1, 2], [[3, 4, 5, 6], [7, 8, 9]]]
@@ -293,7 +284,6 @@ def geometry_data_thinnest_repr() -> str:
 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
 def test_pretty_repr_of_draft_approximately_in_frame(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     geometry_data: Annotated[list, pytest.fixture],
     geometry_data_thinnest_repr: Annotated[str, pytest.fixture],
     pretty_printer: PrettyPrinterLib,
@@ -369,7 +359,6 @@ def test_pretty_repr_of_draft_approximately_in_frame(
 
 
 def test_pretty_repr_of_draft_partly_thin_output_known_issue(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     geometry_data: Annotated[list, pytest.fixture],
     geometry_data_thinnest_repr: Annotated[str, pytest.fixture],
 ) -> None:
@@ -385,10 +374,7 @@ def test_pretty_repr_of_draft_partly_thin_output_known_issue(
 
 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
-def test_pretty_repr_of_draft_models(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-    pretty_printer: PrettyPrinterLib,
-) -> None:
+def test_pretty_repr_of_draft_models(pretty_printer: PrettyPrinterLib) -> None:
     class ListOfIntsModel(Model[list[int]]):
         ...
 
@@ -429,10 +415,7 @@ def test_pretty_repr_of_draft_models(
 
 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
-def test_pretty_repr_of_draft_variable_char_weight(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-    pretty_printer: PrettyPrinterLib,
-) -> None:
+def test_pretty_repr_of_draft_variable_char_weight(pretty_printer: PrettyPrinterLib) -> None:
 
     _assert_pretty_repr_of_draft(
         ['北京', '€450'],
@@ -470,9 +453,7 @@ def test_pretty_repr_of_draft_variable_char_weight(
 )
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
 def test_pretty_repr_of_draft_multi_line_if_nested_known_issue(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-    pretty_printer: PrettyPrinterLib,
-) -> None:
+        pretty_printer: PrettyPrinterLib) -> None:
     config = OutputConfig(pretty_printer=pretty_printer)
     _assert_pretty_repr_of_draft(
         [1, 2, '[...]'],

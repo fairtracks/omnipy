@@ -1,5 +1,4 @@
 from textwrap import dedent
-from typing import Annotated
 
 import pytest
 import pytest_cases as pc
@@ -15,13 +14,11 @@ from .helpers import (apply_frame_variant_to_test_case,
                       assert_dims_aware_panel,
                       assert_draft_panel_subcls,
                       assert_next_stage_panel,
-                      OutputPropertyType,
                       PanelFrameVariantTestCase,
                       PanelOutputTestCase)
 
 
-def test_reflowed_text_draft_panel_init(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_reflowed_text_draft_panel_init() -> None:
     panel_cls = ReflowedTextDraftPanel
     assert_draft_panel_subcls(panel_cls, 'Some text')
     assert_draft_panel_subcls(
@@ -51,8 +48,7 @@ def test_reflowed_text_draft_panel_init(
     )
 
 
-def test_reflowed_text_draft_panel_hashable(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_reflowed_text_draft_panel_hashable() -> None:
     panel_1 = ReflowedTextDraftPanel('')
     panel_2 = ReflowedTextDraftPanel('')
 
@@ -81,17 +77,13 @@ def test_reflowed_text_draft_panel_hashable(
     assert hash(panel_7) == hash(panel_12)
 
 
-def test_fail_reflowed_text_draft_panel_if_extra_params(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-
+def test_fail_reflowed_text_draft_panel_if_extra_params() -> None:
     with pytest.raises(TypeError):
         ReflowedTextDraftPanel('[123, 234, 345]', extra=123)  # type: ignore[call-arg]
 
 
 # noinspection PyDataclass
-def test_fail_reflowed_text_draft_panel_no_assignments(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-
+def test_fail_reflowed_text_draft_panel_no_assignments() -> None:
     reflowed_text_panel = ReflowedTextDraftPanel('Some text')
 
     with pytest.raises(AttributeError):
@@ -116,10 +108,7 @@ def test_fail_reflowed_text_draft_panel_no_assignments(
     has_tag=('dims_and_edge_cases', 'syntax_text'),
 )
 def test_reflowed_text_draft_panel_basic_dims_and_edge_cases(
-    case: PanelFrameVariantTestCase[str] | PanelOutputTestCase[str],
-    output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+        case: PanelFrameVariantTestCase[str] | PanelOutputTestCase[str]) -> None:
     if isinstance(case, PanelFrameVariantTestCase):
         frame_case = apply_frame_variant_to_test_case(case, stylized_stage=False)
     else:
@@ -139,8 +128,7 @@ def test_reflowed_text_draft_panel_basic_dims_and_edge_cases(
     )
 
 
-def test_reflowed_text_draft_panel_variable_width_chars(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_reflowed_text_draft_panel_variable_width_chars() -> None:
     # Mandarin Chinese characters are double-width
     assert_dims_aware_panel(ReflowedTextDraftPanel('北京'), Dimensions(width=4, height=1))
 
@@ -172,8 +160,7 @@ def test_reflowed_text_draft_panel_variable_width_chars(
 
 
 #
-# def test_reflowed_text_draft_panel_visible_char_coverage(
-#         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+# def test_reflowed_text_draft_panel_visible_char_coverage() -> None:
 #     panel = ReflowedTextDraftPanel('', frame=Frame(Dimensions(width=6, height=3)))
 #     assert panel.visible_char_coverage() == 0
 #
@@ -214,9 +201,7 @@ def test_reflowed_text_draft_panel_variable_width_chars(
 #     assert panel.visible_char_coverage() == 10  # 5 English + 2 double-width Asian chars
 
 
-def test_reflowed_text_draft_panel_max_container_width_across_lines(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-
+def test_reflowed_text_draft_panel_max_container_width_across_lines() -> None:
     assert ReflowedTextDraftPanel('').max_container_width_across_lines == 0
     assert ReflowedTextDraftPanel('(1, 2, 3)').max_container_width_across_lines == 9
     assert ReflowedTextDraftPanel(dedent("""(
@@ -240,9 +225,7 @@ def test_reflowed_text_draft_panel_max_container_width_across_lines(
     )"""),).max_container_width_across_lines == 0
 
 
-def test_reflowed_text_draft_panel_constraints_satisfaction(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-
+def test_reflowed_text_draft_panel_constraints_satisfaction() -> None:
     out = dedent("""(
       [1, 2],
       {'asd': 1234567}
@@ -269,8 +252,7 @@ def test_reflowed_text_draft_panel_constraints_satisfaction(
     assert draft.satisfies.container_width_per_line_limit is True
 
 
-def test_draft_panel_render_next_stage(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_draft_panel_render_next_stage() -> None:
     reflowed_text_panel = ReflowedTextDraftPanel('Some text')
     assert_next_stage_panel(
         this_panel=reflowed_text_panel,

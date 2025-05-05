@@ -1,4 +1,4 @@
-from typing import Annotated, Any
+from typing import Any
 
 import pygments.styles
 import pytest
@@ -15,8 +15,7 @@ from omnipy.data._display.config import (ConsoleColorSystem,
                                          VerticalOverflowMode)
 
 
-def test_output_config(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_output_config() -> None:
     config = OutputConfig(
         tab_size=2,
         indent_tab_size=4,
@@ -95,8 +94,7 @@ def test_output_config(
     assert config.css_line_height is None
 
 
-def test_output_config_hashable(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_output_config_hashable() -> None:
     config_1 = OutputConfig()
 
     config_2 = OutputConfig()
@@ -159,8 +157,7 @@ def test_output_config_hashable(
 
 
 # noinspection PyDataclass
-def test_fail_output_config_no_assignments(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_output_config_no_assignments() -> None:
     config = OutputConfig()
 
     with pytest.raises(AttributeError):
@@ -206,8 +203,7 @@ def test_fail_output_config_no_assignments(
         config.layout_style = LayoutStyle.PANELS  # type: ignore[misc]
 
 
-def test_fail_output_config_if_invalid_params(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_output_config_if_invalid_params() -> None:
     with pytest.raises(ValueError):
         OutputConfig(tab_size=-1)
 
@@ -257,8 +253,7 @@ def test_fail_output_config_if_invalid_params(
         OutputConfig(layout_style=None)  # type: ignore[arg-type]
 
 
-def test_output_config_default_values(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_output_config_default_values() -> None:
     config = OutputConfig()
     assert config.tab_size == 4
     assert config.indent_tab_size == 2
@@ -283,20 +278,17 @@ def test_output_config_default_values(
     assert config.layout_style is LayoutStyle.TABLE_GRID
 
 
-def test_fail_output_config_if_extra_params(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_output_config_if_extra_params() -> None:
     with pytest.raises(TypeError):
         OutputConfig(indent_tab_size=4, debug_mode=True, extra=2)  # type: ignore
 
 
-def test_fail_output_config_no_positional_parameters(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_output_config_no_positional_parameters() -> None:
     with pytest.raises(TypeError):
         OutputConfig(2, True)  # type: ignore
 
 
-def test_config_autoimport_base16_color_style(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_config_autoimport_base16_color_style() -> None:
     style_name = 'tb16-zenburn'
     OutputConfig(color_style=style_name)  # To trigger the auto-import
     pygments_style = pygments.styles.get_style_by_name(style_name)

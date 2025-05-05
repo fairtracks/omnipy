@@ -1,12 +1,9 @@
-from typing import Annotated
-
 import pytest
 
 from omnipy.data._display.constraints import Constraints, ConstraintsSatisfaction
 
 
-def test_constraints_init(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_constraints_init() -> None:
     constraints = Constraints()
     assert constraints.container_width_per_line_limit is None
 
@@ -20,8 +17,7 @@ def test_constraints_init(
         Constraints(container_width_per_line_limit=40, extra=123)  # type: ignore[call-arg]
 
 
-def test_fail_constraints_it_invalid_params(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_constraints_it_invalid_params() -> None:
     with pytest.raises(ValueError):
         Constraints(container_width_per_line_limit=-1)
 
@@ -29,8 +25,7 @@ def test_fail_constraints_it_invalid_params(
         Constraints(container_width_per_line_limit='None')  # type: ignore[arg-type]
 
 
-def test_constraints_hashable(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_constraints_hashable() -> None:
     constraints_1 = Constraints()
     constraints_2 = Constraints()
     constraints_3 = Constraints(container_width_per_line_limit=40)
@@ -42,17 +37,14 @@ def test_constraints_hashable(
 
 
 # noinspection PyDataclass
-def test_fail_constraints_no_assignments(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_constraints_no_assignments() -> None:
     constraints = Constraints()
 
     with pytest.raises(AttributeError):
         constraints.container_width_per_line_limit = 50  # type: ignore[misc]
 
 
-def test_constraints_satisfaction(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-
+def test_constraints_satisfaction() -> None:
     with pytest.raises(TypeError):
         ConstraintsSatisfaction()  # type: ignore[call-arg]
 
@@ -73,8 +65,7 @@ def test_constraints_satisfaction(
     assert satisfied.container_width_per_line_limit is False
 
 
-def test_constraints_satisfaction_immutable_properties(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_constraints_satisfaction_immutable_properties() -> None:
     satisfied = ConstraintsSatisfaction(Constraints())
     with pytest.raises(AttributeError):
         satisfied.container_width_per_line_limit = True  # type: ignore[misc]

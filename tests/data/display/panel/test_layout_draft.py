@@ -1,5 +1,3 @@
-from typing import Annotated
-
 import pytest
 import pytest_cases as pc
 
@@ -16,12 +14,10 @@ from .helpers import (apply_frame_variant_to_test_case,
                       assert_dims_aware_panel,
                       assert_draft_panel_subcls,
                       assert_next_stage_panel,
-                      OutputPropertyType,
                       PanelFrameVariantTestCase)
 
 
-def test_resized_layout_draft_panel_init(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_resized_layout_draft_panel_init() -> None:
     panel_cls = ResizedLayoutDraftPanel
     assert_draft_panel_subcls(panel_cls, Layout(), content_is_identical=False)
 
@@ -73,8 +69,7 @@ def test_resized_layout_draft_panel_init(
     )
 
 
-def test_resized_layout_draft_panel_hashable(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_resized_layout_draft_panel_hashable() -> None:
     draft_panel_1 = ResizedLayoutDraftPanel(Layout())
     draft_panel_2 = ResizedLayoutDraftPanel(Layout())
 
@@ -104,16 +99,14 @@ def test_resized_layout_draft_panel_hashable(
     assert hash(draft_panel_7) == hash(draft_panel_12)
 
 
-def test_fail_resized_layout_draft_panel_if_extra_params(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_resized_layout_draft_panel_if_extra_params() -> None:
 
     with pytest.raises(TypeError):
         ResizedLayoutDraftPanel(Layout(), extra=123)  # type: ignore[call-arg]
 
 
 # noinspection PyDataclass
-def test_fail_resized_layout_draft_panel_no_assignments(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_resized_layout_draft_panel_no_assignments() -> None:
 
     resized_layout_panel = ResizedLayoutDraftPanel(Layout())
 
@@ -139,10 +132,7 @@ def test_fail_resized_layout_draft_panel_no_assignments(
     has_tag=('dims_and_edge_cases', 'layout'),
 )
 def test_resized_layout_draft_panel_basic_dims_and_edge_cases(
-    case: PanelFrameVariantTestCase[Layout],
-    output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+        case: PanelFrameVariantTestCase[Layout]) -> None:
     frame_case = apply_frame_variant_to_test_case(case, stylized_stage=False)
 
     text_panel = ResizedLayoutDraftPanel(
@@ -160,8 +150,7 @@ def test_resized_layout_draft_panel_basic_dims_and_edge_cases(
     )
 
 
-def test_draft_panel_render_next_stage(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_draft_panel_render_next_stage() -> None:
     resized_layout_panel = ResizedLayoutDraftPanel(Layout(panel=MockPanel('Some text')))
     assert_next_stage_panel(
         this_panel=resized_layout_panel,

@@ -1,4 +1,4 @@
-from typing import Annotated, TypedDict
+from typing import TypedDict
 
 import pytest
 
@@ -61,8 +61,7 @@ def _assert_dimensions(
         _f: int = dims.height  # noqa: F841
 
 
-def test_dimensions(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_dimensions() -> None:
     _assert_dimensions(None, None, False, False, False)
     _assert_dimensions(10, None, True, False, False)
     _assert_dimensions(None, 20, False, True, False)
@@ -73,8 +72,7 @@ def test_dimensions(
     _assert_dimensions(10, 20, True, True, True)
 
 
-def test_dimension_types(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_dimension_types() -> None:
     def undefined_dims_func(dims: UndefinedDimensions) -> None:
         ...
 
@@ -121,8 +119,7 @@ def test_dimension_types(
     undefined_dims_func(Dimensions(10, 20))  # type: ignore[arg-type]
 
 
-def test_fail_dimensions_if_negative(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_dimensions_if_negative() -> None:
     with pytest.raises(ValueError):
         Dimensions(-1, None)
 
@@ -139,8 +136,7 @@ def test_fail_dimensions_if_negative(
         Dimensions(-1, -1)
 
 
-def test_dimensions_hashable(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_dimensions_hashable() -> None:
     dims_1 = Dimensions(None, None)
     dims_2 = Dimensions(None, None)
     dims_3 = Dimensions(10, None)
@@ -156,8 +152,7 @@ def test_dimensions_hashable(
 
 
 # noinspection PyDataclass
-def test_fail_dimensions_no_assignments(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_dimensions_no_assignments() -> None:
     dims: Dimensions = Dimensions(width=None, height=10)
 
     with pytest.raises(AttributeError):
@@ -168,8 +163,7 @@ def test_fail_dimensions_no_assignments(
         dims.height = None  # type: ignore[misc]
 
 
-def test_fail_dimensions_if_extra_param(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_dimensions_if_extra_param() -> None:
     with pytest.raises(TypeError):
         Dimensions(10, 20, 30)  # type: ignore
 
@@ -190,8 +184,7 @@ def _assert_within_frame(width: int,
     assert fit.both is fits_both
 
 
-def test_dimensions_fit(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_dimensions_fit() -> None:
     _assert_within_frame(10, 10, None, None, None, None, None)
     _assert_within_frame(10, 10, 10, None, True, None, None)
     _assert_within_frame(10, 10, None, 10, None, True, None)
@@ -201,8 +194,7 @@ def test_dimensions_fit(
     _assert_within_frame(11, 11, 10, 10, False, False, False)
 
 
-def test_dimensions_fit_zeros(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_dimensions_fit_zeros() -> None:
     _assert_within_frame(0, 0, None, None, None, None, None)
     _assert_within_frame(0, 0, 0, None, True, None, None)
     _assert_within_frame(0, 0, None, 0, None, True, None)
@@ -213,8 +205,7 @@ def test_dimensions_fit_zeros(
 
 
 # noinspection PyDataclass
-def test_dimensions_fit_immutable_properties(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_dimensions_fit_immutable_properties() -> None:
     fit = DimensionsFit(Dimensions(10, 10), Dimensions(10, 10))
 
     with pytest.raises(AttributeError):
@@ -227,8 +218,7 @@ def test_dimensions_fit_immutable_properties(
         fit.both = False  # type: ignore
 
 
-def test_dimensions_fit_proportionality(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_dimensions_fit_proportionality() -> None:
     def proportionally_wider(a, frame):
         return a.height * frame.width / frame.height < a.width
 

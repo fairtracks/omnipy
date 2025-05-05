@@ -1,5 +1,3 @@
-from typing import Annotated
-
 from pydantic import ValidationError
 import pytest
 
@@ -54,8 +52,7 @@ def _assert_frame(
         _f: int = frame.dims.height  # noqa: F841
 
 
-def test_frame(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_frame() -> None:
     frame: Frame = empty_frame()
     assert frame.dims == Dimensions(width=None, height=None)
 
@@ -65,8 +62,7 @@ def test_frame(
     _assert_frame(Dimensions(10, 20), True, True, True)
 
 
-def test_frame_fixed_dims(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_frame_fixed_dims() -> None:
     no_dims_frame: Frame = empty_frame()
     assert no_dims_frame.fixed_width is False
     assert no_dims_frame.fixed_height is False
@@ -105,8 +101,7 @@ def test_frame_fixed_dims(
     assert both_dims_frame_width_not_fixed.fixed_height is False
 
 
-def test_fail_frame_fixed_dims_if_none(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_frame_fixed_dims_if_none() -> None:
     with pytest.raises(ValidationError):
         Frame(Dimensions(None, None), fixed_width=True)
 
@@ -120,8 +115,7 @@ def test_fail_frame_fixed_dims_if_none(
         Frame(Dimensions(None, 20), fixed_width=True)
 
 
-def test_frame_types(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_frame_types() -> None:
     def undefined_frame_func(dims: UndefinedFrame) -> None:
         ...
 
@@ -168,8 +162,7 @@ def test_frame_types(
     undefined_frame_func(Frame(Dimensions(10, 20)))  # type: ignore[arg-type]
 
 
-def test_frame_hashable(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_frame_hashable() -> None:
     frame_1 = empty_frame()
     frame_2 = empty_frame()
     frame_3 = Frame(Dimensions(None, 20))
@@ -192,8 +185,7 @@ def test_frame_hashable(
 
 
 # noinspection PyDataclass
-def test_fail_frame_no_assignments(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_frame_no_assignments() -> None:
     frame = empty_frame()
 
     with pytest.raises(AttributeError):
@@ -206,8 +198,7 @@ def test_fail_frame_no_assignments(
         frame.fixed_height = False  # type: ignore[misc]
 
 
-def test_fail_frame_if_extra_param(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+def test_fail_frame_if_extra_param() -> None:
     with pytest.raises(TypeError):
         Frame(Dimensions(), 123)  # type: ignore
 
