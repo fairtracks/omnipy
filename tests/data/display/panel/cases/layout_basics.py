@@ -215,14 +215,7 @@ def case_layout_single_panel(
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
-        content=Layout(
-            panel=MockPanel(
-                content='Some content here',
-                frame=Frame(
-                    Dimensions(width=17, height=3),
-                    fixed_width=False,
-                    fixed_height=True,
-                ))),
+        content=Layout(panel=MockPanel(content='Some content here',)),
         frame=frame_case.frame,
         config=OutputConfig(
             # Horizontal and vertical overflow modes are not applied to text

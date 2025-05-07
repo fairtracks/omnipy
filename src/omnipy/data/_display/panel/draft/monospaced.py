@@ -94,19 +94,17 @@ def crop_content_lines_for_resizing(
     frame: AnyFrame,
 ) -> list[str]:
     # If both frame dimensions are specified, the frame height is less
-    # than the number of lines, the frame width is defined as
-    # flexible (False), AND the frame height is defined as fixed,
-    # then we need to crop the content to fit the frame so that the width of
-    # the panel can be reduced to fit only what is in the frame. Otherwise
-    # (and the default) is that the panel is wide enough to support the
-    # maximum width over all lines, also those out of frame.
+    # than the number of lines, and the frame width is defined as flexible
+    # (False), then we need to crop the content to fit the frame so that the
+    # width of the panel can be reduced to fit only what is in the frame.
+    # Otherwise (and the default) is that the panel is wide enough to
+    # support the maximum width over all lines, also those out of frame.
     #
     # TODO: Add support for scrolling of text content, not just
     #       cropping from bottom
 
     if has_width_and_height(frame.dims) \
             and frame.fixed_width is False \
-            and frame.fixed_height is True \
             and frame.dims.width > 0 \
             and frame.dims.height < len(all_content_lines):
         return all_content_lines[:frame.dims.height]

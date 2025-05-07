@@ -279,19 +279,19 @@ def test_draft_panel_render_next_stage_with_layout() -> None:
                 ),
             ),
             text1=MockPanelStage2(
-                'Here\nis\nsome\ntext',
+                'Here is\nsome\ntext',
                 title='Text panel 1',
                 frame=Frame(
-                    Dimensions(4, 3),
+                    Dimensions(7, 3),
                     fixed_width=False,
                     fixed_height=False,
                 ),
             ),
             text2=MockPanelStage2(
-                'Here is\nsome\nother\ntext',
+                'Here\nis\nsome\nother\ntext',
                 title='Text panel 2',
                 frame=Frame(
-                    Dimensions(7, 3),
+                    Dimensions(4, 3),
                     fixed_width=False,
                     fixed_height=False,
                 ),
