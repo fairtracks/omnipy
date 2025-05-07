@@ -65,8 +65,8 @@ def case_layout_no_panels(
             exp_plain_output=('╭╮\n'
                               '╰╯\n'),
             # Cropping to frame is enacted for height only by resizing the
-            # inner panel at the 'resize' stage, as the panel
-            # width is already 0 and cannot be further reduced
+            # height of the inner panel at the 'resize' stage, as the inner
+            # panel width is already 0 and cannot be further reduced
             exp_resized_dims=Dimensions(width=4, height=2),
             # Width is cropped to 2 at the 'stylize' stage
             exp_stylized_dims=Dimensions(width=2, height=2),
@@ -105,9 +105,12 @@ def case_layout_no_panels(
         FrameTestCase(
             frame=Frame(Dimensions(width=4, height=1)),
             exp_plain_output='…\n',
-            # Cropping to a frame with height=1 crops to a single ellipsis
-            # character, hence width is also cropped to 1, independent of
-            # the width of the frame
+            # The height is reduced to 2 at the 'resize' stage by setting
+            # the height of the inner panel to 0.
+            exp_resized_dims=Dimensions(width=4, height=2),
+            # In the `stylize` stage, cropping to a frame with height=1
+            # crops to a single ellipsis character, hence width is also
+            # cropped to 1, independent of the width of the frame
             exp_stylized_dims=Dimensions(width=1, height=1),
             # For the 'only width' case, the "default" values of
             # `exp_output_no_frame` and `exp_dims_no_frame` is reiterated to
@@ -115,12 +118,11 @@ def case_layout_no_panels(
             exp_plain_output_only_width=('╭──╮\n'
                                          '│  │\n'
                                          '╰──╯\n'),
-            exp_stylized_dims_only_width=Dimensions(width=4, height=3),
-            # For the 'only height' case, the width needs to be explicitly
-            # set to 1, overriding the "default" non-cropped height of 3 set
-            # globally for the test by the `exp_dims_no_frame` parameter
-            # below.
-            exp_stylized_dims_only_height=Dimensions(width=1, height=1),
+            # For the 'only width' case, the "default" values of
+            # `exp_output_no_frame` and `exp_dims_no_frame` is reiterated to
+            # override `exp_plain_output`, `exp_resized_dims` and
+            # `exp_stylized_dims` set above.
+            exp_dims_all_stages_only_width=Dimensions(width=4, height=3),
         ),
     ),
     ids=(
@@ -256,7 +258,10 @@ def case_layout_single_panel(
             exp_plain_output=('╭────────╮\n'
                               '│ Some   │\n'
                               '╰────────╯\n'),
-            exp_dims_all_stages=Dimensions(width=10, height=3),
+            # No frame reduction in the resize phase due to fixed width and
+            # height
+            exp_resized_dims=Dimensions(width=10, height=4),
+            exp_stylized_dims=Dimensions(width=10, height=3),
             exp_plain_output_only_width=('╭────────╮\n'
                                          '│ Some   │\n'
                                          '│ conten │\n'
@@ -265,21 +270,25 @@ def case_layout_single_panel(
         ),
         FrameTestCase(
             frame=Frame(Dimensions(width=9, height=3)),
-            # The explicit width reduction to 9 is applied at the "resize"
-            # stage. Extra whitespace is still not removed.
+            # Extra whitespace is still not removed.
             exp_plain_output=('╭───────╮\n'
                               '│ Some  │\n'
                               '╰───────╯\n'),
-            exp_dims_all_stages=Dimensions(width=9, height=3),
+            # Still no frame reduction in the resize phase due to fixed
+            # width and height
+            exp_resized_dims=Dimensions(width=10, height=4),
+            exp_stylized_dims=Dimensions(width=9, height=3),
             exp_plain_output_only_width=('╭───────╮\n'
                                          '│ Some  │\n'
-                                         '│ conte │\n'
+                                         '│ cont… │\n'
                                          '╰───────╯\n'),
-            exp_dims_all_stages_only_width=Dimensions(width=9, height=4),
+            exp_resized_dims_only_width=Dimensions(width=10, height=4),
+            exp_stylized_dims_only_width=Dimensions(width=9, height=4),
             exp_plain_output_only_height=('╭────────╮\n'
                                           '│ Some   │\n'
                                           '╰────────╯\n'),
-            exp_dims_all_stages_only_height=Dimensions(width=10, height=3),
+            exp_resized_dims_only_height=Dimensions(width=10, height=4),
+            exp_stylized_dims_only_height=Dimensions(width=10, height=3),
         ),
     ),
     ids=(
@@ -650,8 +659,10 @@ def case_layout_single_panel_stage_2_fixed_dims(
             exp_plain_output=('╭──┬──╮\n'
                               '│  │  │\n'
                               '╰──┴──╯\n'),
-            exp_dims_all_stages=Dimensions(width=7, height=3),
+            # No frame reduction in the resize phase due to fixed height
+            exp_resized_dims=Dimensions(width=7, height=4),
             exp_resized_dims_only_width=Dimensions(width=7, height=5),
+            exp_stylized_dims=Dimensions(width=7, height=3),
         ),
         # All things being equal, reduce the rightmost panel
         FrameTestCase(
@@ -659,7 +670,8 @@ def case_layout_single_panel_stage_2_fixed_dims(
             exp_plain_output=('╭──┬─╮\n'
                               '│  │ │\n'
                               '╰──┴─╯\n'),
-            exp_resized_dims=Dimensions(width=7, height=3),
+            # No frame reduction in the resize phase due to fixed height
+            exp_resized_dims=Dimensions(width=7, height=4),
             exp_resized_dims_only_width=Dimensions(width=7, height=5),
             exp_stylized_dims=Dimensions(width=6, height=3),
         ),
@@ -669,7 +681,8 @@ def case_layout_single_panel_stage_2_fixed_dims(
             exp_plain_output=('╭─┬─╮\n'
                               '│ │ │\n'
                               '╰─┴─╯\n'),
-            exp_resized_dims=Dimensions(width=7, height=3),
+            # No frame reduction in the resize phase due to fixed height
+            exp_resized_dims=Dimensions(width=7, height=4),
             exp_resized_dims_only_width=Dimensions(width=7, height=5),
             exp_stylized_dims=Dimensions(width=5, height=3),
         ),
@@ -679,7 +692,8 @@ def case_layout_single_panel_stage_2_fixed_dims(
             exp_plain_output=('╭─┬╮\n'
                               '│ ││\n'
                               '╰─┴╯\n'),
-            exp_resized_dims=Dimensions(width=7, height=3),
+            # No frame reduction in the resize phase due to fixed height
+            exp_resized_dims=Dimensions(width=7, height=4),
             exp_resized_dims_only_width=Dimensions(width=7, height=5),
             exp_stylized_dims=Dimensions(width=4, height=3),
         ),
@@ -689,7 +703,8 @@ def case_layout_single_panel_stage_2_fixed_dims(
             exp_plain_output=('╭┬╮\n'
                               '│││\n'
                               '╰┴╯\n'),
-            exp_resized_dims=Dimensions(width=7, height=3),
+            # No frame reduction in the resize phase due to fixed height
+            exp_resized_dims=Dimensions(width=7, height=4),
             exp_resized_dims_only_width=Dimensions(width=7, height=5),
             exp_stylized_dims=Dimensions(width=3, height=3),
         ),
@@ -699,7 +714,8 @@ def case_layout_single_panel_stage_2_fixed_dims(
             exp_plain_output=('╭┬\n'
                               '││\n'
                               '╰┴\n'),
-            exp_resized_dims=Dimensions(width=7, height=3),
+            # No frame reduction in the resize phase due to fixed height
+            exp_resized_dims=Dimensions(width=7, height=4),
             exp_resized_dims_only_width=Dimensions(width=7, height=5),
             exp_stylized_dims=Dimensions(width=2, height=3),
         ),
@@ -707,7 +723,8 @@ def case_layout_single_panel_stage_2_fixed_dims(
         FrameTestCase(
             frame=Frame(Dimensions(width=1, height=3)),
             exp_plain_output='…\n',
-            exp_resized_dims=Dimensions(width=7, height=3),
+            # No frame reduction in the resize phase due to fixed height
+            exp_resized_dims=Dimensions(width=7, height=4),
             exp_resized_dims_only_width=Dimensions(width=7, height=5),
             exp_stylized_dims=Dimensions(width=1, height=1),
         ),

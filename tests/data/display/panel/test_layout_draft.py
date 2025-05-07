@@ -176,12 +176,20 @@ def test_draft_panel_render_next_stage() -> None:
             first=MockPanelStage3(
                 'Some\ntext',
                 title='First panel',
-                frame=Frame(Dimensions(4, None)),
+                frame=Frame(
+                    Dimensions(4, 3),
+                    fixed_width=False,
+                    fixed_height=False,
+                ),
             ),
             second=MockPanelStage3(
                 'Some\nother\ntext',
                 title='Second panel',
-                frame=Frame(Dimensions(5, None)),
+                frame=Frame(
+                    Dimensions(5, 3),
+                    fixed_width=False,
+                    fixed_height=False,
+                ),
             )),
     )
 
@@ -199,10 +207,22 @@ def test_draft_panel_render_next_stage() -> None:
         next_stage=resized_layout_panel_complex.render_next_stage(),
         next_stage_panel_cls=StylizedLayoutPanel,
         exp_content=Layout(
-            first=MockPanelStage3('Some\ntext', title='First panel'),
+            first=MockPanelStage3(
+                'Some\ntext',
+                title='First panel',
+                frame=Frame(
+                    Dimensions(None, 3),
+                    fixed_width=False,
+                    fixed_height=False,
+                ),
+            ),
             second=MockPanelStage3(
                 'Some other\ntext',
                 title='Second panel',
-                frame=Frame(Dimensions(10, None)),
+                frame=Frame(
+                    Dimensions(10, 3),
+                    fixed_width=False,
+                    fixed_height=False,
+                ),
             )),
     )

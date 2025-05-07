@@ -198,12 +198,20 @@ def test_draft_panel_render_next_stage_with_layout() -> None:
             tuple=MockPanelStage2(
                 '(1, 2,\n3)',
                 title='Tuple panel',
-                frame=Frame(Dimensions(6, 2)),
+                frame=Frame(
+                    Dimensions(6, 3),
+                    fixed_width=False,
+                    fixed_height=False,
+                ),
             ),
             text=MockPanelStage2(
                 'Here is\nsome\ntext',
                 title='Text panel',
-                frame=Frame(Dimensions(7, 3)),
+                frame=Frame(
+                    Dimensions(7, 3),
+                    fixed_width=False,
+                    fixed_height=False,
+                ),
             ),
         ),
     )
@@ -237,7 +245,11 @@ def test_draft_panel_render_next_stage_with_layout() -> None:
             text=MockPanelStage2(
                 'Here\nis\nsome\ntext',
                 title='Text panel',
-                frame=Frame(Dimensions(4, 3)),
+                frame=Frame(
+                    Dimensions(4, 3),
+                    fixed_width=False,
+                    fixed_height=False,
+                ),
             ),
         ),
     )
@@ -260,16 +272,29 @@ def test_draft_panel_render_next_stage_with_layout() -> None:
             tuple=MockPanelStage2(
                 '(1,\n2,\n3)',
                 title='Stage 2 tuple panel',
+                frame=Frame(
+                    Dimensions(None, 3),
+                    fixed_width=False,
+                    fixed_height=False,
+                ),
             ),
             text1=MockPanelStage2(
                 'Here\nis\nsome\ntext',
                 title='Text panel 1',
-                frame=Frame(Dimensions(4, 3)),
+                frame=Frame(
+                    Dimensions(4, 3),
+                    fixed_width=False,
+                    fixed_height=False,
+                ),
             ),
             text2=MockPanelStage2(
                 'Here is\nsome\nother\ntext',
                 title='Text panel 2',
-                frame=Frame(Dimensions(7, 3)),
+                frame=Frame(
+                    Dimensions(7, 3),
+                    fixed_width=False,
+                    fixed_height=False,
+                ),
             ),
         ),
     )
