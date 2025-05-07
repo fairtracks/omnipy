@@ -135,7 +135,7 @@ def test_resized_layout_draft_panel_basic_dims_and_edge_cases(
         case: PanelFrameVariantTestCase[Layout]) -> None:
     frame_case = apply_frame_variant_to_test_case(case, stylized_stage=False)
 
-    text_panel = ResizedLayoutDraftPanel(
+    resized_layout_panel = ResizedLayoutDraftPanel(
         case.content,
         title=case.title,
         frame=frame_case.frame,
@@ -143,7 +143,7 @@ def test_resized_layout_draft_panel_basic_dims_and_edge_cases(
     )
 
     assert_dims_aware_panel(
-        text_panel,
+        resized_layout_panel,
         exp_dims=frame_case.exp_dims,
         exp_frame=frame_case.frame,
         exp_within_frame=frame_case.exp_within_frame,
