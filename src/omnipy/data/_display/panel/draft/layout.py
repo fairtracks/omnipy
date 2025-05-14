@@ -49,7 +49,7 @@ class ResizedLayoutDraftPanel(
             per_panel_height = frame.dims.height - 2
             per_panel_height = max(per_panel_height, 0)
 
-        print(f'per_panel_height: {per_panel_height}')
+        # print(f'per_panel_height: {per_panel_height}')
 
         for key, panel in dim_aware_panels.items():
             if per_panel_height is not None \
@@ -131,20 +131,21 @@ class ResizedLayoutDraftPanel(
                     reverse=delta_width is not None and delta_width < 0)
             ]
 
-            print(f'layout_dims: {layout_dims}')
-            print(f'frame.dims: {frame.dims}')
-            print(f'delta_width: {delta_width}')
-            print(f'panel_priority: {panel_priority}')
-            for i, (key, panel) in enumerate(dim_aware_panels.items()):
-                print(f'panel frame: {key}: {panel.frame}')
-                print(f'_priority(({i}, ({key}, <panel>))): {_priority((i, (key, panel)))}')
+            # print(f'layout_dims: {layout_dims}')
+            # print(f'frame.dims: {frame.dims}')
+            # print(f'delta_width: {delta_width}')
+            # print(f'panel_priority: {panel_priority}')
+            # for i, (key, panel) in enumerate(dim_aware_panels.items()):
+            #     print(f'panel frame: {key}: {panel.frame}')
+            #     print(f'_priority(({i}, ({key}, <panel>))): {_priority((i, (key, panel)))}')
 
             total_layout_subpanel_dims_if_cropped = cls.total_subpanel_dims_if_cropped(
                 dim_aware_layout)
             min_frame_width = 0 if total_layout_subpanel_dims_if_cropped.width <= len(
                 dim_aware_panels) else 1
-            print(f'total_layout_subpanel_dims_if_cropped: {total_layout_subpanel_dims_if_cropped}')
-            print(f'min_frame_width: {min_frame_width}')
+            # print(f'total_layout_subpanel_dims_if_cropped: '
+            #       f'{total_layout_subpanel_dims_if_cropped}')
+            # print(f'min_frame_width: {min_frame_width}')
 
             for key in panel_priority:
                 cur_draft_panel = content[key]

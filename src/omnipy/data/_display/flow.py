@@ -36,7 +36,7 @@ def flow_layout_subpanels_inside_frame(
             else:
                 per_panel_width = 0
 
-        print(f'per_panel_width: {per_panel_width}')
+        # print(f'per_panel_width: {per_panel_width}')
 
         new_layout = Layout()
         for key, panel in layout_panel.content.items():
