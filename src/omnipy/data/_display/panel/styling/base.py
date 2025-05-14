@@ -115,6 +115,16 @@ class StylizedMonospacedPanel(
 
         return console_dims
 
+    @cached_property
+    def rich_overflow_method(self) -> rich.console.OverflowMethod | None:
+        match (self.config.horizontal_overflow_mode):
+            case HorizontalOverflowMode.ELLIPSIS:
+                return 'ellipsis'
+            case HorizontalOverflowMode.CROP:
+                return 'crop'
+            case HorizontalOverflowMode.WORD_WRAP:
+                return None
+
     @staticmethod
     @cache
     def _get_console_common(
@@ -122,19 +132,9 @@ class StylizedMonospacedPanel(
         console_width: int,
         console_height: int,
         frame_width: int | None,
+        rich_overflow_method: rich.console.OverflowMethod | None,
         console_color_system: ConsoleColorSystem,
-        horizontal_overflow_mode: HorizontalOverflowMode,
     ) -> rich.console.Console:
-        def _map_horizontal_overflow_mode_to_console_overflow_method(
-                horizontal_overflow_mode: HorizontalOverflowMode
-        ) -> rich.console.OverflowMethod | None:
-            match (horizontal_overflow_mode):
-                case HorizontalOverflowMode.ELLIPSIS:
-                    return 'ellipsis'
-                case HorizontalOverflowMode.CROP:
-                    return 'crop'
-                case HorizontalOverflowMode.WORD_WRAP:
-                    return None
 
         console = rich.console.Console(
             file=StringIO(),
@@ -144,10 +144,8 @@ class StylizedMonospacedPanel(
             record=True,
         )
 
-        overflow_method = _map_horizontal_overflow_mode_to_console_overflow_method(
-            horizontal_overflow_mode)
         soft_wrap = True if frame_width is None else False
-        console.print(stylized_content, overflow=overflow_method, soft_wrap=soft_wrap)
+        console.print(stylized_content, overflow=rich_overflow_method, soft_wrap=soft_wrap)
 
         return console
 
@@ -158,8 +156,8 @@ class StylizedMonospacedPanel(
             console_width=self._console_dimensions.width,
             console_height=self._console_dimensions.height,
             frame_width=self.frame.dims.width,
+            rich_overflow_method=self.rich_overflow_method,
             console_color_system=self.config.console_color_system,
-            horizontal_overflow_mode=self.config.horizontal_overflow_mode,
         )
 
     @property
@@ -170,8 +168,8 @@ class StylizedMonospacedPanel(
             console_width=self._console_dimensions.width,
             console_height=self._console_dimensions.height,
             frame_width=self.frame.dims.width,
+            rich_overflow_method=self.rich_overflow_method,
             console_color_system=ConsoleColorSystem.ANSI_RGB,
-            horizontal_overflow_mode=self.config.horizontal_overflow_mode,
         )
 
     @cached_property
