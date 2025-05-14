@@ -95,10 +95,11 @@ def crop_content_lines_for_resizing(
 ) -> list[str]:
     # If both frame dimensions are specified, the frame height is less
     # than the number of lines, and the frame width is defined as flexible
-    # (False), then we need to crop the content to fit the frame so that the
-    # width of the panel can be reduced to fit only what is in the frame.
-    # Otherwise (and the default) is that the panel is wide enough to
-    # support the maximum width over all lines, also those out of frame.
+    # (fixed_width=False), then we need to crop the content to fit the frame
+    # so that the width of the panel can be reduced to fit only what is in
+    # the frame. Otherwise (and the default) is that the panel is wide
+    # enough to support the maximum width over all lines, also those out of
+    # frame.
     #
     # TODO: Add support for scrolling of text content, not just
     #       cropping from bottom

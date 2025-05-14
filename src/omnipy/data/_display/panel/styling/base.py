@@ -44,7 +44,7 @@ class StylizedMonospacedPanel(
     # Pydantic 1.10 emits a RuntimeWarning for dataclasses with private
     # fields (starting with '_')
     # See https://github.com/pydantic/pydantic/issues/2816
-    # _input_panel_dims_if_croppeds: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
+    # _input_panel_dims_if_cropped: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
 
     input_panel_dims_if_cropped: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
 

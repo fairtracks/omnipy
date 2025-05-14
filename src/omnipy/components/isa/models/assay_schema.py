@@ -53,7 +53,7 @@ class IsaAssayJsonSchema(pyd.BaseModel):
     unitCategories: Optional[List[ontology_annotation_schema.IsaOntologyReferenceModel]] = \
         pyd.Field(
             None,
-            description='List of all the unitsdefined in the study, used to avoid duplication '
+            description='List of all the units defined in the study, used to avoid duplication '
                         'of their declaration when each value is created. ')
     processSequence: Optional[List[process_schema.IsaProcessOrProtocolApplicationModel]] = None
     comments: Optional[List[comment_schema.IsaCommentModel]] = None
