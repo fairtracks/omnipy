@@ -441,15 +441,15 @@ def assert_next_stage_panel(
 ) -> None:
     assert isinstance(next_stage, next_stage_panel_cls)
     assert next_stage.content == exp_content, \
-        f'{next_stage.content} != {exp_content}'
+        f'\n{next_stage.content} != \n{exp_content}'
     assert next_stage.frame == this_panel.frame, \
-        f'{next_stage.frame} != {this_panel.frame}'
+        f'\n{next_stage.frame} != \n{this_panel.frame}'
     assert next_stage.title == this_panel.title, \
-        f'{next_stage.title} != {this_panel.title}'
+        f'\n{next_stage.title} != \n{this_panel.title}'
     assert next_stage.constraints == this_panel.constraints, \
-        f'{next_stage.constraints} != {this_panel.constraints}'
+        f'\n{next_stage.constraints} != \n{this_panel.constraints}'
     assert next_stage.config == this_panel.config, \
-        f'{next_stage.config} != {this_panel.config}'
+        f'\n{next_stage.config} != \n{this_panel.config}'
 
 
 def _strip_html(html: str) -> str:
