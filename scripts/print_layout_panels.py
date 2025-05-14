@@ -1,6 +1,8 @@
 from omnipy import JsonModel
-from omnipy.data._display.config import (DarkHighContrastColorStyles,
+from omnipy.data._display.config import (ConsoleColorSystem,
+                                         DarkHighContrastColorStyles,
                                          DarkLowContrastColorStyles,
+                                         PrettyPrinterLib,
                                          RecommendedColorStyles)
 from omnipy.data._display.frame import Dimensions, Frame
 from omnipy.data._display.panel.draft.base import DraftPanel, Layout, OutputConfig
@@ -107,53 +109,68 @@ smith79\t5079\tJamie\tSmith
 """
 
 config = OutputConfig(
-    console_color_system='truecolor',
+    console_color_system=ConsoleColorSystem.ANSI_RGB,
     color_style=RecommendedColorStyles.OMNIPY_SELENIZED_WHITE,
     transparent_background=False,
     language='python',
     debug_mode=False)
 config1 = OutputConfig(
-    console_color_system='truecolor',
+    console_color_system=ConsoleColorSystem.ANSI_RGB,
     color_style=DarkHighContrastColorStyles.TB16_BLACK_METAL_KHOLD,
     transparent_background=False,
     language='python',
-    debug_mode=False)
+    debug_mode=False,
+    tab_size=12,
+)
 config2 = OutputConfig(
-    console_color_system='truecolor',
+    console_color_system=ConsoleColorSystem.ANSI_RGB,
     color_style=DarkHighContrastColorStyles.TB16_STELLA,
     transparent_background=False,
     language='python',
     debug_mode=False)
 config3 = OutputConfig(
-    console_color_system='truecolor',
+    console_color_system=ConsoleColorSystem.ANSI_RGB,
     color_style=RecommendedColorStyles.OMNIPY_SELENIZED_BLACK,
     transparent_background=True,
     language='python',
     debug_mode=False,
-    pretty_printer='rich',
+    pretty_printer=PrettyPrinterLib.RICH,
     tab_size=12)
 config4 = OutputConfig(
-    console_color_system='truecolor',
+    console_color_system=ConsoleColorSystem.ANSI_RGB,
     color_style=DarkLowContrastColorStyles.TB16_TAROT,
     transparent_background=False,
     language='json',
-    debug_mode=False)
+    debug_mode=False,
+)
 
 
 def print_with_config(json, tsv, config1, config2, config3, width, height):
     j = JsonModel()
     j.from_json(json)
     layout = Layout(
-        first=DraftPanel(j[0], config=config1),
-        second=ReflowedTextDraftPanel(json, config=config2),
-        third=ReflowedTextDraftPanel(tsv, config=config3),
-        fourth=DraftPanel(j[2], config=config3))
+        first=DraftPanel(j[0], title='First panel', config=config1),
+        second=ReflowedTextDraftPanel(json, title='Second panel', config=config2),
+        third=ReflowedTextDraftPanel(tsv, title='Third panel', config=config3),
+        fourth=DraftPanel(
+            j[2], frame=Frame(Dimensions(30, 100)), title='Fourth panel', config=config3),
+    )
     p = DraftPanel(layout, frame=Frame(Dimensions(width, height)), config=config3)
     print(p.render_next_stage().render_next_stage().colorized.terminal)
     return p
 
 
-print_with_config(json, tsv, config1, config4, config3, 220, 91)
-print_with_config(json, tsv, config1, config4, config3, 180, 91)
-print_with_config(json, tsv, config1, config4, config3, 100, 91)
+print_with_config(json, tsv, config1, config4, config3, 220, None)
+print_with_config(json, tsv, config1, config4, config1, 220, 50)
+print_with_config(json, tsv, config1, config4, config3, 196, 48)
+print_with_config(json, tsv, config1, config4, config1, 195, 48)
+print_with_config(json, tsv, config1, config4, config3, 80, 7)
+print_with_config(json, tsv, config1, config4, config1, 80, 7)
+print_with_config(json, tsv, config1, config4, config1, 80, 6)
 print_with_config(json, tsv, config1, config4, config3, 40, 21)
+print_with_config(json, tsv, config1, config4, config1, 40, 21)
+print_with_config(json, tsv, config1, config4, config3, 40, 7)
+print_with_config(json, tsv, config1, config4, config3, 40, 6)
+print_with_config(json, tsv, config1, config4, config3, 30, 7)
+print_with_config(json, tsv, config1, config4, config3, 30, 6)
+print_with_config(json, tsv, config1, config4, config3, 22, 6)
