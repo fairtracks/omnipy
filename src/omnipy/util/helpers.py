@@ -1,5 +1,6 @@
 import asyncio
 from collections.abc import Hashable, Iterable
+from dataclasses import asdict
 import functools
 from importlib.abc import Loader
 from importlib.machinery import FileFinder, ModuleSpec
@@ -17,24 +18,24 @@ from typing import _UnionGenericAlias  # type: ignore[attr-defined]
 from typing import (_SpecialForm,
                     Any,
                     cast,
-                    ClassVar,
                     ForwardRef,
                     get_args,
                     get_origin,
                     Mapping,
                     overload,
-                    Protocol,
                     TypeAlias,
                     TypeGuard,
                     Union)
 
 from typing_extensions import TypeVar
 
+from omnipy.shared.protocols.util import IsDataclass
 from omnipy.shared.typedefs import LocaleType, TypeForm
 import omnipy.util._pydantic as pyd
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
 _ObjT = TypeVar('_ObjT', bound=object)
+_DataclassT = TypeVar('_DataclassT', bound=IsDataclass)
 
 Dictable: TypeAlias = Mapping[_KeyT, Any] | Iterable[tuple[_KeyT, Any]]
 
@@ -62,6 +63,10 @@ def create_merged_dict(dictable_1: Dictable[_KeyT],
     )
     merged_dict |= dict_2
     return merged_dict
+
+
+def merge_dataclasses(dataclass: _DataclassT, other_dict: dict[str, Any]) -> _DataclassT:
+    return dataclass.__class__(**(asdict(dataclass) | other_dict))
 
 
 def remove_none_vals(**kwargs: object) -> dict[object, object]:
@@ -274,10 +279,6 @@ def is_non_omnipy_pydantic_model(obj: object):
         and (pyd.BaseModel in mro or pyd.GenericModel in mro) \
         and Model not in mro \
         and Dataset not in mro
-
-
-class IsDataclass(Protocol):
-    __dataclass_fields__: ClassVar[dict]
 
 
 def is_unreserved_identifier(identifier: str) -> bool:

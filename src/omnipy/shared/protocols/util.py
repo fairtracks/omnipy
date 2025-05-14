@@ -1,4 +1,4 @@
-from typing import Callable, Protocol
+from typing import Any, Callable, ClassVar, Protocol
 
 
 class IsDataPublisher(Protocol):
@@ -10,3 +10,9 @@ class IsDataPublisher(Protocol):
 
     def unsubscribe_all(self) -> None:
         ...
+
+
+class IsDataclass(Protocol):
+    # as already noted in comments, checking for this attribute is currently
+    # the most reliable way to ascertain that something is a dataclass
+    __dataclass_fields__: ClassVar[dict[str, Any]]
