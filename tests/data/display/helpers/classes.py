@@ -57,7 +57,10 @@ class MockPanelStage2(DimensionsAwarePanel, MockPanel):
     @cached_property
     def _content_lines(self) -> list[str]:
         all_content_lines = self.content.split('\n')
-        all_content_lines = crop_content_lines_for_resizing(all_content_lines, self.frame)
+        all_content_lines = crop_content_lines_for_resizing(
+            all_content_lines,
+            self.frame,
+        )
         all_content_lines = crop_content_with_extra_wide_chars(
             all_content_lines,
             self.frame,

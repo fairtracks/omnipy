@@ -22,13 +22,19 @@ class ReflowedTextDraftPanel(
         # correct behaviour. An empty string is the split into a list of one element. If
         # splitlines() had been used, the list would be empty.
         all_content_lines = self.content.split('\n')
-        all_content_lines = crop_content_lines_for_resizing(all_content_lines, self.frame)
+
+        all_content_lines = crop_content_lines_for_resizing(
+            all_content_lines,
+            self.frame,
+        )
+
         all_content_lines = crop_content_with_extra_wide_chars(
             all_content_lines,
             self.frame,
             self.config,
             self._char_width_map,
         )
+
         return all_content_lines
 
     @cached_property
