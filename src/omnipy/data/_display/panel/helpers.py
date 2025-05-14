@@ -4,6 +4,7 @@ from functools import cache
 import pygments.token
 import rich.color
 import rich.color_triplet
+import rich.style
 import rich.syntax
 
 from omnipy.data._display.config import ColorStyles
@@ -26,13 +27,21 @@ def get_syntax_theme_from_color_style(color_style: ColorStyles) -> rich.syntax.S
 
 
 @cache
+def get_token_style_from_color_style(
+    token: pygments.token._TokenType,
+    color_style: ColorStyles,
+) -> rich.style.Style:
+    syntax_theme = get_syntax_theme_from_color_style(color_style)
+    return syntax_theme.get_style_for_token(token)
+
+
+@cache
 def calculate_fg_color_from_color_style(color_style: ColorStyles) -> rich.color.Color:
     ANSI_FG_COLOR_MAP = {'ansi_light': 'black', 'ansi_dark': 'bright_white'}
 
     color_style_name = extract_value_if_enum(color_style)
 
-    syntax_theme = get_syntax_theme_from_color_style(color_style)
-    fg_color = syntax_theme.get_style_for_token(pygments.token.Token).color
+    fg_color = get_token_style_from_color_style(pygments.token.Token, color_style).color
 
     if fg_color is None and color_style_name in ANSI_FG_COLOR_MAP:
         fg_color = rich.color.Color.parse(ANSI_FG_COLOR_MAP[color_style_name])
