@@ -47,7 +47,7 @@ class WithinFrameExp(NamedTuple):
 @dataclass
 class FrameTestCase(Generic[FrameT]):
     frame: FrameT | None
-    config: OutputConfig | None = None
+    config: OutputConfig | None | pyd.UndefinedType = field(default=pyd.Undefined)
 
     exp_plain_output: str | None | pyd.UndefinedType = field(default=pyd.Undefined)
     exp_dims_all_stages: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
@@ -92,12 +92,12 @@ class FrameTestCase(Generic[FrameT]):
 class PanelFrameVariantTestCase(Generic[ContentT, FrameT]):
     content: ContentT
     frame: FrameWithWidthAndHeight | None
-    config: OutputConfig | None
     exp_plain_output_no_frame: str | None
     exp_dims_all_stages_no_frame: DimensionsWithWidthAndHeight
     frame_case: FrameTestCase[FrameT]
     frame_variant: FrameVariant
     title: str = ''
+    config: OutputConfig | None | pyd.UndefinedType = field(default=pyd.Undefined)
 
     exp_plain_output: str | None | pyd.UndefinedType = field(default=pyd.Undefined)
     exp_dims_all_stages: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
@@ -222,6 +222,11 @@ class PanelFrameVariantTestCase(Generic[ContentT, FrameT]):
                 height=self.exp_stylized_dims.height,
             ),
         )
+        self.config = _resolve_to_first_defined(
+            self.frame_case.config,
+            self.config,
+            None,
+        )
 
 
 class PanelOutputTestCase(NamedTuple, Generic[ContentT]):
@@ -268,6 +273,7 @@ def apply_frame_variant_to_test_case(
     case: PanelFrameVariantTestCase,
     stylized_stage: bool,
 ) -> PanelOutputTestCase:
+    assert not isinstance(case.config, pyd.UndefinedType)
     assert not isinstance(case.exp_plain_output_only_width, pyd.UndefinedType)
     assert not isinstance(case.exp_resized_dims_only_width, pyd.UndefinedType)
     assert not isinstance(case.exp_stylized_dims_only_width, pyd.UndefinedType)

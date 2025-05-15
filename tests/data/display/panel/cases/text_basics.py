@@ -324,7 +324,6 @@ def case_syntax_text_double_width_chars(
         # Mandarin Chinese characters are double-width
         content='北京',
         frame=frame_case.frame,
-        config=frame_case.config,
         exp_plain_output_no_frame='北京\n',
         exp_dims_all_stages_no_frame=Dimensions(width=4, height=1),
         exp_plain_output_only_height='北京\n',
@@ -496,7 +495,6 @@ def case_syntax_text_tab_char(
         # the next tab stop (4 chars by default)
         content=' a\tb',
         frame=frame_case.frame,
-        config=frame_case.config,
         exp_plain_output_no_frame=' a  b\n',
         exp_dims_all_stages_no_frame=Dimensions(width=5, height=1),
         exp_plain_output_only_height=' a  b\n',
