@@ -37,7 +37,9 @@ class ResizedLayoutDraftPanel(
             constraints=draft_panel_basis.constraints,
             config=draft_panel_basis.config,
         )
-        return new_draft_panel.render_next_stage()
+        if not panel_is_dimensions_aware(new_draft_panel):
+            return new_draft_panel.render_next_stage()
+        return new_draft_panel
 
     @classmethod
     def _set_panel_heights(
