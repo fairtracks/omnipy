@@ -74,7 +74,7 @@ def case_layout_styling_setup_frame_and_title(
 def case_layout_styling_setup_small_frame(
         transparent_background: bool) -> StylizedPanelTestCaseSetup[Layout]:
     # Create a simple layout with mock panels
-    layout = Layout()
+    layout: Layout[MockPanel] = Layout()
     layout['first'] = MockPanel(
         content='Panel_1 Content', frame=Frame(Dimensions(width=7, height=2)))
     layout['second'] = MockPanel(
@@ -370,6 +370,7 @@ def case_layout_styling_expectations_plain_html_tag(
                           '╰┴'),
                     case_id=case_id,
                 )
+
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
@@ -421,6 +422,7 @@ def case_layout_styling_expectations_bw_stylized_html_tag(
                           '╰┴'),
                     case_id=case_id,
                 )
+
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
@@ -472,6 +474,7 @@ def case_layout_styling_expectations_colorized_html_tag(
                     color_style=lightbulb_dark_color_style_with_bg,
                     case_id=case_id,
                 )
+
             case 'no-frame-dark-color-no-bg':
                 return _fill_html_tag_template(
                     data=('<span style="color: #d4d2c8; text-decoration-color: #d4d2c8">'
@@ -620,6 +623,7 @@ def case_layout_styling_expectations_colorized_html_tag(
                     color_style=lightbulb_dark_color_style_with_bg,
                     case_id=case_id,
                 )
+
             case 'tiny-cropped-table-dark-color-no-bg':
                 return _fill_html_tag_template(
                     data=('<span style="color: #d4d2c8; text-decoration-color: #d4d2c8">╭┬</span>\n'
@@ -627,6 +631,7 @@ def case_layout_styling_expectations_colorized_html_tag(
                     color_style=lightbulb_dark_color_style_no_bg,
                     case_id=case_id,
                 )
+
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
@@ -678,6 +683,7 @@ def case_layout_styling_expectations_plain_html_page(
                           '╰┴'),
                     case_id=case_id,
                 )
+
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
@@ -691,6 +697,7 @@ def case_layout_styling_expectations_plain_html_page(
 def case_layout_styling_expectations_bw_stylized_html_page(
     bw_stylized_html_page: Annotated[OutputPropertyType, pc.fixture]
 ) -> StylizedPanelOutputExpectations:
+
     bold_style = '\n'.join([
         '.r2 {font-weight: bold}',
     ])
@@ -756,6 +763,7 @@ def case_layout_styling_expectations_bw_stylized_html_page(
                           '<span class="r1">╰┴</span>'),
                     case_id=case_id,
                 )
+
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
@@ -848,6 +856,9 @@ def case_layout_styling_expectations_colorized_html_page(
         '<span class="r1"> │</span>\n'
         '<span class="r1">╰────────────┴──────────────────────────╯</span>')
 
+    tiny_cropped_table_dark_color_exp_output = ('<span class="r1">╭┬</span>\n'
+                                                '<span class="r1">╰┴</span>')
+
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-dark-color':
@@ -856,6 +867,7 @@ def case_layout_styling_expectations_colorized_html_page(
                     + lightbulb_dark_body_style_with_bg,
                     data=no_frame_default_color_exp_output,
                 )
+
             case 'no-frame-dark-color-no-bg':
                 return _fill_html_page_template(
                     style=lightbulb_dark_style_no_bg + lightbulb_dark_bold_style_no_bg
@@ -882,17 +894,17 @@ def case_layout_styling_expectations_colorized_html_page(
             case 'tiny-cropped-table-dark-color':
                 return _fill_html_page_template(
                     style=lightbulb_dark_style_with_bg + lightbulb_dark_body_style_with_bg,
-                    data=('<span class="r1">╭┬</span>\n'
-                          '<span class="r1">╰┴</span>'),
+                    data=tiny_cropped_table_dark_color_exp_output,
                     case_id=case_id,
                 )
+
             case 'tiny-cropped-table-dark-color-no-bg':
                 return _fill_html_page_template(
                     style=lightbulb_dark_style_no_bg + lightbulb_dark_body_style_no_bg,
-                    data=('<span class="r1">╭┬</span>\n'
-                          '<span class="r1">╰┴</span>'),
+                    data=tiny_cropped_table_dark_color_exp_output,
                     case_id=case_id,
                 )
+
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
