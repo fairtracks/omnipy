@@ -323,6 +323,205 @@ def case_layout_single_panel_fixed_dims(
     'frame_case',
     (
         FrameTestCase(frame=None),
+        FrameTestCase(frame=Frame(Dimensions(width=21, height=5))),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=20, height=6)),
+            exp_plain_output=('╭──────────────╮\n'
+                              '│ A nice title │\n'
+                              '│              │\n'
+                              '│ Here is some │\n'
+                              '│ text         │\n'
+                              '╰──────────────╯\n'),
+            # The frame is larger than needed by the content, so the
+            # extra whitespace is trimmed at the 'resize' stage,
+            # reducing the panel width to 16
+            exp_dims_all_stages=Dimensions(width=16, height=6),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=15, height=7)),
+            exp_plain_output=('╭───────────╮\n'
+                              '│  A nice   │\n'
+                              '│   title   │\n'
+                              '│           │\n'
+                              '│ Here is   │\n'
+                              '│ some text │\n'
+                              '╰───────────╯\n'),
+            # Title can be wrapped into two lines maximum
+            exp_dims_all_stages=Dimensions(width=13, height=7),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=10, height=8), fixed_width=False),
+            # Not enough room for a double-line title, so the title is
+            # cropped to a single line
+            exp_plain_output=('╭────────╮\n'
+                              '│ A nice │\n'
+                              '│        │\n'
+                              '│ Here   │\n'
+                              '│ is     │\n'
+                              '│ some   │\n'
+                              '│ text   │\n'
+                              '╰────────╯\n'),
+            # The dims include the width of the double-line title cropped to
+            # a single line
+            exp_dims_all_stages=Dimensions(width=10, height=8),
+            exp_plain_output_only_width=('╭────────╮\n'
+                                         '│ A nice │\n'
+                                         '│ title  │\n'
+                                         '│        │\n'
+                                         '│ Here   │\n'
+                                         '│ is     │\n'
+                                         '│ some   │\n'
+                                         '│ text   │\n'
+                                         '╰────────╯\n'),
+            exp_dims_all_stages_only_width=Dimensions(width=10, height=9),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=10, height=7), fixed_width=False),
+            # Just enough room for a single-line title (last line cropped),
+            # while content is cropped to 3 lines. Both crop operations
+            # happen at the 'resize' stage
+            config=OutputConfig(panel_title_at_top=False),
+            exp_plain_output=('╭────────╮\n'
+                              '│ Here   │\n'
+                              '│ is     │\n'
+                              '│ some   │\n'
+                              '│        │\n'
+                              '│ A nice │\n'
+                              '╰────────╯\n'),
+            exp_dims_all_stages=Dimensions(width=10, height=7),
+            exp_plain_output_only_width=('╭────────╮\n'
+                                         '│ Here   │\n'
+                                         '│ is     │\n'
+                                         '│ some   │\n'
+                                         '│ text   │\n'
+                                         '│        │\n'
+                                         '│ A nice │\n'
+                                         '│ title  │\n'
+                                         '╰────────╯\n'),
+            exp_dims_all_stages_only_width=Dimensions(width=10, height=9),
+            exp_plain_output_only_height=('╭───────────────────╮\n'
+                                          '│ Here is some text │\n'
+                                          '│                   │\n'
+                                          '│   A nice title    │\n'
+                                          '╰───────────────────╯\n'),
+            exp_dims_all_stages_only_height=Dimensions(width=21, height=5),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=9, height=6), fixed_width=False),
+            # When only 2 or fewer lines of content are not in conflict with
+            # a single-line title, the title is removed. As this happens in
+            # the 'resize' stage, horizontal cropping of the content is
+            # triggered
+            exp_plain_output=('╭──────╮\n'
+                              '│ Here │\n'
+                              '│ is   │\n'
+                              '│ some │\n'
+                              '│ text │\n'
+                              '╰──────╯\n'),
+            exp_dims_all_stages=Dimensions(width=8, height=6),
+            exp_plain_output_only_width=('╭───────╮\n'
+                                         '│ A nic │\n'
+                                         '│ title │\n'
+                                         '│       │\n'
+                                         '│ Here  │\n'
+                                         '│ is    │\n'
+                                         '│ some  │\n'
+                                         '│ text  │\n'
+                                         '╰───────╯\n'),
+            exp_resized_dims_only_width=Dimensions(width=10, height=9),
+            exp_stylized_dims_only_width=Dimensions(width=9, height=9),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=11, height=7), fixed_width=False),
+            # Once there is enough width to remove the conflict between the
+            # title and the table, the title reappears.
+            exp_plain_output=('╭─────────╮\n'
+                              '│ A nice  │\n'
+                              '│         │\n'
+                              '│ Here is │\n'
+                              '│ some    │\n'
+                              '│ text    │\n'
+                              '╰─────────╯\n'),
+            exp_dims_all_stages=Dimensions(width=11, height=7),
+            exp_plain_output_only_width=('╭─────────╮\n'
+                                         '│ A nice  │\n'
+                                         '│  title  │\n'
+                                         '│         │\n'
+                                         '│ Here is │\n'
+                                         '│ some    │\n'
+                                         '│ text    │\n'
+                                         '╰─────────╯\n'),
+            exp_dims_all_stages_only_width=Dimensions(width=11, height=8),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=9, height=10), fixed_width=False),
+            # Title does not expand into more than two lines, even though
+            # there is enough vertical space. The title stops the frame
+            # from being cropped horizontally, even though the width is
+            # specified as flexible
+            exp_plain_output=('╭───────╮\n'
+                              '│ A nic │\n'
+                              '│ title │\n'
+                              '│       │\n'
+                              '│ Here  │\n'
+                              '│ is    │\n'
+                              '│ some  │\n'
+                              '│ text  │\n'
+                              '╰───────╯\n'),
+            exp_resized_dims=Dimensions(width=10, height=9),
+            exp_stylized_dims=Dimensions(width=9, height=9),
+        ),
+    ),
+    ids=(
+        'no_frame',
+        'exact_frame',
+        'reduced_width_frame_single_line_title',
+        'reduced_width_frame_double_line_title',
+        'reduced_height_frame_crop_title_to_single_line',
+        'reduced_height_frame_crop_content_keep_title_at_bottom',
+        'reduced_height_frame_remove_title',
+        'expand_width_frame_title_reappears',
+        'reduced_width_frame_max_double_line_title',
+    ),
+)
+@pc.case(id='single_panel_with_title', tags=['dims_and_edge_cases', 'layout'])
+def case_layout_single_panel_with_title(
+    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    per_frame_variant: Annotated[FrameVariant, pc.fixture],
+) -> PanelFrameVariantTestCase[Layout]:
+    return PanelFrameVariantTestCase(
+        content=Layout(panel=MockPanel(content='Here is some text', title='A nice title'),),
+        frame=frame_case.frame,
+        config=OutputConfig(
+            # Horizontal and vertical overflow modes are not applied to text
+            # in these tests as MockPanel is used, which ignores horizontal
+            # and vertical overflow modes.
+            horizontal_overflow_mode=HorizontalOverflowMode.CROP,
+            vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
+            console_color_system=ConsoleColorSystem.ANSI_RGB,
+            transparent_background=False,
+        ),
+        exp_plain_output_no_frame=('╭───────────────────╮\n'
+                                   '│   A nice title    │\n'
+                                   '│                   │\n'
+                                   '│ Here is some text │\n'
+                                   '╰───────────────────╯\n'),
+        exp_dims_all_stages_no_frame=Dimensions(width=21, height=5),
+        exp_plain_output_only_height=('╭───────────────────╮\n'
+                                      '│   A nice title    │\n'
+                                      '│                   │\n'
+                                      '│ Here is some text │\n'
+                                      '╰───────────────────╯\n'),
+        exp_dims_all_stages_only_height=Dimensions(width=21, height=5),
+        frame_case=frame_case,
+        frame_variant=per_frame_variant,
+    )
+
+
+@pc.parametrize(
+    'frame_case',
+    (
+        FrameTestCase(frame=None),
         FrameTestCase(frame=Frame(Dimensions(width=9, height=5))),
         FrameTestCase(frame=Frame(Dimensions(width=8, height=4))),
         FrameTestCase(

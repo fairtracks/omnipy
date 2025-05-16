@@ -120,6 +120,7 @@ config1 = OutputConfig(
     transparent_background=False,
     language='python',
     debug_mode=False,
+    panel_title_at_top=False,
     tab_size=12,
 )
 config2 = OutputConfig(

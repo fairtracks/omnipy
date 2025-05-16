@@ -10,6 +10,7 @@ from omnipy.data._display.dimensions import (Dimensions,
                                              has_height,
                                              has_width)
 from omnipy.data._display.frame import AnyFrame, empty_frame, Frame
+from omnipy.data._display.helpers import soft_wrap_words
 import omnipy.util._pydantic as pyd
 
 FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
@@ -94,6 +95,13 @@ def dims_if_cropped(
 
 
 class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
+    TITLE_BLANK_LINES = 1
+    DOUBLE_LINE_TITLE_HEIGHT = TITLE_BLANK_LINES + 2
+    SINGLE_LINE_TITLE_HEIGHT = TITLE_BLANK_LINES + 1
+
+    MIN_PANEL_LINES_SHOWN_TO_ALLOW_DOUBLE_LINE_TITLE = 8
+    MIN_PANEL_LINES_SHOWN_TO_ALLOW_SINGLE_LINE_TITLE = 3
+
     @cached_property
     @abstractmethod
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
@@ -110,6 +118,85 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
     @cached_property
     def within_frame(self) -> DimensionsFit:
         return DimensionsFit(self.dims, self.frame.dims)
+
+    @cached_property
+    def _available_height_for_title(self) -> int | None:
+        if has_height(self.frame.dims):
+            return max(self.frame.dims.height - self.dims_if_cropped.height, 0)
+        else:
+            return None
+
+    @cached_property
+    def _max_title_height(self) -> int:
+        if self.frame.dims.height is None:
+            # No table cell height restrictions, so space for both single-
+            # and double-line titles
+            return 2
+
+        assert self._available_height_for_title is not None
+        if self._available_height_for_title >= self.DOUBLE_LINE_TITLE_HEIGHT:
+            # Enough space for both single- or double-line titles
+            return 2
+        elif self._available_height_for_title == self.SINGLE_LINE_TITLE_HEIGHT:
+            # Enough space for single-line title
+            return 1
+        else:  # title needs to make use of panel space
+            if (self.frame.dims.height - self.DOUBLE_LINE_TITLE_HEIGHT
+                    >= self.MIN_PANEL_LINES_SHOWN_TO_ALLOW_DOUBLE_LINE_TITLE):
+                # Enough content shown for double-line title
+                return 2
+            elif (self.frame.dims.height - self.SINGLE_LINE_TITLE_HEIGHT
+                  >= self.MIN_PANEL_LINES_SHOWN_TO_ALLOW_SINGLE_LINE_TITLE):
+                # Enough content shown for single-line title
+                return 1
+            else:
+                # Not enough space for title
+                return 0
+
+    @cached_property
+    def title_overlaps_panel(self) -> bool:
+        """
+        Returns True if the title overlaps with the panel content.
+        """
+        if self._available_height_for_title is None:
+            return False
+        return self._available_height_for_title < self.SINGLE_LINE_TITLE_HEIGHT
+
+    @cached_property
+    def resized_title(self) -> list[str]:
+        if self.title == '':
+            return []
+        else:
+            if has_width(self.frame.dims):
+                title_width = min(self.dims.width, self.frame.dims.width)
+            else:
+                title_width = self.dims.width
+
+            title_words = self.title.split()
+            while True:
+                title_lines = soft_wrap_words(title_words, title_width)
+                if 1 <= len(title_lines) < 3:
+                    break
+                title_width += 1
+
+            return title_lines
+
+    @cached_property
+    def title_width(self) -> int:
+        return max((len(line) for line in self.resized_title), default=0)
+
+    @cached_property
+    def title_height(self) -> int:
+        return min(self._max_title_height, len(self.resized_title))
+
+        return len(self.resized_title)
+
+    def calc_panel_title_height(self,) -> int:
+        return min(self._max_title_height, len(self.resized_title))
+
+    @cached_property
+    def title_height_with_blank_lines(self) -> int:
+        return self.title_height + self.TITLE_BLANK_LINES if self.title_height > 0 else 0
 
 
 class FullyRenderedPanel(DimensionsAwarePanel[FrameT], Generic[FrameT]):
