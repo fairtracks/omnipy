@@ -31,7 +31,7 @@ def test_output_config() -> None:
         horizontal_overflow_mode=HorizontalOverflowMode.CROP,
         vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
         layout_style=LayoutStyle.PANELS,
-    )
+        panel_title_at_top=False)
 
     assert config.tab_size == 2
     assert config.indent_tab_size == 4
@@ -47,6 +47,7 @@ def test_output_config() -> None:
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.CROP
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_TOP
     assert config.layout_style is LayoutStyle.PANELS
+    assert config.panel_title_at_top is False
 
     config = OutputConfig(
         tab_size='2',  # type: ignore[arg-type]
@@ -68,6 +69,7 @@ def test_output_config() -> None:
         horizontal_overflow_mode='ellipsis',  # type: ignore[arg-type]
         vertical_overflow_mode='crop_bottom',  # type: ignore[arg-type]
         layout_style='table_grid',  # type: ignore[arg-type]
+        panel_title_at_top=0,  # type: ignore[arg-type]
     )
     assert config.tab_size == 2
     assert config.indent_tab_size == 4
@@ -83,6 +85,7 @@ def test_output_config() -> None:
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
     assert config.layout_style is LayoutStyle.TABLE_GRID
+    assert config.panel_title_at_top is False
 
     config = OutputConfig(
         css_font_weight=None,
@@ -143,6 +146,9 @@ def test_output_config_hashable() -> None:
         {
             'layout_style': LayoutStyle.PANELS
         },
+        {
+            'panel_title_at_top': False
+        },
     ]
 
     prev_hash = hash(config_1)
@@ -202,6 +208,9 @@ def test_fail_output_config_no_assignments() -> None:
     with pytest.raises(AttributeError):
         config.layout_style = LayoutStyle.PANELS  # type: ignore[misc]
 
+    with pytest.raises(AttributeError):
+        config.panel_title_at_top = False  # type: ignore[misc]
+
 
 def test_fail_output_config_if_invalid_params() -> None:
     with pytest.raises(ValueError):
@@ -252,6 +261,9 @@ def test_fail_output_config_if_invalid_params() -> None:
     with pytest.raises(ValueError):
         OutputConfig(layout_style=None)  # type: ignore[arg-type]
 
+    with pytest.raises(ValueError):
+        OutputConfig(panel_title_at_top=None)  # type: ignore[arg-type]
+
 
 def test_output_config_default_values() -> None:
     config = OutputConfig()
@@ -276,6 +288,7 @@ def test_output_config_default_values() -> None:
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
     assert config.layout_style is LayoutStyle.TABLE_GRID
+    assert config.panel_title_at_top is True
 
 
 def test_fail_output_config_if_extra_params() -> None:

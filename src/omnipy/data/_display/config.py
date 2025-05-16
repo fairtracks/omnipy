@@ -625,6 +625,8 @@ class OutputConfig:
             that exceeds the height.
         layout_style (LayoutStyle): Visual styles for the layout of the
             output.
+        panel_title_at_top (bool): Whether panel titles will be displayed
+            over the panel contents (True) or below the contents (False)
     """
 
     tab_size: pyd.NonNegativeInt = 4
@@ -649,6 +651,7 @@ class OutputConfig:
     horizontal_overflow_mode: HorizontalOverflowMode = HorizontalOverflowMode.ELLIPSIS
     vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.CROP_BOTTOM
     layout_style: LayoutStyle = LayoutStyle.TABLE_GRID
+    panel_title_at_top: bool = True
 
     @pyd.validator('language')
     def validate_language(cls, language: SyntaxLanguage | str) -> SyntaxLanguage | str:
