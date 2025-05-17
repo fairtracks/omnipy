@@ -8,14 +8,14 @@ import rich.containers
 import rich.style
 import rich.table
 import rich.text
-from typing_extensions import override
+from typing_extensions import override, TypeVar
 
 from omnipy.data._display.config import ColorStyles, ConsoleColorSystem
-from omnipy.data._display.dimensions import Dimensions, has_width
+from omnipy.data._display.dimensions import Dimensions, has_height, has_width
+from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              dims_if_cropped,
-                                             FrameT,
                                              FullyRenderedPanel,
                                              OutputVariant)
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
@@ -27,6 +27,8 @@ from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, Sty
 from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingOutputVariant
 from omnipy.util import _pydantic as pyd
 
+FrameInvT = TypeVar('FrameInvT', bound=AnyFrame, default=AnyFrame)
+
 
 @pyd.dataclass(
     init=False,
@@ -34,8 +36,10 @@ from omnipy.util import _pydantic as pyd
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True, arbitrary_types_allowed=True),
 )
 class StylizedLayoutPanel(
-        StylizedMonospacedPanel[ResizedLayoutDraftPanel[FrameT], Layout, FrameT],
-        Generic[FrameT],
+        # StylizedMonospacedPanel[ResizedLayoutDraftPanel[FrameT], Layout, FrameT],
+        # Generic[FrameT],
+        StylizedMonospacedPanel[ResizedLayoutDraftPanel[FrameInvT], Layout, FrameInvT],
+        Generic[FrameInvT],
 ):
     @pyd.validator('content', pre=True)
     def _copy_content(cls, content: Layout) -> Layout:
@@ -72,6 +76,7 @@ class StylizedLayoutPanel(
     @cache
     def _get_stylized_layout_common(  # noqa: C901
         layout: Layout[FullyRenderedPanel],
+        frame: FrameInvT,
         panel_title_at_top: bool,
         rich_overflow_method: rich.console.OverflowMethod | None,
         console_color_system: ConsoleColorSystem,  # Only used for hashing
@@ -101,16 +106,19 @@ class StylizedLayoutPanel(
                                       '│ ││\n'
                                       '╰─┴╯\n')
 
-        table_cell_height = max(
-            (dims_if_cropped(
-                Dimensions(
-                    width=panel.dims.width,
-                    height=panel.dims.height + panel.title_height + 1,
-                ),
-                panel.frame,
-            ).height for panel in panels),
-            default=0,
-        )
+        if has_height(frame.dims):
+            table_cell_height = frame.dims.height - 2
+        else:
+            table_cell_height = max(
+                (dims_if_cropped(
+                    Dimensions(
+                        width=panel.dims.width,
+                        height=panel.dims.height + panel.title_height + 1,
+                    ),
+                    panel.frame,
+                ).height for panel in panels),
+                default=0,
+            )
 
         def _prepare_content(panels: Iterable[FullyRenderedPanel]) -> Iterator[rich.table.Table]:
             for panel in panels:
@@ -208,6 +216,7 @@ class StylizedLayoutPanel(
     def _stylized_content_terminal_impl(self) -> StylizedRichTypes:
         return self._get_stylized_layout_common(
             layout=self.content,
+            frame=self.frame,
             panel_title_at_top=self.config.panel_title_at_top,
             rich_overflow_method=self.rich_overflow_method,
             console_color_system=self.config.console_color_system,
@@ -220,6 +229,7 @@ class StylizedLayoutPanel(
     def _stylized_content_html_impl(self) -> StylizedRichTypes:
         return self._get_stylized_layout_common(
             layout=self.content,
+            frame=self.frame,
             panel_title_at_top=self.config.panel_title_at_top,
             rich_overflow_method=self.rich_overflow_method,
             console_color_system=ConsoleColorSystem.ANSI_RGB,

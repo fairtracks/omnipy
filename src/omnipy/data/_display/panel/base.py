@@ -82,12 +82,18 @@ def dims_if_cropped(
     frame: AnyFrame,
 ) -> DimensionsWithWidthAndHeight:
     if has_width(frame.dims):
-        cropped_width = min(frame.dims.width, dims.width)
+        if frame.fixed_width:
+            cropped_width = frame.dims.width
+        else:
+            cropped_width = min(frame.dims.width, dims.width)
     else:
         cropped_width = dims.width
 
     if has_height(frame.dims):
-        cropped_height = min(frame.dims.height, dims.height)
+        if frame.fixed_height:
+            cropped_height = frame.dims.height
+        else:
+            cropped_height = min(frame.dims.height, dims.height)
     else:
         cropped_height = dims.height
 
@@ -188,8 +194,6 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
     @cached_property
     def title_height(self) -> int:
         return min(self._max_title_height, len(self.resized_title))
-
-        return len(self.resized_title)
 
     def calc_panel_title_height(self,) -> int:
         return min(self._max_title_height, len(self.resized_title))

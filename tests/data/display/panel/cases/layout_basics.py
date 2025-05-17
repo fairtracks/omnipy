@@ -402,9 +402,15 @@ def case_layout_single_panel_fixed_dims(
             exp_plain_output_only_height=('╭───────────────────╮\n'
                                           '│ Here is some text │\n'
                                           '│                   │\n'
+                                          '│                   │\n'
+                                          '│                   │\n'
                                           '│   A nice title    │\n'
                                           '╰───────────────────╯\n'),
-            exp_dims_all_stages_only_height=Dimensions(width=21, height=5),
+            # The 'resized' dims are based on the dims_if_cropped of the
+            # inner panel, not the frame of the outer panel. Hence, the
+            # height is 5, not 7
+            exp_resized_dims_only_height=Dimensions(width=21, height=5),
+            exp_stylized_dims_only_height=Dimensions(width=21, height=7),
         ),
         FrameTestCase(
             frame=Frame(Dimensions(width=9, height=6), fixed_width=False),
@@ -513,6 +519,92 @@ def case_layout_single_panel_with_title(
                                       '│ Here is some text │\n'
                                       '╰───────────────────╯\n'),
         exp_dims_all_stages_only_height=Dimensions(width=21, height=5),
+        frame_case=frame_case,
+        frame_variant=per_frame_variant,
+    )
+
+
+@pc.parametrize(
+    'frame_case',
+    (
+        FrameTestCase(frame=None),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=16, height=None)),
+            exp_resized_dims=Dimensions(width=24, height=7),
+            exp_stylized_dims=Dimensions(width=16, height=7),
+            exp_plain_output=('╭──────────────╮\n'
+                              '│ Inner panel… │\n'
+                              '│ fixed dims   │\n'
+                              '│              │\n'
+                              '│              │\n'
+                              '│ Panel title  │\n'
+                              '╰──────────────╯\n'),
+        ),
+        FrameTestCase(
+            frame=Frame(Dimensions(width=14, height=6)),
+            exp_resized_dims=Dimensions(width=24, height=7),
+            exp_stylized_dims=Dimensions(width=14, height=6),
+            exp_plain_output=('╭────────────╮\n'
+                              '│ Inner pan… │\n'
+                              '│ fixed dims │\n'
+                              '│            │\n'
+                              '│ Panel tit… │\n'
+                              '╰────────────╯\n'),
+            exp_plain_output_only_width=('╭────────────╮\n'
+                                         '│ Inner pan… │\n'
+                                         '│ fixed dims │\n'
+                                         '│            │\n'
+                                         '│            │\n'
+                                         '│ Panel tit… │\n'
+                                         '╰────────────╯\n'),
+            # exp_dims_all_stages_only_width=Dimensions(width=24, height=7),
+            exp_stylized_dims_only_height=Dimensions(width=24, height=6),
+            exp_plain_output_only_height=('╭──────────────────────╮\n'
+                                          '│ Inner panel with     │\n'
+                                          '│ fixed dims           │\n'
+                                          '│                      │\n'
+                                          '│     Panel title      │\n'
+                                          '╰──────────────────────╯\n'),
+            # exp_dims_all_stages_only_height=Dimensions(width=24, height=7),
+            exp_stylized_dims_only_width=Dimensions(width=14, height=7),
+        ),
+    ),
+    ids=(
+        'no_frame',
+        'reduced_width',
+        'reduced_width_crop_contents',
+    ),
+)
+@pc.case(id='single_panel_with_title_fixed_dims', tags=['dims_and_edge_cases', 'layout'])
+def case_layout_single_panel_with_title_fixed_dims(
+    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    per_frame_variant: Annotated[FrameVariant, pc.fixture],
+) -> PanelFrameVariantTestCase[Layout]:
+    return PanelFrameVariantTestCase(
+        content=Layout(
+            panel=MockPanel(
+                content='Inner panel with fixed dims',
+                title='Panel title',
+                frame=Frame(Dimensions(width=20, height=5)),
+            ),),
+        frame=frame_case.frame,
+        config=OutputConfig(panel_title_at_top=False,),
+        exp_plain_output_no_frame=('╭──────────────────────╮\n'
+                                   '│ Inner panel with     │\n'
+                                   '│ fixed dims           │\n'
+                                   '│                      │\n'
+                                   '│                      │\n'
+                                   '│     Panel title      │\n'
+                                   '╰──────────────────────╯\n'),
+        exp_dims_all_stages_no_frame=Dimensions(width=24, height=7),
+        exp_plain_output_only_height=('╭──────────────────────╮\n'
+                                      '│ Inner panel with     │\n'
+                                      '│ fixed dims           │\n'
+                                      '│                      │\n'
+                                      '│                      │\n'
+                                      '│     Panel title      │\n'
+                                      '╰──────────────────────╯\n'),
+        exp_dims_all_stages_only_height=Dimensions(width=24, height=7),
         frame_case=frame_case,
         frame_variant=per_frame_variant,
     )
