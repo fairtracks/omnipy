@@ -2,7 +2,7 @@ import inspect
 from typing import Any, Callable, cast, Generic, ParamSpec
 
 import pytest
-from typing_extensions import reveal_type, TypeVar
+from typing_extensions import TypeVar
 
 from omnipy.util.callable_decorator import callable_decorator_cls
 
@@ -66,9 +66,6 @@ def test_plain_decorator() -> None:
     def my_func_1(*args: object, **kwargs: object) -> dict[str, object]:
         return dict(args=args, kwargs=kwargs)
 
-    reveal_type(my_func_1)
-    reveal_type(my_func_1.__call__)
-
     assert type(my_func_1) is MockClass
     _assert_func_decoration(my_func_1)  # noqa
     _assert_call_func(my_func_1)
@@ -82,9 +79,6 @@ def test_plain_decorator_parentheses() -> None:
     @MockClass()
     def my_func_2(*args: object, **kwargs: object) -> dict[str, object]:
         return dict(args=args, kwargs=kwargs)
-
-    reveal_type(my_func_2)
-    reveal_type(my_func_2.__call__)
 
     assert type(my_func_2) is MockClass
     _assert_func_decoration(my_func_2)  # noqa
