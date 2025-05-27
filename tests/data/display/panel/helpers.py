@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
 import re
-from typing import Callable, Generic, TypeAlias, TypedDict
+from typing import Annotated, Callable, Generic, TypeAlias, TypedDict
 
 import pytest
+import pytest_cases as pc
 from typing_extensions import NamedTuple, TypeVar
 
 from omnipy.data._display.config import OutputConfig
@@ -483,3 +484,17 @@ def strip_all_styling_from_panel_output(
     get_output_property: OutputPropertyType,
 ) -> str:
     return _strip_ansi(_strip_html(get_output_property(text_panel)))
+
+
+def prepare_test_case_for_stylized_layout(
+    case: PanelOutputTestCase[Layout] | PanelFrameVariantTestCase[Layout],
+    plain_terminal: Annotated[OutputPropertyType, pc.fixture],
+    output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
+) -> PanelOutputTestCase[Layout]:
+    if isinstance(case, PanelFrameVariantTestCase):
+        if case.frame_variant != FrameVariant(True, True) \
+                and output_format_accessor != plain_terminal:
+            pytest.skip('Skip test combination to increase test efficiency.')
+
+        case = apply_frame_variant_to_test_case(case, stylized_stage=True)
+    return case

@@ -8,17 +8,15 @@ from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.layout import Layout
-from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 
 from ..helpers.classes import MockPanel, MockPanelStage3
-from .helpers import (apply_frame_variant_to_test_case,
-                      assert_dims_aware_panel,
-                      FrameVariant,
+from .helpers import (assert_dims_aware_panel,
                       OutputPropertyType,
                       PanelFrameVariantTestCase,
                       PanelOutputTestCase,
+                      prepare_test_case_for_stylized_layout,
                       strip_all_styling_from_panel_output,
                       StylizedPanelOutputExpectations,
                       StylizedPanelTestCaseSetup)
@@ -80,20 +78,6 @@ def test_stylized_layout_panel_immutable_properties() -> None:
         layout_panel.config = OutputConfig()  # type: ignore[misc]
 
 
-def _prepare_test_case(
-    case: PanelOutputTestCase[Layout] | PanelFrameVariantTestCase[Layout],
-    plain_terminal: Annotated[OutputPropertyType, pc.fixture],
-    output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
-) -> PanelOutputTestCase[Layout]:
-    if isinstance(case, PanelFrameVariantTestCase):
-        if case.frame_variant != FrameVariant(True, True) \
-                and output_format_accessor != plain_terminal:
-            pytest.skip('Skip test combination to increase test efficiency.')
-
-        case = apply_frame_variant_to_test_case(case, stylized_stage=True)
-    return case
-
-
 @pc.parametrize_with_cases(
     'case',
     cases='.cases.layout_basics',
@@ -104,7 +88,7 @@ def test_stylized_layout_panel_basic_dims_and_edge_cases(
     plain_terminal: Annotated[OutputPropertyType, pc.fixture],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> None:
-    case = _prepare_test_case(case, plain_terminal, output_format_accessor)
+    case = prepare_test_case_for_stylized_layout(case, plain_terminal, output_format_accessor)
 
     layout_panel = StylizedLayoutPanel(
         ResizedLayoutDraftPanel(
@@ -113,42 +97,6 @@ def test_stylized_layout_panel_basic_dims_and_edge_cases(
             frame=case.frame,
             config=case.config,
         ))
-    assert_dims_aware_panel(
-        layout_panel,
-        exp_dims=case.exp_dims,
-        exp_frame=case.frame,
-        exp_within_frame=case.exp_within_frame,
-    )
-
-    if case.exp_plain_output is not None:
-        processed_text_panel = strip_all_styling_from_panel_output(
-            layout_panel,
-            output_format_accessor,
-        )
-        assert processed_text_panel == case.exp_plain_output
-
-
-@pc.parametrize_with_cases(
-    'case',
-    cases='.cases.layout_reflow',
-    has_tag=('reflow_cases', 'layout'),
-)
-def test_stylized_layout_panel_reflow_cases(
-    case: PanelOutputTestCase[Layout] | PanelFrameVariantTestCase[Layout],
-    plain_terminal: Annotated[OutputPropertyType, pc.fixture],
-    output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
-) -> None:
-    case = _prepare_test_case(case, plain_terminal, output_format_accessor)
-
-    draft_layout_panel = DraftPanel(
-        case.content,
-        title=case.title,
-        frame=case.frame,
-        config=case.config,
-    )
-
-    layout_panel = StylizedLayoutPanel(draft_layout_panel)
-
     assert_dims_aware_panel(
         layout_panel,
         exp_dims=case.exp_dims,

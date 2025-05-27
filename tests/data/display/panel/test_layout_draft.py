@@ -6,7 +6,6 @@ from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.layout import Layout
-from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 
@@ -142,31 +141,6 @@ def test_resized_layout_draft_panel_basic_dims_and_edge_cases(
         frame=frame_case.frame,
         config=case.config,
     )
-
-    assert_dims_aware_panel(
-        resized_layout_panel,
-        exp_dims=frame_case.exp_dims,
-        exp_frame=frame_case.frame,
-        exp_within_frame=frame_case.exp_within_frame,
-    )
-
-
-@pc.parametrize_with_cases(
-    'case',
-    cases='.cases.layout_reflow',
-    has_tag=('reflow_cases', 'layout'),
-)
-def test_resized_layout_draft_panel_reflow_cases(case: PanelFrameVariantTestCase[Layout]) -> None:
-    frame_case = apply_frame_variant_to_test_case(case, stylized_stage=False)
-
-    draft_layout_panel = DraftPanel(
-        case.content,
-        title=case.title,
-        frame=frame_case.frame,
-        config=case.config,
-    )
-
-    resized_layout_panel = draft_layout_panel.render_next_stage()
 
     assert_dims_aware_panel(
         resized_layout_panel,
