@@ -204,3 +204,33 @@ def test_fail_frame_if_extra_param() -> None:
 
     with pytest.raises(TypeError):
         Frame(Dimensions(), extra=30)  # type: ignore
+
+
+def test_frame_modified_copy() -> None:
+    frame = Frame(Dimensions(10, 20), fixed_width=False, fixed_height=True)
+
+    # Exact copy
+    frame_copy = frame.modified_copy()
+    assert frame_copy.dims == Dimensions(10, 20)
+    assert frame_copy.fixed_width is False
+    assert frame_copy.fixed_height is True
+
+    # Copy with edits
+    new_frame_only_width = frame.modified_copy(width=30, height=None, fixed_width=True)
+
+    assert new_frame_only_width.dims == Dimensions(30, None)
+    assert new_frame_only_width.fixed_width is True
+    # Automatically set fixed_height to False as height is None
+    assert new_frame_only_width.fixed_height is False
+
+    # Copy with modified width
+    new_frame_new_height = frame.modified_copy(height=10, fixed_height=False)
+
+    assert new_frame_new_height.dims == Dimensions(10, 10)
+    assert new_frame_new_height.fixed_width is False
+    assert new_frame_new_height.fixed_height is False
+
+    # Original frame should remain unchanged
+    assert frame.dims == Dimensions(10, 20)
+    assert frame.fixed_width is False
+    assert frame.fixed_height is True

@@ -22,12 +22,17 @@ class Frame(Generic[WidthT, HeightT]):
         return Dimensions(dims.width, dims.height)
 
     @staticmethod
-    def _not_fixed_if_empty(dims_attr: str,
-                            fixed_value: bool | None,
-                            dims: Dimensions[WidthT, HeightT]) -> bool:
+    def _not_fixed_if_empty(
+        dims_attr: str,
+        fixed_value: bool | None,
+        dims: Dimensions,
+        raise_if_incorrect: bool = True,
+    ) -> bool:
         dim_value = getattr(dims, dims_attr)
         if dim_value is None:
-            assert fixed_value is not True, f'Cannot fix {dims_attr} of frame with {dims_attr}=None'
+            if raise_if_incorrect:
+                assert fixed_value is not True, \
+                    f'Cannot fix {dims_attr} of frame with {dims_attr}=None'
             return False
         return True if fixed_value is None else fixed_value
 
@@ -46,6 +51,46 @@ class Frame(Generic[WidthT, HeightT]):
         values: dict[str, Dimensions[WidthT, HeightT]],
     ) -> bool:
         return cls._not_fixed_if_empty('height', fixed_height, values['dims'])
+
+    def modified_copy(
+        self,
+        width: pyd.NonNegativeInt | None | pyd.UndefinedType = pyd.Undefined,
+        height: pyd.NonNegativeInt | None | pyd.UndefinedType = pyd.Undefined,
+        fixed_width: bool | None | pyd.UndefinedType = pyd.Undefined,
+        fixed_height: bool | None | pyd.UndefinedType = pyd.Undefined,
+    ) -> 'Frame':
+        """
+        Create a modified copy of the frame with specified changes.
+
+        Parameters that are Undefined will use the current frame's values.
+        """
+        if isinstance(width, pyd.UndefinedType):
+            width = self.dims.width
+
+        if isinstance(height, pyd.UndefinedType):
+            height = self.dims.height
+
+        # Create new dimensions
+        new_dims = Dimensions(width=width, height=height)
+
+        if isinstance(fixed_width, pyd.UndefinedType):
+            fixed_width = self._not_fixed_if_empty(
+                'width',
+                self.fixed_width,
+                new_dims,
+                raise_if_incorrect=False,
+            )
+
+        if isinstance(fixed_height, pyd.UndefinedType):
+            fixed_height = self._not_fixed_if_empty(
+                'height',
+                self.fixed_height,
+                new_dims,
+                raise_if_incorrect=False,
+            )
+
+        # Create new frame with updated values
+        return Frame(dims=new_dims, fixed_width=fixed_width, fixed_height=fixed_height)
 
 
 def empty_frame() -> Frame[None, None]:
