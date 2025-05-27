@@ -8,7 +8,7 @@ from omnipy.data._display.config import (ConsoleColorSystem,
                                          VerticalOverflowMode)
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
-from omnipy.data._display.layout import Layout
+from omnipy.data._display.panel.layout import Layout
 
 from ...helpers.classes import MockPanel, MockPanelStage2
 from ..helpers import FrameTestCase, FrameVariant, PanelFrameVariantTestCase

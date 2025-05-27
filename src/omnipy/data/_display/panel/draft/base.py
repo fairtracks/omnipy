@@ -40,14 +40,14 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
         return ConstraintsSatisfaction(self.constraints)
 
     def render_next_stage(self) -> 'DimensionsAwarePanel[FrameT]':
-        from omnipy.data._display.layout import Layout
+        from omnipy.data._display.panel.layout import Layout
 
         if isinstance(self.content, Layout):
-            from omnipy.data._display.flow import flow_layout_subpanels_inside_frame
+            from omnipy.data._display.panel.flow import flow_layout_subpanels_inside_frame
             layout_panel = cast('DraftPanel[Layout, FrameT]', self)
             return flow_layout_subpanels_inside_frame(layout_panel)
         else:
-            from omnipy.data._display.pretty import pretty_repr_of_draft_output
+            from omnipy.data._display.panel.pretty import pretty_repr_of_draft_output
             return pretty_repr_of_draft_output(self)
 
 

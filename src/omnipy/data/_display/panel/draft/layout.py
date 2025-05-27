@@ -5,10 +5,10 @@ from typing_extensions import override
 
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight, has_height
 from omnipy.data._display.frame import AnyFrame
-from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT
 from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, DraftPanel
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
+from omnipy.data._display.panel.layout import Layout
 from omnipy.shared.exceptions import ShouldNotOccurException
 import omnipy.util._pydantic as pyd
 

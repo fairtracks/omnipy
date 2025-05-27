@@ -5,8 +5,8 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
-from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
+from omnipy.data._display.panel.layout import Layout
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 
 from ..helpers.classes import MockPanel, MockPanelStage3

@@ -5,9 +5,9 @@ from omnipy.data._display.config import (ConsoleColorSystem,
                                          PrettyPrinterLib,
                                          RecommendedColorStyles)
 from omnipy.data._display.frame import Dimensions, Frame
-from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel, OutputConfig
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
+from omnipy.data._display.panel.layout import Layout
 
 json = """[
          {

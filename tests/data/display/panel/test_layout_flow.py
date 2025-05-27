@@ -2,8 +2,8 @@ from typing import Annotated
 
 import pytest_cases as pc
 
-from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel
+from omnipy.data._display.panel.layout import Layout
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 
 from .helpers import (apply_frame_variant_to_test_case,

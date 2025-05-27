@@ -13,9 +13,9 @@ from omnipy.data._display.dimensions import (Dimensions,
                                              has_height,
                                              has_width)
 from omnipy.data._display.frame import empty_frame, Frame, FrameWithWidthAndHeight
-from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, Panel
 from omnipy.data._display.panel.draft.base import DraftPanel
+from omnipy.data._display.panel.layout import Layout
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 from omnipy.shared.exceptions import ShouldNotOccurException
