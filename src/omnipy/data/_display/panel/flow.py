@@ -1,12 +1,9 @@
 from collections import defaultdict
 import dataclasses
-from typing import cast
+from typing import cast, NamedTuple
 
-from omnipy.data._display.dimensions import (Dimensions,
-                                             DimensionsWithWidthAndHeight,
-                                             has_height,
-                                             has_width)
-from omnipy.data._display.frame import AnyFrame, Frame
+from omnipy.data._display.dimensions import DimensionsWithWidthAndHeight, has_height, has_width
+from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              FrameInvT,
                                              FrameT,
@@ -19,178 +16,100 @@ import omnipy.util._pydantic as pyd
 
 def flow_layout_subpanels_inside_frame(
         layout_panel: DraftPanel[Layout[DraftPanel], FrameT]) -> ResizedLayoutDraftPanel[FrameT]:
+    """
+    Layout subpanels within a parent frame, distributing width appropriately.
 
+    This function:
+    1. Determines if panel widths need to be calculated (based on frame
+       width)
+    2. Calculates width for panels without pre-set widths
+    3. Applies widths to panels and resizes the layout to fit the frame
+    """
+    # If frame has no width, no width distribution is needed
     if not has_width(layout_panel.frame.dims):
-        draft_layout: Layout = layout_panel.content
-    else:
-        frame_dims = layout_panel.frame.dims
+        return resize_layout_to_fit_frame(layout_panel, layout_panel.content)
 
-        per_panel_width = None
+    # Calculate widths for panels without pre-defined width
+    draft_layout = _create_layout_with_distributed_widths(layout_panel)
 
-        width_unset_panels = {}
-        if has_width(frame_dims):
-            preset_width = 0
-            for key, panel in layout_panel.content.items():
-                if panel.frame is not None and panel.frame.dims.width is not None:
-                    preset_width += panel.frame.dims.width + 3
-                elif panel_is_dimensions_aware(panel) and panel.dims.width is not None:
-                    preset_width += panel.dims.width + 3
-                else:
-                    width_unset_panels[key] = panel
-
-            num_unset_panels = len(width_unset_panels)
-            if num_unset_panels > 0:
-                per_panel_width = ((frame_dims.width - preset_width - 1) // num_unset_panels) - 3
-                per_panel_width = max(per_panel_width, 0)
-            else:
-                per_panel_width = 0
-
-        # print(f'per_panel_width: {per_panel_width}')
-
-        draft_layout = Layout()
-        for key, panel in layout_panel.content.items():
-            if key in width_unset_panels:
-                frame_width: int | None = per_panel_width
-                frame_fixed_width: bool | None = False
-            else:
-                frame_width = panel.frame.dims.width
-                frame_fixed_width = panel.frame.fixed_width
-
-            draft_layout[key] = dataclasses.replace(
-                panel,
-                frame=Frame(
-                    Dimensions(
-                        width=frame_width,
-                        height=panel.frame.dims.height,
-                    ),
-                    fixed_width=frame_fixed_width,
-                    fixed_height=panel.frame.fixed_height,
-                ),
-            )
-
+    # Resize the entire layout to fit parent frame
     return resize_layout_to_fit_frame(layout_panel, draft_layout)
 
 
-def _create_new_resized_panel(
-    draft_panel_basis: DraftPanel[ContentT, AnyFrame],
-    frame: FrameInvT,
-) -> DimensionsAwareDraftPanel[FrameInvT]:
-    new_draft_panel = cast(
-        DraftPanel[ContentT, FrameInvT],
-        draft_panel_basis.__class__(
-            content=draft_panel_basis.content,
-            title=draft_panel_basis.title,
-            frame=frame,
-            constraints=draft_panel_basis.constraints,
-            config=draft_panel_basis.config,
-        ),
-    )
-    if not panel_is_dimensions_aware(new_draft_panel):
-        return cast(DimensionsAwareDraftPanel[FrameInvT], new_draft_panel.render_next_stage())
-    else:
-        return cast(DimensionsAwareDraftPanel[FrameInvT], new_draft_panel)
+def _create_layout_with_distributed_widths(
+        layout_panel: DraftPanel[Layout[DraftPanel], FrameT]) -> Layout:
+    """
+    Create a new layout with widths distributed among subpanels.
+
+    Panels with pre-defined widths keep their widths. Remaining width is
+    distributed evenly among panels without pre-defined widths.
+    """
+    frame_dims = layout_panel.frame.dims
+    draft_layout: Layout = Layout()
+
+    # Calculate per-panel width for panels without pre-set width
+    per_panel_width = _calculate_per_panel_width(layout_panel.content, frame_dims.width)
+
+    # Apply calculated widths to each panel
+    for key, panel in layout_panel.content.items():
+        panel_width, fixed_width = _determine_panel_width(panel, per_panel_width)
+
+        draft_layout[key] = dataclasses.replace(
+            panel,
+            frame=panel.frame.modified_copy(width=panel_width, fixed_width=fixed_width),
+        )
+
+    return draft_layout
 
 
-def _set_panel_heights(
-    frame: AnyFrame,
-    dim_aware_layout: Layout[DimensionsAwareDraftPanel[AnyFrame]],
-) -> Layout[DimensionsAwareDraftPanel[AnyFrame]]:
+def _calculate_per_panel_width(layout: Layout, frame_width: int | None) -> int | None:
+    """
+    Calculate width for each panel without pre-set width.
+    """
+    if frame_width is None:
+        return None
 
-    per_panel_height = None
+    width_unset_panels = {}
+    preset_width = 0
 
-    if has_height(frame.dims):
-        per_panel_height = frame.dims.height - 2
-        per_panel_height = max(per_panel_height, 0)
-
-    # print(f'per_panel_height: {per_panel_height}')
-
-    for key, panel in dim_aware_layout.items():
-        if per_panel_height is not None \
-                and not panel.frame.fixed_height:
-            frame_fixed_height = False
-
-            dim_aware_layout[key] = dataclasses.replace(
-                panel,
-                frame=Frame(  # type: ignore[arg-type]
-                    Dimensions(
-                        width=panel.frame.dims.width,
-                        height=per_panel_height,
-                    ),
-                    fixed_width=panel.frame.fixed_width,
-                    fixed_height=frame_fixed_height,
-                ),
-            )
-
-    return dim_aware_layout
-
-
-def _tighten_panel_widths(
-    dim_aware_layout: Layout[DimensionsAwareDraftPanel[AnyFrame]]
-) -> Layout[DimensionsAwareDraftPanel[AnyFrame]]:
-    for key, panel in dim_aware_layout.items():
-        if panel.frame.dims.width is not None and not panel.frame.fixed_width:
-            new_frame_width: int | None = min(panel.frame.dims.width, panel.dims.width)
-            new_fixed_width: bool | None = panel.frame.fixed_width
+    # Calculate total width used by panels with pre-set width
+    for key, panel in layout.items():
+        if has_width(panel.frame.dims):
+            preset_width += panel.frame.dims.width + 3
+        elif panel_is_dimensions_aware(panel) and has_width(panel.dims):
+            preset_width += panel.dims.width + 3
         else:
-            new_frame_width = panel.frame.dims.width
-            new_fixed_width = panel.frame.fixed_width if has_width(panel.frame.dims) else None
+            width_unset_panels[key] = panel
 
-        frame = Frame(
-            Dimensions(width=new_frame_width, height=panel.frame.dims.height),
-            fixed_width=new_fixed_width,
-            fixed_height=panel.frame.fixed_height)
+    # Calculate width for unset panels
+    num_unset_panels = len(width_unset_panels)
+    if num_unset_panels > 0:
+        available_width = frame_width - preset_width - 1
+        per_panel_width = (available_width // num_unset_panels) - 3
+        return max(per_panel_width, 0)
 
-        if frame != panel.frame:
-            dim_aware_layout[key] = \
-                dataclasses.replace(panel, frame=frame)  # type: ignore[arg-type]
-    return dim_aware_layout
+    return None
 
 
-def _widen_inner_panels_to_make_room_for_titles(
-    dim_aware_layout: Layout[DimensionsAwareDraftPanel[AnyFrame]],
-    draft_layout: Layout[DraftPanel[Layout, AnyFrame]],
-    extra_width: int,
-) -> Layout[DimensionsAwareDraftPanel[AnyFrame]]:
-    title_width2cramped_panel_info: defaultdict[int, list[tuple[str, int]]] = defaultdict(list)
+def _determine_panel_width(panel: DraftPanel,
+                           per_panel_width: int | None) -> tuple[int | None, bool | None]:
+    """
+    Determine width and fixed_width flag for a panel.
 
-    for key, panel in dim_aware_layout.items():
-        if panel.title_width > 0 \
-                and panel.frame.dims.width is not None \
-                and panel.frame.fixed_width is not True \
-                and panel.dims_if_cropped.width < panel.title_width:
-            title_width2cramped_panel_info[panel.title_width].append(
-                (key, panel.dims_if_cropped.width))
+    Parameters:
+        panel: Panel to determine width for
+        per_panel_width: Calculated width for panels without pre-set width
 
-    title_widths = list(sorted(title_width2cramped_panel_info.keys()))
-    panel_width_additions: defaultdict[str, int] = defaultdict(int)
+    Returns:
+        Tuple of (width, fixed_width) for the panel
+    """
+    # For panels with unset frame width and no calculated dimensions, use
+    # calculated per_panel_width
+    if not has_width(panel.frame.dims) and not panel_is_dimensions_aware(panel):
+        return per_panel_width, False
 
-    while extra_width != 0 and len(title_widths) > 0:
-        title_width = title_widths[0]
-        key, panel_width = title_width2cramped_panel_info[title_width].pop(0)
-        panel_width_additions[key] += 1
-        extra_width -= 1
-        if panel_width + 1 < title_width:
-            title_width2cramped_panel_info[title_width].append((key, panel_width + 1))
-        if len(title_width2cramped_panel_info[title_width]) == 0:
-            del title_width2cramped_panel_info[title_width]
-            title_widths.pop(0)
-
-    for key, width_addition in panel_width_additions.items():
-        dim_aware_panel = dim_aware_layout[key]
-        panel_width = dim_aware_panel.dims_if_cropped.width
-        title_adjusted_frame = Frame(
-            dims=Dimensions(
-                width=panel_width + width_addition,
-                height=dim_aware_panel.frame.dims.height,
-            ),
-            fixed_width=False,
-            fixed_height=dim_aware_panel.frame.fixed_height,
-        )
-        dim_aware_layout[key] = _create_new_resized_panel(
-            draft_layout[key],
-            title_adjusted_frame,
-        )
-    return dim_aware_layout
+    # For panels with set frame width, keep original width and fixed_width
+    return panel.frame.dims.width, panel.frame.fixed_width
 
 
 def resize_layout_to_fit_frame(  # noqa: C901
@@ -288,22 +207,21 @@ def resize_layout_to_fit_frame(  # noqa: C901
 
             frame_width = cur_dim_aware_panel.frame.dims.width
             frame_height = cur_dim_aware_panel.frame.dims.height
-            draft_fixed_width = cur_draft_panel.frame.fixed_width
-            draft_fixed_height = cur_draft_panel.frame.fixed_height
 
             if delta_width:
                 frame_width = cur_dim_aware_panel.dims_if_cropped.width
                 frame_width_delta = (-1) if delta_width > 0 else -delta_width
                 frame_width = max(frame_width + frame_width_delta, min_frame_width)
 
-                if draft_fixed_width is True and has_width(cur_draft_panel.frame.dims):
+                if cur_draft_panel.frame.fixed_width and has_width(cur_draft_panel.frame.dims):
                     frame_width = min(frame_width, cur_draft_panel.frame.dims.width)
 
-            new_panel_frame = Frame(
-                dims=Dimensions(width=frame_width, height=frame_height),
-                fixed_width=draft_fixed_width if has_width(cur_draft_panel.frame.dims) else False,
-                fixed_height=draft_fixed_height,
+            new_panel_frame = cur_draft_panel.frame.modified_copy(
+                width=frame_width,
+                height=frame_height,
+                fixed_width=False if not has_width(cur_draft_panel.frame.dims) else pyd.Undefined,
             )
+
             if new_panel_frame != cur_dim_aware_panel.frame \
                     and cur_draft_panel.frame.fixed_width is not True:
                 new_resized_panel = _create_new_resized_panel(
@@ -347,3 +265,182 @@ def resize_layout_to_fit_frame(  # noqa: C901
         )
     ret_panel = ResizedLayoutDraftPanel.create_from_draft_panel(layout_panel, dim_aware_layout)
     return ret_panel  # pyright: ignore [reportReturnType]
+
+
+def _create_new_resized_panel(
+    draft_panel_basis: DraftPanel[ContentT, AnyFrame],
+    frame: FrameInvT,
+) -> DimensionsAwareDraftPanel[FrameInvT]:
+    """
+    Create a new dimensions-aware panel based on an existing panel with a
+    new frame.
+
+    This function creates a copy of the draft panel with a new frame and
+    ensures the returned panel is dimensions-aware. If the original panel is
+    not dimensions-aware, it renders the next stage to get a
+    dimensions-aware panel.
+    """
+    new_draft_panel = cast(
+        DraftPanel[ContentT, FrameInvT],
+        draft_panel_basis.__class__(
+            content=draft_panel_basis.content,
+            title=draft_panel_basis.title,
+            frame=frame,
+            constraints=draft_panel_basis.constraints,
+            config=draft_panel_basis.config,
+        ),
+    )
+    if not panel_is_dimensions_aware(new_draft_panel):
+        return cast(DimensionsAwareDraftPanel[FrameInvT], new_draft_panel.render_next_stage())
+    else:
+        return cast(DimensionsAwareDraftPanel[FrameInvT], new_draft_panel)
+
+
+def _set_panel_heights(
+    frame: AnyFrame,
+    dim_aware_layout: Layout[DimensionsAwareDraftPanel[AnyFrame]],
+) -> Layout[DimensionsAwareDraftPanel[AnyFrame]]:
+    """
+    Adjust heights of panels in a layout based on frame height.
+
+    For non-fixed height panels in the layout, sets their height to match
+    the container frame's available height (minus borders). Panels with
+    fixed height retain their original height.
+    """
+    per_panel_height = None
+    if has_height(frame.dims):
+        per_panel_height = max(frame.dims.height - 2, 0)
+
+    for key, panel in dim_aware_layout.items():
+        should_use_panel_original_height = (per_panel_height is None or panel.frame.fixed_height)
+
+        if not should_use_panel_original_height:
+            dim_aware_layout[key] = dataclasses.replace(
+                panel,
+                frame=panel.frame.modified_copy(height=per_panel_height,
+                                                fixed_height=False),  # type: ignore[arg-type]
+            )
+
+    return dim_aware_layout
+
+
+def _tighten_panel_widths(
+    dim_aware_layout: Layout[DimensionsAwareDraftPanel[AnyFrame]]
+) -> Layout[DimensionsAwareDraftPanel[AnyFrame]]:
+    """
+    Reduce panel widths to match their content width when possible.
+
+    Panels with fixed width or without specified width are left unchanged.
+    """
+    for key, panel in dim_aware_layout.items():
+        # Skip panels without width or with fixed width constraint
+        if not has_width(panel.frame.dims) or panel.frame.fixed_width:
+            continue
+
+        # Calculate new optimal width
+        new_frame = panel.frame.modified_copy(width=min(panel.frame.dims.width, panel.dims.width))
+
+        # Only update panel if frame dimensions changed
+        if new_frame != panel.frame:
+            dim_aware_layout[key] = dataclasses.replace(
+                panel,
+                frame=new_frame,  # type: ignore[arg-type]
+            )
+
+    return dim_aware_layout
+
+
+class CrampedPanelInfo(NamedTuple):
+    key: str
+    panel_width: int
+
+
+def _widen_inner_panels_to_make_room_for_titles(
+    dim_aware_layout: Layout[DimensionsAwareDraftPanel[AnyFrame]],
+    draft_layout: Layout[DraftPanel[Layout, AnyFrame]],
+    extra_width: int,
+) -> Layout[DimensionsAwareDraftPanel[AnyFrame]]:
+    """
+    Allocate extra width to panels whose titles are wider than their content
+    areas.
+
+    Distributes available extra width to panels that need it most (where
+    title width exceeds content width), prioritizing smallest gaps first.
+    """
+    # Find panels with titles wider than content
+    cramped_panels = _identify_cramped_panels(dim_aware_layout)
+    if not cramped_panels or extra_width <= 0:
+        return dim_aware_layout
+
+    # Distribute extra width to cramped panels
+    panel_width_additions = _allocate_extra_width(cramped_panels, extra_width)
+
+    # Apply width additions to panels
+    return _apply_width_additions(dim_aware_layout, draft_layout, panel_width_additions)
+
+
+def _identify_cramped_panels(
+    dim_aware_layout: Layout[DimensionsAwareDraftPanel[AnyFrame]]
+) -> defaultdict[int, list[CrampedPanelInfo]]:
+    """
+    Identify panels where title width exceeds content width and group by
+    title width.
+    """
+    title_width2cramped_panels: defaultdict[int, list[CrampedPanelInfo]] = defaultdict(list)
+
+    for key, panel in dim_aware_layout.items():
+        if (panel.title_width > 0 and has_width(panel.frame.dims)
+                and panel.frame.fixed_width is not True
+                and panel.dims_if_cropped.width < panel.title_width):
+            title_width2cramped_panels[panel.title_width].append(
+                CrampedPanelInfo(key, panel.dims_if_cropped.width))
+
+    return title_width2cramped_panels
+
+
+def _allocate_extra_width(title_width2cramped_panels: defaultdict[int, list[CrampedPanelInfo]],
+                          extra_width: int) -> defaultdict[str, int]:
+    """
+    Distribute extra width to cramped panels, prioritizing smallest gaps
+    first.
+    """
+    panel_width_additions: defaultdict[str, int] = defaultdict(int)
+    title_widths = list(sorted(title_width2cramped_panels.keys()))
+
+    while extra_width > 0 and title_widths:
+        title_width = title_widths[0]
+        key, panel_width = title_width2cramped_panels[title_width].pop(0)
+
+        # Add 1 to this panel's width
+        panel_width_additions[key] += 1
+        extra_width -= 1
+
+        # If panel still needs width, put it back in the queue
+        if panel_width + 1 < title_width:
+            title_width2cramped_panels[title_width].append(CrampedPanelInfo(key, panel_width + 1))
+
+        elif not title_width2cramped_panels[title_width]:
+            # Remove empty title width entries
+            del title_width2cramped_panels[title_width]
+            title_widths.pop(0)
+
+    return panel_width_additions
+
+
+def _apply_width_additions(
+    dim_aware_layout: Layout[DimensionsAwareDraftPanel[AnyFrame]],
+    draft_layout: Layout[DraftPanel[Layout, AnyFrame]],
+    panel_width_additions: defaultdict[str, int],
+) -> Layout[DimensionsAwareDraftPanel[AnyFrame]]:
+    """Apply calculated width additions to panels that need them."""
+    for key, width_addition in panel_width_additions.items():
+        dim_aware_panel = dim_aware_layout[key]
+        panel_width = dim_aware_panel.dims_if_cropped.width
+
+        dim_aware_layout[key] = _create_new_resized_panel(
+            draft_layout[key],
+            dim_aware_panel.frame.modified_copy(
+                width=panel_width + width_addition, fixed_width=False),
+        )
+
+    return dim_aware_layout
