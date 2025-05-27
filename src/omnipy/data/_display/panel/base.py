@@ -14,6 +14,7 @@ from omnipy.data._display.helpers import soft_wrap_words
 import omnipy.util._pydantic as pyd
 
 FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
+FrameInvT = TypeVar('FrameInvT', bound=AnyFrame, default=AnyFrame)
 
 
 class OutputVariant(ABC):

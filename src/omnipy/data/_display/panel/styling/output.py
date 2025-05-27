@@ -11,8 +11,8 @@ import rich.console
 import rich.segment
 import rich.terminal_theme
 
-from omnipy.data._display.config import VerticalOverflowMode
-from omnipy.data._display.dimensions import has_height, has_width
+from omnipy.data._display.config import HorizontalOverflowMode, VerticalOverflowMode
+from omnipy.data._display.dimensions import Dimensions, has_height, has_width
 from omnipy.data._display.panel.base import FrameT, OutputVariant
 from omnipy.data._display.panel.draft.base import ContentT
 from omnipy.data._display.panel.helpers import (calculate_bg_color_triplet_from_color_style,
@@ -72,8 +72,12 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
         self._output = output
         self._config = output.config
         self._frame = output.frame
-        self._input_panel_dims_if_cropped = output.input_panel_dims_if_cropped
         self._output_mode = output_mode
+
+        if self._output.config.horizontal_overflow_mode is HorizontalOverflowMode.WORD_WRAP:
+            self._crop_dims = self._frame.dims
+        else:
+            self._crop_dims = self._output.input_panel_dims_if_cropped
 
     # Hacks to remove color and strip styles from the console record buffer, making use of
     # private methods in the rich library. These are needed to prevent the stylized output from
@@ -337,7 +341,11 @@ class CroppingOutputVariant(
     def _split_to_lines_and_crop_virtually(self, output):
         lines = output.splitlines(keepends=True)
         uncropped_height = len(lines)
-        return self._crop_lines_vertically(lines, uncropped_height)
+        return self._crop_lines_vertically(
+            lines,
+            uncropped_height,
+            self._crop_dims,
+        )
 
     def _crop_lines_horizontally(self, lines: list[str]) -> tuple[list[str], bool]:
         uncropped_width = max_newline_stripped_width(lines)
@@ -345,7 +353,8 @@ class CroppingOutputVariant(
 
         cropped_lines = []
         for line in lines:
-            cropped_line, more = self._crop_line_horizontally(line, uncropped_width)
+            cropped_line, more = \
+                self._crop_line_horizontally(line, uncropped_width, self._crop_dims)
             cropped_lines.append(cropped_line)
             if not more:
                 exited_early = True
@@ -358,6 +367,7 @@ class CroppingOutputVariant(
         self,
         lines: list[str],
         uncropped_height: int,
+        crop_dims: Dimensions,
     ) -> list[str]:
         ...
 
@@ -366,6 +376,7 @@ class CroppingOutputVariant(
         self,
         line: str,
         uncropped_width: int,
+        crop_dims: Dimensions,
     ) -> tuple[str, bool]:
         ...
 
@@ -390,27 +401,29 @@ class TextCroppingOutputVariant(
         self,
         lines: list[str],
         uncropped_height: int,
+        crop_dims: Dimensions,
     ) -> list[str]:
-        if not has_height(self._frame.dims) or uncropped_height <= self._frame.dims.height:
+        if not has_height(crop_dims) or uncropped_height <= crop_dims.height:
             return lines
 
         match self._config.vertical_overflow_mode:
             case VerticalOverflowMode.CROP_BOTTOM:
-                return lines[:self._frame.dims.height]
+                return lines[:crop_dims.height]
             case VerticalOverflowMode.CROP_TOP:
-                return lines[-self._frame.dims.height:]
+                return lines[-crop_dims.height:]
 
     def _crop_line_horizontally(
         self,
         line: str,
         uncropped_width: int,
+        crop_dims: Dimensions,
     ) -> tuple[str, bool]:
         line_content, newline = strip_and_split_newline(line)
         # To enforce cropping at the "resize" stage, e.g.
         # crop_content_for_tab_and_double_width_chars(), even in the
         # presence of StylizedMonospacedPanel._apply_console_newline_hack()
-        if len(line_content) > self._input_panel_dims_if_cropped.width:
-            return line_content[:self._input_panel_dims_if_cropped.width] + newline, True
+        if has_width(crop_dims) and len(line_content) > crop_dims.width:
+            return line_content[:crop_dims.width] + newline, True
 
         return line, True
 
@@ -423,35 +436,36 @@ class TableCroppingOutputVariant(
         self,
         lines: list[str],
         uncropped_height: int,
+        crop_dims: Dimensions,
     ) -> list[str]:
-        if not has_height(self._frame.dims) or uncropped_height <= self._frame.dims.height:
+        if not has_height(crop_dims) or uncropped_height <= crop_dims.height:
             return lines
 
         if self._frame.dims.height == 0:
             return []
 
-        return lines[:self._frame.dims.height - 1] + [lines[-1]]
+        return lines[:crop_dims.height - 1] + [lines[-1]]
 
     def _crop_line_horizontally(
         self,
         line: str,
         uncropped_width: int,
+        crop_dims: Dimensions,
     ) -> tuple[str, bool]:
-
         # Checks if width or height is 1, and if so returns '…' or '' (depending on uncropped_width)
         # Code is placed only here and not in _crop_lines_vertically to simplify logic for cropping
         # of HTML text
-        if (has_width(self._frame.dims) and self._frame.dims.width == 1
-                or has_height(self._frame.dims) and self._frame.dims.height == 1):
+        if (has_width(crop_dims) and crop_dims.width == 1
+                or has_height(crop_dims) and crop_dims.height == 1):
             newline = extract_newline(line)
             if uncropped_width >= 1:
                 return '…' + newline, False
             else:
                 return '' + newline, False
 
-        if not has_width(self._frame.dims) or uncropped_width <= self._frame.dims.width:
+        if not has_width(crop_dims) or uncropped_width <= crop_dims.width:
             return line, True
 
         line_stripped, newline = strip_and_split_newline(line)
-        line_stripped_and_cropped = line_stripped[:self._frame.dims.width - 1] + line_stripped[-1:]
+        line_stripped_and_cropped = line_stripped[:crop_dims.width - 1] + line_stripped[-1:]
         return line_stripped_and_cropped + newline, True

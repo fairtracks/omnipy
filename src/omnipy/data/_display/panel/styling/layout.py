@@ -1,5 +1,5 @@
 from functools import cache, cached_property
-from typing import Generic, Iterable, Iterator
+from typing import cast, Generic, Iterable, Iterator
 
 import pygments.token
 import rich.align
@@ -8,16 +8,18 @@ import rich.containers
 import rich.style
 import rich.table
 import rich.text
-from typing_extensions import override, TypeVar
+from typing_extensions import override
 
 from omnipy.data._display.config import ColorStyles, ConsoleColorSystem
 from omnipy.data._display.dimensions import Dimensions, has_height, has_width
-from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.layout import Layout
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              dims_if_cropped,
+                                             FrameInvT,
                                              FullyRenderedPanel,
-                                             OutputVariant)
+                                             OutputVariant,
+                                             panel_is_dimensions_aware)
+from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_style,
                                                 calculate_fg_color_from_color_style,
@@ -27,8 +29,6 @@ from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, Sty
 from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingOutputVariant
 from omnipy.util import _pydantic as pyd
 
-FrameInvT = TypeVar('FrameInvT', bound=AnyFrame, default=AnyFrame)
-
 
 @pyd.dataclass(
     init=False,
@@ -36,11 +36,18 @@ FrameInvT = TypeVar('FrameInvT', bound=AnyFrame, default=AnyFrame)
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True, arbitrary_types_allowed=True),
 )
 class StylizedLayoutPanel(
-        # StylizedMonospacedPanel[ResizedLayoutDraftPanel[FrameT], Layout, FrameT],
-        # Generic[FrameT],
         StylizedMonospacedPanel[ResizedLayoutDraftPanel[FrameInvT], Layout, FrameInvT],
         Generic[FrameInvT],
 ):
+    def __init__(self, panel: DraftPanel[Layout, FrameInvT] | ResizedLayoutDraftPanel[FrameInvT]):
+        if not panel_is_dimensions_aware(panel):
+            resized_panel: ResizedLayoutDraftPanel[FrameInvT] = cast(
+                ResizedLayoutDraftPanel[FrameInvT], panel.render_next_stage())
+        else:
+            resized_panel = panel
+
+        super().__init__(resized_panel)
+
     @pyd.validator('content', pre=True)
     def _copy_content(cls, content: Layout) -> Layout:
         return content.copy()

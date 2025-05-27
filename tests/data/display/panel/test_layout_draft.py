@@ -6,10 +6,11 @@ from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.layout import Layout
+from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 
-from ..helpers.classes import MockPanel, MockPanelStage2, MockPanelStage3
+from ..helpers.classes import MockPanel, MockPanelStage3
 from .helpers import (apply_frame_variant_to_test_case,
                       assert_dims_aware_panel,
                       assert_draft_panel_subcls,
@@ -150,6 +151,31 @@ def test_resized_layout_draft_panel_basic_dims_and_edge_cases(
     )
 
 
+@pc.parametrize_with_cases(
+    'case',
+    cases='.cases.layout_reflow',
+    has_tag=('reflow_cases', 'layout'),
+)
+def test_resized_layout_draft_panel_reflow_cases(case: PanelFrameVariantTestCase[Layout]) -> None:
+    frame_case = apply_frame_variant_to_test_case(case, stylized_stage=False)
+
+    draft_layout_panel = DraftPanel(
+        case.content,
+        title=case.title,
+        frame=frame_case.frame,
+        config=case.config,
+    )
+
+    resized_layout_panel = draft_layout_panel.render_next_stage()
+
+    assert_dims_aware_panel(
+        resized_layout_panel,
+        exp_dims=frame_case.exp_dims,
+        exp_frame=frame_case.frame,
+        exp_within_frame=frame_case.exp_within_frame,
+    )
+
+
 def test_draft_panel_render_next_stage() -> None:
     resized_layout_panel = ResizedLayoutDraftPanel(Layout(panel=MockPanel('Some text')))
     assert_next_stage_panel(
@@ -159,6 +185,7 @@ def test_draft_panel_render_next_stage() -> None:
         exp_content=Layout(panel=MockPanelStage3('Some text')),
     )
 
+    # No reflow of panels, just rendering of the content
     resized_layout_panel_complex = ResizedLayoutDraftPanel(
         Layout(
             first=MockPanel('Some text', title='First panel'),
@@ -174,53 +201,19 @@ def test_draft_panel_render_next_stage() -> None:
         next_stage_panel_cls=StylizedLayoutPanel,
         exp_content=Layout(
             first=MockPanelStage3(
-                'Some\ntext',
+                'Some text',
                 title='First panel',
                 frame=Frame(
-                    Dimensions(4, 3),
+                    Dimensions(None, None),
                     fixed_width=False,
                     fixed_height=False,
                 ),
             ),
             second=MockPanelStage3(
-                'Some\nother\ntext',
+                'Some other text',
                 title='Second panel',
                 frame=Frame(
-                    Dimensions(5, 3),
-                    fixed_width=False,
-                    fixed_height=False,
-                ),
-            )),
-    )
-
-    resized_layout_panel_complex = ResizedLayoutDraftPanel(
-        Layout(
-            first=MockPanelStage2('Some\ntext', title='First panel'),
-            second=MockPanel('Some other text', title='Second panel'),
-        ),
-        frame=Frame(Dimensions(21, 5)),
-        constraints=Constraints(container_width_per_line_limit=10),
-        config=OutputConfig(indent_tab_size=1),
-    )
-    assert_next_stage_panel(
-        this_panel=resized_layout_panel_complex,
-        next_stage=resized_layout_panel_complex.render_next_stage(),
-        next_stage_panel_cls=StylizedLayoutPanel,
-        exp_content=Layout(
-            first=MockPanelStage3(
-                'Some\ntext',
-                title='First panel',
-                frame=Frame(
-                    Dimensions(None, 3),
-                    fixed_width=False,
-                    fixed_height=False,
-                ),
-            ),
-            second=MockPanelStage3(
-                'Some other\ntext',
-                title='Second panel',
-                frame=Frame(
-                    Dimensions(10, 3),
+                    Dimensions(None, None),
                     fixed_width=False,
                     fixed_height=False,
                 ),
