@@ -147,7 +147,7 @@ def test_draft_panel_with_empty_content() -> None:
     assert framed_empty_draft_panel.content == ''
 
 
-def test_draft_panel_render_next_stage_with_repr() -> None:
+def test_draft_panel_render_next_stage_with_repr_simple() -> None:
     draft_panel = DraftPanel('Some text')
     assert_next_stage_panel(
         this_panel=draft_panel,
@@ -156,6 +156,8 @@ def test_draft_panel_render_next_stage_with_repr() -> None:
         exp_content="'Some text'",
     )
 
+
+def test_draft_panel_render_next_stage_with_repr_complex() -> None:
     draft_panel_complex = DraftPanel(
         (1, 2, 3),
         title='My text panel',
@@ -171,7 +173,7 @@ def test_draft_panel_render_next_stage_with_repr() -> None:
     )
 
 
-def test_draft_panel_render_next_stage_with_layout() -> None:
+def test_draft_panel_render_next_stage_with_layout_simple() -> None:
     draft_panel: DraftPanel[Layout, AnyFrame] = DraftPanel(Layout())
     assert_next_stage_panel(
         this_panel=draft_panel,
@@ -180,6 +182,8 @@ def test_draft_panel_render_next_stage_with_layout() -> None:
         exp_content=Layout(),
     )
 
+
+def test_draft_panel_render_next_stage_with_layout_complex() -> None:
     draft_panel_complex: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
         Layout(
             tuple=MockPanel('(1, 2, 3)', title='Tuple panel'),
@@ -216,6 +220,8 @@ def test_draft_panel_render_next_stage_with_layout() -> None:
         ),
     )
 
+
+def test_draft_panel_render_next_stage_with_layout_half_framed() -> None:
     draft_panel_half_framed: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
         Layout(
             tuple=MockPanel(
@@ -254,6 +260,8 @@ def test_draft_panel_render_next_stage_with_layout() -> None:
         ),
     )
 
+
+def test_draft_panel_render_next_stage_with_layout_half_rendered() -> None:
     draft_panel_half_rendered: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
         Layout(
             tuple=MockPanelStage2('(1,\n2,\n3)', title='Stage 2 tuple panel'),

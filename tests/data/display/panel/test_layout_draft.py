@@ -176,7 +176,7 @@ def test_resized_layout_draft_panel_reflow_cases(case: PanelFrameVariantTestCase
     )
 
 
-def test_draft_panel_render_next_stage() -> None:
+def test_draft_panel_render_next_stage_simple() -> None:
     resized_layout_panel = ResizedLayoutDraftPanel(Layout(panel=MockPanel('Some text')))
     assert_next_stage_panel(
         this_panel=resized_layout_panel,
@@ -185,6 +185,8 @@ def test_draft_panel_render_next_stage() -> None:
         exp_content=Layout(panel=MockPanelStage3('Some text')),
     )
 
+
+def test_draft_panel_render_next_stage_complex() -> None:
     # No reflow of panels, just rendering of the content
     resized_layout_panel_complex = ResizedLayoutDraftPanel(
         Layout(
