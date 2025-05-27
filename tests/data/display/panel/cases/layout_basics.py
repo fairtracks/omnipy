@@ -309,16 +309,16 @@ def case_layout_single_panel(
             exp_stylized_dims=Dimensions(width=20, height=5),
         ),
         FrameTestCase(
-            frame=Frame(Dimensions(width=15, height=6)),
-            exp_plain_output=('╭─────────────╮\n'
-                              '│ A nice titl │\n'
-                              '│             │\n'
-                              '│ Here is so… │\n'
-                              '╰─────────────╯\n'),
+            frame=Frame(Dimensions(width=14, height=6)),
+            exp_plain_output=('╭────────────╮\n'
+                              '│ A nice ti… │\n'
+                              '│            │\n'
+                              '│ Here is s… │\n'
+                              '╰────────────╯\n'),
             # Title is cropped at the `stylize` stage, even though there
             # is enough frame height to display it in two lines. This is
             # because the layout reflowing is skipped for these tests.
-            exp_stylized_dims=Dimensions(width=15, height=5),
+            exp_stylized_dims=Dimensions(width=14, height=5),
         ),
         FrameTestCase(
             frame=Frame(Dimensions(width=10, height=7)),
@@ -359,12 +359,12 @@ def case_layout_single_panel(
             # the 'resize' stage, horizontal cropping of the content is
             # triggered
             exp_plain_output=('╭────────╮\n'
-                              '│ A nice │\n'
+                              '│ A nic… │\n'
                               '│        │\n'
                               '╰────────╯\n'),
             exp_stylized_dims=Dimensions(width=10, height=4),
             exp_plain_output_only_width=('╭────────╮\n'
-                                         '│ A nice │\n'
+                                         '│ A nic… │\n'
                                          '│        │\n'
                                          '│ Here … │\n'
                                          '╰────────╯\n'),

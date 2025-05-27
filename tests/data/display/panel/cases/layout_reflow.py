@@ -211,7 +211,7 @@ def case_layout_single_panel_fixed_dims(
             # Not enough room for a double-line title, so the title is
             # cropped to a single line
             exp_plain_output=('╭────────╮\n'
-                              '│ A nice │\n'
+                              '│ A nic… │\n'
                               '│        │\n'
                               '│ Here   │\n'
                               '│ is     │\n'
@@ -243,7 +243,7 @@ def case_layout_single_panel_fixed_dims(
                               '│ is     │\n'
                               '│ some   │\n'
                               '│        │\n'
-                              '│ A nice │\n'
+                              '│ A nic… │\n'
                               '╰────────╯\n'),
             exp_dims_all_stages=Dimensions(width=10, height=7),
             exp_plain_output_only_width=('╭────────╮\n'
@@ -283,7 +283,7 @@ def case_layout_single_panel_fixed_dims(
                               '╰──────╯\n'),
             exp_dims_all_stages=Dimensions(width=8, height=6),
             exp_plain_output_only_width=('╭───────╮\n'
-                                         '│ A nic │\n'
+                                         '│ A ni… │\n'
                                          '│ title │\n'
                                          '│       │\n'
                                          '│ Here  │\n'
@@ -299,7 +299,7 @@ def case_layout_single_panel_fixed_dims(
             # Once there is enough width to remove the conflict between the
             # title and the table, the title reappears.
             exp_plain_output=('╭─────────╮\n'
-                              '│ A nice  │\n'
+                              '│ A nice… │\n'
                               '│         │\n'
                               '│ Here is │\n'
                               '│ some    │\n'
@@ -323,7 +323,7 @@ def case_layout_single_panel_fixed_dims(
             # from being cropped horizontally, even though the width is
             # specified as flexible
             exp_plain_output=('╭───────╮\n'
-                              '│ A nic │\n'
+                              '│ A ni… │\n'
                               '│ title │\n'
                               '│       │\n'
                               '│ Here  │\n'

@@ -127,6 +127,20 @@ class StylizedLayoutPanel(
                 default=0,
             )
 
+        def _add_ellipsis_if_vertically_cropped(panel, title_lines):
+            if len(panel.resized_title) > panel.title_height >= 1:
+                last_title_line = title_lines[-1]
+                if len(last_title_line) > 0:
+                    # Add ellipsis if title height is cropped
+
+                    max_title_width = (
+                        max(panel.dims.width, panel.frame.dims.width)
+                        if has_width(panel.frame.dims) else panel.dims.width)
+
+                    title_lines[-1] = f'{last_title_line[:max_title_width-1]}…'
+
+            return title_lines
+
         def _prepare_content(panels: Iterable[FullyRenderedPanel]) -> Iterator[rich.table.Table]:
             for panel in panels:
                 content = rich.text.Text.from_ansi(panel.colorized.terminal, no_wrap=True)
@@ -134,6 +148,8 @@ class StylizedLayoutPanel(
 
                 if panel.title:
                     title_lines = panel.resized_title[:panel.title_height]
+                    title_lines = _add_ellipsis_if_vertically_cropped(panel, title_lines)
+
                     if title_lines:
                         full_panel_title_height = panel.title_height + panel.TITLE_BLANK_LINES
                     else:
@@ -182,7 +198,7 @@ class StylizedLayoutPanel(
                             style=title_style,
                             no_wrap=True,
                             justify='center',
-                            overflow=rich_overflow_method,
+                            overflow='ellipsis',  # Titles are always cropped with ellipsis
                         )
 
                 content_table = rich.table.Table(
