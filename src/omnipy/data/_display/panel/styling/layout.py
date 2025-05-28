@@ -10,16 +10,18 @@ import rich.table
 import rich.text
 from typing_extensions import override
 
-from omnipy.data._display.config import ColorStyles, ConsoleColorSystem
-from omnipy.data._display.dimensions import Dimensions, has_height, has_width
-from omnipy.data._display.panel.base import (cropped_dims,
-                                             DimensionsAwarePanel,
+from omnipy.data._display.config import ColorStyles, ConsoleColorSystem, LayoutDesign
+from omnipy.data._display.dimensions import has_height, has_width
+from omnipy.data._display.frame import AnyFrame
+from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              FrameInvT,
                                              FullyRenderedPanel,
                                              OutputVariant,
                                              panel_is_dimensions_aware)
 from omnipy.data._display.panel.draft.base import DraftPanel
-from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
+from omnipy.data._display.panel.draft.layout import (DimensionsAwarePanelLayoutMixin,
+                                                     ResizedLayoutDraftPanel)
+from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_style,
                                                 calculate_fg_color_from_color_style,
                                                 ForceAutodetect,
@@ -30,13 +32,22 @@ from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingO
 from omnipy.util import _pydantic as pyd
 
 
+class FullyRenderedPanelLayout(
+        Layout[FullyRenderedPanel[AnyFrame]],
+        DimensionsAwarePanelLayoutMixin,
+):
+    ...
+
+
 @pyd.dataclass(
     init=False,
     frozen=True,
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True, arbitrary_types_allowed=True),
 )
 class StylizedLayoutPanel(
-        StylizedMonospacedPanel[ResizedLayoutDraftPanel[FrameInvT], Layout, FrameInvT],
+        StylizedMonospacedPanel[ResizedLayoutDraftPanel[FrameInvT],
+                                FullyRenderedPanelLayout,
+                                FrameInvT],
         Generic[FrameInvT],
 ):
     def __init__(self, panel: DraftPanel[Layout, FrameInvT] | ResizedLayoutDraftPanel[FrameInvT]):
@@ -46,7 +57,8 @@ class StylizedLayoutPanel(
         else:
             resized_panel = panel
 
-        super().__init__(resized_panel)
+        super().__init__(
+            cast(MonospacedDraftPanel[FullyRenderedPanelLayout, FrameInvT], resized_panel))
 
     @pyd.validator('content', pre=True)
     def _copy_content(cls, content: Layout) -> Layout:
@@ -76,14 +88,15 @@ class StylizedLayoutPanel(
     def render_panels_fully(
         cls,
         content: Layout[DimensionsAwarePanel],
-    ) -> Layout[FullyRenderedPanel]:
-        return Layout(**content.render_fully())
+    ) -> FullyRenderedPanelLayout:
+        return FullyRenderedPanelLayout(**content.render_fully())
 
     @staticmethod
     @cache
     def _get_stylized_layout_common(  # noqa: C901
-        layout: Layout[FullyRenderedPanel],
+        layout: FullyRenderedPanelLayout,
         frame: FrameInvT,
+        layout_design: LayoutDesign,
         panel_title_at_top: bool,
         rich_overflow_method: rich.console.OverflowMethod | None,
         console_color_system: ConsoleColorSystem,  # Only used for hashing
@@ -114,18 +127,11 @@ class StylizedLayoutPanel(
                                       '╰─┴╯\n')
 
         if has_height(frame.dims):
-            table_cell_height = frame.dims.height - 2
+            layout_design_dims = layout.get_layout_design_dims(layout_design)
+            table_cell_height = (
+                frame.dims.height - layout_design_dims.extra_vertical_chars(num_vertical_panels=1))
         else:
-            table_cell_height = max(
-                (cropped_dims(
-                    Dimensions(
-                        width=panel.dims.width,
-                        height=panel.dims.height + panel.title_height + 1,
-                    ),
-                    panel.frame,
-                ).height for panel in panels),
-                default=0,
-            )
+            table_cell_height = layout.total_subpanel_outer_dims.height
 
         def _add_ellipsis_if_vertically_cropped(panel, title_lines):
             if len(panel.resized_title) > panel.title_height >= 1:
@@ -240,6 +246,7 @@ class StylizedLayoutPanel(
         return self._get_stylized_layout_common(
             layout=self.content,
             frame=self.frame,
+            layout_design=self.config.layout_design,
             panel_title_at_top=self.config.panel_title_at_top,
             rich_overflow_method=self.rich_overflow_method,
             console_color_system=self.config.console_color_system,
@@ -253,6 +260,7 @@ class StylizedLayoutPanel(
         return self._get_stylized_layout_common(
             layout=self.content,
             frame=self.frame,
+            layout_design=self.config.layout_design,
             panel_title_at_top=self.config.panel_title_at_top,
             rich_overflow_method=self.rich_overflow_method,
             console_color_system=ConsoleColorSystem.ANSI_RGB,

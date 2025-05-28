@@ -538,11 +538,11 @@ class HorizontalOverflowMode(str, Enum):
     WORD_WRAP = 'word_wrap'
 
 
-class LayoutStyle(str, Enum):
+class LayoutDesign(str, Enum):
     """
-    Visual style for the layout of the output.
+    Visual design for the layout of the output.
 
-    The layout styles are:
+    The layout designs are:
     - `TABLE`: The output is displayed as a simple table grid
     - `PANELS`: The output is displayed as a set of panels
     """
@@ -623,7 +623,7 @@ class OutputConfig:
             text that exceeds the width.
         vertical_overflow_mode (VerticalOverflowMode): How to handle text
             that exceeds the height.
-        layout_style (LayoutStyle): Visual styles for the layout of the
+        layout_design (LayoutDesign): Visual design for the layout of the
             output.
         panel_title_at_top (bool): Whether panel titles will be displayed
             over the panel contents (True) or below the contents (False)
@@ -650,7 +650,7 @@ class OutputConfig:
     css_line_height: pyd.NonNegativeFloat | None = 1.35
     horizontal_overflow_mode: HorizontalOverflowMode = HorizontalOverflowMode.ELLIPSIS
     vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.CROP_BOTTOM
-    layout_style: LayoutStyle = LayoutStyle.TABLE_GRID
+    layout_design: LayoutDesign = LayoutDesign.TABLE_GRID
     panel_title_at_top: bool = True
 
     @pyd.validator('language')

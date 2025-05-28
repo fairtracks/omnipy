@@ -3,7 +3,7 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from omnipy.data._display.config import LayoutStyle, OutputConfig
+from omnipy.data._display.config import LayoutDesign, OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
@@ -34,7 +34,7 @@ def test_stylized_layout_panel_init() -> None:
     assert layout_panel.config == OutputConfig()
 
     frame = Frame(Dimensions(10, 10))
-    config = OutputConfig(layout_style=LayoutStyle.PANELS)
+    config = OutputConfig(layout_design=LayoutDesign.PANELS)
     constraints = Constraints()
     configured_layout_panel = StylizedLayoutPanel(
         ResizedLayoutDraftPanel(
