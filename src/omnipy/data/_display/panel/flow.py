@@ -11,9 +11,8 @@ from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              panel_is_dimensions_aware)
 from omnipy.data._display.panel.draft.base import ContentT, DimensionsAwareDraftPanel, DraftPanel
 from omnipy.data._display.panel.draft.layout import (DimensionsAwareDraftPanelLayout,
-                                                     LayoutDesignDims,
                                                      ResizedLayoutDraftPanel)
-from omnipy.data._display.panel.layout import Layout
+from omnipy.data._display.panel.layout import Layout, LayoutDesignDims
 import omnipy.util._pydantic as pyd
 
 

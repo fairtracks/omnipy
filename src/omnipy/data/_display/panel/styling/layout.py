@@ -19,15 +19,15 @@ from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              OutputVariant,
                                              panel_is_dimensions_aware)
 from omnipy.data._display.panel.draft.base import DraftPanel
-from omnipy.data._display.panel.draft.layout import (DimensionsAwarePanelLayoutMixin,
-                                                     LayoutDesignDims,
-                                                     ResizedLayoutDraftPanel)
+from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_style,
                                                 calculate_fg_color_from_color_style,
                                                 ForceAutodetect,
                                                 get_token_style_from_color_style)
-from omnipy.data._display.panel.layout import Layout
+from omnipy.data._display.panel.layout import (DimensionsAwarePanelLayoutMixin,
+                                               Layout,
+                                               LayoutDesignDims)
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingOutputVariant
 from omnipy.util import _pydantic as pyd
