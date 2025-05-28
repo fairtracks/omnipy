@@ -1,6 +1,6 @@
 from collections import UserDict
 from dataclasses import dataclass
-from typing import Callable, cast, Generic, Iterator, Mapping
+from typing import Callable, cast, Generic, Iterable, Iterator, Mapping
 
 from typing_extensions import TypeIs, TypeVar
 
@@ -16,9 +16,9 @@ PanelT = TypeVar('PanelT', bound=Panel)
 RenderedPanelT = TypeVar('RenderedPanelT', bound=Panel)
 
 
-class Grid:
+class Grid(Generic[PanelT]):
     """Class to represent a grid of panels with coordinate-based access."""
-    def __init__(self, layout: 'Layout'):
+    def __init__(self, layout: 'Layout[PanelT]'):
         self._layout = layout
 
     @property
@@ -41,6 +41,9 @@ class Grid:
         # Get the item at the specified position (in insertion order)
         keys = list(self._layout.keys())
         return keys[y]
+
+    def get_row(self, row_index: int) -> Iterable[PanelT]:
+        return (self._layout[self[(row_index, i)]] for i in range(self.dims.width))
 
 
 class Layout(UserDict[str, PanelT], Generic[PanelT]):

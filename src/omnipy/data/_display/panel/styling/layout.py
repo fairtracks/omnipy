@@ -1,5 +1,6 @@
+from dataclasses import dataclass
 from functools import cache, cached_property
-from typing import cast, Generic, Iterable, Iterator
+from typing import cast, Generic, Iterator
 
 import pygments.token
 import rich.align
@@ -10,7 +11,7 @@ import rich.table
 import rich.text
 from typing_extensions import override
 
-from omnipy.data._display.config import ColorStyles, ConsoleColorSystem, LayoutDesign
+from omnipy.data._display.config import ConsoleColorSystem, LayoutDesign
 from omnipy.data._display.dimensions import has_height, has_width
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
@@ -95,180 +96,41 @@ class StylizedLayoutPanel(
     @staticmethod
     @cache
     def _get_stylized_layout_common(  # noqa: C901
-        layout: FullyRenderedPanelLayout,
-        frame: FrameInvT,
-        layout_design: LayoutDesign,
-        panel_title_at_top: bool,
-        rich_overflow_method: rich.console.OverflowMethod | None,
+        outer_panel: 'StylizedLayoutPanel[FrameInvT]',
         console_color_system: ConsoleColorSystem,  # Only used for hashing
-        color_style: ColorStyles,
-        transparent_background: bool,
         force_autodetect_bg_color: ForceAutodetect,
     ) -> rich.table.Table:
-
-        style_fg_color = calculate_fg_color_from_color_style(color_style)
-        if transparent_background:
-            style_bg_color = None
-        else:
-            style_bg_color = calculate_bg_color_from_color_style(
-                color_style, force_autodetect=force_autodetect_bg_color)
-        table_style = rich.style.Style(color=style_fg_color, bgcolor=style_bg_color)
-        title_style = get_token_style_from_color_style(pygments.token.Token.Name.Decorator,
-                                                       color_style)
-        title_style._bgcolor = style_bg_color
-
-        panels = list(layout[layout.grid[(0, i)]] for i in range(layout.grid.dims.width))
-        my_rounded_box = rich.box.Box('╭─┬╮\n'
-                                      '│ ││\n'
-                                      '│ ││\n'
-                                      '│ ││\n'
-                                      '├─┼┤\n'
-                                      '│ ││\n'
-                                      '│ ││\n'
-                                      '╰─┴╯\n')
-
-        if has_height(frame.dims):
-            layout_design_dims = LayoutDesignDims.create(layout_design)
-            table_cell_height = (
-                frame.dims.height - layout_design_dims.extra_vertical_chars(num_vertical_panels=1))
-        else:
-            table_cell_height = layout.total_subpanel_outer_dims.height
-
-        def _add_ellipsis_if_vertically_cropped(panel, title_lines):
-            if len(panel.resized_title) > panel.title_height >= 1:
-                last_title_line = title_lines[-1]
-                if len(last_title_line) > 0:
-                    # Add ellipsis if title height is cropped
-
-                    max_title_width = (
-                        max(panel.dims.width, panel.frame.dims.width)
-                        if has_width(panel.frame.dims) else panel.dims.width)
-
-                    title_lines[-1] = f'{last_title_line[:max_title_width-1]}…'
-
-            return title_lines
-
-        def _prepare_content(panels: Iterable[FullyRenderedPanel]) -> Iterator[rich.table.Table]:
-            for panel in panels:
-                content = rich.text.Text.from_ansi(panel.colorized.terminal, no_wrap=True)
-                title: str | rich.text.Text = ''
-
-                if panel.title:
-                    title_lines = panel.resized_title[:panel.title_height]
-                    title_lines = _add_ellipsis_if_vertically_cropped(panel, title_lines)
-
-                    if title_lines:
-                        full_panel_title_height = panel.title_height + panel.TITLE_BLANK_LINES
-                    else:
-                        full_panel_title_height = 0
-
-                    def num_free_lines_for_title(
-                        table_cell_height: int,
-                        panel: DimensionsAwarePanel,
-                    ) -> int:
-                        return max(table_cell_height - panel.cropped_dims.height, 0)
-
-                    free_lines_for_title = num_free_lines_for_title(table_cell_height, panel)
-                    extra_blank_lines_if_title_at_bottom = max(
-                        free_lines_for_title - full_panel_title_height, 0)
-                    if panel.title_overlaps_panel:
-                        panel_content_lines = table_cell_height - full_panel_title_height
-                    else:
-                        panel_content_lines = panel.cropped_dims.height
-
-                    content_lines: list[rich.text.Text] | rich.containers.Lines = \
-                        content.split('\n')
-
-                    if len(content_lines) < panel_content_lines:
-                        # rich.text.Text.from_ansi() might remove empty lines at the end.
-                        # Add them back here
-                        for _ in range(panel_content_lines - len(content_lines)):
-                            content_lines.append(rich.text.Text(''))
-                    elif len(content_lines) > panel_content_lines:
-                        # Crop content_lines if too high
-                        content_lines = content_lines[:panel_content_lines]
-
-                    linesep_text = rich.text.Text('\n', no_wrap=True)
-                    content = linesep_text.join(content_lines)
-
-                    if title_lines:
-                        if panel_title_at_top:
-                            title_with_space = '\n'.join(title_lines
-                                                         + [''] * (panel.TITLE_BLANK_LINES))
-                        else:
-                            num_blank_lines = (
-                                panel.TITLE_BLANK_LINES + extra_blank_lines_if_title_at_bottom)
-                            title_with_space = '\n'.join([''] * num_blank_lines + title_lines)
-
-                        title = rich.text.Text(
-                            title_with_space,
-                            style=title_style,
-                            no_wrap=True,
-                            justify='center',
-                            overflow='ellipsis',  # Titles are always cropped with ellipsis
-                        )
-
-                content_table = rich.table.Table(
-                    show_header=True if title and panel_title_at_top else False,
-                    show_footer=True if title and not panel_title_at_top else False,
-                    box=None,
-                    padding=(0, 0),
-                )
-
-                if panel.frame.fixed_width and has_width(panel.frame.dims):
-                    column_width = panel.frame.dims.width
-                else:
-                    column_width = None
-
-                if title:
-                    if panel_title_at_top:
-                        content_table.add_column(header=title, width=column_width)
-                    else:
-                        content_table.add_column(footer=title, width=column_width)
-                else:
-                    content_table.add_column(width=column_width)
-
-                content_table.add_row(content)
-
-                yield content_table
-
-        table = rich.table.Table(
-            show_header=False,
-            box=my_rounded_box,
-            style=table_style,
-            footer_style=title_style,
-        )
-        table.add_row(*(x for x in _prepare_content(panels)), style=table_style)
-
-        return table
+        styles = PanelElementStyles(outer_panel, force_autodetect_bg_color)
+        outer_layout_panel_styler = OuterLayoutPanelStyler(outer_panel, styles)
+        return outer_layout_panel_styler.style_outer_panel()
 
     @override
     def _stylized_content_terminal_impl(self) -> StylizedRichTypes:
         return self._get_stylized_layout_common(
-            layout=self.content,
-            frame=self.frame,
-            layout_design=self.config.layout_design,
-            panel_title_at_top=self.config.panel_title_at_top,
-            rich_overflow_method=self.rich_overflow_method,
+            outer_panel=self,
             console_color_system=self.config.console_color_system,
-            color_style=self.config.color_style,
-            transparent_background=self.config.transparent_background,
             force_autodetect_bg_color=ForceAutodetect.NEVER,
         )
 
     @override
     def _stylized_content_html_impl(self) -> StylizedRichTypes:
         return self._get_stylized_layout_common(
-            layout=self.content,
-            frame=self.frame,
-            layout_design=self.config.layout_design,
-            panel_title_at_top=self.config.panel_title_at_top,
-            rich_overflow_method=self.rich_overflow_method,
+            outer_panel=self,
             console_color_system=ConsoleColorSystem.ANSI_RGB,
-            color_style=self.config.color_style,
-            transparent_background=self.config.transparent_background,
             force_autodetect_bg_color=ForceAutodetect.NEVER,
         )
+
+    @cached_property
+    def table_cell_height(self) -> int:
+        if has_height(self.frame.dims):
+            layout_design_dims = LayoutDesignDims.create(self.config.layout_design)
+            table_cell_height = (
+                self.frame.dims.height
+                - layout_design_dims.extra_vertical_chars(num_vertical_panels=1))
+        else:
+            table_cell_height = self.content.total_subpanel_outer_dims.height
+
+        return table_cell_height
 
     @cached_property
     @override
@@ -284,3 +146,204 @@ class StylizedLayoutPanel(
     @override
     def colorized(self) -> OutputVariant:
         return TableCroppingOutputVariant(self, OutputMode.COLORIZED)
+
+
+@dataclass
+class PanelElementStyles:
+    title_style: rich.style.Style
+    table_style: rich.style.Style
+
+    def __init__(
+        self,
+        outer_panel: 'StylizedLayoutPanel[FrameInvT]',
+        force_autodetect_bg_color: ForceAutodetect,
+    ) -> None:
+        color_style = outer_panel.config.color_style
+        style_fg_color = calculate_fg_color_from_color_style(color_style)
+
+        if outer_panel.config.transparent_background:
+            style_bg_color = None
+        else:
+            style_bg_color = calculate_bg_color_from_color_style(
+                color_style, force_autodetect=force_autodetect_bg_color)
+
+        self.title_style = get_token_style_from_color_style(
+            pygments.token.Token.Name.Decorator,
+            color_style,
+        )
+        self.title_style._bgcolor = style_bg_color
+
+        self.table_style = rich.style.Style(color=style_fg_color, bgcolor=style_bg_color)
+
+
+class InnerPanelStyler:
+    def __init__(
+        self,
+        inner_panel: FullyRenderedPanel,
+        table_cell_height: int,
+        panel_title_at_top: bool,
+        styles: PanelElementStyles,
+    ):
+        self._panel = inner_panel
+        self._table_cell_height = table_cell_height
+        self._panel_title_at_top = panel_title_at_top
+        self._styles = styles
+
+    def _add_ellipsis_to_title_if_vertically_cropped(self, title_lines: list[str]) -> list[str]:
+        if len(self._panel.resized_title) > self._panel.title_height >= 1:
+            last_title_line = title_lines[-1]
+            if len(last_title_line) > 0:
+                max_title_width = (
+                    max(self._panel.dims.width, self._panel.frame.dims.width)
+                    if has_width(self._panel.frame.dims) else self._panel.dims.width)
+
+                # Add ellipsis if title height is cropped
+                title_lines[-1] = f'{last_title_line[:max_title_width - 1]}…'
+
+        return title_lines
+
+    @cached_property
+    def _title_lines(self) -> list[str]:
+        title_lines = self._panel.resized_title[:self._panel.title_height]
+        title_lines = self._add_ellipsis_to_title_if_vertically_cropped(title_lines)
+        return title_lines
+
+    @property
+    def _full_panel_title_height(self) -> int:
+        if self._title_lines:
+            return self._panel.title_height + self._panel.TITLE_BLANK_LINES
+        else:
+            return 0
+
+    @property
+    def _num_free_lines_for_title(self) -> int:
+        return max((self._table_cell_height - self._panel.cropped_dims.height), 0)
+
+    @property
+    def _num_extra_blank_lines_if_title_at_bottom(self) -> int:
+        return max((self._num_free_lines_for_title - self._full_panel_title_height), 0)
+
+    @cached_property
+    def _num_content_lines(self) -> int:
+        if self._panel.title_overlaps_panel:
+            return self._table_cell_height - self._full_panel_title_height
+        else:
+            return self._panel.cropped_dims.height
+
+    @property
+    def _fixed_frame_width_if_any(self) -> int | None:
+        if self._panel.frame.fixed_width and has_width(self._panel.frame.dims):
+            return self._panel.frame.dims.width
+        else:
+            return None
+
+    @property
+    def _styled_title(self) -> str | rich.text.Text:
+        title: str | rich.text.Text = ''
+
+        if self._title_lines:
+            if self._panel_title_at_top:
+                title_with_space = '\n'.join(self._title_lines
+                                             + [''] * (self._panel.TITLE_BLANK_LINES))
+            else:
+                num_blank_lines = (
+                    self._panel.TITLE_BLANK_LINES + self._num_extra_blank_lines_if_title_at_bottom)
+                title_with_space = '\n'.join(([''] * num_blank_lines) + self._title_lines)
+
+            title = rich.text.Text(
+                title_with_space,
+                style=self._styles.title_style,
+                no_wrap=True,
+                justify='center',
+                overflow='ellipsis',  # Titles are always cropped with ellipsis
+            )
+
+        return title
+
+    @property
+    def _styled_and_cropped_content(self) -> rich.text.Text:
+        content = rich.text.Text.from_ansi(self._panel.colorized.terminal, no_wrap=True)
+
+        if not self._panel.title:
+            return content
+        else:
+            content_lines: list[rich.text.Text] | rich.containers.Lines = \
+                content.split('\n')
+
+            if len(content_lines) < self._num_content_lines:
+                # rich.text.Text.from_ansi() might remove empty lines at the end.
+                # Add them back here
+                for _ in range(self._num_content_lines - len(content_lines)):
+                    content_lines.append(rich.text.Text(''))
+
+            elif len(content_lines) > self._num_content_lines:
+                # Crop content_lines if too high
+                content_lines = content_lines[:self._num_content_lines]
+
+            linesep_text = rich.text.Text('\n', no_wrap=True)
+            return linesep_text.join(content_lines)
+
+    @property
+    def styled_inner_panel(self,) -> rich.table.Table:
+        styled_title = self._styled_title
+        styled_and_cropped_content = self._styled_and_cropped_content
+        column_width = self._fixed_frame_width_if_any
+
+        panel_title_at_top = self._panel_title_at_top
+        content_table = rich.table.Table(
+            show_header=True if styled_title and panel_title_at_top else False,
+            show_footer=True if styled_title and not panel_title_at_top else False,
+            box=None,
+            padding=(0, 0),
+        )
+
+        if styled_title:
+            if panel_title_at_top:
+                content_table.add_column(header=styled_title, width=column_width)
+            else:
+                content_table.add_column(footer=styled_title, width=column_width)
+        else:
+            content_table.add_column(width=column_width)
+
+        content_table.add_row(styled_and_cropped_content)
+
+        return content_table
+
+
+class OuterLayoutPanelStyler:
+    def __init__(
+        self,
+        outer_panel: 'StylizedLayoutPanel[FrameInvT]',
+        styles: PanelElementStyles,
+    ):
+        self._outer_panel = outer_panel
+        self._styles = styles
+
+    def style_outer_panel(self) -> rich.table.Table:
+        assert self._outer_panel.config.layout_design is LayoutDesign.TABLE_GRID
+        return self._style_outer_panel_as_table()
+
+    def _style_outer_panel_as_table(self):
+        assert self._outer_panel.config.layout_design is LayoutDesign.TABLE_GRID
+
+        table = rich.table.Table(
+            show_header=False,
+            box=rich.box.ROUNDED,
+            style=self._styles.table_style,
+            footer_style=self._styles.title_style,
+        )
+
+        table.add_row(*(x for x in self._style_inner_panels()), style=self._styles.table_style)
+
+        return table
+
+    def _style_inner_panels(self) -> Iterator[rich.table.Table]:
+        for inner_panel in self._outer_panel.content.grid.get_row(0):
+
+            inner_panel_layout_props = InnerPanelStyler(
+                inner_panel,
+                self._outer_panel.table_cell_height,
+                self._outer_panel.config.panel_title_at_top,
+                self._styles,
+            )
+            yield inner_panel_layout_props.styled_inner_panel

@@ -305,3 +305,13 @@ def test_layout_simple_grid_insert_and_delete(
 
     with pytest.raises(IndexError):
         case.layout.grid[1, 0]
+
+
+def test_layout_simple_grid_get_row(
+        simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
+    """Test getting a row from the grid."""
+    case = simple_layout
+
+    # Get the first row
+    first_row = case.layout.grid.get_row(0)
+    assert list(first_row) == [case.first_panel, case.second_panel]
