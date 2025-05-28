@@ -20,6 +20,7 @@ from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              panel_is_dimensions_aware)
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.layout import (DimensionsAwarePanelLayoutMixin,
+                                                     LayoutDesignDims,
                                                      ResizedLayoutDraftPanel)
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_style,
@@ -127,7 +128,7 @@ class StylizedLayoutPanel(
                                       '╰─┴╯\n')
 
         if has_height(frame.dims):
-            layout_design_dims = layout.get_layout_design_dims(layout_design)
+            layout_design_dims = LayoutDesignDims.create(layout_design)
             table_cell_height = (
                 frame.dims.height - layout_design_dims.extra_vertical_chars(num_vertical_panels=1))
         else:

@@ -2,6 +2,7 @@ from collections import defaultdict
 import dataclasses
 from typing import cast, NamedTuple
 
+from omnipy.data._display.config import LayoutDesign
 from omnipy.data._display.dimensions import DimensionsWithWidthAndHeight, has_height, has_width
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
@@ -10,6 +11,7 @@ from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              panel_is_dimensions_aware)
 from omnipy.data._display.panel.draft.base import ContentT, DimensionsAwareDraftPanel, DraftPanel
 from omnipy.data._display.panel.draft.layout import (DimensionsAwareDraftPanelLayout,
+                                                     LayoutDesignDims,
                                                      ResizedLayoutDraftPanel)
 from omnipy.data._display.panel.layout import Layout
 import omnipy.util._pydantic as pyd
@@ -49,7 +51,11 @@ def _create_layout_with_distributed_widths(
     draft_layout: Layout = Layout()
 
     # Calculate per-panel width for panels without pre-set width
-    per_panel_width = _calculate_per_panel_width(layout_panel.content, frame_dims.width)
+    per_panel_width = _calculate_per_panel_width(
+        layout_panel.content,
+        frame_dims.width,
+        layout_panel.config.layout_design,
+    )
 
     # Apply calculated widths to each panel
     for key, panel in layout_panel.content.items():
@@ -63,7 +69,11 @@ def _create_layout_with_distributed_widths(
     return draft_layout
 
 
-def _calculate_per_panel_width(layout: Layout, frame_width: int | None) -> int | None:
+def _calculate_per_panel_width(
+    layout: Layout,
+    frame_width: int | None,
+    layout_design: LayoutDesign,
+) -> int | None:
     """
     Calculate width for each panel without pre-set width.
     """
@@ -73,22 +83,25 @@ def _calculate_per_panel_width(layout: Layout, frame_width: int | None) -> int |
     width_unset_panels = {}
     preset_width = 0
 
+    layout_design_dims = LayoutDesignDims.create(layout_design)
+
     # Calculate total width used by panels with pre-set width
     for key, panel in layout.items():
         if has_width(panel.frame.dims):
-            preset_width += panel.frame.dims.width + 3
+            preset_width += panel.frame.dims.width + layout_design_dims.horizontal_chars_per_panel
         elif panel_is_dimensions_aware(panel) and has_width(panel.dims):
-            preset_width += panel.dims.width + 3
+            preset_width += panel.dims.width + layout_design_dims.horizontal_chars_per_panel
         else:
             width_unset_panels[key] = panel
 
-    preset_width += 1
+    preset_width += layout_design_dims.horizontal_end_chars
 
     # Calculate width for unset panels
     num_unset_panels = len(width_unset_panels)
     if num_unset_panels > 0:
         available_width = frame_width - preset_width
-        per_panel_width = (available_width // num_unset_panels) - 3
+        per_panel_width = ((available_width // num_unset_panels)
+                           - layout_design_dims.horizontal_chars_per_panel)
         return max(per_panel_width, 0)
 
     return None

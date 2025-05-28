@@ -41,13 +41,11 @@ class LayoutDesignDims:
             num_vertical_panels,
         )
 
-
-class DimensionsAwarePanelLayoutMixin:
     @classmethod
-    def get_layout_design_dims(
+    def create(
         cls,
         layout_design: LayoutDesign = LayoutDesign.TABLE_GRID,
-    ) -> LayoutDesignDims:
+    ) -> 'LayoutDesignDims':
         if layout_design == LayoutDesign.TABLE_GRID:
             return LayoutDesignDims(
                 horizontal_chars_per_panel=3,
@@ -58,6 +56,8 @@ class DimensionsAwarePanelLayoutMixin:
         else:
             raise ValueError(f'Unsupported layout design: {layout_design}')
 
+
+class DimensionsAwarePanelLayoutMixin:
     def _total_dims_over_subpanels(self, dims_property: str) -> DimensionsWithWidthAndHeight:
         self_as_layout = cast(Layout, self)
 
@@ -87,7 +87,7 @@ class DimensionsAwarePanelLayoutMixin:
             else:
                 total_subpanel_dims = self.total_subpanel_cropped_dims
 
-            layout_design_dims = self.get_layout_design_dims(layout_design)
+            layout_design_dims = LayoutDesignDims.create(layout_design)
 
             num_horizontal_panels = len(self_as_layout)
             num_vertical_panels = 1  # Assuming a single row layout for simplicity
