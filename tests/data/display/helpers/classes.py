@@ -5,7 +5,7 @@ from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHe
 from omnipy.data._display.frame import AnyFrame, Frame
 from omnipy.data._display.helpers import soft_wrap_words, UnicodeCharWidthMap
 from omnipy.data._display.panel.base import DimensionsAwarePanel, FullyRenderedPanel, OutputVariant
-from omnipy.data._display.panel.draft.base import DraftPanel
+from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, DraftPanel
 from omnipy.data._display.panel.draft.monospaced import (crop_content_lines_for_resizing,
                                                          crop_content_with_extra_wide_chars)
 from omnipy.data._display.panel.styling.output import OutputMode
@@ -44,7 +44,7 @@ class MockPanel(DraftPanel[str, AnyFrame]):
 
 
 @pyd.dataclass(init=False, frozen=True)
-class MockPanelStage2(DimensionsAwarePanel, MockPanel):
+class MockPanelStage2(DimensionsAwareDraftPanel[AnyFrame]):
     def render_next_stage(self) -> FullyRenderedPanel[AnyFrame]:
         return MockPanelStage3(
             content=self.content,

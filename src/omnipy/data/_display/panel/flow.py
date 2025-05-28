@@ -9,7 +9,8 @@ from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              FrameT,
                                              panel_is_dimensions_aware)
 from omnipy.data._display.panel.draft.base import ContentT, DimensionsAwareDraftPanel, DraftPanel
-from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
+from omnipy.data._display.panel.draft.layout import (DimensionsAwareDraftPanelLayout,
+                                                     ResizedLayoutDraftPanel)
 from omnipy.data._display.panel.layout import Layout
 import omnipy.util._pydantic as pyd
 
@@ -81,10 +82,12 @@ def _calculate_per_panel_width(layout: Layout, frame_width: int | None) -> int |
         else:
             width_unset_panels[key] = panel
 
+    preset_width += 1
+
     # Calculate width for unset panels
     num_unset_panels = len(width_unset_panels)
     if num_unset_panels > 0:
-        available_width = frame_width - preset_width - 1
+        available_width = frame_width - preset_width
         per_panel_width = (available_width // num_unset_panels) - 3
         return max(per_panel_width, 0)
 
@@ -141,10 +144,7 @@ def resize_layout_to_fit_frame(  # noqa: C901
 
     delta_width = None
     while True:
-        layout_dims = ResizedLayoutDraftPanel.calc_table_layout_dims(
-            dim_aware_layout,
-            exclude_title=True,
-        )
+        layout_dims = dim_aware_layout.calc_dims(inner_subpanel_dims=True)
         delta_width = layout_dims.width - frame.dims.width \
             if has_width(frame.dims) else None
 
@@ -190,15 +190,8 @@ def resize_layout_to_fit_frame(  # noqa: C901
         #     print(f'panel frame: {key}: {panel.frame}')
         #     print(f'_priority(({i}, ({key}, <panel>))): {_priority((i, (key, panel)))}')
 
-        total_layout_subpanel_dims_if_cropped = (
-            ResizedLayoutDraftPanel.total_subpanel_dims_if_cropped(
-                dim_aware_layout,
-                exclude_title=True,
-            ))
-        min_frame_width = 0 if total_layout_subpanel_dims_if_cropped.width <= len(
+        min_frame_width = 0 if dim_aware_layout.total_inner_subpanel_dims_if_cropped.width <= len(
             dim_aware_layout) else 1
-        # print(f'total_layout_subpanel_dims_if_cropped: '
-        #       f'{total_layout_subpanel_dims_if_cropped}')
         # print(f'min_frame_width: {min_frame_width}')
 
         for key in panel_priority:
@@ -298,8 +291,8 @@ def _create_new_resized_panel(
 
 def _set_panel_heights(
     frame: AnyFrame,
-    dim_aware_layout: Layout[DimensionsAwareDraftPanel[AnyFrame]],
-) -> Layout[DimensionsAwareDraftPanel[AnyFrame]]:
+    dim_aware_layout: DimensionsAwareDraftPanelLayout,
+) -> DimensionsAwareDraftPanelLayout:
     """
     Adjust heights of panels in a layout based on frame height.
 
@@ -325,8 +318,7 @@ def _set_panel_heights(
 
 
 def _tighten_panel_widths(
-    dim_aware_layout: Layout[DimensionsAwareDraftPanel[AnyFrame]]
-) -> Layout[DimensionsAwareDraftPanel[AnyFrame]]:
+        dim_aware_layout: DimensionsAwareDraftPanelLayout) -> DimensionsAwareDraftPanelLayout:
     """
     Reduce panel widths to match their content width when possible.
 
@@ -356,10 +348,10 @@ class CrampedPanelInfo(NamedTuple):
 
 
 def _widen_inner_panels_to_make_room_for_titles(
-    dim_aware_layout: Layout[DimensionsAwareDraftPanel[AnyFrame]],
+    dim_aware_layout: DimensionsAwareDraftPanelLayout,
     draft_layout: Layout[DraftPanel[Layout, AnyFrame]],
     extra_width: int,
-) -> Layout[DimensionsAwareDraftPanel[AnyFrame]]:
+) -> DimensionsAwareDraftPanelLayout:
     """
     Allocate extra width to panels whose titles are wider than their content
     areas.
@@ -380,7 +372,7 @@ def _widen_inner_panels_to_make_room_for_titles(
 
 
 def _identify_cramped_panels(
-    dim_aware_layout: Layout[DimensionsAwareDraftPanel[AnyFrame]]
+        dim_aware_layout: DimensionsAwareDraftPanelLayout
 ) -> defaultdict[int, list[CrampedPanelInfo]]:
     """
     Identify panels where title width exceeds content width and group by
@@ -428,10 +420,10 @@ def _allocate_extra_width(title_width2cramped_panels: defaultdict[int, list[Cram
 
 
 def _apply_width_additions(
-    dim_aware_layout: Layout[DimensionsAwareDraftPanel[AnyFrame]],
+    dim_aware_layout: DimensionsAwareDraftPanelLayout,
     draft_layout: Layout[DraftPanel[Layout, AnyFrame]],
     panel_width_additions: defaultdict[str, int],
-) -> Layout[DimensionsAwareDraftPanel[AnyFrame]]:
+) -> DimensionsAwareDraftPanelLayout:
     """Apply calculated width additions to panels that need them."""
     for key, width_addition in panel_width_additions.items():
         dim_aware_panel = dim_aware_layout[key]

@@ -5,11 +5,13 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
-from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
+from omnipy.data._display.panel.draft.layout import (DimensionsAwareDraftPanelLayout,
+                                                     ResizedLayoutDraftPanel)
 from omnipy.data._display.panel.layout import Layout
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
+import omnipy.util._pydantic as pyd
 
-from ..helpers.classes import MockPanel, MockPanelStage3
+from ..helpers.classes import MockPanel, MockPanelStage2, MockPanelStage3
 from .helpers import (apply_frame_variant_to_test_case,
                       assert_dims_aware_panel,
                       assert_draft_panel_subcls,
@@ -111,7 +113,7 @@ def test_fail_resized_layout_draft_panel_no_assignments() -> None:
     resized_layout_panel = ResizedLayoutDraftPanel(Layout())
 
     with pytest.raises(AttributeError):
-        resized_layout_panel.content = Layout()  # type: ignore[misc]
+        resized_layout_panel.content = Layout()  # type: ignore
 
     with pytest.raises(AttributeError):
         resized_layout_panel.title = 'My panel'  # type: ignore[misc]
@@ -134,6 +136,8 @@ def test_fail_resized_layout_draft_panel_no_assignments() -> None:
 def test_resized_layout_draft_panel_basic_dims_and_edge_cases(
         case: PanelFrameVariantTestCase[Layout]) -> None:
     frame_case = apply_frame_variant_to_test_case(case, stylized_stage=False)
+
+    assert not isinstance(case.config, pyd.UndefinedType)
 
     resized_layout_panel = ResizedLayoutDraftPanel(
         case.content,
@@ -195,3 +199,20 @@ def test_draft_panel_render_next_stage_complex() -> None:
                 ),
             )),
     )
+
+
+def test_dimensions_aware_draft_panel_layout() -> None:
+    layout = DimensionsAwareDraftPanelLayout()
+
+    assert layout.total_inner_subpanel_dims_if_cropped == Dimensions(0, 0)
+    assert layout.calc_dims() == Dimensions(0, 1)
+
+    layout['panel1'] = MockPanelStage2('Panel\ncontent')
+    assert layout.total_inner_subpanel_dims_if_cropped == Dimensions(7, 2)
+    assert layout.calc_dims() == Dimensions(11, 4)
+    assert layout.calc_dims(inner_subpanel_dims=True) == Dimensions(11, 4)
+
+    layout['panel2'] = MockPanelStage2('Even more\npanel\ncontent', title='Panel_2_title')
+    assert layout.total_inner_subpanel_dims_if_cropped == Dimensions(16, 3)
+    assert layout.calc_dims() == Dimensions(27, 7)
+    assert layout.calc_dims(inner_subpanel_dims=True) == Dimensions(23, 5)

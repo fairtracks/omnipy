@@ -123,6 +123,19 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
         return dims_if_cropped(self.dims, self.frame)
 
     @cached_property
+    def outer_dims_if_cropped(self) -> DimensionsWithWidthAndHeight:
+        if self.title_height > 0:
+            dims_width = max(self.dims_if_cropped.width, self.title_width)
+        else:
+            dims_width = self.dims_if_cropped.width
+
+        dims_height = (self.dims_if_cropped.height + self.title_height_with_blank_lines)
+        if has_height(self.frame.dims):
+            dims_height = min(self.frame.dims.height, dims_height)
+
+        return Dimensions(width=dims_width, height=dims_height)
+
+    @cached_property
     def within_frame(self) -> DimensionsFit:
         return DimensionsFit(self.dims, self.frame.dims)
 
