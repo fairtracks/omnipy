@@ -144,7 +144,7 @@ def resize_layout_to_fit_frame(  # noqa: C901
 
     delta_width = None
     while True:
-        layout_dims = dim_aware_layout.calc_dims(inner_subpanel_dims=True)
+        layout_dims = dim_aware_layout.calc_dims(use_outer_dims_for_subpanels=False)
         delta_width = layout_dims.width - frame.dims.width \
             if has_width(frame.dims) else None
 
@@ -173,7 +173,7 @@ def resize_layout_to_fit_frame(  # noqa: C901
             return (float('inf') if key in no_resize_panel_keys else panel_height,
                     float('inf') if key in no_resize_panel_keys else
                     (-panel.frame.dims.width if has_width(panel.frame.dims) else -float('inf')),
-                    -panel.dims_if_cropped.width,
+                    -panel.cropped_dims.width,
                     -i)
 
         panel_priority = [
@@ -190,7 +190,7 @@ def resize_layout_to_fit_frame(  # noqa: C901
         #     print(f'panel frame: {key}: {panel.frame}')
         #     print(f'_priority(({i}, ({key}, <panel>))): {_priority((i, (key, panel)))}')
 
-        min_frame_width = 0 if dim_aware_layout.total_inner_subpanel_dims_if_cropped.width <= len(
+        min_frame_width = 0 if dim_aware_layout.total_subpanel_cropped_dims.width <= len(
             dim_aware_layout) else 1
         # print(f'min_frame_width: {min_frame_width}')
 
@@ -202,7 +202,7 @@ def resize_layout_to_fit_frame(  # noqa: C901
             frame_height = cur_dim_aware_panel.frame.dims.height
 
             if delta_width:
-                frame_width = cur_dim_aware_panel.dims_if_cropped.width
+                frame_width = cur_dim_aware_panel.cropped_dims.width
                 frame_width_delta = (-1) if delta_width > 0 else -delta_width
                 frame_width = max(frame_width + frame_width_delta, min_frame_width)
 
@@ -222,8 +222,8 @@ def resize_layout_to_fit_frame(  # noqa: C901
                     new_panel_frame,
                 )
 
-                prev_cropped_dims = cur_dim_aware_panel.dims_if_cropped
-                new_cropped_dims = new_resized_panel.dims_if_cropped
+                prev_cropped_dims = cur_dim_aware_panel.cropped_dims
+                new_cropped_dims = new_resized_panel.cropped_dims
 
                 if key not in no_resize_panel_keys:
                     prev_frame_dims = cur_dim_aware_panel.frame.dims
@@ -383,9 +383,9 @@ def _identify_cramped_panels(
     for key, panel in dim_aware_layout.items():
         if (panel.title_width > 0 and has_width(panel.frame.dims)
                 and panel.frame.fixed_width is not True
-                and panel.dims_if_cropped.width < panel.title_width):
+                and panel.cropped_dims.width < panel.title_width):
             title_width2cramped_panels[panel.title_width].append(
-                CrampedPanelInfo(key, panel.dims_if_cropped.width))
+                CrampedPanelInfo(key, panel.cropped_dims.width))
 
     return title_width2cramped_panels
 
@@ -427,7 +427,7 @@ def _apply_width_additions(
     """Apply calculated width additions to panels that need them."""
     for key, width_addition in panel_width_additions.items():
         dim_aware_panel = dim_aware_layout[key]
-        panel_width = dim_aware_panel.dims_if_cropped.width
+        panel_width = dim_aware_panel.cropped_dims.width
 
         dim_aware_layout[key] = _create_new_resized_panel(
             draft_layout[key],

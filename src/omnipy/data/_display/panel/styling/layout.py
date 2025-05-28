@@ -12,8 +12,8 @@ from typing_extensions import override
 
 from omnipy.data._display.config import ColorStyles, ConsoleColorSystem
 from omnipy.data._display.dimensions import Dimensions, has_height, has_width
-from omnipy.data._display.panel.base import (DimensionsAwarePanel,
-                                             dims_if_cropped,
+from omnipy.data._display.panel.base import (cropped_dims,
+                                             DimensionsAwarePanel,
                                              FrameInvT,
                                              FullyRenderedPanel,
                                              OutputVariant,
@@ -117,7 +117,7 @@ class StylizedLayoutPanel(
             table_cell_height = frame.dims.height - 2
         else:
             table_cell_height = max(
-                (dims_if_cropped(
+                (cropped_dims(
                     Dimensions(
                         width=panel.dims.width,
                         height=panel.dims.height + panel.title_height + 1,
@@ -159,7 +159,7 @@ class StylizedLayoutPanel(
                         table_cell_height: int,
                         panel: DimensionsAwarePanel,
                     ) -> int:
-                        return max(table_cell_height - panel.dims_if_cropped.height, 0)
+                        return max(table_cell_height - panel.cropped_dims.height, 0)
 
                     free_lines_for_title = num_free_lines_for_title(table_cell_height, panel)
                     extra_blank_lines_if_title_at_bottom = max(
@@ -167,7 +167,7 @@ class StylizedLayoutPanel(
                     if panel.title_overlaps_panel:
                         panel_content_lines = table_cell_height - full_panel_title_height
                     else:
-                        panel_content_lines = panel.dims_if_cropped.height
+                        panel_content_lines = panel.cropped_dims.height
 
                     content_lines: list[rich.text.Text] | rich.containers.Lines = \
                         content.split('\n')

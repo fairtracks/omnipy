@@ -204,15 +204,15 @@ def test_draft_panel_render_next_stage_complex() -> None:
 def test_dimensions_aware_draft_panel_layout() -> None:
     layout = DimensionsAwareDraftPanelLayout()
 
-    assert layout.total_inner_subpanel_dims_if_cropped == Dimensions(0, 0)
+    assert layout.total_subpanel_cropped_dims == Dimensions(0, 0)
     assert layout.calc_dims() == Dimensions(0, 1)
 
     layout['panel1'] = MockPanelStage2('Panel\ncontent')
-    assert layout.total_inner_subpanel_dims_if_cropped == Dimensions(7, 2)
+    assert layout.total_subpanel_cropped_dims == Dimensions(7, 2)
     assert layout.calc_dims() == Dimensions(11, 4)
-    assert layout.calc_dims(inner_subpanel_dims=True) == Dimensions(11, 4)
+    assert layout.calc_dims(use_outer_dims_for_subpanels=False) == Dimensions(11, 4)
 
     layout['panel2'] = MockPanelStage2('Even more\npanel\ncontent', title='Panel_2_title')
-    assert layout.total_inner_subpanel_dims_if_cropped == Dimensions(16, 3)
+    assert layout.total_subpanel_cropped_dims == Dimensions(16, 3)
     assert layout.calc_dims() == Dimensions(27, 7)
-    assert layout.calc_dims(inner_subpanel_dims=True) == Dimensions(23, 5)
+    assert layout.calc_dims(use_outer_dims_for_subpanels=False) == Dimensions(23, 5)

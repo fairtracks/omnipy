@@ -78,7 +78,7 @@ def panel_is_fully_rendered(panel: 'Panel') -> TypeIs['FullyRenderedPanel']:
     return isinstance(panel, FullyRenderedPanel)
 
 
-def dims_if_cropped(
+def cropped_dims(
     dims: DimensionsWithWidthAndHeight,
     frame: AnyFrame,
 ) -> DimensionsWithWidthAndHeight:
@@ -115,21 +115,26 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
         ...
 
     @cached_property
-    def dims_if_cropped(self,) -> DimensionsWithWidthAndHeight:
+    def cropped_dims(self,) -> DimensionsWithWidthAndHeight:
         """
         Returns the dimensions of the panel, cropped to fit within the
         frame dimensions.
         """
-        return dims_if_cropped(self.dims, self.frame)
+        return cropped_dims(self.dims, self.frame)
 
     @cached_property
-    def outer_dims_if_cropped(self) -> DimensionsWithWidthAndHeight:
+    def outer_dims(self) -> DimensionsWithWidthAndHeight:
+        """
+        Returns the outer dimensions of the panel, which includes the title
+        height if applicable, and the width of the cropped dimensions or
+        the title width, whichever is larger.
+        """
         if self.title_height > 0:
-            dims_width = max(self.dims_if_cropped.width, self.title_width)
+            dims_width = max(self.cropped_dims.width, self.title_width)
         else:
-            dims_width = self.dims_if_cropped.width
+            dims_width = self.cropped_dims.width
 
-        dims_height = (self.dims_if_cropped.height + self.title_height_with_blank_lines)
+        dims_height = (self.cropped_dims.height + self.title_height_with_blank_lines)
         if has_height(self.frame.dims):
             dims_height = min(self.frame.dims.height, dims_height)
 
@@ -142,7 +147,7 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
     @cached_property
     def _available_height_for_title(self) -> int | None:
         if has_height(self.frame.dims):
-            return max(self.frame.dims.height - self.dims_if_cropped.height, 0)
+            return max(self.frame.dims.height - self.cropped_dims.height, 0)
         else:
             return None
 

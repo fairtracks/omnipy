@@ -23,12 +23,12 @@ class DimensionsAwareDraftPanelLayout(Layout[DimensionsAwareDraftPanel[AnyFrame]
             height=max((panel_dims.height for panel_dims in all_panel_dims), default=0))
 
     @property
-    def total_inner_subpanel_dims_if_cropped(self) -> DimensionsWithWidthAndHeight:
-        return self._total_dims_over_subpanels('dims_if_cropped')
+    def total_subpanel_cropped_dims(self) -> DimensionsWithWidthAndHeight:
+        return self._total_dims_over_subpanels('cropped_dims')
 
-    def calc_dims(self, inner_subpanel_dims: bool = False) -> DimensionsWithWidthAndHeight:
+    def calc_dims(self, use_outer_dims_for_subpanels: bool = True) -> DimensionsWithWidthAndHeight:
         if len(self) > 0:
-            dims_property = 'dims_if_cropped' if inner_subpanel_dims else 'outer_dims_if_cropped'
+            dims_property = 'outer_dims' if use_outer_dims_for_subpanels else 'cropped_dims'
             total_subpanel_dims = self._total_dims_over_subpanels(dims_property)
 
             return Dimensions(

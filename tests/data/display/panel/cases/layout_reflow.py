@@ -263,7 +263,7 @@ def case_layout_single_panel_fixed_dims(
                                           '│                   │\n'
                                           '│   A nice title    │\n'
                                           '╰───────────────────╯\n'),
-            # The 'resized' dims are based on the dims_if_cropped of the
+            # The 'resized' dims are based on the cropped_dims of the
             # inner panel, not the frame of the outer panel. Hence, the
             # height is 5, not 7
             exp_resized_dims_only_height=Dimensions(width=21, height=5),
