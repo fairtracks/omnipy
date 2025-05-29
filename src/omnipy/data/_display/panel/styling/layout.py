@@ -237,8 +237,7 @@ class InnerPanelStyler:
         else:
             return None
 
-    @property
-    def _styled_title(self) -> str | rich.text.Text:
+    def _style_title(self) -> str | rich.text.Text:
         title: str | rich.text.Text = ''
 
         if self._title_lines:
@@ -260,8 +259,7 @@ class InnerPanelStyler:
 
         return title
 
-    @property
-    def _styled_and_cropped_content(self) -> rich.text.Text:
+    def _style_and_crop_content(self) -> rich.text.Text:
         content = rich.text.Text.from_ansi(self._panel.colorized.terminal, no_wrap=True)
 
         if not self._panel.title:
@@ -283,10 +281,9 @@ class InnerPanelStyler:
             linesep_text = rich.text.Text('\n', no_wrap=True)
             return linesep_text.join(content_lines)
 
-    @property
-    def styled_inner_panel(self,) -> rich.table.Table:
-        styled_title = self._styled_title
-        styled_and_cropped_content = self._styled_and_cropped_content
+    def style_inner_panel(self) -> rich.table.Table:
+        styled_title = self._style_title()
+        styled_and_cropped_content = self._style_and_crop_content()
         column_width = self._fixed_frame_width_if_any
 
         panel_title_at_top = self._panel_title_at_top
@@ -346,4 +343,4 @@ class OuterLayoutPanelStyler:
                 self._outer_panel.config.panel_title_at_top,
                 self._styles,
             )
-            yield inner_panel_layout_props.styled_inner_panel
+            yield inner_panel_layout_props.style_inner_panel()
