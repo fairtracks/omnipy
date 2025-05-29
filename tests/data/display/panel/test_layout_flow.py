@@ -5,6 +5,7 @@ import pytest_cases as pc
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.layout import Layout
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
+import omnipy.util._pydantic as pyd
 
 from .helpers import (apply_frame_variant_to_test_case,
                       assert_dims_aware_panel,
@@ -22,6 +23,8 @@ from .helpers import (apply_frame_variant_to_test_case,
 )
 def test_resized_layout_draft_panel_reflow_cases(case: PanelFrameVariantTestCase[Layout]) -> None:
     frame_case = apply_frame_variant_to_test_case(case, stylized_stage=False)
+
+    assert not isinstance(case.config, pyd.UndefinedType)
 
     draft_layout_panel = DraftPanel(
         case.content,
