@@ -28,6 +28,17 @@ class ResizedLayoutDraftPanel(
         MonospacedDraftPanel[DimensionsAwareDraftPanelLayout, FrameT],
         Generic[FrameT],
 ):
+    """
+    A draft panel containing a layout that has been resized to fit its
+    frame.
+
+    This class represents the result of the layout optimization process,
+    where all contained panels have been adjusted to fit within frame
+    constraints.
+
+    The layout has undergone width distribution, height adjustment, and various
+    optimization steps to ensure panels display their content effectively.
+    """
     def __init__(
         self,
         content: Layout,
