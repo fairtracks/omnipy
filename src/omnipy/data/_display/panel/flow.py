@@ -231,7 +231,7 @@ class OuterLayoutResizeContext(Generic[FrameT]):
     @property
     def _delta_width(self) -> int | None:
         if has_width(self.frame.dims):
-            return self.layout_dims.width - self.frame.dims.width
+            return self.frame.dims.width - self.layout_dims.width
         else:
             return None
 
@@ -245,13 +245,13 @@ class OuterLayoutResizeContext(Generic[FrameT]):
     def too_wide_panel(self) -> bool:
         """Whether outer panel is too wide and in need of slimming."""
         delta_width = self._delta_width
-        return delta_width is not None and delta_width > 0
+        return delta_width is not None and delta_width < 0
 
     @property
     def extra_width_available(self) -> bool:
         """Whether extra width is available to append to inner panels."""
         delta_width = self._delta_width
-        return delta_width is not None and delta_width < 0
+        return delta_width is not None and delta_width > 0
 
     @property
     def extra_width(self) -> int:
@@ -260,7 +260,7 @@ class OuterLayoutResizeContext(Generic[FrameT]):
         if delta_width is None:
             raise ValueError('Extra width is not available. '
                              'Please check "extra_width_available" first.')
-        return -delta_width
+        return delta_width
 
     @property
     def min_frame_width(self) -> int:
