@@ -229,19 +229,38 @@ class OuterLayoutResizeContext(Generic[FrameT]):
         return self.dim_aware_layout.calc_dims(use_outer_dims_for_subpanels=False)
 
     @property
-    def delta_width(self) -> int | None:
+    def _delta_width(self) -> int | None:
         if has_width(self.frame.dims):
             return self.layout_dims.width - self.frame.dims.width
         else:
             return None
 
     @property
-    def has_extra_width(self) -> int | None:
-        """Calculate extra width available for resizing."""
+    def panel_width_ok(self) -> bool:
+        """Whether the outer panel width is ok and does not need resizing."""
+        delta_width = self._delta_width
+        return delta_width is None or delta_width == 0
 
     @property
-    def extra_width(self) -> int | None:
-        """Calculate extra width available for resizing."""
+    def too_wide_panel(self) -> bool:
+        """Whether outer panel is too wide and in need of slimming."""
+        delta_width = self._delta_width
+        return delta_width is not None and delta_width > 0
+
+    @property
+    def extra_width_available(self) -> bool:
+        """Whether extra width is available to append to inner panels."""
+        delta_width = self._delta_width
+        return delta_width is not None and delta_width < 0
+
+    @property
+    def extra_width(self) -> int:
+        """Extra width available to append to inner panels."""
+        delta_width = self._delta_width
+        if delta_width is None:
+            raise ValueError('Extra width is not available. '
+                             'Please check "extra_width_available" first.')
+        return -delta_width
 
     @property
     def min_frame_width(self) -> int:
@@ -267,18 +286,20 @@ class InnerPanelResizeContext:
         self.frame_width = self.dim_aware_panel.frame.dims.width
         self.frame_height = self.dim_aware_panel.frame.dims.height
 
-    def update_frame_width(self, outer_context: OuterLayoutResizeContext) -> None:
-        delta_width = outer_context.delta_width
+    def adjust_frame_width(
+        self,
+        frame_width_delta: int,
+        outer_context: OuterLayoutResizeContext,
+    ) -> None:
+        frame_width = max(
+            self.dim_aware_panel.cropped_dims.width + frame_width_delta,
+            outer_context.min_frame_width,
+        )
 
-        if delta_width:
-            frame_width = self.dim_aware_panel.cropped_dims.width
-            frame_width_delta = (-1) if delta_width > 0 else -delta_width
-            frame_width = max(frame_width + frame_width_delta, outer_context.min_frame_width)
+        if self.draft_panel.frame.fixed_width:
+            frame_width = self.draft_panel.frame.crop_width(frame_width, ignore_fixed_dims=True)
 
-            if self.draft_panel.frame.fixed_width:
-                frame_width = self.draft_panel.frame.crop_width(frame_width, ignore_fixed_dims=True)
-
-            self.frame_width = frame_width
+        self.frame_width = frame_width
 
     @cached_property
     def new_panel_frame(self):
@@ -306,7 +327,7 @@ class InnerPanelResizeContext:
     def update_resizable_panels(self, key: str, outer_context: OuterLayoutResizeContext) -> bool:
         if key not in outer_context.no_resize_panel_keys:
             prev_frame_dims = self.dim_aware_panel.frame.dims
-            if outer_context.delta_width and outer_context.delta_width > 0 \
+            if outer_context.too_wide_panel \
                     and self.new_resized_panel.dims.width == self.dim_aware_panel.dims.width:
                 if has_width(self.new_panel_frame.dims) and \
                         has_width(prev_frame_dims) and \
@@ -326,17 +347,12 @@ class InnerPanelResizeContext:
 
 def _resize_inner_panels(outer_context):
     while True:
-        if not outer_context.delta_width:
+        if outer_context.panel_width_ok:
             break
 
         prev_outer_context = outer_context.copy()
 
         panel_priority = _determine_panel_priority(outer_context)
-
-        # print(f'layout_dims: {layout_dims}')
-        # print(f'frame.dims: {frame.dims}')
-        # print(f'delta_width: {delta_width}')
-        # print(f'min_frame_width: {min_frame_width}')
 
         for key in panel_priority:
             inner_context = InnerPanelResizeContext(
@@ -344,7 +360,13 @@ def _resize_inner_panels(outer_context):
                 dim_aware_panel=outer_context.dim_aware_layout[key],
             )
 
-            inner_context.update_frame_width(outer_context)
+            if outer_context.extra_width_available:
+                frame_width_delta = outer_context.extra_width
+            else:
+                # If no extra width is available, reduce frame width by 1.
+                frame_width_delta = -1
+
+            inner_context.adjust_frame_width(frame_width_delta, outer_context)
 
             if inner_context.new_panel_frame != inner_context.dim_aware_panel.frame \
                     and inner_context.draft_panel.frame.fixed_width is not True:
@@ -399,9 +421,10 @@ def _determine_panel_priority(outer_context: OuterLayoutResizeContext[FrameT]) -
     panel_priority = [
         key for _i, (key, _panel) in sorted(
             enumerate(outer_context.dim_aware_layout.items()), key=_priority,
-            reverse=outer_context.delta_width is not None and outer_context.delta_width < 0)
+            reverse=outer_context.extra_width_available)
     ]
 
+    # print(f'outer_context._delta_width: {outer_context._delta_width}')
     # print(f'panel_priority: {panel_priority}')
     # for i, (key, panel) in enumerate(outer_context.dim_aware_layout.items()):
     #     print(f'panel frame: {key}: {panel.frame}')
@@ -509,16 +532,17 @@ def _widen_inner_panels_to_make_room_for_titles(
     Distributes available extra width to panels that need it most (where
     title width exceeds frame width), prioritizing shortest titles first.
     """
-    assert outer_context.delta_width is not None
-    extra_width = -outer_context.delta_width
+    if not outer_context.extra_width_available:
+        # No extra width available to distribute
+        return outer_context
 
     # Find panels with titles wider than their frames
     cramped_panels = _identify_cramped_panels(outer_context)
-    if not cramped_panels or extra_width <= 0:
+    if not cramped_panels:
         return outer_context
 
     # Distribute extra width to cramped panels
-    panel_width_additions = _allocate_extra_width(cramped_panels, extra_width)
+    panel_width_additions = _allocate_extra_width(cramped_panels, outer_context.extra_width)
 
     # Apply width additions to panels
     return _apply_width_additions(outer_context, panel_width_additions)
