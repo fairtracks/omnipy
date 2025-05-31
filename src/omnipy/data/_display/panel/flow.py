@@ -160,19 +160,19 @@ class LayoutFlowContext(Generic[FrameT]):
     input_layout_panel: DraftPanel[Layout[DraftPanel], FrameT]
     draft_layout: Layout[DraftPanel]
     dim_aware_layout: DimensionsAwareDraftPanelLayout
-    no_resize_panel_keys: set[str] = field(default_factory=set)
+    keys_of_resizable_panels: set[str] = field(default_factory=set)
 
     def __init__(
         self,
         input_layout_panel: DraftPanel[Layout[DraftPanel], FrameT],
         draft_layout: Layout[DraftPanel],
         dim_aware_layout: DimensionsAwareDraftPanelLayout | pyd.UndefinedType = pyd.Undefined,
-        no_resize_panel_keys: set[str] | pyd.UndefinedType = pyd.Undefined,
+        keys_of_resizable_panels: set[str] | pyd.UndefinedType = pyd.Undefined,
     ) -> None:
         self.input_layout_panel = input_layout_panel
         self.draft_layout = draft_layout
         self._init_dim_aware_layout(dim_aware_layout)
-        self._init_no_resize_panel_keys(no_resize_panel_keys)
+        self._init_keys_of_resizable_panels(keys_of_resizable_panels)
 
     def _init_dim_aware_layout(
             self, dim_aware_layout: DimensionsAwareDraftPanelLayout | pyd.UndefinedType) -> None:
@@ -186,18 +186,18 @@ class LayoutFlowContext(Generic[FrameT]):
         else:
             self.dim_aware_layout = dim_aware_layout
 
-    def _init_no_resize_panel_keys(
+    def _init_keys_of_resizable_panels(
         self,
-        no_resize_panel_keys: set[str] | pyd.UndefinedType,
+        keys_of_resizable_panels: set[str] | pyd.UndefinedType,
     ) -> None:
-        if isinstance(no_resize_panel_keys, pyd.UndefinedType):
-            self.no_resize_panel_keys = set()
-            # Identify panels that should not be resized
+        if isinstance(keys_of_resizable_panels, pyd.UndefinedType):
+            self.keys_of_resizable_panels = set()
+            # Identify panels that could be resizable.
             for key, draft_panel in self.draft_layout.items():
-                if draft_panel.frame.fixed_width is True or panel_is_dimensions_aware(draft_panel):
-                    self.no_resize_panel_keys.add(key)
+                if not (draft_panel.frame.fixed_width or panel_is_dimensions_aware(draft_panel)):
+                    self.keys_of_resizable_panels.add(key)
         else:
-            self.no_resize_panel_keys = no_resize_panel_keys
+            self.keys_of_resizable_panels = keys_of_resizable_panels
 
     def copy(self) -> 'LayoutFlowContext[FrameT]':
         """
@@ -208,7 +208,7 @@ class LayoutFlowContext(Generic[FrameT]):
             input_layout_panel=self.input_layout_panel,
             draft_layout=self.draft_layout,
             dim_aware_layout=self.dim_aware_layout.copy(),
-            no_resize_panel_keys=self.no_resize_panel_keys.copy(),
+            keys_of_resizable_panels=self.keys_of_resizable_panels.copy(),
         )
 
     @cached_property
@@ -272,7 +272,33 @@ class LayoutFlowContext(Generic[FrameT]):
     def changed_since(self, prev_context: 'LayoutFlowContext') -> bool:
         """Check if the layout dimensions or set of resizable panels have changed."""
         return not (self.layout_dims == prev_context.layout_dims
-                    and self.no_resize_panel_keys == prev_context.no_resize_panel_keys)
+                    and self.keys_of_resizable_panels == prev_context.keys_of_resizable_panels)
+
+    def resizable_panel(self, key: str) -> bool:
+        """
+        Check if a panel with the given key is resizable.
+        :param key: Key of the panel to check.
+        :return: True if the panel is resizable, False otherwise.
+        """
+        return key in self.keys_of_resizable_panels
+
+    def update_resizability_of_panel(self, key: str, resize_helper: 'PanelResizeHelper'):
+        """
+        Update the resizability of the panel in process of being resized.
+        :param key: Key of the panel being resized.
+        :param resize_helper: Resize helper containing information about the
+                              resizing.
+        :return: True if the panel was removed from the set of resizable
+                 panels
+        """
+        resizing = resize_helper
+        if key in self.keys_of_resizable_panels:
+            if self.too_wide_panel and resizing.frame_tightened and resizing.same_cropped_dims:
+                self.keys_of_resizable_panels.remove(key)
+                return True
+        else:
+            if resizing.widened_cropped_dims:
+                self.keys_of_resizable_panels.add(key)
 
 
 @dataclass
@@ -328,6 +354,14 @@ class PanelResizeHelper:
         return self.new_frame != self.orig_frame
 
     @cached_property
+    def frame_tightened(self) -> bool:
+        """
+        Returns whether the frame has been tightened (width reduced).
+        """
+        return (has_width(self.new_frame.dims) and has_width(self.orig_frame.dims)
+                and self.new_frame.dims.width < self.orig_frame.dims.width)
+
+    @cached_property
     def new_resized_panel(self) -> DimensionsAwareDraftPanel:
         return _create_panel_with_updated_frame(
             self.draft_panel,
@@ -342,25 +376,13 @@ class PanelResizeHelper:
     def new_cropped_dims(self) -> DimensionsWithWidthAndHeight:
         return self.new_resized_panel.cropped_dims
 
-    def update_resizable_panels(self, key: str, context: LayoutFlowContext) -> bool:
-        if key not in context.no_resize_panel_keys:
-            prev_frame_dims = self.dim_aware_panel.frame.dims
-            if context.too_wide_panel \
-                    and self.new_resized_panel.dims.width == self.dim_aware_panel.dims.width:
-                if has_width(self.new_frame.dims) and \
-                        has_width(prev_frame_dims) and \
-                        self.new_frame.dims.width < prev_frame_dims.width:
-                    context.no_resize_panel_keys.add(key)
-                    return True
-        else:
-            if self.new_cropped_dims.width > self.prev_cropped_dims.width:
-                context.no_resize_panel_keys.remove(key)
-
-        return False
-
     @cached_property
     def same_cropped_dims(self) -> bool:
-        return self.prev_cropped_dims == self.new_cropped_dims
+        return self.new_cropped_dims == self.prev_cropped_dims
+
+    @cached_property
+    def widened_cropped_dims(self) -> bool:
+        return self.new_cropped_dims.width > self.prev_cropped_dims.width
 
 
 def _resize_inner_panels(context: LayoutFlowContext):
@@ -388,7 +410,8 @@ def _resize_inner_panels(context: LayoutFlowContext):
 
             if resize_helper.frame_changed and resize_helper.orig_frame.fixed_width is not True:
 
-                if resize_helper.update_resizable_panels(key, context):
+                panel_no_longer_resizable = context.update_resizability_of_panel(key, resize_helper)
+                if panel_no_longer_resizable:
                     break
 
                 if resize_helper.same_cropped_dims:
@@ -409,7 +432,7 @@ def _sort_panels_by_resize_priority(context: LayoutFlowContext[FrameT]) -> list[
         i, (key, panel) = el
 
         def _shortest_panel_if_resizable() -> int | float:
-            if key not in context.no_resize_panel_keys:
+            if key in context.keys_of_resizable_panels:
                 if panel.frame.fixed_height:
                     return panel.frame.crop_height(panel.dims.height, ignore_fixed_dims=True)
                 else:
@@ -417,7 +440,7 @@ def _sort_panels_by_resize_priority(context: LayoutFlowContext[FrameT]) -> list[
             return float('inf')
 
         def _panel_with_widest_frame_if_resizable() -> int | float:
-            if key not in context.no_resize_panel_keys and has_width(panel.frame.dims):
+            if key in context.keys_of_resizable_panels and has_width(panel.frame.dims):
                 return -panel.frame.dims.width
 
             return float('inf')
