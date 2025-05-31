@@ -50,9 +50,9 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
         from omnipy.data._display.panel.layout import Layout
 
         if isinstance(self.content, Layout):
-            from omnipy.data._display.panel.flow import flow_layout_subpanels_inside_frame
+            from omnipy.data._display.panel.flow import reflow_layout_to_fit_frame
             layout_panel = cast('DraftPanel[Layout, FrameT]', self)
-            return flow_layout_subpanels_inside_frame(layout_panel)
+            return reflow_layout_to_fit_frame(layout_panel)
         else:
             from omnipy.data._display.panel.pretty import pretty_repr_of_draft_output
             return pretty_repr_of_draft_output(self)
