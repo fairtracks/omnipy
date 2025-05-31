@@ -391,7 +391,7 @@ def _determine_panel_priority(outer_context: OuterLayoutResizeContext[FrameT]) -
     ) -> tuple[int | float, int | float, int, int]:
         i, (key, panel) = el
 
-        def _largest_panel_height_if_resizable() -> int | float:
+        def _shortest_panel_if_resizable() -> int | float:
             if key not in outer_context.no_resize_panel_keys:
                 if panel.frame.fixed_height:
                     return panel.frame.crop_height(panel.dims.height, ignore_fixed_dims=True)
@@ -399,22 +399,22 @@ def _determine_panel_priority(outer_context: OuterLayoutResizeContext[FrameT]) -
                     return panel.dims.height
             return float('inf')
 
-        def _smallest_panel_frame_width_if_resizable() -> int | float:
+        def _panel_with_widest_frame_if_resizable() -> int | float:
             if key not in outer_context.no_resize_panel_keys and has_width(panel.frame.dims):
                 return -panel.frame.dims.width
 
-            return -float('inf')
+            return float('inf')
 
-        def _smallest_cropped_width() -> int:
+        def _widest_panel() -> int:
             return -panel.cropped_dims.width
 
         def _last_index() -> int:
             return -i
 
         return (
-            _largest_panel_height_if_resizable(),
-            _smallest_panel_frame_width_if_resizable(),
-            _smallest_cropped_width(),
+            _shortest_panel_if_resizable(),
+            _panel_with_widest_frame_if_resizable(),
+            _widest_panel(),
             _last_index(),
         )
 
