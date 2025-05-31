@@ -21,6 +21,24 @@ import omnipy.util._pydantic as pyd
 def reflow_layout_to_fit_frame(
         input_layout_panel: DraftPanel[Layout[DraftPanel],
                                        FrameT]) -> ResizedLayoutDraftPanel[FrameT]:
+    """
+    Adjust a panel layout to fit within its frame constraints. Currently only handles layouts with
+    a single row of panels.
+
+    This function performs several operations in sequence:
+    1. Distributes available width among panels
+    2. Sets panel heights based on frame constraints
+    3. Optimizes panel widths to match content
+    4. Resizes panels to fit within frame width
+    5. Widens panels whose titles need more space
+
+    Parameters:
+        input_layout_panel: Original draft panel containing a layout
+
+    Returns:
+        ResizedLayoutDraftPanel: Layout with optimized panel dimensions
+    """
+
     if has_width(input_layout_panel.frame.dims):
         # Calculate widths for panels without pre-defined width
         draft_layout = _create_layout_with_distributed_widths(input_layout_panel)
@@ -432,9 +450,12 @@ def _set_panel_heights(
     """
     frame = outer_context.frame
 
+    layout_design = outer_context.input_layout_panel.config.layout_design
+    layout_design_dims = LayoutDesignDims.create(layout_design)
+
     per_panel_height = None
     if has_height(frame.dims):
-        per_panel_height = max(frame.dims.height - 2, 0)
+        per_panel_height = max(frame.dims.height - layout_design_dims.extra_vertical_chars(1), 0)
 
     for key, panel in outer_context.dim_aware_layout.items():
         should_use_panel_original_height = (per_panel_height is None or panel.frame.fixed_height)

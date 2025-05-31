@@ -186,9 +186,6 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
     def title_height(self) -> int:
         return min(self._max_title_height, len(self.resized_title))
 
-    def calc_panel_title_height(self,) -> int:
-        return min(self._max_title_height, len(self.resized_title))
-
     @cached_property
     def title_height_with_blank_lines(self) -> int:
         return self.title_height + self.TITLE_BLANK_LINES if self.title_height > 0 else 0
