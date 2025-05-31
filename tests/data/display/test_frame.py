@@ -234,3 +234,83 @@ def test_frame_modified_copy() -> None:
     assert frame.dims == Dimensions(10, 20)
     assert frame.fixed_width is False
     assert frame.fixed_height is True
+
+
+def test_cropped_dims() -> None:
+    # No dimensions defined
+    frame: AnyFrame = Frame(Dimensions(None, None), fixed_width=False, fixed_height=False)
+
+    assert frame.crop_width(11) == 11
+    assert frame.crop_width(10) == 10
+    assert frame.crop_width(9) == 9
+
+    assert frame.crop_height(21) == 21
+    assert frame.crop_height(20) == 20
+    assert frame.crop_height(19) == 19
+
+    assert frame.crop_dims(Dimensions(11, 21)) == Dimensions(11, 21)
+    assert frame.crop_dims(Dimensions(10, 20)) == Dimensions(10, 20)
+    assert frame.crop_dims(Dimensions(9, 19)) == Dimensions(9, 19)
+
+    # Both dimensions defined
+    frame = Frame(Dimensions(10, 20), fixed_width=False, fixed_height=False)
+
+    assert frame.crop_width(11) == 10
+    assert frame.crop_width(10) == 10
+    assert frame.crop_width(9) == 9
+
+    assert frame.crop_height(21) == 20
+    assert frame.crop_height(20) == 20
+    assert frame.crop_height(19) == 19
+
+    assert frame.crop_dims(Dimensions(11, 21)) == Dimensions(10, 20)
+    assert frame.crop_dims(Dimensions(10, 20)) == Dimensions(10, 20)
+    assert frame.crop_dims(Dimensions(9, 19)) == Dimensions(9, 19)
+
+    # Fixed width
+    frame = Frame(Dimensions(10, None), fixed_width=True, fixed_height=False)
+
+    assert frame.crop_width(11) == 10
+    assert frame.crop_width(11, ignore_fixed_dims=True) == 10
+    assert frame.crop_width(10) == 10
+    assert frame.crop_width(10, ignore_fixed_dims=True) == 10
+    assert frame.crop_width(9) == 10
+    assert frame.crop_width(9, ignore_fixed_dims=True) == 9
+
+    assert frame.crop_height(21) == 21
+    assert frame.crop_height(21, ignore_fixed_dims=True) == 21
+    assert frame.crop_height(20) == 20
+    assert frame.crop_height(20, ignore_fixed_dims=True) == 20
+    assert frame.crop_height(19) == 19
+    assert frame.crop_height(19, ignore_fixed_dims=True) == 19
+
+    assert frame.crop_dims(Dimensions(11, 21)) == Dimensions(10, 21)
+    assert frame.crop_dims(Dimensions(11, 21), ignore_fixed_dims=True) == Dimensions(10, 21)
+    assert frame.crop_dims(Dimensions(10, 20)) == Dimensions(10, 20)
+    assert frame.crop_dims(Dimensions(10, 20), ignore_fixed_dims=True) == Dimensions(10, 20)
+    assert frame.crop_dims(Dimensions(9, 19)) == Dimensions(10, 19)
+    assert frame.crop_dims(Dimensions(9, 19), ignore_fixed_dims=True) == Dimensions(9, 19)
+
+    # Fixed height
+    frame = Frame(Dimensions(None, 20), fixed_width=False, fixed_height=True)
+
+    assert frame.crop_width(11) == 11
+    assert frame.crop_width(11, ignore_fixed_dims=True) == 11
+    assert frame.crop_width(10) == 10
+    assert frame.crop_width(10, ignore_fixed_dims=True) == 10
+    assert frame.crop_width(9) == 9
+    assert frame.crop_width(9, ignore_fixed_dims=True) == 9
+
+    assert frame.crop_height(21) == 20
+    assert frame.crop_height(21, ignore_fixed_dims=True) == 20
+    assert frame.crop_height(20) == 20
+    assert frame.crop_height(20, ignore_fixed_dims=True) == 20
+    assert frame.crop_height(19) == 20
+    assert frame.crop_height(19, ignore_fixed_dims=True) == 19
+
+    assert frame.crop_dims(Dimensions(11, 21)) == Dimensions(11, 20)
+    assert frame.crop_dims(Dimensions(11, 21), ignore_fixed_dims=True) == Dimensions(11, 20)
+    assert frame.crop_dims(Dimensions(10, 20)) == Dimensions(10, 20)
+    assert frame.crop_dims(Dimensions(10, 20), ignore_fixed_dims=True) == Dimensions(10, 20)
+    assert frame.crop_dims(Dimensions(9, 19)) == Dimensions(9, 20)
+    assert frame.crop_dims(Dimensions(9, 19), ignore_fixed_dims=True) == Dimensions(9, 19)

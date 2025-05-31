@@ -255,10 +255,12 @@ class InnerPanelResizeContext:
         if delta_width:
             frame_width = self.dim_aware_panel.cropped_dims.width
             frame_width_delta = (-1) if delta_width > 0 else -delta_width
-            self.frame_width = max(frame_width + frame_width_delta, outer_context.min_frame_width)
+            frame_width = max(frame_width + frame_width_delta, outer_context.min_frame_width)
 
-            if self.draft_panel.frame.fixed_width and has_width(self.draft_panel.frame.dims):
-                self.frame_width = min(frame_width, self.draft_panel.frame.dims.width)
+            if self.draft_panel.frame.fixed_width:
+                frame_width = self.draft_panel.frame.crop_width(frame_width, ignore_fixed_dims=True)
+
+            self.frame_width = frame_width
 
     @cached_property
     def new_panel_frame(self):
@@ -351,8 +353,8 @@ def _determine_panel_priority(outer_context: OuterLayoutResizeContext[FrameT]) -
 
         def _largest_panel_height_if_resizable() -> int | float:
             if key not in outer_context.no_resize_panel_keys:
-                if (has_height(panel.frame.dims) and panel.frame.fixed_height):
-                    return min(panel.frame.dims.height, panel.dims.height)
+                if panel.frame.fixed_height:
+                    return panel.frame.crop_height(panel.dims.height, ignore_fixed_dims=True)
                 else:
                     return panel.dims.height
             return float('inf')
@@ -460,7 +462,7 @@ def _tighten_panel_widths(
             continue
 
         # Calculate new optimal width
-        new_frame = panel.frame.modified_copy(width=min(panel.frame.dims.width, panel.dims.width))
+        new_frame = panel.frame.modified_copy(width=panel.frame.crop_width(panel.dims.width))
 
         # Only update panel if frame dimensions changed
         if new_frame != panel.frame:

@@ -7,8 +7,7 @@ from typing_extensions import TypeIs, TypeVar
 from omnipy.data._display.dimensions import (Dimensions,
                                              DimensionsFit,
                                              DimensionsWithWidthAndHeight,
-                                             has_height,
-                                             has_width)
+                                             has_height)
 from omnipy.data._display.frame import AnyFrame, empty_frame, Frame
 from omnipy.data._display.helpers import soft_wrap_words
 import omnipy.util._pydantic as pyd
@@ -78,29 +77,6 @@ def panel_is_fully_rendered(panel: 'Panel') -> TypeIs['FullyRenderedPanel']:
     return isinstance(panel, FullyRenderedPanel)
 
 
-def cropped_dims(
-    dims: DimensionsWithWidthAndHeight,
-    frame: AnyFrame,
-) -> DimensionsWithWidthAndHeight:
-    if has_width(frame.dims):
-        if frame.fixed_width:
-            cropped_width = frame.dims.width
-        else:
-            cropped_width = min(frame.dims.width, dims.width)
-    else:
-        cropped_width = dims.width
-
-    if has_height(frame.dims):
-        if frame.fixed_height:
-            cropped_height = frame.dims.height
-        else:
-            cropped_height = min(frame.dims.height, dims.height)
-    else:
-        cropped_height = dims.height
-
-    return Dimensions(width=cropped_width, height=cropped_height)
-
-
 class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
     TITLE_BLANK_LINES = 1
     DOUBLE_LINE_TITLE_HEIGHT = TITLE_BLANK_LINES + 2
@@ -120,7 +96,7 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
         Returns the dimensions of the panel, cropped to fit within the
         frame dimensions.
         """
-        return cropped_dims(self.dims, self.frame)
+        return self.frame.crop_dims(self.dims)
 
     @cached_property
     def outer_dims(self) -> DimensionsWithWidthAndHeight:
@@ -134,9 +110,8 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
         else:
             dims_width = self.cropped_dims.width
 
-        dims_height = (self.cropped_dims.height + self.title_height_with_blank_lines)
-        if has_height(self.frame.dims):
-            dims_height = min(self.frame.dims.height, dims_height)
+        dims_height_with_title = self.cropped_dims.height + self.title_height_with_blank_lines
+        dims_height = self.frame.crop_height(dims_height_with_title, ignore_fixed_dims=True)
 
         return Dimensions(width=dims_width, height=dims_height)
 
@@ -192,10 +167,7 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
         if self.title == '':
             return []
         else:
-            if has_width(self.frame.dims):
-                title_width = min(self.dims.width, self.frame.dims.width)
-            else:
-                title_width = self.dims.width
+            title_width = self.frame.crop_width(self.dims.width, ignore_fixed_dims=True)
 
             title_words = self.title.split()
             while True:

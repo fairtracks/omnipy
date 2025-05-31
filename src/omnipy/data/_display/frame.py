@@ -1,8 +1,9 @@
-from typing import Generic
+from typing import cast, Generic
 
 from typing_extensions import TypeIs
 
 from omnipy.data._display.dimensions import (Dimensions,
+                                             DimensionsWithWidthAndHeight,
                                              has_height,
                                              has_width,
                                              has_width_and_height,
@@ -91,6 +92,51 @@ class Frame(Generic[WidthT, HeightT]):
 
         # Create new frame with updated values
         return Frame(dims=new_dims, fixed_width=fixed_width, fixed_height=fixed_height)
+
+    def _crop_dims(
+        self,
+        value: pyd.NonNegativeInt,
+        dim_attr: str,
+        fixed_dim_attr: str,
+        ignore_fixed_dims: bool,
+    ) -> pyd.NonNegativeInt:
+        frame_dim = cast(pyd.NonNegativeInt | None, getattr(self.dims, dim_attr))
+        fixed_dim = cast(bool, getattr(self, fixed_dim_attr))
+
+        if frame_dim is not None:
+            if fixed_dim and not ignore_fixed_dims:
+                return frame_dim
+            else:
+                return min(frame_dim, value)
+        else:
+            return value
+
+    def crop_width(
+        self,
+        width: pyd.NonNegativeInt,
+        ignore_fixed_dims=False,
+    ) -> pyd.NonNegativeInt:
+        """Crop the frame's width to the specified value."""
+        return self._crop_dims(width, 'width', 'fixed_width', ignore_fixed_dims)
+
+    def crop_height(
+        self,
+        height: pyd.NonNegativeInt,
+        ignore_fixed_dims=False,
+    ) -> pyd.NonNegativeInt:
+        """Crop the frame's width to the specified value."""
+        return self._crop_dims(height, 'height', 'fixed_height', ignore_fixed_dims)
+
+    def crop_dims(
+        self,
+        dims: DimensionsWithWidthAndHeight,
+        ignore_fixed_dims=False,
+    ) -> DimensionsWithWidthAndHeight:
+        """Crop the frame's dimensions to the specified values."""
+        return Dimensions(
+            width=self.crop_width(dims.width, ignore_fixed_dims),
+            height=self.crop_height(dims.height, ignore_fixed_dims),
+        )
 
 
 def empty_frame() -> Frame[None, None]:

@@ -18,7 +18,7 @@ from typing_extensions import override, TypeVar
 
 from omnipy.data._display.config import ConsoleColorSystem, HorizontalOverflowMode
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
-from omnipy.data._display.panel.base import cropped_dims, FullyRenderedPanel, OutputVariant
+from omnipy.data._display.panel.base import FullyRenderedPanel, OutputVariant
 from omnipy.data._display.panel.draft.base import ContentT, FrameT
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 import omnipy.util._pydantic as pyd
@@ -102,7 +102,7 @@ class StylizedMonospacedPanel(
     @cached_property
     def _console_dimensions(self) -> DimensionsWithWidthAndHeight:
         input_panel_dims = self.input_panel_cropped_dims
-        return self._apply_console_newline_hack(cropped_dims(input_panel_dims, self.frame))
+        return self._apply_console_newline_hack(self.frame.crop_dims(input_panel_dims))
 
     def _apply_console_newline_hack(
             self, console_dims: DimensionsWithWidthAndHeight) -> DimensionsWithWidthAndHeight:
