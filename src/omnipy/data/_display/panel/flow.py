@@ -18,6 +18,35 @@ from omnipy.data._display.panel.layout import Layout, LayoutDesignDims
 import omnipy.util._pydantic as pyd
 
 
+def reflow_layout_to_fit_frame(
+        input_layout_panel: DraftPanel[Layout[DraftPanel],
+                                       FrameT]) -> ResizedLayoutDraftPanel[FrameT]:
+    if has_width(input_layout_panel.frame.dims):
+        # Calculate widths for panels without pre-defined width
+        draft_layout = _create_layout_with_distributed_widths(input_layout_panel)
+    else:
+        # If frame has no width, no width distribution is needed
+        draft_layout = input_layout_panel.content
+
+    outer_context = OuterLayoutResizeContext(input_layout_panel, draft_layout)
+
+    outer_context = _set_panel_heights(outer_context)
+    outer_context = _tighten_panel_widths(outer_context)
+
+    if has_width(outer_context.frame.dims):
+        outer_context = _resize_inner_panels(outer_context)
+        outer_context = _tighten_panel_widths(outer_context)
+
+        # TODO: In case outer frame is fixed width and wider than the outer
+        #       panel dimensions, we need to expand the inner panels with
+        #       flexible frame width, distributing the extra width among
+        #       them.
+
+        outer_context = _widen_inner_panels_to_make_room_for_titles(outer_context)
+
+    return outer_context.resized_panel
+
+
 def _create_layout_with_distributed_widths(
         layout_panel: DraftPanel[Layout[DraftPanel], FrameT]) -> Layout[DraftPanel]:
     """
@@ -30,7 +59,7 @@ def _create_layout_with_distributed_widths(
     draft_layout: Layout[DraftPanel] = Layout()
 
     # Calculate per-panel width for panels without pre-set width
-    per_panel_width = _calculate_per_panel_width(
+    per_panel_width = _calc_per_unset_panel_width(
         layout_panel.content,
         frame_dims.width,
         layout_panel.config.layout_design,
@@ -48,7 +77,7 @@ def _create_layout_with_distributed_widths(
     return draft_layout
 
 
-def _calculate_per_panel_width(
+def _calc_per_unset_panel_width(
     layout: Layout,
     frame_width: int | None,
     layout_design: LayoutDesign,
@@ -75,7 +104,7 @@ def _calculate_per_panel_width(
 
     preset_width += layout_design_dims.horizontal_end_chars
 
-    # Calculate width for unset panels
+    # Calculate width per unset panel
     num_unset_panels = len(width_unset_panels)
     if num_unset_panels > 0:
         available_width = frame_width - preset_width
@@ -273,35 +302,6 @@ class InnerPanelResizeContext:
     @cached_property
     def same_cropped_dims(self) -> bool:
         return self.prev_cropped_dims == self.new_cropped_dims
-
-
-def reflow_layout_to_fit_frame(
-        input_layout_panel: DraftPanel[Layout[DraftPanel],
-                                       FrameT]) -> ResizedLayoutDraftPanel[FrameT]:
-    if has_width(input_layout_panel.frame.dims):
-        # Calculate widths for panels without pre-defined width
-        draft_layout = _create_layout_with_distributed_widths(input_layout_panel)
-    else:
-        # If frame has no width, no width distribution is needed
-        draft_layout = input_layout_panel.content
-
-    outer_context = OuterLayoutResizeContext(input_layout_panel, draft_layout)
-
-    outer_context = _set_panel_heights(outer_context)
-    outer_context = _tighten_panel_widths(outer_context)
-
-    if has_width(outer_context.frame.dims):
-        outer_context = _resize_inner_panels(outer_context)
-        outer_context = _tighten_panel_widths(outer_context)
-
-        # TODO: In case outer frame is fixed width and wider than the outer
-        #       panel dimensions, we need to expand the inner panels with
-        #       flexible frame width, distributing the extra width among
-        #       them.
-
-        outer_context = _widen_inner_panels_to_make_room_for_titles(outer_context)
-
-    return outer_context.resized_panel
 
 
 def _resize_inner_panels(outer_context):
