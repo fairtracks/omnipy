@@ -46,23 +46,23 @@ def reflow_layout_to_fit_frame(
         # If frame has no width, no width distribution is needed
         draft_layout = input_layout_panel.content
 
-    outer_context = OuterLayoutResizeContext(input_layout_panel, draft_layout)
+    context = LayoutFlowContext(input_layout_panel, draft_layout)
 
-    outer_context = _set_panel_heights(outer_context)
-    outer_context = _tighten_panel_widths(outer_context)
+    context = _set_panel_heights(context)
+    context = _tighten_panel_widths(context)
 
-    if has_width(outer_context.frame.dims):
-        outer_context = _resize_inner_panels(outer_context)
-        outer_context = _tighten_panel_widths(outer_context)
+    if has_width(context.frame.dims):
+        context = _resize_inner_panels(context)
+        context = _tighten_panel_widths(context)
 
         # TODO: In case outer frame is fixed width and wider than the outer
         #       panel dimensions, we need to expand the inner panels with
         #       flexible frame width, distributing the extra width among
         #       them.
 
-        outer_context = _widen_inner_panels_to_make_room_for_titles(outer_context)
+        context = _widen_inner_panels_to_make_room_for_titles(context)
 
-    return outer_context.resized_panel
+    return context.resized_panel  # pyright: ignore [reportReturnType]
 
 
 def _create_layout_with_distributed_widths(
@@ -155,7 +155,7 @@ def _determine_panel_width(panel: DraftPanel,
 
 
 @dataclass(init=False)
-class OuterLayoutResizeContext(Generic[FrameT]):
+class LayoutFlowContext(Generic[FrameT]):
     """Context for the layout resizing process."""
     input_layout_panel: DraftPanel[Layout[DraftPanel], FrameT]
     draft_layout: Layout[DraftPanel]
@@ -199,12 +199,12 @@ class OuterLayoutResizeContext(Generic[FrameT]):
         else:
             self.no_resize_panel_keys = no_resize_panel_keys
 
-    def copy(self) -> 'OuterLayoutResizeContext[FrameT]':
+    def copy(self) -> 'LayoutFlowContext[FrameT]':
         """
         Create a copy of the context, with a deep copy of changeable members (dim_aware_layout
         and no_resize_panel_keys).
         """
-        return OuterLayoutResizeContext(
+        return LayoutFlowContext(
             input_layout_panel=self.input_layout_panel,
             draft_layout=self.draft_layout,
             dim_aware_layout=self.dim_aware_layout.copy(),
@@ -269,14 +269,14 @@ class OuterLayoutResizeContext(Generic[FrameT]):
         else:
             return 1
 
-    def changed_since(self, prev_context: 'OuterLayoutResizeContext') -> bool:
+    def changed_since(self, prev_context: 'LayoutFlowContext') -> bool:
         """Check if the layout dimensions or set of resizable panels have changed."""
         return not (self.layout_dims == prev_context.layout_dims
                     and self.no_resize_panel_keys == prev_context.no_resize_panel_keys)
 
 
 @dataclass
-class InnerPanelResizeContext:
+class PanelResizeHelper:
     draft_panel: DraftPanel
     dim_aware_panel: DimensionsAwareDraftPanel
     frame_width: pyd.NonNegativeInt | None = None
@@ -289,11 +289,11 @@ class InnerPanelResizeContext:
     def adjust_frame_width(
         self,
         frame_width_delta: int,
-        outer_context: OuterLayoutResizeContext,
+        context: LayoutFlowContext,
     ) -> None:
         frame_width = max(
             self.dim_aware_panel.cropped_dims.width + frame_width_delta,
-            outer_context.min_frame_width,
+            context.min_frame_width,
         )
 
         if self.draft_panel.frame.fixed_width:
@@ -302,7 +302,18 @@ class InnerPanelResizeContext:
         self.frame_width = frame_width
 
     @cached_property
-    def new_panel_frame(self):
+    def orig_frame(self) -> AnyFrame:
+        """
+        Returns the original frame of the draft panel.
+        """
+        return self.draft_panel.frame
+
+    @cached_property
+    def new_frame(self) -> AnyFrame:
+        """
+        Returns a new frame for the draft panel, according to any
+        adjustments made to the original frame width and height.
+        """
         return self.draft_panel.frame.modified_copy(
             width=self.frame_width,
             height=self.frame_height,
@@ -310,10 +321,17 @@ class InnerPanelResizeContext:
         )
 
     @cached_property
+    def frame_changed(self) -> bool:
+        """
+        Returns whether the frame has changed from the original frame.
+        """
+        return self.new_frame != self.orig_frame
+
+    @cached_property
     def new_resized_panel(self) -> DimensionsAwareDraftPanel:
-        return _create_new_resized_panel(
+        return _create_panel_with_updated_frame(
             self.draft_panel,
-            self.new_panel_frame,
+            self.new_frame,
         )
 
     @cached_property
@@ -324,19 +342,19 @@ class InnerPanelResizeContext:
     def new_cropped_dims(self) -> DimensionsWithWidthAndHeight:
         return self.new_resized_panel.cropped_dims
 
-    def update_resizable_panels(self, key: str, outer_context: OuterLayoutResizeContext) -> bool:
-        if key not in outer_context.no_resize_panel_keys:
+    def update_resizable_panels(self, key: str, context: LayoutFlowContext) -> bool:
+        if key not in context.no_resize_panel_keys:
             prev_frame_dims = self.dim_aware_panel.frame.dims
-            if outer_context.too_wide_panel \
+            if context.too_wide_panel \
                     and self.new_resized_panel.dims.width == self.dim_aware_panel.dims.width:
-                if has_width(self.new_panel_frame.dims) and \
+                if has_width(self.new_frame.dims) and \
                         has_width(prev_frame_dims) and \
-                        self.new_panel_frame.dims.width < prev_frame_dims.width:
-                    outer_context.no_resize_panel_keys.add(key)
+                        self.new_frame.dims.width < prev_frame_dims.width:
+                    context.no_resize_panel_keys.add(key)
                     return True
         else:
             if self.new_cropped_dims.width > self.prev_cropped_dims.width:
-                outer_context.no_resize_panel_keys.remove(key)
+                context.no_resize_panel_keys.remove(key)
 
         return False
 
@@ -345,54 +363,53 @@ class InnerPanelResizeContext:
         return self.prev_cropped_dims == self.new_cropped_dims
 
 
-def _resize_inner_panels(outer_context):
+def _resize_inner_panels(context: LayoutFlowContext):
     while True:
-        if outer_context.panel_width_ok:
+        if context.panel_width_ok:
             break
 
-        prev_outer_context = outer_context.copy()
+        prev_context = context.copy()
 
-        panel_priority = _determine_panel_priority(outer_context)
+        panel_priority = _sort_panels_by_resize_priority(context)
 
         for key in panel_priority:
-            inner_context = InnerPanelResizeContext(
-                draft_panel=outer_context.input_layout_panel.content[key],
-                dim_aware_panel=outer_context.dim_aware_layout[key],
+            resize_helper = PanelResizeHelper(
+                draft_panel=context.input_layout_panel.content[key],
+                dim_aware_panel=context.dim_aware_layout[key],
             )
 
-            if outer_context.extra_width_available:
-                frame_width_delta = outer_context.extra_width
+            if context.extra_width_available:
+                frame_width_delta = context.extra_width
             else:
                 # If no extra width is available, reduce frame width by 1.
                 frame_width_delta = -1
 
-            inner_context.adjust_frame_width(frame_width_delta, outer_context)
+            resize_helper.adjust_frame_width(frame_width_delta, context)
 
-            if inner_context.new_panel_frame != inner_context.dim_aware_panel.frame \
-                    and inner_context.draft_panel.frame.fixed_width is not True:
+            if resize_helper.frame_changed and resize_helper.orig_frame.fixed_width is not True:
 
-                if inner_context.update_resizable_panels(key, outer_context):
+                if resize_helper.update_resizable_panels(key, context):
                     break
 
-                if inner_context.same_cropped_dims:
+                if resize_helper.same_cropped_dims:
                     continue
 
-                outer_context.dim_aware_layout[key] = inner_context.new_resized_panel
+                context.dim_aware_layout[key] = resize_helper.new_resized_panel
                 break
 
-        if not outer_context.changed_since(prev_outer_context):
+        if not context.changed_since(prev_context):
             break
-    return outer_context
+    return context
 
 
-def _determine_panel_priority(outer_context: OuterLayoutResizeContext[FrameT]) -> list[str]:
+def _sort_panels_by_resize_priority(context: LayoutFlowContext[FrameT]) -> list[str]:
     def _priority(
         el: tuple[int, tuple[str, DimensionsAwarePanel[AnyFrame]]]
     ) -> tuple[int | float, int | float, int, int]:
         i, (key, panel) = el
 
         def _shortest_panel_if_resizable() -> int | float:
-            if key not in outer_context.no_resize_panel_keys:
+            if key not in context.no_resize_panel_keys:
                 if panel.frame.fixed_height:
                     return panel.frame.crop_height(panel.dims.height, ignore_fixed_dims=True)
                 else:
@@ -400,7 +417,7 @@ def _determine_panel_priority(outer_context: OuterLayoutResizeContext[FrameT]) -
             return float('inf')
 
         def _panel_with_widest_frame_if_resizable() -> int | float:
-            if key not in outer_context.no_resize_panel_keys and has_width(panel.frame.dims):
+            if key not in context.no_resize_panel_keys and has_width(panel.frame.dims):
                 return -panel.frame.dims.width
 
             return float('inf')
@@ -420,20 +437,20 @@ def _determine_panel_priority(outer_context: OuterLayoutResizeContext[FrameT]) -
 
     panel_priority = [
         key for _i, (key, _panel) in sorted(
-            enumerate(outer_context.dim_aware_layout.items()), key=_priority,
-            reverse=outer_context.extra_width_available)
+            enumerate(context.dim_aware_layout.items()), key=_priority,
+            reverse=context.extra_width_available)
     ]
 
-    # print(f'outer_context._delta_width: {outer_context._delta_width}')
+    # print(f'context._delta_width: {context._delta_width}')
     # print(f'panel_priority: {panel_priority}')
-    # for i, (key, panel) in enumerate(outer_context.dim_aware_layout.items()):
+    # for i, (key, panel) in enumerate(context.dim_aware_layout.items()):
     #     print(f'panel frame: {key}: {panel.frame}')
     #     print(f'_priority(({i}, ({key}, <panel>))): {_priority((i, (key, panel)))}')
 
     return panel_priority
 
 
-def _create_new_resized_panel(
+def _create_panel_with_updated_frame(
     draft_panel_basis: DraftPanel[ContentT, AnyFrame],
     frame: FrameInvT,
 ) -> DimensionsAwareDraftPanel[FrameInvT]:
@@ -462,8 +479,7 @@ def _create_new_resized_panel(
         return cast(DimensionsAwareDraftPanel[FrameInvT], new_draft_panel)
 
 
-def _set_panel_heights(
-        outer_context: OuterLayoutResizeContext[FrameT]) -> OuterLayoutResizeContext[FrameT]:
+def _set_panel_heights(context: LayoutFlowContext[FrameT]) -> LayoutFlowContext[FrameT]:
     """
     Adjust heights of panels in a layout based on the height of the frame,
     if defined.
@@ -472,36 +488,35 @@ def _set_panel_heights(
     the container frame's available height (minus borders). Panels with
     fixed height retain their original height.
     """
-    frame = outer_context.frame
+    frame = context.frame
 
-    layout_design = outer_context.input_layout_panel.config.layout_design
+    layout_design = context.input_layout_panel.config.layout_design
     layout_design_dims = LayoutDesignDims.create(layout_design)
 
     per_panel_height = None
     if has_height(frame.dims):
         per_panel_height = max(frame.dims.height - layout_design_dims.extra_vertical_chars(1), 0)
 
-    for key, panel in outer_context.dim_aware_layout.items():
+    for key, panel in context.dim_aware_layout.items():
         should_use_panel_original_height = (per_panel_height is None or panel.frame.fixed_height)
 
         if not should_use_panel_original_height:
-            outer_context.dim_aware_layout[key] = dataclasses.replace(
+            context.dim_aware_layout[key] = dataclasses.replace(
                 panel,
                 frame=panel.frame.modified_copy(height=per_panel_height,
                                                 fixed_height=False),  # type: ignore[arg-type]
             )
 
-    return outer_context
+    return context
 
 
-def _tighten_panel_widths(
-        outer_context: OuterLayoutResizeContext[FrameT]) -> OuterLayoutResizeContext[FrameT]:
+def _tighten_panel_widths(context: LayoutFlowContext[FrameT]) -> LayoutFlowContext[FrameT]:
     """
     Reduce panel widths to match their frame width, if defined.
 
     Panels with fixed width or without specified frame width are left unchanged.
     """
-    for key, panel in outer_context.dim_aware_layout.items():
+    for key, panel in context.dim_aware_layout.items():
         # Skip panels without frame width or with fixed frame width
         if not has_width(panel.frame.dims) or panel.frame.fixed_width:
             continue
@@ -511,12 +526,12 @@ def _tighten_panel_widths(
 
         # Only update panel if frame dimensions changed
         if new_frame != panel.frame:
-            outer_context.dim_aware_layout[key] = dataclasses.replace(
+            context.dim_aware_layout[key] = dataclasses.replace(
                 panel,
                 frame=new_frame,  # type: ignore[arg-type]
             )
 
-    return outer_context
+    return context
 
 
 class CrampedPanelInfo(NamedTuple):
@@ -525,39 +540,38 @@ class CrampedPanelInfo(NamedTuple):
 
 
 def _widen_inner_panels_to_make_room_for_titles(
-        outer_context: OuterLayoutResizeContext[FrameT]) -> OuterLayoutResizeContext[FrameT]:
+        context: LayoutFlowContext[FrameT]) -> LayoutFlowContext[FrameT]:
     """
     Allocate extra width to panels whose titles are wider than their frames.
 
     Distributes available extra width to panels that need it most (where
     title width exceeds frame width), prioritizing shortest titles first.
     """
-    if not outer_context.extra_width_available:
+    if not context.extra_width_available:
         # No extra width available to distribute
-        return outer_context
+        return context
 
     # Find panels with titles wider than their frames
-    cramped_panels = _identify_cramped_panels(outer_context)
+    cramped_panels = _identify_cramped_panels(context)
     if not cramped_panels:
-        return outer_context
+        return context
 
     # Distribute extra width to cramped panels
-    panel_width_additions = _allocate_extra_width(cramped_panels, outer_context.extra_width)
+    panel_width_additions = _distribute_width_to_cramped_panels(cramped_panels, context.extra_width)
 
     # Apply width additions to panels
-    return _apply_width_additions(outer_context, panel_width_additions)
+    return _apply_width_additions(context, panel_width_additions)
 
 
 def _identify_cramped_panels(
-        outer_context: OuterLayoutResizeContext[FrameT]
-) -> defaultdict[int, list[CrampedPanelInfo]]:
+        context: LayoutFlowContext[FrameT]) -> defaultdict[int, list[CrampedPanelInfo]]:
     """
     Identify panels where title width exceeds flexible frame width and group
     by title width.
     """
     title_width2cramped_panels: defaultdict[int, list[CrampedPanelInfo]] = defaultdict(list)
 
-    for key, panel in outer_context.dim_aware_layout.items():
+    for key, panel in context.dim_aware_layout.items():
         if (panel.title_width > 0 and has_width(panel.frame.dims)
                 and panel.frame.fixed_width is not True
                 and panel.cropped_dims.width < panel.title_width):
@@ -567,7 +581,7 @@ def _identify_cramped_panels(
     return title_width2cramped_panels
 
 
-def _allocate_extra_width(
+def _distribute_width_to_cramped_panels(
     title_width2cramped_panels: defaultdict[int, list[CrampedPanelInfo]],
     extra_width: int,
 ) -> defaultdict[str, int]:
@@ -599,18 +613,18 @@ def _allocate_extra_width(
 
 
 def _apply_width_additions(
-    outer_context: OuterLayoutResizeContext[FrameT],
+    context: LayoutFlowContext[FrameT],
     panel_width_additions: defaultdict[str, int],
-) -> OuterLayoutResizeContext[FrameT]:
+) -> LayoutFlowContext[FrameT]:
     """Apply calculated width additions to designated panels."""
     for key, width_addition in panel_width_additions.items():
-        dim_aware_panel = outer_context.dim_aware_layout[key]
+        dim_aware_panel = context.dim_aware_layout[key]
         panel_width = dim_aware_panel.cropped_dims.width
 
-        outer_context.dim_aware_layout[key] = _create_new_resized_panel(
-            outer_context.draft_layout[key],
+        context.dim_aware_layout[key] = _create_panel_with_updated_frame(
+            context.draft_layout[key],
             dim_aware_panel.frame.modified_copy(
                 width=panel_width + width_addition, fixed_width=False),
         )
 
-    return outer_context
+    return context
