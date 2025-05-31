@@ -26,10 +26,10 @@ def reflow_layout_to_fit_frame(
     a single row of panels.
 
     This function performs several operations in sequence:
-    1. Distributes available width among panels
-    2. Sets panel heights based on frame constraints
-    3. Optimizes panel widths to match content
-    4. Resizes panels to fit within frame width
+    1. Distributes available width among panels, if frame width is defined
+    2. Sets panel heights based on frame height, if defined
+    3. Tightens panel widths if they exceed their frame width
+    4. Iteratively resizes panels to fit within the total frame width
     5. Widens panels whose titles need more space
 
     Parameters:
@@ -442,9 +442,10 @@ def _create_new_resized_panel(
 def _set_panel_heights(
         outer_context: OuterLayoutResizeContext[FrameT]) -> OuterLayoutResizeContext[FrameT]:
     """
-    Adjust heights of panels in a layout based on frame height.
+    Adjust heights of panels in a layout based on the height of the frame,
+    if defined.
 
-    For non-fixed height panels in the layout, sets their height to match
+    For non-fixed-height panels in the layout, sets their height to match
     the container frame's available height (minus borders). Panels with
     fixed height retain their original height.
     """
@@ -473,16 +474,16 @@ def _set_panel_heights(
 def _tighten_panel_widths(
         outer_context: OuterLayoutResizeContext[FrameT]) -> OuterLayoutResizeContext[FrameT]:
     """
-    Reduce panel widths to match their content width when possible.
+    Reduce panel widths to match their frame width, if defined.
 
-    Panels with fixed width or without specified width are left unchanged.
+    Panels with fixed width or without specified frame width are left unchanged.
     """
     for key, panel in outer_context.dim_aware_layout.items():
-        # Skip panels without width or with fixed width constraint
+        # Skip panels without frame width or with fixed frame width
         if not has_width(panel.frame.dims) or panel.frame.fixed_width:
             continue
 
-        # Calculate new optimal width
+        # Calculate new tightened width
         new_frame = panel.frame.modified_copy(width=panel.frame.crop_width(panel.dims.width))
 
         # Only update panel if frame dimensions changed
@@ -503,16 +504,15 @@ class CrampedPanelInfo(NamedTuple):
 def _widen_inner_panels_to_make_room_for_titles(
         outer_context: OuterLayoutResizeContext[FrameT]) -> OuterLayoutResizeContext[FrameT]:
     """
-    Allocate extra width to panels whose titles are wider than their content
-    areas.
+    Allocate extra width to panels whose titles are wider than their frames.
 
     Distributes available extra width to panels that need it most (where
-    title width exceeds content width), prioritizing smallest gaps first.
+    title width exceeds frame width), prioritizing shortest titles first.
     """
     assert outer_context.delta_width is not None
     extra_width = -outer_context.delta_width
 
-    # Find panels with titles wider than content
+    # Find panels with titles wider than their frames
     cramped_panels = _identify_cramped_panels(outer_context)
     if not cramped_panels or extra_width <= 0:
         return outer_context
@@ -528,8 +528,8 @@ def _identify_cramped_panels(
         outer_context: OuterLayoutResizeContext[FrameT]
 ) -> defaultdict[int, list[CrampedPanelInfo]]:
     """
-    Identify panels where title width exceeds content width and group by
-    title width.
+    Identify panels where title width exceeds flexible frame width and group
+    by title width.
     """
     title_width2cramped_panels: defaultdict[int, list[CrampedPanelInfo]] = defaultdict(list)
 
@@ -548,7 +548,7 @@ def _allocate_extra_width(
     extra_width: int,
 ) -> defaultdict[str, int]:
     """
-    Distribute extra width to cramped panels, prioritizing smallest gaps
+    Distribute extra width to cramped panels, prioritizing shortest titles
     first.
     """
     panel_width_additions: defaultdict[str, int] = defaultdict(int)
@@ -578,7 +578,7 @@ def _apply_width_additions(
     outer_context: OuterLayoutResizeContext[FrameT],
     panel_width_additions: defaultdict[str, int],
 ) -> OuterLayoutResizeContext[FrameT]:
-    """Apply calculated width additions to panels that need them."""
+    """Apply calculated width additions to designated panels."""
     for key, width_addition in panel_width_additions.items():
         dim_aware_panel = outer_context.dim_aware_layout[key]
         panel_width = dim_aware_panel.cropped_dims.width
