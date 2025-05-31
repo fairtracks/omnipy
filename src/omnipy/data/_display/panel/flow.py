@@ -18,7 +18,7 @@ from omnipy.data._display.panel.layout import Layout, LayoutDesignDims
 import omnipy.util._pydantic as pyd
 
 
-def reflow_layout_to_fit_frame(
+def optimize_layout_to_fit_frame(
         input_layout_panel: DraftPanel[Layout[DraftPanel],
                                        FrameT]) -> ResizedLayoutDraftPanel[FrameT]:
     """
@@ -77,7 +77,7 @@ def _create_layout_with_distributed_widths(
     draft_layout: Layout[DraftPanel] = Layout()
 
     # Calculate per-panel width for panels without pre-set width
-    per_panel_width = _calc_per_unset_panel_width(
+    per_panel_width = _calculate_per_panel_width_for_panels_without_width(
         layout_panel.content,
         frame_dims.width,
         layout_panel.config.layout_design,
@@ -95,7 +95,7 @@ def _create_layout_with_distributed_widths(
     return draft_layout
 
 
-def _calc_per_unset_panel_width(
+def _calculate_per_panel_width_for_panels_without_width(
     layout: Layout,
     frame_width: int | None,
     layout_design: LayoutDesign,
@@ -190,11 +190,15 @@ class LayoutFlowContext(Generic[FrameT]):
         self,
         keys_of_resizable_panels: set[str] | pyd.UndefinedType,
     ) -> None:
+        def _panel_is_resizable(panel: DraftPanel) -> bool:
+            """Check if panel is eligible for resizing."""
+            return not (draft_panel.frame.fixed_width or panel_is_dimensions_aware(draft_panel))
+
         if isinstance(keys_of_resizable_panels, pyd.UndefinedType):
             self.keys_of_resizable_panels = set()
             # Identify panels that could be resizable.
             for key, draft_panel in self.draft_layout.items():
-                if not (draft_panel.frame.fixed_width or panel_is_dimensions_aware(draft_panel)):
+                if _panel_is_resizable(draft_panel):
                     self.keys_of_resizable_panels.add(key)
         else:
             self.keys_of_resizable_panels = keys_of_resizable_panels
