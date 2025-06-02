@@ -2,18 +2,18 @@ from typing import Annotated
 
 import pytest_cases as pc
 
+from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel
-from omnipy.data._display.panel.layout import Layout
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 import omnipy.util._pydantic as pyd
 
-from .helpers import (apply_frame_variant_to_test_case,
-                      assert_dims_aware_panel,
-                      OutputPropertyType,
-                      PanelFrameVariantTestCase,
-                      PanelOutputTestCase,
-                      prepare_test_case_for_stylized_layout,
-                      strip_all_styling_from_panel_output)
+from ...panel.helpers.case_setup import (apply_frame_variant_to_test_case,
+                                         OutputPropertyType,
+                                         PanelFrameVariantTestCase,
+                                         PanelOutputTestCase,
+                                         prepare_test_case_for_stylized_layout)
+from ...panel.helpers.panel_assert import (assert_dims_aware_panel,
+                                           strip_all_styling_from_panel_output)
 
 
 @pc.parametrize_with_cases(

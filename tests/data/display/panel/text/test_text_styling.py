@@ -12,16 +12,16 @@ from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
+import omnipy.util._pydantic as pyd
 
-from .helpers import (apply_frame_variant_to_test_case,
-                      assert_dims_aware_panel,
-                      FrameVariant,
-                      OutputPropertyType,
-                      PanelFrameVariantTestCase,
-                      PanelOutputTestCase,
-                      strip_all_styling_from_panel_output,
-                      StylizedPanelOutputExpectations,
-                      StylizedPanelTestCaseSetup)
+from ..helpers.case_setup import (apply_frame_variant_to_test_case,
+                                  FrameVariant,
+                                  OutputPropertyType,
+                                  PanelFrameVariantTestCase,
+                                  PanelOutputTestCase,
+                                  StylizedPanelOutputExpectations,
+                                  StylizedPanelTestCaseSetup)
+from ..helpers.panel_assert import assert_dims_aware_panel, strip_all_styling_from_panel_output
 
 
 def test_syntax_stylized_text_panel_init() -> None:
@@ -136,6 +136,8 @@ def test_syntax_stylized_text_panel_basic_dims_and_edge_cases(
         frame_case = apply_frame_variant_to_test_case(case, stylized_stage=True)
     else:
         frame_case = case
+
+    assert not isinstance(case.config, pyd.UndefinedType)
 
     text_panel = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel(case.content, frame=frame_case.frame, config=case.config))

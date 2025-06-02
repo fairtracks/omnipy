@@ -9,13 +9,14 @@ from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
+import omnipy.util._pydantic as pyd
 
-from .helpers import (apply_frame_variant_to_test_case,
-                      assert_dims_aware_panel,
-                      assert_draft_panel_subcls,
-                      assert_next_stage_panel,
-                      PanelFrameVariantTestCase,
-                      PanelOutputTestCase)
+from ..helpers.case_setup import (apply_frame_variant_to_test_case,
+                                  PanelFrameVariantTestCase,
+                                  PanelOutputTestCase)
+from ..helpers.panel_assert import (assert_dims_aware_panel,
+                                    assert_draft_panel_subcls,
+                                    assert_next_stage_panel)
 
 
 def test_reflowed_text_draft_panel_init() -> None:
@@ -113,6 +114,8 @@ def test_reflowed_text_draft_panel_basic_dims_and_edge_cases(
         frame_case = apply_frame_variant_to_test_case(case, stylized_stage=False)
     else:
         frame_case = case
+
+    assert not isinstance(case.config, pyd.UndefinedType)
 
     text_panel = ReflowedTextDraftPanel(
         case.content,

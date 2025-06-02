@@ -8,10 +8,10 @@ from omnipy.data._display.config import (ConsoleColorSystem,
                                          VerticalOverflowMode)
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
-from omnipy.data._display.panel.layout import Layout
+from omnipy.data._display.layout.base import Layout
 
-from ...helpers.classes import MockPanel, MockPanelStage2
-from ..helpers import FrameTestCase, FrameVariant, PanelFrameVariantTestCase
+from ....panel.helpers.case_setup import FrameTestCase, FrameVariant, PanelFrameVariantTestCase
+from ....panel.helpers.mocks import MockPanel, MockPanelStage2
 
 
 @pc.parametrize(
@@ -761,8 +761,8 @@ def case_layout_single_panel_stage_2_fixed_dims(
             exp_resized_dims_only_width=Dimensions(width=7, height=5),
         ),
         # All things being equal, reduce the rightmost panel. Contrast this
-        # with the two-panel case in 'layout_basics.py', where the
-        # leftmost panel is reduced first, as that case skips over layout
+        # with the two-panel case in 'panel/cases/layout_basics.py', where
+        # theleftmost panel is reduced first, as that case skips over layout
         # reflow.
         FrameTestCase(
             frame=Frame(Dimensions(width=6, height=3)),

@@ -6,7 +6,7 @@ from omnipy.data._display.config import HorizontalOverflowMode, OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
 
-from ..helpers import FrameTestCase, FrameVariant, PanelFrameVariantTestCase
+from ...helpers.case_setup import FrameTestCase, FrameVariant, PanelFrameVariantTestCase
 
 
 @pc.parametrize(

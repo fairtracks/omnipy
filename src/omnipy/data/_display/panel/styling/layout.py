@@ -14,6 +14,9 @@ from typing_extensions import override
 from omnipy.data._display.config import ConsoleColorSystem, LayoutDesign
 from omnipy.data._display.dimensions import has_height, has_width
 from omnipy.data._display.frame import AnyFrame
+from omnipy.data._display.layout.base import (DimensionsAwarePanelLayoutMixin,
+                                              Layout,
+                                              LayoutDesignDims)
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              FrameInvT,
                                              FullyRenderedPanel,
@@ -26,9 +29,6 @@ from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_st
                                                 calculate_fg_color_from_color_style,
                                                 ForceAutodetect,
                                                 get_token_style_from_color_style)
-from omnipy.data._display.panel.layout import (DimensionsAwarePanelLayoutMixin,
-                                               Layout,
-                                               LayoutDesignDims)
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingOutputVariant
 from omnipy.util import _pydantic as pyd

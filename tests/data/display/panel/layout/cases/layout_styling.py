@@ -3,8 +3,6 @@ from typing import Annotated
 
 import pytest_cases as pc
 
-from data.display.helpers.classes import MockPanel
-from data.display.panel.cases.text_styling import _fill_html_page_template, _fill_html_tag_template
 from omnipy.data._display.config import (ConsoleColorSystem,
                                          DarkHighContrastColorStyles,
                                          HorizontalOverflowMode,
@@ -12,11 +10,13 @@ from omnipy.data._display.config import (ConsoleColorSystem,
                                          RecommendedColorStyles)
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.data._display.panel.layout import Layout
+from omnipy.data._display.layout.base import Layout
 
-from ..helpers import (OutputPropertyType,
-                       StylizedPanelOutputExpectations,
-                       StylizedPanelTestCaseSetup)
+from ...helpers.case_setup import (OutputPropertyType,
+                                   StylizedPanelOutputExpectations,
+                                   StylizedPanelTestCaseSetup)
+from ...helpers.mocks import MockPanel
+from ...helpers.panel_assert import fill_html_page_template, fill_html_tag_template
 
 
 @pc.parametrize('transparent_background', [False, True])
@@ -334,7 +334,7 @@ def case_layout_styling_expectations_plain_html_tag(
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-dark-color' | 'no-frame-dark-color-no-bg':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=('╭─────────┬─────────╮\n'
                           '│ Panel_1 │ Panel_2 │\n'
                           '│ Content │ Content │\n'
@@ -342,7 +342,7 @@ def case_layout_styling_expectations_plain_html_tag(
                     case_id=case_id,
                 )
             case 'frame-title-light-color':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=('╭────────────┬──────────────────────────╮\n'
                           '│ True       │ Some longer content here │\n'
                           '│            │                          │\n'
@@ -353,7 +353,7 @@ def case_layout_styling_expectations_plain_html_tag(
                 )
 
             case 'frame-title-light-color-no-bg':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=('╭────────────┬──────────────────────────╮\n'
                           '│ True       │ Some longer content here │\n'
                           '│            │                          │\n'
@@ -365,7 +365,7 @@ def case_layout_styling_expectations_plain_html_tag(
 
             case 'tiny-cropped-table-dark-color' \
                  | 'tiny-cropped-table-dark-color-no-bg':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=('╭┬\n'
                           '╰┴'),
                     case_id=case_id,
@@ -387,7 +387,7 @@ def case_layout_styling_expectations_bw_stylized_html_tag(
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-dark-color' | 'no-frame-dark-color-no-bg':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=('╭─────────┬─────────╮\n'
                           '│ <span style="font-weight: bold">Panel_1</span> '
                           '│ <span style="font-weight: bold">Panel_2</span> │\n'
@@ -398,7 +398,7 @@ def case_layout_styling_expectations_bw_stylized_html_tag(
                 )
 
             case 'frame-title-light-color' | 'frame-title-light-color-no-bg':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=('╭────────────┬──────────────────────────╮\n'
                           '│ <span style="font-weight: bold">True</span>       │ '
                           '<span style="font-weight: bold">Some</span> '
@@ -417,7 +417,7 @@ def case_layout_styling_expectations_bw_stylized_html_tag(
 
             case 'tiny-cropped-table-dark-color' \
                  | 'tiny-cropped-table-dark-color-no-bg':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=('╭┬\n'
                           '╰┴'),
                     case_id=case_id,
@@ -446,7 +446,7 @@ def case_layout_styling_expectations_colorized_html_tag(
 
         match case_id:
             case 'no-frame-dark-color':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=('<span style="color: #d4d2c8; text-decoration-color: #d4d2c8; '
                           'background-color: #1d2331">╭─────────┬─────────╮</span>\n'
                           '<span style="color: #d4d2c8; text-decoration-color: #d4d2c8; '
@@ -476,7 +476,7 @@ def case_layout_styling_expectations_colorized_html_tag(
                 )
 
             case 'no-frame-dark-color-no-bg':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=('<span style="color: #d4d2c8; text-decoration-color: #d4d2c8">'
                           '╭─────────┬─────────╮</span>\n'
                           '<span style="color: #d4d2c8; text-decoration-color: #d4d2c8">│ </span>'
@@ -500,7 +500,7 @@ def case_layout_styling_expectations_colorized_html_tag(
                 )
 
             case 'frame-title-light-color':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=('<span style="color: #53676d; text-decoration-color: #53676d; '
                           'background-color: #fbf3db">'
                           '╭────────────┬──────────────────────────╮</span>\n'
@@ -567,7 +567,7 @@ def case_layout_styling_expectations_colorized_html_tag(
                 )
 
             case 'frame-title-light-color-no-bg':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=('<span style="color: #53676d; text-decoration-color: #53676d">'
                           '╭────────────┬──────────────────────────╮</span>\n'
                           '<span style="color: #53676d; text-decoration-color: #53676d">│ </span>'
@@ -615,7 +615,7 @@ def case_layout_styling_expectations_colorized_html_tag(
                 )
 
             case 'tiny-cropped-table-dark-color':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=('<span style="color: #d4d2c8; text-decoration-color: #d4d2c8; '
                           'background-color: #1d2331">╭┬</span>\n'
                           '<span style="color: #d4d2c8; text-decoration-color: #d4d2c8; '
@@ -625,7 +625,7 @@ def case_layout_styling_expectations_colorized_html_tag(
                 )
 
             case 'tiny-cropped-table-dark-color-no-bg':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=('<span style="color: #d4d2c8; text-decoration-color: #d4d2c8">╭┬</span>\n'
                           '<span style="color: #d4d2c8; text-decoration-color: #d4d2c8">╰┴</span>'),
                     color_style=lightbulb_dark_color_style_no_bg,
@@ -654,7 +654,7 @@ def case_layout_styling_expectations_plain_html_page(
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-dark-color' | 'no-frame-dark-color-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=light_body_style,
                     data=('╭─────────┬─────────╮\n'
                           '│ Panel_1 │ Panel_2 │\n'
@@ -664,7 +664,7 @@ def case_layout_styling_expectations_plain_html_page(
                 )
 
             case 'frame-title-light-color' | 'frame-title-light-color-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=light_body_style,
                     data=('╭────────────┬──────────────────────────╮\n'
                           '│ True       │ Some longer content here │\n'
@@ -677,7 +677,7 @@ def case_layout_styling_expectations_plain_html_page(
 
             case 'tiny-cropped-table-dark-color' \
                  | 'tiny-cropped-table-dark-color-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=light_body_style,
                     data=('╭┬\n'
                           '╰┴'),
@@ -716,7 +716,7 @@ def case_layout_styling_expectations_bw_stylized_html_page(
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-dark-color' | 'no-frame-dark-color-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=bold_style + light_body_style,
                     data=('<span class="r1">╭─────────┬─────────╮</span>\n'
                           '<span class="r1">│ </span><span class="r2">Panel_1</span>'
@@ -730,7 +730,7 @@ def case_layout_styling_expectations_bw_stylized_html_page(
                 )
 
             case 'frame-title-light-color' | 'frame-title-light-color-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=bold_and_italic_style + light_body_style,
                     data=('<span class="r1">╭────────────┬──────────────────────────╮</span>\n'
                           '<span class="r1">│ </span><span class="r2">True</span>'
@@ -757,7 +757,7 @@ def case_layout_styling_expectations_bw_stylized_html_page(
 
             case 'tiny-cropped-table-dark-color' \
                  | 'tiny-cropped-table-dark-color-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=light_body_style,
                     data=('<span class="r1">╭┬</span>\n'
                           '<span class="r1">╰┴</span>'),
@@ -862,21 +862,21 @@ def case_layout_styling_expectations_colorized_html_page(
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-dark-color':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=lightbulb_dark_style_with_bg + lightbulb_dark_bold_style_with_bg
                     + lightbulb_dark_body_style_with_bg,
                     data=no_frame_default_color_exp_output,
                 )
 
             case 'no-frame-dark-color-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=lightbulb_dark_style_no_bg + lightbulb_dark_bold_style_no_bg
                     + lightbulb_dark_body_style_no_bg,
                     data=no_frame_default_color_exp_output,
                 )
 
             case 'frame-title-light-color':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=omnipy_selenized_light_style_with_bg
                     + omnipy_selenized_light_body_style_with_bg,
                     data=frame_title_light_color_exp_output,
@@ -884,7 +884,7 @@ def case_layout_styling_expectations_colorized_html_page(
                 )
 
             case 'frame-title-light-color-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=omnipy_selenized_light_style_no_bg
                     + omnipy_selenized_light_body_style_no_bg,
                     data=frame_title_light_color_exp_output,
@@ -892,14 +892,14 @@ def case_layout_styling_expectations_colorized_html_page(
                 )
 
             case 'tiny-cropped-table-dark-color':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=lightbulb_dark_style_with_bg + lightbulb_dark_body_style_with_bg,
                     data=tiny_cropped_table_dark_color_exp_output,
                     case_id=case_id,
                 )
 
             case 'tiny-cropped-table-dark-color-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=lightbulb_dark_style_no_bg + lightbulb_dark_body_style_no_bg,
                     data=tiny_cropped_table_dark_color_exp_output,
                     case_id=case_id,

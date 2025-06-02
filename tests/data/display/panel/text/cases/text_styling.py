@@ -12,11 +12,12 @@ from omnipy.data._display.config import (ConsoleColorSystem,
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
 
-from ..helpers import (OutputPropertyType,
-                       PanelOutputTestCase,
-                       StylizedPanelOutputExpectations,
-                       StylizedPanelTestCaseSetup,
-                       WithinFrameExp)
+from ...helpers.case_setup import (OutputPropertyType,
+                                   PanelOutputTestCase,
+                                   StylizedPanelOutputExpectations,
+                                   StylizedPanelTestCaseSetup,
+                                   WithinFrameExp)
+from ...helpers.panel_assert import fill_html_page_template, fill_html_tag_template
 
 
 @pc.case(id='word_wrap_horizontal', tags=['overflow_modes', 'syntax_text'])
@@ -416,65 +417,6 @@ def case_syntax_styling_expectations_colorized_terminal(
     )
 
 
-def _get_font_style_by_case_id(case_id: str | None) -> str:
-    DEFAULT_FONT_STYLE = (
-        "font-family: 'CommitMonoOmnipy', 'Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', "
-        "'monospace'; font-size: 14px; font-weight: 450; line-height: 1.35; ")
-
-    FONT_STYLING_ONLY = 'font-weight: 500; line-height: 1.0; '
-
-    FULL_FONT_CONF = ("font-family: 'monospace'; font-size: 15px; "
-                      'font-weight: 600; line-height: 1.1; ')
-
-    match (case_id):
-        case str(case_id) if 'no-fonts' in case_id:
-            return ''
-        case str(case_id) if 'font-styling-only' in case_id:
-            return FONT_STYLING_ONLY
-        case str(case_id) if 'full-font-conf' in case_id:
-            return FULL_FONT_CONF
-        case _:
-            return DEFAULT_FONT_STYLE
-
-
-def _fill_html_tag_template(data: str, color_style: str = '', case_id: str | None = None) -> str:
-    HTML_TAG_TEMPLATE = ('<pre>'
-                         '<code style="{font_style}{color_style}">'
-                         '{data}\n'
-                         '</code>'
-                         '</pre>')
-
-    return HTML_TAG_TEMPLATE.format(
-        font_style=_get_font_style_by_case_id(case_id),
-        color_style=color_style,
-        data=data,
-    )
-
-
-def _fill_html_page_template(style: str, data: str, case_id: str | None = None) -> str:
-    HTML_PAGE_TEMPLATE = dedent("""\
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="UTF-8">
-            <style>
-              {style}
-            </style>
-          </head>
-          <body>
-            <pre><code style="{font_style}">{data}
-        </code></pre>
-          </body>
-        </html>
-        """)
-
-    return HTML_PAGE_TEMPLATE.format(
-        style=style,
-        font_style=_get_font_style_by_case_id(case_id),
-        data=data,
-    )
-
-
 @pc.case(id='plain-html-tag-output', tags=['expectations', 'syntax_text'])
 def case_syntax_styling_expectations_plain_html_tag(
         plain_html_tag: Annotated[OutputPropertyType,
@@ -489,7 +431,7 @@ def case_syntax_styling_expectations_plain_html_tag(
                  | 'no-frame-light-color-no-fonts-no-bg' \
                  | 'no-frame-light-color-font-styling-only-no-bg' \
                  | 'no-frame-light-color-full-font-conf-no-bg':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data='MyClass({&#x27;abc&#x27;: [123, 234]})',
                     case_id=case_id,
                 )
@@ -499,9 +441,9 @@ def case_syntax_styling_expectations_plain_html_tag(
                  | 'w-frame-dark-color-w-wrap-auto-no-bg' \
                  | 'w-frame-dark-color-w-wrap-256-no-bg' \
                  | 'w-frame-dark-color-w-wrap-truecolor-no-bg':
-                return _fill_html_tag_template(data=('&#x27;abc&#x27;: \n'
-                                                     '[123, \n'
-                                                     '234]})'))
+                return fill_html_tag_template(data=('&#x27;abc&#x27;: \n'
+                                                    '[123, \n'
+                                                    '234]})'))
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
@@ -519,14 +461,14 @@ def case_syntax_styling_expectations_bw_stylized_html_tag(
         match case_id:
             case 'no-frame-default-color' \
                  | 'no-frame-default-color-no-bg':
-                return _fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})')
+                return fill_html_tag_template(data='MyClass({&#x27;abc&#x27;: [123, 234]})')
             case 'no-frame-light-color-no-fonts' \
                  | 'no-frame-light-color-font-styling-only' \
                  | 'no-frame-light-color-full-font-conf' \
                  | 'no-frame-light-color-no-fonts-no-bg' \
                  | 'no-frame-light-color-font-styling-only-no-bg' \
                  | 'no-frame-light-color-full-font-conf-no-bg':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=('MyClass({&#x27;abc&#x27;: ['
                           '<span style="font-weight: bold">123</span>, '
                           '<span style="font-weight: bold">234</span>]})'),
@@ -538,9 +480,9 @@ def case_syntax_styling_expectations_bw_stylized_html_tag(
                  | 'w-frame-dark-color-w-wrap-auto-no-bg' \
                  | 'w-frame-dark-color-w-wrap-256-no-bg' \
                  | 'w-frame-dark-color-w-wrap-truecolor-no-bg':
-                return _fill_html_tag_template(data=('&#x27;abc&#x27;: \n'
-                                                     '[123, \n'
-                                                     '234]})'))
+                return fill_html_tag_template(data=('&#x27;abc&#x27;: \n'
+                                                    '[123, \n'
+                                                    '234]})'))
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
@@ -597,19 +539,19 @@ def case_syntax_styling_expectations_colorized_html_tag(
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-default-color':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=no_frame_default_color_exp_output,
                     color_style=ansi_dark_color_style_with_bg,
                 )
             case 'no-frame-default-color-no-bg':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=no_frame_default_color_exp_output,
                     color_style=ansi_dark_color_style_no_bg,
                 )
             case 'no-frame-light-color-no-fonts' \
                  | 'no-frame-light-color-font-styling-only' \
                  | 'no-frame-light-color-full-font-conf':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=no_frame_light_color_exp_output,
                     color_style=murphy_light_color_style_with_bg,
                     case_id=case_id,
@@ -617,7 +559,7 @@ def case_syntax_styling_expectations_colorized_html_tag(
             case 'no-frame-light-color-no-fonts-no-bg' \
                  | 'no-frame-light-color-font-styling-only-no-bg' \
                  | 'no-frame-light-color-full-font-conf-no-bg':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=no_frame_light_color_exp_output,
                     color_style=murphy_light_color_style_no_bg,
                     case_id=case_id,
@@ -625,14 +567,14 @@ def case_syntax_styling_expectations_colorized_html_tag(
             case 'w-frame-dark-color-w-wrap-auto' \
                  | 'w-frame-dark-color-w-wrap-256' \
                  | 'w-frame-dark-color-w-wrap-truecolor':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=w_frame_dark_color_exp_output,
                     color_style=zenburn_dark_color_style_with_bg,
                 )
             case 'w-frame-dark-color-w-wrap-auto-no-bg' \
                  | 'w-frame-dark-color-w-wrap-256-no-bg' \
                  | 'w-frame-dark-color-w-wrap-truecolor-no-bg':
-                return _fill_html_tag_template(
+                return fill_html_tag_template(
                     data=w_frame_dark_color_exp_output,
                     color_style=zenburn_dark_color_style_no_bg,
                 )
@@ -665,7 +607,7 @@ def case_syntax_styling_expectations_plain_html_page(
                  | 'no-frame-light-color-no-fonts-no-bg' \
                  | 'no-frame-light-color-font-styling-only-no-bg' \
                  | 'no-frame-light-color-full-font-conf-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=bw_light_body_style,
                     data='MyClass({&#x27;abc&#x27;: [123, 234]})',
                     case_id=case_id,
@@ -676,7 +618,7 @@ def case_syntax_styling_expectations_plain_html_page(
                  | 'w-frame-dark-color-w-wrap-auto-no-bg' \
                  | 'w-frame-dark-color-w-wrap-256-no-bg' \
                  | 'w-frame-dark-color-w-wrap-truecolor-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=bw_light_body_style,
                     data=('&#x27;abc&#x27;: \n'
                           '[123, \n'
@@ -707,7 +649,7 @@ def case_syntax_styling_expectations_bw_stylized_html_page(
         match case_id:
             case 'no-frame-default-color' \
                  | 'no-frame-default-color-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=bw_light_body_style,
                     data=('MyClass({'
                           '<span class="r1">&#x27;abc&#x27;</span>: ['
@@ -720,7 +662,7 @@ def case_syntax_styling_expectations_bw_stylized_html_page(
                  | 'no-frame-light-color-no-fonts-no-bg' \
                  | 'no-frame-light-color-font-styling-only-no-bg' \
                  | 'no-frame-light-color-full-font-conf-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=bold_style + bw_light_body_style,
                     data=('<span class="r1">MyClass({&#x27;abc&#x27;: [</span>'
                           '<span class="r2">123</span>'
@@ -735,7 +677,7 @@ def case_syntax_styling_expectations_bw_stylized_html_page(
                  | 'w-frame-dark-color-w-wrap-auto-no-bg' \
                  | 'w-frame-dark-color-w-wrap-256-no-bg' \
                  | 'w-frame-dark-color-w-wrap-truecolor-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=bw_light_body_style,
                     data=('<span class="r1">&#x27;abc&#x27;: </span>\n'
                           '<span class="r1">[123, </span>\n'
@@ -823,7 +765,7 @@ def case_syntax_styling_expectations_colorized_html_page(
         match case_id:
             case 'no-frame-default-color' \
                  | 'no-frame-default-color-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=ansi_dark_style + ansi_dark_body_style,
                     data=no_frame_default_color_exp_output,
                 )
@@ -833,7 +775,7 @@ def case_syntax_styling_expectations_colorized_html_page(
                  | 'no-frame-light-color-no-fonts-no-bg' \
                  | 'no-frame-light-color-font-styling-only-no-bg' \
                  | 'no-frame-light-color-full-font-conf-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=murphy_light_style + murphy_light_body_style,
                     data=no_frame_light_color_exp_output,
                     case_id=case_id,
@@ -841,14 +783,14 @@ def case_syntax_styling_expectations_colorized_html_page(
             case 'w-frame-dark-color-w-wrap-auto' \
                  | 'w-frame-dark-color-w-wrap-256' \
                  | 'w-frame-dark-color-w-wrap-truecolor':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=zenburn_dark_style_no_bg + zenburn_dark_body_style_with_bg,
                     data=w_frame_dark_color_exp_output,
                 )
             case 'w-frame-dark-color-w-wrap-auto-no-bg' \
                  | 'w-frame-dark-color-w-wrap-256-no-bg' \
                  | 'w-frame-dark-color-w-wrap-truecolor-no-bg':
-                return _fill_html_page_template(
+                return fill_html_page_template(
                     style=zenburn_dark_style_no_bg + zenburn_dark_body_style_no_bg,
                     data=w_frame_dark_color_exp_output,
                 )

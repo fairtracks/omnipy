@@ -5,18 +5,17 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
+from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.layout import (DimensionsAwareDraftPanelLayout,
                                                      ResizedLayoutDraftPanel)
-from omnipy.data._display.panel.layout import Layout
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 import omnipy.util._pydantic as pyd
 
-from ..helpers.classes import MockPanel, MockPanelStage2, MockPanelStage3
-from .helpers import (apply_frame_variant_to_test_case,
-                      assert_dims_aware_panel,
-                      assert_draft_panel_subcls,
-                      assert_next_stage_panel,
-                      PanelFrameVariantTestCase)
+from ..helpers.case_setup import apply_frame_variant_to_test_case, PanelFrameVariantTestCase
+from ..helpers.mocks import MockPanel, MockPanelStage2, MockPanelStage3
+from ..helpers.panel_assert import (assert_dims_aware_panel,
+                                    assert_draft_panel_subcls,
+                                    assert_next_stage_panel)
 
 
 def test_resized_layout_draft_panel_init() -> None:

@@ -8,13 +8,13 @@ from omnipy.data._display.frame import (AnyFrame,
                                         Frame,
                                         FrameWithWidthAndHeight,
                                         UndefinedFrame)
+from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
-from omnipy.data._display.panel.layout import Layout
 
-from ..helpers.classes import MockPanel, MockPanelStage2
-from .helpers import assert_draft_panel_subcls, assert_next_stage_panel
+from .helpers.mocks import MockPanel, MockPanelStage2
+from .helpers.panel_assert import assert_draft_panel_subcls, assert_next_stage_panel
 
 
 def test_draft_panel_init() -> None:

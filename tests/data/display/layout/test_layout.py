@@ -3,10 +3,11 @@ from typing import Annotated
 
 import pytest
 
-from data.display.helpers.classes import MockPanel
 from omnipy.data._display.dimensions import Dimensions
+from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.base import Panel
-from omnipy.data._display.panel.layout import Layout
+
+from ..panel.helpers.mocks import MockPanel
 
 
 @dataclass

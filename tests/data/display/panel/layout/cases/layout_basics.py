@@ -8,10 +8,10 @@ from omnipy.data._display.config import (ConsoleColorSystem,
                                          VerticalOverflowMode)
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
-from omnipy.data._display.panel.layout import Layout
+from omnipy.data._display.layout.base import Layout
 
-from ...helpers.classes import MockPanel, MockPanelStage2
-from ..helpers import FrameTestCase, FrameVariant, PanelFrameVariantTestCase
+from ...helpers.case_setup import FrameTestCase, FrameVariant, PanelFrameVariantTestCase
+from ...helpers.mocks import MockPanel, MockPanelStage2
 
 
 @pc.parametrize(
@@ -483,9 +483,9 @@ def case_layout_single_panel_with_title(
             exp_stylized_dims=Dimensions(width=7, height=3),
         ),
         # Here, the Rich library inconsistently crops the leftmost panel
-        # first. Compare with similar test in layout_reflow.py, where Omnipy
-        # overrides Rich and crops the rightmost panel first, maintaining
-        # consistency.
+        # first. Compare with similar test in layout/flow/layout_reflow.py,
+        # where Omnipy overrides Rich and crops the rightmost panel first,
+        # maintaining consistency.
         FrameTestCase(
             frame=Frame(Dimensions(width=6, height=4)),
             exp_plain_output=('╭─┬──╮\n'

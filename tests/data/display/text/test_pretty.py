@@ -5,14 +5,15 @@ from typing import Annotated
 
 import pytest
 
-from data.display.panel.helpers import DraftPanelKwArgs
 from omnipy.data._display.config import OutputConfig, PrettyPrinterLib
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
-from omnipy.data._display.panel.pretty import pretty_repr_of_draft_output
+from omnipy.data._display.text.pretty import pretty_repr_of_draft_output
 from omnipy.data.model import Model
+
+from ..panel.helpers.panel_assert import DraftPanelKwArgs
 
 DEFAULT_FRAME = Frame(Dimensions(80, 24))
 

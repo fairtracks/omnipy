@@ -7,19 +7,18 @@ from omnipy.data._display.config import LayoutDesign, OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
+from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
-from omnipy.data._display.panel.layout import Layout
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 
-from ..helpers.classes import MockPanel, MockPanelStage3
-from .helpers import (assert_dims_aware_panel,
-                      OutputPropertyType,
-                      PanelFrameVariantTestCase,
-                      PanelOutputTestCase,
-                      prepare_test_case_for_stylized_layout,
-                      strip_all_styling_from_panel_output,
-                      StylizedPanelOutputExpectations,
-                      StylizedPanelTestCaseSetup)
+from ..helpers.case_setup import (OutputPropertyType,
+                                  PanelFrameVariantTestCase,
+                                  PanelOutputTestCase,
+                                  prepare_test_case_for_stylized_layout,
+                                  StylizedPanelOutputExpectations,
+                                  StylizedPanelTestCaseSetup)
+from ..helpers.mocks import MockPanel, MockPanelStage3
+from ..helpers.panel_assert import assert_dims_aware_panel, strip_all_styling_from_panel_output
 
 
 def test_stylized_layout_panel_init() -> None:
@@ -66,7 +65,7 @@ def test_stylized_layout_panel_immutable_properties() -> None:
     layout_panel = StylizedLayoutPanel(ResizedLayoutDraftPanel(Layout()))
 
     with pytest.raises(AttributeError):
-        layout_panel.content = Layout()  # type: ignore[misc]
+        layout_panel.content = Layout()  # type: ignore[misc, assignment]
 
     with pytest.raises(AttributeError):
         layout_panel.frame = empty_frame()  # type: ignore[misc]
