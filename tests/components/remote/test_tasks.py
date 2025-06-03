@@ -1,4 +1,5 @@
 import asyncio
+from functools import partial
 from typing import Annotated, cast
 
 import aiohttp
@@ -13,6 +14,7 @@ from omnipy import (AutoResponseContentsDataset,
                     JsonDataset,
                     Model,
                     StrDataset)
+from omnipy.util.helpers import get_event_loop_and_check_if_loop_is_running
 
 from ...helpers.functions import assert_model
 from ...helpers.protocols import AssertModelOrValFunc
@@ -67,8 +69,28 @@ async def test_get_from_api_endpoint_without_session(
     if case.is_async:
         data = await case.job.run(endpoint.query_urls, **case.kwargs)
     else:
-        data = case.job.run(endpoint.query_urls, **case.kwargs)
-    _assert_query_results(assert_model_if_dyn_conv_else_val, case, data, endpoint.auto_model_type)
+        # Need to run synchronous job in thread to simulate a synchronous
+        # environment, while the async endpoints continue to serve requests
+        # in the event loop.
+        loop, loop_is_running = get_event_loop_and_check_if_loop_is_running()
+        assert loop_is_running
+        run_func = partial(case.job.run, endpoint.query_urls, **case.kwargs)
+        data = await loop.run_in_executor(None, run_func)
+    if case.expected_exceptions:
+        with pytest.raises(case.expected_exceptions):
+            _assert_query_results(
+                assert_model_if_dyn_conv_else_val,
+                case,
+                data,
+                endpoint.auto_model_type,
+            )
+    else:
+        _assert_query_results(
+            assert_model_if_dyn_conv_else_val,
+            case,
+            data,
+            endpoint.auto_model_type,
+        )
 
 
 @pc.parametrize_with_cases(
