@@ -16,7 +16,7 @@ from omnipy import (AutoResponseContentsDataset,
                     StrDataset)
 from omnipy.util.helpers import get_event_loop_and_check_if_loop_is_running
 
-from ...helpers.functions import assert_model
+from ...helpers.functions import assert_model, assert_model_or_val
 from ...helpers.protocols import AssertModelOrValFunc
 from .helpers.classes import EndpointCase, RequestTypeCase
 
@@ -26,38 +26,42 @@ def _assert_query_results(assert_model_if_dyn_conv_else_val,
                           data: Dataset,
                           auto_model_type: type[Model]):
     assert isinstance(data, case.dataset_cls)
-    match case.dataset_cls if case.dataset_cls != AutoResponseContentsDataset else auto_model_type:
-        case omnipy.BytesDataset:
+    model_cls = case.dataset_cls.get_model_class(
+    ) if case.dataset_cls != AutoResponseContentsDataset else auto_model_type
+    match model_cls:
+        case omnipy.BytesModel | omnipy.StrictBytesModel:
             _assert_bytes_query_results(assert_model, cast(BytesDataset, data))
-        case omnipy.StrDataset:
+        case omnipy.StrModel | omnipy.StrictStrModel:
             _assert_str_query_results(assert_model, cast(StrDataset, data))
-        case omnipy.JsonDataset | omnipy.JsonDictDataset:
+        case omnipy.JsonModel | omnipy.JsonDictModel:
             _assert_json_query_results(assert_model_if_dyn_conv_else_val, cast(JsonDataset, data))
+        case _:
+            raise RuntimeError(f'Unknown model: "{model_cls.__name__}"')
 
 
 def _assert_bytes_query_results(assert_model, data: BytesDataset):
-    assert_model(data['jokke'][-10:], bytes | str, b'f\\u00e5"]}')
-    assert_model(data['odd'][-10:], bytes | str, b'5 drite"]}')
-    assert_model(data['delillos'][-10:], bytes | str, b'ttifire"]}')
-    assert_model(data['delillos_2'][-10:], bytes | str, b'n\\u00f8"]}')
+    assert_model_or_val(data['jokke'][-10:], bytes | str, b'f\\u00e5"]}')
+    assert_model_or_val(data['odd'][-10:], bytes | str, b'5 drite"]}')
+    assert_model_or_val(data['delillos'][-10:], bytes | str, b'ttifire"]}')
+    assert_model_or_val(data['delillos_2'][-10:], bytes | str, b'n\\u00f8"]}')
 
 
 def _assert_str_query_results(assert_model, data: StrDataset):
-    assert_model(data['jokke'][-10:], str | bytes, 'f\\u00e5"]}')
-    assert_model(data['odd'][-10:], str | bytes, '5 drite"]}')
-    assert_model(data['delillos'][-10:], str | bytes, 'ttifire"]}')
-    assert_model(data['delillos_2'][-10:], str | bytes, 'n\\u00f8"]}')
+    assert_model_or_val(data['jokke'][-10:], str | bytes, 'f\\u00e5"]}')
+    assert_model_or_val(data['odd'][-10:], str | bytes, '5 drite"]}')
+    assert_model_or_val(data['delillos'][-10:], str | bytes, 'ttifire"]}')
+    assert_model_or_val(data['delillos_2'][-10:], str | bytes, 'n\\u00f8"]}')
 
 
 def _assert_json_query_results(assert_model_if_dyn_conv_else_val, data: JsonDataset):
-    assert_model_if_dyn_conv_else_val(data['jokke']['author'], str, 'Joachim Nielsen')
-    assert_model_if_dyn_conv_else_val(data['jokke']['lyrics'][0], str, "Her kommer vinter'n")
-    assert_model_if_dyn_conv_else_val(data['odd']['author'], str, 'Odd Børretzen')
-    assert_model_if_dyn_conv_else_val(data['odd']['lyrics'][0], str, 'Jeg så min første blues')
-    assert_model_if_dyn_conv_else_val(data['delillos']['author'], str, 'deLillos')
-    assert_model_if_dyn_conv_else_val(data['delillos']['lyrics'][0], str, 'Og en fyr lå i senga mi')
-    assert_model_if_dyn_conv_else_val(data['delillos_2']['author'], str, 'deLillos')
-    assert_model_if_dyn_conv_else_val(data['delillos_2']['lyrics'][0], str, 'Joda sier Arne')
+    assert_model_or_val(data['jokke']['author'], str, 'Joachim Nielsen')
+    assert_model_or_val(data['jokke']['lyrics'][0], str, "Her kommer vinter'n")
+    assert_model_or_val(data['odd']['author'], str, 'Odd Børretzen')
+    assert_model_or_val(data['odd']['lyrics'][0], str, 'Jeg så min første blues')
+    assert_model_or_val(data['delillos']['author'], str, 'deLillos')
+    assert_model_or_val(data['delillos']['lyrics'][0], str, 'Og en fyr lå i senga mi')
+    assert_model_or_val(data['delillos_2']['author'], str, 'deLillos')
+    assert_model_or_val(data['delillos_2']['lyrics'][0], str, 'Joda sier Arne')
 
 
 @pc.parametrize_with_cases('case', cases='.cases.request_types')
