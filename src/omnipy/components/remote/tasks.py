@@ -170,9 +170,7 @@ def load_urls_into_new_dataset(
     urls: HttpUrlDataset,
     dataset_cls: type[_JsonDatasetT] = JsonDataset,
 ) -> _JsonDatasetT:
-    dataset = dataset_cls()
-    dataset.load(urls)
-    return dataset
+    return dataset_cls.load(urls)
 
 
 @TaskTemplate()
@@ -180,6 +178,4 @@ async def async_load_urls_into_new_dataset(
     urls: HttpUrlDataset,
     dataset_cls: type[_JsonDatasetT] = JsonDataset,
 ) -> _JsonDatasetT:
-    dataset = dataset_cls()
-    await dataset.load(urls)
-    return dataset
+    return await dataset_cls.load(urls)

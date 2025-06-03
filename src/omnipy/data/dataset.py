@@ -674,12 +674,22 @@ class Dataset(
             tar.extractall(path=directory)
             tar.close()
 
-    def load(self,
+    @classmethod
+    def load(cls,
              paths_or_urls: 'str | Iterable[str] | HttpUrlModel | HttpUrlDataset '
              '| Mapping[str, str | HttpUrlModel] | None' = None,
              by_file_suffix: bool = False,
-             **kwargs: 'str | HttpUrlModel') -> list[asyncio.Task] | None:
-        from omnipy import HttpUrlDataset, HttpUrlModel
+             **kwargs: 'str | HttpUrlModel') -> asyncio.Task | None:
+        empty_dataset = cls()
+        return empty_dataset.load_into(paths_or_urls, by_file_suffix=by_file_suffix, **kwargs)
+
+    def load_into(self,
+                  paths_or_urls: 'str | Iterable[str] | HttpUrlModel | HttpUrlDataset '
+                  '| Mapping[str, str | HttpUrlModel] | None' = None,
+                  by_file_suffix: bool = False,
+                  **kwargs: 'str | HttpUrlModel') -> asyncio.Task:
+        from omnipy.components.remote.datasets import HttpUrlDataset
+        from omnipy.components.remote.models import HttpUrlModel
 
         if paths_or_urls is None:
             assert len(kwargs) > 0, 'No paths or urls specified'
