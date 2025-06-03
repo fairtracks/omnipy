@@ -13,9 +13,9 @@ class OmnipyNoneIsNotAllowedError(pyd.NoneIsNotAllowedError):
     msg_template = '[Omnipy] none is not an allowed value'
 
 
-class PendingDataError(Exception):
+class PendingDataError(ValueError):
     ...
 
 
-class FailedDataError(Exception):
+class FailedDataError(ValueError):
     ...

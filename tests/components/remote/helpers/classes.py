@@ -15,3 +15,4 @@ class RequestTypeCase:
     job: TaskTemplate
     kwargs: dict[str, object]
     dataset_cls: type[Dataset]
+    expected_exceptions: tuple[type[Exception], ...] | None = None

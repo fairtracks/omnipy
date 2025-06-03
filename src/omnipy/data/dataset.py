@@ -679,14 +679,17 @@ class Dataset(
              paths_or_urls: 'str | Iterable[str] | HttpUrlModel | HttpUrlDataset '
              '| Mapping[str, str | HttpUrlModel] | None' = None,
              by_file_suffix: bool = False,
+             as_mime_type: None | str = None,
              **kwargs: 'str | HttpUrlModel') -> asyncio.Task | None:
         empty_dataset = cls()
-        return empty_dataset.load_into(paths_or_urls, by_file_suffix=by_file_suffix, **kwargs)
+        return empty_dataset.load_into(
+            paths_or_urls, by_file_suffix=by_file_suffix, as_mime_type=as_mime_type, **kwargs)
 
     def load_into(self,
                   paths_or_urls: 'str | Iterable[str] | HttpUrlModel | HttpUrlDataset '
                   '| Mapping[str, str | HttpUrlModel] | None' = None,
                   by_file_suffix: bool = False,
+                  as_mime_type: None | str = None,
                   **kwargs: 'str | HttpUrlModel') -> asyncio.Task:
         from omnipy.components.remote.datasets import HttpUrlDataset
         from omnipy.components.remote.models import HttpUrlModel
@@ -699,17 +702,20 @@ class Dataset(
 
         match paths_or_urls:
             case HttpUrlDataset():
-                return self._load_http_urls(paths_or_urls)
+                return self._load_http_urls(paths_or_urls, as_mime_type=as_mime_type)
 
             case HttpUrlModel():
-                return self._load_http_urls(HttpUrlDataset({str(paths_or_urls): paths_or_urls}))
+                return self._load_http_urls(
+                    HttpUrlDataset({str(paths_or_urls): paths_or_urls}),
+                    as_mime_type=as_mime_type,
+                )
 
             case str():
                 try:
                     http_url_dataset = HttpUrlDataset({paths_or_urls: paths_or_urls})
                 except ValidationError:
                     return self._load_paths([paths_or_urls], by_file_suffix)
-                return self._load_http_urls(http_url_dataset)
+                return self._load_http_urls(http_url_dataset, as_mime_type=as_mime_type)
 
             case Mapping():
                 try:
@@ -719,7 +725,7 @@ class Dataset(
                         'Loading files with specified keys is not yet '
                         'implemented, as only tar.gz file import is '
                         'supported until serializers have been refactored.') from exp
-                return self._load_http_urls(http_url_dataset)
+                return self._load_http_urls(http_url_dataset, as_mime_type=as_mime_type)
 
             case Iterable():
                 try:
@@ -728,19 +734,23 @@ class Dataset(
                         zip(path_or_url_iterable, path_or_url_iterable))
                 except ValidationError:
                     return self._load_paths(path_or_url_iterable, by_file_suffix)
-                return self._load_http_urls(http_url_dataset)
+                return self._load_http_urls(http_url_dataset, as_mime_type=as_mime_type)
             case _:
                 raise TypeError(f'"paths_or_urls" argument is of incorrect type. Type '
                                 f'{type(paths_or_urls)} is not supported.')
 
-    def _load_http_urls(self, http_url_dataset: 'HttpUrlDataset') -> list[asyncio.Task]:
+    def _load_http_urls(
+        self,
+        http_url_dataset: 'HttpUrlDataset',
+        as_mime_type: None | str = None,
+    ) -> asyncio.Task:
         from omnipy.components.remote.helpers import RateLimitingClientSession
         from omnipy.components.remote.tasks import get_auto_from_api_endpoint
         hosts: defaultdict[str, list[int]] = defaultdict(list)
         for i, url in enumerate(http_url_dataset.values()):
             hosts[url.host].append(i)
 
-        async def load_all():
+        async def load_all(as_mime_type: None | str = None):
             tasks = []
 
             for host in hosts:
@@ -749,11 +759,22 @@ class Dataset(
                         self.config.http_config_for_host[host].time_period_in_secs
                 ) as client_session:
                     indices = hosts[host]
+                    # fetch_task = get_auto_from_api_endpoint
+                    # if as_mime_type:
+                    #     match as_mime_type:
+                    #         case 'application/json':
+                    #             fetch_task = get_json_from_api_endpoint
+                    #         case 'text/plain':
+                    #             fetch_task = get_str_from_api_endpoint
+                    #         case 'application/octet-stream' | _:
+                    #             fetch_task = get_bytes_from_api_endpoint
+
                     ret = get_auto_from_api_endpoint.refine(
                         output_dataset_param='output_dataset').run(
                             http_url_dataset[indices],
                             client_session=client_session,
-                            output_dataset=self)
+                            output_dataset=self,
+                            as_mime_type=as_mime_type)
 
                     if not isinstance(ret, asyncio.Task):
                         assert inspect.iscoroutine(ret)
@@ -772,9 +793,9 @@ class Dataset(
         loop, loop_is_running = get_event_loop_and_check_if_loop_is_running()
 
         if loop and loop_is_running:
-            return loop.create_task(load_all())
+            return loop.create_task(load_all(as_mime_type=as_mime_type))
         else:
-            return asyncio.run(load_all())
+            return asyncio.run(load_all(as_mime_type=as_mime_type))
 
     def _load_paths(self, path_or_urls: Iterable[str], by_file_suffix: bool) -> None:
         for path_or_url in path_or_urls:

@@ -141,6 +141,7 @@ async def get_auto_from_api_endpoint(
     retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
     retry_attempts: int = DEFAULT_RETRIES,
     retry_backoff_strategy: BackoffStrategy = DEFAULT_BACKOFF_STRATEGY,
+    as_mime_type: str | None = None,
 ) -> AutoResponseContentsModel:
     async for retry_session in _ensure_retry_session(
             client_session,
@@ -149,10 +150,13 @@ async def get_auto_from_api_endpoint(
             retry_backoff_strategy,
     ):
         async for response in _call_get(url, cast(ClientSession, retry_session)):
-
-            assert CONTENT_TYPE in response.headers
-            content_type_header = response.headers[CONTENT_TYPE]
-            match response.content_type:
+            if as_mime_type:
+                content_type = content_type_header = as_mime_type
+            else:
+                assert CONTENT_TYPE in response.headers
+                content_type_header = response.headers[CONTENT_TYPE]
+                content_type = response.content_type
+            match content_type:
                 case 'application/json':
                     contents = await response.json(content_type=None)
                 case 'text/plain':
@@ -169,13 +173,15 @@ async def get_auto_from_api_endpoint(
 def load_urls_into_new_dataset(
     urls: HttpUrlDataset,
     dataset_cls: type[_JsonDatasetT] = JsonDataset,
+    as_mime_type: str | None = None,
 ) -> _JsonDatasetT:
-    return dataset_cls.load(urls)
+    return dataset_cls.load(urls, as_mime_type=as_mime_type)
 
 
 @TaskTemplate()
 async def async_load_urls_into_new_dataset(
     urls: HttpUrlDataset,
     dataset_cls: type[_JsonDatasetT] = JsonDataset,
+    as_mime_type: str | None = None,
 ) -> _JsonDatasetT:
-    return await dataset_cls.load(urls)
+    return await dataset_cls.load(urls, as_mime_type=as_mime_type)
