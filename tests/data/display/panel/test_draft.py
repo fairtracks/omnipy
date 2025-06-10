@@ -13,7 +13,7 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 
-from .helpers.mocks import MockPanel, MockPanelStage2
+from .helpers.mocks import MockResizedStylablePlainCropPanel, MockStylablePlainCropPanel
 from .helpers.panel_assert import assert_draft_panel_subcls, assert_next_stage_panel
 
 
@@ -186,8 +186,8 @@ def test_draft_panel_render_next_stage_with_layout_simple() -> None:
 def test_draft_panel_render_next_stage_with_layout_complex() -> None:
     draft_panel_complex: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
         Layout(
-            tuple=MockPanel('(1, 2, 3)', title='Tuple panel'),
-            text=MockPanel('Here is some text', title='Text panel'),
+            tuple=MockStylablePlainCropPanel('(1, 2, 3)', title='Tuple panel'),
+            text=MockStylablePlainCropPanel('Here is some text', title='Text panel'),
         ),
         title='My layout panel',
         frame=Frame(Dimensions(21, 5)),
@@ -199,7 +199,7 @@ def test_draft_panel_render_next_stage_with_layout_complex() -> None:
         next_stage=draft_panel_complex.render_next_stage(),
         next_stage_panel_cls=ResizedLayoutDraftPanel,
         exp_content=Layout(
-            tuple=MockPanelStage2(
+            tuple=MockResizedStylablePlainCropPanel(
                 '(1, 2,\n3)',
                 title='Tuple panel',
                 frame=Frame(
@@ -208,7 +208,7 @@ def test_draft_panel_render_next_stage_with_layout_complex() -> None:
                     fixed_height=False,
                 ),
             ),
-            text=MockPanelStage2(
+            text=MockResizedStylablePlainCropPanel(
                 'Here is\nsome\ntext',
                 title='Text panel',
                 frame=Frame(
@@ -224,12 +224,12 @@ def test_draft_panel_render_next_stage_with_layout_complex() -> None:
 def test_draft_panel_render_next_stage_with_layout_half_framed() -> None:
     draft_panel_half_framed: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
         Layout(
-            tuple=MockPanel(
+            tuple=MockStylablePlainCropPanel(
                 '(1, 2, 3)',
                 title='Framed tuple panel',
                 frame=Frame(Dimensions(9, 1)),
             ),
-            text=MockPanel(
+            text=MockStylablePlainCropPanel(
                 'Here is some text',
                 title='Text panel',
             ),
@@ -243,12 +243,12 @@ def test_draft_panel_render_next_stage_with_layout_half_framed() -> None:
         next_stage=draft_panel_half_framed.render_next_stage(),
         next_stage_panel_cls=ResizedLayoutDraftPanel,
         exp_content=Layout(
-            tuple=MockPanelStage2(
+            tuple=MockResizedStylablePlainCropPanel(
                 '(1, 2, 3)',
                 title='Framed tuple panel',
                 frame=Frame(Dimensions(9, 1)),
             ),
-            text=MockPanelStage2(
+            text=MockResizedStylablePlainCropPanel(
                 'Here\nis\nsome\ntext',
                 title='Text panel',
                 frame=Frame(
@@ -264,9 +264,9 @@ def test_draft_panel_render_next_stage_with_layout_half_framed() -> None:
 def test_draft_panel_render_next_stage_with_layout_half_rendered() -> None:
     draft_panel_half_rendered: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
         Layout(
-            tuple=MockPanelStage2('(1,\n2,\n3)', title='Stage 2 tuple panel'),
-            text1=MockPanel('Here is some text', title='Text panel 1'),
-            text2=MockPanel('Here is some other text', title='Text panel 2'),
+            tuple=MockResizedStylablePlainCropPanel('(1,\n2,\n3)', title='Stage 2 tuple panel'),
+            text1=MockStylablePlainCropPanel('Here is some text', title='Text panel 1'),
+            text2=MockStylablePlainCropPanel('Here is some other text', title='Text panel 2'),
         ),
         frame=Frame(Dimensions(24, 5)),
         constraints=Constraints(container_width_per_line_limit=10),
@@ -277,7 +277,7 @@ def test_draft_panel_render_next_stage_with_layout_half_rendered() -> None:
         next_stage=draft_panel_half_rendered.render_next_stage(),
         next_stage_panel_cls=ResizedLayoutDraftPanel,
         exp_content=Layout(
-            tuple=MockPanelStage2(
+            tuple=MockResizedStylablePlainCropPanel(
                 '(1,\n2,\n3)',
                 title='Stage 2 tuple panel',
                 frame=Frame(
@@ -286,20 +286,20 @@ def test_draft_panel_render_next_stage_with_layout_half_rendered() -> None:
                     fixed_height=False,
                 ),
             ),
-            text1=MockPanelStage2(
-                'Here is\nsome\ntext',
+            text1=MockResizedStylablePlainCropPanel(
+                'Here\nis\nsome\ntext',
                 title='Text panel 1',
                 frame=Frame(
-                    Dimensions(7, 3),
+                    Dimensions(4, 3),
                     fixed_width=False,
                     fixed_height=False,
                 ),
             ),
-            text2=MockPanelStage2(
-                'Here\nis\nsome\nother\ntext',
+            text2=MockResizedStylablePlainCropPanel(
+                'Here is\nsome\nother\ntext',
                 title='Text panel 2',
                 frame=Frame(
-                    Dimensions(4, 3),
+                    Dimensions(7, 3),
                     fixed_width=False,
                     fixed_height=False,
                 ),

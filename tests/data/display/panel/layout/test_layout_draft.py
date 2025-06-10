@@ -12,7 +12,9 @@ from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 import omnipy.util._pydantic as pyd
 
 from ..helpers.case_setup import apply_frame_variant_to_test_case, PanelFrameVariantTestCase
-from ..helpers.mocks import MockPanel, MockPanelStage2, MockPanelStage3
+from ..helpers.mocks import (MockResizedStylablePlainCropPanel,
+                             MockStylablePlainCropPanel,
+                             MockStylizedPlainCropPanel)
 from ..helpers.panel_assert import (assert_dims_aware_panel,
                                     assert_draft_panel_subcls,
                                     assert_next_stage_panel)
@@ -22,7 +24,7 @@ def test_resized_layout_draft_panel_init() -> None:
     panel_cls = ResizedLayoutDraftPanel
     assert_draft_panel_subcls(panel_cls, Layout(), content_is_identical=False)
 
-    layout: Layout = Layout(abc=MockPanel('Some text'))
+    layout: Layout = Layout(abc=MockStylablePlainCropPanel('Some text'))
     assert_draft_panel_subcls(
         panel_cls,
         layout,
@@ -76,7 +78,7 @@ def test_resized_layout_draft_panel_hashable() -> None:
 
     assert hash(draft_panel_1) == hash(draft_panel_2)
 
-    draft_panel_3 = ResizedLayoutDraftPanel(Layout(a=MockPanel('Some text')))
+    draft_panel_3 = ResizedLayoutDraftPanel(Layout(a=MockStylablePlainCropPanel('Some text')))
     draft_panel_4 = ResizedLayoutDraftPanel(Layout(), title='My panel')
     draft_panel_5 = ResizedLayoutDraftPanel(Layout(), frame=Frame(Dimensions(10, 20)))
     draft_panel_6 = ResizedLayoutDraftPanel(
@@ -86,7 +88,7 @@ def test_resized_layout_draft_panel_hashable() -> None:
     assert hash(draft_panel_1) != hash(draft_panel_3) != hash(draft_panel_4) != hash(
         draft_panel_5) != hash(draft_panel_6) != hash(draft_panel_7)
 
-    draft_panel_8 = ResizedLayoutDraftPanel(Layout(a=MockPanel('Some text')))
+    draft_panel_8 = ResizedLayoutDraftPanel(Layout(a=MockStylablePlainCropPanel('Some text')))
     draft_panel_9 = ResizedLayoutDraftPanel(Layout(), title='My panel')
     draft_panel_10 = ResizedLayoutDraftPanel(Layout(), frame=Frame(Dimensions(10, 20)))
     draft_panel_11 = ResizedLayoutDraftPanel(
@@ -154,12 +156,13 @@ def test_resized_layout_draft_panel_basic_dims_and_edge_cases(
 
 
 def test_draft_panel_render_next_stage_simple() -> None:
-    resized_layout_panel = ResizedLayoutDraftPanel(Layout(panel=MockPanel('Some text')))
+    resized_layout_panel = ResizedLayoutDraftPanel(
+        Layout(panel=MockStylablePlainCropPanel('Some text')))
     assert_next_stage_panel(
         this_panel=resized_layout_panel,
         next_stage=resized_layout_panel.render_next_stage(),
         next_stage_panel_cls=StylizedLayoutPanel,
-        exp_content=Layout(panel=MockPanelStage3('Some text')),
+        exp_content=Layout(panel=MockStylizedPlainCropPanel('Some text')),
     )
 
 
@@ -167,8 +170,8 @@ def test_draft_panel_render_next_stage_complex() -> None:
     # No reflow of panels, just rendering of the content
     resized_layout_panel_complex = ResizedLayoutDraftPanel(
         Layout(
-            first=MockPanel('Some text', title='First panel'),
-            second=MockPanel('Some other text', title='Second panel'),
+            first=MockStylablePlainCropPanel('Some text', title='First panel'),
+            second=MockStylablePlainCropPanel('Some other text', title='Second panel'),
         ),
         frame=Frame(Dimensions(16, 5)),
         constraints=Constraints(container_width_per_line_limit=10),
@@ -179,7 +182,7 @@ def test_draft_panel_render_next_stage_complex() -> None:
         next_stage=resized_layout_panel_complex.render_next_stage(),
         next_stage_panel_cls=StylizedLayoutPanel,
         exp_content=Layout(
-            first=MockPanelStage3(
+            first=MockStylizedPlainCropPanel(
                 'Some text',
                 title='First panel',
                 frame=Frame(
@@ -188,7 +191,7 @@ def test_draft_panel_render_next_stage_complex() -> None:
                     fixed_height=False,
                 ),
             ),
-            second=MockPanelStage3(
+            second=MockStylizedPlainCropPanel(
                 'Some other text',
                 title='Second panel',
                 frame=Frame(
@@ -206,12 +209,13 @@ def test_dimensions_aware_draft_panel_layout() -> None:
     assert layout.total_subpanel_cropped_dims == Dimensions(0, 0)
     assert layout.calc_dims() == Dimensions(0, 1)
 
-    layout['panel1'] = MockPanelStage2('Panel\ncontent')
+    layout['panel1'] = MockResizedStylablePlainCropPanel('Panel\ncontent')
     assert layout.total_subpanel_cropped_dims == Dimensions(7, 2)
     assert layout.calc_dims() == Dimensions(11, 4)
     assert layout.calc_dims(use_outer_dims_for_subpanels=False) == Dimensions(11, 4)
 
-    layout['panel2'] = MockPanelStage2('Even more\npanel\ncontent', title='Panel_2_title')
+    layout['panel2'] = MockResizedStylablePlainCropPanel(
+        'Even more\npanel\ncontent', title='Panel_2_title')
     assert layout.total_subpanel_cropped_dims == Dimensions(16, 3)
     assert layout.calc_dims() == Dimensions(27, 7)
     assert layout.calc_dims(use_outer_dims_for_subpanels=False) == Dimensions(23, 5)

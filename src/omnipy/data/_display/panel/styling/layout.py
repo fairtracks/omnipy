@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from functools import cache, cached_property
-from typing import cast, Generic, Iterator
+from typing import Any, cast, Generic, Iterator
 
 import pygments.token
 import rich.align
@@ -294,13 +294,15 @@ class InnerPanelStyler:
             padding=(0, 0),
         )
 
+        add_column_kwargs: dict[str, Any] = dict(width=column_width, overflow='crop')
+
         if styled_title:
             if panel_title_at_top:
-                content_table.add_column(header=styled_title, width=column_width)
+                content_table.add_column(header=styled_title, **add_column_kwargs)
             else:
-                content_table.add_column(footer=styled_title, width=column_width)
+                content_table.add_column(footer=styled_title, **add_column_kwargs)
         else:
-            content_table.add_column(width=column_width)
+            content_table.add_column(**add_column_kwargs)
 
         content_table.add_row(styled_and_cropped_content)
 

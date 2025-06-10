@@ -15,8 +15,16 @@ from omnipy.data._display.layout.base import Layout
 from ...helpers.case_setup import (OutputPropertyType,
                                    StylizedPanelOutputExpectations,
                                    StylizedPanelTestCaseSetup)
-from ...helpers.mocks import MockPanel
+from ...helpers.mocks import MockStylablePlainCropPanel
 from ...helpers.panel_assert import fill_html_page_template, fill_html_tag_template
+
+# Note:
+#
+# Mock panels are used as inner panels for these test cases to focus on
+# outer layout panel functionality. In these tests, the inner panels provide
+# simple styling, but only supports plain cropping, horizontally and
+# vertically (`horizontal_overflow_mode` and `vertical_overflow_mode`
+# config values are ignored).
 
 
 @pc.parametrize('transparent_background', [False, True])
@@ -24,10 +32,10 @@ from ...helpers.panel_assert import fill_html_page_template, fill_html_tag_templ
 def case_layout_styling_setup_no_frame(
         transparent_background: bool) -> StylizedPanelTestCaseSetup[Layout]:
     # Create a simple layout with mock panels
-    layout = Layout()
-    layout['first'] = MockPanel(
+    layout: Layout = Layout()
+    layout['first'] = MockStylablePlainCropPanel(
         content='Panel_1 Content', frame=Frame(Dimensions(width=7, height=2)))
-    layout['second'] = MockPanel(
+    layout['second'] = MockStylablePlainCropPanel(
         content='Panel_2 Content', frame=Frame(Dimensions(width=7, height=2)))
 
     # Create stylized output with default config (should use Table grid)
@@ -46,12 +54,12 @@ def case_layout_styling_setup_no_frame(
 def case_layout_styling_setup_frame_and_title(
         transparent_background: bool) -> StylizedPanelTestCaseSetup[Layout]:
     # Create a simple layout with mock panels
-    layout: Layout[MockPanel] = Layout()
-    layout['first'] = MockPanel(
+    layout: Layout = Layout()
+    layout['first'] = MockStylablePlainCropPanel(
         content='True',
         title='The title of Panel 1',
     )
-    layout['second'] = MockPanel(
+    layout['second'] = MockStylablePlainCropPanel(
         content='Some longer content here',
         title='Panel 2',
     )
@@ -74,10 +82,10 @@ def case_layout_styling_setup_frame_and_title(
 def case_layout_styling_setup_small_frame(
         transparent_background: bool) -> StylizedPanelTestCaseSetup[Layout]:
     # Create a simple layout with mock panels
-    layout: Layout[MockPanel] = Layout()
-    layout['first'] = MockPanel(
+    layout: Layout = Layout()
+    layout['first'] = MockStylablePlainCropPanel(
         content='Panel_1 Content', frame=Frame(Dimensions(width=7, height=2)))
-    layout['second'] = MockPanel(
+    layout['second'] = MockStylablePlainCropPanel(
         content='Panel_2 Content', frame=Frame(Dimensions(width=7, height=2)))
 
     # Create stylized output with default config (should use Table grid)

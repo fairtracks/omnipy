@@ -11,59 +11,213 @@ from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
 from omnipy.data._display.layout.base import Layout
 
 from ....panel.helpers.case_setup import FrameTestCase, FrameVariant, PanelFrameVariantTestCase
-from ....panel.helpers.mocks import MockPanel, MockPanelStage2
+from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
+
+# Note:
+#
+# Mock panels are used as inner panels for these test cases to focus on
+# outer layout panel functionality. In these tests, the inner panels only
+# provides plain styling, but supports all types of horizontal and vertical
+# overflow modes (according to config values).
 
 
 @pc.parametrize(
     'frame_case',
     (
+        #
+        # id='no_frame'
+        #
         FrameTestCase(frame=None),
-        FrameTestCase(frame=Frame(Dimensions(width=22, height=4))),
-        FrameTestCase(frame=Frame(Dimensions(width=21, height=3))),
+
+        #
+        # id='larger_frame'
+        #
+        FrameTestCase(frame=Frame(Dimensions(width=20, height=5))),
+
+        #
+        # id='exact_frame'
+        #
+        FrameTestCase(frame=Frame(Dimensions(width=19, height=4))),
+
+        #
+        # id='taller_and_thinner_frame'
+        #
         FrameTestCase(
-            frame=Frame(Dimensions(width=20, height=4)),
+            frame=Frame(Dimensions(width=18, height=5), fixed_width=False),
+            # The content is wider than the frame, so the content is
+            # resized to fit the frame. The height and width is recalculated
+            # from the reflowed content as the "resize" stage, allowing
+            # white space to be reclaimed.
+            exp_plain_output=('╭────────────────╮\n'
+                              '│ This content   │\n'
+                              '│ is             │\n'
+                              '│ extraordinary! │\n'
+                              '╰────────────────╯\n'),
+            exp_dims_all_stages=Dimensions(width=18, height=5),
+        ),
+
+        #
+        # id='thinner_frame'
+        #
+        FrameTestCase(
+            frame=Frame(Dimensions(width=18, height=4), fixed_width=False),
+            # Vertical cropping with ellipsis after reflow. Since the last
+            # line is removed, the height and width is recalculated as the
+            # "resize" stage, allowing more white space to be reclaimed.
             exp_plain_output=('╭──────────────╮\n'
-                              '│ Some content │\n'
-                              '│ here         │\n'
+                              '│ This content │\n'
+                              '│ …            │\n'
                               '╰──────────────╯\n'),
-            # The frame is larger than needed by the content, so the
-            # extra whitespace is trimmed at the 'resize' stage,
-            # reducing the panel width to 16
             exp_dims_all_stages=Dimensions(width=16, height=4),
+            exp_plain_output_only_width=('╭────────────────╮\n'
+                                         '│ This content   │\n'
+                                         '│ is             │\n'
+                                         '│ extraordinary! │\n'
+                                         '╰────────────────╯\n'),
+            exp_dims_all_stages_only_width=Dimensions(width=18, height=5),
         ),
+
+        #
+        # id='ellipsis_in_both_dims'
+        #
         FrameTestCase(
-            frame=Frame(Dimensions(width=15, height=5)),
-            exp_plain_output=('╭─────────╮\n'
-                              '│ Some    │\n'
-                              '│ content │\n'
-                              '│ here    │\n'
-                              '╰─────────╯\n'),
-            exp_dims_all_stages=Dimensions(width=11, height=5),
+            frame=Frame(Dimensions(width=10, height=5), fixed_width=False),
+            # Vertical and horizontal cropping, simultaneously, with
+            # ellipses. Recalculation of dimensions at the "resize" stage
+            # allows whitespace to be reclaimed.
+            exp_plain_output=('╭────────╮\n'
+                              '│ This   │\n'
+                              '│ conte… │\n'
+                              '│ …      │\n'
+                              '╰────────╯\n'),
+            exp_dims_all_stages=Dimensions(width=10, height=5),
+            exp_plain_output_only_width=('╭────────╮\n'
+                                         '│ This   │\n'
+                                         '│ conte… │\n'
+                                         '│ is     │\n'
+                                         '│ extra… │\n'
+                                         '╰────────╯\n'),
+            exp_dims_all_stages_only_width=Dimensions(width=10, height=6),
         ),
+
+        #
+        # id='cropping_from_right_and_top'
+        #
         FrameTestCase(
-            frame=Frame(Dimensions(width=11, height=3)),
-            # Only the first line of the panel content is shown, hence the
-            # extra whitespace needed for line 2 is trimmed at the 'resize'
-            # stage, reducing the panel width further down to 8.
-            exp_plain_output=('╭──────╮\n'
-                              '│ Some │\n'
-                              '╰──────╯\n'),
-            exp_dims_all_stages=Dimensions(width=8, height=3),
-            exp_plain_output_only_width=('╭─────────╮\n'
-                                         '│ Some    │\n'
-                                         '│ content │\n'
-                                         '│ here    │\n'
-                                         '╰─────────╯\n'),
-            exp_dims_all_stages_only_width=Dimensions(width=11, height=5),
+            content=Layout(
+                panel=MockConfigCropPanel(
+                    content='This content is\nextraordinary!',
+                    config=OutputConfig(
+                        horizontal_overflow_mode=HorizontalOverflowMode.CROP,
+                        vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
+                    ),
+                )),
+            frame=Frame(Dimensions(width=14, height=4), fixed_width=False),
+            # Here, vertical content is cropped plainly from the top, in the
+            # "resize" stage.
+            exp_plain_output=('╭────────────╮\n'
+                              '│ content is │\n'
+                              '│ extraordin │\n'
+                              '╰────────────╯\n'),
+            exp_dims_all_stages=Dimensions(width=14, height=4),
+            exp_plain_output_only_width=('╭────────────╮\n'
+                                         '│ This       │\n'
+                                         '│ content is │\n'
+                                         '│ extraordin │\n'
+                                         '╰────────────╯\n'),
+            exp_dims_all_stages_only_width=Dimensions(width=14, height=5),
+        ),
+
+        #
+        # id='single_line_resized_inner_panel_flexible_width_crop_to_ellipsis'
+        #
+        FrameTestCase(
+            content=Layout(
+                panel=MockResizedConfigCropPanel(
+                    content='This content is\nextraordinary!',
+                    frame=Frame(Dimensions(width=15, height=1), fixed_width=False))),
+            frame=Frame(Dimensions(width=19, height=3), fixed_width=False),
+            # Inner panel is a resized panel with a defined frame width,
+            # which is flexible, and a frame height of 1. With the vertical
+            # cropping mode set as default to
+            # 'VerticalOverflowMode.ELLIPSIS_BOTTOM', the content is cropped
+            # to a single ellipsis character, with the reduced dimensions
+            # calculated at the "resize" stage to allow for other panels to
+            # make use of the released area.
+            exp_plain_output=('╭───╮\n'
+                              '│ … │\n'
+                              '╰───╯\n'),
+            exp_dims_all_stages=Dimensions(width=5, height=3),
+            exp_plain_output_only_height=('╭───╮\n'
+                                          '│ … │\n'
+                                          '╰───╯\n'),
+            exp_dims_all_stages_only_height=Dimensions(width=5, height=3),
+        ),
+
+        #
+        # id='single_line_resized_inner_panel_fixed_width_no_ellipsis_crop'
+        #
+        FrameTestCase(
+            content=Layout(
+                panel=MockResizedConfigCropPanel(
+                    content='This content is\nextraordinary!',
+                    frame=Frame(Dimensions(width=15, height=1)))),
+            frame=Frame(Dimensions(width=19, height=3), fixed_width=False),
+            # Same as previous test case, but with the inner panel frame
+            # width fixed. In this case, the inner panel content is still
+            # cropped to a single ellipsis character, but the width is not
+            # reduced and the outer panel will not reduce to reclaim the
+            # whitespace on the right, even though the outer frame width is
+            # flexible.
+            exp_plain_output=('╭─────────────────╮\n'
+                              '│ …               │\n'
+                              '╰─────────────────╯\n'),
+            exp_dims_all_stages=Dimensions(width=19, height=3),
+            exp_plain_output_only_height=('╭─────────────────╮\n'
+                                          '│ …               │\n'
+                                          '╰─────────────────╯\n'),
+            exp_dims_all_stages_only_height=Dimensions(width=19, height=3),
+        ),
+
+        #
+        # id='smallest_frame_with_ellipsis'
+        #
+        FrameTestCase(
+            frame=Frame(Dimensions(width=5, height=3)),
+            # Smallest frame that can fit some panel content, which is
+            # cropped vertically into a single ellipsis character at the
+            # "resize" stage.
+            exp_plain_output=('╭───╮\n'
+                              '│ … │\n'
+                              '╰───╯\n'),
+            exp_dims_all_stages=Dimensions(width=5, height=3),
+            # The 'only width' case is horizontally cropped to a single
+            # ellipsis character per line.
+            exp_plain_output_only_width=('╭───╮\n'
+                                         '│ … │\n'
+                                         '│ … │\n'
+                                         '│ … │\n'
+                                         '│ … │\n'
+                                         '╰───╯\n'),
+            exp_dims_all_stages_only_width=Dimensions(width=5, height=6),
+            exp_plain_output_only_height=('╭───╮\n'
+                                          '│ … │\n'
+                                          '╰───╯\n'),
+            exp_resized_dims_only_height=Dimensions(width=19, height=3),
+            exp_stylized_dims_only_height=Dimensions(width=5, height=3),
         ),
     ),
     ids=(
         'no_frame',
         'larger_frame',
         'exact_frame',
-        'two_lines_frame',
-        'three_lines_frame',
-        'height_crop_frame',
+        'taller_and_thinner_frame',
+        'thinner_frame',
+        'ellipses_in_both_dims',
+        'cropping_from_right_and_top',
+        'single_line_resized_inner_panel_flexible_width_crop_to_ellipsis',
+        'single_line_resized_inner_panel_fixed_width_no_ellipsis_crop',
+        'smallest_frame_with_ellipsis',
     ),
 )
 @pc.case(id='single_panel', tags=['reflow_cases', 'layout'])
@@ -72,22 +226,17 @@ def case_layout_single_panel(
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
-        content=Layout(panel=MockPanel(content='Some content here',)),
-        config=OutputConfig(
-            # Horizontal and vertical overflow modes are not applied to text
-            # in these tests as MockPanel is used, which ignores horizontal
-            # and vertical overflow modes.
-            horizontal_overflow_mode=HorizontalOverflowMode.CROP,
-            vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
-        ),
-        exp_plain_output_no_frame=('╭───────────────────╮\n'
-                                   '│ Some content here │\n'
-                                   '╰───────────────────╯\n'),
-        exp_dims_all_stages_no_frame=Dimensions(width=21, height=3),
-        exp_plain_output_only_height=('╭───────────────────╮\n'
-                                      '│ Some content here │\n'
-                                      '╰───────────────────╯\n'),
-        exp_dims_all_stages_only_height=Dimensions(width=21, height=3),
+        content=Layout(panel=MockConfigCropPanel(content='This content is\nextraordinary!',)),
+        exp_plain_output_no_frame=('╭─────────────────╮\n'
+                                   '│ This content is │\n'
+                                   '│ extraordinary!  │\n'
+                                   '╰─────────────────╯\n'),
+        exp_dims_all_stages_no_frame=Dimensions(width=19, height=4),
+        exp_plain_output_only_height=('╭─────────────────╮\n'
+                                      '│ This content is │\n'
+                                      '│ extraordinary!  │\n'
+                                      '╰─────────────────╯\n'),
+        exp_dims_all_stages_only_height=Dimensions(width=19, height=4),
         frame_case=frame_case,
         frame_variant=per_frame_variant,
     )
@@ -96,27 +245,47 @@ def case_layout_single_panel(
 @pc.parametrize(
     'frame_case',
     (
+        #
+        # id='no_frame'
+        #
         FrameTestCase(frame=None),
-        FrameTestCase(frame=Frame(Dimensions(width=11, height=5))),
-        FrameTestCase(frame=Frame(Dimensions(width=10, height=4))),
+
+        #
+        # id='larger_frame'
+        #
+        FrameTestCase(frame=Frame(Dimensions(width=11, height=6))),
+
+        #
+        # id='exact_frame'
+        #
+        FrameTestCase(frame=Frame(Dimensions(width=10, height=5))),
+
+        #
+        # id='height_crop_frame'
+        #
         FrameTestCase(
             frame=Frame(Dimensions(width=10, height=3)),
             # Notice that no automatic whitespace removal takes place when
-            # the frame height is reduced to 3, as the panel frame width is
-            # fixed to 6.
+            # the frame height is reduced to 3, as the inner panel frame
+            # width is fixed to 6.
             exp_plain_output=('╭────────╮\n'
                               '│ Some   │\n'
                               '╰────────╯\n'),
-            # No frame reduction in the resize phase due to fixed width and
+            # No frame reduction in the resize stage due to fixed width and
             # height
-            exp_resized_dims=Dimensions(width=10, height=4),
+            exp_resized_dims=Dimensions(width=10, height=5),
             exp_stylized_dims=Dimensions(width=10, height=3),
             exp_plain_output_only_width=('╭────────╮\n'
                                          '│ Some   │\n'
-                                         '│ conten │\n'
+                                         '│ conte… │\n'
+                                         '│ …      │\n'
                                          '╰────────╯\n'),
-            exp_dims_all_stages_only_width=Dimensions(width=10, height=4),
+            exp_dims_all_stages_only_width=Dimensions(width=10, height=5),
         ),
+
+        #
+        # id='both_dims_crop_frame'
+        #
         FrameTestCase(
             frame=Frame(Dimensions(width=9, height=3)),
             # Extra whitespace is still not removed.
@@ -125,18 +294,17 @@ def case_layout_single_panel(
                               '╰───────╯\n'),
             # Still no frame reduction in the resize phase due to fixed
             # width and height
-            exp_resized_dims=Dimensions(width=10, height=4),
+            exp_resized_dims=Dimensions(width=10, height=5),
             exp_stylized_dims=Dimensions(width=9, height=3),
             exp_plain_output_only_width=('╭───────╮\n'
                                          '│ Some  │\n'
-                                         '│ cont… │\n'
+                                         '│ conte │\n'
+                                         '│ …     │\n'
                                          '╰───────╯\n'),
-            exp_resized_dims_only_width=Dimensions(width=10, height=4),
-            exp_stylized_dims_only_width=Dimensions(width=9, height=4),
+            exp_stylized_dims_only_width=Dimensions(width=9, height=5),
             exp_plain_output_only_height=('╭────────╮\n'
                                           '│ Some   │\n'
                                           '╰────────╯\n'),
-            exp_resized_dims_only_height=Dimensions(width=10, height=4),
             exp_stylized_dims_only_height=Dimensions(width=10, height=3),
         ),
     ),
@@ -155,20 +323,14 @@ def case_layout_single_panel_fixed_dims(
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(
-            panel=MockPanel(
-                content='Some content here', frame=Frame(Dimensions(width=6, height=2)))),
-        config=OutputConfig(
-            # Horizontal and vertical overflow modes are not applied to text
-            # in these tests as MockPanel is used, which ignores horizontal
-            # and vertical overflow modes.
-            horizontal_overflow_mode=HorizontalOverflowMode.CROP,
-            vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
-        ),
+            panel=MockConfigCropPanel(
+                content='Some content shown here', frame=Frame(Dimensions(width=6, height=3)))),
         exp_plain_output_no_frame=('╭────────╮\n'
                                    '│ Some   │\n'
-                                   '│ conten │\n'
+                                   '│ conte… │\n'
+                                   '│ …      │\n'
                                    '╰────────╯\n'),
-        exp_dims_all_stages_no_frame=Dimensions(width=10, height=4),
+        exp_dims_all_stages_no_frame=Dimensions(width=10, height=5),
         frame_case=frame_case,
         frame_variant=per_frame_variant,
     )
@@ -177,8 +339,20 @@ def case_layout_single_panel_fixed_dims(
 @pc.parametrize(
     'frame_case',
     (
+
+        #
+        # id='no_frame'
+        #
         FrameTestCase(frame=None),
+
+        #
+        # id='exact_frame'
+        #
         FrameTestCase(frame=Frame(Dimensions(width=21, height=5))),
+
+        #
+        # id='reduced_width_frame_single_line_title'
+        #
         FrameTestCase(
             frame=Frame(Dimensions(width=20, height=6)),
             exp_plain_output=('╭──────────────╮\n'
@@ -188,10 +362,14 @@ def case_layout_single_panel_fixed_dims(
                               '│ text         │\n'
                               '╰──────────────╯\n'),
             # The frame is larger than needed by the content, so the
-            # extra whitespace is trimmed at the 'resize' stage,
+            # extra whitespace is trimmed at the "resize" stage,
             # reducing the panel width to 16
             exp_dims_all_stages=Dimensions(width=16, height=6),
         ),
+
+        #
+        # id='reduced_width_frame_double_line_title'
+        #
         FrameTestCase(
             frame=Frame(Dimensions(width=15, height=7)),
             exp_plain_output=('╭───────────╮\n'
@@ -204,6 +382,10 @@ def case_layout_single_panel_fixed_dims(
             # Title can be wrapped into two lines maximum
             exp_dims_all_stages=Dimensions(width=13, height=7),
         ),
+
+        #
+        # id='reduced_height_frame_crop_title_to_single_line'
+        #
         FrameTestCase(
             frame=Frame(Dimensions(width=10, height=8), fixed_width=False),
             # Not enough room for a double-line title, so the title is
@@ -230,11 +412,15 @@ def case_layout_single_panel_fixed_dims(
                                          '╰────────╯\n'),
             exp_dims_all_stages_only_width=Dimensions(width=10, height=9),
         ),
+
+        #
+        # id='reduced_height_frame_crop_content_keep_title_at_bottom'
+        #
         FrameTestCase(
             frame=Frame(Dimensions(width=10, height=7), fixed_width=False),
             # Just enough room for a single-line title (last line cropped),
             # while content is cropped to 3 lines. Both crop operations
-            # happen at the 'resize' stage
+            # happen at the "resize" stage
             config=OutputConfig(panel_title_at_top=False),
             exp_plain_output=('╭────────╮\n'
                               '│ Here   │\n'
@@ -267,11 +453,15 @@ def case_layout_single_panel_fixed_dims(
             exp_resized_dims_only_height=Dimensions(width=21, height=5),
             exp_stylized_dims_only_height=Dimensions(width=21, height=7),
         ),
+
+        #
+        # id='reduced_height_frame_remove_title'
+        #
         FrameTestCase(
             frame=Frame(Dimensions(width=9, height=6), fixed_width=False),
             # When only 2 or fewer lines of content are not in conflict with
             # a single-line title, the title is removed. As this happens in
-            # the 'resize' stage, horizontal cropping of the content is
+            # the "resize" stage, horizontal cropping of the content is
             # triggered
             exp_plain_output=('╭──────╮\n'
                               '│ Here │\n'
@@ -292,6 +482,10 @@ def case_layout_single_panel_fixed_dims(
             exp_resized_dims_only_width=Dimensions(width=10, height=9),
             exp_stylized_dims_only_width=Dimensions(width=9, height=9),
         ),
+
+        #
+        # id='expand_width_frame_title_reappears'
+        #
         FrameTestCase(
             frame=Frame(Dimensions(width=11, height=7), fixed_width=False),
             # Once there is enough width to remove the conflict between the
@@ -314,6 +508,10 @@ def case_layout_single_panel_fixed_dims(
                                          '╰─────────╯\n'),
             exp_dims_all_stages_only_width=Dimensions(width=11, height=8),
         ),
+
+        #
+        # id='reduced_width_frame_max_double_line_title'
+        #
         FrameTestCase(
             frame=Frame(Dimensions(width=9, height=10), fixed_width=False),
             # Title does not expand into more than two lines, even though
@@ -351,13 +549,9 @@ def case_layout_single_panel_with_title(
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
-        content=Layout(panel=MockPanel(content='Here is some text', title='A nice title'),),
+        content=Layout(
+            panel=MockConfigCropPanel(content='Here is some text', title='A nice title'),),
         config=OutputConfig(
-            # Horizontal and vertical overflow modes are not applied to text
-            # in these tests as MockPanel is used, which ignores horizontal
-            # and vertical overflow modes.
-            horizontal_overflow_mode=HorizontalOverflowMode.CROP,
-            vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
             console_color_system=ConsoleColorSystem.ANSI_RGB,
             transparent_background=False,
         ),
@@ -381,37 +575,58 @@ def case_layout_single_panel_with_title(
 @pc.parametrize(
     'frame_case',
     (
+        #
+        # id='no_frame'
+        #
         FrameTestCase(frame=None),
+
+        #
+        # id='reduced_width'
+        #
         FrameTestCase(
             frame=Frame(Dimensions(width=16, height=None)),
             exp_resized_dims=Dimensions(width=24, height=7),
             exp_stylized_dims=Dimensions(width=16, height=7),
+            # Ellipses are not shown as the inner panel frame is fixed to a
+            # larger dimension than what is visible within the outer frame.
+            # Reducing the inner frame according to the visible area would
+            # add ellipses.
+            #
+            # Also, whitespace on the right side are not reclaimed for the
+            # same reason.
+            #
+            # See also the 'single_panel_resized_inner_panel_fixed_dims' case.
             exp_plain_output=('╭──────────────╮\n'
-                              '│ Inner panel… │\n'
+                              '│ Inner panel  │\n'
                               '│ fixed dims   │\n'
                               '│              │\n'
                               '│              │\n'
                               '│ Panel title  │\n'
                               '╰──────────────╯\n'),
         ),
+
+        #
+        # id='reduced_width_crop_contents'
+        #
         FrameTestCase(
             frame=Frame(Dimensions(width=14, height=6)),
             exp_resized_dims=Dimensions(width=24, height=7),
             exp_stylized_dims=Dimensions(width=14, height=6),
+            # The title is cropped with an ellipsis, as it is part of the
+            # outer table.
             exp_plain_output=('╭────────────╮\n'
-                              '│ Inner pan… │\n'
+                              '│ Inner pane │\n'
                               '│ fixed dims │\n'
                               '│            │\n'
                               '│ Panel tit… │\n'
                               '╰────────────╯\n'),
             exp_plain_output_only_width=('╭────────────╮\n'
-                                         '│ Inner pan… │\n'
+                                         '│ Inner pane │\n'
                                          '│ fixed dims │\n'
                                          '│            │\n'
                                          '│            │\n'
                                          '│ Panel tit… │\n'
                                          '╰────────────╯\n'),
-            # exp_dims_all_stages_only_width=Dimensions(width=24, height=7),
             exp_stylized_dims_only_height=Dimensions(width=24, height=6),
             exp_plain_output_only_height=('╭──────────────────────╮\n'
                                           '│ Inner panel with     │\n'
@@ -419,7 +634,6 @@ def case_layout_single_panel_with_title(
                                           '│                      │\n'
                                           '│     Panel title      │\n'
                                           '╰──────────────────────╯\n'),
-            # exp_dims_all_stages_only_height=Dimensions(width=24, height=7),
             exp_stylized_dims_only_width=Dimensions(width=14, height=7),
         ),
     ),
@@ -436,7 +650,7 @@ def case_layout_single_panel_with_title_fixed_dims(
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(
-            panel=MockPanel(
+            panel=MockConfigCropPanel(
                 content='Inner panel with fixed dims',
                 title='Panel title',
                 frame=Frame(Dimensions(width=20, height=5)),
@@ -466,23 +680,45 @@ def case_layout_single_panel_with_title_fixed_dims(
 @pc.parametrize(
     'frame_case',
     (
+        #
+        # id='no_frame'
+        #
         FrameTestCase(frame=None),
+
+        #
+        # id='larger_frame'
+        #
         FrameTestCase(frame=Frame(Dimensions(width=9, height=5))),
+
+        #
+        # id='exact_frame'
+        #
         FrameTestCase(frame=Frame(Dimensions(width=8, height=4))),
+
+        #
+        # id='smaller_frame'
+        #
         FrameTestCase(
             frame=Frame(Dimensions(width=7, height=3)),
+            # Ellipses are not shown as the inner panel frame is fixed to a
+            # larger dimension than what is visible within the outer frame.
+            # Reducing the inner frame according to the visible area would
+            # add ellipses.
+            #
+            # Also, whitespace on the right side are not reclaimed for the
+            # same reason.
             exp_plain_output=('╭─────╮\n'
-                              '│ So… │\n'
+                              '│ Som │\n'
                               '╰─────╯\n'),
             # No resizing of inner frame is possible, as it is already
-            # in the resized stage (stage 2).
+            # in the resized stage.
             exp_resized_dims=Dimensions(width=8, height=4),
-            # Cropping to frame is enacted by cropping at the 'stylize'
+            # Cropping to frame is enacted by cropping at the "stylize"
             # stage, both horizontally and vertically
             exp_stylized_dims=Dimensions(width=7, height=3),
             exp_plain_output_only_width=('╭─────╮\n'
-                                         '│ So… │\n'
-                                         '│ co… │\n'
+                                         '│ Som │\n'
+                                         '│ …   │\n'
                                          '╰─────╯\n'),
             exp_stylized_dims_only_width=Dimensions(width=7, height=4),
             exp_plain_output_only_height=('╭──────╮\n'
@@ -491,27 +727,28 @@ def case_layout_single_panel_with_title_fixed_dims(
             exp_stylized_dims_only_height=Dimensions(width=8, height=3),
         ),
     ),
-    ids=('no_frame', 'larger_frame', 'exact_frame', 'smaller_frame'),
+    ids=(
+        'no_frame',
+        'larger_frame',
+        'exact_frame',
+        'smaller_frame',
+    ),
 )
-@pc.case(id='single_panel_stage_2_fixed_dims', tags=['reflow_cases', 'layout'])
-def case_layout_single_panel_stage_2_fixed_dims(
+@pc.case(id='single_panel_resized_inner_panel_fixed_dims', tags=['reflow_cases', 'layout'])
+def case_layout_single_panel_resized_inner_panel_fixed_dims(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(
-            panel=MockPanelStage2(
+            panel=MockResizedConfigCropPanel(
                 content='Some\ncontent\nhere', frame=Frame(Dimensions(width=4, height=2)))),
-        config=OutputConfig(
-            # Horizontal and vertical overflow modes are not applied to text
-            # in these tests as MockPanelStage2 is used, which ignores
-            # horizontal and vertical overflow modes.
-            horizontal_overflow_mode=HorizontalOverflowMode.CROP,
-            vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
-        ),
+        # Without an outer frame, the visible area of the outer panel is the
+        # size of the inner panel frame. Hence, the ellipsis from the inner
+        # panel cropping is fully visible.
         exp_plain_output_no_frame=('╭──────╮\n'
                                    '│ Some │\n'
-                                   '│ cont │\n'
+                                   '│ …    │\n'
                                    '╰──────╯\n'),
         exp_dims_all_stages_no_frame=Dimensions(width=8, height=4),
         frame_case=frame_case,
@@ -522,9 +759,25 @@ def case_layout_single_panel_stage_2_fixed_dims(
 @pc.parametrize(
     'frame_case',
     (
+        #
+        # id='no_frame'
+        #
         FrameTestCase(frame=None),
+
+        #
+        # id='larger_frame'
+        #
         FrameTestCase(frame=Frame(Dimensions(width=31, height=4))),
+
+        #
+        # id='exact_frame'
+        #
         FrameTestCase(frame=Frame(Dimensions(width=30, height=3))),
+
+        #
+        # id='width_29_frame'
+        #
+
         # Width-resizable panels:
         # - First
         # - Second
@@ -544,6 +797,11 @@ def case_layout_single_panel_stage_2_fixed_dims(
                               '╰───────────┴───────────╯\n'),
             exp_dims_all_stages=Dimensions(width=25, height=4),
         ),
+
+        #
+        # id='width_25_frame'
+        #
+
         # No change, but frame is now exact size again
         FrameTestCase(
             frame=Frame(Dimensions(width=25, height=4)),
@@ -553,6 +811,11 @@ def case_layout_single_panel_stage_2_fixed_dims(
                               '╰───────────┴───────────╯\n'),
             exp_dims_all_stages=Dimensions(width=25, height=4),
         ),
+
+        #
+        # id='width_24_frame'
+        #
+
         # Width-resizable panels:
         # - First
         # - Second
@@ -567,6 +830,11 @@ def case_layout_single_panel_stage_2_fixed_dims(
                               '╰───────────┴────────╯\n'),
             exp_dims_all_stages=Dimensions(width=22, height=4),
         ),
+
+        #
+        # id='width_21_frame'
+        #
+
         # Width-resizable panels:
         # - First
         # - Second
@@ -587,6 +855,11 @@ def case_layout_single_panel_stage_2_fixed_dims(
                               '╰──────┴───────────╯\n'),
             exp_dims_all_stages=Dimensions(width=20, height=5),
         ),
+
+        #
+        # id='width_19_frame'
+        #
+
         # First panel is no longer width-resizable, since the text in the
         # first panel cannot be soft-wrapped more than what has already been
         # done.
@@ -606,6 +879,11 @@ def case_layout_single_panel_stage_2_fixed_dims(
                               '╰──────┴────────╯\n'),
             exp_dims_all_stages=Dimensions(width=17, height=5),
         ),
+
+        #
+        # id='width_16_frame'
+        #
+
         # Width-resizable panels:
         # - Second
         #
@@ -624,6 +902,11 @@ def case_layout_single_panel_stage_2_fixed_dims(
                               '╰──────┴───────╯\n'),
             exp_dims_all_stages=Dimensions(width=16, height=5),
         ),
+
+        #
+        # id='width_15_frame'
+        #
+
         # Width-resizable panels:
         # - Second
         #
@@ -639,6 +922,11 @@ def case_layout_single_panel_stage_2_fixed_dims(
                               '╰──────┴─────╯\n'),
             exp_dims_all_stages=Dimensions(width=14, height=5),
         ),
+
+        #
+        # id='width_13_frame'
+        #
+
         # Width-resizable panels:
         #   (none left)
         #
@@ -649,12 +937,17 @@ def case_layout_single_panel_stage_2_fixed_dims(
         FrameTestCase(
             frame=Frame(Dimensions(width=13, height=5)),
             exp_plain_output=('╭─────┬─────╮\n'
-                              '│ Som │ (1, │\n'
-                              '│ tex │ 2,  │\n'
-                              '│ her │ 3)  │\n'
+                              '│ So… │ (1, │\n'
+                              '│ te… │ 2,  │\n'
+                              '│ he… │ 3)  │\n'
                               '╰─────┴─────╯\n'),
             exp_dims_all_stages=Dimensions(width=13, height=5),
         ),
+
+        #
+        # id='width_12_frame'
+        #
+
         # Width-resizable panels:
         #   (none left)
         #
@@ -669,12 +962,17 @@ def case_layout_single_panel_stage_2_fixed_dims(
         FrameTestCase(
             frame=Frame(Dimensions(width=12, height=5)),
             exp_plain_output=('╭─────┬────╮\n'
-                              '│ Som │ (1 │\n'
-                              '│ tex │ 2, │\n'
-                              '│ her │ 3) │\n'
+                              '│ So… │ (… │\n'
+                              '│ te… │ 2, │\n'
+                              '│ he… │ 3) │\n'
                               '╰─────┴────╯\n'),
             exp_dims_all_stages=Dimensions(width=12, height=5),
         ),
+
+        #
+        # id='width_11_frame'
+        #
+
         # Width-resizable panels:
         #   (none left)
         #
@@ -685,12 +983,17 @@ def case_layout_single_panel_stage_2_fixed_dims(
         FrameTestCase(
             frame=Frame(Dimensions(width=11, height=5)),
             exp_plain_output=('╭────┬────╮\n'
-                              '│ So │ (1 │\n'
-                              '│ te │ 2, │\n'
-                              '│ he │ 3) │\n'
+                              '│ S… │ (… │\n'
+                              '│ t… │ 2, │\n'
+                              '│ h… │ 3) │\n'
                               '╰────┴────╯\n'),
             exp_dims_all_stages=Dimensions(width=11, height=5),
         ),
+
+        #
+        # id='width_10_frame'
+        #
+
         # Width-resizable panels:
         #   (none left)
         #
@@ -705,12 +1008,17 @@ def case_layout_single_panel_stage_2_fixed_dims(
         FrameTestCase(
             frame=Frame(Dimensions(width=10, height=5)),
             exp_plain_output=('╭────┬───╮\n'
-                              '│ So │ ( │\n'
-                              '│ te │ 2 │\n'
-                              '│ he │ 3 │\n'
+                              '│ S… │ … │\n'
+                              '│ t… │ … │\n'
+                              '│ h… │ … │\n'
                               '╰────┴───╯\n'),
             exp_dims_all_stages=Dimensions(width=10, height=5),
         ),
+
+        #
+        # id='width_9_frame'
+        #
+
         # Width-resizable panels:
         #   (none left)
         #
@@ -721,12 +1029,17 @@ def case_layout_single_panel_stage_2_fixed_dims(
         FrameTestCase(
             frame=Frame(Dimensions(width=9, height=5)),
             exp_plain_output=('╭───┬───╮\n'
-                              '│ S │ ( │\n'
-                              '│ t │ 2 │\n'
-                              '│ h │ 3 │\n'
+                              '│ … │ … │\n'
+                              '│ … │ … │\n'
+                              '│ … │ … │\n'
                               '╰───┴───╯\n'),
             exp_dims_all_stages=Dimensions(width=9, height=5),
         ),
+
+        #
+        # id='width_8_frame'
+        #
+
         # Width-resizable panels:
         #   (none left)
         #
@@ -741,12 +1054,16 @@ def case_layout_single_panel_stage_2_fixed_dims(
         FrameTestCase(
             frame=Frame(Dimensions(width=8, height=5)),
             exp_plain_output=('╭───┬──╮\n'
-                              '│ S │  │\n'
-                              '│ t │  │\n'
-                              '│ h │  │\n'
+                              '│ … │  │\n'
+                              '│ … │  │\n'
+                              '│ … │  │\n'
                               '╰───┴──╯\n'),
             exp_dims_all_stages=Dimensions(width=8, height=5),
         ),
+
+        #
+        # id='width_7_frame'
+        #
         FrameTestCase(
             frame=Frame(Dimensions(width=7, height=3)),
             exp_plain_output=('╭──┬──╮\n'
@@ -755,8 +1072,13 @@ def case_layout_single_panel_stage_2_fixed_dims(
             exp_dims_all_stages=Dimensions(width=7, height=3),
             exp_resized_dims_only_width=Dimensions(width=7, height=5),
         ),
+
+        #
+        # id='width_6_frame'
+        #
+
         # All things being equal, reduce the rightmost panel. Contrast this
-        # with the two-panel case in 'panel/cases/layout_basics.py', where
+        # with the two-panel case in 'panel/cases/layout_basics.py' where
         # theleftmost panel is reduced first, as that case skips over layout
         # reflow.
         FrameTestCase(
@@ -764,13 +1086,18 @@ def case_layout_single_panel_stage_2_fixed_dims(
             exp_plain_output=('╭──┬─╮\n'
                               '│  │ │\n'
                               '╰──┴─╯\n'),
-            # No resizing of inner frame is possible in the 'resize' stage,
+            # No resizing of inner panel is possible in the "resize" stage,
             # as the widths are 0 for both panels. Hence, width resizing
-            # happens in the 'stylize' stage.
+            # happens in the "stylize" stage.
             exp_resized_dims=Dimensions(width=7, height=3),
             exp_stylized_dims=Dimensions(width=6, height=3),
             exp_resized_dims_only_width=Dimensions(width=7, height=5),
         ),
+
+        #
+        # id='width_5_frame'
+        #
+
         # Reduce the widest panel
         FrameTestCase(
             frame=Frame(Dimensions(width=5, height=3)),
@@ -813,17 +1140,8 @@ def case_layout_two_panels(
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(
-            first=MockPanel(content='Some text here'),
-            second=MockPanel(content='(1, 2, 3)'),
-        ),
-        config=OutputConfig(
-            # Horizontal and vertical overflow modes are not applied to text
-            # in these tests as MockPanel is used, which ignores horizontal
-            # and vertical overflow modes.
-            horizontal_overflow_mode=HorizontalOverflowMode.CROP,
-            vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
-            console_color_system=ConsoleColorSystem.ANSI_RGB,
-            transparent_background=False,
+            first=MockConfigCropPanel(content='Some text here'),
+            second=MockConfigCropPanel(content='(1, 2, 3)'),
         ),
         exp_plain_output_no_frame=('╭────────────────┬───────────╮\n'
                                    '│ Some text here │ (1, 2, 3) │\n'

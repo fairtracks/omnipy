@@ -523,7 +523,8 @@ ColorStyles = (
 
 class HorizontalOverflowMode(str, Enum):
     """
-    Horizontal overflow modes for the output.
+    Horizontal overflow modes for the output. Horizontal overflow modes have
+    no effect on layout panels.
 
     The horizontal overflow modes are:
     - `ELLIPSIS`: Adds an ellipsis (...) at the end of the line if it
@@ -552,7 +553,8 @@ class LayoutDesign(str, Enum):
 
 class VerticalOverflowMode(str, Enum):
     """
-    Vertical overflow modes for the output.
+    Vertical overflow modes for the output. Vertical overflow modes have
+    no effect on layout panels.
 
     The vertical overflow modes are:
     - `CROP_TOP`: Crops the top of the output if it exceeds the height.
@@ -561,6 +563,8 @@ class VerticalOverflowMode(str, Enum):
     """
     CROP_TOP = 'crop_top'
     CROP_BOTTOM = 'crop_bottom'
+    ELLIPSIS_TOP = 'ellipsis_top'
+    ELLIPSIS_BOTTOM = 'ellipsis_bottom'
 
 
 @pyd.dataclass(
@@ -649,7 +653,7 @@ class OutputConfig:
     css_font_weight: pyd.NonNegativeInt | None = 450
     css_line_height: pyd.NonNegativeFloat | None = 1.35
     horizontal_overflow_mode: HorizontalOverflowMode = HorizontalOverflowMode.ELLIPSIS
-    vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.CROP_BOTTOM
+    vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.ELLIPSIS_BOTTOM
     layout_design: LayoutDesign = LayoutDesign.TABLE_GRID
     panel_title_at_top: bool = True
 

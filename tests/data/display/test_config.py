@@ -286,7 +286,7 @@ def test_output_config_default_values() -> None:
     assert config.css_font_weight == 450
     assert config.css_line_height == 1.35
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
-    assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
+    assert config.vertical_overflow_mode is VerticalOverflowMode.ELLIPSIS_BOTTOM
     assert config.layout_design is LayoutDesign.TABLE_GRID
     assert config.panel_title_at_top is True
 

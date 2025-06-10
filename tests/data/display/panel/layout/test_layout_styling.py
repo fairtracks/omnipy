@@ -17,14 +17,14 @@ from ..helpers.case_setup import (OutputPropertyType,
                                   prepare_test_case_for_stylized_layout,
                                   StylizedPanelOutputExpectations,
                                   StylizedPanelTestCaseSetup)
-from ..helpers.mocks import MockPanel, MockPanelStage3
+from ..helpers.mocks import MockStylablePlainCropPanel, MockStylizedPlainCropPanel
 from ..helpers.panel_assert import assert_dims_aware_panel, strip_all_styling_from_panel_output
 
 
 def test_stylized_layout_panel_init() -> None:
 
     layout: Layout = Layout()
-    layout['panel'] = MockPanel(content='Some Content')
+    layout['panel'] = MockStylablePlainCropPanel(content='Some Content')
     layout_panel = StylizedLayoutPanel(ResizedLayoutDraftPanel(layout))
 
     assert layout_panel.content is not layout
@@ -44,7 +44,7 @@ def test_stylized_layout_panel_init() -> None:
         ))
 
     assert configured_layout_panel.content is not layout
-    assert isinstance(configured_layout_panel.content['panel'], MockPanelStage3)
+    assert isinstance(configured_layout_panel.content['panel'], MockStylizedPlainCropPanel)
     assert configured_layout_panel.frame is not frame
     assert configured_layout_panel.frame == frame
     assert configured_layout_panel.constraints is not constraints

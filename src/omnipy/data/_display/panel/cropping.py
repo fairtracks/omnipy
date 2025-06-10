@@ -6,7 +6,7 @@ from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.helpers import UnicodeCharWidthMap
 from omnipy.data._display.panel.draft.monospaced import _calc_line_stats
 import omnipy.util._pydantic as pyd
-from omnipy.util.helpers import strip_and_split_newline
+from omnipy.util.helpers import extract_newline, strip_and_split_newline
 
 
 def rich_overflow_method(
@@ -62,8 +62,40 @@ def crop_content_lines_vertically(
             return content_lines[:frame_height]
         case VerticalOverflowMode.CROP_TOP:
             return content_lines[-frame_height:]
+        case VerticalOverflowMode.ELLIPSIS_BOTTOM:
+            uncropped_lines = content_lines[:frame_height - 1]
+            first_cropped_line = content_lines[frame_height - 1]
+            newline = extract_newline(first_cropped_line)
+            return uncropped_lines + ['…' + newline]
+        case VerticalOverflowMode.ELLIPSIS_TOP:
+            uncropped_lines = content_lines[-frame_height + 1:]
+            first_cropped_line = content_lines[-frame_height + 1]
+            newline = extract_newline(first_cropped_line)
+            return ['…' + newline] + uncropped_lines
         case _:
             raise ValueError(f'Unknown vertical overflow mode: {vertical_overflow_mode}')
+
+
+def crop_content_line_horizontally(
+    content_line: str,
+    frame_width: pyd.NonNegativeInt | None,
+    horizontal_overflow_mode: HorizontalOverflowMode,
+) -> str:
+    if frame_width is None or len(content_line) <= frame_width:
+        return content_line
+
+    match horizontal_overflow_mode:
+        case HorizontalOverflowMode.ELLIPSIS:
+            if frame_width > 1:
+                return content_line[:frame_width - 1] + '…'
+            else:
+                return '…'
+        case HorizontalOverflowMode.CROP:
+            return content_line[:frame_width]
+        case HorizontalOverflowMode.WORD_WRAP:
+            return content_line
+        case _:
+            raise ValueError(f'Unknown horizontal overflow mode: {horizontal_overflow_mode}')
 
 
 def crop_content_with_extra_wide_chars(

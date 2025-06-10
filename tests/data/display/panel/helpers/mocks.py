@@ -1,94 +1,35 @@
 from functools import cached_property
 import re
+from typing import cast, ClassVar
 
-from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight, has_height
-from omnipy.data._display.frame import AnyFrame, Frame
-from omnipy.data._display.helpers import soft_wrap_words, UnicodeCharWidthMap
-from omnipy.data._display.panel.base import DimensionsAwarePanel, FullyRenderedPanel, OutputVariant
-from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, DraftPanel
-from omnipy.data._display.panel.draft.monospaced import (crop_content_lines_for_resizing,
-                                                         crop_content_with_extra_wide_chars)
+from omnipy.data._display.config import OutputConfig
+from omnipy.data._display.dimensions import has_height, has_width
+from omnipy.data._display.frame import Frame
+from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, FullyRenderedDraftPanel
 from omnipy.data._display.panel.styling.output import OutputMode
 import omnipy.util._pydantic as pyd
 
-
-@pyd.dataclass(init=False, frozen=True)
-class MockPanel(DraftPanel[str, AnyFrame]):
-    def __init__(self, content: str = '', frame=None, title='', constraints=None, config=None):
-        super().__init__(
-            content=content,
-            frame=frame,
-            title=title,
-            constraints=constraints,
-            config=config,
-        )
-
-    def render_next_stage(self) -> 'DimensionsAwarePanel[AnyFrame]':
-        frame_width = self.frame.dims.width if self.frame else None
-        if frame_width is None:
-            return MockPanelStage2(
-                content=self.content,
-                frame=self.frame,
-                title=self.title,
-                constraints=self.constraints,
-                config=self.config,
-            )
-        else:
-            return MockPanelStage2(
-                '\n'.join(soft_wrap_words(self.content.split(), frame_width)),
-                frame=self.frame,
-                title=self.title,
-                constraints=self.constraints,
-                config=self.config,
-            )
+from ...helpers.mocks import (MockDimsAwarePanelBase,
+                              MockFullyRenderedPanelBase,
+                              MockOutputVariantBase,
+                              MockPanelBase)
 
 
-@pyd.dataclass(init=False, frozen=True)
-class MockPanelStage2(DimensionsAwareDraftPanel[AnyFrame]):
-    def render_next_stage(self) -> FullyRenderedPanel[AnyFrame]:
-        return MockPanelStage3(
-            content=self.content,
-            frame=self.frame,
-            title=self.title,
-            constraints=self.constraints,
-            config=self.config,
-        )
-
-    @cached_property
-    def _content_lines(self) -> list[str]:
-        all_content_lines = self.content.split('\n')
-        all_content_lines = crop_content_lines_for_resizing(
-            all_content_lines,
-            self.frame,
-        )
-        all_content_lines = crop_content_with_extra_wide_chars(
-            all_content_lines,
-            self.frame,
-            self.config,
-            UnicodeCharWidthMap(),
-        )
-        return all_content_lines
-
-    @cached_property
-    def dims(self) -> DimensionsWithWidthAndHeight:
-        return Dimensions(
-            width=max(len(line) for line in self._content_lines),
-            height=len(self._content_lines),
-        )
-
-
-class MockOutputVariant(OutputVariant):
-    def __init__(self, content_lines: list[str], frame: Frame, output_mode: OutputMode) -> None:
-        self._cropped_lines = self._crop_to_frame(content_lines, frame)
-        self._output_mode = output_mode
-
-    def _crop_to_frame(self, content_lines: list[str], frame: Frame) -> list[str]:
+class MockPlainCropOutputVariant(MockOutputVariantBase):
+    def _crop_to_frame(
+        self,
+        lines: list[str],
+        frame: Frame,
+        config: OutputConfig,
+    ) -> list[str]:
         cropped_lines = []
-        for line_num, line in enumerate(content_lines):
+        for line_num, line in enumerate(lines):
             if has_height(frame.dims) and line_num >= frame.dims.height:
                 break
-            else:
+            if has_width(frame.dims) and len(line) > frame.dims.width:
                 cropped_lines.append(line[:frame.dims.width])
+            else:
+                cropped_lines.append(line)
         return cropped_lines
 
     @cached_property
@@ -131,16 +72,24 @@ class MockOutputVariant(OutputVariant):
                         '</body></html>')
 
 
+class SplitContentMixin:
+    @cached_property
+    def _content_lines(self) -> list[str]:
+        _self = cast(DimensionsAwareDraftPanel, self)
+        return _self.content.split('\n')
+
+
 @pyd.dataclass(init=False, frozen=True)
-class MockPanelStage3(FullyRenderedPanel, MockPanelStage2):
-    @cached_property
-    def plain(self) -> OutputVariant:
-        return MockOutputVariant(self._content_lines, self.frame, OutputMode.PLAIN)
+class MockStylizedPlainCropPanel(SplitContentMixin, MockFullyRenderedPanelBase):
+    _output_variant_cls: ClassVar[type[MockOutputVariantBase]] = MockPlainCropOutputVariant
 
-    @cached_property
-    def bw_stylized(self) -> OutputVariant:
-        return MockOutputVariant(self._content_lines, self.frame, OutputMode.BW_STYLIZED)
 
-    @cached_property
-    def colorized(self) -> OutputVariant:
-        return MockOutputVariant(self._content_lines, self.frame, OutputMode.COLORIZED)
+@pyd.dataclass(init=False, frozen=True)
+class MockResizedStylablePlainCropPanel(SplitContentMixin, MockDimsAwarePanelBase):
+    _fully_rendered_panel_cls: ClassVar[type[FullyRenderedDraftPanel]] = MockStylizedPlainCropPanel
+
+
+@pyd.dataclass(init=False, frozen=True)
+class MockStylablePlainCropPanel(MockPanelBase):
+    _dims_aware_panel_cls: ClassVar[
+        type[DimensionsAwareDraftPanel]] = MockResizedStylablePlainCropPanel

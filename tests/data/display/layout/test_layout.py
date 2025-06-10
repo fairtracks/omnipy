@@ -7,7 +7,7 @@ from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.base import Panel
 
-from ..panel.helpers.mocks import MockPanel
+from ..panel.helpers.mocks import MockStylablePlainCropPanel
 
 
 @dataclass
@@ -35,9 +35,9 @@ def test_empty_layout() -> None:
 @pytest.fixture
 def simple_layout() -> SimpleLayoutCase:
     """Create a layout with two panels for testing."""
-    layout = Layout()
-    first_panel = MockPanel()
-    second_panel = MockPanel()
+    layout: Layout = Layout()
+    first_panel = MockStylablePlainCropPanel()
+    second_panel = MockStylablePlainCropPanel()
 
     layout['first'] = first_panel
     layout['second'] = second_panel
@@ -50,21 +50,21 @@ def simple_layout() -> SimpleLayoutCase:
 
 
 def test_layout_hashable(simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
-    layout_1 = Layout()
-    layout_2 = Layout()
+    layout_1: Layout = Layout()
+    layout_2: Layout = Layout()
 
     assert hash(layout_1) == hash(layout_2)
 
-    layout_3 = Layout()
-    layout_3['first'] = MockPanel()
+    layout_3: Layout = Layout()
+    layout_3['first'] = MockStylablePlainCropPanel()
 
-    layout_4 = Layout()
-    layout_4['first'] = MockPanel()
+    layout_4: Layout = Layout()
+    layout_4['first'] = MockStylablePlainCropPanel()
 
     assert hash(layout_1) != hash(layout_3)
     assert hash(layout_3) == hash(layout_4)
 
-    layout_4['first'] = MockPanel('contents')
+    layout_4['first'] = MockStylablePlainCropPanel('contents')
 
     assert hash(layout_3) != hash(layout_4)
 
@@ -111,7 +111,7 @@ def test_layout_insertion_and_deletion(
     """Test insertion and deletion of panels in the layout."""
     case = simple_layout
 
-    third_panel = MockPanel()
+    third_panel = MockStylablePlainCropPanel()
     case.layout['third'] = third_panel
 
     # Test insertion
@@ -157,17 +157,17 @@ def test_layout_default_methods(simple_layout: Annotated[SimpleLayoutCase, pytes
     # Test get() method
     assert case.layout.get('first') is case.first_panel
     assert case.layout.get('missing') is None
-    other_panel = MockPanel()
+    other_panel = MockStylablePlainCropPanel()
     assert case.layout.get('missing', other_panel) is other_panel
 
     # Test setdefault()
-    third_panel = MockPanel()
+    third_panel = MockStylablePlainCropPanel()
     result = case.layout.setdefault('third', third_panel)
     assert case.layout['third'] is third_panel
     assert result is third_panel
 
     # Test setdefault() with existing key
-    result = case.layout.setdefault('first', MockPanel())
+    result = case.layout.setdefault('first', MockStylablePlainCropPanel())
     assert case.layout['first'] is case.first_panel
     assert result is case.first_panel  # Should return existing value
 
@@ -178,33 +178,33 @@ def test_layout_update_methods_and_operators(
     case = simple_layout
 
     # Test update() with another dict
-    new_third_panel = MockPanel()
-    fourth_panel = MockPanel()
+    new_third_panel = MockStylablePlainCropPanel()
+    fourth_panel = MockStylablePlainCropPanel()
     case.layout.update({'third': new_third_panel, 'fourth': fourth_panel})
     assert case.layout['third'] is new_third_panel
     assert case.layout['fourth'] is fourth_panel
 
     # Test update() with keyword arguments
-    fifth_panel = MockPanel()
+    fifth_panel = MockStylablePlainCropPanel()
     case.layout.update(fifth=fifth_panel)
     assert case.layout['fifth'] is fifth_panel
 
     # Test update() with iterable of key-value pairs
-    sixth_panel = MockPanel()
+    sixth_panel = MockStylablePlainCropPanel()
     iterable = [('sixth', sixth_panel)]
     case.layout.update(iterable)
     assert case.layout['sixth'] is sixth_panel
 
     # Test |= operator
-    new_sixth_panel = MockPanel()
-    seventh_panel = MockPanel()
+    new_sixth_panel = MockStylablePlainCropPanel()
+    seventh_panel = MockStylablePlainCropPanel()
     case.layout |= {'sixth': new_sixth_panel, 'seventh': seventh_panel}
     assert case.layout['sixth'] is new_sixth_panel
     assert case.layout['seventh'] is seventh_panel
 
     # Test | operator
-    new_seventh_panel = MockPanel()
-    eighth_panel = MockPanel()
+    new_seventh_panel = MockStylablePlainCropPanel()
+    eighth_panel = MockStylablePlainCropPanel()
     other_dict = {'seventh': new_seventh_panel, 'eighth': eighth_panel}
     combined = case.layout | other_dict
     assert combined['seventh'] is new_seventh_panel
@@ -224,7 +224,7 @@ def test_layout_dict_comparison(simple_layout: Annotated[SimpleLayoutCase, pytes
     assert dict(case.layout) == same_dict
 
     # Check with different content
-    different_dict = {'first': case.first_panel, 'different': MockPanel()}
+    different_dict = {'first': case.first_panel, 'different': MockStylablePlainCropPanel()}
     assert dict(case.layout) != different_dict
 
 
@@ -239,7 +239,7 @@ def test_layout_dict_copy_and_clear(
     assert layout_copy is not case.layout
 
     # Modifying copy shouldn't affect original
-    new_panel = MockPanel()
+    new_panel = MockStylablePlainCropPanel()
     layout_copy['new'] = new_panel
     assert 'new' in layout_copy
     assert 'new' not in case.layout
@@ -284,7 +284,7 @@ def test_layout_simple_grid_insert_and_delete(
     """Test simple grid queries."""
     case = simple_layout
 
-    third_panel = MockPanel()
+    third_panel = MockStylablePlainCropPanel()
     case.layout['third'] = third_panel
 
     assert case.layout.grid.dims == Dimensions(width=3, height=1)
