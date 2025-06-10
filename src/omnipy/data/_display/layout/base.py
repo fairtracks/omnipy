@@ -97,26 +97,26 @@ class Layout(UserDict[str, PanelT], Generic[PanelT]):
 
 @dataclass
 class LayoutDesignDims:
-    horizontal_chars_per_panel: int
-    horizontal_end_chars: int
-    vertical_chars_per_panel: int
-    vertical_end_chars: int
+    num_horizontal_chars_per_panel: int
+    num_horizontal_end_chars: int
+    num_vertical_lines_per_panel: int
+    num_vertical_end_lines: int
 
     @staticmethod
     def _extra_chars(chars_per_panel: int, end_chars: int, num_panels: int) -> int:
         return num_panels * chars_per_panel + end_chars
 
-    def extra_horizontal_chars(self, num_horizontal_panels: int) -> int:
+    def num_extra_horizontal_chars(self, num_horizontal_panels: int) -> int:
         return self._extra_chars(
-            self.horizontal_chars_per_panel,
-            self.horizontal_end_chars,
+            self.num_horizontal_chars_per_panel,
+            self.num_horizontal_end_chars,
             num_horizontal_panels,
         )
 
-    def extra_vertical_chars(self, num_vertical_panels: int) -> int:
+    def num_extra_vertical_chars(self, num_vertical_panels: int) -> int:
         return self._extra_chars(
-            self.vertical_chars_per_panel,
-            self.vertical_end_chars,
+            self.num_vertical_lines_per_panel,
+            self.num_vertical_end_lines,
             num_vertical_panels,
         )
 
@@ -127,10 +127,10 @@ class LayoutDesignDims:
     ) -> 'LayoutDesignDims':
         if layout_design == LayoutDesign.TABLE_GRID:
             return LayoutDesignDims(
-                horizontal_chars_per_panel=3,
-                horizontal_end_chars=1,
-                vertical_chars_per_panel=1,
-                vertical_end_chars=1,
+                num_horizontal_chars_per_panel=3,
+                num_horizontal_end_chars=1,
+                num_vertical_lines_per_panel=1,
+                num_vertical_end_lines=1,
             )
         else:
             raise ValueError(f'Unsupported layout design: {layout_design}')
@@ -172,9 +172,9 @@ class DimensionsAwarePanelLayoutMixin:
             num_vertical_panels = 1  # Assuming a single row layout for simplicity
             return Dimensions(
                 width=(total_subpanel_dims.width
-                       + layout_design_dims.extra_horizontal_chars(num_horizontal_panels)),
+                       + layout_design_dims.num_extra_horizontal_chars(num_horizontal_panels)),
                 height=(total_subpanel_dims.height
-                        + layout_design_dims.extra_vertical_chars(num_vertical_panels)),
+                        + layout_design_dims.num_extra_vertical_chars(num_vertical_panels)),
             )
         else:
             return Dimensions(width=0, height=1)

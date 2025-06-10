@@ -130,20 +130,21 @@ def _calculate_per_panel_width_for_panels_without_width(
     # Calculate total width used by panels with pre-set width
     for key, panel in layout.items():
         if has_width(panel.frame.dims):
-            preset_width += panel.frame.dims.width + layout_design_dims.horizontal_chars_per_panel
+            preset_width += (
+                panel.frame.dims.width + layout_design_dims.num_horizontal_chars_per_panel)
         elif panel_is_dimensions_aware(panel):
-            preset_width += panel.dims.width + layout_design_dims.horizontal_chars_per_panel
+            preset_width += (panel.dims.width + layout_design_dims.num_horizontal_chars_per_panel)
         else:
             width_unset_panels[key] = panel
 
-    preset_width += layout_design_dims.horizontal_end_chars
+    preset_width += layout_design_dims.num_horizontal_end_chars
 
     # Calculate width per unset panel
     num_unset_panels = len(width_unset_panels)
     if num_unset_panels > 0:
         available_width = frame_width - preset_width
         per_panel_width = ((available_width // num_unset_panels)
-                           - layout_design_dims.horizontal_chars_per_panel)
+                           - layout_design_dims.num_horizontal_chars_per_panel)
         return max(per_panel_width, 0)
 
     return None
@@ -317,7 +318,8 @@ def _set_panel_heights(context: LayoutFlowContext[FrameT]) -> LayoutFlowContext[
 
     per_panel_height = None
     if has_height(frame.dims):
-        per_panel_height = max(frame.dims.height - layout_design_dims.extra_vertical_chars(1), 0)
+        per_panel_height = max(frame.dims.height - layout_design_dims.num_extra_vertical_chars(1),
+                               0)
 
     for key, panel in context.dim_aware_layout.items():
         should_use_panel_original_height = (per_panel_height is None or panel.frame.fixed_height)

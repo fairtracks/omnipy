@@ -126,7 +126,7 @@ class StylizedLayoutPanel(
             layout_design_dims = LayoutDesignDims.create(self.config.layout_design)
             table_cell_height = (
                 self.frame.dims.height
-                - layout_design_dims.extra_vertical_chars(num_vertical_panels=1))
+                - layout_design_dims.num_extra_vertical_chars(num_vertical_panels=1))
         else:
             table_cell_height = self.content.total_subpanel_outer_dims.height
 
