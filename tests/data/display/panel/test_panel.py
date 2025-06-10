@@ -1,4 +1,5 @@
 import pytest
+from typing_extensions import override
 
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
@@ -6,6 +7,7 @@ from omnipy.data._display.panel.base import Panel
 
 
 class SimplePanel(Panel):
+    @override
     def render_next_stage(self) -> 'SimplePanel':
         return self
 

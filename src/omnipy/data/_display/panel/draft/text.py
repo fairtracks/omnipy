@@ -2,6 +2,8 @@ from functools import cached_property
 import re
 from typing import Generic
 
+from typing_extensions import override
+
 from omnipy.data._display.constraints import ConstraintsSatisfaction
 from omnipy.data._display.panel.base import FrameT, FullyRenderedPanel
 from omnipy.data._display.panel.draft.monospaced import (crop_content_lines_for_resizing,
@@ -55,6 +57,7 @@ class ReflowedTextDraftPanel(
             max_container_width_across_lines=self.max_container_width_across_lines,
         )
 
+    @override
     def render_next_stage(self) -> 'FullyRenderedPanel[FrameT]':
         from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
         panel: SyntaxStylizedTextPanel[FrameT] = SyntaxStylizedTextPanel(self)

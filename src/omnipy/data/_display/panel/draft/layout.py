@@ -84,6 +84,7 @@ class ResizedLayoutDraftPanel(
     def _content_lines(self) -> list[str]:
         raise ShouldNotOccurException()
 
+    @override
     def render_next_stage(self) -> 'DimensionsAwarePanel[FrameT]':
         from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
         return StylizedLayoutPanel(self)

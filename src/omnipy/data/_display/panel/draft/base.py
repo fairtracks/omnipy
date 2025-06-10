@@ -1,11 +1,11 @@
 from dataclasses import asdict
 from typing import Any, cast, Generic
 
-from typing_extensions import TypeVar
+from typing_extensions import override, TypeVar
 
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints, ConstraintsSatisfaction
-from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, Panel
+from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, FullyRenderedPanel, Panel
 from omnipy.util import _pydantic as pyd
 
 ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)
@@ -46,6 +46,7 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
     def satisfies(self) -> ConstraintsSatisfaction:
         return ConstraintsSatisfaction(self.constraints)
 
+    @override
     def render_next_stage(self) -> 'DimensionsAwarePanel[FrameT]':
         from omnipy.data._display.layout.base import Layout
 
@@ -62,3 +63,11 @@ class DimensionsAwareDraftPanel(DimensionsAwarePanel[FrameT],
                                 DraftPanel[Any, FrameT],
                                 Generic[FrameT]):
     ...
+
+
+class FullyRenderedDraftPanel(FullyRenderedPanel[FrameT],
+                              DimensionsAwareDraftPanel[FrameT],
+                              Generic[FrameT]):
+    @override
+    def render_next_stage(self) -> 'FullyRenderedDraftPanel[FrameT]':
+        raise NotImplementedError('This panel is fully rendered.')

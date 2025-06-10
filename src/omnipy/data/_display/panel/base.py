@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from functools import cached_property
 from typing import cast, Generic
 
-from typing_extensions import TypeIs, TypeVar
+from typing_extensions import override, TypeIs, TypeVar
 
 from omnipy.data._display.dimensions import (Dimensions,
                                              DimensionsFit,
@@ -192,6 +192,7 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
 
 
 class FullyRenderedPanel(DimensionsAwarePanel[FrameT], Generic[FrameT]):
+    @override
     def render_next_stage(self) -> 'FullyRenderedPanel[FrameT]':
         raise NotImplementedError('This panel is fully rendered.')
 
