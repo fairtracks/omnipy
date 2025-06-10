@@ -139,10 +139,10 @@ def test_resized_layout_draft_panel_basic_dims_and_edge_cases(
     assert not isinstance(case.config, pyd.UndefinedType)
 
     resized_layout_panel = ResizedLayoutDraftPanel(
-        case.content,
-        title=case.title,
+        frame_case.content,
+        title=frame_case.title,
         frame=frame_case.frame,
-        config=case.config,
+        config=frame_case.config,
     )
 
     assert_dims_aware_panel(
