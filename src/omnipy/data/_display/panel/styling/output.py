@@ -283,7 +283,7 @@ class CroppingOutputVariant(
         findall_regexp: str,
         unescape_html: bool,
     ) -> str:
-        lines = self._split_to_lines_and_crop_virtually(output)
+        lines = self._split_to_lines_and_crop_vertically(output)
         cropped_lines = []
         text_lines = []
         items_per_line: list[list[StylizedItem]] = []
@@ -332,13 +332,13 @@ class CroppingOutputVariant(
 
     def _crop_text(self, output: str) -> str:
         if self._output_mode is OutputMode.PLAIN:
-            lines = self._split_to_lines_and_crop_virtually(output)
+            lines = self._split_to_lines_and_crop_vertically(output)
             lines, _exited_early = self._crop_lines_horizontally(lines)
             return ''.join(lines)
         else:
             return self._crop_stylized_text(output)
 
-    def _split_to_lines_and_crop_virtually(self, output):
+    def _split_to_lines_and_crop_vertically(self, output):
         lines = output.splitlines(keepends=True)
         uncropped_height = len(lines)
         return self._crop_lines_vertically(
