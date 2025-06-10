@@ -444,6 +444,7 @@ class TableCroppingOutputVariant(
         if self._frame.dims.height == 0:
             return []
 
+        # Needed for very small tables, e.g. height==2
         return lines[:crop_dims.height - 1] + [lines[-1]]
 
     def _crop_line_horizontally(
@@ -452,9 +453,10 @@ class TableCroppingOutputVariant(
         uncropped_width: int,
         crop_dims: Dimensions,
     ) -> tuple[str, bool]:
-        # Checks if width or height is 1, and if so returns '…' or '' (depending on uncropped_width)
-        # Code is placed only here and not in _crop_lines_vertically to simplify logic for cropping
-        # of HTML text
+        # Checks if width or height is 1, and if so returns '…' or ''
+        # (depending on uncropped_width). Code is placed only here and not
+        # in _crop_lines_vertically to simplify logic for cropping of HTML
+        # text
         if (has_width(crop_dims) and crop_dims.width == 1
                 or has_height(crop_dims) and crop_dims.height == 1):
             newline = extract_newline(line)
@@ -466,6 +468,9 @@ class TableCroppingOutputVariant(
         if not has_width(crop_dims) or uncropped_width <= crop_dims.width:
             return line, True
 
+        # TODO: check whether horizontal cropping of tables are ever carried
+        #       out in the "stylize" stage. Code is kept here for now, but
+        #       is seldom, if ever used.
         line_stripped, newline = strip_and_split_newline(line)
         line_stripped_and_cropped = line_stripped[:crop_dims.width - 1] + line_stripped[-1:]
         return line_stripped_and_cropped + newline, True
