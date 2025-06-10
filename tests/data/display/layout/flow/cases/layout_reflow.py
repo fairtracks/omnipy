@@ -68,12 +68,11 @@ from ....panel.helpers.mocks import MockPanel, MockPanelStage2
 )
 @pc.case(id='single_panel', tags=['reflow_cases', 'layout'])
 def case_layout_single_panel(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(panel=MockPanel(content='Some content here',)),
-        frame=frame_case.frame,
         config=OutputConfig(
             # Horizontal and vertical overflow modes are not applied to text
             # in these tests as MockPanel is used, which ignores horizontal
@@ -151,14 +150,13 @@ def case_layout_single_panel(
 )
 @pc.case(id='single_panel_fixed_dims', tags=['reflow_cases', 'layout'])
 def case_layout_single_panel_fixed_dims(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(
             panel=MockPanel(
                 content='Some content here', frame=Frame(Dimensions(width=6, height=2)))),
-        frame=frame_case.frame,
         config=OutputConfig(
             # Horizontal and vertical overflow modes are not applied to text
             # in these tests as MockPanel is used, which ignores horizontal
@@ -349,12 +347,11 @@ def case_layout_single_panel_fixed_dims(
 )
 @pc.case(id='single_panel_with_title', tags=['reflow_cases', 'layout'])
 def case_layout_single_panel_with_title(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(panel=MockPanel(content='Here is some text', title='A nice title'),),
-        frame=frame_case.frame,
         config=OutputConfig(
             # Horizontal and vertical overflow modes are not applied to text
             # in these tests as MockPanel is used, which ignores horizontal
@@ -434,7 +431,7 @@ def case_layout_single_panel_with_title(
 )
 @pc.case(id='single_panel_with_title_fixed_dims', tags=['reflow_cases', 'layout'])
 def case_layout_single_panel_with_title_fixed_dims(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
@@ -444,7 +441,6 @@ def case_layout_single_panel_with_title_fixed_dims(
                 title='Panel title',
                 frame=Frame(Dimensions(width=20, height=5)),
             ),),
-        frame=frame_case.frame,
         config=OutputConfig(panel_title_at_top=False,),
         exp_plain_output_no_frame=('╭──────────────────────╮\n'
                                    '│ Inner panel with     │\n'
@@ -499,14 +495,13 @@ def case_layout_single_panel_with_title_fixed_dims(
 )
 @pc.case(id='single_panel_stage_2_fixed_dims', tags=['reflow_cases', 'layout'])
 def case_layout_single_panel_stage_2_fixed_dims(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(
             panel=MockPanelStage2(
                 content='Some\ncontent\nhere', frame=Frame(Dimensions(width=4, height=2)))),
-        frame=frame_case.frame,
         config=OutputConfig(
             # Horizontal and vertical overflow modes are not applied to text
             # in these tests as MockPanelStage2 is used, which ignores
@@ -813,7 +808,7 @@ def case_layout_single_panel_stage_2_fixed_dims(
 )
 @pc.case(id='two_panels', tags=['reflow_cases', 'layout'])
 def case_layout_two_panels(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
@@ -821,7 +816,6 @@ def case_layout_two_panels(
             first=MockPanel(content='Some text here'),
             second=MockPanel(content='(1, 2, 3)'),
         ),
-        frame=frame_case.frame,
         config=OutputConfig(
             # Horizontal and vertical overflow modes are not applied to text
             # in these tests as MockPanel is used, which ignores horizontal

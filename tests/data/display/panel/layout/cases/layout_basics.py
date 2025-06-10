@@ -40,12 +40,11 @@ from ...helpers.mocks import MockPanel, MockPanelStage2
 )
 @pc.case(id='no_panels', tags=['dims_and_edge_cases', 'layout'])
 def case_layout_no_panels(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(),
-        frame=frame_case.frame,
         config=None,
         exp_plain_output_no_frame='\n',
         exp_dims_all_stages_no_frame=Dimensions(width=0, height=1),
@@ -124,12 +123,11 @@ def case_layout_no_panels(
     ))
 @pc.case(id='single_empty_panel', tags=['dims_and_edge_cases', 'layout'])
 def case_layout_single_empty_panel(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(empty=MockPanel('')),
-        frame=frame_case.frame,
         exp_plain_output_no_frame=('╭──╮\n'
                                    '│  │\n'
                                    '╰──╯\n'),
@@ -195,12 +193,11 @@ def case_layout_single_empty_panel(
     ))
 @pc.case(id='single_empty_panel_height_zero', tags=['dims_and_edge_cases', 'layout'])
 def case_layout_single_empty_panel_height_zero(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(empty=MockPanel('', frame=Frame(Dimensions(width=None, height=0)))),
-        frame=frame_case.frame,
         # When the height of the empty panel is zero, the middle line of the
         # frame is not rendered, so the output is just the top and bottom
         # frame lines, also at the 'resize' stage.
@@ -269,12 +266,11 @@ def case_layout_single_empty_panel_height_zero(
 )
 @pc.case(id='single_panel', tags=['dims_and_edge_cases', 'layout'])
 def case_layout_single_panel(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(panel=MockPanel(content='Some content\nhere',)),
-        frame=frame_case.frame,
         config=OutputConfig(
             # Horizontal and vertical overflow modes are not applied to text
             # in these tests as MockPanel is used, which ignores horizontal
@@ -387,12 +383,11 @@ def case_layout_single_panel(
 )
 @pc.case(id='single_panel_with_title', tags=['dims_and_edge_cases', 'layout'])
 def case_layout_single_panel_with_title(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(panel=MockPanel(content='Here is some text', title='A nice title'),),
-        frame=frame_case.frame,
         config=OutputConfig(
             # Horizontal and vertical overflow modes are not applied to text
             # in these tests as MockPanel is used, which ignores horizontal
@@ -552,7 +547,7 @@ def case_layout_single_panel_with_title(
 )
 @pc.case(id='two_panels_one_fixed_content_and_frame', tags=['dims_and_edge_cases', 'layout'])
 def case_layout_two_panels_fixed_content_and_frame(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
@@ -569,7 +564,6 @@ def case_layout_two_panels_fixed_content_and_frame(
             # used.
             second=MockPanel(content='(1, 2, 3)'),
         ),
-        frame=frame_case.frame,
         config=OutputConfig(
             # Horizontal and vertical overflow modes are not applied to text
             # in these tests as MockPanel is used, which ignores horizontal

@@ -25,12 +25,11 @@ from ...helpers.case_setup import FrameTestCase, FrameVariant, PanelFrameVariant
 )
 @pc.case(id='empty', tags=['dims_and_edge_cases', 'syntax_text'])
 def case_syntax_text_empty(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[str, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[str]:
     return PanelFrameVariantTestCase(
         content='',
-        frame=frame_case.frame,
         config=None,
         exp_plain_output_no_frame='\n',
         exp_dims_all_stages_no_frame=Dimensions(width=0, height=1),
@@ -61,12 +60,11 @@ def case_syntax_text_empty(
 )
 @pc.case(id='whitespace', tags=['dims_and_edge_cases', 'syntax_text'])
 def case_syntax_text_whitespace(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[str, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[str]:
     return PanelFrameVariantTestCase(
         content='  \n  ',
-        frame=frame_case.frame,
         config=None,
         exp_plain_output_no_frame='  \n  \n',
         exp_dims_all_stages_no_frame=Dimensions(width=2, height=2),
@@ -91,12 +89,11 @@ def case_syntax_text_whitespace(
 )
 @pc.case(id='empty_lines', tags=['dims_and_edge_cases', 'syntax_text'])
 def case_syntax_text_empty_lines(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[str, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[str]:
     return PanelFrameVariantTestCase(
         content='\n\n',
-        frame=frame_case.frame,
         config=None,
         exp_plain_output_no_frame='\n\n\n',
         exp_dims_all_stages_no_frame=Dimensions(width=0, height=3),
@@ -165,12 +162,11 @@ def case_syntax_text_empty_lines(
 )
 @pc.case(id='simple_text', tags=['dims_and_edge_cases', 'syntax_text'])
 def case_syntax_text_simple_text(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[str, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[str]:
     return PanelFrameVariantTestCase(
         content='I scream,\nyou scream,\nwe all scream\nfor ice cream',
-        frame=frame_case.frame,
         config=None,
         exp_plain_output_no_frame='I scream,\nyou scream,\nwe all scream\nfor ice cream\n',
         exp_dims_all_stages_no_frame=Dimensions(width=13, height=4),
@@ -317,13 +313,12 @@ def case_syntax_text_simple_text(
 )
 @pc.case(id='double_width_chars', tags=['dims_and_edge_cases', 'syntax_text'])
 def case_syntax_text_double_width_chars(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[str, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[str]:
     return PanelFrameVariantTestCase(
         # Mandarin Chinese characters are double-width
         content='北京',
-        frame=frame_case.frame,
         exp_plain_output_no_frame='北京\n',
         exp_dims_all_stages_no_frame=Dimensions(width=4, height=1),
         exp_plain_output_only_height='北京\n',
@@ -487,14 +482,13 @@ def case_syntax_text_double_width_chars(
 )
 @pc.case(id='tab_char', tags=['dims_and_edge_cases', 'syntax_text'])
 def case_syntax_text_tab_char(
-    frame_case: FrameTestCase[FrameWithWidthAndHeight],
+    frame_case: FrameTestCase[str, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[str]:
     return PanelFrameVariantTestCase(
         # Tab character width depends on context, filling the spaces until
         # the next tab stop (4 chars by default)
         content=' a\tb',
-        frame=frame_case.frame,
         exp_plain_output_no_frame=' a  b\n',
         exp_dims_all_stages_no_frame=Dimensions(width=5, height=1),
         exp_plain_output_only_height=' a  b\n',

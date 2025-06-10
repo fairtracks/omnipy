@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Annotated, Callable, Generic, TypeAlias
+from typing import Annotated, Callable, cast, Generic, TypeAlias
 
 import pytest
 import pytest_cases as pc
@@ -10,7 +10,7 @@ from omnipy.data._display.dimensions import (Dimensions,
                                              DimensionsWithWidthAndHeight,
                                              has_height,
                                              has_width)
-from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
+from omnipy.data._display.frame import Frame
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.base import FrameT
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
@@ -36,8 +36,9 @@ class WithinFrameExp(NamedTuple):
 
 
 @dataclass
-class FrameTestCase(Generic[FrameT]):
+class FrameTestCase(Generic[ContentT, FrameT]):
     frame: FrameT | None
+    content: ContentT | pyd.UndefinedType = field(default=pyd.Undefined)
     config: OutputConfig | None | pyd.UndefinedType = field(default=pyd.Undefined)
 
     exp_plain_output: str | None | pyd.UndefinedType = field(default=pyd.Undefined)
@@ -82,10 +83,9 @@ class FrameTestCase(Generic[FrameT]):
 @dataclass
 class PanelFrameVariantTestCase(Generic[ContentT, FrameT]):
     content: ContentT
-    frame: FrameWithWidthAndHeight | None
     exp_plain_output_no_frame: str | None
     exp_dims_all_stages_no_frame: DimensionsWithWidthAndHeight
-    frame_case: FrameTestCase[FrameT]
+    frame_case: FrameTestCase[ContentT, FrameT]
     frame_variant: FrameVariant
     title: str = ''
     config: OutputConfig | None | pyd.UndefinedType = field(default=pyd.Undefined)
@@ -123,6 +123,13 @@ class PanelFrameVariantTestCase(Generic[ContentT, FrameT]):
             return pyd.Undefined
 
         # General fields
+        self.frame = self.frame_case.frame
+        self.content = cast(ContentT,
+                            _resolve_to_first_defined(
+                                self.frame_case.content,
+                                self.content,
+                            ))
+
         self.exp_plain_output = _resolve_to_first_defined(
             self.frame_case.exp_plain_output,
             self.exp_plain_output,
