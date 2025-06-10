@@ -6,10 +6,11 @@ from typing_extensions import override
 
 from omnipy.data._display.constraints import ConstraintsSatisfaction
 from omnipy.data._display.panel.base import FrameT, FullyRenderedPanel
-from omnipy.data._display.panel.draft.monospaced import (crop_content_lines_for_resizing,
-                                                         crop_content_with_extra_wide_chars,
-                                                         MonospacedDraftPanel)
+from omnipy.data._display.panel.cropping import (crop_content_lines_vertically_for_resizing,
+                                                 crop_content_with_extra_wide_chars)
+from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 import omnipy.util._pydantic as pyd
+from omnipy.util.helpers import split_all_content_to_lines, strip_newlines
 
 
 @pyd.dataclass(
@@ -20,24 +21,19 @@ class ReflowedTextDraftPanel(
 ):
     @cached_property
     def _content_lines(self) -> list[str]:
-        # Typical repr output should not end with newline. Hence, a regular split on newline is
-        # correct behaviour. An empty string is the split into a list of one element. If
-        # splitlines() had been used, the list would be empty.
-        all_content_lines = self.content.split('\n')
-
-        all_content_lines = crop_content_lines_for_resizing(
-            all_content_lines,
+        content_lines = split_all_content_to_lines(self.content)
+        content_lines = crop_content_lines_vertically_for_resizing(
+            content_lines,
             self.frame,
+            self.config,
         )
-
-        all_content_lines = crop_content_with_extra_wide_chars(
-            all_content_lines,
+        content_lines = crop_content_with_extra_wide_chars(
+            content_lines,
             self.frame,
             self.config,
             self._char_width_map,
         )
-
-        return all_content_lines
+        return strip_newlines(content_lines)
 
     @cached_property
     def max_container_width_across_lines(self) -> int:

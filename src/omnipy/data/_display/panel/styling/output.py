@@ -10,10 +10,12 @@ from typing import Callable, ClassVar, Generic, Iterable, NamedTuple
 import rich.console
 import rich.segment
 import rich.terminal_theme
+from typing_extensions import override
 
-from omnipy.data._display.config import HorizontalOverflowMode, VerticalOverflowMode
+from omnipy.data._display.config import HorizontalOverflowMode
 from omnipy.data._display.dimensions import Dimensions, has_height, has_width
 from omnipy.data._display.panel.base import FrameT, OutputVariant
+from omnipy.data._display.panel.cropping import crop_content_lines_vertically
 from omnipy.data._display.panel.draft.base import ContentT
 from omnipy.data._display.panel.helpers import (calculate_bg_color_triplet_from_color_style,
                                                 calculate_fg_color_triplet_from_color_style,
@@ -397,21 +399,20 @@ class TextCroppingOutputVariant(
         CroppingOutputVariant[PanelT, ContentT, FrameT],
         Generic[PanelT, ContentT, FrameT],
 ):
+    @override
     def _crop_lines_vertically(
         self,
         lines: list[str],
         uncropped_height: int,
         crop_dims: Dimensions,
     ) -> list[str]:
-        if not has_height(crop_dims) or uncropped_height <= crop_dims.height:
-            return lines
+        return crop_content_lines_vertically(
+            lines,
+            crop_dims.height,
+            self._output.config.vertical_overflow_mode,
+        )
 
-        match self._config.vertical_overflow_mode:
-            case VerticalOverflowMode.CROP_BOTTOM:
-                return lines[:crop_dims.height]
-            case VerticalOverflowMode.CROP_TOP:
-                return lines[-crop_dims.height:]
-
+    @override
     def _crop_line_horizontally(
         self,
         line: str,
@@ -432,6 +433,7 @@ class TableCroppingOutputVariant(
         CroppingOutputVariant[PanelT, ContentT, FrameT],
         Generic[PanelT, ContentT, FrameT],
 ):
+    @override
     def _crop_lines_vertically(
         self,
         lines: list[str],
@@ -447,6 +449,7 @@ class TableCroppingOutputVariant(
         # Needed for very small tables, e.g. height==2
         return lines[:crop_dims.height - 1] + [lines[-1]]
 
+    @override
     def _crop_line_horizontally(
         self,
         line: str,

@@ -398,14 +398,38 @@ def running_in_jupyter() -> bool:
         return False
 
 
+def split_all_content_to_lines(content: str) -> list[str]:
+    all_content_lines_stripped = content.splitlines(keepends=False)
+    all_content_lines = content.splitlines(keepends=True)
+
+    if len(all_content_lines) == 0 \
+            or all_content_lines[-1] != all_content_lines_stripped[-1]:
+        # If no content or the last line ends with a newline, we add an
+        # empty line. This is needed as the last newline is excluded
+        # from self.content (in line with typical repr output).
+        all_content_lines.append('')
+
+    return all_content_lines
+
+
 def strip_newline(line: str) -> str:
-    return line.rstrip('\n').rstrip('\r')
+    line_stripped = line.splitlines()
+    assert len(line_stripped) <= 1, \
+        f'Expected a single line, but got {len(line_stripped)} lines: {line_stripped}'
+    if len(line_stripped) == 0:
+        return ''
+    else:
+        return line_stripped[0]
 
 
 def strip_and_split_newline(line: str) -> tuple[str, str]:
     line_stripped = strip_newline(line)
     newline = line[len(line_stripped):]
     return line_stripped, newline
+
+
+def strip_newlines(lines: Iterable[str]) -> list[str]:
+    return [strip_newline(line) for line in lines]
 
 
 def extract_newline(line: str) -> str:

@@ -3,9 +3,7 @@ from dataclasses import dataclass
 from functools import cached_property, lru_cache
 from typing import ClassVar, Generic
 
-from omnipy.data._display.config import HorizontalOverflowMode, OutputConfig
-from omnipy.data._display.dimensions import Dimensions, has_width, has_width_and_height
-from omnipy.data._display.frame import AnyFrame
+from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.helpers import UnicodeCharWidthMap
 from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT
 from omnipy.data._display.panel.draft.base import ContentT, DraftPanel
@@ -87,63 +85,3 @@ def _calc_line_stats(
             stats.register_char(char_width)
 
         return stats
-
-
-def crop_content_lines_for_resizing(
-    all_content_lines: list[str],
-    frame: AnyFrame,
-) -> list[str]:
-    # If both frame dimensions are specified, the frame height is less
-    # than the number of lines, and the frame width is defined as flexible
-    # (fixed_width=False), then we need to crop the content to fit the frame
-    # so that the width of the panel can be reduced to fit only what is in
-    # the frame. Otherwise (and the default) is that the panel is wide
-    # enough to support the maximum width over all lines, also those out of
-    # frame.
-    #
-    # TODO: Add support for scrolling of text content, not just
-    #       cropping from bottom
-
-    if has_width_and_height(frame.dims) \
-            and frame.fixed_width is False \
-            and frame.dims.width > 0 \
-            and frame.dims.height < len(all_content_lines):
-        return all_content_lines[:frame.dims.height]
-
-    return all_content_lines
-
-
-def crop_content_with_extra_wide_chars(
-    all_content_lines: list[str],
-    frame: AnyFrame,
-    config: OutputConfig,
-    char_width_map: UnicodeCharWidthMap,
-) -> list[str]:
-    if has_width(frame.dims) \
-            and frame.fixed_width is False \
-            and frame.dims.width > 0:
-
-        ellipsis_if_overflow = config.horizontal_overflow_mode == HorizontalOverflowMode.ELLIPSIS
-
-        for i, line in enumerate(all_content_lines):
-            stats = _calc_line_stats(
-                line,
-                config.tab_size,
-                char_width_map,
-                width_limit=frame.dims.width,
-            )
-
-            cropped_line = line[:stats.char_count]
-
-            if stats.overflow and ellipsis_if_overflow:
-                if stats.line_width == frame.dims.width > 0:
-                    # Exactly at the limit, must remove the last character
-                    # to have space for the ellipsis
-                    cropped_line = cropped_line[:-1]
-                cropped_line += '…'
-
-            cropped_line = cropped_line.rstrip('\t')
-
-            all_content_lines[i] = cropped_line
-
-    return all_content_lines

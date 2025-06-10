@@ -16,9 +16,10 @@ import rich.terminal_theme
 import rich.text
 from typing_extensions import override, TypeVar
 
-from omnipy.data._display.config import ConsoleColorSystem, HorizontalOverflowMode
+from omnipy.data._display.config import ConsoleColorSystem
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
 from omnipy.data._display.panel.base import FullyRenderedPanel, OutputVariant
+from omnipy.data._display.panel.cropping import rich_overflow_method
 from omnipy.data._display.panel.draft.base import ContentT, FrameT
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 import omnipy.util._pydantic as pyd
@@ -117,13 +118,7 @@ class StylizedMonospacedPanel(
 
     @cached_property
     def rich_overflow_method(self) -> rich.console.OverflowMethod | None:
-        match (self.config.horizontal_overflow_mode):
-            case HorizontalOverflowMode.ELLIPSIS:
-                return 'ellipsis'
-            case HorizontalOverflowMode.CROP:
-                return 'crop'
-            case HorizontalOverflowMode.WORD_WRAP:
-                return None
+        return rich_overflow_method(self.config.horizontal_overflow_mode)
 
     @staticmethod
     @cache
