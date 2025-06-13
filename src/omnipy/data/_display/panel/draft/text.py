@@ -25,7 +25,7 @@ class ReflowedTextDraftPanel(
         content_lines = crop_content_lines_vertically_for_resizing(
             content_lines,
             self.frame,
-            self.config,
+            self.config.vertical_overflow_mode,
         )
         content_lines = crop_content_with_extra_wide_chars(
             content_lines,

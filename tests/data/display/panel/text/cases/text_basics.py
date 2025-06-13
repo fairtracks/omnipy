@@ -34,6 +34,9 @@ from ...helpers.case_setup import FrameTestCase, FrameVariant, PanelFrameVariant
             frame=Frame(Dimensions(width=0, height=0)),
             exp_plain_output='',
             exp_stylized_dims=Dimensions(width=0, height=0),
+            # With width not defined, vertical cropping at the "resize"
+            # stage is still applied
+            exp_dims_all_stages_only_height=Dimensions(width=0, height=0),
         ),
     ),
     ids=(
@@ -89,7 +92,9 @@ def case_syntax_text_empty(
             exp_plain_output_only_width=' \n \n',
             exp_stylized_dims_only_width=Dimensions(width=1, height=2),
             exp_plain_output_only_height='  \n',
-            exp_stylized_dims_only_height=Dimensions(width=2, height=1),
+            # With width not defined, vertical cropping at the "resize"
+            # stage is still applied
+            exp_dims_all_stages_only_height=Dimensions(width=2, height=1),
         ),
     ),
     ids=(
@@ -139,6 +144,9 @@ def case_syntax_text_whitespace(
             frame=Frame(Dimensions(width=0, height=2)),
             exp_plain_output='\n\n',
             exp_stylized_dims=Dimensions(width=0, height=2),
+            # With width not defined, vertical cropping at the "resize"
+            # stage is still applied
+            exp_dims_all_stages_only_height=Dimensions(width=0, height=2),
         ),
     ),
     ids=(
@@ -211,6 +219,9 @@ def case_syntax_text_empty_lines(
             # Vertical cropping instead only happens at the "styling"
             # stage.
             exp_stylized_dims=Dimensions(width=11, height=3),
+            # With width not defined, vertical cropping at the "resize"
+            # stage is still applied
+            exp_dims_all_stages_only_height=Dimensions(width=11, height=3),
         ),
 
         #
@@ -231,12 +242,6 @@ def case_syntax_text_empty_lines(
             # stage.
             exp_plain_output_only_width='I scream,\nyou scre…\nwe all s…\nfor ice …\n',
             exp_stylized_dims_only_width=Dimensions(width=9, height=4),
-            # With only the frame height defined, no vertical cropping is
-            # applied at the "resize" stage. This is because
-            # `frame.width is None` entails that the panel is wide enough to
-            # support the maximum width over all lines, also those out of
-            # frame. Vertical cropping to an ellipsis character happens in
-            # the "styling" stage.
             exp_plain_output_only_height='I scream,\nyou scream,\n…\n',
             exp_stylized_dims_only_height=Dimensions(width=11, height=3),
         ),
@@ -259,7 +264,9 @@ def case_syntax_text_empty_lines(
             exp_plain_output_only_width='I scream,\nyou scre…\nwe all s…\nfor ice …\n',
             exp_stylized_dims_only_width=Dimensions(width=9, height=4),
             exp_plain_output_only_height='I scream,\nyou scream,\n…\n',
-            exp_stylized_dims_only_height=Dimensions(width=11, height=3),
+            # With width not defined, vertical cropping at the "resize"
+            # stage is still applied
+            exp_dims_all_stages_only_height=Dimensions(width=11, height=3),
         ),
 
         #
@@ -389,6 +396,9 @@ def case_syntax_text_empty_lines(
             # Vertical cropping instead only happens at the "styling"
             # stage.
             exp_stylized_dims=Dimensions(width=1, height=1),
+            # With width not defined, vertical cropping at the "resize"
+            # stage is still applied
+            exp_resized_dims_only_height=Dimensions(width=1, height=1),
         ),
     ),
     ids=(
@@ -419,9 +429,6 @@ def case_syntax_text_simple_text(
         exp_dims_all_stages_no_frame=Dimensions(width=13, height=4),
         exp_plain_output_only_width='I scream,\nyou scream,\nwe all scream\nfor ice cream\n',
         exp_dims_all_stages_only_width=Dimensions(width=13, height=4),
-        # Width should not be auto-adjusted to fit the content at the
-        # "resize" stage if the frame does not define the width.
-        exp_resized_dims_only_height=Dimensions(width=13, height=4),
         frame_case=frame_case,
         frame_variant=per_frame_variant,
     )

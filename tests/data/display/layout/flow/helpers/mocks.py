@@ -47,7 +47,7 @@ class SplitAndVerticallyCropContentMixin:
         content_lines = crop_content_lines_vertically_for_resizing(
             content_lines,
             _self.frame,
-            _self.config,
+            _self.config.vertical_overflow_mode,
         )
         return content_lines
 

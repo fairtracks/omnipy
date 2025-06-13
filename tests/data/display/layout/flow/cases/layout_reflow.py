@@ -203,8 +203,7 @@ from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
             exp_plain_output_only_height=('╭───╮\n'
                                           '│ … │\n'
                                           '╰───╯\n'),
-            exp_resized_dims_only_height=Dimensions(width=19, height=3),
-            exp_stylized_dims_only_height=Dimensions(width=5, height=3),
+            exp_dims_all_stages_only_height=Dimensions(width=5, height=3),
         ),
     ),
     ids=(

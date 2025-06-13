@@ -23,7 +23,7 @@ def rich_overflow_method(
 def crop_content_lines_vertically_for_resizing(
     content_lines: list[str],
     frame: AnyFrame,
-    config: OutputConfig,
+    vertical_overflow_mode: VerticalOverflowMode,
 ) -> list[str]:
     # If both frame dimensions are specified, the frame height is less
     # than the number of lines, and the frame width is defined as flexible
@@ -36,14 +36,14 @@ def crop_content_lines_vertically_for_resizing(
     # TODO: Add support for scrolling of text content, not just
     #       cropping from bottom
 
-    if (has_width(frame.dims) and frame.dims.width > 0 and frame.fixed_width is False):
-        return crop_content_lines_vertically(
-            content_lines,
-            frame.dims.height,
-            config.vertical_overflow_mode,
-        )
+    if has_width(frame.dims) and frame.dims.width == 0 or frame.fixed_width is True:
+        return content_lines
 
-    return content_lines
+    return crop_content_lines_vertically(
+        content_lines,
+        frame.dims.height,
+        vertical_overflow_mode,
+    )
 
 
 def crop_content_lines_vertically(
