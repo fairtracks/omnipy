@@ -13,9 +13,10 @@ import rich.terminal_theme
 from typing_extensions import override
 
 from omnipy.data._display.config import HorizontalOverflowMode
-from omnipy.data._display.dimensions import Dimensions, has_height, has_width
+from omnipy.data._display.dimensions import has_height, has_width
 from omnipy.data._display.panel.base import FrameT, OutputVariant
-from omnipy.data._display.panel.cropping import crop_content_lines_vertically
+from omnipy.data._display.panel.cropping import (crop_content_lines_vertically2,
+                                                 replace_ellipsis_lines_with_ellipses)
 from omnipy.data._display.panel.draft.base import ContentT
 from omnipy.data._display.panel.helpers import (calculate_bg_color_triplet_from_color_style,
                                                 calculate_fg_color_triplet_from_color_style,
@@ -278,14 +279,16 @@ class CroppingOutputVariant(
             unescape_html=False,
         )
 
-    def _crop_stylized_output_common(
+    def _crop_stylized_output_common(  # noqa: C901
         self,
         output: str,
         split_regexp: str,
         findall_regexp: str,
         unescape_html: bool,
     ) -> str:
-        lines = self._split_to_lines_and_crop_vertically(output)
+        lines = output.splitlines(keepends=True)
+        lines, ellipsis_line_indices = self._crop_lines_vertically(lines)
+
         cropped_lines = []
         text_lines = []
         items_per_line: list[list[StylizedItem]] = []
@@ -305,27 +308,38 @@ class CroppingOutputVariant(
 
             text_lines.append(text_line)
 
-        text_lines, _exited_early = self._crop_lines_horizontally(text_lines)
+        text_lines = self._crop_lines_horizontally(text_lines)
 
-        for i, cropped_text_line in enumerate(text_lines):
+        for line_idx, cropped_text_line in enumerate(text_lines):
             cropped_line = ''
-            items = items_per_line[i]
+            newline = extract_newline(cropped_text_line)
+            items = items_per_line[line_idx]
 
             if unescape_html:
                 cropped_text_line = html.escape(cropped_text_line)
 
+            if line_idx in ellipsis_line_indices:
+                # Retains newline to allow matching with remaining chars/items
+                cropped_text_line = newline
+
             for item in items:
                 cropped_content = ''
+
                 for char in item.content:
-                    if _exited_early:  # e.g. returned ['…\n']
-                        stripped_line, newline = strip_and_split_newline(cropped_text_line)
-                        # Extracts the content of the cropped text line to reuse styling
-                        cropped_content += stripped_line
-                        # Retains newline to allow matching with remaining chars/items
-                        cropped_text_line = newline
                     if cropped_text_line.startswith(char):
                         cropped_content += char
                         cropped_text_line = cropped_text_line[1:]
+                    else:
+                        if not cropped_text_line.startswith(newline):
+                            # E.g. horizontal ellipsis crop. Reuse styling from mismatched character
+                            cropped_content += cropped_text_line[0]
+                            cropped_text_line = cropped_text_line[1:]
+                        elif line_idx in ellipsis_line_indices:
+                            # Vertical ellipsis crop
+                            cropped_content += '…'
+
+                            # To print only a single ellipsis
+                            ellipsis_line_indices.remove(line_idx)
 
                 cropped_line += item.span_start + cropped_content + item.span_end
             cropped_lines.append(cropped_line)
@@ -334,43 +348,52 @@ class CroppingOutputVariant(
 
     def _crop_text(self, output: str) -> str:
         if self._output_mode is OutputMode.PLAIN:
-            lines = self._split_to_lines_and_crop_vertically(output)
-            lines, _exited_early = self._crop_lines_horizontally(lines)
+            lines = output.splitlines(keepends=True)
+            lines, ellipsis_line_indices = self._crop_lines_vertically(lines)
+            lines = replace_ellipsis_lines_with_ellipses(lines, ellipsis_line_indices)
+            lines = self._crop_lines_horizontally(lines)
             return ''.join(lines)
         else:
             return self._crop_stylized_text(output)
 
-    def _split_to_lines_and_crop_vertically(self, output):
-        lines = output.splitlines(keepends=True)
-        uncropped_height = len(lines)
-        return self._crop_lines_vertically(
-            lines,
-            uncropped_height,
-            self._crop_dims,
-        )
+    def _crop_lines_horizontally(
+        self,
+        lines: list[str],
+    ) -> list[str]:
+        """
+        Crop all content lines horizontally.
 
-    def _crop_lines_horizontally(self, lines: list[str]) -> tuple[list[str], bool]:
+        :param lines: All content lines as a list, including newlines]
+        :return: The cropped content lines
+        """
         uncropped_width = max_newline_stripped_width(lines)
-        exited_early = False
 
         cropped_lines = []
         for line in lines:
             cropped_line, more = \
-                self._crop_line_horizontally(line, uncropped_width, self._crop_dims)
+                self._crop_line_horizontally(line, uncropped_width)
             cropped_lines.append(cropped_line)
             if not more:
-                exited_early = True
                 break
 
-        return cropped_lines, exited_early
+        return cropped_lines
 
     @abstractmethod
     def _crop_lines_vertically(
         self,
         lines: list[str],
-        uncropped_height: int,
-        crop_dims: Dimensions,
-    ) -> list[str]:
+    ) -> tuple[list[str], set[int]]:
+        """
+        Abstract method for cropping all content lines vertically.
+
+        :param lines: All content lines as a list, including newlines
+
+        :return: A tuple. The first item is the cropped content lines as a
+                 list and the second item is the set of indices (line
+                 numbers) of the lines that have been horizontally cropped,
+                 i.e. where characters have been removed (due to ellipsis
+                 cropping etc.).
+        """
         ...
 
     @abstractmethod
@@ -378,8 +401,16 @@ class CroppingOutputVariant(
         self,
         line: str,
         uncropped_width: int,
-        crop_dims: Dimensions,
     ) -> tuple[str, bool]:
+        """
+        Abstract method for cropping one content line horizontally.
+
+        :param line: Single content line, including newline
+        :param uncropped_width: Width of the entire contents (longest line)
+        :return: A tuple. The first item is the cropped content lines as a
+                 list and the second item is a boolean indicating that the
+                 horizontal cropping loop should exit early.
+        """
         ...
 
     @cached_property
@@ -403,12 +434,10 @@ class TextCroppingOutputVariant(
     def _crop_lines_vertically(
         self,
         lines: list[str],
-        uncropped_height: int,
-        crop_dims: Dimensions,
-    ) -> list[str]:
-        return crop_content_lines_vertically(
+    ) -> tuple[list[str], set[int]]:
+        return crop_content_lines_vertically2(
             lines,
-            crop_dims.height,
+            self._crop_dims.height,
             self._output.config.vertical_overflow_mode,
         )
 
@@ -417,8 +446,9 @@ class TextCroppingOutputVariant(
         self,
         line: str,
         uncropped_width: int,
-        crop_dims: Dimensions,
     ) -> tuple[str, bool]:
+        crop_dims = self._crop_dims
+
         line_content, newline = strip_and_split_newline(line)
         # To enforce cropping at the "resize" stage, e.g.
         # crop_content_for_tab_and_double_width_chars(), even in the
@@ -437,25 +467,27 @@ class TableCroppingOutputVariant(
     def _crop_lines_vertically(
         self,
         lines: list[str],
-        uncropped_height: int,
-        crop_dims: Dimensions,
-    ) -> list[str]:
+    ) -> tuple[list[str], set[int]]:
+        uncropped_height = len(lines)
+        crop_dims = self._crop_dims
+
         if not has_height(crop_dims) or uncropped_height <= crop_dims.height:
-            return lines
+            return lines, set()
 
         if self._frame.dims.height == 0:
-            return []
+            return [], set()
 
         # Needed for very small tables, e.g. height==2
-        return lines[:crop_dims.height - 1] + [lines[-1]]
+        return lines[:crop_dims.height - 1] + [lines[-1]], set()
 
     @override
     def _crop_line_horizontally(
         self,
         line: str,
         uncropped_width: int,
-        crop_dims: Dimensions,
     ) -> tuple[str, bool]:
+        crop_dims = self._crop_dims
+
         # Checks if width or height is 1, and if so returns '…' or ''
         # (depending on uncropped_width). Code is placed only here and not
         # in _crop_lines_vertically to simplify logic for cropping of HTML

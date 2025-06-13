@@ -6,7 +6,7 @@ from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.helpers import UnicodeCharWidthMap
 from omnipy.data._display.panel.draft.monospaced import _calc_line_stats
 import omnipy.util._pydantic as pyd
-from omnipy.util.helpers import extract_newline, strip_and_split_newline
+from omnipy.util.helpers import strip_and_split_newline
 
 
 def rich_overflow_method(
@@ -25,6 +25,17 @@ def crop_content_lines_vertically_for_resizing(
     frame: AnyFrame,
     vertical_overflow_mode: VerticalOverflowMode,
 ) -> list[str]:
+    """
+    Crop content lines vertically to allow width resizing. No cropping will
+    take place if the panel frame width is fixed or equal to 0.
+
+    :param content_lines: All content lines as a list, including newlines
+    :param frame: Inner panel frame
+    :param vertical_overflow_mode: Configured vertical overflow mode,
+                                   specifying e.g. type of cropping
+                                   (ellipsis or plain).
+    :return: The cropped content lines
+    """
     # If both frame dimensions are specified, the frame height is less
     # than the number of lines, and the frame width is defined as flexible
     # (fixed_width=False), then we need to crop the content to fit the frame
@@ -47,31 +58,84 @@ def crop_content_lines_vertically_for_resizing(
 
 
 def crop_content_lines_vertically(
-        content_lines: list[str],
-        frame_height: pyd.NonNegativeInt | None,
-        vertical_overflow_mode: VerticalOverflowMode,  # linesep: str | None,
+    lines: list[str],
+    crop_height: pyd.NonNegativeInt | None,
+    vertical_overflow_mode: VerticalOverflowMode,
 ) -> list[str]:
-    if frame_height is None or len(content_lines) <= frame_height:
-        return content_lines
+    """
+    Crop content lines vertically according to frame height and configured
+    vertical overflow mode.
 
-    if frame_height == 0:
-        return []
+    :param lines: All content lines as a list, including newlines
+    :param crop_height: Max height of the resulting cropped content
+    :param vertical_overflow_mode: Configured vertical overflow mode,
+                                   specifying e.g. type of cropping
+                                   (ellipsis or plain).
+    :return: The cropped content lines as a list.
+    """
+    cropped_lines, ellipsis_line_indices = crop_content_lines_vertically2(
+        lines,
+        crop_height,
+        vertical_overflow_mode,
+    )
+    replace_ellipsis_lines_with_ellipses(cropped_lines, ellipsis_line_indices)
+
+    return cropped_lines
+
+
+def replace_ellipsis_lines_with_ellipses(
+    cropped_lines: list[str],
+    ellipsis_line_indices: set[int],
+) -> list[str]:
+    for line_idx in ellipsis_line_indices:
+        stripped_line, newline = strip_and_split_newline(cropped_lines[line_idx])
+        if len(stripped_line) > 0:
+            cropped_lines[line_idx] = '…' + newline
+    return cropped_lines
+
+
+def crop_content_lines_vertically2(
+    lines: list[str],
+    crop_height: pyd.NonNegativeInt | None,
+    vertical_overflow_mode: VerticalOverflowMode,
+) -> tuple[list[str], set[int]]:
+    """
+    Crop content lines vertically according to frame height and configured
+    vertical overflow mode.
+
+    :param lines: All content lines as a list, including newlines
+    :param crop_height: Max height of the resulting cropped content
+    :param vertical_overflow_mode: Configured vertical overflow mode,
+                                   specifying e.g. type of cropping
+                                   (ellipsis or plain).
+    :return: A tuple. The first item is the cropped content lines as a list
+             and the second item is the set of indices (line numbers) of the
+             lines that have been horizontally cropped, i.e. where
+             characters have been removed (due to ellipsis cropping etc.).
+    """
+    if crop_height is None or len(lines) <= crop_height:
+        return lines, set()
+
+    if crop_height == 0:
+        return [], set()
 
     match vertical_overflow_mode:
         case VerticalOverflowMode.CROP_BOTTOM:
-            return content_lines[:frame_height]
+            return lines[:crop_height], set()
+
         case VerticalOverflowMode.CROP_TOP:
-            return content_lines[-frame_height:]
+            return lines[-crop_height:], set()
+
         case VerticalOverflowMode.ELLIPSIS_BOTTOM:
-            uncropped_lines = content_lines[:frame_height - 1]
-            first_cropped_line = content_lines[frame_height - 1]
-            newline = extract_newline(first_cropped_line)
-            return uncropped_lines + ['…' + newline]
+            ellipsis_line_idx = crop_height - 1
+            uncropped_lines = lines[:ellipsis_line_idx + 1]
+            return uncropped_lines, {ellipsis_line_idx}
+
         case VerticalOverflowMode.ELLIPSIS_TOP:
-            uncropped_lines = content_lines[-frame_height + 1:]
-            first_cropped_line = content_lines[-frame_height + 1]
-            newline = extract_newline(first_cropped_line)
-            return ['…' + newline] + uncropped_lines
+            ellipsis_line_idx = len(lines) - crop_height - 1
+            uncropped_lines = lines[ellipsis_line_idx + 1:]
+            return uncropped_lines, {0}
+
         case _:
             raise ValueError(f'Unknown vertical overflow mode: {vertical_overflow_mode}')
 
