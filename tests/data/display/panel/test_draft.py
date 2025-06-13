@@ -203,7 +203,7 @@ def test_draft_panel_render_next_stage_with_layout_complex() -> None:
                 '(1, 2,\n3)',
                 title='Tuple panel',
                 frame=Frame(
-                    Dimensions(6, 3),
+                    Dimensions(6, 2),
                     fixed_width=False,
                     fixed_height=False,
                 ),
