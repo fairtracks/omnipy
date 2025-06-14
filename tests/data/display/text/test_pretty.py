@@ -40,6 +40,7 @@ def _assert_pretty_repr_of_draft(
 
     out_draft_panel: ReflowedTextDraftPanel = pretty_repr_of_draft_output(in_draft_panel)
 
+    assert out_draft_panel.frame == in_draft_panel.frame
     assert _harmonize(out_draft_panel.content) == exp_plain_output
     assert out_draft_panel.within_frame.width is within_frame_width
     assert out_draft_panel.within_frame.height is within_frame_height
@@ -358,18 +359,35 @@ def test_pretty_repr_of_draft_approximately_in_frame(
     )
 
 
-def test_pretty_repr_of_draft_partly_thin_output_known_issue(
-    geometry_data: Annotated[list, pytest.fixture],
-    geometry_data_thinnest_repr: Annotated[str, pytest.fixture],
-) -> None:
+@pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
+def test_pretty_repr_of_draft_one_line_wider_than_frame(pretty_printer: PrettyPrinterLib,) -> None:
+    config = OutputConfig(pretty_printer=pretty_printer)
+    # This is a test for the case where one line is wider than the frame
+    # width. The pretty printer should not fit the short lines into a singe
+    # line even though this single line will not be wider than the widest
+    # line. The result would in that case be two lines that are both wider
+    # than the frame width and need to be cropped, which is worse than
+    # having one line that is too wide for the frame.
 
     _assert_pretty_repr_of_draft(
-        geometry_data,
-        geometry_data_thinnest_repr,
-        frame=Frame(Dimensions(10, 10)),
-        config=OutputConfig(pretty_printer=PrettyPrinterLib.DEVTOOLS),
+        {
+            'nested': {
+                'short_key_1': 'short_value', 'short_key_2': 'short_value_2'
+            },
+            'long_key': 'This is a very long value that will be too long for the frame',
+        },
+        dedent("""\
+        {
+          'nested': {
+            'short_key_1': 'short_value',
+            'short_key_2': 'short_value_2'
+          },
+          'long_key': 'This is a very long value that will be too long for the frame'
+        }"""),
+        frame=Frame(Dimensions(40, 7)),
+        config=config,
         within_frame_width=False,
-        within_frame_height=False,
+        within_frame_height=True,
     )
 
 
