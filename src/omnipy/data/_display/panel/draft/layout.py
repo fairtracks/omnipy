@@ -8,7 +8,7 @@ from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.layout.base import DimensionsAwarePanelLayoutMixin, Layout
-from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT
+from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameInvT, FrameT
 from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, DraftPanel
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.shared.exceptions import ShouldNotOccurException
@@ -54,12 +54,13 @@ class ResizedLayoutDraftPanel(
             constraints=constraints,
             config=config)
 
-    @staticmethod
+    @classmethod
     def create_from_draft_panel(
-        draft_panel: DraftPanel[Layout, FrameT],
+        cls,
+        draft_panel: DraftPanel[Layout, FrameInvT],
         new_layout: Layout,
-    ) -> 'ResizedLayoutDraftPanel[FrameT]':
-        resized_panel: ResizedLayoutDraftPanel[FrameT] = ResizedLayoutDraftPanel(
+    ) -> 'ResizedLayoutDraftPanel[FrameInvT]':
+        resized_panel: ResizedLayoutDraftPanel[FrameInvT] = ResizedLayoutDraftPanel(
             DimensionsAwareDraftPanelLayout(**new_layout),
             title=draft_panel.title,
             frame=draft_panel.frame,
