@@ -3,11 +3,11 @@ from textwrap import dedent
 import pytest
 import pytest_cases as pc
 
-from omnipy.data._display.config import OutputConfig
+from omnipy.data._display.config import OutputConfig, SyntaxLanguage
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
-from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
+from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel, TextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 import omnipy.util._pydantic as pyd
 
@@ -17,6 +17,49 @@ from ..helpers.case_setup import (apply_frame_variant_to_test_case,
 from ..helpers.panel_assert import (assert_dims_aware_panel,
                                     assert_draft_panel_subcls,
                                     assert_next_stage_panel)
+
+
+def test_text_draft_panel_init() -> None:
+    assert_draft_panel_subcls(TextDraftPanel, 'Some text')
+
+    assert_draft_panel_subcls(
+        TextDraftPanel,
+        '{"json": "data"}',
+        title='My JSON file',
+        frame=Frame(Dimensions(20, 10)),
+        constraints=Constraints(container_width_per_line_limit=10),
+        config=OutputConfig(language=SyntaxLanguage.JSON),
+    )
+
+
+def test_text_draft_panel_render_next_stage_simple() -> None:
+    text_draft_panel = TextDraftPanel('Some\ntext')
+    assert_next_stage_panel(
+        this_panel=text_draft_panel,
+        next_stage=text_draft_panel.render_next_stage(),
+        next_stage_panel_cls=ReflowedTextDraftPanel,
+        exp_content='Some\ntext',
+    )
+
+
+def test_text_draft_panel_render_next_stage_with_repr_complex() -> None:
+    draft_panel_complex = TextDraftPanel(
+        dedent("""\
+        def my_function():
+            return (1, 2, 3)"""),
+        title='My repr panel',
+        frame=Frame(Dimensions(18, 2)),
+        constraints=Constraints(container_width_per_line_limit=10),
+        config=OutputConfig(indent_tab_size=1, language=SyntaxLanguage.PYTHON),
+    )
+    assert_next_stage_panel(
+        this_panel=draft_panel_complex,
+        next_stage=draft_panel_complex.render_next_stage(),
+        next_stage_panel_cls=ReflowedTextDraftPanel,
+        exp_content=dedent("""\
+        def my_function():
+            return (1, 2, 3)"""),
+    )
 
 
 def test_reflowed_text_draft_panel_init() -> None:

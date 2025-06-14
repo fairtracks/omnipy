@@ -7,13 +7,25 @@ from typing_extensions import override
 from omnipy.data._display.constraints import ConstraintsSatisfaction
 from omnipy.data._display.dimensions import Dimensions, has_height
 from omnipy.data._display.frame import AnyFrame
-from omnipy.data._display.panel.base import FrameT, FullyRenderedPanel
+from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, FullyRenderedPanel
 from omnipy.data._display.panel.cropping import (crop_content_lines_vertically_for_resizing,
                                                  crop_content_with_extra_wide_chars)
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import split_all_content_to_lines, strip_newlines
+
+
+@pyd.dataclass(
+    init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
+class TextDraftPanel(
+        DraftPanel[str, FrameT],
+        Generic[FrameT],
+):
+    @override
+    def render_next_stage(self) -> 'DimensionsAwarePanel[FrameT]':
+        from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
+        return ReflowedTextDraftPanel.create_from_draft_panel(self)
 
 
 @pyd.dataclass(
