@@ -1,7 +1,8 @@
+import asyncio
 from contextlib import contextmanager
 import random
 from textwrap import dedent
-from typing import Annotated, AsyncGenerator, Iterator
+from typing import Annotated, Any, AsyncGenerator, Awaitable, Callable, Iterator
 
 from aiohttp import web
 import pygments.style
@@ -124,18 +125,39 @@ async def my_base2_endpoint_url(
     yield await _get_endpoint_url(aiohttp_server, '/example-2.yaml', example_base2_theme_yaml)
 
 
+@pc.fixture(scope='function')
+def run_sync_func() -> Callable[[Callable[..., Any]], Awaitable[Any]]:
+    """
+    Fixture to run blocking synchronous functions in an async context.
+    """
+    async def _run_sync_func(func: Callable[..., Any]) -> Any:
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, func)
+
+    return _run_sync_func
+
+
 async def test_fetch_base16_theme(
     my_base16_endpoint_url: Annotated[str, pytest.fixture],
     example_base16_theme: Annotated[Base16Theme, pytest.fixture],
+    run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
 ) -> None:
-    base16_theme_output = await fetch_base16_theme(my_base16_endpoint_url)
-    assert base16_theme_output == example_base16_theme
+    def _test_fetch_base16_theme():
+        base16_theme_output = fetch_base16_theme(my_base16_endpoint_url)
+        assert base16_theme_output == example_base16_theme
+
+    run_sync_func(_test_fetch_base16_theme)
 
 
 async def test_fail_incorrect_system_fetch_base2_theme(
-        my_base2_endpoint_url: Annotated[str, pytest.fixture]) -> None:
-    with pytest.raises(ValueError):
-        await fetch_base16_theme(my_base2_endpoint_url)
+    my_base2_endpoint_url: Annotated[str, pytest.fixture],
+    run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
+) -> None:
+    def _test_fail_incorrect_system_fetch_base2_theme():
+        with pytest.raises(ValueError):
+            fetch_base16_theme(my_base2_endpoint_url)
+
+    run_sync_func(_test_fail_incorrect_system_fetch_base2_theme)
 
 
 def _assert_example_base16_style(TintedBase16Example_1Style: type[pygments.style.Style],
@@ -177,46 +199,64 @@ def _setup_base16_download_url(my_base16_endpoint_url: str) -> Iterator[None]:
         yield
 
 
-def test_auto_create_dynamic_style_class_at_import(
+async def test_auto_create_dynamic_style_class_at_import(
     example_base16_theme: Annotated[Base16Theme, pytest.fixture],
     my_base16_endpoint_url: Annotated[str, pytest.fixture],
+    run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
 ):
-    with _setup_base16_download_url(my_base16_endpoint_url):
-        from omnipy.data._display.styles.dynamic_styles import TintedBase16Example_1Style
-        _assert_example_base16_style(TintedBase16Example_1Style, example_base16_theme)
-
-
-def test_install_base16_theme(
-    example_base16_theme: Annotated[Base16Theme, pytest.fixture],
-    my_base16_endpoint_url: Annotated[str, pytest.fixture],
-):
-    with _setup_base16_download_url(my_base16_endpoint_url):
-        install_base16_theme('tb16-example-1')
-        _assert_example_base16_style(
-            pygments.styles.get_style_by_name('tb16-example-1'),
-            example_base16_theme,
-        )
-
-
-def test_fail_install_base16_theme_incorrect_theme_suffix(
-    example_base16_theme: Annotated[Base16Theme, pytest.fixture],
-    my_base16_endpoint_url: Annotated[str, pytest.fixture],
-):
-    with pytest.raises(AssertionError):
+    def _test_auto_create_dynamic_style_class_at_import():
         with _setup_base16_download_url(my_base16_endpoint_url):
-            install_base16_theme('my-example-1')
+            from omnipy.data._display.styles.dynamic_styles import TintedBase16Example_1Style
+            style_cls = TintedBase16Example_1Style
+            _assert_example_base16_style(style_cls, example_base16_theme)
+
+    await run_sync_func(_test_auto_create_dynamic_style_class_at_import)
 
 
-def test_fail_import_missing(
+async def test_install_base16_theme(
     example_base16_theme: Annotated[Base16Theme, pytest.fixture],
     my_base16_endpoint_url: Annotated[str, pytest.fixture],
+    run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
 ):
-    with _setup_base16_download_url(my_base16_endpoint_url):
-        with pytest.raises(ImportError):
-            from omnipy.data._display.styles.dynamic_styles import TintedBase16MissingStyle  # noqa
+    def _test_install_base16_theme():
+        with _setup_base16_download_url(my_base16_endpoint_url):
+            install_base16_theme('tb16-example-1')
+            _assert_example_base16_style(
+                pygments.styles.get_style_by_name('tb16-example-1'),
+                example_base16_theme,
+            )
 
-        with pytest.raises(ImportError):
-            from omnipy.data._display.styles.dynamic_styles import something_else  # noqa
+    await run_sync_func(_test_install_base16_theme)
+
+
+async def test_fail_install_base16_theme_incorrect_theme_suffix(
+    example_base16_theme: Annotated[Base16Theme, pytest.fixture],
+    my_base16_endpoint_url: Annotated[str, pytest.fixture],
+    run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
+):
+    def _test_fail_install_base16_theme_incorrect_theme_suffix():
+        with pytest.raises(AssertionError):
+            with _setup_base16_download_url(my_base16_endpoint_url):
+                install_base16_theme('my-example-1')
+
+    await run_sync_func(_test_fail_install_base16_theme_incorrect_theme_suffix)
+
+
+async def test_fail_import_missing(
+    example_base16_theme: Annotated[Base16Theme, pytest.fixture],
+    my_base16_endpoint_url: Annotated[str, pytest.fixture],
+    run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
+):
+    def _test_fail_import_missing():
+        with _setup_base16_download_url(my_base16_endpoint_url):
+            with pytest.raises(ImportError):
+                from omnipy.data._display.styles.dynamic_styles import \
+                    TintedBase16MissingStyle  # noqa
+
+            with pytest.raises(ImportError):
+                from omnipy.data._display.styles.dynamic_styles import something_else  # noqa
+
+    await run_sync_func(_test_fail_import_missing)
 
 
 def test_omnipy_style_import() -> None:

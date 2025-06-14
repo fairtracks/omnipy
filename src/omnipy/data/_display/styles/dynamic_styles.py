@@ -1,7 +1,6 @@
-import asyncio
 from functools import cache
+from urllib.request import urlopen
 
-import aiohttp
 from inflection import dasherize, underscore
 import pygments.style
 import pygments.styles
@@ -22,16 +21,9 @@ class TintedBase16Style(pygments.style.Style):
     variant: str
 
 
-async def _get_response(url: str) -> str:
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            if resp.status != 200:
-                raise IOError(f'Failed to fetch "{url}", returned: {resp.status}')
-            return await resp.text()
-
-
-async def fetch_base16_theme(theme_url: str) -> Base16Theme:
-    base16_theme_yaml = await _get_response(theme_url)
+def fetch_base16_theme(theme_url: str) -> Base16Theme:
+    with urlopen(theme_url) as response:
+        base16_theme_yaml = response.read()
 
     yaml = YAML(typ='safe')
     response = yaml.load(base16_theme_yaml)
@@ -57,6 +49,14 @@ def create_dynamic_base16_style_class(
             'highlight_color': base16_theme.palette.base02,
             'styles': get_styles_from_base16_colors(base16_theme.palette),
         })
+
+
+def _fetch_base16_theme_and_create_dynamic_style_class(
+    theme_key: str,
+    base16_url: str,
+) -> type[TintedBase16Style]:
+    base16_theme = fetch_base16_theme(base16_url)
+    return create_dynamic_base16_style_class(theme_key, base16_theme)
 
 
 def _create_base_16_class_name_from_theme_key(base16_theme_name: str):
@@ -85,10 +85,10 @@ def __getattr__(attr: str) -> type[pygments.style.Style]:
             theme_key = _THEME_KEY_BASE16_PREFIX + core_name
 
             base16_url = f'{_BASE16_DOWNLOAD_URL}/{filename}'
-            loop = asyncio.get_event_loop()
-            base16_theme = loop.run_until_complete(fetch_base16_theme(base16_url))
-
-            return create_dynamic_base16_style_class(theme_key, base16_theme)
+            return _fetch_base16_theme_and_create_dynamic_style_class(
+                theme_key,
+                base16_url,
+            )
 
     except (IOError, ValueError) as e:
         raise AttributeError(f'Failed to fetch base16 theme: {e}') from e
