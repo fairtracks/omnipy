@@ -40,10 +40,10 @@ from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
         FrameTestCase(frame=Frame(Dimensions(width=19, height=4))),
 
         #
-        # id='taller_and_thinner_frame'
+        # id='taller_and_thinner_frame_reflow'
         #
         FrameTestCase(
-            frame=Frame(Dimensions(width=18, height=5), fixed_width=False),
+            frame=Frame(Dimensions(width=18, height=5)),
             # The content is wider than the frame, so the content is
             # resized to fit the frame. The height and width is recalculated
             # from the reflowed content as the "resize" stage, allowing
@@ -60,7 +60,7 @@ from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
         # id='thinner_frame'
         #
         FrameTestCase(
-            frame=Frame(Dimensions(width=18, height=4), fixed_width=False),
+            frame=Frame(Dimensions(width=18, height=4)),
             # Vertical cropping with ellipsis after reflow. Since the last
             # line is removed, the height and width is recalculated as the
             # "resize" stage, allowing more white space to be reclaimed.
@@ -81,7 +81,7 @@ from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
         # id='ellipsis_in_both_dims'
         #
         FrameTestCase(
-            frame=Frame(Dimensions(width=10, height=5), fixed_width=False),
+            frame=Frame(Dimensions(width=10, height=5)),
             # Vertical and horizontal cropping, simultaneously, with
             # ellipses. Recalculation of dimensions at the "resize" stage
             # allows whitespace to be reclaimed.
@@ -101,6 +101,48 @@ from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
         ),
 
         #
+        # id='larger_inner_frame_ellipses_out_of_view'
+        #
+        FrameTestCase(
+            content=Layout(
+                panel=MockConfigCropPanel(
+                    content='These contents are extra- ordinary!',
+                    frame=Frame(Dimensions(width=7, height=4)),
+                )),
+            frame=Frame(Dimensions(width=10, height=5)),
+            # Compare with 'ellipsis_in_both_dims':
+            #
+            # Setting the inner panel frame larger than what is visible
+            # within the outer panel frame, removes the ellipses from the
+            # output. The reason is that it is the inner panel that crops
+            # the content according to the config. In the "only width" and
+            # "only height" cases, you can see that the ellipses are found
+            # just outside the visible area within the outer panel.
+            exp_plain_output=('╭────────╮\n'
+                              '│ These  │\n'
+                              '│ conten │\n'
+                              '│ are    │\n'
+                              '╰────────╯\n'),
+            exp_resized_dims=Dimensions(width=11, height=6),
+            exp_stylized_dims=Dimensions(width=10, height=5),
+            exp_plain_output_only_width=('╭────────╮\n'
+                                         '│ These  │\n'
+                                         '│ conten │\n'
+                                         '│ are    │\n'
+                                         '│ …      │\n'
+                                         '╰────────╯\n'),
+            exp_resized_dims_only_width=Dimensions(width=11, height=6),
+            exp_stylized_dims_only_width=Dimensions(width=10, height=6),
+            exp_plain_output_only_height=('╭─────────╮\n'
+                                          '│ These   │\n'
+                                          '│ conten… │\n'
+                                          '│ are     │\n'
+                                          '╰─────────╯\n'),
+            exp_resized_dims_only_height=Dimensions(width=11, height=6),
+            exp_stylized_dims_only_height=Dimensions(width=11, height=5),
+        ),
+
+        #
         # id='cropping_from_right_and_top'
         #
         FrameTestCase(
@@ -112,7 +154,7 @@ from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
                         vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
                     ),
                 )),
-            frame=Frame(Dimensions(width=14, height=4), fixed_width=False),
+            frame=Frame(Dimensions(width=14, height=4)),
             # Here, vertical content is cropped plainly from the top, in the
             # "resize" stage.
             exp_plain_output=('╭────────────╮\n'
@@ -136,7 +178,7 @@ from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
                 panel=MockResizedConfigCropPanel(
                     content='This content is\nextraordinary!',
                     frame=Frame(Dimensions(width=15, height=1), fixed_width=False))),
-            frame=Frame(Dimensions(width=19, height=3), fixed_width=False),
+            frame=Frame(Dimensions(width=19, height=3)),
             # Inner panel is a resized panel with a defined frame width,
             # which is flexible, and a frame height of 1. With the vertical
             # cropping mode set as default to
@@ -162,7 +204,7 @@ from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
                 panel=MockResizedConfigCropPanel(
                     content='This content is\nextraordinary!',
                     frame=Frame(Dimensions(width=15, height=1)))),
-            frame=Frame(Dimensions(width=19, height=3), fixed_width=False),
+            frame=Frame(Dimensions(width=19, height=3)),
             # Same as previous test case, but with the inner panel frame
             # width fixed. In this case, the inner panel content is still
             # cropped to a single ellipsis character, but the width is not
@@ -210,9 +252,10 @@ from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
         'no_frame',
         'larger_frame',
         'exact_frame',
-        'taller_and_thinner_frame',
+        'taller_and_thinner_frame_reflow',
         'thinner_frame',
         'ellipses_in_both_dims',
+        'larger_inner_frame_ellipses_out_of_view',
         'cropping_from_right_and_top',
         'single_line_resized_inner_panel_flexible_width_crop_to_ellipsis',
         'single_line_resized_inner_panel_fixed_width_no_ellipsis_crop',
@@ -386,7 +429,7 @@ def case_layout_single_panel_fixed_dims(
         # id='reduced_height_frame_crop_title_to_single_line'
         #
         FrameTestCase(
-            frame=Frame(Dimensions(width=10, height=8), fixed_width=False),
+            frame=Frame(Dimensions(width=10, height=8)),
             # Not enough room for a double-line title, so the title is
             # cropped to a single line
             exp_plain_output=('╭────────╮\n'
@@ -416,7 +459,7 @@ def case_layout_single_panel_fixed_dims(
         # id='reduced_height_frame_crop_content_keep_title_at_bottom'
         #
         FrameTestCase(
-            frame=Frame(Dimensions(width=10, height=7), fixed_width=False),
+            frame=Frame(Dimensions(width=10, height=7)),
             # Just enough room for a single-line title (last line cropped),
             # while content is cropped to 3 lines. Both crop operations
             # happen at the "resize" stage
@@ -442,22 +485,16 @@ def case_layout_single_panel_fixed_dims(
             exp_plain_output_only_height=('╭───────────────────╮\n'
                                           '│ Here is some text │\n'
                                           '│                   │\n'
-                                          '│                   │\n'
-                                          '│                   │\n'
                                           '│   A nice title    │\n'
                                           '╰───────────────────╯\n'),
-            # The 'resized' dims are based on the cropped_dims of the
-            # inner panel, not the frame of the outer panel. Hence, the
-            # height is 5, not 7
-            exp_resized_dims_only_height=Dimensions(width=21, height=5),
-            exp_stylized_dims_only_height=Dimensions(width=21, height=7),
+            exp_dims_all_stages_only_height=Dimensions(width=21, height=5),
         ),
 
         #
         # id='reduced_height_frame_remove_title'
         #
         FrameTestCase(
-            frame=Frame(Dimensions(width=9, height=6), fixed_width=False),
+            frame=Frame(Dimensions(width=9, height=6)),
             # When only 2 or fewer lines of content are not in conflict with
             # a single-line title, the title is removed. As this happens in
             # the "resize" stage, horizontal cropping of the content is
@@ -486,7 +523,7 @@ def case_layout_single_panel_fixed_dims(
         # id='expand_width_frame_title_reappears'
         #
         FrameTestCase(
-            frame=Frame(Dimensions(width=11, height=7), fixed_width=False),
+            frame=Frame(Dimensions(width=11, height=7)),
             # Once there is enough width to remove the conflict between the
             # title and the table, the title reappears.
             exp_plain_output=('╭─────────╮\n'
@@ -512,7 +549,7 @@ def case_layout_single_panel_fixed_dims(
         # id='reduced_width_frame_max_double_line_title'
         #
         FrameTestCase(
-            frame=Frame(Dimensions(width=9, height=10), fixed_width=False),
+            frame=Frame(Dimensions(width=9, height=10)),
             # Title does not expand into more than two lines, even though
             # there is enough vertical space. The title stops the frame
             # from being cropped horizontally, even though the width is

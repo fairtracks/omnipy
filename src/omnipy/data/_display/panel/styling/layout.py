@@ -122,13 +122,14 @@ class StylizedLayoutPanel(
 
     @cached_property
     def table_cell_height(self) -> int:
+        table_cell_height = self.content.total_subpanel_outer_dims.height
+
         if has_height(self.frame.dims):
             layout_design_dims = LayoutDesignDims.create(self.config.layout_design)
-            table_cell_height = (
+            frame_cropped_table_cell_height = (
                 self.frame.dims.height
                 - layout_design_dims.num_extra_vertical_chars(num_vertical_panels=1))
-        else:
-            table_cell_height = self.content.total_subpanel_outer_dims.height
+            table_cell_height = min(table_cell_height, frame_cropped_table_cell_height)
 
         return table_cell_height
 
@@ -262,24 +263,21 @@ class InnerPanelStyler:
     def _style_and_crop_content(self) -> rich.text.Text:
         content = rich.text.Text.from_ansi(self._panel.colorized.terminal, no_wrap=True)
 
-        if not self._panel.title:
-            return content
-        else:
-            content_lines: list[rich.text.Text] | rich.containers.Lines = \
-                content.split('\n')
+        content_lines: list[rich.text.Text] | rich.containers.Lines = \
+            content.split('\n')
 
-            if len(content_lines) < self._num_content_lines:
-                # rich.text.Text.from_ansi() might remove empty lines at the end.
-                # Add them back here
-                for _ in range(self._num_content_lines - len(content_lines)):
-                    content_lines.append(rich.text.Text(''))
+        if len(content_lines) < self._num_content_lines:
+            # rich.text.Text.from_ansi() might remove empty lines at the end.
+            # Add them back here
+            for _ in range(self._num_content_lines - len(content_lines)):
+                content_lines.append(rich.text.Text(''))
 
-            elif len(content_lines) > self._num_content_lines:
-                # Crop content_lines if too high
-                content_lines = content_lines[:self._num_content_lines]
+        elif len(content_lines) > self._num_content_lines:
+            # Crop content_lines if too high
+            content_lines = content_lines[:self._num_content_lines]
 
-            linesep_text = rich.text.Text('\n', no_wrap=True)
-            return linesep_text.join(content_lines)
+        linesep_text = rich.text.Text('\n', no_wrap=True)
+        return linesep_text.join(content_lines)
 
     def style_inner_panel(self) -> rich.table.Table:
         styled_title = self._style_title()

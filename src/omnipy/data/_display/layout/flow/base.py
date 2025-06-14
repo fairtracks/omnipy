@@ -53,12 +53,6 @@ def optimize_layout_to_fit_frame(
     if has_width(context.frame.dims):
         context = _resize_inner_panels(context)
         context = _tighten_panel_frame_widths(context)
-
-        # TODO: In case outer frame is fixed width and wider than the outer
-        #       panel dimensions, we need to expand the inner panels with
-        #       flexible frame width, distributing the extra width among
-        #       them.
-
         context = _widen_inner_panels_to_make_room_for_titles(context)
 
     context = _reduce_panel_heights(context)
