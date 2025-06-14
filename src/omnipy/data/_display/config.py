@@ -567,6 +567,13 @@ class VerticalOverflowMode(str, Enum):
     ELLIPSIS_BOTTOM = 'ellipsis_bottom'
 
 
+class MaxTitleHeight(int, Enum):
+    AUTO = -1
+    ZERO = 0
+    ONE = 1
+    TWO = 2
+
+
 class Justify(str, Enum):
     """
     Justification modes for the output.
@@ -645,6 +652,11 @@ class OutputConfig:
             output.
         panel_title_at_top (bool): Whether panel titles will be displayed
             over the panel contents (True) or below the contents (False)
+        max_title_height (MaxTitleHeight): Maximum height of the panel
+            title. If AUTO, the height is determined by the content of the
+            title, up to a maximum of two lines. If ZERO, the title is not
+            displayed at all. If ONE or TWO, the title is displayed with a
+            fixed height of max one or two lines, respectively.
         justify_in_layout (Justify): Justification mode for the panel if
             inside a layout panel. This is only used for the panel contents.
     """
@@ -672,6 +684,7 @@ class OutputConfig:
     vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.ELLIPSIS_BOTTOM
     layout_design: LayoutDesign = LayoutDesign.TABLE_GRID
     panel_title_at_top: bool = True
+    max_title_height: MaxTitleHeight = MaxTitleHeight.AUTO
     justify_in_layout: Justify = Justify.LEFT
 
     @pyd.validator('language')

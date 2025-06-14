@@ -431,7 +431,7 @@ def case_layout_single_panel_fixed_dims(
         FrameTestCase(
             frame=Frame(Dimensions(width=10, height=8)),
             # Not enough room for a double-line title, so the title is
-            # cropped to a single line
+            # in a single line
             exp_plain_output=('╭────────╮\n'
                               '│ A nic… │\n'
                               '│        │\n'
@@ -440,9 +440,11 @@ def case_layout_single_panel_fixed_dims(
                               '│ some   │\n'
                               '│ text   │\n'
                               '╰────────╯\n'),
-            # The dims include the width of the double-line title cropped to
-            # a single line
-            exp_dims_all_stages=Dimensions(width=10, height=8),
+            # The "resized" dims include the width of the single line title
+            exp_resized_dims=Dimensions(width=16, height=8),
+            # The title is cropped according to outer frame width in the
+            # "stylized" stage
+            exp_stylized_dims=Dimensions(width=10, height=8),
             exp_plain_output_only_width=('╭────────╮\n'
                                          '│ A nice │\n'
                                          '│ title  │\n'
@@ -460,9 +462,8 @@ def case_layout_single_panel_fixed_dims(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=10, height=7)),
-            # Just enough room for a single-line title (last line cropped),
-            # while content is cropped to 3 lines. Both crop operations
-            # happen at the "resize" stage
+            # Just enough room for a horizontally cropped single-line title
+            # while content is vertically cropped to 3 lines.
             config=OutputConfig(panel_title_at_top=False),
             exp_plain_output=('╭────────╮\n'
                               '│ Here   │\n'
@@ -471,7 +472,8 @@ def case_layout_single_panel_fixed_dims(
                               '│        │\n'
                               '│ A nic… │\n'
                               '╰────────╯\n'),
-            exp_dims_all_stages=Dimensions(width=10, height=7),
+            exp_resized_dims=Dimensions(width=16, height=7),
+            exp_stylized_dims=Dimensions(width=10, height=7),
             exp_plain_output_only_width=('╭────────╮\n'
                                          '│ Here   │\n'
                                          '│ is     │\n'
@@ -533,7 +535,8 @@ def case_layout_single_panel_fixed_dims(
                               '│ some    │\n'
                               '│ text    │\n'
                               '╰─────────╯\n'),
-            exp_dims_all_stages=Dimensions(width=11, height=7),
+            exp_resized_dims=Dimensions(width=16, height=7),
+            exp_stylized_dims=Dimensions(width=11, height=7),
             exp_plain_output_only_width=('╭─────────╮\n'
                                          '│ A nice  │\n'
                                          '│  title  │\n'

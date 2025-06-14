@@ -3,6 +3,9 @@ from dataclasses import dataclass
 from functools import cached_property, lru_cache
 from typing import ClassVar, Generic
 
+from typing_extensions import override
+
+from omnipy.data._display.config import MaxTitleHeight
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.helpers import UnicodeCharWidthMap
 from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT
@@ -44,6 +47,17 @@ class MonospacedDraftPanel(
     @cached_property
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
         return Dimensions(width=self._width, height=self._height)
+
+    @cached_property
+    @override
+    def _max_title_height(self) -> int:
+        auto_title_height = super()._max_title_height
+
+        match self.config.max_title_height:
+            case MaxTitleHeight.AUTO:
+                return auto_title_height
+            case _:
+                return int(self.config.max_title_height)
 
 
 @dataclass

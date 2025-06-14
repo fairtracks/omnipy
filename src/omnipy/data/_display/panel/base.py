@@ -172,7 +172,7 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
             title_words = self.title.split()
             while True:
                 title_lines = soft_wrap_words(title_words, title_width)
-                if 1 <= len(title_lines) < 3:
+                if 1 <= len(title_lines) <= max(self._max_title_height, 1):
                     break
                 title_width += 1
 

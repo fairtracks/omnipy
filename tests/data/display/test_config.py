@@ -9,6 +9,7 @@ from omnipy.data._display.config import (ConsoleColorSystem,
                                          Justify,
                                          LayoutDesign,
                                          LightHighContrastColorStyles,
+                                         MaxTitleHeight,
                                          OutputConfig,
                                          PrettyPrinterLib,
                                          RecommendedColorStyles,
@@ -33,6 +34,7 @@ def test_output_config() -> None:
         vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
         layout_design=LayoutDesign.PANELS,
         panel_title_at_top=False,
+        max_title_height=MaxTitleHeight.ZERO,
         justify_in_layout=Justify.RIGHT,
     )
 
@@ -51,6 +53,7 @@ def test_output_config() -> None:
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_TOP
     assert config.layout_design is LayoutDesign.PANELS
     assert config.panel_title_at_top is False
+    assert config.max_title_height == MaxTitleHeight.ZERO
     assert config.justify_in_layout is Justify.RIGHT
 
     config = OutputConfig(
@@ -74,6 +77,7 @@ def test_output_config() -> None:
         vertical_overflow_mode='crop_bottom',  # type: ignore[arg-type]
         layout_design='table_grid',  # type: ignore[arg-type]
         panel_title_at_top=0,  # type: ignore[arg-type]
+        max_title_height=1,  # type: ignore[arg-type]
         justify_in_layout='right',  # type: ignore[arg-type]
     )
     assert config.tab_size == 2
@@ -91,6 +95,7 @@ def test_output_config() -> None:
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
     assert config.layout_design is LayoutDesign.TABLE_GRID
     assert config.panel_title_at_top is False
+    assert config.max_title_height == MaxTitleHeight.ONE
     assert config.justify_in_layout is Justify.RIGHT
 
     config = OutputConfig(
@@ -154,6 +159,9 @@ def test_output_config_hashable() -> None:
         },
         {
             'panel_title_at_top': False
+        },
+        {
+            'max_title_height': MaxTitleHeight.ZERO
         },
         {
             'justify_in_layout': Justify.RIGHT
@@ -221,6 +229,9 @@ def test_fail_output_config_no_assignments() -> None:
         config.panel_title_at_top = False  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
+        config.max_title_height = MaxTitleHeight.ONE  # type: ignore[misc]
+
+    with pytest.raises(AttributeError):
         config.justify_in_layout = Justify.RIGHT  # type: ignore[misc]
 
 
@@ -277,6 +288,9 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(panel_title_at_top=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
+        OutputConfig(max_title_height=None)  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError):
         OutputConfig(justify_in_layout=None)  # type: ignore[arg-type]
 
 
@@ -304,6 +318,7 @@ def test_output_config_default_values() -> None:
     assert config.vertical_overflow_mode is VerticalOverflowMode.ELLIPSIS_BOTTOM
     assert config.layout_design is LayoutDesign.TABLE_GRID
     assert config.panel_title_at_top is True
+    assert config.max_title_height is MaxTitleHeight.AUTO
     assert config.justify_in_layout is Justify.LEFT
 
 
