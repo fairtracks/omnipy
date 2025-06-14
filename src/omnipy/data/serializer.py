@@ -180,10 +180,12 @@ class SerializerRegistry:
         return tuple(serializer_cls for serializer_cls in self.tar_file_serializers
                      if serializer_cls.get_output_file_suffix() == file_suffix)
 
-    def load_from_tar_file_path_based_on_file_suffix(self,
-                                                     log_obj: CanLog,
-                                                     tar_file_path: str,
-                                                     to_dataset: IsDataset) -> IsDataset | None:
+    def load_from_tar_file_path_based_on_file_suffix(
+        self,
+        log_obj: CanLog,
+        tar_file_path: str,
+        to_dataset: IsDataset,
+    ) -> IsDataset | None:
         log: Callable
         if hasattr(log_obj, 'log'):
             log = log_obj.log
@@ -224,10 +226,13 @@ class SerializerRegistry:
                     except Exception:
                         return auto_dataset
 
-    def load_from_tar_file_path_based_on_dataset_cls(self,
-                                                     log_obj: CanLog,
-                                                     tar_file_path: str,
-                                                     to_dataset: IsDataset) -> IsDataset | None:
+    def load_from_tar_file_path_based_on_dataset_cls(
+        self,
+        log_obj: CanLog,
+        tar_file_path: str,
+        to_dataset: IsDataset,
+        any_file_suffix: bool = False,
+    ) -> IsDataset | None:
         log: Callable
         if hasattr(log_obj, 'log'):
             log = log_obj.log
@@ -245,6 +250,9 @@ class SerializerRegistry:
                     f'"{serializer.__name__}"')
 
                 with open(tar_file_path, 'rb') as tarfile_binary:
-                    out_dataset = serializer.deserialize(tarfile_binary.read())
+                    out_dataset = serializer.deserialize(
+                        tarfile_binary.read(),
+                        any_file_suffix=any_file_suffix,
+                    )
 
                 return out_dataset

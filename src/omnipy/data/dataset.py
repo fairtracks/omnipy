@@ -6,7 +6,7 @@ import inspect
 import json
 import os
 import tarfile
-from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKING
+from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKING, TypeAlias
 
 from typing_extensions import TypeVar
 
@@ -50,6 +50,10 @@ _ModelT = TypeVar('_ModelT', bound=IsModel)
 _NewModelT = TypeVar('_NewModelT', bound=IsModel)
 _GeneralModelT = TypeVar('_GeneralModelT', bound=IsModel)
 _DatasetT = TypeVar('_DatasetT')
+
+PathOrUrl: TypeAlias = 'str | HttpUrlModel'
+PathsOrUrls: TypeAlias = 'PathOrUrl | Iterable[str] | HttpUrlDataset | Mapping[str, PathOrUrl]'
+PathsOrUrlsOrNone: TypeAlias = 'PathsOrUrls | None'
 
 # def orjson_dumps(v, *, default):
 #     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
@@ -674,22 +678,24 @@ class Dataset(
             tar.close()
 
     @classmethod
-    def load(cls,
-             paths_or_urls: 'str | Iterable[str] | HttpUrlModel | HttpUrlDataset '
-             '| Mapping[str, str | HttpUrlModel] | None' = None,
-             by_file_suffix: bool = False,
-             as_mime_type: None | str = None,
-             **kwargs: 'str | HttpUrlModel') -> asyncio.Task | None:
-        empty_dataset = cls()
-        return empty_dataset.load_into(
+    def load(
+        cls,
+        paths_or_urls: PathsOrUrlsOrNone = None,
+        by_file_suffix: bool = False,
+        as_mime_type: None | str = None,
+        **kwargs: PathOrUrl,
+    ) -> 'asyncio.Task[Dataset[_ModelT]] | Dataset[_ModelT]':
+        dataset = cls()
+        return dataset.load_into(
             paths_or_urls, by_file_suffix=by_file_suffix, as_mime_type=as_mime_type, **kwargs)
 
-    def load_into(self,
-                  paths_or_urls: 'str | Iterable[str] | HttpUrlModel | HttpUrlDataset '
-                  '| Mapping[str, str | HttpUrlModel] | None' = None,
-                  by_file_suffix: bool = False,
-                  as_mime_type: None | str = None,
-                  **kwargs: 'str | HttpUrlModel') -> asyncio.Task:
+    def load_into(
+        self,
+        paths_or_urls: PathsOrUrlsOrNone = None,
+        by_file_suffix: bool = False,
+        as_mime_type: None | str = None,
+        **kwargs: PathOrUrl,
+    ) -> 'Dataset[_ModelT] | asyncio.Task[Dataset[_ModelT]]':
         from omnipy.components.remote.datasets import HttpUrlDataset
         from omnipy.components.remote.models import HttpUrlModel
 
@@ -727,8 +733,8 @@ class Dataset(
                 return self._load_http_urls(http_url_dataset, as_mime_type=as_mime_type)
 
             case Iterable():
+                path_or_url_iterable = cast(Iterable[str], paths_or_urls)
                 try:
-                    path_or_url_iterable = cast(Iterable[str], paths_or_urls)
                     http_url_dataset = HttpUrlDataset(
                         zip(path_or_url_iterable, path_or_url_iterable))
                 except ValidationError:
@@ -742,14 +748,14 @@ class Dataset(
         self,
         http_url_dataset: 'HttpUrlDataset',
         as_mime_type: None | str = None,
-    ) -> asyncio.Task:
+    ) -> 'Dataset[_ModelT] | asyncio.Task[Dataset[_ModelT]]':
         from omnipy.components.remote.helpers import RateLimitingClientSession
         from omnipy.components.remote.tasks import get_auto_from_api_endpoint
         hosts: defaultdict[str, list[int]] = defaultdict(list)
         for i, url in enumerate(http_url_dataset.values()):
             hosts[url.host].append(i)
 
-        async def load_all(as_mime_type: None | str = None):
+        async def load_all(as_mime_type: None | str = None) -> 'Dataset[_ModelT]':
             tasks = []
 
             for host in hosts:
@@ -796,7 +802,7 @@ class Dataset(
         else:
             return asyncio.run(load_all(as_mime_type=as_mime_type))
 
-    def _load_paths(self, path_or_urls: Iterable[str], by_file_suffix: bool) -> None:
+    def _load_paths(self, path_or_urls: Iterable[str], by_file_suffix: bool) -> 'Dataset[_ModelT]':
         for path_or_url in path_or_urls:
             serializer_registry = self._get_serializer_registry()
             tar_gz_file_path = self._ensure_tar_gz_file(path_or_url)
@@ -808,12 +814,13 @@ class Dataset(
             else:
                 loaded_dataset = \
                     serializer_registry.load_from_tar_file_path_based_on_dataset_cls(
-                        self, tar_gz_file_path, self)
+                        self, tar_gz_file_path, self, any_file_suffix=True)
             if loaded_dataset is not None:
                 self.absorb(loaded_dataset)
                 continue
             else:
                 raise RuntimeError('Unable to load from serializer')
+        return self
 
     @staticmethod
     def _ensure_tar_gz_file(path: str):
