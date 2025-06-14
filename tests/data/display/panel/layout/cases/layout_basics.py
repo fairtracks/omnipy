@@ -4,6 +4,7 @@ import pytest_cases as pc
 
 from omnipy.data._display.config import (ConsoleColorSystem,
                                          HorizontalOverflowMode,
+                                         Justify,
                                          OutputConfig,
                                          VerticalOverflowMode)
 from omnipy.data._display.dimensions import Dimensions
@@ -364,6 +365,47 @@ def case_layout_single_empty_panel_height_zero(
         ),
 
         #
+        # id='taller_and_thinner_frame_inner_frame_reflow_justify_right'
+        #
+        FrameTestCase(
+            content=Layout(
+                panel=MockStylablePlainCropPanel(
+                    content='This content is\nextraordinary!',
+                    frame=Frame(Dimensions(width=14, height=3),),
+                    config=OutputConfig(justify_in_layout=Justify.RIGHT),
+                )),
+            frame=Frame(Dimensions(width=18, height=5)),
+            # As 'taller_and_thinner_frame_inner_frame_reflow', but with
+            # right justification.
+            exp_plain_output=('╭────────────────╮\n'
+                              '│   This content │\n'
+                              '│             is │\n'
+                              '│ extraordinary! │\n'
+                              '╰────────────────╯\n'),
+            exp_dims_all_stages=Dimensions(width=18, height=5),
+        ),
+
+        #
+        # id='taller_and_thinner_frame_inner_frame_reflow_justify_center'
+        #
+        FrameTestCase(
+            content=Layout(
+                panel=MockStylablePlainCropPanel(
+                    content='This content is\nextraordinary!',
+                    frame=Frame(Dimensions(width=14, height=3),),
+                    config=OutputConfig(justify_in_layout=Justify.CENTER),
+                )),
+            frame=Frame(Dimensions(width=18, height=5)),
+            # As 'taller_and_thinner_frame_inner_frame_reflow', but with
+            # right justification.
+            exp_plain_output=('╭────────────────╮\n'
+                              '│  This content  │\n'
+                              '│       is       │\n'
+                              '│ extraordinary! │\n'
+                              '╰────────────────╯\n'),
+            exp_dims_all_stages=Dimensions(width=18, height=5),
+        ),
+        #
         # id='smaller_frame_large_inner_panel_crop'
         #
         FrameTestCase(
@@ -490,6 +532,8 @@ def case_layout_single_empty_panel_height_zero(
         'exact_frame',
         'taller_and_thinner_frame',
         'taller_and_thinner_frame_inner_frame_reflow',
+        'taller_and_thinner_frame_inner_frame_reflow_justify_right',
+        'taller_and_thinner_frame_inner_frame_reflow_justify_center',
         'smaller_frame_large_inner_panel_crop',
         'larger_frame_large_inner_panel',
         'larger_frame_large_inner_panel_flexible_frame',
@@ -526,6 +570,56 @@ def case_layout_single_panel(
         # id='exact_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=23, height=5))),
+
+        #
+        # id='exact_frame_justify_right'
+        #
+        FrameTestCase(
+            content=Layout(
+                panel=MockStylablePlainCropPanel(
+                    content='Here is some text',
+                    title='A nice title',
+                    frame=Frame(Dimensions(width=19, height=None)),
+                    config=OutputConfig(justify_in_layout=Justify.RIGHT),
+                ),),
+            frame=Frame(Dimensions(width=23, height=5)),
+            exp_plain_output=('╭─────────────────────╮\n'
+                              '│    A nice title     │\n'
+                              '│                     │\n'
+                              '│   Here is some text │\n'
+                              '╰─────────────────────╯\n'),
+            exp_plain_output_only_height=('╭─────────────────────╮\n'
+                                          '│    A nice title     │\n'
+                                          '│                     │\n'
+                                          '│   Here is some text │\n'
+                                          '╰─────────────────────╯\n'),
+            exp_dims_all_stages_only_height=Dimensions(width=23, height=5),
+        ),
+
+        #
+        # id='exact_frame_justify_center'
+        #
+        FrameTestCase(
+            content=Layout(
+                panel=MockStylablePlainCropPanel(
+                    content='Here is some text',
+                    title='A nice title',
+                    frame=Frame(Dimensions(width=19, height=None)),
+                    config=OutputConfig(justify_in_layout=Justify.CENTER),
+                ),),
+            frame=Frame(Dimensions(width=23, height=5)),
+            exp_plain_output=('╭─────────────────────╮\n'
+                              '│    A nice title     │\n'
+                              '│                     │\n'
+                              '│  Here is some text  │\n'
+                              '╰─────────────────────╯\n'),
+            exp_plain_output_only_height=('╭─────────────────────╮\n'
+                                          '│    A nice title     │\n'
+                                          '│                     │\n'
+                                          '│  Here is some text  │\n'
+                                          '╰─────────────────────╯\n'),
+            exp_dims_all_stages_only_height=Dimensions(width=23, height=5),
+        ),
 
         #
         # id='exact_content_width_frame_single_line_title'
@@ -672,6 +766,8 @@ def case_layout_single_panel(
     ids=(
         'no_frame',
         'exact_frame',
+        'exact_frame_justify_right',
+        'exact_frame_justify_center',
         'exact_content_width_frame_single_line_title',
         'reduced_width_frame_single_line_title',
         'reduced_width_frame_not_double_line_title',

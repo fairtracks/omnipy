@@ -19,10 +19,9 @@ from omnipy.data._display.layout.base import (DimensionsAwarePanelLayoutMixin,
                                               LayoutDesignDims)
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              FrameInvT,
-                                             FullyRenderedPanel,
                                              OutputVariant,
                                              panel_is_dimensions_aware)
-from omnipy.data._display.panel.draft.base import DraftPanel
+from omnipy.data._display.panel.draft.base import DraftPanel, FullyRenderedDraftPanel
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_style,
@@ -34,8 +33,8 @@ from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingO
 from omnipy.util import _pydantic as pyd
 
 
-class FullyRenderedPanelLayout(
-        Layout[FullyRenderedPanel[AnyFrame]],
+class FullyRenderedDraftPanelLayout(
+        Layout[FullyRenderedDraftPanel[AnyFrame]],
         DimensionsAwarePanelLayoutMixin,
 ):
     ...
@@ -48,7 +47,7 @@ class FullyRenderedPanelLayout(
 )
 class StylizedLayoutPanel(
         StylizedMonospacedPanel[ResizedLayoutDraftPanel[FrameInvT],
-                                FullyRenderedPanelLayout,
+                                FullyRenderedDraftPanelLayout,
                                 FrameInvT],
         Generic[FrameInvT],
 ):
@@ -60,7 +59,7 @@ class StylizedLayoutPanel(
             resized_panel = panel
 
         super().__init__(
-            cast(MonospacedDraftPanel[FullyRenderedPanelLayout, FrameInvT], resized_panel))
+            cast(MonospacedDraftPanel[FullyRenderedDraftPanelLayout, FrameInvT], resized_panel))
 
     @pyd.validator('content', pre=True)
     def _copy_content(cls, content: Layout) -> Layout:
@@ -90,8 +89,8 @@ class StylizedLayoutPanel(
     def render_panels_fully(
         cls,
         content: Layout[DimensionsAwarePanel],
-    ) -> FullyRenderedPanelLayout:
-        return FullyRenderedPanelLayout(**content.render_fully())
+    ) -> FullyRenderedDraftPanelLayout:
+        return FullyRenderedDraftPanelLayout(**content.render_fully())
 
     @staticmethod
     @cache
@@ -180,7 +179,7 @@ class PanelElementStyles:
 class InnerPanelStyler:
     def __init__(
         self,
-        inner_panel: FullyRenderedPanel,
+        inner_panel: FullyRenderedDraftPanel,
         table_cell_height: int,
         panel_title_at_top: bool,
         styles: PanelElementStyles,
@@ -292,7 +291,11 @@ class InnerPanelStyler:
             padding=(0, 0),
         )
 
-        add_column_kwargs: dict[str, Any] = dict(width=column_width, overflow='crop')
+        add_column_kwargs: dict[str, Any] = dict(
+            width=column_width,
+            overflow='crop',
+            justify=self._panel.config.justify_in_layout.value,
+        )
 
         if styled_title:
             if panel_title_at_top:
@@ -336,7 +339,6 @@ class OuterLayoutPanelStyler:
 
     def _style_inner_panels(self) -> Iterator[rich.table.Table]:
         for inner_panel in self._outer_panel.content.grid.get_row(0):
-
             inner_panel_layout_props = InnerPanelStyler(
                 inner_panel,
                 self._outer_panel.table_cell_height,

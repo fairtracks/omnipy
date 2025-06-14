@@ -567,6 +567,20 @@ class VerticalOverflowMode(str, Enum):
     ELLIPSIS_BOTTOM = 'ellipsis_bottom'
 
 
+class Justify(str, Enum):
+    """
+    Justification modes for the output.
+
+    The justification modes are:
+    - `LEFT`: Left-justified text.
+    - `RIGHT`: Right-justified text.
+    - `CENTER`: Centered text.
+    """
+    LEFT = 'left'
+    CENTER = 'center'
+    RIGHT = 'right'
+
+
 @pyd.dataclass(
     kw_only=True,
     frozen=True,
@@ -631,6 +645,8 @@ class OutputConfig:
             output.
         panel_title_at_top (bool): Whether panel titles will be displayed
             over the panel contents (True) or below the contents (False)
+        justify_in_layout (Justify): Justification mode for the panel if
+            inside a layout panel. This is only used for the panel contents.
     """
 
     tab_size: pyd.NonNegativeInt = 4
@@ -656,6 +672,7 @@ class OutputConfig:
     vertical_overflow_mode: VerticalOverflowMode = VerticalOverflowMode.ELLIPSIS_BOTTOM
     layout_design: LayoutDesign = LayoutDesign.TABLE_GRID
     panel_title_at_top: bool = True
+    justify_in_layout: Justify = Justify.LEFT
 
     @pyd.validator('language')
     def validate_language(cls, language: SyntaxLanguage | str) -> SyntaxLanguage | str:
