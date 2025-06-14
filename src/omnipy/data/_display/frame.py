@@ -14,6 +14,48 @@ import omnipy.util._pydantic as pyd
 
 @pyd.dataclass(frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))
 class Frame(Generic[WidthT, HeightT]):
+    """
+    Represents a frame limiting the dimensions of a display panel, with the
+    units of width and height being characters and lines respectively.
+
+    Any dimensions can be `None`, which indicates that the frame is not
+    limited in that dimension.
+
+    A frame attached to a display panel works according to the following
+    rules:
+
+    - A frame dimension value defines the maximum size of the panel in that
+      dimension, possibly cropping the content if it exceeds the frame size.
+      If a frame dimension value exceeds the size of the content in that
+      dimension, the content will not be cropped. The frame size will also
+      have no effect on the dimensions of the panel as a whole. In effect,
+      a too large frame dimension will collapse to the size of the content.
+
+    However, a frame dimension can be defined as "fixed" with the
+    `fixed_width` or `fixed_height` attributes, with the following rules:
+
+    - A fixed frame dimension value will NOT collapse to the size of the
+    content IF (and only if) the frame describes a panel that is contained
+    within a layout panel (an "inner" panel). Fixing a frame dimension for
+    an "outer" panel (i.e. a panel that is not contained within another
+    layout panel) will have no effect on that panel's dimensions.
+
+    - If a frame is attached to an inner panel (i.e. a panel that is
+    contained within another layout panel), a "flexible" frame dimension
+    (i.e. a dimension that is not fixed) will be honored by the layout panel
+    reflow algorithm, allowing space released by collapsing to the size of
+    the content to be reused by other inner panels.
+
+    By default, a frame's dimensions are fixed if defined, unless otherwise
+    specified. If a frame dimension is `None`, it is considered flexible.
+
+    In the layout panel reflow algorithm, available space is distributed
+    among inner panels that have no pre-defined dimensions by setting their
+    frame dimensions accordingly. All such distributed frame dimensions
+    are considered flexible, unless otherwise specified in the inner panel's
+    frame. The layout panel reflow algorithm is defined in the module
+    `omnipy.data._display.layout.flow.base.optimize_layout_to_fit_frame`.
+    """
     dims: Dimensions[WidthT, HeightT]
     fixed_width: bool | None = None
     fixed_height: bool | None = None
