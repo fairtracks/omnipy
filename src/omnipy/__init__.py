@@ -133,6 +133,7 @@ from omnipy.components.remote.models import (AutoResponseContentsModel,
                                              UrlPathModel)
 from omnipy.components.remote.tasks import (async_load_urls_into_new_dataset,
                                             get_bytes_from_api_endpoint,
+                                            get_github_repo_urls,
                                             get_json_from_api_endpoint,
                                             get_str_from_api_endpoint,
                                             load_urls_into_new_dataset)
@@ -363,6 +364,7 @@ __all__ = [
     'get_str_from_api_endpoint',
     'async_load_urls_into_new_dataset',
     'load_urls_into_new_dataset',
+    'get_github_repo_urls',
     'create_row_index_from_column',
     'remove_columns',
     'rename_col_names',
