@@ -86,6 +86,7 @@ class ReflowedTextDraftPanel(
         # Ensure eventual cached values used to calculate dims are deleted
         _del_attrs_if_defined(
             '_content_lines_generator',
+            'cropped_dims',
             'dims',
             '_width',
             '_height',
@@ -104,6 +105,7 @@ class ReflowedTextDraftPanel(
 
         # Delete cached values, expect for "_content_lines_generator"
         _del_attrs_if_defined(
+            'cropped_dims',
             'dims',
             '_width',
             '_height',
