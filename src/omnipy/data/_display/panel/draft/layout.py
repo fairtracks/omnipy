@@ -6,20 +6,12 @@ from typing_extensions import override
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.frame import AnyFrame
-from omnipy.data._display.layout.base import DimensionsAwarePanelLayoutMixin, Layout
-from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameInvT, FrameT
-from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, DraftPanel
+from omnipy.data._display.layout.base import Layout
+from omnipy.data._display.panel.base import FrameInvT, FrameT, FullyRenderedPanel
+from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanelLayout, DraftPanel
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.shared.exceptions import ShouldNotOccurException
 import omnipy.util._pydantic as pyd
-
-
-class DimensionsAwareDraftPanelLayout(
-        Layout[DimensionsAwareDraftPanel[AnyFrame]],
-        DimensionsAwarePanelLayoutMixin,
-):
-    ...
 
 
 @pyd.dataclass(
@@ -86,6 +78,6 @@ class ResizedLayoutDraftPanel(
         raise ShouldNotOccurException()
 
     @override
-    def render_next_stage(self) -> 'DimensionsAwarePanel[FrameT]':
+    def render_next_stage(self) -> 'FullyRenderedPanel[FrameT]':
         from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
         return StylizedLayoutPanel(self)

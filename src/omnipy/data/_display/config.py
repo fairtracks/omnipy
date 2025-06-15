@@ -44,6 +44,7 @@ class SyntaxLanguage(str, Enum):
     """
 
     PYTHON = 'python'
+    TEXT = 'text'
     JSON = 'json'
     JSON_LD = 'json-ld'
     YAML = 'yaml'

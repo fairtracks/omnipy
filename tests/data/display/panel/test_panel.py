@@ -1,15 +1,17 @@
+from typing import cast
+
 import pytest
 from typing_extensions import override
 
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.frame import empty_frame, Frame
-from omnipy.data._display.panel.base import Panel
+from omnipy.data._display.frame import AnyFrame, empty_frame, Frame
+from omnipy.data._display.panel.base import DimensionsAwarePanel, Panel
 
 
 class SimplePanel(Panel):
     @override
-    def render_next_stage(self) -> 'SimplePanel':
-        return self
+    def render_next_stage(self) -> 'DimensionsAwarePanel[AnyFrame]':
+        return cast(DimensionsAwarePanel[AnyFrame], self)
 
 
 def test_panel():

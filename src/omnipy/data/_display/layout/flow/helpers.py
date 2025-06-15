@@ -6,9 +6,11 @@ from omnipy.data._display.dimensions import DimensionsWithWidthAndHeight, has_wi
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.base import FrameInvT, FrameT, panel_is_dimensions_aware
-from omnipy.data._display.panel.draft.base import ContentT, DimensionsAwareDraftPanel, DraftPanel
-from omnipy.data._display.panel.draft.layout import (DimensionsAwareDraftPanelLayout,
-                                                     ResizedLayoutDraftPanel)
+from omnipy.data._display.panel.draft.base import (ContentT,
+                                                   DimensionsAwareDraftPanel,
+                                                   DimensionsAwareDraftPanelLayout,
+                                                   DraftPanel)
+from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.util import _pydantic as pyd
 
 # Functions
@@ -17,7 +19,7 @@ from omnipy.util import _pydantic as pyd
 def create_panel_with_updated_frame(
     draft_panel_basis: DraftPanel[ContentT, AnyFrame],
     frame: FrameInvT,
-) -> DimensionsAwareDraftPanel[FrameInvT]:
+) -> DimensionsAwareDraftPanel[ContentT, FrameInvT]:
     """
     Create a new dimensions-aware panel based on an existing panel with a new frame.
 
@@ -44,9 +46,10 @@ def create_panel_with_updated_frame(
         ),
     )
     if not panel_is_dimensions_aware(new_draft_panel):
-        return cast(DimensionsAwareDraftPanel[FrameInvT], new_draft_panel.render_next_stage())
+        return cast(DimensionsAwareDraftPanel[ContentT, FrameInvT],
+                    new_draft_panel.render_next_stage())
     else:
-        return cast(DimensionsAwareDraftPanel[FrameInvT], new_draft_panel)
+        return cast(DimensionsAwareDraftPanel[ContentT, FrameInvT], new_draft_panel)
 
 
 # Classes

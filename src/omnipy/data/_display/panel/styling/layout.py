@@ -13,15 +13,14 @@ from typing_extensions import override
 
 from omnipy.data._display.config import ConsoleColorSystem, LayoutDesign
 from omnipy.data._display.dimensions import has_height, has_width
-from omnipy.data._display.frame import AnyFrame
-from omnipy.data._display.layout.base import (DimensionsAwarePanelLayoutMixin,
-                                              Layout,
-                                              LayoutDesignDims)
+from omnipy.data._display.layout.base import Layout, LayoutDesignDims
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              FrameInvT,
                                              OutputVariant,
                                              panel_is_dimensions_aware)
-from omnipy.data._display.panel.draft.base import DraftPanel, FullyRenderedDraftPanel
+from omnipy.data._display.panel.draft.base import (DraftPanel,
+                                                   FullyRenderedDraftPanel,
+                                                   FullyRenderedDraftPanelLayout)
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_style,
@@ -31,13 +30,6 @@ from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_st
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingOutputVariant
 from omnipy.util import _pydantic as pyd
-
-
-class FullyRenderedDraftPanelLayout(
-        Layout[FullyRenderedDraftPanel[AnyFrame]],
-        DimensionsAwarePanelLayoutMixin,
-):
-    ...
 
 
 @pyd.dataclass(

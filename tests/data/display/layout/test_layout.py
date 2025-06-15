@@ -18,7 +18,7 @@ class SimpleLayoutCase:
 
 
 def test_empty_layout() -> None:
-    layout = Layout()
+    layout: Layout = Layout()
 
     # Check contents
     assert len(layout) == 0

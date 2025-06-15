@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import field
 from functools import cached_property
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from typing_extensions import override
 
@@ -31,7 +31,7 @@ class MockPanelBase(DraftPanel[str, AnyFrame]):
         )
 
     @override
-    def render_next_stage(self) -> DimensionsAwareDraftPanel[AnyFrame]:
+    def render_next_stage(self) -> DimensionsAwareDraftPanel[Any, AnyFrame]:
         frame_width = self.frame.dims.width if self.frame else None
         if frame_width is None:
             return self._dims_aware_panel_cls(
@@ -52,11 +52,11 @@ class MockPanelBase(DraftPanel[str, AnyFrame]):
 
 
 @pyd.dataclass(init=False, frozen=True)
-class MockDimsAwarePanelBase(DimensionsAwareDraftPanel[AnyFrame], ABC):
+class MockDimsAwarePanelBase(DimensionsAwareDraftPanel[Any, AnyFrame], ABC):
     _fully_rendered_panel_cls: ClassVar[type[FullyRenderedDraftPanel]] = field(init=False)
 
     @override
-    def render_next_stage(self) -> FullyRenderedDraftPanel[AnyFrame]:
+    def render_next_stage(self) -> FullyRenderedDraftPanel[Any, AnyFrame]:
         return self._fully_rendered_panel_cls(
             content=self.content,
             frame=self.frame,
@@ -100,7 +100,7 @@ class MockOutputVariantBase(OutputVariant):
 
 
 @pyd.dataclass(init=False, frozen=True)
-class MockFullyRenderedPanelBase(FullyRenderedDraftPanel[AnyFrame], MockDimsAwarePanelBase):
+class MockFullyRenderedPanelBase(FullyRenderedDraftPanel[Any, AnyFrame], MockDimsAwarePanelBase):
     _output_variant_cls: ClassVar[type[MockOutputVariantBase]] = field(init=False)
 
     @cached_property

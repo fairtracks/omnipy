@@ -4,9 +4,10 @@ from typing import cast, ClassVar
 
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import has_height, has_width
-from omnipy.data._display.frame import Frame
+from omnipy.data._display.frame import AnyFrame, Frame
 from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, FullyRenderedDraftPanel
 from omnipy.data._display.panel.styling.output import OutputMode
+from omnipy.shared.exceptions import ShouldNotOccurException
 import omnipy.util._pydantic as pyd
 
 from ...helpers.mocks import (MockDimsAwarePanelBase,
@@ -42,6 +43,8 @@ class MockPlainCropOutputVariant(MockOutputVariantBase):
                 return re.sub(r'(\S+)', '\x1b[1m\\1\x1b[0m', content)
             case OutputMode.COLORIZED:
                 return re.sub(r'(\S+)', '\x1b[1;34m\\1\x1b[0m', content)
+            case _:
+                raise ShouldNotOccurException(f'Unexpected output mode: {self._output_mode}')
 
     @cached_property
     def html_tag(self) -> str:
@@ -53,6 +56,8 @@ class MockPlainCropOutputVariant(MockOutputVariantBase):
                 return f'<strong>{html_core}</strong>'
             case OutputMode.COLORIZED:
                 return f'<strong style="color: blue">{html_core}</strong>'
+            case _:
+                raise ShouldNotOccurException(f'Unexpected output mode: {self._output_mode}')
 
     @cached_property
     def html_page(self) -> str:
@@ -70,12 +75,14 @@ class MockPlainCropOutputVariant(MockOutputVariantBase):
                 return (f'<html><body style="color: blue">'
                         f'<strong>{html_core}</strong>'
                         '</body></html>')
+            case _:
+                raise ShouldNotOccurException(f'Unexpected output mode: {self._output_mode}')
 
 
 class SplitContentMixin:
     @cached_property
     def _content_lines(self) -> list[str]:
-        _self = cast(DimensionsAwareDraftPanel, self)
+        _self = cast(DimensionsAwareDraftPanel[str, AnyFrame], self)
         return _self.content.split('\n')
 
 

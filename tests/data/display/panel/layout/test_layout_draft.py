@@ -6,8 +6,8 @@ from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.layout.base import Layout
-from omnipy.data._display.panel.draft.layout import (DimensionsAwareDraftPanelLayout,
-                                                     ResizedLayoutDraftPanel)
+from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanelLayout
+from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 import omnipy.util._pydantic as pyd
 

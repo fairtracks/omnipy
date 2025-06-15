@@ -2,7 +2,7 @@ from functools import cached_property
 from typing import cast, ClassVar
 
 from omnipy.data._display.config import OutputConfig
-from omnipy.data._display.frame import Frame
+from omnipy.data._display.frame import AnyFrame, Frame
 from omnipy.data._display.panel.cropping import (crop_content_line_horizontally,
                                                  crop_content_lines_vertically,
                                                  crop_content_lines_vertically_for_resizing)
@@ -41,7 +41,7 @@ class MockConfigCropOutputVariant(MockOutputVariantBase):
 class SplitAndVerticallyCropContentMixin:
     @cached_property
     def _content_lines(self) -> list[str]:
-        _self = cast(DimensionsAwareDraftPanel, self)
+        _self = cast(DimensionsAwareDraftPanel[str, AnyFrame], self)
 
         content_lines = _self.content.split('\n')
         content_lines = crop_content_lines_vertically_for_resizing(

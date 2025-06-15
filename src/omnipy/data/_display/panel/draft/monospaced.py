@@ -8,15 +8,15 @@ from typing_extensions import override
 from omnipy.data._display.config import MaxTitleHeight
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.helpers import UnicodeCharWidthMap
-from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT
-from omnipy.data._display.panel.draft.base import ContentT, DraftPanel
+from omnipy.data._display.panel.base import FrameT
+from omnipy.data._display.panel.draft.base import ContentT, DimensionsAwareDraftPanel, DraftPanel
 import omnipy.util._pydantic as pyd
 
 
 @pyd.dataclass(
     init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
 class MonospacedDraftPanel(
-        DimensionsAwarePanel[FrameT],
+        DimensionsAwareDraftPanel[ContentT, FrameT],
         DraftPanel[ContentT, FrameT],
         Generic[ContentT, FrameT],
         ABC,

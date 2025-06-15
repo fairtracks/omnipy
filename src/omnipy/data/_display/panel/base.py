@@ -65,7 +65,7 @@ class Panel(Generic[FrameT]):
         )
 
     @abstractmethod
-    def render_next_stage(self) -> 'Panel[FrameT]':
+    def render_next_stage(self) -> 'DimensionsAwarePanel[FrameT] | FullyRenderedPanel[FrameT]':
         ...
 
 
@@ -189,6 +189,11 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
     @cached_property
     def title_height_with_blank_lines(self) -> int:
         return self.title_height + self.TITLE_BLANK_LINES if self.title_height > 0 else 0
+
+    @abstractmethod
+    @override
+    def render_next_stage(self) -> 'FullyRenderedPanel[FrameT]':
+        ...
 
 
 class FullyRenderedPanel(DimensionsAwarePanel[FrameT], Generic[FrameT]):
