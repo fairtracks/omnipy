@@ -424,8 +424,11 @@ class Model(
         assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
 
         if self._get_root_field().default_factory() is Undefined:
-            default_factory = self.__class__._get_default_factory_from_model(self.full_type())
-            self._get_root_field().default_factory = default_factory
+            try:
+                default_factory = self.__class__._get_default_factory_from_model(self.full_type())
+                self._get_root_field().default_factory = default_factory
+            except TypeError:
+                ...
 
         omnipy_or_pydantic_model_as_input = False
         if ROOT_KEY in super_kwargs:
