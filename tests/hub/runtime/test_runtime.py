@@ -62,6 +62,7 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
 
     # data
     assert isinstance(config.data, DataConfig)
+    assert config.data.display.cache_dir_path == str(dir_path / '_cache')
 
     assert isinstance(config.data.display, DisplayConfig)
 

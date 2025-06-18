@@ -146,4 +146,5 @@ class OutputConfig:
             else:
                 raise ValueError(f'Invalid color style: {color_style}')
         except pygments.util.ClassNotFound as exp:
-            raise ValueError(f'Invalid color style: {color_style}') from exp
+            raise ValueError(f'Color style not registered in Pygments: {color_style}. '
+                             f'This may be due to a network error.') from exp

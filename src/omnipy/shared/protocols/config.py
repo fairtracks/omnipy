@@ -115,6 +115,7 @@ class IsDisplayConfig(IsDataPublisher, Protocol):
     browser: IsBrowserConsoleConfig
     text: IsTextConfig
     layout: IsLayoutConfig
+    cache_dir_path: str
 
 
 @runtime_checkable

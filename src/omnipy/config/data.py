@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from pathlib import Path
 import shutil
 from typing import Any
 
@@ -178,6 +179,10 @@ class LayoutConfig(ConfigBase):
     panel_title_at_top: bool = True
 
 
+def _get_cache_dir_path() -> str:
+    return str(Path.cwd().joinpath(Path('_cache')))
+
+
 class DisplayConfig(ConfigBase):
     """
     Configuration for display output.
@@ -188,6 +193,7 @@ class DisplayConfig(ConfigBase):
     browser: IsBrowserConsoleConfig = pyd.Field(default_factory=BrowserConsoleConfig)
     text: IsTextConfig = pyd.Field(default_factory=TextConfig)
     layout: IsLayoutConfig = pyd.Field(default_factory=LayoutConfig)
+    cache_dir_path: str = pyd.Field(default_factory=_get_cache_dir_path)
 
 
 class ModelConfig(ConfigBase):

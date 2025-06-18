@@ -80,6 +80,7 @@ def runtime(
     runtime = runtime_cls()
 
     runtime.config.reset_to_defaults()
+    runtime.config.data.display.cache_dir_path = str(tmp_dir_path / '_cache')
     runtime.config.job.output_storage.local.persist_data_dir_path = str(tmp_dir_path / 'outputs')
     runtime.config.root_log.file_log_path = str(tmp_dir_path / 'logs' / 'omnipy.log')
 

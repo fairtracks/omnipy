@@ -1,4 +1,7 @@
-from functools import cache
+from functools import lru_cache
+import os
+from pathlib import Path
+from urllib.parse import urlparse
 from urllib.request import urlopen
 
 from inflection import dasherize, underscore
@@ -7,12 +10,14 @@ import pygments.styles
 from ruamel.yaml import YAML
 
 from omnipy.data._display.styles.helpers import Base16Theme, get_styles_from_base16_colors
+from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 _BASE16_DOWNLOAD_URL = ('https://raw.githubusercontent.com/tinted-theming/'
                         'schemes/refs/heads/spec-0.11/base16/')
 _STYLE_CLS_NAME_BASE16_PREFIX = 'TintedBase16'
 _STYLE_CLS_NAME_SUFFIX = 'Style'
 _THEME_KEY_BASE16_PREFIX = 'tb16-'
+_runtime: IsRuntime | None = None
 
 
 class TintedBase16Style(pygments.style.Style):
@@ -22,8 +27,25 @@ class TintedBase16Style(pygments.style.Style):
 
 
 def fetch_base16_theme(theme_url: str) -> Base16Theme:
-    with urlopen(theme_url) as response:
-        base16_theme_yaml = response.read()
+    from omnipy.hub.runtime import runtime
+    if not runtime:
+        assert _runtime
+        runtime = _runtime
+
+    cache_dir_path = Path(runtime.config.data.display.cache_dir_path) / 'styles'
+    if not os.path.exists(cache_dir_path):
+        os.makedirs(cache_dir_path)
+
+    theme_cache_path = cache_dir_path / os.path.basename(urlparse(theme_url).path)
+    if os.path.exists(theme_cache_path):
+        with open(theme_cache_path, 'rb') as f:
+            base16_theme_yaml = f.read()
+    else:
+        with urlopen(theme_url) as response:
+            base16_theme_yaml = response.read()
+
+        with open(theme_cache_path, 'wb') as f:
+            f.write(base16_theme_yaml)
 
     yaml = YAML(typ='safe')
     response = yaml.load(base16_theme_yaml)
@@ -74,7 +96,7 @@ def _capitalize_words(text: str) -> str:
     return ' '.join(word.capitalize() for word in text.split())
 
 
-@cache
+@lru_cache
 def __getattr__(attr: str) -> type[pygments.style.Style]:
     try:
         if attr.startswith(_STYLE_CLS_NAME_BASE16_PREFIX) and attr.endswith(_STYLE_CLS_NAME_SUFFIX):

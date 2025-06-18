@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Annotated, Any, Iterator
 
 import pygments.styles
 import pytest
@@ -332,7 +332,8 @@ def test_fail_output_config_no_positional_parameters() -> None:
         OutputConfig(2, True)  # type: ignore
 
 
-def test_config_autoimport_base16_color_style() -> None:
+def test_config_autoimport_base16_color_style(
+        register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
     style_name = 'tb16-zenburn'
     OutputConfig(color_style=style_name)  # To trigger the auto-import
     pygments_style = pygments.styles.get_style_by_name(style_name)
