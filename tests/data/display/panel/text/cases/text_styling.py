@@ -3,14 +3,14 @@ from typing import Annotated
 
 import pytest_cases as pc
 
-from omnipy.data._display.config import (ConsoleColorSystem,
-                                         DarkLowContrastColorStyles,
-                                         HorizontalOverflowMode,
-                                         LightLowContrastColorStyles,
-                                         OutputConfig,
-                                         VerticalOverflowMode)
+from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
+from omnipy.shared.enums import (ConsoleColorSystem,
+                                 DarkLowContrastColorStyles,
+                                 HorizontalOverflowMode,
+                                 LightLowContrastColorStyles,
+                                 VerticalOverflowMode)
 
 from ...helpers.case_setup import (OutputPropertyType,
                                    PanelOutputTestCase,

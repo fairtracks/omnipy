@@ -3,12 +3,13 @@ from textwrap import dedent
 import pytest
 import pytest_cases as pc
 
-from omnipy.data._display.config import OutputConfig, SyntaxLanguage
+from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel, TextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
+from omnipy.shared.enums import SyntaxLanguage
 import omnipy.util._pydantic as pyd
 
 from ..helpers.case_setup import (apply_frame_variant_to_test_case,

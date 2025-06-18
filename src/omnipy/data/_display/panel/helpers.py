@@ -7,7 +7,7 @@ import rich.color_triplet
 import rich.style
 import rich.syntax
 
-from omnipy.data._display.config import ColorStyles
+from omnipy.shared.enums import ColorStyles
 
 
 class ForceAutodetect(str, Enum):

@@ -11,9 +11,8 @@ import rich.table
 import rich.text
 from typing_extensions import override
 
-from omnipy.data._display.config import ConsoleColorSystem, LayoutDesign
 from omnipy.data._display.dimensions import has_height, has_width
-from omnipy.data._display.layout.base import Layout, LayoutDesignDims
+from omnipy.data._display.layout.base import Layout, PanelDesignDims
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              FrameInvT,
                                              OutputVariant,
@@ -29,6 +28,7 @@ from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_st
                                                 get_token_style_from_color_style)
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingOutputVariant
+from omnipy.shared.enums import ConsoleColorSystem, PanelDesign
 from omnipy.util import _pydantic as pyd
 
 
@@ -116,10 +116,10 @@ class StylizedLayoutPanel(
         table_cell_height = self.content.total_subpanel_outer_dims.height
 
         if has_height(self.frame.dims):
-            layout_design_dims = LayoutDesignDims.create(self.config.layout_design)
+            panel_design_dims = PanelDesignDims.create(self.config.panel_design)
             frame_cropped_table_cell_height = (
                 self.frame.dims.height
-                - layout_design_dims.num_extra_vertical_chars(num_vertical_panels=1))
+                - panel_design_dims.num_extra_vertical_chars(num_vertical_panels=1))
             table_cell_height = min(table_cell_height, frame_cropped_table_cell_height)
 
         return table_cell_height
@@ -312,11 +312,11 @@ class OuterLayoutPanelStyler:
         self._styles = styles
 
     def style_outer_panel(self) -> rich.table.Table:
-        assert self._outer_panel.config.layout_design is LayoutDesign.TABLE_GRID
+        assert self._outer_panel.config.panel_design is PanelDesign.TABLE_GRID
         return self._style_outer_panel_as_table()
 
     def _style_outer_panel_as_table(self):
-        assert self._outer_panel.config.layout_design is LayoutDesign.TABLE_GRID
+        assert self._outer_panel.config.panel_design is PanelDesign.TABLE_GRID
 
         table = rich.table.Table(
             show_header=False,

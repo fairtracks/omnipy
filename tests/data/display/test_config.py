@@ -3,18 +3,18 @@ from typing import Any
 import pygments.styles
 import pytest
 
-from omnipy.data._display.config import (ConsoleColorSystem,
-                                         DarkLowContrastColorStyles,
-                                         HorizontalOverflowMode,
-                                         Justify,
-                                         LayoutDesign,
-                                         LightHighContrastColorStyles,
-                                         MaxTitleHeight,
-                                         OutputConfig,
-                                         PrettyPrinterLib,
-                                         RecommendedColorStyles,
-                                         SyntaxLanguage,
-                                         VerticalOverflowMode)
+from omnipy.data._display.config import OutputConfig
+from omnipy.shared.enums import (ConsoleColorSystem,
+                                 DarkLowContrastColorStyles,
+                                 HorizontalOverflowMode,
+                                 Justify,
+                                 LightHighContrastColorStyles,
+                                 MaxTitleHeight,
+                                 PanelDesign,
+                                 PrettyPrinterLib,
+                                 RecommendedColorStyles,
+                                 SyntaxLanguage,
+                                 VerticalOverflowMode)
 
 
 def test_output_config() -> None:
@@ -32,7 +32,7 @@ def test_output_config() -> None:
         css_line_height=1.0,
         horizontal_overflow_mode=HorizontalOverflowMode.CROP,
         vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
-        layout_design=LayoutDesign.PANELS,
+        panel_design=PanelDesign.PANELS,
         panel_title_at_top=False,
         max_title_height=MaxTitleHeight.ZERO,
         justify_in_layout=Justify.RIGHT,
@@ -51,7 +51,7 @@ def test_output_config() -> None:
     assert config.css_line_height == 1.0
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.CROP
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_TOP
-    assert config.layout_design is LayoutDesign.PANELS
+    assert config.panel_design is PanelDesign.PANELS
     assert config.panel_title_at_top is False
     assert config.max_title_height == MaxTitleHeight.ZERO
     assert config.justify_in_layout is Justify.RIGHT
@@ -75,7 +75,7 @@ def test_output_config() -> None:
         css_line_height='1',  # type: ignore[arg-type]
         horizontal_overflow_mode='ellipsis',  # type: ignore[arg-type]
         vertical_overflow_mode='crop_bottom',  # type: ignore[arg-type]
-        layout_design='table_grid',  # type: ignore[arg-type]
+        panel_design='table_grid',  # type: ignore[arg-type]
         panel_title_at_top=0,  # type: ignore[arg-type]
         max_title_height=1,  # type: ignore[arg-type]
         justify_in_layout='right',  # type: ignore[arg-type]
@@ -93,7 +93,7 @@ def test_output_config() -> None:
     assert config.css_line_height == 1.0
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
     assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
-    assert config.layout_design is LayoutDesign.TABLE_GRID
+    assert config.panel_design is PanelDesign.TABLE_GRID
     assert config.panel_title_at_top is False
     assert config.max_title_height == MaxTitleHeight.ONE
     assert config.justify_in_layout is Justify.RIGHT
@@ -155,7 +155,7 @@ def test_output_config_hashable() -> None:
             'vertical_overflow_mode': VerticalOverflowMode.CROP_TOP
         },
         {
-            'layout_design': LayoutDesign.PANELS
+            'panel_design': PanelDesign.PANELS
         },
         {
             'panel_title_at_top': False
@@ -223,7 +223,7 @@ def test_fail_output_config_no_assignments() -> None:
         config.vertical_overflow_mode = VerticalOverflowMode.CROP_TOP  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.layout_design = LayoutDesign.PANELS  # type: ignore[misc]
+        config.panel_design = PanelDesign.PANELS  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
         config.panel_title_at_top = False  # type: ignore[misc]
@@ -282,7 +282,7 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(vertical_overflow_mode=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(layout_design=None)  # type: ignore[arg-type]
+        OutputConfig(panel_design=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
         OutputConfig(panel_title_at_top=None)  # type: ignore[arg-type]
@@ -316,7 +316,7 @@ def test_output_config_default_values() -> None:
     assert config.css_line_height == 1.35
     assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
     assert config.vertical_overflow_mode is VerticalOverflowMode.ELLIPSIS_BOTTOM
-    assert config.layout_design is LayoutDesign.TABLE_GRID
+    assert config.panel_design is PanelDesign.TABLE_GRID
     assert config.panel_title_at_top is True
     assert config.max_title_height is MaxTitleHeight.AUTO
     assert config.justify_in_layout is Justify.LEFT

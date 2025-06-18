@@ -2,10 +2,9 @@ from collections import defaultdict
 import dataclasses
 from typing import Callable
 
-from omnipy.data._display.config import LayoutDesign
 from omnipy.data._display.dimensions import has_height, has_width
 from omnipy.data._display.frame import AnyFrame
-from omnipy.data._display.layout.base import Layout, LayoutDesignDims
+from omnipy.data._display.layout.base import Layout, PanelDesignDims
 from omnipy.data._display.layout.flow.helpers import (CrampedPanelInfo,
                                                       create_panel_with_updated_frame,
                                                       LayoutFlowContext,
@@ -13,6 +12,7 @@ from omnipy.data._display.layout.flow.helpers import (CrampedPanelInfo,
 from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, panel_is_dimensions_aware
 from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, DraftPanel
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
+from omnipy.shared.enums import PanelDesign
 import omnipy.util._pydantic as pyd
 
 
@@ -82,7 +82,7 @@ def _create_layout_with_distributed_widths(
         per_panel_width = _calculate_per_panel_width_for_panels_without_width(
             layout_panel.content,
             frame_dims.width,
-            layout_panel.config.layout_design,
+            layout_panel.config.panel_design,
         )
 
         # Apply calculated widths to each panel
@@ -100,7 +100,7 @@ def _create_layout_with_distributed_widths(
 def _calculate_per_panel_width_for_panels_without_width(
     layout: Layout,
     frame_width: int,
-    layout_design: LayoutDesign,
+    panel_design: PanelDesign,
 ) -> int | None:
     """
     Calculate width for each panel without pre-set width.
@@ -114,7 +114,7 @@ def _calculate_per_panel_width_for_panels_without_width(
     Parameters:
         layout: The panel layout
         frame_width: Width of the containing frame, or None if not constrained
-        layout_design: Layout design parameters
+        panel_design: Layout design parameters
 
     Returns:
         Width for each panel without pre-set width, or None if all panels
@@ -123,26 +123,26 @@ def _calculate_per_panel_width_for_panels_without_width(
     width_unset_panels = {}
     preset_width = 0
 
-    layout_design_dims = LayoutDesignDims.create(layout_design)
+    panel_design_dims = PanelDesignDims.create(panel_design)
 
     # Calculate total width used by panels with pre-set width
     for key, panel in layout.items():
         if has_width(panel.frame.dims):
             preset_width += (
-                panel.frame.dims.width + layout_design_dims.num_horizontal_chars_per_panel)
+                panel.frame.dims.width + panel_design_dims.num_horizontal_chars_per_panel)
         elif panel_is_dimensions_aware(panel):
-            preset_width += (panel.dims.width + layout_design_dims.num_horizontal_chars_per_panel)
+            preset_width += (panel.dims.width + panel_design_dims.num_horizontal_chars_per_panel)
         else:
             width_unset_panels[key] = panel
 
-    preset_width += layout_design_dims.num_horizontal_end_chars
+    preset_width += panel_design_dims.num_horizontal_end_chars
 
     # Calculate width per unset panel
     num_unset_panels = len(width_unset_panels)
     if num_unset_panels > 0:
         available_width = frame_width - preset_width
         per_panel_width = ((available_width // num_unset_panels)
-                           - layout_design_dims.num_horizontal_chars_per_panel)
+                           - panel_design_dims.num_horizontal_chars_per_panel)
         return max(per_panel_width, 0)
 
     return None
@@ -319,10 +319,10 @@ def _set_panel_heights(context: LayoutFlowContext[FrameT]) -> LayoutFlowContext[
 
 
 def _calc_inner_panel_height(context: LayoutFlowContext[FrameT], outer_panel_height: int) -> int:
-    layout_design = context.input_layout_panel.config.layout_design
-    layout_design_dims = LayoutDesignDims.create(layout_design)
+    panel_design = context.input_layout_panel.config.panel_design
+    panel_design_dims = PanelDesignDims.create(panel_design)
 
-    inner_panel_height = max(outer_panel_height - layout_design_dims.num_extra_vertical_chars(1), 0)
+    inner_panel_height = max(outer_panel_height - panel_design_dims.num_extra_vertical_chars(1), 0)
     return inner_panel_height
 
 

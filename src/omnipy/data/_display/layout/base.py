@@ -4,13 +4,13 @@ from typing import Callable, cast, Generic, Iterable, Iterator, Mapping
 
 from typing_extensions import TypeIs, TypeVar
 
-from omnipy.data._display.config import LayoutDesign
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              FullyRenderedPanel,
                                              Panel,
                                              panel_is_dimensions_aware,
                                              panel_is_fully_rendered)
+from omnipy.shared.enums import PanelDesign
 
 PanelT = TypeVar('PanelT', bound=Panel)
 RenderedPanelT = TypeVar('RenderedPanelT', bound=Panel)
@@ -96,7 +96,7 @@ class Layout(UserDict[str, PanelT], Generic[PanelT]):
 
 
 @dataclass
-class LayoutDesignDims:
+class PanelDesignDims:
     num_horizontal_chars_per_panel: int
     num_horizontal_end_chars: int
     num_vertical_lines_per_panel: int
@@ -123,17 +123,17 @@ class LayoutDesignDims:
     @classmethod
     def create(
         cls,
-        layout_design: LayoutDesign = LayoutDesign.TABLE_GRID,
-    ) -> 'LayoutDesignDims':
-        if layout_design == LayoutDesign.TABLE_GRID:
-            return LayoutDesignDims(
+        panel_design: PanelDesign = PanelDesign.TABLE_GRID,
+    ) -> 'PanelDesignDims':
+        if panel_design == PanelDesign.TABLE_GRID:
+            return PanelDesignDims(
                 num_horizontal_chars_per_panel=3,
                 num_horizontal_end_chars=1,
                 num_vertical_lines_per_panel=1,
                 num_vertical_end_lines=1,
             )
         else:
-            raise ValueError(f'Unsupported layout design: {layout_design}')
+            raise ValueError(f'Unsupported panel design: {panel_design}')
 
 
 class DimensionsAwarePanelLayoutMixin:
@@ -155,7 +155,7 @@ class DimensionsAwarePanelLayoutMixin:
 
     def calc_dims(
         self,
-        layout_design: LayoutDesign = LayoutDesign.TABLE_GRID,
+        panel_design: PanelDesign = PanelDesign.TABLE_GRID,
         use_outer_dims_for_subpanels: bool = True,
     ) -> DimensionsWithWidthAndHeight:
         self_as_layout = cast(Layout, self)
@@ -166,15 +166,15 @@ class DimensionsAwarePanelLayoutMixin:
             else:
                 total_subpanel_dims = self.total_subpanel_cropped_dims
 
-            layout_design_dims = LayoutDesignDims.create(layout_design)
+            panel_design_dims = PanelDesignDims.create(panel_design)
 
             num_horizontal_panels = len(self_as_layout)
             num_vertical_panels = 1  # Assuming a single row layout for simplicity
             return Dimensions(
                 width=(total_subpanel_dims.width
-                       + layout_design_dims.num_extra_horizontal_chars(num_horizontal_panels)),
+                       + panel_design_dims.num_extra_horizontal_chars(num_horizontal_panels)),
                 height=(total_subpanel_dims.height
-                        + layout_design_dims.num_extra_vertical_chars(num_vertical_panels)),
+                        + panel_design_dims.num_extra_vertical_chars(num_vertical_panels)),
             )
         else:
             return Dimensions(width=0, height=1)

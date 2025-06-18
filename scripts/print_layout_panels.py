@@ -1,13 +1,13 @@
 from omnipy import JsonModel
-from omnipy.data._display.config import (ConsoleColorSystem,
-                                         DarkHighContrastColorStyles,
-                                         DarkLowContrastColorStyles,
-                                         PrettyPrinterLib,
-                                         RecommendedColorStyles)
 from omnipy.data._display.frame import Dimensions, Frame
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel, OutputConfig
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
+from omnipy.shared.enums import (ConsoleColorSystem,
+                                 DarkHighContrastColorStyles,
+                                 DarkLowContrastColorStyles,
+                                 PrettyPrinterLib,
+                                 RecommendedColorStyles)
 
 json = """[
          {

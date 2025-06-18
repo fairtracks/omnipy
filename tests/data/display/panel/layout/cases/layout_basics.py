@@ -2,14 +2,14 @@ from typing import Annotated
 
 import pytest_cases as pc
 
-from omnipy.data._display.config import (ConsoleColorSystem,
-                                         HorizontalOverflowMode,
-                                         Justify,
-                                         OutputConfig,
-                                         VerticalOverflowMode)
+from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
 from omnipy.data._display.layout.base import Layout
+from omnipy.shared.enums import (ConsoleColorSystem,
+                                 HorizontalOverflowMode,
+                                 Justify,
+                                 VerticalOverflowMode)
 
 from ...helpers.case_setup import FrameTestCase, FrameVariant, PanelFrameVariantTestCase
 from ...helpers.mocks import MockResizedStylablePlainCropPanel, MockStylablePlainCropPanel

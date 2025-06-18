@@ -11,12 +11,12 @@ import pygments.token
 import pytest
 import pytest_cases as pc
 
-from omnipy.data._display.config import AllColorStyles
 from omnipy.data._display.styles.dynamic_styles import (create_dynamic_base16_style_class,
                                                         fetch_base16_theme,
                                                         install_base16_theme,
                                                         TintedBase16Style)
 from omnipy.data._display.styles.helpers import Base16Colors, Base16Theme
+from omnipy.shared.enums import AllColorStyles
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 
 from ....helpers.functions import get_pip_installed_packages

@@ -16,12 +16,12 @@ import rich.terminal_theme
 import rich.text
 from typing_extensions import override, TypeVar
 
-from omnipy.data._display.config import ConsoleColorSystem
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
 from omnipy.data._display.panel.base import FullyRenderedPanel, OutputVariant
 from omnipy.data._display.panel.cropping import rich_overflow_method
 from omnipy.data._display.panel.draft.base import ContentT, FrameT
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
+from omnipy.shared.enums import ConsoleColorSystem
 import omnipy.util._pydantic as pyd
 
 StylizedRichTypes: TypeAlias = rich.syntax.Syntax | rich.panel.Panel | rich.table.Table
