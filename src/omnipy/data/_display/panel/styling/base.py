@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from functools import cache, cached_property
+from functools import cached_property, lru_cache
 from io import StringIO
 from typing import Generic, TypeAlias
 
@@ -123,7 +123,7 @@ class StylizedMonospacedPanel(
         return rich_overflow_method(self.config.horizontal_overflow_mode)
 
     @staticmethod
-    @cache
+    @lru_cache(maxsize=1024)
     def _get_console_common(
         stylized_content: rich.console.RenderableType,
         console_width: int,

@@ -1,4 +1,4 @@
-from functools import cache, cached_property
+from functools import cached_property, lru_cache
 from typing import Generic
 
 import rich.style
@@ -13,7 +13,8 @@ from omnipy.data._display.panel.styling.output import OutputMode, TextCroppingOu
 from omnipy.shared.enums import (ColorStyles,
                                  ConsoleColorSystem,
                                  HorizontalOverflowMode,
-                                 SyntaxLanguage)
+                                 SyntaxLanguage,
+                                 VerticalOverflowMode)
 from omnipy.util import _pydantic as pyd
 
 
@@ -27,7 +28,7 @@ class SyntaxStylizedTextPanel(
         Generic[FrameT],
 ):
     @staticmethod
-    @cache
+    @lru_cache(maxsize=1024)
     def _get_stylized_content_common(
         content: str,
         tab_size: int,
@@ -60,10 +61,39 @@ class SyntaxStylizedTextPanel(
             tab_size=tab_size,
         )
 
+    @staticmethod
+    # @lru_cache
+    def _vert_cropped_contents(
+        content: str,
+        height: pyd.NonNegativeInt | None,
+        vert_overflow_mode: VerticalOverflowMode,
+    ) -> str:
+        """
+        Crops the content vertically to the specified height.
+        """
+        if height is None:
+            return content
+
+        lines = content.splitlines(keepends=True)
+        height += 1  # Add one line to correctly add ellipsis if needed
+        if height < len(lines):
+            match vert_overflow_mode:
+                case VerticalOverflowMode.CROP_BOTTOM | VerticalOverflowMode.ELLIPSIS_BOTTOM:
+                    return ''.join(lines[:height])
+                case VerticalOverflowMode.CROP_TOP | VerticalOverflowMode.ELLIPSIS_TOP:
+                    return ''.join(lines[-height:])
+        return content
+
     @override
     def _stylized_content_terminal_impl(self) -> StylizedRichTypes:
+        cropped_content = self._vert_cropped_contents(
+            self.content,
+            self.frame.dims.height,
+            self.config.vertical_overflow_mode,
+        )
+
         return self._get_stylized_content_common(
-            content=self.content,
+            content=cropped_content,
             tab_size=self.config.tab_size,
             console_color_system=self.config.console_color_system,
             console_color_style=self.config.color_style,
@@ -74,8 +104,14 @@ class SyntaxStylizedTextPanel(
 
     @override
     def _stylized_content_html_impl(self) -> StylizedRichTypes:
+        cropped_content = self._vert_cropped_contents(
+            self.content,
+            self.frame.dims.height,
+            self.config.vertical_overflow_mode,
+        )
+
         return self._get_stylized_content_common(
-            content=self.content,
+            content=cropped_content,
             tab_size=self.config.tab_size,
             # Color system is hard-coded to 'truecolor' for HTML output
             console_color_system=ConsoleColorSystem.ANSI_RGB,

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from functools import cache, cached_property
+from functools import cached_property, lru_cache
 from typing import Any, cast, Generic, Iterator
 
 import pygments.token
@@ -85,7 +85,7 @@ class StylizedLayoutPanel(
         return FullyRenderedDraftPanelLayout(**content.render_fully())
 
     @staticmethod
-    @cache
+    @lru_cache(maxsize=1024)
     def _get_stylized_layout_common(  # noqa: C901
         outer_panel: 'StylizedLayoutPanel[FrameInvT]',
         console_color_system: ConsoleColorSystem,  # Only used for hashing
