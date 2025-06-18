@@ -7,8 +7,7 @@ import omnipy as om
 from omnipy.data._display.styles.dynamic_styles import (_create_base_16_class_name_from_theme_key,
                                                         fetch_base16_theme)
 
-om.runtime.config.data.http_config_for_host[
-    'raw.githubusercontent.com'].requests_per_time_period = 600
+om.runtime.config.data.http.for_host['raw.githubusercontent.com'].requests_per_time_period = 600
 
 
 async def get_github_repo_urls(owner: str, repo: str, branch: str, path: str,

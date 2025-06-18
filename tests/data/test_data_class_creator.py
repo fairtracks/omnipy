@@ -2,7 +2,7 @@ from typing import Annotated
 
 import pytest
 
-from omnipy.config.data import DataConfig
+from omnipy.config.data import DataConfig, ModelConfig
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta, DataClassCreator
 from omnipy.data.snapshot import SnapshotHolder
 
@@ -23,7 +23,7 @@ def test_set_config() -> None:
     data_class_creator = DataClassCreator()
     assert data_class_creator.config == DataConfig()
 
-    new_data_config = DataConfig(interactive_mode=False)
+    new_data_config = DataConfig(model=ModelConfig(interactive=False))
     with pytest.raises(AttributeError):
         data_class_creator.config = new_data_config
 
@@ -110,7 +110,7 @@ def test_config_property_mutable_from_data_class_creator(
         property='config',
         property_type=DataConfig,
         set_property_from_data_class=False,
-        new_val=DataConfig(interactive_mode=False),
+        new_val=DataConfig(model=ModelConfig(interactive=False)),
         property_setter='set_config',
     )
 

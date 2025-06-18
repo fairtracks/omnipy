@@ -760,9 +760,8 @@ class Dataset(
 
             for host in hosts:
                 async with RateLimitingClientSession(
-                        self.config.http_config_for_host[host].requests_per_time_period,
-                        self.config.http_config_for_host[host].time_period_in_secs
-                ) as client_session:
+                        self.config.http.for_host[host].requests_per_time_period,
+                        self.config.http.for_host[host].time_period_in_secs) as client_session:
                     indices = hosts[host]
                     # fetch_task = get_auto_from_api_endpoint
                     # if as_mime_type:

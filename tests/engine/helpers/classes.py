@@ -5,7 +5,7 @@ from typing import Any, Awaitable, Callable, Generic, Type, TypeVar
 from omnipy.shared.enums import RunState
 from omnipy.shared.protocols.compute._job import IsJob
 from omnipy.shared.protocols.compute.job import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
-from omnipy.shared.protocols.config import IsEngineConfig
+from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.engine.job_runner import (IsDagFlowRunnerEngine,
                                                        IsFuncFlowRunnerEngine,
                                                        IsTaskRunnerEngine)
@@ -37,13 +37,13 @@ class JobRunnerStateChecker(IsTaskRunnerEngine, IsDagFlowRunnerEngine, IsFuncFlo
         self._engine = engine
         self._engine.__init__()
 
-    def set_config(self, config: IsEngineConfig) -> None:
+    def set_config(self, config: IsJobRunnerConfig) -> None:
         self._engine.set_config(config)
 
     def set_registry(self, registry: IsRunStateRegistry | None) -> None:
         self._engine.set_registry(registry)
 
-    def get_config_cls(self) -> Type[IsEngineConfig]:
+    def get_config_cls(self) -> Type[IsJobRunnerConfig]:
         return self._engine.get_config_cls()  # noqa
 
     def apply_task_decorator(self, task: IsTask, job_callback_accept_decorator: Callable) -> None:

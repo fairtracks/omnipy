@@ -4,16 +4,16 @@ from typing import cast, Generic, Protocol
 from typing_extensions import TypeVar
 
 from omnipy.config import ConfigBase
-from omnipy.shared.protocols.config import IsEngineConfig
+from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
-EngineConfigT = TypeVar('EngineConfigT', bound=IsEngineConfig)
+EngineConfigT = TypeVar('EngineConfigT', bound=IsJobRunnerConfig)
 
 
 class MockEngine(ABC, Generic[EngineConfigT]):
     def __init__(self) -> None:
         config_cls = self.get_config_cls()
-        self._config: IsEngineConfig = config_cls()
+        self._config: IsJobRunnerConfig = config_cls()
         self.registry: IsRunStateRegistry | None = None
 
     @classmethod
@@ -21,7 +21,7 @@ class MockEngine(ABC, Generic[EngineConfigT]):
     def get_config_cls(cls) -> type[EngineConfigT]:
         ...
 
-    def set_config(self, config: IsEngineConfig) -> None:
+    def set_config(self, config: IsJobRunnerConfig) -> None:
         self._config = config
 
     def set_registry(self, registry: IsRunStateRegistry | None) -> None:
@@ -32,7 +32,7 @@ class MockLocalRunnerConfig(ConfigBase):
     backend_verbose: bool = True
 
 
-class IsMockLocalRunnerConfig(IsEngineConfig, Protocol):
+class IsMockLocalRunnerConfig(IsJobRunnerConfig, Protocol):
     backend_verbose: bool
 
 
@@ -51,7 +51,7 @@ class MockPrefectEngineConfig(ConfigBase):
     use_cached_results: bool = False
 
 
-class IsMockPrefectEngineConfig(IsEngineConfig, Protocol):
+class IsMockPrefectEngineConfig(IsJobRunnerConfig, Protocol):
     server_url: str = ''
     use_cached_results: bool
 

@@ -3,59 +3,222 @@ from io import TextIOBase
 from typing import Protocol, runtime_checkable
 
 from omnipy.shared.enums import (BackoffStrategy,
+                                 ColorStyles,
                                  ConfigOutputStorageProtocolOptions,
                                  ConfigPersistOutputsOptions,
-                                 ConfigRestoreOutputsOptions)
+                                 ConfigRestoreOutputsOptions,
+                                 ConsoleColorSystem,
+                                 ConsoleDimensionsMode,
+                                 EngineChoice,
+                                 HorizontalOverflowMode,
+                                 PanelDesign,
+                                 PrettyPrinterLib,
+                                 VerticalOverflowMode)
 from omnipy.shared.protocols.util import IsDataPublisher
 from omnipy.shared.typedefs import LocaleType
+import omnipy.util._pydantic as pyd
+
+# data
 
 
 @runtime_checkable
-class IsEngineConfig(IsDataPublisher, Protocol):
+class IsColorConfig(IsDataPublisher, Protocol):
+    """"""
+    color_system: ConsoleColorSystem
+    color_style: ColorStyles | str
+    transparent_background: bool
+
+
+@runtime_checkable
+class IsConsoleConfig(IsDataPublisher, Protocol):
+    """"""
+    width: pyd.NonNegativeInt | None
+    height: pyd.NonNegativeInt | None
+    color: IsColorConfig
+
+
+@runtime_checkable
+class IsDimsModeMixin(Protocol):
+    """"""
+    dims_mode: ConsoleDimensionsMode = ConsoleDimensionsMode.AUTO
+
+
+@runtime_checkable
+class IsDimsModeConfig(IsConsoleConfig, IsDimsModeMixin, Protocol):
     """"""
     ...
 
 
 @runtime_checkable
-class IsLocalRunnerConfig(IsEngineConfig, Protocol):
+class IsTerminalConsoleConfig(IsDimsModeConfig, Protocol):
     """"""
     ...
 
 
 @runtime_checkable
-class IsPrefectEngineConfig(IsEngineConfig, Protocol):
+class IsFontConfig(IsDataPublisher, Protocol):
     """"""
-    use_cached_results: bool = False
+    families: tuple[str, ...]
+    size: pyd.NonNegativeInt | None
+    weight: pyd.NonNegativeInt | None
+    line_height: pyd.NonNegativeFloat | None
 
 
 @runtime_checkable
-class IsJobConfig(IsDataPublisher, Protocol):
+class IsHtmlConsoleConfig(IsConsoleConfig, Protocol):
     """"""
-    output_storage: 'IsOutputStorageConfig'
+    font: IsFontConfig
 
 
 @runtime_checkable
-class IsDataConfig(IsDataPublisher, Protocol):
+class IsJupyterConsoleDimsModeConfig(IsHtmlConsoleConfig, IsDimsModeConfig, Protocol):
     """"""
-    interactive_mode: bool
+    ...
+
+
+@runtime_checkable
+class IsBrowserConsoleConfig(IsHtmlConsoleConfig, Protocol):
+    """"""
+    ...
+
+
+@runtime_checkable
+class IsOverflowConfig(IsDataPublisher, Protocol):
+    """"""
+    horizontal: HorizontalOverflowMode
+    vertical: VerticalOverflowMode
+
+
+@runtime_checkable
+class IsTextConfig(IsDataPublisher, Protocol):
+    """"""
+    overflow: IsOverflowConfig
+    tab_size: pyd.NonNegativeInt
+    indent_tab_size: pyd.NonNegativeInt
+    pretty_printer: PrettyPrinterLib
+    debug_mode: bool
+
+
+@runtime_checkable
+class IsLayoutConfig(IsDataPublisher, Protocol):
+    """"""
+    overflow: IsOverflowConfig
+    panel_design: PanelDesign
+    panel_title_at_top: bool
+
+
+@runtime_checkable
+class IsDisplayConfig(IsDataPublisher, Protocol):
+    """"""
+    terminal: IsTerminalConsoleConfig
+    jupyter: IsJupyterConsoleDimsModeConfig
+    browser: IsBrowserConsoleConfig
+    text: IsTextConfig
+    layout: IsLayoutConfig
+
+
+@runtime_checkable
+class IsModelConfig(IsDataPublisher, Protocol):
+    """"""
+    interactive: bool
     dynamically_convert_elements_to_models: bool
-    terminal_size_columns: int
-    terminal_size_lines: int
-    http_defaults: 'IsHttpConfig'
-    http_config_for_host: defaultdict[str, 'IsHttpConfig']
-
-    def reset_to_terminal_size(self) -> None:
-        ...
 
 
 @runtime_checkable
-class IsHttpConfig(IsDataPublisher, Protocol):
+class IsHttpRequestsConfig(IsDataPublisher, Protocol):
     """"""
     requests_per_time_period: float
     time_period_in_secs: float
     retry_http_statuses: tuple[int, ...]
     retry_attempts: int
     retry_backoff_strategy: BackoffStrategy
+
+
+@runtime_checkable
+class IsHttpConfig(IsDataPublisher, Protocol):
+    """"""
+    defaults: IsHttpRequestsConfig
+    for_host: defaultdict[str, IsHttpRequestsConfig]
+
+
+@runtime_checkable
+class IsDataConfig(IsDataPublisher, Protocol):
+    """"""
+    display: IsDisplayConfig
+    model: IsModelConfig
+    http: IsHttpConfig
+
+
+# engine
+
+
+@runtime_checkable
+class IsJobRunnerConfig(IsDataPublisher, Protocol):
+    """"""
+    ...
+
+
+@runtime_checkable
+class IsLocalRunnerConfig(IsJobRunnerConfig, Protocol):
+    """"""
+    ...
+
+
+@runtime_checkable
+class IsPrefectEngineConfig(IsJobRunnerConfig, Protocol):
+    """"""
+    use_cached_results: bool = False
+
+
+@runtime_checkable
+class IsEngineConfig(IsDataPublisher, Protocol):
+    """"""
+    choice: EngineChoice
+    local: IsLocalRunnerConfig
+    prefect: IsPrefectEngineConfig
+    ...
+
+
+# job
+
+
+@runtime_checkable
+class IsOutputStorageConfigBase(IsDataPublisher, Protocol):
+    """"""
+    persist_data_dir_path: str
+
+
+@runtime_checkable
+class IsLocalOutputStorageConfig(IsOutputStorageConfigBase, Protocol):
+    """"""
+
+
+@runtime_checkable
+class IsS3OutputStorageConfig(IsOutputStorageConfigBase, Protocol):
+    """"""
+    endpoint_url: str
+    access_key: str
+    secret_key: str
+    bucket_name: str
+
+
+@runtime_checkable
+class IsOutputStorageConfig(IsDataPublisher, Protocol):
+    """"""
+    persist_outputs: ConfigPersistOutputsOptions
+    restore_outputs: ConfigRestoreOutputsOptions
+    protocol: ConfigOutputStorageProtocolOptions
+    local: IsLocalOutputStorageConfig
+    s3: IsS3OutputStorageConfig
+
+
+@runtime_checkable
+class IsJobConfig(IsDataPublisher, Protocol):
+    """"""
+    output_storage: IsOutputStorageConfig
+
+
+# root_log
 
 
 @runtime_checkable
@@ -72,30 +235,3 @@ class IsRootLogConfig(IsDataPublisher, Protocol):
     stderr_log_min_level: int
     file_log_min_level: int
     file_log_path: str
-
-
-@runtime_checkable
-class IsOutputStorageConfigBase(IsDataPublisher, Protocol):
-    persist_data_dir_path: str
-
-
-@runtime_checkable
-class IsLocalOutputStorageConfig(IsOutputStorageConfigBase, Protocol):
-    ...
-
-
-@runtime_checkable
-class IsS3OutputStorageConfig(IsOutputStorageConfigBase, Protocol):
-    endpoint_url: str
-    access_key: str
-    secret_key: str
-    bucket_name: str
-
-
-@runtime_checkable
-class IsOutputStorageConfig(IsDataPublisher, Protocol):
-    persist_outputs: ConfigPersistOutputsOptions
-    restore_outputs: ConfigRestoreOutputsOptions
-    protocol: ConfigOutputStorageProtocolOptions
-    local: IsLocalOutputStorageConfig
-    s3: IsS3OutputStorageConfig

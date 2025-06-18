@@ -583,7 +583,7 @@ class Model(
         /,
     ) -> ResetSolutionTuple:
         snapshot_taken = False
-        if self.config.interactive_mode:
+        if self.config.model.interactive:
             # TODO: Lazy snapshotting causes unneeded double validation for data that is later
             #       validated for snapshot. Perhaps add a dirty flag to snapshot that can be used
             #       to determine if re-validation is needed? This can also help avoid equality
@@ -603,7 +603,7 @@ class Model(
         )
 
     def _get_reset_solution(self) -> ContextManager[None]:
-        if self.config.interactive_mode and self.has_snapshot():
+        if self.config.model.interactive and self.has_snapshot():
             return self._get_revert_to_snapshot_reset_solution()
         else:
             return nothing()
@@ -702,7 +702,7 @@ class Model(
         return not needs_validation
 
     def _take_snapshot_of_validated_contents(self) -> None:
-        if self.config.interactive_mode:
+        if self.config.model.interactive:
             with self.deepcopy_context(self.snapshot_holder.take_snapshot_setup,
                                        self.snapshot_holder.take_snapshot_teardown):
                 self.snapshot_holder.take_snapshot(self)
@@ -733,8 +733,9 @@ class Model(
         value = parse_none_according_to_model(value, root_model=cls)
 
         config = cls.data_class_creator.config
-        with hold_and_reset_prev_attrib_value(config, 'dynamically_convert_elements_to_models'):
-            config.dynamically_convert_elements_to_models = False
+        with hold_and_reset_prev_attrib_value(config.model,
+                                              'dynamically_convert_elements_to_models'):
+            config.model.dynamically_convert_elements_to_models = False
             return {ROOT_KEY: cls._parse_data(value)}
 
     # TODO: Rename Model.contents to Model.content as it may be a single value, while "contents"
@@ -892,7 +893,7 @@ class Model(
                     if is_new_contents:
                         contents_prop.__set__(self, value)
 
-                        if self.config.interactive_mode and self.has_snapshot():
+                        if self.config.model.interactive and self.has_snapshot():
                             self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
                                 old_contents_id)
                 case 'repr_state':
@@ -911,7 +912,7 @@ class Model(
     def _special_method(  # noqa: C901
             self, name: str, info: MethodInfo, *args: object, **kwargs: object) -> object:
 
-        if info.state_changing and self.config.interactive_mode:
+        if info.state_changing and self.config.model.interactive:
 
             def _call_special_method_and_return_self_if_inplace(*inner_args: object,
                                                                 **inner_kwargs: object) -> object:
@@ -1079,10 +1080,10 @@ class Model(
     ):
         try:
             with hold_and_reset_prev_attrib_value(
-                    self.config,
+                    self.config.model,
                     'dynamically_convert_elements_to_models',
             ):
-                self.config.dynamically_convert_elements_to_models = False
+                self.config.model.dynamically_convert_elements_to_models = False
                 ret = method(*args, **kwargs)
         except TypeError as type_exc:
             try:
@@ -1142,7 +1143,7 @@ class Model(
     ) -> ('Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] '
           '| Model[_ReturnT] | Model[_RootT] | _ReturnT'):
 
-        if level_up and not self.config.dynamically_convert_elements_to_models:
+        if level_up and not self.config.model.dynamically_convert_elements_to_models:
             ...
         elif is_model_instance(ret):
             ...

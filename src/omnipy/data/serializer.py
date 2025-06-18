@@ -107,15 +107,15 @@ class SerializerRegistry:
         from omnipy.hub.runtime import runtime
         if runtime:
             with hold_and_reset_prev_attrib_value(
-                    runtime.config.data,
-                    'interactive_mode',
+                    runtime.config.data.model,
+                    'interactive',
             ):
                 with hold_and_reset_prev_attrib_value(
-                        runtime.config.data,
+                        runtime.config.data.model,
                         'dynamically_convert_elements_to_models',
                 ):
-                    runtime.config.data.interactive_mode = False
-                    runtime.config.data.dynamically_convert_elements_to_models = False
+                    runtime.config.data.model.interactive = False
+                    runtime.config.data.model.dynamically_convert_elements_to_models = False
 
                     return cls._test_all_serializer_combos(dataset, serializers)
         else:

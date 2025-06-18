@@ -3,10 +3,8 @@ from datetime import datetime, timedelta
 from time import sleep
 from typing import Callable, cast, Type
 
-from omnipy.compute._job import JobBase
-from omnipy.engine._base import Engine
 from omnipy.shared.enums import RunState
-from omnipy.shared.protocols.compute._job import IsJob
+from omnipy.shared.protocols.compute._job import IsJob, IsJobBase
 from omnipy.shared.protocols.compute.job import (IsDagFlow,
                                                  IsDagFlowTemplate,
                                                  IsFlowTemplate,
@@ -26,15 +24,15 @@ from omnipy.util.helpers import resolve
 from .classes import JobCase, JobType
 
 
-def extract_engine(job: JobBase):
+def extract_engine(job: IsJobBase) -> IsEngine:
     engine = job.__class__.job_creator.engine
     if hasattr(engine, '_engine'):  # TaskRunnerStateChecker
         engine = engine._engine  # noqa
     return engine
 
 
-def extract_job_run_state(job: IsJob):
-    engine = extract_engine(cast(JobBase, job))
+def extract_job_run_state(job: IsJob) -> RunState | None:
+    engine = extract_engine(cast(IsJobBase, job))
     registry = engine._registry  # noqa
     if registry:
         return registry.get_job_state(job)
@@ -82,14 +80,14 @@ def get_async_assert_results_wait_a_bit_func(job: IsJob):
     return async_assert_results_wait_a_bit
 
 
-def check_engine_cls(job: IsJob, engine_cls: type[Engine]):
+def check_engine_cls(job: IsJob, engine_cls: type[IsEngine]):
     return isinstance(extract_engine(job), engine_cls)
 
 
 def create_task_with_func(
     name: str,
     func: Callable,
-    task_template_cls: type(IsTaskTemplate),
+    task_template_cls: type[IsTaskTemplate],
     engine: IsTaskRunnerEngine,
     registry: IsRunStateRegistry | None,
 ) -> IsTask:
@@ -106,8 +104,8 @@ def create_task_with_func(
 def create_linear_flow_with_two_func_tasks(
     name: str,
     func: Callable,
-    task_template_cls: type(IsTaskTemplate),
-    linear_flow_template_cls: type(IsLinearFlowTemplate),
+    task_template_cls: type[IsTaskTemplate],
+    linear_flow_template_cls: type[IsLinearFlowTemplate],
     engine: IsLinearFlowRunnerEngine,
     registry: IsRunStateRegistry | None,
 ) -> IsLinearFlow:
@@ -132,8 +130,8 @@ def create_linear_flow_with_two_func_tasks(
 def create_dag_flow_with_two_func_tasks(
     name: str,
     func: Callable,
-    task_template_cls: type(IsTaskTemplate),
-    dag_flow_template_cls: type(IsDagFlowTemplate),
+    task_template_cls: type[IsTaskTemplate],
+    dag_flow_template_cls: type[IsDagFlowTemplate],
     engine: IsDagFlowRunnerEngine,
     registry: IsRunStateRegistry | None,
 ) -> IsDagFlow:
@@ -151,8 +149,8 @@ def create_dag_flow_with_two_func_tasks(
 def create_func_flow_with_two_func_tasks(
     name: str,
     func: Callable,
-    task_template_cls: type(IsTaskTemplate),
-    func_flow_template_cls: type(IsFuncFlowTemplate),
+    task_template_cls: type[IsTaskTemplate],
+    func_flow_template_cls: type[IsFuncFlowTemplate],
     engine: IsFuncFlowRunnerEngine,
     registry: IsRunStateRegistry | None,
 ) -> IsDagFlow:
@@ -177,7 +175,7 @@ def update_job_case_with_job(
     job_type: JobType,
     task_template_cls: Type[IsTaskTemplate],
     flow_template_cls: Type[IsFlowTemplate] | None,
-    engine: Type[IsEngine],
+    engine: IsEngine,
     engine_decorator: Callable[[IsEngine], IsEngine] | None,
     registry: IsRunStateRegistry | None,
 ):

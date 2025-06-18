@@ -719,7 +719,7 @@ def test_nested_validation_level_one(runtime: Annotated[IsRuntime, pytest.fixtur
     with pytest.raises(ValidationError):
         dataset['data_file_1'][0] = 'abc'
 
-    if not runtime.config.data.interactive_mode:
+    if not runtime.config.data.model.interactive:
         assert dataset['data_file_1'].contents == ['abc']
         dataset['data_file_1'][0] = '123'
 
@@ -740,7 +740,7 @@ def test_nested_validation_level_two_only_model_at_top(runtime: Annotated[IsRunt
     assert dataset['data_file_2'].contents == [[234]]
 
     dataset['data_file_1'][0][0] = '345'
-    if runtime.config.data.dynamically_convert_elements_to_models:
+    if runtime.config.data.model.dynamically_convert_elements_to_models:
         # dataset['data_file_1'][0] is a new `Model[list[int]]` object containing a copy of the
         # original list, so changes do not propagate to parents. See
         # `test_mimic_doubly_nested_dyn_converted_containers_are_copies`
@@ -758,10 +758,10 @@ def test_nested_validation_level_two_only_model_at_top(runtime: Annotated[IsRunt
 
     assert dataset['data_file_1'].contents == [[345]]
 
-    if runtime.config.data.dynamically_convert_elements_to_models:
+    if runtime.config.data.model.dynamically_convert_elements_to_models:
         # As `dataset['data_file_1'][0]` is a copy, changes are not propagated to parents. Thus,
         # validation errors seems to reset the parents, regardless of the setting of
-        # `interactive_mode`. In fact, the parents were never changed.
+        # `model.interactive`. In fact, the parents were never changed.
         with pytest.raises(ValidationError):
             dataset['data_file_1'][0][0] = 'abc'
     else:
@@ -769,7 +769,7 @@ def test_nested_validation_level_two_only_model_at_top(runtime: Annotated[IsRunt
         with pytest.raises(ValidationError):
             dataset['data_file_1'].validate_contents()
 
-        if not runtime.config.data.interactive_mode:
+        if not runtime.config.data.model.interactive:
             assert dataset['data_file_1'].contents == [['abc']]
             dataset['data_file_1'][0][0] = 345
 
@@ -794,7 +794,7 @@ def test_nested_validation_level_two_models_at_both_levels(runtime: Annotated[Is
     with pytest.raises(ValidationError):
         dataset['data_file_1'][0][0] = 'abc'
 
-    if not runtime.config.data.interactive_mode:
+    if not runtime.config.data.model.interactive:
         assert dataset['data_file_1'][0].contents == ['abc']
         dataset['data_file_1'][0][0] = 345
 

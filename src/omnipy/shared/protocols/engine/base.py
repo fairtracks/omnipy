@@ -1,6 +1,6 @@
 from typing import Protocol, runtime_checkable, Type
 
-from omnipy.shared.protocols.config import IsEngineConfig
+from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
 
@@ -11,17 +11,17 @@ class IsEngine(Protocol):
         ...
 
     @classmethod
-    def get_config_cls(cls) -> Type[IsEngineConfig]:
+    def get_config_cls(cls) -> Type[IsJobRunnerConfig]:
         ...
 
-    def set_config(self, config: IsEngineConfig) -> None:
+    def set_config(self, config: IsJobRunnerConfig) -> None:
         ...
 
     def set_registry(self, registry: IsRunStateRegistry | None) -> None:
         ...
 
     @property
-    def config(self) -> IsEngineConfig:
+    def config(self) -> IsJobRunnerConfig:
         ...
 
     @property

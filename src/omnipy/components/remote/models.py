@@ -57,9 +57,9 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
         return dict((unquote(key), unquote(val)) for key, val in params_list)
 
     def to_data(self) -> str:
-        with hold_and_reset_prev_attrib_value(self.config,
+        with hold_and_reset_prev_attrib_value(self.config.model,
                                               'dynamically_convert_elements_to_models'):
-            self.config.dynamically_convert_elements_to_models = False
+            self.config.model.dynamically_convert_elements_to_models = False
             assert isinstance(self.contents, dict)
             url_encoded_contents = tuple(
                 (quote(key), quote(val)) for key, val in self.contents.items())

@@ -68,8 +68,9 @@ def record_schema_factory(data_file: str,
     class Config(pyd.BaseConfig):
         extra = pyd.Extra.forbid
 
-    # For real-world implementation config.dynamically_convert_elements_to_models must be forced
-    # to False here.
+    # For real-world implementation,
+    # config.model.dynamically_convert_elements_to_models must be forced to
+    # False here.
 
     return pyd.create_model(
         data_file,

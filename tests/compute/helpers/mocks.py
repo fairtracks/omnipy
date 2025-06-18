@@ -30,7 +30,7 @@ from omnipy.shared.protocols.compute.job import (IsDagFlow,
                                                  IsFuncFlow,
                                                  IsLinearFlow,
                                                  IsTask)
-from omnipy.shared.protocols.config import IsEngineConfig
+from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.engine.job_runner import IsTaskRunnerEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
@@ -391,17 +391,17 @@ class MockLocalRunner:
         self.finished = False
 
     @classmethod
-    def get_config_cls(cls) -> Type[IsEngineConfig]:
+    def get_config_cls(cls) -> Type[IsJobRunnerConfig]:
         ...
 
-    def set_config(self, config: IsEngineConfig) -> None:
+    def set_config(self, config: IsJobRunnerConfig) -> None:
         ...
 
     def set_registry(self, registry: IsRunStateRegistry | None) -> None:
         ...
 
     @property
-    def config(self) -> IsEngineConfig:
+    def config(self) -> IsJobRunnerConfig:
         ...
 
     @property

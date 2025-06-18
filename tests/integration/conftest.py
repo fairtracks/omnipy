@@ -15,4 +15,4 @@ def runtime(runtime_data_config_variants: Annotated[IsRuntime, pytest.fixture]) 
 @pc.fixture(scope='function')
 @pc.parametrize(engine=[EngineChoice.LOCAL, EngineChoice.PREFECT], ids=['local', 'prefect'])
 def runtime_all_engines(runtime: Annotated[IsRuntime, pytest.fixture], engine: str) -> None:
-    runtime.config.engine = engine
+    runtime.config.engine.choice = engine  # type: ignore[assignment]

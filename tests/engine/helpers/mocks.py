@@ -18,7 +18,7 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
 from omnipy.shared.enums import RunState
 from omnipy.shared.protocols.compute._job import IsJob
 from omnipy.shared.protocols.compute.job import IsDagFlow, IsFlow, IsFuncFlow, IsLinearFlow, IsTask
-from omnipy.shared.protocols.config import IsEngineConfig
+from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.typedefs import GeneralDecorator
 from omnipy.util.callable_decorator import callable_decorator_cls
@@ -202,7 +202,7 @@ class MockJobRunnerSubclass(TaskRunnerEngine,
         self.backend_verbose: bool = self._config.backend_verbose
 
     @classmethod
-    def get_config_cls(cls) -> Type[IsEngineConfig]:
+    def get_config_cls(cls) -> Type[IsJobRunnerConfig]:
         return MockEngineConfig
 
     # TaskRunnerEngine

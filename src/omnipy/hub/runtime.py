@@ -4,7 +4,7 @@ from omnipy.components.prefect.engine.prefect import PrefectEngine
 from omnipy.compute._job import JobBase
 from omnipy.config import ConfigBase
 from omnipy.config.data import DataConfig
-from omnipy.config.engine import LocalRunnerConfig, PrefectEngineConfig
+from omnipy.config.engine import EngineConfig
 from omnipy.config.job import JobConfig
 from omnipy.config.root_log import RootLogConfig
 from omnipy.data._data_class_creator import DataClassBase
@@ -17,13 +17,15 @@ from omnipy.shared.protocols.compute.job_creator import IsJobConfigHolder
 from omnipy.shared.protocols.config import (IsDataConfig,
                                             IsEngineConfig,
                                             IsJobConfig,
-                                            IsLocalRunnerConfig,
-                                            IsPrefectEngineConfig,
+                                            IsJobRunnerConfig,
                                             IsRootLogConfig)
 from omnipy.shared.protocols.data import IsDataClassCreator, IsSerializerRegistry
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
-from omnipy.shared.protocols.hub.runtime import IsRootLogObjects, IsRuntimeConfig, IsRuntimeObjects
+from omnipy.shared.protocols.hub.runtime import (IsRootLogObjects,
+                                                 IsRuntime,
+                                                 IsRuntimeConfig,
+                                                 IsRuntimeObjects)
 import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import called_from_omnipy_tests
 from omnipy.util.publisher import DataPublisher, RuntimeEntryPublisher
@@ -46,22 +48,18 @@ def _data_config_factory():
 
 
 class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
-    job: IsJobConfig = pyd.Field(default_factory=_job_config_factory)
     data: IsDataConfig = pyd.Field(default_factory=_data_config_factory)
-    engine: EngineChoice = EngineChoice.LOCAL
-    local: IsLocalRunnerConfig = pyd.Field(default_factory=LocalRunnerConfig)
-    prefect: IsPrefectEngineConfig = pyd.Field(default_factory=PrefectEngineConfig)
+    engine: IsEngineConfig = pyd.Field(default_factory=EngineConfig)
+    job: IsJobConfig = pyd.Field(default_factory=_job_config_factory)
     root_log: IsRootLogConfig = pyd.Field(default_factory=RootLogConfig)
 
     def reset_to_defaults(self) -> None:
         prev_back = self._back
         self._back = None
 
-        self.job = JobConfig()
         self.data = DataConfig()
-        self.engine = EngineChoice.LOCAL
-        self.local = LocalRunnerConfig()
-        self.prefect = PrefectEngineConfig()
+        self.engine = EngineConfig()
+        self.job = JobConfig()
         self.root_log = RootLogConfig()
 
         self._back = prev_back
@@ -111,11 +109,12 @@ class Runtime(DataPublisher):
         # This might e.g. happen due to the use of  mock objects for testing, or if the config is
         # reloaded from a file.
 
-        self.config.subscribe_attr('job', self.objects.job_creator.set_config)
         self.config.subscribe_attr('data', self.objects.data_class_creator.set_config)
-        self.config.subscribe_attr('local', self.objects.local.set_config)
-        self.config.subscribe_attr('prefect', self.objects.prefect.set_config)
+        self.config.subscribe_attr('job', self.objects.job_creator.set_config)
         self.config.subscribe_attr('root_log', self.objects.root_log.set_config)
+
+        self.config.engine.subscribe_attr('local', self.objects.local.set_config)
+        self.config.engine.subscribe_attr('prefect', self.objects.prefect.set_config)
 
         # Makes sure that the registry references in the job runners always refer to the registry
         # object in runtime, even when one or both of the objects are replaced with new objects.
@@ -124,9 +123,9 @@ class Runtime(DataPublisher):
 
         # Makes sure that the engine used by the job creator is always the one specified in the
         # 'engine' config item in runtime
-        self.config.subscribe_attr('local', self._update_job_creator_engine)
-        self.config.subscribe_attr('prefect', self._update_job_creator_engine)
-        self.config.subscribe_attr('engine', self._update_job_creator_engine)
+        self.config.engine.subscribe_attr('local', self._update_job_creator_engine)
+        self.config.engine.subscribe_attr('prefect', self._update_job_creator_engine)
+        self.config.engine.subscribe_attr('choice', self._update_job_creator_engine)
 
         # Makes sure that the local and prefect engine configs are always reloaded when the local
         # or prefect engine objects are replaced with new engine objects. This is necessary because
@@ -141,21 +140,21 @@ class Runtime(DataPublisher):
         self.config._back = self  # pyright: ignore [reportAttributeAccessIssue]
         self.objects._back = self  # pyright: ignore [reportAttributeAccessIssue]
 
-    def _get_engine_config(self, engine_choice: EngineChoice):
-        return getattr(self.config, engine_choice)
+    def _get_engine_config(self, choice: EngineChoice):
+        return getattr(self.config.engine, choice)
 
-    def _set_engine_config(self, engine_choice: EngineChoice, engine_config: IsEngineConfig):
-        return setattr(self.config, engine_choice, engine_config)
+    def _set_engine_config(self, choice: EngineChoice, engine_config: IsJobRunnerConfig):
+        return setattr(self.config.engine, choice, engine_config)
 
-    def _get_engine(self, engine_choice: EngineChoice):
-        return getattr(self.objects, engine_choice)
+    def _get_engine(self, choice: EngineChoice):
+        return getattr(self.objects, choice)
 
-    def _new_engine_config_if_new_cls(self, engine: IsEngine, engine_choice: EngineChoice) -> None:
+    def _new_engine_config_if_new_cls(self, engine: IsEngine, choice: EngineChoice) -> None:
         # TODO: when parsing config from file is implemented, make sure that the new engine
         #       config classes here reparse the config files
         engine_config_cls = engine.get_config_cls()
-        if self._get_engine_config(engine_choice).__class__ is not engine_config_cls:
-            self._set_engine_config(engine_choice, engine_config_cls())
+        if self._get_engine_config(choice).__class__ is not engine_config_cls:
+            self._set_engine_config(choice, engine_config_cls())
 
     def _update_local_runner_config(self, local_runner: IsEngine):
         self._new_engine_config_if_new_cls(local_runner, EngineChoice.LOCAL)
@@ -164,10 +163,10 @@ class Runtime(DataPublisher):
         self._new_engine_config_if_new_cls(prefect_engine, EngineChoice.PREFECT)
 
     def _update_job_creator_engine(self, _item_changed: Any):
-        self.objects.job_creator.set_engine(self._get_engine(self.config.engine))
+        self.objects.job_creator.set_engine(self._get_engine(self.config.engine.choice))
 
 
 if TYPE_CHECKING:
-    runtime: 'Runtime' = Runtime()
+    runtime: 'IsRuntime' = Runtime()
 else:
-    runtime: 'Runtime | None' = None if called_from_omnipy_tests() else Runtime()
+    runtime: 'IsRuntime | None' = None if called_from_omnipy_tests() else Runtime()

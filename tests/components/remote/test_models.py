@@ -163,7 +163,7 @@ def test_http_url_model_modify_direct_fields(runtime: Annotated[IsRuntime, pytes
     with pytest.raises(ValidationError):
         url.scheme = 'ftp'
 
-    if not runtime.config.data.interactive_mode:
+    if not runtime.config.data.model.interactive:
         # Manual reset of invalid modification above
         url.scheme = 'https'
 

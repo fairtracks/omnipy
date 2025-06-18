@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Type
 
-from omnipy.shared.protocols.config import IsEngineConfig
+from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
 
@@ -9,7 +9,7 @@ class Engine(ABC):
     """Base class for engine implementations"""
     def __init__(self) -> None:
         config_cls = self.get_config_cls()
-        self._config: IsEngineConfig = config_cls()
+        self._config: IsJobRunnerConfig = config_cls()
         self._registry: IsRunStateRegistry | None = None
 
         self._init_engine()
@@ -32,7 +32,7 @@ class Engine(ABC):
 
     @classmethod
     @abstractmethod
-    def get_config_cls(cls) -> Type[IsEngineConfig]:
+    def get_config_cls(cls) -> Type[IsJobRunnerConfig]:
         """
         Specification of config class mapped to an Engine subclass. Must be implemented by all
         subclasses of Engine. If no configuration is needed, then the EngineConfig class should be
@@ -40,7 +40,7 @@ class Engine(ABC):
         :return: Class implementing the IsEngineConfig protocol
         """
 
-    def set_config(self, config: IsEngineConfig) -> None:
+    def set_config(self, config: IsJobRunnerConfig) -> None:
         self._config = config
         self._update_from_config()
 
@@ -48,7 +48,7 @@ class Engine(ABC):
         self._registry = registry
 
     @property
-    def config(self) -> IsEngineConfig:
+    def config(self) -> IsJobRunnerConfig:
         return self._config
 
     @property
