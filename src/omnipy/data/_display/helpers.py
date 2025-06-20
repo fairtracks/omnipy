@@ -4,6 +4,7 @@ import sys
 from rich._cell_widths import CELL_WIDTHS
 from rich.cells import _is_single_cell_widths
 
+from omnipy.data.typechecks import is_model_instance
 from omnipy.shared.enums import DisplayType
 from omnipy.util.range_lookup import RangeLookup
 
@@ -151,6 +152,32 @@ def get_terminal_prompt_height(display_type: DisplayType) -> int:
             return 3
         case _:
             return 0
+
+
+def setup_displayhook_if_plain_terminal() -> None:
+    """
+    Sets up the display hook for plain terminal environments to ensure that
+    the output is displayed correctly.
+    """
+    from omnipy.data.dataset import Dataset
+
+    display_type = detect_display_type()
+    if display_type in (DisplayType.TERMINAL, DisplayType.PYCHARM_TERMINAL, DisplayType.UNKNOWN):
+
+        def _omnipy_displayhook(obj: object) -> None:
+            """
+            Custom display hook for plain terminal environments.
+            """
+            import builtins
+
+            if obj is not None:
+                if is_model_instance(obj) or isinstance(obj, Dataset):
+                    print(obj._display())
+                    builtins._ = obj  # type: ignore[attr-defined]
+                else:
+                    sys.__displayhook__(obj)
+
+        sys.displayhook = _omnipy_displayhook
 
 
 def setup_css_if_running_in_jupyter() -> None:
