@@ -17,11 +17,12 @@ import rich.text
 from typing_extensions import override, TypeVar
 
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
+from omnipy.data._display.helpers import detect_display_type, display_type_is_any_terminal
 from omnipy.data._display.panel.base import FullyRenderedPanel, OutputVariant
 from omnipy.data._display.panel.cropping import rich_overflow_method
 from omnipy.data._display.panel.draft.base import ContentT, FrameT
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
-from omnipy.shared.enums import ConsoleColorSystem
+from omnipy.shared.enums import ConsoleColorSystem, DisplayType
 import omnipy.util._pydantic as pyd
 
 StylizedRichTypes: TypeAlias = rich.syntax.Syntax | rich.panel.Panel | rich.table.Table
@@ -125,12 +126,13 @@ class StylizedMonospacedPanel(
     @staticmethod
     @lru_cache(maxsize=1024)
     def _get_console_common(
-        stylized_content: rich.console.RenderableType,
-        console_width: int,
-        console_height: int,
-        frame_width: int | None,
-        rich_overflow_method: rich.console.OverflowMethod | None,
-        console_color_system: ConsoleColorSystem,
+            stylized_content: rich.console.RenderableType,
+            console_width: int,
+            console_height: int,
+            frame_width: int | None,
+            rich_overflow_method: rich.console.OverflowMethod | None,
+            console_color_system: ConsoleColorSystem,
+            display_type: DisplayType = detect_display_type(),
     ) -> rich.console.Console:
 
         console = rich.console.Console(
@@ -139,6 +141,8 @@ class StylizedMonospacedPanel(
             height=console_height,
             color_system=console_color_system.value,
             record=True,
+            force_jupyter=False,
+            force_terminal=display_type_is_any_terminal(display_type),
         )
 
         soft_wrap = True if frame_width is None else False
