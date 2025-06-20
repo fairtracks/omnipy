@@ -166,8 +166,6 @@ from omnipy.compute.flow import (DagFlow,
                                  LinearFlow,
                                  LinearFlowTemplate)
 from omnipy.compute.task import Task, TaskTemplate
-from omnipy.data._display.helpers import (setup_css_if_running_in_jupyter,
-                                          setup_displayhook_if_plain_terminal)
 from omnipy.data.dataset import Dataset, MultiModelDataset
 from omnipy.data.model import Model
 from omnipy.data.param import (bind_adjust_dataset_func,
@@ -375,6 +373,3 @@ __all__ = [
     'transpose_columns_with_data_files',
     'print_exception',
 ]
-
-setup_css_if_running_in_jupyter()
-setup_displayhook_if_plain_terminal()
