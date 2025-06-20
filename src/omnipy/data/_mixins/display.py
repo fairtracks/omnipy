@@ -7,6 +7,7 @@ from typing import Any, cast, Literal, TYPE_CHECKING
 import humanize
 from IPython.lib.pretty import RepresentationPrinter
 import objsize
+from reacton.core import Element
 
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import (OutputConfig,
@@ -14,7 +15,10 @@ from omnipy.data._display.config import (OutputConfig,
                                          TERMINAL_DEFAULT_WIDTH)
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.data._display.helpers import detect_display_type
+from omnipy.data._display.helpers import (detect_display_type,
+                                          display_type_is_any_terminal,
+                                          get_terminal_prompt_height)
+from omnipy.data._display.jupyter.components import DynamiclyResizingHtml
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
@@ -31,14 +35,14 @@ if TYPE_CHECKING:
 
 class BaseDisplayMixin(metaclass=ABCMeta):
     @abstractmethod
-    def _display(self) -> str:
+    def _display(self) -> str | Element:
         ...
 
-    def peek(self) -> str:
-        return self._peek()
+    def peek(self) -> str | Element:
+        return self._insert_any_reactive_components('_peek')
 
     @abstractmethod
-    def _peek(self) -> str:
+    def _peek(self) -> str | Element:
         ...
 
     def __str__(self) -> str:
@@ -55,6 +59,10 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             else:
                 p.text(self.__repr__())
 
+    def _repr_html_(self) -> str:
+        element = cast(Element, self._display())
+        element._ipython_display_()
+        return ''
 
     @staticmethod
     @functools.lru_cache
@@ -63,7 +71,24 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             display_type = detect_display_type()
         return display_type
 
+    def _insert_any_reactive_components(
+        self,
+        method_name: str,
+        display_type: DisplayType = DisplayType.AUTO,
+        **kwargs: Any,
+    ) -> str | Element:
+        from omnipy.data.dataset import Dataset, Model
 
+        display_type = self._determine_display_type(display_type)
+
+        if display_type is DisplayType.JUPYTER:
+            return DynamiclyResizingHtml(
+                cast(Dataset | Model, self),
+                method_name=method_name,
+                **kwargs,
+            )
+        else:
+            return getattr(self, method_name)(**kwargs)
 
     def _peek_models(
         self,
@@ -206,6 +231,9 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         width = console_config.width or TERMINAL_DEFAULT_WIDTH
         height = console_config.height or TERMINAL_DEFAULT_HEIGHT
 
+        if display_type_is_any_terminal(display_type):
+            # Reserve space for the command line prompt
+            height -= get_terminal_prompt_height(display_type)
 
         return Frame(
             Dimensions(
@@ -218,16 +246,16 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
 
 class ModelDisplayMixin(BaseDisplayMixin):
-    def _display(self) -> str:
+    def _display(self) -> str | Element:
         return self.peek()
 
-    def _peek(self) -> str:
+    def _peek(self) -> str | Element:
         from omnipy.data.model import Model
         return self._peek_models(models={self.__class__.__name__: cast(Model, self)})
 
 
 class DatasetDisplayMixin(BaseDisplayMixin):
-    def _display(self) -> str:
+    def _display(self) -> str | Element:
         return self.list()
 
     def _peek(self) -> str:
@@ -237,8 +265,8 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             f'{i}. {title}': model for i, (title, model) in enumerate(self_as_dataset.data.items())
         })
 
-    def list(self) -> str:
-        return self._list()
+    def list(self) -> str | Element:
+        return self._insert_any_reactive_components('_list')
 
     def _list(self) -> str:
         from omnipy.data.dataset import Dataset

@@ -137,3 +137,55 @@ def display_type_is_any_terminal(display_type: DisplayType) -> bool:
                             DisplayType.PYCHARM_TERMINAL,
                             DisplayType.PYCHARM_IPYTHON,
                             DisplayType.UNKNOWN)
+
+
+def get_terminal_prompt_height(display_type: DisplayType) -> int:
+    """
+    Get the height of the terminal prompt (including blank lines) based on
+    the display type.
+    """
+    match display_type:
+        case DisplayType.TERMINAL | DisplayType.PYCHARM_TERMINAL:
+            return 2
+        case DisplayType.IPYTHON | DisplayType.PYCHARM_IPYTHON | DisplayType.UNKNOWN:
+            return 3
+        case _:
+            return 0
+
+
+def setup_css_if_running_in_jupyter() -> None:
+    """
+    Displays the CSS styles for Jupyter Notebook or JupyterLab, given that
+    the Jupyter environment is detected.
+    """
+    if running_in_jupyter():
+        from IPython.display import display, HTML
+        display(
+            HTML("""
+            Note: Some CSS styling related to Solara/Vuetify was added by
+            Omnipy to Jupyter Notebook or JupyterLab.
+        <style>
+        /*
+        Workaround for an issue where cells that are far out of view
+        lose their padding. This causes issues with panels resizing
+        when scrolling quickly.
+        */
+        .jp-Cell {
+            padding: var(--jp-cell-padding) !important;
+        }
+
+        /*
+        Remove Vuetify background color in order to support
+        transparent-background=True
+        */
+        :where(.vuetify-styles) .v-application code {
+            background-color: unset;
+        }
+        :where(.vuetify-styles) .theme--dark.v-sheet {
+            background-color: unset;
+        }
+        :where(.vuetify-styles) .theme--light.v-sheet {
+            background-color: unset;
+        }
+        </style>
+        """))
