@@ -1,6 +1,10 @@
+import os
+import sys
+
 from rich._cell_widths import CELL_WIDTHS
 from rich.cells import _is_single_cell_widths
 
+from omnipy.shared.enums import DisplayType
 from omnipy.util.range_lookup import RangeLookup
 
 
@@ -73,3 +77,63 @@ def soft_wrap_words(words: list[str], max_width: int) -> list[str]:
 
     # Add spaces and return
     return [' '.join(line) for line in lines]
+
+
+def running_in_ipython_terminal() -> bool:
+    try:
+        ipython = get_ipython()  # type: ignore[name-defined]
+        return ipython.__class__.__name__ == 'TerminalInteractiveShell'
+    except NameError:
+        return False
+
+
+def running_in_ipython_pycharm() -> bool:
+    try:
+        ipython = get_ipython()  # type: ignore[name-defined]
+        return ipython.__class__.__name__ == 'PyDevTerminalInteractiveShell'
+    except NameError:
+        return False
+
+
+def running_in_jupyter() -> bool:
+    try:
+        ipython = get_ipython()  # type: ignore[name-defined]
+        return ipython.__class__.__name__ == 'ZMQInteractiveShell'
+    except NameError:
+        return False
+
+
+def running_in_pycharm_console() -> bool:
+    return os.getenv('PYCHARM_HOSTED') is not None
+
+
+def running_in_atty_terminal() -> bool:
+    return sys.stdout.isatty()
+
+
+def detect_display_type() -> DisplayType:
+    if running_in_jupyter():
+        return DisplayType.JUPYTER
+    elif running_in_ipython_terminal():
+        return DisplayType.IPYTHON
+    elif running_in_pycharm_console():
+        if running_in_ipython_pycharm():
+            return DisplayType.PYCHARM_IPYTHON
+        else:
+            return DisplayType.PYCHARM_TERMINAL
+    elif running_in_atty_terminal():
+        return DisplayType.TERMINAL
+    else:
+        return DisplayType.UNKNOWN
+
+
+def display_type_is_any_terminal(display_type: DisplayType) -> bool:
+    """
+    Check if the display_type refers to any terminal environment. If display
+    type is unknown, we still assume it is a terminal.
+    """
+    return display_type in (DisplayType.TERMINAL,
+                            DisplayType.IPYTHON,
+                            DisplayType.PYCHARM_TERMINAL,
+                            DisplayType.PYCHARM_IPYTHON,
+                            DisplayType.UNKNOWN)

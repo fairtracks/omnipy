@@ -95,6 +95,32 @@ class ConsoleDimensionsMode(str, Enum):
     FIXED = 'fixed'
 
 
+class DisplayType(str, Enum):
+    """
+    Specifies the type of display to use for output.
+
+    - TERMINAL: The default display type, which uses the terminal's
+        standard output and error streams.
+    - IPYTHON: The IPython console, a variation of TERMINAL that supports
+        IPython-specific features.
+    - PYCHARM_TERMINAL: A PyCharm console running with the Python REPL
+    - PYCHARM_IPYTHON: A PyCharm console running with the IPython REPL
+    - JUPYTER: A Jupyter notebook or JupyterLab environment, which supports
+        rich output rendering (based on HTML) and interactive widgets.
+    - BROWSER: A web browser with HTML rendering.
+    - UNKNOWN: An unknown display type, which is used when the display type
+      cannot be determined.
+    """
+    TERMINAL = 'terminal'
+    IPYTHON = 'ipython'
+    PYCHARM_TERMINAL = 'pycharm_terminal'
+    PYCHARM_IPYTHON = 'pycharm_ipython'
+    JUPYTER = 'jupyter'
+    BROWSER = 'browser'
+    UNKNOWN = 'unknown'
+    AUTO = 'auto'
+
+
 class BackoffStrategy(str, Enum):
     EXPONENTIAL = 'exponential'
     JITTER = 'jitter'

@@ -382,22 +382,6 @@ def get_event_loop_and_check_if_loop_is_running() -> tuple[asyncio.AbstractEvent
     return loop, loop_is_running
 
 
-def running_in_ipython() -> bool:
-    try:
-        ipython = get_ipython()  # type: ignore[name-defined]
-        return ipython.__class__.__name__ == 'TerminalInteractiveShell'
-    except NameError:
-        return False
-
-
-def running_in_jupyter() -> bool:
-    try:
-        ipython = get_ipython()  # type: ignore[name-defined]
-        return ipython.__class__.__name__ == 'ZMQInteractiveShell'
-    except NameError:
-        return False
-
-
 def split_all_content_to_lines(content: str) -> list[str]:
     all_content_lines_stripped = content.splitlines(keepends=False)
     all_content_lines = content.splitlines(keepends=True)
