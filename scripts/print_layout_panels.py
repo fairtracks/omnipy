@@ -1,5 +1,6 @@
 from omnipy import JsonModel
 from omnipy.data._display.frame import Dimensions, Frame
+from omnipy.data._display.helpers import detect_display_type
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel, OutputConfig
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
@@ -8,6 +9,8 @@ from omnipy.shared.enums import (ConsoleColorSystem,
                                  DarkLowContrastColorStyles,
                                  PrettyPrinterLib,
                                  RecommendedColorStyles)
+
+print(detect_display_type())
 
 json = """[
          {
@@ -158,18 +161,25 @@ def print_with_config(json, tsv, config1, config2, config3, width, height):
             j[2], frame=Frame(Dimensions(30, 100)), title='Fourth panel', config=config3),
     )
     p = DraftPanel(layout, frame=Frame(Dimensions(width, height)), config=config3)
-    print(p.render_next_stage().render_next_stage().colorized.terminal)
+    p1 = p.render_next_stage()
+    p2 = p1.render_next_stage()
+    print(p2.colorized.terminal)
     return p
 
 
 print_with_config(json, tsv, config1, config4, config3, 220, None)
 print_with_config(json, tsv, config1, config4, config1, 220, 50)
 print_with_config(json, tsv, config1, config4, config3, 196, 48)
-print_with_config(json, tsv, config1, config4, config1, 195, 48)
+print_with_config(json, tsv, config1, config4, config1, 195, 49)
+print_with_config(json, tsv, config1, config4, config2, 195, 48)
+print_with_config(json, tsv, config1, config4, config3, 195, 47)
+print_with_config(json, tsv, config1, config4, config1, 195, 30)
 print_with_config(json, tsv, config1, config4, config3, 130, 7)
+print_with_config(json, tsv, config1, config4, config3, 80, 14)
 print_with_config(json, tsv, config1, config4, config3, 80, 7)
 print_with_config(json, tsv, config1, config4, config1, 80, 7)
 print_with_config(json, tsv, config1, config4, config1, 80, 6)
+print_with_config(json, tsv, config1, config4, config3, 74, 14)
 print_with_config(json, tsv, config1, config4, config3, 40, 21)
 print_with_config(json, tsv, config1, config4, config1, 40, 21)
 print_with_config(json, tsv, config1, config4, config3, 40, 7)
