@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 _ModelT = TypeVar('_ModelT', bound=IsModel)
 _NewModelT = TypeVar('_NewModelT', bound=IsModel)
 _GeneralModelT = TypeVar('_GeneralModelT', bound=IsModel)
-_DatasetT = TypeVar('_DatasetT')
+_DatasetT = TypeVar('_DatasetT', bound=IsDataset)
 
 PathOrUrl: TypeAlias = 'str | HttpUrlModel'
 PathsOrUrls: TypeAlias = 'PathOrUrl | Iterable[str] | HttpUrlDataset | Mapping[str, PathOrUrl]'
@@ -684,7 +684,7 @@ class Dataset(
         by_file_suffix: bool = False,
         as_mime_type: None | str = None,
         **kwargs: PathOrUrl,
-    ) -> 'asyncio.Task[Dataset[_ModelT]] | Dataset[_ModelT]':
+    ) -> 'Dataset[_ModelT] | asyncio.Task[Dataset[_ModelT]]':
         dataset = cls()
         return dataset.load_into(
             paths_or_urls, by_file_suffix=by_file_suffix, as_mime_type=as_mime_type, **kwargs)

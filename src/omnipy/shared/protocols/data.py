@@ -1,3 +1,4 @@
+import asyncio
 from typing import (Any,
                     Callable,
                     ContextManager,
@@ -8,7 +9,8 @@ from typing import (Any,
                     overload,
                     Protocol,
                     runtime_checkable,
-                    Type)
+                    Type,
+                    TypeAlias)
 
 from typing_extensions import TypeVar
 
@@ -25,6 +27,11 @@ _ModelT = TypeVar('_ModelT', bound='IsModel')
 ContentsT = TypeVar('ContentsT', bound=object)
 HasContentsT = TypeVar('HasContentsT', bound='HasContents')
 ObjContraT = TypeVar('ObjContraT', contravariant=True, bound=object)
+
+IsPathOrUrl: TypeAlias = 'str | IsHttpUrlModel'
+IsPathsOrUrls: TypeAlias = 'Iterable[str] | IsHttpUrlDataset | Mapping[str, IsPathOrUrl]'
+IsPathsOrUrlsOneOrMore: TypeAlias = 'IsPathOrUrl | IsPathsOrUrls'
+IsPathsOrUrlsOneOrMoreOrNone: TypeAlias = 'IsPathsOrUrlsOneOrMore | None'
 
 
 @runtime_checkable
@@ -77,6 +84,28 @@ class IsDataset(IsMutableMapping[str, _ModelT], Protocol[_ModelT]):
     def to_json_schema(cls, pretty=True) -> str | dict[str, str]:
         ...
 
+    def save(self, path: str) -> None:
+        ...
+
+    @classmethod
+    def load(
+        cls,
+        paths_or_urls: IsPathsOrUrlsOneOrMore = None,
+        by_file_suffix: bool = False,
+        as_mime_type: None | str = None,
+        **kwargs: IsPathOrUrl,
+    ) -> 'IsDataset[_ModelT] | asyncio.Task[IsDataset[_ModelT]]':
+        ...
+
+    def load_into(
+        self,
+        paths_or_urls: IsPathsOrUrlsOneOrMore = None,
+        by_file_suffix: bool = False,
+        as_mime_type: None | str = None,
+        **kwargs: IsPathOrUrl,
+    ) -> 'IsDataset[_ModelT] | asyncio.Task[IsDataset[_ModelT]]':
+        ...
+
     @overload
     def __getitem__(self, selector: str | int) -> _ModelT:
         ...
@@ -120,6 +149,16 @@ class IsMultiModelDataset(IsDataset[_ModelT], Protocol[_ModelT]):
 
     def get_model(self, data_file: str) -> type[IsModel]:
         ...
+
+
+@runtime_checkable
+class IsHttpUrlModel(IsModel, Protocol):
+    ...
+
+
+@runtime_checkable
+class IsHttpUrlDataset(IsDataset, Protocol):
+    ...
 
 
 class IsSerializer(Protocol):
