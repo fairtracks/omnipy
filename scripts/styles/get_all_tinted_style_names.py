@@ -1,8 +1,8 @@
-# import asyncio
 from collections import defaultdict
 
 from inflection import underscore
 
+from omnipy import get_github_repo_urls
 import omnipy as om
 from omnipy.data._display.styles.dynamic_styles import (_create_base_16_class_name_from_theme_key,
                                                         fetch_base16_theme)
@@ -10,36 +10,17 @@ from omnipy.data._display.styles.dynamic_styles import (_create_base_16_class_na
 om.runtime.config.data.http.for_host['raw.githubusercontent.com'].requests_per_time_period = 600
 
 
-async def get_github_repo_urls(owner: str, repo: str, branch: str, path: str,
-                               file_suffix: str) -> om.HttpUrlDataset:
-
-    api_url = om.HttpUrlModel('https://api.github.com')
-    api_url.path // 'repos' // owner // repo // 'contents' // path
-    api_url.query['ref'] = branch
-
-    url_pre = om.HttpUrlModel('https://raw.githubusercontent.com')
-    url_pre.path // owner // repo // 'refs' // 'heads' // branch // path
-
-    json_data = om.JsonListOfDictsDataset()
-    await json_data.load(api_url)
-
-    FileSuffixMatches = om.MatchItemsModel.adjust(
-        'FileSuffixMatches', match_functions=(lambda x: x.endswith(file_suffix),))
-    filtered_names = FileSuffixMatches(el['name'] for el in json_data[0])
-    return om.HttpUrlDataset({name: url_pre + f'/{name}' for name in filtered_names})
-
-
-async def get_all_tinted_themes() -> defaultdict[tuple[bool, str], list[str]]:
+def get_all_tinted_themes() -> defaultdict[tuple[bool, str], list[str]]:
     # `pip install color-contrast` to run
     from color_contrast import AccessibilityLevel, check_contrast
 
-    all_theme_urls = await get_github_repo_urls('tinted-theming',
-                                                'schemes',
-                                                'spec-0.11',
-                                                'base16',
-                                                '.yaml')
+    all_theme_urls = get_github_repo_urls.run('tinted-theming',
+                                              'schemes',
+                                              'spec-0.11',
+                                              'base16',
+                                              '.yaml')
 
-    all_themes = {name: await fetch_base16_theme(str(url)) for name, url in all_theme_urls.items()}
+    all_themes = {name: fetch_base16_theme(str(url)) for name, url in all_theme_urls.items()}
 
     themes_per_variant = defaultdict(list)
     for name, theme in all_themes.items():
@@ -53,9 +34,10 @@ async def get_all_tinted_themes() -> defaultdict[tuple[bool, str], list[str]]:
 # themes_per_variant = asyncio.run(get_all_tinted_themes())
 #
 # print(themes_per_variant)
-# Per Feb 23, 2025, the output of this script is:
+# Per Jun 19, 2025, the output of this script is:
 themes_per_variant = {
     (True, 'dark'): [
+        '0x96f.yaml',
         '3024.yaml',
         'apathy.yaml',
         'ashes.yaml',
@@ -94,6 +76,7 @@ themes_per_variant = {
         'catppuccin-macchiato.yaml',
         'catppuccin-mocha.yaml',
         'chalk.yaml',
+        'chicago-night.yaml',
         'circus.yaml',
         'classic-dark.yaml',
         'codeschool.yaml',
@@ -110,6 +93,7 @@ themes_per_variant = {
         'decaf.yaml',
         'deep-oceanic-next.yaml',
         'default-dark.yaml',
+        'digital-rain.yaml',
         'dracula.yaml',
         'edge-dark.yaml',
         'eighties.yaml',
@@ -119,10 +103,12 @@ themes_per_variant = {
         'espresso.yaml',
         'evenok-dark.yaml',
         'everforest-dark-hard.yaml',
+        'everforest-dark-soft.yaml',
         'everforest.yaml',
         'flat.yaml',
         'framer.yaml',
         'gigavolt.yaml',
+        'github-dark.yaml',
         'google-dark.yaml',
         'gotham.yaml',
         'grayscale-dark.yaml',
@@ -132,6 +118,7 @@ themes_per_variant = {
         'gruvbox-dark-medium.yaml',
         'gruvbox-dark-pale.yaml',
         'gruvbox-dark-soft.yaml',
+        'gruvbox-dark.yaml',
         'gruvbox-material-dark-hard.yaml',
         'gruvbox-material-dark-medium.yaml',
         'gruvbox-material-dark-soft.yaml',
@@ -147,6 +134,7 @@ themes_per_variant = {
         'irblack.yaml',
         'isotope.yaml',
         'jabuti.yaml',
+        'kanagawa-dragon.yaml',
         'kanagawa.yaml',
         'katy.yaml',
         'kimber.yaml',
@@ -222,6 +210,7 @@ themes_per_variant = {
         'unikitty-dark.yaml',
         'unikitty-reversible.yaml',
         'uwunicorn.yaml',
+        'valua.yaml',
         'vesper.yaml',
         'vice.yaml',
         'windows-10.yaml',
@@ -263,6 +252,7 @@ themes_per_variant = {
         'atelier-sulphurpool-light.yaml',
         'ayu-light.yaml',
         'catppuccin-latte.yaml',
+        'chicago-day.yaml',
         'classic-light.yaml',
         'cupertino.yaml',
         'da-one-paper.yaml',
@@ -282,6 +272,7 @@ themes_per_variant = {
         'gruvbox-light-hard.yaml',
         'gruvbox-light-medium.yaml',
         'gruvbox-light-soft.yaml',
+        'gruvbox-light.yaml',
         'gruvbox-material-light-hard.yaml',
         'gruvbox-material-light-medium.yaml',
         'gruvbox-material-light-soft.yaml',

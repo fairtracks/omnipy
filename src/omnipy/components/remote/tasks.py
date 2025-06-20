@@ -1,9 +1,11 @@
+import asyncio
 from pathlib import Path
 from typing import AsyncGenerator, cast
 
 from aiohttp import ClientResponse, ClientSession
 from aiohttp.hdrs import CONTENT_TYPE
 from aiohttp_retry import ExponentialRetry, FibonacciRetry, JitterRetry, RandomRetry, RetryClient
+from attr import dataclass
 from typing_extensions import TypeVar
 
 from omnipy.compute.task import TaskTemplate
@@ -189,25 +191,85 @@ async def async_load_urls_into_new_dataset(
     return await dataset_cls.load(urls, as_mime_type=as_mime_type)
 
 
-@TaskTemplate()
-def get_github_repo_urls(owner: str,
-                         repo: str,
-                         branch: str,
-                         path: str | Path,
-                         file_suffix: str | None = None) -> HttpUrlDataset:
+@dataclass
+class GithubRepoContext:
+    owner: str
+    repo: str
+    branch: str
+    path: str | Path
 
-    url_pre = HttpUrlModel('https://raw.githubusercontent.com')
-    url_pre.path // owner // repo // branch // path
+
+@TaskTemplate()
+def get_github_repo_urls(
+    owner: str,
+    repo: str,
+    branch: str,
+    path: str | Path,
+    file_suffix: str | None = None,
+) -> HttpUrlDataset:
+
+    repo_context = GithubRepoContext(owner=owner, repo=repo, branch=branch, path=path)
 
     if file_suffix:
-        api_url = HttpUrlModel('https://api.github.com')
-        api_url.path // 'repos' // owner // repo // 'contents' // path
-        api_url.query['ref'] = branch
-
-        json_data = JsonListOfDictsDataset.load(api_url)
-        names = Model[list[str]](
-            [f['name'] for f in json_data[0] if f['name'].endswith(file_suffix)])
-        return HttpUrlDataset({name: f'{url_pre}/{name}' for name in names})
+        return _get_urls_for_files_in_dir_with_suffix(repo_context, file_suffix)
     else:
-        name = url_pre.path.name
-        return HttpUrlDataset({name: url_pre})
+        return _get_url_for_single_file(repo_context)
+
+
+def _get_urls_for_files_in_dir_with_suffix(ctx: GithubRepoContext, file_suffix: str):
+    api_url = _create_api_url_for_file_list(ctx)
+    file_list = cast(JsonListOfDictsDataset, JsonListOfDictsDataset.load(api_url))
+    return _create_url_dataset_for_files_with_suffix(file_list, file_suffix, ctx)
+
+
+@TaskTemplate()
+async def async_get_github_repo_urls(
+    owner: str,
+    repo: str,
+    branch: str,
+    path: str | Path,
+    file_suffix: str | None = None,
+) -> HttpUrlDataset:
+
+    repo_context = GithubRepoContext(owner=owner, repo=repo, branch=branch, path=path)
+
+    if file_suffix:
+        return await _async_get_urls_for_files_in_dir_with_suffix(repo_context, file_suffix)
+    else:
+        return _get_url_for_single_file(repo_context)
+
+
+async def _async_get_urls_for_files_in_dir_with_suffix(ctx: GithubRepoContext, file_suffix: str):
+    api_url = _create_api_url_for_file_list(ctx)
+    file_list = await cast(asyncio.Task[JsonListOfDictsDataset],
+                           JsonListOfDictsDataset.load(api_url))
+    return _create_url_dataset_for_files_with_suffix(file_list, file_suffix, ctx)
+
+
+def _create_api_url_for_file_list(ctx: GithubRepoContext) -> HttpUrlModel:
+    api_url = HttpUrlModel('https://api.github.com')
+    api_url.path // 'repos' // ctx.owner // ctx.repo // 'contents' // ctx.path
+    api_url.query['ref'] = ctx.branch
+    return api_url
+
+
+def _create_url_dataset_for_files_with_suffix(
+    file_list: JsonListOfDictsDataset,
+    file_suffix: str,
+    ctx: GithubRepoContext,
+):
+    url_prefix = _get_url_prefix_for_download(ctx)
+    names = Model[list[str]]([f['name'] for f in file_list[0] if f['name'].endswith(file_suffix)])
+    return HttpUrlDataset({name: f'{url_prefix}/{name}' for name in names})
+
+
+def _get_url_prefix_for_download(ctx: GithubRepoContext):
+    url_pre = HttpUrlModel('https://raw.githubusercontent.com')
+    url_pre.path // ctx.owner // ctx.repo // ctx.branch // ctx.path
+    return url_pre
+
+
+def _get_url_for_single_file(repo_context):
+    url_pre = _get_url_prefix_for_download(repo_context)
+    name = url_pre.path.name
+    return HttpUrlDataset({name: url_pre})
