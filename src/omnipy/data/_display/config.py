@@ -16,6 +16,8 @@ from omnipy.shared.enums import (ColorStyles,
 import omnipy.util._pydantic as pyd
 
 MAX_TERMINAL_SIZE = 2**16 - 1
+TERMINAL_DEFAULT_WIDTH = 80
+TERMINAL_DEFAULT_HEIGHT = 24
 
 
 @pyd.dataclass(

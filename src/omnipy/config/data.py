@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from typing_extensions import override
 
 from omnipy.config import ConfigBase
+from omnipy.data._display.config import TERMINAL_DEFAULT_HEIGHT, TERMINAL_DEFAULT_WIDTH
 from omnipy.shared.enums import (BackoffStrategy,
                                  ColorStyles,
                                  ConsoleColorSystem,
@@ -42,8 +43,8 @@ class ColorConfig(ConfigBase):
 
 
 class ConsoleConfig(ConfigBase):
-    width: pyd.NonNegativeInt | None = 80
-    height: pyd.NonNegativeInt | None = 24
+    width: pyd.NonNegativeInt | None = TERMINAL_DEFAULT_WIDTH
+    height: pyd.NonNegativeInt | None = TERMINAL_DEFAULT_HEIGHT
     color: IsColorConfig = pyd.Field(default_factory=ColorConfig)
 
 
@@ -119,9 +120,9 @@ class FontConfig(ConfigBase):
         'Courier New',
         'monospace',
     )
-    size: pyd.NonNegativeInt | None = 14
-    weight: pyd.NonNegativeInt | None = 400
-    line_height: pyd.NonNegativeFloat | None = 1.25
+    size: pyd.NonNegativeInt = 14
+    weight: pyd.NonNegativeInt = 400
+    line_height: pyd.NonNegativeFloat = 1.25
 
 
 class HtmlConsoleConfig(ConsoleConfig):
@@ -138,9 +139,9 @@ class JupyterConsoleDimsModeConfig(HtmlConsoleConfig, DimsModeConfig):
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
         self.width = 120
-        self.height = 75
+        self.height = 50
         self.color.color_system = ConsoleColorSystem.ANSI_RGB
-        self.color.color_style = RecommendedColorStyles.OMNIPY_SELENIZED_DARK
+        self.color.color_style = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
         self.color.transparent_background = True
 
 

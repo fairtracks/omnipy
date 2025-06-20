@@ -59,9 +59,9 @@ class IsTerminalConsoleConfig(IsDimsModeConfig, Protocol):
 class IsFontConfig(IsDataPublisher, Protocol):
     """"""
     families: tuple[str, ...]
-    size: pyd.NonNegativeInt | None
-    weight: pyd.NonNegativeInt | None
-    line_height: pyd.NonNegativeFloat | None
+    size: pyd.NonNegativeInt
+    weight: pyd.NonNegativeInt
+    line_height: pyd.NonNegativeFloat
 
 
 @runtime_checkable
