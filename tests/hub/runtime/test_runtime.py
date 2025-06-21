@@ -71,8 +71,8 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.data.display.terminal.height == 24
     assert config.data.display.terminal.dims_mode == ConsoleDimensionsMode.AUTO
     assert isinstance(config.data.display.terminal.color, ColorConfig)
-    assert config.data.display.terminal.color.color_system == ConsoleColorSystem.AUTO
-    assert config.data.display.terminal.color.color_style == RecommendedColorStyles.ANSI_DARK
+    assert config.data.display.terminal.color.system == ConsoleColorSystem.AUTO
+    assert config.data.display.terminal.color.style == RecommendedColorStyles.ANSI_DARK
     assert config.data.display.terminal.color.transparent_background is True
 
     assert isinstance(config.data.display.jupyter, JupyterConsoleDimsModeConfig)
@@ -80,8 +80,8 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.data.display.jupyter.height == 75
     assert config.data.display.jupyter.dims_mode == ConsoleDimensionsMode.AUTO
     assert isinstance(config.data.display.jupyter.color, ColorConfig)
-    assert config.data.display.jupyter.color.color_system is ConsoleColorSystem.ANSI_RGB
-    assert config.data.display.jupyter.color.color_style \
+    assert config.data.display.jupyter.color.system is ConsoleColorSystem.ANSI_RGB
+    assert config.data.display.jupyter.color.style \
            is RecommendedColorStyles.OMNIPY_SELENIZED_DARK
     assert config.data.display.jupyter.color.transparent_background is True
 
@@ -90,8 +90,8 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.data.display.browser.height is None
     assert not hasattr(config.data.display.browser, 'dims_mode')
     assert isinstance(config.data.display.browser.color, ColorConfig)
-    assert config.data.display.browser.color.color_system is ConsoleColorSystem.ANSI_RGB
-    assert config.data.display.browser.color.color_style \
+    assert config.data.display.browser.color.system is ConsoleColorSystem.ANSI_RGB
+    assert config.data.display.browser.color.style \
            is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
     assert config.data.display.browser.color.transparent_background is False
 

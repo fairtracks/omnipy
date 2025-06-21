@@ -24,8 +24,8 @@ import omnipy.util._pydantic as pyd
 @runtime_checkable
 class IsColorConfig(IsDataPublisher, Protocol):
     """"""
-    color_system: ConsoleColorSystem
-    color_style: ColorStyles | str
+    system: ConsoleColorSystem
+    style: ColorStyles | str
     transparent_background: bool
 
 

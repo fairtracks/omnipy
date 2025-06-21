@@ -37,8 +37,8 @@ class ColorConfig(ConfigBase):
     """
     Configuration for color output.
     """
-    color_system: ConsoleColorSystem = ConsoleColorSystem.AUTO
-    color_style: ColorStyles | str = RecommendedColorStyles.ANSI_DARK
+    system: ConsoleColorSystem = ConsoleColorSystem.AUTO
+    style: ColorStyles | str = RecommendedColorStyles.ANSI_DARK
     transparent_background: bool = True
 
 
@@ -140,8 +140,8 @@ class JupyterConsoleDimsModeConfig(HtmlConsoleConfig, DimsModeConfig):
         super().__init__(**data)
         self.width = 120
         self.height = 50
-        self.color.color_system = ConsoleColorSystem.ANSI_RGB
-        self.color.color_style = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
+        self.color.system = ConsoleColorSystem.ANSI_RGB
+        self.color.style = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
         self.color.transparent_background = True
 
 
@@ -153,8 +153,8 @@ class BrowserConsoleConfig(HtmlConsoleConfig):
         super().__init__(**data)
         self.width = 160
         self.height = None
-        self.color.color_system = ConsoleColorSystem.ANSI_RGB
-        self.color.color_style = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
+        self.color.system = ConsoleColorSystem.ANSI_RGB
+        self.color.style = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
         self.color.transparent_background = False
 
 

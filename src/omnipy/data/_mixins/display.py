@@ -200,7 +200,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                   | DisplayType.JUPYTER | DisplayType.BROWSER):
                 color_system = ConsoleColorSystem.ANSI_RGB
             case _:
-                color_system = console_config.color.color_system
+                color_system = console_config.color.system
 
         config = OutputConfig(
             tab_size=display_config.text.tab_size,
@@ -208,7 +208,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             debug_mode=display_config.text.debug_mode,
             pretty_printer=display_config.text.pretty_printer,
             console_color_system=color_system,
-            color_style=console_config.color.color_style,
+            color_style=console_config.color.style,
             transparent_background=console_config.color.transparent_background,
             panel_design=display_config.layout.panel_design,
             panel_title_at_top=display_config.layout.panel_title_at_top,

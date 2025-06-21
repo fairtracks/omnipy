@@ -12,13 +12,13 @@ from omnipy.shared.enums import (DarkHighContrastColorStyles,
 def set_random_style():
     om.runtime.config.root_log.log_to_stdout = False
     om.runtime.config.data.display.terminal.width = 160
-    om.runtime.config.data.display.terminal.color.color_style = random.choice(
+    om.runtime.config.data.display.terminal.color.style = random.choice(
         list(DarkHighContrastColorStyles) + list(DarkLowContrastColorStyles)
         + list(LightHighContrastColorStyles) + list(LightLowContrastColorStyles)
         + list(RecommendedColorStyles))
     om.runtime.config.data.display.terminal.color.transparent_background = False
-    print(f'color_style={om.runtime.config.data.display.terminal.color.color_style}')
-    print(f'transparent_background='
+    print(f'color.style={om.runtime.config.data.display.terminal.color.style}')
+    print(f'color.transparent_background='
           f'{om.runtime.config.data.display.terminal.color.transparent_background}')
 
 
