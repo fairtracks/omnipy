@@ -1,17 +1,14 @@
 from typing import Any, cast, get_args
 
-from typing_extensions import TypeVar
+from typing_extensions import Self
 
-from omnipy.data.helpers import FailedData, HasData, PendingData
+from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.typechecks import is_model_subclass
 from omnipy.shared.exceptions import FailedDataError, PendingDataError
-from omnipy.shared.protocols.data import IsDataset
+from omnipy.shared.protocols.data import HasData, IsFailedData, IsPendingData
 from omnipy.shared.typedefs import TypeForm
 from omnipy.util.decorators import call_super_if_available
 from omnipy.util.helpers import is_union
-
-# _ModelT = TypeVar('_ModelT', bound=IsModel)
-_ModelT = TypeVar('_ModelT')
 
 
 class TaskDatasetMixin:
@@ -34,7 +31,7 @@ class TaskDatasetMixin:
             return model
 
     @property
-    def available_data(self) -> IsDataset[type[_ModelT]]:
+    def available_data(self) -> Self:
         self_with_data = cast(HasData, self)
         copy = cast(HasData, self.__class__())
         copy.data = {
@@ -42,35 +39,37 @@ class TaskDatasetMixin:
             for key, val in self_with_data.data.items()
             if not isinstance(val, (PendingData, FailedData))
         }
-        return cast(IsDataset[type[_ModelT]], copy)
+        return cast(Self, copy)
 
     @property
-    def pending_data(self) -> IsDataset[type[_ModelT]]:
+    def pending_data(self) -> Self:
         self_with_data = cast(HasData, self)
         copy = cast(HasData, self.__class__())
         copy.data = {
             key: val for key, val in self_with_data.data.items() if isinstance(val, PendingData)
         }
-        return cast(IsDataset[type[_ModelT]], copy)
+        return cast(Self, copy)
 
     @property
-    def failed_data(self) -> IsDataset[type[_ModelT]]:
+    def failed_data(self) -> Self:
         self_with_data = cast(HasData, self)
         copy = cast(HasData, self.__class__())
         copy.data = {
             key: val for key, val in self_with_data.data.items() if isinstance(val, FailedData)
         }
-        return cast(IsDataset[type[_ModelT]], copy)
+        return cast(Self, copy)
 
-    def pending_task_details(self) -> dict[str, PendingData]:
+    def pending_task_details(self) -> dict[str, IsPendingData]:
         self_with_data = cast(HasData, self)
-        return {
+        return {  # pyright: ignore [reportReturnType]
             key: val for key, val in self_with_data.data.items() if isinstance(val, PendingData)
         }
 
-    def failed_task_details(self) -> dict[str, FailedData]:
+    def failed_task_details(self) -> dict[str, IsFailedData]:
         self_with_data = cast(HasData, self)
-        return {key: val for key, val in self_with_data.data.items() if isinstance(val, FailedData)}
+        return {  # pyright: ignore [reportReturnType]
+            key: val for key, val in self_with_data.data.items() if isinstance(val, FailedData)
+        }
 
     @call_super_if_available(call_super_before_method=True)
     def _check_value(self, value: Any) -> Any:

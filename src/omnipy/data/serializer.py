@@ -5,8 +5,7 @@ import tarfile
 from tarfile import TarInfo
 from typing import Any, Callable, cast, IO, Type
 
-from omnipy.data.helpers import HasData
-from omnipy.shared.protocols.data import IsDataset, IsSerializer, IsTarFileSerializer
+from omnipy.shared.protocols.data import HasData, IsDataset, IsSerializer, IsTarFileSerializer
 from omnipy.shared.protocols.hub.log import CanLog
 from omnipy.util._pydantic import ValidationError
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value

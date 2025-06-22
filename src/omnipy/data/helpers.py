@@ -2,14 +2,7 @@ from collections import defaultdict
 from contextlib import suppress
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import (Any,
-                    ContextManager,
-                    ForwardRef,
-                    Generic,
-                    get_args,
-                    get_origin,
-                    NamedTuple,
-                    Protocol)
+from typing import ContextManager, ForwardRef, Generic, get_args, get_origin, NamedTuple
 
 from typing_extensions import TypeVar
 
@@ -25,7 +18,6 @@ __all__ = [
     'DoubleTypeVarStore',
     'PendingData',
     'FailedData',
-    'HasData',
 ]
 
 _T = TypeVar('_T')
@@ -191,7 +183,7 @@ def cleanup_name_qualname_and_module(
             return str(model)
         else:
             with suppress(AttributeError):
-                return model.__name__
+                return model.__name__  # type:ignore[union-attr]
             return str(model)
 
     params_str = _display_as_type(orig_model)
@@ -217,7 +209,3 @@ class FailedData:
     job_name: str
     job_unique_name: str = ''
     exception: BaseException
-
-
-class HasData(Protocol):
-    data: dict[str, Any | PendingData | FailedData]

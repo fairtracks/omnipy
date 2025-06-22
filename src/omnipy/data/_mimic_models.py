@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
     from omnipy.data.model import Model
 
-    class Model_int(int, Model[int]):
+    class Model_int(Model[int], int):
         ...
 
     class Model_float(Model[float], float):

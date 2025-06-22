@@ -44,10 +44,10 @@ def test_no_model():
 
     with pytest.raises(TypeError):
 
-        class MyDataset(Dataset[list[str]]):
+        class MyOtherDataset(Dataset[list[str]]):
             ...
 
-        MyDataset()
+        MyOtherDataset()
 
 
 def test_init_with_basic_parsing() -> None:

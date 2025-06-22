@@ -1,4 +1,5 @@
 import asyncio
+from dataclasses import dataclass
 from typing import (Any,
                     Callable,
                     ContextManager,
@@ -12,7 +13,7 @@ from typing import (Any,
                     Type,
                     TypeAlias)
 
-from typing_extensions import TypeVar
+from typing_extensions import Self, TypeVar
 
 from omnipy.shared.protocols._util import IsWeakKeyRefContainer
 from omnipy.shared.protocols.builtins import IsMutableMapping
@@ -32,6 +33,26 @@ IsPathOrUrl: TypeAlias = 'str | IsHttpUrlModel'
 IsPathsOrUrls: TypeAlias = 'Iterable[str] | IsHttpUrlDataset | Mapping[str, IsPathOrUrl]'
 IsPathsOrUrlsOneOrMore: TypeAlias = 'IsPathOrUrl | IsPathsOrUrls'
 IsPathsOrUrlsOneOrMoreOrNone: TypeAlias = 'IsPathsOrUrlsOneOrMore | None'
+
+
+@runtime_checkable
+@dataclass(frozen=True, kw_only=True)
+class IsPendingData(Protocol):
+    job_name: str
+    job_unique_name: str
+
+
+@runtime_checkable
+@dataclass(frozen=True, kw_only=True)
+class IsFailedData(Protocol):
+    job_name: str
+    job_unique_name: str
+    exception: BaseException
+
+
+@runtime_checkable
+class HasData(Protocol):
+    data: dict[str, Any | IsPendingData | IsFailedData]
 
 
 @runtime_checkable
@@ -90,20 +111,38 @@ class IsDataset(IsMutableMapping[str, _ModelT], Protocol[_ModelT]):
     @classmethod
     def load(
         cls,
-        paths_or_urls: IsPathsOrUrlsOneOrMore = None,
+        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
         by_file_suffix: bool = False,
         as_mime_type: None | str = None,
         **kwargs: IsPathOrUrl,
-    ) -> 'IsDataset[_ModelT] | asyncio.Task[IsDataset[_ModelT]]':
+    ) -> Self | asyncio.Task[Self]:
         ...
 
     def load_into(
         self,
-        paths_or_urls: IsPathsOrUrlsOneOrMore = None,
+        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
         by_file_suffix: bool = False,
         as_mime_type: None | str = None,
         **kwargs: IsPathOrUrl,
-    ) -> 'IsDataset[_ModelT] | asyncio.Task[IsDataset[_ModelT]]':
+    ) -> Self | asyncio.Task[Self]:
+        ...
+
+    @property
+    def available_data(self) -> Self:
+        ...
+
+    @property
+    def pending_data(self) -> Self:
+        ...
+
+    @property
+    def failed_data(self) -> Self:
+        ...
+
+    def pending_task_details(self) -> dict[str, IsPendingData]:
+        ...
+
+    def failed_task_details(self) -> dict[str, IsFailedData]:
         ...
 
     @overload
@@ -111,12 +150,10 @@ class IsDataset(IsMutableMapping[str, _ModelT], Protocol[_ModelT]):
         ...
 
     @overload
-    def __getitem__(self, selector: slice | Iterable[str | int]) -> 'IsDataset[_ModelT]':
+    def __getitem__(self, selector: slice | Iterable[str | int]) -> Self:
         ...
 
-    def __getitem__(
-            self,
-            selector: str | int | slice | Iterable[str | int]) -> '_ModelT | IsDataset[_ModelT]':
+    def __getitem__(self, selector: str | int | slice | Iterable[str | int]) -> _ModelT | Self:
         ...
 
     @overload
@@ -140,7 +177,8 @@ class IsDataset(IsMutableMapping[str, _ModelT], Protocol[_ModelT]):
         ...
 
 
-class IsMultiModelDataset(IsDataset[_ModelT], Protocol[_ModelT]):
+@runtime_checkable
+class IsMultiModelDataset(IsDataset[type[_ModelT]], Protocol[_ModelT]):
     """
         Variant of Dataset that allows custom models to be set on individual data files
     """
@@ -184,6 +222,7 @@ class IsSerializer(Protocol):
         ...
 
 
+@runtime_checkable
 class IsTarFileSerializer(IsSerializer, Protocol):
     @classmethod
     def create_tarfile_from_dataset(cls,
@@ -264,6 +303,7 @@ class HasContents(Protocol[ContentsT]):
         ...
 
 
+@runtime_checkable
 class IsSnapshotWrapper(Protocol[ObjContraT, ContentsT]):
     id: int
     snapshot: ContentsT
@@ -275,6 +315,7 @@ class IsSnapshotWrapper(Protocol[ObjContraT, ContentsT]):
         ...
 
 
+@runtime_checkable
 class IsSnapshotHolder(IsWeakKeyRefContainer[HasContentsT,
                                              IsSnapshotWrapper[HasContentsT, ContentsT]],
                        Protocol[HasContentsT, ContentsT]):

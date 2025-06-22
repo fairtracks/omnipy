@@ -6,9 +6,9 @@ import inspect
 import json
 import os
 import tarfile
-from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKING, TypeAlias
+from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKING
 
-from typing_extensions import TypeVar
+from typing_extensions import Self, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._mixins.display import DatasetDisplayMixin
@@ -23,7 +23,11 @@ from omnipy.data.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
 from omnipy.data.helpers import cleanup_name_qualname_and_module
 from omnipy.data.model import Model
 from omnipy.data.typechecks import is_model_instance, is_model_subclass
-from omnipy.shared.protocols.data import IsDataset, IsModel, IsMultiModelDataset
+from omnipy.shared.protocols.data import (IsHttpUrlDataset,
+                                          IsModel,
+                                          IsMultiModelDataset,
+                                          IsPathOrUrl,
+                                          IsPathsOrUrlsOneOrMoreOrNone)
 from omnipy.shared.typedefs import TypeForm
 from omnipy.util._pydantic import Undefined, UndefinedType, ValidationError
 import omnipy.util._pydantic as pyd
@@ -34,8 +38,6 @@ from omnipy.util.helpers import (get_default_if_typevar,
                                  remove_forward_ref_notation)
 
 if TYPE_CHECKING:
-    from omnipy.components.remote.datasets import HttpUrlDataset
-    from omnipy.components.remote.models import HttpUrlModel
     from omnipy.data._mimic_models import (Model_bool,
                                            Model_dict,
                                            Model_float,
@@ -49,11 +51,6 @@ if TYPE_CHECKING:
 _ModelT = TypeVar('_ModelT', bound=IsModel)
 _NewModelT = TypeVar('_NewModelT', bound=IsModel)
 _GeneralModelT = TypeVar('_GeneralModelT', bound=IsModel)
-_DatasetT = TypeVar('_DatasetT', bound=IsDataset)
-
-PathOrUrl: TypeAlias = 'str | HttpUrlModel'
-PathsOrUrls: TypeAlias = 'PathOrUrl | Iterable[str] | HttpUrlDataset | Mapping[str, PathOrUrl]'
-PathsOrUrlsOrNone: TypeAlias = 'PathsOrUrls | None'
 
 # def orjson_dumps(v, *, default):
 #     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
@@ -72,8 +69,8 @@ class Dataset(
         TaskDatasetMixin,
         DataClassBase,
         pyd.GenericModel,
-        Generic[_ModelT],
         UserDict,
+        Generic[_ModelT],
         metaclass=_DatasetMetaclass):
     """
     Dict-based container of data files that follow a specific Model
@@ -132,11 +129,11 @@ class Dataset(
 
     data: dict[str, _ModelT] = pyd.Field(default={})
 
-    def __class_getitem__(
+    def __class_getitem__(  # type: ignore[override]
         cls,
         params: type[_ModelT] | tuple[type[_ModelT]] | tuple[type[_ModelT], Any] | TypeVar
         | tuple[TypeVar, ...],
-    ) -> 'type[Dataset[type[_ModelT]]]':
+    ) -> Self:
         # TODO: change model type to params: Type[Any] | tuple[Type[Any], ...]
         #       as in GenericModel.
 
@@ -267,16 +264,16 @@ class Dataset(
     def __copy__(self):
         return self.copy(deep=False)
 
-    def copy(self, *, deep: bool = False, **kwargs) -> 'Dataset[_ModelT]':
+    def copy(self, *, deep: bool = False, **kwargs) -> Self:
         pydantic_copy = pyd.GenericModel.copy(self, deep=deep, **kwargs)
         if not deep:
             pydantic_copy.__dict__[DATA_KEY] = pydantic_copy.__dict__[DATA_KEY].copy()
         return pydantic_copy  # pyright: ignore [reportReturnType]
 
     @classmethod
-    def clone_dataset_cls(cls: type[_DatasetT],
+    def clone_dataset_cls(cls,
                           new_dataset_cls_name: str,
-                          model_cls: type[_NewModelT] | None = None) -> type[IsDataset[_NewModelT]]:
+                          model_cls: type[_NewModelT] | None = None) -> Self:
         if model_cls:
             generic_dataset_cls = cls.__bases__[0]
             new_base_cls = generic_dataset_cls[model_cls]
@@ -284,7 +281,7 @@ class Dataset(
             new_base_cls = cls
 
         new_dataset_cls = type(new_dataset_cls_name, (new_base_cls,), {})
-        return cast(type[IsDataset[_NewModelT]], new_dataset_cls)
+        return new_dataset_cls
 
     @classmethod
     def _get_data_field(cls) -> pyd.ModelField:
@@ -325,7 +322,7 @@ class Dataset(
 
     if TYPE_CHECKING:  # noqa: C901
 
-        # The code below is a hack needed because ofa fundamental limitation of the current Python
+        # The code below is a hack needed because of a fundamental limitation of the current Python
         # typing syntax. There is no way (that we know of) to tell the type checkers that Model
         # objects can mimic the functionality of their type arguments, say that a Model[list] can
         # mimic a list. What we were aiming to do as a lesser hack was to tell to the type checkers
@@ -404,16 +401,14 @@ class Dataset(
         # way Model objects mimic the functionality of their type arguments.
 
         @overload
-        def __getitem__(self: 'Dataset[_ModelT]', selector: str | int) -> _ModelT:
+        def __getitem__(self, selector: str | int) -> _ModelT:
             ...
 
     @overload
-    def __getitem__(self, selector: slice | Iterable[str | int]) -> 'Dataset[_ModelT]':
+    def __getitem__(self, selector: slice | Iterable[str | int]) -> Self:
         ...
 
-    def __getitem__(
-            self,
-            selector: str | int | slice | Iterable[str | int]) -> '_ModelT | Dataset[_ModelT]':
+    def __getitem__(self, selector: str | int | slice | Iterable[str | int]) -> _ModelT | Self:
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
@@ -680,22 +675,22 @@ class Dataset(
     @classmethod
     def load(
         cls,
-        paths_or_urls: PathsOrUrlsOrNone = None,
+        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
         by_file_suffix: bool = False,
         as_mime_type: None | str = None,
-        **kwargs: PathOrUrl,
-    ) -> 'Dataset[_ModelT] | asyncio.Task[Dataset[_ModelT]]':
+        **kwargs: IsPathOrUrl,
+    ) -> Self | asyncio.Task[Self]:
         dataset = cls()
         return dataset.load_into(
             paths_or_urls, by_file_suffix=by_file_suffix, as_mime_type=as_mime_type, **kwargs)
 
     def load_into(
         self,
-        paths_or_urls: PathsOrUrlsOrNone = None,
+        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
         by_file_suffix: bool = False,
         as_mime_type: None | str = None,
-        **kwargs: PathOrUrl,
-    ) -> 'Dataset[_ModelT] | asyncio.Task[Dataset[_ModelT]]':
+        **kwargs: IsPathOrUrl,
+    ) -> Self | asyncio.Task[Self]:
         from omnipy.components.remote.datasets import HttpUrlDataset
         from omnipy.components.remote.models import HttpUrlModel
 
@@ -746,9 +741,9 @@ class Dataset(
 
     def _load_http_urls(
         self,
-        http_url_dataset: 'HttpUrlDataset',
+        http_url_dataset: IsHttpUrlDataset,
         as_mime_type: None | str = None,
-    ) -> 'Dataset[_ModelT] | asyncio.Task[Dataset[_ModelT]]':
+    ) -> Self | asyncio.Task[Self]:
         from omnipy.components.remote.helpers import RateLimitingClientSession
         from omnipy.components.remote.tasks import get_auto_from_api_endpoint
         hosts: defaultdict[str, list[int]] = defaultdict(list)
@@ -801,7 +796,7 @@ class Dataset(
         else:
             return asyncio.run(load_all(as_mime_type=as_mime_type))
 
-    def _load_paths(self, path_or_urls: Iterable[str], by_file_suffix: bool) -> 'Dataset[_ModelT]':
+    def _load_paths(self, path_or_urls: Iterable[str], by_file_suffix: bool) -> Self:
         for path_or_url in path_or_urls:
             serializer_registry = self._get_serializer_registry()
             tar_gz_file_path = self._ensure_tar_gz_file(path_or_url)
