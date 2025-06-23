@@ -202,6 +202,17 @@ def setup_css_if_running_in_jupyter() -> None:
         }
 
         /*
+        Workaround to remove horizontal spacing for vuetify code elements
+        */
+        :where(.vuetify-styles) .v-application code:after,
+        :where(.vuetify-styles) .v-application code:before,
+        :where(.vuetify-styles) .v-application kbd:after,
+        :where(.vuetify-styles) .v-application kbd:before {
+            content: none;
+            letter-spacing: 0px;
+        }
+
+        /*
         Remove Vuetify background color in order to support
         transparent-background=True
         */
