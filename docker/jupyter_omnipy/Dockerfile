@@ -1,4 +1,4 @@
-FROM quay.io/jupyterhub/singleuser:4.1
+FROM quay.io/jupyterhub/singleuser:5
 
 USER root
 
@@ -7,7 +7,7 @@ RUN apt-get update -y && apt-get install -y tzdata
 USER jovyan
 
 RUN conda install mamba -y && conda clean -afy
-RUN mamba install nodejs=22 nano jupyterlab=4.1 jupyterlab-lsp=5.1 jupyter-lsp-python=2.2 nb_conda_kernels -y && mamba clean -ay
+RUN mamba install nodejs=22 nano jupyterlab=4.3 jupyterlab_widgets jupyterlab-lsp=5.1 jupyter-lsp-python=2.2 nb_conda_kernels ipyvue ipyvuetify ipywidgets -y && mamba clean -ay
 RUN npm install pyright
 
 RUN conda create -n omnipy -y
@@ -15,8 +15,9 @@ RUN conda create -n omnipy -y
 # From https://stackoverflow.com/a/60148365
 SHELL ["conda", "run", "--no-capture-output", "-n", "omnipy", "/bin/bash", "-c"]
 
-RUN mamba install python=3.12 ipykernel ipywidgets -y && mamba clean -ay
-RUN pip install omnipy omnipy_examples itables
+RUN mamba install python=3.12 ipykernel ipywidgets git -y && mamba clean -ay
+RUN pip install git+https://github.com/fairtracks/omnipy.git@pretty_print
+RUN pip install itables
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
