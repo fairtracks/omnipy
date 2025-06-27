@@ -8,7 +8,7 @@ import pytest
 import pytest_cases as pc
 from typing_extensions import TypeVar
 
-from omnipy.data.dataset import Dataset
+from omnipy.data.dataset import Dataset, MultiModelDataset
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
 from omnipy.shared.exceptions import FailedDataError, PendingDataError
@@ -1420,9 +1420,6 @@ def test_dataset_pending_and_failed_data_extract_details() -> None:
     assert dataset.available_data.failed_task_details() == {}
 
 
-# TODO: Add unit tests for MultiModelDataset
-
-
 def test_parametrized_dataset() -> None:
     assert ParamUpperStrDataset(x='foo')['x'].contents == 'foo'
 
@@ -1484,3 +1481,90 @@ def test_parametrized_dataset_with_none() -> None:
     )
 
     assert DefaultOtherStrDataset(dict(x=None))['x'].contents == 'other'
+
+
+class MyBlueprintDataset(MultiModelDataset[Model[str]]):
+    ...
+
+
+@MyBlueprintDataset.blueprint
+class MyBlueprint(pyd.BaseModel):
+    text_file: Model[str] | None = None
+    int_file: Model[int] | None = None
+    float_file: Model[float] = pyd.Field(default=0.0)
+
+    class Config:
+        validate_all = True
+
+
+def test_multi_model_dataset_no_blueprint():
+    dataset = MultiModelDataset[Model[int]]()
+    assert dataset.get_model_class() is Model[int]
+    assert dataset.get_blueprint() is None
+
+    assert 'int_file' not in dataset
+    dataset['int_file'] = '123'
+    assert dataset['int_file'].contents == 123
+
+    with pytest.raises(ValidationError):
+        dataset['int_file'] = 'not an int'
+
+    assert dataset['int_file'].contents == 123
+    del dataset['int_file']
+    assert 'int_file' not in dataset
+
+
+def test_multi_model_dataset_with_blueprint():
+    dataset = MyBlueprintDataset()
+    assert dataset.get_model_class() is Model[str]
+    assert MyBlueprintDataset.get_blueprint() is dataset.get_blueprint() is MyBlueprint
+
+    assert 'text_file' not in dataset
+    assert 'int_file' not in dataset
+    assert 'float_file' in dataset
+    assert type(dataset['float_file']) is Model[float]
+    assert dataset['float_file'].contents == 0.0  # Default value
+
+    dataset['text_file'] = '123'
+    assert dataset['text_file'].contents == '123'
+
+    dataset['int_file'] = '456'
+    assert dataset['int_file'].contents == 456  # Converted to int
+
+    with pytest.raises(ValidationError):
+        dataset['float_file'] = 'not a float'
+    assert dataset['float_file'].contents == 0.0  # Still the default value
+
+    dataset['float_file'] = '3.14'
+    assert dataset['float_file'].contents == 3.14  # Converted to float
+
+    dataset['extra_file'] = 3.14
+    assert dataset['extra_file'].contents == '3.14'  # Model is Model[str], so converted to str
+
+    del dataset['text_file']
+    assert 'text_file' not in dataset
+
+    del dataset['float_file']
+    assert dataset['float_file'].contents == 0.0  # Still the default value
+
+
+def test_multi_model_dataset_prioritise_blueprint():
+    class IntListBlueprintDataset(MultiModelDataset[Model[list[int]]]):
+        ...
+
+    @IntListBlueprintDataset.blueprint
+    class StrTupleBlueprint(pyd.BaseModel):
+        str_tuple_file: Model[tuple[str, ...]] | None = None
+
+        class Config:
+            validate_all = True
+
+    dataset = IntListBlueprintDataset()
+    dataset['extra_file'] = ('1', '2')
+    assert dataset['extra_file'].contents == [1, 2]
+
+    dataset['str_tuple_file'] = ('1', '2')
+    assert dataset['str_tuple_file'].contents == ('1', '2')
+
+    with pytest.raises(ValidationError):
+        dataset['other_file'] = ('one', 'two')  # Should raise, as Model is list[int]

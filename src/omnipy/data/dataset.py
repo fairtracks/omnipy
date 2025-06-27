@@ -6,7 +6,7 @@ import inspect
 import json
 import os
 import tarfile
-from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKING
+from typing import Any, Callable, cast, ClassVar, Generic, Iterator, overload, TYPE_CHECKING
 
 from typing_extensions import Self, TypeVar
 
@@ -48,7 +48,7 @@ if TYPE_CHECKING:
                                            Model_tuple_pair)
     from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
 
-_ModelT = TypeVar('_ModelT', bound=IsModel)
+_ModelT: TypeVar = TypeVar('_ModelT', bound=IsModel)
 _NewModelT = TypeVar('_NewModelT', bound=IsModel)
 _GeneralModelT = TypeVar('_GeneralModelT', bound=IsModel)
 
@@ -426,16 +426,19 @@ class Dataset(
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
-            del self.data[selected_keys.keys[0]]
+            self._delete_single_item(selected_keys.keys[0])
         else:
             prev_data = copy(self.data)
 
             try:
                 for key in selected_keys.keys:
-                    del self.data[key]
+                    self._delete_single_item(key)
             except Exception:
                 self.data = prev_data
                 raise
+
+    def _delete_single_item(self, key: str) -> None:
+        del self.data[key]
 
     @overload
     def __setitem__(self, selector: str | int, data_obj: object) -> None:
@@ -861,54 +864,78 @@ class Dataset(
 
 class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
     """
-        Variant of Dataset that allows custom models to be set on individual data files
+    Variant of Dataset that allows custom models to be set on individual data files
 
-        Note that the general model still needs to hold for all data files, in addition to any
-        custom models.
+    Note that the general model still needs to hold for all data files, in addition to any
+    custom models.
     """
 
     # Custom field models should really be a subtype of _ModelT, however this is currently not
     # checkable in the type system. Instead, we rely on the _validate method to ensure that the
     # custom field models are valid.
-    _custom_field_models: dict[str, type[IsModel]] = pyd.PrivateAttr(default={})
+    _model_blueprint: ClassVar[type[pyd.BaseModel] | None] = None
 
-    def set_model(self, data_file: str, model: type[IsModel]) -> None:
-        try:
-            self._custom_field_models[data_file] = model
-            if data_file in self.data:
-                self._validate_data_file(data_file)
-            else:
-                self.data[data_file] = model()
-        except ValidationError:
-            del self._custom_field_models[data_file]
-            raise
+    @classmethod
+    def blueprint(cls, pyd_model: type[pyd.BaseModel]) -> type[pyd.BaseModel]:
+        """
+        Decorator to use a pydantic model to define the per-key models of its
+        parent MultiModelDataset.
+        :param pyd_model: A pydantic model class contained as an inner class
+                          within a MultiModelDataset class, describing the
+                          models per key (=data file name) of the outer
+                          MultiModelDataset class. All types of the multi_model
+                          fields must be subclasses of omnipy's Model class.
+                          Also: the default value of each field must validate
+                          with the main dataset model(s).
+        :return: None
+        """
+        cls._model_blueprint = pyd_model
+        return pyd_model
 
-    def get_model(self, data_file: str) -> type[IsModel]:
-        if data_file in self._custom_field_models:
-            return self._custom_field_models[data_file]
-        else:
-            return self.get_model_class()
+    @classmethod
+    def get_blueprint(cls) -> type[pyd.BaseModel] | None:
+        """
+        Returns the pydantic model class used as a blueprint for the per-key models of this
+        MultiModelDataset.
+        :return: The pydantic model class used as a blueprint for the per-key models of this
+                 MultiModelDataset, or None if no blueprint is set.
+        """
+        return cls._model_blueprint
+
+    def _primary_validation(self, super_kwargs):
+        super()._primary_validation(super_kwargs)
+        self._validate_according_to_blueprint()
 
     def from_data(self,
                   data: dict[str, Any] | Iterator[tuple[str, Any]],
                   update: bool = True) -> None:
         super().from_data(data, update)
-        for data_file in self:
-            self._validate_data_file_according_to_custom_field_model(data_file)
         self._force_full_validation()
+        self._validate_according_to_blueprint()
 
     def _validate_data_file(self, data_file: str) -> None:
-        self._validate_data_file_according_to_custom_field_model(data_file)
         self._force_full_validation()
+        self._validate_according_to_blueprint()
 
-    def _validate_data_file_according_to_custom_field_model(self, data_file: str):
-        if data_file in self._custom_field_models:
-            model = self._custom_field_models[data_file]
-            if not is_model_instance(model):
-                model = Model[model]
-            data_obj = self._to_data_if_model(self.data[data_file])
-            parsed_data = self._to_data_if_model(model(data_obj))
-            self.data[data_file] = parsed_data
+    def _delete_single_item(self, key: str) -> None:
+        super()._delete_single_item(key)
+        self._validate_according_to_blueprint()
+
+    def _validate_according_to_blueprint(self):
+        blueprint = self.get_blueprint()
+        if blueprint is None:
+            return
+        else:
+            to_validate: dict[str, _GeneralModelT | None] = self.data.copy()
+            none_keys = set()
+            missing_keys = blueprint.__fields__.keys() - to_validate.keys()
+            for key in missing_keys:
+                if blueprint.__fields__[key].get_default() is None:
+                    to_validate[key] = None
+                    none_keys.add(key)
+            validated_blueprint = blueprint(**self.data)
+            for key in validated_blueprint.__fields__.keys() - none_keys:
+                self.__dict__['data'][key] = getattr(validated_blueprint, key)
 
     @staticmethod
     def _to_data_if_model(data_obj: Any):

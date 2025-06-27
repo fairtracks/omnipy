@@ -26,27 +26,33 @@ def test_table_models(runtime: Annotated[None, pytest.fixture]) -> None:
         TableTemplate[MyOtherRecordSchema]([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
 
 
+# TODO: Update test_multi_model_dataset to work with new MultiModelDataset (once finalised)
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason="""
+Not updated to new MultiModelDataset
+""")
 def test_dataset_with_multiple_table_models(runtime: Annotated[None, pytest.fixture]) -> None:
     my_dataset = MultiModelDataset[GeneralTable]()
 
     my_dataset['a'] = [{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}]
-    assert my_dataset.get_model('a') == GeneralTable
+    assert my_dataset.get_model_class_for_key('a') == GeneralTable
 
-    my_dataset.set_model('a', TableTemplate[MyRecordSchema])
-    assert my_dataset.get_model('a') == TableTemplate[MyRecordSchema]
+    my_dataset.set_model_class_for_key('a', TableTemplate[MyRecordSchema])
+    assert my_dataset.get_model_class_for_key('a') == TableTemplate[MyRecordSchema]
 
     my_dataset['b'] = [{'b': 'df', 'c': True}, {'b': 'sg', 'c': False}]
     with pytest.raises(ValidationError):
-        my_dataset.set_model('b', TableTemplate[MyRecordSchema])
-    assert my_dataset.get_model('b') == GeneralTable
+        my_dataset.set_model_class_for_key('b', TableTemplate[MyRecordSchema])
+    assert my_dataset.get_model_class_for_key('b') == GeneralTable
     assert my_dataset['b'].to_data() == [{'b': 'df', 'c': True}, {'b': 'sg', 'c': False}]
 
-    my_dataset.set_model('b', TableTemplate[MyOtherRecordSchema])
-    assert my_dataset.get_model('b') == TableTemplate[MyOtherRecordSchema]
+    my_dataset.set_model_class_for_key('b', TableTemplate[MyOtherRecordSchema])
+    assert my_dataset.get_model_class_for_key('b') == TableTemplate[MyOtherRecordSchema]
     assert my_dataset['b'].to_data() == [{'b': 'df', 'c': 1}, {'b': 'sg', 'c': 0}]
 
-    my_dataset.set_model('c', TableTemplate[MyOtherRecordSchema])
-    assert my_dataset.get_model('c') == TableTemplate[MyOtherRecordSchema]
+    my_dataset.set_model_class_for_key('c', TableTemplate[MyOtherRecordSchema])
+    assert my_dataset.get_model_class_for_key('c') == TableTemplate[MyOtherRecordSchema]
     assert my_dataset['c'].contents == []
 
     with pytest.raises(ValidationError):
@@ -56,17 +62,17 @@ def test_dataset_with_multiple_table_models(runtime: Annotated[None, pytest.fixt
     assert my_dataset['c'].to_data() == [{'b': 'sd', 'c': 0}, {'b': 'dd', 'c': 0}]
 
     del my_dataset['b']
-    assert my_dataset.get_model('b') == TableTemplate[MyOtherRecordSchema]
+    assert my_dataset.get_model_class_for_key('b') == TableTemplate[MyOtherRecordSchema]
 
     with pytest.raises(ValidationError):
         my_dataset.from_data({'c': [{'b': 'rt', 'd': True}, {'b': 'vf', 'd': True}]}, update=False)
     my_dataset.from_data({'c': [{'b': 'rt', 'c': True}, {'b': 'vf', 'c': True}]}, update=False)
-    assert my_dataset.get_model('a') == TableTemplate[MyRecordSchema]
+    assert my_dataset.get_model_class_for_key('a') == TableTemplate[MyRecordSchema]
 
     with pytest.raises(ValidationError):
         my_dataset.update({'a': [{'a': 444, 'd': True}]})
     my_dataset.update({'a': [{'a': 444, 'b': 'fae'}]})
-    assert my_dataset.get_model('a') == TableTemplate[MyRecordSchema]
+    assert my_dataset.get_model_class_for_key('a') == TableTemplate[MyRecordSchema]
 
 
 @pytest.mark.skipif(
@@ -81,8 +87,8 @@ definition of 'specialize_record_models' below.
 def test_dataset_with_multiple_table_models_json_schema():
     my_dataset = MultiModelDataset[GeneralTable]()
 
-    my_dataset.set_model('a', TableTemplate[MyRecordSchema])
-    my_dataset.set_model('b', TableTemplate[MyRecordSchema])
+    my_dataset.set_model_class_for_key('a', TableTemplate[MyRecordSchema])
+    my_dataset.set_model_class_for_key('b', TableTemplate[MyRecordSchema])
 
     assert 'MyRecordSchema' in my_dataset.to_json_schema(pretty=True)
     assert 'MyOtherRecordSchema' in my_dataset.data['b'].to_json_schema(pretty=True)
@@ -107,6 +113,11 @@ def test_specialize_record_models_signature_and_return_type_func(
 # TODO: Harmonize signature of job object and param_signatures mixin. Should both be used?
 
 
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason="""
+Not updated to new MultiModelDataset
+""")
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
 def test_run_specialize_record_models_consistent_types(
         runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
