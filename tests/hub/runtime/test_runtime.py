@@ -77,12 +77,12 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
 
     assert isinstance(config.data.display.jupyter, JupyterConsoleDimsModeConfig)
     assert config.data.display.jupyter.width == 120
-    assert config.data.display.jupyter.height == 75
+    assert config.data.display.jupyter.height == 50
     assert config.data.display.jupyter.dims_mode == ConsoleDimensionsMode.AUTO
     assert isinstance(config.data.display.jupyter.color, ColorConfig)
     assert config.data.display.jupyter.color.system is ConsoleColorSystem.ANSI_RGB
     assert config.data.display.jupyter.color.style \
-           is RecommendedColorStyles.OMNIPY_SELENIZED_DARK
+           is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
     assert config.data.display.jupyter.color.transparent_background is True
 
     assert isinstance(config.data.display.browser, BrowserConsoleConfig)
