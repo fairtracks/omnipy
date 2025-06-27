@@ -21,7 +21,7 @@ from typing import (Annotated,
                     TYPE_CHECKING,
                     Union)
 
-from typing_extensions import get_original_bases, TypeVar
+from typing_extensions import get_original_bases, Self, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._missing import parse_none_according_to_model
@@ -381,7 +381,7 @@ class Model(
             cls,
             *args: Any,
             **kwargs: Any,
-        ) -> 'Model[_RootT]':
+        ) -> Self:
             model_not_specified = ROOT_KEY not in cls.__fields__
             if model_not_specified:
                 cls._raise_no_model_exception()
@@ -476,19 +476,19 @@ class Model(
         contents_id = id(self.contents)
         self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(contents_id)
 
-    def __copy__(self):
+    def __copy__(self) -> Self:
         return self.copy(deep=False)
 
-    def copy(self, *, deep: bool = False, **kwargs) -> 'Model[_RootT]':
+    def copy(self, *, deep: bool = False, **kwargs) -> Self:
         pydantic_copy = pyd.GenericModel.copy(self, deep=deep, **kwargs)
         if not deep:
             pydantic_copy.__dict__[ROOT_KEY] = pydantic_copy.__dict__[ROOT_KEY].copy()
-        return pydantic_copy
+        return cast(Self, pydantic_copy)
 
     @classmethod
-    def clone_model_cls(cls: type[_ModelT], new_model_cls_name: str) -> type[_ModelT]:
-        new_model_cls: type[_ModelT] = type(new_model_cls_name, (cls,), {})
-        return new_model_cls
+    def clone_model_cls(cls, new_model_cls_name: str) -> Self:
+        new_model_cls = type(new_model_cls_name, (cls,), {})
+        return cast(Self, new_model_cls)
 
     @staticmethod
     def _raise_no_model_exception() -> None:
