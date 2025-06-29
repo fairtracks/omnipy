@@ -904,38 +904,65 @@ class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
 
     def _primary_validation(self, super_kwargs):
         super()._primary_validation(super_kwargs)
-        self._validate_according_to_blueprint()
+        self._validate_according_to_blueprint(key_is_alias=True)
 
     def from_data(self,
                   data: dict[str, Any] | Iterator[tuple[str, Any]],
                   update: bool = True) -> None:
         super().from_data(data, update)
         self._force_full_validation()
-        self._validate_according_to_blueprint()
+        self._validate_according_to_blueprint(key_is_alias=True)
 
     def _validate_data_file(self, data_file: str) -> None:
         self._force_full_validation()
-        self._validate_according_to_blueprint()
+        self._validate_according_to_blueprint(key_is_alias=False)
 
     def _delete_single_item(self, key: str) -> None:
         super()._delete_single_item(key)
-        self._validate_according_to_blueprint()
+        self._validate_according_to_blueprint(key_is_alias=False)
 
-    def _validate_according_to_blueprint(self):
+    def _validate_according_to_blueprint(self, key_is_alias: bool) -> None:  # noqa: C901
+        def _get_key_to_alias_mapping(blueprint: type[pyd.BaseModel]) -> dict[str, str]:
+            return {key: field.alias for key, field in blueprint.__fields__.items() if field.alias}
+
+        def _get_alias_to_key_mapping(blueprint: type[pyd.BaseModel]) -> dict[str, str]:
+            return {field.alias: key for key, field in blueprint.__fields__.items() if field.alias}
+
+        def _get_field_aliases(blueprint: type[pyd.BaseModel]) -> set[str]:
+            return (field.alias for field in blueprint.__fields__.values())
+
         blueprint = self.get_blueprint()
         if blueprint is None:
             return
         else:
-            to_validate: dict[str, _GeneralModelT | None] = self.data.copy()
+            to_validate: dict[str, _GeneralModelT | None] = {}
+            key_to_alias = _get_key_to_alias_mapping(blueprint)
+            alias_to_key = _get_alias_to_key_mapping(blueprint)
+
+            data_keys = self.data.keys()
+            for key in data_keys:
+                if not key_is_alias and key in key_to_alias:
+                    to_validate[key_to_alias[key]] = self.data[key]
+                else:
+                    to_validate[key] = self.data[key]
+
             none_keys = set()
-            missing_keys = blueprint.__fields__.keys() - to_validate.keys()
-            for key in missing_keys:
-                if blueprint.__fields__[key].get_default() is None:
-                    to_validate[key] = None
-                    none_keys.add(key)
-            validated_blueprint = blueprint(**self.data)
-            for key in validated_blueprint.__fields__.keys() - none_keys:
-                self.__dict__['data'][key] = getattr(validated_blueprint, key)
+            missing_aliases = [_ for _ in alias_to_key if _ not in to_validate]
+            extra_keys = [_ for _ in to_validate if _ not in alias_to_key]
+            for missing_alias in missing_aliases:
+                missing_key = alias_to_key.get(missing_alias, missing_alias)
+
+                if blueprint.__fields__[missing_key].get_default() is None:
+                    to_validate[missing_alias] = None
+                    none_keys.add(missing_key)
+
+            validated_blueprint = blueprint(**to_validate)
+
+            self.__dict__['data'] = {}
+            all_keys = [_ for _ in blueprint.__fields__.keys() if _ not in none_keys] + extra_keys
+            for key in all_keys:
+                if hasattr(validated_blueprint, key):
+                    self.__dict__['data'][key] = getattr(validated_blueprint, key)
 
     @staticmethod
     def _to_data_if_model(data_obj: Any):

@@ -1490,11 +1490,12 @@ class MyBlueprintDataset(MultiModelDataset[Model[str]]):
 @MyBlueprintDataset.blueprint
 class MyBlueprint(pyd.BaseModel):
     text_file: Model[str] | None = None
-    int_file: Model[int] | None = None
+    int_file: Model[int] | None = pyd.Field(alias='int-file', default=None)
     float_file: Model[float] = pyd.Field(default=0.0)
 
     class Config:
         validate_all = True
+        extra = 'allow'
 
 
 def test_multi_model_dataset_no_blueprint():
@@ -1548,6 +1549,15 @@ def test_multi_model_dataset_with_blueprint():
     assert dataset['float_file'].contents == 0.0  # Still the default value
 
 
+def test_multi_model_dataset_with_blueprint_and_alias_field():
+    dataset = MyBlueprintDataset(**{'int-file': '123'})
+    assert dataset['int_file'].contents == 123
+    assert 'int-file' not in dataset  # Alias field is not in the dataset keys
+    assert 'float_file' in dataset
+    # assert dataset.to_json() == '{"int-file": 123, "float_file": 0.0}'
+    assert dataset.to_data() == {'int-file': 123, 'float_file': 0.0}
+
+
 def test_multi_model_dataset_prioritise_blueprint():
     class IntListBlueprintDataset(MultiModelDataset[Model[list[int]]]):
         ...
@@ -1558,6 +1568,7 @@ def test_multi_model_dataset_prioritise_blueprint():
 
         class Config:
             validate_all = True
+            extra = 'allow'
 
     dataset = IntListBlueprintDataset()
     dataset['extra_file'] = ('1', '2')
