@@ -13,99 +13,93 @@ from omnipy import HttpUrlDataset, HttpUrlModel, JsonModel, Model, StrictBytesMo
 from .helpers.classes import EndpointCase
 
 
-async def _get_lyrics(url: str):
-    url = HttpUrlModel(url)
-    match url.query.get('song'):
-        case 'Her kommer vinteren':
-            data = dict(
-                author='Joachim Nielsen',
-                lyrics=[
-                    "Her kommer vinter'n",
-                    'Her kommer den kalde fine tida',
-                    "Her kommer vinter'n",
-                    'Endelig fred å få',
-                ])
-        case 'Blues fra Oslo Ø':
-            data = dict(
-                author='Odd Børretzen',
-                lyrics=[
-                    'Jeg så min første blues',
-                    'på veggen på do',
-                    'herrer',
-                    'ned trappa',
-                    'under perrong fem',
-                    'Der sto det:',
-                    "Arbe' og slite",
-                    'tjene lite',
-                    'og 25 øre for å drite',
-                ])
-        case '1984':
-            data = dict(
-                author='deLillos',
-                lyrics=[
-                    'Og en fyr lå i senga mi',
-                    'Og det var kaldt',
-                    'Den kaldeste dagen',
-                    'Overalt',
-                    'Den kaldeste dagen i Nittenåttifire',
-                ])
-        case 'Arne':
-            data = dict(
-                author='deLillos',
-                lyrics=[
-                    'Joda sier Arne',
-                    'Det er vel og bra det',
-                    'Men jeg lever til jeg dør',
-                    'Faen som det regner ute',
-                    'Jeg lurer på om det er i natt det begynner å snø',
-                ])
-    return data
-
-
-async def lyrics_bytes_endpoint(request: web.Request) -> web.Response:
-    data = await _get_lyrics(str(request.url))
-    return web.Response(body=dumps(data).encode('utf-8'))
-
-
-async def lyrics_text_endpoint(request: web.Request) -> web.Response:
-    data = await _get_lyrics(str(request.url))
-    return web.Response(text=dumps(data))
-
-
-async def lyrics_json_endpoint(request: web.Request) -> web.Response:
-    data = await _get_lyrics(str(request.url))
-    return web.json_response(data)
-
-
-_request_counts_per_url: defaultdict[str, int] = defaultdict(int)
-
-
-async def timeout_lyrics_endpoint(request: web.Request) -> web.Response:
-    global _request_counts_per_url
-    url = str(request.url)
-    _request_counts_per_url[url] += 1
-    if _request_counts_per_url[url] % 3 == 0:
-        data = await _get_lyrics(url)
-        return web.json_response(data)
-    else:
-        await asyncio.sleep(0.01)
-        return web.Response(
-            text='Error',
-            status=random.choice((408, 425, 429, 500, 502, 503, 504)),
-        )
-
-
-def create_app() -> web.Application:
-    app = web.Application()
-    app.router.add_route('GET', '/lyrics_bytes', lyrics_bytes_endpoint)
-    app.router.add_route('GET', '/lyrics_text', lyrics_text_endpoint)
-    app.router.add_route('GET', '/lyrics_json', lyrics_json_endpoint)
-    app.router.add_route('GET', '/timeout_lyrics', timeout_lyrics_endpoint)
-    return app
-
-
 @pc.fixture(scope='function')
 async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:
+    async def _get_lyrics(url: str):
+        url_model = HttpUrlModel(url)
+        match url_model.query.get('song'):
+            case 'Her kommer vinteren':
+                data = dict(
+                    author='Joachim Nielsen',
+                    lyrics=[
+                        "Her kommer vinter'n",
+                        'Her kommer den kalde fine tida',
+                        "Her kommer vinter'n",
+                        'Endelig fred å få',
+                    ])
+            case 'Blues fra Oslo Ø':
+                data = dict(
+                    author='Odd Børretzen',
+                    lyrics=[
+                        'Jeg så min første blues',
+                        'på veggen på do',
+                        'herrer',
+                        'ned trappa',
+                        'under perrong fem',
+                        'Der sto det:',
+                        "Arbe' og slite",
+                        'tjene lite',
+                        'og 25 øre for å drite',
+                    ])
+            case '1984':
+                data = dict(
+                    author='deLillos',
+                    lyrics=[
+                        'Og en fyr lå i senga mi',
+                        'Og det var kaldt',
+                        'Den kaldeste dagen',
+                        'Overalt',
+                        'Den kaldeste dagen i Nittenåttifire',
+                    ])
+            case 'Arne':
+                data = dict(
+                    author='deLillos',
+                    lyrics=[
+                        'Joda sier Arne',
+                        'Det er vel og bra det',
+                        'Men jeg lever til jeg dør',
+                        'Faen som det regner ute',
+                        'Jeg lurer på om det er i natt det begynner å snø',
+                    ])
+            case _:
+                data = dict(author='Unknown', lyrics=['No lyrics found for the requested song.'])
+        return data
+
+    async def lyrics_bytes_endpoint(request: web.Request) -> web.Response:
+        data = await _get_lyrics(str(request.url))
+        return web.Response(body=dumps(data).encode('utf-8'))
+
+    async def lyrics_text_endpoint(request: web.Request) -> web.Response:
+        data = await _get_lyrics(str(request.url))
+        return web.Response(text=dumps(data))
+
+    async def lyrics_json_endpoint(request: web.Request) -> web.Response:
+        data = await _get_lyrics(str(request.url))
+        return web.json_response(data)
+
+    _request_counts_per_url: defaultdict[str, int] = defaultdict(int)
+
+    async def timeout_lyrics_endpoint(request: web.Request) -> web.Response:
+        url = str(request.url)
+        _request_counts_per_url[url] += 1
+        if _request_counts_per_url[url] % 3 == 0:
+            data = await _get_lyrics(url)
+            return web.json_response(data)
+        else:
+            await asyncio.sleep(0.01)
+            return web.Response(
+                text='Error',
+                status=random.choice((408, 425, 429, 500, 502, 503, 504)),
+            )
+
+    def create_app() -> web.Application:
+        app = web.Application()
+        app.router.add_route('GET', '/lyrics_bytes', lyrics_bytes_endpoint)
+        app.router.add_route('GET', '/lyrics_text', lyrics_text_endpoint)
+        app.router.add_route('GET', '/lyrics_json', lyrics_json_endpoint)
+        app.router.add_route('GET', '/timeout_lyrics', timeout_lyrics_endpoint)
+        return app
+
     yield await aiohttp_server(create_app())
 
 
