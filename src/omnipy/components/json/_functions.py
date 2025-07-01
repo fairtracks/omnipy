@@ -48,6 +48,9 @@ def _ensure_item_first_in_nested_record(
 ) -> str:
     if key in nested_record:
         assert not fail_if_present, f'Key "{key}" already present in dict'
+        existing_value = nested_record[key]
+        if isinstance(existing_value, str):
+            value = existing_value
         del nested_record[key]
 
     _update_dict_from_front(nested_record, {key: value})
