@@ -57,11 +57,11 @@ def test_transpose_dicts_of_various_2_lists_of_various(runtime: Annotated[IsRunt
     assert type(out_dataset) is JsonListDataset
     assert out_dataset.to_data() == {
         'a': [{
-            '_omnipy_id': 'abc_0', 'x': 33.2, 'y': 14.5
+            '_omnipy_id': 'abc', 'x': 33.2, 'y': 14.5
         }, {
             '_omnipy_id': 'abc_1', 'x': 9.2, 'y': 21.3
         }, {
-            '_omnipy_id': 'bcd_0', 'x': 2.34, 'y': 3.3
+            '_omnipy_id': 'bcd', 'x': 2.34, 'y': 3.3
         }],
         'b': [1, 2, 3, 4, 5, 6],
         'c': [654]
@@ -94,16 +94,16 @@ def test_transpose_dict_of_dicts_2_list_of_dicts(runtime: Annotated[IsRuntime, p
     assert out_dataset.to_data() == {
         'a': [
             {
-                'myid': 'abc_0', 'x': True, 'y': None
+                'myid': 'abc', 'x': True, 'y': None
             },
             {
-                'myid': 'bcd_0', 'x': False
+                'myid': 'bcd', 'x': False
             },
         ],
         'b': [{
-            'myid': 'abc_0', 'i': 123, 'ii': 234
+            'myid': 'abc', 'i': 123, 'ii': 234
         }, {
-            'myid': 'bcd_0', 'i': 312, 'iii': 423
+            'myid': 'bcd', 'i': 312, 'iii': 423
         }],
     }
 
@@ -166,7 +166,7 @@ def test_transpose_dicts_of_lists_of_dicts_2_lists_of_dicts(runtime: Annotated[I
     assert out_dataset.to_data() == {
         'People': [
             {
-                'local_id': 'real_0',
+                'local_id': 'real',
                 'First name': 'Elvis',
                 'Last name': 'Presley',
             },
@@ -181,7 +181,7 @@ def test_transpose_dicts_of_lists_of_dicts_2_lists_of_dicts(runtime: Annotated[I
                 'Last name': 'Ali',
             },
             {
-                'local_id': 'fictional_0',
+                'local_id': 'fictional',
                 'First name': 'Clark',
                 'Last name': 'Kent',
             },
@@ -193,7 +193,7 @@ def test_transpose_dicts_of_lists_of_dicts_2_lists_of_dicts(runtime: Annotated[I
         ],
         'Cities': [
             {
-                'local_id': 'real_0',
+                'local_id': 'real',
                 'Name': 'New York',
                 'Country': {
                     'Name': 'USA', 'Anthem': 'The Star-Spangled Banner'
@@ -207,7 +207,7 @@ def test_transpose_dicts_of_lists_of_dicts_2_lists_of_dicts(runtime: Annotated[I
                 }
             },
             {
-                'local_id': 'fictional_0',
+                'local_id': 'fictional',
                 'Name': 'Metropolis',
                 'Country': {
                     'Name': 'USA', 'Anthem': 'The Star-Spangled Banner'

@@ -43,7 +43,8 @@ def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> J
 
             for item_index, val_item in enumerate(val):
                 if obj_or_model_contents_isinstance(val_item, dict):
-                    output_dataset[key].append({id_key: f'{name}_{item_index}'})
+                    output_dataset[key].append(
+                        {id_key: f'{name}_{item_index}' if item_index > 0 else name})
                     assert id_key not in val_item
                     output_dataset[key][-1] |= val_item
                 else:
