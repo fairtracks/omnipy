@@ -27,8 +27,8 @@ class _JsonDictM(Model[dict[str, _JsonBaseT]], Generic[_JsonBaseT]):
 
 
 # Note: This intermediate level of JSON models is needed for two reasons. 1) as targets for
-#       .updateForwardRefs(), as this does not seem to work properly directly on a generic model
-#       (e.g. `_JsonListM['_JsonAnyUnion'].updateForwardRefs()`), at least in pydantic v1.
+#       .update_forward_refs(), as this does not seem to work properly directly on a generic model
+#       (e.g. `_JsonListM['_JsonAnyUnion'].update_forward_refs()`), at least in pydantic v1.
 #       But even if this is fixed in pydantic v2, or more probably in python 3.13 with PEP649, the
 #       intermediate level is still needed due to the other reason: 2) For consistency in the
 #       hierarchy of JSON models, as tested in e.g. `test_json_model_consistency_basic()`. The
