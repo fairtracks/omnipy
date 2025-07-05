@@ -1,10 +1,12 @@
 from io import BytesIO
-from typing import Any, IO, Type
+from typing import Any, IO, Type, TYPE_CHECKING
 
 from omnipy.data.serializer import TarFileSerializer
 from omnipy.shared.protocols.data import IsDataset
 
-from . import pd
+if TYPE_CHECKING:
+    from .lazy_import import pd
+
 from .datasets import PandasDataset
 
 
@@ -26,7 +28,7 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer):
     def serialize(cls, pandas_dataset: PandasDataset) -> bytes | memoryview:
         assert isinstance(pandas_dataset, PandasDataset)
 
-        def pandas_encode_func(pandas_data: pd.DataFrame) -> memoryview:
+        def pandas_encode_func(pandas_data: 'pd.DataFrame') -> memoryview:
             csv_bytes = BytesIO()
             pandas_data.to_csv(csv_bytes, encoding='utf8', mode='b', index=False)
             return csv_bytes.getbuffer()
@@ -37,7 +39,8 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer):
     def deserialize(cls, tarfile_bytes: bytes, any_file_suffix=False) -> PandasDataset:
         pandas_dataset = PandasDataset()
 
-        def csv_decode_func(file_stream: IO[bytes]) -> pd.DataFrame:
+        def csv_decode_func(file_stream: IO[bytes]) -> 'pd.DataFrame':
+            from .lazy_import import pd
             return pd.read_csv(file_stream, encoding='utf8')
 
         def python_dictify_object(data_file: str, obj_val: Any) -> dict:

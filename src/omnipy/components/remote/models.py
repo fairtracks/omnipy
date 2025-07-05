@@ -2,8 +2,6 @@ from pathlib import PurePosixPath
 from typing import Any, cast, TYPE_CHECKING, TypeGuard
 from urllib.parse import quote, unquote
 
-from aiohttp.helpers import MimeType, parse_mimetype
-
 from omnipy.data.model import Model
 import omnipy.util._pydantic as pyd
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
@@ -219,6 +217,8 @@ class ResponseContentsPydModel(pyd.BaseModel):
     @pyd.validator('content_type')
     def parse_content_type(cls,
                            contents_type: ModelFriendlyMimeType | str) -> ModelFriendlyMimeType:
+        from .lazy_import import MimeType, parse_mimetype
+
         if isinstance(contents_type, ModelFriendlyMimeType):
             return contents_type
 

@@ -1,9 +1,7 @@
 from typing import Callable, cast
 
 from inflection import underscore
-from slugify import slugify
 
-from omnipy.components.prefect import generate_slug
 from omnipy.util.mixin import WITH_MIXINS_CLS_SUFFIX
 
 
@@ -35,6 +33,10 @@ class NameJobBaseMixin:
         return self._unique_name
 
     def _generate_unique_name(self) -> str | None:
+        from slugify import slugify
+
+        from omnipy.components.prefect.lazy_import import generate_slug
+
         if self._name is None:
             return None
 

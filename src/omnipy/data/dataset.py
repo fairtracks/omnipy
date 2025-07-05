@@ -746,6 +746,7 @@ class Dataset(
     ) -> Self | asyncio.Task[Self]:
         from omnipy.components.remote.helpers import RateLimitingClientSession
         from omnipy.components.remote.tasks import get_auto_from_api_endpoint
+
         hosts: defaultdict[str, list[int]] = defaultdict(list)
         for i, url in enumerate(http_url_dataset.values()):
             hosts[url.host].append(i)

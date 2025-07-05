@@ -1,10 +1,12 @@
-from typing import Annotated
+from typing import Annotated, TYPE_CHECKING
 
 import pytest
 
 from omnipy.components.json.typedefs import JsonListOfDictsOfScalars
-from omnipy.components.pandas import pd
 from omnipy.components.pandas.models import PandasModel
+
+if TYPE_CHECKING:
+    from omnipy.components.pandas.lazy_import import pd
 
 
 @pytest.fixture
@@ -23,7 +25,9 @@ def list_of_dicts_data_with_missing() -> Annotated[JsonListOfDictsOfScalars, pyt
 
 
 @pytest.fixture
-def dataframe_of_list_of_dicts_data() -> Annotated[pd.DataFrame, pytest.fixture]:
+def dataframe_of_list_of_dicts_data() -> 'Annotated[pd.DataFrame, pytest.fixture]':
+    from omnipy.components.pandas.lazy_import import pd
+
     int_col = pd.Series([12, -3, pd.NA], dtype='Int64')
     float_col = pd.Series([12.1, pd.NA, 14.3], dtype='Float64')
     bool_col = pd.Series([True, False, pd.NA], dtype='boolean')
@@ -46,9 +50,11 @@ def list_of_dicts_data_with_nones() -> Annotated[JsonListOfDictsOfScalars, pytes
 
 def test_pandas_model_from_data_to_data(
     list_of_dicts_data_with_missing: Annotated[JsonListOfDictsOfScalars, pytest.fixture],
-    dataframe_of_list_of_dicts_data: Annotated[pd.DataFrame, pytest.fixture],
+    dataframe_of_list_of_dicts_data: 'Annotated[pd.DataFrame, pytest.fixture]',
     list_of_dicts_data_with_nones: Annotated[JsonListOfDictsOfScalars, pytest.fixture],
 ) -> None:
+    from omnipy.components.pandas.lazy_import import pd
+
     pandas_model = PandasModel()
     pandas_model.from_data(list_of_dicts_data_with_missing)
     pd.testing.assert_frame_equal(
@@ -60,9 +66,11 @@ def test_pandas_model_from_data_to_data(
 
 def test_pandas_model_init_to_data(
     list_of_dicts_data_with_missing: Annotated[JsonListOfDictsOfScalars, pytest.fixture],
-    dataframe_of_list_of_dicts_data: Annotated[pd.DataFrame, pytest.fixture],
+    dataframe_of_list_of_dicts_data: 'Annotated[pd.DataFrame, pytest.fixture]',
     list_of_dicts_data_with_nones: Annotated[JsonListOfDictsOfScalars, pytest.fixture],
 ) -> None:
+    from omnipy.components.pandas.lazy_import import pd
+
     pandas_model = PandasModel(list_of_dicts_data_with_missing)
     pd.testing.assert_frame_equal(
         pandas_model.contents,  # type: ignore
@@ -72,9 +80,11 @@ def test_pandas_model_init_to_data(
 
 
 def test_pandas_model_init_dataframe_to_data(
-    dataframe_of_list_of_dicts_data: Annotated[pd.DataFrame, pytest.fixture],
+    dataframe_of_list_of_dicts_data: 'Annotated[pd.DataFrame, pytest.fixture]',
     list_of_dicts_data_with_nones: Annotated[JsonListOfDictsOfScalars, pytest.fixture],
 ) -> None:
+    from omnipy.components.pandas.lazy_import import pd
+
     pandas_model = PandasModel(dataframe_of_list_of_dicts_data)
 
     pd.testing.assert_frame_equal(

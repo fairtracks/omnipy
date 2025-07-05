@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any, Callable, Type
+from typing import Any, Callable, Type, TYPE_CHECKING
 
 from omnipy.config.engine import PrefectEngineConfig
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
@@ -10,7 +10,8 @@ from omnipy.shared.protocols.compute.job import IsDagFlow, IsFlow, IsFuncFlow, I
 from omnipy.shared.protocols.config import IsPrefectEngineConfig
 from omnipy.util.helpers import resolve
 
-from .. import prefect_flow, prefect_task, PrefectTask, task_input_hash
+if TYPE_CHECKING:
+    from ..lazy_import import PrefectTask
 
 
 class PrefectEngine(TaskRunnerEngine,
@@ -30,7 +31,9 @@ class PrefectEngine(TaskRunnerEngine,
 
     # TaskRunnerEngine
 
-    def _init_task(self, task: IsTask, call_func: Callable) -> PrefectTask:
+    def _init_task(self, task: IsTask, call_func: Callable) -> 'PrefectTask':
+        from ..lazy_import import prefect_task, task_input_hash
+
         assert isinstance(self._config, PrefectEngineConfig)
         task_kwargs = dict(
             name=task.name,
@@ -50,8 +53,9 @@ class PrefectEngine(TaskRunnerEngine,
 
         return _task
 
-    def _run_task(self, state: PrefectTask, task: IsTask, call_func: Callable, *args,
+    def _run_task(self, state: 'PrefectTask', task: IsTask, call_func: Callable, *args,
                   **kwargs) -> Any:
+        from ..lazy_import import prefect_flow
 
         _prefect_task = state
 
@@ -74,6 +78,8 @@ class PrefectEngine(TaskRunnerEngine,
             return _task_flow(*args, **kwargs)
 
     def _init_flow(self, flow: IsFlow, call_func: Callable) -> Any:
+        from ..lazy_import import prefect_flow
+
         assert isinstance(self._config, PrefectEngineConfig)
         flow_kwargs = dict(name=flow.name,)
         if flow.has_coroutine_func():

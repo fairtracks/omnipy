@@ -4,10 +4,7 @@ import functools
 import inspect
 from typing import Any, cast, Literal, TYPE_CHECKING
 
-import humanize
 from IPython.lib.pretty import RepresentationPrinter
-import objsize
-from reacton.core import Element
 
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import (OutputConfig,
@@ -18,7 +15,6 @@ from omnipy.data._display.frame import Frame
 from omnipy.data._display.helpers import (detect_display_type,
                                           display_type_is_any_terminal,
                                           get_terminal_prompt_height)
-from omnipy.data._display.jupyter.components import DynamiclyResizingHtml
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
@@ -30,19 +26,21 @@ from omnipy.shared.protocols.config import IsConsoleConfig, IsDisplayConfig, IsH
 import omnipy.util._pydantic as pyd
 
 if TYPE_CHECKING:
+    from reacton.core import Element
+
     from omnipy.data.model import Model
 
 
 class BaseDisplayMixin(metaclass=ABCMeta):
     @abstractmethod
-    def _display(self) -> str | Element:
+    def _display(self) -> 'str | Element':
         ...
 
-    def peek(self) -> str | Element:
+    def peek(self) -> 'str | Element':
         return self._insert_any_reactive_components('_peek')
 
     @abstractmethod
-    def _peek(self) -> str | Element:
+    def _peek(self) -> 'str | Element':
         ...
 
     def __str__(self) -> str:
@@ -60,6 +58,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 p.text(self.__repr__())
 
     def _repr_html_(self) -> str:
+        from reacton.core import Element
         element = cast(Element, self._display())
         element._ipython_display_()
         return ''
@@ -76,12 +75,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         method_name: str,
         display_type: DisplayType = DisplayType.AUTO,
         **kwargs: Any,
-    ) -> str | Element:
+    ) -> 'str | Element':
         from omnipy.data.dataset import Dataset, Model
 
         display_type = self._determine_display_type(display_type)
 
         if display_type is DisplayType.JUPYTER:
+            from omnipy.data._display.jupyter.components import DynamiclyResizingHtml
             return DynamiclyResizingHtml(
                 cast(Dataset | Model, self),
                 method_name=method_name,
@@ -94,7 +94,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         self,
         models: dict[str, 'Model'],
         display_type: DisplayType = DisplayType.AUTO,
-    ) -> str:
+    ) -> 'str | Element':
         from omnipy.data.dataset import Dataset
 
         display_type = self._determine_display_type(display_type)
@@ -246,26 +246,26 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
 
 class ModelDisplayMixin(BaseDisplayMixin):
-    def _display(self) -> str | Element:
+    def _display(self) -> 'str | Element':
         return self.peek()
 
-    def _peek(self) -> str | Element:
+    def _peek(self) -> 'str | Element':
         from omnipy.data.model import Model
         return self._peek_models(models={self.__class__.__name__: cast(Model, self)})
 
 
 class DatasetDisplayMixin(BaseDisplayMixin):
-    def _display(self) -> str | Element:
+    def _display(self) -> 'str | Element':
         return self.list()
 
-    def _peek(self) -> str:
+    def _peek(self) -> 'str | Element':
         from omnipy.data.dataset import Dataset
         self_as_dataset = cast(Dataset, self)
         return self._peek_models({
             f'{i}. {title}': model for i, (title, model) in enumerate(self_as_dataset.data.items())
         })
 
-    def list(self) -> str | Element:
+    def list(self) -> 'str | Element':
         return self._insert_any_reactive_components('_list')
 
     def _list(self) -> str:
@@ -340,4 +340,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
     @staticmethod
     def _obj_size(obj: Any) -> str:
+        import humanize
+        import objsize
+
         return humanize.naturalsize(objsize.get_deep_size(obj))

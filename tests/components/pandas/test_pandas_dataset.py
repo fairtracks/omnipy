@@ -5,7 +5,6 @@ from deepdiff import DeepDiff
 import numpy as np
 import pytest
 
-from omnipy.components.pandas import pd
 from omnipy.components.pandas.datasets import PandasDataset
 from omnipy.components.pandas.models import PandasModel
 from omnipy.components.tables.models import TableListOfDictsOfJsonScalarsModel
@@ -17,6 +16,8 @@ from .helpers.asserts import assert_pandas_frame_dtypes
 
 
 def test_pandas_dataset_input_variants():
+    from omnipy.components.pandas.lazy_import import pd
+
     table = TableListOfDictsOfJsonScalarsModel([{'a': 'abc', 'b': 12}])
     df = pd.concat([
         pd.Series(['abc'], dtype='string'),
@@ -61,6 +62,8 @@ def test_pandas_dataset_input_variants():
 
 
 def test_pandas_dataset_list_of_objects_same_keys():
+    from omnipy.components.pandas.lazy_import import pd
+
     pandas_data = PandasDataset()
     data = {'data_file': [{'a': 'abc', 'b': 12}, {'a': 'bcd', 'b': 23}]}
     pandas_data.from_data(data)
@@ -78,6 +81,8 @@ def test_pandas_dataset_list_of_objects_same_keys():
 
 
 def test_pandas_dataset_json_list_of_objects_same_keys():
+    from omnipy.components.pandas.lazy_import import pd
+
     pandas_data = PandasDataset()
     json_data = {'data_file': '[{"a": "abc", "b": 12}, {"a": "bcd", "b": 23}]'}
     pandas_data.from_json(json_data)
@@ -95,6 +100,8 @@ def test_pandas_dataset_json_list_of_objects_same_keys():
 
 
 def test_pandas_dataset_list_of_objects_different_keys():
+    from omnipy.components.pandas.lazy_import import pd
+
     pandas_data = PandasDataset()
     data = {'data_file': [{'a': 'abc', 'b': 12}, {'c': 'bcd'}]}
     pandas_data.from_data(data)
@@ -124,6 +131,8 @@ Pandas converts 'a' column into 'Int64' since all values can be cast into intege
  Should remain floats.
 """)
 def test_pandas_dataset_list_of_objects_float_numbers():
+    from omnipy.components.pandas.lazy_import import pd
+
     pandas_data = PandasDataset()
     data = {'data_file': [{'a': 12.0, 'b': 12.1}, {'a': 3.0}]}
     pandas_data.from_data(data)
@@ -146,6 +155,8 @@ def test_pandas_dataset_list_of_objects_float_numbers():
 
 
 def test_pandas_dataset_list_of_nested_objects():
+    from omnipy.components.pandas.lazy_import import pd
+
     pandas_data = PandasDataset()
     data = {'data_file': [{'a': 'abc', 'b': {'c': [1, 3]}}]}
     pandas_data.from_data(data)
@@ -173,6 +184,8 @@ def test_pandas_dataset_missing_values():
 
 
 def test_pandas_dataset_empty_list():
+    from omnipy.components.pandas.lazy_import import pd
+
     pandas_data = PandasDataset()
     assert pandas_data.to_data() == {}
 
@@ -201,6 +214,8 @@ def test_pandas_dataset_objects_keys_not_str():
 
 
 def test_pandas_dataset_error_empty_objects():
+    from omnipy.components.pandas.lazy_import import pd
+
     # We might want to reevaluate how to handle empty objects later
     pandas_data = PandasDataset()
     pandas_data['data_file'] = [{'a': 'abc', 'b': 12}, {}]

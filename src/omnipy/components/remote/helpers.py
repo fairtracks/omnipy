@@ -3,8 +3,14 @@ from datetime import datetime
 from types import TracebackType
 from typing import cast
 
-from aiohttp import ClientSession, TraceConfig
-from aiolimiter import AsyncLimiter
+from omnipy.shared.enums import BackoffStrategy
+
+from .lazy_import import (ClientSession,
+                          ExponentialRetry,
+                          FibonacciRetry,
+                          JitterRetry,
+                          RandomRetry,
+                          TraceConfig)
 
 
 class RateLimitingClientSession(ClientSession):
@@ -14,6 +20,8 @@ class RateLimitingClientSession(ClientSession):
     """
     def __init__(self, requests_per_time_period: float, time_period_in_secs: float, *args,
                  **kwargs) -> None:
+        from .lazy_import import AsyncLimiter
+
         trace_config = TraceConfig()
         trace_config.on_request_start.append(self._limit_request)
         super().__init__(*args, trace_configs=[trace_config], **kwargs)
@@ -75,3 +83,11 @@ class RateLimitingClientSession(ClientSession):
         exc_tb: TracebackType | None,
     ) -> None:
         await super().__aexit__(exc_type, exc_val, exc_tb)
+
+
+BACKOFF_STRATEGY_2_RETRY_CLS = {
+    BackoffStrategy.EXPONENTIAL: ExponentialRetry,
+    BackoffStrategy.JITTER: JitterRetry,
+    BackoffStrategy.FIBONACCI: FibonacciRetry,
+    BackoffStrategy.RANDOM: RandomRetry,
+}

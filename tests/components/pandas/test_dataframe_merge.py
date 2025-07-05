@@ -1,6 +1,5 @@
 from typing import Annotated
 
-import pandas as pd
 import pytest
 import pytest_cases as pc
 
@@ -17,6 +16,8 @@ def test_join_tables(
     runtime: Annotated[IsRuntime, pytest.fixture],
     case: TablePairCase,
 ):
+    from omnipy.components.pandas.lazy_import import pd
+
     table_1 = PandasModel(convert_testcase_table_to_dataframe(case.table_1))
     table_2 = PandasModel(convert_testcase_table_to_dataframe(case.table_2))
 
@@ -35,6 +36,8 @@ def test_cartesian_product_of_tables(
     runtime: Annotated[IsRuntime, pytest.fixture],
     case: TablePairCase,
 ):
+    from omnipy.components.pandas.lazy_import import pd
+
     table_1 = PandasModel(convert_testcase_table_to_dataframe(case.table_1))
     table_2 = PandasModel(convert_testcase_table_to_dataframe(case.table_2))
 

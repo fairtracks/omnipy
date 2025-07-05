@@ -9,7 +9,6 @@ from typing import Any, Callable, Type
 from inflection import underscore
 from slugify import slugify
 
-from omnipy.components.prefect import generate_slug
 from omnipy.config import ConfigBase
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
@@ -49,6 +48,8 @@ class MockTask:
         self.regenerate_unique_name()
 
     def regenerate_unique_name(self) -> None:
+        from omnipy.components.prefect.lazy_import import generate_slug
+
         class_name_snake = underscore(self.__class__.__name__)
         self.unique_name = slugify(  # noqa
             f'{class_name_snake}-{underscore(self.name)}-{generate_slug(2)}')

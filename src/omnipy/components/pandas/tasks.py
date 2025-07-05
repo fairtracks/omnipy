@@ -5,7 +5,6 @@ from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
-from . import pd
 from ..general.models import NotIterableExceptStrOrBytesModel
 from .datasets import ListOfPandasDatasetsWithSameNumberOfFiles, PandasDataset
 from .helpers import extract_common_colnames
@@ -28,6 +27,8 @@ def convert_dataset_csv_to_pandas(dataset: Dataset[Model[bytes]],
                                   col_names: list[str] | None = None,
                                   ignore_comments: bool = True,
                                   comments_char: str = '#') -> PandasDataset:
+    from .lazy_import import pd
+
     out_dataset = PandasDataset()
     for key, item in dataset.items():
         df = pd.read_csv(
@@ -64,6 +65,8 @@ def convert_dataset_pandas_to_csv(
 
 @TaskTemplate()
 def extract_columns_as_files(dataset: PandasDataset, col_names: list[str]) -> PandasDataset:
+    from .lazy_import import pd
+
     out_dataset = PandasDataset()
     for key, item in dataset.items():
         df = dataset[key]
@@ -77,6 +80,8 @@ def extract_columns_as_files(dataset: PandasDataset, col_names: list[str]) -> Pa
 @TaskTemplate()
 def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSameNumberOfFiles,
                                       vertical=True) -> PandasDataset:
+    from .lazy_import import pd
+
     # We know from the data type that there are at least two datasets and that there is an equal
     # amount of files/DataFrames in each dataset. This simplifies implementation.
 
@@ -94,6 +99,8 @@ def join_tables(table_1: PandasModel,
                 table_2: PandasModel,
                 join_type: str = 'outer',
                 on_cols: Sequence[str] | Mapping[str, str] | None = None) -> PandasModel:
+    from .lazy_import import pd
+
     if join_type == 'cross':
         raise ValueError('join_type="cross" not supported. Please use "cartesian_product" task.')
     assert join_type in ['inner', 'outer', 'left', 'right']
@@ -138,6 +145,8 @@ def join_tables(table_1: PandasModel,
 
 @TaskTemplate()
 def cartesian_product(table_1: PandasModel, table_2: PandasModel) -> PandasModel:
+    from .lazy_import import pd
+
     merged_df = pd.merge(
         table_1.loc[:, :],
         table_2.loc[:, :],

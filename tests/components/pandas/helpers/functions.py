@@ -1,10 +1,10 @@
-import pandas as pd
-
 from omnipy.components.json.typedefs import JsonListOfListsOfScalars
 from omnipy.components.pandas.models import PandasModel
 
 
 def convert_testcase_table_to_dataframe(testcase_table: JsonListOfListsOfScalars):
+    from omnipy.components.pandas.lazy_import import pd
+
     if len(testcase_table) == 0:
         return pd.DataFrame([])
 

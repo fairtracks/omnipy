@@ -3,7 +3,6 @@ import dataclasses
 import re
 from typing import cast
 
-from devtools import PrettyFormat
 import rich.pretty
 from typing_extensions import override
 
@@ -181,6 +180,8 @@ class DevtoolsPrettyPrinter(PrettyPrinter):
 
     @override
     def print_draft_to_str(self, draft_panel: DraftPanel[object, FrameT]) -> str:
+        from devtools import PrettyFormat
+
         if draft_panel.constraints.container_width_per_line_limit is not None:
             simple_cutoff = draft_panel.constraints.container_width_per_line_limit
         else:

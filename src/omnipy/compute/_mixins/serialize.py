@@ -23,8 +23,7 @@ ProtocolOpts = OutputStorageProtocolOptions
 
 
 class SerializerFuncJobBaseMixin:
-
-    _serializer_registry: IsSerializerRegistry = get_serializer_registry()
+    _serializer_registry: IsSerializerRegistry | None = None
 
     def __init__(self,
                  *,
@@ -121,6 +120,9 @@ class SerializerFuncJobBaseMixin:
     def _call_job(self, *args: object, **kwargs: object) -> object:
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
 
+        if self._serializer_registry is None:
+            self._serializer_registry = get_serializer_registry()
+
         if self.will_restore_outputs in [
                 RestoreOpts.AUTO_ENABLE_IGNORE_PARAMS, RestoreOpts.FORCE_ENABLE_IGNORE_PARAMS
         ]:
@@ -144,6 +146,8 @@ class SerializerFuncJobBaseMixin:
         return results
 
     def _serialize_and_persist_outputs(self, results: Dataset):
+        assert self._serializer_registry is not None
+
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
 
         datetime_str = self._generate_datetime_str()
@@ -210,6 +214,8 @@ class SerializerFuncJobBaseMixin:
 
     # TODO: Further refactor _deserialize_and_restore_outputs
     def _deserialize_and_restore_outputs(self) -> IsDataset | None:
+        assert self._serializer_registry is not None
+
         self_as_job_base = cast(IsJobBase, self)
 
         persist_data_dir_path = Path(self._job_config.output_storage.local.persist_data_dir_path)
