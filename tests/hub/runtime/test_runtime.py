@@ -83,7 +83,7 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.data.display.jupyter.color.system is ConsoleColorSystem.ANSI_RGB
     assert config.data.display.jupyter.color.style \
            is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
-    assert config.data.display.jupyter.color.transparent_background is True
+    assert config.data.display.jupyter.color.transparent_background is False
 
     assert isinstance(config.data.display.browser, BrowserConsoleConfig)
     assert config.data.display.browser.width == 160

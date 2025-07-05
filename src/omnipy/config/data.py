@@ -142,7 +142,7 @@ class JupyterConsoleDimsModeConfig(HtmlConsoleConfig, DimsModeConfig):
         self.height = 50
         self.color.system = ConsoleColorSystem.ANSI_RGB
         self.color.style = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
-        self.color.transparent_background = True
+        self.color.transparent_background = False
 
 
 class BrowserConsoleConfig(HtmlConsoleConfig):
