@@ -4,8 +4,6 @@ import functools
 import inspect
 from typing import Any, cast, Literal, TYPE_CHECKING
 
-from IPython.lib.pretty import RepresentationPrinter
-
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import (OutputConfig,
                                          TERMINAL_DEFAULT_HEIGHT,
@@ -46,7 +44,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def __str__(self) -> str:
         return repr(self)
 
-    def _repr_pretty_(self, p: RepresentationPrinter, cycle: bool) -> None:
+    def _repr_pretty_(self, p, cycle: bool) -> None:
         if cycle:
             p.text(f'{cast(pyd.GenericModel, self).__repr_name__()}(...)')
         else:

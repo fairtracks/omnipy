@@ -527,10 +527,10 @@ def test_repr() -> None:
 
 
 def test_repr_pretty() -> None:
-    a = Model[list[int]]([123])
     from IPython.lib.pretty import pretty
 
-    pretty([a])
+    model = Model[list[int]]([123])
+    assert pretty([model]) == '[Model[list[int]]([123])]'
 
 
 def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model]) -> bool:
@@ -4212,7 +4212,7 @@ def test_pandas_dataframe_non_builtin_direct() -> None:
     #
     # SetDeque() is a good candidate.
 
-    import pandas as pd
+    from omnipy.components.pandas.lazy_import import pd
 
     class PandasDataFrameModel(Model[pd.DataFrame]):
         ...
