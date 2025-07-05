@@ -48,6 +48,7 @@ pyright = "^1.1.389"
 aiostream = "^0.7.0"
 pytest-asyncio = "<1"
 pytest-cases = "<4"
+tuna = "^0.5.11"
 
 [tool.poetry.group.docs.dependencies]
 pymdown-extensions = "^10.0.1"
