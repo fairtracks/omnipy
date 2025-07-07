@@ -17,6 +17,7 @@ from omnipy.util.helpers import (all_type_variants,
                                  get_parametrized_type,
                                  has_items,
                                  is_iterable,
+                                 is_literal_type,
                                  is_non_omnipy_pydantic_model,
                                  is_non_str_byte_iterable,
                                  is_optional,
@@ -336,6 +337,18 @@ def test_is_optional() -> None:
     assert is_optional(None) is False
     assert is_optional(NoneType) is False
     assert is_optional(Literal[None]) is False
+
+
+def test_is_literal_type() -> None:
+    assert is_literal_type(Literal['a', 'b'])
+    assert is_literal_type(Literal[True, False])
+    assert is_literal_type(Literal[1, 2, 3])
+    assert is_literal_type(Literal['one value'])
+
+    assert not is_literal_type(str)
+    assert not is_literal_type(int)
+    assert not is_literal_type(bool)
+    assert not is_literal_type(list)
 
 
 def test_is_strict_subclass() -> None:

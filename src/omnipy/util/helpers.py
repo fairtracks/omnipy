@@ -21,6 +21,7 @@ from typing import (_SpecialForm,
                     ForwardRef,
                     get_args,
                     get_origin,
+                    Literal,
                     Mapping,
                     overload,
                     TypeAlias,
@@ -237,6 +238,10 @@ def is_union(cls_or_type: type | UnionType | None | object) -> bool:
 
 def is_optional(cls_or_type: type | UnionType | None | object) -> bool:
     return is_union(cls_or_type) and any(pyd.is_none_type(arg) for arg in get_args(cls_or_type))
+
+
+def is_literal_type(value: Any) -> bool:
+    return get_origin(value) is Literal
 
 
 def all_equals(first, second) -> bool:
