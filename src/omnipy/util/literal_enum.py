@@ -1,6 +1,8 @@
-from typing import ClassVar, get_args, get_type_hints
+from typing import Any, ClassVar, get_args, get_type_hints
 
-from omnipy.util.helpers import is_literal_type
+import inflection
+
+from omnipy.util.helpers import is_literal_type, is_unreserved_identifier
 
 
 class LiteralEnum:
@@ -218,3 +220,119 @@ class LiteralEnum:
         if literal_missing_attrs:
             raise TypeError(f'Not all choices in {cls.__name__}.Literals are defined as members .'
                             f'Missing members: {literal_missing_attrs}')
+
+
+def generate_literal_enum_code(values: tuple[object, ...],
+                               class_name: str = 'NewLiteralEnum') -> str:
+    """
+    Generate code for a LiteralEnum class based on a tuple of string values.
+
+    Args:
+        values: A tuple of objects that define the literal values for the enum
+        class_name: The name of the generated class (default: 'GeneratedEnum')
+
+    Returns:
+        A string containing the complete Python code for a LiteralEnum class
+
+    Raises:
+        ValueError: If no values are provided or if class_name is not a valid identifier
+
+    Example:
+        >>> code = generate_literal_enum_code(('active', 'inactive', 'pending'))
+        >>> print(code)
+        from typing import Literal
+        from omnipy.util.literal_enum import LiteralEnum
+
+
+        class GeneratedEnum(LiteralEnum):
+            Literals = Literal['active', 'inactive', 'pending']
+            ACTIVE: Literal['active'] = 'active'
+            INACTIVE: Literal['inactive'] = 'inactive'
+            PENDING: Literal['pending'] = 'pending'
+    """
+    if not values:
+        raise ValueError('At least one value must be provided')
+
+    if not is_unreserved_identifier(class_name):
+        raise ValueError(f'"{class_name}" is not a valid Python class name')
+
+    # Generate attribute names from values, handling duplicates
+    attr_names = []
+    used_names: set[str] = set()
+
+    for value in values:
+        # Convert value to a valid attribute name
+        attr_name = _generate_attribute_name(value, used_names)
+        attr_names.append(attr_name)
+        used_names.add(attr_name)
+
+    # Build the literals string
+    literals_str = ', '.join(repr(value) for value in values)
+
+    # Build the class code
+    lines = [
+        'from typing import Literal',
+        'from omnipy.util.literal_enum import LiteralEnum',
+        '',
+        '',
+        f'class {class_name}(LiteralEnum):',
+        f'    Literals = Literal[{literals_str}]'
+    ]
+
+    # Add attribute definitions
+    for value, attr_name in zip(values, attr_names):
+        lines.append(f'    {attr_name}: Literal[{repr(value)}] = {repr(value)}')
+
+    return '\n'.join(lines)
+
+
+def _generate_attribute_name(value: Any, used_names: set[str]) -> str:
+    """
+    Generate a valid Python attribute name from a value.
+
+    Args:
+        value: The value to convert to an attribute name
+        used_names: Set of already used attribute names to avoid conflicts
+
+    Returns:
+        A valid Python attribute name
+    """
+    import re
+
+    if not isinstance(value, str):
+        value = str(value)
+
+    if value == '':
+        base_name = 'empty'
+    elif value[0].isdigit():
+        base_name = f'number_{value}'
+    elif value.isspace():
+        base_name = 'whitespace'
+    else:
+        base_name = value
+
+    # Transliterate non-ascii characters
+    base_name = inflection.transliterate(base_name)
+
+    # Transform to snake_case and uppercase
+    base_name = inflection.underscore(base_name).upper()
+
+    # Replace non-alphanumeric characters with underscores
+    base_name = re.sub(r'[^a-zA-Z0-9_]', '_', base_name)
+
+    # Remove leading/trailing underscores and collapse multiple underscores
+    base_name = re.sub(r'^_+|_+$', '', base_name)
+    base_name = re.sub(r'_+', '_', base_name)
+
+    # Ensure it's a valid identifier (this should now always pass)
+    if not is_unreserved_identifier(base_name):
+        base_name = f'VALUE_{base_name}'
+
+    # Handle conflicts by adding a suffix
+    candidate = base_name
+    counter = 2
+    while candidate in used_names:
+        candidate = f'{base_name}_{counter}'
+        counter += 1
+
+    return candidate
