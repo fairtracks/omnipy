@@ -119,6 +119,22 @@ def test_attribute_wrong_annotation() -> None:
             VALUE: str = 'value'  # Wrong annotation type
 
 
+def test_attribute_incorrect_literal() -> None:
+    with pytest.raises(AssertionError, match='value of the Literal annotation must match'):
+
+        class BadEnum(LiteralEnum):
+            Literals = Literal['value']
+            VALUE: Literal['different'] = 'value'  # type: ignore[assignment]
+
+
+def test_attribute_too_many_literal_values() -> None:
+    with pytest.raises(AssertionError, match='value of the Literal annotation must match'):
+
+        class BadEnum(LiteralEnum):
+            Literals = Literal['value']
+            VALUE: Literal['value', 'other'] = 'value'
+
+
 def test_attribute_value_mismatch() -> None:
     with pytest.raises(TypeError, match='is not defined in'):
 

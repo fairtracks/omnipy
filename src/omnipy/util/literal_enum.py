@@ -204,6 +204,12 @@ class LiteralEnum:
             if not attr.startswith('_') and not is_literal_type(val):
                 assert attr in cls_type_hints and is_literal_type(cls_type_hints[attr]), \
                     f'{cls.__name__}.{attr} must be annotated as a Literal type.'
+
+                annotation_args = get_args(cls_type_hints[attr])
+                assert annotation_args == (val, ), \
+                    (f'The value of the Literal annotation must match the assigned value for '
+                     f'{attr}: {annotation_args} != {(val, )}')
+
                 if val not in all_literals:
                     raise TypeError(f'{val} is not defined in {cls.Literals}.')
                 defined_attrs.add(val)
