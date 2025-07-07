@@ -31,3 +31,8 @@ class ConstraintsSatisfaction:
     @property
     def container_width_per_line_limit(self) -> bool | None:
         return self._container_width_per_line_limit
+
+    def __repr__(self) -> str:
+        return (f'ConstraintsSatisfaction('
+                f'container_width_per_line_limit={self.container_width_per_line_limit}'
+                f')')

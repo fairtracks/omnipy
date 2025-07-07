@@ -1,9 +1,9 @@
-from enum import Enum
-from typing import Generic
+from typing import Generic, Literal
 
 from typing_extensions import TypeIs, TypeVar
 
 import omnipy.util._pydantic as pyd
+from omnipy.util.literal_enum import LiteralEnum
 
 WidthT = TypeVar(
     'WidthT',
@@ -52,10 +52,11 @@ def has_width_or_height(dims: AnyDimensions) -> TypeIs[DimensionsWithWidthOrHeig
     return has_width(dims) or has_height(dims)
 
 
-class Proportionally(str, Enum):
-    THINNER = 'thinner'
-    SAME = 'same'
-    WIDER = 'wider'
+class Proportionally(LiteralEnum):
+    Literals = Literal['thinner', 'same', 'wider']
+    THINNER: Literal['thinner'] = 'thinner'
+    SAME: Literal['same'] = 'same'
+    WIDER: Literal['wider'] = 'wider'
 
 
 class DimensionsFit:
@@ -64,7 +65,7 @@ class DimensionsFit:
 
         self._width: bool | None = None
         self._height: bool | None = None
-        self._proportionality: Proportionally | None = None
+        self._proportionality: Proportionally.Literals | None = None
 
         if frame_dims.width is not None:
             self._width = dims.width <= frame_dims.width
@@ -75,7 +76,8 @@ class DimensionsFit:
         if frame_dims.width not in [None, 0] and frame_dims.height not in [None, 0]:
             self._proportionality = self._calculate_proportionality(dims, frame_dims)
 
-    def _calculate_proportionality(self, dims, frame_dims) -> Proportionally:
+    @staticmethod
+    def _calculate_proportionality(dims, frame_dims) -> Proportionally.Literals:
         frame_width_height_ratio = frame_dims.width / frame_dims.height
         proportional_width = dims.height * frame_width_height_ratio
 
@@ -95,7 +97,7 @@ class DimensionsFit:
         return self._height
 
     @property
-    def proportionality(self) -> Proportionally | None:
+    def proportionality(self) -> Proportionally.Literals | None:
         return self._proportionality
 
     @property
@@ -104,3 +106,13 @@ class DimensionsFit:
             return None
         else:
             return self.width and self.height
+
+    def __repr__(self) -> str:
+        # Format proportionality properly - None without quotes, strings with quotes
+        prop_str = f"'{self.proportionality}'" if self.proportionality is not None else 'None'
+
+        return (f'DimensionsFit('
+                f'width={self.width}, '
+                f'height={self.height}, '
+                f'both={self.both}, '
+                f'proportionality={prop_str})')

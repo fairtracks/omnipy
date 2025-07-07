@@ -234,3 +234,40 @@ def test_dimensions_fit_proportionality() -> None:
     assert DimensionsFit(Dims(10, 10), Dims(None, None)).proportionality is None
     assert DimensionsFit(Dims(10, 10), Dims(None, 20)).proportionality is None
     assert DimensionsFit(Dims(10, 10), Dims(10, None)).proportionality is None
+
+
+def test_dimensions_fit_repr() -> None:
+    # Test basic case with all properties defined
+    fit = DimensionsFit(Dimensions(10, 10), Dimensions(20, 20))
+    expected = "DimensionsFit(width=True, height=True, both=True, proportionality='same')"
+    assert repr(fit) == expected
+
+    # Test case where dimensions don't fit
+    fit = DimensionsFit(Dimensions(25, 15), Dimensions(20, 20))
+    expected = "DimensionsFit(width=False, height=True, both=False, proportionality='wider')"
+    assert repr(fit) == expected
+
+    # Test case with None frame width
+    fit = DimensionsFit(Dimensions(10, 10), Dimensions(None, 20))
+    expected = 'DimensionsFit(width=None, height=True, both=None, proportionality=None)'
+    assert repr(fit) == expected
+
+    # Test case with None frame height
+    fit = DimensionsFit(Dimensions(10, 10), Dimensions(20, None))
+    expected = 'DimensionsFit(width=True, height=None, both=None, proportionality=None)'
+    assert repr(fit) == expected
+
+    # Test case with both frame dimensions None
+    fit = DimensionsFit(Dimensions(10, 10), Dimensions(None, None))
+    expected = 'DimensionsFit(width=None, height=None, both=None, proportionality=None)'
+    assert repr(fit) == expected
+
+    # Test case with zero dimensions
+    fit = DimensionsFit(Dimensions(0, 0), Dimensions(10, 10))
+    expected = "DimensionsFit(width=True, height=True, both=True, proportionality='same')"
+    assert repr(fit) == expected
+
+    # Test thinner proportionality
+    fit = DimensionsFit(Dimensions(10, 15), Dimensions(20, 20))
+    expected = "DimensionsFit(width=True, height=True, both=True, proportionality='thinner')"
+    assert repr(fit) == expected
