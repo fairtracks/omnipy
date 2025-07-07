@@ -3,6 +3,8 @@ from typing import get_args, Literal
 import pytest
 from typing_extensions import assert_never, TypeIs
 
+from omnipy.util._pydantic import ValidationError
+import omnipy.util._pydantic as pyd
 from omnipy.util.literal_enum import LiteralEnum
 
 
@@ -98,3 +100,18 @@ def test_docs_type_narrowing_exhaustiveness_check_with_assert_never() -> None:
     # The following call will fail both at static type checking and at runtime
     with pytest.raises(AssertionError, match='Expected code to be unreachable'):
         most_choices_are_still_ok('whatever')  # type: ignore[arg-type]
+
+
+def test_docs_pydantic_runtime_validation() -> None:
+    class MyModel(pyd.BaseModel):
+        clear: ClearBoolChoices.Literals
+        confused: AllStrChoices.Literals
+
+    # Valid input
+    model = MyModel(clear=True is False, confused=AllStrChoices.MAYBE)
+    assert model.clear is False
+    assert model.confused == 'maybe'
+
+    # Invalid input will raise a ValidationError
+    with pytest.raises(ValidationError):
+        MyModel(clear=ClearBoolChoices.POSITIVE, confused='whatever')  # type: ignore[arg-type]

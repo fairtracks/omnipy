@@ -1,4 +1,3 @@
-from pydantic import ValidationError
 import pytest
 
 from omnipy.data._display.dimensions import AnyDimensions, Dimensions
@@ -12,6 +11,7 @@ from omnipy.data._display.frame import (AnyFrame,
                                         FrameWithWidth,
                                         FrameWithWidthAndHeight,
                                         UndefinedFrame)
+from omnipy.util._pydantic import ValidationError
 
 
 def _assert_frame(

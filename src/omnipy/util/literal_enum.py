@@ -153,28 +153,27 @@ class LiteralEnum:
 
     ```python
     class MyModel(BaseModel):
-        clear_choice: ClearStrChoices.Literals
-        any_choice: AllStrChoices.Literals
+        clear: ClearBoolChoices.Literals
+        confused: AllStrChoices.Literals
     ```
 
     As with `i_need_a_clear_choice()`, any combination of matching enum attributes and values will
     work at runtime and for static type checking:
 
     ```pycon
-    >>> abc = MyModel(clear_choice=True is False, any_choice=AllStrChoices.MAYBE)
+    >>> abc = MyModel(clear=True is False, confused=AllStrChoices.MAYBE)
     >>> abc
-    MyModel(clear_choice=False, any_choice='maybe')
+    MyModel(clear=False, confused='maybe')
     ```
 
     Incorrect values will fail static type checking and (in contrast to `i_need_a_clear_choice()`)
     also raise a validation error at runtime:
 
     ```pycon
-    >>> abc = MyModel(clear_choice=ClearStrChoices.POSITIVE, any_choice='whatever')
-    (...)
-    any_choice
-      Input should be True, False, 'maybe' or 'depends' [type=literal_error, input_value='whatever'…
-        For further information visit https://errors.pydantic.dev/2.11/v/literal_error
+    >>> abc = MyModel(clear=ClearBoolChoices.POSITIVE, confused='whatever')
+    (…)
+    confused
+      unexpected value; permitted: 'yes', 'no', 'maybe', 'possibly' (…)
     ```
     """
 
