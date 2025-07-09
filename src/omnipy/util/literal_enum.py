@@ -1,13 +1,45 @@
-from typing import Any, ClassVar, get_args, get_type_hints
+from typing import Any, cast, ClassVar, Generic, get_args, get_type_hints, Iterator, overload
 
-import inflection
+from typing_extensions import TypeVar
 
-from omnipy.util.helpers import is_literal_type, is_unreserved_identifier
+from omnipy.shared.typedefs import TypeForm
+from omnipy.util.helpers import all_type_variants, is_literal_type
+
+LiteralEnumInnerTypes = bool | str | int | bytes | None  # Types that can be used in LiteralEnum
+
+LiteralInnerTypeT = TypeVar('LiteralInnerTypeT', bound=LiteralEnumInnerTypes)
 
 
-class LiteralEnum:
+class LiteralEnumMeta(type):
     """
-    A base class for creating enums with defined literal choices, with support from the main
+    A metaclass for LiteralEnum that contains the logic for iteration.
+    """
+    @overload
+    def __iter__(  # type: ignore[misc]
+        self: 'type[LiteralEnum[LiteralEnumInnerTypes]]'  # Match generic LiteralEnum subtypes
+    ) -> Iterator[LiteralEnumInnerTypes]:
+        ...
+
+    @overload
+    def __iter__(  # type: ignore[misc]
+        self: 'type[LiteralEnum[LiteralInnerTypeT]]'  # Match specialized LiteralEnum subtypes
+    ) -> Iterator[LiteralInnerTypeT]:
+        ...
+
+    def __iter__(self) -> Iterator[LiteralEnumInnerTypes]:
+        """
+        Iterate over the enum values. Narrows the type according to the
+        specialization to specific Literal inner types
+
+        Returns:
+            An typed iterator over the enum values.
+        """
+        return iter(get_args(cast(LiteralEnum, self).Literals))
+
+
+class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
+    """
+    Base class for creating enums with defined literal choices, with support from the main
     static type checkers (tested with `mypy` and `pyright`). Unlike standard Enums, LiteralEnum
     supports multiple inheritance and the use the enum attribute names and underlying values
     directly in type hints and function signatures. At the same time, LiteralEnum maintains the
@@ -23,7 +55,7 @@ class LiteralEnum:
     ```python
     from typing import Literal
 
-    class ClearBoolChoices(LiteralEnum):
+    class ClearBoolChoices(LiteralEnum[bool]):
         Literals = Literal[True, False]
 
         POSITIVE: Literal[True] = True
@@ -36,6 +68,12 @@ class LiteralEnum:
         Documentation for the negative choice.
         \"\"\"
     ```
+
+    Specializing the `LiteralEnum` class with a specific inner type allows
+    for more precise type checking for iteration and other methods. If no
+    specialization is provided, the default inner types are defined as:
+
+    `LiteralEnumInnerTypes = `bool | str | int | bytes | None`
 
     Example usage:
 
@@ -64,8 +102,15 @@ class LiteralEnum:
     into a single enum, e.g.:
 
     ```python
+    class ClearStrChoices(LiteralEnum[str]):
+        Literals = Literal['yes', 'no']
+
+        POSITIVE: Literal['yes'] = 'yes'
+        NEGATIVE: Literal['no'] = 'no'
+
     class UnclearStrChoices(LiteralEnum):
         Literals = Literal['maybe', 'possibly']
+
         MAYBE: Literal['maybe'] = 'maybe'
         POSSIBLY: Literal['possibly'] = 'possibly'
 
@@ -85,13 +130,11 @@ class LiteralEnum:
 
     ```python
     # For Python versions < 3.13
-    from typing_extensions import TypeIs
-
-    # Otherwise, use the built-in versions:
-    from typing import TypeIs
-
     # In any case:
-    from typing import get_args
+    # Otherwise, use the built-in versions:
+    from typing import get_args, TypeIs
+
+    from typing_extensions import TypeIs
 
     def is_unclear_choice(choice: AllStrChoices.Literals) -> TypeIs[UnclearStrChoices.Literals]:
         \"\"\"
@@ -132,9 +175,10 @@ class LiteralEnum:
 
     ```python
     # For Python versions < 3.11
-    from typing_extensions import assert_never
     # Otherwise, use the built-in versions:
     from typing import assert_never
+
+    from typing_extensions import assert_never
 
     def most_choices_are_still_ok(choice: AllStrChoices.Literals) -> None:
         match choice:
@@ -179,16 +223,46 @@ class LiteralEnum:
     ```
     """
 
+    _ALLOWED_LITERAL_INNER_TYPES: tuple[type, ...] = cast(
+        tuple[type, ...],
+        all_type_variants(LiteralEnumInnerTypes),
+    )
+
+    _RESERVED_PUBLIC_ATTRS = set(('Literals',))
+    _RESERVED_PUBLIC_METHODS = set(('names', 'name_for_value'))
+    _RESERVED_PUBLIC_NAMES = _RESERVED_PUBLIC_ATTRS | _RESERVED_PUBLIC_METHODS
+
     Literals: ClassVar
     """
-    A class variable  that specify the valid choices as a Literal type. Each choice must also be
-    defined as a separate class attribute with a Literal type.
+    A class variable  that specify the valid choices as a Literal type. Each
+    choice must also be defined as a separate class attribute with a Literal
+    type.
     """
-    def __init_subclass__(cls):
+    def __init_subclass__(cls) -> None:
         """
-        This method is called when a subclass of LiteralEnum is created. It makes sure all
-        values of the `Literals` class variable are also defined as members of the subclass. The
-        method also checks that the types of the class attributes correctly defined.
+        This method is called when a subclass of LiteralEnum is created. It
+        makes sure all values of the `Literals` class variable are also
+        defined as members of the subclass. The method also checks that the
+        types of the class attributes correctly defined.
+        """
+        # Check cls.Literals
+        all_cls_literal_vals = cls._check_literals_outer_type()
+        cls._check_literals_inner_types_are_allowed(all_cls_literal_vals)
+
+        # Check all defined attributes
+        defined_attr_literal_vals = cls._check_attributes(all_cls_literal_vals)
+
+        # Check that all values in cls.Literals are defined as attributes
+        cls._check_missing_attributes(all_cls_literal_vals, defined_attr_literal_vals)
+
+    @classmethod
+    def _check_literals_outer_type(cls) -> set[LiteralEnumInnerTypes]:
+        """
+        Checks that the `Literals` class variable is defined as a Literal
+        type and returns the set of all possible values defined in it.
+
+        Returns:
+            The set of all values defined in `cls.Literals`.
         """
         if not hasattr(cls, 'Literals'):
             raise TypeError(f'{cls.__name__} must define a Literals property.')
@@ -196,143 +270,170 @@ class LiteralEnum:
         assert is_literal_type(cls.Literals), \
             f'{cls.__name__}.Literals must be defined as a Literal type.'
 
-        all_literals = set(get_args(cls.Literals))
-        cls_type_hints = get_type_hints(cls)
-        defined_attrs = set()
+        return set(get_args(cls.Literals))
 
-        # Check that all attributes are defined as Literal types and match the `Literals` attribute
-        for attr in dir(cls):
-            val = getattr(cls, attr)
-            if not attr.startswith('_') and not is_literal_type(val):
-                assert attr in cls_type_hints and is_literal_type(cls_type_hints[attr]), \
-                    f'{cls.__name__}.{attr} must be annotated as a Literal type.'
+    @classmethod
+    def _check_literals_inner_types_are_allowed(
+            cls, all_cls_literal_vals: set[LiteralEnumInnerTypes]) -> None:
+        """
+        Checks that all values in cls.Literals are of the allowed inner
+        types. For a generic class, the checks are performed against
+        LiteralEnumInnerTypes. For a specialized class, the checks are
+        performed against the specialized inner types.
+        """
+        specialized_inner_types: tuple[type, ...] = cls._get_specialized_literal_inner_types()
 
-                annotation_args = get_args(cls_type_hints[attr])
-                assert annotation_args == (val, ), \
-                    (f'The value of the Literal annotation must match the assigned value for '
-                     f'{attr}: {annotation_args} != {(val, )}')
+        if specialized_inner_types:
+            literal_inner_types = specialized_inner_types
+        else:
+            literal_inner_types = cls._ALLOWED_LITERAL_INNER_TYPES
 
-                if val not in all_literals:
-                    raise TypeError(f'{val} is not defined in {cls.Literals}.')
-                defined_attrs.add(val)
+        non_matching_inner_types = []
 
-        literal_missing_attrs = all_literals - defined_attrs
+        for literal_val in all_cls_literal_vals:
+            if not isinstance(literal_val, literal_inner_types):
+                non_matching_inner_types.append(literal_val)
+
+        if non_matching_inner_types:
+            plurality_text = 'value does' if len(non_matching_inner_types) == 1 else 'values do'
+            raise TypeError(
+                f'{cls.__name__}: Literal {plurality_text} not match the specialization '
+                f"({', '.join(_.__name__ for _ in specialized_inner_types)}): "
+                + ', '.join(f'{_!r}' for _ in non_matching_inner_types))
+
+    @classmethod
+    def _get_specialized_literal_inner_types(cls) -> tuple[type, ...]:
+        """
+        Extract the specialized inner types from the Generics machinery.
+        """
+        return cast(
+            tuple[type, ...],
+            tuple(
+                _typ for _typ in all_type_variants(
+                    get_args(cls.__orig_bases__[0])[0]  # type: ignore[attr-defined]
+                ) if _typ in cls._ALLOWED_LITERAL_INNER_TYPES),
+        )
+
+    @classmethod
+    def _check_attributes(
+            cls, all_cls_literal_vals: set[LiteralEnumInnerTypes]) -> set[LiteralEnumInnerTypes]:
+        """
+        Checks that all public attributes are defined:
+        - with an uppercase name
+        - annotated as Literal types and with a matching value
+        - match the inner types defined in `Literals`
+
+        Returns:
+            The set of all correctly defined attribute values
+        """
+
+        defined_attr_vals: set[LiteralEnumInnerTypes] = set()
+
+        for member_name in dir(cls):
+            member = getattr(cls, member_name)
+
+            if cls._is_public_attr(member_name, member):
+                cls._check_uppercase_attr_name(member_name)
+                cls._check_attr_annotation_and_value_are_matching_literals(member_name, member)
+                cls._check_attr_matches_cls_literals(all_cls_literal_vals, member)
+
+                defined_attr_vals.add(member)
+
+        return defined_attr_vals
+
+    @classmethod
+    def _check_uppercase_attr_name(cls, attr):
+        assert attr.isupper(), f'{cls.__name__}.{attr} must be an uppercase attribute name.'
+
+    @classmethod
+    def _check_attr_annotation_and_value_are_matching_literals(
+        cls,
+        attr: str,
+        value: Any,
+    ):
+        """
+        Checks that the attribute is annotated as a Literal type and that
+        the value matches the annotation.
+        """
+        cls_type_hints: dict[str, TypeForm] = get_type_hints(cls)
+
+        assert attr in cls_type_hints and is_literal_type(cls_type_hints[attr]), \
+            f'{cls.__name__}.{attr} must be annotated as a Literal type.'
+
+        annotation_args = get_args(cls_type_hints[attr])
+        assert annotation_args == (value,), \
+            (f'The value of the Literal annotation must match the assigned value for '
+             f'{attr}: {annotation_args} != {(value,)}')
+
+    @classmethod
+    def _check_attr_matches_cls_literals(
+        cls,
+        all_cls_literal_vals: set[LiteralEnumInnerTypes],
+        value: Any,
+    ):
+        """
+        Checks that the value of the attribute is one of the defined
+        literals in `cls.Literals`.
+        """
+        if value not in all_cls_literal_vals:
+            raise TypeError(f'{value} is not defined in {cls.Literals}.')
+
+    @classmethod
+    def _is_public_attr(cls, attr: str, value: Any) -> bool:
+        return (
+            # Check if the attribute is not private
+            not attr.startswith('_')
+            # Check if the attribute is not a reserved public attribute
+            and attr not in cls._RESERVED_PUBLIC_ATTRS
+            # Check if the attribute is not a reserved public method
+            and not cls._is_reserved_method(attr, value))
+
+    @classmethod
+    def _is_reserved_method(cls, attr: str, val: Any) -> bool:
+        if attr in cls._RESERVED_PUBLIC_METHODS:
+            return getattr(val, '__func__', None) is getattr(LiteralEnum, attr).__func__
+        return False
+
+    @classmethod
+    def _check_missing_attributes(
+        cls,
+        all_cls_literal_vals: set[LiteralEnumInnerTypes],
+        defined_attrs: set[LiteralEnumInnerTypes],
+    ):
+        """
+        Checks that all choices in `cls.Literals` are defined as class
+        attributes.
+        """
+        literal_missing_attrs = all_cls_literal_vals - defined_attrs
         if literal_missing_attrs:
             raise TypeError(f'Not all choices in {cls.__name__}.Literals are defined as members .'
                             f'Missing members: {literal_missing_attrs}')
 
+    @classmethod
+    def names(cls) -> Iterator[str]:
+        """
+        Get an iterator of all attribute names defined in the enum.
 
-def generate_literal_enum_code(values: tuple[object, ...],
-                               class_name: str = 'NewLiteralEnum') -> str:
-    """
-    Generate code for a LiteralEnum class based on a tuple of string values.
+        Returns:
+            An iterator of attribute names defined in the enum.
+        """
+        return (attr_name for attr_name in cls.__dict__.keys()
+                if not attr_name.startswith('_') and attr_name not in cls._RESERVED_PUBLIC_NAMES)
 
-    Args:
-        values: A tuple of objects that define the literal values for the enum
-        class_name: The name of the generated class (default: 'GeneratedEnum')
+    @classmethod
+    def name_for_value(cls: 'type[LiteralEnum[LiteralInnerTypeT]]',
+                       value: LiteralInnerTypeT) -> str:
+        """
+        Get the name of the enum attribute that corresponds to the given value.
 
-    Returns:
-        A string containing the complete Python code for a LiteralEnum class
+        Args:
+            value: The value to look up in the enum
 
-    Raises:
-        ValueError: If no values are provided or if class_name is not a valid identifier
-
-    Example:
-        >>> code = generate_literal_enum_code(('active', 'inactive', 'pending'))
-        >>> print(code)
-        from typing import Literal
-        from omnipy.util.literal_enum import LiteralEnum
-
-
-        class GeneratedEnum(LiteralEnum):
-            Literals = Literal['active', 'inactive', 'pending']
-            ACTIVE: Literal['active'] = 'active'
-            INACTIVE: Literal['inactive'] = 'inactive'
-            PENDING: Literal['pending'] = 'pending'
-    """
-    if not values:
-        raise ValueError('At least one value must be provided')
-
-    if not is_unreserved_identifier(class_name):
-        raise ValueError(f'"{class_name}" is not a valid Python class name')
-
-    # Generate attribute names from values, handling duplicates
-    attr_names = []
-    used_names: set[str] = set()
-
-    for value in values:
-        # Convert value to a valid attribute name
-        attr_name = _generate_attribute_name(value, used_names)
-        attr_names.append(attr_name)
-        used_names.add(attr_name)
-
-    # Build the literals string
-    literals_str = ', '.join(repr(value) for value in values)
-
-    # Build the class code
-    lines = [
-        'from typing import Literal',
-        'from omnipy.util.literal_enum import LiteralEnum',
-        '',
-        '',
-        f'class {class_name}(LiteralEnum):',
-        f'    Literals = Literal[{literals_str}]'
-    ]
-
-    # Add attribute definitions
-    for value, attr_name in zip(values, attr_names):
-        lines.append(f'    {attr_name}: Literal[{repr(value)}] = {repr(value)}')
-
-    return '\n'.join(lines)
-
-
-def _generate_attribute_name(value: Any, used_names: set[str]) -> str:
-    """
-    Generate a valid Python attribute name from a value.
-
-    Args:
-        value: The value to convert to an attribute name
-        used_names: Set of already used attribute names to avoid conflicts
-
-    Returns:
-        A valid Python attribute name
-    """
-    import re
-
-    if not isinstance(value, str):
-        value = str(value)
-
-    if value == '':
-        base_name = 'empty'
-    elif value[0].isdigit():
-        base_name = f'number_{value}'
-    elif value.isspace():
-        base_name = 'whitespace'
-    else:
-        base_name = value
-
-    # Transliterate non-ascii characters
-    base_name = inflection.transliterate(base_name)
-
-    # Transform to snake_case and uppercase
-    base_name = inflection.underscore(base_name).upper()
-
-    # Replace non-alphanumeric characters with underscores
-    base_name = re.sub(r'[^a-zA-Z0-9_]', '_', base_name)
-
-    # Remove leading/trailing underscores and collapse multiple underscores
-    base_name = re.sub(r'^_+|_+$', '', base_name)
-    base_name = re.sub(r'_+', '_', base_name)
-
-    # Ensure it's a valid identifier (this should now always pass)
-    if not is_unreserved_identifier(base_name):
-        base_name = f'VALUE_{base_name}'
-
-    # Handle conflicts by adding a suffix
-    candidate = base_name
-    counter = 2
-    while candidate in used_names:
-        candidate = f'{base_name}_{counter}'
-        counter += 1
-
-    return candidate
+        Returns:
+            The name of the enum attribute that corresponds to the value, or raise ValueError if the
+            value is not found.
+        """
+        for attr_name, attr_value in cls.__dict__.items():
+            if attr_value == value:
+                return attr_name
+        raise ValueError(f'Value {value!r} not found in {cls.__name__}')

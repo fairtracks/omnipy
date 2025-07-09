@@ -1,13 +1,15 @@
+from enum import Enum
 from typing import get_args
 
 import pytest
 
-from omnipy.util.literal_enum import generate_literal_enum_code, LiteralEnum
+from omnipy.util.literal_enum import LiteralEnum
+from omnipy.util.literal_enum_generator import generate_literal_enum_code
 
 
-def test_generate_literal_enum_code_basic() -> None:
+def test_generate_literal_enum_code_basic_tuple() -> None:
     """Test basic code generation with simple string values."""
-    code = generate_literal_enum_code(('active', 'inactive', 'pending'))
+    code = generate_literal_enum_code(('active', 'inactive', 'pending'), print_to_stdout=False)
 
     expected_lines = [
         'from typing import Literal',
@@ -16,6 +18,7 @@ def test_generate_literal_enum_code_basic() -> None:
         '',
         'class NewLiteralEnum(LiteralEnum):',
         "    Literals = Literal['active', 'inactive', 'pending']",
+        '',
         "    ACTIVE: Literal['active'] = 'active'",
         "    INACTIVE: Literal['inactive'] = 'inactive'",
         "    PENDING: Literal['pending'] = 'pending'"
@@ -24,9 +27,75 @@ def test_generate_literal_enum_code_basic() -> None:
     assert code == '\n'.join(expected_lines)
 
 
+def test_generate_literal_enum_code_basic_tuple_no_imports() -> None:
+    """Test basic code generation with simple string values."""
+    code = generate_literal_enum_code(
+        ('active', 'inactive', 'pending'),
+        print_to_stdout=False,
+        include_imports=False,
+    )
+
+    expected_lines = [
+        'class NewLiteralEnum(LiteralEnum):',
+        "    Literals = Literal['active', 'inactive', 'pending']",
+        '',
+        "    ACTIVE: Literal['active'] = 'active'",
+        "    INACTIVE: Literal['inactive'] = 'inactive'",
+        "    PENDING: Literal['pending'] = 'pending'"
+    ]
+
+    assert code == '\n'.join(expected_lines)
+
+
+def test_generate_literal_enum_code_basic_dict() -> None:
+    """Test basic code generation with simple dict values."""
+    code = generate_literal_enum_code({'YES': True, 'NO': False}, print_to_stdout=False)
+
+    expected_lines = [
+        'from typing import Literal',
+        'from omnipy.util.literal_enum import LiteralEnum',
+        '',
+        '',
+        'class NewLiteralEnum(LiteralEnum):',
+        '    Literals = Literal[True, False]',
+        '',
+        '    YES: Literal[True] = True',
+        '    NO: Literal[False] = False',
+    ]
+
+    assert code == '\n'.join(expected_lines)
+
+
+def test_generate_literal_enum_from_other_enum_mapping() -> None:
+    """Test basic code generation with simple dict values."""
+    class MyEnum(Enum):
+        YES = True
+        NO = False
+
+    code = generate_literal_enum_code(MyEnum.__members__, print_to_stdout=False)
+
+    expected_lines = [
+        'from typing import Literal',
+        'from omnipy.util.literal_enum import LiteralEnum',
+        '',
+        '',
+        'class NewLiteralEnum(LiteralEnum):',
+        '    Literals = Literal[True, False]',
+        '',
+        '    YES: Literal[True] = True',
+        '    NO: Literal[False] = False',
+    ]
+
+    assert code == '\n'.join(expected_lines)
+
+
 def test_generate_literal_enum_code_custom_class_name() -> None:
     """Test code generation with custom class name."""
-    code = generate_literal_enum_code((True, False), 'YesNoChoice')
+    code = generate_literal_enum_code(
+        (True, False),
+        print_to_stdout=False,
+        class_name='YesNoChoice',
+    )
 
     assert 'class YesNoChoice(LiteralEnum):' in code
     assert 'Literals = Literal[True, False]' in code
@@ -36,7 +105,7 @@ def test_generate_literal_enum_code_custom_class_name() -> None:
 
 def test_generate_literal_enum_code_single_value() -> None:
     """Test code generation with a single value."""
-    code = generate_literal_enum_code(('only',))
+    code = generate_literal_enum_code(('only',), print_to_stdout=False)
 
     assert "Literals = Literal['only']" in code
     assert "ONLY: Literal['only'] = 'only'" in code
@@ -44,7 +113,8 @@ def test_generate_literal_enum_code_single_value() -> None:
 
 def test_generate_literal_enum_code_special_characters() -> None:
     """Test code generation with values containing special characters."""
-    code = generate_literal_enum_code(('hello-world', 'foo.bar', 'test@example'))
+    code = generate_literal_enum_code(('hello-world', 'foo.bar', 'test@example'),
+                                      print_to_stdout=False)
 
     # Check that special characters are handled in attribute names
     assert 'HELLO_WORLD:' in code
@@ -59,7 +129,7 @@ def test_generate_literal_enum_code_special_characters() -> None:
 
 def test_generate_literal_enum_code_numbers_and_numeric_strings() -> None:
     """Test code generation with numeric string values."""
-    code = generate_literal_enum_code((123, '456'))
+    code = generate_literal_enum_code((123, '456'), print_to_stdout=False)
 
     # Numerics should get NUMBER_ prefix for attribute names
     assert 'NUMBER_123:' in code
@@ -70,7 +140,7 @@ def test_generate_literal_enum_code_numbers_and_numeric_strings() -> None:
 
 def test_generate_literal_enum_code_empty() -> None:
     """Test code generation with empty strings and whitespace."""
-    code = generate_literal_enum_code(('', ''))
+    code = generate_literal_enum_code(('', ''), print_to_stdout=False)
 
     # Empty strings should get EMPTY attribute names
     assert 'EMPTY:' in code
@@ -82,7 +152,7 @@ def test_generate_literal_enum_code_empty() -> None:
 
 def test_generate_literal_enum_code_whitespace() -> None:
     """Test code generation with empty strings and whitespace."""
-    code = generate_literal_enum_code(('   ', '\t\n'))
+    code = generate_literal_enum_code(('   ', '\t\n'), print_to_stdout=False)
 
     # Whitespace-only strings should get WHITESPACE attribute names
     assert 'WHITESPACE:' in code
@@ -95,7 +165,7 @@ def test_generate_literal_enum_code_whitespace() -> None:
 
 def test_generate_literal_enum_code_duplicate_values() -> None:
     """Test code generation with duplicate values."""
-    code = generate_literal_enum_code(('same', 'same', 'different'))
+    code = generate_literal_enum_code(('same', 'same', 'different'), print_to_stdout=False)
 
     # Should handle duplicates by creating unique attribute names
     assert 'SAME:' in code
@@ -108,7 +178,7 @@ def test_generate_literal_enum_code_duplicate_values() -> None:
 
 def test_generate_literal_enum_code_keywords() -> None:
     """Test code generation with Python keywords as values."""
-    code = generate_literal_enum_code(('class', 'def', 'if'))
+    code = generate_literal_enum_code(('class', 'def', 'if'), print_to_stdout=False)
 
     assert 'CLASS:' in code
     assert 'DEF:' in code
@@ -122,7 +192,8 @@ def test_generate_literal_enum_code_keywords() -> None:
 
 def test_generate_literal_enum_code_mixed_cases() -> None:
     """Test code generation with mixed case values."""
-    code = generate_literal_enum_code(('CamelCase', 'snake_case', 'UPPER_CASE'))
+    code = generate_literal_enum_code(('CamelCase', 'snake_case', 'UPPER_CASE'),
+                                      print_to_stdout=False)
 
     # All should be converted to uppercase for attribute names
     assert 'CAMEL_CASE:' in code
@@ -133,21 +204,31 @@ def test_generate_literal_enum_code_mixed_cases() -> None:
 def test_generate_literal_enum_code_empty_values_error() -> None:
     """Test that empty tuple raises ValueError."""
     with pytest.raises(ValueError, match='At least one value must be provided'):
-        generate_literal_enum_code(())
+        generate_literal_enum_code((), print_to_stdout=False)
 
 
 def test_generate_literal_enum_code_invalid_class_name() -> None:
     """Test that invalid class names raise ValueError."""
     with pytest.raises(ValueError, match='is not a valid Python class name'):
-        generate_literal_enum_code(('value',), '123InvalidName')
+        generate_literal_enum_code(
+            ('value',),
+            print_to_stdout=False,
+            class_name='123InvalidName',
+        )
 
     with pytest.raises(ValueError, match='is not a valid Python class name'):
-        generate_literal_enum_code(('value',), 'class')  # keyword
+        generate_literal_enum_code(
+            ('value',),
+            print_to_stdout=False,
+            class_name='class',
+        )  # keyword
 
 
 def test_generate_literal_enum_code_generated_class_works() -> None:
     """Test that the generated code actually creates a working LiteralEnum."""
-    code = generate_literal_enum_code(('active', 'inactive'), 'StatusEnum')
+    code = generate_literal_enum_code(('active', 'inactive'),
+                                      print_to_stdout=False,
+                                      class_name='StatusEnum')
 
     # Execute the generated code
     namespace: dict[str, type[LiteralEnum]] = {}
@@ -168,7 +249,7 @@ def test_generate_literal_enum_code_generated_class_works() -> None:
 def test_generate_literal_enum_code_complex_example() -> None:
     """Test code generation with a complex real-world example."""
     values = ('pending-approval', 'in-progress', 'completed', 'failed', 'cancelled')
-    code = generate_literal_enum_code(values, 'TaskStatus')
+    code = generate_literal_enum_code(values, print_to_stdout=False, class_name='TaskStatus')
 
     # Execute and test the generated code
     namespace: dict[str, type[LiteralEnum]] = {}

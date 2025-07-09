@@ -8,7 +8,7 @@ import omnipy.util._pydantic as pyd
 from omnipy.util.literal_enum import LiteralEnum
 
 
-class ClearBoolChoices(LiteralEnum):
+class ClearBoolChoices(LiteralEnum[bool]):
     Literals = Literal[True, False]
 
     POSITIVE: Literal[True] = True
@@ -41,13 +41,13 @@ def test_docs_clear_choices_example() -> None:
     assert response is None
 
 
-class ClearStrChoices(LiteralEnum):
+class ClearStrChoices(LiteralEnum[str]):
     Literals = Literal['yes', 'no']
     POSITIVE: Literal['yes'] = 'yes'
     NEGATIVE: Literal['no'] = 'no'
 
 
-class UnclearStrChoices(LiteralEnum):
+class UnclearStrChoices(LiteralEnum[str]):
     Literals = Literal['maybe', 'possibly']
     MAYBE: Literal['maybe'] = 'maybe'
     POSSIBLY: Literal['possibly'] = 'possibly'
