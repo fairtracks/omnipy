@@ -63,7 +63,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
     @staticmethod
     @functools.lru_cache
-    def _determine_display_type(display_type: DisplayType,) -> DisplayType:
+    def _determine_display_type(display_type: DisplayType.Literals) -> DisplayType.Literals:
         if display_type is DisplayType.AUTO:
             display_type = detect_display_type()
         return display_type
@@ -71,9 +71,9 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _insert_any_reactive_components(
         self,
         method_name: str,
-        display_type: DisplayType = DisplayType.AUTO,
         **kwargs: Any,
     ) -> 'str | Element':
+        display_type: DisplayType.Literals = DisplayType.AUTO,
         from omnipy.data.dataset import Dataset, Model
 
         display_type = self._determine_display_type(display_type)
@@ -91,8 +91,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _peek_models(
         self,
         models: dict[str, 'Model'],
-        display_type: DisplayType = DisplayType.AUTO,
     ) -> 'str | Element':
+        display_type: DisplayType.Literals = DisplayType.AUTO,
         from omnipy.data.dataset import Dataset
 
         display_type = self._determine_display_type(display_type)
@@ -155,7 +155,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     @functools.lru_cache
     def _get_output_according_to_display_type(
         stylized_panel: FullyRenderedPanel,
-        display_type: DisplayType,
+        display_type: DisplayType.Literals,
     ) -> str:
         match display_type:
             case (DisplayType.TERMINAL | DisplayType.IPYTHON
@@ -172,7 +172,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     @staticmethod
     def _get_console_config(
         display_config: IsDisplayConfig,
-        display_type: DisplayType,
+        display_type: DisplayType.Literals,
     ) -> IsConsoleConfig:
         match display_type:
             case (DisplayType.TERMINAL | DisplayType.IPYTHON
@@ -187,7 +187,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 raise ShouldNotOccurException(f'Incorrect display type: {display_type}')
         return getattr(display_config, display_config_attr)
 
-    def _get_output_config(self, display_type: DisplayType) -> OutputConfig:
+    def _get_output_config(self, display_type: DisplayType.Literals) -> OutputConfig:
         display_config = cast(DataClassBase, self).config.display
         console_config: IsConsoleConfig = self._get_console_config(display_config, display_type)
 
@@ -222,7 +222,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             )
         return config
 
-    def _define_frame_from_console_size(self, display_type: DisplayType) -> Frame:
+    def _define_frame_from_console_size(self, display_type: DisplayType.Literals) -> Frame:
         display_config = cast(DataClassBase, self).config.display
         console_config: IsConsoleConfig = self._get_console_config(display_config, display_type)
 

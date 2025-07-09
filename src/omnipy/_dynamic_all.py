@@ -1,9 +1,9 @@
-from enum import Enum
 import os
 from types import ModuleType
 
 import omnipy
 from omnipy.util._pydantic import lenient_isinstance, lenient_issubclass
+from omnipy.util.literal_enum import LiteralEnum
 
 from . import (BackoffStrategy,
                ConfigOutputStorageProtocolOptions,
@@ -110,7 +110,7 @@ if not __all__:
                 if lenient_issubclass(val, Model) \
                         or lenient_issubclass(val, Dataset) \
                         or lenient_isinstance(val, JobTemplateMixin) \
-                        or lenient_issubclass(val, Enum):
+                        or lenient_issubclass(val, LiteralEnum):
                     print(f'Adding {attr}')
                     _all_element_names.add(attr)
                     globals()[attr] = val

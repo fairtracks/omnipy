@@ -36,7 +36,7 @@ def _get_retry_client(
     client_session: 'ClientSession | None',
     retry_http_statuses: tuple[int, ...],
     retry_attempts: int,
-    retry_backoff_strategy: BackoffStrategy,
+    retry_backoff_strategy: BackoffStrategy.Literals,
 ) -> 'RetryClient':
     from .helpers import BACKOFF_STRATEGY_2_RETRY_CLS
     from .lazy_import import RetryClient
@@ -57,7 +57,7 @@ async def _ensure_retry_session(
     client_session: 'ClientSession | None',
     retry_http_statuses: tuple[int, ...],
     retry_attempts: int,
-    retry_backoff_strategy: BackoffStrategy,
+    retry_backoff_strategy: BackoffStrategy.Literals,
 ) -> 'AsyncGenerator[RetryClient, None]':
     from .lazy_import import ClientSession
 
@@ -84,7 +84,7 @@ async def get_json_from_api_endpoint(
     client_session: 'ClientSession | None' = None,
     retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
     retry_attempts: int = DEFAULT_RETRIES,
-    retry_backoff_strategy: BackoffStrategy = DEFAULT_BACKOFF_STRATEGY,
+    retry_backoff_strategy: BackoffStrategy.Literals = DEFAULT_BACKOFF_STRATEGY,
 ) -> JsonModel:
     from .lazy_import import ClientSession
 
@@ -105,7 +105,7 @@ async def get_str_from_api_endpoint(
     client_session: 'ClientSession | None' = None,
     retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
     retry_attempts: int = DEFAULT_RETRIES,
-    retry_backoff_strategy: BackoffStrategy = DEFAULT_BACKOFF_STRATEGY,
+    retry_backoff_strategy: BackoffStrategy.Literals = DEFAULT_BACKOFF_STRATEGY,
 ) -> StrModel:
     from .lazy_import import ClientSession
 
@@ -126,7 +126,7 @@ async def get_bytes_from_api_endpoint(
     client_session: 'ClientSession | None' = None,
     retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
     retry_attempts: int = DEFAULT_RETRIES,
-    retry_backoff_strategy: BackoffStrategy = DEFAULT_BACKOFF_STRATEGY,
+    retry_backoff_strategy: BackoffStrategy.Literals = DEFAULT_BACKOFF_STRATEGY,
 ) -> BytesModel:
     from .lazy_import import ClientSession
 
@@ -147,7 +147,7 @@ async def get_auto_from_api_endpoint(
     client_session: 'ClientSession | None' = None,
     retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
     retry_attempts: int = DEFAULT_RETRIES,
-    retry_backoff_strategy: BackoffStrategy = DEFAULT_BACKOFF_STRATEGY,
+    retry_backoff_strategy: BackoffStrategy.Literals = DEFAULT_BACKOFF_STRATEGY,
     as_mime_type: str | None = None,
 ) -> AutoResponseContentsModel:
     from .lazy_import import ClientSession, CONTENT_TYPE

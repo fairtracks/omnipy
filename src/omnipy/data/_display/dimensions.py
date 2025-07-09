@@ -52,8 +52,9 @@ def has_width_or_height(dims: AnyDimensions) -> TypeIs[DimensionsWithWidthOrHeig
     return has_width(dims) or has_height(dims)
 
 
-class Proportionally(LiteralEnum):
+class Proportionally(LiteralEnum[str]):
     Literals = Literal['thinner', 'same', 'wider']
+
     THINNER: Literal['thinner'] = 'thinner'
     SAME: Literal['same'] = 'same'
     WIDER: Literal['wider'] = 'wider'

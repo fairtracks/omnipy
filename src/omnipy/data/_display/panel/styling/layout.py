@@ -88,8 +88,8 @@ class StylizedLayoutPanel(
     @lru_cache(maxsize=1024)
     def _get_stylized_layout_common(  # noqa: C901
         outer_panel: 'StylizedLayoutPanel[FrameInvT]',
-        console_color_system: ConsoleColorSystem,  # Only used for hashing
-        force_autodetect_bg_color: ForceAutodetect,
+        console_color_system: ConsoleColorSystem.Literals,  # Only used for hashing
+        force_autodetect_bg_color: ForceAutodetect.Literals,
     ) -> rich.table.Table:
         styles = PanelElementStyles(outer_panel, force_autodetect_bg_color)
         outer_layout_panel_styler = OuterLayoutPanelStyler(outer_panel, styles)
@@ -148,7 +148,7 @@ class PanelElementStyles:
     def __init__(
         self,
         outer_panel: 'StylizedLayoutPanel[FrameInvT]',
-        force_autodetect_bg_color: ForceAutodetect,
+        force_autodetect_bg_color: ForceAutodetect.Literals,
     ) -> None:
         color_style = outer_panel.config.color_style
         style_fg_color = calculate_fg_color_from_color_style(color_style)
@@ -286,7 +286,7 @@ class InnerPanelStyler:
         add_column_kwargs: dict[str, Any] = dict(
             width=column_width,
             overflow='crop',
-            justify=self._panel.config.justify_in_layout.value,
+            justify=self._panel.config.justify_in_layout,
         )
 
         if styled_title:

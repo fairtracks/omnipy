@@ -1,11 +1,10 @@
 from abc import abstractmethod
 from copy import copy
-from enum import Enum
 from functools import cached_property
 import html
 import re
 from textwrap import dedent
-from typing import Callable, ClassVar, Generic, Iterable, NamedTuple
+from typing import Callable, ClassVar, Generic, Iterable, Literal, NamedTuple
 
 import rich.console
 import rich.segment
@@ -23,12 +22,15 @@ from omnipy.data._display.panel.helpers import (calculate_bg_color_triplet_from_
 from omnipy.data._display.panel.styling.base import PanelT, StylizedMonospacedPanel
 from omnipy.shared.enums import HorizontalOverflowMode
 from omnipy.util.helpers import extract_newline, max_newline_stripped_width, strip_and_split_newline
+from omnipy.util.literal_enum import LiteralEnum
 
 
-class OutputMode(str, Enum):
-    PLAIN = 'plain'
-    BW_STYLIZED = 'bw_stylized'
-    COLORIZED = 'colorized'
+class OutputMode(LiteralEnum[str]):
+    Literals = Literal['plain', 'bw_stylized', 'colorized']
+
+    PLAIN: Literal['plain'] = 'plain'
+    BW_STYLIZED: Literal['bw_stylized'] = 'bw_stylized'
+    COLORIZED: Literal['colorized'] = 'colorized'
 
 
 class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
@@ -71,7 +73,7 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
 
     def __init__(self,
                  output: 'StylizedMonospacedPanel[PanelT, ContentT, FrameT]',
-                 output_mode: OutputMode) -> None:
+                 output_mode: OutputMode.Literals) -> None:
         self._output = output
         self._config = output.config
         self._frame = output.frame
@@ -180,7 +182,7 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
         return html_page_template
 
     def _prepare_color_theme_for_html(
-            self, force_autodetect: ForceAutodetect) -> rich.terminal_theme.TerminalTheme:
+            self, force_autodetect: ForceAutodetect.Literals) -> rich.terminal_theme.TerminalTheme:
         """
         Prepares the color theme for the HTML export, confusingly called a "terminal theme" in the
         rich library. The "terminal theme" is used to set the foreground and background colors for
@@ -228,7 +230,7 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
         console = self._prepare_html_console_according_to_output_mode()
 
         if self._config.transparent_background:
-            force_autodetect = ForceAutodetect.ALWAYS
+            force_autodetect: ForceAutodetect.Literals = ForceAutodetect.ALWAYS
         else:
             force_autodetect = ForceAutodetect.IF_NO_BG_COLOR_IN_STYLE
 

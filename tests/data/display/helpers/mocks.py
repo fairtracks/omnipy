@@ -84,7 +84,7 @@ class MockOutputVariantBase(OutputVariant):
         content_lines: list[str],
         frame: Frame,
         config: OutputConfig,
-        output_mode: OutputMode,
+        output_mode: OutputMode.Literals,
     ) -> None:
         self._cropped_lines = self._crop_to_frame(content_lines, frame, config)
         self._output_mode = output_mode

@@ -263,19 +263,19 @@ class MockRunStateRegistryConfig(ConfigBase):
 class MockRunStateRegistry:
     def __init__(self) -> None:
         self._jobs: dict[str, IsJob] = {}
-        self._job_state: dict[str, RunState] = {}
-        self._job_state_datetime: dict[tuple[str, RunState], datetime] = {}
+        self._job_state: dict[str, RunState.Literals] = {}
+        self._job_state_datetime: dict[tuple[str, RunState.Literals], datetime] = {}
 
-    def get_job_state(self, job: IsJob) -> RunState:
+    def get_job_state(self, job: IsJob) -> RunState.Literals:
         return self._job_state[job.unique_name]
 
-    def get_job_state_datetime(self, job: IsJob, state: RunState) -> datetime:
+    def get_job_state_datetime(self, job: IsJob, state: RunState.Literals) -> datetime:
         return self._job_state_datetime[(job.unique_name, state)]
 
-    def all_jobs(self, state: RunState | None = None) -> tuple[IsJob, ...]:  # noqa
+    def all_jobs(self, state: RunState.Literals | None = None) -> tuple[IsJob, ...]:  # noqa
         return tuple(self._jobs.values())
 
-    def set_job_state(self, job: IsJob, state: RunState) -> None:
+    def set_job_state(self, job: IsJob, state: RunState.Literals) -> None:
         self._jobs[job.unique_name] = job
         self._job_state[job.unique_name] = state
         self._job_state_datetime[(job.unique_name, state)] = datetime.now()

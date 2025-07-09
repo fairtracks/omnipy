@@ -9,8 +9,8 @@ from typing_extensions import override
 
 from omnipy.config import ConfigBase
 from omnipy.data._display.config import TERMINAL_DEFAULT_HEIGHT, TERMINAL_DEFAULT_WIDTH
-from omnipy.shared.enums import (BackoffStrategy,
-                                 ColorStyles,
+from omnipy.shared.enums import (AllColorStyles,
+                                 BackoffStrategy,
                                  ConsoleColorSystem,
                                  ConsoleDimensionsMode,
                                  HorizontalOverflowMode,
@@ -37,8 +37,8 @@ class ColorConfig(ConfigBase):
     """
     Configuration for color output.
     """
-    system: ConsoleColorSystem = ConsoleColorSystem.AUTO
-    style: ColorStyles | str = RecommendedColorStyles.ANSI_DARK
+    system: ConsoleColorSystem.Literals = ConsoleColorSystem.AUTO
+    style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
     transparent_background: bool = True
 
 
@@ -49,7 +49,7 @@ class ConsoleConfig(ConfigBase):
 
 
 class DimsModeMixin(BaseModel):
-    dims_mode: ConsoleDimensionsMode = ConsoleDimensionsMode.AUTO
+    dims_mode: ConsoleDimensionsMode.Literals = ConsoleDimensionsMode.AUTO
 
 
 class DimsModeConfig(ConsoleConfig, DimsModeMixin, ABC):
@@ -162,21 +162,21 @@ class OverflowConfig(ConfigBase):
     """
     Configuration for overflow handling.
     """
-    horizontal: HorizontalOverflowMode = HorizontalOverflowMode.ELLIPSIS
-    vertical: VerticalOverflowMode = VerticalOverflowMode.ELLIPSIS_BOTTOM
+    horizontal: HorizontalOverflowMode.Literals = HorizontalOverflowMode.ELLIPSIS
+    vertical: VerticalOverflowMode.Literals = VerticalOverflowMode.ELLIPSIS_BOTTOM
 
 
 class TextConfig(ConfigBase):
     overflow: IsOverflowConfig = pyd.Field(default_factory=OverflowConfig)
     tab_size: pyd.NonNegativeInt = 4
     indent_tab_size: pyd.NonNegativeInt = 2
-    pretty_printer: PrettyPrinterLib = PrettyPrinterLib.RICH
+    pretty_printer: PrettyPrinterLib.Literals = PrettyPrinterLib.RICH
     debug_mode: bool = False
 
 
 class LayoutConfig(ConfigBase):
     overflow: IsOverflowConfig = pyd.Field(default_factory=OverflowConfig)
-    panel_design: PanelDesign = PanelDesign.TABLE_GRID
+    panel_design: PanelDesign.Literals = PanelDesign.TABLE_GRID
     panel_title_at_top: bool = True
 
 
@@ -216,7 +216,7 @@ class HttpRequestsConfig(ConfigBase):
     # For get_*_from_api_endpoint tasks
     retry_http_statuses: tuple[int, ...] = (408, 425, 429, 500, 502, 503, 504)
     retry_attempts: int = 5
-    retry_backoff_strategy: BackoffStrategy = BackoffStrategy.EXPONENTIAL
+    retry_backoff_strategy: BackoffStrategy.Literals = BackoffStrategy.EXPONENTIAL
 
 
 class HttpConfig(ConfigBase):

@@ -11,7 +11,8 @@ from omnipy.util.helpers import strip_and_split_newline
 
 
 def rich_overflow_method(
-        horizontal_overflow_mode: HorizontalOverflowMode) -> rich.console.OverflowMethod | None:
+    horizontal_overflow_mode: HorizontalOverflowMode.Literals
+) -> rich.console.OverflowMethod | None:
     match horizontal_overflow_mode:
         case HorizontalOverflowMode.ELLIPSIS:
             return 'ellipsis'
@@ -98,7 +99,7 @@ def replace_ellipsis_lines_with_ellipses(
 def crop_content_lines_vertically2(
     lines: list[str],
     crop_height: pyd.NonNegativeInt | None,
-    vertical_overflow_mode: VerticalOverflowMode,
+    vertical_overflow_mode: VerticalOverflowMode.Literals,
 ) -> tuple[list[str], set[int]]:
     """
     Crop content lines vertically according to frame height and configured
@@ -144,7 +145,7 @@ def crop_content_lines_vertically2(
 def crop_content_line_horizontally(
     content_line: str,
     frame_width: pyd.NonNegativeInt | None,
-    horizontal_overflow_mode: HorizontalOverflowMode,
+    horizontal_overflow_mode: HorizontalOverflowMode.Literals,
 ) -> str:
     if frame_width is None or len(content_line) <= frame_width:
         return content_line

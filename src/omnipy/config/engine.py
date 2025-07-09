@@ -17,6 +17,6 @@ class PrefectEngineConfig(JobRunnerConfig):
 
 
 class EngineConfig(ConfigBase):
-    choice: EngineChoice = EngineChoice.LOCAL
+    choice: EngineChoice.Literals = EngineChoice.LOCAL
     local: IsLocalRunnerConfig = pyd.Field(default_factory=LocalRunnerConfig)
     prefect: IsPrefectEngineConfig = pyd.Field(default_factory=PrefectEngineConfig)

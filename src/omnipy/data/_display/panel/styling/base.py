@@ -131,7 +131,7 @@ class StylizedMonospacedPanel(
             console_height: int,
             frame_width: int | None,
             rich_overflow_method: rich.console.OverflowMethod | None,
-            console_color_system: ConsoleColorSystem,
+            console_color_system: ConsoleColorSystem.Literals,
             display_type: DisplayType = detect_display_type(),
     ) -> rich.console.Console:
 
@@ -139,7 +139,7 @@ class StylizedMonospacedPanel(
             file=StringIO(),
             width=console_width,
             height=console_height,
-            color_system=console_color_system.value,
+            color_system=console_color_system,
             record=True,
             force_jupyter=False,
             force_terminal=display_type_is_any_terminal(display_type),

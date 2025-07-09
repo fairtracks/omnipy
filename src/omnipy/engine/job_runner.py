@@ -12,7 +12,7 @@ from omnipy.shared.protocols.compute.job import IsDagFlow, IsFuncFlow, IsLinearF
 
 class JobRunnerEngine(Engine, ABC):
     """Base class for job runner engine implementations"""
-    def _register_job_state(self, job: IsJob, state: RunState) -> None:
+    def _register_job_state(self, job: IsJob, state: RunState.Literals) -> None:
         if self._registry:
             self._registry.set_job_state(job, state)
 

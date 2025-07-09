@@ -1,5 +1,6 @@
 from enum import Enum
 from functools import lru_cache
+from typing import Literal
 
 import pygments.token
 import rich.color
@@ -7,13 +8,16 @@ import rich.color_triplet
 import rich.style
 import rich.syntax
 
-from omnipy.shared.enums import ColorStyles
+from omnipy.shared.enums import AllColorStyles
+from omnipy.util.literal_enum import LiteralEnum
 
 
-class ForceAutodetect(str, Enum):
-    NEVER = 'never'
-    IF_NO_BG_COLOR_IN_STYLE = 'if_no_bg_color_in_style'
-    ALWAYS = 'always'
+class ForceAutodetect(LiteralEnum[str]):
+    Literals = Literal['never', 'if_no_bg_color_in_style', 'always']
+
+    NEVER: Literal['never'] = 'never'
+    IF_NO_BG_COLOR_IN_STYLE: Literal['if_no_bg_color_in_style'] = 'if_no_bg_color_in_style'
+    ALWAYS: Literal['always'] = 'always'
 
 
 def extract_value_if_enum(conf_item: Enum | str) -> str:
@@ -21,7 +25,8 @@ def extract_value_if_enum(conf_item: Enum | str) -> str:
 
 
 @lru_cache
-def get_syntax_theme_from_color_style(color_style: ColorStyles) -> rich.syntax.SyntaxTheme:
+def get_syntax_theme_from_color_style(
+        color_style: AllColorStyles.Literals) -> rich.syntax.SyntaxTheme:
     color_style_name = extract_value_if_enum(color_style)
     return rich.syntax.Syntax.get_theme(color_style_name)
 
@@ -29,14 +34,14 @@ def get_syntax_theme_from_color_style(color_style: ColorStyles) -> rich.syntax.S
 @lru_cache
 def get_token_style_from_color_style(
     token: pygments.token._TokenType,
-    color_style: ColorStyles,
+    color_style: AllColorStyles.Literals,
 ) -> rich.style.Style:
     syntax_theme = get_syntax_theme_from_color_style(color_style)
     return syntax_theme.get_style_for_token(token)
 
 
 @lru_cache
-def calculate_fg_color_from_color_style(color_style: ColorStyles) -> rich.color.Color:
+def calculate_fg_color_from_color_style(color_style: AllColorStyles.Literals) -> rich.color.Color:
     ANSI_FG_COLOR_MAP = {'ansi_light': 'black', 'ansi_dark': 'bright_white'}
 
     color_style_name = extract_value_if_enum(color_style)
@@ -57,15 +62,15 @@ def calculate_fg_color_from_color_style(color_style: ColorStyles) -> rich.color.
 
 @lru_cache
 def calculate_fg_color_triplet_from_color_style(
-        color_style: ColorStyles) -> rich.color_triplet.ColorTriplet:
+        color_style: AllColorStyles.Literals) -> rich.color_triplet.ColorTriplet:
     syntax_theme_fg_color = calculate_fg_color_from_color_style(color_style)
     return syntax_theme_fg_color.get_truecolor(foreground=True)
 
 
 @lru_cache
 def calculate_bg_color_from_color_style(
-    color_style: ColorStyles,
-    force_autodetect: ForceAutodetect,
+    color_style: AllColorStyles.Literals,
+    force_autodetect: ForceAutodetect.Literals,
 ) -> rich.color.Color | None:
     def _auto_detect_bw_background_color(
             fg_color_triplet: rich.color_triplet.ColorTriplet) -> rich.color.Color:
@@ -97,8 +102,8 @@ def calculate_bg_color_from_color_style(
 
 @lru_cache
 def calculate_bg_color_triplet_from_color_style(
-    color_style: ColorStyles,
-    force_autodetect: ForceAutodetect,
+    color_style: AllColorStyles.Literals,
+    force_autodetect: ForceAutodetect.Literals,
 ) -> rich.color_triplet.ColorTriplet | None:
     bg_color = calculate_bg_color_from_color_style(color_style, force_autodetect)
 

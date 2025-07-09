@@ -2,8 +2,8 @@ from collections import defaultdict
 from io import TextIOBase
 from typing import Protocol, runtime_checkable
 
-from omnipy.shared.enums import (BackoffStrategy,
-                                 ColorStyles,
+from omnipy.shared.enums import (AllColorStyles,
+                                 BackoffStrategy,
                                  ConfigOutputStorageProtocolOptions,
                                  ConfigPersistOutputsOptions,
                                  ConfigRestoreOutputsOptions,
@@ -24,8 +24,8 @@ import omnipy.util._pydantic as pyd
 @runtime_checkable
 class IsColorConfig(IsDataPublisher, Protocol):
     """"""
-    system: ConsoleColorSystem
-    style: ColorStyles | str
+    system: ConsoleColorSystem.Literals
+    style: AllColorStyles.Literals | str
     transparent_background: bool
 
 
@@ -40,7 +40,7 @@ class IsConsoleConfig(IsDataPublisher, Protocol):
 @runtime_checkable
 class IsDimsModeMixin(Protocol):
     """"""
-    dims_mode: ConsoleDimensionsMode = ConsoleDimensionsMode.AUTO
+    dims_mode: ConsoleDimensionsMode.Literals = ConsoleDimensionsMode.AUTO
 
 
 @runtime_checkable
@@ -85,8 +85,8 @@ class IsBrowserConsoleConfig(IsHtmlConsoleConfig, Protocol):
 @runtime_checkable
 class IsOverflowConfig(IsDataPublisher, Protocol):
     """"""
-    horizontal: HorizontalOverflowMode
-    vertical: VerticalOverflowMode
+    horizontal: HorizontalOverflowMode.Literals
+    vertical: VerticalOverflowMode.Literals
 
 
 @runtime_checkable
@@ -95,7 +95,7 @@ class IsTextConfig(IsDataPublisher, Protocol):
     overflow: IsOverflowConfig
     tab_size: pyd.NonNegativeInt
     indent_tab_size: pyd.NonNegativeInt
-    pretty_printer: PrettyPrinterLib
+    pretty_printer: PrettyPrinterLib.Literals
     debug_mode: bool
 
 
@@ -103,7 +103,7 @@ class IsTextConfig(IsDataPublisher, Protocol):
 class IsLayoutConfig(IsDataPublisher, Protocol):
     """"""
     overflow: IsOverflowConfig
-    panel_design: PanelDesign
+    panel_design: PanelDesign.Literals
     panel_title_at_top: bool
 
 
@@ -132,7 +132,7 @@ class IsHttpRequestsConfig(IsDataPublisher, Protocol):
     time_period_in_secs: float
     retry_http_statuses: tuple[int, ...]
     retry_attempts: int
-    retry_backoff_strategy: BackoffStrategy
+    retry_backoff_strategy: BackoffStrategy.Literals
 
 
 @runtime_checkable
@@ -174,7 +174,7 @@ class IsPrefectEngineConfig(IsJobRunnerConfig, Protocol):
 @runtime_checkable
 class IsEngineConfig(IsDataPublisher, Protocol):
     """"""
-    choice: EngineChoice
+    choice: EngineChoice.Literals
     local: IsLocalRunnerConfig
     prefect: IsPrefectEngineConfig
     ...
@@ -206,9 +206,9 @@ class IsS3OutputStorageConfig(IsOutputStorageConfigBase, Protocol):
 @runtime_checkable
 class IsOutputStorageConfig(IsDataPublisher, Protocol):
     """"""
-    persist_outputs: ConfigPersistOutputsOptions
-    restore_outputs: ConfigRestoreOutputsOptions
-    protocol: ConfigOutputStorageProtocolOptions
+    persist_outputs: ConfigPersistOutputsOptions.Literals
+    restore_outputs: ConfigRestoreOutputsOptions.Literals
+    protocol: ConfigOutputStorageProtocolOptions.Literals
     local: IsLocalOutputStorageConfig
     s3: IsS3OutputStorageConfig
 

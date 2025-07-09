@@ -10,7 +10,7 @@ from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.helpers import extract_value_if_enum
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.data._display.panel.styling.output import OutputMode, TextCroppingOutputVariant
-from omnipy.shared.enums import (ColorStyles,
+from omnipy.shared.enums import (AllColorStyles,
                                  ConsoleColorSystem,
                                  HorizontalOverflowMode,
                                  SyntaxLanguage,
@@ -32,10 +32,10 @@ class SyntaxStylizedTextPanel(
     def _get_stylized_content_common(
         content: str,
         tab_size: int,
-        console_color_system: ConsoleColorSystem,  # Only used for hashing
-        console_color_style: ColorStyles | str,
-        language: SyntaxLanguage | str,
-        horizontal_overflow_mode: HorizontalOverflowMode,
+        console_color_system: ConsoleColorSystem.Literals,  # Only used for hashing
+        console_color_style: AllColorStyles.Literals | str,
+        language: SyntaxLanguage.Literals | str,
+        horizontal_overflow_mode: HorizontalOverflowMode.Literals,
         remove_bg_color: bool,
     ) -> rich.syntax.Syntax:
         style_name = extract_value_if_enum(console_color_style)
@@ -66,7 +66,7 @@ class SyntaxStylizedTextPanel(
     def _vert_cropped_contents(
         content: str,
         height: pyd.NonNegativeInt | None,
-        vert_overflow_mode: VerticalOverflowMode,
+        vert_overflow_mode: VerticalOverflowMode.Literals,
     ) -> str:
         """
         Crops the content vertically to the specified height.

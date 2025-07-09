@@ -140,16 +140,20 @@ class Runtime(DataPublisher):
         self.config._back = self  # pyright: ignore [reportAttributeAccessIssue]
         self.objects._back = self  # pyright: ignore [reportAttributeAccessIssue]
 
-    def _get_engine_config(self, choice: EngineChoice):
+    def _get_engine_config(self, choice: EngineChoice.Literals):
         return getattr(self.config.engine, choice)
 
-    def _set_engine_config(self, choice: EngineChoice, engine_config: IsJobRunnerConfig):
+    def _set_engine_config(self, choice: EngineChoice.Literals, engine_config: IsJobRunnerConfig):
         return setattr(self.config.engine, choice, engine_config)
 
-    def _get_engine(self, choice: EngineChoice):
+    def _get_engine(self, choice: EngineChoice.Literals):
         return getattr(self.objects, choice)
 
-    def _new_engine_config_if_new_cls(self, engine: IsEngine, choice: EngineChoice) -> None:
+    def _new_engine_config_if_new_cls(
+        self,
+        engine: IsEngine,
+        choice: EngineChoice.Literals,
+    ) -> None:
         # TODO: when parsing config from file is implemented, make sure that the new engine
         #       config classes here reparse the config files
         engine_config_cls = engine.get_config_cls()

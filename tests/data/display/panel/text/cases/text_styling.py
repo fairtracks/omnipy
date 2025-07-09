@@ -181,11 +181,11 @@ def case_syntax_styling_setup_no_frame_color_config(
 @pc.parametrize('transparent_background', [False, True])
 @pc.case(id='w-frame-dark-color-w-wrap', tags=['setup', 'syntax_text'])
 def case_syntax_styling_setup_small_frame_color_and_overflow_config(
-    color_system: ConsoleColorSystem,
+    color_system: ConsoleColorSystem.Literals,
     transparent_background: bool,
 ) -> StylizedPanelTestCaseSetup[str]:
 
-    case_id = f'w-frame-dark-color-w-wrap-{color_system.value}' + \
+    case_id = f'w-frame-dark-color-w-wrap-{color_system}' + \
               ('-no-bg' if transparent_background else '')
 
     return StylizedPanelTestCaseSetup(

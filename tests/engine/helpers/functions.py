@@ -31,35 +31,45 @@ def extract_engine(job: IsJobBase) -> IsEngine:
     return engine
 
 
-def extract_job_run_state(job: IsJob) -> RunState | None:
+def extract_job_run_state(job: IsJob) -> RunState.Literals | None:
     engine = extract_engine(cast(IsJobBase, job))
-    registry = engine._registry  # noqa
+    registry = engine.registry
     if registry:
         return registry.get_job_state(job)
 
 
-def assert_job_state(job: IsJob, states: list[RunState]):
+def assert_job_state(job: IsJob, states: list[RunState.Literals]):
     job_state = extract_job_run_state(job)
     if job_state:
         assert job_state in states, job_state
 
 
-def _check_timeout(start_time: datetime, timeout_secs: float, job: IsJob, states: list[RunState]):
+def _check_timeout(
+    start_time: datetime,
+    timeout_secs: float,
+    job: IsJob,
+    states: list[RunState.Literals],
+):
     if datetime.now() - start_time >= timedelta(seconds=timeout_secs):
-        raise TimeoutError(
-            f'Run state of "{job.name}" not set to {[state.name for state in states]} '
-            f'until timeout: {timeout_secs} sec(s). '
-            f'Current state: {extract_job_run_state(job).name}')
+        current_state = extract_job_run_state(job)
+        current_state_text = (
+            RunState.name_for_value(current_state) if current_state else 'Unable to extract state')
+        raise TimeoutError(f'Run state of "{job.name}" not set to '
+                           f'{[RunState.name_for_value(state) for state in states]} '
+                           f'until timeout: {timeout_secs} sec(s). '
+                           f'Current state: {current_state_text}')
 
 
-def sync_wait_for_job_state(job: IsJob, states: list[RunState], timeout_secs: float = 1):
+def sync_wait_for_job_state(job: IsJob, states: list[RunState.Literals], timeout_secs: float = 1):
     start_time = datetime.now()
     while extract_job_run_state(job) not in states:
         sleep(0.001)
         _check_timeout(start_time, timeout_secs, job, states)
 
 
-async def async_wait_for_job_state(job: IsJob, states: list[RunState], timeout_secs: float = 1):
+async def async_wait_for_job_state(job: IsJob,
+                                   states: list[RunState.Literals],
+                                   timeout_secs: float = 1):
     start_time = datetime.now()
     while extract_job_run_state(job) not in states:
         await asyncio.sleep(0.001)

@@ -138,27 +138,27 @@ class IsFuncArgJobBase(Protocol):
         ...
 
     @property
-    def persist_outputs(self) -> PersistOutputsOptions | None:
+    def persist_outputs(self) -> PersistOutputsOptions.Literals:
         ...
 
     @property
-    def restore_outputs(self) -> RestoreOutputsOptions | None:
+    def restore_outputs(self) -> RestoreOutputsOptions.Literals:
         ...
 
     @property
-    def output_storage_protocol(self) -> OutputStorageProtocolOptions | None:
+    def output_storage_protocol(self) -> OutputStorageProtocolOptions.Literals:
         ...
 
     @property
-    def will_persist_outputs(self) -> PersistOutputsOptions:
+    def will_persist_outputs(self) -> PersistOutputsOptions.Literals:
         ...
 
     @property
-    def will_restore_outputs(self) -> RestoreOutputsOptions:
+    def will_restore_outputs(self) -> RestoreOutputsOptions.Literals:
         ...
 
     @property
-    def output_storage_protocol_to_use(self) -> OutputStorageProtocolOptions:
+    def output_storage_protocol_to_use(self) -> OutputStorageProtocolOptions.Literals:
         ...
 
     @property
@@ -204,11 +204,11 @@ class HasFuncArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetContraT]):
         output_dataset_param: str | None = None,
         output_dataset_cls: type[IsDataset] | None = None,
         auto_async: bool = True,
-        persist_outputs: PersistOutputsOptions | None = None,
-        restore_outputs: RestoreOutputsOptions | None = None,
         result_key: str | None = None,
         fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
         param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
+        persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
+        restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
         **kwargs: object,
     ) -> _JobTemplateT:
         ...
@@ -218,20 +218,21 @@ class IsFuncArgJobTemplate(IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT]
                            IsFuncArgJobBase,
                            Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
     """"""
-    def refine(self,
-               *args: Any,
-               update: bool = True,
-               name: str | None = None,
-               iterate_over_data_files: bool = False,
-               output_dataset_param: str | None = None,
-               output_dataset_cls: type[IsDataset] | None = None,
-               auto_async: bool = True,
-               persist_outputs: PersistOutputsOptions | None = None,
-               restore_outputs: RestoreOutputsOptions | None = None,
-               result_key: str | None = None,
-               fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
-               param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
-               **kwargs: object) -> _JobTemplateT:
+    def refine(
+            self,
+            *args: Any,
+            update: bool = True,
+            name: str | None = None,
+            iterate_over_data_files: bool = False,
+            output_dataset_param: str | None = None,
+            output_dataset_cls: type[IsDataset] | None = None,
+            auto_async: bool = True,
+            result_key: str | None = None,
+            fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
+            param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
+            persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
+            restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
+            **kwargs: object) -> _JobTemplateT:
         ...
 
 
@@ -269,11 +270,11 @@ class HasTaskTemplateArgsJobTemplateInit(Protocol[_JobTemplateT,
         output_dataset_param: str | None = None,
         output_dataset_cls: type[IsDataset] | None = None,
         auto_async: bool = True,
-        persist_outputs: PersistOutputsOptions | None = None,
-        restore_outputs: RestoreOutputsOptions | None = None,
         result_key: str | None = None,
         fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
         param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
+        persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
+        restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
         **kwargs: object,
     ) -> _JobTemplateT:
         ...
@@ -284,18 +285,19 @@ class IsTaskTemplateArgsJobTemplate(IsFuncArgJobTemplate[_JobTemplateT, _JobT, _
                                     Protocol[_TaskTemplateT, _JobTemplateT, _JobT, _CallP,
                                              _RetCovT]):
     """"""
-    def refine(self,
-               *task_templates: _TaskTemplateT,
-               update: bool = True,
-               name: str | None = None,
-               iterate_over_data_files: bool = False,
-               output_dataset_param: str | None = None,
-               output_dataset_cls: type[IsDataset] | None = None,
-               auto_async: bool = True,
-               fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
-               param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
-               result_key: str | None = None,
-               persist_outputs: PersistOutputsOptions | None = None,
-               restore_outputs: RestoreOutputsOptions | None = None,
-               **kwargs: object) -> _JobTemplateT:
+    def refine(
+            self,
+            *task_templates: _TaskTemplateT,
+            update: bool = True,
+            name: str | None = None,
+            iterate_over_data_files: bool = False,
+            output_dataset_param: str | None = None,
+            output_dataset_cls: type[IsDataset] | None = None,
+            auto_async: bool = True,
+            result_key: str | None = None,
+            fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
+            param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
+            persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
+            restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
+            **kwargs: object) -> _JobTemplateT:
         ...

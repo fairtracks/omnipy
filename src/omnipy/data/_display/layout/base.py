@@ -123,7 +123,7 @@ class PanelDesignDims:
     @classmethod
     def create(
         cls,
-        panel_design: PanelDesign = PanelDesign.TABLE_GRID,
+        panel_design: PanelDesign.Literals = PanelDesign.TABLE_GRID,
     ) -> 'PanelDesignDims':
         if panel_design == PanelDesign.TABLE_GRID:
             return PanelDesignDims(

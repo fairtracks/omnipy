@@ -8,7 +8,6 @@ from omnipy.compute._mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute._mixins.name import NameJobBaseMixin
 from omnipy.data.dataset import Dataset
 from omnipy.shared.enums import ConfigPersistOutputsOptions as ConfigPersistOpts
-from omnipy.shared.enums import ConfigRestoreOutputsOptions as ConfigRestoreOpts
 from omnipy.shared.enums import (OutputStorageProtocolOptions,
                                  PersistOutputsOptions,
                                  RestoreOutputsOptions)
@@ -25,27 +24,19 @@ ProtocolOpts = OutputStorageProtocolOptions
 class SerializerFuncJobBaseMixin:
     _serializer_registry: IsSerializerRegistry | None = None
 
-    def __init__(self,
-                 *,
-                 persist_outputs: PersistOutputsOptions | None = None,
-                 restore_outputs: RestoreOutputsOptions | None = None,
-                 output_storage_protocol: OutputStorageProtocolOptions | None = None):
+    def __init__(
+        self,
+        *,
+        persist_outputs: PersistOutputsOptions.Literals = PersistOpts.FOLLOW_CONFIG,
+        restore_outputs: RestoreOutputsOptions.Literals = RestoreOpts.FOLLOW_CONFIG,
+        output_storage_protocol: OutputStorageProtocolOptions.Literals = ProtocolOpts.FOLLOW_CONFIG,
+    ):
 
         # TODO: Possibly reimplement logic using a state machine, e.g. "transitions" package
-        if persist_outputs is None:
-            self._persist_outputs = PersistOpts.FOLLOW_CONFIG
-        else:
-            self._persist_outputs = PersistOpts(persist_outputs)
-
-        if restore_outputs is None:
-            self._restore_outputs = RestoreOpts.FOLLOW_CONFIG
-        else:
-            self._restore_outputs = RestoreOpts(restore_outputs)
-
-        if output_storage_protocol is None:
-            self._output_storage_protocol = ProtocolOpts.FOLLOW_CONFIG
-        else:
-            self._output_storage_protocol = ProtocolOpts(output_storage_protocol)
+        self._persist_outputs: PersistOutputsOptions.Literals = persist_outputs
+        self._restore_outputs: RestoreOutputsOptions.Literals = restore_outputs
+        self._output_storage_protocol: OutputStorageProtocolOptions.Literals = \
+            output_storage_protocol
 
     @property
     def _job_config(self) -> IsJobConfig:
@@ -62,60 +53,50 @@ class SerializerFuncJobBaseMixin:
         return self_as_signature_func_job_base_mixin.return_type
 
     @property
-    def persist_outputs(self) -> PersistOutputsOptions | None:
+    def persist_outputs(self) -> PersistOutputsOptions.Literals:
         return self._persist_outputs
 
     @property
-    def restore_outputs(self) -> RestoreOutputsOptions | None:
+    def restore_outputs(self) -> RestoreOutputsOptions.Literals:
         return self._restore_outputs
 
     @property
-    def output_storage_protocol(self) -> OutputStorageProtocolOptions | None:
+    def output_storage_protocol(self) -> OutputStorageProtocolOptions.Literals:
         return self._output_storage_protocol
 
     @property
-    def will_persist_outputs(self) -> PersistOutputsOptions:
+    def will_persist_outputs(self) -> PersistOutputsOptions.Literals:
         if self._persist_outputs is not PersistOpts.FOLLOW_CONFIG:
-            return self._persist_outputs if self._persist_outputs is not None \
-                else PersistOpts.DISABLED
+            return self._persist_outputs
         else:
             # TODO: Refactor using Flow and Task Mixins
             from omnipy.compute.flow import FlowBase
             from omnipy.compute.task import TaskBase
 
-            config_persist_opt = self._job_config.output_storage.persist_outputs
-
-            if config_persist_opt == ConfigPersistOpts.ENABLE_FLOW_OUTPUTS:
-                return PersistOpts.ENABLED if isinstance(self, FlowBase) else PersistOpts.DISABLED
-            elif config_persist_opt == ConfigPersistOpts.ENABLE_FLOW_AND_TASK_OUTPUTS:
-                return PersistOpts.ENABLED \
-                    if any(isinstance(self, cls) for cls in (FlowBase, TaskBase)) \
-                    else PersistOpts.DISABLED
-            else:
-                assert config_persist_opt == ConfigPersistOpts.DISABLED
-                return PersistOpts.DISABLED
-
-    @property
-    def will_restore_outputs(self) -> RestoreOutputsOptions:
-        if self._restore_outputs is not RestoreOpts.FOLLOW_CONFIG:
-            return self._restore_outputs if self._restore_outputs is not None \
-                else RestoreOpts.DISABLED
-        else:
-            config_restore_opt = self._job_config.output_storage.restore_outputs
-
-            if config_restore_opt == ConfigRestoreOpts.AUTO_ENABLE_IGNORE_PARAMS:
-                return RestoreOpts.AUTO_ENABLE_IGNORE_PARAMS
-            assert config_restore_opt == ConfigRestoreOpts.DISABLED
-            return RestoreOpts.DISABLED
+            match self._job_config.output_storage.persist_outputs:
+                case ConfigPersistOpts.ENABLE_FLOW_OUTPUTS:
+                    return PersistOpts.ENABLED if isinstance(self,
+                                                             FlowBase) else PersistOpts.DISABLED
+                case ConfigPersistOpts.ENABLE_FLOW_AND_TASK_OUTPUTS:
+                    return PersistOpts.ENABLED \
+                        if any(isinstance(self, cls) for cls in (FlowBase, TaskBase)) \
+                        else PersistOpts.DISABLED
+                case ConfigPersistOpts.DISABLED:
+                    return PersistOpts.DISABLED
 
     @property
-    def output_storage_protocol_to_use(self) -> OutputStorageProtocolOptions:
-        if self._output_storage_protocol is not ProtocolOpts.FOLLOW_CONFIG:
-            return self._output_storage_protocol if self._output_storage_protocol is not None \
-                else ProtocolOpts.LOCAL
+    def will_restore_outputs(self) -> RestoreOutputsOptions.Literals:
+        if self._restore_outputs is RestoreOpts.FOLLOW_CONFIG:
+            return self._job_config.output_storage.restore_outputs
         else:
-            config_protocol = self._job_config.output_storage.protocol
-            return ProtocolOpts(config_protocol)
+            return self._restore_outputs
+
+    @property
+    def output_storage_protocol_to_use(self) -> OutputStorageProtocolOptions.Literals:
+        if self._output_storage_protocol is ProtocolOpts.FOLLOW_CONFIG:
+            return self._job_config.output_storage.protocol
+        else:
+            return self._output_storage_protocol
 
     def _call_job(self, *args: object, **kwargs: object) -> object:
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)

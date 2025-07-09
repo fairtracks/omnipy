@@ -314,7 +314,7 @@ def test_omnipy_style_import() -> None:
         IGNORE_PREFIXES = ['tb16-', 'ansi_']
 
         installed_styles = [
-            style for style in AllColorStyles.values()
+            style for style in AllColorStyles
             if not any(style.startswith(prefix) for prefix in IGNORE_PREFIXES)
         ]
         for style in installed_styles:
@@ -322,7 +322,7 @@ def test_omnipy_style_import() -> None:
 
 
 def test_dynamic_style_import(register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
-    installable_styles = [style for style in AllColorStyles.values() if style.startswith('tb16-')]
+    installable_styles = [style for style in AllColorStyles if style.startswith('tb16-')]
 
     for style in random.sample(installable_styles, 3):
         print(f'Installing style: {style}...')

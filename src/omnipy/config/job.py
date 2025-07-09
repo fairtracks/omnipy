@@ -28,11 +28,11 @@ class S3OutputStorageConfig(ConfigBase):
 
 
 class OutputStorageConfig(ConfigBase):
-    persist_outputs: ConfigPersistOutputsOptions = \
+    persist_outputs: ConfigPersistOutputsOptions.Literals = \
         ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
-    restore_outputs: ConfigRestoreOutputsOptions = \
+    restore_outputs: ConfigRestoreOutputsOptions.Literals = \
         ConfigRestoreOutputsOptions.DISABLED
-    protocol: ConfigOutputStorageProtocolOptions = ConfigOutputStorageProtocolOptions.LOCAL
+    protocol: ConfigOutputStorageProtocolOptions.Literals = ConfigOutputStorageProtocolOptions.LOCAL
     local: IsLocalOutputStorageConfig = pyd.Field(default_factory=LocalOutputStorageConfig)
     s3: IsS3OutputStorageConfig = pyd.Field(default_factory=S3OutputStorageConfig)
 

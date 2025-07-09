@@ -128,7 +128,7 @@ def detect_display_type() -> DisplayType:
         return DisplayType.UNKNOWN
 
 
-def display_type_is_any_terminal(display_type: DisplayType) -> bool:
+def display_type_is_any_terminal(display_type: DisplayType.Literals) -> bool:
     """
     Check if the display_type refers to any terminal environment. If display
     type is unknown, we still assume it is a terminal.
@@ -140,7 +140,7 @@ def display_type_is_any_terminal(display_type: DisplayType) -> bool:
                             DisplayType.UNKNOWN)
 
 
-def get_terminal_prompt_height(display_type: DisplayType) -> int:
+def get_terminal_prompt_height(display_type: DisplayType.Literals) -> int:
     """
     Get the height of the terminal prompt (including blank lines) based on
     the display type.
