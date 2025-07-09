@@ -8,28 +8,33 @@ from pydantic import BaseModel
 from typing_extensions import override
 
 from omnipy.config import ConfigBase
-from omnipy.data._display.config import TERMINAL_DEFAULT_HEIGHT, TERMINAL_DEFAULT_WIDTH
+from omnipy.shared.constants import (BROWSER_DEFAULT_HEIGHT,
+                                     BROWSER_DEFAULT_WIDTH,
+                                     JUPYTER_DEFAULT_HEIGHT,
+                                     JUPYTER_DEFAULT_WIDTH,
+                                     TERMINAL_DEFAULT_HEIGHT,
+                                     TERMINAL_DEFAULT_WIDTH)
 from omnipy.shared.enums import (AllColorStyles,
                                  BackoffStrategy,
-                                 ConsoleColorSystem,
-                                 ConsoleDimensionsMode,
+                                 DisplayColorSystem,
+                                 DisplayDimensionsUpdateMode,
                                  HorizontalOverflowMode,
                                  PanelDesign,
                                  PrettyPrinterLib,
                                  RecommendedColorStyles,
                                  VerticalOverflowMode)
-from omnipy.shared.protocols.config import (IsBrowserConsoleConfig,
+from omnipy.shared.protocols.config import (IsBrowserUserInterfaceConfig,
                                             IsColorConfig,
-                                            IsDisplayConfig,
                                             IsFontConfig,
                                             IsHttpConfig,
                                             IsHttpRequestsConfig,
-                                            IsJupyterConsoleDimsModeConfig,
+                                            IsJupyterUserInterfaceConfig,
                                             IsLayoutConfig,
                                             IsModelConfig,
                                             IsOverflowConfig,
-                                            IsTerminalConsoleConfig,
-                                            IsTextConfig)
+                                            IsTerminalUserInterfaceConfig,
+                                            IsTextConfig,
+                                            IsUserInterfaceConfig)
 import omnipy.util._pydantic as pyd
 
 
@@ -37,29 +42,30 @@ class ColorConfig(ConfigBase):
     """
     Configuration for color output.
     """
-    system: ConsoleColorSystem.Literals = ConsoleColorSystem.AUTO
+    system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
     style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
     transparent_background: bool = True
 
 
-class ConsoleConfig(ConfigBase):
+class UserInterfaceTypeConfig(ConfigBase):
     width: pyd.NonNegativeInt | None = TERMINAL_DEFAULT_WIDTH
     height: pyd.NonNegativeInt | None = TERMINAL_DEFAULT_HEIGHT
     color: IsColorConfig = pyd.Field(default_factory=ColorConfig)
 
 
 class DimsModeMixin(BaseModel):
-    dims_mode: ConsoleDimensionsMode.Literals = ConsoleDimensionsMode.AUTO
+    dims_mode: DisplayDimensionsUpdateMode.Literals = DisplayDimensionsUpdateMode.AUTO
 
 
-class DimsModeConfig(ConsoleConfig, DimsModeMixin, ABC):
+class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
     class Config:  # pyright: ignore [reportIncompatibleVariableOverride]
         validate_all = True
         validate_assignment = True
 
     @classmethod
     @abstractmethod
-    def _get_console_size(cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
+    def _get_available_display_dims(
+            cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
         ...
 
     @pyd.validator('width', always=True)
@@ -68,7 +74,7 @@ class DimsModeConfig(ConsoleConfig, DimsModeMixin, ABC):
         value: pyd.NonNegativeInt,
         values: dict[str, Any],
     ) -> pyd.NonNegativeInt:
-        return cls._get_console_size_if_auto_dims_mode(value, values, index=0)
+        return cls._get_available_display_dim_if_auto_dims_mode(value, values, index=0)
 
     @pyd.validator('height', always=True)
     def check_and_set_auto_height(
@@ -76,27 +82,27 @@ class DimsModeConfig(ConsoleConfig, DimsModeMixin, ABC):
         value: pyd.NonNegativeInt,
         values: dict[str, Any],
     ) -> pyd.NonNegativeInt:
-        return cls._get_console_size_if_auto_dims_mode(value, values, index=1)
+        return cls._get_available_display_dim_if_auto_dims_mode(value, values, index=1)
 
     @classmethod
-    def _get_console_size_if_auto_dims_mode(
+    def _get_available_display_dim_if_auto_dims_mode(
         cls,
         value: pyd.NonNegativeInt,
         values: dict[str, Any],
         index: int,
     ):
-        if values.get('dims_mode') is ConsoleDimensionsMode.AUTO:
-            fetched_val = cls._get_console_size()[index]
+        if values.get('dims_mode') is DisplayDimensionsUpdateMode.AUTO:
+            fetched_val = cls._get_available_display_dims()[index]
             if fetched_val:
                 return fetched_val
         return value
 
     # Override __getattribute__ to dynamically update width and height
-    # if dims_mode is AUTO and the console size is available.
+    # if dims_mode is AUTO and the display size is available.
     def __getattribute__(self, attr):
         if (attr in ['width', 'height']
-                and object.__getattribute__(self, 'dims_mode') is ConsoleDimensionsMode.AUTO):
-            width, height = object.__getattribute__(self, '_get_console_size')()
+                and object.__getattribute__(self, 'dims_mode') is DisplayDimensionsUpdateMode.AUTO):
+            width, height = object.__getattribute__(self, '_get_available_display_dims')()
             if width is not None:
                 setattr(self, 'width', width)
             if height is not None:
@@ -104,10 +110,11 @@ class DimsModeConfig(ConsoleConfig, DimsModeMixin, ABC):
         return object.__getattribute__(self, attr)
 
 
-class TerminalConsoleConfig(DimsModeConfig):
+class TerminalUserInterfaceConfig(DimsModeConfig):
     @classmethod
     @override
-    def _get_console_size(cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
+    def _get_available_display_dims(
+            cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
         width, height = shutil.get_terminal_size(fallback=(-1, -1))
         return None if width == -1 else width, None if height == -1 else height
 
@@ -125,35 +132,36 @@ class FontConfig(ConfigBase):
     line_height: pyd.NonNegativeFloat = 1.25
 
 
-class HtmlConsoleConfig(ConsoleConfig):
+class HtmlUserInterfaceConfig(UserInterfaceTypeConfig):
     font: IsFontConfig = pyd.Field(default_factory=FontConfig)
 
 
-class JupyterConsoleDimsModeConfig(HtmlConsoleConfig, DimsModeConfig):
+class JupyterUserInterfaceConfig(HtmlUserInterfaceConfig, DimsModeConfig):
     @classmethod
     @override
-    def _get_console_size(cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
+    def _get_available_display_dims(
+            cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
         # For now, Jupyter width is pushed, not fetched. Hence, we return None.
         return None, None
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
-        self.width = 120
-        self.height = 50
-        self.color.system = ConsoleColorSystem.ANSI_RGB
+        self.width = JUPYTER_DEFAULT_WIDTH
+        self.height = JUPYTER_DEFAULT_HEIGHT
+        self.color.system = DisplayColorSystem.ANSI_RGB
         self.color.style = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
         self.color.transparent_background = False
 
 
-class BrowserConsoleConfig(HtmlConsoleConfig):
+class BrowserUserInterfaceConfig(HtmlUserInterfaceConfig):
     """
-    Configuration for browser console output.
+    Configuration for browser user interface type.
     """
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
-        self.width = 160
-        self.height = None
-        self.color.system = ConsoleColorSystem.ANSI_RGB
+        self.width = BROWSER_DEFAULT_WIDTH
+        self.height = BROWSER_DEFAULT_HEIGHT
+        self.color.system = DisplayColorSystem.ANSI_RGB
         self.color.style = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
         self.color.transparent_background = False
 
@@ -184,14 +192,14 @@ def _get_cache_dir_path() -> str:
     return str(Path.cwd().joinpath(Path('_cache')))
 
 
-class DisplayConfig(ConfigBase):
+class UserInterfaceConfig(ConfigBase):
     """
-    Configuration for display output.
+    Configuration for the user interface, including inputs and output
+    devices.
     """
-    terminal: IsTerminalConsoleConfig = pyd.Field(default_factory=TerminalConsoleConfig)
-    jupyter: IsJupyterConsoleDimsModeConfig = pyd.Field(
-        default_factory=JupyterConsoleDimsModeConfig)
-    browser: IsBrowserConsoleConfig = pyd.Field(default_factory=BrowserConsoleConfig)
+    terminal: IsTerminalUserInterfaceConfig = pyd.Field(default_factory=TerminalUserInterfaceConfig)
+    jupyter: IsJupyterUserInterfaceConfig = pyd.Field(default_factory=JupyterUserInterfaceConfig)
+    browser: IsBrowserUserInterfaceConfig = pyd.Field(default_factory=BrowserUserInterfaceConfig)
     text: IsTextConfig = pyd.Field(default_factory=TextConfig)
     layout: IsLayoutConfig = pyd.Field(default_factory=LayoutConfig)
     cache_dir_path: str = pyd.Field(default_factory=_get_cache_dir_path)
@@ -199,7 +207,7 @@ class DisplayConfig(ConfigBase):
 
 class ModelConfig(ConfigBase):
     """
-    Configuration for model module.
+    Configuration for behavior of the Model class.
     """
     interactive: bool = True
     dynamically_convert_elements_to_models: bool = False
@@ -235,6 +243,6 @@ class DataConfig(ConfigBase):
     """
     Configuration for data module.
     """
-    display: IsDisplayConfig = pyd.Field(default_factory=lambda: DisplayConfig())
+    ui: IsUserInterfaceConfig = pyd.Field(default_factory=lambda: UserInterfaceConfig())
     model: IsModelConfig = pyd.Field(default_factory=lambda: ModelConfig())
     http: IsHttpConfig = pyd.Field(default_factory=HttpConfig)

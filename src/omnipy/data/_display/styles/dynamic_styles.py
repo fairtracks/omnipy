@@ -32,7 +32,7 @@ def fetch_base16_theme(theme_url: str) -> Base16Theme:
         assert _runtime
         runtime = _runtime
 
-    cache_dir_path = Path(runtime.config.data.display.cache_dir_path) / 'styles'
+    cache_dir_path = Path(runtime.config.data.ui.cache_dir_path) / 'styles'
     if not os.path.exists(cache_dir_path):
         os.makedirs(cache_dir_path)
 

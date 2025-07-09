@@ -6,7 +6,6 @@ from typing import cast
 import rich.pretty
 from typing_extensions import override
 
-from omnipy.data._display.config import MAX_TERMINAL_SIZE
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import DimensionsWithWidth, Proportionally
 from omnipy.data._display.frame import frame_has_width, FrameWithWidth
@@ -14,6 +13,7 @@ from omnipy.data._display.panel.base import FrameT
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data.typechecks import is_model_instance
+from omnipy.shared.constants import MAX_TERMINAL_SIZE
 from omnipy.shared.enums import PrettyPrinterLib
 import omnipy.util._pydantic as pyd
 

@@ -4,7 +4,7 @@ import pygments.util
 
 from omnipy.data._display.styles.dynamic_styles import install_base16_theme
 from omnipy.shared.enums import (AllColorStyles,
-                                 ConsoleColorSystem,
+                                 DisplayColorSystem,
                                  HorizontalOverflowMode,
                                  Justify,
                                  MaxTitleHeight,
@@ -14,10 +14,6 @@ from omnipy.shared.enums import (AllColorStyles,
                                  SyntaxLanguage,
                                  VerticalOverflowMode)
 import omnipy.util._pydantic as pyd
-
-MAX_TERMINAL_SIZE = 2**16 - 1
-TERMINAL_DEFAULT_WIDTH = 80
-TERMINAL_DEFAULT_HEIGHT = 24
 
 
 @pyd.dataclass(
@@ -34,7 +30,7 @@ class OutputConfig:
     both terminal and HTML output. It is intended to be used for a specific
     instance of DraftOutput, and not as a global configuration.
 
-    Args:
+    Parameters:
         tab_size (NonNegativeInt): Number of spaces to use for each tab
         indent_tab_size (NonNegativeInt): Number of spaces to use for each
             indentation level.
@@ -48,7 +44,7 @@ class OutputConfig:
             For non-supported styles, the user can specify a string with the
             Pygments lexer name. For this to work, the lexer must be
             registered in the Pygments library.
-        console_color_system (ConsoleColorSystem.Literals): Color system to
+        color_system (ColorSystem.Literals): Color system to
             use for terminal output. The default is AUTO, which
             automatically detects the color system based on particular
             environment variables. If color capabilities are not detected,
@@ -56,11 +52,11 @@ class OutputConfig:
             modern consoles/terminal is not auto-detected (which is the case
             for e.g. the PyCharm console), the user might want to set the
             color system manually to ANSI_RGB to force color output.
-        color_style (AllColorStyles.Literals | str): Color style/theme for syntax
-            highlighting. Supported styles are defined in AllColorStyles.
-            For non-supported languages, the user can specify a string with
-            the Pygments style name. For this to work, the style must be
-            registered in the Pygments library.
+        color_style (AllColorStyles.Literals | str): Color style/theme for
+            syntax highlighting and other display elements. Supported styles
+            are defined in AllColorStyles. For non-supported languages, the
+            user can specify a string with the Pygments style name. For this
+            to work, the style must be registered in the Pygments library.
         transparent_background (bool): If True, uses transparent background
             for the output. In the case of terminal output, the background
             color will be the current background color of the terminal. For
@@ -99,7 +95,7 @@ class OutputConfig:
     debug_mode: bool = False
     pretty_printer: PrettyPrinterLib.Literals = PrettyPrinterLib.RICH
     language: SyntaxLanguage.Literals | str = SyntaxLanguage.PYTHON
-    console_color_system: ConsoleColorSystem.Literals = ConsoleColorSystem.AUTO
+    color_system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
     color_style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
     transparent_background: bool = True
     css_font_families: tuple[str, ...] = (

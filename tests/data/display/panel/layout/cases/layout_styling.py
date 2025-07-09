@@ -7,8 +7,8 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.layout.base import Layout
-from omnipy.shared.enums import (ConsoleColorSystem,
-                                 DarkHighContrastColorStyles,
+from omnipy.shared.enums import (DarkHighContrastColorStyles,
+                                 DisplayColorSystem,
                                  HorizontalOverflowMode,
                                  RecommendedColorStyles)
 
@@ -43,7 +43,7 @@ def case_layout_styling_setup_no_frame(
         case_id='no-frame-dark-color' + ('-no-bg' if transparent_background else ''),
         content=layout,
         config=OutputConfig(
-            console_color_system=ConsoleColorSystem.ANSI_RGB,
+            color_system=DisplayColorSystem.ANSI_RGB,
             color_style=DarkHighContrastColorStyles.LIGHTBULB,
             transparent_background=transparent_background),
     )
@@ -69,7 +69,7 @@ def case_layout_styling_setup_frame_and_title(
         case_id='frame-title-light-color' + ('-no-bg' if transparent_background else ''),
         content=layout,
         config=OutputConfig(
-            console_color_system=ConsoleColorSystem.ANSI_RGB,
+            color_system=DisplayColorSystem.ANSI_RGB,
             color_style=RecommendedColorStyles.OMNIPY_SELENIZED_LIGHT,
             transparent_background=transparent_background,
             horizontal_overflow_mode=HorizontalOverflowMode.ELLIPSIS,
@@ -94,7 +94,7 @@ def case_layout_styling_setup_small_frame(
         content=layout,
         frame=Frame(Dimensions(width=2, height=2)),
         config=OutputConfig(
-            console_color_system=ConsoleColorSystem.ANSI_RGB,
+            color_system=DisplayColorSystem.ANSI_RGB,
             color_style=DarkHighContrastColorStyles.LIGHTBULB,
             transparent_background=transparent_background),
     )

@@ -1,6 +1,10 @@
 from textwrap import dedent
 from typing import Literal
 
+from omnipy.shared.constants import (JUPYTER_DEFAULT_HEIGHT,
+                                     JUPYTER_DEFAULT_WIDTH,
+                                     TERMINAL_DEFAULT_HEIGHT,
+                                     TERMINAL_DEFAULT_WIDTH)
 from omnipy.util.literal_enum import LiteralEnum
 
 
@@ -79,70 +83,151 @@ class RunStateLogMessages(LiteralEnum[str]):
     FINISHED: Literal['Finished running "{}"!'] = 'Finished running "{}"!'
 
 
-class ConsoleDimensionsMode(LiteralEnum[str]):
+class DisplayDimensionsUpdateMode(LiteralEnum[str]):
     """
-    Specifies how terminal dimensions should be determined.
-
-    - AUTO:
-
-        Automatically updates the `terminal_dimensions` config based on the
-        current console size every time some output renders, given that the
-        console size can be automatically determined.
-
-    - FIXED:
-
-        Updates the `terminal_dimensions` config only once at the start of
-        the program.
-
-    The default values of `terminal_dimensions` are set to the terminal size
-    the time of update, or 24x80 if the terminal dimensions cannot be
-    determined. The default values can be overridden by the user in the
-    config. If the values are manually overridden, the
-    `terminal_dimensions_mode` config option is automatically flipped to
-    `FIXED`. To resume automatic updates, the user must set the
-    `terminal_dimensions_mode` config option back to `AUTO`.
+    Specifies how display dimensions should be updated.
     """
 
     Literals = Literal['auto', 'fixed']
 
     AUTO: Literal['auto'] = 'auto'
-    FIXED: Literal['fixed'] = 'fixed'
-
-
-class DisplayType(LiteralEnum[str]):
     """
-    Specifies the type of display to use for output.
+    Automatically updates the `width` and `height` dimension configs of the
+    relevant interface output based on the currently available display area
+    every time some output renders or (in some cases) when there is a change
+    in the available display area (e.g. a window is resized). Automatic
+    updates might not work in cases when the available display area can be
+    automatically determined (which is e.g. the case for `PYCHARM_TERMINAL`
+    and `PYCHARM_IPYTHON` user interface types). In those cases, the
+    specified dimensions are kept unchanged. Default values are defined for
+    each type of user interface .
+    """
 
-    - TERMINAL: The default display type, which uses the terminal's
-        standard output and error streams.
-    - IPYTHON: The IPython console, a variation of TERMINAL that supports
-        IPython-specific features.
-    - PYCHARM_TERMINAL: A PyCharm console running with the Python REPL
-    - PYCHARM_IPYTHON: A PyCharm console running with the IPython REPL
-    - JUPYTER: A Jupyter notebook or JupyterLab environment, which supports
-        rich output rendering (based on HTML) and interactive widgets.
-    - BROWSER: A web browser with HTML rendering.
-    - UNKNOWN: An unknown display type, which is used when the display type
-      cannot be determined.
+    FIXED: Literal['fixed'] = 'fixed'
+    """
+    Updates the `width` and `height` dimension config according to the
+    available display area only once at the start of the program. Default
+    values are defined for each type of user interface. The default values
+    can be overridden by the user in the configs, however users are then
+    advised to first set `dims_mode` to `FIXED` even when the current
+    display area cannot be automatically determined. Setting `dims_mode` to
+    `FIXED` retains the current dimensions at the time of the setting.
+    """
+
+
+_IPYTHON_DESCRIPTION = dedent("""
+    IPython is an more advanced interactive interpreter than the builtin
+    Python REPL, providing additional features such as syntax highlighting,
+    tab completion, and better error messages.
+    """)
+
+_JUPYTER_DESCRIPTION = dedent("""
+    The Jupyter environment supports rich output rendering (based on HTML)
+    and interactive widgets and is typically used for data analysis,
+    scientific computing, and machine learning tasks. Jupyter and allows for
+    the execution of code in cells, with the output displayed inline in the
+    notebook.
+    """)
+
+_PYCHARM_NOTE = dedent(f"""
+    Note that PyCharm does not support automatic detection of the display
+    dimensions, so the dimensions are set to the default values defined in
+    the config ({TERMINAL_DEFAULT_WIDTH}x{TERMINAL_DEFAULT_HEIGHT} for the
+    terminal, {JUPYTER_DEFAULT_WIDTH}x{JUPYTER_DEFAULT_HEIGHT} for Jupyter).
+    """)
+
+_BROWSER_DESCRIPTION = dedent("""
+    A web browser with HTML rendering, such as Google Chrome, Mozilla
+    Firefox, or Microsoft Edge. This is for now used to display HTML output
+    and does not currently support any interactive features.
+    """)
+
+
+class UserInterfaceType(LiteralEnum[str]):
+    """
+    Describes the type of interface in use for interacting with the user,
+    encompassing the support available for displaying output as well as how
+    the user interacts with the library (including the type of interactive
+    interpreter used, if any).
+
+    Should be automatically determined by Omnipy, but the user can also be
+    set the user interface type manually in the config if for some reason
+    needed (e.g. if auto-detection fails). In particular, the user can
+    expect this to fail in other IDEs than PyCharm, which is the only IDE
+    currently supported by Omnipy.
     """
 
     Literals = Literal['terminal',
                        'ipython',
                        'pycharm_terminal',
                        'pycharm_ipython',
+                       'pycharm_jupyter',
                        'jupyter',
                        'browser',
+                       'browser_embedded',
                        'unknown',
                        'auto']
 
     TERMINAL: Literal['terminal'] = 'terminal'
+    """
+    A standard Python interactive interpreter (REPL), running within
+    terminal-emulation software, such as the builtin "Terminal" app on Mac
+    OS or GNOME Terminal on Linux, through a SSH connection to a remote
+    server,  or directly on a console.
+    """
     IPYTHON: Literal['ipython'] = 'ipython'
+    """
+    Same as `TERMINAL`, but running within the IPython interactive
+    interpreter (REPL). The IPython interpreter is a more advanced
+    interactive interpreter that provides additional features such as syntax
+    highlighting, tab completion, and better error messages.
+    """
     PYCHARM_TERMINAL: Literal['pycharm_terminal'] = 'pycharm_terminal'
+    f"""
+    The console and/or terminal of the JetBrains PyCharm IDE running with
+    the Python interactive interpreter (REPL). {_PYCHARM_NOTE}
+    """
     PYCHARM_IPYTHON: Literal['pycharm_ipython'] = 'pycharm_ipython'
+    f"""
+    The console and/or terminal of the JetBrains PyCharm IDE running with
+    the IPython interactive interpreter (REPL). {_IPYTHON_DESCRIPTION}
+    {_PYCHARM_NOTE}
+    """
+    PYCHARM_JUPYTER: Literal['pycharm_jupyter'] = 'pycharm_jupyter'
+    f"""
+    A Jupyter notebook running within the user interface of the JetBrains
+    PyCharm IDE. {_JUPYTER_DESCRIPTION}
+    {_PYCHARM_NOTE}.
+    """
     JUPYTER: Literal['jupyter'] = 'jupyter'
+    f"""
+    A Jupyter notebook or JupyterLab environment. {_JUPYTER_DESCRIPTION}
+    """
     BROWSER: Literal['browser'] = 'browser'
+    f"""
+    {_BROWSER_DESCRIPTION}. The `BROWSER` UI type displays content as full
+    web pages.
+    """
+    BROWSER_EMBEDDED: Literal['browser_embedded'] = 'browser_embedded'
+    f"""
+    {_BROWSER_DESCRIPTION} The `BROWSER_EMBEDDED` UI type displays content
+    as standalone HTML elements, and produce HTML code that can be embedded
+    in other HTML documents.
+    """
     UNKNOWN: Literal['unknown'] = 'unknown'
+    """
+    The `UNKNOWN` user interface type is used when the user interface type
+    cannot be determined. This will in practice produce the same output as
+    the `TERMINAL` display type, but assuming only basic terminal
+    capabilities (such as ANSI escape codes for color and text formatting)
+    are available.
+    """
     AUTO: Literal['auto'] = 'auto'
+    """
+    The `AUTO` user interface type is used to describe that the user
+    interface type has not yet been determined, and that it should be
+    automatically determined by Omnipy. This is the default value.
+    """
 
 
 class BackoffStrategy(LiteralEnum[str]):
@@ -222,32 +307,41 @@ class SyntaxLanguage(LiteralEnum[str]):
     TEX: Literal['tex'] = 'tex'
 
 
-class ConsoleColorSystem(LiteralEnum[str]):
+class DisplayColorSystem(LiteralEnum[str]):
     """
-    Supported console color systems for syntax highlighting.
+    Supported display color systems for syntax highlighting.
 
     The color systems map to the color systems provided by the Rich library
     (https://rich.readthedocs.io/en/stable/console.html#color-systems).
-    The names have been slightly modified to be more descriptive.
-
-    The color systems are:
-    - `AUTO`: The default color system, which is automatically detected
-        based on the terminal capabilities. This is the default value.
-    - `ANSI_16`: The standard ANSI color system, which supports 16 colors.
-    - `ANSI_256`: The extended ANSI color system, which supports 256 colors.
-    - `ANSI_RGB`: The truecolor ANSI color system, which supports 16 million
-        colors. Most modern terminals support this color system.
-    - `WINDOWS_LEGACY`: The legacy Windows color system, for backwards
-        compatibility with older Windows terminals.
+    The names of the Omnipy attributes have been slightly modified to be
+    more descriptive.
     """
 
     Literals = Literal['auto', 'standard', '256', 'truecolor', 'windows']
 
     AUTO: Literal['auto'] = 'auto'
+    """
+    The default color system, which is automatically detected
+        based on the terminal capabilities. This is the default value.
+        """
     ANSI_16: Literal['standard'] = 'standard'
+    """
+    The standard ANSI color system, which supports 16 colors.
+    """
     ANSI_256: Literal['256'] = '256'
+    """
+    The extended ANSI color system, which supports 256 colors.
+    """
     ANSI_RGB: Literal['truecolor'] = 'truecolor'
+    """
+    The truecolor ANSI color system, which supports 16 million
+        colors. Most modern terminals support this color system.
+        """
     WINDOWS_LEGACY: Literal['windows'] = 'windows'
+    """
+    The legacy Windows color system, for backwards
+        compatibility with older Windows terminals.
+    """
 
 
 class RecommendedColorStyles(LiteralEnum[str]):

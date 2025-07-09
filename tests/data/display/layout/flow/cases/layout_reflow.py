@@ -6,7 +6,7 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
 from omnipy.data._display.layout.base import Layout
-from omnipy.shared.enums import ConsoleColorSystem, HorizontalOverflowMode, VerticalOverflowMode
+from omnipy.shared.enums import DisplayColorSystem, HorizontalOverflowMode, VerticalOverflowMode
 
 from ....panel.helpers.case_setup import FrameTestCase, FrameVariant, PanelFrameVariantTestCase
 from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
@@ -589,7 +589,7 @@ def case_layout_single_panel_with_title(
         content=Layout(
             panel=MockConfigCropPanel(content='Here is some text', title='A nice title'),),
         config=OutputConfig(
-            console_color_system=ConsoleColorSystem.ANSI_RGB,
+            color_system=DisplayColorSystem.ANSI_RGB,
             transparent_background=False,
         ),
         exp_plain_output_no_frame=('╭───────────────────╮\n'

@@ -5,22 +5,25 @@ import inspect
 from typing import Any, cast, Literal, TYPE_CHECKING
 
 from omnipy.data._data_class_creator import DataClassBase
-from omnipy.data._display.config import (OutputConfig,
-                                         TERMINAL_DEFAULT_HEIGHT,
-                                         TERMINAL_DEFAULT_WIDTH)
+from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.data._display.helpers import (detect_display_type,
-                                          display_type_is_any_terminal,
-                                          get_terminal_prompt_height)
+from omnipy.data._display.helpers import (detect_ui_type,
+                                          get_terminal_prompt_height,
+                                          ui_type_is_any_terminal)
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import TextDraftPanel
 from omnipy.data.helpers import FailedData, PendingData
-from omnipy.shared.enums import ConsoleColorSystem, DisplayType, MaxTitleHeight, SyntaxLanguage
+from omnipy.shared.enums import (DisplayColorSystem,
+                                 MaxTitleHeight,
+                                 SyntaxLanguage,
+                                 UserInterfaceType)
 from omnipy.shared.exceptions import ShouldNotOccurException
-from omnipy.shared.protocols.config import IsConsoleConfig, IsDisplayConfig, IsHtmlConsoleConfig
+from omnipy.shared.protocols.config import (IsHtmlUserInterfaceConfig,
+                                            IsUserInterfaceConfig,
+                                            IsUserInterfaceTypeConfig)
 import omnipy.util._pydantic as pyd
 
 if TYPE_CHECKING:
@@ -49,9 +52,9 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             p.text(f'{cast(pyd.GenericModel, self).__repr_name__()}(...)')
         else:
             if len(p.stack) == 1:
-                display_type = self._determine_display_type(DisplayType.AUTO)
-                if display_type is not DisplayType.JUPYTER:
-                    p.text(self._display())
+                ui_type = self._determine_ui_type(UserInterfaceType.AUTO)
+                if ui_type is not UserInterfaceType.JUPYTER:
+                    p.text(self._default_repr())
             else:
                 p.text(self.__repr__())
 
@@ -63,22 +66,22 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
     @staticmethod
     @functools.lru_cache
-    def _determine_display_type(display_type: DisplayType.Literals) -> DisplayType.Literals:
-        if display_type is DisplayType.AUTO:
-            display_type = detect_display_type()
-        return display_type
+    def _determine_ui_type(ui_type: UserInterfaceType.Literals) -> UserInterfaceType.Literals:
+        if ui_type is UserInterfaceType.AUTO:
+            ui_type = detect_ui_type()
+        return ui_type
 
     def _insert_any_reactive_components(
         self,
         method_name: str,
         **kwargs: Any,
     ) -> 'str | Element':
-        display_type: DisplayType.Literals = DisplayType.AUTO,
+        ui_type: UserInterfaceType.Literals = UserInterfaceType.AUTO
         from omnipy.data.dataset import Dataset, Model
 
-        display_type = self._determine_display_type(display_type)
+        ui_type = self._determine_ui_type(ui_type)
 
-        if display_type is DisplayType.JUPYTER:
+        if ui_type is UserInterfaceType.JUPYTER:
             from omnipy.data._display.jupyter.components import DynamiclyResizingHtml
             return DynamiclyResizingHtml(
                 cast(Dataset | Model, self),
@@ -92,12 +95,12 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         self,
         models: dict[str, 'Model'],
     ) -> 'str | Element':
-        display_type: DisplayType.Literals = DisplayType.AUTO,
+        ui_type: UserInterfaceType.Literals = UserInterfaceType.AUTO,
         from omnipy.data.dataset import Dataset
 
-        display_type = self._determine_display_type(display_type)
-        frame = self._define_frame_from_console_size(display_type)
-        config = self._get_output_config(display_type)
+        ui_type = self._determine_ui_type(ui_type)
+        frame = self._define_frame_from_available_display_dims(ui_type)
+        config = self._get_output_config(ui_type)
         layout: Layout[DraftPanel] = Layout()
 
         for title, model in models.items():
@@ -111,7 +114,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         panel = DraftPanel(layout, frame=frame, config=config)
         resized_panel = panel.render_next_stage()
         stylized_panel = resized_panel.render_next_stage()
-        return self._get_output_according_to_display_type(stylized_panel, display_type)
+        return self._get_output_according_to_ui_type(stylized_panel, ui_type)
 
     def _create_inner_panel_for_model(self, config, model, outer_type, title):
         from omnipy.components.json.models import JsonModel
@@ -140,8 +143,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         panel_type: Literal['text', 'layout'],
         **kwargs: Any,
     ) -> OutputConfig:
-        display_config = cast(DataClassBase, self).config.display
-        overflow_config = getattr(display_config, panel_type).overflow
+        ui_config = cast(DataClassBase, self).config.ui
+        overflow_config = getattr(ui_config, panel_type).overflow
 
         config = dataclasses.replace(
             config,
@@ -153,85 +156,86 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
     @staticmethod
     @functools.lru_cache
-    def _get_output_according_to_display_type(
+    def _get_output_according_to_ui_type(
         stylized_panel: FullyRenderedPanel,
-        display_type: DisplayType.Literals,
+        ui_type: UserInterfaceType.Literals,
     ) -> str:
-        match display_type:
-            case (DisplayType.TERMINAL | DisplayType.IPYTHON
-                  | DisplayType.PYCHARM_TERMINAL | DisplayType.PYCHARM_IPYTHON
-                  | DisplayType.UNKNOWN):
+        match ui_type:
+            case (UserInterfaceType.TERMINAL | UserInterfaceType.IPYTHON
+                  | UserInterfaceType.PYCHARM_TERMINAL | UserInterfaceType.PYCHARM_IPYTHON
+                  | UserInterfaceType.UNKNOWN):
                 return stylized_panel.colorized.terminal
-            case DisplayType.JUPYTER:
+            case UserInterfaceType.JUPYTER:
                 return stylized_panel.colorized.html_tag
-            case DisplayType.BROWSER:
+            case UserInterfaceType.BROWSER:
                 return stylized_panel.colorized.html_page
             case _:
-                raise ValueError(f'Output not supported for display type: {display_type}')
+                raise ValueError(f'Output not supported for user interface type: {ui_type}')
 
     @staticmethod
-    def _get_console_config(
-        display_config: IsDisplayConfig,
-        display_type: DisplayType.Literals,
-    ) -> IsConsoleConfig:
-        match display_type:
-            case (DisplayType.TERMINAL | DisplayType.IPYTHON
-                  | DisplayType.PYCHARM_TERMINAL | DisplayType.PYCHARM_IPYTHON
-                  | DisplayType.UNKNOWN):
-                display_config_attr = 'terminal'
-            case DisplayType.JUPYTER:
-                display_config_attr = 'jupyter'
-            case DisplayType.BROWSER:
-                display_config_attr = 'browser'
+    def _get_ui_type_config(
+        ui_config: IsUserInterfaceConfig,
+        ui_type: UserInterfaceType.Literals,
+    ) -> IsUserInterfaceTypeConfig:
+        match ui_type:
+            case (UserInterfaceType.TERMINAL | UserInterfaceType.IPYTHON
+                  | UserInterfaceType.PYCHARM_TERMINAL | UserInterfaceType.PYCHARM_IPYTHON
+                  | UserInterfaceType.UNKNOWN):
+                ui_config_attr = 'terminal'
+            case UserInterfaceType.JUPYTER:
+                ui_config_attr = 'jupyter'
+            case UserInterfaceType.BROWSER:
+                ui_config_attr = 'browser'
             case _:
-                raise ShouldNotOccurException(f'Incorrect display type: {display_type}')
-        return getattr(display_config, display_config_attr)
+                raise ShouldNotOccurException(f'Incorrect user interface type: {ui_type}')
+        return getattr(ui_config, ui_config_attr)
 
-    def _get_output_config(self, display_type: DisplayType.Literals) -> OutputConfig:
-        display_config = cast(DataClassBase, self).config.display
-        console_config: IsConsoleConfig = self._get_console_config(display_config, display_type)
+    def _get_output_config(self, ui_type: UserInterfaceType.Literals) -> OutputConfig:
+        ui_config = cast(DataClassBase, self).config.ui
+        ui_type_config: IsUserInterfaceTypeConfig = self._get_ui_type_config(ui_config, ui_type)
 
-        match display_type:
-            case DisplayType.UNKNOWN:
-                color_system = ConsoleColorSystem.AUTO
-            case (DisplayType.PYCHARM_TERMINAL | DisplayType.PYCHARM_IPYTHON
-                  | DisplayType.JUPYTER | DisplayType.BROWSER):
-                color_system = ConsoleColorSystem.ANSI_RGB
+        match ui_type:
+            case UserInterfaceType.UNKNOWN:
+                color_system = DisplayColorSystem.AUTO
+            case (UserInterfaceType.PYCHARM_TERMINAL | UserInterfaceType.PYCHARM_IPYTHON
+                  | UserInterfaceType.JUPYTER | UserInterfaceType.BROWSER):
+                color_system = DisplayColorSystem.ANSI_RGB
             case _:
-                color_system = console_config.color.system
+                color_system = ui_type_config.color.system
 
         config = OutputConfig(
-            tab_size=display_config.text.tab_size,
-            indent_tab_size=display_config.text.indent_tab_size,
-            debug_mode=display_config.text.debug_mode,
-            pretty_printer=display_config.text.pretty_printer,
-            console_color_system=color_system,
-            color_style=console_config.color.style,
-            transparent_background=console_config.color.transparent_background,
-            panel_design=display_config.layout.panel_design,
-            panel_title_at_top=display_config.layout.panel_title_at_top,
+            tab_size=ui_config.text.tab_size,
+            indent_tab_size=ui_config.text.indent_tab_size,
+            debug_mode=ui_config.text.debug_mode,
+            pretty_printer=ui_config.text.pretty_printer,
+            color_system=color_system,
+            color_style=ui_type_config.color.style,
+            transparent_background=ui_type_config.color.transparent_background,
+            panel_design=ui_config.layout.panel_design,
+            panel_title_at_top=ui_config.layout.panel_title_at_top,
         )
 
-        if isinstance(console_config, IsHtmlConsoleConfig):
+        if isinstance(ui_type_config, IsHtmlUserInterfaceConfig):
             config = dataclasses.replace(
                 config,
-                css_font_families=console_config.font.families,
-                css_font_size=console_config.font.size,
-                css_font_weight=console_config.font.weight,
-                css_line_height=console_config.font.line_height,
+                css_font_families=ui_type_config.font.families,
+                css_font_size=ui_type_config.font.size,
+                css_font_weight=ui_type_config.font.weight,
+                css_line_height=ui_type_config.font.line_height,
             )
         return config
 
-    def _define_frame_from_console_size(self, display_type: DisplayType.Literals) -> Frame:
-        display_config = cast(DataClassBase, self).config.display
-        console_config: IsConsoleConfig = self._get_console_config(display_config, display_type)
+    def _define_frame_from_available_display_dims(self,
+                                                  ui_type: UserInterfaceType.Literals) -> Frame:
+        ui_config = cast(DataClassBase, self).config.ui
+        ui_type_config: IsUserInterfaceTypeConfig = self._get_ui_type_config(ui_config, ui_type)
 
-        width = console_config.width or TERMINAL_DEFAULT_WIDTH
-        height = console_config.height or TERMINAL_DEFAULT_HEIGHT
+        width = ui_type_config.width
+        height = ui_type_config.height
 
-        if display_type_is_any_terminal(display_type):
+        if ui_type_is_any_terminal(ui_type) and height is not None:
             # Reserve space for the command line prompt
-            height -= get_terminal_prompt_height(display_type)
+            height -= get_terminal_prompt_height(ui_type)
 
         return Frame(
             Dimensions(
@@ -270,9 +274,9 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         from omnipy.data.dataset import Dataset
         dataset = cast(Dataset, self)
 
-        display_type = self._determine_display_type(DisplayType.AUTO)
-        frame = self._define_frame_from_console_size(display_type)
-        config = self._get_output_config(display_type)
+        ui_type = self._determine_ui_type(UserInterfaceType.AUTO)
+        frame = self._define_frame_from_available_display_dims(ui_type)
+        config = self._get_output_config(ui_type)
 
         config = self._set_overflow_modes_and_other_configs(
             config,
@@ -307,7 +311,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
         resized_panel = panel.render_next_stage()
         stylized_panel = resized_panel.render_next_stage()
-        return self._get_output_according_to_display_type(stylized_panel, display_type)
+        return self._get_output_according_to_ui_type(stylized_panel, ui_type)
 
     @classmethod
     def _type_str(cls, obj: Any) -> str:

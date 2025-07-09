@@ -11,7 +11,7 @@ from omnipy.data._display.panel.helpers import extract_value_if_enum
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.data._display.panel.styling.output import OutputMode, TextCroppingOutputVariant
 from omnipy.shared.enums import (AllColorStyles,
-                                 ConsoleColorSystem,
+                                 DisplayColorSystem,
                                  HorizontalOverflowMode,
                                  SyntaxLanguage,
                                  VerticalOverflowMode)
@@ -32,7 +32,7 @@ class SyntaxStylizedTextPanel(
     def _get_stylized_content_common(
         content: str,
         tab_size: int,
-        console_color_system: ConsoleColorSystem.Literals,  # Only used for hashing
+        color_system: DisplayColorSystem.Literals,  # Only used for hashing
         console_color_style: AllColorStyles.Literals | str,
         language: SyntaxLanguage.Literals | str,
         horizontal_overflow_mode: HorizontalOverflowMode.Literals,
@@ -95,7 +95,7 @@ class SyntaxStylizedTextPanel(
         return self._get_stylized_content_common(
             content=cropped_content,
             tab_size=self.config.tab_size,
-            console_color_system=self.config.console_color_system,
+            color_system=self.config.color_system,
             console_color_style=self.config.color_style,
             language=self.config.language,
             horizontal_overflow_mode=self.config.horizontal_overflow_mode,
@@ -114,7 +114,7 @@ class SyntaxStylizedTextPanel(
             content=cropped_content,
             tab_size=self.config.tab_size,
             # Color system is hard-coded to 'truecolor' for HTML output
-            console_color_system=ConsoleColorSystem.ANSI_RGB,
+            color_system=DisplayColorSystem.ANSI_RGB,
             console_color_style=self.config.color_style,
             language=self.config.language,
             horizontal_overflow_mode=self.config.horizontal_overflow_mode,

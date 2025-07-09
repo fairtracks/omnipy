@@ -11,18 +11,18 @@ import pytest_cases as pc
 from omnipy.components.prefect.engine.prefect import PrefectEngine
 from omnipy.compute._job import JobBase
 from omnipy.compute._job_creator import JobCreator
-from omnipy.config.data import (BrowserConsoleConfig,
+from omnipy.config.data import (BrowserUserInterfaceConfig,
                                 ColorConfig,
                                 DataConfig,
-                                DisplayConfig,
                                 HttpConfig,
                                 HttpRequestsConfig,
-                                JupyterConsoleDimsModeConfig,
+                                JupyterUserInterfaceConfig,
                                 LayoutConfig,
                                 ModelConfig,
                                 OverflowConfig,
-                                TerminalConsoleConfig,
-                                TextConfig)
+                                TerminalUserInterfaceConfig,
+                                TextConfig,
+                                UserInterfaceConfig)
 from omnipy.config.engine import EngineConfig, LocalRunnerConfig, PrefectEngineConfig
 from omnipy.config.job import (JobConfig,
                                LocalOutputStorageConfig,
@@ -39,8 +39,8 @@ from omnipy.shared.enums import (BackoffStrategy,
                                  ConfigOutputStorageProtocolOptions,
                                  ConfigPersistOutputsOptions,
                                  ConfigRestoreOutputsOptions,
-                                 ConsoleColorSystem,
-                                 ConsoleDimensionsMode,
+                                 DisplayColorSystem,
+                                 DisplayDimensionsUpdateMode,
                                  EngineChoice,
                                  HorizontalOverflowMode,
                                  PanelDesign,
@@ -62,62 +62,62 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
 
     # data
     assert isinstance(config.data, DataConfig)
-    assert config.data.display.cache_dir_path == str(dir_path / '_cache')
+    assert config.data.ui.cache_dir_path == str(dir_path / '_cache')
 
-    assert isinstance(config.data.display, DisplayConfig)
+    assert isinstance(config.data.ui, UserInterfaceConfig)
 
-    assert isinstance(config.data.display.terminal, TerminalConsoleConfig)
-    assert config.data.display.terminal.width == 80
-    assert config.data.display.terminal.height == 24
-    assert config.data.display.terminal.dims_mode == ConsoleDimensionsMode.AUTO
-    assert isinstance(config.data.display.terminal.color, ColorConfig)
-    assert config.data.display.terminal.color.system == ConsoleColorSystem.AUTO
-    assert config.data.display.terminal.color.style == RecommendedColorStyles.ANSI_DARK
-    assert config.data.display.terminal.color.transparent_background is True
+    assert isinstance(config.data.ui.terminal, TerminalUserInterfaceConfig)
+    assert config.data.ui.terminal.width == 80
+    assert config.data.ui.terminal.height == 24
+    assert config.data.ui.terminal.dims_mode == DisplayDimensionsUpdateMode.AUTO
+    assert isinstance(config.data.ui.terminal.color, ColorConfig)
+    assert config.data.ui.terminal.color.system == DisplayColorSystem.AUTO
+    assert config.data.ui.terminal.color.style == RecommendedColorStyles.ANSI_DARK
+    assert config.data.ui.terminal.color.transparent_background is True
 
-    assert isinstance(config.data.display.jupyter, JupyterConsoleDimsModeConfig)
-    assert config.data.display.jupyter.width == 120
-    assert config.data.display.jupyter.height == 50
-    assert config.data.display.jupyter.dims_mode == ConsoleDimensionsMode.AUTO
-    assert isinstance(config.data.display.jupyter.color, ColorConfig)
-    assert config.data.display.jupyter.color.system is ConsoleColorSystem.ANSI_RGB
-    assert config.data.display.jupyter.color.style \
+    assert isinstance(config.data.ui.jupyter, JupyterUserInterfaceConfig)
+    assert config.data.ui.jupyter.width == 120
+    assert config.data.ui.jupyter.height == 50
+    assert config.data.ui.jupyter.dims_mode == DisplayDimensionsUpdateMode.AUTO
+    assert isinstance(config.data.ui.jupyter.color, ColorConfig)
+    assert config.data.ui.jupyter.color.system is DisplayColorSystem.ANSI_RGB
+    assert config.data.ui.jupyter.color.style \
            is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
-    assert config.data.display.jupyter.color.transparent_background is False
+    assert config.data.ui.jupyter.color.transparent_background is False
 
-    assert isinstance(config.data.display.browser, BrowserConsoleConfig)
-    assert config.data.display.browser.width == 160
-    assert config.data.display.browser.height is None
-    assert not hasattr(config.data.display.browser, 'dims_mode')
-    assert isinstance(config.data.display.browser.color, ColorConfig)
-    assert config.data.display.browser.color.system is ConsoleColorSystem.ANSI_RGB
-    assert config.data.display.browser.color.style \
+    assert isinstance(config.data.ui.browser, BrowserUserInterfaceConfig)
+    assert config.data.ui.browser.width == 160
+    assert config.data.ui.browser.height is None
+    assert not hasattr(config.data.ui.browser, 'dims_mode')
+    assert isinstance(config.data.ui.browser.color, ColorConfig)
+    assert config.data.ui.browser.color.system is DisplayColorSystem.ANSI_RGB
+    assert config.data.ui.browser.color.style \
            is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
-    assert config.data.display.browser.color.transparent_background is False
+    assert config.data.ui.browser.color.transparent_background is False
 
-    assert isinstance(config.data.display.text, TextConfig)
+    assert isinstance(config.data.ui.text, TextConfig)
 
-    assert isinstance(config.data.display.text.overflow, OverflowConfig)
-    assert config.data.display.text.overflow.horizontal \
+    assert isinstance(config.data.ui.text.overflow, OverflowConfig)
+    assert config.data.ui.text.overflow.horizontal \
            is HorizontalOverflowMode.ELLIPSIS
-    assert config.data.display.text.overflow.vertical \
+    assert config.data.ui.text.overflow.vertical \
            is VerticalOverflowMode.ELLIPSIS_BOTTOM
 
-    assert config.data.display.text.tab_size == 4
-    assert config.data.display.text.indent_tab_size == 2
-    assert config.data.display.text.pretty_printer is PrettyPrinterLib.RICH
-    assert config.data.display.text.debug_mode is False
+    assert config.data.ui.text.tab_size == 4
+    assert config.data.ui.text.indent_tab_size == 2
+    assert config.data.ui.text.pretty_printer is PrettyPrinterLib.RICH
+    assert config.data.ui.text.debug_mode is False
 
-    assert isinstance(config.data.display.layout, LayoutConfig)
+    assert isinstance(config.data.ui.layout, LayoutConfig)
 
-    assert isinstance(config.data.display.layout.overflow, OverflowConfig)
-    assert config.data.display.layout.overflow.horizontal \
+    assert isinstance(config.data.ui.layout.overflow, OverflowConfig)
+    assert config.data.ui.layout.overflow.horizontal \
            is HorizontalOverflowMode.ELLIPSIS
-    assert config.data.display.layout.overflow.vertical \
+    assert config.data.ui.layout.overflow.vertical \
            is VerticalOverflowMode.ELLIPSIS_BOTTOM
 
-    assert config.data.display.layout.panel_design is PanelDesign.TABLE_GRID
-    assert config.data.display.layout.panel_title_at_top is True
+    assert config.data.ui.layout.panel_design is PanelDesign.TABLE_GRID
+    assert config.data.ui.layout.panel_title_at_top is True
 
     assert isinstance(config.data.model, ModelConfig)
     assert config.data.model.interactive is True
@@ -233,26 +233,25 @@ def test_data_config_http_config_for_host_default(
         .requests_per_time_period == 60
 
 
-def test_data_config_display_terminal_dimensions(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    runtime.config.data.display.terminal.width = 80
-    runtime.config.data.display.terminal.height = 24
-    runtime.config.data.display.terminal.dims_mode = ConsoleDimensionsMode.FIXED
+def test_data_config_display_dimensions(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    runtime.config.data.ui.terminal.width = 80
+    runtime.config.data.ui.terminal.height = 24
+    runtime.config.data.ui.terminal.dims_mode = DisplayDimensionsUpdateMode.FIXED
     os.environ['COLUMNS'] = '100'
     os.environ['LINES'] = '50'
-    assert runtime.config.data.display.terminal.width == 80
-    assert runtime.config.data.display.terminal.height == 24
-    runtime.config.data.display.terminal.dims_mode = ConsoleDimensionsMode.AUTO
-    assert runtime.config.data.display.terminal.width == 100
-    assert runtime.config.data.display.terminal.height == 50
+    assert runtime.config.data.ui.terminal.width == 80
+    assert runtime.config.data.ui.terminal.height == 24
+    runtime.config.data.ui.terminal.dims_mode = DisplayDimensionsUpdateMode.AUTO
+    assert runtime.config.data.ui.terminal.width == 100
+    assert runtime.config.data.ui.terminal.height == 50
     os.environ.pop('COLUMNS')
     os.environ.pop('LINES')
-    assert runtime.config.data.display.terminal.width == 100
-    assert runtime.config.data.display.terminal.height == 50
+    assert runtime.config.data.ui.terminal.width == 100
+    assert runtime.config.data.ui.terminal.height == 50
     os.environ['COLUMNS'] = '80'
     os.environ['LINES'] = '24'
-    assert runtime.config.data.display.terminal.width == 80
-    assert runtime.config.data.display.terminal.height == 24
+    assert runtime.config.data.ui.terminal.width == 80
+    assert runtime.config.data.ui.terminal.height == 24
     os.environ.pop('COLUMNS')
     os.environ.pop('LINES')
 

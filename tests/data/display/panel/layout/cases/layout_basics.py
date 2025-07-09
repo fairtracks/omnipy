@@ -6,7 +6,7 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
 from omnipy.data._display.layout.base import Layout
-from omnipy.shared.enums import (ConsoleColorSystem,
+from omnipy.shared.enums import (DisplayColorSystem,
                                  HorizontalOverflowMode,
                                  Justify,
                                  VerticalOverflowMode)
@@ -789,7 +789,7 @@ def case_layout_single_panel_fixed_width_with_title(
                 frame=Frame(Dimensions(width=19, height=None)),
             )),
         config=OutputConfig(
-            console_color_system=ConsoleColorSystem.ANSI_RGB,
+            color_system=DisplayColorSystem.ANSI_RGB,
             transparent_background=False,
         ),
         exp_plain_output_no_frame=('╭─────────────────────╮\n'
@@ -1024,7 +1024,7 @@ def case_layout_two_panels_fixed_content_and_frame(
             # and vertical overflow modes.
             horizontal_overflow_mode=HorizontalOverflowMode.CROP,
             vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
-            console_color_system=ConsoleColorSystem.ANSI_RGB,
+            color_system=DisplayColorSystem.ANSI_RGB,
             transparent_background=False,
         ),
         exp_plain_output_no_frame=('╭──────────────┬───────────╮\n'

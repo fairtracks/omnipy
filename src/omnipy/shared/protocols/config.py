@@ -7,8 +7,8 @@ from omnipy.shared.enums import (AllColorStyles,
                                  ConfigOutputStorageProtocolOptions,
                                  ConfigPersistOutputsOptions,
                                  ConfigRestoreOutputsOptions,
-                                 ConsoleColorSystem,
-                                 ConsoleDimensionsMode,
+                                 DisplayColorSystem,
+                                 DisplayDimensionsUpdateMode,
                                  EngineChoice,
                                  HorizontalOverflowMode,
                                  PanelDesign,
@@ -24,13 +24,13 @@ import omnipy.util._pydantic as pyd
 @runtime_checkable
 class IsColorConfig(IsDataPublisher, Protocol):
     """"""
-    system: ConsoleColorSystem.Literals
+    system: DisplayColorSystem.Literals
     style: AllColorStyles.Literals | str
     transparent_background: bool
 
 
 @runtime_checkable
-class IsConsoleConfig(IsDataPublisher, Protocol):
+class IsUserInterfaceTypeConfig(IsDataPublisher, Protocol):
     """"""
     width: pyd.NonNegativeInt | None
     height: pyd.NonNegativeInt | None
@@ -40,17 +40,17 @@ class IsConsoleConfig(IsDataPublisher, Protocol):
 @runtime_checkable
 class IsDimsModeMixin(Protocol):
     """"""
-    dims_mode: ConsoleDimensionsMode.Literals = ConsoleDimensionsMode.AUTO
+    dims_mode: DisplayDimensionsUpdateMode.Literals = DisplayDimensionsUpdateMode.AUTO
 
 
 @runtime_checkable
-class IsDimsModeConfig(IsConsoleConfig, IsDimsModeMixin, Protocol):
+class IsDimsModeConfig(IsUserInterfaceTypeConfig, IsDimsModeMixin, Protocol):
     """"""
     ...
 
 
 @runtime_checkable
-class IsTerminalConsoleConfig(IsDimsModeConfig, Protocol):
+class IsTerminalUserInterfaceConfig(IsDimsModeConfig, Protocol):
     """"""
     ...
 
@@ -65,19 +65,19 @@ class IsFontConfig(IsDataPublisher, Protocol):
 
 
 @runtime_checkable
-class IsHtmlConsoleConfig(IsConsoleConfig, Protocol):
+class IsHtmlUserInterfaceConfig(IsUserInterfaceTypeConfig, Protocol):
     """"""
     font: IsFontConfig
 
 
 @runtime_checkable
-class IsJupyterConsoleDimsModeConfig(IsHtmlConsoleConfig, IsDimsModeConfig, Protocol):
+class IsJupyterUserInterfaceConfig(IsHtmlUserInterfaceConfig, IsDimsModeConfig, Protocol):
     """"""
     ...
 
 
 @runtime_checkable
-class IsBrowserConsoleConfig(IsHtmlConsoleConfig, Protocol):
+class IsBrowserUserInterfaceConfig(IsHtmlUserInterfaceConfig, Protocol):
     """"""
     ...
 
@@ -108,11 +108,11 @@ class IsLayoutConfig(IsDataPublisher, Protocol):
 
 
 @runtime_checkable
-class IsDisplayConfig(IsDataPublisher, Protocol):
+class IsUserInterfaceConfig(IsDataPublisher, Protocol):
     """"""
-    terminal: IsTerminalConsoleConfig
-    jupyter: IsJupyterConsoleDimsModeConfig
-    browser: IsBrowserConsoleConfig
+    terminal: IsTerminalUserInterfaceConfig
+    jupyter: IsJupyterUserInterfaceConfig
+    browser: IsBrowserUserInterfaceConfig
     text: IsTextConfig
     layout: IsLayoutConfig
     cache_dir_path: str
@@ -145,7 +145,7 @@ class IsHttpConfig(IsDataPublisher, Protocol):
 @runtime_checkable
 class IsDataConfig(IsDataPublisher, Protocol):
     """"""
-    display: IsDisplayConfig
+    ui: IsUserInterfaceConfig
     model: IsModelConfig
     http: IsHttpConfig
 

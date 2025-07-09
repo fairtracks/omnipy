@@ -4,8 +4,8 @@ import pygments.styles
 import pytest
 
 from omnipy.data._display.config import OutputConfig
-from omnipy.shared.enums import (ConsoleColorSystem,
-                                 DarkLowContrastColorStyles,
+from omnipy.shared.enums import (DarkLowContrastColorStyles,
+                                 DisplayColorSystem,
                                  HorizontalOverflowMode,
                                  Justify,
                                  LightHighContrastColorStyles,
@@ -24,7 +24,7 @@ def test_output_config() -> None:
         debug_mode=True,
         pretty_printer=PrettyPrinterLib.DEVTOOLS,
         language=SyntaxLanguage.JSON,
-        console_color_system=ConsoleColorSystem.ANSI_RGB,
+        color_system=DisplayColorSystem.ANSI_RGB,
         color_style=DarkLowContrastColorStyles.ONE_DARK,
         css_font_families=('Menlo', 'monospace'),
         css_font_size=16,
@@ -43,7 +43,7 @@ def test_output_config() -> None:
     assert config.debug_mode is True
     assert config.pretty_printer is PrettyPrinterLib.DEVTOOLS
     assert config.language is SyntaxLanguage.JSON
-    assert config.console_color_system is ConsoleColorSystem.ANSI_RGB
+    assert config.color_system is DisplayColorSystem.ANSI_RGB
     assert config.color_style is DarkLowContrastColorStyles.ONE_DARK
     assert config.css_font_families == ('Menlo', 'monospace')
     assert config.css_font_size == 16
@@ -60,10 +60,10 @@ def test_output_config() -> None:
         tab_size='2',  # type: ignore[arg-type]
         indent_tab_size='4',  # type: ignore[arg-type]
         debug_mode='yes',  # type: ignore[arg-type]
-        pretty_printer='rich',  # type: ignore[arg-type]
+        pretty_printer='rich',
         # Any language string supported by the pygments library should be accepted
         language='c++',
-        console_color_system='256',  # type: ignore[arg-type]
+        color_system='256',
         # Any color style string supported by the pygments library should be accepted
         # Note: the lilypond color style is for use with the lilypond music notation software and as
         #       thus excluded from the list of valid color styles in Omnipy, but it is still a valid
@@ -73,19 +73,19 @@ def test_output_config() -> None:
         css_font_size='16',  # type: ignore[arg-type]
         css_font_weight='400',  # type: ignore[arg-type]
         css_line_height='1',  # type: ignore[arg-type]
-        horizontal_overflow_mode='ellipsis',  # type: ignore[arg-type]
-        vertical_overflow_mode='crop_bottom',  # type: ignore[arg-type]
-        panel_design='table_grid',  # type: ignore[arg-type]
+        horizontal_overflow_mode='ellipsis',
+        vertical_overflow_mode='crop_bottom',
+        panel_design='table_grid',
         panel_title_at_top=0,  # type: ignore[arg-type]
-        max_title_height=1,  # type: ignore[arg-type]
-        justify_in_layout='right',  # type: ignore[arg-type]
+        max_title_height=1,
+        justify_in_layout='right',
     )
     assert config.tab_size == 2
     assert config.indent_tab_size == 4
     assert config.debug_mode is True
     assert config.pretty_printer is PrettyPrinterLib.RICH
     assert config.language == 'c++'
-    assert config.console_color_system is ConsoleColorSystem.ANSI_256
+    assert config.color_system is DisplayColorSystem.ANSI_256
     assert config.color_style == 'lilypond'
     assert config.css_font_families == ()
     assert config.css_font_size == 16
@@ -131,7 +131,7 @@ def test_output_config_hashable() -> None:
             'language': SyntaxLanguage.XML
         },
         {
-            'console_color_system': ConsoleColorSystem.ANSI_256
+            'color_system': DisplayColorSystem.ANSI_256
         },
         {
             'color_style': LightHighContrastColorStyles.XCODE
@@ -199,7 +199,7 @@ def test_fail_output_config_no_assignments() -> None:
         config.language = SyntaxLanguage.XML  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.console_color_system = ConsoleColorSystem.WINDOWS_LEGACY  # type: ignore[misc]
+        config.color_system = DisplayColorSystem.WINDOWS_LEGACY  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
         config.color_style = DarkLowContrastColorStyles.GRUVBOX_DARK  # type: ignore[misc]
@@ -258,7 +258,7 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(language='xyz')
 
     with pytest.raises(ValueError):
-        OutputConfig(console_color_system=None)  # type: ignore[arg-type]
+        OutputConfig(color_system=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
         OutputConfig(color_style='red')
@@ -301,7 +301,7 @@ def test_output_config_default_values() -> None:
     assert config.debug_mode is False
     assert config.pretty_printer is PrettyPrinterLib.RICH
     assert config.language is SyntaxLanguage.PYTHON
-    assert config.console_color_system is ConsoleColorSystem.AUTO
+    assert config.color_system is DisplayColorSystem.AUTO
     assert config.color_style is RecommendedColorStyles.ANSI_DARK
     assert config.css_font_families == (
         'CommitMonoOmnipy',

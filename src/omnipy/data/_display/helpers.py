@@ -5,7 +5,7 @@ from rich._cell_widths import CELL_WIDTHS
 from rich.cells import _is_single_cell_widths
 
 from omnipy.data.typechecks import is_model_instance
-from omnipy.shared.enums import DisplayType
+from omnipy.shared.enums import UserInterfaceType
 from omnipy.util.range_lookup import RangeLookup
 
 
@@ -48,7 +48,7 @@ def soft_wrap_words(words: list[str], max_width: int) -> list[str]:
     exceed the specified maximum width. Single words longer than max_width
     are not split and will appear on their own line.
 
-    Args:
+    Parameters:
         words: List of words to be wrapped
         max_width: Maximum width (in characters) for each line
 
@@ -112,43 +112,45 @@ def running_in_atty_terminal() -> bool:
     return sys.stdout.isatty()
 
 
-def detect_display_type() -> DisplayType:
+def detect_ui_type() -> UserInterfaceType.Literals:
     if running_in_jupyter():
-        return DisplayType.JUPYTER
+        return UserInterfaceType.PYCHARM_IPYTHON
+        return UserInterfaceType.JUPYTER
     elif running_in_ipython_terminal():
-        return DisplayType.IPYTHON
+        return UserInterfaceType.IPYTHON
     elif running_in_pycharm_console():
         if running_in_ipython_pycharm():
-            return DisplayType.PYCHARM_IPYTHON
+            return UserInterfaceType.PYCHARM_IPYTHON
         else:
-            return DisplayType.PYCHARM_TERMINAL
+            return UserInterfaceType.PYCHARM_TERMINAL
     elif running_in_atty_terminal():
-        return DisplayType.TERMINAL
+        return UserInterfaceType.TERMINAL
     else:
-        return DisplayType.UNKNOWN
+        return UserInterfaceType.UNKNOWN
 
 
-def display_type_is_any_terminal(display_type: DisplayType.Literals) -> bool:
+def ui_type_is_any_terminal(ui_type: UserInterfaceType.Literals) -> bool:
     """
-    Check if the display_type refers to any terminal environment. If display
-    type is unknown, we still assume it is a terminal.
+    Check if the ui_type refers to any terminal environment. If user
+    interface type is unknown, we still assume it is a terminal.
     """
-    return display_type in (DisplayType.TERMINAL,
-                            DisplayType.IPYTHON,
-                            DisplayType.PYCHARM_TERMINAL,
-                            DisplayType.PYCHARM_IPYTHON,
-                            DisplayType.UNKNOWN)
+    return ui_type in (UserInterfaceType.TERMINAL,
+                       UserInterfaceType.IPYTHON,
+                       UserInterfaceType.PYCHARM_TERMINAL,
+                       UserInterfaceType.PYCHARM_IPYTHON,
+                       UserInterfaceType.UNKNOWN)
 
 
-def get_terminal_prompt_height(display_type: DisplayType.Literals) -> int:
+def get_terminal_prompt_height(ui_type: UserInterfaceType.Literals) -> int:
     """
     Get the height of the terminal prompt (including blank lines) based on
     the display type.
     """
-    match display_type:
-        case DisplayType.TERMINAL | DisplayType.PYCHARM_TERMINAL:
+    match ui_type:
+        case UserInterfaceType.TERMINAL | UserInterfaceType.PYCHARM_TERMINAL:
             return 2
-        case DisplayType.IPYTHON | DisplayType.PYCHARM_IPYTHON | DisplayType.UNKNOWN:
+        case (UserInterfaceType.IPYTHON | UserInterfaceType.PYCHARM_IPYTHON
+              | UserInterfaceType.UNKNOWN):
             return 3
         case _:
             return 0
@@ -161,8 +163,10 @@ def setup_displayhook_if_plain_terminal() -> None:
     """
     from omnipy.data.dataset import Dataset
 
-    display_type = detect_display_type()
-    if display_type in (DisplayType.TERMINAL, DisplayType.PYCHARM_TERMINAL, DisplayType.UNKNOWN):
+    ui_type = detect_ui_type()
+    if ui_type in (UserInterfaceType.TERMINAL,
+                   UserInterfaceType.PYCHARM_TERMINAL,
+                   UserInterfaceType.UNKNOWN):
 
         def _omnipy_displayhook(obj: object) -> None:
             """
@@ -172,7 +176,7 @@ def setup_displayhook_if_plain_terminal() -> None:
 
             if obj is not None:
                 if is_model_instance(obj) or isinstance(obj, Dataset):
-                    print(obj._display())
+                    print(obj._default_repr())
                     builtins._ = obj  # type: ignore[attr-defined]
                 else:
                     sys.__displayhook__(obj)

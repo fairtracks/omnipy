@@ -37,7 +37,7 @@ def generate_literal_enum_code(
     """
     Generate code for a LiteralEnum class based on a tuple of string values.
 
-    Args:
+    Parameters:
         values: Either one of the following:
             1. Tuple of objects that define the literal values for the enum,
                where each value will be converted to a valid attribute name
@@ -122,7 +122,7 @@ def _generate_attribute_name(value: Any, used_names: KeysView[str]) -> str:
     """
     Generate a valid Python attribute name from a value.
 
-    Args:
+    Parameters:
         value: The value to convert to an attribute name
         used_names: QAlready used attribute names to avoid conflicts
 

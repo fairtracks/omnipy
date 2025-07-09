@@ -50,7 +50,7 @@ module.exports = {
       const width = this._getColumns(this.$el.getBoundingClientRect().width);
       const height = this._getLines(this.windowPanel.getBoundingClientRect().height);
       if (width && height) {
-        this.console_size = {"width": width, "height": height};
+        this.available_display_dims = {"width": width, "height": height};
       }
     },
 

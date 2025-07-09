@@ -426,7 +426,7 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
         """
         Get the name of the enum attribute that corresponds to the given value.
 
-        Args:
+        Parameters:
             value: The value to look up in the enum
 
         Returns:

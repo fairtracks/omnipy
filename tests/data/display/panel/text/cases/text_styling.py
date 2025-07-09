@@ -6,8 +6,8 @@ import pytest_cases as pc
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.shared.enums import (ConsoleColorSystem,
-                                 DarkLowContrastColorStyles,
+from omnipy.shared.enums import (DarkLowContrastColorStyles,
+                                 DisplayColorSystem,
                                  HorizontalOverflowMode,
                                  LightLowContrastColorStyles,
                                  VerticalOverflowMode)
@@ -139,7 +139,7 @@ def case_syntax_styling_setup_no_frame_or_configs(
         case_id='no-frame-default-color' + ('-no-bg' if transparent_background else ''),
         content="MyClass({'abc': [123, 234]})",
         config=OutputConfig(
-            console_color_system=ConsoleColorSystem.ANSI_RGB,
+            color_system=DisplayColorSystem.ANSI_RGB,
             transparent_background=transparent_background),
     )
 
@@ -170,18 +170,18 @@ def case_syntax_styling_setup_no_frame_color_config(
             css_font_size=css_font_size,
             css_font_weight=css_font_weight,
             css_line_height=css_line_height,
-            console_color_system=ConsoleColorSystem.ANSI_RGB,
+            color_system=DisplayColorSystem.ANSI_RGB,
             color_style=LightLowContrastColorStyles.MURPHY,
             transparent_background=transparent_background),
     )
 
 
 @pc.parametrize('color_system',
-                [ConsoleColorSystem.AUTO, ConsoleColorSystem.ANSI_256, ConsoleColorSystem.ANSI_RGB])
+                [DisplayColorSystem.AUTO, DisplayColorSystem.ANSI_256, DisplayColorSystem.ANSI_RGB])
 @pc.parametrize('transparent_background', [False, True])
 @pc.case(id='w-frame-dark-color-w-wrap', tags=['setup', 'syntax_text'])
 def case_syntax_styling_setup_small_frame_color_and_overflow_config(
-    color_system: ConsoleColorSystem.Literals,
+    color_system: DisplayColorSystem.Literals,
     transparent_background: bool,
 ) -> StylizedPanelTestCaseSetup[str]:
 
@@ -193,7 +193,7 @@ def case_syntax_styling_setup_small_frame_color_and_overflow_config(
         content="MyClass({'abc': [123, 234]})",
         frame=Frame(Dimensions(9, 3)),
         config=OutputConfig(
-            console_color_system=color_system,
+            color_system=color_system,
             color_style=DarkLowContrastColorStyles.ZENBURN,
             transparent_background=transparent_background,
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,

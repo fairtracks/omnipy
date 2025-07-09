@@ -28,7 +28,7 @@ from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_st
                                                 get_token_style_from_color_style)
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingOutputVariant
-from omnipy.shared.enums import ConsoleColorSystem, PanelDesign
+from omnipy.shared.enums import DisplayColorSystem, PanelDesign
 from omnipy.util import _pydantic as pyd
 
 
@@ -88,7 +88,7 @@ class StylizedLayoutPanel(
     @lru_cache(maxsize=1024)
     def _get_stylized_layout_common(  # noqa: C901
         outer_panel: 'StylizedLayoutPanel[FrameInvT]',
-        console_color_system: ConsoleColorSystem.Literals,  # Only used for hashing
+        color_system: DisplayColorSystem.Literals,  # Only used for hashing
         force_autodetect_bg_color: ForceAutodetect.Literals,
     ) -> rich.table.Table:
         styles = PanelElementStyles(outer_panel, force_autodetect_bg_color)
@@ -99,7 +99,7 @@ class StylizedLayoutPanel(
     def _stylized_content_terminal_impl(self) -> StylizedRichTypes:
         return self._get_stylized_layout_common(
             outer_panel=self,
-            console_color_system=self.config.console_color_system,
+            color_system=self.config.color_system,
             force_autodetect_bg_color=ForceAutodetect.NEVER,
         )
 
@@ -107,7 +107,7 @@ class StylizedLayoutPanel(
     def _stylized_content_html_impl(self) -> StylizedRichTypes:
         return self._get_stylized_layout_common(
             outer_panel=self,
-            console_color_system=ConsoleColorSystem.ANSI_RGB,
+            color_system=DisplayColorSystem.ANSI_RGB,
             force_autodetect_bg_color=ForceAutodetect.NEVER,
         )
 
