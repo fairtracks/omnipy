@@ -306,13 +306,18 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
         """
         Extract the specialized inner types from the Generics machinery.
         """
-        return cast(
-            tuple[type, ...],
-            tuple(
-                _typ for _typ in all_type_variants(
-                    get_args(cls.__orig_bases__[0])[0]  # type: ignore[attr-defined]
-                ) if _typ in cls._ALLOWED_LITERAL_INNER_TYPES),
-        )
+        bases_names = [_.__name__ for _ in cls.__orig_bases__]  # type: ignore[attr-defined]
+        try:
+            lit_enum_idx = bases_names.index('LiteralEnum')
+            return cast(
+                tuple[type, ...],
+                tuple(
+                    _typ for _typ in all_type_variants(
+                        get_args(cls.__orig_bases__[lit_enum_idx])[0]  # type: ignore[attr-defined]
+                    )))
+        except ValueError:
+            # Not a specialized LiteralEnum, so return an empty tuple
+            return tuple()
 
     @classmethod
     def _check_attributes(
@@ -404,7 +409,7 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
         """
         literal_missing_attrs = all_cls_literal_vals - defined_attrs
         if literal_missing_attrs:
-            raise TypeError(f'Not all choices in {cls.__name__}.Literals are defined as members .'
+            raise TypeError(f'Not all choices in {cls.__name__}.Literals are defined as members. '
                             f'Missing members: {literal_missing_attrs}')
 
     @classmethod
