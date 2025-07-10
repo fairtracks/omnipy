@@ -119,7 +119,7 @@ def create_linear_flow_with_two_func_tasks(
     engine: IsLinearFlowRunnerEngine,
     registry: IsRunStateRegistry | None,
 ) -> IsLinearFlow:
-    @task_template_cls
+    @task_template_cls()
     def passthrough_task(arg):
         return arg
 
