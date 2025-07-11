@@ -10,7 +10,7 @@ from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
-from omnipy.shared.enums import PanelDesign
+from omnipy.shared.enums.display import PanelDesign
 
 from ..helpers.case_setup import (OutputPropertyType,
                                   PanelFrameVariantTestCase,

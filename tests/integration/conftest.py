@@ -3,7 +3,7 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from omnipy.shared.enums import EngineChoice
+from omnipy.shared.enums.job import EngineChoice
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 

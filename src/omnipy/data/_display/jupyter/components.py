@@ -3,7 +3,7 @@ from typing import Any, Callable, TYPE_CHECKING
 import solara
 
 from omnipy.shared.constants import TERMINAL_DEFAULT_HEIGHT, TERMINAL_DEFAULT_WIDTH
-from omnipy.shared.enums import DisplayDimensionsUpdateMode
+from omnipy.shared.enums.display import DisplayDimensionsUpdateMode
 
 if TYPE_CHECKING:
     from omnipy.data.dataset import Dataset

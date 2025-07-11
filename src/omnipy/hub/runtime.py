@@ -12,7 +12,7 @@ from omnipy.data.serializer import SerializerRegistry
 from omnipy.engine.local import LocalRunner
 from omnipy.hub._registry import RunStateRegistry
 from omnipy.hub.log._root_log import RootLogObjects
-from omnipy.shared.enums import EngineChoice
+from omnipy.shared.enums.job import EngineChoice
 from omnipy.shared.protocols.compute.job_creator import IsJobConfigHolder
 from omnipy.shared.protocols.config import (IsDataConfig,
                                             IsEngineConfig,

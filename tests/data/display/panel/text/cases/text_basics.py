@@ -5,7 +5,7 @@ import pytest_cases as pc
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
-from omnipy.shared.enums import HorizontalOverflowMode, VerticalOverflowMode
+from omnipy.shared.enums.display import HorizontalOverflowMode, VerticalOverflowMode
 
 from ...helpers.case_setup import FrameTestCase, FrameVariant, PanelFrameVariantTestCase
 

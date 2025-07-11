@@ -12,7 +12,7 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.text.pretty import pretty_repr_of_draft_output
 from omnipy.data.model import Model
-from omnipy.shared.enums import PrettyPrinterLib
+from omnipy.shared.enums.display import PrettyPrinterLib
 
 from ..panel.helpers.panel_assert import DraftPanelKwArgs
 

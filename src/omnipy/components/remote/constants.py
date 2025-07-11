@@ -1,4 +1,4 @@
-from omnipy.shared.enums import BackoffStrategy
+from omnipy.shared.enums.data import BackoffStrategy
 
 DEFAULT_RETRIES = 5
 DEFAULT_BACKOFF_STRATEGY = BackoffStrategy.EXPONENTIAL

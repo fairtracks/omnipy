@@ -9,7 +9,7 @@ from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.helpers import UnicodeCharWidthMap
 from omnipy.data._display.panel.base import FrameT
 from omnipy.data._display.panel.draft.base import ContentT, DimensionsAwareDraftPanel, DraftPanel
-from omnipy.shared.enums import MaxTitleHeight
+from omnipy.shared.enums.display import MaxTitleHeight
 import omnipy.util._pydantic as pyd
 
 

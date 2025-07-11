@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Protocol, runtime_checkable
 
-from omnipy.shared.enums import RunState
+from omnipy.shared.enums.job import RunState
 from omnipy.shared.protocols.compute.mixins import IsUniquelyNamedJob
 
 

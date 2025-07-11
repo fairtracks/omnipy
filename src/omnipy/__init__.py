@@ -166,7 +166,7 @@ from omnipy.compute.flow import (DagFlow,
                                  LinearFlow,
                                  LinearFlowTemplate)
 from omnipy.compute.task import Task, TaskTemplate
-from omnipy.data._display.helpers import (setup_css_if_running_in_jupyter,
+from omnipy.data._display.helpers import (setup_css_if_running_in_jupyter_in_browser,
                                           setup_displayhook_if_plain_terminal)
 from omnipy.data.dataset import Dataset, MultiModelDataset
 from omnipy.data.model import Model
@@ -175,31 +175,31 @@ from omnipy.data.param import (bind_adjust_dataset_func,
                                params_dataclass,
                                ParamsBase)
 from omnipy.hub.runtime import runtime
-from omnipy.shared.enums import (AllColorStyles,
-                                 BackoffStrategy,
-                                 ConfigOutputStorageProtocolOptions,
-                                 ConfigPersistOutputsOptions,
-                                 ConfigRestoreOutputsOptions,
-                                 DarkHighContrastColorStyles,
-                                 DarkLowContrastColorStyles,
-                                 DisplayColorSystem,
-                                 DisplayDimensionsUpdateMode,
-                                 EngineChoice,
-                                 HorizontalOverflowMode,
-                                 Justify,
-                                 LightHighContrastColorStyles,
-                                 LightLowContrastColorStyles,
-                                 MaxTitleHeight,
-                                 OutputStorageProtocolOptions,
-                                 PanelDesign,
-                                 PersistOutputsOptions,
-                                 PrettyPrinterLib,
-                                 RecommendedColorStyles,
-                                 RestoreOutputsOptions,
-                                 RunState,
-                                 SyntaxLanguage,
-                                 UserInterfaceType,
-                                 VerticalOverflowMode)
+from omnipy.shared.enums.colorstyles import (AllColorStyles,
+                                             DarkHighContrastColorStyles,
+                                             DarkLowContrastColorStyles,
+                                             LightHighContrastColorStyles,
+                                             LightLowContrastColorStyles,
+                                             RecommendedColorStyles)
+from omnipy.shared.enums.data import BackoffStrategy
+from omnipy.shared.enums.display import (DisplayColorSystem,
+                                         DisplayDimensionsUpdateMode,
+                                         HorizontalOverflowMode,
+                                         Justify,
+                                         MaxTitleHeight,
+                                         PanelDesign,
+                                         PrettyPrinterLib,
+                                         SyntaxLanguage,
+                                         VerticalOverflowMode)
+from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
+                                     ConfigPersistOutputsOptions,
+                                     ConfigRestoreOutputsOptions,
+                                     EngineChoice,
+                                     OutputStorageProtocolOptions,
+                                     PersistOutputsOptions,
+                                     RestoreOutputsOptions,
+                                     RunState)
+from omnipy.shared.enums.ui import UserInterfaceType
 from omnipy.util.contexts import print_exception
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -408,5 +408,5 @@ __all__ = [
     'print_exception',
 ]
 
-setup_css_if_running_in_jupyter()
+setup_css_if_running_in_jupyter_in_browser()
 setup_displayhook_if_plain_terminal()

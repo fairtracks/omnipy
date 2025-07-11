@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from time import sleep
 from typing import Callable, cast, Type
 
-from omnipy.shared.enums import RunState
+from omnipy.shared.enums.job import RunState
 from omnipy.shared.protocols.compute._job import IsJob, IsJobBase
 from omnipy.shared.protocols.compute.job import (IsDagFlow,
                                                  IsDagFlowTemplate,

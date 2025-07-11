@@ -8,7 +8,7 @@ import pytest_cases as pc
 
 from omnipy import MultiModelDataset
 from omnipy.data.dataset import Dataset
-from omnipy.shared.enums import RunState
+from omnipy.shared.enums.job import RunState
 from omnipy.util._pydantic import ValidationError
 
 from ....engine.helpers.functions import assert_job_state

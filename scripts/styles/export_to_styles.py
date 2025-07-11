@@ -12,11 +12,11 @@ from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 from omnipy.data._display.text.pretty import pretty_repr_of_draft_output
 from omnipy.data.typechecks import is_model_instance
-from omnipy.shared.enums import (DarkHighContrastColorStyles,
-                                 DarkLowContrastColorStyles,
-                                 LightHighContrastColorStyles,
-                                 LightLowContrastColorStyles,
-                                 RecommendedColorStyles)
+from omnipy.shared.enums.colorstyles import (DarkHighContrastColorStyles,
+                                             DarkLowContrastColorStyles,
+                                             LightHighContrastColorStyles,
+                                             LightLowContrastColorStyles,
+                                             RecommendedColorStyles)
 
 
 class Inputs(NamedTuple):

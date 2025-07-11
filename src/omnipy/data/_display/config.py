@@ -3,16 +3,15 @@ import pygments.styles
 import pygments.util
 
 from omnipy.data._display.styles.dynamic_styles import install_base16_theme
-from omnipy.shared.enums import (AllColorStyles,
-                                 DisplayColorSystem,
-                                 HorizontalOverflowMode,
-                                 Justify,
-                                 MaxTitleHeight,
-                                 PanelDesign,
-                                 PrettyPrinterLib,
-                                 RecommendedColorStyles,
-                                 SyntaxLanguage,
-                                 VerticalOverflowMode)
+from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
+from omnipy.shared.enums.display import (DisplayColorSystem,
+                                         HorizontalOverflowMode,
+                                         Justify,
+                                         MaxTitleHeight,
+                                         PanelDesign,
+                                         PrettyPrinterLib,
+                                         SyntaxLanguage,
+                                         VerticalOverflowMode)
 import omnipy.util._pydantic as pyd
 
 

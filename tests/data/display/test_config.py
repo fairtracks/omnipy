@@ -4,17 +4,17 @@ import pygments.styles
 import pytest
 
 from omnipy.data._display.config import OutputConfig
-from omnipy.shared.enums import (DarkLowContrastColorStyles,
-                                 DisplayColorSystem,
-                                 HorizontalOverflowMode,
-                                 Justify,
-                                 LightHighContrastColorStyles,
-                                 MaxTitleHeight,
-                                 PanelDesign,
-                                 PrettyPrinterLib,
-                                 RecommendedColorStyles,
-                                 SyntaxLanguage,
-                                 VerticalOverflowMode)
+from omnipy.shared.enums.colorstyles import (DarkLowContrastColorStyles,
+                                             LightHighContrastColorStyles,
+                                             RecommendedColorStyles)
+from omnipy.shared.enums.display import (DisplayColorSystem,
+                                         HorizontalOverflowMode,
+                                         Justify,
+                                         MaxTitleHeight,
+                                         PanelDesign,
+                                         PrettyPrinterLib,
+                                         SyntaxLanguage,
+                                         VerticalOverflowMode)
 
 
 def test_output_config() -> None:

@@ -8,7 +8,7 @@ import rich.color_triplet
 import rich.style
 import rich.syntax
 
-from omnipy.shared.enums import AllColorStyles
+from omnipy.shared.enums.colorstyles import AllColorStyles
 from omnipy.util.literal_enum import LiteralEnum
 
 

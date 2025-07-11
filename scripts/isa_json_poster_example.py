@@ -2,11 +2,11 @@ import asyncio
 import random
 
 import omnipy as om
-from omnipy.shared.enums import (DarkHighContrastColorStyles,
-                                 DarkLowContrastColorStyles,
-                                 LightHighContrastColorStyles,
-                                 LightLowContrastColorStyles,
-                                 RecommendedColorStyles)
+from omnipy.shared.enums.colorstyles import (DarkHighContrastColorStyles,
+                                             DarkLowContrastColorStyles,
+                                             LightHighContrastColorStyles,
+                                             LightLowContrastColorStyles,
+                                             RecommendedColorStyles)
 
 
 def set_random_style():

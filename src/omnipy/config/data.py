@@ -14,15 +14,14 @@ from omnipy.shared.constants import (BROWSER_DEFAULT_HEIGHT,
                                      JUPYTER_DEFAULT_WIDTH,
                                      TERMINAL_DEFAULT_HEIGHT,
                                      TERMINAL_DEFAULT_WIDTH)
-from omnipy.shared.enums import (AllColorStyles,
-                                 BackoffStrategy,
-                                 DisplayColorSystem,
-                                 DisplayDimensionsUpdateMode,
-                                 HorizontalOverflowMode,
-                                 PanelDesign,
-                                 PrettyPrinterLib,
-                                 RecommendedColorStyles,
-                                 VerticalOverflowMode)
+from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
+from omnipy.shared.enums.data import BackoffStrategy
+from omnipy.shared.enums.display import (DisplayColorSystem,
+                                         DisplayDimensionsUpdateMode,
+                                         HorizontalOverflowMode,
+                                         PanelDesign,
+                                         PrettyPrinterLib,
+                                         VerticalOverflowMode)
 from omnipy.shared.protocols.config import (IsBrowserUserInterfaceConfig,
                                             IsColorConfig,
                                             IsFontConfig,

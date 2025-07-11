@@ -14,7 +14,7 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data.typechecks import is_model_instance
 from omnipy.shared.constants import MAX_TERMINAL_SIZE
-from omnipy.shared.enums import PrettyPrinterLib
+from omnipy.shared.enums.display import PrettyPrinterLib
 import omnipy.util._pydantic as pyd
 
 

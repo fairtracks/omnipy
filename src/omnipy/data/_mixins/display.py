@@ -4,23 +4,20 @@ import functools
 import inspect
 from typing import Any, cast, Literal, TYPE_CHECKING
 
+from typing_extensions import assert_never
+
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.data._display.helpers import (detect_ui_type,
-                                          get_terminal_prompt_height,
-                                          ui_type_is_any_terminal)
+from omnipy.data._display.helpers import detect_ui_type, get_terminal_prompt_height
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import TextDraftPanel
 from omnipy.data.helpers import FailedData, PendingData
-from omnipy.shared.enums import (DisplayColorSystem,
-                                 MaxTitleHeight,
-                                 SyntaxLanguage,
-                                 UserInterfaceType)
-from omnipy.shared.exceptions import ShouldNotOccurException
+from omnipy.shared.enums.display import DisplayColorSystem, MaxTitleHeight, SyntaxLanguage
+from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
 from omnipy.shared.protocols.config import (IsHtmlUserInterfaceConfig,
                                             IsUserInterfaceConfig,
                                             IsUserInterfaceTypeConfig)
@@ -53,7 +50,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         else:
             if len(p.stack) == 1:
                 ui_type = self._determine_ui_type(UserInterfaceType.AUTO)
-                if ui_type is not UserInterfaceType.JUPYTER:
+                if UserInterfaceType.is_jupyter(ui_type):
                     p.text(self._default_repr())
             else:
                 p.text(self.__repr__())
@@ -158,47 +155,40 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     @functools.lru_cache
     def _get_output_according_to_ui_type(
         stylized_panel: FullyRenderedPanel,
-        ui_type: UserInterfaceType.Literals,
-    ) -> str:
+        ui_type: SpecifiedUserInterfaceType.Literals,
+    ) -> str:  # pyright: ignore [reportReturnType]
         match ui_type:
-            case (UserInterfaceType.TERMINAL | UserInterfaceType.IPYTHON
-                  | UserInterfaceType.PYCHARM_TERMINAL | UserInterfaceType.PYCHARM_IPYTHON
-                  | UserInterfaceType.UNKNOWN):
+            case x if UserInterfaceType.requires_terminal_output(x):
                 return stylized_panel.colorized.terminal
-            case UserInterfaceType.JUPYTER:
+            case x if UserInterfaceType.requires_html_tag_output(x):
                 return stylized_panel.colorized.html_tag
-            case UserInterfaceType.BROWSER:
+            case x if UserInterfaceType.requires_html_page_output(x):
                 return stylized_panel.colorized.html_page
-            case _:
-                raise ValueError(f'Output not supported for user interface type: {ui_type}')
 
     @staticmethod
     def _get_ui_type_config(
         ui_config: IsUserInterfaceConfig,
-        ui_type: UserInterfaceType.Literals,
+        ui_type: SpecifiedUserInterfaceType.Literals,
     ) -> IsUserInterfaceTypeConfig:
         match ui_type:
-            case (UserInterfaceType.TERMINAL | UserInterfaceType.IPYTHON
-                  | UserInterfaceType.PYCHARM_TERMINAL | UserInterfaceType.PYCHARM_IPYTHON
-                  | UserInterfaceType.UNKNOWN):
+            case x if UserInterfaceType.is_terminal(x):
                 ui_config_attr = 'terminal'
-            case UserInterfaceType.JUPYTER:
+            case x if UserInterfaceType.is_jupyter(x):
                 ui_config_attr = 'jupyter'
-            case UserInterfaceType.BROWSER:
+            case x if UserInterfaceType.is_browser(x):
                 ui_config_attr = 'browser'
-            case _:
-                raise ShouldNotOccurException(f'Incorrect user interface type: {ui_type}')
+            case _ as never:
+                raise assert_never(never)  # pyright: ignore [reportArgumentType]
         return getattr(ui_config, ui_config_attr)
 
-    def _get_output_config(self, ui_type: UserInterfaceType.Literals) -> OutputConfig:
+    def _get_output_config(self, ui_type: SpecifiedUserInterfaceType.Literals) -> OutputConfig:
         ui_config = cast(DataClassBase, self).config.ui
         ui_type_config: IsUserInterfaceTypeConfig = self._get_ui_type_config(ui_config, ui_type)
 
         match ui_type:
             case UserInterfaceType.UNKNOWN:
                 color_system = DisplayColorSystem.AUTO
-            case (UserInterfaceType.PYCHARM_TERMINAL | UserInterfaceType.PYCHARM_IPYTHON
-                  | UserInterfaceType.JUPYTER | UserInterfaceType.BROWSER):
+            case x if UserInterfaceType.supports_rgb_color_output(x):
                 color_system = DisplayColorSystem.ANSI_RGB
             case _:
                 color_system = ui_type_config.color.system
@@ -233,7 +223,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         width = ui_type_config.width
         height = ui_type_config.height
 
-        if ui_type_is_any_terminal(ui_type) and height is not None:
+        if UserInterfaceType.requires_terminal_output(ui_type) and height is not None:
             # Reserve space for the command line prompt
             height -= get_terminal_prompt_height(ui_type)
 

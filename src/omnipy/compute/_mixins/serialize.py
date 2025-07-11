@@ -7,10 +7,10 @@ from omnipy.components import get_serializer_registry
 from omnipy.compute._mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute._mixins.name import NameJobBaseMixin
 from omnipy.data.dataset import Dataset
-from omnipy.shared.enums import ConfigPersistOutputsOptions as ConfigPersistOpts
-from omnipy.shared.enums import (OutputStorageProtocolOptions,
-                                 PersistOutputsOptions,
-                                 RestoreOutputsOptions)
+from omnipy.shared.enums.job import ConfigPersistOutputsOptions as ConfigPersistOpts
+from omnipy.shared.enums.job import (OutputStorageProtocolOptions,
+                                     PersistOutputsOptions,
+                                     RestoreOutputsOptions)
 from omnipy.shared.protocols.compute._job import IsJob, IsJobBase
 from omnipy.shared.protocols.compute.job import IsFlow
 from omnipy.shared.protocols.config import IsJobConfig

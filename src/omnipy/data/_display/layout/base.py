@@ -10,7 +10,7 @@ from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              Panel,
                                              panel_is_dimensions_aware,
                                              panel_is_fully_rendered)
-from omnipy.shared.enums import PanelDesign
+from omnipy.shared.enums.display import PanelDesign
 
 PanelT = TypeVar('PanelT', bound=Panel)
 RenderedPanelT = TypeVar('RenderedPanelT', bound=Panel)

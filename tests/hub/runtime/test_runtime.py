@@ -35,18 +35,18 @@ from omnipy.engine.local import LocalRunner
 from omnipy.hub._registry import RunStateRegistry
 from omnipy.hub.log._root_log import RootLogObjects
 from omnipy.hub.runtime import RuntimeConfig, RuntimeObjects
-from omnipy.shared.enums import (BackoffStrategy,
-                                 ConfigOutputStorageProtocolOptions,
-                                 ConfigPersistOutputsOptions,
-                                 ConfigRestoreOutputsOptions,
-                                 DisplayColorSystem,
-                                 DisplayDimensionsUpdateMode,
-                                 EngineChoice,
-                                 HorizontalOverflowMode,
-                                 PanelDesign,
-                                 PrettyPrinterLib,
-                                 RecommendedColorStyles,
-                                 VerticalOverflowMode)
+from omnipy.shared.enums.colorstyles import RecommendedColorStyles
+from omnipy.shared.enums.data import BackoffStrategy
+from omnipy.shared.enums.display import (DisplayColorSystem,
+                                         DisplayDimensionsUpdateMode,
+                                         HorizontalOverflowMode,
+                                         PanelDesign,
+                                         PrettyPrinterLib,
+                                         VerticalOverflowMode)
+from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
+                                     ConfigPersistOutputsOptions,
+                                     ConfigRestoreOutputsOptions,
+                                     EngineChoice)
 from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.hub.runtime import IsRuntime, IsRuntimeConfig
 

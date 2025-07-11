@@ -3,7 +3,7 @@ from datetime import datetime
 from types import TracebackType
 from typing import cast
 
-from omnipy.shared.enums import BackoffStrategy
+from omnipy.shared.enums.data import BackoffStrategy
 
 from .lazy_import import (ClientSession,
                           ExponentialRetry,

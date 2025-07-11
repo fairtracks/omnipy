@@ -7,10 +7,8 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.layout.base import Layout
-from omnipy.shared.enums import (DarkHighContrastColorStyles,
-                                 DisplayColorSystem,
-                                 HorizontalOverflowMode,
-                                 RecommendedColorStyles)
+from omnipy.shared.enums.colorstyles import DarkHighContrastColorStyles, RecommendedColorStyles
+from omnipy.shared.enums.display import DisplayColorSystem, HorizontalOverflowMode
 
 from ...helpers.case_setup import (OutputPropertyType,
                                    StylizedPanelOutputExpectations,

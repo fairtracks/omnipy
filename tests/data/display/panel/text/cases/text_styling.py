@@ -6,11 +6,10 @@ import pytest_cases as pc
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.shared.enums import (DarkLowContrastColorStyles,
-                                 DisplayColorSystem,
-                                 HorizontalOverflowMode,
-                                 LightLowContrastColorStyles,
-                                 VerticalOverflowMode)
+from omnipy.shared.enums.colorstyles import DarkLowContrastColorStyles, LightLowContrastColorStyles
+from omnipy.shared.enums.display import (DisplayColorSystem,
+                                         HorizontalOverflowMode,
+                                         VerticalOverflowMode)
 
 from ...helpers.case_setup import (OutputPropertyType,
                                    PanelOutputTestCase,

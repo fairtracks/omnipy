@@ -7,7 +7,7 @@ from typing import Annotated
 import pytest
 
 from omnipy.hub._registry import RunStateRegistry
-from omnipy.shared.enums import RunState
+from omnipy.shared.enums.job import RunState
 from omnipy.shared.protocols.compute.job import IsDagFlow, IsTask
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 

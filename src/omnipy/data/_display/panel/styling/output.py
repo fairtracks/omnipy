@@ -20,7 +20,7 @@ from omnipy.data._display.panel.helpers import (calculate_bg_color_triplet_from_
                                                 calculate_fg_color_triplet_from_color_style,
                                                 ForceAutodetect)
 from omnipy.data._display.panel.styling.base import PanelT, StylizedMonospacedPanel
-from omnipy.shared.enums import HorizontalOverflowMode
+from omnipy.shared.enums.display import HorizontalOverflowMode
 from omnipy.util.helpers import extract_newline, max_newline_stripped_width, strip_and_split_newline
 from omnipy.util.literal_enum import LiteralEnum
 

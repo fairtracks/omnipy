@@ -28,7 +28,7 @@ from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_st
                                                 get_token_style_from_color_style)
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingOutputVariant
-from omnipy.shared.enums import DisplayColorSystem, PanelDesign
+from omnipy.shared.enums.display import DisplayColorSystem, PanelDesign
 from omnipy.util import _pydantic as pyd
 
 

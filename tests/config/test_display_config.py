@@ -2,7 +2,7 @@ import pydantic as pyd
 from typing_extensions import ClassVar, override
 
 from omnipy.config.data import DimsModeConfig
-from omnipy.shared.enums import DisplayDimensionsUpdateMode
+from omnipy.shared.enums.display import DisplayDimensionsUpdateMode
 
 
 class NoSizeDisplayDimsModeConfig(DimsModeConfig):

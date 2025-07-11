@@ -2,18 +2,18 @@ from collections import defaultdict
 from io import TextIOBase
 from typing import Protocol, runtime_checkable
 
-from omnipy.shared.enums import (AllColorStyles,
-                                 BackoffStrategy,
-                                 ConfigOutputStorageProtocolOptions,
-                                 ConfigPersistOutputsOptions,
-                                 ConfigRestoreOutputsOptions,
-                                 DisplayColorSystem,
-                                 DisplayDimensionsUpdateMode,
-                                 EngineChoice,
-                                 HorizontalOverflowMode,
-                                 PanelDesign,
-                                 PrettyPrinterLib,
-                                 VerticalOverflowMode)
+from omnipy.shared.enums.colorstyles import AllColorStyles
+from omnipy.shared.enums.data import BackoffStrategy
+from omnipy.shared.enums.display import (DisplayColorSystem,
+                                         DisplayDimensionsUpdateMode,
+                                         HorizontalOverflowMode,
+                                         PanelDesign,
+                                         PrettyPrinterLib,
+                                         VerticalOverflowMode)
+from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
+                                     ConfigPersistOutputsOptions,
+                                     ConfigRestoreOutputsOptions,
+                                     EngineChoice)
 from omnipy.shared.protocols.util import IsDataPublisher
 from omnipy.shared.typedefs import LocaleType
 import omnipy.util._pydantic as pyd

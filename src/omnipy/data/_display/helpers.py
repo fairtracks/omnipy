@@ -5,7 +5,9 @@ from rich._cell_widths import CELL_WIDTHS
 from rich.cells import _is_single_cell_widths
 
 from omnipy.data.typechecks import is_model_instance
-from omnipy.shared.enums import UserInterfaceType
+from omnipy.shared.enums.ui import (AutoDetectableUserInterfaceType,
+                                    TerminalOutputUserInterfaceType,
+                                    UserInterfaceType)
 from omnipy.util.range_lookup import RangeLookup
 
 
@@ -96,12 +98,20 @@ def running_in_ipython_pycharm() -> bool:
         return False
 
 
-def running_in_jupyter() -> bool:
+def running_in_any_jupyter() -> bool:
     try:
         ipython = get_ipython()  # type: ignore[name-defined]
         return ipython.__class__.__name__ == 'ZMQInteractiveShell'
     except NameError:
         return False
+
+
+def running_in_jupyter_in_browser() -> bool:
+    return running_in_any_jupyter() and not running_in_jupyter_in_pycharm()
+
+
+def running_in_jupyter_in_pycharm() -> bool:
+    return running_in_any_jupyter() and 'pydev_jupyter_utils' in sys.modules
 
 
 def running_in_pycharm_console() -> bool:
@@ -112,9 +122,10 @@ def running_in_atty_terminal() -> bool:
     return sys.stdout.isatty()
 
 
-def detect_ui_type() -> UserInterfaceType.Literals:
-    if running_in_jupyter():
-        return UserInterfaceType.PYCHARM_IPYTHON
+def detect_ui_type() -> AutoDetectableUserInterfaceType.Literals:
+    if running_in_jupyter_in_pycharm():
+        return UserInterfaceType.PYCHARM_JUPYTER
+    elif running_in_jupyter_in_browser():
         return UserInterfaceType.JUPYTER
     elif running_in_ipython_terminal():
         return UserInterfaceType.IPYTHON
@@ -129,30 +140,19 @@ def detect_ui_type() -> UserInterfaceType.Literals:
         return UserInterfaceType.UNKNOWN
 
 
-def ui_type_is_any_terminal(ui_type: UserInterfaceType.Literals) -> bool:
-    """
-    Check if the ui_type refers to any terminal environment. If user
-    interface type is unknown, we still assume it is a terminal.
-    """
-    return ui_type in (UserInterfaceType.TERMINAL,
-                       UserInterfaceType.IPYTHON,
-                       UserInterfaceType.PYCHARM_TERMINAL,
-                       UserInterfaceType.PYCHARM_IPYTHON,
-                       UserInterfaceType.UNKNOWN)
-
-
-def get_terminal_prompt_height(ui_type: UserInterfaceType.Literals) -> int:
+def get_terminal_prompt_height(
+    ui_type: TerminalOutputUserInterfaceType.Literals,
+) -> int:  # pyright: ignore [reportReturnType]
     """
     Get the height of the terminal prompt (including blank lines) based on
     the display type.
     """
     match ui_type:
-        case UserInterfaceType.TERMINAL | UserInterfaceType.PYCHARM_TERMINAL:
+        case x if UserInterfaceType.is_plain_terminal(x):
             return 2
-        case (UserInterfaceType.IPYTHON | UserInterfaceType.PYCHARM_IPYTHON
-              | UserInterfaceType.UNKNOWN):
+        case x if UserInterfaceType.is_ipython_terminal(x):
             return 3
-        case _:
+        case x if UserInterfaceType.is_jupyter_embedded(x):
             return 0
 
 
@@ -164,9 +164,8 @@ def setup_displayhook_if_plain_terminal() -> None:
     from omnipy.data.dataset import Dataset
 
     ui_type = detect_ui_type()
-    if ui_type in (UserInterfaceType.TERMINAL,
-                   UserInterfaceType.PYCHARM_TERMINAL,
-                   UserInterfaceType.UNKNOWN):
+
+    if UserInterfaceType.is_plain_terminal(ui_type):
 
         def _omnipy_displayhook(obj: object) -> None:
             """
@@ -184,12 +183,12 @@ def setup_displayhook_if_plain_terminal() -> None:
         sys.displayhook = _omnipy_displayhook
 
 
-def setup_css_if_running_in_jupyter() -> None:
+def setup_css_if_running_in_jupyter_in_browser() -> None:
     """
     Displays the CSS styles for Jupyter Notebook or JupyterLab, given that
     the Jupyter environment is detected.
     """
-    if running_in_jupyter():
+    if running_in_jupyter_in_browser():
         from IPython.display import display, HTML
         display(
             HTML("""

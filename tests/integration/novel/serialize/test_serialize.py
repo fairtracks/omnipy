@@ -3,12 +3,12 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from omnipy.shared.enums import (ConfigOutputStorageProtocolOptions,
-                                 ConfigPersistOutputsOptions,
-                                 ConfigRestoreOutputsOptions,
-                                 OutputStorageProtocolOptions,
-                                 PersistOutputsOptions,
-                                 RestoreOutputsOptions)
+from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
+                                     ConfigPersistOutputsOptions,
+                                     ConfigRestoreOutputsOptions,
+                                     OutputStorageProtocolOptions,
+                                     PersistOutputsOptions,
+                                     RestoreOutputsOptions)
 from omnipy.shared.protocols.compute._job import IsFuncArgJobTemplate
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 

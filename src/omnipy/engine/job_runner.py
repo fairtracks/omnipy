@@ -5,7 +5,7 @@ from types import AsyncGeneratorType, GeneratorType
 from typing import Any, Awaitable, Callable, cast
 
 from omnipy.engine._base import Engine
-from omnipy.shared.enums import RunState
+from omnipy.shared.enums.job import RunState
 from omnipy.shared.protocols.compute._job import IsJob
 from omnipy.shared.protocols.compute.job import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
 

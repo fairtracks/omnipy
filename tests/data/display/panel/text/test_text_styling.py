@@ -9,7 +9,8 @@ from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
-from omnipy.shared.enums import DisplayColorSystem, RecommendedColorStyles, SyntaxLanguage
+from omnipy.shared.enums.colorstyles import RecommendedColorStyles
+from omnipy.shared.enums.display import DisplayColorSystem, SyntaxLanguage
 import omnipy.util._pydantic as pyd
 
 from ..helpers.case_setup import (apply_frame_variant_to_test_case,

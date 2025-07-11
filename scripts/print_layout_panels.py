@@ -4,11 +4,10 @@ from omnipy.data._display.helpers import detect_ui_type
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel, OutputConfig
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
-from omnipy.shared.enums import (DarkHighContrastColorStyles,
-                                 DarkLowContrastColorStyles,
-                                 DisplayColorSystem,
-                                 PrettyPrinterLib,
-                                 RecommendedColorStyles)
+from omnipy.shared.enums.colorstyles import (DarkHighContrastColorStyles,
+                                             DarkLowContrastColorStyles,
+                                             RecommendedColorStyles)
+from omnipy.shared.enums.display import DisplayColorSystem, PrettyPrinterLib
 
 print(detect_ui_type())
 

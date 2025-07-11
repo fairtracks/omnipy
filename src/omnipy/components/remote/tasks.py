@@ -8,7 +8,7 @@ from typing_extensions import TypeVar
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-from omnipy.shared.enums import BackoffStrategy
+from omnipy.shared.enums.data import BackoffStrategy
 
 from ..json.datasets import JsonDataset, JsonListOfDictsDataset
 from ..json.models import JsonModel

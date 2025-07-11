@@ -385,14 +385,12 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
             not attr.startswith('_')
             # Check if the attribute is not a reserved public attribute
             and attr not in cls._RESERVED_PUBLIC_ATTRS
-            # Check if the attribute is not a reserved public method
-            and not cls._is_reserved_method(attr, value))
+            # Check if the attribute is not a method
+            and not cls._is_method(value))
 
     @classmethod
-    def _is_reserved_method(cls, attr: str, val: Any) -> bool:
-        if attr in cls._RESERVED_PUBLIC_METHODS:
-            return getattr(val, '__func__', None) is getattr(LiteralEnum, attr).__func__
-        return False
+    def _is_method(cls, val: Any) -> bool:
+        return hasattr(val, '__func__')
 
     @classmethod
     def _check_missing_attributes(

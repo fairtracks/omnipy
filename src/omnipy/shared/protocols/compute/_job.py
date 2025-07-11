@@ -10,9 +10,9 @@ from omnipy.shared._typedefs import (_JobT,
                                      _TaskTemplateContraT,
                                      _TaskTemplateCovT,
                                      _TaskTemplateT)
-from omnipy.shared.enums import (OutputStorageProtocolOptions,
-                                 PersistOutputsOptions,
-                                 RestoreOutputsOptions)
+from omnipy.shared.enums.job import (OutputStorageProtocolOptions,
+                                     PersistOutputsOptions,
+                                     RestoreOutputsOptions)
 from omnipy.shared.protocols.compute.job_creator import IsJobCreator
 from omnipy.shared.protocols.compute.mixins import IsUniquelyNamedJob
 from omnipy.shared.protocols.config import IsJobConfig

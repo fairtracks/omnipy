@@ -2,9 +2,9 @@ import os
 from pathlib import Path
 
 from omnipy.config import ConfigBase
-from omnipy.shared.enums import (ConfigOutputStorageProtocolOptions,
-                                 ConfigPersistOutputsOptions,
-                                 ConfigRestoreOutputsOptions)
+from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
+                                     ConfigPersistOutputsOptions,
+                                     ConfigRestoreOutputsOptions)
 from omnipy.shared.protocols.config import (IsLocalOutputStorageConfig,
                                             IsOutputStorageConfig,
                                             IsS3OutputStorageConfig)
