@@ -2,12 +2,14 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from pathlib import Path
 import shutil
-from typing import Any
+from typing import Any, TypedDict
 
 from pydantic import BaseModel
+from term_background import is_dark_background
 from typing_extensions import override
 
 from omnipy.config import ConfigBase
+from omnipy.hub.ui import detect_display_color_system
 from omnipy.shared.constants import (BROWSER_DEFAULT_HEIGHT,
                                      BROWSER_DEFAULT_WIDTH,
                                      JUPYTER_DEFAULT_HEIGHT,
@@ -22,6 +24,7 @@ from omnipy.shared.enums.display import (DisplayColorSystem,
                                          PanelDesign,
                                          PrettyPrinterLib,
                                          VerticalOverflowMode)
+from omnipy.shared.enums.ui import UserInterfaceType
 from omnipy.shared.protocols.config import (IsBrowserUserInterfaceConfig,
                                             IsColorConfig,
                                             IsFontConfig,
@@ -37,13 +40,37 @@ from omnipy.shared.protocols.config import (IsBrowserUserInterfaceConfig,
 import omnipy.util._pydantic as pyd
 
 
+class _ColorConfigTypedDict(TypedDict):
+    system: DisplayColorSystem.Literals
+    style: AllColorStyles.Literals | str
+    dark_background: bool
+    transparent_background: bool
+
+
 class ColorConfig(ConfigBase):
     """
     Configuration for color output.
     """
     system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
-    style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
+    style: AllColorStyles.Literals | str = RecommendedColorStyles.AUTO
+    dark_background: bool = False
     transparent_background: bool = True
+
+    @pyd.root_validator()
+    def default_style(cls, values: _ColorConfigTypedDict) -> _ColorConfigTypedDict:
+        if values['style'] in RecommendedColorStyles:
+            values['style'] = RecommendedColorStyles.get_default_style(
+                values['system'],
+                values['dark_background'],
+                values['transparent_background'],
+            )
+        return values
+
+    # Override __getattribute__ to dynamically update default style
+    def __getattribute__(self, attr):
+        if (attr in ['style'] and object.__getattribute__(self, 'style') in RecommendedColorStyles):
+            setattr(self, 'style', RecommendedColorStyles.AUTO)
+        return object.__getattribute__(self, attr)
 
 
 class UserInterfaceTypeConfig(ConfigBase):
@@ -117,6 +144,10 @@ class TerminalUserInterfaceConfig(DimsModeConfig):
         width, height = shutil.get_terminal_size(fallback=(-1, -1))
         return None if width == -1 else width, None if height == -1 else height
 
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+        self.color.dark_background = is_dark_background()
+
 
 class FontConfig(ConfigBase):
     families: tuple[str, ...] = (
@@ -147,9 +178,8 @@ class JupyterUserInterfaceConfig(HtmlUserInterfaceConfig, DimsModeConfig):
         super().__init__(**data)
         self.width = JUPYTER_DEFAULT_WIDTH
         self.height = JUPYTER_DEFAULT_HEIGHT
-        self.color.system = DisplayColorSystem.ANSI_RGB
-        self.color.style = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
-        self.color.transparent_background = False
+        self.color.system = detect_display_color_system(UserInterfaceType.JUPYTER)
+        self.color.dark_background = False
 
 
 class BrowserUserInterfaceConfig(HtmlUserInterfaceConfig):
@@ -160,9 +190,8 @@ class BrowserUserInterfaceConfig(HtmlUserInterfaceConfig):
         super().__init__(**data)
         self.width = BROWSER_DEFAULT_WIDTH
         self.height = BROWSER_DEFAULT_HEIGHT
-        self.color.system = DisplayColorSystem.ANSI_RGB
-        self.color.style = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
-        self.color.transparent_background = False
+        self.color.system = detect_display_color_system(UserInterfaceType.BROWSER_PAGE)
+        self.color.dark_background = False
 
 
 class OverflowConfig(ConfigBase):

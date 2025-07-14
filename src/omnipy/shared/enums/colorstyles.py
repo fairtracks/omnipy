@@ -1,6 +1,7 @@
 from textwrap import dedent
 from typing import Literal
 
+from omnipy.shared.enums.display import DisplayColorSystem
 from omnipy.util.literal_enum import LiteralEnum
 
 
@@ -48,19 +49,45 @@ class RecommendedColorStyles(LiteralEnum[str]):
     choice.
     """
 
-    Literals = Literal['ansi_dark',
+    Literals = Literal['auto',
+                       'ansi_dark',
                        'ansi_light',
                        'omnipy-selenized-black',
                        'omnipy-selenized-dark',
                        'omnipy-selenized-light',
                        'omnipy-selenized-white']
 
+    AUTO: Literal['auto'] = 'auto'
     ANSI_DARK: Literal['ansi_dark'] = 'ansi_dark'
     ANSI_LIGHT: Literal['ansi_light'] = 'ansi_light'
     OMNIPY_SELENIZED_BLACK: Literal['omnipy-selenized-black'] = 'omnipy-selenized-black'
     OMNIPY_SELENIZED_DARK: Literal['omnipy-selenized-dark'] = 'omnipy-selenized-dark'
     OMNIPY_SELENIZED_LIGHT: Literal['omnipy-selenized-light'] = 'omnipy-selenized-light'
     OMNIPY_SELENIZED_WHITE: Literal['omnipy-selenized-white'] = 'omnipy-selenized-white'
+
+    @classmethod
+    def get_default_style(
+        cls,
+        color_system: DisplayColorSystem.Literals,
+        dark_background: bool,
+        transparent_background: bool,
+    ) -> 'RecommendedColorStyles.Literals':
+        """
+        Returns the default color style for the given color system.
+        """
+        match (color_system, dark_background, transparent_background):
+            case (DisplayColorSystem.ANSI_256 | DisplayColorSystem.ANSI_RGB, False, False):
+                return cls.OMNIPY_SELENIZED_LIGHT
+            case (DisplayColorSystem.ANSI_256 | DisplayColorSystem.ANSI_RGB, False, True):
+                return cls.OMNIPY_SELENIZED_WHITE
+            case (DisplayColorSystem.ANSI_256 | DisplayColorSystem.ANSI_RGB, True, False):
+                return cls.OMNIPY_SELENIZED_DARK
+            case (DisplayColorSystem.ANSI_256 | DisplayColorSystem.ANSI_RGB, True, True):
+                return cls.OMNIPY_SELENIZED_BLACK
+            case _, False, _:
+                return cls.ANSI_LIGHT
+            case _, True, _:
+                return cls.ANSI_DARK
 
 
 _GENERAL_COLOR_STYLE_DOCSTRING = dedent("""

@@ -33,6 +33,7 @@ dependencies = [
 "ruamel-yaml (>=0.18.10,<0.19.0)",
 "solara-ui (>=1.48.0,<2.0.0)",
 "ipython (<8)",
+"term-background (>=1.0.2,<2.0.0)",
 "compact-json (>=1.8.1,<2.0.0)",
 "cachebox (>=5.0.1,<6.0.0)",
 ]

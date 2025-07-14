@@ -26,6 +26,7 @@ class IsColorConfig(IsDataPublisher, Protocol):
     """"""
     system: DisplayColorSystem.Literals
     style: AllColorStyles.Literals | str
+    dark_background: bool
     transparent_background: bool
 
 

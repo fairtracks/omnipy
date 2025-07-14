@@ -1,8 +1,13 @@
 import os
 import sys
+from typing import cast
+
+import rich.console
 
 from omnipy.data.typechecks import is_model_instance
+from omnipy.shared.enums.display import DisplayColorSystem
 from omnipy.shared.enums.ui import (AutoDetectableUserInterfaceType,
+                                    SpecifiedUserInterfaceType,
                                     TerminalOutputUserInterfaceType,
                                     UserInterfaceType)
 
@@ -63,6 +68,23 @@ def detect_ui_type() -> AutoDetectableUserInterfaceType.Literals:
         return UserInterfaceType.TERMINAL
     else:
         return UserInterfaceType.UNKNOWN
+
+
+def detect_display_color_system(
+        ui_type: SpecifiedUserInterfaceType.Literals) -> DisplayColorSystem.Literals:
+    if UserInterfaceType.supports_rgb_color_output(ui_type):
+        return DisplayColorSystem.ANSI_RGB
+    else:
+        console = rich.console.Console(
+            color_system=DisplayColorSystem.AUTO,
+            force_terminal=UserInterfaceType.is_terminal(detect_ui_type()),
+        )
+        rich_color_system: str | None = console.color_system
+        if rich_color_system is None:
+            return DisplayColorSystem.AUTO
+        else:
+            assert rich_color_system in DisplayColorSystem
+            return cast(DisplayColorSystem.Literals, rich_color_system)
 
 
 def get_terminal_prompt_height(

@@ -311,7 +311,7 @@ def test_omnipy_style_import() -> None:
 
     if 'omnipy' in get_pip_installed_packages():
 
-        IGNORE_PREFIXES = ['tb16-', 'ansi_']
+        IGNORE_PREFIXES = ['tb16-', 'ansi_', 'auto']
 
         installed_styles = [
             style for style in AllColorStyles

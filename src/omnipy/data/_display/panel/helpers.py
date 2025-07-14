@@ -68,6 +68,14 @@ def calculate_fg_color_triplet_from_color_style(
 
 
 @lru_cache
+def is_color_dark(red: int, green: int, blue: int) -> bool:
+    """
+    Determines whether the color is dark based on the RGB values.
+    """
+    return (red + green + blue) / 3 < 127.5
+
+
+@lru_cache
 def calculate_bg_color_from_color_style(
     color_style: AllColorStyles.Literals,
     force_autodetect: ForceAutodetect.Literals,
@@ -78,8 +86,8 @@ def calculate_bg_color_from_color_style(
         Auto-detects a black or bright white background color based on the luminance of the
         foreground color (i.e. whether the style is light or dark).
         """
-        fg_luminance = sum(fg_color_triplet) / 3
-        return rich.color.Color.parse('black' if fg_luminance > 127.5 else 'bright_white')
+        fg_color_is_dark = is_color_dark(*fg_color_triplet)
+        return rich.color.Color.parse('bright_white' if fg_color_is_dark else 'black')
 
     syntax_theme = get_syntax_theme_from_color_style(color_style)
     bg_color = syntax_theme.get_background_style().bgcolor
