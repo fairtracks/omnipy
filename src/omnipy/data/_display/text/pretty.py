@@ -39,10 +39,10 @@ class PrettyPrinter(ABC):
             dims_width_reduced = True
         else:
             dims_width_reduced = (
-                reflowed_text_panel.dims.width < self._prev_reflowed_text_panel_width)
+                reflowed_text_panel.orig_dims.width < self._prev_reflowed_text_panel_width)
 
         self._prev_frame_width = draft_for_print.frame.dims.width
-        self._prev_reflowed_text_panel_width = reflowed_text_panel.dims.width
+        self._prev_reflowed_text_panel_width = reflowed_text_panel.orig_dims.width
 
         return frame_width_reduced and dims_width_reduced
 
@@ -87,7 +87,7 @@ class PrettyPrinter(ABC):
         self,
         reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> FrameWithWidth:
-        new_frame_width = self._calc_reduced_frame_width(reflowed_text_panel.dims)
+        new_frame_width = self._calc_reduced_frame_width(reflowed_text_panel.orig_dims)
         return cast(FrameWithWidth, reflowed_text_panel.frame.modified_copy(width=new_frame_width))
 
     @abstractmethod

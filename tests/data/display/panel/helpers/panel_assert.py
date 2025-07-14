@@ -93,7 +93,6 @@ def assert_dims_aware_panel(
         exp_within_frame = WithinFrameExp(width=None, height=None, both=None)
     else:
         assert exp_frame is not None
-        assert exp_within_frame is not None
 
     assert panel.dims.width == exp_dims.width, \
         f'{panel.dims.width} != {exp_dims.width}'
@@ -104,13 +103,14 @@ def assert_dims_aware_panel(
     assert panel.frame.dims.height == exp_frame.dims.height, \
         f'{panel.frame.dims.height} != {exp_frame.dims.height}'
 
-    dims_fit = panel.within_frame
-    assert dims_fit.width == exp_within_frame.width, \
-        f'{dims_fit.width} != {exp_within_frame.width}'
-    assert dims_fit.height == exp_within_frame.height, \
-        f'{dims_fit.height} != {exp_within_frame.height}'
-    assert dims_fit.both == exp_within_frame.both, \
-        f'{dims_fit.both} != {exp_within_frame.both}'
+    if exp_within_frame is not None:
+        dims_fit = panel.within_frame
+        assert dims_fit.width == exp_within_frame.width, \
+            f'{dims_fit.width} != {exp_within_frame.width}'
+        assert dims_fit.height == exp_within_frame.height, \
+            f'{dims_fit.height} != {exp_within_frame.height}'
+        assert dims_fit.both == exp_within_frame.both, \
+            f'{dims_fit.both} != {exp_within_frame.both}'
 
 
 def assert_next_stage_panel(

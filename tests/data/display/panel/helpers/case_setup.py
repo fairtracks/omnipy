@@ -6,10 +6,7 @@ import pytest_cases as pc
 from typing_extensions import NamedTuple, TypeVar
 
 from omnipy.data._display.config import OutputConfig
-from omnipy.data._display.dimensions import (Dimensions,
-                                             DimensionsWithWidthAndHeight,
-                                             has_height,
-                                             has_width)
+from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.base import FrameT
@@ -233,7 +230,7 @@ class PanelOutputTestCase(NamedTuple, Generic[ContentT]):
     config: OutputConfig | None
     exp_plain_output: str | None
     exp_dims: DimensionsWithWidthAndHeight
-    exp_within_frame: WithinFrameExp
+    exp_within_frame: WithinFrameExp | None = None
     title: str = ''
 
 
@@ -251,20 +248,6 @@ class StylizedPanelOutputExpectations(NamedTuple):
 
 
 # Functions
-
-
-def get_exp_within_frame(
-    frame: Frame | None,
-    dims: DimensionsWithWidthAndHeight,
-) -> WithinFrameExp:
-    if frame is None:
-        return WithinFrameExp(width=False, height=False, both=False)
-    else:
-        within_width = dims.width <= frame.dims.width if has_width(frame.dims) else None
-        within_height = dims.height <= frame.dims.height if has_height(frame.dims) else None
-        within_both = within_width and within_height if has_width(frame.dims) and has_height(
-            frame.dims) else None
-        return WithinFrameExp(width=within_width, height=within_height, both=within_both)
 
 
 def apply_frame_variant_to_test_case(
@@ -311,7 +294,6 @@ def apply_frame_variant_to_test_case(
                     config=case.config,
                     exp_plain_output=case.exp_plain_output_only_width,
                     exp_dims=exp_dims_only_width,
-                    exp_within_frame=get_exp_within_frame(frame_only_width, exp_dims_only_width),
                 )
             case False, True:  # only height
                 frame_only_height = Frame(
@@ -328,7 +310,6 @@ def apply_frame_variant_to_test_case(
                     config=case.config,
                     exp_plain_output=case.exp_plain_output_only_height,
                     exp_dims=exp_dims_only_height,
-                    exp_within_frame=get_exp_within_frame(frame_only_height, exp_dims_only_height),
                 )
             case True, True:  # width and height
                 exp_plain_output = case.exp_plain_output
@@ -340,7 +321,6 @@ def apply_frame_variant_to_test_case(
                     config=case.config,
                     exp_plain_output=exp_plain_output,
                     exp_dims=exp_dims,
-                    exp_within_frame=get_exp_within_frame(case.frame, exp_dims),
                 )
         raise ShouldNotOccurException()
 

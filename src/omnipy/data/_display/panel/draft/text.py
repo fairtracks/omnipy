@@ -5,7 +5,7 @@ from typing import Generic, Iterator
 from typing_extensions import override
 
 from omnipy.data._display.constraints import ConstraintsSatisfaction
-from omnipy.data._display.dimensions import Dimensions, has_height
+from omnipy.data._display.dimensions import Dimensions, DimensionsFit, has_height
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.base import FrameInvT, FrameT, FullyRenderedPanel
 from omnipy.data._display.panel.cropping import (crop_content_lines_vertically_for_resizing,
@@ -131,6 +131,35 @@ class ReflowedTextDraftPanel(
             self._char_width_map,
         )
         return strip_newlines(content_lines)
+
+    @cached_property
+    def orig_dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
+        """
+        Original dimensions of the panel, without any cropping applied.
+        This is used to determine the original size of the content before
+        any transformations or cropping.
+        """
+        orig_content_lines = strip_newlines(split_all_content_to_lines(self.content))
+        orig_width = max((self._line_width(line) for line in orig_content_lines), default=0)
+        orig_height = len(orig_content_lines)
+        return Dimensions(width=orig_width, height=orig_height)
+
+    @cached_property
+    @override
+    def within_frame(self) -> DimensionsFit:
+        """
+        Returns a summary of how well the panel's content fit within the
+        frame's dimensions (minus the title height, if any).
+
+        Overrides the base class method to ensure that the fitness is
+        calculated based on the dimensions of the original, non-cropped
+        content.
+        """
+        return DimensionsFit(
+            self.orig_dims,
+            self.inner_frame.dims,
+            proportional_freedom=self.config.proportional_freedom,
+        )
 
     @cached_property
     def max_inline_container_width_incl(self) -> int:
