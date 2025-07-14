@@ -132,8 +132,10 @@ def get_terminal_prompt_height(
 def setup_displayhook_if_plain_terminal() -> None:
     """
     Sets up the display hook for plain terminal environments to ensure that
-    the output is displayed correctly.
+    Model instances, Datasets, and ConfigBase objects are displayed using
+    Omnipy's syntax highlighting and formatting.
     """
+    from omnipy.config import ConfigBase
     from omnipy.data.dataset import Dataset
 
     ui_type = detect_ui_type()
@@ -147,8 +149,9 @@ def setup_displayhook_if_plain_terminal() -> None:
             import builtins
 
             if obj is not None:
-                if is_model_instance(obj) or isinstance(obj, Dataset):
-                    print(obj._default_repr())
+                if (is_model_instance(obj) or isinstance(obj, Dataset)
+                        or isinstance(obj, ConfigBase)):
+                    print(obj.default_repr_to_terminal_str(ui_type))
                     builtins._ = obj  # type: ignore[attr-defined]
                 else:
                     sys.__displayhook__(obj)

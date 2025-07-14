@@ -3,6 +3,7 @@ import locale as pkg_locale
 import logging
 from pathlib import Path
 import sys
+from typing import Any, Generator
 
 from omnipy.config import ConfigBase
 from omnipy.shared.typedefs import LocaleType
@@ -25,3 +26,12 @@ class RootLogConfig(ConfigBase):
     stderr_log_min_level: int = logging.ERROR
     file_log_min_level: int = logging.WARNING
     file_log_path: str = pyd.Field(default_factory=_get_log_path)
+
+    def _iter(self, **kwargs) -> Generator[tuple[str, Any], None, None]:  # type: ignore[override]
+        for key, val in super()._iter(**kwargs):
+            print(f'Processing key: {key}, value: {repr(val)}')
+            if key in ['stdout', 'stderr']:
+                # Convert TextIOBase to str for serialization
+                yield key, repr(val)
+            else:
+                yield key, val
