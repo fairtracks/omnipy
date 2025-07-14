@@ -1,9 +1,11 @@
-from typing import Generic, Type, TypeAlias
+from typing import Any, Generic, Type, TypeAlias
 
 from typing_extensions import TypeVar
 
 from omnipy.data.model import Model
+from omnipy.util.helpers import ensure_plain_type
 
+from ...data.typechecks import is_model_instance
 from .typedefs import JsonScalar
 
 #
@@ -22,7 +24,10 @@ class _JsonListM(Model[list[_JsonBaseT]], Generic[_JsonBaseT]):
     ...
 
 
-class _JsonDictM(Model[dict[str, _JsonBaseT]], Generic[_JsonBaseT]):
+class _JsonDictM(
+        Model[dict[str, _JsonBaseT]],
+        Generic[_JsonBaseT],  # pyright: ignore [reportInvalidTypeForm] ??
+):
     ...
 
 
@@ -324,8 +329,10 @@ _dict_related_json_model_classes: list[Type[Model]] = [
     JsonDictOfListsOfScalarsModel,
     JsonDictOfDictsModel,
     JsonDictOfDictsOfScalarsModel,
+    JsonListOfDictsModel,
+    JsonListOfDictsOfScalarsModel,
     JsonOnlyDictsModel,
-    JsonNestedListsModel,
+    JsonNestedDictsModel,
     JsonListOfNestedDictsModel,
     JsonDictOfNestedListsModel,
     JsonDictOfListsOfDictsModel,
@@ -335,3 +342,41 @@ _dict_related_json_model_classes: list[Type[Model]] = [
 for _dict_related_json_model_cls in _dict_related_json_model_classes:
     if _dict_related_json_model_cls.__doc__:
         _dict_related_json_model_cls.__doc__ += _NOTE_ON_DICT_KEYS
+
+_rest_of_the_json_model_classes: list[Type[Model]] = [
+    JsonScalarModel,
+    JsonListModel,
+    JsonListOfScalarsModel,
+    JsonListOfListsModel,
+    JsonListOfListsOfScalarsModel,
+    JsonOnlyListsModel,
+    JsonNestedListsModel,
+    JsonCustomListModel,
+]
+
+_internal_model_classes: list[Type[Model]] = [
+    _JsonListM, _JsonDictM, _JsonAnyListM, _JsonAnyDictM, _JsonOnlyListsM, _JsonOnlyDictsM
+]
+
+_all_json_model_classes: list[Type[Model]] = (
+    _dict_related_json_model_classes + _rest_of_the_json_model_classes + _internal_model_classes)
+
+
+def is_json_model_instance_hack(obj: Any) -> bool:
+    """
+    Check if the given class is a JSON model class. Temporary solution
+    to identify JSON model classes for output formatting.
+
+    (Does not work for JsonCustomListModel and JsonCustomDictModel)
+
+    Args:
+        cls: The class to check.
+
+    Returns:
+        True if the class is a JSON model class, False otherwise.
+    """
+
+    if is_model_instance(obj):
+        plain_class = ensure_plain_type(obj.__class__)
+        return plain_class in _all_json_model_classes
+    return False
