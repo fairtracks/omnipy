@@ -46,7 +46,7 @@ from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
             frame=Frame(Dimensions(width=18, height=5)),
             # The content is wider than the frame, so the content is
             # resized to fit the frame. The height and width is recalculated
-            # from the reflowed content as the "resize" stage, allowing
+            # from the reflowed content at the "resize" stage, allowing
             # white space to be reclaimed.
             exp_plain_output=('╭────────────────╮\n'
                               '│ This content   │\n'

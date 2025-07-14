@@ -91,7 +91,7 @@ def test_dims_mode_config_both_display_dims_size_set():
     assert both_sizes_display_config_fixed.dims_mode is DisplayDimensionsUpdateMode.FIXED
 
 
-class OnlyWidthdisplayDimsModeConfig(DimsModeConfig):
+class OnlyWidthDisplayDimsModeConfig(DimsModeConfig):
     display_width: ClassVar[pyd.NonNegativeInt] = 200
     display_height: ClassVar[pyd.NonNegativeInt | None] = None
 
@@ -103,7 +103,7 @@ class OnlyWidthdisplayDimsModeConfig(DimsModeConfig):
 
 
 def test_dims_mode_config_only_width_set():
-    only_width_display_config = OnlyWidthdisplayDimsModeConfig()
+    only_width_display_config = OnlyWidthDisplayDimsModeConfig()
     assert only_width_display_config.width == 200
     assert only_width_display_config.height == 24
     assert only_width_display_config.dims_mode is DisplayDimensionsUpdateMode.AUTO
@@ -116,7 +116,7 @@ def test_dims_mode_config_only_width_set():
 
     assert only_width_display_config.dims_mode is DisplayDimensionsUpdateMode.AUTO
 
-    only_width_display_config_auto = OnlyWidthdisplayDimsModeConfig(
+    only_width_display_config_auto = OnlyWidthDisplayDimsModeConfig(
         width=100,
         height=100,
     )
@@ -124,12 +124,12 @@ def test_dims_mode_config_only_width_set():
     assert only_width_display_config_auto.height == 100
     assert only_width_display_config_auto.dims_mode is DisplayDimensionsUpdateMode.AUTO
 
-    OnlyWidthdisplayDimsModeConfig.display_width = 50
+    OnlyWidthDisplayDimsModeConfig.display_width = 50
 
     assert only_width_display_config_auto.width == 50
     assert only_width_display_config_auto.height == 100
 
-    only_width_display_config_fixed = OnlyWidthdisplayDimsModeConfig(
+    only_width_display_config_fixed = OnlyWidthDisplayDimsModeConfig(
         width=100,
         height=100,
         dims_mode=DisplayDimensionsUpdateMode.FIXED,
