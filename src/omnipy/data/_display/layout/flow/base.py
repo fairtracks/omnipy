@@ -2,6 +2,8 @@ from collections import defaultdict
 import dataclasses
 from typing import Callable
 
+from typing_extensions import TypeVar
+
 from omnipy.data._display.dimensions import has_height, has_width
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.layout.base import Layout, PanelDesignDims
@@ -14,6 +16,8 @@ from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, Dra
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.shared.enums.display import PanelDesign
 import omnipy.util._pydantic as pyd
+
+LayoutT = TypeVar('LayoutT', bound=Layout)
 
 
 def optimize_layout_to_fit_frame(
@@ -38,26 +42,31 @@ def optimize_layout_to_fit_frame(
         ResizedLayoutDraftPanel: Layout with optimized panel dimensions
     """
 
+    # print('Preparing draft layout...')
     if has_width(input_layout_panel.frame.dims):
         # Calculate widths for panels without pre-defined width
         draft_layout = _create_layout_with_distributed_widths(input_layout_panel)
     else:
         # If frame has no width, no width distribution is needed
-        draft_layout = input_layout_panel.content
+        draft_layout = input_layout_panel.content.copy()
 
-    # print(f'Creating LayoutFlowContext...')
+    if has_height(input_layout_panel.frame.dims):
+        # Setting the heights of the inner panel of the draft layout...')
+        draft_layout = _set_inner_panel_heights(input_layout_panel, draft_layout)
+
+    # print('Creating LayoutFlowContext...')
     context = LayoutFlowContext(input_layout_panel, draft_layout)
 
-    # print(f'Setting panel heights...')
-    context = _set_panel_heights(context)
+    # print('Tightening panel frame widths...')
     context = _tighten_panel_frame_widths(context)
 
     if has_width(context.frame.dims) and len(context.draft_layout) > 1:
         # print('Resizing inner panels...')
         context = _resize_inner_panels(context)
 
-    # print('Reducing panel heights...')
-    context = _reduce_panel_heights(context)
+    if has_height(context.frame.dims):
+        # print('Reducing panel heights...')
+        context = _reduce_panel_heights(context)
 
     if has_width(context.frame.dims):
         # print('Tightening panel frame widths again...')
@@ -304,7 +313,8 @@ def _sort_panels_by_resize_priority(context: LayoutFlowContext[FrameT]) -> list[
     return panel_priority
 
 
-def _set_panel_heights(context: LayoutFlowContext[FrameT]) -> LayoutFlowContext[FrameT]:
+def _set_inner_panel_heights(input_layout_panel: DraftPanel[Layout[DraftPanel], AnyFrame],
+                             draft_layout: Layout[DraftPanel]) -> Layout[DraftPanel]:
     """
     Adjust heights of panels in a layout based on the frame's constraints.
 
@@ -313,22 +323,26 @@ def _set_panel_heights(context: LayoutFlowContext[FrameT]) -> LayoutFlowContext[
     height retain their original height.
 
     Parameters:
-        context: The layout flow context containing panels to be adjusted
+        input_layout_panel: The input layout panel
+        draft_layout: The initial layout of draft panels
 
     Returns:
-        Updated layout flow context with adjusted panel heights
+        Updated layout of draft panels with adjusted heights
     """
-    frame = context.frame
+    assert has_height(input_layout_panel.frame.dims)
 
-    if has_height(frame.dims):
-        per_inner_panel_height = _calc_inner_panel_height(context, frame.dims.height)
-        context = _resize_inner_panel_heights(context, lambda _panel: per_inner_panel_height)
+    per_inner_panel_height = _calc_inner_panel_height(
+        input_layout_panel.config.panel_design,
+        input_layout_panel.frame.dims.height,
+    )
 
-    return context
+    return _resize_inner_panel_heights(
+        draft_layout,
+        lambda _panel: per_inner_panel_height,
+    )
 
 
-def _calc_inner_panel_height(context: LayoutFlowContext[FrameT], outer_panel_height: int) -> int:
-    panel_design = context.input_layout_panel.config.panel_design
+def _calc_inner_panel_height(panel_design: PanelDesign.Literals, outer_panel_height: int) -> int:
     panel_design_dims = PanelDesignDims.create(panel_design)
 
     inner_panel_height = max(outer_panel_height - panel_design_dims.num_extra_vertical_chars(1), 0)
@@ -336,19 +350,19 @@ def _calc_inner_panel_height(context: LayoutFlowContext[FrameT], outer_panel_hei
 
 
 def _resize_inner_panel_heights(
-    context: LayoutFlowContext[FrameT],
+    layout: LayoutT,
     panel_height_func: Callable[[DimensionsAwareDraftPanel], pyd.NonNegativeInt],
-) -> LayoutFlowContext[FrameT]:
-    for key, panel in context.dim_aware_layout.items():
+) -> LayoutT:
+    for key, panel in layout.items():
         should_use_panel_original_height = panel.frame.fixed_height
 
         if not should_use_panel_original_height:
-            context.dim_aware_layout[key] = dataclasses.replace(
+            layout[key] = dataclasses.replace(
                 panel,
                 frame=panel.frame.modified_copy(
-                    height=panel_height_func(panel), fixed_height=False),  # type: ignore[arg-type]
+                    height=panel_height_func(panel), fixed_height=False),
             )
-    return context
+    return layout
 
 
 def _tighten_panel_frame_widths(context: LayoutFlowContext[FrameT]) -> LayoutFlowContext[FrameT]:
@@ -514,6 +528,9 @@ def _apply_width_additions(
 
 
 def _reduce_panel_heights(context: LayoutFlowContext[FrameT]) -> LayoutFlowContext[FrameT]:
-    context = _resize_inner_panel_heights(context, lambda panel: panel.outer_dims.height)
+    context.dim_aware_layout = _resize_inner_panel_heights(
+        context.dim_aware_layout,
+        lambda panel: panel.outer_dims.height,
+    )
 
     return context
