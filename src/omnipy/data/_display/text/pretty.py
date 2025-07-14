@@ -3,18 +3,19 @@ import dataclasses
 import re
 from typing import cast
 
+import compact_json
 import rich.pretty
 from typing_extensions import override
 
 from omnipy.data._display.constraints import Constraints
-from omnipy.data._display.dimensions import DimensionsWithWidth, Proportionally
+from omnipy.data._display.dimensions import DimensionsWithWidth, has_width, Proportionally
 from omnipy.data._display.frame import frame_has_width, FrameWithWidth
 from omnipy.data._display.panel.base import FrameT
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data.typechecks import is_model_instance
-from omnipy.shared.constants import MAX_TERMINAL_SIZE
-from omnipy.shared.enums.display import PrettyPrinterLib
+from omnipy.shared.constants import MAX_TERMINAL_SIZE, TERMINAL_DEFAULT_WIDTH
+from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguage
 import omnipy.util._pydantic as pyd
 
 
@@ -218,6 +219,68 @@ class DevtoolsPrettyPrinter(PrettyPrinter):
                 raise
 
 
+class CompactJsonPrettyPrinter(PrettyPrinter):
+    @override
+    def _constraints_tightened_since_last_print(
+        self,
+        reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
+    ) -> bool:
+        if (self._prev_constraints is None
+                or self._prev_constraints.max_inline_list_or_dict_width_excl is None):
+            return True
+        else:
+            return (reflowed_text_panel.max_inline_list_or_dict_width_excl
+                    < self._prev_constraints.max_inline_list_or_dict_width_excl)
+
+    @override
+    def _calc_reduced_frame_width(
+        self,
+        cropped_panel_dims: DimensionsWithWidth,
+    ) -> pyd.NonNegativeInt:
+        # Not really used, but just in case
+        return cropped_panel_dims.width
+
+    @override
+    def _calc_tightened_constraints(
+        self,
+        reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
+    ) -> Constraints:
+        new_max_inline_list_or_dict_width_excl = max(
+            reflowed_text_panel.max_inline_list_or_dict_width_excl - 1, 0)
+
+        return dataclasses.replace(
+            reflowed_text_panel.constraints,
+            max_inline_list_or_dict_width_excl=new_max_inline_list_or_dict_width_excl,
+        )
+
+    @override
+    def print_draft_to_str(self, draft_panel: DraftPanel[object, FrameT]) -> str:
+        max_inline_list_or_dict_width_excl = \
+            draft_panel.constraints.max_inline_list_or_dict_width_excl
+        if max_inline_list_or_dict_width_excl is not None:
+            max_inline_length = max_inline_list_or_dict_width_excl
+        elif has_width(draft_panel.frame.dims):
+            max_inline_length = draft_panel.frame.dims.width
+        else:
+            max_inline_length = TERMINAL_DEFAULT_WIDTH
+
+        json_formatter = compact_json.Formatter(
+            max_inline_length=max_inline_length,
+            max_inline_complexity=2,
+            max_compact_list_complexity=2,
+            simple_bracket_padding=True,
+            indent_spaces=draft_panel.config.indent_tab_size,
+            table_dict_minimum_similarity=90,
+            table_list_minimum_similarity=90,
+            dont_justify_numbers=True,
+            ensure_ascii=False,
+            east_asian_string_widths=True,
+            multiline_compact_dict=False,
+            omit_trailing_whitespace=True,
+        )
+        return json_formatter.serialize(draft_panel.content)  # pyright: ignore [reportArgumentType]
+
+
 def _reduce_width_until_proportional_with_frame(
     pretty_printer: PrettyPrinter,
     draft_panel: DraftPanel[object, FrameT],
@@ -258,11 +321,17 @@ def _reduce_width_until_proportional_with_frame(
 
 
 def _get_pretty_printer(draft_panel: DraftPanel[object, FrameT]) -> PrettyPrinter:
-    match draft_panel.config.pretty_printer:
-        case PrettyPrinterLib.RICH:
-            return RichPrettyPrinter()
-        case PrettyPrinterLib.DEVTOOLS:
-            return DevtoolsPrettyPrinter()
+    match draft_panel.config.language:
+        case SyntaxLanguage.JSON:
+            return CompactJsonPrettyPrinter()
+        case SyntaxLanguage.PYTHON:
+            match draft_panel.config.pretty_printer:
+                case PrettyPrinterLib.RICH:
+                    return RichPrettyPrinter()
+                case PrettyPrinterLib.DEVTOOLS:
+                    return DevtoolsPrettyPrinter()
+    raise ValueError(f'No pretty printer matching configured syntax language exist: '
+                     f'{draft_panel.config.language}')
 
 
 def _prepare_content(in_draft: DraftPanel[object, FrameT]) -> DraftPanel[object, FrameT]:
