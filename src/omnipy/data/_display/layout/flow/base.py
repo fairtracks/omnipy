@@ -52,10 +52,11 @@ def optimize_layout_to_fit_frame(
 
     if has_width(context.frame.dims):
         context = _resize_inner_panels(context)
+    context = _reduce_panel_heights(context)
+
+    if has_width(context.frame.dims):
         context = _tighten_panel_frame_widths(context)
         context = _widen_inner_panels_to_make_room_for_titles(context)
-
-    context = _reduce_panel_heights(context)
 
     return context.resized_panel  # pyright: ignore [reportReturnType]
 
