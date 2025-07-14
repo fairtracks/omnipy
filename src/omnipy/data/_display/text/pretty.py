@@ -3,6 +3,7 @@ import dataclasses
 import re
 from typing import cast
 
+from cachebox import cached, FIFOCache
 import compact_json
 import rich.pretty
 from typing_extensions import override
@@ -10,7 +11,7 @@ from typing_extensions import override
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import DimensionsWithWidth, has_width, Proportionally
 from omnipy.data._display.frame import frame_has_width, FrameWithWidth
-from omnipy.data._display.panel.base import FrameT
+from omnipy.data._display.panel.base import FrameT, OtherFrameT
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data.typechecks import is_model_instance
@@ -24,6 +25,13 @@ class PrettyPrinter(ABC):
         self._prev_frame_width: pyd.NonNegativeInt | None = None
         self._prev_constraints: Constraints | None = None
         self._prev_reflowed_text_panel_width: pyd.NonNegativeInt | None = None
+
+    def __hash__(self) -> int:
+        _hash = hash((self.__class__,
+                      self._prev_frame_width,
+                      self._prev_constraints,
+                      self._prev_reflowed_text_panel_width))
+        return _hash
 
     def width_reduced_since_last_print(
         self,
@@ -322,17 +330,45 @@ def _iteratively_reduce_width(
 
         prev_reflowed_text_panel = cur_reflowed_text_panel
 
-        # To maintain original frame and constraints
-        cur_reflowed_text_panel = ReflowedTextDraftPanel(
-            pretty_printer.print_draft_to_str(draft_for_format),
-            title=cur_reflowed_text_panel.title,
-            frame=cur_reflowed_text_panel.frame,
-            constraints=cur_reflowed_text_panel.constraints,
-            config=cur_reflowed_text_panel.config,
-        )
+        cur_reflowed_text_panel = _format_draft_panel(
+            orig_draft_content_id=orig_draft_content_id,
+            pretty_printer=pretty_printer,
+            draft_for_format=draft_for_format,
+            cur_reflowed_text_panel=cur_reflowed_text_panel)
 
     # Even though FrameT is FrameWithWidth at this point, static type checkers don't know that
     return cast(ReflowedTextDraftPanel[FrameT], cur_reflowed_text_panel)
+
+
+def unique_format_params_key_maker(_args, kwargs):
+    """A key maker for unique format parameters."""
+    return hash((
+        kwargs['pretty_printer'],
+        kwargs['orig_draft_content_id'],
+        kwargs['draft_for_format'].title,
+        kwargs['draft_for_format'].frame,
+        kwargs['draft_for_format'].constraints,
+        kwargs['draft_for_format'].config,
+        kwargs['cur_reflowed_text_panel'],
+    ))
+
+
+@cached(FIFOCache(maxsize=512), key_maker=unique_format_params_key_maker)
+def _format_draft_panel(
+    *,
+    pretty_printer: PrettyPrinter,
+    orig_draft_content_id: int,  # Only used for generating unique cache keys
+    draft_for_format: DraftPanel[object, FrameT],
+    cur_reflowed_text_panel: ReflowedTextDraftPanel[OtherFrameT],
+) -> ReflowedTextDraftPanel[OtherFrameT]:
+    cur_reflowed_text_panel = ReflowedTextDraftPanel(
+        pretty_printer.print_draft_to_str(draft_for_format),
+        title=cur_reflowed_text_panel.title,
+        frame=cur_reflowed_text_panel.frame,
+        constraints=cur_reflowed_text_panel.constraints,
+        config=cur_reflowed_text_panel.config,
+    )
+    return cur_reflowed_text_panel
 
 
 def _get_pretty_printer(draft_panel: DraftPanel[object, FrameT]) -> PrettyPrinter:
