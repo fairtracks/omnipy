@@ -212,7 +212,7 @@ def test_draft_panel_render_next_stage_with_layout_complex() -> None:
                 'Here is\nsome\ntext',
                 title='Text panel',
                 frame=Frame(
-                    Dimensions(8, 3),
+                    Dimensions(7, 3),
                     fixed_width=False,
                     fixed_height=False,
                 ),

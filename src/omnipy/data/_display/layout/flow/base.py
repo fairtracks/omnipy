@@ -424,7 +424,7 @@ def _identify_cramped_panels(
     title_width2cramped_panels: defaultdict[int, list[CrampedPanelInfo]] = defaultdict(list)
 
     for key, panel in context.dim_aware_layout.items():
-        if (panel.title_width > 0 and has_width(panel.frame.dims)
+        if (panel.title_width > 0 and panel.title_height > 0 and has_width(panel.frame.dims)
                 and panel.frame.fixed_width is not True
                 and panel.cropped_dims.width < panel.title_width):
             title_width2cramped_panels[panel.title_width].append(
