@@ -104,7 +104,7 @@ class PrettyPrinter(ABC):
     ) -> Constraints:
         return reflowed_text_panel.constraints
 
-    def print_draft(
+    def format_draft(
         self,
         draft_panel: DraftPanel[object, FrameT],
     ) -> ReflowedTextDraftPanel[FrameT]:
@@ -281,35 +281,43 @@ class CompactJsonPrettyPrinter(PrettyPrinter):
         return json_formatter.serialize(draft_panel.content)  # pyright: ignore [reportArgumentType]
 
 
-def _reduce_width_until_proportional_with_frame(
+def _iteratively_reduce_width(
     pretty_printer: PrettyPrinter,
     draft_panel: DraftPanel[object, FrameT],
     cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
+    orig_draft_content_id: int,
+    should_follow_proportionality: bool,
 ) -> ReflowedTextDraftPanel[FrameT]:
 
     while True:
         fit = cur_reflowed_text_panel.within_frame
-        if fit.width and fit.proportionality is not Proportionally.MUCH_WIDER:
-            break
 
-        draft_for_print: DraftPanel[object, FrameWithWidth] = \
+        if fit.width:
+            if should_follow_proportionality:
+                if fit.proportionality and fit.proportionality <= Proportionally.WIDER:
+                    break
+
+            else:
+                break
+
+        draft_for_format: DraftPanel[object, FrameWithWidth] = \
             pretty_printer.prepare_draft_for_print_with_reduced_width_requirements(
                 draft_panel,
                 cur_reflowed_text_panel,
         )
 
         if not (pretty_printer.width_reduced_since_last_print(
-                draft_for_print,
+                draft_for_format,
                 cur_reflowed_text_panel,
         ) or pretty_printer.constraints_tightened_since_last_print(
-                draft_for_print,
+                draft_for_format,
                 cur_reflowed_text_panel,
         )):
             break
 
         # To maintain original frame and constraints
         cur_reflowed_text_panel = ReflowedTextDraftPanel(
-            pretty_printer.print_draft_to_str(draft_for_print),
+            pretty_printer.print_draft_to_str(draft_for_format),
             title=cur_reflowed_text_panel.title,
             frame=cur_reflowed_text_panel.frame,
             constraints=cur_reflowed_text_panel.constraints,
@@ -349,37 +357,39 @@ def _prepare_content(in_draft: DraftPanel[object, FrameT]) -> DraftPanel[object,
     return draft_panel
 
 
-def _should_adjust(
-    draft_panel: DraftPanel[object, FrameT],
-    reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
-) -> bool:
-    if reflowed_text_panel.within_frame.height is False:
-        return False
-    return not reflowed_text_panel.within_frame.width or _is_nested_structure(draft_panel)
+def _should_follow_proportionality(
+        reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth]) -> bool:
+    fit = reflowed_text_panel.within_frame
+
+    return fit.proportionality is not None and fit.proportionality > Proportionally.WIDER
 
 
-def _is_nested_structure(draft_panel: DraftPanel[object, FrameT]) -> bool:
-    def _any_abbrev_containers(repr_str: str) -> bool:
-        return bool(re.search(r'\[...\]|\(...\)|\{...\}', repr_str))
+def _should_reduce_width(reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],) -> bool:
+    fit = reflowed_text_panel.within_frame
 
-    only_1st_level_repr = rich.pretty.pretty_repr(draft_panel.content, max_depth=1)
-    if _any_abbrev_containers(only_1st_level_repr):
+    if fit.width is False:
         return True
-    return False
+
+    return _should_follow_proportionality(reflowed_text_panel)
 
 
 def pretty_repr_of_draft_output(
         in_draft_panel: DraftPanel[object, FrameT]) -> ReflowedTextDraftPanel[FrameT]:
 
     pretty_printer = _get_pretty_printer(in_draft_panel)
+    orig_draft_content_id = id(in_draft_panel.content)
     draft_panel = _prepare_content(in_draft_panel)
-    printed_draft_panel = pretty_printer.print_draft(draft_panel)
+    formatted_draft_panel = pretty_printer.format_draft(draft_panel)
 
-    if frame_has_width(printed_draft_panel.frame):
-        reflowed_text_panel = cast(ReflowedTextDraftPanel[FrameWithWidth], printed_draft_panel)
-        if _should_adjust(draft_panel, reflowed_text_panel):
-            return _reduce_width_until_proportional_with_frame(pretty_printer,
-                                                               draft_panel,
-                                                               reflowed_text_panel)
+    if frame_has_width(formatted_draft_panel.frame):
+        reflowed_text_panel = cast(ReflowedTextDraftPanel[FrameWithWidth], formatted_draft_panel)
+        if _should_reduce_width(reflowed_text_panel):
+            return _iteratively_reduce_width(
+                pretty_printer=pretty_printer,
+                draft_panel=draft_panel,
+                cur_reflowed_text_panel=reflowed_text_panel,
+                orig_draft_content_id=orig_draft_content_id,
+                should_follow_proportionality=_should_follow_proportionality(reflowed_text_panel),
+            )
 
-    return printed_draft_panel
+    return formatted_draft_panel
