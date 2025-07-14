@@ -288,13 +288,18 @@ def _iteratively_reduce_width(
     orig_draft_content_id: int,
     should_follow_proportionality: bool,
 ) -> ReflowedTextDraftPanel[FrameT]:
+    prev_reflowed_text_panel = None
 
     while True:
         fit = cur_reflowed_text_panel.within_frame
 
+        # TODO: Refactor pretty printer loop exit logic into separate class or function
         if fit.width:
             if should_follow_proportionality:
                 if fit.proportionality and fit.proportionality <= Proportionally.WIDER:
+                    if (not fit.height and prev_reflowed_text_panel
+                            and prev_reflowed_text_panel.within_frame.both):
+                        cur_reflowed_text_panel = prev_reflowed_text_panel
                     break
 
             else:
@@ -314,6 +319,8 @@ def _iteratively_reduce_width(
                 cur_reflowed_text_panel,
         )):
             break
+
+        prev_reflowed_text_panel = cur_reflowed_text_panel
 
         # To maintain original frame and constraints
         cur_reflowed_text_panel = ReflowedTextDraftPanel(
