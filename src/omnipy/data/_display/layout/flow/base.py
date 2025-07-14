@@ -50,7 +50,7 @@ def optimize_layout_to_fit_frame(
     context = _set_panel_heights(context)
     context = _tighten_panel_frame_widths(context)
 
-    if has_width(context.frame.dims):
+    if has_width(context.frame.dims) and len(context.draft_layout) > 1:
         context = _resize_inner_panels(context)
     context = _reduce_panel_heights(context)
 
@@ -192,9 +192,6 @@ def _resize_inner_panels(context: LayoutFlowContext):
         Updated layout flow context with resized panels
     """
     while True:
-        if context.panel_width_ok:
-            break
-
         prev_context = context.copy()
 
         panel_priority = _sort_panels_by_resize_priority(context)
@@ -226,6 +223,9 @@ def _resize_inner_panels(context: LayoutFlowContext):
                 break
 
         if not context.changed_since(prev_context):
+            break
+
+        if context.panel_width_ok:
             break
     return context
 
