@@ -43,6 +43,18 @@ class OutputConfig:
             For non-supported styles, the user can specify a string with the
             Pygments lexer name. For this to work, the lexer must be
             registered in the Pygments library.
+        proportional_freedom (float): Parameter that controls the level of
+            freedom for formatted text to follow the geometry of the frame
+            size (=total available area) in a proportional manner. If the
+            proportional freedom is 0 (the lowest), then the output area
+            must not in any case be proportionally wider that the frame
+            (i.e. a 16:9 frame will only produce output that is 16:9 or
+            narrower). Larger values of proportional freedom allow the
+            output to be proportionally wider than the total available
+            frame, to a degree that relates to the size difference
+            between the frame and the content (larger difference gives more
+            freedom). The default value of 2.5 is a good compromise between
+            readability/aesthetics and good use of the screen estate.
         color_system (ColorSystem.Literals): Color system to
             use for terminal output. The default is AUTO, which
             automatically detects the color system based on particular
@@ -94,6 +106,7 @@ class OutputConfig:
     debug_mode: bool = False
     pretty_printer: PrettyPrinterLib.Literals = PrettyPrinterLib.RICH
     language: SyntaxLanguage.Literals | str = SyntaxLanguage.PYTHON
+    proportional_freedom: pyd.NonNegativeFloat = 2.5
     color_system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
     color_style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
     transparent_background: bool = True

@@ -1,4 +1,3 @@
-from dataclasses import asdict
 from typing import Any, cast, Generic
 
 from typing_extensions import override, TypeVar
@@ -20,8 +19,6 @@ ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)
 )
 class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
     content: ContentT
-    constraints: Constraints = pyd.Field(default_factory=Constraints)
-    config: OutputConfig = pyd.Field(default_factory=OutputConfig)
 
     def __init__(
         self,
@@ -32,17 +29,7 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
         config: OutputConfig | None = None,
     ):
         object.__setattr__(self, 'content', content)
-        object.__setattr__(self, 'constraints', constraints or Constraints())
-        object.__setattr__(self, 'config', config or OutputConfig())
-        super().__init__(title=title, frame=frame)
-
-    @pyd.validator('constraints')
-    def _copy_constraints(cls, constraints: Constraints) -> Constraints:
-        return Constraints(**asdict(constraints))
-
-    @pyd.validator('config')
-    def _copy_config(cls, config: OutputConfig) -> OutputConfig:
-        return OutputConfig(**asdict(config))
+        super().__init__(title=title, frame=frame, constraints=constraints, config=config)
 
     @property
     def satisfies(self) -> ConstraintsSatisfaction:

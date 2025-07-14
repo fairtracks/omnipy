@@ -218,10 +218,7 @@ def test_dimensions_fit_immutable_properties() -> None:
         fit.both = False  # type: ignore
 
 
-def test_dimensions_fit_proportionality() -> None:
-    def proportionally_wider(a, frame):
-        return a.height * frame.width / frame.height < a.width
-
+def test_dimensions_fit_proportionality_basic() -> None:
     Dims = Dimensions
 
     assert DimensionsFit(Dims(10, 10), Dims(20, 20)).proportionality is Proportionally.SAME
@@ -236,38 +233,64 @@ def test_dimensions_fit_proportionality() -> None:
     assert DimensionsFit(Dims(10, 10), Dims(10, None)).proportionality is None
 
 
+def test_dimensions_fit_proportionality_large_deviations() -> None:
+    Dims = Dimensions
+
+    # Large deviations of proportionality give much wider or much thinner
+    assert DimensionsFit(Dims(10, 30), Dims(20, 20)).proportionality is Proportionally.MUCH_THINNER
+    assert DimensionsFit(Dims(30, 10), Dims(20, 20)).proportionality is Proportionally.MUCH_WIDER
+
+    # Proportionality is thinner or wider if the deviation is not too large
+    assert DimensionsFit(Dims(10, 30), Dims(20, 40)).proportionality is Proportionally.THINNER
+    assert DimensionsFit(Dims(30, 10), Dims(40, 20)).proportionality is Proportionally.WIDER
+
+    # Threshold for large deviations in proportionality is related to the relative size of the frame
+    assert DimensionsFit(Dims(10, 30), Dims(40, 40)).proportionality is Proportionally.THINNER
+    assert DimensionsFit(Dims(30, 10), Dims(40, 40)).proportionality is Proportionally.WIDER
+
+    # Threshold for large deviations in proportionality can be adjusted with proportional_freedom
+    assert DimensionsFit(Dims(10, 30), Dims(40, 40), proportional_freedom=1.4).proportionality \
+           is Proportionally.MUCH_THINNER
+    assert DimensionsFit(Dims(30, 10), Dims(40, 40), proportional_freedom=1.4).proportionality \
+           is Proportionally.MUCH_WIDER
+
+    # Proportional_freedom adjustment have less effect on larger relative frame sizes
+    assert DimensionsFit(Dims(10, 30), Dims(200, 200)).proportionality is Proportionally.THINNER
+    assert DimensionsFit(Dims(30, 10), Dims(200, 200)).proportionality is Proportionally.WIDER
+
+    assert DimensionsFit(Dims(10, 30), Dims(200, 200), proportional_freedom=1.4).proportionality \
+           is Proportionally.THINNER
+    assert DimensionsFit(Dims(30, 10), Dims(200, 200), proportional_freedom=1.4).proportionality \
+           is Proportionally.WIDER
+
+
 def test_dimensions_fit_repr() -> None:
     # Test basic case with all properties defined
     fit = DimensionsFit(Dimensions(10, 10), Dimensions(20, 20))
-    expected = "DimensionsFit(width=True, height=True, both=True, proportionality='same')"
-    assert repr(fit) == expected
+    assert repr(fit) == \
+        'DimensionsFit(width=True, height=True, both=True, proportionality=Proportionally.SAME)'
 
     # Test case where dimensions don't fit
     fit = DimensionsFit(Dimensions(25, 15), Dimensions(20, 20))
-    expected = "DimensionsFit(width=False, height=True, both=False, proportionality='wider')"
-    assert repr(fit) == expected
+    assert repr(fit) == \
+        'DimensionsFit(width=False, height=True, both=False, proportionality=Proportionally.WIDER)'
 
     # Test case with None frame width
     fit = DimensionsFit(Dimensions(10, 10), Dimensions(None, 20))
-    expected = 'DimensionsFit(width=None, height=True, both=None, proportionality=None)'
-    assert repr(fit) == expected
-
+    assert repr(fit) == 'DimensionsFit(width=None, height=True, both=None, proportionality=None)'
     # Test case with None frame height
     fit = DimensionsFit(Dimensions(10, 10), Dimensions(20, None))
-    expected = 'DimensionsFit(width=True, height=None, both=None, proportionality=None)'
-    assert repr(fit) == expected
+    assert repr(fit) == 'DimensionsFit(width=True, height=None, both=None, proportionality=None)'
 
     # Test case with both frame dimensions None
     fit = DimensionsFit(Dimensions(10, 10), Dimensions(None, None))
-    expected = 'DimensionsFit(width=None, height=None, both=None, proportionality=None)'
-    assert repr(fit) == expected
+    assert repr(fit) == 'DimensionsFit(width=None, height=None, both=None, proportionality=None)'
 
     # Test case with zero dimensions
     fit = DimensionsFit(Dimensions(0, 0), Dimensions(10, 10))
-    expected = "DimensionsFit(width=True, height=True, both=True, proportionality='same')"
-    assert repr(fit) == expected
+    assert repr(fit) == 'DimensionsFit(width=True, height=True, both=True, proportionality=None)'
 
     # Test thinner proportionality
     fit = DimensionsFit(Dimensions(10, 15), Dimensions(20, 20))
-    expected = "DimensionsFit(width=True, height=True, both=True, proportionality='thinner')"
-    assert repr(fit) == expected
+    assert repr(fit) == \
+        'DimensionsFit(width=True, height=True, both=True, proportionality=Proportionally.THINNER)'

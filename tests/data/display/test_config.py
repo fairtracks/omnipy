@@ -24,6 +24,7 @@ def test_output_config() -> None:
         debug_mode=True,
         pretty_printer=PrettyPrinterLib.DEVTOOLS,
         language=SyntaxLanguage.JSON,
+        proportional_freedom=3.5,
         color_system=DisplayColorSystem.ANSI_RGB,
         color_style=DarkLowContrastColorStyles.ONE_DARK,
         css_font_families=('Menlo', 'monospace'),
@@ -43,6 +44,7 @@ def test_output_config() -> None:
     assert config.debug_mode is True
     assert config.pretty_printer is PrettyPrinterLib.DEVTOOLS
     assert config.language is SyntaxLanguage.JSON
+    assert config.proportional_freedom == 3.5
     assert config.color_system is DisplayColorSystem.ANSI_RGB
     assert config.color_style is DarkLowContrastColorStyles.ONE_DARK
     assert config.css_font_families == ('Menlo', 'monospace')
@@ -63,6 +65,7 @@ def test_output_config() -> None:
         pretty_printer='rich',
         # Any language string supported by the pygments library should be accepted
         language='c++',
+        proportional_freedom='3',  # type: ignore[arg-type]
         color_system='256',
         # Any color style string supported by the pygments library should be accepted
         # Note: the lilypond color style is for use with the lilypond music notation software and as
@@ -85,6 +88,7 @@ def test_output_config() -> None:
     assert config.debug_mode is True
     assert config.pretty_printer is PrettyPrinterLib.RICH
     assert config.language == 'c++'
+    assert config.proportional_freedom == 3.0
     assert config.color_system is DisplayColorSystem.ANSI_256
     assert config.color_style == 'lilypond'
     assert config.css_font_families == ()
@@ -129,6 +133,9 @@ def test_output_config_hashable() -> None:
         },
         {
             'language': SyntaxLanguage.XML
+        },
+        {
+            'proportional_freedom': 1.0
         },
         {
             'color_system': DisplayColorSystem.ANSI_256
@@ -199,6 +206,9 @@ def test_fail_output_config_no_assignments() -> None:
         config.language = SyntaxLanguage.XML  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
+        config.proportional_freedom = 3.0  # type: ignore[misc]
+
+    with pytest.raises(AttributeError):
         config.color_system = DisplayColorSystem.WINDOWS_LEGACY  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
@@ -258,6 +268,9 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(language='xyz')
 
     with pytest.raises(ValueError):
+        OutputConfig(proportional_freedom=-1)
+
+    with pytest.raises(ValueError):
         OutputConfig(color_system=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
@@ -301,6 +314,7 @@ def test_output_config_default_values() -> None:
     assert config.debug_mode is False
     assert config.pretty_printer is PrettyPrinterLib.RICH
     assert config.language is SyntaxLanguage.PYTHON
+    assert config.proportional_freedom == 2.5
     assert config.color_system is DisplayColorSystem.AUTO
     assert config.color_style is RecommendedColorStyles.ANSI_DARK
     assert config.css_font_families == (

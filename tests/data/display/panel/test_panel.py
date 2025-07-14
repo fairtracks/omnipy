@@ -3,6 +3,8 @@ from typing import cast
 import pytest
 from typing_extensions import override
 
+from omnipy.data._display.config import OutputConfig
+from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import AnyFrame, empty_frame, Frame
 from omnipy.data._display.panel.base import DimensionsAwarePanel, Panel
@@ -34,6 +36,25 @@ def test_panel():
     assert panel.title == 'My other panel'
     assert panel.frame is not custom_frame_not_fixed  # Should be a copy, not the same object
     assert panel.frame == custom_frame_not_fixed  # But should be equal in value
+
+    custom_constraints = Constraints(max_inline_container_width_incl=10)
+    constraints_panel = SimplePanel(
+        title='My panel with no frame',
+        constraints=custom_constraints,
+    )
+
+    assert constraints_panel.constraints == custom_constraints
+    assert constraints_panel.constraints is not custom_constraints  # Should be a copy
+
+    custom_config = OutputConfig(indent_tab_size=4)
+    constraints_and_config_panel = SimplePanel(
+        title='My panel with no frame',
+        constraints=custom_constraints,
+        config=custom_config,
+    )
+
+    assert constraints_and_config_panel.config == custom_config
+    assert constraints_and_config_panel.config is not custom_config  # Should be a copy
 
 
 def test_panel_hashable():

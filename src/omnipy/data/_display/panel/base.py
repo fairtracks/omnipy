@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
+from dataclasses import asdict
 from functools import cached_property
 from typing import cast, Generic
 
 from typing_extensions import override, TypeIs, TypeVar
 
+from omnipy.data._display.config import OutputConfig
+from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import (Dimensions,
                                              DimensionsFit,
                                              DimensionsWithWidthAndHeight,
@@ -13,6 +16,7 @@ from omnipy.data._display.helpers import soft_wrap_words
 import omnipy.util._pydantic as pyd
 
 FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
+OtherFrameT = TypeVar('OtherFrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
 FrameInvT = TypeVar('FrameInvT', bound=AnyFrame, default=AnyFrame)
 
 
@@ -51,10 +55,18 @@ class Panel(Generic[FrameT]):
     """Base panel class that contains frame and title"""
     title: str
     frame: FrameT
+    constraints: Constraints
+    config: OutputConfig
 
-    def __init__(self, title: str = '', frame: FrameT | None = None):
+    def __init__(self,
+                 title: str = '',
+                 frame: FrameT | None = None,
+                 constraints: Constraints | None = None,
+                 config: OutputConfig | None = None):
         object.__setattr__(self, 'title', title)
         object.__setattr__(self, 'frame', frame or cast(FrameT, empty_frame()))
+        object.__setattr__(self, 'constraints', constraints or Constraints())
+        object.__setattr__(self, 'config', config or OutputConfig())
 
     @pyd.validator('frame')
     def _copy_frame(cls, frame: Frame) -> Frame:
@@ -63,6 +75,14 @@ class Panel(Generic[FrameT]):
             fixed_width=frame.fixed_width,
             fixed_height=frame.fixed_height,
         )
+
+    @pyd.validator('constraints')
+    def _copy_constraints(cls, constraints: Constraints) -> Constraints:
+        return Constraints(**asdict(constraints))
+
+    @pyd.validator('config')
+    def _copy_config(cls, config: OutputConfig) -> OutputConfig:
+        return OutputConfig(**asdict(config))
 
     @abstractmethod
     def render_next_stage(self) -> 'DimensionsAwarePanel[FrameT] | FullyRenderedPanel[FrameT]':
@@ -116,8 +136,31 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
         return Dimensions(width=dims_width, height=dims_height)
 
     @cached_property
+    def inner_frame(self) -> FrameT:
+        """
+        Returns the inner panel frame, which is the same as
+        the outer panelframe, but adjusted for the title height if
+        applicable.
+        """
+        if has_height(self.frame.dims) and self.title_height > 0:
+            return cast(
+                FrameT,
+                self.frame.modified_copy(
+                    height=self.frame.dims.height - self.title_height_with_blank_lines,))
+        else:
+            return self.frame
+
+    @cached_property
     def within_frame(self) -> DimensionsFit:
-        return DimensionsFit(self.dims, self.frame.dims)
+        """
+        Returns a summary of how well the panel's content fit within the
+        frame's dimensions (minus the title height, if any).
+        """
+        return DimensionsFit(
+            self.dims,
+            self.inner_frame.dims,
+            proportional_freedom=self.config.proportional_freedom,
+        )
 
     @cached_property
     def _available_height_for_title(self) -> int | None:

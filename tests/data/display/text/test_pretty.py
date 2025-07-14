@@ -50,7 +50,7 @@ def _assert_pretty_repr_of_draft(
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
 def test_pretty_repr_of_draft_multi_line_if_nested(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer)
+    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
 
     _assert_pretty_repr_of_draft(1, '1', config=config)
 
@@ -123,6 +123,11 @@ def test_pretty_repr_of_draft_multi_line_if_nested(
 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
 def test_pretty_repr_of_draft_indent(pretty_printer: PrettyPrinterLib.Literals) -> None:
+    config = OutputConfig(
+        pretty_printer=pretty_printer,
+        proportional_freedom=0,
+        indent_tab_size=4,
+    )
 
     _assert_pretty_repr_of_draft(
         [[1, 2, 3], [[4, 5, 6], [7, 8, 9]]],
@@ -135,10 +140,7 @@ def test_pretty_repr_of_draft_indent(pretty_printer: PrettyPrinterLib.Literals) 
             ]
         ]"""),
         frame=DEFAULT_FRAME,
-        config=OutputConfig(
-            indent_tab_size=4,
-            pretty_printer=pretty_printer,
-        ),
+        config=config,
         within_frame_width=True,
         within_frame_height=True,
     )
@@ -146,7 +148,7 @@ def test_pretty_repr_of_draft_indent(pretty_printer: PrettyPrinterLib.Literals) 
 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
 def test_pretty_repr_of_draft_in_frame(pretty_printer: PrettyPrinterLib.Literals) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer)
+    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
 
     data = [[1, 2], [[3, 4, 5, 6], [7, 8, 9]]]
 
@@ -291,7 +293,7 @@ def test_pretty_repr_of_draft_approximately_in_frame(
     geometry_data_thinnest_repr: Annotated[str, pytest.fixture],
     pretty_printer: PrettyPrinterLib.Literals,
 ) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer)
+    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
 
     _assert_pretty_repr_of_draft(
         geometry_data,
@@ -364,7 +366,7 @@ def test_pretty_repr_of_draft_approximately_in_frame(
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
 def test_pretty_repr_of_draft_one_line_wider_than_frame(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer)
+    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
     # This is a test for the case where one line is wider than the frame
     # width. The pretty printer should not fit the short lines into a singe
     # line even though this single line will not be wider than the widest
@@ -410,7 +412,11 @@ def test_pretty_repr_of_draft_models(pretty_printer: PrettyPrinterLib.Literals) 
           [4, 5, 6]
         ]"""),
         frame=DEFAULT_FRAME,
-        config=OutputConfig(debug_mode=False, pretty_printer=pretty_printer),
+        config=OutputConfig(
+            debug_mode=False,
+            pretty_printer=pretty_printer,
+            proportional_freedom=0,
+        ),
         within_frame_width=True,
         within_frame_height=True,
     )
@@ -429,7 +435,11 @@ def test_pretty_repr_of_draft_models(pretty_printer: PrettyPrinterLib.Literals) 
           ]
         )"""),
         frame=DEFAULT_FRAME,
-        config=OutputConfig(debug_mode=True, pretty_printer=pretty_printer),
+        config=OutputConfig(
+            debug_mode=True,
+            pretty_printer=pretty_printer,
+            proportional_freedom=0,
+        ),
         within_frame_width=True,
         within_frame_height=True,
     )
@@ -438,12 +448,13 @@ def test_pretty_repr_of_draft_models(pretty_printer: PrettyPrinterLib.Literals) 
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
 def test_pretty_repr_of_draft_variable_char_weight(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
+    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
 
     _assert_pretty_repr_of_draft(
         ['北京', '€450'],
         "['北京', '€450']",
         frame=Frame(Dimensions(16, 1)),
-        config=OutputConfig(pretty_printer=pretty_printer),
+        config=config,
         within_frame_width=True,
         within_frame_height=True,
     )
@@ -456,7 +467,7 @@ def test_pretty_repr_of_draft_variable_char_weight(
           '€450'
         ]"""),
         frame=Frame(Dimensions(15, 4)),
-        config=OutputConfig(pretty_printer=pretty_printer),
+        config=config,
         within_frame_width=True,
         within_frame_height=True,
     )
@@ -476,7 +487,7 @@ def test_pretty_repr_of_draft_variable_char_weight(
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
 def test_pretty_repr_of_draft_multi_line_if_nested_known_issue(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer)
+    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
     _assert_pretty_repr_of_draft(
         [1, 2, '[...]'],
         "[1, 2, '[...]']",

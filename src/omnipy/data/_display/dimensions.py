@@ -52,21 +52,27 @@ def has_width_or_height(dims: AnyDimensions) -> TypeIs[DimensionsWithWidthOrHeig
     return has_width(dims) or has_height(dims)
 
 
-class Proportionally(LiteralEnum[str]):
-    Literals = Literal['thinner', 'same', 'wider']
+class Proportionally(LiteralEnum[int]):
+    Literals = Literal[-2, -1, 0, 1, 2]
 
-    THINNER: Literal['thinner'] = 'thinner'
-    SAME: Literal['same'] = 'same'
-    WIDER: Literal['wider'] = 'wider'
+    MUCH_THINNER: Literal[-2] = -2
+    THINNER: Literal[-1] = -1
+    SAME: Literal[0] = 0
+    WIDER: Literal[1] = 1
+    MUCH_WIDER: Literal[2] = 2
 
 
 class DimensionsFit:
-    def __init__(self, dims: DimensionsWithWidthAndHeight, frame_dims: Dimensions):
+    def __init__(self,
+                 dims: DimensionsWithWidthAndHeight,
+                 frame_dims: Dimensions,
+                 proportional_freedom: pyd.NonNegativeFloat = 2.5):
         assert has_width_and_height(dims)
 
         self._width: bool | None = None
         self._height: bool | None = None
         self._proportionality: Proportionally.Literals | None = None
+        self._proportional_freedom = proportional_freedom
 
         if frame_dims.width is not None:
             self._width = dims.width <= frame_dims.width
@@ -74,18 +80,32 @@ class DimensionsFit:
         if frame_dims.height is not None:
             self._height = dims.height <= frame_dims.height
 
-        if frame_dims.width not in [None, 0] and frame_dims.height not in [None, 0]:
+        if (dims.width > 0 and dims.height > 0 and frame_dims.width not in [None, 0]
+                and frame_dims.height not in [None, 0]):
             self._proportionality = self._calculate_proportionality(dims, frame_dims)
 
-    @staticmethod
-    def _calculate_proportionality(dims, frame_dims) -> Proportionally.Literals:
+    def _calculate_proportionality(self, dims, frame_dims) -> Proportionally.Literals:
         frame_width_height_ratio = frame_dims.width / frame_dims.height
         proportional_width = dims.height * frame_width_height_ratio
+        proportional_height = dims.width / frame_width_height_ratio
 
-        if proportional_width < dims.width:
+        proportional_width_freedom_multiplier = max(
+            1 + self._proportional_freedom * frame_dims.width / dims.width,
+            1,
+        )
+        proportional_height_freedom_multiplier = max(
+            1 + self._proportional_freedom * frame_dims.height / dims.height,
+            1,
+        )
+
+        if proportional_width * proportional_width_freedom_multiplier < dims.width:
+            return Proportionally.MUCH_WIDER
+        elif proportional_width < dims.width:
             return Proportionally.WIDER
         elif proportional_width == dims.width:
             return Proportionally.SAME
+        elif proportional_height * proportional_height_freedom_multiplier < dims.height:
+            return Proportionally.MUCH_THINNER
         else:
             return Proportionally.THINNER
 
@@ -110,7 +130,8 @@ class DimensionsFit:
 
     def __repr__(self) -> str:
         # Format proportionality properly - None without quotes, strings with quotes
-        prop_str = f"'{self.proportionality}'" if self.proportionality is not None else 'None'
+        prop_str = f'Proportionally.{Proportionally.name_for_value(self.proportionality)}' \
+            if self.proportionality is not None else 'None'
 
         return (f'DimensionsFit('
                 f'width={self.width}, '

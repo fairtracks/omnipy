@@ -226,7 +226,7 @@ def _reduce_width_until_proportional_with_frame(
 
     while True:
         fit = cur_reflowed_text_panel.within_frame
-        if fit.width and fit.proportionality is not Proportionally.WIDER:
+        if fit.width and fit.proportionality is not Proportionally.MUCH_WIDER:
             break
 
         draft_for_print: DraftPanel[object, FrameWithWidth] = \
