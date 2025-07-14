@@ -359,6 +359,9 @@ def _prepare_content(in_draft: DraftPanel[object, FrameT]) -> DraftPanel[object,
 
 def _should_follow_proportionality(
         reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth]) -> bool:
+    if reflowed_text_panel.frame.fixed_width:
+        return False
+
     fit = reflowed_text_panel.within_frame
 
     return fit.proportionality is not None and fit.proportionality > Proportionally.WIDER

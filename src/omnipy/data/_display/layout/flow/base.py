@@ -498,7 +498,7 @@ def _apply_width_additions(
         context.dim_aware_layout[key] = create_panel_with_updated_frame(
             context.draft_layout[key],
             dim_aware_panel.frame.modified_copy(
-                width=panel_width + width_addition, fixed_width=False),
+                width=panel_width + width_addition, fixed_width=True),
         )
 
     return context

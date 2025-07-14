@@ -16,7 +16,7 @@ from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguage
 
 from ..panel.helpers.panel_assert import DraftPanelKwArgs
 
-DEFAULT_FRAME = Frame(Dimensions(80, 24))
+DEFAULT_FRAME = Frame(Dimensions(80, 24), fixed_width=False, fixed_height=False)
 
 
 def _remove_training_commas(output: str) -> str:
@@ -264,7 +264,7 @@ def test_pretty_repr_of_draft_in_frame(
     _assert_pretty_repr_of_draft(
         data,
         excepted_output_slimmer,
-        frame=Frame(Dimensions(17, None)),
+        frame=Frame(Dimensions(17, None), fixed_width=False),
         config=config,
         within_frame_width=True,
         within_frame_height=None,
@@ -273,7 +273,7 @@ def test_pretty_repr_of_draft_in_frame(
     _assert_pretty_repr_of_draft(
         data,
         excepted_output_slimmer,
-        frame=Frame(Dimensions(17, output_height)),
+        frame=Frame(Dimensions(17, output_height), fixed_width=False),
         config=config,
         within_frame_width=True,
         within_frame_height=True,
@@ -329,7 +329,7 @@ def test_pretty_repr_of_draft_in_frame(
     _assert_pretty_repr_of_draft(
         data,
         excepted_output_high_and_slim,
-        frame=Frame(Dimensions(17, 24)),
+        frame=Frame(Dimensions(17, 24), fixed_width=False),
         config=config,
         within_frame_width=True,
         within_frame_height=True,
@@ -338,7 +338,7 @@ def test_pretty_repr_of_draft_in_frame(
     _assert_pretty_repr_of_draft(
         data,
         excepted_output_high_and_slim,
-        frame=Frame(Dimensions(8, None)),
+        frame=Frame(Dimensions(8, None), fixed_width=False),
         config=config,
         within_frame_width=True,
         within_frame_height=None,
@@ -347,7 +347,7 @@ def test_pretty_repr_of_draft_in_frame(
     _assert_pretty_repr_of_draft(
         data,
         excepted_output_high_and_slim,
-        frame=Frame(Dimensions(8, 20)),
+        frame=Frame(Dimensions(8, 20), fixed_width=False),
         config=config,
         within_frame_width=True,
         within_frame_height=True,
@@ -356,7 +356,7 @@ def test_pretty_repr_of_draft_in_frame(
     _assert_pretty_repr_of_draft(
         data,
         excepted_output_high_and_slim,
-        frame=Frame(Dimensions(8, 18)),
+        frame=Frame(Dimensions(8, 18), fixed_width=False),
         config=config,
         within_frame_width=True,
         within_frame_height=False,
@@ -407,7 +407,7 @@ def test_pretty_repr_of_draft_approximately_in_frame(
             }
           }
         ]"""),
-        frame=Frame(Dimensions(160, 9)),
+        frame=Frame(Dimensions(160, 9), fixed_width=False),
         config=config,
         within_frame_width=True,
         within_frame_height=True,
@@ -428,7 +428,7 @@ def test_pretty_repr_of_draft_approximately_in_frame(
             }
           }
         ]"""),
-        frame=Frame(Dimensions(149, 20)),
+        frame=Frame(Dimensions(149, 12), fixed_width=False),
         config=config,
         within_frame_width=True,
         within_frame_height=True,
@@ -460,7 +460,7 @@ def test_pretty_repr_of_draft_approximately_in_frame(
     _assert_pretty_repr_of_draft(
         geometry_data,
         geometry_data_thinnest_repr,
-        frame=Frame(Dimensions(37, 21)),
+        frame=Frame(Dimensions(37, 21), fixed_width=False),
         config=config,
         within_frame_width=True,
         within_frame_height=True,
@@ -469,7 +469,7 @@ def test_pretty_repr_of_draft_approximately_in_frame(
     _assert_pretty_repr_of_draft(
         geometry_data,
         geometry_data_thinnest_repr,
-        frame=Frame(Dimensions(35, 21)),
+        frame=Frame(Dimensions(35, 21), fixed_width=False),
         config=config,
         within_frame_width=False,
         within_frame_height=True,
@@ -478,7 +478,7 @@ def test_pretty_repr_of_draft_approximately_in_frame(
     _assert_pretty_repr_of_draft(
         geometry_data,
         geometry_data_thinnest_repr,
-        frame=Frame(Dimensions(10, 10)),
+        frame=Frame(Dimensions(10, 10), fixed_width=False),
         config=config,
         within_frame_width=False,
         within_frame_height=False,
@@ -520,7 +520,7 @@ def test_pretty_repr_of_draft_one_line_wider_than_frame(
           },
           'long_key': 'This is a very long value that will be too long for the frame'
         }"""),
-        frame=Frame(Dimensions(40, 7)),
+        frame=Frame(Dimensions(40, 7), fixed_width=True),
         config=config,
         within_frame_width=False,
         within_frame_height=True,
@@ -605,7 +605,7 @@ def test_pretty_repr_of_draft_variable_char_weight(
     _assert_pretty_repr_of_draft(
         ['北京', '€450'],
         "['北京', '€450']",
-        frame=Frame(Dimensions(18, 1)),
+        frame=Frame(Dimensions(18, 1), fixed_width=False),
         config=config,
         within_frame_width=True,
         within_frame_height=True,
@@ -618,7 +618,7 @@ def test_pretty_repr_of_draft_variable_char_weight(
           '北京',
           '€450'
         ]"""),
-        frame=Frame(Dimensions(15, 4)),
+        frame=Frame(Dimensions(15, 4), fixed_width=False),
         config=config,
         within_frame_width=True,
         within_frame_height=True,
