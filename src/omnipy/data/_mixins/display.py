@@ -10,12 +10,12 @@ from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.data._display.helpers import detect_ui_type, get_terminal_prompt_height
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import TextDraftPanel
 from omnipy.data.helpers import FailedData, PendingData
+from omnipy.hub.ui import detect_ui_type, get_terminal_prompt_height
 from omnipy.shared.enums.display import DisplayColorSystem, MaxTitleHeight, SyntaxLanguage
 from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
 from omnipy.shared.protocols.config import (IsHtmlUserInterfaceConfig,

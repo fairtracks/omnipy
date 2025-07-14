@@ -1,9 +1,9 @@
 from omnipy import JsonModel
 from omnipy.data._display.frame import Dimensions, Frame
-from omnipy.data._display.helpers import detect_ui_type
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel, OutputConfig
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
+from omnipy.hub.ui import detect_ui_type
 from omnipy.shared.enums.colorstyles import (DarkHighContrastColorStyles,
                                              DarkLowContrastColorStyles,
                                              RecommendedColorStyles)
