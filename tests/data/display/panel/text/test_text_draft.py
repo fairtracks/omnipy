@@ -28,7 +28,7 @@ def test_text_draft_panel_init() -> None:
         '{"json": "data"}',
         title='My JSON file',
         frame=Frame(Dimensions(20, 10)),
-        constraints=Constraints(container_width_per_line_limit=10),
+        constraints=Constraints(max_inline_container_width_incl=10),
         config=OutputConfig(language=SyntaxLanguage.JSON),
     )
 
@@ -50,7 +50,7 @@ def test_text_draft_panel_render_next_stage_with_repr_complex() -> None:
             return (1, 2, 3)"""),
         title='My repr panel',
         frame=Frame(Dimensions(18, 2)),
-        constraints=Constraints(container_width_per_line_limit=10),
+        constraints=Constraints(max_inline_container_width_incl=10),
         config=OutputConfig(indent_tab_size=1, language=SyntaxLanguage.PYTHON),
     )
     assert_next_stage_panel(
@@ -81,14 +81,14 @@ def test_reflowed_text_draft_panel_init() -> None:
     assert_draft_panel_subcls(
         panel_cls,
         content,
-        constraints=Constraints(container_width_per_line_limit=10),
+        constraints=Constraints(max_inline_container_width_incl=10),
     )
     assert_draft_panel_subcls(
         panel_cls,
         content,
         title='AllPanel',
         frame=Frame(Dimensions(20, 10)),
-        constraints=Constraints(container_width_per_line_limit=10),
+        constraints=Constraints(max_inline_container_width_incl=10),
         config=OutputConfig(indent_tab_size=4),
     )
 
@@ -102,7 +102,8 @@ def test_reflowed_text_draft_panel_hashable() -> None:
     panel_3 = ReflowedTextDraftPanel('Some text')
     panel_4 = ReflowedTextDraftPanel('', title='Some panel')
     panel_5 = ReflowedTextDraftPanel('', frame=Frame(Dimensions(10, 20)))
-    panel_6 = ReflowedTextDraftPanel('', constraints=Constraints(container_width_per_line_limit=10))
+    panel_6 = ReflowedTextDraftPanel(
+        '', constraints=Constraints(max_inline_container_width_incl=10))
     panel_7 = ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4))
 
     assert hash(panel_1) != hash(panel_3) != hash(panel_4) != hash(panel_5) != hash(panel_6) \
@@ -112,7 +113,7 @@ def test_reflowed_text_draft_panel_hashable() -> None:
     panel_9 = ReflowedTextDraftPanel('', title='Some panel')
     panel_10 = ReflowedTextDraftPanel('', frame=Frame(Dimensions(10, 20)))
     panel_11 = ReflowedTextDraftPanel(
-        '', constraints=Constraints(container_width_per_line_limit=10))
+        '', constraints=Constraints(max_inline_container_width_incl=10))
     panel_12 = ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4))
 
     assert hash(panel_3) == hash(panel_8)
@@ -248,55 +249,171 @@ def test_reflowed_text_draft_panel_variable_width_chars() -> None:
 #     assert panel.visible_char_coverage() == 10  # 5 English + 2 double-width Asian chars
 
 
-def test_reflowed_text_draft_panel_max_container_width_across_lines() -> None:
-    assert ReflowedTextDraftPanel('').max_container_width_across_lines == 0
-    assert ReflowedTextDraftPanel('(1, 2, 3)').max_container_width_across_lines == 9
-    assert ReflowedTextDraftPanel(dedent("""(
-      [1, 2],
-      1234567
-    )"""),).max_container_width_across_lines == 6
-    assert ReflowedTextDraftPanel(dedent("""(
-      [1, 2],
-      {'asd': 1234567}
-    )"""),).max_container_width_across_lines == 16
+def test_reflowed_text_draft_panel_max_inline_container_width_incl() -> None:
+    assert ReflowedTextDraftPanel('').max_inline_container_width_incl == 0
+
+    assert ReflowedTextDraftPanel('(1, 2, 3)').max_inline_container_width_incl == 9
+
     assert ReflowedTextDraftPanel(
         dedent("""(
-      [
-        1,
-        2
-      ],
-      {
-        'asd':
-        1234567
-      }
-    )"""),).max_container_width_across_lines == 0
+            [1, 2],
+            1234567
+        )"""),).max_inline_container_width_incl == 6
+
+    assert ReflowedTextDraftPanel(
+        dedent("""(
+            [1, 2],
+            {'asd': 1234567}
+        )"""),).max_inline_container_width_incl == 16
+
+    assert ReflowedTextDraftPanel(
+        dedent("""(
+            [
+              1,
+              2
+            ],
+            {
+              'asd':
+              1234567
+            }
+        )"""),).max_inline_container_width_incl == 0
+
+
+def test_reflowed_text_draft_panel_max_inline_list_or_dict_width_excl() -> None:
+    assert ReflowedTextDraftPanel('').max_inline_list_or_dict_width_excl == 0
+
+    # Only defined for lists and dicts, not tuples
+    assert ReflowedTextDraftPanel('(1, 2, 3)').max_inline_list_or_dict_width_excl == 0
+
+    assert ReflowedTextDraftPanel(dedent("""
+        [1, 2]
+    """),).max_inline_list_or_dict_width_excl == 4
+
+    assert ReflowedTextDraftPanel(
+        dedent("""
+            {"asd": 1234567, "dsa": 65432}
+        """),).max_inline_list_or_dict_width_excl == 28
+
+    assert ReflowedTextDraftPanel(
+        dedent("""
+            [
+              1, 2, 3, 4,
+              5, 6, 7
+            ]
+        """),).max_inline_list_or_dict_width_excl == 10
+
+    assert ReflowedTextDraftPanel(
+        dedent("""
+            {
+              "asd": 1234567, "dsa": [ 1, 2, 3, 4 ],
+              "qwe": 1234567890
+            }
+        """),).max_inline_list_or_dict_width_excl == 37
+
+    assert ReflowedTextDraftPanel(
+        dedent("""
+            [
+              1, 2, 3, [ 4, 5, 6 ],
+              [ 7, 8, 9, 10 ]
+            ]
+        """),).max_inline_list_or_dict_width_excl == 20
+
+    assert ReflowedTextDraftPanel(
+        dedent("""
+            [
+              {"asd": 1234567, "dsa": 65432},
+              {"qwe": 1234567890}, {"rty": 987654321}
+            ]
+        """),).max_inline_list_or_dict_width_excl == 39
+
+    assert ReflowedTextDraftPanel(
+        dedent("""
+            {
+              "this_is_a_very_long_key_longer_than_most": [
+                { "asd": 1234567, "dsa": "abcde" },
+                { "qwe": 1234567890 },
+                { "rty": 987654321 }
+              ], "no": [
+                { "asd": 12 }, { "dsa": "abc" }
+              ]
+            }
+        """),).max_inline_list_or_dict_width_excl == 34
+
+    assert ReflowedTextDraftPanel(
+        dedent("""
+            {
+              "asd": [1, 2, 3, 4], "dsa": [5, 6, 7],
+              "qwe": [8, 9, 10]
+            }
+        """),).max_inline_list_or_dict_width_excl == 37
+
+    assert ReflowedTextDraftPanel(
+        dedent("""
+            {
+              "asd": {"12": "abc", "13": "def"}, "dsa": {"14": "ghi"},
+              "qwe": {"15": "jkl"}
+            }
+        """),).max_inline_list_or_dict_width_excl == 55
+
+    assert ReflowedTextDraftPanel(
+        dedent("""
+            [
+              {
+                "asd": {"12": "abc", "13": "def", "14": "ghi", "15": "jkl"},
+                "dsa": {"14": "ghi"}, "qwe": {"15": "jkl"}
+              }, {
+                "asd": {"12": "abc", "13": "def"},
+                "dsa": {"14": "ghi"},
+              },
+            ]
+        """),).max_inline_list_or_dict_width_excl == 52
+
+    assert ReflowedTextDraftPanel(
+        dedent("""
+            [
+              {
+                "geometry": {
+                  "loc": { "lng": 77.2, "lat": 28.1 },
+                  "vp": { "ne": { "lng": 77.2, "lat": 28.1 }, "se": { "lng": 77.2, "lat": 28.6 } },
+                }
+              }
+            ]
+        """),).max_inline_list_or_dict_width_excl == 74
 
 
 def test_reflowed_text_draft_panel_constraints_satisfaction() -> None:
     out = dedent("""(
       [1, 2],
-      {'asd': 1234567}
+      {"asd": 1234567}
     )""")
 
-    assert ReflowedTextDraftPanel(out).max_container_width_across_lines == 16
-    assert ReflowedTextDraftPanel(out).satisfies.container_width_per_line_limit is None
+    assert ReflowedTextDraftPanel(out).max_inline_container_width_incl == 16
+    assert ReflowedTextDraftPanel(out).max_inline_list_or_dict_width_excl == 14
+    assert ReflowedTextDraftPanel(out).satisfies.max_inline_container_width_incl is None
+    assert ReflowedTextDraftPanel(out).satisfies.max_inline_list_or_dict_width_excl is None
 
-    draft = ReflowedTextDraftPanel(out, constraints=Constraints(container_width_per_line_limit=17))
-    assert draft.satisfies.container_width_per_line_limit is True
+    draft = ReflowedTextDraftPanel(out, constraints=Constraints(max_inline_container_width_incl=16))
+    assert draft.satisfies.max_inline_container_width_incl is True
+    assert draft.satisfies.max_inline_list_or_dict_width_excl is None
 
-    draft = ReflowedTextDraftPanel(out, constraints=Constraints(container_width_per_line_limit=16))
-    assert draft.satisfies.container_width_per_line_limit is True
+    draft = ReflowedTextDraftPanel(
+        out, constraints=Constraints(max_inline_list_or_dict_width_excl=14))
+    assert draft.satisfies.max_inline_container_width_incl is None
+    assert draft.satisfies.max_inline_list_or_dict_width_excl is True
 
-    constraints_15 = Constraints(container_width_per_line_limit=15)
-    draft = ReflowedTextDraftPanel(out, constraints=constraints_15)
-    assert draft.satisfies.container_width_per_line_limit is False
+    constraints_too_tight = Constraints(
+        max_inline_container_width_incl=15, max_inline_list_or_dict_width_excl=13)
+    draft = ReflowedTextDraftPanel(out, constraints=constraints_too_tight)
+    assert draft.satisfies.max_inline_container_width_incl is False
+    assert draft.satisfies.max_inline_list_or_dict_width_excl is False
 
     out_shorter = dedent("""(
       [1, 2],
-      {'asd': 123456}
+      {"asd": 123456}
     )""")
-    draft = ReflowedTextDraftPanel(out_shorter, constraints=constraints_15)
-    assert draft.satisfies.container_width_per_line_limit is True
+    draft = ReflowedTextDraftPanel(out_shorter, constraints=constraints_too_tight)
+    assert draft.satisfies.max_inline_container_width_incl is True
+    assert draft.satisfies.max_inline_list_or_dict_width_excl is True
 
 
 def test_draft_panel_render_next_stage() -> None:
@@ -312,7 +429,7 @@ def test_draft_panel_render_next_stage() -> None:
         '(1, 2, 3)',
         title='My panel',
         frame=Frame(Dimensions(9, 1)),
-        constraints=Constraints(container_width_per_line_limit=10),
+        constraints=Constraints(max_inline_container_width_incl=10),
         config=OutputConfig(indent_tab_size=1),
     )
     assert_next_stage_panel(

@@ -152,11 +152,11 @@ class DevtoolsPrettyPrinter(PrettyPrinter):
         reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> bool:
         if (self._prev_constraints is None
-                or self._prev_constraints.container_width_per_line_limit is None):
+                or self._prev_constraints.max_inline_container_width_incl is None):
             return True
         else:
-            return (reflowed_text_panel.max_container_width_across_lines
-                    < self._prev_constraints.container_width_per_line_limit)
+            return (reflowed_text_panel.max_inline_container_width_incl
+                    < self._prev_constraints.max_inline_container_width_incl)
 
     @override
     def _calc_reduced_frame_width(
@@ -170,20 +170,20 @@ class DevtoolsPrettyPrinter(PrettyPrinter):
         self,
         reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> Constraints:
-        new_container_width_per_line_limit = max(
-            reflowed_text_panel.max_container_width_across_lines - 1, 0)
+        new_max_inline_container_width_incl = max(
+            reflowed_text_panel.max_inline_container_width_incl - 1, 0)
 
         return dataclasses.replace(
             reflowed_text_panel.constraints,
-            container_width_per_line_limit=new_container_width_per_line_limit,
+            max_inline_container_width_incl=new_max_inline_container_width_incl,
         )
 
     @override
     def print_draft_to_str(self, draft_panel: DraftPanel[object, FrameT]) -> str:
         from devtools import PrettyFormat
 
-        if draft_panel.constraints.container_width_per_line_limit is not None:
-            simple_cutoff = draft_panel.constraints.container_width_per_line_limit
+        if draft_panel.constraints.max_inline_container_width_incl is not None:
+            simple_cutoff = draft_panel.constraints.max_inline_container_width_incl
         else:
             simple_cutoff = MAX_TERMINAL_SIZE
 

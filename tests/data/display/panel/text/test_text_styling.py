@@ -67,7 +67,7 @@ def test_syntax_stylized_text_panel_hashable() -> None:
     panel_5 = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel('', frame=Frame(Dimensions(width=10, height=20))))
     panel_6 = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel('', constraints=Constraints(container_width_per_line_limit=9)))
+        ReflowedTextDraftPanel('', constraints=Constraints(max_inline_container_width_incl=9)))
     panel_7 = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4)))
 
@@ -79,7 +79,7 @@ def test_syntax_stylized_text_panel_hashable() -> None:
     panel_10 = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel('', frame=Frame(Dimensions(width=10, height=20))))
     panel_11 = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel('', constraints=Constraints(container_width_per_line_limit=9)))
+        ReflowedTextDraftPanel('', constraints=Constraints(max_inline_container_width_incl=9)))
     panel_12 = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4)))
 
@@ -111,7 +111,7 @@ def test_syntax_stylized_text_panel_no_assignments() -> None:
 
     with pytest.raises(AttributeError):
         text_panel.constraints = Constraints(  # type: ignore[misc]
-            container_width_per_line_limit=10)
+            max_inline_container_width_incl=10)
 
     with pytest.raises(AttributeError):
         text_panel.config = OutputConfig()  # type: ignore[misc]

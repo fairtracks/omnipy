@@ -34,14 +34,14 @@ def test_draft_panel_init() -> None:
     assert_draft_panel_subcls(
         DraftPanel,
         content,
-        constraints=Constraints(container_width_per_line_limit=10),
+        constraints=Constraints(max_inline_container_width_incl=10),
     )
     assert_draft_panel_subcls(
         DraftPanel,
         content,
         title='AllPanel',
         frame=Frame(Dimensions(20, 10)),
-        constraints=Constraints(container_width_per_line_limit=10),
+        constraints=Constraints(max_inline_container_width_incl=10),
         config=OutputConfig(indent_tab_size=4),
     )
 
@@ -55,7 +55,7 @@ def test_draft_panel_hashable() -> None:
     panel_3 = DraftPanel('Some text')
     panel_4 = DraftPanel('', title='My panel')
     panel_5 = DraftPanel('', frame=Frame(Dimensions(10, 20)))
-    panel_6 = DraftPanel('', constraints=Constraints(container_width_per_line_limit=10))
+    panel_6 = DraftPanel('', constraints=Constraints(max_inline_container_width_incl=10))
     panel_7 = DraftPanel('', config=OutputConfig(indent_tab_size=4))
 
     assert hash(panel_1) != hash(panel_3) != hash(panel_4) != hash(panel_5) \
@@ -64,7 +64,7 @@ def test_draft_panel_hashable() -> None:
     panel_8 = DraftPanel('Some text')
     panel_9 = DraftPanel('', title='My panel')
     panel_10 = DraftPanel('', frame=Frame(Dimensions(10, 20)))
-    panel_11 = DraftPanel('', constraints=Constraints(container_width_per_line_limit=10))
+    panel_11 = DraftPanel('', constraints=Constraints(max_inline_container_width_incl=10))
     panel_12 = DraftPanel('', config=OutputConfig(indent_tab_size=4))
 
     assert hash(panel_3) == hash(panel_8)
@@ -98,7 +98,7 @@ def test_fail_draft_panel_no_assignments() -> None:
 
     with pytest.raises(AttributeError):
         draft_panel.constraints = Constraints(  # type: ignore[misc]
-            container_width_per_line_limit=10)
+            max_inline_container_width_incl=10)
 
     with pytest.raises(AttributeError):
         draft_panel.config = OutputConfig(indent_tab_size=4)  # type: ignore[misc]
@@ -107,11 +107,11 @@ def test_fail_draft_panel_no_assignments() -> None:
 def test_draft_panel_constraints_satisfaction() -> None:
 
     draft_panel = DraftPanel('Some text')
-    assert draft_panel.satisfies.container_width_per_line_limit is None
+    assert draft_panel.satisfies.max_inline_container_width_incl is None
 
     draft_panel = DraftPanel(
-        'Some text', constraints=Constraints(container_width_per_line_limit=10))
-    assert draft_panel.satisfies.container_width_per_line_limit is False
+        'Some text', constraints=Constraints(max_inline_container_width_incl=10))
+    assert draft_panel.satisfies.max_inline_container_width_incl is False
 
 
 def test_draft_panel_with_empty_content() -> None:
@@ -162,7 +162,7 @@ def test_draft_panel_render_next_stage_with_repr_complex() -> None:
         (1, 2, 3),
         title='My text panel',
         frame=Frame(Dimensions(3, 5)),
-        constraints=Constraints(container_width_per_line_limit=10),
+        constraints=Constraints(max_inline_container_width_incl=10),
         config=OutputConfig(indent_tab_size=1),
     )
     assert_next_stage_panel(
@@ -191,7 +191,7 @@ def test_draft_panel_render_next_stage_with_layout_complex() -> None:
         ),
         title='My layout panel',
         frame=Frame(Dimensions(21, 5)),
-        constraints=Constraints(container_width_per_line_limit=10),
+        constraints=Constraints(max_inline_container_width_incl=10),
         config=OutputConfig(indent_tab_size=1),
     )
     assert_next_stage_panel(
@@ -235,7 +235,7 @@ def test_draft_panel_render_next_stage_with_layout_half_framed() -> None:
             ),
         ),
         frame=Frame(Dimensions(20, 5)),
-        constraints=Constraints(container_width_per_line_limit=10),
+        constraints=Constraints(max_inline_container_width_incl=10),
         config=OutputConfig(indent_tab_size=1),
     )
     assert_next_stage_panel(
@@ -269,7 +269,7 @@ def test_draft_panel_render_next_stage_with_layout_half_rendered() -> None:
             text2=MockStylablePlainCropPanel('Here is some other text', title='Text panel 2'),
         ),
         frame=Frame(Dimensions(24, 5)),
-        constraints=Constraints(container_width_per_line_limit=10),
+        constraints=Constraints(max_inline_container_width_incl=10),
         config=OutputConfig(indent_tab_size=1),
     )
     assert_next_stage_panel(
