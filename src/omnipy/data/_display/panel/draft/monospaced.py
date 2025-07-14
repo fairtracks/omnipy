@@ -42,7 +42,7 @@ class MonospacedDraftPanel(
 
     @cached_property
     def _height(self) -> pyd.NonNegativeInt:
-        return max(0, len(self._content_lines))
+        return len(self._content_lines)
 
     @cached_property
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:

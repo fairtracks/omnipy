@@ -25,7 +25,7 @@ def rich_overflow_method(
 def crop_content_lines_vertically_for_resizing(
     content_lines: list[str],
     frame: AnyFrame,
-    vertical_overflow_mode: VerticalOverflowMode,
+    vertical_overflow_mode: VerticalOverflowMode.Literals,
 ) -> list[str]:
     """
     Crop content lines vertically to allow width resizing. No cropping will
@@ -62,7 +62,7 @@ def crop_content_lines_vertically_for_resizing(
 def crop_content_lines_vertically(
     lines: list[str],
     crop_height: pyd.NonNegativeInt | None,
-    vertical_overflow_mode: VerticalOverflowMode,
+    vertical_overflow_mode: VerticalOverflowMode.Literals,
 ) -> list[str]:
     """
     Crop content lines vertically according to frame height and configured

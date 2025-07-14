@@ -45,17 +45,25 @@ def optimize_layout_to_fit_frame(
         # If frame has no width, no width distribution is needed
         draft_layout = input_layout_panel.content
 
+    # print(f'Creating LayoutFlowContext...')
     context = LayoutFlowContext(input_layout_panel, draft_layout)
 
+    # print(f'Setting panel heights...')
     context = _set_panel_heights(context)
     context = _tighten_panel_frame_widths(context)
 
     if has_width(context.frame.dims) and len(context.draft_layout) > 1:
+        # print('Resizing inner panels...')
         context = _resize_inner_panels(context)
+
+    # print('Reducing panel heights...')
     context = _reduce_panel_heights(context)
 
     if has_width(context.frame.dims):
+        # print('Tightening panel frame widths again...')
         context = _tighten_panel_frame_widths(context)
+
+        # print('Widening inner panels to make room for titles...')
         context = _widen_inner_panels_to_make_room_for_titles(context)
 
     return context.resized_panel  # pyright: ignore [reportReturnType]
@@ -101,7 +109,7 @@ def _create_layout_with_distributed_widths(
 def _calculate_per_panel_width_for_panels_without_width(
     layout: Layout,
     frame_width: int,
-    panel_design: PanelDesign,
+    panel_design: PanelDesign.Literals,
 ) -> int | None:
     """
     Calculate width for each panel without pre-set width.
