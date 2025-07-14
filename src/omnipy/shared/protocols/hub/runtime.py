@@ -2,6 +2,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from typing import Protocol, runtime_checkable
 
+from omnipy.shared.enums.ui import UserInterfaceType
 from omnipy.shared.protocols.compute.job_creator import IsJobConfigHolder
 from omnipy.shared.protocols.config import (IsDataConfig,
                                             IsEngineConfig,
@@ -36,6 +37,7 @@ class IsRuntimeConfig(IsDataPublisher, Protocol):
     engine: IsEngineConfig
     job: IsJobConfig
     root_log: IsRootLogConfig
+    user_interface_type: UserInterfaceType.Literals
 
     def reset_to_defaults(self) -> None:
         ...

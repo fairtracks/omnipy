@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import cast
+from typing import cast, TYPE_CHECKING
 
 import rich.console
 
@@ -10,6 +10,32 @@ from omnipy.shared.enums.ui import (AutoDetectableUserInterfaceType,
                                     SpecifiedUserInterfaceType,
                                     TerminalOutputUserInterfaceType,
                                     UserInterfaceType)
+from omnipy.shared.protocols.config import IsColorConfig
+
+from ..data._display.jupyter.components import ReactiveBgColorUpdater
+
+if TYPE_CHECKING:
+    from .runtime import Runtime
+
+
+def detect_and_setup_user_interface(runtime: 'Runtime') -> None:
+    """
+    Detects the user interface type based on the current environment and
+    sets up the default configuration for that user interface type. This
+    includes setting up color systems, display hooks, and CSS styles and
+    other functionality as needed.
+    """
+    ui_type: AutoDetectableUserInterfaceType.Literals = detect_ui_type()
+    runtime.config.user_interface_type = ui_type
+
+    ui_type_data_config = runtime.config.data.ui.get_ui_type_config(ui_type)
+    ui_type_data_config.color.system = detect_display_color_system(ui_type)
+
+    match ui_type:
+        case x if UserInterfaceType.is_jupyter_in_browser(x):
+            setup_css_if_running_in_jupyter_in_browser(ui_type_data_config.color)
+        case x if UserInterfaceType.is_plain_terminal(x):
+            setup_displayhook_if_plain_terminal()
 
 
 def running_in_ipython_terminal() -> bool:
@@ -130,50 +156,51 @@ def setup_displayhook_if_plain_terminal() -> None:
         sys.displayhook = _omnipy_displayhook
 
 
-def setup_css_if_running_in_jupyter_in_browser() -> None:
+def setup_css_if_running_in_jupyter_in_browser(jupyter_color_config: IsColorConfig) -> None:
     """
-    Displays the CSS styles for Jupyter Notebook or JupyterLab, given that
-    the Jupyter environment is detected.
+    Displays the CSS styles for Jupyter Notebook or JupyterLab. Also adds
+    a reactive background color updater to monitor changes in the web page
+    background color and update the UI accordingly.
     """
-    if running_in_jupyter_in_browser():
-        from IPython.display import display, HTML
-        display(
-            HTML("""
-            Note: Some CSS styling related to Solara/Vuetify was added by
-            Omnipy to Jupyter Notebook or JupyterLab.
-        <style>
-        /*
-        Workaround for an issue where cells that are far out of view
-        lose their padding. This causes issues with panels resizing
-        when scrolling quickly.
-        */
-        .jp-Cell {
-            padding: var(--jp-cell-padding) !important;
-        }
+    from IPython.display import display, HTML
+    display(
+        HTML("""
+        Note: Some CSS styling related to Solara/Vuetify was added by
+        Omnipy to Jupyter Notebook or JupyterLab.
+    <style>
+    /*
+    Workaround for an issue where cells that are far out of view
+    lose their padding. This causes issues with panels resizing
+    when scrolling quickly.
+    */
+    .jp-Cell {
+        padding: var(--jp-cell-padding) !important;
+    }
 
-        /*
-        Workaround to remove horizontal spacing for vuetify code elements
-        */
-        :where(.vuetify-styles) .v-application code:after,
-        :where(.vuetify-styles) .v-application code:before,
-        :where(.vuetify-styles) .v-application kbd:after,
-        :where(.vuetify-styles) .v-application kbd:before {
-            content: none;
-            letter-spacing: 0px;
-        }
+    /*
+    Workaround to remove horizontal spacing for vuetify code elements
+    */
+    :where(.vuetify-styles) .v-application code:after,
+    :where(.vuetify-styles) .v-application code:before,
+    :where(.vuetify-styles) .v-application kbd:after,
+    :where(.vuetify-styles) .v-application kbd:before {
+        content: none;
+        letter-spacing: 0px;
+    }
 
-        /*
-        Remove Vuetify background color in order to support
-        transparent-background=True
-        */
-        :where(.vuetify-styles) .v-application code {
-            background-color: unset;
-        }
-        :where(.vuetify-styles) .theme--dark.v-sheet {
-            background-color: unset;
-        }
-        :where(.vuetify-styles) .theme--light.v-sheet {
-            background-color: unset;
-        }
-        </style>
-        """))
+    /*
+    Remove Vuetify background color in order to support
+    transparent-background=True
+    */
+    :where(.vuetify-styles) .v-application code {
+        background-color: unset;
+    }
+    :where(.vuetify-styles) .theme--dark.v-sheet {
+        background-color: unset;
+    }
+    :where(.vuetify-styles) .theme--light.v-sheet {
+        background-color: unset;
+    }
+    </style>
+    """))
+    display(ReactiveBgColorUpdater(jupyter_color_config))

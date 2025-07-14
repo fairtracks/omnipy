@@ -14,6 +14,7 @@ from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
                                      ConfigPersistOutputsOptions,
                                      ConfigRestoreOutputsOptions,
                                      EngineChoice)
+from omnipy.shared.enums.ui import SpecifiedUserInterfaceType
 from omnipy.shared.protocols.util import IsDataPublisher
 from omnipy.shared.typedefs import LocaleType
 import omnipy.util._pydantic as pyd
@@ -117,6 +118,12 @@ class IsUserInterfaceConfig(IsDataPublisher, Protocol):
     text: IsTextConfig
     layout: IsLayoutConfig
     cache_dir_path: str
+
+    def get_ui_type_config(
+        self,
+        ui_type: SpecifiedUserInterfaceType.Literals,
+    ) -> IsUserInterfaceTypeConfig:
+        ...
 
 
 @runtime_checkable

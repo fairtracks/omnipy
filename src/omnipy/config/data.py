@@ -24,7 +24,7 @@ from omnipy.shared.enums.display import (DisplayColorSystem,
                                          PanelDesign,
                                          PrettyPrinterLib,
                                          VerticalOverflowMode)
-from omnipy.shared.enums.ui import UserInterfaceType
+from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
 from omnipy.shared.protocols.config import (IsBrowserUserInterfaceConfig,
                                             IsColorConfig,
                                             IsFontConfig,
@@ -36,7 +36,8 @@ from omnipy.shared.protocols.config import (IsBrowserUserInterfaceConfig,
                                             IsOverflowConfig,
                                             IsTerminalUserInterfaceConfig,
                                             IsTextConfig,
-                                            IsUserInterfaceConfig)
+                                            IsUserInterfaceConfig,
+                                            IsUserInterfaceTypeConfig)
 import omnipy.util._pydantic as pyd
 
 
@@ -231,6 +232,18 @@ class UserInterfaceConfig(ConfigBase):
     text: IsTextConfig = pyd.Field(default_factory=TextConfig)
     layout: IsLayoutConfig = pyd.Field(default_factory=LayoutConfig)
     cache_dir_path: str = pyd.Field(default_factory=_get_cache_dir_path)
+
+    def get_ui_type_config(
+        self,
+        ui_type: SpecifiedUserInterfaceType.Literals,
+    ) -> IsUserInterfaceTypeConfig:  # pyright: ignore [reportReturnType]
+        match ui_type:
+            case x if UserInterfaceType.is_terminal(x):
+                return self.terminal
+            case x if UserInterfaceType.is_jupyter(x):
+                return self.jupyter
+            case x if UserInterfaceType.is_browser(x):
+                return self.browser
 
 
 class ModelConfig(ConfigBase):

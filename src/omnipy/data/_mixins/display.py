@@ -4,8 +4,6 @@ import functools
 import inspect
 from typing import Any, cast, Literal, TYPE_CHECKING
 
-from typing_extensions import assert_never
-
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
@@ -18,9 +16,7 @@ from omnipy.data.helpers import FailedData, PendingData
 from omnipy.hub.ui import detect_ui_type, get_terminal_prompt_height
 from omnipy.shared.enums.display import DisplayColorSystem, MaxTitleHeight, SyntaxLanguage
 from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
-from omnipy.shared.protocols.config import (IsHtmlUserInterfaceConfig,
-                                            IsUserInterfaceConfig,
-                                            IsUserInterfaceTypeConfig)
+from omnipy.shared.protocols.config import IsHtmlUserInterfaceConfig, IsUserInterfaceTypeConfig
 import omnipy.util._pydantic as pyd
 
 if TYPE_CHECKING:
@@ -164,22 +160,6 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 return stylized_panel.colorized.html_tag
             case x if UserInterfaceType.requires_html_page_output(x):
                 return stylized_panel.colorized.html_page
-
-    @staticmethod
-    def _get_ui_type_config(
-        ui_config: IsUserInterfaceConfig,
-        ui_type: SpecifiedUserInterfaceType.Literals,
-    ) -> IsUserInterfaceTypeConfig:
-        match ui_type:
-            case x if UserInterfaceType.is_terminal(x):
-                ui_config_attr = 'terminal'
-            case x if UserInterfaceType.is_jupyter(x):
-                ui_config_attr = 'jupyter'
-            case x if UserInterfaceType.is_browser(x):
-                ui_config_attr = 'browser'
-            case _ as never:
-                raise assert_never(never)  # pyright: ignore [reportArgumentType]
-        return getattr(ui_config, ui_config_attr)
 
     def _get_output_config(self, ui_type: SpecifiedUserInterfaceType.Literals) -> OutputConfig:
         ui_config = cast(DataClassBase, self).config.ui
