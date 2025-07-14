@@ -76,8 +76,8 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.data.ui.terminal.color.transparent_background is True
 
     assert isinstance(config.data.ui.jupyter, JupyterUserInterfaceConfig)
-    assert config.data.ui.jupyter.width == 120
-    assert config.data.ui.jupyter.height == 50
+    assert config.data.ui.jupyter.width == 112
+    assert config.data.ui.jupyter.height == 48
     assert config.data.ui.jupyter.dims_mode == DisplayDimensionsUpdateMode.AUTO
     assert isinstance(config.data.ui.jupyter.color, ColorConfig)
     assert config.data.ui.jupyter.color.system is DisplayColorSystem.ANSI_RGB
