@@ -113,6 +113,13 @@ class JupyterEmbeddedUserInterfaceType(LiteralEnum[str]):
     """
 
 
+class SupportsDarkTerminalBgDetection(TerminalUserInterfaceType, JupyterEmbeddedUserInterfaceType):
+    Literals = Literal[
+        TerminalUserInterfaceType.Literals,
+        JupyterEmbeddedUserInterfaceType.Literals,
+    ]
+
+
 class JupyterInBrowserUserInterfaceType(LiteralEnum[str]):
     Literals = Literal['jupyter']
 
@@ -295,6 +302,20 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
          {_TYPEIS_NARROW_NOTE}
         """
         return ui_type in JupyterEmbeddedUserInterfaceType
+
+    @classmethod
+    def supports_dark_terminal_bg_detection(
+            cls, ui_type: 'UserInterfaceType.Literals'
+    ) -> TypeIs[SupportsDarkTerminalBgDetection.Literals]:
+        f"""
+        Check whether the user interface type supports detection of dark
+        background color by checking environment variables or using
+        ANSI terminal functionality. This is typically the case for
+        Jupyter notebooks embedded in IDEs, such as PyCharm, or other
+        terminals.
+         {_TYPEIS_NARROW_NOTE}
+        """
+        return ui_type in SupportsDarkTerminalBgDetection
 
     @classmethod
     def is_jupyter_in_browser(

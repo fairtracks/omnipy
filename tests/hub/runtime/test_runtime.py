@@ -72,7 +72,7 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.data.ui.terminal.dims_mode == DisplayDimensionsUpdateMode.AUTO
     assert isinstance(config.data.ui.terminal.color, ColorConfig)
     assert config.data.ui.terminal.color.system == DisplayColorSystem.AUTO
-    assert config.data.ui.terminal.color.style == RecommendedColorStyles.ANSI_DARK
+    assert config.data.ui.terminal.color.style == RecommendedColorStyles.ANSI_LIGHT
     assert config.data.ui.terminal.color.transparent_background is True
 
     assert isinstance(config.data.ui.jupyter, JupyterUserInterfaceConfig)

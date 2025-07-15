@@ -29,6 +29,8 @@ def detect_and_setup_user_interface(runtime: 'Runtime') -> None:
 
     ui_type_data_config = runtime.config.data.ui.get_ui_type_config(ui_type)
     ui_type_data_config.color.system = detect_display_color_system(ui_type)
+    if UserInterfaceType.supports_dark_terminal_bg_detection(ui_type):
+        ui_type_data_config.color.dark_background = detect_dark_terminal_background()
 
     match ui_type:
         case x if UserInterfaceType.is_jupyter_in_browser(x):
@@ -110,6 +112,31 @@ def detect_display_color_system(
         else:
             assert rich_color_system in DisplayColorSystem
             return cast(DisplayColorSystem.Literals, rich_color_system)
+
+
+def detect_dark_terminal_background() -> bool:
+    from term_background import is_dark_background
+
+    color_fg_bg = os.environ.get('COLORFGBG', None)
+    if color_fg_bg is not None:
+        dark_from_color_fg_bg = _is_dark_from_color_fg_bg_nuanced(color_fg_bg)
+        if dark_from_color_fg_bg is not None:
+            return dark_from_color_fg_bg
+
+    return is_dark_background()
+
+
+def _is_dark_from_color_fg_bg_nuanced(color_fg_bg: str) -> bool | None:
+    # COLORFGBG is set, use it to determine the background color
+    try:
+        parts = color_fg_bg.split(';')
+        fg = int(parts[0])
+        bg = int(parts[-1])
+        # Dark background if bg is less than foreground
+        # term_background.py only considers values 0 and 15
+        return bg < fg
+    except ValueError:
+        return None
 
 
 def get_terminal_prompt_height(

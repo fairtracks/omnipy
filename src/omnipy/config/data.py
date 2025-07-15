@@ -5,7 +5,6 @@ import shutil
 from typing import Any, TypedDict
 
 from pydantic import BaseModel
-from term_background import is_dark_background
 from typing_extensions import override
 
 from omnipy.config import ConfigBase
@@ -144,10 +143,6 @@ class TerminalUserInterfaceConfig(DimsModeConfig):
             cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
         width, height = shutil.get_terminal_size(fallback=(-1, -1))
         return None if width == -1 else width, None if height == -1 else height
-
-    def __init__(self, **data: Any) -> None:
-        super().__init__(**data)
-        self.color.dark_background = is_dark_background()
 
 
 class FontConfig(ConfigBase):
