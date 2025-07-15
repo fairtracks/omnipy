@@ -29,7 +29,6 @@ class RootLogConfig(ConfigBase):
 
     def _iter(self, **kwargs) -> Generator[tuple[str, Any], None, None]:  # type: ignore[override]
         for key, val in super()._iter(**kwargs):
-            print(f'Processing key: {key}, value: {repr(val)}')
             if key in ['stdout', 'stderr']:
                 # Convert TextIOBase to str for serialization
                 yield key, repr(val)
