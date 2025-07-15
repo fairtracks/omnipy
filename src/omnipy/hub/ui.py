@@ -4,6 +4,7 @@ from typing import cast, TYPE_CHECKING
 
 import rich.console
 
+from omnipy.data._display.integrations.jupyter.components import ReactiveBgColorUpdater
 from omnipy.data.typechecks import is_model_instance
 from omnipy.shared.enums.display import DisplayColorSystem
 from omnipy.shared.enums.ui import (AutoDetectableUserInterfaceType,
@@ -11,8 +12,6 @@ from omnipy.shared.enums.ui import (AutoDetectableUserInterfaceType,
                                     TerminalOutputUserInterfaceType,
                                     UserInterfaceType)
 from omnipy.shared.protocols.config import IsColorConfig
-
-from ..data._display.jupyter.components import ReactiveBgColorUpdater
 
 if TYPE_CHECKING:
     from .runtime import Runtime

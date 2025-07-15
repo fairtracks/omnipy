@@ -189,7 +189,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         match ui_type:
             case x if UserInterfaceType.is_jupyter_in_browser(x):
-                from omnipy.data._display.jupyter.components import ReactivelyResizingHtml
+                from omnipy.data._display.integrations.jupyter.components import \
+                    ReactivelyResizingHtml
                 element: Element = ReactivelyResizingHtml(
                     cast(Dataset | Model, self),
                     output_method=_render_output,

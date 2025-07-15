@@ -36,7 +36,7 @@ def _is_dark_background(bg_color: str) -> bool:
     return False
 
 
-@solara.component
+@solara.component  # pyright: ignore [reportPrivateImportUsage]
 def ReactiveBgColorUpdater(color_config: IsColorConfig):
     with GetPageBgColor(
             bg_color=_bg_color.value,
@@ -60,7 +60,7 @@ def GetAvailableDisplayDims(
     ...
 
 
-@solara.component
+@solara.component  # pyright: ignore [reportPrivateImportUsage]
 def ShowHtml(
     obj: 'Dataset | Model',
     bg_color: str,
@@ -84,7 +84,7 @@ def ShowHtml(
     )
 
 
-@solara.component
+@solara.component  # pyright: ignore [reportPrivateImportUsage]
 def ReactivelyResizingHtml(
     obj: 'Dataset | Model',
     output_method: Method[P, str],
