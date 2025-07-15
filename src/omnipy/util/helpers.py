@@ -17,13 +17,16 @@ from typing import _LiteralSpecialForm  # type: ignore[attr-defined]
 from typing import _UnionGenericAlias  # type: ignore[attr-defined]
 from typing import (_SpecialForm,
                     Any,
+                    Callable,
                     cast,
+                    Concatenate,
                     ForwardRef,
                     get_args,
                     get_origin,
                     Literal,
                     Mapping,
                     overload,
+                    ParamSpec,
                     TypeAlias,
                     TypeGuard,
                     Union)
@@ -37,6 +40,8 @@ import omnipy.util._pydantic as pyd
 _KeyT = TypeVar('_KeyT', bound=Hashable)
 _ObjT = TypeVar('_ObjT', bound=object)
 _DataclassT = TypeVar('_DataclassT', bound=IsDataclass)
+_P = ParamSpec('_P')
+_RetT = TypeVar('_RetT')
 
 Dictable: TypeAlias = Mapping[_KeyT, Any] | Iterable[tuple[_KeyT, Any]]
 
@@ -218,6 +223,12 @@ def is_non_str_byte_iterable(obj: object) -> bool:
 
 def ensure_non_str_byte_iterable(value):
     return value if is_non_str_byte_iterable(value) else (value,)
+
+
+def takes_input_params_from(
+    func: Callable[Concatenate[Any, _P], Any]
+) -> Callable[[Callable[Concatenate[Any, _P], _RetT]], Callable[Concatenate[Any, _P], _RetT]]:
+    return lambda _: _
 
 
 def has_items(obj: object) -> bool:

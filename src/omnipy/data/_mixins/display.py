@@ -31,6 +31,7 @@ from omnipy.shared.enums.ui import (BrowserPageUserInterfaceType,
 from omnipy.shared.protocols.config import IsHtmlUserInterfaceConfig, IsUserInterfaceTypeConfig
 from omnipy.shared.typedefs import Method, TypeForm
 import omnipy.util._pydantic as pyd
+from omnipy.util.helpers import takes_input_params_from
 
 if TYPE_CHECKING:
     from IPython.lib.pretty import RepresentationPrinter
@@ -47,6 +48,31 @@ P = ParamSpec('P')
 LiteralT = TypeVar('LiteralT', bound=LiteralString)
 
 
+@pyd.dataclass(
+    kw_only=True,
+    frozen=True,
+    config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True),
+)
+class _DimensionsRestatedParams:
+    """
+    NOTE: Only used to generate parameter lists, not a real dataclass
+    """
+    width: pyd.NonNegativeInt | None = None
+    height: pyd.NonNegativeInt | None = None
+
+
+@pyd.dataclass(
+    kw_only=True,
+    frozen=True,
+    config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True),
+)
+class _DisplayMethodParams(OutputConfig, _DimensionsRestatedParams):
+    """
+    NOTE: Only used to generate parameter lists, not a real dataclass
+    """
+    ...
+
+
 class BaseDisplayMixin(metaclass=ABCMeta):
     @abstractmethod
     def _default_panel(self) -> DraftPanel:
@@ -60,15 +86,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             output_method=self._default_panel,
         )
 
-    def peek(self) -> 'Element | None':
+    @takes_input_params_from(_DisplayMethodParams.__init__)
+    def peek(self, **kwargs) -> 'Element | None':
+
         return self._display_according_to_ui_type(
             ui_type=self._detect_ui_type_if_auto(UserInterfaceType.AUTO),
             return_output_if_str=False,
             output_method=self._peek,
-        )
+            **kwargs)
 
     @abstractmethod
-    def _peek(self) -> DraftPanel:
+    def _peek(self, **kwargs) -> DraftPanel:
         ...
 
     def __str__(self) -> str:
@@ -215,13 +243,27 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 else:
                     print(output)
 
-    def _peek_models(self, models: dict[str, 'Model']) -> DraftPanel:
+    def _peek_models(self, models: dict[str, 'Model'], **kwargs) -> DraftPanel:
         from omnipy.data.dataset import Dataset
 
         ui_type = self._detect_ui_type_if_auto(UserInterfaceType.AUTO)
         frame = self._define_frame_from_available_display_dims(ui_type)
         config = self._get_output_config(ui_type)
         layout: Layout[DraftPanel] = Layout()
+
+        frame_kwargs = {
+            k: v for k, v in kwargs.items() if k in _DimensionsRestatedParams.__annotations__
+        }
+        config_kwargs = {k: v for k, v in kwargs.items() if k in OutputConfig.__annotations__}
+        extra_keys = (kwargs.keys() - frame_kwargs.keys() - config_kwargs.keys())
+        if extra_keys:
+            raise TypeError(f'Unexpected keyword arguments: {", ".join(extra_keys)}. '
+                            f'Expected only Dimensions and OutputConfig parameters.')
+
+        if frame_kwargs:
+            frame = frame.modified_copy(**frame_kwargs)  # type: ignore[call-arg]
+        if config_kwargs:
+            config = dataclasses.replace(config, **config_kwargs)
 
         for title, model in models.items():
             outer_type = model.outer_type()
@@ -399,9 +441,9 @@ class ModelDisplayMixin(BaseDisplayMixin):
     def _default_panel(self) -> DraftPanel:
         return self._peek()
 
-    def _peek(self) -> DraftPanel:
+    def _peek(self, **kwargs) -> DraftPanel:
         self_as_model = cast('Model', self)
-        return self._peek_models(models={self.__class__.__name__: self_as_model})
+        return self._peek_models(models={self.__class__.__name__: self_as_model}, **kwargs)
 
     def browse(self) -> None:
         self_as_model = cast('Model', self)
@@ -426,11 +468,14 @@ class DatasetDisplayMixin(BaseDisplayMixin):
     def _default_panel(self) -> DraftPanel:
         return self._list()
 
-    def _peek(self) -> DraftPanel:
+    def _peek(self, **kwargs) -> DraftPanel:
         self_as_dataset = cast('Dataset', self)
-        return self._peek_models(models={
-            f'{i}. {title}': model for i, (title, model) in enumerate(self_as_dataset.data.items())
-        })
+        return self._peek_models(
+            models={
+                f'{i}. {title}': model
+                for i, (title, model) in enumerate(self_as_dataset.data.items())
+            },
+            **kwargs)
 
     def list(self) -> 'Element | None':
         return self._display_according_to_ui_type(
