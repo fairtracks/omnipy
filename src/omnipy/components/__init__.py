@@ -22,7 +22,3 @@ def get_serializer_registry():
     if len(serializer_registry.serializers) == 0:
         register_serializers(serializer_registry)
     return serializer_registry
-
-
-# TODO: Add module with helper classes/functions/takss to make it simpler to contact REST apis
-#       Augmentation service should have some attempts at this.
