@@ -234,25 +234,43 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         return DraftPanel(layout, frame=frame, config=config)
 
     def _browse_models(self, models: dict[str, 'Model']) -> None:
+        self_as_dataclass = cast(DataClassBase, self)
+
+        html_output = {}
         all_urls = []
         for name, model in models.items():
-
-            html_output = model._display_according_to_ui_type(
+            filename = f'{name}_{id(self)}.html'
+            html_output[filename] = model._display_according_to_ui_type(
                 ui_type=UserInterfaceType.BROWSER_PAGE,
                 return_output_if_str=True,
                 output_method=model._browse,
             )
 
-            file_path = model._create_cached_html_file(name, html_output)
-            all_urls.append(file_path.as_uri())
-
-        browser = webbrowser.get()
-        if isinstance(browser, OmnipyMacOSXOSAScript):
-            webbrowser.open_new(all_urls)  # type: ignore[arg-type]
+        if self_as_dataclass.config.ui.detected_type is UserInterfaceType.JUPYTER:
+            from omnipy.data._display.integrations.jupyter.components import BrowseModels
+            BrowseModels(html_contents=html_output)._ipython_display_()
         else:
-            # For other browsers, we open each URL in a new tab
-            for i, url in enumerate(all_urls):
-                webbrowser.open(url, new=(i == 0))
+            for filename, html_content in html_output.items():
+                file_path = self._create_cached_html_file(filename, html_content)
+                all_urls.append(file_path.as_uri())
+
+            browser = webbrowser.get()
+            if isinstance(browser, OmnipyMacOSXOSAScript):
+                webbrowser.open_new(all_urls)  # type: ignore[arg-type]
+            else:
+                # For other browsers, we open each URL in a new tab
+                for i, url in enumerate(all_urls):
+                    webbrowser.open(url, new=(i == 0))
+
+    def _create_cached_html_file(self, filename: str, html_output: str) -> Path:
+        self_as_dataclass = cast(DataClassBase, self)
+
+        file_path = Path(self_as_dataclass.config.ui.cache_dir_path) / filename
+
+        with open(file_path, 'w', encoding='utf-8') as html_file:
+            html_file.write(html_output)
+
+        return file_path
 
     def _create_inner_panel_for_model(
         self,
@@ -402,17 +420,6 @@ class ModelDisplayMixin(BaseDisplayMixin):
             self_as_model.outer_type(),
             frame=frame,
         )
-
-    def _create_cached_html_file(self, name: str, html_output: str) -> Path:
-        self_as_model = cast('Model', self)
-
-        file_path = Path(self_as_model.config.ui.cache_dir_path) \
-            / f'{name}_{id(self)}.html'
-
-        with open(file_path, 'w', encoding='utf-8') as html_file:
-            html_file.write(html_output)
-
-        return file_path
 
 
 class DatasetDisplayMixin(BaseDisplayMixin):

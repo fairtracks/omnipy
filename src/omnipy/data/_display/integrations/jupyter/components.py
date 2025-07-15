@@ -118,3 +118,12 @@ def GetPageBgColor(
     style={},
 ):
     ...
+
+
+@solara.component_vue('browse.vue')
+def BrowseModels(
+    html_contents: dict[str, str],
+    children=[],
+    style={},
+):
+    ...
