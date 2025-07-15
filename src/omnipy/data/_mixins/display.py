@@ -78,8 +78,10 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _default_panel(self) -> DraftPanel:
         ...
 
-    def default_repr_to_terminal_str(self,
-                                     ui_type: TerminalOutputUserInterfaceType.Literals) -> str:
+    def default_repr_to_terminal_str(
+        self,
+        ui_type: TerminalOutputUserInterfaceType.Literals,
+    ) -> str:
         return self._display_according_to_ui_type(
             ui_type=ui_type,
             return_output_if_str=True,
@@ -104,6 +106,26 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             **kwargs)
 
     @takes_input_params_from(_DisplayMethodParams.__init__)
+    def full(self, **kwargs) -> 'Element | None':
+        """
+        Displays a full-height version of the default representation of the
+        model or dataset. This is the same as `peek(height=None)` for
+        models, and `list(height=None)` for datasets. Both views
+        are automatically limited in width by the available display
+        dimensions.
+        :return: If the UI type is Jupyter runnint in in browser, `peek`
+        returns a ReactivelyResizingHtml element which is a Jupyter widget
+        to display HTML output in the browser. Otherwise, returns None.
+        """
+        kwargs_copy = kwargs.copy()
+        kwargs_copy['height'] = None
+        return self._display_according_to_ui_type(
+            ui_type=self._detect_ui_type_if_auto(UserInterfaceType.AUTO),
+            return_output_if_str=False,
+            output_method=self._full,
+            **kwargs_copy)
+
+    @takes_input_params_from(_DisplayMethodParams.__init__)
     def browse(self, **kwargs) -> None:
         """
         Opens the model or dataset in a browser, if possible. For models,
@@ -115,6 +137,10 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
     @abstractmethod
     def _peek(self, **kwargs) -> DraftPanel:
+        ...
+
+    @abstractmethod
+    def _full(self, **kwargs) -> DraftPanel:
         ...
 
     @abstractmethod
@@ -494,6 +520,9 @@ class ModelDisplayMixin(BaseDisplayMixin):
         self_as_model = cast('Model', self)
         return self._peek_models(models={self.__class__.__name__: self_as_model}, **kwargs)
 
+    def _full(self, **kwargs) -> DraftPanel:
+        return self._peek(**kwargs)
+
     def _browse(self, **kwargs) -> None:
         self_as_model = cast('Model', self)
         self._browse_models(models={self_as_model.__class__.__name__: self_as_model}, **kwargs)
@@ -528,6 +557,9 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 for i, (title, model) in enumerate(self_as_dataset.data.items())
             },
             **kwargs)
+
+    def _full(self, **kwargs) -> DraftPanel:
+        return self._list(**kwargs)
 
     @takes_input_params_from(_DisplayMethodParams.__init__)
     def list(self, **kwargs) -> 'Element | None':
