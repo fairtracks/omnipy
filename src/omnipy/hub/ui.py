@@ -25,7 +25,7 @@ def detect_and_setup_user_interface(runtime: 'Runtime') -> None:
     other functionality as needed.
     """
     ui_type: AutoDetectableUserInterfaceType.Literals = detect_ui_type()
-    runtime.config.user_interface_type = ui_type
+    runtime.config.data.ui.detected_type = ui_type
 
     ui_type_data_config = runtime.config.data.ui.get_ui_type_config(ui_type)
     ui_type_data_config.color.system = detect_display_color_system(ui_type)

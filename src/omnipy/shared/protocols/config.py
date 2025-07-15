@@ -14,7 +14,7 @@ from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
                                      ConfigPersistOutputsOptions,
                                      ConfigRestoreOutputsOptions,
                                      EngineChoice)
-from omnipy.shared.enums.ui import SpecifiedUserInterfaceType
+from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
 from omnipy.shared.protocols.util import IsDataPublisher
 from omnipy.shared.typedefs import LocaleType
 import omnipy.util._pydantic as pyd
@@ -112,6 +112,7 @@ class IsLayoutConfig(IsDataPublisher, Protocol):
 @runtime_checkable
 class IsUserInterfaceConfig(IsDataPublisher, Protocol):
     """"""
+    detected_type: UserInterfaceType.Literals
     terminal: IsTerminalUserInterfaceConfig
     jupyter: IsJupyterUserInterfaceConfig
     browser: IsBrowserUserInterfaceConfig

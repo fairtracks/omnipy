@@ -226,6 +226,7 @@ class UserInterfaceConfig(ConfigBase):
     Configuration for the user interface, including inputs and output
     devices.
     """
+    detected_type: UserInterfaceType.Literals = UserInterfaceType.AUTO
     terminal: IsTerminalUserInterfaceConfig = pyd.Field(default_factory=TerminalUserInterfaceConfig)
     jupyter: IsJupyterUserInterfaceConfig = pyd.Field(default_factory=JupyterUserInterfaceConfig)
     browser: IsBrowserUserInterfaceConfig = pyd.Field(default_factory=BrowserUserInterfaceConfig)

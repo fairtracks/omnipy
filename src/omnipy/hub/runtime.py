@@ -14,7 +14,6 @@ from omnipy.hub._registry import RunStateRegistry
 from omnipy.hub.log._root_log import RootLogObjects
 from omnipy.hub.ui import detect_and_setup_user_interface
 from omnipy.shared.enums.job import EngineChoice
-from omnipy.shared.enums.ui import UserInterfaceType
 from omnipy.shared.protocols.compute.job_creator import IsJobConfigHolder
 from omnipy.shared.protocols.config import (IsDataConfig,
                                             IsEngineConfig,
@@ -54,7 +53,6 @@ class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
     engine: IsEngineConfig = pyd.Field(default_factory=EngineConfig)
     job: IsJobConfig = pyd.Field(default_factory=_job_config_factory)
     root_log: IsRootLogConfig = pyd.Field(default_factory=RootLogConfig)
-    user_interface_type: UserInterfaceType.Literals = UserInterfaceType.AUTO
 
     def reset_to_defaults(self) -> None:
         prev_back = self._back
