@@ -53,7 +53,7 @@ LiteralT = TypeVar('LiteralT', bound=LiteralString)
     frozen=True,
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True),
 )
-class _DimensionsRestatedParams:
+class _DimsRestatedParams:
     """
     NOTE: Only used to generate parameter lists, not a real dataclass
     """
@@ -66,7 +66,7 @@ class _DimensionsRestatedParams:
     frozen=True,
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True),
 )
-class _DisplayMethodParams(OutputConfig, _DimensionsRestatedParams):
+class _DisplayMethodParams(OutputConfig, _DimsRestatedParams):
     """
     NOTE: Only used to generate parameter lists, not a real dataclass
     """
@@ -88,15 +88,37 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
     @takes_input_params_from(_DisplayMethodParams.__init__)
     def peek(self, **kwargs) -> 'Element | None':
-
+        """
+        Displays a preview of the model or dataset. For models, this is a
+        preview of the model's contents, and for datasets, this is a
+        side-by-side view of each model contained in the dataset. Both views
+        are automatically limited by the available display dimensions.
+        :return: If the UI type is Jupyter runnint in in browser, `peek`
+        returns a ReactivelyResizingHtml element which is a Jupyter widget
+        to display HTML output in the browser. Otherwise, returns None.
+        """
         return self._display_according_to_ui_type(
             ui_type=self._detect_ui_type_if_auto(UserInterfaceType.AUTO),
             return_output_if_str=False,
             output_method=self._peek,
             **kwargs)
 
+    @takes_input_params_from(_DisplayMethodParams.__init__)
+    def browse(self, **kwargs) -> None:
+        """
+        Opens the model or dataset in a browser, if possible. For models,
+        this is a detailed view of the model's contents, and for datasets
+        this is a detailed view of each model contained in the dataset,
+        one model per browser tab.
+        """
+        self._browse(**kwargs)
+
     @abstractmethod
     def _peek(self, **kwargs) -> DraftPanel:
+        ...
+
+    @abstractmethod
+    def _browse(self, **kwargs) -> None:
         ...
 
     def __str__(self) -> str:
@@ -251,19 +273,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         config = self._get_output_config(ui_type)
         layout: Layout[DraftPanel] = Layout()
 
-        frame_kwargs = {
-            k: v for k, v in kwargs.items() if k in _DimensionsRestatedParams.__annotations__
-        }
-        config_kwargs = {k: v for k, v in kwargs.items() if k in OutputConfig.__annotations__}
-        extra_keys = (kwargs.keys() - frame_kwargs.keys() - config_kwargs.keys())
-        if extra_keys:
-            raise TypeError(f'Unexpected keyword arguments: {", ".join(extra_keys)}. '
-                            f'Expected only Dimensions and OutputConfig parameters.')
-
-        if frame_kwargs:
-            frame = frame.modified_copy(**frame_kwargs)  # type: ignore[call-arg]
-        if config_kwargs:
-            config = dataclasses.replace(config, **config_kwargs)
+        frame = self._apply_kwargs_to_frame(frame, **kwargs)
+        config = self._apply_kwargs_to_config(config, **kwargs)
 
         for title, model in models.items():
             outer_type = model.outer_type()
@@ -275,7 +286,44 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         config = self._set_overflow_modes_and_other_configs(config, 'layout')
         return DraftPanel(layout, frame=frame, config=config)
 
-    def _browse_models(self, models: dict[str, 'Model']) -> None:
+    def _apply_kwargs_to_frame(
+        self,
+        frame: Frame,
+        **kwargs,
+    ) -> Frame:
+
+        self._check_kwarg_keys(**kwargs)
+        frame_kwargs = {k: v for k, v in kwargs.items() if k in _DimsRestatedParams.__annotations__}
+        if frame_kwargs:
+            frame = frame.modified_copy(**frame_kwargs)  # type: ignore[call-arg]
+
+        return frame
+
+    def _apply_kwargs_to_config(
+        self,
+        config: OutputConfig,
+        **kwargs,
+    ) -> OutputConfig:
+
+        self._check_kwarg_keys(**kwargs)
+        config_kwargs = {k: v for k, v in kwargs.items() if k in OutputConfig.__annotations__}
+        if config_kwargs:
+            config = dataclasses.replace(config, **config_kwargs)
+
+        return config
+
+    def _check_kwarg_keys(self, **kwargs):
+        supported_keys = (
+            list(_DimsRestatedParams.__annotations__.keys())
+            + list(OutputConfig.__annotations__.keys()))
+        extra_keys = (kwargs.keys() - set(supported_keys))
+
+        if extra_keys:
+            raise TypeError(f'Unexpected keyword arguments: {", ".join(extra_keys)}. '
+                            f'Expected only Dimensions and OutputConfig parameters: '
+                            f'{", ".join(supported_keys)}.')
+
+    def _browse_models(self, models: dict[str, 'Model'], **kwargs) -> None:
         self_as_dataclass = cast(DataClassBase, self)
 
         html_output = {}
@@ -285,7 +333,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             html_output[filename] = model._display_according_to_ui_type(
                 ui_type=UserInterfaceType.BROWSER_PAGE,
                 return_output_if_str=True,
-                output_method=model._browse,
+                output_method=model._browse_model,
+                **kwargs,
             )
 
         if self_as_dataclass.config.ui.detected_type is UserInterfaceType.JUPYTER:
@@ -445,16 +494,19 @@ class ModelDisplayMixin(BaseDisplayMixin):
         self_as_model = cast('Model', self)
         return self._peek_models(models={self.__class__.__name__: self_as_model}, **kwargs)
 
-    def browse(self) -> None:
+    def _browse(self, **kwargs) -> None:
         self_as_model = cast('Model', self)
-        return self._browse_models(models={self_as_model.__class__.__name__: self_as_model})
+        self._browse_models(models={self_as_model.__class__.__name__: self_as_model}, **kwargs)
 
-    def _browse(self) -> DraftPanel:
+    def _browse_model(self, **kwargs) -> DraftPanel:
         self_as_model = cast('Model', self)
         ui_type = UserInterfaceType.BROWSER_PAGE
 
         frame = self._define_frame_from_available_display_dims(ui_type)
         config = self._get_output_config(ui_type)
+
+        frame = self._apply_kwargs_to_frame(frame, **kwargs)
+        config = self._apply_kwargs_to_config(config, **kwargs)
 
         return self._create_inner_panel_for_model(
             config,
@@ -477,14 +529,25 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             },
             **kwargs)
 
-    def list(self) -> 'Element | None':
+    @takes_input_params_from(_DisplayMethodParams.__init__)
+    def list(self, **kwargs) -> 'Element | None':
+        """
+        Displays a list of all models in the dataset, including their
+        data file names, types, lengths, and sizes in memory. The output
+        is automatically limited by the available display dimensions.
+
+        :return: If the UI type is Jupyter running in browser, `list`
+        returns a ReactivelyResizingHtml element which is a Jupyter widget
+        to display HTML output in the browser. Otherwise, returns None.
+        """
         return self._display_according_to_ui_type(
             ui_type=self._detect_ui_type_if_auto(UserInterfaceType.AUTO),
             return_output_if_str=False,
             output_method=self._list,
+            **kwargs,
         )
 
-    def _list(self) -> DraftPanel:
+    def _list(self, **kwargs) -> DraftPanel:
         from omnipy.data.dataset import Dataset
         dataset = cast(Dataset, self)
 
@@ -493,12 +556,15 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         config = self._get_output_config(ui_type)
 
         config = self._set_overflow_modes_and_other_configs(
-            config,
-            'layout',
-            max_title_height=MaxTitleHeight.ONE,
-        )
+            config, 'layout', max_title_height=MaxTitleHeight.ONE)
+
         right_justified_config = dataclasses.replace(config, justify_in_layout='right')
         text_config = dataclasses.replace(config, language=SyntaxLanguage.TEXT)
+
+        frame = self._apply_kwargs_to_frame(frame, **kwargs)
+        config = self._apply_kwargs_to_config(config, **kwargs)
+        right_justified_config = self._apply_kwargs_to_config(right_justified_config, **kwargs)
+        text_config = self._apply_kwargs_to_config(text_config, **kwargs)
 
         # TODO: Add dataset title for dataset peek()
         # _title = self.__class__.__name__
@@ -523,12 +589,15 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
         return DraftPanel(layout, frame=frame, config=config)
 
-    def browse(self) -> None:
+    def _browse(self, **kwargs) -> None:
         self_as_dataset = cast('Dataset', self)
 
-        return self._browse_models(models={
-            f'{i}. {title}': model for i, (title, model) in enumerate(self_as_dataset.data.items())
-        })
+        self._browse_models(
+            models={
+                f'{i}. {title}': model
+                for i, (title, model) in enumerate(self_as_dataset.data.items())
+            },
+            **kwargs)
 
     @classmethod
     def _type_str(cls, obj: Any) -> str:
