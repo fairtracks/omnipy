@@ -2,7 +2,10 @@ from abc import ABCMeta, abstractmethod
 import dataclasses
 import functools
 import inspect
+from pathlib import Path
+import sys
 from typing import Any, cast, Literal, overload, ParamSpec, TYPE_CHECKING
+import webbrowser
 
 from typing_extensions import assert_never, LiteralString, TypeVar
 
@@ -10,6 +13,8 @@ from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
+from omnipy.data._display.integrations.browser.macosx import (OmnipyMacOSXOSAScript,
+                                                              setup_macosx_browser_integration)
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
@@ -31,7 +36,12 @@ if TYPE_CHECKING:
     from IPython.lib.pretty import RepresentationPrinter
     from reacton.core import Element
 
+    from omnipy.data.dataset import Dataset
     from omnipy.data.model import Model
+
+if sys.platform == 'darwin':
+    # Register the macOS browser integration for webbrowser module
+    setup_macosx_browser_integration()
 
 P = ParamSpec('P')
 LiteralT = TypeVar('LiteralT', bound=LiteralString)
@@ -205,10 +215,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 else:
                     print(output)
 
-    def _peek_models(
-        self,
-        models: dict[str, 'Model'],
-    ) -> DraftPanel:
+    def _peek_models(self, models: dict[str, 'Model']) -> DraftPanel:
         from omnipy.data.dataset import Dataset
 
         ui_type = self._detect_ui_type_if_auto(UserInterfaceType.AUTO)
@@ -225,6 +232,27 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         config = self._set_overflow_modes_and_other_configs(config, 'layout')
         return DraftPanel(layout, frame=frame, config=config)
+
+    def _browse_models(self, models: dict[str, 'Model']) -> None:
+        all_urls = []
+        for name, model in models.items():
+
+            html_output = model._display_according_to_ui_type(
+                ui_type=UserInterfaceType.BROWSER_PAGE,
+                return_output_if_str=True,
+                output_method=model._browse,
+            )
+
+            file_path = model._create_cached_html_file(name, html_output)
+            all_urls.append(file_path.as_uri())
+
+        browser = webbrowser.get()
+        if isinstance(browser, OmnipyMacOSXOSAScript):
+            webbrowser.open_new(all_urls)  # type: ignore[arg-type]
+        else:
+            # For other browsers, we open each URL in a new tab
+            for i, url in enumerate(all_urls):
+                webbrowser.open(url, new=(i == 0))
 
     def _create_inner_panel_for_model(
         self,
@@ -354,8 +382,37 @@ class ModelDisplayMixin(BaseDisplayMixin):
         return self._peek()
 
     def _peek(self) -> DraftPanel:
-        from omnipy.data.model import Model
-        return self._peek_models(models={self.__class__.__name__: cast(Model, self)})
+        self_as_model = cast('Model', self)
+        return self._peek_models(models={self.__class__.__name__: self_as_model})
+
+    def browse(self) -> None:
+        self_as_model = cast('Model', self)
+        return self._browse_models(models={self_as_model.__class__.__name__: self_as_model})
+
+    def _browse(self) -> DraftPanel:
+        self_as_model = cast('Model', self)
+        ui_type = UserInterfaceType.BROWSER_PAGE
+
+        frame = self._define_frame_from_available_display_dims(ui_type)
+        config = self._get_output_config(ui_type)
+
+        return self._create_inner_panel_for_model(
+            config,
+            self_as_model,
+            self_as_model.outer_type(),
+            frame=frame,
+        )
+
+    def _create_cached_html_file(self, name: str, html_output: str) -> Path:
+        self_as_model = cast('Model', self)
+
+        file_path = Path(self_as_model.config.ui.cache_dir_path) \
+            / f'{name}_{id(self)}.html'
+
+        with open(file_path, 'w', encoding='utf-8') as html_file:
+            html_file.write(html_output)
+
+        return file_path
 
 
 class DatasetDisplayMixin(BaseDisplayMixin):
@@ -363,9 +420,8 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         return self._list()
 
     def _peek(self) -> DraftPanel:
-        from omnipy.data.dataset import Dataset
-        self_as_dataset = cast(Dataset, self)
-        return self._peek_models({
+        self_as_dataset = cast('Dataset', self)
+        return self._peek_models(models={
             f'{i}. {title}': model for i, (title, model) in enumerate(self_as_dataset.data.items())
         })
 
@@ -414,6 +470,13 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             config=right_justified_config)
 
         return DraftPanel(layout, frame=frame, config=config)
+
+    def browse(self) -> None:
+        self_as_dataset = cast('Dataset', self)
+
+        return self._browse_models(models={
+            f'{i}. {title}': model for i, (title, model) in enumerate(self_as_dataset.data.items())
+        })
 
     @classmethod
     def _type_str(cls, obj: Any) -> str:
