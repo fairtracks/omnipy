@@ -14,6 +14,11 @@ from omnipy.data._display.dimensions import (Dimensions,
 from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.helpers import soft_wrap_words
 from omnipy.data._display.panel.typedefs import FrameT
+from omnipy.shared.constants import (DOUBLE_LINE_TITLE_HEIGHT,
+                                     MIN_PANEL_LINES_SHOWN_TO_ALLOW_DOUBLE_LINE_TITLE,
+                                     MIN_PANEL_LINES_SHOWN_TO_ALLOW_SINGLE_LINE_TITLE,
+                                     SINGLE_LINE_TITLE_HEIGHT,
+                                     TITLE_BLANK_LINES)
 import omnipy.util._pydantic as pyd
 
 
@@ -95,13 +100,6 @@ def panel_is_fully_rendered(panel: 'Panel') -> TypeIs['FullyRenderedPanel']:
 
 
 class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
-    TITLE_BLANK_LINES = 1
-    DOUBLE_LINE_TITLE_HEIGHT = TITLE_BLANK_LINES + 2
-    SINGLE_LINE_TITLE_HEIGHT = TITLE_BLANK_LINES + 1
-
-    MIN_PANEL_LINES_SHOWN_TO_ALLOW_DOUBLE_LINE_TITLE = 8
-    MIN_PANEL_LINES_SHOWN_TO_ALLOW_SINGLE_LINE_TITLE = 3
-
     @cached_property
     @abstractmethod
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
@@ -174,19 +172,19 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
             return 2
 
         assert self._available_height_for_title is not None
-        if self._available_height_for_title >= self.DOUBLE_LINE_TITLE_HEIGHT:
+        if self._available_height_for_title >= DOUBLE_LINE_TITLE_HEIGHT:
             # Enough space for both single- or double-line titles
             return 2
-        elif self._available_height_for_title == self.SINGLE_LINE_TITLE_HEIGHT:
+        elif self._available_height_for_title == SINGLE_LINE_TITLE_HEIGHT:
             # Enough space for single-line title
             return 1
         else:  # title needs to make use of panel space
-            if (self.frame.dims.height - self.DOUBLE_LINE_TITLE_HEIGHT
-                    >= self.MIN_PANEL_LINES_SHOWN_TO_ALLOW_DOUBLE_LINE_TITLE):
+            if (self.frame.dims.height - DOUBLE_LINE_TITLE_HEIGHT
+                    >= MIN_PANEL_LINES_SHOWN_TO_ALLOW_DOUBLE_LINE_TITLE):
                 # Enough content shown for double-line title
                 return 2
-            elif (self.frame.dims.height - self.SINGLE_LINE_TITLE_HEIGHT
-                  >= self.MIN_PANEL_LINES_SHOWN_TO_ALLOW_SINGLE_LINE_TITLE):
+            elif (self.frame.dims.height - SINGLE_LINE_TITLE_HEIGHT
+                  >= MIN_PANEL_LINES_SHOWN_TO_ALLOW_SINGLE_LINE_TITLE):
                 # Enough content shown for single-line title
                 return 1
             else:
@@ -200,7 +198,7 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
         """
         if self._available_height_for_title is None:
             return False
-        return self._available_height_for_title < self.SINGLE_LINE_TITLE_HEIGHT
+        return self._available_height_for_title < SINGLE_LINE_TITLE_HEIGHT
 
     @cached_property
     def resized_title(self) -> list[str]:
@@ -228,7 +226,7 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
 
     @cached_property
     def title_height_with_blank_lines(self) -> int:
-        return self.title_height + self.TITLE_BLANK_LINES if self.title_height > 0 else 0
+        return self.title_height + TITLE_BLANK_LINES if self.title_height > 0 else 0
 
     @abstractmethod
     @override

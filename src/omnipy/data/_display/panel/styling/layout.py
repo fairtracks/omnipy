@@ -30,7 +30,8 @@ from omnipy.shared.constants import (PANEL_TITLE_BASE_16_TOKEN,
                                      PANEL_TITLE_EXTRA_STYLE,
                                      PANEL_TITLE_GENERAL_TOKEN,
                                      TABLE_BORDER_BASE_16_TOKEN,
-                                     TABLE_BORDER_GENERAL_TOKEN)
+                                     TABLE_BORDER_GENERAL_TOKEN,
+                                     TITLE_BLANK_LINES)
 from omnipy.shared.enums.display import DisplayColorSystem, PanelDesign
 from omnipy.util import _pydantic as pyd
 
@@ -213,7 +214,7 @@ class InnerPanelStyler:
     @property
     def _full_panel_title_height(self) -> int:
         if self._title_lines:
-            return self._panel.title_height + self._panel.TITLE_BLANK_LINES
+            return self._panel.title_height + TITLE_BLANK_LINES
         else:
             return 0
 
@@ -244,11 +245,10 @@ class InnerPanelStyler:
 
         if self._title_lines:
             if self._panel_title_at_top:
-                title_with_space = '\n'.join(self._title_lines
-                                             + [''] * (self._panel.TITLE_BLANK_LINES))
+                title_with_space = '\n'.join(self._title_lines + [''] * TITLE_BLANK_LINES)
             else:
                 num_blank_lines = (
-                    self._panel.TITLE_BLANK_LINES + self._num_extra_blank_lines_if_title_at_bottom)
+                    TITLE_BLANK_LINES + self._num_extra_blank_lines_if_title_at_bottom)
                 title_with_space = '\n'.join(([''] * num_blank_lines) + self._title_lines)
 
             title = rich.text.Text(
