@@ -15,12 +15,11 @@ from omnipy.data._display.dimensions import has_height, has_width
 from omnipy.data._display.panel.base import OutputVariant
 from omnipy.data._display.panel.cropping import (crop_content_lines_vertically2,
                                                  replace_ellipsis_lines_with_ellipses)
-from omnipy.data._display.panel.draft.base import ContentT
 from omnipy.data._display.panel.helpers import (calculate_bg_color_triplet_from_color_style,
                                                 calculate_fg_color_triplet_from_color_style,
                                                 ForceAutodetect)
 from omnipy.data._display.panel.styling.base import PanelT, StylizedMonospacedPanel
-from omnipy.data._display.panel.typedefs import FrameT
+from omnipy.data._display.panel.typedefs import ContentT, FrameT
 from omnipy.shared.enums.display import HorizontalOverflowMode
 from omnipy.util.helpers import extract_newline, max_newline_stripped_width, strip_and_split_newline
 from omnipy.util.literal_enum import LiteralEnum

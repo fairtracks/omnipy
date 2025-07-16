@@ -61,14 +61,14 @@ class ReflowedTextDraftPanel(
         draft_panel: DraftPanel[str | object, FrameInvT],
         other_content: str | None = None,
     ) -> 'ReflowedTextDraftPanel[FrameInvT]':
-        resized_panel: ReflowedTextDraftPanel[FrameInvT] = ReflowedTextDraftPanel(
-            draft_panel.content if other_content is None else other_content,
+        content = (draft_panel.content if other_content is None else other_content)
+        return ReflowedTextDraftPanel(
+            content,  # type: ignore[arg-type]
             title=draft_panel.title,
             frame=draft_panel.frame,
             constraints=draft_panel.constraints,
             config=draft_panel.config,
         )
-        return resized_panel
 
     @cached_property
     def _content_lines_generator(self) -> Iterator[list[str]]:

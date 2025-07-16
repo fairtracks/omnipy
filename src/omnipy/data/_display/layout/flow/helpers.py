@@ -6,12 +6,11 @@ from omnipy.data._display.dimensions import DimensionsWithWidthAndHeight, has_wi
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.base import panel_is_dimensions_aware
-from omnipy.data._display.panel.draft.base import (ContentT,
-                                                   DimensionsAwareDraftPanel,
+from omnipy.data._display.panel.draft.base import (DimensionsAwareDraftPanel,
                                                    DimensionsAwareDraftPanelLayout,
                                                    DraftPanel)
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
-from omnipy.data._display.panel.typedefs import FrameInvT, FrameT
+from omnipy.data._display.panel.typedefs import ContentT, FrameInvT, FrameT
 from omnipy.util import _pydantic as pyd
 
 # Functions

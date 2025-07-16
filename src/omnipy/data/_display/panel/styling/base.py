@@ -19,9 +19,8 @@ from typing_extensions import override, TypeVar
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
 from omnipy.data._display.panel.base import FullyRenderedPanel, OutputVariant
 from omnipy.data._display.panel.cropping import rich_overflow_method
-from omnipy.data._display.panel.draft.base import ContentT
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
-from omnipy.data._display.panel.typedefs import FrameT
+from omnipy.data._display.panel.typedefs import ContentT, FrameT
 from omnipy.shared.enums.display import DisplayColorSystem
 from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
 import omnipy.util._pydantic as pyd

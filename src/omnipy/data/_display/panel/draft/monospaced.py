@@ -7,8 +7,8 @@ from typing_extensions import override
 
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.helpers import UnicodeCharWidthMap
-from omnipy.data._display.panel.draft.base import ContentT, DimensionsAwareDraftPanel, DraftPanel
-from omnipy.data._display.panel.typedefs import FrameT
+from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, DraftPanel
+from omnipy.data._display.panel.typedefs import ContentT, FrameT
 from omnipy.shared.enums.display import MaxTitleHeight
 import omnipy.util._pydantic as pyd
 

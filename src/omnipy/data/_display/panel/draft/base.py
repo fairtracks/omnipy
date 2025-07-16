@@ -1,16 +1,14 @@
 from typing import Any, cast, Generic
 
-from typing_extensions import override, TypeVar
+from typing_extensions import override
 
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints, ConstraintsSatisfaction
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.layout.base import DimensionsAwarePanelLayoutMixin, Layout
 from omnipy.data._display.panel.base import DimensionsAwarePanel, FullyRenderedPanel, Panel
-from omnipy.data._display.panel.typedefs import FrameT
+from omnipy.data._display.panel.typedefs import ContentInvT, ContentT, FrameInvT, FrameT
 from omnipy.util import _pydantic as pyd
-
-ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)
 
 
 @pyd.dataclass(
@@ -31,6 +29,20 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
     ):
         object.__setattr__(self, 'content', content)
         super().__init__(title=title, frame=frame, constraints=constraints, config=config)
+
+    @classmethod
+    def create_copy_with_other_content(
+        cls,
+        draft_panel: 'DraftPanel[object, FrameInvT]',
+        other_content: ContentInvT,
+    ) -> 'DraftPanel[ContentInvT, FrameInvT]':
+        return DraftPanel(
+            other_content,
+            title=draft_panel.title,
+            frame=draft_panel.frame,
+            constraints=draft_panel.constraints,
+            config=draft_panel.config,
+        )
 
     @property
     def satisfies(self) -> ConstraintsSatisfaction:
