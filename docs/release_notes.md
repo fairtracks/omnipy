@@ -1,6 +1,6 @@
 ## Omnipy v0.20.1
 
-_Release date: Jan 7, 2024_
+_Release date: Jan 7, 2025_
 
 ### New features in v0.20.1
 
@@ -14,7 +14,7 @@ _Release date: Jan 7, 2024_
 
 ## Omnipy v0.20.0
 
-_Release date: Jan 6, 2024_
+_Release date: Jan 6, 2025_
 
 Omnipy v0.20.0 has focused on improving the documentation and code structure of the project, as well
 as fixing a few bugs from the v0.90 release.
