@@ -1,29 +1,34 @@
 from abc import ABC, abstractmethod
-from typing import cast
+from typing import cast, Generic
 
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import DimensionsWithWidth
 from omnipy.data._display.frame import FrameWithWidth
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
-from omnipy.data._display.panel.typedefs import FrameT
+from omnipy.data._display.panel.typedefs import ContentT, FrameT
 from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguage
 from omnipy.util import _pydantic as pyd
 
 
-class PrettyPrinter(ABC):
+class PrettyPrinter(ABC, Generic[ContentT]):
     @abstractmethod
     def format_draft(
         self,
-        draft_panel: DraftPanel[object, FrameT],
+        draft_panel: DraftPanel[ContentT, FrameT],
     ) -> ReflowedTextDraftPanel[FrameT]:
         ...
 
+    @abstractmethod
+    def prepare_draft_panel(
+            self, draft_panel: DraftPanel[ContentT, FrameT]) -> DraftPanel[object, FrameT]:
+        ...
+
     @classmethod
-    def get_pretty_printer_for_draft_panel(
-            cls, draft_panel: DraftPanel[object, FrameT]) -> 'PrettyPrinter':
+    def get_pretty_printer_for_draft_panel(cls, draft_panel: DraftPanel) -> 'PrettyPrinter':
         from omnipy.data._display.text.pretty_printer.compact_json import CompactJsonPrettyPrinter
         from omnipy.data._display.text.pretty_printer.devtools import DevtoolsPrettyPrinter
+        from omnipy.data._display.text.pretty_printer.plain_text import PlainTextPrettyPrinter
         from omnipy.data._display.text.pretty_printer.rich import RichPrettyPrinter
 
         match draft_panel.config.language:
@@ -35,11 +40,11 @@ class PrettyPrinter(ABC):
                         return RichPrettyPrinter()
                     case PrettyPrinterLib.DEVTOOLS:
                         return DevtoolsPrettyPrinter()
-        raise ValueError(f'No pretty printer matching configured syntax language exist: '
-                         f'{draft_panel.config.language}')
+            case _:
+                return PlainTextPrettyPrinter()
 
 
-class WidthReducingPrettyPrinter(PrettyPrinter):
+class WidthReducingPrettyPrinter(PrettyPrinter[ContentT], Generic[ContentT]):
     def __init__(self) -> None:
         self._prev_frame_width: pyd.NonNegativeInt | None = None
         self._prev_constraints: Constraints | None = None
@@ -54,7 +59,7 @@ class WidthReducingPrettyPrinter(PrettyPrinter):
 
     def width_reduced_since_last_print(
         self,
-        draft_for_print: DraftPanel[object, FrameWithWidth],
+        draft_for_print: DraftPanel[ContentT, FrameWithWidth],
         reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> bool:
 
@@ -76,7 +81,7 @@ class WidthReducingPrettyPrinter(PrettyPrinter):
 
     def constraints_tightened_since_last_print(
         self,
-        draft_for_print: DraftPanel[object, FrameWithWidth],
+        draft_for_print: DraftPanel[ContentT, FrameWithWidth],
         reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> bool:
         reduced_constraints = self._constraints_tightened_since_last_print(reflowed_text_panel)
@@ -93,9 +98,9 @@ class WidthReducingPrettyPrinter(PrettyPrinter):
 
     def prepare_draft_for_print_with_reduced_width_requirements(
         self,
-        draft_panel: DraftPanel[object, FrameT],
+        draft_panel: DraftPanel[ContentT, FrameT],
         reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
-    ) -> DraftPanel[object, FrameWithWidth]:
+    ) -> DraftPanel[ContentT, FrameWithWidth]:
         # For initial iteration, compare with frame of
         # cur_reflowed_text_panel provided as input
         if self._prev_frame_width is None:
@@ -133,7 +138,7 @@ class WidthReducingPrettyPrinter(PrettyPrinter):
 
     def format_draft(
         self,
-        draft_panel: DraftPanel[object, FrameT],
+        draft_panel: DraftPanel[ContentT, FrameT],
     ) -> ReflowedTextDraftPanel[FrameT]:
         return ReflowedTextDraftPanel.create_from_draft_panel(
             draft_panel,
@@ -141,5 +146,5 @@ class WidthReducingPrettyPrinter(PrettyPrinter):
         )
 
     @abstractmethod
-    def print_draft_to_str(self, draft_panel: DraftPanel[object, FrameT]) -> str:
+    def print_draft_to_str(self, draft_panel: DraftPanel[ContentT, FrameT]) -> str:
         pass

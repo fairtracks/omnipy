@@ -541,13 +541,27 @@ def test_pretty_repr_of_draft_models(
     class ListOfListsOfIntsModel(Model[list[ListOfIntsModel]]):
         ...
 
-    _assert_pretty_repr_of_draft(
-        ListOfListsOfIntsModel([[1, 2], [3, 4]]),
-        dedent("""\
+    plain_output = dedent("""\
         [
           [1, 2],
           [3, 4]
-        ]"""),
+        ]""")
+
+    class_output = dedent("""\
+        ListOfListsOfIntsModel(
+          [
+            ListOfIntsModel(
+              [1, 2]
+            ),
+            ListOfIntsModel(
+              [3, 4]
+            )
+          ]
+        )""")
+
+    _assert_pretty_repr_of_draft(
+        ListOfListsOfIntsModel([[1, 2], [3, 4]]),
+        plain_output,
         frame=DEFAULT_FRAME,
         config=OutputConfig(
             debug_mode=False,
@@ -559,37 +573,19 @@ def test_pretty_repr_of_draft_models(
         within_frame_height=True,
     )
 
-    def _debug_mode_test():
-        _assert_pretty_repr_of_draft(
-            ListOfListsOfIntsModel([[1, 2, 3], [4, 5, 6]]),
-            dedent("""\
-            ListOfListsOfIntsModel(
-              [
-                ListOfIntsModel(
-                  [1, 2, 3]
-                ),
-                ListOfIntsModel(
-                  [4, 5, 6]
-                )
-              ]
-            )"""),
-            frame=DEFAULT_FRAME,
-            config=OutputConfig(
-                debug_mode=True,
-                pretty_printer=pretty_printer,
-                language=language,
-                proportional_freedom=0,
-            ),
-            within_frame_width=True,
-            within_frame_height=True,
-        )
-
-    if language == SyntaxLanguage.PYTHON:
-        # Debug mode is only supported for Python syntax
-        _debug_mode_test()
-    else:
-        with pytest.raises(TypeError):
-            _debug_mode_test()
+    _assert_pretty_repr_of_draft(
+        ListOfListsOfIntsModel([[1, 2], [3, 4]]),
+        class_output if language is SyntaxLanguage.PYTHON else plain_output,
+        frame=DEFAULT_FRAME,
+        config=OutputConfig(
+            debug_mode=True,
+            pretty_printer=pretty_printer,
+            language=language,
+            proportional_freedom=0,
+        ),
+        within_frame_width=True,
+        within_frame_height=True,
+    )
 
 
 @pytest.mark.parametrize('pretty_printer, language',
@@ -645,6 +641,32 @@ def test_pretty_repr_of_draft_multi_line_if_nested_known_issue(
         "[1, 2, '[...]']",
         frame=DEFAULT_FRAME,
         config=config,
+        within_frame_width=True,
+        within_frame_height=True,
+    )
+
+
+def test_plain_str_pretty_print() -> None:
+    data = 'This is a plain string that should not be formatted in any way.'
+
+    _assert_pretty_repr_of_draft(
+        data,
+        exp_plain_output=data,
+        frame=DEFAULT_FRAME,
+        config=OutputConfig(language=SyntaxLanguage.TEXT),
+        within_frame_width=True,
+        within_frame_height=True,
+    )
+
+    class A:
+        def __repr__(self):
+            return 'A()'
+
+    _assert_pretty_repr_of_draft(
+        A(),
+        exp_plain_output='A()',
+        frame=DEFAULT_FRAME,
+        config=OutputConfig(language=SyntaxLanguage.TEXT),
         within_frame_width=True,
         within_frame_height=True,
     )

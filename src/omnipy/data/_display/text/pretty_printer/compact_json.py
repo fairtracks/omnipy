@@ -1,6 +1,6 @@
 import dataclasses
 
-import compact_json
+import compact_json.formatter
 from typing_extensions import override
 
 from omnipy.data._display.constraints import Constraints
@@ -10,11 +10,13 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.data._display.text.pretty_printer.base import WidthReducingPrettyPrinter
+from omnipy.data._display.text.pretty_printer.mixins import JsonWidthReducingPrettyPrinterMixin
 from omnipy.shared.constants import TERMINAL_DEFAULT_WIDTH
 from omnipy.util import _pydantic as pyd
 
 
-class CompactJsonPrettyPrinter(WidthReducingPrettyPrinter):
+class CompactJsonPrettyPrinter(JsonWidthReducingPrettyPrinterMixin,
+                               WidthReducingPrettyPrinter[object]):
     @override
     def _constraints_tightened_since_last_print(
         self,
@@ -59,7 +61,7 @@ class CompactJsonPrettyPrinter(WidthReducingPrettyPrinter):
         else:
             max_inline_length = TERMINAL_DEFAULT_WIDTH
 
-        json_formatter = compact_json.Formatter(
+        json_formatter = compact_json.formatter.Formatter(
             max_inline_length=max_inline_length,
             max_inline_complexity=2,
             max_compact_list_complexity=2,

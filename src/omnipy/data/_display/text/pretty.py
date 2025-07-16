@@ -8,7 +8,6 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import FrameT, OtherFrameT
 from omnipy.data._display.text.pretty_printer.base import PrettyPrinter, WidthReducingPrettyPrinter
-from omnipy.data.typechecks import is_model_instance
 
 
 def pretty_repr_of_draft_output(
@@ -16,7 +15,7 @@ def pretty_repr_of_draft_output(
 
     pretty_printer = PrettyPrinter.get_pretty_printer_for_draft_panel(in_draft_panel)
     orig_draft_content_id = id(in_draft_panel.content)
-    draft_panel = _prepare_content(in_draft_panel)
+    draft_panel = pretty_printer.prepare_draft_panel(in_draft_panel)
     formatted_draft_panel = pretty_printer.format_draft(draft_panel)
 
     if frame_has_width(formatted_draft_panel.frame):
@@ -32,21 +31,6 @@ def pretty_repr_of_draft_output(
             )
 
     return formatted_draft_panel
-
-
-def _prepare_content(in_draft: DraftPanel[object, FrameT]) -> DraftPanel[object, FrameT]:
-    if is_model_instance(in_draft.content) and not in_draft.config.debug_mode:
-        data = in_draft.content.to_data()
-    else:
-        data = in_draft.content
-    draft_panel: DraftPanel[object, FrameT] = DraftPanel(
-        data,
-        title=in_draft.title,
-        frame=in_draft.frame,
-        constraints=in_draft.constraints,
-        config=in_draft.config,
-    )
-    return draft_panel
 
 
 def _should_follow_proportionality(

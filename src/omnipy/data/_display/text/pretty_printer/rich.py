@@ -5,11 +5,12 @@ from omnipy.data._display.dimensions import DimensionsWithWidth
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.data._display.text.pretty_printer.base import WidthReducingPrettyPrinter
+from omnipy.data._display.text.pretty_printer.mixins import PythonWidthReducingPrettyPrinterMixin
 from omnipy.shared.constants import MAX_TERMINAL_SIZE
 from omnipy.util import _pydantic as pyd
 
 
-class RichPrettyPrinter(WidthReducingPrettyPrinter):
+class RichPrettyPrinter(PythonWidthReducingPrettyPrinterMixin, WidthReducingPrettyPrinter[object]):
     @override
     def _calc_reduced_frame_width(
         self,

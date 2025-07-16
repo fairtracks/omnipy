@@ -10,11 +10,13 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.data._display.text.pretty_printer.base import WidthReducingPrettyPrinter
+from omnipy.data._display.text.pretty_printer.mixins import PythonWidthReducingPrettyPrinterMixin
 from omnipy.shared.constants import MAX_TERMINAL_SIZE
 from omnipy.util import _pydantic as pyd
 
 
-class DevtoolsPrettyPrinter(WidthReducingPrettyPrinter):
+class DevtoolsPrettyPrinter(PythonWidthReducingPrettyPrinterMixin,
+                            WidthReducingPrettyPrinter[object]):
     @override
     def _constraints_tightened_since_last_print(
         self,
