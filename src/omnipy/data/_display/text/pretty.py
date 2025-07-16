@@ -116,12 +116,9 @@ class PrettyPrinter(ABC):
         self,
         draft_panel: DraftPanel[object, FrameT],
     ) -> ReflowedTextDraftPanel[FrameT]:
-        return ReflowedTextDraftPanel(
-            self.print_draft_to_str(draft_panel),
-            title=draft_panel.title,
-            frame=draft_panel.frame,
-            constraints=draft_panel.constraints,
-            config=draft_panel.config,
+        return ReflowedTextDraftPanel.create_from_draft_panel(
+            draft_panel,
+            other_content=self.print_draft_to_str(draft_panel),
         )
 
     @abstractmethod
@@ -361,14 +358,10 @@ def _format_draft_panel(
     draft_for_format: DraftPanel[object, FrameT],
     cur_reflowed_text_panel: ReflowedTextDraftPanel[OtherFrameT],
 ) -> ReflowedTextDraftPanel[OtherFrameT]:
-    cur_reflowed_text_panel = ReflowedTextDraftPanel(
-        pretty_printer.print_draft_to_str(draft_for_format),
-        title=cur_reflowed_text_panel.title,
-        frame=cur_reflowed_text_panel.frame,
-        constraints=cur_reflowed_text_panel.constraints,
-        config=cur_reflowed_text_panel.config,
+    return ReflowedTextDraftPanel.create_from_draft_panel(
+        cur_reflowed_text_panel,
+        other_content=pretty_printer.print_draft_to_str(draft_for_format),
     )
-    return cur_reflowed_text_panel
 
 
 def _get_pretty_printer(draft_panel: DraftPanel[object, FrameT]) -> PrettyPrinter:
