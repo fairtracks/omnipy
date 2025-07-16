@@ -21,6 +21,15 @@ import omnipy.util._pydantic as pyd
 
 
 class PrettyPrinter(ABC):
+    @abstractmethod
+    def format_draft(
+        self,
+        draft_panel: DraftPanel[object, FrameT],
+    ) -> ReflowedTextDraftPanel[FrameT]:
+        ...
+
+
+class WidthReducingPrettyPrinter(PrettyPrinter):
     def __init__(self) -> None:
         self._prev_frame_width: pyd.NonNegativeInt | None = None
         self._prev_constraints: Constraints | None = None
@@ -126,7 +135,7 @@ class PrettyPrinter(ABC):
         pass
 
 
-class RichPrettyPrinter(PrettyPrinter):
+class RichPrettyPrinter(WidthReducingPrettyPrinter):
     @override
     def _calc_reduced_frame_width(
         self,
@@ -151,7 +160,7 @@ class RichPrettyPrinter(PrettyPrinter):
         )
 
 
-class DevtoolsPrettyPrinter(PrettyPrinter):
+class DevtoolsPrettyPrinter(WidthReducingPrettyPrinter):
     @override
     def _constraints_tightened_since_last_print(
         self,
@@ -224,7 +233,7 @@ class DevtoolsPrettyPrinter(PrettyPrinter):
                 raise
 
 
-class CompactJsonPrettyPrinter(PrettyPrinter):
+class CompactJsonPrettyPrinter(WidthReducingPrettyPrinter):
     @override
     def _constraints_tightened_since_last_print(
         self,
@@ -287,7 +296,7 @@ class CompactJsonPrettyPrinter(PrettyPrinter):
 
 
 def _iteratively_reduce_width(
-    pretty_printer: PrettyPrinter,
+    pretty_printer: WidthReducingPrettyPrinter,
     draft_panel: DraftPanel[object, FrameT],
     cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     orig_draft_content_id: int,
@@ -422,7 +431,8 @@ def pretty_repr_of_draft_output(
 
     if frame_has_width(formatted_draft_panel.frame):
         reflowed_text_panel = cast(ReflowedTextDraftPanel[FrameWithWidth], formatted_draft_panel)
-        if _should_reduce_width(reflowed_text_panel):
+        if (isinstance(pretty_printer, WidthReducingPrettyPrinter)
+                and _should_reduce_width(reflowed_text_panel)):
             return _iteratively_reduce_width(
                 pretty_printer=pretty_printer,
                 draft_panel=draft_panel,
