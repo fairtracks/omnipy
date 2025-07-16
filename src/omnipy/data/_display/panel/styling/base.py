@@ -61,7 +61,7 @@ class StylizedMonospacedPanel(
         # object.__setattr__(self, '_input_panel_cropped_dims', panel.cropped_dims)
         object.__setattr__(self,
                            'input_panel_cropped_dims',
-                           panel.frame.crop_dims(panel.dims, ignore_fixed_dims=True))
+                           panel.inner_frame.crop_dims(panel.dims, ignore_fixed_dims=True))
 
     @staticmethod
     def _clean_rich_style_caches():
