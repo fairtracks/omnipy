@@ -35,7 +35,7 @@ class OutputConfig:
         indent_tab_size (NonNegativeInt): Number of spaces to use for each
             indentation level.
         pretty_printer (PrettyPrinterLib.Literals): Library to use for
-            pretty printing (rich or devtools).
+            pretty printing.
         language (SyntaxLanguage.Literals | str): Syntax language for code
             highlighting. Supported lexers are defined in SyntaxLanguage.
             For non-supported styles, the user can specify a string with the
@@ -112,7 +112,7 @@ class OutputConfig:
 
     tab_size: pyd.NonNegativeInt = 4
     indent_tab_size: pyd.NonNegativeInt = 2
-    pretty_printer: PrettyPrinterLib.Literals = PrettyPrinterLib.RICH
+    pretty_printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO
     language: SyntaxLanguage.Literals | str = SyntaxLanguage.PYTHON
     proportional_freedom: pyd.NonNegativeFloat = 2.5
     debug_mode: bool = False
@@ -144,7 +144,7 @@ class OutputConfig:
         language: SyntaxLanguage.Literals | str,
     ) -> SyntaxLanguage.Literals | str:
         try:
-            if language in SyntaxLanguage:
+            if SyntaxLanguage.is_syntax_language(language):
                 return language
             elif pygments.lexers.get_lexer_by_name(language):
                 return language

@@ -153,7 +153,7 @@ def test_draft_panel_render_next_stage_with_repr_simple() -> None:
         this_panel=draft_panel,
         next_stage=draft_panel.render_next_stage(),
         next_stage_panel_cls=ReflowedTextDraftPanel,
-        exp_content="'Some text'",
+        exp_content='Some text',
     )
 
 

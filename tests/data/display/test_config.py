@@ -338,7 +338,7 @@ def test_output_config_default_values() -> None:
     config = OutputConfig()
     assert config.tab_size == 4
     assert config.indent_tab_size == 2
-    assert config.pretty_printer is PrettyPrinterLib.RICH
+    assert config.pretty_printer is PrettyPrinterLib.AUTO
     assert config.language is SyntaxLanguage.PYTHON
     assert config.proportional_freedom == 2.5
     assert config.debug_mode is False

@@ -5,6 +5,7 @@ from typing import Annotated
 
 import pytest
 
+from omnipy import JsonModel
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
@@ -68,7 +69,7 @@ def _assert_pretty_repr_of_draft(
     if config:
         if config.pretty_printer is PrettyPrinterLib.DEVTOOLS:
             output = _remove_training_commas(output)
-        if config.language == SyntaxLanguage.JSON:
+        if config.pretty_printer is PrettyPrinterLib.COMPACT_JSON:
             output = _hackish_convert_json_to_python_syntax(output)
 
     assert output == exp_plain_output
@@ -77,15 +78,13 @@ def _assert_pretty_repr_of_draft(
     assert out_draft_panel.within_frame.height is within_frame_height
 
 
-@pytest.mark.parametrize('pretty_printer, language',
-                         [(PrettyPrinterLib.DEVTOOLS, SyntaxLanguage.PYTHON),
-                          (PrettyPrinterLib.RICH, SyntaxLanguage.PYTHON),
-                          (PrettyPrinterLib.RICH, SyntaxLanguage.JSON)])
+@pytest.mark.parametrize(
+    'pretty_printer',
+    [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
+)
 def test_pretty_repr_of_draft_multi_line_if_nested(
-    pretty_printer: PrettyPrinterLib.Literals,
-    language: SyntaxLanguage.Literals,
-) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer, language=language, proportional_freedom=0)
+        pretty_printer: PrettyPrinterLib.Literals) -> None:
+    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
 
     _assert_pretty_repr_of_draft(1, '1', config=config)
 
@@ -132,7 +131,7 @@ def test_pretty_repr_of_draft_multi_line_if_nested(
         within_frame_height=True,
     )
 
-    if language == SyntaxLanguage.JSON:
+    if pretty_printer is PrettyPrinterLib.COMPACT_JSON:
         # CompactJson configured to smax include 2 nested levels in one line
         _assert_pretty_repr_of_draft(
             [[1, 2, 3], [()], [[4, 5, 6], [7, 8, 9]]],
@@ -169,20 +168,12 @@ def test_pretty_repr_of_draft_multi_line_if_nested(
     )
 
 
-@pytest.mark.parametrize('pretty_printer, language',
-                         [(PrettyPrinterLib.DEVTOOLS, SyntaxLanguage.PYTHON),
-                          (PrettyPrinterLib.RICH, SyntaxLanguage.PYTHON),
-                          (PrettyPrinterLib.RICH, SyntaxLanguage.JSON)])
-def test_pretty_repr_of_draft_indent(
-    pretty_printer: PrettyPrinterLib.Literals,
-    language: SyntaxLanguage.Literals,
-) -> None:
-    config = OutputConfig(
-        pretty_printer=pretty_printer,
-        language=language,
-        proportional_freedom=0,
-        indent_tab_size=4,
-    )
+@pytest.mark.parametrize(
+    'pretty_printer',
+    [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
+)
+def test_pretty_repr_of_draft_indent(pretty_printer: PrettyPrinterLib.Literals,) -> None:
+    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0, indent_tab_size=4)
 
     _assert_pretty_repr_of_draft(
         [[1, 2, 3], [[4, 5, 6], [7, 8, 9]]],
@@ -201,19 +192,16 @@ def test_pretty_repr_of_draft_indent(
     )
 
 
-@pytest.mark.parametrize('pretty_printer, language',
-                         [(PrettyPrinterLib.DEVTOOLS, SyntaxLanguage.PYTHON),
-                          (PrettyPrinterLib.RICH, SyntaxLanguage.PYTHON),
-                          (PrettyPrinterLib.RICH, SyntaxLanguage.JSON)])
-def test_pretty_repr_of_draft_in_frame(
-    pretty_printer: PrettyPrinterLib.Literals,
-    language: SyntaxLanguage.Literals,
-) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer, language=language, proportional_freedom=0)
+@pytest.mark.parametrize(
+    'pretty_printer',
+    [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
+)
+def test_pretty_repr_of_draft_in_frame(pretty_printer: PrettyPrinterLib.Literals) -> None:
+    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
 
     data = [[0, 1, 2], [[3, 4, 5, 6], [7, 8, 9]]]
 
-    if language == SyntaxLanguage.JSON:
+    if pretty_printer is PrettyPrinterLib.COMPACT_JSON:
         # CompactJson configured to max include 2 nested levels in one line
         _assert_pretty_repr_of_draft(
             data,
@@ -237,7 +225,7 @@ def test_pretty_repr_of_draft_in_frame(
             within_frame_height=True,
         )
 
-    if language == SyntaxLanguage.JSON:
+    if pretty_printer is PrettyPrinterLib.COMPACT_JSON:
         # CompactJson supports a more compact representation
         excepted_output_slimmer = dedent("""\
             [
@@ -279,7 +267,7 @@ def test_pretty_repr_of_draft_in_frame(
         within_frame_height=True,
     )
 
-    if language == SyntaxLanguage.JSON:
+    if pretty_printer is PrettyPrinterLib.COMPACT_JSON:
         # CompactJson supports a slightly more compact representation
         excepted_output_high_and_slim = dedent("""\
             [
@@ -383,16 +371,14 @@ def geometry_data() -> list:
     }]
 
 
-@pytest.mark.parametrize('pretty_printer, language',
-                         [(PrettyPrinterLib.DEVTOOLS, SyntaxLanguage.PYTHON),
-                          (PrettyPrinterLib.RICH, SyntaxLanguage.PYTHON),
-                          (PrettyPrinterLib.RICH, SyntaxLanguage.JSON)])
+@pytest.mark.parametrize(
+    'pretty_printer',
+    [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
+)
 def test_pretty_repr_of_draft_approximately_in_frame(
-    geometry_data: Annotated[list, pytest.fixture],
-    pretty_printer: PrettyPrinterLib.Literals,
-    language: SyntaxLanguage.Literals,
-) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer, language=language, proportional_freedom=0)
+        geometry_data: Annotated[list, pytest.fixture],
+        pretty_printer: PrettyPrinterLib.Literals) -> None:
+    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
 
     _assert_pretty_repr_of_draft(
         geometry_data,
@@ -486,18 +472,19 @@ def test_pretty_repr_of_draft_approximately_in_frame(
 
 
 @pytest.mark.parametrize(
-    'pretty_printer, language',
+    'pretty_printer',
     # Devtools actually shortens the long line to fit the frame,
     # which is not what we want to test here.
-    [  # (PrettyPrinterLib.DEVTOOLS, SyntaxLanguage.PYTHON),
-        (PrettyPrinterLib.RICH, SyntaxLanguage.PYTHON),
-        (PrettyPrinterLib.RICH, SyntaxLanguage.JSON),
-    ])
+    [
+        # PrettyPrinterLib.DEVTOOLS,
+        PrettyPrinterLib.RICH,
+        PrettyPrinterLib.COMPACT_JSON,
+    ],
+)
 def test_pretty_repr_of_draft_one_line_wider_than_frame(
-    pretty_printer: PrettyPrinterLib.Literals,
-    language: SyntaxLanguage.Literals,
-) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer, language=language, proportional_freedom=0)
+        pretty_printer: PrettyPrinterLib.Literals) -> None:
+    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
+
     # This is a test for the case where one line is wider than the frame
     # width. The pretty printer should not fit the short lines into a singe
     # line even though this single line will not be wider than the widest
@@ -527,14 +514,11 @@ def test_pretty_repr_of_draft_one_line_wider_than_frame(
     )
 
 
-@pytest.mark.parametrize('pretty_printer, language',
-                         [(PrettyPrinterLib.DEVTOOLS, SyntaxLanguage.PYTHON),
-                          (PrettyPrinterLib.RICH, SyntaxLanguage.PYTHON),
-                          (PrettyPrinterLib.RICH, SyntaxLanguage.JSON)])
-def test_pretty_repr_of_draft_models(
-    pretty_printer: PrettyPrinterLib.Literals,
-    language: SyntaxLanguage.Literals,
-) -> None:
+@pytest.mark.parametrize(
+    'pretty_printer',
+    [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
+)
+def test_pretty_repr_of_draft_models(pretty_printer: PrettyPrinterLib.Literals) -> None:
     class ListOfIntsModel(Model[list[int]]):
         ...
 
@@ -566,7 +550,6 @@ def test_pretty_repr_of_draft_models(
         config=OutputConfig(
             debug_mode=False,
             pretty_printer=pretty_printer,
-            language=language,
             proportional_freedom=0,
         ),
         within_frame_width=True,
@@ -575,12 +558,11 @@ def test_pretty_repr_of_draft_models(
 
     _assert_pretty_repr_of_draft(
         ListOfListsOfIntsModel([[1, 2], [3, 4]]),
-        class_output if language is SyntaxLanguage.PYTHON else plain_output,
+        plain_output if pretty_printer is PrettyPrinterLib.COMPACT_JSON else class_output,
         frame=DEFAULT_FRAME,
         config=OutputConfig(
             debug_mode=True,
             pretty_printer=pretty_printer,
-            language=language,
             proportional_freedom=0,
         ),
         within_frame_width=True,
@@ -588,15 +570,13 @@ def test_pretty_repr_of_draft_models(
     )
 
 
-@pytest.mark.parametrize('pretty_printer, language',
-                         [(PrettyPrinterLib.DEVTOOLS, SyntaxLanguage.PYTHON),
-                          (PrettyPrinterLib.RICH, SyntaxLanguage.PYTHON),
-                          (PrettyPrinterLib.RICH, SyntaxLanguage.JSON)])
+@pytest.mark.parametrize(
+    'pretty_printer',
+    [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
+)
 def test_pretty_repr_of_draft_variable_char_weight(
-    pretty_printer: PrettyPrinterLib.Literals,
-    language: SyntaxLanguage.Literals,
-) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer, language=language, proportional_freedom=0)
+        pretty_printer: PrettyPrinterLib.Literals) -> None:
+    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
 
     _assert_pretty_repr_of_draft(
         ['北京', '€450'],
@@ -653,7 +633,27 @@ def test_plain_str_pretty_print() -> None:
         data,
         exp_plain_output=data,
         frame=DEFAULT_FRAME,
-        config=OutputConfig(language=SyntaxLanguage.TEXT),
+        within_frame_width=True,
+        within_frame_height=True,
+    )
+
+    data = 'This is a string inside a model.'
+
+    _assert_pretty_repr_of_draft(
+        Model[str](data),
+        exp_plain_output=data,
+        frame=DEFAULT_FRAME,
+        within_frame_width=True,
+        within_frame_height=True,
+    )
+
+    data = [1, 2, 3]
+
+    _assert_pretty_repr_of_draft(
+        JsonModel(data),
+        exp_plain_output='_JsonAnyListM([1, 2, 3])',
+        frame=DEFAULT_FRAME,
+        config=OutputConfig(pretty_printer=PrettyPrinterLib.TEXT),
         within_frame_width=True,
         within_frame_height=True,
     )
@@ -666,7 +666,7 @@ def test_plain_str_pretty_print() -> None:
         A(),
         exp_plain_output='A()',
         frame=DEFAULT_FRAME,
-        config=OutputConfig(language=SyntaxLanguage.TEXT),
+        config=OutputConfig(language=SyntaxLanguage.TEX),
         within_frame_width=True,
         within_frame_height=True,
     )

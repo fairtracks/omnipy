@@ -204,7 +204,7 @@ class TextConfig(ConfigBase):
     overflow: IsOverflowConfig = pyd.Field(default_factory=OverflowConfig)
     tab_size: pyd.NonNegativeInt = 4
     indent_tab_size: pyd.NonNegativeInt = 2
-    pretty_printer: PrettyPrinterLib.Literals = PrettyPrinterLib.RICH
+    pretty_printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO
     proportional_freedom: pyd.NonNegativeFloat = 2.5
     debug_mode: bool = False
 

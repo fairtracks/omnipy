@@ -7,11 +7,14 @@ from omnipy.data._display.frame import FrameWithWidth
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import ContentT, FrameT
-from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguage
 from omnipy.util import _pydantic as pyd
 
 
 class PrettyPrinter(ABC, Generic[ContentT]):
+    @abstractmethod
+    def is_suitable_content(self, draft_panel: DraftPanel[ContentT, FrameT]) -> bool:
+        ...
+
     @abstractmethod
     def format_draft(
         self,
@@ -26,22 +29,18 @@ class PrettyPrinter(ABC, Generic[ContentT]):
 
     @classmethod
     def get_pretty_printer_for_draft_panel(cls, draft_panel: DraftPanel) -> 'PrettyPrinter':
-        from omnipy.data._display.text.pretty_printer.compact_json import CompactJsonPrettyPrinter
-        from omnipy.data._display.text.pretty_printer.devtools import DevtoolsPrettyPrinter
-        from omnipy.data._display.text.pretty_printer.plain_text import PlainTextPrettyPrinter
-        from omnipy.data._display.text.pretty_printer.rich import RichPrettyPrinter
+        import omnipy.data._display.text.pretty_printer.register as register
 
-        match draft_panel.config.language:
-            case SyntaxLanguage.JSON:
-                return CompactJsonPrettyPrinter()
-            case SyntaxLanguage.PYTHON:
-                match draft_panel.config.pretty_printer:
-                    case PrettyPrinterLib.RICH:
-                        return RichPrettyPrinter()
-                    case PrettyPrinterLib.DEVTOOLS:
-                        return DevtoolsPrettyPrinter()
-            case _:
-                return PlainTextPrettyPrinter()
+        pretty_printer = register.get_pretty_printer_from_config_value(
+            draft_panel.config.pretty_printer)
+        if pretty_printer:
+            return pretty_printer
+
+        pretty_printer = register.get_pretty_printer_from_content(draft_panel)
+        if pretty_printer:
+            return pretty_printer
+
+        return register.get_pretty_printer_from_language(draft_panel.config.language)
 
 
 class WidthReducingPrettyPrinter(PrettyPrinter[ContentT], Generic[ContentT]):

@@ -615,7 +615,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         layout['Type'] = TextDraftPanel(
             '\n'.join(self._type_str(v) for v in dataset.data.values()),
             title='Type',
-            config=text_config)
+            config=config)
         layout['Length'] = TextDraftPanel(
             '\n'.join(str(self._len_if_available(v)) for v in dataset.data.values()),
             title='Length',

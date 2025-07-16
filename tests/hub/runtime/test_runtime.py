@@ -107,7 +107,7 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
 
     assert config.data.ui.text.tab_size == 4
     assert config.data.ui.text.indent_tab_size == 2
-    assert config.data.ui.text.pretty_printer is PrettyPrinterLib.RICH
+    assert config.data.ui.text.pretty_printer is PrettyPrinterLib.AUTO
     assert config.data.ui.text.debug_mode is False
 
     assert isinstance(config.data.ui.layout, LayoutConfig)

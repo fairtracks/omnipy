@@ -1,5 +1,7 @@
 from typing import Literal
 
+from typing_extensions import TypeIs
+
 from omnipy.util.literal_enum import LiteralEnum
 
 
@@ -37,43 +39,64 @@ class DisplayDimensionsUpdateMode(LiteralEnum[str]):
 
 class PrettyPrinterLib(LiteralEnum[str]):
     """
-    Supported libraries for pretty printing of Python data structures.
+    Supported libraries for pretty printing of various data structures.
 
-    For most data structures, the outputs are more or less the same.
-    However, the RICH library formats the width of the output on a per-item
-    basis, while the DEVTOOLS library formats the width of the output based
-    on the maximum width of the output. This means that the RICH library
-    will in many cases produce a more compact output, which is typically
-    recommended.
-
-    The libraries are:
-    - `RICH`: The Rich library (https://rich.readthedocs.io/en/stable/).
-        This is the default value.
-    - `DEVTOOLS`: The Python Devtools library
-        (https://python-devtools.helpmanual.io/). Included for future
-        testing for data types such as numpy arrays, but might become
-        deprecated in the future.
+    Comparison of RICH and DEVTOOLS for Python structures: the outputs are
+    more or less the same. However, the RICH library formats the width of
+    the output on a per-item basis, while the DEVTOOLS library formats the
+    width of the output based on the maximum width of the output. This means
+    that the RICH library will in many cases produce a more compact output,
+    which is typically recommended. However, the DEVTOOLS library might be
+    more suitable for visualizing Pydantic models with debug_mode set to
+    `True`, as it is specifically designed for that purpose.
     """
 
-    Literals = Literal['rich', 'devtools']
+    Literals = Literal['rich', 'devtools', 'compact-json', 'text', 'auto']
 
     RICH: Literal['rich'] = 'rich'
+    """
+    The pretty printer of Rich library
+    (https://rich.readthedocs.io/en/stable/), a general-purpose formatter
+    of Python objects. This is the default value.
+    """
+
     DEVTOOLS: Literal['devtools'] = 'devtools'
-
-
-class SyntaxLanguage(LiteralEnum[str]):
     """
-    Supported languages for syntax recognition and highlighting.
-
-    A selected subset of the lexer languages supported by the Pygments
-    library (https://pygments.org/languages/), assumed to be the ones most
-    relevant for Omnipy.
+    The pretty printer of the Devtools library
+    (https://python-devtools.helpmanual.io/), a general-purpose formatter
+    of Python objects and specifically designed for visualizing Pydantic
+    models.
     """
 
-    Literals = Literal['python',
-                       'text',
-                       'json',
-                       'json-ld',
+    COMPACT_JSON: Literal['compact-json'] = 'compact-json'
+    """
+    The compact-json library (https://github.com/masaccio/compact-json),
+    which is used for compact formatting of JSON data structures.
+    """
+
+    TEXT: Literal['text'] = 'text'
+    """
+    The plain text pretty printer, which is used for displaying plain text
+    content.
+    """
+
+    AUTO: Literal['auto'] = 'auto'
+    """
+    Automatically selects the pretty printer based on:
+    1. The content type
+    2. The `language` config parameter
+    """
+
+
+class JsonSyntaxLanguage(LiteralEnum[str]):
+    Literals = Literal['json', 'json-ld']
+
+    JSON: Literal['json'] = 'json'
+    JSON_LD: Literal['json-ld'] = 'json-ld'
+
+
+class TextSyntaxLanguage(LiteralEnum[str]):
+    Literals = Literal['text',
                        'yaml',
                        'xml',
                        'toml',
@@ -86,10 +109,7 @@ class SyntaxLanguage(LiteralEnum[str]):
                        'sparql',
                        'tex']
 
-    PYTHON: Literal['python'] = 'python'
     TEXT: Literal['text'] = 'text'
-    JSON: Literal['json'] = 'json'
-    JSON_LD: Literal['json-ld'] = 'json-ld'
     YAML: Literal['yaml'] = 'yaml'
     XML: Literal['xml'] = 'xml'
     TOML: Literal['toml'] = 'toml'
@@ -97,10 +117,58 @@ class SyntaxLanguage(LiteralEnum[str]):
     SQL: Literal['sql'] = 'sql'
     HTML: Literal['html'] = 'html'
     MARKDOWN: Literal['markdown'] = 'markdown'
-    CSS: Literal['css'] = 'css'
     NUMPY: Literal['numpy'] = 'numpy'
+    CSS: Literal['css'] = 'css'
     SPARQL: Literal['sparql'] = 'sparql'
     TEX: Literal['tex'] = 'tex'
+
+
+class PythonSyntaxLanguage(LiteralEnum[str]):
+    Literals = Literal['python']
+
+    PYTHON: Literal['python'] = 'python'
+
+
+class SyntaxLanguage(JsonSyntaxLanguage, TextSyntaxLanguage, PythonSyntaxLanguage):
+    """
+    Supported languages for syntax recognition and highlighting.
+
+    A selected subset of the lexer languages supported by the Pygments
+    library (https://pygments.org/languages/), assumed to be the ones most
+    relevant for Omnipy.
+    """
+
+    Literals = Literal[JsonSyntaxLanguage.Literals,
+                       TextSyntaxLanguage.Literals,
+                       PythonSyntaxLanguage.Literals]
+
+    @classmethod
+    def is_syntax_language(cls, language: str) -> 'TypeIs[SyntaxLanguage.Literals]':
+        """
+        Checks if the given language is a Syntax language.
+        """
+        return language in SyntaxLanguage
+
+    @classmethod
+    def is_json_language(cls, language: str) -> TypeIs[JsonSyntaxLanguage.Literals]:
+        """
+        Checks if the given language is a JSON language.
+        """
+        return language in JsonSyntaxLanguage
+
+    @classmethod
+    def is_text_language(cls, language: str) -> TypeIs[TextSyntaxLanguage.Literals]:
+        """
+        Checks if the given language is a general text language.
+        """
+        return language in TextSyntaxLanguage
+
+    @classmethod
+    def is_python_language(cls, language: str) -> TypeIs[PythonSyntaxLanguage.Literals]:
+        """
+        Checks if the given language is a Python variant.
+        """
+        return language in PythonSyntaxLanguage
 
 
 class DisplayColorSystem(LiteralEnum[str]):
