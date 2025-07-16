@@ -1,3 +1,12 @@
+# Data - General
+
+ROOT_KEY = '__root__'
+DATA_KEY = 'data'
+UNTITLED_KEY = '_untitled'
+ASYNC_LOAD_SLEEP_TIME = 0.05
+
+# Data - Display
+
 MAX_TERMINAL_SIZE = 2**16 - 1
 
 TERMINAL_DEFAULT_WIDTH = 80

@@ -27,7 +27,6 @@ from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._missing import parse_none_according_to_model
 from omnipy.data._mixins.display import ModelDisplayMixin
 from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
-from omnipy.data.constants import ROOT_KEY
 from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  get_special_methods_info_dict,
                                  MethodInfo,
@@ -35,6 +34,7 @@ from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  validate_cls_counts,
                                  YesNoMaybe)
 from omnipy.data.typechecks import is_model_instance
+from omnipy.shared.constants import ROOT_KEY
 from omnipy.shared.protocols.data import IsModel, IsSnapshotWrapper
 from omnipy.shared.typedefs import TypeForm
 from omnipy.util._pydantic import (is_none_type,

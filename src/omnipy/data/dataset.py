@@ -19,10 +19,10 @@ from omnipy.data._selector import (create_updated_mapping,
                                    prepare_selected_items_with_iterable_data,
                                    prepare_selected_items_with_mapping_data,
                                    select_keys)
-from omnipy.data.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
 from omnipy.data.helpers import cleanup_name_qualname_and_module
 from omnipy.data.model import Model
 from omnipy.data.typechecks import is_model_instance, is_model_subclass
+from omnipy.shared.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
 from omnipy.shared.protocols.data import (IsHttpUrlDataset,
                                           IsModel,
                                           IsMultiModelDataset,

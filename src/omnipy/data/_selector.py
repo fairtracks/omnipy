@@ -4,7 +4,7 @@ from typing import Iterable, Mapping, MutableMapping, TypeAlias
 
 from typing_extensions import TypeVar
 
-from omnipy.data.constants import UNTITLED_KEY
+from omnipy.shared.constants import UNTITLED_KEY
 from omnipy.util.helpers import is_iterable
 
 _ValT = TypeVar('_ValT')
