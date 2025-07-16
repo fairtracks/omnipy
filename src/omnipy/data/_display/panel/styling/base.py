@@ -21,9 +21,8 @@ from omnipy.data._display.panel.base import FullyRenderedPanel, OutputVariant
 from omnipy.data._display.panel.cropping import rich_overflow_method
 from omnipy.data._display.panel.draft.base import ContentT, FrameT
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
-from omnipy.hub.ui import detect_ui_type
 from omnipy.shared.enums.display import DisplayColorSystem
-from omnipy.shared.enums.ui import UserInterfaceType
+from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
 import omnipy.util._pydantic as pyd
 
 StylizedRichTypes: TypeAlias = rich.syntax.Syntax | rich.panel.Panel | rich.table.Table
@@ -127,13 +126,13 @@ class StylizedMonospacedPanel(
     @staticmethod
     @lru_cache(maxsize=1024)
     def _get_console_common(
-            stylized_content: rich.console.RenderableType,
-            console_width: int,
-            console_height: int,
-            frame_width: int | None,
-            rich_overflow_method: rich.console.OverflowMethod | None,
-            color_system: DisplayColorSystem.Literals,
-            ui_type: UserInterfaceType.Literals = detect_ui_type(),
+        stylized_content: rich.console.RenderableType,
+        console_width: int,
+        console_height: int,
+        frame_width: int | None,
+        rich_overflow_method: rich.console.OverflowMethod | None,
+        color_system: DisplayColorSystem.Literals,
+        ui_type: SpecifiedUserInterfaceType.Literals,
     ) -> rich.console.Console:
 
         console = rich.console.Console(
@@ -159,6 +158,7 @@ class StylizedMonospacedPanel(
             console_height=self._console_dimensions.height,
             frame_width=self.frame.dims.width,
             rich_overflow_method=self.rich_overflow_method,
+            ui_type=self.config.user_interface_type,
             color_system=self.config.color_system,
         )
 
@@ -171,6 +171,7 @@ class StylizedMonospacedPanel(
             console_height=self._console_dimensions.height,
             frame_width=self.frame.dims.width,
             rich_overflow_method=self.rich_overflow_method,
+            ui_type=self.config.user_interface_type,
             color_system=DisplayColorSystem.ANSI_RGB,
         )
 

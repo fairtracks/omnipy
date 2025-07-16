@@ -20,7 +20,7 @@ from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import TextDraftPanel
 from omnipy.data.helpers import FailedData, PendingData
-from omnipy.hub.ui import detect_ui_type, get_terminal_prompt_height
+from omnipy.hub.ui import get_terminal_prompt_height
 from omnipy.shared.enums.display import DisplayColorSystem, MaxTitleHeight, SyntaxLanguage
 from omnipy.shared.enums.ui import (BrowserPageUserInterfaceType,
                                     BrowserUserInterfaceType,
@@ -100,7 +100,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         to display HTML output in the browser. Otherwise, returns None.
         """
         return self._display_according_to_ui_type(
-            ui_type=self._detect_ui_type_if_auto(UserInterfaceType.AUTO),
+            ui_type=cast(DataClassBase, self).config.ui.detected_type,
             return_output_if_str=False,
             output_method=self._peek,
             **kwargs)
@@ -119,8 +119,9 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         """
         kwargs_copy = kwargs.copy()
         kwargs_copy['height'] = None
+
         return self._display_according_to_ui_type(
-            ui_type=self._detect_ui_type_if_auto(UserInterfaceType.AUTO),
+            ui_type=cast(DataClassBase, self).config.ui.detected_type,
             return_output_if_str=False,
             output_method=self._full,
             **kwargs_copy)
@@ -160,7 +161,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             if len(p.stack) == 1:
                 # The Model or Dataset object is at the top level and should
                 # be displayed.
-                ui_type = self._detect_ui_type_if_auto(UserInterfaceType.AUTO)
+                ui_type = cast(DataClassBase, self).config.ui.detected_type
                 if UserInterfaceType.is_jupyter(ui_type):
                     # Jupyter calls both _repr_pretty_() and _repr_html_(),
                     # so we ignore the _repr_pretty_ call and instead
@@ -181,7 +182,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 p.text(self.__repr__())
 
     def _repr_html_(self) -> str:
-        ui_type = self._detect_ui_type_if_auto(UserInterfaceType.AUTO)
+        ui_type = cast(DataClassBase, self).config.ui.detected_type
         if UserInterfaceType.is_jupyter_in_browser(ui_type):
             from reacton.core import Element
             element: Element = self._display_according_to_ui_type(
@@ -193,15 +194,6 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         elif UserInterfaceType.is_jupyter_embedded(ui_type):
             print(self.default_repr_to_terminal_str(ui_type))
         return ''
-
-    @staticmethod
-    @functools.lru_cache
-    def _detect_ui_type_if_auto(
-            ui_type: UserInterfaceType.Literals) -> SpecifiedUserInterfaceType.Literals:
-        if ui_type == UserInterfaceType.AUTO:
-            return detect_ui_type()
-        else:
-            return ui_type
 
     @overload
     def _display_according_to_ui_type(
@@ -294,22 +286,27 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _peek_models(self, models: dict[str, 'Model'], **kwargs) -> DraftPanel:
         from omnipy.data.dataset import Dataset
 
-        ui_type = self._detect_ui_type_if_auto(UserInterfaceType.AUTO)
+        ui_type = cast(DataClassBase, self).config.ui.detected_type
         frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._get_output_config(ui_type)
+        config = self._extract_output_config_from_data_config(ui_type)
         layout: Layout[DraftPanel] = Layout()
 
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
-        config = self._apply_kwargs_to_config(config, **kwargs)
 
         for title, model in models.items():
             outer_type = model.outer_type()
             if inspect.isclass(outer_type) and issubclass(outer_type, Dataset):
                 return cast(Dataset, model.contents)._peek()
 
-            layout[title] = self._create_inner_panel_for_model(config, model, outer_type, title)
+            layout[title] = self._create_inner_panel_for_model(config,
+                                                               model,
+                                                               outer_type,
+                                                               title,
+                                                               **kwargs)
 
-        config = self._set_overflow_modes_and_other_configs(config, 'layout')
+        config = self._update_config_with_overflow_modes(config, 'layout')
+        config = self._apply_kwargs_to_config(config, **kwargs)
+
         return DraftPanel(layout, frame=frame, config=config)
 
     def _apply_kwargs_to_frame(
@@ -382,6 +379,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _create_cached_html_file(self, filename: str, html_output: str) -> Path:
         self_as_dataclass = cast(DataClassBase, self)
 
+        # TODO: Improve file caching mechanism, including style files
         file_path = Path(self_as_dataclass.config.ui.cache_dir_path) / filename
 
         with open(file_path, 'w', encoding='utf-8') as html_file:
@@ -396,6 +394,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         outer_type: TypeForm,
         title: str = '',
         frame: Frame | None = None,
+        **kwargs,
     ) -> DraftPanel:
         from omnipy.components.json.models import is_json_model_instance_hack
         from omnipy.components.raw.models import StrModel
@@ -408,7 +407,9 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         else:
             language = SyntaxLanguage.PYTHON
 
-        config = self._set_overflow_modes_and_other_configs(config, 'text', language=language)
+        config = self._update_config_with_overflow_modes(config, 'text')
+        config = dataclasses.replace(config, language=language)
+        config = self._apply_kwargs_to_config(config, **kwargs)
 
         match language:
             case SyntaxLanguage.TEXT:
@@ -426,11 +427,10 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     config=config,
                 )
 
-    def _set_overflow_modes_and_other_configs(
+    def _update_config_with_overflow_modes(
         self,
         config: OutputConfig,
         panel_type: Literal['text', 'layout'],
-        **kwargs: Any,
     ) -> OutputConfig:
         ui_config = cast(DataClassBase, self).config.ui
         overflow_config = getattr(ui_config, panel_type).overflow
@@ -439,7 +439,6 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             config,
             horizontal_overflow_mode=overflow_config.horizontal,
             vertical_overflow_mode=overflow_config.vertical,
-            **kwargs,
         )
         return config
 
@@ -457,7 +456,10 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             case x if UserInterfaceType.requires_html_page_output(x):
                 return stylized_panel.colorized.html_page
 
-    def _get_output_config(self, ui_type: SpecifiedUserInterfaceType.Literals) -> OutputConfig:
+    def _extract_output_config_from_data_config(
+        self,
+        ui_type: SpecifiedUserInterfaceType.Literals,
+    ) -> OutputConfig:
         ui_config = cast(DataClassBase, self).config.ui
         ui_type_config = ui_config.get_ui_type_config(ui_type)
 
@@ -471,13 +473,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         config = OutputConfig(
             tab_size=ui_config.text.tab_size,
             indent_tab_size=ui_config.text.indent_tab_size,
-            debug_mode=ui_config.text.debug_mode,
             pretty_printer=ui_config.text.pretty_printer,
+            proportional_freedom=ui_config.text.proportional_freedom,
+            debug_mode=ui_config.text.debug_mode,
+            user_interface_type=ui_type,
             color_system=color_system,
             color_style=ui_type_config.color.style,
             transparent_background=ui_type_config.color.transparent_background,
             panel_design=ui_config.layout.panel_design,
             panel_title_at_top=ui_config.layout.panel_title_at_top,
+            max_title_height=ui_config.layout.max_title_height,
+            justify_in_layout=ui_config.layout.justify_in_layout,
         )
 
         if isinstance(ui_type_config, IsHtmlUserInterfaceConfig):
@@ -532,7 +538,7 @@ class ModelDisplayMixin(BaseDisplayMixin):
         ui_type = UserInterfaceType.BROWSER_PAGE
 
         frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._get_output_config(ui_type)
+        config = self._extract_output_config_from_data_config(ui_type)
 
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
         config = self._apply_kwargs_to_config(config, **kwargs)
@@ -542,6 +548,7 @@ class ModelDisplayMixin(BaseDisplayMixin):
             self_as_model,
             self_as_model.outer_type(),
             frame=frame,
+            **kwargs,
         )
 
 
@@ -573,7 +580,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         to display HTML output in the browser. Otherwise, returns None.
         """
         return self._display_according_to_ui_type(
-            ui_type=self._detect_ui_type_if_auto(UserInterfaceType.AUTO),
+            ui_type=cast(DataClassBase, self).config.ui.detected_type,
             return_output_if_str=False,
             output_method=self._list,
             **kwargs,
@@ -583,13 +590,12 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         from omnipy.data.dataset import Dataset
         dataset = cast(Dataset, self)
 
-        ui_type = self._detect_ui_type_if_auto(UserInterfaceType.AUTO)
+        ui_type = cast(DataClassBase, self).config.ui.detected_type
         frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._get_output_config(ui_type)
+        config = self._extract_output_config_from_data_config(ui_type)
+        config = self._update_config_with_overflow_modes(config, 'layout')
 
-        config = self._set_overflow_modes_and_other_configs(
-            config, 'layout', max_title_height=MaxTitleHeight.ONE)
-
+        config = dataclasses.replace(config, max_title_height=MaxTitleHeight.ONE)
         right_justified_config = dataclasses.replace(config, justify_in_layout='right')
         text_config = dataclasses.replace(config, language=SyntaxLanguage.TEXT)
 

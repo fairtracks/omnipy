@@ -15,18 +15,21 @@ from omnipy.shared.enums.display import (DisplayColorSystem,
                                          PrettyPrinterLib,
                                          SyntaxLanguage,
                                          VerticalOverflowMode)
+from omnipy.shared.enums.ui import UserInterfaceType
 
 
 def test_output_config() -> None:
     config = OutputConfig(
         tab_size=2,
         indent_tab_size=4,
-        debug_mode=True,
         pretty_printer=PrettyPrinterLib.DEVTOOLS,
         language=SyntaxLanguage.JSON,
         proportional_freedom=3.5,
+        debug_mode=True,
+        user_interface_type=UserInterfaceType.JUPYTER,
         color_system=DisplayColorSystem.ANSI_RGB,
         color_style=DarkLowContrastColorStyles.ONE_DARK,
+        transparent_background=False,
         css_font_families=('Menlo', 'monospace'),
         css_font_size=16,
         css_font_weight=400,
@@ -41,12 +44,14 @@ def test_output_config() -> None:
 
     assert config.tab_size == 2
     assert config.indent_tab_size == 4
-    assert config.debug_mode is True
     assert config.pretty_printer is PrettyPrinterLib.DEVTOOLS
     assert config.language is SyntaxLanguage.JSON
     assert config.proportional_freedom == 3.5
+    assert config.debug_mode is True
+    assert config.user_interface_type is UserInterfaceType.JUPYTER
     assert config.color_system is DisplayColorSystem.ANSI_RGB
     assert config.color_style is DarkLowContrastColorStyles.ONE_DARK
+    assert config.transparent_background is False
     assert config.css_font_families == ('Menlo', 'monospace')
     assert config.css_font_size == 16
     assert config.css_font_weight == 400
@@ -61,17 +66,19 @@ def test_output_config() -> None:
     config = OutputConfig(
         tab_size='2',  # type: ignore[arg-type]
         indent_tab_size='4',  # type: ignore[arg-type]
-        debug_mode='yes',  # type: ignore[arg-type]
         pretty_printer='rich',
         # Any language string supported by the pygments library should be accepted
         language='c++',
         proportional_freedom='3',  # type: ignore[arg-type]
+        debug_mode='yes',  # type: ignore[arg-type]
+        user_interface_type='terminal',
         color_system='256',
         # Any color style string supported by the pygments library should be accepted
         # Note: the lilypond color style is for use with the lilypond music notation software and as
         #       thus excluded from the list of valid color styles in Omnipy, but it is still a valid
         #       color style in the Pygments library.
         color_style='lilypond',
+        transparent_background=0,  # type: ignore[arg-type]
         css_font_families=[],  # type: ignore[arg-type]
         css_font_size='16',  # type: ignore[arg-type]
         css_font_weight='400',  # type: ignore[arg-type]
@@ -85,12 +92,14 @@ def test_output_config() -> None:
     )
     assert config.tab_size == 2
     assert config.indent_tab_size == 4
-    assert config.debug_mode is True
     assert config.pretty_printer is PrettyPrinterLib.RICH
     assert config.language == 'c++'
     assert config.proportional_freedom == 3.0
+    assert config.debug_mode is True
+    assert config.user_interface_type is UserInterfaceType.TERMINAL
     assert config.color_system is DisplayColorSystem.ANSI_256
     assert config.color_style == 'lilypond'
+    assert config.transparent_background is False
     assert config.css_font_families == ()
     assert config.css_font_size == 16
     assert config.css_font_weight == 400
@@ -126,9 +135,6 @@ def test_output_config_hashable() -> None:
             'indent_tab_size': 4
         },
         {
-            'debug_mode': True
-        },
-        {
             'pretty_printer': PrettyPrinterLib.DEVTOOLS
         },
         {
@@ -138,10 +144,19 @@ def test_output_config_hashable() -> None:
             'proportional_freedom': 1.0
         },
         {
+            'debug_mode': True
+        },
+        {
+            'user_interface_type': UserInterfaceType.JUPYTER
+        },
+        {
             'color_system': DisplayColorSystem.ANSI_256
         },
         {
             'color_style': LightHighContrastColorStyles.XCODE
+        },
+        {
+            'transparent_background': False
         },
         {
             'css_font_families': ()
@@ -197,9 +212,6 @@ def test_fail_output_config_no_assignments() -> None:
         config.indent_tab_size = 3  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.debug_mode = False  # type: ignore[misc]
-
-    with pytest.raises(AttributeError):
         config.pretty_printer = PrettyPrinterLib.DEVTOOLS  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
@@ -209,10 +221,19 @@ def test_fail_output_config_no_assignments() -> None:
         config.proportional_freedom = 3.0  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
+        config.debug_mode = False  # type: ignore[misc]
+
+    with pytest.raises(AttributeError):
+        config.user_interface_type = UserInterfaceType.JUPYTER  # type: ignore[misc]
+
+    with pytest.raises(AttributeError):
         config.color_system = DisplayColorSystem.WINDOWS_LEGACY  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
         config.color_style = DarkLowContrastColorStyles.GRUVBOX_DARK  # type: ignore[misc]
+
+    with pytest.raises(AttributeError):
+        config.transparent_background = False  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
         config.css_font_families = ('Menlo', 'monospace')  # type: ignore[misc]
@@ -259,9 +280,6 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(indent_tab_size=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(debug_mode=None)  # type: ignore[arg-type]
-
-    with pytest.raises(ValueError):
         OutputConfig(pretty_printer=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
@@ -271,10 +289,19 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(proportional_freedom=-1)
 
     with pytest.raises(ValueError):
+        OutputConfig(debug_mode=None)  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError):
+        OutputConfig(user_interface_type=None)  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError):
         OutputConfig(color_system=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
         OutputConfig(color_style='red')
+
+    with pytest.raises(ValueError):
+        OutputConfig(transparent_background=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
         OutputConfig(css_font_families=None)  # type: ignore[arg-type]
@@ -311,12 +338,14 @@ def test_output_config_default_values() -> None:
     config = OutputConfig()
     assert config.tab_size == 4
     assert config.indent_tab_size == 2
-    assert config.debug_mode is False
     assert config.pretty_printer is PrettyPrinterLib.RICH
     assert config.language is SyntaxLanguage.PYTHON
     assert config.proportional_freedom == 2.5
+    assert config.debug_mode is False
+    assert config.user_interface_type is UserInterfaceType.TERMINAL
     assert config.color_system is DisplayColorSystem.AUTO
     assert config.color_style is RecommendedColorStyles.ANSI_DARK
+    assert config.transparent_background is True
     assert config.css_font_families == (
         'CommitMonoOmnipy',
         'Menlo',

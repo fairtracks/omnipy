@@ -12,6 +12,7 @@ from omnipy.shared.enums.display import (DisplayColorSystem,
                                          PrettyPrinterLib,
                                          SyntaxLanguage,
                                          VerticalOverflowMode)
+from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
 import omnipy.util._pydantic as pyd
 
 
@@ -33,9 +34,6 @@ class OutputConfig:
         tab_size (NonNegativeInt): Number of spaces to use for each tab
         indent_tab_size (NonNegativeInt): Number of spaces to use for each
             indentation level.
-        debug_mode (bool): When True, enables additional debugging
-            information in the output, such as the hierarchy of the Model
-            objects.
         pretty_printer (PrettyPrinterLib.Literals): Library to use for
             pretty printing (rich or devtools).
         language (SyntaxLanguage.Literals | str): Syntax language for code
@@ -55,6 +53,16 @@ class OutputConfig:
             between the frame and the content (larger difference gives more
             freedom). The default value of 2.5 is a good compromise between
             readability/aesthetics and good use of the screen estate.
+        debug_mode (bool): When True, enables additional debugging
+            information in the output, such as the hierarchy of the Model
+            objects.
+        user_interface_type (UserInterfaceType.Literals): Type of user
+            interface for which the output should being prepared. The user
+            interface describes the technical solutions available for
+            interacting with the user, encompassing the support available
+            for displaying output as well as how the user interacts with the
+            library (including the type of interactive interpreter used, if
+            any).
         color_system (ColorSystem.Literals): Color system to
             use for terminal output. The default is AUTO, which
             automatically detects the color system based on particular
@@ -87,8 +95,9 @@ class OutputConfig:
             handle text that exceeds the width.
         vertical_overflow_mode (VerticalOverflowMode.Literals): How to
             handle text that exceeds the height.
-        layout_design (LayoutDesign.Literals): Visual design for the layout
-            of the output.
+        panel_design (PanelDesign.Literals): Visual design of the panel
+            used as container for the output. Only TABLE_GRID is currently
+            supported, which displays the output in a table-like grid.
         panel_title_at_top (bool): Whether panel titles will be displayed
             over the panel contents (True) or below the contents (False)
         max_title_height (MaxTitleHeight.Literals): Maximum height of the
@@ -103,10 +112,11 @@ class OutputConfig:
 
     tab_size: pyd.NonNegativeInt = 4
     indent_tab_size: pyd.NonNegativeInt = 2
-    debug_mode: bool = False
     pretty_printer: PrettyPrinterLib.Literals = PrettyPrinterLib.RICH
     language: SyntaxLanguage.Literals | str = SyntaxLanguage.PYTHON
     proportional_freedom: pyd.NonNegativeFloat = 2.5
+    debug_mode: bool = False
+    user_interface_type: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL
     color_system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
     color_style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
     transparent_background: bool = True

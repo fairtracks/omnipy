@@ -20,6 +20,8 @@ from omnipy.shared.enums.data import BackoffStrategy
 from omnipy.shared.enums.display import (DisplayColorSystem,
                                          DisplayDimensionsUpdateMode,
                                          HorizontalOverflowMode,
+                                         Justify,
+                                         MaxTitleHeight,
                                          PanelDesign,
                                          PrettyPrinterLib,
                                          VerticalOverflowMode)
@@ -203,6 +205,7 @@ class TextConfig(ConfigBase):
     tab_size: pyd.NonNegativeInt = 4
     indent_tab_size: pyd.NonNegativeInt = 2
     pretty_printer: PrettyPrinterLib.Literals = PrettyPrinterLib.RICH
+    proportional_freedom: pyd.NonNegativeFloat = 2.5
     debug_mode: bool = False
 
 
@@ -210,6 +213,8 @@ class LayoutConfig(ConfigBase):
     overflow: IsOverflowConfig = pyd.Field(default_factory=OverflowConfig)
     panel_design: PanelDesign.Literals = PanelDesign.TABLE_GRID
     panel_title_at_top: bool = True
+    max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO
+    justify_in_layout: Justify.Literals = Justify.LEFT
 
 
 def _get_cache_dir_path() -> str:
@@ -221,7 +226,7 @@ class UserInterfaceConfig(ConfigBase):
     Configuration for the user interface, including inputs and output
     devices.
     """
-    detected_type: UserInterfaceType.Literals = UserInterfaceType.AUTO
+    detected_type: SpecifiedUserInterfaceType.Literals = UserInterfaceType.UNKNOWN
     terminal: IsTerminalUserInterfaceConfig = pyd.Field(default_factory=TerminalUserInterfaceConfig)
     jupyter: IsJupyterUserInterfaceConfig = pyd.Field(default_factory=JupyterUserInterfaceConfig)
     browser: IsBrowserUserInterfaceConfig = pyd.Field(default_factory=BrowserUserInterfaceConfig)

@@ -7,6 +7,8 @@ from omnipy.shared.enums.data import BackoffStrategy
 from omnipy.shared.enums.display import (DisplayColorSystem,
                                          DisplayDimensionsUpdateMode,
                                          HorizontalOverflowMode,
+                                         Justify,
+                                         MaxTitleHeight,
                                          PanelDesign,
                                          PrettyPrinterLib,
                                          VerticalOverflowMode)
@@ -14,7 +16,7 @@ from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
                                      ConfigPersistOutputsOptions,
                                      ConfigRestoreOutputsOptions,
                                      EngineChoice)
-from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
+from omnipy.shared.enums.ui import SpecifiedUserInterfaceType
 from omnipy.shared.protocols.util import IsDataPublisher
 from omnipy.shared.typedefs import LocaleType
 import omnipy.util._pydantic as pyd
@@ -98,6 +100,7 @@ class IsTextConfig(IsDataPublisher, Protocol):
     tab_size: pyd.NonNegativeInt
     indent_tab_size: pyd.NonNegativeInt
     pretty_printer: PrettyPrinterLib.Literals
+    proportional_freedom: pyd.NonNegativeFloat
     debug_mode: bool
 
 
@@ -107,12 +110,14 @@ class IsLayoutConfig(IsDataPublisher, Protocol):
     overflow: IsOverflowConfig
     panel_design: PanelDesign.Literals
     panel_title_at_top: bool
+    max_title_height: MaxTitleHeight.Literals
+    justify_in_layout: Justify.Literals
 
 
 @runtime_checkable
 class IsUserInterfaceConfig(IsDataPublisher, Protocol):
     """"""
-    detected_type: UserInterfaceType.Literals
+    detected_type: SpecifiedUserInterfaceType.Literals
     terminal: IsTerminalUserInterfaceConfig
     jupyter: IsJupyterUserInterfaceConfig
     browser: IsBrowserUserInterfaceConfig

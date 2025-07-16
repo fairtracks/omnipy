@@ -33,10 +33,10 @@ def detect_and_setup_user_interface(runtime: 'Runtime') -> None:
         ui_type_data_config.color.dark_background = detect_dark_terminal_background()
 
     match ui_type:
-        case x if UserInterfaceType.is_jupyter_in_browser(x):
+        case _ui_type if UserInterfaceType.is_jupyter_in_browser(_ui_type):
             setup_css_if_running_in_jupyter_in_browser(ui_type_data_config.color)
-        case x if UserInterfaceType.is_plain_terminal(x):
-            setup_displayhook_if_plain_terminal()
+        case _ui_type if UserInterfaceType.is_plain_terminal(_ui_type):
+            setup_displayhook_if_plain_terminal(_ui_type)
 
 
 def running_in_ipython_terminal() -> bool:
@@ -104,7 +104,7 @@ def detect_display_color_system(
     else:
         console = rich.console.Console(
             color_system=DisplayColorSystem.AUTO,
-            force_terminal=UserInterfaceType.is_terminal(detect_ui_type()),
+            force_terminal=UserInterfaceType.is_terminal(ui_type),
         )
         rich_color_system: str | None = console.color_system
         if rich_color_system is None:
@@ -155,7 +155,7 @@ def get_terminal_prompt_height(
             return 0
 
 
-def setup_displayhook_if_plain_terminal() -> None:
+def setup_displayhook_if_plain_terminal(ui_type: TerminalOutputUserInterfaceType.Literals) -> None:
     """
     Sets up the display hook for plain terminal environments to ensure that
     Model instances, Datasets, and ConfigBase objects are displayed using
@@ -164,25 +164,20 @@ def setup_displayhook_if_plain_terminal() -> None:
     from omnipy.config import ConfigBase
     from omnipy.data.dataset import Dataset
 
-    ui_type = detect_ui_type()
+    def _omnipy_displayhook(obj: object) -> None:
+        """
+        Custom display hook for plain terminal environments.
+        """
+        import builtins
 
-    if UserInterfaceType.is_plain_terminal(ui_type):
+        if obj is not None:
+            if (is_model_instance(obj) or isinstance(obj, Dataset) or isinstance(obj, ConfigBase)):
+                print(obj.default_repr_to_terminal_str(ui_type))
+                builtins._ = obj  # type: ignore[attr-defined]
+            else:
+                sys.__displayhook__(obj)
 
-        def _omnipy_displayhook(obj: object) -> None:
-            """
-            Custom display hook for plain terminal environments.
-            """
-            import builtins
-
-            if obj is not None:
-                if (is_model_instance(obj) or isinstance(obj, Dataset)
-                        or isinstance(obj, ConfigBase)):
-                    print(obj.default_repr_to_terminal_str(ui_type))
-                    builtins._ = obj  # type: ignore[attr-defined]
-                else:
-                    sys.__displayhook__(obj)
-
-        sys.displayhook = _omnipy_displayhook
+    sys.displayhook = _omnipy_displayhook
 
 
 def setup_css_if_running_in_jupyter_in_browser(jupyter_color_config: IsColorConfig) -> None:
