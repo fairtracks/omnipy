@@ -7,9 +7,10 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.layout.base import Layout
-from omnipy.data._display.panel.base import FrameInvT, FrameT, FullyRenderedPanel
+from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanelLayout, DraftPanel
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
+from omnipy.data._display.panel.typedefs import FrameInvT, FrameT
 from omnipy.shared.exceptions import ShouldNotOccurException
 import omnipy.util._pydantic as pyd
 

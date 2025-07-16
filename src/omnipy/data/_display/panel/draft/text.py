@@ -7,11 +7,12 @@ from typing_extensions import override
 from omnipy.data._display.constraints import ConstraintsSatisfaction
 from omnipy.data._display.dimensions import Dimensions, DimensionsFit, has_height
 from omnipy.data._display.frame import AnyFrame
-from omnipy.data._display.panel.base import FrameInvT, FrameT, FullyRenderedPanel
+from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.cropping import (crop_content_lines_vertically_for_resizing,
                                                  crop_content_with_extra_wide_chars)
 from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, DraftPanel
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
+from omnipy.data._display.panel.typedefs import FrameInvT, FrameT
 import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import split_all_content_to_lines, strip_newlines
 

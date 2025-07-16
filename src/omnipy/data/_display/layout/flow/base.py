@@ -11,9 +11,10 @@ from omnipy.data._display.layout.flow.helpers import (CrampedPanelInfo,
                                                       create_panel_with_updated_frame,
                                                       LayoutFlowContext,
                                                       PanelResizeHelper)
-from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, panel_is_dimensions_aware
+from omnipy.data._display.panel.base import DimensionsAwarePanel, panel_is_dimensions_aware
 from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, DraftPanel
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
+from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.shared.enums.display import PanelDesign
 import omnipy.util._pydantic as pyd
 

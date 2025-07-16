@@ -5,11 +5,12 @@ import rich.style
 import rich.syntax
 from typing_extensions import override
 
-from omnipy.data._display.panel.base import FrameT, OutputVariant
+from omnipy.data._display.panel.base import OutputVariant
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.helpers import extract_value_if_enum
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.data._display.panel.styling.output import OutputMode, TextCroppingOutputVariant
+from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.shared.enums.colorstyles import AllColorStyles
 from omnipy.shared.enums.display import (DisplayColorSystem,
                                          HorizontalOverflowMode,

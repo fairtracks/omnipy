@@ -11,9 +11,9 @@ from typing_extensions import override
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import DimensionsWithWidth, has_width, Proportionally
 from omnipy.data._display.frame import frame_has_width, FrameWithWidth
-from omnipy.data._display.panel.base import FrameT, OtherFrameT
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
+from omnipy.data._display.panel.typedefs import FrameT, OtherFrameT
 from omnipy.data.typechecks import is_model_instance
 from omnipy.shared.constants import MAX_TERMINAL_SIZE, TERMINAL_DEFAULT_WIDTH
 from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguage

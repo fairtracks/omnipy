@@ -5,12 +5,13 @@ from typing import cast, Generic, NamedTuple
 from omnipy.data._display.dimensions import DimensionsWithWidthAndHeight, has_width
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.layout.base import Layout
-from omnipy.data._display.panel.base import FrameInvT, FrameT, panel_is_dimensions_aware
+from omnipy.data._display.panel.base import panel_is_dimensions_aware
 from omnipy.data._display.panel.draft.base import (ContentT,
                                                    DimensionsAwareDraftPanel,
                                                    DimensionsAwareDraftPanelLayout,
                                                    DraftPanel)
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
+from omnipy.data._display.panel.typedefs import FrameInvT, FrameT
 from omnipy.util import _pydantic as pyd
 
 # Functions

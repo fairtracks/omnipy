@@ -6,10 +6,11 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
 from omnipy.data._display.frame import empty_frame, Frame
-from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, Panel
+from omnipy.data._display.panel.base import DimensionsAwarePanel, Panel
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
+from omnipy.data._display.panel.typedefs import FrameT
 
 from .case_setup import OutputPropertyType, WithinFrameExp
 

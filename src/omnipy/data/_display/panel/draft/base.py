@@ -6,7 +6,8 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints, ConstraintsSatisfaction
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.layout.base import DimensionsAwarePanelLayoutMixin, Layout
-from omnipy.data._display.panel.base import DimensionsAwarePanel, FrameT, FullyRenderedPanel, Panel
+from omnipy.data._display.panel.base import DimensionsAwarePanel, FullyRenderedPanel, Panel
+from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.util import _pydantic as pyd
 
 ContentT = TypeVar('ContentT', bound=object, default=object, covariant=True)

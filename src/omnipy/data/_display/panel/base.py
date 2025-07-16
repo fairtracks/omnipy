@@ -3,7 +3,7 @@ from dataclasses import asdict
 from functools import cached_property
 from typing import cast, Generic
 
-from typing_extensions import override, TypeIs, TypeVar
+from typing_extensions import override, TypeIs
 
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
@@ -11,13 +11,10 @@ from omnipy.data._display.dimensions import (Dimensions,
                                              DimensionsFit,
                                              DimensionsWithWidthAndHeight,
                                              has_height)
-from omnipy.data._display.frame import AnyFrame, empty_frame, Frame
+from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.helpers import soft_wrap_words
+from omnipy.data._display.panel.typedefs import FrameT
 import omnipy.util._pydantic as pyd
-
-FrameT = TypeVar('FrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
-OtherFrameT = TypeVar('OtherFrameT', bound=AnyFrame, default=AnyFrame, covariant=True)
-FrameInvT = TypeVar('FrameInvT', bound=AnyFrame, default=AnyFrame)
 
 
 class OutputVariant(ABC):

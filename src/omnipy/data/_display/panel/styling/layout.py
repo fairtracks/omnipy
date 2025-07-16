@@ -13,7 +13,6 @@ from typing_extensions import override
 from omnipy.data._display.dimensions import has_height, has_width
 from omnipy.data._display.layout.base import Layout, PanelDesignDims
 from omnipy.data._display.panel.base import (DimensionsAwarePanel,
-                                             FrameInvT,
                                              OutputVariant,
                                              panel_is_dimensions_aware)
 from omnipy.data._display.panel.draft.base import (DraftPanel,
@@ -26,6 +25,7 @@ from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_st
                                                 get_token_style_from_color_style)
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingOutputVariant
+from omnipy.data._display.panel.typedefs import FrameInvT
 from omnipy.shared.constants import (PANEL_TITLE_BASE_16_TOKEN,
                                      PANEL_TITLE_EXTRA_STYLE,
                                      PANEL_TITLE_GENERAL_TOKEN,

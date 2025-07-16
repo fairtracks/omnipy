@@ -9,9 +9,9 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.layout.base import Layout
-from omnipy.data._display.panel.base import FrameT
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
+from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.shared.exceptions import ShouldNotOccurException
 import omnipy.util._pydantic as pyd
 
