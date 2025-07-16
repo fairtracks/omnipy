@@ -27,7 +27,8 @@ def test_join_tables(
                 join_tables.run(table_1, table_2, join_type=join_type, on_cols=case.on_cols)
         else:
             result = join_tables.run(table_1, table_2, join_type=join_type, on_cols=case.on_cols)
-            target = get_target_as_pandas_model(getattr(case, f'result_{join_type}_join'))
+            target = get_target_as_pandas_model(
+                getattr(case, f'result_{join_type}_join'), col_dtypes=case.col_dtypes)
             pd.testing.assert_frame_equal(result.contents, target.contents, check_dtype=False)
 
 

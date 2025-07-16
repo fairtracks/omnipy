@@ -17,6 +17,7 @@ class TablePairCase:
     result_right_join: JsonListOfListsOfScalars | None = None
     result_cartesian: JsonListOfListsOfScalars | None = None
     exception_cls: type[Exception] | None = None
+    col_dtypes: dict[str, str] | None = None
 
 
 @pc.case(id='error_join_two_empty_tables', tags=['join', 'on_all_cols'])
@@ -759,12 +760,12 @@ def case_join_two_tables_two_common_colnames_no_match(
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'adult'],
         [7, 'Bob', 'Duck', None],
+        [None, 'Bob', 'Mouse', False],
         [39, 'Donald', 'Duck', None],
-        [41, 'Mickey', 'Mouse', None],
+        [None, 'Donald', 'Mouse', True],
         [None, 'Mickey', 'Duck', True],
         [None, 'Mickey', 'Duck', False],
-        [None, 'Donald', 'Mouse', True],
-        [None, 'Bob', 'Mouse', False],
+        [41, 'Mickey', 'Mouse', None],
     ]
     result_inner_join: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'adult'],
@@ -790,6 +791,7 @@ def case_join_two_tables_two_common_colnames_no_match(
         result_inner_join=result_inner_join,
         result_left_join=result_left_join,
         result_right_join=result_right_join,
+        col_dtypes=dict(age='Int64', firstname='str', lastname='str', adult='boolean'),
     )
 
 
