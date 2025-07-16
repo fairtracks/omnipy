@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from functools import cached_property, lru_cache
 from typing import Any, cast, Generic, Iterator
 
-import pygments.token
 import rich.align
 import rich.box
 import rich.containers
@@ -23,11 +22,15 @@ from omnipy.data._display.panel.draft.base import (DraftPanel,
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_style,
-                                                calculate_fg_color_from_color_style,
                                                 ForceAutodetect,
                                                 get_token_style_from_color_style)
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingOutputVariant
+from omnipy.shared.constants import (PANEL_TITLE_BASE_16_TOKEN,
+                                     PANEL_TITLE_EXTRA_STYLE,
+                                     PANEL_TITLE_GENERAL_TOKEN,
+                                     TABLE_BORDER_BASE_16_TOKEN,
+                                     TABLE_BORDER_GENERAL_TOKEN)
 from omnipy.shared.enums.display import DisplayColorSystem, PanelDesign
 from omnipy.util import _pydantic as pyd
 
@@ -151,7 +154,6 @@ class PanelElementStyles:
         force_autodetect_bg_color: ForceAutodetect.Literals,
     ) -> None:
         color_style = outer_panel.config.color_style
-        style_fg_color = calculate_fg_color_from_color_style(color_style)
 
         if outer_panel.config.transparent_background:
             style_bg_color = None
@@ -159,13 +161,21 @@ class PanelElementStyles:
             style_bg_color = calculate_bg_color_from_color_style(
                 color_style, force_autodetect=force_autodetect_bg_color)
 
-        self.title_style = get_token_style_from_color_style(
-            pygments.token.Token.Name.Decorator,
-            color_style,
-        )
-        self.title_style._bgcolor = style_bg_color
+        basic_title_style = get_token_style_from_color_style(PANEL_TITLE_BASE_16_TOKEN, color_style)
+        if basic_title_style is rich.style.Style.null():
+            basic_title_style = get_token_style_from_color_style(PANEL_TITLE_GENERAL_TOKEN,
+                                                                 color_style)
 
-        self.table_style = rich.style.Style(color=style_fg_color, bgcolor=style_bg_color)
+        self.title_style = rich.style.Style(color=basic_title_style.color, bgcolor=style_bg_color)
+        self.title_style += rich.style.Style.parse(PANEL_TITLE_EXTRA_STYLE)
+
+        basic_table_style = get_token_style_from_color_style(TABLE_BORDER_BASE_16_TOKEN,
+                                                             color_style)
+        if basic_table_style is rich.style.Style.null():
+            basic_table_style = get_token_style_from_color_style(TABLE_BORDER_GENERAL_TOKEN,
+                                                                 color_style)
+
+        self.table_style = rich.style.Style(color=basic_table_style.color, bgcolor=style_bg_color)
 
 
 class InnerPanelStyler:

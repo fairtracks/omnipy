@@ -1,6 +1,28 @@
 import pygments.token
+from pygments.token import Token
 
 import omnipy.util._pydantic as pyd
+
+Base16 = Token.Base16
+
+# See Chris Kempson's Base16 framework
+# https://github.com/chriskempson/base16/blob/main/styling.md
+Base16.DefaultBackground
+Base16.LighterBackground
+Base16.SelectionBackground
+Base16.LineHighlight
+Base16.DarkForeground
+Base16.DefaultForeground
+Base16.LightForeground
+Base16.LightBackground
+Base16.Variables
+Base16.Integers
+Base16.Classes
+Base16.Strings
+Base16.Support
+Base16.Functions
+Base16.Keywords
+Base16.Deprecated
 
 
 class Base16Colors(pyd.BaseModel):
@@ -79,7 +101,7 @@ def get_styles_from_base16_colors(
         pygments.token.String.Other: base16_colors.base0C,
         pygments.token.Generic: base16_colors.base05,
         pygments.token.Generic.Heading: 'bold ' + base16_colors.base0D,
-        pygments.token.Generic.Subheading: base16_colors.base0D,
+        pygments.token.Generic.Subheading: 'italic ' + base16_colors.base0A,
         pygments.token.Generic.Deleted: base16_colors.base08,
         pygments.token.Generic.Inserted: base16_colors.base0B,
         pygments.token.Generic.Changed: base16_colors.base0E,
@@ -90,4 +112,20 @@ def get_styles_from_base16_colors(
         pygments.token.Generic.Prompt: base16_colors.base03,
         pygments.token.Generic.Output: base16_colors.base05,
         pygments.token.Generic.Traceback: base16_colors.base08,
+        Base16.DefaultBackground: base16_colors.base00,
+        Base16.LighterBackground: base16_colors.base01,
+        Base16.SelectionBackground: base16_colors.base02,
+        Base16.LineHighlight: base16_colors.base03,
+        Base16.DarkForeground: base16_colors.base04,
+        Base16.DefaultForeground: base16_colors.base05,
+        Base16.LightForeground: base16_colors.base06,
+        Base16.LightBackground: base16_colors.base07,
+        Base16.Variables: base16_colors.base0D,
+        Base16.Integers: base16_colors.base09,
+        Base16.Classes: base16_colors.base0A,
+        Base16.Strings: base16_colors.base0B,
+        Base16.Support: base16_colors.base0C,
+        Base16.Functions: base16_colors.base0D,
+        Base16.Keywords: base16_colors.base0E,
+        Base16.Deprecated: base16_colors.base08,
     }
