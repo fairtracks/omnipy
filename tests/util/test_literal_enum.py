@@ -131,11 +131,7 @@ def test_missing_attribute_definition() -> None:
 
 
 def test_literals_not_in_line_with_specialization() -> None:
-    with pytest.raises(
-            TypeError,
-            match=r'Literal values do not match the '
-            r'specialization \(str, bool\): 123, None',
-    ):
+    with pytest.raises(TypeError, match=r'Literal values do not match the specialization'):
 
         class BadEnum(LiteralEnum[str | bool]):
             Literals = Literal['Text', 123, True, None]

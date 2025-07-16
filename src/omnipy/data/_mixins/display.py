@@ -345,9 +345,9 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         extra_keys = (kwargs.keys() - set(supported_keys))
 
         if extra_keys:
-            raise TypeError(f'Unexpected keyword arguments: {", ".join(extra_keys)}. '
+            raise TypeError(f"Unexpected keyword arguments: {', '.join(extra_keys)}. "
                             f'Expected only Dimensions and OutputConfig parameters: '
-                            f'{", ".join(supported_keys)}.')
+                            f"{', '.join(supported_keys)}.")
 
     def _browse_models(self, models: dict[str, 'Model'], **kwargs) -> None:
         self_as_dataclass = cast(DataClassBase, self)

@@ -13,7 +13,6 @@ import sys
 from types import GenericAlias, ModuleType, NoneType, UnionType
 from typing import _AnnotatedAlias  # type: ignore[attr-defined]
 from typing import _LiteralGenericAlias  # type: ignore[attr-defined]
-from typing import _LiteralSpecialForm  # type: ignore[attr-defined]
 from typing import _UnionGenericAlias  # type: ignore[attr-defined]
 from typing import (_SpecialForm,
                     Any,
@@ -117,7 +116,8 @@ def transfer_generic_args_to_cls(to_cls, from_generic_type):
 
 
 @overload
-def ensure_plain_type(in_type: ForwardRef) -> ForwardRef:
+def ensure_plain_type(
+        in_type: ForwardRef) -> ForwardRef:  # pyright: ignore [reportOverlappingOverload]
     ...
 
 
@@ -137,21 +137,18 @@ def ensure_plain_type(in_type: _SpecialForm) -> _SpecialForm:
 
 
 @overload
-def ensure_plain_type(
-    in_type: _LiteralGenericAlias | _UnionGenericAlias | _AnnotatedAlias
-) -> _LiteralSpecialForm | type:
+def ensure_plain_type(in_type: _LiteralGenericAlias | _UnionGenericAlias | _AnnotatedAlias) -> type:
     ...
 
 
-def ensure_plain_type(
-        in_type: TypeForm) -> ForwardRef | TypeVar | type | _SpecialForm | _LiteralSpecialForm:
+def ensure_plain_type(in_type: TypeForm) -> ForwardRef | TypeVar | type | _SpecialForm | NoneType:
 
     if in_type == NoneType:
         return None
 
     origin = get_origin(in_type)
     if origin == Union:
-        return UnionType
+        return UnionType  # pyright: ignore [reportReturnType]
     else:
         return cast(type | ForwardRef | TypeVar, origin if get_args(in_type) else in_type)
 
