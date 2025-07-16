@@ -6,6 +6,7 @@ from typing_extensions import Self
 
 from omnipy.data.model import Model
 from omnipy.data.typechecks import is_model_instance
+from omnipy.shared.exceptions import ShouldNotOccurException
 
 from ..tables.models import (TableDictOfDictsOfJsonScalarsModel,
                              TableDictOfListsOfJsonScalarsModel,
@@ -82,8 +83,18 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType']):
 
         self._validate_and_set_value(pd.read_json(StringIO(json_contents)).convert_dtypes())
 
+    def to_json(self, pretty=True) -> str:
+        from .lazy_import import pd
+
+        if isinstance(self.contents, pd.DataFrame):
+            return self.contents.to_json(orient='records')
+        elif isinstance(self.contents, pd.Series):
+            return self.contents.to_json()
+        else:
+            raise ShouldNotOccurException()
+
 
 if TYPE_CHECKING:
 
-    class PandasModel_DataFrame(PandasModel, pd.DataFrame):
+    class PandasModel_DataFrame(PandasModel, pd.DataFrame):  # type: ignore[misc]
         ...
