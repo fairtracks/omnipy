@@ -27,6 +27,8 @@ theme:
 extra_css:
   - https://cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/hack.css
   - stylesheets/extra.css
+extra_javascript:
+  - javascripts/extra.js
 markdown_extensions:
 #  - pymdownx.details
   - pymdownx.highlight:
