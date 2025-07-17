@@ -105,7 +105,7 @@ The following creates a data model of a list of integers, and parses some data i
 ```
 
 ```pycon exec="1" session="greet" result="console"
->>> data_as_list_of_ints.peek(user_interface_type='browser_tag')
+>>> data_as_list_of_ints._docs()
 ```
  
 Omnipy Models are self-constraining, meaning that they will always ensure that the data 
@@ -133,7 +133,7 @@ as it allows you to handle errors gracefully without losing your progress.
 ```
 
 ```pycon exec="1" session="greet" result="console"
->>> data_as_list_of_ints.peek(user_interface_type='browser_tag')
+>>> data_as_list_of_ints._docs()
 ```
 
 ```pycon exec="1" session="greet" source="console"
@@ -142,7 +142,7 @@ as it allows you to handle errors gracefully without losing your progress.
 ```
 
 ```pycon exec="1" session="greet" result="console"
->>> data_as_list_of_ints.peek(user_interface_type='browser_tag')
+>>> data_as_list_of_ints._docs()
 ```
 
 More to come soon...

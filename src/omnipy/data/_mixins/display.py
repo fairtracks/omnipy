@@ -21,6 +21,7 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import TextDraftPanel
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.hub.ui import get_terminal_prompt_height
+from omnipy.shared.enums.colorstyles import RecommendedColorStyles
 from omnipy.shared.enums.display import DisplayColorSystem, MaxTitleHeight, SyntaxLanguage
 from omnipy.shared.enums.ui import (BrowserPageUserInterfaceType,
                                     BrowserUserInterfaceType,
@@ -100,10 +101,15 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         to display HTML output in the browser. Otherwise, returns None.
         """
         return self._display_according_to_ui_type(
-            ui_type=cast(DataClassBase, self).config.ui.detected_type,
+            ui_type=self._extract_ui_type(**kwargs),
             return_output_if_str=False,
             output_method=self._peek,
-            **kwargs)
+            **kwargs,
+        )
+
+    def _extract_ui_type(self, **kwargs) -> SpecifiedUserInterfaceType.Literals:
+        return (kwargs.get('user_interface_type', None)
+                or cast(DataClassBase, self).config.ui.detected_type)
 
     @takes_input_params_from(_DisplayMethodParams.__init__)
     def full(self, **kwargs) -> 'Element | None':
@@ -121,7 +127,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         kwargs_copy['height'] = None
 
         return self._display_according_to_ui_type(
-            ui_type=cast(DataClassBase, self).config.ui.detected_type,
+            ui_type=self._extract_ui_type(**kwargs),
             return_output_if_str=False,
             output_method=self._full,
             **kwargs_copy)
@@ -147,6 +153,16 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     @abstractmethod
     def _browse(self, **kwargs) -> None:
         ...
+
+    @takes_input_params_from(_DisplayMethodParams.__init__)
+    def _docs(self, **kwargs) -> None:
+        """
+        Displays a preview of the model or dataset for the documentation.
+        """
+        self.peek(
+            user_interface_type=SpecifiedUserInterfaceType.BROWSER_TAG,
+            color_style=RecommendedColorStyles.OMNIPY_SELENIZED_WHITE,
+            **kwargs)
 
     def __str__(self) -> str:
         return repr(self)
@@ -318,7 +334,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         self._check_kwarg_keys(**kwargs)
         frame_kwargs = {k: v for k, v in kwargs.items() if k in _DimsRestatedParams.__annotations__}
         if frame_kwargs:
-            frame = frame.modified_copy(**frame_kwargs)  # type: ignore[call-arg]
+            frame = frame.modified_copy(**frame_kwargs)
 
         return frame
 
@@ -580,7 +596,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         to display HTML output in the browser. Otherwise, returns None.
         """
         return self._display_according_to_ui_type(
-            ui_type=cast(DataClassBase, self).config.ui.detected_type,
+            ui_type=self._extract_ui_type(**kwargs),
             return_output_if_str=False,
             output_method=self._list,
             **kwargs,
