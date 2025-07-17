@@ -121,7 +121,6 @@ class OutputConfig:
     color_style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
     transparent_background: bool = True
     css_font_families: tuple[str, ...] = (
-        'CommitMonoOmnipy',
         'Menlo',
         'DejaVu Sans Mono',
         'Consolas',
@@ -129,8 +128,8 @@ class OutputConfig:
         'monospace',
     )
     css_font_size: pyd.NonNegativeInt | None = 14
-    css_font_weight: pyd.NonNegativeInt | None = 450
-    css_line_height: pyd.NonNegativeFloat | None = 1.35
+    css_font_weight: pyd.NonNegativeInt | None = 400
+    css_line_height: pyd.NonNegativeFloat | None = 1.25
     horizontal_overflow_mode: HorizontalOverflowMode.Literals = HorizontalOverflowMode.ELLIPSIS
     vertical_overflow_mode: VerticalOverflowMode.Literals = VerticalOverflowMode.ELLIPSIS_BOTTOM
     panel_design: PanelDesign.Literals = PanelDesign.TABLE_GRID

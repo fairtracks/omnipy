@@ -104,7 +104,7 @@ The following creates a data model of a list of integers, and parses some data i
 >>> data_as_list_of_ints  # The data is now parsed into a list of integers
 ```
 
-```pycon exec="1" session="greet" result="console" html=true
+```pycon exec="1" session="greet" result="console" html="true"
 >>> print(data_as_list_of_ints._docs())
 ```
  
@@ -132,7 +132,7 @@ as it allows you to handle errors gracefully without losing your progress.
 >>> data_as_list_of_ints
 ```
 
-```pycon exec="1" session="greet" result="console" html=true
+```pycon exec="1" session="greet" result="console" html="true"
 >>> print(data_as_list_of_ints._docs())
 ```
 
@@ -141,8 +141,8 @@ as it allows you to handle errors gracefully without losing your progress.
 >>> data_as_list_of_ints
 ```
 
-```pycon exec="1" session="greet" result="console" html=true
->>> data_as_list_of_ints.peek(user_interface_type='browser-tag', color_style='omnipy-selenized-white')
+```pycon exec="1" session="greet" result="console" html="true"
+>>> print(data_as_list_of_ints._docs())
 ```
 
 More to come soon...

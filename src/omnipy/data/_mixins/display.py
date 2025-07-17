@@ -159,10 +159,14 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         """
         Displays a preview of the model or dataset for the documentation.
         """
+        ui_type = UserInterfaceType.BROWSER_TAG
         if 'color_style' not in kwargs:
             kwargs['color_style'] = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
+        if 'user_interface_type' not in kwargs:
+            kwargs['user_interface_type'] = ui_type
+
         return self._display_according_to_ui_type(
-            ui_type=SpecifiedUserInterfaceType.BROWSER_TAG,
+            ui_type=ui_type,
             return_output_if_str=True,
             output_method=self._default_panel,
             **kwargs,
@@ -306,7 +310,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _peek_models(self, models: dict[str, 'Model'], **kwargs) -> DraftPanel:
         from omnipy.data.dataset import Dataset
 
-        ui_type = cast(DataClassBase, self).config.ui.detected_type
+        ui_type = self._extract_ui_type(**kwargs)
         frame = self._define_frame_from_available_display_dims(ui_type)
         config = self._extract_output_config_from_data_config(ui_type)
         layout: Layout[DraftPanel] = Layout()
@@ -367,7 +371,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                             f"{', '.join(supported_keys)}.")
 
     def _browse_models(self, models: dict[str, 'Model'], **kwargs) -> None:
-        self_as_dataclass = cast(DataClassBase, self)
+        ui_type = self._extract_ui_type(**kwargs)
 
         html_output = {}
         all_urls = []
@@ -380,7 +384,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 **kwargs,
             )
 
-        if self_as_dataclass.config.ui.detected_type is UserInterfaceType.JUPYTER:
+        if ui_type is UserInterfaceType.JUPYTER:
             from omnipy.data._display.integrations.jupyter.components import BrowseModels
             BrowseModels(html_contents=html_output)._ipython_display_()
         else:
@@ -610,7 +614,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         from omnipy.data.dataset import Dataset
         dataset = cast(Dataset, self)
 
-        ui_type = cast(DataClassBase, self).config.ui.detected_type
+        ui_type = self._extract_ui_type(**kwargs)
         frame = self._define_frame_from_available_display_dims(ui_type)
         config = self._extract_output_config_from_data_config(ui_type)
         config = self._update_config_with_overflow_modes(config, 'layout')

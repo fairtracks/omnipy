@@ -77,17 +77,20 @@ code.doc-symbol-module::after {
 }
 
 /* Remove bottom margin for top code box of two consecutive code boxes  */
-.md-typeset div:has(+ div > pre) > pre {
+.md-typeset div:has(+ div > pre) > pre,
+.md-typeset div:has(+ pre) > pre {
   margin-bottom: 0;
 }
 
 /* Remove top margin for bottom code box of two consecutive code boxes  */
-.md-typeset div:has(> pre) + div > pre  {
+.md-typeset div:has(> pre) + div > pre,
+.md-typeset div:has(> pre) + pre {
   margin-top: 0;
 }
 
 /* Remove "copy code" button for bottom code box of two consecutive code boxes  */
-.md-typeset div:has(> pre) + div > pre > button  {
+.md-typeset div:has(> pre) + div > pre > button,
+.md-typeset div:has(> pre) + pre > button  {
   display: none;
 }
 
@@ -98,7 +101,8 @@ code.doc-symbol-module::after {
 }
 
 /* Improve mono font line art by removing gaps between lines */
-.md-typeset div:has(> pre) + div > pre > code  {
+.md-typeset div:has(> pre) + div > pre > code,
+.md-typeset div:has(> pre) + pre > code {
   line-height: normal;
 }
 
