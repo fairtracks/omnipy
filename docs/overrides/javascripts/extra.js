@@ -1,5 +1,5 @@
 // From https://github.com/opensafely/documentation/issues/1458#issuecomment-1997884145
-// By Github user [Jongmassey](https://github.com/Jongmassey),
+// Modified from Github user [Jongmassey](https://github.com/Jongmassey),
 // available under the GNU General Public License v3.0:
 //
 // OpenSAFELY Documentation
@@ -32,9 +32,11 @@ function getTextWithoutPromptAndOutput(targetSelector) {
   var text = '';
   var targetElement = document.querySelector(targetSelector);
   const excludedClasses = ['gp', 'go'];
-  for (const node of targetElement.childNodes) {
-    if (node.nodeType == Node.TEXT_NODE | (node.nodeType == Node.ELEMENT_NODE && !excludedClasses.includes(node.className))) {
-      text += node.textContent;
+  for (const span of targetElement.childNodes) {
+    for (const node of span.childNodes) {
+      if (node.nodeType == Node.TEXT_NODE | (node.nodeType == Node.ELEMENT_NODE && !excludedClasses.includes(node.className))) {
+        text += node.textContent;
+      }
     }
   }
   return text;
