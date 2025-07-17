@@ -1,15 +1,20 @@
 from textwrap import dedent
 from typing import Literal
 
+from _pytest.compat import assert_never
+
 from omnipy.shared.enums.display import DisplayColorSystem
 from omnipy.util.literal_enum import LiteralEnum
 
+_ANSI_TEXT = dedent("""
+    The ANSI {variant} color setting from the Rich library is set as default
+    for terminals with a {variant} background and low number of supported
+    colors. This is out of pragmatism, as it makes use of the predefined
+    colors of the terminal instead of overriding with a predefined color
+    style.
+    """)
 
-class RecommendedColorStyles(LiteralEnum[str]):
-    """
-    Recommended color styles for syntax highlighting, provided through the
-    Pygments and Rich libraries.
-
+_SELENIZED_TEXT = dedent("""
     The Omnipy Selenized styles are based on the Selenized color scheme by
     Jan Warchoł (https://github.com/jan-warchol/selenized).
 
@@ -24,30 +29,19 @@ class RecommendedColorStyles(LiteralEnum[str]):
     These color styles work well with transparent backgrounds to blend in
     with the current terminal theme. For best results, you should change
     the background color of the terminal (or the complete color theme) to
-    align with the Omnipy Selenized styles.
+    align with the Omnipy Selenized styles. """)
 
-    The Omnipy Selenized styles are available in four variants:
-    - Black: A slightly soft dark theme with an almost black background,
-             suitable also on a fully black background
-    - Dark: A dark theme on a dark bluish background,
-            a bit harsh on a fully black background
-    - Light: A soft light theme on an off-white background,
-             suitable also on a fully white background for a softer feel
-    - White: A light theme on a fully white background
 
-    The ANSI color settings from the Rich library are set as default out of
-    pragmatism, as they make use of the predefined colors of the terminal
-    instead of overriding with a predefined color style. The ANSI dark
-    variant seems to be slightly more readable across both light and dark
-    terminal themes. However, if you are using a light theme, you may want
-    to use the light variant of the ANSI color style.
+class RecommendedColorStyles(LiteralEnum[str]):
+    """
+    Recommended color styles for syntax highlighting, provided through the
+    Pygments and Rich libraries.
 
     The ANSI color styles are provided to make Omnipy work ok on a wider
     range of terminals, but they are not recommended for use in the long
     run. For best results, you should switch to the light or white variants
     of the Omnipy Selenized styles, or to another color style of your
-    choice.
-    """
+    choice. """
 
     Literals = Literal['auto',
                        'ansi_dark',
@@ -58,12 +52,61 @@ class RecommendedColorStyles(LiteralEnum[str]):
                        'omnipy-selenized-white']
 
     AUTO: Literal['auto'] = 'auto'
+    """
+    The default color style, which is automatically replaced with one of the
+    other recommended styles based on the color system, dark background
+    and transparent background settings.
+
+    ANSI color styles are selected for color systems with fewer than 256
+    colors. Otherwise, the Omnipy Selenized styles are selected based on
+    the dark background and transparent background settings.
+
+    All recommended styles will automatically replace themselves with other
+    recommended styles if the color system or background settings change.
+    If you want to fix a specific color style, you should use one of the
+    other (non-recommended) styles directly.
+    """
+
     ANSI_DARK: Literal['ansi_dark'] = 'ansi_dark'
+    f"""
+    {_ANSI_TEXT.format(variant='dark')}
+    """
+
     ANSI_LIGHT: Literal['ansi_light'] = 'ansi_light'
+    f"""
+    {_ANSI_TEXT.format(variant='light')}Even though the light variant is
+    defined for light backgrounds, you may find the ANSI dark variant
+    slightly more readable across both light and dark terminal themes.
+    """
+
     OMNIPY_SELENIZED_BLACK: Literal['omnipy-selenized-black'] = 'omnipy-selenized-black'
+    f"""
+    {_SELENIZED_TEXT}
+    Black variant: A slightly soft dark theme with an almost black
+    background, suitable also on a fully black background.
+    """
+
     OMNIPY_SELENIZED_DARK: Literal['omnipy-selenized-dark'] = 'omnipy-selenized-dark'
+    f"""
+    {_SELENIZED_TEXT}
+    Dark variant: A dark theme on a dark bluish background, a bit harsh on a
+    fully black background.
+    """
+
     OMNIPY_SELENIZED_LIGHT: Literal['omnipy-selenized-light'] = 'omnipy-selenized-light'
+    f"""
+    {_SELENIZED_TEXT}
+    Light variant: A soft light theme on an off-white background, suitable
+    also on a fully white background for a softer feel.
+    """
+
     OMNIPY_SELENIZED_WHITE: Literal['omnipy-selenized-white'] = 'omnipy-selenized-white'
+    f"""
+    {_SELENIZED_TEXT}
+    White variant: A light theme on a fully white background.
+    """
+
+    # Methods
 
     @classmethod
     def get_default_style(
@@ -88,6 +131,8 @@ class RecommendedColorStyles(LiteralEnum[str]):
                 return cls.ANSI_LIGHT
             case _, True, _:
                 return cls.ANSI_DARK
+            case _ as never:
+                assert_never(never)  # type: ignore[arg-type] # Unsure why mypy fails here
 
 
 _GENERAL_COLOR_STYLE_DOCSTRING = dedent("""

@@ -1,8 +1,10 @@
 import pydantic as pyd
 from typing_extensions import ClassVar, override
 
-from omnipy.config.data import DimsModeConfig
-from omnipy.shared.enums.display import DisplayDimensionsUpdateMode
+from omnipy import RecommendedColorStyles
+from omnipy.config.data import ColorConfig, DimsModeConfig
+from omnipy.shared.enums.colorstyles import DarkHighContrastColorStyles
+from omnipy.shared.enums.display import DisplayColorSystem, DisplayDimensionsUpdateMode
 
 
 class NoSizeDisplayDimsModeConfig(DimsModeConfig):
@@ -13,7 +15,7 @@ class NoSizeDisplayDimsModeConfig(DimsModeConfig):
         return None, None
 
 
-def test_dims_mode_config_no_display_dims_size_set():
+def test_dims_mode_config_no_display_dims_size_set() -> None:
     no_size_display_config = NoSizeDisplayDimsModeConfig()
     assert no_size_display_config.width == 80
     assert no_size_display_config.height == 24
@@ -53,7 +55,7 @@ class BothSizesdisplayDimsModeConfig(DimsModeConfig):
         return cls.display_width, cls.display_height
 
 
-def test_dims_mode_config_both_display_dims_size_set():
+def test_dims_mode_config_both_display_dims_size_set() -> None:
     both_sizes_display_config = BothSizesdisplayDimsModeConfig()
     assert both_sizes_display_config.width == 200
     assert both_sizes_display_config.height == 200
@@ -102,7 +104,7 @@ class OnlyWidthDisplayDimsModeConfig(DimsModeConfig):
         return cls.display_width, cls.display_height
 
 
-def test_dims_mode_config_only_width_set():
+def test_dims_mode_config_only_width_set() -> None:
     only_width_display_config = OnlyWidthDisplayDimsModeConfig()
     assert only_width_display_config.width == 200
     assert only_width_display_config.height == 24
@@ -137,3 +139,55 @@ def test_dims_mode_config_only_width_set():
     assert only_width_display_config_fixed.width == 100
     assert only_width_display_config_fixed.height == 100
     assert only_width_display_config_fixed.dims_mode is DisplayDimensionsUpdateMode.FIXED
+
+
+def test_color_config_auto_style_ansi() -> None:
+    color_config = ColorConfig()
+
+    assert color_config.system is DisplayColorSystem.AUTO
+    assert color_config.dark_background is False
+    assert color_config.transparent_background is True
+    # ansi_light is the default style based on the above defaults
+    assert color_config.style is RecommendedColorStyles.ANSI_LIGHT
+
+    color_config.dark_background = True
+    assert color_config.style is RecommendedColorStyles.ANSI_DARK
+
+    color_config.system = DisplayColorSystem.ANSI_16
+    assert color_config.style is RecommendedColorStyles.ANSI_DARK
+
+
+def test_color_config_auto_style_more_colors() -> None:
+    color_config = ColorConfig(system=DisplayColorSystem.ANSI_256)
+    assert color_config.style is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
+
+    color_config.system = DisplayColorSystem.ANSI_RGB
+    assert color_config.style is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
+
+    color_config.transparent_background = False
+    assert color_config.style is RecommendedColorStyles.OMNIPY_SELENIZED_LIGHT
+
+    color_config.dark_background = True
+    assert color_config.style is RecommendedColorStyles.OMNIPY_SELENIZED_DARK
+
+    color_config.transparent_background = True
+    assert color_config.style is RecommendedColorStyles.OMNIPY_SELENIZED_BLACK
+
+
+def test_color_config_specific_not_recommended_style() -> None:
+    color_config = ColorConfig(
+        system=DisplayColorSystem.ANSI_RGB, style=DarkHighContrastColorStyles.TB16_GOTHAM)
+    # If a specific style is set, it overrides the automatic style selection.
+    assert color_config.style is DarkHighContrastColorStyles.TB16_GOTHAM
+
+    color_config.system = DisplayColorSystem.ANSI_16
+    color_config.dark_background = False
+    color_config.transparent_background = False
+    assert color_config.style is DarkHighContrastColorStyles.TB16_GOTHAM
+
+
+def test_color_config_specific_style_recommended_style() -> None:
+    color_config = ColorConfig(style=RecommendedColorStyles.OMNIPY_SELENIZED_LIGHT)
+    # Automatic style selection only applies when style is set to auto or
+    # one of the recommended styles.
+    assert color_config.style is RecommendedColorStyles.ANSI_LIGHT
