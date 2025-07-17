@@ -43,7 +43,7 @@ dependencies = [
 
 [tool.poetry.group.dev.dependencies]
 deepdiff = "^6.2.1"
-pytest = "<9"
+pytest = "<8"
 pytest-pycharm = "^0.7.0"
 types-python-slugify = "^8.0.0.1"
 pandas-stubs = ">=2.2"
