@@ -141,9 +141,9 @@ class JupyterUserInterfaceType(
 
 
 class BrowserPageUserInterfaceType(LiteralEnum[str]):
-    Literals = Literal['browser_page']
+    Literals = Literal['browser-page']
 
-    BROWSER_PAGE: Literal['browser_page'] = 'browser_page'
+    BROWSER_PAGE: Literal['browser-page'] = 'browser-page'
     f"""
     {_BROWSER_DESCRIPTION} The `BROWSER_PAGE` UI type displays content as
     full web pages.
@@ -151,9 +151,9 @@ class BrowserPageUserInterfaceType(LiteralEnum[str]):
 
 
 class BrowserTagUserInterfaceType(LiteralEnum[str]):
-    Literals = Literal['browser_tag']
+    Literals = Literal['browser-tag']
 
-    BROWSER_TAG: Literal['browser_tag'] = 'browser_tag'
+    BROWSER_TAG: Literal['browser-tag'] = 'browser-tag'
     f"""
     {_BROWSER_DESCRIPTION} The `BROWSER_TAG` UI type displays content as
     standalone HTML elements, for HTML code that can be embedded in other
