@@ -241,12 +241,12 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
     ```
     """
 
-    _ALLOWED_LITERAL_INNER_TYPES: tuple[type, ...] = cast(
+    ALLOWED_LITERAL_INNER_TYPES: tuple[type, ...] = cast(
         tuple[type, ...],
         all_type_variants(LiteralEnumInnerTypes),
     )
 
-    _RESERVED_PUBLIC_ATTRS = set(('Literals',))
+    _RESERVED_PUBLIC_ATTRS = set(('Literals', 'ALLOWED_LITERAL_INNER_TYPES'))
     _RESERVED_PUBLIC_METHODS = set(('names', 'name_for_value'))
     _RESERVED_PUBLIC_NAMES = _RESERVED_PUBLIC_ATTRS | _RESERVED_PUBLIC_METHODS
 
@@ -304,7 +304,7 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
         if specialized_inner_types:
             literal_inner_types = specialized_inner_types
         else:
-            literal_inner_types = cls._ALLOWED_LITERAL_INNER_TYPES
+            literal_inner_types = cls.ALLOWED_LITERAL_INNER_TYPES
 
         non_matching_inner_types = []
 

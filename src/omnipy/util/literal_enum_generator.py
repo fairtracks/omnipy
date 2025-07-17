@@ -1,16 +1,23 @@
 from collections.abc import KeysView
 from enum import Enum
+from textwrap import TextWrapper
 from types import MappingProxyType
 from typing import Any, Literal, overload
 
 import inflection
 
 from omnipy.util.helpers import is_unreserved_identifier
+from omnipy.util.literal_enum import LiteralEnum, LiteralEnumInnerTypes
+
+ValueType = (
+    tuple[LiteralEnumInnerTypes, ...] | dict[str, LiteralEnumInnerTypes]
+    | MappingProxyType[str, LiteralEnumInnerTypes])
 
 
 @overload
 def generate_literal_enum_code(
-    values: tuple[object, ...] | dict[str, object] | MappingProxyType[str, object],
+    values: ValueType,
+    *,
     print_to_stdout: Literal[False],
     include_imports: bool = ...,
     class_name: str = ...,
@@ -20,7 +27,21 @@ def generate_literal_enum_code(
 
 @overload
 def generate_literal_enum_code(
-    values: tuple[object, ...] | dict[str, object] | MappingProxyType[str, object],
+    values: ValueType,
+    docstrings: dict[LiteralEnumInnerTypes, str] | None,
+    *,
+    print_to_stdout: Literal[False],
+    include_imports: bool = ...,
+    class_name: str = ...,
+) -> str:
+    ...
+
+
+@overload
+def generate_literal_enum_code(
+    values: ValueType,
+    docstrings: dict[LiteralEnumInnerTypes, str] | None = None,
+    *,
     print_to_stdout: Literal[True] = ...,
     include_imports: bool = ...,
     class_name: str = ...,
@@ -29,7 +50,9 @@ def generate_literal_enum_code(
 
 
 def generate_literal_enum_code(
-    values: tuple[object, ...] | dict[str, object] | MappingProxyType[str, Enum | object],
+    values: ValueType,
+    docstrings: dict[LiteralEnumInnerTypes, str] | None = None,
+    *,
     print_to_stdout: bool = True,
     include_imports: bool = True,
     class_name: str = 'NewLiteralEnum',
@@ -65,20 +88,31 @@ def generate_literal_enum_code(
         from omnipy.util.literal_enum import LiteralEnum
 
 
-        class GeneratedEnum(LiteralEnum):
+        class GeneratedEnum(LiteralEnum[str]):
             Literals = Literal['active', 'inactive', 'pending']
             ACTIVE: Literal['active'] = 'active'
             INACTIVE: Literal['inactive'] = 'inactive'
             PENDING: Literal['pending'] = 'pending'
     """
-    if not values:
-        raise ValueError('At least one value must be provided')
+    enum_mappings = _generate_attrib_names(values)
+    _check_params(values, docstrings, class_name, enum_mappings)
 
-    if not is_unreserved_identifier(class_name):
-        raise ValueError(f'"{class_name}" is not a valid Python class name')
+    lines: list[str] = []
 
-    # Generate attribute names from values, handling duplicates
-    enum_mappings: dict[str, object] = {}
+    lines = _build_import_lines(lines, include_imports)
+    lines = _build_class_definition_lines(lines, class_name, enum_mappings)
+    lines = _build_attribute_definitions(docstrings, enum_mappings, lines)
+
+    code = '\n'.join(lines)
+
+    if print_to_stdout:
+        print(code)
+    else:
+        return code
+
+
+def _generate_attrib_names(values: ValueType) -> dict[str, LiteralEnumInnerTypes]:
+    enum_mappings: dict[str, LiteralEnumInnerTypes] = {}
 
     match values:
         case dict() | MappingProxyType():
@@ -90,32 +124,7 @@ def generate_literal_enum_code(
                 attr_name = _generate_attribute_name(value, enum_mappings.keys())
                 enum_mappings[attr_name] = value
 
-    # Build the class code. First. we need to check if we need to include imports
-    if include_imports:
-        lines = [
-            'from typing import Literal',
-            'from omnipy.util.literal_enum import LiteralEnum',
-            '',
-            ''
-        ]
-    else:
-        lines = []
-
-    # Build the literals string
-    literals_str = ', '.join(repr(value) for value in enum_mappings.values())
-
-    # Add class definition
-    lines += [f'class {class_name}(LiteralEnum):', f'    Literals = Literal[{literals_str}]', '']
-
-    # Add attribute definitions
-    for attr_name, value in enum_mappings.items():
-        lines.append(f'    {attr_name}: Literal[{repr(value)}] = {repr(value)}')
-
-    code = '\n'.join(lines)
-    if print_to_stdout:
-        print(code)
-    else:
-        return code
+    return enum_mappings
 
 
 def _generate_attribute_name(value: Any, used_names: KeysView[str]) -> str:
@@ -168,3 +177,75 @@ def _generate_attribute_name(value: Any, used_names: KeysView[str]) -> str:
         counter += 1
 
     return candidate
+
+
+def _check_params(values: ValueType,
+                  docstrings: dict[LiteralEnumInnerTypes, str] | None,
+                  class_name: str,
+                  enum_mappings: dict[str, LiteralEnumInnerTypes]) -> None:
+    if not values:
+        raise ValueError('At least one value must be provided')
+
+    if not is_unreserved_identifier(class_name):
+        raise ValueError(f'"{class_name}" is not a valid Python class name')
+
+    if docstrings:
+        for val in docstrings:
+            if val not in enum_mappings.values():
+                raise ValueError(f'Docstring for {val!r} does not match any value')
+
+
+def _build_import_lines(lines: list[str], include_imports: bool) -> list[str]:
+    # Build the class code. First. we need to check if we need to include imports
+    if include_imports:
+        lines += [
+            'from typing import Literal',
+            'from omnipy.util.literal_enum import LiteralEnum',
+            '',
+            ''
+        ]
+
+    return lines
+
+
+def _build_class_definition_lines(
+    lines: list[str],
+    class_name: str,
+    enum_mappings: dict[str, LiteralEnumInnerTypes],
+) -> list[str]:
+
+    # Detect the value types
+    value_types = {type(value).__name__: type(value) for value in enum_mappings.values()}
+    inner_types = LiteralEnum.ALLOWED_LITERAL_INNER_TYPES
+    for name, type_ in value_types.items():
+        if type_ not in inner_types:
+            raise ValueError(f'Unsupported value type: {name}. Allowed types: '
+                             f"{', '.join(_.__name__ for _ in inner_types)}.")
+
+    # Build the literals string
+    literals_str = ', '.join(repr(value) for value in enum_mappings.values())
+
+    # Add class definition
+    lines += [
+        f"class {class_name}(LiteralEnum[{' | '.join(value_types.keys())}]):",
+        f'    Literals = Literal[{literals_str}]',
+        '',
+    ]
+
+    return lines
+
+
+def _build_attribute_definitions(docstrings, enum_mappings, lines):
+    textwrapper = TextWrapper(
+        width=78,
+        initial_indent='    ',
+        subsequent_indent='    ',
+    )
+    # Add attribute definitions
+    for attr_name, value in enum_mappings.items():
+        lines.append(f'    {attr_name}: Literal[{repr(value)}] = {repr(value)}')
+        if docstrings and value in docstrings:
+            wrapped_docstring = textwrapper.wrap(docstrings[value])
+            lines += ['    """'] + wrapped_docstring + ['    """', '']
+
+    return lines

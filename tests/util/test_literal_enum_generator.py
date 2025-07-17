@@ -16,7 +16,7 @@ def test_generate_literal_enum_code_basic_tuple() -> None:
         'from omnipy.util.literal_enum import LiteralEnum',
         '',
         '',
-        'class NewLiteralEnum(LiteralEnum):',
+        'class NewLiteralEnum(LiteralEnum[str]):',
         "    Literals = Literal['active', 'inactive', 'pending']",
         '',
         "    ACTIVE: Literal['active'] = 'active'",
@@ -36,12 +36,46 @@ def test_generate_literal_enum_code_basic_tuple_no_imports() -> None:
     )
 
     expected_lines = [
-        'class NewLiteralEnum(LiteralEnum):',
+        'class NewLiteralEnum(LiteralEnum[str]):',
         "    Literals = Literal['active', 'inactive', 'pending']",
         '',
         "    ACTIVE: Literal['active'] = 'active'",
         "    INACTIVE: Literal['inactive'] = 'inactive'",
         "    PENDING: Literal['pending'] = 'pending'"
+    ]
+
+    assert code == '\n'.join(expected_lines)
+
+
+def test_generate_literal_enum_code_basic_tuple_with_docstrings() -> None:
+    """Test basic code generation with simple string values."""
+    code = generate_literal_enum_code(
+        ('active', 'inactive', 'pending'),
+        docstrings={
+            'active': 'This is an active state',
+            'inactive': 'This is an inactive state. This docstring is longer than the others, '
+                        'and more than 74 characters long.',
+        },
+        print_to_stdout=False,
+        include_imports=False,
+    )
+
+    expected_lines = [
+        'class NewLiteralEnum(LiteralEnum[str]):',
+        "    Literals = Literal['active', 'inactive', 'pending']",
+        '',
+        "    ACTIVE: Literal['active'] = 'active'",
+        '    """',
+        '    This is an active state',
+        '    """',
+        '',
+        "    INACTIVE: Literal['inactive'] = 'inactive'",
+        '    """',
+        '    This is an inactive state. This docstring is longer than the others, and',
+        '    more than 74 characters long.',
+        '    """',
+        '',
+        "    PENDING: Literal['pending'] = 'pending'",
     ]
 
     assert code == '\n'.join(expected_lines)
@@ -56,7 +90,7 @@ def test_generate_literal_enum_code_basic_dict() -> None:
         'from omnipy.util.literal_enum import LiteralEnum',
         '',
         '',
-        'class NewLiteralEnum(LiteralEnum):',
+        'class NewLiteralEnum(LiteralEnum[bool]):',
         '    Literals = Literal[True, False]',
         '',
         '    YES: Literal[True] = True',
@@ -79,7 +113,7 @@ def test_generate_literal_enum_from_other_enum_mapping() -> None:
         'from omnipy.util.literal_enum import LiteralEnum',
         '',
         '',
-        'class NewLiteralEnum(LiteralEnum):',
+        'class NewLiteralEnum(LiteralEnum[bool]):',
         '    Literals = Literal[True, False]',
         '',
         '    YES: Literal[True] = True',
@@ -97,7 +131,7 @@ def test_generate_literal_enum_code_custom_class_name() -> None:
         class_name='YesNoChoice',
     )
 
-    assert 'class YesNoChoice(LiteralEnum):' in code
+    assert 'class YesNoChoice(LiteralEnum[bool]):' in code
     assert 'Literals = Literal[True, False]' in code
     assert 'TRUE: Literal[True] = True' in code
     assert 'FALSE: Literal[False] = False' in code
@@ -131,6 +165,8 @@ def test_generate_literal_enum_code_numbers_and_numeric_strings() -> None:
     """Test code generation with numeric string values."""
     code = generate_literal_enum_code((123, '456'), print_to_stdout=False)
 
+    assert 'LiteralEnum[int | str]' in code
+
     # Numerics should get NUMBER_ prefix for attribute names
     assert 'NUMBER_123:' in code
     assert 'NUMBER_456:' in code
@@ -141,6 +177,8 @@ def test_generate_literal_enum_code_numbers_and_numeric_strings() -> None:
 def test_generate_literal_enum_code_empty() -> None:
     """Test code generation with empty strings and whitespace."""
     code = generate_literal_enum_code(('', ''), print_to_stdout=False)
+
+    assert 'LiteralEnum[str]' in code
 
     # Empty strings should get EMPTY attribute names
     assert 'EMPTY:' in code
@@ -153,6 +191,8 @@ def test_generate_literal_enum_code_empty() -> None:
 def test_generate_literal_enum_code_whitespace() -> None:
     """Test code generation with empty strings and whitespace."""
     code = generate_literal_enum_code(('   ', '\t\n'), print_to_stdout=False)
+
+    assert 'LiteralEnum[str]' in code
 
     # Whitespace-only strings should get WHITESPACE attribute names
     assert 'WHITESPACE:' in code
@@ -201,19 +241,47 @@ def test_generate_literal_enum_code_mixed_cases() -> None:
     assert 'UPPER_CASE:' in code
 
 
-def test_generate_literal_enum_code_empty_values_error() -> None:
+def test_error_generate_literal_enum_code_empty_values_error() -> None:
     """Test that empty tuple raises ValueError."""
     with pytest.raises(ValueError, match='At least one value must be provided'):
         generate_literal_enum_code((), print_to_stdout=False)
 
 
-def test_generate_literal_enum_code_invalid_class_name() -> None:
+def test_error_generate_literal_enum_code_unmatching_docstrings() -> None:
+    """Test that invalid class names raise ValueError."""
+    with pytest.raises(ValueError, match="Docstring for 'maybe' does not match any value"):
+        generate_literal_enum_code(
+            ('yes', 'no'),
+            docstrings={'maybe': 'This is an irrelevant docstring'},
+            print_to_stdout=False,
+        )
+
+
+def test_error_generate_literal_enum_code_invalid_class_name() -> None:
     """Test that invalid class names raise ValueError."""
     with pytest.raises(ValueError, match='is not a valid Python class name'):
         generate_literal_enum_code(
             ('value',),
             print_to_stdout=False,
             class_name='123InvalidName',
+        )
+
+    with pytest.raises(ValueError, match='is not a valid Python class name'):
+        generate_literal_enum_code(
+            ('value',),
+            print_to_stdout=False,
+            class_name='class',
+        )  # keyword
+
+
+def test_error_generate_literal_enum_code_invalid_value_type() -> None:
+    """Test that invalid class names raise ValueError."""
+    with pytest.raises(ValueError, match='Unsupported value type: dict'):
+        generate_literal_enum_code(
+            ({
+                1: 2
+            },),
+            print_to_stdout=False,
         )
 
     with pytest.raises(ValueError, match='is not a valid Python class name'):
