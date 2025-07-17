@@ -76,7 +76,7 @@ class _DisplayMethodParams(OutputConfig, _DimsRestatedParams):
 
 class BaseDisplayMixin(metaclass=ABCMeta):
     @abstractmethod
-    def _default_panel(self) -> DraftPanel:
+    def _default_panel(self, **kwargs) -> DraftPanel:
         ...
 
     def default_repr_to_terminal_str(
@@ -539,8 +539,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
 
 class ModelDisplayMixin(BaseDisplayMixin):
-    def _default_panel(self) -> DraftPanel:
-        return self._peek()
+    def _default_panel(self, **kwargs) -> DraftPanel:
+        return self._peek(**kwargs)
 
     def _peek(self, **kwargs) -> DraftPanel:
         self_as_model = cast('Model', self)
@@ -573,8 +573,8 @@ class ModelDisplayMixin(BaseDisplayMixin):
 
 
 class DatasetDisplayMixin(BaseDisplayMixin):
-    def _default_panel(self) -> DraftPanel:
-        return self._list()
+    def _default_panel(self, **kwargs) -> DraftPanel:
+        return self._list(**kwargs)
 
     def _peek(self, **kwargs) -> DraftPanel:
         self_as_dataset = cast('Dataset', self)
