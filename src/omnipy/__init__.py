@@ -199,6 +199,8 @@ from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
                                      RunState)
 from omnipy.shared.enums.ui import UserInterfaceType
 from omnipy.util.contexts import print_exception
+from omnipy.util.literal_enum import LiteralEnum
+from omnipy.util.literal_enum_generator import generate_literal_enum_code
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -404,4 +406,6 @@ __all__ = [
     'rename_col_names',
     'transpose_columns_with_data_files',
     'print_exception',
+    'LiteralEnum',
+    'generate_literal_enum_code',
 ]

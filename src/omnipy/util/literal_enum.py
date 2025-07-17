@@ -39,21 +39,25 @@ class LiteralEnumMeta(type):
 
 class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
     """
-    Base class for creating enums with defined literal choices, with support from the main
-    static type checkers (tested with `mypy` and `pyright`). Unlike standard Enums, LiteralEnum
-    supports multiple inheritance and the use the enum attribute names and underlying values
-    directly in type hints and function signatures. At the same time, LiteralEnum maintains the
-    main benefits of traditional Enum types: a clearly defined and namespaced set of choices with
-    possibilities for flexible naming and per-item documentation.
+    Base class for creating enums with defined literal choices, with support
+    from the main static type checkers (tested with `mypy` and `pyright`).
+    Unlike standard Enums, LiteralEnum supports multiple inheritance and the
+    use the enum attribute names and underlying values directly in type
+    hints and function signatures. At the same time, LiteralEnum maintains
+    the main benefits of traditional Enum types: a clearly defined and
+    namespaced set of choices with possibilities for flexible naming and
+    per-item documentation.
 
-    Subclasses must define a `Literals` class attribute that specify the valid choices as a Literal
-    type. Each choice must also be defined as a separate class attribute with a Literal type.
-    The LiteralEnum superclass will ensure that all choices are defined according to these rules.
+    Subclasses must define a `Literals` class attribute that specify the
+    valid choices as a Literal type. Each choice must also be defined as a
+    separate class attribute with a Literal type. The LiteralEnum superclass
+    will ensure that all choices are defined according to these rules.
 
     Example LiteralEnum:
 
     ```python
     from typing import Literal
+    from omnipy import LiteralEnum
 
     class ClearBoolChoices(LiteralEnum[bool]):
         Literals = Literal[True, False]
@@ -75,31 +79,34 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
 
     `LiteralEnumInnerTypes = `bool | str | int | bytes | None`
 
-    Example usage:
+    Example usage in a function signature:
 
     ```python
     def i_need_a_clear_choice(choice: ClearBoolChoices.Literals) -> str:
         match choice:
             case ClearBoolChoices.POSITIVE:
-                return "You chose a positive response"
+                return 'You chose a positive response'
             case ClearBoolChoices.NEGATIVE:
-                return "You chose a negative response"
-
-
-
-    # All following calls will work at runtime, but with different static type checking results:
-    response = i_need_a_clear_choice(ClearBoolChoices.POSITIVE)  # Will pass static type checking
-    assert response == "You chose a positive response"
-
-    response = i_need_a_clear_choice(False)  # Unlike Enums, passing the value also works
-    assert response == "You chose a negative response"
-
-    response = i_need_a_clear_choice('maybe')  # This will raise an error in static type checking
-    assert response is None
+                return 'You chose a negative response'
     ```
 
-    LiteralEnum supports multiple inheritance, allowing you to combine different sets of choices
-    into a single enum, e.g.:
+    All the following calls will work at runtime, but with different static
+    type checking results:
+
+    ```pycon
+    >>> i_need_a_clear_choice(ClearBoolChoices.POSITIVE)  # Will pass static type checking
+    'You chose a positive response'
+
+    >>> i_need_a_clear_choice(False)  # Unlike Enums, passing the value also works
+    'You chose a negative response'
+
+    >>> response = i_need_a_clear_choice('maybe')  # This will fail static type checking
+    >>> response is None
+    True
+    ```
+
+    LiteralEnum supports multiple inheritance, allowing you to combine
+    different sets of choices into a single enum, e.g.:
 
     ```python
     class ClearStrChoices(LiteralEnum[str]):
@@ -118,13 +125,15 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
         Literals = Literal[ClearStrChoices.Literals, UnclearStrChoices.Literals]
     ```
 
-    The `AllStrChoices` enum will have all the choices from both `ClearStrChoices` and
-    `UnclearStrChoices`. The `Literals` type of `AllStrChoices` will be a union of the literals from
-    both enums, allowing for flexible type checking and usage in function signatures.
+    The `AllStrChoices` enum will have all the choices from both
+    `ClearStrChoices` and `UnclearStrChoices`. The `Literals` type of
+    `AllStrChoices` will be a union of the literals from both enums,
+    allowing for flexible type checking and usage in function signatures.
 
-    When there are many enum values, you can avoid manually specifying all the choices by making
-    use of a type narrowing function. As a bonus, `mypy` (as of v1.16.1) supports exhaustiveness
-    checking for `TypeIs` narrowing in the same way as with explicit pattern matching.
+    When there are many enum values, you can avoid manually specifying all
+    the choices by making use of a type narrowing function. As a bonus,
+    `mypy` (as of v1.16.1) supports exhaustiveness checking for `TypeIs`
+    narrowing in the same way as with explicit pattern matching.
 
     Example:
 
@@ -143,7 +152,7 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
         check succeeds. Otherwise, the type of choice is negatively narrowed to the remaining
         choices in `AllStrChoices.Literals`.
         \"\"\"
-        return choice in get_args(UnclearStrChoices.Literals)
+        return choice in UnclearStrChoices
 
     # This will produce a static type error on the return value, as we forgot to handle the
     # case of AllStrChoices.NEGATIVE
@@ -153,25 +162,31 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
                 return "You chose yes"
             case x if is_unclear_choice(x):
                 return f"You chose an unclear option: {x}"
-
-    # Still no runtime checks
-    response = most_choices_are_ok('maybe')  # No static type checking errors
-    assert response == "You chose an unclear option: maybe"
-
-    response = most_choices_are_ok('whatever')  # Static type checking error here
-    assert response is None
     ```
-    Note: pyright (as of v1.1.402) does not support `TypeIs` narrowing of exhaustiveness checks:
+
+    Note that there are still no runtime checks:
+
+    ```pycon
+    >>> most_choices_are_ok('maybe')  # No static type checking errors
+    'You chose an unclear option: maybe'
+
+    >>> response = most_choices_are_ok('whatever')  # Static type checking error here
+    >>> response is None
+    True
+    ```
+    Note: pyright (as of v1.1.402) does not support `TypeIs` narrowing of
+    exhaustiveness checks:
 
         https://github.com/microsoft/pyright/issues/10680
 
-    In contrast to `i_need_a_clear_choice()`, the `most_choices_are_ok()` function also
-    checks the provided value at runtime. This is due to the use of the `assert_never()` function:
+    In contrast to `i_need_a_clear_choice()`, the `most_choices_are_ok()`
+    function also checks the provided value at runtime. This is due to the
+    use of the `assert_never()` function:
 
     For runtime checks, there are several options:
 
-    One is to make use of the new `assert_never()` function, which also provides exhaustiveness
-    checks when there are no return values:
+    1. Make use of the new `assert_never()` function, which also provides
+    exhaustiveness checks when there are no return values:
 
     ```python
     # For Python versions < 3.11
@@ -188,14 +203,17 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
                 print(f"You chose an unclear option: {x}")
             case _ as never:
                 assert_never(never)  # This will raise an error if the case is not handled
-
-    # The following call will fail both at static type checking and at runtime
-    response = most_choices_are_still_ok('whatever')
     ```
 
+    The following call will fail both at static type checking and at runtime:
+
+    ```pycon
+    >>> most_choices_are_still_ok('whatever')
+    (...)
+    AssertionError: Expected code to be unreachable, but got: 'whatever'
     ```
-    assert response is None
-    one can also use e.g. pydantic to validate (and transform) the input:
+
+    2. Use e.g. pydantic to validate (and transform) the input:
 
     ```python
     class MyModel(BaseModel):
