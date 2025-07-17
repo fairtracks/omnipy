@@ -155,14 +155,18 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         ...
 
     @takes_input_params_from(_DisplayMethodParams.__init__)
-    def _docs(self, **kwargs) -> None:
+    def _docs(self, **kwargs) -> str:
         """
         Displays a preview of the model or dataset for the documentation.
         """
-        self.peek(
-            user_interface_type=SpecifiedUserInterfaceType.BROWSER_TAG,
-            color_style=RecommendedColorStyles.OMNIPY_SELENIZED_WHITE,
-            **kwargs)
+        if 'color_style' not in kwargs:
+            kwargs['color_style'] = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
+        return self._display_according_to_ui_type(
+            ui_type=SpecifiedUserInterfaceType.BROWSER_TAG,
+            return_output_if_str=True,
+            output_method=self._default_panel,
+            **kwargs,
+        )
 
     def __str__(self) -> str:
         return repr(self)
