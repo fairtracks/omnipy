@@ -214,7 +214,7 @@ class LayoutConfig(ConfigBase):
     panel_design: PanelDesign.Literals = PanelDesign.TABLE_GRID
     panel_title_at_top: bool = True
     max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO
-    justify_in_layout: Justify.Literals = Justify.LEFT
+    justify: Justify.Literals = Justify.LEFT
 
 
 def _get_cache_dir_path() -> str:

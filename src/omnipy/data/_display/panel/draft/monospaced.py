@@ -31,7 +31,7 @@ class MonospacedDraftPanel(
     def _line_width(self, line):
         stats = _calc_line_stats(
             line,
-            self.config.tab_size,
+            self.config.tab,
             self._char_width_map,
         )
         return stats.line_width

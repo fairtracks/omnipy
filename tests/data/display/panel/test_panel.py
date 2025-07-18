@@ -46,7 +46,7 @@ def test_panel():
     assert constraints_panel.constraints == custom_constraints
     assert constraints_panel.constraints is not custom_constraints  # Should be a copy
 
-    custom_config = OutputConfig(indent_tab_size=4)
+    custom_config = OutputConfig(indent=4)
     constraints_and_config_panel = SimplePanel(
         title='My panel with no frame',
         constraints=custom_constraints,

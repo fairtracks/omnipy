@@ -87,7 +87,7 @@ def case_syntax_text_empty(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=1, height=1)),
-            config=OutputConfig(vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM),
+            config=OutputConfig(v_overflow=VerticalOverflowMode.CROP_BOTTOM),
             exp_plain_output=' \n',
             exp_stylized_dims=Dimensions(width=1, height=1),
             exp_plain_output_only_width=' \n \n',
@@ -276,8 +276,8 @@ def case_syntax_text_empty_lines(
         FrameTestCase(
             frame=Frame(Dimensions(width=9, height=3), fixed_width=False),
             config=OutputConfig(
-                horizontal_overflow_mode=HorizontalOverflowMode.CROP,
-                vertical_overflow_mode=VerticalOverflowMode.ELLIPSIS_TOP,
+                h_overflow=HorizontalOverflowMode.CROP,
+                v_overflow=VerticalOverflowMode.ELLIPSIS_TOP,
             ),
             exp_plain_output='…\nwe all sc\nfor ice c\n',
             # With vertical overflow mode set to ELLIPSIS_TOP and frame
@@ -300,8 +300,8 @@ def case_syntax_text_empty_lines(
         FrameTestCase(
             frame=Frame(Dimensions(width=9, height=3), fixed_width=False),
             config=OutputConfig(
-                horizontal_overflow_mode=HorizontalOverflowMode.CROP,
-                vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
+                h_overflow=HorizontalOverflowMode.CROP,
+                v_overflow=VerticalOverflowMode.CROP_TOP,
             ),
             exp_plain_output='you screa\nwe all sc\nfor ice c\n',
             # With vertical overflow mode set to CROP_TOP and frame width
@@ -324,8 +324,8 @@ def case_syntax_text_empty_lines(
         FrameTestCase(
             frame=Frame(Dimensions(width=9, height=2), fixed_width=False),
             config=OutputConfig(
-                horizontal_overflow_mode=HorizontalOverflowMode.CROP,
-                vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
+                h_overflow=HorizontalOverflowMode.CROP,
+                v_overflow=VerticalOverflowMode.CROP_BOTTOM,
             ),
             exp_plain_output='I scream,\nyou screa\n',
             # As in 'crop_height_and_width_flexible_width_crop_top'
@@ -348,8 +348,8 @@ def case_syntax_text_empty_lines(
         FrameTestCase(
             frame=Frame(Dimensions(width=9, height=3), fixed_width=False),
             config=OutputConfig(
-                horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
-                vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
+                h_overflow=HorizontalOverflowMode.WORD_WRAP,
+                v_overflow=VerticalOverflowMode.CROP_BOTTOM,
             ),
             exp_plain_output='I scream,\nyou \nscream,\n',
             # TODO: Since horizontal cropping with WORD_WRAP has the
@@ -475,7 +475,7 @@ def case_syntax_text_simple_text(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=3, height=2), fixed_width=False),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output='北\n北\n',
             exp_dims_all_stages=Dimensions(width=2, height=2),
         ),
@@ -485,7 +485,7 @@ def case_syntax_text_simple_text(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=3, height=2)),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output='北 \n北 \n',
             # The frame is fixed width, so the cropping logic for
             # double-width characters is not applied in the "reflowing"
@@ -521,7 +521,7 @@ def case_syntax_text_simple_text(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=2, height=2), fixed_width=False),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output='北\n北\n',
             exp_dims_all_stages=Dimensions(width=2, height=2),
         ),
@@ -531,7 +531,7 @@ def case_syntax_text_simple_text(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=2, height=2)),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output='北\n北\n',
             # The frame is fixed width, so the cropping logic for
             # double-width characters is not applied in the "reflowing"
@@ -567,7 +567,7 @@ def case_syntax_text_simple_text(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=1, height=2), fixed_width=False),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output='\n\n',
             exp_dims_all_stages=Dimensions(width=0, height=2),
         ),
@@ -577,7 +577,7 @@ def case_syntax_text_simple_text(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=1, height=2)),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output=' \n \n',
             # The frame is fixed width, so the cropping logic for
             # double-width characters is not applied in the "reflowing"
@@ -591,7 +591,7 @@ def case_syntax_text_simple_text(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=0, height=2), fixed_width=False),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output='\n\n',
             # Frame width is zero, which shortcuts the cropping logic for
             # double-width characters in the "reflowing" stage. Hence, the
@@ -604,7 +604,7 @@ def case_syntax_text_simple_text(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=0, height=2)),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output='\n\n',
             # Frame width is both zero and fixed. Both shortcuts the
             # cropping logic for double-width characters in the "reflowing"
@@ -689,7 +689,7 @@ def case_syntax_text_double_width_chars(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=4, height=1), fixed_width=False),
-            config=OutputConfig(tab_size=3),
+            config=OutputConfig(tab=3),
             exp_plain_output=' a b\n',
             # No cropping needed
             exp_dims_all_stages=Dimensions(width=4, height=1),
@@ -702,7 +702,7 @@ def case_syntax_text_double_width_chars(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=4, height=1)),
-            config=OutputConfig(tab_size=3),
+            config=OutputConfig(tab=3),
             exp_plain_output=' a b\n',
             # No cropping needed
             exp_dims_all_stages=Dimensions(width=4, height=1),
@@ -715,7 +715,7 @@ def case_syntax_text_double_width_chars(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=4, height=1), fixed_width=False),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output=' a\n',
             exp_dims_all_stages=Dimensions(width=2, height=1),
         ),
@@ -725,7 +725,7 @@ def case_syntax_text_double_width_chars(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=4, height=1)),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output=' a  \n',
             # The frame is fixed width, so the cropping logic for
             # tab characters is not applied in the "reflowing" stage.
@@ -760,7 +760,7 @@ def case_syntax_text_double_width_chars(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=3, height=1), fixed_width=False),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output=' a\n',
             exp_dims_all_stages=Dimensions(width=2, height=1),
         ),
@@ -770,7 +770,7 @@ def case_syntax_text_double_width_chars(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=3, height=1)),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output=' a \n',
             # The frame is fixed width, so the cropping logic for
             # tab characters is not applied in the "reflowing" stage.
@@ -807,7 +807,7 @@ def case_syntax_text_double_width_chars(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=2, height=1), fixed_width=False),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output=' a\n',
             exp_dims_all_stages=Dimensions(width=2, height=1),
         ),
@@ -817,7 +817,7 @@ def case_syntax_text_double_width_chars(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=2, height=1)),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output=' a\n',
             # The frame is fixed width, so the cropping logic for
             # tab characters is not applied in the "reflowing" stage.
@@ -830,7 +830,7 @@ def case_syntax_text_double_width_chars(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=0, height=1), fixed_width=False),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output='\n',
             # Frame width is zero, which shortcuts the cropping logic for
             # tab characters in the "reflowing" stage. Hence, the width is
@@ -843,7 +843,7 @@ def case_syntax_text_double_width_chars(
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=0, height=1)),
-            config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+            config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
             exp_plain_output='\n',
             # Frame width is both zero and fixed. Both shortcuts the
             # cropping logic for tab characters in the "reflowing" stage.

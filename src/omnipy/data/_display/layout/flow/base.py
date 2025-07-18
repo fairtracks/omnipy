@@ -101,7 +101,7 @@ def _create_layout_with_distributed_widths(
         per_panel_width = _calculate_per_panel_width_for_panels_without_width(
             layout_panel.content,
             frame_dims.width,
-            layout_panel.config.panel_design,
+            layout_panel.config.panel,
         )
 
         # Apply calculated widths to each panel
@@ -333,7 +333,7 @@ def _set_inner_panel_heights(input_layout_panel: DraftPanel[Layout[DraftPanel], 
     assert has_height(input_layout_panel.frame.dims)
 
     per_inner_panel_height = _calc_inner_panel_height(
-        input_layout_panel.config.panel_design,
+        input_layout_panel.config.panel,
         input_layout_panel.frame.dims.height,
     )
 

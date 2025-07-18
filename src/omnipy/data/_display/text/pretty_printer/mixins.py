@@ -13,7 +13,7 @@ class PythonWidthReducingPrettyPrinterMixin:
         self,
         draft_panel: DraftPanel[object, FrameT],
     ) -> DraftPanel[object, FrameT]:
-        if is_model_instance(draft_panel.content) and not draft_panel.config.debug_mode:
+        if is_model_instance(draft_panel.content) and not draft_panel.config.debug:
             content: object = draft_panel.content.to_data()
         else:
             content = draft_panel.content

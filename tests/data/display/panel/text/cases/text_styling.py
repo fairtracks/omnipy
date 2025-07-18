@@ -25,7 +25,7 @@ def case_syntax_styling_word_wrap_horizontal(
     return PanelOutputTestCase(  # pyright: ignore [reportCallIssue]
         content=common_content,
         frame=Frame(Dimensions(22, None)),
-        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
+        config=OutputConfig(h_overflow=HorizontalOverflowMode.WORD_WRAP),
         exp_plain_output=dedent("""\
             [MyClass({'abc': [123,
             234]}),
@@ -43,7 +43,7 @@ def case_syntax_styling_ellipsis_horizontal(
     return PanelOutputTestCase(
         content=common_text_content,
         frame=Frame(Dimensions(22, None)),
-        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.ELLIPSIS),
+        config=OutputConfig(h_overflow=HorizontalOverflowMode.ELLIPSIS),
         exp_plain_output=dedent("""\
             [MyClass({'abc': [123…
              MyClass({'def': [345…
@@ -59,7 +59,7 @@ def case_syntax_styling_crop_horizontal(
     return PanelOutputTestCase(
         content=common_text_content,
         frame=Frame(Dimensions(22, None)),
-        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.CROP),
+        config=OutputConfig(h_overflow=HorizontalOverflowMode.CROP),
         exp_plain_output=dedent("""\
             [MyClass({'abc': [123,
              MyClass({'def': [345,
@@ -75,7 +75,7 @@ def case_syntax_styling_word_wrap_small_frame(
     return PanelOutputTestCase(
         content=common_text_content,
         frame=Frame(Dimensions(10, 8)),
-        config=OutputConfig(horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP),
+        config=OutputConfig(h_overflow=HorizontalOverflowMode.WORD_WRAP),
         exp_plain_output=dedent("""\
             [MyClass({
             'abc': 
@@ -98,8 +98,8 @@ def case_syntax_styling_word_wrap_crop_bottom(
         content=common_text_content,
         frame=Frame(Dimensions(10, 4)),
         config=OutputConfig(
-            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
-            vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
+            h_overflow=HorizontalOverflowMode.WORD_WRAP,
+            v_overflow=VerticalOverflowMode.CROP_BOTTOM,
         ),
         exp_plain_output=dedent("""\
             [MyClass({
@@ -119,8 +119,8 @@ def case_syntax_styling_word_wrap_crop_top(
         content=common_text_content,
         frame=Frame(Dimensions(10, 1)),
         config=OutputConfig(
-            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
-            vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
+            h_overflow=HorizontalOverflowMode.WORD_WRAP,
+            v_overflow=VerticalOverflowMode.CROP_TOP,
         ),
         exp_plain_output=dedent("""\
             456]})]
@@ -137,8 +137,7 @@ def case_syntax_styling_setup_no_frame_or_configs(
     return StylizedPanelTestCaseSetup(
         case_id='no-frame-default-color' + ('-no-bg' if not solid_background else ''),
         content="MyClass({'abc': [123, 234]})",
-        config=OutputConfig(
-            color_system=DisplayColorSystem.ANSI_RGB, solid_background=solid_background),
+        config=OutputConfig(system=DisplayColorSystem.ANSI_RGB, bg=solid_background),
     )
 
 
@@ -164,13 +163,13 @@ def case_syntax_styling_setup_no_frame_color_config(
         case_id=case_id,
         content="MyClass({'abc': [123, 234]})",
         config=OutputConfig(
-            css_font_families=css_font_families,
-            css_font_size=css_font_size,
-            css_font_weight=css_font_weight,
-            css_line_height=css_line_height,
-            color_system=DisplayColorSystem.ANSI_RGB,
-            color_style=LightLowContrastColorStyles.MURPHY_PYGMENTS,
-            solid_background=solid_background),
+            fonts=css_font_families,
+            font_size=css_font_size,
+            font_weight=css_font_weight,
+            line_height=css_line_height,
+            system=DisplayColorSystem.ANSI_RGB,
+            style=LightLowContrastColorStyles.MURPHY_PYGMENTS,
+            bg=solid_background),
     )
 
 
@@ -191,11 +190,11 @@ def case_syntax_styling_setup_small_frame_color_and_overflow_config(
         content="MyClass({'abc': [123, 234]})",
         frame=Frame(Dimensions(9, 3)),
         config=OutputConfig(
-            color_system=color_system,
-            color_style=DarkLowContrastColorStyles.ZENBURN_PYGMENTS,
-            solid_background=solid_background,
-            horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
-            vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
+            system=color_system,
+            style=DarkLowContrastColorStyles.ZENBURN_PYGMENTS,
+            bg=solid_background,
+            h_overflow=HorizontalOverflowMode.WORD_WRAP,
+            v_overflow=VerticalOverflowMode.CROP_TOP,
         ),
     )
 

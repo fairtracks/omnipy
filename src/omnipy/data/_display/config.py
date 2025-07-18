@@ -31,152 +31,141 @@ class OutputConfig:
     instance of DraftOutput, and not as a global configuration.
 
     Parameters:
-        tab_size (NonNegativeInt): Number of spaces to use for each tab
-        indent_tab_size (NonNegativeInt): Number of spaces to use for each
+        tab (NonNegativeInt): Number of spaces to use for each tab
+        indent (NonNegativeInt): Number of spaces to use for each
             indentation level.
-        pretty_printer (PrettyPrinterLib.Literals): Library to use for
-            pretty printing.
-        language (SyntaxLanguage.Literals | str): Syntax language for code
+        printer (PrettyPrinterLib.Literals): Library to use for pretty
+            printing.
+        lang (SyntaxLanguage.Literals | str): Syntax language for code
             highlighting. Supported lexers are defined in SyntaxLanguage.
             For non-supported styles, the user can specify a string with the
             Pygments lexer name. For this to work, the lexer must be
             registered in the Pygments library.
-        proportional_freedom (float): Parameter that controls the level of
-            freedom for formatted text to follow the geometry of the frame
-            size (=total available area) in a proportional manner. If the
-            proportional freedom is 0 (the lowest), then the output area
-            must not in any case be proportionally wider that the frame
-            (i.e. a 16:9 frame will only produce output that is 16:9 or
-            narrower). Larger values of proportional freedom allow the
-            output to be proportionally wider than the total available
-            frame, to a degree that relates to the size difference
-            between the frame and the content (larger difference gives more
-            freedom). The default value of 2.5 is a good compromise between
-            readability/aesthetics and good use of the screen estate.
-        debug_mode (bool): When True, enables additional debugging
-            information in the output, such as the hierarchy of the Model
-            objects.
-        user_interface_type (UserInterfaceType.Literals): Type of user
-            interface for which the output should being prepared. The user
-            interface describes the technical solutions available for
-            interacting with the user, encompassing the support available
-            for displaying output as well as how the user interacts with the
-            library (including the type of interactive interpreter used, if
-            any).
-        color_system (ColorSystem.Literals): Color system to
-            use for terminal output. The default is AUTO, which
-            automatically detects the color system based on particular
-            environment variables. If color capabilities are not detected,
-            the output will be in black and white. If the color system of a
-            modern consoles/terminal is not auto-detected (which is the case
-            for e.g. the PyCharm console), the user might want to set the
-            color system manually to ANSI_RGB to force color output.
-        color_style (AllColorStyles.Literals | str): Color style/theme for
-            syntax highlighting and other display elements. Supported styles
-            are defined in AllColorStyles. For non-supported languages, the
-            user can specify a string with the Pygments style name. For this
-            to work, the style must be registered in the Pygments library.
-        solid_background (bool): If False, uses transparent background
-            for the output. In the case of terminal output, the background
-            color will be the current background color of the terminal. For
-            HTML output, the background color will be automatically set to
-            pure black or pure white, depending on the luminosity of the
-            foreground color.
-        css_font_families (Tuple[str, ...]): Font families to use in HTML
-            output, in order of preference (empty tuple for browser
-            default).
-        css_font_size (NonNegativeInt | None): Font size in pixels for HTML
+        freedom (float): Parameter that controls the level of freedom for
+            formatted text to follow the geometry of the frame size (=total
+            available area) in a proportional manner. If the proportional
+            freedom is 0 (the lowest), then the output area must not in any
+            case be proportionally wider that the frame (i.e. a 16:9 frame
+            will only produce output that is 16:9 or narrower). Larger
+            values of proportional freedom allow the output to be
+            proportionally wider than the total available frame, to a degree
+            that relates to the size difference between the frame and the
+            content (larger difference gives more freedom). The default
+            value of 2.5 is a good compromise between readability/aesthetics
+            and good use of the screen estate.
+        debug (bool): When True, enables additional debugging information in
+            the output, such as the hierarchy of the Model objects.
+        ui (UserInterfaceType.Literals): Type of user interface for which
+            the output should being prepared. The user interface describes
+            the technical solutions available for interacting with the user,
+            encompassing the support available for displaying output as well
+            as how the user interacts with the library (including the type
+            of interactive interpreter used, if any).
+        system (ColorSystem.Literals): Color system to use for terminal
+            output. The default is AUTO, which automatically detects the
+            color system based on particular environment variables. If color
+            capabilities are not detected, the output will be in black and
+            white. If the color system of a modern consoles/terminal is not
+            auto-detected (which is the case for e.g. the PyCharm console),
+            the user might want to set the color system manually to ANSI_RGB
+            to force color output.
+        style (AllColorStyles.Literals | str): Color style/theme for syntax
+            highlighting and other display elements. Supported styles are
+            defined in AllColorStyles. For non-supported languages, the user
+            can specify a string with the Pygments style name. For this to
+            work, the style must be registered in the Pygments library.
+        bg (bool): If False, uses transparent background for the output. In
+            the case of terminal output, the background color will be the
+            current background color of the terminal. For HTML output, the
+            background color will be automatically set to pure black or pure
+            white, depending on the luminosity of the foreground color.
+        fonts (Tuple[str, ...]): Font families to use in HTML output, in
+            order of preference (empty tuple for browser default).
+        font_size (NonNegativeInt | None): Font size in pixels for HTML output
+            (None for browser default).
+        font_weight (NonNegativeInt | None): Font weight for HTML output (None
+            for browser default).
+        line_height (NonNegativeFloat | None): Line height multiplier for HTML
             output (None for browser default).
-        css_font_weight (NonNegativeInt | None): Font weight for HTML
-            output (None for browser default).
-        css_line_height (NonNegativeFloat | None): Line height multiplier
-            for HTML output (None for browser default).
-        horizontal_overflow_mode (HorizontalOverflowMode.Literals): How to
-            handle text that exceeds the width.
-        vertical_overflow_mode (VerticalOverflowMode.Literals): How to
-            handle text that exceeds the height.
-        panel_design (PanelDesign.Literals): Visual design of the panel
-            used as container for the output. Only TABLE_GRID is currently
+        h_overflow (HorizontalOverflowMode.Literals): How to handle text
+            that exceeds the width.
+        v_overflow (VerticalOverflowMode.Literals): How to handle text
+            that exceeds the height.
+        panel (PanelDesign.Literals): Visual design of the panel used as
+            container for the output. Only TABLE_GRID is currently
             supported, which displays the output in a table-like grid.
-        panel_title_at_top (bool): Whether panel titles will be displayed
-            over the panel content (True) or below the content (False)
-        max_title_height (MaxTitleHeight.Literals): Maximum height of the
-            panel title. If AUTO, the height is determined by the content of
-            the title, up to a maximum of two lines. If ZERO, the title is
-            not displayed at all. If ONE or TWO, the title is displayed with
-            a fixed height of max one or two lines, respectively.
-        justify_in_layout (Justify.Literals): Justification mode for the
-            panel if inside a layout panel. This is only used for the panel
-            content.
+        title_at_top (bool): Whether panel titles will be displayed over the
+            panel content (True) or below the content (False)
+        max_title_height (MaxTitleHeight.Literals): Maximum height of the panel
+            title. If AUTO, the height is determined by the content of the
+            title, up to a maximum of two lines. If ZERO, the title is not
+            displayed at all. If ONE or TWO, the title is displayed with a
+            fixed height of max one or two lines, respectively.
+        justify (Justify.Literals): Justification mode for the panel if
+            inside a layout panel. This is only used for the panel content.
     """
 
-    tab_size: pyd.NonNegativeInt = 4
-    indent_tab_size: pyd.NonNegativeInt = 2
-    pretty_printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO
-    language: SyntaxLanguage.Literals | str = SyntaxLanguage.PYTHON
-    proportional_freedom: pyd.NonNegativeFloat = 2.5
-    debug_mode: bool = False
-    user_interface_type: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL
-    color_system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
-    color_style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
-    solid_background: bool = False
-    css_font_families: tuple[str, ...] = (
+    tab: pyd.NonNegativeInt = 4
+    indent: pyd.NonNegativeInt = 2
+    printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO
+    lang: SyntaxLanguage.Literals | str = SyntaxLanguage.PYTHON
+    freedom: pyd.NonNegativeFloat = 2.5
+    debug: bool = False
+    ui: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL
+    system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
+    style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
+    bg: bool = False
+    fonts: tuple[str, ...] = (
         'Menlo',
         'DejaVu Sans Mono',
         'Consolas',
         'Courier New',
         'monospace',
     )
-    css_font_size: pyd.NonNegativeInt | None = 14
-    css_font_weight: pyd.NonNegativeInt | None = 400
-    css_line_height: pyd.NonNegativeFloat | None = 1.25
-    horizontal_overflow_mode: HorizontalOverflowMode.Literals = HorizontalOverflowMode.ELLIPSIS
-    vertical_overflow_mode: VerticalOverflowMode.Literals = VerticalOverflowMode.ELLIPSIS_BOTTOM
-    panel_design: PanelDesign.Literals = PanelDesign.TABLE_GRID
-    panel_title_at_top: bool = True
+    font_size: pyd.NonNegativeInt | None = 14
+    font_weight: pyd.NonNegativeInt | None = 400
+    line_height: pyd.NonNegativeFloat | None = 1.25
+    h_overflow: HorizontalOverflowMode.Literals = HorizontalOverflowMode.ELLIPSIS
+    v_overflow: VerticalOverflowMode.Literals = VerticalOverflowMode.ELLIPSIS_BOTTOM
+    panel: PanelDesign.Literals = PanelDesign.TABLE_GRID
+    title_at_top: bool = True
     max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO
-    justify_in_layout: Justify.Literals = Justify.LEFT
+    justify: Justify.Literals = Justify.LEFT
 
-    class Config:
-        allow_population_by_field_name = True
-        extra = pyd.Extra.forbid
-        validate_assignment = True
-        allow_population_by_field_name = True
-
-    @pyd.validator('language')
+    @pyd.validator('lang')
     def check_language(
         cls,
-        language: SyntaxLanguage.Literals | str,
+        lang: SyntaxLanguage.Literals | str,
     ) -> SyntaxLanguage.Literals | str:
         try:
-            if SyntaxLanguage.is_syntax_language(language):
-                return language
-            elif pygments.lexers.get_lexer_by_name(language):
-                return language
+            if SyntaxLanguage.is_syntax_language(lang):
+                return lang
+            elif pygments.lexers.get_lexer_by_name(lang):
+                return lang
             else:
-                raise ValueError(f'Invalid syntax language: {language}')
+                raise ValueError(f'Invalid syntax language: {lang}')
         except pygments.util.ClassNotFound as exp:
-            raise ValueError(f'Invalid syntax language: {language}') from exp
+            raise ValueError(f'Invalid syntax language: {lang}') from exp
 
-    @pyd.validator('color_style')
+    @pyd.validator('style')
     def check_color_style(
         cls,
-        color_style: AllColorStyles.Literals | str,
+        style: AllColorStyles.Literals | str,
     ) -> AllColorStyles.Literals | str:
         try:
-            if color_style in RecommendedColorStyles:
-                return color_style
-            elif color_style in AllColorStyles:
+            if style in RecommendedColorStyles:
+                return style
+            elif style in AllColorStyles:
                 try:
-                    pygments.styles.get_style_by_name(clean_style_name(color_style))
+                    pygments.styles.get_style_by_name(clean_style_name(style))
                 except pygments.util.ClassNotFound:
-                    install_base16_theme(color_style)
-                    pygments.styles.get_style_by_name(color_style)
-                return color_style
-            elif pygments.styles.get_style_by_name(color_style):
-                return color_style
+                    install_base16_theme(style)
+                    pygments.styles.get_style_by_name(style)
+                return style
+            elif pygments.styles.get_style_by_name(style):
+                return style
             else:
-                raise ValueError(f'Invalid color style: {color_style}')
+                raise ValueError(f'Invalid color style: {style}')
         except pygments.util.ClassNotFound as exp:
-            raise ValueError(f'Color style not registered in Pygments: {color_style}. '
+            raise ValueError(f'Color style not registered in Pygments: {style}. '
                              f'This may be due to a network error.') from exp

@@ -423,19 +423,19 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         from omnipy.components.json.models import is_json_model_instance_hack
         from omnipy.components.raw.models import StrModel
 
-        language: SyntaxLanguage.Literals
+        lang: SyntaxLanguage.Literals
         if outer_type is str or isinstance(model, StrModel):
-            language = SyntaxLanguage.TEXT
+            lang = SyntaxLanguage.TEXT
         elif is_json_model_instance_hack(model):
-            language = SyntaxLanguage.JSON
+            lang = SyntaxLanguage.JSON
         else:
-            language = SyntaxLanguage.PYTHON
+            lang = SyntaxLanguage.PYTHON
 
         config = self._update_config_with_overflow_modes(config, 'text')
-        config = dataclasses.replace(config, language=language)
+        config = dataclasses.replace(config, lang=lang)
         config = self._apply_kwargs_to_config(config, **kwargs)
 
-        match language:
+        match lang:
             case SyntaxLanguage.TEXT:
                 return TextDraftPanel(
                     cast(str, model.content),
@@ -461,8 +461,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         config = dataclasses.replace(
             config,
-            horizontal_overflow_mode=overflow_config.horizontal,
-            vertical_overflow_mode=overflow_config.vertical,
+            h_overflow=overflow_config.horizontal,
+            v_overflow=overflow_config.vertical,
         )
         return config
 
@@ -495,28 +495,28 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 color_system = ui_type_config.color.system
 
         config = OutputConfig(
-            tab_size=ui_config.text.tab_size,
-            indent_tab_size=ui_config.text.indent_tab_size,
-            pretty_printer=ui_config.text.pretty_printer,
-            proportional_freedom=ui_config.text.proportional_freedom,
-            debug_mode=ui_config.text.debug_mode,
-            user_interface_type=ui_type,
-            color_system=color_system,
-            color_style=ui_type_config.color.style,
-            solid_background=ui_type_config.color.solid_background,
-            panel_design=ui_config.layout.panel_design,
-            panel_title_at_top=ui_config.layout.panel_title_at_top,
+            tab=ui_config.text.tab_size,
+            indent=ui_config.text.indent_tab_size,
+            printer=ui_config.text.pretty_printer,
+            freedom=ui_config.text.proportional_freedom,
+            debug=ui_config.text.debug_mode,
+            ui=ui_type,
+            system=color_system,
+            style=ui_type_config.color.style,
+            bg=ui_type_config.color.solid_background,
+            panel=ui_config.layout.panel_design,
+            title_at_top=ui_config.layout.panel_title_at_top,
             max_title_height=ui_config.layout.max_title_height,
-            justify_in_layout=ui_config.layout.justify_in_layout,
+            justify=ui_config.layout.justify,
         )
 
         if isinstance(ui_type_config, IsHtmlUserInterfaceConfig):
             config = dataclasses.replace(
                 config,
-                css_font_families=ui_type_config.font.families,
-                css_font_size=ui_type_config.font.size,
-                css_font_weight=ui_type_config.font.weight,
-                css_line_height=ui_type_config.font.line_height,
+                fonts=ui_type_config.font.families,
+                font_size=ui_type_config.font.size,
+                font_weight=ui_type_config.font.weight,
+                line_height=ui_type_config.font.line_height,
             )
         return config
 
@@ -620,8 +620,8 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         config = self._update_config_with_overflow_modes(config, 'layout')
 
         config = dataclasses.replace(config, max_title_height=MaxTitleHeight.ONE)
-        right_justified_config = dataclasses.replace(config, justify_in_layout='right')
-        text_config = dataclasses.replace(config, language=SyntaxLanguage.TEXT)
+        right_justified_config = dataclasses.replace(config, justify='right')
+        text_config = dataclasses.replace(config, lang=SyntaxLanguage.TEXT)
 
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
         config = self._apply_kwargs_to_config(config, **kwargs)

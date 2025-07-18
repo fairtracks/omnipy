@@ -372,7 +372,7 @@ def case_layout_single_empty_panel_height_zero(
                 panel=MockStylablePlainCropPanel(
                     content='This content is\nextraordinary!',
                     frame=Frame(Dimensions(width=14, height=3),),
-                    config=OutputConfig(justify_in_layout=Justify.RIGHT),
+                    config=OutputConfig(justify=Justify.RIGHT),
                 )),
             frame=Frame(Dimensions(width=18, height=5)),
             # As 'taller_and_thinner_frame_inner_frame_reflow', but with
@@ -393,7 +393,7 @@ def case_layout_single_empty_panel_height_zero(
                 panel=MockStylablePlainCropPanel(
                     content='This content is\nextraordinary!',
                     frame=Frame(Dimensions(width=14, height=3),),
-                    config=OutputConfig(justify_in_layout=Justify.CENTER),
+                    config=OutputConfig(justify=Justify.CENTER),
                 )),
             frame=Frame(Dimensions(width=18, height=5)),
             # As 'taller_and_thinner_frame_inner_frame_reflow', but with
@@ -580,7 +580,7 @@ def case_layout_single_panel(
                     content='Here is some text',
                     title='A nice title',
                     frame=Frame(Dimensions(width=19, height=None)),
-                    config=OutputConfig(justify_in_layout=Justify.RIGHT),
+                    config=OutputConfig(justify=Justify.RIGHT),
                 ),),
             frame=Frame(Dimensions(width=23, height=5)),
             exp_plain_output=('╭─────────────────────╮\n'
@@ -605,7 +605,7 @@ def case_layout_single_panel(
                     content='Here is some text',
                     title='A nice title',
                     frame=Frame(Dimensions(width=19, height=None)),
-                    config=OutputConfig(justify_in_layout=Justify.CENTER),
+                    config=OutputConfig(justify=Justify.CENTER),
                 ),),
             frame=Frame(Dimensions(width=23, height=5)),
             exp_plain_output=('╭─────────────────────╮\n'
@@ -672,7 +672,7 @@ def case_layout_single_panel(
             # Even though the outer frame has enough height to display
             # extra lines of empty content, the outer layout panel height is
             # reduced to fit the inner panel dimensions.
-            config=OutputConfig(panel_title_at_top=False),
+            config=OutputConfig(title_at_top=False),
             exp_plain_output=('╭────────╮\n'
                               '│ Here i │\n'
                               '│        │\n'
@@ -708,7 +708,7 @@ def case_layout_single_panel(
             frame=Frame(Dimensions(width=10, height=7)),
             # Adding two lines to the inner panel frame height, spans the
             # outer panel height accordingly.
-            config=OutputConfig(panel_title_at_top=False),
+            config=OutputConfig(title_at_top=False),
             exp_plain_output=('╭────────╮\n'
                               '│ Here i │\n'
                               '│        │\n'
@@ -789,8 +789,8 @@ def case_layout_single_panel_fixed_width_with_title(
                 frame=Frame(Dimensions(width=19, height=None)),
             )),
         config=OutputConfig(
-            color_system=DisplayColorSystem.ANSI_RGB,
-            solid_background=True,
+            system=DisplayColorSystem.ANSI_RGB,
+            bg=True,
         ),
         exp_plain_output_no_frame=('╭─────────────────────╮\n'
                                    '│    A nice title     │\n'
@@ -1022,10 +1022,10 @@ def case_layout_two_panels_fixed_content_and_frame(
             # Horizontal and vertical overflow modes are not applied to text
             # in these tests as MockPanel is used, which ignores horizontal
             # and vertical overflow modes.
-            horizontal_overflow_mode=HorizontalOverflowMode.CROP,
-            vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
-            color_system=DisplayColorSystem.ANSI_RGB,
-            solid_background=True,
+            h_overflow=HorizontalOverflowMode.CROP,
+            v_overflow=VerticalOverflowMode.CROP_BOTTOM,
+            system=DisplayColorSystem.ANSI_RGB,
+            bg=True,
         ),
         exp_plain_output_no_frame=('╭──────────────┬───────────╮\n'
                                    '│ Some content │ (1, 2, 3) │\n'

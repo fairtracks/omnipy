@@ -89,17 +89,17 @@ class SyntaxStylizedTextPanel(
         cropped_content = self._vert_cropped_content(
             self.content,
             self.frame.dims.height,
-            self.config.vertical_overflow_mode,
+            self.config.v_overflow,
         )
 
         return self._get_stylized_content_common(
             content=cropped_content,
-            tab_size=self.config.tab_size,
-            color_system=self.config.color_system,
-            console_color_style=self.config.color_style,
-            language=self.config.language,
-            horizontal_overflow_mode=self.config.horizontal_overflow_mode,
-            remove_bg_color=not self.config.solid_background,
+            tab_size=self.config.tab,
+            color_system=self.config.system,
+            console_color_style=self.config.style,
+            language=self.config.lang,
+            horizontal_overflow_mode=self.config.h_overflow,
+            remove_bg_color=not self.config.bg,
         )
 
     @override
@@ -107,17 +107,17 @@ class SyntaxStylizedTextPanel(
         cropped_content = self._vert_cropped_content(
             self.content,
             self.frame.dims.height,
-            self.config.vertical_overflow_mode,
+            self.config.v_overflow,
         )
 
         return self._get_stylized_content_common(
             content=cropped_content,
-            tab_size=self.config.tab_size,
+            tab_size=self.config.tab,
             # Color system is hard-coded to 'truecolor' for HTML output
             color_system=DisplayColorSystem.ANSI_RGB,
-            console_color_style=self.config.color_style,
-            language=self.config.language,
-            horizontal_overflow_mode=self.config.horizontal_overflow_mode,
+            console_color_style=self.config.style,
+            language=self.config.lang,
+            horizontal_overflow_mode=self.config.h_overflow,
             # The HTML background color is set for the entire tag/page, so
             # we need to remove the background color for each element
             remove_bg_color=True)

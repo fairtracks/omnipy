@@ -20,105 +20,105 @@ from omnipy.shared.enums.ui import UserInterfaceType
 
 def test_output_config() -> None:
     config = OutputConfig(
-        tab_size=2,
-        indent_tab_size=4,
-        pretty_printer=PrettyPrinterLib.DEVTOOLS,
-        language=SyntaxLanguage.JSON,
-        proportional_freedom=3.5,
-        debug_mode=True,
-        user_interface_type=UserInterfaceType.JUPYTER,
-        color_system=DisplayColorSystem.ANSI_RGB,
-        color_style=DarkLowContrastColorStyles.ONE_DARK_PYGMENTS,
-        solid_background=True,
-        css_font_families=('Menlo', 'monospace'),
-        css_font_size=16,
-        css_font_weight=400,
-        css_line_height=1.0,
-        horizontal_overflow_mode=HorizontalOverflowMode.CROP,
-        vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
-        panel_design=PanelDesign.PANELS,
-        panel_title_at_top=False,
+        tab=2,
+        indent=4,
+        printer=PrettyPrinterLib.DEVTOOLS,
+        lang=SyntaxLanguage.JSON,
+        freedom=3.5,
+        debug=True,
+        ui=UserInterfaceType.JUPYTER,
+        system=DisplayColorSystem.ANSI_RGB,
+        style=DarkLowContrastColorStyles.ONE_DARK_PYGMENTS,
+        bg=True,
+        fonts=('Menlo', 'monospace'),
+        font_size=16,
+        font_weight=400,
+        line_height=1.0,
+        h_overflow=HorizontalOverflowMode.CROP,
+        v_overflow=VerticalOverflowMode.CROP_TOP,
+        panel=PanelDesign.PANELS,
+        title_at_top=False,
         max_title_height=MaxTitleHeight.ZERO,
-        justify_in_layout=Justify.RIGHT,
+        justify=Justify.RIGHT,
     )
 
-    assert config.tab_size == 2
-    assert config.indent_tab_size == 4
-    assert config.pretty_printer is PrettyPrinterLib.DEVTOOLS
-    assert config.language is SyntaxLanguage.JSON
-    assert config.proportional_freedom == 3.5
-    assert config.debug_mode is True
-    assert config.user_interface_type is UserInterfaceType.JUPYTER
-    assert config.color_system is DisplayColorSystem.ANSI_RGB
-    assert config.color_style is DarkLowContrastColorStyles.ONE_DARK_PYGMENTS
-    assert config.solid_background is True
-    assert config.css_font_families == ('Menlo', 'monospace')
-    assert config.css_font_size == 16
-    assert config.css_font_weight == 400
-    assert config.css_line_height == 1.0
-    assert config.horizontal_overflow_mode is HorizontalOverflowMode.CROP
-    assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_TOP
-    assert config.panel_design is PanelDesign.PANELS
-    assert config.panel_title_at_top is False
+    assert config.tab == 2
+    assert config.indent == 4
+    assert config.printer is PrettyPrinterLib.DEVTOOLS
+    assert config.lang is SyntaxLanguage.JSON
+    assert config.freedom == 3.5
+    assert config.debug is True
+    assert config.ui is UserInterfaceType.JUPYTER
+    assert config.system is DisplayColorSystem.ANSI_RGB
+    assert config.style is DarkLowContrastColorStyles.ONE_DARK_PYGMENTS
+    assert config.bg is True
+    assert config.fonts == ('Menlo', 'monospace')
+    assert config.font_size == 16
+    assert config.font_weight == 400
+    assert config.line_height == 1.0
+    assert config.h_overflow is HorizontalOverflowMode.CROP
+    assert config.v_overflow is VerticalOverflowMode.CROP_TOP
+    assert config.panel is PanelDesign.PANELS
+    assert config.title_at_top is False
     assert config.max_title_height == MaxTitleHeight.ZERO
-    assert config.justify_in_layout is Justify.RIGHT
+    assert config.justify is Justify.RIGHT
 
     config = OutputConfig(
-        tab_size='2',  # type: ignore[arg-type]
-        indent_tab_size='4',  # type: ignore[arg-type]
-        pretty_printer='rich',
+        tab='2',  # type: ignore[arg-type]
+        indent='4',  # type: ignore[arg-type]
+        printer='rich',
         # Any language string supported by the pygments library should be accepted
-        language='c++',
-        proportional_freedom='3',  # type: ignore[arg-type]
-        debug_mode='yes',  # type: ignore[arg-type]
-        user_interface_type='terminal',
-        color_system='256',
+        lang='c++',
+        freedom='3',  # type: ignore[arg-type]
+        debug='yes',  # type: ignore[arg-type]
+        ui='terminal',
+        system='256',
         # Any color style string supported by the pygments library should be accepted
         # Note: the lilypond color style is for use with the lilypond music notation software and as
         #       thus excluded from the list of valid color styles in Omnipy, but it is still a valid
         #       color style in the Pygments library.
-        color_style='lilypond',
-        solid_background=1,  # type: ignore[arg-type]
-        css_font_families=[],  # type: ignore[arg-type]
-        css_font_size='16',  # type: ignore[arg-type]
-        css_font_weight='400',  # type: ignore[arg-type]
-        css_line_height='1',  # type: ignore[arg-type]
-        horizontal_overflow_mode='ellipsis',
-        vertical_overflow_mode='crop_bottom',
-        panel_design='table_grid',
-        panel_title_at_top=0,  # type: ignore[arg-type]
+        style='lilypond',
+        bg=1,  # type: ignore[arg-type]
+        fonts=[],  # type: ignore[arg-type]
+        font_size='16',  # type: ignore[arg-type]
+        font_weight='400',  # type: ignore[arg-type]
+        line_height='1',  # type: ignore[arg-type]
+        h_overflow='ellipsis',
+        v_overflow='crop_bottom',
+        panel='table_grid',
+        title_at_top=0,  # type: ignore[arg-type]
         max_title_height=1,
-        justify_in_layout='right',
+        justify='right',
     )
-    assert config.tab_size == 2
-    assert config.indent_tab_size == 4
-    assert config.pretty_printer is PrettyPrinterLib.RICH
-    assert config.language == 'c++'
-    assert config.proportional_freedom == 3.0
-    assert config.debug_mode is True
-    assert config.user_interface_type is UserInterfaceType.TERMINAL
-    assert config.color_system is DisplayColorSystem.ANSI_256
-    assert config.color_style == 'lilypond'
-    assert config.solid_background is True
-    assert config.css_font_families == ()
-    assert config.css_font_size == 16
-    assert config.css_font_weight == 400
-    assert config.css_line_height == 1.0
-    assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
-    assert config.vertical_overflow_mode is VerticalOverflowMode.CROP_BOTTOM
-    assert config.panel_design is PanelDesign.TABLE_GRID
-    assert config.panel_title_at_top is False
+    assert config.tab == 2
+    assert config.indent == 4
+    assert config.printer is PrettyPrinterLib.RICH
+    assert config.lang == 'c++'
+    assert config.freedom == 3.0
+    assert config.debug is True
+    assert config.ui is UserInterfaceType.TERMINAL
+    assert config.system is DisplayColorSystem.ANSI_256
+    assert config.style == 'lilypond'
+    assert config.bg is True
+    assert config.fonts == ()
+    assert config.font_size == 16
+    assert config.font_weight == 400
+    assert config.line_height == 1.0
+    assert config.h_overflow is HorizontalOverflowMode.ELLIPSIS
+    assert config.v_overflow is VerticalOverflowMode.CROP_BOTTOM
+    assert config.panel is PanelDesign.TABLE_GRID
+    assert config.title_at_top is False
     assert config.max_title_height == MaxTitleHeight.ONE
-    assert config.justify_in_layout is Justify.RIGHT
+    assert config.justify is Justify.RIGHT
 
     config = OutputConfig(
-        css_font_weight=None,
-        css_font_size=None,
-        css_line_height=None,
+        font_weight=None,
+        font_size=None,
+        line_height=None,
     )
-    assert config.css_font_size is None
-    assert config.css_font_weight is None
-    assert config.css_line_height is None
+    assert config.font_size is None
+    assert config.font_weight is None
+    assert config.line_height is None
 
 
 def test_output_config_hashable() -> None:
@@ -129,64 +129,64 @@ def test_output_config_hashable() -> None:
 
     config_settings: list[dict[str, Any]] = [
         {
-            'tab_size': 2
+            'tab': 2
         },
         {
-            'indent_tab_size': 4
+            'indent': 4
         },
         {
-            'pretty_printer': PrettyPrinterLib.DEVTOOLS
+            'printer': PrettyPrinterLib.DEVTOOLS
         },
         {
-            'language': SyntaxLanguage.XML
+            'lang': SyntaxLanguage.XML
         },
         {
-            'proportional_freedom': 1.0
+            'freedom': 1.0
         },
         {
-            'debug_mode': True
+            'debug': True
         },
         {
-            'user_interface_type': UserInterfaceType.JUPYTER
+            'ui': UserInterfaceType.JUPYTER
         },
         {
-            'color_system': DisplayColorSystem.ANSI_256
+            'system': DisplayColorSystem.ANSI_256
         },
         {
-            'color_style': LightHighContrastColorStyles.XCODE_PYGMENTS
+            'style': LightHighContrastColorStyles.XCODE_PYGMENTS
         },
         {
-            'solid_background': True
+            'bg': True
         },
         {
-            'css_font_families': ()
+            'fonts': ()
         },
         {
-            'css_font_size': 16
+            'font_size': 16
         },
         {
-            'css_font_weight': 400
+            'font_weight': 400
         },
         {
-            'css_line_height': 1.0
+            'line_height': 1.0
         },
         {
-            'horizontal_overflow_mode': HorizontalOverflowMode.ELLIPSIS
+            'h_overflow': HorizontalOverflowMode.ELLIPSIS
         },
         {
-            'vertical_overflow_mode': VerticalOverflowMode.CROP_TOP
+            'v_overflow': VerticalOverflowMode.CROP_TOP
         },
         {
-            'panel_design': PanelDesign.PANELS
+            'panel': PanelDesign.PANELS
         },
         {
-            'panel_title_at_top': False
+            'title_at_top': False
         },
         {
             'max_title_height': MaxTitleHeight.ZERO
         },
         {
-            'justify_in_layout': Justify.RIGHT
+            'justify': Justify.RIGHT
         },
     ]
 
@@ -206,167 +206,167 @@ def test_fail_output_config_no_assignments() -> None:
     config = OutputConfig()
 
     with pytest.raises(AttributeError):
-        config.tab_size = 3  # type: ignore[misc]
+        config.tab = 3  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.indent_tab_size = 3  # type: ignore[misc]
+        config.indent = 3  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.pretty_printer = PrettyPrinterLib.DEVTOOLS  # type: ignore[misc]
+        config.printer = PrettyPrinterLib.DEVTOOLS  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.language = SyntaxLanguage.XML  # type: ignore[misc]
+        config.lang = SyntaxLanguage.XML  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.proportional_freedom = 3.0  # type: ignore[misc]
+        config.freedom = 3.0  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.debug_mode = False  # type: ignore[misc]
+        config.debug = False  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.user_interface_type = UserInterfaceType.JUPYTER  # type: ignore[misc]
+        config.ui = UserInterfaceType.JUPYTER  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.color_system = DisplayColorSystem.WINDOWS_LEGACY  # type: ignore[misc]
+        config.system = DisplayColorSystem.WINDOWS_LEGACY  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.color_style = DarkLowContrastColorStyles.GRUVBOX_DARK  # type: ignore[misc]
+        config.style = DarkLowContrastColorStyles.GRUVBOX_DARK  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.solid_background = True  # type: ignore[misc]
+        config.bg = True  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.css_font_families = ('Menlo', 'monospace')  # type: ignore[misc]
+        config.fonts = ('Menlo', 'monospace')  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.css_font_size = 18  # type: ignore[misc]
+        config.font_size = 18  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.css_font_weight = 500  # type: ignore[misc]
+        config.font_weight = 500  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.css_line_height = 1.5  # type: ignore[misc]
+        config.line_height = 1.5  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.horizontal_overflow_mode = HorizontalOverflowMode.ELLIPSIS  # type: ignore[misc]
+        config.h_overflow = HorizontalOverflowMode.ELLIPSIS  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.vertical_overflow_mode = VerticalOverflowMode.CROP_TOP  # type: ignore[misc]
+        config.v_overflow = VerticalOverflowMode.CROP_TOP  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.panel_design = PanelDesign.PANELS  # type: ignore[misc]
+        config.panel = PanelDesign.PANELS  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.panel_title_at_top = False  # type: ignore[misc]
+        config.title_at_top = False  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
         config.max_title_height = MaxTitleHeight.ONE  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.justify_in_layout = Justify.RIGHT  # type: ignore[misc]
+        config.justify = Justify.RIGHT  # type: ignore[misc]
 
 
 def test_fail_output_config_if_invalid_params() -> None:
     with pytest.raises(ValueError):
-        OutputConfig(tab_size=-1)
+        OutputConfig(tab=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(tab_size=None)  # type: ignore[arg-type]
+        OutputConfig(tab=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(indent_tab_size=-1)
+        OutputConfig(indent=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(indent_tab_size=None)  # type: ignore[arg-type]
+        OutputConfig(indent=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(pretty_printer=None)  # type: ignore[arg-type]
+        OutputConfig(printer=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(language='xyz')
+        OutputConfig(lang='xyz')
 
     with pytest.raises(ValueError):
-        OutputConfig(proportional_freedom=-1)
+        OutputConfig(freedom=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(debug_mode=None)  # type: ignore[arg-type]
+        OutputConfig(debug=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(user_interface_type=None)  # type: ignore[arg-type]
+        OutputConfig(ui=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(color_system=None)  # type: ignore[arg-type]
+        OutputConfig(system=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(color_style='red')
+        OutputConfig(style='red')
 
     with pytest.raises(ValueError):
-        OutputConfig(solid_background=None)  # type: ignore[arg-type]
+        OutputConfig(bg=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(css_font_families=None)  # type: ignore[arg-type]
+        OutputConfig(fonts=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(css_font_weight=-1)
+        OutputConfig(font_weight=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(css_font_weight=-1)
+        OutputConfig(font_weight=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(css_font_weight=-1)
+        OutputConfig(font_weight=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(horizontal_overflow_mode=None)  # type: ignore[arg-type]
+        OutputConfig(h_overflow=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(vertical_overflow_mode=None)  # type: ignore[arg-type]
+        OutputConfig(v_overflow=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(panel_design=None)  # type: ignore[arg-type]
+        OutputConfig(panel=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(panel_title_at_top=None)  # type: ignore[arg-type]
+        OutputConfig(title_at_top=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
         OutputConfig(max_title_height=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(justify_in_layout=None)  # type: ignore[arg-type]
+        OutputConfig(justify=None)  # type: ignore[arg-type]
 
 
 def test_output_config_default_values() -> None:
     config = OutputConfig()
-    assert config.tab_size == 4
-    assert config.indent_tab_size == 2
-    assert config.pretty_printer is PrettyPrinterLib.AUTO
-    assert config.language is SyntaxLanguage.PYTHON
-    assert config.proportional_freedom == 2.5
-    assert config.debug_mode is False
-    assert config.user_interface_type is UserInterfaceType.TERMINAL
-    assert config.color_system is DisplayColorSystem.AUTO
-    assert config.color_style is RecommendedColorStyles.ANSI_DARK
-    assert config.solid_background is False
-    assert config.css_font_families == (
+    assert config.tab == 4
+    assert config.indent == 2
+    assert config.printer is PrettyPrinterLib.AUTO
+    assert config.lang is SyntaxLanguage.PYTHON
+    assert config.freedom == 2.5
+    assert config.debug is False
+    assert config.ui is UserInterfaceType.TERMINAL
+    assert config.system is DisplayColorSystem.AUTO
+    assert config.style is RecommendedColorStyles.ANSI_DARK
+    assert config.bg is False
+    assert config.fonts == (
         'Menlo',
         'DejaVu Sans Mono',
         'Consolas',
         'Courier New',
         'monospace',
     )
-    assert config.css_font_size == 14
-    assert config.css_font_weight == 400
-    assert config.css_line_height == 1.25
-    assert config.horizontal_overflow_mode is HorizontalOverflowMode.ELLIPSIS
-    assert config.vertical_overflow_mode is VerticalOverflowMode.ELLIPSIS_BOTTOM
-    assert config.panel_design is PanelDesign.TABLE_GRID
-    assert config.panel_title_at_top is True
+    assert config.font_size == 14
+    assert config.font_weight == 400
+    assert config.line_height == 1.25
+    assert config.h_overflow is HorizontalOverflowMode.ELLIPSIS
+    assert config.v_overflow is VerticalOverflowMode.ELLIPSIS_BOTTOM
+    assert config.panel is PanelDesign.TABLE_GRID
+    assert config.title_at_top is True
     assert config.max_title_height is MaxTitleHeight.AUTO
-    assert config.justify_in_layout is Justify.LEFT
+    assert config.justify is Justify.LEFT
 
 
 def test_fail_output_config_if_extra_params() -> None:
     with pytest.raises(TypeError):
-        OutputConfig(indent_tab_size=4, debug_mode=True, extra=2)  # type: ignore
+        OutputConfig(indent=4, debug=True, extra=2)  # type: ignore
 
 
 def test_fail_output_config_no_positional_parameters() -> None:
@@ -377,6 +377,6 @@ def test_fail_output_config_no_positional_parameters() -> None:
 def test_config_autoimport_base16_color_style(
         register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
     style_name = 'zenburn-t16'
-    OutputConfig(color_style=style_name)  # To trigger the auto-import
+    OutputConfig(style=style_name)  # To trigger the auto-import
     pygments_style = pygments.styles.get_style_by_name(style_name)
     assert pygments_style.background_color == '#383838'

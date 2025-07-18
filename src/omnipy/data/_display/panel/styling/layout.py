@@ -103,7 +103,7 @@ class StylizedLayoutPanel(
     def _stylized_content_terminal_impl(self) -> StylizedRichTypes:
         return self._get_stylized_layout_common(
             outer_panel=self,
-            color_system=self.config.color_system,
+            color_system=self.config.system,
             force_autodetect_bg_color=ForceAutodetect.NEVER,
         )
 
@@ -120,7 +120,7 @@ class StylizedLayoutPanel(
         table_cell_height = self.content.total_subpanel_outer_dims.height
 
         if has_height(self.frame.dims):
-            panel_design_dims = PanelDesignDims.create(self.config.panel_design)
+            panel_design_dims = PanelDesignDims.create(self.config.panel)
             frame_cropped_table_cell_height = (
                 self.frame.dims.height
                 - panel_design_dims.num_extra_vertical_chars(num_vertical_panels=1))
@@ -154,9 +154,9 @@ class PanelElementStyles:
         outer_panel: 'StylizedLayoutPanel[FrameInvT]',
         force_autodetect_bg_color: ForceAutodetect.Literals,
     ) -> None:
-        color_style = outer_panel.config.color_style
+        color_style = outer_panel.config.style
 
-        if outer_panel.config.solid_background:
+        if outer_panel.config.bg:
             style_bg_color = calculate_bg_color_from_color_style(
                 color_style, force_autodetect=force_autodetect_bg_color)
         else:
@@ -296,7 +296,7 @@ class InnerPanelStyler:
         add_column_kwargs: dict[str, Any] = dict(
             width=column_width,
             overflow='crop',
-            justify=self._panel.config.justify_in_layout,
+            justify=self._panel.config.justify,
         )
 
         if styled_title:
@@ -322,11 +322,11 @@ class OuterLayoutPanelStyler:
         self._styles = styles
 
     def style_outer_panel(self) -> rich.table.Table:
-        assert self._outer_panel.config.panel_design is PanelDesign.TABLE_GRID
+        assert self._outer_panel.config.panel is PanelDesign.TABLE_GRID
         return self._style_outer_panel_as_table()
 
     def _style_outer_panel_as_table(self):
-        assert self._outer_panel.config.panel_design is PanelDesign.TABLE_GRID
+        assert self._outer_panel.config.panel is PanelDesign.TABLE_GRID
 
         table = rich.table.Table(
             show_header=False,
@@ -344,7 +344,7 @@ class OuterLayoutPanelStyler:
             inner_panel_layout_props = InnerPanelStyler(
                 inner_panel,
                 self._outer_panel.table_cell_height,
-                self._outer_panel.config.panel_title_at_top,
+                self._outer_panel.config.title_at_top,
                 self._styles,
             )
             yield inner_panel_layout_props.style_inner_panel()

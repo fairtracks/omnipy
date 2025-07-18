@@ -72,10 +72,10 @@ for input in inputs:
 
             frame = Frame(Dimensions(165, None))
             config = OutputConfig(
-                color_style=style.name,
-                solid_background=solid_background,
-                language=input.lexer,
-                debug_mode=input.debug,
+                style=style.name,
+                bg=solid_background,
+                lang=input.lexer,
+                debug=input.debug,
             )
             if is_model_instance(data):
                 draft_panel = DraftPanel(data, frame=frame, config=config)

@@ -112,40 +112,40 @@ smith79\t5079\tJamie\tSmith
 """
 
 config = OutputConfig(
-    color_system=DisplayColorSystem.ANSI_RGB,
-    color_style=RecommendedColorStyles.OMNIPY_SELENIZED_WHITE,
-    solid_background=True,
-    language='python',
-    debug_mode=False)
+    system=DisplayColorSystem.ANSI_RGB,
+    style=RecommendedColorStyles.OMNIPY_SELENIZED_WHITE,
+    bg=True,
+    lang='python',
+    debug=False)
 config1 = OutputConfig(
-    color_system=DisplayColorSystem.ANSI_RGB,
-    color_style=DarkHighContrastColorStyles.BLACK_METAL_KHOLD_T16,
-    solid_background=True,
-    language='python',
-    debug_mode=False,
-    panel_title_at_top=False,
-    tab_size=12,
+    system=DisplayColorSystem.ANSI_RGB,
+    style=DarkHighContrastColorStyles.BLACK_METAL_KHOLD_T16,
+    bg=True,
+    lang='python',
+    debug=False,
+    title_at_top=False,
+    tab=12,
 )
 config2 = OutputConfig(
-    color_system=DisplayColorSystem.ANSI_RGB,
-    color_style=DarkHighContrastColorStyles.STELLA_T16,
-    solid_background=True,
-    language='python',
-    debug_mode=False)
+    system=DisplayColorSystem.ANSI_RGB,
+    style=DarkHighContrastColorStyles.STELLA_T16,
+    bg=True,
+    lang='python',
+    debug=False)
 config3 = OutputConfig(
-    color_system=DisplayColorSystem.ANSI_RGB,
-    color_style=RecommendedColorStyles.OMNIPY_SELENIZED_BLACK,
-    solid_background=False,
-    language='python',
-    debug_mode=False,
-    pretty_printer=PrettyPrinterLib.RICH,
-    tab_size=12)
+    system=DisplayColorSystem.ANSI_RGB,
+    style=RecommendedColorStyles.OMNIPY_SELENIZED_BLACK,
+    bg=False,
+    lang='python',
+    debug=False,
+    printer=PrettyPrinterLib.RICH,
+    tab=12)
 config4 = OutputConfig(
-    color_system=DisplayColorSystem.ANSI_RGB,
-    color_style=DarkLowContrastColorStyles.TAROT_T16,
-    solid_background=True,
-    language='json',
-    debug_mode=False,
+    system=DisplayColorSystem.ANSI_RGB,
+    style=DarkLowContrastColorStyles.TAROT_T16,
+    bg=True,
+    lang='json',
+    debug=False,
 )
 
 

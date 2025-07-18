@@ -79,7 +79,7 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
         self._frame = output.frame
         self._output_mode = output_mode
 
-        if self._output.config.horizontal_overflow_mode is HorizontalOverflowMode.WORD_WRAP:
+        if self._output.config.h_overflow is HorizontalOverflowMode.WORD_WRAP:
             self._crop_dims = self._frame.dims
         else:
             self._crop_dims = self._output.input_panel_cropped_dims
@@ -139,26 +139,26 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
     def _prepare_css_font_style(self):
         font_style = ''
 
-        if self._config.css_font_families:
+        if self._config.fonts:
             font_style += self._CSS_FONT_FAMILIES_TEMPLATE.format(font_family_str=', '.join(
-                f"'{_}'" for _ in self._config.css_font_families))
+                f"'{_}'" for _ in self._config.fonts))
 
-        if self._config.css_font_size:
-            font_style += self._CSS_FONT_SIZE_TEMPLATE.format(font_size=self._config.css_font_size)
+        if self._config.font_size:
+            font_style += self._CSS_FONT_SIZE_TEMPLATE.format(font_size=self._config.font_size)
 
-        if self._config.css_font_weight:
+        if self._config.font_weight:
             font_style += self._CSS_FONT_WEIGHT_TEMPLATE.format(
-                font_weight=self._config.css_font_weight)
+                font_weight=self._config.font_weight)
 
-        if self._config.css_line_height:
+        if self._config.line_height:
             font_style += self._CSS_LINE_HEIGHT_TEMPLATE.format(
-                line_height=self._config.css_line_height)
+                line_height=self._config.line_height)
 
         return font_style
 
     def _prepare_html_tag_template(self):
         if self._output_mode == OutputMode.COLORIZED:
-            if self._config.solid_background:
+            if self._config.bg:
                 css_color_style = self._CSS_COLOR_STYLE_TEMPLATE_FG_AND_BG
             else:
                 css_color_style = self._CSS_COLOR_STYLE_TEMPLATE_FG_ONLY
@@ -202,9 +202,9 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
         if self._output_mode is OutputMode.COLORIZED:
             theme = copy(theme)
 
-            style_fg_color = calculate_fg_color_triplet_from_color_style(self._config.color_style)
+            style_fg_color = calculate_fg_color_triplet_from_color_style(self._config.style)
             style_bg_color = calculate_bg_color_triplet_from_color_style(
-                self._config.color_style,
+                self._config.style,
                 force_autodetect,
             )
 
@@ -229,7 +229,7 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
     def _html_page(self) -> str:
         console = self._prepare_html_console_according_to_output_mode()
 
-        if self._config.solid_background:
+        if self._config.bg:
             force_autodetect: ForceAutodetect.Literals = ForceAutodetect.IF_NO_BG_COLOR_IN_STYLE
         else:
             force_autodetect = ForceAutodetect.ALWAYS
@@ -440,7 +440,7 @@ class TextCroppingOutputVariant(
         return crop_content_lines_vertically2(
             lines,
             self._crop_dims.height,
-            self._output.config.vertical_overflow_mode,
+            self._output.config.v_overflow,
         )
 
     @override

@@ -121,7 +121,7 @@ class StylizedMonospacedPanel(
 
     @cached_property
     def rich_overflow_method(self) -> rich.console.OverflowMethod | None:
-        return rich_overflow_method(self.config.horizontal_overflow_mode)
+        return rich_overflow_method(self.config.h_overflow)
 
     @staticmethod
     @lru_cache(maxsize=1024)
@@ -158,8 +158,8 @@ class StylizedMonospacedPanel(
             console_height=self._console_dimensions.height,
             frame_width=self.frame.dims.width,
             rich_overflow_method=self.rich_overflow_method,
-            ui_type=self.config.user_interface_type,
-            color_system=self.config.color_system,
+            ui_type=self.config.ui,
+            color_system=self.config.system,
         )
 
     @property
@@ -171,7 +171,7 @@ class StylizedMonospacedPanel(
             console_height=self._console_dimensions.height,
             frame_width=self.frame.dims.width,
             rich_overflow_method=self.rich_overflow_method,
-            ui_type=self.config.user_interface_type,
+            ui_type=self.config.ui,
             color_system=DisplayColorSystem.ANSI_RGB,
         )
 

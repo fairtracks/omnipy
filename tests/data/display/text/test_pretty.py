@@ -67,9 +67,9 @@ def _assert_pretty_repr_of_draft(
     output = out_draft_panel.content
 
     if config:
-        if config.pretty_printer is PrettyPrinterLib.DEVTOOLS:
+        if config.printer is PrettyPrinterLib.DEVTOOLS:
             output = _remove_training_commas(output)
-        if config.pretty_printer is PrettyPrinterLib.COMPACT_JSON:
+        if config.printer is PrettyPrinterLib.COMPACT_JSON:
             output = _hackish_convert_json_to_python_syntax(output)
 
     assert output == exp_plain_output
@@ -84,7 +84,7 @@ def _assert_pretty_repr_of_draft(
 )
 def test_pretty_repr_of_draft_multi_line_if_nested(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
+    config = OutputConfig(printer=pretty_printer, freedom=0)
 
     _assert_pretty_repr_of_draft(1, '1', config=config)
 
@@ -173,7 +173,7 @@ def test_pretty_repr_of_draft_multi_line_if_nested(
     [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
 )
 def test_pretty_repr_of_draft_indent(pretty_printer: PrettyPrinterLib.Literals,) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0, indent_tab_size=4)
+    config = OutputConfig(printer=pretty_printer, freedom=0, indent=4)
 
     _assert_pretty_repr_of_draft(
         [[1, 2, 3], [[4, 5, 6], [7, 8, 9]]],
@@ -197,7 +197,7 @@ def test_pretty_repr_of_draft_indent(pretty_printer: PrettyPrinterLib.Literals,)
     [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
 )
 def test_pretty_repr_of_draft_in_frame(pretty_printer: PrettyPrinterLib.Literals) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
+    config = OutputConfig(printer=pretty_printer, freedom=0)
 
     data = [[0, 1, 2], [[3, 4, 5, 6], [7, 8, 9]]]
 
@@ -378,7 +378,7 @@ def geometry_data() -> list:
 def test_pretty_repr_of_draft_approximately_in_frame(
         geometry_data: Annotated[list, pytest.fixture],
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
+    config = OutputConfig(printer=pretty_printer, freedom=0)
 
     _assert_pretty_repr_of_draft(
         geometry_data,
@@ -483,7 +483,7 @@ def test_pretty_repr_of_draft_approximately_in_frame(
 )
 def test_pretty_repr_of_draft_one_line_wider_than_frame(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
+    config = OutputConfig(printer=pretty_printer, freedom=0)
 
     # This is a test for the case where one line is wider than the frame
     # width. The pretty printer should not fit the short lines into a singe
@@ -548,9 +548,9 @@ def test_pretty_repr_of_draft_models(pretty_printer: PrettyPrinterLib.Literals) 
         plain_output,
         frame=DEFAULT_FRAME,
         config=OutputConfig(
-            debug_mode=False,
-            pretty_printer=pretty_printer,
-            proportional_freedom=0,
+            debug=False,
+            printer=pretty_printer,
+            freedom=0,
         ),
         within_frame_width=True,
         within_frame_height=True,
@@ -561,9 +561,9 @@ def test_pretty_repr_of_draft_models(pretty_printer: PrettyPrinterLib.Literals) 
         plain_output if pretty_printer is PrettyPrinterLib.COMPACT_JSON else class_output,
         frame=DEFAULT_FRAME,
         config=OutputConfig(
-            debug_mode=True,
-            pretty_printer=pretty_printer,
-            proportional_freedom=0,
+            debug=True,
+            printer=pretty_printer,
+            freedom=0,
         ),
         within_frame_width=True,
         within_frame_height=True,
@@ -576,7 +576,7 @@ def test_pretty_repr_of_draft_models(pretty_printer: PrettyPrinterLib.Literals) 
 )
 def test_pretty_repr_of_draft_variable_char_weight(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
+    config = OutputConfig(printer=pretty_printer, freedom=0)
 
     _assert_pretty_repr_of_draft(
         ['北京', '€450'],
@@ -615,7 +615,7 @@ def test_pretty_repr_of_draft_variable_char_weight(
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
 def test_pretty_repr_of_draft_multi_line_if_nested_known_issue(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    config = OutputConfig(pretty_printer=pretty_printer, proportional_freedom=0)
+    config = OutputConfig(printer=pretty_printer, freedom=0)
     _assert_pretty_repr_of_draft(
         [1, 2, '[...]'],
         "[1, 2, '[...]']",
@@ -653,7 +653,7 @@ def test_plain_str_pretty_print() -> None:
         JsonModel(data),
         exp_plain_output='_JsonAnyListM([1, 2, 3])',
         frame=DEFAULT_FRAME,
-        config=OutputConfig(pretty_printer=PrettyPrinterLib.TEXT),
+        config=OutputConfig(printer=PrettyPrinterLib.TEXT),
         within_frame_width=True,
         within_frame_height=True,
     )
@@ -666,7 +666,7 @@ def test_plain_str_pretty_print() -> None:
         A(),
         exp_plain_output='A()',
         frame=DEFAULT_FRAME,
-        config=OutputConfig(language=SyntaxLanguage.TEX),
+        config=OutputConfig(lang=SyntaxLanguage.TEX),
         within_frame_width=True,
         within_frame_height=True,
     )

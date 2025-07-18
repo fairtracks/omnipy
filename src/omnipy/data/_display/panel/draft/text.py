@@ -139,7 +139,7 @@ class ReflowedTextDraftPanel(
         content_lines = crop_content_lines_vertically_for_resizing(
             content_lines,
             frame,
-            self.config.vertical_overflow_mode,
+            self.config.v_overflow,
         )
         content_lines = crop_content_with_extra_wide_chars(
             content_lines,
@@ -175,7 +175,7 @@ class ReflowedTextDraftPanel(
         return DimensionsFit(
             self.orig_dims,
             self.inner_frame.dims,
-            proportional_freedom=self.config.proportional_freedom,
+            proportional_freedom=self.config.freedom,
         )
 
     @cached_property

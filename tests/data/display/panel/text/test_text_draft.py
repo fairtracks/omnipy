@@ -29,7 +29,7 @@ def test_text_draft_panel_init() -> None:
         title='My JSON file',
         frame=Frame(Dimensions(20, 10)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(language=SyntaxLanguage.JSON),
+        config=OutputConfig(lang=SyntaxLanguage.JSON),
     )
 
 
@@ -51,7 +51,7 @@ def test_text_draft_panel_render_next_stage_with_repr_complex() -> None:
         title='My repr panel',
         frame=Frame(Dimensions(18, 2)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(indent_tab_size=1, language=SyntaxLanguage.PYTHON),
+        config=OutputConfig(indent=1, lang=SyntaxLanguage.PYTHON),
     )
     assert_next_stage_panel(
         this_panel=draft_panel_complex,
@@ -75,7 +75,7 @@ def test_reflowed_text_draft_panel_init() -> None:
     assert_draft_panel_subcls(
         panel_cls, '(1, 2, 3)', title='BoundPanel', frame=Frame(Dimensions(10, 20)))
     assert_draft_panel_subcls(
-        panel_cls, '{}', title='EmptyDictPanel', config=OutputConfig(indent_tab_size=4))
+        panel_cls, '{}', title='EmptyDictPanel', config=OutputConfig(indent=4))
 
     content = "('a', 'b', (1, 2, 3))"
     assert_draft_panel_subcls(
@@ -89,7 +89,7 @@ def test_reflowed_text_draft_panel_init() -> None:
         title='AllPanel',
         frame=Frame(Dimensions(20, 10)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(indent_tab_size=4),
+        config=OutputConfig(indent=4),
     )
 
 
@@ -104,7 +104,7 @@ def test_reflowed_text_draft_panel_hashable() -> None:
     panel_5 = ReflowedTextDraftPanel('', frame=Frame(Dimensions(10, 20)))
     panel_6 = ReflowedTextDraftPanel(
         '', constraints=Constraints(max_inline_container_width_incl=10))
-    panel_7 = ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4))
+    panel_7 = ReflowedTextDraftPanel('', config=OutputConfig(indent=4))
 
     assert hash(panel_1) != hash(panel_3) != hash(panel_4) != hash(panel_5) != hash(panel_6) \
            != hash(panel_7)
@@ -114,7 +114,7 @@ def test_reflowed_text_draft_panel_hashable() -> None:
     panel_10 = ReflowedTextDraftPanel('', frame=Frame(Dimensions(10, 20)))
     panel_11 = ReflowedTextDraftPanel(
         '', constraints=Constraints(max_inline_container_width_incl=10))
-    panel_12 = ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4))
+    panel_12 = ReflowedTextDraftPanel('', config=OutputConfig(indent=4))
 
     assert hash(panel_3) == hash(panel_8)
     assert hash(panel_4) == hash(panel_9)
@@ -194,15 +194,15 @@ def test_reflowed_text_draft_panel_variable_width_chars() -> None:
 
     # Tab character width also depends on config
     assert_dims_aware_panel(
-        ReflowedTextDraftPanel('\tc', config=OutputConfig(tab_size=6)),
+        ReflowedTextDraftPanel('\tc', config=OutputConfig(tab=6)),
         Dimensions(width=7, height=1),
     )
     assert_dims_aware_panel(
-        ReflowedTextDraftPanel(' a\tb', config=OutputConfig(tab_size=6)),
+        ReflowedTextDraftPanel(' a\tb', config=OutputConfig(tab=6)),
         Dimensions(width=7, height=1),
     )
     assert_dims_aware_panel(
-        ReflowedTextDraftPanel('abcd  \te', config=OutputConfig(tab_size=6)),
+        ReflowedTextDraftPanel('abcd  \te', config=OutputConfig(tab=6)),
         Dimensions(width=13, height=1),
     )
 
@@ -430,7 +430,7 @@ def test_draft_panel_render_next_stage() -> None:
         title='My panel',
         frame=Frame(Dimensions(9, 1)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(indent_tab_size=1),
+        config=OutputConfig(indent=1),
     )
     assert_next_stage_panel(
         this_panel=reflowed_text_panel_complex,

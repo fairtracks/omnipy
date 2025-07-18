@@ -150,8 +150,8 @@ from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
                 panel=MockConfigCropPanel(
                     content='This content is\nextraordinary!',
                     config=OutputConfig(
-                        horizontal_overflow_mode=HorizontalOverflowMode.CROP,
-                        vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
+                        h_overflow=HorizontalOverflowMode.CROP,
+                        v_overflow=VerticalOverflowMode.CROP_TOP,
                     ),
                 )),
             frame=Frame(Dimensions(width=14, height=4)),
@@ -464,7 +464,7 @@ def case_layout_single_panel_fixed_dims(
             frame=Frame(Dimensions(width=10, height=7)),
             # Just enough room for a horizontally cropped single-line title
             # while content is vertically cropped to 3 lines.
-            config=OutputConfig(panel_title_at_top=False),
+            config=OutputConfig(title_at_top=False),
             exp_plain_output=('╭────────╮\n'
                               '│ Here   │\n'
                               '│ is     │\n'
@@ -591,8 +591,8 @@ def case_layout_single_panel_with_title(
         content=Layout(
             panel=MockConfigCropPanel(content='Here is some text', title='A nice title'),),
         config=OutputConfig(
-            color_system=DisplayColorSystem.ANSI_RGB,
-            solid_background=True,
+            system=DisplayColorSystem.ANSI_RGB,
+            bg=True,
         ),
         exp_plain_output_no_frame=('╭───────────────────╮\n'
                                    '│   A nice title    │\n'
@@ -694,7 +694,7 @@ def case_layout_single_panel_with_title_fixed_dims(
                 title='Panel title',
                 frame=Frame(Dimensions(width=20, height=5)),
             ),),
-        config=OutputConfig(panel_title_at_top=False,),
+        config=OutputConfig(title_at_top=False,),
         exp_plain_output_no_frame=('╭──────────────────────╮\n'
                                    '│ Inner panel with     │\n'
                                    '│ fixed dims           │\n'

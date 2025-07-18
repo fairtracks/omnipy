@@ -41,9 +41,9 @@ def case_layout_styling_setup_no_frame(
         case_id='no-frame-dark-color' + ('-no-bg' if not solid_background else ''),
         content=layout,
         config=OutputConfig(
-            color_system=DisplayColorSystem.ANSI_RGB,
-            color_style=DarkHighContrastColorStyles.LIGHTBULB_PYGMENTS,
-            solid_background=solid_background),
+            system=DisplayColorSystem.ANSI_RGB,
+            style=DarkHighContrastColorStyles.LIGHTBULB_PYGMENTS,
+            bg=solid_background),
     )
 
 
@@ -67,11 +67,11 @@ def case_layout_styling_setup_frame_and_title(
         case_id='frame-title-light-color' + ('-no-bg' if not solid_background else ''),
         content=layout,
         config=OutputConfig(
-            color_system=DisplayColorSystem.ANSI_RGB,
-            color_style=RecommendedColorStyles.OMNIPY_SELENIZED_LIGHT,
-            solid_background=solid_background,
-            horizontal_overflow_mode=HorizontalOverflowMode.ELLIPSIS,
-            panel_title_at_top=False,
+            system=DisplayColorSystem.ANSI_RGB,
+            style=RecommendedColorStyles.OMNIPY_SELENIZED_LIGHT,
+            bg=solid_background,
+            h_overflow=HorizontalOverflowMode.ELLIPSIS,
+            title_at_top=False,
         ))
 
 
@@ -92,9 +92,9 @@ def case_layout_styling_setup_small_frame(
         content=layout,
         frame=Frame(Dimensions(width=2, height=2)),
         config=OutputConfig(
-            color_system=DisplayColorSystem.ANSI_RGB,
-            color_style=DarkHighContrastColorStyles.LIGHTBULB_PYGMENTS,
-            solid_background=solid_background),
+            system=DisplayColorSystem.ANSI_RGB,
+            style=DarkHighContrastColorStyles.LIGHTBULB_PYGMENTS,
+            bg=solid_background),
     )
 
 

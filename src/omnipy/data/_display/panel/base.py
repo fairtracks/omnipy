@@ -154,7 +154,7 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
         return DimensionsFit(
             self.dims,
             self.inner_frame.dims,
-            proportional_freedom=self.config.proportional_freedom,
+            proportional_freedom=self.config.freedom,
         )
 
     @cached_property

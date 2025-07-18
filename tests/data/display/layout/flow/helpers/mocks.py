@@ -17,8 +17,8 @@ from ....helpers.mocks import (MockDimsAwarePanelBase,
 
 class MockConfigCropOutputVariant(MockOutputVariantBase):
     def _crop_to_frame(self, lines: list[str], frame: Frame, config: OutputConfig) -> list[str]:
-        vert_mode = config.vertical_overflow_mode
-        hor_mode = config.horizontal_overflow_mode
+        vert_mode = config.v_overflow
+        hor_mode = config.h_overflow
 
         lines = crop_content_lines_vertically(lines, frame.dims.height, vert_mode)
         lines = [crop_content_line_horizontally(_, frame.dims.width, hor_mode) for _ in lines]
@@ -47,7 +47,7 @@ class SplitAndVerticallyCropContentMixin:
         content_lines = crop_content_lines_vertically_for_resizing(
             content_lines,
             _self.frame,
-            _self.config.vertical_overflow_mode,
+            _self.config.v_overflow,
         )
         return content_lines
 

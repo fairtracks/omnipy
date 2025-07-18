@@ -31,8 +31,7 @@ class PrettyPrinter(ABC, Generic[ContentT]):
     def get_pretty_printer_for_draft_panel(cls, draft_panel: DraftPanel) -> 'PrettyPrinter':
         import omnipy.data._display.text.pretty_printer.register as register
 
-        pretty_printer = register.get_pretty_printer_from_config_value(
-            draft_panel.config.pretty_printer)
+        pretty_printer = register.get_pretty_printer_from_config_value(draft_panel.config.printer)
         if pretty_printer:
             return pretty_printer
 
@@ -40,7 +39,7 @@ class PrettyPrinter(ABC, Generic[ContentT]):
         if pretty_printer:
             return pretty_printer
 
-        return register.get_pretty_printer_from_language(draft_panel.config.language)
+        return register.get_pretty_printer_from_language(draft_panel.config.lang)
 
 
 class WidthReducingPrettyPrinter(PrettyPrinter[ContentT], Generic[ContentT]):

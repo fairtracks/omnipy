@@ -174,13 +174,13 @@ def crop_content_with_extra_wide_chars(
             and frame.fixed_width is False \
             and frame.dims.width > 0:
 
-        ellipsis_if_overflow = config.horizontal_overflow_mode == HorizontalOverflowMode.ELLIPSIS
+        ellipsis_if_overflow = config.h_overflow == HorizontalOverflowMode.ELLIPSIS
 
         for i, (line, newline) in enumerate(strip_and_split_newline(_) for _ in all_content_lines):
 
             stats = _calc_line_stats(
                 line,
-                config.tab_size,
+                config.tab,
                 char_width_map,
                 width_limit=frame.dims.width,
             )

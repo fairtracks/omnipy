@@ -27,8 +27,7 @@ def test_draft_panel_init() -> None:
         DraftPanel, (1, 2, 3), title='HeightBoundPanel', frame=Frame(Dimensions(None, 20)))
     assert_draft_panel_subcls(
         DraftPanel, (1, 2, 3), title='BoundPanel', frame=Frame(Dimensions(10, 20)))
-    assert_draft_panel_subcls(
-        DraftPanel, None, title='NonePanel', config=OutputConfig(indent_tab_size=4))
+    assert_draft_panel_subcls(DraftPanel, None, title='NonePanel', config=OutputConfig(indent=4))
 
     content = ('a', 'b', (1, 2, 3))
     assert_draft_panel_subcls(
@@ -42,7 +41,7 @@ def test_draft_panel_init() -> None:
         title='AllPanel',
         frame=Frame(Dimensions(20, 10)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(indent_tab_size=4),
+        config=OutputConfig(indent=4),
     )
 
 
@@ -56,7 +55,7 @@ def test_draft_panel_hashable() -> None:
     panel_4 = DraftPanel('', title='My panel')
     panel_5 = DraftPanel('', frame=Frame(Dimensions(10, 20)))
     panel_6 = DraftPanel('', constraints=Constraints(max_inline_container_width_incl=10))
-    panel_7 = DraftPanel('', config=OutputConfig(indent_tab_size=4))
+    panel_7 = DraftPanel('', config=OutputConfig(indent=4))
 
     assert hash(panel_1) != hash(panel_3) != hash(panel_4) != hash(panel_5) \
            != hash(panel_6) != hash(panel_7)
@@ -65,7 +64,7 @@ def test_draft_panel_hashable() -> None:
     panel_9 = DraftPanel('', title='My panel')
     panel_10 = DraftPanel('', frame=Frame(Dimensions(10, 20)))
     panel_11 = DraftPanel('', constraints=Constraints(max_inline_container_width_incl=10))
-    panel_12 = DraftPanel('', config=OutputConfig(indent_tab_size=4))
+    panel_12 = DraftPanel('', config=OutputConfig(indent=4))
 
     assert hash(panel_3) == hash(panel_8)
     assert hash(panel_4) == hash(panel_9)
@@ -101,7 +100,7 @@ def test_fail_draft_panel_no_assignments() -> None:
             max_inline_container_width_incl=10)
 
     with pytest.raises(AttributeError):
-        draft_panel.config = OutputConfig(indent_tab_size=4)  # type: ignore[misc]
+        draft_panel.config = OutputConfig(indent=4)  # type: ignore[misc]
 
 
 def test_draft_panel_constraints_satisfaction() -> None:
@@ -163,7 +162,7 @@ def test_draft_panel_render_next_stage_with_repr_complex() -> None:
         title='My text panel',
         frame=Frame(Dimensions(3, 5)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(indent_tab_size=1),
+        config=OutputConfig(indent=1),
     )
     assert_next_stage_panel(
         this_panel=draft_panel_complex,
@@ -192,7 +191,7 @@ def test_draft_panel_render_next_stage_with_layout_complex() -> None:
         title='My layout panel',
         frame=Frame(Dimensions(21, 5)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(indent_tab_size=1),
+        config=OutputConfig(indent=1),
     )
     assert_next_stage_panel(
         this_panel=draft_panel_complex,
@@ -236,7 +235,7 @@ def test_draft_panel_render_next_stage_with_layout_half_framed() -> None:
         ),
         frame=Frame(Dimensions(20, 5)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(indent_tab_size=1),
+        config=OutputConfig(indent=1),
     )
     assert_next_stage_panel(
         this_panel=draft_panel_half_framed,
@@ -270,7 +269,7 @@ def test_draft_panel_render_next_stage_with_layout_half_rendered() -> None:
         ),
         frame=Frame(Dimensions(24, 5)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(indent_tab_size=1),
+        config=OutputConfig(indent=1),
     )
     assert_next_stage_panel(
         this_panel=draft_panel_half_rendered,

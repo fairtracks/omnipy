@@ -38,8 +38,8 @@ def test_syntax_stylized_text_panel_init() -> None:
         frame=Frame(Dimensions(10, 10)),
         constraints=Constraints(),
         config=OutputConfig(
-            language=SyntaxLanguage.PYTHON,
-            color_style=RecommendedColorStyles.ANSI_LIGHT,
+            lang=SyntaxLanguage.PYTHON,
+            style=RecommendedColorStyles.ANSI_LIGHT,
         ),
     )
 
@@ -68,8 +68,7 @@ def test_syntax_stylized_text_panel_hashable() -> None:
         ReflowedTextDraftPanel('', frame=Frame(Dimensions(width=10, height=20))))
     panel_6 = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel('', constraints=Constraints(max_inline_container_width_incl=9)))
-    panel_7 = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4)))
+    panel_7 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('', config=OutputConfig(indent=4)))
 
     assert hash(panel_1) != hash(panel_3) != hash(panel_4) != hash(panel_5) != hash(panel_6) \
            != hash(panel_7)
@@ -80,8 +79,7 @@ def test_syntax_stylized_text_panel_hashable() -> None:
         ReflowedTextDraftPanel('', frame=Frame(Dimensions(width=10, height=20))))
     panel_11 = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel('', constraints=Constraints(max_inline_container_width_incl=9)))
-    panel_12 = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel('', config=OutputConfig(indent_tab_size=4)))
+    panel_12 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('', config=OutputConfig(indent=4)))
 
     assert hash(panel_3) == hash(panel_8)
     assert hash(panel_4) == hash(panel_9)
@@ -180,7 +178,7 @@ def test_syntax_stylized_text_panel_variable_width_chars() -> None:
     assert _get_plain_terminal_output_from_content('abcd  \te') == 'abcd    e\n'
 
     # Tab character width also depends on config
-    config = OutputConfig(tab_size=6)
+    config = OutputConfig(tab=6)
     assert _get_plain_terminal_output_from_content('\ta', config) == '      a\n'
     assert _get_plain_terminal_output_from_content(' a\tb', config) == ' a    b\n'
     assert _get_plain_terminal_output_from_content('abcd  \te', config) == 'abcd        e\n'
@@ -237,11 +235,10 @@ def test_syntax_stylized_text_panel_json() -> None:
     text_panel = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel(
             json_content,
-            config=OutputConfig(
-                language=SyntaxLanguage.JSON, color_system=DisplayColorSystem.ANSI_RGB)))
+            config=OutputConfig(lang=SyntaxLanguage.JSON, system=DisplayColorSystem.ANSI_RGB)))
 
     assert text_panel.content == json_content
-    assert text_panel.config.language == SyntaxLanguage.JSON
+    assert text_panel.config.lang == SyntaxLanguage.JSON
 
     # Checking that the plain output is unchanged (except for the trailing newline)
     assert text_panel.plain.terminal == json_content + '\n'

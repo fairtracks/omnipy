@@ -65,7 +65,7 @@ class DevtoolsPrettyPrinter(PythonWidthReducingPrettyPrinterMixin,
 
         while True:
             pf = PrettyFormat(
-                indent_step=draft_panel.config.indent_tab_size,
+                indent_step=draft_panel.config.indent,
                 simple_cutoff=simple_cutoff,
                 width=width,
             )

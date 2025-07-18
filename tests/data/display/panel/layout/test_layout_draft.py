@@ -53,7 +53,7 @@ def test_resized_layout_draft_panel_init() -> None:
         panel_cls,
         layout,
         title='ConfigPanel',
-        config=OutputConfig(indent_tab_size=4),
+        config=OutputConfig(indent=4),
         content_is_identical=False)
     assert_draft_panel_subcls(
         panel_cls,
@@ -67,7 +67,7 @@ def test_resized_layout_draft_panel_init() -> None:
         title='AllPanel',
         frame=Frame(Dimensions(20, 10)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(indent_tab_size=4),
+        config=OutputConfig(indent=4),
         content_is_identical=False,
     )
 
@@ -83,7 +83,7 @@ def test_resized_layout_draft_panel_hashable() -> None:
     draft_panel_5 = ResizedLayoutDraftPanel(Layout(), frame=Frame(Dimensions(10, 20)))
     draft_panel_6 = ResizedLayoutDraftPanel(
         Layout(), constraints=Constraints(max_inline_container_width_incl=10))
-    draft_panel_7 = ResizedLayoutDraftPanel(Layout(), config=OutputConfig(indent_tab_size=4))
+    draft_panel_7 = ResizedLayoutDraftPanel(Layout(), config=OutputConfig(indent=4))
 
     assert hash(draft_panel_1) != hash(draft_panel_3) != hash(draft_panel_4) != hash(
         draft_panel_5) != hash(draft_panel_6) != hash(draft_panel_7)
@@ -93,7 +93,7 @@ def test_resized_layout_draft_panel_hashable() -> None:
     draft_panel_10 = ResizedLayoutDraftPanel(Layout(), frame=Frame(Dimensions(10, 20)))
     draft_panel_11 = ResizedLayoutDraftPanel(
         Layout(), constraints=Constraints(max_inline_container_width_incl=10))
-    draft_panel_12 = ResizedLayoutDraftPanel(Layout(), config=OutputConfig(indent_tab_size=4))
+    draft_panel_12 = ResizedLayoutDraftPanel(Layout(), config=OutputConfig(indent=4))
 
     assert hash(draft_panel_3) == hash(draft_panel_8)
     assert hash(draft_panel_4) == hash(draft_panel_9)
@@ -175,7 +175,7 @@ def test_draft_panel_render_next_stage_complex() -> None:
         ),
         frame=Frame(Dimensions(16, 5)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(indent_tab_size=1),
+        config=OutputConfig(indent=1),
     )
     assert_next_stage_panel(
         this_panel=resized_layout_panel_complex,

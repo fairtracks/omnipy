@@ -111,7 +111,7 @@ class IsLayoutConfig(IsDataPublisher, Protocol):
     panel_design: PanelDesign.Literals
     panel_title_at_top: bool
     max_title_height: MaxTitleHeight.Literals
-    justify_in_layout: Justify.Literals
+    justify: Justify.Literals
 
 
 @runtime_checkable

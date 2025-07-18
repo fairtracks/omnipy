@@ -30,6 +30,6 @@ class RichPrettyPrinter(PythonWidthReducingPrettyPrinterMixin, WidthReducingPret
 
         return rich.pretty.pretty_repr(
             draft_panel.content,
-            indent_size=draft_panel.config.indent_tab_size,
+            indent_size=draft_panel.config.indent,
             max_width=max_width,
         )
