@@ -94,6 +94,9 @@ class PrettyPrinterLib(LiteralEnum[str]):
     """
 
 
+# TODO: Update to hexdump implementation with utf8 support
+
+
 class JsonSyntaxLanguage(LiteralEnum[str]):
     Literals = Literal['json', 'json-ld']
 
