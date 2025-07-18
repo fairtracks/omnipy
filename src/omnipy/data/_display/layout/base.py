@@ -155,7 +155,7 @@ class DimensionsAwarePanelLayoutMixin:
 
     def calc_dims(
         self,
-        panel_design: PanelDesign = PanelDesign.TABLE_GRID,
+        panel_design: PanelDesign.Literals = PanelDesign.TABLE_GRID,
         use_outer_dims_for_subpanels: bool = True,
     ) -> DimensionsWithWidthAndHeight:
         self_as_layout = cast(Layout, self)

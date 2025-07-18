@@ -39,6 +39,7 @@ def test_output_config() -> None:
         panel=PanelDesign.PANELS,
         title_at_top=False,
         max_title_height=MaxTitleHeight.ZERO,
+        min_peek_width=20,
         justify=Justify.RIGHT,
     )
 
@@ -61,6 +62,7 @@ def test_output_config() -> None:
     assert config.panel is PanelDesign.PANELS
     assert config.title_at_top is False
     assert config.max_title_height == MaxTitleHeight.ZERO
+    assert config.min_peek_width == 20
     assert config.justify is Justify.RIGHT
 
     config = OutputConfig(
@@ -88,6 +90,7 @@ def test_output_config() -> None:
         panel='table_grid',
         title_at_top=0,  # type: ignore[arg-type]
         max_title_height=1,
+        min_peek_width=20,
         justify='right',
     )
     assert config.tab == 2
@@ -109,6 +112,7 @@ def test_output_config() -> None:
     assert config.panel is PanelDesign.TABLE_GRID
     assert config.title_at_top is False
     assert config.max_title_height == MaxTitleHeight.ONE
+    assert config.min_peek_width == 20
     assert config.justify is Justify.RIGHT
 
     config = OutputConfig(
@@ -186,6 +190,9 @@ def test_output_config_hashable() -> None:
             'max_title_height': MaxTitleHeight.ZERO
         },
         {
+            'min_peek_width': 20
+        },
+        {
             'justify': Justify.RIGHT
         },
     ]
@@ -230,7 +237,7 @@ def test_fail_output_config_no_assignments() -> None:
         config.system = DisplayColorSystem.WINDOWS_LEGACY  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.style = DarkLowContrastColorStyles.GRUVBOX_DARK  # type: ignore[misc]
+        config.style = DarkLowContrastColorStyles.GRUVBOX_DARK_PYGMENTS  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
         config.bg = True  # type: ignore[misc]
@@ -261,6 +268,9 @@ def test_fail_output_config_no_assignments() -> None:
 
     with pytest.raises(AttributeError):
         config.max_title_height = MaxTitleHeight.ONE  # type: ignore[misc]
+
+    with pytest.raises(AttributeError):
+        config.min_peek_width = 20  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
         config.justify = Justify.RIGHT  # type: ignore[misc]
@@ -331,6 +341,9 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(max_title_height=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
+        OutputConfig(min_peek_width=None)  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError):
         OutputConfig(justify=None)  # type: ignore[arg-type]
 
 
@@ -361,6 +374,7 @@ def test_output_config_default_values() -> None:
     assert config.panel is PanelDesign.TABLE_GRID
     assert config.title_at_top is True
     assert config.max_title_height is MaxTitleHeight.AUTO
+    assert config.min_peek_width == 30
     assert config.justify is Justify.LEFT
 
 

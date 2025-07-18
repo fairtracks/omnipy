@@ -111,6 +111,7 @@ class IsLayoutConfig(IsDataPublisher, Protocol):
     panel_design: PanelDesign.Literals
     panel_title_at_top: bool
     max_title_height: MaxTitleHeight.Literals
+    min_panel_width_for_peek: pyd.NonNegativeInt
     justify: Justify.Literals
 
 

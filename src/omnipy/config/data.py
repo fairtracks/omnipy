@@ -214,6 +214,7 @@ class LayoutConfig(ConfigBase):
     panel_design: PanelDesign.Literals = PanelDesign.TABLE_GRID
     panel_title_at_top: bool = True
     max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO
+    min_panel_width_for_peek: pyd.NonNegativeInt = 30
     justify: Justify.Literals = Justify.LEFT
 
 

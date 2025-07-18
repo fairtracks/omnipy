@@ -233,6 +233,9 @@ class HorizontalOverflowMode(LiteralEnum[str]):
     WORD_WRAP: Literal['word_wrap'] = 'word_wrap'
 
 
+# TODO: Improve word wrap support for layout panels.
+
+
 class PanelDesign(LiteralEnum[str]):
     """
     Visual design for the layout of the output.

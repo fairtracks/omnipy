@@ -11,11 +11,11 @@ from typing_extensions import assert_never, LiteralString, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import OutputConfig
-from omnipy.data._display.dimensions import Dimensions
+from omnipy.data._display.dimensions import Dimensions, has_width
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.integrations.browser.macosx import (OmnipyMacOSXOSAScript,
                                                               setup_macosx_browser_integration)
-from omnipy.data._display.layout.base import Layout
+from omnipy.data._display.layout.base import Layout, PanelDesignDims
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import TextDraftPanel
@@ -313,25 +313,55 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         ui_type = self._extract_ui_type(**kwargs)
         frame = self._define_frame_from_available_display_dims(ui_type)
         config = self._extract_output_config_from_data_config(ui_type)
+        config = self._apply_kwargs_to_config(config, **kwargs)
         layout: Layout[DraftPanel] = Layout()
 
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
 
-        for title, model in models.items():
-            outer_type = model.outer_type()
-            if inspect.isclass(outer_type) and issubclass(outer_type, Dataset):
-                return cast(Dataset, model.content)._peek()
+        max_num_models = self._calc_max_num_models(config, frame)
 
-            layout[title] = self._create_inner_panel_for_model(config,
-                                                               model,
-                                                               outer_type,
-                                                               title,
-                                                               **kwargs)
+        for i, (title, model) in enumerate(models.items()):
+            if max_num_models is not None and i >= max_num_models:
+                # If the number of models exceeds the maximum number of models
+                # that can fit in the frame, we stop adding more models.
+                break
+
+            if i + 1 == max_num_models:
+                layout['...'] = self._create_inner_panel_for_ellipsis(config)
+            else:
+                outer_type = model.outer_type()
+                if inspect.isclass(outer_type) and issubclass(outer_type, Dataset):
+                    return cast(Dataset, model.content)._peek()
+
+                layout[title] = self._create_inner_panel_for_model(config,
+                                                                   model,
+                                                                   outer_type,
+                                                                   title,
+                                                                   **kwargs)
 
         config = self._update_config_with_overflow_modes(config, 'layout')
         config = self._apply_kwargs_to_config(config, **kwargs)
 
         return DraftPanel(layout, frame=frame, config=config)
+
+    def _calc_max_num_models(self, config: OutputConfig, frame: Frame) -> int | None:
+        max_num_models = None
+        panel_design_dims = PanelDesignDims.create(config.panel)
+        if has_width(frame.dims):
+            max_num_models = (
+                (
+                    frame.dims.width
+                    # Remove space for extra panel with ellipsis
+                    - (panel_design_dims.num_horizontal_chars_per_panel + 1)
+                    # Remove end chars
+                    - panel_design_dims.num_horizontal_end_chars)
+                # Divide with space needed per panel(
+                // (config.min_peek_width + panel_design_dims.num_horizontal_chars_per_panel))
+
+            # Add extra panel with ellipsis
+            max_num_models += 1
+
+        return max_num_models
 
     def _apply_kwargs_to_frame(
         self,
@@ -410,6 +440,21 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             html_file.write(html_output)
 
         return file_path
+
+    def _create_inner_panel_for_ellipsis(
+        self,
+        config: OutputConfig,
+        **kwargs,
+    ) -> DraftPanel:
+
+        config = self._update_config_with_overflow_modes(config, 'text')
+        config = self._apply_kwargs_to_config(config, **kwargs)
+
+        return DraftPanel(
+            '',
+            title='…',
+            frame=Frame(Dimensions(width=1, height=None), fixed_width=True),
+            config=config)
 
     def _create_inner_panel_for_model(
         self,
@@ -507,6 +552,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             panel=ui_config.layout.panel_design,
             title_at_top=ui_config.layout.panel_title_at_top,
             max_title_height=ui_config.layout.max_title_height,
+            min_peek_width=ui_config.layout.min_panel_width_for_peek,
             justify=ui_config.layout.justify,
         )
 
