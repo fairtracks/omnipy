@@ -187,7 +187,7 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
         Prepares the color theme for the HTML export, confusingly called a "terminal theme" in the
         rich library. The "terminal theme" is used to set the foreground and background colors for
         the HTML output, as well as converting from ANSI to RGB colors, if needed (for e.g.
-        "ansi_dark" and "ansi_light" color styles).
+        "ansi-dark" and "ansi-light" color styles).
 
         :param force_autodetect: Rule for when to force the auto-detection of background color,
             which sets the background color to black or bright white, depending on the luminance of

@@ -147,7 +147,7 @@ def test_color_config_auto_style_ansi() -> None:
     assert color_config.system is DisplayColorSystem.AUTO
     assert color_config.dark_background is False
     assert color_config.transparent_background is True
-    # ansi_light is the default style based on the above defaults
+    # ANSI_LIGHT is the default style based on the above defaults
     assert color_config.style is RecommendedColorStyles.ANSI_LIGHT
 
     color_config.dark_background = True
@@ -176,14 +176,14 @@ def test_color_config_auto_style_more_colors() -> None:
 
 def test_color_config_specific_not_recommended_style() -> None:
     color_config = ColorConfig(
-        system=DisplayColorSystem.ANSI_RGB, style=DarkHighContrastColorStyles.TB16_GOTHAM)
+        system=DisplayColorSystem.ANSI_RGB, style=DarkHighContrastColorStyles.GOTHAM_T16)
     # If a specific style is set, it overrides the automatic style selection.
-    assert color_config.style is DarkHighContrastColorStyles.TB16_GOTHAM
+    assert color_config.style is DarkHighContrastColorStyles.GOTHAM_T16
 
     color_config.system = DisplayColorSystem.ANSI_16
     color_config.dark_background = False
     color_config.transparent_background = False
-    assert color_config.style is DarkHighContrastColorStyles.TB16_GOTHAM
+    assert color_config.style is DarkHighContrastColorStyles.GOTHAM_T16
 
 
 def test_color_config_specific_style_recommended_style() -> None:

@@ -170,7 +170,7 @@ def case_syntax_styling_setup_no_frame_color_config(
             css_font_weight=css_font_weight,
             css_line_height=css_line_height,
             color_system=DisplayColorSystem.ANSI_RGB,
-            color_style=LightLowContrastColorStyles.MURPHY,
+            color_style=LightLowContrastColorStyles.MURPHY_PYGMENTS,
             transparent_background=transparent_background),
     )
 
@@ -193,7 +193,7 @@ def case_syntax_styling_setup_small_frame_color_and_overflow_config(
         frame=Frame(Dimensions(9, 3)),
         config=OutputConfig(
             color_system=color_system,
-            color_style=DarkLowContrastColorStyles.ZENBURN,
+            color_style=DarkLowContrastColorStyles.ZENBURN_PYGMENTS,
             transparent_background=transparent_background,
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
             vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,

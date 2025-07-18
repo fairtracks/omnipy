@@ -28,7 +28,7 @@ def test_output_config() -> None:
         debug_mode=True,
         user_interface_type=UserInterfaceType.JUPYTER,
         color_system=DisplayColorSystem.ANSI_RGB,
-        color_style=DarkLowContrastColorStyles.ONE_DARK,
+        color_style=DarkLowContrastColorStyles.ONE_DARK_PYGMENTS,
         transparent_background=False,
         css_font_families=('Menlo', 'monospace'),
         css_font_size=16,
@@ -50,7 +50,7 @@ def test_output_config() -> None:
     assert config.debug_mode is True
     assert config.user_interface_type is UserInterfaceType.JUPYTER
     assert config.color_system is DisplayColorSystem.ANSI_RGB
-    assert config.color_style is DarkLowContrastColorStyles.ONE_DARK
+    assert config.color_style is DarkLowContrastColorStyles.ONE_DARK_PYGMENTS
     assert config.transparent_background is False
     assert config.css_font_families == ('Menlo', 'monospace')
     assert config.css_font_size == 16
@@ -153,7 +153,7 @@ def test_output_config_hashable() -> None:
             'color_system': DisplayColorSystem.ANSI_256
         },
         {
-            'color_style': LightHighContrastColorStyles.XCODE
+            'color_style': LightHighContrastColorStyles.XCODE_PYGMENTS
         },
         {
             'transparent_background': False
@@ -376,7 +376,7 @@ def test_fail_output_config_no_positional_parameters() -> None:
 
 def test_config_autoimport_base16_color_style(
         register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
-    style_name = 'tb16-zenburn'
+    style_name = 'zenburn-t16'
     OutputConfig(color_style=style_name)  # To trigger the auto-import
     pygments_style = pygments.styles.get_style_by_name(style_name)
     assert pygments_style.background_color == '#383838'

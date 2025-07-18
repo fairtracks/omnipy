@@ -12,7 +12,8 @@ import pygments.token
 import pytest
 import pytest_cases as pc
 
-from omnipy.data._display.styles.dynamic_styles import (create_dynamic_base16_style_class,
+from omnipy.data._display.styles.dynamic_styles import (clean_style_name,
+                                                        create_dynamic_base16_style_class,
                                                         fetch_base16_theme,
                                                         install_base16_theme,
                                                         TintedBase16Style)
@@ -216,7 +217,7 @@ def _assert_example_base16_style(TintedBase16Example_1Style: type[pygments.style
 
 def test_create_dynamic_style_class(example_base16_theme: Annotated[Base16Theme, pytest.fixture]):
     TintedBase16Example_1Style = create_dynamic_base16_style_class(
-        'tb16-example-1',
+        'example-1-t16',
         example_base16_theme,
     )
     _assert_example_base16_style(TintedBase16Example_1Style, example_base16_theme)
@@ -263,9 +264,9 @@ async def test_install_base16_theme(
 ):
     def _test_install_base16_theme():
         with _setup_base16_download_url(my_base16_endpoint_url):
-            install_base16_theme('tb16-example-1')
+            install_base16_theme('example-1-t16')
             _assert_example_base16_style(
-                pygments.styles.get_style_by_name('tb16-example-1'),
+                pygments.styles.get_style_by_name('example-1-t16'),
                 example_base16_theme,
             )
 
@@ -311,18 +312,21 @@ def test_omnipy_style_import() -> None:
 
     if 'omnipy' in get_pip_installed_packages():
 
-        IGNORE_PREFIXES = ['tb16-', 'ansi_', 'auto']
+        IGNORE_PREFIXES = ['ansi-', 'auto']
+        IGNORE_SUFFIXED = ['-t16']
 
         installed_styles = [
             style for style in AllColorStyles
-            if not any(style.startswith(prefix) for prefix in IGNORE_PREFIXES)
+            if not any(style.startswith(prefix) for prefix in IGNORE_PREFIXES) and not any(
+                style.endswith(suffix) for suffix in IGNORE_SUFFIXED)
         ]
         for style in installed_styles:
+            style = clean_style_name(style)
             pygments.styles.get_style_by_name(style)
 
 
 def test_dynamic_style_import(register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
-    installable_styles = [style for style in AllColorStyles if style.startswith('tb16-')]
+    installable_styles = [style for style in AllColorStyles if style.endswith('-t16')]
 
     for style in random.sample(installable_styles, 3):
         print(f'Installing style: {style}...')

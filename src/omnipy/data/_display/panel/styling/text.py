@@ -7,10 +7,10 @@ from typing_extensions import override
 
 from omnipy.data._display.panel.base import OutputVariant
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
-from omnipy.data._display.panel.helpers import extract_value_if_enum
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.data._display.panel.styling.output import OutputMode, TextCroppingOutputVariant
 from omnipy.data._display.panel.typedefs import FrameT
+from omnipy.data._display.styles.dynamic_styles import clean_style_name
 from omnipy.shared.enums.colorstyles import AllColorStyles
 from omnipy.shared.enums.display import (DisplayColorSystem,
                                          HorizontalOverflowMode,
@@ -39,8 +39,7 @@ class SyntaxStylizedTextPanel(
         horizontal_overflow_mode: HorizontalOverflowMode.Literals,
         remove_bg_color: bool,
     ) -> rich.syntax.Syntax:
-        style_name = extract_value_if_enum(console_color_style)
-        lexer_name = extract_value_if_enum(language)
+        style_name = clean_style_name(console_color_style)
         word_wrap = horizontal_overflow_mode == HorizontalOverflowMode.WORD_WRAP
 
         # Workaround to remove the background color from the theme, as setting
@@ -55,7 +54,7 @@ class SyntaxStylizedTextPanel(
 
         return rich.syntax.Syntax(
             content,
-            lexer=lexer_name,
+            lexer=language,
             theme=theme,
             # background_color='default' if self.config.transparent_background else None,
             word_wrap=word_wrap,

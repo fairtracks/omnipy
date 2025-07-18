@@ -1,4 +1,3 @@
-from enum import Enum
 from functools import lru_cache
 from typing import Literal
 
@@ -8,6 +7,7 @@ import rich.color_triplet
 import rich.style
 import rich.syntax
 
+from omnipy.data._display.styles.dynamic_styles import clean_style_name
 from omnipy.shared.enums.colorstyles import AllColorStyles
 from omnipy.util.literal_enum import LiteralEnum
 
@@ -20,14 +20,10 @@ class ForceAutodetect(LiteralEnum[str]):
     ALWAYS: Literal['always'] = 'always'
 
 
-def extract_value_if_enum(conf_item: Enum | str) -> str:
-    return conf_item.value if isinstance(conf_item, Enum) else conf_item
-
-
 @lru_cache
 def get_syntax_theme_from_color_style(
         color_style: AllColorStyles.Literals) -> rich.syntax.SyntaxTheme:
-    color_style_name = extract_value_if_enum(color_style)
+    color_style_name = clean_style_name(color_style)
     return rich.syntax.Syntax.get_theme(color_style_name)
 
 
@@ -36,7 +32,7 @@ def get_token_style_from_color_style(
     token: pygments.token._TokenType,
     color_style: AllColorStyles.Literals,
 ) -> rich.style.Style:
-    syntax_theme = get_syntax_theme_from_color_style(color_style)
+    syntax_theme = get_syntax_theme_from_color_style(clean_style_name(color_style))
     return syntax_theme.get_style_for_token(token)
 
 
@@ -44,7 +40,7 @@ def get_token_style_from_color_style(
 def calculate_fg_color_from_color_style(color_style: AllColorStyles.Literals) -> rich.color.Color:
     ANSI_FG_COLOR_MAP = {'ansi_light': 'black', 'ansi_dark': 'bright_white'}
 
-    color_style_name = extract_value_if_enum(color_style)
+    color_style_name = clean_style_name(color_style)
 
     fg_color = get_token_style_from_color_style(pygments.token.Token, color_style).color
 

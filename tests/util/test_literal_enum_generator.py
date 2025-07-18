@@ -53,7 +53,7 @@ def test_generate_literal_enum_code_basic_tuple_with_docstrings() -> None:
         docstrings={
             'active': ('This is an active state',),
             'inactive': ('This is an inactive state. This docstring is longer than the others, '
-                         'and more than 72 characters long.',
+                         'and more than 74 characters long.',
                          'Here is a second paragraph.'),
         },
         include_imports=False,

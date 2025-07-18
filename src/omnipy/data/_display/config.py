@@ -2,7 +2,7 @@ import pygments.lexers
 import pygments.styles
 import pygments.util
 
-from omnipy.data._display.styles.dynamic_styles import install_base16_theme
+from omnipy.data._display.styles.dynamic_styles import clean_style_name, install_base16_theme
 from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
 from omnipy.shared.enums.display import (DisplayColorSystem,
                                          HorizontalOverflowMode,
@@ -162,7 +162,7 @@ class OutputConfig:
                 return color_style
             elif color_style in AllColorStyles:
                 try:
-                    pygments.styles.get_style_by_name(color_style)
+                    pygments.styles.get_style_by_name(clean_style_name(color_style))
                 except pygments.util.ClassNotFound:
                     install_base16_theme(color_style)
                     pygments.styles.get_style_by_name(color_style)

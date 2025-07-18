@@ -42,7 +42,7 @@ def case_layout_styling_setup_no_frame(
         content=layout,
         config=OutputConfig(
             color_system=DisplayColorSystem.ANSI_RGB,
-            color_style=DarkHighContrastColorStyles.LIGHTBULB,
+            color_style=DarkHighContrastColorStyles.LIGHTBULB_PYGMENTS,
             transparent_background=transparent_background),
     )
 
@@ -93,7 +93,7 @@ def case_layout_styling_setup_small_frame(
         frame=Frame(Dimensions(width=2, height=2)),
         config=OutputConfig(
             color_system=DisplayColorSystem.ANSI_RGB,
-            color_style=DarkHighContrastColorStyles.LIGHTBULB,
+            color_style=DarkHighContrastColorStyles.LIGHTBULB_PYGMENTS,
             transparent_background=transparent_background),
     )
 
