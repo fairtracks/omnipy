@@ -400,13 +400,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                             f'Expected only Dimensions and OutputConfig parameters: '
                             f"{', '.join(supported_keys)}.")
 
-    def _browse_models(self, models: dict[str, 'Model'], **kwargs) -> None:
+    def _browse_models(self,
+                       models: dict[str, 'Model'],
+                       initial_html_output: dict[str, str] | None = None,
+                       **kwargs) -> None:
         ui_type = self._extract_ui_type(**kwargs)
 
-        html_output = {}
+        html_output = initial_html_output or {}
         all_urls = []
+
         for name, model in models.items():
-            filename = f'{name}_{id(self)}.html'
+            filename = f'{name}_{id(model)}.html'
             html_output[filename] = model._display_according_to_ui_type(
                 ui_type=UserInterfaceType.BROWSER_PAGE,
                 return_output_if_str=True,
@@ -700,11 +704,21 @@ class DatasetDisplayMixin(BaseDisplayMixin):
     def _browse(self, **kwargs) -> None:
         self_as_dataset = cast('Dataset', self)
 
+        html_output: dict[str, str] = {}
+        filename = f'{self.__class__.__name__}_{id(self)}.html'
+        html_output[filename] = self._display_according_to_ui_type(
+            ui_type=UserInterfaceType.BROWSER_PAGE,
+            return_output_if_str=True,
+            output_method=self._list,
+            **kwargs,
+        )
+
         self._browse_models(
             models={
                 f'{i}. {title}': model
                 for i, (title, model) in enumerate(self_as_dataset.data.items())
             },
+            initial_html_output=html_output,
             **kwargs)
 
     @classmethod
