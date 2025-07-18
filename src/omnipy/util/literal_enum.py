@@ -1,3 +1,4 @@
+import random
 from typing import Any, cast, ClassVar, Generic, get_args, get_type_hints, Iterator, overload
 
 from typing_extensions import TypeVar
@@ -458,3 +459,10 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
             if attr_value == value:
                 return attr_name
         raise ValueError(f'Value {value!r} not found in {cls.__name__}')
+
+    @classmethod
+    def random_choice(cls) -> LiteralInnerTypeT:
+        """
+        Returns a random choice from all available enum values.
+        """
+        return random.choice(get_args(cls.Literals))

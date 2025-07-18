@@ -4148,4 +4148,7 @@ class AllColorStyles(RecommendedColorStyles,
                        DarkHighContrastColorStyles.Literals,
                        DarkLowContrastColorStyles.Literals,
                        LightHighContrastColorStyles.Literals,
-                       LightLowContrastColorStyles.Literals]
+                       LightLowContrastColorStyles.Literals,
+                       'random']
+
+    RANDOM_ALL: Literal['random'] = 'random'

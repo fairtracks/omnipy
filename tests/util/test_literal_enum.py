@@ -318,3 +318,23 @@ def test_iteration() -> None:
     # Type narrowing according to specialization works correctly
     for value in SimpleEnumSpecialized:
         value.capitalize()
+
+
+def test_random_choice() -> None:
+    class RandomEnum(LiteralEnum):
+        Literals = Literal['apple', 'banana', 'cherry']
+        APPLE: Literal['apple'] = 'apple'
+        BANANA: Literal['banana'] = 'banana'
+        CHERRY: Literal['cherry'] = 'cherry'
+
+    choice = RandomEnum.random_choice()
+    assert choice in RandomEnum
+
+    class RandomEnumSpecialized(LiteralEnum[str]):
+        Literals = Literal['apple', 'banana', 'cherry']
+        APPLE: Literal['apple'] = 'apple'
+        BANANA: Literal['banana'] = 'banana'
+        CHERRY: Literal['cherry'] = 'cherry'
+
+    choice_specialized = RandomEnumSpecialized.random_choice()
+    assert choice_specialized in RandomEnumSpecialized
