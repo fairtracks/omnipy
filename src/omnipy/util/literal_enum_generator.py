@@ -2,7 +2,7 @@ from collections.abc import KeysView
 from enum import Enum
 from textwrap import TextWrapper
 from types import MappingProxyType
-from typing import Any, Literal, overload
+from typing import Any, Sequence
 
 import inflection
 
@@ -10,53 +10,17 @@ from omnipy.util.helpers import is_unreserved_identifier
 from omnipy.util.literal_enum import LiteralEnum, LiteralEnumInnerTypes
 
 ValueType = (
-    tuple[LiteralEnumInnerTypes, ...] | dict[str, LiteralEnumInnerTypes]
+    Sequence[LiteralEnumInnerTypes]
+    | dict[str, LiteralEnumInnerTypes]
     | MappingProxyType[str, LiteralEnumInnerTypes])
 
 
-@overload
 def generate_literal_enum_code(
     values: ValueType,
-    *,
-    print_to_stdout: Literal[False],
-    include_imports: bool = ...,
-    class_name: str = ...,
-) -> str:
-    ...
-
-
-@overload
-def generate_literal_enum_code(
-    values: ValueType,
-    docstrings: dict[LiteralEnumInnerTypes, str] | None,
-    *,
-    print_to_stdout: Literal[False],
-    include_imports: bool = ...,
-    class_name: str = ...,
-) -> str:
-    ...
-
-
-@overload
-def generate_literal_enum_code(
-    values: ValueType,
-    docstrings: dict[LiteralEnumInnerTypes, str] | None = None,
-    *,
-    print_to_stdout: Literal[True] = ...,
-    include_imports: bool = ...,
-    class_name: str = ...,
-) -> None:
-    ...
-
-
-def generate_literal_enum_code(
-    values: ValueType,
-    docstrings: dict[LiteralEnumInnerTypes, str] | None = None,
-    *,
-    print_to_stdout: bool = True,
+    docstrings: dict[LiteralEnumInnerTypes, Sequence[str]] | None = None,
     include_imports: bool = True,
     class_name: str = 'NewLiteralEnum',
-) -> str | None:
+) -> str:
     """
     Generate code for a LiteralEnum class based on a tuple of string values.
 
@@ -66,12 +30,15 @@ def generate_literal_enum_code(
                where each value will be converted to a valid attribute name
             2. Dict of string keys to values, where the keys are used as
                attribute names
+        docstrings: Optional dictionary mapping values to their
+            corresponding docstrings. If provided, the docstrings will be
+            added to the generated class attributes. The keys should match
+            the values in `values`. If None, no docstrings are added
+            (default: None)
         include_imports: If True, includes necessary imports for Literal and
             LiteralEnum (default: True)
         class_name: The name of the generated class (default:
             'GeneratedEnum')
-        print_to_stdout: If True, prints the generated code to stdout
-            (default: True)
 
     Returns:
         A string containing the complete Python code for a LiteralEnum class
@@ -104,11 +71,7 @@ def generate_literal_enum_code(
     lines = _build_attribute_definitions(docstrings, enum_mappings, lines)
 
     code = '\n'.join(lines)
-
-    if print_to_stdout:
-        print(code)
-    else:
-        return code
+    return code
 
 
 def _generate_attrib_names(values: ValueType) -> dict[str, LiteralEnumInnerTypes]:
@@ -118,7 +81,7 @@ def _generate_attrib_names(values: ValueType) -> dict[str, LiteralEnumInnerTypes
         case dict() | MappingProxyType():
             for key, value in values.items():
                 enum_mappings[key] = value.value if isinstance(value, Enum) else value
-        case tuple():
+        case _:
             for value in values:
                 # Convert value to a valid attribute name
                 attr_name = _generate_attribute_name(value, enum_mappings.keys())
@@ -180,7 +143,7 @@ def _generate_attribute_name(value: Any, used_names: KeysView[str]) -> str:
 
 
 def _check_params(values: ValueType,
-                  docstrings: dict[LiteralEnumInnerTypes, str] | None,
+                  docstrings: dict[LiteralEnumInnerTypes, Sequence[str]] | None,
                   class_name: str,
                   enum_mappings: dict[str, LiteralEnumInnerTypes]) -> None:
     if not values:
@@ -235,9 +198,13 @@ def _build_class_definition_lines(
     return lines
 
 
-def _build_attribute_definitions(docstrings, enum_mappings, lines):
+def _build_attribute_definitions(
+    docstrings: dict[LiteralEnumInnerTypes, Sequence[str]] | None,
+    enum_mappings: dict[str, LiteralEnumInnerTypes],
+    lines: list[str],
+):
     textwrapper = TextWrapper(
-        width=78,
+        width=76,
         initial_indent='    ',
         subsequent_indent='    ',
     )
@@ -245,7 +212,10 @@ def _build_attribute_definitions(docstrings, enum_mappings, lines):
     for attr_name, value in enum_mappings.items():
         lines.append(f'    {attr_name}: Literal[{repr(value)}] = {repr(value)}')
         if docstrings and value in docstrings:
-            wrapped_docstring = textwrapper.wrap(docstrings[value])
-            lines += ['    """'] + wrapped_docstring + ['    """', '']
+            lines += ['    """']
+            for paragraph in docstrings[value]:
+                lines += textwrapper.wrap(paragraph) + ['']
+            del lines[-1]
+            lines += ['    """', '']
 
     return lines
