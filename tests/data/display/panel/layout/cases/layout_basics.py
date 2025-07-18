@@ -790,7 +790,7 @@ def case_layout_single_panel_fixed_width_with_title(
             )),
         config=OutputConfig(
             color_system=DisplayColorSystem.ANSI_RGB,
-            transparent_background=False,
+            solid_background=True,
         ),
         exp_plain_output_no_frame=('╭─────────────────────╮\n'
                                    '│    A nice title     │\n'
@@ -1025,7 +1025,7 @@ def case_layout_two_panels_fixed_content_and_frame(
             horizontal_overflow_mode=HorizontalOverflowMode.CROP,
             vertical_overflow_mode=VerticalOverflowMode.CROP_BOTTOM,
             color_system=DisplayColorSystem.ANSI_RGB,
-            transparent_background=False,
+            solid_background=True,
         ),
         exp_plain_output_no_frame=('╭──────────────┬───────────╮\n'
                                    '│ Some content │ (1, 2, 3) │\n'

@@ -146,7 +146,7 @@ def test_color_config_auto_style_ansi() -> None:
 
     assert color_config.system is DisplayColorSystem.AUTO
     assert color_config.dark_background is False
-    assert color_config.transparent_background is True
+    assert color_config.solid_background is False
     # ANSI_LIGHT is the default style based on the above defaults
     assert color_config.style is RecommendedColorStyles.ANSI_LIGHT
 
@@ -164,13 +164,13 @@ def test_color_config_auto_style_more_colors() -> None:
     color_config.system = DisplayColorSystem.ANSI_RGB
     assert color_config.style is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
 
-    color_config.transparent_background = False
+    color_config.solid_background = True
     assert color_config.style is RecommendedColorStyles.OMNIPY_SELENIZED_LIGHT
 
     color_config.dark_background = True
     assert color_config.style is RecommendedColorStyles.OMNIPY_SELENIZED_DARK
 
-    color_config.transparent_background = True
+    color_config.solid_background = False
     assert color_config.style is RecommendedColorStyles.OMNIPY_SELENIZED_BLACK
 
 
@@ -182,7 +182,7 @@ def test_color_config_specific_not_recommended_style() -> None:
 
     color_config.system = DisplayColorSystem.ANSI_16
     color_config.dark_background = False
-    color_config.transparent_background = False
+    color_config.solid_background = True
     assert color_config.style is DarkHighContrastColorStyles.GOTHAM_T16
 
 

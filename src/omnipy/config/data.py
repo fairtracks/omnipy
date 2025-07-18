@@ -46,7 +46,7 @@ class _ColorConfigTypedDict(TypedDict):
     system: DisplayColorSystem.Literals
     style: AllColorStyles.Literals | str
     dark_background: bool
-    transparent_background: bool
+    solid_background: bool
 
 
 class ColorConfig(ConfigBase):
@@ -56,7 +56,7 @@ class ColorConfig(ConfigBase):
     system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
     style: AllColorStyles.Literals | str = RecommendedColorStyles.AUTO
     dark_background: bool = False
-    transparent_background: bool = True
+    solid_background: bool = False
 
     @pyd.root_validator()
     def default_style(cls, values: _ColorConfigTypedDict) -> _ColorConfigTypedDict:
@@ -64,7 +64,7 @@ class ColorConfig(ConfigBase):
             values['style'] = RecommendedColorStyles.get_default_style(
                 values['system'],
                 values['dark_background'],
-                values['transparent_background'],
+                values['solid_background'],
             )
         return values
 

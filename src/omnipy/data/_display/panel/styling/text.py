@@ -56,7 +56,7 @@ class SyntaxStylizedTextPanel(
             content,
             lexer=language,
             theme=theme,
-            # background_color='default' if self.config.transparent_background else None,
+            # background_color=None if self.config.solid_background else 'default',
             word_wrap=word_wrap,
             tab_size=tab_size,
         )
@@ -99,7 +99,7 @@ class SyntaxStylizedTextPanel(
             console_color_style=self.config.color_style,
             language=self.config.language,
             horizontal_overflow_mode=self.config.horizontal_overflow_mode,
-            remove_bg_color=self.config.transparent_background,
+            remove_bg_color=not self.config.solid_background,
         )
 
     @override

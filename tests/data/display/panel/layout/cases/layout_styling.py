@@ -25,10 +25,10 @@ from ...helpers.panel_assert import fill_html_page_template, fill_html_tag_templ
 # config values are ignored).
 
 
-@pc.parametrize('transparent_background', [False, True])
+@pc.parametrize('solid_background', [True, False])
 @pc.case(id='no-frame-dark-color', tags=['setup', 'layout'])
 def case_layout_styling_setup_no_frame(
-        transparent_background: bool) -> StylizedPanelTestCaseSetup[Layout]:
+        solid_background: bool) -> StylizedPanelTestCaseSetup[Layout]:
     # Create a simple layout with mock panels
     layout: Layout = Layout()
     layout['first'] = MockStylablePlainCropPanel(
@@ -38,19 +38,19 @@ def case_layout_styling_setup_no_frame(
 
     # Create stylized output with default config (should use Table grid)
     return StylizedPanelTestCaseSetup(
-        case_id='no-frame-dark-color' + ('-no-bg' if transparent_background else ''),
+        case_id='no-frame-dark-color' + ('-no-bg' if not solid_background else ''),
         content=layout,
         config=OutputConfig(
             color_system=DisplayColorSystem.ANSI_RGB,
             color_style=DarkHighContrastColorStyles.LIGHTBULB_PYGMENTS,
-            transparent_background=transparent_background),
+            solid_background=solid_background),
     )
 
 
-@pc.parametrize('transparent_background', [False, True])
+@pc.parametrize('solid_background', [True, False])
 @pc.case(id='frame-title-light-color', tags=['setup', 'layout'])
 def case_layout_styling_setup_frame_and_title(
-        transparent_background: bool) -> StylizedPanelTestCaseSetup[Layout]:
+        solid_background: bool) -> StylizedPanelTestCaseSetup[Layout]:
     # Create a simple layout with mock panels
     layout: Layout = Layout()
     layout['first'] = MockStylablePlainCropPanel(
@@ -64,21 +64,21 @@ def case_layout_styling_setup_frame_and_title(
 
     # Create stylized output with default config (should use Table grid)
     return StylizedPanelTestCaseSetup(
-        case_id='frame-title-light-color' + ('-no-bg' if transparent_background else ''),
+        case_id='frame-title-light-color' + ('-no-bg' if not solid_background else ''),
         content=layout,
         config=OutputConfig(
             color_system=DisplayColorSystem.ANSI_RGB,
             color_style=RecommendedColorStyles.OMNIPY_SELENIZED_LIGHT,
-            transparent_background=transparent_background,
+            solid_background=solid_background,
             horizontal_overflow_mode=HorizontalOverflowMode.ELLIPSIS,
             panel_title_at_top=False,
         ))
 
 
-@pc.parametrize('transparent_background', [False, True])
+@pc.parametrize('solid_background', [True, False])
 @pc.case(id='tiny-cropped-table-dark-color', tags=['setup', 'layout'])
 def case_layout_styling_setup_small_frame(
-        transparent_background: bool) -> StylizedPanelTestCaseSetup[Layout]:
+        solid_background: bool) -> StylizedPanelTestCaseSetup[Layout]:
     # Create a simple layout with mock panels
     layout: Layout = Layout()
     layout['first'] = MockStylablePlainCropPanel(
@@ -88,13 +88,13 @@ def case_layout_styling_setup_small_frame(
 
     # Create stylized output with default config (should use Table grid)
     return StylizedPanelTestCaseSetup(
-        case_id='tiny-cropped-table-dark-color' + ('-no-bg' if transparent_background else ''),
+        case_id='tiny-cropped-table-dark-color' + ('-no-bg' if not solid_background else ''),
         content=layout,
         frame=Frame(Dimensions(width=2, height=2)),
         config=OutputConfig(
             color_system=DisplayColorSystem.ANSI_RGB,
             color_style=DarkHighContrastColorStyles.LIGHTBULB_PYGMENTS,
-            transparent_background=transparent_background),
+            solid_background=solid_background),
     )
 
 

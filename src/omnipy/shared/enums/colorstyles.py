@@ -113,20 +113,20 @@ class RecommendedColorStyles(LiteralEnum[str]):
         cls,
         color_system: DisplayColorSystem.Literals,
         dark_background: bool,
-        transparent_background: bool,
+        solid_background: bool,
     ) -> 'RecommendedColorStyles.Literals':
         """
         Returns the default color style for the given color system.
         """
-        match (color_system, dark_background, transparent_background):
+        match (color_system, dark_background, solid_background):
             case (DisplayColorSystem.ANSI_256 | DisplayColorSystem.ANSI_RGB, False, False):
-                return cls.OMNIPY_SELENIZED_LIGHT
-            case (DisplayColorSystem.ANSI_256 | DisplayColorSystem.ANSI_RGB, False, True):
                 return cls.OMNIPY_SELENIZED_WHITE
+            case (DisplayColorSystem.ANSI_256 | DisplayColorSystem.ANSI_RGB, False, True):
+                return cls.OMNIPY_SELENIZED_LIGHT
             case (DisplayColorSystem.ANSI_256 | DisplayColorSystem.ANSI_RGB, True, False):
-                return cls.OMNIPY_SELENIZED_DARK
-            case (DisplayColorSystem.ANSI_256 | DisplayColorSystem.ANSI_RGB, True, True):
                 return cls.OMNIPY_SELENIZED_BLACK
+            case (DisplayColorSystem.ANSI_256 | DisplayColorSystem.ANSI_RGB, True, True):
+                return cls.OMNIPY_SELENIZED_DARK
             case _, False, _:
                 return cls.ANSI_LIGHT
             case _, True, _:

@@ -62,8 +62,8 @@ for input in inputs:
 
     for style in styles:
         # print(style)
-        for transparent_background in (True, False):
-            transparency_label = 'default_bg' if transparent_background else 'style_bg'
+        for solid_background in (True, False):
+            transparency_label = 'default_bg' if solid_background else 'style_bg'
             input_name = (f'{os.path.splitext(os.path.basename(input.path))[0]}'
                           f'_{input.data_type.__name__.lower()}')
             dirname = f'{input_name}/{underscore(style.group)}/{transparency_label}'
@@ -73,7 +73,7 @@ for input in inputs:
             frame = Frame(Dimensions(165, None))
             config = OutputConfig(
                 color_style=style.name,
-                transparent_background=transparent_background,
+                solid_background=solid_background,
                 language=input.lexer,
                 debug_mode=input.debug,
             )

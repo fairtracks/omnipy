@@ -130,16 +130,15 @@ def case_syntax_styling_word_wrap_crop_top(
     )
 
 
-@pc.parametrize('transparent_background', [False, True])
+@pc.parametrize('solid_background', [True, False])
 @pc.case(id='no-frame-default-color', tags=['setup', 'syntax_text'])
 def case_syntax_styling_setup_no_frame_or_configs(
-        transparent_background: bool) -> StylizedPanelTestCaseSetup[str]:
+        solid_background: bool) -> StylizedPanelTestCaseSetup[str]:
     return StylizedPanelTestCaseSetup(
-        case_id='no-frame-default-color' + ('-no-bg' if transparent_background else ''),
+        case_id='no-frame-default-color' + ('-no-bg' if not solid_background else ''),
         content="MyClass({'abc': [123, 234]})",
         config=OutputConfig(
-            color_system=DisplayColorSystem.ANSI_RGB,
-            transparent_background=transparent_background),
+            color_system=DisplayColorSystem.ANSI_RGB, solid_background=solid_background),
     )
 
 
@@ -147,19 +146,19 @@ def case_syntax_styling_setup_no_frame_or_configs(
     'css_font_families, css_font_size, css_font_weight, css_line_height',
     [[[], None, None, None], [[], None, 500, 1.0], [('monospace',), 15, 600, 1.1]],
     ids=['no-fonts', 'font-styling-only', 'full-font-conf'])
-@pc.parametrize('transparent_background', [False, True])
+@pc.parametrize('solid_background', [True, False])
 @pc.case(id='no-frame-light-color', tags=['setup', 'syntax_text'])
 def case_syntax_styling_setup_no_frame_color_config(
         css_font_families: tuple[str, ...],
         css_font_size: int | None,
         css_font_weight: int | None,
         css_line_height: float | None,
-        transparent_background: bool) -> StylizedPanelTestCaseSetup[str]:
+        solid_background: bool) -> StylizedPanelTestCaseSetup[str]:
     case_id = 'no-frame-light-color' \
               + ('-no-fonts' if css_font_weight is None else '') \
               + ('-font-styling-only' if css_font_weight == 500 else '') \
               + ('-full-font-conf' if css_font_families == ('monospace',) else '') \
-              + ('-no-bg' if transparent_background else '')
+              + ('-no-bg' if not solid_background else '')
 
     return StylizedPanelTestCaseSetup(
         case_id=case_id,
@@ -171,21 +170,21 @@ def case_syntax_styling_setup_no_frame_color_config(
             css_line_height=css_line_height,
             color_system=DisplayColorSystem.ANSI_RGB,
             color_style=LightLowContrastColorStyles.MURPHY_PYGMENTS,
-            transparent_background=transparent_background),
+            solid_background=solid_background),
     )
 
 
 @pc.parametrize('color_system',
                 [DisplayColorSystem.AUTO, DisplayColorSystem.ANSI_256, DisplayColorSystem.ANSI_RGB])
-@pc.parametrize('transparent_background', [False, True])
+@pc.parametrize('solid_background', [True, False])
 @pc.case(id='w-frame-dark-color-w-wrap', tags=['setup', 'syntax_text'])
 def case_syntax_styling_setup_small_frame_color_and_overflow_config(
     color_system: DisplayColorSystem.Literals,
-    transparent_background: bool,
+    solid_background: bool,
 ) -> StylizedPanelTestCaseSetup[str]:
 
     case_id = f'w-frame-dark-color-w-wrap-{color_system}' + \
-              ('-no-bg' if transparent_background else '')
+              ('-no-bg' if not solid_background else '')
 
     return StylizedPanelTestCaseSetup(
         case_id=case_id,
@@ -194,7 +193,7 @@ def case_syntax_styling_setup_small_frame_color_and_overflow_config(
         config=OutputConfig(
             color_system=color_system,
             color_style=DarkLowContrastColorStyles.ZENBURN_PYGMENTS,
-            transparent_background=transparent_background,
+            solid_background=solid_background,
             horizontal_overflow_mode=HorizontalOverflowMode.WORD_WRAP,
             vertical_overflow_mode=VerticalOverflowMode.CROP_TOP,
         ),

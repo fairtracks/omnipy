@@ -16,10 +16,10 @@ def set_random_style():
         list(DarkHighContrastColorStyles) + list(DarkLowContrastColorStyles)
         + list(LightHighContrastColorStyles) + list(LightLowContrastColorStyles)
         + list(RecommendedColorStyles))
-    om.runtime.config.data.ui.terminal.color.transparent_background = False
+    om.runtime.config.data.ui.terminal.color.solid_background = True
     print(f'color.style={om.runtime.config.data.ui.terminal.color.style}')
-    print(f'color.transparent_background='
-          f'{om.runtime.config.data.ui.terminal.color.transparent_background}')
+    print(f'color.solid_background='
+          f'{om.runtime.config.data.ui.terminal.color.solid_background}')
 
 
 # Omnipy tasks

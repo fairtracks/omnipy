@@ -73,7 +73,7 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert isinstance(config.data.ui.terminal.color, ColorConfig)
     assert config.data.ui.terminal.color.system == DisplayColorSystem.AUTO
     assert config.data.ui.terminal.color.style == RecommendedColorStyles.ANSI_LIGHT
-    assert config.data.ui.terminal.color.transparent_background is True
+    assert config.data.ui.terminal.color.solid_background is False
 
     assert isinstance(config.data.ui.jupyter, JupyterUserInterfaceConfig)
     assert config.data.ui.jupyter.width == 112
@@ -84,7 +84,7 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.data.ui.jupyter.color.style \
            is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
     assert config.data.ui.jupyter.color.dark_background is False
-    assert config.data.ui.jupyter.color.transparent_background is True
+    assert config.data.ui.jupyter.color.solid_background is False
 
     assert isinstance(config.data.ui.browser, BrowserUserInterfaceConfig)
     assert config.data.ui.browser.width == 160
@@ -95,7 +95,7 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.data.ui.browser.color.style \
            is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
     assert config.data.ui.jupyter.color.dark_background is False
-    assert config.data.ui.browser.color.transparent_background is True
+    assert config.data.ui.browser.color.solid_background is False
 
     assert isinstance(config.data.ui.text, TextConfig)
 

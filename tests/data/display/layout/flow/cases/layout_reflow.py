@@ -592,7 +592,7 @@ def case_layout_single_panel_with_title(
             panel=MockConfigCropPanel(content='Here is some text', title='A nice title'),),
         config=OutputConfig(
             color_system=DisplayColorSystem.ANSI_RGB,
-            transparent_background=False,
+            solid_background=True,
         ),
         exp_plain_output_no_frame=('╭───────────────────╮\n'
                                    '│   A nice title    │\n'

@@ -30,7 +30,7 @@ class IsColorConfig(IsDataPublisher, Protocol):
     system: DisplayColorSystem.Literals
     style: AllColorStyles.Literals | str
     dark_background: bool
-    transparent_background: bool
+    solid_background: bool
 
 
 @runtime_checkable

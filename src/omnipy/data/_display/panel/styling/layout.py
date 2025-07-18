@@ -156,11 +156,11 @@ class PanelElementStyles:
     ) -> None:
         color_style = outer_panel.config.color_style
 
-        if outer_panel.config.transparent_background:
-            style_bg_color = None
-        else:
+        if outer_panel.config.solid_background:
             style_bg_color = calculate_bg_color_from_color_style(
                 color_style, force_autodetect=force_autodetect_bg_color)
+        else:
+            style_bg_color = None
 
         basic_title_style = get_token_style_from_color_style(PANEL_TITLE_BASE_16_TOKEN, color_style)
         if basic_title_style is rich.style.Style.null():

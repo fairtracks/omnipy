@@ -76,7 +76,7 @@ class OutputConfig:
             are defined in AllColorStyles. For non-supported languages, the
             user can specify a string with the Pygments style name. For this
             to work, the style must be registered in the Pygments library.
-        transparent_background (bool): If True, uses transparent background
+        solid_background (bool): If False, uses transparent background
             for the output. In the case of terminal output, the background
             color will be the current background color of the terminal. For
             HTML output, the background color will be automatically set to
@@ -119,7 +119,7 @@ class OutputConfig:
     user_interface_type: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL
     color_system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
     color_style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
-    transparent_background: bool = True
+    solid_background: bool = False
     css_font_families: tuple[str, ...] = (
         'Menlo',
         'DejaVu Sans Mono',
@@ -137,8 +137,14 @@ class OutputConfig:
     max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO
     justify_in_layout: Justify.Literals = Justify.LEFT
 
+    class Config:
+        allow_population_by_field_name = True
+        extra = pyd.Extra.forbid
+        validate_assignment = True
+        allow_population_by_field_name = True
+
     @pyd.validator('language')
-    def validate_language(
+    def check_language(
         cls,
         language: SyntaxLanguage.Literals | str,
     ) -> SyntaxLanguage.Literals | str:
@@ -153,7 +159,7 @@ class OutputConfig:
             raise ValueError(f'Invalid syntax language: {language}') from exp
 
     @pyd.validator('color_style')
-    def validate_color_style(
+    def check_color_style(
         cls,
         color_style: AllColorStyles.Literals | str,
     ) -> AllColorStyles.Literals | str:

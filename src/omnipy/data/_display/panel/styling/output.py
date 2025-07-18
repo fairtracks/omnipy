@@ -158,10 +158,10 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
 
     def _prepare_html_tag_template(self):
         if self._output_mode == OutputMode.COLORIZED:
-            if self._config.transparent_background:
-                css_color_style = self._CSS_COLOR_STYLE_TEMPLATE_FG_ONLY
-            else:
+            if self._config.solid_background:
                 css_color_style = self._CSS_COLOR_STYLE_TEMPLATE_FG_AND_BG
+            else:
+                css_color_style = self._CSS_COLOR_STYLE_TEMPLATE_FG_ONLY
         else:
             css_color_style = ''
 
@@ -229,10 +229,10 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
     def _html_page(self) -> str:
         console = self._prepare_html_console_according_to_output_mode()
 
-        if self._config.transparent_background:
-            force_autodetect: ForceAutodetect.Literals = ForceAutodetect.ALWAYS
+        if self._config.solid_background:
+            force_autodetect: ForceAutodetect.Literals = ForceAutodetect.IF_NO_BG_COLOR_IN_STYLE
         else:
-            force_autodetect = ForceAutodetect.IF_NO_BG_COLOR_IN_STYLE
+            force_autodetect = ForceAutodetect.ALWAYS
 
         return console.export_html(
             clear=False,

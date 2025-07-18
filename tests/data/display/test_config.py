@@ -29,7 +29,7 @@ def test_output_config() -> None:
         user_interface_type=UserInterfaceType.JUPYTER,
         color_system=DisplayColorSystem.ANSI_RGB,
         color_style=DarkLowContrastColorStyles.ONE_DARK_PYGMENTS,
-        transparent_background=False,
+        solid_background=True,
         css_font_families=('Menlo', 'monospace'),
         css_font_size=16,
         css_font_weight=400,
@@ -51,7 +51,7 @@ def test_output_config() -> None:
     assert config.user_interface_type is UserInterfaceType.JUPYTER
     assert config.color_system is DisplayColorSystem.ANSI_RGB
     assert config.color_style is DarkLowContrastColorStyles.ONE_DARK_PYGMENTS
-    assert config.transparent_background is False
+    assert config.solid_background is True
     assert config.css_font_families == ('Menlo', 'monospace')
     assert config.css_font_size == 16
     assert config.css_font_weight == 400
@@ -78,7 +78,7 @@ def test_output_config() -> None:
         #       thus excluded from the list of valid color styles in Omnipy, but it is still a valid
         #       color style in the Pygments library.
         color_style='lilypond',
-        transparent_background=0,  # type: ignore[arg-type]
+        solid_background=1,  # type: ignore[arg-type]
         css_font_families=[],  # type: ignore[arg-type]
         css_font_size='16',  # type: ignore[arg-type]
         css_font_weight='400',  # type: ignore[arg-type]
@@ -99,7 +99,7 @@ def test_output_config() -> None:
     assert config.user_interface_type is UserInterfaceType.TERMINAL
     assert config.color_system is DisplayColorSystem.ANSI_256
     assert config.color_style == 'lilypond'
-    assert config.transparent_background is False
+    assert config.solid_background is True
     assert config.css_font_families == ()
     assert config.css_font_size == 16
     assert config.css_font_weight == 400
@@ -156,7 +156,7 @@ def test_output_config_hashable() -> None:
             'color_style': LightHighContrastColorStyles.XCODE_PYGMENTS
         },
         {
-            'transparent_background': False
+            'solid_background': True
         },
         {
             'css_font_families': ()
@@ -233,7 +233,7 @@ def test_fail_output_config_no_assignments() -> None:
         config.color_style = DarkLowContrastColorStyles.GRUVBOX_DARK  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.transparent_background = False  # type: ignore[misc]
+        config.solid_background = True  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
         config.css_font_families = ('Menlo', 'monospace')  # type: ignore[misc]
@@ -301,7 +301,7 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(color_style='red')
 
     with pytest.raises(ValueError):
-        OutputConfig(transparent_background=None)  # type: ignore[arg-type]
+        OutputConfig(solid_background=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
         OutputConfig(css_font_families=None)  # type: ignore[arg-type]
@@ -345,7 +345,7 @@ def test_output_config_default_values() -> None:
     assert config.user_interface_type is UserInterfaceType.TERMINAL
     assert config.color_system is DisplayColorSystem.AUTO
     assert config.color_style is RecommendedColorStyles.ANSI_DARK
-    assert config.transparent_background is True
+    assert config.solid_background is False
     assert config.css_font_families == (
         'Menlo',
         'DejaVu Sans Mono',
