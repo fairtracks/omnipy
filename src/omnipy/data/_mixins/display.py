@@ -18,6 +18,7 @@ from omnipy.data._display.integrations.browser.macosx import (OmnipyMacOSXOSAScr
 from omnipy.data._display.layout.base import Layout, PanelDesignDims
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
+from omnipy.data._display.panel.draft.bytes import BytesDraftPanel
 from omnipy.data._display.panel.draft.text import TextDraftPanel
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.hub.ui import get_terminal_prompt_height
@@ -470,11 +471,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         **kwargs,
     ) -> DraftPanel:
         from omnipy.components.json.models import is_json_model_instance_hack
-        from omnipy.components.raw.models import StrModel
+        from omnipy.components.raw.models import BytesModel, StrModel
 
         lang: SyntaxLanguage.Literals
         if outer_type is str or isinstance(model, StrModel):
             lang = SyntaxLanguage.TEXT
+        if outer_type is bytes or isinstance(model, BytesModel):
+            lang = SyntaxLanguage.HEXDUMP
         elif is_json_model_instance_hack(model):
             lang = SyntaxLanguage.JSON
         else:
@@ -488,6 +491,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             case SyntaxLanguage.TEXT:
                 return TextDraftPanel(
                     cast(str, model.content),
+                    title=title,
+                    frame=frame,
+                    config=config,
+                )
+            case SyntaxLanguage.HEXDUMP:
+                return BytesDraftPanel(
+                    cast(bytes, model.content),
                     title=title,
                     frame=frame,
                     config=config,

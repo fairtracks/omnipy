@@ -2,6 +2,7 @@ from typing_extensions import assert_never
 
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.text.pretty_printer.base import PrettyPrinter
+from omnipy.data._display.text.pretty_printer.bytes import HexdumpPrettyPrinter
 from omnipy.data._display.text.pretty_printer.compact_json import CompactJsonPrettyPrinter
 from omnipy.data._display.text.pretty_printer.devtools import DevtoolsPrettyPrinter
 from omnipy.data._display.text.pretty_printer.rich import RichPrettyPrinter
@@ -20,6 +21,8 @@ def get_pretty_printer_from_config_value(
             return RichPrettyPrinter()
         case PrettyPrinterLib.TEXT:
             return PlainTextPrettyPrinter()
+        case PrettyPrinterLib.HEXDUMP:
+            return HexdumpPrettyPrinter()
         case PrettyPrinterLib.AUTO:
             return None
 
@@ -43,6 +46,8 @@ def get_pretty_printer_from_language(language: SyntaxLanguage.Literals | str) ->
                 return CompactJsonPrettyPrinter()
             case _lang if SyntaxLanguage.is_text_language(_lang):
                 return PlainTextPrettyPrinter()
+            case _lang if SyntaxLanguage.is_hexdump_language(_lang):
+                return HexdumpPrettyPrinter()
             case _lang if SyntaxLanguage.is_python_language(_lang):
                 return RichPrettyPrinter()
             case _ as never:
