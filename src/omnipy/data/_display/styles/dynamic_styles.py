@@ -12,6 +12,7 @@ from ruamel.yaml import YAML
 from omnipy.data._display.styles.helpers import Base16Theme, get_styles_from_base16_colors
 from omnipy.shared.constants import (ANSI_PREFIX,
                                      PYGMENTS_SUFFIX,
+                                     RANDOM_PREFIX,
                                      STYLE_CLS_NAME_BASE16_PREFIX,
                                      STYLE_CLS_NAME_SUFFIX,
                                      THEME_KEY_BASE16_SUFFIX)
@@ -127,6 +128,12 @@ def clean_style_name(name: str | AllColorStyles.Literals) -> str:
             PYGMENTS_SUFFIX)]  # Convert dashes to underscores for Pygments compatibility
     elif name.startswith(ANSI_PREFIX):
         return name.replace('-', '_')  # Convert dashes to underscores for Rich compatibility
+    elif name.startswith(RANDOM_PREFIX):
+        color_style_cls = AllColorStyles.get_supercls_for_random_choice(name)
+        if color_style_cls:
+            return clean_style_name(color_style_cls.random_choice())
+        else:
+            raise ValueError(f'Invalid random color style: {name}')
     return name
 
 

@@ -348,7 +348,8 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
                        'woodland-t16',
                        'xcode-dusk-t16',
                        'zenbones-t16',
-                       'zenburn-t16']
+                       'zenburn-t16',
+                       'random-t16-dark-high']
 
     NUMBER_0X96F_T16: Literal['0x96f-t16'] = '0x96f-t16'
     """
@@ -2608,6 +2609,8 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
+    RANDOM_T16_DARK_HIGH_CONTRAST: Literal['random-t16-dark-high'] = 'random-t16-dark-high'
+
 
 class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     f"""
@@ -2631,7 +2634,8 @@ class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
                        'tokyo-night-moon-t16',
                        'tokyo-night-terminal-dark-t16',
                        'tokyo-night-terminal-storm-t16',
-                       'vulcan-t16']
+                       'vulcan-t16',
+                       'random-t16-dark-low']
 
     APPRENTICE_T16: Literal['apprentice-t16'] = 'apprentice-t16'
     """
@@ -2839,6 +2843,8 @@ class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     2.1 (https://www.w3.org/TR/WCAG21/).
     """
 
+    RANDOM_T16_DARK_LOW_CONTRAST: Literal['random-t16-dark-low'] = 'random-t16-dark-low'
+
 
 class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     f"""
@@ -2923,7 +2929,8 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
                        'tomorrow-t16',
                        'unikitty-light-t16',
                        'windows-95-light-t16',
-                       'windows-highcontrast-light-t16']
+                       'windows-highcontrast-light-t16',
+                       'random-t16-light-high']
 
     ATELIER_CAVE_LIGHT_T16: Literal['atelier-cave-light-t16'] = 'atelier-cave-light-t16'
     """
@@ -3862,6 +3869,8 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
+    RANDOM_T16_LIGHT_HIGH_CONTRAST: Literal['random-t16-light-high'] = 'random-t16-light-high'
+
 
 class LightLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     f"""
@@ -3874,7 +3883,8 @@ class LightLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
                        'cupcake-t16',
                        'material-lighter-t16',
                        'windows-10-light-t16',
-                       'windows-nt-light-t16']
+                       'windows-nt-light-t16',
+                       'random-t16-light-low']
 
     BRUSHTREES_T16: Literal['brushtrees-t16'] = 'brushtrees-t16'
     """
@@ -3935,6 +3945,8 @@ class LightLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     meet the AA criteria of the Web Content Accessibility Guidelines (WCAG)
     2.1 (https://www.w3.org/TR/WCAG21/).
     """
+
+    RANDOM_T16_LIGHT_LOW_CONTRAST: Literal['random-t16-light-low'] = 'random-t16-light-low'
 
 
 _GENERAL_PYGMENTS_COLOR_STYLE_DOCSTRING = dedent("""
@@ -4092,7 +4104,10 @@ class DarkHighContrastColorStyles(
     """
 
     Literals = Literal[DarkHighContrastTintedThemingBase16ColorStyles.Literals,
-                       DarkHighContrastPygmentsColorStyles.Literals]
+                       DarkHighContrastPygmentsColorStyles.Literals,
+                       'random-dark-high']
+
+    RANDOM_DARK_HIGH_CONTRAST: Literal['random-dark-high'] = 'random-dark-high'
 
 
 class DarkLowContrastColorStyles(
@@ -4105,7 +4120,10 @@ class DarkLowContrastColorStyles(
     """
 
     Literals = Literal[DarkLowContrastTintedThemingBase16ColorStyles.Literals,
-                       DarkLowContrastPygmentsColorStyles.Literals]
+                       DarkLowContrastPygmentsColorStyles.Literals,
+                       'random-dark-low']
+
+    RANDOM_DARK_LOW_CONTRAST: Literal['random-dark-low'] = 'random-dark-low'
 
 
 class LightHighContrastColorStyles(
@@ -4118,7 +4136,10 @@ class LightHighContrastColorStyles(
     """
 
     Literals = Literal[LightHighContrastTintedThemingBase16ColorStyles.Literals,
-                       LightHighContrastPygmentsColorStyles.Literals]
+                       LightHighContrastPygmentsColorStyles.Literals,
+                       'random-light-high']
+
+    RANDOM_LIGHT_HIGH_CONTRAST: Literal['random-light-high'] = 'random-light-high'
 
 
 class LightLowContrastColorStyles(
@@ -4131,7 +4152,10 @@ class LightLowContrastColorStyles(
     """
 
     Literals = Literal[LightLowContrastTintedThemingBase16ColorStyles.Literals,
-                       LightLowContrastPygmentsColorStyles.Literals]
+                       LightLowContrastPygmentsColorStyles.Literals,
+                       'random-light-low']
+
+    RANDOM_LIGHT_LOW_CONTRAST: Literal['random-light-low'] = 'random-light-low'
 
 
 class AllColorStyles(RecommendedColorStyles,
@@ -4152,3 +4176,14 @@ class AllColorStyles(RecommendedColorStyles,
                        'random']
 
     RANDOM_ALL: Literal['random'] = 'random'
+
+    @classmethod
+    def get_supercls_for_random_choice(
+            cls, choice: 'AllColorStyles.Literals | str') -> type[LiteralEnum[str]] | None:
+        """
+        Returns the superclass that contains the given choice.
+        """
+        for supercls in reversed(cls.__mro__):
+            if (issubclass(supercls, LiteralEnum) and supercls is not LiteralEnum
+                    and choice in supercls):
+                return supercls

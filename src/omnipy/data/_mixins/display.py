@@ -314,7 +314,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         ui_type = self._extract_ui_type(**kwargs)
         frame = self._define_frame_from_available_display_dims(ui_type)
         config = self._extract_output_config_from_data_config(ui_type)
-        config = self._apply_kwargs_to_config(config, **kwargs)
+        config_kwargs = self._validate_kwargs_for_config(**kwargs)
+        config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
         layout: Layout[DraftPanel] = Layout()
 
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
@@ -338,10 +339,10 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                                                                    model,
                                                                    outer_type,
                                                                    title,
-                                                                   **kwargs)
+                                                                   **config_kwargs)
 
         config = self._update_config_with_overflow_modes(config, 'layout')
-        config = self._apply_kwargs_to_config(config, **kwargs)
+        config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
 
         return DraftPanel(layout, frame=frame, config=config)
 
@@ -377,14 +378,24 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         return frame
 
-    def _apply_kwargs_to_config(
+    def _validate_kwargs_for_config(
         self,
-        config: OutputConfig,
         **kwargs,
-    ) -> OutputConfig:
-
+    ) -> dict[str, Any]:
         self._check_kwarg_keys(**kwargs)
         config_kwargs = {k: v for k, v in kwargs.items() if k in OutputConfig.__annotations__}
+
+        return {
+            k: v
+            for k, v in (dataclasses.asdict(OutputConfig(**config_kwargs))).items()
+            if k in kwargs
+        }
+
+    def _apply_validated_kwargs_to_config(
+        self,
+        config: OutputConfig,
+        **config_kwargs,
+    ) -> OutputConfig:
         if config_kwargs:
             config = dataclasses.replace(config, **config_kwargs)
 
@@ -449,11 +460,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _create_inner_panel_for_ellipsis(
         self,
         config: OutputConfig,
-        **kwargs,
+        **config_kwargs,
     ) -> DraftPanel:
 
         config = self._update_config_with_overflow_modes(config, 'text')
-        config = self._apply_kwargs_to_config(config, **kwargs)
+        config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
 
         return DraftPanel(
             '',
@@ -468,7 +479,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         outer_type: TypeForm,
         title: str = '',
         frame: Frame | None = None,
-        **kwargs,
+        **config_kwargs,
     ) -> DraftPanel:
         from omnipy.components.json.models import is_json_model_instance_hack
         from omnipy.components.raw.models import BytesModel, StrModel
@@ -485,7 +496,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         config = self._update_config_with_overflow_modes(config, 'text')
         config = dataclasses.replace(config, lang=lang)
-        config = self._apply_kwargs_to_config(config, **kwargs)
+        config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
 
         match lang:
             case SyntaxLanguage.TEXT:
@@ -625,7 +636,9 @@ class ModelDisplayMixin(BaseDisplayMixin):
         config = self._extract_output_config_from_data_config(ui_type)
 
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
-        config = self._apply_kwargs_to_config(config, **kwargs)
+
+        config_kwargs = self._validate_kwargs_for_config(**kwargs)
+        config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
 
         return self._create_inner_panel_for_model(
             config,
@@ -684,9 +697,11 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         text_config = dataclasses.replace(config, lang=SyntaxLanguage.TEXT)
 
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
-        config = self._apply_kwargs_to_config(config, **kwargs)
-        right_justified_config = self._apply_kwargs_to_config(right_justified_config, **kwargs)
-        text_config = self._apply_kwargs_to_config(text_config, **kwargs)
+        config_kwargs = self._validate_kwargs_for_config(**kwargs)
+        config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
+        right_justified_config = self._apply_validated_kwargs_to_config(
+            right_justified_config, **config_kwargs)
+        text_config = self._apply_validated_kwargs_to_config(text_config, **config_kwargs)
 
         # TODO: Add dataset title for dataset peek()
         # _title = self.__class__.__name__

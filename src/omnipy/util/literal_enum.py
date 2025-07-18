@@ -465,4 +465,11 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
         """
         Returns a random choice from all available enum values.
         """
-        return random.choice(get_args(cls.Literals))
+        from omnipy.shared.constants import RANDOM_PREFIX
+
+        choice = ''
+        while choice == '' or choice.startswith(RANDOM_PREFIX):
+            choice = random.choice(get_args(cls.Literals))
+
+        print(f'Random choice from {cls.__name__}: {choice!r}')
+        return cast(LiteralInnerTypeT, choice)
