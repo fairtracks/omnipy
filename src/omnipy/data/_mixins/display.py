@@ -161,10 +161,10 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         Displays a preview of the model or dataset for the documentation.
         """
         ui_type = UserInterfaceType.BROWSER_TAG
-        if 'color_style' not in kwargs:
-            kwargs['color_style'] = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
-        if 'user_interface_type' not in kwargs:
-            kwargs['user_interface_type'] = ui_type
+        if 'style' not in kwargs:
+            kwargs['style'] = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
+        if 'ui' not in kwargs:
+            kwargs['ui'] = ui_type
 
         return self._display_according_to_ui_type(
             ui_type=ui_type,
