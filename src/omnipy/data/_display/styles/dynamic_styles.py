@@ -10,16 +10,16 @@ import pygments.styles
 from ruamel.yaml import YAML
 
 from omnipy.data._display.styles.helpers import Base16Theme, get_styles_from_base16_colors
+from omnipy.shared.constants import (ANSI_PREFIX,
+                                     PYGMENTS_SUFFIX,
+                                     STYLE_CLS_NAME_BASE16_PREFIX,
+                                     STYLE_CLS_NAME_SUFFIX,
+                                     THEME_KEY_BASE16_SUFFIX)
 from omnipy.shared.enums.colorstyles import AllColorStyles
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 _BASE16_DOWNLOAD_URL = ('https://raw.githubusercontent.com/tinted-theming/'
                         'schemes/refs/heads/spec-0.11/base16/')
-_STYLE_CLS_NAME_BASE16_PREFIX = 'TintedBase16'
-_STYLE_CLS_NAME_SUFFIX = 'Style'
-_THEME_KEY_BASE16_SUFFIX = '-t16'
-_PYGMENTS_SUFFIX = '-pygments'
-_ANSI_PREFIX = 'ansi-'
 _runtime: IsRuntime | None = None
 
 
@@ -85,12 +85,12 @@ def _fetch_base16_theme_and_create_dynamic_style_class(
 
 
 def _create_base_16_class_name_from_theme_key(base16_theme_name: str):
-    assert base16_theme_name.endswith(_THEME_KEY_BASE16_SUFFIX)
-    base16_theme_name_stripped = base16_theme_name[:-len(_THEME_KEY_BASE16_SUFFIX)]
+    assert base16_theme_name.endswith(THEME_KEY_BASE16_SUFFIX)
+    base16_theme_name_stripped = base16_theme_name[:-len(THEME_KEY_BASE16_SUFFIX)]
 
-    class_name = (f'{_STYLE_CLS_NAME_BASE16_PREFIX}'
+    class_name = (f'{STYLE_CLS_NAME_BASE16_PREFIX}'
                   f"{_capitalize_words(underscore(base16_theme_name_stripped)).replace(' ', '')}"
-                  f'{_STYLE_CLS_NAME_SUFFIX}')
+                  f'{STYLE_CLS_NAME_SUFFIX}')
 
     return class_name
 
@@ -102,12 +102,12 @@ def _capitalize_words(text: str) -> str:
 @lru_cache
 def __getattr__(attr: str) -> type[pygments.style.Style]:
     try:
-        if attr.startswith(_STYLE_CLS_NAME_BASE16_PREFIX) and attr.endswith(_STYLE_CLS_NAME_SUFFIX):
-            stripped_name = attr[len(_STYLE_CLS_NAME_BASE16_PREFIX):-len(_STYLE_CLS_NAME_SUFFIX)]
+        if attr.startswith(STYLE_CLS_NAME_BASE16_PREFIX) and attr.endswith(STYLE_CLS_NAME_SUFFIX):
+            stripped_name = attr[len(STYLE_CLS_NAME_BASE16_PREFIX):-len(STYLE_CLS_NAME_SUFFIX)]
 
             core_name = dasherize(underscore(stripped_name))
             filename = core_name + '.yaml'
-            theme_key = core_name + _THEME_KEY_BASE16_SUFFIX
+            theme_key = core_name + THEME_KEY_BASE16_SUFFIX
 
             base16_url = f'{_BASE16_DOWNLOAD_URL}/{filename}'
             return _fetch_base16_theme_and_create_dynamic_style_class(
@@ -122,10 +122,10 @@ def __getattr__(attr: str) -> type[pygments.style.Style]:
 
 
 def clean_style_name(name: str | AllColorStyles.Literals) -> str:
-    if name.endswith(_PYGMENTS_SUFFIX):
+    if name.endswith(PYGMENTS_SUFFIX):
         return name[:-len(
-            _PYGMENTS_SUFFIX)]  # Convert dashes to underscores for Pygments compatibility
-    if name.startswith(_ANSI_PREFIX):
+            PYGMENTS_SUFFIX)]  # Convert dashes to underscores for Pygments compatibility
+    elif name.startswith(ANSI_PREFIX):
         return name.replace('-', '_')  # Convert dashes to underscores for Rich compatibility
     return name
 

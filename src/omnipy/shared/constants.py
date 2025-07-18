@@ -32,3 +32,11 @@ PANEL_TITLE_GENERAL_TOKEN = ('Name', 'Class')
 PANEL_TITLE_EXTRA_STYLE = 'italic not bold not underline'
 TABLE_BORDER_BASE_16_TOKEN = ('Base16', 'LineHighlight')
 TABLE_BORDER_GENERAL_TOKEN = ('Comment',)
+
+# Data - Display - Styles
+STYLE_CLS_NAME_BASE16_PREFIX = 'TintedBase16'
+STYLE_CLS_NAME_SUFFIX = 'Style'
+THEME_KEY_BASE16_SUFFIX = '-t16'
+PYGMENTS_SUFFIX = '-pygments'
+ANSI_PREFIX = 'ansi-'
+RANDOM_PREFIX = 'random'
