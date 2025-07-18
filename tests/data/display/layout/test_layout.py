@@ -20,7 +20,7 @@ class SimpleLayoutCase:
 def test_empty_layout() -> None:
     layout: Layout = Layout()
 
-    # Check contents
+    # Check content
     assert len(layout) == 0
     assert list(layout) == []
 
@@ -64,7 +64,7 @@ def test_layout_hashable(simple_layout: Annotated[SimpleLayoutCase, pytest.fixtu
     assert hash(layout_1) != hash(layout_3)
     assert hash(layout_3) == hash(layout_4)
 
-    layout_4['first'] = MockStylablePlainCropPanel('contents')
+    layout_4['first'] = MockStylablePlainCropPanel('content')
 
     assert hash(layout_3) != hash(layout_4)
 
@@ -217,7 +217,7 @@ def test_layout_dict_comparison(simple_layout: Annotated[SimpleLayoutCase, pytes
     """Test dictionary comparison operations."""
     case = simple_layout
 
-    # Create a dict with the same contents
+    # Create a dict with the same content
     same_dict = {'first': case.first_panel, 'second': case.second_panel}
 
     # Check equality

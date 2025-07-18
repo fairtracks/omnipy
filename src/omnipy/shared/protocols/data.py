@@ -25,8 +25,8 @@ from omnipy.util.setdeque import SetDeque
 _RootT = TypeVar('_RootT', covariant=True)
 _ModelT = TypeVar('_ModelT', bound='IsModel')
 
-ContentsT = TypeVar('ContentsT', bound=object)
-HasContentsT = TypeVar('HasContentsT', bound='HasContents')
+ContentT = TypeVar('ContentT', bound=object)
+HasContentT = TypeVar('HasContentT', bound='HasContent')
 ObjContraT = TypeVar('ObjContraT', contravariant=True, bound=object)
 
 IsPathOrUrl: TypeAlias = 'str | IsHttpUrlModel'
@@ -58,7 +58,7 @@ class HasData(Protocol):
 @runtime_checkable
 class IsModel(Protocol[_RootT]):
     # @property
-    # def contents(self) -> _RootT:
+    # def content(self) -> _RootT:
     #     ...
     ...
 
@@ -293,20 +293,20 @@ class IsSerializerRegistry(Protocol):
 
 
 @runtime_checkable
-class HasContents(Protocol[ContentsT]):
+class HasContent(Protocol[ContentT]):
     @property
-    def contents(self) -> ContentsT:
+    def content(self) -> ContentT:
         ...
 
-    @contents.setter
-    def contents(self, value: ContentsT) -> None:
+    @content.setter
+    def content(self, value: ContentT) -> None:
         ...
 
 
 @runtime_checkable
-class IsSnapshotWrapper(Protocol[ObjContraT, ContentsT]):
+class IsSnapshotWrapper(Protocol[ObjContraT, ContentT]):
     id: int
-    snapshot: ContentsT
+    snapshot: ContentT
 
     def taken_of_same_obj(self, obj: ObjContraT) -> bool:
         ...
@@ -316,9 +316,8 @@ class IsSnapshotWrapper(Protocol[ObjContraT, ContentsT]):
 
 
 @runtime_checkable
-class IsSnapshotHolder(IsWeakKeyRefContainer[HasContentsT,
-                                             IsSnapshotWrapper[HasContentsT, ContentsT]],
-                       Protocol[HasContentsT, ContentsT]):
+class IsSnapshotHolder(IsWeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasContentT, ContentT]],
+                       Protocol[HasContentT, ContentT]):
     """"""
     def clear(self) -> None:
         ...
@@ -344,12 +343,12 @@ class IsSnapshotHolder(IsWeakKeyRefContainer[HasContentsT,
     def take_snapshot_teardown(self) -> None:
         ...
 
-    def take_snapshot(self, obj: HasContentsT) -> None:
+    def take_snapshot(self, obj: HasContentT) -> None:
         ...
 
 
 @runtime_checkable
-class IsDataClassCreator(Protocol[HasContentsT, ContentsT]):
+class IsDataClassCreator(Protocol[HasContentT, ContentT]):
     """"""
     @property
     def config(self) -> IsDataConfig:
@@ -359,7 +358,7 @@ class IsDataClassCreator(Protocol[HasContentsT, ContentsT]):
         ...
 
     @property
-    def snapshot_holder(self) -> IsSnapshotHolder[HasContentsT, ContentsT]:
+    def snapshot_holder(self) -> IsSnapshotHolder[HasContentT, ContentT]:
         ...
 
     def deepcopy_context(

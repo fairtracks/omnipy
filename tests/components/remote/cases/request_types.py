@@ -11,7 +11,7 @@ from omnipy import (BytesDataset,
                     StrDataset,
                     StrictBytesModel,
                     StrictStrModel)
-from omnipy.components.remote.datasets import AutoResponseContentsDataset
+from omnipy.components.remote.datasets import AutoResponseContentDataset
 from omnipy.components.remote.tasks import (async_load_urls_into_new_dataset,
                                             get_auto_from_api_endpoint,
                                             get_bytes_from_api_endpoint,
@@ -39,7 +39,7 @@ def case_get_bytes_from_api_endpoint() -> RequestTypeCase:
 
 @pc.case(tags='supports_external_session')
 def case_get_auto_from_api_endpoint() -> RequestTypeCase:
-    return RequestTypeCase(True, get_auto_from_api_endpoint, dict(), AutoResponseContentsDataset)
+    return RequestTypeCase(True, get_auto_from_api_endpoint, dict(), AutoResponseContentDataset)
 
 
 @pc.case

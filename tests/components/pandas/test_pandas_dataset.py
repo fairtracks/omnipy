@@ -30,35 +30,35 @@ def test_pandas_dataset_input_variants():
 
     dataset_2 = PandasDataset()
     dataset_2.from_json({'data_file': '[{"a": "abc", "b": 12}]'})
-    pd.testing.assert_frame_equal(dataset_1['data_file'].contents, dataset_2['data_file'].contents)
+    pd.testing.assert_frame_equal(dataset_1['data_file'].content, dataset_2['data_file'].content)
 
     dataset_3 = PandasDataset()
     dataset_3['data_file'] = [{'a': 'abc', 'b': 12}]
-    pd.testing.assert_frame_equal(dataset_2['data_file'].contents, dataset_3['data_file'].contents)
+    pd.testing.assert_frame_equal(dataset_2['data_file'].content, dataset_3['data_file'].content)
 
     dataset_4 = PandasDataset()
     dataset_4['data_file'] = table
-    pd.testing.assert_frame_equal(dataset_3['data_file'].contents, dataset_4['data_file'].contents)
+    pd.testing.assert_frame_equal(dataset_3['data_file'].content, dataset_4['data_file'].content)
 
     dataset_5 = PandasDataset()
     dataset_5['data_file'] = df
-    pd.testing.assert_frame_equal(dataset_4['data_file'].contents, dataset_5['data_file'].contents)
+    pd.testing.assert_frame_equal(dataset_4['data_file'].content, dataset_5['data_file'].content)
 
     dataset_6 = PandasDataset()
     dataset_6['data_file'] = PandasModel([{'a': 'abc', 'b': 12}])
-    pd.testing.assert_frame_equal(dataset_5['data_file'].contents, dataset_6['data_file'].contents)
+    pd.testing.assert_frame_equal(dataset_5['data_file'].content, dataset_6['data_file'].content)
 
     dataset_7 = PandasDataset(data_file=[{'a': 'abc', 'b': 12}])
-    pd.testing.assert_frame_equal(dataset_6['data_file'].contents, dataset_7['data_file'].contents)
+    pd.testing.assert_frame_equal(dataset_6['data_file'].content, dataset_7['data_file'].content)
 
     dataset_8 = PandasDataset(data_file=table)
-    pd.testing.assert_frame_equal(dataset_7['data_file'].contents, dataset_8['data_file'].contents)
+    pd.testing.assert_frame_equal(dataset_7['data_file'].content, dataset_8['data_file'].content)
 
     dataset_9 = PandasDataset(data_file=df)
-    pd.testing.assert_frame_equal(dataset_8['data_file'].contents, dataset_9['data_file'].contents)
+    pd.testing.assert_frame_equal(dataset_8['data_file'].content, dataset_9['data_file'].content)
 
     dataset_10 = PandasDataset(data_file=PandasModel([{'a': 'abc', 'b': 12}]))
-    pd.testing.assert_frame_equal(dataset_9['data_file'].contents, dataset_10['data_file'].contents)
+    pd.testing.assert_frame_equal(dataset_9['data_file'].content, dataset_10['data_file'].content)
 
 
 def test_pandas_dataset_list_of_objects_same_keys():
@@ -68,7 +68,7 @@ def test_pandas_dataset_list_of_objects_same_keys():
     data = {'data_file': [{'a': 'abc', 'b': 12}, {'a': 'bcd', 'b': 23}]}
     pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
-        pandas_data['data_file'].contents,
+        pandas_data['data_file'].content,
         pd.DataFrame([{
             'a': 'abc', 'b': 12
         }, {
@@ -87,7 +87,7 @@ def test_pandas_dataset_json_list_of_objects_same_keys():
     json_data = {'data_file': '[{"a": "abc", "b": 12}, {"a": "bcd", "b": 23}]'}
     pandas_data.from_json(json_data)
     pd.testing.assert_frame_equal(
-        pandas_data['data_file'].contents,
+        pandas_data['data_file'].content,
         pd.DataFrame([{
             'a': 'abc', 'b': 12
         }, {
@@ -106,7 +106,7 @@ def test_pandas_dataset_list_of_objects_different_keys():
     data = {'data_file': [{'a': 'abc', 'b': 12}, {'c': 'bcd'}]}
     pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
-        pandas_data['data_file'].contents,
+        pandas_data['data_file'].content,
         pd.DataFrame([{
             'a': 'abc', 'b': 12, 'c': None
         }, {
@@ -137,7 +137,7 @@ def test_pandas_dataset_list_of_objects_float_numbers():
     data = {'data_file': [{'a': 12.0, 'b': 12.1}, {'a': 3.0}]}
     pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
-        pandas_data['data_file'].contents,
+        pandas_data['data_file'].content,
         pd.DataFrame([{
             'a': 12.0, 'b': 12.1
         }, {
@@ -161,7 +161,7 @@ def test_pandas_dataset_list_of_nested_objects():
     data = {'data_file': [{'a': 'abc', 'b': {'c': [1, 3]}}]}
     pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
-        pandas_data['data_file'].contents,
+        pandas_data['data_file'].content,
         pd.DataFrame([{
             'a': 'abc', 'b': {
                 'c': [1, 3]
@@ -170,7 +170,7 @@ def test_pandas_dataset_list_of_nested_objects():
         check_dtype=False)
     assert_pandas_frame_dtypes(pandas_data['data_file'], ('string', 'object'))
     assert pandas_data.to_data() == data
-    assert pandas_data['data_file'].contents.loc[0, 'b'] == {'c': [1, 3]}
+    assert pandas_data['data_file'].content.loc[0, 'b'] == {'c': [1, 3]}
 
 
 @pytest.mark.skipif(os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1', reason='To be implemented later')
@@ -190,8 +190,8 @@ def test_pandas_dataset_empty_list():
     assert pandas_data.to_data() == {}
 
     pandas_data.from_data({'data_file': []})
-    assert isinstance(pandas_data['data_file'].contents,
-                      pd.DataFrame) and pandas_data['data_file'].contents.empty
+    assert isinstance(pandas_data['data_file'].content,
+                      pd.DataFrame) and pandas_data['data_file'].content.empty
     assert pandas_data.to_data() == {'data_file': []}
 
 

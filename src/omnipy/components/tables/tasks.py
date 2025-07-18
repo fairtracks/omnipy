@@ -68,7 +68,7 @@ def transpose_columns_with_data_files(dataset: TableWithColNamesDataset,
 #         out_dataset[table_name] = table
 #     return out_dataset
 
-# TODO: Somehow fix so that we do not need to call Model.contents within a task
+# TODO: Somehow fix so that we do not need to call Model.content within a task
 
 
 @TaskTemplate(iterate_over_data_files=True)

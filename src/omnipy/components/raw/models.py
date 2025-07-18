@@ -4,7 +4,7 @@ from typing_extensions import TypeVar
 
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
-from omnipy.data.typechecks import obj_or_model_contents_isinstance
+from omnipy.data.typechecks import obj_or_model_content_isinstance
 import omnipy.util._pydantic as pyd
 
 
@@ -249,7 +249,7 @@ class _NestedItemsParamsMixin:
                                             level: int = 0) -> str | list[_NestedStrNoListModelsT]:
 
         raw_data = cast(str | list[NestedStrWithListModels],
-                        data if isinstance(data, str) else data.contents)
+                        data if isinstance(data, str) else data.content)
 
         num_delimiters = len(cls.Params.delimiters)
 
@@ -285,7 +285,7 @@ class _NestedItemsParamsMixin:
                 assert isinstance(data, str), \
                     'Data must be an string if no delimiters are provided.'
             else:
-                assert not any(obj_or_model_contents_isinstance(item, list) for item in data), \
+                assert not any(obj_or_model_content_isinstance(item, list) for item in data), \
                     (f'Data is nested higher than permitted by the number of delimiters in '
                      f'Params (={num_delimiters}).')
 
@@ -298,7 +298,7 @@ class _NestedSplitToItemsModel(Model[list[_NestedStrNoListModelsT] | str],
     @classmethod
     def _parse_data(
             cls, data: list[_NestedStrNoListModelsT] | str) -> list[_NestedStrNoListModelsT] | str:
-        str_parsed_data = Model[NestedStrWithListModels](data).contents
+        str_parsed_data = Model[NestedStrWithListModels](data).content
         return cls._split_data_according_to_delimiters(str_parsed_data)
 
 
@@ -336,7 +336,7 @@ class _NestedJoinItemsModel(Model[str | list[_NestedStrNoListModelsT]],
 
     @classmethod
     def _parse_data(cls, data: str | list[_NestedStrNoListModelsT]) -> str:
-        str_parsed_data = Model[NestedStrWithListModels](data).contents
+        str_parsed_data = Model[NestedStrWithListModels](data).content
         return cls._join_data_according_to_delimiters(
             cls._split_data_according_to_delimiters(str_parsed_data))
 

@@ -5,7 +5,7 @@ from typing import Callable, ContextManager, Iterator
 from omnipy.config.data import DataConfig
 from omnipy.data.snapshot import SnapshotHolder
 from omnipy.shared.protocols.config import IsDataConfig
-from omnipy.shared.protocols.data import HasContents, IsDataClassCreator, IsSnapshotHolder
+from omnipy.shared.protocols.data import HasContent, IsDataClassCreator, IsSnapshotHolder
 from omnipy.shared.typedefs import TypeForm
 import omnipy.util._pydantic as pyd
 from omnipy.util.decorators import call_super_if_available
@@ -15,7 +15,7 @@ from omnipy.util.helpers import is_union
 class DataClassCreator:
     def __init__(self) -> None:
         self._config: IsDataConfig = DataConfig()
-        self._snapshot_holder = SnapshotHolder[HasContents, object]()
+        self._snapshot_holder = SnapshotHolder[HasContent, object]()
         self._deepcopy_context_level = 0
 
     @property
@@ -26,7 +26,7 @@ class DataClassCreator:
         self._config = config
 
     @property
-    def snapshot_holder(self) -> IsSnapshotHolder[HasContents, object]:
+    def snapshot_holder(self) -> IsSnapshotHolder[HasContent, object]:
         return self._snapshot_holder
 
     def deepcopy_context(
@@ -96,7 +96,7 @@ class DataClassBase(metaclass=DataClassBaseMeta):
         return self.__class__.data_class_creator.config
 
     @property
-    def snapshot_holder(self) -> IsSnapshotHolder[HasContents, object]:
+    def snapshot_holder(self) -> IsSnapshotHolder[HasContent, object]:
         return self.__class__.data_class_creator.snapshot_holder
 
     def deepcopy_context(

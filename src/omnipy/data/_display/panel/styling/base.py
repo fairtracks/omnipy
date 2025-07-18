@@ -111,7 +111,7 @@ class StylizedMonospacedPanel(
     def _apply_console_newline_hack(
             self, console_dims: DimensionsWithWidthAndHeight) -> DimensionsWithWidthAndHeight:
         """
-        Hack to allow rich.console to output newline contents when
+        Hack to allow rich.console to output newline content when
         width == 0
         """
         if console_dims.width == 0 and console_dims.height > 0:

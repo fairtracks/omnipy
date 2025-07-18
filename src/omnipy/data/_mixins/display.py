@@ -93,7 +93,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def peek(self, **kwargs) -> 'Element | None':
         """
         Displays a preview of the model or dataset. For models, this is a
-        preview of the model's contents, and for datasets, this is a
+        preview of the model's content, and for datasets, this is a
         side-by-side view of each model contained in the dataset. Both views
         are automatically limited by the available display dimensions.
         :return: If the UI type is Jupyter runnint in in browser, `peek`
@@ -136,7 +136,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def browse(self, **kwargs) -> None:
         """
         Opens the model or dataset in a browser, if possible. For models,
-        this is a detailed view of the model's contents, and for datasets
+        this is a detailed view of the model's content, and for datasets
         this is a detailed view of each model contained in the dataset,
         one model per browser tab.
         """
@@ -269,7 +269,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             panel = output_method(*args, **kwargs)
             resized_panel = panel.render_next_stage()
             if ui_type in BrowserPageUserInterfaceType:
-                # If the output is a browser page, we allow expanding the frame to fit the contents
+                # If the output is a browser page, we allow expanding the frame to fit the content
                 if not resized_panel.within_frame.width:
                     wider_panel = dataclasses.replace(
                         panel,
@@ -320,7 +320,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         for title, model in models.items():
             outer_type = model.outer_type()
             if inspect.isclass(outer_type) and issubclass(outer_type, Dataset):
-                return cast(Dataset, model.contents)._peek()
+                return cast(Dataset, model.content)._peek()
 
             layout[title] = self._create_inner_panel_for_model(config,
                                                                model,
@@ -386,7 +386,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         if ui_type is UserInterfaceType.JUPYTER:
             from omnipy.data._display.integrations.jupyter.components import BrowseModels
-            BrowseModels(html_contents=html_output)._ipython_display_()
+            BrowseModels(html_content=html_output)._ipython_display_()
         else:
             for filename, html_content in html_output.items():
                 file_path = self._create_cached_html_file(filename, html_content)
@@ -438,7 +438,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         match language:
             case SyntaxLanguage.TEXT:
                 return TextDraftPanel(
-                    cast(str, model.contents),
+                    cast(str, model.content),
                     title=title,
                     frame=frame,
                     config=config,

@@ -58,7 +58,7 @@ def test_pandas_model_from_data_to_data(
     pandas_model = PandasModel()
     pandas_model.from_data(list_of_dicts_data_with_missing)
     pd.testing.assert_frame_equal(
-        pandas_model.contents,  # type: ignore
+        pandas_model.content,  # type: ignore
         dataframe_of_list_of_dicts_data,
     )
     assert pandas_model.to_data() == list_of_dicts_data_with_nones
@@ -73,7 +73,7 @@ def test_pandas_model_init_to_data(
 
     pandas_model = PandasModel(list_of_dicts_data_with_missing)
     pd.testing.assert_frame_equal(
-        pandas_model.contents,  # type: ignore
+        pandas_model.content,  # type: ignore
         dataframe_of_list_of_dicts_data,
     )
     assert pandas_model.to_data() == list_of_dicts_data_with_nones
@@ -88,7 +88,7 @@ def test_pandas_model_init_dataframe_to_data(
     pandas_model = PandasModel(dataframe_of_list_of_dicts_data)
 
     pd.testing.assert_frame_equal(
-        pandas_model.contents,  # type: ignore
+        pandas_model.content,  # type: ignore
         dataframe_of_list_of_dicts_data,
     )
     assert pandas_model.to_data() == list_of_dicts_data_with_nones

@@ -12,10 +12,10 @@ from .helpers.models import MyList, MyListModel, RotateOneCharModel, SplitCharsM
 
 
 def test_not_iterable_except_str_model():
-    assert NotIterableExceptStrOrBytesModel().contents is None
-    assert NotIterableExceptStrOrBytesModel(None).contents is None
-    assert NotIterableExceptStrOrBytesModel(1234).contents == 1234
-    assert NotIterableExceptStrOrBytesModel(True).contents is True
+    assert NotIterableExceptStrOrBytesModel().content is None
+    assert NotIterableExceptStrOrBytesModel(None).content is None
+    assert NotIterableExceptStrOrBytesModel(1234).content == 1234
+    assert NotIterableExceptStrOrBytesModel(True).content is True
 
     with pytest.raises(ValidationError):
         NotIterableExceptStrOrBytesModel((1, 2, 3, 4))
@@ -29,8 +29,8 @@ def test_not_iterable_except_str_model():
     with pytest.raises(ValidationError):
         NotIterableExceptStrOrBytesModel({1, 2, 3, 4})
 
-    assert NotIterableExceptStrOrBytesModel('1234').contents == '1234'
-    assert NotIterableExceptStrOrBytesModel('æøå'.encode('utf8')).contents == 'æøå'.encode('utf8')
+    assert NotIterableExceptStrOrBytesModel('1234').content == '1234'
+    assert NotIterableExceptStrOrBytesModel('æøå'.encode('utf8')).content == 'æøå'.encode('utf8')
 
 
 def test_chain2_model():
@@ -44,7 +44,7 @@ def test_chain2_model():
         ...
 
     model = SplitCharsToMyListModel('abc')
-    assert model.contents == MyListModel(MyList('a', 'b', 'c'))
+    assert model.content == MyListModel(MyList('a', 'b', 'c'))
     assert model.to_data() == ['a', 'b', 'c']
 
 
@@ -70,7 +70,7 @@ def test_concat_chain2_model_with_to_data_conversion():
 #     class IntThenStrModel(Chain2[Model[int], Model[str]]):
 #         ...
 #
-#     assert IntThenStrModel(3.4).contents == '3'
+#     assert IntThenStrModel(3.4).content == '3'
 
 
 def test_chain3_model():
@@ -82,7 +82,7 @@ def test_chain3_model():
         ...
 
     model = RotateOneAndSplitCharsToMyListModel('abcdefg')
-    assert model.contents == MyListModel(MyList('b', 'c', 'd', 'e', 'f', 'g', 'a'))
+    assert model.content == MyListModel(MyList('b', 'c', 'd', 'e', 'f', 'g', 'a'))
     assert model.to_data() == ['b', 'c', 'd', 'e', 'f', 'g', 'a']
 
 
@@ -96,7 +96,7 @@ def test_chain4_model():
         ...
 
     model = RotateTwoAndSplitCharsToMyListModel('abcdefg')
-    assert model.contents == MyListModel(MyList('c', 'd', 'e', 'f', 'g', 'a', 'b'))
+    assert model.content == MyListModel(MyList('c', 'd', 'e', 'f', 'g', 'a', 'b'))
     assert model.to_data() == ['c', 'd', 'e', 'f', 'g', 'a', 'b']
 
 
@@ -111,7 +111,7 @@ def test_chain5_model():
         ...
 
     model = RotateThreeAndSplitCharsToMyListModel('abcdefg')
-    assert model.contents == MyListModel(MyList('d', 'e', 'f', 'g', 'a', 'b', 'c'))
+    assert model.content == MyListModel(MyList('d', 'e', 'f', 'g', 'a', 'b', 'c'))
     assert model.to_data() == ['d', 'e', 'f', 'g', 'a', 'b', 'c']
 
 
@@ -127,5 +127,5 @@ def test_chain6_model():
         ...
 
     model = RotateThreeAndSplitCharsToMyListModel('abcdefg')
-    assert model.contents == MyListModel(MyList('e', 'f', 'g', 'a', 'b', 'c', 'd'))
+    assert model.content == MyListModel(MyList('e', 'f', 'g', 'a', 'b', 'c', 'd'))
     assert model.to_data() == ['e', 'f', 'g', 'a', 'b', 'c', 'd']

@@ -14,7 +14,7 @@ from omnipy.data.dataset import Dataset, Model
 from omnipy.util.setdeque import SetDeque
 
 from .datasets import StrDataset
-from .protocols import IsModifyAllLinesCallable, IsModifyContentsCallable, IsModifyEachLineCallable
+from .protocols import IsModifyAllLinesCallable, IsModifyContentCallable, IsModifyEachLineCallable
 
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=StrDataset)
@@ -46,12 +46,12 @@ def decode_bytes(data: Model[bytes], encoding: str | None = None) -> str:
 
 
 @TaskTemplate(iterate_over_data_files=True)
-def modify_datafile_contents(
+def modify_datafile_content(
     data_file: Model[str],
-    modify_contents_func: IsModifyContentsCallable,
+    modify_content_func: IsModifyContentCallable,
     **kwargs: object,
 ) -> str:
-    return modify_contents_func(str(data_file), **kwargs)
+    return modify_content_func(str(data_file), **kwargs)
 
 
 @TaskTemplate(iterate_over_data_files=True)

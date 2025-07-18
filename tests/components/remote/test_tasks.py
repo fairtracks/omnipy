@@ -8,12 +8,7 @@ import pytest
 import pytest_cases as pc
 
 import omnipy
-from omnipy import (AutoResponseContentsDataset,
-                    BytesDataset,
-                    Dataset,
-                    JsonDataset,
-                    Model,
-                    StrDataset)
+from omnipy import AutoResponseContentDataset, BytesDataset, Dataset, JsonDataset, Model, StrDataset
 from omnipy.util.helpers import get_event_loop_and_check_if_loop_is_running
 
 from ...helpers.functions import assert_model, assert_model_or_val
@@ -27,7 +22,7 @@ def _assert_query_results(assert_model_if_dyn_conv_else_val,
                           auto_model_type: type[Model]):
     assert isinstance(data, case.dataset_cls)
     model_cls = case.dataset_cls.get_model_class(
-    ) if case.dataset_cls != AutoResponseContentsDataset else auto_model_type
+    ) if case.dataset_cls != AutoResponseContentDataset else auto_model_type
     match model_cls:
         case omnipy.BytesModel | omnipy.StrictBytesModel:
             _assert_bytes_query_results(assert_model, cast(BytesDataset, data))

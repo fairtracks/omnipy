@@ -489,7 +489,7 @@ def case_layout_single_empty_panel_height_zero(
             # frame set to flexible in both dimensions.
             #
             # In this case, the outer panel collapse to just fit the inner
-            # panel contents.
+            # panel content.
             exp_plain_output=('╭─────────────────╮\n'
                               '│ This content is │\n'
                               '│ extraordinary!  │\n'
@@ -830,7 +830,7 @@ def case_layout_single_panel_fixed_width_with_title(
         #
         # id='width_27_frame'
         #
-        # Since the inner panel contents have not been reflowed, the table
+        # Since the inner panel content have not been reflowed, the table
         # cropping of the Rich library is applied at the "stylize" stage.
         # This reduces the width of the widest panel first.
         FrameTestCase(

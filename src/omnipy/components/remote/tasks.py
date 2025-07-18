@@ -15,8 +15,8 @@ from ..json.models import JsonModel
 from ..raw.datasets import BytesDataset, StrDataset
 from ..raw.models import BytesModel, StrModel
 from .constants import DEFAULT_BACKOFF_STRATEGY, DEFAULT_RETRIES, DEFAULT_RETRY_STATUSES
-from .datasets import AutoResponseContentsDataset, HttpUrlDataset
-from .models import AutoResponseContentsModel, HttpUrlModel, ResponseContentsPydModel
+from .datasets import AutoResponseContentDataset, HttpUrlDataset
+from .models import AutoResponseContentModel, HttpUrlModel, ResponseContentPydModel
 
 if TYPE_CHECKING:
     from .lazy_import import ClientResponse, ClientSession, RetryClient
@@ -141,7 +141,7 @@ async def get_bytes_from_api_endpoint(
     return output_data
 
 
-@TaskTemplate(iterate_over_data_files=True, output_dataset_cls=AutoResponseContentsDataset)
+@TaskTemplate(iterate_over_data_files=True, output_dataset_cls=AutoResponseContentDataset)
 async def get_auto_from_api_endpoint(
     url: HttpUrlModel,
     client_session: 'ClientSession | None' = None,
@@ -149,7 +149,7 @@ async def get_auto_from_api_endpoint(
     retry_attempts: int = DEFAULT_RETRIES,
     retry_backoff_strategy: BackoffStrategy.Literals = DEFAULT_BACKOFF_STRATEGY,
     as_mime_type: str | None = None,
-) -> AutoResponseContentsModel:
+) -> AutoResponseContentModel:
     from .lazy_import import ClientSession, CONTENT_TYPE
 
     async for retry_session in _ensure_retry_session(
@@ -167,14 +167,14 @@ async def get_auto_from_api_endpoint(
                 content_type = response.content_type
             match content_type:
                 case 'application/json':
-                    contents = await response.json(content_type=None)
+                    content = await response.json(content_type=None)
                 case 'text/plain':
-                    contents = await response.text()
+                    content = await response.text()
                 case 'application/octet-stream' | _:
-                    contents = await response.read()
+                    content = await response.read()
 
-    model = AutoResponseContentsModel(
-        ResponseContentsPydModel(content_type=content_type_header, response=contents))
+    model = AutoResponseContentModel(
+        ResponseContentPydModel(content_type=content_type_header, response=content))
     return model
 
 
@@ -253,7 +253,7 @@ async def _async_get_urls_for_files_in_dir_with_suffix(ctx: GithubRepoContext, f
 
 def _create_api_url_for_file_list(ctx: GithubRepoContext) -> HttpUrlModel:
     api_url = HttpUrlModel('https://api.github.com')
-    api_url.path // 'repos' // ctx.owner // ctx.repo // 'contents' // ctx.path
+    api_url.path // 'repos' // ctx.owner // ctx.repo // 'content' // ctx.path
     api_url.query['ref'] = ctx.branch
     return api_url
 

@@ -127,7 +127,7 @@ def _calculate_per_panel_width_for_panels_without_width(
     This divides the available frame width (after accounting for panels with
     preset widths and border characters) among panels without pre-defined
     widths. Pre-defined widths can either be defined in the frame or
-    calculated based on contents (or both).
+    calculated based on content (or both).
 
 
     Parameters:
@@ -255,7 +255,7 @@ def _sort_panels_by_resize_priority(context: LayoutFlowContext[FrameT]) -> list[
     When shrinking (`context.too_wide_panel == True`), prioritizes:
     1. Shortest resizable panels first (lowest frame-cropped height)
     2. Resizable panels with the widest frames
-    3. Panels with the widest (frame-cropped) contents
+    3. Panels with the widest (frame-cropped) content
     4. Panel most to the right in the layout (lowest index)
 
     When expanding (`context.extra_width_available == True`), the priority

@@ -4,7 +4,7 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import SerializerRegistry
 
-from .helpers.functions import assert_tar_file_contents
+from .helpers.functions import assert_tar_file_content
 from .helpers.mocks import MockNumberSerializer, MockNumberToTarFileSerializer, NumberDataset
 
 
@@ -39,8 +39,8 @@ def test_number_dataset_to_tar_file_serializer():
     tarfile_bytes = serializer.serialize(number_data)
     decode_func = lambda x: int.from_bytes(x, byteorder=sys.byteorder)  # noqa
 
-    assert_tar_file_contents(tarfile_bytes, 'data_file_1', 'num', decode_func, 35)
-    assert_tar_file_contents(tarfile_bytes, 'data_file_2', 'num', decode_func, 12)
+    assert_tar_file_content(tarfile_bytes, 'data_file_1', 'num', decode_func, 35)
+    assert_tar_file_content(tarfile_bytes, 'data_file_2', 'num', decode_func, 12)
 
     deserialized_json_data = serializer.deserialize(tarfile_bytes)
 

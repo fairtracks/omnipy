@@ -47,7 +47,7 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
         if isinstance(data, dict):
             return data
 
-        params_list = QueryParamsSplitterModel(data).contents
+        params_list = QueryParamsSplitterModel(data).content
         assert cls._validate_tuple_of_pairs(params_list), \
             (f'Each parameter must have 2 elements only: [key, value]. '
              f'Incorrect parameter list: {params_list}')
@@ -58,10 +58,10 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
         with hold_and_reset_prev_attrib_value(self.config.model,
                                               'dynamically_convert_elements_to_models'):
             self.config.model.dynamically_convert_elements_to_models = False
-            assert isinstance(self.contents, dict)
-            url_encoded_contents = tuple(
-                (quote(key), quote(val)) for key, val in self.contents.items())
-            return cast(str, QueryParamsJoinerModel(url_encoded_contents).to_data())
+            assert isinstance(self.content, dict)
+            url_encoded_content = tuple(
+                (quote(key), quote(val)) for key, val in self.content.items())
+            return cast(str, QueryParamsJoinerModel(url_encoded_content).to_data())
 
     def __str__(self) -> str:
         return self.to_data()
@@ -84,13 +84,13 @@ class UrlPathModel(Model[PurePosixPath | str]):
         return PurePosixPath(data) if isinstance(data, str) else data
 
     def to_data(self) -> str:
-        return str(self.contents)
+        return str(self.content)
 
     def __str__(self) -> str:
-        return str(self.contents)
+        return str(self.content)
 
     def __floordiv__(self, other):
-        self.contents /= other
+        self.content /= other
         return self
 
     def __add__(self, other):
@@ -188,10 +188,10 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
         return HttpUrlModel(str(self) + other)
 
     def to_data(self) -> str:
-        return str(self.contents)
+        return str(self.content)
 
     def __str__(self) -> str:
-        return str(self.contents)
+        return str(self.content)
 
 
 if TYPE_CHECKING:
@@ -207,7 +207,7 @@ class ModelFriendlyMimeType(pyd.BaseModel):
     parameters: tuple[tuple[str, str], ...]
 
 
-class ResponseContentsPydModel(pyd.BaseModel):
+class ResponseContentPydModel(pyd.BaseModel):
     content_type: ModelFriendlyMimeType | str
     response: object
 
@@ -215,14 +215,13 @@ class ResponseContentsPydModel(pyd.BaseModel):
         arbitrary_types_allowed = True
 
     @pyd.validator('content_type')
-    def parse_content_type(cls,
-                           contents_type: ModelFriendlyMimeType | str) -> ModelFriendlyMimeType:
+    def parse_content_type(cls, content_type: ModelFriendlyMimeType | str) -> ModelFriendlyMimeType:
         from .lazy_import import MimeType, parse_mimetype
 
-        if isinstance(contents_type, ModelFriendlyMimeType):
-            return contents_type
+        if isinstance(content_type, ModelFriendlyMimeType):
+            return content_type
 
-        mime_type: MimeType = parse_mimetype(contents_type)
+        mime_type: MimeType = parse_mimetype(content_type)
         return ModelFriendlyMimeType(
             type=mime_type.type,
             subtype=mime_type.subtype,
@@ -231,16 +230,16 @@ class ResponseContentsPydModel(pyd.BaseModel):
         )
 
 
-class AutoResponseContentsModel(Model[ResponseContentsPydModel | StrictBytesModel | StrictStrModel
-                                      | JsonModel]):
+class AutoResponseContentModel(Model[ResponseContentPydModel | StrictBytesModel | StrictStrModel
+                                     | JsonModel]):
     class Config:
         smart_union = False
 
     @classmethod
     def _parse_data(
-        cls, data: ResponseContentsPydModel | StrictBytesModel | StrictStrModel | JsonModel
+        cls, data: ResponseContentPydModel | StrictBytesModel | StrictStrModel | JsonModel
     ) -> StrictBytesModel | StrictStrModel | JsonModel:
-        if isinstance(data, ResponseContentsPydModel):
+        if isinstance(data, ResponseContentPydModel):
             assert isinstance(data.content_type, ModelFriendlyMimeType)
 
             mimetype_tuple = (data.content_type.type, data.content_type.subtype)

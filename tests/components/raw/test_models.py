@@ -26,13 +26,13 @@ from ...helpers.protocols import AssertModelOrValFunc
 
 
 def test_bytes_model() -> None:
-    assert BytesModel(b'').contents == b''
-    assert BytesModel(b'\xc3\xa6\xc3\xb8\xc3\xa5').contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
-    assert BytesModel('').contents == b''
-    assert BytesModel('æøå').contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
+    assert BytesModel(b'').content == b''
+    assert BytesModel(b'\xc3\xa6\xc3\xb8\xc3\xa5').content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
+    assert BytesModel('').content == b''
+    assert BytesModel('æøå').content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
 
     BytesModelLatin1 = BytesModel.adjust('BytesModelLatin1', encoding='latin-1')
-    assert BytesModelLatin1('æøå').contents == b'\xe6\xf8\xe5'
+    assert BytesModelLatin1('æøå').content == b'\xe6\xf8\xe5'
 
     BytesModelMyEncoding = BytesModel.adjust('BytesModelMyEncoding', encoding='my-encoding')
     with pytest.raises(LookupError):
@@ -40,8 +40,8 @@ def test_bytes_model() -> None:
 
 
 def test_strict_bytes_model() -> None:
-    assert StrictBytesModel(b'').contents == b''
-    assert StrictBytesModel(b'\xc3\xa6\xc3\xb8\xc3\xa5').contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
+    assert StrictBytesModel(b'').content == b''
+    assert StrictBytesModel(b'\xc3\xa6\xc3\xb8\xc3\xa5').content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
 
     with pytest.raises(ValidationError):
         StrictBytesModel('')
@@ -51,19 +51,19 @@ def test_strict_bytes_model() -> None:
 
 
 def test_str_model():
-    assert StrModel('').contents == ''
-    assert StrModel('æøå').contents == 'æøå'
-    assert StrModel(b'').contents == ''
-    assert StrModel(b'\xc3\xa6\xc3\xb8\xc3\xa5').contents == 'æøå'
+    assert StrModel('').content == ''
+    assert StrModel('æøå').content == 'æøå'
+    assert StrModel(b'').content == ''
+    assert StrModel(b'\xc3\xa6\xc3\xb8\xc3\xa5').content == 'æøå'
 
     with pytest.raises(ValidationError):
         StrModel(b'\xe6\xf8\xe5')
 
     StrModelLatin1 = StrModel.adjust('StrModelLatin1', encoding='latin-1')
-    assert StrModelLatin1(b'\xe6\xf8\xe5').contents == 'æøå'
+    assert StrModelLatin1(b'\xe6\xf8\xe5').content == 'æøå'
 
     StrModelUtf8Sig = StrModel.adjust('StrModelUtf8Sig', encoding='utf-8-sig')
-    assert StrModelUtf8Sig(b'\xef\xbb\xbfsomething').contents == 'something'
+    assert StrModelUtf8Sig(b'\xef\xbb\xbfsomething').content == 'something'
 
     with pytest.raises(ValidationError):
         StrModelUtf8Sig(b'\xe6\xf8\xe5')
@@ -74,8 +74,8 @@ def test_str_model():
 
 
 def test_strict_str_model():
-    assert StrictStrModel('').contents == ''
-    assert StrictStrModel('æøå').contents == 'æøå'
+    assert StrictStrModel('').content == ''
+    assert StrictStrModel('æøå').content == 'æøå'
 
     with pytest.raises(ValidationError):
         StrictStrModel(b'')
@@ -123,7 +123,7 @@ def test_split_to_and_join_lines_model(
     assert_model_if_dyn_conv_else_val(lines_unstripped[-1], str, '        ')  # type: ignore[index]
 
     last_lines = lines_stripped[3:]  # type: ignore[index]
-    assert last_lines[0:2].contents == [
+    assert last_lines[0:2].content == [
         'abhorred in my imagination it is! my gorge rises at',
         'it. Here hung those lips that I have kissed I know'
     ]
@@ -132,21 +132,21 @@ def test_split_to_and_join_lines_model(
                                       'now, to mock your own grinning? quite chap-fallen.')
 
     joined_lines = JoinLinesModel(last_lines[0:2])
-    assert joined_lines.contents == dedent("""\
+    assert joined_lines.content == dedent("""\
         abhorred in my imagination it is! my gorge rises at
         it. Here hung those lips that I have kissed I know""")
-    assert joined_lines[:joined_lines.index(' ')].contents == 'abhorred'  # type: ignore[index]
+    assert joined_lines[:joined_lines.index(' ')].content == 'abhorred'  # type: ignore[index]
 
-    assert JoinLinesModel(SplitToLinesModel(data)).contents == '\n'.join(
+    assert JoinLinesModel(SplitToLinesModel(data)).content == '\n'.join(
         [line.strip() for line in data.strip().split('\n')])  # type: ignore[attr-defined]
 
-    assert JoinLinesModel(SplitToLinesNoStripModel(data)).contents == raw_data
+    assert JoinLinesModel(SplitToLinesNoStripModel(data)).content == raw_data
 
     JoinLinesByOsLinesepModel = JoinLinesModel.adjust(
         'JoinLinesByOsLinesepModel', delimiter=os.linesep)
 
     os_linesep_joined_lines = JoinLinesByOsLinesepModel(last_lines[0:2])
-    assert os_linesep_joined_lines.contents == os.linesep.join([
+    assert os_linesep_joined_lines.content == os.linesep.join([
         'abhorred in my imagination it is! my gorge rises at',
         'it. Here hung those lips that I have kissed I know'
     ])
@@ -163,16 +163,16 @@ def test_split_to_and_join_items_model(
     data_comma = Model[str](raw_data_comma) if use_str_model else raw_data_comma
 
     items_stripped_comma = SplitToItemsModel(data_comma)
-    assert items_stripped_comma.contents == ['abc', 'def', 'ghi', 'jkl']
+    assert items_stripped_comma.content == ['abc', 'def', 'ghi', 'jkl']
     assert_model_if_dyn_conv_else_val(items_stripped_comma[1], str, 'def')  # type: ignore[index]
-    assert items_stripped_comma[-2:].contents == ['ghi', 'jkl']  # type: ignore[index]
+    assert items_stripped_comma[-2:].content == ['ghi', 'jkl']  # type: ignore[index]
 
     SplitToItemsNoStripModel = SplitToItemsModel.adjust('SplitToItemsNoStripModel', strip=False)
 
     items_unstripped_tab = SplitToItemsNoStripModel(data_comma)
-    assert items_unstripped_tab.contents == ['abc', ' def ', 'ghi', 'jkl']
+    assert items_unstripped_tab.content == ['abc', ' def ', 'ghi', 'jkl']
     assert_model_if_dyn_conv_else_val(items_unstripped_tab[1], str, ' def ')  # type: ignore[index]
-    assert items_unstripped_tab[-2:].contents == ['ghi', 'jkl']  # type: ignore[index]
+    assert items_unstripped_tab[-2:].content == ['ghi', 'jkl']  # type: ignore[index]
 
     raw_data_tab = 'abc\t def \tghi\tjkl'
 
@@ -181,21 +181,21 @@ def test_split_to_and_join_items_model(
     SplitToItemsByTabModel = SplitToItemsModel.adjust('SplitToItemsByTabModel', delimiter='\t')
 
     items_stripped_tab = SplitToItemsByTabModel(data_tab)
-    assert items_stripped_tab.contents == ['abc', 'def', 'ghi', 'jkl']
+    assert items_stripped_tab.content == ['abc', 'def', 'ghi', 'jkl']
 
     assert_model_if_dyn_conv_else_val(items_stripped_tab[1], str, 'def')  # type: ignore[index]
-    assert items_stripped_tab[-2:].contents == ['ghi', 'jkl']  # type: ignore[index]
+    assert items_stripped_tab[-2:].content == ['ghi', 'jkl']  # type: ignore[index]
 
     comma_space_joined_items = JoinItemsModel(items_stripped_comma[1:3])  # type: ignore[index]
-    assert comma_space_joined_items.contents == 'def,ghi'
-    assert comma_space_joined_items[1:-1].contents == 'ef,gh'  # type: ignore[index]
+    assert comma_space_joined_items.content == 'def,ghi'
+    assert comma_space_joined_items[1:-1].content == 'ef,gh'  # type: ignore[index]
 
     JoinItemsByCommaSpaceModel = JoinItemsModel.adjust('JoinItemsByCommaSpaceModel', delimiter=', ')
 
     comma_space_joined_items = JoinItemsByCommaSpaceModel(
         items_stripped_tab[1:3])  # type: ignore[index]
-    assert comma_space_joined_items.contents == 'def, ghi'
-    assert comma_space_joined_items[1:-1].contents == 'ef, gh'  # type: ignore[index]
+    assert comma_space_joined_items.content == 'def, ghi'
+    assert comma_space_joined_items[1:-1].content == 'ef, gh'  # type: ignore[index]
 
 
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
@@ -213,7 +213,7 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
         list[str],
         ['abc', 'def', 'ghi', 'jkl'])
     assert_model_if_dyn_conv_else_val(cols_stripped_tab[0][1], str, 'def')  # type: ignore[index]
-    assert cols_stripped_tab[1:2].contents == [  # type: ignore[index]
+    assert cols_stripped_tab[1:2].content == [  # type: ignore[index]
         ['mno', 'pqr', 'stu', 'vwx']
     ]
     assert cols_stripped_tab[1:].to_data() == [  # type: ignore[index]
@@ -233,7 +233,7 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
         cols_unstripped_tab[0][1],  # type: ignore[index]
         str,
         ' def ')
-    assert cols_unstripped_tab[1:2].contents == [  # type: ignore[index]
+    assert cols_unstripped_tab[1:2].content == [  # type: ignore[index]
         ['mno', ' pqr', 'stu', ' vwx']
     ]
     assert cols_unstripped_tab[1:].to_data() == [  # type: ignore[index]
@@ -257,7 +257,7 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
         str,
         'def',
     )
-    assert cols_stripped_comma[1:2].contents == [  # type: ignore[index]
+    assert cols_stripped_comma[1:2].content == [  # type: ignore[index]
         ['mno', 'pqr', 'stu', 'vwx']
     ]
     assert cols_stripped_comma[1:].to_data() == [  # type: ignore[index]
@@ -266,8 +266,8 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
 
     joined_cols = JoinColumnsToLinesModel(cols_stripped_tab[1:])  # type: ignore[index]
 
-    assert joined_cols.contents == ['mno\tpqr\tstu\tvwx', 'yz']
-    assert joined_cols[1:].contents == ['yz']  # type: ignore[index]
+    assert joined_cols.content == ['mno\tpqr\tstu\tvwx', 'yz']
+    assert joined_cols[1:].content == ['yz']  # type: ignore[index]
     assert joined_cols.to_data() == ['mno\tpqr\tstu\tvwx', 'yz']
 
     JoinColumnsByCommaToLinesModel = JoinColumnsToLinesModel.adjust(
@@ -275,8 +275,8 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
 
     joined_cols_by_comma = JoinColumnsByCommaToLinesModel(
         cols_stripped_comma[1:])  # type: ignore[index]
-    assert joined_cols_by_comma.contents == ['mno, pqr, stu, vwx', 'yz']
-    assert joined_cols_by_comma[1:].contents == ['yz']  # type: ignore[index]
+    assert joined_cols_by_comma.content == ['mno, pqr, stu, vwx', 'yz']
+    assert joined_cols_by_comma[1:].content == ['yz']  # type: ignore[index]
     assert joined_cols_by_comma.to_data() == ['mno, pqr, stu, vwx', 'yz']
 
 
@@ -343,7 +343,7 @@ def splittable_data(
 def _assert_empty_model(model_cls: type[Model], default_value: object) -> None:
     empty_model: Model
     for empty_model in [model_cls(), model_cls(''), model_cls([])]:
-        assert empty_model.contents == empty_model.to_data() == default_value
+        assert empty_model.content == empty_model.to_data() == default_value
 
 
 def test_nested_split_to_items_model_default(
@@ -355,7 +355,7 @@ def test_nested_split_to_items_model_default(
 
     if pre_split == PreSplitEnum.FALSE:
         default_no_split = NestedSplitToItemsModel(data)
-        assert default_no_split.contents == default_no_split.to_data() == raw_data
+        assert default_no_split.content == default_no_split.to_data() == raw_data
 
     elif pre_split == PreSplitEnum.LEVEL_1:
         with pytest.raises(ValidationError):
@@ -376,7 +376,7 @@ def test_nested_split_to_items_model_one_level(
 
     if pre_split in [PreSplitEnum.FALSE, PreSplitEnum.LEVEL_1]:
         top_level_split = OneLevelNestedSplitToItemsModel(data)
-        assert top_level_split.contents == top_level_split.to_data() == [
+        assert top_level_split.content == top_level_split.to_data() == [
             'abc=def&ghi=jkl&pqr=stu&xyz=123', 'x=1&y=2'
         ]
     else:
@@ -398,7 +398,7 @@ def test_nested_split_to_items_model_two_levels(
 
     if pre_split != PreSplitEnum.LEVEL_3:
         two_level_split = TwoLevelNestedSplitToItemsModel(data)
-        assert two_level_split.contents == two_level_split.to_data() == [
+        assert two_level_split.content == two_level_split.to_data() == [
             ['abc=def', 'ghi=jkl', 'pqr=stu', 'xyz=123'],
             ['x=1', 'y=2'],
         ]
@@ -420,7 +420,7 @@ def test_nested_split_to_items_model_three_levels(
     _assert_empty_model(ThreeLevelNestedSplitToItemsModel, [])
 
     three_level_split = ThreeLevelNestedSplitToItemsModel(data)
-    assert three_level_split.contents == three_level_split.to_data() == [
+    assert three_level_split.content == three_level_split.to_data() == [
         [['abc', 'def'], ['ghi', 'jkl'], ['pqr', 'stu'], ['xyz', '123']],
         [['x', '1'], ['y', '2']],
     ]
@@ -461,7 +461,7 @@ def test_nested_split_to_items_model_parse_to_str() -> None:
         [[3, 6.0]],
     ]
     split_model = ThreeLevelNestedSplitToItemsModel(data)
-    assert split_model.contents == split_model.to_data() == [
+    assert split_model.content == split_model.to_data() == [
         [
             ['1', '2.0'],
             ['2', '4.0'],
@@ -479,7 +479,7 @@ def test_nested_join_items_model_default(
 
     if pre_split == PreSplitEnum.FALSE:
         default_no_join = NestedJoinItemsModel(data)
-        assert default_no_join.contents == default_no_join.to_data() == raw_data
+        assert default_no_join.content == default_no_join.to_data() == raw_data
 
     elif pre_split == PreSplitEnum.LEVEL_1:
         with pytest.raises(ValidationError):
@@ -500,7 +500,7 @@ def test_nested_join_items_model_one_level(
 
     if pre_split in [PreSplitEnum.FALSE, PreSplitEnum.LEVEL_1]:
         top_level_join = OneLevelNestedJoinItemsModel(data)
-        assert top_level_join.contents == top_level_join.to_data() == raw_data
+        assert top_level_join.content == top_level_join.to_data() == raw_data
     else:
         with pytest.raises(ValidationError):
             OneLevelNestedJoinItemsModel(data)
@@ -520,7 +520,7 @@ def test_nested_join_items_model_two_levels(
 
     if pre_split != PreSplitEnum.LEVEL_3:
         two_level_join = TwoLevelNestedJoinItemsModel(data)
-        assert two_level_join.contents == two_level_join.to_data() == raw_data
+        assert two_level_join.content == two_level_join.to_data() == raw_data
     else:
         with pytest.raises(ValidationError):
             TwoLevelNestedJoinItemsModel(data)
@@ -539,7 +539,7 @@ def test_nested_join_items_model_three_levels(
     _assert_empty_model(ThreeLevelNestedJoinItemsModel, '')
 
     three_level_join = ThreeLevelNestedJoinItemsModel(data)
-    assert three_level_join.contents == three_level_join.to_data() == raw_data
+    assert three_level_join.content == three_level_join.to_data() == raw_data
 
 
 def test_nested_join_items_model_mixed_levels() -> None:
@@ -575,14 +575,14 @@ def test_nested_join_items_model_parse_to_str() -> None:
         [[3, 6.0]],
     ]
     joined_model = ThreeLevelNestedJoinItemsModel(data)
-    assert joined_model.contents == joined_model.to_data() == '1=2.0&2=4.0;3=6.0'
+    assert joined_model.content == joined_model.to_data() == '1=2.0&2=4.0;3=6.0'
 
 
 def test_match_items_model_default() -> None:
     data = ('abc', 123, 13.0)
 
     matched_model = MatchItemsModel(data)
-    assert matched_model.contents == matched_model.to_data() == ['abc', '123', '13.0']
+    assert matched_model.content == matched_model.to_data() == ['abc', '123', '13.0']
 
 
 def test_match_items_model_one_func() -> None:
@@ -594,13 +594,13 @@ def test_match_items_model_one_func() -> None:
         'FilterCommentsModel', match_functions=(match_comments_func,), invert_matches=False)
 
     matched_model = MatchCommentsModel(data)
-    assert matched_model.contents == matched_model.to_data() == ['# comment 1', '# comment 2']
+    assert matched_model.content == matched_model.to_data() == ['# comment 1', '# comment 2']
 
     FilterCommentsModel = MatchItemsModel.adjust(
         'FilterCommentsModel', match_functions=(match_comments_func,), invert_matches=True)
 
     filtered_model = FilterCommentsModel(data)
-    assert filtered_model.contents == filtered_model.to_data() == ['line 1', 'line 2']
+    assert filtered_model.content == filtered_model.to_data() == ['line 1', 'line 2']
 
 
 def test_match_items_model_two_funcs() -> None:
@@ -616,7 +616,7 @@ def test_match_items_model_two_funcs() -> None:
         match_all=True)
 
     matched_model = MatchLowerCaseAndAlphaNumModel(data)
-    assert matched_model.contents == matched_model.to_data() == ['abc123']
+    assert matched_model.content == matched_model.to_data() == ['abc123']
 
     MatchLowerCaseOrAlphaNumModel = MatchItemsModel.adjust(
         'FilterCommentsModel',
@@ -625,7 +625,7 @@ def test_match_items_model_two_funcs() -> None:
         match_all=False)
 
     matched_model = MatchLowerCaseOrAlphaNumModel(data)
-    assert matched_model.contents == matched_model.to_data() == ['abc123', 'ABC123', 'xyz-123']
+    assert matched_model.content == matched_model.to_data() == ['abc123', 'ABC123', 'xyz-123']
 
     FilterLowerCaseAndAlphaNumModel = MatchItemsModel.adjust(
         'FilterCommentsModel',
@@ -634,7 +634,7 @@ def test_match_items_model_two_funcs() -> None:
         match_all=True)
 
     matched_model = FilterLowerCaseAndAlphaNumModel(data)
-    assert matched_model.contents == matched_model.to_data() == ['ABC123', 'xyz-123', 'XYZ-123']
+    assert matched_model.content == matched_model.to_data() == ['ABC123', 'xyz-123', 'XYZ-123']
 
     FilterLowerCaseOrAlphaNumModel = MatchItemsModel.adjust(
         'FilterCommentsModel',
@@ -643,4 +643,4 @@ def test_match_items_model_two_funcs() -> None:
         match_all=False)
 
     matched_model = FilterLowerCaseOrAlphaNumModel(data)
-    assert matched_model.contents == matched_model.to_data() == ['XYZ-123']
+    assert matched_model.content == matched_model.to_data() == ['XYZ-123']

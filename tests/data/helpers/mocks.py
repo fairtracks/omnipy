@@ -36,7 +36,7 @@ class MockNumberSerializer(Serializer):
     @classmethod
     def serialize(cls, number_dataset: NumberDataset) -> bytes | memoryview:
         return ','.join(
-            ':'.join([k, str(v.contents)]) for (k, v) in number_dataset.items()).encode('utf8')
+            ':'.join([k, str(v.content)]) for (k, v) in number_dataset.items()).encode('utf8')
 
     @classmethod
     def deserialize(cls, serialized_bytes: bytes, any_file_suffix=False) -> NumberDataset:

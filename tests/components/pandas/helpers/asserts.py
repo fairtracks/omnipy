@@ -17,5 +17,4 @@ def assert_pandas_dataset_equals(pandas_dataset_1: PandasDataset,
 
     assert pandas_dataset_1.keys() == pandas_dataset_2.keys()
     for key in pandas_dataset_1.keys():
-        pd.testing.assert_frame_equal(pandas_dataset_1[key].contents,
-                                      pandas_dataset_2[key].contents)
+        pd.testing.assert_frame_equal(pandas_dataset_1[key].content, pandas_dataset_2[key].content)

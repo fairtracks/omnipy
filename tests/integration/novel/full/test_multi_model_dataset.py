@@ -47,11 +47,11 @@ def test_dataset_with_multiple_table_models(runtime: Annotated[None, pytest.fixt
 
     my_dataset.set_model('c', TableTemplate[MyOtherRecordSchema])
     assert my_dataset.get_model('c') == TableTemplate[MyOtherRecordSchema]
-    assert my_dataset['c'].contents == []
+    assert my_dataset['c'].content == []
 
     with pytest.raises(ValidationError):
         my_dataset['c'] = [{'b': 'sd', 'd': False}, {'b': 'dd', 'd': False}]
-    assert my_dataset['c'].contents == []
+    assert my_dataset['c'].content == []
     my_dataset['c'] = [{'b': 'sd', 'c': False}, {'b': 'dd', 'c': False}]
     assert my_dataset['c'].to_data() == [{'b': 'sd', 'c': 0}, {'b': 'dd', 'c': 0}]
 

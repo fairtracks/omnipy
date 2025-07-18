@@ -20,7 +20,7 @@ def test_frozen_scalar() -> None:
     class FrozenScalarModel(Model[_FrozenScalarM[int]]):
         ...
 
-    assert FrozenScalarModel().contents == _FrozenScalarM[int](0)
+    assert FrozenScalarModel().content == _FrozenScalarM[int](0)
 
     with pytest.raises(ValidationError):
         FrozenScalarModel(None)
@@ -28,15 +28,15 @@ def test_frozen_scalar() -> None:
     with pytest.raises(ValidationError):
         FrozenScalarModel('hello')
 
-    assert FrozenScalarModel(1).contents == _FrozenScalarM[int](1)
+    assert FrozenScalarModel(1).content == _FrozenScalarM[int](1)
 
 
 def test_frozen_scalar_of_none() -> None:
     class FrozenScalarModel(Model[_FrozenScalarM[None]]):
         ...
 
-    assert FrozenScalarModel().contents == _FrozenScalarM[None](None)
-    assert FrozenScalarModel(None).contents == _FrozenScalarM[None](None)
+    assert FrozenScalarModel().content == _FrozenScalarM[None](None)
+    assert FrozenScalarModel(None).content == _FrozenScalarM[None](None)
 
     with pytest.raises(ValidationError):
         FrozenScalarModel([None])
@@ -52,7 +52,7 @@ def test_frozen_dict_of_none() -> None:
     class FrozenDictsOfInt2NoneModel(Model[FrozenDict[int, NoneModel]]):
         ...
 
-    assert FrozenDictsOfInt2NoneModel().contents == FrozenDict()
+    assert FrozenDictsOfInt2NoneModel().content == FrozenDict()
 
     with pytest.raises(ValidationError):
         FrozenDictsOfInt2NoneModel(None)
@@ -60,9 +60,9 @@ def test_frozen_dict_of_none() -> None:
     with pytest.raises(ValidationError):
         FrozenDictsOfInt2NoneModel([None])
 
-    assert FrozenDictsOfInt2NoneModel({1: None}).contents == FrozenDict({1: NoneModel(None)})
+    assert FrozenDictsOfInt2NoneModel({1: None}).content == FrozenDict({1: NoneModel(None)})
     assert FrozenDictsOfInt2NoneModel(FrozenDict({1: None
-                                                  })).contents == FrozenDict({1: NoneModel(None)})
+                                                  })).content == FrozenDict({1: NoneModel(None)})
 
     with pytest.raises(ValidationError):
         FrozenDictsOfInt2NoneModel({'hello': None})
@@ -284,5 +284,5 @@ def test_nested_frozen_models(case: CaseInfo) -> None:
                 # model_obj = model_cls(data)
 
                 # print(f'repr(model_obj): {repr(model_obj)}')
-                # print(f'model_obj.contents: {model_obj.contents}')
+                # print(f'model_obj.content: {model_obj.content}')
                 # print(f'model_obj.to_data(): {model_obj.to_data()}')

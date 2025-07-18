@@ -156,7 +156,7 @@ Examples:
 class JsonListModel(Model[_JsonAnyListM]):
     """
     JsonListModel is a limited JSON model supporting only JSON content that has a list (or "array"
-    in JSON nomenclature) at the root. The contents of the top-level list can be any JSON content,
+    in JSON nomenclature) at the root. The content of the top-level list can be any JSON content,
     though, any levels deep.
 
     Examples:

@@ -27,7 +27,7 @@ class PlainTextPrettyPrinter(PrettyPrinter[str]):
     def prepare_draft_panel(self, draft_panel: DraftPanel[object,
                                                           FrameT]) -> DraftPanel[str, FrameT]:
         if is_model_instance(draft_panel.content):
-            raw_content = draft_panel.content.contents
+            raw_content = draft_panel.content.content
         else:
             raw_content = draft_panel.content
 

@@ -47,7 +47,7 @@ def test_json_models(case: CaseInfo) -> None:
                 model_obj = model_cls(data)  # noqa: F841
 
                 # print(f'repr(model_obj): {repr(model_obj)}')
-                # print(f'model_obj.contents: {model_obj.contents}')
+                # print(f'model_obj.content: {model_obj.content}')
                 # print(f'model_obj.to_data(): {model_obj.to_data()}')
                 # print(f'model_obj.to_json(): {model_obj.to_json(pretty=True)}')
 
@@ -57,23 +57,23 @@ def test_json_model_consistency_basic():
     MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonScalar]
 
     example_dict_data = {'abc': 2312}
-    assert JsonModel(example_dict_data).contents == _JsonAnyDictM(__root__={'abc': 2312})
-    assert JsonDictModel(example_dict_data).contents == _JsonAnyDictM(__root__={'abc': 2312})
-    assert JsonDictOfScalarsModel(example_dict_data).contents == _JsonDictM[JsonScalar](
+    assert JsonModel(example_dict_data).content == _JsonAnyDictM(__root__={'abc': 2312})
+    assert JsonDictModel(example_dict_data).content == _JsonAnyDictM(__root__={'abc': 2312})
+    assert JsonDictOfScalarsModel(example_dict_data).content == _JsonDictM[JsonScalar](
         __root__={
             'abc': 2312
         })
-    assert MyJsonDictOfScalarsModel(example_dict_data).contents == _JsonDictM[JsonScalar](
+    assert MyJsonDictOfScalarsModel(example_dict_data).content == _JsonDictM[JsonScalar](
         __root__={
             'abc': 2312
         })
 
     example_list_data = ['abc', 2312]
-    assert JsonModel(example_list_data).contents == _JsonAnyListM(__root__=['abc', 2312])
-    assert JsonListModel(example_list_data).contents == _JsonAnyListM(__root__=['abc', 2312])
-    assert JsonListOfScalarsModel(example_list_data).contents == _JsonListM[JsonScalar](
+    assert JsonModel(example_list_data).content == _JsonAnyListM(__root__=['abc', 2312])
+    assert JsonListModel(example_list_data).content == _JsonAnyListM(__root__=['abc', 2312])
+    assert JsonListOfScalarsModel(example_list_data).content == _JsonListM[JsonScalar](
         __root__=['abc', 2312])
-    assert MyJsonListOfScalarsModel(example_list_data).contents == _JsonListM[JsonScalar](
+    assert MyJsonListOfScalarsModel(example_list_data).content == _JsonListM[JsonScalar](
         __root__=['abc', 2312])
 
 
@@ -82,29 +82,29 @@ def test_json_model_consistency_with_none() -> None:
     MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonScalar]
 
     example_dict_data = {'abc': None}
-    assert JsonModel(example_dict_data).contents == _JsonAnyDictM(__root__={'abc': None})
+    assert JsonModel(example_dict_data).content == _JsonAnyDictM(__root__={'abc': None})
 
-    assert JsonDictModel(example_dict_data).contents == _JsonAnyDictM(__root__={'abc': None})
+    assert JsonDictModel(example_dict_data).content == _JsonAnyDictM(__root__={'abc': None})
 
-    assert JsonDictOfScalarsModel(example_dict_data).contents == _JsonDictM[JsonScalar](
+    assert JsonDictOfScalarsModel(example_dict_data).content == _JsonDictM[JsonScalar](
         __root__={
             'abc': None
         })
 
-    assert MyJsonDictOfScalarsModel(example_dict_data).contents == _JsonDictM[JsonScalar](
+    assert MyJsonDictOfScalarsModel(example_dict_data).content == _JsonDictM[JsonScalar](
         __root__={
             'abc': None
         })
 
     example_list_data = ['abc', None]
-    assert JsonModel(example_list_data).contents == _JsonAnyListM(__root__=['abc', None])
+    assert JsonModel(example_list_data).content == _JsonAnyListM(__root__=['abc', None])
 
-    assert JsonListModel(example_list_data).contents == _JsonAnyListM(__root__=['abc', None])
+    assert JsonListModel(example_list_data).content == _JsonAnyListM(__root__=['abc', None])
 
-    assert JsonListOfScalarsModel(example_list_data).contents == _JsonListM[JsonScalar](
+    assert JsonListOfScalarsModel(example_list_data).content == _JsonListM[JsonScalar](
         __root__=['abc', None])
 
-    assert MyJsonListOfScalarsModel(example_list_data).contents == _JsonListM[JsonScalar](
+    assert MyJsonListOfScalarsModel(example_list_data).content == _JsonListM[JsonScalar](
         __root__=['abc', None])
 
 
@@ -203,4 +203,4 @@ def test_json_model_operations(
     assert_model_if_dyn_conv_else_val(c['d'], int, 5)
 
     e = JsonScalarModel(1)
-    assert (e + 1).contents == 2
+    assert (e + 1).content == 2

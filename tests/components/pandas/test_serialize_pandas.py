@@ -3,7 +3,7 @@ from textwrap import dedent
 from omnipy.components.pandas.datasets import PandasDataset
 from omnipy.components.pandas.serializers import PandasDatasetToTarFileSerializer
 
-from ...data.helpers.functions import assert_tar_file_contents
+from ...data.helpers.functions import assert_tar_file_content
 from .helpers.asserts import assert_pandas_dataset_equals
 
 
@@ -28,8 +28,8 @@ def test_pandas_dataset_serializer_to_tar_file():
     tarfile_bytes = serializer.serialize(pandas_data)
     decode_func = lambda x: x.decode('utf8')  # noqa
 
-    assert_tar_file_contents(tarfile_bytes, 'data_file_1', 'csv', decode_func, data_file_1_csv)
-    assert_tar_file_contents(tarfile_bytes, 'data_file_2', 'csv', decode_func, data_file_2_csv)
+    assert_tar_file_content(tarfile_bytes, 'data_file_1', 'csv', decode_func, data_file_1_csv)
+    assert_tar_file_content(tarfile_bytes, 'data_file_2', 'csv', decode_func, data_file_2_csv)
 
     deserialized_pandas_data = serializer.deserialize(tarfile_bytes)
 

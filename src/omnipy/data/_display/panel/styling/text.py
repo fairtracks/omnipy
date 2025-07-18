@@ -63,7 +63,7 @@ class SyntaxStylizedTextPanel(
 
     @staticmethod
     # @lru_cache
-    def _vert_cropped_contents(
+    def _vert_cropped_content(
         content: str,
         height: pyd.NonNegativeInt | None,
         vert_overflow_mode: VerticalOverflowMode.Literals,
@@ -86,7 +86,7 @@ class SyntaxStylizedTextPanel(
 
     @override
     def _stylized_content_terminal_impl(self) -> StylizedRichTypes:
-        cropped_content = self._vert_cropped_contents(
+        cropped_content = self._vert_cropped_content(
             self.content,
             self.frame.dims.height,
             self.config.vertical_overflow_mode,
@@ -104,7 +104,7 @@ class SyntaxStylizedTextPanel(
 
     @override
     def _stylized_content_html_impl(self) -> StylizedRichTypes:
-        cropped_content = self._vert_cropped_contents(
+        cropped_content = self._vert_cropped_content(
             self.content,
             self.frame.dims.height,
             self.config.vertical_overflow_mode,

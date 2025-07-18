@@ -4,7 +4,7 @@ from omnipy.components.json.datasets import JsonDataset
 from omnipy.components.json.serializers import JsonDatasetToTarFileSerializer
 from omnipy.data.serializer import TarFileSerializer
 
-from ...data.helpers.functions import assert_tar_file_contents
+from ...data.helpers.functions import assert_tar_file_content
 
 
 def test_json_dataset_serializer_to_tar_file():
@@ -41,8 +41,8 @@ def test_json_dataset_serializer_to_tar_file():
     tarfile_bytes = serializer.serialize(json_data)
     decode_func = lambda x: x.decode('utf8')  # noqa
 
-    assert_tar_file_contents(tarfile_bytes, 'data_file_1', 'json', decode_func, data_file_1_json)
-    assert_tar_file_contents(tarfile_bytes, 'data_file_2', 'json', decode_func, data_file_2_json)
+    assert_tar_file_content(tarfile_bytes, 'data_file_1', 'json', decode_func, data_file_1_json)
+    assert_tar_file_content(tarfile_bytes, 'data_file_2', 'json', decode_func, data_file_2_json)
 
     deserialized_json_data = serializer.deserialize(tarfile_bytes)
 

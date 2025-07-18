@@ -1,11 +1,11 @@
 from omnipy.data.dataset import Dataset
 
-from .models import AutoResponseContentsModel, HttpUrlModel
+from .models import AutoResponseContentModel, HttpUrlModel
 
 
 class HttpUrlDataset(Dataset[HttpUrlModel]):
     ...
 
 
-class AutoResponseContentsDataset(Dataset[AutoResponseContentsModel]):
+class AutoResponseContentDataset(Dataset[AutoResponseContentModel]):
     ...

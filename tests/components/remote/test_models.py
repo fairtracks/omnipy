@@ -5,10 +5,10 @@ import pytest
 
 from omnipy import JsonModel, Model
 from omnipy.components.raw.models import StrictBytesModel, StrictStrModel
-from omnipy.components.remote.models import (AutoResponseContentsModel,
+from omnipy.components.remote.models import (AutoResponseContentModel,
                                              HttpUrlModel,
                                              QueryParamsModel,
-                                             ResponseContentsPydModel,
+                                             ResponseContentPydModel,
                                              UrlPathModel)
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util._pydantic import ValidationError
@@ -18,11 +18,11 @@ from ...helpers.protocols import AssertModelOrValFunc
 
 def test_query_params_model():
     empty_params = QueryParamsModel()
-    assert empty_params.contents == {}
+    assert empty_params.content == {}
     assert empty_params.to_data() == str(empty_params) == ''
 
     params = QueryParamsModel('a=1&b=2&c=3')
-    assert params.contents == {'a': '1', 'b': '2', 'c': '3'}
+    assert params.content == {'a': '1', 'b': '2', 'c': '3'}
     assert params.to_data() == str(params) == 'a=1&b=2&c=3'
 
     with pytest.raises(ValidationError):
@@ -31,31 +31,31 @@ def test_query_params_model():
 
 def test_query_params_model_split_before_url_decode():
     params = QueryParamsModel(str(QueryParamsModel(a='1', b='2')))
-    assert params.contents == {'a': '1', 'b': '2'}
+    assert params.content == {'a': '1', 'b': '2'}
     params = QueryParamsModel(str(QueryParamsModel(a='=', b='&')))
-    assert params.contents == {'a': '=', 'b': '&'}
+    assert params.content == {'a': '=', 'b': '&'}
 
     params = QueryParamsModel('a=b%3D3')
-    assert params.contents == {'a': 'b=3'}
+    assert params.content == {'a': 'b=3'}
 
     params = QueryParamsModel('a=b%3D3%26c%3D1')
-    assert params.contents == {'a': 'b=3&c=1'}
+    assert params.content == {'a': 'b=3&c=1'}
 
 
 def test_url_path_model():
     empty_path = UrlPathModel()
-    assert empty_path.contents == PurePosixPath('.')
+    assert empty_path.content == PurePosixPath('.')
 
     path = UrlPathModel('/abc/def')
-    assert path.contents == PurePosixPath('/abc/def')
+    assert path.content == PurePosixPath('/abc/def')
     assert path.to_data() == str(path) == '/abc/def'
 
     path /= 'ghi'
-    assert path.contents == PurePosixPath('/abc/def/ghi')
+    assert path.content == PurePosixPath('/abc/def/ghi')
     assert path.to_data() == str(path) == '/abc/def/ghi'
 
     new_path = path / PurePosixPath('jkl', 'mno')
-    assert new_path.contents == PurePosixPath('/abc/def/ghi/jkl/mno')
+    assert new_path.content == PurePosixPath('/abc/def/ghi/jkl/mno')
     assert new_path.to_data() == str(new_path) == '/abc/def/ghi/jkl/mno'
     assert new_path.parts == ('/', 'abc', 'def', 'ghi', 'jkl', 'mno')
 
@@ -63,12 +63,12 @@ def test_url_path_model():
         path /= 'jkl' / 'mno'
 
     path // 'jkl' // 'mno'
-    assert path.contents == PurePosixPath('/abc/def/ghi/jkl/mno')
+    assert path.content == PurePosixPath('/abc/def/ghi/jkl/mno')
     assert path.to_data() == str(path) == '/abc/def/ghi/jkl/mno'
     assert path.parts == ('/', 'abc', 'def', 'ghi', 'jkl', 'mno')
 
     path += 'pqr'
-    assert path.contents == PurePosixPath('/abc/def/ghi/jkl/mnopqr')
+    assert path.content == PurePosixPath('/abc/def/ghi/jkl/mnopqr')
     assert path.to_data() == str(path) == '/abc/def/ghi/jkl/mnopqr'
     assert path.parts == ('/', 'abc', 'def', 'ghi', 'jkl', 'mnopqr')
 
@@ -213,28 +213,28 @@ def test_http_url_model_query_params(
 
     # TODO: When type-dependent conversion is implemented, make QueryParamsModel convertible to both
     #       str and dict[str, str] types
-    # Model[dict[str, str]](url.query).contents = {}
-    Model[str](url.query).contents = ''
+    # Model[dict[str, str]](url.query).content = {}
+    Model[str](url.query).content = ''
 
     url.query |= {'jkl': 'mno'}
     url.query['pqr'] = 123
 
     assert_model_if_dyn_conv_else_val(url.query['jkl'], str, 'mno')
     assert_model_if_dyn_conv_else_val(url.query['pqr'], str, '123')
-    assert url.query.contents == {'jkl': 'mno', 'pqr': '123'}
+    assert url.query.content == {'jkl': 'mno', 'pqr': '123'}
 
-    # Model[dict[str, str]](url.query).contents = {'jkl': 'mno', 'pqr': '123'}
-    Model[str](url.query).contents = 'jkl=mno&pqr=123'
+    # Model[dict[str, str]](url.query).content = {'jkl': 'mno', 'pqr': '123'}
+    Model[str](url.query).content = 'jkl=mno&pqr=123'
 
     assert url.to_data() == str(url) == 'http://abc.net/def?jkl=mno&pqr=123'
 
     url.query |= {456: 'abc'}
     del url.query['jkl']
 
-    # Model[dict[str, str]](url.query).contents = {'pqr': '123', '456': 'abc'}
+    # Model[dict[str, str]](url.query).content = {'pqr': '123', '456': 'abc'}
     assert_model_if_dyn_conv_else_val(url.query['pqr'], str, '123')
     assert_model_if_dyn_conv_else_val(url.query['456'], str, 'abc')
-    Model[str](url.query).contents = 'pqr=123&456=abc'
+    Model[str](url.query).content = 'pqr=123&456=abc'
 
     assert url.to_data() == str(url) == 'http://abc.net/def?pqr=123&456=abc'
 
@@ -267,15 +267,15 @@ def test_http_url_model_add_operator(
         url + new_url  # type: ignore[operator]
 
 
-def test_auto_response_contents_model() -> None:
-    model = AutoResponseContentsModel(
-        ResponseContentsPydModel(content_type='text/plain', response='abc'))
-    assert model.contents == StrictStrModel('abc')
+def test_auto_response_content_model() -> None:
+    model = AutoResponseContentModel(
+        ResponseContentPydModel(content_type='text/plain', response='abc'))
+    assert model.content == StrictStrModel('abc')
 
-    model = AutoResponseContentsModel(
-        ResponseContentsPydModel(content_type='application/octet-stream', response=b'abc'))
-    assert model.contents == StrictBytesModel(b'abc')
+    model = AutoResponseContentModel(
+        ResponseContentPydModel(content_type='application/octet-stream', response=b'abc'))
+    assert model.content == StrictBytesModel(b'abc')
 
-    model = AutoResponseContentsModel(
-        ResponseContentsPydModel(content_type='application/json', response='abc'))
-    assert model.contents == JsonModel('abc')
+    model = AutoResponseContentModel(
+        ResponseContentPydModel(content_type='application/json', response='abc'))
+    assert model.content == JsonModel('abc')

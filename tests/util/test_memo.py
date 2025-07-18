@@ -130,24 +130,24 @@ def test_ref_count_memo_dict_complex_object_deletion() -> None:
     ref_count_memo_dict: RefCountMemoDict = RefCountMemoDict()
 
     class MyClass:
-        def __init__(self, contents: object) -> None:
-            self.contents = contents
+        def __init__(self, content: object) -> None:
+            self.content = content
 
         def __del__(self) -> None:
-            contents_id = id(self.contents)
+            content_id = id(self.content)
 
-            # print(f'__del__() called for {self} (id(self.contents)={contents_id})')
+            # print(f'__del__() called for {self} (id(self.content)={content_id})')
             # print(ref_count_memo_dict)
 
-            self.contents = pyd.Undefined
-            ref_count_memo_dict.recursively_remove_deleted_objs(SetDeque((contents_id,)))
+            self.content = pyd.Undefined
+            ref_count_memo_dict.recursively_remove_deleted_objs(SetDeque((content_id,)))
 
         def __repr__(self) -> str:
-            return f'MyClass({self.contents})'
+            return f'MyClass({self.content})'
 
         def __eq__(self, other):
             if isinstance(other, MyClass):
-                return self.contents == other.contents
+                return self.content == other.content
             return False
 
     def _outer_test_count_memo_dict() -> tuple:
@@ -160,23 +160,23 @@ def test_ref_count_memo_dict_complex_object_deletion() -> None:
             e_obj = MyClass({2: 4, 6: a_list})
             f_obj = MyClass({1: e_obj, 2: e_obj})
 
-            for obj in (a_list, c_set, b_tuple, d_dict, e_obj.contents, f_obj.contents):
+            for obj in (a_list, c_set, b_tuple, d_dict, e_obj.content, f_obj.content):
                 _deepcopy_obj_with_memodict(ref_count_memo_dict, obj)
 
             id_a = id(a_list)
             id_b = id(b_tuple)
             id_c = id(c_set)
             id_d = id(d_dict)
-            id_e_c = id(e_obj.contents)
-            id_f_c = id(f_obj.contents)
+            id_e_c = id(e_obj.content)
+            id_f_c = id(f_obj.content)
             all_ids = (id_a, id_b, id_c, id_d, id_e_c, id_f_c)
 
             assert ref_count_memo_dict[id_a] == a_list
             assert id_b not in ref_count_memo_dict  # tuples are not memoized
             assert ref_count_memo_dict[id_c] == c_set
             assert ref_count_memo_dict[id_d] == d_dict
-            assert ref_count_memo_dict[id_e_c] == e_obj.contents
-            assert ref_count_memo_dict[id_f_c] == f_obj.contents
+            assert ref_count_memo_dict[id_e_c] == e_obj.content
+            assert ref_count_memo_dict[id_f_c] == f_obj.content
 
             _assert_values_in_memo(
                 ref_count_memo_dict,
@@ -351,8 +351,8 @@ def test_ref_count_memo_dict_deepcopy_pydantic_model_with_parsing() -> None:
                   'object between deepcopies might result in fragments of the old object '
                   'being kept alive. While there at least partial solutions to this '
                   'problem commented out in the code, they are not needed in practice, as'
-                  'validation of Model.contents is always run before taking a snapshot if the '
-                  'contents has changed, returning a new object to be taken snapshot of. '
+                  'validation of Model.content is always run before taking a snapshot if the '
+                  'content has changed, returning a new object to be taken snapshot of. '
                   'Then SnapshotHolder replaces the old snapshot with the new one, and the old '
                   'snapshot is scheduled for deletion, in order to correctly remove all '
                   'unreferenced fragments that are still being kept alive. The test is kept '

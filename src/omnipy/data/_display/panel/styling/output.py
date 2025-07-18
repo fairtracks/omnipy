@@ -408,7 +408,7 @@ class CroppingOutputVariant(
         Abstract method for cropping one content line horizontally.
 
         :param line: Single content line, including newline
-        :param uncropped_width: Width of the entire contents (longest line)
+        :param uncropped_width: Width of the entire content (longest line)
         :return: A tuple. The first item is the cropped content lines as a
                  list and the second item is a boolean indicating that the
                  horizontal cropping loop should exit early.

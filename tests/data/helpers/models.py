@@ -15,7 +15,7 @@ ChildrenT = TypeVar('ChildrenT', bound=list)
 
 class MyFloatObjModel(Model[MyFloatObject]):
     def to_data(self) -> float:
-        return self.contents.int_part + self.contents.float_part
+        return self.content.int_part + self.content.float_part
 
     def from_data(self, data: float):
         self._validate_and_set_value(MyFloatObject(int_part=floor(data), float_part=data % 1))

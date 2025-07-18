@@ -23,16 +23,16 @@ from ...helpers.protocols import AssertModelOrValFunc
 
 
 def test_bytes_dataset() -> None:
-    assert BytesDataset(dict(a=b''))['a'].contents == b''
+    assert BytesDataset(dict(a=b''))['a'].content == b''
     assert BytesDataset(
-        dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
-    assert BytesDataset(dict(a=''))['a'].contents == b''
-    assert BytesDataset(dict(a='æøå'))['a'].contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
-    assert BytesDataset(dict(a='æøå'))['a'].contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
+        dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
+    assert BytesDataset(dict(a=''))['a'].content == b''
+    assert BytesDataset(dict(a='æøå'))['a'].content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
+    assert BytesDataset(dict(a='æøå'))['a'].content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
 
     BytesDatasetLatin1 = BytesDataset.adjust(
         'BytesDatasetLatin1', 'BytesModelLatin1', encoding='latin-1')
-    assert BytesDatasetLatin1(dict(a='æøå'))['a'].contents == b'\xe6\xf8\xe5'
+    assert BytesDatasetLatin1(dict(a='æøå'))['a'].content == b'\xe6\xf8\xe5'
 
     BytesDatasetMyEncoding = BytesDataset.adjust(
         'BytesDatasetMyEncoding', 'BytesModelMyEncoding', encoding='my-encoding')
@@ -41,9 +41,9 @@ def test_bytes_dataset() -> None:
 
 
 def test_strict_bytes_dataset() -> None:
-    assert StrictBytesDataset(dict(a=b''))['a'].contents == b''
+    assert StrictBytesDataset(dict(a=b''))['a'].content == b''
     assert StrictBytesDataset(
-        dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].contents == b'\xc3\xa6\xc3\xb8\xc3\xa5'
+        dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
 
     with pytest.raises(ValidationError):
         StrictBytesDataset(dict(a=''))
@@ -53,20 +53,20 @@ def test_strict_bytes_dataset() -> None:
 
 
 def test_str_dataset() -> None:
-    assert StrDataset(dict(a=''))['a'].contents == ''
-    assert StrDataset(dict(a='æøå'))['a'].contents == 'æøå'
-    assert StrDataset(dict(a=b''))['a'].contents == ''
-    assert StrDataset(dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].contents == 'æøå'
+    assert StrDataset(dict(a=''))['a'].content == ''
+    assert StrDataset(dict(a='æøå'))['a'].content == 'æøå'
+    assert StrDataset(dict(a=b''))['a'].content == ''
+    assert StrDataset(dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].content == 'æøå'
 
     with pytest.raises(ValidationError):
         StrDataset(dict(a=b'\xe6\xf8\xe5'))
 
     StrDatasetLatin1 = StrDataset.adjust('StrDatasetLatin1', 'StrModelLatin1', encoding='latin-1')
-    assert StrDatasetLatin1(dict(a=b'\xe6\xf8\xe5'))['a'].contents == 'æøå'
+    assert StrDatasetLatin1(dict(a=b'\xe6\xf8\xe5'))['a'].content == 'æøå'
 
     StrDatasetUtf8Sig = StrDataset.adjust(
         'StrDatasetUtf8Sig', 'StrModelUtf8Sig', encoding='utf-8-sig')
-    assert StrDatasetUtf8Sig(dict(a=b'\xef\xbb\xbfsomething'))['a'].contents == 'something'
+    assert StrDatasetUtf8Sig(dict(a=b'\xef\xbb\xbfsomething'))['a'].content == 'something'
     with pytest.raises(ValidationError):
         StrDatasetUtf8Sig(dict(a=b'\xe6\xf8\xe5'))
 
@@ -77,8 +77,8 @@ def test_str_dataset() -> None:
 
 
 def test_strict_str_dataset() -> None:
-    assert StrictStrDataset(dict(a=''))['a'].contents == ''
-    assert StrictStrDataset(dict(a='æøå'))['a'].contents == 'æøå'
+    assert StrictStrDataset(dict(a=''))['a'].content == ''
+    assert StrictStrDataset(dict(a='æøå'))['a'].content == 'æøå'
 
     with pytest.raises(ValidationError):
         StrictStrDataset(dict(a=b''))
@@ -133,21 +133,21 @@ def test_split_to_and_join_lines_dataset(
     for data_file, lines in lines_stripped.items():
         lines_stripped[data_file] = lines[0:2]
 
-    assert (lines_stripped['last_lines'].contents == [
+    assert (lines_stripped['last_lines'].content == [
         'abhorred in my imagination it is! my gorge rises at',
         'it. Here hung those lips that I have kissed I know'
     ])
 
     joined_lines = JoinLinesDataset(lines_stripped)
 
-    assert joined_lines['monologue'].contents == dedent("""\
+    assert joined_lines['monologue'].content == dedent("""\
         Alas, poor Yorick! I knew him, Horatio: a fellow
         of infinite jest, of most excellent fancy: he hath""")
-    assert joined_lines['last_lines'].contents == dedent("""\
+    assert joined_lines['last_lines'].content == dedent("""\
         abhorred in my imagination it is! my gorge rises at
         it. Here hung those lips that I have kissed I know""")
 
-    assert joined_lines['last_lines'][:joined_lines['last_lines'].index(' ')].contents == 'abhorred'
+    assert joined_lines['last_lines'][:joined_lines['last_lines'].index(' ')].content == 'abhorred'
     assert JoinLinesDataset(SplitToLinesDataset(dict(monologue=data))).to_data() == {
         'monologue': '\n'.join([line.strip() for line in raw_data.strip().split('\n')])
     }
@@ -160,7 +160,7 @@ def test_split_to_and_join_lines_dataset(
 
     os_linesep_joined_lines = JoinLinesByOsLinesepDataset(lines_stripped)
 
-    assert os_linesep_joined_lines['last_lines'].contents == os.linesep.join([
+    assert os_linesep_joined_lines['last_lines'].content == os.linesep.join([
         'abhorred in my imagination it is! my gorge rises at',
         'it. Here hung those lips that I have kissed I know'
     ])
@@ -181,9 +181,9 @@ def test_split_to_and_join_items_dataset(
 
     items_stripped_comma = SplitToItemsDataset(dict(start=data_comma_start, end=data_comma_end))
 
-    assert items_stripped_comma['start'].contents == ['abc', 'def', 'ghi', 'jkl']
+    assert items_stripped_comma['start'].content == ['abc', 'def', 'ghi', 'jkl']
     assert_model_if_dyn_conv_else_val(items_stripped_comma['start'][1], str, 'def')
-    assert items_stripped_comma['end'][-2:].contents == ['vwx', 'yz']
+    assert items_stripped_comma['end'][-2:].content == ['vwx', 'yz']
 
     SplitToItemsNoStripDataset = SplitToItemsDataset.adjust(
         'SplitToItemsNoStripDataset',
@@ -194,9 +194,9 @@ def test_split_to_and_join_items_dataset(
     items_unstripped_comma = SplitToItemsNoStripDataset(
         dict(start=data_comma_start, end=data_comma_end))
 
-    assert items_unstripped_comma['start'].contents == ['abc', ' def ', 'ghi', 'jkl']
+    assert items_unstripped_comma['start'].content == ['abc', ' def ', 'ghi', 'jkl']
     assert_model_if_dyn_conv_else_val(items_unstripped_comma['start'][1], str, ' def ')
-    assert items_unstripped_comma['end'][-2:].contents == ['vwx', 'yz ']
+    assert items_unstripped_comma['end'][-2:].content == ['vwx', 'yz ']
 
     data_tab_start = 'abc\t def \tghi\tjkl'
     data_tab_end = 'mno\t pqr \tstu\tvwx\tyz '
@@ -209,16 +209,16 @@ def test_split_to_and_join_items_dataset(
 
     items_stripped_tab = SplitToItemsByTabDataset(dict(start=data_tab_start, end=data_tab_end))
 
-    assert items_stripped_tab['start'].contents == ['abc', 'def', 'ghi', 'jkl']
+    assert items_stripped_tab['start'].content == ['abc', 'def', 'ghi', 'jkl']
     assert_model_if_dyn_conv_else_val(items_stripped_tab['start'][1], str, 'def')
-    assert items_stripped_tab['end'][-2:].contents == ['vwx', 'yz']
+    assert items_stripped_tab['end'][-2:].content == ['vwx', 'yz']
 
     for data_file, items in items_stripped_tab.items():
         items_stripped_tab[data_file] = items[1:3]
 
     comma_joined_items = JoinItemsDataset(items_stripped_tab)
-    assert comma_joined_items['start'].contents == 'def,ghi'
-    assert comma_joined_items['end'][1:-1].contents == 'qr,st'
+    assert comma_joined_items['start'].content == 'def,ghi'
+    assert comma_joined_items['end'][1:-1].content == 'qr,st'
 
     JoinItemsByCommaSpaceDataset = JoinItemsDataset.adjust(
         'JoinItemsByCommaSpaceDataset',
@@ -228,8 +228,8 @@ def test_split_to_and_join_items_dataset(
 
     comma_space_joined_items = JoinItemsByCommaSpaceDataset(items_stripped_tab)
 
-    assert comma_space_joined_items['start'].contents == 'def, ghi'
-    assert comma_space_joined_items['end'][1:-1].contents == 'qr, st'
+    assert comma_space_joined_items['start'].content == 'def, ghi'
+    assert comma_space_joined_items['end'][1:-1].content == 'qr, st'
 
 
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
@@ -253,7 +253,7 @@ def test_split_lines_to_columns_and_join_columns_to_lines_dataset(
         ['abc', 'def', 'ghi', 'jkl'],
     )
     assert_model_if_dyn_conv_else_val(cols_stripped_tab['forward'][0][1], str, 'def')
-    assert cols_stripped_tab['reverse'][1:2].contents == [['nml', 'kji', 'hgf', 'edc']]
+    assert cols_stripped_tab['reverse'][1:2].content == [['nml', 'kji', 'hgf', 'edc']]
     assert cols_stripped_tab['reverse'][1:].to_data() == [['nml', 'kji', 'hgf', 'edc'], ['ab']]
 
     SplitLinesToColumnsNoStripDataset = SplitLinesToColumnsDataset.adjust(
@@ -271,7 +271,7 @@ def test_split_lines_to_columns_and_join_columns_to_lines_dataset(
         ['abc', ' def ', 'ghi', ' jkl'],
     )
     assert_model_if_dyn_conv_else_val(cols_unstripped_tab['forward'][0][1], str, ' def ')
-    assert cols_unstripped_tab['reverse'][1:2].contents == [[' nml', ' kji', 'hgf', ' edc']]
+    assert cols_unstripped_tab['reverse'][1:2].content == [[' nml', ' kji', 'hgf', ' edc']]
     assert cols_unstripped_tab['reverse'][1:].to_data() \
            == [[' nml', ' kji', 'hgf', ' edc'], ['ab ']]
 
@@ -298,7 +298,7 @@ def test_split_lines_to_columns_and_join_columns_to_lines_dataset(
         ['abc', 'def', 'ghi', 'jkl'],
     )
     assert_model_if_dyn_conv_else_val(cols_stripped_comma['forward'][0][1], str, 'def')
-    assert cols_stripped_comma['reverse'][1:2].contents == [['nml', 'kji', 'hgf', 'edc']]
+    assert cols_stripped_comma['reverse'][1:2].content == [['nml', 'kji', 'hgf', 'edc']]
     assert cols_stripped_comma['reverse'][1:].to_data() == [['nml', 'kji', 'hgf', 'edc'], ['ab']]
 
     for data_file, items in cols_stripped_comma.items():
@@ -309,8 +309,8 @@ def test_split_lines_to_columns_and_join_columns_to_lines_dataset(
 
     joined_cols = JoinColumnsToLinesDataset(cols_stripped_tab)
 
-    assert joined_cols['forward'].contents == ['mno\tpqr\tstu\tvwx', 'yz']
-    assert joined_cols['forward'][1:].contents == ['yz']
+    assert joined_cols['forward'].content == ['mno\tpqr\tstu\tvwx', 'yz']
+    assert joined_cols['forward'][1:].content == ['yz']
     assert joined_cols['reverse'].to_data() == ['nml\tkji\thgf\tedc', 'ab']
 
     JoinColumnsToLinesByCommaDataset = JoinColumnsToLinesDataset.adjust(
@@ -321,6 +321,6 @@ def test_split_lines_to_columns_and_join_columns_to_lines_dataset(
 
     joined_cols_by_comma = JoinColumnsToLinesByCommaDataset(cols_stripped_comma)
 
-    assert joined_cols_by_comma['forward'].contents == ['mno, pqr, stu, vwx', 'yz']
-    assert joined_cols_by_comma['forward'][1:].contents == ['yz']
+    assert joined_cols_by_comma['forward'].content == ['mno, pqr, stu, vwx', 'yz']
+    assert joined_cols_by_comma['forward'][1:].content == ['yz']
     assert joined_cols_by_comma['reverse'].to_data() == ['nml, kji, hgf, edc', 'ab']

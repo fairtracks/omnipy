@@ -14,19 +14,19 @@ def test_pydantic_record_model_all_required() -> None:
         pass
 
     record = NameRecordModel(firstname='John', lastname='Doe')
-    assert record.contents == NameRecord(firstname='John', lastname='Doe')
+    assert record.content == NameRecord(firstname='John', lastname='Doe')
     assert record.to_data() == {'firstname': 'John', 'lastname': 'Doe'}
 
     record = NameRecordModel({'firstname': 'Jane', 'lastname': 'Doe'})
-    assert record.contents == NameRecord(firstname='Jane', lastname='Doe')
+    assert record.content == NameRecord(firstname='Jane', lastname='Doe')
     assert record.to_data() == {'firstname': 'Jane', 'lastname': 'Doe'}
 
     record = NameRecordModel(NameRecord(firstname='Robert', lastname='Doe'))
-    assert record.contents == NameRecord(firstname='Robert', lastname='Doe')
+    assert record.content == NameRecord(firstname='Robert', lastname='Doe')
     assert record.to_data() == {'firstname': 'Robert', 'lastname': 'Doe'}
 
     record = NameRecordModel(['Emily', 'Doe'])
-    assert record.contents == NameRecord(firstname='Emily', lastname='Doe')
+    assert record.content == NameRecord(firstname='Emily', lastname='Doe')
     assert record.to_data() == {'firstname': 'Emily', 'lastname': 'Doe'}
 
     with pytest.raises(ValidationError):
@@ -42,15 +42,15 @@ def test_pydantic_record_model_optional() -> None:
         pass
 
     record = NameRecordOptionalLastNameModel(firstname='Tarzan')
-    assert record.contents == NameRecordOptionalLastName(firstname='Tarzan')
+    assert record.content == NameRecordOptionalLastName(firstname='Tarzan')
     assert record.to_data() == {'firstname': 'Tarzan', 'lastname': None}
 
     record = NameRecordOptionalLastNameModel(['Tarzan', None])
-    assert record.contents == NameRecordOptionalLastName(firstname='Tarzan')
+    assert record.content == NameRecordOptionalLastName(firstname='Tarzan')
     assert record.to_data() == {'firstname': 'Tarzan', 'lastname': None}
 
     NameRecordOptionalLastNameModel(firstname='Tarzan', title='King of Apes')
-    assert record.contents == NameRecordOptionalLastName(firstname='Tarzan')
+    assert record.content == NameRecordOptionalLastName(firstname='Tarzan')
     assert record.to_data() == {'firstname': 'Tarzan', 'lastname': None}
 
 
@@ -79,7 +79,7 @@ def test_pydantic_record_model_extra_fields_config() -> None:
         pass
 
     record = NameRecordExtraFieldsModel(firstname='Tarzan', title='King of Apes')
-    assert record.contents == NameRecordExtraFields(
+    assert record.content == NameRecordExtraFields(
         firstname='Tarzan',  # type: ignore[call-arg]
         title='King of Apes',
     )

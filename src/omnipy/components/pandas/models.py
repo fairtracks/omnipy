@@ -64,12 +64,12 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType']):
     @classmethod
     def _from_iterable(cls, data: Iterable) -> 'pd.DataFrame':
         from .lazy_import import pd
-        return pd.DataFrame(data.contents if is_model_instance(data) else data).convert_dtypes()
+        return pd.DataFrame(data.content if is_model_instance(data) else data).convert_dtypes()
 
     def to_data(self) -> Any:
         from .lazy_import import pd
 
-        df = self.contents.replace({pd.NA: None})
+        df = self.content.replace({pd.NA: None})
         if isinstance(df, pd.DataFrame):
             return df.to_dict(orient='records')
         elif isinstance(df, pd.Series):
@@ -78,18 +78,18 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType']):
     def from_data(self, data: Iterable) -> None:
         self._validate_and_set_value(self._from_iterable(data))
 
-    def from_json(self, json_contents: str) -> None:
+    def from_json(self, json_content: str) -> None:
         from .lazy_import import pd
 
-        self._validate_and_set_value(pd.read_json(StringIO(json_contents)).convert_dtypes())
+        self._validate_and_set_value(pd.read_json(StringIO(json_content)).convert_dtypes())
 
     def to_json(self, pretty=True) -> str:
         from .lazy_import import pd
 
-        if isinstance(self.contents, pd.DataFrame):
-            return self.contents.to_json(orient='records')
-        elif isinstance(self.contents, pd.Series):
-            return self.contents.to_json()
+        if isinstance(self.content, pd.DataFrame):
+            return self.content.to_json(orient='records')
+        elif isinstance(self.content, pd.Series):
+            return self.content.to_json()
         else:
             raise ShouldNotOccurException()
 

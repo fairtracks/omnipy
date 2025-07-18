@@ -79,7 +79,7 @@ def json_table_as_str_dataset() -> Dataset[Model[str]]:
 @pytest.fixture
 def json_dataset() -> JsonDataset:
     _json_dataset = JsonDataset()
-    _json_dataset['json_python_a'] = {'one': ['contents', 1, True], 'two': None}
+    _json_dataset['json_python_a'] = {'one': ['content', 1, True], 'two': None}
     _json_dataset['json_python_b'] = [1, 4, 9, {'options': {'verbose': False}}]
     return _json_dataset
 
@@ -87,7 +87,7 @@ def json_dataset() -> JsonDataset:
 @pytest.fixture
 def json_str_dataset() -> Dataset[Model[str]]:
     _json_str_dataset = Dataset[Model[str]]()
-    _json_str_dataset['json_str_a'] = '{"one": ["contents", 1, true], "two": null}'
+    _json_str_dataset['json_str_a'] = '{"one": ["content", 1, true], "two": null}'
     _json_str_dataset['json_str_b'] = '[1, 4, 9, {"options": {"verbose": false}}]'
     return _json_str_dataset
 

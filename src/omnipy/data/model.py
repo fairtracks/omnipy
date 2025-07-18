@@ -121,12 +121,12 @@ class Model(
 
         my_number_list = MyNumberList([2,3,4])
 
-        my_number_list.contents = ['3', 4, True]
-        assert my_number_list.contents == [3,4,1]
+        my_number_list.content = ['3', 4, True]
+        assert my_number_list.content == [3,4,1]
 
     While the following should raise a `ValidationError`::
 
-        my_number_list.contents = ['abc', 'def']
+        my_number_list.content = ['abc', 'def']
 
     The Model class is a wrapper class around the powerful `GenericModel` class from pydantic.
 
@@ -475,8 +475,8 @@ class Model(
         ...
 
     def __del__(self):
-        contents_id = id(self.contents)
-        self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(contents_id)
+        content_id = id(self.content)
+        self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(content_id)
 
     def __copy__(self) -> Self:
         return self.copy(deep=False)
@@ -559,25 +559,25 @@ class Model(
 
         cls._clean_type_caches()
 
-    def validate_contents(self) -> None:
-        self._validate_and_set_value(self.contents)
+    def validate_content(self) -> None:
+        self._validate_and_set_value(self.content)
 
     def _validate_and_set_value(
         self,
-        new_contents: object,
+        new_content: object,
         reset_solution: ContextManager[None] | None = None,
     ) -> None:
 
-        old_contents_id = id(self.contents)
+        old_content_id = id(self.content)
 
-        def _set_new_contents(contents: object) -> None:
-            if id(contents) != old_contents_id:
-                self.contents = contents
+        def _set_new_content(content: object) -> None:
+            if id(content) != old_content_id:
+                self.content = content
 
-        self._generic_validate_contents(
-            new_contents=new_contents,
+        self._generic_validate_content(
+            new_content=new_content,
             outer_reset_solution=reset_solution,
-            post_validation_func=_set_new_contents,
+            post_validation_func=_set_new_content,
         )
 
     def _prepare_reset_solution_take_snapshot_if_needed(
@@ -591,12 +591,12 @@ class Model(
             #       to determine if re-validation is needed? This can also help avoid equality
             #       tests, which might be expensive for large data structures.
             needs_pre_validation = (not self.has_snapshot()
-                                    or not self.contents_validated_according_to_snapshot())
+                                    or not self.content_validated_according_to_snapshot())
             if needs_pre_validation:
                 internal_reset_solution = self._get_reset_solution()
                 with internal_reset_solution:
                     self._validate_and_set_value(
-                        self.contents, reset_solution=internal_reset_solution)
+                        self.content, reset_solution=internal_reset_solution)
                     snapshot_taken = True
 
         return ResetSolutionTuple(
@@ -622,50 +622,50 @@ class Model(
             new_deepcopy_content_ids.extend(prev_deepcopy_content_ids)
             self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
                 *new_deepcopy_content_ids)
-            # self.contents = self.snapshot_holder.get_snapshot_deepcopy(self)
+            # self.content = self.snapshot_holder.get_snapshot_deepcopy(self)
             from copy import deepcopy
-            self.contents = deepcopy(self.snapshot)
+            self.content = deepcopy(self.snapshot)
 
         return setup_and_teardown_callback_context(
             setup_func=_setup,
             exception_func=_handle_exception,
         )
 
-    def _generic_validate_contents(
+    def _generic_validate_content(
         self,
         /,
-        new_contents: object,
+        new_content: object,
         outer_reset_solution: ContextManager[None] | None = None,
         post_validation_func: Callable[[_RootT], None] | None = None,
     ) -> None:
-        keep_alive_old_contents = self.contents  # To ensure old content ids are not reused
+        keep_alive_old_content = self.content  # To ensure old content ids are not reused
 
         inner_reset_solution: ContextManager[None]
         if outer_reset_solution:
             inner_reset_solution = nothing()
         else:
-            validating_self = new_contents is self.contents
+            validating_self = new_content is self.content
             reset_solution_tuple = self._prepare_reset_solution_take_snapshot_if_needed()
             if validating_self and reset_solution_tuple.snapshot_taken:
                 return
             inner_reset_solution = reset_solution_tuple.reset_solution
 
         with (inner_reset_solution):
-            validated_contents = self._validate_contents_from_value(new_contents)
+            validated_content = self._validate_content_from_value(new_content)
 
-            if validated_contents is new_contents:
-                validated_contents = copy(validated_contents)
+            if validated_content is new_content:
+                validated_content = copy(validated_content)
 
             if post_validation_func:
-                post_validation_func(validated_contents)
+                post_validation_func(validated_content)
         del inner_reset_solution
 
-        del new_contents
-        self._take_snapshot_of_validated_contents()
+        del new_content
+        self._take_snapshot_of_validated_content()
 
-        del keep_alive_old_contents
+        del keep_alive_old_content
 
-    def _validate_contents_from_value(
+    def _validate_content_from_value(
         self,
         value: object,
     ) -> _RootT:
@@ -696,14 +696,14 @@ class Model(
 
     def snapshot_differs_from_model(self, model: 'Model') -> bool:
         snapshot_wrapper = self._get_snapshot_wrapper()
-        return snapshot_wrapper.differs_from(model.contents)
+        return snapshot_wrapper.differs_from(model.content)
 
-    def contents_validated_according_to_snapshot(self) -> bool:
+    def content_validated_according_to_snapshot(self) -> bool:
         needs_validation = self.snapshot_differs_from_model(self) \
             or not self.snapshot_taken_of_same_model(self)
         return not needs_validation
 
-    def _take_snapshot_of_validated_contents(self) -> None:
+    def _take_snapshot_of_validated_content(self) -> None:
         if self.config.model.interactive:
             with self.deepcopy_context(self.snapshot_holder.take_snapshot_setup,
                                        self.snapshot_holder.take_snapshot_teardown):
@@ -740,18 +740,18 @@ class Model(
             config.model.dynamically_convert_elements_to_models = False
             return {ROOT_KEY: cls._parse_data(value)}
 
-    # TODO: Rename Model.contents to Model.content as it may be a single value, while "contents"
+    # TODO: Rename Model.content to Model.content as it may be a single value, while "content"
     #       implies a countable collection of values
     @property
-    def contents(self) -> _RootT:
+    def content(self) -> _RootT:
         return cast(_RootT, self.__dict__.get(ROOT_KEY))
 
-    @contents.setter
-    def contents(self, value: _RootT) -> None:
+    @content.setter
+    def content(self, value: _RootT) -> None:
         """
-        Sets the contents of the model. Note: in contrast to the `__init__()`, `from_data()` and
-        `from_json()` methods, the contents are not validated automatically. To validate the
-        contents, call the `validate_contents()` method explicitly.
+        Sets the content of the model. Note: in contrast to the `__init__()`, `from_data()` and
+        `from_json()` methods, the content are not validated automatically. To validate the
+        content, call the `validate_content()` method explicitly.
         """
         super().__setattr__(ROOT_KEY, value)
 
@@ -776,13 +776,13 @@ class Model(
 
         @contextmanager
         def _reset_to_default(*args, **kwds):
-            self.contents = self._get_default_value_from_model(self.full_type())
+            self.content = self._get_default_value_from_model(self.full_type())
             yield
 
         self._validate_and_set_value(value, reset_solution=_reset_to_default())
 
     def from_data(self, data: Any) -> None:
-        if self.contents == self._get_default_value_from_model(self.full_type()):
+        if self.content == self._get_default_value_from_model(self.full_type()):
             self._empty_from_data(data)
         else:
             self._validate_and_set_value(data)
@@ -797,9 +797,9 @@ class Model(
         else:
             return json_content
 
-    def from_json(self, json_contents: str) -> None:
-        new_model = self.parse_raw(json_contents, proto=pyd.Protocol.json)
-        self.contents = new_model.contents
+    def from_json(self, json_content: str) -> None:
+        new_model = self.parse_raw(json_content, proto=pyd.Protocol.json)
+        self.content = new_model.content
 
     @classmethod
     @functools.cache
@@ -887,17 +887,17 @@ class Model(
             super().__setattr__(attr, value)
         else:
             match (attr):
-                case 'contents':
-                    contents_prop = getattr(self.__class__, attr)
-                    old_contents_id = id(contents_prop.__get__(self))
-                    is_new_contents = id(value) != old_contents_id
+                case 'content':
+                    content_prop = getattr(self.__class__, attr)
+                    old_content_id = id(content_prop.__get__(self))
+                    is_new_content = id(value) != old_content_id
 
-                    if is_new_contents:
-                        contents_prop.__set__(self, value)
+                    if is_new_content:
+                        content_prop.__set__(self, value)
 
                         if self.config.model.interactive and self.has_snapshot():
                             self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
-                                old_contents_id)
+                                old_content_id)
                 case 'repr_state':
                     prop = getattr(self.__class__, attr)
                     prop.__set__(self, value)
@@ -920,7 +920,7 @@ class Model(
                                                                 **inner_kwargs: object) -> object:
                 return_val = self._call_special_method(name, *inner_args, **inner_kwargs)
 
-                if id(return_val) == id(self.contents):  # in-place operator, e.g. model += 1
+                if id(return_val) == id(self.content):  # in-place operator, e.g. model += 1
                     return_val = self
 
                 return return_val
@@ -932,13 +932,13 @@ class Model(
                     return ret
 
                 self._validate_and_set_value(
-                    new_contents=self.contents,
+                    new_content=self.content,
                     reset_solution=reset_solution,
                 )
 
         elif name == '__iter__' and isinstance(self, Iterable):
             _per_element_model_generator = self._get_convert_full_element_model_generator(
-                cast(Iterable, self.contents),
+                cast(Iterable, self.content),
                 level_up_type_arg_idx=0,
             )
             return _per_element_model_generator()
@@ -948,7 +948,7 @@ class Model(
                 return ret
 
             if info.state_changing:
-                self.validate_contents()
+                self.validate_content()
 
         if id(ret) != id(self) and info.returns_same_type:
             level_up = False
@@ -974,18 +974,18 @@ class Model(
             *args: object,
             **kwargs: object,
     ) -> object:
-        contents = self._get_real_contents()
-        has_add_method = hasattr(contents, '__add__')
-        has_radd_method = hasattr(contents, '__radd__')
-        has_iadd_method = hasattr(contents, '__iadd__')
+        content = self._get_real_content()
+        has_add_method = hasattr(content, '__add__')
+        has_radd_method = hasattr(content, '__radd__')
+        has_iadd_method = hasattr(content, '__iadd__')
 
         if name == '__add__' and has_add_method:
 
             def _add(other):
                 # try:
-                #     return contents.__add__(self.__class__(other).contents)
+                #     return content.__add__(self.__class__(other).content)
                 # except ValidationError:
-                return contents.__add__(other)
+                return content.__add__(other)
 
             # return _add_new_other_model(*args, **kwargs)
             method = _add
@@ -996,15 +996,15 @@ class Model(
 
             def _radd(other):
                 if has_radd_method:
-                    return contents.__radd__(other)
+                    return content.__radd__(other)
                 else:
-                    return contents.__add__(other)
+                    return content.__add__(other)
 
             def _radd_model_converted_other(other):
                 if has_radd_method:
-                    return contents.__radd__(self.__class__(other).contents)
+                    return content.__radd__(self.__class__(other).content)
                 else:
-                    return self.__class__(other).contents.__add__(self.contents)
+                    return self.__class__(other).content.__add__(self.content)
 
             method = _radd
             model_converted_other_method = _radd_model_converted_other
@@ -1020,16 +1020,16 @@ class Model(
 
             def _iadd(other):
                 if has_iadd_method:
-                    return contents.__iadd__(other)
+                    return content.__iadd__(other)
                 else:
-                    return contents.__add__(other)
+                    return content.__add__(other)
 
             method = _iadd
             return self._call_single_arg_method_with_model_converted_other_first(
                 name, method, *args, **kwargs)
         else:
             try:
-                method = cast(Callable, self._getattr_from_contents_obj(name))
+                method = cast(Callable, self._getattr_from_content_obj(name))
             except AttributeError as e:
                 if name in ('__int__', '__float__', '__complex__'):
                     raise ValueError from e
@@ -1064,7 +1064,7 @@ class Model(
                 if model_converted_other_method:
                     return model_converted_other_method(arg)
                 else:
-                    return method(self.__class__(arg).contents, **kwargs)
+                    return method(self.__class__(arg).content, **kwargs)
             except ValidationError:
                 # TODO: Add debug logging for hidden validation and other exceptions e.g. when
                 #       concatenating `Model[int](123) + '234.'` (gives TypeError:
@@ -1105,7 +1105,7 @@ class Model(
         *args: object,
         **kwargs: object,
     ):
-        model_args = [self.__class__(arg).contents for arg in args]
+        model_args = [self.__class__(arg).content for arg in args]
         return method(*model_args, **kwargs)
 
     def _get_convert_full_element_model_generator(
@@ -1151,7 +1151,7 @@ class Model(
             ...
         else:
             outer_type = self.outer_type(with_args=True)
-            # For double Models, e.g. Model[Model[int]], where _get_real_contents() have already
+            # For double Models, e.g. Model[Model[int]], where _get_real_content() have already
             # skipped the outer Model to get the `ret`, we need to do the same to compare the value
             # with the corresponding type.
             if lenient_issubclass(ensure_plain_type(outer_type), Model):
@@ -1224,26 +1224,26 @@ class Model(
             return level_up_type_to_check
 
     def __getattr__(self, attr: str) -> Any:
-        if self._is_non_omnipy_pydantic_model() and self._contents_obj_hasattr(attr):
-            self._validate_and_set_value(self.contents)
+        if self._is_non_omnipy_pydantic_model() and self._content_obj_hasattr(attr):
+            self._validate_and_set_value(self.content)
 
-        contents_attr = self._getattr_from_contents_obj(attr)
+        content_attr = self._getattr_from_content_obj(attr)
 
-        if inspect.isroutine(contents_attr):
+        if inspect.isroutine(content_attr):
             reset_solution = self._prepare_reset_solution_take_snapshot_if_needed().reset_solution
-            new_contents_attr = self._getattr_from_contents_obj(attr)
+            new_content_attr = self._getattr_from_content_obj(attr)
 
-            def _validate_contents(ret: Any):
-                self._validate_and_set_value(self.contents, reset_solution=reset_solution)
+            def _validate_content(ret: Any):
+                self._validate_and_set_value(self.content, reset_solution=reset_solution)
                 return self._convert_to_model_if_reasonable(
                     ret,
                     level_up=False,
                     raise_validation_errors=False,
                 )
 
-            contents_attr = add_callback_after_call(new_contents_attr,
-                                                    _validate_contents,
-                                                    reset_solution)
+            content_attr = add_callback_after_call(new_content_attr,
+                                                   _validate_content,
+                                                   reset_solution)
 
         if attr in ('values', 'items'):
             match attr:
@@ -1255,42 +1255,42 @@ class Model(
                 case 'items':
                     _model_generator = self._get_convert_element_value_model_generator(None,)
 
-            contents_attr = add_callback_after_call(contents_attr, _model_generator, no_context)
+            content_attr = add_callback_after_call(content_attr, _model_generator, no_context)
 
-        return contents_attr
+        return content_attr
 
     def _is_non_omnipy_pydantic_model(self) -> bool:
-        return is_non_omnipy_pydantic_model(self._get_real_contents())
+        return is_non_omnipy_pydantic_model(self._get_real_content())
 
-    def _contents_obj_hasattr(self, attr) -> object:
-        return hasattr(self._get_real_contents(), attr)
+    def _content_obj_hasattr(self, attr) -> object:
+        return hasattr(self._get_real_content(), attr)
 
-    def _getattr_from_contents_obj(self, attr) -> object:
-        return getattr(self._get_real_contents(), attr)
+    def _getattr_from_content_obj(self, attr) -> object:
+        return getattr(self._get_real_content(), attr)
 
-    def _getattr_from_contents_cls(self, attr) -> object:
-        return getattr(self._get_real_contents().__class__, attr)
+    def _getattr_from_content_cls(self, attr) -> object:
+        return getattr(self._get_real_content().__class__, attr)
 
-    def _get_real_contents(self) -> object:
-        if is_model_instance(self.contents):
-            return self.contents.contents
+    def _get_real_content(self) -> object:
+        if is_model_instance(self.content):
+            return self.content.content
         else:
-            return self.contents
+            return self.content
 
     def __eq__(self, other: object) -> bool:
         return is_model_instance(other) \
             and self.__class__ == other.__class__ \
-            and all_equals(self.contents, cast(Model, other).contents)
+            and all_equals(self.content, cast(Model, other).content)
         # and self.to_data() == cast(Model, other).to_data()  # last line is just in case
 
     def __bool__(self):
-        if self._get_real_contents():
+        if self._get_real_content():
             return True
         else:
             return False
 
     def __call__(self, *args: object, **kwargs: object) -> object:
-        if not hasattr(self._get_real_contents(), '__call__'):
+        if not hasattr(self._get_real_content(), '__call__'):
             raise TypeError(f"'{self.__class__.__name__}' object is not callable")
         return self._special_method(
             '__call__',
@@ -1299,4 +1299,4 @@ class Model(
             **kwargs)
 
     def __repr_args__(self):
-        return [(None, self.contents)]
+        return [(None, self.content)]

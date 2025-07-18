@@ -48,4 +48,4 @@ class MyListModel(Model[MyList[str] | list[str]]):
         return data
 
     def to_data(self) -> list[str]:
-        return self.contents.data
+        return self.content.data

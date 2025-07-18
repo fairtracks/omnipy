@@ -1,7 +1,7 @@
 from typing import Protocol
 
 
-class IsModifyContentsCallable(Protocol):
+class IsModifyContentCallable(Protocol):
     """"""
     def __call__(self, data_file: str, **kwargs: object) -> str:
         ...

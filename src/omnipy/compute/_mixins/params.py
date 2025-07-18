@@ -55,7 +55,7 @@ class ParamsFuncJobBaseMixin:
                 raise TypeError(f'Incorrect job function arguments for job '
                                 f'"{self_as_name_job_base_mixin.name}"!\n'
                                 f'Job class name: {self.__class__.__name__}\n'
-                                f'Current parameter key map contents: {self.param_key_map}\n'
+                                f'Current parameter key map content: {self.param_key_map}\n'
                                 f'Positional arguments: {repr_max_len(args)}\n'
                                 f'Keyword arguments: {repr_max_len(kwargs)}\n'
                                 f'Mapped fixed parameters: {repr_max_len(mapped_fixed_params)}\n'

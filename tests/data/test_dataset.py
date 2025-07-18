@@ -58,24 +58,24 @@ def test_init_with_basic_parsing() -> None:
 
     assert len(dataset_1) == 2
     assert dataset_1['data_file_1'] == Model[int](123)
-    assert dataset_1['data_file_2'].contents == 456
+    assert dataset_1['data_file_2'].content == 456
 
     dataset_2 = Dataset[Model[int]]({
         'data_file_1': 456.5, 'data_file_2': '789', 'data_file_3': True
     })
 
     assert len(dataset_2) == 3
-    assert dataset_2['data_file_1'].contents == 456
-    assert dataset_2['data_file_2'].contents == 789
-    assert dataset_2['data_file_3'].contents == 1
+    assert dataset_2['data_file_1'].content == 456
+    assert dataset_2['data_file_2'].content == 789
+    assert dataset_2['data_file_3'].content == 1
 
     dataset_3 = Dataset[Model[str]]([('data_file_1', 'abc'), ('data_file_2', 123),
                                      ('data_file_3', True)])
 
     assert len(dataset_3) == 3
-    assert dataset_3['data_file_1'].contents == 'abc'
-    assert dataset_3['data_file_2'].contents == '123'
-    assert dataset_3['data_file_3'].contents == 'True'
+    assert dataset_3['data_file_1'].content == 'abc'
+    assert dataset_3['data_file_2'].content == '123'
+    assert dataset_3['data_file_3'].content == 'True'
 
     dataset_4 = Dataset[Model[dict[int, int]]](
         data_file_1={
@@ -85,8 +85,8 @@ def test_init_with_basic_parsing() -> None:
         })
 
     assert len(dataset_4) == 2
-    assert dataset_4['data_file_1'].contents == {1: 1234, 2: 2345}
-    assert dataset_4['data_file_2'].contents == {2: 2345, 3: 3456}
+    assert dataset_4['data_file_1'].content == {1: 1234, 2: 2345}
+    assert dataset_4['data_file_2'].content == {2: 2345, 3: 3456}
 
 
 def test_init_dataset_as_input():
@@ -108,15 +108,15 @@ def test_init_models_as_input():
 def test_init_converting_dataset_or_models_as_input():
     my_float_dataset = MyFloatObjDataset()
     my_float_dataset.from_data(dict(x=4.5, y=3.25))
-    assert my_float_dataset['x'].contents == MyFloatObject(int_part=4, float_part=0.5)
+    assert my_float_dataset['x'].content == MyFloatObject(int_part=4, float_part=0.5)
     assert my_float_dataset.to_data() == {'x': 4.5, 'y': 3.25}
 
-    assert Dataset[Model[float]](my_float_dataset)['x'].contents == 4.5
-    assert Dataset[Model[float]](my_float_dataset.items())['x'].contents == 4.5
-    assert Dataset[Model[float]]({k: v for k, v in my_float_dataset.items()})['x'].contents == 4.5
+    assert Dataset[Model[float]](my_float_dataset)['x'].content == 4.5
+    assert Dataset[Model[float]](my_float_dataset.items())['x'].content == 4.5
+    assert Dataset[Model[float]]({k: v for k, v in my_float_dataset.items()})['x'].content == 4.5
     assert Dataset[Model[float]](MappingProxyType({
         k: v for k, v in my_float_dataset.items()
-    }))['x'].contents == 4.5
+    }))['x'].content == 4.5
 
     assert MyFloatObjDataset(Dataset[Model[float]](x=4.5, y=3.25)).to_data() == {
         'x': 4.5, 'y': 3.25
@@ -203,25 +203,25 @@ def test_more_dict_methods_with_parsing():
     dataset['data_file_2'] = 345
 
     assert len(dataset) == 2
-    assert dataset['data_file_1'].contents == '123'
-    assert dataset['data_file_2'].contents == '345'
+    assert dataset['data_file_1'].content == '123'
+    assert dataset['data_file_2'].content == '345'
 
     del dataset['data_file_1']
     assert len(dataset) == 1
-    assert dataset['data_file_2'].contents == '345'
+    assert dataset['data_file_2'].content == '345'
 
     with pytest.raises(KeyError):
         assert dataset['data_file_3']
 
     dataset.update({'data_file_2': 456, 'data_file_3': 567})
-    assert dataset['data_file_2'].contents == '456'
-    assert dataset['data_file_3'].contents == '567'
+    assert dataset['data_file_2'].content == '456'
+    assert dataset['data_file_3'].content == '567'
 
     dataset.setdefault('data_file_3', 789)
-    assert dataset.get('data_file_3').contents == '567'
+    assert dataset.get('data_file_3').content == '567'
 
     dataset.setdefault('data_file_4', 789)
-    assert dataset.get('data_file_4').contents == '789'
+    assert dataset.get('data_file_4').content == '789'
 
     assert dataset.fromkeys(['data_file_1', 'data_file_2'], 321) == \
         Dataset[Model[str]](data_file_1='321', data_file_2='321')
@@ -447,11 +447,11 @@ def test_set_item_converting_models_as_input():
 
     float_dataset = Dataset[Model[float]]()
     float_dataset['x'] = my_float_model
-    assert float_dataset['x'].contents == 4.5
+    assert float_dataset['x'].content == 4.5
 
     my_float_dataset = MyFloatObjDataset()
     my_float_dataset['x'] = float_model
-    assert my_float_dataset['x'].contents == MyFloatObject(int_part=4, float_part=0.5)
+    assert my_float_dataset['x'].content == MyFloatObject(int_part=4, float_part=0.5)
 
 
 def test_del_item_with_str() -> None:
@@ -567,8 +567,8 @@ def test_complex_equality() -> None:
     assert Dataset[Model[list[MyInt]]]({'data_file_1': [1, 2, 3]}) != \
            Dataset[Model[List[MyInt]]]({'data_file_1': [1, 2, 3]})
 
-    # Had to be set to dict to trigger difference in data contents. Validation for some reason
-    # harmonised the data contents to list[MyInt] even though the model itself keeps the data
+    # Had to be set to dict to trigger difference in data content. Validation for some reason
+    # harmonised the data content to list[MyInt] even though the model itself keeps the data
     # as MyIntList if provided in that form
     as_list_of_myints_dataset = Dataset[Model[MyIntList | list[MyInt]]]({'data_file_1': [1, 2, 3]})
     as_myintlist_dataset = Dataset[Model[MyIntList | list[MyInt]]]()
@@ -662,8 +662,8 @@ def test_copy(copy_func: Callable[[Dataset], Dataset]) -> None:
     assert dataset_copy['data_file_1'] is dataset['data_file_1']
     assert dataset_copy['data_file_2'] is dataset['data_file_2']
 
-    assert dataset_copy['data_file_1'].contents is dataset['data_file_1'].contents
-    assert dataset_copy['data_file_2'].contents is dataset['data_file_2'].contents
+    assert dataset_copy['data_file_1'].content is dataset['data_file_1'].content
+    assert dataset_copy['data_file_2'].content is dataset['data_file_2'].content
 
     assert dataset_copy.__fields_set__ == {'data'}
 
@@ -690,11 +690,11 @@ def test_deepcopy(deepcopy_func: Callable[[Dataset], Dataset]) -> None:
     assert dataset_deepcopy['data_file_2'] is not dataset['data_file_2']
     assert dataset_deepcopy['data_file_2'] == dataset['data_file_2']
 
-    assert dataset_deepcopy['data_file_1'].contents is not dataset['data_file_1'].contents
-    assert dataset_deepcopy['data_file_1'].contents == dataset['data_file_1'].contents
+    assert dataset_deepcopy['data_file_1'].content is not dataset['data_file_1'].content
+    assert dataset_deepcopy['data_file_1'].content == dataset['data_file_1'].content
 
-    assert dataset_deepcopy['data_file_2'].contents is not dataset['data_file_2'].contents
-    assert dataset_deepcopy['data_file_2'].contents == dataset['data_file_2'].contents
+    assert dataset_deepcopy['data_file_2'].content is not dataset['data_file_2'].content
+    assert dataset_deepcopy['data_file_2'].content == dataset['data_file_2'].content
 
     assert dataset_deepcopy.__fields_set__ == {'data'}
 
@@ -704,13 +704,13 @@ def test_basic_validation(runtime: Annotated[IsRuntime, pytest.fixture]):
 
     with pytest.raises(ValidationError):
         dataset['data_file_1'] = 'abc'
-    assert dataset['data_file_1'].contents == 123
+    assert dataset['data_file_1'].content == 123
 
     dataset['data_file_2'] = '234'
-    assert dataset['data_file_2'].contents == 234
+    assert dataset['data_file_2'].content == 234
 
     dataset['data_file_1'] = '345'
-    assert dataset['data_file_1'].contents == 345
+    assert dataset['data_file_1'].content == 345
 
 
 def test_nested_validation_level_one(runtime: Annotated[IsRuntime, pytest.fixture]):
@@ -720,16 +720,16 @@ def test_nested_validation_level_one(runtime: Annotated[IsRuntime, pytest.fixtur
         dataset['data_file_1'][0] = 'abc'
 
     if not runtime.config.data.model.interactive:
-        assert dataset['data_file_1'].contents == ['abc']
+        assert dataset['data_file_1'].content == ['abc']
         dataset['data_file_1'][0] = '123'
 
-    assert dataset['data_file_1'].contents == [123]
+    assert dataset['data_file_1'].content == [123]
 
     dataset['data_file_2'] = ['234']
-    assert dataset['data_file_2'].contents == [234]
+    assert dataset['data_file_2'].content == [234]
 
     dataset['data_file_1'][0] = '345'
-    assert dataset['data_file_1'].contents == [345]
+    assert dataset['data_file_1'].content == [345]
 
 
 def test_nested_validation_level_two_only_model_at_top(runtime: Annotated[IsRuntime,
@@ -737,7 +737,7 @@ def test_nested_validation_level_two_only_model_at_top(runtime: Annotated[IsRunt
     dataset = Dataset[Model[list[list[int]]]](data_file_1=[[123]])
 
     dataset['data_file_2'] = [['234']]
-    assert dataset['data_file_2'].contents == [[234]]
+    assert dataset['data_file_2'].content == [[234]]
 
     dataset['data_file_1'][0][0] = '345'
     if runtime.config.data.model.dynamically_convert_elements_to_models:
@@ -745,7 +745,7 @@ def test_nested_validation_level_two_only_model_at_top(runtime: Annotated[IsRunt
         # original list, so changes do not propagate to parents. See
         # `test_mimic_doubly_nested_dyn_converted_containers_are_copies`
         # in `test_model`.
-        assert dataset['data_file_1'].contents == [[123]]
+        assert dataset['data_file_1'].content == [[123]]
 
         # Instead setting the value one level up works
         dataset['data_file_1'][0] = ['345']
@@ -753,10 +753,10 @@ def test_nested_validation_level_two_only_model_at_top(runtime: Annotated[IsRunt
         # dataset['data_file_1'][0] is the same `list[int]` as in the parent. Since it is not a
         # Model object, it is not validated when set, and validation needs to be called manually,
         # here directly on the dataset.
-        assert dataset['data_file_1'].contents == [['345']]
-        dataset['data_file_1'].validate_contents()
+        assert dataset['data_file_1'].content == [['345']]
+        dataset['data_file_1'].validate_content()
 
-    assert dataset['data_file_1'].contents == [[345]]
+    assert dataset['data_file_1'].content == [[345]]
 
     if runtime.config.data.model.dynamically_convert_elements_to_models:
         # As `dataset['data_file_1'][0]` is a copy, changes are not propagated to parents. Thus,
@@ -767,13 +767,13 @@ def test_nested_validation_level_two_only_model_at_top(runtime: Annotated[IsRunt
     else:
         dataset['data_file_1'][0][0] = 'abc'
         with pytest.raises(ValidationError):
-            dataset['data_file_1'].validate_contents()
+            dataset['data_file_1'].validate_content()
 
         if not runtime.config.data.model.interactive:
-            assert dataset['data_file_1'].contents == [['abc']]
+            assert dataset['data_file_1'].content == [['abc']]
             dataset['data_file_1'][0][0] = 345
 
-    assert dataset['data_file_1'].contents == [[345]]
+    assert dataset['data_file_1'].content == [[345]]
 
 
 def test_nested_validation_level_two_models_at_both_levels(runtime: Annotated[IsRuntime,
@@ -784,22 +784,22 @@ def test_nested_validation_level_two_models_at_both_levels(runtime: Annotated[Is
     dataset = Dataset[Model[list[Model[list[int]]]]](data_file_1=[[123]])
 
     dataset['data_file_2'] = [['234']]
-    assert dataset['data_file_2'][0].contents == [234]
-    assert dataset['data_file_2'].contents == [Model[list[int]]([234])]
+    assert dataset['data_file_2'][0].content == [234]
+    assert dataset['data_file_2'].content == [Model[list[int]]([234])]
 
     dataset['data_file_1'][0][0] = '345'
-    assert dataset['data_file_1'][0].contents == [345]
-    assert dataset['data_file_1'].contents == [Model[list[int]]([345])]
+    assert dataset['data_file_1'][0].content == [345]
+    assert dataset['data_file_1'].content == [Model[list[int]]([345])]
 
     with pytest.raises(ValidationError):
         dataset['data_file_1'][0][0] = 'abc'
 
     if not runtime.config.data.model.interactive:
-        assert dataset['data_file_1'][0].contents == ['abc']
+        assert dataset['data_file_1'][0].content == ['abc']
         dataset['data_file_1'][0][0] = 345
 
-    assert dataset['data_file_1'][0].contents == [345]
-    assert dataset['data_file_1'].contents == [Model[list[int]]([345])]
+    assert dataset['data_file_1'][0].content == [345]
+    assert dataset['data_file_1'].content == [Model[list[int]]([345])]
 
 
 def test_validation_pydantic_types():
@@ -820,8 +820,8 @@ def test_import_and_export():
     data = {'data_file_1': {'a': 123, 'b': 234, 'c': 345}, 'data_file_2': {'c': 456}}
     dataset.from_data(data)
 
-    assert dataset['data_file_1'].contents == {'a': '123', 'b': '234', 'c': '345'}
-    assert dataset['data_file_2'].contents == {'c': '456'}
+    assert dataset['data_file_1'].content == {'a': '123', 'b': '234', 'c': '345'}
+    assert dataset['data_file_2'].content == {'c': '456'}
 
     assert dataset.to_data() == {
         'data_file_1': {
@@ -945,16 +945,16 @@ def test_import_export_custom_parser_to_other_type():
     dataset = Dataset[StringToLength]()
 
     dataset['data_file_1'] = 'And we lived beneath the waves'
-    assert dataset['data_file_1'].contents == 30
+    assert dataset['data_file_1'].content == 30
 
     dataset.from_data({'data_file_2': 'In our yellow submarine'}, update=True)  # noqa
-    assert dataset['data_file_1'].contents == 30
-    assert dataset['data_file_2'].contents == 23
+    assert dataset['data_file_1'].content == 30
+    assert dataset['data_file_2'].content == 23
     assert dataset.to_data() == {'data_file_1': 30, 'data_file_2': 23}
 
     dataset.from_json({'data_file_2': '"In our yellow submarine!"'}, update=True)  # noqa
-    assert dataset['data_file_1'].contents == 30
-    assert dataset['data_file_2'].contents == 24
+    assert dataset['data_file_1'].content == 30
+    assert dataset['data_file_2'].content == 24
     assert dataset.to_json() == {'data_file_1': '30', 'data_file_2': '24'}
 
     assert dataset.to_json_schema(pretty=True) == dedent('''\
@@ -990,8 +990,8 @@ def test_generic_dataset_unbound_typevar():
     # Without further restrictions
 
     assert MyTupleOrListDataset().to_data() == {}
-    assert MyTupleOrListDataset({'a': (123, 'a')})['a'].contents == (123, 'a')
-    assert MyTupleOrListDataset({'a': [True, False]})['a'].contents == [True, False]
+    assert MyTupleOrListDataset({'a': (123, 'a')})['a'].content == (123, 'a')
+    assert MyTupleOrListDataset({'a': [True, False]})['a'].content == [True, False]
 
     with pytest.raises(ValidationError):
         MyTupleOrListDataset({'a': 123})
@@ -1002,10 +1002,10 @@ def test_generic_dataset_unbound_typevar():
     with pytest.raises(ValidationError):
         MyTupleOrListDataset({'a': {'x': 123}})
 
-    # Restricting the contents of the tuples and lists
+    # Restricting the content of the tuples and lists
 
-    assert MyTupleOrListDataset[int]({'a': (123, '456')})['a'].contents == (123, 456)
-    assert MyTupleOrListDataset[bool]({'a': [False, 1, '0']})['a'].contents == [False, True, False]
+    assert MyTupleOrListDataset[int]({'a': (123, '456')})['a'].content == (123, 456)
+    assert MyTupleOrListDataset[bool]({'a': [False, 1, '0']})['a'].content == [False, True, False]
 
     with pytest.raises(ValidationError):
         MyTupleOrListDataset[int]({'a': (123, 'abc')})
@@ -1029,8 +1029,8 @@ def test_generic_dataset_bound_typevar():
 
     assert MyListOfIntsOrStringsDataset().to_data() == {}
 
-    assert MyListOfIntsOrStringsDataset({'a': (123, 'a')})['a'].contents == [123, 'a']
-    assert MyListOfIntsOrStringsDataset({'a': [True, False]})['a'].contents == [1, 0]
+    assert MyListOfIntsOrStringsDataset({'a': (123, 'a')})['a'].content == [123, 'a']
+    assert MyListOfIntsOrStringsDataset({'a': [True, False]})['a'].content == [1, 0]
 
     with pytest.raises(ValidationError):
         MyListOfIntsOrStringsDataset({'a': 123})
@@ -1041,9 +1041,9 @@ def test_generic_dataset_bound_typevar():
     with pytest.raises(ValidationError):
         MyListOfIntsOrStringsDataset({'a': {'x': 123}})
 
-    # Further restricting the contents of the tuples and lists
-    assert MyListOfIntsOrStringsDataset[str]({'a': (123, '456')})['a'].contents == ['123', '456']
-    assert MyListOfIntsOrStringsDataset[int]({'a': (123, '456')})['a'].contents == [123, 456]
+    # Further restricting the content of the tuples and lists
+    assert MyListOfIntsOrStringsDataset[str]({'a': (123, '456')})['a'].content == ['123', '456']
+    assert MyListOfIntsOrStringsDataset[int]({'a': (123, '456')})['a'].content == [123, 456]
 
     with pytest.raises(ValidationError):
         MyListOfIntsOrStringsDataset[int]({'a': (123, 'abc')})
@@ -1147,7 +1147,7 @@ def test_complex_models():
 
     dataset.from_data([(str(i), [1, i]) for i in range(1, 5)])  # noqa
     dataset.snapshot_holder.all_are_empty(debug=True)
-    assert dataset['4'].contents == [4, 3, 2, 1]
+    assert dataset['4'].content == [4, 3, 2, 1]
 
     assert dataset.to_data() == {'1': [1], '2': [2, 1], '3': [3, 2, 1], '4': [4, 3, 2, 1]}
 
@@ -1424,7 +1424,7 @@ def test_dataset_pending_and_failed_data_extract_details() -> None:
 
 
 def test_parametrized_dataset() -> None:
-    assert ParamUpperStrDataset(x='foo')['x'].contents == 'foo'
+    assert ParamUpperStrDataset(x='foo')['x'].content == 'foo'
 
     MyUpperStrDataset = ParamUpperStrDataset.adjust(
         'MyUpperStrDataset',
@@ -1435,7 +1435,7 @@ def test_parametrized_dataset() -> None:
 
     dataset = MyUpperStrDataset()
     dataset['x'] = 'foo'
-    assert dataset['x'].contents == 'FOO'
+    assert dataset['x'].content == 'FOO'
 
     dataset.from_data(dict(y='bar', z='foobar'))
     assert dataset.to_data() == dict(x='FOO', y='BAR', z='FOOBAR')
@@ -1475,7 +1475,7 @@ def test_parametrized_dataset_with_none() -> None:
     with pytest.raises(ValidationError):
         MyUpperStrDataset(dict(x=None))
 
-    assert DefaultStrDataset(dict(x=None))['x'].contents == 'default'
+    assert DefaultStrDataset(dict(x=None))['x'].content == 'default'
 
     DefaultOtherStrDataset = DefaultStrDataset.adjust(
         'DefaultOtherStrDataset',
@@ -1483,4 +1483,4 @@ def test_parametrized_dataset_with_none() -> None:
         default='other',
     )
 
-    assert DefaultOtherStrDataset(dict(x=None))['x'].contents == 'other'
+    assert DefaultOtherStrDataset(dict(x=None))['x'].content == 'other'

@@ -645,7 +645,7 @@ def case_layout_single_panel_with_title(
         ),
 
         #
-        # id='reduced_width_crop_contents'
+        # id='reduced_width_crop_content'
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=14, height=6)),
@@ -679,7 +679,7 @@ def case_layout_single_panel_with_title(
     ids=(
         'no_frame',
         'reduced_width',
-        'reduced_width_crop_contents',
+        'reduced_width_crop_content',
     ),
 )
 @pc.case(id='single_panel_with_title_fixed_dims', tags=['reflow_cases', 'layout'])

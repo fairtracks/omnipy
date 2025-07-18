@@ -5,7 +5,7 @@ from typing import Generic
 
 from pydantic import ValidationError
 
-from omnipy.shared.protocols.data import ContentsT, HasContentsT, IsSnapshotWrapper, ObjContraT
+from omnipy.shared.protocols.data import ContentT, HasContentT, IsSnapshotWrapper, ObjContraT
 from omnipy.util.contexts import setup_and_teardown_callback_context
 from omnipy.util.helpers import all_equals
 from omnipy.util.memo import RefCountMemoDict
@@ -14,9 +14,9 @@ from omnipy.util.weak import WeakKeyRefContainer
 
 
 @dataclass
-class SnapshotWrapper(Generic[ObjContraT, ContentsT]):
+class SnapshotWrapper(Generic[ObjContraT, ContentT]):
     id: int
-    snapshot: ContentsT
+    snapshot: ContentT
 
     def taken_of_same_obj(self, obj: ObjContraT) -> bool:
         return self.id == id(obj)
@@ -29,15 +29,15 @@ obj_getattr = object.__getattribute__
 obj_setattr = object.__setattr__
 
 
-class SnapshotHolder(WeakKeyRefContainer[HasContentsT, IsSnapshotWrapper[HasContentsT, ContentsT]],
-                     Generic[HasContentsT, ContentsT]):
+class SnapshotHolder(WeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasContentT, ContentT]],
+                     Generic[HasContentT, ContentT]):
     def __init__(self) -> None:
         super().__init__()
-        self._deepcopy_memo = RefCountMemoDict[ContentsT]()
+        self._deepcopy_memo = RefCountMemoDict[ContentT]()
         self._deepcopy_content_ids_for_deleted_objs: SetDeque[int] = SetDeque()
 
-    def __setitem__(self, key: HasContentsT, value: IsSnapshotWrapper[HasContentsT,
-                                                                      ContentsT]) -> None:
+    def __setitem__(self, key: HasContentT, value: IsSnapshotWrapper[HasContentT,
+                                                                     ContentT]) -> None:
         raise TypeError(f"'{self.__class__.__name__}' object does not support item assignment")
 
     def clear(self) -> None:
@@ -95,37 +95,37 @@ class SnapshotHolder(WeakKeyRefContainer[HasContentsT, IsSnapshotWrapper[HasCont
         self.delete_scheduled_deepcopy_content_ids()
         gc.enable()
 
-    def take_snapshot(self, obj: HasContentsT) -> None:
+    def take_snapshot(self, obj: HasContentT) -> None:
         try:
             # Delete scheduled content in the deepcopy memo if the new object is reusing an old id.
             # This deletion might not succeed, e.g. if the current snapshot holds a reference to the
             # old object. In those case, setup_deepcopy() will raise an AssertionError, which should
             # trigger a new attempt to deepcopy without the memo dict.
 
-            if id(obj.contents) in self.get_deepcopy_content_ids():
+            if id(obj.content) in self.get_deepcopy_content_ids():
                 self.delete_scheduled_deepcopy_content_ids()
 
-            obj_copy: ContentsT
+            obj_copy: ContentT
 
             with setup_and_teardown_callback_context(
                     setup_func=self._deepcopy_memo.setup_deepcopy,
-                    setup_func_args=(obj.contents,),
+                    setup_func_args=(obj.content,),
                     exception_func=self._deepcopy_memo.teardown_deepcopy,
                     teardown_func=self._deepcopy_memo.teardown_deepcopy,
             ):
 
-                obj_copy = deepcopy(obj.contents, self._deepcopy_memo)  # type: ignore[arg-type]
+                obj_copy = deepcopy(obj.content, self._deepcopy_memo)  # type: ignore[arg-type]
                 self._deepcopy_memo.keep_alive_after_deepcopy()
         except (TypeError, ValueError, ValidationError, AssertionError) as exp:
             print(f'Error in deepcopy with memo dict: {exp}. '
                   f'Attempting deepcopy without memo dict.')
             try:
-                # print(f'object contents after retry: {obj.contents}')
-                obj_copy = deepcopy(obj.contents)
+                # print(f'object content after retry: {obj.content}')
+                obj_copy = deepcopy(obj.content)
             except (TypeError, ValueError, ValidationError, AssertionError) as exp:
                 print(f'Error in deepcopy without memo dict: {exp}. '
                       f'Attempting simple copy.')
-                obj_copy = copy(obj.contents)
+                obj_copy = copy(obj.content)
 
         # Eventual old snapshot object is being kept alive until this point, but is scheduled for
         # deletion after the next line. In many cases (but not all), this happens before

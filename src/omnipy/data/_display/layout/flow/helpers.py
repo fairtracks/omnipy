@@ -164,7 +164,7 @@ class LayoutFlowContext(Generic[FrameT]):
 
         Returns:
             Dimensions of the current layout without including outer
-            dimensions of subpanels (i.e. only the contents, exclude titles,
+            dimensions of subpanels (i.e. only the content, exclude titles,
             line numbers, etc.).
         """
         return self.dim_aware_layout.calc_dims(use_outer_dims_for_subpanels=False)

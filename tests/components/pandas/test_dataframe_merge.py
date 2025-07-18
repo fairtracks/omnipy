@@ -29,7 +29,7 @@ def test_join_tables(
             result = join_tables.run(table_1, table_2, join_type=join_type, on_cols=case.on_cols)
             target = get_target_as_pandas_model(
                 getattr(case, f'result_{join_type}_join'), col_dtypes=case.col_dtypes)
-            pd.testing.assert_frame_equal(result.contents, target.contents, check_dtype=False)
+            pd.testing.assert_frame_equal(result.content, target.content, check_dtype=False)
 
 
 @pc.parametrize_with_cases('case', cases='.cases.tablepairs', has_tag='cartesian')
@@ -48,7 +48,7 @@ def test_cartesian_product_of_tables(
     else:
         result = cartesian_product.run(table_1, table_2)
         target = get_target_as_pandas_model(getattr(case, 'result_cartesian'))
-        pd.testing.assert_frame_equal(result.contents, target.contents, check_column_type=False)
+        pd.testing.assert_frame_equal(result.content, target.content, check_column_type=False)
 
 
 # Further tests

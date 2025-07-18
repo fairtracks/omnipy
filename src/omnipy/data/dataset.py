@@ -107,7 +107,7 @@ class Dataset(
             pass
 
     Once instantiated, a dataset object functions as a dict of data files, with the keys
-    referring to the data file names and the contents to the data file contents, e.g.::
+    referring to the data file names and the content to the data file content, e.g.::
 
         MyNumberListDataset = Dataset[Model[list[int]]]
 
@@ -564,8 +564,8 @@ class Dataset(
     def from_data(self,
                   data: dict[str, Any] | Iterator[tuple[str, Any]],
                   update: bool = True) -> None:
-        def callback_func(model: _ModelT, contents: Any):
-            model.from_data(contents)
+        def callback_func(model: _ModelT, content: Any):
+            model.from_data(content)
 
         self._from_dict_with_callback(data, update, callback_func)
 
@@ -580,9 +580,9 @@ class Dataset(
             self.clear()
 
         model_cls = self.get_model_class()
-        for data_file, contents in data.items():
+        for data_file, content in data.items():
             new_model = model_cls()
-            callback_func(new_model, contents)
+            callback_func(new_model, content)
             self.data[data_file] = new_model
 
     def absorb(self, other: 'Dataset'):
@@ -601,8 +601,8 @@ class Dataset(
     def from_json(self,
                   data: Mapping[str, str] | Iterable[tuple[str, str]],
                   update: bool = True) -> None:
-        def callback_func(model: _ModelT, contents: Any):
-            model.from_json(contents)
+        def callback_func(model: _ModelT, content: Any):
+            model.from_json(content)
 
         self._from_dict_with_callback(data, update, callback_func)
 
@@ -668,7 +668,7 @@ class Dataset(
                 os.makedirs(directory)
 
             tar = tarfile.open(out_tar_gz_path)
-            print(f'Extracting contents to directory "{os.path.abspath(out_tar_gz_path[:-7])}"')
+            print(f'Extracting content to directory "{os.path.abspath(out_tar_gz_path[:-7])}"')
             tar.extractall(path=directory)
             tar.close()
 
@@ -825,7 +825,7 @@ class Dataset(
             tar_gz_file_path = path + '.tar.gz'
             if not os.path.isfile(tar_gz_file_path):
                 print(f'Creating compressed file {os.path.abspath(tar_gz_file_path)} from '
-                      f'the contents of "{os.path.abspath(path)}"')
+                      f'the content of "{os.path.abspath(path)}"')
 
                 with tarfile.open(tar_gz_file_path, 'w:gz') as tar:
                     if os.path.isdir(path):
@@ -857,7 +857,7 @@ class Dataset(
             and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
 
     def __repr_args__(self):
-        return [(k, v.contents) if is_model_instance(v) else (k, v) for k, v in self.data.items()]
+        return [(k, v.content) if is_model_instance(v) else (k, v) for k, v in self.data.items()]
 
 
 class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):

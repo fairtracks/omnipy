@@ -4,7 +4,7 @@ import pytest
 
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
-from omnipy.data.typechecks import is_model_instance, obj_or_model_contents_isinstance
+from omnipy.data.typechecks import is_model_instance, obj_or_model_content_isinstance
 from omnipy.util._pydantic import ValidationError
 
 from .helpers.models import PydanticParentModel
@@ -18,55 +18,55 @@ def test_is_model_instance() -> None:
     assert not is_model_instance(PydanticParentModel)
 
 
-def test_obj_or_model_contents_isinstance_for_regular_objects() -> None:
-    assert obj_or_model_contents_isinstance(123, int)
-    assert obj_or_model_contents_isinstance('abc', str)
-    assert obj_or_model_contents_isinstance([1, 2, 3], list)
+def test_obj_or_model_content_isinstance_for_regular_objects() -> None:
+    assert obj_or_model_content_isinstance(123, int)
+    assert obj_or_model_content_isinstance('abc', str)
+    assert obj_or_model_content_isinstance([1, 2, 3], list)
 
-    assert not obj_or_model_contents_isinstance(123, list)
-    assert not obj_or_model_contents_isinstance('abc', int)
-    assert not obj_or_model_contents_isinstance([1, 2, 3], str)
+    assert not obj_or_model_content_isinstance(123, list)
+    assert not obj_or_model_content_isinstance('abc', int)
+    assert not obj_or_model_content_isinstance([1, 2, 3], str)
 
-    assert obj_or_model_contents_isinstance(123, (list, int))
-    assert obj_or_model_contents_isinstance('abc', (int, str))
-    assert obj_or_model_contents_isinstance([1, 2, 3], (str, list))
+    assert obj_or_model_content_isinstance(123, (list, int))
+    assert obj_or_model_content_isinstance('abc', (int, str))
+    assert obj_or_model_content_isinstance([1, 2, 3], (str, list))
 
-    assert obj_or_model_contents_isinstance(123, list | int)
-    assert obj_or_model_contents_isinstance('abc', int | str)
-    assert obj_or_model_contents_isinstance([1, 2, 3], str | list)
-
-    with pytest.raises(TypeError):
-        obj_or_model_contents_isinstance('abc', Literal['abc'])  # type: ignore[arg-type]
+    assert obj_or_model_content_isinstance(123, list | int)
+    assert obj_or_model_content_isinstance('abc', int | str)
+    assert obj_or_model_content_isinstance([1, 2, 3], str | list)
 
     with pytest.raises(TypeError):
-        obj_or_model_contents_isinstance([1, 2, 3], list[int])
-
-
-def test_obj_or_model_contents_isinstance_for_models() -> None:
-    assert obj_or_model_contents_isinstance(Model[int](123), int)
-    assert obj_or_model_contents_isinstance(Model[str]('abc'), str)
-    assert obj_or_model_contents_isinstance(Model[list[int]]([1, 2, 3]), list)
-
-    assert not obj_or_model_contents_isinstance(Model[int](123), list)
-    assert not obj_or_model_contents_isinstance(Model[str]('abc'), int)
-    assert not obj_or_model_contents_isinstance(Model[list[int]]([1, 2, 3]), str)
-
-    assert obj_or_model_contents_isinstance(Model[int](123), (list, int))
-    assert obj_or_model_contents_isinstance(Model[str]('abc'), (int, str))
-    assert obj_or_model_contents_isinstance(Model[list[int]]([1, 2, 3]), (str, list))
-
-    assert obj_or_model_contents_isinstance(Model[int](123), list | int)
-    assert obj_or_model_contents_isinstance(Model[str]('abc'), int | str)
-    assert obj_or_model_contents_isinstance(Model[list[int]]([1, 2, 3]), str | list)
+        obj_or_model_content_isinstance('abc', Literal['abc'])  # type: ignore[arg-type]
 
     with pytest.raises(TypeError):
-        assert obj_or_model_contents_isinstance(
+        obj_or_model_content_isinstance([1, 2, 3], list[int])
+
+
+def test_obj_or_model_content_isinstance_for_models() -> None:
+    assert obj_or_model_content_isinstance(Model[int](123), int)
+    assert obj_or_model_content_isinstance(Model[str]('abc'), str)
+    assert obj_or_model_content_isinstance(Model[list[int]]([1, 2, 3]), list)
+
+    assert not obj_or_model_content_isinstance(Model[int](123), list)
+    assert not obj_or_model_content_isinstance(Model[str]('abc'), int)
+    assert not obj_or_model_content_isinstance(Model[list[int]]([1, 2, 3]), str)
+
+    assert obj_or_model_content_isinstance(Model[int](123), (list, int))
+    assert obj_or_model_content_isinstance(Model[str]('abc'), (int, str))
+    assert obj_or_model_content_isinstance(Model[list[int]]([1, 2, 3]), (str, list))
+
+    assert obj_or_model_content_isinstance(Model[int](123), list | int)
+    assert obj_or_model_content_isinstance(Model[str]('abc'), int | str)
+    assert obj_or_model_content_isinstance(Model[list[int]]([1, 2, 3]), str | list)
+
+    with pytest.raises(TypeError):
+        assert obj_or_model_content_isinstance(
             Model[Literal['abc']]('abc'),
             Literal['abc'],  # type: ignore[arg-type]
         )
 
     with pytest.raises(TypeError):
-        assert obj_or_model_contents_isinstance(Model[list[int]]([1, 2, 3]), list[int])
+        assert obj_or_model_content_isinstance(Model[list[int]]([1, 2, 3]), list[int])
 
 
 # noinspection PyDataclass

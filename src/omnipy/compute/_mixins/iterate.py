@@ -226,7 +226,7 @@ class IterateFuncJobBaseMixin:
         return output_dataset, return_args, return_kwargs
 
     def _prepare_data_arg(self, data_file):
-        return data_file if is_model_subclass(self._input_dataset_type) else data_file.contents
+        return data_file if is_model_subclass(self._input_dataset_type) else data_file.content
 
     def _create_pending_data(self):
         self_as_job_base = cast(IsJobBase, self)

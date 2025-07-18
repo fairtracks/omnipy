@@ -24,8 +24,8 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer):
 
     @classmethod
     def serialize(cls, dataset: Dataset[Model[str]]) -> bytes | memoryview:
-        def raw_encode_func(contents: str) -> bytes:
-            return contents.encode('utf8')
+        def raw_encode_func(content: str) -> bytes:
+            return content.encode('utf8')
 
         return cls.create_tarfile_from_dataset(dataset, data_encode_func=raw_encode_func)
 
@@ -68,8 +68,8 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer):
 
     @classmethod
     def serialize(cls, dataset: Dataset[Model[bytes]]) -> bytes | memoryview:
-        def raw_encode_func(contents: bytes) -> bytes:
-            return contents
+        def raw_encode_func(content: bytes) -> bytes:
+            return content
 
         return cls.create_tarfile_from_dataset(dataset, data_encode_func=raw_encode_func)
 

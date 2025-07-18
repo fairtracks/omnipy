@@ -203,12 +203,12 @@ def assert_model_if_dyn_conv_else_val(
     def _assert_model_if_dyn_convert_else_val(
         model_or_val: object,
         target_type: TypeForm,
-        contents: object,
+        content: object,
     ):
         if runtime.config.data.model.dynamically_convert_elements_to_models:
-            assert_model(model_or_val, target_type, contents)
+            assert_model(model_or_val, target_type, content)
         else:
-            assert_val(model_or_val, target_type, contents)
+            assert_val(model_or_val, target_type, content)
 
     return _assert_model_if_dyn_convert_else_val
 

@@ -99,7 +99,7 @@ class OutputConfig:
             used as container for the output. Only TABLE_GRID is currently
             supported, which displays the output in a table-like grid.
         panel_title_at_top (bool): Whether panel titles will be displayed
-            over the panel contents (True) or below the contents (False)
+            over the panel content (True) or below the content (False)
         max_title_height (MaxTitleHeight.Literals): Maximum height of the
             panel title. If AUTO, the height is determined by the content of
             the title, up to a maximum of two lines. If ZERO, the title is
@@ -107,7 +107,7 @@ class OutputConfig:
             a fixed height of max one or two lines, respectively.
         justify_in_layout (Justify.Literals): Justification mode for the
             panel if inside a layout panel. This is only used for the panel
-            contents.
+            content.
     """
 
     tab_size: pyd.NonNegativeInt = 4

@@ -64,7 +64,7 @@ def single_int_model_plus_int_return_str_model_func(
     data_number: Model[int],
     number: int,
 ) -> Model[str]:
-    return str(data_number.contents + number)  # type: ignore[return-value]
+    return str(data_number.content + number)  # type: ignore[return-value]
 
 
 def single_int_model_plus_default_int_pair_return_str_model_func(
@@ -72,7 +72,7 @@ def single_int_model_plus_default_int_pair_return_str_model_func(
     number: int = 0,
     other_number: int = 0,
 ) -> Model[str]:
-    return str(data_number.contents + number + other_number)  # type: ignore[return-value]
+    return str(data_number.content + number + other_number)  # type: ignore[return-value]
 
 
 def single_int_plus_int_return_str_func(data_number: int, number: int) -> str:
@@ -100,7 +100,7 @@ async def async_single_int_model_plus_int_return_str_model_func(
     number: int,
 ) -> Model[str]:
     await asyncio.sleep(random() / 10.0)
-    return str(data_number.contents + number)  # type: ignore[return-value]
+    return str(data_number.content + number)  # type: ignore[return-value]
 
 
 async def async_single_int_plus_int_return_str_func(data_number: int, number: int) -> str:

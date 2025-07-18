@@ -8,6 +8,6 @@ class AssertModelOrValFunc(Protocol):
         self,
         model_or_val: object,
         target_type: TypeForm,
-        contents: object,
+        content: object,
     ) -> None:
         ...
