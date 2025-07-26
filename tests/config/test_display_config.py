@@ -44,7 +44,7 @@ def test_dims_mode_config_no_display_dims_size_set() -> None:
     assert no_size_display_config_fixed.dims_mode is DisplayDimensionsUpdateMode.FIXED
 
 
-class BothSizesdisplayDimsModeConfig(DimsModeConfig):
+class BothSizesDisplayDimsModeConfig(DimsModeConfig):
     display_width: ClassVar[pyd.NonNegativeInt] = 200
     display_height: ClassVar[pyd.NonNegativeInt] = 200
 
@@ -56,7 +56,7 @@ class BothSizesdisplayDimsModeConfig(DimsModeConfig):
 
 
 def test_dims_mode_config_both_display_dims_size_set() -> None:
-    both_sizes_display_config = BothSizesdisplayDimsModeConfig()
+    both_sizes_display_config = BothSizesDisplayDimsModeConfig()
     assert both_sizes_display_config.width == 200
     assert both_sizes_display_config.height == 200
     assert both_sizes_display_config.dims_mode is DisplayDimensionsUpdateMode.AUTO
@@ -69,7 +69,7 @@ def test_dims_mode_config_both_display_dims_size_set() -> None:
 
     assert both_sizes_display_config.dims_mode is DisplayDimensionsUpdateMode.AUTO
 
-    both_sizes_display_config_auto = BothSizesdisplayDimsModeConfig(
+    both_sizes_display_config_auto = BothSizesDisplayDimsModeConfig(
         width=100,
         height=100,
     )
@@ -77,13 +77,13 @@ def test_dims_mode_config_both_display_dims_size_set() -> None:
     assert both_sizes_display_config_auto.height == 200
     assert both_sizes_display_config_auto.dims_mode is DisplayDimensionsUpdateMode.AUTO
 
-    BothSizesdisplayDimsModeConfig.display_width = 50
-    BothSizesdisplayDimsModeConfig.display_height = 50
+    BothSizesDisplayDimsModeConfig.display_width = 50
+    BothSizesDisplayDimsModeConfig.display_height = 50
 
     assert both_sizes_display_config_auto.width == 50
     assert both_sizes_display_config_auto.height == 50
 
-    both_sizes_display_config_fixed = BothSizesdisplayDimsModeConfig(
+    both_sizes_display_config_fixed = BothSizesDisplayDimsModeConfig(
         width=100,
         height=100,
         dims_mode=DisplayDimensionsUpdateMode.FIXED,
