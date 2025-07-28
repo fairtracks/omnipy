@@ -7,7 +7,7 @@ import pytest
 
 from omnipy.data.snapshot import SnapshotHolder, SnapshotWrapper
 from omnipy.shared.protocols.data import ContentT, HasContent, IsSnapshotHolder
-from omnipy.util import _pydantic as pyd
+import omnipy.util._pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 
