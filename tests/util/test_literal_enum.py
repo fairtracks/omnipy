@@ -338,3 +338,15 @@ def test_random_choice() -> None:
 
     choice_specialized = RandomEnumSpecialized.random_choice()
     assert choice_specialized in RandomEnumSpecialized
+
+
+def test_random_choice_no_excluded_prefixes() -> None:
+    class RandomEnum(LiteralEnum):
+        Literals = Literal['apple', 'auto', 'random-fruit']
+        APPLE: Literal['apple'] = 'apple'
+        AUTO: Literal['auto'] = 'auto'
+        RANDOM_FRUIT: Literal['random-fruit'] = 'random-fruit'
+
+    for _ in range(30):
+        choice = RandomEnum.random_choice()
+        assert choice == RandomEnum.APPLE

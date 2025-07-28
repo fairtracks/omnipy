@@ -122,18 +122,21 @@ def __getattr__(attr: str) -> type[pygments.style.Style]:
     raise AttributeError(f"Module '{__name__}' has no attribute '{attr}'")
 
 
-def clean_style_name(name: str | AllColorStyles.Literals) -> str:
-    if name.endswith(PYGMENTS_SUFFIX):
-        return name[:-len(
-            PYGMENTS_SUFFIX)]  # Convert dashes to underscores for Pygments compatibility
-    elif name.startswith(ANSI_PREFIX):
-        return name.replace('-', '_')  # Convert dashes to underscores for Rich compatibility
-    elif name.startswith(RANDOM_PREFIX):
+def handle_random_name(name: str | AllColorStyles.Literals) -> str:
+    if name.startswith(RANDOM_PREFIX):
         color_style_cls = AllColorStyles.get_supercls_for_random_choice(name)
         if color_style_cls:
-            return clean_style_name(color_style_cls.random_choice())
+            return color_style_cls.random_choice()
         else:
             raise ValueError(f'Invalid random color style: {name}')
+    return name
+
+
+def clean_style_name(name: str | AllColorStyles.Literals) -> str:
+    if name.endswith(PYGMENTS_SUFFIX):
+        return name[:-len(PYGMENTS_SUFFIX)]  # Remove suffix for Pygments compatibility
+    elif name.startswith(ANSI_PREFIX):
+        return name.replace('-', '_')  # Convert dashes to underscores for Rich compatibility
     return name
 
 
