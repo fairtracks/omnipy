@@ -109,6 +109,10 @@ class DataClassBase(metaclass=DataClassBaseMeta):
         return self.__class__.data_class_creator.config
 
     @property
+    def reactive_objects(self) -> IsReactiveObjects:
+        return self.__class__.data_class_creator.reactive_objects
+
+    @property
     def snapshot_holder(self) -> IsSnapshotHolder[HasContent, object]:
         return self.__class__.data_class_creator.snapshot_holder
 

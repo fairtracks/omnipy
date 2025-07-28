@@ -129,6 +129,17 @@ def test_config_property_mutable_from_data_class_creator(
     )
 
 
+def test_reactive_objects_property_mutable_from_data_class_creator(
+        teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
+    _assert_property_is_singularly_mutable(
+        property='reactive_objects',
+        property_type=ReactiveObjects,
+        set_property_from_data_class=False,
+        new_val=ReactiveObjects(),
+        property_setter='set_reactive_objects',
+    )
+
+
 def test_snapshot_holder_property_immutable(
         teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
     _assert_property_is_singularly_immutable(
