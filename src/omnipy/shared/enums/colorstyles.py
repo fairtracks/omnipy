@@ -3949,6 +3949,51 @@ class LightLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     RANDOM_T16_LIGHT_LOW_CONTRAST: Literal['random-t16-light-low'] = 'random-t16-light-low'
 
 
+class DarkTintedThemingBase16ColorStyles(
+        DarkHighContrastTintedThemingBase16ColorStyles,
+        DarkLowContrastTintedThemingBase16ColorStyles,
+):
+    f"""
+    {_GENERAL_T16_COLOR_STYLE_DOCSTRING.format(description='All dark')}
+    """
+
+    Literals = Literal[DarkHighContrastTintedThemingBase16ColorStyles.Literals,
+                       DarkLowContrastTintedThemingBase16ColorStyles.Literals,
+                       'random-t16-dark']
+
+    RANDOM_T16_DARK: Literal['random-t16-dark'] = 'random-t16-dark'
+
+
+class LightTintedThemingBase16ColorStyles(
+        LightHighContrastTintedThemingBase16ColorStyles,
+        LightLowContrastTintedThemingBase16ColorStyles,
+):
+    f"""
+    {_GENERAL_T16_COLOR_STYLE_DOCSTRING.format(description='All light')}
+    """
+
+    Literals = Literal[LightHighContrastTintedThemingBase16ColorStyles.Literals,
+                       LightLowContrastTintedThemingBase16ColorStyles.Literals,
+                       'random-t16-light']
+
+    RANDOM_T16_LIGHT: Literal['random-t16-light'] = 'random-t16-light'
+
+
+class TintedThemingBase16ColorStyles(
+        DarkTintedThemingBase16ColorStyles,
+        LightTintedThemingBase16ColorStyles,
+):
+    f"""
+    {_GENERAL_T16_COLOR_STYLE_DOCSTRING.format(description='All')}
+    """
+
+    Literals = Literal[DarkTintedThemingBase16ColorStyles.Literals,
+                       LightTintedThemingBase16ColorStyles.Literals,
+                       'random-t16']
+
+    RANDOM_T16: Literal['random-t16'] = 'random-t16'
+
+
 _GENERAL_PYGMENTS_COLOR_STYLE_DOCSTRING = dedent("""
     provided by the Pygments library. See
     the Pygment docs for an overview of all Pygment-included styles:
@@ -4158,21 +4203,53 @@ class LightLowContrastColorStyles(
     RANDOM_LIGHT_LOW_CONTRAST: Literal['random-light-low'] = 'random-light-low'
 
 
-class AllColorStyles(RecommendedColorStyles,
-                     DarkHighContrastColorStyles,
-                     DarkLowContrastColorStyles,
-                     LightHighContrastColorStyles,
-                     LightLowContrastColorStyles):
+class DarkColorStyles(
+        DarkHighContrastColorStyles,
+        DarkLowContrastColorStyles,
+):
+    """
+    All dark color styles for syntax highlighting. See subclasses for more
+    details on the color styles.
+    """
+
+    Literals = Literal[DarkHighContrastColorStyles.Literals,
+                       DarkLowContrastColorStyles.Literals,
+                       'random-dark']
+
+    RANDOM_DARK: Literal['random-dark'] = 'random-dark'
+
+
+class LightColorStyles(
+        LightHighContrastColorStyles,
+        LightLowContrastColorStyles,
+):
+    """
+    All light color styles for syntax highlighting. See subclasses for more
+    details on the color styles.
+    """
+
+    Literals = Literal[LightHighContrastColorStyles.Literals,
+                       LightLowContrastColorStyles.Literals,
+                       'random-light']
+
+    RANDOM_LIGHT: Literal['random-light'] = 'random-light'
+
+
+class AllColorStyles(
+        RecommendedColorStyles,
+        DarkColorStyles,
+        LightColorStyles,
+        TintedThemingBase16ColorStyles,
+):
     """
     All color styles available for syntax highlighting. See superclasses for
     more details on the color styles.
     """
 
     Literals = Literal[RecommendedColorStyles.Literals,
-                       DarkHighContrastColorStyles.Literals,
-                       DarkLowContrastColorStyles.Literals,
-                       LightHighContrastColorStyles.Literals,
-                       LightLowContrastColorStyles.Literals,
+                       DarkColorStyles.Literals,
+                       LightColorStyles.Literals,
+                       TintedThemingBase16ColorStyles.Literals,
                        'random']
 
     RANDOM_ALL: Literal['random'] = 'random'
