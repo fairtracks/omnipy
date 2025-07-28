@@ -2,7 +2,7 @@
 
 Omnipy is a type-driven Python library for:
 
-- data conversion, parsing and wrangling
+- data parsing, wrangling, visualization, and conversion
 - tool and web service interoperability, and
 - scalable dataflow orchestration
 
