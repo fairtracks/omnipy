@@ -8,6 +8,7 @@ from omnipy.config.engine import EngineConfig
 from omnipy.config.job import JobConfig
 from omnipy.config.root_log import RootLogConfig
 from omnipy.data._data_class_creator import DataClassBase
+from omnipy.data._display.integrations.jupyter.helpers import ReactiveObjects
 from omnipy.data.serializer import SerializerRegistry
 from omnipy.engine.local import LocalRunner
 from omnipy.hub._registry import RunStateRegistry
@@ -20,7 +21,7 @@ from omnipy.shared.protocols.config import (IsDataConfig,
                                             IsJobConfig,
                                             IsJobRunnerConfig,
                                             IsRootLogConfig)
-from omnipy.shared.protocols.data import IsDataClassCreator, IsSerializerRegistry
+from omnipy.shared.protocols.data import IsDataClassCreator, IsReactiveObjects, IsSerializerRegistry
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 from omnipy.shared.protocols.hub.runtime import (IsRootLogObjects,
@@ -71,6 +72,7 @@ class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
 class RuntimeObjects(RuntimeEntryPublisher, DataPublisher):
     job_creator: IsJobConfigHolder = pyd.Field(default_factory=_job_creator_factory)
     data_class_creator: IsDataClassCreator = pyd.Field(default_factory=_data_class_creator_factory)
+    reactive: IsReactiveObjects = pyd.Field(default_factory=ReactiveObjects)
     local: IsEngine = pyd.Field(default_factory=LocalRunner)
     prefect: IsEngine = pyd.Field(default_factory=PrefectEngine)
     registry: IsRunStateRegistry = pyd.Field(default_factory=RunStateRegistry)
@@ -118,6 +120,11 @@ class Runtime(DataPublisher):
 
         self.config.engine.subscribe_attr('local', self.objects.local.set_config)
         self.config.engine.subscribe_attr('prefect', self.objects.prefect.set_config)
+
+        self.objects.subscribe_attr(
+            'reactive',
+            self.objects.data_class_creator.set_reactive_objects,
+        )
 
         # Makes sure that the registry references in the job runners always refer to the registry
         # object in runtime, even when one or both of the objects are replaced with new objects.

@@ -30,6 +30,8 @@ from omnipy.config.job import (JobConfig,
                                S3OutputStorageConfig)
 from omnipy.config.root_log import RootLogConfig
 from omnipy.data._data_class_creator import DataClassBase, DataClassCreator
+from omnipy.data._display.integrations.jupyter.helpers import (AvailableDisplayDimsRegistry,
+                                                               ReactiveObjects)
 from omnipy.data.serializer import SerializerRegistry
 from omnipy.engine.local import LocalRunner
 from omnipy.hub._registry import RunStateRegistry
@@ -199,6 +201,10 @@ def _assert_runtime_objects_default(objects: RuntimeObjects):
     assert isinstance(objects.data_class_creator, DataClassCreator)
     assert objects.data_class_creator is DataClassBase.data_class_creator
 
+    assert isinstance(objects.reactive, ReactiveObjects)
+    assert isinstance(objects.reactive.available_display_dims_registry,
+                      AvailableDisplayDimsRegistry)
+
     assert isinstance(objects.local, LocalRunner)
     assert isinstance(objects.prefect, PrefectEngine)
     assert isinstance(objects.registry, RunStateRegistry)
@@ -333,6 +339,13 @@ def test_init_runtime_config_after_job_creator(
             'config',
         ),
         (
+            ('objects', 'reactive'),
+            ReactiveObjects,
+            ('objects', 'data_class_creator'),
+            DataClassCreator,
+            'reactive_objects',
+        ),
+        (
             ('objects', 'registry'),
             RunStateRegistry,
             ('objects', 'local'),
@@ -353,6 +366,7 @@ def test_init_runtime_config_after_job_creator(
         'config.engine->prefect => objects->prefect',
         'config->job => objects->job_creator',
         'config->root_log => objects->root_log',
+        'objects->reactive => objects->data_class_creator',
         'objects->registry => objects->local',
         'objects->registry => objects->prefect',
     ])

@@ -3,9 +3,13 @@ from contextlib import contextmanager
 from typing import Callable, ContextManager, Iterator
 
 from omnipy.config.data import DataConfig
+from omnipy.data._display.integrations.jupyter.helpers import ReactiveObjects
 from omnipy.data.snapshot import SnapshotHolder
 from omnipy.shared.protocols.config import IsDataConfig
-from omnipy.shared.protocols.data import HasContent, IsDataClassCreator, IsSnapshotHolder
+from omnipy.shared.protocols.data import (HasContent,
+                                          IsDataClassCreator,
+                                          IsReactiveObjects,
+                                          IsSnapshotHolder)
 from omnipy.shared.typedefs import TypeForm
 import omnipy.util._pydantic as pyd
 from omnipy.util.decorators import call_super_if_available
@@ -15,6 +19,7 @@ from omnipy.util.helpers import is_union
 class DataClassCreator:
     def __init__(self) -> None:
         self._config: IsDataConfig = DataConfig()
+        self._reactive_objects: IsReactiveObjects = ReactiveObjects()
         self._snapshot_holder = SnapshotHolder[HasContent, object]()
         self._deepcopy_context_level = 0
 
@@ -24,6 +29,13 @@ class DataClassCreator:
 
     def set_config(self, config: IsDataConfig) -> None:
         self._config = config
+
+    @property
+    def reactive_objects(self) -> IsReactiveObjects:
+        return self._reactive_objects
+
+    def set_reactive_objects(self, reactive_objects: IsReactiveObjects) -> None:
+        self._reactive_objects = reactive_objects
 
     @property
     def snapshot_holder(self) -> IsSnapshotHolder[HasContent, object]:
@@ -80,6 +92,7 @@ class DataClassBase(metaclass=DataClassBaseMeta):
                 cls._recursively_set_allow_none(sub_field)
         if field.key_field:
             if is_union(field.key_field.outer_type_):
+                assert field.key_field.sub_fields is not None
                 if any(_.allow_none for _ in field.key_field.sub_fields):
                     field.key_field.allow_none = True
 

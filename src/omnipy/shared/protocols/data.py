@@ -12,11 +12,13 @@ from typing import (Any,
                     runtime_checkable,
                     Type,
                     TypeAlias)
+from uuid import UUID
 
+import solara
 from typing_extensions import Self, TypeVar
 
 from omnipy.shared.protocols._util import IsWeakKeyRefContainer
-from omnipy.shared.protocols.builtins import IsMutableMapping
+from omnipy.shared.protocols.builtins import IsMapping, IsMutableMapping
 from omnipy.shared.protocols.config import IsDataConfig
 from omnipy.shared.protocols.hub.log import CanLog
 import omnipy.util._pydantic as pyd
@@ -348,6 +350,26 @@ class IsSnapshotHolder(IsWeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasC
 
 
 @runtime_checkable
+class IsAvailableDisplayDimsRegistry(
+        IsMapping[UUID, solara.Reactive[IsMapping[str, pyd.NonNegativeInt]]],
+        Protocol,
+):
+    def new_reactive_obj(self) -> solara.Reactive[IsMapping[str, pyd.NonNegativeInt]]:
+        ...
+
+    def remove_reactive_obj(
+        self,
+        reactive_obj: solara.Reactive[IsMapping[str, pyd.NonNegativeInt]],
+    ) -> None:
+        ...
+
+
+@runtime_checkable
+class IsReactiveObjects(Protocol):
+    available_display_dims_registry: IsAvailableDisplayDimsRegistry
+
+
+@runtime_checkable
 class IsDataClassCreator(Protocol[HasContentT, ContentT]):
     """"""
     @property
@@ -355,6 +377,13 @@ class IsDataClassCreator(Protocol[HasContentT, ContentT]):
         ...
 
     def set_config(self, config: IsDataConfig) -> None:
+        ...
+
+    @property
+    def reactive_objects(self) -> IsReactiveObjects:
+        ...
+
+    def set_reactive_objects(self, reactive_objects: IsReactiveObjects) -> None:
         ...
 
     @property

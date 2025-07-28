@@ -7,7 +7,7 @@ from omnipy.shared.protocols.config import (IsDataConfig,
                                             IsEngineConfig,
                                             IsJobConfig,
                                             IsRootLogConfig)
-from omnipy.shared.protocols.data import IsDataClassCreator, IsSerializerRegistry
+from omnipy.shared.protocols.data import IsDataClassCreator, IsReactiveObjects, IsSerializerRegistry
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 from omnipy.shared.protocols.util import IsDataPublisher
@@ -47,6 +47,7 @@ class IsRuntimeObjects(IsDataPublisher, Protocol):
 
     job_creator: IsJobConfigHolder
     data_class_creator: IsDataClassCreator
+    reactive: IsReactiveObjects
     local: IsEngine
     prefect: IsEngine
     registry: IsRunStateRegistry

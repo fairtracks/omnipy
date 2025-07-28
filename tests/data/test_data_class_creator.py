@@ -4,6 +4,7 @@ import pytest
 
 from omnipy.config.data import DataConfig, ModelConfig
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta, DataClassCreator
+from omnipy.data._display.integrations.jupyter.helpers import ReactiveObjects
 from omnipy.data.snapshot import SnapshotHolder
 
 from .helpers.mocks import MockDataset, MockModel
@@ -29,6 +30,19 @@ def test_set_config() -> None:
 
     data_class_creator.set_config(new_data_config)
     assert data_class_creator.config == new_data_config
+
+
+def test_set_reactive_objects() -> None:
+    data_class_creator = DataClassCreator()
+    assert data_class_creator.reactive_objects == ReactiveObjects()
+
+    new_reactive_objects = ReactiveObjects()
+    new_reactive_objects.available_display_dims_registry.new_reactive_obj()
+    with pytest.raises(AttributeError):
+        data_class_creator.reactive_objects = new_reactive_objects  # type: ignore[misc]
+
+    data_class_creator.set_reactive_objects(new_reactive_objects)
+    assert data_class_creator.reactive_objects == new_reactive_objects
 
 
 def test_singular_mock(teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
