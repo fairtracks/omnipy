@@ -13,9 +13,9 @@ from omnipy.data._display.styles.helpers import Base16Theme, get_styles_from_bas
 from omnipy.shared.constants import (ANSI_PREFIX,
                                      PYGMENTS_SUFFIX,
                                      RANDOM_PREFIX,
-                                     STYLE_CLS_NAME_BASE16_PREFIX,
                                      STYLE_CLS_NAME_SUFFIX,
-                                     THEME_KEY_BASE16_SUFFIX)
+                                     STYLE_CLS_NAME_TINTED_BASE16_PREFIX,
+                                     THEME_KEY_TINTED_BASE16_SUFFIX)
 from omnipy.shared.enums.colorstyles import AllColorStyles
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 
@@ -86,10 +86,10 @@ def _fetch_base16_theme_and_create_dynamic_style_class(
 
 
 def _create_base_16_class_name_from_theme_key(base16_theme_name: str):
-    assert base16_theme_name.endswith(THEME_KEY_BASE16_SUFFIX)
-    base16_theme_name_stripped = base16_theme_name[:-len(THEME_KEY_BASE16_SUFFIX)]
+    assert base16_theme_name.endswith(THEME_KEY_TINTED_BASE16_SUFFIX)
+    base16_theme_name_stripped = base16_theme_name[:-len(THEME_KEY_TINTED_BASE16_SUFFIX)]
 
-    class_name = (f'{STYLE_CLS_NAME_BASE16_PREFIX}'
+    class_name = (f'{STYLE_CLS_NAME_TINTED_BASE16_PREFIX}'
                   f"{_capitalize_words(underscore(base16_theme_name_stripped)).replace(' ', '')}"
                   f'{STYLE_CLS_NAME_SUFFIX}')
 
@@ -103,12 +103,14 @@ def _capitalize_words(text: str) -> str:
 @lru_cache
 def __getattr__(attr: str) -> type[pygments.style.Style]:
     try:
-        if attr.startswith(STYLE_CLS_NAME_BASE16_PREFIX) and attr.endswith(STYLE_CLS_NAME_SUFFIX):
-            stripped_name = attr[len(STYLE_CLS_NAME_BASE16_PREFIX):-len(STYLE_CLS_NAME_SUFFIX)]
+        if attr.startswith(STYLE_CLS_NAME_TINTED_BASE16_PREFIX) and attr.endswith(
+                STYLE_CLS_NAME_SUFFIX):
+            stripped_name = \
+                attr[len(STYLE_CLS_NAME_TINTED_BASE16_PREFIX):-len(STYLE_CLS_NAME_SUFFIX)]
 
             core_name = dasherize(underscore(stripped_name))
             filename = core_name + '.yaml'
-            theme_key = core_name + THEME_KEY_BASE16_SUFFIX
+            theme_key = core_name + THEME_KEY_TINTED_BASE16_SUFFIX
 
             base16_url = f'{_BASE16_DOWNLOAD_URL}/{filename}'
             return _fetch_base16_theme_and_create_dynamic_style_class(

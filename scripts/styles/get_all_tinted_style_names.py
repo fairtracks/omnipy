@@ -8,6 +8,7 @@ from omnipy import get_github_repo_urls
 import omnipy as om
 from omnipy.data._display.styles.dynamic_styles import (_create_base_16_class_name_from_theme_key,
                                                         fetch_base16_theme)
+from omnipy.shared.constants import THEME_KEY_TINTED_BASE16_SUFFIX
 from omnipy.util.literal_enum import LiteralEnumInnerTypes
 from omnipy.util.literal_enum_generator import generate_literal_enum_code
 
@@ -521,7 +522,7 @@ themes_per_variant: ThemesPerVariantType = {
 
 
 def create_pygments_theme_name(name: str) -> str:
-    return f'{name}-t16'.lower()
+    return f'{name}{THEME_KEY_TINTED_BASE16_SUFFIX}'.lower()
 
 
 def create_literal_enum_class_name(high_contrast: bool, variant_name: str) -> str:
