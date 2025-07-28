@@ -312,13 +312,13 @@ def test_omnipy_style_import() -> None:
 
     if 'omnipy' in get_pip_installed_packages():
 
-        IGNORE_PREFIXES = ['ansi-', 'auto']
-        IGNORE_SUFFIXED = ['-t16']
+        IGNORE_PREFIXES = ['ansi-', 'random', 'auto']
+        IGNORE_SUFFIXES = ['-t16']
 
         installed_styles = [
             style for style in AllColorStyles
             if not any(style.startswith(prefix) for prefix in IGNORE_PREFIXES) and not any(
-                style.endswith(suffix) for suffix in IGNORE_SUFFIXED)
+                style.endswith(suffix) for suffix in IGNORE_SUFFIXES)
         ]
         for style in installed_styles:
             style = clean_style_name(style)
