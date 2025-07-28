@@ -2,7 +2,7 @@ from collections.abc import KeysView
 from enum import Enum
 from textwrap import TextWrapper
 from types import MappingProxyType
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 
 import inflection
 
@@ -11,13 +11,13 @@ from omnipy.util.literal_enum import LiteralEnum, LiteralEnumInnerTypes
 
 ValueType = (
     Sequence[LiteralEnumInnerTypes]
-    | dict[str, LiteralEnumInnerTypes]
+    | Mapping[str, LiteralEnumInnerTypes]
     | MappingProxyType[str, LiteralEnumInnerTypes])
 
 
 def generate_literal_enum_code(
     values: ValueType,
-    docstrings: dict[LiteralEnumInnerTypes, Sequence[str]] | None = None,
+    docstrings: Mapping[LiteralEnumInnerTypes, Sequence[str]] | None = None,
     include_imports: bool = True,
     class_name: str = 'NewLiteralEnum',
 ) -> str:
@@ -74,7 +74,7 @@ def generate_literal_enum_code(
     return code
 
 
-def _generate_attrib_names(values: ValueType) -> dict[str, LiteralEnumInnerTypes]:
+def _generate_attrib_names(values: ValueType) -> Mapping[str, LiteralEnumInnerTypes]:
     enum_mappings: dict[str, LiteralEnumInnerTypes] = {}
 
     match values:
@@ -143,9 +143,9 @@ def _generate_attribute_name(value: Any, used_names: KeysView[str]) -> str:
 
 
 def _check_params(values: ValueType,
-                  docstrings: dict[LiteralEnumInnerTypes, Sequence[str]] | None,
+                  docstrings: Mapping[LiteralEnumInnerTypes, Sequence[str]] | None,
                   class_name: str,
-                  enum_mappings: dict[str, LiteralEnumInnerTypes]) -> None:
+                  enum_mappings: Mapping[str, LiteralEnumInnerTypes]) -> None:
     if not values:
         raise ValueError('At least one value must be provided')
 
@@ -174,7 +174,7 @@ def _build_import_lines(lines: list[str], include_imports: bool) -> list[str]:
 def _build_class_definition_lines(
     lines: list[str],
     class_name: str,
-    enum_mappings: dict[str, LiteralEnumInnerTypes],
+    enum_mappings: Mapping[str, LiteralEnumInnerTypes],
 ) -> list[str]:
 
     # Detect the value types
@@ -199,8 +199,8 @@ def _build_class_definition_lines(
 
 
 def _build_attribute_definitions(
-    docstrings: dict[LiteralEnumInnerTypes, Sequence[str]] | None,
-    enum_mappings: dict[str, LiteralEnumInnerTypes],
+    docstrings: Mapping[LiteralEnumInnerTypes, Sequence[str]] | None,
+    enum_mappings: Mapping[str, LiteralEnumInnerTypes],
     lines: list[str],
 ):
     textwrapper = TextWrapper(

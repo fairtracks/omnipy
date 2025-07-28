@@ -11,7 +11,7 @@ from .helpers.mocks import MockDataset, MockModel
 
 def test_init():
     with pytest.raises(TypeError):
-        DataClassCreator('something')  # noqa
+        DataClassCreator('something')  # noqa  # pyright: ignore [reportCallIssue]
 
     data_class_creator_1 = DataClassCreator()
     data_class_creator_2 = DataClassCreator()
@@ -25,7 +25,7 @@ def test_set_config() -> None:
 
     new_data_config = DataConfig(model=ModelConfig(interactive=False))
     with pytest.raises(AttributeError):
-        data_class_creator.config = new_data_config
+        data_class_creator.config = new_data_config  # type: ignore[misc]
 
     data_class_creator.set_config(new_data_config)
     assert data_class_creator.config == new_data_config
@@ -39,10 +39,10 @@ def test_singular_mock(teardown_reset_data_class_creator: Annotated[None, pytest
         DataClassBase.data_class_creator = DataClassCreator()  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        MockDataset.data_class_creator = DataClassCreator()  # type: ignore[misc]
+        MockDataset.data_class_creator = DataClassCreator()  # pyright: ignore
 
     with pytest.raises(AttributeError):
-        MockModel.data_class_creator = DataClassCreator()  # type: ignore[misc]
+        MockModel.data_class_creator = DataClassCreator()  # pyright: ignore
 
     data_class_creator = DataClassBase.data_class_creator
     assert MockDataset.data_class_creator is data_class_creator
