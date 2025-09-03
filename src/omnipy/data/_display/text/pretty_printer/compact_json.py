@@ -60,6 +60,7 @@ class CompactJsonPrettyPrinter(JsonWidthReducingPrettyPrinterMixin,
             max_inline_length = draft_panel.frame.dims.width
         else:
             max_inline_length = TERMINAL_DEFAULT_WIDTH
+        assert max_inline_length is not None
 
         json_formatter = compact_json.formatter.Formatter(
             max_inline_length=max_inline_length,

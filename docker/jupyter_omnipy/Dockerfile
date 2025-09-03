@@ -29,12 +29,14 @@ RUN mkdir shared
 RUN mkdir -p .jupyter/lab/user-settings/\@jupyter-lsp/jupyterlab-lsp
 RUN mkdir -p .jupyter/lab/user-settings/\@jupyterlab/completer-extension
 RUN mkdir -p .jupyter/lab/user-settings/\@jupyterlab/apputils-extension
+RUN mkdir -p .jupyter/lab/user-settings/\@jupyterlab/notebook-extension
 RUN mkdir -p /opt/conda/etc/jupyter/jupyter_notebook_config.d/
 
 RUN wget https://raw.githubusercontent.com/fairtracks/omnipy/refs/heads/main/docker/jupyter_omnipy/config/completion.jupyterlab-settings -O .jupyter/lab/user-settings/\@jupyter-lsp/jupyterlab-lsp/completion.jupyterlab-settings
 RUN wget https://raw.githubusercontent.com/fairtracks/omnipy/refs/heads/main/docker/jupyter_omnipy/config/manager.jupyterlab-settings -O .jupyter/lab/user-settings/\@jupyterlab/completer-extension/manager.jupyterlab-settings
 RUN wget https://raw.githubusercontent.com/fairtracks/omnipy/refs/heads/main/docker/jupyter_omnipy/config/notification.jupyterlab-settings -O .jupyter/lab/user-settings/\@jupyterlab/apputils-extension/notification.jupyterlab-settings
-RUN wget https://raw.githubusercontent.com/fairtracks/omnipy/refs/heads/main/docker/jupyter_omnipy/config/plugin.jupyterlab-settings -O .jupyter/lab/user-settings/@jupyter-lsp/jupyterlab-lsp/plugin.jupyterlab-settings
+RUN wget https://raw.githubusercontent.com/fairtracks/omnipy/refs/heads/main/docker/jupyter_omnipy/config/plugin.jupyterlab-settings -O .jupyter/lab/user-settings/\@jupyter-lsp/jupyterlab-lsp/plugin.jupyterlab-settings
+RUN wget https://raw.githubusercontent.com/fairtracks/omnipy/refs/heads/main/docker/jupyter_omnipy/config/tracker.jupyterlab-settings -O .jupyter/lab/user-settings/\@jupyterlab/notebook-extension/tracker.jupyterlab-settings
 RUN wget https://raw.githubusercontent.com/fairtracks/omnipy/refs/heads/main/docker/jupyter_omnipy/config/pyright.json -O /opt/conda/etc/jupyter/jupyter_notebook_config.d/pyright.json
 
 RUN fix-permissions $CONDA_DIR && \

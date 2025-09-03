@@ -141,10 +141,20 @@ class IsMutableMapping(IsMapping[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
     IsMutableMapping is a protocol with the same interface as the abstract class MutableMapping.
     It is the protocol of a generic mutable container for associating key/value pairs.
     """
+    @overload
+    def __setitem__(self, selector: _KeyT | int, data_obj: _ValT) -> None:
+        ...
+
+    @overload
+    def __setitem__(self,
+                    selector: slice | Iterable[_KeyT | int],
+                    data_obj: Mapping[_KeyT, _ValT] | Iterable[_ValT]) -> None:
+        ...
+
     def __setitem__(
         self,
-        selector: str | int | slice | Iterable[str | int],
-        data_obj: _ValT | Mapping[str, _ValT] | Iterable[_ValT],
+        selector: _KeyT | int | slice | Iterable[_KeyT | int],
+        data_obj: _ValT | Mapping[_KeyT, _ValT] | Iterable[_ValT],
     ) -> None:
         ...
 

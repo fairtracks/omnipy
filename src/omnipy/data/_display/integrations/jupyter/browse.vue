@@ -11,7 +11,7 @@ module.exports = {
   },
   methods: {
     openAllModels() {
-      Object.entries(this.html_contents).forEach(([key, value]) => {
+      Object.entries(this.html_content).forEach(([key, value]) => {
 
 
         // alert(`Opening model: ${key}`);

@@ -253,7 +253,7 @@ async def _async_get_urls_for_files_in_dir_with_suffix(ctx: GithubRepoContext, f
 
 def _create_api_url_for_file_list(ctx: GithubRepoContext) -> HttpUrlModel:
     api_url = HttpUrlModel('https://api.github.com')
-    api_url.path // 'repos' // ctx.owner // ctx.repo // 'content' // ctx.path
+    api_url.path // 'repos' // ctx.owner // ctx.repo // 'contents' // ctx.path
     api_url.query['ref'] = ctx.branch
     return api_url
 

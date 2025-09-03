@@ -1,0 +1,110 @@
+{
+    // Notebook
+    // @jupyterlab/notebook-extension:tracker
+    // Notebook settings.
+    // **************************************
+
+    // Kernel history access
+    // Enable kernel history access from notebook cells. Enabling this allows you to scroll through kernel history from a given notebook cell.
+    "accessKernelHistory": false,
+
+    // Automatically Start Preferred Kernel
+    // Whether to automatically start the preferred kernel.
+    "autoStartDefaultKernel": false,
+
+    // Code Cell Configuration
+    // The configuration for all code cells; it will override the CodeMirror default configuration.
+    "codeCellConfig": {
+        "lineNumbers": false,
+        "lineWrap": false
+    },
+
+    // Default cell type
+    // The default type (markdown, code, or raw) for new cells
+    "defaultCell": "code",
+
+    // Enable undo/redo actions at the notebook document level.
+    // Enables the undo/redo actions at the notebook document level; aka undoing within a cell may undo the latest notebook change that happen in another cell. This is deprecated and will be removed in 5.0.0.
+    "documentWideUndoRedo": false,
+
+    // Notify about code execution if kernel is initializing
+    // Display notification if code cells are run while kernel is initializing.
+    "enableKernelInitNotification": false,
+
+    // Input History Scope
+    // Whether the line history for standard input (e.g. the ipdb prompt) should kept separately for different kernel sessions (`session`) or combined (`global`).
+    "inputHistoryScope": "global",
+
+    // Shut down kernel
+    // Whether to shut down or not the kernel when closing a notebook.
+    "kernelShutdown": false,
+
+    // Kernel status icon configuration
+    // Defines the position and components of execution progress indicator.
+    "kernelStatus": {
+        "showOnStatusBar": false,
+        "showProgress": true
+    },
+
+    // Markdown Cell Configuration
+    // The configuration for all markdown cells; it will override the CodeMirror default configuration.
+    "markdownCellConfig": {
+        "lineNumbers": false,
+        "matchBrackets": false
+    },
+
+    // The maximum number of output cells to be rendered in the output area.
+    // Defines the maximum number of output cells to be rendered in the output area for cells with many outputs. The output area will have a head and the remaining outputs will be trimmed and not displayed unless the user clicks on the information message. Set to 0 to have the complete display.
+    "maxNumberOutputs": 50,
+
+    // Number of cells to render outside de the viewport
+    // In 'full' windowing mode, this is the number of cells above and below the viewport.
+    "overscanCount": 1,
+
+    // Raw Cell Configuration
+    // The configuration for all raw cells; it will override the CodeMirror default configuration.
+    "rawCellConfig": {
+        "lineNumbers": false,
+        "matchBrackets": false
+    },
+
+    // Recording timing
+    // Should timing data be recorded in cell metadata
+    "recordTiming": false,
+
+    // Rendering Layout
+    // Global setting to define the rendering layout in notebooks. 'default' or 'side-by-side' are supported.
+    "renderingLayout": "default",
+
+    // Scroll heading to top
+    // Whether to scroll heading to the document top when selecting it in the table of contents.
+    "scrollHeadingToTop": true,
+
+    // Scroll past last cell
+    // Whether to be able to scroll so the last cell is at the top of the panel
+    "scrollPastEnd": true,
+
+    // Show editor for read-only Markdown cells
+    // Should an editor be shown for read-only markdown
+    "showEditorForReadOnlyMarkdown": true,
+
+    // Show hidden cells button if collapsed
+    // If set to true, a button is shown below collapsed headings, indicating how many cells are hidden beneath the collapsed heading.
+    "showHiddenCellsButton": true,
+
+    // Side-by-side left margin override
+    // Side-by-side left margin override.
+    "sideBySideLeftMarginOverride": "10px",
+
+    // Side-by-side output ratio
+    // For the side-by-side rendering, the side-by-side output ratio defines the width of the output vs the input. Set 1 for same size, > 1 for larger output, < 1 for smaller output.
+    "sideBySideOutputRatio": 1,
+
+    // Side-by-side right margin override
+    // Side-by-side right margin override.
+    "sideBySideRightMarginOverride": "10px",
+
+    // Windowing mode
+    // 'defer': Improve loading time - Wait for idle CPU cycles to attach out of viewport cells - 'full': Best performance with side effects - Attach to the DOM only cells in viewport - 'none': Worst performance without side effects - Attach all cells to the viewport
+    "windowingMode": "defer"
+}

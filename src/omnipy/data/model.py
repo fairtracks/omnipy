@@ -95,6 +95,7 @@ class Model(
         ModelDisplayMixin,
         DataClassBase,
         pyd.GenericModel,
+        # ModelDisplayMixin,
         Generic[_RootT],
         metaclass=_ModelMetaclass,
 ):

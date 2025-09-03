@@ -173,6 +173,7 @@ from omnipy.data.param import (bind_adjust_dataset_func,
                                params_dataclass,
                                ParamsBase)
 from omnipy.hub.runtime import runtime
+from omnipy.hub.ui import setup_jupyter_ui
 from omnipy.shared.enums.colorstyles import (AllColorStyles,
                                              DarkColorStyles,
                                              DarkHighContrastColorStyles,
@@ -219,6 +220,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 __all__ = [
     'runtime',
+    'setup_jupyter_ui',
     'AllColorStyles',
     'BackoffStrategy',
     'ConfigOutputStorageProtocolOptions',

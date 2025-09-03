@@ -1,4 +1,5 @@
 # Data - General
+import omnipy.util._pydantic as pyd
 
 ROOT_KEY = '__root__'
 DATA_KEY = 'data'
@@ -9,14 +10,14 @@ ASYNC_LOAD_SLEEP_TIME = 0.05
 
 MAX_TERMINAL_SIZE = 2**16 - 1
 
-TERMINAL_DEFAULT_WIDTH = 80
-TERMINAL_DEFAULT_HEIGHT = 24
+TERMINAL_DEFAULT_WIDTH: pyd.NonNegativeInt | None = 80
+TERMINAL_DEFAULT_HEIGHT: pyd.NonNegativeInt | None = 24
 
-JUPYTER_DEFAULT_WIDTH = 112
-JUPYTER_DEFAULT_HEIGHT = 48
+JUPYTER_DEFAULT_WIDTH: pyd.NonNegativeInt | None = 112
+JUPYTER_DEFAULT_HEIGHT: pyd.NonNegativeInt | None = 48
 
-BROWSER_DEFAULT_WIDTH = 160
-BROWSER_DEFAULT_HEIGHT = None
+BROWSER_DEFAULT_WIDTH: pyd.NonNegativeInt | None = 160
+BROWSER_DEFAULT_HEIGHT: pyd.NonNegativeInt | None = None
 
 # Data - Display - Panel
 

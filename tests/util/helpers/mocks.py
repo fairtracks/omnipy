@@ -1,22 +1,22 @@
-from omnipy.config import ConfigBase
 import omnipy.util._pydantic as pyd
+from omnipy.util.publisher import DataPublisher
 
 
 class MockFoo:
     ...
 
 
-class MockDataPublisher(ConfigBase):
+class MockDataPublisher(DataPublisher):
     foo: MockFoo | None = None
     text: str = 'bar'
     number: int = 42
 
 
-class MockDataPublisherParent(ConfigBase):
+class MockDataPublisherParent(DataPublisher):
     config: MockDataPublisher = pyd.Field(default_factory=MockDataPublisher)
 
 
-class MockDataPublisherGrandParent(ConfigBase):
+class MockDataPublisherGrandParent(DataPublisher):
     parent_config: MockDataPublisherParent = pyd.Field(default_factory=MockDataPublisherParent)
 
 

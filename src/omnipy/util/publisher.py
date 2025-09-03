@@ -1,6 +1,8 @@
 from collections import defaultdict
 from typing import Callable, DefaultDict
 
+from typing_extensions import Self
+
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 import omnipy.util._pydantic as pyd
 
@@ -37,7 +39,13 @@ class DataPublisher(pyd.BaseModel):
         def _get_attr_callback_for_publisher_child(
                 attr_name: str) -> Callable[[DataPublisher], None]:
             def _attr_callback_for_publisher_child(value: object) -> None:
-                self._call_all_subscribers(attr_name, value)
+                # print(attr_name)
+                # from traceback import print_stack
+
+                # print_stack()
+                # self._call_all_subscribers(attr_name, value)
+                # self._call_self_subscribers()
+                callback_fun(self)
 
             return _attr_callback_for_publisher_child
 
@@ -55,16 +63,28 @@ class DataPublisher(pyd.BaseModel):
         self._self_subscriptions.clear()
         self._attr_subscriptions.clear()
 
+        for attr_name in self.__class__.__fields__.keys():
+            if not attr_name.startswith('_'):
+                attr = getattr(self, attr_name)
+                if isinstance(attr, DataPublisher):
+                    attr.unsubscribe_all()
+
     def _call_subscribers(self, attr_name: str, value: object) -> None:
         if attr_name in self._attr_subscriptions:
             for callback_fun in self._attr_subscriptions[attr_name]:
+                # print(
+                #     f"_call_subscribers of {self.__class__}, attr_name: {attr_name}, callback_func: {callback_fun}"
+                # )
                 callback_fun(value)
 
     def _call_self_subscribers(self) -> None:
         for callback_fun in self._self_subscriptions:
+            # print(f"_call_self_subscribers of {self.__class__}, callback_func: {callback_fun}")
+            # print(callback_fun)
             callback_fun(self)
 
     def _call_all_subscribers(self, attr_name: str, value: object) -> None:
+        # print(f"self.__class__: {self.__class__}, attr_name: {attr_name}, value: {value}")
         self._call_subscribers(attr_name, value)
         self._call_self_subscribers()
 
@@ -73,6 +93,15 @@ class DataPublisher(pyd.BaseModel):
 
         if not attr_name.startswith('_'):
             self._call_all_subscribers(attr_name, value)
+
+    def deepcopy(self) -> Self:
+        """
+        Create a deep copy of the DataPublisher instance, resetting subscriptions in the copy.
+        """
+        self_copy = self.copy()
+        self_copy._self_subscriptions = []
+        self_copy._attr_subscriptions = _subscribers_factory()
+        return self_copy.copy(deep=True)
 
 
 class RuntimeEntryPublisher(DataPublisher):

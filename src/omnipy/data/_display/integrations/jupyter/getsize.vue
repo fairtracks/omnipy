@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="omnipy-hidden">
     <jupyter-widget v-for="child in children" :key="child" :widget="child"></jupyter-widget>
   </div></template>
 
@@ -21,6 +21,25 @@ module.exports = {
       return this.font_size * this.line_height;
     },
   },
+
+  watch: {
+    font_size: function () {
+      console.log('font_size: ' + this.font_size)
+      this._updateViewData();
+      },
+    font_weight: function () {
+      console.log('font_weight: ' + this.font_weight)
+      this._updateViewData();
+    },
+    font_family: function () {
+      console.log('font_family: ' + this.font_family)
+      this._updateViewData();
+    },
+    line_height: function () {
+      console.log('line_height: ' + this.line_height)
+      this._updateViewData();
+    },
+  },
   created() {
     function debounce(f, delay) {
       let timer = 0;
@@ -37,9 +56,10 @@ module.exports = {
     }, this.resize_delay));
   },
   mounted() {
-    this.windowPanel = this.$el.closest(".jp-WindowedPanel-outer");
+    this.windowPanel = document.getElementsByClassName('jp-WindowedPanel')[0];
     this.resizeObserverWidth.observe(this.$el);
     this.resizeObserverHeight.observe(this.windowPanel);
+    this._preventCellCollapse();
   },
   destroyed() {
     this.resizeObserverWidth.unobserve(this.$el);
@@ -53,12 +73,18 @@ module.exports = {
         this.available_display_dims = {"width": width, "height": height};
       }
     },
-
     _getColumns(width) {
-      return Math.floor(width / (this.charWidth));
+      return Math.floor(width / this.charWidth);
     },
     _getLines(height) {
       return Math.floor(height / this.charHeight);
+    },
+    _preventCellCollapse() {
+      let cell = this.$el.closest(".jp-Cell")
+
+      if (cell && !cell.classList.contains('getsize-protected-cell')) {
+        cell.classList.add('getsize-protected-cell');
+      }
     },
   },
 }

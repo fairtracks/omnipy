@@ -2,6 +2,7 @@ import asyncio
 from dataclasses import dataclass
 from typing import (Any,
                     Callable,
+                    cast,
                     ContextManager,
                     IO,
                     Iterable,
@@ -11,15 +12,16 @@ from typing import (Any,
                     Protocol,
                     runtime_checkable,
                     Type,
-                    TypeAlias)
+                    TypeAlias,
+                    TypedDict)
 from uuid import UUID
 
 import solara
 from typing_extensions import Self, TypeVar
 
 from omnipy.shared.protocols._util import IsWeakKeyRefContainer
-from omnipy.shared.protocols.builtins import IsMapping, IsMutableMapping
-from omnipy.shared.protocols.config import IsDataConfig
+from omnipy.shared.protocols.builtins import IsMutableMapping
+from omnipy.shared.protocols.config import IsDataConfig, IsJupyterUserInterfaceConfig
 from omnipy.shared.protocols.hub.log import CanLog
 import omnipy.util._pydantic as pyd
 from omnipy.util.setdeque import SetDeque
@@ -147,31 +149,33 @@ class IsDataset(IsMutableMapping[str, _ModelT], Protocol[_ModelT]):
     def failed_task_details(self) -> dict[str, IsFailedData]:
         ...
 
-    @overload
-    def __getitem__(self, selector: str | int) -> _ModelT:
-        ...
+    #TODO: Remove methods of IsDataset that overlap with IsMutableMapping?
 
     @overload
     def __getitem__(self, selector: slice | Iterable[str | int]) -> Self:
+        ...
+
+    @overload
+    def __getitem__(self, selector: str | int) -> _ModelT:
         ...
 
     def __getitem__(self, selector: str | int | slice | Iterable[str | int]) -> _ModelT | Self:
         ...
 
     @overload
-    def __setitem__(self, selector: str | int, data_obj: object) -> None:
+    def __setitem__(self, selector: str | int, data_obj: _ModelT) -> None:
         ...
 
     @overload
     def __setitem__(self,
                     selector: slice | Iterable[str | int],
-                    data_obj: Mapping[str, object] | Iterable[object]) -> None:
+                    data_obj: Mapping[str, _ModelT] | Iterable[_ModelT]) -> None:
         ...
 
     def __setitem__(
         self,
         selector: str | int | slice | Iterable[str | int],
-        data_obj: object | Mapping[str, object] | Iterable[object],
+        data_obj: _ModelT | Mapping[str, _ModelT] | Iterable[_ModelT],
     ) -> None:
         ...
 
@@ -349,24 +353,13 @@ class IsSnapshotHolder(IsWeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasC
         ...
 
 
-@runtime_checkable
-class IsAvailableDisplayDimsRegistry(
-        IsMapping[UUID, solara.Reactive[IsMapping[str, pyd.NonNegativeInt]]],
-        Protocol,
-):
-    def new_reactive_obj(self) -> solara.Reactive[IsMapping[str, pyd.NonNegativeInt]]:
-        ...
-
-    def remove_reactive_obj(
-        self,
-        reactive_obj: solara.Reactive[IsMapping[str, pyd.NonNegativeInt]],
-    ) -> None:
-        ...
+class AvailableDisplayDims(dict[str, pyd.NonNegativeInt | None]):
+    ...
 
 
 @runtime_checkable
 class IsReactiveObjects(Protocol):
-    available_display_dims_registry: IsAvailableDisplayDimsRegistry
+    jupyter_ui_config: solara.Reactive[IsJupyterUserInterfaceConfig]
 
 
 @runtime_checkable
