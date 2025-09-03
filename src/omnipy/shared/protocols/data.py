@@ -146,31 +146,33 @@ class IsDataset(IsMutableMapping[str, _ModelT], Protocol[_ModelT]):
     def failed_task_details(self) -> dict[str, IsFailedData]:
         ...
 
-    @overload
-    def __getitem__(self, selector: str | int) -> _ModelT:
-        ...
+    # TODO: Remove methods of IsDataset that overlap with IsMutableMapping?
 
     @overload
     def __getitem__(self, selector: slice | Iterable[str | int]) -> Self:
+        ...
+
+    @overload
+    def __getitem__(self, selector: str | int) -> _ModelT:
         ...
 
     def __getitem__(self, selector: str | int | slice | Iterable[str | int]) -> _ModelT | Self:
         ...
 
     @overload
-    def __setitem__(self, selector: str | int, data_obj: object) -> None:
+    def __setitem__(self, selector: str | int, data_obj: _ModelT) -> None:
         ...
 
     @overload
     def __setitem__(self,
                     selector: slice | Iterable[str | int],
-                    data_obj: Mapping[str, object] | Iterable[object]) -> None:
+                    data_obj: Mapping[str, _ModelT] | Iterable[_ModelT]) -> None:
         ...
 
     def __setitem__(
         self,
         selector: str | int | slice | Iterable[str | int],
-        data_obj: object | Mapping[str, object] | Iterable[object],
+        data_obj: _ModelT | Mapping[str, _ModelT] | Iterable[_ModelT],
     ) -> None:
         ...
 
