@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="omnipy-hidden">
     <jupyter-widget v-for="child in children" :key="child" :widget="child"></jupyter-widget>
   </div></template>
 

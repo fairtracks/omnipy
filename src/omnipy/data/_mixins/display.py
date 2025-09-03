@@ -7,7 +7,7 @@ import sys
 from typing import Any, cast, Literal, overload, ParamSpec, TYPE_CHECKING
 import webbrowser
 
-from typing_extensions import assert_never, LiteralString, TypeVar
+from typing_extensions import assert_never, get_args, LiteralString, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import OutputConfig
@@ -21,11 +21,13 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.bytes import BytesDraftPanel
 from omnipy.data._display.panel.draft.text import TextDraftPanel
 from omnipy.data.helpers import FailedData, PendingData
-from omnipy.hub.ui import get_terminal_prompt_height
+from omnipy.hub.ui import get_terminal_prompt_height, note_mime_bundle
 from omnipy.shared.enums.colorstyles import RecommendedColorStyles
 from omnipy.shared.enums.display import DisplayColorSystem, MaxTitleHeight, SyntaxLanguage
 from omnipy.shared.enums.ui import (BrowserPageUserInterfaceType,
+                                    BrowserTagUserInterfaceType,
                                     BrowserUserInterfaceType,
+                                    JupyterEmbeddedUserInterfaceType,
                                     JupyterInBrowserUserInterfaceType,
                                     SpecifiedUserInterfaceType,
                                     TerminalOutputUserInterfaceType,
@@ -109,8 +111,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         )
 
     def _extract_ui_type(self, **kwargs) -> SpecifiedUserInterfaceType.Literals:
-        return (kwargs.get('user_interface_type', None)
-                or cast(DataClassBase, self).config.ui.detected_type)
+        return (kwargs.get('ui', None) or cast(DataClassBase, self).config.ui.detected_type)
 
     @takes_input_params_from(_DisplayMethodParams.__init__)
     def full(self, **kwargs) -> 'Element | None':
@@ -209,13 +210,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _repr_html_(self) -> str:
         ui_type = cast(DataClassBase, self).config.ui.detected_type
         if UserInterfaceType.is_jupyter_in_browser(ui_type):
-            from reacton.core import Element
-            element: Element = self._display_according_to_ui_type(
+            self._display_according_to_ui_type(
                 ui_type=ui_type,
                 return_output_if_str=False,
                 output_method=self._default_panel,
             )
-            element._ipython_display_()
         elif UserInterfaceType.is_jupyter_embedded(ui_type):
             print(self.default_repr_to_terminal_str(ui_type))
         return ''
@@ -250,7 +249,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         output_method: Method[P, DraftPanel],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> 'Element':
+    ) -> None:
         ...
 
     def _display_according_to_ui_type(
@@ -264,6 +263,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         from omnipy.data.dataset import Dataset, Model
 
         def _render_output(
+            ui_type: SpecifiedUserInterfaceType.Literals,
             *args: P.args,
             **kwargs: P.kwargs,
         ) -> str:
@@ -291,18 +291,46 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     assert_never(never)  # pyright: ignore [reportArgumentType]
 
         match ui_type:
-            case x if UserInterfaceType.is_jupyter_in_browser(x):
-                from omnipy.data._display.integrations.jupyter.components import \
-                    ReactivelyResizingHtml
-                element: Element = ReactivelyResizingHtml(
-                    cast(Dataset | Model, self),
-                    output_method=_render_output,
-                    *args,
-                    **kwargs,
-                )
-                return element
+            case x if UserInterfaceType.is_jupyter(x):
+                mime_bundle = {}
+
+                embedded_ui_type = get_args(JupyterEmbeddedUserInterfaceType.Literals)[0]
+                mime_bundle['text/plain'] = _render_output(embedded_ui_type, *args, **kwargs)
+
+                if UserInterfaceType.is_jupyter_in_browser(ui_type):
+                    import reacton
+                    from reacton.core import Element
+
+                    from omnipy.data._display.integrations.jupyter.components import \
+                        ReactivelyResizingHtml
+
+                    browser_tag_ui_type = BrowserTagUserInterfaceType.BROWSER_TAG
+
+                    mime_bundle = note_mime_bundle(
+                        bullet='⚠️',
+                        html_content=('Widget for reactive Omnipy output '
+                                      'was not loaded. If you are running '
+                                      'Jupyter in a web browser, you '
+                                      'probably want to rerun the code '
+                                      'cell above (<i>Click in the code '
+                                      'cell, and press Shift+Enter '
+                                      '<kbd>⇧</kbd>+<kbd>↩</kbd></i>).'),
+                    )
+                    mime_bundle['text/html'] += _render_output(browser_tag_ui_type, *args, **kwargs)
+
+                    element: Element = ReactivelyResizingHtml(
+                        cast(Dataset | Model, self),
+                        output_method=functools.partial(_render_output, ui_type),
+                        *args,
+                        **kwargs,
+                    )
+                    reacton.display(element, mime_bundle=mime_bundle)
+
+                else:
+                    import IPython.display
+                    IPython.display.display(mime_bundle, raw=True)
             case _:
-                output = _render_output(*args, **kwargs)
+                output = _render_output(ui_type, *args, **kwargs)
                 if return_output_if_str:
                     return output
                 else:
