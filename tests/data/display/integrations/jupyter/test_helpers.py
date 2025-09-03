@@ -1,44 +1,79 @@
-from solara import Reactive
+from typing import Annotated
 
-from omnipy.data._display.integrations.jupyter.helpers import AvailableDisplayDimsRegistry
+import pytest
+
+from omnipy.config import ConfigBase
+from omnipy.data._display.integrations.jupyter.helpers import ReactiveConfigCopy
 
 
-def test_available_display_dims_registry() -> None:
-    registry = AvailableDisplayDimsRegistry()
-    assert len(registry) == 0
+class MyChildConfig(ConfigBase):
+    param2: int = 0
 
-    available_display_dims = registry.new_reactive_obj()
-    assert len(registry) == 1
-    assert isinstance(available_display_dims, Reactive)
-    assert available_display_dims.value['width'] == 80
-    assert available_display_dims.value['height'] == 24
 
-    available_display_dims.set({'width': 100, 'height': 48})
-    assert available_display_dims.value['width'] == 100
-    assert available_display_dims.value['height'] == 48
+class MyConfig(ConfigBase):
+    param1: str = 'default'
+    child: MyChildConfig = MyChildConfig()
 
-    available_display_dims_2 = registry.new_reactive_obj()
-    assert len(registry) == 2
-    assert isinstance(available_display_dims_2, Reactive)
-    assert available_display_dims_2.value['width'] == 80
-    assert available_display_dims_2.value['height'] == 24
 
-    assert available_display_dims is not available_display_dims_2
+class MyParentConfig(ConfigBase):
+    config: MyConfig = MyConfig()
 
-    keys = [_ for _ in registry.keys()]
-    assert len(keys) == 2
-    assert keys[0] != keys[1]
 
-    values = [_ for _ in registry.values()]
-    assert len(values) == 2
-    assert values[0] is available_display_dims
-    assert values[1] is available_display_dims_2
+@pytest.fixture
+def parent() -> MyParentConfig:
+    parent = MyParentConfig(config=MyConfig(
+        param1='test',
+        child=MyChildConfig(param2=10),
+    ))
+    return parent
 
-    registry.remove_reactive_obj(available_display_dims)
-    assert len(registry) == 1
-    assert available_display_dims not in registry.values()
-    assert available_display_dims_2 in registry.values()
 
-    registry.remove_reactive_obj(available_display_dims_2)
-    assert len(registry) == 0
-    assert available_display_dims_2 not in registry.values()
+def test_reactive_config_copy_init(parent: Annotated[MyParentConfig, pytest.fixture]) -> None:
+    reactive_config_copy = ReactiveConfigCopy(parent.config)
+
+    assert reactive_config_copy.value.param1 == 'test'
+    assert reactive_config_copy.value.child.param2 == 10
+
+    parent.config.param1 = 'updated'
+    parent.config.child.param2 = 15
+
+    assert reactive_config_copy.value.param1 == 'test'
+    assert reactive_config_copy.value.child.param2 == 10
+
+
+def test_reactive_config_copy_set(parent: Annotated[MyParentConfig, pytest.fixture]) -> None:
+    reactive_config_copy = ReactiveConfigCopy(parent.config)
+
+    assert reactive_config_copy.value.param1 == 'test'
+    assert reactive_config_copy.value.child.param2 == 10
+
+    parent.config.param1 = 'updated'
+    parent.config.child.param2 = 15
+
+    reactive_config_copy.set(parent.config)
+
+    assert reactive_config_copy.value.param1 == 'updated'
+    assert reactive_config_copy.value.child.param2 == 15
+
+
+def test_reactive_config_copy_subscribe_with_set(
+        parent: Annotated[MyParentConfig, pytest.fixture]) -> None:
+    reactive_config_copy = ReactiveConfigCopy(parent.config)
+
+    assert reactive_config_copy.value.param1 == 'test'
+    assert reactive_config_copy.value.child.param2 == 10
+
+    parent.subscribe_attr(
+        'config',
+        reactive_config_copy.set,
+    )
+
+    parent.config.param1 = 'new value'
+
+    assert reactive_config_copy.value.param1 == 'new value'
+    assert reactive_config_copy.value.child.param2 == 10
+
+    parent.config.child.param2 = 5
+
+    assert reactive_config_copy.value.param1 == 'new value'
+    assert reactive_config_copy.value.child.param2 == 5

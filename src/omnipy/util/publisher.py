@@ -1,6 +1,8 @@
 from collections import defaultdict
 from typing import Callable, DefaultDict
 
+from typing_extensions import Self
+
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 import omnipy.util._pydantic as pyd
 
@@ -73,6 +75,15 @@ class DataPublisher(pyd.BaseModel):
 
         if not attr_name.startswith('_'):
             self._call_all_subscribers(attr_name, value)
+
+    def deepcopy(self) -> Self:
+        """
+        Create a deep copy of the DataPublisher instance, resetting subscriptions in the copy.
+        """
+        self_copy = self.copy()
+        self_copy._self_subscriptions = []
+        self_copy._attr_subscriptions = _subscribers_factory()
+        return self_copy.copy(deep=True)
 
 
 class RuntimeEntryPublisher(DataPublisher):

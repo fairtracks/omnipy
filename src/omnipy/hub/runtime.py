@@ -87,9 +87,9 @@ class Runtime(DataPublisher):
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
 
-        detect_and_setup_user_interface(self)
-
         self.reset_subscriptions()
+
+        detect_and_setup_user_interface(self)
 
     def reset_subscriptions(self, data=None, **kwargs):
         """
@@ -117,6 +117,11 @@ class Runtime(DataPublisher):
         self.config.subscribe_attr('data', self.objects.data_class_creator.set_config)
         self.config.subscribe_attr('job', self.objects.job_creator.set_config)
         self.config.subscribe_attr('root_log', self.objects.root_log.set_config)
+
+        self.config.data.ui.subscribe_attr(
+            'jupyter',
+            self.objects.reactive.jupyter_ui_config.set,
+        )
 
         self.config.engine.subscribe_attr('local', self.objects.local.set_config)
         self.config.engine.subscribe_attr('prefect', self.objects.prefect.set_config)

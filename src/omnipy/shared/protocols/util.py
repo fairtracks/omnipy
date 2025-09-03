@@ -1,5 +1,7 @@
 from typing import Any, Callable, ClassVar, Protocol
 
+from typing_extensions import Self
+
 
 class IsDataPublisher(Protocol):
     def subscribe_attr(self, attr_name: str, callback_fun: Callable[..., None]):
@@ -9,6 +11,9 @@ class IsDataPublisher(Protocol):
         ...
 
     def unsubscribe_all(self) -> None:
+        ...
+
+    def deepcopy(self) -> Self:
         ...
 
 
