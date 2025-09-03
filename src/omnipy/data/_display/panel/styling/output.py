@@ -62,6 +62,9 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
               body {{{{
                 color: {{foreground}};
                 background-color: {{background}};
+                text-rendering: geometricPrecision;
+                -webkit-font-smoothing: subpixel-antialiased;
+                -moz-osx-font-smoothing: grayscale;
               }}}}
             </style>
           </head>

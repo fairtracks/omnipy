@@ -312,6 +312,16 @@ def setup_jupyter_ui():
 
     jupyter_in_browser_styling = dedent("""\
         /*
+        Improve font rendering
+        */
+
+        #main, .vuetify-styles {
+            text-rendering: geometricPrecision;
+            -webkit-font-smoothing: subpixel-antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /*
         Workaround for an issue where cells that are far out of view
         lose their padding. This causes issues with panels resizing
         when scrolling quickly.
