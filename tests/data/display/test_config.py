@@ -23,7 +23,7 @@ def test_output_config() -> None:
         tab=2,
         indent=4,
         printer=PrettyPrinterLib.DEVTOOLS,
-        lang=SyntaxLanguage.JSON,
+        syntax=SyntaxLanguage.JSON,
         freedom=3.5,
         debug=True,
         ui=UserInterfaceType.JUPYTER,
@@ -46,7 +46,7 @@ def test_output_config() -> None:
     assert config.tab == 2
     assert config.indent == 4
     assert config.printer is PrettyPrinterLib.DEVTOOLS
-    assert config.lang is SyntaxLanguage.JSON
+    assert config.syntax is SyntaxLanguage.JSON
     assert config.freedom == 3.5
     assert config.debug is True
     assert config.ui is UserInterfaceType.JUPYTER
@@ -69,8 +69,8 @@ def test_output_config() -> None:
         tab='2',  # type: ignore[arg-type]
         indent='4',  # type: ignore[arg-type]
         printer='rich',
-        # Any language string supported by the pygments library should be accepted
-        lang='c++',
+        # Any syntax language string supported by the pygments library should be accepted
+        syntax='c++',
         freedom='3',  # type: ignore[arg-type]
         debug='yes',  # type: ignore[arg-type]
         ui='terminal',
@@ -96,7 +96,7 @@ def test_output_config() -> None:
     assert config.tab == 2
     assert config.indent == 4
     assert config.printer is PrettyPrinterLib.RICH
-    assert config.lang == 'c++'
+    assert config.syntax == 'c++'
     assert config.freedom == 3.0
     assert config.debug is True
     assert config.ui is UserInterfaceType.TERMINAL
@@ -142,7 +142,7 @@ def test_output_config_hashable() -> None:
             'printer': PrettyPrinterLib.DEVTOOLS
         },
         {
-            'lang': SyntaxLanguage.XML
+            'syntax': SyntaxLanguage.XML
         },
         {
             'freedom': 1.0
@@ -222,7 +222,7 @@ def test_fail_output_config_no_assignments() -> None:
         config.printer = PrettyPrinterLib.DEVTOOLS  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.lang = SyntaxLanguage.XML  # type: ignore[misc]
+        config.syntax = SyntaxLanguage.XML  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
         config.freedom = 3.0  # type: ignore[misc]
@@ -293,7 +293,7 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(printer=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(lang='xyz')
+        OutputConfig(syntax='xyz')
 
     with pytest.raises(ValueError):
         OutputConfig(freedom=-1)
@@ -352,7 +352,7 @@ def test_output_config_default_values() -> None:
     assert config.tab == 4
     assert config.indent == 2
     assert config.printer is PrettyPrinterLib.AUTO
-    assert config.lang is SyntaxLanguage.PYTHON
+    assert config.syntax is SyntaxLanguage.PYTHON
     assert config.freedom == 2.5
     assert config.debug is False
     assert config.ui is UserInterfaceType.TERMINAL

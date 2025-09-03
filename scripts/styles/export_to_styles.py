@@ -74,7 +74,7 @@ for input in inputs:
             config = OutputConfig(
                 style=style.name,
                 bg=solid_background,
-                lang=input.lexer,
+                syntax=input.lexer,
                 debug=input.debug,
             )
             if is_model_instance(data):

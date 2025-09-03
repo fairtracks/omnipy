@@ -514,21 +514,21 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         from omnipy.components.json.models import is_json_model_instance_hack
         from omnipy.components.raw.models import BytesModel, StrModel
 
-        lang: SyntaxLanguage.Literals
+        syntax: SyntaxLanguage.Literals
         if outer_type is str or isinstance(model, StrModel):
-            lang = SyntaxLanguage.TEXT
+            syntax = SyntaxLanguage.TEXT
         if outer_type is bytes or isinstance(model, BytesModel):
-            lang = SyntaxLanguage.HEXDUMP
+            syntax = SyntaxLanguage.HEXDUMP
         elif is_json_model_instance_hack(model):
-            lang = SyntaxLanguage.JSON
+            syntax = SyntaxLanguage.JSON
         else:
-            lang = SyntaxLanguage.PYTHON
+            syntax = SyntaxLanguage.PYTHON
 
         config = self._update_config_with_overflow_modes(config, 'text')
-        config = dataclasses.replace(config, lang=lang)
+        config = dataclasses.replace(config, syntax=syntax)
         config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
 
-        match lang:
+        match syntax:
             case SyntaxLanguage.TEXT:
                 return TextDraftPanel(
                     cast(str, model.content),
@@ -724,7 +724,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
         config = dataclasses.replace(config, max_title_height=MaxTitleHeight.ONE)
         right_justified_config = dataclasses.replace(config, justify='right')
-        text_config = dataclasses.replace(config, lang=SyntaxLanguage.TEXT)
+        text_config = dataclasses.replace(config, syntax=SyntaxLanguage.TEXT)
 
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
         config_kwargs = self._validate_kwargs_for_config(**kwargs)

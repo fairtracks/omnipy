@@ -38,7 +38,7 @@ def test_syntax_stylized_text_panel_init() -> None:
         frame=Frame(Dimensions(10, 10)),
         constraints=Constraints(),
         config=OutputConfig(
-            lang=SyntaxLanguage.PYTHON,
+            syntax=SyntaxLanguage.PYTHON,
             style=RecommendedColorStyles.ANSI_LIGHT,
         ),
     )
@@ -235,10 +235,10 @@ def test_syntax_stylized_text_panel_json() -> None:
     text_panel = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel(
             json_content,
-            config=OutputConfig(lang=SyntaxLanguage.JSON, system=DisplayColorSystem.ANSI_RGB)))
+            config=OutputConfig(syntax=SyntaxLanguage.JSON, system=DisplayColorSystem.ANSI_RGB)))
 
     assert text_panel.content == json_content
-    assert text_panel.config.lang == SyntaxLanguage.JSON
+    assert text_panel.config.syntax == SyntaxLanguage.JSON
 
     # Checking that the plain output is unchanged (except for the trailing newline)
     assert text_panel.plain.terminal == json_content + '\n'

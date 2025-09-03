@@ -29,7 +29,7 @@ def test_text_draft_panel_init() -> None:
         title='My JSON file',
         frame=Frame(Dimensions(20, 10)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(lang=SyntaxLanguage.JSON),
+        config=OutputConfig(syntax=SyntaxLanguage.JSON),
     )
 
 
@@ -51,7 +51,7 @@ def test_text_draft_panel_render_next_stage_with_repr_complex() -> None:
         title='My repr panel',
         frame=Frame(Dimensions(18, 2)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(indent=1, lang=SyntaxLanguage.PYTHON),
+        config=OutputConfig(indent=1, syntax=SyntaxLanguage.PYTHON),
     )
     assert_next_stage_panel(
         this_panel=draft_panel_complex,

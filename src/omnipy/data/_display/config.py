@@ -38,7 +38,7 @@ class OutputConfig:
             indentation level.
         printer (PrettyPrinterLib.Literals): Library to use for pretty
             printing.
-        lang (SyntaxLanguage.Literals | str): Syntax language for code
+        syntax (SyntaxLanguage.Literals | str): Syntax language for code
             highlighting. Supported lexers are defined in SyntaxLanguage.
             For non-supported styles, the user can specify a string with the
             Pygments lexer name. For this to work, the lexer must be
@@ -73,7 +73,7 @@ class OutputConfig:
             to force color output.
         style (AllColorStyles.Literals | str): Color style/theme for syntax
             highlighting and other display elements. Supported styles are
-            defined in AllColorStyles. For non-supported languages, the user
+            defined in AllColorStyles. For non-supported styles, the user
             can specify a string with the Pygments style name. For this to
             work, the style must be registered in the Pygments library.
         bg (bool): If False, uses transparent background for the output. In
@@ -113,7 +113,7 @@ class OutputConfig:
     tab: pyd.NonNegativeInt = 4
     indent: pyd.NonNegativeInt = 2
     printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO
-    lang: SyntaxLanguage.Literals | str = SyntaxLanguage.PYTHON
+    syntax: SyntaxLanguage.Literals | str = SyntaxLanguage.PYTHON
     freedom: pyd.NonNegativeFloat = 2.5
     debug: bool = False
     ui: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL
@@ -138,20 +138,20 @@ class OutputConfig:
     min_peek_width: pyd.NonNegativeInt = 30
     justify: Justify.Literals = Justify.LEFT
 
-    @pyd.validator('lang')
-    def check_language(
+    @pyd.validator('syntax')
+    def check_syntax(
         cls,
-        lang: SyntaxLanguage.Literals | str,
+        syntax: SyntaxLanguage.Literals | str,
     ) -> SyntaxLanguage.Literals | str:
         try:
-            if SyntaxLanguage.is_syntax_language(lang):
-                return lang
-            elif pygments.lexers.get_lexer_by_name(lang):
-                return lang
+            if SyntaxLanguage.is_syntax_language(syntax):
+                return syntax
+            elif pygments.lexers.get_lexer_by_name(syntax):
+                return syntax
             else:
-                raise ValueError(f'Invalid syntax language: {lang}')
+                raise ValueError(f'Invalid syntax language: {syntax}')
         except pygments.util.ClassNotFound as exp:
-            raise ValueError(f'Invalid syntax language: {lang}') from exp
+            raise ValueError(f'Invalid syntax language: {syntax}') from exp
 
     @pyd.validator('style')
     def check_color_style(

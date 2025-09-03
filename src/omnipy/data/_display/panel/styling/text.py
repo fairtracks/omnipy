@@ -35,7 +35,7 @@ class SyntaxStylizedTextPanel(
         tab_size: int,
         color_system: DisplayColorSystem.Literals,  # Only used for hashing
         console_color_style: AllColorStyles.Literals | str,
-        language: SyntaxLanguage.Literals | str,
+        syntax_language: SyntaxLanguage.Literals | str,
         horizontal_overflow_mode: HorizontalOverflowMode.Literals,
         remove_bg_color: bool,
     ) -> rich.syntax.Syntax:
@@ -54,7 +54,7 @@ class SyntaxStylizedTextPanel(
 
         return rich.syntax.Syntax(
             content,
-            lexer=language,
+            lexer=syntax_language,
             theme=theme,
             # background_color=None if self.config.solid_background else 'default',
             word_wrap=word_wrap,
@@ -97,7 +97,7 @@ class SyntaxStylizedTextPanel(
             tab_size=self.config.tab,
             color_system=self.config.system,
             console_color_style=self.config.style,
-            language=self.config.lang,
+            syntax_language=self.config.syntax,
             horizontal_overflow_mode=self.config.h_overflow,
             remove_bg_color=not self.config.bg,
         )
@@ -116,7 +116,7 @@ class SyntaxStylizedTextPanel(
             # Color system is hard-coded to 'truecolor' for HTML output
             color_system=DisplayColorSystem.ANSI_RGB,
             console_color_style=self.config.style,
-            language=self.config.lang,
+            syntax_language=self.config.syntax,
             horizontal_overflow_mode=self.config.h_overflow,
             # The HTML background color is set for the entire tag/page, so
             # we need to remove the background color for each element

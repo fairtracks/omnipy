@@ -90,7 +90,7 @@ class PrettyPrinterLib(LiteralEnum[str]):
     """
     Automatically selects the pretty printer based on:
     1. The content type
-    2. The `language` config parameter
+    2. The `syntax` config parameter
     """
 
 
@@ -162,39 +162,39 @@ class SyntaxLanguage(JsonSyntaxLanguage,
                        PythonSyntaxLanguage.Literals]
 
     @classmethod
-    def is_syntax_language(cls, language: str) -> 'TypeIs[SyntaxLanguage.Literals]':
+    def is_syntax_language(cls, syntax: str) -> 'TypeIs[SyntaxLanguage.Literals]':
         """
-        Checks if the given language is a Syntax language.
+        Checks if the given syntax is a Syntax language.
         """
-        return language in SyntaxLanguage
+        return syntax in SyntaxLanguage
 
     @classmethod
-    def is_json_language(cls, language: str) -> TypeIs[JsonSyntaxLanguage.Literals]:
+    def is_json_syntax(cls, syntax: str) -> TypeIs[JsonSyntaxLanguage.Literals]:
         """
-        Checks if the given language is a JSON language.
+        Checks if the given syntax is a JSON syntax.
         """
-        return language in JsonSyntaxLanguage
+        return syntax in JsonSyntaxLanguage
 
     @classmethod
-    def is_text_language(cls, language: str) -> TypeIs[TextSyntaxLanguage.Literals]:
+    def is_text_syntax(cls, syntax: str) -> TypeIs[TextSyntaxLanguage.Literals]:
         """
-        Checks if the given language is a general text language.
+        Checks if the given syntax is a general text syntax.
         """
-        return language in TextSyntaxLanguage
+        return syntax in TextSyntaxLanguage
 
     @classmethod
-    def is_hexdump_language(cls, language: str) -> TypeIs[HexdumpSyntaxLanguage.Literals]:
+    def is_hexdump_syntax(cls, syntax: str) -> TypeIs[HexdumpSyntaxLanguage.Literals]:
         """
-        Checks if the given language is a language for displaying binary as hexdump
+        Checks if the given syntax is the syntax for displaying binary as hexdump
         """
-        return language in HexdumpSyntaxLanguage
+        return syntax in HexdumpSyntaxLanguage
 
     @classmethod
-    def is_python_language(cls, language: str) -> TypeIs[PythonSyntaxLanguage.Literals]:
+    def is_python_syntax(cls, syntax: str) -> TypeIs[PythonSyntaxLanguage.Literals]:
         """
-        Checks if the given language is a Python variant.
+        Checks if the given syntax is a Python variant.
         """
-        return language in PythonSyntaxLanguage
+        return syntax in PythonSyntaxLanguage
 
 
 class DisplayColorSystem(LiteralEnum[str]):

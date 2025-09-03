@@ -666,7 +666,7 @@ def test_plain_str_pretty_print() -> None:
         A(),
         exp_plain_output='A()',
         frame=DEFAULT_FRAME,
-        config=OutputConfig(lang=SyntaxLanguage.TEX),
+        config=OutputConfig(syntax=SyntaxLanguage.TEX),
         within_frame_width=True,
         within_frame_height=True,
     )

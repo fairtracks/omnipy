@@ -39,7 +39,7 @@ class PrettyPrinter(ABC, Generic[ContentT]):
         if pretty_printer:
             return pretty_printer
 
-        return register.get_pretty_printer_from_language(draft_panel.config.lang)
+        return register.get_pretty_printer_from_syntax(draft_panel.config.syntax)
 
 
 class WidthReducingPrettyPrinter(PrettyPrinter[ContentT], Generic[ContentT]):

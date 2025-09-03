@@ -6,7 +6,7 @@ from omnipy.data.typechecks import is_model_instance
 
 class PythonWidthReducingPrettyPrinterMixin:
     def is_suitable_content(self, draft_panel: DraftPanel[object, FrameT]) -> bool:
-        # To first allow for language-based selection, and PYTHON is the default language
+        # To first allow for syntax-based selection, and PYTHON is the default syntax
         return False
 
     def prepare_draft_panel(

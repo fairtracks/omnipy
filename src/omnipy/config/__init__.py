@@ -18,7 +18,7 @@ class ConfigBase(DataPublisher):
         class ConfigModel(JsonModel):
             def _default_panel(self, **kwargs) -> 'DraftPanel':
                 kwargs_copy = kwargs.copy()
-                kwargs_copy['lang'] = SyntaxLanguage.JSON
+                kwargs_copy['syntax'] = SyntaxLanguage.JSON
                 return self._full(**kwargs_copy)
 
         return ConfigModel(self)

@@ -38,20 +38,20 @@ def get_pretty_printer_from_content(draft_panel: DraftPanel) -> PrettyPrinter | 
             return pretty_printer
 
 
-def get_pretty_printer_from_language(language: SyntaxLanguage.Literals | str) -> PrettyPrinter:
+def get_pretty_printer_from_syntax(syntax: SyntaxLanguage.Literals | str) -> PrettyPrinter:
 
-    if SyntaxLanguage.is_syntax_language(language):
-        match language:
-            case _lang if SyntaxLanguage.is_json_language(_lang):
+    if SyntaxLanguage.is_syntax_language(syntax):
+        match syntax:
+            case _syntax if SyntaxLanguage.is_json_syntax(_syntax):
                 return CompactJsonPrettyPrinter()
-            case _lang if SyntaxLanguage.is_text_language(_lang):
+            case _syntax if SyntaxLanguage.is_text_syntax(_syntax):
                 return PlainTextPrettyPrinter()
-            case _lang if SyntaxLanguage.is_hexdump_language(_lang):
+            case _syntax if SyntaxLanguage.is_hexdump_syntax(_syntax):
                 return HexdumpPrettyPrinter()
-            case _lang if SyntaxLanguage.is_python_language(_lang):
+            case _syntax if SyntaxLanguage.is_python_syntax(_syntax):
                 return RichPrettyPrinter()
             case _ as never:
                 assert_never(never)  # pyright: ignore [reportArgumentType]
 
-    # Other language from pygments, not explicitly supported by Omnipy
+    # Other syntax language from pygments, not explicitly supported by Omnipy
     return PlainTextPrettyPrinter()
