@@ -8,6 +8,7 @@ from typing import Any, cast, Literal, overload, ParamSpec, TYPE_CHECKING
 import webbrowser
 
 from pathvalidate import sanitize_filename
+import solara
 from typing_extensions import assert_never, get_args, LiteralString, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase
@@ -323,8 +324,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     element: Element = ReactivelyResizingHtml(
                         cast(Dataset | Model, self),
                         output_method=functools.partial(_render_output, ui_type),
-                        *args,
-                        **kwargs,
+                        reactive_kwargs=solara.reactive(kwargs),  # **kwargs.copy(),
                     )
                     reacton.display(element, mime_bundle=mime_bundle)
 
@@ -461,8 +461,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             )
 
         if ui_type is UserInterfaceType.JUPYTER:
-            from omnipy.data._display.integrations.jupyter.components import BrowseModels
-            BrowseModels(html_content=html_output)._ipython_display_()
+            from omnipy.data._display.integrations.jupyter.components import ModelBrowser
+            ModelBrowser(html_content=html_output)._ipython_display_()
         else:
             for filename, html_content in html_output.items():
                 file_path = self._create_cached_html_file(filename, html_content)

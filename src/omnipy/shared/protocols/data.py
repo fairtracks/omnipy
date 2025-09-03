@@ -11,7 +11,8 @@ from typing import (Any,
                     Protocol,
                     runtime_checkable,
                     Type,
-                    TypeAlias)
+                    TypeAlias,
+                    TypedDict)
 
 import solara
 from typing_extensions import Self, TypeVar
@@ -350,9 +351,15 @@ class IsSnapshotHolder(IsWeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasC
         ...
 
 
+class AvailableDisplayDims(TypedDict):
+    width: pyd.NonNegativeInt | None
+    height: pyd.NonNegativeInt | None
+
+
 @runtime_checkable
 class IsReactiveObjects(Protocol):
     jupyter_ui_config: solara.Reactive[IsJupyterUserInterfaceConfig]
+    available_display_dims_in_px: solara.Reactive[AvailableDisplayDims]
 
 
 @runtime_checkable

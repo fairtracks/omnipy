@@ -7,7 +7,8 @@ from typing_extensions import TypeVar
 from omnipy.config import ConfigBase
 from omnipy.config.data import JupyterUserInterfaceConfig
 from omnipy.shared.protocols.config import IsJupyterUserInterfaceConfig
-import omnipy.util._pydantic as pyd
+from omnipy.shared.protocols.data import AvailableDisplayDims
+from omnipy.util import _pydantic as pyd
 from omnipy.util.publisher import DataPublisher
 
 ConfigBaseT = TypeVar('ConfigBaseT', bound=ConfigBase)
@@ -56,3 +57,5 @@ class ReactiveObjects(DataPublisher):
     """
     jupyter_ui_config: solara.Reactive[IsJupyterUserInterfaceConfig] = pyd.Field(
         default_factory=lambda: ReactiveConfigCopy(JupyterUserInterfaceConfig()))
+    available_display_dims_in_px: solara.Reactive[AvailableDisplayDims] = pyd.Field(
+        default_factory=lambda: solara.Reactive(AvailableDisplayDims(width=0, height=0)))
