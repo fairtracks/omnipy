@@ -7,6 +7,7 @@ import sys
 from typing import Any, cast, Literal, overload, ParamSpec, TYPE_CHECKING
 import webbrowser
 
+from pathvalidate import sanitize_filename
 from typing_extensions import assert_never, get_args, LiteralString, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase
@@ -99,7 +100,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         preview of the model's content, and for datasets, this is a
         side-by-side view of each model contained in the dataset. Both views
         are automatically limited by the available display dimensions.
-        :return: If the UI type is Jupyter runnint in in browser, `peek`
+        :return: If the UI type is Jupyter running in a browser, `peek`
         returns a ReactivelyResizingHtml element which is a Jupyter widget
         to display HTML output in the browser. Otherwise, returns None.
         """
@@ -113,6 +114,12 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _extract_ui_type(self, **kwargs) -> SpecifiedUserInterfaceType.Literals:
         return (kwargs.get('ui', None) or cast(DataClassBase, self).config.ui.detected_type)
 
+    @classmethod
+    def _prepare_kwargs_for_full(cls, kwargs):
+        kwargs_copy = kwargs.copy()
+        kwargs_copy['height'] = None
+        return kwargs_copy
+
     @takes_input_params_from(_DisplayMethodParams.__init__)
     def full(self, **kwargs) -> 'Element | None':
         """
@@ -125,14 +132,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         returns a ReactivelyResizingHtml element which is a Jupyter widget
         to display HTML output in the browser. Otherwise, returns None.
         """
-        kwargs_copy = kwargs.copy()
-        kwargs_copy['height'] = None
-
         return self._display_according_to_ui_type(
             ui_type=self._extract_ui_type(**kwargs),
             return_output_if_str=False,
             output_method=self._full,
-            **kwargs_copy)
+            **kwargs)
 
     @takes_input_params_from(_DisplayMethodParams.__init__)
     def browse(self, **kwargs) -> None:
@@ -207,17 +211,15 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 #       __repr__()?
                 p.text(self.__repr__())
 
-    def _repr_html_(self) -> str:
+    def _ipython_display_(self) -> None:
         ui_type = cast(DataClassBase, self).config.ui.detected_type
-        if UserInterfaceType.is_jupyter_in_browser(ui_type):
-            self._display_according_to_ui_type(
-                ui_type=ui_type,
-                return_output_if_str=False,
-                output_method=self._default_panel,
-            )
-        elif UserInterfaceType.is_jupyter_embedded(ui_type):
-            print(self.default_repr_to_terminal_str(ui_type))
-        return ''
+        if UserInterfaceType.is_ipython_terminal(ui_type):
+            print()  # Otherwise, first line is indented due to prompt
+        self._display_according_to_ui_type(
+            ui_type=ui_type,
+            return_output_if_str=False,
+            output_method=self._default_panel,
+        )
 
     @overload
     def _display_according_to_ui_type(
@@ -478,7 +480,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         self_as_dataclass = cast(DataClassBase, self)
 
         # TODO: Improve file caching mechanism, including style files
-        file_path = Path(self_as_dataclass.config.ui.cache_dir_path) / filename
+        file_path = Path(self_as_dataclass.config.ui.cache_dir_path) / sanitize_filename(filename)
 
         with open(file_path, 'w', encoding='utf-8') as html_file:
             html_file.write(html_output)
@@ -650,7 +652,7 @@ class ModelDisplayMixin(BaseDisplayMixin):
         return self._peek_models(models={self.__class__.__name__: self_as_model}, **kwargs)
 
     def _full(self, **kwargs) -> DraftPanel:
-        return self._peek(**kwargs)
+        return self._peek(**self._prepare_kwargs_for_full(kwargs))
 
     def _browse(self, **kwargs) -> None:
         self_as_model = cast('Model', self)
@@ -691,7 +693,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             **kwargs)
 
     def _full(self, **kwargs) -> DraftPanel:
-        return self._list(**kwargs)
+        return self._list(**self._prepare_kwargs_for_full(kwargs))
 
     @takes_input_params_from(_DisplayMethodParams.__init__)
     def list(self, **kwargs) -> 'Element | None':
@@ -759,11 +761,15 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
         html_output: dict[str, str] = {}
         filename = f'{self.__class__.__name__}_{id(self)}.html'
+
+        kwargs_copy = kwargs.copy()
+        kwargs_copy['ui'] = UserInterfaceType.BROWSER_PAGE
+
         html_output[filename] = self._display_according_to_ui_type(
             ui_type=UserInterfaceType.BROWSER_PAGE,
             return_output_if_str=True,
             output_method=self._list,
-            **kwargs,
+            **kwargs_copy,
         )
 
         self._browse_models(
