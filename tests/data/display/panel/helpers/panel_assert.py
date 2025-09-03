@@ -216,3 +216,9 @@ def fill_html_page_template(style: str, data: str, case_id: str | None = None) -
         font_style=_get_font_style_by_case_id(case_id),
         data=data,
     )
+
+
+FONT_RENDER_BODY_STYLE = dedent("""\
+    text-rendering: geometricPrecision;
+            -webkit-font-smoothing: subpixel-antialiased;
+            -moz-osx-font-smoothing: grayscale;""")

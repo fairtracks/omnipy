@@ -4,14 +4,13 @@ import solara
 from solara.toestand import ValueBase
 from typing_extensions import TypeVar
 
-from omnipy.config import ConfigBase
 from omnipy.config.data import JupyterUserInterfaceConfig
 from omnipy.shared.protocols.config import IsJupyterUserInterfaceConfig
 from omnipy.shared.protocols.data import AvailableDisplayDims
 from omnipy.util import _pydantic as pyd
 from omnipy.util.publisher import DataPublisher
 
-ConfigBaseT = TypeVar('ConfigBaseT', bound=ConfigBase)
+ConfigBaseT = TypeVar('ConfigBaseT')
 
 
 class ReactiveConfigCopy(solara.Reactive[ConfigBaseT], Generic[ConfigBaseT]):
@@ -59,3 +58,10 @@ class ReactiveObjects(DataPublisher):
         default_factory=lambda: ReactiveConfigCopy(JupyterUserInterfaceConfig()))
     available_display_dims_in_px: solara.Reactive[AvailableDisplayDims] = pyd.Field(
         default_factory=lambda: solara.Reactive(AvailableDisplayDims(width=0, height=0)))
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, ReactiveObjects):
+            return False
+        return all(
+            getattr(self, field.name).value == getattr(other, field.name).value
+            for field in self.__class__.__fields__.values())

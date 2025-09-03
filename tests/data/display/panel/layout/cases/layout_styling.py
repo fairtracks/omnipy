@@ -14,7 +14,9 @@ from ...helpers.case_setup import (OutputPropertyType,
                                    StylizedPanelOutputExpectations,
                                    StylizedPanelTestCaseSetup)
 from ...helpers.mocks import MockStylablePlainCropPanel
-from ...helpers.panel_assert import fill_html_page_template, fill_html_tag_template
+from ...helpers.panel_assert import (fill_html_page_template,
+                                     fill_html_tag_template,
+                                     FONT_RENDER_BODY_STYLE)
 
 # Note:
 #
@@ -651,11 +653,12 @@ def case_layout_styling_expectations_colorized_html_tag(
 def case_layout_styling_expectations_plain_html_page(
         plain_html_page: Annotated[OutputPropertyType,
                                    pc.fixture]) -> StylizedPanelOutputExpectations:
-    light_body_style = """
-      body {
+    light_body_style = f"""
+      body {{
         color: #000000;
         background-color: #ffffff;
-      }"""
+        {FONT_RENDER_BODY_STYLE}
+      }}"""
 
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
@@ -713,11 +716,12 @@ def case_layout_styling_expectations_bw_stylized_html_page(
         '.r3 {font-style: italic}',
     ])
 
-    light_body_style = """
-      body {
+    light_body_style = f"""
+      body {{
         color: #000000;
         background-color: #ffffff;
-      }"""
+        {FONT_RENDER_BODY_STYLE}
+      }}"""
 
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
@@ -795,17 +799,19 @@ def case_layout_styling_expectations_colorized_html_page(
     lightbulb_dark_bold_style_no_bg = (
         '\n.r2 {color: #000080; text-decoration-color: #000080; font-weight: bold}')
 
-    lightbulb_dark_body_style_with_bg = """
-      body {
+    lightbulb_dark_body_style_with_bg = f"""
+      body {{
         color: #d4d2c8;
         background-color: #1d2331;
-      }"""
+        {FONT_RENDER_BODY_STYLE}
+      }}"""
 
-    lightbulb_dark_body_style_no_bg = """
-      body {
+    lightbulb_dark_body_style_no_bg = f"""
+      body {{
         color: #d4d2c8;
         background-color: #000000;
-      }"""
+        {FONT_RENDER_BODY_STYLE}
+      }}"""
 
     omnipy_selenized_light_style_with_bg = '\n'.join([
         '.r1 {color: #808c8a; text-decoration-color: #808c8a; background-color: #fbf3db}',
@@ -821,17 +827,19 @@ def case_layout_styling_expectations_colorized_html_page(
         '.r3 {color: #a78300; text-decoration-color: #a78300; font-style: italic}',
     ])
 
-    omnipy_selenized_light_body_style_with_bg = """
-      body {
+    omnipy_selenized_light_body_style_with_bg = f"""
+      body {{
         color: #53676d;
         background-color: #fbf3db;
-      }"""
+        {FONT_RENDER_BODY_STYLE}
+      }}"""
 
-    omnipy_selenized_light_body_style_no_bg = """
-      body {
+    omnipy_selenized_light_body_style_no_bg = f"""
+      body {{
         color: #53676d;
         background-color: #ffffff;
-      }"""
+        {FONT_RENDER_BODY_STYLE}
+      }}"""
 
     no_frame_default_color_exp_output = (
         '<span class="r1">╭─────────┬─────────╮</span>\n'

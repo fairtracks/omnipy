@@ -16,7 +16,9 @@ from ...helpers.case_setup import (OutputPropertyType,
                                    StylizedPanelOutputExpectations,
                                    StylizedPanelTestCaseSetup,
                                    WithinFrameExp)
-from ...helpers.panel_assert import fill_html_page_template, fill_html_tag_template
+from ...helpers.panel_assert import (fill_html_page_template,
+                                     fill_html_tag_template,
+                                     FONT_RENDER_BODY_STYLE)
 
 
 @pc.case(id='word_wrap_horizontal', tags=['overflow_modes', 'syntax_text'])
@@ -579,11 +581,12 @@ def case_syntax_styling_expectations_colorized_html_tag(
 def case_syntax_styling_expectations_plain_html_page(
         plain_html_page: Annotated[OutputPropertyType,
                                    pc.fixture]) -> StylizedPanelOutputExpectations:
-    bw_light_body_style = """
-      body {
+    bw_light_body_style = f"""
+      body {{
         color: #000000;
         background-color: #ffffff;
-      }"""
+        {FONT_RENDER_BODY_STYLE}
+      }}"""
 
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
@@ -627,11 +630,12 @@ def case_syntax_styling_expectations_bw_stylized_html_page(
 ) -> StylizedPanelOutputExpectations:
     bold_style = '.r2 {font-weight: bold}'
 
-    bw_light_body_style = """
-      body {
+    bw_light_body_style = f"""
+      body {{
         color: #000000;
         background-color: #ffffff;
-      }"""
+        {FONT_RENDER_BODY_STYLE}
+      }}"""
 
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
@@ -702,29 +706,33 @@ def case_syntax_styling_expectations_colorized_html_page(
         '.r4 {color: #8cd0d3; text-decoration-color: #8cd0d3}',
     ])
 
-    ansi_dark_body_style = """
-      body {
+    ansi_dark_body_style = f"""
+      body {{
         color: #ffffff;
         background-color: #000000;
-      }"""
+        {FONT_RENDER_BODY_STYLE}
+      }}"""
 
-    murphy_light_body_style = """
-      body {
+    murphy_light_body_style = f"""
+      body {{
         color: #000000;
         background-color: #ffffff;
-      }"""
+        {FONT_RENDER_BODY_STYLE}
+      }}"""
 
-    zenburn_dark_body_style_with_bg = """
-      body {
+    zenburn_dark_body_style_with_bg = f"""
+      body {{
         color: #dcdccc;
         background-color: #3f3f3f;
-      }"""
+        {FONT_RENDER_BODY_STYLE}
+      }}"""
 
-    zenburn_dark_body_style_no_bg = """
-      body {
+    zenburn_dark_body_style_no_bg = f"""
+      body {{
         color: #dcdccc;
         background-color: #000000;
-      }"""
+        {FONT_RENDER_BODY_STYLE}
+      }}"""
 
     no_frame_default_color_exp_output = ('MyClass({'
                                          '<span class="r1">&#x27;abc&#x27;</span>: ['
