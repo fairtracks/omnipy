@@ -39,7 +39,7 @@ class DataPublisher(pyd.BaseModel):
         def _get_attr_callback_for_publisher_child(
                 attr_name: str) -> Callable[[DataPublisher], None]:
             def _attr_callback_for_publisher_child(value: object) -> None:
-                self._call_all_subscribers(attr_name, value)
+                callback_fun(self)
 
             return _attr_callback_for_publisher_child
 
@@ -56,6 +56,12 @@ class DataPublisher(pyd.BaseModel):
     def unsubscribe_all(self) -> None:
         self._self_subscriptions.clear()
         self._attr_subscriptions.clear()
+
+        for attr_name in self.__class__.__fields__.keys():
+            if not attr_name.startswith('_'):
+                attr = getattr(self, attr_name)
+                if isinstance(attr, DataPublisher):
+                    attr.unsubscribe_all()
 
     def _call_subscribers(self, attr_name: str, value: object) -> None:
         if attr_name in self._attr_subscriptions:
