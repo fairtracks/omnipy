@@ -4,7 +4,7 @@ from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.data.typechecks import is_model_instance
 
 
-class PythonWidthReducingPrettyPrinterMixin:
+class PythonStatsTighteningPrettyPrinterMixin:
     def is_suitable_content(self, draft_panel: DraftPanel[object, FrameT]) -> bool:
         # To first allow for syntax-based selection, and PYTHON is the default syntax
         return False
@@ -23,7 +23,7 @@ class PythonWidthReducingPrettyPrinterMixin:
         )
 
 
-class JsonWidthReducingPrettyPrinterMixin:
+class JsonStatsTighteningPrettyPrinterMixin:
     def is_suitable_content(self, draft_panel: DraftPanel[object, FrameT]) -> bool:
         return is_json_model_instance_hack(draft_panel.content)
 

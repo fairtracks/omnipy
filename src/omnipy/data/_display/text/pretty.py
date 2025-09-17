@@ -3,11 +3,12 @@ from typing import cast
 from cachebox import cached, FIFOCache
 
 from omnipy.data._display.dimensions import Proportionally
-from omnipy.data._display.frame import frame_has_width, FrameWithWidth
+from omnipy.data._display.frame import AnyFrame, frame_has_width, FrameWithWidth
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import FrameT, OtherFrameT
-from omnipy.data._display.text.pretty_printer.base import PrettyPrinter, WidthReducingPrettyPrinter
+from omnipy.data._display.text.pretty_printer.base import (PrettyPrinter,
+                                                           StatsTighteningPrettyPrinter)
 
 
 def pretty_repr_of_draft_output(
@@ -20,7 +21,7 @@ def pretty_repr_of_draft_output(
 
     if frame_has_width(formatted_draft_panel.frame):
         reflowed_text_panel = cast(ReflowedTextDraftPanel[FrameWithWidth], formatted_draft_panel)
-        if (isinstance(pretty_printer, WidthReducingPrettyPrinter)
+        if (isinstance(pretty_printer, StatsTighteningPrettyPrinter)
                 and _should_reduce_width(reflowed_text_panel)):
             return _iteratively_reduce_width(
                 pretty_printer=pretty_printer,
@@ -53,9 +54,9 @@ def _should_reduce_width(reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWi
 
 
 def _iteratively_reduce_width(
-    pretty_printer: WidthReducingPrettyPrinter,
+    pretty_printer: StatsTighteningPrettyPrinter[object],
     draft_panel: DraftPanel[object, FrameT],
-    cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
+    cur_reflowed_text_panel: ReflowedTextDraftPanel[OtherFrameT],
     orig_draft_content_id: int,
     should_follow_proportionality: bool,
 ) -> ReflowedTextDraftPanel[FrameT]:
@@ -76,19 +77,16 @@ def _iteratively_reduce_width(
             else:
                 break
 
-        draft_for_format: DraftPanel[object, FrameWithWidth] = \
-            pretty_printer.prepare_draft_for_print_with_reduced_width_requirements(
+        draft_for_format: DraftPanel[object, AnyFrame] = \
+            pretty_printer.prepare_draft_for_print_with_tightened_stat_requirements(
                 draft_panel,
                 cur_reflowed_text_panel,
         )
 
-        if not (pretty_printer.width_reduced_since_last_print(
+        if not pretty_printer.stats_tightened_since_last_print(
                 draft_for_format,
                 cur_reflowed_text_panel,
-        ) or pretty_printer.constraints_tightened_since_last_print(
-                draft_for_format,
-                cur_reflowed_text_panel,
-        )):
+        ):
             break
 
         prev_reflowed_text_panel = cur_reflowed_text_panel
@@ -119,7 +117,7 @@ def _unique_format_params_key_maker(_args, kwargs):
 @cached(FIFOCache(maxsize=512), key_maker=_unique_format_params_key_maker)
 def _format_draft_panel(
     *,
-    pretty_printer: WidthReducingPrettyPrinter,
+    pretty_printer: StatsTighteningPrettyPrinter,
     orig_draft_content_id: int,  # Only used for generating unique cache keys
     draft_for_format: DraftPanel[object, FrameT],
     cur_reflowed_text_panel: ReflowedTextDraftPanel[OtherFrameT],

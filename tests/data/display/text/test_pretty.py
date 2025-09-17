@@ -461,9 +461,48 @@ def test_pretty_repr_of_draft_approximately_in_frame(
         within_frame_height=True,
     )
 
+    if pretty_printer is PrettyPrinterLib.DEVTOOLS:
+        # Devtools supports a slightly more compact representation
+        excepted_output_high_and_slim = dedent("""\
+        [
+          {
+            'geometry': {
+              'location': {
+                'lng': 77.2295097,
+                'lat': 28.612912
+              },
+              'viewport': {
+                'northeast': {
+                  'lng': (
+                    77.23085868029
+                    15
+                  ),
+                  'lat': (
+                    28.61426098029
+                    15
+                  )
+                },
+                'southwest': {
+                  'lng': (
+                    77.22816071970
+                    848
+                  ),
+                  'lat': (
+                    28.61156301970
+                    85
+                  )
+                }
+              },
+              'location_type': 'APPROXIMATE'
+            }
+          }
+        ]""")
+    else:
+        excepted_output_high_and_slim = geometry_data_thinnest_repr
+
     _assert_pretty_repr_of_draft(
         geometry_data,
-        geometry_data_thinnest_repr,
+        excepted_output_high_and_slim,
         frame=Frame(Dimensions(10, 10), fixed_width=False),
         config=config,
         within_frame_width=False,

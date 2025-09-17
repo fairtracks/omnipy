@@ -25,10 +25,24 @@ from omnipy.util.helpers import (all_type_variants,
                                  is_strict_subclass,
                                  is_union,
                                  is_unreserved_identifier,
+                                 sorted_dict_hash,
                                  transfer_generic_args_to_cls)
 
 T = TypeVar('T')
 U = TypeVar('U')
+
+
+def test_key_sorted_dict_hash() -> None:
+    d1 = {'b': 2, 'a': 1}
+    d2 = {'a': 1, 'b': 2}
+    d3 = {'a': 1, 'c': 2}
+    d4: dict[str, int] = {}
+    d5: dict[str, int] = {}
+
+    assert sorted_dict_hash(d1) == sorted_dict_hash(d2)
+    assert sorted_dict_hash(d1) != sorted_dict_hash(d3)
+    assert sorted_dict_hash(d3) != sorted_dict_hash(d4)
+    assert sorted_dict_hash(d4) == sorted_dict_hash(d5)
 
 
 class MyGenericDict(dict[T, U], Generic[T, U]):

@@ -45,6 +45,10 @@ _RetT = TypeVar('_RetT')
 Dictable: TypeAlias = Mapping[_KeyT, Any] | Iterable[tuple[_KeyT, Any]]
 
 
+def sorted_dict_hash(d: dict) -> tuple:
+    return tuple((k, d[k]) for k in sorted(d.keys()))
+
+
 def as_dictable(obj: object) -> Dictable | None:
     def _is_iterable_of_tuple_pairs(obj_inner: object) -> bool:
         return isinstance(obj_inner, Iterable) and \
