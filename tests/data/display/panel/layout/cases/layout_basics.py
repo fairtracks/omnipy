@@ -6,10 +6,7 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
 from omnipy.data._display.layout.base import Layout
-from omnipy.shared.enums.display import (DisplayColorSystem,
-                                         HorizontalOverflowMode,
-                                         Justify,
-                                         VerticalOverflowMode)
+from omnipy.shared.enums.display import HorizontalOverflowMode, Justify, VerticalOverflowMode
 
 from ...helpers.case_setup import FrameTestCase, FrameVariant, PanelFrameVariantTestCase
 from ...helpers.mocks import MockResizedStylablePlainCropPanel, MockStylablePlainCropPanel
@@ -788,10 +785,6 @@ def case_layout_single_panel_fixed_width_with_title(
                 title='A nice title',
                 frame=Frame(Dimensions(width=19, height=None)),
             )),
-        config=OutputConfig(
-            system=DisplayColorSystem.ANSI_RGB,
-            bg=True,
-        ),
         exp_plain_output_no_frame=('╭─────────────────────╮\n'
                                    '│    A nice title     │\n'
                                    '│                     │\n'
@@ -1024,8 +1017,6 @@ def case_layout_two_panels_fixed_content_and_frame(
             # and vertical overflow modes.
             h_overflow=HorizontalOverflowMode.CROP,
             v_overflow=VerticalOverflowMode.CROP_BOTTOM,
-            system=DisplayColorSystem.ANSI_RGB,
-            bg=True,
         ),
         exp_plain_output_no_frame=('╭──────────────┬───────────╮\n'
                                    '│ Some content │ (1, 2, 3) │\n'
