@@ -49,7 +49,8 @@ def ReactiveBgColorUpdater(jupyter_ui_config: IsJupyterUserInterfaceConfig):
             bg_color=_bg_color.value,
             on_bg_color=_bg_color.set,
     ):
-        jupyter_ui_config.color.dark_background = _is_dark_background(_bg_color.value)
+        if jupyter_ui_config.color.dark_background != _is_dark_background(_bg_color.value):
+            jupyter_ui_config.color.dark_background = _is_dark_background(_bg_color.value)
 
 
 @solara.component_vue('AvailableDisplayDimsDetector.vue')
