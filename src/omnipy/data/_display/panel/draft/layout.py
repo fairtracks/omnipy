@@ -72,7 +72,7 @@ class ResizedLayoutDraftPanel(
     @cached_property
     @override
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
-        return self.content.calc_dims()
+        return self.content.calc_dims(panel_design=self.config.panel)
 
     @cached_property
     def _content_lines(self) -> list[str]:

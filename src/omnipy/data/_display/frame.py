@@ -65,7 +65,7 @@ class Frame(Generic[WidthT, HeightT]):
         return Dimensions(dims.width, dims.height)
 
     @staticmethod
-    def _not_fixed_if_empty(
+    def _auto_fixed_value_from_dims(
         dims_attr: str,
         fixed_value: bool | None,
         dims: Dimensions,
@@ -80,20 +80,20 @@ class Frame(Generic[WidthT, HeightT]):
         return True if fixed_value is None else fixed_value
 
     @pyd.validator('fixed_width', pre=True, always=True)
-    def _not_fixed_width_if_empty_frame(
+    def _auto_fixed_width_from_frame_dims(
         cls,
         fixed_width: bool | None,
         values: dict[str, Dimensions[WidthT, HeightT]],
     ) -> bool:
-        return cls._not_fixed_if_empty('width', fixed_width, values['dims'])
+        return cls._auto_fixed_value_from_dims('width', fixed_width, values['dims'])
 
     @pyd.validator('fixed_height', pre=True, always=True)
-    def _not_fixed_height_if_empty_frame(
+    def _auto_fixed_height_from_frame_dims(
         cls,
         fixed_height: bool | None,
         values: dict[str, Dimensions[WidthT, HeightT]],
     ) -> bool:
-        return cls._not_fixed_if_empty('height', fixed_height, values['dims'])
+        return cls._auto_fixed_value_from_dims('height', fixed_height, values['dims'])
 
     def modified_copy(
         self,
@@ -117,7 +117,7 @@ class Frame(Generic[WidthT, HeightT]):
         new_dims = Dimensions(width=width, height=height)
 
         if isinstance(fixed_width, pyd.UndefinedType):
-            fixed_width = self._not_fixed_if_empty(
+            fixed_width = self._auto_fixed_value_from_dims(
                 'width',
                 self.fixed_width,
                 new_dims,
@@ -125,7 +125,7 @@ class Frame(Generic[WidthT, HeightT]):
             )
 
         if isinstance(fixed_height, pyd.UndefinedType):
-            fixed_height = self._not_fixed_if_empty(
+            fixed_height = self._auto_fixed_value_from_dims(
                 'height',
                 self.fixed_height,
                 new_dims,

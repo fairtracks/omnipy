@@ -134,7 +134,7 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
     def inner_frame(self) -> FrameT:
         """
         Returns the inner panel frame, which is the same as
-        the outer panelframe, but adjusted for the title height if
+        the outer panel frame, but adjusted for the title height if
         applicable.
         """
         if has_height(self.frame.dims) and self.title_height > 0:

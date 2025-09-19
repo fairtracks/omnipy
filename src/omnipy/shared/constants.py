@@ -21,6 +21,8 @@ BROWSER_DEFAULT_HEIGHT: pyd.NonNegativeInt | None = None
 
 # Data - Display - Panel
 
+# TODO: If an issue in practice, consider making TITLE_BLANK_LINES depend on
+#       the panel style (i.e., no blank lines for nested layout panels).
 TITLE_BLANK_LINES = 1
 DOUBLE_LINE_TITLE_HEIGHT = TITLE_BLANK_LINES + 2
 SINGLE_LINE_TITLE_HEIGHT = TITLE_BLANK_LINES + 1

@@ -686,7 +686,7 @@ class ModelDisplayMixin(BaseDisplayMixin):
             self_as_model,
             self_as_model.outer_type(),
             frame=frame,
-            **kwargs,
+            **config_kwargs,
         )
 
 
