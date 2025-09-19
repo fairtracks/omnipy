@@ -40,6 +40,17 @@ class IsUserInterfaceTypeConfig(IsDataPublisher, Protocol):
     height: pyd.NonNegativeInt | None
     color: IsColorConfig
 
+    def set_width_and_height(
+        self,
+        width: pyd.NonNegativeInt | None,
+        height: pyd.NonNegativeInt | None,
+    ) -> None:
+        """
+        Sets width and height, and notifies subscribers of the change. Only
+        notifies self-subscribers once after both attributes have been
+        updated.
+        """
+
 
 @runtime_checkable
 class IsDimsModeMixin(Protocol):

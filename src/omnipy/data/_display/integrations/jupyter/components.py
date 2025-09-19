@@ -100,8 +100,10 @@ def ReactiveAvailableDisplaySizeUpdater(
 
     def _set_available_display_dims(available_display_dims: AvailableDisplayDims):
         if jupyter_ui_config.dims_mode is not DisplayDimensionsUpdateMode.FIXED:
-            jupyter_ui_config.width = available_display_dims['width']
-            jupyter_ui_config.height = available_display_dims['height']
+            jupyter_ui_config.set_width_and_height(
+                available_display_dims['width'],
+                available_display_dims['height'],
+            )
 
     with AvailableDisplayDimsDetector(
             available_display_dims_in_px=reactive_objects.available_display_dims_in_px.value,

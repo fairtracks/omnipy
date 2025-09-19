@@ -80,6 +80,21 @@ class UserInterfaceTypeConfig(ConfigBase):
     height: pyd.NonNegativeInt | None = TERMINAL_DEFAULT_HEIGHT
     color: IsColorConfig = pyd.Field(default_factory=ColorConfig)
 
+    def set_width_and_height(
+        self,
+        width: pyd.NonNegativeInt | None,
+        height: pyd.NonNegativeInt | None,
+    ) -> None:
+        """
+        Sets width and height, and notifies subscribers of the change. Only
+        notifies self-subscribers once after both attributes have been
+        updated.
+        """
+        for (dim_name, dim_value) in (('width', width), ('height', height)):
+            object.__setattr__(self, dim_name, dim_value)
+            self._call_subscribers(dim_name, dim_value)
+        self._call_self_subscribers()
+
 
 class DimsModeMixin(BaseModel):
     dims_mode: DisplayDimensionsUpdateMode.Literals = DisplayDimensionsUpdateMode.AUTO
