@@ -3,11 +3,11 @@ from typing import Any, Callable, ParamSpec, TYPE_CHECKING
 
 import solara
 
+from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.helpers import is_color_dark
 from omnipy.shared.enums.display import DisplayDimensionsUpdateMode
 from omnipy.shared.protocols.config import IsJupyterUserInterfaceConfig
 from omnipy.shared.protocols.data import AvailableDisplayDims, IsReactiveObjects
-from omnipy.shared.typedefs import Method
 
 if TYPE_CHECKING:
     from omnipy.data.dataset import Dataset
@@ -81,13 +81,18 @@ def DimsCalculator(
 @solara.component  # pyright: ignore [reportPrivateImportUsage]
 def ShowHtml(
     jupyter_ui_config: IsJupyterUserInterfaceConfig,
-    output_method: Method[P, str],
-    *args: Any,
+    orig_jupyter_ui_config: IsJupyterUserInterfaceConfig,
+    rendered_panel: FullyRenderedPanel,
+    render_panel_method: Callable[..., FullyRenderedPanel],
+    render_output_method: Callable[[FullyRenderedPanel], str],
     **kwargs: Any,
 ):
+    if jupyter_ui_config != orig_jupyter_ui_config:
+        rendered_panel = render_panel_method(**kwargs)
+
     solara.HTML(
         tag='div',
-        unsafe_innerHTML=output_method(*args, **kwargs),
+        unsafe_innerHTML=render_output_method(rendered_panel),
     )
 
 
@@ -123,10 +128,15 @@ def ReactiveAvailableDisplaySizeUpdater(
 @solara.component  # pyright: ignore [reportPrivateImportUsage]
 def ReactivelyResizingHtml(
     obj: 'Dataset | Model',
-    output_method: Method[P, str],
+    orig_jupyter_ui_config: IsJupyterUserInterfaceConfig,
+    rendered_panel: FullyRenderedPanel,
+    render_panel_method: Callable[..., FullyRenderedPanel],
+    render_output_method: Callable[[FullyRenderedPanel], str],
     reactive_kwargs: solara.Reactive[dict[str, Any]],
 ):
     kwargs = reactive_kwargs.value
+    reactive_objs = obj.reactive_objects
+    reactive_jupyter_ui_config = reactive_objs.jupyter_ui_config.value
 
     if any(_ in kwargs for _ in ('font_weight', 'font_size', 'fonts', 'line_height')):
 
@@ -135,9 +145,6 @@ def ReactivelyResizingHtml(
             kwargs_copy['width'] = available_display_dims['width']
             kwargs_copy['height'] = available_display_dims['height']
             reactive_kwargs.set(kwargs_copy)
-
-        reactive_objs = obj.reactive_objects
-        reactive_jupyter_ui_config = reactive_objs.jupyter_ui_config.value
 
         with DimsCalculator(
                 available_display_dims_in_px=reactive_objs.available_display_dims_in_px.value,
@@ -151,17 +158,16 @@ def ReactivelyResizingHtml(
                              or reactive_jupyter_ui_config.font.line_height),
         ):
             if 'width' in kwargs and 'height' in kwargs:
-                ShowHtml(
-                    jupyter_ui_config=reactive_objs.jupyter_ui_config.value,
-                    output_method=output_method,
-                    **kwargs,
-                )
-    else:
-        ShowHtml(
-            jupyter_ui_config=obj.reactive_objects.jupyter_ui_config.value,
-            output_method=output_method,
-            **kwargs,
-        )
+                # re-render panel as dims most probably have changed
+                rendered_panel = render_panel_method(**kwargs)
+
+    ShowHtml(
+        jupyter_ui_config=obj.reactive_objects.jupyter_ui_config.value,
+        orig_jupyter_ui_config=orig_jupyter_ui_config,
+        rendered_panel=rendered_panel,
+        render_panel_method=render_panel_method,
+        render_output_method=render_output_method,
+        **kwargs)
 
 
 @solara.component_vue('PageBgColorDetector.vue')

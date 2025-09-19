@@ -265,30 +265,35 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     ) -> 'str | Element | None':
         from omnipy.data.dataset import Dataset, Model
 
-        def _render_output(
+        def _render_panel(
             ui_type: SpecifiedUserInterfaceType.Literals,
             *args: P.args,
             **kwargs: P.kwargs,
-        ) -> str:
+        ) -> FullyRenderedPanel:
             panel = output_method(*args, **kwargs)
             resized_panel = panel.render_next_stage()
             if ui_type in BrowserPageUserInterfaceType:
-                # If the output is a browser page, we allow expanding the frame to fit the content
+                # If the output is a browser page, we allow expanding the
+                # frame to fit the content
                 if not resized_panel.within_frame.width:
                     wider_panel = dataclasses.replace(
                         panel,
                         frame=panel.frame.modified_copy(width=resized_panel.dims.width),
                     )
                     resized_panel = wider_panel.render_next_stage()
-            stylized_panel = resized_panel.render_next_stage()
+            return resized_panel.render_next_stage()
 
+        def _render_output(
+            rendered_panel: FullyRenderedPanel,
+            ui_type: SpecifiedUserInterfaceType.Literals,
+        ) -> str:
             match ui_type:
                 case x if UserInterfaceType.requires_terminal_output(x):
-                    return stylized_panel.colorized.terminal
+                    return rendered_panel.colorized.terminal
                 case x if UserInterfaceType.requires_html_tag_output(x):
-                    return stylized_panel.colorized.html_tag
+                    return rendered_panel.colorized.html_tag
                 case x if UserInterfaceType.requires_html_page_output(x):
-                    return stylized_panel.colorized.html_page
+                    return rendered_panel.colorized.html_page
                 case _ as never:
                     # Only supported by mypy, see https://github.com/microsoft/pyright/issues/10680
                     assert_never(never)  # pyright: ignore [reportArgumentType]
@@ -298,7 +303,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 mime_bundle = {}
 
                 embedded_ui_type = get_args(JupyterEmbeddedUserInterfaceType.Literals)[0]
-                mime_bundle['text/plain'] = _render_output(embedded_ui_type, *args, **kwargs)
+                rendered_panel = _render_panel(embedded_ui_type, *args, **kwargs)
+                mime_bundle['text/plain'] = _render_output(rendered_panel, embedded_ui_type)
 
                 if UserInterfaceType.is_jupyter_in_browser(ui_type):
                     import reacton
@@ -319,12 +325,16 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                                       'cell, and press Shift+Enter '
                                       '<kbd>⇧</kbd>+<kbd>↩</kbd></i>).'),
                     )
-                    mime_bundle['text/html'] += _render_output(browser_tag_ui_type, *args, **kwargs)
+                    mime_bundle['text/html'] += _render_output(rendered_panel, browser_tag_ui_type)
 
+                    self_as_dataclass = cast(Dataset | Model, self)
                     element: Element = ReactivelyResizingHtml(
-                        cast(Dataset | Model, self),
-                        output_method=functools.partial(_render_output, ui_type),
-                        reactive_kwargs=solara.reactive(kwargs),  # **kwargs.copy(),
+                        self_as_dataclass,
+                        self_as_dataclass.config.ui.jupyter.deepcopy(),
+                        rendered_panel=rendered_panel,
+                        render_panel_method=functools.partial(_render_panel, ui_type=ui_type),
+                        render_output_method=functools.partial(_render_output, ui_type=ui_type),
+                        reactive_kwargs=solara.reactive(kwargs),
                     )
                     reacton.display(element, mime_bundle=mime_bundle)
 
@@ -332,7 +342,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     import IPython.display
                     IPython.display.display(mime_bundle, raw=True)
             case _:
-                output = _render_output(ui_type, *args, **kwargs)
+                rendered_panel = _render_panel(ui_type, *args, **kwargs)
+                output = _render_output(rendered_panel, ui_type)
                 if return_output_if_str:
                     return output
                 else:
