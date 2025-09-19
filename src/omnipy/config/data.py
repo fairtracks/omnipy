@@ -158,8 +158,8 @@ class TerminalUserInterfaceConfig(DimsModeConfig):
     @override
     def _get_available_display_dims(
             cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
-        width, height = shutil.get_terminal_size(fallback=(-1, -1))
-        return None if width == -1 else width, None if height == -1 else height
+        width, height = shutil.get_terminal_size(fallback=(0, 0))
+        return None if width == 0 else width, None if height == 0 else height
 
 
 class FontConfig(ConfigBase):
