@@ -66,25 +66,35 @@ class DimensionsFit:
     def __init__(self,
                  dims: DimensionsWithWidthAndHeight,
                  frame_dims: Dimensions,
-                 proportional_freedom: pyd.NonNegativeFloat = 2.5):
+                 proportional_freedom: pyd.NonNegativeFloat | None = 2.5):
         assert has_width_and_height(dims)
 
         self._width: bool | None = None
         self._height: bool | None = None
         self._proportionality: Proportionally.Literals | None = None
-        self._proportional_freedom = proportional_freedom
+        self._proportional_freedom: pyd.NonNegativeFloat | None = proportional_freedom
 
-        if frame_dims.width is not None:
-            self._width = dims.width <= frame_dims.width
+        if self._proportional_freedom is None:
+            self._proportionality
+        else:
+            if frame_dims.width is not None:
+                self._width = dims.width <= frame_dims.width
 
-        if frame_dims.height is not None:
-            self._height = dims.height <= frame_dims.height
+            if frame_dims.height is not None:
+                self._height = dims.height <= frame_dims.height
 
-        if (dims.width > 0 and dims.height > 0 and frame_dims.width not in [None, 0]
-                and frame_dims.height not in [None, 0]):
-            self._proportionality = self._calculate_proportionality(dims, frame_dims)
+            if (dims.width > 0 and dims.height > 0 and frame_dims.width not in [None, 0]
+                    and frame_dims.height not in [None, 0]):
+                assert has_width_and_height(frame_dims)
+                self._proportionality = self._calculate_proportionality(dims, frame_dims)
 
-    def _calculate_proportionality(self, dims, frame_dims) -> Proportionally.Literals:
+    def _calculate_proportionality(
+        self,
+        dims: DimensionsWithWidthAndHeight,
+        frame_dims: DimensionsWithWidthAndHeight,
+    ) -> Proportionally.Literals:
+        assert self._proportional_freedom is not None
+
         frame_width_height_ratio = frame_dims.width / frame_dims.height
         proportional_width = dims.height * frame_width_height_ratio
         proportional_height = dims.width / frame_width_height_ratio

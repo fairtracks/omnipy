@@ -116,6 +116,7 @@ def test_output_config() -> None:
     assert config.justify is Justify.RIGHT
 
     config = OutputConfig(
+        freedom=None,
         font_weight=None,
         font_size=None,
         line_height=None,

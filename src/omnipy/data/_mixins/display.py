@@ -379,7 +379,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 if isinstance(model.content, Dataset):
                     inner_kwargs = config_kwargs.copy()
                     if 'freedom' not in inner_kwargs:
-                        inner_kwargs['freedom'] = 1000
+                        inner_kwargs['freedom'] = None
 
                     layout[inner_title] = cast(Dataset, model.content)._peek_dataset_models(
                         title=inner_title,

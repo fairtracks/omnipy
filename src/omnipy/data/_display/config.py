@@ -43,18 +43,20 @@ class OutputConfig:
             For non-supported styles, the user can specify a string with the
             Pygments lexer name. For this to work, the lexer must be
             registered in the Pygments library.
-        freedom (float): Parameter that controls the level of freedom for
-            formatted text to follow the geometry of the frame size (=total
-            available area) in a proportional manner. If the proportional
-            freedom is 0 (the lowest), then the output area must not in any
-            case be proportionally wider that the frame (i.e. a 16:9 frame
-            will only produce output that is 16:9 or narrower). Larger
-            values of proportional freedom allow the output to be
-            proportionally wider than the total available frame, to a degree
-            that relates to the size difference between the frame and the
-            content (larger difference gives more freedom). The default
-            value of 2.5 is a good compromise between readability/aesthetics
-            and good use of the screen estate.
+        freedom (float | None): Parameter that controls the level of
+            freedom for formatted text to follow the geometry of the frame
+            size (=total available area) in a proportional manner. If the
+            proportional freedom is 0 (the lowest), then the output area
+            must not in any case be proportionally wider that the frame
+            (i.e. a 16:9 frame will only produce output that is 16:9 or
+            narrower). Larger values of proportional freedom allow the
+            output to be proportionally wider than the total available
+            frame, to a degree that relates to the size difference between
+            the frame and the content (larger difference gives more
+            freedom). The default value of 2.5 is a good compromise
+            between readability/aesthetics and good use of the screen
+            estate. If None, the freedom is unlimited (i.e. proportionality
+            is not taken into account at all).
         debug (bool): When True, enables additional debugging information in
             the output, such as the hierarchy of the Model objects.
         ui (UserInterfaceType.Literals): Type of user interface for which
@@ -114,7 +116,7 @@ class OutputConfig:
     indent: pyd.NonNegativeInt = 2
     printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO
     syntax: SyntaxLanguage.Literals | str = SyntaxLanguage.PYTHON
-    freedom: pyd.NonNegativeFloat = 2.5
+    freedom: pyd.NonNegativeFloat | None = 2.5
     debug: bool = False
     ui: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL
     system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO

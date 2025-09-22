@@ -264,6 +264,15 @@ def test_dimensions_fit_proportionality_large_deviations() -> None:
            is Proportionally.WIDER
 
 
+def test_dimensions_fit_proportionality_no_freedom() -> None:
+    Dims = Dimensions
+
+    assert DimensionsFit(
+        Dims(10, 30), Dims(20, 20), proportional_freedom=None).proportionality is None
+    assert DimensionsFit(
+        Dims(30, 10), Dims(20, 20), proportional_freedom=None).proportionality is None
+
+
 def test_dimensions_fit_repr() -> None:
     # Test basic case with all properties defined
     fit = DimensionsFit(Dimensions(10, 10), Dimensions(20, 20))
