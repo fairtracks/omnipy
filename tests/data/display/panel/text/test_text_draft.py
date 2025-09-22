@@ -7,7 +7,8 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import empty_frame, Frame
-from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel, TextDraftPanel
+from omnipy.data._display.panel.draft.base import DraftPanel
+from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 from omnipy.shared.enums.display import SyntaxLanguage
 import omnipy.util._pydantic as pyd
@@ -21,10 +22,10 @@ from ..helpers.panel_assert import (assert_dims_aware_panel,
 
 
 def test_text_draft_panel_init() -> None:
-    assert_draft_panel_subcls(TextDraftPanel, 'Some text')
+    assert_draft_panel_subcls(DraftPanel, 'Some text')
 
     assert_draft_panel_subcls(
-        TextDraftPanel,
+        DraftPanel,
         '{"json": "data"}',
         title='My JSON file',
         frame=Frame(Dimensions(20, 10)),
@@ -34,7 +35,7 @@ def test_text_draft_panel_init() -> None:
 
 
 def test_text_draft_panel_render_next_stage_simple() -> None:
-    text_draft_panel = TextDraftPanel('Some\ntext')
+    text_draft_panel = DraftPanel('Some\ntext')
     assert_next_stage_panel(
         this_panel=text_draft_panel,
         next_stage=text_draft_panel.render_next_stage(),
@@ -44,7 +45,7 @@ def test_text_draft_panel_render_next_stage_simple() -> None:
 
 
 def test_text_draft_panel_render_next_stage_with_repr_complex() -> None:
-    draft_panel_complex = TextDraftPanel(
+    draft_panel_complex = DraftPanel(
         dedent("""\
         def my_function():
             return (1, 2, 3)"""),

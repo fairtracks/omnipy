@@ -21,15 +21,6 @@ _INNER_DICT_OR_LIST_REGEXP = re.compile(r'(\{[^\{\}\[\]]*\}|\[[^\{\}\[\]]*\])')
 
 @pyd.dataclass(
     init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
-class TextDraftPanel(
-        DraftPanel[str, FrameT],
-        Generic[FrameT],
-):
-    ...
-
-
-@pyd.dataclass(
-    init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
 class ReflowedTextDraftPanel(
         MonospacedDraftPanel[str, FrameT],
         Generic[FrameT],
