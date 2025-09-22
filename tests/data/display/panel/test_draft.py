@@ -202,7 +202,7 @@ def test_draft_panel_render_next_stage_with_layout_complex() -> None:
                 '(1, 2,\n3)',
                 title='Tuple panel',
                 frame=Frame(
-                    Dimensions(6, 2),
+                    Dimensions(6, 1),
                     fixed_width=False,
                     fixed_height=False,
                 ),
@@ -211,7 +211,7 @@ def test_draft_panel_render_next_stage_with_layout_complex() -> None:
                 'Here is\nsome\ntext',
                 title='Text panel',
                 frame=Frame(
-                    Dimensions(7, 3),
+                    Dimensions(7, 1),
                     fixed_width=False,
                     fixed_height=False,
                 ),

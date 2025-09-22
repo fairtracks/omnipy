@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import dataclasses
 import functools
-import inspect
 from pathlib import Path
 import sys
 from typing import Any, cast, Literal, overload, ParamSpec, TYPE_CHECKING
@@ -14,7 +13,7 @@ from typing_extensions import assert_never, get_args, LiteralString, TypeVar
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions, has_width
-from omnipy.data._display.frame import Frame
+from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.integrations.browser.macosx import (OmnipyMacOSXOSAScript,
                                                               setup_macosx_browser_integration)
 from omnipy.data._display.layout.base import Layout, PanelDesignDims
@@ -347,11 +346,18 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 else:
                     print(output)
 
-    def _peek_models(self, models: dict[str, 'Model'], **kwargs) -> DraftPanel:
+    def _peek_models(
+        self,
+        models: dict[str, 'Model'],
+        title: str = '',
+        frame: Frame | None = None,
+        **kwargs,
+    ) -> DraftPanel:
         from omnipy.data.dataset import Dataset
 
         ui_type = self._extract_ui_type(**kwargs)
-        frame = self._define_frame_from_available_display_dims(ui_type)
+        if not frame:
+            frame = self._define_frame_from_available_display_dims(ui_type)
         config = self._extract_output_config_from_data_config(ui_type)
         config_kwargs = self._validate_kwargs_for_config(**kwargs)
         config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
@@ -361,7 +367,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         max_num_models = self._calc_max_num_models(config, frame)
 
-        for i, (title, model) in enumerate(models.items()):
+        for i, (inner_title, model) in enumerate(models.items()):
             if max_num_models is not None and i >= max_num_models:
                 # If the number of models exceeds the maximum number of models
                 # that can fit in the frame, we stop adding more models.
@@ -370,20 +376,24 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             if i + 1 == max_num_models:
                 layout['...'] = self._create_inner_panel_for_ellipsis(config)
             else:
-                outer_type = model.outer_type()
-                if inspect.isclass(outer_type) and issubclass(outer_type, Dataset):
-                    return cast(Dataset, model.content)._peek()
+                if isinstance(model.content, Dataset):
+                    inner_kwargs = config_kwargs.copy()
+                    if 'freedom' not in inner_kwargs:
+                        inner_kwargs['freedom'] = 1000
 
-                layout[title] = self._create_inner_panel_for_model(config,
-                                                                   model,
-                                                                   outer_type,
-                                                                   title,
-                                                                   **config_kwargs)
+                    layout[inner_title] = cast(Dataset, model.content)._peek_dataset_models(
+                        title=inner_title,
+                        frame=empty_frame(),
+                        **inner_kwargs,
+                    )
+                else:
+                    layout[inner_title] = self._create_inner_panel_for_model(
+                        config, model, model.outer_type(), inner_title, **config_kwargs)
 
         config = self._update_config_with_overflow_modes(config, 'layout')
         config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
 
-        return DraftPanel(layout, frame=frame, config=config)
+        return DraftPanel(layout, title=title, frame=frame, config=config)
 
     def _calc_max_num_models(self, config: OutputConfig, frame: Frame) -> int | None:
         max_num_models = None
@@ -455,19 +465,24 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                        models: dict[str, 'Model'],
                        initial_html_output: dict[str, str] | None = None,
                        **kwargs) -> None:
+        from omnipy.data.dataset import Dataset
+
         ui_type = self._extract_ui_type(**kwargs)
 
         html_output = initial_html_output or {}
         all_urls = []
 
         for name, model in models.items():
-            filename = f'{name}_{id(model)}.html'
-            html_output[filename] = model._display_according_to_ui_type(
-                ui_type=UserInterfaceType.BROWSER_PAGE,
-                return_output_if_str=True,
-                output_method=model._browse_model,
-                **kwargs,
-            )
+            if isinstance(model.content, Dataset):
+                cast(Dataset, model.content)._browse_dataset(html_output, **kwargs)
+            else:
+                filename = f'{name}_{id(model)}.html'
+                html_output[filename] = model._display_according_to_ui_type(
+                    ui_type=UserInterfaceType.BROWSER_PAGE,
+                    return_output_if_str=True,
+                    output_method=model._browse_model,
+                    **kwargs,
+                )
 
         if ui_type is UserInterfaceType.JUPYTER:
             from omnipy.data._display.integrations.jupyter.components import ModelBrowser
@@ -676,12 +691,20 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         return self._list(**kwargs)
 
     def _peek(self, **kwargs) -> DraftPanel:
+        return self._peek_dataset_models(**kwargs)
+
+    def _peek_dataset_models(self,
+                             title: str = '',
+                             frame: Frame | None = None,
+                             **kwargs) -> DraftPanel:
         self_as_dataset = cast('Dataset', self)
         return self._peek_models(
             models={
-                f'{i}. {title}': model
-                for i, (title, model) in enumerate(self_as_dataset.data.items())
+                f'{i}. {inner_title}': model
+                for i, (inner_title, model) in enumerate(self_as_dataset.data.items())
             },
+            title=title,
+            frame=frame,
             **kwargs)
 
     def _full(self, **kwargs) -> DraftPanel:
@@ -749,9 +772,15 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         return DraftPanel(layout, frame=frame, config=config)
 
     def _browse(self, **kwargs) -> None:
+        self._browse_dataset(**kwargs)
+
+    def _browse_dataset(self, html_output: dict[str, str] | None = None, **kwargs) -> None:
+        self_as_dataset = cast('Dataset', self)
+        if html_output is None:
+            html_output = {}
+
         self_as_dataset = cast('Dataset', self)
 
-        html_output: dict[str, str] = {}
         filename = f'{self.__class__.__name__}_{id(self)}.html'
 
         kwargs_copy = kwargs.copy()

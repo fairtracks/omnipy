@@ -6,6 +6,7 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
 from omnipy.data._display.layout.base import Layout
+from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.shared.enums.display import HorizontalOverflowMode, Justify, VerticalOverflowMode
 
 from ...helpers.case_setup import FrameTestCase, FrameVariant, PanelFrameVariantTestCase
@@ -1030,6 +1031,190 @@ def case_layout_two_panels_fixed_content_and_frame(
                                       '│ is           │           │\n'
                                       '╰──────────────┴───────────╯\n'),
         exp_dims_all_stages_only_height=Dimensions(width=28, height=4),
+        frame_case=frame_case,
+        frame_variant=per_frame_variant,
+    )
+
+
+@pc.parametrize(
+    'frame_case',
+    (
+        #
+        # id='no_frame'
+        #
+        FrameTestCase(frame=None),
+
+        #
+        # id='larger_frame'
+        #
+        FrameTestCase(frame=Frame(Dimensions(width=27, height=11)),),
+
+        #
+        # id='exact_frame'
+        #
+        FrameTestCase(frame=Frame(Dimensions(width=25, height=9))),
+
+        #
+        # id='reduced_width_frame_single_line_title'
+        #
+        FrameTestCase(
+            frame=Frame(Dimensions(width=20, height=9)),
+            exp_plain_output=('╭──────────────────╮\n'
+                              '│ Nested layout p… │\n'
+                              '│                  │\n'
+                              '│ ╭─────────────── │\n'
+                              '│ │ Inner text pan │\n'
+                              '│ │                │\n'
+                              '│ │ Here is some t │\n'
+                              '│ ╰─────────────── │\n'
+                              '╰──────────────────╯\n'),
+            exp_stylized_dims=Dimensions(width=20, height=9),
+            exp_plain_output_only_height=('╭───────────────────────╮\n'
+                                          '│  Nested layout panel  │\n'
+                                          '│                       │\n'
+                                          '│ ╭───────────────────╮ │\n'
+                                          '│ │ Inner text panel  │ │\n'
+                                          '│ │                   │ │\n'
+                                          '│ │ Here is some text │ │\n'
+                                          '│ ╰───────────────────╯ │\n'
+                                          '╰───────────────────────╯\n'),
+            exp_dims_all_stages_only_height=Dimensions(width=25, height=9),
+        ),
+
+        #
+        # id='reduced_width_frame_not_double_line_title'
+        #
+        FrameTestCase(
+            frame=Frame(Dimensions(width=14, height=10)),
+            exp_plain_output=('╭────────────╮\n'
+                              '│ Nested la… │\n'
+                              '│            │\n'
+                              '│ ╭───────── │\n'
+                              '│ │ Inner te │\n'
+                              '│ │          │\n'
+                              '│ │ Here is  │\n'
+                              '│ ╰───────── │\n'
+                              '╰────────────╯\n'),
+            # Title is cropped at the `stylize` stage, even though there
+            # is enough frame height to display it in two lines. This is
+            # because the outer layout panel reflow is skipped for these
+            # tests.
+            exp_stylized_dims=Dimensions(width=14, height=9),
+            exp_plain_output_only_height=('╭───────────────────────╮\n'
+                                          '│  Nested layout panel  │\n'
+                                          '│                       │\n'
+                                          '│ ╭───────────────────╮ │\n'
+                                          '│ │ Inner text panel  │ │\n'
+                                          '│ │                   │ │\n'
+                                          '│ │ Here is some text │ │\n'
+                                          '│ ╰───────────────────╯ │\n'
+                                          '╰───────────────────────╯\n'),
+            exp_dims_all_stages_only_height=Dimensions(width=25, height=9),
+        ),
+
+        #
+        # id='reduced_height_frame'
+        #
+        FrameTestCase(
+            frame=Frame(Dimensions(width=25, height=7)),
+            # When only 2 or fewer lines of content are not in conflict with
+            # a single-line title, the title is removed. However, title
+            # removal happens during outer layout panel reflow, which is
+            # skipped in these tests.
+            exp_plain_output=('╭───────────────────────╮\n'
+                              '│  Nested layout panel  │\n'
+                              '│                       │\n'
+                              '│ ╭───────────────────╮ │\n'
+                              '│ │ Inner text panel  │ │\n'
+                              '│ │                   │ │\n'
+                              '╰───────────────────────╯\n'),
+            exp_stylized_dims=Dimensions(width=25, height=7),
+            exp_plain_output_only_width=('╭───────────────────────╮\n'
+                                         '│  Nested layout panel  │\n'
+                                         '│                       │\n'
+                                         '│ ╭───────────────────╮ │\n'
+                                         '│ │ Inner text panel  │ │\n'
+                                         '│ │                   │ │\n'
+                                         '│ │ Here is some text │ │\n'
+                                         '│ ╰───────────────────╯ │\n'
+                                         '╰───────────────────────╯\n'),
+            exp_dims_all_stages_only_width=Dimensions(width=25, height=9),
+        ),
+
+        #
+        # id='reduced_height_frame_keep_titles_at_bottom'
+        #
+        FrameTestCase(
+            frame=Frame(Dimensions(width=25, height=6)),
+            # When only 2 or fewer lines of content are not in conflict with
+            # a single-line title, the outer title is removed. However,
+            # title removal happens during outer layout panel reflow, which is
+            # skipped in these tests. Hence, the inner title is kept.
+            content=Layout(
+                nested=DraftPanel(
+                    content=Layout(
+                        inner=MockStylablePlainCropPanel(
+                            content='Here is some text',
+                            title='Inner text panel',
+                        )),
+                    title='Nested layout panel',
+                    config=OutputConfig(title_at_top=False),
+                )),
+            config=OutputConfig(title_at_top=False),
+            exp_plain_output=('╭───────────────────────╮\n'
+                              '│ ╭───────────────────╮ │\n'
+                              '│ │ Here is some text │ │\n'
+                              '│ │                   │ │\n'
+                              '│ │ Inner text panel  │ │\n'
+                              '╰───────────────────────╯\n'),
+            exp_stylized_dims=Dimensions(width=25, height=6),
+            exp_plain_output_only_width=('╭───────────────────────╮\n'
+                                         '│ ╭───────────────────╮ │\n'
+                                         '│ │ Here is some text │ │\n'
+                                         '│ │                   │ │\n'
+                                         '│ │ Inner text panel  │ │\n'
+                                         '│ ╰───────────────────╯ │\n'
+                                         '│                       │\n'
+                                         '│  Nested layout panel  │\n'
+                                         '╰───────────────────────╯\n'),
+            exp_dims_all_stages_only_width=Dimensions(width=25, height=9),
+        ),
+    ),
+    ids=(
+        'no_frame',
+        'larger_frame',
+        'exact_frame',
+        'reduced_width_frame_single_line_title',
+        'reduced_width_frame_not_double_line_title',
+        'reduced_height_frame',
+        'reduced_height_frame_keep_titles_at_bottom',
+    ),
+)
+@pc.case(id='nested_layout_panels_with_title', tags=['dims_and_edge_cases', 'layout'])
+def case_layout_nested_layout_panels_with_title(
+    frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
+    per_frame_variant: Annotated[FrameVariant, pc.fixture],
+) -> PanelFrameVariantTestCase[Layout]:
+    return PanelFrameVariantTestCase(
+        content=Layout(
+            nested=DraftPanel(
+                content=Layout(
+                    inner=MockStylablePlainCropPanel(
+                        content='Here is some text',
+                        title='Inner text panel',
+                    )),
+                title='Nested layout panel',
+            )),
+        exp_plain_output_no_frame=('╭───────────────────────╮\n'
+                                   '│  Nested layout panel  │\n'
+                                   '│                       │\n'
+                                   '│ ╭───────────────────╮ │\n'
+                                   '│ │ Inner text panel  │ │\n'
+                                   '│ │                   │ │\n'
+                                   '│ │ Here is some text │ │\n'
+                                   '│ ╰───────────────────╯ │\n'
+                                   '╰───────────────────────╯\n'),
+        exp_dims_all_stages_no_frame=Dimensions(width=25, height=9),
         frame_case=frame_case,
         frame_variant=per_frame_variant,
     )

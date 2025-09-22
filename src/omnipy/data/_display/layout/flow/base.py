@@ -61,6 +61,10 @@ def optimize_layout_to_fit_frame(
     # print('Creating LayoutFlowContext...')
     context = LayoutFlowContext(input_layout_panel, draft_layout)
 
+    if has_height(context.input_layout_panel.frame.dims):
+        # print('Adjusting the heights of the inner panel after first render, if needed...)
+        context = _adjust_inner_panel_heights_after_render(context)
+
     if has_width(context.frame.dims):
         # print('Tightening panel frame widths...')
         context = _tighten_inner_panel_frame_widths(context)
@@ -347,6 +351,37 @@ def _set_inner_panel_heights(input_layout_panel: DraftPanel[Layout[DraftPanel], 
         panel_height_modifier=lambda _key, _panel: per_inner_panel_height,
         fixed_height=False,
     )
+
+
+def _adjust_inner_panel_heights_after_render(
+        context: LayoutFlowContext[FrameT]) -> LayoutFlowContext[FrameT]:
+    """
+    Adjust heights of panels in a layout based on the calculated inner frame
+    height after an initial render. Takes into account any changes in panel
+    heights that may have occurred during rendering, such as title
+    rendering and reflowing of nested layouts. All panels with flexible
+    heights are set to the same height.
+
+    Parameters:
+        context: The layout flow context containing the layout and its frame
+
+    Returns:
+        Updated layout flow context with adjusted panel heights
+    """
+
+    assert has_height(context.resized_panel.inner_frame.dims)
+
+    per_inner_panel_height = _calc_inner_panel_height(
+        context.resized_panel.config.panel,
+        context.resized_panel.inner_frame.dims.height,
+    )
+
+    context.dim_aware_layout = _resize_inner_panel_frames(
+        context.dim_aware_layout,
+        panel_height_modifier=lambda _key, _panel: per_inner_panel_height,
+        fixed_height=False,
+    )
+    return context
 
 
 def _calc_inner_panel_height(panel_design: PanelDesign.Literals, outer_panel_height: int) -> int:
