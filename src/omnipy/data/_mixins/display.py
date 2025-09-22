@@ -20,8 +20,6 @@ from omnipy.data._display.integrations.browser.macosx import (OmnipyMacOSXOSAScr
 from omnipy.data._display.layout.base import Layout, PanelDesignDims
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
-from omnipy.data._display.panel.draft.bytes import BytesDraftPanel
-from omnipy.data._display.panel.draft.text import TextDraftPanel
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.hub.ui import get_terminal_prompt_height, note_mime_bundle
 from omnipy.shared.enums.colorstyles import RecommendedColorStyles
@@ -538,29 +536,12 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         config = self._update_config_with_overflow_modes(config, 'text')
         config = dataclasses.replace(config, syntax=syntax)
         config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
-
-        match syntax:
-            case SyntaxLanguage.TEXT:
-                return TextDraftPanel(
-                    cast(str, model.content),
-                    title=title,
-                    frame=frame,
-                    config=config,
-                )
-            case SyntaxLanguage.HEXDUMP:
-                return BytesDraftPanel(
-                    cast(bytes, model.content),
-                    title=title,
-                    frame=frame,
-                    config=config,
-                )
-            case SyntaxLanguage.PYTHON | SyntaxLanguage.JSON:
-                return DraftPanel(
-                    model,
-                    title=title,
-                    frame=frame,
-                    config=config,
-                )
+        return DraftPanel(
+            model,
+            title=title,
+            frame=frame,
+            config=config,
+        )
 
     def _update_config_with_overflow_modes(
         self,
@@ -747,20 +728,20 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         # TODO: Add dataset title for dataset peek()
         # _title = self.__class__.__name__
 
-        layout: Layout[TextDraftPanel] = Layout()
-        layout['#'] = TextDraftPanel(
+        layout: Layout[DraftPanel] = Layout()
+        layout['#'] = DraftPanel(
             '\n'.join(str(i) for i in range(len(dataset))), title='#', config=config)
-        layout['Data file name'] = TextDraftPanel(
+        layout['Data file name'] = DraftPanel(
             '\n'.join(dataset.data.keys()), title='Data file name', config=text_config)
-        layout['Type'] = TextDraftPanel(
+        layout['Type'] = DraftPanel(
             '\n'.join(self._type_str(v) for v in dataset.data.values()),
             title='Type',
             config=config)
-        layout['Length'] = TextDraftPanel(
+        layout['Length'] = DraftPanel(
             '\n'.join(str(self._len_if_available(v)) for v in dataset.data.values()),
             title='Length',
             config=right_justified_config)
-        layout['Size (in memory)'] = TextDraftPanel(
+        layout['Size (in memory)'] = DraftPanel(
             '\n'.join(self._obj_size_if_available(v) for v in dataset.data.values()),
             title='Size (in memory)',
             config=right_justified_config)
