@@ -280,7 +280,7 @@ def test_draft_panel_render_next_stage_with_layout_half_rendered() -> None:
                 '(1,\n2,\n3)',
                 title='Stage 2 tuple panel',
                 frame=Frame(
-                    Dimensions(None, 3),
+                    Dimensions(3, 3),
                     fixed_width=False,
                     fixed_height=False,
                 ),

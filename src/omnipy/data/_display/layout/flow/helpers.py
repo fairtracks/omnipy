@@ -286,7 +286,7 @@ class LayoutFlowContext(Generic[FrameT]):
         """
         return key in self.keys_of_resizable_panels
 
-    def update_resizability_of_panel(self, key: str, resize_helper: 'PanelResizeHelper'):
+    def update_resizability_of_panel(self, key: str, resize_helper: 'PanelResizeHelper') -> bool:
         """
         Update whether a panel should remain in the set of resizable panels.
 
@@ -300,7 +300,8 @@ class LayoutFlowContext(Generic[FrameT]):
             resize_helper: Helper object containing panel resize information
 
         Returns:
-            True if the panel was removed from the set of resizable panels
+            True if the panel was removed from the set of resizable panels,
+            else False
         """
         resizing = resize_helper
         if key in self.keys_of_resizable_panels:
@@ -310,6 +311,7 @@ class LayoutFlowContext(Generic[FrameT]):
         else:
             if resizing.widened_cropped_dims:
                 self.keys_of_resizable_panels.add(key)
+        return False
 
 
 @dataclass
