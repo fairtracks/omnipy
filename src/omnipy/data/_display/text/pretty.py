@@ -1,6 +1,7 @@
 from typing import cast
 
 from cachebox import cached, FIFOCache
+from typing_extensions import reveal_type
 
 from omnipy.data._display.dimensions import Proportionally
 from omnipy.data._display.frame import AnyFrame, frame_has_width, FrameWithWidth
@@ -17,8 +18,7 @@ def pretty_repr_of_draft_output(
     pretty_printer = PrettyPrinter.get_pretty_printer_for_draft_panel(in_draft_panel)
     orig_draft_content_id = id(in_draft_panel.content)
     draft_panel = pretty_printer.prepare_draft_panel(in_draft_panel)
-    formatted_draft_panel = pretty_printer.format_draft(draft_panel)
-
+    formatted_draft_panel = pretty_printer.format_prepared_draft(draft_panel)
     if frame_has_width(formatted_draft_panel.frame):
         reflowed_text_panel = cast(ReflowedTextDraftPanel[FrameWithWidth], formatted_draft_panel)
         if (isinstance(pretty_printer, StatsTighteningPrettyPrinter)
@@ -56,7 +56,7 @@ def _should_reduce_width(reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWi
 def _iteratively_reduce_width(
     pretty_printer: StatsTighteningPrettyPrinter[object],
     draft_panel: DraftPanel[object, FrameT],
-    cur_reflowed_text_panel: ReflowedTextDraftPanel[OtherFrameT],
+    cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     orig_draft_content_id: int,
     should_follow_proportionality: bool,
 ) -> ReflowedTextDraftPanel[FrameT]:
@@ -77,7 +77,7 @@ def _iteratively_reduce_width(
             else:
                 break
 
-        draft_for_format: DraftPanel[object, AnyFrame] = \
+        draft_for_format = \
             pretty_printer.prepare_draft_for_print_with_tightened_stat_requirements(
                 draft_panel,
                 cur_reflowed_text_panel,

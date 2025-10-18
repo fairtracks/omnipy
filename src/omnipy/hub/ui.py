@@ -398,8 +398,8 @@ def setup_jupyter_ui():
         """) + embedded_content_styling
 
     assert UserInterfaceType.is_jupyter(detected_ui_type), \
-        (f'Unexpected user interface type: {detected_ui_type}. Expected'
-         'a Jupyter variant. If run from a Jupyter session, please'
+        (f'Unexpected user interface type: {detected_ui_type}. Expected '
+         'a Jupyter variant. If run from a Jupyter session, please '
          'restart the kernel and try again.')
 
     display(
