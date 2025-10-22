@@ -175,8 +175,10 @@ def _calculate_per_panel_width_for_panels_without_width(
     return None
 
 
-def _determine_panel_width(panel: DraftPanel,
-                           per_panel_width: int | None) -> tuple[int | None, bool | None]:
+def _determine_panel_width(
+    panel: DraftPanel,
+    per_panel_width: pyd.NonNegativeInt | None,
+) -> tuple[pyd.NonNegativeInt | None, bool | None]:
     """
     Determine width and fixed_width flag for a panel.
 
