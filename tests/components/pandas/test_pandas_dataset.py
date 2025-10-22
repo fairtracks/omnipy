@@ -84,7 +84,7 @@ def test_pandas_dataset_json_list_of_objects_same_keys():
     from omnipy.components.pandas.lazy_import import pd
 
     pandas_data = PandasDataset()
-    json_data = {'data_file': '[{"a": "abc", "b": 12}, {"a": "bcd", "b": 23}]'}
+    json_data = {'data_file': '[{"a":"abc","b":12},{"a":"bcd","b":23}]'}
     pandas_data.from_json(json_data)
     pd.testing.assert_frame_equal(
         pandas_data['data_file'].content,

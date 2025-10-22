@@ -594,8 +594,8 @@ class Dataset(
     def to_json(self, pretty=True) -> dict[str, str]:
         result = {}
 
-        for key, val in self.to_data().items():
-            result[key] = self._pretty_print_json(val) if pretty else json.dumps(val)
+        for key, val in self.data.items():
+            result[key] = val.to_json(pretty=pretty)
         return result
 
     def from_json(self,
