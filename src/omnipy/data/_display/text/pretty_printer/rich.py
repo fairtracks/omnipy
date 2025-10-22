@@ -2,16 +2,15 @@ import rich.pretty
 from typing_extensions import override
 
 from omnipy.data._display.dimensions import DimensionsWithWidth
+from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.draft.base import DraftPanel
-from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.data._display.text.pretty_printer.base import WidthReducingPrettyPrinter
-from omnipy.data._display.text.pretty_printer.mixins import PythonStatsTighteningPrettyPrinterMixin
+from omnipy.data._display.text.pretty_printer.mixins import PythonStatsTighteningPrettyPrinter
 from omnipy.shared.constants import MAX_TERMINAL_SIZE
 from omnipy.util import _pydantic as pyd
 
 
-class RichPrettyPrinter(PythonStatsTighteningPrettyPrinterMixin,
-                        WidthReducingPrettyPrinter[object]):
+class RichPrettyPrinter(PythonStatsTighteningPrettyPrinter, WidthReducingPrettyPrinter[object]):
     @override
     @classmethod
     def _calc_reduced_frame_width(
@@ -24,14 +23,14 @@ class RichPrettyPrinter(PythonStatsTighteningPrettyPrinterMixin,
             return cropped_panel_dims.width - 1
 
     @override
-    def print_draft_to_str(self, draft_panel: DraftPanel[object, FrameT]) -> str:
+    def print_draft_to_str(self, draft_panel: DraftPanel[object, AnyFrame]) -> str:
         if draft_panel.frame.dims.width is not None:
-            max_width = draft_panel.frame.dims.width + 1
+            width = draft_panel.frame.dims.width + 1
         else:
-            max_width = MAX_TERMINAL_SIZE
+            width = MAX_TERMINAL_SIZE
 
         return rich.pretty.pretty_repr(
             draft_panel.content,
             indent_size=draft_panel.config.indent,
-            max_width=max_width,
+            max_width=width,
         )

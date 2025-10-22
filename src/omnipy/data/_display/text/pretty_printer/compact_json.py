@@ -1,34 +1,36 @@
-from typing import ClassVar
+import operator
+from typing import Callable, ClassVar
 
 import compact_json.formatter
 from typing_extensions import override
 
-from omnipy.data._display.dimensions import has_width
+from omnipy.data._display.constraints import Constraints
+from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.draft.base import DraftPanel
-from omnipy.data._display.panel.typedefs import FrameT
-from omnipy.data._display.text.pretty_printer.base import ConstraintTighteningPrettyPrinterMixin
+from omnipy.data._display.text.pretty_printer.base import ConstraintTighteningPrettyPrinter
 from omnipy.data._display.text.pretty_printer.mixins import JsonStatsTighteningPrettyPrinterMixin
 from omnipy.shared.constants import TERMINAL_DEFAULT_WIDTH
 
 
 class CompactJsonPrettyPrinter(
         JsonStatsTighteningPrettyPrinterMixin,
-        ConstraintTighteningPrettyPrinterMixin[object],
+        ConstraintTighteningPrettyPrinter[object],
 ):
     CONSTRAINT_STAT_NAME: ClassVar[str] = 'max_inline_list_or_dict_width_excl'
+    CONSTRAINT_TIGHTEN_FUNC: Callable[[int], int] = lambda x: max(x - 1, 0)
+    CONSTRAINT_TIGHTENED_OPERATOR: Callable[[int, int], bool] = operator.lt
 
     @override
-    def print_draft_to_str(self, draft_panel: DraftPanel[object, FrameT]) -> str:
-        max_inline_list_or_dict_width_excl = \
-            draft_panel.constraints.max_inline_list_or_dict_width_excl
+    @classmethod
+    def _get_default_constraints_for_draft_panel(
+            cls, draft_panel: DraftPanel[object, AnyFrame]) -> Constraints:
+        return Constraints(
+            max_inline_list_or_dict_width_excl=(
+                draft_panel.frame.dims.width or TERMINAL_DEFAULT_WIDTH))
 
-        if max_inline_list_or_dict_width_excl is not None:
-            max_inline_length = max_inline_list_or_dict_width_excl
-        elif has_width(draft_panel.frame.dims):
-            max_inline_length = draft_panel.frame.dims.width
-        else:
-            max_inline_length = TERMINAL_DEFAULT_WIDTH
-
+    @override
+    def print_draft_to_str(self, draft_panel: DraftPanel[object, AnyFrame]) -> str:
+        max_inline_length = draft_panel.constraints.max_inline_list_or_dict_width_excl
         assert max_inline_length is not None
 
         json_formatter = compact_json.formatter.Formatter(

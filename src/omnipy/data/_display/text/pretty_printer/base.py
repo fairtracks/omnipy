@@ -7,7 +7,7 @@ from typing_extensions import override
 
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import DimensionsWithWidth
-from omnipy.data._display.frame import AnyFrame
+from omnipy.data._display.frame import AnyFrame, FrameWithWidth
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import ContentT, FrameT
@@ -16,24 +16,43 @@ from omnipy.util.helpers import sorted_dict_hash
 
 
 class PrettyPrinter(ABC, Generic[ContentT]):
+    @classmethod
     @abstractmethod
-    def is_suitable_content(self, draft_panel: DraftPanel[ContentT, FrameT]) -> bool:
+    def is_suitable_content(cls, draft_panel: DraftPanel[object, AnyFrame]) -> bool:
         ...
 
+    @classmethod
     @abstractmethod
-    def format_draft(
+    def _get_content_for_draft_panel(cls, draft_panel: DraftPanel[object, AnyFrame]) -> ContentT:
+        ...
+
+    @classmethod
+    def _get_default_constraints_for_draft_panel(
+            cls, draft_panel: DraftPanel[object, AnyFrame]) -> Constraints:
+        return draft_panel.constraints
+
+    def prepare_draft_panel(
+        self,
+        draft_panel: DraftPanel[object, FrameT],
+    ) -> DraftPanel[ContentT, FrameT]:
+        return draft_panel.create_modified_copy(
+            content=self._get_content_for_draft_panel(draft_panel),
+            frame=draft_panel.frame,
+            constraints=self._get_default_constraints_for_draft_panel(draft_panel),
+        )
+
+    @abstractmethod
+    def format_prepared_draft(
         self,
         draft_panel: DraftPanel[ContentT, FrameT],
     ) -> ReflowedTextDraftPanel[FrameT]:
         ...
 
-    @abstractmethod
-    def prepare_draft_panel(
-            self, draft_panel: DraftPanel[ContentT, FrameT]) -> DraftPanel[object, FrameT]:
-        ...
-
     @classmethod
-    def get_pretty_printer_for_draft_panel(cls, draft_panel: DraftPanel) -> 'PrettyPrinter':
+    def get_pretty_printer_for_draft_panel(
+        cls,
+        draft_panel: DraftPanel,
+    ) -> 'PrettyPrinter':
         import omnipy.data._display.text.pretty_printer.register as register
 
         pretty_printer = register.get_pretty_printer_from_config_value(draft_panel.config.printer)
@@ -64,23 +83,18 @@ class StatsTighteningPrettyPrinter(
             sorted_dict_hash(self._prev_calculated_stats),
         ))
 
-    def prepare_draft_for_print_with_tightened_stat_requirements(
+    @abstractmethod
+    def prepare_draft_for_print_with_tightened_stat_reqs(
         self,
         draft_panel: DraftPanel[ContentT, FrameT],
-        cur_reflowed_text_panel: ReflowedTextDraftPanel[AnyFrame],
-    ) -> DraftPanel[ContentT, AnyFrame]:
-        return DraftPanel(
-            draft_panel.content,
-            title=draft_panel.title,
-            frame=draft_panel.frame,
-            constraints=draft_panel.constraints,
-            config=draft_panel.config,
-        )
+        cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
+    ) -> DraftPanel[ContentT, FrameT | FrameWithWidth]:
+        ...
 
     def stats_tightened_since_last_print(
         self,
-        draft_for_print: DraftPanel[ContentT, AnyFrame],
-        cur_reflowed_text_panel: ReflowedTextDraftPanel[AnyFrame],
+        draft_for_print: DraftPanel[ContentT, FrameT],
+        cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> bool:
         return False
 
@@ -112,7 +126,7 @@ class StatsTighteningPrettyPrinter(
         stat_name: str,
         cur_stat_requirement: pyd.NonNegativeInt | None,
         cur_calculated_stat: pyd.NonNegativeInt | None,
-        compare_operator: Callable[[int, int], bool] = operator.lt,
+        compare_operator: Callable[[int, int], bool],
     ) -> bool:
         stat_requirement_tightened = self._stat_tightened_since_last_print_common(
             self._prev_stat_requirements,
@@ -128,7 +142,7 @@ class StatsTighteningPrettyPrinter(
         )
         return stat_requirement_tightened and calculated_stat_tightened
 
-    def format_draft(
+    def format_prepared_draft(
         self,
         draft_panel: DraftPanel[ContentT, FrameT],
     ) -> ReflowedTextDraftPanel[FrameT]:
@@ -138,36 +152,39 @@ class StatsTighteningPrettyPrinter(
         )
 
     @abstractmethod
-    def print_draft_to_str(self, draft_panel: DraftPanel[ContentT, FrameT]) -> str:
+    def print_draft_to_str(self, draft_panel: DraftPanel[ContentT, AnyFrame]) -> str:
         pass
 
 
 class WidthReducingPrettyPrinter(StatsTighteningPrettyPrinter[ContentT], Generic[ContentT]):
-    @override
-    def prepare_draft_for_print_with_tightened_stat_requirements(
+    def _init_prev_frame_width(
         self,
-        draft_panel: DraftPanel[ContentT, FrameT],
-        cur_reflowed_text_panel: ReflowedTextDraftPanel[AnyFrame],
-    ) -> DraftPanel[ContentT, AnyFrame]:
+        cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
+    ) -> None:
         # For initial iteration, compare with frame of
         # cur_reflowed_text_panel provided as input
         if 'frame_width' not in self._prev_stat_requirements:
             self._prev_stat_requirements['frame_width'] = cur_reflowed_text_panel.frame.dims.width
 
+    @override
+    def prepare_draft_for_print_with_tightened_stat_reqs(
+        self,
+        draft_panel: DraftPanel[ContentT, FrameT],
+        cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
+    ) -> DraftPanel[ContentT, FrameT | FrameWithWidth]:
+        self._init_prev_frame_width(cur_reflowed_text_panel)
         new_frame = self._calc_frame_with_reduced_width(cur_reflowed_text_panel)
-
-        return DraftPanel(
+        return draft_panel.create_modified_copy(
             draft_panel.content,
-            title=draft_panel.title,
             frame=new_frame,
             constraints=draft_panel.constraints,
-            config=draft_panel.config,
         )
 
     def _calc_frame_with_reduced_width(
         self,
-        cur_reflowed_text_panel: ReflowedTextDraftPanel[AnyFrame],
-    ) -> AnyFrame:
+        cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
+    ) -> FrameWithWidth:
+
         new_frame_width = self._calc_reduced_frame_width(cur_reflowed_text_panel.orig_dims)
         return cur_reflowed_text_panel.frame.modified_copy(width=new_frame_width)
 
@@ -181,8 +198,8 @@ class WidthReducingPrettyPrinter(StatsTighteningPrettyPrinter[ContentT], Generic
 
     def stats_tightened_since_last_print(
         self,
-        draft_for_print: DraftPanel[ContentT, AnyFrame],
-        cur_reflowed_text_panel: ReflowedTextDraftPanel[AnyFrame],
+        draft_for_print: DraftPanel[ContentT, FrameT],
+        cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> bool:
         return super().stats_tightened_since_last_print(
             draft_for_print,
@@ -191,49 +208,60 @@ class WidthReducingPrettyPrinter(StatsTighteningPrettyPrinter[ContentT], Generic
             'frame_width',
             draft_for_print.frame.dims.width,
             cur_reflowed_text_panel.orig_dims.width,
-        )
+            operator.lt)
 
 
-class ConstraintTighteningPrettyPrinterMixin(
+class ConstraintTighteningPrettyPrinter(
         StatsTighteningPrettyPrinter[ContentT],
         ABC,
         Generic[ContentT],
 ):
     # Must be defined in subclasses
     CONSTRAINT_STAT_NAME: ClassVar[str]
+    CONSTRAINT_TIGHTEN_FUNC: Callable[[int], int]
+    CONSTRAINT_TIGHTENED_OPERATOR: Callable[[int, int], bool]
 
     @override
-    def prepare_draft_for_print_with_tightened_stat_requirements(
+    def prepare_draft_for_print_with_tightened_stat_reqs(
         self,
         draft_panel: DraftPanel[ContentT, FrameT],
-        cur_reflowed_text_panel: ReflowedTextDraftPanel[AnyFrame],
-    ) -> DraftPanel[ContentT, AnyFrame]:
-        draft_for_print = super().prepare_draft_for_print_with_tightened_stat_requirements(
-            draft_panel,
-            cur_reflowed_text_panel,
-        )
+        cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
+    ) -> DraftPanel[ContentT, FrameT | FrameWithWidth]:
 
-        new_constraints = self._calc_tightened_constraint(cur_reflowed_text_panel)
-        return dataclasses.replace(draft_for_print, constraints=new_constraints)
+        new_constraints = self._calc_tightened_constraint(draft_panel, cur_reflowed_text_panel)
+
+        return draft_panel.create_modified_copy(
+            draft_panel.content,
+            constraints=new_constraints,
+        )
 
     # Override in subclasses if needed
     @classmethod
     def _calc_tightened_constraint(
         cls,
+        draft_panel: DraftPanel[object, FrameT],
         reflowed_text_panel: ReflowedTextDraftPanel[AnyFrame],
     ) -> Constraints:
-        new_constraint_stat_val = max(getattr(reflowed_text_panel, cls.CONSTRAINT_STAT_NAME) - 1, 0)
+        prev_constraint_stat_val = getattr(reflowed_text_panel, cls.CONSTRAINT_STAT_NAME)
+        new_constraint_val = cls.CONSTRAINT_TIGHTEN_FUNC(prev_constraint_stat_val)
 
-        return dataclasses.replace(
-            reflowed_text_panel.constraints,
-            **{cls.CONSTRAINT_STAT_NAME: new_constraint_stat_val},
-        )
+        prev_constraint_val = getattr(reflowed_text_panel.constraints, cls.CONSTRAINT_STAT_NAME)
+        assert prev_constraint_val is not None
+
+        if cls.CONSTRAINT_TIGHTENED_OPERATOR(new_constraint_val, prev_constraint_val):
+            # Always tighten constraints, never relax
+            return dataclasses.replace(
+                reflowed_text_panel.constraints,
+                **{cls.CONSTRAINT_STAT_NAME: new_constraint_val},
+            )
+        else:
+            return reflowed_text_panel.constraints
 
     @override
     def stats_tightened_since_last_print(
         self,
-        draft_for_print: DraftPanel[ContentT, AnyFrame],
-        cur_reflowed_text_panel: ReflowedTextDraftPanel[AnyFrame],
+        draft_for_print: DraftPanel[ContentT, FrameT],
+        cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> bool:
         return super().stats_tightened_since_last_print(
             draft_for_print,
@@ -242,4 +270,5 @@ class ConstraintTighteningPrettyPrinterMixin(
             self.CONSTRAINT_STAT_NAME,
             getattr(draft_for_print.constraints, self.CONSTRAINT_STAT_NAME),
             getattr(cur_reflowed_text_panel, self.CONSTRAINT_STAT_NAME),
+            self.CONSTRAINT_TIGHTENED_OPERATOR,
         )

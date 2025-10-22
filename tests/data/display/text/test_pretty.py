@@ -520,7 +520,7 @@ def test_pretty_repr_of_draft_approximately_in_frame(
         PrettyPrinterLib.COMPACT_JSON,
     ],
 )
-def test_pretty_repr_of_draft_one_line_wider_than_frame(
+def test_pretty_repr_of_draft_one_line_wider_than_frame_dict(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
     config = OutputConfig(printer=pretty_printer, freedom=0)
 
@@ -550,6 +550,50 @@ def test_pretty_repr_of_draft_one_line_wider_than_frame(
         config=config,
         within_frame_width=False,
         within_frame_height=True,
+    )
+
+
+@pytest.mark.parametrize(
+    'pretty_printer',
+    # Devtools actually shortens the long line to fit the frame,
+    # which is not what we want to test here.
+    [
+        # PrettyPrinterLib.DEVTOOLS,
+        PrettyPrinterLib.RICH,
+        PrettyPrinterLib.COMPACT_JSON,
+    ],
+)
+def test_pretty_repr_of_draft_one_line_wider_than_frame_list(
+        pretty_printer: PrettyPrinterLib.Literals) -> None:
+    config = OutputConfig(printer=pretty_printer, freedom=0)
+
+    # This is a test for the case where one line is wider than the frame
+    # width. The pretty printer should not fit the short lines into a singe
+    # line even though this single line will not be wider than the widest
+    # line. The result would in that case be two lines that are both wider
+    # than the frame width and need to be cropped, which is worse than
+    # having one line that is too wide for the frame.
+
+    _assert_pretty_repr_of_draft(
+        [{
+            'h0': '##gff-version 3'
+        }, {
+            'h1': '##sequence-region NC_003424.3 1 5579133'
+        }, {
+            'h2': '##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=4896'
+        }],
+        dedent("""\
+        [
+          {'h0': '##gff-version 3'},
+          {'h1': '##sequence-region NC_003424.3 1 5579133'},
+          {
+            'h2': '##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=4896'
+          }
+        ]"""),
+        frame=Frame(Dimensions(60, 5), fixed_width=True),
+        config=config,
+        within_frame_width=False,
+        within_frame_height=False,
     )
 
 

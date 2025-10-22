@@ -1,4 +1,5 @@
-from typing import Any, cast, Generic
+from abc import ABC
+from typing import Any, cast, Generic, overload
 
 from typing_extensions import override
 
@@ -30,18 +31,40 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
         object.__setattr__(self, 'content', content)
         super().__init__(title=title, frame=frame, constraints=constraints, config=config)
 
-    @classmethod
-    def create_copy_with_other_content(
-        cls,
-        draft_panel: 'DraftPanel[object, FrameInvT]',
-        other_content: ContentInvT,
+    @overload
+    def create_modified_copy(
+        self,
+        content: ContentInvT,
+        frame: FrameInvT,
+        *args,
+        **kwargs,
     ) -> 'DraftPanel[ContentInvT, FrameInvT]':
+        ...
+
+    @overload
+    def create_modified_copy(
+        self,
+        content: ContentInvT,
+        frame: None = None,
+        *args,
+        **kwargs,
+    ) -> 'DraftPanel[ContentInvT, FrameT]':
+        ...
+
+    def create_modified_copy(
+        self,
+        content: ContentInvT,
+        frame: FrameInvT | None = None,
+        title: str | None = None,
+        constraints: Constraints | None = None,
+        config: OutputConfig | None = None,
+    ) -> 'DraftPanel[ContentInvT, FrameT | FrameInvT]':
         return DraftPanel(
-            other_content,
-            title=draft_panel.title,
-            frame=draft_panel.frame,
-            constraints=draft_panel.constraints,
-            config=draft_panel.config,
+            content,
+            title=title or self.title,
+            frame=frame or self.frame,
+            constraints=constraints or self.constraints,
+            config=config or self.config,
         )
 
     @property
@@ -61,13 +84,15 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
 
 class DimensionsAwareDraftPanel(DimensionsAwarePanel[FrameT],
                                 DraftPanel[ContentT, FrameT],
-                                Generic[ContentT, FrameT]):
+                                Generic[ContentT, FrameT],
+                                ABC):
     ...
 
 
 class FullyRenderedDraftPanel(FullyRenderedPanel[FrameT],
                               DimensionsAwareDraftPanel[ContentT, FrameT],
-                              Generic[ContentT, FrameT]):
+                              Generic[ContentT, FrameT],
+                              ABC):
     @override
     def render_next_stage(self) -> 'FullyRenderedDraftPanel[ContentT, FrameT]':
         raise NotImplementedError('This panel is fully rendered.')

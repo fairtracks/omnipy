@@ -1,4 +1,4 @@
-from typing import cast, Generic
+from typing import cast, Generic, overload
 
 from typing_extensions import TypeIs
 
@@ -95,13 +95,45 @@ class Frame(Generic[WidthT, HeightT]):
     ) -> bool:
         return cls._auto_fixed_value_from_dims('height', fixed_height, values['dims'])
 
+    @overload
+    def modified_copy(self, width: pyd.NonNegativeInt, **kwargs) -> 'FrameWithWidth':
+        ...
+
+    @overload
+    def modified_copy(
+        self,
+        width: None | pyd.UndefinedType,
+        height: pyd.NonNegativeInt,
+        **kwargs,
+    ) -> 'FrameWithHeight':
+        ...
+
+    @overload
+    def modified_copy(
+        self,
+        width: pyd.NonNegativeInt,
+        height: pyd.NonNegativeInt,
+        **kwargs,
+    ) -> 'FrameWithWidthAndHeight':
+        ...
+
+    @overload
+    def modified_copy(
+        self,
+        width: pyd.NonNegativeInt | None | pyd.UndefinedType = pyd.Undefined,
+        height: pyd.NonNegativeInt | None | pyd.UndefinedType = pyd.Undefined,
+        **kwargs,
+    ) -> 'Frame':
+        ...
+
     def modified_copy(
         self,
         width: pyd.NonNegativeInt | None | pyd.UndefinedType = pyd.Undefined,
         height: pyd.NonNegativeInt | None | pyd.UndefinedType = pyd.Undefined,
         fixed_width: bool | None | pyd.UndefinedType = pyd.Undefined,
         fixed_height: bool | None | pyd.UndefinedType = pyd.Undefined,
-    ) -> 'Frame':
+        **kwargs,  # ignored, added to support overload
+    ) -> 'FrameWithWidth|FrameWithHeight|FrameWithWidthAndHeight|Frame':
         """
         Create a modified copy of the frame with specified changes.
 
