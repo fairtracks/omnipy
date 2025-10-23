@@ -125,15 +125,23 @@ class PanelDesignDims:
         cls,
         panel_design: PanelDesign.Literals = PanelDesign.TABLE,
     ) -> 'PanelDesignDims':
-        if panel_design == PanelDesign.TABLE:
-            return PanelDesignDims(
-                num_horizontal_chars_per_panel=3,
-                num_horizontal_end_chars=1,
-                num_vertical_lines_per_panel=1,
-                num_vertical_end_lines=1,
-            )
-        else:
-            raise ValueError(f'Unsupported panel design: {panel_design}')
+        match panel_design:
+            case PanelDesign.TABLE:
+                return PanelDesignDims(
+                    num_horizontal_chars_per_panel=3,
+                    num_horizontal_end_chars=1,
+                    num_vertical_lines_per_panel=1,
+                    num_vertical_end_lines=1,
+                )
+            case PanelDesign.TABLE_SHOW_STYLE:
+                return PanelDesignDims(
+                    num_horizontal_chars_per_panel=3,
+                    num_horizontal_end_chars=1,
+                    num_vertical_lines_per_panel=1,
+                    num_vertical_end_lines=2,
+                )
+            case _:
+                raise ValueError(f'Unsupported panel design: {panel_design}')
 
 
 class DimensionsAwarePanelLayoutMixin:

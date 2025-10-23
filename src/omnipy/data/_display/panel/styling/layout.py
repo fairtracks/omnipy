@@ -148,6 +148,7 @@ class StylizedLayoutPanel(
 class PanelElementStyles:
     title_style: rich.style.Style
     table_style: rich.style.Style
+    info_style: rich.style.Style
 
     def __init__(
         self,
@@ -177,6 +178,7 @@ class PanelElementStyles:
                                                                  color_style)
 
         self.table_style = rich.style.Style(color=basic_table_style.color, bgcolor=style_bg_color)
+        self.info_style = self.table_style + rich.style.Style(italic=True)
 
 
 class InnerPanelStyler:
@@ -322,13 +324,38 @@ class OuterLayoutPanelStyler:
         self._styles = styles
 
     def style_outer_panel(self) -> rich.table.Table:
-        assert self._outer_panel.config.panel is PanelDesign.TABLE
+        assert self._outer_panel.config.panel in [PanelDesign.TABLE, PanelDesign.TABLE_SHOW_STYLE]
         return self._style_outer_panel_as_table()
 
+    def _get_style_text(self) -> str:
+        style_text_prefix = 'Style: '
+        short_style_text = self._outer_panel.config.style
+        full_style_text = style_text_prefix + short_style_text
+
+        if len(full_style_text) > self._outer_panel.inner_cropped_dims.width:
+            return short_style_text
+        else:
+            return full_style_text
+
+    def style_color_style_line(self) -> rich.text.Text | None:
+        if (self._outer_panel.config.panel == PanelDesign.TABLE_SHOW_STYLE
+                and self._outer_panel.inner_cropped_dims.height >= 5):
+
+            return rich.text.Text(
+                self._get_style_text(),
+                style=self._styles.info_style,
+                no_wrap=True,
+                overflow='ellipsis',
+                justify='right',
+            )
+        else:
+            return None
+
     def _style_outer_panel_as_table(self):
-        assert self._outer_panel.config.panel is PanelDesign.TABLE
+        assert self._outer_panel.config.panel in [PanelDesign.TABLE, PanelDesign.TABLE_SHOW_STYLE]
 
         table = rich.table.Table(
+            caption=self.style_color_style_line(),
             show_header=False,
             box=rich.box.ROUNDED,
             style=self._styles.table_style,
