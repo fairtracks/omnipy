@@ -29,8 +29,9 @@ class ResizedLayoutDraftPanel(
     where all contained panels have been adjusted to fit within frame
     constraints.
 
-    The layout has undergone width distribution, height adjustment, and various
-    optimization steps to ensure panels display their content effectively.
+    The layout has undergone width distribution, height adjustment, and
+    various optimization steps to ensure panels display their content
+    effectively.
     """
     def __init__(
         self,
