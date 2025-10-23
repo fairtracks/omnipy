@@ -105,9 +105,14 @@ class OutputConfig:
             title, up to a maximum of two lines. If ZERO, the title is not
             displayed at all. If ONE or TWO, the title is displayed with a
             fixed height of max one or two lines, respectively.
-        min_peek_width (NonNegativeInt): Minimum width of panels in
-            characters for Dataset peek(). This is used to calculate the
-            number of models to display in a Dataset peek().
+        min_crop_width (NonNegativeInt): Minimum cropping width in
+            characters for panels in cases where more than one panel are to
+            be displayed. This is for instance used to calculate the
+            number of models to display in a Dataset peek(). Only applied
+            if `use_min_crop_width` is set to `True`.
+        use_min_crop_width (bool): Whether the `min_crop_width` value should
+            be considered in cases where more than one panel are to
+            be displayed, potentially reduce the number of displayed panels.
         justify (Justify.Literals): Justification mode for the panel if
             inside a layout panel. This is only used for the panel content.
     """
@@ -137,7 +142,8 @@ class OutputConfig:
     panel: PanelDesign.Literals = PanelDesign.TABLE
     title_at_top: bool = True
     max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO
-    min_peek_width: pyd.NonNegativeInt = 30
+    min_crop_width: pyd.NonNegativeInt = 30
+    use_min_crop_width: bool = False
     justify: Justify.Literals = Justify.LEFT
 
     @pyd.validator('syntax')

@@ -407,7 +407,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     # Remove end chars
                     - panel_design_dims.num_horizontal_end_chars)
                 # Divide with space needed per panel(
-                // (config.min_peek_width + panel_design_dims.num_horizontal_chars_per_panel))
+                // (config.min_crop_width + panel_design_dims.num_horizontal_chars_per_panel))
 
             # Add extra panel with ellipsis
             max_num_models += 1
@@ -590,6 +590,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _extract_output_config_from_data_config(
         self,
         ui_type: SpecifiedUserInterfaceType.Literals,
+        use_min_crop_width: bool = False,
     ) -> OutputConfig:
         ui_config = cast(DataClassBase, self).config.ui
         ui_type_config = ui_config.get_ui_type_config(ui_type)
@@ -614,7 +615,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             panel=ui_config.layout.panel_design,
             title_at_top=ui_config.layout.panel_title_at_top,
             max_title_height=ui_config.layout.max_title_height,
-            min_peek_width=ui_config.layout.min_panel_width_for_peek,
+            min_crop_width=ui_config.layout.min_panel_width_for_peek,
+            use_min_crop_width=use_min_crop_width,
             justify=ui_config.layout.justify,
         )
 

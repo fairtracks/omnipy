@@ -39,7 +39,8 @@ def test_output_config() -> None:
         panel=PanelDesign.PANELS,
         title_at_top=False,
         max_title_height=MaxTitleHeight.ZERO,
-        min_peek_width=20,
+        min_crop_width=20,
+        use_min_crop_width=True,
         justify=Justify.RIGHT,
     )
 
@@ -62,7 +63,8 @@ def test_output_config() -> None:
     assert config.panel is PanelDesign.PANELS
     assert config.title_at_top is False
     assert config.max_title_height == MaxTitleHeight.ZERO
-    assert config.min_peek_width == 20
+    assert config.min_crop_width == 20
+    assert config.use_min_crop_width is True
     assert config.justify is Justify.RIGHT
 
     config = OutputConfig(
@@ -90,7 +92,8 @@ def test_output_config() -> None:
         panel='table',
         title_at_top=0,  # type: ignore[arg-type]
         max_title_height=1,
-        min_peek_width=20,
+        min_crop_width=20,
+        use_min_crop_width=1,  # type: ignore[arg-type]
         justify='right',
     )
     assert config.tab == 2
@@ -112,7 +115,8 @@ def test_output_config() -> None:
     assert config.panel is PanelDesign.TABLE
     assert config.title_at_top is False
     assert config.max_title_height == MaxTitleHeight.ONE
-    assert config.min_peek_width == 20
+    assert config.min_crop_width == 20
+    assert config.use_min_crop_width is True
     assert config.justify is Justify.RIGHT
 
     config = OutputConfig(
@@ -191,7 +195,10 @@ def test_output_config_hashable() -> None:
             'max_title_height': MaxTitleHeight.ZERO
         },
         {
-            'min_peek_width': 20
+            'min_crop_width': 20
+        },
+        {
+            'use_min_crop_width': True
         },
         {
             'justify': Justify.RIGHT
@@ -271,7 +278,10 @@ def test_fail_output_config_no_assignments() -> None:
         config.max_title_height = MaxTitleHeight.ONE  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.min_peek_width = 20  # type: ignore[misc]
+        config.min_crop_width = 20  # type: ignore[misc]
+
+    with pytest.raises(AttributeError):
+        config.use_min_crop_width = True  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
         config.justify = Justify.RIGHT  # type: ignore[misc]
@@ -342,7 +352,10 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(max_title_height=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(min_peek_width=None)  # type: ignore[arg-type]
+        OutputConfig(min_crop_width=None)  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError):
+        OutputConfig(use_min_crop_width=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
         OutputConfig(justify=None)  # type: ignore[arg-type]
@@ -375,7 +388,8 @@ def test_output_config_default_values() -> None:
     assert config.panel is PanelDesign.TABLE
     assert config.title_at_top is True
     assert config.max_title_height is MaxTitleHeight.AUTO
-    assert config.min_peek_width == 30
+    assert config.min_crop_width == 30
+    assert config.use_min_crop_width is False
     assert config.justify is Justify.LEFT
 
 
