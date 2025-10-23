@@ -268,12 +268,14 @@ class PanelDesign(LiteralEnum[str]):
 
     The layout designs are:
     - `TABLE`: The output is displayed as a simple table grid
+    - `TABLE_SHOW_STYLE`: The output is displayed as a simple table grid
     - `PANELS`: The output is displayed as a set of panels
     """
 
-    Literals = Literal['table', 'panels']
+    Literals = Literal['table', 'table_show_style', 'panels']
 
     TABLE: Literal['table'] = 'table'
+    TABLE_SHOW_STYLE: Literal['table_show_style'] = 'table_show_style'
     PANELS: Literal['panels'] = 'panels'
 
 
