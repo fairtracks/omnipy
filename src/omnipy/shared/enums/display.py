@@ -271,9 +271,9 @@ class PanelDesign(LiteralEnum[str]):
     - `PANELS`: The output is displayed as a set of panels
     """
 
-    Literals = Literal['table_grid', 'panels']
+    Literals = Literal['table', 'panels']
 
-    TABLE_GRID: Literal['table_grid'] = 'table_grid'
+    TABLE: Literal['table'] = 'table'
     PANELS: Literal['panels'] = 'panels'
 
 

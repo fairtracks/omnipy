@@ -322,11 +322,11 @@ class OuterLayoutPanelStyler:
         self._styles = styles
 
     def style_outer_panel(self) -> rich.table.Table:
-        assert self._outer_panel.config.panel is PanelDesign.TABLE_GRID
+        assert self._outer_panel.config.panel is PanelDesign.TABLE
         return self._style_outer_panel_as_table()
 
     def _style_outer_panel_as_table(self):
-        assert self._outer_panel.config.panel is PanelDesign.TABLE_GRID
+        assert self._outer_panel.config.panel is PanelDesign.TABLE
 
         table = rich.table.Table(
             show_header=False,

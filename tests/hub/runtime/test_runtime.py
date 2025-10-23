@@ -119,7 +119,7 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.data.ui.layout.overflow.vertical \
            is VerticalOverflowMode.ELLIPSIS_BOTTOM
 
-    assert config.data.ui.layout.panel_design is PanelDesign.TABLE_GRID
+    assert config.data.ui.layout.panel_design is PanelDesign.TABLE
     assert config.data.ui.layout.panel_title_at_top is True
 
     assert isinstance(config.data.model, ModelConfig)

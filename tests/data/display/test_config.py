@@ -87,7 +87,7 @@ def test_output_config() -> None:
         line_height='1',  # type: ignore[arg-type]
         h_overflow='ellipsis',
         v_overflow='crop_bottom',
-        panel='table_grid',
+        panel='table',
         title_at_top=0,  # type: ignore[arg-type]
         max_title_height=1,
         min_peek_width=20,
@@ -109,7 +109,7 @@ def test_output_config() -> None:
     assert config.line_height == 1.0
     assert config.h_overflow is HorizontalOverflowMode.ELLIPSIS
     assert config.v_overflow is VerticalOverflowMode.CROP_BOTTOM
-    assert config.panel is PanelDesign.TABLE_GRID
+    assert config.panel is PanelDesign.TABLE
     assert config.title_at_top is False
     assert config.max_title_height == MaxTitleHeight.ONE
     assert config.min_peek_width == 20
@@ -372,7 +372,7 @@ def test_output_config_default_values() -> None:
     assert config.line_height == 1.25
     assert config.h_overflow is HorizontalOverflowMode.ELLIPSIS
     assert config.v_overflow is VerticalOverflowMode.ELLIPSIS_BOTTOM
-    assert config.panel is PanelDesign.TABLE_GRID
+    assert config.panel is PanelDesign.TABLE
     assert config.title_at_top is True
     assert config.max_title_height is MaxTitleHeight.AUTO
     assert config.min_peek_width == 30

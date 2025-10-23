@@ -96,7 +96,7 @@ class OutputConfig:
         v_overflow (VerticalOverflowMode.Literals): How to handle text
             that exceeds the height.
         panel (PanelDesign.Literals): Visual design of the panel used as
-            container for the output. Only TABLE_GRID is currently
+            container for the output. Only TABLE is currently
             supported, which displays the output in a table-like grid.
         title_at_top (bool): Whether panel titles will be displayed over the
             panel content (True) or below the content (False)
@@ -134,7 +134,7 @@ class OutputConfig:
     line_height: pyd.NonNegativeFloat | None = 1.25
     h_overflow: HorizontalOverflowMode.Literals = HorizontalOverflowMode.ELLIPSIS
     v_overflow: VerticalOverflowMode.Literals = VerticalOverflowMode.ELLIPSIS_BOTTOM
-    panel: PanelDesign.Literals = PanelDesign.TABLE_GRID
+    panel: PanelDesign.Literals = PanelDesign.TABLE
     title_at_top: bool = True
     max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO
     min_peek_width: pyd.NonNegativeInt = 30

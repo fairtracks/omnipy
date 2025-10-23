@@ -123,9 +123,9 @@ class PanelDesignDims:
     @classmethod
     def create(
         cls,
-        panel_design: PanelDesign.Literals = PanelDesign.TABLE_GRID,
+        panel_design: PanelDesign.Literals = PanelDesign.TABLE,
     ) -> 'PanelDesignDims':
-        if panel_design == PanelDesign.TABLE_GRID:
+        if panel_design == PanelDesign.TABLE:
             return PanelDesignDims(
                 num_horizontal_chars_per_panel=3,
                 num_horizontal_end_chars=1,
@@ -155,7 +155,7 @@ class DimensionsAwarePanelLayoutMixin:
 
     def calc_dims(
         self,
-        panel_design: PanelDesign.Literals = PanelDesign.TABLE_GRID,
+        panel_design: PanelDesign.Literals = PanelDesign.TABLE,
         use_outer_dims_for_subpanels: bool = True,
     ) -> DimensionsWithWidthAndHeight:
         self_as_layout = cast(Layout, self)

@@ -226,7 +226,7 @@ class TextConfig(ConfigBase):
 
 class LayoutConfig(ConfigBase):
     overflow: IsOverflowConfig = pyd.Field(default_factory=OverflowConfig)
-    panel_design: PanelDesign.Literals = PanelDesign.TABLE_GRID
+    panel_design: PanelDesign.Literals = PanelDesign.TABLE
     panel_title_at_top: bool = True
     max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO
     min_panel_width_for_peek: pyd.NonNegativeInt = 30

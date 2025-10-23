@@ -34,7 +34,7 @@ def test_stylized_layout_panel_init() -> None:
     assert layout_panel.config == OutputConfig()
 
     frame = Frame(Dimensions(10, 10))
-    config = OutputConfig(panel=PanelDesign.TABLE_GRID)
+    config = OutputConfig(panel=PanelDesign.TABLE)
     constraints = Constraints()
     configured_layout_panel = StylizedLayoutPanel(
         ResizedLayoutDraftPanel(
