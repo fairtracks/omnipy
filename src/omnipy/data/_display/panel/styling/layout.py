@@ -338,9 +338,7 @@ class OuterLayoutPanelStyler:
             return full_style_text
 
     def style_color_style_line(self) -> rich.text.Text | None:
-        if (self._outer_panel.config.panel == PanelDesign.TABLE_SHOW_STYLE
-                and self._outer_panel.inner_cropped_dims.height >= 5):
-
+        if self._outer_panel.config.panel == PanelDesign.TABLE_SHOW_STYLE:
             return rich.text.Text(
                 self._get_style_text(),
                 style=self._styles.info_style,

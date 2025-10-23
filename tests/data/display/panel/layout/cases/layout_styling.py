@@ -1,4 +1,3 @@
-from textwrap import dedent
 from typing import Annotated
 
 import pytest_cases as pc
@@ -129,40 +128,45 @@ def case_layout_styling_setup_small_frame(
 def case_layout_styling_expectations_plain_terminal(
         plain_terminal: Annotated[OutputPropertyType,
                                   pc.fixture]) -> StylizedPanelOutputExpectations:
+    no_frame_dark_color_exp_output = ('╭─────────┬─────────╮\n'
+                                      '│ Panel_1 │ Panel_2 │\n'
+                                      '│ Content │ Content │\n'
+                                      '╰─────────┴─────────╯\n')
+
+    no_frame_dark_color_no_bg_show_style_exp_output = (
+        no_frame_dark_color_exp_output + '   lightbulb-pygments\n')
+
+    frame_title_light_color_exp_output = ('╭────────────┬──────────────────────────╮\n'
+                                          '│ True       │ Some longer content here │\n'
+                                          '│            │                          │\n'
+                                          '│ The title  │                          │\n'
+                                          '│ of Panel 1 │         Panel 2          │\n'
+                                          '╰────────────┴──────────────────────────╯\n')
+
+    frame_title_light_color_no_bg_show_style_exp_output = (
+        frame_title_light_color_exp_output + '            Style: omnipy-selenized-light\n')
+
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
-            case 'no-frame-dark-color' | 'no-frame-dark-color-no-bg-show-style':
-                exp_output = dedent("""\
-                    ╭─────────┬─────────╮
-                    │ Panel_1 │ Panel_2 │
-                    │ Content │ Content │
-                    ╰─────────┴─────────╯
-                    """)
+            case 'no-frame-dark-color':
+                return no_frame_dark_color_exp_output
 
-                if 'show-style' in case_id:
-                    exp_output += '   lightbulb-pygments\n'
+            case 'no-frame-dark-color-no-bg-show-style':
+                return no_frame_dark_color_no_bg_show_style_exp_output
 
-                return exp_output
+            case 'frame-title-light-color':
+                return frame_title_light_color_exp_output
 
-            case 'frame-title-light-color' | 'frame-title-light-color-no-bg-show-style':
-                exp_output = ('╭────────────┬──────────────────────────╮\n'
-                              '│ True       │ Some longer content here │\n'
-                              '│            │                          │\n'
-                              '│ The title  │                          │\n'
-                              '│ of Panel 1 │         Panel 2          │\n'
-                              '╰────────────┴──────────────────────────╯\n')
+            case 'frame-title-light-color-no-bg-show-style':
+                return frame_title_light_color_no_bg_show_style_exp_output
 
-                if 'show-style' in case_id:
-                    exp_output += '            Style: omnipy-selenized-light\n'
+            case 'tiny-cropped-table-dark-color':
+                return ('╭┬\n'
+                        '╰┴\n')
 
-                return exp_output
-
-            case 'tiny-cropped-table-dark-color' \
-                 | 'tiny-cropped-table-dark-color-no-bg-show-style':
-                return dedent("""\
-                    ╭┬
-                    ╰┴
-                    """)
+            case 'tiny-cropped-table-dark-color-no-bg-show-style':
+                return ('╭┬\n'
+                        'li\n')
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
@@ -176,42 +180,48 @@ def case_layout_styling_expectations_plain_terminal(
 def case_layout_styling_expectations_bw_stylized_terminal(
     bw_stylized_terminal: Annotated[OutputPropertyType,
                                     pc.fixture]) -> StylizedPanelOutputExpectations:
+    no_frame_dark_color_exp_output = ('╭─────────┬─────────╮\n'
+                                      '│ \x1b[1mPanel_1\x1b[0m │ \x1b[1mPanel_2\x1b[0m │\n'
+                                      '│ \x1b[1mContent\x1b[0m │ \x1b[1mContent\x1b[0m │\n'
+                                      '╰─────────┴─────────╯\n')
+
+    no_frame_dark_color_no_bg_show_style_exp_output = (
+        no_frame_dark_color_exp_output + '\x1b[3m   lightbulb-pygments\x1b[0m\n')
+
+    frame_title_light_color_exp_output = (
+        '╭────────────┬──────────────────────────╮\n'
+        '│ \x1b[1mTrue\x1b[0m       │ \x1b[1mSome\x1b[0m \x1b[1mlonger\x1b[0m '
+        '\x1b[1mcontent\x1b[0m \x1b[1mhere\x1b[0m │\n'
+        '│ \x1b[3m          \x1b[0m │ \x1b[3m                        \x1b[0m │\n'
+        '│ \x1b[3mThe title \x1b[0m │ \x1b[3m                        \x1b[0m │\n'
+        '│ \x1b[3mof Panel 1\x1b[0m │ \x1b[3m        Panel 2         \x1b[0m │\n'
+        '╰────────────┴──────────────────────────╯\n')
+
+    frame_title_light_color_no_bg_show_style_exp_output = (
+        frame_title_light_color_exp_output
+        + '\x1b[3m            Style: omnipy-selenized-light\x1b[0m\n')
+
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
-            case 'no-frame-dark-color' | 'no-frame-dark-color-no-bg-show-style':
-                exp_output = dedent("""\
-                    ╭─────────┬─────────╮
-                    │ \x1b[1mPanel_1\x1b[0m │ \x1b[1mPanel_2\x1b[0m │
-                    │ \x1b[1mContent\x1b[0m │ \x1b[1mContent\x1b[0m │
-                    ╰─────────┴─────────╯
-                    """)
+            case 'no-frame-dark-color':
+                return no_frame_dark_color_exp_output
 
-                if 'show-style' in case_id:
-                    exp_output += '\x1b[3m   lightbulb-pygments\x1b[0m\n'
+            case 'no-frame-dark-color-no-bg-show-style':
+                return no_frame_dark_color_no_bg_show_style_exp_output
 
-                return exp_output
+            case 'frame-title-light-color':
+                return frame_title_light_color_exp_output
 
-            case 'frame-title-light-color' | 'frame-title-light-color-no-bg-show-style':
-                exp_output = (
-                    '╭────────────┬──────────────────────────╮\n'
-                    '│ \x1b[1mTrue\x1b[0m       │ \x1b[1mSome\x1b[0m \x1b[1mlonger\x1b[0m '
-                    '\x1b[1mcontent\x1b[0m \x1b[1mhere\x1b[0m │\n'
-                    '│ \x1b[3m          \x1b[0m │ \x1b[3m                        \x1b[0m │\n'
-                    '│ \x1b[3mThe title \x1b[0m │ \x1b[3m                        \x1b[0m │\n'
-                    '│ \x1b[3mof Panel 1\x1b[0m │ \x1b[3m        Panel 2         \x1b[0m │\n'
-                    '╰────────────┴──────────────────────────╯\n')
+            case 'frame-title-light-color-no-bg-show-style':
+                return frame_title_light_color_no_bg_show_style_exp_output
 
-                if 'show-style' in case_id:
-                    exp_output += '\x1b[3m            Style: omnipy-selenized-light\x1b[0m\n'
+            case 'tiny-cropped-table-dark-color':
+                return ('╭┬\n'
+                        '╰┴\n')
 
-                return exp_output
-
-            case 'tiny-cropped-table-dark-color' \
-                 | 'tiny-cropped-table-dark-color-no-bg-show-style':
-                return dedent("""\
-                    ╭┬
-                    ╰┴
-                    """)
+            case 'tiny-cropped-table-dark-color-no-bg-show-style':
+                return ('╭┬\n'
+                        '\x1b[3mli\x1b[0m\n')
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
 
@@ -369,7 +379,7 @@ def case_layout_styling_expectations_colorized_terminal(
 
             case 'tiny-cropped-table-dark-color-no-bg-show-style':
                 return ('\x1b[38;2;126;138;161m╭┬\x1b[0m\n'
-                        '\x1b[38;2;126;138;161m╰┴\x1b[0m\n')
+                        '\x1b[3;38;2;126;138;161mli\x1b[0m\n')
 
             case _:
                 raise ValueError(f'Unexpected case_id: {case_id}')
@@ -389,12 +399,26 @@ def case_layout_styling_expectations_plain_html_tag(
                                       '│ Content │ Content │\n'
                                       '╰─────────┴─────────╯')
 
+    no_frame_dark_color_no_bg_show_style_exp_output = (
+        no_frame_dark_color_exp_output + '\n'
+        '   lightbulb-pygments')
+
     frame_title_light_color_exp_output = ('╭────────────┬──────────────────────────╮\n'
                                           '│ True       │ Some longer content here │\n'
                                           '│            │                          │\n'
                                           '│ The title  │                          │\n'
                                           '│ of Panel 1 │         Panel 2          │\n'
                                           '╰────────────┴──────────────────────────╯')
+
+    frame_title_light_color_no_bg_show_style_exp_output = (
+        frame_title_light_color_exp_output + '\n'
+        '            Style: omnipy-selenized-light')
+
+    tiny_cropped_table_dark_color_exp_output = ('╭┬\n'
+                                                '╰┴')
+
+    tiny_cropped_table_dark_color_no_bg_show_style_exp_output = ('╭┬\n'
+                                                                 'li')
 
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
@@ -406,8 +430,7 @@ def case_layout_styling_expectations_plain_html_tag(
 
             case 'no-frame-dark-color-no-bg-show-style':
                 return fill_html_tag_template(
-                    data=(no_frame_dark_color_exp_output + '\n'
-                          '   lightbulb-pygments'),
+                    data=no_frame_dark_color_no_bg_show_style_exp_output,
                     case_id=case_id,
                 )
 
@@ -419,16 +442,19 @@ def case_layout_styling_expectations_plain_html_tag(
 
             case 'frame-title-light-color-no-bg-show-style':
                 return fill_html_tag_template(
-                    data=(frame_title_light_color_exp_output + '\n'
-                          '            Style: omnipy-selenized-light'),
+                    data=frame_title_light_color_no_bg_show_style_exp_output,
                     case_id=case_id,
                 )
 
-            case 'tiny-cropped-table-dark-color' \
-                 | 'tiny-cropped-table-dark-color-no-bg-show-style':
+            case 'tiny-cropped-table-dark-color':
                 return fill_html_tag_template(
-                    data=('╭┬\n'
-                          '╰┴'),
+                    data=tiny_cropped_table_dark_color_exp_output,
+                    case_id=case_id,
+                )
+
+            case 'tiny-cropped-table-dark-color-no-bg-show-style':
+                return fill_html_tag_template(
+                    data=tiny_cropped_table_dark_color_no_bg_show_style_exp_output,
                     case_id=case_id,
                 )
 
@@ -452,6 +478,10 @@ def case_layout_styling_expectations_bw_stylized_html_tag(
                                       '│ <span style="font-weight: bold">Content</span> │\n'
                                       '╰─────────┴─────────╯')
 
+    no_frame_dark_color_no_bg_show_style_exp_output = (
+        no_frame_dark_color_exp_output + '\n'
+        '<span style="font-style: italic">   lightbulb-pygments</span>')
+
     frame_title_light_color_exp_output = (
         '╭────────────┬──────────────────────────╮\n'
         '│ <span style="font-weight: bold">True</span>       │ '
@@ -467,6 +497,17 @@ def case_layout_styling_expectations_bw_stylized_html_tag(
         '<span style="font-style: italic">        Panel 2         </span> │\n'
         '╰────────────┴──────────────────────────╯')
 
+    frame_title_light_color_no_bg_show_style_exp_output = (
+        frame_title_light_color_exp_output + '\n'
+        '<span style="font-style: italic">            Style: omnipy-selenized-light</span>')
+
+    tiny_cropped_table_dark_color_exp_output = ('╭┬\n'
+                                                '╰┴')
+
+    tiny_cropped_table_dark_color_no_bg_show_style_exp_output = (
+        '╭┬\n'
+        '<span style="font-style: italic">li</span>')
+
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-dark-color':
@@ -477,8 +518,7 @@ def case_layout_styling_expectations_bw_stylized_html_tag(
 
             case 'no-frame-dark-color-no-bg-show-style':
                 return fill_html_tag_template(
-                    data=(no_frame_dark_color_exp_output + '\n'
-                          '<span style="font-style: italic">   lightbulb-pygments</span>'),
+                    data=no_frame_dark_color_no_bg_show_style_exp_output,
                     case_id=case_id,
                 )
 
@@ -490,17 +530,19 @@ def case_layout_styling_expectations_bw_stylized_html_tag(
 
             case 'frame-title-light-color-no-bg-show-style':
                 return fill_html_tag_template(
-                    data=(frame_title_light_color_exp_output + '\n'
-                          '<span style="font-style: italic">'
-                          '            Style: omnipy-selenized-light</span>'),
+                    data=frame_title_light_color_no_bg_show_style_exp_output,
                     case_id=case_id,
                 )
 
-            case 'tiny-cropped-table-dark-color' \
-                 | 'tiny-cropped-table-dark-color-no-bg-show-style':
+            case 'tiny-cropped-table-dark-color':
                 return fill_html_tag_template(
-                    data=('╭┬\n'
-                          '╰┴'),
+                    data=tiny_cropped_table_dark_color_exp_output,
+                    case_id=case_id,
+                )
+
+            case 'tiny-cropped-table-dark-color-no-bg-show-style':
+                return fill_html_tag_template(
+                    data=tiny_cropped_table_dark_color_no_bg_show_style_exp_output,
                     case_id=case_id,
                 )
 
@@ -712,7 +754,8 @@ def case_layout_styling_expectations_colorized_html_tag(
             case 'tiny-cropped-table-dark-color-no-bg-show-style':
                 return fill_html_tag_template(
                     data=('<span style="color: #7e8aa1; text-decoration-color: #7e8aa1">╭┬</span>\n'
-                          '<span style="color: #7e8aa1; text-decoration-color: #7e8aa1">╰┴</span>'),
+                          '<span style="color: #7e8aa1; text-decoration-color: #7e8aa1; '
+                          'font-style: italic">li</span>'),
                     color_style=lightbulb_dark_color_style_no_bg,
                     case_id=case_id,
                 )
@@ -742,12 +785,26 @@ def case_layout_styling_expectations_plain_html_page(
                                       '│ Content │ Content │\n'
                                       '╰─────────┴─────────╯')
 
+    no_frame_dark_color_no_bg_show_style_exp_output = (
+        no_frame_dark_color_exp_output + '\n'
+        '   lightbulb-pygments')
+
     frame_title_light_color_exp_output = ('╭────────────┬──────────────────────────╮\n'
                                           '│ True       │ Some longer content here │\n'
                                           '│            │                          │\n'
                                           '│ The title  │                          │\n'
                                           '│ of Panel 1 │         Panel 2          │\n'
                                           '╰────────────┴──────────────────────────╯')
+
+    frame_title_light_color_no_bg_show_style_exp_output = (
+        frame_title_light_color_exp_output + '\n'
+        '            Style: omnipy-selenized-light')
+
+    tiny_cropped_table_dark_color_exp_output = ('╭┬\n'
+                                                '╰┴')
+
+    tiny_cropped_table_dark_color_no_bg_show_style_exp_output = ('╭┬\n'
+                                                                 'li')
 
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
@@ -761,8 +818,7 @@ def case_layout_styling_expectations_plain_html_page(
             case 'no-frame-dark-color-no-bg-show-style':
                 return fill_html_page_template(
                     style=light_body_style,
-                    data=(no_frame_dark_color_exp_output + '\n'
-                          '   lightbulb-pygments'),
+                    data=no_frame_dark_color_no_bg_show_style_exp_output,
                     case_id=case_id,
                 )
 
@@ -776,17 +832,21 @@ def case_layout_styling_expectations_plain_html_page(
             case 'frame-title-light-color-no-bg-show-style':
                 return fill_html_page_template(
                     style=light_body_style,
-                    data=(frame_title_light_color_exp_output + '\n'
-                          '            Style: omnipy-selenized-light'),
+                    data=frame_title_light_color_no_bg_show_style_exp_output,
                     case_id=case_id,
                 )
 
-            case 'tiny-cropped-table-dark-color' \
-                 | 'tiny-cropped-table-dark-color-no-bg-show-style':
+            case 'tiny-cropped-table-dark-color':
                 return fill_html_page_template(
                     style=light_body_style,
-                    data=('╭┬\n'
-                          '╰┴'),
+                    data=tiny_cropped_table_dark_color_exp_output,
+                    case_id=case_id,
+                )
+
+            case 'tiny-cropped-table-dark-color-no-bg-show-style':
+                return fill_html_page_template(
+                    style=light_body_style,
+                    data=tiny_cropped_table_dark_color_no_bg_show_style_exp_output,
                     case_id=case_id,
                 )
 
@@ -813,6 +873,10 @@ def case_layout_styling_expectations_bw_stylized_html_page(
         '.r3 {font-style: italic}',
     ])
 
+    italic_style = '\n'.join([
+        '.r2 {font-style: italic}',
+    ])
+
     light_body_style = f"""
       body {{
         color: #000000;
@@ -828,6 +892,10 @@ def case_layout_styling_expectations_bw_stylized_html_page(
                                       '<span class="r1"> │ </span><span class="r2">Content</span>'
                                       '<span class="r1"> │</span>\n'
                                       '<span class="r1">╰─────────┴─────────╯</span>')
+
+    no_frame_dark_color_no_bg_show_style_exp_output = (
+        no_frame_dark_color_exp_output + '\n'
+        '<span class="r3">   lightbulb-pygments</span>')
 
     frame_title_light_color_exp_output = (
         '<span class="r1">╭────────────┬──────────────────────────╮</span>\n'
@@ -851,6 +919,16 @@ def case_layout_styling_expectations_bw_stylized_html_page(
         '<span class="r1"> │</span>\n'
         '<span class="r1">╰────────────┴──────────────────────────╯</span>')
 
+    frame_title_light_color_no_bg_show_style_exp_output = (
+        frame_title_light_color_exp_output + '\n'
+        '<span class="r3">            Style: omnipy-selenized-light</span>')
+
+    tiny_cropped_table_dark_color_exp_output = ('<span class="r1">╭┬</span>\n'
+                                                '<span class="r1">╰┴</span>')
+
+    tiny_cropped_table_dark_color_no_bg_show_style_exp_output = ('<span class="r1">╭┬</span>\n'
+                                                                 '<span class="r2">li</span>')
+
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-dark-color':
@@ -863,8 +941,7 @@ def case_layout_styling_expectations_bw_stylized_html_page(
             case 'no-frame-dark-color-no-bg-show-style':
                 return fill_html_page_template(
                     style=bold_and_italic_style + light_body_style,
-                    data=(no_frame_dark_color_exp_output + '\n'
-                          '<span class="r3">   lightbulb-pygments</span>'),
+                    data=no_frame_dark_color_no_bg_show_style_exp_output,
                     case_id=case_id,
                 )
 
@@ -878,17 +955,21 @@ def case_layout_styling_expectations_bw_stylized_html_page(
             case 'frame-title-light-color-no-bg-show-style':
                 return fill_html_page_template(
                     style=bold_and_italic_style + light_body_style,
-                    data=(frame_title_light_color_exp_output
-                          + '\n<span class="r3">            Style: omnipy-selenized-light</span>'),
+                    data=frame_title_light_color_no_bg_show_style_exp_output,
                     case_id=case_id,
                 )
 
-            case 'tiny-cropped-table-dark-color' \
-                 | 'tiny-cropped-table-dark-color-no-bg-show-style':
+            case 'tiny-cropped-table-dark-color':
                 return fill_html_page_template(
                     style=light_body_style,
-                    data=('<span class="r1">╭┬</span>\n'
-                          '<span class="r1">╰┴</span>'),
+                    data=tiny_cropped_table_dark_color_exp_output,
+                    case_id=case_id,
+                )
+
+            case 'tiny-cropped-table-dark-color-no-bg-show-style':
+                return fill_html_page_template(
+                    style=italic_style + light_body_style,
+                    data=tiny_cropped_table_dark_color_no_bg_show_style_exp_output,
                     case_id=case_id,
                 )
 
@@ -914,9 +995,12 @@ def case_layout_styling_expectations_colorized_html_page(
 
     lightbulb_dark_style_no_bg = ('.r1 {color: #7e8aa1; text-decoration-color: #7e8aa1}')
 
-    lightbulb_dark_style_no_bg_show_style_extra = (
+    lightbulb_dark_style_no_bg_show_style_bold_italic_extra = (
         '\n.r2 {color: #000080; text-decoration-color: #000080; font-weight: bold}'
         '\n.r3 {color: #7e8aa1; text-decoration-color: #7e8aa1; font-style: italic}')
+
+    lightbulb_dark_style_no_bg_show_style_italic_extra = (
+        '\n.r2 {color: #7e8aa1; text-decoration-color: #7e8aa1; font-style: italic}')
 
     lightbulb_dark_body_style_with_bg = f"""
       body {{
@@ -961,15 +1045,17 @@ def case_layout_styling_expectations_colorized_html_page(
         {FONT_RENDER_BODY_STYLE}
       }}"""
 
-    no_frame_default_color_exp_output = (
-        '<span class="r1">╭─────────┬─────────╮</span>\n'
-        '<span class="r1">│ </span><span class="r2">Panel_1</span>'
-        '<span class="r1"> │ </span><span class="r2">Panel_2</span>'
-        '<span class="r1"> │</span>\n'
-        '<span class="r1">│ </span><span class="r2">Content</span>'
-        '<span class="r1"> │ </span><span class="r2">Content</span>'
-        '<span class="r1"> │</span>\n'
-        '<span class="r1">╰─────────┴─────────╯</span>')
+    no_frame_dark_color_exp_output = ('<span class="r1">╭─────────┬─────────╮</span>\n'
+                                      '<span class="r1">│ </span><span class="r2">Panel_1</span>'
+                                      '<span class="r1"> │ </span><span class="r2">Panel_2</span>'
+                                      '<span class="r1"> │</span>\n'
+                                      '<span class="r1">│ </span><span class="r2">Content</span>'
+                                      '<span class="r1"> │ </span><span class="r2">Content</span>'
+                                      '<span class="r1"> │</span>\n'
+                                      '<span class="r1">╰─────────┴─────────╯</span>')
+
+    no_frame_dark_color_no_bg_show_style_exp_output = (
+        no_frame_dark_color_exp_output + '\n<span class="r3">   lightbulb-pygments</span>')
 
     frame_title_light_color_exp_output = (
         '<span class="r1">╭────────────┬──────────────────────────╮</span>\n'
@@ -990,40 +1076,46 @@ def case_layout_styling_expectations_colorized_html_page(
         '<span class="r1"> │</span>\n'
         '<span class="r1">╰────────────┴──────────────────────────╯</span>')
 
+    frame_title_light_color_no_bg_show_style_exp_output = (
+        frame_title_light_color_exp_output
+        + '\n<span class="r4">            Style: omnipy-selenized-light</span>')
+
     tiny_cropped_table_dark_color_exp_output = ('<span class="r1">╭┬</span>\n'
                                                 '<span class="r1">╰┴</span>')
+
+    tiny_cropped_table_dark_color_no_bg_show_style_exp_output = ('<span class="r1">╭┬</span>\n'
+                                                                 '<span class="r2">li</span>')
 
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         match case_id:
             case 'no-frame-dark-color':
                 return fill_html_page_template(
-                    style=lightbulb_dark_style_with_bg + lightbulb_dark_bold_style_with_bg
-                    + lightbulb_dark_body_style_with_bg,
-                    data=no_frame_default_color_exp_output,
+                    style=(lightbulb_dark_style_with_bg + lightbulb_dark_bold_style_with_bg
+                           + lightbulb_dark_body_style_with_bg),
+                    data=no_frame_dark_color_exp_output,
                 )
 
             case 'no-frame-dark-color-no-bg-show-style':
                 return fill_html_page_template(
-                    style=lightbulb_dark_style_no_bg + lightbulb_dark_style_no_bg_show_style_extra
-                    + lightbulb_dark_body_style_no_bg,
-                    data=(no_frame_default_color_exp_output
-                          + '\n<span class="r3">   lightbulb-pygments</span>'),
+                    style=(lightbulb_dark_style_no_bg
+                           + lightbulb_dark_style_no_bg_show_style_bold_italic_extra
+                           + lightbulb_dark_body_style_no_bg),
+                    data=no_frame_dark_color_no_bg_show_style_exp_output,
                 )
 
             case 'frame-title-light-color':
                 return fill_html_page_template(
-                    style=omnipy_selenized_light_style_with_bg
-                    + omnipy_selenized_light_body_style_with_bg,
+                    style=(omnipy_selenized_light_style_with_bg
+                           + omnipy_selenized_light_body_style_with_bg),
                     data=frame_title_light_color_exp_output,
                     case_id=case_id,
                 )
 
             case 'frame-title-light-color-no-bg-show-style':
                 return fill_html_page_template(
-                    style=omnipy_selenized_light_style_no_bg_show_style
-                    + omnipy_selenized_light_body_style_no_bg,
-                    data=(frame_title_light_color_exp_output
-                          + '\n<span class="r4">            Style: omnipy-selenized-light</span>'),
+                    style=(omnipy_selenized_light_style_no_bg_show_style
+                           + omnipy_selenized_light_body_style_no_bg),
+                    data=frame_title_light_color_no_bg_show_style_exp_output,
                     case_id=case_id,
                 )
 
@@ -1036,8 +1128,10 @@ def case_layout_styling_expectations_colorized_html_page(
 
             case 'tiny-cropped-table-dark-color-no-bg-show-style':
                 return fill_html_page_template(
-                    style=lightbulb_dark_style_no_bg + lightbulb_dark_body_style_no_bg,
-                    data=tiny_cropped_table_dark_color_exp_output,
+                    style=(lightbulb_dark_style_no_bg
+                           + lightbulb_dark_style_no_bg_show_style_italic_extra
+                           + lightbulb_dark_body_style_no_bg),
+                    data=tiny_cropped_table_dark_color_no_bg_show_style_exp_output,
                     case_id=case_id,
                 )
 
