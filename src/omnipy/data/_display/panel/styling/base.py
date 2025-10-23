@@ -3,17 +3,11 @@ from functools import cached_property, lru_cache
 from io import StringIO
 from typing import Generic, TypeAlias
 
-import rich.box
-import rich.color
-import rich.color_triplet
 import rich.console
 import rich.panel
-import rich.segment
 import rich.style
 import rich.syntax
 import rich.table
-import rich.terminal_theme
-import rich.text
 from typing_extensions import override, TypeVar
 
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
