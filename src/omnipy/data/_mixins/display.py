@@ -373,7 +373,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 # that can fit in the frame, we stop adding more models.
                 break
 
-            if i + 1 == max_num_models:
+            if i > 0 and i + 1 == max_num_models:
                 layout['...'] = self._create_inner_panel_for_ellipsis(config)
             else:
                 if isinstance(model.content, Dataset):
@@ -400,16 +400,19 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         panel_design_dims = PanelDesignDims.create(config.panel)
         if has_width(frame.dims):
             max_num_models = (
-                (
-                    frame.dims.width
-                    # Remove space for extra panel with ellipsis
-                    - (panel_design_dims.num_horizontal_chars_per_panel + 1)
-                    # Remove end chars
-                    - panel_design_dims.num_horizontal_end_chars)
+                max(
+                    (
+                        frame.dims.width
+                        # Remove space for extra panel with ellipsis
+                        - (panel_design_dims.num_horizontal_chars_per_panel + 1)
+                        # Remove end chars
+                        - panel_design_dims.num_horizontal_end_chars),
+                    0,  # But not less than 0
+                )
                 # Divide with space needed per panel(
                 // (config.min_crop_width + panel_design_dims.num_horizontal_chars_per_panel))
 
-            # Add extra panel with ellipsis
+            # Add extra panel with ellipsis (or first panel if max_num_models == 0)
             max_num_models += 1
 
         return max_num_models

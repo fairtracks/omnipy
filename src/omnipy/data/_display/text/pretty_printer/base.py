@@ -185,7 +185,7 @@ class WidthReducingPrettyPrinter(StatsTighteningPrettyPrinter[ContentT], Generic
         cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
     ) -> FrameWithWidth:
 
-        new_frame_width = self._calc_reduced_frame_width(cur_reflowed_text_panel.orig_dims)
+        new_frame_width = max(0, self._calc_reduced_frame_width(cur_reflowed_text_panel.orig_dims))
         return cur_reflowed_text_panel.frame.modified_copy(width=new_frame_width)
 
     @classmethod
