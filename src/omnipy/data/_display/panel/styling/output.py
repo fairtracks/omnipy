@@ -85,7 +85,7 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
         if self._output.config.h_overflow is HorizontalOverflowMode.WORD_WRAP:
             self._crop_dims = self._frame.dims
         else:
-            self._crop_dims = self._output.input_panel_cropped_dims
+            self._crop_dims = self._output.inner_cropped_dims
 
     # Hacks to remove color and strip styles from the console record buffer, making use of
     # private methods in the rich library. These are needed to prevent the stylized output from

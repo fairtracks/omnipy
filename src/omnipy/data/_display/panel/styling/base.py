@@ -41,14 +41,14 @@ class StylizedMonospacedPanel(
         Generic[PanelT, ContentT, FrameT],
         ABC,
 ):
-    # TODO: Return to _input_panel_cropped_dims when Pydantic 2.0 is released
+    # TODO: Return to _inner_cropped_dims when Pydantic 2.0 is released
     #
     # Pydantic 1.10 emits a RuntimeWarning for dataclasses with private
     # fields (starting with '_')
     # See https://github.com/pydantic/pydantic/issues/2816
-    # _input_panel_cropped_dims: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
+    # _inner_cropped_dims: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
 
-    input_panel_cropped_dims: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
+    inner_cropped_dims: DimensionsWithWidthAndHeight = Dimensions(width=0, height=0)
 
     def __init__(self, panel: MonospacedDraftPanel[ContentT, FrameT]):
         super().__init__(
@@ -58,10 +58,8 @@ class StylizedMonospacedPanel(
             constraints=panel.constraints,
             config=panel.config,
         )
-        # object.__setattr__(self, '_input_panel_cropped_dims', panel.cropped_dims)
-        object.__setattr__(self,
-                           'input_panel_cropped_dims',
-                           panel.inner_frame.crop_dims(panel.dims, ignore_fixed_dims=True))
+        # object.__setattr__(self, '_inner_cropped_dims', panel.cropped_dims)
+        object.__setattr__(self, 'inner_cropped_dims', self._calc_inner_cropped_dims(panel))
 
     @staticmethod
     def _clean_rich_style_caches():
@@ -103,13 +101,18 @@ class StylizedMonospacedPanel(
         placeholder method to be overridden by subclasses.
         """
 
+    @staticmethod
+    def _calc_inner_cropped_dims(
+            panel: MonospacedDraftPanel[ContentT, FrameT]) -> DimensionsWithWidthAndHeight:
+        return panel.inner_frame.crop_dims(panel.dims, ignore_fixed_dims=True)
+
     @cached_property
     def _console_dimensions(self) -> DimensionsWithWidthAndHeight:
-        input_panel_dims = self.input_panel_cropped_dims
-        return self._apply_console_newline_hack(self.frame.crop_dims(input_panel_dims))
+        return self._apply_console_newline_hack(self.inner_cropped_dims)
 
+    @staticmethod
     def _apply_console_newline_hack(
-            self, console_dims: DimensionsWithWidthAndHeight) -> DimensionsWithWidthAndHeight:
+            console_dims: DimensionsWithWidthAndHeight) -> DimensionsWithWidthAndHeight:
         """
         Hack to allow rich.console to output newline content when
         width == 0
