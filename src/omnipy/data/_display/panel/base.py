@@ -99,7 +99,7 @@ def panel_is_fully_rendered(panel: 'Panel') -> TypeIs['FullyRenderedPanel']:
     return isinstance(panel, FullyRenderedPanel)
 
 
-class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
+class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
     @cached_property
     @abstractmethod
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:

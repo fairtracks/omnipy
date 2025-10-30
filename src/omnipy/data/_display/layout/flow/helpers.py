@@ -304,7 +304,7 @@ class LayoutFlowContext(Generic[FrameT]):
         self.dim_aware_layout[key] = cast(DimensionsAwareDraftPanel,
                                           ellipsis_panel.render_next_stage())
 
-    def _delete_consecutively_removed_panels(self):
+    def _delete_consecutively_removed_panels(self) -> None:
         prev_key_removed = False
         keys_for_consecutively_removed_panels = []
         for cur_key in self.dim_aware_layout.keys():

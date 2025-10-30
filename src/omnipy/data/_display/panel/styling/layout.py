@@ -349,7 +349,7 @@ class OuterLayoutPanelStyler:
         else:
             return None
 
-    def _style_outer_panel_as_table(self):
+    def _style_outer_panel_as_table(self) -> rich.table.Table:
         assert self._outer_panel.config.panel in [PanelDesign.TABLE, PanelDesign.TABLE_SHOW_STYLE]
 
         table = rich.table.Table(

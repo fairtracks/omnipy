@@ -97,7 +97,7 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.data.ui.browser.color.system is DisplayColorSystem.ANSI_RGB
     assert config.data.ui.browser.color.style \
            is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
-    assert config.data.ui.jupyter.color.dark_background is False
+    assert config.data.ui.browser.color.dark_background is False
     assert config.data.ui.browser.color.solid_background is False
 
     assert isinstance(config.data.ui.text, TextConfig)

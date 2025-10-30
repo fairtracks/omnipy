@@ -15,7 +15,7 @@ from omnipy.hub._registry import RunStateRegistry
 from omnipy.hub.log._root_log import RootLogObjects
 from omnipy.hub.ui import detect_and_setup_user_interface
 from omnipy.shared.enums.job import EngineChoice
-from omnipy.shared.protocols.compute.job_creator import IsJobConfigHolder
+from omnipy.shared.protocols.compute.job_creator import IsJobConfigHolder, IsJobCreator
 from omnipy.shared.protocols.config import (IsDataConfig,
                                             IsEngineConfig,
                                             IsJobConfig,
@@ -33,19 +33,19 @@ from omnipy.util.helpers import called_from_omnipy_tests
 from omnipy.util.publisher import DataPublisher, RuntimeEntryPublisher
 
 
-def _job_creator_factory():
+def _job_creator_factory() -> IsJobCreator:
     return JobBase.job_creator
 
 
-def _job_config_factory():
+def _job_config_factory() -> IsJobConfig:
     return _job_creator_factory().config
 
 
-def _data_class_creator_factory():
+def _data_class_creator_factory() -> IsDataClassCreator:
     return DataClassBase.data_class_creator
 
 
-def _data_config_factory():
+def _data_config_factory() -> IsDataConfig:
     return _data_class_creator_factory().config
 
 
@@ -91,7 +91,7 @@ class Runtime(DataPublisher):
 
         detect_and_setup_user_interface(self)
 
-    def reset_subscriptions(self, data=None, **kwargs):
+    def reset_subscriptions(self) -> None:
         """
         Resets all subscriptions for the current instance.
 
@@ -150,17 +150,21 @@ class Runtime(DataPublisher):
         self.objects.subscribe_attr('local', self._update_local_runner_config)
         self.objects.subscribe_attr('prefect', self._update_prefect_engine_config)
 
-    def reset_backlinks(self):
-        self.config._back = self  # pyright: ignore [reportAttributeAccessIssue]
-        self.objects._back = self  # pyright: ignore [reportAttributeAccessIssue]
+    def reset_backlinks(self) -> None:
+        self.config._back = self  # type: ignore[attr-defined]
+        self.objects._back = self  # type: ignore[attr-defined]
 
-    def _get_engine_config(self, choice: EngineChoice.Literals):
+    def _get_engine_config(self, choice: EngineChoice.Literals) -> IsEngineConfig:
         return getattr(self.config.engine, choice)
 
-    def _set_engine_config(self, choice: EngineChoice.Literals, engine_config: IsJobRunnerConfig):
-        return setattr(self.config.engine, choice, engine_config)
+    def _set_engine_config(
+        self,
+        choice: EngineChoice.Literals,
+        engine_config: IsJobRunnerConfig,
+    ) -> None:
+        setattr(self.config.engine, choice, engine_config)
 
-    def _get_engine(self, choice: EngineChoice.Literals):
+    def _get_engine(self, choice: EngineChoice.Literals) -> IsEngine:
         return getattr(self.objects, choice)
 
     def _new_engine_config_if_new_cls(
@@ -174,13 +178,13 @@ class Runtime(DataPublisher):
         if self._get_engine_config(choice).__class__ is not engine_config_cls:
             self._set_engine_config(choice, engine_config_cls())
 
-    def _update_local_runner_config(self, local_runner: IsEngine):
+    def _update_local_runner_config(self, local_runner: IsEngine) -> None:
         self._new_engine_config_if_new_cls(local_runner, EngineChoice.LOCAL)
 
-    def _update_prefect_engine_config(self, prefect_engine: IsEngine):
+    def _update_prefect_engine_config(self, prefect_engine: IsEngine) -> None:
         self._new_engine_config_if_new_cls(prefect_engine, EngineChoice.PREFECT)
 
-    def _update_job_creator_engine(self, _item_changed: Any):
+    def _update_job_creator_engine(self, _item_changed: Any) -> None:
         self.objects.job_creator.set_engine(self._get_engine(self.config.engine.choice))
 
 

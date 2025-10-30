@@ -261,8 +261,6 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> 'str | Element | None':
-        from omnipy.data.dataset import Dataset, Model
-
         def _render_panel(
             ui_type: SpecifiedUserInterfaceType.Literals,
             *args: P.args,
@@ -325,7 +323,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     )
                     mime_bundle['text/html'] += _render_output(rendered_panel, browser_tag_ui_type)
 
-                    self_as_dataclass = cast(Dataset | Model, self)
+                    self_as_dataclass = cast('Dataset | Model', self)
                     element: Element = ReactivelyResizingHtml(
                         self_as_dataclass,
                         self_as_dataclass.config.ui.jupyter.deepcopy(),
@@ -713,8 +711,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         )
 
     def _list(self, **kwargs) -> DraftPanel:
-        from omnipy.data.dataset import Dataset
-        dataset = cast(Dataset, self)
+        dataset = cast('Dataset', self)
 
         ui_type = self._extract_ui_type(**kwargs)
         frame = self._define_frame_from_available_display_dims(ui_type)
@@ -768,7 +765,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
     def _max_digits_for_dataset_list_index_numbers(
         self,
-        dataset: Dataset,
+        dataset: 'Dataset',
         frame: Frame,
         config: OutputConfig,
     ) -> int:
