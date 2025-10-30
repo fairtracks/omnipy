@@ -268,7 +268,7 @@ def _iteratively_resize_inner_panels(  # noqa: C901
                 context.dim_aware_layout[key] = resize_helper.new_resized_panel
                 continue
 
-        for key in reversed(tuple(context.dim_aware_layout.keys())):
+        for key in reversed(context.remaining_panel_keys()):
             just_removed_panel = context.remove_panel_if_overly_cropped(key)
             if just_removed_panel:
                 # Only remove one panel at a time, as panel resize might

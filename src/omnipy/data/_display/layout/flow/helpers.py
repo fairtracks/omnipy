@@ -323,6 +323,16 @@ class LayoutFlowContext(Generic[FrameT]):
     def panel_removed(self, key) -> bool:
         return key in self.keys_of_removed_panels
 
+    def remaining_panel_keys(self) -> tuple[str, ...]:
+        """
+        Get a list of keys for panels that have not been removed.
+
+        Returns:
+            List of keys for remaining panels in the layout
+        """
+        return tuple(
+            key for key in self.dim_aware_layout.keys() if key not in self.keys_of_removed_panels)
+
     def changed_since(self, prev_context: 'LayoutFlowContext') -> bool:
         """
         Check if the layout dimensions or set of resizable panels have
