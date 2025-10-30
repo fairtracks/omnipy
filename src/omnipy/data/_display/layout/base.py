@@ -120,6 +120,33 @@ class PanelDesignDims:
             num_vertical_panels,
         )
 
+    @staticmethod
+    def _num_panels_within_frame_dim(
+        chars_per_panel: int,
+        end_chars: int,
+        frame_dim_val: int,
+        content_dim_val_per_panel: int,
+    ) -> int:
+        available_dim_val = frame_dim_val - end_chars
+        dim_val_per_panel = chars_per_panel + content_dim_val_per_panel
+        return available_dim_val // dim_val_per_panel
+
+    def num_panels_within_frame_width(self, frame_width: int, width_per_panel: int) -> int:
+        return self._num_panels_within_frame_dim(
+            self.num_horizontal_chars_per_panel,
+            self.num_horizontal_end_chars,
+            frame_width,
+            width_per_panel,
+        )
+
+    def num_panels_within_frame_height(self, frame_height: int, height_per_panel: int) -> int:
+        return self._num_panels_within_frame_dim(
+            self.num_vertical_lines_per_panel,
+            self.num_vertical_end_lines,
+            frame_height,
+            height_per_panel,
+        )
+
     @classmethod
     def create(
         cls,

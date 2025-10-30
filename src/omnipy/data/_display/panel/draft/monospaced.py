@@ -38,7 +38,11 @@ class MonospacedDraftPanel(
 
     @cached_property
     def _width(self) -> pyd.NonNegativeInt:
-        return max((self._line_width(line) for line in self._content_lines), default=0)
+        min_width = self.config.min_panel_width
+        return max(
+            (max(self._line_width(line), min_width) for line in self._content_lines),
+            default=min_width,
+        )
 
     @cached_property
     def _height(self) -> pyd.NonNegativeInt:

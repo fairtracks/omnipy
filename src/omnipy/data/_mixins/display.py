@@ -365,8 +365,16 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         layout: Layout[DraftPanel] = Layout()
 
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
+        max_num_panels: None | int = self._calc_max_num_panels(config, frame)
 
-        for inner_title, model in models.items():
+        for i, (inner_title, model) in enumerate(models.items()):
+            if max_num_panels is not None and i > max_num_panels:
+                # If the number of models exceeds the maximum number of
+                # models that can possibly fit in the frame based on the
+                # `min_width` config, we stop adding more models.
+                print(i)
+                break
+
             if isinstance(model.content, Dataset):
                 inner_kwargs = config_kwargs.copy()
                 if 'freedom' not in inner_kwargs:
@@ -386,27 +394,15 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         return DraftPanel(layout, title=title, frame=frame, config=config)
 
-    def _calc_max_num_models(self, config: OutputConfig, frame: Frame) -> int | None:
-        max_num_models = None
-        panel_design_dims = PanelDesignDims.create(config.panel)
+    def _calc_max_num_panels(self, config: OutputConfig, frame: Frame) -> int | None:
+        max_num_panels: None | int = None
         if has_width(frame.dims):
-            max_num_models = (
-                max(
-                    (
-                        frame.dims.width
-                        # Remove space for extra panel with ellipsis
-                        - (panel_design_dims.num_horizontal_chars_per_panel + 1)
-                        # Remove end chars
-                        - panel_design_dims.num_horizontal_end_chars),
-                    0,  # But not less than 0
-                )
-                # Divide with space needed per panel(
-                // (config.min_crop_width + panel_design_dims.num_horizontal_chars_per_panel))
-
-            # Add extra panel with ellipsis (or first panel if max_num_models == 0)
-            max_num_models += 1
-
-        return max_num_models
+            panel_design_dims = PanelDesignDims.create(config.panel)
+            max_num_panels = panel_design_dims.num_panels_within_frame_width(
+                frame.dims.width,
+                config.min_panel_width,
+            )
+        return max_num_panels
 
     def _apply_kwargs_to_frame(
         self,
