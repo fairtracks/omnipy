@@ -1,9 +1,9 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import cached_property
 from typing import cast, Generic, NamedTuple
 
-from omnipy.data._display.dimensions import DimensionsWithWidthAndHeight, has_width
-from omnipy.data._display.frame import AnyFrame
+from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight, has_width
+from omnipy.data._display.frame import AnyFrame, Frame
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.base import panel_is_dimensions_aware
 from omnipy.data._display.panel.draft.base import (DimensionsAwareDraftPanel,
@@ -12,6 +12,7 @@ from omnipy.data._display.panel.draft.base import (DimensionsAwareDraftPanel,
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.typedefs import ContentT, FrameInvT, FrameT
 from omnipy.util import _pydantic as pyd
+from omnipy.util.helpers import first_key_in_mapping
 
 # Functions
 
@@ -73,7 +74,8 @@ class LayoutFlowContext(Generic[FrameT]):
     input_layout_panel: DraftPanel[Layout[DraftPanel], FrameT]
     draft_layout: Layout[DraftPanel]
     dim_aware_layout: DimensionsAwareDraftPanelLayout
-    keys_of_resizable_panels: set[str] = field(default_factory=set)
+    keys_of_resizable_panels: set[str]
+    keys_of_removed_panels: set[str]
 
     def __init__(
         self,
@@ -81,11 +83,13 @@ class LayoutFlowContext(Generic[FrameT]):
         draft_layout: Layout[DraftPanel],
         dim_aware_layout: DimensionsAwareDraftPanelLayout | pyd.UndefinedType = pyd.Undefined,
         keys_of_resizable_panels: set[str] | pyd.UndefinedType = pyd.Undefined,
+        keys_of_removed_panels: set[str] | pyd.UndefinedType = pyd.Undefined,
     ) -> None:
         self.input_layout_panel = input_layout_panel
         self.draft_layout = draft_layout
         self._init_dim_aware_layout(dim_aware_layout)
         self._init_keys_of_resizable_panels(keys_of_resizable_panels)
+        self._init_keys_of_removed_panels(keys_of_removed_panels)
 
     def _init_dim_aware_layout(
             self, dim_aware_layout: DimensionsAwareDraftPanelLayout | pyd.UndefinedType) -> None:
@@ -116,6 +120,15 @@ class LayoutFlowContext(Generic[FrameT]):
         else:
             self.keys_of_resizable_panels = keys_of_resizable_panels
 
+    def _init_keys_of_removed_panels(
+        self,
+        keys_of_removed_panels: set[str] | pyd.UndefinedType,
+    ) -> None:
+        if isinstance(keys_of_removed_panels, pyd.UndefinedType):
+            self.keys_of_removed_panels = set()
+        else:
+            self.keys_of_removed_panels = keys_of_removed_panels
+
     def copy(self) -> 'LayoutFlowContext[FrameT]':
         """
         Create a copy of the context with deep copies of mutable members.
@@ -133,6 +146,7 @@ class LayoutFlowContext(Generic[FrameT]):
             draft_layout=self.draft_layout,
             dim_aware_layout=self.dim_aware_layout.copy(),
             keys_of_resizable_panels=self.keys_of_resizable_panels.copy(),
+            keys_of_removed_panels=self.keys_of_removed_panels.copy(),
         )
 
     @cached_property
@@ -261,13 +275,62 @@ class LayoutFlowContext(Generic[FrameT]):
         else:
             return 1
 
+    def remove_panel_if_overly_cropped(self, key: str) -> bool:
+        """
+        Remove a panel if its has been overly cropped (currently only
+        checking the crop width against the `min_crop_width` config).
+        Removed panels are replaced with an ellipsis panel. Consecutive
+        removed panels beyond the first are deleted entirely.
+        :param key: Key of the panel to check
+        :return: True if the panel was removed, False otherwise
+        """
+        panel = self.dim_aware_layout[key]
+
+        if panel.config.use_min_crop_width and key != first_key_in_mapping(self.dim_aware_layout):
+            if panel.overly_cropped():
+                self.keys_of_removed_panels.add(key)
+                self._turn_into_ellipsis_panel(key)
+                self._delete_consecutively_removed_panels()
+                return True
+        return False
+
+    def _turn_into_ellipsis_panel(self, key: str) -> None:
+        panel = self.dim_aware_layout[key]
+        ellipsis_panel = panel.create_modified_copy(
+            '',
+            title='…',
+            frame=Frame(Dimensions(width=1, height=None), fixed_width=True),
+        )
+        self.dim_aware_layout[key] = cast(DimensionsAwareDraftPanel,
+                                          ellipsis_panel.render_next_stage())
+
+    def _delete_consecutively_removed_panels(self):
+        prev_key_removed = False
+        keys_for_consecutively_removed_panels = []
+        for cur_key in self.dim_aware_layout.keys():
+            if cur_key in self.keys_of_removed_panels:
+                if prev_key_removed:
+                    keys_for_consecutively_removed_panels.append(cur_key)
+                else:
+                    prev_key_removed = True
+            else:
+                prev_key_removed = False
+
+        for key in keys_for_consecutively_removed_panels:
+            # Completely remove consecutive removed panels, leaving only the first
+            del self.dim_aware_layout[key]
+
+    def panel_removed(self, key) -> bool:
+        return key in self.keys_of_removed_panels
+
     def changed_since(self, prev_context: 'LayoutFlowContext') -> bool:
         """
         Check if the layout dimensions or set of resizable panels have
         changed in comparison to a previous context.
         """
         return not (self.layout_dims == prev_context.layout_dims
-                    and self.keys_of_resizable_panels == prev_context.keys_of_resizable_panels)
+                    and self.keys_of_resizable_panels == prev_context.keys_of_resizable_panels
+                    and self.keys_of_removed_panels == prev_context.keys_of_removed_panels)
 
     def resizable_panel(self, key: str) -> bool:
         """

@@ -157,6 +157,27 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT]):
             proportional_freedom=self.config.freedom,
         )
 
+    def overly_cropped(self) -> bool:
+        """
+        Returns True if the panel width has been overly cropped, according
+        to the `min_crop_width` defined in the config.
+        """
+        width_cropped = self.dims.width > self.cropped_dims.width
+        width_less_than_min_crop = self.cropped_dims.width < self.config.min_crop_width
+        overly_cropped = width_cropped and width_less_than_min_crop
+        return overly_cropped
+
+    def width_missing_to_not_be_overly_cropped(self) -> pyd.NonNegativeInt:
+        """
+        Calculates the width that needs to be added to the panel frame in
+        order for the panel to be considered overly_cropped according to
+        the `min_crop_width` defined in the config. If the panel is not
+        currently considered overly cropped, this function returns 0.
+        """
+        if not self.overly_cropped():
+            return 0
+        return max(self.config.min_crop_width - self.cropped_dims.width, 0)
+
     @cached_property
     def _available_height_for_title(self) -> int | None:
         if has_height(self.frame.dims):

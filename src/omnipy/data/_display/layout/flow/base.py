@@ -201,7 +201,7 @@ def _determine_panel_width(
     return panel.frame.dims.width, panel.frame.fixed_width
 
 
-def _iteratively_resize_inner_panels(
+def _iteratively_resize_inner_panels(  # noqa: C901
         context: LayoutFlowContext[FrameT]) -> LayoutFlowContext[FrameT]:
     """
     Iteratively resize inner panels to fit within the total frame width.
@@ -220,7 +220,10 @@ def _iteratively_resize_inner_panels(
     Returns:
         Updated layout flow context with resized panels
     """
+    have_considered_panel_removal = False
+
     while True:
+        just_removed_panel = False
         prev_context = context.copy()
 
         panel_priority = _sort_panels_by_resize_priority(context)
@@ -232,12 +235,26 @@ def _iteratively_resize_inner_panels(
             )
 
             if context.extra_width_available:
-                frame_width_delta = context.extra_width
+                panel = resize_helper.dim_aware_panel
+                if panel.overly_cropped():
+                    # Only increase enough for the cropped width to be
+                    # equal to or greater than the defined
+                    # `min_crop_width` value.
+                    frame_width_delta: int = panel.width_missing_to_not_be_overly_cropped()
+                else:
+                    frame_width_delta = context.extra_width
             else:
+                if not have_considered_panel_removal:
+                    # Force panel removal check before downsizing, as
+                    # panel removal might also remove the need to downsize
+                    break
+
                 # If no extra width is available, reduce frame width by 1.
                 frame_width_delta = -1
 
             resize_helper.adjust_frame_width(frame_width_delta, context)
+            # Panels have been resized, need to re-check for panel removal
+            have_considered_panel_removal = False
 
             if resize_helper.frame_changed and resize_helper.orig_frame.fixed_width is not True:
 
@@ -249,25 +266,43 @@ def _iteratively_resize_inner_panels(
                     continue
 
                 context.dim_aware_layout[key] = resize_helper.new_resized_panel
+                continue
+
+        for key in reversed(tuple(context.dim_aware_layout.keys())):
+            just_removed_panel = context.remove_panel_if_overly_cropped(key)
+            if just_removed_panel:
+                # Only remove one panel at a time, as panel resize might
+                # take away the need to remove additional panels
                 break
+
+        have_considered_panel_removal = True
+
+        if just_removed_panel:
+            continue
 
         if not context.changed_since(prev_context):
             break
 
-        if context.panel_width_ok:
+        if context.panel_width_ok and not just_removed_panel:
+            # Make sure to not break out of the panel resize loop just
+            # after a panel has been removed. Another cycle will be needed
+            # to make use of the released space
             break
+
     return context
 
 
 def _sort_panels_by_resize_priority(context: LayoutFlowContext[FrameT]) -> list[str]:
     """
-    Sort panels by priority for resizing operations.
+    Sort panels by priority for resizing operations. Ignore panels that have
+    already been removed from the layout.
 
     When shrinking (`context.too_wide_panel == True`), prioritizes:
-    1. Shortest resizable panels first (lowest frame-cropped height)
-    2. Resizable panels with the widest frames
-    3. Panels with the widest (frame-cropped) content
-    4. Panel most to the right in the layout (lowest index)
+    1. Panels that are not overly cropped (according to `min_crop_width`)
+    2. Shortest resizable panels first (lowest frame-cropped height)
+    3. Resizable panels with the widest frames
+    4. Panels with the widest (frame-cropped) content
+    5. Panel most to the left in the layout (lowest index)
 
     When expanding (`context.extra_width_available == True`), the priority
     order is reversed.
@@ -280,8 +315,11 @@ def _sort_panels_by_resize_priority(context: LayoutFlowContext[FrameT]) -> list[
     """
     def _priority(
         el: tuple[int, tuple[str, DimensionsAwarePanel[AnyFrame]]]
-    ) -> tuple[int | float, int | float, int, int]:
+    ) -> tuple[int, int | float, int | float, int, int]:
         i, (key, panel) = el
+
+        def _panel_not_overly_cropped() -> int:
+            return int(panel.overly_cropped())
 
         def _shortest_panel_if_resizable() -> int | float:
             if key in context.keys_of_resizable_panels:
@@ -304,6 +342,7 @@ def _sort_panels_by_resize_priority(context: LayoutFlowContext[FrameT]) -> list[
             return -i
 
         return (
+            _panel_not_overly_cropped(),
             _shortest_panel_if_resizable(),
             _panel_with_widest_frame_if_resizable(),
             _widest_panel(),
@@ -313,7 +352,7 @@ def _sort_panels_by_resize_priority(context: LayoutFlowContext[FrameT]) -> list[
     panel_priority = [
         key for _i, (key, _panel) in sorted(
             enumerate(context.dim_aware_layout.items()), key=_priority,
-            reverse=context.extra_width_available)
+            reverse=context.extra_width_available) if not context.panel_removed(key)
     ]
 
     # print(f'context._delta_width: {context._delta_width}')

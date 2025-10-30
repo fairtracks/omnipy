@@ -358,37 +358,27 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         ui_type = self._extract_ui_type(**kwargs)
         if not frame:
             frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._extract_output_config_from_data_config(ui_type)
+        config = self._extract_output_config_from_data_config(ui_type, use_min_crop_width=True)
         config_kwargs = self._validate_kwargs_for_config(**kwargs)
         config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
         layout: Layout[DraftPanel] = Layout()
 
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
 
-        max_num_models = self._calc_max_num_models(config, frame)
+        for inner_title, model in models.items():
+            if isinstance(model.content, Dataset):
+                inner_kwargs = config_kwargs.copy()
+                if 'freedom' not in inner_kwargs:
+                    inner_kwargs['freedom'] = None
 
-        for i, (inner_title, model) in enumerate(models.items()):
-            if max_num_models is not None and i >= max_num_models:
-                # If the number of models exceeds the maximum number of models
-                # that can fit in the frame, we stop adding more models.
-                break
-
-            if i > 0 and i + 1 == max_num_models:
-                layout['...'] = self._create_inner_panel_for_ellipsis(config)
+                layout[inner_title] = cast(Dataset, model.content)._peek_dataset_models(
+                    title=inner_title,
+                    frame=empty_frame(),
+                    **inner_kwargs,
+                )
             else:
-                if isinstance(model.content, Dataset):
-                    inner_kwargs = config_kwargs.copy()
-                    if 'freedom' not in inner_kwargs:
-                        inner_kwargs['freedom'] = None
-
-                    layout[inner_title] = cast(Dataset, model.content)._peek_dataset_models(
-                        title=inner_title,
-                        frame=empty_frame(),
-                        **inner_kwargs,
-                    )
-                else:
-                    layout[inner_title] = self._create_inner_panel_for_model(
-                        config, model, model.outer_type(), inner_title, **config_kwargs)
+                layout[inner_title] = self._create_inner_panel_for_model(
+                    config, model, model.outer_type(), inner_title, **config_kwargs)
 
         config = self._update_config_with_overflow_modes(config, 'layout')
         config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
@@ -513,21 +503,6 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             html_file.write(html_output)
 
         return file_path
-
-    def _create_inner_panel_for_ellipsis(
-        self,
-        config: OutputConfig,
-        **config_kwargs,
-    ) -> DraftPanel:
-
-        config = self._update_config_with_overflow_modes(config, 'text')
-        config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
-
-        return DraftPanel(
-            '',
-            title='…',
-            frame=Frame(Dimensions(width=1, height=None), fixed_width=True),
-            config=config)
 
     def _create_inner_panel_for_model(
         self,
@@ -675,7 +650,7 @@ class ModelDisplayMixin(BaseDisplayMixin):
         ui_type = UserInterfaceType.BROWSER_PAGE
 
         frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._extract_output_config_from_data_config(ui_type)
+        config = self._extract_output_config_from_data_config(ui_type, use_min_crop_width=False)
 
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
 
@@ -739,7 +714,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
         ui_type = self._extract_ui_type(**kwargs)
         frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._extract_output_config_from_data_config(ui_type)
+        config = self._extract_output_config_from_data_config(ui_type, use_min_crop_width=False)
         config = self._update_config_with_overflow_modes(config, 'layout')
 
         config = dataclasses.replace(config, max_title_height=MaxTitleHeight.ONE)

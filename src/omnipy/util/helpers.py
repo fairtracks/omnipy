@@ -74,6 +74,12 @@ def create_merged_dict(dictable_1: Dictable[_KeyT],
     return merged_dict
 
 
+def first_key_in_mapping(mapping: Mapping[_KeyT, Any],) -> _KeyT:
+    for _key in mapping.keys():
+        return _key
+    raise KeyError('Mapping is empty, no first key.')
+
+
 def merge_dataclasses(dataclass: _DataclassT, other_dict: dict[str, Any]) -> _DataclassT:
     return dataclass.__class__(**(asdict(dataclass) | other_dict))
 
