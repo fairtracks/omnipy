@@ -12,7 +12,7 @@ from typing_extensions import assert_never, get_args, LiteralString, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import OutputConfig
-from omnipy.data._display.dimensions import Dimensions, has_width
+from omnipy.data._display.dimensions import Dimensions, has_height, has_width
 from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.integrations.browser.macosx import (OmnipyMacOSXOSAScript,
                                                               setup_macosx_browser_integration)
@@ -21,6 +21,7 @@ from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.hub.ui import get_terminal_prompt_height, note_mime_bundle
+from omnipy.shared.constants import TITLE_BLANK_LINES
 from omnipy.shared.enums.colorstyles import RecommendedColorStyles
 from omnipy.shared.enums.display import DisplayColorSystem, MaxTitleHeight, SyntaxLanguage
 from omnipy.shared.enums.ui import (BrowserPageUserInterfaceType,
@@ -732,8 +733,19 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         # _title = self.__class__.__name__
 
         layout: Layout[DraftPanel] = Layout()
+
+        max_digits_for_dataset_list_index_numbers = self._max_digits_for_dataset_list_index_numbers(
+            dataset,
+            frame,
+            config,
+        )
+
         layout['#'] = DraftPanel(
-            '\n'.join(str(i) for i in range(len(dataset))), title='#', config=config)
+            '\n'.join(str(i) for i in range(len(dataset))),
+            title='#',
+            frame=Frame(
+                Dimensions(max_digits_for_dataset_list_index_numbers, None), fixed_width=True),
+            config=config)
         layout['Data file name'] = DraftPanel(
             '\n'.join(dataset.data.keys()), title='Data file name', config=text_config)
         layout['Type'] = DraftPanel(
@@ -750,6 +762,27 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             config=right_justified_config)
 
         return DraftPanel(layout, frame=frame, config=config)
+
+    def _max_digits_for_dataset_list_index_numbers(
+        self,
+        dataset: Dataset,
+        frame: Frame,
+        config: OutputConfig,
+    ) -> int:
+        panels_design_dims = PanelDesignDims.create(config.panel)
+
+        if has_height(frame.dims):
+            inner_frame_height = (
+                frame.dims.height - panels_design_dims.num_extra_vertical_chars(1)
+                - config.max_title_height - TITLE_BLANK_LINES)
+            num_panels_listed_in_view = min(len(dataset), inner_frame_height)
+        else:
+            num_panels_listed_in_view = len(dataset)
+
+        # -1 is due to indices starting at 0
+        max_digits_for_dataset_list_index_numbers = len(str(num_panels_listed_in_view - 1))
+
+        return max_digits_for_dataset_list_index_numbers
 
     def _browse(self, **kwargs) -> None:
         self._browse_dataset(**kwargs)
