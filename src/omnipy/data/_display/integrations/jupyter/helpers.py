@@ -4,8 +4,10 @@ import solara
 from solara.toestand import ValueBase
 from typing_extensions import TypeVar
 
-from omnipy.config.data import JupyterUserInterfaceConfig
-from omnipy.shared.protocols.config import IsJupyterUserInterfaceConfig
+from omnipy.config.data import JupyterUserInterfaceConfig, LayoutConfig, TextConfig
+from omnipy.shared.protocols.config import (IsJupyterUserInterfaceConfig,
+                                            IsLayoutConfig,
+                                            IsTextConfig)
 from omnipy.shared.protocols.data import AvailableDisplayDims
 from omnipy.util import _pydantic as pyd
 from omnipy.util.publisher import DataPublisher
@@ -52,10 +54,16 @@ class ReactiveObjects(DataPublisher):
     to the main Jupyter config will propagate to the reactive
     `jupyter_ui_config` object contained in the ReactiveObjects instance,
     allowing solara to detect changes and propagate the update to all
-    reactive components that read from `jupyter_ui_config`.
+    reactive components that read from `jupyter_ui_config`. Similarly, we
+    wrap the TextConfig and LayoutConfig in ReactiveConfigCopy instances to
+    ensure that changes to those configs are also detected.
     """
     jupyter_ui_config: solara.Reactive[IsJupyterUserInterfaceConfig] = pyd.Field(
         default_factory=lambda: ReactiveConfigCopy(JupyterUserInterfaceConfig()))
+    text_config: solara.Reactive[IsTextConfig] = pyd.Field(
+        default_factory=lambda: ReactiveConfigCopy(TextConfig()))
+    layout_config: solara.Reactive[IsLayoutConfig] = pyd.Field(
+        default_factory=lambda: ReactiveConfigCopy(LayoutConfig()))
     available_display_dims_in_px: solara.Reactive[AvailableDisplayDims] = pyd.Field(
         default_factory=lambda: solara.Reactive(AvailableDisplayDims(width=0, height=0)))
 

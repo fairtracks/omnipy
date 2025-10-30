@@ -329,6 +329,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     element: Element = ReactivelyResizingHtml(
                         self_as_dataclass,
                         self_as_dataclass.config.ui.jupyter.deepcopy(),
+                        self_as_dataclass.config.ui.text.deepcopy(),
+                        self_as_dataclass.config.ui.layout.deepcopy(),
                         rendered_panel=rendered_panel,
                         render_panel_method=functools.partial(_render_panel, ui_type=ui_type),
                         render_output_method=functools.partial(_render_output, ui_type=ui_type),

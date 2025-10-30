@@ -207,6 +207,8 @@ def _assert_runtime_objects_default(objects: RuntimeObjects):
 
     assert isinstance(objects.reactive, ReactiveObjects)
     assert isinstance(objects.reactive.jupyter_ui_config, ReactiveConfigCopy)
+    assert isinstance(objects.reactive.text_config, ReactiveConfigCopy)
+    assert isinstance(objects.reactive.layout_config, ReactiveConfigCopy)
 
     assert isinstance(objects.local, LocalRunner)
     assert isinstance(objects.prefect, PrefectEngine)

@@ -118,10 +118,9 @@ class Runtime(DataPublisher):
         self.config.subscribe_attr('job', self.objects.job_creator.set_config)
         self.config.subscribe_attr('root_log', self.objects.root_log.set_config)
 
-        self.config.data.ui.subscribe_attr(
-            'jupyter',
-            self.objects.reactive.jupyter_ui_config.set,
-        )
+        self.config.data.ui.subscribe_attr('jupyter', self.objects.reactive.jupyter_ui_config.set)
+        self.config.data.ui.subscribe_attr('text', self.objects.reactive.text_config.set)
+        self.config.data.ui.subscribe_attr('layout', self.objects.reactive.layout_config.set)
 
         self.config.engine.subscribe_attr('local', self.objects.local.set_config)
         self.config.engine.subscribe_attr('prefect', self.objects.prefect.set_config)

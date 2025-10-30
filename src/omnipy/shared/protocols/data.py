@@ -19,7 +19,10 @@ from typing_extensions import Self, TypeVar
 
 from omnipy.shared.protocols._util import IsWeakKeyRefContainer
 from omnipy.shared.protocols.builtins import IsMutableMapping
-from omnipy.shared.protocols.config import IsDataConfig, IsJupyterUserInterfaceConfig
+from omnipy.shared.protocols.config import (IsDataConfig,
+                                            IsJupyterUserInterfaceConfig,
+                                            IsLayoutConfig,
+                                            IsTextConfig)
 from omnipy.shared.protocols.hub.log import CanLog
 import omnipy.util._pydantic as pyd
 from omnipy.util.setdeque import SetDeque
@@ -359,6 +362,8 @@ class AvailableDisplayDims(TypedDict):
 @runtime_checkable
 class IsReactiveObjects(Protocol):
     jupyter_ui_config: solara.Reactive[IsJupyterUserInterfaceConfig]
+    text_config: solara.Reactive[IsTextConfig]
+    layout_config: solara.Reactive[IsLayoutConfig]
     available_display_dims_in_px: solara.Reactive[AvailableDisplayDims]
 
 

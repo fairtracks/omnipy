@@ -6,7 +6,9 @@ import solara
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.helpers import is_color_dark
 from omnipy.shared.enums.display import DisplayDimensionsUpdateMode
-from omnipy.shared.protocols.config import IsJupyterUserInterfaceConfig
+from omnipy.shared.protocols.config import (IsJupyterUserInterfaceConfig,
+                                            IsLayoutConfig,
+                                            IsTextConfig)
 from omnipy.shared.protocols.data import AvailableDisplayDims, IsReactiveObjects
 
 if TYPE_CHECKING:
@@ -83,12 +85,17 @@ def DimsCalculator(
 def ShowHtml(
     jupyter_ui_config: IsJupyterUserInterfaceConfig,
     orig_jupyter_ui_config: IsJupyterUserInterfaceConfig,
+    text_config: IsTextConfig,
+    orig_text_config: IsTextConfig,
+    layout_config: IsLayoutConfig,
+    orig_layout_config: IsLayoutConfig,
     rendered_panel: FullyRenderedPanel,
     render_panel_method: Callable[..., FullyRenderedPanel],
     render_output_method: Callable[[FullyRenderedPanel], str],
     **kwargs: Any,
 ):
-    if jupyter_ui_config != orig_jupyter_ui_config:
+    if (jupyter_ui_config != orig_jupyter_ui_config or text_config != orig_text_config
+            or layout_config != orig_layout_config):
         rendered_panel = render_panel_method(**kwargs)
 
     solara.HTML(
@@ -130,6 +137,8 @@ def ReactiveAvailableDisplaySizeUpdater(
 def ReactivelyResizingHtml(
     obj: 'Dataset | Model',
     orig_jupyter_ui_config: IsJupyterUserInterfaceConfig,
+    orig_text_config: IsTextConfig,
+    orig_layout_config: IsLayoutConfig,
     rendered_panel: FullyRenderedPanel,
     render_panel_method: Callable[..., FullyRenderedPanel],
     render_output_method: Callable[[FullyRenderedPanel], str],
@@ -138,6 +147,8 @@ def ReactivelyResizingHtml(
     kwargs = reactive_kwargs.value
     reactive_objs = obj.reactive_objects
     reactive_jupyter_ui_config = reactive_objs.jupyter_ui_config.value
+    reactive_text_config = reactive_objs.text_config.value
+    reactive_layout_config = reactive_objs.layout_config.value
 
     if any(_ in kwargs for _ in ('font_weight', 'font_size', 'fonts', 'line_height')):
 
@@ -163,8 +174,12 @@ def ReactivelyResizingHtml(
                 rendered_panel = render_panel_method(**kwargs)
 
     ShowHtml(
-        jupyter_ui_config=obj.reactive_objects.jupyter_ui_config.value,
+        jupyter_ui_config=reactive_jupyter_ui_config,
         orig_jupyter_ui_config=orig_jupyter_ui_config,
+        text_config=reactive_text_config,
+        orig_text_config=orig_text_config,
+        layout_config=reactive_layout_config,
+        orig_layout_config=orig_layout_config,
         rendered_panel=rendered_panel,
         render_panel_method=render_panel_method,
         render_output_method=render_output_method,
