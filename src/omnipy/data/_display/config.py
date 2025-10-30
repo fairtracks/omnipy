@@ -1,3 +1,5 @@
+from typing import Any
+
 import pygments.lexers
 import pygments.styles
 import pygments.util
@@ -5,6 +7,7 @@ import pygments.util
 from omnipy.data._display.styles.dynamic_styles import (clean_style_name,
                                                         handle_random_name,
                                                         install_base16_theme)
+from omnipy.shared.constants import MIN_CROP_WIDTH, MIN_PANEL_WIDTH
 from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
 from omnipy.shared.enums.display import (DisplayColorSystem,
                                          HorizontalOverflowMode,
@@ -100,16 +103,19 @@ class OutputConfig:
             supported, which displays the output in a table-like grid.
         title_at_top (bool): Whether panel titles will be displayed over the
             panel content (True) or below the content (False)
-        max_title_height (MaxTitleHeight.Literals): Maximum height of the panel
-            title. If AUTO, the height is determined by the content of the
-            title, up to a maximum of two lines. If ZERO, the title is not
-            displayed at all. If ONE or TWO, the title is displayed with a
-            fixed height of max one or two lines, respectively.
+        max_title_height (MaxTitleHeight.Literals): Maximum height of the
+            panel title. If AUTO, the height is determined by the content
+            of the title, up to a maximum of two lines. If ZERO, the title
+            is not displayed at all. If ONE or TWO, the title is displayed
+            with a fixed height of max one or two lines, respectively.
+        min_panel_width (NonNegativeInt): Minimum width in characters per
+            panel.
         min_crop_width (NonNegativeInt): Minimum cropping width in
             characters for panels in cases where more than one panel are to
             be displayed. This is for instance used to calculate the
             number of models to display in a Dataset peek(). Only applied
-            if `use_min_crop_width` is set to `True`.
+            if `use_min_crop_width` is set to `True`. `min_crop_width`
+            must be equal to or larger than `min_panel_width`.
         use_min_crop_width (bool): Whether the `min_crop_width` value should
             be considered in cases where more than one panel are to
             be displayed, potentially reduce the number of displayed panels.
@@ -142,7 +148,8 @@ class OutputConfig:
     panel: PanelDesign.Literals = PanelDesign.TABLE
     title_at_top: bool = True
     max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO
-    min_crop_width: pyd.NonNegativeInt = 30
+    min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH
+    min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH
     use_min_crop_width: bool = False
     justify: Justify.Literals = Justify.LEFT
 
@@ -184,3 +191,13 @@ class OutputConfig:
         except pygments.util.ClassNotFound as exp:
             raise ValueError(f'Color style not registered in Pygments: {style}. '
                              f'This may be due to a network error.') from exp
+
+    @pyd.root_validator
+    def check_min_crop_width(cls, values: dict[str, Any]) -> dict[str, Any]:
+        min_crop_width = values.get('min_crop_width')
+        min_panel_width = values.get('min_panel_width')
+        if min_crop_width is not None and min_panel_width is not None:
+            if min_crop_width < min_panel_width:
+                raise ValueError(f'min_crop_width ({min_crop_width}) cannot be less than '
+                                 f'min_panel_width ({min_panel_width})')
+        return values

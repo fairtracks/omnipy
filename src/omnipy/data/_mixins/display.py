@@ -594,7 +594,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             panel=ui_config.layout.panel_design,
             title_at_top=ui_config.layout.panel_title_at_top,
             max_title_height=ui_config.layout.max_title_height,
-            min_crop_width=ui_config.layout.min_panel_width_for_peek,
+            min_panel_width=ui_config.layout.min_panel_width,
+            min_crop_width=ui_config.layout.min_crop_width,
             use_min_crop_width=use_min_crop_width,
             justify=ui_config.layout.justify,
         )

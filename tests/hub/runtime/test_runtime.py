@@ -41,6 +41,8 @@ from omnipy.shared.enums.data import BackoffStrategy
 from omnipy.shared.enums.display import (DisplayColorSystem,
                                          DisplayDimensionsUpdateMode,
                                          HorizontalOverflowMode,
+                                         Justify,
+                                         MaxTitleHeight,
                                          PanelDesign,
                                          PrettyPrinterLib,
                                          VerticalOverflowMode)
@@ -118,9 +120,12 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
            is HorizontalOverflowMode.ELLIPSIS
     assert config.data.ui.layout.overflow.vertical \
            is VerticalOverflowMode.ELLIPSIS_BOTTOM
-
     assert config.data.ui.layout.panel_design is PanelDesign.TABLE
     assert config.data.ui.layout.panel_title_at_top is True
+    assert config.data.ui.layout.max_title_height is MaxTitleHeight.AUTO
+    assert config.data.ui.layout.min_panel_width == 3
+    assert config.data.ui.layout.min_crop_width == 33
+    assert config.data.ui.layout.justify is Justify.LEFT
 
     assert isinstance(config.data.model, ModelConfig)
     assert config.data.model.interactive is True

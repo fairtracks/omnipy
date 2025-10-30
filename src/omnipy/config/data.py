@@ -13,6 +13,8 @@ from omnipy.shared.constants import (BROWSER_DEFAULT_HEIGHT,
                                      BROWSER_DEFAULT_WIDTH,
                                      JUPYTER_DEFAULT_HEIGHT,
                                      JUPYTER_DEFAULT_WIDTH,
+                                     MIN_CROP_WIDTH,
+                                     MIN_PANEL_WIDTH,
                                      TERMINAL_DEFAULT_HEIGHT,
                                      TERMINAL_DEFAULT_WIDTH)
 from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
@@ -229,7 +231,8 @@ class LayoutConfig(ConfigBase):
     panel_design: PanelDesign.Literals = PanelDesign.TABLE
     panel_title_at_top: bool = True
     max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO
-    min_panel_width_for_peek: pyd.NonNegativeInt = 30
+    min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH
+    min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH
     justify: Justify.Literals = Justify.LEFT
 
 
