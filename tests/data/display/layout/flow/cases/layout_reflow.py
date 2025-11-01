@@ -14,8 +14,8 @@ from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
 
 # Note:
 #
-# Mock panels are used as inner panels for these test cases to focus on
-# outer layout panel functionality. In these tests, the inner panels only
+# Mock panels are used as inner panels for most of these test cases to focus
+# on outer layout panel functionality. In these tests, the inner panels only
 # provides plain styling, but supports all types of horizontal and vertical
 # overflow modes (according to config values).
 
@@ -1187,6 +1187,132 @@ def case_layout_two_panels(
                                       '│ Some text here │ (1, 2, 3) │\n'
                                       '╰────────────────┴───────────╯\n'),
         exp_dims_all_stages_only_height=Dimensions(width=30, height=3),
+        frame_case=frame_case,
+        frame_variant=per_frame_variant,
+    )
+
+
+min_panel_and_crop_width_config = OutputConfig(
+    min_panel_width=4,
+    min_crop_width=5,
+    use_min_crop_width=True,
+)
+
+
+@pc.parametrize(
+    'frame_case',
+    (
+        #
+        # id='no_frame'
+        #
+        FrameTestCase(frame=None),
+
+        #
+        # id='exact_frame'
+        #
+        FrameTestCase(frame=Frame(Dimensions(width=26, height=3))),
+
+        #
+        # id='crop_slightly'
+        #
+        FrameTestCase(
+            frame=Frame(Dimensions(width=25, height=3)),
+            exp_plain_output=('╭──────┬───────┬────────╮\n'
+                              '│ One  │ Three │ Fifte… │\n'
+                              '╰──────┴───────┴────────╯\n'),
+            exp_dims_all_stages=Dimensions(width=25, height=3),
+        ),
+
+        #
+        # id='crop_third_to_minimum'
+        #
+        FrameTestCase(
+            frame=Frame(Dimensions(width=24, height=3)),
+            exp_plain_output=('╭──────┬───────┬───────╮\n'
+                              '│ One  │ Three │ Fift… │\n'
+                              '╰──────┴───────┴───────╯\n'),
+            exp_dims_all_stages=Dimensions(width=24, height=3),
+        ),
+
+        #
+        # id='crop_third_to_under_minimum'
+        #
+        FrameTestCase(
+            frame=Frame(Dimensions(width=20, height=3)),
+            exp_plain_output=('╭──────┬───────┬───╮\n'
+                              '│ One  │ Three │ … │\n'
+                              '╰──────┴───────┴───╯\n'),
+            exp_dims_all_stages=Dimensions(width=20, height=3),
+        ),
+
+        #
+        # id='crop_second_to_under_minimum'
+        #
+        FrameTestCase(
+            frame=Frame(Dimensions(width=12, height=3)),
+            exp_plain_output=('╭──────┬───╮\n'
+                              '│ One  │ … │\n'
+                              '╰──────┴───╯\n'),
+            exp_dims_all_stages=Dimensions(width=12, height=3),
+        ),
+
+        #
+        # id='crop_first_to_text'
+        #
+        FrameTestCase(
+            frame=Frame(Dimensions(width=11, height=3)),
+            exp_plain_output=('╭─────┬───╮\n'
+                              '│ One │ … │\n'
+                              '╰─────┴───╯\n'),
+            exp_dims_all_stages=Dimensions(width=11, height=3),
+        ),
+
+        #
+        # id='crop_first_to_ellipsis'
+        #
+        FrameTestCase(
+            frame=Frame(Dimensions(width=10, height=3)),
+            exp_plain_output=('╭────┬───╮\n'
+                              '│ O… │ … │\n'
+                              '╰────┴───╯\n'),
+            exp_dims_all_stages=Dimensions(width=10, height=3),
+        ),
+    ),
+    ids=(
+        'no_frame',
+        'exact_frame',
+        'crop_slightly',
+        'crop_third_to_minimum',
+        'crop_third_to_under_minimum',
+        'crop_second_to_under_minimum',
+        'crop_first_to_text',
+        'crop_first_to_ellipsis',
+    ),
+)
+@pc.case(
+    id='case_layout_three_draft_panels_min_panel_and_crop_width',
+    tags=['reflow_cases', 'layout'],
+)
+def case_layout_three_draft_panels_min_panel_and_crop_width(
+    frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
+    per_frame_variant: Annotated[FrameVariant, pc.fixture],
+) -> PanelFrameVariantTestCase[Layout]:
+    return PanelFrameVariantTestCase(
+        content=Layout(
+            first=DraftPanel(content='One', config=min_panel_and_crop_width_config),
+            second=DraftPanel(content='Three', config=min_panel_and_crop_width_config),
+            third=DraftPanel(content='Fifteen', config=min_panel_and_crop_width_config),
+        ),
+        exp_plain_output_no_frame=('╭──────┬───────┬─────────╮\n'
+                                   '│ One  │ Three │ Fifteen │\n'
+                                   '╰──────┴───────┴─────────╯\n'),
+        exp_dims_all_stages_no_frame=Dimensions(width=26, height=3),
+        # No test cases reduce frame height. Thus, the 'only_height'
+        # parameters are set globally for the entire test.
+        exp_plain_output_only_height=('╭──────┬───────┬─────────╮\n'
+                                      '│ One  │ Three │ Fifteen │\n'
+                                      '╰──────┴───────┴─────────╯\n'),
+        exp_dims_all_stages_only_height=Dimensions(width=26, height=3),
         frame_case=frame_case,
         frame_variant=per_frame_variant,
     )
