@@ -1,7 +1,7 @@
 from textwrap import dedent
 from typing import Literal
 
-from _pytest.compat import assert_never
+from typing_extensions import assert_never
 
 from omnipy.shared.enums.display import DisplayColorSystem
 from omnipy.util.literal_enum import LiteralEnum
