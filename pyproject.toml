@@ -3,12 +3,12 @@ name = "omnipy"
 version = "0.20.1"
 description = "Omnipy is a type-driven Python library for data conversion, parsing and wrangling; tool and web service interoperability; and scalable dataflow orchestration"
 readme = "docs/readme.md"
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.10,<3.15"
 license = { file = "LICENSE" }
 authors = [{name="Sveinung Gundersen"}, {name="Joshua Baskaran"}, {name="Federico Bianchini"}, {name="Jeanne Chèneby"}, {name="Ahmed Ghanem"},{name="Pável Vázquez"}]
 maintainers = [{name="Sveinung Gundersen"}]
 keywords = ["data wrangling", "metadata", "workflows", "etl", "research data", "prefect", "pydantic", "FAIR", "ontologies", "JSON", "tabular", "type-driven", "orchestration", "data models", "universal"]
-classifiers = ["Development Status :: 2 - Pre-Alpha", "Framework :: Pydantic", "Intended Audience :: Developers", "Intended Audience :: Science/Research", "License :: OSI Approved :: Apache Software License", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13", "Topic :: Software Development :: Libraries"]
+classifiers = ["Development Status :: 2 - Pre-Alpha", "Framework :: Pydantic", "Intended Audience :: Developers", "Intended Audience :: Science/Research", "License :: OSI Approved :: Apache Software License", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13", "Programming Language :: Python :: 3.14", "Topic :: Software Development :: Libraries"]
 packages = [{include = "omnipy", from = "src"}]
 dependencies = [
 "inflection (>=0.5.1,<0.6.0)",
