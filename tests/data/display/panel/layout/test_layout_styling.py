@@ -16,6 +16,7 @@ from ..helpers.case_setup import (OutputPropertyType,
                                   PanelFrameVariantTestCase,
                                   PanelOutputTestCase,
                                   prepare_test_case_for_stylized_layout,
+                                  set_case_config,
                                   StylizedPanelOutputExpectations,
                                   StylizedPanelTestCaseSetup)
 from ..helpers.mocks import MockStylablePlainCropPanel, MockStylizedPlainCropPanel
@@ -79,16 +80,17 @@ def test_stylized_layout_panel_immutable_properties() -> None:
 
 
 @pc.parametrize_with_cases(
-    'case',
+    'any_case',
     cases='.cases.layout_basics',
     has_tag=('dims_and_edge_cases', 'layout'),
 )
 def test_stylized_layout_panel_basic_dims_and_edge_cases(
-    case: PanelOutputTestCase[Layout] | PanelFrameVariantTestCase[Layout],
+    any_case: PanelOutputTestCase[Layout] | PanelFrameVariantTestCase[Layout],
     plain_terminal: Annotated[OutputPropertyType, pc.fixture],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> None:
-    case = prepare_test_case_for_stylized_layout(case, plain_terminal, output_format_accessor)
+    case = prepare_test_case_for_stylized_layout(any_case, plain_terminal, output_format_accessor)
+    case = set_case_config(case, min_panel_width=0)
 
     layout_panel = StylizedLayoutPanel(
         ResizedLayoutDraftPanel(

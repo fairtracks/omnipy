@@ -9,9 +9,10 @@ from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanelLayout
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
-import omnipy.util._pydantic as pyd
 
-from ..helpers.case_setup import apply_frame_variant_to_test_case, PanelFrameVariantTestCase
+from ..helpers.case_setup import (apply_frame_variant_to_test_case,
+                                  PanelFrameVariantTestCase,
+                                  set_case_config)
 from ..helpers.mocks import (MockResizedStylablePlainCropPanel,
                              MockStylablePlainCropPanel,
                              MockStylizedPlainCropPanel)
@@ -130,28 +131,27 @@ def test_fail_resized_layout_draft_panel_no_assignments() -> None:
 
 
 @pc.parametrize_with_cases(
-    'case',
+    'frame_variant_case',
     cases='.cases.layout_basics',
     has_tag=('dims_and_edge_cases', 'layout'),
 )
 def test_resized_layout_draft_panel_basic_dims_and_edge_cases(
-        case: PanelFrameVariantTestCase[Layout]) -> None:
-    frame_case = apply_frame_variant_to_test_case(case, stylized_stage=False)
-
-    assert not isinstance(case.config, pyd.UndefinedType)
+        frame_variant_case: PanelFrameVariantTestCase[Layout]) -> None:
+    case = apply_frame_variant_to_test_case(frame_variant_case, stylized_stage=False)
+    case = set_case_config(case, min_panel_width=0)
 
     resized_layout_panel = ResizedLayoutDraftPanel(
-        frame_case.content,
-        title=frame_case.title,
-        frame=frame_case.frame,
-        config=frame_case.config,
+        case.content,
+        title=case.title,
+        frame=case.frame,
+        config=case.config,
     )
 
     assert_dims_aware_panel(
         resized_layout_panel,
-        exp_dims=frame_case.exp_dims,
-        exp_frame=frame_case.frame,
-        exp_within_frame=frame_case.exp_within_frame,
+        exp_dims=case.exp_dims,
+        exp_frame=case.frame,
+        exp_within_frame=case.exp_within_frame,
     )
 
 

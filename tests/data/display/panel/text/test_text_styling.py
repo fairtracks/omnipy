@@ -11,13 +11,13 @@ from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 from omnipy.shared.enums.colorstyles import RecommendedColorStyles
 from omnipy.shared.enums.display import DisplayColorSystem, SyntaxLanguage
-import omnipy.util._pydantic as pyd
 
 from ..helpers.case_setup import (apply_frame_variant_to_test_case,
                                   FrameVariant,
                                   OutputPropertyType,
                                   PanelFrameVariantTestCase,
                                   PanelOutputTestCase,
+                                  set_case_config,
                                   StylizedPanelOutputExpectations,
                                   StylizedPanelTestCaseSetup)
 from ..helpers.panel_assert import assert_dims_aware_panel, strip_all_styling_from_panel_output
@@ -116,41 +116,45 @@ def test_syntax_stylized_text_panel_no_assignments() -> None:
 
 
 @pc.parametrize_with_cases(
-    'case',
+    'any_case',
     cases='.cases.text_basics',
     has_tag=('dims_and_edge_cases', 'syntax_text'),
 )
 def test_syntax_stylized_text_panel_basic_dims_and_edge_cases(
-    case: PanelFrameVariantTestCase[str] | PanelOutputTestCase[str],
+    any_case: PanelFrameVariantTestCase[str] | PanelOutputTestCase[str],
     plain_terminal: Annotated[OutputPropertyType, pc.fixture],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> None:
-    if isinstance(case, PanelFrameVariantTestCase):
-        if case.frame_variant != FrameVariant(True, True) \
+    if isinstance(any_case, PanelFrameVariantTestCase):
+        if any_case.frame_variant != FrameVariant(True, True) \
                 and output_format_accessor != plain_terminal:
             pytest.skip('Skip test combination to increase test efficiency.')
 
-        frame_case = apply_frame_variant_to_test_case(case, stylized_stage=True)
+        case = apply_frame_variant_to_test_case(any_case, stylized_stage=True)
     else:
-        frame_case = case
+        case = any_case
 
-    assert not isinstance(case.config, pyd.UndefinedType)
+    case = set_case_config(case, min_panel_width=0)
 
     text_panel = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel(case.content, frame=frame_case.frame, config=case.config))
+        ReflowedTextDraftPanel(
+            case.content,
+            frame=case.frame,
+            config=case.config,
+        ))
     assert_dims_aware_panel(
         text_panel,
-        exp_dims=frame_case.exp_dims,
-        exp_frame=frame_case.frame,
-        exp_within_frame=frame_case.exp_within_frame,
+        exp_dims=case.exp_dims,
+        exp_frame=case.frame,
+        exp_within_frame=case.exp_within_frame,
     )
 
-    if frame_case.exp_plain_output is not None:
+    if case.exp_plain_output is not None:
         processed_text_panel = strip_all_styling_from_panel_output(
             text_panel,
             output_format_accessor,
         )
-        assert processed_text_panel == frame_case.exp_plain_output
+        assert processed_text_panel == case.exp_plain_output
 
 
 def test_syntax_stylized_text_panel_variable_width_chars() -> None:
@@ -197,6 +201,8 @@ def test_syntax_stylized_text_panel_overflow_modes(
     text_panel = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel(case.content, frame=case.frame, config=case.config))
     processed_text_panel = strip_all_styling_from_panel_output(text_panel, output_format_accessor)
+
+    assert case.exp_within_frame is not None
 
     assert processed_text_panel == case.exp_plain_output
     assert text_panel.dims.width == case.exp_dims.width

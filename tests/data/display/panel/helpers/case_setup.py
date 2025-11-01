@@ -1,5 +1,6 @@
+import dataclasses
 from dataclasses import dataclass, field
-from typing import Annotated, Callable, cast, Generic, TypeAlias
+from typing import Annotated, Any, Callable, cast, Generic, TypeAlias
 
 import pytest
 import pytest_cases as pc
@@ -251,9 +252,9 @@ class StylizedPanelOutputExpectations(NamedTuple):
 
 
 def apply_frame_variant_to_test_case(
-    case: PanelFrameVariantTestCase,
+    case: PanelFrameVariantTestCase[ContentT],
     stylized_stage: bool,
-) -> PanelOutputTestCase:
+) -> PanelOutputTestCase[ContentT]:
     assert not isinstance(case.config, pyd.UndefinedType)
     assert not isinstance(case.exp_plain_output_only_width, pyd.UndefinedType)
     assert not isinstance(case.exp_resized_dims_only_width, pyd.UndefinedType)
@@ -326,14 +327,28 @@ def apply_frame_variant_to_test_case(
 
 
 def prepare_test_case_for_stylized_layout(
-    case: PanelOutputTestCase[Layout] | PanelFrameVariantTestCase[Layout],
+    any_case: PanelOutputTestCase[Layout] | PanelFrameVariantTestCase[Layout],
     plain_terminal: Annotated[OutputPropertyType, pc.fixture],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> PanelOutputTestCase[Layout]:
-    if isinstance(case, PanelFrameVariantTestCase):
-        if case.frame_variant != FrameVariant(True, True) \
+    if isinstance(any_case, PanelFrameVariantTestCase):
+        if any_case.frame_variant != FrameVariant(True, True) \
                 and output_format_accessor != plain_terminal:
             pytest.skip('Skip test combination to increase test efficiency.')
 
-        case = apply_frame_variant_to_test_case(case, stylized_stage=True)
+        case = apply_frame_variant_to_test_case(any_case, stylized_stage=True)
+    else:
+        case = any_case
     return case
+
+
+def set_case_config(
+    case: PanelOutputTestCase[ContentT],
+    **kwargs: Any,
+) -> PanelOutputTestCase[ContentT]:
+    assert not isinstance(case.config, pyd.UndefinedType)
+    if case.config:
+        new_config = dataclasses.replace(case.config, **kwargs)
+    else:
+        new_config = OutputConfig(**kwargs)
+    return case._replace(config=new_config)
