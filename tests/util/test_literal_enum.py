@@ -350,3 +350,14 @@ def test_random_choice_no_excluded_prefixes() -> None:
     for _ in range(30):
         choice = RandomEnum.random_choice()
         assert choice == RandomEnum.APPLE
+
+
+def test_is_random_choice_val() -> None:
+    class RandomEnum(LiteralEnum):
+        Literals = Literal['apple', 'auto', 'random-fruit']
+        APPLE: Literal['apple'] = 'apple'
+        AUTO: Literal['auto'] = 'auto'
+        RANDOM_FRUIT: Literal['random-fruit'] = 'random-fruit'
+
+    assert RandomEnum.is_random_choice_value('random-fruit') is True
+    assert RandomEnum.is_random_choice_value('random-item') is False

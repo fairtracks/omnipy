@@ -22,8 +22,11 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.hub.ui import get_terminal_prompt_height, note_mime_bundle
 from omnipy.shared.constants import TITLE_BLANK_LINES
-from omnipy.shared.enums.colorstyles import RecommendedColorStyles
-from omnipy.shared.enums.display import DisplayColorSystem, MaxTitleHeight, SyntaxLanguage
+from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
+from omnipy.shared.enums.display import (DisplayColorSystem,
+                                         MaxTitleHeight,
+                                         PanelDesign,
+                                         SyntaxLanguage)
 from omnipy.shared.enums.ui import (BrowserPageUserInterfaceType,
                                     BrowserTagUserInterfaceType,
                                     BrowserUserInterfaceType,
@@ -359,7 +362,10 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         ui_type = self._extract_ui_type(**kwargs)
         if not frame:
             frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._extract_output_config_from_data_config(ui_type, use_min_crop_width=True)
+        config = self._extract_and_configure_output_config_from_data_config(
+            ui_type,
+            use_min_crop_width=True,
+        )
         config_kwargs = self._validate_kwargs_for_config(**kwargs)
         config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
         layout: Layout[DraftPanel] = Layout()
@@ -562,7 +568,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             case x if UserInterfaceType.requires_html_page_output(x):
                 return stylized_panel.colorized.html_page
 
-    def _extract_output_config_from_data_config(
+    def _extract_and_configure_output_config_from_data_config(
         self,
         ui_type: SpecifiedUserInterfaceType.Literals,
         use_min_crop_width: bool = False,
@@ -577,6 +583,12 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             case _:
                 color_system = ui_type_config.color.system
 
+        color_style = ui_type_config.color.style
+        panel_design = ui_config.layout.panel_design
+
+        if AllColorStyles.is_random_choice_value(color_style) and panel_design is PanelDesign.TABLE:
+            panel_design = PanelDesign.TABLE_SHOW_STYLE
+
         config = OutputConfig(
             tab=ui_config.text.tab_size,
             indent=ui_config.text.indent_tab_size,
@@ -585,9 +597,9 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             debug=ui_config.text.debug_mode,
             ui=ui_type,
             system=color_system,
-            style=ui_type_config.color.style,
+            style=color_style,
             bg=ui_type_config.color.solid_background,
-            panel=ui_config.layout.panel_design,
+            panel=panel_design,
             title_at_top=ui_config.layout.panel_title_at_top,
             max_title_height=ui_config.layout.max_title_height,
             min_panel_width=ui_config.layout.min_panel_width,
@@ -648,7 +660,10 @@ class ModelDisplayMixin(BaseDisplayMixin):
         ui_type = UserInterfaceType.BROWSER_PAGE
 
         frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._extract_output_config_from_data_config(ui_type, use_min_crop_width=False)
+        config = self._extract_and_configure_output_config_from_data_config(
+            ui_type,
+            use_min_crop_width=False,
+        )
 
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
 
@@ -711,7 +726,10 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
         ui_type = self._extract_ui_type(**kwargs)
         frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._extract_output_config_from_data_config(ui_type, use_min_crop_width=False)
+        config = self._extract_and_configure_output_config_from_data_config(
+            ui_type,
+            use_min_crop_width=False,
+        )
         config = self._update_config_with_overflow_modes(config, 'layout')
 
         config = dataclasses.replace(config, max_title_height=MaxTitleHeight.ONE)

@@ -471,5 +471,21 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
         while choice == '' or any(choice.startswith(_) for _ in exclude_prefixes):
             choice = random.choice(get_args(cls.Literals))
 
-        print(f'Random choice from {cls.__name__}: {choice!r}')
         return cast(LiteralInnerTypeT, choice)
+
+    @classmethod
+    def is_random_choice_value(cls, value: object) -> bool:
+        """
+        Checks whether the provided value is a valid random choice value for
+        this enum.
+
+        Parameters:
+            value: The value to check.
+
+        Returns:
+            True if the value is a valid random choice value for this enum,
+            False otherwise.
+        """
+        from omnipy.shared.constants import RANDOM_PREFIX
+        return (isinstance(value, str) and cast(LiteralInnerTypeT, value) in cls
+                and value.startswith(RANDOM_PREFIX))
