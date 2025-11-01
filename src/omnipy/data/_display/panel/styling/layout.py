@@ -26,7 +26,9 @@ from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_st
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingOutputVariant
 from omnipy.data._display.panel.typedefs import FrameInvT
-from omnipy.shared.constants import (PANEL_TITLE_BASE_16_TOKEN,
+from omnipy.shared.constants import (INFO_BASE_16_TOKEN,
+                                     INFO_GENERAL_TOKEN,
+                                     PANEL_TITLE_BASE_16_TOKEN,
                                      PANEL_TITLE_EXTRA_STYLE,
                                      PANEL_TITLE_GENERAL_TOKEN,
                                      TABLE_BORDER_BASE_16_TOKEN,
@@ -176,9 +178,15 @@ class PanelElementStyles:
         if basic_table_style is rich.style.Style.null():
             basic_table_style = get_token_style_from_color_style(TABLE_BORDER_GENERAL_TOKEN,
                                                                  color_style)
-
         self.table_style = rich.style.Style(color=basic_table_style.color, bgcolor=style_bg_color)
-        self.info_style = self.table_style + rich.style.Style(italic=True)
+
+        basic_info_style = get_token_style_from_color_style(INFO_BASE_16_TOKEN, color_style)
+        if basic_info_style is rich.style.Style.null():
+            basic_info_style = get_token_style_from_color_style(INFO_GENERAL_TOKEN, color_style)
+
+        self.info_style = (
+            rich.style.Style(color=basic_info_style.color, bgcolor=style_bg_color)
+            + rich.style.Style(italic=True))
 
 
 class InnerPanelStyler:
