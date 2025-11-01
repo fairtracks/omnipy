@@ -18,8 +18,7 @@ export PATH="$PATH:$HOME/Library/Application Support/multipass/bin"
 - Setup QEMU and buildx inside docker VM:
 ```bash
 multipass shell docker-dev
-docker run --rm --privileged multiarch/qemu-user-static -
--reset -p yes
+docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 docker buildx create --name builder
 docker buildx inspect --bootstrap
 exit

@@ -16,7 +16,7 @@ RUN conda create -n omnipy -y
 SHELL ["conda", "run", "--no-capture-output", "-n", "omnipy", "/bin/bash", "-c"]
 
 RUN mamba install python=3.12 ipykernel ipywidgets git -y && mamba clean -ay
-RUN pip install git+https://github.com/fairtracks/omnipy.git@pretty_print
+RUN pip install omnipy
 RUN pip install itables
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
