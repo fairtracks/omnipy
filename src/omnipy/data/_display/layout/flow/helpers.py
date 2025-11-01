@@ -297,8 +297,8 @@ class LayoutFlowContext(Generic[FrameT]):
     def _turn_into_ellipsis_panel(self, key: str) -> None:
         panel = self.dim_aware_layout[key]
         ellipsis_panel = panel.create_modified_copy(
-            '',
-            title='…',
+            '' if panel.title else '…',
+            title='…' if panel.title else None,
             frame=Frame(Dimensions(width=1, height=None), fixed_width=True),
         )
         self.dim_aware_layout[key] = cast(DimensionsAwareDraftPanel,
