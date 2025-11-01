@@ -200,8 +200,12 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
                        'catppuccin-frappe-t16',
                        'catppuccin-macchiato-t16',
                        'catppuccin-mocha-t16',
+                       'charcoal-dark-t16',
                        'chalk-t16',
                        'chicago-night-t16',
+                       'chinoiserie-midnight-t16',
+                       'chinoiserie-morandi-t16',
+                       'chinoiserie-night-t16',
                        'circus-t16',
                        'classic-dark-t16',
                        'codeschool-t16',
@@ -248,6 +252,7 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
                        'gruvbox-material-dark-medium-t16',
                        'gruvbox-material-dark-soft-t16',
                        'hardcore-t16',
+                       'hardhacker-t16',
                        'harmonic16-dark-t16',
                        'heetch-t16',
                        'helios-t16',
@@ -263,6 +268,7 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
                        'kanagawa-t16',
                        'katy-t16',
                        'kimber-t16',
+                       'linux-vt-t16',
                        'macintosh-t16',
                        'marrakesh-t16',
                        'materia-t16',
@@ -820,9 +826,57 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
+    CHARCOAL_DARK_T16: Literal['charcoal-dark-t16'] = 'charcoal-dark-t16'
+    """
+    Charcoal Dark: Base-16 color style by "Mubin Muhammad".
+
+    Collected by Tinted Theming (https://github.com/tinted-theming/schemes).
+    Automatically downloaded by Omnipy when needed (locally cached).
+
+    This style is a dark variant, with high-level contrast that conforms to
+    the AA criteria of the Web Content Accessibility Guidelines (WCAG) 2.1
+    (https://www.w3.org/TR/WCAG21/).
+    """
+
     CHICAGO_NIGHT_T16: Literal['chicago-night-t16'] = 'chicago-night-t16'
     """
     Chicago Night: Base-16 color style by "Wendell, Ryan".
+
+    Collected by Tinted Theming (https://github.com/tinted-theming/schemes).
+    Automatically downloaded by Omnipy when needed (locally cached).
+
+    This style is a dark variant, with high-level contrast that conforms to
+    the AA criteria of the Web Content Accessibility Guidelines (WCAG) 2.1
+    (https://www.w3.org/TR/WCAG21/).
+    """
+
+    CHINOISERIE_MIDNIGHT_T16: Literal['chinoiserie-midnight-t16'] = 'chinoiserie-midnight-t16'
+    """
+    Chinoiserie Midnight: Base-16 color style by "Di Wang".
+
+    Collected by Tinted Theming (https://github.com/tinted-theming/schemes).
+    Automatically downloaded by Omnipy when needed (locally cached).
+
+    This style is a dark variant, with high-level contrast that conforms to
+    the AA criteria of the Web Content Accessibility Guidelines (WCAG) 2.1
+    (https://www.w3.org/TR/WCAG21/).
+    """
+
+    CHINOISERIE_MORANDI_T16: Literal['chinoiserie-morandi-t16'] = 'chinoiserie-morandi-t16'
+    """
+    Chinoiserie Morandi: Base-16 color style by "Di Wang".
+
+    Collected by Tinted Theming (https://github.com/tinted-theming/schemes).
+    Automatically downloaded by Omnipy when needed (locally cached).
+
+    This style is a dark variant, with high-level contrast that conforms to
+    the AA criteria of the Web Content Accessibility Guidelines (WCAG) 2.1
+    (https://www.w3.org/TR/WCAG21/).
+    """
+
+    CHINOISERIE_NIGHT_T16: Literal['chinoiserie-night-t16'] = 'chinoiserie-night-t16'
+    """
+    Chinoiserie Night: Base-16 color style by "Di Wang".
 
     Collected by Tinted Theming (https://github.com/tinted-theming/schemes).
     Automatically downloaded by Omnipy when needed (locally cached).
@@ -1389,6 +1443,19 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
+    HARDHACKER_T16: Literal['hardhacker-t16'] = 'hardhacker-t16'
+    """
+    Hardhacker: Base-16 color style by "fe2-Nyxar, based on the
+    https://github.com/hardhackerlabs".
+
+    Collected by Tinted Theming (https://github.com/tinted-theming/schemes).
+    Automatically downloaded by Omnipy when needed (locally cached).
+
+    This style is a dark variant, with high-level contrast that conforms to
+    the AA criteria of the Web Content Accessibility Guidelines (WCAG) 2.1
+    (https://www.w3.org/TR/WCAG21/).
+    """
+
     HARMONIC16_DARK_T16: Literal['harmonic16-dark-t16'] = 'harmonic16-dark-t16'
     """
     Harmonic16 Dark: Base-16 color style by "Jannik Siebert".
@@ -1560,6 +1627,18 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     KIMBER_T16: Literal['kimber-t16'] = 'kimber-t16'
     """
     Kimber: Base-16 color style by "Mishka Nguyen".
+
+    Collected by Tinted Theming (https://github.com/tinted-theming/schemes).
+    Automatically downloaded by Omnipy when needed (locally cached).
+
+    This style is a dark variant, with high-level contrast that conforms to
+    the AA criteria of the Web Content Accessibility Guidelines (WCAG) 2.1
+    (https://www.w3.org/TR/WCAG21/).
+    """
+
+    LINUX_VT_T16: Literal['linux-vt-t16'] = 'linux-vt-t16'
+    """
+    Linux VT: Base-16 color style by "j-c-m".
 
     Collected by Tinted Theming (https://github.com/tinted-theming/schemes).
     Automatically downloaded by Omnipy when needed (locally cached).
@@ -2624,6 +2703,7 @@ class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
                        'eris-t16',
                        'eva-dim-t16',
                        'eva-t16',
+                       'everforest-dark-medium-t16',
                        'icy-t16',
                        'lime-t16',
                        'material-vivid-t16',
@@ -2700,6 +2780,18 @@ class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     EVA_T16: Literal['eva-t16'] = 'eva-t16'
     """
     Eva: Base-16 color style by "kjakapat".
+
+    Collected by Tinted Theming (https://github.com/tinted-theming/schemes).
+    Automatically downloaded by Omnipy when needed (locally cached).
+
+    This style is a dark variant, with lower-level contrast that did not
+    meet the AA criteria of the Web Content Accessibility Guidelines (WCAG)
+    2.1 (https://www.w3.org/TR/WCAG21/).
+    """
+
+    EVERFOREST_DARK_MEDIUM_T16: Literal['everforest-dark-medium-t16'] = 'everforest-dark-medium-t16'
+    """
+    Everforest Dark Medium: Base-16 color style by "Sainnhe Park".
 
     Collected by Tinted Theming (https://github.com/tinted-theming/schemes).
     Automatically downloaded by Omnipy when needed (locally cached).
@@ -2865,7 +2957,9 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
                        'atelier-sulphurpool-light-t16',
                        'ayu-light-t16',
                        'catppuccin-latte-t16',
+                       'charcoal-light-t16',
                        'chicago-day-t16',
+                       'chinoiserie-t16',
                        'classic-light-t16',
                        'cupertino-t16',
                        'da-one-paper-t16',
@@ -3077,9 +3171,33 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
+    CHARCOAL_LIGHT_T16: Literal['charcoal-light-t16'] = 'charcoal-light-t16'
+    """
+    Charcoal Light: Base-16 color style by "Mubin Muhammad".
+
+    Collected by Tinted Theming (https://github.com/tinted-theming/schemes).
+    Automatically downloaded by Omnipy when needed (locally cached).
+
+    This style is a light variant, with high-level contrast that conforms to
+    the AA criteria of the Web Content Accessibility Guidelines (WCAG) 2.1
+    (https://www.w3.org/TR/WCAG21/).
+    """
+
     CHICAGO_DAY_T16: Literal['chicago-day-t16'] = 'chicago-day-t16'
     """
     Chicago Day: Base-16 color style by "Wendell, Ryan".
+
+    Collected by Tinted Theming (https://github.com/tinted-theming/schemes).
+    Automatically downloaded by Omnipy when needed (locally cached).
+
+    This style is a light variant, with high-level contrast that conforms to
+    the AA criteria of the Web Content Accessibility Guidelines (WCAG) 2.1
+    (https://www.w3.org/TR/WCAG21/).
+    """
+
+    CHINOISERIE_T16: Literal['chinoiserie-t16'] = 'chinoiserie-t16'
+    """
+    Chinoiserie: Base-16 color style by "Di Wang".
 
     Collected by Tinted Theming (https://github.com/tinted-theming/schemes).
     Automatically downloaded by Omnipy when needed (locally cached).
