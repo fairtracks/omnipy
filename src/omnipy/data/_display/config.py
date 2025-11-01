@@ -178,11 +178,12 @@ class OutputConfig:
                 return style
             elif style in AllColorStyles:
                 style = handle_random_name(style)
-                try:
-                    pygments.styles.get_style_by_name(clean_style_name(style))
-                except pygments.util.ClassNotFound:
-                    install_base16_theme(style)
-                    pygments.styles.get_style_by_name(style)
+                if style not in RecommendedColorStyles:
+                    try:
+                        pygments.styles.get_style_by_name(clean_style_name(style))
+                    except pygments.util.ClassNotFound:
+                        install_base16_theme(style)
+                        pygments.styles.get_style_by_name(style)
                 return style
             elif pygments.styles.get_style_by_name(style):
                 return style
