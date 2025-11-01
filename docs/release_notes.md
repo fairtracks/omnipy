@@ -1,3 +1,146 @@
+## Omnipy v0.21
+
+_Release date: Nov 1, 2025_
+
+v0.21 represents a major milestone for Omnipy with the introduction of a
+comprehensive output styling and pretty-printing system built from the
+ground up. This release also brings significant performance improvements
+through lazy loading of dependencies and intelligent caching, as well as
+Docker integration for seamless Jupyter deployment.
+
+### New features and changes in v0.21
+
+- **Complete output styling and pretty-printing system (brand new!)**
+  
+  A comprehensive pretty-printing and layout system has been implemented
+  from scratch, wrapping the [Rich](https://github.com/Textualize/rich)
+  library while solving complex boundary and dimension challenges:
+
+  - Direct access to data** at your fingertips. Model and Dataset contents
+    expand to full size, intelligently utilizing available display space
+    with syntax-highlighted layout in full color:
+    - New method `peek()` for Datasets and Models gives quick access to
+      content previews.
+    - `Dataset.list()` gives a detailed listing of entries in the dataset.
+    - As before, hitting `Enter` on a Model or Dataset in Jupyter shows a
+      concise summary, a `peek` for a Model, or a `list` for a Dataset.
+    - New method `full()` for Models and Datasets shows the complete output
+      without any truncation (of a `peek` or `list` respectively). - New
+    - New method `browse()` for Models and  Datasets shows the full output in
+      new browser tabs for easy scrolling and exploration of large
+      contents. Particularly useful for large Datasets.
+  
+  - **Advanced panel system**: A complete panel system has been implemented
+    supporting dynamic pretty-printing of Python objects, compact JSON,
+    hexdumps, syntax-highlighted text, and nested layouts, making the most
+    of available display space.
+  
+  - **Intelligent layout and flow engine**: Built sophisticated layout
+    optimization with automatic width distribution, proportional sizing,
+    cropping (horizontal and vertical) with title and content ellipses.
+    Implemented comprehensive reflow algorithms automatic frame
+    adjustments to fit content while respecting constraints, while also
+    handling edge cases like empty layouts, single panels, and complex
+    nested structures.
+  
+  - **Rich color and syntax highlighting**: Added over 300 color styles,
+    with automatic loading of Base16 themes from the 
+    [Tinted Theming project](https://github.com/tinted-theming), in 
+    addition to the styles from the 
+    [Pygments library](https://pygments.org/styles/). Color styles support
+    transparent/solid background handling for both terminal and HTML outputs,
+    and configurable fonts/CSS. Syntax highlighting based on 
+    [hundreds of Pygments lexers](https://pygments.org/languages/).
+    Output as ANSI terminal codes or HTML, with plain text, stylized text and
+    colorized output variants.
+  
+  - **Comprehensive User Interfaces support**: Added support for various UI
+    contexts, including terminal ANSI output for the basic Python terminal
+    interpreter, the IPython interpreter, the PyCharm console, Jupyter
+    notebook and JupyterHub, and HTML export as web pages or embedded tags
+    (e.g. for documentation). Autodetection of UI contexts.
+  
+  - **Configuration system**: Comprehensive configuration of all aspects of
+    output presentation, including color styles, fonts, panel and title
+    styles, syntax language, background transparency, height and width
+    limits, indentation, cropping behavior, and more. Configurable
+    globally or per display call.
+  
+  - **Other features**: 
+    - Support for variable character widths.
+
+
+- **Jupyter and UI integration**
+  
+  Seamless integration with Jupyter environments through dynamic resizing
+  and reactive components:
+  
+  - Outputs in Jupyter are reactive, with automatically resizing and
+    restyling based on e.g. window size, global config changes and
+    selection of dark/light theme.
+  - Reactive compunents implemented using the Solara library, which
+    simplifies development of reactive components and Jupyter widgets
+    using plain Python or VueJS.
+  - JupyterLab settings and scrolling workarounds, and other CSS fixes.
+
+
+- **Performance and caching improvements**
+  
+  Major performance enhancements through intelligent caching strategies:
+  
+  - Import of omnipy is now significantly faster due to lazy loading of
+    submodules
+  - Bounded `lru_cache` for draft panel formatting to prevent unbounded
+    cache growth while maintaining fast lookups
+  - Caching for downloaded base16 themes and other remote resources
+  - Rendering efficiency improvements to reduce unnecessary reflows
+
+
+- **Dockerfile and container support**
+  
+  Complete Docker setup for running Omnipy in JupyterLab.
+
+
+- **Documentation overhaul**
+  
+  Extensive improvements to documentation:
+  
+  - Added Omnipy logos and overview illustration
+  - Complete README rewrite and reorganization into new 'Data models' section
+  - Migration of all Markdown files into `docs` directory
+  - Detailed inline documentation for output styling: color styles, HTML
+    export variants, pretty-printing, base16 themes
+  - Added examples and notebooks demonstrating new features
+  - Color and style updates
+
+
+- **Dataset and data loading enhancements**
+  
+  - API change: `Dataset.load()` → `load_into()`; `Dataset.load()` is now a
+    class method
+  - Added `as_mime_type` parameter to loading functions
+  - Fixed synchronous testing of asynchronous endpoints
+
+
+- **Tests and quality improvements**
+  
+  - Extensive test coverage for panels, layout flow, cropping, HTML output,
+    and color styles
+  - Fixed previously non-running tests due to bugs
+
+
+- **Miscellaneous improvements**
+  
+  - Python 3.13 compatibility
+  - Cleanup: removed debug prints, fixed typos, improved docstrings, import
+    sorting fixes, and typing fixes across multiple modules
+  - Improved macOS web browser support for open() (used in `browse()`)
+  - Added overridable `_get_default_factory()` in `Model`
+  - Added`.editorconfig` for consistent formatting
+  - Added example notebooks
+  - Updated dependencies and CI adjustments
+
+
 ## Omnipy v0.20.1
 
 _Release date: Jan 7, 2025_
