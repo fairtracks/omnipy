@@ -236,11 +236,11 @@ class InnerPanelStyler:
             return self._panel.cropped_dims.height
 
     @property
-    def _frame_width_if_any(self) -> int | None:
+    def _frame_width_else_outer_dims_width(self) -> int | None:
         if has_width(self._panel.frame.dims):
             return self._panel.frame.dims.width
         else:
-            return None
+            return self._panel.outer_dims.width
 
     def _style_title(self) -> str | rich.text.Text:
         title: str | rich.text.Text = ''
@@ -285,7 +285,7 @@ class InnerPanelStyler:
     def style_inner_panel(self) -> rich.table.Table:
         styled_title = self._style_title()
         styled_and_cropped_content = self._style_and_crop_content()
-        column_width = self._frame_width_if_any
+        column_width = self._frame_width_else_outer_dims_width
 
         panel_title_at_top = self._panel_title_at_top
         content_table = rich.table.Table(
