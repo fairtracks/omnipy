@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 import dataclasses
 import functools
+import os
 from pathlib import Path
 import sys
 from typing import Any, cast, Literal, overload, ParamSpec, TYPE_CHECKING
@@ -500,7 +501,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         self_as_dataclass = cast(DataClassBase, self)
 
         # TODO: Improve file caching mechanism, including style files
-        file_path = Path(self_as_dataclass.config.ui.cache_dir_path) / sanitize_filename(filename)
+        cache_dir_path = Path(self_as_dataclass.config.ui.cache_dir_path)
+        if not cache_dir_path:
+            os.makedirs(cache_dir_path)
+
+        file_path = cache_dir_path / sanitize_filename(filename)
 
         with open(file_path, 'w', encoding='utf-8') as html_file:
             html_file.write(html_output)
