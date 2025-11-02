@@ -16,7 +16,7 @@ Docker integration for seamless Jupyter deployment.
   from scratch, wrapping the [Rich](https://github.com/Textualize/rich)
   library while solving complex boundary and dimension challenges:
 
-  - Direct access to data** at your fingertips. Model and Dataset contents
+  - **Direct access to data** at your fingertips. Model and Dataset contents
     expand to full size, intelligently utilizing available display space
     with syntax-highlighted layout in full color:
     - New method `peek()` for Datasets and Models gives quick access to
@@ -25,7 +25,7 @@ Docker integration for seamless Jupyter deployment.
     - As before, hitting `Enter` on a Model or Dataset in Jupyter shows a
       concise summary, a `peek` for a Model, or a `list` for a Dataset.
     - New method `full()` for Models and Datasets shows the complete output
-      without any truncation (of a `peek` or `list` respectively). - New
+      without any truncation (of a `peek` or `list` respectively).
     - New method `browse()` for Models and  Datasets shows the full output in
       new browser tabs for easy scrolling and exploration of large
       contents. Particularly useful for large Datasets.
