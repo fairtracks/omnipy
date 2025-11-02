@@ -363,10 +363,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         ui_type = self._extract_ui_type(**kwargs)
         if not frame:
             frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._extract_and_configure_output_config_from_data_config(
-            ui_type,
-            use_min_crop_width=True,
-        )
+        config = self._create_output_config_from_data_config(ui_type, use_min_crop_width=True)
         config_kwargs = self._validate_kwargs_for_config(**kwargs)
         config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
         layout: Layout[DraftPanel] = Layout()
@@ -431,10 +428,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         self._check_kwarg_keys(**kwargs)
         config_kwargs = {k: v for k, v in kwargs.items() if k in OutputConfig.__annotations__}
 
+        config_kwargs = self._update_config_kwargs_with_show_style_in_panel_if_random_style(
+            **config_kwargs)
+
         return {
             k: v
             for k, v in (dataclasses.asdict(OutputConfig(**config_kwargs))).items()
-            if k in kwargs
+            if k in config_kwargs
         }
 
     def _apply_validated_kwargs_to_config(
@@ -442,10 +442,28 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         config: OutputConfig,
         **config_kwargs,
     ) -> OutputConfig:
+
         if config_kwargs:
             config = dataclasses.replace(config, **config_kwargs)
 
         return config
+
+    def _update_config_kwargs_with_show_style_in_panel_if_random_style(
+        self,
+        **config_kwargs,
+    ):
+        if 'style' in config_kwargs:
+            if 'panel' in config_kwargs:
+                panel_design: PanelDesign.Literals = config_kwargs['panel']
+            else:
+                panel_design = OutputConfig().panel  # Default value
+
+            color_style: AllColorStyles.Literals | str = config_kwargs['style']
+            panel_design = self._show_style_in_panel_if_random_style(panel_design, color_style)
+
+            config_kwargs['panel'] = panel_design
+
+        return config_kwargs
 
     def _check_kwarg_keys(self, **kwargs):
         supported_keys = (
@@ -573,7 +591,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             case x if UserInterfaceType.requires_html_page_output(x):
                 return stylized_panel.colorized.html_page
 
-    def _extract_and_configure_output_config_from_data_config(
+    def _create_output_config_from_data_config(
         self,
         ui_type: SpecifiedUserInterfaceType.Literals,
         use_min_crop_width: bool = False,
@@ -581,18 +599,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         ui_config = cast(DataClassBase, self).config.ui
         ui_type_config = ui_config.get_ui_type_config(ui_type)
 
-        color_system: DisplayColorSystem.Literals
-        match ui_type:
-            case x if UserInterfaceType.supports_rgb_color_output(x):
-                color_system = DisplayColorSystem.ANSI_RGB
-            case _:
-                color_system = ui_type_config.color.system
+        color_system = self._get_color_system_for_user_interface(ui_type, ui_type_config)
 
-        color_style = ui_type_config.color.style
         panel_design = ui_config.layout.panel_design
-
-        if AllColorStyles.is_random_choice_value(color_style) and panel_design is PanelDesign.TABLE:
-            panel_design = PanelDesign.TABLE_SHOW_STYLE
+        color_style = ui_type_config.color.style
+        panel_design = self._show_style_in_panel_if_random_style(panel_design, color_style)
 
         config = OutputConfig(
             tab=ui_config.text.tab_size,
@@ -622,6 +633,34 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 line_height=ui_type_config.font.line_height,
             )
         return config
+
+    def _show_style_in_panel_if_random_style(
+        self,
+        panel_design: PanelDesign.Literals,
+        color_style: AllColorStyles.Literals | str,
+    ) -> PanelDesign.Literals:
+
+        if AllColorStyles.is_random_choice_value(color_style):
+            if panel_design is PanelDesign.TABLE:
+                panel_design = PanelDesign.TABLE_SHOW_STYLE
+
+        return panel_design
+
+    def _get_color_system_for_user_interface(
+        self,
+        ui_type: SpecifiedUserInterfaceType.Literals,
+        ui_type_config: IsUserInterfaceTypeConfig,
+    ) -> DisplayColorSystem.Literals:
+
+        color_system: DisplayColorSystem.Literals
+
+        match ui_type:
+            case x if UserInterfaceType.supports_rgb_color_output(x):
+                color_system = DisplayColorSystem.ANSI_RGB
+            case _:
+                color_system = ui_type_config.color.system
+
+        return color_system
 
     def _define_frame_from_available_display_dims(
             self, ui_type: SpecifiedUserInterfaceType.Literals) -> Frame:
@@ -665,10 +704,7 @@ class ModelDisplayMixin(BaseDisplayMixin):
         ui_type = UserInterfaceType.BROWSER_PAGE
 
         frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._extract_and_configure_output_config_from_data_config(
-            ui_type,
-            use_min_crop_width=False,
-        )
+        config = self._create_output_config_from_data_config(ui_type, use_min_crop_width=False)
 
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
 
@@ -731,10 +767,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
         ui_type = self._extract_ui_type(**kwargs)
         frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._extract_and_configure_output_config_from_data_config(
-            ui_type,
-            use_min_crop_width=False,
-        )
+        config = self._create_output_config_from_data_config(ui_type, use_min_crop_width=False)
         config = self._update_config_with_overflow_modes(config, 'layout')
 
         config = dataclasses.replace(config, max_title_height=MaxTitleHeight.ONE)
