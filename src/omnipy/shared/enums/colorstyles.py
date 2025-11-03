@@ -355,7 +355,7 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
                        'xcode-dusk-t16',
                        'zenbones-t16',
                        'zenburn-t16',
-                       'random-t16-dark-high']
+                       'random-dark-high-t16']
 
     NUMBER_0X96F_T16: Literal['0x96f-t16'] = '0x96f-t16'
     """
@@ -2688,7 +2688,7 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    RANDOM_T16_DARK_HIGH_CONTRAST: Literal['random-t16-dark-high'] = 'random-t16-dark-high'
+    RANDOM_DARK_HIGH_CONTRAST_T16: Literal['random-dark-high-t16'] = 'random-dark-high-t16'
 
 
 class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
@@ -2715,7 +2715,7 @@ class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
                        'tokyo-night-terminal-dark-t16',
                        'tokyo-night-terminal-storm-t16',
                        'vulcan-t16',
-                       'random-t16-dark-low']
+                       'random-dark-low-t16']
 
     APPRENTICE_T16: Literal['apprentice-t16'] = 'apprentice-t16'
     """
@@ -2935,7 +2935,7 @@ class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     2.1 (https://www.w3.org/TR/WCAG21/).
     """
 
-    RANDOM_T16_DARK_LOW_CONTRAST: Literal['random-t16-dark-low'] = 'random-t16-dark-low'
+    RANDOM_DARK_LOW_CONTRAST_T16: Literal['random-dark-low-t16'] = 'random-dark-low-t16'
 
 
 class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
@@ -3024,7 +3024,7 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
                        'unikitty-light-t16',
                        'windows-95-light-t16',
                        'windows-highcontrast-light-t16',
-                       'random-t16-light-high']
+                       'random-light-high-t16']
 
     ATELIER_CAVE_LIGHT_T16: Literal['atelier-cave-light-t16'] = 'atelier-cave-light-t16'
     """
@@ -3987,7 +3987,7 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    RANDOM_T16_LIGHT_HIGH_CONTRAST: Literal['random-t16-light-high'] = 'random-t16-light-high'
+    RANDOM_LIGHT_HIGH_CONTRAST_T16: Literal['random-light-high-t16'] = 'random-light-high-t16'
 
 
 class LightLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
@@ -4002,7 +4002,7 @@ class LightLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
                        'material-lighter-t16',
                        'windows-10-light-t16',
                        'windows-nt-light-t16',
-                       'random-t16-light-low']
+                       'random-light-low-t16']
 
     BRUSHTREES_T16: Literal['brushtrees-t16'] = 'brushtrees-t16'
     """
@@ -4064,7 +4064,7 @@ class LightLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     2.1 (https://www.w3.org/TR/WCAG21/).
     """
 
-    RANDOM_T16_LIGHT_LOW_CONTRAST: Literal['random-t16-light-low'] = 'random-t16-light-low'
+    RANDOM_LIGHT_LOW_CONTRAST_T16: Literal['random-light-low-t16'] = 'random-light-low-t16'
 
 
 class DarkTintedThemingBase16ColorStyles(
@@ -4077,9 +4077,9 @@ class DarkTintedThemingBase16ColorStyles(
 
     Literals = Literal[DarkHighContrastTintedThemingBase16ColorStyles.Literals,
                        DarkLowContrastTintedThemingBase16ColorStyles.Literals,
-                       'random-t16-dark']
+                       'random-dark-t16']
 
-    RANDOM_T16_DARK: Literal['random-t16-dark'] = 'random-t16-dark'
+    RANDOM_DARK_T16: Literal['random-dark-t16'] = 'random-dark-t16'
 
 
 class LightTintedThemingBase16ColorStyles(
@@ -4092,9 +4092,9 @@ class LightTintedThemingBase16ColorStyles(
 
     Literals = Literal[LightHighContrastTintedThemingBase16ColorStyles.Literals,
                        LightLowContrastTintedThemingBase16ColorStyles.Literals,
-                       'random-t16-light']
+                       'random-light-t16']
 
-    RANDOM_T16_LIGHT: Literal['random-t16-light'] = 'random-t16-light'
+    RANDOM_LIGHT_T16: Literal['random-light-t16'] = 'random-light-t16'
 
 
 class TintedThemingBase16ColorStyles(
