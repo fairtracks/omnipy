@@ -17,7 +17,7 @@ SHELL ["conda", "run", "--no-capture-output", "-n", "omnipy", "/bin/bash", "-c"]
 
 RUN mamba install python=3.12 ipykernel ipywidgets git -y && mamba clean -ay
 RUN pip cache purge
-RUN pip install omnipy==0.21.1
+RUN pip install omnipy==0.21.2
 RUN pip install itables
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
