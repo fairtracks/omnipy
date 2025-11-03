@@ -742,7 +742,11 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             **kwargs)
 
     def _full(self, **kwargs) -> DraftPanel:
-        return self._list(**self._prepare_kwargs_for_full(kwargs))
+        # TODO: Get feedback from users whether list() or peek() should be
+        #       the basis for Dataset.full(). For now, changed from list()
+        #       to peek().
+        # return self._list(**self._prepare_kwargs_for_full(kwargs))
+        return self._peek(**self._prepare_kwargs_for_full(kwargs))
 
     @takes_input_params_from(_DisplayMethodParams.__init__)
     def list(self, **kwargs) -> 'Element | None':
