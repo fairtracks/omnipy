@@ -4,7 +4,7 @@ _Release date: Nov 3, 2025_
 
 ### Bugfixes in v0.21.2
 
-- Updates to Dockerfile and related README to fix issues wit~~h JupyterHub
+- Updates to Dockerfile and related README to fix issues with JupyterHub
 - Fixed bug with `browse()` method for `Model` and `Dataset` when local
   cache folder is missing
 - Fixed issue showing style when random style is selected as keyword 
