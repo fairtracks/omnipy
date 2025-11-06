@@ -146,9 +146,12 @@ def test_apply_decorator_to_property():
 
         return _inner
 
-    MyDataGetter.data = apply_decorator_to_property(MyDataGetter.data, my_decorator)
-    MyDataSetter.data = apply_decorator_to_property(MyDataSetter.data, my_decorator)
-    MyDataDeleter.data = apply_decorator_to_property(MyDataDeleter.data, my_decorator)
+    MyDataGetter.data = apply_decorator_to_property(  # pyright: ignore
+        MyDataGetter.data, my_decorator)
+    MyDataSetter.data = apply_decorator_to_property(  # pyright: ignore
+        MyDataSetter.data, my_decorator)
+    MyDataDeleter.data = apply_decorator_to_property(  # pyright: ignore
+        MyDataDeleter.data, my_decorator)
 
     assert MyDataGetter.data.__doc__ == 'data property documentation'
     assert MyDataSetter.data.__doc__ == 'data property documentation'
@@ -161,7 +164,7 @@ def test_apply_decorator_to_property():
     assert call_counter == [1]
 
     with pytest.raises(AttributeError):
-        data_getter.data = 'data'
+        data_getter.data = 'data'  # pyright: ignore
     assert call_counter == [1]
 
     data_setter = MyDataSetter()
@@ -172,7 +175,7 @@ def test_apply_decorator_to_property():
     assert call_counter == [3]
 
     with pytest.raises(AttributeError):
-        del data_getter.data
+        del data_getter.data  # pyright: ignore
     assert call_counter == [3]
 
     data_deleter = MyDataDeleter()

@@ -4,8 +4,6 @@ from typing import Any, Callable, Concatenate, ContextManager, Generic, ParamSpe
 _DecoratedP = ParamSpec('_DecoratedP')
 _DecoratedR = TypeVar('_DecoratedR')
 _CallbackP = ParamSpec('_CallbackP')
-_CallbackR = TypeVar('_CallbackR')
-_ReturnT = TypeVar('_ReturnT')
 
 _ArgT = TypeVar('_ArgT')
 _SelfOrClsT = TypeVar('_SelfOrClsT')
@@ -29,17 +27,17 @@ def add_callback_if_exception(
 
 
 def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
-                            callback_func: Callable[Concatenate[_ReturnT | None, _CallbackP],
-                                                    _CallbackR],
+                            callback_func: Callable[Concatenate[_DecoratedR, _CallbackP],
+                                                    _DecoratedR],
                             with_context: ContextManager[None] | None,
                             *cb_args: _CallbackP.args,
                             **cb_kwargs: _CallbackP.kwargs) -> Callable[_DecoratedP, _DecoratedR]:
     class CallbackAfterCall(AbstractContextManager):
-        def __init__(self, decorated_func, *args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs):
-            self._decorated_func = decorated_func
+        def __init__(self, dec_func, *args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs):
+            self._decorated_func = dec_func
             self._args = args
             self._kwargs = kwargs
-            self.return_value: _ReturnT | None = None
+            self.return_value: _DecoratedR
 
         def __enter__(self):
             self.return_value = self._decorated_func(*self._args, **self._kwargs)
@@ -52,8 +50,8 @@ def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
                 self.return_value = callback_func(self.return_value, *cb_args, **cb_kwargs)
             return ret
 
-    def _callback_after_call(decorated_func, *args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs):
-        with CallbackAfterCall(decorated_func, *args, **kwargs) as callback:
+    def _callback_after_call(dec_func, *args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs):
+        with CallbackAfterCall(dec_func, *args, **kwargs) as callback:
             ...
         return callback.return_value
 

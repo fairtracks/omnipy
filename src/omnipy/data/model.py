@@ -1231,7 +1231,7 @@ class Model(
 
         if inspect.isroutine(content_attr):
             reset_solution = self._prepare_reset_solution_take_snapshot_if_needed().reset_solution
-            new_content_attr = self._getattr_from_content_obj(attr)
+            new_content_attr: Callable = cast(Callable, self._getattr_from_content_obj(attr))
 
             def _validate_content(ret: Any):
                 self._validate_and_set_value(self.content, reset_solution=reset_solution)
@@ -1255,7 +1255,11 @@ class Model(
                 case 'items':
                     _model_generator = self._get_convert_element_value_model_generator(None,)
 
-            content_attr = add_callback_after_call(content_attr, _model_generator, no_context)
+            content_attr = add_callback_after_call(
+                cast(Callable, content_attr),
+                _model_generator,
+                no_context,
+            )
 
         return content_attr
 
