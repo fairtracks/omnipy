@@ -7,6 +7,7 @@ from omnipy.util.decorators import (add_callback_after_call,
                                     add_callback_if_exception,
                                     apply_decorator_to_property,
                                     call_super_if_available,
+                                    class_or_instance_method,
                                     no_context)
 
 
@@ -225,3 +226,21 @@ def test_call_super_if_available() -> None:
     assert MyClassWithSuper().my_method(1) == 20
     assert MyClassWithSuper().my_other_method(1) == 11
     assert MyClassWithSuper.my_class_method(1) == 6
+
+
+def test_class_or_instance_method() -> None:
+    class MyClass:
+        def __init__(self, a: int) -> None:
+            self._a = a
+
+        @class_or_instance_method
+        def foo(self: 'MyClass | None', cls: 'type[MyClass]', b: int, c: int = 42) -> int:
+            if self:
+                return self._a + b + c
+            else:
+                return b + c
+
+    assert MyClass.foo(10) == 52
+    assert MyClass.foo(10, 10) == 20
+    assert MyClass(48).foo(10) == 100
+    assert MyClass(48).foo(10, 10) == 68

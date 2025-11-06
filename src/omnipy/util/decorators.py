@@ -9,6 +9,7 @@ _ReturnT = TypeVar('_ReturnT')
 
 _ArgT = TypeVar('_ArgT')
 _SelfOrClsT = TypeVar('_SelfOrClsT')
+T = TypeVar('T')
 
 no_context = None
 
@@ -108,3 +109,27 @@ def call_super_if_available(call_super_before_method: bool):
                 return method(self._calling_obj_or_cls, arg)
 
     return SuperCaller
+
+
+class class_or_instance_method(Generic[T, _DecoratedP, _DecoratedR], object):
+    """
+    Decorator that allows method to be called as class method or instance method
+
+    Based on https://stackoverflow.com/a/79278611
+    """
+
+    # TODO: Properly attribute Stackoverflow contributions here and elsewhere,
+    #       adding to the general license info which parts of the code follow
+    #       CC BY-SA 4.0
+
+    def __init__(
+        self,
+        decorated_func: Callable[Concatenate[T | None, type[T], _DecoratedP], _DecoratedR],
+    ):
+        self._decorated_func = decorated_func
+
+    def __get__(self, instance: T | None, cls: type[T]) -> Callable[_DecoratedP, _DecoratedR]:
+        def _func(*args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs) -> _DecoratedR:
+            return self._decorated_func(instance, cls, *args, **kwargs)
+
+        return _func
