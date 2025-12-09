@@ -146,6 +146,8 @@ def ReactivelyResizingHtml(
 ):
     kwargs = reactive_kwargs.value
     reactive_objs = obj.reactive_objects
+    assert reactive_objs is not None
+
     reactive_jupyter_ui_config = reactive_objs.jupyter_ui_config.value
     reactive_text_config = reactive_objs.text_config.value
     reactive_layout_config = reactive_objs.layout_config.value

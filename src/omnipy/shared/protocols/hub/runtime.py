@@ -2,8 +2,10 @@ import logging
 from logging.handlers import RotatingFileHandler
 from typing import Protocol, runtime_checkable
 
+from omnipy.shared.enums.ui import UserInterfaceType
 from omnipy.shared.protocols.compute.job_creator import IsJobConfigHolder
-from omnipy.shared.protocols.config import (IsDataConfig,
+from omnipy.shared.protocols.config import (IsConfigBase,
+                                            IsDataConfig,
                                             IsEngineConfig,
                                             IsJobConfig,
                                             IsRootLogConfig)
@@ -30,7 +32,7 @@ class IsRootLogObjects(Protocol):
 
 
 @runtime_checkable
-class IsRuntimeConfig(IsDataPublisher, Protocol):
+class IsRuntimeConfig(IsConfigBase, Protocol):
     """"""
     data: IsDataConfig
     engine: IsEngineConfig
@@ -47,12 +49,15 @@ class IsRuntimeObjects(IsDataPublisher, Protocol):
 
     job_creator: IsJobConfigHolder
     data_class_creator: IsDataClassCreator
-    reactive: IsReactiveObjects
+    reactive: IsReactiveObjects | None
     local: IsEngine
     prefect: IsEngine
     registry: IsRunStateRegistry
     serializers: IsSerializerRegistry
     root_log: IsRootLogObjects
+
+    def setup_reactive(self, ui_type: UserInterfaceType.Literals) -> None:
+        ...
 
 
 @runtime_checkable

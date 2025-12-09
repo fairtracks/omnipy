@@ -1,11 +1,12 @@
+from types import NoneType
 from typing import Annotated
 
 import pytest
 
 from omnipy.config.data import DataConfig, JupyterUserInterfaceConfig, ModelConfig
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta, DataClassCreator
-from omnipy.data._display.integrations.jupyter.helpers import ReactiveConfigCopy, ReactiveObjects
 from omnipy.data.snapshot import SnapshotHolder
+from omnipy.shared.protocols.config import IsJupyterUserInterfaceConfig
 
 from .helpers.mocks import MockDataset, MockModel
 
@@ -33,11 +34,15 @@ def test_set_config() -> None:
 
 
 def test_set_reactive_objects() -> None:
+    from omnipy.data._display.integrations.jupyter.helpers import (ReactiveConfigCopy,
+                                                                   ReactiveObjects)
+
     data_class_creator = DataClassCreator()
-    assert data_class_creator.reactive_objects == ReactiveObjects()
+    assert data_class_creator.reactive_objects is None
 
     new_reactive_objects = ReactiveObjects(
-        jupyter_ui_config=ReactiveConfigCopy(JupyterUserInterfaceConfig(dims_mode='fixed')))
+        jupyter_ui_config=ReactiveConfigCopy[IsJupyterUserInterfaceConfig](
+            JupyterUserInterfaceConfig(dims_mode='fixed')))
     assert data_class_creator.reactive_objects != new_reactive_objects
 
     data_class_creator.set_reactive_objects(new_reactive_objects)
@@ -130,9 +135,10 @@ def test_config_property_mutable_from_data_class_creator(
 
 def test_reactive_objects_property_mutable_from_data_class_creator(
         teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
+    from omnipy.data._display.integrations.jupyter.helpers import ReactiveObjects
     _assert_property_is_singularly_mutable(
         property='reactive_objects',
-        property_type=ReactiveObjects,
+        property_type=NoneType,
         set_property_from_data_class=False,
         new_val=ReactiveObjects(),
         property_setter='set_reactive_objects',

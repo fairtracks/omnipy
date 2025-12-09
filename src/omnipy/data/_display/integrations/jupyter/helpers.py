@@ -8,7 +8,7 @@ from omnipy.config.data import JupyterUserInterfaceConfig, LayoutConfig, TextCon
 from omnipy.shared.protocols.config import (IsJupyterUserInterfaceConfig,
                                             IsLayoutConfig,
                                             IsTextConfig)
-from omnipy.shared.protocols.data import AvailableDisplayDims
+from omnipy.shared.protocols.data import AvailableDisplayDims, IsReactive
 from omnipy.util import _pydantic as pyd
 from omnipy.util.publisher import DataPublisher
 
@@ -58,13 +58,13 @@ class ReactiveObjects(DataPublisher):
     wrap the TextConfig and LayoutConfig in ReactiveConfigCopy instances to
     ensure that changes to those configs are also detected.
     """
-    jupyter_ui_config: solara.Reactive[IsJupyterUserInterfaceConfig] = pyd.Field(
+    jupyter_ui_config: IsReactive[IsJupyterUserInterfaceConfig] = pyd.Field(
         default_factory=lambda: ReactiveConfigCopy(JupyterUserInterfaceConfig()))
-    text_config: solara.Reactive[IsTextConfig] = pyd.Field(
+    text_config: IsReactive[IsTextConfig] = pyd.Field(
         default_factory=lambda: ReactiveConfigCopy(TextConfig()))
-    layout_config: solara.Reactive[IsLayoutConfig] = pyd.Field(
+    layout_config: IsReactive[IsLayoutConfig] = pyd.Field(
         default_factory=lambda: ReactiveConfigCopy(LayoutConfig()))
-    available_display_dims_in_px: solara.Reactive[AvailableDisplayDims] = pyd.Field(
+    available_display_dims_in_px: IsReactive[AvailableDisplayDims] = pyd.Field(
         default_factory=lambda: solara.Reactive(AvailableDisplayDims(width=0, height=0)))
 
     def __eq__(self, other) -> bool:

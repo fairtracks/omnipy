@@ -8,7 +8,6 @@ from typing import Any, cast, Literal, overload, ParamSpec, TYPE_CHECKING
 import webbrowser
 
 from pathvalidate import sanitize_filename
-import solara
 from typing_extensions import assert_never, get_args, LiteralString, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase
@@ -309,6 +308,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 if UserInterfaceType.is_jupyter_in_browser(ui_type):
                     import reacton
                     from reacton.core import Element
+                    import solara
 
                     from omnipy.data._display.integrations.jupyter.components import \
                         ReactivelyResizingHtml
@@ -499,7 +499,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     **kwargs,
                 )
 
-        if ui_type is UserInterfaceType.JUPYTER:
+        if UserInterfaceType.is_jupyter_in_browser(ui_type):
             from omnipy.data._display.integrations.jupyter.components import ModelBrowser
             ModelBrowser(html_content=html_output)._ipython_display_()
         else:

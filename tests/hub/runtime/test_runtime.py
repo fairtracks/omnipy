@@ -50,6 +50,9 @@ from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
                                      ConfigPersistOutputsOptions,
                                      ConfigRestoreOutputsOptions,
                                      EngineChoice)
+from omnipy.shared.enums.ui import (JupyterInBrowserUserInterfaceType,
+                                    PlainTerminalUserInterfaceType,
+                                    SpecifiedUserInterfaceType)
 from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.hub.runtime import IsRuntime, IsRuntimeConfig
 
@@ -198,17 +201,28 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.root_log.file_log_path.endswith('logs/omnipy.log')
 
 
-def _assert_runtime_objects_default(objects: RuntimeObjects):
+def _assert_runtime_objects_default(
+    objects: RuntimeObjects,
+    ui_type: SpecifiedUserInterfaceType.Literals,
+):
+
     assert isinstance(objects.job_creator, JobCreator)
     assert objects.job_creator is JobBase.job_creator
 
     assert isinstance(objects.data_class_creator, DataClassCreator)
     assert objects.data_class_creator is DataClassBase.data_class_creator
 
-    assert isinstance(objects.reactive, ReactiveObjects)
-    assert isinstance(objects.reactive.jupyter_ui_config, ReactiveConfigCopy)
-    assert isinstance(objects.reactive.text_config, ReactiveConfigCopy)
-    assert isinstance(objects.reactive.layout_config, ReactiveConfigCopy)
+    if ui_type == JupyterInBrowserUserInterfaceType.JUPYTER:
+        from solara import Reactive
+
+        assert isinstance(objects.reactive, ReactiveObjects)
+
+        assert isinstance(objects.reactive.jupyter_ui_config, ReactiveConfigCopy)
+        assert isinstance(objects.reactive.text_config, ReactiveConfigCopy)
+        assert isinstance(objects.reactive.layout_config, ReactiveConfigCopy)
+        assert isinstance(objects.reactive.available_display_dims_in_px, Reactive)
+    else:
+        assert objects.reactive is None
 
     assert isinstance(objects.local, LocalRunner)
     assert isinstance(objects.prefect, PrefectEngine)
@@ -222,17 +236,29 @@ def test_config_default() -> None:
     _assert_runtime_config_default(RuntimeConfig(), Path.cwd())
 
 
-def test_objects_default(teardown_rm_default_root_log_dir: Annotated[None, pytest.fixture]) -> None:
-    _assert_runtime_objects_default(RuntimeObjects())
+@pytest.mark.parametrize(
+    'ui_type', [PlainTerminalUserInterfaceType.UNKNOWN, JupyterInBrowserUserInterfaceType.JUPYTER])
+def test_objects_default(
+    ui_type: SpecifiedUserInterfaceType.Literals,
+    teardown_rm_default_root_log_dir: Annotated[None, pytest.fixture],
+) -> None:
+    runtime_objects = RuntimeObjects()
+    runtime_objects.setup_reactive(ui_type)
+    _assert_runtime_objects_default(runtime_objects, ui_type)
 
 
-def test_default_runtime(runtime: Annotated[IsRuntime, pytest.fixture],
+@pytest.mark.parametrize(
+    'ui_type', [PlainTerminalUserInterfaceType.UNKNOWN, JupyterInBrowserUserInterfaceType.JUPYTER])
+def test_default_runtime(ui_type: SpecifiedUserInterfaceType.Literals,
+                         runtime: Annotated[IsRuntime, pytest.fixture],
                          tmp_dir_path: Annotated[Path, pytest.fixture]) -> None:
+    runtime.config.data.ui.detected_type = ui_type
+
     assert isinstance(runtime.config, RuntimeConfig)
     assert isinstance(runtime.objects, RuntimeObjects)
 
     _assert_runtime_config_default(runtime.config, tmp_dir_path)
-    _assert_runtime_objects_default(runtime.objects)
+    _assert_runtime_objects_default(runtime.objects, ui_type)
 
 
 def test_data_config_http_config_for_host_default(
@@ -305,7 +331,8 @@ def test_init_runtime_config_after_job_creator(
         'publisher_cls',
         'subscriber_runtime_attr_names',
         'subscriber_cls',
-        'subscriber_attr_name',
+        'subscriber_attr_names',
+        'create_copy',
     ],
     argvalues=[
         (
@@ -313,81 +340,119 @@ def test_init_runtime_config_after_job_creator(
             DataConfig,
             ('objects', 'data_class_creator'),
             DataClassCreator,
-            'config',
-        ),
-        (
-            ('config', 'engine', 'local'),
-            LocalRunnerConfig,
-            ('objects', 'local'),
-            LocalRunner,
-            'config',
-        ),
-        (
-            ('config', 'engine', 'prefect'),
-            PrefectEngineConfig,
-            ('objects', 'prefect'),
-            PrefectEngine,
-            'config',
+            ('config',),
+            False,
         ),
         (
             ('config', 'job'),
             JobConfig,
             ('objects', 'job_creator'),
             JobCreator,
-            'config',
+            ('config',),
+            False,
         ),
         (
             ('config', 'root_log'),
             RootLogConfig,
             ('objects', 'root_log'),
             RootLogObjects,
-            'config',
+            ('config',),
+            False,
+        ),
+        (
+            ('config', 'data', 'ui', 'jupyter'),
+            JupyterUserInterfaceConfig,
+            ('objects', 'reactive'),
+            ReactiveObjects,
+            ('jupyter_ui_config', 'value'),
+            True,
+        ),
+        (
+            ('config', 'data', 'ui', 'text'),
+            TextConfig,
+            ('objects', 'reactive'),
+            ReactiveObjects,
+            ('text_config', 'value'),
+            True,
+        ),
+        (
+            ('config', 'data', 'ui', 'layout'),
+            LayoutConfig,
+            ('objects', 'reactive'),
+            ReactiveObjects,
+            ('layout_config', 'value'),
+            True,
+        ),
+        (
+            ('config', 'engine', 'local'),
+            LocalRunnerConfig,
+            ('objects', 'local'),
+            LocalRunner,
+            ('config',),
+            False,
+        ),
+        (
+            ('config', 'engine', 'prefect'),
+            PrefectEngineConfig,
+            ('objects', 'prefect'),
+            PrefectEngine,
+            ('config',),
+            False,
         ),
         (
             ('objects', 'reactive'),
             ReactiveObjects,
             ('objects', 'data_class_creator'),
             DataClassCreator,
-            'reactive_objects',
+            ('reactive_objects',),
+            False,
         ),
         (
             ('objects', 'registry'),
             RunStateRegistry,
             ('objects', 'local'),
             LocalRunner,
-            'registry',
+            ('registry',),
+            False,
         ),
         (
             ('objects', 'registry'),
             RunStateRegistry,
             ('objects', 'prefect'),
             PrefectEngine,
-            'registry',
+            ('registry',),
+            False,
         ),
     ],
     ids=[
         'config->data => objects->data_class_creator',
-        'config.engine->local => objects->local',
-        'config.engine->prefect => objects->prefect',
         'config->job => objects->job_creator',
         'config->root_log => objects->root_log',
+        'config.data.ui->jupyter => objects->reactive->jupyter_ui_config',
+        'config.data.ui->text => objects->reactive->text_config',
+        'config.data.ui->layout => objects->reactive->layout_config',
+        'config.engine->local => objects->local',
+        'config.engine->prefect => objects->prefect',
         'objects->reactive => objects->data_class_creator',
         'objects->registry => objects->local',
         'objects->registry => objects->prefect',
     ])
-def test_basic_runtime_subscriptions(
+def test_basic_runtime_subscriptions(  # noqa: C901
     runtime: Annotated[IsRuntime, pytest.fixture],
     publisher_runtime_attr_names: tuple[str, ...],
     publisher_cls: type,
     subscriber_runtime_attr_names: tuple[str, ...],
     subscriber_cls: type,
-    subscriber_attr_name: str,
+    subscriber_attr_names: tuple[str, ...],
+    create_copy: bool,
 ) -> None:
-    def _get_runtime_nested_attr(attr_names: tuple[str, ...]) -> object:
-        obj = runtime
+    def _get_nested_attr(obj, attr_names: tuple[str, ...]) -> object:
         for attr_name in attr_names:
             obj = getattr(obj, attr_name)
         return obj
+
+    def _get_runtime_nested_attr(attr_names: tuple[str, ...]) -> object:
+        return _get_nested_attr(runtime, attr_names)
 
     def _publisher() -> object:
         return _get_runtime_nested_attr(publisher_runtime_attr_names)
@@ -396,7 +461,10 @@ def test_basic_runtime_subscriptions(
         return _get_runtime_nested_attr(subscriber_runtime_attr_names)
 
     def _subscriber_attr(subscriber: object) -> object:
-        return getattr(subscriber, subscriber_attr_name)
+        return _get_nested_attr(subscriber, subscriber_attr_names)
+
+    # Ensure reactive objects exist for subscription tests
+    runtime.config.data.ui.detected_type = JupyterInBrowserUserInterfaceType.JUPYTER
 
     publisher = _publisher()
     publisher_parent = _get_runtime_nested_attr(publisher_runtime_attr_names[:-1])
@@ -408,22 +476,40 @@ def test_basic_runtime_subscriptions(
 
     assert isinstance(publisher, publisher_cls)
     assert isinstance(subscriber, subscriber_cls)
-    assert _subscriber_attr(subscriber) is publisher
+
+    if create_copy:
+        assert _subscriber_attr(subscriber) is not publisher
+        assert _subscriber_attr(subscriber) == publisher
+    else:
+        assert _subscriber_attr(subscriber) is publisher
 
     subscriber_2 = subscriber_cls()
     setattr(subscriber_parent, subscriber_parent_attr_name, subscriber_2)
     assert _subscriber() is subscriber_2 is not subscriber
-    assert _subscriber_attr(subscriber_2) is publisher
+
+    if create_copy:
+        assert _subscriber_attr(subscriber_2) is not publisher
+        assert _subscriber_attr(subscriber_2) == publisher
+    else:
+        assert _subscriber_attr(subscriber_2) is publisher
 
     publisher_2 = publisher_cls()
     setattr(publisher_parent, publisher_parent_attr_name, publisher_2)
     assert _publisher() is publisher_2 is not publisher
     assert _subscriber() is subscriber_2 is not subscriber
-    assert _subscriber_attr(subscriber_2) is publisher_2 is not publisher
+    if create_copy:
+        assert _subscriber_attr(subscriber_2) is not publisher_2
+        assert _subscriber_attr(subscriber_2) == publisher_2
+    else:
+        assert _subscriber_attr(subscriber_2) is publisher_2
 
     setattr(subscriber_parent, subscriber_parent_attr_name, subscriber)
     assert _subscriber() is subscriber is not subscriber_2
-    assert _subscriber_attr(subscriber) is publisher_2
+    if create_copy:
+        assert _subscriber_attr(subscriber) is not publisher_2
+        assert _subscriber_attr(subscriber) == publisher_2
+    else:
+        assert _subscriber_attr(subscriber) is publisher_2
 
 
 def test_job_creator_subscribes_to_selected_engine(

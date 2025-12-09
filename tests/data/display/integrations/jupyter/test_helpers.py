@@ -29,7 +29,7 @@ def parent() -> MyParentConfig:
 
 
 def test_reactive_config_copy_init(parent: Annotated[MyParentConfig, pytest.fixture]) -> None:
-    reactive_config_copy = ReactiveConfigCopy(parent.config)
+    reactive_config_copy = ReactiveConfigCopy[MyConfig](parent.config)
 
     assert reactive_config_copy.value.param1 == 'test'
     assert reactive_config_copy.value.child.param2 == 10
@@ -42,7 +42,7 @@ def test_reactive_config_copy_init(parent: Annotated[MyParentConfig, pytest.fixt
 
 
 def test_reactive_config_copy_set(parent: Annotated[MyParentConfig, pytest.fixture]) -> None:
-    reactive_config_copy = ReactiveConfigCopy(parent.config)
+    reactive_config_copy = ReactiveConfigCopy[MyConfig](parent.config)
 
     assert reactive_config_copy.value.param1 == 'test'
     assert reactive_config_copy.value.child.param2 == 10
@@ -58,7 +58,7 @@ def test_reactive_config_copy_set(parent: Annotated[MyParentConfig, pytest.fixtu
 
 def test_reactive_config_copy_subscribe_with_set(
         parent: Annotated[MyParentConfig, pytest.fixture]) -> None:
-    reactive_config_copy = ReactiveConfigCopy(parent.config)
+    reactive_config_copy = ReactiveConfigCopy[MyConfig](parent.config)
 
     assert reactive_config_copy.value.param1 == 'test'
     assert reactive_config_copy.value.child.param2 == 10

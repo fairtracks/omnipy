@@ -8,13 +8,13 @@ from omnipy.config.engine import EngineConfig
 from omnipy.config.job import JobConfig
 from omnipy.config.root_log import RootLogConfig
 from omnipy.data._data_class_creator import DataClassBase
-from omnipy.data._display.integrations.jupyter.helpers import ReactiveObjects
 from omnipy.data.serializer import SerializerRegistry
 from omnipy.engine.local import LocalRunner
 from omnipy.hub._registry import RunStateRegistry
 from omnipy.hub.log._root_log import RootLogObjects
 from omnipy.hub.ui import detect_and_setup_user_interface
 from omnipy.shared.enums.job import EngineChoice
+from omnipy.shared.enums.ui import UserInterfaceType
 from omnipy.shared.protocols.compute.job_creator import IsJobConfigHolder, IsJobCreator
 from omnipy.shared.protocols.config import (IsDataConfig,
                                             IsEngineConfig,
@@ -72,12 +72,22 @@ class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
 class RuntimeObjects(RuntimeEntryPublisher, DataPublisher):
     job_creator: IsJobConfigHolder = pyd.Field(default_factory=_job_creator_factory)
     data_class_creator: IsDataClassCreator = pyd.Field(default_factory=_data_class_creator_factory)
-    reactive: IsReactiveObjects = pyd.Field(default_factory=ReactiveObjects)
+    reactive: IsReactiveObjects | None = None
     local: IsEngine = pyd.Field(default_factory=LocalRunner)
     prefect: IsEngine = pyd.Field(default_factory=PrefectEngine)
     registry: IsRunStateRegistry = pyd.Field(default_factory=RunStateRegistry)
     serializers: IsSerializerRegistry = pyd.Field(default_factory=SerializerRegistry)
     root_log: IsRootLogObjects = pyd.Field(default_factory=RootLogObjects)
+
+    def setup_reactive(self, ui_type: UserInterfaceType.Literals) -> None:
+        if UserInterfaceType.is_jupyter_in_browser(ui_type):
+            from omnipy.data._display.integrations.jupyter.helpers import ReactiveObjects
+
+            if self.reactive is None:
+                self.reactive = ReactiveObjects()
+        else:
+            if self.reactive is not None:
+                self.reactive = None
 
 
 class Runtime(DataPublisher):
@@ -86,10 +96,8 @@ class Runtime(DataPublisher):
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
-
-        self.reset_subscriptions()
-
         detect_and_setup_user_interface(self)
+        self.reset_subscriptions()
 
     def reset_subscriptions(self) -> None:
         """
@@ -118,9 +126,14 @@ class Runtime(DataPublisher):
         self.config.subscribe_attr('job', self.objects.job_creator.set_config)
         self.config.subscribe_attr('root_log', self.objects.root_log.set_config)
 
-        self.config.data.ui.subscribe_attr('jupyter', self.objects.reactive.jupyter_ui_config.set)
-        self.config.data.ui.subscribe_attr('text', self.objects.reactive.text_config.set)
-        self.config.data.ui.subscribe_attr('layout', self.objects.reactive.layout_config.set)
+        self.config.data.ui.subscribe_attr('detected_type', self.objects.setup_reactive)
+
+        if UserInterfaceType.is_jupyter_in_browser(self.config.data.ui.detected_type):
+            assert self.objects.reactive is not None
+            self.config.data.ui.subscribe_attr('jupyter',
+                                               self.objects.reactive.jupyter_ui_config.set)
+            self.config.data.ui.subscribe_attr('text', self.objects.reactive.text_config.set)
+            self.config.data.ui.subscribe_attr('layout', self.objects.reactive.layout_config.set)
 
         self.config.engine.subscribe_attr('local', self.objects.local.set_config)
         self.config.engine.subscribe_attr('prefect', self.objects.prefect.set_config)

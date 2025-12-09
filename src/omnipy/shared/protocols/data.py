@@ -14,7 +14,6 @@ from typing import (Any,
                     TypeAlias,
                     TypedDict)
 
-import solara
 from typing_extensions import Self, TypeVar
 
 from omnipy.shared.protocols._util import IsWeakKeyRefContainer
@@ -360,11 +359,24 @@ class AvailableDisplayDims(TypedDict):
 
 
 @runtime_checkable
+class IsReactive(Protocol[ContentT]):
+    @property
+    def value(self) -> ContentT:
+        ...
+
+    def set(self, value: ContentT):
+        ...
+
+
+@runtime_checkable
 class IsReactiveObjects(Protocol):
-    jupyter_ui_config: solara.Reactive[IsJupyterUserInterfaceConfig]
-    text_config: solara.Reactive[IsTextConfig]
-    layout_config: solara.Reactive[IsLayoutConfig]
-    available_display_dims_in_px: solara.Reactive[AvailableDisplayDims]
+    jupyter_ui_config: IsReactive[IsJupyterUserInterfaceConfig]
+    text_config: IsReactive[IsTextConfig]
+    layout_config: IsReactive[IsLayoutConfig]
+    available_display_dims_in_px: IsReactive[AvailableDisplayDims]
+
+    def __eq__(self, other) -> bool:
+        ...
 
 
 @runtime_checkable
@@ -378,7 +390,7 @@ class IsDataClassCreator(Protocol[HasContentT, ContentT]):
         ...
 
     @property
-    def reactive_objects(self) -> IsReactiveObjects:
+    def reactive_objects(self) -> IsReactiveObjects | None:
         ...
 
     def set_reactive_objects(self, reactive_objects: IsReactiveObjects) -> None:

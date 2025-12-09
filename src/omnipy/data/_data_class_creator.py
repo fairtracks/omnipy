@@ -3,7 +3,6 @@ from contextlib import contextmanager
 from typing import Callable, ContextManager, Iterator
 
 from omnipy.config.data import DataConfig
-from omnipy.data._display.integrations.jupyter.helpers import ReactiveObjects
 from omnipy.data.snapshot import SnapshotHolder
 from omnipy.shared.protocols.config import IsDataConfig
 from omnipy.shared.protocols.data import (HasContent,
@@ -19,7 +18,7 @@ from omnipy.util.helpers import is_union
 class DataClassCreator:
     def __init__(self) -> None:
         self._config: IsDataConfig = DataConfig()
-        self._reactive_objects: IsReactiveObjects = ReactiveObjects()
+        self._reactive_objects: IsReactiveObjects | None = None
         self._snapshot_holder = SnapshotHolder[HasContent, object]()
         self._deepcopy_context_level = 0
 
@@ -31,7 +30,7 @@ class DataClassCreator:
         self._config = config
 
     @property
-    def reactive_objects(self) -> IsReactiveObjects:
+    def reactive_objects(self) -> IsReactiveObjects | None:
         return self._reactive_objects
 
     def set_reactive_objects(self, reactive_objects: IsReactiveObjects) -> None:
@@ -109,7 +108,7 @@ class DataClassBase(metaclass=DataClassBaseMeta):
         return self.__class__.data_class_creator.config
 
     @property
-    def reactive_objects(self) -> IsReactiveObjects:
+    def reactive_objects(self) -> IsReactiveObjects | None:
         return self.__class__.data_class_creator.reactive_objects
 
     @property
