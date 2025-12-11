@@ -5,6 +5,7 @@ import functools
 import inspect
 import json
 from types import GenericAlias, NoneType, UnionType
+import typing
 from typing import (Annotated,
                     Any,
                     cast,
@@ -21,12 +22,12 @@ from typing import (Annotated,
                     TYPE_CHECKING,
                     Union)
 
-from typing_extensions import get_original_bases, Self, TypeVar
+from typing_extensions import get_original_bases, Self, TypeVar, Unpack
 
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._missing import parse_none_according_to_model
 from omnipy.data._mixins.display import ModelDisplayMixin
-from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
+from omnipy.data._typedefs import _KeyT, _ValT, _ValTupleT
 from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  get_special_methods_info_dict,
                                  MethodInfo,
@@ -286,8 +287,7 @@ class Model(
                                     Model_int,
                                     Model_list,
                                     Model_str,
-                                    Model_tuple_all_same,
-                                    Model_tuple_pair)
+                                    Model_tuple)
 
         @overload
         def __new__(
@@ -331,18 +331,10 @@ class Model(
 
         @overload
         def __new__(
-            cls: 'type[Model[tuple[_ValT, _ValT2]]]',
+            cls: 'type[Model[tuple[Unpack[_ValTupleT]]]]',
             *args: Any,
             **kwargs: Any,
-        ) -> Model_tuple_pair[_ValT, _ValT2]:
-            ...
-
-        @overload
-        def __new__(
-            cls: 'type[Model[tuple[_ValT, ...]]]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> Model_tuple_all_same[_ValT]:
+        ) -> Model_tuple[Unpack[_ValTupleT]]:
             ...
 
         @overload
@@ -351,14 +343,6 @@ class Model(
             *args: Any,
             **kwargs: Any,
         ) -> Model_dict[_KeyT, _ValT]:
-            ...
-
-        @overload
-        def __new__(
-            cls: 'type[_ModelT]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> '_ModelT':
             ...
 
         @overload
@@ -1223,45 +1207,48 @@ class Model(
         else:
             return level_up_type_to_check
 
-    def __getattr__(self, attr: str) -> Any:
-        if self._is_non_omnipy_pydantic_model() and self._content_obj_hasattr(attr):
-            self._validate_and_set_value(self.content)
+    if not typing.TYPE_CHECKING:
 
-        content_attr = self._getattr_from_content_obj(attr)
+        def __getattr__(self, attr: str) -> Any:
+            if self._is_non_omnipy_pydantic_model() and self._content_obj_hasattr(attr):
+                self._validate_and_set_value(self.content)
 
-        if inspect.isroutine(content_attr):
-            reset_solution = self._prepare_reset_solution_take_snapshot_if_needed().reset_solution
-            new_content_attr: Callable = cast(Callable, self._getattr_from_content_obj(attr))
+            content_attr = self._getattr_from_content_obj(attr)
 
-            def _validate_content(ret: Any):
-                self._validate_and_set_value(self.content, reset_solution=reset_solution)
-                return self._convert_to_model_if_reasonable(
-                    ret,
-                    level_up=False,
-                    raise_validation_errors=False,
+            if inspect.isroutine(content_attr):
+                reset_solution = self._prepare_reset_solution_take_snapshot_if_needed(
+                ).reset_solution
+                new_content_attr: Callable = cast(Callable, self._getattr_from_content_obj(attr))
+
+                def _validate_content(ret: Any):
+                    self._validate_and_set_value(self.content, reset_solution=reset_solution)
+                    return self._convert_to_model_if_reasonable(
+                        ret,
+                        level_up=False,
+                        raise_validation_errors=False,
+                    )
+
+                content_attr = add_callback_after_call(new_content_attr,
+                                                       _validate_content,
+                                                       reset_solution)
+
+            if attr in ('values', 'items'):
+                match attr:
+                    case 'values':
+                        _model_generator = self._get_convert_full_element_model_generator(
+                            None,
+                            level_up_type_arg_idx=1,
+                        )
+                    case 'items':
+                        _model_generator = self._get_convert_element_value_model_generator(None,)
+
+                content_attr = add_callback_after_call(
+                    cast(Callable, content_attr),
+                    _model_generator,
+                    no_context,
                 )
 
-            content_attr = add_callback_after_call(new_content_attr,
-                                                   _validate_content,
-                                                   reset_solution)
-
-        if attr in ('values', 'items'):
-            match attr:
-                case 'values':
-                    _model_generator = self._get_convert_full_element_model_generator(
-                        None,
-                        level_up_type_arg_idx=1,
-                    )
-                case 'items':
-                    _model_generator = self._get_convert_element_value_model_generator(None,)
-
-            content_attr = add_callback_after_call(
-                cast(Callable, content_attr),
-                _model_generator,
-                no_context,
-            )
-
-        return content_attr
+            return content_attr
 
     def _is_non_omnipy_pydantic_model(self) -> bool:
         return is_non_omnipy_pydantic_model(self._get_real_content())

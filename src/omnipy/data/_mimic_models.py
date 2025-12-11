@@ -1,7 +1,9 @@
 from typing import Generic, TYPE_CHECKING
 
+from typing_extensions import Unpack
+
 if TYPE_CHECKING:
-    from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
+    from omnipy.data._typedefs import _KeyT, _ValT, _ValTupleT
     from omnipy.data.model import Model
 
     class Model_int(Model[int], int):
@@ -19,12 +21,11 @@ if TYPE_CHECKING:
     class Model_list(Model[list[_ValT]], list[_ValT], Generic[_ValT]):  # type: ignore[misc]
         ...
 
-    class Model_tuple_all_same(Model[tuple[_ValT, ...]], tuple[_ValT, ...], Generic[_ValT]):
-        ...
-
-    class Model_tuple_pair(Model[tuple[_ValT, _ValT2]],
-                           tuple[_ValT, _ValT2],
-                           Generic[_ValT, _ValT2]):
+    class Model_tuple(  # type: ignore[misc]
+            Model[tuple[Unpack[_ValTupleT]]],
+            tuple[Unpack[_ValTupleT]],
+            Generic[Unpack[_ValTupleT]],
+    ):
         ...
 
     class Model_dict(  # type: ignore[misc]
