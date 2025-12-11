@@ -224,7 +224,8 @@ def is_iterable(obj: Iterable[_ObjT] | _ObjT) -> TypeGuard[Iterable[_ObjT]]:
         return False
 
 
-def is_non_str_byte_iterable(obj: object) -> bool:
+def is_non_str_byte_iterable(
+        obj: Iterable[_ObjT] | _ObjT | str | bytes) -> TypeGuard[Iterable[_ObjT]]:
     return is_iterable(obj) and not type(obj) in (str, bytes)
 
 

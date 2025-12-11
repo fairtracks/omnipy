@@ -697,19 +697,22 @@ class Model(
     def _parse_data(cls, data: Any) -> _RootT:
         return data
 
-    # TODO: Expand _generous_sequence_support to support iterators, such as dict_keys. Also see if
-    #       it is possible to support general mappings in a similar way
+    # TODO: See if it is possible to support general mappings similarly to iterables (in Model)
+    #       (note: this is an old TODO, it is unclear what exactly is not supported...)
     @pyd.root_validator(pre=True)
-    def _generous_sequence_support(cls, root_obj: dict[str, _RootT | None]) -> Any:
+    def _generous_iterable_support(cls, root_obj: dict[str, _RootT | None]) -> Any:
         if ROOT_KEY in root_obj:
             value = root_obj[ROOT_KEY]
             outer_type = cls.outer_type()
-            if lenient_issubclass(outer_type, Sequence) \
-                    and not lenient_isinstance(value, outer_type) \
-                    and isinstance(value, Sequence) \
-                    and not pyd.sequence_like(value) \
-                    and not any(isinstance(value, typ) for typ in (str, bytes)):
-                return {ROOT_KEY: [_ for _ in value]}
+            if (lenient_issubclass(outer_type, Sequence)
+                    and not lenient_isinstance(value, outer_type)  # type: ignore[arg-type]
+                    and is_non_str_byte_iterable(value)
+                    # Leave the types below for pydantic to handle
+                    and not pyd.sequence_like(value)
+                    # Also, exclude mappings
+                    and not isinstance(value, Mapping)):
+                assert isinstance(value, Iterable)
+                return {ROOT_KEY: (_ for _ in value)}
         return root_obj
 
     @pyd.root_validator

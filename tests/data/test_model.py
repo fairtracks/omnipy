@@ -632,13 +632,64 @@ def test_parse_convertible_data() -> None:
     assert model_3 != model_4
 
 
-def test_parse_convertible_sequences() -> None:
+def test_parse_convertible_iterables() -> None:
     model = Model[list[int]](range(5))
     assert model.to_data() == [0, 1, 2, 3, 4]
 
-    model = Model[tuple[str, ...]](range(5))  # type: ignore[assignment]
+    model = Model[tuple[str, ...]](range(5))
     assert model.to_data() == ('0', '1', '2', '3', '4')
 
+    model = Model[list[tuple[int, str]]](enumerate(('a', 'b', 'c')))
+    assert model.to_data() == [(0, 'a'), (1, 'b'), (2, 'c')]
+
+    my_dict = {'x': 123, 'z': 345, 'y': 234}
+    model = Model[list[str]](my_dict.keys())
+    assert model.to_data() == ['x', 'z', 'y']
+
+    model = Model[list[str]](my_dict.values())
+    assert model.to_data() == ['123', '345', '234']
+
+    model = Model[tuple[list[str], ...]](my_dict.items())
+    assert model.to_data() == (['x', '123'], ['z', '345'], ['y', '234'])
+
+    model = Model[tuple[list[str], ...]](sorted(my_dict.items()))
+    assert model.to_data() == (['x', '123'], ['y', '234'], ['z', '345'])
+
+    model = Model[tuple[list[str], ...]](reversed(my_dict.items()))
+    assert model.to_data() == (['y', '234'], ['z', '345'], ['x', '123'])
+
+    model = Model[list[tuple[int, str]]](enumerate(('a', 'b', 'c')))
+    assert model.to_data() == [(0, 'a'), (1, 'b'), (2, 'c')]
+
+
+def test_parse_empty_iterables() -> None:
+    model = Model[list[int]](range(0))
+    assert model.to_data() == []
+
+    my_empty_dict = {}
+    model = Model[list[str]](my_empty_dict.keys())
+    assert model.to_data() == []
+
+    model = Model[list[str]](my_empty_dict.values())
+    assert model.to_data() == []
+
+    model = Model[tuple[list[str], ...]](my_empty_dict.items())
+    assert model.to_data() == ()
+
+    model = Model[tuple[list[str], ...]](sorted(my_empty_dict.items()))
+    assert model.to_data() == ()
+
+    model = Model[tuple[list[str], ...]](reversed(my_empty_dict.items()))
+    assert model.to_data() == ()
+
+    model = Model[tuple[list[str], ...]](my_empty_dict.items())
+    assert model.to_data() == ()
+
+    model = Model[list[tuple[int, str]]](enumerate(()))
+    assert model.to_data() == []
+
+
+def test_fail_parsing_strings_or_bytes_as_iterables() -> None:
     with pytest.raises(ValidationError):
         Model[list[str]]('abcde')
 
