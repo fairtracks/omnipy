@@ -6,7 +6,8 @@ import gc
 from math import floor
 import os
 from textwrap import dedent
-from types import MappingProxyType, MethodType, NotImplementedType, UnionType
+from types import GenericAlias, MappingProxyType, MethodType, NotImplementedType, UnionType
+import typing
 from typing import (Annotated,
                     Any,
                     cast,
@@ -1842,6 +1843,15 @@ def test_model_of_pydantic_model_with_pydantic_model_children(
             },
         ]
     }
+
+
+def test_bordercase_models() -> None:
+    class MyGeneric(Generic[T]):
+        ...
+
+    Model[type](list)
+    Model[type | GenericAlias](list[int])
+    Model[typing._GenericAlias](MyGeneric[int])  # type: ignore[name-defined]
 
 
 def _assert_no_snapshot(model: Model[T]):
