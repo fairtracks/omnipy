@@ -1648,6 +1648,28 @@ def test_import_export_methods() -> None:
     }''')  # noqa: Q001
 
 
+def test_model_of_pydantic_model():
+    class MyPydanticModel(pyd.BaseModel):
+        a: str = ''
+        b: int = 0
+
+    assert Model[MyPydanticModel]().to_data() == {'a': '', 'b': 0}
+    assert Model[MyPydanticModel]({'a': 'test', 'b': '12'}).to_data() == {'a': 'test', 'b': 12}
+    assert Model[MyPydanticModel](a='test', b='12').to_data() == {'a': 'test', 'b': 12}
+    assert Model[MyPydanticModel](MyPydanticModel(a='hello', b=34)).to_data() == {
+        'a': 'hello', 'b': 34
+    }
+
+    class MyPydanticModelNoDefaults(pyd.BaseModel):
+        a: str
+        b: int
+
+    with pytest.raises(ValidationError):
+        Model[MyPydanticModelNoDefaults]()
+
+    assert Model[MyPydanticModelNoDefaults](a='test', b='12').to_data() == {'a': 'test', 'b': 12}
+
+
 # This would probably cause more trouble than it's worth and is (possibly permanently) put on ice
 # def test_mimic_isinstance() -> None:
 #     assert isinstance(Model[int](), int)

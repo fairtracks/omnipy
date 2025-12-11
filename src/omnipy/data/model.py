@@ -92,6 +92,9 @@ class _ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
         return super().__instancecheck__(instance)
 
 
+undefined_default_factory: Callable[[], Any] = lambda: Undefined
+
+
 class Model(
         ModelDisplayMixin,
         DataClassBase,
@@ -134,7 +137,7 @@ class Model(
     See also docs of the Dataset class for more usage examples.
     """
 
-    __root__: _RootT = pyd.Field(default_factory=lambda: Undefined)
+    __root__: _RootT = pyd.Field(default_factory=undefined_default_factory)
 
     class Config:
         arbitrary_types_allowed = True
@@ -144,15 +147,12 @@ class Model(
         # json_loads = orjson.loads
         # json_dumps = orjson_dumps
 
-    @classmethod
-    def _get_default_factory_from_model(
-            cls, model: type[_RootT] | TypeForm | TypeVar) -> Callable[[], _RootT]:
-        default_val = cls._get_default_value_from_model(model)
-
-        def default_factory() -> _RootT:
-            return default_val
-
-        return default_factory
+    def _get_default_factory(self) -> Callable[[], _RootT]:
+        try:
+            fixed_default_val = self._get_default_value()
+            return lambda: fixed_default_val
+        except (ValidationError, TypeError, ValueError):
+            return lambda: self._get_default_value()
 
     @classmethod
     def _get_default_value_from_model(  # noqa: C901
@@ -407,7 +407,7 @@ class Model(
 
         assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
 
-        if self._get_root_field().default_factory() is Undefined:
+        if self._get_root_field().default_factory is undefined_default_factory:
             self._get_root_field().default_factory = self._get_default_factory()
 
         omnipy_or_pydantic_model_as_input = False
@@ -436,8 +436,8 @@ class Model(
         if not self.__class__.__doc__:
             self._set_standard_field_description()
 
-    def _get_default_factory(self) -> Callable[[], _RootT]:
-        return self.__class__._get_default_factory_from_model(self.full_type())
+    def _get_default_value(self) -> _RootT:
+        return self.__class__._get_default_value_from_model(self.full_type())
 
     def _primary_validation(self, super_kwargs):
         # Pydantic validation of super_kwargs
