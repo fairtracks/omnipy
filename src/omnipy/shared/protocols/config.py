@@ -16,16 +16,30 @@ from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
                                      ConfigPersistOutputsOptions,
                                      ConfigRestoreOutputsOptions,
                                      EngineChoice)
-from omnipy.shared.enums.ui import SpecifiedUserInterfaceType
+from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, TerminalOutputUserInterfaceType
 from omnipy.shared.protocols.util import IsDataPublisher
 from omnipy.shared.typedefs import LocaleType
 import omnipy.util._pydantic as pyd
+
+
+@runtime_checkable
+class IsConfigBase(IsDataPublisher, Protocol):
+    """"""
+    def default_repr_to_terminal_str(
+        self,
+        ui_type: TerminalOutputUserInterfaceType.Literals,
+    ) -> str:
+        ...
+
+    def __str__(self) -> str:
+        ...
+
 
 # data
 
 
 @runtime_checkable
-class IsColorConfig(IsDataPublisher, Protocol):
+class IsColorConfig(IsConfigBase, Protocol):
     """"""
     system: DisplayColorSystem.Literals
     style: AllColorStyles.Literals | str
@@ -34,7 +48,7 @@ class IsColorConfig(IsDataPublisher, Protocol):
 
 
 @runtime_checkable
-class IsUserInterfaceTypeConfig(IsDataPublisher, Protocol):
+class IsUserInterfaceTypeConfig(IsConfigBase, Protocol):
     """"""
     width: pyd.NonNegativeInt | None
     height: pyd.NonNegativeInt | None
@@ -71,7 +85,7 @@ class IsTerminalUserInterfaceConfig(IsDimsModeConfig, Protocol):
 
 
 @runtime_checkable
-class IsFontConfig(IsDataPublisher, Protocol):
+class IsFontConfig(IsConfigBase, Protocol):
     """"""
     families: tuple[str, ...]
     size: pyd.NonNegativeInt
@@ -98,14 +112,14 @@ class IsBrowserUserInterfaceConfig(IsHtmlUserInterfaceConfig, Protocol):
 
 
 @runtime_checkable
-class IsOverflowConfig(IsDataPublisher, Protocol):
+class IsOverflowConfig(IsConfigBase, Protocol):
     """"""
     horizontal: HorizontalOverflowMode.Literals
     vertical: VerticalOverflowMode.Literals
 
 
 @runtime_checkable
-class IsTextConfig(IsDataPublisher, Protocol):
+class IsTextConfig(IsConfigBase, Protocol):
     """"""
     overflow: IsOverflowConfig
     tab_size: pyd.NonNegativeInt
@@ -116,7 +130,7 @@ class IsTextConfig(IsDataPublisher, Protocol):
 
 
 @runtime_checkable
-class IsLayoutConfig(IsDataPublisher, Protocol):
+class IsLayoutConfig(IsConfigBase, Protocol):
     """"""
     overflow: IsOverflowConfig
     panel_design: PanelDesign.Literals
@@ -128,7 +142,7 @@ class IsLayoutConfig(IsDataPublisher, Protocol):
 
 
 @runtime_checkable
-class IsUserInterfaceConfig(IsDataPublisher, Protocol):
+class IsUserInterfaceConfig(IsConfigBase, Protocol):
     """"""
     detected_type: SpecifiedUserInterfaceType.Literals
     terminal: IsTerminalUserInterfaceConfig
@@ -146,14 +160,14 @@ class IsUserInterfaceConfig(IsDataPublisher, Protocol):
 
 
 @runtime_checkable
-class IsModelConfig(IsDataPublisher, Protocol):
+class IsModelConfig(IsConfigBase, Protocol):
     """"""
     interactive: bool
     dynamically_convert_elements_to_models: bool
 
 
 @runtime_checkable
-class IsHttpRequestsConfig(IsDataPublisher, Protocol):
+class IsHttpRequestsConfig(IsConfigBase, Protocol):
     """"""
     requests_per_time_period: float
     time_period_in_secs: float
@@ -163,14 +177,14 @@ class IsHttpRequestsConfig(IsDataPublisher, Protocol):
 
 
 @runtime_checkable
-class IsHttpConfig(IsDataPublisher, Protocol):
+class IsHttpConfig(IsConfigBase, Protocol):
     """"""
     defaults: IsHttpRequestsConfig
     for_host: defaultdict[str, IsHttpRequestsConfig]
 
 
 @runtime_checkable
-class IsDataConfig(IsDataPublisher, Protocol):
+class IsDataConfig(IsConfigBase, Protocol):
     """"""
     ui: IsUserInterfaceConfig
     model: IsModelConfig
@@ -181,7 +195,7 @@ class IsDataConfig(IsDataPublisher, Protocol):
 
 
 @runtime_checkable
-class IsJobRunnerConfig(IsDataPublisher, Protocol):
+class IsJobRunnerConfig(IsConfigBase, Protocol):
     """"""
     ...
 
@@ -199,7 +213,7 @@ class IsPrefectEngineConfig(IsJobRunnerConfig, Protocol):
 
 
 @runtime_checkable
-class IsEngineConfig(IsDataPublisher, Protocol):
+class IsEngineConfig(IsConfigBase, Protocol):
     """"""
     choice: EngineChoice.Literals
     local: IsLocalRunnerConfig
@@ -211,7 +225,7 @@ class IsEngineConfig(IsDataPublisher, Protocol):
 
 
 @runtime_checkable
-class IsOutputStorageConfigBase(IsDataPublisher, Protocol):
+class IsOutputStorageConfigBase(IsConfigBase, Protocol):
     """"""
     persist_data_dir_path: str
 
@@ -231,7 +245,7 @@ class IsS3OutputStorageConfig(IsOutputStorageConfigBase, Protocol):
 
 
 @runtime_checkable
-class IsOutputStorageConfig(IsDataPublisher, Protocol):
+class IsOutputStorageConfig(IsConfigBase, Protocol):
     """"""
     persist_outputs: ConfigPersistOutputsOptions.Literals
     restore_outputs: ConfigRestoreOutputsOptions.Literals
@@ -241,7 +255,7 @@ class IsOutputStorageConfig(IsDataPublisher, Protocol):
 
 
 @runtime_checkable
-class IsJobConfig(IsDataPublisher, Protocol):
+class IsJobConfig(IsConfigBase, Protocol):
     """"""
     output_storage: IsOutputStorageConfig
 
@@ -250,7 +264,7 @@ class IsJobConfig(IsDataPublisher, Protocol):
 
 
 @runtime_checkable
-class IsRootLogConfig(IsDataPublisher, Protocol):
+class IsRootLogConfig(IsConfigBase, Protocol):
     """"""
     log_format_str: str
     locale: LocaleType

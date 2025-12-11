@@ -5,14 +5,15 @@ from solara.toestand import ValueBase
 from typing_extensions import TypeVar
 
 from omnipy.config.data import JupyterUserInterfaceConfig, LayoutConfig, TextConfig
-from omnipy.shared.protocols.config import (IsJupyterUserInterfaceConfig,
+from omnipy.shared.protocols.config import (IsConfigBase,
+                                            IsJupyterUserInterfaceConfig,
                                             IsLayoutConfig,
                                             IsTextConfig)
 from omnipy.shared.protocols.data import AvailableDisplayDims, IsReactive
 from omnipy.util import _pydantic as pyd
 from omnipy.util.publisher import DataPublisher
 
-ConfigBaseT = TypeVar('ConfigBaseT')
+ConfigBaseT = TypeVar('ConfigBaseT', bound=IsConfigBase)
 
 
 class ReactiveConfigCopy(solara.Reactive[ConfigBaseT], Generic[ConfigBaseT]):
