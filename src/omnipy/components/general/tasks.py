@@ -1,5 +1,6 @@
+from io import IOBase
 import os
-from typing import Type, TypeVar
+from typing import Callable, Type, TypeVar
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
@@ -34,14 +35,15 @@ def split_dataset(
 def import_directory(directory: str,
                      exclude_prefixes: tuple[str, ...] = ('.', '_'),
                      include_suffixes: tuple[str, ...] = (),
-                     model: Type[Model] = Model[str]) -> Dataset[Model]:
+                     model: Type[Model] = Model[str],
+                     open_func: Callable[[str], IOBase] = open) -> Dataset[Model]:
     dataset = Dataset[model]()
     for import_filename in os.listdir(directory):
         if not exclude_prefixes or \
                 not any(import_filename.startswith(prefix) for prefix in exclude_prefixes):
             if not include_suffixes or \
                     any(import_filename.endswith(suffix) for suffix in include_suffixes):
-                with open(os.path.join(directory, import_filename)) as open_file:
+                with open_func(os.path.join(directory, import_filename)) as open_file:
                     dataset_name = '_'.join(import_filename.split('.')[:-1])
                     print(f"{import_filename} -> Dataset['{dataset_name}']")
                     dataset[dataset_name] = open_file.read()
