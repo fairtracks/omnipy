@@ -66,6 +66,14 @@ class _SplitToItemsParamsMixin:
         delimiter: str = ','
 
 
+class _SplitToItemsByTabParamsMixin:
+    @params_dataclass
+    class Params(ParamsBase):
+        strip: bool = True
+        strip_chars: str | None = None
+        delimiter: str = '\t'
+
+
 class _SplitToItemsMixin:
     @classmethod
     def _split_line(cls, data: str) -> list[str]:
@@ -94,6 +102,13 @@ class SplitToItemsModel(_SplitToItemsParamsMixin, _SplitToItemsModel):
     adjust = bind_adjust_model_func(
         _SplitToItemsModel.clone_model_cls,
         _SplitToItemsParamsMixin.Params,
+    )
+
+
+class SplitToItemsByTabModel(_SplitToItemsByTabParamsMixin, _SplitToItemsModel):
+    adjust = bind_adjust_model_func(
+        _SplitToItemsModel.clone_model_cls,
+        _SplitToItemsByTabParamsMixin.Params,
     )
 
 

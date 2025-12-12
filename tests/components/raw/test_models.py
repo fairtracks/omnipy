@@ -1,7 +1,7 @@
 from enum import Enum
 import os
 from textwrap import dedent
-from typing import Annotated, Callable, Iterator, TypeAlias
+from typing import Annotated, Callable, cast, Iterator, TypeAlias
 
 import pytest
 import pytest_cases as pc
@@ -14,6 +14,7 @@ from omnipy.components.raw.models import (BytesModel,
                                           NestedJoinItemsModel,
                                           NestedSplitToItemsModel,
                                           SplitLinesToColumnsModel,
+                                          SplitToItemsByTabModel,
                                           SplitToItemsModel,
                                           SplitToLinesModel,
                                           StrictBytesModel,
@@ -135,10 +136,10 @@ def test_split_to_and_join_lines_model(
     assert joined_lines.content == dedent("""\
         abhorred in my imagination it is! my gorge rises at
         it. Here hung those lips that I have kissed I know""")
-    assert joined_lines[:joined_lines.index(' ')].content == 'abhorred'  # type: ignore[index]
+    assert joined_lines[:joined_lines.index(' ')].content == 'abhorred'  # type: ignore
 
     assert JoinLinesModel(SplitToLinesModel(data)).content == '\n'.join(
-        [line.strip() for line in data.strip().split('\n')])  # type: ignore[attr-defined]
+        [line.strip() for line in data.strip().split('\n')])  # type: ignore[union-attr]
 
     assert JoinLinesModel(SplitToLinesNoStripModel(data)).content == raw_data
 
@@ -178,7 +179,9 @@ def test_split_to_and_join_items_model(
 
     data_tab = Model[str](raw_data_tab) if use_str_model else raw_data_tab
 
-    SplitToItemsByTabModel = SplitToItemsModel.adjust('SplitToItemsByTabModel', delimiter='\t')
+    SplitToItemsBySpaceModel = SplitToItemsModel.adjust('SplitToItemsBySpaceModel', delimiter=' ')
+    items_stripped_space = SplitToItemsBySpaceModel(data_tab)
+    assert items_stripped_space.content == ['abc', 'def', 'ghi\tjkl']
 
     items_stripped_tab = SplitToItemsByTabModel(data_tab)
     assert items_stripped_tab.content == ['abc', 'def', 'ghi', 'jkl']
@@ -186,9 +189,9 @@ def test_split_to_and_join_items_model(
     assert_model_if_dyn_conv_else_val(items_stripped_tab[1], str, 'def')  # type: ignore[index]
     assert items_stripped_tab[-2:].content == ['ghi', 'jkl']  # type: ignore[index]
 
-    comma_space_joined_items = JoinItemsModel(items_stripped_comma[1:3])  # type: ignore[index]
-    assert comma_space_joined_items.content == 'def,ghi'
-    assert comma_space_joined_items[1:-1].content == 'ef,gh'  # type: ignore[index]
+    comma_joined_items = JoinItemsModel(items_stripped_comma[1:3])  # type: ignore[index]
+    assert comma_joined_items.content == 'def,ghi'
+    assert comma_joined_items[1:-1].content == 'ef,gh'  # type: ignore[index]
 
     JoinItemsByCommaSpaceModel = JoinItemsModel.adjust('JoinItemsByCommaSpaceModel', delimiter=', ')
 
@@ -315,11 +318,11 @@ def splittable_data(
     pre_split: PreSplitEnum,
     use_model: bool,
 ) -> SplittableDataReturnType:
-    raw_data = 'abc=def&ghi=jkl&pqr=stu&xyz=123;x=1&y=2'
+    raw_data = cast(str, 'abc=def&ghi=jkl&pqr=stu&xyz=123;x=1&y=2')  # type: ignore[redundant-cast]
     data: SplittableDataType
 
     if not pre_split == PreSplitEnum.FALSE:
-        split_data = raw_data.split(';')
+        split_data = list(raw_data.split(';'))
         doubly_split_data = [item.split('&') for item in split_data]
         match (pre_split):
             case PreSplitEnum.LEVEL_1:
