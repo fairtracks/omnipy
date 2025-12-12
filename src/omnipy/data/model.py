@@ -818,6 +818,7 @@ class Model(
 
     @classmethod
     def _clean_type_caches(cls):
+        cls._get_root_type.cache_clear()
         cls.outer_type.cache_clear()
         cls.inner_type.cache_clear()
         cls.full_type.cache_clear()
@@ -828,6 +829,7 @@ class Model(
         return cast(pyd.ModelField, cls.__fields__.get(ROOT_KEY))
 
     @classmethod
+    @functools.cache
     def _get_root_type(cls, outer: bool, with_args: bool) -> TypeForm:
         root_field = cls._get_root_field()
         root_type = root_field.outer_type_ if outer else root_field.type_

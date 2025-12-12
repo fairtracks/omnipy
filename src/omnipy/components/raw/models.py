@@ -4,7 +4,6 @@ from typing_extensions import TypeVar
 
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
-from omnipy.data.typechecks import obj_or_model_content_isinstance
 import omnipy.util._pydantic as pyd
 
 
@@ -301,8 +300,8 @@ class _NestedItemsParamsMixin:
             if num_delimiters == 0:
                 assert isinstance(data, str), \
                     'Data must be an string if no delimiters are provided.'
-            else:
-                assert not any(obj_or_model_content_isinstance(item, list) for item in data), \
+            else:  # 0 < num_delimiters <= next_level
+                assert all(isinstance(item, str) for item in raw_data), \
                     (f'Data is nested higher than permitted by the number of delimiters in '
                      f'Params (={num_delimiters}).')
 
