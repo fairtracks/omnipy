@@ -480,9 +480,9 @@ class Model(
         return cast(Self, pydantic_copy)
 
     @classmethod
-    def clone_model_cls(cls, new_model_cls_name: str) -> Self:
+    def clone_model_cls(cls, new_model_cls_name: str) -> type[Self]:
         new_model_cls = type(new_model_cls_name, (cls,), {})
-        return cast(Self, new_model_cls)
+        return cast(type[Self], new_model_cls)
 
     @staticmethod
     def _raise_no_model_exception() -> None:
