@@ -400,7 +400,8 @@ class Dataset(
     def __getitem__(self, selector: slice | Iterable[str | int]) -> Self:
         ...
 
-    def __getitem__(self, selector: str | int | slice | Iterable[str | int]) -> _ModelT | Self:
+    def __getitem__(self,
+                    selector: str | int | slice | Iterable[str | int]) -> _ModelT | Model | Self:
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:

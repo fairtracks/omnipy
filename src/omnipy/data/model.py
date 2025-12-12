@@ -347,6 +347,14 @@ class Model(
 
         @overload
         def __new__(
+            cls: 'type[Model[_ModelT]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> '_ModelT':
+            ...
+
+        @overload
+        def __new__(
             cls: 'type[Model[_RootT]]',
             *args: Any,
             **kwargs: Any,
@@ -357,7 +365,7 @@ class Model(
             cls,
             *args: Any,
             **kwargs: Any,
-        ) -> 'Model':
+        ) -> 'Model | _ModelT':
             ...
     else:
 

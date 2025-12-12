@@ -61,9 +61,10 @@ class HasData(Protocol):
 
 @runtime_checkable
 class IsModel(Protocol[_RootT]):
-    # @property
-    # def content(self) -> _RootT:
-    #     ...
+    @property
+    def content(self) -> _RootT:
+        ...
+
     ...
 
 

@@ -52,10 +52,11 @@ def test_json_models(case: CaseInfo) -> None:
                 # print(f'model_obj.to_json(): {model_obj.to_json(pretty=True)}')
 
 
-def test_json_model_consistency_basic():
-    MyJsonDictOfScalarsModel: TypeAlias = JsonCustomDictModel[JsonScalar]
-    MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonScalar]
+MyJsonDictOfScalarsModel: TypeAlias = JsonCustomDictModel[JsonScalar]
+MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonScalar]
 
+
+def test_json_model_consistency_basic() -> None:
     example_dict_data = {'abc': 2312}
     assert JsonModel(example_dict_data).content == _JsonAnyDictM(__root__={'abc': 2312})
     assert JsonDictModel(example_dict_data).content == _JsonAnyDictM(__root__={'abc': 2312})
@@ -78,9 +79,6 @@ def test_json_model_consistency_basic():
 
 
 def test_json_model_consistency_with_none() -> None:
-    MyJsonDictOfScalarsModel: TypeAlias = JsonCustomDictModel[JsonScalar]
-    MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonScalar]
-
     example_dict_data = {'abc': None}
     assert JsonModel(example_dict_data).content == _JsonAnyDictM(__root__={'abc': None})
 
@@ -150,24 +148,22 @@ def test_error_list_of_single_dict_with_two_elements_known_issue():
         interoperable parsing as possible, the stricter v2 behavior is in this case preferable.
     """))
 def test_error_dict_with_empty_list_known_issue(runtime: Annotated[IsRuntime, pytest.fixture]):
-    dict_model = JsonDictModel()
-
     with pytest.raises(ValidationError):
         # A dict value of [] is interpreted by pydantic v1 as an empty dict
-        dict_model = []
+        dict_model = JsonDictModel([])
         assert dict_model.to_data() == {}
 
     dict_of_scalars_model = JsonDictOfScalarsModel({'a': 123})
 
     with pytest.raises(ValidationError):
-        # Setting an integer value of a nested dict to [] validates as expected
-        dict_of_scalars_model['a'] = []
+        # Setting an integer value of a nested dict to [] fails validation as expected
+        dict_of_scalars_model['a'] = []  # type: ignore[assignment]
 
     dict_of_dicts_model = JsonDictOfDictsModel({'a': {'x': 123}})
 
     with pytest.raises(ValidationError):
-        # However, setting the value of a nested dict of dicts to [] still fails
-        dict_of_dicts_model['a'] = []
+        # However, setting the value of a nested dict of dicts to [] should also fail
+        dict_of_dicts_model['a'] = []  # type: ignore[index]
         assert dict_of_dicts_model.to_data() == {'a': {}}
 
 
@@ -184,7 +180,7 @@ def test_json_model_operations(
     assert_model_if_dyn_conv_else_val(a[0], int, 1)
 
     b = JsonModel([1, 2, 3])
-    assert_model_if_dyn_conv_else_val(b[0], int, 1)
+    assert_model_if_dyn_conv_else_val(b[0], int, 1)  # type: ignore[index]
 
     c = JsonDictModel({'a': 1, 'b': 2, 'c': 3})
     assert_model_if_dyn_conv_else_val(c['c'], int, 3)
@@ -195,12 +191,12 @@ def test_json_model_operations(
     assert_model_if_dyn_conv_else_val(c['d'], int, 5)
 
     d = JsonModel({'a': 1, 'b': 2, 'c': 3})
-    assert_model_if_dyn_conv_else_val(d['c'], int, 3)
+    assert_model_if_dyn_conv_else_val(d['c'], int, 3)  # type: ignore[index]
 
-    d |= JsonModel({'b': 4, 'd': 5})
+    d |= JsonModel({'b': 4, 'd': 5})  # type: ignore[operator]
     assert_model_if_dyn_conv_else_val(c['b'], int, 4)
     assert_model_if_dyn_conv_else_val(c['c'], int, 3)
     assert_model_if_dyn_conv_else_val(c['d'], int, 5)
 
     e = JsonScalarModel(1)
-    assert (e + 1).content == 2
+    assert (e + 1).content == 2  # type: ignore[attr-defined, operator]
