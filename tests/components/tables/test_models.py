@@ -1,8 +1,123 @@
 import pytest
 
-from omnipy.components.tables.models import PydanticRecordModel, TableOfPydanticRecordsModel
+from omnipy.components.tables.models import (ColumnWiseTableDictOfListsModel,
+                                             PydanticRecordModel,
+                                             RowWiseTableFirstRowAsColNamesModel,
+                                             RowWiseTableListOfDictsModel,
+                                             TableOfPydanticRecordsModel)
 from omnipy.util._pydantic import ValidationError
 import omnipy.util._pydantic as pyd
+
+# TODO: Add tests and logic to check that all columns have the same length
+#       in column-wise table models
+
+
+def test_columnwise_and_rowwise_table_models_with_col_names() -> None:
+    row_wise_data = [
+        {
+            'a': '1', 'b': 2, 'c': True
+        },
+        {
+            'a': '4', 'b': 5, 'd': 'abc'
+        },
+    ]
+    column_wise_data = {
+        'a': ['1', '4'],
+        'b': [2, 5],
+        'c': [True, None],
+        'd': [None, 'abc'],
+    }
+
+    row_wise_model = RowWiseTableListOfDictsModel(row_wise_data)
+    assert row_wise_model.content == row_wise_data
+    assert row_wise_model.to_data() == row_wise_data
+
+    column_wise_model = ColumnWiseTableDictOfListsModel(column_wise_data)
+    assert column_wise_model.content == column_wise_data
+    assert column_wise_model.to_data() == column_wise_data
+
+    converted_to_column_wise_model = ColumnWiseTableDictOfListsModel(row_wise_model)
+    assert converted_to_column_wise_model.content == column_wise_data
+    assert converted_to_column_wise_model.to_data() == column_wise_data
+    assert converted_to_column_wise_model == column_wise_model
+
+    row_wise_data_with_none = [
+        {
+            'a': '1', 'b': 2, 'c': True, 'd': None
+        },
+        {
+            'a': '4', 'b': 5, 'c': None, 'd': 'abc'
+        },
+    ]
+    converted_to_row_wise_model = RowWiseTableListOfDictsModel(column_wise_model)
+    assert converted_to_row_wise_model.content == row_wise_data_with_none
+    assert converted_to_row_wise_model.to_data() == row_wise_data_with_none
+    assert converted_to_row_wise_model == RowWiseTableListOfDictsModel(row_wise_data_with_none)
+
+
+def test_columnwise_and_rowwise_table_models_with_col_names_empty() -> None:
+    row_wise_model = RowWiseTableListOfDictsModel([])
+    assert row_wise_model.content == []
+    assert row_wise_model.to_data() == []
+
+    column_wise_model = ColumnWiseTableDictOfListsModel({})
+    assert column_wise_model.content == {}
+    assert column_wise_model.to_data() == {}
+
+    converted_to_column_wise_model = ColumnWiseTableDictOfListsModel([])
+    assert converted_to_column_wise_model.content == {}
+    assert converted_to_column_wise_model.to_data() == {}
+    assert converted_to_column_wise_model == column_wise_model
+
+    converted_to_row_wise_model = RowWiseTableListOfDictsModel({})
+    assert converted_to_row_wise_model.content == []
+    assert converted_to_row_wise_model.to_data() == []
+    assert converted_to_row_wise_model == row_wise_model
+
+
+def test_columnwise_and_rowwise_table_models_failure() -> None:
+    with pytest.raises(ValidationError):
+        RowWiseTableListOfDictsModel(1)
+
+    with pytest.raises(ValidationError):
+        ColumnWiseTableDictOfListsModel(1)
+
+
+def test_row_wise_table_first_row_as_col_names_model() -> None:
+    row_wise_list_of_lists_data = [
+        ['firstname', 'lastname'],
+        ['John', 'Doe'],
+        ['Jane', 'Doe'],
+    ]
+
+    row_wise_list_of_dicts_data = [
+        {
+            'firstname': 'John', 'lastname': 'Doe'
+        },
+        {
+            'firstname': 'Jane', 'lastname': 'Doe'
+        },
+    ]
+
+    row_wise_table_with_col_names_model = RowWiseTableFirstRowAsColNamesModel(
+        row_wise_list_of_lists_data)
+    assert row_wise_table_with_col_names_model.content == row_wise_list_of_dicts_data
+    assert row_wise_table_with_col_names_model.to_data() == row_wise_list_of_dicts_data
+    assert row_wise_table_with_col_names_model.col_names == ('firstname', 'lastname')
+
+
+def test_row_wise_table_first_row_as_col_names_model_empty() -> None:
+    row_wise_table_with_col_names_model = RowWiseTableFirstRowAsColNamesModel([])
+    assert row_wise_table_with_col_names_model.content == []
+    assert row_wise_table_with_col_names_model.to_data() == []
+    assert row_wise_table_with_col_names_model.col_names == ()
+
+    row_wise_table_with_col_names_model = RowWiseTableFirstRowAsColNamesModel(
+        [['firstname', 'lastname']])
+    assert row_wise_table_with_col_names_model.content == []
+    assert row_wise_table_with_col_names_model.to_data() == []
+    # At least one data row is needed to store column names
+    assert row_wise_table_with_col_names_model.col_names == ()
 
 
 def test_pydantic_record_model_all_required() -> None:

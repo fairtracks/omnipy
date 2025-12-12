@@ -3,33 +3,33 @@ from typing import Generic, TypeVar
 from omnipy.data.dataset import Dataset
 import omnipy.util._pydantic as pyd
 
-from .models import (CsvTableModel,
-                     TableDictOfDictsOfJsonScalarsModel,
-                     TableDictOfListsOfJsonScalarsModel,
-                     TableListOfDictsOfJsonScalarsModel,
-                     TableListOfListsOfJsonScalarsModel,
+from .models import (ColumnWiseTableDictOfDictsModel,
+                     ColumnWiseTableDictOfListsModel,
+                     CsvTableModel,
+                     RowWiseTableFirstRowAsColNamesModel,
+                     RowWiseTableListOfDictsModel,
+                     RowWiseTableListOfListsModel,
                      TableOfPydanticRecordsModel,
-                     TableWithColNamesModel,
                      TsvTableModel)
 
 
-class TableListOfListsOfJsonScalarsDataset(Dataset[TableListOfListsOfJsonScalarsModel]):
+class TableListOfListsOfJsonScalarsDataset(Dataset[RowWiseTableListOfListsModel]):
     ...
 
 
-class TableListOfDictsOfJsonScalarsDataset(Dataset[TableListOfDictsOfJsonScalarsModel]):
+class TableListOfDictsOfJsonScalarsDataset(Dataset[RowWiseTableListOfDictsModel]):
     ...
 
 
-class TableDictOfDictsOfJsonScalarsDataset(Dataset[TableDictOfDictsOfJsonScalarsModel]):
+class TableDictOfDictsOfJsonScalarsDataset(Dataset[ColumnWiseTableDictOfDictsModel]):
     ...
 
 
-class TableDictOfListsOfJsonScalarsDataset(Dataset[TableDictOfListsOfJsonScalarsModel]):
+class TableDictOfListsOfJsonScalarsDataset(Dataset[ColumnWiseTableDictOfListsModel]):
     ...
 
 
-class TableWithColNamesDataset(Dataset[TableWithColNamesModel]):
+class TableWithColNamesDataset(Dataset[RowWiseTableFirstRowAsColNamesModel]):
     @property
     def col_names(self) -> tuple[str]:
         col_names = {}

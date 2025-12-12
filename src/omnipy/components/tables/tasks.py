@@ -6,9 +6,9 @@ from omnipy.compute.task import TaskTemplate
 from ..json.datasets import JsonListOfDictsDataset
 from ..json.typedefs import JsonScalar
 from .datasets import TableWithColNamesDataset
-from .models import (TableDictOfDictsOfJsonScalarsModel,
-                     TableListOfDictsOfJsonScalarsModel,
-                     TableWithColNamesModel)
+from .models import (ColumnWiseTableDictOfDictsModel,
+                     RowWiseTableFirstRowAsColNamesModel,
+                     RowWiseTableListOfDictsModel)
 
 
 @TaskTemplate()
@@ -28,9 +28,9 @@ def remove_columns(json_dataset: JsonListOfDictsDataset,
 
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TableWithColNamesDataset)
-def rename_col_names(data_file: TableWithColNamesModel,
-                     prev2new_keymap: dict[str, str]) -> TableWithColNamesModel:
-    return TableWithColNamesModel([{
+def rename_col_names(data_file: RowWiseTableFirstRowAsColNamesModel,
+                     prev2new_keymap: dict[str, str]) -> RowWiseTableFirstRowAsColNamesModel:
+    return RowWiseTableFirstRowAsColNamesModel([{
         prev2new_keymap[key] if key in prev2new_keymap else key: val for key, val in row.items()
     } for row in data_file])
 
@@ -72,8 +72,8 @@ def transpose_columns_with_data_files(dataset: TableWithColNamesDataset,
 
 
 @TaskTemplate(iterate_over_data_files=True)
-def create_row_index_from_column(list_of_dicts: TableListOfDictsOfJsonScalarsModel,
-                                 column_key: str) -> TableDictOfDictsOfJsonScalarsModel:
+def create_row_index_from_column(list_of_dicts: RowWiseTableListOfDictsModel,
+                                 column_key: str) -> ColumnWiseTableDictOfDictsModel:
     output_dict = {}
     input_table = cast(list[dict[str, JsonScalar]], list_of_dicts.to_data())
     for item in input_table:
@@ -81,4 +81,4 @@ def create_row_index_from_column(list_of_dicts: TableListOfDictsOfJsonScalarsMod
         new_key = item[column_key]
         del item_copy[column_key]
         output_dict[new_key] = item_copy
-    return TableDictOfDictsOfJsonScalarsModel(output_dict)
+    return ColumnWiseTableDictOfDictsModel(output_dict)
