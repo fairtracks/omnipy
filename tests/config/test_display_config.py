@@ -1,9 +1,8 @@
 import pydantic as pyd
 from typing_extensions import ClassVar, override
 
-from omnipy import RecommendedColorStyles
 from omnipy.config.data import ColorConfig, DimsModeConfig
-from omnipy.shared.enums.colorstyles import DarkHighContrastColorStyles
+from omnipy.shared.enums.colorstyles import DarkHighContrastColorStyles, RecommendedColorStyles
 from omnipy.shared.enums.display import DisplayColorSystem, DisplayDimensionsUpdateMode
 
 
