@@ -8,7 +8,7 @@ from typing import Any, cast, Literal, overload, ParamSpec, TYPE_CHECKING
 import webbrowser
 
 from pathvalidate import sanitize_filename
-from typing_extensions import assert_never, get_args, LiteralString, TypeVar
+from typing_extensions import assert_never, get_args
 
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import OutputConfig
@@ -52,7 +52,6 @@ if sys.platform == 'darwin':
     setup_macosx_browser_integration()
 
 P = ParamSpec('P')
-LiteralT = TypeVar('LiteralT', bound=LiteralString)
 
 
 @pyd.dataclass(
