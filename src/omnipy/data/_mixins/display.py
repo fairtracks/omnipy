@@ -547,7 +547,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         if outer_type is bytes or isinstance(model, BytesModel):
             syntax = SyntaxLanguage.HEXDUMP
         elif is_json_model_instance_hack(model):
-            syntax = SyntaxLanguage.JSON
+            syntax = SyntaxLanguage.JSON5
         else:
             syntax = SyntaxLanguage.PYTHON
 

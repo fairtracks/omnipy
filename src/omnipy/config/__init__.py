@@ -21,7 +21,7 @@ class ConfigBase(DataPublisher):
             @override
             def _default_panel(self, **kwargs) -> 'DraftPanel':
                 kwargs_copy = kwargs.copy()
-                kwargs_copy['syntax'] = SyntaxLanguage.JSON
+                kwargs_copy['syntax'] = SyntaxLanguage.JSON5
                 return self._full(**kwargs_copy)
 
         return ConfigModel(self)  # pyright: ignore [reportReturnType]

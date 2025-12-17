@@ -98,9 +98,10 @@ class PrettyPrinterLib(LiteralEnum[str]):
 
 
 class JsonSyntaxLanguage(LiteralEnum[str]):
-    Literals = Literal['json', 'json-ld']
+    Literals = Literal['json', 'json5', 'json-ld']
 
     JSON: Literal['json'] = 'json'
+    JSON5: Literal['json5'] = 'json5'
     JSON_LD: Literal['json-ld'] = 'json-ld'
 
 
