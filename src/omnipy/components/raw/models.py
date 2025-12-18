@@ -1,4 +1,4 @@
-from typing import Callable, cast, Generic, TypeAlias
+from typing import Callable, cast, Generic, Protocol, TypeAlias
 
 from typing_extensions import TypeVar
 
@@ -57,106 +57,111 @@ class StrictStrModel(Model[pyd.StrictStr]):
     ...
 
 
-class _SplitToItemsParamsMixin:
+# Protocols for split mixins
+
+
+class _HasSplitParams(Protocol):
+    class Params:
+        strip: bool
+        strip_chars: str | None
+        delimiter: str
+
+
+# Function to split line
+
+
+def _split_line(model_cls: type[_HasSplitParams], data: str) -> list[str]:
+    strip = model_cls.Params.strip
+    strip_chars = model_cls.Params.strip_chars
+    delimiter = model_cls.Params.delimiter
+
+    if strip:
+        data = data.strip(strip_chars)
+
+    items = data.split(delimiter)
+    return [item.strip(strip_chars) for item in items] if strip else items
+
+
+# Mixins for split models
+
+
+class _SplitParamsBase(ParamsBase):
+    strip: bool = True
+    strip_chars: str | None = None
+
+
+class _SplitByCommaParamsMixin:
     @params_dataclass
-    class Params(ParamsBase):
-        strip: bool = True
-        strip_chars: str | None = None
+    class Params(_SplitParamsBase):
         delimiter: str = ','
 
 
-class _SplitToItemsByTabParamsMixin:
+class _SplitByTabParamsMixin:
     @params_dataclass
-    class Params(ParamsBase):
-        strip: bool = True
-        strip_chars: str | None = None
+    class Params(_SplitParamsBase):
         delimiter: str = '\t'
 
 
-class _SplitToItemsMixin:
-    @classmethod
-    def _split_line(cls, data: str) -> list[str]:
-        Params = cast(type[_SplitToItemsParamsMixin], cls).Params
-        strip = Params.strip
-        strip_chars = Params.strip_chars
-        delimiter = Params.delimiter
-
-        if strip:
-            data = data.strip(strip_chars)
-
-        items = data.split(delimiter)
-        return [item.strip(strip_chars) for item in items] if strip else items
-
-
-class _SplitToItemsModel(Model[list[str] | str], _SplitToItemsMixin):
-    @classmethod
-    def _parse_data(cls, data: list[str] | str) -> list[str]:
-        if isinstance(data, list):
-            return data
-
-        return cls._split_line(data)
-
-
-class SplitToItemsModel(_SplitToItemsParamsMixin, _SplitToItemsModel):
-    adjust = bind_adjust_model_func(
-        _SplitToItemsModel.clone_model_cls,
-        _SplitToItemsParamsMixin.Params,
-    )
-
-
-class SplitToItemsByTabModel(_SplitToItemsByTabParamsMixin, _SplitToItemsModel):
-    adjust = bind_adjust_model_func(
-        _SplitToItemsModel.clone_model_cls,
-        _SplitToItemsByTabParamsMixin.Params,
-    )
-
-
-class _SplitToLinesParamsMixin:
+class _SplitByNewlineParamsMixin:
     @params_dataclass
-    class Params(ParamsBase):
-        strip: bool = True
-        strip_chars: str | None = None
+    class Params(_SplitParamsBase):
         delimiter: str = '\n'
 
 
-class SplitToLinesModel(_SplitToLinesParamsMixin, _SplitToItemsModel):
+# Split models
+
+
+class _SplitToItemsModel(Model[list[str] | str]):
+    @classmethod
+    def _parse_data(cls: type[_HasSplitParams], data: list[str] | str) -> list[str]:
+        if isinstance(data, list):
+            return data
+
+        return _split_line(cls, data)
+
+
+class SplitToItemsModel(_SplitByCommaParamsMixin, _SplitToItemsModel):
     adjust = bind_adjust_model_func(
         _SplitToItemsModel.clone_model_cls,
-        _SplitToLinesParamsMixin.Params,
+        _SplitByCommaParamsMixin.Params,
     )
 
 
-class _SplitItemsToSubitemsModel(
-        Model[list[list[str]] | list[str] | list[StrModel]],
-        _SplitToItemsMixin,
-):
+class SplitToItemsByTabModel(_SplitByTabParamsMixin, _SplitToItemsModel):
+    adjust = bind_adjust_model_func(
+        _SplitToItemsModel.clone_model_cls,
+        _SplitByTabParamsMixin.Params,
+    )
+
+
+class SplitToLinesModel(_SplitByNewlineParamsMixin, _SplitToItemsModel):
+    adjust = bind_adjust_model_func(
+        _SplitToItemsModel.clone_model_cls,
+        _SplitByNewlineParamsMixin.Params,
+    )
+
+
+class _SplitItemsToSubitemsModel(Model[list[list[str]] | list[str] | list[StrModel]]):
     @classmethod
-    def _parse_data(cls, data: list[list[str]] | list[str] | list[StrModel]) -> list[list[str]]:
+    def _parse_data(cls: type[_HasSplitParams],
+                    data: list[list[str]] | list[str] | list[StrModel]) -> list[list[str]]:
         if isinstance(data, list) and (len(data) == 0 or isinstance(data[0], list)):
             return cast(list[list[str]], data)
 
-        return [cls._split_line(cast(str, line)) for line in data]
+        return [_split_line(cls, cast(str, line)) for line in data]
 
 
-class SplitItemsToSubitemsModel(_SplitToItemsParamsMixin, _SplitItemsToSubitemsModel):
+class SplitItemsToSubitemsModel(_SplitByCommaParamsMixin, _SplitItemsToSubitemsModel):
     adjust = bind_adjust_model_func(
         _SplitItemsToSubitemsModel.clone_model_cls,
-        _SplitToItemsParamsMixin.Params,
+        _SplitByCommaParamsMixin.Params,
     )
 
 
-class _SplitLinesToColumnsParamsMixin:
-    @params_dataclass
-    class Params(ParamsBase):
-        strip: bool = True
-        strip_chars: str | None = None
-        delimiter: str = '\t'
-
-
-class SplitLinesToColumnsModel(_SplitLinesToColumnsParamsMixin, _SplitItemsToSubitemsModel):
+class SplitLinesToColumnsModel(_SplitByTabParamsMixin, _SplitItemsToSubitemsModel):
     adjust = bind_adjust_model_func(
         _SplitItemsToSubitemsModel.clone_model_cls,
-        _SplitLinesToColumnsParamsMixin.Params,
+        _SplitByTabParamsMixin.Params,
     )
 
 
@@ -165,79 +170,90 @@ class SplitLinesToColumnsModel(_SplitLinesToColumnsParamsMixin, _SplitItemsToSub
 SplitLinesToColumnsByCommaModel = SplitLinesToColumnsModel.adjust(
     'SplitLinesToColumnsByCommaModel', delimiter=',')
 
+# Protocols for join mixins
 
-class _JoinItemsParamMixin:
+
+class _HasJoinParams(Protocol):
+    class Params:
+        delimiter: str
+
+
+# Function to join items
+
+
+def _join_items(model_cls: type[_HasJoinParams], data: list[str]) -> str:
+    return model_cls.Params.delimiter.join(data)
+
+
+# Mixins for join models
+
+
+class _JoinByCommaParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
         delimiter: str = ','
 
 
-class _JoinItemsMixin:
-    @classmethod
-    def _join_items(cls, data: list[str]) -> str:
-        return cast(_JoinItemsParamMixin, cls).Params.delimiter.join(data)
+class _JoinByTabParamsMixin:
+    @params_dataclass
+    class Params(ParamsBase):
+        delimiter: str = '\t'
 
 
-class _JoinItemsModel(Model[str | list[str]], _JoinItemsMixin):
-    @classmethod
-    def _parse_data(cls, data: str | list[str]) -> str:
-        if isinstance(data, str):
-            return data
-
-        return cls._join_items(data)
-
-    ...
-
-
-class JoinItemsModel(_JoinItemsParamMixin, _JoinItemsModel):
-    adjust = bind_adjust_model_func(
-        _JoinItemsModel.clone_model_cls,
-        _JoinItemsParamMixin.Params,
-    )
-
-
-class _JoinLinesParamsMixin:
+class _JoinByNewlineParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
         delimiter: str = '\n'
 
 
-class JoinLinesModel(_JoinLinesParamsMixin, _JoinItemsModel):
+# Join models
+
+
+class _JoinItemsModel(Model[str | list[str]]):
+    @classmethod
+    def _parse_data(cls: type[_HasJoinParams], data: str | list[str]) -> str:
+        if isinstance(data, str):
+            return data
+
+        return _join_items(cls, data)
+
+    ...
+
+
+class JoinItemsModel(_JoinByCommaParamsMixin, _JoinItemsModel):
     adjust = bind_adjust_model_func(
         _JoinItemsModel.clone_model_cls,
-        _JoinLinesParamsMixin.Params,
+        _JoinByCommaParamsMixin.Params,
     )
 
 
-class _JoinSubitemsToItemsModel(
-        Model[list[str] | list[list[str]]],
-        _JoinItemsMixin,
-):
+class JoinLinesModel(_JoinByNewlineParamsMixin, _JoinItemsModel):
+    adjust = bind_adjust_model_func(
+        _JoinItemsModel.clone_model_cls,
+        _JoinByNewlineParamsMixin.Params,
+    )
+
+
+class _JoinSubitemsToItemsModel(Model[list[str] | list[list[str]]]):
     @classmethod
-    def _parse_data(cls, data: list[str] | list[list[str]]) -> list[str]:
+    def _parse_data(cls: type[_HasJoinParams], data: list[str] | list[list[str]]) -> list[str]:
         if isinstance(data, list) and (len(data) == 0 or not isinstance(data[0], list)):
             return cast(list[str], data)
 
-        return [cls._join_items(cast(list[str], cols)) for cols in data]
+        return [_join_items(cls, cast(list[str], cols)) for cols in data]
 
 
-class JoinSubitemsToItemsModel(_JoinItemsParamMixin, _JoinSubitemsToItemsModel):
+class JoinSubitemsToItemsModel(_JoinByCommaParamsMixin, _JoinSubitemsToItemsModel):
     adjust = bind_adjust_model_func(
         _JoinSubitemsToItemsModel.clone_model_cls,
-        _JoinItemsParamMixin.Params,
+        _JoinByCommaParamsMixin.Params,
     )
 
 
-class _JoinItemsByTabParamsMixin:
-    @params_dataclass
-    class Params(ParamsBase):
-        delimiter: str = ('\t')
-
-
-class JoinColumnsToLinesModel(_JoinItemsByTabParamsMixin, _JoinSubitemsToItemsModel):
+class JoinColumnsToLinesModel(_JoinByTabParamsMixin, _JoinSubitemsToItemsModel):
     adjust = bind_adjust_model_func(
         _JoinSubitemsToItemsModel.clone_model_cls,
-        _JoinItemsByTabParamsMixin.Params,
+        _JoinByTabParamsMixin.Params,
     )
 
 
