@@ -120,7 +120,7 @@
 
 - case: test_json_list_on_top
   main: |
-    from omnipy.components.json.typedefs import JsonListOfScalars, JsonListOfLists, JsonListOfListsOfScalars, JsonListOfDicts, JsonListOfDictsOfScalars
+    from omnipy.components.json.typedefs import JsonDict, JsonList, JsonListOfScalars, JsonListOfLists, JsonListOfListsOfScalars, JsonListOfDicts, JsonListOfDictsOfScalars
     from tests.components.json.cases.raw.examples import b_none, b_int, b_float, b_str, b_bool, b_list, b_dict, b_tuple, b_set
 
     err_l_list_of_scalars_none: JsonListOfScalars = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "list[int | float | str | bool | None]")  [assignment]
@@ -141,8 +141,8 @@
     err_l_list_of_scalars_with_empty_dict_at_level_two: JsonListOfScalars = list(b_list + [{}])  # E: List item 0 has incompatible type "dict[Never, Never]"; expected "str | float | int | None"  [list-item]
     err_l_list_of_scalars_with_dict_at_level_two: JsonListOfScalars = list(b_list + [dict(b_dict)])  # E: List item 0 has incompatible type "dict[str, str | float | int | None]"; expected "str | float | int | None"  [list-item]
 
-    err_l_list_of_lists_none: JsonListOfLists = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "JsonListOfLists")  [assignment]
-    err_l_list_of_lists_int: JsonListOfLists = b_int  # E: Incompatible types in assignment (expression has type "int", variable has type "JsonListOfLists")  [assignment]
+    err_l_list_of_lists_none: JsonListOfLists = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "list[JsonList]")  [assignment]
+    err_l_list_of_lists_int: JsonListOfLists = b_int  # E: Incompatible types in assignment (expression has type "int", variable has type "list[JsonList]")  [assignment]
     l_list_of_lists_empty_list: JsonListOfLists = []
     err_l_list_of_lists_list_of_none: JsonListOfLists = [b_none]  # E: List item 0 has incompatible type "None"; expected "list[Json]"  [list-item]
     err_l_list_of_lists_one_level: JsonListOfLists = list(b_list)  # E: Argument 1 to "list" has incompatible type "list[str | float | int | None]"; expected "Iterable[list[Json]]"  [arg-type]
@@ -163,8 +163,8 @@
     err_l_list_of_lists_of_scalars_with_scalars_at_level_two: JsonListOfListsOfScalars = list(b_list + [list(b_list)])  # E: Argument 1 to "list" has incompatible type "list[list[int | float | str | bool | None] | str | float | int | None]"; expected "Iterable[list[int | float | str | bool | None]]"  [arg-type]
     err_l_list_of_lists_of_scalars_three_levels: JsonListOfListsOfScalars = [list(b_list), [list(b_list)]]  # E: List item 0 has incompatible type "list[str | float | int | None]"; expected "int | float | str | None"  [list-item]
 
-    err_l_list_of_dicts_none: JsonListOfDicts = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "JsonListOfDicts")  [assignment]
-    err_l_list_of_dicts_str: JsonListOfDicts = b_str  # E: Incompatible types in assignment (expression has type "str", variable has type "JsonListOfDicts")  [assignment]
+    err_l_list_of_dicts_none: JsonListOfDicts = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "list[JsonDict]")  [assignment]
+    err_l_list_of_dicts_str: JsonListOfDicts = b_str  # E: Incompatible types in assignment (expression has type "str", variable has type "list[JsonDict]")  [assignment]
     err_l_list_of_dicts_list_of_none: JsonListOfDicts = [b_none]  # E: List item 0 has incompatible type "None"; expected "dict[str, Json]"  [list-item]
     err_l_list_of_dicts_one_level: JsonListOfDicts = list(b_list)  # E: Argument 1 to "list" has incompatible type "list[str | float | int | None]"; expected "Iterable[dict[str, Json]]"  [arg-type]
     l_list_of_dicts: JsonListOfDicts = [dict(b_dict), dict(b_dict)]
@@ -183,7 +183,7 @@
 
 - case: test_json_dict_on_top
   main: |
-    from omnipy.components.json.typedefs import JsonDictOfScalars, JsonDictOfLists, JsonDictOfListsOfScalars, JsonDictOfDicts, JsonDictOfDictsOfScalars
+    from omnipy.components.json.typedefs import JsonDict, JsonList, JsonDictOfScalars, JsonDictOfLists, JsonDictOfListsOfScalars, JsonDictOfDicts, JsonDictOfDictsOfScalars
     from tests.components.json.cases.raw.examples import (b_none, b_int, b_float, b_str, b_bool, b_list, b_dict, b_tuple, b_set,
                                                        e_int_key_dict, e_float_key_dict, e_bool_key_dict, e_none_key_dict)
 
@@ -203,8 +203,8 @@
     err_d_dict_of_scalars_with_list_at_level_two: JsonDictOfScalars = {'a': b_bool, 'b': list(b_list)}  # E: Dict entry 1 has incompatible type "str": "list[str | float | int | None]"; expected "str": "int | float | str | None"  [dict-item]
     err_d_dict_of_scalars_with_dict_at_level_two: JsonDictOfScalars = {'a': b_bool, 'b': dict(b_dict)}  # E: Dict entry 1 has incompatible type "str": "dict[str, str | float | int | None]"; expected "str": "int | float | str | None"  [dict-item]
 
-    err_d_dict_of_lists_none: JsonDictOfLists = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "JsonDictOfLists")  [assignment]
-    err_d_dict_of_lists_int: JsonDictOfLists = b_int  # E: Incompatible types in assignment (expression has type "int", variable has type "JsonDictOfLists")  [assignment]
+    err_d_dict_of_lists_none: JsonDictOfLists = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "dict[str, JsonList]")  [assignment]
+    err_d_dict_of_lists_int: JsonDictOfLists = b_int  # E: Incompatible types in assignment (expression has type "int", variable has type "dict[str, JsonList]")  [assignment]
     err_d_dict_of_lists_dict_of_none: JsonDictOfLists = {'a': b_none}  # E: Dict entry 0 has incompatible type "str": "None"; expected "str": "list[Json]"  [dict-item]
     err_d_dict_of_lists_one_level: JsonDictOfLists = dict(b_dict)  # E: Argument 1 to "dict" has incompatible type "dict[str, str | float | int | None]"; expected "SupportsKeysAndGetItem[str, list[Json]]"  [arg-type]
     d_dict_of_lists: JsonDictOfLists = {'a': list(b_list), 'b': list(b_list)}
@@ -223,8 +223,8 @@
 
     # Added tests of empty lists and dicts to JsonDictOfDicts already to help find specific bug
 
-    err_d_dict_of_dicts_none: JsonDictOfDicts = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "JsonDictOfDicts")  [assignment]
-    err_d_dict_of_dicts_str: JsonDictOfDicts = b_str  # E: Incompatible types in assignment (expression has type "str", variable has type "JsonDictOfDicts")  [assignment]
+    err_d_dict_of_dicts_none: JsonDictOfDicts = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "dict[str, JsonDict]")  [assignment]
+    err_d_dict_of_dicts_str: JsonDictOfDicts = b_str  # E: Incompatible types in assignment (expression has type "str", variable has type "dict[str, JsonDict]")  [assignment]
     d_dict_of_dicts_empty_dict: JsonDictOfDicts = {}
     err_d_dict_of_dicts_dict_of_none: JsonDictOfDicts = {'a': b_none}  # E: Dict entry 0 has incompatible type "str": "None"; expected "str": "dict[str, Json]"  [dict-item]
     err_d_dict_of_dicts_one_level: JsonDictOfDicts = dict(b_dict)  # E: Argument 1 to "dict" has incompatible type "dict[str, str | float | int | None]"; expected "SupportsKeysAndGetItem[str, dict[str, Json]]"  [arg-type]
@@ -339,21 +339,21 @@
 
 - case: test_json_more_specific_types
   main: |
-    from omnipy.components.json.typedefs import JsonListOfNestedDicts, JsonDictOfNestedLists, JsonDictOfListsOfDicts
+    from omnipy.components.json.typedefs import JsonNestedDicts, JsonNestedLists, JsonListOfNestedDicts, JsonDictOfNestedLists, JsonDictOfListsOfDicts
     from tests.components.json.cases.raw.examples import b_none, b_int, b_float, b_str, b_bool, b_list, b_dict, b_tuple, b_set
     
-    err_m_list_of_nested_dicts_none: JsonListOfNestedDicts = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "JsonListOfNestedDicts")  [assignment]
-    err_m_list_of_nested_dicts_int: JsonListOfNestedDicts = b_int  # E: Incompatible types in assignment (expression has type "int", variable has type "JsonListOfNestedDicts")  [assignment]
-    err_m_list_of_nested_dicts_float: JsonListOfNestedDicts = b_float  # E: Incompatible types in assignment (expression has type "float", variable has type "JsonListOfNestedDicts")  [assignment]
-    err_m_list_of_nested_dicts_str: JsonListOfNestedDicts = b_str  # E: Incompatible types in assignment (expression has type "str", variable has type "JsonListOfNestedDicts")  [assignment]
-    err_m_list_of_nested_dicts_bool: JsonListOfNestedDicts = b_bool  # E: Incompatible types in assignment (expression has type "bool", variable has type "JsonListOfNestedDicts")  [assignment]
+    err_m_list_of_nested_dicts_none: JsonListOfNestedDicts = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "list[JsonNestedDicts]")  [assignment]
+    err_m_list_of_nested_dicts_int: JsonListOfNestedDicts = b_int  # E: Incompatible types in assignment (expression has type "int", variable has type "list[JsonNestedDicts]")  [assignment]
+    err_m_list_of_nested_dicts_float: JsonListOfNestedDicts = b_float  # E: Incompatible types in assignment (expression has type "float", variable has type "list[JsonNestedDicts]")  [assignment]
+    err_m_list_of_nested_dicts_str: JsonListOfNestedDicts = b_str  # E: Incompatible types in assignment (expression has type "str", variable has type "list[JsonNestedDicts]")  [assignment]
+    err_m_list_of_nested_dicts_bool: JsonListOfNestedDicts = b_bool  # E: Incompatible types in assignment (expression has type "bool", variable has type "list[JsonNestedDicts]")  [assignment]
     err_m_list_of_nested_dicts_list: JsonListOfNestedDicts = list(b_list)  # E: Argument 1 to "list" has incompatible type "list[str | float | int | None]"; expected "Iterable[dict[str, JsonOnlyDicts]]"  [arg-type]
-    err_m_list_of_nested_dicts_dict: JsonListOfNestedDicts = dict(b_dict)  # E: Incompatible types in assignment (expression has type "dict[str, str | float | int | None]", variable has type "JsonListOfNestedDicts")  [assignment]
-    err_m_list_of_nested_dicts_tuple: JsonListOfNestedDicts = b_tuple  # E: Incompatible types in assignment (expression has type "tuple[None, int, float, str, bool]", variable has type "JsonListOfNestedDicts")  [assignment]
-    err_m_list_of_nested_dicts_set: JsonListOfNestedDicts = set(b_set)  # E: Incompatible types in assignment (expression has type "set[str | float | int | None]", variable has type "JsonListOfNestedDicts")  [assignment]
+    err_m_list_of_nested_dicts_dict: JsonListOfNestedDicts = dict(b_dict)  # E: Incompatible types in assignment (expression has type "dict[str, str | float | int | None]", variable has type "list[JsonNestedDicts]")  [assignment]
+    err_m_list_of_nested_dicts_tuple: JsonListOfNestedDicts = b_tuple  # E: Incompatible types in assignment (expression has type "tuple[None, int, float, str, bool]", variable has type "list[JsonNestedDicts]")  [assignment]
+    err_m_list_of_nested_dicts_set: JsonListOfNestedDicts = set(b_set)  # E: Incompatible types in assignment (expression has type "set[str | float | int | None]", variable has type "list[JsonNestedDicts]")  [assignment]
   
     err_m_list_of_nested_dicts_list_of_none: JsonListOfNestedDicts = [b_none]  # E: List item 0 has incompatible type "None"; expected "dict[str, JsonOnlyDicts]"  [list-item]
-    err_m_list_of_nested_dicts_dict_of_none: JsonListOfNestedDicts = {'a': b_none}  # E: Incompatible types in assignment (expression has type "dict[str, None]", variable has type "JsonListOfNestedDicts")  [assignment]
+    err_m_list_of_nested_dicts_dict_of_none: JsonListOfNestedDicts = {'a': b_none}  # E: Incompatible types in assignment (expression has type "dict[str, None]", variable has type "list[JsonNestedDicts]")  [assignment]
     m_list_of_nested_dicts_list_of_dict_of_none: JsonListOfNestedDicts = [{'a': b_none}]
     m_list_of_nested_dicts_two_levels: JsonListOfNestedDicts = [dict(b_dict)]
     m_list_of_nested_dicts_list_of_dict_of_dict_of_none: JsonListOfNestedDicts = [{'a': {'b': b_none}}]
@@ -365,17 +365,17 @@
     err_m_list_of_nested_dicts_with_list_level_three: JsonListOfNestedDicts = [{'a': dict(b_dict), 'b': list(b_list)}]  # E: Dict entry 1 has incompatible type "str": "list[str | float | int | None]"; expected "str": "int | float | str | JsonNestedDicts | None"  [dict-item]
     err_m_list_of_nested_dicts_with_list_level_four: JsonListOfNestedDicts = [{'a': dict(b_dict), 'b': {'x': list(b_list)}}]  # E: Dict entry 0 has incompatible type "str": "list[str | float | int | None]"; expected "str": "int | float | str | JsonNestedDicts | None"  [dict-item]
 
-    err_m_dict_of_nested_lists_none: JsonDictOfNestedLists = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "JsonDictOfNestedLists")  [assignment]
-    err_m_dict_of_nested_lists_int: JsonDictOfNestedLists = b_int  # E: Incompatible types in assignment (expression has type "int", variable has type "JsonDictOfNestedLists")  [assignment]
-    err_m_dict_of_nested_lists_float: JsonDictOfNestedLists = b_float  # E: Incompatible types in assignment (expression has type "float", variable has type "JsonDictOfNestedLists")  [assignment]
-    err_m_dict_of_nested_lists_str: JsonDictOfNestedLists = b_str  # E: Incompatible types in assignment (expression has type "str", variable has type "JsonDictOfNestedLists")  [assignment]
-    err_m_dict_of_nested_lists_bool: JsonDictOfNestedLists = b_bool  # E: Incompatible types in assignment (expression has type "bool", variable has type "JsonDictOfNestedLists")  [assignment]
-    err_m_dict_of_nested_lists_list: JsonDictOfNestedLists = list(b_list)  # E: Incompatible types in assignment (expression has type "list[str | float | int | None]", variable has type "JsonDictOfNestedLists")  [assignment]
+    err_m_dict_of_nested_lists_none: JsonDictOfNestedLists = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "dict[str, JsonNestedLists]")  [assignment]
+    err_m_dict_of_nested_lists_int: JsonDictOfNestedLists = b_int  # E: Incompatible types in assignment (expression has type "int", variable has type "dict[str, JsonNestedLists]")  [assignment]
+    err_m_dict_of_nested_lists_float: JsonDictOfNestedLists = b_float  # E: Incompatible types in assignment (expression has type "float", variable has type "dict[str, JsonNestedLists]")  [assignment]
+    err_m_dict_of_nested_lists_str: JsonDictOfNestedLists = b_str  # E: Incompatible types in assignment (expression has type "str", variable has type "dict[str, JsonNestedLists]")  [assignment]
+    err_m_dict_of_nested_lists_bool: JsonDictOfNestedLists = b_bool  # E: Incompatible types in assignment (expression has type "bool", variable has type "dict[str, JsonNestedLists]")  [assignment]
+    err_m_dict_of_nested_lists_list: JsonDictOfNestedLists = list(b_list)  # E: Incompatible types in assignment (expression has type "list[str | float | int | None]", variable has type "dict[str, JsonNestedLists]")  [assignment]
     err_m_dict_of_nested_lists_dict: JsonDictOfNestedLists = dict(b_dict)  # E: Argument 1 to "dict" has incompatible type "dict[str, str | float | int | None]"; expected "SupportsKeysAndGetItem[str, list[JsonOnlyLists]]"  [arg-type]
-    err_m_dict_of_nested_lists_tuple: JsonDictOfNestedLists = b_tuple  # E: Incompatible types in assignment (expression has type "tuple[None, int, float, str, bool]", variable has type "JsonDictOfNestedLists")  [assignment]
-    err_m_dict_of_nested_lists_set: JsonDictOfNestedLists = set(b_set)  # E: Incompatible types in assignment (expression has type "set[str | float | int | None]", variable has type "JsonDictOfNestedLists")  [assignment]
+    err_m_dict_of_nested_lists_tuple: JsonDictOfNestedLists = b_tuple  # E: Incompatible types in assignment (expression has type "tuple[None, int, float, str, bool]", variable has type "dict[str, JsonNestedLists]")  [assignment]
+    err_m_dict_of_nested_lists_set: JsonDictOfNestedLists = set(b_set)  # E: Incompatible types in assignment (expression has type "set[str | float | int | None]", variable has type "dict[str, JsonNestedLists]")  [assignment]
     
-    err_m_dict_of_nested_lists_list_of_none: JsonDictOfNestedLists = [b_none]  # E: Incompatible types in assignment (expression has type "list[None]", variable has type "JsonDictOfNestedLists")  [assignment]
+    err_m_dict_of_nested_lists_list_of_none: JsonDictOfNestedLists = [b_none]  # E: Incompatible types in assignment (expression has type "list[None]", variable has type "dict[str, JsonNestedLists]")  [assignment]
     err_m_dict_of_nested_lists_dict_of_none: JsonDictOfNestedLists = {'a': b_none}  # E: Dict entry 0 has incompatible type "str": "None"; expected "str": "list[JsonOnlyLists]"  [dict-item]
     m_dict_of_nested_lists_dict_of_list_of_none: JsonDictOfNestedLists = {'a': [b_none]}
     m_dict_of_nested_lists_two_levels: JsonDictOfNestedLists = {'a': list(b_list), 'b': list(b_list)}
@@ -392,9 +392,9 @@
     err_m_dict_of_nested_lists_with_dict_level_three: JsonDictOfNestedLists = {'a': list(b_list), 'b': [dict(b_dict)]}  # E: List item 0 has incompatible type "dict[str, str | float | int | None]"; expected "int | float | str | JsonNestedLists | None"  [list-item]
     err_m_dict_of_nested_lists_with_dict_level_four: JsonDictOfNestedLists = {'a': list(b_list), 'b': [list(b_list), [dict(b_dict)]]}  # E: List item 0 has incompatible type "dict[str, str | float | int | None]"; expected "int | float | str | JsonNestedLists | None"  [list-item]
 
-    err_m_dict_of_lists_of_dicts_none: JsonDictOfListsOfDicts = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "JsonDictOfListsOfDicts")  [assignment]
-    err_m_dict_of_lists_of_dicts_float: JsonDictOfListsOfDicts = b_float  # E: Incompatible types in assignment (expression has type "float", variable has type "JsonDictOfListsOfDicts")  [assignment]
-    err_m_dict_of_lists_of_dicts_list_of_none: JsonDictOfListsOfDicts = [b_none]  # E: Incompatible types in assignment (expression has type "list[None]", variable has type "JsonDictOfListsOfDicts")  [assignment]
+    err_m_dict_of_lists_of_dicts_none: JsonDictOfListsOfDicts = b_none  # E: Incompatible types in assignment (expression has type "None", variable has type "dict[str, list[JsonDict]]")  [assignment]
+    err_m_dict_of_lists_of_dicts_float: JsonDictOfListsOfDicts = b_float  # E: Incompatible types in assignment (expression has type "float", variable has type "dict[str, list[JsonDict]]")  [assignment]
+    err_m_dict_of_lists_of_dicts_list_of_none: JsonDictOfListsOfDicts = [b_none]  # E: Incompatible types in assignment (expression has type "list[None]", variable has type "dict[str, list[JsonDict]]")  [assignment]
     err_m_dict_of_lists_of_dicts_dict_of_none: JsonDictOfListsOfDicts = {'a': b_none}  # E: Dict entry 0 has incompatible type "str": "None"; expected "str": "list[JsonDict]"  [dict-item]
     err_m_dict_of_lists_of_dicts_one_level: JsonDictOfListsOfDicts = dict(b_dict)  # E: Argument 1 to "dict" has incompatible type "dict[str, str | float | int | None]"; expected "SupportsKeysAndGetItem[str, list[JsonDict]]"  [arg-type]
     err_m_dict_of_lists_of_dicts_dict_of_list_of_none: JsonDictOfListsOfDicts = {'a': [b_none]}  # E: List item 0 has incompatible type "None"; expected "dict[str, Json]"  [list-item]
