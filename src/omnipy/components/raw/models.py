@@ -248,9 +248,12 @@ NestedListsAndStrsWithModels: TypeAlias = str | ListOfNestedListsAndStrsModel
 
 ListOfNestedListsAndStrsModel.update_forward_refs()
 
+ListOfNestedListsAndStrsNoModels: TypeAlias = list['NestedListsAndStrsNoModels']
+NestedListsAndStrsNoModels: TypeAlias = str | ListOfNestedListsAndStrsNoModels
+
+# Hack to support recursive types in Pydantic v1.10.x. Should not bee needed in Pydantic v2.
 _NestedListsAndStrsNoModelsT = TypeVar(
-    '_NestedListsAndStrsNoModelsT',
-    default=str | list['_NestedListsAndStrsNoModelsT'])  # type: ignore[misc]
+    '_NestedListsAndStrsNoModelsT', default=str | list[NestedListsAndStrsNoModels])
 
 
 class _NestedItemsParamsMixin:
@@ -262,9 +265,9 @@ class _NestedItemsParamsMixin:
     def _split_data_according_to_delimiters(
             cls,
             data: NestedListsAndStrsWithModels,
-            level: int = 0) -> str | list[_NestedListsAndStrsNoModelsT]:
+            level: int = 0) -> list[str] | ListOfNestedListsAndStrsNoModels:
 
-        raw_data = cast(str | list[NestedListsAndStrsWithModels],
+        raw_data = cast(str | list[str | ListOfNestedListsAndStrsModel],
                         data if isinstance(data, str) else data.content)
 
         num_delimiters = len(cls.Params.delimiters)
@@ -272,13 +275,11 @@ class _NestedItemsParamsMixin:
         if level == 0 and len(raw_data) == 0:
             return []
 
-        split_data: list[NestedListsAndStrsWithModels]
         if isinstance(raw_data, str):
             if num_delimiters == 0:
                 return [raw_data]
 
-            split_data = cast(list[NestedListsAndStrsWithModels],
-                              raw_data.split(cls.Params.delimiters[level]))
+            split_data = cast(str, raw_data).split(cls.Params.delimiters[level])
         else:
             split_data = raw_data
 
@@ -295,7 +296,7 @@ class _NestedItemsParamsMixin:
                 cls._split_data_according_to_delimiters(item, level=next_level)
                 for item in split_data
             ]
-            return cast(list[_NestedListsAndStrsNoModelsT], split_data_no_list_models)
+            return cast(ListOfNestedListsAndStrsNoModels, split_data_no_list_models)
         else:
             if num_delimiters == 0:
                 assert isinstance(data, str), \
@@ -305,18 +306,22 @@ class _NestedItemsParamsMixin:
                     (f'Data is nested higher than permitted by the number of delimiters in '
                      f'Params (={num_delimiters}).')
 
-        return cast(list[_NestedListsAndStrsNoModelsT], split_data)
+            return cast(list[str], split_data)
 
 
-class _NestedSplitToItemsModel(Model[list[_NestedListsAndStrsNoModelsT] | str],
-                               Generic[_NestedListsAndStrsNoModelsT],
-                               _NestedItemsParamsMixin):
+class _NestedSplitToItemsModel(  # pyright: ignore [reportGeneralTypeIssues]
+        Model[list[_NestedListsAndStrsNoModelsT] | str],
+        Generic[_NestedListsAndStrsNoModelsT],
+        _NestedItemsParamsMixin,
+):
     @classmethod
     def _parse_data(
             cls, data: list[_NestedListsAndStrsNoModelsT] | str
     ) -> list[_NestedListsAndStrsNoModelsT] | str:
         str_parsed_data = Model[NestedListsAndStrsWithModels](data).content
-        return cls._split_data_according_to_delimiters(str_parsed_data)
+        return cls._split_data_according_to_delimiters(
+            str_parsed_data,  # type: ignore[return-value]
+        )
 
 
 class NestedSplitToItemsModel(_NestedSplitToItemsModel):
@@ -358,7 +363,8 @@ class _NestedJoinItemsModel(Model[str | list[_NestedListsAndStrsNoModelsT]],
     def _parse_data(cls, data: str | list[_NestedListsAndStrsNoModelsT]) -> str:
         str_parsed_data = Model[NestedListsAndStrsWithModels](data).content
         return cls._join_data_according_to_delimiters(
-            cls._split_data_according_to_delimiters(str_parsed_data))
+            cls._split_data_according_to_delimiters(str_parsed_data),  # type: ignore[arg-type]
+        )
 
 
 class NestedJoinItemsModel(_NestedJoinItemsModel):

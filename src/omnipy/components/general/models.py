@@ -1,3 +1,4 @@
+import typing
 from typing import Generic, get_args
 
 from typing_extensions import TypeVar
@@ -76,28 +77,49 @@ class Chain2(_ChainMixin, Model[_V | _U], Generic[_U, _V]):
     ...
 
 
-class Chain3(_ChainMixin, Model[_W | TypeVarStore1[_V] | _U], Generic[_U, _V, _W]):
-    ...
+if typing.TYPE_CHECKING:
 
+    class Chain3(Model[_W], Generic[_U, _V, _W]):
+        ...
 
-class Chain4(_ChainMixin,
-             Model[_X | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
-             Generic[_U, _V, _W, _X]):
-    ...
+    class Chain4(_ChainMixin, Model[_X | _W | _V | _U], Generic[_U, _V, _W, _X]):
+        ...
 
+    class Chain5(
+            _ChainMixin,
+            Model[_Y | _X | _W | _V | _U],
+            Generic[_U, _V, _W, _X, _Y],
+    ):
+        ...
 
-class Chain5(
-        _ChainMixin,
-        Model[_Y | TypeVarStore3[_X] | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
-        Generic[_U, _V, _W, _X, _Y],
-):
-    ...
+    class Chain6(
+            _ChainMixin,
+            Model[_Z | _Y | _X | _W | _V | _U],
+            Generic[_U, _V, _W, _X, _Y, _Z],
+    ):
+        ...
 
+else:
 
-class Chain6(
-        _ChainMixin,
-        Model[_Z | TypeVarStore4[_Y] | TypeVarStore3[_X] | TypeVarStore2[_W] | TypeVarStore1[_V]
-              | _U],
-        Generic[_U, _V, _W, _X, _Y, _Z],
-):
-    ...
+    class Chain3(_ChainMixin, Model[_W | TypeVarStore1[_V] | _U], Generic[_U, _V, _W]):
+        ...
+
+    class Chain4(_ChainMixin,
+                 Model[_X | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
+                 Generic[_U, _V, _W, _X]):
+        ...
+
+    class Chain5(
+            _ChainMixin,
+            Model[_Y | TypeVarStore3[_X] | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
+            Generic[_U, _V, _W, _X, _Y],
+    ):
+        ...
+
+    class Chain6(
+            _ChainMixin,
+            Model[_Z | TypeVarStore4[_Y] | TypeVarStore3[_X] | TypeVarStore2[_W] | TypeVarStore1[_V]
+                  | _U],
+            Generic[_U, _V, _W, _X, _Y, _Z],
+    ):
+        ...

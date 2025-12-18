@@ -2480,16 +2480,16 @@ def test_mimic_simple_list_operations(
     model += [234, 345, 456]  # type: ignore[operator]
     assert len(model) == 4
 
-    assert_model_if_dyn_conv_else_val(model[-1], int, 456)  # type: ignore[index]
-    assert_model(model[1:-1], list[int], [234, 345])  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[-1], int, 456)
+    assert_model(model[1:-1], list[int], [234, 345])
 
     assert tuple(reversed(model)) == (456, 345, 234, 123)
 
     model[2] = 432
     model[3] = '654'
 
-    assert_model_if_dyn_conv_else_val(model[2], int, 432)  # type: ignore[index]
-    assert_model_if_dyn_conv_else_val(model[3], int, 654)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[2], int, 432)
+    assert_model_if_dyn_conv_else_val(model[3], int, 654)
 
     with pytest.raises(ValidationError):
         model[0] = 'bacon'
@@ -2498,11 +2498,11 @@ def test_mimic_simple_list_operations(
         assert_model(model, list[int], ['bacon', 234, 432, 654])
         model[0] = 123
 
-    assert_model_if_dyn_conv_else_val(model[1], int, 234)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[1], int, 234)
 
-    model[1] /= 2  # type: ignore[index]
+    model[1] /= 2
 
-    assert_model_if_dyn_conv_else_val(model[1], int, 117)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model[1], int, 117)
     assert_model(model, list[int], [123, 117, 432, 654])
 
     assert model.index(432) == 2
@@ -2550,7 +2550,7 @@ def test_mimic_simple_dict_operations(
     assert_model_if_dyn_conv_else_val(model['def'], int, 456)  # type: ignore[index]
 
     model |= {'efg': 765, 'ghi': 678}  # type: ignore[operator]
-    assert_model_if_dyn_conv_else_val(model['efg'], int, 765)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(model['efg'], int, 765)
 
     del model['bcd']
 
@@ -2614,7 +2614,7 @@ def test_mimic_simple_list_operator_with_auto_convert(
     model += Model[list[int]](['42'])  # type: ignore[operator]
     assert_model(model, list[int], [42, 42])
 
-    model += ['42']  # type: ignore[operator]
+    model += ['42']
     assert_model(model, list[int], [42, 42, 42])
 
     with pytest.raises(SyntaxError):
@@ -2623,7 +2623,7 @@ def test_mimic_simple_list_operator_with_auto_convert(
     # No underlying TypeError, as any list can be added to a list. Exception is instead raised
     # during the subsequent validation of the content
     with pytest.raises(ValidationError):
-        model += ['abc']  # type: ignore[operator]
+        model += ['abc']
 
     if runtime.config.data.model.interactive:
         assert_model(model, list[int], [42, 42, 42])
@@ -2635,41 +2635,41 @@ def test_mimic_simple_list_operator_with_auto_convert(
     # model.__getitem__, model[0].__sub__,  model[0].__rsub__
     #
 
-    ret = model[0] - Model[int]('42')  # type: ignore[index]
+    ret = model[0] - Model[int]('42')  # type: ignore[operator]
     assert_model(ret, int, 0)
 
     if runtime.config.data.model.dynamically_convert_elements_to_models:
         # model[0] is dynamically converted to a Model[int] instance
-        ret = model[0] - '42'  # type: ignore[index]
+        ret = model[0] - '42'  # type: ignore[operator]
         assert_model(ret, int, 0)
 
-        ret = '42' - model[0]  # type: ignore[index]
+        ret = '42' - model[0]  # type: ignore[operator]
         assert_model(ret, int, 0)
     else:
         # model[0] is just an int
         with pytest.raises(TypeError):
-            model[0] - '42'  # type: ignore[index]
+            model[0] - '42'  # type: ignore[operator]
 
         with pytest.raises(TypeError):
-            '42' - model[0]  # type: ignore[index]
+            '42' - model[0]  # type: ignore[operator]
 
     with pytest.raises(TypeError):
-        model[0] - 'abc'  # type: ignore[index]
+        model[0] - 'abc'  # type: ignore[operator]
 
     with pytest.raises(TypeError):
-        'abc' - model[0]  # type: ignore[index]
+        'abc' - model[0]  # type: ignore[operator]
 
     #
     # model.__add__,  model.__radd__
     #
 
-    ret = model + Model[list[int]](['42'])  # type: ignore[operator]
+    ret = model + Model[list[int]](['42'])
     assert_model(ret, list[int], [42, 42, 42, 42])
 
-    ret = model + ['42']  # type: ignore[operator]
+    ret = model + ['42']
     assert_model(ret, list[int], [42, 42, 42, 42])
 
-    ret = ['42'] + model  # type: ignore[operator]
+    ret = ['42'] + model
     assert_model(ret, list[int], [42, 42, 42, 42])
 
     with pytest.raises(TypeError):
