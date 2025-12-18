@@ -1,4 +1,7 @@
-from typing import cast, Generic, get_args, TypeVar
+import typing
+from typing import Any, cast, Generic, get_args
+
+from typing_extensions import TypeVar
 
 from omnipy.data.model import Model
 import omnipy.util._pydantic as pyd
@@ -74,8 +77,37 @@ class ColumnWiseTableDictOfListsNoConvertModel(Model[dict[str, list[JsonScalar]]
 RowWiseTableListOfDictsModel.update_forward_refs()
 
 
-class RowWiseTableFirstRowAsColNamesModel(Model[list[dict[str, JsonScalar]]
+class ColNamesMixin:
+    @property
+    def col_names(self) -> tuple[str, ...]:
+        col_names = {}
+        for row in self:  # type: ignore[attr-defined]
+            col_names.update(dict.fromkeys(row.keys()))
+        return tuple(col_names.keys())
+
+
+if typing.TYPE_CHECKING:
+    from omnipy.data._mimic_models import Model_list
+
+    class _RowWiseTableFirstRowAsColNamesModel(  # type: ignore[misc]
+            ColNamesMixin,
+            Model_list[dict[str, JsonScalar]],
+    ):
+        ...
+
+
+class RowWiseTableFirstRowAsColNamesModel(ColNamesMixin,
+                                          Model[list[dict[str, JsonScalar]]
                                                 | RowWiseTableListOfListsModel]):
+    if typing.TYPE_CHECKING:
+
+        def __new__(  # type: ignore[misc]
+            cls,
+            *args: Any,
+            **kwargs: Any,
+        ) -> '_RowWiseTableFirstRowAsColNamesModel':
+            ...
+
     @classmethod
     def _parse_data(
         cls, data: list[dict[str, JsonScalar]] | RowWiseTableListOfListsModel
@@ -109,13 +141,6 @@ class RowWiseTableFirstRowAsColNamesModel(Model[list[dict[str, JsonScalar]]
             if j > 0
         ]
 
-    @property
-    def col_names(self) -> tuple[str]:
-        col_names = {}
-        for row in self:
-            col_names.update(dict.fromkeys(row.keys()))  # type: ignore[attr-defined]
-        return tuple(col_names.keys())
-
 
 _PydBaseModelT = TypeVar('_PydBaseModelT', bound=pyd.BaseModel)
 _PydRecordT = TypeVar('_PydRecordT', bound=pyd.BaseModel)
@@ -147,11 +172,19 @@ class PydanticRecordModel(Model[_PydBaseModelT | JsonListOfScalarsModel], Generi
                 return data
 
 
-class TableOfPydanticRecordsModel(Chain3[SplitToLinesModel,
-                                         SplitLinesToColumnsModel,
-                                         Model[list[PydanticRecordModel[_PydRecordT]]]],
-                                  Generic[_PydRecordT]):
-    ...
+if typing.TYPE_CHECKING:
+    from omnipy.data._mimic_models import Model_list
+
+    class TableOfPydanticRecordsModel(Model_list[PydanticRecordModel[_PydRecordT]],
+                                      Generic[_PydRecordT]):
+        ...
+else:
+
+    class TableOfPydanticRecordsModel(Chain3[SplitToLinesModel,
+                                             SplitLinesToColumnsModel,
+                                             Model[list[PydanticRecordModel[_PydRecordT]]]],
+                                      Generic[_PydRecordT]):
+        ...
 
 
 class TsvTableModel(Chain3[
@@ -159,10 +192,14 @@ class TsvTableModel(Chain3[
         SplitLinesToColumnsModel,
         RowWiseTableFirstRowAsColNamesModel,
 ]):
-    ...
+    if typing.TYPE_CHECKING:
 
-
-
+        def __new__(  # type: ignore[misc]
+            cls,
+            *args: Any,
+            **kwargs: Any,
+        ) -> '_RowWiseTableFirstRowAsColNamesModel':
+            ...
 
 
 class CsvTableModel(Chain3[
@@ -170,4 +207,11 @@ class CsvTableModel(Chain3[
         SplitLinesToColumnsByCommaModel,  # type: ignore[valid-type]
         RowWiseTableFirstRowAsColNamesModel,
 ]):
-    ...
+    if typing.TYPE_CHECKING:
+
+        def __new__(  # type: ignore[misc]
+            cls,
+            *args: Any,
+            **kwargs: Any,
+        ) -> '_RowWiseTableFirstRowAsColNamesModel':
+            ...

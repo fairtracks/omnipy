@@ -195,8 +195,8 @@ def test_pydantic_record_model_extra_fields_config() -> None:
 
     record = NameRecordExtraFieldsModel(firstname='Tarzan', title='King of Apes')
     assert record.content == NameRecordExtraFields(
-        firstname='Tarzan',  # type: ignore[call-arg]
-        title='King of Apes',
+        firstname='Tarzan',
+        title='King of Apes',  # type: ignore[call-arg]
     )
     assert record.to_data() == {'firstname': 'Tarzan', 'lastname': None, 'title': 'King of Apes'}
 
@@ -308,8 +308,8 @@ def test_table_of_pydantic_records_model_with_optional_fields_last() -> None:
     table = TableOfNameRecordsModel('John\tDoe\nJane\tDoe\t37')
 
     assert len(table) == 2
-    assert isinstance(table[0], PydanticRecordModel)  # type: ignore[index]
-    assert isinstance(table[1], PydanticRecordModel)  # type: ignore[index]
+    assert isinstance(table[0], PydanticRecordModel)
+    assert isinstance(table[1], PydanticRecordModel)
 
     assert table.to_data() == [
         {
