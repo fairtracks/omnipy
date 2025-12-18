@@ -2,6 +2,7 @@ from collections.abc import Callable, Sequence
 from copy import copy, deepcopy
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 import gc
 from math import floor
 import os
@@ -3959,6 +3960,91 @@ def test_literal_model_validation() -> None:
 
     with pytest.raises(ValidationError):
         LiteralFiveOrTextModel('txt')
+
+
+def test_validation_and_mimic_enum_model() -> None:
+    class ColorEnum(Enum):
+        RED = 'red'
+        GREEN = 'green'
+        BLUE = 'blue'
+
+    class ColorModel(Model[ColorEnum]):
+        ...
+
+    red_model = ColorModel('red')
+
+    assert red_model.content == 'red'
+    assert red_model.to_data() == 'red'
+    assert red_model.to_json() == '"red"'
+
+    green_model = ColorModel(ColorEnum.GREEN)
+
+    assert green_model.content == 'green'
+    assert green_model.to_data() == 'green'
+    assert green_model.to_json() == '"green"'
+
+    redgreen = red_model + green_model
+    assert redgreen == 'redgreen'
+
+    with pytest.raises(ValidationError):
+        ColorModel('yellow')
+
+    with pytest.raises(ValidationError):
+        ColorModel(123)
+
+
+def test_model_of_pydantic_model_with_enum() -> None:
+    class MyEnum(Enum):
+        YES = 'yes'
+        NO = 'no'
+        MAYBE = 'maybe'
+
+    class MyStrEnum(str, Enum):
+        YES = 'yes'
+        NO = 'no'
+        MAYBE = 'maybe'
+
+    class MyPydanticModelWithEnum(pyd.BaseModel):
+        decision: MyEnum
+        regrets: MyStrEnum
+
+    my_pydantic_enum_model = Model[MyPydanticModelWithEnum]({
+        'decision': 'yes', 'regrets': MyStrEnum.MAYBE
+    })
+
+    # Pydantic models with enum as field by default store the enum member
+    # Compare with test_validation_and_mimic_enum_model(). Omnipy always store the enum value
+    assert my_pydantic_enum_model.content.decision == MyEnum.YES
+    assert my_pydantic_enum_model.content.decision.value == 'yes'
+
+    # Unless the enum inherits from e.g. str
+    assert my_pydantic_enum_model.content.regrets == 'maybe'
+
+    assert my_pydantic_enum_model.to_data() == {'decision': MyEnum.YES, 'regrets': 'maybe'}
+    assert my_pydantic_enum_model.to_json() == dedent("""\
+        {
+          "decision": "yes",
+          "regrets": "maybe"
+        }""")
+
+    with pytest.raises(ValidationError):
+        Model[MyPydanticModelWithEnum]({'decision': 'invalid_value'})
+
+    # To always use values for Pydantic models with enum fields, use a custom config
+    class MyPydanticModelWithEnumValues(pyd.BaseModel):
+        decision: MyEnum
+        regrets: MyStrEnum
+
+        class Config:
+            use_enum_values = True
+
+    my_pydantic_enum_as_value_model = Model[MyPydanticModelWithEnumValues]({
+        'decision': 'maybe', 'regrets': MyStrEnum.YES
+    })
+
+    assert my_pydantic_enum_as_value_model.content.decision == 'maybe'
+    assert my_pydantic_enum_as_value_model.content.regrets == 'yes'
+    assert my_pydantic_enum_as_value_model.to_data() == {'decision': 'maybe', 'regrets': 'yes'}
 
 
 def test_mimic_operations_on_literal_models() -> None:

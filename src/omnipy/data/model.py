@@ -146,6 +146,7 @@ class Model(
         smart_union = True
         # json_loads = orjson.loads
         # json_dumps = orjson_dumps
+        use_enum_values = True
 
     def _get_default_factory(self) -> Callable[[], _RootT]:
         try:
