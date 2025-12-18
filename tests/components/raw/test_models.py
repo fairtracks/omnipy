@@ -352,13 +352,13 @@ def _assert_empty_model(model_cls: type[Model], default_value: object) -> None:
 def test_nested_split_to_items_model_default(
         splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
 
-    _assert_empty_model(NestedSplitToItemsModel, '')
+    _assert_empty_model(NestedSplitToItemsModel, [])
 
     pre_split, raw_data, data = splittable_data
 
     if pre_split == PreSplitEnum.FALSE:
         default_no_split = NestedSplitToItemsModel(data)
-        assert default_no_split.content == default_no_split.to_data() == raw_data
+        assert default_no_split.content == default_no_split.to_data() == [raw_data]
 
     elif pre_split == PreSplitEnum.LEVEL_1:
         with pytest.raises(ValidationError):

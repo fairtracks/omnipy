@@ -270,12 +270,12 @@ class _NestedItemsParamsMixin:
         num_delimiters = len(cls.Params.delimiters)
 
         if level == 0 and len(raw_data) == 0:
-            return [] if num_delimiters > 0 else ''
+            return []
 
         split_data: list[NestedListsAndStrsWithModels]
         if isinstance(raw_data, str):
             if num_delimiters == 0:
-                return raw_data
+                return [raw_data]
 
             split_data = cast(list[NestedListsAndStrsWithModels],
                               raw_data.split(cls.Params.delimiters[level]))
@@ -349,7 +349,10 @@ class _NestedJoinItemsModel(Model[str | list[_NestedListsAndStrsNoModelsT]],
         else:
             raw_data = cast(list[str], data)
 
-        return cls.Params.delimiters[level].join(raw_data) if len(raw_data) > 0 else ''
+        if num_delimiters == 0:
+            return ''.join(raw_data)
+        else:
+            return cls.Params.delimiters[level].join(raw_data)
 
     @classmethod
     def _parse_data(cls, data: str | list[_NestedListsAndStrsNoModelsT]) -> str:
