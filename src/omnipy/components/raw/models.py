@@ -85,6 +85,7 @@ def _split_line(model_cls: type[_HasSplitParams], data: str) -> list[str]:
 # Mixins for split models
 
 
+@params_dataclass
 class _SplitParamsBase(ParamsBase):
     strip: bool = True
     strip_chars: str | None = None
@@ -165,10 +166,12 @@ class SplitLinesToColumnsModel(_SplitByTabParamsMixin, _SplitItemsToSubitemsMode
     )
 
 
-# TODO: Implement SplitLinesToColumnsByCommaModel properly in parallel to SplitLinesToColumnsModel
+class SplitLinesToColumnsByCommaModel(_SplitByCommaParamsMixin, _SplitItemsToSubitemsModel):
+    adjust = bind_adjust_model_func(
+        _SplitItemsToSubitemsModel.clone_model_cls,
+        _SplitByCommaParamsMixin.Params,
+    )
 
-SplitLinesToColumnsByCommaModel = SplitLinesToColumnsModel.adjust(
-    'SplitLinesToColumnsByCommaModel', delimiter=',')
 
 # Protocols for join mixins
 
@@ -254,6 +257,13 @@ class JoinColumnsToLinesModel(_JoinByTabParamsMixin, _JoinSubitemsToItemsModel):
     adjust = bind_adjust_model_func(
         _JoinSubitemsToItemsModel.clone_model_cls,
         _JoinByTabParamsMixin.Params,
+    )
+
+
+class JoinColumnsByCommaToLinesModel(_JoinByCommaParamsMixin, _JoinSubitemsToItemsModel):
+    adjust = bind_adjust_model_func(
+        _JoinSubitemsToItemsModel.clone_model_cls,
+        _JoinByCommaParamsMixin.Params,
     )
 
 

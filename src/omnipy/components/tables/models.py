@@ -204,7 +204,7 @@ class TsvTableModel(Chain3[
 
 class CsvTableModel(Chain3[
         SplitToLinesModel,
-        SplitLinesToColumnsByCommaModel,  # type: ignore[valid-type]
+        SplitLinesToColumnsByCommaModel,
         RowWiseTableFirstRowAsColNamesModel,
 ]):
     if typing.TYPE_CHECKING:

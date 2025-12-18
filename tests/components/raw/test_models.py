@@ -7,12 +7,14 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.components.raw.models import (BytesModel,
+                                          JoinColumnsByCommaToLinesModel,
                                           JoinColumnsToLinesModel,
                                           JoinItemsModel,
                                           JoinLinesModel,
                                           MatchItemsModel,
                                           NestedJoinItemsModel,
                                           NestedSplitToItemsModel,
+                                          SplitLinesToColumnsByCommaModel,
                                           SplitLinesToColumnsModel,
                                           SplitToItemsByTabModel,
                                           SplitToItemsModel,
@@ -246,9 +248,6 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
     raw_data_comma = ['abc, def, ghi, jkl', 'mno, pqr, stu, vwx', 'yz']
     data_comma = [Model[str](line) for line in raw_data_comma] if use_str_model else raw_data_comma
 
-    SplitLinesToColumnsByCommaModel = SplitLinesToColumnsModel.adjust(
-        'SplitLinesToColumnsByCommaModel', delimiter=',')
-
     cols_stripped_comma = SplitLinesToColumnsByCommaModel(data_comma)
 
     assert_model_if_dyn_conv_else_val(
@@ -273,14 +272,21 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
     assert joined_cols[1:].content == ['yz']  # type: ignore[index]
     assert joined_cols.to_data() == ['mno\tpqr\tstu\tvwx', 'yz']
 
-    JoinColumnsByCommaToLinesModel = JoinColumnsToLinesModel.adjust(
-        'JoinColumnsByCommaToLinesModel', delimiter=', ')
-
     joined_cols_by_comma = JoinColumnsByCommaToLinesModel(
         cols_stripped_comma[1:])  # type: ignore[index]
-    assert joined_cols_by_comma.content == ['mno, pqr, stu, vwx', 'yz']
+
+    assert joined_cols_by_comma.content == ['mno,pqr,stu,vwx', 'yz']
     assert joined_cols_by_comma[1:].content == ['yz']  # type: ignore[index]
-    assert joined_cols_by_comma.to_data() == ['mno, pqr, stu, vwx', 'yz']
+    assert joined_cols_by_comma.to_data() == ['mno,pqr,stu,vwx', 'yz']
+
+    JoinColumnsByCommaSpaceToLinesModel = JoinColumnsToLinesModel.adjust(
+        'JoinColumnsByCommaToLinesModel', delimiter=', ')
+
+    joined_cols_by_comma_space = \
+        JoinColumnsByCommaSpaceToLinesModel(cols_stripped_comma[1:])  # type: ignore
+    assert joined_cols_by_comma_space.content == ['mno, pqr, stu, vwx', 'yz']
+    assert joined_cols_by_comma_space[1:].content == ['yz']  # type: ignore[index]
+    assert joined_cols_by_comma_space.to_data() == ['mno, pqr, stu, vwx', 'yz']
 
 
 class PreSplitEnum(str, Enum):
