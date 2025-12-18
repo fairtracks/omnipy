@@ -6,7 +6,9 @@ import omnipy.util._pydantic as pyd
 from ..general.models import Chain3
 from ..json.models import JsonListOfScalarsModel
 from ..json.typedefs import JsonScalar
-from ..raw.models import SplitLinesToColumnsModel, SplitToLinesModel
+from ..raw.models import (SplitLinesToColumnsByCommaModel,
+                          SplitLinesToColumnsModel,
+                          SplitToLinesModel)
 
 
 class RowWiseTableListOfListsModel(Model[list[list[JsonScalar]]]):
@@ -160,10 +162,7 @@ class TsvTableModel(Chain3[
     ...
 
 
-# TODO: Implement SplitLinesToColumnsByCommaModel properly in parallel to SplitLinesToColumnsModel
 
-SplitLinesToColumnsByCommaModel = SplitLinesToColumnsModel.adjust(
-    'SplitLinesToColumnsByCommaModel', delimiter=',')
 
 
 class CsvTableModel(Chain3[

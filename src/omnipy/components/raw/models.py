@@ -160,6 +160,12 @@ class SplitLinesToColumnsModel(_SplitLinesToColumnsParamsMixin, _SplitItemsToSub
     )
 
 
+# TODO: Implement SplitLinesToColumnsByCommaModel properly in parallel to SplitLinesToColumnsModel
+
+SplitLinesToColumnsByCommaModel = SplitLinesToColumnsModel.adjust(
+    'SplitLinesToColumnsByCommaModel', delimiter=',')
+
+
 class _JoinItemsParamMixin:
     @params_dataclass
     class Params(ParamsBase):
