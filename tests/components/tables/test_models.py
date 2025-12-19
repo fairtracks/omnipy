@@ -1,10 +1,16 @@
+from typing import Annotated, Mapping
+
 import pytest
+from scripts.type_alias_example import JsonScalar
 
 from omnipy.components.tables.models import (ColumnWiseTableDictOfListsModel,
                                              PydanticRecordModel,
                                              RowWiseTableFirstRowAsColNamesModel,
                                              RowWiseTableListOfDictsModel,
                                              TableOfPydanticRecordsModel)
+from omnipy.data.model import Model
+from omnipy.data.typechecks import is_model_instance
+from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util._pydantic import ValidationError
 import omnipy.util._pydantic as pyd
 
@@ -81,6 +87,121 @@ def test_columnwise_and_rowwise_table_models_failure() -> None:
 
     with pytest.raises(ValidationError):
         ColumnWiseTableDictOfListsModel(1)
+
+
+class TestColumnWiseTable:
+
+    _column_wise_data = {
+        'a': ['1', '4'],
+        'b': [2, 5],
+        'c': [True, None],
+        'd': [None, 'abc'],
+    }
+
+    @classmethod
+    def _assert_row_iter(cls, row_idx: int, row: Mapping[str, JsonScalar]) -> None:
+        assert len(row) == 4
+        assert tuple(row) == ('a', 'b', 'c', 'd')
+        assert tuple(row.keys()) == ('a', 'b', 'c', 'd')
+
+        if row_idx == 0:
+            assert isinstance(row, Mapping)
+            assert row['a'] == '1'
+            assert row['b'] == 2
+            assert row['c'] is True
+            assert row['d'] is None
+            assert dict(row) == {
+                'a': '1',
+                'b': 2,
+                'c': True,
+                'd': None,
+            }
+            assert tuple(row.values()) == ('1', 2, True, None)
+        elif row_idx == 1:
+            assert isinstance(row, Mapping)
+            assert row['a'] == '4'
+            assert row['b'] == 5
+            assert row['c'] is None
+            assert row['d'] == 'abc'
+            assert dict(row) == {
+                'a': '4',
+                'b': 5,
+                'c': None,
+                'd': 'abc',
+            }
+            assert tuple(row.values()) == ('4', 5, None, 'abc')
+
+        with pytest.raises(KeyError):
+            row['non_existent_column']
+
+        with pytest.raises(TypeError):
+            row['a'] = 'new_value'  # type: ignore[index]
+
+        with pytest.raises(TypeError):
+            del row['a']  # type: ignore[attr-defined]
+
+    @classmethod
+    def test_columnwise_table_iter(cls, runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+        column_wise_model = ColumnWiseTableDictOfListsModel(cls._column_wise_data)
+
+        for i, row in enumerate(column_wise_model):
+            cls._assert_row_iter(i, row)
+
+        def model_content_if_needed(model_or_obj):
+            return model_or_obj.content if is_model_instance(model_or_obj) else model_or_obj
+
+        assert tuple(column_wise_model.keys()) == ('a', 'b', 'c', 'd')
+        assert tuple(model_content_if_needed(_) for _ in column_wise_model.values()) == (
+            ['1', '4'],
+            [2, 5],
+            [True, None],
+            [None, 'abc'],
+        )
+
+        assert len(column_wise_model) == 2
+        rows = list(column_wise_model)
+        assert len(rows) == 2
+
+        # The rows are the same object reused for each iteration
+        assert rows[0] == rows[1]
+        assert id(rows[0]) == id(rows[1])
+
+        # But can still be extracted using a Model and an iterator
+        extracted = Model[list[dict[str, JsonScalar]]](iter(column_wise_model))
+        assert extracted.to_data() == [
+            {
+                'a': '1', 'b': 2, 'c': True, 'd': None
+            },
+            {
+                'a': '4', 'b': 5, 'c': None, 'd': 'abc'
+            },
+        ]
+
+        # Without iter(), a new Model will consider the column-wise data as a whole
+        extracted_whole = Model[dict[str, list[JsonScalar]]](column_wise_model)
+        assert extracted_whole.to_data() == cls._column_wise_data
+
+    @classmethod
+    def test_columnwise_table_index(cls, runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+        column_wise_model = ColumnWiseTableDictOfListsModel(cls._column_wise_data)
+
+        assert len(column_wise_model) == 2
+
+        cls._assert_row_iter(0, column_wise_model[0])
+        cls._assert_row_iter(1, column_wise_model[1])
+
+        with pytest.raises(IndexError):
+            column_wise_model[2]
+
+        with pytest.raises(ValidationError):
+            column_wise_model[1] = {'a': '2', 'b': 3, 'c': False, 'd': 'def'}  # type: ignore
+
+        if not runtime.config.data.model.interactive:
+            del column_wise_model[1]  # type: ignore
+
+        assert column_wise_model['a'] == ['1', '4']
+        column_wise_model['a'] = ['10', '40']
+        assert column_wise_model[1]['a'] == '40'
 
 
 def test_row_wise_table_first_row_as_col_names_model() -> None:
