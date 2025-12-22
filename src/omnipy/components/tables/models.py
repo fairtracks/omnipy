@@ -49,7 +49,7 @@ class RowWiseTableListOfListsModel(Model[list[list[JsonScalar]]]):
     ...
 
 
-class RowWiseTableListOfDictsModel(
+class _RowWiseTableListOfDictsModel(
         Model['list[dict[str, JsonScalar]] | ColumnWiseTableDictOfListsNoConvertModel']):
     @classmethod
     def _parse_data(
@@ -66,6 +66,18 @@ class RowWiseTableListOfDictsModel(
             return converted_data
         else:
             return data
+
+
+if typing.TYPE_CHECKING:
+    from omnipy.data._mimic_models import Model_list
+
+    class RowWiseTableListOfDictsModel(Model_list[dict[str, JsonScalar]]):
+        ...
+
+else:
+
+    class RowWiseTableListOfDictsModel(_RowWiseTableListOfDictsModel):
+        ...
 
 
 class RowWiseTableListOfDictsNoConvertModel(Model[list[dict[str, JsonScalar]]]):
@@ -193,10 +205,10 @@ if typing.TYPE_CHECKING:  # noqa: C901
             ...
 
         # TODO: Figure a better way to type ColumnWiseTableDictOfListsModel.
-        #       Main issue is that PyCharm has special treatment of Mapping
-        #       then iterating, so that the type of the iterator is str.
+        #       Main issue is that Pyright has special treatment of Mapping
+        #       when iterating, so that the type of the iterator is str.
         #       Thus, inheriting from dict through Model_dict does not work
-        #       properly in PyCharm.
+        #       properly in Pyright.
 
         @overload
         def get(self, key: str, /) -> list[JsonScalar] | None:
@@ -352,7 +364,6 @@ class ColNamesMixin:
 
 
 if typing.TYPE_CHECKING:
-    from omnipy.data._mimic_models import Model_list
 
     class _RowWiseTableFirstRowAsColNamesModel(  # type: ignore[misc]
             ColNamesMixin,
