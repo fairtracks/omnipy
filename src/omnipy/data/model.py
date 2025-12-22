@@ -720,7 +720,6 @@ class Model(
                     and not pyd.sequence_like(value)
                     # Also, exclude mappings
                     and not isinstance(value, Mapping)):
-                assert isinstance(value, Iterable)
                 return {ROOT_KEY: (_ for _ in value)}
         return root_obj
 
