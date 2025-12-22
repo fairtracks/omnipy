@@ -1,5 +1,7 @@
+from collections.abc import Iterable, Iterator, Mapping
+from copy import copy
 import typing
-from typing import Any, cast, Generic, get_args, Iterable, Iterator, Mapping, overload
+from typing import Any, cast, Generic, get_args, overload, TypeAlias
 
 from typing_extensions import override, TypeVar
 
@@ -140,6 +142,45 @@ class _ColumnWiseTableDictOfListsModel(
     def __setitem__(self, key: str, value: list[JsonScalar]) -> None:
         super().__setitem__(key, value)  # type: ignore[misc]
 
+    def _common_add(
+        self,
+        other: 'ColWiseAddOtherType',
+        reverse: bool,
+    ) -> 'ColumnWiseTableDictOfListsModel':
+        if not isinstance(other, ColumnWiseTableDictOfListsModel):
+            other = ColumnWiseTableDictOfListsModel(other)
+
+        def _concat_self_and_other(self_value: list[JsonScalar],
+                                   value: list[JsonScalar],
+                                   reverse: bool) -> list[JsonScalar]:
+            return value + self_value if reverse else self_value + value
+
+        new_content = dict(self._content)
+        for key, value in other._content.items():  # type: ignore[attr-defined]
+            if key in new_content:
+                self_value: list[JsonScalar] = copy(new_content[key])
+            else:
+                self_value = [None] * len(self)
+            new_content[key] = _concat_self_and_other(self_value, value, reverse)
+
+        for missing_key in new_content.keys() - other._content.keys():  # type: ignore[attr-defined]
+            new_content[missing_key] = _concat_self_and_other(
+                copy(new_content[missing_key]), [None] * len(other), reverse)
+
+        return ColumnWiseTableDictOfListsModel(new_content)
+
+    def __add__(
+        self,
+        other: 'ColWiseAddOtherType',
+    ) -> 'ColumnWiseTableDictOfListsModel':
+        return self._common_add(other, reverse=False)
+
+    def __radd__(
+        self,
+        other: 'ColWiseAddOtherType',
+    ) -> 'ColumnWiseTableDictOfListsModel':
+        return self._common_add(other, reverse=True)
+
 
 if typing.TYPE_CHECKING:  # noqa: C901
 
@@ -272,10 +313,26 @@ if typing.TYPE_CHECKING:  # noqa: C901
         def __delitem__(self, key: str) -> None:
             ...
 
+        def __add__(
+            self,
+            other: 'ColWiseAddOtherType',
+        ) -> 'ColumnWiseTableDictOfListsModel':
+            ...
+
+        def __radd__(
+            self,
+            other: 'ColWiseAddOtherType',
+        ) -> 'ColumnWiseTableDictOfListsModel':
+            ...
 else:
 
     class ColumnWiseTableDictOfListsModel(_ColumnWiseTableDictOfListsModel):
         ...
+
+
+ColWiseAddOtherType: TypeAlias = (
+    ColumnWiseTableDictOfListsModel | RowWiseTableListOfDictsModel | dict[str, list[JsonScalar]]
+    | list[dict[str, JsonScalar]])
 
 
 class ColumnWiseTableDictOfListsNoConvertModel(Model[dict[str, list[JsonScalar]]]):
