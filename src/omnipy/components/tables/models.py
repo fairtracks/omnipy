@@ -47,8 +47,16 @@ class IterRow(Mapping[str, JsonScalar]):
         return False
 
 
-class RowWiseTableListOfListsModel(Model[list[list[JsonScalar]]]):
-    ...
+if typing.TYPE_CHECKING:
+    from omnipy.data._mimic_models import Model_list
+
+    class RowWiseTableListOfListsModel(Model_list[list[JsonScalar]]):
+        ...
+
+else:
+
+    class RowWiseTableListOfListsModel(Model[list[list[JsonScalar]]]):
+        ...
 
 
 class _RowWiseTableListOfDictsModel(
@@ -71,7 +79,6 @@ class _RowWiseTableListOfDictsModel(
 
 
 if typing.TYPE_CHECKING:
-    from omnipy.data._mimic_models import Model_list
 
     class RowWiseTableListOfDictsModel(Model_list[dict[str, JsonScalar]]):
         ...

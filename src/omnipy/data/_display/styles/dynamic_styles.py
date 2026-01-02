@@ -33,7 +33,7 @@ class TintedBase16Style(pygments.style.Style):
 def fetch_base16_theme(theme_url: str) -> Base16Theme:
     from omnipy.hub.runtime import runtime
     if not runtime:
-        assert _runtime
+        assert _runtime, 'Runtime is not initialized, probably due to pytest usage'
         runtime = _runtime
 
     cache_dir_path = Path(runtime.config.data.ui.cache_dir_path) / 'styles'
