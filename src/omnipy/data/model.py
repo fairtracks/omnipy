@@ -71,7 +71,7 @@ _ModelT = TypeVar('_ModelT', bound=IsModel)
 # TODO: Refactor Dataset and Model using mixins (including below functions)
 
 
-class _ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
+class ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
     # Hack to overcome bug in pydantic/fields.py (v1.10.13), lines 636-641:
     #
     # if origin is None or origin is CollectionsHashable:
@@ -100,7 +100,7 @@ class Model(
         DataClassBase,
         pyd.GenericModel,
         Generic[_RootT],
-        metaclass=_ModelMetaclass,
+        metaclass=ModelMetaclass,
 ):
     """
     A data model containing a value parsed according to the model.
@@ -269,7 +269,7 @@ class Model(
     def _inherit_first_orig_model_in_bases_if_missing(cls):
         if cls is not Model:
             for orig_base in get_original_bases(cls):
-                if isinstance(orig_base, _ModelMetaclass) and orig_base.__concrete__:
+                if isinstance(orig_base, ModelMetaclass) and orig_base.__concrete__:
                     orig_base._inherit_first_orig_model_in_bases_if_missing()
                     orig_model = orig_base.get_orig_model()
                     if orig_model is not Undefined:

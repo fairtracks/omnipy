@@ -1,11 +1,14 @@
+from abc import abstractmethod
 from collections.abc import Iterable, Iterator, Mapping
 from copy import copy
 import typing
-from typing import Any, cast, Generic, get_args, overload, TypeAlias
+from typing import Any, Callable, cast, Generic, get_args, NamedTuple, overload, TypeAlias
 
+from pydantic import BaseModel
 from typing_extensions import override, TypeVar
 
-from omnipy.data.model import Model
+from omnipy.data.helpers import TypeVarStore
+from omnipy.data.model import Model, ModelMetaclass
 import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import first_key_in_mapping
 
@@ -14,7 +17,6 @@ from ...shared.protocols.builtins import (IsItemsView,
                                           IsValuesView,
                                           SupportsKeysAndGetItem)
 from ..general.models import Chain3
-from ..json.models import JsonListOfScalarsModel
 from ..json.typedefs import JsonScalar
 from ..raw.models import (SplitLinesToColumnsByCommaModel,
                           SplitLinesToColumnsModel,
@@ -419,33 +421,209 @@ class RowWiseTableFirstRowAsColNamesModel(ColNamesMixin,
 
 
 _PydBaseModelT = TypeVar('_PydBaseModelT', bound=pyd.BaseModel)
+_DataWithColNamesModelT = TypeVar(
+    '_DataWithColNamesModelT',
+    dict[str, JsonScalar],
+    ColumnWiseTableDictOfListsModel,
+)
+_DataWithoutColNamesModelT = TypeVar(
+    '_DataWithoutColNamesModelT',
+    list[JsonScalar],
+    RowWiseTableListOfListsModel,
+)
 _PydRecordT = TypeVar('_PydRecordT', bound=pyd.BaseModel)
 
 
-class PydanticRecordModel(Model[_PydBaseModelT | JsonListOfScalarsModel], Generic[_PydBaseModelT]):
+class _HeaderInfo(NamedTuple):
+    pydantic_model: type[pyd.BaseModel]
+    header_names: tuple[str, ...]
+    num_required_fields: int
+
+
+class PydanticRecordModelMetaclass(ModelMetaclass):
+    def __init__(cls, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        cls._header_info: _HeaderInfo | None = None
+
+    @property
+    def header_info(cls) -> _HeaderInfo:
+        if cls._header_info is None:
+            type_var_store = get_args(cast(type[Model], cls).outer_type(with_args=True))[0]
+            pydantic_model = get_args(type_var_store)[0]
+            if hasattr(pydantic_model, '__pydantic_model__'):
+                pydantic_model = pydantic_model.__pydantic_model__
+
+            headers = pydantic_model.__fields__
+
+            num_required_fields = -1
+            for i, header_field in enumerate(headers.values()):
+                if not header_field.required:
+                    if num_required_fields == -1:
+                        num_required_fields = i
+                    continue
+                elif num_required_fields != -1 and i > num_required_fields:
+                    raise ValueError('Required fields must not come after optional fields')
+
+            if num_required_fields == -1:
+                num_required_fields = len(headers)
+
+            cls._header_info = _HeaderInfo(
+                pydantic_model,
+                tuple(headers.keys()),
+                num_required_fields,
+            )
+        return cls._header_info
+
+
+class PydanticRecordModelBase(
+        Model[TypeVarStore[_PydBaseModelT] | _DataWithColNamesModelT | _DataWithoutColNamesModelT],
+        Generic[_PydBaseModelT, _DataWithColNamesModelT, _DataWithoutColNamesModelT],
+        metaclass=PydanticRecordModelMetaclass,
+):
     @classmethod
-    def _parse_data(cls, data: _PydBaseModelT | JsonListOfScalarsModel) -> _PydBaseModelT:
-        match data:
-            case JsonListOfScalarsModel():
-                pydantic_model = get_args(cls.outer_type(with_args=True))[0]
-                headers = pydantic_model.__fields__
+    @abstractmethod
+    def _validate_record_model_with_col_names(
+        cls,
+        pyd_model: type[pyd.BaseModel],
+        data: _DataWithColNamesModelT,
+        header_names: tuple[str, ...],
+    ) -> pyd.BaseModel | _DataWithColNamesModelT:
+        ...
 
-                num_required_fields = -1
-                for i, header_field in enumerate(headers.values()):
-                    if not header_field.required:
-                        if num_required_fields == -1:
-                            num_required_fields = i
-                        continue
-                    elif num_required_fields != -1 and i > num_required_fields:
-                        raise ValueError('Required fields must not come after optional fields')
+    @classmethod
+    @abstractmethod
+    def _validate_record_model_without_col_names(
+        cls,
+        pyd_model: type[pyd.BaseModel],
+        data: _DataWithoutColNamesModelT,
+        header_names: tuple[str, ...],
+    ) -> pyd.BaseModel | _DataWithColNamesModelT:
+        ...
 
-                assert len(headers) >= len(data) >= num_required_fields, \
-                    (f'Incorrect number of data elements: '
-                     f'{len(headers)} >= {len(data)} >= {num_required_fields}')
+    @override
+    @classmethod
+    def _parse_data(  # type: ignore[override]
+        cls,
+        data: _DataWithColNamesModelT | _DataWithoutColNamesModelT,
+    ) -> pyd.BaseModel | _DataWithColNamesModelT:
+        pyd_model, header_names, num_required_fields = cls.header_info
+        if isinstance(data, (dict, ColumnWiseTableDictOfListsModel)):
+            # cls._validate_and_set_value(data)
+            return cls._validate_record_model_with_col_names(pyd_model, data, header_names)
+            return pyd_model(**data)
 
-                return pydantic_model(**dict(zip(headers, data)))
-            case _:
-                return data
+        if isinstance(data, (list, RowWiseTableListOfListsModel)):
+            if isinstance(data, RowWiseTableListOfListsModel):
+                num_data_cols = len(data.content[0]) if len(data.content) > 0 else 0
+            else:
+                num_data_cols = len(data)
+
+            assert len(header_names) >= num_data_cols >= num_required_fields, \
+                (f'Incorrect number of data elements: '
+                 f'{len(header_names)} >= {num_data_cols} >= {num_required_fields}')
+
+            return cls._validate_record_model_without_col_names(pyd_model, data, header_names)
+            return pyd_model(**dict(zip(header_names, data)))
+
+
+class PydanticRecordModel(
+        PydanticRecordModelBase[
+            _PydBaseModelT,
+            dict[str, JsonScalar],
+            list[JsonScalar],
+        ],
+        Generic[_PydBaseModelT],
+):
+    @override
+    @classmethod
+    def _validate_record_model_with_col_names(
+        cls,
+        pyd_model: type[pyd.BaseModel],
+        data: dict[str, JsonScalar],
+        header_names: tuple[str, ...],
+    ) -> pyd.BaseModel | dict[str, JsonScalar]:
+        return pyd_model(**data)
+
+    @override
+    @classmethod
+    def _validate_record_model_without_col_names(
+        cls,
+        pyd_model: type[pyd.BaseModel],
+        data: list[JsonScalar],
+        header_names: tuple[str, ...],
+    ) -> pyd.BaseModel | dict[str, JsonScalar]:
+        return pyd_model(**dict(zip(header_names, data)))
+
+
+class IteratingPydanticRecordModel(
+        PydanticRecordModelBase[
+            _PydBaseModelT,
+            ColumnWiseTableDictOfListsModel,
+            RowWiseTableListOfListsModel,
+        ],
+        Generic[_PydBaseModelT],
+):
+    @classmethod
+    def _validate_over_all_rows(
+        cls,
+        input_model: ColumnWiseTableDictOfListsModel | RowWiseTableListOfListsModel,
+        output_model: ColumnWiseTableDictOfListsModel,
+        pyd_model: type[BaseModel],
+        to_row_dict_func: Callable[[list[JsonScalar]], dict[str, JsonScalar]] | None = None,
+    ):
+        def _init_col(
+                content: dict[str, list[JsonScalar]],
+                pyd_model: type[pyd.BaseModel],
+                key: str,
+                col_len: int = len(input_model),
+        ) -> None:
+            content[key] = [pyd_model.__fields__[key].get_default()] * col_len
+
+        content = output_model.content
+        for key, field in pyd_model.__fields__.items():
+            if field.required and key not in content:
+                _init_col(content, pyd_model, key)
+
+        for i, row in enumerate(input_model):
+            values, _fields_set, error = pyd.validate_model(
+                pyd_model,
+                to_row_dict_func(row) if to_row_dict_func else row,  # type: ignore[arg-type]
+            )
+            if error:
+                raise error
+            for key, val in values.items():
+                if key not in content:
+                    _init_col(content, pyd_model, key)
+
+                content[key][i] = val
+
+    @override
+    @classmethod
+    def _validate_record_model_with_col_names(
+        cls,
+        pyd_model: type[pyd.BaseModel],
+        data: ColumnWiseTableDictOfListsModel,
+        header_names: tuple[str, ...],
+    ) -> pyd.BaseModel | ColumnWiseTableDictOfListsModel:
+        cls._validate_over_all_rows(input_model=data, output_model=data, pyd_model=pyd_model)
+        return data
+
+    @override
+    @classmethod
+    def _validate_record_model_without_col_names(
+        cls,
+        pyd_model: type[pyd.BaseModel],
+        data: RowWiseTableListOfListsModel,
+        header_names: tuple[str, ...],
+    ) -> pyd.BaseModel | ColumnWiseTableDictOfListsModel:
+        output = ColumnWiseTableDictOfListsModel()
+        cls._validate_over_all_rows(
+            input_model=data,
+            output_model=output,
+            pyd_model=pyd_model,
+            to_row_dict_func=lambda row: dict(zip(header_names, row)),
+        )
+        return output
 
 
 if typing.TYPE_CHECKING:

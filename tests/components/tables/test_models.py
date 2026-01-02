@@ -5,6 +5,7 @@ import pytest_cases as pc
 from scripts.type_alias_example import JsonScalar
 
 from omnipy.components.tables.models import (ColumnWiseTableDictOfListsModel,
+                                             IteratingPydanticRecordModel,
                                              PydanticRecordModel,
                                              RowWiseTableFirstRowAsColNamesModel,
                                              RowWiseTableListOfDictsModel,
@@ -251,6 +252,87 @@ def test_pydantic_record_model_all_required() -> None:
 
     with pytest.raises(ValidationError):
         NameRecordModel(firstname='Tarzan')
+
+
+@pytest.fixture
+def IteratingPersonModel() -> type[IteratingPydanticRecordModel]:
+    class PersonRecord(pyd.BaseModel):
+        firstname: str
+        lastname: str | None = ...  # type: ignore[assignment]
+        age: int
+        deceased: bool = False
+
+    class IteratingPersonModel(IteratingPydanticRecordModel[PersonRecord]):
+        pass
+
+    return IteratingPersonModel
+
+
+def test_iterating_pydantic_record_model_column_wise_data(
+        IteratingPersonModel: Annotated[type[IteratingPydanticRecordModel],
+                                        pytest.fixture]) -> None:
+    persons = IteratingPersonModel(
+        firstname=['John', 'Jane', 'Tarzan'],
+        lastname=['Doe', 'Doe', None],
+        age=['30', '25', '19'],
+    )
+    assert isinstance(persons.content, ColumnWiseTableDictOfListsModel)
+    assert persons.to_data() == {
+        'firstname': ['John', 'Jane', 'Tarzan'],
+        'lastname': ['Doe', 'Doe', None],
+        'age': [30, 25, 19],
+        'deceased': [False, False, False],
+    }
+    tuple(persons.to_data().keys()) == (  # type: ignore[attr-defined]
+        'firstname', 'lastname', 'age', 'deceased')
+
+    with pytest.raises(ValidationError):
+        IteratingPersonModel(firstname='Tarzan')
+
+    with pytest.raises(ValidationError):
+        IteratingPersonModel(firstname=['Tarzan'], age=['Unknown'])
+
+    no_persons = IteratingPersonModel(firstname=[], lastname=[], age=[])
+    assert isinstance(no_persons.content, ColumnWiseTableDictOfListsModel)
+    assert no_persons.to_data() == {'firstname': [], 'lastname': [], 'age': []}
+
+    empty_persons = IteratingPersonModel()
+    assert isinstance(empty_persons.content, ColumnWiseTableDictOfListsModel)
+    assert empty_persons.to_data() == {'firstname': [], 'lastname': [], 'age': []}
+
+
+def test_iterating_pydantic_record_model_row_wise_data(
+    # runtime: Annotated[IsRuntime, pytest.fixture],
+    IteratingPersonModel: Annotated[type[IteratingPydanticRecordModel], pytest.fixture]
+) -> None:
+    persons = IteratingPersonModel([
+        ['John', 'Doe', '30'],
+        ['Jane', 'Doe', '25'],
+        ['Tarzan', None, '19'],
+    ])
+    assert isinstance(persons.content, ColumnWiseTableDictOfListsModel)
+    assert persons.to_data() == {
+        'firstname': ['John', 'Jane', 'Tarzan'],
+        'lastname': ['Doe', 'Doe', None],
+        'age': [30, 25, 19],
+        'deceased': [False, False, False],
+    }
+    tuple(persons.to_data().keys()) == (  # type: ignore[attr-defined]
+        'firstname', 'lastname', 'age', 'deceased')
+
+    with pytest.raises(ValidationError):
+        IteratingPersonModel([['Tarzan']])
+
+    with pytest.raises(ValidationError):
+        IteratingPersonModel([['Tarzan', None, 'Unknown']])
+
+    no_persons = IteratingPersonModel([[], [], []])
+    assert isinstance(no_persons.content, ColumnWiseTableDictOfListsModel)
+    assert no_persons.to_data() == {'firstname': [], 'lastname': [], 'age': []}
+
+    empty_persons = IteratingPersonModel()
+    assert isinstance(empty_persons.content, ColumnWiseTableDictOfListsModel)
+    assert empty_persons.to_data() == {'firstname': [], 'lastname': [], 'age': []}
 
 
 def test_pydantic_record_model_optional() -> None:
