@@ -8,7 +8,7 @@ import os
 import tarfile
 from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKING
 
-from typing_extensions import Self, TypeVar, Unpack
+from typing_extensions import Self, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._mixins.display import DatasetDisplayMixin
@@ -44,8 +44,9 @@ if TYPE_CHECKING:
                                            Model_int,
                                            Model_list,
                                            Model_str,
-                                           Model_tuple)
-    from omnipy.data._typedefs import _KeyT, _ValT, _ValTupleT
+                                           Model_tuple_pair,
+                                           Model_tuple_same_type)
+    from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
 
 _ModelT = TypeVar('_ModelT', bound=IsModel)
 _NewModelT = TypeVar('_NewModelT', bound=IsModel)
@@ -367,9 +368,16 @@ class Dataset(
 
         @overload
         def __getitem__(
-            self: 'Dataset[Model[tuple[Unpack[_ValTupleT]]]]',
+            self: 'Dataset[Model[tuple[_ValT, _ValT2]]]',
             selector: str | int,
-        ) -> Model_tuple[Unpack[_ValTupleT]]:
+        ) -> Model_tuple_pair[_ValT, _ValT2]:
+            ...
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[Model[tuple[_ValT]]]',
+            selector: str | int,
+        ) -> Model_tuple_same_type[_ValT]:
             ...
 
         @overload

@@ -5,7 +5,6 @@ import functools
 import inspect
 import json
 from types import GenericAlias, NoneType, UnionType
-import typing
 from typing import (Annotated,
                     Any,
                     cast,
@@ -22,12 +21,12 @@ from typing import (Annotated,
                     TYPE_CHECKING,
                     Union)
 
-from typing_extensions import get_original_bases, Self, TypeVar, Unpack
+from typing_extensions import get_original_bases, override, Self, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._missing import parse_none_according_to_model
 from omnipy.data._mixins.display import ModelDisplayMixin
-from omnipy.data._typedefs import _KeyT, _ValT, _ValTupleT
+from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
 from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  get_special_methods_info_dict,
                                  MethodInfo,
@@ -288,7 +287,8 @@ class Model(
                                     Model_int,
                                     Model_list,
                                     Model_str,
-                                    Model_tuple)
+                                    Model_tuple_pair,
+                                    Model_tuple_same_type)
 
         @overload
         def __new__(
@@ -332,10 +332,18 @@ class Model(
 
         @overload
         def __new__(
-            cls: 'type[Model[tuple[Unpack[_ValTupleT]]]]',
+            cls: 'type[Model[tuple[_ValT, _ValT2]]]',
             *args: Any,
             **kwargs: Any,
-        ) -> Model_tuple[Unpack[_ValTupleT]]:
+        ) -> Model_tuple_pair[_ValT, _ValT2]:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[tuple[_ValT, ...]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> Model_tuple_same_type[_ValT]:
             ...
 
         @overload
@@ -473,6 +481,12 @@ class Model(
 
     def __copy__(self) -> Self:
         return self.copy(deep=False)
+
+    if TYPE_CHECKING:
+
+        @override
+        def __iter__(self) -> Iterator:  # pyright: ignore [reportIncompatibleMethodOverride]
+            ...
 
     def copy(self, *, deep: bool = False, **kwargs) -> Self:
         pydantic_copy = pyd.GenericModel.copy(self, deep=deep, **kwargs)
@@ -1220,7 +1234,7 @@ class Model(
         else:
             return level_up_type_to_check
 
-    if not typing.TYPE_CHECKING:
+    if not TYPE_CHECKING:
 
         def __getattr__(self, attr: str) -> Any:
             if self._is_non_omnipy_pydantic_model() and self._content_obj_hasattr(attr):

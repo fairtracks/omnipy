@@ -65,8 +65,6 @@ class IsModel(Protocol[_RootT]):
     def content(self) -> _RootT:
         ...
 
-    ...
-
 
 class IsDataset(IsMutableMapping[str, _ModelT], Protocol[_ModelT]):
     """
