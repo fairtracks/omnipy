@@ -278,7 +278,7 @@ class Model(
             cls._clean_type_caches()
 
     #
-    if TYPE_CHECKING and TYPE_CHECKER == 'pyright':  # noqa: C901
+    if TYPE_CHECKING and TYPE_CHECKER != 'mypy':  # noqa: C901
 
         # mypy currently does not support overloads of __new__()
 

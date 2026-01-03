@@ -564,7 +564,7 @@ class TsvTableModel(Chain3[
         SplitLinesToColumnsModel,
         RowWiseTableFirstRowAsColNamesModel,
 ]):
-    if TYPE_CHECKING and TYPE_CHECKER == 'pyright':
+    if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
         def __new__(
             cls,
@@ -579,7 +579,7 @@ class CsvTableModel(Chain3[
         SplitLinesToColumnsByCommaModel,
         RowWiseTableFirstRowAsColNamesModel,
 ]):
-    if TYPE_CHECKING and TYPE_CHECKER == 'pyright':
+    if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
         def __new__(
             cls,

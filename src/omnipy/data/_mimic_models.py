@@ -46,7 +46,7 @@ if TYPE_CHECKING:
         # handle subclassing when one of the Mimic models is used as a base
         # class.
 
-        if TYPE_CHECKER == 'pyright':
+        if TYPE_CHECKER != 'mypy':
 
             def __new__(cls, *args: Any, **kwargs: Any) -> _CorrectModelT:
                 ...
