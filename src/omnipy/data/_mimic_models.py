@@ -1,4 +1,6 @@
-from typing import Generic, TYPE_CHECKING
+from typing import Any, Generic, TYPE_CHECKING, TypeVar
+
+from omnipy.shared.protocols.data import IsModel
 
 if TYPE_CHECKING:
 
@@ -35,3 +37,12 @@ if TYPE_CHECKING:
             Generic[_KeyT, _ValT],
     ):
         ...
+
+    _CorrectModelT = TypeVar('_CorrectModelT', bound=IsModel)
+
+    class RevertModelMimicTypingHack(Generic[_CorrectModelT]):
+        # Need to override Model.__new__() hack for Pyright to correctly
+        # handle subclassing when one of the Mimic models is used as a base
+        # class.
+        def __new__(cls, *args: Any, **kwargs: Any) -> _CorrectModelT:
+            ...

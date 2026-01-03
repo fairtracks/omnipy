@@ -43,15 +43,18 @@ def test_columnwise_and_rowwise_table_models_with_col_names() -> None:
     row_wise_model = RowWiseTableListOfDictsModel(row_wise_data)
     assert row_wise_model.content == row_wise_data
     assert row_wise_model.to_data() == row_wise_data
+    assert row_wise_model.col_names == ('a', 'b', 'c', 'd')
 
     column_wise_model = ColumnWiseTableDictOfListsModel(column_wise_data)
     assert column_wise_model.content == column_wise_data
     assert column_wise_model.to_data() == column_wise_data
+    assert column_wise_model.col_names == ('a', 'b', 'c', 'd')
 
     converted_to_column_wise_model = ColumnWiseTableDictOfListsModel(row_wise_model)
     assert converted_to_column_wise_model.content == column_wise_data
     assert converted_to_column_wise_model.to_data() == column_wise_data
     assert converted_to_column_wise_model == column_wise_model
+    assert converted_to_column_wise_model.col_names == ('a', 'b', 'c', 'd')
 
     row_wise_data_with_none = [
         {
@@ -65,26 +68,31 @@ def test_columnwise_and_rowwise_table_models_with_col_names() -> None:
     assert converted_to_row_wise_model.content == row_wise_data_with_none
     assert converted_to_row_wise_model.to_data() == row_wise_data_with_none
     assert converted_to_row_wise_model == RowWiseTableListOfDictsModel(row_wise_data_with_none)
+    assert converted_to_row_wise_model.col_names == ('a', 'b', 'c', 'd')
 
 
 def test_columnwise_and_rowwise_table_models_with_col_names_empty() -> None:
     row_wise_model = RowWiseTableListOfDictsModel([])
     assert row_wise_model.content == []
     assert row_wise_model.to_data() == []
+    assert row_wise_model.col_names == ()
 
     column_wise_model = ColumnWiseTableDictOfListsModel({})
     assert column_wise_model.content == {}
     assert column_wise_model.to_data() == {}
+    assert column_wise_model.col_names == ()
 
     converted_to_column_wise_model = ColumnWiseTableDictOfListsModel([])
     assert converted_to_column_wise_model.content == {}
     assert converted_to_column_wise_model.to_data() == {}
     assert converted_to_column_wise_model == column_wise_model
+    assert converted_to_column_wise_model.col_names == ()
 
     converted_to_row_wise_model = RowWiseTableListOfDictsModel({})
     assert converted_to_row_wise_model.content == []
     assert converted_to_row_wise_model.to_data() == []
     assert converted_to_row_wise_model == row_wise_model
+    assert converted_to_row_wise_model.col_names == ()
 
 
 def test_columnwise_and_rowwise_table_models_failure() -> None:
@@ -189,7 +197,7 @@ def test_columnwise_table_reverse_concatenate_add(case: ConcatCaseReverse) -> No
     assert concat_model.to_data() == case.expected_reverse
 
 
-def test_row_wise_table_first_row_as_col_names_model() -> None:
+def test_rowwise_table_first_row_as_col_names_model() -> None:
     row_wise_list_of_lists_data = [
         ['firstname', 'lastname'],
         ['John', 'Doe'],
@@ -212,7 +220,7 @@ def test_row_wise_table_first_row_as_col_names_model() -> None:
     assert row_wise_table_with_col_names_model.col_names == ('firstname', 'lastname')
 
 
-def test_row_wise_table_first_row_as_col_names_model_empty() -> None:
+def test_rowwise_table_first_row_as_col_names_model_empty() -> None:
     row_wise_table_with_col_names_model = RowWiseTableFirstRowAsColNamesModel([])
     assert row_wise_table_with_col_names_model.content == []
     assert row_wise_table_with_col_names_model.to_data() == []
