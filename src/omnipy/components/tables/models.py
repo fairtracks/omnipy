@@ -1,7 +1,6 @@
 from abc import abstractmethod
 from collections.abc import Iterator, Mapping
 from copy import copy
-import typing
 from typing import (Any,
                     Callable,
                     cast,
@@ -20,6 +19,7 @@ from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model, ModelMetaclass
 from omnipy.shared.protocols.builtins import IsDict, IsList, SupportsKeysAndGetItem
 from omnipy.shared.protocols.data import HasContent
+from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import first_key_in_mapping
 
@@ -54,7 +54,7 @@ class IterRow(Mapping[str, JsonScalar]):
         return False
 
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from omnipy.data._mimic_models import RevertModelMimicTypingHack
 
     class RowWiseTableListOfListsModel(IsList[list[JsonScalar]], Model[list[list[JsonScalar]]]):
@@ -97,7 +97,7 @@ class _RowWiseTableListOfDictsModel(
             return data
 
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
 
     class RowWiseTableListOfDictsModel(
             _RowWiseColNamesMixin,
@@ -252,7 +252,7 @@ class _ColumnWiseTableDictOfListsModel(
             return data
 
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
 
     class ColumnWiseTableDictOfListsModel(  # type: ignore[misc]
             _ColumnWiseTableDictOfListsMixin,
@@ -319,7 +319,7 @@ class _RowWiseTableFirstRowAsColNamesModel(Model[list[dict[str, JsonScalar]]
         ]
 
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
 
     class RowWiseTableFirstRowAsColNamesModel(
             _RowWiseColNamesMixin,
@@ -544,7 +544,7 @@ class IteratingPydanticRecordModel(
         return output
 
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from omnipy.data._mimic_models import Model_list
 
     class TableOfPydanticRecordsModel(Model_list[PydanticRecordModel[_PydRecordT]],
@@ -564,7 +564,7 @@ class TsvTableModel(Chain3[
         SplitLinesToColumnsModel,
         RowWiseTableFirstRowAsColNamesModel,
 ]):
-    if typing.TYPE_CHECKING:
+    if TYPE_CHECKING and TYPE_CHECKER == 'pyright':
 
         def __new__(
             cls,
@@ -579,7 +579,7 @@ class CsvTableModel(Chain3[
         SplitLinesToColumnsByCommaModel,
         RowWiseTableFirstRowAsColNamesModel,
 ]):
-    if typing.TYPE_CHECKING:
+    if TYPE_CHECKING and TYPE_CHECKER == 'pyright':
 
         def __new__(
             cls,

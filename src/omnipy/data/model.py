@@ -18,7 +18,6 @@ from typing import (Annotated,
                     Literal,
                     Optional,
                     overload,
-                    TYPE_CHECKING,
                     Union)
 
 from typing_extensions import get_original_bases, override, Self, TypeVar
@@ -37,6 +36,7 @@ from omnipy.data.typechecks import is_model_instance
 from omnipy.shared.constants import ROOT_KEY
 from omnipy.shared.protocols.data import IsModel, IsSnapshotWrapper
 from omnipy.shared.typedefs import TypeForm
+from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 from omnipy.util._pydantic import (is_none_type,
                                    lenient_isinstance,
                                    lenient_issubclass,
@@ -277,10 +277,11 @@ class Model(
 
             cls._clean_type_caches()
 
-    # TODO: Add TYPE_CHECKING override for __iter__ method, as BaseModel.__iter__() iterates over
-    #       tuples. E.g. `for item in Model[list[int]]([1,2,3]): reveal_type(item)` should reveal
-    #       type `int` instead of `tuple[str, Any]`.
-    if TYPE_CHECKING:  # noqa: C901
+    #
+    if TYPE_CHECKING and TYPE_CHECKER == 'pyright':  # noqa: C901
+
+        # mypy currently does not support overloads of __new__()
+
         from ._mimic_models import (Model_bool,
                                     Model_dict,
                                     Model_float,

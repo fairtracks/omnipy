@@ -1,6 +1,7 @@
-from typing import Any, Generic, TYPE_CHECKING, TypeVar
+from typing import Any, Generic, TypeVar
 
 from omnipy.shared.protocols.data import IsModel
+from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 
 if TYPE_CHECKING:
 
@@ -44,5 +45,8 @@ if TYPE_CHECKING:
         # Need to override Model.__new__() hack for Pyright to correctly
         # handle subclassing when one of the Mimic models is used as a base
         # class.
-        def __new__(cls, *args: Any, **kwargs: Any) -> _CorrectModelT:
-            ...
+
+        if TYPE_CHECKER == 'pyright':
+
+            def __new__(cls, *args: Any, **kwargs: Any) -> _CorrectModelT:
+                ...
