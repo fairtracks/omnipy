@@ -46,6 +46,7 @@ model2[1] = 5
 model3 = Model[list]([1, 2, 3])
 reveal_type(Model[list])
 reveal_type(model3)
+reveal_type(model3.content)
 model3.append(2)
 model3.asdf()
 asd = model3[0]
@@ -54,10 +55,30 @@ reveal_type(asd)
 model4 = Model[list[int]]([1, 2, 3])
 reveal_type(Model[list[int]])
 reveal_type(model4)
+reveal_type(model4.content)
 model4.append(2)
 model4.asdf()
 asd = model4[0]
 model4[1] = 5
+reveal_type(asd)
+
+model5 = Model[dict]({'a': 1, 'b': 2})
+reveal_type(Model[dict])
+reveal_type(model5)
+model5.pop('a')
+model5.asdf()
+asd = model5['a']
+model5['b'] = 'c'
+reveal_type(asd)
+
+model6 = Model[dict[int, str]]({1: 'a', 2: 'b'})
+reveal_type(Model[dict[int, str]])
+reveal_type(model6)
+model6.pop(2)
+model6.asdf()
+asd = model6[1]
+model6['a'] = 'c'
+model6[3] = 'c'
 reveal_type(asd)
 
 (1, 2, 3).count(1)
@@ -72,6 +93,7 @@ ass: IsModel = A
 
 model_a = Model[A]()
 reveal_type(model_a)
+reveal_type(model_a.content)
 model_a.adf()
 
 model_model_list = Model[Model[list[int]]]([23])

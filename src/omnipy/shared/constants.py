@@ -1,5 +1,6 @@
-# Data - General
 import omnipy.util._pydantic as pyd
+
+# Data - General
 
 ROOT_KEY = '__root__'
 DATA_KEY = 'data'
