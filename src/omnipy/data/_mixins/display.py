@@ -24,6 +24,7 @@ from omnipy.hub.ui import get_terminal_prompt_height, note_mime_bundle
 from omnipy.shared.constants import TITLE_BLANK_LINES
 from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
 from omnipy.shared.enums.display import (DisplayColorSystem,
+                                         HorizontalOverflowMode,
                                          MaxTitleHeight,
                                          PanelDesign,
                                          SyntaxLanguage)
@@ -350,9 +351,9 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 else:
                     print(output)
 
-    def _peek_models(
+    def _peek_nested_content(
         self,
-        models: dict[str, 'Model'],
+        nested_content: dict[str, 'Model | Dataset'],
         title: str = '',
         frame: Frame | None = None,
         **kwargs,
@@ -370,27 +371,33 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
         max_num_panels: None | int = self._calc_max_num_panels(config, frame)
 
-        for i, (inner_title, model) in enumerate(models.items()):
+        for i, (inner_title, model_or_dataset) in enumerate(nested_content.items()):
             if max_num_panels is not None and i > max_num_panels:
                 # If the number of models exceeds the maximum number of
                 # models that can possibly fit in the frame based on the
                 # `min_width` config, we stop adding more models.
-                print(i)
                 break
 
-            if isinstance(model.content, Dataset):
+            if isinstance(model_or_dataset, Dataset):
                 inner_kwargs = config_kwargs.copy()
-                if 'freedom' not in inner_kwargs:
-                    inner_kwargs['freedom'] = None
+                # # Why was this here?
+                # if 'freedom' not in inner_kwargs:
+                #     inner_kwargs['freedom'] = None
+                if 'h_overflow' not in inner_kwargs:
+                    inner_kwargs['h_overflow'] = HorizontalOverflowMode.WRAP
 
-                layout[inner_title] = cast(Dataset, model.content)._peek_dataset_models(
+                layout[inner_title] = cast(Dataset, model_or_dataset)._peek_dataset_models(
                     title=inner_title,
                     frame=empty_frame(),
                     **inner_kwargs,
                 )
-            else:
+            else:  # Model
                 layout[inner_title] = self._create_inner_panel_for_model(
-                    config, model, model.outer_type(), inner_title, **config_kwargs)
+                    config,
+                    model_or_dataset,
+                    model_or_dataset.outer_type(),
+                    inner_title,
+                    **config_kwargs)
 
         config = self._update_config_with_overflow_modes(config, 'layout')
         config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
@@ -475,10 +482,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                             f'Expected only Dimensions and OutputConfig parameters: '
                             f"{', '.join(supported_keys)}.")
 
-    def _browse_models(self,
-                       models: dict[str, 'Model'],
-                       initial_html_output: dict[str, str] | None = None,
-                       **kwargs) -> None:
+    def _browse_nested_content(
+        self,
+        nested_content: dict[str, 'Model | Dataset'],
+        initial_html_output: dict[str, str] | None = None,
+        nested_call: bool = False,
+        **kwargs,
+    ) -> None:
         from omnipy.data.dataset import Dataset
 
         ui_type = self._extract_ui_type(**kwargs)
@@ -486,33 +496,34 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         html_output = initial_html_output or {}
         all_urls = []
 
-        for name, model in models.items():
-            if isinstance(model.content, Dataset):
-                cast(Dataset, model.content)._browse_dataset(html_output, **kwargs)
+        for name, model_or_dataset in nested_content.items():
+            if isinstance(model_or_dataset, Dataset):
+                cast(Dataset, model_or_dataset)._browse_dataset(html_output, **kwargs)
             else:
-                filename = f'{name}_{id(model)}.html'
-                html_output[filename] = model._display_according_to_ui_type(
+                filename = f'{name}_{id(model_or_dataset)}.html'
+                html_output[filename] = model_or_dataset._display_according_to_ui_type(
                     ui_type=UserInterfaceType.BROWSER_PAGE,
                     return_output_if_str=True,
-                    output_method=model._browse_model,
+                    output_method=model_or_dataset._browse_model,
                     **kwargs,
                 )
 
-        if UserInterfaceType.is_jupyter_in_browser(ui_type):
-            from omnipy.data._display.integrations.jupyter.components import ModelBrowser
-            ModelBrowser(html_content=html_output)._ipython_display_()
-        else:
-            for filename, html_content in html_output.items():
-                file_path = self._create_cached_html_file(filename, html_content)
-                all_urls.append(file_path.as_uri())
-
-            browser = webbrowser.get()
-            if isinstance(browser, OmnipyMacOSXOSAScript):
-                webbrowser.open_new(all_urls)  # type: ignore[arg-type]
+        if not nested_call:
+            if UserInterfaceType.is_jupyter_in_browser(ui_type):
+                from omnipy.data._display.integrations.jupyter.components import ModelBrowser
+                ModelBrowser(html_content=html_output)._ipython_display_()
             else:
-                # For other browsers, we open each URL in a new tab
-                for i, url in enumerate(all_urls):
-                    webbrowser.open(url, new=(i == 0))
+                for filename, html_content in html_output.items():
+                    file_path = self._create_cached_html_file(filename, html_content)
+                    all_urls.append(file_path.as_uri())
+
+                browser = webbrowser.get()
+                if isinstance(browser, OmnipyMacOSXOSAScript):
+                    webbrowser.open_new(all_urls)  # type: ignore[arg-type]
+                else:
+                    # For other browsers, we open each URL in a new tab
+                    for i, url in enumerate(all_urls):
+                        webbrowser.open(url, new=(i == 0))
 
     def _create_cached_html_file(self, filename: str, html_output: str) -> Path:
         self_as_dataclass = cast(DataClassBase, self)
@@ -689,14 +700,16 @@ class ModelDisplayMixin(BaseDisplayMixin):
 
     def _peek(self, **kwargs) -> DraftPanel:
         self_as_model = cast('Model', self)
-        return self._peek_models(models={self.__class__.__name__: self_as_model}, **kwargs)
+        return self._peek_nested_content(
+            nested_content={self.__class__.__name__: self_as_model}, **kwargs)
 
     def _full(self, **kwargs) -> DraftPanel:
         return self._peek(**self._prepare_kwargs_for_full(kwargs))
 
     def _browse(self, **kwargs) -> None:
         self_as_model = cast('Model', self)
-        self._browse_models(models={self_as_model.__class__.__name__: self_as_model}, **kwargs)
+        self._browse_nested_content(
+            nested_content={self_as_model.__class__.__name__: self_as_model}, **kwargs)
 
     def _browse_model(self, **kwargs) -> DraftPanel:
         self_as_model = cast('Model', self)
@@ -731,8 +744,8 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                              frame: Frame | None = None,
                              **kwargs) -> DraftPanel:
         self_as_dataset = cast('Dataset', self)
-        return self._peek_models(
-            models={
+        return self._peek_nested_content(
+            nested_content={
                 f'{i}. {inner_title}': model
                 for i, (inner_title, model) in enumerate(self_as_dataset.data.items())
             },
@@ -846,6 +859,9 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         self_as_dataset = cast('Dataset', self)
         if html_output is None:
             html_output = {}
+            nested_call = False
+        else:
+            nested_call = True
 
         self_as_dataset = cast('Dataset', self)
 
@@ -861,12 +877,13 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             **kwargs_copy,
         )
 
-        self._browse_models(
-            models={
+        self._browse_nested_content(
+            nested_content={
                 f'{i}. {title}': model
                 for i, (title, model) in enumerate(self_as_dataset.data.items())
             },
             initial_html_output=html_output,
+            nested_call=nested_call,
             **kwargs)
 
     @classmethod

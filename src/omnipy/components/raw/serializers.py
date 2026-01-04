@@ -11,8 +11,8 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer):
     """"""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
-        model_type_variants = all_type_variants(dataset.get_model_class().full_type())
-        return len(model_type_variants) > 0 and model_type_variants[0] is str
+        type_variants = all_type_variants(dataset.get_type().full_type())
+        return len(type_variants) > 0 and type_variants[0] is str
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
@@ -55,8 +55,8 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer):
     """"""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
-        model_type_variants = all_type_variants(dataset.get_model_class().full_type())
-        return len(model_type_variants) > 0 and model_type_variants[0] is bytes
+        type_variants = all_type_variants(dataset.get_type().full_type())
+        return len(type_variants) > 0 and type_variants[0] is bytes
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:

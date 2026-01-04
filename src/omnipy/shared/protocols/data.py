@@ -23,11 +23,12 @@ from omnipy.shared.protocols.config import (IsDataConfig,
                                             IsLayoutConfig,
                                             IsTextConfig)
 from omnipy.shared.protocols.hub.log import CanLog
+from omnipy.util._pydantic import Undefined, UndefinedType
 import omnipy.util._pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 _RootT = TypeVar('_RootT', covariant=True)
-_ModelT = TypeVar('_ModelT', bound='IsModel')
+_ModelOrDatasetT = TypeVar('_ModelOrDatasetT', bound='IsModel | IsDataset')
 
 ContentT = TypeVar('ContentT', bound=object)
 HasContentT = TypeVar('HasContentT', bound='HasContent')
@@ -66,25 +67,28 @@ class IsModel(Protocol[_RootT]):
         ...
 
 
-class IsDataset(IsMutableMapping[str, _ModelT], Protocol[_ModelT]):
+@runtime_checkable
+class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatasetT]):
     """
     Dict-based container of data files that follow a specific Model
     """
     def __init__(
         self,
-        value: dict[str, object] | Iterator[tuple[str, object]] | pyd.UndefinedType = pyd.Undefined,
+        value: Mapping[str, object] | Iterator[tuple[str, object]] | UndefinedType = Undefined,
         *,
-        data: dict[str, object] | pyd.UndefinedType = pyd.Undefined,
+        data: Mapping[str, object] | UndefinedType = Undefined,
         **input_data: object,
     ) -> None:
         ...
 
     @classmethod
-    def get_model_class(cls) -> type[_ModelT]:
+    def get_type(cls) -> type[_ModelOrDatasetT]:
         """
-        Returns the concrete Model class used for all data files in the dataset, e.g.:
-        `Model[list[int]]`
-        :return: The concrete Model class used for all data files in the dataset
+        Returns the concrete type (Model or Dataset class) used for all
+        data files in the dataset, e.g.: `Model[list[int]]`, or
+        `Dataset[Model[dict[str, float]]]` for nested datasets.
+        :return: The concrete type (Model or Dataset class) used for all
+                 data files in the dataset.
         """
         ...
 
@@ -155,26 +159,27 @@ class IsDataset(IsMutableMapping[str, _ModelT], Protocol[_ModelT]):
         ...
 
     @overload
-    def __getitem__(self, selector: str | int) -> _ModelT:
+    def __getitem__(self, selector: str | int) -> _ModelOrDatasetT:
         ...
 
-    def __getitem__(self, selector: str | int | slice | Iterable[str | int]) -> _ModelT | Self:
+    def __getitem__(self,
+                    selector: str | int | slice | Iterable[str | int]) -> _ModelOrDatasetT | Self:
         ...
 
     @overload
-    def __setitem__(self, selector: str | int, data_obj: _ModelT) -> None:
+    def __setitem__(self, selector: str | int, data_obj: _ModelOrDatasetT) -> None:
         ...
 
     @overload
     def __setitem__(self,
                     selector: slice | Iterable[str | int],
-                    data_obj: Mapping[str, _ModelT] | Iterable[_ModelT]) -> None:
+                    data_obj: Mapping[str, _ModelOrDatasetT] | Iterable[_ModelOrDatasetT]) -> None:
         ...
 
     def __setitem__(
         self,
         selector: str | int | slice | Iterable[str | int],
-        data_obj: _ModelT | Mapping[str, _ModelT] | Iterable[_ModelT],
+        data_obj: _ModelOrDatasetT | Mapping[str, _ModelOrDatasetT] | Iterable[_ModelOrDatasetT],
     ) -> None:
         ...
 
@@ -183,7 +188,7 @@ class IsDataset(IsMutableMapping[str, _ModelT], Protocol[_ModelT]):
 
 
 @runtime_checkable
-class IsMultiModelDataset(IsDataset[type[_ModelT]], Protocol[_ModelT]):
+class IsMultiModelDataset(IsDataset[type[_ModelOrDatasetT]], Protocol[_ModelOrDatasetT]):
     """
         Variant of Dataset that allows custom models to be set on individual data files
     """

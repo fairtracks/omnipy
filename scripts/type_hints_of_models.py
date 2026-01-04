@@ -62,6 +62,28 @@ asd = model4[0]
 model4[1] = 5
 reveal_type(asd)
 
+dataset4 = Dataset[Model[list[int]]](a=[1, 2, 3])
+reveal_type(Dataset[Model[list[int]]])
+reveal_type(dataset4)
+reveal_type(dataset4['a'])
+dataset4['a'].append(2)
+dataset4['a'].asdf()
+asd = dataset4['a'][0]
+dataset4['a'][1] = 5
+reveal_type(asd)
+
+nested_dataset4 = Dataset[Dataset[Model[list[int]]]](outer={'a': [1, 2, 3]})
+reveal_type(Dataset[Dataset[Model[list[int]]]])
+reveal_type(nested_dataset4)
+reveal_type(nested_dataset4['outer'])
+nested_dataset4['inner'] = nested_dataset4['outer']
+reveal_type(nested_dataset4['outer']['a'])
+nested_dataset4['outer']['a'].append(2)
+nested_dataset4['outer']['a'].asdf()
+asd = nested_dataset4['outer']['a'][0]
+nested_dataset4['outer']['a'][1] = 5
+reveal_type(asd)
+
 model5 = Model[dict]({'a': 1, 'b': 2})
 reveal_type(Model[dict])
 reveal_type(model5)

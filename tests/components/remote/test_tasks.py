@@ -21,9 +21,9 @@ def _assert_query_results(assert_model_if_dyn_conv_else_val,
                           data: Dataset,
                           auto_model_type: type[Model]):
     assert isinstance(data, case.dataset_cls)
-    model_cls = case.dataset_cls.get_model_class(
+    _type = case.dataset_cls.get_type(
     ) if case.dataset_cls != AutoResponseContentDataset else auto_model_type
-    match model_cls:
+    match _type:
         case omnipy.BytesModel | omnipy.StrictBytesModel:
             _assert_bytes_query_results(assert_model, cast(BytesDataset, data))
         case omnipy.StrModel | omnipy.StrictStrModel:
@@ -31,7 +31,7 @@ def _assert_query_results(assert_model_if_dyn_conv_else_val,
         case omnipy.JsonModel | omnipy.JsonDictModel:
             _assert_json_query_results(assert_model_if_dyn_conv_else_val, cast(JsonDataset, data))
         case _:
-            raise RuntimeError(f'Unknown model: "{model_cls.__name__}"')
+            raise RuntimeError(f'Unknown model: "{_type.__name__}"')
 
 
 def _assert_bytes_query_results(assert_model, data: BytesDataset):

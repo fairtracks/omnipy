@@ -1,11 +1,15 @@
 from io import IOBase
 import os
-from typing import Callable, Type, TypeVar
+from typing import Callable
+
+from typing_extensions import TypeVar
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
+from omnipy.shared.protocols.data import IsDataset
 
+_DatasetT = TypeVar('_DatasetT', bound=IsDataset)
 # @TaskTemplate()
 # def cast_dataset(dataset: Dataset, cast_model: Callable[[], _ModelT]) -> _ModelT:
 #     out_dataset: Dataset[_ModelT] = Dataset[cast_model]()
@@ -18,13 +22,13 @@ from omnipy.data.model import Model
 def split_dataset(
         dataset: Dataset[Model[object]],
         datafile_names_for_b: list[str]) -> tuple[Dataset[Model[object]], Dataset[Model[object]]]:
-    model_cls = dataset.get_model_class()
+    _type = dataset.get_type()
     datafile_names_for_a = set(dataset.keys()) - set(datafile_names_for_b)
-    dataset_a = Dataset[model_cls](  # type: ignore
+    dataset_a = Dataset[_type](  # type: ignore[valid-type]
         {
             name: dataset[name] for name in dataset.keys() if name in datafile_names_for_a
         })
-    dataset_b = Dataset[model_cls](  # type: ignore
+    dataset_b = Dataset[_type](  # type: ignore[valid-type]
         {
             name: dataset[name] for name in dataset.keys() if name in datafile_names_for_b
         })
@@ -32,12 +36,13 @@ def split_dataset(
 
 
 @TaskTemplate()
-def import_directory(directory: str,
-                     exclude_prefixes: tuple[str, ...] = ('.', '_'),
-                     include_suffixes: tuple[str, ...] = (),
-                     model: Type[Model] = Model[str],
-                     open_func: Callable[[str], IOBase] = open) -> Dataset[Model]:
-    dataset = Dataset[model]()
+def import_directory(
+        directory: str,
+        exclude_prefixes: tuple[str, ...] = ('.', '_'),
+        include_suffixes: tuple[str, ...] = (),
+        dataset_cls: type[_DatasetT] = Dataset[Model[str]],  # type: ignore
+        open_func: Callable[[str], IOBase] = open) -> _DatasetT:
+    dataset = dataset_cls()
     for import_filename in os.listdir(directory):
         if not exclude_prefixes or \
                 not any(import_filename.startswith(prefix) for prefix in exclude_prefixes):
@@ -50,9 +55,6 @@ def import_directory(directory: str,
     return dataset
 
 
-_DatasetT = TypeVar('_DatasetT', bound=Dataset)
-
-
 @TaskTemplate()
 def convert_dataset(dataset: Dataset, dataset_cls: type[_DatasetT], **kwargs: object) -> _DatasetT:
-    return dataset_cls(dataset, **kwargs)
+    return dataset_cls(dataset, **kwargs)  # type: ignore[arg-type]

@@ -8,11 +8,13 @@ from omnipy.shared.typedefs import TypeForm
 from omnipy.util._pydantic import is_none_type, lenient_isinstance, lenient_issubclass
 
 if TYPE_CHECKING:
+    from omnipy.data.dataset import Dataset
     from omnipy.data.model import Model
 
 __all__ = [
     'is_model_instance',
     'is_model_subclass',
+    'is_dataset_subclass',
     'obj_or_model_content_isinstance',
 ]
 
@@ -28,6 +30,12 @@ def is_model_subclass(__cls: TypeForm) -> 'TypeIs[type[Model]]':
     from omnipy.data.model import Model
     return lenient_issubclass(__cls, Model) \
         and not is_none_type(__cls)  # Consequence of _ModelMetaclass hack
+
+
+@functools.cache
+def is_dataset_subclass(__cls: TypeForm) -> 'TypeIs[type[Dataset]]':
+    from omnipy.data.dataset import Dataset
+    return lenient_issubclass(__cls, Dataset)
 
 
 def obj_or_model_content_isinstance(

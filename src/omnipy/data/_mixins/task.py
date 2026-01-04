@@ -15,7 +15,7 @@ class TaskDatasetMixin:
     @call_super_if_available(call_super_before_method=True)
     @classmethod
     def _prepare_params(cls, params: TypeForm) -> TypeForm:
-        cleaned_params = cls._clean_model(params)
+        cleaned_params = cls._clean_type(params)
         if is_model_subclass(cleaned_params):
             return cleaned_params | PendingData | FailedData
         else:
@@ -23,12 +23,12 @@ class TaskDatasetMixin:
 
     @call_super_if_available(call_super_before_method=True)
     @classmethod
-    def _clean_model(cls, model: TypeForm) -> TypeForm:
-        args = get_args(model)
-        if is_union(model) and len(args) == 3 and args[1:] == (PendingData, FailedData):
+    def _clean_type(cls, _type: TypeForm) -> TypeForm:
+        args = get_args(_type)
+        if is_union(_type) and len(args) == 3 and args[1:] == (PendingData, FailedData):
             return args[0]
         else:
-            return model
+            return _type
 
     @property
     def available_data(self) -> Self:

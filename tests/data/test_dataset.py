@@ -1217,10 +1217,10 @@ def test_complex_models():
 
 
 def test_dataset_model_class():
-    assert Dataset[Model[int]]().get_model_class() == Model[int]
-    assert Dataset[Model[str]]().get_model_class() == Model[str]
-    assert Dataset[Model[list[float]]]().get_model_class() == Model[list[float]]
-    assert Dataset[Model[dict[int, str]]]().get_model_class() == Model[dict[int, str]]
+    assert Dataset[Model[int]]().get_type() == Model[int]
+    assert Dataset[Model[str]]().get_type() == Model[str]
+    assert Dataset[Model[list[float]]]().get_type() == Model[list[float]]
+    assert Dataset[Model[dict[int, str]]]().get_type() == Model[dict[int, str]]
 
 
 def test_dataset_switch_models_issue():
@@ -1235,6 +1235,36 @@ def test_dataset_switch_models_issue():
 
     dataset = Dataset[Model[Model[list[int]]]]({'a': [123], 'b': [234]})
     dataset['a'], dataset['b'] = dataset['b'], dataset['a']
+
+
+def test_nested_datasets():
+    nested_data = {'a': {'x': 123}, 'b': {'y': 234}}
+    nested_dataset = Dataset[Dataset[Model[int]]](nested_data)
+    assert isinstance(nested_dataset['a'], Dataset)
+    assert isinstance(nested_dataset['a']['x'], Model)
+    assert nested_dataset['a']['x'].content == 123
+    assert nested_dataset.to_data() == nested_data
+    assert nested_dataset.get_type() == Dataset[Model[int]]
+
+    nested_str_dataset = Dataset[Dataset[Model[str]]](nested_dataset)
+    assert nested_str_dataset['a']['x'].content == '123'
+    assert nested_str_dataset.get_type() == Dataset[Model[str]]
+
+    deep_nested_data = {'first': {'a': {'x': 123}}, 'second': {'b': {'y': 234}}}
+    deep_nested_dataset = Dataset[Dataset[Dataset[Model[int]]]](deep_nested_data)
+    assert isinstance(deep_nested_dataset['first'], Dataset)
+    assert isinstance(deep_nested_dataset['first']['a'], Dataset)
+    assert isinstance(deep_nested_dataset['first']['a']['x'], Model)
+    assert deep_nested_dataset['first']['a']['x'].content == 123
+    assert deep_nested_dataset.to_data() == deep_nested_data
+    assert deep_nested_dataset.get_type() == Dataset[Dataset[Model[int]]]
+
+    deep_nested_str_dataset = Dataset[Dataset[Dataset[Model[str]]]](deep_nested_dataset)
+    assert deep_nested_str_dataset['first']['a']['x'].content == '123'
+    assert deep_nested_str_dataset.get_type() == Dataset[Dataset[Model[str]]]
+
+    # TODO: make sure to_json and to_json_schema also work and make sense
+    #       for nested datasets
 
 
 def _assert_no_access_data_exceptions(dataset: Dataset,
@@ -1279,7 +1309,7 @@ def _assert_dataset(
 ) -> None:
     assert len(dataset) == len(keys)
     assert isinstance(dataset, Dataset)
-    assert dataset.get_model_class() == model_cls
+    assert dataset.get_type() == model_cls
     assert list(dataset.keys()) == keys
     if error_cls is None:
         assert values is not None
@@ -1421,6 +1451,8 @@ def test_dataset_pending_and_failed_data_extract_details() -> None:
 
 
 # TODO: Add unit tests for MultiModelDataset
+
+# TODO: Support parametrized nested datasets?
 
 
 def test_parametrized_dataset() -> None:

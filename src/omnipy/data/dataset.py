@@ -21,9 +21,10 @@ from omnipy.data._selector import (create_updated_mapping,
                                    select_keys)
 from omnipy.data.helpers import cleanup_name_qualname_and_module
 from omnipy.data.model import Model
-from omnipy.data.typechecks import is_model_instance, is_model_subclass
+from omnipy.data.typechecks import is_dataset_subclass, is_model_instance, is_model_subclass
 from omnipy.shared.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
-from omnipy.shared.protocols.data import (IsHttpUrlDataset,
+from omnipy.shared.protocols.data import (IsDataset,
+                                          IsHttpUrlDataset,
                                           IsModel,
                                           IsMultiModelDataset,
                                           IsPathOrUrl,
@@ -48,7 +49,7 @@ if TYPE_CHECKING:
                                            Model_tuple_same_type)
     from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
 
-_ModelT = TypeVar('_ModelT', bound=IsModel)
+_ModelOrDatasetT = TypeVar('_ModelOrDatasetT', bound=IsModel | IsDataset)
 _NewModelT = TypeVar('_NewModelT', bound=IsModel)
 _GeneralModelT = TypeVar('_GeneralModelT', bound=IsModel)
 
@@ -58,6 +59,13 @@ _GeneralModelT = TypeVar('_GeneralModelT', bound=IsModel)
 
 # TODO: implement copy(), __copy__() and __deepcopy__() for Dataset and Model, making use of
 #       pyd.BaseModel.copy()
+
+# Due to overriding the dict method of pydantic GenericModel, we need to
+# redefine dict here to be able to use it for typing in Dataset methods.
+# Otherwise, python syntax checkers will assume that 'dict' in method signatures
+# refers to the method instead of the built-in dict type.
+
+dict_t = dict
 
 
 class _DatasetMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
@@ -70,7 +78,7 @@ class Dataset(
         DataClassBase,
         pyd.GenericModel,
         UserDict,
-        Generic[_ModelT],
+        Generic[_ModelOrDatasetT],
         metaclass=_DatasetMetaclass):
     """
     Dict-based container of data files that follow a specific Model
@@ -127,38 +135,40 @@ class Dataset(
         # json_loads = orjson.loads
         # json_dumps = orjson_dumps
 
-    data: dict[str, _ModelT] = pyd.Field(default={})
+    data: dict[str, _ModelOrDatasetT] = pyd.Field(default={})
 
     def __class_getitem__(  # type: ignore[override]
         cls,
-        params: type[_ModelT] | tuple[type[_ModelT]] | tuple[type[_ModelT], Any] | TypeVar
+        params: type[_ModelOrDatasetT] | tuple[type[_ModelOrDatasetT]]
+        | tuple[type[_ModelOrDatasetT], Any] | TypeVar
         | tuple[TypeVar, ...],
     ) -> Self:
         # TODO: change model type to params: Type[Any] | tuple[Type[Any], ...]
         #       as in GenericModel.
 
-        model = cls._prepare_params(params)
-        orig_model = cls._clean_model(model)
+        _type = cls._prepare_params(params)
+        orig_type = cls._clean_type(_type)
 
         if cls == Dataset:
-            if not isinstance(orig_model, TypeVar) and not is_model_subclass(orig_model):
-                raise TypeError('Invalid model: {}! '.format(orig_model)
+            if (not isinstance(orig_type, TypeVar) and not is_model_subclass(orig_type)
+                    and not is_dataset_subclass(orig_type)):
+                raise TypeError('Invalid model: {}! '.format(orig_type)
                                 + 'omnipy Dataset models must be a specialization of the omnipy '
                                 'Model class.')
         else:
-            if isinstance(orig_model, TypeVar):
-                model = get_default_if_typevar(orig_model)
+            if isinstance(orig_type, TypeVar):
+                _type = get_default_if_typevar(orig_type)
 
-        created_dataset = super().__class_getitem__(model)
+        created_dataset = super().__class_getitem__(_type)
         cls._recursively_set_allow_none(created_dataset._get_data_field())
-        cleanup_name_qualname_and_module(cls, created_dataset, orig_model)
+        cleanup_name_qualname_and_module(cls, created_dataset, orig_type)
 
         return created_dataset
 
     @call_super_if_available(call_super_before_method=True)
     @classmethod
-    def _clean_model(cls, model: TypeForm) -> TypeForm:
-        return model
+    def _clean_type(cls, _type: TypeForm) -> TypeForm:
+        return _type
 
     def __init__(  # noqa: C901
         self,
@@ -202,9 +212,9 @@ class Dataset(
                 super_kwargs[DATA_KEY] = kwargs
                 kwargs = {}
 
-        model_cls = self.get_model_class()
-        if model_cls == _ModelT:  # type: ignore[misc]
-            self._raise_no_model_exception()
+        _type = self.get_type()
+        if _type == _ModelOrDatasetT:  # type: ignore[misc]
+            self._raise_no_type_exception()
 
         model_or_dataset_as_input = False
         if DATA_KEY in super_kwargs:
@@ -220,7 +230,7 @@ class Dataset(
                         for key, val in mapping_value.items():
                             if is_model_instance(val):
                                 model_or_dataset_as_input = True
-                                mapping_value[key] = model_cls(val)
+                                mapping_value[key] = _type(val)
                         done = True
                     case Iterable():
                         try:
@@ -252,7 +262,7 @@ class Dataset(
         super().__init__()
         self.from_data(super_kwargs[DATA_KEY])
 
-    def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
+    def _init(self, super_kwargs: dict_t[str, Any], **kwargs: Any) -> None:
         ...
 
     # TODO: Revise with pydantic v2: __deepcopy__ is not defined for Dataset and Model, as it is not
@@ -288,26 +298,34 @@ class Dataset(
         return cast(pyd.ModelField, cls.__fields__.get(DATA_KEY))
 
     @classmethod
-    def get_model_class(cls) -> type[_ModelT]:
+    def get_type(cls) -> type[_ModelOrDatasetT]:
         """
-        Returns the concrete Model class used for all data files in the dataset, e.g.:
-        `Model[list[int]]`
-        :return: The concrete Model class used for all data files in the dataset
+        Returns the concrete type (Model or Dataset class) used for all
+        data files in the dataset, e.g.: `Model[list[int]]`, or
+        `Dataset[Model[dict[str, float]]]` for nested datasets.
+        :return: The concrete type (Model or Dataset class) used for all
+                 data files in the dataset.
         """
-        return cls._clean_model(cls._get_data_field().type_)
+        return cls._clean_type(cls._get_data_field().type_)
 
     @staticmethod
-    def _raise_no_model_exception() -> None:
+    def _raise_no_type_exception() -> None:
         raise TypeError(
-            'Note: The Dataset class requires a Model class (or a subclass) to be specified as '
-            'a type hierarchy within brackets either directly, e.g.:\n\n'
-            '\tmodel = Dataset[Model[list[int]]]()\n\n'
+            'Note: The Dataset class requires a concrete type '
+            '(e.g. a Model class or a subclass) to be specified as a '
+            'type hierarchy within brackets either directly, e.g.:\n\n'
+            '\t`model = Dataset[Model[list[int]]]()`\n\n'
             'or indirectly in a subclass definition, e.g.:\n\n'
-            '\tclass MyNumberListDataset(Dataset[Model[list[int]]]): ...\n\n'
-            'For anything other than the simplest cases, the definition of Model and Dataset '
-            'subclasses is encouraged , e.g.:\n\n'
-            '\tclass MyNumberListModel(Model[list[int]]): ...\n'
-            '\tclass MyDataset(Dataset[MyNumberListModel]): ...\n\n')
+            '\t`class MyNumberListDataset(Dataset[Model[list[int]]]): ...`\n\n'
+            'For anything other than the simplest cases, the definition of '
+            'Model and Dataset subclasses is encouraged , e.g.:\n\n'
+            '\t`class MyNumberListModel(Model[list[int]]): ...`\n'
+            '\t`class MyDataset(Dataset[MyNumberListModel]): ...`\n\n'
+            'Alternatively, a dataset can nest another dataset instead of a '
+            'model, e.g.:\n\n'
+            '\t`class MyNestedDataset(Dataset[Dataset[Model[list[int]]]]): ...`\n\n'
+            'Note that at the bottom of the dataset nesting hierarchy, a '
+            'Model class must always be specified.\n\n',)
 
     def _set_standard_field_description(self) -> None:
         self.__fields__[DATA_KEY].field_info.description = self._get_standard_field_description()
@@ -382,16 +400,16 @@ class Dataset(
 
         @overload
         def __getitem__(
-            self: 'Dataset[Model[dict[_KeyT, _ValT]]]',
+            self: 'Dataset[Model[dict_t[_KeyT, _ValT]]]',
             selector: str | int,
         ) -> Model_dict[_KeyT, _ValT]:
             ...
 
         @overload
         def __getitem__(
-            self: 'Dataset[_ModelT]',
+            self: 'Dataset[_ModelOrDatasetT]',
             selector: str | int,
-        ) -> _ModelT:
+        ) -> _ModelOrDatasetT:
             ...
     else:
 
@@ -401,15 +419,16 @@ class Dataset(
         # way Model objects mimic the functionality of their type arguments.
 
         @overload
-        def __getitem__(self, selector: str | int) -> _ModelT:
+        def __getitem__(self, selector: str | int) -> _ModelOrDatasetT:
             ...
 
     @overload
     def __getitem__(self, selector: slice | Iterable[str | int]) -> Self:
         ...
 
-    def __getitem__(self,
-                    selector: str | int | slice | Iterable[str | int]) -> _ModelT | Model | Self:
+    def __getitem__(
+            self,
+            selector: str | int | slice | Iterable[str | int]) -> _ModelOrDatasetT | Model | Self:
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
@@ -456,7 +475,8 @@ class Dataset(
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
-            self._set_data_file_and_validate(selected_keys.keys[0], cast(_ModelT, data_obj))
+            self._set_data_file_and_validate(selected_keys.keys[0],
+                                             cast(_ModelOrDatasetT, data_obj))
         else:
             key_2_data_item: Key2DataItemType[object]
             index_2_data_items: Index2DataItemsType[object]
@@ -499,7 +519,7 @@ class Dataset(
             self.data = prev_data
             raise
 
-    def _set_data_file_and_validate(self, key: str, val: _ModelT) -> None:
+    def _set_data_file_and_validate(self, key: str, val: _ModelOrDatasetT) -> None:
         has_prev_value = key in self.data
         if has_prev_value:
             prev_value = self.data[key]
@@ -519,7 +539,7 @@ class Dataset(
         """
         Try to update ForwardRefs on fields based on this Model, globalns and localns.
         """
-        cls.get_model_class().update_forward_refs(**localns)  # Update Model cls
+        cls.get_type().update_forward_refs(**localns)  # Recursively update forward refs
         super().update_forward_refs(**localns)
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
@@ -527,7 +547,7 @@ class Dataset(
     def _validate_data_file(self, _data_file: str) -> None:
         val = self.data[_data_file]
         if is_model_instance(val):
-            self.data[_data_file] = self.get_model_class()(val)
+            self.data[_data_file] = self.get_type()(val)
         else:
             self._force_full_validation()
 
@@ -547,31 +567,31 @@ class Dataset(
             raise RuntimeError('Model does not allow setting of extra attributes')
 
     @pyd.root_validator
-    def _parse_root_object(cls, root_obj: dict[str, _ModelT]) -> Any:  # noqa
+    def _parse_root_object(cls, root_obj: dict_t[str, _ModelOrDatasetT]) -> Any:  # noqa
         assert DATA_KEY in root_obj
         data_dict = root_obj[DATA_KEY]
-        model = cls.get_model_class()
+        _model_or_dataset_cls = cls.get_type()
         for key, val in data_dict.items():
             if val is None:
-                data_dict[key] = model.parse_obj(val)
+                data_dict[key] = _model_or_dataset_cls.parse_obj(val)
         return {DATA_KEY: data_dict}
 
-    def to_data(self) -> dict[str, Any]:
-        return {
-            key: self._check_value(val)
-            for key, val in pyd.GenericModel.dict(self, by_alias=True).get(DATA_KEY).items()
-        }
+    def to_data(self) -> dict_t[str, Any]:
+        return {key: self._check_value(val) for key, val in self.dict(by_alias=True).items()}
+
+    def dict(self, **kwargs) -> dict_t[str, Any]:
+        return super().dict(**kwargs)[DATA_KEY]
 
     def from_data(self,
-                  data: dict[str, Any] | Iterator[tuple[str, Any]],
+                  data: dict_t[str, Any] | Iterator[tuple[str, Any]],
                   update: bool = True) -> None:
-        def callback_func(model: _ModelT, content: Any):
+        def callback_func(model: _ModelOrDatasetT, content: Any):
             model.from_data(content)
 
         self._from_dict_with_callback(data, update, callback_func)
 
     def _from_dict_with_callback(self,
-                                 data: dict[str, Any] | Iterator[tuple[str, Any]],
+                                 data: dict_t[str, Any] | Iterator[tuple[str, Any]],
                                  update: bool,
                                  callback_func: Callable):
         if not isinstance(data, dict):
@@ -580,11 +600,11 @@ class Dataset(
         if not update:
             self.clear()
 
-        model_cls = self.get_model_class()
+        _type = self.get_type()
         for data_file, content in data.items():
-            new_model = model_cls()
-            callback_func(new_model, content)
-            self.data[data_file] = new_model
+            new_type_instance = _type()
+            callback_func(new_type_instance, content)
+            self.data[data_file] = new_type_instance
 
     def absorb(self, other: 'Dataset'):
         self.from_data(other.to_data(), update=True)
@@ -592,7 +612,7 @@ class Dataset(
     def absorb_and_replace(self, other: 'Dataset'):
         self.from_data(other.to_data(), update=False)
 
-    def to_json(self, pretty=True) -> dict[str, str]:
+    def to_json(self, pretty=True) -> dict_t[str, str]:
         result = {}
 
         for key, val in self.data.items():
@@ -602,7 +622,7 @@ class Dataset(
     def from_json(self,
                   data: Mapping[str, str] | Iterable[tuple[str, str]],
                   update: bool = True) -> None:
-        def callback_func(model: _ModelT, content: Any):
+        def callback_func(model: _ModelOrDatasetT, content: Any):
             model.from_json(content)
 
         self._from_dict_with_callback(data, update, callback_func)
@@ -625,9 +645,9 @@ class Dataset(
     #     return self.__class__.create_from_json, (self.to_json(),)
 
     @classmethod
-    def to_json_schema(cls, pretty: bool = True) -> str | dict[str, str]:
+    def to_json_schema(cls, pretty: bool = True) -> str | dict_t[str, str]:
         result = {}
-        clean_dataset = super(Dataset, Dataset).__class_getitem__(cls.get_model_class())
+        clean_dataset = super(Dataset, Dataset).__class_getitem__(cls.get_type())
         schema = clean_dataset.schema()
         for key, val in schema['properties'][DATA_KEY].items():
             result[key] = val
@@ -752,7 +772,7 @@ class Dataset(
         for i, url in enumerate(http_url_dataset.values()):
             hosts[url.host].append(i)
 
-        async def load_all(as_mime_type: None | str = None) -> 'Dataset[_ModelT]':
+        async def load_all(as_mime_type: None | str = None) -> 'Dataset[_ModelOrDatasetT]':
             tasks = []
 
             for host in hosts:
@@ -844,8 +864,8 @@ class Dataset(
         from omnipy.components import get_serializer_registry
         return get_serializer_registry()
 
-    def as_multi_model_dataset(self) -> 'IsMultiModelDataset[_ModelT]':
-        multi_model_dataset = MultiModelDataset[self.get_model_class()]()
+    def as_multi_model_dataset(self) -> 'IsMultiModelDataset[_ModelOrDatasetT]':
+        multi_model_dataset = MultiModelDataset[self.get_type()]()
         for data_file in self:
             multi_model_dataset.data[data_file] = self.data[data_file]
         return multi_model_dataset
@@ -889,7 +909,7 @@ class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
         if data_file in self._custom_field_models:
             return self._custom_field_models[data_file]
         else:
-            return self.get_model_class()
+            return self.get_type()
 
     def from_data(self,
                   data: dict[str, Any] | Iterator[tuple[str, Any]],
