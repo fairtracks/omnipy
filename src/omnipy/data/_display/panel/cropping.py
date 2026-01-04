@@ -18,7 +18,7 @@ def rich_overflow_method(
             return 'ellipsis'
         case HorizontalOverflowMode.CROP:
             return 'crop'
-        case HorizontalOverflowMode.WORD_WRAP:
+        case HorizontalOverflowMode.WRAP:
             return None
 
 
@@ -158,7 +158,7 @@ def crop_content_line_horizontally(
                 return '…'
         case HorizontalOverflowMode.CROP:
             return content_line[:frame_width]
-        case HorizontalOverflowMode.WORD_WRAP:
+        case HorizontalOverflowMode.WRAP:
             return content_line
         case _:
             raise ValueError(f'Unknown horizontal overflow mode: {horizontal_overflow_mode}')

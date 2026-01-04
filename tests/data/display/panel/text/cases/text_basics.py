@@ -343,16 +343,16 @@ def case_syntax_text_empty_lines(
         ),
 
         #
-        # id='crop_height_and_width_flexible_width_word_wrap'
+        # id='crop_height_and_width_flexible_width_wrap'
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=9, height=3), fixed_width=False),
             config=OutputConfig(
-                h_overflow=HorizontalOverflowMode.WORD_WRAP,
+                h_overflow=HorizontalOverflowMode.WRAP,
                 v_overflow=VerticalOverflowMode.CROP_BOTTOM,
             ),
             exp_plain_output='I scream,\nyou \nscream,\n',
-            # TODO: Since horizontal cropping with WORD_WRAP has the
+            # TODO: Since horizontal cropping with WRAP has the
             #       potential to reduce the width if combined with vertical
             #       cropping, it should be carried out in the "resize"
             #       stage.
@@ -413,7 +413,7 @@ def case_syntax_text_empty_lines(
         'crop_height_and_width_flexible_width_ellipsis_top',
         'crop_height_and_width_flexible_width_crop_top',
         'crop_height_and_width_flexible_width_crop_bottom',
-        'crop_height_and_width_flexible_width_word_wrap',
+        'crop_height_and_width_flexible_width_wrap',
         'crop_height_single_line_flexible_width',
         'crop_height_single_line_fixed_width',
     ),

@@ -21,13 +21,13 @@ from ...helpers.panel_assert import (fill_html_page_template,
                                      FONT_RENDER_BODY_STYLE)
 
 
-@pc.case(id='word_wrap_horizontal', tags=['overflow_modes', 'syntax_text'])
-def case_syntax_styling_word_wrap_horizontal(
+@pc.case(id='wrap_horizontal', tags=['overflow_modes', 'syntax_text'])
+def case_syntax_styling_wrap_horizontal(
         common_content: Annotated[str, pc.fixture]) -> PanelOutputTestCase[str]:
     return PanelOutputTestCase(  # pyright: ignore [reportCallIssue]
         content=common_content,
         frame=Frame(Dimensions(22, None)),
-        config=OutputConfig(h_overflow=HorizontalOverflowMode.WORD_WRAP),
+        config=OutputConfig(h_overflow=HorizontalOverflowMode.WRAP),
         exp_plain_output=dedent("""\
             [MyClass({'abc': [123,
             234]}),
@@ -71,13 +71,13 @@ def case_syntax_styling_crop_horizontal(
     )
 
 
-@pc.case(id='word_wrap_small_frame', tags=['overflow_modes', 'syntax_text'])
-def case_syntax_styling_word_wrap_small_frame(
+@pc.case(id='wrap_small_frame', tags=['overflow_modes', 'syntax_text'])
+def case_syntax_styling_wrap_small_frame(
         common_text_content: Annotated[str, pc.fixture]) -> PanelOutputTestCase[str]:
     return PanelOutputTestCase(
         content=common_text_content,
         frame=Frame(Dimensions(10, 8)),
-        config=OutputConfig(h_overflow=HorizontalOverflowMode.WORD_WRAP),
+        config=OutputConfig(h_overflow=HorizontalOverflowMode.WRAP),
         exp_plain_output=dedent("""\
             [MyClass({
             'abc': 
@@ -93,14 +93,14 @@ def case_syntax_styling_word_wrap_small_frame(
     )
 
 
-@pc.case(id='word_wrap_crop_bottom', tags=['overflow_modes', 'syntax_text'])
-def case_syntax_styling_word_wrap_crop_bottom(
+@pc.case(id='wrap_crop_bottom', tags=['overflow_modes', 'syntax_text'])
+def case_syntax_styling_wrap_crop_bottom(
         common_text_content: Annotated[str, pc.fixture]) -> PanelOutputTestCase[str]:
     return PanelOutputTestCase(
         content=common_text_content,
         frame=Frame(Dimensions(10, 4)),
         config=OutputConfig(
-            h_overflow=HorizontalOverflowMode.WORD_WRAP,
+            h_overflow=HorizontalOverflowMode.WRAP,
             v_overflow=VerticalOverflowMode.CROP_BOTTOM,
         ),
         exp_plain_output=dedent("""\
@@ -114,14 +114,14 @@ def case_syntax_styling_word_wrap_crop_bottom(
     )
 
 
-@pc.case(id='word_wrap_crop_top', tags=['overflow_modes', 'syntax_text'])
-def case_syntax_styling_word_wrap_crop_top(
+@pc.case(id='wrap_crop_top', tags=['overflow_modes', 'syntax_text'])
+def case_syntax_styling_wrap_crop_top(
         common_text_content: Annotated[str, pc.fixture]) -> PanelOutputTestCase[str]:
     return PanelOutputTestCase(
         content=common_text_content,
         frame=Frame(Dimensions(10, 1)),
         config=OutputConfig(
-            h_overflow=HorizontalOverflowMode.WORD_WRAP,
+            h_overflow=HorizontalOverflowMode.WRAP,
             v_overflow=VerticalOverflowMode.CROP_TOP,
         ),
         exp_plain_output=dedent("""\
@@ -195,7 +195,7 @@ def case_syntax_styling_setup_small_frame_color_and_overflow_config(
             system=color_system,
             style=DarkLowContrastColorStyles.ZENBURN_PYGMENTS,
             bg=solid_background,
-            h_overflow=HorizontalOverflowMode.WORD_WRAP,
+            h_overflow=HorizontalOverflowMode.WRAP,
             v_overflow=VerticalOverflowMode.CROP_TOP,
         ),
     )

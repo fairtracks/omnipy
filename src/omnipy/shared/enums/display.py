@@ -249,15 +249,15 @@ class HorizontalOverflowMode(LiteralEnum[str]):
         exceeds the width.
     - `CROP`: Crops the line to fit within the width, without adding an
         ellipsis.
-    - `WORD_WRAP`: Wraps the line to the next line if it exceeds the
+    - `WRAP`: Wraps the line to the next line if it exceeds the
         width, breaking according to the specified syntax language.
     """
 
-    Literals = Literal['ellipsis', 'crop', 'word_wrap']
+    Literals = Literal['ellipsis', 'crop', 'wrap']
 
     ELLIPSIS: Literal['ellipsis'] = 'ellipsis'
     CROP: Literal['crop'] = 'crop'
-    WORD_WRAP: Literal['word_wrap'] = 'word_wrap'
+    WRAP: Literal['wrap'] = 'wrap'
 
 
 # TODO: Improve word wrap support for layout panels.

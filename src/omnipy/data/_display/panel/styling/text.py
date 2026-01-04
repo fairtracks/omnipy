@@ -40,7 +40,7 @@ class SyntaxStylizedTextPanel(
         remove_bg_color: bool,
     ) -> rich.syntax.Syntax:
         style_name = clean_style_name(console_color_style)
-        word_wrap = horizontal_overflow_mode == HorizontalOverflowMode.WORD_WRAP
+        word_wrap = horizontal_overflow_mode == HorizontalOverflowMode.WRAP
 
         # Workaround to remove the background color from the theme, as setting
         # background_color='default' (the official solution,

@@ -82,7 +82,7 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
         self._frame = output.frame
         self._output_mode = output_mode
 
-        if self._output.config.h_overflow is HorizontalOverflowMode.WORD_WRAP:
+        if self._output.config.h_overflow is HorizontalOverflowMode.WRAP:
             self._crop_dims = self._frame.dims
         else:
             self._crop_dims = self._output.inner_cropped_dims
