@@ -233,7 +233,7 @@ class IsPairTuple(IsSameTypeTuple[_ValT | _SecondValT], Protocol[_ValT, _SecondV
     """
 
 
-class IsMapping(IsCollection[_KeyT], IsReversible[_KeyT], Protocol[_KeyT, _ValT]):
+class IsMapping(IsCollection[_KeyT], Protocol[_KeyT, _ValT]):
     """
     IsMapping is a protocol with the same interface as the abstract class
     Mapping. It is the protocol of a generic container for associating
@@ -373,7 +373,7 @@ class IsMutableMapping(IsMapping[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
         raise AssumedToBeImplementedException
 
 
-class IsDict(IsMutableMapping[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
+class IsDict(IsMutableMapping[_KeyT, _ValT], IsReversible[_KeyT], Protocol[_KeyT, _ValT]):
     """
     IsDict is a protocol with the same interface as the builtin class dict.
     """
