@@ -811,7 +811,7 @@ def test_validation_pydantic_types():
         dataset_1['data_file_2'] = -234
 
     with pytest.raises(ValidationError):
-        Dataset[Model[list[pyd.StrictInt]]](x=[12.4, 11])  # noqa
+        Dataset[Model[list[pyd.StrictInt]]](x=[12.4, 11])
 
 
 def test_import_and_export():

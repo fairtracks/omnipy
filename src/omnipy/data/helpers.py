@@ -11,11 +11,15 @@ from omnipy.shared.typedefs import TypeForm
 from omnipy.util.helpers import format_classname_with_params, is_union
 
 __all__ = [
+    'TypeVarStore',
     'TypeVarStore1',
     'TypeVarStore2',
     'TypeVarStore3',
     'TypeVarStore4',
     'DoubleTypeVarStore',
+    'get_special_methods_info_dict',
+    'ResetSolutionTuple',
+    'cleanup_name_qualname_and_module',
     'PendingData',
     'FailedData',
 ]
