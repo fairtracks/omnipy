@@ -26,6 +26,7 @@ from omnipy.util.helpers import (all_type_variants,
                                  is_union,
                                  is_unreserved_identifier,
                                  sorted_dict_hash,
+                                 split_to_union_variants,
                                  transfer_generic_args_to_cls)
 
 T = TypeVar('T')
@@ -279,6 +280,27 @@ def test_get_first_item() -> None:
     assert get_first_item([1, 2, 3]) == 1
     assert get_first_item({1: 2, 3: 4}) == 1
     assert get_first_item({1, 5, 6}) == 1
+
+
+def test_split_to_union_variants() -> None:
+    assert split_to_union_variants(str) == (str,)
+    assert split_to_union_variants(Optional[str]) == (str, NoneType)
+    assert split_to_union_variants(Union[str, None]) == (str, NoneType)
+    assert split_to_union_variants(str | None) == (str, NoneType)
+
+    assert split_to_union_variants(str | int) == (str, int)
+    assert split_to_union_variants(Union[str, int]) == (str, int)
+    assert split_to_union_variants(Optional[str | int]) == (str, int, NoneType)
+    assert split_to_union_variants(Optional[Union[str, int]]) == (str, int, NoneType)
+
+    assert split_to_union_variants(Union[str, int, None]) == (str, int, NoneType)
+    assert split_to_union_variants(Union[Union[str, int], None]) == (str, int, NoneType)
+    assert split_to_union_variants(Union[Union[str, None], int]) == (str, NoneType, int)
+
+    assert split_to_union_variants(Union) == ()
+
+    assert split_to_union_variants(str | int | None) == (str, int, NoneType)
+    assert split_to_union_variants(str | None | int) == (str, NoneType, int)
 
 
 def test_is_union() -> None:

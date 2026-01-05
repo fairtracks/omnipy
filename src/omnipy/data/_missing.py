@@ -7,7 +7,7 @@ from omnipy.data.typechecks import is_model_subclass
 from omnipy.shared.exceptions import OmnipyNoneIsNotAllowedError
 from omnipy.shared.typedefs import TypeForm
 from omnipy.util._pydantic import is_none_type, lenient_isinstance, lenient_issubclass, Undefined
-from omnipy.util.helpers import is_optional, is_union
+from omnipy.util.helpers import is_optional, is_union, split_to_union_variants
 
 _RootT = TypeVar('_RootT')
 
@@ -66,12 +66,8 @@ def _parse_none_in_model(outer_type, value):
     return outer_type(value) if type(value) is not outer_type else value
 
 
-def _split_to_union_variants(type_: TypeForm) -> tuple[TypeForm]:
-    return get_args(type_) if is_union(type_) else (type_,)
-
-
 def _split_outer_type_to_union_variants(outer_type_args):
-    return tuple(_split_to_union_variants(_) for _ in outer_type_args)
+    return tuple(split_to_union_variants(_) for _ in outer_type_args)
 
 
 def _flatten_two_level_tuple(two_level_tuple):
@@ -89,7 +85,7 @@ def _outer_type_and_value_are_of_types(plain_outer_type, value, *types):
 
 
 def _parse_none_in_mutable_sequence_or_tuple(plain_outer_type, inner_val_type, value):
-    inner_val_union_types = _split_to_union_variants(inner_val_type)
+    inner_val_union_types = split_to_union_variants(inner_val_type)
 
     if any(is_model_subclass(_) or _supports_none(_) for _ in inner_val_union_types):
         return plain_outer_type(
@@ -98,11 +94,11 @@ def _parse_none_in_mutable_sequence_or_tuple(plain_outer_type, inner_val_type, v
 
 
 def _parse_none_in_mapping(plain_outer_type, outer_type_args, inner_val_type, value):
-    inner_val_union_types = _split_to_union_variants(inner_val_type)
+    inner_val_union_types = split_to_union_variants(inner_val_type)
 
     inner_key_type = outer_type_args[0] if lenient_issubclass(
         plain_outer_type, Mapping) and outer_type_args else Undefined
-    inner_key_union_types = _split_to_union_variants(inner_key_type)
+    inner_key_union_types = split_to_union_variants(inner_key_type)
 
     if any(
             is_model_subclass(_) or _supports_none(_)
@@ -116,7 +112,7 @@ def _parse_none_in_mapping(plain_outer_type, outer_type_args, inner_val_type, va
 
 
 def _parse_none_in_typevar(inner_val_type):
-    inner_val_union_types = _split_to_union_variants(inner_val_type)
+    inner_val_union_types = split_to_union_variants(inner_val_type)
 
     return _parse_none_in_types(inner_val_union_types)
 

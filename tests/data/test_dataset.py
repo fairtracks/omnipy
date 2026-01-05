@@ -12,6 +12,7 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
 from omnipy.shared.exceptions import FailedDataError, PendingDataError
+from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util._pydantic import ValidationError
 import omnipy.util._pydantic as pyd
@@ -105,28 +106,36 @@ def test_init_models_as_input():
     assert tuple_of_ints_dataset.to_data() == {'x': (4, 2), 'y': (1, 4, 6)}
 
 
-def test_init_converting_dataset_or_models_as_input():
+@pytest.mark.parametrize('dataset_cls, expects_str',
+                         [
+                             (Dataset[Model[float]], False),
+                             (Dataset[Model[float] | Model[str]], False),
+                             (Dataset[Model[str] | Model[float]], True),
+                         ])
+def test_init_converting_dataset_or_models_as_input(dataset_cls: type[IsDataset],
+                                                    expects_str: bool):
     my_float_dataset = MyFloatObjDataset()
     my_float_dataset.from_data(dict(x=4.5, y=3.25))
     assert my_float_dataset['x'].content == MyFloatObject(int_part=4, float_part=0.5)
     assert my_float_dataset.to_data() == {'x': 4.5, 'y': 3.25}
 
-    assert Dataset[Model[float]](my_float_dataset)['x'].content == 4.5
-    assert Dataset[Model[float]](my_float_dataset.items())['x'].content == 4.5
-    assert Dataset[Model[float]]({k: v for k, v in my_float_dataset.items()})['x'].content == 4.5
-    assert Dataset[Model[float]](MappingProxyType({
-        k: v for k, v in my_float_dataset.items()
-    }))['x'].content == 4.5
+    exp_val = '4.5' if expects_str else 4.5
+    assert dataset_cls(my_float_dataset)['x'].content == exp_val
 
-    assert MyFloatObjDataset(Dataset[Model[float]](x=4.5, y=3.25)).to_data() == {
-        'x': 4.5, 'y': 3.25
-    }
-    assert MyFloatObjDataset(
-        x=Model[float](4.5),
-        y=Model[float](3.25),
-    ).to_data() == {
-        'x': 4.5, 'y': 3.25
-    }
+    assert dataset_cls(my_float_dataset.items())['x'].content == exp_val
+    assert dataset_cls({k: v for k, v in my_float_dataset.items()})['x'].content == exp_val
+    assert dataset_cls(MappingProxyType[str, object]({
+        k: v for k, v in my_float_dataset.items()
+    }))['x'].content == exp_val
+
+    if not expects_str:
+        assert MyFloatObjDataset(dataset_cls(x=4.5, y=3.25)).to_data() == {'x': 4.5, 'y': 3.25}
+        assert MyFloatObjDataset(
+            x=Model[float](4.5),
+            y=Model[float](3.25),
+        ).to_data() == {
+            'x': 4.5, 'y': 3.25
+        }
 
 
 def test_init_errors():
@@ -711,6 +720,27 @@ def test_basic_validation(runtime: Annotated[IsRuntime, pytest.fixture]):
 
     dataset['data_file_1'] = '345'
     assert dataset['data_file_1'].content == 345
+
+
+def test_validation_union_and_nested_type(runtime: Annotated[IsRuntime, pytest.fixture]):
+    class UnionDataset(Dataset[Model[int] | Model[str] | Dataset[Model[int]]]):
+        ...
+
+    dataset = UnionDataset(
+        data_file_1=123, data_file_2='abc', data_file_3={'data_file_inner': '456'})
+    assert dataset.to_data() == {
+        'data_file_1': 123, 'data_file_2': 'abc', 'data_file_3': {
+            'data_file_inner': 456
+        }
+    }
+
+    dataset['data_file_1'] = 'abc'
+    assert dataset['data_file_1'].to_data() == 'abc'
+    dataset['data_file_2'] = {'data_file_inner': '789'}
+    assert dataset['data_file_2']['data_file_inner'].to_data() == 789
+
+    with pytest.raises(ValidationError):
+        dataset['data_file_1'] = ['abc', 123]
 
 
 def test_nested_validation_level_one(runtime: Annotated[IsRuntime, pytest.fixture]):

@@ -251,6 +251,10 @@ def get_first_item(iterable: Iterable[object]) -> object:
         return item
 
 
+def split_to_union_variants(type_: TypeForm) -> tuple[TypeForm]:
+    return get_args(type_) if is_union(type_) else (type_,)
+
+
 @cached(LRUCache(128))
 def is_union(cls_or_type: type | UnionType | None | object) -> bool:
     union_types = [Union, UnionType]

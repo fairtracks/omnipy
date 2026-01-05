@@ -6,6 +6,7 @@ import inspect
 import json
 import os
 import tarfile
+from textwrap import dedent
 from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKING
 
 from typing_extensions import Self, TypeVar
@@ -33,10 +34,13 @@ from omnipy.shared.typedefs import TypeForm
 from omnipy.util._pydantic import Undefined, UndefinedType, ValidationError
 import omnipy.util._pydantic as pyd
 from omnipy.util.decorators import call_super_if_available
-from omnipy.util.helpers import (get_default_if_typevar,
+from omnipy.util.helpers import (evaluate_any_forward_refs_if_possible,
+                                 get_calling_module_name,
+                                 get_default_if_typevar,
                                  get_event_loop_and_check_if_loop_is_running,
                                  is_iterable,
-                                 remove_forward_ref_notation)
+                                 remove_forward_ref_notation,
+                                 split_to_union_variants)
 
 if TYPE_CHECKING:
     from omnipy.data._mimic_models import (Model_bool,
@@ -146,22 +150,22 @@ class Dataset(
         # TODO: change model type to params: Type[Any] | tuple[Type[Any], ...]
         #       as in GenericModel.
 
-        _type = cls._prepare_params(params)
-        orig_type = cls._clean_type(_type)
+        _params = cls._prepare_params(params)
+        orig_params = cls._clean_type(_params)
 
         if cls == Dataset:
-            if (not isinstance(orig_type, TypeVar) and not is_model_subclass(orig_type)
-                    and not is_dataset_subclass(orig_type)):
-                raise TypeError('Invalid model: {}! '.format(orig_type)
-                                + 'omnipy Dataset models must be a specialization of the omnipy '
-                                'Model class.')
+            for type_variant in split_to_union_variants(orig_params):
+                if (not isinstance(type_variant,
+                                   (TypeVar, str)) and not is_model_subclass(type_variant)
+                        and not is_dataset_subclass(type_variant)):
+                    cls._raise_type_exception(f'Invalid model: {orig_params} ')
         else:
-            if isinstance(orig_type, TypeVar):
-                _type = get_default_if_typevar(orig_type)
+            if isinstance(orig_params, TypeVar):
+                _params = get_default_if_typevar(orig_params)
 
-        created_dataset = super().__class_getitem__(_type)
+        created_dataset = super().__class_getitem__(_params)
         cls._recursively_set_allow_none(created_dataset._get_data_field())
-        cleanup_name_qualname_and_module(cls, created_dataset, orig_type)
+        cleanup_name_qualname_and_module(cls, created_dataset, orig_params)
 
         return created_dataset
 
@@ -214,7 +218,7 @@ class Dataset(
 
         _type = self.get_type()
         if _type == _ModelOrDatasetT:  # type: ignore[misc]
-            self._raise_no_type_exception()
+            self._raise_type_exception()
 
         model_or_dataset_as_input = False
         if DATA_KEY in super_kwargs:
@@ -230,7 +234,7 @@ class Dataset(
                         for key, val in mapping_value.items():
                             if is_model_instance(val):
                                 model_or_dataset_as_input = True
-                                mapping_value[key] = _type(val)
+                                mapping_value[key] = self._validate_value_for_data_file(key, val)
                         done = True
                     case Iterable():
                         try:
@@ -309,23 +313,38 @@ class Dataset(
         return cls._clean_type(cls._get_data_field().type_)
 
     @staticmethod
-    def _raise_no_type_exception() -> None:
-        raise TypeError(
-            'Note: The Dataset class requires a concrete type '
-            '(e.g. a Model class or a subclass) to be specified as a '
-            'type hierarchy within brackets either directly, e.g.:\n\n'
-            '\t`model = Dataset[Model[list[int]]]()`\n\n'
-            'or indirectly in a subclass definition, e.g.:\n\n'
-            '\t`class MyNumberListDataset(Dataset[Model[list[int]]]): ...`\n\n'
-            'For anything other than the simplest cases, the definition of '
-            'Model and Dataset subclasses is encouraged , e.g.:\n\n'
-            '\t`class MyNumberListModel(Model[list[int]]): ...`\n'
-            '\t`class MyDataset(Dataset[MyNumberListModel]): ...`\n\n'
-            'Alternatively, a dataset can nest another dataset instead of a '
-            'model, e.g.:\n\n'
-            '\t`class MyNestedDataset(Dataset[Dataset[Model[list[int]]]]): ...`\n\n'
-            'Note that at the bottom of the dataset nesting hierarchy, a '
-            'Model class must always be specified.\n\n',)
+    def _raise_type_exception(prefix_msg: str = '') -> None:
+        msg = dedent("""\
+            The Dataset class requires a concrete type (e.g. a Model class
+            or a subclass) to be specified as a type hierarchy within
+            brackets either directly, e.g.:
+
+              model = Dataset[Model[list[int]]]()
+
+            or indirectly in a subclass definition, e.g.:
+
+              class MyNumberListDataset(Dataset[Model[list[int]]]): ...
+
+            For anything other than the simplest cases, the definition of
+            Model and Dataset subclasses is encouraged , e.g.:
+
+              class MyNumberListModel(Model[list[int]]): ...
+              class MyDataset(Dataset[MyNumberListModel]): ...
+
+            Alternatively, a dataset can nest another dataset instead of a
+            model, e.g.:
+
+              class MyNestedDataset(Dataset[Dataset[Model[list[int]]]]): ...
+
+            Note that at the bottom of the dataset nesting hierarchy, a
+            Model class must always be specified.
+
+            Unions of Model or Dataset classes are also supported, e.g.:
+
+              model = Dataset[Model[int] | StrModel]()""")
+        if prefix_msg:
+            msg = prefix_msg + '\n\n' + msg
+        raise TypeError(msg)
 
     def _set_standard_field_description(self) -> None:
         self.__fields__[DATA_KEY].field_info.description = self._get_standard_field_description()
@@ -539,17 +558,57 @@ class Dataset(
         """
         Try to update ForwardRefs on fields based on this Model, globalns and localns.
         """
-        cls.get_type().update_forward_refs(**localns)  # Recursively update forward refs
+        prev_type = cls._get_data_field().type_
+
         super().update_forward_refs(**localns)
+
+        calling_module = get_calling_module_name()
+        cls._get_data_field().type_ = evaluate_any_forward_refs_if_possible(
+            prev_type, calling_module, **localns)
+        cls.__annotations__[DATA_KEY] = evaluate_any_forward_refs_if_possible(
+            cls.__annotations__[DATA_KEY], calling_module, **localns)
+
+        for type_variant in split_to_union_variants(cls.get_type()):
+            # Don't recurse into Dataset subclasses to avoid infinite recursion
+            #
+            # if is_model_subclass(type_variant) or is_dataset_subclass(type_variant):
+            #
+            if is_model_subclass(type_variant):
+                type_variant.update_forward_refs(**localns)
+
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
-    def _validate_data_file(self, _data_file: str) -> None:
-        val = self.data[_data_file]
+        cls._clean_type_caches()
+
+    def _validate_data_file(self, data_file: str) -> None:
+        val = self.data[data_file]
         if is_model_instance(val):
-            self.data[_data_file] = self.get_type()(val)
+            self.data[data_file] = self._validate_value_for_data_file(data_file, val)
         else:
             self._force_full_validation()
+
+    @staticmethod
+    def _basic_validation_func(type_variant: type[IsModel | IsDataset],
+                               value: UndefinedType | object) -> IsModel | IsDataset:
+        return type_variant(value)  # type: ignore[arg-type]
+
+    def _validate_value_for_data_file(
+        self,
+        data_file: str,
+        value: UndefinedType | object,
+        validation_func: Callable[[type[IsModel | IsDataset], UndefinedType | object],
+                                  IsModel | IsDataset] = _basic_validation_func,
+    ) -> IsModel | IsDataset:
+        errors = []
+        for type_variant in split_to_union_variants(self.get_type()):
+            try:
+                return validation_func(cast(type[IsModel | IsDataset], type_variant), value)
+            except (ValidationError, ValueError, TypeError) as exp:
+                errors.append(exp)
+        assert errors
+        raise ValidationError([pyd.ErrorWrapper(exc, loc=data_file) for exc in errors],
+                              self.__class__)
 
     def _force_full_validation(self):
         self.data = self.data  # Triggers pydantic validation, as validate_assignment=True
@@ -585,7 +644,7 @@ class Dataset(
     def from_data(self,
                   data: dict_t[str, Any] | Iterator[tuple[str, Any]],
                   update: bool = True) -> None:
-        def callback_func(model: _ModelOrDatasetT, content: Any):
+        def callback_func(model: IsModel | IsDataset, content: Any):
             model.from_data(content)
 
         self._from_dict_with_callback(data, update, callback_func)
@@ -593,18 +652,36 @@ class Dataset(
     def _from_dict_with_callback(self,
                                  data: dict_t[str, Any] | Iterator[tuple[str, Any]],
                                  update: bool,
-                                 callback_func: Callable):
-        if not isinstance(data, dict):
-            data = dict(data)
+                                 callback_func: Callable[[IsModel | IsDataset, Any], None]):
+        if isinstance(data, dict):
+            data_as_dict: dict[str, Any] = data  # pyright: ignore [reportAssignmentType]
+        else:
+            data_as_dict = dict(data)
 
         if not update:
             self.clear()
 
-        _type = self.get_type()
-        for data_file, content in data.items():
-            new_type_instance = _type()
-            callback_func(new_type_instance, content)
-            self.data[data_file] = new_type_instance
+        for data_file, content in data_as_dict.items():
+            # TODO: Redefine from_data() also as classmethods on Model and
+            #       Dataset. Here, we could then do
+            #       type_variant.from_data(content) instead of creating a
+            #       new instance and then calling from_data() on it.
+            #       Instance-level from_data() should however also be kept,
+            #       as it is useful in many cases.
+
+            def validation_by_callback_func(
+                type_variant: type[IsModel | IsDataset],
+                value: UndefinedType | object,
+            ) -> IsModel | IsDataset:
+                new_instance = type_variant()
+                callback_func(new_instance, value)
+                return new_instance
+
+            self.data[data_file] = self._validate_value_for_data_file(
+                data_file,
+                content,
+                validation_by_callback_func,
+            )
 
     def absorb(self, other: 'Dataset'):
         self.from_data(other.to_data(), update=True)
@@ -622,8 +699,8 @@ class Dataset(
     def from_json(self,
                   data: Mapping[str, str] | Iterable[tuple[str, str]],
                   update: bool = True) -> None:
-        def callback_func(model: _ModelOrDatasetT, content: Any):
-            model.from_json(content)
+        def callback_func(type_variant: IsModel | IsDataset, content: Any):
+            type_variant.from_json(content)
 
         self._from_dict_with_callback(data, update, callback_func)
 
