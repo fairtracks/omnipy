@@ -2,6 +2,7 @@ import asyncio
 from collections import defaultdict, UserDict
 from collections.abc import Iterable, Mapping, MutableMapping
 from copy import copy
+import functools
 import inspect
 import json
 import os
@@ -9,7 +10,7 @@ import tarfile
 from textwrap import dedent
 from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKING
 
-from typing_extensions import Self, TypeVar
+from typing_extensions import override, Self, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._mixins.display import DatasetDisplayMixin
@@ -24,9 +25,7 @@ from omnipy.data.helpers import cleanup_name_qualname_and_module
 from omnipy.data.model import Model
 from omnipy.data.typechecks import is_dataset_subclass, is_model_instance, is_model_subclass
 from omnipy.shared.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
-from omnipy.shared.protocols.data import (IsDataset,
-                                          IsHttpUrlDataset,
-                                          IsModel,
+from omnipy.shared.protocols.data import (IsHttpUrlDataset,
                                           IsMultiModelDataset,
                                           IsPathOrUrl,
                                           IsPathsOrUrlsOneOrMoreOrNone)
@@ -53,9 +52,11 @@ if TYPE_CHECKING:
                                            Model_tuple_same_type)
     from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
 
-_ModelOrDatasetT = TypeVar('_ModelOrDatasetT', bound=IsModel | IsDataset)
-_NewModelT = TypeVar('_NewModelT', bound=IsModel)
-_GeneralModelT = TypeVar('_GeneralModelT', bound=IsModel)
+_ModelOrDatasetT = TypeVar('_ModelOrDatasetT', bound='Model | Dataset')
+_DatasetT = TypeVar('_DatasetT', bound='Dataset')
+_ModelT = TypeVar('_ModelT', bound=Model)
+_NewModelT = TypeVar('_NewModelT', bound=Model)
+_GeneralModelT = TypeVar('_GeneralModelT', bound=Model)
 
 # def orjson_dumps(v, *, default):
 #     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
@@ -81,7 +82,7 @@ class Dataset(
         TaskDatasetMixin,
         DataClassBase,
         pyd.GenericModel,
-        UserDict,
+        UserDict[str, _ModelOrDatasetT],
         Generic[_ModelOrDatasetT],
         metaclass=_DatasetMetaclass):
     """
@@ -167,7 +168,7 @@ class Dataset(
         cls._recursively_set_allow_none(created_dataset._get_data_field())
         cleanup_name_qualname_and_module(cls, created_dataset, orig_params)
 
-        return created_dataset
+        return cast(Self, created_dataset)
 
     @call_super_if_available(call_super_before_method=True)
     @classmethod
@@ -290,18 +291,19 @@ class Dataset(
                           model_cls: type[_NewModelT] | None = None) -> Self:
         if model_cls:
             generic_dataset_cls = cls.__bases__[0]
-            new_base_cls = generic_dataset_cls[model_cls]
+            new_base_cls = generic_dataset_cls[model_cls]  # type: ignore[index]
         else:
             new_base_cls = cls
 
         new_dataset_cls = type(new_dataset_cls_name, (new_base_cls,), {})
-        return new_dataset_cls
+        return cast(Self, new_dataset_cls)
 
     @classmethod
     def _get_data_field(cls) -> pyd.ModelField:
         return cast(pyd.ModelField, cls.__fields__.get(DATA_KEY))
 
     @classmethod
+    @functools.cache
     def get_type(cls) -> type[_ModelOrDatasetT]:
         """
         Returns the concrete type (Model or Dataset class) used for all
@@ -311,6 +313,10 @@ class Dataset(
                  data files in the dataset.
         """
         return cls._clean_type(cls._get_data_field().type_)
+
+    @classmethod
+    def _clean_type_caches(cls):
+        cls.get_type.cache_clear()
 
     @staticmethod
     def _raise_type_exception(prefix_msg: str = '') -> None:
@@ -424,34 +430,52 @@ class Dataset(
         ) -> Model_dict[_KeyT, _ValT]:
             ...
 
+        # For better typing of NestedDataset and similar. Will always type
+        # as if a nested Dataset is returned, thus will be wrong for the
+        # terminal Model case (only when multiple __getitem__ are chained,
+        # e.g.:
+        #   nested_dataset = Dataset[Dataset[Model[list[int]]]](...)
+        #   nested_dataset['a'][0] = 5  # <- here the type checker will
+        #                               #    think nested_dataset['a'] is a
+        #                               #    Dataset, not a Model[list[int]]
+
         @overload
         def __getitem__(
+            self: 'Dataset[_DatasetT | _ModelT ]',
+            selector: str | int,
+        ) -> _DatasetT:
+            ...
+
+        # Even though these two overloads overlap, they are needed in this
+        # order to solve typing for both nested and regular Dataset cases.
+
+        @overload
+        def __getitem__(  # type: ignore[overload-overlap]
             self: 'Dataset[_ModelOrDatasetT]',
             selector: str | int,
         ) -> _ModelOrDatasetT:
             ...
-    else:
 
         # The only thing that should really be needed – if Python type hints would have able to
         # describe that Model objects can dynamically inherit from their type arguments. This would
         # at least go some way towards what we really want, which is a way to describe exactly the
         # way Model objects mimic the functionality of their type arguments.
+        #
+        # @overload
+        # def __getitem__(self, selector: str | int) -> _ModelOrDatasetT:
+        #     ...
 
         @overload
-        def __getitem__(self, selector: str | int) -> _ModelOrDatasetT:
+        def __getitem__(self, selector: slice | Iterable[str | int]) -> Self:
             ...
-
-    @overload
-    def __getitem__(self, selector: slice | Iterable[str | int]) -> Self:
-        ...
 
     def __getitem__(
             self,
-            selector: str | int | slice | Iterable[str | int]) -> _ModelOrDatasetT | Model | Self:
+            selector: str | int | slice | Iterable[str | int]) -> '_ModelOrDatasetT | Model | Self':
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
-            value = self.data[selected_keys.keys[0]]
+            value: _ModelOrDatasetT | Self = self.data[selected_keys.keys[0]]
         else:
             value = self.__class__({key: self.data[key] for key in selected_keys.keys})
 
@@ -574,7 +598,7 @@ class Dataset(
             # if is_model_subclass(type_variant) or is_dataset_subclass(type_variant):
             #
             if is_model_subclass(type_variant):
-                type_variant.update_forward_refs(**localns)
+                cast(type[Model], type_variant).update_forward_refs(**localns)
 
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
@@ -589,21 +613,22 @@ class Dataset(
             self._force_full_validation()
 
     @staticmethod
-    def _basic_validation_func(type_variant: type[IsModel | IsDataset],
-                               value: UndefinedType | object) -> IsModel | IsDataset:
-        return type_variant(value)  # type: ignore[arg-type]
+    def _basic_validation_func(type_variant: 'type[Model | Dataset]',
+                               value: UndefinedType | object) -> _ModelOrDatasetT:
+        return cast(_ModelOrDatasetT, type_variant(value))  # type: ignore[arg-type]
 
     def _validate_value_for_data_file(
         self,
         data_file: str,
         value: UndefinedType | object,
-        validation_func: Callable[[type[IsModel | IsDataset], UndefinedType | object],
-                                  IsModel | IsDataset] = _basic_validation_func,
-    ) -> IsModel | IsDataset:
+        validation_func: (
+            'Callable[[type[Model | Dataset], UndefinedType | object], _ModelOrDatasetT]'
+        ) = _basic_validation_func,
+    ) -> _ModelOrDatasetT:
         errors = []
         for type_variant in split_to_union_variants(self.get_type()):
             try:
-                return validation_func(cast(type[IsModel | IsDataset], type_variant), value)
+                return validation_func(cast('type[Model | Dataset]', type_variant), value)
             except (ValidationError, ValueError, TypeError) as exp:
                 errors.append(exp)
         assert errors
@@ -613,7 +638,8 @@ class Dataset(
     def _force_full_validation(self):
         self.data = self.data  # Triggers pydantic validation, as validate_assignment=True
 
-    def __iter__(self) -> Iterator:
+    @override
+    def __iter__(self) -> Iterator[str]:  # type: ignore[override]
         return UserDict.__iter__(self)
 
     def __setattr__(self, attr: str, value: Any) -> None:
@@ -626,7 +652,8 @@ class Dataset(
             raise RuntimeError('Model does not allow setting of extra attributes')
 
     @pyd.root_validator
-    def _parse_root_object(cls, root_obj: dict_t[str, _ModelOrDatasetT]) -> Any:  # noqa
+    def _parse_root_object(cls, root_obj: dict_t[str, dict_t[str,
+                                                             _ModelOrDatasetT]]) -> Any:  # noqa
         assert DATA_KEY in root_obj
         data_dict = root_obj[DATA_KEY]
         _model_or_dataset_cls = cls.get_type()
@@ -642,17 +669,17 @@ class Dataset(
         return super().dict(**kwargs)[DATA_KEY]
 
     def from_data(self,
-                  data: dict_t[str, Any] | Iterator[tuple[str, Any]],
+                  data: Mapping[str, Any] | Iterable[tuple[str, Any]],
                   update: bool = True) -> None:
-        def callback_func(model: IsModel | IsDataset, content: Any):
+        def callback_func(model: Model | Dataset, content: Any):
             model.from_data(content)
 
         self._from_dict_with_callback(data, update, callback_func)
 
     def _from_dict_with_callback(self,
-                                 data: dict_t[str, Any] | Iterator[tuple[str, Any]],
+                                 data: Mapping[str, Any] | Iterable[tuple[str, Any]],
                                  update: bool,
-                                 callback_func: Callable[[IsModel | IsDataset, Any], None]):
+                                 callback_func: 'Callable[[Model | Dataset, Any], None]'):
         if isinstance(data, dict):
             data_as_dict: dict[str, Any] = data  # pyright: ignore [reportAssignmentType]
         else:
@@ -670,12 +697,12 @@ class Dataset(
             #       as it is useful in many cases.
 
             def validation_by_callback_func(
-                type_variant: type[IsModel | IsDataset],
+                type_variant: 'type[Model | Dataset]',
                 value: UndefinedType | object,
-            ) -> IsModel | IsDataset:
+            ) -> _ModelOrDatasetT:
                 new_instance = type_variant()
                 callback_func(new_instance, value)
-                return new_instance
+                return cast(_ModelOrDatasetT, new_instance)
 
             self.data[data_file] = self._validate_value_for_data_file(
                 data_file,
@@ -694,12 +721,13 @@ class Dataset(
 
         for key, val in self.data.items():
             result[key] = val.to_json(pretty=pretty)
+
         return result
 
     def from_json(self,
                   data: Mapping[str, str] | Iterable[tuple[str, str]],
                   update: bool = True) -> None:
-        def callback_func(type_variant: IsModel | IsDataset, content: Any):
+        def callback_func(type_variant: 'Model | Dataset', content: Any):
             type_variant.from_json(content)
 
         self._from_dict_with_callback(data, update, callback_func)
@@ -826,7 +854,7 @@ class Dataset(
                 return self._load_http_urls(http_url_dataset, as_mime_type=as_mime_type)
 
             case Iterable():
-                path_or_url_iterable = cast(Iterable[str], paths_or_urls)
+                path_or_url_iterable = paths_or_urls
                 try:
                     http_url_dataset = HttpUrlDataset(
                         zip(path_or_url_iterable, path_or_url_iterable))
@@ -957,6 +985,26 @@ class Dataset(
     def __repr_args__(self):
         return [(k, v.content) if is_model_instance(v) else (k, v) for k, v in self.data.items()]
 
+    if TYPE_CHECKING:
+
+        # Override UserDict methods to fit with IsMutableMapping
+
+        @override
+        def __or__(  # type: ignore [override]
+            self,
+            other: dict_t[str, _ModelOrDatasetT],
+            /,
+        ) -> dict_t[str, _ModelOrDatasetT]:
+            ...
+
+        @override
+        def __ror__(  # type: ignore [override]
+            self,
+            other: dict_t[str, _ModelOrDatasetT],
+            /,
+        ) -> dict_t[str, _ModelOrDatasetT]:
+            ...
+
 
 class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
     """
@@ -966,12 +1014,14 @@ class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
         custom models.
     """
 
-    # Custom field models should really be a subtype of _ModelT, however this is currently not
-    # checkable in the type system. Instead, we rely on the _validate method to ensure that the
-    # custom field models are valid.
-    _custom_field_models: dict[str, type[IsModel]] = pyd.PrivateAttr(default={})
+    # Custom field models should really be a subtype of _GeneralModelT,
+    # however this is currently not checkable in the type system. Instead,
+    # we rely on the _validate method to ensure that the custom field
+    # models are valid.
 
-    def set_model(self, data_file: str, model: type[IsModel]) -> None:
+    _custom_field_models: dict[str, type[Model]] = pyd.PrivateAttr(default={})
+
+    def set_model(self, data_file: str, model: type[Model]) -> None:
         try:
             self._custom_field_models[data_file] = model
             if data_file in self.data:
@@ -982,14 +1032,14 @@ class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
             del self._custom_field_models[data_file]
             raise
 
-    def get_model(self, data_file: str) -> type[IsModel]:
+    def get_model(self, data_file: str) -> type[Model]:
         if data_file in self._custom_field_models:
             return self._custom_field_models[data_file]
         else:
             return self.get_type()
 
     def from_data(self,
-                  data: dict[str, Any] | Iterator[tuple[str, Any]],
+                  data: Mapping[str, Any] | Iterable[tuple[str, Any]],
                   update: bool = True) -> None:
         super().from_data(data, update)
         for data_file in self:

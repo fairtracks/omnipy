@@ -16,7 +16,7 @@ from omnipy.components.json.models import (JsonCustomDictModel,
                                            JsonOnlyDictsModel,
                                            JsonOnlyListsModel,
                                            JsonScalarModel)
-from omnipy.shared.protocols.data import IsModel
+from omnipy.shared.protocols.data import IsDataset, IsModel
 
 d = JsonDictModel({'a': 1, 'b': 2})
 d['a'] = 4
@@ -58,50 +58,28 @@ reveal_type(model4)
 reveal_type(model4.content)
 model4.append(2)
 model4.asdf()
-asd = model4[0]
+das = model4[0]
 model4[1] = 5
-reveal_type(asd)
-
-dataset4 = Dataset[Model[list[int]]](a=[1, 2, 3])
-reveal_type(Dataset[Model[list[int]]])
-reveal_type(dataset4)
-reveal_type(dataset4['a'])
-dataset4['a'].append(2)
-dataset4['a'].asdf()
-asd = dataset4['a'][0]
-dataset4['a'][1] = 5
-reveal_type(asd)
-
-nested_dataset4 = Dataset[Dataset[Model[list[int]]]](outer={'a': [1, 2, 3]})
-reveal_type(Dataset[Dataset[Model[list[int]]]])
-reveal_type(nested_dataset4)
-reveal_type(nested_dataset4['outer'])
-nested_dataset4['inner'] = nested_dataset4['outer']
-reveal_type(nested_dataset4['outer']['a'])
-nested_dataset4['outer']['a'].append(2)
-nested_dataset4['outer']['a'].asdf()
-asd = nested_dataset4['outer']['a'][0]
-nested_dataset4['outer']['a'][1] = 5
-reveal_type(asd)
+reveal_type(das)
 
 model5 = Model[dict]({'a': 1, 'b': 2})
 reveal_type(Model[dict])
 reveal_type(model5)
 model5.pop('a')
 model5.asdf()
-asd = model5['a']
+sdf = model5['a']
 model5['b'] = 'c'
-reveal_type(asd)
+reveal_type(sdf)
 
 model6 = Model[dict[int, str]]({1: 'a', 2: 'b'})
 reveal_type(Model[dict[int, str]])
 reveal_type(model6)
 model6.pop(2)
 model6.asdf()
-asd = model6[1]
+czx = model6[1]
 model6['a'] = 'c'
 model6[3] = 'c'
-reveal_type(asd)
+reveal_type(czx)
 
 (1, 2, 3).count(1)
 
@@ -123,6 +101,51 @@ reveal_type(model_model_list)
 model_model_list.append(23)
 mm = model_model_list[2]
 reveal_type(mm)
+
+dataset = Dataset[Model[list[int]]](a=[1, 2, 3])
+reveal_type(Dataset[Model[list[int]]])
+reveal_type(dataset)
+reveal_type(dataset['a'])
+dataset['a'].append(2)
+dataset['a'].asdf()
+wex = dataset['a'][0]
+dataset['a'][1] = 5
+reveal_type(wex)
+
+dataset_2 = Dataset[JsonListModel](a=[1, 2, 3])
+reveal_type(Dataset[JsonListModel])
+reveal_type(dataset_2)
+reveal_type(dataset_2['a'])
+dataset_2['a'].append(2)
+dataset_2['a'].asdf()
+xad = dataset_2['a'][0]
+dataset_2['a'][1] = 5
+reveal_type(xad)
+
+ffgh: IsDataset[Dataset[Model[list[int]]]] = Dataset[Dataset[Model[list[int]]]]()
+nested_dataset = Dataset[Dataset[Model[list[int]]]](outer={'a': [1, 2, 3]})
+reveal_type(Dataset[Dataset[Model[list[int]]]])
+reveal_type(nested_dataset)
+reveal_type(nested_dataset['outer'])
+nested_dataset['inner'] = nested_dataset['outer']
+reveal_type(nested_dataset['outer']['a'])
+nested_dataset['outer']['a'].append(2)
+nested_dataset['outer']['a'].asdf()
+dqx = nested_dataset['outer']['a'][0]
+nested_dataset['outer']['a'][1] = 5
+reveal_type(dqx)
+
+nested_or_dataset = Dataset[Dataset[Model[list[int]]] | Model[str]](outer={'a': [1, 2, 3]})
+reveal_type(Dataset[Dataset[Model[list[int]]] | Model[str]])
+reveal_type(nested_or_dataset)
+reveal_type(nested_or_dataset['outer'])
+nested_or_dataset['inner'] = nested_dataset['outer']
+reveal_type(nested_or_dataset['outer']['a'])
+nested_or_dataset['outer']['a'].append(2)
+nested_or_dataset['outer']['a'].asdf()
+ffs = nested_or_dataset['outer']['a'][0]
+nested_or_dataset['outer']['a'][1] = 5
+reveal_type(ffs)
 
 dataset_model_model_list = Dataset[Model[Model[list[int]]]](a=[23])
 reveal_type(dataset_model_model_list)
@@ -181,9 +204,9 @@ json_list_of_lists_model.append([3, 4])
 json_list_of_lists_model.append([3, ['a']])
 json_list_of_lists_model.append(json_list_of_lists_model2[0])
 json_list_of_lists_model.asdf()
-asd = json_list_of_lists_model[1]
-reveal_type(asd)
-reveal_type(asd[0])
+wed = json_list_of_lists_model[1]
+reveal_type(wed)
+reveal_type(wed[0])
 
 json_list_of_lists_dataset = JsonListOfListsDataset(d=[[1, 2], ['a', 'b']])
 reveal_type(json_list_of_lists_dataset)

@@ -272,12 +272,6 @@ class IsMapping(IsCollection[_KeyT], Protocol[_KeyT, _ValT]):
     def __eq__(self, other: object, /) -> bool:
         raise AssumedToBeImplementedException
 
-    def __or__(self, other: Self, /) -> Self:
-        raise AssumedToBeImplementedException
-
-    def __ror__(self, other: Self, /) -> Self:
-        raise AssumedToBeImplementedException
-
 
 class IsMappingView(Sized, Protocol):
     def __len__(self) -> int:
@@ -343,7 +337,15 @@ class IsMutableMapping(IsMapping[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
         raise AssumedToBeImplementedException
 
     @overload
+    def update(self, other: SupportsKeysAndGetItem[_KeyT, _ValT], /) -> None:
+        raise AssumedToBeImplementedException
+
+    @overload
     def update(self, other: SupportsKeysAndGetItem[_KeyT, _ValT], /, **kwargs: _ValT) -> None:
+        raise AssumedToBeImplementedException
+
+    @overload
+    def update(self, other: Iterable[tuple[_KeyT, _ValT]], /) -> None:
         raise AssumedToBeImplementedException
 
     @overload
@@ -367,6 +369,12 @@ class IsMutableMapping(IsMapping[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
         """
         D.setdefault(k[,d]) -> D.get(k,d), also set D[k]=d if k not in D
         """
+        raise AssumedToBeImplementedException
+
+    def __or__(self, other: dict[_KeyT, _ValT], /) -> dict[_KeyT, _ValT]:
+        raise AssumedToBeImplementedException
+
+    def __ror__(self, other: dict[_KeyT, _ValT], /) -> dict[_KeyT, _ValT]:
         raise AssumedToBeImplementedException
 
     def __ior__(self, other: Self, /) -> Self:
