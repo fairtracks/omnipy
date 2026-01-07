@@ -16,6 +16,10 @@ from omnipy.util.helpers import sorted_dict_hash
 
 
 class PrettyPrinter(ABC, Generic[ContentT]):
+    def __init__(self) -> None:
+        super().__init__()
+        self._prev_horizontal_overflow_lines: list[str] = []
+
     @classmethod
     @abstractmethod
     def is_suitable_content(cls, draft_panel: DraftPanel[object, AnyFrame]) -> bool:
@@ -64,6 +68,29 @@ class PrettyPrinter(ABC, Generic[ContentT]):
             return pretty_printer
 
         return register.get_pretty_printer_from_syntax(draft_panel.config.syntax)
+
+    def _longest_stripped_lines_changed_since_last_print(
+        self,
+        cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
+    ) -> bool:
+
+        cur_horizontal_overflow_lines = cur_reflowed_text_panel.horizontal_overflow_lines
+        if cur_horizontal_overflow_lines != self._prev_horizontal_overflow_lines:
+            self._prev_horizontal_overflow_lines = cur_horizontal_overflow_lines
+            return True
+        else:
+            if cur_horizontal_overflow_lines:
+                return False
+            else:
+                return True
+
+    # @override
+    def significant_change_since_last_print(
+        self,
+        draft_for_print: DraftPanel[ContentT, FrameT],
+        cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
+    ) -> bool:
+        return self._longest_stripped_lines_changed_since_last_print(cur_reflowed_text_panel)
 
 
 class StatsTighteningPrettyPrinter(

@@ -87,6 +87,12 @@ def _iteratively_reduce_width(
         ):
             break
 
+        if not pretty_printer.significant_change_since_last_print(
+                draft_for_format,
+                cur_reflowed_text_panel,
+        ):
+            break
+
         prev_reflowed_text_panel = cur_reflowed_text_panel
 
         cur_reflowed_text_panel = _format_draft_panel(

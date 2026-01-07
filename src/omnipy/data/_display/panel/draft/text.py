@@ -10,7 +10,7 @@ from omnipy.components.json.helpers import (is_json_scalar,
                                             parse_str_as_json)
 from omnipy.components.json.typedefs import JsonDict, JsonList
 from omnipy.data._display.constraints import ConstraintsSatisfaction
-from omnipy.data._display.dimensions import Dimensions, DimensionsFit, has_height
+from omnipy.data._display.dimensions import Dimensions, DimensionsFit, has_height, has_width
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.cropping import (crop_content_lines_vertically_for_resizing,
@@ -171,6 +171,17 @@ class ReflowedTextDraftPanel(
             self.inner_frame.dims,
             proportional_freedom=self.config.freedom,
         )
+
+    @cached_property
+    def horizontal_overflow_lines(self) -> list[str]:
+        h_overflow_lines = []
+
+        if has_width(self.frame.dims):
+            for line in self._content_lines:
+                if len(line) > self.frame.dims.width:
+                    h_overflow_lines.append(line)
+
+        return h_overflow_lines
 
     @cached_property
     def max_inline_container_width_incl(self) -> int:

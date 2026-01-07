@@ -250,6 +250,32 @@ def test_reflowed_text_draft_panel_variable_width_chars() -> None:
 #     assert panel.visible_char_coverage() == 10  # 5 English + 2 double-width Asian chars
 
 
+def test_overflow_lines() -> None:
+    panel = ReflowedTextDraftPanel('')
+    assert panel.horizontal_overflow_lines == []
+
+    panel = ReflowedTextDraftPanel('Short line')
+    assert panel.horizontal_overflow_lines == []
+
+    panel = ReflowedTextDraftPanel('Short line', frame=Frame(Dimensions(10, None)))
+    assert panel.horizontal_overflow_lines == []
+
+    panel = ReflowedTextDraftPanel('Short line', frame=Frame(Dimensions(9, None)))
+    assert panel.horizontal_overflow_lines == ['Short line']
+
+    panel = ReflowedTextDraftPanel(
+        'Line one\nLonger line two\nShort', frame=Frame(Dimensions(9, None)))
+    assert panel.horizontal_overflow_lines == ['Longer line two']
+
+    panel = ReflowedTextDraftPanel(
+        'Line one\nLonger line two\n    Spaced        ', frame=Frame(Dimensions(9, None)))
+    assert panel.horizontal_overflow_lines == ['Longer line two', '    Spaced        ']
+
+    panel = ReflowedTextDraftPanel(
+        'Line one\nLonger line two\n    Spaced        ', frame=Frame(Dimensions(0, None)))
+    assert panel.horizontal_overflow_lines == ['Line one', 'Longer line two', '    Spaced        ']
+
+
 def test_reflowed_text_draft_panel_max_inline_container_width_incl() -> None:
     assert ReflowedTextDraftPanel('').max_inline_container_width_incl == 0
 
