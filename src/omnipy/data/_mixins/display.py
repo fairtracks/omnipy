@@ -302,11 +302,10 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 # If the output is a browser page, we allow expanding the
                 # frame to fit the content
                 if not resized_panel.within_frame.width:
-                    wider_panel = dataclasses.replace(
-                        panel,
-                        frame=panel.frame.modified_copy(width=resized_panel.dims.width),
+                    resized_panel = dataclasses.replace(
+                        resized_panel,
+                        frame=resized_panel.frame.modified_copy(width=resized_panel.dims.width),
                     )
-                    resized_panel = wider_panel.render_next_stage()
             return resized_panel.render_next_stage()
 
         def _render_output(
