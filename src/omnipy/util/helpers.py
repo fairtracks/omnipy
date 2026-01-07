@@ -39,6 +39,7 @@ from omnipy.shared.typedefs import LocaleType, TypeForm
 import omnipy.util._pydantic as pyd
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
+_ValueT = TypeVar('_ValueT')
 _ObjT = TypeVar('_ObjT', bound=object)
 _DataclassT = TypeVar('_DataclassT', bound=IsDataclass)
 _P = ParamSpec('_P')
@@ -80,6 +81,12 @@ def first_key_in_mapping(mapping: Mapping[_KeyT, Any],) -> _KeyT:
     for _key in mapping.keys():
         return _key
     raise KeyError('Mapping is empty, no first key.')
+
+
+def first_value_in_mapping(mapping: Mapping[Any, _ValueT],) -> _ValueT:
+    for _val in mapping.values():
+        return _val
+    raise ValueError('Mapping is empty, no first value.')
 
 
 def merge_dataclasses(dataclass: _DataclassT, other_dict: dict[str, Any]) -> _DataclassT:
