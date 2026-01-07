@@ -6,6 +6,7 @@ import pytest_cases as pc
 from omnipy import (BytesDataset,
                     Dataset,
                     JsonDataset,
+                    JsonDictModel,
                     JsonModel,
                     Model,
                     StrDataset,
@@ -89,7 +90,8 @@ def case_async_load_urls_into_new_dataset_auto_as_mime_type(
     [
         (StrictBytesModel, 'text/plain'),
         (StrictStrModel, 'application/json'),
-        (JsonModel, 'application/octet-stream'),
+        # (JsonModel, 'application/octet-stream'),
+        (JsonDictModel, 'application/octet-stream'),
     ],
     ids=['bytes', 'text', 'json'])
 def case_fail_async_load_urls_into_new_dataset_auto_as_incorrect_mime_type(
