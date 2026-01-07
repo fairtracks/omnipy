@@ -2,8 +2,8 @@ from typing import Annotated
 
 import pytest
 import pytest_cases as pc
-from scripts.type_alias_example import JsonScalar
 
+from omnipy.components.json.typedefs import JsonScalar
 from omnipy.components.tables.models import (ColumnWiseTableDictOfListsModel,
                                              IteratingPydanticRecordModel,
                                              PydanticRecordModel,
