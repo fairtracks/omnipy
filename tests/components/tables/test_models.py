@@ -9,6 +9,7 @@ from omnipy.components.tables.models import (ColumnWiseTableDictOfListsModel,
                                              PydanticRecordModel,
                                              RowWiseTableFirstRowAsColNamesModel,
                                              RowWiseTableListOfDictsModel,
+                                             RowWiseTableListOfListsModel,
                                              TableOfPydanticRecordsModel)
 from omnipy.data.model import Model
 from omnipy.data.typechecks import is_model_instance
@@ -22,6 +23,24 @@ from .cases.raw.table_data import column_wise_dict_of_lists_data
 
 # TODO: Add tests and logic to check that all columns have the same length
 #       in column-wise table models
+
+
+def test_rowwise_table_without_col_names_model() -> None:
+    row_wise_list_of_lists_data = [
+        ['John', 'Doe', 30],
+        ['Jane', 'Doe', 25],
+    ]
+
+    row_wise_table_without_col_names_model = RowWiseTableListOfListsModel(
+        row_wise_list_of_lists_data)
+    assert row_wise_table_without_col_names_model.content == row_wise_list_of_lists_data
+    assert row_wise_table_without_col_names_model.to_data() == row_wise_list_of_lists_data
+
+
+def test_rowwise_table_without_col_names_model_empty() -> None:
+    row_wise_table_without_col_names_model = RowWiseTableListOfListsModel([])
+    assert row_wise_table_without_col_names_model.content == []
+    assert row_wise_table_without_col_names_model.to_data() == []
 
 
 def test_columnwise_and_rowwise_table_models_with_col_names() -> None:
