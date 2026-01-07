@@ -204,34 +204,34 @@ if typing.TYPE_CHECKING:
 
 else:
 
-    JsonScalarModel: TypeAlias = Model[JsonScalar]
-    """
-    JsonScalarModel is a limited JSON model supporting only scalar JSON
-    content, e.g. the basic types: `None`, `int`, `float`, `str`, and
-    `bool`. Lists and dicts (or "objects") are not supported.
+    class JsonScalarModel(Model[JsonScalar]):
+        """
+        JsonScalarModel is a limited JSON model supporting only scalar JSON
+        content, e.g. the basic types: `None`, `int`, `float`, `str`, and
+        `bool`. Lists and dicts (or "objects") are not supported.
 
-    Examples:
-        >>> my_none = JsonScalarModel(None)
-        >>> my_none.to_data(), my_none.to_json()
-        (None, 'null')
-        >>> my_int = JsonScalarModel(123)
-        >>> my_int.to_data(), my_int.to_json()
-        (123, '123')
-        >>> my_float = JsonScalarModel(12.3)
-        >>> my_float.to_data(), my_float.to_json()
-        (12.3, '12.3')
-        >>> my_str = JsonScalarModel('abc')
-        >>> my_str.to_data(), my_str.to_json()
-        (abc, '"abc"')
-        >>> my_bool = JsonScalarModel(False)
-        >>> my_bool.to_data(), my_bool.to_json()
-        (False, '"false"')
-        >>> try:
-        ...     my_json = JsonScalarModel([123])
-        ... except Exception as e:
-        ...     print(str(e).splitlines()[0])
-        6 validation errors for JsonScalarModel
-    """
+        Examples:
+            >>> my_none = JsonScalarModel(None)
+            >>> my_none.to_data(), my_none.to_json()
+            (None, 'null')
+            >>> my_int = JsonScalarModel(123)
+            >>> my_int.to_data(), my_int.to_json()
+            (123, '123')
+            >>> my_float = JsonScalarModel(12.3)
+            >>> my_float.to_data(), my_float.to_json()
+            (12.3, '12.3')
+            >>> my_str = JsonScalarModel('abc')
+            >>> my_str.to_data(), my_str.to_json()
+            (abc, '"abc"')
+            >>> my_bool = JsonScalarModel(False)
+            >>> my_bool.to_data(), my_bool.to_json()
+            (False, '"false"')
+            >>> try:
+            ...     my_json = JsonScalarModel([123])
+            ... except Exception as e:
+            ...     print(str(e).splitlines()[0])
+            6 validation errors for JsonScalarModel
+        """
 
 # List at the top level
 
