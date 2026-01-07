@@ -128,6 +128,8 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.data.ui.layout.max_title_height is MaxTitleHeight.AUTO
     assert config.data.ui.layout.min_panel_width == 3
     assert config.data.ui.layout.min_crop_width == 33
+    assert config.data.ui.layout.max_panels_hor == 8
+    assert config.data.ui.layout.max_nesting_depth == 3
     assert config.data.ui.layout.justify is Justify.LEFT
 
     assert isinstance(config.data.model, ModelConfig)

@@ -7,7 +7,10 @@ import pygments.util
 from omnipy.data._display.styles.dynamic_styles import (clean_style_name,
                                                         handle_random_name,
                                                         install_base16_theme)
-from omnipy.shared.constants import MIN_CROP_WIDTH, MIN_PANEL_WIDTH
+from omnipy.shared.constants import (MAX_PANEL_NESTING_DEPTH,
+                                     MAX_PANELS_HORIZONTALLY,
+                                     MIN_CROP_WIDTH,
+                                     MIN_PANEL_WIDTH)
 from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
 from omnipy.shared.enums.display import (DisplayColorSystem,
                                          HorizontalOverflowMode,
@@ -119,6 +122,14 @@ class OutputConfig:
         use_min_crop_width (bool): Whether the `min_crop_width` value should
             be considered in cases where more than one panel are to
             be displayed, potentially reduce the number of displayed panels.
+        max_panels_hor (NonNegativeInt | None): Maximum number of
+            panels to display horizontally side-by-side at the top level.
+            This value also acts as a ceiling for nested panels: nested
+            panels cannot exceed this limit even if the constant
+            MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED is set to a higher value.
+            If None, there is no limit.
+        max_nesting_depth (NonNegativeInt | None): Maximum levels of nested
+            panels to display. If None, there is no limit.
         justify (Justify.Literals): Justification mode for the panel if
             inside a layout panel. This is only used for the panel content.
     """
@@ -151,6 +162,8 @@ class OutputConfig:
     min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH
     min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH
     use_min_crop_width: bool = False
+    max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY
+    max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH
     justify: Justify.Literals = Justify.LEFT
 
     @pyd.validator('syntax')

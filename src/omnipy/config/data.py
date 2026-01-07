@@ -13,6 +13,8 @@ from omnipy.shared.constants import (BROWSER_DEFAULT_HEIGHT,
                                      BROWSER_DEFAULT_WIDTH,
                                      JUPYTER_DEFAULT_HEIGHT,
                                      JUPYTER_DEFAULT_WIDTH,
+                                     MAX_PANEL_NESTING_DEPTH,
+                                     MAX_PANELS_HORIZONTALLY,
                                      MIN_CROP_WIDTH,
                                      MIN_PANEL_WIDTH,
                                      TERMINAL_DEFAULT_HEIGHT,
@@ -233,6 +235,8 @@ class LayoutConfig(ConfigBase):
     max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO
     min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH
     min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH
+    max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY
+    max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH
     justify: Justify.Literals = Justify.LEFT
 
 

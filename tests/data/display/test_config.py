@@ -42,6 +42,8 @@ def test_output_config() -> None:
         min_panel_width=5,
         min_crop_width=20,
         use_min_crop_width=True,
+        max_panels_hor=15,
+        max_nesting_depth=5,
         justify=Justify.RIGHT,
     )
 
@@ -67,6 +69,8 @@ def test_output_config() -> None:
     assert config.max_title_height == MaxTitleHeight.ZERO
     assert config.min_crop_width == 20
     assert config.use_min_crop_width is True
+    assert config.max_panels_hor == 15
+    assert config.max_nesting_depth == 5
     assert config.justify is Justify.RIGHT
 
     config = OutputConfig(
@@ -97,6 +101,8 @@ def test_output_config() -> None:
         min_panel_width='5',  # type: ignore[arg-type]
         min_crop_width='20',  # type: ignore[arg-type]
         use_min_crop_width=1,  # type: ignore[arg-type]
+        max_panels_hor=None,
+        max_nesting_depth=None,
         justify='right',
     )
     assert config.tab == 2
@@ -117,10 +123,12 @@ def test_output_config() -> None:
     assert config.v_overflow is VerticalOverflowMode.CROP_BOTTOM
     assert config.panel is PanelDesign.TABLE
     assert config.title_at_top is False
-    assert config.min_panel_width == 5
     assert config.max_title_height == MaxTitleHeight.ONE
+    assert config.min_panel_width == 5
     assert config.min_crop_width == 20
     assert config.use_min_crop_width is True
+    assert config.max_panels_hor is None
+    assert config.max_nesting_depth is None
     assert config.justify is Justify.RIGHT
 
     config = OutputConfig(
@@ -206,6 +214,12 @@ def test_output_config_hashable() -> None:
         },
         {
             'use_min_crop_width': True
+        },
+        {
+            'max_panels_hor': 15
+        },
+        {
+            'max_nesting_depth': 5
         },
         {
             'justify': Justify.RIGHT
@@ -294,6 +308,12 @@ def test_fail_output_config_no_assignments() -> None:
         config.use_min_crop_width = True  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
+        config.max_panels_hor = 15  # type: ignore[misc]
+
+    with pytest.raises(AttributeError):
+        config.max_nesting_depth = 5  # type: ignore[misc]
+
+    with pytest.raises(AttributeError):
         config.justify = Justify.RIGHT  # type: ignore[misc]
 
 
@@ -375,6 +395,12 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(use_min_crop_width=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
+        OutputConfig(max_panels_hor=-1)
+
+    with pytest.raises(ValueError):
+        OutputConfig(max_nesting_depth=-1)
+
+    with pytest.raises(ValueError):
         OutputConfig(justify=None)  # type: ignore[arg-type]
 
 
@@ -408,6 +434,8 @@ def test_output_config_default_values() -> None:
     assert config.max_title_height is MaxTitleHeight.AUTO
     assert config.min_crop_width == 33
     assert config.use_min_crop_width is False
+    assert config.max_panels_hor == 8
+    assert config.max_nesting_depth == 3
     assert config.justify is Justify.LEFT
 
 

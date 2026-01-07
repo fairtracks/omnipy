@@ -138,6 +138,8 @@ class IsLayoutConfig(IsConfigBase, Protocol):
     max_title_height: MaxTitleHeight.Literals
     min_panel_width: pyd.NonNegativeInt
     min_crop_width: pyd.NonNegativeInt
+    max_panels_hor: pyd.NonNegativeInt | None
+    max_nesting_depth: pyd.NonNegativeInt | None
     justify: Justify.Literals
 
 

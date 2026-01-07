@@ -9,9 +9,18 @@ ASYNC_LOAD_SLEEP_TIME = 0.05
 
 # Data - Display
 
-MAX_TERMINAL_SIZE = 2**16 - 1
-MIN_PANEL_WIDTH = 3
-MIN_CROP_WIDTH = 33
+MAX_TERMINAL_SIZE: pyd.NonNegativeInt = 2**16 - 1
+MIN_PANEL_WIDTH: pyd.NonNegativeInt = 3
+MIN_CROP_WIDTH: pyd.NonNegativeInt = 33
+
+# Overrides MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED if smaller.
+MAX_PANELS_HORIZONTALLY: pyd.NonNegativeInt | None = 8
+
+# For deeply nested panels (level >= 2), we want to be more restrictive to
+# improve performance and readability.
+MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED: pyd.NonNegativeInt | None = 4
+
+MAX_PANEL_NESTING_DEPTH: pyd.NonNegativeInt | None = 3
 
 TERMINAL_DEFAULT_WIDTH: pyd.NonNegativeInt | None = 80
 TERMINAL_DEFAULT_HEIGHT: pyd.NonNegativeInt | None = 24

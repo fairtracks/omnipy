@@ -509,3 +509,21 @@ def test_get_calling_module_name() -> None:
 def test_called_from_omnipy_tests() -> None:
     # Negative test is left as an exercise to the reader
     assert called_from_omnipy_tests()
+
+
+def test_min_or_none() -> None:
+    from omnipy.util.helpers import min_or_none
+
+    assert min_or_none(3, 1, 2.5) == 1
+    assert min_or_none(3, 1, None) == 1
+    assert min_or_none(None, None) is None
+    assert min_or_none() is None
+
+
+def test_max_or_none() -> None:
+    from omnipy.util.helpers import max_or_none
+
+    assert max_or_none(3, 1, 2.5) == 3
+    assert max_or_none(3, 1, None) == 3
+    assert max_or_none(None, None) is None
+    assert max_or_none() is None

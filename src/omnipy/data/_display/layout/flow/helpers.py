@@ -53,6 +53,15 @@ def create_panel_with_updated_frame(
         return cast(DimensionsAwareDraftPanel[ContentT, FrameInvT], new_draft_panel)
 
 
+def create_ellipsis_panel(panel: DraftPanel) -> DimensionsAwareDraftPanel:
+    ellipsis_panel = panel.create_modified_copy(
+        '' if panel.title else '…',
+        title='…' if panel.title else None,
+        frame=Frame(Dimensions(width=1, height=None), fixed_width=True),
+    )
+    return cast(DimensionsAwareDraftPanel, ellipsis_panel.render_next_stage())
+
+
 # Classes
 
 
@@ -296,13 +305,7 @@ class LayoutFlowContext(Generic[FrameT]):
 
     def _turn_into_ellipsis_panel(self, key: str) -> None:
         panel = self.dim_aware_layout[key]
-        ellipsis_panel = panel.create_modified_copy(
-            '' if panel.title else '…',
-            title='…' if panel.title else None,
-            frame=Frame(Dimensions(width=1, height=None), fixed_width=True),
-        )
-        self.dim_aware_layout[key] = cast(DimensionsAwareDraftPanel,
-                                          ellipsis_panel.render_next_stage())
+        self.dim_aware_layout[key] = create_ellipsis_panel(panel)
 
     def _delete_consecutively_removed_panels(self) -> None:
         prev_key_removed = False

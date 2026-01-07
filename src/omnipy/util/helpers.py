@@ -270,18 +270,6 @@ def is_literal_type(value: Any) -> bool:
     return get_origin(value) is Literal
 
 
-def all_equals(first, second) -> bool:
-    equals = first == second
-    if is_iterable(equals):
-        if hasattr(equals, 'all') and callable(getattr(equals, 'all')):
-            # Works for both pandas and numpy
-            return equals.all(None)  # pyright: ignore [reportAttributeAccessIssue]
-        else:
-            return all(equals)
-    else:
-        return equals
-
-
 @functools.cache
 def is_strict_subclass(
         __cls: type,
@@ -451,3 +439,28 @@ def extract_newline(line: str) -> str:
 
 def max_newline_stripped_width(lines: list[str]) -> int:
     return max((len(strip_newline(line)) for line in lines), default=0)
+
+
+def all_equals(first, second) -> bool:
+    equals = first == second
+    if is_iterable(equals):
+        if hasattr(equals, 'all') and callable(getattr(equals, 'all')):
+            # Works for both pandas and numpy
+            return equals.all(None)  # pyright: ignore [reportAttributeAccessIssue]
+        else:
+            return all(equals)
+    else:
+        return equals
+
+
+NumberT = TypeVar('NumberT', float, int)
+
+
+def min_or_none(*args: NumberT | None) -> NumberT | None:
+    filtered_args = [arg for arg in args if arg is not None]
+    return min(filtered_args) if filtered_args else None
+
+
+def max_or_none(*args: NumberT | None) -> NumberT | None:
+    filtered_args = [arg for arg in args if arg is not None]
+    return max(filtered_args) if filtered_args else None

@@ -17,15 +17,15 @@ from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.integrations.browser.macosx import (OmnipyMacOSXOSAScript,
                                                               setup_macosx_browser_integration)
 from omnipy.data._display.layout.base import Layout, PanelDesignDims
+from omnipy.data._display.layout.flow.helpers import create_ellipsis_panel
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data.helpers import FailedData, PendingData
-from omnipy.data.typechecks import is_dataset_instance
+from omnipy.data.typechecks import is_dataset_instance, is_model_instance
 from omnipy.hub.ui import get_terminal_prompt_height, note_mime_bundle
-from omnipy.shared.constants import TITLE_BLANK_LINES
+from omnipy.shared.constants import MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED, TITLE_BLANK_LINES
 from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
 from omnipy.shared.enums.display import (DisplayColorSystem,
-                                         HorizontalOverflowMode,
                                          MaxTitleHeight,
                                          PanelDesign,
                                          SyntaxLanguage)
@@ -40,7 +40,7 @@ from omnipy.shared.enums.ui import (BrowserPageUserInterfaceType,
 from omnipy.shared.protocols.config import IsHtmlUserInterfaceConfig, IsUserInterfaceTypeConfig
 from omnipy.shared.typedefs import Method, TypeForm
 import omnipy.util._pydantic as pyd
-from omnipy.util.helpers import takes_input_params_from
+from omnipy.util.helpers import min_or_none, takes_input_params_from
 
 if TYPE_CHECKING:
     from IPython.lib.pretty import RepresentationPrinter
@@ -383,63 +383,91 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         nested_content: dict[str, 'Model | Dataset'],
         title: str = '',
         frame: Frame | None = None,
+        level: int = 0,
         **kwargs,
     ) -> DraftPanel:
         from omnipy.data.dataset import Dataset
+        from omnipy.data.model import Model
 
         ui_type = self._extract_ui_type(**kwargs)
-        if not frame:
-            frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._create_output_config_from_data_config(ui_type, use_min_crop_width=True)
+        config = self._create_output_config_from_data_config(
+            ui_type, level, use_min_crop_width=True)
         config_kwargs = self._validate_kwargs_for_config(**kwargs)
         config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
+
+        if not frame:
+            frame = self._define_frame_from_available_display_dims(ui_type)
+        frame = self._apply_kwargs_to_frame(frame, **kwargs)
+        max_num_panels_in_frame: None | int = self._calc_max_num_panels_in_frame(config, frame)
         layout: Layout[DraftPanel] = Layout()
 
-        frame = self._apply_kwargs_to_frame(frame, **kwargs)
-        max_num_panels: None | int = self._calc_max_num_panels(config, frame)
-
         for i, (inner_title, model_or_dataset) in enumerate(nested_content.items()):
-            if max_num_panels is not None and i > max_num_panels:
-                # If the number of models exceeds the maximum number of
-                # models that can possibly fit in the frame based on the
-                # `min_width` config, we stop adding more models.
+            if max_num_panels_in_frame is not None and i >= max_num_panels_in_frame:
+                # If the number of panels exceeds the maximum number of
+                # panels that can possibly fit in the frame based on the
+                # `min_width` config, we stop adding more panels.
                 break
 
-            if isinstance(model_or_dataset, Dataset):
-                inner_kwargs = config_kwargs.copy()
+            if config.max_panels_hor is not None and i > config.max_panels_hor:
+                # If we have reached the maximum number of panels allowed
+                # horizontally, we stop adding more panels.
+                break
+
+            is_dataset = (
+                is_dataset_instance(model_or_dataset)
+                or (is_model_instance(model_or_dataset)
+                    and is_dataset_instance(model_or_dataset.content)))
+            is_ellipsis_panel = config.max_panels_hor is not None and i == config.max_panels_hor
+            not_too_deep = (config.max_nesting_depth and level < config.max_nesting_depth - 1)
+
+            if (is_dataset and not is_ellipsis_panel and not_too_deep):
                 # # Why was this here?
+                # inner_kwargs = config_kwargs.copy()
                 # if 'freedom' not in inner_kwargs:
                 #     inner_kwargs['freedom'] = None
-                if 'h_overflow' not in inner_kwargs:
-                    inner_kwargs['h_overflow'] = HorizontalOverflowMode.WRAP
 
                 layout[inner_title] = cast(Dataset, model_or_dataset)._peek_dataset_models(
                     title=inner_title,
                     frame=empty_frame(),
-                    **inner_kwargs,
+                    level=level + 1,
+                    **config_kwargs,
                 )
-            else:  # Model
+            else:
+                inner_kwargs = config_kwargs.copy()
+
+                if is_dataset_instance(model_or_dataset):
+                    dataset = cast(Dataset, model_or_dataset)
+                    model = dataset._get_self_as_json_model()
+                    inner_kwargs = self._prepare_kwargs_for_json(inner_kwargs)
+                else:  # Model
+                    model = cast(Model, model_or_dataset)
+
                 layout[inner_title] = self._create_inner_panel_for_model(
                     config,
-                    model_or_dataset,
-                    model_or_dataset.outer_type(),
+                    model,
+                    model.outer_type(),
                     inner_title,
-                    **config_kwargs)
+                    **inner_kwargs,
+                )
+
+                if is_ellipsis_panel:
+                    layout[inner_title] = create_ellipsis_panel(layout[inner_title])
 
         config = self._update_config_with_overflow_modes(config, 'layout')
         config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
 
         return DraftPanel(layout, title=title, frame=frame, config=config)
 
-    def _calc_max_num_panels(self, config: OutputConfig, frame: Frame) -> int | None:
-        max_num_panels: None | int = None
+    def _calc_max_num_panels_in_frame(self, config: OutputConfig, frame: Frame) -> int | None:
+        max_num_panels_in_frame: None | int = None
         if has_width(frame.dims):
             panel_design_dims = PanelDesignDims.create(config.panel)
-            max_num_panels = panel_design_dims.num_panels_within_frame_width(
+            max_num_panels_in_frame = panel_design_dims.num_panels_within_frame_width(
                 frame.dims.width,
                 config.min_panel_width,
             )
-        return max_num_panels
+
+        return max_num_panels_in_frame
 
     def _apply_kwargs_to_frame(
         self,
@@ -631,6 +659,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _create_output_config_from_data_config(
         self,
         ui_type: SpecifiedUserInterfaceType.Literals,
+        level: int = 0,
         use_min_crop_width: bool = False,
     ) -> OutputConfig:
         ui_config = cast(DataClassBase, self).config.ui
@@ -640,7 +669,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         panel_design = ui_config.layout.panel_design
         color_style = ui_type_config.color.style
-        panel_design = self._show_style_in_panel_if_random_style(panel_design, color_style)
+        if level == 0:
+            panel_design = self._show_style_in_panel_if_random_style(panel_design, color_style)
+
+        max_panels_hor = min_or_none(ui_config.layout.max_panels_hor,
+                                     MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED if level >= 2 else None)
 
         config = OutputConfig(
             tab=ui_config.text.tab_size,
@@ -658,6 +691,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             min_panel_width=ui_config.layout.min_panel_width,
             min_crop_width=ui_config.layout.min_crop_width,
             use_min_crop_width=use_min_crop_width,
+            max_panels_hor=max_panels_hor,
+            max_nesting_depth=ui_config.layout.max_nesting_depth,
             justify=ui_config.layout.justify,
         )
 
@@ -790,6 +825,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
     def _peek_dataset_models(self,
                              title: str = '',
                              frame: Frame | None = None,
+                             level: int = 0,
                              **kwargs) -> DraftPanel:
         self_as_dataset = cast('Dataset', self)
         return self._peek_nested_content(
@@ -799,6 +835,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             },
             title=title,
             frame=frame,
+            level=level,
             **kwargs)
 
     def _full(self, **kwargs) -> DraftPanel:
