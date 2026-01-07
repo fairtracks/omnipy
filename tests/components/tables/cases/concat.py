@@ -2,8 +2,8 @@ from dataclasses import dataclass
 import typing
 
 import pytest_cases as pc
-from scripts.type_alias_example import JsonScalar
 
+from omnipy.components.json.typedefs import JsonScalar
 from omnipy.components.tables.models import (ColumnWiseTableDictOfListsModel,
                                              ColWiseAddOtherType,
                                              RowWiseTableListOfDictsModel)

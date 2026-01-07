@@ -1,4 +1,4 @@
-from scripts.type_alias_example import JsonScalar
+from omnipy.components.json.typedefs import JsonScalar
 
 column_wise_dict_of_lists_data: dict[str, list[JsonScalar]] = {
     'a': ['1', '4'],
