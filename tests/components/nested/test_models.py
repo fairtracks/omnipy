@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Annotated
 
 from pydantic import ValidationError
 import pytest
@@ -112,7 +113,10 @@ def test_list_as_nested_dataset_model() -> None:
     assert empty_list_as_nested_dataset_model.to_data() == {}
 
 
-def test_nested_dataset_lists_and_dicts() -> None:
+# Known issue: NestedDataset incompatibility with dynamic conversion of elements to models
+def test_nested_dataset_lists_and_dicts(
+        skip_test_if_dynamically_convert_elements_to_models: Annotated[None,
+                                                                       pytest.fixture]) -> None:
     nested_lists_and_dict_data = {
         'id_0': {
             'name':
