@@ -1,6 +1,6 @@
 import os
 from textwrap import dedent
-from typing import Annotated, Iterator
+from typing import Annotated, Iterable
 
 import pytest
 import pytest_cases as pc
@@ -90,7 +90,7 @@ def test_strict_str_dataset() -> None:
 @pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
 def test_split_to_and_join_lines_dataset(
     use_str_model: bool,
-    mock_linesep_variants: Annotated[Iterator[None], pc.fixture],
+    mock_linesep_variants: Annotated[Iterable[None], pc.fixture],
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
