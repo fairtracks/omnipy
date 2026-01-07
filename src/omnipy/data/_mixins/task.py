@@ -11,7 +11,7 @@ from omnipy.util.decorators import call_super_if_available
 from omnipy.util.helpers import is_union
 
 
-class TaskDatasetMixin:
+class DatasetTaskMixin:
     @call_super_if_available(call_super_before_method=True)
     @classmethod
     def _prepare_params(cls, params: TypeForm) -> TypeForm:

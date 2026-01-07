@@ -291,16 +291,21 @@ class IsSerializerRegistry(Protocol):
             self, file_suffix: str) -> tuple[Type[IsTarFileSerializer], ...]:
         ...
 
-    def load_from_tar_file_path_based_on_file_suffix(self,
-                                                     log_obj: CanLog,
-                                                     tar_file_path: str,
-                                                     to_dataset: IsDataset) -> IsDataset | None:
+    def load_from_tar_file_path_based_on_file_suffix(
+        self,
+        log_obj: CanLog,
+        tar_file_path: str,
+        to_dataset: IsDataset,
+    ) -> IsDataset | None:
         ...
 
-    def load_from_tar_file_path_based_on_dataset_cls(self,
-                                                     log_obj: CanLog,
-                                                     tar_file_path: str,
-                                                     to_dataset: IsDataset) -> IsDataset | None:
+    def load_from_tar_file_path_based_on_dataset_cls(
+        self,
+        log_obj: CanLog,
+        tar_file_path: str,
+        to_dataset: IsDataset,
+        any_file_suffix: bool = False,
+    ) -> IsDataset | None:
         ...
 
 
