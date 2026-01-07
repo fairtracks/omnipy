@@ -90,6 +90,60 @@ def test_init_with_basic_parsing() -> None:
     assert dataset_4['data_file_2'].content == {2: 2345, 3: 3456}
 
 
+def test_init_empty() -> None:
+    dataset = Dataset[Model[int]]()
+    assert len(dataset) == 0
+    assert dataset.to_data() == {}
+
+    dataset = Dataset[Model[int]]([])
+    assert len(dataset) == 0
+    assert dataset.to_data() == {}
+
+    dataset = Dataset[Model[int]](())
+    assert len(dataset) == 0
+    assert dataset.to_data() == {}
+
+    dataset = Dataset[Model[int]]({})
+    assert len(dataset) == 0
+    assert dataset.to_data() == {}
+
+    with pytest.raises(TypeError):
+        # Make sure that an empty string is not considered as an empty
+        # iterable
+        Dataset[Model[int]]('')
+
+
+def test_init_iterables_as_input() -> None:
+    assert Dataset[Model[int]]((('x', 4.5),)).to_data() == {'x': 4}
+    assert Dataset[Model[str]]([[1, 'y'], [2, 'b']]).to_data() == {'1': 'y', '2': 'b'}
+    assert Dataset[Model[str]]({'1': 'y', '2': 'b'}.items()).to_data() == {'1': 'y', '2': 'b'}
+
+
+def test_init_iterables_as_input_errors_wrong_shape() -> None:
+    with pytest.raises(TypeError):
+        Dataset[Model[int]]([1, 2, 3])
+
+    with pytest.raises(TypeError):
+        Dataset[Model[list]]([[1], [2]])
+
+    with pytest.raises(TypeError):
+        Dataset[Model[list]]([[[1], [2]]])
+
+    with pytest.raises(TypeError):
+        Dataset[Model[list]]([[1, 2], [3, 4, 5]])
+
+
+def test_init_iterables_as_input_errors_wrong_type() -> None:
+    with pytest.raises(TypeError):
+        Dataset[Model[str]](['ab', 'cd'])
+
+    with pytest.raises(TypeError):
+        Dataset[Model[str]]([{'x': 'y'}])
+
+    with pytest.raises(TypeError):
+        Dataset[Model[str]]([{'x': 'y', 'a': 'b'}])
+
+
 def test_init_dataset_as_input():
     assert Dataset[Model[int]](Dataset[Model[float]](x=4.5, y=5.5)).to_data() == {'x': 4, 'y': 5}
 

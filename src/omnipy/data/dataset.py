@@ -226,30 +226,42 @@ class Dataset(
         if _type == _ModelOrDatasetT:  # type: ignore[misc]
             self._raise_type_exception()
 
+        def _validate_any_models_or_datasets(
+                iterable_data: Iterable[tuple[str, object]]) -> tuple[dict, bool]:
+
+            prepared_data = {}
+            _model_or_dataset_as_input: bool = False,
+
+            for key, val in iterable_data:
+                if is_model_instance(val):
+                    _model_or_dataset_as_input = True
+                    prepared_data[key] = self._validate_value_for_data_file(key, val)
+                else:
+                    prepared_data[key] = val
+            return prepared_data, _model_or_dataset_as_input
+
         model_or_dataset_as_input = False
         if DATA_KEY in super_kwargs:
-            done = False
-            while not done:
-                match super_kwargs[DATA_KEY]:
-                    case Dataset():
-                        model_or_dataset_as_input = True
-                        super_kwargs[DATA_KEY] = cast(Dataset, super_kwargs[DATA_KEY]).to_data()
-                        done = True
-                    case MutableMapping():
-                        mapping_value = cast(MutableMapping, super_kwargs[DATA_KEY])
-                        for key, val in mapping_value.items():
-                            if is_model_instance(val):
-                                model_or_dataset_as_input = True
-                                mapping_value[key] = self._validate_value_for_data_file(key, val)
-                        done = True
-                    case Iterable():
-                        try:
-                            super_kwargs[DATA_KEY] = dict(cast(Iterable, super_kwargs[DATA_KEY]))
-                        except TypeError as e:
-                            raise TypeError('Data object must be a mapping or an iterable of '
-                                            '(key, val) pairs') from e
-                    case _:
-                        done = True
+            input_data = super_kwargs[DATA_KEY]
+            match input_data:
+                case Dataset():
+                    model_or_dataset_as_input = True
+                    super_kwargs[DATA_KEY] = cast(Dataset, input_data).to_data()
+                case Mapping():
+                    super_kwargs[DATA_KEY], model_or_dataset_as_input = (
+                        _validate_any_models_or_datasets(input_data.items()))
+                case Iterable():
+                    try:
+                        super_kwargs[DATA_KEY], model_or_dataset_as_input = (
+                            _validate_any_models_or_datasets(self._check_iterable(input_data)))
+                    except (TypeError, ValueError) as e:
+                        raise TypeError(
+                            'Data object must be a mapping or an iterable of '
+                            '(key, val) pairs',
+                            self.__class__) from e
+
+                case _:
+                    ...
 
         self._init(super_kwargs, **kwargs)
 
@@ -586,6 +598,42 @@ class Dataset(
             raise
 
     @classmethod
+    def _check_iterable(cls, iterable: Iterable[Any]) -> Iterable[Any]:
+        if isinstance(iterable, (str, bytes)):
+            raise TypeError(
+                'Outer data iterables cannot be strings or, '
+                'bytes, got: {type(value)}', cls)
+
+        def check_iterable_elements(iterable: Iterable) -> Iterator:
+            for el in iterable:
+                if not isinstance(el, (tuple, list)):
+                    raise TypeError(
+                        'Inner data iterable elements must be '
+                        '(key, val) pairs, as tuples or lists, '
+                        f'not: {type(el)}',
+                        cls)
+                if isinstance(el, Mapping):
+                    yield from el.items()
+                else:
+                    yield el
+
+        return check_iterable_elements(iterable)
+
+    @classmethod
+    def validate(cls, value: Any) -> Self:
+        """
+        Hack to allow overwriting of __iter__ method without compromising pydantic validation. Part
+        of the pydantic API and not the Omnipy API.
+        """
+        # TODO: Doublecheck if validate() method is still needed for pydantic v2
+
+        # validate_cls_counts[cls.__name__] += 1
+        if is_iterable(value) and not isinstance(value, Mapping):
+            value = cls._check_iterable(value)
+
+        return super().validate(value)
+
+    @classmethod
     def update_forward_refs(cls, **localns: Any) -> None:
         """
         Try to update ForwardRefs on fields based on this Model, globalns and localns.
@@ -625,8 +673,9 @@ class Dataset(
                                value: UndefinedType | object) -> _ModelOrDatasetT:
         return cast(_ModelOrDatasetT, type_variant(value))  # type: ignore[arg-type]
 
+    @classmethod
     def _validate_value_for_data_file(
-        self,
+        cls,
         data_file: str,
         value: UndefinedType | object,
         validation_func: (
@@ -634,14 +683,13 @@ class Dataset(
         ) = _basic_validation_func,
     ) -> _ModelOrDatasetT:
         errors = []
-        for type_variant in split_to_union_variants(self.get_type()):
+        for type_variant in split_to_union_variants(cls.get_type()):
             try:
                 return validation_func(cast('type[Model | Dataset]', type_variant), value)
             except (ValidationError, ValueError, TypeError) as exp:
                 errors.append(exp)
         assert errors
-        raise ValidationError([pyd.ErrorWrapper(exc, loc=data_file) for exc in errors],
-                              self.__class__)
+        raise ValidationError([pyd.ErrorWrapper(exc, loc=data_file) for exc in errors], cls)
 
     def _force_full_validation(self):
         self.data = self.data  # Triggers pydantic validation, as validate_assignment=True
@@ -660,14 +708,27 @@ class Dataset(
             raise RuntimeError('Model does not allow setting of extra attributes')
 
     @pyd.root_validator
-    def _parse_root_object(cls, root_obj: dict_t[str, dict_t[str,
-                                                             _ModelOrDatasetT]]) -> Any:  # noqa
+    def _parse_root_object(
+        cls,
+        root_obj: dict_t[str, dict_t[str, _ModelOrDatasetT]],
+    ) -> Any:  # noqa
         assert DATA_KEY in root_obj
         data_dict = root_obj[DATA_KEY]
-        _model_or_dataset_cls = cls.get_type()
-        for key, val in data_dict.items():
+        for data_file, val in data_dict.items():
             if val is None:
-                data_dict[key] = _model_or_dataset_cls.parse_obj(val)
+
+                def validation_by_parse_obj(
+                    type_variant: 'type[Model | Dataset]',
+                    value: UndefinedType | object,
+                ) -> _ModelOrDatasetT:
+                    return cast(_ModelOrDatasetT, type_variant.parse_obj(value))
+
+                data_dict[data_file] = cls._validate_value_for_data_file(
+                    data_file,
+                    val,
+                    validation_by_parse_obj,
+                )
+
         return {DATA_KEY: data_dict}
 
     def to_data(self) -> dict_t[str, Any]:
