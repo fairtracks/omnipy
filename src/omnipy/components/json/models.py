@@ -233,6 +233,7 @@ else:
             6 validation errors for JsonScalarModel
         """
 
+
 # List at the top level
 
 if typing.TYPE_CHECKING:

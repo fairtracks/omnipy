@@ -34,7 +34,7 @@ from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  YesNoMaybe)
 from omnipy.data.typechecks import is_model_instance
 from omnipy.shared.constants import ROOT_KEY
-from omnipy.shared.protocols.data import IsModel, IsSnapshotWrapper
+from omnipy.shared.protocols.data import IsSnapshotWrapper
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 from omnipy.util._pydantic import (is_none_type,
@@ -65,7 +65,12 @@ from omnipy.util.setdeque import SetDeque
 
 _ReturnT = TypeVar('_ReturnT')
 _RootT = TypeVar('_RootT')
-_ModelT = TypeVar('_ModelT', bound=IsModel)
+_ModelT = TypeVar('_ModelT', bound='Model')
+_DatasetT = TypeVar('_DatasetT', bound='Dataset')
+_OtherModelT = TypeVar('_OtherModelT', bound='Model')
+
+if TYPE_CHECKING:
+    from omnipy.data.dataset import Dataset
 
 # TODO: Refactor Dataset and Model using mixins (including below functions)
 
@@ -283,6 +288,7 @@ class Model(
         # mypy currently does not support overloads of __new__()
 
         from ._mimic_models import (Model_bool,
+                                    Model_Dataset,
                                     Model_dict,
                                     Model_float,
                                     Model_int,
@@ -333,14 +339,6 @@ class Model(
 
         @overload
         def __new__(
-            cls: 'type[Model[tuple[_ValT, _ValT2]]]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> Model_tuple_pair[_ValT, _ValT2]:
-            ...
-
-        @overload
-        def __new__(
             cls: 'type[Model[tuple[_ValT, ...]]]',
             *args: Any,
             **kwargs: Any,
@@ -349,10 +347,26 @@ class Model(
 
         @overload
         def __new__(
+            cls: 'type[Model[tuple[_ValT, _ValT2]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> Model_tuple_pair[_ValT, _ValT2]:
+            ...
+
+        @overload
+        def __new__(
             cls: 'type[Model[dict[_KeyT, _ValT]]]',
             *args: Any,
             **kwargs: Any,
         ) -> Model_dict[_KeyT, _ValT]:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[Dataset[_DatasetT | _OtherModelT]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model_Dataset[_DatasetT]':
             ...
 
         @overload

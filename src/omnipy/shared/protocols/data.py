@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass
+import functools
 from typing import (Any,
                     Callable,
                     ContextManager,
@@ -82,6 +83,7 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
         ...
 
     @classmethod
+    @functools.cache
     def get_type(cls) -> type[_ModelOrDatasetT]:
         """
         Returns the concrete type (Model or Dataset class) used for all
@@ -96,7 +98,7 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
         ...
 
     def from_data(self,
-                  data: dict[str, Any] | Iterator[tuple[str, Any]],
+                  data: Mapping[str, Any] | Iterable[tuple[str, Any]],
                   update: bool = True) -> None:
         ...
 
@@ -104,7 +106,7 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
         ...
 
     def from_json(self,
-                  data: dict[str, str] | Iterator[tuple[str, str]],
+                  data: Mapping[str, str] | Iterable[tuple[str, str]],
                   update: bool = True) -> None:
         ...
 
@@ -155,15 +157,15 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
     # TODO: Remove methods of IsDataset that overlap with IsMutableMapping?
 
     @overload
-    def __getitem__(self, selector: slice | Iterable[str | int]) -> Self:
-        ...
-
-    @overload
     def __getitem__(self, selector: str | int) -> _ModelOrDatasetT:
         ...
 
+    @overload
+    def __getitem__(self, selector: slice | Iterable[str | int]) -> Self:
+        ...
+
     def __getitem__(self,
-                    selector: str | int | slice | Iterable[str | int]) -> _ModelOrDatasetT | Self:
+                    selector: str | int | slice | Iterable[str | int]) -> '_ModelOrDatasetT | Self':
         ...
 
     @overload
@@ -188,7 +190,7 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
 
 
 @runtime_checkable
-class IsMultiModelDataset(IsDataset[type[_ModelOrDatasetT]], Protocol[_ModelOrDatasetT]):
+class IsMultiModelDataset(IsDataset[_ModelOrDatasetT], Protocol[_ModelOrDatasetT]):
     """
         Variant of Dataset that allows custom models to be set on individual data files
     """

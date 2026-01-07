@@ -431,16 +431,16 @@ class Dataset(
 
         @overload
         def __getitem__(
-            self: 'Dataset[Model[tuple[_ValT, _ValT2]]]',
+            self: 'Dataset[Model[tuple[_ValT, ...]]]',
             selector: str | int,
-        ) -> Model_tuple_pair[_ValT, _ValT2]:
+        ) -> Model_tuple_same_type[_ValT]:
             ...
 
         @overload
         def __getitem__(
-            self: 'Dataset[Model[tuple[_ValT]]]',
+            self: 'Dataset[Model[tuple[_ValT, _ValT2]]]',
             selector: str | int,
-        ) -> Model_tuple_same_type[_ValT]:
+        ) -> Model_tuple_pair[_ValT, _ValT2]:
             ...
 
         @overload
