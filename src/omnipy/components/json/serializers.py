@@ -25,7 +25,7 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer):
     @classmethod
     def serialize(cls, json_dataset: _JsonBaseDataset) -> bytes | memoryview:
         def json_encode_func(json_data: JsonModel) -> bytes:
-            return json_data.json(indent=2).encode('utf8')
+            return json_data.to_json().encode('utf8')
 
         return cls.create_tarfile_from_dataset(json_dataset, data_encode_func=json_encode_func)
 

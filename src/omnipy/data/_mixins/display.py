@@ -4,11 +4,11 @@ import functools
 import os
 from pathlib import Path
 import sys
-from typing import Any, cast, Literal, overload, ParamSpec, TYPE_CHECKING
+from typing import Any, Callable, cast, Literal, overload, ParamSpec, TYPE_CHECKING
 import webbrowser
 
 from pathvalidate import sanitize_filename
-from typing_extensions import assert_never, get_args
+from typing_extensions import assert_never, get_args, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import OutputConfig
@@ -20,6 +20,7 @@ from omnipy.data._display.layout.base import Layout, PanelDesignDims
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data.helpers import FailedData, PendingData
+from omnipy.data.typechecks import is_dataset_instance
 from omnipy.hub.ui import get_terminal_prompt_height, note_mime_bundle
 from omnipy.shared.constants import TITLE_BLANK_LINES
 from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
@@ -53,6 +54,7 @@ if sys.platform == 'darwin':
     setup_macosx_browser_integration()
 
 P = ParamSpec('P')
+_RetT = TypeVar('_RetT', DraftPanel, None)
 
 
 @pyd.dataclass(
@@ -122,15 +124,20 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         kwargs_copy['height'] = None
         return kwargs_copy
 
+    @classmethod
+    def _prepare_kwargs_for_json(cls, kwargs):
+        kwargs_copy = kwargs.copy()
+        kwargs_copy['syntax'] = SyntaxLanguage.JSON5
+        return kwargs_copy
+
     @takes_input_params_from(_DisplayMethodParams.__init__)
     def full(self, **kwargs) -> 'Element | None':
         """
         Displays a full-height version of the default representation of the
         model or dataset. This is the same as `peek(height=None)` for
-        models, and `list(height=None)` for datasets. Both views
-        are automatically limited in width by the available display
-        dimensions.
-        :return: If the UI type is Jupyter runnint in in browser, `peek`
+        both models and datasets. Both full-height views are automatically
+        limited in width by the available display dimensions.
+        :return: If the UI type is Jupyter running in in browser, `peek`
         returns a ReactivelyResizingHtml element which is a Jupyter widget
         to display HTML output in the browser. Otherwise, returns None.
         """
@@ -138,6 +145,22 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             ui_type=self._extract_ui_type(**kwargs),
             return_output_if_str=False,
             output_method=self._full,
+            **kwargs)
+
+    @takes_input_params_from(_DisplayMethodParams.__init__)
+    def json(self, **kwargs) -> 'Element | None':
+        """
+        Displays a peek of the data content of a Model or Dataset, i.e.
+        the output of to_data(), formatted in JSON (for compactness). The
+        view is automatically limited by the available display dimensions.
+        :return: If the UI type is Jupyter running in a browser, `data`
+        returns a ReactivelyResizingHtml element which is a Jupyter widget
+        to display HTML output in the browser. Otherwise, returns None.
+        """
+        return self._display_according_to_ui_type(
+            ui_type=self._extract_ui_type(**kwargs),
+            return_output_if_str=False,
+            output_method=self._json,
             **kwargs)
 
     @takes_input_params_from(_DisplayMethodParams.__init__)
@@ -156,6 +179,10 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
     @abstractmethod
     def _full(self, **kwargs) -> DraftPanel:
+        ...
+
+    @abstractmethod
+    def _json(self, **kwargs) -> DraftPanel:
         ...
 
     @abstractmethod
@@ -694,18 +721,39 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         )
 
 
+def _call_dataset_method_if_applicable(model_method: Callable[..., _RetT]):
+    def wrapper(self, **kwargs) -> _RetT:
+        self_as_model = cast('Model', self)
+        if is_dataset_instance(self_as_model.content):
+            self_as_dataset = cast('Dataset', self_as_model.content)
+            dataset_method = getattr(self_as_dataset, model_method.__name__)
+            return dataset_method(**kwargs)
+        else:
+            return model_method(self, **kwargs)
+
+    return wrapper
+
+
 class ModelDisplayMixin(BaseDisplayMixin):
+    @_call_dataset_method_if_applicable
     def _default_panel(self, **kwargs) -> DraftPanel:
         return self._peek(**kwargs)
 
+    @_call_dataset_method_if_applicable
     def _peek(self, **kwargs) -> DraftPanel:
         self_as_model = cast('Model', self)
         return self._peek_nested_content(
             nested_content={self.__class__.__name__: self_as_model}, **kwargs)
 
+    @_call_dataset_method_if_applicable
     def _full(self, **kwargs) -> DraftPanel:
         return self._peek(**self._prepare_kwargs_for_full(kwargs))
 
+    @_call_dataset_method_if_applicable
+    def _json(self, **kwargs) -> DraftPanel:
+        return self._peek(**self._prepare_kwargs_for_json(kwargs))
+
+    @_call_dataset_method_if_applicable
     def _browse(self, **kwargs) -> None:
         self_as_model = cast('Model', self)
         self._browse_nested_content(
@@ -759,6 +807,14 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         #       to peek().
         # return self._list(**self._prepare_kwargs_for_full(kwargs))
         return self._peek(**self._prepare_kwargs_for_full(kwargs))
+
+    def _get_self_as_json_model(self) -> 'Model':
+        from omnipy.components.json.models import JsonModel
+        self_as_dataset = cast('Dataset', self)
+        return JsonModel(self_as_dataset.to_data())
+
+    def _json(self, **kwargs) -> DraftPanel:
+        return self._get_self_as_json_model()._peek(**self._prepare_kwargs_for_json(kwargs))
 
     @takes_input_params_from(_DisplayMethodParams.__init__)
     def list(self, **kwargs) -> 'Element | None':

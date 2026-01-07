@@ -815,7 +815,7 @@ class Model(
         self.from_data(other.to_data())
 
     def to_json(self, pretty=True) -> str:
-        json_content = self.json()
+        json_content = pyd.BaseModel.json(self)
         if pretty:
             return self._pretty_print_json(json.loads(json_content))
         else:
