@@ -147,6 +147,31 @@ ffs = nested_or_dataset['outer']['a'][0]
 nested_or_dataset['outer']['a'][1] = 5
 reveal_type(ffs)
 
+model_of_dataset = Model[Dataset[Model[list[int]]]](outer=[1, 2, 3])
+reveal_type(Model[Dataset[Model[list[int]]]])
+reveal_type(model_of_dataset)
+reveal_type(model_of_dataset['outer'])
+model_of_dataset['inner'] = nested_dataset['outer']
+reveal_type(model_of_dataset['outer'][0])
+model_of_dataset['outer'][0] + 3
+model_of_dataset['outer'][0].asdf()
+cvw = model_of_dataset['outer'][0] + 2
+reveal_type(cvw)
+
+model_of_nested_dataset = Model[Dataset[Dataset[Model[list[int]]] | Model[str]]](
+    outer={
+        'a': [1, 2, 3]
+    })
+reveal_type(Model[Dataset[Dataset[Model[list[int]]] | Model[str]]])
+reveal_type(model_of_nested_dataset)
+reveal_type(model_of_nested_dataset['outer'])
+model_of_nested_dataset['inner'] = nested_dataset['outer']
+reveal_type(model_of_nested_dataset['outer'][0])
+model_of_nested_dataset['outer'][0] + 3
+model_of_nested_dataset['outer'][0].asdf()
+xzs = model_of_nested_dataset['outer'][0] + 2
+reveal_type(xzs)
+
 dataset_model_model_list = Dataset[Model[Model[list[int]]]](a=[23])
 reveal_type(dataset_model_model_list)
 reveal_type(dataset_model_model_list['a'])

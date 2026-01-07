@@ -55,6 +55,9 @@ if TYPE_CHECKING:
 _ModelOrDatasetT = TypeVar('_ModelOrDatasetT', bound='Model | Dataset')
 _DatasetT = TypeVar('_DatasetT', bound='Dataset')
 _ModelT = TypeVar('_ModelT', bound=Model)
+_Model2T = TypeVar('_Model2T', bound=Model)
+_Model3T = TypeVar('_Model3T', bound=Model)
+_Model4T = TypeVar('_Model4T', bound=Model)
 _NewModelT = TypeVar('_NewModelT', bound=Model)
 _GeneralModelT = TypeVar('_GeneralModelT', bound=Model)
 
@@ -462,6 +465,27 @@ class Dataset(
         @overload
         def __getitem__(
             self: 'Dataset[_DatasetT | _ModelT ]',
+            selector: str | int,
+        ) -> _DatasetT:
+            ...
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[_DatasetT | _ModelT | _Model2T]',
+            selector: str | int,
+        ) -> _DatasetT:
+            ...
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[_DatasetT | _ModelT | _Model2T | _Model3T]',
+            selector: str | int,
+        ) -> _DatasetT:
+            ...
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[_DatasetT | _ModelT | _Model2T | _Model3T | _Model4T]',
             selector: str | int,
         ) -> _DatasetT:
             ...

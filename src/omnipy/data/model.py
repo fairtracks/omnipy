@@ -363,6 +363,14 @@ class Model(
 
         @overload
         def __new__(
+            cls: 'type[Model[Dataset[_OtherModelT]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model_Dataset[_OtherModelT]':
+            ...
+
+        @overload
+        def __new__(
             cls: 'type[Model[Dataset[_DatasetT | _OtherModelT]]]',
             *args: Any,
             **kwargs: Any,

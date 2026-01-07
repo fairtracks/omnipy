@@ -39,6 +39,7 @@ class _ListAsNestedDatasetModel(Chain2[EnumeratedListModel, 'NestedDataset']):
 
 
 if TYPE_CHECKING:
+    from ..json.models import JsonScalarModel  # noqa: F401
 
     class ListAsNestedDatasetModel(Model[Dataset['NestedDataset | JsonScalarModel']]):
         ...

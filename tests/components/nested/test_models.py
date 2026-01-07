@@ -9,7 +9,6 @@ from omnipy.components.nested.datasets import NestedDataset
 from omnipy.components.nested.models import (EnumeratedListModel,
                                              EnumeratedListOfTuplesModel,
                                              ListAsNestedDatasetModel)
-# from omnipy.components.nested.models import NestedDataset
 from omnipy.data.dataset import Dataset
 
 
@@ -171,9 +170,9 @@ def test_nested_dataset_lists_and_dicts() -> None:
     assert nested_lists_and_dict_dataset.to_data() == expected_lists_and_dict_output
 
     assert len(nested_lists_and_dict_dataset) == 2
-    assert isinstance(nested_lists_and_dict_dataset['id_0'], Dataset)
+    assert list(nested_lists_and_dict_dataset['id_0'].keys()) == ['name', 'age', 'kids']
     assert nested_lists_and_dict_dataset['id_0'].to_data() == expected_lists_and_dict_output['id_0']
-    assert isinstance(nested_lists_and_dict_dataset['id_0']['kids'], Dataset)
+    assert list(nested_lists_and_dict_dataset['id_0']['kids'].keys()) == ['0', '1', '2']
     assert len(nested_lists_and_dict_dataset['id_0']['kids']) == 3
     assert nested_lists_and_dict_dataset['id_0']['kids'][0].to_data() == {
         'name': 'Charlie', 'age': 5
@@ -189,11 +188,15 @@ def test_nested_dataset_lists_and_dicts() -> None:
             'name': 'Hannah', 'age': 2
         }]
     }
-    assert nested_lists_and_dict_dataset['id_2']['kids'].to_data() == [{'name': 'Hannah', 'age': 2}]
+    assert nested_lists_and_dict_dataset['id_2']['kids'].to_data() == {
+        '0': {
+            'name': 'Hannah', 'age': 2
+        }
+    }
 
     nested_lists_and_dict_dataset['id_2']['kids'] = nested_lists_and_dict_dataset['id_1']['kids']
     nested_lists_and_dict_dataset['id_0']['kids'][
         0, 2] = nested_lists_and_dict_dataset['id_2']['kids'][0, 1]
 
     with pytest.raises(ValidationError):
-        nested_lists_and_dict_dataset['id_1']['kids'][2]['age'] = 1 + 2j
+        nested_lists_and_dict_dataset['id_1']['kids'][1]['age'] = 1 + 2j
