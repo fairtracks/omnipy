@@ -3,6 +3,7 @@ from typing import Any, Generic, get_args, Protocol
 
 from typing_extensions import TypeVar
 
+from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import TypeVarStore1, TypeVarStore2, TypeVarStore3, TypeVarStore4
 from omnipy.data.model import Model
 from omnipy.shared.typedefs import TypeForm
@@ -47,12 +48,12 @@ class NotIterableExceptStrOrBytesModel(Model[object | None]):
 
 # General
 
-_U = TypeVar('_U', bound=Model, default=Model[object])
-_V = TypeVar('_V', bound=Model, default=Model[object])
-_W = TypeVar('_W', bound=Model, default=Model[object])
-_X = TypeVar('_X', bound=Model, default=Model[object])
-_Y = TypeVar('_Y', bound=Model, default=Model[object])
-_Z = TypeVar('_Z', bound=Model, default=Model[object])
+_U = TypeVar('_U', bound=Model | Dataset, default=Model[object])
+_V = TypeVar('_V', bound=Model | Dataset, default=Model[object])
+_W = TypeVar('_W', bound=Model | Dataset, default=Model[object])
+_X = TypeVar('_X', bound=Model | Dataset, default=Model[object])
+_Y = TypeVar('_Y', bound=Model | Dataset, default=Model[object])
+_Z = TypeVar('_Z', bound=Model | Dataset, default=Model[object])
 
 
 class HasOuterType(Protocol):
@@ -66,17 +67,22 @@ class _ChainMixin:
     def _parse_data(cls: type[HasOuterType], data: Any) -> Any:
         type_args = get_args(cls.outer_type(with_args=True))
         store_models = [get_args(store)[0] for store in type_args[1:-1]]
-        all_models = [type_args[0]] + store_models + [type_args[-1]]
-        all_models.reverse()
+        all_types = [type_args[0]] + store_models + [type_args[-1]]
 
-        if isinstance(data, all_models[-1]):
+        # To revert type reversal in ChainX class definition. After
+        # reversal, `all_types` will be in the order specified by the user
+        all_types.reverse()
+
+        if isinstance(data, all_types[-1]):
             return data
 
-        assert isinstance(data, all_models[0]), \
-            f'Expected data of type {all_models[0]}, got {type(data)}'
+        assert isinstance(data, all_types[0]), \
+            f'Expected data of type {all_types[0]}, got {type(data)}'
 
-        for model in all_models[1:]:
-            data = model(data)
+        # Run through the pipeline
+        for _type in all_types[1:]:
+            data = _type(data)
+
         return data
 
 
