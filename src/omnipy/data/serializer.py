@@ -212,12 +212,12 @@ class SerializerRegistry:
                 with open(tar_file_path, 'rb') as tarfile_binary:
                     auto_dataset = serializer.deserialize(tarfile_binary.read())
 
-                if to_dataset.get_model_class() is auto_dataset.get_model_class():
+                if to_dataset.get_type() is auto_dataset.get_type():
                     cast(HasData, to_dataset).data = cast(HasData, auto_dataset).data
                     return to_dataset
                 else:
                     try:
-                        if to_dataset.get_model_class().inner_type == str:
+                        if to_dataset.get_type().inner_type == str:
                             to_dataset.from_data(auto_dataset.to_json())
                         else:
                             to_dataset.from_json(auto_dataset.to_data())

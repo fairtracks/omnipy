@@ -3,15 +3,15 @@ from typing import Any, IO, Type
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import TarFileSerializer
+from omnipy.data.typechecks import all_dataset_type_variants
 from omnipy.shared.protocols.data import IsDataset
-from omnipy.util.helpers import all_type_variants
 
 
 class RawStrDatasetToTarFileSerializer(TarFileSerializer):
     """"""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
-        type_variants = all_type_variants(dataset.get_type().full_type())
+        type_variants = all_dataset_type_variants(dataset)
         return len(type_variants) > 0 and type_variants[0] is str
 
     @classmethod
@@ -55,7 +55,7 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer):
     """"""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
-        type_variants = all_type_variants(dataset.get_type().full_type())
+        type_variants = all_dataset_type_variants(dataset)
         return len(type_variants) > 0 and type_variants[0] is bytes
 
     @classmethod
