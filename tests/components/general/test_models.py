@@ -6,6 +6,7 @@ from omnipy.components.general.models import (Chain2,
                                               Chain5,
                                               Chain6,
                                               NotIterableExceptStrOrBytesModel)
+from omnipy.data.model import Model
 from omnipy.util._pydantic import ValidationError
 
 from .helpers.models import MyList, MyListModel, RotateOneCharModel, SplitCharsModel
@@ -60,6 +61,32 @@ def test_concat_chain2_model_with_to_data_conversion():
 
     stream = SplitCharsToMyListModel('abc') + SplitCharsModel('def')
     assert stream.to_data() == ['a', 'b', 'c', 'd', 'e', 'f']
+
+
+def test_chain2_union_models():
+    with pytest.raises(IndexError):
+
+        class FailingStrToBoolOrFloatModel(Chain2[Model[str], Model[bool] | Model[float]]):
+            ...
+
+        FailingStrToBoolOrFloatModel(3.4)
+
+    # Could of course have used Model[bool | float] directly,
+    # but this is to document a workaround for Chain2 with Unions
+    class BoolOrFloatModel(Model[Model[bool] | Model[float]]):
+        ...
+
+    class StrToBoolOrFloatModel(Chain2[Model[str], BoolOrFloatModel]):
+        ...
+
+    float_data_model = StrToBoolOrFloatModel('3.4')
+    assert float_data_model.to_data() == 3.4
+
+    bool_data_model = StrToBoolOrFloatModel('1')
+    assert bool_data_model.to_data() is True
+
+    with pytest.raises(ValidationError):
+        StrToBoolOrFloatModel('not_a_bool_nor_float')
 
 
 # TODO: When Model conversion types have been implemented, improve Chain models to parse on main
