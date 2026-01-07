@@ -4,7 +4,7 @@ from typing import Any, cast, ClassVar, Generic, get_args, get_type_hints, Itera
 from typing_extensions import TypeVar
 
 from omnipy.shared.typedefs import TypeForm
-from omnipy.util.helpers import all_type_variants, is_literal_type
+from omnipy.util.helpers import all_type_variants, is_literal_type, is_package_editable
 
 LiteralEnumInnerTypes = bool | str | int | bytes | None  # Types that can be used in LiteralEnum
 
@@ -264,15 +264,16 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
         defined as members of the subclass. The method also checks that the
         types of the class attributes correctly defined.
         """
-        # Check cls.Literals
-        all_cls_literal_vals = cls._check_literals_outer_type()
-        cls._check_literals_inner_types_are_allowed(all_cls_literal_vals)
+        if is_package_editable('omnipy'):
+            # Check cls.Literals
+            all_cls_literal_vals = cls._check_literals_outer_type()
+            cls._check_literals_inner_types_are_allowed(all_cls_literal_vals)
 
-        # Check all defined attributes
-        defined_attr_literal_vals = cls._check_attributes(all_cls_literal_vals)
+            # Check all defined attributes
+            defined_attr_literal_vals = cls._check_attributes(all_cls_literal_vals)
 
-        # Check that all values in cls.Literals are defined as attributes
-        cls._check_missing_attributes(all_cls_literal_vals, defined_attr_literal_vals)
+            # Check that all values in cls.Literals are defined as attributes
+            cls._check_missing_attributes(all_cls_literal_vals, defined_attr_literal_vals)
 
     @classmethod
     def _check_literals_outer_type(cls) -> set[LiteralEnumInnerTypes]:

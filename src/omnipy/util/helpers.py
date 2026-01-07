@@ -4,6 +4,7 @@ from dataclasses import asdict
 import functools
 from importlib.abc import Loader
 from importlib.machinery import FileFinder, ModuleSpec
+from importlib.metadata import distribution
 import inspect
 from inspect import getmodule, isclass
 from keyword import iskeyword, issoftkeyword
@@ -384,6 +385,21 @@ def called_from_omnipy_tests() -> bool:
                 and 'omnipy/tests' in module.__file__:
             return True
     return False
+
+
+@functools.cache
+def is_package_editable(package_name):
+    """Check if package is installed in editable mode using metadata."""
+    try:
+        dist = distribution(package_name)
+        # Get the location where package is installed
+        if dist.read_text('direct_url.json'):
+            import json
+            direct_url = json.loads(dist.read_text('direct_url.json'))  # pyright: ignore
+            return direct_url.get('dir_info', {}).get('editable', False)
+        return False
+    except Exception:
+        return False
 
 
 def get_event_loop_and_check_if_loop_is_running() -> tuple[asyncio.AbstractEventLoop | None, bool]:
