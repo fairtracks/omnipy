@@ -4,6 +4,11 @@ from typing import Generic, Iterator, overload
 
 from typing_extensions import override
 
+from omnipy.components.json.helpers import (is_json_scalar,
+                                            parse_line_as_elements_of_dict,
+                                            parse_line_as_elements_of_list,
+                                            parse_str_as_json)
+from omnipy.components.json.typedefs import JsonDict, JsonList
 from omnipy.data._display.constraints import ConstraintsSatisfaction
 from omnipy.data._display.dimensions import Dimensions, DimensionsFit, has_height
 from omnipy.data._display.frame import AnyFrame
@@ -14,9 +19,7 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.data._display.panel.typedefs import FrameInvT, FrameT
 import omnipy.util._pydantic as pyd
-from omnipy.util.helpers import split_all_content_to_lines, strip_newlines
-
-_INNER_DICT_OR_LIST_REGEXP = re.compile(r'(\{[^\{\}\[\]]*\}|\[[^\{\}\[\]]*\])')
+from omnipy.util.helpers import first_key_in_mapping, split_all_content_to_lines, strip_newlines
 
 
 @pyd.dataclass(
@@ -184,13 +187,48 @@ class ReflowedTextDraftPanel(
 
     @cached_property
     def max_inline_list_or_dict_width_excl(self) -> int:  # noqa: C901
+        def _as_json_dict_with_line_as_single_el(_line: str) -> JsonDict | None:
+            _dict_with_line_as_elements = parse_line_as_elements_of_dict(_line)
+            if not isinstance(_dict_with_line_as_elements, pyd.UndefinedType):
+                if len(_dict_with_line_as_elements) == 1:
+                    return _dict_with_line_as_elements
+            return None
+
+        def _as_json_list_with_line_as_single_el(_line: str) -> JsonList | None:
+            _list_with_line_as_elements = parse_line_as_elements_of_list(_line)
+            if not isinstance(_list_with_line_as_elements, pyd.UndefinedType):
+                if len(_list_with_line_as_elements) == 1:
+                    return _list_with_line_as_elements
+            return None
+
+        def _line_length_if_not_simple_json_element(_line: str) -> int:
+            """
+            Checks if the line represents a simple JSON element (JSON scalar
+            or a single-element content of a JSON dict or list, e.g.
+            '"key": "value"'). If it does, return 0, otherwise return the
+            length of the line.
+            """
+            json_value = parse_str_as_json(_line)
+            if not isinstance(json_value, pyd.UndefinedType):
+                if is_json_scalar(json_value):
+                    return 0
+                else:
+                    return len(_line)
+
+            if (_as_json_dict_with_line_as_single_el(_line)
+                    or _as_json_list_with_line_as_single_el(_line)):
+                return 0
+
+            return len(_line)
+
         inline_list_or_dict_widths = []
         line_iter = iter(self._content_lines)
 
         try:
             end_of_multiline_char = ''
             while True:
-                line = next(line_iter).strip()
+                # Ignore white space and trailing commas
+                line = next(line_iter).strip().rstrip(',')
 
                 if line.endswith('['):
                     # Start of a multiline list, wait for the closing bracket
@@ -201,22 +239,26 @@ class ReflowedTextDraftPanel(
                 elif end_of_multiline_char:
                     # We are in a multiline context
 
-                    if line.startswith('"'):
-                        line_copy = line
-                        while True:
-                            inner_dict_or_lists = re.findall(_INNER_DICT_OR_LIST_REGEXP, line_copy)
-                            if not inner_dict_or_lists:
-                                # No more inner dicts or lists found, break the loop
-                                break
-                            for inner_dict_or_list in inner_dict_or_lists:
-                                line_copy = line_copy.replace(inner_dict_or_list, '')
+                    dict_with_line_as_single_el = _as_json_dict_with_line_as_single_el(line)
+                    if dict_with_line_as_single_el:
+                        # Single dict element in a multiline context
 
-                        if line_copy.count(':') == 1:
-                            # Single dict element in a multiline context
-                            # Only consider the width of the value part
-                            value_part = line.split(':', 1)[-1].strip()
-                            inline_list_or_dict_widths.append(len(value_part.rstrip(',')))
-                            continue
+                        # Only consider the width of the value part
+                        first_key = first_key_in_mapping(dict_with_line_as_single_el)
+                        assert line.find(f'"{first_key}"') == 0, line
+                        key_length = len(f'"{first_key}"')
+                        index_of_dict_colon = key_length + line[key_length:].find(':')
+                        value_part = line[index_of_dict_colon + 1:].strip()
+
+                        # Add the length of the value part to the
+                        # widths, unless it's a simple JSON element
+                        # (see docstring of
+                        # _line_length_if_not_simple_json_element)
+                        inline_list_or_dict_widths.append(
+                            _line_length_if_not_simple_json_element(value_part))
+
+                        continue
+
                     if line.startswith(end_of_multiline_char):
                         # End character found, reset end_of_multiline_char
                         # to signal that we are no longer in a multiline
@@ -226,9 +268,11 @@ class ReflowedTextDraftPanel(
                         # potential start of a new inline list or dict
                     else:
                         # If we are still in a multiline context, we
-                        # add the length of the full line to the widths
-                        inline_list_or_dict_widths.append(len(line.rstrip(',')))
-                        continue
+                        # add the length of the full line to the widths,
+                        # unless it is a simple JSON element (see docstring
+                        # of _line_length_if_not_simple_json_element)
+                        inline_list_or_dict_widths.append(
+                            _line_length_if_not_simple_json_element(line))
                 elif ((line.startswith('{') and line.endswith('}'))
                       or (line.startswith('[') and line.endswith(']'))):
                     # If the line is a dict or list, we add the width of the

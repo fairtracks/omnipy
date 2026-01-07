@@ -322,6 +322,14 @@ def test_reflowed_text_draft_panel_max_inline_list_or_dict_width_excl() -> None:
     assert ReflowedTextDraftPanel(
         dedent("""
             [
+              {"asd": 1234567},
+              {"qwe": 1234567890}
+            ]
+        """),).max_inline_list_or_dict_width_excl == 19
+
+    assert ReflowedTextDraftPanel(
+        dedent("""
+            [
               {"asd": 1234567, "dsa": 65432},
               {"qwe": 1234567890}, {"rty": 987654321}
             ]
@@ -360,11 +368,11 @@ def test_reflowed_text_draft_panel_max_inline_list_or_dict_width_excl() -> None:
         dedent("""
             [
               {
-                "asd": {"12": "abc", "13": "def", "14": "ghi", "15": "jkl"},
-                "dsa": {"14": "ghi"}, "qwe": {"15": "jkl"}
+                "asd"    : {"12": "abc", "13": "def", "14": "ghi", "15": "jkl"},
+                "dsa"    : {"14": "ghi"}, "qwe": {"15": "jkl"}
               }, {
-                "asd": {"12": "abc", "13": "def"},
-                "dsa": {"14": "ghi"},
+                "asd"    : {"12": "abc", "13": "def"},
+                "dsa"    : {"14": "ghi"},
               },
             ]
         """),).max_inline_list_or_dict_width_excl == 52
@@ -380,6 +388,74 @@ def test_reflowed_text_draft_panel_max_inline_list_or_dict_width_excl() -> None:
               }
             ]
         """),).max_inline_list_or_dict_width_excl == 74
+
+
+def test_reflowed_text_draft_panel_max_inline_list_or_dict_width_excl_no_counts() -> None:
+    # Only defined for lists and dicts, not tuples
+    assert ReflowedTextDraftPanel('(1, 2, 3)').max_inline_list_or_dict_width_excl == 0
+
+    # Do not count lists within a string
+    assert ReflowedTextDraftPanel(dedent("""
+        "[1, 2]"
+    """),).max_inline_list_or_dict_width_excl == 0
+
+    # Do not count simple items within a list
+    assert ReflowedTextDraftPanel(
+        dedent("""
+        [
+          1,
+          "abc"
+        ]
+    """),).max_inline_list_or_dict_width_excl == 0
+
+    # Do not count lists within a string within a list
+    assert ReflowedTextDraftPanel(
+        dedent("""
+            [
+              "[1, 2, 3]",
+              123
+            ]
+        """),).max_inline_list_or_dict_width_excl == 0
+
+    # Do not count simple items within a dict
+    assert ReflowedTextDraftPanel(
+        dedent("""
+            {
+              "asd": 1234567,
+              "dsa": 65432
+            }
+        """),).max_inline_list_or_dict_width_excl == 0
+
+    # Do not count lists within a string within a dict
+    assert ReflowedTextDraftPanel(
+        dedent("""
+            {
+              "asd": "[1, 2, 3]"
+            }
+        """),).max_inline_list_or_dict_width_excl == 0
+
+
+def test_reflowed_text_draft_panel_max_inline_list_or_dict_width_excl_border_cases() -> None:
+    # assert ReflowedTextDraftPanel(
+    #     dedent("""
+    #     [
+    #         "\\\", [1, 2]"
+    #     ]
+    # """),).max_inline_list_or_dict_width_excl == 0
+    #
+    # assert ReflowedTextDraftPanel(
+    #     dedent("""
+    #     {
+    #         "key:": "value"
+    #     }
+    # """),).max_inline_list_or_dict_width_excl == 0
+
+    assert ReflowedTextDraftPanel(
+        dedent("""
+        {
+            "key": "value:"
+        }
+    """),).max_inline_list_or_dict_width_excl == 0
 
 
 def test_reflowed_text_draft_panel_constraints_satisfaction() -> None:
