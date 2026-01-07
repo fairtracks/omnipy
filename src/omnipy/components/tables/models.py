@@ -1,8 +1,7 @@
 from abc import abstractmethod
 from collections.abc import Iterator, Mapping
 from copy import copy
-from typing import (Any,
-                    Callable,
+from typing import (Callable,
                     cast,
                     Generic,
                     get_args,
@@ -19,7 +18,7 @@ from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model, ModelMetaclass
 from omnipy.shared.protocols.builtins import IsDict, IsList, SupportsKeysAndGetItem
 from omnipy.shared.protocols.data import HasContent
-from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
+from omnipy.shared.typing import TYPE_CHECKING
 import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import first_key_in_mapping
 
@@ -473,7 +472,7 @@ class PydanticRecordModel(
         return pyd_model(**dict(zip(header_names, data)))
 
 
-class IteratingPydanticRecordModel(
+class IteratingPydanticRecordsModel(
         PydanticRecordModelBase[
             _PydBaseModelT,
             ColumnWiseTableDictOfListsModel,
@@ -544,10 +543,13 @@ class IteratingPydanticRecordModel(
         return output
 
 
+# read header line as param, somehow?
+
 if TYPE_CHECKING:
     from omnipy.data._mimic_models import Model_list
 
-    class TableOfPydanticRecordsModel(Model_list[PydanticRecordModel[_PydRecordT]],
+    class TableOfPydanticRecordsModel(RevertModelMimicTypingHack['TableOfPydanticRecordsModel'],
+                                      Model_list[PydanticRecordModel[_PydRecordT]],
                                       Generic[_PydRecordT]):
         ...
 else:
@@ -559,31 +561,49 @@ else:
         ...
 
 
-class TsvTableModel(Chain3[
-        SplitToLinesModel,
-        SplitLinesToColumnsModel,
-        RowWiseTableFirstRowAsColNamesModel,
-]):
-    if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
+if TYPE_CHECKING:
 
-        def __new__(
-            cls,
-            *args: Any,
-            **kwargs: Any,
-        ) -> '_RowWiseTableFirstRowAsColNamesModel':
-            ...
+    class CsvTableOfPydanticRecordsModel(
+            RevertModelMimicTypingHack['CsvTableOfPydanticRecordsModel'],
+            Model_list[PydanticRecordModel[_PydRecordT]],
+            Generic[_PydRecordT]):
+        ...
+else:
+
+    class CsvTableOfPydanticRecordsModel(Chain3[SplitToLinesModel,
+                                                SplitLinesToColumnsByCommaModel,
+                                                Model[list[PydanticRecordModel[_PydRecordT]]]],
+                                         Generic[_PydRecordT]):
+        ...
 
 
-class CsvTableModel(Chain3[
-        SplitToLinesModel,
-        SplitLinesToColumnsByCommaModel,
-        RowWiseTableFirstRowAsColNamesModel,
-]):
-    if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
+# TODO: Support CSV and TSV fully according to standards
+#       (e.g. https://datatracker.ietf.org/doc/html/rfc4180,
+#       https://en.wikipedia.org/wiki/Tab-separated_values)
 
-        def __new__(
-            cls,
-            *args: Any,
-            **kwargs: Any,
-        ) -> '_RowWiseTableFirstRowAsColNamesModel':
-            ...
+if TYPE_CHECKING:
+
+    class TsvTableModel(RevertModelMimicTypingHack['TsvTableModel'], Model_list[list[str]]):
+        ...
+else:
+
+    class TsvTableModel(Chain3[
+            SplitToLinesModel,
+            SplitLinesToColumnsModel,
+            RowWiseTableFirstRowAsColNamesModel,
+    ]):
+        ...
+
+
+if TYPE_CHECKING:
+
+    class CsvTableModel(RevertModelMimicTypingHack['CsvTableModel'], Model_list[list[str]]):
+        ...
+else:
+
+    class CsvTableModel(Chain3[
+            SplitToLinesModel,
+            SplitLinesToColumnsByCommaModel,
+            RowWiseTableFirstRowAsColNamesModel,
+    ]):
+        ...
