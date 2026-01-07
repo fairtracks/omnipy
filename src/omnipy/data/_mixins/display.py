@@ -610,7 +610,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         syntax: SyntaxLanguage.Literals
         if outer_type is str or isinstance(model, StrModel):
             syntax = SyntaxLanguage.TEXT
-        if outer_type is bytes or isinstance(model, BytesModel):
+        elif outer_type is bytes or isinstance(model, BytesModel):
             syntax = SyntaxLanguage.HEXDUMP
         elif is_json_model_instance_hack(model):
             syntax = SyntaxLanguage.JSON5
