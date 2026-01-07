@@ -1216,7 +1216,7 @@ def test_complex_models():
 
     assert dataset.to_json_schema(pretty=True) == dedent('''\
     {
-      "title": "MyReversedRangeList",
+      "title": "Dataset[MyReversedListModel[MyRangeList]]",
       "description": "''' + Dataset._get_standard_field_description() + '''",
       "default": {},
       "type": "object",

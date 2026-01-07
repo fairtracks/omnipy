@@ -140,7 +140,12 @@ class Dataset(
         # json_loads = orjson.loads
         # json_dumps = orjson_dumps
 
-    data: dict[str, _ModelOrDatasetT] = pyd.Field(default={})
+    # TODO: For pydantic v2, remove hack in Dataset to stop e.g.
+    #       [{'a': 'b', 'c': 'd'}] to be coerced into {'a': 'c'} (remove
+    #       first part of the union below, and edit get_type() and to_json_schema())
+    data: list[dict[str, _ModelOrDatasetT]] | dict[str, _ModelOrDatasetT] = pyd.Field(default={})
+
+    # data: dict[str, _ModelOrDatasetT] = pyd.Field(default={})
 
     def __class_getitem__(  # type: ignore[override]
         cls,
@@ -312,7 +317,10 @@ class Dataset(
         :return: The concrete type (Model or Dataset class) used for all
                  data files in the dataset.
         """
-        return cls._clean_type(cls._get_data_field().type_)
+        # Part of pydantic v1 hack to stop coercing of e.g.
+        # [{'a': 'b', 'c': 'd'}] to {'a': 'c'}
+        return cls._clean_type(cls._get_data_field().sub_fields[1].type_)  # type: ignore[index]
+        # return cls._clean_type(cls._get_data_field().type_)
 
     @classmethod
     def _clean_type_caches(cls):
@@ -751,12 +759,23 @@ class Dataset(
 
     @classmethod
     def to_json_schema(cls, pretty: bool = True) -> str | dict_t[str, str]:
+        from pydantic.schema import normalize_name
         result = {}
         clean_dataset = super(Dataset, Dataset).__class_getitem__(cls.get_type())
         schema = clean_dataset.schema()
         for key, val in schema['properties'][DATA_KEY].items():
-            result[key] = val
-        result['title'] = cls.__name__
+            # Remove the first part of the type definition of 'data', added
+            # as a hack to stop coercing of e.g. [{'a': 'b', 'c': 'd'}]
+            # to {'a': 'c'}
+            if key == 'anyOf':
+                result['type'] = 'object'
+                result['additionalProperties'] = {
+                    '$ref': '#/definitions/' + normalize_name(clean_dataset.get_type().__name__)
+                }
+            else:
+                result[key] = val
+
+        result['title'] = clean_dataset.__name__
         result['definitions'] = schema['definitions']
 
         for model_desc in result['definitions'].values():
