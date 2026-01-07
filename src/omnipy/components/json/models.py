@@ -4,9 +4,11 @@ from typing import Any, Generic, overload, Type, TypeAlias
 from typing_extensions import TypeVar
 
 from omnipy.data.model import Model
+import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import ensure_plain_type
 
 from ...data.typechecks import is_model_instance
+from .helpers import parse_str_as_json
 from .typedefs import JsonScalar
 
 #
@@ -123,6 +125,11 @@ _JsonOnlyDictsM.update_forward_refs()
 
 # General
 
+# Note: Since parsing JSON strings is potentially ambiguous (a string can
+#       be a valid JSON string, but also a string representing JSON
+#       entities), strings starting with a quote are not parsed as JSON
+#       entities.
+
 if typing.TYPE_CHECKING:
 
     class JsonModel(Model[Model[None] | Model_int | Model_float | Model_str | Model_bool
@@ -165,6 +172,19 @@ else:
             ...     print(str(e).splitlines()[0])
             34 validation errors for JsonModel
         """
+        @classmethod
+        def _parse_data(cls, data: _JsonAnyUnion) -> _JsonAnyUnion:
+            if isinstance(data, str):
+                # Refusing to parse strings starting with a quote
+                if len(data) > 0 and data[0] in '[{0123456789-tfn':  # not [{"0123456789-tfn'
+                    # Potentially a string representing JSON entities.
+                    parsed_json = parse_str_as_json(data)
+                    if parsed_json is not pyd.Undefined:
+                        if isinstance(parsed_json, str):
+                            return parsed_json
+                        return cls(parsed_json).content
+
+            return data
 
 
 # Scalars

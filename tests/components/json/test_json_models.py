@@ -1,7 +1,7 @@
 from dataclasses import fields
 import os
 from textwrap import dedent
-from typing import Annotated, TypeAlias
+from typing import Annotated, Any, TypeAlias
 
 import pytest
 import pytest_cases as pc
@@ -200,3 +200,41 @@ def test_json_model_operations(
 
     e = JsonScalarModel(1)
     assert (e + 1).content == 2  # type: ignore[attr-defined, operator]
+
+
+# Note: Since parsing JSON strings is potentially ambiguous (a string can
+#       be a valid JSON string, but also a string representing JSON
+#       entities), strings starting with a quote are not parsed as JSON
+#       entities.
+
+
+@pc.parametrize('json_string, expected_data',
+                [
+                    ('{"a": 1, "b": 2}', {
+                        'a': 1, 'b': 2
+                    }),
+                    ('[1, 2, 3]', [1, 2, 3]),
+                    ('{"a": [1, -2.5, null, true]}', {
+                        'a': [1, -2.5, None, True]
+                    }),
+                    ('"A simple JSON string"', '"A simple JSON string"'),
+                    ('12', 12),
+                    ('"12"', '"12"'),
+                    ('0.25', 0.25),
+                    ('"0.25"', '"0.25"'),
+                    ('null', None),
+                    ('"null"', '"null"'),
+                    ('false', False),
+                    ('"false"', '"false"'),
+                ])
+def test_json_parsing_of_json_strings(json_string: str, expected_data: Any) -> None:
+    assert JsonModel(json_string).to_data() == expected_data
+
+    if isinstance(expected_data, str):
+        assert JsonModel(json_string).content == expected_data
+    else:
+        assert JsonModel(json_string) == JsonModel(expected_data)
+
+    # This would fail if strings starting with a quote were parsed as
+    # JSON entities
+    assert JsonModel(JsonModel(json_string)).to_data() == expected_data
