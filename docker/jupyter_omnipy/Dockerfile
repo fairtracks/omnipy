@@ -7,7 +7,7 @@ RUN apt-get update -y && apt-get install -y tzdata
 USER jovyan
 
 RUN conda install mamba -y && conda clean -afy
-RUN mamba install nodejs=22 nano jupyterlab=4.3 jupyterlab_widgets jupyterlab-lsp=5.1 jupyter-lsp-python=2.2 nb_conda_kernels ipyvue ipyvuetify ipywidgets -y && mamba clean -ay
+RUN mamba install nodejs=22 nano jupyterlab=4.3 jupyterlab_widgets jupyterlab-lsp=5.1 jupyter-lsp-python=2.2 nb_conda_kernels ipyvue==1.11.3 ipyvuetify==1.11.3 ipywidgets -y && mamba clean -ay
 RUN npm install pyright
 
 RUN conda create -n omnipy -y
@@ -17,8 +17,9 @@ SHELL ["conda", "run", "--no-capture-output", "-n", "omnipy", "/bin/bash", "-c"]
 
 RUN mamba install python=3.12 ipykernel ipywidgets git -y && mamba clean -ay
 RUN pip cache purge
-RUN pip install omnipy==0.21.2
+RUN pip install omnipy==0.22.0
 RUN pip install itables
+RUN pip install ipy
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
