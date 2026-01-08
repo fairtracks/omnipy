@@ -787,6 +787,9 @@ class Model(
         """
         super().__setattr__(ROOT_KEY, value)
 
+    def to(self, model_cls: type[_OtherModelT]) -> _OtherModelT:
+        return model_cls(self)
+
     def dict(self, *args, **kwargs) -> dict[str, object]:
         return {ROOT_KEY: self.to_data()}
 

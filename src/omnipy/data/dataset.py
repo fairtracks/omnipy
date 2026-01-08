@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
 
 _ModelOrDatasetT = TypeVar('_ModelOrDatasetT', bound='Model | Dataset')
+_OtherModelOrDatasetT = TypeVar('_OtherModelOrDatasetT', bound='Model | Dataset')
 _DatasetT = TypeVar('_DatasetT', bound='Dataset')
 _ModelT = TypeVar('_ModelT', bound=Model)
 _Model2T = TypeVar('_Model2T', bound=Model)
@@ -754,6 +755,9 @@ class Dataset(
                 )
 
         return {DATA_KEY: data_dict}
+
+    def to(self, model_or_dataset_cls: type[_OtherModelOrDatasetT]) -> '_OtherModelOrDatasetT':
+        return model_or_dataset_cls(self)
 
     def to_data(self) -> dict_t[str, Any]:
         return {key: self._check_value(val) for key, val in self.dict(by_alias=True).items()}
