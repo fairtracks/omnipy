@@ -124,7 +124,9 @@ def test_nested_dataset_lists_and_dicts(
             'age':
                 30,
             'kids': [{
-                'name': 'Charlie', 'age': 5
+                'name': 'Charlie',
+                'age': 5,
+                'toys': ['car', 'doll'],
             }, {
                 'name': 'Daisy', 'age': 3
             }, {
@@ -132,12 +134,14 @@ def test_nested_dataset_lists_and_dicts(
             }]
         },
         'id_1': {
-            'name': 'Bob',
-            'age': 25,
+            'name':
+                'Bob',
+            'age':
+                25,
             'kids': [{
-                'name': 'Frank', 'age': 4
+                'name': 'Frank', 'age': 4, 'toys': ['ball']
             }, {
-                'name': 'Grace', 'age': 2
+                'name': 'Grace', 'age': 2, 'toys': ['puzzle']
             }]
         }
     }
@@ -148,7 +152,9 @@ def test_nested_dataset_lists_and_dicts(
             'age': 30,
             'kids': {
                 '0': {
-                    'name': 'Charlie', 'age': 5
+                    'name': 'Charlie', 'age': 5, 'toys': {
+                        '0': 'car', '1': 'doll'
+                    }
                 },
                 '1': {
                     'name': 'Daisy', 'age': 3
@@ -163,9 +169,14 @@ def test_nested_dataset_lists_and_dicts(
             'age': 25,
             'kids': {
                 '0': {
-                    'name': 'Frank', 'age': 4
-                }, '1': {
-                    'name': 'Grace', 'age': 2
+                    'name': 'Frank', 'age': 4, 'toys': {
+                        '0': 'ball'
+                    }
+                },
+                '1': {
+                    'name': 'Grace', 'age': 2, 'toys': {
+                        '0': 'puzzle'
+                    }
                 }
             }
         }
@@ -179,7 +190,9 @@ def test_nested_dataset_lists_and_dicts(
     assert list(nested_lists_and_dict_dataset['id_0']['kids'].keys()) == ['0', '1', '2']
     assert len(nested_lists_and_dict_dataset['id_0']['kids']) == 3
     assert nested_lists_and_dict_dataset['id_0']['kids'][0].to_data() == {
-        'name': 'Charlie', 'age': 5
+        'name': 'Charlie', 'age': 5, 'toys': {
+            '0': 'car', '1': 'doll'
+        }
     }
     assert nested_lists_and_dict_dataset['id_0']['kids'][0]['name'] == JsonScalarModel('Charlie')
     assert nested_lists_and_dict_dataset['id_0']['kids'][0]['name'].to_data() == 'Charlie'
@@ -188,13 +201,17 @@ def test_nested_dataset_lists_and_dicts(
     assert nested_lists_and_dict_dataset['id_0']['kids'][0]['age'].to_data() == 6
 
     nested_lists_and_dict_dataset['id_2'] = {
-        'name': 'Charlie', 'age': 28, 'kids': [{
-            'name': 'Hannah', 'age': 2
+        'name': 'Charlie',
+        'age': 28,
+        'kids': [{
+            'name': 'Hannah', 'age': 2, 'toys': ['teddy bear']
         }]
     }
     assert nested_lists_and_dict_dataset['id_2']['kids'].to_data() == {
         '0': {
-            'name': 'Hannah', 'age': 2
+            'name': 'Hannah', 'age': 2, 'toys': {
+                '0': 'teddy bear'
+            }
         }
     }
 
