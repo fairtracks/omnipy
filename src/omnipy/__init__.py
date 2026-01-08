@@ -2,6 +2,9 @@ __version__ = '0.22.0'
 
 import os
 
+from placeholder import _ as x
+from placeholder import F, m
+
 from omnipy.components.general.models import (Chain2,
                                               Chain3,
                                               Chain4,
@@ -500,4 +503,7 @@ __all__ = [
     'PersistOpts',
     'SpecifiedUserInterfaceType',
     'RgbColorUserInterfaceType',
+    'x',
+    'm',
+    'F',
 ]

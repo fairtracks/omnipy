@@ -22,6 +22,7 @@ from typing import (Annotated,
 
 from typing_extensions import get_original_bases, override, Self, TypeVar
 
+from omnipy import F
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._missing import parse_none_according_to_model
 from omnipy.data._mixins.display import ModelDisplayMixin
@@ -789,6 +790,9 @@ class Model(
 
     def to(self, model_cls: type[_OtherModelT]) -> _OtherModelT:
         return model_cls(self)
+
+    def do(self, placeholder: F) -> Any:
+        return placeholder(self)
 
     def dict(self, *args, **kwargs) -> dict[str, object]:
         return {ROOT_KEY: self.to_data()}

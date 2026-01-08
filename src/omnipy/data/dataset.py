@@ -12,6 +12,7 @@ from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKI
 
 from typing_extensions import override, Self, TypeVar
 
+from omnipy import F
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._mixins.display import DatasetDisplayMixin
 from omnipy.data._mixins.task import TaskDatasetMixin
@@ -758,6 +759,12 @@ class Dataset(
 
     def to(self, model_or_dataset_cls: type[_OtherModelOrDatasetT]) -> '_OtherModelOrDatasetT':
         return model_or_dataset_cls(self)
+
+    def do(self, placeholder: F) -> 'Dataset[_ModelOrDatasetT]':
+        new_dataset = self.__class__()
+        for data_file, val in self.items():
+            new_dataset[data_file] = placeholder(val)
+        return new_dataset
 
     def to_data(self) -> dict_t[str, Any]:
         return {key: self._check_value(val) for key, val in self.dict(by_alias=True).items()}
