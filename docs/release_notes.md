@@ -1,3 +1,137 @@
+
+
+## Omnipy v0.22.0
+
+_Release date: Jan 8, 2026_
+
+Omnipy v0.22.0 brings major improvements to data model flexibility and
+type system robustness. This release focuses on enhanced support for
+nested datasets, improved table model architecture, and comprehensive
+typing improvements across the codebase. The JSON parsing system has been
+significantly enhanced, and new display capabilities make working with
+complex nested data structures more intuitive.
+
+### New features and changes in v0.22.0
+
+- **Nested Dataset support**
+
+  Major architectural enhancement enabling nested datasets:
+  
+  - `Dataset`s can now contain other datasets as items, allowing for
+    arbitrarily nested dataset structures, implemented through the new 
+    `NestedDataset` class. `Union` types are also now allowed in `Dataset` 
+    type specialization.
+  - Implemented configurable limits for controlling display of deeply nested
+    structures. Deep nested content automatically falls back to JSON display
+    for improved readability
+  - Enhanced Dataset validation to properly handle iterables as input and
+    prevent invalid iterators. Pydantic v1 workaround to prevent unwanted
+    coercion of nested structures.
+  - `Model[Dataset]` objects now display as datasets for intuitive 
+    interaction
+
+
+- **Enhanced JSON parsing and display**
+
+  Comprehensive improvements to JSON handling:
+  
+  - `JsonModel` now parses all JSON types except JSON strings (e.g., `"hi"`)
+  - Helper methods for parsing and serializing JSON outside of models
+  - New `json()` display method in `ModelDisplayMixin`
+  - Fixed compact JSON reflowing algorithm, preventing line overflow
+  - `ConfigBase` now has `as_model()` method returning `JsonDictModel`
+  - Improved type hints for JSON models throughout
+
+
+- **Table model architecture overhaul**
+
+  Complete redesign of table models for better performance and flexibility:
+  
+  - Split table models into `RowWise` and `ColumnWise` types with conversion
+    support, such as `RowWiseTableWithColNamesModel` and 
+    `ColumnWiseTableWithColNamesModel`.
+  - Implemented `IteratingPydanticRecordModel` for optimized validation of
+    column-wise and row-wise data (with a focus on the former). Will allow
+    fast validation of e.g. Pandas DataFrames or Numpy/Bionumpy structured
+    arrays in future releases. This feature was implemented on top
+    of feather-light row-wise iteration to 
+    `ColumnWiseTableWithColNamesModel` through `IterRow`
+  - Support for simplified concatenation through addition operator for 
+    column-wise tables (row-wise tables can already be concatenated this
+    way).
+  - Added `RowWiseTableModel` implementation
+  - Refactored `SplitLinesToColumnsByCommaModel` and 
+    `JoinColumnsByCommaToLinesModel`, and added `SplitToItemsByTabModel`
+    with associated parameters
+  - First implementation of table displays!
+
+
+- **Comprehensive typing improvements**
+
+  Major enhancements to type system and static analysis support:
+  
+  - Introduced `IsList`, `IsDict`, and other protocols for builtin types
+  - Replaced direct subclassing with protocols for mimic typing in `Model`
+    and `Dataset`
+  - Enhanced type hints in `Dataset` and `Model` classes with additional
+    overloads
+  - Improved typing of `ChainX` models with support for `Dataset` and 
+    `Union` types
+  - Simplified typing of `ColumnWiseTableWithColNamesModel` and other table
+    models
+  - Support for `Model` of types with no default values
+  - Pydantic v1 hack for supporting models with generic types
+  - Introduced `TypeVarTuple` for better tuple handling
+  - Added detection of which type checker is running through `TYPE_CHECKER`
+    variable
+  - Fixed numerous typing issues across multiple modules
+
+
+- **Model and Dataset enhancements**
+
+  Various improvements to core data structures:
+  
+  - `JsonScalarModel` is now a proper model subclass
+  - Support for enums as values in Omnipy models
+  - Expanded general sequence support in `Model` to handle any iterable
+  - Name changes: `NestedStrWithListModels` → `NestedListsAndStrsWithModels` (and similar)
+  - Fixed edge case issue for `_NestedSplitToItemsModel`
+
+
+- **Display and UI improvements**
+
+  - Renamed horizontal overflow mode: `WORD_WRAP` → `WRAP`
+  - Removed unneeded extra resize rendering for `browse()`
+  - Fixed bug with syntax coloring of text content
+  - Partly fixed edge case issues with very long lines for compact JSON
+  - `Dataset.full()` now based on `peek()` instead of `list()`
+  - Renamed random color styles: `random-t16-dark` → `random-dark-t16` (and
+    similar)
+
+
+- **Performance improvements**
+
+  - Improved import performance greatly by removing solara import for non-
+    Jupyter UI types, and other improvements
+  - Miscellaneous speedups across various operations
+  - Added `open_func` parameter to `import_directory` for BioNumpy support
+  - Implemented `class_or_instance_method` decorator, which allows method to
+    be called as class method or instance method. Will be used to unify
+    `load()` and `load_into()` methods.
+
+
+- **Development and testing**
+
+  - LiteralEnum checks now only run when in develop mode (editable install)
+  - Workaround documented for `Chain2` with `Union` types
+  - Updated mypy version
+  - Clean up of inheritance for `Config` classes and protocols with 
+    `IsConfigBase` intermediate
+  - Updated IHEC and nobel notebooks
+  - Various cleanups and removed unneeded tests. Skipped some tests that are
+    known to fail
+
+
 ## Omnipy v0.21.2
 
 _Release date: Nov 3, 2025_
