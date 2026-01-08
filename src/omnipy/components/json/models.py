@@ -4,10 +4,10 @@ from typing import Any, Generic, overload, Type, TypeAlias
 from typing_extensions import TypeVar
 
 from omnipy.data.model import Model
+from omnipy.data.typechecks import is_model_instance
 import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import ensure_plain_type
 
-from ...data.typechecks import is_model_instance
 from .helpers import parse_str_as_json
 from .typedefs import JsonScalar
 

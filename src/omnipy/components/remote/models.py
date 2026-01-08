@@ -214,7 +214,7 @@ class ResponseContentPydModel(pyd.BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    @pyd.validator('content_type')
+    @pyd.validator('content_type', allow_reuse=True)
     def parse_content_type(cls, content_type: ModelFriendlyMimeType | str) -> ModelFriendlyMimeType:
         from .lazy_import import MimeType, parse_mimetype
 
