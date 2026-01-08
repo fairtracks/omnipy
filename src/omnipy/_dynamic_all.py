@@ -5,16 +5,6 @@ import omnipy
 from omnipy.util._pydantic import lenient_isinstance, lenient_issubclass
 from omnipy.util.literal_enum import LiteralEnum
 
-from . import (BackoffStrategy,
-               ConfigOutputStorageProtocolOptions,
-               ConfigPersistOutputsOptions,
-               ConfigRestoreOutputsOptions,
-               EngineChoice,
-               OutputStorageProtocolOptions,
-               PersistOutputsOptions,
-               RestoreOutputsOptions,
-               RunState)
-
 # TODO: Finish implementation of dynamic __all__ generation. Possibly useful together with Poe the
 #       Poet (https://poethepoet.natn.io/poetry_plugin.html) for generating a fixed __all__ list as
 #       part of the build process. The goal for this functionality is to follow DRY principles and
@@ -43,28 +33,62 @@ _exclude_attrs: set[str] = {
     'JoinSubitemsToItemsModel',
     'QueryParamsJoinerModel',
     'QueryParamsSplitterModel',
+    'generate_literal_enum_code',
+    'GenericNestedDataset',
+    'EnumeratedListModel',
+    'EnumeratedListOfTuplesModel',
+    'ListAsNestedDatasetModel',
+    'ColumnWiseTableWithColNamesNoConvertModel',
+    'RowWiseTableWithColNamesNoConvertModel',
+    'ListOfNestedListsAndStrsModel',
+    'ListOfPandasDatasetsWithSameNumberOfFiles',
+    'get_auto_from_api_endpoint',
+    'GenericNestedDataset',
+    'ListOfNestedListsAndStrsModel',
+    'Proportionally',
+    'ListAsNestedDatasetModel',
+    'get_auto_from_api_endpoint',
+    'RowWiseTableWithColNamesNoConvertModel',
+    'ColumnWiseTableWithColNamesNoConvertModel',
+    'EnumeratedListOfTuplesModel',
+    'EnumeratedListModel',
+    'RunStateLogMessages',
+    'OutputMode',
 }
 
 _all_modules: dict[str, ModuleType] = {}
 
 if not __all__:
-    from .compute._job import JobTemplateMixin
-    from .compute.flow import (DagFlow,
-                               DagFlowTemplate,
-                               FuncFlow,
-                               FuncFlowTemplate,
-                               LinearFlow,
-                               LinearFlowTemplate)
-    from .compute.task import Task, TaskTemplate
-    from .data.dataset import Dataset, MultiModelDataset
-    from .data.model import Model
-    from .data.param import (bind_adjust_dataset_func,
-                             bind_adjust_model_func,
-                             params_dataclass,
-                             ParamsBase)
-    from .hub.runtime import runtime
-    from .util.contexts import print_exception
-    from .util.helpers import recursive_module_import_new
+
+    from omnipy import (BackoffStrategy,
+                        ConfigOutputStorageProtocolOptions,
+                        ConfigPersistOutputsOptions,
+                        ConfigRestoreOutputsOptions,
+                        EngineChoice,
+                        generate_literal_enum_code,
+                        OutputStorageProtocolOptions,
+                        PersistOutputsOptions,
+                        RestoreOutputsOptions,
+                        RunState,
+                        setup_jupyter_ui)
+    from omnipy.components.tables.models import PydanticRecordModel
+    from omnipy.compute._job import JobTemplateMixin
+    from omnipy.compute.flow import (DagFlow,
+                                     DagFlowTemplate,
+                                     FuncFlow,
+                                     FuncFlowTemplate,
+                                     LinearFlow,
+                                     LinearFlowTemplate)
+    from omnipy.compute.task import Task, TaskTemplate
+    from omnipy.data.dataset import Dataset, MultiModelDataset
+    from omnipy.data.model import Model
+    from omnipy.data.param import (bind_adjust_dataset_func,
+                                   bind_adjust_model_func,
+                                   params_dataclass,
+                                   ParamsBase)
+    from omnipy.hub.runtime import runtime
+    from omnipy.util.contexts import print_exception
+    from omnipy.util.helpers import recursive_module_import_new
 
     __all__ = [
         'DagFlow',
@@ -93,6 +117,9 @@ if not __all__:
         'ConfigOutputStorageProtocolOptions',
         'RunState',
         'EngineChoice',
+        'generate_literal_enum_code',
+        'PydanticRecordModel',
+        'setup_jupyter_ui',
     ]
     _all_element_names = set(__all__)
 
