@@ -8,11 +8,11 @@ from omnipy.data.model import Model
 from omnipy.data.typechecks import is_model_instance
 from omnipy.shared.exceptions import ShouldNotOccurException
 
-from ..tables.models import (ColumnWiseTableDictOfDictsModel,
-                             ColumnWiseTableDictOfListsModel,
+from ..tables.models import (ColumnWiseTableWithColNamesAndIndexModel,
+                             ColumnWiseTableWithColNamesModel,
                              PrintableTable,
-                             RowWiseTableListOfDictsModel,
-                             RowWiseTableListOfListsModel)
+                             RowWiseTableModel,
+                             RowWiseTableWithColNamesModel)
 
 if TYPE_CHECKING:
     from .lazy_import import pd
@@ -20,8 +20,8 @@ if TYPE_CHECKING:
 __all__ = ['PandasModel']
 
 AnyJsonTableType = (
-    RowWiseTableListOfListsModel | RowWiseTableListOfDictsModel
-    | ColumnWiseTableDictOfDictsModel | ColumnWiseTableDictOfListsModel)
+    RowWiseTableModel | RowWiseTableWithColNamesModel
+    | ColumnWiseTableWithColNamesAndIndexModel | ColumnWiseTableWithColNamesModel)
 
 
 class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], PrintableTable):

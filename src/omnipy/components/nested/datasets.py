@@ -5,7 +5,7 @@ from typing_extensions import TypeAlias, TypeVar
 from omnipy.data.dataset import Dataset
 
 from ..json.models import JsonScalarModel
-from ..tables.models import ColumnWiseTableDictOfListsModel, RowWiseTableListOfDictsModel
+from ..tables.models import ColumnWiseTableWithColNamesModel, RowWiseTableWithColNamesModel
 from .models import ListAsNestedDatasetModel
 
 NestedAnyUnionT = TypeVar(
@@ -17,7 +17,7 @@ class GenericNestedDataset(Dataset[NestedAnyUnionT], Generic[NestedAnyUnionT]):
 
 
 # NestedAnyUnion: TypeAlias = 'NestedDataset | ListAsNestedDatasetModel | JsonScalarModel'
-TableModels: TypeAlias = ColumnWiseTableDictOfListsModel | RowWiseTableListOfDictsModel
+TableModels: TypeAlias = ColumnWiseTableWithColNamesModel | RowWiseTableWithColNamesModel
 NestedUnion: TypeAlias = 'NestedDataset | TableModels | ListAsNestedDatasetModel | JsonScalarModel'
 
 

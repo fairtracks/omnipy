@@ -7,7 +7,7 @@ import pytest
 
 from omnipy.components.pandas.datasets import PandasDataset
 from omnipy.components.pandas.models import PandasModel
-from omnipy.components.tables.models import RowWiseTableListOfDictsModel
+from omnipy.components.tables.models import RowWiseTableWithColNamesModel
 from omnipy.util._pydantic import ValidationError
 
 from .helpers.asserts import assert_pandas_frame_dtypes
@@ -18,7 +18,7 @@ from .helpers.asserts import assert_pandas_frame_dtypes
 def test_pandas_dataset_input_variants():
     from omnipy.components.pandas.lazy_import import pd
 
-    table = RowWiseTableListOfDictsModel([{'a': 'abc', 'b': 12}])
+    table = RowWiseTableWithColNamesModel([{'a': 'abc', 'b': 12}])
     df = pd.concat([
         pd.Series(['abc'], dtype='string'),
         pd.Series([12], dtype='Int64'),

@@ -6,9 +6,9 @@ from omnipy.compute.task import TaskTemplate
 from ..json.datasets import JsonListOfDictsDataset
 from ..json.typedefs import JsonScalar
 from .datasets import TableWithColNamesDataset
-from .models import (ColumnWiseTableDictOfDictsModel,
+from .models import (ColumnWiseTableWithColNamesAndIndexModel,
                      RowWiseTableFirstRowAsColNamesModel,
-                     RowWiseTableListOfDictsModel)
+                     RowWiseTableWithColNamesModel)
 
 
 @TaskTemplate()
@@ -72,8 +72,8 @@ def transpose_columns_with_data_files(dataset: TableWithColNamesDataset,
 
 
 @TaskTemplate(iterate_over_data_files=True)
-def create_row_index_from_column(list_of_dicts: RowWiseTableListOfDictsModel,
-                                 column_key: str) -> ColumnWiseTableDictOfDictsModel:
+def create_row_index_from_column(list_of_dicts: RowWiseTableWithColNamesModel,
+                                 column_key: str) -> ColumnWiseTableWithColNamesAndIndexModel:
     output_dict = {}
     input_table = cast(list[dict[str, JsonScalar]], list_of_dicts.to_data())
     for item in input_table:
@@ -81,4 +81,4 @@ def create_row_index_from_column(list_of_dicts: RowWiseTableListOfDictsModel,
         new_key = item[column_key]
         del item_copy[column_key]
         output_dict[new_key] = item_copy
-    return ColumnWiseTableDictOfDictsModel(output_dict)
+    return ColumnWiseTableWithColNamesAndIndexModel(output_dict)

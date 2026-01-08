@@ -607,7 +607,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         from omnipy.components.json.models import is_json_model_instance_hack
         from omnipy.components.raw.models import BytesModel, StrModel
         from omnipy.components.tables.models import (ColumnModel,
-                                                     ColumnWiseTableDictOfListsModel,
+                                                     ColumnWiseTableWithColNamesModel,
                                                      PrintableTable)
 
         syntax: SyntaxLanguage.Literals
@@ -631,7 +631,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             number_config = dataclasses.replace(
                 config, syntax=SyntaxLanguage.PYTHON, justify='right')
 
-            column_wise_table = ColumnWiseTableDictOfListsModel(model)
+            column_wise_table = ColumnWiseTableWithColNamesModel(model)
 
             layout['#'] = DraftPanel(
                 '\n'.join(str(i) for i in range(len(column_wise_table))),

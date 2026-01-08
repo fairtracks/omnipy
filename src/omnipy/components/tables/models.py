@@ -60,12 +60,12 @@ class PrintableTable:
 if TYPE_CHECKING:
     from omnipy.data._mimic_models import RevertModelMimicTypingHack
 
-    class RowWiseTableListOfListsModel(IsList[list[JsonScalar]], Model[list[list[JsonScalar]]]):
+    class RowWiseTableModel(IsList[list[JsonScalar]], Model[list[list[JsonScalar]]]):
         ...
 
 else:
 
-    class RowWiseTableListOfListsModel(Model[list[list[JsonScalar]]]):
+    class RowWiseTableModel(Model[list[list[JsonScalar]]]):
         ...
 
 
@@ -81,13 +81,13 @@ class _RowWiseColNamesMixin:
         return tuple(col_names.keys())
 
 
-class _RowWiseTableListOfDictsModel(
-        Model['list[dict[str, JsonScalar]] | ColumnWiseTableDictOfListsNoConvertModel']):
+class _RowWiseTableWithColNamesModel(
+        Model['list[dict[str, JsonScalar]] | ColumnWiseTableWithColNamesNoConvertModel']):
     @classmethod
     def _parse_data(
-        cls, data: 'list[dict[str, JsonScalar]] | ColumnWiseTableDictOfListsNoConvertModel'
+        cls, data: 'list[dict[str, JsonScalar]] | ColumnWiseTableWithColNamesNoConvertModel'
     ) -> list[dict[str, JsonScalar]]:
-        if isinstance(data, ColumnWiseTableDictOfListsNoConvertModel):
+        if isinstance(data, ColumnWiseTableWithColNamesNoConvertModel):
             # Convert column-wise to row-wise
             converted_data: list[dict[str, JsonScalar]] = []
             for col_name, col_values in data.content.items():
@@ -102,9 +102,9 @@ class _RowWiseTableListOfDictsModel(
 
 if TYPE_CHECKING:
 
-    class RowWiseTableListOfDictsModel(
+    class RowWiseTableWithColNamesModel(
             _RowWiseColNamesMixin,
-            RevertModelMimicTypingHack['RowWiseTableListOfDictsModel'],
+            RevertModelMimicTypingHack['RowWiseTableWithColNamesModel'],
             IsList[dict[str, JsonScalar]],
             Model[list[dict[str, JsonScalar]]],
             PrintableTable,
@@ -112,23 +112,23 @@ if TYPE_CHECKING:
         ...
 else:
 
-    class RowWiseTableListOfDictsModel(
+    class RowWiseTableWithColNamesModel(
             _RowWiseColNamesMixin,
-            _RowWiseTableListOfDictsModel,
+            _RowWiseTableWithColNamesModel,
             PrintableTable,
     ):
         ...
 
 
-class RowWiseTableListOfDictsNoConvertModel(Model[list[dict[str, JsonScalar]]]):
+class RowWiseTableWithColNamesNoConvertModel(Model[list[dict[str, JsonScalar]]]):
     ...
 
 
-class ColumnWiseTableDictOfDictsModel(Model[dict[str, dict[str, JsonScalar]]]):
+class ColumnWiseTableWithColNamesAndIndexModel(Model[dict[str, dict[str, JsonScalar]]]):
     ...
 
 
-class _IsColumnWiseTableDictOfLists(HasContent, Sized, SupportsKeysAndGetItem, Protocol):
+class _IsColumnWiseTableWithColNames(HasContent, Sized, SupportsKeysAndGetItem, Protocol):
     @property
     def _content(self) -> dict[str, list[JsonScalar]]:
         ...
@@ -137,30 +137,30 @@ class _IsColumnWiseTableDictOfLists(HasContent, Sized, SupportsKeysAndGetItem, P
         self,
         other: 'ColWiseAddOtherType',
         reverse: bool,
-    ) -> 'ColumnWiseTableDictOfListsModel':
+    ) -> 'ColumnWiseTableWithColNamesModel':
         ...
 
 
-class _ColumnWiseTableDictOfListsMixin:
+class _ColumnWiseTableWithColNamesMixin:
     @property
-    def col_names(self: _IsColumnWiseTableDictOfLists) -> tuple[str, ...]:
+    def col_names(self: _IsColumnWiseTableWithColNames) -> tuple[str, ...]:
         """
         The column names in the table, in the order they first appear in the rows.
         """
         return tuple(self.keys())
 
     @property
-    def _content(self: _IsColumnWiseTableDictOfLists) -> dict[str, list[JsonScalar]]:
+    def _content(self: _IsColumnWiseTableWithColNames) -> dict[str, list[JsonScalar]]:
         return cast(dict[str, list[JsonScalar]], self.content)
 
-    def __len__(self: _IsColumnWiseTableDictOfLists) -> int:
+    def __len__(self: _IsColumnWiseTableWithColNames) -> int:
         try:
             first_key = first_key_in_mapping(self._content)
             return len(self._content[first_key])
         except KeyError:
             return 0
 
-    def __iter__(self: _IsColumnWiseTableDictOfLists) -> Iterator[Mapping[str, JsonScalar]]:
+    def __iter__(self: _IsColumnWiseTableWithColNames) -> Iterator[Mapping[str, JsonScalar]]:
         _iter_row = IterRow(self._content)
 
         for i in range(len(self)):
@@ -168,14 +168,14 @@ class _ColumnWiseTableDictOfListsMixin:
             yield _iter_row
 
     @overload
-    def __getitem__(self: _IsColumnWiseTableDictOfLists, item: str) -> list[JsonScalar]:
+    def __getitem__(self: _IsColumnWiseTableWithColNames, item: str) -> list[JsonScalar]:
         ...
 
     @overload
-    def __getitem__(self: _IsColumnWiseTableDictOfLists, item: int) -> Mapping[str, JsonScalar]:
+    def __getitem__(self: _IsColumnWiseTableWithColNames, item: int) -> Mapping[str, JsonScalar]:
         ...
 
-    def __getitem__(self: _IsColumnWiseTableDictOfLists,
+    def __getitem__(self: _IsColumnWiseTableWithColNames,
                     item: str | int) -> list[JsonScalar] | Mapping[str, JsonScalar]:
         if isinstance(item, str):
             return self._content[item]
@@ -187,14 +187,14 @@ class _ColumnWiseTableDictOfListsMixin:
         return _iter_row
 
     def _common_add(
-        self: _IsColumnWiseTableDictOfLists,
+        self: _IsColumnWiseTableWithColNames,
         other: 'ColWiseAddOtherType',
         reverse: bool,
-    ) -> 'ColumnWiseTableDictOfListsModel':
-        if isinstance(other, ColumnWiseTableDictOfListsModel):
-            _other: _IsColumnWiseTableDictOfLists = other
+    ) -> 'ColumnWiseTableWithColNamesModel':
+        if isinstance(other, ColumnWiseTableWithColNamesModel):
+            _other: _IsColumnWiseTableWithColNames = other
         else:
-            _other = ColumnWiseTableDictOfListsModel(other)
+            _other = ColumnWiseTableWithColNamesModel(other)
 
         def _concat_self_and_other(
             self_value: list[JsonScalar],
@@ -215,28 +215,28 @@ class _ColumnWiseTableDictOfListsMixin:
             new_content[missing_key] = _concat_self_and_other(
                 copy(new_content[missing_key]), [None] * len(_other), reverse)
 
-        return ColumnWiseTableDictOfListsModel(new_content)
+        return ColumnWiseTableWithColNamesModel(new_content)
 
     def __add__(
-        self: _IsColumnWiseTableDictOfLists,
+        self: _IsColumnWiseTableWithColNames,
         other: 'ColWiseAddOtherType',
-    ) -> 'ColumnWiseTableDictOfListsModel':
+    ) -> 'ColumnWiseTableWithColNamesModel':
         return self._common_add(other, reverse=False)
 
     def __radd__(
-        self: _IsColumnWiseTableDictOfLists,
+        self: _IsColumnWiseTableWithColNames,
         other: 'ColWiseAddOtherType',
-    ) -> 'ColumnWiseTableDictOfListsModel':
+    ) -> 'ColumnWiseTableWithColNamesModel':
         return self._common_add(other, reverse=True)
 
 
-class _ColumnWiseTableDictOfListsModel(
-        Model['dict[str, list[JsonScalar]] | RowWiseTableListOfDictsNoConvertModel']):
+class _ColumnWiseTableWithColNamesModel(
+        Model['dict[str, list[JsonScalar]] | RowWiseTableWithColNamesNoConvertModel']):
     @classmethod
     def _parse_data(
-        cls, data: 'dict[str, list[JsonScalar]] | RowWiseTableListOfDictsNoConvertModel'
+        cls, data: 'dict[str, list[JsonScalar]] | RowWiseTableWithColNamesNoConvertModel'
     ) -> dict[str, list[JsonScalar]]:
-        if isinstance(data, RowWiseTableListOfDictsNoConvertModel):
+        if isinstance(data, RowWiseTableWithColNamesNoConvertModel):
             row_wise_data = cast(list[dict[str, JsonScalar]], data)
             # Convert row-wise to column-wise
             column_wise_data: dict[str, list[JsonScalar]] = {}
@@ -259,9 +259,9 @@ class _ColumnWiseTableDictOfListsModel(
 
 if TYPE_CHECKING:
 
-    class ColumnWiseTableDictOfListsModel(  # type: ignore[misc]
-            _ColumnWiseTableDictOfListsMixin,
-            RevertModelMimicTypingHack['ColumnWiseTableDictOfListsModel'],
+    class ColumnWiseTableWithColNamesModel(  # type: ignore[misc]
+            _ColumnWiseTableWithColNamesMixin,
+            RevertModelMimicTypingHack['ColumnWiseTableWithColNamesModel'],
             IsDict[str, list[JsonScalar]],
             Model[dict[str, list[JsonScalar]]],
             PrintableTable,
@@ -270,33 +270,32 @@ if TYPE_CHECKING:
 
 else:
 
-    class ColumnWiseTableDictOfListsModel(
-            _ColumnWiseTableDictOfListsMixin,
-            _ColumnWiseTableDictOfListsModel,
+    class ColumnWiseTableWithColNamesModel(
+            _ColumnWiseTableWithColNamesMixin,
+            _ColumnWiseTableWithColNamesModel,
             PrintableTable,
     ):
         ...
 
 
 ColWiseAddOtherType: TypeAlias = (
-    ColumnWiseTableDictOfListsModel | RowWiseTableListOfDictsModel | dict[str, list[JsonScalar]]
+    ColumnWiseTableWithColNamesModel | RowWiseTableWithColNamesModel | dict[str, list[JsonScalar]]
     | list[dict[str, JsonScalar]])
 
 
-class ColumnWiseTableDictOfListsNoConvertModel(Model[dict[str, list[JsonScalar]]]):
+class ColumnWiseTableWithColNamesNoConvertModel(Model[dict[str, list[JsonScalar]]]):
     ...
 
 
-RowWiseTableListOfDictsModel.update_forward_refs()
+RowWiseTableWithColNamesModel.update_forward_refs()
 
 
-class _RowWiseTableFirstRowAsColNamesModel(Model[list[dict[str, JsonScalar]]
-                                                 | RowWiseTableListOfListsModel]):
+class _RowWiseTableFirstRowAsColNamesModel(Model[list[dict[str, JsonScalar]] | RowWiseTableModel]):
     @classmethod
     def _parse_data(
-        cls, data: list[dict[str, JsonScalar]] | RowWiseTableListOfListsModel
-    ) -> list[dict[str, JsonScalar]]:
-        if isinstance(data, RowWiseTableListOfListsModel):
+            cls,
+            data: list[dict[str, JsonScalar]] | RowWiseTableModel) -> list[dict[str, JsonScalar]]:
+        if isinstance(data, RowWiseTableModel):
             data_list_of_lists = data.content
 
             if len(data_list_of_lists) > 0:
@@ -351,12 +350,12 @@ _PydBaseModelT = TypeVar('_PydBaseModelT', bound=pyd.BaseModel)
 _DataWithColNamesModelT = TypeVar(
     '_DataWithColNamesModelT',
     dict[str, JsonScalar],
-    ColumnWiseTableDictOfListsModel,
+    ColumnWiseTableWithColNamesModel,
 )
 _DataWithoutColNamesModelT = TypeVar(
     '_DataWithoutColNamesModelT',
     list[JsonScalar],
-    RowWiseTableListOfListsModel,
+    RowWiseTableModel,
 )
 _PydRecordT = TypeVar('_PydRecordT', bound=pyd.BaseModel)
 
@@ -434,13 +433,13 @@ class PydanticRecordModelBase(
         data: _DataWithColNamesModelT | _DataWithoutColNamesModelT,
     ) -> pyd.BaseModel | _DataWithColNamesModelT:
         pyd_model, header_names, num_required_fields = cls.header_info
-        if isinstance(data, (dict, ColumnWiseTableDictOfListsModel)):
+        if isinstance(data, (dict, ColumnWiseTableWithColNamesModel)):
             # cls._validate_and_set_value(data)
             return cls._validate_record_model_with_col_names(pyd_model, data, header_names)
             return pyd_model(**data)
 
-        if isinstance(data, (list, RowWiseTableListOfListsModel)):
-            if isinstance(data, RowWiseTableListOfListsModel):
+        if isinstance(data, (list, RowWiseTableModel)):
+            if isinstance(data, RowWiseTableModel):
                 num_data_cols = len(data.content[0]) if len(data.content) > 0 else 0
             else:
                 num_data_cols = len(data)
@@ -485,16 +484,16 @@ class PydanticRecordModel(
 class IteratingPydanticRecordsModel(
         PydanticRecordModelBase[
             _PydBaseModelT,
-            ColumnWiseTableDictOfListsModel,
-            RowWiseTableListOfListsModel,
+            ColumnWiseTableWithColNamesModel,
+            RowWiseTableModel,
         ],
         Generic[_PydBaseModelT],
 ):
     @classmethod
     def _validate_over_all_rows(
         cls,
-        input_model: ColumnWiseTableDictOfListsModel | RowWiseTableListOfListsModel,
-        output_model: ColumnWiseTableDictOfListsModel,
+        input_model: ColumnWiseTableWithColNamesModel | RowWiseTableModel,
+        output_model: ColumnWiseTableWithColNamesModel,
         pyd_model: type[BaseModel],
         to_row_dict_func: Callable[[list[JsonScalar]], dict[str, JsonScalar]] | None = None,
     ):
@@ -529,9 +528,9 @@ class IteratingPydanticRecordsModel(
     def _validate_record_model_with_col_names(
         cls,
         pyd_model: type[pyd.BaseModel],
-        data: ColumnWiseTableDictOfListsModel,
+        data: ColumnWiseTableWithColNamesModel,
         header_names: tuple[str, ...],
-    ) -> pyd.BaseModel | ColumnWiseTableDictOfListsModel:
+    ) -> pyd.BaseModel | ColumnWiseTableWithColNamesModel:
         cls._validate_over_all_rows(input_model=data, output_model=data, pyd_model=pyd_model)
         return data
 
@@ -540,10 +539,10 @@ class IteratingPydanticRecordsModel(
     def _validate_record_model_without_col_names(
         cls,
         pyd_model: type[pyd.BaseModel],
-        data: RowWiseTableListOfListsModel,
+        data: RowWiseTableModel,
         header_names: tuple[str, ...],
-    ) -> pyd.BaseModel | ColumnWiseTableDictOfListsModel:
-        output = ColumnWiseTableDictOfListsModel()
+    ) -> pyd.BaseModel | ColumnWiseTableWithColNamesModel:
+        output = ColumnWiseTableWithColNamesModel()
         cls._validate_over_all_rows(
             input_model=data,
             output_model=output,

@@ -3,29 +3,29 @@ from typing import Generic, TypeVar
 from omnipy.data.dataset import Dataset
 import omnipy.util._pydantic as pyd
 
-from .models import (ColumnWiseTableDictOfDictsModel,
-                     ColumnWiseTableDictOfListsModel,
+from .models import (ColumnWiseTableWithColNamesAndIndexModel,
+                     ColumnWiseTableWithColNamesModel,
                      CsvTableModel,
                      RowWiseTableFirstRowAsColNamesModel,
-                     RowWiseTableListOfDictsModel,
-                     RowWiseTableListOfListsModel,
+                     RowWiseTableModel,
+                     RowWiseTableWithColNamesModel,
                      TableOfPydanticRecordsModel,
                      TsvTableModel)
 
 
-class TableListOfListsOfJsonScalarsDataset(Dataset[RowWiseTableListOfListsModel]):
+class TableListOfListsOfJsonScalarsDataset(Dataset[RowWiseTableModel]):
     ...
 
 
-class TableListOfDictsOfJsonScalarsDataset(Dataset[RowWiseTableListOfDictsModel]):
+class TableListOfDictsOfJsonScalarsDataset(Dataset[RowWiseTableWithColNamesModel]):
     ...
 
 
-class TableDictOfDictsOfJsonScalarsDataset(Dataset[ColumnWiseTableDictOfDictsModel]):
+class TableDictOfDictsOfJsonScalarsDataset(Dataset[ColumnWiseTableWithColNamesAndIndexModel]):
     ...
 
 
-class TableDictOfListsOfJsonScalarsDataset(Dataset[ColumnWiseTableDictOfListsModel]):
+class TableDictOfListsOfJsonScalarsDataset(Dataset[ColumnWiseTableWithColNamesModel]):
     ...
 
 
