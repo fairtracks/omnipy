@@ -1,6 +1,6 @@
 [project]
 name = "omnipy"
-version = "0.21.2"
+version = "0.22.0"
 description = "Omnipy is a type-driven Python library for data conversion, parsing and wrangling; tool and web service interoperability; and scalable dataflow orchestration"
 readme = "docs/readme.md"
 requires-python = ">=3.10,<3.14"
@@ -54,7 +54,7 @@ pre-commit = "^3.8.0"
 pytest-mypy-plugins = "^3.2.0"
 mypy = ">=1.19.1,<2.0.0"
 pytest-aiohttp = "^1.0.5"
-pyright = "^1.1.389"
+pyright = ">=1.1.406,!=1.1.407" # See https://github.com/microsoft/pyright/issues/11060
 aiostream = "^0.7.0"
 pytest-asyncio = "<1"
 pytest-cases = "<4"
