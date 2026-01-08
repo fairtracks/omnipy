@@ -51,7 +51,7 @@ class PrettyPrinterLib(LiteralEnum[str]):
     `True`, as it is specifically designed for that purpose.
     """
 
-    Literals = Literal['rich', 'devtools', 'compact-json', 'text', 'hexdump', 'auto']
+    Literals = Literal['rich', 'devtools', 'compact-json', 'text', 'column', 'hexdump', 'auto']
 
     RICH: Literal['rich'] = 'rich'
     """
@@ -78,6 +78,12 @@ class PrettyPrinterLib(LiteralEnum[str]):
     """
     The plain text pretty printer, which is used for displaying plain text
     content.
+    """
+
+    COLUMN: Literal['column'] = 'column'
+    """
+    The column pretty printer is the basis for tabular data display in
+    Omnipy, with the regular panel layout providing the table formatting.
     """
 
     HEXDUMP: Literal['hexdump'] = 'hexdump'

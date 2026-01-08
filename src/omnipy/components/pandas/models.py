@@ -10,6 +10,7 @@ from omnipy.shared.exceptions import ShouldNotOccurException
 
 from ..tables.models import (ColumnWiseTableDictOfDictsModel,
                              ColumnWiseTableDictOfListsModel,
+                             PrintableTable,
                              RowWiseTableListOfDictsModel,
                              RowWiseTableListOfListsModel)
 
@@ -23,7 +24,7 @@ AnyJsonTableType = (
     | ColumnWiseTableDictOfDictsModel | ColumnWiseTableDictOfListsModel)
 
 
-class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType']):
+class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], PrintableTable):
     if TYPE_CHECKING:
 
         def __new__(cls, *args: Any, **kwargs: Any) -> 'PandasModel_DataFrame':

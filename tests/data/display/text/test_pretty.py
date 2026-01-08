@@ -1,11 +1,14 @@
 import os
 import re
 from textwrap import dedent
-from typing import Annotated
+from typing import Annotated, Any
 
+from attr import dataclass
 import pytest
+import pytest_cases as pc
 
-from omnipy import JsonModel
+from omnipy.components.json.models import JsonModel
+from omnipy.components.tables.models import ColumnModel
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
@@ -857,7 +860,60 @@ def test_plain_str_pretty_print() -> None:
         A(),
         exp_plain_output='A()',
         frame=DEFAULT_FRAME,
-        config=OutputConfig(syntax=SyntaxLanguage.TEX),
+        config=OutputConfig(syntax=SyntaxLanguage.TEXT),
+        within_frame_width=True,
+        within_frame_height=True,
+    )
+
+
+@dataclass
+class ColumnPrettyPrintCase:
+    data: list[Any]
+    expected_column_output: str
+    expected_regular_output: str
+
+
+@pc.case(tags=['column_pretty_print'])
+def case_list_of_strings() -> ColumnPrettyPrintCase:
+    return ColumnPrettyPrintCase(
+        data=['John', 'Jane', 'Jonathan'],
+        expected_column_output=dedent("""\
+            John
+            Jane
+            Jonathan"""),
+        expected_regular_output=dedent("""\
+            [
+              'John',
+              'Jane',
+              'Jonathan'
+            ]"""),
+    )
+
+
+@pc.parametrize_with_cases('case', cases='.', has_tag='column_pretty_print')
+def test_column_pretty_print(case: ColumnPrettyPrintCase) -> None:
+
+    _assert_pretty_repr_of_draft(
+        case.data,
+        exp_plain_output=case.expected_regular_output,
+        frame=DEFAULT_FRAME,
+        within_frame_width=True,
+        within_frame_height=True,
+    )
+
+    _assert_pretty_repr_of_draft(
+        ColumnModel(case.data),
+        exp_plain_output=case.expected_column_output,
+        frame=DEFAULT_FRAME,
+        within_frame_width=True,
+        within_frame_height=True,
+    )
+
+    _assert_pretty_repr_of_draft(
+        case.data,
+        exp_plain_output=case.expected_column_output,
+        frame=DEFAULT_FRAME,
+        config=OutputConfig(printer=PrettyPrinterLib.COLUMN),
         within_frame_width=True,
         within_frame_height=True,
     )

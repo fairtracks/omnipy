@@ -643,3 +643,21 @@ def test_fail_table_of_records_model_with_optional_fields_incorrect_input(
 
     with pytest.raises(ValidationError):
         RowwiseRecordsTableOptionalLastModel('John\tDoe\t37\textra')
+
+
+@pytest.mark.parametrize(
+    'column_data', [[1, 2, 3], ['a', 'b', 'c'], [True, False, True], [1.0, 'abc', None]],
+    ids=['integers', 'strings', 'booleans', 'mixed'])
+def test_column_model(column_data: list[object]) -> None:
+    from omnipy.components.tables.models import ColumnModel
+
+    col = ColumnModel(column_data)
+    assert col.content == column_data
+    assert col.to_data() == column_data
+
+
+def test_fail_column_model_invalid_input() -> None:
+    from omnipy.components.tables.models import ColumnModel
+
+    with pytest.raises(ValidationError):
+        ColumnModel([1 + 2j])  # complex numbers are not JsonScalar

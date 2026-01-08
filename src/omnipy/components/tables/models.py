@@ -53,6 +53,10 @@ class IterRow(Mapping[str, JsonScalar]):
         return False
 
 
+class PrintableTable:
+    ...
+
+
 if TYPE_CHECKING:
     from omnipy.data._mimic_models import RevertModelMimicTypingHack
 
@@ -103,6 +107,7 @@ if TYPE_CHECKING:
             RevertModelMimicTypingHack['RowWiseTableListOfDictsModel'],
             IsList[dict[str, JsonScalar]],
             Model[list[dict[str, JsonScalar]]],
+            PrintableTable,
     ):
         ...
 else:
@@ -110,6 +115,7 @@ else:
     class RowWiseTableListOfDictsModel(
             _RowWiseColNamesMixin,
             _RowWiseTableListOfDictsModel,
+            PrintableTable,
     ):
         ...
 
@@ -258,6 +264,7 @@ if TYPE_CHECKING:
             RevertModelMimicTypingHack['ColumnWiseTableDictOfListsModel'],
             IsDict[str, list[JsonScalar]],
             Model[dict[str, list[JsonScalar]]],
+            PrintableTable,
     ):
         ...
 
@@ -266,6 +273,7 @@ else:
     class ColumnWiseTableDictOfListsModel(
             _ColumnWiseTableDictOfListsMixin,
             _ColumnWiseTableDictOfListsModel,
+            PrintableTable,
     ):
         ...
 
@@ -325,6 +333,7 @@ if TYPE_CHECKING:
             RevertModelMimicTypingHack['RowWiseTableFirstRowAsColNamesModel'],
             IsList[dict[str, JsonScalar]],
             Model[list[dict[str, JsonScalar]]],
+            PrintableTable,
     ):
         ...
 
@@ -333,6 +342,7 @@ else:
     class RowWiseTableFirstRowAsColNamesModel(
             _RowWiseColNamesMixin,
             _RowWiseTableFirstRowAsColNamesModel,
+            PrintableTable,
     ):
         ...
 
@@ -550,6 +560,7 @@ if TYPE_CHECKING:
 
     class TableOfPydanticRecordsModel(RevertModelMimicTypingHack['TableOfPydanticRecordsModel'],
                                       Model_list[PydanticRecordModel[_PydRecordT]],
+                                      PrintableTable,
                                       Generic[_PydRecordT]):
         ...
 else:
@@ -557,6 +568,7 @@ else:
     class TableOfPydanticRecordsModel(Chain3[SplitToLinesModel,
                                              SplitLinesToColumnsModel,
                                              Model[list[PydanticRecordModel[_PydRecordT]]]],
+                                      PrintableTable,
                                       Generic[_PydRecordT]):
         ...
 
@@ -566,6 +578,7 @@ if TYPE_CHECKING:
     class CsvTableOfPydanticRecordsModel(
             RevertModelMimicTypingHack['CsvTableOfPydanticRecordsModel'],
             Model_list[PydanticRecordModel[_PydRecordT]],
+            PrintableTable,
             Generic[_PydRecordT]):
         ...
 else:
@@ -573,6 +586,7 @@ else:
     class CsvTableOfPydanticRecordsModel(Chain3[SplitToLinesModel,
                                                 SplitLinesToColumnsByCommaModel,
                                                 Model[list[PydanticRecordModel[_PydRecordT]]]],
+                                         PrintableTable,
                                          Generic[_PydRecordT]):
         ...
 
@@ -583,27 +597,45 @@ else:
 
 if TYPE_CHECKING:
 
-    class TsvTableModel(RevertModelMimicTypingHack['TsvTableModel'], Model_list[list[str]]):
+    class TsvTableModel(
+            RevertModelMimicTypingHack['TsvTableModel'],
+            Model_list[list[str]],
+            PrintableTable,
+    ):
         ...
 else:
 
-    class TsvTableModel(Chain3[
-            SplitToLinesModel,
-            SplitLinesToColumnsModel,
-            RowWiseTableFirstRowAsColNamesModel,
-    ]):
+    class TsvTableModel(
+            Chain3[
+                SplitToLinesModel,
+                SplitLinesToColumnsModel,
+                RowWiseTableFirstRowAsColNamesModel,
+            ],
+            PrintableTable,
+    ):
         ...
 
 
 if TYPE_CHECKING:
 
-    class CsvTableModel(RevertModelMimicTypingHack['CsvTableModel'], Model_list[list[str]]):
+    class CsvTableModel(
+            RevertModelMimicTypingHack['CsvTableModel'],
+            Model_list[list[str]],
+            PrintableTable,
+    ):
         ...
 else:
 
-    class CsvTableModel(Chain3[
-            SplitToLinesModel,
-            SplitLinesToColumnsByCommaModel,
-            RowWiseTableFirstRowAsColNamesModel,
-    ]):
+    class CsvTableModel(
+            Chain3[
+                SplitToLinesModel,
+                SplitLinesToColumnsByCommaModel,
+                RowWiseTableFirstRowAsColNamesModel,
+            ],
+            PrintableTable,
+    ):
         ...
+
+
+class ColumnModel(Model[list[JsonScalar]]):
+    pass

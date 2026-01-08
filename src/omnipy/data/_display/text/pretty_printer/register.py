@@ -3,6 +3,7 @@ from typing_extensions import assert_never
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.text.pretty_printer.base import PrettyPrinter
 from omnipy.data._display.text.pretty_printer.bytes import HexdumpPrettyPrinter
+from omnipy.data._display.text.pretty_printer.column import ColumnPrettyPrinter
 from omnipy.data._display.text.pretty_printer.compact_json import CompactJsonPrettyPrinter
 from omnipy.data._display.text.pretty_printer.devtools import DevtoolsPrettyPrinter
 from omnipy.data._display.text.pretty_printer.rich import RichPrettyPrinter
@@ -19,6 +20,8 @@ def get_pretty_printer_from_config_value(
             return DevtoolsPrettyPrinter()
         case PrettyPrinterLib.RICH:
             return RichPrettyPrinter()
+        case PrettyPrinterLib.COLUMN:
+            return ColumnPrettyPrinter()
         case PrettyPrinterLib.TEXT:
             return PlainTextPrettyPrinter()
         case PrettyPrinterLib.HEXDUMP:
@@ -30,6 +33,7 @@ def get_pretty_printer_from_config_value(
 def get_pretty_printer_from_content(draft_panel: DraftPanel) -> PrettyPrinter | None:
     for pretty_printer in [
             CompactJsonPrettyPrinter(),
+            ColumnPrettyPrinter(),
             PlainTextPrettyPrinter(),
             RichPrettyPrinter(),
             DevtoolsPrettyPrinter(),

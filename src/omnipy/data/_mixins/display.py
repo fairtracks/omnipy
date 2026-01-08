@@ -398,6 +398,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             frame = self._define_frame_from_available_display_dims(ui_type)
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
         max_num_panels_in_frame: None | int = self._calc_max_num_panels_in_frame(config, frame)
+
         layout: Layout[DraftPanel] = Layout()
 
         for i, (inner_title, model_or_dataset) in enumerate(nested_content.items()):
@@ -605,9 +606,12 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     ) -> DraftPanel:
         from omnipy.components.json.models import is_json_model_instance_hack
         from omnipy.components.raw.models import BytesModel, StrModel
+        from omnipy.components.tables.models import (ColumnModel,
+                                                     ColumnWiseTableDictOfListsModel,
+                                                     PrintableTable)
 
         syntax: SyntaxLanguage.Literals
-        if outer_type is str or isinstance(model, StrModel):
+        if outer_type is str or isinstance(model, (StrModel, PrintableTable)):
             syntax = SyntaxLanguage.TEXT
         elif outer_type is bytes or isinstance(model, BytesModel):
             syntax = SyntaxLanguage.HEXDUMP
@@ -619,12 +623,31 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         config = self._update_config_with_overflow_modes(config, 'text')
         config = dataclasses.replace(config, syntax=syntax)
         config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
-        return DraftPanel(
-            model,
-            title=title,
-            frame=frame,
-            config=config,
-        )
+
+        if isinstance(model, PrintableTable):
+            layout: Layout[DraftPanel] = Layout()
+
+            config = dataclasses.replace(config, max_title_height=MaxTitleHeight.ONE)
+            number_config = dataclasses.replace(
+                config, syntax=SyntaxLanguage.PYTHON, justify='right')
+
+            column_wise_table = ColumnWiseTableDictOfListsModel(model)
+
+            layout['#'] = DraftPanel(
+                '\n'.join(str(i) for i in range(len(column_wise_table))),
+                title='#',
+                frame=Frame(Dimensions(len(str(len(column_wise_table))), None), fixed_width=True),
+                config=number_config)
+
+            for i, column in enumerate(column_wise_table.col_names):
+                layout[column] = DraftPanel(
+                    ColumnModel(column_wise_table[column]), title=f'{i}. {column}', config=config)
+
+            content = layout
+        else:
+            content = model
+
+        return DraftPanel(content, title=title, frame=frame, config=config)
 
     def _update_config_with_overflow_modes(
         self,
