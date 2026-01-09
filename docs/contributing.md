@@ -2,67 +2,97 @@
 
 ## Development setup
 
-### Install Python, Poetry and dependencies
+### Install Python, uv and dependencies
 
 - Make sure that you have Python v3 available from your path. Installation of this depends on your
-  local setup. If you are using Conda, you can e.g. install a Python environment with:
+  local setup. We recommend using `conda`, `pyenv` or `asdf` to manage Python versions. If you are 
+  using Conda, you can install a Python environment with:
 
   - `conda create -n omnipy python=3.10`
   - `conda activate omnipy`
 
-- Install Poetry (and follow the instructions to add poetry to your PATH):
-  - `curl -sSL https://install.python-poetry.org | python3 -`
-
-- Configure locally installed virtualenv (under `.venv`):
-  - `poetry config virtualenvs.in-project true`
+- Install uv:
+  - `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 - Install dependencies:
-  - `poetry install --with dev --with docs`
+  - `uv sync --all-groups`
 
-### Poetry commands to update dependencies
+### uv commands
+
+#### Installing dependencies
+
+- Install all dependencies (including all groups):
+  - `uv sync --all-groups`
+
+- Install only main dependencies:
+  - `uv sync`
+
+- Install specific dependency groups:
+  - `uv sync --group dev`
+  - `uv sync --group docs`
+
+#### Updating dependencies
 
 - Update all dependencies:
-  - `poetry update`
+  - `uv lock --upgrade`
 
 - Update single dependency, e.g.:
-  - `poetry update prefect`
+  - `uv lock --upgrade-package prefect`
 
-- If a dependency is not updated to the latest version available on Pypi, you might need to clear
-  the pip cache of poetry:
-  - `poetry cache clear pypi --all`
+
+- If a dependency is not updated to the latest version available on Pypi,
+  you might need to clear the cache:
+  - `uv cache clean`
+
+#### Running commands
+
+- Run any command in the virtual environment:
+  - `uv run <command>`
+  - Examples:
+    - `uv run pytest`
+    - `uv run python script.py`
+    - `uv run mkdocs serve`
+
+#### Building and publishing
+
+- Build the package:
+  - `uv build`
+
+- Install in editable mode:
+  - `uv pip install -e .`
 
 ### Running tests
 
 - To run all tests, type:
-  - `pytest --mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process`
+  - `uv run pytest --mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process`
 
 - If you are repeatedly running tests on the command line, e.g.:
   - ```
     export PYTEST_ARGS="--mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process"
     ```
   - Using `zsh`, which is default shell on Mac:
-    - `pytest $=PYTEST_ARGS tests`
+    - `uv run pytest $=PYTEST_ARGS tests`
   - Using `bash`:
-    - `eval pytest $PYTEST_ARGS tests`
+    - `eval uv run pytest $PYTEST_ARGS tests`
 
 - With a specific subpackage/testmodule
   - Using `zsh`:
-    - `pytest $=PYTEST_ARGS tests/modules/json`
+    - `uv run pytest $=PYTEST_ARGS tests/modules/json`
   - Using `bash`:
-    - `eval pytest $PYTEST_ARGS tests/modules/json`
+    - `eval uv run pytest $PYTEST_ARGS tests/modules/json`
 
 - With a specific test module (this test example is a mypy typing test, which is the reason for the
   extra variables in the first place):
   - Using `zsh`:
-    - `pytest $=PYTEST_ARGS tests/modules/json/test_json_types.yml`
+    - `uv run pytest $=PYTEST_ARGS tests/modules/json/test_json_types.yml`
   - Using `bash`:
-    - `eval pytest $PYTEST_ARGS tests/modules/json/test_json_types.yml`
+    - `eval uv run pytest $PYTEST_ARGS tests/modules/json/test_json_types.yml`
 
 - With a specific test:
   - Using `zsh`:
-    - `pytest $=PYTEST_ARGS tests/modules/json/test_json_types.yml::test_json_scalar`
+    - `uv run pytest $=PYTEST_ARGS tests/modules/json/test_json_types.yml::test_json_scalar`
   - Using `bash`:
-    - `eval pytest $PYTEST_ARGS tests/modules/json/test_json_types.yml::test_json_scalar`
+    - `eval uv run pytest $PYTEST_ARGS tests/modules/json/test_json_types.yml::test_json_scalar`
 
 ## Note on Python type checkers
 
@@ -79,17 +109,15 @@ Information on how to configure `pyright` for `PyCharm` and `JupyterLab` will be
 
 ### Configure PyCharm project for Omnipy
 
-- Preparation (in terminal). Note the paths to the Python and Poetry binaries:
+- Preparation (in terminal). Note the path to the Python binary:
   - `which python`
-  - `which poetry`
 
 - In Setting/Preferences dialog:
   - Select Project Interpreter (under Project: omnipy)
     - Click "Add interpreter" -> "Add Local Interpreter"
-    - Select "Poetry Environment"
-    - Click the three dots button under "Base Interpreter". Paste the path to the Python binary
-    - Make sure that "Install packages from pyproject.toml" is checked
-    - Under "Poetry Executable", paste the path to the Poetry binary
+    - Select "Existing environment"
+    - Select "uv"
+    - Make sure that the `.venv/bin/python` binary in your project directory is selected
     - Click "OK"
 
   - Select "Project structure"

@@ -12,14 +12,14 @@ build:
     - language-pack-en
   jobs:
     post_create_environment:
-      # Install poetry
-      # https://python-poetry.org/docs/#installing-manually
-      - python -m pip install poetry==2.0
+      # Install uv
+      # https://docs.astral.sh/uv/
+      - curl -LsSf https://astral.sh/uv/install.sh | sh
+      - echo "$HOME/.local/bin" >> $GITHUB_PATH
     post_install:
       # Install dependencies with 'docs' dependency group
-      # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
-      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry install --with docs
+      - uv sync --group docs
       # Generate code documentation skeleton
-      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python docs/gen_ref_pages.py
+      - uv run python docs/gen_ref_pages.py
 mkdocs:
   configuration: mkdocs.yml

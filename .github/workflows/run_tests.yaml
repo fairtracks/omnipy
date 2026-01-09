@@ -15,14 +15,15 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
       - name: Install dependencies
         run: |
-          curl -sSL https://install.python-poetry.org | python3 - --version 2.0.0
-          $HOME/.local/bin/poetry install
+          uv sync --all-groups
       - name: Install locale - de_DE.UTF-8
         run: |
           sudo locale-gen de_DE.UTF-8
           sudo update-locale LANG=de_DE.UTF-8
       - name: Test with pytest
         run: |
-          poetry run pytest -v --mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process
+          uv run pytest -v --mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process
