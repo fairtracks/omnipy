@@ -886,6 +886,17 @@ def test_nested_validation_level_two_models_at_both_levels(runtime: Annotated[Is
     assert dataset['data_file_1'].content == [Model[list[int]]([345])]
 
 
+def test_nested_validation_init_parameters_as_keys_in_data() -> None:
+    nested_dataset = Dataset[Dataset[Model[str | int]]](a=dict(self=4, value=3, data='abc'))
+    assert nested_dataset['a'].to_data() == {'self': 4, 'value': 3, 'data': 'abc'}
+
+    nested_dataset['b'] = dict(self=6, value=5, data='def')
+    assert nested_dataset['b'].to_data() == {'self': 6, 'value': 5, 'data': 'def'}
+
+    nested_dataset['c'] = [('self', 8), ('value', 7), ('data', 'ghi')]
+    assert nested_dataset['c'].to_data() == {'self': 8, 'value': 7, 'data': 'ghi'}
+
+
 def test_validation_pydantic_types():
     dataset_1 = Dataset[Model[pyd.PositiveInt]]()
 

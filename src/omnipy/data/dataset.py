@@ -657,7 +657,7 @@ class Dataset(
         if is_iterable(value) and not isinstance(value, Mapping):
             value = cls._check_iterable(value)
 
-        return super().validate(value)
+        return super().validate({'data': value})
 
     @classmethod
     def update_forward_refs(cls, **localns: Any) -> None:
