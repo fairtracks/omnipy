@@ -1,6 +1,7 @@
 """Tests for docstring macro expansion."""
 
 import os
+from textwrap import dedent
 
 import pytest
 
@@ -11,59 +12,79 @@ from omnipy.util.docstr_macros import (expand_macros,
 
 
 @pytest.fixture
-def sample_macros():
+def sample_macros() -> dict[str, str]:
     """Provide sample macro definitions for testing."""
     return {
         '{{COMMON_PARAM}}':
-            'Parameters:\n    param1 (str): First parameter\n    param2 (int): Second parameter',
+            dedent("""\
+            Args:
+                param1 (str): First parameter
+                param2 (int): Second parameter"""),
         '{{COMMON_RETURN}}':
-            'Returns:\n    dict: A dictionary result',
+            dedent("""\
+            Returns:
+                dict: A dictionary result"""),
         '{{EXAMPLE}}':
-            'Example:\n    >>> obj.method()\n    result',
+            dedent("""\
+            Example:
+                >>> obj.method()
+                result"""),
     }
 
 
-def test_find_macros_in_docstring(sample_macros):
+def test_find_macros_in_docstring(sample_macros) -> None:
     """Test finding macros in docstrings."""
-    docstring = 'My function.\n\n{{COMMON_PARAM}}\n\n{{COMMON_RETURN}}'
+    docstring = dedent("""\
+        My function.
+
+        {{COMMON_PARAM}}
+
+        {{COMMON_RETURN}}""")
     found = find_macros_in_docstring(docstring, sample_macros)
     assert found == {'{{COMMON_PARAM}}', '{{COMMON_RETURN}}'}
 
 
-def test_find_no_macros(sample_macros):
+def test_find_no_macros(sample_macros) -> None:
     """Test when no macros are present."""
     docstring = 'Simple docstring with no macros.'
     found = find_macros_in_docstring(docstring, sample_macros)
     assert found == set()
 
 
-def test_expand_macros(sample_macros):
+def test_expand_macros(sample_macros) -> None:
     """Test expanding macros in text."""
-    text = 'My function.\n\n{{COMMON_PARAM}}'
+    text = dedent("""\
+        My function.
+
+        {{COMMON_PARAM}}""")
     expanded = expand_macros(text, sample_macros)
     assert '{{COMMON_PARAM}}' not in expanded
-    assert 'param1 (str): First parameter' in expanded
+    assert '    param1 (str): First parameter' in expanded
 
 
-def test_expand_multiple_macros(sample_macros):
+def test_expand_multiple_macros(sample_macros) -> None:
     """Test expanding multiple macros."""
-    text = '{{COMMON_PARAM}}\n\n{{COMMON_RETURN}}'
+    text = dedent("""\
+        {{COMMON_PARAM}}
+
+        {{COMMON_RETURN}}""")
     expanded = expand_macros(text, sample_macros)
     assert '{{COMMON_PARAM}}' not in expanded
     assert '{{COMMON_RETURN}}' not in expanded
-    assert 'param1 (str)' in expanded
+    assert '    param1 (str)' in expanded
     assert 'Returns:' in expanded
 
 
-def test_process_content_first_expansion(sample_macros):
+def test_process_content_first_expansion(sample_macros) -> None:
     """Test first-time macro expansion in content."""
-    source = '''def my_function():
-    """My function.
-    
-    {{COMMON_PARAM}}
-    """
-    pass
-'''
+    source = dedent('''\
+        def my_function():
+            """My function.
+
+            {{COMMON_PARAM}}
+            """
+            pass
+        ''')
 
     result, modified = process_content(source, sample_macros)
 
@@ -71,15 +92,16 @@ def test_process_content_first_expansion(sample_macros):
     assert '# %% Original docstring with macros' in result
     assert '# My function.' in result
     assert '#     {{COMMON_PARAM}}' in result  # Note: indentation preserved
-    assert 'param1 (str): First parameter' in result
+    assert '    param1 (str): First parameter' in result
 
 
-def test_process_content_no_macros(sample_macros):
+def test_process_content_no_macros(sample_macros) -> None:
     """Test content without macros is unchanged."""
-    source = '''def my_function():
-    """Simple docstring."""
-    pass
-'''
+    source = dedent('''\
+        def my_function():
+            """Simple docstring."""
+            pass
+        ''')
 
     result, modified = process_content(source, sample_macros)
 
@@ -87,43 +109,45 @@ def test_process_content_no_macros(sample_macros):
     assert result == source
 
 
-def test_process_content_reexpansion(sample_macros):
+def test_process_content_reexpansion(sample_macros) -> None:
     """Test re-expansion when macro definition changes."""
     # Content that's already been processed
-    source = '''def my_function():
-    # %% Original docstring with macros (managed by copy_docstrings.py) %%
-    # My function.
-    # 
-    #     {{COMMON_PARAM}}
-    """My function.
-    
-    Parameters:
-        param1 (str): OLD VALUE
-    """
-    pass
-'''
+    source = dedent('''\
+        def my_function():
+            # %% Original docstring with macros (managed by copy_docstrings.py) %%
+            # My function.
+            #
+            #     {{COMMON_PARAM}}
+            """My function.
+
+            Args:
+                param1 (str): OLD VALUE
+            """
+            pass
+        ''')
 
     result, modified = process_content(source, sample_macros)
 
     assert modified
-    assert 'param1 (str): First parameter' in result
+    assert '    param1 (str): First parameter' in result
     assert 'OLD VALUE' not in result
     assert '#     {{COMMON_PARAM}}' in result  # Original preserved with indentation
 
 
-def test_process_content_mixed_text_and_macros(sample_macros):
+def test_process_content_mixed_text_and_macros(sample_macros) -> None:
     """Test docstring with custom text mixed with macros."""
-    source = '''def my_function():
-    """My custom function.
-    
-    This does something special.
-    
-    {{COMMON_PARAM}}
-    
-    Note: Important detail!
-    """
-    pass
-'''
+    source = dedent('''\
+        def my_function():
+            """My custom function.
+
+            This does something special.
+
+            {{COMMON_PARAM}}
+
+            Note: Important detail!
+            """
+            pass
+        ''')
 
     result, modified = process_content(source, sample_macros)
 
@@ -133,52 +157,54 @@ def test_process_content_mixed_text_and_macros(sample_macros):
     assert '#     {{COMMON_PARAM}}' in result  # With indentation
     assert '#     Note: Important detail!' in result  # With indentation
     assert 'This does something special.' in result  # In expanded docstring
-    assert 'param1 (str): First parameter' in result
+    assert '    param1 (str): First parameter' in result
 
 
-def test_process_content_class_docstring(sample_macros):
+def test_process_content_class_docstring(sample_macros) -> None:
     """Test macro expansion in class docstrings."""
-    source = '''class MyClass:
-    """My class.
-    
-    {{COMMON_PARAM}}
-    """
-    pass
-'''
+    source = dedent('''\
+        class MyClass:
+            """My class.
+
+            {{COMMON_PARAM}}
+            """
+            pass
+        ''')
 
     result, modified = process_content(source, sample_macros)
 
     assert modified
     assert '# %% Original docstring with macros' in result
-    assert 'param1 (str): First parameter' in result
+    assert '    param1 (str): First parameter' in result
 
 
-def test_process_content_multiple_docstrings(sample_macros):
+def test_process_content_multiple_docstrings(sample_macros) -> None:
     """Test processing multiple docstrings in same file."""
-    source = '''class MyClass:
-    """Class docstring.
-    
-    {{COMMON_PARAM}}
-    """
-    
-    def method(self):
-        """Method docstring.
-        
-        {{COMMON_RETURN}}
-        """
-        pass
-'''
+    source = dedent('''\
+        class MyClass:
+            """Class docstring.
+
+            {{COMMON_PARAM}}
+            """
+
+            def method(self):
+                """Method docstring.
+
+                {{COMMON_RETURN}}
+                """
+                pass
+        ''')
 
     result, modified = process_content(source, sample_macros)
 
     assert modified
     # Should have two comment blocks
     assert result.count('# %% Original docstring with macros') == 2
-    assert 'param1 (str): First parameter' in result
+    assert '    param1 (str): First parameter' in result
     assert 'Returns:' in result
 
 
-def test_get_macros_from_env():
+def test_get_macros_from_env() -> None:
     """Test loading macros from environment variables."""
     # Set up test environment variables
     os.environ['OMNIPY_MACRO_TEST1'] = 'Value 1'
@@ -200,25 +226,28 @@ def test_get_macros_from_env():
         del os.environ['OTHER_VAR']
 
 
-def test_process_content_indented_docstring(sample_macros):
+def test_process_content_indented_docstring(sample_macros) -> None:
     """Test macro expansion in indented contexts."""
-    source = '''class MyClass:
-    def my_method(self):
-        """Method docstring.
-        
-        {{COMMON_PARAM}}
-        """
-        pass
-'''
+    source = dedent('''\
+        class MyClass:
+            def my_method(self):
+                """Method docstring.
+
+                {{COMMON_PARAM}}
+                """
+                pass
+        ''')
 
     result, modified = process_content(source, sample_macros)
 
     assert modified
+
+    # Double indentation (class + method + docstring)
     assert '        # %% Original docstring with macros' in result
-    assert '        #         {{COMMON_PARAM}}' in result  # Double indentation (class + method + docstring)
+    assert '        #         {{COMMON_PARAM}}' in result
 
 
-def test_process_content_empty_string(sample_macros):
+def test_process_content_empty_string(sample_macros) -> None:
     """Test processing empty content."""
     result, modified = process_content('', sample_macros)
 
@@ -226,15 +255,16 @@ def test_process_content_empty_string(sample_macros):
     assert result == ''
 
 
-def test_process_content_triple_single_quotes(sample_macros):
+def test_process_content_triple_single_quotes(sample_macros) -> None:
     """Test with triple single quote docstrings."""
-    source = """def my_function():
-    '''My function.
-    
-    {{COMMON_PARAM}}
-    '''
-    pass
-"""
+    source = dedent("""\
+        def my_function():
+            '''My function.
+
+            {{COMMON_PARAM}}
+            '''
+            pass
+        """)
 
     result, modified = process_content(source, sample_macros)
 
