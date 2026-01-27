@@ -17,8 +17,13 @@ def get_macros_from_env() -> dict[str, str]:
     Load macro definitions from environment variables.
 
     Environment variables starting with 'OMNIPY_MACRO_' are treated as macro definitions.
-    For example, OMNIPY_MACRO_COMMON_PARAM='Parameters:\n  param1: desc' defines
-    the macro {{COMMON_PARAM}}.
+    For example:
+
+    ```bash
+    OMNIPY_MACRO_COMMON_PARAM='Parameters:\n  param1: desc'
+    ```
+
+    defines the macro COMMON_PARAM.
 
     Returns:
         Dict mapping macro names (with {{...}} delimiters) to their expansion values
@@ -55,9 +60,8 @@ def expand_macros(text: str, macros: dict[str, str]) -> str:
     return result
 
 
-def process_content(content: str,
-                    macros: dict[str, str],
-                    verbose: bool = False) -> tuple[str, bool]:
+def process_content(  # noqa: C901
+        content: str, macros: dict[str, str], verbose: bool = False) -> tuple[str, bool]:
     """
     Process Python source code, expanding macros in docstrings.
 
@@ -153,7 +157,7 @@ def process_content(content: str,
             new_docstring = f'{comment_block}{indent}{prefix}{quote}{expanded_content}{quote}'
 
             if verbose:
-                print(f'  Re-expanding docstring with macros')
+                print('  Re-expanding docstring with macros')
 
             modified = True
             return new_docstring
@@ -177,7 +181,7 @@ def process_content(content: str,
             new_docstring = f'{comment_block}{indent}{prefix}{quote}{expanded_content}{quote}'
 
             if verbose:
-                print(f'  Expanding docstring with macros')
+                print('  Expanding docstring with macros')
 
             modified = True
             return new_docstring
