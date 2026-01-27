@@ -83,14 +83,13 @@ def process_content(  # noqa: C901
     # Build the pattern with the marker prefix escaped properly
     escaped_prefix = re.escape(ORIGINAL_DOCSTRING_PREFIX)
     pattern = rf'''
-        ^([\ \t]*)                              # Capture indentation at start of line
+        ^([\ \t]*)                             # Capture indentation at start of line
         (?:
             \#\ {escaped_prefix}\n             # Marker line
             (?:\1\#\ .*\n)*                    # Multiple comment lines with original docstring
             \1                                 # Same indentation before actual docstring
         )?
         (                                      # Capture the quote style and docstring
-            (?:r)?                             # Optional 'r' prefix
             ("""|\'\'\')                       # Opening quotes
             .*?                                # Docstring content (non-greedy)
             \3                                 # Closing quotes (same as opening quotes)
@@ -114,11 +113,7 @@ def process_content(  # noqa: C901
         else:
             quote = "'''"
 
-        is_raw = docstring_part.startswith('r')
-        if is_raw:
-            start_idx = docstring_part.index(quote) + 3
-        else:
-            start_idx = len(quote)
+        start_idx = len(quote)
 
         end_idx = docstring_part.rindex(quote)
         docstring_content = docstring_part[start_idx:end_idx]
@@ -153,8 +148,7 @@ def process_content(  # noqa: C901
                 comment_block += f'{indent}# {line}\n'
 
             # Rebuild docstring
-            prefix = 'r' if is_raw else ''
-            new_docstring = f'{comment_block}{indent}{prefix}{quote}{expanded_content}{quote}'
+            new_docstring = f'{comment_block}{indent}{quote}{expanded_content}{quote}'
 
             if verbose:
                 print('  Re-expanding docstring with macros')
@@ -177,8 +171,7 @@ def process_content(  # noqa: C901
             expanded_content = expand_macros(docstring_content, macros)
 
             # Rebuild docstring
-            prefix = 'r' if is_raw else ''
-            new_docstring = f'{comment_block}{indent}{prefix}{quote}{expanded_content}{quote}'
+            new_docstring = f'{comment_block}{indent}{quote}{expanded_content}{quote}'
 
             if verbose:
                 print('  Expanding docstring with macros')
