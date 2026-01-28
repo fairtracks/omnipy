@@ -6,7 +6,6 @@ the original docstring (with unexpanded macros) in comment blocks above the docs
 """
 
 import re
-from typing import Set
 
 # Constants
 ORIGINAL_DOCSTRING_PREFIX = '%% Original docstring with macros (managed by copy_docstrings.py) %%'
@@ -43,7 +42,7 @@ def get_macros_from_env() -> dict[str, str]:
     return macros
 
 
-def find_macros_in_docstring(docstring: str, macros: dict[str, str]) -> Set[str]:
+def find_macros_in_docstring(docstring: str, macros: dict[str, str]) -> set[str]:
     """Find all macro references in a docstring."""
     macros_found = set()
     for macro_name in macros.keys():
@@ -60,13 +59,81 @@ def expand_macros(text: str, macros: dict[str, str]) -> str:
     return result
 
 
+def extract_original_docstring_from_comment_block(
+    comment_block: str,
+    verbose: bool = False,
+) -> str:
+    """Extract the original unexpanded docstring from comment block."""
+    original_lines = []
+    for line in comment_block.split('\n'):
+        stripped = line.strip()
+        if stripped.startswith('# ') and not stripped.startswith(f'# {ORIGINAL_DOCSTRING_PREFIX}'):
+            original_lines.append(stripped[2:])  # Remove '# ' prefix
+
+    original_docstring = '\n'.join(original_lines)
+
+    if verbose:
+        print('  Extracting original docstring from comment block')
+
+    return original_docstring
+
+
+def create_docblock_with_expansion(
+    matched_docblock: str,
+    original_docstring: str,
+    indent: str,
+    quote: str,
+    macros: dict[str, str],
+    verbose: bool = False,
+) -> tuple[str, bool]:
+    """
+    Create a new docblock (comment block + docstring) with macros expanded.
+
+    Args:
+        matched_docblock: The entire matched text (may include existing comments)
+        indent: Indentation string
+        original_docstring: The unexpanded docstring text (with macros)
+        quote: Quote style (single or double triple quotes)
+        macros: Macro definitions
+        verbose: Whether to print verbose output
+
+    Returns:
+        Tuple of (new_docblock, was_modified)
+    """
+    # Check if original has macros
+    macros_found = find_macros_in_docstring(original_docstring, macros)
+
+    if not macros_found:
+        return matched_docblock, False  # No macros, keep as is
+
+    # Expand macros
+    expanded_docstring = expand_macros(original_docstring, macros)
+
+    # Check if expansion changed
+    if expanded_docstring == original_docstring:
+        return matched_docblock, False  # No change needed
+
+    # Build comment block with original docstring (unexpanded)
+    comment_block = f'{indent}# {ORIGINAL_DOCSTRING_PREFIX}\n'
+    for line in original_docstring.split('\n'):
+        comment_block += f'{indent}# {line}\n'
+
+    # Build complete docblock: comment + expanded docstring
+    new_docblock = f'{comment_block}{indent}{quote}{expanded_docstring}{quote}'
+
+    if verbose:
+        print('  Expanding docstring with macros')
+
+    return new_docblock, True
+
+
 def process_content(  # noqa: C901
         content: str, macros: dict[str, str], verbose: bool = False) -> tuple[str, bool]:
     """
     Process Python source code, expanding macros in docstrings.
 
-    Preserves complete original docstrings (with unexpanded macros) in comment blocks
-    immediately before the expanded docstring.
+    Preserves complete original docstrings (with unexpanded macros) in
+    comment blocks immediately before the expanded docstring.
 
     Args:
         content: Python source code as a string
@@ -84,103 +151,54 @@ def process_content(  # noqa: C901
     escaped_prefix = re.escape(ORIGINAL_DOCSTRING_PREFIX)
     pattern = rf'''
         ^([\ \t]*)                             # Capture indentation at start of line
-        (?:
+        (
             \#\ {escaped_prefix}\n             # Marker line
             (?:\1\#\ .*\n)*                    # Multiple comment lines with original docstring
             \1                                 # Same indentation before actual docstring
         )?
-        (                                      # Capture the quote style and docstring
-            ("""|\'\'\')                       # Opening quotes
-            .*?                                # Docstring content (non-greedy)
-            \3                                 # Closing quotes (same as opening quotes)
-        )
+        ("""|\'\'\')                           # Opening quotes
+        (.*?)                                  # Docstring content (non-greedy)
+        \3                                     # Closing quotes (same as opening quotes)
     '''
 
     modified = False
 
-    def replace_docstring(match):
+    def replace_docblock(match: re.Match[str]) -> str:
+        """
+        Replace a full docblock (comment + docstring), expanding any macros
+        found.
+        """
         nonlocal modified
-        indent = match.group(1)
-        full_match = match.group(0)
-        docstring_part = match.group(2)
 
-        # Check if this already has an ORIGINAL_DOCSTRING marker
-        has_marker = f'# {ORIGINAL_DOCSTRING_PREFIX}' in full_match
+        matched_docblock = match.group(0)  # Entire match (may include comment block)
+        indent = match.group(1)  # Indentation (assuming same indentation for entire block)
+        comment_block: str | None = match.group(2)  # Comment block if present, else None
+        quote = match.group(3)  # Quote style (triple single or double)
+        docstring_content = match.group(4)  # Just the docstring content
 
-        # Extract the actual docstring content
-        if '"""' in docstring_part:
-            quote = '"""'
+        if comment_block is not None:
+            # Extract the original (unexpanded) docstring from comments
+            original_docstring = extract_original_docstring_from_comment_block(comment_block)
         else:
-            quote = "'''"
+            # First time - the docstring text is the original
+            original_docstring = docstring_content
 
-        start_idx = len(quote)
+        new_docblock, was_modified = create_docblock_with_expansion(
+            matched_docblock,
+            original_docstring,
+            indent,
+            quote,
+            macros,
+            verbose,
+        )
 
-        end_idx = docstring_part.rindex(quote)
-        docstring_content = docstring_part[start_idx:end_idx]
-
-        if has_marker:
-            # Extract original docstring from comment
-            original_lines = []
-            for line in full_match.split('\n'):
-                stripped = line.strip()
-                if stripped.startswith(
-                        '# ') and not stripped.startswith(f'# {ORIGINAL_DOCSTRING_PREFIX}'):
-                    original_lines.append(stripped[2:])  # Remove '# ' prefix
-
-            original_docstring = '\n'.join(original_lines)
-
-            # Check if original has macros
-            macros_found = find_macros_in_docstring(original_docstring, macros)
-
-            if not macros_found:
-                return match.group(0)  # No macros, keep as is
-
-            # Re-expand from original
-            expanded_content = expand_macros(original_docstring, macros)
-
-            # Check if expansion changed
-            if expanded_content == docstring_content:
-                return match.group(0)  # No change needed
-
-            # Build comment block with original
-            comment_block = f'{indent}# {ORIGINAL_DOCSTRING_PREFIX}\n'
-            for line in original_docstring.split('\n'):
-                comment_block += f'{indent}# {line}\n'
-
-            # Rebuild docstring
-            new_docstring = f'{comment_block}{indent}{quote}{expanded_content}{quote}'
-
-            if verbose:
-                print('  Re-expanding docstring with macros')
-
+        if was_modified:
             modified = True
-            return new_docstring
-        else:
-            # First time - check for macros
-            macros_found = find_macros_in_docstring(docstring_content, macros)
 
-            if not macros_found:
-                return match.group(0)  # No macros, return unchanged
-
-            # Store original docstring in comment block
-            comment_block = f'{indent}# {ORIGINAL_DOCSTRING_PREFIX}\n'
-            for line in docstring_content.split('\n'):
-                comment_block += f'{indent}# {line}\n'
-
-            # Expand macros
-            expanded_content = expand_macros(docstring_content, macros)
-
-            # Rebuild docstring
-            new_docstring = f'{comment_block}{indent}{quote}{expanded_content}{quote}'
-
-            if verbose:
-                print('  Expanding docstring with macros')
-
-            modified = True
-            return new_docstring
+        return new_docblock
 
     # Apply the replacement
     new_content = re.sub(
-        pattern, replace_docstring, content, flags=re.VERBOSE | re.DOTALL | re.MULTILINE)
+        pattern, replace_docblock, content, flags=re.VERBOSE | re.DOTALL | re.MULTILINE)
 
     return new_content, modified

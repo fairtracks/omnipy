@@ -32,6 +32,28 @@ def sample_macros() -> dict[str, str]:
     }
 
 
+def test_get_macros_from_env() -> None:
+    """Test loading macros from environment variables."""
+    # Set up test environment variables
+    os.environ['OMNIPY_MACRO_TEST1'] = 'Value 1'
+    os.environ['OMNIPY_MACRO_TEST2'] = 'Value 2'
+    os.environ['OTHER_VAR'] = 'Should be ignored'
+
+    try:
+        macros = get_macros_from_env()
+
+        assert '{{TEST1}}' in macros
+        assert '{{TEST2}}' in macros
+        assert macros['{{TEST1}}'] == 'Value 1'
+        assert macros['{{TEST2}}'] == 'Value 2'
+        assert '{{OTHER_VAR}}' not in macros
+    finally:
+        # Clean up
+        del os.environ['OMNIPY_MACRO_TEST1']
+        del os.environ['OMNIPY_MACRO_TEST2']
+        del os.environ['OTHER_VAR']
+
+
 def test_find_macros_in_docstring(sample_macros) -> None:
     """Test finding macros in docstrings."""
     docstring = dedent("""\
@@ -202,28 +224,6 @@ def test_process_content_multiple_docstrings(sample_macros) -> None:
     assert result.count('# %% Original docstring with macros') == 2
     assert '    param1 (str): First parameter' in result
     assert 'Returns:' in result
-
-
-def test_get_macros_from_env() -> None:
-    """Test loading macros from environment variables."""
-    # Set up test environment variables
-    os.environ['OMNIPY_MACRO_TEST1'] = 'Value 1'
-    os.environ['OMNIPY_MACRO_TEST2'] = 'Value 2'
-    os.environ['OTHER_VAR'] = 'Should be ignored'
-
-    try:
-        macros = get_macros_from_env()
-
-        assert '{{TEST1}}' in macros
-        assert '{{TEST2}}' in macros
-        assert macros['{{TEST1}}'] == 'Value 1'
-        assert macros['{{TEST2}}'] == 'Value 2'
-        assert '{{OTHER_VAR}}' not in macros
-    finally:
-        # Clean up
-        del os.environ['OMNIPY_MACRO_TEST1']
-        del os.environ['OMNIPY_MACRO_TEST2']
-        del os.environ['OTHER_VAR']
 
 
 def test_process_content_indented_docstring(sample_macros) -> None:
