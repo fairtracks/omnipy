@@ -16,13 +16,24 @@ The `copy_docstrings.py` hook maintains DRY documentation by expanding reusable 
 
 #### 1. Define macros via environment variables
 
-```bash
-export OMNIPY_MACRO_COMMON_PARAM='Parameters:
-    param1 (str): The first parameter
-    param2 (int): The second parameter'
+```python
+import os
+from textwrap import dedent
 
-export OMNIPY_MACRO_COMMON_RETURN='Returns:
-    dict: A dictionary containing the results'
+from omnipy.util.helpers import is_package_editable
+
+if is_package_editable('omnipy'):  # Only define environment variables when developing
+    os.environ['OMNIPY_MACRO_COMMON_PARAM'] = dedent("""\
+    Parameters:
+        param1 (int): Description of param1.
+        param2 (str): Description of param2.
+    """)
+
+    os.environ['OMNIPY_MACRO_COMMON_RETURN'] = dedent("""\
+    Returns:
+        dict: A dictionary containing results.
+    """)
+
 ```
 
 The environment variable `OMNIPY_MACRO_COMMON_PARAM` defines the macro `{{COMMON_PARAM}}`.
