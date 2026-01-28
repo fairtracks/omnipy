@@ -58,7 +58,7 @@ def expand_macros(text: str, macros: dict[str, str]) -> str:
     return result
 
 
-def extract_original_docstring_from_comment_block(
+def _extract_original_docstring_from_comment_block(
     comment_block: str,
     verbose: bool = False,
 ) -> str:
@@ -77,7 +77,7 @@ def extract_original_docstring_from_comment_block(
     return original_docstring
 
 
-def create_docblock_with_expansion(
+def _create_docblock_with_expansion(
     matched_docblock: str,
     original_docstring: str,
     indent: str,
@@ -162,7 +162,7 @@ def process_content(  # noqa: C901
 
     modified = False
 
-    def replace_docblock(match: re.Match[str]) -> str:
+    def _replace_docblock(match: re.Match[str]) -> str:
         """
         Replace a full docblock (comment + docstring), expanding any macros
         found.
@@ -177,12 +177,12 @@ def process_content(  # noqa: C901
 
         if comment_block is not None:
             # Extract the original (unexpanded) docstring from comments
-            original_docstring = extract_original_docstring_from_comment_block(comment_block)
+            original_docstring = _extract_original_docstring_from_comment_block(comment_block)
         else:
             # First time - the docstring text is the original
             original_docstring = docstring_content
 
-        new_docblock, was_modified = create_docblock_with_expansion(
+        new_docblock, was_modified = _create_docblock_with_expansion(
             matched_docblock,
             original_docstring,
             indent,
@@ -198,6 +198,6 @@ def process_content(  # noqa: C901
 
     # Apply the replacement
     new_content = re.sub(
-        pattern, replace_docblock, content, flags=re.VERBOSE | re.DOTALL | re.MULTILINE)
+        pattern, _replace_docblock, content, flags=re.VERBOSE | re.DOTALL | re.MULTILINE)
 
     return new_content, modified
