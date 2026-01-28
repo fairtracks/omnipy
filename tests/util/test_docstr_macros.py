@@ -136,7 +136,7 @@ def test_process_content_reexpansion(sample_macros) -> None:
     # Content that's already been processed
     source = dedent('''\
         def my_function():
-            # %% Original docstring with macros (managed by copy_docstrings.py) %%
+            # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
             # My function.
             #
             #     {{COMMON_PARAM}}

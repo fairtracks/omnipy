@@ -59,7 +59,7 @@ def main():
     files = [arg for arg in sys.argv[1:] if not arg.startswith('-')]
 
     if not files:
-        print('Usage: copy_docstrings.py [--verbose] <file1.py> <file2.py> ...')
+        print('Usage: expand_docstring_macros.py [--verbose] <file1.py> <file2.py> ...')
         sys.exit(0)
 
     # Load macros from environment variables

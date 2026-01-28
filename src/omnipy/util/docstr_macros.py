@@ -8,7 +8,8 @@ the original docstring (with unexpanded macros) in comment blocks above the docs
 import re
 
 # Constants
-ORIGINAL_DOCSTRING_PREFIX = '%% Original docstring with macros (managed by copy_docstrings.py) %%'
+ORIGINAL_DOCSTRING_PREFIX =\
+    '%% Original docstring with macros (managed by expand_docstring_macros.py) %%'
 ENV_MACRO_PREFIX = 'OMNIPY_MACRO_'
 
 
