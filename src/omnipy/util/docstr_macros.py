@@ -3,6 +3,12 @@ Docstring macro expansion utilities.
 
 This module provides functionality to expand macros in Python docstrings while preserving
 the original docstring (with unexpanded macros) in comment blocks above the docstring.
+
+Authors:
+    - Sveinung Gundersen (concept, requirements, review and refactoring)
+    - GitHub Copilot w/ Claude Sonnet 4.5 (impl. assistance, January 2026)
+
+Created: January 2026
 """
 
 import re

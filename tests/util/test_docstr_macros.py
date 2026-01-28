@@ -1,4 +1,12 @@
-"""Tests for docstring macro expansion."""
+"""
+Tests for docstring macro expansion.
+
+Authors:
+    - Sveinung Gundersen (concept, requirements, review and refactoring)
+    - GitHub Copilot w/ Claude Sonnet 4.5 (impl. assistance, January 2026)
+
+Created: January 2026
+"""
 
 import os
 from textwrap import dedent

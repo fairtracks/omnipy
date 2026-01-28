@@ -4,6 +4,12 @@ Pre-commit hook to expand macros in docstrings.
 
 Preserves macro references in comments immediately before docstrings.
 Macros are defined via environment variables starting with 'OMNIPY_MACRO_'.
+
+Authors:
+    - Sveinung Gundersen (concept, requirements, review and refactoring)
+    - GitHub Copilot w/ Claude Sonnet 4.5 (impl. assistance, January 2026)
+
+Created: January 2026
 """
 
 from pathlib import Path
