@@ -15,16 +15,16 @@ from omnipy.util.docstr_macros import (expand_macros,
 def sample_macros() -> dict[str, str]:
     """Provide sample macro definitions for testing."""
     return {
-        '{{COMMON_PARAM}}':
+        'COMMON_PARAM':
             dedent("""\
             Args:
                 param1 (str): First parameter
                 param2 (int): Second parameter"""),
-        '{{COMMON_RETURN}}':
+        'COMMON_RETURN':
             dedent("""\
             Returns:
                 dict: A dictionary result"""),
-        '{{EXAMPLE}}':
+        'EXAMPLE':
             dedent("""\
             Example:
                 >>> obj.method()
@@ -42,11 +42,11 @@ def test_get_macros_from_env() -> None:
     try:
         macros = get_macros_from_env()
 
-        assert '{{TEST1}}' in macros
-        assert '{{TEST2}}' in macros
-        assert macros['{{TEST1}}'] == 'Value 1'
-        assert macros['{{TEST2}}'] == 'Value 2'
-        assert '{{OTHER_VAR}}' not in macros
+        assert 'TEST1' in macros
+        assert 'TEST2' in macros
+        assert macros['TEST1'] == 'Value 1'
+        assert macros['TEST2'] == 'Value 2'
+        assert 'OTHER_VAR' not in macros
     finally:
         # Clean up
         del os.environ['OMNIPY_MACRO_TEST1']
@@ -63,7 +63,7 @@ def test_find_macros_in_docstring(sample_macros) -> None:
 
         {{COMMON_RETURN}}""")
     found = find_macros_in_docstring(docstring, sample_macros)
-    assert found == {'{{COMMON_PARAM}}', '{{COMMON_RETURN}}'}
+    assert found == {'COMMON_PARAM', 'COMMON_RETURN'}
 
 
 def test_find_no_macros(sample_macros) -> None:

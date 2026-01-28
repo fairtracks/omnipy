@@ -9,6 +9,7 @@ import re
 
 # Constants
 ORIGINAL_DOCSTRING_PREFIX = '%% Original docstring with macros (managed by copy_docstrings.py) %%'
+ENV_MACRO_PREFIX = 'OMNIPY_MACRO_'
 
 
 def get_macros_from_env() -> dict[str, str]:
@@ -31,13 +32,11 @@ def get_macros_from_env() -> dict[str, str]:
     macros = {}
 
     for key, value in os.environ.items():
-        if key.startswith('OMNIPY_MACRO_'):
+        if key.startswith(ENV_MACRO_PREFIX):
             # Extract macro name from env var name
             # OMNIPY_MACRO_COMMON_PARAM -> COMMON_PARAM
-            macro_name = key[len('OMNIPY_MACRO_'):]
-            # Add delimiters
-            macro_key = f'{{{{{macro_name}}}}}'
-            macros[macro_key] = value
+            macro_name = key[len(ENV_MACRO_PREFIX):]
+            macros[macro_name] = value
 
     return macros
 
@@ -55,7 +54,7 @@ def expand_macros(text: str, macros: dict[str, str]) -> str:
     """Expand all macros in text."""
     result = text
     for macro_name, macro_value in macros.items():
-        result = result.replace(macro_name, macro_value)
+        result = result.replace(f'{{{{{macro_name}}}}}', macro_value)
     return result
 
 
