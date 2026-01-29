@@ -49,9 +49,17 @@ repos:
         additional_dependencies: [flake8-quotes==3.3.2]
   - repo: local
     hooks:
-      - id: copy-docstrings
-        name: Copy docstrings based on markers
-        entry: python .pre-commit-hooks/expand_docstring_macros.py
+      - id: install-local-package
+        name: Install Local Package
+        entry: pip install -e .
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: expand-docstring-macros
+        name: Expand docstring macros
+        description: "Expand docstring macros in Python files."
+        args: [ '--verbose', 'v' ]
         language: system
         types: [python]
-        stages: [commit]
+        stages: [pre-commit]
+        entry: python .pre-commit-hooks/expand_docstring_macros.py

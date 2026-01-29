@@ -15,23 +15,7 @@ Created: January 2026
 from pathlib import Path
 import sys
 
-# Import the macro expansion logic from omnipy
-try:
-    from omnipy.util.docstr_macros import get_macros_from_env, process_content
-except ImportError:
-    # Fallback for when running outside of installed package
-    import importlib.util
-    docstr_macros_path = Path(
-        __file__).parent.parent / 'src' / 'omnipy' / 'util' / 'docstr_macros.py'
-    spec = importlib.util.spec_from_file_location('docstr_macros', docstr_macros_path)
-    if spec and spec.loader:
-        docstr_macros = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(docstr_macros)
-        get_macros_from_env = docstr_macros.get_macros_from_env
-        process_content = docstr_macros.process_content
-    else:
-        print('Error: Could not import omnipy.util.docstr_macros')
-        sys.exit(1)
+from omnipy.util.docstr_macros import get_macros_from_env, process_content
 
 
 def process_file(filepath: Path, macros: dict[str, str], verbose: bool = False) -> bool:
@@ -92,6 +76,7 @@ def main():
                 print(f'Error processing {filepath}: {e}')
                 import traceback
                 traceback.print_exc()
+                sys.exit(1)
 
     sys.exit(1 if modified_any else 0)
 
