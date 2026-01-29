@@ -145,7 +145,11 @@ def _create_docblock_with_expansion(
     # Build comment block with original docstring (unexpanded)
     comment_block = f'{indent}# {ORIGINAL_DOCSTRING_PREFIX}\n'
     for line in original_docstring.split('\n'):
-        comment_block += f'{indent}# {line.strip()}\n'
+        stripped_line = line.strip()
+        if stripped_line:
+            comment_block += f'{indent}# {stripped_line}\n'
+        else:
+            comment_block += f'{indent}#\n'  # No whitespace after hash char
 
     # Build complete docblock: comment + expanded docstring
     new_docblock = f'{comment_block}{indent}{quote}{expanded_docstring}{quote}'

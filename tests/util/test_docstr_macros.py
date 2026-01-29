@@ -134,6 +134,7 @@ def test_process_content_first_expansion(sample_macros) -> None:
     assert modified
     assert '    # %% Original docstring with macros' in result
     assert '    # My function.' in result  # Note: correct indentation before hash
+    assert '    #\n' in result  # No whitespace after hash for blank line
     assert '    # {{COMMON_PARAM}}' in result
     assert '        param1 (str): First parameter' in result  # Note: correct indentation
 
