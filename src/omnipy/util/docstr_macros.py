@@ -186,7 +186,7 @@ def process_content(  # noqa: C901
         ^([\ \t]*)                             # Capture indentation at start of line
         (
             \#\ {escaped_prefix}\n             # Marker line
-            (?:\1\#\ .*\n)*                    # Multiple comment lines with original docstring
+            ^(?:\1\#[^\n]*\n)*                 # Multiple comment lines with original docstring
             \1                                 # Same indentation before actual docstring
         )?
         ("""|\'\'\')                           # Opening quotes
