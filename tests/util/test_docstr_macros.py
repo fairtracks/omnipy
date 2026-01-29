@@ -122,7 +122,8 @@ def test_process_content_first_expansion(sample_macros) -> None:
     """Test first-time macro expansion in content."""
     source = dedent('''\
         def my_function():
-            """My function.
+            """
+            My function.
 
             {{COMMON_PARAM}}
             """
@@ -132,11 +133,53 @@ def test_process_content_first_expansion(sample_macros) -> None:
     result, modified = process_content(source, sample_macros)
 
     assert modified
-    assert '    # %% Original docstring with macros' in result
-    assert '    # My function.' in result  # Note: correct indentation before hash
-    assert '    #\n' in result  # No whitespace after hash for blank line
-    assert '    # {{COMMON_PARAM}}' in result
-    assert '        param1 (str): First parameter' in result  # Note: correct indentation
+
+    assert '''\
+    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    #
+    # My function.
+    #
+    # {{COMMON_PARAM}}
+    #
+    """''' in result  # Note: first and last lines are empty to denote line breaks at ends
+
+    assert '''\
+    """
+    My function.
+
+    Args:
+        param1 (str): First parameter
+        param2 (int): Second parameter
+    """''' in result
+
+
+def test_process_content_first_expansion_no_whitespace_at_ends_of_docstr(sample_macros) -> None:
+    """Test first-time macro expansion in content."""
+    source = dedent('''\
+        def my_function():
+            """My function.
+
+            {{COMMON_PARAM}}"""
+            pass
+        ''')
+
+    result, modified = process_content(source, sample_macros)
+
+    assert modified
+
+    assert '''\
+    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    # My function.
+    #
+    # {{COMMON_PARAM}}
+    """''' in result  # Note: first and last lines are not empty as there are no line breaks at ends
+
+    assert '''\
+    """My function.
+
+    Args:
+        param1 (str): First parameter
+        param2 (int): Second parameter"""''' in result
 
 
 def test_process_content_no_macros(sample_macros) -> None:
@@ -161,10 +204,10 @@ def test_process_content_reexpansion(sample_macros) -> None:
             # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
             #
             # My function.
-            #
             # {{COMMON_PARAM}}
-            """My function.
-
+            #
+            """
+            My function.
             Args:
                 param1 (str): OLD VALUE
             """
@@ -174,12 +217,68 @@ def test_process_content_reexpansion(sample_macros) -> None:
     result, modified = process_content(source, sample_macros)
 
     assert modified
-    assert '        param1 (str): First parameter' in result  # Correct indentation
-    assert 'OLD VALUE' not in result
-    assert '    # {{COMMON_PARAM}}' in result  # Original preserved with indentation before hash
+
+    assert '''\
+    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    #
+    # My function.
+    # {{COMMON_PARAM}}
+    #
+    """''' in result  # Ensure original comment block is preserved exactly
+
+    assert '''\
+    """
+    My function.
+    Args:
+        param1 (str): First parameter
+        param2 (int): Second parameter
+    """\n''' in result  # Ensure docstring is exactly as before except for expansion
 
 
-def test_process_content_mixed_text_and_macros(sample_macros) -> None:
+def test_process_content_reexpansion_no_whitespace_at_ends_of_docstr(sample_macros) -> None:
+    """Test re-expansion when macro definition changes."""
+    # Content that's already been processed
+    source = dedent('''\
+        def my_function():
+            # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+            # My function.
+            #
+            # This is my function.
+            #
+            # {{COMMON_PARAM}}
+            """My function.
+
+            This is my function.
+
+            Args:
+                param1 (str): OLD VALUE"""
+            pass
+        ''')
+
+    result, modified = process_content(source, sample_macros)
+
+    assert modified
+
+    assert '''\
+    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    # My function.
+    #
+    # This is my function.
+    #
+    # {{COMMON_PARAM}}
+    """''' in result  # Ensure original comment block is preserved exactly
+
+    assert '''\
+    """My function.
+
+    This is my function.
+
+    Args:
+        param1 (str): First parameter
+        param2 (int): Second parameter"""\n''' in result
+
+
+def test_process_content_mixed_text_and_macros_repeated(sample_macros) -> None:
     """Test docstring with custom text mixed with macros."""
     source = dedent('''\
         def my_function():
@@ -189,20 +288,44 @@ def test_process_content_mixed_text_and_macros(sample_macros) -> None:
 
             {{COMMON_PARAM}}
 
-            Note: Important detail!
+            Returns:
+                Not sure what.
             """
             pass
         ''')
 
-    result, modified = process_content(source, sample_macros)
+    for i in range(2):
+        result, modified = process_content(source, sample_macros)
 
-    assert modified
-    assert '    # My custom function.' in result  # Correct indentation before hash
-    assert '    # This does something special.' in result
-    assert '    # {{COMMON_PARAM}}' in result
-    assert '    # Note: Important detail!' in result
-    assert '    This does something special.' in result
-    assert '        param1 (str): First parameter' in result  # Correct expanded indentation
+        assert modified
+
+        assert '''\
+    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    # My custom function.
+    #
+    # This does something special.
+    #
+    # {{COMMON_PARAM}}
+    #
+    # Returns:
+    #     Not sure what.
+    #
+    """''' in result
+
+        assert '''\
+    """My custom function.
+
+    This does something special.
+
+    Args:
+        param1 (str): First parameter
+        param2 (int): Second parameter
+
+    Returns:
+        Not sure what.
+    """\n''' in result
+
+        source = result
 
 
 def test_process_content_class_docstring(sample_macros) -> None:
@@ -219,8 +342,22 @@ def test_process_content_class_docstring(sample_macros) -> None:
     result, modified = process_content(source, sample_macros)
 
     assert modified
-    assert '    # %% Original docstring with macros' in result
-    assert '        param1 (str): First parameter' in result
+
+    assert '''\
+    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    # My class.
+    #
+    # {{COMMON_PARAM}}
+    #
+    """''' in result
+
+    assert '''\
+    """My class.
+
+    Args:
+        param1 (str): First parameter
+        param2 (int): Second parameter
+    """\n''' in result
 
 
 def test_process_content_multiple_docstrings(sample_macros) -> None:
@@ -243,12 +380,37 @@ def test_process_content_multiple_docstrings(sample_macros) -> None:
     result, modified = process_content(source, sample_macros)
 
     assert modified
-    # Should have two comment blocks
-    assert result.count('# %% Original docstring with macros') == 2
-    assert '    # {{COMMON_PARAM}}' in result
-    assert '        # {{COMMON_RETURN}}' in result  # Note: indentation for method before hash
-    assert '    param1 (str): First parameter' in result
-    assert '        dict: A dictionary result' in result  # Correct indentation for method
+
+    assert '''\
+    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    # Class docstring.
+    #
+    # {{COMMON_PARAM}}
+    #
+    """''' in result
+
+    assert '''\
+    """Class docstring.
+
+    Args:
+        param1 (str): First parameter
+        param2 (int): Second parameter
+    """\n''' in result
+
+    assert '''\
+        # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+        # Method docstring.
+        #
+        # {{COMMON_RETURN}}
+        #
+        """''' in result  # Correct indentation for method
+
+    assert '''\
+        """Method docstring.
+
+        Returns:
+            dict: A dictionary result
+        """\n''' in result  # Correct indentation for method
 
 
 def test_process_content_empty_string(sample_macros) -> None:
@@ -273,5 +435,19 @@ def test_process_content_triple_single_quotes(sample_macros) -> None:
     result, modified = process_content(source, sample_macros)
 
     assert modified
-    assert '    # {{COMMON_PARAM}}' in result  # With indentation before hash
-    assert '        param1 (str): First parameter' in result
+
+    assert """\
+    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    # My function.
+    #
+    # {{COMMON_PARAM}}
+    #
+    '''""" in result
+
+    assert """\
+    '''My function.
+
+    Args:
+        param1 (str): First parameter
+        param2 (int): Second parameter
+    '''\n""" in result

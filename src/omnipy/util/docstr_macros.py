@@ -93,11 +93,29 @@ def _extract_original_docstring_from_comment_block(
 ) -> str:
     """Extract the original unexpanded docstring from comment block."""
     original_lines = []
-    for line in comment_block.split('\n'):
-        stripped = line.strip()
-        if stripped.startswith('# ') and not stripped.startswith(f'# {ORIGINAL_DOCSTRING_PREFIX}'):
-            indent, content = line.split('# ', 1)
-            original_lines.append(indent + content)  # Remove '# ' prefix
+
+    # Remove end indent and split comments to lines
+    comment_lines = comment_block.rstrip().split('\n')
+
+    for i, line in enumerate(comment_lines):
+        line = line.rstrip()  # Remove trailing whitespace
+        stripped = line.lstrip()
+
+        if i == 0:
+            assert stripped.startswith(f'# {ORIGINAL_DOCSTRING_PREFIX}')
+        else:
+            assert stripped.startswith('#')
+
+            indent, content = line.split('#', 1)  # Remove '#' prefix
+            if content.startswith(' '):
+                content = content[1:]  # Remove leading whitespace after '#'
+
+            if i == 1:
+                original_lines.append(content)  # Do not add extra indent for first line
+            elif content == '' and i != len(comment_lines) - 1:
+                original_lines.append('')  # Blank line
+            else:
+                original_lines.append(indent + content)
 
     original_docstring = '\n'.join(original_lines)
 
@@ -143,13 +161,14 @@ def _create_docblock_with_expansion(
         return matched_docblock, False  # No change needed
 
     # Build comment block with original docstring (unexpanded)
-    comment_block = f'{indent}# {ORIGINAL_DOCSTRING_PREFIX}\n'
+    comment_block_lines = [f'{indent}# {ORIGINAL_DOCSTRING_PREFIX}']
     for line in original_docstring.split('\n'):
-        stripped_line = line.strip()
-        if stripped_line:
-            comment_block += f'{indent}# {stripped_line}\n'
-        else:
-            comment_block += f'{indent}#\n'  # No whitespace after hash char
+        if line.strip():
+            line_without_indent = line[len(indent):] if line.startswith(indent) else line
+            comment_block_lines.append(f'{indent}# {line_without_indent}')
+        else:  # Blank line
+            comment_block_lines.append(f'{indent}#')  # No whitespace after hash char
+    comment_block = '\n'.join(comment_block_lines) + '\n'
 
     # Build complete docblock: comment + expanded docstring
     new_docblock = f'{comment_block}{indent}{quote}{expanded_docstring}{quote}'

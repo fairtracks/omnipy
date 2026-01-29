@@ -257,9 +257,9 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             # {{DISPLAY_METHOD_ARGS}}
             #
             # Returns:
-            # If the UI type is Jupyter running in browser, `peek`
-            # returns a ReactivelyResizingHtml element which is a Jupyter widget
-            # to display HTML output in the browser. Otherwise, returns None.
+            #     If the UI type is Jupyter running in browser, `peek`
+            #     returns a ReactivelyResizingHtml element which is a Jupyter widget
+            #     to display HTML output in the browser. Otherwise, returns None.
             #
             """
             Displays a preview of the model or dataset. For models, this is a
