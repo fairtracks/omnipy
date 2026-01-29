@@ -297,7 +297,10 @@ def test_process_content_mixed_text_and_macros_repeated(sample_macros) -> None:
     for i in range(2):
         result, modified = process_content(source, sample_macros)
 
-        assert modified
+        if i == 0:
+            assert modified
+        else:
+            assert not modified
 
         assert '''\
     # %% Original docstring with macros (managed by expand_docstring_macros.py) %%

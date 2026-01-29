@@ -176,7 +176,8 @@ def _create_docblock_with_expansion(
     if verbose:
         print('  Expanding docstring with macros')
 
-    return new_docblock, True
+    modified = (new_docblock != matched_docblock)
+    return new_docblock, modified
 
 
 def process_content(  # noqa: C901
