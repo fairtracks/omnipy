@@ -60,8 +60,30 @@ def find_macros_in_docstring(docstring: str, macros: dict[str, str]) -> set[str]
 def expand_macros(text: str, macros: dict[str, str]) -> str:
     """Expand all macros in text."""
     result = text
+
     for macro_name, macro_value in macros.items():
-        result = result.replace(f'{{{{{macro_name}}}}}', macro_value)
+        macro_index = 0
+        while macro_index != -1:
+            macro_index = result.find(f'{{{{{macro_name}}}}}', macro_index)
+            if macro_index == -1:
+                break
+            indent = ''
+            if macro_index > 0:
+                reversed_result_in_front_of_hit = result[macro_index - 1::-1]
+                reverse_indent_match = re.match(r'^([ \t]*)', reversed_result_in_front_of_hit)
+                indent = reverse_indent_match.group(1)[::-1] if reverse_indent_match else ''
+
+            replace_value = ''
+            for i, line in enumerate(macro_value.splitlines(keepends=True)):
+                if i == 0:
+                    replace_value += line
+                else:
+                    replace_value += indent + line
+
+            result = (
+                result[:macro_index] + replace_value
+                + result[macro_index + len(f'{{{{{macro_name}}}}}'):])
+
     return result
 
 
@@ -74,7 +96,8 @@ def _extract_original_docstring_from_comment_block(
     for line in comment_block.split('\n'):
         stripped = line.strip()
         if stripped.startswith('# ') and not stripped.startswith(f'# {ORIGINAL_DOCSTRING_PREFIX}'):
-            original_lines.append(stripped[2:])  # Remove '# ' prefix
+            indent, content = line.split('# ', 1)
+            original_lines.append(indent + content)  # Remove '# ' prefix
 
     original_docstring = '\n'.join(original_lines)
 
@@ -122,7 +145,7 @@ def _create_docblock_with_expansion(
     # Build comment block with original docstring (unexpanded)
     comment_block = f'{indent}# {ORIGINAL_DOCSTRING_PREFIX}\n'
     for line in original_docstring.split('\n'):
-        comment_block += f'{indent}# {line}\n'
+        comment_block += f'{indent}# {line.strip()}\n'
 
     # Build complete docblock: comment + expanded docstring
     new_docblock = f'{comment_block}{indent}{quote}{expanded_docstring}{quote}'
@@ -184,7 +207,8 @@ def process_content(  # noqa: C901
 
         if comment_block is not None:
             # Extract the original (unexpanded) docstring from comments
-            original_docstring = _extract_original_docstring_from_comment_block(comment_block)
+            original_docstring = _extract_original_docstring_from_comment_block(
+                comment_block, verbose)
         else:
             # First time - the docstring text is the original
             original_docstring = docstring_content
