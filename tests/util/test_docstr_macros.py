@@ -23,6 +23,13 @@ from omnipy.util.docstr_macros import (expand_macros,
 def sample_macros() -> dict[str, str]:
     """Provide sample macro definitions for testing."""
     return {
+        'SHORT_DESCRIPTION':
+            'This is a nice method.',
+        'FULL_DESCRIPTION':
+            dedent("""\
+            This is a nice method.
+
+            It does many things."""),
         'COMMON_PARAM':
             dedent("""\
             Args:
@@ -32,11 +39,6 @@ def sample_macros() -> dict[str, str]:
             dedent("""\
             Returns:
                 dict: A dictionary result"""),
-        'EXAMPLE':
-            dedent("""\
-            Example:
-                >>> obj.method()
-                result"""),
     }
 
 
@@ -89,33 +91,49 @@ def test_expand_macros(sample_macros) -> None:
         {{COMMON_PARAM}}""")
     expanded = expand_macros(text, sample_macros)
     assert '{{COMMON_PARAM}}' not in expanded
-    assert '    param1 (str): First parameter' in expanded
+    assert '\n    param1 (str): First parameter' in expanded
+
+
+def test_expand_error_multi_paragraph_macro_in_first_line(sample_macros) -> None:
+    """Test expanding multiple macros."""
+    text = dedent("""\
+        {{FULL_DESCRIPTION}}""")
+    with pytest.raises(ValueError):
+        expand_macros(text, sample_macros)
 
 
 def test_expand_multiple_macros(sample_macros) -> None:
     """Test expanding multiple macros."""
     text = dedent("""\
+        {{SHORT_DESCRIPTION}}
+
         {{COMMON_PARAM}}
 
         {{COMMON_RETURN}}""")
     expanded = expand_macros(text, sample_macros)
+    assert '{{SHORT_DESCRIPTION}}' not in expanded
     assert '{{COMMON_PARAM}}' not in expanded
     assert '{{COMMON_RETURN}}' not in expanded
-    assert '    param1 (str)' in expanded
-    assert '    dict: A dictionary result' in expanded
+    assert expanded.startswith('This is a nice method.')
+    assert '\n    param1 (str)' in expanded
+    assert '\n    dict: A dictionary result' in expanded
 
 
 def test_expand_multiple_macros_manage_indentation(sample_macros) -> None:
     """Test expanding multiple macros."""
     text = dedent("""\
-        {{COMMON_PARAM}}
+        {{SHORT_DESCRIPTION}}
 
-            {{COMMON_RETURN}}""")
+            {{COMMON_PARAM}}
+
+                {{COMMON_RETURN}}""")
     expanded = expand_macros(text, sample_macros)
+    assert '{{SHORT_DESCRIPTION}}' not in expanded
     assert '{{COMMON_PARAM}}' not in expanded
     assert '{{COMMON_RETURN}}' not in expanded
-    assert '    param1 (str)' in expanded
-    assert '        dict: A dictionary result' in expanded
+    assert expanded.startswith('This is a nice method.')
+    assert '\n        param1 (str)' in expanded
+    assert '\n            dict: A dictionary result' in expanded
 
 
 def test_process_content_first_expansion(sample_macros) -> None:

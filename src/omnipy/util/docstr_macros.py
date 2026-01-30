@@ -78,6 +78,12 @@ def expand_macros(text: str, macros: dict[str, str]) -> str:
                 if i == 0:
                     replace_value += line
                 else:
+                    if macro_index == 0:
+                        raise ValueError(
+                            'Cannot indent macro expansion when macro is '
+                            'placed at the start of the docstring. Please '
+                            'break up multi-line macros placed at the '
+                            'start of the docstring into smaller parts.',)
                     replace_value += indent + line
 
             result = (
