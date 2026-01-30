@@ -263,7 +263,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
             justify: Justify.Literals = Justify.LEFT,
         ) -> 'Element | None':
-            # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+            # %% Original docstring (managed by expand_docstr_macros.py) %%
             #
             # Displays a preview of the model or dataset. For models, this is a
             # preview of the model's content, and for datasets, this is a
@@ -409,7 +409,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         @takes_input_params_from(_DisplayMethodParams.__init__)
         def peek(self, **kwargs) -> 'Element | None':
-            # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+            # %% Original docstring (managed by expand_docstr_macros.py) %%
             #
             # Displays a preview of the model or dataset. For models, this is a
             # preview of the model's content, and for datasets, this is a

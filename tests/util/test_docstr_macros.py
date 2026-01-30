@@ -153,7 +153,7 @@ def test_process_content_first_expansion(sample_macros) -> None:
     assert modified
 
     assert '''\
-    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
     #
     # My function.
     #
@@ -186,7 +186,7 @@ def test_process_content_first_expansion_no_whitespace_at_ends_of_docstr(sample_
     assert modified
 
     assert '''\
-    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
     # My function.
     #
     # {{COMMON_PARAM}}
@@ -219,7 +219,7 @@ def test_process_content_reexpansion(sample_macros) -> None:
     # Content that's already been processed
     source = dedent('''\
         def my_function():
-            # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+            # %% Original docstring (managed by expand_docstr_macros.py) %%
             #
             # My function.
             # {{COMMON_PARAM}}
@@ -237,7 +237,7 @@ def test_process_content_reexpansion(sample_macros) -> None:
     assert modified
 
     assert '''\
-    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
     #
     # My function.
     # {{COMMON_PARAM}}
@@ -258,7 +258,7 @@ def test_process_content_reexpansion_no_whitespace_at_ends_of_docstr(sample_macr
     # Content that's already been processed
     source = dedent('''\
         def my_function():
-            # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+            # %% Original docstring (managed by expand_docstr_macros.py) %%
             # My function.
             #
             # This is my function.
@@ -278,7 +278,7 @@ def test_process_content_reexpansion_no_whitespace_at_ends_of_docstr(sample_macr
     assert modified
 
     assert '''\
-    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
     # My function.
     #
     # This is my function.
@@ -321,7 +321,7 @@ def test_process_content_mixed_text_and_macros_repeated(sample_macros) -> None:
             assert not modified
 
         assert '''\
-    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
     # My custom function.
     #
     # This does something special.
@@ -365,7 +365,7 @@ def test_process_content_class_docstring(sample_macros) -> None:
     assert modified
 
     assert '''\
-    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
     # My class.
     #
     # {{COMMON_PARAM}}
@@ -403,7 +403,7 @@ def test_process_content_multiple_docstrings(sample_macros) -> None:
     assert modified
 
     assert '''\
-    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
     # Class docstring.
     #
     # {{COMMON_PARAM}}
@@ -419,7 +419,7 @@ def test_process_content_multiple_docstrings(sample_macros) -> None:
     """\n''' in result
 
     assert '''\
-        # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
         # Method docstring.
         #
         # {{COMMON_RETURN}}
@@ -458,7 +458,7 @@ def test_process_content_triple_single_quotes(sample_macros) -> None:
     assert modified
 
     assert """\
-    # %% Original docstring with macros (managed by expand_docstring_macros.py) %%
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
     # My function.
     #
     # {{COMMON_PARAM}}

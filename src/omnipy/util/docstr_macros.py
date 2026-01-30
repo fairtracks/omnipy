@@ -15,7 +15,7 @@ import re
 
 # Constants
 ORIGINAL_DOCSTRING_PREFIX =\
-    '%% Original docstring with macros (managed by expand_docstring_macros.py) %%'
+    '%% Original docstring (managed by expand_docstr_macros.py) %%'
 ENV_MACRO_PREFIX = 'OMNIPY_MACRO_'
 
 

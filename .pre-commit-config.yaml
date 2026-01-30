@@ -55,11 +55,11 @@ repos:
         language: system
         pass_filenames: false
         types: [python]
-      - id: expand-docstring-macros
+      - id: expand-docstr-macros
         name: Expand docstring macros
         description: "Expand docstring macros in Python files."
         args: [ '--verbose', 'v' ]
         language: system
         types: [python]
         stages: [pre-commit]
-        entry: python .pre-commit-hooks/expand_docstring_macros.py
+        entry: python .pre-commit-hooks/expand_docstr_macros.py

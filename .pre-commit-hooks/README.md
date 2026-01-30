@@ -57,7 +57,7 @@ def example_method(self):
 #### 3. Run the hook
 
 ```bash
-python .pre-commit-hooks/expand_docstring_macros.py --verbose path/to/file.py
+python .pre-commit-hooks/expand_docstr_macros.py --verbose path/to/file.py
 ```
 
 ### Testing
