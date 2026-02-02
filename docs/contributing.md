@@ -105,7 +105,14 @@ editor, which is the most popular editor for Python development. The
 `Omnipy` and therefore (as of Dec 2024) should not be used. Luckily, there is a `pyright` plugin for
 `PyCharm` which supports using `pyright` for code completion.
 
-Information on how to configure `pyright` for `PyCharm` and `JupyterLab` will be added here soon.
+Note: Omnipy has now changed the development setup to use `basedpyright`
+instead of `pyright`, but sue of `pyright` is still supported.
+
+From version 2025.3 of PyCharm, support for pyright is included. To set up 
+just enable Pyright in Settings->Python->Tools->Pyright and specify the path
+to the `basedpyright-langserver` binary, e.g. ``.venv/bin/basedpyright-langserver``.
+
+Information on how to configure `pyright` for `JupyterLab` will be added here soon.
 
 ### Configure PyCharm project for Omnipy
 
