@@ -19,7 +19,7 @@ build:
       - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
     install:
       # Install dependencies with 'docs' dependency group
-      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --frozen --group docs
+      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --group docs
       # Generate code documentation skeleton
       - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv run python docs/gen_ref_pages.py
 mkdocs:
