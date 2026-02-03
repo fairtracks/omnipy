@@ -1,3 +1,30 @@
+## Omnipy v0.22.2
+
+_Release date: Feb 3, 2026_
+
+### New features and bugfixes in v0.22.2
+
+- Implemented `pre-commit` script `expand_docstr_macros` to automatically
+  expand docstring macros before commit.
+- Harmonize docstrings for all Model and Dataset display methods with
+  macros. Support both static and runtime docstring generation (e.g. both
+  `pyright` and `help()`). Fix typing errors
+- Fixed bug to allow nested Datasets to set values using parameters of the
+  Dataset.__init__() method as keys (e.g. 'self', 'value', 'data')
+- Changed dependency management from `poetry` to `uv`.
+- Switched `pyright` dependency with `basedpyright`.
+
+
+## Omnipy v0.22.1
+
+_Release date: Jan 8, 2026_
+
+### New features and bugfixes in v0.22.1
+
+- Initial implementation of to() and do() methods for Models and Datasets, 
+  including `placeholder` variables `x`, `m`, and `F`.
+- Fixed Dockerfile to install correct versions of Pyright, ipyvue, and 
+  ipyvuetify.
 
 
 ## Omnipy v0.22.0
@@ -144,6 +171,7 @@ _Release date: Nov 3, 2025_
 - Fixed issue showing style when random style is selected as keyword 
   argument
 
+
 ## Omnipy v0.21.1
 
 _Release date: Nov 1, 2025_
@@ -152,6 +180,7 @@ _Release date: Nov 1, 2025_
 
 - Fixed major import issue for straight install, without pytest
 - Updated Dockerfile to import main branch of Omnipy
+
 
 ## Omnipy v0.21
 
@@ -313,6 +342,7 @@ _Release date: Jan 7, 2025_
 - Implemented
   `get_auto_from_api_endpoint()` and deployed in `Dataset.load()`
 
+
 ## Omnipy v0.20.0
 
 _Release date: Jan 6, 2025_
@@ -374,6 +404,7 @@ code to support the basic features needed byOmnipy.
   - Refactored away `_Model` and similar private classes added in the
     v0.19.0 auto-complete hack
 
+
 ## Omnipy v0.19.0
 
 _Release date: Dec 17, 2024_
@@ -421,6 +452,7 @@ that Model objects can mimic the functionality of its type arguments.
   - Added convenience functions to detect IPython and Jupyter Notebooks
   - Bugfix in `QueryParamsModel` for URL-encoded parameters that encode `&`
     or `=`
+
 
 ## Omnipy v0.18.0
 
@@ -501,6 +533,7 @@ starting to receive some love!
     - Removed parallel run of yapf checks to fix strange issue with `yapf`
       and `pickle`
 
+
 ## Omnipy v0.17.2
 
 _Release date: Nov 9, 2024_
@@ -511,6 +544,7 @@ _Release date: Nov 9, 2024_
   `Dataset.__setitem__()` methods. Directly setting dataset items now
   converts Models using `to_data()` +`from_data()`.
 
+
 ## Omnipy v0.17.1
 
 _Release date: Nov 9, 2024_
@@ -519,6 +553,7 @@ _Release date: Nov 9, 2024_
 
 - Fixed incorrect (lack of) closing of client sessions in asynchronous
   download tasks
+
 
 ## Omnipy v0.17.0
 
@@ -661,6 +696,7 @@ efficient manner.
     iterators of models to a dataset
   - Refactored models and datasets for split and join, to reduce duplication
     and allow adjustments of params for all.
+
 
 ## Omnipy v0.16.1
 
