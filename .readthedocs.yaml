@@ -17,8 +17,8 @@ build:
       - curl -LsSf https://astral.sh/uv/install.sh | sh
     post_install:
       # Install dependencies with 'docs' dependency group
-      - uv sync --group docs
+      - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --group docs
       # Generate code documentation skeleton
-      - uv run python docs/gen_ref_pages.py
+      - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv run python docs/gen_ref_pages.py
 mkdocs:
   configuration: mkdocs.yml
