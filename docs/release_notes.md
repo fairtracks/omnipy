@@ -44,7 +44,7 @@ complex nested data structures more intuitive.
 
   Major architectural enhancement enabling nested datasets:
   
-  - `Dataset`s can now contain other datasets as items, allowing for
+  - `Dataset` objects can now contain other datasets as items, allowing for
     arbitrarily nested dataset structures, implemented through the new 
     `NestedDataset` class. `Union` types are also now allowed in `Dataset` 
     type specialization.
