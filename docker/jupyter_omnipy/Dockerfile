@@ -8,7 +8,7 @@ USER jovyan
 
 RUN conda install mamba -y && conda clean -afy
 RUN mamba install nodejs=22 nano jupyterlab=4.3 jupyterlab_widgets jupyterlab-lsp=5.1 jupyter-lsp-python=2.2 nb_conda_kernels ipyvue ipyvuetify ipywidgets -y && mamba clean -ay
-RUN npm install pyright@1.1.406
+RUN npm install basedpyright@1.37.2
 RUN pip install ipyvue==1.11.3 ipyvuetify==1.11.3
 
 RUN conda create -n omnipy -y
