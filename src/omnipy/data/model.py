@@ -22,7 +22,6 @@ from typing import (Annotated,
 
 from typing_extensions import get_original_bases, override, Self, TypeVar
 
-from omnipy import F
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._missing import parse_none_according_to_model
 from omnipy.data._mixins.display import ModelDisplayMixin
@@ -38,6 +37,7 @@ from omnipy.shared.constants import ROOT_KEY
 from omnipy.shared.protocols.data import IsSnapshotWrapper
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
+from omnipy.util._placeholder import F
 from omnipy.util._pydantic import (is_none_type,
                                    lenient_isinstance,
                                    lenient_issubclass,

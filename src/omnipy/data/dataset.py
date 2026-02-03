@@ -12,7 +12,6 @@ from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKI
 
 from typing_extensions import override, Self, TypeVar
 
-from omnipy import F
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._mixins.display import DatasetDisplayMixin
 from omnipy.data._mixins.task import TaskDatasetMixin
@@ -31,6 +30,7 @@ from omnipy.shared.protocols.data import (IsHttpUrlDataset,
                                           IsPathOrUrl,
                                           IsPathsOrUrlsOneOrMoreOrNone)
 from omnipy.shared.typedefs import TypeForm
+from omnipy.util._placeholder import F
 from omnipy.util._pydantic import Undefined, UndefinedType, ValidationError
 import omnipy.util._pydantic as pyd
 from omnipy.util.decorators import call_super_if_available

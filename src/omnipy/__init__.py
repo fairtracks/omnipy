@@ -2,9 +2,6 @@ __version__ = '0.22.1'
 
 import os
 
-from placeholder import _ as x
-from placeholder import F, m
-
 from omnipy.components.general.models import (Chain2,
                                               Chain3,
                                               Chain4,
@@ -247,6 +244,7 @@ from omnipy.shared.enums.ui import (AutoDetectableUserInterfaceType,
                                     TerminalOutputUserInterfaceType,
                                     TerminalUserInterfaceType,
                                     UserInterfaceType)
+from omnipy.util._placeholder import F, m, x
 from omnipy.util.contexts import print_exception
 from omnipy.util.literal_enum import LiteralEnum
 from omnipy.util.literal_enum_generator import generate_literal_enum_code
