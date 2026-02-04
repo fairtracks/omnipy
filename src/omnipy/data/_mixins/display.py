@@ -2975,5 +2975,3 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 if TYPE_CHECKING:
     _Model: type[BaseDisplayMixin] = ModelDisplayMixin
     _Dataset: type[IsDatabaseDisplayMixin] = DatasetDisplayMixin
-
-#
