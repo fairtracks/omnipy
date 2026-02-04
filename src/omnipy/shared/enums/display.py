@@ -163,11 +163,16 @@ class SyntaxLanguage(JsonSyntaxLanguage,
     relevant for Omnipy.
     """
 
-    Literals = Literal[JsonSyntaxLanguage.Literals,
+    Literals = Literal['auto',
+                       JsonSyntaxLanguage.Literals,
                        TextSyntaxLanguage.Literals,
                        HexdumpSyntaxLanguage.Literals,
                        PythonSyntaxLanguage.Literals]
 
+    AUTO: Literal['auto'] = 'auto'
+    """
+    Autodetect the syntax language based on the content.
+    """
     @classmethod
     def is_syntax_language(cls, syntax: str) -> 'TypeIs[SyntaxLanguage.Literals]':
         """

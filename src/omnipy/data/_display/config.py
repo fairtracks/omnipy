@@ -137,7 +137,7 @@ class OutputConfig:
     tab: pyd.NonNegativeInt = 4
     indent: pyd.NonNegativeInt = 2
     printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO
-    syntax: SyntaxLanguage.Literals | str = SyntaxLanguage.PYTHON
+    syntax: SyntaxLanguage.Literals | str = SyntaxLanguage.AUTO
     freedom: pyd.NonNegativeFloat | None = 2.5
     debug: bool = False
     ui: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL
