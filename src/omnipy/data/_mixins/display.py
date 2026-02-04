@@ -49,7 +49,7 @@ from omnipy.shared.enums.ui import (BrowserPageUserInterfaceType,
                                     TerminalOutputUserInterfaceType,
                                     UserInterfaceType)
 from omnipy.shared.protocols.config import IsHtmlUserInterfaceConfig, IsUserInterfaceTypeConfig
-from omnipy.shared.typedefs import Method, TypeForm
+from omnipy.shared.typedefs import Method
 import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import is_package_editable, min_or_none, takes_input_params_from
 
@@ -1929,7 +1929,6 @@ class BaseDisplayMixin:
                 layout[inner_title] = self._create_inner_panel_for_model(
                     config,
                     model,
-                    model.outer_type(),
                     inner_title,
                     **inner_kwargs,
                 )
@@ -2083,7 +2082,6 @@ class BaseDisplayMixin:
         self,
         config: OutputConfig,
         model: 'Model',
-        outer_type: TypeForm,
         title: str = '',
         frame: Frame | None = None,
         **config_kwargs,
@@ -2095,9 +2093,9 @@ class BaseDisplayMixin:
                                                      PrintableTable)
 
         syntax: SyntaxLanguage.Literals
-        if outer_type is str or isinstance(model, (StrModel, PrintableTable)):
+        if isinstance(model, (StrModel, PrintableTable)):
             syntax = SyntaxLanguage.TEXT
-        elif outer_type is bytes or isinstance(model, BytesModel):
+        elif isinstance(model, BytesModel):
             syntax = SyntaxLanguage.HEXDUMP
         elif is_json_model_instance_hack(model):
             syntax = SyntaxLanguage.JSON5
@@ -2311,7 +2309,6 @@ class ModelDisplayMixin(BaseDisplayMixin):
         return self._create_inner_panel_for_model(
             config,
             self_as_model,
-            self_as_model.outer_type(),
             frame=frame,
             **config_kwargs,
         )
