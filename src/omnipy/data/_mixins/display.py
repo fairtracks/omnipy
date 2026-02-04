@@ -2329,6 +2329,9 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                              frame: Frame | None = None,
                              level: int = 0,
                              **kwargs) -> DraftPanel:
+        from omnipy.data.dataset import Dataset
+        from omnipy.data.model import Model
+
         self_data_as_dict = cast(dict[str, Model], cast(Dataset, self).data)
         return self._peek_nested_content(
             nested_content={
@@ -2679,6 +2682,9 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             list.__signature__ = signature(IsDisplayMethod.__call__)
 
     def _list(self, **kwargs) -> DraftPanel:
+        from omnipy.data.dataset import Dataset
+        from omnipy.data.model import Model
+
         self_dataset = cast('Dataset', self)
         self_data_as_dict = cast(dict[str, Model], cast(Dataset, self).data)
 
@@ -2757,6 +2763,9 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         self._browse_dataset(**kwargs)
 
     def _browse_dataset(self, html_output: dict[str, str] | None = None, **kwargs) -> None:
+        from omnipy.data.dataset import Dataset
+        from omnipy.data.model import Model
+
         if html_output is None:
             html_output = {}
             nested_call = False
