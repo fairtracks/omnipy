@@ -31,8 +31,8 @@ from omnipy.data.model import Model
 from omnipy.shared.protocols.data import IsModel
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.shared.protocols.typing import IsMapping
-from omnipy.util._pydantic import ValidationError
-import omnipy.util._pydantic as pyd
+from omnipy.util.pydantic import ValidationError
+import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 from ..helpers.functions import assert_model, assert_val

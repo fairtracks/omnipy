@@ -33,6 +33,8 @@ from pydantic.v1.typing import display_as_type, is_none_type
 from pydantic.v1.utils import lenient_isinstance, lenient_issubclass, sequence_like
 from pydantic_core import Url
 
+ModelMetaclass
+
 
 def pydantic_v1_hack():
     """
@@ -54,3 +56,44 @@ def pydantic_v1_hack():
 
 
 pydantic_v1_hack()
+
+__all__ = [
+    'BaseConfig',
+    'BaseModel',
+    'ConfigDict',
+    'ConfigError',
+    'conint',
+    'constr',
+    'create_model',
+    'EmailStr',
+    'Extra',
+    'Field',
+    'NoneIsNotAllowedError',
+    'NonNegativeFloat',
+    'NonNegativeInt',
+    'PositiveInt',
+    'PrivateAttr',
+    'Protocol',
+    'root_validator',
+    'StrictBytes',
+    'StrictInt',
+    'StrictStr',
+    'validate_arguments',
+    'ValidationError',
+    'validator',
+    'dataclass',
+    'ErrorWrapper',
+    'ModelField',
+    'Undefined',
+    'UndefinedType',
+    'GenericModel',
+    'ModelMetaclass',
+    'validate_model',
+    'normalize_name',
+    'display_as_type',
+    'is_none_type',
+    'lenient_isinstance',
+    'lenient_issubclass',
+    'sequence_like',
+    'Url',
+]

@@ -1,5 +1,6 @@
 import pytest
 
+from omnipy import SyntaxLanguageSpec
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
@@ -152,7 +153,11 @@ def test_draft_panel_render_next_stage_with_repr_simple() -> None:
         this_panel=draft_panel,
         next_stage=draft_panel.render_next_stage(),
         next_stage_panel_cls=ReflowedTextDraftPanel,
-        exp_content='Some text',
+        exp_content="'Some text'",
+        # SyntaxLanguageSpec.AUTO causes syntax to be set to default syntax
+        # for the pretty printer, which for Python printers are
+        # SyntaxLanguageSpec.PYTHON
+        exp_config=OutputConfig(syntax=SyntaxLanguageSpec.PYTHON),
     )
 
 
@@ -169,6 +174,9 @@ def test_draft_panel_render_next_stage_with_repr_complex() -> None:
         next_stage=draft_panel_complex.render_next_stage(),
         next_stage_panel_cls=ReflowedTextDraftPanel,
         exp_content='(\n 1,\n 2,\n 3\n)',
+        # The default syntax for the Python pretty printers are
+        # SyntaxLanguageSpec.PYTHON
+        exp_config=OutputConfig(indent=1, syntax=SyntaxLanguageSpec.PYTHON),
     )
 
 

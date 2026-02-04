@@ -39,14 +39,6 @@ from omnipy.shared.protocols.data import IsModel, IsSnapshotWrapper
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 from omnipy.util._placeholder import F
-from omnipy.util._pydantic import (is_none_type,
-                                   lenient_isinstance,
-                                   lenient_issubclass,
-                                   Undefined,
-                                   UndefinedType,
-                                   ValidationError)
-# from orjson import orjson
-import omnipy.util._pydantic as pyd
 from omnipy.util.contexts import (hold_and_reset_prev_attrib_value,
                                   LastErrorHolder,
                                   nothing,
@@ -64,6 +56,14 @@ from omnipy.util.helpers import (all_equals,
                                  is_optional,
                                  is_type_specialization,
                                  remove_forward_ref_notation)
+from omnipy.util.pydantic import (is_none_type,
+                                  lenient_isinstance,
+                                  lenient_issubclass,
+                                  Undefined,
+                                  UndefinedType,
+                                  ValidationError)
+# from orjson import orjson
+import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 _ReturnT = TypeVar('_ReturnT')

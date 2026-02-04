@@ -18,10 +18,10 @@ from omnipy.shared.enums.display import (DisplayColorSystem,
                                          MaxTitleHeight,
                                          PanelDesign,
                                          PrettyPrinterLib,
-                                         SyntaxLanguage,
+                                         SyntaxLanguageSpec,
                                          VerticalOverflowMode)
-from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
-import omnipy.util._pydantic as pyd
+from omnipy.shared.enums.ui import UserInterfaceType
+import omnipy.util.pydantic as pyd
 
 
 @pyd.dataclass(
@@ -54,7 +54,7 @@ class OutputConfig:
             size (=total available area) in a proportional manner. If the
             proportional freedom is 0 (the lowest), then the output area
             must not in any case be proportionally wider that the frame
-            (i.e. a 16:9 frame will only produce output that is 16:9 or
+            (i.e. a 16/9 frame will only produce output that is 16/9 or
             narrower). Larger values of proportional freedom allow the
             output to be proportionally wider than the total available
             frame, to a degree that relates to the size difference between
@@ -65,6 +65,10 @@ class OutputConfig:
             is not taken into account at all).
         debug (bool): When True, enables additional debugging information in
             the output, such as the hierarchy of the Model objects.
+            Currently, only Python pretty printers support debug=True.
+            Hence, enabling debug mode will automatically set the printer
+            to the default Python pretty printer if the `printer` config
+            value is not already set.
         ui (UserInterfaceType.Literals): Type of user interface for which
             the output should being prepared. The user interface describes
             the technical solutions available for interacting with the user,
@@ -121,7 +125,8 @@ class OutputConfig:
             must be equal to or larger than `min_panel_width`.
         use_min_crop_width (bool): Whether the `min_crop_width` value should
             be considered in cases where more than one panel are to
-            be displayed, potentially reduce the number of displayed panels.
+            be displayed, potentially reducing the number of displayed
+            panels.
         max_panels_hor (NonNegativeInt | None): Maximum number of
             panels to display horizontally side-by-side at the top level.
             This value also acts as a ceiling for nested panels: nested
@@ -137,12 +142,12 @@ class OutputConfig:
     tab: pyd.NonNegativeInt = 4
     indent: pyd.NonNegativeInt = 2
     printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO
-    syntax: SyntaxLanguage.Literals | str = SyntaxLanguage.AUTO
+    syntax: SyntaxLanguageSpec.Literals | str = SyntaxLanguageSpec.AUTO
     freedom: pyd.NonNegativeFloat | None = 2.5
     debug: bool = False
-    ui: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL
+    ui: UserInterfaceType.Literals = UserInterfaceType.AUTO
     system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
-    style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
+    style: AllColorStyles.Literals | str = RecommendedColorStyles.AUTO
     bg: bool = False
     fonts: tuple[str, ...] = (
         'Menlo',
@@ -169,10 +174,10 @@ class OutputConfig:
     @pyd.validator('syntax')
     def check_syntax(
         cls,
-        syntax: SyntaxLanguage.Literals | str,
-    ) -> SyntaxLanguage.Literals | str:
+        syntax: SyntaxLanguageSpec.Literals | str,
+    ) -> SyntaxLanguageSpec.Literals | str:
         try:
-            if SyntaxLanguage.is_syntax_language(syntax):
+            if SyntaxLanguageSpec.is_syntax_language_spec(syntax):
                 return syntax
             elif pygments.lexers.get_lexer_by_name(syntax):
                 return syntax

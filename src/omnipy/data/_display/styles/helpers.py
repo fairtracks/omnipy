@@ -1,7 +1,7 @@
 import pygments.token
 from pygments.token import Token
 
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 Base16 = Token.Base16
 

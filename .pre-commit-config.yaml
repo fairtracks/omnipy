@@ -54,12 +54,12 @@ repos:
         entry: pip install -e .
         language: system
         pass_filenames: false
-        types: [python]
+        types: [ python ]
       - id: expand-docstr-macros
         name: Expand docstring macros
         description: "Expand docstring macros in Python files."
         args: [ '--verbose', 'v' ]
         language: system
-        types: [python]
-        stages: [pre-commit]
+        types: [ python ]
+        stages: [ pre-commit ]
         entry: python .pre-commit-hooks/expand_docstr_macros.py

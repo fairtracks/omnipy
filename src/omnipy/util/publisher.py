@@ -4,7 +4,7 @@ from typing import Callable, DefaultDict
 from typing_extensions import Self
 
 from omnipy.shared.protocols.hub.runtime import IsRuntime
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 
 def _subscribers_factory():

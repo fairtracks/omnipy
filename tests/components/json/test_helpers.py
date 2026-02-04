@@ -8,7 +8,7 @@ from omnipy.components.json.helpers import (is_json_dict,
                                             parse_line_as_elements_of_dict,
                                             parse_line_as_elements_of_list,
                                             parse_str_as_json)
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 
 def test_is_json_scalar(skip_test_if_not_default_data_config_values: Annotated[None,

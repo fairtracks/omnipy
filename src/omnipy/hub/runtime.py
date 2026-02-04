@@ -29,9 +29,9 @@ from omnipy.shared.protocols.hub.runtime import (IsRootLogObjects,
                                                  IsRuntimeConfig,
                                                  IsRuntimeObjects)
 from omnipy.shared.typing import TYPE_CHECKING
-import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import called_from_omnipy_tests
 from omnipy.util.publisher import DataPublisher, RuntimeEntryPublisher
+import omnipy.util.pydantic as pyd
 
 
 def _job_creator_factory() -> IsJobCreator:

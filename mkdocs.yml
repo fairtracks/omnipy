@@ -72,18 +72,44 @@ plugins:
     handlers:
       python:
         paths: [ src ]
+# TODO: Re-enable inventory import with pydantic v2 support
+#        import:
+#        - https://docs.pydantic.dev/latest/objects.inv
         options:
-          filters:
-            - "!^_"
-            - "^__"
-            - "!^__all__"
-            - "!^pyd"
+          allow_inspection: false
+          backlinks: true
+          extensions:
+            - omnipy.util.griffe_extension:UseDynamicSignatureForSpecificFunctions:
+                functions:
+                  - omnipy.data._mixins.display.BaseDisplayMixin.peek
+                  - omnipy.data._mixins.display.BaseDisplayMixin.full
+                  - omnipy.data._mixins.display.BaseDisplayMixin.json
+                  - omnipy.data._mixins.display.BaseDisplayMixin.browse
+                  - omnipy.data._mixins.display.DatasetDisplayMixin.list
+          inheritance_diagram_direction: BT
+          preload_modules:
+          - pydantic
+          show_inheritance_diagram: true
           heading_level: 1
           show_root_heading: true
-          show_if_no_docstring: true
           show_symbol_type_heading: true
           show_symbol_type_toc: true
+          filters:
+            - "!^_"
+            - "__init__"
+            - "!^__all__"
+            - "!^pyd"
           summary: true
+          docstring_style: google
+          docstring_options:
+            returns_multiple_items: false
+          docstring_section_style: spacy
+          show_if_no_docstring: true
+          annotations_path: source
+          line_length: 100
+          modernize_annotations: true
+          show_overloads: true
+          overloads_only: true
           show_signature_annotations: true
           separate_signature: true
           signature_crossrefs: true

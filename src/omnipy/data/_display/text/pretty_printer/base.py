@@ -5,14 +5,15 @@ from typing import Callable, ClassVar, Generic
 
 from typing_extensions import override
 
+from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import DimensionsWithWidth
 from omnipy.data._display.frame import AnyFrame, FrameWithWidth
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import ContentT, FrameT
-from omnipy.shared.enums.display import SyntaxLanguage
-from omnipy.util import _pydantic as pyd
+from omnipy.shared.enums.display import SyntaxLanguageSpec
+from omnipy.util import pydantic as pyd
 from omnipy.util.helpers import sorted_dict_hash
 
 
@@ -20,6 +21,11 @@ class PrettyPrinter(ABC, Generic[ContentT]):
     @classmethod
     @abstractmethod
     def is_suitable_content(cls, draft_panel: DraftPanel[object, AnyFrame]) -> bool:
+        ...
+
+    @classmethod
+    @abstractmethod
+    def get_default_syntax_language(cls) -> SyntaxLanguageSpec.Literals:
         ...
 
     @classmethod
@@ -32,6 +38,16 @@ class PrettyPrinter(ABC, Generic[ContentT]):
             cls, draft_panel: DraftPanel[object, AnyFrame]) -> Constraints:
         return draft_panel.constraints
 
+    @classmethod
+    def _set_default_syntax_for_panel_if_syntax_is_auto(cls, config: OutputConfig) -> OutputConfig:
+        if config.syntax is SyntaxLanguageSpec.AUTO:
+            return dataclasses.replace(
+                config,
+                syntax=cls.get_default_syntax_language(),
+            )
+        else:
+            return config
+
     def prepare_draft_panel(
         self,
         draft_panel: DraftPanel[object, FrameT],
@@ -40,6 +56,7 @@ class PrettyPrinter(ABC, Generic[ContentT]):
             content=self._get_content_for_draft_panel(draft_panel),
             frame=draft_panel.frame,
             constraints=self._get_default_constraints_for_draft_panel(draft_panel),
+            config=self._set_default_syntax_for_panel_if_syntax_is_auto(draft_panel.config),
         )
 
     @abstractmethod
@@ -60,7 +77,7 @@ class PrettyPrinter(ABC, Generic[ContentT]):
         if pretty_printer:
             return pretty_printer
 
-        if draft_panel.config.syntax is SyntaxLanguage.AUTO:
+        if draft_panel.config.syntax is SyntaxLanguageSpec.AUTO:
             pretty_printer = register.get_pretty_printer_from_content(draft_panel)
             if pretty_printer:
                 return pretty_printer

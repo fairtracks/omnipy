@@ -9,7 +9,7 @@ from omnipy.data._display.dimensions import (Dimensions,
                                              has_width_and_height,
                                              HeightT,
                                              WidthT)
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 
 @pyd.dataclass(frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))

@@ -2,7 +2,7 @@ import pytest
 
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
-from omnipy.util._pydantic import ValidationError
+from omnipy.util.pydantic import ValidationError
 
 
 # noinspection PyDataclass

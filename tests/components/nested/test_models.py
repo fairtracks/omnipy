@@ -9,7 +9,7 @@ from omnipy.components.nested.models import (EnumeratedListModel,
                                              EnumeratedListOfTuplesModel,
                                              ListAsNestedDatasetModel)
 from omnipy.data.dataset import Dataset
-from omnipy.util._pydantic import ValidationError
+from omnipy.util.pydantic import ValidationError
 
 
 def test_enumerated_list_of_tuples_model() -> None:

@@ -1,5 +1,5 @@
-import omnipy.util._pydantic as pyd
 from omnipy.util.publisher import DataPublisher
+import omnipy.util.pydantic as pyd
 
 
 class MockFoo:

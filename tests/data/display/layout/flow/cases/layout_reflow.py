@@ -7,7 +7,9 @@ from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame, FrameWithWidthAndHeight
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel
-from omnipy.shared.enums.display import HorizontalOverflowMode, VerticalOverflowMode
+from omnipy.shared.enums.display import (HorizontalOverflowMode,
+                                         SyntaxLanguageSpec,
+                                         VerticalOverflowMode)
 
 from ....panel.helpers.case_setup import FrameTestCase, FrameVariant, PanelFrameVariantTestCase
 from ..helpers.mocks import MockConfigCropPanel, MockResizedConfigCropPanel
@@ -1193,6 +1195,7 @@ def case_layout_two_panels(
 
 
 min_panel_and_crop_width_config = OutputConfig(
+    syntax=SyntaxLanguageSpec.TEXT,
     min_panel_width=4,
     min_crop_width=5,
     use_min_crop_width=True,
@@ -1519,6 +1522,7 @@ def case_layout_nested_layout_panels_with_title(
                     inner=DraftPanel(
                         content='Here is some text',
                         title='Inner text panel',
+                        config=OutputConfig(syntax=SyntaxLanguageSpec.TEXT),
                     )),
                 title='Nested layout panel',
             )),

@@ -11,7 +11,7 @@ from omnipy.components.remote.models import (AutoResponseContentModel,
                                              ResponseContentPydModel,
                                              UrlPathModel)
 from omnipy.shared.protocols.hub.runtime import IsRuntime
-from omnipy.util._pydantic import ValidationError
+from omnipy.util.pydantic import ValidationError
 
 from ...helpers.protocols import AssertModelOrValFunc
 

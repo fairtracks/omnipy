@@ -7,8 +7,8 @@ from typing_extensions import TypeIs, TypeVar
 from omnipy.shared.protocols.data import IsDataset, IsModel
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKING
-from omnipy.util._pydantic import is_none_type, lenient_isinstance, lenient_issubclass
 from omnipy.util.helpers import all_type_variants
+from omnipy.util.pydantic import is_none_type, lenient_isinstance, lenient_issubclass
 
 if TYPE_CHECKING:
     from omnipy.data.dataset import Dataset
