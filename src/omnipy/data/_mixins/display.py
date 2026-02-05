@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 import dataclasses
 import functools
 from inspect import signature
@@ -187,7 +187,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 the user interacts with the library (including the
                 type of interactive interpreter used, if any).
             system (ColorSystem.Literals): Color system to use for
-                terminal output. The default is AUTO, which
+                terminal output. The default is `AUTO`, which
                 automatically detects the color system based on
                 particular environment variables. If color
                 capabilities are not detected, the output will be in
@@ -222,18 +222,18 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
             v_overflow (VerticalOverflowMode.Literals): How to handle
                 text that exceeds the height.
             panel (PanelDesign.Literals): Visual design of the panel
-                used as container for the output. Only TABLE is
+                used as container for the output. Only `TABLE` is
                 currently supported, which displays the output in a
                 table-like grid.
             title_at_top (bool): Whether panel titles will be displayed
                 over the panel content (True) or below the content
                 (False)
             max_title_height (MaxTitleHeight.Literals): Maximum height
-                of the panel title. If AUTO, the height is determined
+                of the panel title. If `AUTO`, the height is determined
                 by the content of the title, up to a maximum of two
-                lines. If ZERO, the title is not displayed at all. If
-                ONE or TWO, the title is displayed with a fixed height
-                of max one or two lines, respectively.
+                lines. If `ZERO`, the title is not displayed at all. If
+                `ONE` or `TWO`, the title is displayed with a fixed
+                height of max one or two lines, respectively.
             min_panel_width (NonNegativeInt): Minimum width in
                 characters per panel.
             min_crop_width (NonNegativeInt): Minimum cropping width in
@@ -251,7 +251,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 panels to display horizontally side-by-side at the top
                 level. This value also acts as a ceiling for nested
                 panels; nested panels cannot exceed this limit even if
-                the constant MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED is
+                the constant `MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED` is
                 set to a higher value. If None, there is no limit.
             max_nesting_depth (NonNegativeInt | None): Maximum levels of
                 nested panels to display. If None, there is no limit.
@@ -468,7 +468,7 @@ class IsDatabaseDisplayMixin(IsBaseDisplayMixin, Protocol):
     list: IsDisplayMethod['Element | None']
 
 
-class BaseDisplayMixin:
+class BaseDisplayMixin(metaclass=ABCMeta):
     @abstractmethod
     def _default_panel(self, **kwargs) -> DraftPanel:
         ...
@@ -725,22 +725,20 @@ class BaseDisplayMixin:
             justify: Justify.Literals = Justify.LEFT,
         ) -> 'Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
-            # {{PEEK_SUMMARY}}
+            # {{FULL_SUMMARY}}
             #
-            # {{PEEK_DESCRIPTION}}
+            # {{FULL_DESCRIPTION}}
             #
             # {{DISPLAY_METHOD_ARGS}}
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
             #
-            """Display a preview of the Model or Dataset content.
+            """Display the content of the Model or Dataset in full height.
 
-            For Model instances, `peek()` displays a preview of the
-            model's content. For Dataset instances, `peek()` displays a
-            side-by-side view of each model contained in the dataset. Both
-            views are automatically limited by the available display
-            dimensions.
+            `full()` is a shorthand for `peek(height=None)` for both
+            models and datasets. Both full-height views are automatically
+            limited in width by the available display dimensions.
 
             Other Args:
                 width (NonNegativeInt | None):
@@ -787,7 +785,7 @@ class BaseDisplayMixin:
                     the user interacts with the library (including the
                     type of interactive interpreter used, if any).
                 system (ColorSystem.Literals): Color system to use for
-                    terminal output. The default is AUTO, which
+                    terminal output. The default is `AUTO`, which
                     automatically detects the color system based on
                     particular environment variables. If color
                     capabilities are not detected, the output will be in
@@ -822,18 +820,18 @@ class BaseDisplayMixin:
                 v_overflow (VerticalOverflowMode.Literals): How to handle
                     text that exceeds the height.
                 panel (PanelDesign.Literals): Visual design of the panel
-                    used as container for the output. Only TABLE is
+                    used as container for the output. Only `TABLE` is
                     currently supported, which displays the output in a
                     table-like grid.
                 title_at_top (bool): Whether panel titles will be displayed
                     over the panel content (True) or below the content
                     (False)
                 max_title_height (MaxTitleHeight.Literals): Maximum height
-                    of the panel title. If AUTO, the height is determined
+                    of the panel title. If `AUTO`, the height is determined
                     by the content of the title, up to a maximum of two
-                    lines. If ZERO, the title is not displayed at all. If
-                    ONE or TWO, the title is displayed with a fixed height
-                    of max one or two lines, respectively.
+                    lines. If `ZERO`, the title is not displayed at all. If
+                    `ONE` or `TWO`, the title is displayed with a fixed
+                    height of max one or two lines, respectively.
                 min_panel_width (NonNegativeInt): Minimum width in
                     characters per panel.
                 min_crop_width (NonNegativeInt): Minimum cropping width in
@@ -851,7 +849,7 @@ class BaseDisplayMixin:
                     panels to display horizontally side-by-side at the top
                     level. This value also acts as a ceiling for nested
                     panels; nested panels cannot exceed this limit even if
-                    the constant MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED is
+                    the constant `MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED` is
                     set to a higher value. If None, there is no limit.
                 max_nesting_depth (NonNegativeInt | None): Maximum levels of
                     nested panels to display. If None, there is no limit.
@@ -871,22 +869,20 @@ class BaseDisplayMixin:
         @takes_input_params_from(_DisplayMethodParams.__init__)
         def full(self, **kwargs) -> 'Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
-            # {{PEEK_SUMMARY}}
+            # {{FULL_SUMMARY}}
             #
-            # {{PEEK_DESCRIPTION}}
+            # {{FULL_DESCRIPTION}}
             #
             # {{DISPLAY_METHOD_ARGS}}
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
             #
-            """Display a preview of the Model or Dataset content.
+            """Display the content of the Model or Dataset in full height.
 
-            For Model instances, `peek()` displays a preview of the
-            model's content. For Dataset instances, `peek()` displays a
-            side-by-side view of each model contained in the dataset. Both
-            views are automatically limited by the available display
-            dimensions.
+            `full()` is a shorthand for `peek(height=None)` for both
+            models and datasets. Both full-height views are automatically
+            limited in width by the available display dimensions.
 
             Other Args:
                 width (NonNegativeInt | None):
@@ -933,7 +929,7 @@ class BaseDisplayMixin:
                     the user interacts with the library (including the
                     type of interactive interpreter used, if any).
                 system (ColorSystem.Literals): Color system to use for
-                    terminal output. The default is AUTO, which
+                    terminal output. The default is `AUTO`, which
                     automatically detects the color system based on
                     particular environment variables. If color
                     capabilities are not detected, the output will be in
@@ -968,18 +964,18 @@ class BaseDisplayMixin:
                 v_overflow (VerticalOverflowMode.Literals): How to handle
                     text that exceeds the height.
                 panel (PanelDesign.Literals): Visual design of the panel
-                    used as container for the output. Only TABLE is
+                    used as container for the output. Only `TABLE` is
                     currently supported, which displays the output in a
                     table-like grid.
                 title_at_top (bool): Whether panel titles will be displayed
                     over the panel content (True) or below the content
                     (False)
                 max_title_height (MaxTitleHeight.Literals): Maximum height
-                    of the panel title. If AUTO, the height is determined
+                    of the panel title. If `AUTO`, the height is determined
                     by the content of the title, up to a maximum of two
-                    lines. If ZERO, the title is not displayed at all. If
-                    ONE or TWO, the title is displayed with a fixed height
-                    of max one or two lines, respectively.
+                    lines. If `ZERO`, the title is not displayed at all. If
+                    `ONE` or `TWO`, the title is displayed with a fixed
+                    height of max one or two lines, respectively.
                 min_panel_width (NonNegativeInt): Minimum width in
                     characters per panel.
                 min_crop_width (NonNegativeInt): Minimum cropping width in
@@ -997,7 +993,7 @@ class BaseDisplayMixin:
                     panels to display horizontally side-by-side at the top
                     level. This value also acts as a ceiling for nested
                     panels; nested panels cannot exceed this limit even if
-                    the constant MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED is
+                    the constant `MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED` is
                     set to a higher value. If None, there is no limit.
                 max_nesting_depth (NonNegativeInt | None): Maximum levels of
                     nested panels to display. If None, there is no limit.
@@ -1122,7 +1118,7 @@ class BaseDisplayMixin:
                     the user interacts with the library (including the
                     type of interactive interpreter used, if any).
                 system (ColorSystem.Literals): Color system to use for
-                    terminal output. The default is AUTO, which
+                    terminal output. The default is `AUTO`, which
                     automatically detects the color system based on
                     particular environment variables. If color
                     capabilities are not detected, the output will be in
@@ -1157,18 +1153,18 @@ class BaseDisplayMixin:
                 v_overflow (VerticalOverflowMode.Literals): How to handle
                     text that exceeds the height.
                 panel (PanelDesign.Literals): Visual design of the panel
-                    used as container for the output. Only TABLE is
+                    used as container for the output. Only `TABLE` is
                     currently supported, which displays the output in a
                     table-like grid.
                 title_at_top (bool): Whether panel titles will be displayed
                     over the panel content (True) or below the content
                     (False)
                 max_title_height (MaxTitleHeight.Literals): Maximum height
-                    of the panel title. If AUTO, the height is determined
+                    of the panel title. If `AUTO`, the height is determined
                     by the content of the title, up to a maximum of two
-                    lines. If ZERO, the title is not displayed at all. If
-                    ONE or TWO, the title is displayed with a fixed height
-                    of max one or two lines, respectively.
+                    lines. If `ZERO`, the title is not displayed at all. If
+                    `ONE` or `TWO`, the title is displayed with a fixed
+                    height of max one or two lines, respectively.
                 min_panel_width (NonNegativeInt): Minimum width in
                     characters per panel.
                 min_crop_width (NonNegativeInt): Minimum cropping width in
@@ -1186,7 +1182,7 @@ class BaseDisplayMixin:
                     panels to display horizontally side-by-side at the top
                     level. This value also acts as a ceiling for nested
                     panels; nested panels cannot exceed this limit even if
-                    the constant MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED is
+                    the constant `MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED` is
                     set to a higher value. If None, there is no limit.
                 max_nesting_depth (NonNegativeInt | None): Maximum levels of
                     nested panels to display. If None, there is no limit.
@@ -1268,7 +1264,7 @@ class BaseDisplayMixin:
                     the user interacts with the library (including the
                     type of interactive interpreter used, if any).
                 system (ColorSystem.Literals): Color system to use for
-                    terminal output. The default is AUTO, which
+                    terminal output. The default is `AUTO`, which
                     automatically detects the color system based on
                     particular environment variables. If color
                     capabilities are not detected, the output will be in
@@ -1303,18 +1299,18 @@ class BaseDisplayMixin:
                 v_overflow (VerticalOverflowMode.Literals): How to handle
                     text that exceeds the height.
                 panel (PanelDesign.Literals): Visual design of the panel
-                    used as container for the output. Only TABLE is
+                    used as container for the output. Only `TABLE` is
                     currently supported, which displays the output in a
                     table-like grid.
                 title_at_top (bool): Whether panel titles will be displayed
                     over the panel content (True) or below the content
                     (False)
                 max_title_height (MaxTitleHeight.Literals): Maximum height
-                    of the panel title. If AUTO, the height is determined
+                    of the panel title. If `AUTO`, the height is determined
                     by the content of the title, up to a maximum of two
-                    lines. If ZERO, the title is not displayed at all. If
-                    ONE or TWO, the title is displayed with a fixed height
-                    of max one or two lines, respectively.
+                    lines. If `ZERO`, the title is not displayed at all. If
+                    `ONE` or `TWO`, the title is displayed with a fixed
+                    height of max one or two lines, respectively.
                 min_panel_width (NonNegativeInt): Minimum width in
                     characters per panel.
                 min_crop_width (NonNegativeInt): Minimum cropping width in
@@ -1332,7 +1328,7 @@ class BaseDisplayMixin:
                     panels to display horizontally side-by-side at the top
                     level. This value also acts as a ceiling for nested
                     panels; nested panels cannot exceed this limit even if
-                    the constant MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED is
+                    the constant `MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED` is
                     set to a higher value. If None, there is no limit.
                 max_nesting_depth (NonNegativeInt | None): Maximum levels of
                     nested panels to display. If None, there is no limit.
@@ -1449,7 +1445,7 @@ class BaseDisplayMixin:
                     the user interacts with the library (including the
                     type of interactive interpreter used, if any).
                 system (ColorSystem.Literals): Color system to use for
-                    terminal output. The default is AUTO, which
+                    terminal output. The default is `AUTO`, which
                     automatically detects the color system based on
                     particular environment variables. If color
                     capabilities are not detected, the output will be in
@@ -1484,18 +1480,18 @@ class BaseDisplayMixin:
                 v_overflow (VerticalOverflowMode.Literals): How to handle
                     text that exceeds the height.
                 panel (PanelDesign.Literals): Visual design of the panel
-                    used as container for the output. Only TABLE is
+                    used as container for the output. Only `TABLE` is
                     currently supported, which displays the output in a
                     table-like grid.
                 title_at_top (bool): Whether panel titles will be displayed
                     over the panel content (True) or below the content
                     (False)
                 max_title_height (MaxTitleHeight.Literals): Maximum height
-                    of the panel title. If AUTO, the height is determined
+                    of the panel title. If `AUTO`, the height is determined
                     by the content of the title, up to a maximum of two
-                    lines. If ZERO, the title is not displayed at all. If
-                    ONE or TWO, the title is displayed with a fixed height
-                    of max one or two lines, respectively.
+                    lines. If `ZERO`, the title is not displayed at all. If
+                    `ONE` or `TWO`, the title is displayed with a fixed
+                    height of max one or two lines, respectively.
                 min_panel_width (NonNegativeInt): Minimum width in
                     characters per panel.
                 min_crop_width (NonNegativeInt): Minimum cropping width in
@@ -1513,7 +1509,7 @@ class BaseDisplayMixin:
                     panels to display horizontally side-by-side at the top
                     level. This value also acts as a ceiling for nested
                     panels; nested panels cannot exceed this limit even if
-                    the constant MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED is
+                    the constant `MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED` is
                     set to a higher value. If None, there is no limit.
                 max_nesting_depth (NonNegativeInt | None): Maximum levels of
                     nested panels to display. If None, there is no limit.
@@ -1583,7 +1579,7 @@ class BaseDisplayMixin:
                     the user interacts with the library (including the
                     type of interactive interpreter used, if any).
                 system (ColorSystem.Literals): Color system to use for
-                    terminal output. The default is AUTO, which
+                    terminal output. The default is `AUTO`, which
                     automatically detects the color system based on
                     particular environment variables. If color
                     capabilities are not detected, the output will be in
@@ -1618,18 +1614,18 @@ class BaseDisplayMixin:
                 v_overflow (VerticalOverflowMode.Literals): How to handle
                     text that exceeds the height.
                 panel (PanelDesign.Literals): Visual design of the panel
-                    used as container for the output. Only TABLE is
+                    used as container for the output. Only `TABLE` is
                     currently supported, which displays the output in a
                     table-like grid.
                 title_at_top (bool): Whether panel titles will be displayed
                     over the panel content (True) or below the content
                     (False)
                 max_title_height (MaxTitleHeight.Literals): Maximum height
-                    of the panel title. If AUTO, the height is determined
+                    of the panel title. If `AUTO`, the height is determined
                     by the content of the title, up to a maximum of two
-                    lines. If ZERO, the title is not displayed at all. If
-                    ONE or TWO, the title is displayed with a fixed height
-                    of max one or two lines, respectively.
+                    lines. If `ZERO`, the title is not displayed at all. If
+                    `ONE` or `TWO`, the title is displayed with a fixed
+                    height of max one or two lines, respectively.
                 min_panel_width (NonNegativeInt): Minimum width in
                     characters per panel.
                 min_crop_width (NonNegativeInt): Minimum cropping width in
@@ -1647,7 +1643,7 @@ class BaseDisplayMixin:
                     panels to display horizontally side-by-side at the top
                     level. This value also acts as a ceiling for nested
                     panels; nested panels cannot exceed this limit even if
-                    the constant MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED is
+                    the constant `MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED` is
                     set to a higher value. If None, there is no limit.
                 max_nesting_depth (NonNegativeInt | None): Maximum levels of
                     nested panels to display. If None, there is no limit.
@@ -2453,7 +2449,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                         the user interacts with the library (including the
                         type of interactive interpreter used, if any).
                     system (ColorSystem.Literals): Color system to use for
-                        terminal output. The default is AUTO, which
+                        terminal output. The default is `AUTO`, which
                         automatically detects the color system based on
                         particular environment variables. If color
                         capabilities are not detected, the output will be in
@@ -2488,18 +2484,18 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                     v_overflow (VerticalOverflowMode.Literals): How to handle
                         text that exceeds the height.
                     panel (PanelDesign.Literals): Visual design of the panel
-                        used as container for the output. Only TABLE is
+                        used as container for the output. Only `TABLE` is
                         currently supported, which displays the output in a
                         table-like grid.
                     title_at_top (bool): Whether panel titles will be displayed
                         over the panel content (True) or below the content
                         (False)
                     max_title_height (MaxTitleHeight.Literals): Maximum height
-                        of the panel title. If AUTO, the height is determined
+                        of the panel title. If `AUTO`, the height is determined
                         by the content of the title, up to a maximum of two
-                        lines. If ZERO, the title is not displayed at all. If
-                        ONE or TWO, the title is displayed with a fixed height
-                        of max one or two lines, respectively.
+                        lines. If `ZERO`, the title is not displayed at all. If
+                        `ONE` or `TWO`, the title is displayed with a fixed
+                        height of max one or two lines, respectively.
                     min_panel_width (NonNegativeInt): Minimum width in
                         characters per panel.
                     min_crop_width (NonNegativeInt): Minimum cropping width in
@@ -2517,7 +2513,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                         panels to display horizontally side-by-side at the top
                         level. This value also acts as a ceiling for nested
                         panels; nested panels cannot exceed this limit even if
-                        the constant MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED is
+                        the constant `MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED` is
                         set to a higher value. If None, there is no limit.
                     max_nesting_depth (NonNegativeInt | None): Maximum levels of
                         nested panels to display. If None, there is no limit.
@@ -2596,7 +2592,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                         the user interacts with the library (including the
                         type of interactive interpreter used, if any).
                     system (ColorSystem.Literals): Color system to use for
-                        terminal output. The default is AUTO, which
+                        terminal output. The default is `AUTO`, which
                         automatically detects the color system based on
                         particular environment variables. If color
                         capabilities are not detected, the output will be in
@@ -2631,18 +2627,18 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                     v_overflow (VerticalOverflowMode.Literals): How to handle
                         text that exceeds the height.
                     panel (PanelDesign.Literals): Visual design of the panel
-                        used as container for the output. Only TABLE is
+                        used as container for the output. Only `TABLE` is
                         currently supported, which displays the output in a
                         table-like grid.
                     title_at_top (bool): Whether panel titles will be displayed
                         over the panel content (True) or below the content
                         (False)
                     max_title_height (MaxTitleHeight.Literals): Maximum height
-                        of the panel title. If AUTO, the height is determined
+                        of the panel title. If `AUTO`, the height is determined
                         by the content of the title, up to a maximum of two
-                        lines. If ZERO, the title is not displayed at all. If
-                        ONE or TWO, the title is displayed with a fixed height
-                        of max one or two lines, respectively.
+                        lines. If `ZERO`, the title is not displayed at all. If
+                        `ONE` or `TWO`, the title is displayed with a fixed
+                        height of max one or two lines, respectively.
                     min_panel_width (NonNegativeInt): Minimum width in
                         characters per panel.
                     min_crop_width (NonNegativeInt): Minimum cropping width in
@@ -2660,7 +2656,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                         panels to display horizontally side-by-side at the top
                         level. This value also acts as a ceiling for nested
                         panels; nested panels cannot exceed this limit even if
-                        the constant MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED is
+                        the constant `MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED` is
                         set to a higher value. If None, there is no limit.
                     max_nesting_depth (NonNegativeInt | None): Maximum levels of
                         nested panels to display. If None, there is no limit.
