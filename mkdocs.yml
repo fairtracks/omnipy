@@ -75,9 +75,6 @@ plugins:
         options:
           allow_inspection: false
           backlinks: true
-          extensions:
-            - griffe_fieldz:
-                add_fields_to: docstring-attributes
           inheritance_diagram_direction: BT
           show_inheritance_diagram: true
           heading_level: 1
