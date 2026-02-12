@@ -91,6 +91,7 @@ plugins:
           docstring_options:
             returns_multiple_items: false
           docstring_section_style: spacy
+          merge_init_into_class: true
           show_if_no_docstring: true
           annotations_path: source
           line_length: 100
