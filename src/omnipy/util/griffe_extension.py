@@ -22,7 +22,6 @@ class UseDynamicSignatureForSpecificFunctions(griffe.Extension):
             logger.warning(f'Could not import {func.path}: {error}')
             return
 
-        # Update default values modified by decorator.
         signature = inspect.signature(runtime_func)
 
         def _convert_parameter(parameter: inspect.Parameter) -> griffe.Parameter:
