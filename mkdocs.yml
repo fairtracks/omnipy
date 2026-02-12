@@ -83,7 +83,6 @@ plugins:
           show_symbol_type_toc: true
           filters:
             - "!^_"
-            - "^__"
             - "!^__all__"
             - "!^pyd"
           summary: true
