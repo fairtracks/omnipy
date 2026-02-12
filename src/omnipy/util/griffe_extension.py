@@ -1,7 +1,6 @@
 import inspect
 
 import griffe
-from griffe.agents.inspector import _convert_object_to_annotation, _convert_parameter
 
 logger = griffe.get_logger('griffe_dyn_signature_specific_functions')
 
@@ -10,7 +9,10 @@ class UseDynamicSignatureForSpecificFunctions(griffe.Extension):
     def __init__(self, functions: list[str]) -> None:
         self.functions = functions
 
-    def on_function(self, *, func: griffe.Function, **kwargs) -> None:
+    def on_function_instance(self, *, func: griffe.Function, **kwargs) -> None:
+
+        from _griffe.agents.inspector import _convert_object_to_annotation, _convert_parameter
+
         if func.path not in self.functions:
             return
 
