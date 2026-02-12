@@ -75,6 +75,9 @@ plugins:
         options:
           allow_inspection: false
           backlinks: true
+          extensions:
+            - omnipy/util/griffe_extensions.py:UseDynamicSignatureForSpecificFunctions:
+                functions: [ omnipy.data._mixins.display.BaseDisplayMixin.peek ]
           inheritance_diagram_direction: BT
           show_inheritance_diagram: true
           heading_level: 1
