@@ -43,6 +43,8 @@ dependencies = [
     "notebook (>=7.4.5,<8.0.0)",
     "placeholder (>=1.5.1,<2.0.0)",
     "pip>=22",
+    "ipyvuetify==1.11.3",
+    "ipyvue==1.11.3",
 ]
 
 [dependency-groups]
