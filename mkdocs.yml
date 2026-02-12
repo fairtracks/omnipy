@@ -76,6 +76,10 @@ plugins:
           docstring_style: google
           docstring_options:
             returns_multiple_items: false
+          extensions:
+            - griffe_pydantic:
+                schema: true
+            - griffe_inherited_method_crossrefs
           filters:
             - "!^_"
             - "^__"
