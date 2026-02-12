@@ -14,8 +14,8 @@ from omnipy.data.model import Model
 from omnipy.shared.exceptions import FailedDataError, PendingDataError
 from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.protocols.hub.runtime import IsRuntime
-from omnipy.util._pydantic import ValidationError
-import omnipy.util._pydantic as pyd
+from omnipy.util.pydantic import ValidationError
+import omnipy.util.pydantic as pyd
 
 from .helpers.classes import MyFloatObject
 from .helpers.datasets import (DefaultStrDataset,

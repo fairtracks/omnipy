@@ -7,7 +7,7 @@ from omnipy.data._display.panel.cropping import (crop_content_line_horizontally,
                                                  crop_content_lines_vertically,
                                                  crop_content_lines_vertically_for_resizing)
 from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, FullyRenderedDraftPanel
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 from ....helpers.mocks import (MockDimsAwarePanelBase,
                                MockFullyRenderedPanelBase,

@@ -8,7 +8,7 @@ from datetime import date
 from enum import Enum
 from typing import List, Optional
 
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 
 class SortOrder(Enum):

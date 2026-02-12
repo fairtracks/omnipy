@@ -3,7 +3,7 @@ from dataclasses import fields
 import pytest
 import pytest_cases as pc
 
-from omnipy.util._pydantic import ValidationError
+from omnipy.util.pydantic import ValidationError
 
 from ..helpers.classes import CaseInfo
 

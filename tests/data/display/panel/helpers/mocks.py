@@ -8,7 +8,7 @@ from omnipy.data._display.frame import AnyFrame, Frame
 from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, FullyRenderedDraftPanel
 from omnipy.data._display.panel.styling.output import OutputMode
 from omnipy.shared.exceptions import ShouldNotOccurException
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 from ...helpers.mocks import (MockDimsAwarePanelBase,
                               MockFullyRenderedPanelBase,

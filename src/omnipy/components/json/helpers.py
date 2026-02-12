@@ -2,7 +2,7 @@ import json
 
 from typing_extensions import TypeIs
 
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 from .typedefs import Json, JsonDict, JsonList, JsonScalar
 

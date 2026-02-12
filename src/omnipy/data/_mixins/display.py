@@ -50,8 +50,8 @@ from omnipy.shared.enums.ui import (BrowserPageUserInterfaceType,
                                     UserInterfaceType)
 from omnipy.shared.protocols.config import IsHtmlUserInterfaceConfig, IsUserInterfaceTypeConfig
 from omnipy.shared.typedefs import Method
-import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import is_package_editable, min_or_none, takes_input_params_from
+import omnipy.util.pydantic as pyd
 
 if TYPE_CHECKING:
     from IPython.lib.pretty import RepresentationPrinter
