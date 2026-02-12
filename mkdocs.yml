@@ -73,24 +73,32 @@ plugins:
       python:
         paths: [ src ]
         options:
-          docstring_style: google
-          docstring_options:
-            returns_multiple_items: false
+          allow_inspection: false
+          backlinks: true
           extensions:
             - griffe_fieldz:
                 add_fields_to: docstring-attributes
-
+          inheritance_diagram_direction: BT
+          show_inheritance_diagram: true
+          heading_level: 1
+          show_root_heading: true
+          show_symbol_type_heading: true
+          show_symbol_type_toc: true
           filters:
             - "!^_"
             - "^__"
             - "!^__all__"
             - "!^pyd"
-          heading_level: 1
-          show_root_heading: true
-          show_if_no_docstring: true
-          show_symbol_type_heading: true
-          show_symbol_type_toc: true
           summary: true
+          docstring_style: google
+          docstring_options:
+            returns_multiple_items: false
+          show_if_no_docstring: true
+          annotations_path: source
+          line_length: 100
+          modernize_annotations: true
+          show_overloads: true
+          overloads_only: true
           show_signature_annotations: true
-          separate_signature: true
+          separate_signature: false
           signature_crossrefs: true
