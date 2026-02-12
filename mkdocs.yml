@@ -77,8 +77,9 @@ plugins:
           docstring_options:
             returns_multiple_items: false
           extensions:
-            - griffe_fieldz
-            - griffe_inherited_method_crossrefs
+            - griffe_fieldz:
+                add_fields_to: docstring-attributes
+
           filters:
             - "!^_"
             - "^__"
