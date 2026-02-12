@@ -16,7 +16,7 @@ from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, Dra
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.shared.enums.display import PanelDesign
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 LayoutT = TypeVar('LayoutT', bound=Layout)
 

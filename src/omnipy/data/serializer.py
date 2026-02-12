@@ -7,8 +7,8 @@ from typing import Any, Callable, cast, IO, Type
 
 from omnipy.shared.protocols.data import HasData, IsDataset, IsSerializer, IsTarFileSerializer
 from omnipy.shared.protocols.hub.log import CanLog
-from omnipy.util._pydantic import ValidationError
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
+from omnipy.util.pydantic import ValidationError
 
 
 class Serializer(ABC):

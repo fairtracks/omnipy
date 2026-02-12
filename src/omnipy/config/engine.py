@@ -1,7 +1,7 @@
 from omnipy.config import ConfigBase
 from omnipy.shared.enums.job import EngineChoice
 from omnipy.shared.protocols.config import IsLocalRunnerConfig, IsPrefectEngineConfig
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 
 class JobRunnerConfig(ConfigBase):

@@ -7,7 +7,7 @@ from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.shared.protocols.compute.job import IsTaskTemplate
-from omnipy.util._pydantic import ValidationError
+from omnipy.util.pydantic import ValidationError
 
 from ..cases.iterate_tasks import IterateDataFilesCase
 from ..cases.raw.functions import data_import_func

@@ -31,8 +31,6 @@ from omnipy.shared.protocols.data import (IsHttpUrlDataset,
                                           IsPathsOrUrlsOneOrMoreOrNone)
 from omnipy.shared.typedefs import TypeForm
 from omnipy.util._placeholder import F
-from omnipy.util._pydantic import Undefined, UndefinedType, ValidationError
-import omnipy.util._pydantic as pyd
 from omnipy.util.decorators import call_super_if_available
 from omnipy.util.helpers import (evaluate_any_forward_refs_if_possible,
                                  get_calling_module_name,
@@ -41,6 +39,8 @@ from omnipy.util.helpers import (evaluate_any_forward_refs_if_possible,
                                  is_iterable,
                                  remove_forward_ref_notation,
                                  split_to_union_variants)
+from omnipy.util.pydantic import Undefined, UndefinedType, ValidationError
+import omnipy.util.pydantic as pyd
 
 if TYPE_CHECKING:
     from omnipy.data._mimic_models import (Model_bool,

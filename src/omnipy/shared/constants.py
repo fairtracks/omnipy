@@ -1,4 +1,4 @@
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 # Data - General
 

@@ -8,7 +8,7 @@ import pytest
 from omnipy.components.pandas.datasets import PandasDataset
 from omnipy.components.pandas.models import PandasModel
 from omnipy.components.tables.models import RowWiseTableWithColNamesModel
-from omnipy.util._pydantic import ValidationError
+from omnipy.util.pydantic import ValidationError
 
 from .helpers.asserts import assert_pandas_frame_dtypes
 

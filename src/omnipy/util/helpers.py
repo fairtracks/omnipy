@@ -36,7 +36,7 @@ from typing_extensions import TypeVar
 
 from omnipy.shared.protocols.util import IsDataclass
 from omnipy.shared.typedefs import LocaleType, TypeForm
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 _KeyT = TypeVar('_KeyT', bound=Hashable)
 _ValueT = TypeVar('_ValueT')

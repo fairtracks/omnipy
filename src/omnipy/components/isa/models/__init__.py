@@ -1,5 +1,5 @@
 from omnipy.data.model import Model
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 from ...json.models import JsonListOfDictsOfScalarsModel
 from ..models.investigation_schema import IsaInvestigationModel, IsaInvestigationSchema

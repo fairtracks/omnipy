@@ -18,8 +18,8 @@ from omnipy.data._display.panel.cropping import (crop_content_lines_vertically_f
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.data._display.panel.typedefs import FrameInvT, FrameT
-import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import first_key_in_mapping, split_all_content_to_lines, strip_newlines
+import omnipy.util.pydantic as pyd
 
 
 @pyd.dataclass(

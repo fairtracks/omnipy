@@ -11,7 +11,7 @@ from omnipy.data._display.frame import (AnyFrame,
                                         FrameWithWidth,
                                         FrameWithWidthAndHeight,
                                         UndefinedFrame)
-from omnipy.util._pydantic import ValidationError
+from omnipy.util.pydantic import ValidationError
 
 
 def _assert_frame(
