@@ -73,12 +73,11 @@ plugins:
       python:
         paths: [ src ]
         options:
-          allow_inspection: true
+          allow_inspection: false
           backlinks: true
-          force_inspection: true
           inheritance_diagram_direction: BT
           show_inheritance_diagram: true
-          heading_leve4l: 1
+          heading_level: 1
           show_root_heading: true
           show_symbol_type_heading: true
           show_symbol_type_toc: true
