@@ -10,7 +10,7 @@ from typing import Any, Callable, cast, Literal, overload, ParamSpec, Protocol, 
 import webbrowser
 
 from pathvalidate import sanitize_filename
-from typing_extensions import assert_never, get_args, TypeVar
+from typing_extensions import assert_never, get_args, override, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import OutputConfig
@@ -286,7 +286,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 browser. Otherwise, the method returns None.""")
 
 
-class IsDisplayMethod(Protocol[_RetT]):
+class IsDisplayMethod(Protocol):
     def __call__(
         self,
         /,
@@ -294,43 +294,155 @@ class IsDisplayMethod(Protocol[_RetT]):
         height: pyd.NonNegativeInt | None = None,
         tab: pyd.NonNegativeInt = 4,
         indent: pyd.NonNegativeInt = 2,
-        printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO,
-        syntax: SyntaxLanguage.Literals | str = SyntaxLanguage.AUTO,
-        freedom: pyd.NonNegativeFloat | None = 2.5,
+        printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
+        syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+        freedom: 'pyd.NonNegativeFloat | None' = 2.5,
         debug: bool = False,
-        ui: UserInterfaceType.Literals = UserInterfaceType.AUTO,
-        system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO,
-        style: AllColorStyles.Literals | str = RecommendedColorStyles.AUTO,
+        ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+        system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
+        style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
         bg: bool = False,
         fonts: tuple[str,
                      ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
         font_size: pyd.NonNegativeInt | None = 14,
         font_weight: pyd.NonNegativeInt | None = 400,
         line_height: pyd.NonNegativeFloat | None = 1.25,
-        h_overflow: HorizontalOverflowMode.Literals = HorizontalOverflowMode.ELLIPSIS,
-        v_overflow: VerticalOverflowMode.Literals = VerticalOverflowMode.ELLIPSIS_BOTTOM,
-        panel: PanelDesign.Literals = PanelDesign.TABLE,
+        h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
+        v_overflow: 'VerticalOverflowMode.Literals' = VerticalOverflowMode.ELLIPSIS_BOTTOM,
+        panel: 'PanelDesign.Literals' = PanelDesign.TABLE,
         title_at_top: bool = True,
-        max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO,
+        max_title_height: 'MaxTitleHeight.Literals' = MaxTitleHeight.AUTO,
         min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH,
         min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH,
         use_min_crop_width: bool = False,
         max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY,
         max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
-        justify: Justify.Literals = Justify.LEFT,
-    ) -> _RetT:
+        justify: 'Justify.Literals' = Justify.LEFT,
+    ) -> object:
+        ...
+
+
+class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
+    @override
+    def __call__(
+        self,
+        /,
+        width: pyd.NonNegativeInt | None = None,
+        height: pyd.NonNegativeInt | None = None,
+        tab: pyd.NonNegativeInt = 4,
+        indent: pyd.NonNegativeInt = 2,
+        printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
+        syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+        freedom: 'pyd.NonNegativeFloat | None' = 2.5,
+        debug: bool = False,
+        ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+        system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
+        style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+        bg: bool = False,
+        fonts: tuple[str,
+                     ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
+        font_size: pyd.NonNegativeInt | None = 14,
+        font_weight: pyd.NonNegativeInt | None = 400,
+        line_height: pyd.NonNegativeFloat | None = 1.25,
+        h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
+        v_overflow: 'VerticalOverflowMode.Literals' = VerticalOverflowMode.ELLIPSIS_BOTTOM,
+        panel: 'PanelDesign.Literals' = PanelDesign.TABLE,
+        title_at_top: bool = True,
+        max_title_height: 'MaxTitleHeight.Literals' = MaxTitleHeight.AUTO,
+        min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH,
+        min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH,
+        use_min_crop_width: bool = False,
+        max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY,
+        max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
+        justify: 'Justify.Literals' = Justify.LEFT,
+    ) -> 'Element | None':
+        ...
+
+
+class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
+    @override
+    def __call__(
+        self,
+        /,
+        width: pyd.NonNegativeInt | None = None,
+        height: pyd.NonNegativeInt | None = None,
+        tab: pyd.NonNegativeInt = 4,
+        indent: pyd.NonNegativeInt = 2,
+        printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
+        syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+        freedom: 'pyd.NonNegativeFloat | None' = 2.5,
+        debug: bool = False,
+        ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+        system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
+        style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+        bg: bool = False,
+        fonts: tuple[str,
+                     ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
+        font_size: pyd.NonNegativeInt | None = 14,
+        font_weight: pyd.NonNegativeInt | None = 400,
+        line_height: pyd.NonNegativeFloat | None = 1.25,
+        h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
+        v_overflow: 'VerticalOverflowMode.Literals' = VerticalOverflowMode.ELLIPSIS_BOTTOM,
+        panel: 'PanelDesign.Literals' = PanelDesign.TABLE,
+        title_at_top: bool = True,
+        max_title_height: 'MaxTitleHeight.Literals' = MaxTitleHeight.AUTO,
+        min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH,
+        min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH,
+        use_min_crop_width: bool = False,
+        max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY,
+        max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
+        justify: 'Justify.Literals' = Justify.LEFT,
+    ) -> None:
+        ...
+
+
+class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
+    @override
+    def __call__(
+        self,
+        /,
+        width: pyd.NonNegativeInt | None = None,
+        height: pyd.NonNegativeInt | None = None,
+        tab: pyd.NonNegativeInt = 4,
+        indent: pyd.NonNegativeInt = 2,
+        printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
+        syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+        freedom: 'pyd.NonNegativeFloat | None' = 2.5,
+        debug: bool = False,
+        ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+        system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
+        style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+        bg: bool = False,
+        fonts: tuple[str,
+                     ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
+        font_size: pyd.NonNegativeInt | None = 14,
+        font_weight: pyd.NonNegativeInt | None = 400,
+        line_height: pyd.NonNegativeFloat | None = 1.25,
+        h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
+        v_overflow: 'VerticalOverflowMode.Literals' = VerticalOverflowMode.ELLIPSIS_BOTTOM,
+        panel: 'PanelDesign.Literals' = PanelDesign.TABLE,
+        title_at_top: bool = True,
+        max_title_height: 'MaxTitleHeight.Literals' = MaxTitleHeight.AUTO,
+        min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH,
+        min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH,
+        use_min_crop_width: bool = False,
+        max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY,
+        max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
+        justify: 'Justify.Literals' = Justify.LEFT,
+    ) -> str:
         ...
 
 
 class IsBaseDisplayMixin(Protocol):
-    peek: IsDisplayMethod['Element | None']
-    full: IsDisplayMethod['Element | None']
-    json: IsDisplayMethod['Element | None']
-    browse: IsDisplayMethod[None]
+    peek: IsDisplayMethodMaybeReturnElement
+    full: IsDisplayMethodMaybeReturnElement
+    json: IsDisplayMethodMaybeReturnElement
+    browse: IsDisplayMethodReturnNone
+    _docs: IsDisplayMethodReturnStr
 
 
 class IsDatabaseDisplayMixin(IsBaseDisplayMixin, Protocol):
-    list: IsDisplayMethod['Element | None']
+    list: IsDisplayMethodMaybeReturnElement
 
 
 class BaseDisplayMixin(metaclass=ABCMeta):
@@ -713,7 +825,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 **kwargs,
             )
 
-        peek.__signature__ = signature(IsDisplayMethod.__call__)
+        peek.__signature__ = signature(IsDisplayMethodMaybeReturnElement.__call__)
 
     def _extract_ui_type(self, **kwargs) -> SpecifiedUserInterfaceType.Literals:
         return (kwargs.get('ui', None) or cast(DataClassBase, self).config.ui.detected_type)
@@ -1094,7 +1206,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 output_method=self._full,
                 **kwargs)
 
-        full.__signature__ = signature(IsDisplayMethod.__call__)
+        full.__signature__ = signature(IsDisplayMethodMaybeReturnElement.__call__)
 
     if TYPE_CHECKING:
 
@@ -1466,7 +1578,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 output_method=self._json,
                 **kwargs)
 
-        json.__signature__ = signature(IsDisplayMethod.__call__)
+        json.__signature__ = signature(IsDisplayMethodMaybeReturnElement.__call__)
 
     if TYPE_CHECKING:
 
@@ -1809,7 +1921,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             """
             self._browse(**kwargs)
 
-        browse.__signature__ = signature(IsDisplayMethod.__call__)
+        browse.__signature__ = signature(IsDisplayMethodReturnNone.__call__)
 
     @abstractmethod
     def _peek(self, **kwargs) -> DraftPanel:
@@ -1999,7 +2111,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             **kwargs,
         )
 
-    _docs.__signature__ = signature(IsDisplayMethod.__call__)
+    _docs.__signature__ = signature(IsDisplayMethodReturnStr.__call__)
 
     def __str__(self) -> str:
         return repr(self)
@@ -3024,7 +3136,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                     **kwargs,
                 )
 
-            list.__signature__ = signature(IsDisplayMethod.__call__)
+            list.__signature__ = signature(IsDisplayMethodMaybeReturnElement.__call__)
 
     def _list(self, **kwargs) -> DraftPanel:
         from omnipy.data.dataset import Dataset
