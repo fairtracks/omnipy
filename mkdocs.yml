@@ -83,6 +83,7 @@ plugins:
           show_symbol_type_toc: true
           filters:
             - "!^_"
+            - "__init__"
             - "!^__all__"
             - "!^pyd"
           summary: true
@@ -90,7 +91,6 @@ plugins:
           docstring_options:
             returns_multiple_items: false
           docstring_section_style: spacy
-          merge_init_into_class: true
           show_if_no_docstring: true
           annotations_path: source
           line_length: 100
@@ -98,5 +98,5 @@ plugins:
           show_overloads: true
           overloads_only: true
           show_signature_annotations: true
-          separate_signature: false
+          separate_signature: true
           signature_crossrefs: true
