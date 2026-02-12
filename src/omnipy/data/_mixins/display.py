@@ -713,7 +713,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 **kwargs,
             )
 
-        peek.__signature__ = signature(IsDisplayMethod['Element | None'].__call__)
+        peek.__signature__ = signature(IsDisplayMethod.__call__)
 
     def _extract_ui_type(self, **kwargs) -> SpecifiedUserInterfaceType.Literals:
         return (kwargs.get('ui', None) or cast(DataClassBase, self).config.ui.detected_type)
