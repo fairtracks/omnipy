@@ -77,8 +77,7 @@ plugins:
           docstring_options:
             returns_multiple_items: false
           extensions:
-            - griffe_pydantic:
-                schema: true
+            - griffe_fieldz
             - griffe_inherited_method_crossrefs
           filters:
             - "!^_"
