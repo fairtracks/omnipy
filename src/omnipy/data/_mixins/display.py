@@ -323,6 +323,8 @@ class IsDisplayMethod(Protocol):
 
 
 class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
+    from reacton.core import Element
+
     @override
     def __call__(
         self,
@@ -355,7 +357,7 @@ class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
         max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY,
         max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
         justify: 'Justify.Literals' = Justify.LEFT,
-    ) -> 'Element | None':
+    ) -> Element | None:
         ...
 
 
