@@ -147,8 +147,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 Width in characters of the output area (None for
                 auto-detect based on available display dimensions).
                 Defaults to `None`.
-            height (:obj:`NonNegativeInt | None = None`, optional):
-                Height in lines of the
+            height (NonNegativeInt | None = None): Height in lines of the
                 output area (None for auto-detect based on available
                 display dimensions).
             tab (NonNegativeInt): Number of spaces to use for each tab
@@ -390,8 +389,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
                     Defaults to `None`.
-                height (:obj:`NonNegativeInt | None = None`, optional):
-                    Height in lines of the
+                height (NonNegativeInt | None = None): Height in lines of the
                     output area (None for auto-detect based on available
                     display dimensions).
                 tab (NonNegativeInt): Number of spaces to use for each tab
@@ -535,8 +533,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
                     Defaults to `None`.
-                height (:obj:`NonNegativeInt | None = None`, optional):
-                    Height in lines of the
+                height (NonNegativeInt | None = None): Height in lines of the
                     output area (None for auto-detect based on available
                     display dimensions).
                 tab (NonNegativeInt): Number of spaces to use for each tab
@@ -737,8 +734,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
                     Defaults to `None`.
-                height (:obj:`NonNegativeInt | None = None`, optional):
-                    Height in lines of the
+                height (NonNegativeInt | None = None): Height in lines of the
                     output area (None for auto-detect based on available
                     display dimensions).
                 tab (NonNegativeInt): Number of spaces to use for each tab
@@ -882,8 +878,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
                     Defaults to `None`.
-                height (:obj:`NonNegativeInt | None = None`, optional):
-                    Height in lines of the
+                height (NonNegativeInt | None = None): Height in lines of the
                     output area (None for auto-detect based on available
                     display dimensions).
                 tab (NonNegativeInt): Number of spaces to use for each tab
@@ -1073,8 +1068,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
                     Defaults to `None`.
-                height (:obj:`NonNegativeInt | None = None`, optional):
-                    Height in lines of the
+                height (NonNegativeInt | None = None): Height in lines of the
                     output area (None for auto-detect based on available
                     display dimensions).
                 tab (NonNegativeInt): Number of spaces to use for each tab
@@ -1221,8 +1215,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
                     Defaults to `None`.
-                height (:obj:`NonNegativeInt | None = None`, optional):
-                    Height in lines of the
+                height (NonNegativeInt | None = None): Height in lines of the
                     output area (None for auto-detect based on available
                     display dimensions).
                 tab (NonNegativeInt): Number of spaces to use for each tab
@@ -1404,8 +1397,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
                     Defaults to `None`.
-                height (:obj:`NonNegativeInt | None = None`, optional):
-                    Height in lines of the
+                height (NonNegativeInt | None = None): Height in lines of the
                     output area (None for auto-detect based on available
                     display dimensions).
                 tab (NonNegativeInt): Number of spaces to use for each tab
@@ -1540,8 +1532,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
                     Defaults to `None`.
-                height (:obj:`NonNegativeInt | None = None`, optional):
-                    Height in lines of the
+                height (NonNegativeInt | None = None): Height in lines of the
                     output area (None for auto-detect based on available
                     display dimensions).
                 tab (NonNegativeInt): Number of spaces to use for each tab
@@ -1698,8 +1689,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 Width in characters of the output area (None for
                 auto-detect based on available display dimensions).
                 Defaults to `None`.
-            height (:obj:`NonNegativeInt | None = None`, optional):
-                Height in lines of the
+            height (NonNegativeInt | None = None): Height in lines of the
                 output area (None for auto-detect based on available
                 display dimensions).
             tab (NonNegativeInt): Number of spaces to use for each tab
@@ -2547,8 +2537,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                         Width in characters of the output area (None for
                         auto-detect based on available display dimensions).
                         Defaults to `None`.
-                    height (:obj:`NonNegativeInt | None = None`, optional):
-                        Height in lines of the
+                    height (NonNegativeInt | None = None): Height in lines of the
                         output area (None for auto-detect based on available
                         display dimensions).
                     tab (NonNegativeInt): Number of spaces to use for each tab
@@ -2692,8 +2681,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                         Width in characters of the output area (None for
                         auto-detect based on available display dimensions).
                         Defaults to `None`.
-                    height (:obj:`NonNegativeInt | None = None`, optional):
-                        Height in lines of the
+                    height (NonNegativeInt | None = None): Height in lines of the
                         output area (None for auto-detect based on available
                         display dimensions).
                     tab (NonNegativeInt): Number of spaces to use for each tab
