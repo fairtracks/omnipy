@@ -8,7 +8,7 @@ repos:
         types: [ toml ]
       - id: check-merge-conflict
       - id: check-ast
-        types_or: [ python, pyi ]
+        types: [ python ]
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.23
     hooks:
@@ -23,25 +23,25 @@ repos:
         additional_dependencies: [toml]
         args: [ '--style', 'pyproject.toml', '--parallel', '--in-place' ]
         stages: [ commit ]
-        types_or: [ python, pyi ]
+        types: [ python ]
       - id: yapf
         name: "yapf (check)"
         additional_dependencies: [toml]
         args: [ '--style', 'pyproject.toml', '--diff' ]
         stages: [ manual ]
-        types_or: [ python, pyi ]
+        types: [ python ]
   - repo: https://github.com/pycqa/isort
     rev: 6.0.0
     hooks:
       - id: isort
         name: isort
         stages: [ commit ]
-        types_or: [ python, pyi ]
+        types: [ python ]
       - id: isort
         name: isort (check)
         args: [ '--check-only' ]
         stages: [ manual ]
-        types_or: [ python, pyi ]
+        types: [ python ]
   - repo: https://github.com/pycqa/flake8
     rev: 7.1.2
     hooks:
@@ -54,12 +54,12 @@ repos:
         entry: pip install -e .
         language: system
         pass_filenames: false
-        types_or: [ python, pyi ]
+        types: [ python ]
       - id: expand-docstr-macros
         name: Expand docstring macros
         description: "Expand docstring macros in Python files."
         args: [ '--verbose', 'v' ]
         language: system
-        types_or: [ python, pyi ]
+        types: [ python ]
         stages: [ pre-commit ]
         entry: python .pre-commit-hooks/expand_docstr_macros.py
