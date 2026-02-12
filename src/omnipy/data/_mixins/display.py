@@ -510,6 +510,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             """
     else:
 
+        @takes_input_params_from(_DisplayMethodParams.__init__)
         def peek(self, /, **kwargs) -> 'Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{PEEK_SUMMARY}}
