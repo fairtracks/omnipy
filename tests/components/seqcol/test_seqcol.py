@@ -5,36 +5,94 @@ import pytest
 
 from omnipy.components.seqcol.models import SeqColLevel2Model
 
-# 1. As a user, I wish to know what sequences are inside a specific
-# collection, so that I can further access those sequences.
+# *1. As a user, I wish to know what sequences are inside a specific
+# collection, so that I can further access those sequences:
+#   i. level 0 digest
+#      -> /collections/{digest} endpoint
+#      -> level 2 "sequences" list
+#  ii. for each level 2 sequence
+#      -> the actual sequence string (e.g. from refget Sequences API)
 #
 # 2. As a user, I want to compare two sequence collections used by two
 # separate analyses so I can understand how comparable and compatible
 # their resulting data are.
+#   i. 2x level 0 digests
+#      -> /comparison/:digest1/:digest2 endpoint
+#      -> summary output (machine-readable)
+#   (ii. interpretation of summary output for human readability)
 #
 # 3. As a user, I am interested in a genome sequence collection, but I want
 # to extract sequences that compose the chromosomes/karyotype of a genome.
+#  i. level 0 digest
+#     -> /collections/{digest} endpoint
+#     -> level 2 "names" list
+#  (ii. select sequences of interest (no automatic way to do this yet))
 #
 # 4. As a submission system, I want to be able to validate a data file
 # submission. To do so, I need to know what exactly a sequence collection
 # contains.
+#  i. level 0 digest
+#     -> /collections/{digest} endpoint
+#     -> level 2 "name_length_pairs" list
+#  (ii. (in the tool) validate that the submitted file are consistent with
+#     the expected sequence names and lengths)
 #
-# 5. As a software developer, I want to embed a sequence collection digest
+# *5. As a software developer, I want to embed a sequence collection digest
 # in my tool's output so that downstream tools can identify the exact
 # sequence collection that was used.
+#  i. one or more FASTA files
+#     -> level 2 data (name, length, sequence)
+#     -> compute level 0 digest
+#     -> embed in output (e.g. in header or metadata)
+#  (ii. level 0 digest
+#     -> /collections/{digest} endpoint
+#     -> extract extra parameters (e.g. accession numbers) to embed in
+#        output metadata)
+#  variant: start with remote URL to FASTA file(s) instead of local files
 #
-# 6. I have a chromosome sizes file (a set of lengths and names), and I want
+# *6. I have a chromosome sizes file (a set of lengths and names), and I want
 # to ask whether a given sequence collection is length-compatible with
 # and/or name-compatible with my file.
+#   i. name_length_pairs serialized as a tabular file (e.g. TSV)
+#      -> level 2 "name_length_pairs" list
+#      -> calculate level 1 digests for "names" and "lengths"
+#   ii. Depends on exactly what "compatible" means:
+#     a. lengths and/or names are the same and in the same order:
+#        -> fetch level 1 "lengths" and "names" digests from level 0 digest
+#           of "given sequence collection"
+#        -> compare level 1 "lengths" and or "names" digest
+#     b. Coordinate systems are compatible if they contain the same names
+#        and lengths, regardless or order:
+#        -> compare level 1 "sorted_name_length_pairs" digests
+#     c. Coordinate systems are compatible if they contain the same names and
+#        lengths, in the same order:
+#        -> compare level 1 "name_length_pairs" digests
+#     d. Coordinate systems are compatible if one is the subset of the other:
+#        -> fetch level 2 "name_length_pairs" list for "given sequence
+#        collection" and manually compare with the name_length_pairs from
+#        the file (e.g. by converting both to sets and checking for
+#        subset/superset relationship)
 #
 # 7. As a genome browser, I have a sequence collection that defines the
 # coordinate system displayed. I want to know if a digest representing the
 # coordinate system of a given BED file is compatible with the browser.
+#  i.  level 0 digest of "given sequence collection" defining genome browser
+#  ii. level 1 digest of "sorted_name_length_pairs" associated with BED file
+#      (e.g. in header or metadata)
+#  iii. Retrieve level 1 digest of "sorted_name_length_pairs" from
+#       /collections/{digest} endpoint and compare.
+#  (advanced): Check for subset relationships
 #
 # 8. As a data processor, my input data didn't include information about the
 # reference genome used. I want to generate a sequence collection digest
 # and attach it so that further processing can benefit from the sequence
 # collection features.
+#  i. one or more FASTA files
+#     -> level 2 data (name, length, sequence)
+#     -> compute level 0 digest
+#     -> embed in output (e.g. in header or metadata)
+#  variant: If you do have the FASTA files, there is no clear-cut way to
+#           solve this in general, depends on exactly what data you have
 
 
 @pytest.fixture
