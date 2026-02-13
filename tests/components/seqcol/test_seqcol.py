@@ -5,6 +5,37 @@ import pytest
 
 from omnipy.components.seqcol.models import SeqColLevel2Model
 
+# 1. As a user, I wish to know what sequences are inside a specific
+# collection, so that I can further access those sequences.
+#
+# 2. As a user, I want to compare two sequence collections used by two
+# separate analyses so I can understand how comparable and compatible
+# their resulting data are.
+#
+# 3. As a user, I am interested in a genome sequence collection, but I want
+# to extract sequences that compose the chromosomes/karyotype of a genome.
+#
+# 4. As a submission system, I want to be able to validate a data file
+# submission. To do so, I need to know what exactly a sequence collection
+# contains.
+#
+# 5. As a software developer, I want to embed a sequence collection digest
+# in my tool's output so that downstream tools can identify the exact
+# sequence collection that was used.
+#
+# 6. I have a chromosome sizes file (a set of lengths and names), and I want
+# to ask whether a given sequence collection is length-compatible with
+# and/or name-compatible with my file.
+#
+# 7. As a genome browser, I have a sequence collection that defines the
+# coordinate system displayed. I want to know if a digest representing the
+# coordinate system of a given BED file is compatible with the browser.
+#
+# 8. As a data processor, my input data didn't include information about the
+# reference genome used. I want to generate a sequence collection digest
+# and attach it so that further processing can benefit from the sequence
+# collection features.
+
 
 @pytest.fixture
 def seqcol_level_0_digest() -> str:
