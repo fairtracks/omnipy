@@ -81,6 +81,8 @@ plugins:
             - omnipy.util.griffe_extension:UseDynamicSignatureForSpecificFunctions:
                 functions: [ omnipy.data._mixins.display.BaseDisplayMixin.peek ]
           inheritance_diagram_direction: BT
+          preload_modules:
+          - pydantic
           show_inheritance_diagram: true
           heading_level: 1
           show_root_heading: true
