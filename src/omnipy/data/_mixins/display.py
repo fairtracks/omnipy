@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import sys
 from textwrap import dedent
-from typing import Any, Callable, cast, Literal, overload, ParamSpec, Protocol, TYPE_CHECKING
+from typing import Any, Callable, cast, Literal, overload, ParamSpec, Protocol
 import webbrowser
 
 from pathvalidate import sanitize_filename
@@ -50,6 +50,7 @@ from omnipy.shared.enums.ui import (BrowserPageUserInterfaceType,
                                     UserInterfaceType)
 from omnipy.shared.protocols.config import IsHtmlUserInterfaceConfig, IsUserInterfaceTypeConfig
 from omnipy.shared.typedefs import Method
+from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import is_package_editable, min_or_none, takes_input_params_from
 
@@ -287,13 +288,17 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
 
 class IsDisplayMethod(Protocol):
+
+    # Forward references for the non-trivial __call__ parameters are needed
+    # for mkdocstrings/griffe extension (omnipy.util.griffe_extension:
+    # UseDynamicSignatureForSpecificFunctions) to work correctly.
     def __call__(
         self,
-        /,
-        width: pyd.NonNegativeInt | None = None,
-        height: pyd.NonNegativeInt | None = None,
-        tab: pyd.NonNegativeInt = 4,
-        indent: pyd.NonNegativeInt = 2,
+        *,
+        width: 'pyd.NonNegativeInt | None' = None,
+        height: 'pyd.NonNegativeInt | None' = None,
+        tab: 'pyd.NonNegativeInt' = 4,
+        indent: 'pyd.NonNegativeInt' = 2,
         printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
         syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
         freedom: 'pyd.NonNegativeFloat | None' = 2.5,
@@ -304,35 +309,33 @@ class IsDisplayMethod(Protocol):
         bg: bool = False,
         fonts: tuple[str,
                      ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
-        font_size: pyd.NonNegativeInt | None = 14,
-        font_weight: pyd.NonNegativeInt | None = 400,
-        line_height: pyd.NonNegativeFloat | None = 1.25,
+        font_size: 'pyd.NonNegativeInt | None' = 14,
+        font_weight: 'pyd.NonNegativeInt | None' = 400,
+        line_height: 'pyd.NonNegativeFloat | None' = 1.25,
         h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
         v_overflow: 'VerticalOverflowMode.Literals' = VerticalOverflowMode.ELLIPSIS_BOTTOM,
         panel: 'PanelDesign.Literals' = PanelDesign.TABLE,
         title_at_top: bool = True,
         max_title_height: 'MaxTitleHeight.Literals' = MaxTitleHeight.AUTO,
-        min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH,
-        min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH,
+        min_panel_width: 'pyd.NonNegativeInt' = MIN_PANEL_WIDTH,
+        min_crop_width: 'pyd.NonNegativeInt' = MIN_CROP_WIDTH,
         use_min_crop_width: bool = False,
-        max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY,
-        max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
+        max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
+        max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
         justify: 'Justify.Literals' = Justify.LEFT,
     ) -> object:
         ...
 
 
 class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
-    from reacton.core import Element
-
     @override
     def __call__(
         self,
-        /,
-        width: pyd.NonNegativeInt | None = None,
-        height: pyd.NonNegativeInt | None = None,
-        tab: pyd.NonNegativeInt = 4,
-        indent: pyd.NonNegativeInt = 2,
+        *,
+        width: 'pyd.NonNegativeInt | None' = None,
+        height: 'pyd.NonNegativeInt | None' = None,
+        tab: 'pyd.NonNegativeInt' = 4,
+        indent: 'pyd.NonNegativeInt' = 2,
         printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
         syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
         freedom: 'pyd.NonNegativeFloat | None' = 2.5,
@@ -343,21 +346,21 @@ class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
         bg: bool = False,
         fonts: tuple[str,
                      ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
-        font_size: pyd.NonNegativeInt | None = 14,
-        font_weight: pyd.NonNegativeInt | None = 400,
-        line_height: pyd.NonNegativeFloat | None = 1.25,
+        font_size: 'pyd.NonNegativeInt | None' = 14,
+        font_weight: 'pyd.NonNegativeInt | None' = 400,
+        line_height: 'pyd.NonNegativeFloat | None' = 1.25,
         h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
         v_overflow: 'VerticalOverflowMode.Literals' = VerticalOverflowMode.ELLIPSIS_BOTTOM,
         panel: 'PanelDesign.Literals' = PanelDesign.TABLE,
         title_at_top: bool = True,
         max_title_height: 'MaxTitleHeight.Literals' = MaxTitleHeight.AUTO,
-        min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH,
-        min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH,
+        min_panel_width: 'pyd.NonNegativeInt' = MIN_PANEL_WIDTH,
+        min_crop_width: 'pyd.NonNegativeInt' = MIN_CROP_WIDTH,
         use_min_crop_width: bool = False,
-        max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY,
-        max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
+        max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
+        max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
         justify: 'Justify.Literals' = Justify.LEFT,
-    ) -> Element | None:
+    ) -> 'Element | None':
         ...
 
 
@@ -365,11 +368,11 @@ class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
     @override
     def __call__(
         self,
-        /,
-        width: pyd.NonNegativeInt | None = None,
-        height: pyd.NonNegativeInt | None = None,
-        tab: pyd.NonNegativeInt = 4,
-        indent: pyd.NonNegativeInt = 2,
+        *,
+        width: 'pyd.NonNegativeInt | None' = None,
+        height: 'pyd.NonNegativeInt | None' = None,
+        tab: 'pyd.NonNegativeInt' = 4,
+        indent: 'pyd.NonNegativeInt' = 2,
         printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
         syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
         freedom: 'pyd.NonNegativeFloat | None' = 2.5,
@@ -380,19 +383,19 @@ class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
         bg: bool = False,
         fonts: tuple[str,
                      ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
-        font_size: pyd.NonNegativeInt | None = 14,
-        font_weight: pyd.NonNegativeInt | None = 400,
-        line_height: pyd.NonNegativeFloat | None = 1.25,
+        font_size: 'pyd.NonNegativeInt | None' = 14,
+        font_weight: 'pyd.NonNegativeInt | None' = 400,
+        line_height: 'pyd.NonNegativeFloat | None' = 1.25,
         h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
         v_overflow: 'VerticalOverflowMode.Literals' = VerticalOverflowMode.ELLIPSIS_BOTTOM,
         panel: 'PanelDesign.Literals' = PanelDesign.TABLE,
         title_at_top: bool = True,
         max_title_height: 'MaxTitleHeight.Literals' = MaxTitleHeight.AUTO,
-        min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH,
-        min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH,
+        min_panel_width: 'pyd.NonNegativeInt' = MIN_PANEL_WIDTH,
+        min_crop_width: 'pyd.NonNegativeInt' = MIN_CROP_WIDTH,
         use_min_crop_width: bool = False,
-        max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY,
-        max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
+        max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
+        max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
         justify: 'Justify.Literals' = Justify.LEFT,
     ) -> None:
         ...
@@ -402,11 +405,11 @@ class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
     @override
     def __call__(
         self,
-        /,
-        width: pyd.NonNegativeInt | None = None,
-        height: pyd.NonNegativeInt | None = None,
-        tab: pyd.NonNegativeInt = 4,
-        indent: pyd.NonNegativeInt = 2,
+        *,
+        width: 'pyd.NonNegativeInt | None' = None,
+        height: 'pyd.NonNegativeInt | None' = None,
+        tab: 'pyd.NonNegativeInt' = 4,
+        indent: 'pyd.NonNegativeInt' = 2,
         printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
         syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
         freedom: 'pyd.NonNegativeFloat | None' = 2.5,
@@ -417,19 +420,19 @@ class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
         bg: bool = False,
         fonts: tuple[str,
                      ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
-        font_size: pyd.NonNegativeInt | None = 14,
-        font_weight: pyd.NonNegativeInt | None = 400,
-        line_height: pyd.NonNegativeFloat | None = 1.25,
+        font_size: 'pyd.NonNegativeInt | None' = 14,
+        font_weight: 'pyd.NonNegativeInt | None' = 400,
+        line_height: 'pyd.NonNegativeFloat | None' = 1.25,
         h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
         v_overflow: 'VerticalOverflowMode.Literals' = VerticalOverflowMode.ELLIPSIS_BOTTOM,
         panel: 'PanelDesign.Literals' = PanelDesign.TABLE,
         title_at_top: bool = True,
         max_title_height: 'MaxTitleHeight.Literals' = MaxTitleHeight.AUTO,
-        min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH,
-        min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH,
+        min_panel_width: 'pyd.NonNegativeInt' = MIN_PANEL_WIDTH,
+        min_crop_width: 'pyd.NonNegativeInt' = MIN_CROP_WIDTH,
         use_min_crop_width: bool = False,
-        max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY,
-        max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
+        max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
+        max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
         justify: 'Justify.Literals' = Justify.LEFT,
     ) -> str:
         ...
@@ -443,7 +446,7 @@ class IsBaseDisplayMixin(Protocol):
     _docs: IsDisplayMethodReturnStr
 
 
-class IsDatabaseDisplayMixin(IsBaseDisplayMixin, Protocol):
+class IsDatasetDisplayMixin(IsBaseDisplayMixin, Protocol):
     list: IsDisplayMethodMaybeReturnElement
 
 
@@ -466,38 +469,38 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         def peek(
             self,
-            /,
-            width: pyd.NonNegativeInt | None = None,
-            height: pyd.NonNegativeInt | None = None,
-            tab: pyd.NonNegativeInt = 4,
-            indent: pyd.NonNegativeInt = 2,
-            printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO,
-            syntax: SyntaxLanguage.Literals | str = SyntaxLanguage.PYTHON,
-            freedom: pyd.NonNegativeFloat | None = 2.5,
+            *,
+            width: 'pyd.NonNegativeInt | None' = None,
+            height: 'pyd.NonNegativeInt | None' = None,
+            tab: 'pyd.NonNegativeInt' = 4,
+            indent: 'pyd.NonNegativeInt' = 2,
+            printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
+            syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+            freedom: 'pyd.NonNegativeFloat | None' = 2.5,
             debug: bool = False,
-            ui: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL,
-            system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO,
-            style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK,
+            ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+            system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
+            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
             bg: bool = False,
             fonts: tuple[str, ...] = ('Menlo',
                                       'DejaVu Sans Mono',
                                       'Consolas',
                                       'Courier New',
                                       'monospace'),
-            font_size: pyd.NonNegativeInt | None = 14,
-            font_weight: pyd.NonNegativeInt | None = 400,
-            line_height: pyd.NonNegativeFloat | None = 1.25,
-            h_overflow: HorizontalOverflowMode.Literals = HorizontalOverflowMode.ELLIPSIS,
-            v_overflow: VerticalOverflowMode.Literals = VerticalOverflowMode.ELLIPSIS_BOTTOM,
-            panel: PanelDesign.Literals = PanelDesign.TABLE,
+            font_size: 'pyd.NonNegativeInt | None' = 14,
+            font_weight: 'pyd.NonNegativeInt | None' = 400,
+            line_height: 'pyd.NonNegativeFloat | None' = 1.25,
+            h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
+            v_overflow: 'VerticalOverflowMode.Literals' = VerticalOverflowMode.ELLIPSIS_BOTTOM,
+            panel: 'PanelDesign.Literals' = PanelDesign.TABLE,
             title_at_top: bool = True,
-            max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO,
-            min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH,
-            min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH,
+            max_title_height: 'MaxTitleHeight.Literals' = MaxTitleHeight.AUTO,
+            min_panel_width: 'pyd.NonNegativeInt' = MIN_PANEL_WIDTH,
+            min_crop_width: 'pyd.NonNegativeInt' = MIN_CROP_WIDTH,
             use_min_crop_width: bool = False,
-            max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY,
-            max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
-            justify: Justify.Literals = Justify.LEFT,
+            max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
+            max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
+            justify: 'Justify.Literals' = Justify.LEFT,
         ) -> 'Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{PEEK_SUMMARY}}
@@ -660,7 +663,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             """
     else:
 
-        def peek(self, /, **kwargs) -> 'Element | None':
+        def peek(self, **kwargs) -> 'Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{PEEK_SUMMARY}}
             #
@@ -848,38 +851,38 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         def full(
             self,
-            /,
-            width: pyd.NonNegativeInt | None = None,
-            height: pyd.NonNegativeInt | None = None,
-            tab: pyd.NonNegativeInt = 4,
-            indent: pyd.NonNegativeInt = 2,
-            printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO,
-            syntax: SyntaxLanguage.Literals | str = SyntaxLanguage.AUTO,
-            freedom: pyd.NonNegativeFloat | None = 2.5,
+            *,
+            width: 'pyd.NonNegativeInt | None' = None,
+            height: 'pyd.NonNegativeInt | None' = None,
+            tab: 'pyd.NonNegativeInt' = 4,
+            indent: 'pyd.NonNegativeInt' = 2,
+            printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
+            syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+            freedom: 'pyd.NonNegativeFloat | None' = 2.5,
             debug: bool = False,
-            ui: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL,
-            system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO,
-            style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK,
+            ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+            system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
+            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
             bg: bool = False,
             fonts: tuple[str, ...] = ('Menlo',
                                       'DejaVu Sans Mono',
                                       'Consolas',
                                       'Courier New',
                                       'monospace'),
-            font_size: pyd.NonNegativeInt | None = 14,
-            font_weight: pyd.NonNegativeInt | None = 400,
-            line_height: pyd.NonNegativeFloat | None = 1.25,
-            h_overflow: HorizontalOverflowMode.Literals = HorizontalOverflowMode.ELLIPSIS,
-            v_overflow: VerticalOverflowMode.Literals = VerticalOverflowMode.ELLIPSIS_BOTTOM,
-            panel: PanelDesign.Literals = PanelDesign.TABLE,
+            font_size: 'pyd.NonNegativeInt | None' = 14,
+            font_weight: 'pyd.NonNegativeInt | None' = 400,
+            line_height: 'pyd.NonNegativeFloat | None' = 1.25,
+            h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
+            v_overflow: 'VerticalOverflowMode.Literals' = VerticalOverflowMode.ELLIPSIS_BOTTOM,
+            panel: 'PanelDesign.Literals' = PanelDesign.TABLE,
             title_at_top: bool = True,
-            max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO,
-            min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH,
-            min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH,
+            max_title_height: 'MaxTitleHeight.Literals' = MaxTitleHeight.AUTO,
+            min_panel_width: 'pyd.NonNegativeInt' = MIN_PANEL_WIDTH,
+            min_crop_width: 'pyd.NonNegativeInt' = MIN_CROP_WIDTH,
             use_min_crop_width: bool = False,
-            max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY,
-            max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
-            justify: Justify.Literals = Justify.LEFT,
+            max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
+            max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
+            justify: 'Justify.Literals' = Justify.LEFT,
         ) -> 'Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{FULL_SUMMARY}}
@@ -1214,38 +1217,38 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         def json(
             self,
-            /,
-            width: pyd.NonNegativeInt | None = None,
-            height: pyd.NonNegativeInt | None = None,
-            tab: pyd.NonNegativeInt = 4,
-            indent: pyd.NonNegativeInt = 2,
-            printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO,
-            syntax: SyntaxLanguage.Literals | str = SyntaxLanguage.AUTO,
-            freedom: pyd.NonNegativeFloat | None = 2.5,
+            *,
+            width: 'pyd.NonNegativeInt | None' = None,
+            height: 'pyd.NonNegativeInt | None' = None,
+            tab: 'pyd.NonNegativeInt' = 4,
+            indent: 'pyd.NonNegativeInt' = 2,
+            printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
+            syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+            freedom: 'pyd.NonNegativeFloat | None' = 2.5,
             debug: bool = False,
-            ui: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL,
-            system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO,
-            style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK,
+            ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+            system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
+            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
             bg: bool = False,
             fonts: tuple[str, ...] = ('Menlo',
                                       'DejaVu Sans Mono',
                                       'Consolas',
                                       'Courier New',
                                       'monospace'),
-            font_size: pyd.NonNegativeInt | None = 14,
-            font_weight: pyd.NonNegativeInt | None = 400,
-            line_height: pyd.NonNegativeFloat | None = 1.25,
-            h_overflow: HorizontalOverflowMode.Literals = HorizontalOverflowMode.ELLIPSIS,
-            v_overflow: VerticalOverflowMode.Literals = VerticalOverflowMode.ELLIPSIS_BOTTOM,
-            panel: PanelDesign.Literals = PanelDesign.TABLE,
+            font_size: 'pyd.NonNegativeInt | None' = 14,
+            font_weight: 'pyd.NonNegativeInt | None' = 400,
+            line_height: 'pyd.NonNegativeFloat | None' = 1.25,
+            h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
+            v_overflow: 'VerticalOverflowMode.Literals' = VerticalOverflowMode.ELLIPSIS_BOTTOM,
+            panel: 'PanelDesign.Literals' = PanelDesign.TABLE,
             title_at_top: bool = True,
-            max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO,
-            min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH,
-            min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH,
+            max_title_height: 'MaxTitleHeight.Literals' = MaxTitleHeight.AUTO,
+            min_panel_width: 'pyd.NonNegativeInt' = MIN_PANEL_WIDTH,
+            min_crop_width: 'pyd.NonNegativeInt' = MIN_CROP_WIDTH,
             use_min_crop_width: bool = False,
-            max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY,
-            max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
-            justify: Justify.Literals = Justify.LEFT,
+            max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
+            max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
+            justify: 'Justify.Literals' = Justify.LEFT,
         ) -> 'Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{JSON_SUMMARY}}
@@ -1411,7 +1414,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             """
     else:
 
-        def json(self, **kwargs) -> 'Element | None':
+        def json(self, **kwargs) -> None:
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{JSON_SUMMARY}}
             #
@@ -1586,38 +1589,38 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         def browse(
             self,
-            /,
-            width: pyd.NonNegativeInt | None = None,
-            height: pyd.NonNegativeInt | None = None,
-            tab: pyd.NonNegativeInt = 4,
-            indent: pyd.NonNegativeInt = 2,
-            printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO,
-            syntax: SyntaxLanguage.Literals | str = SyntaxLanguage.AUTO,
-            freedom: pyd.NonNegativeFloat | None = 2.5,
+            *,
+            width: 'pyd.NonNegativeInt | None' = None,
+            height: 'pyd.NonNegativeInt | None' = None,
+            tab: 'pyd.NonNegativeInt' = 4,
+            indent: 'pyd.NonNegativeInt' = 2,
+            printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
+            syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+            freedom: 'pyd.NonNegativeFloat | None' = 2.5,
             debug: bool = False,
-            ui: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL,
-            system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO,
-            style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK,
+            ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+            system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
+            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
             bg: bool = False,
             fonts: tuple[str, ...] = ('Menlo',
                                       'DejaVu Sans Mono',
                                       'Consolas',
                                       'Courier New',
                                       'monospace'),
-            font_size: pyd.NonNegativeInt | None = 14,
-            font_weight: pyd.NonNegativeInt | None = 400,
-            line_height: pyd.NonNegativeFloat | None = 1.25,
-            h_overflow: HorizontalOverflowMode.Literals = HorizontalOverflowMode.ELLIPSIS,
-            v_overflow: VerticalOverflowMode.Literals = VerticalOverflowMode.ELLIPSIS_BOTTOM,
-            panel: PanelDesign.Literals = PanelDesign.TABLE,
+            font_size: 'pyd.NonNegativeInt | None' = 14,
+            font_weight: 'pyd.NonNegativeInt | None' = 400,
+            line_height: 'pyd.NonNegativeFloat | None' = 1.25,
+            h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
+            v_overflow: 'VerticalOverflowMode.Literals' = VerticalOverflowMode.ELLIPSIS_BOTTOM,
+            panel: 'PanelDesign.Literals' = PanelDesign.TABLE,
             title_at_top: bool = True,
-            max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO,
-            min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH,
-            min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH,
+            max_title_height: 'MaxTitleHeight.Literals' = MaxTitleHeight.AUTO,
+            min_panel_width: 'pyd.NonNegativeInt' = MIN_PANEL_WIDTH,
+            min_crop_width: 'pyd.NonNegativeInt' = MIN_CROP_WIDTH,
             use_min_crop_width: bool = False,
-            max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY,
-            max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
-            justify: Justify.Literals = Justify.LEFT,
+            max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
+            max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
+            justify: 'Justify.Literals' = Justify.LEFT,
         ) -> None:
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{BROWSE_SUMMARY}}
@@ -1945,8 +1948,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _browse(self, **kwargs) -> None:
         ...
 
-    @takes_input_params_from(_DisplayMethodParams.__init__)
-    def _docs(self, **kwargs) -> str:
+    @takes_input_params_from(IsDisplayMethodReturnNone.__call__)
+    def _docs(self, *args, **kwargs) -> str:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         #
         # Displays a preview of the model or dataset for the documentation.
@@ -2113,7 +2116,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             **kwargs,
         )
 
-    _docs.__signature__ = signature(IsDisplayMethodReturnStr.__call__)
+    _docs.__signature__ = signature(IsDisplayMethodReturnStr.__call__)  # type: ignore[attr-defined]
 
     def __str__(self) -> str:
         return repr(self)
@@ -2210,9 +2213,10 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 # If the output is a browser page, we allow expanding the
                 # frame to fit the content
                 if not resized_panel.within_frame.width:
+                    new_frame = resized_panel.frame.modified_copy(width=resized_panel.dims.width)
                     resized_panel = dataclasses.replace(
                         resized_panel,
-                        frame=resized_panel.frame.modified_copy(width=resized_panel.dims.width),
+                        frame=new_frame,  # type: ignore[arg-type]
                     )
             return resized_panel.render_next_stage()
 
@@ -2294,7 +2298,6 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         **kwargs,
     ) -> DraftPanel:
         from omnipy.data.dataset import Dataset
-        from omnipy.data.model import Model
 
         ui_type = self._extract_ui_type(**kwargs)
         config = self._create_output_config_from_data_config(
@@ -2344,11 +2347,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 inner_kwargs = config_kwargs.copy()
 
                 if is_dataset_instance(model_or_dataset):
-                    dataset = cast(Dataset, model_or_dataset)
+                    dataset = model_or_dataset
                     model = dataset._get_self_as_json_model()
                     inner_kwargs = self._prepare_kwargs_for_json(inner_kwargs)
                 else:  # Model
-                    model = cast(Model, model_or_dataset)
+                    model = model_or_dataset
 
                 layout[inner_title] = self._create_inner_panel_for_model(
                     config,
@@ -2418,8 +2421,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
     def _update_config_kwargs_with_show_style_in_panel_if_random_style(
         self,
-        **config_kwargs,
-    ):
+        **config_kwargs: Any,
+    ) -> dict[str, Any]:
         if 'style' in config_kwargs:
             if 'panel' in config_kwargs:
                 panel_design: PanelDesign.Literals = config_kwargs['panel']
@@ -2460,7 +2463,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         for name, model_or_dataset in nested_content.items():
             if isinstance(model_or_dataset, Dataset):
-                cast(Dataset, model_or_dataset)._browse_dataset(html_output, **kwargs)
+                model_or_dataset._browse_dataset(html_output, **kwargs)
             else:
                 filename = f'{name}_{id(model_or_dataset)}.html'
                 html_output[filename] = model_or_dataset._display_according_to_ui_type(
@@ -2688,7 +2691,7 @@ def _call_dataset_method_if_applicable(model_method: Callable[..., _RetT]):
     def wrapper(self, **kwargs) -> _RetT:
         self_as_model = cast('Model', self)
         if is_dataset_instance(self_as_model.content):
-            self_as_dataset = cast('Dataset', self_as_model.content)
+            self_as_dataset = self_as_model.content
             dataset_method = getattr(self_as_dataset, model_method.__name__)
             return dataset_method(**kwargs)
         else:
@@ -2773,372 +2776,370 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
     if TYPE_CHECKING:
 
-        if TYPE_CHECKING:
+        def list(
+            self,
+            *,
+            width: 'pyd.NonNegativeInt | None' = None,
+            height: 'pyd.NonNegativeInt | None' = None,
+            tab: 'pyd.NonNegativeInt' = 4,
+            indent: 'pyd.NonNegativeInt' = 2,
+            printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
+            syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+            freedom: 'pyd.NonNegativeFloat | None' = 2.5,
+            debug: bool = False,
+            ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+            system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
+            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+            bg: bool = False,
+            fonts: tuple[str, ...] = ('Menlo',
+                                      'DejaVu Sans Mono',
+                                      'Consolas',
+                                      'Courier New',
+                                      'monospace'),
+            font_size: 'pyd.NonNegativeInt | None' = 14,
+            font_weight: 'pyd.NonNegativeInt | None' = 400,
+            line_height: 'pyd.NonNegativeFloat | None' = 1.25,
+            h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
+            v_overflow: 'VerticalOverflowMode.Literals' = VerticalOverflowMode.ELLIPSIS_BOTTOM,
+            panel: 'PanelDesign.Literals' = PanelDesign.TABLE,
+            title_at_top: bool = True,
+            max_title_height: 'MaxTitleHeight.Literals' = MaxTitleHeight.AUTO,
+            min_panel_width: 'pyd.NonNegativeInt' = MIN_PANEL_WIDTH,
+            min_crop_width: 'pyd.NonNegativeInt' = MIN_CROP_WIDTH,
+            use_min_crop_width: bool = False,
+            max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
+            max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
+            justify: 'Justify.Literals' = Justify.LEFT,
+        ) -> 'Element | None':
+            # %% Original docstring (managed by expand_docstr_macros.py) %%
+            # {{LIST_SUMMARY}}
+            #
+            # {{LIST_DESCRIPTION}}
+            #
+            # {{DISPLAY_METHOD_ARGS}}
+            #
+            # {{DISPLAY_METHOD_RETURNS}}
+            #
+            """Displays a summary list of all models in the dataset.
 
-            def list(
-                self,
-                /,
-                width: pyd.NonNegativeInt | None = None,
-                height: pyd.NonNegativeInt | None = None,
-                tab: pyd.NonNegativeInt = 4,
-                indent: pyd.NonNegativeInt = 2,
-                printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO,
-                syntax: SyntaxLanguage.Literals | str = SyntaxLanguage.PYTHON,
-                freedom: pyd.NonNegativeFloat | None = 2.5,
-                debug: bool = False,
-                ui: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL,
-                system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO,
-                style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK,
-                bg: bool = False,
-                fonts: tuple[str, ...] = ('Menlo',
-                                          'DejaVu Sans Mono',
-                                          'Consolas',
-                                          'Courier New',
-                                          'monospace'),
-                font_size: pyd.NonNegativeInt | None = 14,
-                font_weight: pyd.NonNegativeInt | None = 400,
-                line_height: pyd.NonNegativeFloat | None = 1.25,
-                h_overflow: HorizontalOverflowMode.Literals = HorizontalOverflowMode.ELLIPSIS,
-                v_overflow: VerticalOverflowMode.Literals = VerticalOverflowMode.ELLIPSIS_BOTTOM,
-                panel: PanelDesign.Literals = PanelDesign.TABLE,
-                title_at_top: bool = True,
-                max_title_height: MaxTitleHeight.Literals = MaxTitleHeight.AUTO,
-                min_panel_width: pyd.NonNegativeInt = MIN_PANEL_WIDTH,
-                min_crop_width: pyd.NonNegativeInt = MIN_CROP_WIDTH,
-                use_min_crop_width: bool = False,
-                max_panels_hor: pyd.NonNegativeInt | None = MAX_PANELS_HORIZONTALLY,
-                max_nesting_depth: pyd.NonNegativeInt | None = MAX_PANEL_NESTING_DEPTH,
-                justify: Justify.Literals = Justify.LEFT,
-            ) -> 'Element | None':
-                # %% Original docstring (managed by expand_docstr_macros.py) %%
-                # {{LIST_SUMMARY}}
-                #
-                # {{LIST_DESCRIPTION}}
-                #
-                # {{DISPLAY_METHOD_ARGS}}
-                #
-                # {{DISPLAY_METHOD_RETURNS}}
-                #
-                """Displays a summary list of all models in the dataset.
+            The summary list includes a number of key properties for each
+            model, including data file names, types, lengths, and sizes in
+            memory. The output is automatically limited by the available
+            display dimensions.
 
-                The summary list includes a number of key properties for each
-                model, including data file names, types, lengths, and sizes in
-                memory. The output is automatically limited by the available
-                display dimensions.
+            Keyword Args:
+                width (NonNegativeInt | None):
+                    Width in characters of the output area (None for
+                    auto-detect based on available display dimensions).
+                    Defaults to `None`.
+                height (NonNegativeInt | None):
+                    Height in lines of the output area (None for
+                    auto-detect based on available display dimensions).
+                    Defaults to `None`.
+                tab (NonNegativeInt):
+                    Number of spaces to use for each tab. Defaults to `4`.
+                indent (NonNegativeInt):
+                    Number of spaces to use for each indentation level.
+                    Defaults to `2`.
+                printer (PrettyPrinterLib.Literals):
+                    Library to use for pretty printing. Defaults to
+                    `'auto'`.
+                syntax (SyntaxLanguage.Literals | str):
+                    Syntax language for code highlighting. Supported
+                    lexers are defined in SyntaxLanguage. For
+                    non-supported styles, the user can specify a string
+                    with the Pygments lexer name. For this to work, the
+                    lexer must be registered in the Pygments library.
+                    Defaults to 'auto'.
+                freedom (float | None):
+                    Parameter that controls the level of freedom for
+                    formatted text to follow the geometry of the frame
+                    size (=total available area) in a proportional manner.
+                    If the proportional freedom is 0 (the lowest), then
+                    the output area must not in any case be proportionally
+                    wider that the frame (i.e. a 16/9 frame will only
+                    produce output that is 16/9 or narrower). Larger
+                    values of proportional freedom allow the output to be
+                    proportionally wider than the total available frame,
+                    to a degree that relates to the size difference
+                    between the frame and the content (larger difference
+                    gives more freedom). The default value of 2.5 is a
+                    good compromise between readability/aesthetics and
+                    good use of the screen estate. If None, the freedom is
+                    unlimited (i.e. proportionality is not taken into
+                    account at all).
+                debug (bool):
+                    When True, enables additional debugging information in
+                    the output, such as the hierarchy of the Model
+                    objects.
+                ui (UserInterfaceType.Literals):
+                    Type of user interface for which the output should
+                    being prepared. The user interface describes the
+                    technical solutions available for interacting with the
+                    user, encompassing the support available for
+                    displaying output as well as how the user interacts
+                    with the library (including the type of interactive
+                    interpreter used, if any).
+                system (ColorSystem.Literals):
+                    Color system to use for terminal output. The default
+                    is `AUTO`, which automatically detects the color
+                    system based on particular environment variables. If
+                    color capabilities are not detected, the output will
+                    be in black and white. If the color system of a modern
+                    consoles/terminal is not auto-detected (which is the
+                    case for e.g. the PyCharm console), the user might
+                    want to set the color system manually to ANSI_RGB to
+                    force color output.
+                style (AllColorStyles.Literals | str):
+                    Color style/theme for syntax highlighting and other
+                    display elements. Supported styles are defined in
+                    AllColorStyles. For non-supported styles, the user can
+                    specify a string with the Pygments style name. For
+                    this to work, the style must be registered in the
+                    Pygments library.
+                bg (bool):
+                    If False, uses transparent background for the output.
+                    In the case of terminal output, the background color
+                    will be the current background color of the terminal.
+                    For HTML output, the background color will be
+                    automatically set to pure black or pure white,
+                    depending on the luminosity of the foreground color.
+                fonts (Tuple[str, ...]):
+                    Font families to use in HTML output, in order of
+                    preference (empty tuple for browser default).
+                font_size (NonNegativeInt | None):
+                    Font size in pixels for HTML output (None for browser
+                    default).
+                font_weight (NonNegativeInt | None):
+                    Font weight for HTML output (None for browser
+                    default).
+                line_height (NonNegativeFloat | None):
+                    Line height multiplier for HTML output (None for
+                    browser default).
+                h_overflow (HorizontalOverflowMode.Literals):
+                    How to handle text that exceeds the width.
+                v_overflow (VerticalOverflowMode.Literals):
+                    How to handle text that exceeds the height.
+                panel (PanelDesign.Literals):
+                    Visual design of the panel used as container for the
+                    output. Only `TABLE` is currently supported, which
+                    displays the output in a table-like grid.
+                title_at_top (bool):
+                    Whether panel titles will be displayed over the panel
+                    content (True) or below the content (False)
+                max_title_height (MaxTitleHeight.Literals):
+                    Maximum height of the panel title. If `AUTO`, the
+                    height is determined by the content of the title, up
+                    to a maximum of two lines. If `ZERO`, the title is not
+                    displayed at all. If `ONE` or `TWO`, the title is
+                    displayed with a fixed height of max one or two lines,
+                    respectively.
+                min_panel_width (NonNegativeInt):
+                    Minimum width in characters per panel.
+                min_crop_width (NonNegativeInt):
+                    Minimum cropping width in characters for panels in
+                    cases where more than one panel are to be displayed.
+                    This is for instance used to calculate the number of
+                    models to display in a Dataset peek(). Only applied if
+                    `use_min_crop_width` is set to `True`.
+                    `min_crop_width` must be equal to or larger than
+                    `min_panel_width`.
+                use_min_crop_width (bool):
+                    Whether the `min_crop_width` value should be
+                    considered in cases where more than one panel are to
+                    be displayed, potentially reduce the number of
+                    displayed panels.
+                max_panels_hor (NonNegativeInt | None):
+                    Maximum number of panels to display horizontally
+                    side-by-side at the top level. This value also acts as
+                    a ceiling for nested panels; nested panels cannot
+                    exceed this limit even if the constant
+                    `MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED` is set to a
+                    higher value. If None, there is no limit.
+                max_nesting_depth (NonNegativeInt | None):
+                    Maximum levels of nested panels to display. If None,
+                    there is no limit.
+                justify (Justify.Literals):
+                    Justification mode for the panel if inside a layout
+                    panel. This is only used for the panel content.
 
-                Keyword Args:
-                    width (NonNegativeInt | None):
-                        Width in characters of the output area (None for
-                        auto-detect based on available display dimensions).
-                        Defaults to `None`.
-                    height (NonNegativeInt | None):
-                        Height in lines of the output area (None for
-                        auto-detect based on available display dimensions).
-                        Defaults to `None`.
-                    tab (NonNegativeInt):
-                        Number of spaces to use for each tab. Defaults to `4`.
-                    indent (NonNegativeInt):
-                        Number of spaces to use for each indentation level.
-                        Defaults to `2`.
-                    printer (PrettyPrinterLib.Literals):
-                        Library to use for pretty printing. Defaults to
-                        `'auto'`.
-                    syntax (SyntaxLanguage.Literals | str):
-                        Syntax language for code highlighting. Supported
-                        lexers are defined in SyntaxLanguage. For
-                        non-supported styles, the user can specify a string
-                        with the Pygments lexer name. For this to work, the
-                        lexer must be registered in the Pygments library.
-                        Defaults to 'auto'.
-                    freedom (float | None):
-                        Parameter that controls the level of freedom for
-                        formatted text to follow the geometry of the frame
-                        size (=total available area) in a proportional manner.
-                        If the proportional freedom is 0 (the lowest), then
-                        the output area must not in any case be proportionally
-                        wider that the frame (i.e. a 16/9 frame will only
-                        produce output that is 16/9 or narrower). Larger
-                        values of proportional freedom allow the output to be
-                        proportionally wider than the total available frame,
-                        to a degree that relates to the size difference
-                        between the frame and the content (larger difference
-                        gives more freedom). The default value of 2.5 is a
-                        good compromise between readability/aesthetics and
-                        good use of the screen estate. If None, the freedom is
-                        unlimited (i.e. proportionality is not taken into
-                        account at all).
-                    debug (bool):
-                        When True, enables additional debugging information in
-                        the output, such as the hierarchy of the Model
-                        objects.
-                    ui (UserInterfaceType.Literals):
-                        Type of user interface for which the output should
-                        being prepared. The user interface describes the
-                        technical solutions available for interacting with the
-                        user, encompassing the support available for
-                        displaying output as well as how the user interacts
-                        with the library (including the type of interactive
-                        interpreter used, if any).
-                    system (ColorSystem.Literals):
-                        Color system to use for terminal output. The default
-                        is `AUTO`, which automatically detects the color
-                        system based on particular environment variables. If
-                        color capabilities are not detected, the output will
-                        be in black and white. If the color system of a modern
-                        consoles/terminal is not auto-detected (which is the
-                        case for e.g. the PyCharm console), the user might
-                        want to set the color system manually to ANSI_RGB to
-                        force color output.
-                    style (AllColorStyles.Literals | str):
-                        Color style/theme for syntax highlighting and other
-                        display elements. Supported styles are defined in
-                        AllColorStyles. For non-supported styles, the user can
-                        specify a string with the Pygments style name. For
-                        this to work, the style must be registered in the
-                        Pygments library.
-                    bg (bool):
-                        If False, uses transparent background for the output.
-                        In the case of terminal output, the background color
-                        will be the current background color of the terminal.
-                        For HTML output, the background color will be
-                        automatically set to pure black or pure white,
-                        depending on the luminosity of the foreground color.
-                    fonts (Tuple[str, ...]):
-                        Font families to use in HTML output, in order of
-                        preference (empty tuple for browser default).
-                    font_size (NonNegativeInt | None):
-                        Font size in pixels for HTML output (None for browser
-                        default).
-                    font_weight (NonNegativeInt | None):
-                        Font weight for HTML output (None for browser
-                        default).
-                    line_height (NonNegativeFloat | None):
-                        Line height multiplier for HTML output (None for
-                        browser default).
-                    h_overflow (HorizontalOverflowMode.Literals):
-                        How to handle text that exceeds the width.
-                    v_overflow (VerticalOverflowMode.Literals):
-                        How to handle text that exceeds the height.
-                    panel (PanelDesign.Literals):
-                        Visual design of the panel used as container for the
-                        output. Only `TABLE` is currently supported, which
-                        displays the output in a table-like grid.
-                    title_at_top (bool):
-                        Whether panel titles will be displayed over the panel
-                        content (True) or below the content (False)
-                    max_title_height (MaxTitleHeight.Literals):
-                        Maximum height of the panel title. If `AUTO`, the
-                        height is determined by the content of the title, up
-                        to a maximum of two lines. If `ZERO`, the title is not
-                        displayed at all. If `ONE` or `TWO`, the title is
-                        displayed with a fixed height of max one or two lines,
-                        respectively.
-                    min_panel_width (NonNegativeInt):
-                        Minimum width in characters per panel.
-                    min_crop_width (NonNegativeInt):
-                        Minimum cropping width in characters for panels in
-                        cases where more than one panel are to be displayed.
-                        This is for instance used to calculate the number of
-                        models to display in a Dataset peek(). Only applied if
-                        `use_min_crop_width` is set to `True`.
-                        `min_crop_width` must be equal to or larger than
-                        `min_panel_width`.
-                    use_min_crop_width (bool):
-                        Whether the `min_crop_width` value should be
-                        considered in cases where more than one panel are to
-                        be displayed, potentially reduce the number of
-                        displayed panels.
-                    max_panels_hor (NonNegativeInt | None):
-                        Maximum number of panels to display horizontally
-                        side-by-side at the top level. This value also acts as
-                        a ceiling for nested panels; nested panels cannot
-                        exceed this limit even if the constant
-                        `MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED` is set to a
-                        higher value. If None, there is no limit.
-                    max_nesting_depth (NonNegativeInt | None):
-                        Maximum levels of nested panels to display. If None,
-                        there is no limit.
-                    justify (Justify.Literals):
-                        Justification mode for the panel if inside a layout
-                        panel. This is only used for the panel content.
+            Returns:
+                If the UI type is Jupyter running in browser, the
+                method returns a ReactivelyResizingHtml element which
+                is a Jupyter widget to display HTML output in the
+                browser. Otherwise, the method returns None.
+            """
 
-                Returns:
-                    If the UI type is Jupyter running in browser, the
-                    method returns a ReactivelyResizingHtml element which
-                    is a Jupyter widget to display HTML output in the
-                    browser. Otherwise, the method returns None.
-                """
+    else:
 
-        else:
+        def list(self, **kwargs) -> 'Element | None':
+            # %% Original docstring (managed by expand_docstr_macros.py) %%
+            # {{LIST_SUMMARY}}
+            #
+            # {{LIST_DESCRIPTION}}
+            #
+            # {{DISPLAY_METHOD_ARGS}}
+            #
+            # {{DISPLAY_METHOD_RETURNS}}
+            #
+            """Displays a summary list of all models in the dataset.
 
-            def list(self, **kwargs) -> 'Element | None':
-                # %% Original docstring (managed by expand_docstr_macros.py) %%
-                # {{LIST_SUMMARY}}
-                #
-                # {{LIST_DESCRIPTION}}
-                #
-                # {{DISPLAY_METHOD_ARGS}}
-                #
-                # {{DISPLAY_METHOD_RETURNS}}
-                #
-                """Displays a summary list of all models in the dataset.
+            The summary list includes a number of key properties for each
+            model, including data file names, types, lengths, and sizes in
+            memory. The output is automatically limited by the available
+            display dimensions.
 
-                The summary list includes a number of key properties for each
-                model, including data file names, types, lengths, and sizes in
-                memory. The output is automatically limited by the available
-                display dimensions.
+            Keyword Args:
+                width (NonNegativeInt | None):
+                    Width in characters of the output area (None for
+                    auto-detect based on available display dimensions).
+                    Defaults to `None`.
+                height (NonNegativeInt | None):
+                    Height in lines of the output area (None for
+                    auto-detect based on available display dimensions).
+                    Defaults to `None`.
+                tab (NonNegativeInt):
+                    Number of spaces to use for each tab. Defaults to `4`.
+                indent (NonNegativeInt):
+                    Number of spaces to use for each indentation level.
+                    Defaults to `2`.
+                printer (PrettyPrinterLib.Literals):
+                    Library to use for pretty printing. Defaults to
+                    `'auto'`.
+                syntax (SyntaxLanguage.Literals | str):
+                    Syntax language for code highlighting. Supported
+                    lexers are defined in SyntaxLanguage. For
+                    non-supported styles, the user can specify a string
+                    with the Pygments lexer name. For this to work, the
+                    lexer must be registered in the Pygments library.
+                    Defaults to 'auto'.
+                freedom (float | None):
+                    Parameter that controls the level of freedom for
+                    formatted text to follow the geometry of the frame
+                    size (=total available area) in a proportional manner.
+                    If the proportional freedom is 0 (the lowest), then
+                    the output area must not in any case be proportionally
+                    wider that the frame (i.e. a 16/9 frame will only
+                    produce output that is 16/9 or narrower). Larger
+                    values of proportional freedom allow the output to be
+                    proportionally wider than the total available frame,
+                    to a degree that relates to the size difference
+                    between the frame and the content (larger difference
+                    gives more freedom). The default value of 2.5 is a
+                    good compromise between readability/aesthetics and
+                    good use of the screen estate. If None, the freedom is
+                    unlimited (i.e. proportionality is not taken into
+                    account at all).
+                debug (bool):
+                    When True, enables additional debugging information in
+                    the output, such as the hierarchy of the Model
+                    objects.
+                ui (UserInterfaceType.Literals):
+                    Type of user interface for which the output should
+                    being prepared. The user interface describes the
+                    technical solutions available for interacting with the
+                    user, encompassing the support available for
+                    displaying output as well as how the user interacts
+                    with the library (including the type of interactive
+                    interpreter used, if any).
+                system (ColorSystem.Literals):
+                    Color system to use for terminal output. The default
+                    is `AUTO`, which automatically detects the color
+                    system based on particular environment variables. If
+                    color capabilities are not detected, the output will
+                    be in black and white. If the color system of a modern
+                    consoles/terminal is not auto-detected (which is the
+                    case for e.g. the PyCharm console), the user might
+                    want to set the color system manually to ANSI_RGB to
+                    force color output.
+                style (AllColorStyles.Literals | str):
+                    Color style/theme for syntax highlighting and other
+                    display elements. Supported styles are defined in
+                    AllColorStyles. For non-supported styles, the user can
+                    specify a string with the Pygments style name. For
+                    this to work, the style must be registered in the
+                    Pygments library.
+                bg (bool):
+                    If False, uses transparent background for the output.
+                    In the case of terminal output, the background color
+                    will be the current background color of the terminal.
+                    For HTML output, the background color will be
+                    automatically set to pure black or pure white,
+                    depending on the luminosity of the foreground color.
+                fonts (Tuple[str, ...]):
+                    Font families to use in HTML output, in order of
+                    preference (empty tuple for browser default).
+                font_size (NonNegativeInt | None):
+                    Font size in pixels for HTML output (None for browser
+                    default).
+                font_weight (NonNegativeInt | None):
+                    Font weight for HTML output (None for browser
+                    default).
+                line_height (NonNegativeFloat | None):
+                    Line height multiplier for HTML output (None for
+                    browser default).
+                h_overflow (HorizontalOverflowMode.Literals):
+                    How to handle text that exceeds the width.
+                v_overflow (VerticalOverflowMode.Literals):
+                    How to handle text that exceeds the height.
+                panel (PanelDesign.Literals):
+                    Visual design of the panel used as container for the
+                    output. Only `TABLE` is currently supported, which
+                    displays the output in a table-like grid.
+                title_at_top (bool):
+                    Whether panel titles will be displayed over the panel
+                    content (True) or below the content (False)
+                max_title_height (MaxTitleHeight.Literals):
+                    Maximum height of the panel title. If `AUTO`, the
+                    height is determined by the content of the title, up
+                    to a maximum of two lines. If `ZERO`, the title is not
+                    displayed at all. If `ONE` or `TWO`, the title is
+                    displayed with a fixed height of max one or two lines,
+                    respectively.
+                min_panel_width (NonNegativeInt):
+                    Minimum width in characters per panel.
+                min_crop_width (NonNegativeInt):
+                    Minimum cropping width in characters for panels in
+                    cases where more than one panel are to be displayed.
+                    This is for instance used to calculate the number of
+                    models to display in a Dataset peek(). Only applied if
+                    `use_min_crop_width` is set to `True`.
+                    `min_crop_width` must be equal to or larger than
+                    `min_panel_width`.
+                use_min_crop_width (bool):
+                    Whether the `min_crop_width` value should be
+                    considered in cases where more than one panel are to
+                    be displayed, potentially reduce the number of
+                    displayed panels.
+                max_panels_hor (NonNegativeInt | None):
+                    Maximum number of panels to display horizontally
+                    side-by-side at the top level. This value also acts as
+                    a ceiling for nested panels; nested panels cannot
+                    exceed this limit even if the constant
+                    `MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED` is set to a
+                    higher value. If None, there is no limit.
+                max_nesting_depth (NonNegativeInt | None):
+                    Maximum levels of nested panels to display. If None,
+                    there is no limit.
+                justify (Justify.Literals):
+                    Justification mode for the panel if inside a layout
+                    panel. This is only used for the panel content.
 
-                Keyword Args:
-                    width (NonNegativeInt | None):
-                        Width in characters of the output area (None for
-                        auto-detect based on available display dimensions).
-                        Defaults to `None`.
-                    height (NonNegativeInt | None):
-                        Height in lines of the output area (None for
-                        auto-detect based on available display dimensions).
-                        Defaults to `None`.
-                    tab (NonNegativeInt):
-                        Number of spaces to use for each tab. Defaults to `4`.
-                    indent (NonNegativeInt):
-                        Number of spaces to use for each indentation level.
-                        Defaults to `2`.
-                    printer (PrettyPrinterLib.Literals):
-                        Library to use for pretty printing. Defaults to
-                        `'auto'`.
-                    syntax (SyntaxLanguage.Literals | str):
-                        Syntax language for code highlighting. Supported
-                        lexers are defined in SyntaxLanguage. For
-                        non-supported styles, the user can specify a string
-                        with the Pygments lexer name. For this to work, the
-                        lexer must be registered in the Pygments library.
-                        Defaults to 'auto'.
-                    freedom (float | None):
-                        Parameter that controls the level of freedom for
-                        formatted text to follow the geometry of the frame
-                        size (=total available area) in a proportional manner.
-                        If the proportional freedom is 0 (the lowest), then
-                        the output area must not in any case be proportionally
-                        wider that the frame (i.e. a 16/9 frame will only
-                        produce output that is 16/9 or narrower). Larger
-                        values of proportional freedom allow the output to be
-                        proportionally wider than the total available frame,
-                        to a degree that relates to the size difference
-                        between the frame and the content (larger difference
-                        gives more freedom). The default value of 2.5 is a
-                        good compromise between readability/aesthetics and
-                        good use of the screen estate. If None, the freedom is
-                        unlimited (i.e. proportionality is not taken into
-                        account at all).
-                    debug (bool):
-                        When True, enables additional debugging information in
-                        the output, such as the hierarchy of the Model
-                        objects.
-                    ui (UserInterfaceType.Literals):
-                        Type of user interface for which the output should
-                        being prepared. The user interface describes the
-                        technical solutions available for interacting with the
-                        user, encompassing the support available for
-                        displaying output as well as how the user interacts
-                        with the library (including the type of interactive
-                        interpreter used, if any).
-                    system (ColorSystem.Literals):
-                        Color system to use for terminal output. The default
-                        is `AUTO`, which automatically detects the color
-                        system based on particular environment variables. If
-                        color capabilities are not detected, the output will
-                        be in black and white. If the color system of a modern
-                        consoles/terminal is not auto-detected (which is the
-                        case for e.g. the PyCharm console), the user might
-                        want to set the color system manually to ANSI_RGB to
-                        force color output.
-                    style (AllColorStyles.Literals | str):
-                        Color style/theme for syntax highlighting and other
-                        display elements. Supported styles are defined in
-                        AllColorStyles. For non-supported styles, the user can
-                        specify a string with the Pygments style name. For
-                        this to work, the style must be registered in the
-                        Pygments library.
-                    bg (bool):
-                        If False, uses transparent background for the output.
-                        In the case of terminal output, the background color
-                        will be the current background color of the terminal.
-                        For HTML output, the background color will be
-                        automatically set to pure black or pure white,
-                        depending on the luminosity of the foreground color.
-                    fonts (Tuple[str, ...]):
-                        Font families to use in HTML output, in order of
-                        preference (empty tuple for browser default).
-                    font_size (NonNegativeInt | None):
-                        Font size in pixels for HTML output (None for browser
-                        default).
-                    font_weight (NonNegativeInt | None):
-                        Font weight for HTML output (None for browser
-                        default).
-                    line_height (NonNegativeFloat | None):
-                        Line height multiplier for HTML output (None for
-                        browser default).
-                    h_overflow (HorizontalOverflowMode.Literals):
-                        How to handle text that exceeds the width.
-                    v_overflow (VerticalOverflowMode.Literals):
-                        How to handle text that exceeds the height.
-                    panel (PanelDesign.Literals):
-                        Visual design of the panel used as container for the
-                        output. Only `TABLE` is currently supported, which
-                        displays the output in a table-like grid.
-                    title_at_top (bool):
-                        Whether panel titles will be displayed over the panel
-                        content (True) or below the content (False)
-                    max_title_height (MaxTitleHeight.Literals):
-                        Maximum height of the panel title. If `AUTO`, the
-                        height is determined by the content of the title, up
-                        to a maximum of two lines. If `ZERO`, the title is not
-                        displayed at all. If `ONE` or `TWO`, the title is
-                        displayed with a fixed height of max one or two lines,
-                        respectively.
-                    min_panel_width (NonNegativeInt):
-                        Minimum width in characters per panel.
-                    min_crop_width (NonNegativeInt):
-                        Minimum cropping width in characters for panels in
-                        cases where more than one panel are to be displayed.
-                        This is for instance used to calculate the number of
-                        models to display in a Dataset peek(). Only applied if
-                        `use_min_crop_width` is set to `True`.
-                        `min_crop_width` must be equal to or larger than
-                        `min_panel_width`.
-                    use_min_crop_width (bool):
-                        Whether the `min_crop_width` value should be
-                        considered in cases where more than one panel are to
-                        be displayed, potentially reduce the number of
-                        displayed panels.
-                    max_panels_hor (NonNegativeInt | None):
-                        Maximum number of panels to display horizontally
-                        side-by-side at the top level. This value also acts as
-                        a ceiling for nested panels; nested panels cannot
-                        exceed this limit even if the constant
-                        `MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED` is set to a
-                        higher value. If None, there is no limit.
-                    max_nesting_depth (NonNegativeInt | None):
-                        Maximum levels of nested panels to display. If None,
-                        there is no limit.
-                    justify (Justify.Literals):
-                        Justification mode for the panel if inside a layout
-                        panel. This is only used for the panel content.
+            Returns:
+                If the UI type is Jupyter running in browser, the
+                method returns a ReactivelyResizingHtml element which
+                is a Jupyter widget to display HTML output in the
+                browser. Otherwise, the method returns None.
+            """
 
-                Returns:
-                    If the UI type is Jupyter running in browser, the
-                    method returns a ReactivelyResizingHtml element which
-                    is a Jupyter widget to display HTML output in the
-                    browser. Otherwise, the method returns None.
-                """
+            return self._display_according_to_ui_type(
+                ui_type=self._extract_ui_type(**kwargs),
+                return_output_if_str=False,
+                output_method=self._list,
+                **kwargs,
+            )
 
-                return self._display_according_to_ui_type(
-                    ui_type=self._extract_ui_type(**kwargs),
-                    return_output_if_str=False,
-                    output_method=self._list,
-                    **kwargs,
-                )
-
-            list.__signature__ = signature(IsDisplayMethodMaybeReturnElement.__call__)
+        list.__signature__ = signature(IsDisplayMethodMaybeReturnElement.__call__)
 
     def _list(self, **kwargs) -> DraftPanel:
         from omnipy.data.dataset import Dataset
@@ -3288,6 +3289,12 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         return humanize.naturalsize(objsize.get_deep_size(obj))
 
 
-if TYPE_CHECKING:
-    _Model: type[BaseDisplayMixin] = ModelDisplayMixin
-    _Dataset: type[IsDatabaseDisplayMixin] = DatasetDisplayMixin
+if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
+    # For some unknown reason, mypy will not match methods with
+    # Protocol members defined as callback protocols. Not sure what is the
+    # correct behavior. As this is just a check that the methods have the
+    # correct signature, the solution (for now) is to only perform this
+    # check with Pyright. It is unclear if other type checkers will have
+    # the same issue as mypy or not.
+    _Model: type[IsBaseDisplayMixin] = ModelDisplayMixin
+    _Dataset: type[IsDatasetDisplayMixin] = DatasetDisplayMixin
