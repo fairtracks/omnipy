@@ -72,6 +72,8 @@ plugins:
     handlers:
       python:
         paths: [ src ]
+        import:
+        - https://docs.pydantic.dev/latest/objects.inv
         options:
           allow_inspection: false
           backlinks: true
