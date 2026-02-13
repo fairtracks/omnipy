@@ -7,7 +7,7 @@ from enum import Enum
 from typing import List, Optional, Union
 
 from omnipy.data.model import Model
-import omnipy.util.pydantic as pyd
+import omnipy.util._pydantic as pyd
 
 from . import (comment_schema,
                data_schema,

@@ -43,7 +43,7 @@ from omnipy.shared.protocols.config import (IsBrowserUserInterfaceConfig,
                                             IsTextConfig,
                                             IsUserInterfaceConfig,
                                             IsUserInterfaceTypeConfig)
-import omnipy.util.pydantic as pyd
+import omnipy.util._pydantic as pyd
 
 
 class _ColorConfigTypedDict(TypedDict):

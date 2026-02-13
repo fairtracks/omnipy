@@ -24,8 +24,8 @@ from omnipy.shared.protocols.config import (IsDataConfig,
                                             IsLayoutConfig,
                                             IsTextConfig)
 from omnipy.shared.protocols.hub.log import CanLog
-from omnipy.util.pydantic import Undefined, UndefinedType
-import omnipy.util.pydantic as pyd
+from omnipy.util._pydantic import Undefined, UndefinedType
+import omnipy.util._pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 _RootT = TypeVar('_RootT', covariant=True)

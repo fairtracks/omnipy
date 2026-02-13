@@ -19,7 +19,7 @@ from omnipy.shared.constants import (DOUBLE_LINE_TITLE_HEIGHT,
                                      MIN_PANEL_LINES_SHOWN_TO_ALLOW_SINGLE_LINE_TITLE,
                                      SINGLE_LINE_TITLE_HEIGHT,
                                      TITLE_BLANK_LINES)
-import omnipy.util.pydantic as pyd
+import omnipy.util._pydantic as pyd
 
 
 class OutputVariant(ABC):

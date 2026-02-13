@@ -6,8 +6,8 @@ from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.helpers import UnicodeCharWidthMap
 from omnipy.data._display.panel.draft.monospaced import _calc_line_stats
 from omnipy.shared.enums.display import HorizontalOverflowMode, VerticalOverflowMode
+import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import strip_and_split_newline
-import omnipy.util.pydantic as pyd
 
 
 def rich_overflow_method(

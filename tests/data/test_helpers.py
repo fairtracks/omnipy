@@ -5,7 +5,7 @@ import pytest
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
 from omnipy.data.typechecks import is_model_instance, obj_or_model_content_isinstance
-from omnipy.util.pydantic import ValidationError
+from omnipy.util._pydantic import ValidationError
 
 from .helpers.models import PydanticParentModel
 

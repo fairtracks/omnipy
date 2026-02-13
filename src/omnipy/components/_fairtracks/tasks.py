@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 
 from omnipy.compute.task import TaskTemplate
-import omnipy.util.pydantic as pyd
+import omnipy.util._pydantic as pyd
 
 from ..json.datasets import JsonDataset
 from .functions import encode_api

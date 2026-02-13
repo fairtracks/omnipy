@@ -14,7 +14,7 @@ from omnipy.data._display.panel.draft.base import (DimensionsAwareDraftPanel,
                                                    DraftPanel,
                                                    FullyRenderedDraftPanel)
 from omnipy.data._display.panel.styling.output import OutputMode
-from omnipy.util import pydantic as pyd
+from omnipy.util import _pydantic as pyd
 
 
 @pyd.dataclass(init=False, frozen=True)

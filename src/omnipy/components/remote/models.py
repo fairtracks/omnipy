@@ -3,8 +3,8 @@ from typing import Any, cast, TYPE_CHECKING, TypeGuard
 from urllib.parse import quote, unquote
 
 from omnipy.data.model import Model
+import omnipy.util._pydantic as pyd
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
-import omnipy.util.pydantic as pyd
 
 from ..json.models import JsonModel
 from ..raw.models import (NestedJoinItemsModel,

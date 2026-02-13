@@ -18,8 +18,8 @@ from omnipy.components.tables.models import (ColumnWiseTableWithColNamesModel,
 from omnipy.data.model import Model
 from omnipy.data.typechecks import is_model_instance
 from omnipy.shared.protocols.hub.runtime import IsRuntime
-from omnipy.util.pydantic import ValidationError
-import omnipy.util.pydantic as pyd
+from omnipy.util._pydantic import ValidationError
+import omnipy.util._pydantic as pyd
 
 from .cases.concat import ConcatCase, ConcatCaseReverse
 from .cases.raw.asserts import assert_row_iter

@@ -5,7 +5,7 @@ from typing import Any, Callable, cast, Concatenate, ParamSpec
 
 from typing_extensions import dataclass_transform, TypeVar
 
-import omnipy.util.pydantic as pyd
+import omnipy.util._pydantic as pyd
 
 _ModelT = TypeVar('_ModelT')
 _DatasetT = TypeVar('_DatasetT')

@@ -2,8 +2,8 @@ from typing import Generic, Literal
 
 from typing_extensions import TypeIs, TypeVar
 
+import omnipy.util._pydantic as pyd
 from omnipy.util.literal_enum import LiteralEnum
-import omnipy.util.pydantic as pyd
 
 WidthT = TypeVar(
     'WidthT',

@@ -35,7 +35,7 @@ from omnipy.shared.constants import (INFO_BASE_16_TOKEN,
                                      TABLE_BORDER_GENERAL_TOKEN,
                                      TITLE_BLANK_LINES)
 from omnipy.shared.enums.display import DisplayColorSystem, PanelDesign
-from omnipy.util import pydantic as pyd
+from omnipy.util import _pydantic as pyd
 
 
 @pyd.dataclass(

@@ -7,7 +7,7 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.text.pretty_printer.base import WidthReducingPrettyPrinter
 from omnipy.data._display.text.pretty_printer.mixins import PythonStatsTighteningPrettyPrinter
 from omnipy.shared.constants import MAX_TERMINAL_SIZE
-from omnipy.util import pydantic as pyd
+from omnipy.util import _pydantic as pyd
 
 
 class RichPrettyPrinter(PythonStatsTighteningPrettyPrinter, WidthReducingPrettyPrinter[object]):

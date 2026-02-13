@@ -10,9 +10,9 @@ from omnipy.shared.protocols.data import (HasContent,
                                           IsReactiveObjects,
                                           IsSnapshotHolder)
 from omnipy.shared.typedefs import TypeForm
+import omnipy.util._pydantic as pyd
 from omnipy.util.decorators import call_super_if_available
 from omnipy.util.helpers import is_union
-import omnipy.util.pydantic as pyd
 
 
 class DataClassCreator:

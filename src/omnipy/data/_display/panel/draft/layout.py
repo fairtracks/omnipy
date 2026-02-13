@@ -12,7 +12,7 @@ from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanelLayou
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.data._display.panel.typedefs import FrameInvT, FrameT
 from omnipy.shared.exceptions import ShouldNotOccurException
-import omnipy.util.pydantic as pyd
+import omnipy.util._pydantic as pyd
 
 
 @pyd.dataclass(

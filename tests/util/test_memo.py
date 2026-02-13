@@ -6,8 +6,8 @@ import pytest
 from typing_extensions import TypeAlias
 
 from omnipy import Model
+import omnipy.util._pydantic as pyd
 from omnipy.util.memo import RefCountMemoDict
-import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 from .helpers.classes import SomeObject

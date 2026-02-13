@@ -11,7 +11,7 @@ from omnipy.data._display.panel.draft.base import (DimensionsAwareDraftPanel,
                                                    DraftPanel)
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.typedefs import ContentT, FrameInvT, FrameT
-from omnipy.util import pydantic as pyd
+from omnipy.util import _pydantic as pyd
 from omnipy.util.helpers import first_key_in_mapping
 
 # Functions

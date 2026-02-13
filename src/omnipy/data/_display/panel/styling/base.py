@@ -17,7 +17,7 @@ from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.data._display.panel.typedefs import ContentT, FrameT
 from omnipy.shared.enums.display import DisplayColorSystem
 from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
-import omnipy.util.pydantic as pyd
+import omnipy.util._pydantic as pyd
 
 StylizedRichTypes: TypeAlias = rich.syntax.Syntax | rich.panel.Panel | rich.table.Table
 

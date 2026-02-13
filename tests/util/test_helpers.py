@@ -6,6 +6,7 @@ from typing_extensions import TypeVar
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
+import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import (all_type_variants,
                                  called_from_omnipy_tests,
                                  ensure_non_str_byte_iterable,
@@ -27,7 +28,6 @@ from omnipy.util.helpers import (all_type_variants,
                                  sorted_dict_hash,
                                  split_to_union_variants,
                                  transfer_generic_args_to_cls)
-import omnipy.util.pydantic as pyd
 
 T = TypeVar('T')
 U = TypeVar('U')

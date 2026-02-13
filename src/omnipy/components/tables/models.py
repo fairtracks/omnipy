@@ -19,8 +19,8 @@ from omnipy.data.model import Model, ModelMetaclass
 from omnipy.shared.protocols.builtins import IsDict, IsList, SupportsKeysAndGetItem
 from omnipy.shared.protocols.data import HasContent
 from omnipy.shared.typing import TYPE_CHECKING
+import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import first_key_in_mapping
-import omnipy.util.pydantic as pyd
 
 from ..general.models import Chain3
 from ..json.typedefs import JsonScalar

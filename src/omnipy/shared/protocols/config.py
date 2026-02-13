@@ -19,7 +19,7 @@ from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
 from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, TerminalOutputUserInterfaceType
 from omnipy.shared.protocols.util import IsDataPublisher
 from omnipy.shared.typedefs import LocaleType
-import omnipy.util.pydantic as pyd
+import omnipy.util._pydantic as pyd
 
 
 @runtime_checkable
