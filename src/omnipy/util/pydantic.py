@@ -1,30 +1,23 @@
-from pydantic import (BaseConfig,
-                      BaseModel,
-                      ConfigDict,
-                      conint,
-                      constr,
-                      create_model,
-                      EmailStr,
-                      Extra,
-                      Field,
-                      NonNegativeFloat,
-                      NonNegativeInt,
-                      PositiveInt,
-                      PrivateAttr,
-                      Protocol,
-                      root_validator,
-                      StrictBytes,
-                      StrictInt,
-                      StrictStr,
-                      validate_arguments,
-                      ValidationError,
-                      validator)
+from pydantic import BaseModel, create_model
+from pydantic.class_validators import root_validator, validator
+from pydantic.config import BaseConfig, ConfigDict, Extra
 from pydantic.dataclasses import dataclass
-from pydantic.error_wrappers import ErrorWrapper
+from pydantic.decorator import validate_arguments
+from pydantic.error_wrappers import ErrorWrapper, ValidationError
 from pydantic.errors import ConfigError, NoneIsNotAllowedError
-from pydantic.fields import ModelField, Undefined, UndefinedType
+from pydantic.fields import Field, ModelField, PrivateAttr, Undefined, UndefinedType
 from pydantic.generics import GenericModel
 from pydantic.main import ModelMetaclass, validate_model
+from pydantic.networks import EmailStr
+from pydantic.parse import Protocol
+from pydantic.types import (conint,
+                            constr,
+                            NonNegativeFloat,
+                            NonNegativeInt,
+                            PositiveInt,
+                            StrictBytes,
+                            StrictInt,
+                            StrictStr)
 from pydantic.typing import display_as_type, is_none_type
 from pydantic.utils import lenient_isinstance, lenient_issubclass, sequence_like
 from pydantic_core import Url
