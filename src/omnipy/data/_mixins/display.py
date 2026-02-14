@@ -143,7 +143,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
         display dimensions.""")
 
     os.environ['OMNIPY_MACRO_DISPLAY_METHOD_ARGS'] = dedent("""\
-        Keyword Args:
+        Args:
             width (NonNegativeInt | None):
                 Width in characters of the output area (None for
                 auto-detect based on available display dimensions).
@@ -519,7 +519,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             views are automatically limited by the available display
             dimensions.
 
-            Keyword Args:
+            Args:
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
@@ -681,7 +681,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             views are automatically limited by the available display
             dimensions.
 
-            Keyword Args:
+            Args:
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
@@ -900,7 +900,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             models and datasets. Both full-height views are automatically
             limited in width by the available display dimensions.
 
-            Keyword Args:
+            Args:
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
@@ -1062,7 +1062,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             models and datasets. Both full-height views are automatically
             limited in width by the available display dimensions.
 
-            Keyword Args:
+            Args:
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
@@ -1270,7 +1270,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             The view is automatically limited by the available display
             dimensions.
 
-            Keyword Args:
+            Args:
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
@@ -1435,7 +1435,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             The view is automatically limited by the available display
             dimensions.
 
-            Keyword Args:
+            Args:
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
@@ -1635,7 +1635,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             and for datasets this is a detailed view of each model
             contained in the dataset, one model per browser tab.
 
-            Keyword Args:
+            Args:
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
@@ -1788,7 +1788,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             and for datasets this is a detailed view of each model
             contained in the dataset, one model per browser tab.
 
-            Keyword Args:
+            Args:
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
@@ -1963,7 +1963,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         """
         Displays a preview of the model or dataset for the documentation.
 
-        Keyword Args:
+        Args:
             width (NonNegativeInt | None):
                 Width in characters of the output area (None for
                 auto-detect based on available display dimensions).
@@ -2827,7 +2827,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             memory. The output is automatically limited by the available
             display dimensions.
 
-            Keyword Args:
+            Args:
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
@@ -2989,7 +2989,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             memory. The output is automatically limited by the available
             display dimensions.
 
-            Keyword Args:
+            Args:
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
