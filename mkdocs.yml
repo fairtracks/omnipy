@@ -80,7 +80,12 @@ plugins:
           backlinks: true
           extensions:
             - omnipy.util.griffe_extension:UseDynamicSignatureForSpecificFunctions:
-                functions: [ omnipy.data._mixins.display.BaseDisplayMixin.peek ]
+                functions:
+                  - omnipy.data._mixins.display.BaseDisplayMixin.peek
+                  - omnipy.data._mixins.display.BaseDisplayMixin.full
+                  - omnipy.data._mixins.display.BaseDisplayMixin.json
+                  - omnipy.data._mixins.display.BaseDisplayMixin.browse
+                  - omnipy.data._mixins.display.DatasetDisplayMixin.list
           inheritance_diagram_direction: BT
           preload_modules:
           - pydantic
