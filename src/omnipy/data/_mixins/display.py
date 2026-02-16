@@ -155,15 +155,13 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
             indent (NonNegativeInt):
                 Number of spaces to use for each indentation level.
             printer (PrettyPrinterLib.Literals):
-                Library to use for pretty printing. Defaults to
-                `'auto'`.
+                Library to use for pretty printing.
             syntax (SyntaxLanguage.Literals | str):
                 Syntax language for code highlighting. Supported
                 lexers are defined in SyntaxLanguage. For
                 non-supported styles, the user can specify a string
                 with the Pygments lexer name. For this to work, the
                 lexer must be registered in the Pygments library.
-                Defaults to 'auto'.
             freedom (float | None):
                 Parameter that controls the level of freedom for
                 formatted text to follow the geometry of the frame
@@ -528,15 +526,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
                 printer (PrettyPrinterLib.Literals):
-                    Library to use for pretty printing. Defaults to
-                    `'auto'`.
+                    Library to use for pretty printing.
                 syntax (SyntaxLanguage.Literals | str):
                     Syntax language for code highlighting. Supported
                     lexers are defined in SyntaxLanguage. For
                     non-supported styles, the user can specify a string
                     with the Pygments lexer name. For this to work, the
                     lexer must be registered in the Pygments library.
-                    Defaults to 'auto'.
                 freedom (float | None):
                     Parameter that controls the level of freedom for
                     formatted text to follow the geometry of the frame
@@ -687,15 +683,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
                 printer (PrettyPrinterLib.Literals):
-                    Library to use for pretty printing. Defaults to
-                    `'auto'`.
+                    Library to use for pretty printing.
                 syntax (SyntaxLanguage.Literals | str):
                     Syntax language for code highlighting. Supported
                     lexers are defined in SyntaxLanguage. For
                     non-supported styles, the user can specify a string
                     with the Pygments lexer name. For this to work, the
                     lexer must be registered in the Pygments library.
-                    Defaults to 'auto'.
                 freedom (float | None):
                     Parameter that controls the level of freedom for
                     formatted text to follow the geometry of the frame
@@ -903,15 +897,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
                 printer (PrettyPrinterLib.Literals):
-                    Library to use for pretty printing. Defaults to
-                    `'auto'`.
+                    Library to use for pretty printing.
                 syntax (SyntaxLanguage.Literals | str):
                     Syntax language for code highlighting. Supported
                     lexers are defined in SyntaxLanguage. For
                     non-supported styles, the user can specify a string
                     with the Pygments lexer name. For this to work, the
                     lexer must be registered in the Pygments library.
-                    Defaults to 'auto'.
                 freedom (float | None):
                     Parameter that controls the level of freedom for
                     formatted text to follow the geometry of the frame
@@ -1062,15 +1054,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
                 printer (PrettyPrinterLib.Literals):
-                    Library to use for pretty printing. Defaults to
-                    `'auto'`.
+                    Library to use for pretty printing.
                 syntax (SyntaxLanguage.Literals | str):
                     Syntax language for code highlighting. Supported
                     lexers are defined in SyntaxLanguage. For
                     non-supported styles, the user can specify a string
                     with the Pygments lexer name. For this to work, the
                     lexer must be registered in the Pygments library.
-                    Defaults to 'auto'.
                 freedom (float | None):
                     Parameter that controls the level of freedom for
                     formatted text to follow the geometry of the frame
@@ -1267,15 +1257,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
                 printer (PrettyPrinterLib.Literals):
-                    Library to use for pretty printing. Defaults to
-                    `'auto'`.
+                    Library to use for pretty printing.
                 syntax (SyntaxLanguage.Literals | str):
                     Syntax language for code highlighting. Supported
                     lexers are defined in SyntaxLanguage. For
                     non-supported styles, the user can specify a string
                     with the Pygments lexer name. For this to work, the
                     lexer must be registered in the Pygments library.
-                    Defaults to 'auto'.
                 freedom (float | None):
                     Parameter that controls the level of freedom for
                     formatted text to follow the geometry of the frame
@@ -1429,15 +1417,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
                 printer (PrettyPrinterLib.Literals):
-                    Library to use for pretty printing. Defaults to
-                    `'auto'`.
+                    Library to use for pretty printing.
                 syntax (SyntaxLanguage.Literals | str):
                     Syntax language for code highlighting. Supported
                     lexers are defined in SyntaxLanguage. For
                     non-supported styles, the user can specify a string
                     with the Pygments lexer name. For this to work, the
                     lexer must be registered in the Pygments library.
-                    Defaults to 'auto'.
                 freedom (float | None):
                     Parameter that controls the level of freedom for
                     formatted text to follow the geometry of the frame
@@ -1626,15 +1612,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
                 printer (PrettyPrinterLib.Literals):
-                    Library to use for pretty printing. Defaults to
-                    `'auto'`.
+                    Library to use for pretty printing.
                 syntax (SyntaxLanguage.Literals | str):
                     Syntax language for code highlighting. Supported
                     lexers are defined in SyntaxLanguage. For
                     non-supported styles, the user can specify a string
                     with the Pygments lexer name. For this to work, the
                     lexer must be registered in the Pygments library.
-                    Defaults to 'auto'.
                 freedom (float | None):
                     Parameter that controls the level of freedom for
                     formatted text to follow the geometry of the frame
@@ -1776,15 +1760,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
                 printer (PrettyPrinterLib.Literals):
-                    Library to use for pretty printing. Defaults to
-                    `'auto'`.
+                    Library to use for pretty printing.
                 syntax (SyntaxLanguage.Literals | str):
                     Syntax language for code highlighting. Supported
                     lexers are defined in SyntaxLanguage. For
                     non-supported styles, the user can specify a string
                     with the Pygments lexer name. For this to work, the
                     lexer must be registered in the Pygments library.
-                    Defaults to 'auto'.
                 freedom (float | None):
                     Parameter that controls the level of freedom for
                     formatted text to follow the geometry of the frame
@@ -1948,15 +1930,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             indent (NonNegativeInt):
                 Number of spaces to use for each indentation level.
             printer (PrettyPrinterLib.Literals):
-                Library to use for pretty printing. Defaults to
-                `'auto'`.
+                Library to use for pretty printing.
             syntax (SyntaxLanguage.Literals | str):
                 Syntax language for code highlighting. Supported
                 lexers are defined in SyntaxLanguage. For
                 non-supported styles, the user can specify a string
                 with the Pygments lexer name. For this to work, the
                 lexer must be registered in the Pygments library.
-                Defaults to 'auto'.
             freedom (float | None):
                 Parameter that controls the level of freedom for
                 formatted text to follow the geometry of the frame
@@ -2782,15 +2762,13 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
                 printer (PrettyPrinterLib.Literals):
-                    Library to use for pretty printing. Defaults to
-                    `'auto'`.
+                    Library to use for pretty printing.
                 syntax (SyntaxLanguage.Literals | str):
                     Syntax language for code highlighting. Supported
                     lexers are defined in SyntaxLanguage. For
                     non-supported styles, the user can specify a string
                     with the Pygments lexer name. For this to work, the
                     lexer must be registered in the Pygments library.
-                    Defaults to 'auto'.
                 freedom (float | None):
                     Parameter that controls the level of freedom for
                     formatted text to follow the geometry of the frame
@@ -2941,15 +2919,13 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
                 printer (PrettyPrinterLib.Literals):
-                    Library to use for pretty printing. Defaults to
-                    `'auto'`.
+                    Library to use for pretty printing.
                 syntax (SyntaxLanguage.Literals | str):
                     Syntax language for code highlighting. Supported
                     lexers are defined in SyntaxLanguage. For
                     non-supported styles, the user can specify a string
                     with the Pygments lexer name. For this to work, the
                     lexer must be registered in the Pygments library.
-                    Defaults to 'auto'.
                 freedom (float | None):
                     Parameter that controls the level of freedom for
                     formatted text to follow the geometry of the frame
