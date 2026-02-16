@@ -167,10 +167,10 @@ class PythonSyntaxLanguage(LiteralEnum[str]):
     PYTHON: Literal['python'] = 'python'
 
 
-class SupportedSyntaxLanguage(JsonSyntaxLanguage,
-                              TextSyntaxLanguage,
-                              HexdumpSyntaxLanguage,
-                              PythonSyntaxLanguage):
+class SyntaxLanguage(JsonSyntaxLanguage,
+                     TextSyntaxLanguage,
+                     HexdumpSyntaxLanguage,
+                     PythonSyntaxLanguage):
     """
     Supported languages for syntax recognition and highlighting.
 
@@ -185,36 +185,36 @@ class SupportedSyntaxLanguage(JsonSyntaxLanguage,
                        PythonSyntaxLanguage.Literals]
 
 
-class SyntaxLanguage(SupportedSyntaxLanguage):
+class SyntaxLanguageSpec(SyntaxLanguage):
     """
     Supported languages for syntax recognition and highlighting (see
     `SupportedSyntaxLanguage`), plus the  `AUTO` option for automatic syntax
     recognition.
     """
 
-    Literals = Literal['auto', SupportedSyntaxLanguage.Literals]
+    Literals = Literal['auto', SyntaxLanguage.Literals]
 
     AUTO: Literal['auto'] = 'auto'
     """
     Autodetect the syntax language based on the content.
     """
     @classmethod
-    def is_syntax_language(cls, syntax: str) -> 'TypeIs[SyntaxLanguage.Literals]':
+    def is_syntax_language_spec(cls, syntax: str) -> 'TypeIs[SyntaxLanguageSpec.Literals]':
         """
         Checks if the given syntax is one of the supported options for
         syntax language specification (including `AUTO`).
         """
-        return syntax in SyntaxLanguage
+        return syntax in SyntaxLanguageSpec
 
     @classmethod
     def is_supported_syntax_language(
         cls,
         syntax: str,
-    ) -> 'TypeIs[SupportedSyntaxLanguage.Literals]':
+    ) -> 'TypeIs[SyntaxLanguage.Literals]':
         """
         Checks if the given syntax is one of the supported syntax languages.
         """
-        return syntax in SupportedSyntaxLanguage
+        return syntax in SyntaxLanguage
 
     @classmethod
     def is_json_syntax(cls, syntax: str) -> TypeIs[JsonSyntaxLanguage.Literals]:
