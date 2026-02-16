@@ -12,7 +12,7 @@ from omnipy.data._display.frame import AnyFrame, FrameWithWidth
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import ContentT, FrameT
-from omnipy.shared.enums.display import SyntaxLanguage
+from omnipy.shared.enums.display import SyntaxLanguageSpec
 from omnipy.util import pydantic as pyd
 from omnipy.util.helpers import sorted_dict_hash
 
@@ -25,7 +25,7 @@ class PrettyPrinter(ABC, Generic[ContentT]):
 
     @classmethod
     @abstractmethod
-    def get_default_syntax_language(cls) -> SyntaxLanguage.Literals:
+    def get_default_syntax_language(cls) -> SyntaxLanguageSpec.Literals:
         ...
 
     @classmethod
@@ -40,7 +40,7 @@ class PrettyPrinter(ABC, Generic[ContentT]):
 
     @classmethod
     def _set_default_syntax_for_panel_if_syntax_is_auto(cls, config: OutputConfig) -> OutputConfig:
-        if config.syntax is SyntaxLanguage.AUTO:
+        if config.syntax is SyntaxLanguageSpec.AUTO:
             return dataclasses.replace(
                 config,
                 syntax=cls.get_default_syntax_language(),
@@ -77,7 +77,7 @@ class PrettyPrinter(ABC, Generic[ContentT]):
         if pretty_printer:
             return pretty_printer
 
-        if draft_panel.config.syntax is SyntaxLanguage.AUTO:
+        if draft_panel.config.syntax is SyntaxLanguageSpec.AUTO:
             pretty_printer = register.get_pretty_printer_from_content(draft_panel)
             if pretty_printer:
                 return pretty_printer

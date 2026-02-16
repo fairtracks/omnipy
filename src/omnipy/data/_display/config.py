@@ -18,7 +18,7 @@ from omnipy.shared.enums.display import (DisplayColorSystem,
                                          MaxTitleHeight,
                                          PanelDesign,
                                          PrettyPrinterLib,
-                                         SyntaxLanguage,
+                                         SyntaxLanguageSpec,
                                          VerticalOverflowMode)
 from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
 import omnipy.util.pydantic as pyd
@@ -137,7 +137,7 @@ class OutputConfig:
     tab: pyd.NonNegativeInt = 4
     indent: pyd.NonNegativeInt = 2
     printer: PrettyPrinterLib.Literals = PrettyPrinterLib.AUTO
-    syntax: SyntaxLanguage.Literals | str = SyntaxLanguage.AUTO
+    syntax: SyntaxLanguageSpec.Literals | str = SyntaxLanguageSpec.AUTO
     freedom: pyd.NonNegativeFloat | None = 2.5
     debug: bool = False
     ui: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL
@@ -169,10 +169,10 @@ class OutputConfig:
     @pyd.validator('syntax')
     def check_syntax(
         cls,
-        syntax: SyntaxLanguage.Literals | str,
-    ) -> SyntaxLanguage.Literals | str:
+        syntax: SyntaxLanguageSpec.Literals | str,
+    ) -> SyntaxLanguageSpec.Literals | str:
         try:
-            if SyntaxLanguage.is_syntax_language(syntax):
+            if SyntaxLanguageSpec.is_syntax_language_spec(syntax):
                 return syntax
             elif pygments.lexers.get_lexer_by_name(syntax):
                 return syntax

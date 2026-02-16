@@ -2,7 +2,7 @@ from typing import cast
 
 from typing_extensions import override
 
-from omnipy import SyntaxLanguage
+from omnipy import SyntaxLanguageSpec
 from omnipy.components.json.typedefs import JsonScalar
 from omnipy.components.tables.models import ColumnModel, PrintableTable
 from omnipy.data._display.frame import AnyFrame
@@ -21,8 +21,8 @@ class ColumnPrettyPrinter(PrettyPrinter[list[JsonScalar]]):
 
     @override
     @classmethod
-    def get_default_syntax_language(cls) -> SyntaxLanguage.Literals:
-        return SyntaxLanguage.TEXT
+    def get_default_syntax_language(cls) -> SyntaxLanguageSpec.Literals:
+        return SyntaxLanguageSpec.TEXT
 
     @override
     @classmethod

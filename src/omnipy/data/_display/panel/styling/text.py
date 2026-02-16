@@ -14,7 +14,7 @@ from omnipy.data._display.styles.dynamic_styles import clean_style_name
 from omnipy.shared.enums.colorstyles import AllColorStyles
 from omnipy.shared.enums.display import (DisplayColorSystem,
                                          HorizontalOverflowMode,
-                                         SyntaxLanguage,
+                                         SyntaxLanguageSpec,
                                          VerticalOverflowMode)
 from omnipy.util import pydantic as pyd
 
@@ -35,7 +35,7 @@ class SyntaxStylizedTextPanel(
         tab_size: int,
         color_system: DisplayColorSystem.Literals,  # Only used for hashing
         console_color_style: AllColorStyles.Literals | str,
-        syntax_language: SyntaxLanguage.Literals | str,
+        syntax_language: SyntaxLanguageSpec.Literals | str,
         horizontal_overflow_mode: HorizontalOverflowMode.Literals,
         remove_bg_color: bool,
     ) -> rich.syntax.Syntax:

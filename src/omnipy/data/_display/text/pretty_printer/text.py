@@ -1,6 +1,6 @@
 from typing_extensions import override
 
-from omnipy import SyntaxLanguage
+from omnipy import SyntaxLanguageSpec
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
@@ -26,8 +26,8 @@ class PlainTextPrettyPrinter(PrettyPrinter[str]):
 
     @override
     @classmethod
-    def get_default_syntax_language(cls) -> SyntaxLanguage.Literals:
-        return SyntaxLanguage.TEXT
+    def get_default_syntax_language(cls) -> SyntaxLanguageSpec.Literals:
+        return SyntaxLanguageSpec.TEXT
 
     @override
     def format_prepared_draft(

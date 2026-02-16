@@ -10,7 +10,7 @@ from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 from omnipy.shared.enums.colorstyles import RecommendedColorStyles
-from omnipy.shared.enums.display import DisplayColorSystem, SyntaxLanguage
+from omnipy.shared.enums.display import DisplayColorSystem, SyntaxLanguageSpec
 
 from ..helpers.case_setup import (apply_frame_variant_to_test_case,
                                   FrameVariant,
@@ -38,7 +38,7 @@ def test_syntax_stylized_text_panel_init() -> None:
         frame=Frame(Dimensions(10, 10)),
         constraints=Constraints(),
         config=OutputConfig(
-            syntax=SyntaxLanguage.PYTHON,
+            syntax=SyntaxLanguageSpec.PYTHON,
             style=RecommendedColorStyles.ANSI_LIGHT,
         ),
     )
@@ -241,10 +241,11 @@ def test_syntax_stylized_text_panel_json() -> None:
     text_panel = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel(
             json_content,
-            config=OutputConfig(syntax=SyntaxLanguage.JSON, system=DisplayColorSystem.ANSI_RGB)))
+            config=OutputConfig(syntax=SyntaxLanguageSpec.JSON,
+                                system=DisplayColorSystem.ANSI_RGB)))
 
     assert text_panel.content == json_content
-    assert text_panel.config.syntax == SyntaxLanguage.JSON
+    assert text_panel.config.syntax == SyntaxLanguageSpec.JSON
 
     # Checking that the plain output is unchanged (except for the trailing newline)
     assert text_panel.plain.terminal == json_content + '\n'

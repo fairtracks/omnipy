@@ -13,7 +13,7 @@ from omnipy.shared.enums.display import (DisplayColorSystem,
                                          MaxTitleHeight,
                                          PanelDesign,
                                          PrettyPrinterLib,
-                                         SyntaxLanguage,
+                                         SyntaxLanguageSpec,
                                          VerticalOverflowMode)
 from omnipy.shared.enums.ui import UserInterfaceType
 
@@ -23,7 +23,7 @@ def test_output_config() -> None:
         tab=2,
         indent=4,
         printer=PrettyPrinterLib.DEVTOOLS,
-        syntax=SyntaxLanguage.JSON,
+        syntax=SyntaxLanguageSpec.JSON,
         freedom=3.5,
         debug=True,
         ui=UserInterfaceType.JUPYTER,
@@ -50,7 +50,7 @@ def test_output_config() -> None:
     assert config.tab == 2
     assert config.indent == 4
     assert config.printer is PrettyPrinterLib.DEVTOOLS
-    assert config.syntax is SyntaxLanguage.JSON
+    assert config.syntax is SyntaxLanguageSpec.JSON
     assert config.freedom == 3.5
     assert config.debug is True
     assert config.ui is UserInterfaceType.JUPYTER
@@ -159,7 +159,7 @@ def test_output_config_hashable() -> None:
             'printer': PrettyPrinterLib.DEVTOOLS
         },
         {
-            'syntax': SyntaxLanguage.XML
+            'syntax': SyntaxLanguageSpec.XML
         },
         {
             'freedom': 1.0
@@ -251,7 +251,7 @@ def test_fail_output_config_no_assignments() -> None:
         config.printer = PrettyPrinterLib.DEVTOOLS  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
-        config.syntax = SyntaxLanguage.XML  # type: ignore[misc]
+        config.syntax = SyntaxLanguageSpec.XML  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
         config.freedom = 3.0  # type: ignore[misc]
@@ -409,7 +409,7 @@ def test_output_config_default_values() -> None:
     assert config.tab == 4
     assert config.indent == 2
     assert config.printer is PrettyPrinterLib.AUTO
-    assert config.syntax is SyntaxLanguage.PYTHON
+    assert config.syntax is SyntaxLanguageSpec.PYTHON
     assert config.freedom == 2.5
     assert config.debug is False
     assert config.ui is UserInterfaceType.TERMINAL

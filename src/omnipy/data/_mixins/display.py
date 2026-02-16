@@ -38,7 +38,7 @@ from omnipy.shared.enums.display import (DisplayColorSystem,
                                          MaxTitleHeight,
                                          PanelDesign,
                                          PrettyPrinterLib,
-                                         SyntaxLanguage,
+                                         SyntaxLanguageSpec,
                                          VerticalOverflowMode)
 from omnipy.shared.enums.ui import (BrowserPageUserInterfaceType,
                                     BrowserTagUserInterfaceType,
@@ -297,7 +297,7 @@ class IsDisplayMethod(Protocol):
         tab: 'pyd.NonNegativeInt' = 4,
         indent: 'pyd.NonNegativeInt' = 2,
         printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
-        syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+        syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
         freedom: 'pyd.NonNegativeFloat | None' = 2.5,
         debug: bool = False,
         ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
@@ -334,7 +334,7 @@ class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
         tab: 'pyd.NonNegativeInt' = 4,
         indent: 'pyd.NonNegativeInt' = 2,
         printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
-        syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+        syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
         freedom: 'pyd.NonNegativeFloat | None' = 2.5,
         debug: bool = False,
         ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
@@ -371,7 +371,7 @@ class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
         tab: 'pyd.NonNegativeInt' = 4,
         indent: 'pyd.NonNegativeInt' = 2,
         printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
-        syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+        syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
         freedom: 'pyd.NonNegativeFloat | None' = 2.5,
         debug: bool = False,
         ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
@@ -408,7 +408,7 @@ class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
         tab: 'pyd.NonNegativeInt' = 4,
         indent: 'pyd.NonNegativeInt' = 2,
         printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
-        syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+        syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
         freedom: 'pyd.NonNegativeFloat | None' = 2.5,
         debug: bool = False,
         ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
@@ -472,7 +472,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             tab: 'pyd.NonNegativeInt' = 4,
             indent: 'pyd.NonNegativeInt' = 2,
             printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
-            syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+            syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
             freedom: 'pyd.NonNegativeFloat | None' = 2.5,
             debug: bool = False,
             ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
@@ -835,7 +835,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     @classmethod
     def _prepare_kwargs_for_json(cls, kwargs):
         kwargs_copy = kwargs.copy()
-        kwargs_copy['syntax'] = SyntaxLanguage.JSON5
+        kwargs_copy['syntax'] = SyntaxLanguageSpec.JSON5
         return kwargs_copy
 
     if TYPE_CHECKING:
@@ -848,7 +848,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             tab: 'pyd.NonNegativeInt' = 4,
             indent: 'pyd.NonNegativeInt' = 2,
             printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
-            syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+            syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
             freedom: 'pyd.NonNegativeFloat | None' = 2.5,
             debug: bool = False,
             ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
@@ -1208,7 +1208,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             tab: 'pyd.NonNegativeInt' = 4,
             indent: 'pyd.NonNegativeInt' = 2,
             printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
-            syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+            syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
             freedom: 'pyd.NonNegativeFloat | None' = 2.5,
             debug: bool = False,
             ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
@@ -1574,7 +1574,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             tab: 'pyd.NonNegativeInt' = 4,
             indent: 'pyd.NonNegativeInt' = 2,
             printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
-            syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+            syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
             freedom: 'pyd.NonNegativeFloat | None' = 2.5,
             debug: bool = False,
             ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
@@ -2495,7 +2495,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
             config = dataclasses.replace(config, max_title_height=MaxTitleHeight.ONE)
             number_config = dataclasses.replace(
-                config, syntax=SyntaxLanguage.PYTHON, justify='right')
+                config, syntax=SyntaxLanguageSpec.PYTHON, justify='right')
 
             column_wise_table = ColumnWiseTableWithColNamesModel(model)
 
@@ -2741,7 +2741,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             tab: 'pyd.NonNegativeInt' = 4,
             indent: 'pyd.NonNegativeInt' = 2,
             printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
-            syntax: 'SyntaxLanguage.Literals | str' = SyntaxLanguage.PYTHON,
+            syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
             freedom: 'pyd.NonNegativeFloat | None' = 2.5,
             debug: bool = False,
             ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
@@ -3106,7 +3106,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
         config = dataclasses.replace(config, max_title_height=MaxTitleHeight.ONE)
         right_justified_config = dataclasses.replace(config, justify='right')
-        text_config = dataclasses.replace(config, syntax=SyntaxLanguage.TEXT)
+        text_config = dataclasses.replace(config, syntax=SyntaxLanguageSpec.TEXT)
 
         frame = self._apply_kwargs_to_frame(frame, **kwargs)
         config_kwargs = self._validate_kwargs_for_config(**kwargs)

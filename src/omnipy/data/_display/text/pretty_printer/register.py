@@ -8,7 +8,7 @@ from omnipy.data._display.text.pretty_printer.compact_json import CompactJsonPre
 from omnipy.data._display.text.pretty_printer.devtools import DevtoolsPrettyPrinter
 from omnipy.data._display.text.pretty_printer.rich import RichPrettyPrinter
 from omnipy.data._display.text.pretty_printer.text import PlainTextPrettyPrinter
-from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguage
+from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
 
 def get_pretty_printer_from_config_value(
@@ -43,17 +43,17 @@ def get_pretty_printer_from_content(draft_panel: DraftPanel) -> PrettyPrinter | 
             return pretty_printer
 
 
-def get_pretty_printer_from_syntax(syntax: SyntaxLanguage.Literals | str) -> PrettyPrinter:
+def get_pretty_printer_from_syntax(syntax: SyntaxLanguageSpec.Literals | str) -> PrettyPrinter:
 
-    if SyntaxLanguage.is_supported_syntax_language(syntax):
+    if SyntaxLanguageSpec.is_supported_syntax_language(syntax):
         match syntax:
-            case _syntax if SyntaxLanguage.is_json_syntax(_syntax):
+            case _syntax if SyntaxLanguageSpec.is_json_syntax(_syntax):
                 return CompactJsonPrettyPrinter()
-            case _syntax if SyntaxLanguage.is_text_syntax(_syntax):
+            case _syntax if SyntaxLanguageSpec.is_text_syntax(_syntax):
                 return PlainTextPrettyPrinter()
-            case _syntax if SyntaxLanguage.is_hexdump_syntax(_syntax):
+            case _syntax if SyntaxLanguageSpec.is_hexdump_syntax(_syntax):
                 return HexdumpPrettyPrinter()
-            case _syntax if SyntaxLanguage.is_python_syntax(_syntax):
+            case _syntax if SyntaxLanguageSpec.is_python_syntax(_syntax):
                 return RichPrettyPrinter()
             case _ as never:
                 assert_never(never)  # pyright: ignore [reportArgumentType]

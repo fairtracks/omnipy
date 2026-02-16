@@ -2,7 +2,7 @@ from abc import ABC
 
 from typing_extensions import override
 
-from omnipy import SyntaxLanguage
+from omnipy import SyntaxLanguageSpec
 from omnipy.components.json.models import is_json_model_instance_hack
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.draft.base import DraftPanel
@@ -19,8 +19,8 @@ class PythonStatsTighteningPrettyPrinter(PrettyPrinter[object], ABC):
 
     @override
     @classmethod
-    def get_default_syntax_language(cls) -> SyntaxLanguage.Literals:
-        return SyntaxLanguage.PYTHON
+    def get_default_syntax_language(cls) -> SyntaxLanguageSpec.Literals:
+        return SyntaxLanguageSpec.PYTHON
 
     @override
     @classmethod
@@ -39,8 +39,8 @@ class JsonStatsTighteningPrettyPrinterMixin(PrettyPrinter[object], ABC):
 
     @override
     @classmethod
-    def get_default_syntax_language(cls) -> SyntaxLanguage.Literals:
-        return SyntaxLanguage.JSON5
+    def get_default_syntax_language(cls) -> SyntaxLanguageSpec.Literals:
+        return SyntaxLanguageSpec.JSON5
 
     @override
     @classmethod
