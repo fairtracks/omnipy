@@ -54,14 +54,16 @@ class PrettyPrinterLib(LiteralEnum[str]):
     Literals = Literal['rich', 'devtools', 'compact-json', 'text', 'column', 'hexdump', 'auto']
 
     RICH: Literal['rich'] = 'rich'
-    """
+    """Rich pretty printer for Python objects.
+
     The pretty printer of Rich library
     (https://rich.readthedocs.io/en/stable/), a general-purpose formatter
     of Python objects. This is the default value.
     """
 
     DEVTOOLS: Literal['devtools'] = 'devtools'
-    """
+    """Devtools pretty printer for Python objects.
+
     The pretty printer of the Devtools library
     (https://python-devtools.helpmanual.io/), a general-purpose formatter
     of Python objects and specifically designed for visualizing Pydantic
@@ -69,49 +71,54 @@ class PrettyPrinterLib(LiteralEnum[str]):
     """
 
     COMPACT_JSON: Literal['compact-json'] = 'compact-json'
-    """
+    """Compact JSON pretty printer.
+
     The compact-json library (https://github.com/masaccio/compact-json),
     which is used for compact formatting of JSON data structures.
     """
 
     TEXT: Literal['text'] = 'text'
-    """
+    """Text pretty printer.
+
     The plain text pretty printer, which is used for displaying plain text
     content.
     """
 
     COLUMN: Literal['column'] = 'column'
-    """
+    """Column pretty printer.
+
     The column pretty printer is the basis for tabular data display in
     Omnipy, with the regular panel layout providing the table formatting.
     """
 
     HEXDUMP: Literal['hexdump'] = 'hexdump'
-    """
+    """Hexdump pretty printer.
+
     Hexdump pretty printer based on [simple-hexdump](https://pypi.org/project/simple-hexdump/)
     for displaying binary content.
     """
 
     AUTO: Literal['auto'] = 'auto'
-    """
-    Automatically selects the pretty printer based on:
-    
+    """Automatically selects the pretty printer.
+
+    The auto-selection of the pretty printer is based on:
+
     1.  The `syntax` config parameter, if other than `AUTO`. The pretty
         printer is set to the default pretty printer for the specified
         syntax language subgroup (see subtypes of `SyntaxLanguage`). If the
         specified syntax language is not supported (i.e. not specified in
-        any subgroup, the pretty printer is set to `TEXT`. 
-        
+        any subgroup, the pretty printer is set to `TEXT`.
+
     2.  If the `syntax` config parameter is set to `AUTO`, the pretty
         printer is set based on the content of the output.
-        
+
     Note: the default pretty printer for a syntax language subgroup is
         currently  determined in the `get_pretty_printer_from_syntax()`
-        function in  `omnipy.data._display.text.pretty_printer.register`, 
+        function in  `omnipy.data._display.text.pretty_printer.register`,
         while the mapping of content types to pretty printers is determined
         in the `get_pretty_printer_from_content()` function in the same
         module, based on the `is_suitable_content()` method of each pretty
-        printer class. The implementation of determining the pretty printer 
+        printer class. The implementation of determining the pretty printer
         when set to `AUTO` will most likely change in the future.
     """
 
@@ -186,23 +193,29 @@ class SyntaxLanguage(JsonSyntaxLanguage,
 
 
 class SyntaxLanguageSpec(SyntaxLanguage):
-    """
-    Supported languages for syntax recognition and highlighting (see
-    `SupportedSyntaxLanguage`), plus the  `AUTO` option for automatic syntax
+    """Specification of language for syntax recognition and highlighting.
+
+    The available values include all supported syntax languages (see
+    `SyntaxLanguage`), plus the  `AUTO` option for automatic syntax
     recognition.
     """
 
     Literals = Literal['auto', SyntaxLanguage.Literals]
 
     AUTO: Literal['auto'] = 'auto'
-    """
-    Autodetect the syntax language based on the content.
+    """Automatically select the syntax language.
+
+    Automatically set the syntax language in accordance with the specified
+    pretty printer selected for the output (e.g. specified in `printer`
+    config parameter). The syntax language specified in the
+    `get_default_syntax_language()` class method is selected.
     """
     @classmethod
     def is_syntax_language_spec(cls, syntax: str) -> 'TypeIs[SyntaxLanguageSpec.Literals]':
-        """
-        Checks if the given syntax is one of the supported options for
-        syntax language specification (including `AUTO`).
+        """Checks for a valid syntax language specification.
+
+        This checks whether the syntax string is one of the supported
+        options for syntax language specification (including `AUTO`).
         """
         return syntax in SyntaxLanguageSpec
 
@@ -211,43 +224,37 @@ class SyntaxLanguageSpec(SyntaxLanguage):
         cls,
         syntax: str,
     ) -> 'TypeIs[SyntaxLanguage.Literals]':
-        """
-        Checks if the given syntax is one of the supported syntax languages.
+        """Checks if the given syntax is a supported syntax language.
         """
         return syntax in SyntaxLanguage
 
     @classmethod
     def is_json_syntax(cls, syntax: str) -> TypeIs[JsonSyntaxLanguage.Literals]:
-        """
-        Checks if the given syntax is a JSON syntax.
+        """Checks if the given syntax is a JSON syntax.
         """
         return syntax in JsonSyntaxLanguage
 
     @classmethod
     def is_text_syntax(cls, syntax: str) -> TypeIs[TextSyntaxLanguage.Literals]:
-        """
-        Checks if the given syntax is a general text syntax.
+        """Checks if the given syntax is a general text syntax.
         """
         return syntax in TextSyntaxLanguage
 
     @classmethod
     def is_hexdump_syntax(cls, syntax: str) -> TypeIs[HexdumpSyntaxLanguage.Literals]:
-        """
-        Checks if the given syntax is the syntax for displaying binary as hexdump
+        """Checks if the given syntax is a binary hexdump variant.
         """
         return syntax in HexdumpSyntaxLanguage
 
     @classmethod
     def is_python_syntax(cls, syntax: str) -> TypeIs[PythonSyntaxLanguage.Literals]:
-        """
-        Checks if the given syntax is a Python variant.
+        """Checks if the given syntax is a Python variant.
         """
         return syntax in PythonSyntaxLanguage
 
 
 class DisplayColorSystem(LiteralEnum[str]):
-    """
-    Supported display color systems for syntax highlighting.
+    """Supported display color systems for syntax highlighting.
 
     The color systems map to the color systems provided by the Rich library
     (https://rich.readthedocs.io/en/stable/console.html#color-systems).
