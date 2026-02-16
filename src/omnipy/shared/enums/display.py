@@ -95,8 +95,24 @@ class PrettyPrinterLib(LiteralEnum[str]):
     AUTO: Literal['auto'] = 'auto'
     """
     Automatically selects the pretty printer based on:
-    1. The content type
-    2. The `syntax` config parameter
+    
+    1.  The `syntax` config parameter, if other than `AUTO`. The pretty
+        printer is set to the default pretty printer for the specified
+        syntax language subgroup (see subtypes of `SyntaxLanguage`). If the
+        specified syntax language is not supported (i.e. not specified in
+        any subgroup, the pretty printer is set to `TEXT`. 
+        
+    2.  If the `syntax` config parameter is set to `AUTO`, the pretty
+        printer is set based on the content of the output.
+        
+    Note: the default pretty printer for a syntax language subgroup is
+        currently  determined in the `get_pretty_printer_from_syntax()`
+        function in  `omnipy.data._display.text.pretty_printer.register`, 
+        while the mapping of content types to pretty printers is determined
+        in the `get_pretty_printer_from_content()` function in the same
+        module, based on the `is_suitable_content()` method of each pretty
+        printer class. The implementation of determining the pretty printer 
+        when set to `AUTO` will most likely change in the future.
     """
 
 
@@ -151,10 +167,10 @@ class PythonSyntaxLanguage(LiteralEnum[str]):
     PYTHON: Literal['python'] = 'python'
 
 
-class SyntaxLanguage(JsonSyntaxLanguage,
-                     TextSyntaxLanguage,
-                     HexdumpSyntaxLanguage,
-                     PythonSyntaxLanguage):
+class SupportedSyntaxLanguage(JsonSyntaxLanguage,
+                              TextSyntaxLanguage,
+                              HexdumpSyntaxLanguage,
+                              PythonSyntaxLanguage):
     """
     Supported languages for syntax recognition and highlighting.
 
@@ -163,11 +179,20 @@ class SyntaxLanguage(JsonSyntaxLanguage,
     relevant for Omnipy.
     """
 
-    Literals = Literal['auto',
-                       JsonSyntaxLanguage.Literals,
+    Literals = Literal[JsonSyntaxLanguage.Literals,
                        TextSyntaxLanguage.Literals,
                        HexdumpSyntaxLanguage.Literals,
                        PythonSyntaxLanguage.Literals]
+
+
+class SyntaxLanguage(SupportedSyntaxLanguage):
+    """
+    Supported languages for syntax recognition and highlighting (see
+    `SupportedSyntaxLanguage`), plus the  `AUTO` option for automatic syntax
+    recognition.
+    """
+
+    Literals = Literal['auto', SupportedSyntaxLanguage.Literals]
 
     AUTO: Literal['auto'] = 'auto'
     """
@@ -176,9 +201,20 @@ class SyntaxLanguage(JsonSyntaxLanguage,
     @classmethod
     def is_syntax_language(cls, syntax: str) -> 'TypeIs[SyntaxLanguage.Literals]':
         """
-        Checks if the given syntax is a Syntax language.
+        Checks if the given syntax is one of the supported options for
+        syntax language specification (including `AUTO`).
         """
         return syntax in SyntaxLanguage
+
+    @classmethod
+    def is_supported_syntax_language(
+        cls,
+        syntax: str,
+    ) -> 'TypeIs[SupportedSyntaxLanguage.Literals]':
+        """
+        Checks if the given syntax is one of the supported syntax languages.
+        """
+        return syntax in SupportedSyntaxLanguage
 
     @classmethod
     def is_json_syntax(cls, syntax: str) -> TypeIs[JsonSyntaxLanguage.Literals]:

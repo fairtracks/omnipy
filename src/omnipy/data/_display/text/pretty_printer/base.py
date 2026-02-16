@@ -24,6 +24,11 @@ class PrettyPrinter(ABC, Generic[ContentT]):
 
     @classmethod
     @abstractmethod
+    def get_default_syntax_language(cls) -> SyntaxLanguage.Literals:
+        ...
+
+    @classmethod
+    @abstractmethod
     def _get_content_for_draft_panel(cls, draft_panel: DraftPanel[object, AnyFrame]) -> ContentT:
         ...
 
@@ -36,10 +41,17 @@ class PrettyPrinter(ABC, Generic[ContentT]):
         self,
         draft_panel: DraftPanel[object, FrameT],
     ) -> DraftPanel[ContentT, FrameT]:
+        config = draft_panel.config
+        if config.syntax is SyntaxLanguage.AUTO:
+            config = dataclasses.replace(
+                draft_panel.config,
+                syntax=self.get_default_syntax_language(),
+            )
         return draft_panel.create_modified_copy(
             content=self._get_content_for_draft_panel(draft_panel),
             frame=draft_panel.frame,
             constraints=self._get_default_constraints_for_draft_panel(draft_panel),
+            config=config,
         )
 
     @abstractmethod

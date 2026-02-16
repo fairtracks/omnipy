@@ -1,5 +1,6 @@
 from typing_extensions import override
 
+from omnipy import SyntaxLanguage
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
@@ -22,6 +23,11 @@ class HexdumpPrettyPrinter(PrettyPrinter[str]):
             return content.outer_type() is bytes or isinstance(content, BytesModel)
 
         return False
+
+    @override
+    @classmethod
+    def get_default_syntax_language(cls) -> SyntaxLanguage.Literals:
+        return SyntaxLanguage.HEXDUMP
 
     @override
     def format_prepared_draft(

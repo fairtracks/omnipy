@@ -147,16 +147,13 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
             width (NonNegativeInt | None):
                 Width in characters of the output area (None for
                 auto-detect based on available display dimensions).
-                Defaults to `None`.
             height (NonNegativeInt | None):
                 Height in lines of the output area (None for
                 auto-detect based on available display dimensions).
-                Defaults to `None`.
             tab (NonNegativeInt):
-                Number of spaces to use for each tab. Defaults to `4`.
+                Number of spaces to use for each tab.
             indent (NonNegativeInt):
                 Number of spaces to use for each indentation level.
-                Defaults to `2`.
             printer (PrettyPrinterLib.Literals):
                 Library to use for pretty printing. Defaults to
                 `'auto'`.
@@ -523,16 +520,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 height (NonNegativeInt | None):
                     Height in lines of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 tab (NonNegativeInt):
-                    Number of spaces to use for each tab. Defaults to `4`.
+                    Number of spaces to use for each tab.
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
-                    Defaults to `2`.
                 printer (PrettyPrinterLib.Literals):
                     Library to use for pretty printing. Defaults to
                     `'auto'`.
@@ -685,16 +679,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 height (NonNegativeInt | None):
                     Height in lines of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 tab (NonNegativeInt):
-                    Number of spaces to use for each tab. Defaults to `4`.
+                    Number of spaces to use for each tab.
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
-                    Defaults to `2`.
                 printer (PrettyPrinterLib.Literals):
                     Library to use for pretty printing. Defaults to
                     `'auto'`.
@@ -904,16 +895,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 height (NonNegativeInt | None):
                     Height in lines of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 tab (NonNegativeInt):
-                    Number of spaces to use for each tab. Defaults to `4`.
+                    Number of spaces to use for each tab.
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
-                    Defaults to `2`.
                 printer (PrettyPrinterLib.Literals):
                     Library to use for pretty printing. Defaults to
                     `'auto'`.
@@ -1066,16 +1054,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 height (NonNegativeInt | None):
                     Height in lines of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 tab (NonNegativeInt):
-                    Number of spaces to use for each tab. Defaults to `4`.
+                    Number of spaces to use for each tab.
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
-                    Defaults to `2`.
                 printer (PrettyPrinterLib.Literals):
                     Library to use for pretty printing. Defaults to
                     `'auto'`.
@@ -1274,16 +1259,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 height (NonNegativeInt | None):
                     Height in lines of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 tab (NonNegativeInt):
-                    Number of spaces to use for each tab. Defaults to `4`.
+                    Number of spaces to use for each tab.
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
-                    Defaults to `2`.
                 printer (PrettyPrinterLib.Literals):
                     Library to use for pretty printing. Defaults to
                     `'auto'`.
@@ -1439,16 +1421,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 height (NonNegativeInt | None):
                     Height in lines of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 tab (NonNegativeInt):
-                    Number of spaces to use for each tab. Defaults to `4`.
+                    Number of spaces to use for each tab.
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
-                    Defaults to `2`.
                 printer (PrettyPrinterLib.Literals):
                     Library to use for pretty printing. Defaults to
                     `'auto'`.
@@ -1639,16 +1618,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 height (NonNegativeInt | None):
                     Height in lines of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 tab (NonNegativeInt):
-                    Number of spaces to use for each tab. Defaults to `4`.
+                    Number of spaces to use for each tab.
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
-                    Defaults to `2`.
                 printer (PrettyPrinterLib.Literals):
                     Library to use for pretty printing. Defaults to
                     `'auto'`.
@@ -1792,16 +1768,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 height (NonNegativeInt | None):
                     Height in lines of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 tab (NonNegativeInt):
-                    Number of spaces to use for each tab. Defaults to `4`.
+                    Number of spaces to use for each tab.
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
-                    Defaults to `2`.
                 printer (PrettyPrinterLib.Literals):
                     Library to use for pretty printing. Defaults to
                     `'auto'`.
@@ -1967,16 +1940,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             width (NonNegativeInt | None):
                 Width in characters of the output area (None for
                 auto-detect based on available display dimensions).
-                Defaults to `None`.
             height (NonNegativeInt | None):
                 Height in lines of the output area (None for
                 auto-detect based on available display dimensions).
-                Defaults to `None`.
             tab (NonNegativeInt):
-                Number of spaces to use for each tab. Defaults to `4`.
+                Number of spaces to use for each tab.
             indent (NonNegativeInt):
                 Number of spaces to use for each indentation level.
-                Defaults to `2`.
             printer (PrettyPrinterLib.Literals):
                 Library to use for pretty printing. Defaults to
                 `'auto'`.
@@ -2519,18 +2489,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                                                      ColumnWiseTableWithColNamesModel,
                                                      PrintableTable)
 
-        syntax: SyntaxLanguage.Literals
-        if isinstance(model, (StrModel, PrintableTable)):
-            syntax = SyntaxLanguage.TEXT
-        elif isinstance(model, BytesModel):
-            syntax = SyntaxLanguage.HEXDUMP
-        elif is_json_model_instance_hack(model):
-            syntax = SyntaxLanguage.JSON5
-        else:
-            syntax = SyntaxLanguage.PYTHON
-
         config = self._update_config_with_overflow_modes(config, 'text')
-        config = dataclasses.replace(config, syntax=syntax)
         config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
 
         if isinstance(model, PrintableTable):
@@ -2831,16 +2790,13 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 height (NonNegativeInt | None):
                     Height in lines of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 tab (NonNegativeInt):
-                    Number of spaces to use for each tab. Defaults to `4`.
+                    Number of spaces to use for each tab.
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
-                    Defaults to `2`.
                 printer (PrettyPrinterLib.Literals):
                     Library to use for pretty printing. Defaults to
                     `'auto'`.
@@ -2993,16 +2949,13 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 width (NonNegativeInt | None):
                     Width in characters of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 height (NonNegativeInt | None):
                     Height in lines of the output area (None for
                     auto-detect based on available display dimensions).
-                    Defaults to `None`.
                 tab (NonNegativeInt):
-                    Number of spaces to use for each tab. Defaults to `4`.
+                    Number of spaces to use for each tab.
                 indent (NonNegativeInt):
                     Number of spaces to use for each indentation level.
-                    Defaults to `2`.
                 printer (PrettyPrinterLib.Literals):
                     Library to use for pretty printing. Defaults to
                     `'auto'`.

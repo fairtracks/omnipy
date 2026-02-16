@@ -2,6 +2,7 @@ from abc import ABC
 
 from typing_extensions import override
 
+from omnipy import SyntaxLanguage
 from omnipy.components.json.models import is_json_model_instance_hack
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.draft.base import DraftPanel
@@ -18,6 +19,11 @@ class PythonStatsTighteningPrettyPrinter(PrettyPrinter[object], ABC):
 
     @override
     @classmethod
+    def get_default_syntax_language(cls) -> SyntaxLanguage.Literals:
+        return SyntaxLanguage.PYTHON
+
+    @override
+    @classmethod
     def _get_content_for_draft_panel(cls, draft_panel: DraftPanel[object, AnyFrame]) -> object:
         if is_model_instance(draft_panel.content) and not draft_panel.config.debug:
             return draft_panel.content.to_data()
@@ -30,6 +36,11 @@ class JsonStatsTighteningPrettyPrinterMixin(PrettyPrinter[object], ABC):
     @classmethod
     def is_suitable_content(cls, draft_panel: DraftPanel[object, AnyFrame]) -> bool:
         return is_json_model_instance_hack(draft_panel.content)
+
+    @override
+    @classmethod
+    def get_default_syntax_language(cls) -> SyntaxLanguage.Literals:
+        return SyntaxLanguage.JSON5
 
     @override
     @classmethod
