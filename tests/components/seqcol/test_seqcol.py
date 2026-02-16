@@ -10,6 +10,7 @@ from omnipy.components.seqcol.models import SeqColLevel2Model
 #   i. level 0 digest
 #      -> /collections/{digest} endpoint
 #      -> level 2 "sequences" list
+#     (-> level 1 "sequences" digest as a variant/extension?)
 #  ii. for each level 2 sequence
 #      -> the actual sequence string (e.g. from refget Sequences API)
 #
@@ -244,3 +245,21 @@ def test_seqcol_level_2_model_invalid_data() -> None:
                 'SQ.AcLxtBuKEPk_7PGE_H4dGElwZHCujwH6'
             ]
         })
+
+
+def test_extract_seqcol_level_2_data_from_level_0_digest(
+        seqcol_level_0_digest: Annotated[str, pytest.fixture],
+        seqcol_level_2_full_data: Annotated[dict, pytest.fixture]) -> None:
+
+    # seqcol_level2_sequences = extract_level_2_sequences(seqcol_level_0_digest, level=2)
+
+    # alt1: just model, user needs to call the api - not what we want, not convenient
+    # alt2: a model and a more or less loose config
+    # alt3: Python client, wrapping each API call to a method, 1:1 (or close to it)
+
+    from omnipy import runtime
+
+    server_urls = ['https://seqcolapi.databio.org/']
+    runtime.config.data.seqcol.server_urls = server_urls
+    seqcol_model = SeqColModel(level_0=seqcol_level_0_digest)
+    assert seqcol_model.level_2.to_data() == seqcol_level_2_full_data
