@@ -409,7 +409,7 @@ def test_output_config_default_values() -> None:
     assert config.tab == 4
     assert config.indent == 2
     assert config.printer is PrettyPrinterLib.AUTO
-    assert config.syntax is SyntaxLanguageSpec.PYTHON
+    assert config.syntax is SyntaxLanguageSpec.AUTO
     assert config.freedom == 2.5
     assert config.debug is False
     assert config.ui is UserInterfaceType.TERMINAL
