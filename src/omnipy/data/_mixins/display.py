@@ -2483,8 +2483,6 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         frame: Frame | None = None,
         **config_kwargs,
     ) -> DraftPanel:
-        from omnipy.components.json.models import is_json_model_instance_hack
-        from omnipy.components.raw.models import BytesModel, StrModel
         from omnipy.components.tables.models import (ColumnModel,
                                                      ColumnWiseTableWithColNamesModel,
                                                      PrintableTable)
