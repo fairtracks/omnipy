@@ -5,6 +5,7 @@ from typing import Callable, ClassVar, Generic
 
 from typing_extensions import override
 
+from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import DimensionsWithWidth
 from omnipy.data._display.frame import AnyFrame, FrameWithWidth
@@ -37,21 +38,25 @@ class PrettyPrinter(ABC, Generic[ContentT]):
             cls, draft_panel: DraftPanel[object, AnyFrame]) -> Constraints:
         return draft_panel.constraints
 
+    @classmethod
+    def _set_default_syntax_for_panel_if_syntax_is_auto(cls, config: OutputConfig) -> OutputConfig:
+        if config.syntax is SyntaxLanguage.AUTO:
+            return dataclasses.replace(
+                config,
+                syntax=cls.get_default_syntax_language(),
+            )
+        else:
+            return config
+
     def prepare_draft_panel(
         self,
         draft_panel: DraftPanel[object, FrameT],
     ) -> DraftPanel[ContentT, FrameT]:
-        config = draft_panel.config
-        if config.syntax is SyntaxLanguage.AUTO:
-            config = dataclasses.replace(
-                draft_panel.config,
-                syntax=self.get_default_syntax_language(),
-            )
         return draft_panel.create_modified_copy(
             content=self._get_content_for_draft_panel(draft_panel),
             frame=draft_panel.frame,
             constraints=self._get_default_constraints_for_draft_panel(draft_panel),
-            config=config,
+            config=self._set_default_syntax_for_panel_if_syntax_is_auto(draft_panel.config),
         )
 
     @abstractmethod
