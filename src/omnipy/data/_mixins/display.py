@@ -3233,5 +3233,34 @@ if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
     # correct signature, the solution (for now) is to only perform this
     # check with Pyright. It is unclear if other type checkers will have
     # the same issue as mypy or not.
+    #
+    # Note: due to the fact that in Python, parameter types are
+    # contravariant (i.e. a callable accepting a more general type can
+    # substitute for one accepting a more specific type), static checks
+    # agains callback protocols will not catch cases where the method
+    # signatures are not exactly matching the protocol, but are still
+    # compatible. Also, cases where the default value in the method
+    # differs from the protocol will not be catched. For instance, static
+    # type checkers will not err in the assignment in the last line of the
+    # following code:
+    #
+    # ```python
+    # class MyCallable(Protocol):
+    #     def __call__(self, x: int = 0) -> str:
+    #         ...
+    #
+    #
+    # def my_function(x: float = 0.4) -> str:
+    #     return str(x)
+    #
+    #
+    # a: MyCallable = my_function
+    # ```
+    #
+    # On the other hant, the below check will catch cases with different
+    # number and names of parameters. Such cases are more likely to occur,
+    # e.g. when a developer fails to add a new parameter to all display
+    # methods.
+
     _Model: type[IsBaseDisplayMixin] = ModelDisplayMixin
     _Dataset: type[IsDatasetDisplayMixin] = DatasetDisplayMixin
