@@ -2530,20 +2530,6 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         )
         return config
 
-    @staticmethod
-    @functools.lru_cache
-    def _get_output_according_to_ui_type(
-        stylized_panel: FullyRenderedPanel,
-        ui_type: SpecifiedUserInterfaceType.Literals,
-    ) -> str:  # pyright: ignore [reportReturnType]
-        match ui_type:
-            case x if UserInterfaceType.requires_terminal_output(x):
-                return stylized_panel.colorized.terminal
-            case x if UserInterfaceType.requires_html_tag_output(x):
-                return stylized_panel.colorized.html_tag
-            case x if UserInterfaceType.requires_html_page_output(x):
-                return stylized_panel.colorized.html_page
-
     def _create_output_config_from_data_config(
         self,
         ui_type: SpecifiedUserInterfaceType.Literals,
