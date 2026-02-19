@@ -14,8 +14,7 @@ class PythonStatsTighteningPrettyPrinter(PrettyPrinter[object], ABC):
     @override
     @classmethod
     def is_suitable_content(cls, draft_panel: DraftPanel[object, AnyFrame]) -> bool:
-        # To first allow for syntax-based selection, and PYTHON is the default syntax
-        return False
+        return True
 
     @override
     @classmethod
