@@ -16,11 +16,9 @@ class HexdumpPrettyPrinter(PrettyPrinter[str]):
         from omnipy.components.raw.models import BytesModel
 
         content = draft_panel.content
-        if isinstance(content, bytes):
-            return True
 
         if is_model_instance(content):
-            return content.outer_type() is bytes or isinstance(content, BytesModel)
+            return isinstance(content, BytesModel)
 
         return False
 

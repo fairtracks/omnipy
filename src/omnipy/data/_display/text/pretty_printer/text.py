@@ -16,11 +16,9 @@ class PlainTextPrettyPrinter(PrettyPrinter[str]):
         from omnipy.components.raw.models import StrModel
 
         content = draft_panel.content
-        if isinstance(content, str):
-            return True
 
         if is_model_instance(content):
-            return content.outer_type() is str or isinstance(content, StrModel)
+            return isinstance(content, StrModel)
 
         return False
 
