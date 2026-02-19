@@ -119,18 +119,21 @@ def assert_next_stage_panel(
     next_stage: Panel[FrameT],
     next_stage_panel_cls: type[DraftPanel[object, FrameT]],
     exp_content: object,
+    exp_config: OutputConfig | None = None,
 ) -> None:
     assert isinstance(next_stage, next_stage_panel_cls)
-    assert next_stage.content == exp_content, \
-        f'\n{next_stage.content} != \n{exp_content}'
     assert next_stage.frame == this_panel.frame, \
         f'\n{next_stage.frame} != \n{this_panel.frame}'
     assert next_stage.title == this_panel.title, \
         f'\n{next_stage.title} != \n{this_panel.title}'
     assert next_stage.constraints == this_panel.constraints, \
         f'\n{next_stage.constraints} != \n{this_panel.constraints}'
-    assert next_stage.config == this_panel.config, \
-        f'\n{next_stage.config} != \n{this_panel.config}'
+    if exp_config is None:
+        exp_config = this_panel.config
+    assert next_stage.config == exp_config, \
+        f'\n{next_stage.config} != \n{exp_config}'
+    assert next_stage.content == exp_content, \
+        f'\n{next_stage.content} != \n{exp_content}'
 
 
 def _strip_html(html: str) -> str:

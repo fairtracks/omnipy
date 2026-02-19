@@ -29,6 +29,10 @@ def test_bytes_draft_panel_render_next_stage_simple() -> None:
         next_stage=text_draft_panel.render_next_stage(),
         next_stage_panel_cls=ReflowedTextDraftPanel,
         exp_content="b'\\xc3\\xa6\\xc3\\xb8\\xc3\\xa5'",
+        # SyntaxLanguageSpec.AUTO causes syntax to be set to default syntax
+        # for the pretty printer, which for Python printers are
+        # SyntaxLanguageSpec.PYTHON
+        exp_config=OutputConfig(syntax=SyntaxLanguageSpec.PYTHON),
     )
 
 

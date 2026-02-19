@@ -827,6 +827,7 @@ def test_plain_str_pretty_print() -> None:
         str_data,
         exp_plain_output=str_data,
         frame=DEFAULT_FRAME,
+        config=OutputConfig(syntax=SyntaxLanguageSpec.TEXT),
         within_frame_width=True,
         within_frame_height=True,
     )
@@ -836,6 +837,7 @@ def test_plain_str_pretty_print() -> None:
     _assert_pretty_repr_of_draft(
         Model[str](str_data),
         exp_plain_output=str_data,
+        config=OutputConfig(syntax=SyntaxLanguageSpec.TEXT),
         frame=DEFAULT_FRAME,
         within_frame_width=True,
         within_frame_height=True,
