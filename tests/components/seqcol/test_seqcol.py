@@ -257,9 +257,25 @@ def test_extract_seqcol_level_2_data_from_level_0_digest(
     # alt2: a model and a more or less loose config
     # alt3: Python client, wrapping each API call to a method, 1:1 (or close to it)
 
-    from omnipy import runtime
+    # from omnipy import runtime
+    #
+    # server_urls = ['https://seqcolapi.databio.org/']
+    # runtime.config.data.seqcol.server_urls = server_urls
+    # seqcol_model = SeqColModel(level_0=seqcol_level_0_digest)
+    # assert seqcol_model.level_2.to_data() == seqcol_level_2_full_data
 
-    server_urls = ['https://seqcolapi.databio.org/']
-    runtime.config.data.seqcol.server_urls = server_urls
-    seqcol_model = SeqColModel(level_0=seqcol_level_0_digest)
-    assert seqcol_model.level_2.to_data() == seqcol_level_2_full_data
+    MySeqColServiceUrlProvider = SeqColServiceUrlProvider.adjust(
+        'MySeqColServiceUrlProvider', servers=['https://seqcolapi.databio.org/'])
+
+    level_0_digest = SeqColLevel0DigestDataset(seqcol_level_0_digests)
+    seq_col_level_2_model = SeqColLevel2Model.load(
+        MySeqColServiceUrlProvider(level_0_digest, return_type=SeqColLevel2Model))
+
+    # seq_col_level_2_model = load_from_client(
+    #     return_type=SeqColLevel2Model, client=seq_col_http_client, parameters=(level_0_digest,))
+
+    # urls = seq_col_http_client.create_urls_from_input_and_output_types(
+    #     parameters=(level_1_sequences_digests,),
+    #     return_type=SeqColLevel2SequencesDataset,
+    # )
+    # seq_col_level_2_dataset = load_urls(return_type=SeqColLevel2Dataset, urls)
