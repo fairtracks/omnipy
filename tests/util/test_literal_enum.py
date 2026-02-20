@@ -238,106 +238,150 @@ def test_private_attributes_ignored() -> None:
     assert WithPrivate.__dunder__ == 'also ignored'
 
 
-def test_name_of_value() -> None:
-    class NumberEnum(LiteralEnum):
+def test_names_method() -> None:
+    class ColorsEnum(LiteralEnum):
+        Literals = Literal['red', 'green']
+        RED: Literal['red'] = 'red'
+        GREEN: Literal['green'] = 'green'
+
+    assert set(ColorsEnum.names()) == {'RED', 'GREEN'}
+
+    # Inheritance should work for names() as well
+    class MoreColorsEnum(ColorsEnum):
+        Literals = Literal[ColorsEnum.Literals, 'blue']
+        BLUE: Literal['blue'] = 'blue'
+
+    assert set(MoreColorsEnum.names()) == {'RED', 'GREEN', 'BLUE'}
+
+
+def test_name_for_value() -> None:
+    class NumbersEnum(LiteralEnum):
         Literals = Literal['one', 'two']
         ONE: Literal['one'] = 'one'
         TWO: Literal['two'] = 'two'
 
-    assert NumberEnum.name_for_value('one') == 'ONE'
-    assert NumberEnum.name_for_value('two') == 'TWO'
+    assert NumbersEnum.name_for_value('one') == 'ONE'
+    assert NumbersEnum.name_for_value('two') == 'TWO'
 
-    with pytest.raises(ValueError, match="Value 'three' not found in NumberEnum"):
-        NumberEnum.name_for_value('three')
+    with pytest.raises(ValueError, match="Value 'three' not found in NumbersEnum"):
+        NumbersEnum.name_for_value('three')
 
-    with pytest.raises(ValueError, match='Value 3 not found in NumberEnum'):
-        NumberEnum.name_for_value(3)
+    with pytest.raises(ValueError, match='Value 3 not found in NumbersEnum'):
+        NumbersEnum.name_for_value(3)
 
     # Specialized version with type hinting allows type checking for name_for_value()
-    class NumberEnumSpecialized(LiteralEnum[str]):
+    class NumbersEnumSpecialized(LiteralEnum[str]):
         Literals = Literal['one', 'two']
         ONE: Literal['one'] = 'one'
         TWO: Literal['two'] = 'two'
 
-    with pytest.raises(ValueError, match='Value 3 not found in NumberEnum'):
-        NumberEnumSpecialized.name_for_value(3)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match='Value 3 not found in NumbersEnum'):
+        NumbersEnumSpecialized.name_for_value(3)  # type: ignore[arg-type]
+
+    # Inheritance should work for name_for_value() as well
+    class MoreNumbersEnum(NumbersEnum):
+        Literals = Literal[NumbersEnum.Literals, 'three']
+        THREE: Literal['three'] = 'three'
+
+    assert MoreNumbersEnum.name_for_value('one') == 'ONE'  # From NumbersEnum
+    assert MoreNumbersEnum.name_for_value('two') == 'TWO'  # From NumbersEnum
+    assert MoreNumbersEnum.name_for_value('three') == 'THREE'
 
 
 def test_contains() -> None:
-    class ColorEnum(LiteralEnum):
-        Literals = Literal['red', 'green', 'blue']
+    class ColorsEnum(LiteralEnum):
+        Literals = Literal['red', 'green']
         RED: Literal['red'] = 'red'
         GREEN: Literal['green'] = 'green'
-        BLUE: Literal['blue'] = 'blue'
 
-    assert 'red' in ColorEnum
-    assert 'green' in ColorEnum
-    assert 'blue' in ColorEnum
-    assert 'yellow' not in ColorEnum
-    assert None not in ColorEnum
+    assert 'red' in ColorsEnum
+    assert 'green' in ColorsEnum
+    assert 'blue' not in ColorsEnum
+    assert None not in ColorsEnum
 
-    class ColorEnumSpecialized(LiteralEnum[str | int]):
-        Literals = Literal['red', 'green', 'blue']
+    class ColorsEnumSpecialized(LiteralEnum[str | int]):
+        Literals = Literal['red', 'green']
         RED: Literal['red'] = 'red'
         GREEN: Literal['green'] = 'green'
-        BLUE: Literal['blue'] = 'blue'
 
-    assert 'red' in ColorEnumSpecialized
-    assert 'green' in ColorEnumSpecialized
-    assert 'blue' in ColorEnumSpecialized
-    assert 'yellow' not in ColorEnumSpecialized
+    assert 'red' in ColorsEnumSpecialized
+    assert 'green' in ColorsEnumSpecialized
+    assert 'blue' not in ColorsEnumSpecialized
 
     # Type narrowing according to specialization works correctly
-    assert None not in ColorEnumSpecialized  # type: ignore[operator]
+    assert None not in ColorsEnumSpecialized  # type: ignore[operator]
 
-    assert 'RED' in ColorEnum.names()
-    assert 'GREEN' in ColorEnum.names()
-    assert 'BLUE' in ColorEnum.names()
-    assert 'YELLOW' not in ColorEnum.names()
+    assert 'RED' in ColorsEnum.names()
+    assert 'GREEN' in ColorsEnum.names()
+    assert 'BLUE' not in ColorsEnum.names()
+
+    # Inheritance should work for __contains__ as well
+    class MoreColorsEnum(ColorsEnum):
+        Literals = Literal[ColorsEnum.Literals, 'blue']
+        BLUE: Literal['blue'] = 'blue'
+
+    assert 'red' in MoreColorsEnum  # From ColorsEnum
+    assert 'green' in MoreColorsEnum  # From ColorsEnum
+    assert 'blue' in MoreColorsEnum
 
 
 def test_iteration() -> None:
-    class SimpleEnum(LiteralEnum):
-        Literals = Literal['one', 'two', 'three']
+    class NumbersEnum(LiteralEnum):
+        Literals = Literal['one', 'two']
         ONE: Literal['one'] = 'one'
         TWO: Literal['two'] = 'two'
-        THREE: Literal['three'] = 'three'
 
-    assert [name for name in SimpleEnum.names()] == ['ONE', 'TWO', 'THREE']
+    assert [name for name in NumbersEnum.names()] == ['ONE', 'TWO']
 
     # Only type narrowing to general LiteralEnumInnerTypes
-    for value in SimpleEnum:
+    for value in NumbersEnum:
         value.capitalize()  # type: ignore[union-attr]
 
-    class SimpleEnumSpecialized(LiteralEnum[str]):
-        Literals = Literal['one', 'two', 'three']
+    class NumbersEnumSpecialized(LiteralEnum[str]):
+        Literals = Literal['one', 'two']
         ONE: Literal['one'] = 'one'
         TWO: Literal['two'] = 'two'
-        THREE: Literal['three'] = 'three'
 
     # Type narrowing according to specialization works correctly
-    for value in SimpleEnumSpecialized:
+    for value in NumbersEnumSpecialized:
         value.capitalize()
+
+    # Inheritance should work for iteration as well
+    class MoreNumbersEnum(NumbersEnum):
+        Literals = Literal[NumbersEnum.Literals, 'three']
+        THREE: Literal['three'] = 'three'
+
+    values = list(MoreNumbersEnum)
+    assert 'one' in values  # From NumbersEnum
+    assert 'two' in values  # From NumbersEnum
+    assert 'three' in values
 
 
 def test_random_choice() -> None:
     class RandomEnum(LiteralEnum):
-        Literals = Literal['apple', 'banana', 'cherry']
+        Literals = Literal['apple', 'banana']
         APPLE: Literal['apple'] = 'apple'
         BANANA: Literal['banana'] = 'banana'
-        CHERRY: Literal['cherry'] = 'cherry'
 
     choice = RandomEnum.random_choice()
     assert choice in RandomEnum
 
     class RandomEnumSpecialized(LiteralEnum[str]):
-        Literals = Literal['apple', 'banana', 'cherry']
+        Literals = Literal['apple', 'banana']
         APPLE: Literal['apple'] = 'apple'
         BANANA: Literal['banana'] = 'banana'
-        CHERRY: Literal['cherry'] = 'cherry'
 
     choice_specialized = RandomEnumSpecialized.random_choice()
     assert choice_specialized in RandomEnumSpecialized
+
+    # Inheritance should work for random_choice() as well
+    class MoreRandomEnum(RandomEnum):
+        Literals = Literal[RandomEnum.Literals, 'cherry']
+        CHERRY: Literal['cherry'] = 'cherry'
+
+    for _ in range(30):
+        choice = MoreRandomEnum.random_choice()
+        assert choice in MoreRandomEnum
 
 
 def test_random_choice_no_excluded_prefixes() -> None:
