@@ -182,7 +182,11 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
             debug (bool):
                 When True, enables additional debugging information in
                 the output, such as the hierarchy of the Model
-                objects.
+                objects. Currently, only Python pretty printers support
+                debug=True. Hence, enabling debug mode will
+                automatically set the printer to the default Python
+                pretty printer if the `printer` config value is not
+                already set.
             ui (UserInterfaceType.Literals):
                 Type of user interface for which the output should
                 being prepared. The user interface describes the
@@ -258,7 +262,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
             use_min_crop_width (bool):
                 Whether the `min_crop_width` value should be
                 considered in cases where more than one panel are to
-                be displayed, potentially reduce the number of
+                be displayed, potentially reducing the number of
                 displayed panels.
             max_panels_hor (NonNegativeInt | None):
                 Maximum number of panels to display horizontally
@@ -553,7 +557,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 debug (bool):
                     When True, enables additional debugging information in
                     the output, such as the hierarchy of the Model
-                    objects.
+                    objects. Currently, only Python pretty printers support
+                    debug=True. Hence, enabling debug mode will
+                    automatically set the printer to the default Python
+                    pretty printer if the `printer` config value is not
+                    already set.
                 ui (UserInterfaceType.Literals):
                     Type of user interface for which the output should
                     being prepared. The user interface describes the
@@ -629,7 +637,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 use_min_crop_width (bool):
                     Whether the `min_crop_width` value should be
                     considered in cases where more than one panel are to
-                    be displayed, potentially reduce the number of
+                    be displayed, potentially reducing the number of
                     displayed panels.
                 max_panels_hor (NonNegativeInt | None):
                     Maximum number of panels to display horizontally
@@ -710,7 +718,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 debug (bool):
                     When True, enables additional debugging information in
                     the output, such as the hierarchy of the Model
-                    objects.
+                    objects. Currently, only Python pretty printers support
+                    debug=True. Hence, enabling debug mode will
+                    automatically set the printer to the default Python
+                    pretty printer if the `printer` config value is not
+                    already set.
                 ui (UserInterfaceType.Literals):
                     Type of user interface for which the output should
                     being prepared. The user interface describes the
@@ -786,7 +798,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 use_min_crop_width (bool):
                     Whether the `min_crop_width` value should be
                     considered in cases where more than one panel are to
-                    be displayed, potentially reduce the number of
+                    be displayed, potentially reducing the number of
                     displayed panels.
                 max_panels_hor (NonNegativeInt | None):
                     Maximum number of panels to display horizontally
@@ -924,7 +936,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 debug (bool):
                     When True, enables additional debugging information in
                     the output, such as the hierarchy of the Model
-                    objects.
+                    objects. Currently, only Python pretty printers support
+                    debug=True. Hence, enabling debug mode will
+                    automatically set the printer to the default Python
+                    pretty printer if the `printer` config value is not
+                    already set.
                 ui (UserInterfaceType.Literals):
                     Type of user interface for which the output should
                     being prepared. The user interface describes the
@@ -1000,7 +1016,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 use_min_crop_width (bool):
                     Whether the `min_crop_width` value should be
                     considered in cases where more than one panel are to
-                    be displayed, potentially reduce the number of
+                    be displayed, potentially reducing the number of
                     displayed panels.
                 max_panels_hor (NonNegativeInt | None):
                     Maximum number of panels to display horizontally
@@ -1081,7 +1097,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 debug (bool):
                     When True, enables additional debugging information in
                     the output, such as the hierarchy of the Model
-                    objects.
+                    objects. Currently, only Python pretty printers support
+                    debug=True. Hence, enabling debug mode will
+                    automatically set the printer to the default Python
+                    pretty printer if the `printer` config value is not
+                    already set.
                 ui (UserInterfaceType.Literals):
                     Type of user interface for which the output should
                     being prepared. The user interface describes the
@@ -1157,7 +1177,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 use_min_crop_width (bool):
                     Whether the `min_crop_width` value should be
                     considered in cases where more than one panel are to
-                    be displayed, potentially reduce the number of
+                    be displayed, potentially reducing the number of
                     displayed panels.
                 max_panels_hor (NonNegativeInt | None):
                     Maximum number of panels to display horizontally
@@ -1284,7 +1304,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 debug (bool):
                     When True, enables additional debugging information in
                     the output, such as the hierarchy of the Model
-                    objects.
+                    objects. Currently, only Python pretty printers support
+                    debug=True. Hence, enabling debug mode will
+                    automatically set the printer to the default Python
+                    pretty printer if the `printer` config value is not
+                    already set.
                 ui (UserInterfaceType.Literals):
                     Type of user interface for which the output should
                     being prepared. The user interface describes the
@@ -1360,7 +1384,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 use_min_crop_width (bool):
                     Whether the `min_crop_width` value should be
                     considered in cases where more than one panel are to
-                    be displayed, potentially reduce the number of
+                    be displayed, potentially reducing the number of
                     displayed panels.
                 max_panels_hor (NonNegativeInt | None):
                     Maximum number of panels to display horizontally
@@ -1444,7 +1468,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 debug (bool):
                     When True, enables additional debugging information in
                     the output, such as the hierarchy of the Model
-                    objects.
+                    objects. Currently, only Python pretty printers support
+                    debug=True. Hence, enabling debug mode will
+                    automatically set the printer to the default Python
+                    pretty printer if the `printer` config value is not
+                    already set.
                 ui (UserInterfaceType.Literals):
                     Type of user interface for which the output should
                     being prepared. The user interface describes the
@@ -1520,7 +1548,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 use_min_crop_width (bool):
                     Whether the `min_crop_width` value should be
                     considered in cases where more than one panel are to
-                    be displayed, potentially reduce the number of
+                    be displayed, potentially reducing the number of
                     displayed panels.
                 max_panels_hor (NonNegativeInt | None):
                     Maximum number of panels to display horizontally
@@ -1639,7 +1667,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 debug (bool):
                     When True, enables additional debugging information in
                     the output, such as the hierarchy of the Model
-                    objects.
+                    objects. Currently, only Python pretty printers support
+                    debug=True. Hence, enabling debug mode will
+                    automatically set the printer to the default Python
+                    pretty printer if the `printer` config value is not
+                    already set.
                 ui (UserInterfaceType.Literals):
                     Type of user interface for which the output should
                     being prepared. The user interface describes the
@@ -1715,7 +1747,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 use_min_crop_width (bool):
                     Whether the `min_crop_width` value should be
                     considered in cases where more than one panel are to
-                    be displayed, potentially reduce the number of
+                    be displayed, potentially reducing the number of
                     displayed panels.
                 max_panels_hor (NonNegativeInt | None):
                     Maximum number of panels to display horizontally
@@ -1787,7 +1819,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 debug (bool):
                     When True, enables additional debugging information in
                     the output, such as the hierarchy of the Model
-                    objects.
+                    objects. Currently, only Python pretty printers support
+                    debug=True. Hence, enabling debug mode will
+                    automatically set the printer to the default Python
+                    pretty printer if the `printer` config value is not
+                    already set.
                 ui (UserInterfaceType.Literals):
                     Type of user interface for which the output should
                     being prepared. The user interface describes the
@@ -1863,7 +1899,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 use_min_crop_width (bool):
                     Whether the `min_crop_width` value should be
                     considered in cases where more than one panel are to
-                    be displayed, potentially reduce the number of
+                    be displayed, potentially reducing the number of
                     displayed panels.
                 max_panels_hor (NonNegativeInt | None):
                     Maximum number of panels to display horizontally
@@ -1957,7 +1993,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             debug (bool):
                 When True, enables additional debugging information in
                 the output, such as the hierarchy of the Model
-                objects.
+                objects. Currently, only Python pretty printers support
+                debug=True. Hence, enabling debug mode will
+                automatically set the printer to the default Python
+                pretty printer if the `printer` config value is not
+                already set.
             ui (UserInterfaceType.Literals):
                 Type of user interface for which the output should
                 being prepared. The user interface describes the
@@ -2033,7 +2073,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             use_min_crop_width (bool):
                 Whether the `min_crop_width` value should be
                 considered in cases where more than one panel are to
-                be displayed, potentially reduce the number of
+                be displayed, potentially reducing the number of
                 displayed panels.
             max_panels_hor (NonNegativeInt | None):
                 Maximum number of panels to display horizontally
@@ -2789,7 +2829,11 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 debug (bool):
                     When True, enables additional debugging information in
                     the output, such as the hierarchy of the Model
-                    objects.
+                    objects. Currently, only Python pretty printers support
+                    debug=True. Hence, enabling debug mode will
+                    automatically set the printer to the default Python
+                    pretty printer if the `printer` config value is not
+                    already set.
                 ui (UserInterfaceType.Literals):
                     Type of user interface for which the output should
                     being prepared. The user interface describes the
@@ -2865,7 +2909,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 use_min_crop_width (bool):
                     Whether the `min_crop_width` value should be
                     considered in cases where more than one panel are to
-                    be displayed, potentially reduce the number of
+                    be displayed, potentially reducing the number of
                     displayed panels.
                 max_panels_hor (NonNegativeInt | None):
                     Maximum number of panels to display horizontally
@@ -2946,7 +2990,11 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 debug (bool):
                     When True, enables additional debugging information in
                     the output, such as the hierarchy of the Model
-                    objects.
+                    objects. Currently, only Python pretty printers support
+                    debug=True. Hence, enabling debug mode will
+                    automatically set the printer to the default Python
+                    pretty printer if the `printer` config value is not
+                    already set.
                 ui (UserInterfaceType.Literals):
                     Type of user interface for which the output should
                     being prepared. The user interface describes the
@@ -3022,7 +3070,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 use_min_crop_width (bool):
                     Whether the `min_crop_width` value should be
                     considered in cases where more than one panel are to
-                    be displayed, potentially reduce the number of
+                    be displayed, potentially reducing the number of
                     displayed panels.
                 max_panels_hor (NonNegativeInt | None):
                     Maximum number of panels to display horizontally
