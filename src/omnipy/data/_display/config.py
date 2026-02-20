@@ -20,7 +20,7 @@ from omnipy.shared.enums.display import (DisplayColorSystem,
                                          PrettyPrinterLib,
                                          SyntaxLanguageSpec,
                                          VerticalOverflowMode)
-from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
+from omnipy.shared.enums.ui import UserInterfaceType
 import omnipy.util.pydantic as pyd
 
 
@@ -145,7 +145,7 @@ class OutputConfig:
     syntax: SyntaxLanguageSpec.Literals | str = SyntaxLanguageSpec.AUTO
     freedom: pyd.NonNegativeFloat | None = 2.5
     debug: bool = False
-    ui: SpecifiedUserInterfaceType.Literals = UserInterfaceType.TERMINAL
+    ui: UserInterfaceType.Literals = UserInterfaceType.AUTO
     system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
     style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
     bg: bool = False

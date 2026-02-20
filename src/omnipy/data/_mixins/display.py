@@ -302,7 +302,7 @@ class IsDisplayMethod(Protocol):
         syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
         freedom: 'pyd.NonNegativeFloat | None' = 2.5,
         debug: bool = False,
-        ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+        ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
         system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
         style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
         bg: bool = False,
@@ -339,7 +339,7 @@ class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
         syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
         freedom: 'pyd.NonNegativeFloat | None' = 2.5,
         debug: bool = False,
-        ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+        ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
         system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
         style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
         bg: bool = False,
@@ -376,7 +376,7 @@ class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
         syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
         freedom: 'pyd.NonNegativeFloat | None' = 2.5,
         debug: bool = False,
-        ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+        ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
         system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
         style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
         bg: bool = False,
@@ -413,7 +413,7 @@ class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
         syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
         freedom: 'pyd.NonNegativeFloat | None' = 2.5,
         debug: bool = False,
-        ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+        ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
         system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
         style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
         bg: bool = False,
@@ -477,7 +477,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
             freedom: 'pyd.NonNegativeFloat | None' = 2.5,
             debug: bool = False,
-            ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+            ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
             bg: bool = False,
@@ -830,7 +830,14 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         peek.__signature__ = signature(IsDisplayMethodMaybeReturnElement.__call__)
 
     def _extract_ui_type(self, **kwargs) -> SpecifiedUserInterfaceType.Literals:
-        return (kwargs.get('ui', None) or cast(DataClassBase, self).config.ui.detected_type)
+        ui_from_kwargs = kwargs.get('ui', UserInterfaceType.AUTO)
+
+        if ui_from_kwargs is UserInterfaceType.AUTO:
+            return cast(DataClassBase, self).config.ui.detected_type
+        else:
+            assert ui_from_kwargs in SpecifiedUserInterfaceType, \
+                f'Invalid value for SpecifiedUserInterfaceType: {ui_from_kwargs}'
+            return cast(SpecifiedUserInterfaceType.Literals, ui_from_kwargs)
 
     @classmethod
     def _prepare_kwargs_for_full(cls, kwargs):
@@ -857,7 +864,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
             freedom: 'pyd.NonNegativeFloat | None' = 2.5,
             debug: bool = False,
-            ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+            ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
             bg: bool = False,
@@ -1221,7 +1228,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
             freedom: 'pyd.NonNegativeFloat | None' = 2.5,
             debug: bool = False,
-            ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+            ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
             bg: bool = False,
@@ -1591,7 +1598,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
             freedom: 'pyd.NonNegativeFloat | None' = 2.5,
             debug: bool = False,
-            ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+            ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
             bg: bool = False,
@@ -2750,7 +2757,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
             freedom: 'pyd.NonNegativeFloat | None' = 2.5,
             debug: bool = False,
-            ui: 'SpecifiedUserInterfaceType.Literals' = UserInterfaceType.TERMINAL,
+            ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
             bg: bool = False,
