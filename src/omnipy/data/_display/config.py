@@ -147,7 +147,7 @@ class OutputConfig:
     debug: bool = False
     ui: UserInterfaceType.Literals = UserInterfaceType.AUTO
     system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
-    style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
+    style: AllColorStyles.Literals | str = RecommendedColorStyles.AUTO
     bg: bool = False
     fonts: tuple[str, ...] = (
         'Menlo',
