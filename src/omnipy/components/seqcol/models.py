@@ -92,3 +92,7 @@ class SeqColLevel2Record(pyd.BaseModel):
 
 class SeqColLevel2Model(Model[SeqColLevel2Record]):
     ...
+
+
+class SeqColLevel0DigestModel(Model[str]):
+    ...

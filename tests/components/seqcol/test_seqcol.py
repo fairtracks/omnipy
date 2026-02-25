@@ -3,7 +3,8 @@ from typing import Annotated, Any
 
 import pytest
 
-from omnipy.components.seqcol.models import SeqColLevel2Model
+from omnipy.components.seqcol.classes import SeqColServiceUrlProvider
+from omnipy.components.seqcol.models import SeqColLevel0DigestModel, SeqColLevel2Model
 
 # *1. As a user, I wish to know what sequences are inside a specific
 # collection, so that I can further access those sequences:
@@ -263,14 +264,24 @@ def test_extract_seqcol_level_2_data_from_level_0_digest(
     # runtime.config.data.seqcol.server_urls = server_urls
     # seqcol_model = SeqColModel(level_0=seqcol_level_0_digest)
     # assert seqcol_model.level_2.to_data() == seqcol_level_2_full_data
+    #
+    # MySeqColServiceUrlProvider = SeqColServiceUrlProvider.adjust(
+    #     'MySeqColServiceUrlProvider', servers=['https://seqcolapi.databio.org/'])
 
-    MySeqColServiceUrlProvider = SeqColServiceUrlProvider.adjust(
-        'MySeqColServiceUrlProvider', servers=['https://seqcolapi.databio.org/'])
+    my_seq_col_url_provider = SeqColServiceUrlProvider(servers=['https://seqcolapi.databio.org/'])
+    level_0_digest_model = SeqColLevel0DigestModel(seqcol_level_0_digest)
 
-    level_0_digest = SeqColLevel0DigestDataset(seqcol_level_0_digests)
     seq_col_level_2_model = SeqColLevel2Model.load(
-        MySeqColServiceUrlProvider(level_0_digest, return_type=SeqColLevel2Model))
+        data=level_0_digest_model, url_provider=my_seq_col_url_provider)
 
+    # seq_col_level_2_model = SeqColLevel2Model.load(
+    #     MySeqColServiceUrlProvider(level_0_digest, return_type=SeqColLevel2Model))
+    # seq_col_level_2_model = SeqColLevel2Model.load(MySeqColServiceUrlProvider(level_0_digest))
+
+    # urls = MySeqColServiceUrlProvider(level_0_digest, return_type=SeqColLevel2Model)
+    # seq_col_level_2_model = SeqColLevel2Model.load(urls)
+
+    # seq_col_dataset = SeqColDataset()
     # seq_col_level_2_model = load_from_client(
     #     return_type=SeqColLevel2Model, client=seq_col_http_client, parameters=(level_0_digest,))
 

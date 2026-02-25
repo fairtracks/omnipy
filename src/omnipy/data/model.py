@@ -1348,3 +1348,13 @@ class Model(
 
     def __repr_args__(self):
         return [(None, self.content)]
+
+    @classmethod
+    def load(cls, data, url_provider) -> Self:
+        # something
+        return cls._load_from_urls(urls)
+
+    @classmethod
+    def _load_from_urls(cls, urls) -> Self:
+        dataset = Dataset[cls]()
+        return dataset.load(urls)[0]
