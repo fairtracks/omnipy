@@ -248,45 +248,57 @@ def test_seqcol_level_2_model_invalid_data() -> None:
         })
 
 
-def test_extract_seqcol_level_2_data_from_level_0_digest(
+# async def test_extract_seqcol_level_2_data_from_level_0_digest(
+#         seqcol_level_0_digest: Annotated[str, pytest.fixture],
+#         seqcol_level_2_full_data: Annotated[dict, pytest.fixture]) -> None:
+
+# seqcol_level2_sequences = extract_level_2_sequences(seqcol_level_0_digest, level=2)
+
+# alt1: just model, user needs to call the api - not what we want, not convenient
+# alt2: a model and a more or less loose config
+# alt3: Python client, wrapping each API call to a method, 1:1 (or close to it)
+
+# from omnipy import runtime
+#
+# server_urls = ['https://seqcolapi.databio.org/']
+# runtime.config.data.seqcol.server_urls = server_urls
+# seqcol_model = SeqColModel(level_0=seqcol_level_0_digest)
+# assert seqcol_model.level_2.to_data() == seqcol_level_2_full_data
+#
+# MySeqColServiceUrlProvider = SeqColServiceUrlProvider.adjust(
+#     'MySeqColServiceUrlProvider', servers=['https://seqcolapi.databio.org/'])
+
+# my_seq_col_url_provider = SeqColServiceUrlProvider(servers=['https://seqcolapi.databio.org/'])
+# level_0_digest_model = SeqColLevel0DigestModel(seqcol_level_0_digest)
+#
+# seq_col_level_2_model = await SeqColLevel2Model.load(
+#     data=level_0_digest_model, url_provider=my_seq_col_url_provider)
+
+# seq_col_level_2_model = SeqColLevel2Model.load(
+#     MySeqColServiceUrlProvider(level_0_digest, return_type=SeqColLevel2Model))
+# seq_col_level_2_model = SeqColLevel2Model.load(MySeqColServiceUrlProvider(level_0_digest))
+
+# urls = MySeqColServiceUrlProvider(level_0_digest, return_type=SeqColLevel2Model)
+# seq_col_level_2_model = SeqColLevel2Model.load(urls)
+
+# seq_col_dataset = SeqColDataset()
+# seq_col_level_2_model = load_from_client(
+#     return_type=SeqColLevel2Model, client=seq_col_http_client, parameters=(level_0_digest,))
+
+# urls = seq_col_http_client.create_urls_from_input_and_output_types(
+#     parameters=(level_1_sequences_digests,),
+#     return_type=SeqColLevel2SequencesDataset,
+# )
+# seq_col_level_2_dataset = load_urls(return_type=SeqColLevel2Dataset, urls)
+
+
+async def test_extract_seqcol_level_2_data_from_level_0_digest(
         seqcol_level_0_digest: Annotated[str, pytest.fixture],
         seqcol_level_2_full_data: Annotated[dict, pytest.fixture]) -> None:
 
-    # seqcol_level2_sequences = extract_level_2_sequences(seqcol_level_0_digest, level=2)
-
-    # alt1: just model, user needs to call the api - not what we want, not convenient
-    # alt2: a model and a more or less loose config
-    # alt3: Python client, wrapping each API call to a method, 1:1 (or close to it)
-
-    # from omnipy import runtime
-    #
-    # server_urls = ['https://seqcolapi.databio.org/']
-    # runtime.config.data.seqcol.server_urls = server_urls
-    # seqcol_model = SeqColModel(level_0=seqcol_level_0_digest)
-    # assert seqcol_model.level_2.to_data() == seqcol_level_2_full_data
-    #
-    # MySeqColServiceUrlProvider = SeqColServiceUrlProvider.adjust(
-    #     'MySeqColServiceUrlProvider', servers=['https://seqcolapi.databio.org/'])
-
-    my_seq_col_url_provider = SeqColServiceUrlProvider(servers=['https://seqcolapi.databio.org/'])
+    my_seq_col_url_provider = SeqColServiceUrlProvider(server_url='https://seqcolapi.databio.org')
     level_0_digest_model = SeqColLevel0DigestModel(seqcol_level_0_digest)
 
-    seq_col_level_2_model = SeqColLevel2Model.load(
+    seq_col_level_2_model = await SeqColLevel2Model.load(
         data=level_0_digest_model, url_provider=my_seq_col_url_provider)
-
-    # seq_col_level_2_model = SeqColLevel2Model.load(
-    #     MySeqColServiceUrlProvider(level_0_digest, return_type=SeqColLevel2Model))
-    # seq_col_level_2_model = SeqColLevel2Model.load(MySeqColServiceUrlProvider(level_0_digest))
-
-    # urls = MySeqColServiceUrlProvider(level_0_digest, return_type=SeqColLevel2Model)
-    # seq_col_level_2_model = SeqColLevel2Model.load(urls)
-
-    # seq_col_dataset = SeqColDataset()
-    # seq_col_level_2_model = load_from_client(
-    #     return_type=SeqColLevel2Model, client=seq_col_http_client, parameters=(level_0_digest,))
-
-    # urls = seq_col_http_client.create_urls_from_input_and_output_types(
-    #     parameters=(level_1_sequences_digests,),
-    #     return_type=SeqColLevel2SequencesDataset,
-    # )
-    # seq_col_level_2_dataset = load_urls(return_type=SeqColLevel2Dataset, urls)
+    assert seq_col_level_2_model.to_data() == seqcol_level_2_full_data

@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import contextmanager
 from copy import copy, deepcopy
@@ -1350,11 +1351,13 @@ class Model(
         return [(None, self.content)]
 
     @classmethod
-    def load(cls, data, url_provider) -> Self:
-        # something
-        return cls._load_from_urls(urls)
+    async def load(cls, data, url_provider) -> Self:
+        url = url_provider.get_url(data=data, return_type=cls)
+        return await cls._load_from_url(url)
 
     @classmethod
-    def _load_from_urls(cls, urls) -> Self:
-        dataset = Dataset[cls]()
-        return dataset.load(urls)[0]
+    async def _load_from_url(cls, url) -> Self:
+        from omnipy.data.dataset import Dataset
+        task = cast(asyncio.Task, Dataset[cls].load(url))
+        dataset = await task
+        return dataset[0]
