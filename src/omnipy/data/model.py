@@ -72,6 +72,8 @@ _DatasetT = TypeVar('_DatasetT', bound='Dataset')
 _OtherModelT = TypeVar('_OtherModelT', bound='Model')
 
 if TYPE_CHECKING:
+    from omnipy.components.remote.models import HttpUrlModel
+    from omnipy.components.seqcol.classes import UrlProvider
     from omnipy.data.dataset import Dataset
 
 # TODO: Refactor Dataset and Model using mixins (including below functions)
@@ -1351,12 +1353,12 @@ class Model(
         return [(None, self.content)]
 
     @classmethod
-    async def load(cls, data, url_provider) -> Self:
+    async def load(cls, data: object, url_provider: 'UrlProvider') -> Self:
         url = url_provider.get_url(data=data, return_type=cls)
         return await cls._load_from_url(url)
 
     @classmethod
-    async def _load_from_url(cls, url) -> Self:
+    async def _load_from_url(cls, url: 'HttpUrlModel') -> Self:
         from omnipy.data.dataset import Dataset
         task = cast(asyncio.Task, Dataset[cls].load(url))
         dataset = await task

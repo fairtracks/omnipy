@@ -95,4 +95,5 @@ class SeqColLevel2Model(Model[SeqColLevel2Record]):
 
 
 class SeqColLevel0DigestModel(Model[str]):
-    ...
+    def __str__(self) -> str:
+        return self.content

@@ -296,9 +296,9 @@ async def test_extract_seqcol_level_2_data_from_level_0_digest(
         seqcol_level_0_digest: Annotated[str, pytest.fixture],
         seqcol_level_2_full_data: Annotated[dict, pytest.fixture]) -> None:
 
-    my_seq_col_url_provider = SeqColServiceUrlProvider(server_url='https://seqcolapi.databio.org')
+    seq_col_url_provider = SeqColServiceUrlProvider(server_url='https://seqcolapi.databio.org')
     level_0_digest_model = SeqColLevel0DigestModel(seqcol_level_0_digest)
 
     seq_col_level_2_model = await SeqColLevel2Model.load(
-        data=level_0_digest_model, url_provider=my_seq_col_url_provider)
+        data=level_0_digest_model, url_provider=seq_col_url_provider)
     assert seq_col_level_2_model.to_data() == seqcol_level_2_full_data
