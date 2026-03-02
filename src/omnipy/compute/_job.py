@@ -45,7 +45,7 @@ class JobBase(
     def __init__(self, *args: object, **kwargs: object):
         # super().__init__()
 
-        # TODO: refactor using state machine
+        # Refactor using state machine (see JobBase._create_job())
 
         if not isinstance(self, JobTemplateMixin) and not isinstance(self, JobMixin):
             raise JobStateException('JobBase and subclasses not inheriting from JobTemplateMixin '
@@ -80,7 +80,7 @@ class JobBase(
         else:
             obj = cls.__new__(cls, *args, **kwargs)
 
-        # TODO: refactor using state machine
+        # TODO: refactor job creation using state machine (see also JobBase.__init__)
 
         obj._from_apply = True
         obj.__init__(*args, **kwargs)
@@ -255,9 +255,6 @@ class JobMixin(DynamicMixinAcceptor, Generic[_JobTemplateT, _JobT, _CallP, _RetT
             self_as_job_base.log(str(e), level=logging.ERROR)
             raise
 
-
-# TODO: Change JobBase and friends into Generics such as one can annotated with
-#       e.g. 'TaskTemplate[[int], int]' instead of just 'TaskTemplate'
 
 JobBase.accept_mixin(NameJobBaseMixin)
 JobMixin.accept_mixin(NameJobMixin)
