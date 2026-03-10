@@ -235,7 +235,7 @@ class Dataset(
                 iterable_data: Iterable[tuple[str, object]]) -> tuple[dict, bool]:
 
             prepared_data = {}
-            _model_or_dataset_as_input: bool = False,
+            _model_or_dataset_as_input: bool = False
 
             for key, val in iterable_data:
                 if is_model_instance(val):
