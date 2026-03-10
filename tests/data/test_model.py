@@ -2085,6 +2085,16 @@ def test_snapshot_deepcopy_reuse_ids_crash(
         model.from_data([[i] for i in range(500)])
 
 
+def test_lazy_snapshot_not_triggered_by_empty_from_data(
+        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
+
+    model = Model[list[int]]()
+    _assert_no_snapshot(model)
+
+    model.from_data([123, 234])
+    _assert_no_snapshot(model)
+
+
 def test_lazy_snapshot_not_triggered_by_set_content(
         skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
 

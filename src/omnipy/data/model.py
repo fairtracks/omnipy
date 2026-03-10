@@ -597,6 +597,7 @@ class Model(
         self,
         new_content: object,
         reset_solution: ContextManager[None] | None = None,
+        take_snapshot_of_validated_content: bool = True,
     ) -> None:
 
         old_content_id = id(self.content)
@@ -609,6 +610,7 @@ class Model(
             new_content=new_content,
             outer_reset_solution=reset_solution,
             post_validation_func=_set_new_content,
+            take_snapshot_of_validated_content=take_snapshot_of_validated_content,
         )
 
     def _prepare_reset_solution_take_snapshot_if_needed(
@@ -668,6 +670,7 @@ class Model(
         new_content: object,
         outer_reset_solution: ContextManager[None] | None = None,
         post_validation_func: Callable[[_RootT], None] | None = None,
+        take_snapshot_of_validated_content: bool = True,
     ) -> None:
         keep_alive_old_content = self.content  # To ensure old content ids are not reused
 
@@ -692,7 +695,8 @@ class Model(
         del inner_reset_solution
 
         del new_content
-        self._take_snapshot_of_validated_content()
+        if take_snapshot_of_validated_content:
+            self._take_snapshot_of_validated_content()
 
         del keep_alive_old_content
 
@@ -818,7 +822,11 @@ class Model(
             self.content = self._get_default_value_from_model(self.full_type())
             yield
 
-        self._validate_and_set_value(value, reset_solution=_reset_to_default())
+        self._validate_and_set_value(
+            value,
+            reset_solution=_reset_to_default(),
+            take_snapshot_of_validated_content=False,
+        )
 
     def from_data(self, data: Any) -> None:
         if self.content == self._get_default_value_from_model(self.full_type()):
