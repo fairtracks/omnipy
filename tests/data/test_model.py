@@ -230,7 +230,7 @@ def test_class_init_recursive_model_through_generic_hack_with_forwardref(
     MyNewestForwardRefModel([MyNewestForwardRefModel([MyNewestForwardRefModel()])])
 
 
-def test_load() -> None:
+def test_data_import_variants() -> None:
     model = Model[int]()
     model.from_data(12)
     assert model.to_data() == 12
@@ -699,7 +699,7 @@ def test_fail_parsing_strings_or_bytes_as_iterables() -> None:
         Model[list[str]](b'abcde')
 
 
-def test_load_inconvertible_data() -> None:
+def test_import_inconvertible_data() -> None:
     class NumberModel(Model[int]):
         ...
 
@@ -714,7 +714,7 @@ def test_load_inconvertible_data() -> None:
     assert model.content == 0
 
 
-def test_load_inconvertible_data_strict_type() -> None:
+def test_import_inconvertible_data_strict_type() -> None:
     class StrictNumberModel(Model[pyd.StrictInt]):
         ...
 
@@ -736,7 +736,7 @@ def test_load_inconvertible_data_strict_type() -> None:
     assert model.content == 123
 
 
-def test_load_inconvertible_data_nested_type() -> None:
+def test_import_inconvertible_data_nested_type() -> None:
     class ListOfIntsModel(Model[list[int]]):
         ...
 
