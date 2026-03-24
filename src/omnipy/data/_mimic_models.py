@@ -1,57 +1,68 @@
-from typing import Any, Generic, TypeVar
-
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Any, Generic
+
+    from typing_extensions import TypeVar
 
     from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
     from omnipy.data.dataset import _ModelOrDatasetT, Dataset
-    from omnipy.data.model import Model
-    from omnipy.shared.protocols.builtins import IsDict, IsList, IsPairTuple, IsSameTypeTuple
+    from omnipy.data.model import PlainModel
+    from omnipy.shared.protocols.builtins import IsBool, IsFloat, IsInt
+    from omnipy.shared.protocols.content import (IsBytesContent,
+                                                 IsDictContent,
+                                                 IsListContent,
+                                                 IsPairTupleContent,
+                                                 IsSameTypeTupleContent,
+                                                 IsStrContent)
     from omnipy.shared.protocols.data import IsDataset, IsModel
 
-    class Model_int(Model[int], int):
+    class Model_int(PlainModel[int], IsInt):
         ...
 
-    class Model_float(Model[float], float):
+    class Model_float(PlainModel[float], IsFloat):
         ...
 
-    class Model_bool(Model[bool], bool):
+    class Model_bool(PlainModel[bool], IsBool):
         ...
 
-    class Model_str(Model[str], str):
+    class Model_str(PlainModel[str], IsStrContent):
+        ...
+
+    class Model_bytes(PlainModel[bytes], IsBytesContent):
         ...
 
     class Model_list(  # type: ignore[misc]
-            IsList[_ValT],
-            Model[list[_ValT]],
+            PlainModel[list[_ValT]],
+            IsListContent[_ValT],
             Generic[_ValT],
     ):
         ...
 
     class Model_tuple_same_type(  # type: ignore[misc]
-            IsSameTypeTuple[_ValT],
-            Model[tuple[_ValT, ...]],
+            PlainModel[tuple[_ValT, ...]],
+            IsSameTypeTupleContent[_ValT],
             Generic[_ValT],
     ):
         ...
 
     class Model_tuple_pair(  # type: ignore[misc]
-            IsPairTuple[_ValT, _ValT2],
-            Model[tuple[_ValT, _ValT2]],
-            Generic[_ValT, _ValT2]):
+            PlainModel[tuple[_ValT, _ValT2]],
+            IsPairTupleContent[_ValT, _ValT2],
+            Generic[_ValT, _ValT2],
+    ):
         ...
 
     class Model_dict(  # type: ignore[misc]
-            IsDict[_KeyT, _ValT],
-            Model[dict[_KeyT, _ValT]],
+            PlainModel[dict[_KeyT, _ValT]],
+            IsDictContent[_KeyT, _ValT],
             Generic[_KeyT, _ValT],
     ):
         ...
 
     class Model_Dataset(  # type: ignore[misc]
-            IsDataset[_ModelOrDatasetT],  # type: ignore[misc]
-            Model[Dataset[_ModelOrDatasetT]],
+            PlainModel[Dataset[_ModelOrDatasetT]],
+            IsDataset[_ModelOrDatasetT],
             Generic[_ModelOrDatasetT],
     ):
         ...

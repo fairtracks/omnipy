@@ -8,7 +8,7 @@ import json
 import os
 import tarfile
 from textwrap import dedent
-from typing import Any, Callable, cast, Generic, Iterator, overload, TYPE_CHECKING
+from typing import Any, Callable, cast, Generic, Iterator, overload
 
 from typing_extensions import override, Self, TypeVar
 
@@ -30,6 +30,7 @@ from omnipy.shared.protocols.data import (IsHttpUrlDataset,
                                           IsPathOrUrl,
                                           IsPathsOrUrlsOneOrMoreOrNone)
 from omnipy.shared.typedefs import TypeForm
+from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util._placeholder import F
 from omnipy.util._pydantic import Undefined, UndefinedType, ValidationError
 import omnipy.util._pydantic as pyd
@@ -44,6 +45,8 @@ from omnipy.util.helpers import (evaluate_any_forward_refs_if_possible,
 
 if TYPE_CHECKING:
     from omnipy.data._mimic_models import (Model_bool,
+                                           Model_bytes,
+                                           Model_Dataset,
                                            Model_dict,
                                            Model_float,
                                            Model_int,
@@ -429,6 +432,13 @@ class Dataset(
 
         @overload
         def __getitem__(
+            self: 'Dataset[Model[bytes]]',
+            selector: str | int,
+        ) -> Model_bytes:
+            ...
+
+        @overload
+        def __getitem__(
             self: 'Dataset[Model[list[_ValT]]]',
             selector: str | int,
         ) -> Model_list[_ValT]:
@@ -463,6 +473,13 @@ class Dataset(
         #   nested_dataset['a'][0] = 5  # <- here the type checker will
         #                               #    think nested_dataset['a'] is a
         #                               #    Dataset, not a Model[list[int]]
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[Model[Dataset[_ModelT]]]',
+            selector: str | int,
+        ) -> Model_Dataset[_ModelT]:
+            ...
 
         @overload
         def __getitem__(
@@ -1099,26 +1116,6 @@ class Dataset(
 
     def __repr_args__(self):
         return [(k, v.content) if is_model_instance(v) else (k, v) for k, v in self.data.items()]
-
-    if TYPE_CHECKING:
-
-        # Override UserDict methods to fit with IsMutableMapping
-
-        @override
-        def __or__(  # type: ignore [override]
-            self,
-            other: dict_t[str, _ModelOrDatasetT],
-            /,
-        ) -> dict_t[str, _ModelOrDatasetT]:
-            ...
-
-        @override
-        def __ror__(  # type: ignore [override]
-            self,
-            other: dict_t[str, _ModelOrDatasetT],
-            /,
-        ) -> dict_t[str, _ModelOrDatasetT]:
-            ...
 
 
 class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):

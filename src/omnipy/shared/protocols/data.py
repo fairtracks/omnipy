@@ -18,12 +18,12 @@ from typing import (Any,
 from typing_extensions import Self, TypeVar
 
 from omnipy.shared.protocols._util import IsWeakKeyRefContainer
-from omnipy.shared.protocols.builtins import IsMutableMapping
 from omnipy.shared.protocols.config import (IsDataConfig,
                                             IsJupyterUserInterfaceConfig,
                                             IsLayoutConfig,
                                             IsTextConfig)
 from omnipy.shared.protocols.hub.log import CanLog
+from omnipy.shared.protocols.typing import IsMutableMapping
 from omnipy.util._pydantic import Undefined, UndefinedType
 import omnipy.util._pydantic as pyd
 from omnipy.util.setdeque import SetDeque

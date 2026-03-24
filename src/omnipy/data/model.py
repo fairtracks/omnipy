@@ -20,7 +20,7 @@ from typing import (Annotated,
                     overload,
                     Union)
 
-from typing_extensions import get_original_bases, override, Self, TypeVar
+from typing_extensions import get_original_bases, override, Self, TypeAlias, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._missing import parse_none_according_to_model
@@ -289,6 +289,7 @@ class Model(
         # mypy currently does not support overloads of __new__()
 
         from ._mimic_models import (Model_bool,
+                                    Model_bytes,
                                     Model_Dataset,
                                     Model_dict,
                                     Model_float,
@@ -300,7 +301,7 @@ class Model(
 
         @overload
         def __new__(
-            cls: 'type[Model[float]]',
+            cls: 'type[Model[float]]' | 'type[Model[Model[float]]]',
             *args: Any,
             **kwargs: Any,
         ) -> Model_float:
@@ -308,7 +309,7 @@ class Model(
 
         @overload
         def __new__(
-            cls: 'type[Model[int]]',
+            cls: 'type[Model[int]]' | 'type[Model[Model[int]]]',
             *args: Any,
             **kwargs: Any,
         ) -> Model_int:
@@ -316,7 +317,7 @@ class Model(
 
         @overload
         def __new__(
-            cls: 'type[Model[bool]]',
+            cls: 'type[Model[bool]]' | 'type[Model[Model[bool]]]',
             *args: Any,
             **kwargs: Any,
         ) -> Model_bool:
@@ -324,7 +325,7 @@ class Model(
 
         @overload
         def __new__(
-            cls: 'type[Model[str]]',
+            cls: 'type[Model[str]]' | 'type[Model[Model[str]]]',
             *args: Any,
             **kwargs: Any,
         ) -> Model_str:
@@ -332,23 +333,23 @@ class Model(
 
         @overload
         def __new__(
-            cls: 'type[Model[list[_ValT]]]',
+            cls: 'type[Model[bytes]]' | 'type[Model[Model[bytes]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> Model_bytes:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[list[_ValT]]]| type[Model[Model[list[_ValT]]]]',
             *args: Any,
             **kwargs: Any,
         ) -> Model_list[_ValT]:
             ...
 
         @overload
-        def __new__(
-            cls: 'type[Model[tuple[_ValT, ...]]]',
-            *args: Any,
-            **kwargs: Any,
-        ) -> Model_tuple_same_type[_ValT]:
-            ...
-
-        @overload
-        def __new__(
-            cls: 'type[Model[tuple[_ValT, _ValT2]]]',
+        def __new__(  # pyright: ignore[reportOverlappingOverload]
+            cls: 'type[Model[tuple[_ValT, _ValT2]]] | type[Model[Model[tuple[_ValT, _ValT2]]]]',
             *args: Any,
             **kwargs: Any,
         ) -> Model_tuple_pair[_ValT, _ValT2]:
@@ -356,7 +357,15 @@ class Model(
 
         @overload
         def __new__(
-            cls: 'type[Model[dict[_KeyT, _ValT]]]',
+            cls: 'type[Model[tuple[_ValT, ...]]] | type[Model[Model[tuple[_ValT, ...]]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> Model_tuple_same_type[_ValT]:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[dict[_KeyT, _ValT]]] | type[Model[Model[dict[_KeyT, _ValT]]]]',
             *args: Any,
             **kwargs: Any,
         ) -> Model_dict[_KeyT, _ValT]:
@@ -388,15 +397,17 @@ class Model(
 
         @overload
         def __new__(
-            cls: 'type[Model[_RootT]]',
+            cls,
             *args: Any,
+            is_list: Literal[False] = False,
             **kwargs: Any,
-        ) -> 'Model[_RootT]':
+        ) -> '_ModelT':
             ...
 
         def __new__(
             cls,
             *args: Any,
+            is_list: bool = False,
             **kwargs: Any,
         ) -> 'Model | _ModelT':
             ...
@@ -1356,3 +1367,16 @@ class Model(
 
     def __repr_args__(self):
         return [(None, self.content)]
+
+
+if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
+
+    class PlainModel(
+            Model[_RootT],
+            Generic[_RootT],
+    ):
+        def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+            ...
+else:
+
+    PlainModel: TypeAlias = Model
