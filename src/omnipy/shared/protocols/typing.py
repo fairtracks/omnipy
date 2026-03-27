@@ -30,8 +30,13 @@ _VT_co = TypeVar('_VT_co', covariant=True)  # Value type covariant containers.
 
 
 # class Sequence(Reversible[_T_co], Collection[_T_co]):
-class IsSequence(Reversible[_T_co], Collection[_T_co], Protocol[_T_co]):
+class IsSequenceNotStrBytes(Reversible[_T_co], Collection[_T_co], Protocol[_T_co]):
     """Protocol with the same interface as the abstract class `typing.Sequence`.
+
+    Note that with no custom handling, as is typically be done in a type
+    checker, the `string`, `bytes`, and `bytearray` types will not be
+    considered Sequences by this protocol, due to differences in the
+    `__contains__` method.
     """
     @overload
     # @abstractmethod
@@ -41,10 +46,10 @@ class IsSequence(Reversible[_T_co], Collection[_T_co], Protocol[_T_co]):
     @overload
     # @abstractmethod
     # def __getitem__(self, index: slice[int | None], /) -> Sequence[_T_co]:
-    def __getitem__(self, index: slice, /) -> IsSequence[_T_co]:
+    def __getitem__(self, index: slice, /) -> IsSequenceNotStrBytes[_T_co]:
         raise AssumedToBeImplementedException
 
-    def __getitem__(self, index: int | slice, /) -> _T_co | IsSequence[_T_co]:
+    def __getitem__(self, index: int | slice, /) -> _T_co | IsSequenceNotStrBytes[_T_co]:
         raise AssumedToBeImplementedException
 
     # Mixin methods
@@ -75,7 +80,7 @@ class IsSequence(Reversible[_T_co], Collection[_T_co], Protocol[_T_co]):
 
 
 # class MutableSequence(Sequence[_T]):
-class IsMutableSequence(IsSequence[_T], Protocol[_T]):
+class IsMutableSequence(IsSequenceNotStrBytes[_T], Protocol[_T]):
     """Protocol with the same interface as the abstract class `typing.MutableSequence`.
     """
 

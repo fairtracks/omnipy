@@ -33,7 +33,7 @@ from omnipy.shared.protocols.typing import (IsAbstractSet,
                                             IsMutableMapping,
                                             IsMutableSequence,
                                             IsMutableSet,
-                                            IsSequence)
+                                            IsSequenceNotStrBytes)
 
 _T = TypeVar('_T')
 _T_co = TypeVar('_T_co', covariant=True)
@@ -642,7 +642,7 @@ class _TranslateTable(Protocol):
 
 # @disjoint_base
 # class str(Sequence[str]):
-class IsStr(IsSequence[str], Protocol):
+class IsStr(IsSequenceNotStrBytes[str], Protocol):
     """Protocol with the same interface as the builtin class `str`.
     """
     # @overload
@@ -1219,7 +1219,7 @@ class IsStr(IsSequence[str], Protocol):
 
 # @disjoint_base
 # class bytes(Sequence[int]):
-class IsBytes(IsSequence[int], Protocol):
+class IsBytes(IsSequenceNotStrBytes[int], Protocol):
     """Protocol with the same interface as the builtin class `bytes`.
     """
 
@@ -1813,9 +1813,8 @@ _IntegerFormats: TypeAlias = Literal['b',
                                      'P',
                                      '@P']
 
-# # @final
-# # class memoryview(Sequence[_I]):
-# class IsMemoryView(IsSequence[_I], Protocol[_I]):
+# @final
+# class memoryview(Sequence[_I]):
 #     @property
 #     def format(self) -> str:
 #         raise AssumedToBeImplementedException
@@ -1864,8 +1863,8 @@ _IntegerFormats: TypeAlias = Literal['b',
 #     def nbytes(self) -> int:
 #         raise AssumedToBeImplementedException
 #
-# #     def __new__(cls, obj: ReadableBuffer) -> Self:
-# #         ...
+#     def __new__(cls, obj: ReadableBuffer) -> Self:
+#         ...
 #
 #     def __enter__(self) -> Self:
 #         raise AssumedToBeImplementedException
@@ -2082,7 +2081,7 @@ class IsBool(IsInt, Protocol):
 
 # @disjoint_base
 # class tuple(Sequence[_T_co]):
-class IsTuple(IsSequence[_T_co], Protocol[_T_co]):  # type: ignore[misc]
+class IsTuple(IsSequenceNotStrBytes[_T_co], Protocol[_T_co]):  # type: ignore[misc]
     """Protocol with the same interface as the builtin class `tuple`.
     """
 

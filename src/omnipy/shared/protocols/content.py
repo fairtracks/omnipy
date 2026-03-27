@@ -1,17 +1,17 @@
-from collections.abc import Iterable
 from typing import Literal, overload, Protocol, SupportsIndex
+from collections.abc import Generator, Iterable
 
 from typing_extensions import override, Self, TypeVar
 
 from omnipy.shared.exceptions import AssumedToBeImplementedException
 from omnipy.shared.protocols._typeshed import SupportsKeysAndGetItem
 from omnipy.shared.protocols.builtins import IsBytes, IsDict, IsList, IsStr, IsTuple
-from omnipy.shared.protocols.typing import IsHashable, IsMapping, IsSequence
+from omnipy.shared.protocols.typing import IsHashable, IsMapping, IsSequenceNotStrBytes
 
 _KeyT = TypeVar('_KeyT')
 _NestedKeyT = TypeVar('_NestedKeyT')
 _ValT = TypeVar('_ValT')
-_ValSequenceT = TypeVar('_ValSequenceT', bound=IsSequence)
+_ValSeqOrGenT = TypeVar('_ValSeqOrGenT', bound=IsSequenceNotStrBytes | Generator)
 _ValMappingT = TypeVar('_ValMappingT', bound=IsMapping)
 _NestedValT = TypeVar('_NestedValT')
 _SecondValT = TypeVar('_SecondValT')
@@ -28,7 +28,12 @@ class IsBytesContent(IsBytes, Protocol):
 
 
 class IsListContent(IsList[_ValT], Protocol[_ValT]):
-    def __add__(self, values: IsSequence[_ValT], /) -> Self:  # type: ignore [override]
+    @override
+    def __add__(  # type: ignore [override]
+        self,
+        values: IsSequenceNotStrBytes[_ValT] | Generator[_ValT],
+        /,
+    ) -> Self:
         raise AssumedToBeImplementedException
 
     @overload  # type: ignore [override]
@@ -57,10 +62,11 @@ class IsListContent(IsList[_ValT], Protocol[_ValT]):
         raise AssumedToBeImplementedException
 
 
-class IsListOfListsContent(IsListContent[_ValSequenceT | IsSequence[_NestedValT]],
-                           Protocol[_ValSequenceT, _NestedValT]):
+class IsListOfListsContent(IsListContent[_ValSeqOrGenT | IsSequenceNotStrBytes[_NestedValT]
+                                         | Generator[_NestedValT]],
+                           Protocol[_ValSeqOrGenT, _NestedValT]):
     @overload  # type: ignore [override]
-    def __getitem__(self, index: SupportsIndex, /) -> _ValSequenceT:
+    def __getitem__(self, index: SupportsIndex, /) -> _ValSeqOrGenT:
         raise AssumedToBeImplementedException
 
     @overload
@@ -68,20 +74,20 @@ class IsListOfListsContent(IsListContent[_ValSequenceT | IsSequence[_NestedValT]
         self,
         index: slice,
         /,
-    ) -> IsListContent[_ValSequenceT]:
+    ) -> IsListContent[_ValSeqOrGenT]:
         raise AssumedToBeImplementedException
 
     @override
     def __getitem__(  # pyright: ignore[reportIncompatibleMethodOverride]
-            self, index: SupportsIndex | slice, /) -> _ValSequenceT | IsListContent[_ValSequenceT]:
+            self, index: SupportsIndex | slice, /) -> _ValSeqOrGenT | IsListContent[_ValSeqOrGenT]:
         raise AssumedToBeImplementedException
 
     def __mul__(  # type: ignore [override]
-            self, value: SupportsIndex, /) -> IsListContent[_ValSequenceT]:
+            self, value: SupportsIndex, /) -> IsListContent[_ValSeqOrGenT]:
         raise AssumedToBeImplementedException
 
     def __rmul__(  # type: ignore [override]
-            self, value: SupportsIndex, /) -> IsListContent[_ValSequenceT]:
+            self, value: SupportsIndex, /) -> IsListContent[_ValSeqOrGenT]:
         raise AssumedToBeImplementedException
 
 
@@ -124,7 +130,11 @@ class IsSameTypeTupleContent(IsHashable, IsTuple[_ValT], Protocol[_ValT]):
     element type.
     """
     @override
-    def __add__(self, value: Iterable[_ValT], /) -> Self:  # type: ignore [override]
+    def __add__(  # type: ignore [override]
+        self,
+        value: IsSequenceNotStrBytes[_ValT] | Generator[_ValT],
+        /,
+    ) -> Self:
         raise AssumedToBeImplementedException
 
 
@@ -194,9 +204,12 @@ class IsDictContent(IsDict[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
         raise AssumedToBeImplementedException
 
 
-class IsDictOfListsContent(IsDictContent[_KeyT, _ValSequenceT | IsSequence[_NestedValT]],
-                           Protocol[_KeyT, _ValSequenceT, _NestedValT]):
-    def __getitem__(self, key: _KeyT, /) -> _ValSequenceT:
+class IsDictOfListsContent(IsDictContent[_KeyT,
+                                         _ValSeqOrGenT | IsSequenceNotStrBytes[_NestedValT]
+                                         | Generator[_NestedValT]],
+                           Protocol[_KeyT, _ValSeqOrGenT, _NestedValT]):
+    @override
+    def __getitem__(self, key: _KeyT, /) -> _ValSeqOrGenT:
         raise AssumedToBeImplementedException
 
 
