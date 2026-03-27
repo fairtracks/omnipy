@@ -51,6 +51,7 @@ if TYPE_CHECKING:
                                            Model_float,
                                            Model_int,
                                            Model_list,
+                                           Model_set,
                                            Model_str,
                                            Model_tuple_pair,
                                            Model_tuple_same_type)
@@ -435,6 +436,13 @@ class Dataset(
             self: 'Dataset[Model[bytes]]',
             selector: str | int,
         ) -> Model_bytes:
+            ...
+
+        @overload
+        def __getitem__(
+            self: 'Dataset[Model[set[_ValT]]]',
+            selector: str | int,
+        ) -> Model_set[_ValT]:
             ...
 
         @overload

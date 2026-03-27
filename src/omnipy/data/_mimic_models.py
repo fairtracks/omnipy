@@ -8,28 +8,38 @@ if TYPE_CHECKING:
     from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
     from omnipy.data.dataset import _ModelOrDatasetT, Dataset
     from omnipy.data.model import PlainModel
-    from omnipy.shared.protocols.builtins import IsBool, IsFloat, IsInt
-    from omnipy.shared.protocols.content import (IsBytesContent,
+    from omnipy.shared.protocols.content import (IsBoolContent,
+                                                 IsBytesContent,
                                                  IsDictContent,
+                                                 IsFloatContent,
+                                                 IsIntContent,
                                                  IsListContent,
                                                  IsPairTupleContent,
                                                  IsSameTypeTupleContent,
+                                                 IsSetContent,
                                                  IsStrContent)
     from omnipy.shared.protocols.data import IsDataset, IsModel
 
-    class Model_int(PlainModel[int], IsInt):
+    class Model_int(PlainModel[int], IsIntContent):
         ...
 
-    class Model_float(PlainModel[float], IsFloat):
+    class Model_float(PlainModel[float], IsFloatContent):
         ...
 
-    class Model_bool(PlainModel[bool], IsBool):
+    class Model_bool(PlainModel[bool], IsBoolContent):
         ...
 
     class Model_str(PlainModel[str], IsStrContent):
         ...
 
     class Model_bytes(PlainModel[bytes], IsBytesContent):
+        ...
+
+    class Model_set(  # type: ignore[misc]
+            PlainModel[set[_ValT]],
+            IsSetContent[_ValT],
+            Generic[_ValT],
+    ):
         ...
 
     class Model_list(  # type: ignore[misc]

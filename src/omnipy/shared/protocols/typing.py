@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Collection, Iterable, Iterator, Reversible
 from types import TracebackType
-from typing import AbstractSet, Any, AnyStr, overload, Protocol
+from typing import AbstractSet, Any, AnyStr, overload, Protocol, runtime_checkable
 
 from typing_extensions import Self, TypeVar
 
@@ -27,6 +27,17 @@ _VT = TypeVar('_VT')  # Value type.
 _T_co = TypeVar('_T_co', covariant=True)  # Any type covariant containers.
 _KT_co = TypeVar('_KT_co', covariant=True)  # Key type covariant containers.
 _VT_co = TypeVar('_VT_co', covariant=True)  # Value type covariant containers.
+
+
+# class Hashable(Protocol, metaclass=ABCMeta):
+@runtime_checkable
+class IsHashable(Protocol):
+    # FIXME: This is special, in that a subclass of a hashable class may not be hashable
+    #   (for example, list vs. object). It's not obvious how to represent this. This class
+    #   is currently mostly useless for static checking.
+    # @abstractmethod
+    def __hash__(self) -> int:
+        ...
 
 
 # class Sequence(Reversible[_T_co], Collection[_T_co]):
@@ -54,7 +65,9 @@ class IsSequenceNotStrBytes(Reversible[_T_co], Collection[_T_co], Protocol[_T_co
 
     # Mixin methods
     # def index(self, value: Any, start: int = 0, stop: int = ..., /) -> int:
-    def index(self, value: Any, start: int = 0, stop: int = 0, /) -> int:
+
+    # Omnipy: start and stop removed to support range as IsSequenceNotStrBytes
+    def index(self, value: Any, /) -> int:
         """
         S.index(value, [start, [stop]]) -> integer -- return first index of value.
         Raises ValueError if the value is not present.

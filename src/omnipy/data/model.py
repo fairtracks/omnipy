@@ -295,6 +295,7 @@ class Model(
                                     Model_float,
                                     Model_int,
                                     Model_list,
+                                    Model_set,
                                     Model_str,
                                     Model_tuple_pair,
                                     Model_tuple_same_type)
@@ -337,6 +338,14 @@ class Model(
             *args: Any,
             **kwargs: Any,
         ) -> Model_bytes:
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[set[_ValT]]]| type[Model[Model[set[_ValT]]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> Model_set[_ValT]:
             ...
 
         @overload
