@@ -1,4 +1,4 @@
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping
 from contextlib import contextmanager
 from copy import copy, deepcopy
 import functools
@@ -766,7 +766,7 @@ class Model(
         if ROOT_KEY in root_obj:
             value = root_obj[ROOT_KEY]
             outer_type = cls.outer_type()
-            if (lenient_issubclass(outer_type, Sequence)
+            if (lenient_issubclass(outer_type, Iterable)
                     and not lenient_isinstance(value, outer_type)  # type: ignore[arg-type]
                     and is_non_str_byte_iterable(value)
                     # Leave the types below for pydantic to handle

@@ -663,6 +663,9 @@ def test_parse_convertible_iterables() -> None:
     model = Model[list[tuple[int, str]]](enumerate(('a', 'b', 'c')))
     assert model.to_data() == [(0, 'a'), (1, 'b'), (2, 'c')]
 
+    model = Model[set[int]](range(3))
+    assert model.to_data() == {0, 1, 2}
+
 
 def test_parse_empty_iterables() -> None:
     model = Model[list[int]](range(0))
