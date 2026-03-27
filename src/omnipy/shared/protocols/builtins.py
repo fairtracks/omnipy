@@ -2321,52 +2321,52 @@ class IsDict(IsMutableMapping[_KT, _VT], Protocol[_KT, _VT]):
     # __init__ should be kept roughly in line with
     # `collections.UserDict.__init__`, which has similar semantics Also
     # multiprocessing.managers.SyncManager.dict()
-    @overload
-    def __init__(self, /) -> None:
-        ...
-
-    @overload
-    def __init__(self: dict[str, _VT], /, **kwargs: _VT) -> None:
-        ...  # pyright: ignore[reportInvalidTypeVarUse]  #11780
-
-    @overload
-    def __init__(self, map: SupportsKeysAndGetItem[_KT, _VT], /) -> None:
-        ...
-
-    @overload
-    def __init__(
-        self: dict[str, _VT],  # pyright: ignore[reportInvalidTypeVarUse]  #11780
-        map: SupportsKeysAndGetItem[str, _VT],
-        /,
-        **kwargs: _VT,
-    ) -> None:
-        ...
-
-    @overload
-    def __init__(self, iterable: Iterable[tuple[_KT, _VT]], /) -> None:
-        ...
-
-    @overload
-    def __init__(
-        self: dict[str, _VT],  # pyright: ignore[reportInvalidTypeVarUse]  #11780
-        iterable: Iterable[tuple[str, _VT]],
-        /,
-        **kwargs: _VT,
-    ) -> None:
-        ...
-
-    # Next two overloads are for dict(string.split(sep) for string in iterable)
-    # Cannot be Iterable[Sequence[_T]] or otherwise dict(['foo', 'bar', 'baz']) is not an error
-    @overload
-    def __init__(self: dict[str, str], iterable: Iterable[list[str]], /) -> None:
-        ...
-
-    @overload
-    def __init__(self: dict[bytes, bytes], iterable: Iterable[list[bytes]], /) -> None:
-        ...
-
-    def __new__(cls, /, *args: Any, **kwargs: Any) -> Self:
-        ...
+    # @overload
+    # def __init__(self, /) -> None:
+    #     ...
+    #
+    # @overload
+    # def __init__(self: dict[str, _VT], /, **kwargs: _VT) -> None:
+    #     ...  # pyright: ignore[reportInvalidTypeVarUse]  #11780
+    #
+    # @overload
+    # def __init__(self, map: SupportsKeysAndGetItem[_KT, _VT], /) -> None:
+    #     ...
+    #
+    # @overload
+    # def __init__(
+    #     self: dict[str, _VT],  # pyright: ignore[reportInvalidTypeVarUse]  #11780
+    #     map: SupportsKeysAndGetItem[str, _VT],
+    #     /,
+    #     **kwargs: _VT,
+    # ) -> None:
+    #     ...
+    #
+    # @overload
+    # def __init__(self, iterable: Iterable[tuple[_KT, _VT]], /) -> None:
+    #     ...
+    #
+    # @overload
+    # def __init__(
+    #     self: dict[str, _VT],  # pyright: ignore[reportInvalidTypeVarUse]  #11780
+    #     iterable: Iterable[tuple[str, _VT]],
+    #     /,
+    #     **kwargs: _VT,
+    # ) -> None:
+    #     ...
+    #
+    # # Next two overloads are for dict(string.split(sep) for string in iterable)
+    # # Cannot be Iterable[Sequence[_T]] or otherwise dict(['foo', 'bar', 'baz']) is not an error
+    # @overload
+    # def __init__(self: dict[str, str], iterable: Iterable[list[str]], /) -> None:
+    #     ...
+    #
+    # @overload
+    # def __init__(self: dict[bytes, bytes], iterable: Iterable[list[bytes]], /) -> None:
+    #     ...
+    #
+    # def __new__(cls, /, *args: Any, **kwargs: Any) -> Self:
+    #     ...
 
     def copy(self) -> dict[_KT, _VT]:
         raise AssumedToBeImplementedException
@@ -2695,16 +2695,3 @@ class IsFrozenSet(IsAbstractSet[_T_co], Protocol[_T_co]):  # type: ignore[misc]
     # def __class_getitem__(cls, item: Any, /) -> GenericAlias:
     # def __class_getitem__(cls, item: Any, /) -> GenericAlias:
     #     raise AssumedToBeImplementedException
-
-
-i: IsInt = 4
-f: IsFloat = 3.14
-b: IsBool = True
-s: IsStr = 'hello'
-bb: IsBytes = b'hello'
-ba: IsByteArray = bytearray(b'hello')
-t: IsTuple[int] = (1, 2, 3)
-l: IsList[int] = [1, 2, 3]
-d: IsDict[str, int] = {'a': 1, 'b': 2}
-se: IsSet[int] = {1, 2, 3}
-fs: IsFrozenSet[int] = frozenset({1, 2, 3})

@@ -321,7 +321,7 @@ class IsBoolContent(IsBool, Protocol):
 
 
 class IsStrContent(IsStr, Protocol):
-    def __add__(self, value: IsStr, /) -> Self:  # type: ignore [override]
+    def __add__(self, value: IsStr, /) -> Self:
         raise AssumedToBeImplementedException
 
 
@@ -494,6 +494,7 @@ class IsListContent(IsList[_ValT], Protocol[_ValT]):
     def __getitem__(self, s: slice | SupportsIndex, /) -> Self | _ValT:
         raise AssumedToBeImplementedException
 
+    @override
     def __getitem__(  # pyright: ignore[reportIncompatibleMethodOverride]
         self,
         index: SupportsIndex | slice,
@@ -501,9 +502,11 @@ class IsListContent(IsList[_ValT], Protocol[_ValT]):
     ) -> Self | _ValT:
         raise AssumedToBeImplementedException
 
+    @override
     def __mul__(self, value: SupportsIndex, /) -> Self:  # type: ignore [override]
         raise AssumedToBeImplementedException
 
+    @override
     def __rmul__(self, value: SupportsIndex, /) -> Self:  # type: ignore [override]
         raise AssumedToBeImplementedException
 
@@ -528,10 +531,12 @@ class IsListOfListsContent(IsListContent[_ValSeqOrGenT | IsSequenceNotStrBytes[_
             self, index: SupportsIndex | slice, /) -> _ValSeqOrGenT | IsListContent[_ValSeqOrGenT]:
         raise AssumedToBeImplementedException
 
+    @override
     def __mul__(  # type: ignore [override]
             self, value: SupportsIndex, /) -> IsListContent[_ValSeqOrGenT]:
         raise AssumedToBeImplementedException
 
+    @override
     def __rmul__(  # type: ignore [override]
             self, value: SupportsIndex, /) -> IsListContent[_ValSeqOrGenT]:
         raise AssumedToBeImplementedException
@@ -557,10 +562,12 @@ class IsListOfDictsContent(IsListContent[(_ValMappingT
     ) -> _ValMappingT | IsListContent[_ValMappingT]:
         raise AssumedToBeImplementedException
 
+    @override
     def __mul__(  # type: ignore [override]
             self, value: SupportsIndex, /) -> IsListContent[_ValMappingT]:
         raise AssumedToBeImplementedException
 
+    @override
     def __rmul__(  # type: ignore [override]
             self, value: SupportsIndex, /) -> IsListContent[_ValMappingT]:
         raise AssumedToBeImplementedException
@@ -610,12 +617,13 @@ class IsPairTupleContent(IsHashable, IsTuple[_ValT | _SecondValT], Protocol[_Val
 
 
 class IsDictContent(IsDict[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
+    @override
     @classmethod
     def fromkeys(  # type: ignore [override]
-            cls,
-            iterable: Iterable[_KeyT],
-            value: _ValT = None,
-            /,
+        cls,
+        iterable: Iterable[_KeyT],
+        value: _ValT | None = None,
+        /,
     ) -> Self:
         raise AssumedToBeImplementedException
 
@@ -627,6 +635,7 @@ class IsDictContent(IsDict[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
     def __or__(self, value: Iterable[tuple[_KeyT, _ValT]], /) -> Self:
         raise AssumedToBeImplementedException
 
+    @override
     def __or__(  # pyright: ignore[reportIncompatibleMethodOverride]
         self,
         value: SupportsKeysAndGetItem[_KeyT, _ValT] | Iterable[tuple[_KeyT, _ValT]],
@@ -642,6 +651,7 @@ class IsDictContent(IsDict[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
     def __ror__(self, value: Iterable[tuple[_KeyT, _ValT]], /) -> Self:
         raise AssumedToBeImplementedException
 
+    @override
     def __ror__(  # pyright: ignore[reportIncompatibleMethodOverride]
         self,
         value: SupportsKeysAndGetItem[_KeyT, _ValT] | Iterable[tuple[_KeyT, _ValT]],
@@ -664,5 +674,6 @@ class IsDictOfDictsContent(IsDictContent[_KeyT,
                                           | SupportsKeysAndGetItem[_NestedKeyT, _NestedValT]
                                           | Iterable[tuple[_NestedKeyT, _NestedValT]])],
                            Protocol[_KeyT, _ValMappingT, _NestedKeyT, _NestedValT]):
+    @override
     def __getitem__(self, key: _KeyT, /) -> _ValMappingT:
         raise AssumedToBeImplementedException
