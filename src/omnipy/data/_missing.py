@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import Any, get_args, Mapping, MutableSequence
+from typing import Any, cast, get_args, Mapping, MutableSequence
 
 from typing_extensions import TypeVar
 
@@ -15,7 +15,7 @@ _RootT = TypeVar('_RootT')
 # Partial workaround of https://github.com/pydantic/pydantic/issues/3836 and similar bugs,
 # together with hacks setting allow_none=True (_ModelMetaclass and _recursively_set_allow_none).
 # See series of relevant tests in test_model.py starting with  test_list_of_none_variants().
-def parse_none_according_to_model(value: _RootT, root_model) -> _RootT:  # IsModel
+def parse_none_according_to_model(value, root_model):  # IsModel
     outer_type = root_model.outer_type(with_args=True)
     plain_outer_type = root_model.outer_type(with_args=False)
     outer_args = get_args(outer_type)
@@ -133,7 +133,9 @@ def _parse_none_in_union(flattened_union_variant_types, value):
 def _parse_none_in_types(inner_union_types: tuple[TypeForm]) -> object:
     for type_ in inner_union_types:
         if is_model_subclass(type_):
-            return type_(parse_none_according_to_model(None, type_))
+            from omnipy.data.model import Model
+            model = cast(type[Model], type_)
+            return model(parse_none_according_to_model(None, model))
         elif _supports_none(type_):
             return None
     raise OmnipyNoneIsNotAllowedError()

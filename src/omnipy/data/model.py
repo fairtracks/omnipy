@@ -34,7 +34,7 @@ from omnipy.data.helpers import (cleanup_name_qualname_and_module,
                                  YesNoMaybe)
 from omnipy.data.typechecks import is_model_instance
 from omnipy.shared.constants import ROOT_KEY
-from omnipy.shared.protocols.data import IsSnapshotWrapper
+from omnipy.shared.protocols.data import IsModel, IsSnapshotWrapper
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 from omnipy.util._placeholder import F
@@ -100,9 +100,9 @@ class ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
 undefined_default_factory: Callable[[], Any] = lambda: Undefined
 
 
-class Model(
+class Model(  # type: ignore[misc]
         ModelDisplayMixin,
-        DataClassBase,
+        DataClassBase[_RootT],
         pyd.GenericModel,
         Generic[_RootT],
         metaclass=ModelMetaclass,
@@ -203,10 +203,13 @@ class Model(
         if origin_type is ForwardRef or type(origin_type) is ForwardRef:
             raise TypeError(f'Cannot instantiate model "{model}". ')
 
-        return cast(_RootT, origin_type())
+        return cast(_RootT, origin_type())  # type: ignore[misc]
 
     @classmethod
-    def _prepare_cls_members_to_mimic_model(cls, created_model: 'Model[type[_RootT]]') -> None:
+    def _prepare_cls_members_to_mimic_model(
+        cls,
+        created_model: 'type[Model[type[_RootT]]]',
+    ) -> None:
         outer_type = created_model.outer_type(with_args=True)
         outer_type_plain = created_model.outer_type(with_args=False)
 
@@ -230,27 +233,30 @@ class Model(
                     # To let the inner break, also break the outer for loop
                     break
 
+    @override
     def __class_getitem__(  # type: ignore[override]
         cls,
-        params: type[_RootT] | tuple[type[_RootT]] | tuple[type[_RootT], Any] | TypeVar
-        | tuple[TypeVar, ...],
-    ) -> 'Model[type[_RootT]]':
+        params: type[_RootT] | tuple[type[_RootT]] | TypeVar | tuple[TypeVar],
+    ) -> 'type[Model[type[_RootT]]]':
 
         model = cls._prepare_params(params)
 
-        orig_model: type[_RootT] | tuple[type[_RootT], Any] | TypeVar = model
+        orig_model: type[_RootT] | TypeVar = model
 
         # Populating the root field at runtime instead of providing a __root__ Field explicitly
         # is needed due to the inability of typing/pydantic to provide a dynamic default based on
         # the actual type. The following issue in mypy seems relevant:
         # https://github.com/python/mypy/issues/3737 (as well as linked issues)
 
-        created_model = cast(Model, super().__class_getitem__(model if cls == Model else params))
+        created_model = cast(
+            type[Model],
+            super().__class_getitem__(model if cls is Model else params),  # type: ignore
+        )
 
         created_model._get_root_field().field_info = deepcopy(
             created_model._get_root_field().field_info)
 
-        if cls is Model and orig_model is not _RootT:
+        if cls is Model and orig_model is not _RootT:  # type: ignore[misc]
             created_model._get_root_field().field_info.extra = {'orig_model': orig_model}
 
         created_model._inherit_first_orig_model_in_bases_if_missing()
@@ -274,12 +280,14 @@ class Model(
     def _inherit_first_orig_model_in_bases_if_missing(cls):
         if cls is not Model:
             for orig_base in get_original_bases(cls):
-                if isinstance(orig_base, ModelMetaclass) and orig_base.__concrete__:
-                    orig_base._inherit_first_orig_model_in_bases_if_missing()
-                    orig_model = orig_base.get_orig_model()
-                    if orig_model is not Undefined:
-                        cls.set_orig_model(orig_model)
-                        break
+                if isinstance(orig_base, ModelMetaclass):
+                    model_base = cast(type[Model], orig_base)
+                    if model_base.__concrete__:
+                        model_base._inherit_first_orig_model_in_bases_if_missing()
+                        orig_model = model_base.get_orig_model()
+                        if orig_model is not Undefined:
+                            cls.set_orig_model(orig_model)
+                            break
 
             cls._clean_type_caches()
 
@@ -422,10 +430,10 @@ class Model(
             ...
     else:
 
-        def __new__(
-            cls,
-            *args: Any,
-            **kwargs: Any,
+        def __new__(  # type: ignore[no-redef]
+                cls,
+                *args: Any,
+                **kwargs: Any,
         ) -> Self:
             model_not_specified = ROOT_KEY not in cls.__fields__
             if model_not_specified:
@@ -440,7 +448,7 @@ class Model(
         return Undefined
 
     @classmethod
-    def set_orig_model(cls, orig_model: type[_RootT]) -> None:
+    def set_orig_model(cls, orig_model: TypeForm) -> None:
         cls.__fields__[ROOT_KEY].field_info.extra['orig_model'] = orig_model
 
     def __init__(  # noqa: C901
@@ -529,14 +537,14 @@ class Model(
     if TYPE_CHECKING:
 
         @override
-        def __iter__(self) -> Iterator:  # pyright: ignore [reportIncompatibleMethodOverride]
+        def __iter__(self) -> Iterator:  # type: ignore[override]
             ...
 
     def copy(self, *, deep: bool = False, **kwargs) -> Self:
         pydantic_copy = pyd.GenericModel.copy(self, deep=deep, **kwargs)
         if not deep:
             pydantic_copy.__dict__[ROOT_KEY] = pydantic_copy.__dict__[ROOT_KEY].copy()
-        return cast(Self, pydantic_copy)
+        return pydantic_copy  # pyright: ignore[reportReturnType]
 
     @classmethod
     def clone_model_cls(cls, new_model_cls_name: str) -> type[Self]:
@@ -574,12 +582,12 @@ class Model(
             @contextmanager
             def temporary_set_value_iter_to_pydantic_method() -> Iterator[None]:
                 prev_iter = value.__class__.__iter__
-                value.__class__.__iter__ = pyd.GenericModel.__iter__
+                value.__class__.__iter__ = pyd.GenericModel.__iter__  # type: ignore[method-assign]
 
                 try:
                     yield
                 finally:
-                    value.__class__.__iter__ = prev_iter
+                    value.__class__.__iter__ = prev_iter  # type: ignore[method-assign]
 
             with temporary_set_value_iter_to_pydantic_method():
                 return super().validate(value)
@@ -624,7 +632,7 @@ class Model(
 
         def _set_new_content(content: object) -> None:
             if id(content) != old_content_id:
-                self.content = content
+                self.content = content  # type: ignore[assignment]
 
         self._generic_validate_content(
             new_content=new_content,
@@ -741,7 +749,7 @@ class Model(
     def has_snapshot(self) -> bool:
         return self in self.snapshot_holder
 
-    def _get_snapshot_wrapper(self) -> IsSnapshotWrapper['Model', _RootT]:
+    def _get_snapshot_wrapper(self) -> IsSnapshotWrapper[IsModel, _RootT]:
         assert self.has_snapshot(), 'No snapshot taken yet'
         return self.snapshot_holder[self]
 
@@ -791,7 +799,7 @@ class Model(
         value = root_obj[ROOT_KEY]
         value = parse_none_according_to_model(value, root_model=cls)
 
-        config = cls.data_class_creator.config
+        config = cast(type[Model[_RootT]], cls).data_class_creator.config
         with hold_and_reset_prev_attrib_value(config.model,
                                               'dynamically_convert_elements_to_models'):
             config.model.dynamically_convert_elements_to_models = False
@@ -1050,30 +1058,31 @@ class Model(
 
         if name == '__add__' and has_add_method:
 
-            def _add(other):
+            def _add(other) -> object:
                 # try:
                 #     return content.__add__(self.__class__(other).content)
                 # except ValidationError:
-                return content.__add__(other)
+                return content.__add__(other)  # type: ignore[operator]
 
             # return _add_new_other_model(*args, **kwargs)
             method = _add
             return self._call_single_arg_method_with_model_converted_other_first(
-                name, method, *args, **kwargs)
+                name, method, *args, model_converted_other_method=None, **kwargs)
 
         elif name == '__radd__' and (has_radd_method or has_add_method):
 
-            def _radd(other):
+            def _radd(other) -> object:
                 if has_radd_method:
-                    return content.__radd__(other)
+                    return content.__radd__(other)  # type: ignore[attr-defined]
                 else:
-                    return content.__add__(other)
+                    return content.__add__(other)  # type: ignore[operator]
 
-            def _radd_model_converted_other(other):
+            def _radd_model_converted_other(other) -> object:
+                other_content = self.__class__(other).content
                 if has_radd_method:
-                    return content.__radd__(self.__class__(other).content)
+                    return content.__radd__(other_content)  # type: ignore[attr-defined]
                 else:
-                    return self.__class__(other).content.__add__(self.content)
+                    return other_content.__add__(self.content)  # type: ignore[operator]
 
             method = _radd
             model_converted_other_method = _radd_model_converted_other
@@ -1087,15 +1096,15 @@ class Model(
 
         elif name == '__iadd__' and (has_iadd_method or has_add_method):
 
-            def _iadd(other):
+            def _iadd(other) -> object:
                 if has_iadd_method:
-                    return content.__iadd__(other)
+                    return content.__iadd__(other)  # type: ignore[attr-defined]
                 else:
-                    return content.__add__(other)
+                    return content.__add__(other)  # type: ignore[operator]
 
             method = _iadd
             return self._call_single_arg_method_with_model_converted_other_first(
-                name, method, *args, **kwargs)
+                name, method, *args, model_converted_other_method=None, **kwargs)
         else:
             try:
                 method = cast(Callable, self._getattr_from_content_obj(name))
@@ -1178,8 +1187,7 @@ class Model(
         return method(*model_args, **kwargs)
 
     def _get_convert_full_element_model_generator(
-            self, elements: Iterable | None,
-            level_up_type_arg_idx: int | slice) -> Callable[..., Generator]:
+            self, elements: Iterable, level_up_type_arg_idx: int) -> Callable[..., Generator]:
         def _convert_full_element_model_generator(elements=elements):
             for el in elements:
                 yield self._convert_to_model_if_reasonable(
@@ -1190,8 +1198,8 @@ class Model(
 
         return _convert_full_element_model_generator
 
-    def _get_convert_element_value_model_generator(
-            self, elements: Iterable | None) -> Callable[..., Generator]:
+    def _get_convert_element_value_model_generator(self,
+                                                   elements: Iterable) -> Callable[..., Generator]:
         def _convert_element_value_model_generator(elements=elements):
             for el in elements:
                 yield (
@@ -1211,8 +1219,7 @@ class Model(
         level_up: bool = False,
         level_up_arg_idx: int = 1,
         raise_validation_errors: bool = False,
-    ) -> ('Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] '
-          '| Model[_ReturnT] | Model[_RootT] | _ReturnT'):
+    ) -> 'Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] | Model[_ReturnT] | Model[_RootT] | _ReturnT':  # noqa: E501
 
         if level_up and not self.config.model.dynamically_convert_elements_to_models:
             ...
@@ -1321,11 +1328,11 @@ class Model(
                 match attr:
                     case 'values':
                         _model_generator = self._get_convert_full_element_model_generator(
-                            None,
+                            (),
                             level_up_type_arg_idx=1,
                         )
                     case 'items':
-                        _model_generator = self._get_convert_element_value_model_generator(None,)
+                        _model_generator = self._get_convert_element_value_model_generator(())
 
                 content_attr = add_callback_after_call(
                     cast(Callable, content_attr),
@@ -1354,10 +1361,11 @@ class Model(
             return self.content
 
     def __eq__(self, other: object) -> bool:
-        return is_model_instance(other) \
-            and self.__class__ == other.__class__ \
-            and all_equals(self.content, cast(Model, other).content)
-        # and self.to_data() == cast(Model, other).to_data()  # last line is just in case
+        if is_model_instance(other):
+            return (self.__class__ == other.__class__ and all_equals(self.content, other.content))
+            # and self.to_data() == other.to_data()  # last line is just in case
+        else:
+            return False
 
     def __bool__(self):
         if self._get_real_content():
@@ -1388,4 +1396,4 @@ if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
             ...
 else:
 
-    PlainModel: TypeAlias = Model
+    PlainModel: TypeAlias = Model  # type: ignore[no-redef]

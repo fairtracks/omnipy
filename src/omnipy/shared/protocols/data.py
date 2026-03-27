@@ -28,7 +28,7 @@ from omnipy.util._pydantic import Undefined, UndefinedType
 import omnipy.util._pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
-_RootT = TypeVar('_RootT', covariant=True)
+_RootT = TypeVar('_RootT')
 _ModelOrDatasetT = TypeVar('_ModelOrDatasetT', bound='IsModel | IsDataset')
 
 ContentT = TypeVar('ContentT', bound=object)
@@ -62,10 +62,19 @@ class HasData(Protocol):
 
 
 @runtime_checkable
-class IsModel(Protocol[_RootT]):
+class HasContent(Protocol[ContentT]):
     @property
-    def content(self) -> _RootT:
+    def content(self) -> ContentT:
         ...
+
+    @content.setter
+    def content(self, value: ContentT) -> None:
+        ...
+
+
+@runtime_checkable
+class IsModel(HasContent[_RootT], Protocol[_RootT]):
+    ...
 
 
 @runtime_checkable
@@ -301,17 +310,6 @@ class IsSerializerRegistry(Protocol):
                                                      log_obj: CanLog,
                                                      tar_file_path: str,
                                                      to_dataset: IsDataset) -> IsDataset | None:
-        ...
-
-
-@runtime_checkable
-class HasContent(Protocol[ContentT]):
-    @property
-    def content(self) -> ContentT:
-        ...
-
-    @content.setter
-    def content(self, value: ContentT) -> None:
         ...
 
 

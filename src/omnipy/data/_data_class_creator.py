@@ -1,11 +1,12 @@
 from abc import ABCMeta
 from contextlib import contextmanager
-from typing import Callable, ContextManager, Iterator
+from typing import Callable, ContextManager, Generic, Iterator
 
 from omnipy.config.data import DataConfig
 from omnipy.data.snapshot import SnapshotHolder
 from omnipy.shared.protocols.config import IsDataConfig
-from omnipy.shared.protocols.data import (HasContent,
+from omnipy.shared.protocols.data import (ContentT,
+                                          HasContent,
                                           IsDataClassCreator,
                                           IsReactiveObjects,
                                           IsSnapshotHolder)
@@ -72,7 +73,7 @@ class DataClassBaseMeta(ABCMeta):
         return self._data_class_creator_obj
 
 
-class DataClassBase(metaclass=DataClassBaseMeta):
+class DataClassBase(Generic[ContentT], metaclass=DataClassBaseMeta):
     @call_super_if_available(call_super_before_method=False)
     @classmethod
     def _prepare_params(cls, params: TypeForm) -> TypeForm:
@@ -112,7 +113,7 @@ class DataClassBase(metaclass=DataClassBaseMeta):
         return self.__class__.data_class_creator.reactive_objects
 
     @property
-    def snapshot_holder(self) -> IsSnapshotHolder[HasContent, object]:
+    def snapshot_holder(self) -> IsSnapshotHolder[HasContent, ContentT]:
         return self.__class__.data_class_creator.snapshot_holder
 
     def deepcopy_context(
