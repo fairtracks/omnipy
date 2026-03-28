@@ -20,6 +20,13 @@ from omnipy.shared.protocols._typeshed import (ReadableBuffer,
                                                SupportsGetItem,
                                                SupportsKeysAndGetItem)
 
+# Note: importing SupportsKeysAndGetItem from _typeshed instead of the
+#       local copy causes basedpyright to enter an infinite loop.
+#       This seems to be connected to the resolution of
+#       IsMutableMapping.update, and might be a bug in basedpyright.
+#       Hence, we instead maintain a local copy of the elements used
+#       from _typeshed.
+
 _T = TypeVar('_T')
 _T2 = TypeVar('_T2')
 _KT = TypeVar('_KT')  # Key type.
@@ -554,7 +561,7 @@ class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
     # -- weakref.WeakValueDictionary.__ior__
     # -- weakref.WeakKeyDictionary.__ior__
     @overload
-    def update(self: SupportsGetItem[_KT, _VT], m: SupportsKeysAndGetItem[_KT, _VT], /) -> None:
+    def update(self, m: SupportsKeysAndGetItem[_KT, _VT], /) -> None:
         raise AssumedToBeImplementedException
 
     @overload
@@ -565,7 +572,7 @@ class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
         raise AssumedToBeImplementedException
 
     @overload
-    def update(self: SupportsGetItem[_KT, _VT], m: Iterable[tuple[_KT, _VT]], /) -> None:
+    def update(self, m: Iterable[tuple[_KT, _VT]], /) -> None:
         raise AssumedToBeImplementedException
 
     @overload
@@ -578,9 +585,8 @@ class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
         raise AssumedToBeImplementedException
 
     def update(
-        self: SupportsGetItem[_KT, _VT] | SupportsGetItem[str, _VT],
-        m: (SupportsKeysAndGetItem[_KT, _VT] | SupportsKeysAndGetItem[str, _VT]
-            | Iterable[tuple[_KT, _VT]] | Iterable[tuple[str, _VT]] | None) = None,
+        self,
+        m: SupportsKeysAndGetItem[_KT, _VT] | Iterable[tuple[_KT, _VT]] | None = None,
         /,
         **kwargs: _VT,
     ) -> None:
@@ -681,7 +687,7 @@ class IsIO(Protocol[AnyStr]):
     def write(self, s: AnyStr, /) -> int:
         raise AssumedToBeImplementedException
 
-    def write(self: IsIO[AnyStr] | IsIO[bytes], s: AnyStr | ReadableBuffer, /) -> int:
+    def write(self, s: AnyStr | ReadableBuffer, /) -> int:
         raise AssumedToBeImplementedException
 
     # @abstractmethod
@@ -695,7 +701,7 @@ class IsIO(Protocol[AnyStr]):
         raise AssumedToBeImplementedException
 
     def writelines(
-        self: IsIO[AnyStr] | IsIO[bytes],
+        self,
         lines: Iterable[AnyStr] | Iterable[ReadableBuffer],
         /,
     ) -> None:
