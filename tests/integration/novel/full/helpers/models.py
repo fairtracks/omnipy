@@ -1,7 +1,7 @@
-import typing
 from typing import Generic, Mapping, Type, TypeVar
 
 from omnipy.data.model import Model
+from omnipy.shared.typing import TYPE_CHECKING
 import omnipy.util._pydantic as pyd
 
 # Types
@@ -81,7 +81,7 @@ def record_schema_factory(data_file: str,
     )
 
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     # TODO: Revisit the need for static classes for mypy after updates to Pydantic v2
     #       as this is a workaround only for these hard-coded test cases
 

@@ -1,9 +1,8 @@
-from typing import TYPE_CHECKING
-
 from typing_extensions import override
 
 from omnipy.shared.enums.display import SyntaxLanguage
 from omnipy.shared.enums.ui import TerminalOutputUserInterfaceType
+from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.publisher import DataPublisher
 
 if TYPE_CHECKING:

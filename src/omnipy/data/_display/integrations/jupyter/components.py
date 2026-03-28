@@ -1,5 +1,5 @@
 import re
-from typing import Any, Callable, ParamSpec, TYPE_CHECKING
+from typing import Any, Callable, ParamSpec
 
 import solara
 
@@ -10,6 +10,7 @@ from omnipy.shared.protocols.config import (IsJupyterUserInterfaceConfig,
                                             IsLayoutConfig,
                                             IsTextConfig)
 from omnipy.shared.protocols.data import AvailableDisplayDims, IsReactiveObjects
+from omnipy.shared.typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from omnipy.data.dataset import Dataset

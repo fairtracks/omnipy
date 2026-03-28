@@ -1,8 +1,9 @@
 from pathlib import PurePosixPath
-from typing import Any, cast, TYPE_CHECKING, TypeGuard
+from typing import Any, cast, TypeGuard
 from urllib.parse import quote, unquote
 
 from omnipy.data.model import Model
+from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 import omnipy.util._pydantic as pyd
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 
@@ -27,7 +28,7 @@ QueryParamsJoinerModel = NestedJoinItemsModel.adjust(
 
 
 class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tuple[str, ...] | str]):
-    if TYPE_CHECKING:
+    if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
         def __new__(cls, *args: Any, **kwargs: Any) -> 'QueryParamsModel_dict':
             ...
@@ -74,7 +75,7 @@ if TYPE_CHECKING:
 
 
 class UrlPathModel(Model[PurePosixPath | str]):
-    if TYPE_CHECKING:
+    if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
         def __new__(cls, *args: Any, **kwargs: Any) -> 'UrlPathModel_PurePosixPath':
             ...

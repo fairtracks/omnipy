@@ -1,6 +1,5 @@
-from typing import TYPE_CHECKING
-
 from omnipy.components.pandas.datasets import PandasDataset
+from omnipy.shared.typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from omnipy.components.pandas.lazy_import import pd

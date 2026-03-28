@@ -1,12 +1,13 @@
 from collections.abc import Iterable
 from io import StringIO
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
 from typing_extensions import Self
 
 from omnipy.data.model import Model
 from omnipy.data.typechecks import is_model_instance
 from omnipy.shared.exceptions import ShouldNotOccurException
+from omnipy.shared.typing import TYPE_CHECKING
 
 from ..tables.models import (ColumnWiseTableWithColNamesAndIndexModel,
                              ColumnWiseTableWithColNamesModel,

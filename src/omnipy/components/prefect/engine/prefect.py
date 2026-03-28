@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any, Callable, Type, TYPE_CHECKING
+from typing import Any, Callable, Type
 
 from omnipy.config.engine import PrefectEngineConfig
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
@@ -8,6 +8,7 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       TaskRunnerEngine)
 from omnipy.shared.protocols.compute.job import IsDagFlow, IsFlow, IsFuncFlow, IsLinearFlow, IsTask
 from omnipy.shared.protocols.config import IsPrefectEngineConfig
+from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.helpers import resolve
 
 if TYPE_CHECKING:

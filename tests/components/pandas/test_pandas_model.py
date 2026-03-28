@@ -1,9 +1,10 @@
-from typing import Annotated, TYPE_CHECKING
+from typing import Annotated
 
 import pytest
 
 from omnipy.components.json.typedefs import JsonListOfDictsOfScalars
 from omnipy.components.pandas.models import PandasModel
+from omnipy.shared.typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from omnipy.components.pandas.lazy_import import pd

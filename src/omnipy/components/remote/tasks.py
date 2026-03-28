@@ -1,7 +1,7 @@
 import asyncio
 from dataclasses import dataclass
 from pathlib import Path
-from typing import AsyncGenerator, cast, TYPE_CHECKING
+from typing import AsyncGenerator, cast
 
 from typing_extensions import TypeVar
 
@@ -9,6 +9,7 @@ from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.shared.enums.data import BackoffStrategy
+from omnipy.shared.typing import TYPE_CHECKING
 
 from ..json.datasets import JsonDataset, JsonListOfDictsDataset
 from ..json.models import JsonModel

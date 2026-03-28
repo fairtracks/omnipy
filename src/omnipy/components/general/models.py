@@ -1,4 +1,3 @@
-import typing
 from typing import Any, Generic, get_args, Protocol
 
 from typing_extensions import TypeVar
@@ -7,6 +6,7 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import TypeVarStore1, TypeVarStore2, TypeVarStore3, TypeVarStore4
 from omnipy.data.model import Model
 from omnipy.shared.typedefs import TypeForm
+from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.helpers import is_iterable
 
 
@@ -86,7 +86,7 @@ class _ChainMixin:
         return data
 
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
 
     class Chain2(_ChainMixin, Model[_V], Generic[_U, _V]):
         ...

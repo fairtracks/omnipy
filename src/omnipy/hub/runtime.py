@@ -1,4 +1,4 @@
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
 from omnipy.components.prefect.engine.prefect import PrefectEngine
 from omnipy.compute._job import JobBase
@@ -28,6 +28,7 @@ from omnipy.shared.protocols.hub.runtime import (IsRootLogObjects,
                                                  IsRuntime,
                                                  IsRuntimeConfig,
                                                  IsRuntimeObjects)
+from omnipy.shared.typing import TYPE_CHECKING
 import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import called_from_omnipy_tests
 from omnipy.util.publisher import DataPublisher, RuntimeEntryPublisher

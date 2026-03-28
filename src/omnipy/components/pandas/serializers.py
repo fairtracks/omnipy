@@ -1,8 +1,9 @@
 from io import BytesIO
-from typing import Any, IO, Type, TYPE_CHECKING
+from typing import Any, IO, Type
 
 from omnipy.data.serializer import TarFileSerializer
 from omnipy.shared.protocols.data import IsDataset
+from omnipy.shared.typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .lazy_import import pd

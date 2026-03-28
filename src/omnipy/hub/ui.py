@@ -1,7 +1,7 @@
 import os
 import sys
 from textwrap import dedent
-from typing import cast, TYPE_CHECKING
+from typing import cast
 
 import rich.console
 
@@ -13,6 +13,7 @@ from omnipy.shared.enums.ui import (AutoDetectableUserInterfaceType,
                                     TerminalOutputUserInterfaceType,
                                     UserInterfaceType)
 from omnipy.shared.protocols.config import IsJupyterUserInterfaceConfig
+from omnipy.shared.typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .runtime import Runtime

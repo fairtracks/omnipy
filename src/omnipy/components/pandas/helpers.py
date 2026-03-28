@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from omnipy.shared.typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .lazy_import import pd
