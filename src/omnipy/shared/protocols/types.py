@@ -43,8 +43,8 @@ class IsMappingProxyType(  # type: ignore[misc, type-var]
     def __eq__(self, value: object, /) -> bool:
         raise AssumedToBeImplementedException
 
-    def copy(self) -> dict[_KT_co, _VT_co]:
-        raise AssumedToBeImplementedException
+    # def copy(self) -> dict[_KT_co, _VT_co]:
+    #     raise AssumedToBeImplementedException
 
     def keys(self) -> IsKeysView[_KT_co]:
         raise AssumedToBeImplementedException

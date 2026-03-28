@@ -1513,8 +1513,8 @@ class IsByteArray(IsMutableSequence[int], Protocol):
               /) -> int:
         raise AssumedToBeImplementedException
 
-    def copy(self) -> bytearray:
-        raise AssumedToBeImplementedException
+    # def copy(self) -> bytearray:
+    #     raise AssumedToBeImplementedException
 
     def decode(self, encoding: str = 'utf-8', errors: str = 'strict') -> str:
         raise AssumedToBeImplementedException
@@ -2173,8 +2173,8 @@ class IsList(IsMutableSequence[_T], Protocol[_T]):
     # def __init__(self, iterable: Iterable[_T], /) -> None:
     #     ...
 
-    def copy(self) -> list[_T]:
-        raise AssumedToBeImplementedException
+    # def copy(self) -> list[_T]:
+    #     raise AssumedToBeImplementedException
 
     def append(self, object: _T, /) -> None:
         raise AssumedToBeImplementedException
@@ -2368,8 +2368,8 @@ class IsDict(IsMutableMapping[_KT, _VT], Protocol[_KT, _VT]):
     # def __new__(cls, /, *args: Any, **kwargs: Any) -> Self:
     #     ...
 
-    def copy(self) -> dict[_KT, _VT]:
-        raise AssumedToBeImplementedException
+    # def copy(self) -> dict[_KT, _VT]:
+    #     raise AssumedToBeImplementedException
 
     # def keys(self) -> dict_keys[_KT, _VT]:
     def keys(self) -> IsDictKeys[_KT, _VT]:
@@ -2519,8 +2519,8 @@ class IsSet(IsMutableSet[_T], Protocol[_T]):
     def add(self, element: _T, /) -> None:
         raise AssumedToBeImplementedException
 
-    def copy(self) -> set[_T]:
-        raise AssumedToBeImplementedException
+    # def copy(self) -> set[_T]:
+    #     raise AssumedToBeImplementedException
 
     def difference(self, *s: Iterable[Any]) -> set[_T]:
         raise AssumedToBeImplementedException
@@ -2629,8 +2629,8 @@ class IsFrozenSet(IsAbstractSet[_T_co], Protocol[_T_co]):  # type: ignore[misc]
     # def __new__(cls, iterable: Iterable[_T_co], /) -> Self:
     #     raise AssumedToBeImplementedException
 
-    def copy(self) -> frozenset[_T_co]:
-        raise AssumedToBeImplementedException
+    # def copy(self) -> frozenset[_T_co]:
+    #     raise AssumedToBeImplementedException
 
     def difference(self, *s: Iterable[object]) -> frozenset[_T_co]:
         raise AssumedToBeImplementedException
