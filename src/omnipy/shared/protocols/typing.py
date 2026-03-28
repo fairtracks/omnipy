@@ -586,7 +586,8 @@ class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
 
     def update(
         self,
-        m: SupportsKeysAndGetItem[_KT, _VT] | Iterable[tuple[_KT, _VT]] | None = None,
+        m: (SupportsKeysAndGetItem[_KT, _VT] | SupportsKeysAndGetItem[str, _VT]
+            | Iterable[tuple[_KT, _VT]] | Iterable[tuple[str, _VT]] | None) = None,
         /,
         **kwargs: _VT,
     ) -> None:
