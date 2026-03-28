@@ -44,7 +44,7 @@ class IsHashable(Protocol):
     #   is currently mostly useless for static checking.
     # @abstractmethod
     def __hash__(self) -> int:
-        ...
+        raise AssumedToBeImplementedException
 
 
 # class Sequence(Reversible[_T_co], Collection[_T_co]):

@@ -1407,7 +1407,7 @@ class IsBytes(IsSequenceNotStrBytes[int], Protocol):
             raise AssumedToBeImplementedException
 
     @staticmethod
-    def maketrans(frm: ReadableBuffer, to: ReadableBuffer, /) -> Self:
+    def maketrans(frm: ReadableBuffer, to: ReadableBuffer, /) -> bytes:
         raise AssumedToBeImplementedException
 
     def __len__(self) -> int:
