@@ -543,7 +543,10 @@ class Model(  # type: ignore[misc]
     def copy(self, *, deep: bool = False, **kwargs) -> Self:
         pydantic_copy = pyd.GenericModel.copy(self, deep=deep, **kwargs)
         if not deep:
-            pydantic_copy.__dict__[ROOT_KEY] = pydantic_copy.__dict__[ROOT_KEY].copy()
+            # Shallow copying of the model should not share the same
+            # content, as this can lead to unintentional side effects when
+            # the content is mutable.
+            pydantic_copy.content = copy(pydantic_copy.__dict__[ROOT_KEY])
         return pydantic_copy  # pyright: ignore[reportReturnType]
 
     @classmethod

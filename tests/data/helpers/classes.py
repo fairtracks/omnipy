@@ -21,6 +21,9 @@ class MyList(Generic[T]):
     def __repr__(self) -> str:
         return f'MyList({self.data.__repr__()})'
 
+    def __getitem__(self, item: int):
+        return self.data[item]
+
     def __add__(self, other: object) -> 'MyList[T] | NotImplementedType':
         if type(other) is MyList:
             return MyList(*self.data + other.data)

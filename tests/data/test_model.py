@@ -563,12 +563,36 @@ def test_issubclass_and_isinstance() -> None:
 
 
 @pc.parametrize(
-    'copy_func',
-    [lambda model: model.copy(), lambda model: model.copy(deep=False), copy],
-    ids=['model.copy()', 'model.copy(deep=False)', 'copy.copy()'],
+    'model',
+    [
+        Model[list[list[int]]]([[123], [456]]),
+        Model[MyList[list[int]]](MyList([123], [456])),
+    ],
+    ids=['Model_list_of_lists', 'Model_custom_list_of_lists_no_copy_method'],
 )
-def test_copy(copy_func: Callable[[Model], Model]) -> None:
-    model = Model[list[list[int]]]([[123], [456]])
+@pc.parametrize(
+    'copy_func, deep_copy',
+    [
+        (lambda model: model.copy(), False),
+        (lambda model: model.copy(deep=False), False),
+        (lambda model: model.copy(deep=True), True),
+        (copy, False),
+        (deepcopy, True),
+    ],
+    ids=[
+        'model.copy()',
+        'model.copy(deep=False)',
+        'model.copy(deep=True)',
+        'copy.copy()',
+        'copy.deepcopy()'
+    ],
+)
+def test_copy(
+    model: Model,
+    copy_func: Callable[[Model], Model],
+    deep_copy: bool,
+    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
+) -> None:
 
     model_copy = copy_func(model)
 
@@ -578,38 +602,18 @@ def test_copy(copy_func: Callable[[Model], Model]) -> None:
     assert model_copy.content is not model.content
     assert model_copy.content == model.content
 
-    assert model_copy.content[0] is model.content[0]
-    assert model_copy.content[1] is model.content[1]
+    if deep_copy:
+        assert model_copy.content[0] is not model.content[0]
+        assert model_copy.content[0] == model.content[0]
+        assert model_copy.content[1] is not model.content[1]
+        assert model_copy.content[1] == model.content[1]
+    else:
+        assert model_copy.content[0] is model.content[0]
+        assert model_copy.content[1] is model.content[1]
 
     assert not model_copy.has_snapshot()
 
     assert model_copy.__fields_set__ == {'__root__'}
-
-
-@pc.parametrize(
-    'deepcopy_func',
-    [lambda model: model.copy(deep=True), deepcopy],
-    ids=['model.copy(deep=True)', 'copy.deepcopy()'],
-)
-def test_deepcopy(deepcopy_func: Callable[[Model], Model]) -> None:
-    model = Model[list[list[int]]]([[123], [456]])
-
-    model_deepcopy = deepcopy_func(model)
-
-    assert model_deepcopy is not model
-    assert model_deepcopy == model
-
-    assert model_deepcopy.content is not model.content
-    assert model_deepcopy.content == model.content
-
-    assert model_deepcopy.content[0] is not model.content[0]
-    assert model_deepcopy.content[0] == model.content[0]
-    assert model_deepcopy.content[1] is not model.content[1]
-    assert model_deepcopy.content[1] == model.content[1]
-
-    assert not model_deepcopy.has_snapshot()
-
-    assert model_deepcopy.__fields_set__ == {'__root__'}
 
 
 def test_parse_convertible_data() -> None:
