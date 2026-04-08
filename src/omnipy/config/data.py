@@ -4,7 +4,6 @@ from pathlib import Path
 import shutil
 from typing import Any, TypedDict
 
-from pydantic import BaseModel
 from typing_extensions import override
 
 from omnipy.config import ConfigBase
@@ -100,7 +99,7 @@ class UserInterfaceTypeConfig(ConfigBase):
         self._call_self_subscribers()
 
 
-class DimsModeMixin(BaseModel):
+class DimsModeMixin(pyd.BaseModel):
     dims_mode: DisplayDimensionsUpdateMode.Literals = DisplayDimensionsUpdateMode.AUTO
 
 

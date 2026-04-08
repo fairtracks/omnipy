@@ -1,6 +1,5 @@
 from typing import Annotated
 
-import pydantic.fields
 import pytest
 
 from omnipy.components.json.helpers import (is_json_dict,
@@ -9,6 +8,7 @@ from omnipy.components.json.helpers import (is_json_dict,
                                             parse_line_as_elements_of_dict,
                                             parse_line_as_elements_of_list,
                                             parse_str_as_json)
+import omnipy.util._pydantic as pyd
 
 
 def test_is_json_scalar(skip_test_if_not_default_data_config_values: Annotated[None,
@@ -59,7 +59,7 @@ def test_parse_str_as_json(skip_test_if_not_default_data_config_values: Annotate
     assert parse_str_as_json('{}') == {}
     assert parse_str_as_json('[1, 2, 3]') == [1, 2, 3]
     assert parse_str_as_json('{"key": "value"}') == {'key': 'value'}
-    assert parse_str_as_json('(1, 2, 3)') is pydantic.fields.Undefined
+    assert parse_str_as_json('(1, 2, 3)') is pyd.Undefined
 
 
 def test_parse_line_as_elements_of_dict(
@@ -71,20 +71,19 @@ def test_parse_line_as_elements_of_dict(
     assert parse_line_as_elements_of_dict('":key1": "va:l1", "key\\\"2": "v\\\"al2"') == {
         ':key1': 'va:l1', 'key"2': 'v"al2'
     }
-    assert parse_line_as_elements_of_dict('"key": "value",') is pydantic.fields.Undefined
-    assert parse_line_as_elements_of_dict(
-        '"key1": "val1", "key2": "val2",') is pydantic.fields.Undefined
+    assert parse_line_as_elements_of_dict('"key": "value",') is pyd.Undefined
+    assert parse_line_as_elements_of_dict('"key1": "val1", "key2": "val2",') is pyd.Undefined
 
-    assert parse_line_as_elements_of_dict('"hello"') is pydantic.fields.Undefined
-    assert parse_line_as_elements_of_dict('42') is pydantic.fields.Undefined
-    assert parse_line_as_elements_of_dict('3.14') is pydantic.fields.Undefined
-    assert parse_line_as_elements_of_dict('true') is pydantic.fields.Undefined
-    assert parse_line_as_elements_of_dict('null') is pydantic.fields.Undefined
-    assert parse_line_as_elements_of_dict('[]') is pydantic.fields.Undefined
-    assert parse_line_as_elements_of_dict('{}') is pydantic.fields.Undefined
-    assert parse_line_as_elements_of_dict('[1, 2, 3]') is pydantic.fields.Undefined
-    assert parse_line_as_elements_of_dict('{"key": "value"}') is pydantic.fields.Undefined
-    assert parse_line_as_elements_of_dict('(1, 2, 3)') is pydantic.fields.Undefined
+    assert parse_line_as_elements_of_dict('"hello"') is pyd.Undefined
+    assert parse_line_as_elements_of_dict('42') is pyd.Undefined
+    assert parse_line_as_elements_of_dict('3.14') is pyd.Undefined
+    assert parse_line_as_elements_of_dict('true') is pyd.Undefined
+    assert parse_line_as_elements_of_dict('null') is pyd.Undefined
+    assert parse_line_as_elements_of_dict('[]') is pyd.Undefined
+    assert parse_line_as_elements_of_dict('{}') is pyd.Undefined
+    assert parse_line_as_elements_of_dict('[1, 2, 3]') is pyd.Undefined
+    assert parse_line_as_elements_of_dict('{"key": "value"}') is pyd.Undefined
+    assert parse_line_as_elements_of_dict('(1, 2, 3)') is pyd.Undefined
 
 
 def test_parse_line_as_elements_of_list(
@@ -97,4 +96,4 @@ def test_parse_line_as_elements_of_list(
     assert parse_line_as_elements_of_list('{}') == [{}]
     assert parse_line_as_elements_of_list('[1, 2, 3]') == [[1, 2, 3]]
     assert parse_line_as_elements_of_list('{"key": "value"}') == [{'key': 'value'}]
-    assert parse_line_as_elements_of_list('(1, 2, 3)') is pydantic.fields.Undefined
+    assert parse_line_as_elements_of_list('(1, 2, 3)') is pyd.Undefined

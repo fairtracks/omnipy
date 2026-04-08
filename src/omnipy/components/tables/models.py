@@ -11,7 +11,6 @@ from typing import (Callable,
                     Sized,
                     TypeAlias)
 
-from pydantic import BaseModel
 from typing_extensions import override, TypeVar
 
 from omnipy.data.helpers import TypeVarStore
@@ -494,7 +493,7 @@ class IteratingPydanticRecordsModel(
         cls,
         input_model: ColumnWiseTableWithColNamesModel | RowWiseTableModel,
         output_model: ColumnWiseTableWithColNamesModel,
-        pyd_model: type[BaseModel],
+        pyd_model: type[pyd.BaseModel],
         to_row_dict_func: Callable[[list[JsonScalar]], dict[str, JsonScalar]] | None = None,
     ):
         def _init_col(

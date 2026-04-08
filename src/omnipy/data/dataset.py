@@ -880,7 +880,6 @@ class Dataset(
 
     @classmethod
     def to_json_schema(cls, pretty: bool = True) -> str | dict_t[str, str]:
-        from pydantic.schema import normalize_name
         result = {}
         clean_dataset = super(Dataset, Dataset).__class_getitem__(cls.get_type())
         schema = clean_dataset.schema()
@@ -891,7 +890,7 @@ class Dataset(
             if key == 'anyOf':
                 result['type'] = 'object'
                 result['additionalProperties'] = {
-                    '$ref': '#/definitions/' + normalize_name(clean_dataset.get_type().__name__)
+                    '$ref': '#/definitions/' + pyd.normalize_name(clean_dataset.get_type().__name__)
                 }
             else:
                 result[key] = val

@@ -1,9 +1,9 @@
-import pydantic as pyd
 from typing_extensions import ClassVar, override
 
 from omnipy.config.data import ColorConfig, DimsModeConfig
 from omnipy.shared.enums.colorstyles import DarkHighContrastColorStyles, RecommendedColorStyles
 from omnipy.shared.enums.display import DisplayColorSystem, DisplayDimensionsUpdateMode
+import omnipy.util._pydantic as pyd
 
 
 class NoSizeDisplayDimsModeConfig(DimsModeConfig):

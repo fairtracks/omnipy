@@ -2,7 +2,6 @@ from collections import defaultdict
 import dataclasses
 from typing import Callable
 
-from pydantic import NonNegativeInt
 from typing_extensions import TypeVar
 
 from omnipy.data._display.dimensions import has_height, has_width
@@ -629,7 +628,7 @@ def _apply_width_additions(
     Returns:
         Updated layout flow context with modified panel frames
     """
-    def _panel_width_modifier(key: str, panel: DimensionsAwareDraftPanel) -> NonNegativeInt:
+    def _panel_width_modifier(key: str, panel: DimensionsAwareDraftPanel) -> pyd.NonNegativeInt:
         assert has_width(panel.frame.dims)
         return panel.frame.dims.width + panel_width_additions.get(key, 0)
 

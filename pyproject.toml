@@ -20,7 +20,7 @@ dependencies = [
     "devtools (>=0.12.2,<1)",
     "objsize (>=0.7.0,<1)",
     "humanize (>=4.9.0,<5)",
-    "pydantic[email] (<2)",
+    "pydantic[email] (>=2)",
     "griffe < 1",
     "pydantic-core (>=2.24.2,<3)",
     "aiohttp (>=3.10.6,<4)",
