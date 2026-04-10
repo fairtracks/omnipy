@@ -2,9 +2,10 @@ from collections import defaultdict
 from contextlib import suppress
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import ContextManager, ForwardRef, Generic, get_args, get_origin, NamedTuple
+import sys
+from typing import Any, ContextManager, ForwardRef, Generic, get_args, get_origin, NamedTuple
 
-from typing_extensions import TypeVar
+from typing_extensions import TypeIs, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.shared.typedefs import TypeForm
@@ -20,6 +21,7 @@ __all__ = [
     'get_special_methods_info_dict',
     'ResetSolutionTuple',
     'cleanup_name_qualname_and_module',
+    'build_own_module_and_global_namespace_for_forward_refs',
     'PendingData',
     'FailedData',
 ]
@@ -200,6 +202,47 @@ def cleanup_name_qualname_and_module(
 # def orjson_dumps(v, *, default):
 #     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
 #     return orjson.dumps(v, default=default).decode()
+
+
+def build_own_module_and_global_namespace_for_forward_refs(
+    own_class: type,
+    calling_module: str | None,
+    **localns: Any,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Build own-module and global namespaces for fwd reference resolution
+
+    Build global namespaces for forward reference resolution by merging:
+
+    1. The model's own defining module namespace — so forward refs
+       declared inside the model (e.g. JsonScalar in
+       tables/models.py) are always resolvable even when
+       update_forward_refs is triggered from a different module.
+
+    2. The calling module's namespace on top — so forward refs
+       that point to types available at the call site (e.g.
+       NestedDataset in datasets.py) are resolved correctly.
+
+    3. Any explicitly passed localns with the highest priority.
+
+    Returns:
+        A tuple of (own_module_namespace, global_namespace) to be used for
+        forward reference resolution.
+    """
+    def _module_loaded(module_name: str | None) -> TypeIs[str]:
+        return module_name is not None and module_name in sys.modules
+
+    own_module = getattr(own_class, '__module__', None)
+    own_module_ns = (sys.modules[own_module].__dict__ if _module_loaded(own_module) else {})
+
+    calling_module_ns = (
+        sys.modules[calling_module].__dict__ if _module_loaded(calling_module) else {})
+
+    globalns: dict[str, Any] = {}
+    globalns.update(own_module_ns)
+    globalns.update(calling_module_ns)
+    globalns.update(localns)
+
+    return own_module_ns, globalns
 
 
 @dataclass(frozen=True, kw_only=True)

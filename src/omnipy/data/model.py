@@ -26,13 +26,14 @@ from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._missing import parse_none_according_to_model
 from omnipy.data._mixins.display import ModelDisplayMixin
 from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
-from omnipy.data.helpers import (cleanup_name_qualname_and_module,
+from omnipy.data.helpers import (build_own_module_and_global_namespace_for_forward_refs,
+                                 cleanup_name_qualname_and_module,
                                  get_special_methods_info_dict,
                                  MethodInfo,
                                  ResetSolutionTuple,
                                  validate_cls_counts,
                                  YesNoMaybe)
-from omnipy.data.typechecks import is_model_instance
+from omnipy.data.typechecks import is_model_instance, is_model_subclass
 from omnipy.shared.constants import ROOT_KEY
 from omnipy.shared.protocols.data import IsModel, IsSnapshotWrapper
 from omnipy.shared.typedefs import TypeForm
@@ -598,23 +599,75 @@ class Model(  # type: ignore[misc]
             return super().validate(value)
 
     @classmethod
-    def update_forward_refs(cls, **localns: Any) -> None:
+    def update_forward_refs(
+        cls,
+        calling_module: str | None = None,
+        prev_visited_classes: set[type] | None = None,
+        **localns: Any,
+    ) -> None:
+        if prev_visited_classes is None:
+            prev_visited_classes = set()
+        elif cls in prev_visited_classes:
+            return
+
+        # Merge the namespaces of the Model's own module and the calling
+        # module to the local namespace for evaluation of forward
+        # references, which is necessary for cases where the Model is
+        # defined in a different module than where it is used, e.g. when
+        # the Model is defined in a library and used by a user in their
+        # own code.
+        if calling_module is None:
+            calling_module = get_calling_module_name()
+        own_module_ns, globalns = \
+            build_own_module_and_global_namespace_for_forward_refs(cls, calling_module, **localns)
+
         prev_outer_type = cls._get_root_field().outer_type_
         prev_type = cls._get_root_field().type_
 
-        super().update_forward_refs(**localns)
+        super().update_forward_refs(**globalns)
 
-        calling_module = get_calling_module_name()
         cls._get_root_field().outer_type_ = evaluate_any_forward_refs_if_possible(
-            prev_outer_type, calling_module, **localns)
-        cls._get_root_field().type_ = evaluate_any_forward_refs_if_possible(
-            prev_type, calling_module, **localns)
-        cls.set_orig_model(
-            evaluate_any_forward_refs_if_possible(cls.get_orig_model(), calling_module, **localns))
+            prev_outer_type, **globalns)
+        cls._get_root_field().type_ = evaluate_any_forward_refs_if_possible(prev_type, **globalns)
+        cls.set_orig_model(evaluate_any_forward_refs_if_possible(cls.get_orig_model(), **globalns))
         cls.__annotations__[ROOT_KEY] = evaluate_any_forward_refs_if_possible(
-            cls.__annotations__[ROOT_KEY], calling_module, **localns)
+            cls.__annotations__[ROOT_KEY], **globalns)
 
         cls._recursively_set_allow_none(cls._get_root_field())
+
+        prev_visited_classes.add(cls)
+
+        # Propagate update_forward_refs to parent models but retaining the
+        # same calling module. This is needed to ensure the correct
+        # context is used to resolve forward references in complex
+        # inheritance hierarchies.
+        #
+        # We explicitly call `update_forward_refs` on immediate parent
+        # classes (`__bases__`) instead of relying solely on
+        # `super().update_forward_refs()`. This is because `super()`
+        # inside this classmethod resolves relative to `Model` in the MRO,
+        # silently bypassing custom logic on any intermediate `Model`
+        # subclasses. Explicitly propagating through `__bases__` ensures
+        # that class-level setups are correctly applied to all parents
+        # exactly once, efficiently preventing redundant updates.
+        for base in cls.__bases__:
+            if is_model_subclass(base) and base is not Model:
+                # Merge the current class's own module namespace into
+                # localns before propagating, so that pydantic-generated
+                # parametrized base classes (which have
+                # __module__='omnipy.data.model' rather than the defining
+                # module) can still resolve forward refs that only exist
+                # in the defining module's namespace.
+
+                extra_ns: dict[str, Any] = {}
+                extra_ns.update(**own_module_ns)
+                extra_ns.update(**localns)
+
+                base.update_forward_refs(
+                    calling_module=calling_module,
+                    prev_visited_classes=prev_visited_classes,
+                    **extra_ns,
+                )
 
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)

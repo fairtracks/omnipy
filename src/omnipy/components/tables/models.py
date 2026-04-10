@@ -229,8 +229,8 @@ class _ColumnWiseTableWithColNamesMixin:
         return self._common_add(other, reverse=True)
 
 
-class _ColumnWiseTableWithColNamesModel(
-        Model['dict[str, list[JsonScalar]] | RowWiseTableWithColNamesNoConvertModel']):
+class _ColumnWiseTableWithColNamesModel(Model[dict[str, list[JsonScalar]]
+                                              | RowWiseTableWithColNamesNoConvertModel]):
     @classmethod
     def _parse_data(
         cls, data: 'dict[str, list[JsonScalar]] | RowWiseTableWithColNamesNoConvertModel'

@@ -21,7 +21,8 @@ from omnipy.data._selector import (create_updated_mapping,
                                    prepare_selected_items_with_iterable_data,
                                    prepare_selected_items_with_mapping_data,
                                    select_keys)
-from omnipy.data.helpers import cleanup_name_qualname_and_module
+from omnipy.data.helpers import (build_own_module_and_global_namespace_for_forward_refs,
+                                 cleanup_name_qualname_and_module)
 from omnipy.data.model import Model
 from omnipy.data.typechecks import is_dataset_subclass, is_model_instance, is_model_subclass
 from omnipy.shared.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
@@ -685,27 +686,83 @@ class Dataset(
         return super().validate({'data': value})
 
     @classmethod
-    def update_forward_refs(cls, **localns: Any) -> None:
+    def update_forward_refs(
+        cls,
+        calling_module: str | None = None,
+        prev_visited_classes: set[type] | None = None,
+        **localns: Any,
+    ) -> None:
         """
         Try to update ForwardRefs on fields based on this Model, globalns and localns.
         """
+
+        if prev_visited_classes is None:
+            prev_visited_classes = set()
+        elif cls in prev_visited_classes:
+            return
+
+        # Merge the namespaces of the Datasets's own module and the
+        # calling module to the local namespace for evaluation of forward
+        # references, which is necessary for cases where the Dataset is
+        # defined in a different module than where it is used, e.g. when
+        # the Dataset is defined in a library and used by a user in their
+        # own code.
+        if calling_module is None:
+            calling_module = get_calling_module_name()
+        own_module_ns, globalns = \
+            build_own_module_and_global_namespace_for_forward_refs(cls, calling_module, **localns)
+
         prev_type = cls._get_data_field().type_
 
-        super().update_forward_refs(**localns)
+        super().update_forward_refs(**globalns)
 
-        calling_module = get_calling_module_name()
-        cls._get_data_field().type_ = evaluate_any_forward_refs_if_possible(
-            prev_type, calling_module, **localns)
+        cls._get_data_field().type_ = evaluate_any_forward_refs_if_possible(prev_type, **globalns)
         cls.__annotations__[DATA_KEY] = evaluate_any_forward_refs_if_possible(
-            cls.__annotations__[DATA_KEY], calling_module, **localns)
+            cls.__annotations__[DATA_KEY], **globalns)
 
+        prev_visited_classes.add(cls)
+
+        # Merge the Dataset's own module namespace into
+        # localns before propagating. This is to allow Model classes and
+        # pydantic-generated parametrized base classes (which have
+        # __module__='omnipy.data.dataset' rather than the defining
+        # module) to still resolve forward refs that only exist
+        # in the defining module's namespace.
+
+        extra_ns: dict[str, Any] = {}
+        extra_ns.update(own_module_ns)
+        extra_ns.update(localns)
+
+        # Propagate update_forward_refs to parent Dataset classes but
+        # retaining the same calling module. This is needed to ensure the
+        # correct context is used to resolve forward references in complex
+        # inheritance hierarchies.
+        #
+        # We explicitly call `update_forward_refs` on immediate parent
+        # classes (`__bases__`) instead of relying solely on
+        # `super().update_forward_refs()`. This is because `super()`
+        # inside this classmethod resolves relative to `Dataset` in the MRO,
+        # silently bypassing custom logic on any intermediate `Dataset`
+        # subclasses. Explicitly propagating through `__bases__` ensures
+        # that class-level setups are correctly applied to all parents
+        # exactly once, efficiently preventing redundant updates.
+        for base in cls.__bases__:
+            if is_dataset_subclass(base) and base is not Dataset:
+                base.update_forward_refs(
+                    calling_module=calling_module,
+                    prev_visited_classes=prev_visited_classes,
+                    **extra_ns,
+                )
+
+        # As above, but now propagate update_forward_refs to the types of
+        # the Dataset (e.g. the Model).
         for type_variant in split_to_union_variants(cls.get_type()):
-            # Don't recurse into Dataset subclasses to avoid infinite recursion
-            #
-            # if is_model_subclass(type_variant) or is_dataset_subclass(type_variant):
-            #
-            if is_model_subclass(type_variant):
-                cast(type[Model], type_variant).update_forward_refs(**localns)
+            if is_dataset_subclass(type_variant) or is_model_subclass(type_variant):
+                type_variant.update_forward_refs(
+                    calling_module=calling_module,
+                    prev_visited_classes=prev_visited_classes,
+                    **extra_ns,
+                )
 
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)

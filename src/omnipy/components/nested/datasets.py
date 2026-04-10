@@ -25,5 +25,5 @@ class NestedDataset(GenericNestedDataset[NestedUnion]):
     ...
 
 
-NestedDataset.update_forward_refs(**{'NestedDataset': NestedDataset})
+NestedDataset.update_forward_refs()
 ListAsNestedDatasetModel.update_forward_refs()
