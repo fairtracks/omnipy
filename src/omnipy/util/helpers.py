@@ -278,6 +278,10 @@ def is_literal_type(value: Any) -> bool:
     return get_origin(value) is Literal
 
 
+def is_type_specialization(value: Any) -> bool:
+    return get_origin(value) is type
+
+
 @functools.cache
 def is_strict_subclass(
         __cls: type,

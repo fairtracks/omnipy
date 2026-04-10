@@ -23,6 +23,7 @@ from omnipy.util.helpers import (all_type_variants,
                                  is_optional,
                                  is_pure_pydantic_model,
                                  is_strict_subclass,
+                                 is_type_specialization,
                                  is_union,
                                  is_unreserved_identifier,
                                  sorted_dict_hash,
@@ -385,6 +386,25 @@ def test_is_literal_type() -> None:
     assert not is_literal_type(int)
     assert not is_literal_type(bool)
     assert not is_literal_type(list)
+
+
+def test_is_type_specialization() -> None:
+    class MyGenericClass(Generic[T]):
+        ...
+
+    class MySpecializedClass(MyGenericClass[int]):
+        ...
+
+    assert is_type_specialization(MyGenericClass) is False
+    assert is_type_specialization(MyGenericClass[int]) is False
+    assert is_type_specialization(MySpecializedClass) is False
+    assert is_type_specialization(int) is False
+    assert is_type_specialization(list[int]) is False
+    assert is_type_specialization(type) is False
+    assert is_type_specialization(type[int]) is True
+    assert is_type_specialization(type[MyGenericClass]) is True
+    assert is_type_specialization(type[MyGenericClass[int]]) is True
+    assert is_type_specialization(type[MySpecializedClass]) is True
 
 
 def test_is_strict_subclass() -> None:
