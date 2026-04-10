@@ -682,6 +682,14 @@ class BaseDisplayMixin:
         kwargs_copy['syntax'] = SyntaxLanguage.JSON5
         return kwargs_copy
 
+    @classmethod
+    def _prepare_kwargs_for_docs(cls, kwargs):
+        kwargs_copy = kwargs.copy()
+        if 'style' not in kwargs_copy:
+            kwargs_copy['style'] = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
+        kwargs_copy['ui'] = kwargs.get('ui', UserInterfaceType.BROWSER_TAG)
+        return kwargs_copy
+
     if TYPE_CHECKING:
 
         def full(
@@ -1679,14 +1687,9 @@ class BaseDisplayMixin:
         """
         Displays a preview of the model or dataset for the documentation.
         """
-        ui_type = UserInterfaceType.BROWSER_TAG
-        if 'style' not in kwargs:
-            kwargs['style'] = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
-        if 'ui' not in kwargs:
-            kwargs['ui'] = ui_type
-
+        kwargs = self._prepare_kwargs_for_docs(kwargs)
         return self._display_according_to_ui_type(
-            ui_type=ui_type,
+            ui_type=kwargs['ui'],
             return_output_if_str=True,
             output_method=self._default_panel,
             **kwargs,
