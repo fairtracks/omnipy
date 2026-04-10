@@ -2072,7 +2072,7 @@ class BaseDisplayMixin:
 
         # TODO: Improve file caching mechanism, including style files
         cache_dir_path = Path(self_as_dataclass.config.ui.cache_dir_path)
-        if not cache_dir_path:
+        if not os.path.exists(cache_dir_path):
             os.makedirs(cache_dir_path)
 
         file_path = cache_dir_path / sanitize_filename(filename)
