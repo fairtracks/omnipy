@@ -33,7 +33,7 @@ from omnipy.data.helpers import (build_own_module_and_global_namespace_for_forwa
                                  ResetSolutionTuple,
                                  validate_cls_counts,
                                  YesNoMaybe)
-from omnipy.data.typechecks import is_model_instance, is_model_subclass
+from omnipy.data.typechecks import all_model_type_variants, is_model_instance, is_model_subclass
 from omnipy.shared.constants import ROOT_KEY
 from omnipy.shared.protocols.data import IsModel, IsSnapshotWrapper
 from omnipy.shared.typedefs import TypeForm
@@ -58,10 +58,11 @@ from omnipy.util.helpers import (all_equals,
                                  evaluate_any_forward_refs_if_possible,
                                  get_calling_module_name,
                                  get_default_if_typevar,
+                                 is_literal_type,
                                  is_non_omnipy_pydantic_model,
                                  is_non_str_byte_iterable,
                                  is_optional,
-                                 is_union,
+                                 is_type_specialization,
                                  remove_forward_ref_notation)
 from omnipy.util.setdeque import SetDeque
 
@@ -211,27 +212,48 @@ class Model(  # type: ignore[misc]
         cls,
         created_model: 'type[Model[type[_RootT]]]',
     ) -> None:
-        outer_type = created_model.outer_type(with_args=True)
-        outer_type_plain = created_model.outer_type(with_args=False)
+        outer_types = all_model_type_variants(created_model, double_model_unions_as_variants=True)
 
-        # TODO: See if it is possible to type Model mimicking of root type, e.g. with Protocol
-        if not lenient_issubclass(outer_type_plain, TypeVar):
-            if is_union(outer_type) or outer_type_plain is Literal:
-                outer_types = get_args(outer_type)
-            else:
-                outer_types = (outer_type_plain,)
+        def _type_supports_method(_type: type | GenericAlias, _method_name: str) -> bool:
+            if is_literal_type(_type):
+                # Literal types should be considered to support the same
+                # methods as their underlying type, e.g. int for Literal[3]
+                _type = get_args(_type)[0].__class__
 
-            for name, method_info in get_special_methods_info_dict().items():
-                names_to_check = (name, '__add__') if name in ('__iadd__', '__radd__') else (name,)
-                for type_to_support in outer_types:
-                    for name_to_check in names_to_check:
-                        setattr(created_model,
-                                name,
-                                functools.partialmethod(cls._special_method, name, method_info))
-                        break
-                    else:
-                        continue
-                    # To let the inner break, also break the outer for loop
+            method: Callable | None = getattr(_type, _method_name, None)
+            if method is None:
+                return False
+
+            # We need to check for e.g. object.__or__, which was added
+            # in Python 3.10 for e.g 'str | int' and is supported by
+            # all types, but should not be considered as a supported
+            # method for the model.
+
+            ALWAYS_SUPPORTED_METHODS = ('__delattr__', '__hash__')
+
+            if (_type is object or is_type_specialization(_type)
+                    or _method_name in ALWAYS_SUPPORTED_METHODS):
+                return True
+
+            # __objclass__ exists for slot_wrappers (built-ins)
+            objclass = getattr(method, '__objclass__', None)
+            if objclass is not None:
+                # Check if the method is defined on the type itself or
+                # inherited from a parent class other than object or type
+                return objclass not in (type, object)
+
+            return True
+
+        if any(lenient_isinstance(_type, TypeVar) for _type in outer_types):
+            return
+
+        for name, method_info in get_special_methods_info_dict().items():
+            names_to_check = (name, '__add__') if name in ('__iadd__', '__radd__') else (name,)
+            for type_to_support in outer_types:
+                if any(_type_supports_method(type_to_support, _) for _ in names_to_check):
+                    setattr(created_model,
+                            name,
+                            functools.partialmethod(cls._special_method, name, method_info))
                     break
 
     @override
@@ -272,8 +294,7 @@ class Model(  # type: ignore[misc]
         if created_model is not cls:
             cleanup_name_qualname_and_module(cls, created_model, orig_model)
 
-        if not isinstance(model, TypeVar):
-            cls._prepare_cls_members_to_mimic_model(created_model)
+        cls._prepare_cls_members_to_mimic_model(created_model)
 
         return created_model
 
@@ -634,6 +655,9 @@ class Model(  # type: ignore[misc]
             cls.__annotations__[ROOT_KEY], **globalns)
 
         cls._recursively_set_allow_none(cls._get_root_field())
+
+        if get_original_bases(cls) == (Model,):
+            cls._prepare_cls_members_to_mimic_model(cls)
 
         prev_visited_classes.add(cls)
 

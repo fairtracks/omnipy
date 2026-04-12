@@ -3980,7 +3980,7 @@ def test_literal_model_validation() -> None:
 
 
 def test_validation_and_mimic_enum_model() -> None:
-    class ColorEnum(Enum):
+    class ColorEnum(str, Enum):
         RED = 'red'
         GREEN = 'green'
         BLUE = 'blue'
