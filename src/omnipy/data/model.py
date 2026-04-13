@@ -1093,10 +1093,9 @@ class Model(  # type: ignore[misc]
                     reset_solution=reset_solution,
                 )
 
-        elif name == '__iter__' and isinstance(self, Iterable):
+        elif name == '__iter__' and isinstance(self, Iterable) and not hasattr(self, 'keys'):
             _per_element_model_generator = self._get_convert_full_element_model_generator(
-                cast(Iterable, self.content),
-                level_up_type_arg_idx=0,
+                cast(Iterable, self.content),  # level_up_type_arg_idx=0,
             )
             return _per_element_model_generator()
         else:
@@ -1119,7 +1118,6 @@ class Model(  # type: ignore[misc]
             ret = self._convert_to_model_if_reasonable(
                 ret,
                 level_up=level_up,
-                level_up_arg_idx=-1,
                 raise_validation_errors=(info.returns_same_type == YesNoMaybe.YES),
             )
 
@@ -1267,14 +1265,12 @@ class Model(  # type: ignore[misc]
         return method(*model_args, **kwargs)
 
     def _get_convert_full_element_model_generator(
-            self, elements: Iterable, level_up_type_arg_idx: int) -> Callable[..., Generator]:
+        self,
+        elements: Iterable,
+    ) -> Callable[..., Generator]:
         def _convert_full_element_model_generator(elements=elements):
             for el in elements:
-                yield self._convert_to_model_if_reasonable(
-                    el,
-                    level_up=True,
-                    level_up_arg_idx=level_up_type_arg_idx,
-                )
+                yield self._convert_to_model_if_reasonable(el, level_up=True)
 
         return _convert_full_element_model_generator
 
@@ -1284,11 +1280,7 @@ class Model(  # type: ignore[misc]
             for el in elements:
                 yield (
                     el[0],
-                    self._convert_to_model_if_reasonable(
-                        el[1],
-                        level_up=True,
-                        level_up_arg_idx=1,
-                    ),
+                    self._convert_to_model_if_reasonable(el[1], level_up=True),
                 )
 
         return _convert_element_value_model_generator
@@ -1297,7 +1289,6 @@ class Model(  # type: ignore[misc]
         self,
         ret: Mapping[_KeyT, _ValT] | Iterable[_ValT] | _ReturnT | _RootT,
         level_up: bool = False,
-        level_up_arg_idx: int = 1,
         raise_validation_errors: bool = False,
     ) -> 'Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] | Model[_ReturnT] | Model[_RootT] | _ReturnT':  # noqa: E501
 
@@ -1320,11 +1311,11 @@ class Model(  # type: ignore[misc]
 
                 if level_up:
                     type_args = get_args(type_to_check)
-                    if len(type_args) == 0:
-                        type_args = (type_to_check,)
                     if type_args:
-                        for level_up_type_to_check in all_type_variants(
-                                type_args[level_up_arg_idx]):
+                        # Assuming last type argument is the type of value of the container
+                        value_arg_type = type_args[-1]
+
+                        for level_up_type_to_check in all_type_variants(value_arg_type):
                             level_up_type_to_check = self._fix_tuple_type_from_args(
                                 level_up_type_to_check)
                             if self._is_instance_or_literal(
@@ -1407,10 +1398,7 @@ class Model(  # type: ignore[misc]
             if attr in ('values', 'items'):
                 match attr:
                     case 'values':
-                        _model_generator = self._get_convert_full_element_model_generator(
-                            (),
-                            level_up_type_arg_idx=1,
-                        )
+                        _model_generator = self._get_convert_full_element_model_generator(())
                     case 'items':
                         _model_generator = self._get_convert_element_value_model_generator(())
 

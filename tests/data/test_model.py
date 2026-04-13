@@ -24,19 +24,20 @@ from typing import (Annotated,
 
 import pytest
 import pytest_cases as pc
-from typing_extensions import TypeVar
+from typing_extensions import TypeForm, TypeVar
 
 from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model
 from omnipy.shared.protocols.data import IsModel
 from omnipy.shared.protocols.hub.runtime import IsRuntime
+from omnipy.shared.protocols.typing import IsMapping
 from omnipy.util._pydantic import ValidationError
 import omnipy.util._pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 from ..helpers.functions import assert_model, assert_val
 from ..helpers.protocols import AssertModelOrValFunc
-from .helpers.classes import MyFloatObject, MyList, MyNumberBase, MyPath
+from .helpers.classes import MyDict, MyFloatObject, MyList, MyNumberBase, MyPath, MyStrKeyDict
 from .helpers.models import (CBA,
                              DefaultStrModel,
                              LiteralFiveModel,
@@ -3516,20 +3517,99 @@ def test_mimic_list_and_dict_iterators(
 
     dict_model = Model[dict[int, str]]({0: 'abc', 1: 'bcd', 2: 'cde'})
 
+    assert tuple(dict_model) == (0, 1, 2)
     assert tuple(dict_model.keys()) == (0, 1, 2)
 
     if runtime.config.data.model.dynamically_convert_elements_to_models:
-        assert tuple(dict_model.values()) == (Model[str]('abc'),
-                                              Model[str]('bcd'),
-                                              Model[str]('cde'))
-        assert tuple(dict_model.items()) == ((0, Model[str]('abc')), (1, Model[str]('bcd')),
-                                             (2, Model[str]('cde')))
+        assert tuple(dict_model.values()) == (
+            Model[str]('abc'),
+            Model[str]('bcd'),
+            Model[str]('cde'),
+        )
+        assert tuple(dict_model.items()) == (
+            (0, Model[str]('abc')),
+            (1, Model[str]('bcd')),
+            (2, Model[str]('cde')),
+        )
     else:
         assert tuple(dict_model.values()) == ('abc', 'bcd', 'cde')
         assert tuple(dict_model.items()) == ((0, 'abc'), (1, 'bcd'), (2, 'cde'))
 
-    for i, key in enumerate(dict_model):
-        assert_model_if_dyn_conv_else_val(key, int, i)
+
+def test_mimic_list_like_classes(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+
+    mylist_int_model = Model[MyList[int]](MyList(0, 1, 2))
+    assert_model_if_dyn_conv_else_val(mylist_int_model[0], int, 0)
+    for i, el in enumerate(mylist_int_model):
+        assert_model_if_dyn_conv_else_val(el, int, i)
+
+    # Dynamic conversion does not work when no type arguments are provided
+    mylist_int_model = Model[MyList](MyList(0, 1, 2))
+    assert mylist_int_model[0] == 0
+    assert tuple(mylist_int_model) == (0, 1, 2)
+
+
+@pytest.mark.parametrize(
+    'my_dict_model, model_supports_dyn_conv',
+    [
+        (
+            Model[MyDict[str, int]](MyDict({
+                'a': 0, 'b': 1, 'c': 2
+            })),
+            True,
+        ),
+        (
+            Model[MyDict](MyDict({
+                'a': 0, 'b': 1, 'c': 2
+            })),
+            False,
+        ),
+        (
+            Model[MyStrKeyDict[int]](MyStrKeyDict(a=0, b=1, c=2)),
+            True,
+        ),
+        (
+            Model[MyStrKeyDict](MyStrKeyDict(a=0, b=1, c=2)),
+            False,
+        ),
+    ],
+    ids=[
+        'Model[MyDict[str, int]]',
+        'Model[MyDict]',
+        'Model[MyStrKeyDict[int]]',
+        'Model[MyStrKeyDict]'
+    ],
+)
+def test_mimic_dict_like_classes(
+    my_dict_model: Model[IsMapping[str, int]],
+    model_supports_dyn_conv: bool,
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+    def _assert_val_if_supports_dyn_conv_else_val(
+        model_or_val: object,
+        target_type: TypeForm,
+        content: object,
+    ):
+        if model_supports_dyn_conv:
+            assert_model_if_dyn_conv_else_val(model_or_val, target_type, content)
+        else:
+            assert_val(model_or_val, target_type, content)
+
+    _assert_val_if_supports_dyn_conv_else_val(my_dict_model['a'], int, 0)
+
+    assert tuple(my_dict_model) == ('a', 'b', 'c')
+    assert tuple(my_dict_model.keys()) == ('a', 'b', 'c')
+
+    for i, val in enumerate(my_dict_model.values()):
+        _assert_val_if_supports_dyn_conv_else_val(val, int, i)
+
+    for i, (key, val) in enumerate(my_dict_model.items()):
+        assert key == ['a', 'b', 'c'][i]
+        _assert_val_if_supports_dyn_conv_else_val(val, int, i)
 
 
 def test_mimic_doubly_nested_dyn_converted_containers_are_copies(
