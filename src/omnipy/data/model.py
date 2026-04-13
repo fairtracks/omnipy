@@ -208,9 +208,9 @@ class Model(  # type: ignore[misc]
         return cast(_RootT, origin_type())  # type: ignore[misc]
 
     @classmethod
-    def _prepare_cls_members_to_mimic_model(
-        cls,
-        created_model: 'type[Model[_RootT]]',
+    def _prepare_cls_members_to_mimic_model(  # noqa: C901
+            cls,
+            created_model: 'type[Model[_RootT]]',
     ) -> None:
         outer_types = all_model_type_variants(created_model, double_model_unions_as_variants=True)
 
@@ -219,6 +219,13 @@ class Model(  # type: ignore[misc]
                 # Literal types should be considered to support the same
                 # methods as their underlying type, e.g. int for Literal[3]
                 _type = get_args(_type)[0].__class__
+            elif get_args(_type):
+                # If type is a specialization of a generic type, e.g.
+                # MyList[int], we want to check the methods of the
+                # underlying generic type, e.g. MyList, as the
+                # specialization of non-builtin types typically does not
+                # have any special methods.
+                _type = cast(type, get_origin(_type))
 
             method: Callable | None = getattr(_type, _method_name, None)
             if method is None:
