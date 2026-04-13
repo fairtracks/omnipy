@@ -18,6 +18,8 @@ __all__ = [
     'TypeVarStore3',
     'TypeVarStore4',
     'DoubleTypeVarStore',
+    'YesNoMaybe',
+    'MethodInfo',
     'get_special_methods_info_dict',
     'ResetSolutionTuple',
     'cleanup_name_qualname_and_module',
@@ -145,6 +147,7 @@ _SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
     '__ceil__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.MAYBE),
     # - Hash and other standard methods ----------------------------------
     '__hash__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    '__delattr__': MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
 }
 
 
