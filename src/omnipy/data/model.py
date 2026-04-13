@@ -210,7 +210,7 @@ class Model(  # type: ignore[misc]
     @classmethod
     def _prepare_cls_members_to_mimic_model(
         cls,
-        created_model: 'type[Model[type[_RootT]]]',
+        created_model: 'type[Model[_RootT]]',
     ) -> None:
         outer_types = all_model_type_variants(created_model, double_model_unions_as_variants=True)
 
@@ -260,7 +260,7 @@ class Model(  # type: ignore[misc]
     def __class_getitem__(  # type: ignore[override]
         cls,
         params: type[_RootT] | tuple[type[_RootT]] | TypeVar | tuple[TypeVar],
-    ) -> 'type[Model[type[_RootT]]]':
+    ) -> 'type[Model[_RootT]]':
 
         model = cls._prepare_params(params)
 
