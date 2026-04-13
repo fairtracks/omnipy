@@ -3074,6 +3074,8 @@ def all_less_than_five_model_add_variants(  # noqa: C901
                 other = MyNumber(converted)
             else:
                 return NotImplemented
+        elif isinstance(other, int):
+            other = MyNumber(other)
 
         ret = adder_func(self, other)
 
@@ -3113,14 +3115,13 @@ def all_less_than_five_model_add_variants(  # noqa: C901
     if has_iadd:
         setattr(MyNumber, '__iadd__', _iadd)
 
-    class LessThanFiveModel(Model[MyNumber | int]):
+    class LessThanFiveModel(Model[MyNumber]):
         @classmethod
-        def _parse_data(cls, data: MyNumber | int) -> MyNumber:
-            my_num = MyNumber(data) if isinstance(data, int) else data
-            assert my_num.val < 5
-            return my_num
+        def _parse_data(cls, data: MyNumber) -> MyNumber:
+            assert data.val < 5
+            return data
 
-    return LessThanFiveModel(1)
+    return LessThanFiveModel(MyNumber(1))
 
 
 def test_mimic_add_concat_all_less_than_five_model_add_variants(
@@ -3140,12 +3141,16 @@ def test_mimic_add_concat_all_less_than_five_model_add_variants(
         with pytest.raises(TypeError):
             less_than_five_model.__add__(1, no_such_kwarg=True)
 
+        assert hasattr(less_than_five_model, '__add__')
+
         res = less_than_five_model + ('three' if other_type_in else 3)  # type: ignore[operator]
         if other_type_out:
             assert res == 'four'
         else:
             assert res.content.val == 4
     else:
+        assert not hasattr(less_than_five_model, '__add__')
+
         with pytest.raises(TypeError):
             less_than_five_model + ('three' if other_type_in else 3)  # type: ignore[operator]
 
@@ -3167,12 +3172,16 @@ def test_mimic_radd_concat_all_less_than_five_model_add_variants(
         with pytest.raises(TypeError):
             less_than_five_model.__radd__(1, no_such_kwarg=True)
 
+        assert hasattr(less_than_five_model, '__radd__')
+
         res = ('two' if other_type_in else 2) + less_than_five_model  # type: ignore[operator]
         if other_type_out:
             assert res == 'three'
         else:
             assert res.content.val == 3
     else:
+        assert not hasattr(less_than_five_model, '__radd__')
+
         with pytest.raises(TypeError):
             ('two' if other_type_in else 2) + less_than_five_model  # type: ignore[operator]
 
@@ -3194,10 +3203,14 @@ def test_mimic_iadd_concat_all_less_than_five_model_add_variants(
         with pytest.raises(TypeError):
             less_than_five_model.__iadd__(1, no_such_kwarg=True)
 
+        assert hasattr(less_than_five_model, '__iadd__')
+
         if not other_type_out:
             less_than_five_model += 'one' if other_type_in else 1  # type: ignore[operator]
             assert less_than_five_model.content.val == 2
     else:
+        assert not hasattr(less_than_five_model, '__iadd__')
+
         with pytest.raises(TypeError):
             less_than_five_model += 'one' if other_type_in else 1  # type: ignore[operator]
 
@@ -3650,6 +3663,270 @@ def test_mimic_doubly_nested_dyn_converted_containers_are_copies(
         assert_model(dict_model, dict[int, dict[int, int]], {0: {1: 1, 2: 2}})
 
 
+def test_mimic_list_operations_with_model_of_model(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+    class MyListDoubleModel(Model[Model[list[int]]]):
+        ...
+
+    list_double_model = MyListDoubleModel([123])
+
+    # __getitem__
+    assert_model_if_dyn_conv_else_val(list_double_model[0], int, 123)  # type: ignore[index]
+
+    # __setitem__
+    list_double_model_setitem = MyListDoubleModel([123, 234, 345])
+
+    list_double_model_setitem[1] = 432
+    assert_model(list_double_model_setitem, Model[list[int]], Model[list[int]]([123, 432, 345]))
+
+    list_double_model_setitem[1] = '234'
+    assert_model(list_double_model_setitem, Model[list[int]], Model[list[int]]([123, 234, 345]))
+
+    list_double_model_setitem[1:3] = [432, 543]
+    assert_model(list_double_model_setitem, Model[list[int]], Model[list[int]]([123, 432, 543]))
+
+    list_double_model_setitem[1:3] = ['432', '543']
+    assert_model(list_double_model_setitem, Model[list[int]], Model[list[int]]([123, 432, 543]))
+
+    # __delitem__
+    list_double_model_setitem = list_double_model.copy()
+
+    del list_double_model_setitem[0]
+    assert_model(list_double_model_setitem, Model[list[int]], Model[list[int]]())
+
+    # __add__
+    assert_model(list_double_model + [234], Model[list[int]], Model[list[int]]([123, 234]))
+    assert_model(list_double_model + list_double_model,
+                 Model[list[int]],
+                 Model[list[int]]([123, 123]))
+
+    # __radd__
+    assert_model([12] + list_double_model, Model[list[int]], Model[list[int]]([12, 123]))
+
+    # __iadd__
+    list_double_model_iadd = list_double_model.copy()
+    list_double_model_iadd += [234]
+    assert_model(list_double_model_iadd, Model[list[int]], Model[list[int]]([123, 234]))
+
+    list_double_model_iadd += list_double_model_iadd
+    assert_model(list_double_model_iadd, Model[list[int]], Model[list[int]]([123, 234, 123, 234]))
+
+    # __mul__
+    assert_model(list_double_model * 2, Model[list[int]], Model[list[int]]([123, 123]))
+
+    # __contains__
+    assert_val(123 in list_double_model, bool, True)
+
+    # __iter__
+    for i, el in enumerate(MyListDoubleModel(range(3))):
+        assert_model_if_dyn_conv_else_val(el, int, i)
+
+    # append()
+    list_double_model_append = list_double_model.copy()
+    list_double_model_append.append(234)
+    assert_model(list_double_model_append, Model[list[int]], Model[list[int]]([123, 234]))
+
+
+def test_mimic_dict_operations_with_model_of_model(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+    class MyDictDoubleModel(Model[Model[dict[str, int]]]):
+        ...
+
+    dict_double_model = MyDictDoubleModel({'1': 123})
+
+    # __getitem__
+    assert_model_if_dyn_conv_else_val(dict_double_model['1'], int, 123)  # type: ignore[index]
+
+    # __setitem__
+    dict_double_model_setitem = MyDictDoubleModel({'1': 123, '2': 234})
+    dict_double_model_setitem['2'] = 432
+    assert_model(
+        dict_double_model_setitem,
+        Model[dict[str, int]],
+        Model[dict[str, int]]({
+            '1': 123, '2': 432
+        }),
+    )
+
+    dict_double_model_setitem[2] = '234'
+    assert_model(
+        dict_double_model_setitem,
+        Model[dict[str, int]],
+        Model[dict[str, int]]({
+            '1': 123, '2': 234
+        }),
+    )
+
+    # __delitem__
+    dict_double_model_delitem = MyDictDoubleModel({'1': 123, '2': 234})
+    del dict_double_model_delitem['2']
+    assert_model(
+        dict_double_model_delitem,
+        Model[dict[str, int]],
+        Model[dict[str, int]]({
+            '1': 123
+        }),
+    )
+
+    # __or__
+    assert_model(
+        dict_double_model | {2: '234'},
+        Model[dict[str, int]],
+        Model[dict[str, int]]({
+            '1': 123, '2': 234
+        }),
+    )
+    assert_model(
+        dict_double_model | Model[dict[int, str]]({
+            2: '234'
+        }),
+        Model[dict[str, int]],
+        Model[dict[str, int]]({
+            '1': 123, '2': 234
+        }),
+    )
+
+    # __ior__
+    dict_double_model_ior = dict_double_model.copy()
+    dict_double_model_ior |= {2: '234'}
+    assert_model(dict_double_model_ior,
+                 Model[dict[str, int]],
+                 Model[dict[str, int]]({
+                     '1': 123, '2': 234
+                 }))
+
+    dict_double_model_ior |= Model[dict[int, str]]({3: '345'})
+    assert_model(dict_double_model_ior,
+                 Model[dict[str, int]],
+                 Model[dict[str, int]]({
+                     '1': 123, '2': 234, '3': 345
+                 }))
+
+    # __ror__
+    assert_model(
+        {2: '234'} | dict_double_model,
+        Model[dict[str, int]],
+        Model[dict[str, int]]({
+            '1': 123, '2': 234
+        }),
+    )
+
+    # __contains__
+    assert_val('1' in dict_double_model, bool, True)
+
+    # __iter__, keys(), values(), items()
+    dict_double_model_iter = MyDictDoubleModel({'0': 0, '1': 2, '2': 4})
+
+    for i, el in enumerate(dict_double_model_iter):
+        assert_val(el, str, str(i))
+
+    for i, el in enumerate(dict_double_model_iter.keys()):
+        assert_val(el, str, str(i))
+
+    for i, el in enumerate(dict_double_model_iter.values()):
+        assert_model_if_dyn_conv_else_val(el, int, 2 * i)
+
+    for i, el in enumerate(dict_double_model_iter.items()):
+        assert_val(el[0], str, str(i))
+        assert_model_if_dyn_conv_else_val(el[1], int, 2 * i)
+
+    # update()
+    dict_double_model_update = dict_double_model.copy()
+    dict_double_model_update.update({2: '234'})
+    assert_model(
+        dict_double_model_update,
+        Model[dict[str, int]],
+        Model[dict[str, int]]({
+            '1': 123, '2': 234
+        }),
+    )
+
+
+def test_mimic_set_operations_with_model_of_model(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+    class MySetDoubleModel(Model[Model[set[int]]]):
+        ...
+
+    set_double_model = MySetDoubleModel({123})
+
+    # __and__
+    assert_model(set_double_model & {123}, Model[set[int]], Model[set[int]]({123}))
+    assert_model(set_double_model & ['123'], Model[set[int]], Model[set[int]]({123}))
+    assert_model(
+        set_double_model & Model[list[str]](['123']),
+        Model[set[int]],
+        Model[set[int]]({123}),
+    )
+
+    # __rand__
+    assert_model({123} & set_double_model, Model[set[int]], Model[set[int]]({123}))
+    assert_model(['123'] & set_double_model, Model[set[int]], Model[set[int]]({123}))
+
+    # __iand__
+    set_double_model_iand = set_double_model.copy()
+    set_double_model_iand &= Model[list[str]](['234'])
+    assert_model(set_double_model_iand, Model[set[int]], Model[set[int]]())
+
+    # __or__
+    assert_model(set_double_model | {234}, Model[set[int]], Model[set[int]]({123, 234}))
+    assert_model(set_double_model | ['234'], Model[set[int]], Model[set[int]]({123, 234}))
+    assert_model(
+        set_double_model | Model[list[str]](['234']),
+        Model[set[int]],
+        Model[set[int]]({123, 234}),
+    )
+
+    # __ror__
+    assert_model({234} | set_double_model, Model[set[int]], Model[set[int]]({234, 123}))
+    assert_model(['234'] | set_double_model, Model[set[int]], Model[set[int]]({234, 123}))
+
+    # __ior__
+    set_double_model_ior = set_double_model.copy()
+    set_double_model_ior |= Model[list[str]](['234'])
+    assert_model(set_double_model_ior, Model[set[int]], Model[set[int]]({234, 123}))
+
+    # __contains__
+    assert_val(123 in set_double_model, bool, True)
+
+    # __iter__
+    for i, el in enumerate(MySetDoubleModel(range(3))):
+        assert_model_if_dyn_conv_else_val(el, int, i)
+
+    # append()
+    set_double_model_add = set_double_model.copy()
+    set_double_model_add.add(234)
+    assert_model(set_double_model_add, Model[set[int]], Model[set[int]]({123, 234}))
+
+
+def test_mimic_operations_with_model_of_union_of_models(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+    class MyStrOrIntDoubleModel(Model[Model[int] | Model[str]]):
+        ...
+
+    str_or_int_double_model_str = MyStrOrIntDoubleModel('abc')
+    str_or_int_double_model_int = MyStrOrIntDoubleModel(123)
+
+    # __add__
+    assert_model(
+        str_or_int_double_model_str + '234',
+        Model[int] | Model[str],
+        Model[str]('abc234'),
+    )
+    assert_model(
+        str_or_int_double_model_int + 234,
+        Model[int] | Model[str],
+        Model[int](357),
+    )
+
+
 def test_mimic_nested_list_operations_with_model_subclass_containers(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
@@ -3683,12 +3960,6 @@ def test_mimic_nested_list_operations_with_model_subclass_containers(
     )
 
     assert_model_if_dyn_conv_else_val(model[-1][-1], int, 2)  # type: ignore[index]
-
-    class MyListDoubleModel(Model[Model[list[int]]]):
-        ...
-
-    double_model = MyListDoubleModel([123])
-    assert_model_if_dyn_conv_else_val(double_model[0], int, 123)  # type: ignore[index]
 
 
 def test_mimic_nested_dict_operations_with_model_containers(

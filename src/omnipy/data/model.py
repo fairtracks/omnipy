@@ -1163,11 +1163,11 @@ class Model(  # type: ignore[misc]
                     return content.__add__(other)  # type: ignore[operator]
 
             def _radd_model_converted_other(other) -> object:
-                other_content = self.__class__(other).content
+                other_content = self.__class__(other)._get_real_content()
                 if has_radd_method:
                     return content.__radd__(other_content)  # type: ignore[attr-defined]
                 else:
-                    return other_content.__add__(self.content)  # type: ignore[operator]
+                    return other_content.__add__(content)  # type: ignore[attr-defined]
 
             method = _radd
             model_converted_other_method = _radd_model_converted_other
@@ -1227,8 +1227,8 @@ class Model(  # type: ignore[misc]
                 if model_converted_other_method:
                     return model_converted_other_method(arg)
                 else:
-                    return method(self.__class__(arg).content, **kwargs)
-            except ValidationError:
+                    return method(self.__class__(arg)._get_real_content(), **kwargs)
+            except (ValidationError, TypeError):
                 # TODO: Add debug logging for hidden validation and other exceptions e.g. when
                 #       concatenating `Model[int](123) + '234.'` (gives TypeError:
                 #       unsupported operand type(s) for +: 'Model[int]' and 'str'). ?
@@ -1268,7 +1268,7 @@ class Model(  # type: ignore[misc]
         *args: object,
         **kwargs: object,
     ):
-        model_args = [self.__class__(arg).content for arg in args]
+        model_args = [self.__class__(arg)._get_real_content() for arg in args]
         return method(*model_args, **kwargs)
 
     def _get_convert_full_element_model_generator(
@@ -1304,14 +1304,8 @@ class Model(  # type: ignore[misc]
         elif is_model_instance(ret):
             ...
         else:
-            outer_type = self.outer_type(with_args=True)
-            # For double Models, e.g. Model[Model[int]], where _get_real_content() have already
-            # skipped the outer Model to get the `ret`, we need to do the same to compare the value
-            # with the corresponding type.
-            if lenient_issubclass(ensure_plain_type(outer_type), Model):
-                outer_type = cast(Model, outer_type).outer_type(with_args=True)
-
-            for type_to_check in all_type_variants(outer_type):
+            for type_to_check in all_model_type_variants(
+                    self, double_model_unions_as_variants=not level_up):
                 plain_type_to_check = ensure_plain_type(type_to_check)
                 if plain_type_to_check in (ForwardRef, TypeVar, None):
                     continue
@@ -1381,7 +1375,9 @@ class Model(  # type: ignore[misc]
 
         def __getattr__(self, attr: str) -> Any:
             if self._is_non_omnipy_pydantic_model() and self._content_obj_hasattr(attr):
-                self._validate_and_set_value(self.content)
+                # Not sure whether self.content or self._get_real_content
+                # here makes any difference...
+                self._validate_and_set_value(self._get_real_content())
 
             content_attr = self._getattr_from_content_obj(attr)
 
