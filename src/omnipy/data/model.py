@@ -20,7 +20,7 @@ from typing import (Annotated,
                     overload,
                     Union)
 
-from typing_extensions import get_original_bases, override, Self, TypeAlias, TypeVar
+from typing_extensions import get_original_bases, override, Self, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._missing import parse_none_according_to_model
@@ -109,8 +109,7 @@ class Model(  # type: ignore[misc]
         Generic[_RootT],
         metaclass=ModelMetaclass,
 ):
-    """
-    A data model containing a value parsed according to the model.
+    """A data model containing a value parsed according to the model.
 
     If no value is provided, the value is set to the default value of the data model, found by
     calling the model class without parameters, e.g. `int()`.
@@ -320,7 +319,6 @@ class Model(  # type: ignore[misc]
 
             cls._clean_type_caches()
 
-    #
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':  # noqa: C901
 
         # mypy currently does not support overloads of __new__()
@@ -1457,14 +1455,13 @@ class Model(  # type: ignore[misc]
         return [(None, self.content)]
 
 
-if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
+if TYPE_CHECKING:
 
     class PlainModel(
             Model[_RootT],
             Generic[_RootT],
     ):
-        def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-            ...
-else:
+        if TYPE_CHECKER != 'mypy':
 
-    PlainModel: TypeAlias = Model  # type: ignore[no-redef]
+            def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+                ...

@@ -150,10 +150,16 @@ class Dataset(
         # json_loads = orjson.loads
         # json_dumps = orjson_dumps
 
-    # TODO: For pydantic v2, remove hack in Dataset to stop e.g.
-    #       [{'a': 'b', 'c': 'd'}] to be coerced into {'a': 'c'} (remove
-    #       first part of the union below, and edit get_type() and to_json_schema())
-    data: list[dict[str, _ModelOrDatasetT]] | dict[str, _ModelOrDatasetT] = pyd.Field(default={})
+    if TYPE_CHECKING:
+        data: dict[str, _ModelOrDatasetT] = pyd.Field(default={})
+
+    else:
+
+        # TODO: For pydantic v2, remove hack in Dataset to stop e.g.
+        #       [{'a': 'b', 'c': 'd'}] to be coerced into {'a': 'c'} (remove
+        #       first part of the union below, and edit get_type() and to_json_schema())
+        data: list[dict[str, _ModelOrDatasetT]] | dict[str, _ModelOrDatasetT] = pyd.Field(
+            default={})
 
     # data: dict[str, _ModelOrDatasetT] = pyd.Field(default={})
 
@@ -309,13 +315,14 @@ class Dataset(
     def copy(self, *, deep: bool = False, **kwargs) -> Self:
         pydantic_copy = pyd.GenericModel.copy(self, deep=deep, **kwargs)
         if not deep:
-            pydantic_copy.__dict__[DATA_KEY] = pydantic_copy.__dict__[DATA_KEY].copy()
+            object.__setattr__(pydantic_copy, DATA_KEY, pydantic_copy.__dict__[DATA_KEY].copy())
+
         return pydantic_copy  # pyright: ignore [reportReturnType]
 
     @classmethod
     def clone_dataset_cls(cls,
                           new_dataset_cls_name: str,
-                          model_cls: type[_NewModelT] | None = None) -> Self:
+                          model_cls: type[_NewModelT] | None = None) -> type[Self]:
         if model_cls:
             generic_dataset_cls = cls.__bases__[0]
             new_base_cls = generic_dataset_cls[model_cls]  # type: ignore[index]
@@ -323,7 +330,7 @@ class Dataset(
             new_base_cls = cls
 
         new_dataset_cls = type(new_dataset_cls_name, (new_base_cls,), {})
-        return cast(Self, new_dataset_cls)
+        return new_dataset_cls
 
     @classmethod
     def _get_data_field(cls) -> pyd.ModelField:
@@ -542,8 +549,9 @@ class Dataset(
             ...
 
     def __getitem__(
-            self,
-            selector: str | int | slice | Iterable[str | int]) -> '_ModelOrDatasetT | Model | Self':
+        self,
+        selector: str | int | slice | Iterable[str | int],
+    ) -> '_DatasetT | _ModelOrDatasetT | Model | Self':
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:

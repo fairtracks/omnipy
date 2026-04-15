@@ -1,11 +1,12 @@
 import functools
-from types import GenericAlias, UnionType
-from typing import cast, TYPE_CHECKING
+from types import GenericAlias
+from typing import cast
 
-from typing_extensions import TypeIs
+from typing_extensions import TypeIs, TypeVar
 
 from omnipy.shared.protocols.data import IsDataset, IsModel
 from omnipy.shared.typedefs import TypeForm
+from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util._pydantic import is_none_type, lenient_isinstance, lenient_issubclass
 from omnipy.util.helpers import all_type_variants
 
@@ -45,10 +46,13 @@ def is_dataset_subclass(__cls: TypeForm) -> 'TypeIs[type[Dataset]]':
     return lenient_issubclass(__cls, Dataset)
 
 
+ClassOrTupleT = TypeVar('ClassOrTupleT')
+
+
 def obj_or_model_content_isinstance(
     __obj: object,
-    __class_or_tuple: type | tuple[type, ...] | UnionType,
-) -> bool:
+    __class_or_tuple: type[ClassOrTupleT] | tuple[type[ClassOrTupleT], ...],
+) -> TypeIs[ClassOrTupleT]:
     return isinstance(__obj.content if is_model_instance(__obj) else __obj, __class_or_tuple)
 
 

@@ -75,13 +75,12 @@ class ParamsBase(pyd.BaseModel, metaclass=_ParamsMeta):
         for key, value in kwargs.items():
             all_field_infos[key].default = value
 
+        field_definitions: dict[str, Any] = {
+            field_name: (cls.__fields__[field_name].outer_type_, field_info)
+            for field_name, field_info in all_field_infos.items()
+        }
         return pyd.create_model(  # type: ignore[call-overload]
-            model_name,
-            __base__=ParamsBase,
-            **{
-                field_name: (cls.__fields__[field_name].outer_type_, field_info) for field_name,
-                field_info in all_field_infos.items()
-            })
+            model_name, __base__=ParamsBase, **field_definitions)
 
 
 def bind_adjust_model_func(

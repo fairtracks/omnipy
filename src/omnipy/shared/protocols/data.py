@@ -15,7 +15,7 @@ from typing import (Any,
                     TypeAlias,
                     TypedDict)
 
-from typing_extensions import Self, TypeVar
+from typing_extensions import override, Self, TypeVar
 
 from omnipy.shared.protocols._util import IsWeakKeyRefContainer
 from omnipy.shared.protocols.config import (IsDataConfig,
@@ -29,6 +29,7 @@ import omnipy.util._pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 
 _RootT = TypeVar('_RootT')
+_DatasetT = TypeVar('_DatasetT', bound='IsDataset')
 _ModelOrDatasetT = TypeVar('_ModelOrDatasetT', bound='IsModel | IsDataset')
 
 ContentT = TypeVar('ContentT', bound=object)
@@ -173,6 +174,7 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
     def __getitem__(self, selector: slice | Iterable[str | int]) -> Self:
         ...
 
+    @override
     def __getitem__(self,
                     selector: str | int | slice | Iterable[str | int]) -> '_ModelOrDatasetT | Self':
         ...
@@ -220,7 +222,7 @@ class IsHttpUrlDataset(IsDataset, Protocol):
     ...
 
 
-class IsSerializer(Protocol):
+class IsSerializer(Protocol[_DatasetT]):
     """"""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
@@ -235,26 +237,26 @@ class IsSerializer(Protocol):
         ...
 
     @classmethod
-    def serialize(cls, dataset: IsDataset) -> bytes | memoryview:
+    def serialize(cls, dataset: _DatasetT) -> bytes | memoryview:
         ...
 
     @classmethod
-    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> IsDataset:
+    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> _DatasetT:
         ...
 
 
 @runtime_checkable
-class IsTarFileSerializer(IsSerializer, Protocol):
+class IsTarFileSerializer(IsSerializer[_DatasetT], Protocol[_DatasetT]):
     @classmethod
     def create_tarfile_from_dataset(cls,
-                                    dataset: IsDataset,
+                                    dataset: _DatasetT,
                                     data_encode_func: Callable[..., bytes | memoryview]) -> bytes:
         """"""
         ...
 
     @classmethod
     def create_dataset_from_tarfile(cls,
-                                    dataset: IsDataset,
+                                    dataset: _DatasetT,
                                     tarfile_bytes: bytes,
                                     data_decode_func: Callable[[IO[bytes]], Any],
                                     dictify_object_func: Callable[[str, Any], dict | str],

@@ -43,7 +43,7 @@ if not TYPE_CHECKER_IS_MYPY:
     _TYPE_CHECKER: Literal['unknown'] = 'unknown'  # pyright: ignore
 
 if TYPE_CHECKER_IS_MYPY:
-    _TYPE_CHECKER: Literal['mypy'] = 'mypy'  # type: ignore[no-redef]
+    _TYPE_CHECKER: Literal['mypy'] = 'mypy'  # pyright: ignore
 else:
     # pyright behavior:
     #   in contrast to mypy, pyright sets the _TYPE_CHECKER type

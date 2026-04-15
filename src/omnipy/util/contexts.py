@@ -1,29 +1,27 @@
 from contextlib import AbstractContextManager, contextmanager
 from copy import deepcopy
-from typing import Callable, Iterator, ParamSpec
+from typing import Callable, Iterator
 
 from typing_extensions import TypeVar
 
 # TODO: Consider refactoring as many as possible of the context managers (AbstractContextManager
 #       subclasses) to @contextmanager-decorated methods
 
-_SetupP = ParamSpec('_SetupP')
-_TeardownP = ParamSpec('_TeardownP')
 _ValT = TypeVar('_ValT')
 
 
 @contextmanager
 def setup_and_teardown_callback_context(
     *,
-    setup_func: Callable[_SetupP, _ValT] | None = None,
-    setup_func_args: _SetupP.args = (),
-    setup_func_kwargs: _SetupP.kwargs = {},
-    exception_func: Callable[_TeardownP, None] | None = None,
-    exception_func_args: _TeardownP.args = (),
-    exception_func_kwargs: _TeardownP.kwargs = {},
-    teardown_func: Callable[_TeardownP, None] | None = None,
-    teardown_func_args: _TeardownP.args = (),
-    teardown_func_kwargs: _TeardownP.kwargs = {},
+    setup_func: Callable[..., _ValT] | None = None,
+    setup_func_args: tuple[object, ...] = (),
+    setup_func_kwargs: dict[str, object] = {},
+    exception_func: Callable[..., None] | None = None,
+    exception_func_args: tuple[object, ...] = (),
+    exception_func_kwargs: dict[str, object] = {},
+    teardown_func: Callable[..., None] | None = None,
+    teardown_func_args: tuple[object, ...] = (),
+    teardown_func_kwargs: dict[str, object] = {},
 ) -> Iterator[_ValT | None]:
     setup_val: _ValT | None = None
     if setup_func is not None:
