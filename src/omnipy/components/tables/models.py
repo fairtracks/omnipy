@@ -15,8 +15,14 @@ from typing_extensions import override, TypeVar
 
 from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model, ModelMetaclass
-from omnipy.shared.protocols.builtins import IsDict, IsList, SupportsKeysAndGetItem
+from omnipy.shared.protocols.content import (IsDictOfDictsContent,
+                                             IsDictOfListsContent,
+                                             IsListContent,
+                                             IsListOfDictsContent,
+                                             IsListOfListsContent,
+                                             SupportsKeysAndGetItem)
 from omnipy.shared.protocols.data import HasContent
+from omnipy.shared.protocols.typing import IsMapping
 from omnipy.shared.typing import TYPE_CHECKING
 import omnipy.util._pydantic as pyd
 from omnipy.util.helpers import first_key_in_mapping
@@ -26,6 +32,9 @@ from ..json.typedefs import JsonScalar
 from ..raw.models import (SplitLinesToColumnsByCommaModel,
                           SplitLinesToColumnsModel,
                           SplitToLinesModel)
+
+if TYPE_CHECKING:
+    from omnipy.data.model import PlainModel
 
 
 class IterRow(Mapping[str, JsonScalar]):
@@ -57,9 +66,11 @@ class PrintableTable:
 
 
 if TYPE_CHECKING:
-    from omnipy.data._mimic_models import RevertModelMimicTypingHack
 
-    class RowWiseTableModel(IsList[list[JsonScalar]], Model[list[list[JsonScalar]]]):
+    class RowWiseTableModel(
+            PlainModel[list[list[JsonScalar]]],
+            IsListOfListsContent[list[JsonScalar], JsonScalar],
+    ):
         ...
 
 else:
@@ -103,9 +114,8 @@ if TYPE_CHECKING:
 
     class RowWiseTableWithColNamesModel(
             _RowWiseColNamesMixin,
-            RevertModelMimicTypingHack['RowWiseTableWithColNamesModel'],
-            IsList[dict[str, JsonScalar]],
-            Model[list[dict[str, JsonScalar]]],
+            PlainModel[list[dict[str, JsonScalar]]],
+            IsListOfDictsContent[IsMapping[str, JsonScalar], str, JsonScalar],
             PrintableTable,
     ):
         ...
@@ -123,8 +133,17 @@ class RowWiseTableWithColNamesNoConvertModel(Model[list[dict[str, JsonScalar]]])
     ...
 
 
-class ColumnWiseTableWithColNamesAndIndexModel(Model[dict[str, dict[str, JsonScalar]]]):
-    ...
+if TYPE_CHECKING:
+
+    class ColumnWiseTableWithColNamesAndIndexModel(
+            PlainModel[dict[str, dict[str, JsonScalar]]],
+            IsDictOfDictsContent[str, IsMapping[str, JsonScalar], str, JsonScalar],
+    ):
+        ...
+else:
+
+    class ColumnWiseTableWithColNamesAndIndexModel(Model[dict[str, dict[str, JsonScalar]]]):
+        ...
 
 
 class _IsColumnWiseTableWithColNames(HasContent, Sized, SupportsKeysAndGetItem, Protocol):
@@ -260,9 +279,8 @@ if TYPE_CHECKING:
 
     class ColumnWiseTableWithColNamesModel(  # type: ignore[misc]
             _ColumnWiseTableWithColNamesMixin,
-            RevertModelMimicTypingHack['ColumnWiseTableWithColNamesModel'],
-            IsDict[str, list[JsonScalar]],
-            Model[dict[str, list[JsonScalar]]],
+            PlainModel[dict[str, list[JsonScalar]]],
+            IsDictOfListsContent[str, list[JsonScalar], JsonScalar],
             PrintableTable,
     ):
         ...
@@ -328,9 +346,8 @@ if TYPE_CHECKING:
 
     class RowWiseTableFirstRowAsColNamesModel(
             _RowWiseColNamesMixin,
-            RevertModelMimicTypingHack['RowWiseTableFirstRowAsColNamesModel'],
-            IsList[dict[str, JsonScalar]],
-            Model[list[dict[str, JsonScalar]]],
+            PlainModel[list[dict[str, JsonScalar]]],
+            IsListOfDictsContent[IsMapping[str, JsonScalar], str, JsonScalar],
             PrintableTable,
     ):
         ...
@@ -427,7 +444,7 @@ class PydanticRecordModelBase(
 
     @override
     @classmethod
-    def _parse_data(  # pyright: ignore [reportIncompatibleMethodOverride]
+    def _parse_data(  # type: ignore[override]
         cls,
         data: _DataWithColNamesModelT | _DataWithoutColNamesModelT,
     ) -> pyd.BaseModel | _DataWithColNamesModelT:
@@ -451,141 +468,167 @@ class PydanticRecordModelBase(
             return pyd_model(**dict(zip(header_names, data)))
 
 
-class PydanticRecordModel(
-        PydanticRecordModelBase[
-            _PydBaseModelT,
-            dict[str, JsonScalar],
-            list[JsonScalar],
-        ],
-        Generic[_PydBaseModelT],
-):
-    @override
-    @classmethod
-    def _validate_record_model_with_col_names(
-        cls,
-        pyd_model: type[pyd.BaseModel],
-        data: dict[str, JsonScalar],
-        header_names: tuple[str, ...],
-    ) -> pyd.BaseModel | dict[str, JsonScalar]:
-        return pyd_model(**data)
+if TYPE_CHECKING:
 
-    @override
-    @classmethod
-    def _validate_record_model_without_col_names(
-        cls,
-        pyd_model: type[pyd.BaseModel],
-        data: list[JsonScalar],
-        header_names: tuple[str, ...],
-    ) -> pyd.BaseModel | dict[str, JsonScalar]:
-        return pyd_model(**dict(zip(header_names, data)))
-
-
-class IteratingPydanticRecordsModel(
-        PydanticRecordModelBase[
-            _PydBaseModelT,
-            ColumnWiseTableWithColNamesModel,
-            RowWiseTableModel,
-        ],
-        Generic[_PydBaseModelT],
-):
-    @classmethod
-    def _validate_over_all_rows(
-        cls,
-        input_model: ColumnWiseTableWithColNamesModel | RowWiseTableModel,
-        output_model: ColumnWiseTableWithColNamesModel,
-        pyd_model: type[pyd.BaseModel],
-        to_row_dict_func: Callable[[list[JsonScalar]], dict[str, JsonScalar]] | None = None,
+    class PydanticRecordModel(
+            Model[_PydBaseModelT],
+            Generic[_PydBaseModelT],
     ):
-        def _init_col(
-                content: dict[str, list[JsonScalar]],
-                pyd_model: type[pyd.BaseModel],
-                key: str,
-                col_len: int = len(input_model),
-        ) -> None:
-            content[key] = [pyd_model.__fields__[key].get_default()] * col_len
+        ...
 
-        content = output_model.content
-        for key, field in pyd_model.__fields__.items():
-            if field.required and key not in content:
-                _init_col(content, pyd_model, key)
+else:
 
-        for i, row in enumerate(input_model):
-            values, _fields_set, error = pyd.validate_model(
-                pyd_model,
-                to_row_dict_func(row) if to_row_dict_func else row,  # pyright: ignore
-            )
-            if error:
-                raise error
-            for key, val in values.items():
-                if key not in content:
+    class PydanticRecordModel(
+            PydanticRecordModelBase[
+                _PydBaseModelT,
+                dict[str, JsonScalar],
+                list[JsonScalar],
+            ],
+            Generic[_PydBaseModelT],
+    ):
+        @override
+        @classmethod
+        def _validate_record_model_with_col_names(
+            cls,
+            pyd_model: type[pyd.BaseModel],
+            data: dict[str, JsonScalar],
+            header_names: tuple[str, ...],
+        ) -> pyd.BaseModel | dict[str, JsonScalar]:
+            return pyd_model(**data)
+
+        @override
+        @classmethod
+        def _validate_record_model_without_col_names(
+            cls,
+            pyd_model: type[pyd.BaseModel],
+            data: list[JsonScalar],
+            header_names: tuple[str, ...],
+        ) -> pyd.BaseModel | dict[str, JsonScalar]:
+            return pyd_model(**dict(zip(header_names, data)))
+
+
+if TYPE_CHECKING:  # noqa: C901
+
+    class IteratingPydanticRecordsModel(
+            Model[ColumnWiseTableWithColNamesModel],
+            Generic[_PydBaseModelT],
+    ):
+        ...
+
+else:
+
+    class IteratingPydanticRecordsModel(
+            PydanticRecordModelBase[
+                _PydBaseModelT,
+                ColumnWiseTableWithColNamesModel,
+                RowWiseTableModel,
+            ],
+            Generic[_PydBaseModelT],
+    ):
+        @classmethod
+        def _validate_over_all_rows(
+            cls,
+            input_model: ColumnWiseTableWithColNamesModel | RowWiseTableModel,
+            output_model: ColumnWiseTableWithColNamesModel,
+            pyd_model: type[pyd.BaseModel],
+            to_row_dict_func: Callable[[list[JsonScalar]], dict[str, JsonScalar]] | None = None,
+        ):
+            def _init_col(
+                    content: dict[str, list[JsonScalar]],
+                    pyd_model: type[pyd.BaseModel],
+                    key: str,
+                    col_len: int = len(input_model),
+            ) -> None:
+                content[key] = [pyd_model.__fields__[key].get_default()] * col_len
+
+            content = output_model.content
+            for key, field in pyd_model.__fields__.items():
+                if field.required and key not in content:
                     _init_col(content, pyd_model, key)
 
-                content[key][i] = val
+            for i, row in enumerate(input_model):
+                values, _fields_set, error = pyd.validate_model(
+                    pyd_model,
+                    to_row_dict_func(row) if to_row_dict_func else row,
+                )
+                if error:
+                    raise error
+                for key, val in values.items():
+                    if key not in content:
+                        _init_col(content, pyd_model, key)
 
-    @override
-    @classmethod
-    def _validate_record_model_with_col_names(
-        cls,
-        pyd_model: type[pyd.BaseModel],
-        data: ColumnWiseTableWithColNamesModel,
-        header_names: tuple[str, ...],
-    ) -> pyd.BaseModel | ColumnWiseTableWithColNamesModel:
-        cls._validate_over_all_rows(input_model=data, output_model=data, pyd_model=pyd_model)
-        return data
+                    content[key][i] = val
 
-    @override
-    @classmethod
-    def _validate_record_model_without_col_names(
-        cls,
-        pyd_model: type[pyd.BaseModel],
-        data: RowWiseTableModel,
-        header_names: tuple[str, ...],
-    ) -> pyd.BaseModel | ColumnWiseTableWithColNamesModel:
-        output = ColumnWiseTableWithColNamesModel()
-        cls._validate_over_all_rows(
-            input_model=data,
-            output_model=output,
-            pyd_model=pyd_model,
-            to_row_dict_func=lambda row: dict(zip(header_names, row)),
-        )
-        return output
+        @override
+        @classmethod
+        def _validate_record_model_with_col_names(
+            cls,
+            pyd_model: type[pyd.BaseModel],
+            data: ColumnWiseTableWithColNamesModel,
+            header_names: tuple[str, ...],
+        ) -> pyd.BaseModel | ColumnWiseTableWithColNamesModel:
+            cls._validate_over_all_rows(input_model=data, output_model=data, pyd_model=pyd_model)
+            return data
+
+        @override
+        @classmethod
+        def _validate_record_model_without_col_names(
+            cls,
+            pyd_model: type[pyd.BaseModel],
+            data: RowWiseTableModel,
+            header_names: tuple[str, ...],
+        ) -> pyd.BaseModel | ColumnWiseTableWithColNamesModel:
+            output = ColumnWiseTableWithColNamesModel()
+            cls._validate_over_all_rows(
+                input_model=data,
+                output_model=output,
+                pyd_model=pyd_model,
+                to_row_dict_func=lambda row: dict(zip(header_names, row)),
+            )
+            return output
 
 
 # read header line as param, somehow?
 
 if TYPE_CHECKING:
-    from omnipy.data._mimic_models import Model_list
 
-    class TableOfPydanticRecordsModel(RevertModelMimicTypingHack['TableOfPydanticRecordsModel'],
-                                      Model_list[PydanticRecordModel[_PydRecordT]],
-                                      PrintableTable,
-                                      Generic[_PydRecordT]):
+    class TableOfPydanticRecordsModel(
+            PlainModel[list[PydanticRecordModel[_PydRecordT]]],
+            IsListContent[PydanticRecordModel[_PydRecordT]],
+            PrintableTable,
+            Generic[_PydRecordT],
+    ):
         ...
 else:
 
-    class TableOfPydanticRecordsModel(Chain3[SplitToLinesModel,
-                                             SplitLinesToColumnsModel,
-                                             Model[list[PydanticRecordModel[_PydRecordT]]]],
-                                      PrintableTable,
-                                      Generic[_PydRecordT]):
+    class TableOfPydanticRecordsModel(
+            Chain3[SplitToLinesModel,
+                   SplitLinesToColumnsModel,
+                   Model[list[PydanticRecordModel[_PydRecordT]]]],
+            PrintableTable,
+            Generic[_PydRecordT],
+    ):
         ...
 
 
 if TYPE_CHECKING:
 
     class CsvTableOfPydanticRecordsModel(
-            RevertModelMimicTypingHack['CsvTableOfPydanticRecordsModel'],
-            Model_list[PydanticRecordModel[_PydRecordT]],
+            PlainModel[list[PydanticRecordModel[_PydRecordT]]],
+            IsListContent[PydanticRecordModel[_PydRecordT]],
             PrintableTable,
-            Generic[_PydRecordT]):
+            Generic[_PydRecordT],
+    ):
         ...
 else:
 
-    class CsvTableOfPydanticRecordsModel(Chain3[SplitToLinesModel,
-                                                SplitLinesToColumnsByCommaModel,
-                                                Model[list[PydanticRecordModel[_PydRecordT]]]],
-                                         PrintableTable,
-                                         Generic[_PydRecordT]):
+    class CsvTableOfPydanticRecordsModel(
+            Chain3[SplitToLinesModel,
+                   SplitLinesToColumnsByCommaModel,
+                   Model[list[PydanticRecordModel[_PydRecordT]]]],
+            PrintableTable,
+            Generic[_PydRecordT],
+    ):
         ...
 
 
@@ -596,8 +639,7 @@ else:
 if TYPE_CHECKING:
 
     class TsvTableModel(
-            RevertModelMimicTypingHack['TsvTableModel'],
-            Model_list[list[str]],
+            RowWiseTableFirstRowAsColNamesModel,
             PrintableTable,
     ):
         ...
@@ -617,8 +659,7 @@ else:
 if TYPE_CHECKING:
 
     class CsvTableModel(
-            RevertModelMimicTypingHack['CsvTableModel'],
-            Model_list[list[str]],
+            RowWiseTableFirstRowAsColNamesModel,
             PrintableTable,
     ):
         ...
@@ -635,5 +676,11 @@ else:
         ...
 
 
-class ColumnModel(Model[list[JsonScalar]]):
-    pass
+if TYPE_CHECKING:
+
+    class ColumnModel(PlainModel[list[JsonScalar]], IsListContent[JsonScalar]):
+        ...
+else:
+
+    class ColumnModel(Model[list[JsonScalar]]):
+        ...

@@ -4,7 +4,15 @@ from typing_extensions import TypeVar
 
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
+from omnipy.shared.protocols.content import (IsBytesContent,
+                                             IsListContent,
+                                             IsListOfListsContent,
+                                             IsStrContent)
+from omnipy.shared.typing import TYPE_CHECKING
 import omnipy.util._pydantic as pyd
+
+if TYPE_CHECKING:
+    from omnipy.data.model import PlainModel
 
 
 class _EncodingParamsMixin:
@@ -13,13 +21,19 @@ class _EncodingParamsMixin:
         encoding: str = 'utf-8'
 
 
-class _BytesModel(Model[bytes | str], _EncodingParamsMixin):
-    @classmethod
-    def _parse_data(cls, data: bytes | str) -> bytes:
-        if isinstance(data, bytes):
-            return data
+if TYPE_CHECKING:
 
-        return data.encode(cls.Params.encoding)
+    class _BytesModel(PlainModel[bytes], IsBytesContent, _EncodingParamsMixin):
+        ...
+else:
+
+    class _BytesModel(Model[bytes | str], _EncodingParamsMixin):
+        @classmethod
+        def _parse_data(cls, data: bytes | str) -> bytes:
+            if isinstance(data, bytes):
+                return data
+
+            return data.encode(cls.Params.encoding)
 
 
 class BytesModel(_BytesModel):
@@ -29,21 +43,31 @@ class BytesModel(_BytesModel):
     )
 
 
-class StrictBytesModel(Model[pyd.StrictBytes]):
-    ...
+if TYPE_CHECKING:
+
+    class StrictBytesModel(PlainModel[bytes], IsBytesContent):
+        ...
+else:
+
+    class StrictBytesModel(Model[pyd.StrictBytes]):
+        ...
 
 
-class _StrModel(Model[str | bytes], _EncodingParamsMixin):
-    Params = _EncodingParamsMixin.Params
+if TYPE_CHECKING:
 
-    @classmethod
-    def _parse_data(cls, data: str | bytes) -> str:
-        if isinstance(data, str):
-            return data
+    class _StrModel(PlainModel[str], IsStrContent, _EncodingParamsMixin):
+        ...
+else:
 
-        return data.decode(cls.Params.encoding)
+    class _StrModel(Model[str | bytes], _EncodingParamsMixin):
+        Params = _EncodingParamsMixin.Params
 
-    ...
+        @classmethod
+        def _parse_data(cls, data: str | bytes) -> str:
+            if isinstance(data, str):
+                return data
+
+            return data.decode(cls.Params.encoding)
 
 
 class StrModel(_StrModel):
@@ -53,8 +77,14 @@ class StrModel(_StrModel):
     )
 
 
-class StrictStrModel(Model[pyd.StrictStr]):
-    ...
+if TYPE_CHECKING:
+
+    class StrictStrModel(PlainModel[str], IsStrContent):
+        ...
+else:
+
+    class StrictStrModel(Model[pyd.StrictStr]):
+        ...
 
 
 # Protocols for split mixins
@@ -111,64 +141,80 @@ class _SplitByNewlineParamsMixin:
 
 # Split models
 
+if TYPE_CHECKING:
 
-class _SplitToItemsModel(Model[list[str] | str]):
-    @classmethod
-    def _parse_data(cls: type[_HasSplitParams], data: list[str] | str) -> list[str]:
-        if isinstance(data, list):
-            return data
+    class SplitToItemsModelBase(PlainModel[list[str]], IsListContent[str]):
+        ...
 
-        return _split_line(cls, data)
+else:
+
+    class SplitToItemsModelBase(Model[list[str] | str]):
+        @classmethod
+        def _parse_data(cls: type[_HasSplitParams], data: list[str] | str) -> list[str]:
+            if isinstance(data, list):
+                return data
+
+            return _split_line(cls, data)
 
 
-class SplitToItemsModel(_SplitByCommaParamsMixin, _SplitToItemsModel):
+class SplitToItemsModel(_SplitByCommaParamsMixin, SplitToItemsModelBase):
     adjust = bind_adjust_model_func(
-        _SplitToItemsModel.clone_model_cls,
+        SplitToItemsModelBase.clone_model_cls,
         _SplitByCommaParamsMixin.Params,
     )
 
 
-class SplitToItemsByTabModel(_SplitByTabParamsMixin, _SplitToItemsModel):
+class SplitToItemsByTabModel(_SplitByTabParamsMixin, SplitToItemsModelBase):
     adjust = bind_adjust_model_func(
-        _SplitToItemsModel.clone_model_cls,
+        SplitToItemsModelBase.clone_model_cls,
         _SplitByTabParamsMixin.Params,
     )
 
 
-class SplitToLinesModel(_SplitByNewlineParamsMixin, _SplitToItemsModel):
+class SplitToLinesModel(_SplitByNewlineParamsMixin, SplitToItemsModelBase):
     adjust = bind_adjust_model_func(
-        _SplitToItemsModel.clone_model_cls,
+        SplitToItemsModelBase.clone_model_cls,
         _SplitByNewlineParamsMixin.Params,
     )
 
 
-class _SplitItemsToSubitemsModel(Model[list[list[str]] | list[str] | list[StrModel]]):
-    @classmethod
-    def _parse_data(cls: type[_HasSplitParams],
-                    data: list[list[str]] | list[str] | list[StrModel]) -> list[list[str]]:
-        if isinstance(data, list) and (len(data) == 0 or isinstance(data[0], list)):
-            return cast(list[list[str]], data)
+if TYPE_CHECKING:
 
-        return [_split_line(cls, cast(str, line)) for line in data]
+    class SplitItemsToSubitemsModelBase(
+            PlainModel[list[list[str]]],
+            IsListOfListsContent[list[str], str],
+    ):
+        ...
+
+else:
+
+    class SplitItemsToSubitemsModelBase(Model[list[list[str]] | list[str] | list[StrModel]]):
+        @classmethod
+        def _parse_data(cls: type[_HasSplitParams],
+                        data: list[list[str]] | list[str] | list[StrModel]) -> list[list[str]]:
+            if isinstance(data, list) and (len(data) == 0 or isinstance(data[0], list)):
+                return cast(list[list[str]], data)
+
+            return [_split_line(cls, cast(str, line)) for line in data]
 
 
-class SplitItemsToSubitemsModel(_SplitByCommaParamsMixin, _SplitItemsToSubitemsModel):
+class SplitItemsToSubitemsModel(_SplitByCommaParamsMixin, SplitItemsToSubitemsModelBase):
     adjust = bind_adjust_model_func(
-        _SplitItemsToSubitemsModel.clone_model_cls,
+        SplitItemsToSubitemsModelBase.clone_model_cls,
         _SplitByCommaParamsMixin.Params,
     )
 
 
-class SplitLinesToColumnsModel(_SplitByTabParamsMixin, _SplitItemsToSubitemsModel):
+class SplitLinesToColumnsModel(_SplitByTabParamsMixin, SplitItemsToSubitemsModelBase):
     adjust = bind_adjust_model_func(
-        _SplitItemsToSubitemsModel.clone_model_cls,
+        SplitItemsToSubitemsModelBase.clone_model_cls,
         _SplitByTabParamsMixin.Params,
     )
 
 
-class SplitLinesToColumnsByCommaModel(_SplitByCommaParamsMixin, _SplitItemsToSubitemsModel):
+class SplitLinesToColumnsByCommaModel(_SplitByCommaParamsMixin, SplitItemsToSubitemsModelBase):
     adjust = bind_adjust_model_func(
-        _SplitItemsToSubitemsModel.clone_model_cls,
+        SplitItemsToSubitemsModelBase.clone_model_cls,
         _SplitByCommaParamsMixin.Params,
     )
 
@@ -211,58 +257,69 @@ class _JoinByNewlineParamsMixin:
 
 # Join models
 
+if TYPE_CHECKING:
 
-class _JoinItemsModel(Model[str | list[str]]):
-    @classmethod
-    def _parse_data(cls: type[_HasJoinParams], data: str | list[str]) -> str:
-        if isinstance(data, str):
-            return data
+    class JoinItemsModelBase(PlainModel[str], IsStrContent):
+        ...
 
-        return _join_items(cls, data)
+else:
 
-    ...
+    class JoinItemsModelBase(Model[str | list[str]]):
+        @classmethod
+        def _parse_data(cls: type[_HasJoinParams], data: str | list[str]) -> str:
+            if isinstance(data, str):
+                return data
+
+            return _join_items(cls, data)
 
 
-class JoinItemsModel(_JoinByCommaParamsMixin, _JoinItemsModel):
+class JoinItemsModel(_JoinByCommaParamsMixin, JoinItemsModelBase):
     adjust = bind_adjust_model_func(
-        _JoinItemsModel.clone_model_cls,
+        JoinItemsModelBase.clone_model_cls,
         _JoinByCommaParamsMixin.Params,
     )
 
 
-class JoinLinesModel(_JoinByNewlineParamsMixin, _JoinItemsModel):
+class JoinLinesModel(_JoinByNewlineParamsMixin, JoinItemsModelBase):
     adjust = bind_adjust_model_func(
-        _JoinItemsModel.clone_model_cls,
+        JoinItemsModelBase.clone_model_cls,
         _JoinByNewlineParamsMixin.Params,
     )
 
 
-class _JoinSubitemsToItemsModel(Model[list[str] | list[list[str]]]):
-    @classmethod
-    def _parse_data(cls: type[_HasJoinParams], data: list[str] | list[list[str]]) -> list[str]:
-        if isinstance(data, list) and (len(data) == 0 or not isinstance(data[0], list)):
-            return cast(list[str], data)
+if TYPE_CHECKING:
 
-        return [_join_items(cls, cast(list[str], cols)) for cols in data]
+    class JoinSubitemsToItemsModelBase(PlainModel[list[str]], IsListContent[str]):
+        ...
+
+else:
+
+    class JoinSubitemsToItemsModelBase(Model[list[str] | list[list[str]]]):
+        @classmethod
+        def _parse_data(cls: type[_HasJoinParams], data: list[str] | list[list[str]]) -> list[str]:
+            if isinstance(data, list) and (len(data) == 0 or not isinstance(data[0], list)):
+                return cast(list[str], data)
+
+            return [_join_items(cls, cast(list[str], cols)) for cols in data]
 
 
-class JoinSubitemsToItemsModel(_JoinByCommaParamsMixin, _JoinSubitemsToItemsModel):
+class JoinSubitemsToItemsModel(_JoinByCommaParamsMixin, JoinSubitemsToItemsModelBase):
     adjust = bind_adjust_model_func(
-        _JoinSubitemsToItemsModel.clone_model_cls,
+        JoinSubitemsToItemsModelBase.clone_model_cls,
         _JoinByCommaParamsMixin.Params,
     )
 
 
-class JoinColumnsToLinesModel(_JoinByTabParamsMixin, _JoinSubitemsToItemsModel):
+class JoinColumnsToLinesModel(_JoinByTabParamsMixin, JoinSubitemsToItemsModelBase):
     adjust = bind_adjust_model_func(
-        _JoinSubitemsToItemsModel.clone_model_cls,
+        JoinSubitemsToItemsModelBase.clone_model_cls,
         _JoinByTabParamsMixin.Params,
     )
 
 
-class JoinColumnsByCommaToLinesModel(_JoinByCommaParamsMixin, _JoinSubitemsToItemsModel):
+class JoinColumnsByCommaToLinesModel(_JoinByCommaParamsMixin, JoinSubitemsToItemsModelBase):
     adjust = bind_adjust_model_func(
-        _JoinSubitemsToItemsModel.clone_model_cls,
+        JoinSubitemsToItemsModelBase.clone_model_cls,
         _JoinByCommaParamsMixin.Params,
     )
 
@@ -270,10 +327,21 @@ class JoinColumnsByCommaToLinesModel(_JoinByCommaParamsMixin, _JoinSubitemsToIte
 _NestedListsAndStrsWithModelsT = TypeVar(
     '_NestedListsAndStrsWithModelsT', bound='NestedListsAndStrsWithModels', default='str')
 
+if TYPE_CHECKING:
 
-class ListOfNestedListsAndStrsModel(Model[list[_NestedListsAndStrsWithModelsT]],
-                                    Generic[_NestedListsAndStrsWithModelsT]):
-    ...
+    class ListOfNestedListsAndStrsModel(
+            PlainModel[list[_NestedListsAndStrsWithModelsT]],
+            IsListContent[_NestedListsAndStrsWithModelsT],
+            Generic[_NestedListsAndStrsWithModelsT],
+    ):
+        ...
+else:
+
+    class ListOfNestedListsAndStrsModel(
+            Model[list[_NestedListsAndStrsWithModelsT]],
+            Generic[_NestedListsAndStrsWithModelsT],
+    ):
+        ...
 
 
 NestedListsAndStrsWithModels: TypeAlias = str | ListOfNestedListsAndStrsModel
@@ -299,8 +367,7 @@ class _NestedItemsParamsMixin:
             data: NestedListsAndStrsWithModels,
             level: int = 0) -> list[str] | ListOfNestedListsAndStrsNoModels:
 
-        raw_data = cast(str | list[str | ListOfNestedListsAndStrsModel],
-                        data if isinstance(data, str) else data.content)
+        raw_data = data if isinstance(data, str) else data.content
 
         num_delimiters = len(cls.Params.delimiters)
 
@@ -311,7 +378,7 @@ class _NestedItemsParamsMixin:
             if num_delimiters == 0:
                 return [raw_data]
 
-            split_data = cast(str, raw_data).split(cls.Params.delimiters[level])
+            split_data = raw_data.split(cls.Params.delimiters[level])
         else:
             split_data = raw_data
 
@@ -338,22 +405,34 @@ class _NestedItemsParamsMixin:
                     (f'Data is nested higher than permitted by the number of delimiters in '
                      f'Params (={num_delimiters}).')
 
-            return cast(list[str], split_data)
+            return split_data
 
 
-class _NestedSplitToItemsModel(  # pyright: ignore [reportGeneralTypeIssues]
-        Model[list[_NestedListsAndStrsNoModelsT] | str],
-        Generic[_NestedListsAndStrsNoModelsT],
-        _NestedItemsParamsMixin,
-):
-    @classmethod
-    def _parse_data(
+if TYPE_CHECKING:
+
+    class _NestedSplitToItemsModel(
+            PlainModel[list[_NestedListsAndStrsNoModelsT]],
+            IsListContent[_NestedListsAndStrsNoModelsT],
+            Generic[_NestedListsAndStrsNoModelsT],
+            _NestedItemsParamsMixin,
+    ):
+        ...
+
+else:
+
+    class _NestedSplitToItemsModel(
+            Model[list[_NestedListsAndStrsNoModelsT] | str],
+            Generic[_NestedListsAndStrsNoModelsT],
+            _NestedItemsParamsMixin,
+    ):
+        @classmethod
+        def _parse_data(
             cls, data: list[_NestedListsAndStrsNoModelsT] | str
-    ) -> list[_NestedListsAndStrsNoModelsT] | str:
-        str_parsed_data = Model[NestedListsAndStrsWithModels](data).content
-        return cls._split_data_according_to_delimiters(
-            str_parsed_data,  # type: ignore[return-value]
-        )
+        ) -> list[_NestedListsAndStrsNoModelsT] | str:
+            str_parsed_data = Model[NestedListsAndStrsWithModels](data).content
+            return cls._split_data_according_to_delimiters(
+                str_parsed_data,  # type: ignore[return-value]
+            )
 
 
 class NestedSplitToItemsModel(_NestedSplitToItemsModel):
@@ -364,39 +443,51 @@ class NestedSplitToItemsModel(_NestedSplitToItemsModel):
     )
 
 
-class _NestedJoinItemsModel(Model[str | list[_NestedListsAndStrsNoModelsT]],
-                            Generic[_NestedListsAndStrsNoModelsT],
-                            _NestedItemsParamsMixin):
-    @classmethod
-    def _join_data_according_to_delimiters(cls,
-                                           data: str | list[_NestedListsAndStrsNoModelsT],
-                                           level: int = 0) -> str:
-        if isinstance(data, str):
-            return data
+if TYPE_CHECKING:
 
-        num_delimiters = len(cls.Params.delimiters)
-        next_level = level + 1
-        raw_data: list[str]
-        if num_delimiters > next_level:
-            raw_data = [
-                cls._join_data_according_to_delimiters(
-                    cast(str | list[_NestedListsAndStrsNoModelsT], item), level=next_level)
-                for item in data
-            ]
-        else:
-            raw_data = cast(list[str], data)
+    class _NestedJoinItemsModel(
+            PlainModel[str],
+            IsStrContent,
+            Generic[_NestedListsAndStrsNoModelsT],
+            _NestedItemsParamsMixin,
+    ):
+        ...
 
-        if num_delimiters == 0:
-            return ''.join(raw_data)
-        else:
-            return cls.Params.delimiters[level].join(raw_data)
+else:
 
-    @classmethod
-    def _parse_data(cls, data: str | list[_NestedListsAndStrsNoModelsT]) -> str:
-        str_parsed_data = Model[NestedListsAndStrsWithModels](data).content
-        return cls._join_data_according_to_delimiters(
-            cls._split_data_according_to_delimiters(str_parsed_data),  # type: ignore[arg-type]
-        )
+    class _NestedJoinItemsModel(Model[str | list[_NestedListsAndStrsNoModelsT]],
+                                Generic[_NestedListsAndStrsNoModelsT],
+                                _NestedItemsParamsMixin):
+        @classmethod
+        def _join_data_according_to_delimiters(cls,
+                                               data: str | list[_NestedListsAndStrsNoModelsT],
+                                               level: int = 0) -> str:
+            if isinstance(data, str):
+                return data
+
+            num_delimiters = len(cls.Params.delimiters)
+            next_level = level + 1
+            raw_data: list[str]
+            if num_delimiters > next_level:
+                raw_data = [
+                    cls._join_data_according_to_delimiters(
+                        cast(str | list[_NestedListsAndStrsNoModelsT], item), level=next_level)
+                    for item in data
+                ]
+            else:
+                raw_data = cast(list[str], data)
+
+            if num_delimiters == 0:
+                return ''.join(raw_data)
+            else:
+                return cls.Params.delimiters[level].join(raw_data)
+
+        @classmethod
+        def _parse_data(cls, data: str | list[_NestedListsAndStrsNoModelsT]) -> str:
+            str_parsed_data = Model[NestedListsAndStrsWithModels](data).content
+            return cls._join_data_according_to_delimiters(
+                cls._split_data_according_to_delimiters(str_parsed_data),  # type: ignore[arg-type]
+            )
 
 
 class NestedJoinItemsModel(_NestedJoinItemsModel):
@@ -409,28 +500,43 @@ class NestedJoinItemsModel(_NestedJoinItemsModel):
 # TODO: Make MatchItemsModel Generic. Generics are currently not supported by Parametrized Models.
 
 
-class _MatchItemsModel(Model[list[str]]):
+class _MatchItemsParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
         match_functions: tuple[Callable[[str], bool], ...] = ()
         invert_matches: bool = False
         match_all: bool = True
 
-    @classmethod
-    def _parse_data(cls, data: list[str]) -> list[str]:
-        match_functions = cls.Params.match_functions
-        invert_matches = cls.Params.invert_matches
 
-        if len(match_functions) == 0:
-            return data
+if TYPE_CHECKING:
 
-        logic_operator = all if cls.Params.match_all else any
+    class _MatchItemsModel(
+            PlainModel[list[str]],
+            IsListContent[str],
+            _MatchItemsParamsMixin,
+    ):
+        ...
+else:
 
-        return [
-            item for item in data
-            if (logic_operator(match_func(item) for match_func in match_functions) is True)
-            ^ invert_matches
-        ]
+    class _MatchItemsModel(
+            Model[list[str]],
+            _MatchItemsParamsMixin,
+    ):
+        @classmethod
+        def _parse_data(cls, data: list[str]) -> list[str]:
+            match_functions = cls.Params.match_functions
+            invert_matches = cls.Params.invert_matches
+
+            if len(match_functions) == 0:
+                return data
+
+            logic_operator = all if cls.Params.match_all else any
+
+            return [
+                item for item in data
+                if (logic_operator(match_func(item) for match_func in match_functions) is True)
+                ^ invert_matches
+            ]
 
 
 class MatchItemsModel(_MatchItemsModel):

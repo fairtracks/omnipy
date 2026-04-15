@@ -13,7 +13,8 @@ from .datasets import (JsonDataset,
                        JsonListDataset,
                        JsonListOfDictsDataset,
                        JsonListOfDictsOfScalarsDataset)
-from .typedefs import (JsonDict,
+from .typedefs import (Json,
+                       JsonDict,
                        JsonDictOfListsOfDicts,
                        JsonDictOfScalars,
                        JsonList,
@@ -40,13 +41,14 @@ def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> J
 
             if not obj_or_model_content_isinstance(val, list):
                 val = [val]
-
             for item_index, val_item in enumerate(val):
                 if obj_or_model_content_isinstance(val_item, dict):
-                    output_dataset[key].append(
-                        {id_key: f'{name}_{item_index}' if item_index > 0 else name})
+                    val_dict: dict[str, Json] = {
+                        id_key: f'{name}_{item_index}' if item_index > 0 else name
+                    }
                     assert id_key not in val_item
-                    output_dataset[key][-1] |= val_item
+                    val_dict |= val_item
+                    output_dataset[key].append(val_dict)
                 else:
                     output_dataset[key].append(val_item)
 

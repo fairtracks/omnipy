@@ -111,21 +111,23 @@ def test_split_to_and_join_lines_model(
 
     lines_stripped = SplitToLinesModel(data)
     assert_model_if_dyn_conv_else_val(
-        lines_stripped[0],  # type: ignore[index]
+        lines_stripped[0],
         str,
-        'Alas, poor Yorick! I knew him, Horatio: a fellow')
+        'Alas, poor Yorick! I knew him, Horatio: a fellow',
+    )
 
     SplitToLinesNoStripModel = SplitToLinesModel.adjust('SplitToLinesNoStripModel', strip=False)
 
     lines_unstripped = SplitToLinesNoStripModel(data)
-    assert_model_if_dyn_conv_else_val(lines_unstripped[0], str, '        \r')  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(lines_unstripped[0], str, '        \r')
     assert_model_if_dyn_conv_else_val(
-        lines_unstripped[1],  # type: ignore[index]
+        lines_unstripped[1],
         str,
-        '        Alas, poor Yorick! I knew him, Horatio: a fellow\r')
-    assert_model_if_dyn_conv_else_val(lines_unstripped[-1], str, '        ')  # type: ignore[index]
+        '        Alas, poor Yorick! I knew him, Horatio: a fellow\r',
+    )
+    assert_model_if_dyn_conv_else_val(lines_unstripped[-1], str, '        ')
 
-    last_lines = lines_stripped[3:]  # type: ignore[index]
+    last_lines = lines_stripped[3:]
     assert last_lines[0:2].content == [
         'abhorred in my imagination it is! my gorge rises at',
         'it. Here hung those lips that I have kissed I know'
@@ -141,7 +143,7 @@ def test_split_to_and_join_lines_model(
     assert joined_lines[:joined_lines.index(' ')].content == 'abhorred'  # type: ignore
 
     assert JoinLinesModel(SplitToLinesModel(data)).content == '\n'.join(
-        [line.strip() for line in data.strip().split('\n')])  # type: ignore[union-attr]
+        [line.strip() for line in data.strip().split('\n')])
 
     assert JoinLinesModel(SplitToLinesNoStripModel(data)).content == raw_data
 
@@ -168,7 +170,7 @@ def test_split_to_and_join_items_model(
     items_stripped_comma = SplitToItemsModel(data_comma)
     assert items_stripped_comma.content == ['abc', 'def', 'ghi', 'jkl']
     assert_model_if_dyn_conv_else_val(items_stripped_comma[1], str, 'def')  # type: ignore[index]
-    assert items_stripped_comma[-2:].content == ['ghi', 'jkl']  # type: ignore[index]
+    assert items_stripped_comma[-2:].content == ['ghi', 'jkl']
 
     SplitToItemsNoStripModel = SplitToItemsModel.adjust('SplitToItemsNoStripModel', strip=False)
 

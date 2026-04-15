@@ -59,8 +59,8 @@ def test_concat_chain2_model_with_to_data_conversion():
     stream = SplitCharsModel('abc') + SplitCharsToMyListModel('def')
     assert stream.to_data() == ['a', 'b', 'c', 'd', 'e', 'f']
 
-    stream = SplitCharsToMyListModel('abc') + SplitCharsModel('def')
-    assert stream.to_data() == ['a', 'b', 'c', 'd', 'e', 'f']
+    stream2 = SplitCharsToMyListModel('abc') + SplitCharsModel('def')
+    assert stream2.to_data() == ['a', 'b', 'c', 'd', 'e', 'f']
 
 
 def test_chain2_union_models():

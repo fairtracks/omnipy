@@ -8,23 +8,26 @@ from omnipy.data.param import bind_adjust_dataset_func
 from .models import (BytesModel,
                      JoinColumnsToLinesModel,
                      JoinItemsModel,
+                     JoinItemsModelBase,
                      JoinLinesModel,
-                     JoinSubitemsToItemsModel,
-                     SplitItemsToSubitemsModel,
+                     JoinSubitemsToItemsModelBase,
+                     SplitItemsToSubitemsModelBase,
                      SplitLinesToColumnsModel,
                      SplitToItemsModel,
+                     SplitToItemsModelBase,
                      SplitToLinesModel,
                      StrictBytesModel,
                      StrictStrModel,
                      StrModel)
 
-_BytesModelT = TypeVar('_BytesModelT', default=BytesModel)
-_StrModelT = TypeVar('_StrModelT', default=StrModel)
-_SplitToItemsModelT = TypeVar('_SplitToItemsModelT', default=SplitToItemsModel)
-_JoinItemsModelT = TypeVar('_JoinItemsModelT', default=JoinItemsModel)
+_BytesModelT = TypeVar('_BytesModelT', bound=BytesModel)
+_StrModelT = TypeVar('_StrModelT', bound=StrModel)
+_SplitToItemsModelT = TypeVar('_SplitToItemsModelT', bound=SplitToItemsModelBase)
+_JoinItemsModelT = TypeVar('_JoinItemsModelT', bound=JoinItemsModelBase)
 _SplitItemsToSubitemsModelT = TypeVar(
-    '_SplitItemsToSubitemsModelT', default=SplitItemsToSubitemsModel)
-_JoinSubitemsToItemsModelT = TypeVar('_JoinSubitemsToItemsModelT', default=JoinSubitemsToItemsModel)
+    '_SplitItemsToSubitemsModelT', bound=SplitItemsToSubitemsModelBase)
+_JoinSubitemsToItemsModelT = TypeVar(
+    '_JoinSubitemsToItemsModelT', bound=JoinSubitemsToItemsModelBase)
 
 
 class _BytesDataset(Dataset[_BytesModelT], Generic[_BytesModelT]):

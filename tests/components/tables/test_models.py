@@ -488,11 +488,16 @@ def RowWise_data_optional_last() -> Any:
 
 @pc.fixture
 def RowWise_records_assert(
-        RowWise_data: Annotated[Any, pc.fixture]) -> Callable[[TableOfPydanticRecordsModel], None]:
-    def _assert_func(table: TableOfPydanticRecordsModel) -> None:
+    RowWise_data: Annotated[Any,
+                            pc.fixture]) -> Callable[[RowWiseTableFirstRowAsColNamesModel], None]:
+    def _assert_func(table: RowWiseTableFirstRowAsColNamesModel) -> None:
         assert len(table) == 2
-        assert isinstance(table[0], dict)
-        assert isinstance(table[1], dict)
+
+        for row in table:
+            if table.config.model.dynamically_convert_elements_to_models:
+                assert is_model_instance(row) and isinstance(row.content, dict)
+            else:
+                assert isinstance(row, dict)
 
         assert table.to_data() == RowWise_data
 

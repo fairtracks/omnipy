@@ -24,79 +24,72 @@ AnyJsonTableType = (
     RowWiseTableModel | RowWiseTableWithColNamesModel
     | ColumnWiseTableWithColNamesAndIndexModel | ColumnWiseTableWithColNamesModel)
 
+if TYPE_CHECKING:  # noqa: C901
 
-class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], PrintableTable):
-    if TYPE_CHECKING:
+    class PandasModel(Model['pd.DataFrame'], pd.DataFrame):  # type: ignore[misc]
+        ...
 
-        def __new__(cls, *args: Any, **kwargs: Any) -> 'PandasModel_DataFrame':
-            ...
+else:
 
-    else:
-
+    class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], PrintableTable):
         def __new__(cls, *args: Any, **kwargs: Any) -> Self:
             from .lazy_import import pd
 
             cls.update_forward_refs(pd=pd, AnyJsonTableType=AnyJsonTableType)
             return super().__new__(cls, *args, **kwargs)
 
-    @classmethod
-    def _parse_data(
-        cls,
-        data: 'pd.DataFrame | pd.Series | AnyJsonTableType',
-    ) -> 'pd.DataFrame | pd.Series':
-        from .lazy_import import pd
+        @classmethod
+        def _parse_data(
+            cls,
+            data: 'pd.DataFrame | pd.Series | AnyJsonTableType',
+        ) -> 'pd.DataFrame | pd.Series':
+            from .lazy_import import pd
 
-        cls.update_forward_refs(pd=pd, AnyJsonTableType=AnyJsonTableType)
+            cls.update_forward_refs(pd=pd, AnyJsonTableType=AnyJsonTableType)
 
-        if isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
-            return data
+            if isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
+                return data
 
-        return cls._from_iterable(data)
+            return cls._from_iterable(data)
 
-    # @staticmethod
-    # def _data_column_names_are_strings(data: pd.DataFrame) -> None:
-    #     for column in data.columns:
-    #         assert isinstance(column, str)
+        # @staticmethod
+        # def _data_column_names_are_strings(data: pd.DataFrame) -> None:
+        #     for column in data.columns:
+        #         assert isinstance(column, str)
 
-    # @staticmethod
-    # def _data_not_empty_object(data: pd.DataFrame) -> None:
-    #     assert not any(data.isna().all(axis=1))
-    #
+        # @staticmethod
+        # def _data_not_empty_object(data: pd.DataFrame) -> None:
+        #     assert not any(data.isna().all(axis=1))
+        #
 
-    @classmethod
-    def _from_iterable(cls, data: Iterable) -> 'pd.DataFrame':
-        from .lazy_import import pd
-        return pd.DataFrame(data.content if is_model_instance(data) else data).convert_dtypes()
+        @classmethod
+        def _from_iterable(cls, data: Iterable) -> 'pd.DataFrame':
+            from .lazy_import import pd
+            return pd.DataFrame(data.content if is_model_instance(data) else data).convert_dtypes()
 
-    def to_data(self) -> Any:
-        from .lazy_import import pd
+        def to_data(self) -> Any:
+            from .lazy_import import pd
 
-        df = self.content.replace({pd.NA: None})
-        if isinstance(df, pd.DataFrame):
-            return df.to_dict(orient='records')
-        elif isinstance(df, pd.Series):
-            return df.to_dict()
+            df = self.content.replace({pd.NA: None})
+            if isinstance(df, pd.DataFrame):
+                return df.to_dict(orient='records')
+            elif isinstance(df, pd.Series):
+                return df.to_dict()
 
-    def from_data(self, data: Iterable) -> None:
-        self._validate_and_set_value(self._from_iterable(data))
+        def from_data(self, data: Iterable) -> None:
+            self._validate_and_set_value(self._from_iterable(data))
 
-    def from_json(self, json_content: str) -> None:
-        from .lazy_import import pd
+        def from_json(self, json_content: str) -> None:
+            from .lazy_import import pd
 
-        self._validate_and_set_value(pd.read_json(StringIO(json_content)).convert_dtypes())
+            self._validate_and_set_value(pd.read_json(StringIO(json_content)).convert_dtypes())
 
-    def to_json(self, pretty=True) -> str:
-        from .lazy_import import pd
+        def to_json(self, pretty=True) -> str:
+            from .lazy_import import pd
 
-        if isinstance(self.content, pd.DataFrame):
-            return self.content.to_json(orient='records')
-        elif isinstance(self.content, pd.Series):
-            return self.content.to_json()
-        else:
-            raise ShouldNotOccurException()
-
-
-if TYPE_CHECKING:
-
-    class PandasModel_DataFrame(PandasModel, pd.DataFrame):  # type: ignore[misc]
-        ...
+            if isinstance(self.content, pd.DataFrame):
+                return self.content.to_json(orient='records')
+            elif isinstance(self.content, pd.Series):
+                return self.content.to_json()
+            else:
+                raise ShouldNotOccurException()

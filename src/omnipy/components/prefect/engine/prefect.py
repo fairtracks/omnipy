@@ -36,7 +36,7 @@ class PrefectEngine(TaskRunnerEngine,
         from ..lazy_import import prefect_task, task_input_hash
 
         assert isinstance(self._config, PrefectEngineConfig)
-        task_kwargs = dict(
+        task_kwargs: dict[str, Any] = dict(
             name=task.name,
             cache_key_fn=task_input_hash if self._config.use_cached_results else None,
             cache_expiration=timedelta(days=1))
@@ -63,7 +63,7 @@ class PrefectEngine(TaskRunnerEngine,
         if task.in_flow_context:
             return _prefect_task(*args, **kwargs)
         else:
-            flow_kwargs = dict(name=task.name)
+            flow_kwargs: dict[str, Any] = dict(name=task.name)
 
             if task.has_coroutine_func():
 

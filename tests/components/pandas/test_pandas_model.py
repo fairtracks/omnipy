@@ -34,7 +34,7 @@ def dataframe_of_list_of_dicts_data() -> 'Annotated[pd.DataFrame, pytest.fixture
     bool_col = pd.Series([True, False, pd.NA], dtype='boolean')
     str_col = pd.Series(['abc', pd.NA, 'def'], dtype='string[python]')
     df = pd.concat([int_col, float_col, bool_col, str_col], axis=1)
-    df.columns = ('int', 'float', 'bool', 'str')  # type: ignore[assignment]
+    df.columns = ('int', 'float', 'bool', 'str')
     return df
 
 

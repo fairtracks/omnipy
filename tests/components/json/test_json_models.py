@@ -163,7 +163,7 @@ def test_error_dict_with_empty_list_known_issue(runtime: Annotated[IsRuntime, py
 
     with pytest.raises(ValidationError):
         # However, setting the value of a nested dict of dicts to [] should also fail
-        dict_of_dicts_model['a'] = []  # type: ignore[index]
+        dict_of_dicts_model['a'] = []
         assert dict_of_dicts_model.to_data() == {'a': {}}
 
 

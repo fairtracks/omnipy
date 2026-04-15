@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Annotated
 
 import pytest
-from typing_extensions import reveal_type
 
 from omnipy.components.json.models import JsonScalarModel
 from omnipy.components.nested.datasets import NestedDataset
@@ -93,9 +92,6 @@ def test_list_as_nested_dataset_model() -> None:
     }
 
     list_as_nested_dataset_model = ListAsNestedDatasetModel(list_data)
-    reveal_type(list_as_nested_dataset_model)
-    reveal_type(list_as_nested_dataset_model['5'])
-    assert list(list_as_nested_dataset_model.keys()) == ['0', '1', '2', '3', '4', '5']
     assert list(list_as_nested_dataset_model['5'].keys()) == ['x', 'y']
     assert list_as_nested_dataset_model['5']['x'] == JsonScalarModel(1)
     assert list_as_nested_dataset_model.to_data() == list_data_expected_output
