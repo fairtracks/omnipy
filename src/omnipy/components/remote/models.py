@@ -7,7 +7,7 @@ from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 import omnipy.util._pydantic as pyd
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 
-from ..json.models import AnyJsonModel, JsonModel
+from ..json.models import AnyJsonListOrDictModel, JsonListOrDictModel
 from ..raw.models import (NestedJoinItemsModel,
                           NestedSplitToItemsModel,
                           StrictBytesModel,
@@ -242,22 +242,22 @@ class ResponseContentPydModel(pyd.BaseModel):
 
 
 class AutoResponseContentModel(Model[ResponseContentPydModel | StrictBytesModel | StrictStrModel
-                                     | JsonModel]):
+                                     | JsonListOrDictModel]):
     class Config(Model.Config):
         smart_union = False
 
     @classmethod
     def _parse_data(  # type: ignore[override]
         cls,
-        data: ResponseContentPydModel | StrictBytesModel | StrictStrModel | AnyJsonModel
-    ) -> StrictBytesModel | StrictStrModel | AnyJsonModel:
+        data: ResponseContentPydModel | StrictBytesModel | StrictStrModel | AnyJsonListOrDictModel
+    ) -> StrictBytesModel | StrictStrModel | AnyJsonListOrDictModel:
         if isinstance(data, ResponseContentPydModel):
             assert isinstance(data.content_type, ModelFriendlyMimeType)
 
             mimetype_tuple = (data.content_type.type, data.content_type.subtype)
             match mimetype_tuple:
                 case ('application', 'json'):
-                    return JsonModel(data.response)
+                    return JsonListOrDictModel(data.response)
                 case ('text', 'plain'):
                     return StrictStrModel(data.response)
                 case ('application', 'octet-stream') | _:
