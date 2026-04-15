@@ -138,6 +138,8 @@ _SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
     '__complex__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     '__int__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     '__float__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    '__str__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    '__bytes__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     # - Used to implement operator.index() - always integer -----------------
     '__index__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     # - Rounding operations - mostly integers -------------------------------
@@ -148,6 +150,10 @@ _SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
     # - Hash and other standard methods ----------------------------------
     '__hash__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     '__delattr__': MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
+    # __format__ returns a str, which might sometimes match the model, but
+    # if e.g. `Model[str]` and `dynamically_convert_elements_to_models=True`
+    # we do not want to return a Model[str] object.
+    '__format__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
 }
 
 
