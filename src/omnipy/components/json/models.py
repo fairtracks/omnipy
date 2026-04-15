@@ -1,4 +1,4 @@
-from typing import Any, Generic, Mapping, overload, Sequence, Type, TypeAlias
+from typing import Any, cast, Generic, Mapping, overload, Sequence, Type, TypeAlias
 
 from typing_extensions import TypeVar
 
@@ -114,16 +114,17 @@ else:
 #       If updated, also update frozen models
 
 if TYPE_CHECKING:
-    _JsonAnyUnionContent: TypeAlias = (
-        JsonScalar
-        | _JsonAnyListM | Sequence['_JsonAnyUnionContent']
+    _JsonListOrDictContent: TypeAlias = (
+        _JsonAnyListM | Sequence['_JsonAnyUnionContent']
         | _JsonAnyDictM | Mapping[str, '_JsonAnyUnionContent'])
+    _JsonAnyUnionContent: TypeAlias = JsonScalar | _JsonListOrDictContent
     _JsonNestedListsContent: TypeAlias = Sequence['_JsonOnlyListsUnionContent']
     _JsonNestedDictsContent: TypeAlias = Mapping[str, '_JsonOnlyDictsUnionContent']
     _JsonOnlyListsUnionContent: TypeAlias = JsonScalar | _JsonNestedListsM | _JsonNestedListsContent
     _JsonOnlyDictsUnionContent: TypeAlias = JsonScalar | _JsonNestedDictsM | _JsonNestedDictsContent
 
 _JsonAnyUnion: TypeAlias = JsonScalar | _JsonAnyListM | _JsonAnyDictM
+_JsonListOfDictUnion: TypeAlias = _JsonAnyListM | _JsonAnyDictM
 _JsonOnlyListsUnion: TypeAlias = JsonScalar | _JsonNestedListsM
 _JsonOnlyDictsUnion: TypeAlias = JsonScalar | _JsonNestedDictsM
 
@@ -152,10 +153,33 @@ AnyJsonScalarModel: TypeAlias = Model[None] | Model[int] | Model[float] | Model[
 
 AnyJsonOnlyListsModel: TypeAlias = AnyJsonScalarModel | _JsonNestedListsM
 AnyJsonOnlyDictsModel: TypeAlias = AnyJsonScalarModel | _JsonNestedDictsM
-AnyJsonModel: TypeAlias = AnyJsonScalarModel | _JsonAnyListM | _JsonAnyDictM
+AnyJsonListOrDictModel: TypeAlias = _JsonAnyListM | _JsonAnyDictM
+AnyJsonModel: TypeAlias = AnyJsonScalarModel | AnyJsonListOrDictModel
+
+_RootT = TypeVar('_RootT')
 
 
-class JsonModel(Model[_JsonAnyUnion]):
+class ParseStrAsJsonMixin(Generic[_RootT]):
+    @classmethod
+    def start_chars_for_json_content(cls) -> str:
+        return '[{0123456789-tfn'  # not [{"0123456789-tfn'
+
+    @classmethod
+    def _parse_data(cls, data: Any) -> _RootT:
+        cls_as_model = cast(type[Model[_RootT]], cls)
+        if isinstance(data, str):
+            if len(data) > 0 and data[0] in cls.start_chars_for_json_content():
+                # Potentially a string representing JSON entities.
+                parsed_json = parse_str_as_json(data)
+                if not isinstance(parsed_json, pyd.UndefinedType):
+                    if isinstance(parsed_json, str):
+                        return cast(_RootT, parsed_json)
+                    return cls_as_model(parsed_json).content
+
+        return cast(_RootT, data)
+
+
+class JsonModel(ParseStrAsJsonMixin[_JsonAnyUnion], Model[_JsonAnyUnion]):
     """
     JsonModel is a general JSON model supporting any JSON content, any
     levels deep.
@@ -189,18 +213,6 @@ class JsonModel(Model[_JsonAnyUnion]):
         ...     print(str(e).splitlines()[0])
         34 validation errors for JsonModel
     """
-    @classmethod
-    def _parse_data(cls, data: _JsonAnyUnion) -> _JsonAnyUnion:
-        if isinstance(data, str):
-            if len(data) > 0 and data[0] in '[{0123456789-tfn':  # not [{"0123456789-tfn'
-                # Potentially a string representing JSON entities.
-                parsed_json = parse_str_as_json(data)
-                if not isinstance(parsed_json, pyd.UndefinedType):
-                    if isinstance(parsed_json, str):
-                        return parsed_json
-                    return cls(parsed_json).content
-
-        return data
 
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
@@ -233,6 +245,56 @@ class JsonModel(Model[_JsonAnyUnion]):
             ...
 
         def __new__(cls, value: _JsonAnyUnionContent | object) -> AnyJsonModel:
+            ...
+
+
+class JsonListOrDictModel(ParseStrAsJsonMixin[_JsonListOfDictUnion], Model[_JsonListOfDictUnion]):
+    """JsonListOrDictModel is a general JSON model supporting any JSON
+    content except scalar data.
+
+    Examples:
+        >>> my_json = JsonListOrDictModel([True, {'a': None, 'b': [1, 12.5, 'abc']}])
+        >>> my_json.to_data()
+        [True, {'a': None, 'b': [1, 12.5, 'abc']}]
+        >>> my_json.to_json()
+        '[true, {"a": null, "b": [1, 12.5, "abc"]}]'
+        >>> print(my_json.to_json(pretty=True))
+        [
+          true,
+          {
+            "a": null,
+            "b": [
+              1,
+              12.5,
+              "abc"
+            ]
+          }
+        ]
+        >>> try:
+        ...     my_json = JsonListOrDictModel(123)  # scalars not supported
+        ... except Exception as e:
+        ...     print(str(e).splitlines()[0])
+        34 validation errors for JsonListOrDictModel
+    """
+    @classmethod
+    def start_chars_for_json_content(cls) -> str:
+        return '[{'
+
+    if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
+
+        @overload
+        def __new__(cls, value: IsList | _JsonAnyListM) -> _JsonAnyListM:
+            ...
+
+        @overload
+        def __new__(cls, value: IsDict | _JsonAnyDictM) -> _JsonAnyDictM:
+            ...
+
+        @overload
+        def __new__(cls, value: IsStr | object) -> AnyJsonListOrDictModel:
+            ...
+
+        def __new__(cls, value: _JsonListOrDictContent | object) -> AnyJsonListOrDictModel:
             ...
 
 

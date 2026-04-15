@@ -18,6 +18,7 @@ from omnipy.components.json.datasets import (JsonDataset,
                                              JsonListOfListsOfScalarsDataset,
                                              JsonListOfNestedDictsDataset,
                                              JsonListOfScalarsDataset,
+                                             JsonListOrDictDataset,
                                              JsonNestedDictsDataset,
                                              JsonNestedListsDataset,
                                              JsonOnlyDictsDataset,
@@ -38,6 +39,7 @@ from omnipy.components.json.models import (JsonDictModel,
                                            JsonListOfListsOfScalarsModel,
                                            JsonListOfNestedDictsModel,
                                            JsonListOfScalarsModel,
+                                           JsonListOrDictModel,
                                            JsonModel,
                                            JsonNestedDictsModel,
                                            JsonNestedListsModel,
@@ -149,6 +151,33 @@ def case_json_dict() -> CaseInfo:
         prefix2model_classes={'d': (JsonDictModel,)},
         prefix2dataset_classes={'d': (JsonDictDataset,)},
         data_points=JsonDictDataPoints(),
+    )
+
+
+@pc.case(id='test_json_list_or_dict', tags=[])
+def case_json_list_or_dict() -> CaseInfo:
+    @dataclass
+    class JsonListOrDictDataPoints:
+        #
+        # JsonListOrDictModel
+        #
+
+        err_l_none: None = b_none
+        err_l_int: int = b_int
+        err_l_float: float = b_float
+        err_l_str: str = b_str
+        err_l_bool: bool = b_bool
+        l_list: list[JS] = field(default_factory=lambda: list(b_list))
+        l_dict: dict[str, JS] = field(default_factory=lambda: dict(b_dict))
+        l_tuple: tuple[JS, ...] = b_tuple  # Orig: err_l_tuple. Due to parsing to list
+        l_set: set[JS] = field(
+            default_factory=lambda: set(b_set))  # Orig: err_l_tuple. Due to parsing to list
+
+    return CaseInfo(
+        name='test_json_list_or_dict',
+        prefix2model_classes={'l': (JsonListOrDictModel,)},
+        prefix2dataset_classes={'l': (JsonListOrDictDataset,)},
+        data_points=JsonListOrDictDataPoints(),
     )
 
 

@@ -20,6 +20,7 @@ from .models import (JsonDictModel,
                      JsonListOfListsOfScalarsModel,
                      JsonListOfNestedDictsModel,
                      JsonListOfScalarsModel,
+                     JsonListOrDictModel,
                      JsonModel,
                      JsonNestedDictsModel,
                      JsonNestedListsModel,
@@ -36,6 +37,11 @@ class JsonBaseDataset(Dataset[_JsonModelT], Generic[_JsonModelT]):
 
 
 class JsonDataset(JsonBaseDataset[JsonModel]):
+    """"""
+    ...
+
+
+class JsonListOrDictDataset(JsonBaseDataset[JsonListOrDictModel]):
     """"""
     ...
 

@@ -9,7 +9,8 @@ from omnipy import (Dataset,
                     JsonNestedListsDataset,
                     Model)
 from omnipy.components.json.datasets import JsonListOfListsDataset
-from omnipy.components.json.models import (AnyJsonModel,
+from omnipy.components.json.models import (AnyJsonListOrDictModel,
+                                           AnyJsonModel,
                                            AnyJsonOnlyDictsModel,
                                            AnyJsonOnlyListsModel,
                                            AnyJsonScalarModel,
@@ -24,6 +25,7 @@ from omnipy.components.json.models import (AnyJsonModel,
                                            JsonListOfListsOfScalarsModel,
                                            JsonListOfNestedDictsModel,
                                            JsonListOfScalarsModel,
+                                           JsonListOrDictModel,
                                            JsonModel,
                                            JsonNestedListsModel,
                                            JsonOnlyDictsModel,
@@ -339,6 +341,22 @@ json_dict_model | {'asd': (4, 5)}
 json_dict_model | {'asd': 3}
 json_dict_model.aljsh()  # pyright: ignore[reportAttributeAccessIssue]
 reveal_type(json_dict_model['asd'])
+
+json_list_or_dict_model: AnyJsonListOrDictModel = JsonListOrDictModel({'sd': [123, 3]})
+reveal_type(json_list_or_dict_model)
+json_list_or_dict_model.update({'a': 5})
+reveal_type(json_list_or_dict_model['sd'])
+json_list_or_dict_model['sd']
+
+json_list_or_dict_model_list: AnyJsonListOrDictModel = JsonListOrDictModel([123, 3])
+reveal_type(json_list_or_dict_model_list)
+json_list_or_dict_model_list.append(234)
+reveal_type(json_list_or_dict_model_list[3])
+json_list_or_dict_model_list[3]
+
+json_list_or_dict_model_obj: AnyJsonListOrDictModel = JsonListOrDictModel(object())
+reveal_type(json_list_or_dict_model_obj)
+json_list_or_dict_model_obj.append(234)  # pyright: ignore[reportAttributeAccessIssue]
 
 json_dict_dataset: JsonDictDataset = JsonDictDataset(a={'asd': [1, 2, 3]})
 reveal_type(json_dict_dataset)
