@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 from .datasets import PandasDataset
 
 
-class PandasDatasetToTarFileSerializer(TarFileSerializer):
+class PandasDatasetToTarFileSerializer(TarFileSerializer[PandasDataset]):
     """"""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
@@ -26,18 +26,18 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer):
         return 'csv'
 
     @classmethod
-    def serialize(cls, pandas_dataset: PandasDataset) -> bytes | memoryview:
-        assert isinstance(pandas_dataset, PandasDataset)
+    def serialize(cls, dataset: PandasDataset) -> bytes | memoryview:
+        assert isinstance(dataset, PandasDataset)
 
         def pandas_encode_func(pandas_data: 'pd.DataFrame') -> memoryview:
             csv_bytes = BytesIO()
-            pandas_data.to_csv(csv_bytes, encoding='utf8', mode='b', index=False)
+            pandas_data.to_csv(csv_bytes, encoding='utf8', mode='wb', index=False)
             return csv_bytes.getbuffer()
 
-        return cls.create_tarfile_from_dataset(pandas_dataset, data_encode_func=pandas_encode_func)
+        return cls.create_tarfile_from_dataset(dataset, data_encode_func=pandas_encode_func)
 
     @classmethod
-    def deserialize(cls, tarfile_bytes: bytes, any_file_suffix=False) -> PandasDataset:
+    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> PandasDataset:
         pandas_dataset = PandasDataset()
 
         def csv_decode_func(file_stream: IO[bytes]) -> 'pd.DataFrame':
@@ -49,7 +49,7 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer):
 
         cls.create_dataset_from_tarfile(
             pandas_dataset,
-            tarfile_bytes,
+            serialized,
             data_decode_func=csv_decode_func,
             dictify_object_func=python_dictify_object,
             import_method='from_data',

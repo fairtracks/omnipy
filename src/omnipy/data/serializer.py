@@ -3,15 +3,19 @@ from io import BytesIO
 import os
 import tarfile
 from tarfile import TarInfo
-from typing import Any, Callable, cast, IO, Type
+from typing import Any, Callable, cast, Generic, IO, Type
+
+from typing_extensions import TypeVar
 
 from omnipy.shared.protocols.data import HasData, IsDataset, IsSerializer, IsTarFileSerializer
 from omnipy.shared.protocols.hub.log import CanLog
 from omnipy.util._pydantic import ValidationError
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 
+_DatasetT = TypeVar('_DatasetT', bound=IsDataset)
 
-class Serializer(ABC):
+
+class Serializer(ABC, Generic[_DatasetT]):
     """"""
     @classmethod
     @abstractmethod
@@ -20,7 +24,7 @@ class Serializer(ABC):
 
     @classmethod
     @abstractmethod
-    def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+    def get_dataset_cls_for_new(cls) -> type[IsDataset]:
         pass
 
     @classmethod
@@ -30,20 +34,20 @@ class Serializer(ABC):
 
     @classmethod
     @abstractmethod
-    def serialize(cls, dataset: IsDataset) -> bytes | memoryview:
+    def serialize(cls, dataset: _DatasetT) -> bytes | memoryview:
         pass
 
     @classmethod
     @abstractmethod
-    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> IsDataset:
+    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> _DatasetT:
         pass
 
 
-class TarFileSerializer(Serializer):
+class TarFileSerializer(Serializer[_DatasetT], Generic[_DatasetT]):
     """"""
     @classmethod
     def create_tarfile_from_dataset(cls,
-                                    dataset: IsDataset,
+                                    dataset: _DatasetT,
                                     data_encode_func: Callable[..., bytes | memoryview]) -> bytes:
         bytes_io = BytesIO()
         with tarfile.open(fileobj=bytes_io, mode='w:gz') as tarfile_stream:
@@ -57,7 +61,7 @@ class TarFileSerializer(Serializer):
 
     @classmethod
     def create_dataset_from_tarfile(cls,
-                                    dataset: IsDataset,
+                                    dataset: _DatasetT,
                                     tarfile_bytes: bytes,
                                     data_decode_func: Callable[[IO[bytes]], Any],
                                     dictify_object_func: Callable[[str, Any], dict | str],
@@ -122,7 +126,7 @@ class SerializerRegistry:
 
     @classmethod
     def _test_all_serializer_combos(
-        self,
+        cls,
         dataset: IsDataset,
         serializers: tuple[Type[IsSerializer], ...],
     ) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:

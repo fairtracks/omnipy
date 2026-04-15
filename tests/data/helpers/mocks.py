@@ -20,7 +20,7 @@ class NumberDataset(Dataset[Model[int]]):
     ...
 
 
-class MockNumberSerializer(Serializer):
+class MockNumberSerializer(Serializer[NumberDataset]):
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         return isinstance(dataset, NumberDataset)
@@ -34,19 +34,18 @@ class MockNumberSerializer(Serializer):
         return 'num'
 
     @classmethod
-    def serialize(cls, number_dataset: NumberDataset) -> bytes | memoryview:
-        return ','.join(
-            ':'.join([k, str(v.content)]) for (k, v) in number_dataset.items()).encode('utf8')
+    def serialize(cls, dataset: NumberDataset) -> bytes | memoryview:
+        return ','.join(':'.join([k, str(v.content)]) for (k, v) in dataset.items()).encode('utf8')
 
     @classmethod
-    def deserialize(cls, serialized_bytes: bytes, any_file_suffix=False) -> NumberDataset:
+    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> NumberDataset:
         number_dataset = NumberDataset()
-        for key, val in [_.split(':') for _ in serialized_bytes.decode('utf8').split(',')]:
+        for key, val in [_.split(':') for _ in serialized.decode('utf8').split(',')]:
             number_dataset[key] = int(val)
         return number_dataset
 
 
-class MockNumberToTarFileSerializer(TarFileSerializer):
+class MockNumberToTarFileSerializer(TarFileSerializer[NumberDataset]):
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         return isinstance(dataset, NumberDataset)
@@ -60,14 +59,14 @@ class MockNumberToTarFileSerializer(TarFileSerializer):
         return 'num'
 
     @classmethod
-    def serialize(cls, number_dataset: NumberDataset) -> bytes | memoryview:
+    def serialize(cls, dataset: NumberDataset) -> bytes | memoryview:
         def number_encode_func(number_data: int) -> bytes:
             return bytes([number_data])
 
-        return cls.create_tarfile_from_dataset(number_dataset, data_encode_func=number_encode_func)
+        return cls.create_tarfile_from_dataset(dataset, data_encode_func=number_encode_func)
 
     @classmethod
-    def deserialize(cls, tarfile_bytes: bytes, any_file_suffix=False) -> NumberDataset:
+    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> NumberDataset:
         number_dataset = NumberDataset()
 
         def number_decode_func(file_stream: IO[bytes]) -> int:
@@ -78,7 +77,7 @@ class MockNumberToTarFileSerializer(TarFileSerializer):
 
         cls.create_dataset_from_tarfile(
             number_dataset,
-            tarfile_bytes,
+            serialized,
             data_decode_func=number_decode_func,
             dictify_object_func=python_dictify_object,
             any_file_suffix=any_file_suffix,

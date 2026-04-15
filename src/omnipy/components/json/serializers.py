@@ -3,16 +3,16 @@ from typing import IO, Type
 from omnipy.data.serializer import TarFileSerializer
 from omnipy.shared.protocols.data import IsDataset
 
-from .datasets import _JsonBaseDataset, JsonDataset
+from .datasets import JsonBaseDataset, JsonDataset
 from .models import JsonModel
 
 
-class JsonDatasetToTarFileSerializer(TarFileSerializer):
+class JsonDatasetToTarFileSerializer(TarFileSerializer[JsonBaseDataset]):
     """"""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         from ..isa.datasets import IsaJsonDataset
-        return isinstance(dataset, _JsonBaseDataset) or isinstance(dataset, IsaJsonDataset)
+        return isinstance(dataset, JsonBaseDataset) or isinstance(dataset, IsaJsonDataset)
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
@@ -23,14 +23,14 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer):
         return 'json'
 
     @classmethod
-    def serialize(cls, json_dataset: _JsonBaseDataset) -> bytes | memoryview:
+    def serialize(cls, dataset: JsonBaseDataset) -> bytes | memoryview:
         def json_encode_func(json_data: JsonModel) -> bytes:
             return json_data.to_json().encode('utf8')
 
-        return cls.create_tarfile_from_dataset(json_dataset, data_encode_func=json_encode_func)
+        return cls.create_tarfile_from_dataset(dataset, data_encode_func=json_encode_func)
 
     @classmethod
-    def deserialize(cls, tarfile_bytes: bytes, any_file_suffix=False) -> JsonDataset:
+    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> JsonDataset:
         json_dataset = JsonDataset()
 
         def json_decode_func(file_stream: IO[bytes]) -> str:
@@ -41,7 +41,7 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer):
 
         cls.create_dataset_from_tarfile(
             json_dataset,
-            tarfile_bytes,
+            serialized,
             data_decode_func=json_decode_func,
             dictify_object_func=json_dictify_object,
             import_method='from_json',
