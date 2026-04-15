@@ -2577,8 +2577,6 @@ def test_mimic_simple_dict_operations(
     assert_model(model, dict[str, int], other)
 
 
-# TODO: Implement automatic conversion for mimicked operations, to allow for e.g.
-#       `Model[int](1) + '1'`
 # @pytest.mark.skipif(
 #     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
 #     reason="""
