@@ -7,7 +7,7 @@ from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 import omnipy.util._pydantic as pyd
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 
-from ..json.models import JsonModel
+from ..json.models import AnyJsonModel, JsonModel
 from ..raw.models import (NestedJoinItemsModel,
                           NestedSplitToItemsModel,
                           StrictBytesModel,
@@ -35,11 +35,10 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
 
     @classmethod
     def _validate_tuple_of_pairs(
-        cls, params_list: list[str | list[str | list[object]]] | str
-    ) -> TypeGuard[list[tuple[str, str]]]:
+            cls, params_list: list[str | list] | str) -> TypeGuard[list[tuple[str, str]]]:
         # The validated type is really a list of lists of two items, but we can't express that with
         # Python type hints, so we use a list of tuple pairs instead.
-        return all(len(param) == 2 for param in params_list)
+        return all(isinstance(param, list) and len(param) == 2 for param in params_list)
 
     @classmethod
     def _parse_data(
@@ -70,7 +69,7 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
 
 if TYPE_CHECKING:
 
-    class QueryParamsModel_dict(QueryParamsModel, dict):
+    class QueryParamsModel_dict(QueryParamsModel, dict):  # type: ignore[misc]
         ...
 
 
@@ -90,17 +89,28 @@ class UrlPathModel(Model[PurePosixPath | str]):
     def __str__(self) -> str:
         return str(self.content)
 
-    def __floordiv__(self, other):
-        self.content /= other
-        return self
+    def _slash_operator(self, other: PurePosixPath | str | object) -> PurePosixPath:
+        content = cast(PurePosixPath, self.content)
+        match other:
+            case PurePosixPath() | str():
+                return content / other
+            case _:
+                return content / str(other)
 
-    def __add__(self, other):
-        return UrlPathModel(str(self) + other)
+    def __truediv__(self, other: PurePosixPath | str | object) -> 'UrlPathModel_PurePosixPath':
+        return UrlPathModel(self._slash_operator(other))
+
+    def __floordiv__(self, other: PurePosixPath | str | object) -> 'UrlPathModel_PurePosixPath':
+        self.content = self._slash_operator(other)
+        return self  # type: ignore[return-value]
+
+    def __add__(self, other: PurePosixPath | str | object) -> 'UrlPathModel_PurePosixPath':
+        return UrlPathModel(str(self) + str(other))
 
 
 if TYPE_CHECKING:
 
-    class UrlPathModel_PurePosixPath(UrlPathModel, PurePosixPath):
+    class UrlPathModel_PurePosixPath(UrlPathModel, PurePosixPath):  # type: ignore[misc]
         ...
 
 
@@ -197,7 +207,7 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
 
 if TYPE_CHECKING:
 
-    class HttpUrlModel_UrlDataclassModel(HttpUrlModel, UrlDataclassModel):
+    class HttpUrlModel_UrlDataclassModel(HttpUrlModel, UrlDataclassModel):  # type: ignore[misc]
         ...
 
 
@@ -233,13 +243,14 @@ class ResponseContentPydModel(pyd.BaseModel):
 
 class AutoResponseContentModel(Model[ResponseContentPydModel | StrictBytesModel | StrictStrModel
                                      | JsonModel]):
-    class Config:
+    class Config(Model.Config):
         smart_union = False
 
     @classmethod
-    def _parse_data(
-        cls, data: ResponseContentPydModel | StrictBytesModel | StrictStrModel | JsonModel
-    ) -> StrictBytesModel | StrictStrModel | JsonModel:
+    def _parse_data(  # type: ignore[override]
+        cls,
+        data: ResponseContentPydModel | StrictBytesModel | StrictStrModel | AnyJsonModel
+    ) -> StrictBytesModel | StrictStrModel | AnyJsonModel:
         if isinstance(data, ResponseContentPydModel):
             assert isinstance(data.content_type, ModelFriendlyMimeType)
 

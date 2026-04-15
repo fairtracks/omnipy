@@ -46,31 +46,48 @@ def test_url_path_model():
     empty_path = UrlPathModel()
     assert empty_path.content == PurePosixPath('.')
 
-    path = UrlPathModel('/abc/def')
-    assert path.content == PurePosixPath('/abc/def')
-    assert path.to_data() == str(path) == '/abc/def'
+    base_path = UrlPathModel('/abc/def')
+    assert base_path.content == PurePosixPath('/abc/def')
+    assert base_path.to_data() == str(base_path) == '/abc/def'
 
-    path /= 'ghi'
-    assert path.content == PurePosixPath('/abc/def/ghi')
-    assert path.to_data() == str(path) == '/abc/def/ghi'
+    base_path /= 'ghi'
+    assert base_path.content == PurePosixPath('/abc/def/ghi')
+    assert base_path.to_data() == str(base_path) == '/abc/def/ghi'
 
-    new_path = path / PurePosixPath('jkl', 'mno')
-    assert new_path.content == PurePosixPath('/abc/def/ghi/jkl/mno')
-    assert new_path.to_data() == str(new_path) == '/abc/def/ghi/jkl/mno'
-    assert new_path.parts == ('/', 'abc', 'def', 'ghi', 'jkl', 'mno')
-
-    with pytest.raises(TypeError):
-        path /= 'jkl' / 'mno'
-
-    path // 'jkl' // 'mno'
+    path = base_path.copy()
+    path = path / PurePosixPath('jkl', 'mno')
     assert path.content == PurePosixPath('/abc/def/ghi/jkl/mno')
     assert path.to_data() == str(path) == '/abc/def/ghi/jkl/mno'
     assert path.parts == ('/', 'abc', 'def', 'ghi', 'jkl', 'mno')
 
-    path += 'pqr'
-    assert path.content == PurePosixPath('/abc/def/ghi/jkl/mnopqr')
-    assert path.to_data() == str(path) == '/abc/def/ghi/jkl/mnopqr'
-    assert path.parts == ('/', 'abc', 'def', 'ghi', 'jkl', 'mnopqr')
+    class MyStrData:
+        def __init__(self, data: str) -> None:
+            self._data = data
+
+        def __str__(self) -> str:
+            return self._data
+
+    path = base_path.copy()
+    path = path / 'jkl' / MyStrData('mno') / 'pqr'
+    assert path.content == PurePosixPath('/abc/def/ghi/jkl/mno/pqr')
+    assert path.to_data() == str(path) == '/abc/def/ghi/jkl/mno/pqr'
+    assert path.parts == ('/', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqr')
+
+    path = base_path.copy()
+    path // 'jkl' // MyStrData('mno') // 'pqr'
+    assert path.content == PurePosixPath('/abc/def/ghi/jkl/mno/pqr')
+    assert path.to_data() == str(path) == '/abc/def/ghi/jkl/mno/pqr'
+    assert path.parts == ('/', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqr')
+
+    with pytest.raises(TypeError):
+        path = base_path.copy()
+        path /= 'jkl' / MyStrData('mno') / 'pqr'
+
+    path = base_path.copy()
+    path += 'jkl'
+    assert path.content == PurePosixPath('/abc/def/ghijkl')
+    assert path.to_data() == str(path) == '/abc/def/ghijkl'
+    assert path.parts == ('/', 'abc', 'def', 'ghijkl')
 
 
 def test_http_url_model_validation_errors():
