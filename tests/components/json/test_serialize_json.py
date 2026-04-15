@@ -47,3 +47,23 @@ def test_json_dataset_serializer_to_tar_file():
     deserialized_json_data = serializer.deserialize(tarfile_bytes)
 
     assert deserialized_json_data == json_data
+
+
+def test_json_scalar_dataset_serializer_to_tar_file():
+    json_scalar_data = JsonDataset(int_data=123, bool_data=True, none_data=None, float_data=3.14)
+
+    serializer = JsonDatasetToTarFileSerializer()
+    assert serializer.get_dataset_cls_for_new() is JsonDataset
+    assert isinstance(serializer, TarFileSerializer)
+
+    tarfile_bytes = serializer.serialize(json_scalar_data)
+    decode_func = lambda x: x.decode('utf8')  # noqa
+
+    assert_tar_file_content(tarfile_bytes, 'int_data', 'json', decode_func, '123')
+    assert_tar_file_content(tarfile_bytes, 'bool_data', 'json', decode_func, 'true')
+    assert_tar_file_content(tarfile_bytes, 'none_data', 'json', decode_func, 'null')
+    assert_tar_file_content(tarfile_bytes, 'float_data', 'json', decode_func, '3.14')
+
+    deserialized_json_data = serializer.deserialize(tarfile_bytes)
+
+    assert deserialized_json_data == json_scalar_data

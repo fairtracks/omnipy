@@ -3,7 +3,7 @@ import tarfile
 from typing import Any, Callable
 
 
-def assert_tar_file_content(tarfile_bytes: bytes,
+def assert_tar_file_content(tarfile_bytes: bytes | memoryview,
                             data_file_name: str,
                             file_suffix: str,
                             decode_func: Callable,
