@@ -3,7 +3,7 @@ from typing import Annotated
 
 import pytest
 
-from omnipy import JsonModel, Model
+from omnipy import JsonListOrDictModel, Model
 from omnipy.components.raw.models import StrictBytesModel, StrictStrModel
 from omnipy.components.remote.models import (AutoResponseContentModel,
                                              HttpUrlModel,
@@ -294,5 +294,5 @@ def test_auto_response_content_model() -> None:
     assert model.content == StrictBytesModel(b'abc')
 
     model = AutoResponseContentModel(
-        ResponseContentPydModel(content_type='application/json', response='abc'))
-    assert model.content == JsonModel('abc')
+        ResponseContentPydModel(content_type='application/json', response=['abc']))
+    assert model.content == JsonListOrDictModel(['abc'])
