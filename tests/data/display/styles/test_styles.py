@@ -305,29 +305,32 @@ async def test_fail_import_missing(
     await run_sync_func(_test_fail_import_missing)
 
 
+def _filter_real_styles(external: bool) -> list[str]:
+    IGNORE_PREFIXES = ['ansi-', 'random', 'auto']
+    EXTERNAL_SUFFIXES = ['-t16']
+
+    filtered_styles = []
+    for style in AllColorStyles:
+        if not any(style.startswith(prefix) for prefix in IGNORE_PREFIXES):
+            style_is_external = any(style.endswith(suffix) for suffix in EXTERNAL_SUFFIXES)
+            if external == style_is_external:
+                filtered_styles.append(style)
+    return filtered_styles
+
+
 def test_omnipy_style_import() -> None:
     # To make sure the tests only run when the omnipy package is installed, which is required for
     # the styles to be registered with the pygments package. This is needed as the tests might be
     # run in a development environment where the omnipy package is not installed.
-
     if 'omnipy' in get_pip_installed_packages():
-
-        IGNORE_PREFIXES = ['ansi-', 'random', 'auto']
-        IGNORE_SUFFIXES = ['-t16']
-
-        installed_styles = [
-            style for style in AllColorStyles
-            if not any(style.startswith(prefix) for prefix in IGNORE_PREFIXES) and not any(
-                style.endswith(suffix) for suffix in IGNORE_SUFFIXES)
-        ]
+        installed_styles = _filter_real_styles(external=False)
         for style in installed_styles:
             style = clean_style_name(style)
             pygments.styles.get_style_by_name(style)
 
 
-def test_dynamic_style_import(register_runtime: Annotated[Iterable[None], pytest.fixture]) -> None:
-    installable_styles = [style for style in AllColorStyles if style.endswith('-t16')]
-
+def test_dynamic_style_import(register_runtime: Annotated[Iterable[None], pytest.fixture],) -> None:
+    installable_styles = _filter_real_styles(external=True)
     for style in random.sample(installable_styles, 3):
         print(f'Installing style: {style}...')
         install_base16_theme(style)
