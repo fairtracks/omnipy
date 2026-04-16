@@ -171,7 +171,8 @@ class SyntaxLanguage(JsonSyntaxLanguage,
 
     AUTO: Literal['auto'] = 'auto'
     """
-    Autodetect the syntax language based on the content.
+    Autodetect the syntax language based on the content. If the syntax
+    language cannot be autodetected, it is set to PYTHON.
     """
     @classmethod
     def is_syntax_language(cls, syntax: str) -> 'TypeIs[SyntaxLanguage.Literals]':

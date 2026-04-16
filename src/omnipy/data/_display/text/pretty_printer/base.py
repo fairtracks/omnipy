@@ -60,12 +60,15 @@ class PrettyPrinter(ABC, Generic[ContentT]):
         if pretty_printer:
             return pretty_printer
 
-        if draft_panel.config.syntax is SyntaxLanguage.AUTO:
+        syntax = draft_panel.config.syntax
+        if syntax is SyntaxLanguage.AUTO:
             pretty_printer = register.get_pretty_printer_from_content(draft_panel)
             if pretty_printer:
                 return pretty_printer
+            else:
+                syntax = SyntaxLanguage.PYTHON
 
-        return register.get_pretty_printer_from_syntax(draft_panel.config.syntax)
+        return register.get_pretty_printer_from_syntax(syntax)
 
 
 class StatsTighteningPrettyPrinter(
