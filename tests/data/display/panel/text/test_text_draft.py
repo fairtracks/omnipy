@@ -10,7 +10,7 @@ from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
-from omnipy.shared.enums.display import SyntaxLanguage
+from omnipy.shared.enums.display import SyntaxLanguageSpec
 
 from ..helpers.case_setup import (apply_frame_variant_to_test_case,
                                   PanelFrameVariantTestCase,
@@ -30,7 +30,7 @@ def test_text_draft_panel_init() -> None:
         title='My JSON file',
         frame=Frame(Dimensions(20, 10)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(syntax=SyntaxLanguage.JSON),
+        config=OutputConfig(syntax=SyntaxLanguageSpec.JSON),
     )
 
 
@@ -52,7 +52,7 @@ def test_text_draft_panel_render_next_stage_with_repr_complex() -> None:
         title='My repr panel',
         frame=Frame(Dimensions(18, 2)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(indent=1, syntax=SyntaxLanguage.PYTHON),
+        config=OutputConfig(indent=1, syntax=SyntaxLanguageSpec.PYTHON),
     )
     assert_next_stage_panel(
         this_panel=draft_panel_complex,

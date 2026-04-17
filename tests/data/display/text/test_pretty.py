@@ -16,7 +16,7 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.text.pretty import pretty_repr_of_draft_output
 from omnipy.data.model import Model
-from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguage
+from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
 from ..panel.helpers.panel_assert import DraftPanelKwArgs
 
@@ -860,7 +860,7 @@ def test_plain_str_pretty_print() -> None:
         A(),
         exp_plain_output='A()',
         frame=DEFAULT_FRAME,
-        config=OutputConfig(syntax=SyntaxLanguage.TEXT),
+        config=OutputConfig(syntax=SyntaxLanguageSpec.TEXT),
         within_frame_width=True,
         within_frame_height=True,
     )

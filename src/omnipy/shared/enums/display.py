@@ -163,20 +163,45 @@ class SyntaxLanguage(JsonSyntaxLanguage,
     relevant for Omnipy.
     """
 
-    Literals = Literal['auto',
-                       JsonSyntaxLanguage.Literals,
+    Literals = Literal[JsonSyntaxLanguage.Literals,
                        TextSyntaxLanguage.Literals,
                        HexdumpSyntaxLanguage.Literals,
                        PythonSyntaxLanguage.Literals]
 
-    AUTO: Literal['auto'] = 'auto'
+
+class SyntaxLanguageSpec(SyntaxLanguage):
+    """Specification of language for syntax recognition and highlighting.
+
+    The available values include all supported syntax languages (see
+    `SyntaxLanguage`), plus the  `AUTO` option for automatic syntax
+    recognition.
     """
-    Autodetect the syntax language based on the content.
+
+    Literals = Literal['auto', SyntaxLanguage.Literals]
+
+    AUTO: Literal['auto'] = 'auto'
+    """Automatically select the syntax language.
+
+    Automatically set the syntax language in accordance with the specified
+    pretty printer selected for the output (e.g. specified in `printer`
+    config parameter). The syntax language specified in the
+    `get_default_syntax_language()` class method is selected.
     """
     @classmethod
-    def is_syntax_language(cls, syntax: str) -> 'TypeIs[SyntaxLanguage.Literals]':
+    def is_syntax_language_spec(cls, syntax: str) -> 'TypeIs[SyntaxLanguageSpec.Literals]':
+        """Checks for a valid syntax language specification.
+
+        This checks whether the syntax string is one of the supported
+        options for syntax language specification (including `AUTO`).
         """
-        Checks if the given syntax is a Syntax language.
+        return syntax in SyntaxLanguageSpec
+
+    @classmethod
+    def is_supported_syntax_language(
+        cls,
+        syntax: str,
+    ) -> 'TypeIs[SyntaxLanguage.Literals]':
+        """Checks if the given syntax is a supported syntax language.
         """
         return syntax in SyntaxLanguage
 

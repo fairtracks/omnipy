@@ -1,6 +1,6 @@
 from typing_extensions import override
 
-from omnipy.shared.enums.display import SyntaxLanguage
+from omnipy.shared.enums.display import SyntaxLanguageSpec
 from omnipy.shared.enums.ui import TerminalOutputUserInterfaceType
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.publisher import DataPublisher
@@ -20,7 +20,7 @@ class ConfigBase(DataPublisher):
             @override
             def _default_panel(self, **kwargs) -> 'DraftPanel':
                 kwargs_copy = kwargs.copy()
-                kwargs_copy['syntax'] = SyntaxLanguage.JSON5
+                kwargs_copy['syntax'] = SyntaxLanguageSpec.JSON5
                 return self._full(**kwargs_copy)
 
         return ConfigModel(self)  # pyright: ignore [reportReturnType]
