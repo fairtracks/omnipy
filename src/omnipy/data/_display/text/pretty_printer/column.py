@@ -2,6 +2,7 @@ from typing import cast
 
 from typing_extensions import override
 
+from omnipy import SyntaxLanguageSpec
 from omnipy.components.json.typedefs import JsonScalar
 from omnipy.components.tables.models import ColumnModel
 from omnipy.data._display.frame import AnyFrame
@@ -17,6 +18,11 @@ class ColumnPrettyPrinter(PrettyPrinter[list[JsonScalar]]):
     def is_suitable_content(cls, draft_panel: DraftPanel[object, AnyFrame]) -> bool:
         from omnipy.components.tables.models import ColumnModel
         return isinstance(draft_panel.content, ColumnModel)
+
+    @override
+    @classmethod
+    def get_default_syntax_language(cls) -> SyntaxLanguageSpec.Literals:
+        return SyntaxLanguageSpec.TEXT
 
     @override
     @classmethod
