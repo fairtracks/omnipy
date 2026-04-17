@@ -9,7 +9,7 @@ from omnipy.shared.protocols.content import (IsBytesContent,
                                              IsListOfListsContent,
                                              IsStrContent)
 from omnipy.shared.typing import TYPE_CHECKING
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 if TYPE_CHECKING:
     from omnipy.data.model import PlainModel

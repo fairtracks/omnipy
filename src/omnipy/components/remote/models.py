@@ -4,8 +4,8 @@ from urllib.parse import quote, unquote
 
 from omnipy.data.model import Model
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
-import omnipy.util._pydantic as pyd
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
+import omnipy.util.pydantic as pyd
 
 from ..json.models import AnyJsonListOrDictModel, JsonListOrDictModel
 from ..raw.models import (NestedJoinItemsModel,

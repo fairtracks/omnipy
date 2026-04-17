@@ -2,7 +2,7 @@ from typing import Generic, Mapping, Type, TypeVar
 
 from omnipy.data.model import Model
 from omnipy.shared.typing import TYPE_CHECKING
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 # Types
 

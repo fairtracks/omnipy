@@ -4,10 +4,10 @@ import gc
 from typing import Generic
 
 from omnipy.shared.protocols.data import ContentT, HasContentT, IsSnapshotWrapper, ObjContraT
-from omnipy.util._pydantic import ValidationError
 from omnipy.util.contexts import setup_and_teardown_callback_context
 from omnipy.util.helpers import all_equals
 from omnipy.util.memo import RefCountMemoDict
+from omnipy.util.pydantic import ValidationError
 from omnipy.util.setdeque import SetDeque
 from omnipy.util.weak import WeakKeyRefContainer
 

@@ -21,7 +21,7 @@ from omnipy.shared.enums.display import (DisplayColorSystem,
                                          SyntaxLanguage,
                                          VerticalOverflowMode)
 from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 
 @pyd.dataclass(

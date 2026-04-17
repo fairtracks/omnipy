@@ -11,7 +11,7 @@ from omnipy.components._frozen.models import (_FrozenAnyUnionM,
                                               NestedFrozenOnlyTuplesModel)
 from omnipy.components._frozen.typedefs import FrozenDict
 from omnipy.data.model import Model
-from omnipy.util._pydantic import ValidationError
+from omnipy.util.pydantic import ValidationError
 
 from ..helpers.classes import CaseInfo
 

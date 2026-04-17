@@ -14,7 +14,7 @@ from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.shared.exceptions import ShouldNotOccurException
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 OutputPropertyType: TypeAlias = Callable[[SyntaxStylizedTextPanel | StylizedLayoutPanel], str]
 ContentT = TypeVar('ContentT', bound=str | Layout)

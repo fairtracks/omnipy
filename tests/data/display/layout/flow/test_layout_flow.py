@@ -3,7 +3,7 @@ import pytest_cases as pc
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 from ...panel.helpers.case_setup import apply_frame_variant_to_test_case, PanelFrameVariantTestCase
 from ...panel.helpers.panel_assert import assert_dims_aware_panel

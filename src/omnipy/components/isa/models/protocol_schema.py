@@ -6,7 +6,7 @@ from enum import Enum
 from typing import List, Optional
 
 from omnipy.data.model import Model
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 from . import comment_schema, ontology_annotation_schema, protocol_parameter_schema
 

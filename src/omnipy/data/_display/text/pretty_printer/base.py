@@ -12,7 +12,7 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import ContentT, FrameT
 from omnipy.shared.enums.display import SyntaxLanguage
-from omnipy.util import _pydantic as pyd
+from omnipy.util import pydantic as pyd
 from omnipy.util.helpers import sorted_dict_hash
 
 

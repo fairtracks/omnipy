@@ -4,8 +4,8 @@ from typing import Annotated
 import pytest
 
 from omnipy.data.param import params_dataclass, ParamsBase
-from omnipy.util._pydantic import ValidationError
-import omnipy.util._pydantic as pyd
+from omnipy.util.pydantic import ValidationError
+import omnipy.util.pydantic as pyd
 
 
 def test_params_parameter_lookup(

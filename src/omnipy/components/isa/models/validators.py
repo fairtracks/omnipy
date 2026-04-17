@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Union
 
-import omnipy.util._pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 # TODO: Remove date/datetime validator with pydantic v2, `model_dump(mode='json')` should fix it
 #       (see https://github.com/pydantic/pydantic/issues/1409#issuecomment-1423995424).

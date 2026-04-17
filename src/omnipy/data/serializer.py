@@ -9,8 +9,8 @@ from typing_extensions import TypeVar
 
 from omnipy.shared.protocols.data import HasData, IsDataset, IsSerializer, IsTarFileSerializer
 from omnipy.shared.protocols.hub.log import CanLog
-from omnipy.util._pydantic import ValidationError
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
+from omnipy.util.pydantic import ValidationError
 
 _DatasetT = TypeVar('_DatasetT', bound=IsDataset)
 
