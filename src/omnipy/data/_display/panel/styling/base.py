@@ -16,7 +16,6 @@ from omnipy.data._display.panel.cropping import rich_overflow_method
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.data._display.panel.typedefs import ContentT, FrameT
 from omnipy.shared.enums.display import DisplayColorSystem
-from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
 import omnipy.util.pydantic as pyd
 
 StylizedRichTypes: TypeAlias = rich.syntax.Syntax | rich.panel.Panel | rich.table.Table
@@ -129,7 +128,6 @@ class StylizedMonospacedPanel(
         frame_width: int | None,
         rich_overflow_method: rich.console.OverflowMethod | None,
         color_system: DisplayColorSystem.Literals,
-        ui_type: SpecifiedUserInterfaceType.Literals,
     ) -> rich.console.Console:
 
         console = rich.console.Console(
@@ -139,7 +137,12 @@ class StylizedMonospacedPanel(
             color_system=color_system,
             record=True,
             force_jupyter=False,
-            force_terminal=UserInterfaceType.is_terminal(ui_type),
+            # Direct console output is always for the terminal, the only
+            # other type of output is HTML output, in which case the
+            # `export_html()` method of the console is called instead.
+            # Hence, `force_terminal=True`. Reconsider if new
+            # `OutputVariant` methods are added.
+            force_terminal=True,
         )
 
         soft_wrap = True if frame_width is None else False
@@ -155,7 +158,6 @@ class StylizedMonospacedPanel(
             console_height=self._console_dimensions.height,
             frame_width=self.frame.dims.width,
             rich_overflow_method=self.rich_overflow_method,
-            ui_type=self.config.ui,
             color_system=self.config.system,
         )
 
@@ -168,7 +170,6 @@ class StylizedMonospacedPanel(
             console_height=self._console_dimensions.height,
             frame_width=self.frame.dims.width,
             rich_overflow_method=self.rich_overflow_method,
-            ui_type=self.config.ui,
             color_system=DisplayColorSystem.ANSI_RGB,
         )
 

@@ -412,7 +412,7 @@ def test_output_config_default_values() -> None:
     assert config.syntax is SyntaxLanguageSpec.AUTO
     assert config.freedom == 2.5
     assert config.debug is False
-    assert config.ui is UserInterfaceType.TERMINAL
+    assert config.ui is UserInterfaceType.AUTO
     assert config.system is DisplayColorSystem.AUTO
     assert config.style is RecommendedColorStyles.ANSI_DARK
     assert config.bg is False
