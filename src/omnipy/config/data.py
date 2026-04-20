@@ -71,12 +71,6 @@ class ColorConfig(ConfigBase):
             )
         return values
 
-    # Override __getattribute__ to dynamically update default style
-    def __getattribute__(self, attr):
-        if (attr in ['style'] and object.__getattribute__(self, 'style') in RecommendedColorStyles):
-            setattr(self, 'style', RecommendedColorStyles.AUTO)
-        return object.__getattribute__(self, attr)
-
 
 class UserInterfaceTypeConfig(ConfigBase):
     width: pyd.NonNegativeInt | None = TERMINAL_DEFAULT_WIDTH
