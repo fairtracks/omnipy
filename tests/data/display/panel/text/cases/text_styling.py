@@ -141,6 +141,10 @@ def case_syntax_styling_setup_no_frame_or_configs(
     return StylizedPanelTestCaseSetup(
         case_id='no-frame-default-color' + ('-no-bg' if not solid_background else ''),
         content="MyClass({'abc': [123, 234]})",
+        # In these tests, the pretty printing stage is skipped. The
+        # pretty-printing stage is where AUTO-configs are resolved, hence
+        # we need to explicitly set all relevant configs to their non-AUTO
+        # values.
         config=OutputConfig(
             printer=PrettyPrinterLib.CODE,
             syntax=SyntaxLanguageSpec.PYTHON,
@@ -170,6 +174,10 @@ def case_syntax_styling_setup_no_frame_color_config(
     return StylizedPanelTestCaseSetup(
         case_id=case_id,
         content="MyClass({'abc': [123, 234]})",
+        # In these tests, the pretty printing stage is skipped. The
+        # pretty-printing stage is where AUTO-configs are resolved, hence
+        # we need to explicitly set all relevant configs to their non-AUTO
+        # values.
         config=OutputConfig(
             printer=PrettyPrinterLib.CODE,
             fonts=css_font_families,
@@ -199,6 +207,10 @@ def case_syntax_styling_setup_small_frame_color_and_overflow_config(
         case_id=case_id,
         content="MyClass({'abc': [123, 234]})",
         frame=Frame(Dimensions(9, 3)),
+        # In these tests, the pretty printing stage is skipped. The
+        # pretty-printing stage is where AUTO-configs are resolved, hence
+        # we need to explicitly set all relevant configs to their non-AUTO
+        # values.
         config=OutputConfig(
             printer=PrettyPrinterLib.CODE,
             syntax=SyntaxLanguageSpec.PYTHON,

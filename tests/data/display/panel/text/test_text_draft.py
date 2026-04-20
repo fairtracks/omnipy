@@ -41,11 +41,12 @@ def test_text_draft_panel_render_next_stage_simple() -> None:
         next_stage=text_draft_panel.render_next_stage(),
         next_stage_panel_cls=ReflowedTextDraftPanel,
         exp_content='Some\ntext',
-        # SyntaxLanguageSpec.AUTO causes syntax to be set to default
-        # syntax for the pretty printer. For plain str input,
-        # CodePrettyPrinter is selected, which has default syntax set
-        # to SyntaxLanguageSpec.PYTHON.
-        exp_config=OutputConfig(syntax=SyntaxLanguageSpec.PYTHON),
+        # PrettyPrinterLib.AUTO cases pretty printer to be automatically
+        # selected. For plain text input, CodePrettyPrinter is selected.
+        # Likewise, SyntaxLanguageSpec.AUTO causes syntax to be set to
+        # default syntax for the pretty printer, which for
+        # CodePrettyPrinter is SyntaxLanguageSpec.PYTHON.
+        exp_config=OutputConfig(printer=PrettyPrinterLib.CODE, syntax=SyntaxLanguageSpec.PYTHON),
     )
 
 

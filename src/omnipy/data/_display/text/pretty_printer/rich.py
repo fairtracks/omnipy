@@ -7,10 +7,16 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.text.pretty_printer.base import WidthReducingPrettyPrinter
 from omnipy.data._display.text.pretty_printer.mixins import PythonStatsTighteningPrettyPrinter
 from omnipy.shared.constants import MAX_TERMINAL_SIZE
+from omnipy.shared.enums.display import PrettyPrinterLib
 from omnipy.util import pydantic as pyd
 
 
 class RichPrettyPrinter(PythonStatsTighteningPrettyPrinter, WidthReducingPrettyPrinter[object]):
+    @override
+    @classmethod
+    def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:
+        return PrettyPrinterLib.RICH
+
     @override
     @classmethod
     def _calc_reduced_frame_width(

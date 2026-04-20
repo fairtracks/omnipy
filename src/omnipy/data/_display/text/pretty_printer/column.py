@@ -2,7 +2,6 @@ from typing import cast
 
 from typing_extensions import override
 
-from omnipy import SyntaxLanguageSpec
 from omnipy.components.json.typedefs import JsonScalar
 from omnipy.components.tables.models import ColumnModel, PrintableTable
 from omnipy.data._display.frame import AnyFrame
@@ -10,6 +9,7 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.data._display.text.pretty_printer.base import PrettyPrinter
+from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
 
 class ColumnPrettyPrinter(PrettyPrinter[list[JsonScalar]]):
@@ -22,6 +22,11 @@ class ColumnPrettyPrinter(PrettyPrinter[list[JsonScalar]]):
     ) -> bool:
         from omnipy.components.tables.models import ColumnModel
         return isinstance(draft_panel.content, (ColumnModel, PrintableTable))
+
+    @override
+    @classmethod
+    def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:
+        return PrettyPrinterLib.COLUMN
 
     @override
     @classmethod

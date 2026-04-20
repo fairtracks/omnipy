@@ -4,7 +4,7 @@ from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
-from omnipy.shared.enums.display import SyntaxLanguageSpec
+from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
 from ..helpers.panel_assert import assert_draft_panel_subcls, assert_next_stage_panel
 
@@ -29,11 +29,12 @@ def test_bytes_draft_panel_render_next_stage_simple() -> None:
         next_stage=text_draft_panel.render_next_stage(),
         next_stage_panel_cls=ReflowedTextDraftPanel,
         exp_content="b'\\xc3\\xa6\\xc3\\xb8\\xc3\\xa5'",
-        # SyntaxLanguageSpec.AUTO causes syntax to be set to default
-        # syntax for the pretty printer. For plain bytes input, a Python
-        # pretty printer is selected, which has default syntax set to
-        # SyntaxLanguageSpec.PYTHON.
-        exp_config=OutputConfig(syntax=SyntaxLanguageSpec.PYTHON),
+        # PrettyPrinterLib.AUTO cases pretty printer to be automatically
+        # selected. For bytes input, RichPrettyPrinter is selected.
+        # Likewise, SyntaxLanguageSpec.AUTO causes syntax to be set to
+        # default syntax for the pretty printer, which for
+        # RichPrettyPrinter is SyntaxLanguageSpec.PYTHON.
+        exp_config=OutputConfig(printer=PrettyPrinterLib.RICH, syntax=SyntaxLanguageSpec.PYTHON),
     )
 
 
@@ -43,11 +44,16 @@ def test_bytes_draft_panel_render_next_stage_with_repr_complex() -> None:
         title='My repr panel',
         frame=Frame(Dimensions(18, 2)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(indent=1, syntax=SyntaxLanguageSpec.PYTHON),
     )
     assert_next_stage_panel(
         this_panel=draft_panel_complex,
         next_stage=draft_panel_complex.render_next_stage(),
         next_stage_panel_cls=ReflowedTextDraftPanel,
         exp_content="b'\\xc3\\xa6\\xc3\\xb8\\xc3\\xa5'",
+        # PrettyPrinterLib.AUTO cases pretty printer to be automatically
+        # selected. For bytes input, RichPrettyPrinter is selected.
+        # Likewise, SyntaxLanguageSpec.AUTO causes syntax to be set to
+        # default syntax for the pretty printer, which for
+        # RichPrettyPrinter is SyntaxLanguageSpec.PYTHON.
+        exp_config=OutputConfig(printer=PrettyPrinterLib.RICH, syntax=SyntaxLanguageSpec.PYTHON),
     )

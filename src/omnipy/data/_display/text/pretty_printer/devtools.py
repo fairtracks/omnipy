@@ -14,6 +14,7 @@ from omnipy.data._display.text.pretty_printer.base import (ConstraintTighteningP
                                                            WidthReducingPrettyPrinter)
 from omnipy.data._display.text.pretty_printer.mixins import PythonStatsTighteningPrettyPrinter
 from omnipy.shared.constants import MAX_TERMINAL_SIZE
+from omnipy.shared.enums.display import PrettyPrinterLib
 from omnipy.util import pydantic as pyd
 
 
@@ -25,6 +26,11 @@ class DevtoolsPrettyPrinter(
     CONSTRAINT_STAT_NAME: ClassVar[str] = 'max_inline_container_width_incl'
     CONSTRAINT_TIGHTEN_FUNC: Callable[[int], int] = lambda x: max(x - 1, 0)
     CONSTRAINT_TIGHTENED_OPERATOR: Callable[[int, int], bool] = operator.lt
+
+    @override
+    @classmethod
+    def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:
+        return PrettyPrinterLib.DEVTOOLS
 
     @override
     @classmethod

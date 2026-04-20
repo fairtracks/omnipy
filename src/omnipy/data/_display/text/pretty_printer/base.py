@@ -12,7 +12,7 @@ from omnipy.data._display.frame import AnyFrame, FrameWithWidth
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import ContentT, FrameT
-from omnipy.shared.enums.display import SyntaxLanguageSpec
+from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 from omnipy.util import pydantic as pyd
 from omnipy.util.helpers import sorted_dict_hash
 
@@ -25,6 +25,11 @@ class PrettyPrinter(ABC, Generic[ContentT]):
         draft_panel: DraftPanel[object, AnyFrame],
         default: bool = False,
     ) -> bool:
+        ...
+
+    @classmethod
+    @abstractmethod
+    def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:
         ...
 
     @classmethod
@@ -43,14 +48,22 @@ class PrettyPrinter(ABC, Generic[ContentT]):
         return draft_panel.constraints
 
     @classmethod
-    def _set_default_syntax_for_panel_if_syntax_is_auto(cls, config: OutputConfig) -> OutputConfig:
-        if config.syntax is SyntaxLanguageSpec.AUTO:
-            return dataclasses.replace(
-                config,
-                syntax=cls.get_default_syntax_language(),
-            )
+    def _set_default_configs_for_panel_if_auto(cls, config: OutputConfig) -> OutputConfig:
+        if config.printer is PrettyPrinterLib.AUTO:
+            printer = cls.get_pretty_printer_lib()
         else:
-            return config
+            printer = config.printer
+
+        if config.syntax is SyntaxLanguageSpec.AUTO:
+            syntax = cls.get_default_syntax_language()
+        else:
+            syntax = config.syntax
+
+        return dataclasses.replace(
+            config,
+            printer=printer,
+            syntax=syntax,
+        )
 
     def prepare_draft_panel(
         self,
@@ -60,7 +73,7 @@ class PrettyPrinter(ABC, Generic[ContentT]):
             content=self._get_content_for_draft_panel(draft_panel),
             frame=draft_panel.frame,
             constraints=self._get_default_constraints_for_draft_panel(draft_panel),
-            config=self._set_default_syntax_for_panel_if_syntax_is_auto(draft_panel.config),
+            config=self._set_default_configs_for_panel_if_auto(draft_panel.config),
         )
 
     @abstractmethod

@@ -10,6 +10,7 @@ from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.text.pretty_printer.base import ConstraintTighteningPrettyPrinter
 from omnipy.data._display.text.pretty_printer.mixins import JsonStatsTighteningPrettyPrinterMixin
 from omnipy.shared.constants import TERMINAL_DEFAULT_WIDTH
+from omnipy.shared.enums.display import PrettyPrinterLib
 
 
 class CompactJsonPrettyPrinter(
@@ -19,6 +20,11 @@ class CompactJsonPrettyPrinter(
     CONSTRAINT_STAT_NAME: ClassVar[str] = 'max_inline_list_or_dict_width_excl'
     CONSTRAINT_TIGHTEN_FUNC: Callable[[int], int] = lambda x: max(x - 1, 0)
     CONSTRAINT_TIGHTENED_OPERATOR: Callable[[int, int], bool] = operator.lt
+
+    @override
+    @classmethod
+    def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:
+        return PrettyPrinterLib.COMPACT_JSON
 
     @override
     @classmethod

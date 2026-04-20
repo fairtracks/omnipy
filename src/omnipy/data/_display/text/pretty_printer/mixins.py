@@ -2,12 +2,12 @@ from abc import ABC
 
 from typing_extensions import override
 
-from omnipy import SyntaxLanguageSpec
 from omnipy.components.json.models import is_json_model_instance_hack
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.text.pretty_printer.base import PrettyPrinter
 from omnipy.data.typechecks import is_model_instance
+from omnipy.shared.enums.display import SyntaxLanguageSpec
 
 
 class PythonStatsTighteningPrettyPrinter(PrettyPrinter[object], ABC):

@@ -1,12 +1,12 @@
 from typing_extensions import override
 
-from omnipy import SyntaxLanguageSpec
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.data._display.text.pretty_printer.base import PrettyPrinter
 from omnipy.data.typechecks import is_model_instance
+from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
 
 class HexdumpPrettyPrinter(PrettyPrinter[str]):
@@ -25,6 +25,11 @@ class HexdumpPrettyPrinter(PrettyPrinter[str]):
             return isinstance(content, BytesModel)
 
         return False
+
+    @override
+    @classmethod
+    def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:
+        return PrettyPrinterLib.HEXDUMP
 
     @override
     @classmethod

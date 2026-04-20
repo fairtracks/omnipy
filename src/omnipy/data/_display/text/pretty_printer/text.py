@@ -7,9 +7,15 @@ from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.data._display.text.pretty_printer.base import PrettyPrinter
 from omnipy.data.typechecks import is_model_instance
+from omnipy.shared.enums.display import PrettyPrinterLib
 
 
 class PlainTextPrettyPrinter(PrettyPrinter[str]):
+    @override
+    @classmethod
+    def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:
+        return PrettyPrinterLib.TEXT
+
     @override
     @classmethod
     def is_suitable_content(
@@ -62,6 +68,11 @@ class PlainTextPrettyPrinter(PrettyPrinter[str]):
 
 
 class CodePrettyPrinter(PlainTextPrettyPrinter):
+    @override
+    @classmethod
+    def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:
+        return PrettyPrinterLib.CODE
+
     @override
     @classmethod
     def is_suitable_content(
