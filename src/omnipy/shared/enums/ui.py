@@ -66,9 +66,9 @@ class PlainTerminalUserInterfaceType(PlainTerminalEmbeddedUserInterfaceType, Lit
     """
     The `UNKNOWN` user interface type is used when the user interface type
     cannot be determined. This will in practice produce the same output as
-    for the `TERMINAL` display type, As is default for terminals, we try to
-    autodetect color capabilities (see `DisplayColorSystem.AUTO`). (such as
-    ANSI escape codes for color and text formatting) are available.
+    for the `TERMINAL` display type. As is default for terminals, we try
+    to autodetect color capabilities such as ANSI escape codes for color
+    and text formatting (see `DisplayColorSystem.AUTO`).
     """
 
 

@@ -13,8 +13,7 @@ LiteralInnerTypeT = TypeVar('LiteralInnerTypeT', bound=LiteralEnumInnerTypes)
 
 
 class LiteralEnumMeta(type):
-    """
-    A metaclass for LiteralEnum that contains the logic for iteration.
+    """A metaclass for LiteralEnum that contains the logic for iteration.
     """
     @overload
     def __iter__(  # type: ignore[misc]
@@ -29,9 +28,10 @@ class LiteralEnumMeta(type):
         ...
 
     def __iter__(self) -> Iterator[LiteralEnumInnerTypes]:
-        """
-        Iterate over the enum values. Narrows the type according to the
-        specialization to specific Literal inner types
+        """Iterate over the enum values.
+
+        Narrows the type according to the specialization to specific Literal
+        inner types
 
         Returns:
             An typed iterator over the enum values.
@@ -40,15 +40,15 @@ class LiteralEnumMeta(type):
 
 
 class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
-    """
-    Base class for creating enums with defined literal choices, with support
-    from the main static type checkers (tested with `mypy` and `pyright`).
-    Unlike standard Enums, LiteralEnum supports multiple inheritance and the
-    use the enum attribute names and underlying values directly in type
-    hints and function signatures. At the same time, LiteralEnum maintains
-    the main benefits of traditional Enum types: a clearly defined and
-    namespaced set of choices with possibilities for flexible naming and
-    per-item documentation.
+    """Base class for creating enums with defined literal choices.
+
+    LiteralEnum supports the main static type checkers (tested with `mypy`
+    and `pyright`). Unlike standard Enums, LiteralEnum supports multiple
+    inheritance and the use the enum attribute names and underlying values
+    directly in type hints and function signatures. At the same time,
+    LiteralEnum maintains the main benefits of traditional Enum types: a
+    clearly defined and namespaced set of choices with possibilities for
+    flexible naming and per-item documentation.
 
     Subclasses must define a `Literals` class attribute that specify the
     valid choices as a Literal type. Each choice must also be defined as a
@@ -253,10 +253,10 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
     _RESERVED_PUBLIC_NAMES = _RESERVED_PUBLIC_ATTRS | _RESERVED_PUBLIC_METHODS
 
     Literals: ClassVar
-    """
-    A class variable  that specify the valid choices as a Literal type. Each
-    choice must also be defined as a separate class attribute with a Literal
-    type.
+    """A class variable that specifies the valid choices as a Literal type.
+
+    Each choice must also be defined as a separate class attribute with a
+    Literal type.
     """
     def __init_subclass__(cls) -> None:
         """
@@ -469,8 +469,7 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
 
     @classmethod
     def random_choice(cls) -> LiteralInnerTypeT:
-        """
-        Returns a random choice from all available enum values.
+        """Select a random choice from all available enum values.
         """
         from omnipy.shared.constants import AUTO_VALUE, RANDOM_PREFIX
         exclude_prefixes = [RANDOM_PREFIX, AUTO_VALUE]
@@ -482,9 +481,7 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
 
     @classmethod
     def is_random_choice_value(cls, value: object) -> bool:
-        """
-        Checks whether the provided value is a valid random choice value for
-        this enum.
+        """Checks whether the value is valid as random choice for this enum.
 
         Parameters:
             value: The value to check.
