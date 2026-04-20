@@ -1,3 +1,4 @@
+from collections import ChainMap
 import random
 from typing import Any, cast, ClassVar, Generic, get_args, get_type_hints, Iterator, overload
 
@@ -433,30 +434,35 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
                             f'Missing members: {literal_missing_attrs}')
 
     @classmethod
+    def _get_all_mro_dicts(cls) -> ChainMap[str, Any]:
+        return ChainMap(*(dict(base.__dict__)
+                          for base in cls.__mro__
+                          if base is not LiteralEnum and issubclass(base, LiteralEnum)))
+
+    @classmethod
     def names(cls) -> Iterator[str]:
-        """
-        Get an iterator of all attribute names defined in the enum.
+        """Get an iterator of all attribute names defined in the enum.
 
         Returns:
             An iterator of attribute names defined in the enum.
         """
-        return (attr_name for attr_name in cls.__dict__.keys()
-                if not attr_name.startswith('_') and attr_name not in cls._RESERVED_PUBLIC_NAMES)
+        for attr_name in cls._get_all_mro_dicts().keys():
+            if cls._is_public_attr(attr_name, getattr(cls, attr_name)):
+                yield attr_name
 
     @classmethod
     def name_for_value(cls: 'type[LiteralEnum[LiteralInnerTypeT]]',
                        value: LiteralInnerTypeT) -> str:
-        """
-        Get the name of the enum attribute that corresponds to the given value.
+        """Get the name of the enum attribute for the given value.
 
         Parameters:
             value: The value to look up in the enum
 
         Returns:
-            The name of the enum attribute that corresponds to the value, or raise ValueError if the
-            value is not found.
+            The name of the enum attribute that corresponds to the value,
+            or raise ValueError if the value is not found.
         """
-        for attr_name, attr_value in cls.__dict__.items():
+        for attr_name, attr_value in cls._get_all_mro_dicts().items():
             if attr_value == value:
                 return attr_name
         raise ValueError(f'Value {value!r} not found in {cls.__name__}')
