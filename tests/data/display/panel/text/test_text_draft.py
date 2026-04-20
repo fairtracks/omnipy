@@ -10,7 +10,7 @@ from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
-from omnipy.shared.enums.display import SyntaxLanguageSpec
+from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
 from ..helpers.case_setup import (apply_frame_variant_to_test_case,
                                   PanelFrameVariantTestCase,
@@ -41,6 +41,11 @@ def test_text_draft_panel_render_next_stage_simple() -> None:
         next_stage=text_draft_panel.render_next_stage(),
         next_stage_panel_cls=ReflowedTextDraftPanel,
         exp_content='Some\ntext',
+        # SyntaxLanguageSpec.AUTO causes syntax to be set to default
+        # syntax for the pretty printer. For plain str input,
+        # CodePrettyPrinter is selected, which has default syntax set
+        # to SyntaxLanguageSpec.PYTHON.
+        exp_config=OutputConfig(syntax=SyntaxLanguageSpec.PYTHON),
     )
 
 
@@ -52,7 +57,8 @@ def test_text_draft_panel_render_next_stage_with_repr_complex() -> None:
         title='My repr panel',
         frame=Frame(Dimensions(18, 2)),
         constraints=Constraints(max_inline_container_width_incl=10),
-        config=OutputConfig(indent=1, syntax=SyntaxLanguageSpec.PYTHON),
+        config=OutputConfig(
+            indent=1, printer=PrettyPrinterLib.CODE, syntax=SyntaxLanguageSpec.PYTHON),
     )
     assert_next_stage_panel(
         this_panel=draft_panel_complex,
@@ -61,6 +67,8 @@ def test_text_draft_panel_render_next_stage_with_repr_complex() -> None:
         exp_content=dedent("""\
         def my_function():
             return (1, 2, 3)"""),
+        exp_config=OutputConfig(
+            indent=1, printer=PrettyPrinterLib.CODE, syntax=SyntaxLanguageSpec.PYTHON),
     )
 
 

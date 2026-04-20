@@ -13,9 +13,16 @@ from omnipy.data.typechecks import is_model_instance
 class PythonStatsTighteningPrettyPrinter(PrettyPrinter[object], ABC):
     @override
     @classmethod
-    def is_suitable_content(cls, draft_panel: DraftPanel[object, AnyFrame]) -> bool:
-        # To first allow for syntax-based selection, and PYTHON is the default syntax
-        return False
+    def is_suitable_content(
+        cls,
+        draft_panel: DraftPanel[object, AnyFrame],
+        default: bool = False,
+    ) -> bool:
+        # return True
+        if default:
+            return True
+        else:
+            return False
 
     @override
     @classmethod
@@ -34,7 +41,11 @@ class PythonStatsTighteningPrettyPrinter(PrettyPrinter[object], ABC):
 class JsonStatsTighteningPrettyPrinterMixin(PrettyPrinter[object], ABC):
     @override
     @classmethod
-    def is_suitable_content(cls, draft_panel: DraftPanel[object, AnyFrame]) -> bool:
+    def is_suitable_content(
+        cls,
+        draft_panel: DraftPanel[object, AnyFrame],
+        default: bool = False,
+    ) -> bool:
         return is_json_model_instance_hack(draft_panel.content)
 
     @override

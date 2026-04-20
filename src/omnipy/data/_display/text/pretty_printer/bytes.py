@@ -12,15 +12,17 @@ from omnipy.data.typechecks import is_model_instance
 class HexdumpPrettyPrinter(PrettyPrinter[str]):
     @override
     @classmethod
-    def is_suitable_content(cls, draft_panel: DraftPanel[object, AnyFrame]) -> bool:
+    def is_suitable_content(
+        cls,
+        draft_panel: DraftPanel[object, AnyFrame],
+        default: bool = False,
+    ) -> bool:
         from omnipy.components.raw.models import BytesModel
 
         content = draft_panel.content
-        if isinstance(content, bytes):
-            return True
 
         if is_model_instance(content):
-            return content.outer_type() is bytes or isinstance(content, BytesModel)
+            return isinstance(content, BytesModel)
 
         return False
 

@@ -12,6 +12,7 @@ from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
+from omnipy.shared.enums.display import SyntaxLanguageSpec
 
 from .helpers.mocks import MockResizedStylablePlainCropPanel, MockStylablePlainCropPanel
 from .helpers.panel_assert import assert_draft_panel_subcls, assert_next_stage_panel
@@ -153,6 +154,11 @@ def test_draft_panel_render_next_stage_with_repr_simple() -> None:
         next_stage=draft_panel.render_next_stage(),
         next_stage_panel_cls=ReflowedTextDraftPanel,
         exp_content='Some text',
+        # SyntaxLanguageSpec.AUTO causes syntax to be set to default
+        # syntax for the pretty printer. For plain str input,
+        # CodePrettyPrinter is selected, which has default syntax set
+        # to SyntaxLanguageSpec.PYTHON.
+        exp_config=OutputConfig(syntax=SyntaxLanguageSpec.PYTHON),
     )
 
 
@@ -169,6 +175,11 @@ def test_draft_panel_render_next_stage_with_repr_complex() -> None:
         next_stage=draft_panel_complex.render_next_stage(),
         next_stage_panel_cls=ReflowedTextDraftPanel,
         exp_content='(\n 1,\n 2,\n 3\n)',
+        # SyntaxLanguageSpec.AUTO causes syntax to be set to default
+        # syntax for the pretty printer. For python object input, a Python
+        # pretty printer is selected, which has default syntax set to
+        # SyntaxLanguageSpec.PYTHON.
+        exp_config=OutputConfig(indent=1, syntax=SyntaxLanguageSpec.PYTHON),
     )
 
 

@@ -20,7 +20,11 @@ from omnipy.util.helpers import sorted_dict_hash
 class PrettyPrinter(ABC, Generic[ContentT]):
     @classmethod
     @abstractmethod
-    def is_suitable_content(cls, draft_panel: DraftPanel[object, AnyFrame]) -> bool:
+    def is_suitable_content(
+        cls,
+        draft_panel: DraftPanel[object, AnyFrame],
+        default: bool = False,
+    ) -> bool:
         ...
 
     @classmethod
@@ -77,12 +81,15 @@ class PrettyPrinter(ABC, Generic[ContentT]):
         if pretty_printer:
             return pretty_printer
 
-        if draft_panel.config.syntax is SyntaxLanguageSpec.AUTO:
-            pretty_printer = register.get_pretty_printer_from_content(draft_panel)
-            if pretty_printer:
-                return pretty_printer
+        pretty_printer = register.get_pretty_printer_from_content(draft_panel, default=False)
+        if pretty_printer:
+            return pretty_printer
 
-        return register.get_pretty_printer_from_syntax(draft_panel.config.syntax)
+        pretty_printer = register.get_pretty_printer_from_syntax(draft_panel.config.syntax)
+        if pretty_printer:
+            return pretty_printer
+
+        return register.get_pretty_printer_from_content(draft_panel, default=True)
 
 
 class StatsTighteningPrettyPrinter(

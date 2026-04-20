@@ -38,7 +38,6 @@ from omnipy.shared.enums.display import (DisplayColorSystem,
                                          MaxTitleHeight,
                                          PanelDesign,
                                          PrettyPrinterLib,
-                                         SyntaxLanguage,
                                          SyntaxLanguageSpec,
                                          VerticalOverflowMode)
 from omnipy.shared.enums.ui import (BrowserPageUserInterfaceType,
@@ -2091,24 +2090,11 @@ class BaseDisplayMixin:
         frame: Frame | None = None,
         **config_kwargs,
     ) -> DraftPanel:
-        from omnipy.components.json.models import is_json_model_instance_hack
-        from omnipy.components.raw.models import BytesModel, StrModel
         from omnipy.components.tables.models import (ColumnModel,
                                                      ColumnWiseTableWithColNamesModel,
                                                      PrintableTable)
 
-        syntax: SyntaxLanguage.Literals
-        if isinstance(model, (StrModel, PrintableTable)):
-            syntax = SyntaxLanguage.TEXT
-        elif isinstance(model, BytesModel):
-            syntax = SyntaxLanguage.HEXDUMP
-        elif is_json_model_instance_hack(model):
-            syntax = SyntaxLanguage.JSON5
-        else:
-            syntax = SyntaxLanguage.PYTHON
-
         config = self._update_config_with_overflow_modes(config, 'text')
-        config = dataclasses.replace(config, syntax=syntax)
         config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
 
         if isinstance(model, PrintableTable):

@@ -51,7 +51,14 @@ class PrettyPrinterLib(LiteralEnum[str]):
     `True`, as it is specifically designed for that purpose.
     """
 
-    Literals = Literal['rich', 'devtools', 'compact-json', 'text', 'column', 'hexdump', 'auto']
+    Literals = Literal['rich',
+                       'devtools',
+                       'compact-json',
+                       'text',
+                       'code',
+                       'column',
+                       'hexdump',
+                       'auto']
 
     RICH: Literal['rich'] = 'rich'
     """
@@ -78,6 +85,13 @@ class PrettyPrinterLib(LiteralEnum[str]):
     """
     The plain text pretty printer, which is used for displaying plain text
     content.
+    """
+
+    CODE: Literal['code'] = 'code'
+    """Code pretty printer.
+
+    The code pretty printer, which is used for displaying plain text
+    containing code. The default syntax is Python.
     """
 
     COLUMN: Literal['column'] = 'column'

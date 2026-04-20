@@ -9,6 +9,8 @@ from omnipy.data._display.frame import Frame
 from omnipy.shared.enums.colorstyles import DarkLowContrastColorStyles, LightLowContrastColorStyles
 from omnipy.shared.enums.display import (DisplayColorSystem,
                                          HorizontalOverflowMode,
+                                         PrettyPrinterLib,
+                                         SyntaxLanguageSpec,
                                          VerticalOverflowMode)
 
 from ...helpers.case_setup import (OutputPropertyType,
@@ -139,7 +141,11 @@ def case_syntax_styling_setup_no_frame_or_configs(
     return StylizedPanelTestCaseSetup(
         case_id='no-frame-default-color' + ('-no-bg' if not solid_background else ''),
         content="MyClass({'abc': [123, 234]})",
-        config=OutputConfig(system=DisplayColorSystem.ANSI_RGB, bg=solid_background),
+        config=OutputConfig(
+            printer=PrettyPrinterLib.CODE,
+            syntax=SyntaxLanguageSpec.PYTHON,
+            system=DisplayColorSystem.ANSI_RGB,
+            bg=solid_background),
     )
 
 
@@ -165,10 +171,12 @@ def case_syntax_styling_setup_no_frame_color_config(
         case_id=case_id,
         content="MyClass({'abc': [123, 234]})",
         config=OutputConfig(
+            printer=PrettyPrinterLib.CODE,
             fonts=css_font_families,
             font_size=css_font_size,
             font_weight=css_font_weight,
             line_height=css_line_height,
+            syntax=SyntaxLanguageSpec.PYTHON,
             system=DisplayColorSystem.ANSI_RGB,
             style=LightLowContrastColorStyles.MURPHY_PYGMENTS,
             bg=solid_background),
@@ -192,6 +200,8 @@ def case_syntax_styling_setup_small_frame_color_and_overflow_config(
         content="MyClass({'abc': [123, 234]})",
         frame=Frame(Dimensions(9, 3)),
         config=OutputConfig(
+            printer=PrettyPrinterLib.CODE,
+            syntax=SyntaxLanguageSpec.PYTHON,
             system=color_system,
             style=DarkLowContrastColorStyles.ZENBURN_PYGMENTS,
             bg=solid_background,

@@ -8,6 +8,7 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.components.json.models import JsonModel
+from omnipy.components.raw.models import StrModel
 from omnipy.components.tables.models import ColumnModel
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
@@ -821,7 +822,7 @@ def test_pretty_repr_of_draft_multi_line_if_nested_known_issue(
 
 
 def test_plain_str_pretty_print() -> None:
-    str_data = 'This is a plain string that should not be formatted in any way.'
+    str_data = 'This is a plain string that should not be formatted in any way'
 
     _assert_pretty_repr_of_draft(
         str_data,
@@ -831,10 +832,20 @@ def test_plain_str_pretty_print() -> None:
         within_frame_height=True,
     )
 
-    str_data = 'This is a string inside a model.'
+    str_data = 'This is a string inside Model[str] that should be displayed as a python object'
 
     _assert_pretty_repr_of_draft(
         Model[str](str_data),
+        exp_plain_output=f"'{str_data}'",
+        frame=DEFAULT_FRAME,
+        within_frame_width=True,
+        within_frame_height=True,
+    )
+
+    str_data = 'This is a string inside a StrModel that should not be formatted in any way'
+
+    _assert_pretty_repr_of_draft(
+        StrModel(str_data),
         exp_plain_output=str_data,
         frame=DEFAULT_FRAME,
         within_frame_width=True,

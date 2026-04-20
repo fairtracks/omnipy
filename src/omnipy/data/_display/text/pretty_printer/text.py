@@ -12,21 +12,32 @@ from omnipy.data.typechecks import is_model_instance
 class PlainTextPrettyPrinter(PrettyPrinter[str]):
     @override
     @classmethod
-    def is_suitable_content(cls, draft_panel: DraftPanel[object, AnyFrame]) -> bool:
+    def is_suitable_content(
+        cls,
+        draft_panel: DraftPanel[object, AnyFrame],
+        default: bool = False,
+    ) -> bool:
         from omnipy.components.raw.models import StrModel
 
         content = draft_panel.content
-        if isinstance(content, str):
-            return True
 
-        if is_model_instance(content):
-            return content.outer_type() is str or isinstance(content, StrModel)
+        if default:
+            if is_model_instance(content):
+                return content.outer_type() is str
+        else:
+            if is_model_instance(content):
+                return isinstance(content, StrModel)
 
         return False
 
     @override
     @classmethod
     def get_default_syntax_language(cls) -> SyntaxLanguageSpec.Literals:
+        # By default, we use TEXT syntax to avoid incorrect highlighting
+        # or non-Python string content, such as Markdown, being
+        # highlighted as Python code. For plain str content, such as e.g.
+        # in Dataset.list() output, CodePrettyPrinter is automatically
+        # selected, which by default uses SyntaxLanguageSpec.PYTHON instead.
         return SyntaxLanguageSpec.TEXT
 
     @override
@@ -48,3 +59,29 @@ class PlainTextPrettyPrinter(PrettyPrinter[str]):
             raw_content = repr(raw_content)
 
         return raw_content
+
+
+class CodePrettyPrinter(PlainTextPrettyPrinter):
+    @override
+    @classmethod
+    def is_suitable_content(
+        cls,
+        draft_panel: DraftPanel[object, AnyFrame],
+        default: bool = False,
+    ) -> bool:
+        # To allow plain str content, such as e.g. in Dataset.list() output,
+        # to be automatically highlighted as Python code.
+        if default and isinstance(draft_panel.content, str):
+            return True
+
+        return False
+
+    @override
+    @classmethod
+    def get_default_syntax_language(cls) -> SyntaxLanguageSpec.Literals:
+        # Python syntax is provided as default. This is among others used
+        # to support highlighting of numbers, types etc. in tables and
+        # elsewhere, such as Dataset.list() output. For str-based Models,
+        # PlainTextPrettyPrinter is automatically selected, which uses
+        # SyntaxLanguageSpec.TEXT instead.
+        return SyntaxLanguageSpec.PYTHON
