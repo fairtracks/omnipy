@@ -37,6 +37,28 @@ class DisplayDimensionsUpdateMode(LiteralEnum[str]):
     """
 
 
+class DarkBackground(LiteralEnum[str | bool]):
+    """
+    Specifies whether the background color of the output is dark or light.
+
+    This is used for selecting the appropriate color scheme for syntax
+    highlighting and other color styles. The dark background mode is
+    automatically detected based on the terminal capabilities, but can be
+    overridden by the user in the configs.
+    """
+
+    Literals = Literal['auto', True, False]
+
+    AUTO: Literal['auto'] = 'auto'
+    """Automatically detects whether the background color of the output is dark or light."""
+
+    TRUE: Literal[True] = True
+    """Specifies that the background color of the output is dark."""
+
+    FALSE: Literal[False] = False
+    """Specifies that the background color of the output is light."""
+
+
 class PrettyPrinterLib(LiteralEnum[str]):
     """
     Supported libraries for pretty printing of various data structures.

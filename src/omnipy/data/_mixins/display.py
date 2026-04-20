@@ -32,7 +32,8 @@ from omnipy.shared.constants import (MAX_PANEL_NESTING_DEPTH,
                                      MIN_PANEL_WIDTH,
                                      TITLE_BLANK_LINES)
 from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
-from omnipy.shared.enums.display import (DisplayColorSystem,
+from omnipy.shared.enums.display import (DarkBackground,
+                                         DisplayColorSystem,
                                          HorizontalOverflowMode,
                                          Justify,
                                          MaxTitleHeight,
@@ -211,7 +212,17 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 AllColorStyles. For non-supported styles, the user can
                 specify a string with the Pygments style name. For
                 this to work, the style must be registered in the
-                Pygments library.
+                Pygments library. If style is `AUTO`, the style is
+                automatically selected from the RecommendedColorStyles
+                based on the detected user interface, the color
+                system, and whether the background is dark or not.
+            dark (DarkBackground.Literals):
+                Whether the background color of the output is dark.
+                This is used to determine the appropriate color scheme
+                for syntax highlighting. The default is AUTO, which
+                automatically tries to detect whether the background
+                is dark. Capability of auto-detection depends on the
+                user interface.
             bg (bool):
                 If False, uses transparent background for the output.
                 In the case of terminal output, the background color
@@ -285,6 +296,12 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 is a Jupyter widget to display HTML output in the
                 browser. Otherwise, the method returns None.""")
 
+    os.environ['OMNIPY_MACRO_DISPLAY_METHOD_NOTE'] = dedent("""\
+            Note:
+                Any default argument value is overridden by the
+                corresponding value in the relevant subsection of the
+                UserInterfaceConfig.""")
+
 
 class IsDisplayMethod(Protocol):
 
@@ -305,6 +322,7 @@ class IsDisplayMethod(Protocol):
         ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
         system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
         style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
+        dark: DarkBackground.Literals = DarkBackground.AUTO,
         bg: bool = False,
         fonts: tuple[str,
                      ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
@@ -342,6 +360,7 @@ class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
         ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
         system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
         style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+        dark: DarkBackground.Literals = DarkBackground.AUTO,
         bg: bool = False,
         fonts: tuple[str,
                      ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
@@ -379,6 +398,7 @@ class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
         ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
         system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
         style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+        dark: DarkBackground.Literals = DarkBackground.AUTO,
         bg: bool = False,
         fonts: tuple[str,
                      ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
@@ -416,6 +436,7 @@ class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
         ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
         system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
         style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+        dark: DarkBackground.Literals = DarkBackground.AUTO,
         bg: bool = False,
         fonts: tuple[str,
                      ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
@@ -480,6 +501,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+            dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
             fonts: tuple[str, ...] = ('Menlo',
                                       'DejaVu Sans Mono',
@@ -510,6 +532,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
+            # {{DISPLAY_METHOD_NOTE}}
+            #
             """Display a preview of the Model or Dataset content.
 
             For Model instances, `peek()` displays a preview of the
@@ -586,7 +610,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     AllColorStyles. For non-supported styles, the user can
                     specify a string with the Pygments style name. For
                     this to work, the style must be registered in the
-                    Pygments library.
+                    Pygments library. If style is `AUTO`, the style is
+                    automatically selected from the RecommendedColorStyles
+                    based on the detected user interface, the color
+                    system, and whether the background is dark or not.
+                dark (DarkBackground.Literals):
+                    Whether the background color of the output is dark.
+                    This is used to determine the appropriate color scheme
+                    for syntax highlighting. The default is AUTO, which
+                    automatically tries to detect whether the background
+                    is dark. Capability of auto-detection depends on the
+                    user interface.
                 bg (bool):
                     If False, uses transparent background for the output.
                     In the case of terminal output, the background color
@@ -658,6 +692,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 method returns a ReactivelyResizingHtml element which
                 is a Jupyter widget to display HTML output in the
                 browser. Otherwise, the method returns None.
+
+            Note:
+                Any default argument value is overridden by the
+                corresponding value in the relevant subsection of the
+                UserInterfaceConfig.
             """
     else:
 
@@ -671,6 +710,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
+            # {{DISPLAY_METHOD_NOTE}}
+            #
             """Display a preview of the Model or Dataset content.
 
             For Model instances, `peek()` displays a preview of the
@@ -747,7 +788,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     AllColorStyles. For non-supported styles, the user can
                     specify a string with the Pygments style name. For
                     this to work, the style must be registered in the
-                    Pygments library.
+                    Pygments library. If style is `AUTO`, the style is
+                    automatically selected from the RecommendedColorStyles
+                    based on the detected user interface, the color
+                    system, and whether the background is dark or not.
+                dark (DarkBackground.Literals):
+                    Whether the background color of the output is dark.
+                    This is used to determine the appropriate color scheme
+                    for syntax highlighting. The default is AUTO, which
+                    automatically tries to detect whether the background
+                    is dark. Capability of auto-detection depends on the
+                    user interface.
                 bg (bool):
                     If False, uses transparent background for the output.
                     In the case of terminal output, the background color
@@ -819,6 +870,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 method returns a ReactivelyResizingHtml element which
                 is a Jupyter widget to display HTML output in the
                 browser. Otherwise, the method returns None.
+
+            Note:
+                Any default argument value is overridden by the
+                corresponding value in the relevant subsection of the
+                UserInterfaceConfig.
             """
             return self._display_according_to_ui_type(
                 ui_type=self._extract_ui_type(**kwargs),
@@ -875,6 +931,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+            dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
             fonts: tuple[str, ...] = ('Menlo',
                                       'DejaVu Sans Mono',
@@ -905,6 +962,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
+            # {{DISPLAY_METHOD_NOTE}}
+            #
             #
             """Display the content of the Model or Dataset in full height.
 
@@ -980,7 +1039,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     AllColorStyles. For non-supported styles, the user can
                     specify a string with the Pygments style name. For
                     this to work, the style must be registered in the
-                    Pygments library.
+                    Pygments library. If style is `AUTO`, the style is
+                    automatically selected from the RecommendedColorStyles
+                    based on the detected user interface, the color
+                    system, and whether the background is dark or not.
+                dark (DarkBackground.Literals):
+                    Whether the background color of the output is dark.
+                    This is used to determine the appropriate color scheme
+                    for syntax highlighting. The default is AUTO, which
+                    automatically tries to detect whether the background
+                    is dark. Capability of auto-detection depends on the
+                    user interface.
                 bg (bool):
                     If False, uses transparent background for the output.
                     In the case of terminal output, the background color
@@ -1052,6 +1121,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 method returns a ReactivelyResizingHtml element which
                 is a Jupyter widget to display HTML output in the
                 browser. Otherwise, the method returns None.
+
+            Note:
+                Any default argument value is overridden by the
+                corresponding value in the relevant subsection of the
+                UserInterfaceConfig.
 
             """
     else:
@@ -1066,6 +1140,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
+            # {{DISPLAY_METHOD_NOTE}}
+            #
             #
             """Display the content of the Model or Dataset in full height.
 
@@ -1141,7 +1217,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     AllColorStyles. For non-supported styles, the user can
                     specify a string with the Pygments style name. For
                     this to work, the style must be registered in the
-                    Pygments library.
+                    Pygments library. If style is `AUTO`, the style is
+                    automatically selected from the RecommendedColorStyles
+                    based on the detected user interface, the color
+                    system, and whether the background is dark or not.
+                dark (DarkBackground.Literals):
+                    Whether the background color of the output is dark.
+                    This is used to determine the appropriate color scheme
+                    for syntax highlighting. The default is AUTO, which
+                    automatically tries to detect whether the background
+                    is dark. Capability of auto-detection depends on the
+                    user interface.
                 bg (bool):
                     If False, uses transparent background for the output.
                     In the case of terminal output, the background color
@@ -1213,6 +1299,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 method returns a ReactivelyResizingHtml element which
                 is a Jupyter widget to display HTML output in the
                 browser. Otherwise, the method returns None.
+
+            Note:
+                Any default argument value is overridden by the
+                corresponding value in the relevant subsection of the
+                UserInterfaceConfig.
 
             """
             return self._display_according_to_ui_type(
@@ -1239,6 +1330,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+            dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
             fonts: tuple[str, ...] = ('Menlo',
                                       'DejaVu Sans Mono',
@@ -1269,6 +1361,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
+            # {{DISPLAY_METHOD_NOTE}}
+            #
             """Preview the data content of the Model or Dataset as JSON.
 
             In contrast to e.g. `peek()`, `json()` displays the "data
@@ -1348,7 +1442,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     AllColorStyles. For non-supported styles, the user can
                     specify a string with the Pygments style name. For
                     this to work, the style must be registered in the
-                    Pygments library.
+                    Pygments library. If style is `AUTO`, the style is
+                    automatically selected from the RecommendedColorStyles
+                    based on the detected user interface, the color
+                    system, and whether the background is dark or not.
+                dark (DarkBackground.Literals):
+                    Whether the background color of the output is dark.
+                    This is used to determine the appropriate color scheme
+                    for syntax highlighting. The default is AUTO, which
+                    automatically tries to detect whether the background
+                    is dark. Capability of auto-detection depends on the
+                    user interface.
                 bg (bool):
                     If False, uses transparent background for the output.
                     In the case of terminal output, the background color
@@ -1420,6 +1524,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 method returns a ReactivelyResizingHtml element which
                 is a Jupyter widget to display HTML output in the
                 browser. Otherwise, the method returns None.
+
+            Note:
+                Any default argument value is overridden by the
+                corresponding value in the relevant subsection of the
+                UserInterfaceConfig.
             """
     else:
 
@@ -1433,6 +1542,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
+            # {{DISPLAY_METHOD_NOTE}}
+            #
             """Preview the data content of the Model or Dataset as JSON.
 
             In contrast to e.g. `peek()`, `json()` displays the "data
@@ -1512,7 +1623,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     AllColorStyles. For non-supported styles, the user can
                     specify a string with the Pygments style name. For
                     this to work, the style must be registered in the
-                    Pygments library.
+                    Pygments library. If style is `AUTO`, the style is
+                    automatically selected from the RecommendedColorStyles
+                    based on the detected user interface, the color
+                    system, and whether the background is dark or not.
+                dark (DarkBackground.Literals):
+                    Whether the background color of the output is dark.
+                    This is used to determine the appropriate color scheme
+                    for syntax highlighting. The default is AUTO, which
+                    automatically tries to detect whether the background
+                    is dark. Capability of auto-detection depends on the
+                    user interface.
                 bg (bool):
                     If False, uses transparent background for the output.
                     In the case of terminal output, the background color
@@ -1584,6 +1705,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 method returns a ReactivelyResizingHtml element which
                 is a Jupyter widget to display HTML output in the
                 browser. Otherwise, the method returns None.
+
+            Note:
+                Any default argument value is overridden by the
+                corresponding value in the relevant subsection of the
+                UserInterfaceConfig.
             """
             return self._display_according_to_ui_type(
                 ui_type=self._extract_ui_type(**kwargs),
@@ -1609,6 +1735,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+            dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
             fonts: tuple[str, ...] = ('Menlo',
                                       'DejaVu Sans Mono',
@@ -1711,7 +1838,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     AllColorStyles. For non-supported styles, the user can
                     specify a string with the Pygments style name. For
                     this to work, the style must be registered in the
-                    Pygments library.
+                    Pygments library. If style is `AUTO`, the style is
+                    automatically selected from the RecommendedColorStyles
+                    based on the detected user interface, the color
+                    system, and whether the background is dark or not.
+                dark (DarkBackground.Literals):
+                    Whether the background color of the output is dark.
+                    This is used to determine the appropriate color scheme
+                    for syntax highlighting. The default is AUTO, which
+                    automatically tries to detect whether the background
+                    is dark. Capability of auto-detection depends on the
+                    user interface.
                 bg (bool):
                     If False, uses transparent background for the output.
                     In the case of terminal output, the background color
@@ -1863,7 +2000,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     AllColorStyles. For non-supported styles, the user can
                     specify a string with the Pygments style name. For
                     this to work, the style must be registered in the
-                    Pygments library.
+                    Pygments library. If style is `AUTO`, the style is
+                    automatically selected from the RecommendedColorStyles
+                    based on the detected user interface, the color
+                    system, and whether the background is dark or not.
+                dark (DarkBackground.Literals):
+                    Whether the background color of the output is dark.
+                    This is used to determine the appropriate color scheme
+                    for syntax highlighting. The default is AUTO, which
+                    automatically tries to detect whether the background
+                    is dark. Capability of auto-detection depends on the
+                    user interface.
                 bg (bool):
                     If False, uses transparent background for the output.
                     In the case of terminal output, the background color
@@ -2037,7 +2184,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 AllColorStyles. For non-supported styles, the user can
                 specify a string with the Pygments style name. For
                 this to work, the style must be registered in the
-                Pygments library.
+                Pygments library. If style is `AUTO`, the style is
+                automatically selected from the RecommendedColorStyles
+                based on the detected user interface, the color
+                system, and whether the background is dark or not.
+            dark (DarkBackground.Literals):
+                Whether the background color of the output is dark.
+                This is used to determine the appropriate color scheme
+                for syntax highlighting. The default is AUTO, which
+                automatically tries to detect whether the background
+                is dark. Capability of auto-detection depends on the
+                user interface.
             bg (bool):
                 If False, uses transparent background for the output.
                 In the case of terminal output, the background color
@@ -2588,6 +2745,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             ui=ui_type,
             system=color_system,
             style=color_style,
+            dark=ui_type_config.color.dark_background,
             bg=ui_type_config.color.solid_background,
             panel=panel_design,
             title_at_top=ui_config.layout.panel_title_at_top,
@@ -2763,6 +2921,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+            dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
             fonts: tuple[str, ...] = ('Menlo',
                                       'DejaVu Sans Mono',
@@ -2793,6 +2952,8 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
+            # {{DISPLAY_METHOD_NOTE}}
+            #
             """Displays a summary list of all models in the dataset.
 
             The summary list includes a number of key properties for each
@@ -2868,7 +3029,17 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                     AllColorStyles. For non-supported styles, the user can
                     specify a string with the Pygments style name. For
                     this to work, the style must be registered in the
-                    Pygments library.
+                    Pygments library. If style is `AUTO`, the style is
+                    automatically selected from the RecommendedColorStyles
+                    based on the detected user interface, the color
+                    system, and whether the background is dark or not.
+                dark (DarkBackground.Literals):
+                    Whether the background color of the output is dark.
+                    This is used to determine the appropriate color scheme
+                    for syntax highlighting. The default is AUTO, which
+                    automatically tries to detect whether the background
+                    is dark. Capability of auto-detection depends on the
+                    user interface.
                 bg (bool):
                     If False, uses transparent background for the output.
                     In the case of terminal output, the background color
@@ -2940,6 +3111,11 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 method returns a ReactivelyResizingHtml element which
                 is a Jupyter widget to display HTML output in the
                 browser. Otherwise, the method returns None.
+
+            Note:
+                Any default argument value is overridden by the
+                corresponding value in the relevant subsection of the
+                UserInterfaceConfig.
             """
 
     else:
@@ -2954,6 +3130,8 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
+            # {{DISPLAY_METHOD_NOTE}}
+            #
             """Displays a summary list of all models in the dataset.
 
             The summary list includes a number of key properties for each
@@ -3029,7 +3207,17 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                     AllColorStyles. For non-supported styles, the user can
                     specify a string with the Pygments style name. For
                     this to work, the style must be registered in the
-                    Pygments library.
+                    Pygments library. If style is `AUTO`, the style is
+                    automatically selected from the RecommendedColorStyles
+                    based on the detected user interface, the color
+                    system, and whether the background is dark or not.
+                dark (DarkBackground.Literals):
+                    Whether the background color of the output is dark.
+                    This is used to determine the appropriate color scheme
+                    for syntax highlighting. The default is AUTO, which
+                    automatically tries to detect whether the background
+                    is dark. Capability of auto-detection depends on the
+                    user interface.
                 bg (bool):
                     If False, uses transparent background for the output.
                     In the case of terminal output, the background color
@@ -3101,6 +3289,11 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 method returns a ReactivelyResizingHtml element which
                 is a Jupyter widget to display HTML output in the
                 browser. Otherwise, the method returns None.
+
+            Note:
+                Any default argument value is overridden by the
+                corresponding value in the relevant subsection of the
+                UserInterfaceConfig.
             """
 
             return self._display_according_to_ui_type(

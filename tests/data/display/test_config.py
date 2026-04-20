@@ -7,7 +7,8 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.shared.enums.colorstyles import (DarkLowContrastColorStyles,
                                              LightHighContrastColorStyles,
                                              RecommendedColorStyles)
-from omnipy.shared.enums.display import (DisplayColorSystem,
+from omnipy.shared.enums.display import (DarkBackground,
+                                         DisplayColorSystem,
                                          HorizontalOverflowMode,
                                          Justify,
                                          MaxTitleHeight,
@@ -29,6 +30,7 @@ def test_output_config() -> None:
         ui=UserInterfaceType.JUPYTER,
         system=DisplayColorSystem.ANSI_RGB,
         style=DarkLowContrastColorStyles.ONE_DARK_PYGMENTS,
+        dark=DarkBackground.TRUE,
         bg=True,
         fonts=('Menlo', 'monospace'),
         font_size=16,
@@ -56,6 +58,7 @@ def test_output_config() -> None:
     assert config.ui is UserInterfaceType.JUPYTER
     assert config.system is DisplayColorSystem.ANSI_RGB
     assert config.style is DarkLowContrastColorStyles.ONE_DARK_PYGMENTS
+    assert config.dark is True
     assert config.bg is True
     assert config.fonts == ('Menlo', 'monospace')
     assert config.font_size == 16
@@ -88,6 +91,7 @@ def test_output_config() -> None:
         #       thus excluded from the list of valid color styles in Omnipy, but it is still a valid
         #       color style in the Pygments library.
         style='lilypond',
+        dark=1,  # type: ignore[arg-type]
         bg=1,  # type: ignore[arg-type]
         fonts=[],  # type: ignore[arg-type]
         font_size='16',  # type: ignore[arg-type]
@@ -114,6 +118,7 @@ def test_output_config() -> None:
     assert config.ui is UserInterfaceType.TERMINAL
     assert config.system is DisplayColorSystem.ANSI_256
     assert config.style == 'lilypond'
+    assert config.dark is True
     assert config.bg is True
     assert config.fonts == ()
     assert config.font_size == 16
@@ -175,6 +180,9 @@ def test_output_config_hashable() -> None:
         },
         {
             'style': LightHighContrastColorStyles.XCODE_PYGMENTS
+        },
+        {
+            'dark': DarkBackground.TRUE
         },
         {
             'bg': True
@@ -269,6 +277,9 @@ def test_fail_output_config_no_assignments() -> None:
         config.style = DarkLowContrastColorStyles.GRUVBOX_DARK_PYGMENTS  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
+        config.dark = True  # type: ignore[misc]
+
+    with pytest.raises(AttributeError):
         config.bg = True  # type: ignore[misc]
 
     with pytest.raises(AttributeError):
@@ -352,19 +363,22 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(style='red')
 
     with pytest.raises(ValueError):
+        OutputConfig(dark=None)  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError):
         OutputConfig(bg=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
         OutputConfig(fonts=None)  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        OutputConfig(font_weight=-1)
+        OutputConfig(font_size=-1)
 
     with pytest.raises(ValueError):
         OutputConfig(font_weight=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(font_weight=-1)
+        OutputConfig(line_height=-1)
 
     with pytest.raises(ValueError):
         OutputConfig(h_overflow=None)  # type: ignore[arg-type]
@@ -415,6 +429,7 @@ def test_output_config_default_values() -> None:
     assert config.ui is UserInterfaceType.AUTO
     assert config.system is DisplayColorSystem.AUTO
     assert config.style is RecommendedColorStyles.ANSI_DARK
+    assert config.dark is DarkBackground.AUTO
     assert config.bg is False
     assert config.fonts == (
         'Menlo',

@@ -12,7 +12,8 @@ from omnipy.shared.constants import (MAX_PANEL_NESTING_DEPTH,
                                      MIN_CROP_WIDTH,
                                      MIN_PANEL_WIDTH)
 from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
-from omnipy.shared.enums.display import (DisplayColorSystem,
+from omnipy.shared.enums.display import (DarkBackground,
+                                         DisplayColorSystem,
                                          HorizontalOverflowMode,
                                          Justify,
                                          MaxTitleHeight,
@@ -87,7 +88,16 @@ class OutputConfig:
             highlighting and other display elements. Supported styles are
             defined in AllColorStyles. For non-supported styles, the user
             can specify a string with the Pygments style name. For this to
-            work, the style must be registered in the Pygments library.
+            work, the style must be registered in the Pygments library. If
+            style is `AUTO`, the style is automatically selected from the
+            RecommendedColorStyles based on the detected user interface,
+            the color system, and whether the background is dark or not.
+        dark (DarkBackground.Literals): Whether the background color of the
+            output is dark. This is used to determine the appropriate
+            color scheme for syntax highlighting. The default is AUTO,
+            which automatically tries to detect whether the background is
+            dark. Capability of auto-detection depends on the user
+            interface.
         bg (bool): If False, uses transparent background for the output. In
             the case of terminal output, the background color will be the
             current background color of the terminal. For HTML output, the
@@ -148,6 +158,7 @@ class OutputConfig:
     ui: UserInterfaceType.Literals = UserInterfaceType.AUTO
     system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
     style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
+    dark: DarkBackground.Literals = DarkBackground.AUTO
     bg: bool = False
     fonts: tuple[str, ...] = (
         'Menlo',
