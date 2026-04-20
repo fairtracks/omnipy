@@ -3291,7 +3291,7 @@ if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
     # a: MyCallable = my_function
     # ```
     #
-    # On the other hant, the below check will catch cases with different
+    # On the other hand, the below check will catch cases with different
     # number and names of parameters. Such cases are more likely to occur,
     # e.g. when a developer fails to add a new parameter to all display
     # methods.
