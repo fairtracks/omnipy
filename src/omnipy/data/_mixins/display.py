@@ -22,9 +22,13 @@ from omnipy.data._display.layout.base import Layout, PanelDesignDims
 from omnipy.data._display.layout.flow.helpers import create_ellipsis_panel
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
+from omnipy.data._display.styles.dynamic_styles import resolve_and_fetch_style
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.typechecks import is_dataset_instance, is_model_instance
-from omnipy.hub.ui import get_terminal_prompt_height, note_mime_bundle
+from omnipy.hub.ui import (detect_dark_background,
+                           detect_display_color_system,
+                           get_terminal_prompt_height,
+                           note_mime_bundle)
 from omnipy.shared.constants import (MAX_PANEL_NESTING_DEPTH,
                                      MAX_PANELS_HORIZONTALLY,
                                      MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED,
@@ -2452,19 +2456,15 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         title: str = '',
         frame: Frame | None = None,
         level: int = 0,
-        **kwargs,
+        /,
+        **kwargs: object,
     ) -> DraftPanel:
         from omnipy.data.dataset import Dataset
 
         ui_type = self._extract_ui_type(**kwargs)
-        config = self._create_output_config_from_data_config(
-            ui_type, level, use_min_crop_width=True)
-        config_kwargs = self._validate_kwargs_for_config(**kwargs)
-        config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
+        config, config_kwargs, frame = self._initial_config_setup(
+            ui_type, kwargs, use_min_crop_width=True, frame=frame, level=level)
 
-        if not frame:
-            frame = self._define_frame_from_available_display_dims(ui_type)
-        frame = self._apply_kwargs_to_frame(frame, **kwargs)
         max_num_panels_in_frame: None | int = self._calc_max_num_panels_in_frame(config, frame)
 
         layout: Layout[DraftPanel] = Layout()
@@ -2498,17 +2498,16 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
             elif (is_dataset and not is_ellipsis_panel and not_too_deep):
                 layout[inner_title] = cast(Dataset, model_or_dataset)._peek_dataset_models(
-                    title=inner_title,
-                    frame=empty_frame(),
-                    level=level + 1,
+                    inner_title,
+                    empty_frame(),
+                    level + 1,
                     **config_kwargs,
                 )
             else:
                 inner_kwargs = config_kwargs.copy()
 
                 if is_dataset_instance(model_or_dataset):
-                    dataset = model_or_dataset
-                    model = dataset._get_self_as_json_model()
+                    model = model_or_dataset._get_self_as_json_model()
                     inner_kwargs = self._prepare_kwargs_for_json(inner_kwargs)
                 else:  # Model
                     model = model_or_dataset
@@ -2523,10 +2522,93 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 if is_ellipsis_panel:
                     layout[inner_title] = create_ellipsis_panel(layout[inner_title])
 
-        config = self._update_config_with_overflow_modes(config, 'layout')
-        config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
-
+        config = self._update_config_with_overflow_modes(config, 'layout', **config_kwargs)
         return DraftPanel(layout, title=title, frame=frame, config=config)
+
+    def _initial_config_setup(
+        self,
+        ui_type: SpecifiedUserInterfaceType.Literals,
+        kwargs: dict[str, object],
+        use_min_crop_width: bool,
+        frame: Frame | None = None,
+        level: int = 0,
+    ) -> tuple[
+            OutputConfig,
+            dict[str, object],
+            Frame,
+    ]:
+        config = self._create_output_config_from_data_config(ui_type, use_min_crop_width)
+
+        config_kwargs = self._validate_kwargs_for_config(**kwargs)
+        config = self._apply_validated_config_kwargs_to_config(config, **config_kwargs)
+        config, config_kwargs = self._resolve_auto_values_and_other_initial_config_updates(
+            config, ui_type, level, **config_kwargs)
+
+        if not frame:
+            frame = self._define_frame_from_available_display_dims(ui_type)
+        frame = self._apply_kwargs_to_frame(frame, **kwargs)
+
+        return config, config_kwargs, frame
+
+    def _resolve_auto_values_and_other_initial_config_updates(
+        self,
+        config: OutputConfig,
+        ui_type: SpecifiedUserInterfaceType.Literals,
+        level: int,
+        /,
+        **config_kwargs: object,
+    ) -> tuple[OutputConfig, dict[str, object]]:
+        if config.system is DisplayColorSystem.AUTO:
+            config, config_kwargs = self._update_config_and_config_kwargs_from_initial_config_setup(
+                config,
+                config_kwargs,
+                system=detect_display_color_system(ui_type),
+            )
+
+        if config.dark is DarkBackground.AUTO:
+            config, config_kwargs = self._update_config_and_config_kwargs_from_initial_config_setup(
+                config,
+                config_kwargs,
+                dark=detect_dark_background(config.ui),
+            )
+        assert config.dark in [False, True]
+
+        if config.style in RecommendedColorStyles:
+            config, config_kwargs = self._update_config_and_config_kwargs_from_initial_config_setup(
+                config,
+                config_kwargs,
+                style=RecommendedColorStyles.get_default_style(
+                    config.system,
+                    config.dark,
+                    config.bg,
+                ),
+            )
+
+        if level == 0:
+            config, config_kwargs = self._update_config_and_config_kwargs_from_initial_config_setup(
+                config,
+                config_kwargs,
+                panel=self._show_style_in_panel_if_random_style(config.panel, config.style))
+
+            # Do not propagate the TABLE_SHOW_STYLE style to nested panels, as style info should
+            # only be shown on the top-level panel.
+            if 'panel' in config_kwargs and config_kwargs['panel'] == PanelDesign.TABLE_SHOW_STYLE:
+                config_kwargs['panel'] = PanelDesign.TABLE
+
+        if level >= 2:
+            config, config_kwargs = self._update_config_and_config_kwargs_from_initial_config_setup(
+                config,
+                config_kwargs,
+                max_panels_hor=min_or_none(config.max_panels_hor,
+                                           MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED))
+
+        if level == 0:
+            config, config_kwargs = self._update_config_and_config_kwargs_from_initial_config_setup(
+                config,
+                config_kwargs,
+                style=resolve_and_fetch_style(config.style))
+
+        return config, config_kwargs
 
     def _calc_max_num_panels_in_frame(self, config: OutputConfig, frame: Frame) -> int | None:
         max_num_panels_in_frame: None | int = None
@@ -2542,13 +2624,14 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _apply_kwargs_to_frame(
         self,
         frame: Frame,
-        **kwargs,
+        /,
+        **kwargs: object,
     ) -> Frame:
 
         self._check_kwarg_keys(**kwargs)
         frame_kwargs = {k: v for k, v in kwargs.items() if k in _DimsRestatedParams.__annotations__}
         if frame_kwargs:
-            frame = frame.modified_copy(**frame_kwargs)
+            frame = frame.modified_copy(**frame_kwargs)  # type: ignore
 
         return frame
 
@@ -2559,16 +2642,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         self._check_kwarg_keys(**kwargs)
         config_kwargs = {k: v for k, v in kwargs.items() if k in OutputConfig.__annotations__}
 
-        config_kwargs = self._update_config_kwargs_with_show_style_in_panel_if_random_style(
-            **config_kwargs)
-
         return {
             k: v
             for k, v in (dataclasses.asdict(OutputConfig(**config_kwargs))).items()
             if k in config_kwargs
         }
 
-    def _apply_validated_kwargs_to_config(
+    def _apply_validated_config_kwargs_to_config(
         self,
         config: OutputConfig,
         **config_kwargs,
@@ -2579,22 +2659,43 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         return config
 
-    def _update_config_kwargs_with_show_style_in_panel_if_random_style(
+    _INITIAL_CONFIG_KEYS = {'system', 'style', 'dark', 'panel', 'max_panels_hor'}
+
+    def _update_config_and_config_kwargs_from_initial_config_setup(
         self,
-        **config_kwargs: Any,
-    ) -> dict[str, Any]:
-        if 'style' in config_kwargs:
-            if 'panel' in config_kwargs:
-                panel_design: PanelDesign.Literals = config_kwargs['panel']
-            else:
-                panel_design = OutputConfig().panel  # Default value
+        config: OutputConfig,
+        config_kwargs: dict[str, object],
+        **updated_kwargs: object,
+    ) -> tuple[OutputConfig, dict[str, object]]:
+        assert all(key in self._INITIAL_CONFIG_KEYS for key in updated_kwargs.keys())
 
-            color_style: AllColorStyles.Literals | str = config_kwargs['style']
-            panel_design = self._show_style_in_panel_if_random_style(panel_design, color_style)
+        config = dataclasses.replace(config, **updated_kwargs)
+        config_kwargs = config_kwargs.copy()
+        config_kwargs.update(updated_kwargs)
 
-            config_kwargs['panel'] = panel_design
+        return config, config_kwargs
 
-        return config_kwargs
+    def _update_config(
+        self,
+        config: OutputConfig,
+        config_kwargs: dict[str, object],
+        **updated_kwargs: object,
+    ) -> OutputConfig:
+
+        filtered_updated_kwargs = {}
+
+        for key, val in updated_kwargs.items():
+            # Only update config if not manually set by user
+            if key not in config_kwargs:
+                # Consistency check to ensure that initial config values
+                # are not accidentally overridden by later updates
+                assert key not in self._INITIAL_CONFIG_KEYS
+                filtered_updated_kwargs[key] = val
+
+        if filtered_updated_kwargs:
+            config = dataclasses.replace(config, **filtered_updated_kwargs)
+
+        return config
 
     def _check_kwarg_keys(self, **kwargs):
         supported_keys = (
@@ -2612,6 +2713,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         nested_content: dict[str, 'Model | Dataset'],
         initial_html_output: dict[str, str] | None = None,
         nested_call: bool = False,
+        /,
         **kwargs,
     ) -> None:
         from omnipy.data.dataset import Dataset
@@ -2671,21 +2773,29 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         model: 'Model',
         title: str = '',
         frame: Frame | None = None,
+        /,
         **config_kwargs,
     ) -> DraftPanel:
         from omnipy.components.tables.models import (ColumnModel,
                                                      ColumnWiseTableWithColNamesModel,
                                                      PrintableTable)
 
-        config = self._update_config_with_overflow_modes(config, 'text')
-        config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
+        config = self._update_config_with_overflow_modes(config, 'text', **config_kwargs)
 
         if isinstance(model, PrintableTable):
             layout: Layout[DraftPanel] = Layout()
 
-            config = dataclasses.replace(config, max_title_height=MaxTitleHeight.ONE)
-            number_config = dataclasses.replace(
-                config, syntax=SyntaxLanguageSpec.PYTHON, justify='right')
+            config = self._update_config(
+                config,
+                config_kwargs,
+                max_title_height=MaxTitleHeight.ONE,
+            )
+            number_config = self._update_config(
+                config,
+                config_kwargs,
+                syntax=SyntaxLanguageSpec.PYTHON,
+                justify='right',
+            )
 
             column_wise_table = ColumnWiseTableWithColNamesModel(model)
 
@@ -2709,12 +2819,14 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         self,
         config: OutputConfig,
         panel_type: Literal['text', 'layout'],
+        **config_kwargs: object,
     ) -> OutputConfig:
         ui_config = cast(DataClassBase, self).config.ui
         overflow_config = getattr(ui_config, panel_type).overflow
 
-        config = dataclasses.replace(
+        config = self._update_config(
             config,
+            config_kwargs,
             h_overflow=overflow_config.horizontal,
             v_overflow=overflow_config.vertical,
         )
@@ -2723,21 +2835,10 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _create_output_config_from_data_config(
         self,
         ui_type: SpecifiedUserInterfaceType.Literals,
-        level: int = 0,
         use_min_crop_width: bool = False,
     ) -> OutputConfig:
         ui_config = cast(DataClassBase, self).config.ui
         ui_type_config = ui_config.get_ui_type_config(ui_type)
-
-        color_system = self._get_color_system_for_user_interface(ui_type, ui_type_config)
-
-        panel_design = ui_config.layout.panel_design
-        color_style = ui_type_config.color.style
-        if level == 0:
-            panel_design = self._show_style_in_panel_if_random_style(panel_design, color_style)
-
-        max_panels_hor = min_or_none(ui_config.layout.max_panels_hor,
-                                     MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED if level >= 2 else None)
 
         config = OutputConfig(
             tab=ui_config.text.tab_size,
@@ -2746,17 +2847,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             freedom=ui_config.text.proportional_freedom,
             debug=ui_config.text.debug_mode,
             ui=ui_type,
-            system=color_system,
-            style=color_style,
+            system=ui_type_config.color.system,
+            style=ui_type_config.color.style,
             dark=ui_type_config.color.dark_background,
             bg=ui_type_config.color.solid_background,
-            panel=panel_design,
+            panel=ui_config.layout.panel_design,
             title_at_top=ui_config.layout.panel_title_at_top,
             max_title_height=ui_config.layout.max_title_height,
             min_panel_width=ui_config.layout.min_panel_width,
             min_crop_width=ui_config.layout.min_crop_width,
             use_min_crop_width=use_min_crop_width,
-            max_panels_hor=max_panels_hor,
+            max_panels_hor=ui_config.layout.max_panels_hor,
             max_nesting_depth=ui_config.layout.max_nesting_depth,
             justify=ui_config.layout.justify,
         )
@@ -2842,8 +2943,7 @@ class ModelDisplayMixin(BaseDisplayMixin):
     @_call_dataset_method_if_applicable
     def _peek(self, **kwargs) -> DraftPanel:
         self_as_model = cast('Model', self)
-        return self._peek_nested_content(
-            nested_content={self.__class__.__name__: self_as_model}, **kwargs)
+        return self._peek_nested_content({self.__class__.__name__: self_as_model}, **kwargs)
 
     @_call_dataset_method_if_applicable
     def _full(self, **kwargs) -> DraftPanel:
@@ -2852,20 +2952,14 @@ class ModelDisplayMixin(BaseDisplayMixin):
     @_call_dataset_method_if_applicable
     def _browse(self, **kwargs) -> None:
         self_as_model = cast('Model', self)
-        self._browse_nested_content(
-            nested_content={self_as_model.__class__.__name__: self_as_model}, **kwargs)
+        self._browse_nested_content({self_as_model.__class__.__name__: self_as_model}, **kwargs)
 
     def _browse_model(self, **kwargs) -> DraftPanel:
         self_as_model = cast('Model', self)
         ui_type = UserInterfaceType.BROWSER_PAGE
 
-        frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._create_output_config_from_data_config(ui_type, use_min_crop_width=False)
-
-        frame = self._apply_kwargs_to_frame(frame, **kwargs)
-
-        config_kwargs = self._validate_kwargs_for_config(**kwargs)
-        config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
+        config, config_kwargs, frame = self._initial_config_setup(
+            ui_type, kwargs, use_min_crop_width=False)
 
         return self._create_inner_panel_for_model(
             config,
@@ -2886,19 +2980,20 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                              title: str = '',
                              frame: Frame | None = None,
                              level: int = 0,
-                             **kwargs) -> DraftPanel:
+                             /,
+                             **kwargs: object) -> DraftPanel:
         from omnipy.data.dataset import Dataset
         from omnipy.data.model import Model
 
         self_data_as_dict = cast(dict[str, Model], cast(Dataset, self).data)
         return self._peek_nested_content(
-            nested_content={
+            {
                 f'{i}. {inner_title}': model
                 for i, (inner_title, model) in enumerate(self_data_as_dict.items())
             },
-            title=title,
-            frame=frame,
-            level=level,
+            title,
+            frame,
+            level,
             **kwargs)
 
     def _full(self, **kwargs) -> DraftPanel:
@@ -3316,20 +3411,14 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         self_data_as_dict = cast(dict[str, Model], cast(Dataset, self).data)
 
         ui_type = self._extract_ui_type(**kwargs)
-        frame = self._define_frame_from_available_display_dims(ui_type)
-        config = self._create_output_config_from_data_config(ui_type, use_min_crop_width=False)
-        config = self._update_config_with_overflow_modes(config, 'layout')
+        config, config_kwargs, frame = self._initial_config_setup(
+            ui_type, kwargs, use_min_crop_width=False)
 
-        config = dataclasses.replace(config, max_title_height=MaxTitleHeight.ONE)
-        right_justified_config = dataclasses.replace(config, justify='right')
-        text_config = dataclasses.replace(config, syntax=SyntaxLanguageSpec.TEXT)
+        config = self._update_config_with_overflow_modes(config, 'layout', **config_kwargs)
+        config = self._update_config(config, config_kwargs, max_title_height=MaxTitleHeight.ONE)
 
-        frame = self._apply_kwargs_to_frame(frame, **kwargs)
-        config_kwargs = self._validate_kwargs_for_config(**kwargs)
-        config = self._apply_validated_kwargs_to_config(config, **config_kwargs)
-        right_justified_config = self._apply_validated_kwargs_to_config(
-            right_justified_config, **config_kwargs)
-        text_config = self._apply_validated_kwargs_to_config(text_config, **config_kwargs)
+        right_justified_config = self._update_config(config, config_kwargs, justify='right')
+        text_config = self._update_config(config, config_kwargs, syntax=SyntaxLanguageSpec.TEXT)
 
         # TODO: Add dataset title for dataset peek()
         # _title = self.__class__.__name__
@@ -3414,11 +3503,11 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         )
 
         self._browse_nested_content(
-            nested_content={
+            {
                 f'{i}. {title}': model for i, (title, model) in enumerate(self_data_as_dict.items())
             },
-            initial_html_output=html_output,
-            nested_call=nested_call,
+            html_output,
+            nested_call,
             **kwargs)
 
     @classmethod
