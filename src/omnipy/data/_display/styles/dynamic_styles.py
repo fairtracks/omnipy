@@ -26,7 +26,7 @@ _runtime: IsRuntime | None = None
 
 
 class TintedBase16Style(pygments.style.Style):
-    name: str
+    name: str  # pyright: ignore[reportIncompatibleVariableOverride]
     author: str
     variant: str
 

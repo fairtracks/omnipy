@@ -499,6 +499,7 @@ def setup_jupyter_ui():
         )
         display(bg_color_updater)
 
+        assert runtime.objects.reactive is not None
         size_updater = jupy_comp.ReactiveAvailableDisplaySizeUpdater(
             jupyter_ui_config=jupyter_ui_config,
             reactive_objects=runtime.objects.reactive,
