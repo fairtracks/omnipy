@@ -10,6 +10,7 @@ from omnipy.config import ConfigBase
 from omnipy.hub.ui import detect_display_color_system
 from omnipy.shared.constants import (BROWSER_DEFAULT_HEIGHT,
                                      BROWSER_DEFAULT_WIDTH,
+                                     DEFAULT_DARK_BACKGROUND,
                                      JUPYTER_DEFAULT_HEIGHT,
                                      JUPYTER_DEFAULT_WIDTH,
                                      MAX_PANEL_NESTING_DEPTH,
@@ -58,7 +59,7 @@ class ColorConfig(ConfigBase):
     """
     system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
     style: AllColorStyles.Literals | str = RecommendedColorStyles.AUTO
-    dark_background: bool = False
+    dark_background: bool = DEFAULT_DARK_BACKGROUND
     solid_background: bool = False
 
     @pyd.root_validator()

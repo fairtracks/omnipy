@@ -6,6 +6,7 @@ from typing import cast
 import rich.console
 
 from omnipy.data.typechecks import is_model_instance
+from omnipy.shared.constants import DEFAULT_DARK_BACKGROUND
 from omnipy.shared.enums.display import DisplayColorSystem
 from omnipy.shared.enums.ui import (AutoDetectableUserInterfaceType,
                                     JupyterUserInterfaceType,
@@ -31,8 +32,7 @@ def detect_and_setup_user_interface(runtime: 'Runtime') -> None:
 
     ui_type_data_config = runtime.config.data.ui.get_ui_type_config(ui_type)
     ui_type_data_config.color.system = detect_display_color_system(ui_type)
-    if UserInterfaceType.supports_dark_terminal_bg_detection(ui_type):
-        ui_type_data_config.color.dark_background = detect_dark_terminal_background()
+    ui_type_data_config.color.dark_background = detect_dark_background(ui_type)
 
     match ui_type:
         case _ui_type if UserInterfaceType.is_jupyter(_ui_type):
@@ -115,6 +115,13 @@ def detect_display_color_system(
         else:
             assert rich_color_system in DisplayColorSystem
             return cast(DisplayColorSystem.Literals, rich_color_system)
+
+
+def detect_dark_background(ui_type: UserInterfaceType.Literals) -> bool:
+    if UserInterfaceType.supports_dark_terminal_bg_detection(ui_type):
+        return detect_dark_terminal_background()
+    else:
+        return DEFAULT_DARK_BACKGROUND
 
 
 def detect_dark_terminal_background() -> bool:
