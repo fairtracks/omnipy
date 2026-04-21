@@ -31,8 +31,9 @@ from omnipy.shared.constants import (INFO_BASE_16_TOKEN,
                                      PANEL_TITLE_BASE_16_TOKEN,
                                      PANEL_TITLE_EXTRA_STYLE,
                                      PANEL_TITLE_GENERAL_TOKEN,
-                                     TABLE_BORDER_BASE_16_TOKEN,
+                                     TABLE_BORDER_BG_BASE_16_TOKEN,
                                      TABLE_BORDER_GENERAL_TOKEN,
+                                     TABLE_BORDER_NO_BG_BASE_16_TOKEN,
                                      TITLE_BLANK_LINES)
 from omnipy.shared.enums.display import DisplayColorSystem, PanelDesign
 from omnipy.util import pydantic as pyd
@@ -173,8 +174,12 @@ class PanelElementStyles:
         self.title_style = rich.style.Style(color=basic_title_style.color, bgcolor=style_bg_color)
         self.title_style += rich.style.Style.parse(PANEL_TITLE_EXTRA_STYLE)
 
-        basic_table_style = get_token_style_from_color_style(TABLE_BORDER_BASE_16_TOKEN,
-                                                             color_style)
+        if outer_panel.config.bg:
+            table_border_token = TABLE_BORDER_BG_BASE_16_TOKEN
+        else:
+            table_border_token = TABLE_BORDER_NO_BG_BASE_16_TOKEN
+
+        basic_table_style = get_token_style_from_color_style(table_border_token, color_style)
         if basic_table_style is rich.style.Style.null():
             basic_table_style = get_token_style_from_color_style(TABLE_BORDER_GENERAL_TOKEN,
                                                                  color_style)
