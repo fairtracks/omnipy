@@ -11,11 +11,14 @@ import pygments.styles
 import pygments.token
 import pytest
 import pytest_cases as pc
+import rich.style
+import rich.syntax
 
 from omnipy.data._display.styles.dynamic_styles import (clean_style_name,
                                                         create_dynamic_base16_style_class,
                                                         fetch_base16_theme,
                                                         install_base16_theme,
+                                                        resolve_and_fetch_style,
                                                         TintedBase16Style)
 from omnipy.data._display.styles.helpers import Base16Colors, Base16Theme
 from omnipy.shared.enums.colorstyles import AllColorStyles
@@ -340,3 +343,40 @@ def test_dynamic_style_import(register_runtime: Annotated[Iterable[None], pytest
         except pygments.util.ClassNotFound as exc:
             raise RuntimeError(f'Failed to import dynamic style: {style}. '
                                f'This may be due to a network error.') from exc
+
+
+def test_resolve_and_fetch_ansi_style(
+        register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
+    style = resolve_and_fetch_style('ansi-dark')
+    assert style in rich.syntax.RICH_SYNTAX_THEMES
+
+    # Check that an additional resolution doesn't cause issues
+    assert resolve_and_fetch_style(style) in rich.syntax.RICH_SYNTAX_THEMES
+
+
+def test_resolve_and_fetch_recommended_style(
+        register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
+    style = resolve_and_fetch_style('omnipy-selenized-white')
+    pygments_style = pygments.styles.get_style_by_name(style)
+    assert pygments_style.background_color == '#ffffff'
+
+
+def test_resolve_and_fetch_pygments_style(
+        register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
+    style = resolve_and_fetch_style('manni-pygments')
+    pygments_style = pygments.styles.get_style_by_name(style)
+    assert pygments_style.background_color == '#f0f3f3'
+
+
+def test_resolve_and_fetch_t16_style(
+        register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
+    style = resolve_and_fetch_style('zenburn-t16')
+    pygments_style = pygments.styles.get_style_by_name(style)
+    assert pygments_style.background_color == '#383838'
+
+
+def test_resolve_and_fetch_random_style(
+        register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
+    for _ in range(5):
+        style = resolve_and_fetch_style('random')
+        assert style in rich.syntax.RICH_SYNTAX_THEMES or pygments.styles.get_style_by_name(style)

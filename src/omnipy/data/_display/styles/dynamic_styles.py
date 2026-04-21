@@ -7,6 +7,7 @@ from urllib.request import urlopen
 from inflection import dasherize, underscore
 import pygments.style
 import pygments.styles
+import pygments.util
 from ruamel.yaml import YAML
 
 from omnipy.data._display.styles.helpers import Base16Theme, get_styles_from_base16_colors
@@ -16,7 +17,7 @@ from omnipy.shared.constants import (ANSI_PREFIX,
                                      STYLE_CLS_NAME_SUFFIX,
                                      STYLE_CLS_NAME_TINTED_BASE16_PREFIX,
                                      THEME_KEY_TINTED_BASE16_SUFFIX)
-from omnipy.shared.enums.colorstyles import AllColorStyles
+from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 _BASE16_DOWNLOAD_URL = ('https://raw.githubusercontent.com/tinted-theming/'
@@ -124,7 +125,22 @@ def __getattr__(attr: str) -> type[pygments.style.Style]:
     raise AttributeError(f"Module '{__name__}' has no attribute '{attr}'")
 
 
-def handle_random_name(name: str | AllColorStyles.Literals) -> str:
+def resolve_and_fetch_style(style: str | AllColorStyles.Literals) -> str:
+    if style in AllColorStyles:
+        style = resolve_random_style_name(style)
+        cleaned_style = clean_style_name(style)
+
+        if style not in RecommendedColorStyles:
+            try:
+                pygments.styles.get_style_by_name(cleaned_style)
+            except pygments.util.ClassNotFound:
+                install_base16_theme(style)
+                pygments.styles.get_style_by_name(style)
+        return cleaned_style
+    return style
+
+
+def resolve_random_style_name(name: str | AllColorStyles.Literals) -> str:
     if name.startswith(RANDOM_PREFIX):
         color_style_cls = AllColorStyles.get_supercls_for_random_choice(name)
         if color_style_cls:

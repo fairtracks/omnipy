@@ -4,9 +4,6 @@ import pygments.lexers
 import pygments.styles
 import pygments.util
 
-from omnipy.data._display.styles.dynamic_styles import (clean_style_name,
-                                                        handle_random_name,
-                                                        install_base16_theme)
 from omnipy.shared.constants import (MAX_PANEL_NESTING_DEPTH,
                                      MAX_PANELS_HORIZONTALLY,
                                      MIN_CROP_WIDTH,
@@ -203,16 +200,7 @@ class OutputConfig:
         style: AllColorStyles.Literals | str,
     ) -> AllColorStyles.Literals | str:
         try:
-            if style in RecommendedColorStyles:
-                return style
-            elif style in AllColorStyles:
-                style = handle_random_name(style)
-                if style not in RecommendedColorStyles:
-                    try:
-                        pygments.styles.get_style_by_name(clean_style_name(style))
-                    except pygments.util.ClassNotFound:
-                        install_base16_theme(style)
-                        pygments.styles.get_style_by_name(style)
+            if style in AllColorStyles:
                 return style
             elif pygments.styles.get_style_by_name(style):
                 return style

@@ -1,6 +1,5 @@
-from typing import Annotated, Any, Iterator
+from typing import Any
 
-import pygments.styles
 import pytest
 
 from omnipy.data._display.config import OutputConfig
@@ -464,9 +463,16 @@ def test_fail_output_config_no_positional_parameters() -> None:
         OutputConfig(2, True)  # type: ignore
 
 
-def test_config_autoimport_base16_color_style(
-        register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
-    style_name = 'zenburn-t16'
-    OutputConfig(style=style_name)  # To trigger the auto-import
-    pygments_style = pygments.styles.get_style_by_name(style_name)
-    assert pygments_style.background_color == '#383838'
+def test_output_config_fail_invalid_syntax() -> None:
+    with pytest.raises(ValueError):
+        OutputConfig(syntax='invalid_syntax')
+
+
+def test_output_config_fail_invalid_style() -> None:
+    with pytest.raises(ValueError):
+        OutputConfig(style='invalid_style')
+
+
+def test_output_config_fail_min_crop_width_smaller_than_min_panel_width() -> None:
+    with pytest.raises(ValueError):
+        OutputConfig(min_panel_width=10, min_crop_width=5)
