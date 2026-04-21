@@ -2488,12 +2488,15 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             is_ellipsis_panel = config.max_panels_hor is not None and i == config.max_panels_hor
             not_too_deep = (config.max_nesting_depth and level < config.max_nesting_depth - 1)
 
-            if (is_dataset and not is_ellipsis_panel and not_too_deep):
-                # # Why was this here?
-                # inner_kwargs = config_kwargs.copy()
-                # if 'freedom' not in inner_kwargs:
-                #     inner_kwargs['freedom'] = None
+            if config.debug:
+                layout[inner_title] = self._create_inner_panel_for_model(
+                    config,
+                    model_or_dataset,  # type: ignore
+                    inner_title,
+                    **config_kwargs,
+                )
 
+            elif (is_dataset and not is_ellipsis_panel and not_too_deep):
                 layout[inner_title] = cast(Dataset, model_or_dataset)._peek_dataset_models(
                     title=inner_title,
                     frame=empty_frame(),

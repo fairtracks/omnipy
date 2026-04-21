@@ -54,7 +54,7 @@ class PrettyPrinter(ABC, Generic[ContentT]):
         else:
             printer = config.printer
 
-        if config.syntax is SyntaxLanguageSpec.AUTO:
+        if config.syntax is SyntaxLanguageSpec.AUTO or config.debug is True:
             syntax = cls.get_default_syntax_language()
         else:
             syntax = config.syntax
@@ -91,6 +91,10 @@ class PrettyPrinter(ABC, Generic[ContentT]):
         import omnipy.data._display.text.pretty_printer.register as register
 
         pretty_printer = register.get_pretty_printer_from_config_value(draft_panel.config.printer)
+        if pretty_printer:
+            return pretty_printer
+
+        pretty_printer = register.get_debug_pretty_printer_if_debug_mode(draft_panel.config.debug)
         if pretty_printer:
             return pretty_printer
 

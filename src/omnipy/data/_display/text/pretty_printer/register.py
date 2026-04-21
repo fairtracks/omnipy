@@ -33,6 +33,13 @@ def get_pretty_printer_from_config_value(
             return None
 
 
+def get_debug_pretty_printer_if_debug_mode(debug_mode: bool) -> PrettyPrinter | None:
+    if debug_mode:
+        return RichPrettyPrinter()
+    else:
+        return None
+
+
 @overload
 def get_pretty_printer_from_content(
     draft_panel: DraftPanel,
