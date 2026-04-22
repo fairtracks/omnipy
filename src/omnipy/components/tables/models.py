@@ -28,6 +28,7 @@ from omnipy.util.helpers import first_key_in_mapping
 import omnipy.util.pydantic as pyd
 
 from ..general.models import Chain3
+from ..json.models import JsonScalarModel
 from ..json.typedefs import JsonScalar
 from ..raw.models import (SplitLinesToColumnsByCommaModel,
                           SplitLinesToColumnsModel,
@@ -682,5 +683,5 @@ if TYPE_CHECKING:
         ...
 else:
 
-    class ColumnModel(Model[list[JsonScalar]]):
+    class ColumnModel(Model[list[JsonScalarModel]]):
         ...

@@ -1,3 +1,5 @@
+from typing import Union
+
 from typing_extensions import TypeVar
 
 from omnipy.data.dataset import Dataset
@@ -5,6 +7,7 @@ from omnipy.data.model import Model
 from omnipy.shared.typing import TYPE_CHECKING
 
 from ..general.models import Chain2
+from ..json.typedefs import JsonScalar
 
 if TYPE_CHECKING:
     from .datasets import NestedDataset  # noqa: F401
@@ -47,3 +50,29 @@ else:
 
     class ListAsNestedDatasetModel(_ListAsNestedDatasetModel):
         ...
+
+
+class MixedJsonDictModel(Model[Union[tuple[dict[str, JsonScalar], 'NestedDataset'],
+                                     dict[str, object]]]):
+    @classmethod
+    def _parse_data(
+        cls, data: Union[tuple[dict[str, JsonScalar], 'NestedDataset'], dict[str, object]]
+    ) -> tuple[dict[str, JsonScalar], 'NestedDataset']:
+        from .datasets import NestedDataset
+
+        data_scalars: dict[str, JsonScalar] = {}
+        nested_data = NestedDataset()
+
+        if isinstance(data, tuple):
+            return data
+
+        for key, val in data.items():
+            if isinstance(val, JsonScalar):
+                data_scalars[key] = val
+            else:
+                nested_data[key] = val
+
+        assert len(nested_data) > 0
+        assert len(data_scalars) > 0
+
+        return data_scalars, nested_data

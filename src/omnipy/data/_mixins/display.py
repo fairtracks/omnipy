@@ -2460,7 +2460,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 else:
                     print(output)
 
-    def _peek_nested_content(
+    def _peek_nested_content(  # noqa: C901
         self,
         nested_content: dict[str, 'Model | Dataset'],
         title: str = '',
@@ -2469,7 +2469,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         /,
         **kwargs: object,
     ) -> DraftPanel:
+        from omnipy.components.json.helpers import is_json_scalar
+        from omnipy.components.json.typedefs import JsonScalar
+        from omnipy.components.tables.models import ColumnModel
         from omnipy.data.dataset import Dataset
+        from omnipy.data.model import Model
 
         ui_type = self._extract_ui_type(**kwargs)
         config, config_kwargs, frame = self._initial_config_setup(
@@ -2479,14 +2483,61 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         layout: Layout[DraftPanel] = Layout()
 
-        for i, (inner_title, model_or_dataset) in enumerate(nested_content.items()):
-            if max_num_panels_in_frame is not None and i >= max_num_panels_in_frame:
+        scalars_as_records_model = Model[dict[str, JsonScalar]]()
+
+        # if len(nested_content) > 1:
+        for inner_title, type_variant in nested_content.items():
+            if is_model_instance(type_variant) and is_json_scalar(type_variant.content):
+                scalars_as_records_model[inner_title] = type_variant.content
+
+        def _records_layout(
+            model: Model[dict[str, JsonScalar]],
+            config: OutputConfig,
+        ) -> DraftPanel:
+            layout: Layout[DraftPanel] = Layout()
+
+            # config = dataclasses.replace(config, max_title_height=MaxTitleHeight.ONE)
+            # number_config = dataclasses.replace(
+            #     config, syntax=SyntaxLanguage.PYTHON, justify='right')
+
+            table_config = dataclasses.replace(
+                config, max_title_height=MaxTitleHeight.ONE, use_min_crop_width=False)
+            table_right_config = dataclasses.replace(table_config, justify='right')
+            # table_wrap_config = dataclasses.replace(table_config, h_overflow='wrap')
+            #
+            # layout['#'] = DraftPanel(
+            #     '\n'.join(str(key[0]) for key in model.keys()),
+            #     title='#',
+            #     frame=Frame(Dimensions(len(str(len(model))), None), fixed_width=True),
+            #     config=table_number_config)
+            #
+            layout['keys'] = DraftPanel(ColumnModel(model.keys()), config=table_right_config)
+            layout['values'] = DraftPanel(ColumnModel(model.values()), config=table_config)
+            # layout['Scalars'] = DraftPanel(
+            #     ColumnModel(f'{inner_title}: {model_or_dataset}'
+            #                 for inner_title, model_or_dataset in model.items()),
+            #     # title=f'Scalars',
+            #     config=table_config)
+
+            return layout
+            return DraftPanel(layout, title=title, frame=frame, config=config)
+
+        if len(scalars_as_records_model):
+            layout |= _records_layout(scalars_as_records_model, config)
+            # layout['records'] = _records_layout(scalars_as_records_model, config)
+
+        for inner_title, model_or_dataset in nested_content.items():
+            if inner_title in scalars_as_records_model:
+                # Already handled as part of the records panel
+                continue
+
+            if max_num_panels_in_frame is not None and len(layout) >= max_num_panels_in_frame:
                 # If the number of panels exceeds the maximum number of
                 # panels that can possibly fit in the frame based on the
                 # `min_width` config, we stop adding more panels.
                 break
 
-            if config.max_panels_hor is not None and i > config.max_panels_hor:
+            if config.max_panels_hor is not None and len(layout) > config.max_panels_hor:
                 # If we have reached the maximum number of panels allowed
                 # horizontally, we stop adding more panels.
                 break
@@ -2495,7 +2546,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 is_dataset_instance(model_or_dataset)
                 or (is_model_instance(model_or_dataset)
                     and is_dataset_instance(model_or_dataset.content)))
-            is_ellipsis_panel = config.max_panels_hor is not None and i == config.max_panels_hor
+            is_ellipsis_panel = config.max_panels_hor is not None and len(
+                layout) == config.max_panels_hor
             not_too_deep = (config.max_nesting_depth and level < config.max_nesting_depth - 1)
 
             if config.debug:
@@ -2793,20 +2845,19 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         config = self._update_config_with_overflow_modes(config, 'text', **config_kwargs)
 
+        table_config = self._update_config(
+            config,
+            config_kwargs,
+            max_title_height=MaxTitleHeight.ONE,
+        )
+        table_number_config = self._update_config(
+            config,
+            config_kwargs,
+            syntax=SyntaxLanguageSpec.PYTHON,
+            justify='right',
+        )
         if isinstance(model, PrintableTable):
             layout: Layout[DraftPanel] = Layout()
-
-            config = self._update_config(
-                config,
-                config_kwargs,
-                max_title_height=MaxTitleHeight.ONE,
-            )
-            number_config = self._update_config(
-                config,
-                config_kwargs,
-                syntax=SyntaxLanguageSpec.PYTHON,
-                justify='right',
-            )
 
             column_wise_table = ColumnWiseTableWithColNamesModel(model)
 
@@ -2814,13 +2865,27 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 '\n'.join(str(i) for i in range(len(column_wise_table))),
                 title='#',
                 frame=Frame(Dimensions(len(str(len(column_wise_table))), None), fixed_width=True),
-                config=number_config)
+                config=table_number_config)
 
             for i, column in enumerate(column_wise_table.col_names):
                 layout[column] = DraftPanel(
-                    ColumnModel(column_wise_table[column]), title=f'{i}. {column}', config=config)
+                    ColumnModel(column_wise_table[column]),
+                    title=f'{i}. {column}',
+                    config=table_config,
+                )
 
             content = layout
+        # elif isinstance(model, JsonDictOfScalarsModel):
+        #     content = _records_layout(model)
+        # elif isinstance(model, MixedJsonDictModel):
+        #     layout: Layout[DraftPanel] = Layout()
+        #     layout['Records'] = DraftPanel(_records_layout(model[0]), config=config)
+        #     layout['Nested'] = self._create_inner_panel_for_model(
+        #         config,
+        #         model[1],
+        #         outer_type=dict,
+        #     )
+        #     content = layout
         else:
             content = model
 
