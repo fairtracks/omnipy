@@ -33,7 +33,10 @@ from omnipy.data.helpers import (build_own_module_and_global_namespace_for_forwa
                                  ResetSolutionTuple,
                                  validate_cls_counts,
                                  YesNoMaybe)
-from omnipy.data.typechecks import all_model_type_variants, is_model_instance, is_model_subclass
+from omnipy.data.typechecks import (all_model_type_variants,
+                                    is_dataset_instance,
+                                    is_model_instance,
+                                    is_model_subclass)
 from omnipy.shared.constants import ROOT_KEY
 from omnipy.shared.protocols.data import IsModel, IsSnapshotWrapper
 from omnipy.shared.typedefs import TypeForm
@@ -506,17 +509,17 @@ class Model(  # type: ignore[misc]
         if self._get_root_field().default_factory is undefined_default_factory:
             self._get_root_field().default_factory = self._get_default_factory()
 
-        omnipy_or_pydantic_model_as_input = False
+        dataset_or_model_as_input = False
         if ROOT_KEY in super_kwargs:
             try:
-                omnipy_or_pydantic_model_as_input, value = \
-                    self._prepare_value_for_validation_if_model(super_kwargs[ROOT_KEY])
+                dataset_or_model_as_input, value = \
+                    self._prepare_value_for_validation_if_dataset_or_model(super_kwargs[ROOT_KEY])
             except Exception as exc:
                 val_exc = ValueError(f'Failed to prepare value for validation: {exc}')
                 raise ValidationError(
                     [pyd.ErrorWrapper(exc, loc=ROOT_KEY), pyd.ErrorWrapper(val_exc, loc=ROOT_KEY)],
                     self.__class__)
-            if omnipy_or_pydantic_model_as_input:
+            if dataset_or_model_as_input:
                 super_kwargs[ROOT_KEY] = cast(_RootT, value)
 
         self._init(super_kwargs, **kwargs)
@@ -524,7 +527,7 @@ class Model(  # type: ignore[misc]
         try:
             self._primary_validation(super_kwargs)
         except ValidationError:
-            if omnipy_or_pydantic_model_as_input:
+            if dataset_or_model_as_input:
                 self._secondary_validation_from_data(super_kwargs)
             else:
                 raise
@@ -544,9 +547,14 @@ class Model(  # type: ignore[misc]
         super().__init__()
         self.from_data(super_kwargs[ROOT_KEY])
 
-    def _prepare_value_for_validation_if_model(self, value: object) -> tuple[bool, object]:
+    def _prepare_value_for_validation_if_dataset_or_model(
+        self,
+        value: object,
+    ) -> tuple[bool, object]:
+        if is_dataset_instance(value):
+            return True, value.to_data()
         if is_model_instance(value):
-            return True, cast(Model[_RootT], value).to_data()
+            return True, value.to_data()
         elif is_non_omnipy_pydantic_model(value):
             return True, cast(pyd.BaseModel, value).dict(by_alias=True)
         return False, value
@@ -817,7 +825,7 @@ class Model(  # type: ignore[misc]
         self,
         value: object,
     ) -> _RootT:
-        _, value = self._prepare_value_for_validation_if_model(value)
+        _, value = self._prepare_value_for_validation_if_dataset_or_model(value)
 
         values, _, validation_error = pyd.validate_model(self.__class__, {ROOT_KEY: value})
         if validation_error:

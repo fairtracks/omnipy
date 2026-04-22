@@ -121,6 +121,13 @@ def test_init_converting_model_as_input() -> None:
     assert MyFloatObjModel(Model[float](4.5)).to_data() == 4.5
 
 
+def test_init_converting_dataset_as_input() -> None:
+    from omnipy.data.dataset import Dataset
+    dataset_of_float_objs = Dataset[Model[MyFloatObjModel]](
+        a=MyFloatObject(int_part=4, float_part=0.5))
+    assert Model[dict[str, float]](dataset_of_float_objs).to_data() == {'a': 4.5}
+
+
 def test_error_init() -> None:
     with pytest.raises(TypeError):
         assert Model[tuple[int, ...]](12, 2, 4).to_data() == 12  # type: ignore
