@@ -8,10 +8,15 @@ import pytest
 import pytest_cases as pc
 
 import omnipy
-from omnipy import AutoResponseContentDataset, BytesDataset, Dataset, JsonDataset, Model, StrDataset
+from omnipy import (AutoResponseContentDataset,
+                    Dataset,
+                    JsonDictOfListsDataset,
+                    Model,
+                    StrictBytesDataset,
+                    StrictStrDataset)
 from omnipy.util.helpers import get_event_loop_and_check_if_loop_is_running
 
-from ...helpers.functions import assert_model, assert_model_or_val
+from ...helpers.functions import assert_model_or_val, assert_val
 from ...helpers.protocols import AssertModelOrValFunc
 from .helpers.classes import EndpointCase, RequestTypeCase
 
@@ -25,30 +30,30 @@ def _assert_query_results(assert_model_if_dyn_conv_else_val,
     ) if case.dataset_cls != AutoResponseContentDataset else auto_model_type
     match _type:
         case omnipy.BytesModel | omnipy.StrictBytesModel:
-            _assert_bytes_query_results(assert_model, cast(BytesDataset, data))
+            _assert_bytes_query_results(cast(StrictBytesDataset, data))
         case omnipy.StrModel | omnipy.StrictStrModel:
-            _assert_str_query_results(assert_model, cast(StrDataset, data))
+            _assert_str_query_results(cast(StrictStrDataset, data))
         case omnipy.JsonModel | omnipy.JsonDictModel:
-            _assert_json_query_results(assert_model_if_dyn_conv_else_val, cast(JsonDataset, data))
+            _assert_json_query_results(cast(JsonDictOfListsDataset, data))
         case _:
             raise RuntimeError(f'Unknown model: "{_type.__name__}"')
 
 
-def _assert_bytes_query_results(assert_model, data: BytesDataset):
-    assert_model_or_val(data['jokke'][-10:], bytes | str, b'f\\u00e5"]}')
-    assert_model_or_val(data['odd'][-10:], bytes | str, b'5 drite"]}')
-    assert_model_or_val(data['delillos'][-10:], bytes | str, b'ttifire"]}')
-    assert_model_or_val(data['delillos_2'][-10:], bytes | str, b'n\\u00f8"]}')
+def _assert_bytes_query_results(data: StrictBytesDataset):
+    assert_val(data['jokke'].content[-10:], bytes | str, b'f\\u00e5"]}')
+    assert_val(data['odd'].content[-10:], bytes | str, b'5 drite"]}')
+    assert_val(data['delillos'].content[-10:], bytes | str, b'ttifire"]}')
+    assert_val(data['delillos_2'].content[-10:], bytes | str, b'n\\u00f8"]}')
 
 
-def _assert_str_query_results(assert_model, data: StrDataset):
-    assert_model_or_val(data['jokke'][-10:], str | bytes, 'f\\u00e5"]}')
-    assert_model_or_val(data['odd'][-10:], str | bytes, '5 drite"]}')
-    assert_model_or_val(data['delillos'][-10:], str | bytes, 'ttifire"]}')
-    assert_model_or_val(data['delillos_2'][-10:], str | bytes, 'n\\u00f8"]}')
+def _assert_str_query_results(data: StrictStrDataset):
+    assert_val(data['jokke'].content[-10:], str | bytes, 'f\\u00e5"]}')
+    assert_val(data['odd'].content[-10:], str | bytes, '5 drite"]}')
+    assert_val(data['delillos'].content[-10:], str | bytes, 'ttifire"]}')
+    assert_val(data['delillos_2'].content[-10:], str | bytes, 'n\\u00f8"]}')
 
 
-def _assert_json_query_results(assert_model_if_dyn_conv_else_val, data: JsonDataset):
+def _assert_json_query_results(data: JsonDictOfListsDataset):
     assert_model_or_val(data['jokke']['author'], str, 'Joachim Nielsen')
     assert_model_or_val(data['jokke']['lyrics'][0], str, "Her kommer vinter'n")
     assert_model_or_val(data['odd']['author'], str, 'Odd Børretzen')
