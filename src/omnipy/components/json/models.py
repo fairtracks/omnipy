@@ -19,8 +19,7 @@ from .helpers import parse_str_as_json
 from .typedefs import JsonScalar
 
 if TYPE_CHECKING:
-    from omnipy.data._mimic_models import Model_bool, Model_float, Model_int, Model_str
-    from omnipy.data.model import PlainModel
+    from omnipy.data._mimic_models import Model_bool, Model_float, Model_int, Model_str, PlainModel
 
 # # IsMapping[str, int]
 #

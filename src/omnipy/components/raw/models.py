@@ -12,7 +12,7 @@ from omnipy.shared.typing import TYPE_CHECKING
 import omnipy.util.pydantic as pyd
 
 if TYPE_CHECKING:
-    from omnipy.data.model import PlainModel
+    from omnipy.data._mimic_models import PlainModel
 
 
 class _EncodingParamsMixin:

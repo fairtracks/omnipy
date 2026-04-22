@@ -3,11 +3,11 @@ from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Any, Generic
 
-    from typing_extensions import TypeVar
+    from typing_extensions import Self, TypeVar
 
     from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
     from omnipy.data.dataset import _ModelOrDatasetT, Dataset
-    from omnipy.data.model import PlainModel
+    from omnipy.data.model import Model
     from omnipy.shared.protocols.content import (IsBoolContent,
                                                  IsBytesContent,
                                                  IsDictContent,
@@ -19,6 +19,17 @@ if TYPE_CHECKING:
                                                  IsSetContent,
                                                  IsStrContent)
     from omnipy.shared.protocols.data import IsDataset, IsModel
+
+    _RootT = TypeVar('_RootT')
+
+    class PlainModel(
+            Model[_RootT],
+            Generic[_RootT],
+    ):
+        if TYPE_CHECKER != 'mypy':
+
+            def __new__(cls, *args: Any, **kwargs: Any) -> Self:
+                ...
 
     class Model_int(PlainModel[int], IsIntContent):
         ...

@@ -1453,15 +1453,3 @@ class Model(  # type: ignore[misc]
 
     def __repr_args__(self):
         return [(None, self.content)]
-
-
-if TYPE_CHECKING:
-
-    class PlainModel(
-            Model[_RootT],
-            Generic[_RootT],
-    ):
-        if TYPE_CHECKER != 'mypy':
-
-            def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-                ...
