@@ -1,18 +1,88 @@
-## Omnipy v0.22.2
+## Omnipy v0.23
 
-_Release date: Feb 3, 2026_
+_Release date: Apr 22, 2026_
 
-### New features and bugfixes in v0.22.2
+Omnipy v0.23 prioritizes under-the-hood improvements and refinement of
+existing functionality over providing major new features.
 
-- Implemented `pre-commit` script `expand_docstr_macros` to automatically
-  expand docstring macros before commit.
-- Harmonize docstrings for all Model and Dataset display methods with
-  macros. Support both static and runtime docstring generation (e.g. both
-  `pyright` and `help()`). Fix typing errors
-- Fixed bug to allow nested Datasets to set values using parameters of the
-  Dataset.__init__() method as keys (e.g. 'self', 'value', 'data')
-- Changed dependency management from `poetry` to `uv`.
-- Switched `pyright` dependency with `basedpyright`.
+The display system introduced in earlier releases has been refined by
+giving `Model` and `Dataset` display methods smarter `AUTO` defaults and
+better automatic resolution of pretty printers, color styles and syntax
+languages. This improves the convenience for users overriding global
+settings when inspecting data interactively.
+
+Typing of models has been significantly strengthened by providing full,
+IDE‑friendly type information and auto-completion for models that mimic
+builtin types and even more complex nested structures.
+
+General structure and formatting of auto-generated documentation is 
+significantly improved through configuration and new features, such as
+docstring‑macro expansion and dynamic method signature generation.
+
+The toolchain has been modernized by adopting `uv` for dependency management
+and `basedpyright` as the recommended static type checker. `pydantic` has 
+been updated to v2 (code is still dependent on embedded v1 version).
+
+### New features and changes in v0.23
+
+- **Display and pretty printing**
+  - A number of core `Model`/`Dataset` display method parameters now 
+    default to `AUTO`, and the methods now includes a dedicated 
+    auto‑resolution step for e.g. styles and syntax language, previously
+    only resolved for global config values. This improves usability with
+    manual override of global configs.
+  - Added `DarkBackground` enum and `dark` configuration option.
+  - Improved automatic pretty‑printer and syntax‑language selection. 
+    Added default syntax languages for pretty printers. Now distinguishes
+    better between plain text/code and strings as e.g. Python objects.
+  - `debug=True` in display methods now automatically selects the default
+    Python pretty printer.
+
+- **Models, datasets, and operators**
+  - Better handling of `Model[Model[T]]` and similar nested models.
+  - Improved forward‑reference handling for complex models.
+  - Auto‑conversion of `Dataset` inputs via `to_data()` when passed into
+    `Model`.
+  - Better iterable support (e.g. `Model[set[int]]`)
+  - Multiple bugfixes for `Model.copy()`, iterator mimicking, and
+    cache‑directory checks.
+  - Fixed bug to allow nested Datasets to set values using parameters of the
+    `Dataset.__init__()` method as keys (e.g. 'self', 'value', 'data').
+  - Implemented `JsonListOrDictModel` / `JsonListOrDictDataset` and updated
+    `AutoResponseContentModel` to use them instead of `JsonDataset`, to 
+    cleanly handle text responses as either plain text or serialized JSON,
+    not as JSON strings.
+  - Added `/` as new operator for `UrlPathModel`
+
+- **Typing and pydantic integration**
+  - Imported and converted Typeshed stubs into protocols that are used to
+    type `Model` instances mimicking builtin classes. This allowed:
+  - Full typing for models mimicking all relevant builtins, now including
+    `set`, `str`, `int`, `float`, etc. Also, full typing of component 
+    models such as table- and split/join-models. With `basedpyright` this 
+    entails dramatically improved support for auto-completion.
+
+- **Documentation**
+  - Implemented `pre-commit` script `expand_docstr_macros` to automatically
+    expand docstring macros before commit.
+  - Harmonize docstrings for all Model and Dataset display methods with
+    macros. Support both static and runtime docstring generation (e.g. both
+    `pyright` and `help()`).
+  - Added script to generate dynamic signatures for specified methods 
+    (used for now for display methods).
+  - Improved mkdocs configuration, fixed recursion issues in documentation
+    builds, and other documentation improvements.
+
+- **Performance and snapshots**
+  - Misc speedup of `Model` snapshots, including allowing lazy snapshots for
+    more scenarios (`from_data()` into empty models, read‑only mimic 
+    operations).
+
+- **Dependencies, tooling, and other thing**
+  - Updated dependency to pydantic v2 (still embedding v1).
+  - Switched dependency management from `poetry` to `uv`, and replaced
+    `pyright` with `basedpyright` as the recommended static type checker.
+  - Numerous docstring fixes, typing cleanups, and minor bugfixes.
 
 
 ## Omnipy v0.22.1
