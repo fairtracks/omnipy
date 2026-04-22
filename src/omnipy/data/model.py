@@ -1380,21 +1380,28 @@ class Model(  # type: ignore[misc]
             content_attr = self._getattr_from_content_obj(attr)
 
             if inspect.isroutine(content_attr):
-                reset_solution = self._prepare_reset_solution_take_snapshot_if_needed(
-                ).reset_solution
-                new_content_attr: Callable = cast(Callable, self._getattr_from_content_obj(attr))
+                method_info = get_special_methods_info_dict().get(attr)
+                is_read_only_method = (
+                    method_info and not method_info.state_changing
+                    or attr in ('items', 'values', 'keys'))
 
-                def _validate_content(ret: Any):
-                    self._validate_and_set_value(self.content, reset_solution=reset_solution)
-                    return self._convert_to_model_if_reasonable(
-                        ret,
-                        level_up=False,
-                        raise_validation_errors=False,
-                    )
+                if not is_read_only_method:
+                    reset_solution = \
+                        self._prepare_reset_solution_take_snapshot_if_needed().reset_solution
+                    new_content_attr: Callable = cast(Callable,
+                                                      self._getattr_from_content_obj(attr))
 
-                content_attr = add_callback_after_call(new_content_attr,
-                                                       _validate_content,
-                                                       reset_solution)
+                    def _validate_content(ret: Any):
+                        self._validate_and_set_value(self.content, reset_solution=reset_solution)
+                        return self._convert_to_model_if_reasonable(
+                            ret,
+                            level_up=False,
+                            raise_validation_errors=False,
+                        )
+
+                    content_attr = add_callback_after_call(new_content_attr,
+                                                           _validate_content,
+                                                           reset_solution)
 
             if attr in ('values', 'items'):
                 match attr:
