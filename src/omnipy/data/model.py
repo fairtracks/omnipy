@@ -148,6 +148,8 @@ class Model(  # type: ignore[misc]
 
     __root__: _RootT = pyd.Field(default_factory=undefined_default_factory)
 
+    # TODO: Pydantic v2, see if slots=True can be used for Model and Dataset to reduce memory usage
+
     class Config:
         arbitrary_types_allowed = True
         validate_all = True
