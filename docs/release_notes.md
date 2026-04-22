@@ -1,8 +1,8 @@
-## Omnipy v0.23
+## Omnipy v0.23.0
 
 _Release date: Apr 22, 2026_
 
-Omnipy v0.23 prioritizes under-the-hood improvements and refinement of
+Omnipy v0.23.0 prioritizes under-the-hood improvements and refinement of
 existing functionality over providing major new features.
 
 The display system introduced in earlier releases has been refined by
@@ -23,7 +23,7 @@ The toolchain has been modernized by adopting `uv` for dependency management
 and `basedpyright` as the recommended static type checker. `pydantic` has 
 been updated to v2 (code is still dependent on embedded v1 version).
 
-### New features and changes in v0.23
+### New features and changes in v0.23.0
 
 - **Display and pretty printing**
   - A number of core `Model`/`Dataset` display method parameters now 
