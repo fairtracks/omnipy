@@ -10,7 +10,7 @@ from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 from omnipy.shared.enums.colorstyles import RecommendedColorStyles
-from omnipy.shared.enums.display import DisplayColorSystem, SyntaxLanguageSpec
+from omnipy.shared.enums.display import SyntaxLanguageSpec
 
 from ..helpers.case_setup import (apply_frame_variant_to_test_case,
                                   FrameVariant,
@@ -241,8 +241,10 @@ def test_syntax_stylized_text_panel_json() -> None:
     text_panel = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel(
             json_content,
-            config=OutputConfig(syntax=SyntaxLanguageSpec.JSON,
-                                system=DisplayColorSystem.ANSI_RGB)))
+            config=OutputConfig(
+                syntax=SyntaxLanguageSpec.JSON,
+                style=RecommendedColorStyles.ANSI_DARK,
+            )))
 
     assert text_panel.content == json_content
     assert text_panel.config.syntax == SyntaxLanguageSpec.JSON

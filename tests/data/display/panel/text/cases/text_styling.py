@@ -6,7 +6,9 @@ import pytest_cases as pc
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
-from omnipy.shared.enums.colorstyles import DarkLowContrastColorStyles, LightLowContrastColorStyles
+from omnipy.shared.enums.colorstyles import (DarkLowContrastColorStyles,
+                                             LightLowContrastColorStyles,
+                                             RecommendedColorStyles)
 from omnipy.shared.enums.display import (DisplayColorSystem,
                                          HorizontalOverflowMode,
                                          PrettyPrinterLib,
@@ -149,6 +151,7 @@ def case_syntax_styling_setup_no_frame_or_configs(
             printer=PrettyPrinterLib.CODE,
             syntax=SyntaxLanguageSpec.PYTHON,
             system=DisplayColorSystem.ANSI_RGB,
+            style=RecommendedColorStyles.ANSI_DARK,
             bg=solid_background),
     )
 

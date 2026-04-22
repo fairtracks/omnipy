@@ -427,7 +427,7 @@ def test_output_config_default_values() -> None:
     assert config.debug is False
     assert config.ui is UserInterfaceType.AUTO
     assert config.system is DisplayColorSystem.AUTO
-    assert config.style is RecommendedColorStyles.ANSI_DARK
+    assert config.style is RecommendedColorStyles.AUTO
     assert config.dark is DarkBackground.AUTO
     assert config.bg is False
     assert config.fonts == (

@@ -86,7 +86,8 @@ class OutputConfig:
             defined in AllColorStyles. For non-supported styles, the user
             can specify a string with the Pygments style name. For this to
             work, the style must be registered in the Pygments library. If
-            style is `AUTO`, the style is automatically selected from the
+            style is `AUTO` or any of the other RecommendedColorStyles,
+            the style is automatically selected from the
             RecommendedColorStyles based on the detected user interface,
             the color system, and whether the background is dark or not.
         dark (DarkBackground.Literals): Whether the background color of the
@@ -154,7 +155,7 @@ class OutputConfig:
     debug: bool = False
     ui: UserInterfaceType.Literals = UserInterfaceType.AUTO
     system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
-    style: AllColorStyles.Literals | str = RecommendedColorStyles.ANSI_DARK
+    style: AllColorStyles.Literals | str = RecommendedColorStyles.AUTO
     dark: DarkBackground.Literals = DarkBackground.AUTO
     bg: bool = False
     fonts: tuple[str, ...] = (

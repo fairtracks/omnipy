@@ -214,12 +214,13 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 Color style/theme for syntax highlighting and other
                 display elements. Supported styles are defined in
                 AllColorStyles. For non-supported styles, the user can
-                specify a string with the Pygments style name. For
-                this to work, the style must be registered in the
-                Pygments library. If style is `AUTO`, the style is
-                automatically selected from the RecommendedColorStyles
-                based on the detected user interface, the color
-                system, and whether the background is dark or not.
+                specify a string with the Pygments style name. For this to
+                work, the style must be registered in the Pygments
+                library. If style is `AUTO` or any of the other
+                RecommendedColorStyles, the style is automatically
+                selected from the RecommendedColorStyles based on the
+                detected user interface, the color system, and whether the
+                background is dark or not.
             dark (DarkBackground.Literals):
                 Whether the background color of the output is dark.
                 This is used to determine the appropriate color scheme
@@ -612,12 +613,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Color style/theme for syntax highlighting and other
                     display elements. Supported styles are defined in
                     AllColorStyles. For non-supported styles, the user can
-                    specify a string with the Pygments style name. For
-                    this to work, the style must be registered in the
-                    Pygments library. If style is `AUTO`, the style is
-                    automatically selected from the RecommendedColorStyles
-                    based on the detected user interface, the color
-                    system, and whether the background is dark or not.
+                    specify a string with the Pygments style name. For this to
+                    work, the style must be registered in the Pygments
+                    library. If style is `AUTO` or any of the other
+                    RecommendedColorStyles, the style is automatically
+                    selected from the RecommendedColorStyles based on the
+                    detected user interface, the color system, and whether the
+                    background is dark or not.
                 dark (DarkBackground.Literals):
                     Whether the background color of the output is dark.
                     This is used to determine the appropriate color scheme
@@ -790,12 +792,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Color style/theme for syntax highlighting and other
                     display elements. Supported styles are defined in
                     AllColorStyles. For non-supported styles, the user can
-                    specify a string with the Pygments style name. For
-                    this to work, the style must be registered in the
-                    Pygments library. If style is `AUTO`, the style is
-                    automatically selected from the RecommendedColorStyles
-                    based on the detected user interface, the color
-                    system, and whether the background is dark or not.
+                    specify a string with the Pygments style name. For this to
+                    work, the style must be registered in the Pygments
+                    library. If style is `AUTO` or any of the other
+                    RecommendedColorStyles, the style is automatically
+                    selected from the RecommendedColorStyles based on the
+                    detected user interface, the color system, and whether the
+                    background is dark or not.
                 dark (DarkBackground.Literals):
                     Whether the background color of the output is dark.
                     This is used to determine the appropriate color scheme
@@ -1041,12 +1044,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Color style/theme for syntax highlighting and other
                     display elements. Supported styles are defined in
                     AllColorStyles. For non-supported styles, the user can
-                    specify a string with the Pygments style name. For
-                    this to work, the style must be registered in the
-                    Pygments library. If style is `AUTO`, the style is
-                    automatically selected from the RecommendedColorStyles
-                    based on the detected user interface, the color
-                    system, and whether the background is dark or not.
+                    specify a string with the Pygments style name. For this to
+                    work, the style must be registered in the Pygments
+                    library. If style is `AUTO` or any of the other
+                    RecommendedColorStyles, the style is automatically
+                    selected from the RecommendedColorStyles based on the
+                    detected user interface, the color system, and whether the
+                    background is dark or not.
                 dark (DarkBackground.Literals):
                     Whether the background color of the output is dark.
                     This is used to determine the appropriate color scheme
@@ -1219,12 +1223,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Color style/theme for syntax highlighting and other
                     display elements. Supported styles are defined in
                     AllColorStyles. For non-supported styles, the user can
-                    specify a string with the Pygments style name. For
-                    this to work, the style must be registered in the
-                    Pygments library. If style is `AUTO`, the style is
-                    automatically selected from the RecommendedColorStyles
-                    based on the detected user interface, the color
-                    system, and whether the background is dark or not.
+                    specify a string with the Pygments style name. For this to
+                    work, the style must be registered in the Pygments
+                    library. If style is `AUTO` or any of the other
+                    RecommendedColorStyles, the style is automatically
+                    selected from the RecommendedColorStyles based on the
+                    detected user interface, the color system, and whether the
+                    background is dark or not.
                 dark (DarkBackground.Literals):
                     Whether the background color of the output is dark.
                     This is used to determine the appropriate color scheme
@@ -1444,12 +1449,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Color style/theme for syntax highlighting and other
                     display elements. Supported styles are defined in
                     AllColorStyles. For non-supported styles, the user can
-                    specify a string with the Pygments style name. For
-                    this to work, the style must be registered in the
-                    Pygments library. If style is `AUTO`, the style is
-                    automatically selected from the RecommendedColorStyles
-                    based on the detected user interface, the color
-                    system, and whether the background is dark or not.
+                    specify a string with the Pygments style name. For this to
+                    work, the style must be registered in the Pygments
+                    library. If style is `AUTO` or any of the other
+                    RecommendedColorStyles, the style is automatically
+                    selected from the RecommendedColorStyles based on the
+                    detected user interface, the color system, and whether the
+                    background is dark or not.
                 dark (DarkBackground.Literals):
                     Whether the background color of the output is dark.
                     This is used to determine the appropriate color scheme
@@ -1625,12 +1631,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Color style/theme for syntax highlighting and other
                     display elements. Supported styles are defined in
                     AllColorStyles. For non-supported styles, the user can
-                    specify a string with the Pygments style name. For
-                    this to work, the style must be registered in the
-                    Pygments library. If style is `AUTO`, the style is
-                    automatically selected from the RecommendedColorStyles
-                    based on the detected user interface, the color
-                    system, and whether the background is dark or not.
+                    specify a string with the Pygments style name. For this to
+                    work, the style must be registered in the Pygments
+                    library. If style is `AUTO` or any of the other
+                    RecommendedColorStyles, the style is automatically
+                    selected from the RecommendedColorStyles based on the
+                    detected user interface, the color system, and whether the
+                    background is dark or not.
                 dark (DarkBackground.Literals):
                     Whether the background color of the output is dark.
                     This is used to determine the appropriate color scheme
@@ -1840,12 +1847,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Color style/theme for syntax highlighting and other
                     display elements. Supported styles are defined in
                     AllColorStyles. For non-supported styles, the user can
-                    specify a string with the Pygments style name. For
-                    this to work, the style must be registered in the
-                    Pygments library. If style is `AUTO`, the style is
-                    automatically selected from the RecommendedColorStyles
-                    based on the detected user interface, the color
-                    system, and whether the background is dark or not.
+                    specify a string with the Pygments style name. For this to
+                    work, the style must be registered in the Pygments
+                    library. If style is `AUTO` or any of the other
+                    RecommendedColorStyles, the style is automatically
+                    selected from the RecommendedColorStyles based on the
+                    detected user interface, the color system, and whether the
+                    background is dark or not.
                 dark (DarkBackground.Literals):
                     Whether the background color of the output is dark.
                     This is used to determine the appropriate color scheme
@@ -2002,12 +2010,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Color style/theme for syntax highlighting and other
                     display elements. Supported styles are defined in
                     AllColorStyles. For non-supported styles, the user can
-                    specify a string with the Pygments style name. For
-                    this to work, the style must be registered in the
-                    Pygments library. If style is `AUTO`, the style is
-                    automatically selected from the RecommendedColorStyles
-                    based on the detected user interface, the color
-                    system, and whether the background is dark or not.
+                    specify a string with the Pygments style name. For this to
+                    work, the style must be registered in the Pygments
+                    library. If style is `AUTO` or any of the other
+                    RecommendedColorStyles, the style is automatically
+                    selected from the RecommendedColorStyles based on the
+                    detected user interface, the color system, and whether the
+                    background is dark or not.
                 dark (DarkBackground.Literals):
                     Whether the background color of the output is dark.
                     This is used to determine the appropriate color scheme
@@ -2186,12 +2195,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 Color style/theme for syntax highlighting and other
                 display elements. Supported styles are defined in
                 AllColorStyles. For non-supported styles, the user can
-                specify a string with the Pygments style name. For
-                this to work, the style must be registered in the
-                Pygments library. If style is `AUTO`, the style is
-                automatically selected from the RecommendedColorStyles
-                based on the detected user interface, the color
-                system, and whether the background is dark or not.
+                specify a string with the Pygments style name. For this to
+                work, the style must be registered in the Pygments
+                library. If style is `AUTO` or any of the other
+                RecommendedColorStyles, the style is automatically
+                selected from the RecommendedColorStyles based on the
+                detected user interface, the color system, and whether the
+                background is dark or not.
             dark (DarkBackground.Literals):
                 Whether the background color of the output is dark.
                 This is used to determine the appropriate color scheme
@@ -3125,12 +3135,13 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                     Color style/theme for syntax highlighting and other
                     display elements. Supported styles are defined in
                     AllColorStyles. For non-supported styles, the user can
-                    specify a string with the Pygments style name. For
-                    this to work, the style must be registered in the
-                    Pygments library. If style is `AUTO`, the style is
-                    automatically selected from the RecommendedColorStyles
-                    based on the detected user interface, the color
-                    system, and whether the background is dark or not.
+                    specify a string with the Pygments style name. For this to
+                    work, the style must be registered in the Pygments
+                    library. If style is `AUTO` or any of the other
+                    RecommendedColorStyles, the style is automatically
+                    selected from the RecommendedColorStyles based on the
+                    detected user interface, the color system, and whether the
+                    background is dark or not.
                 dark (DarkBackground.Literals):
                     Whether the background color of the output is dark.
                     This is used to determine the appropriate color scheme
@@ -3303,12 +3314,13 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                     Color style/theme for syntax highlighting and other
                     display elements. Supported styles are defined in
                     AllColorStyles. For non-supported styles, the user can
-                    specify a string with the Pygments style name. For
-                    this to work, the style must be registered in the
-                    Pygments library. If style is `AUTO`, the style is
-                    automatically selected from the RecommendedColorStyles
-                    based on the detected user interface, the color
-                    system, and whether the background is dark or not.
+                    specify a string with the Pygments style name. For this to
+                    work, the style must be registered in the Pygments
+                    library. If style is `AUTO` or any of the other
+                    RecommendedColorStyles, the style is automatically
+                    selected from the RecommendedColorStyles based on the
+                    detected user interface, the color system, and whether the
+                    background is dark or not.
                 dark (DarkBackground.Literals):
                     Whether the background color of the output is dark.
                     This is used to determine the appropriate color scheme
