@@ -82,6 +82,7 @@ _SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
     '__delitem__': MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
     '__missing__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     '__iter__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    '__next__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.MAYBE),
     '__reversed__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     '__contains__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     # 3.3.8. Emulating numeric types ########################################
@@ -147,13 +148,36 @@ _SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
     '__trunc__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.MAYBE),
     '__floor__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.MAYBE),
     '__ceil__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.MAYBE),
-    # - Hash and other standard methods ----------------------------------
+    # - Context managers -------------------------------------------------------
+    '__enter__': MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
+    '__exit__': MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
+    # - Buffer protocol --------------------------------------------------------
+    '__buffer__': MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
+    '__release_buffer__': MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
+    # - Annotations ---------------------------------------------------------
+    # '__annotations__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    # '__annotate__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    # - Hash and other standard methods -------------------------------------
     '__hash__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
-    '__delattr__': MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
+    # - Coroutines ----------------------------------------------------------
+    '__await__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    # - Asynchronous iterators ------------------------------------------------
+    '__aiter__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    '__anext__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    # - Asynchronous context managers ----------------------------------------
+    '__aenter__': MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
+    '__aexit__': MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
+    # - Copy protocol --------------------------------------------------------
+    '__copy__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.YES),
+    '__deepcopy__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.YES),
+    '__replace__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.YES),
+    # - Str methods --------------------------------------------------------
     # __format__ returns a str, which might sometimes match the model, but
     # if e.g. `Model[str]` and `dynamically_convert_elements_to_models=True`
     # we do not want to return a Model[str] object.
     '__format__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    # - Other --------------------------------------------------------
+    '__delattr__': MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
 }
 
 
