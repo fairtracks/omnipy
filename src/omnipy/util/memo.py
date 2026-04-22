@@ -67,6 +67,9 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         self._keep_alive_dict.clear()
         self._sub_obj_ids.clear()
 
+    def in_deepcopy_object_ids(self, key: int) -> bool:
+        return key in self._sub_obj_ids
+
     def get_deepcopy_object_ids(self) -> SetDeque[int]:
         return SetDeque(self._sub_obj_ids.keys())
 

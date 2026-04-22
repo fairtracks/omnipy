@@ -69,6 +69,9 @@ class SnapshotHolder(WeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasConte
 
         return _all_are_empty
 
+    def in_deepcopy_content_ids(self, key: int) -> bool:
+        return self._deepcopy_memo.in_deepcopy_object_ids(key)
+
     def get_deepcopy_content_ids(self) -> SetDeque[int]:
         return self._deepcopy_memo.get_deepcopy_object_ids()
 
@@ -77,7 +80,7 @@ class SnapshotHolder(WeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasConte
 
     def schedule_deepcopy_content_ids_for_deletion(self, *keys: int) -> None:
         for key in keys:
-            if key in self._deepcopy_memo.get_deepcopy_object_ids():
+            if self.in_deepcopy_content_ids(key):
                 self._deepcopy_content_ids_for_deleted_objs.append(key)
 
     def delete_scheduled_deepcopy_content_ids(self) -> None:
@@ -101,7 +104,7 @@ class SnapshotHolder(WeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasConte
             # old object. In those case, setup_deepcopy() will raise an AssertionError, which should
             # trigger a new attempt to deepcopy without the memo dict.
 
-            if id(obj.content) in self.get_deepcopy_content_ids():
+            if self.in_deepcopy_content_ids(id(obj.content)):
                 self.delete_scheduled_deepcopy_content_ids()
 
             obj_copy: ContentT
