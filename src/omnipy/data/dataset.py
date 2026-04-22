@@ -20,7 +20,8 @@ from omnipy.data._selector import (create_updated_mapping,
                                    Key2DataItemType,
                                    prepare_selected_items_with_iterable_data,
                                    prepare_selected_items_with_mapping_data,
-                                   select_keys)
+                                   select_keys,
+                                   uniquely_add_item_to_mapping)
 from omnipy.data.helpers import (build_own_module_and_global_namespace_for_forward_refs,
                                  cleanup_name_qualname_and_module)
 from omnipy.data.model import Model
@@ -39,6 +40,7 @@ from omnipy.util.helpers import (evaluate_any_forward_refs_if_possible,
                                  get_default_if_typevar,
                                  get_event_loop_and_check_if_loop_is_running,
                                  is_iterable,
+                                 is_non_str_byte_iterable,
                                  remove_forward_ref_notation,
                                  split_to_union_variants)
 from omnipy.util.pydantic import Undefined, UndefinedType, ValidationError
@@ -850,10 +852,235 @@ class Dataset(
     def to(self, model_or_dataset_cls: type[_OtherModelOrDatasetT]) -> '_OtherModelOrDatasetT':
         return model_or_dataset_cls(self)
 
-    def do(self, placeholder: F) -> 'Dataset[_ModelOrDatasetT]':
+    def get_any(self, *args: F) -> 'Dataset[_ModelOrDatasetT]':
         new_dataset = self.__class__()
         for data_file, val in self.items():
-            new_dataset[data_file] = placeholder(val)
+            try:
+                cur_val = val
+                for arg in args:
+                    cur_val = arg(cur_val)
+                new_dataset[data_file] = cur_val
+            except Exception as e:
+                error_msg = (f'Error applying expression "{arg}" on data file '
+                             f'"{data_file}": {type(e)}: {e}. Skipping this data file.')
+                # cast(CanLog, self).log(error_msg)
+                print(error_msg)
+        return new_dataset
+
+    def rename_any(self, *exprs: F, delimiter: str = ' ') -> 'Dataset[_ModelOrDatasetT]':
+        new_dataset = self.__class__()
+        for _data_key, val in self.items():
+            # try:
+
+            # class DatasetItem(NamedTuple):
+            #     key: str
+            #     val: object
+
+            # item = DatasetItem(data_key, val)
+            def _eval_expr(expr: F, val: _ModelOrDatasetT) -> object:
+                result = expr(val)
+                return result.to_data() if is_model_instance(result) else result
+
+            new_val = delimiter.join(str(_eval_expr(expr, val)) for expr in exprs)
+            new_dataset[new_val] = val
+            # except Exception as e:
+            #     new_dataset[data_file] = val
+        return new_dataset
+
+    # def do_items(self, item_expr: F) -> 'Dataset[_ModelOrDatasetT]':
+    #     new_dataset = self.__class__()
+    #     for key, val in self.items():
+    #         new_key, new_val = item_expr((key, val)).
+    #         new_dataset[new_key] = new_val
+    #     return new_dataset
+
+    # def collapse(self, depth: pyd.PositiveInt = 1) -> 'Dataset[_ModelOrDatasetT]':
+    #     def _recurse_collapse(
+    #         new_dataset: Dataset[_ModelOrDatasetT],
+    #         path: list[str],
+    #         cur_val: Any,
+    #         depth: int,
+    #     ):
+    #         print(path)
+    #         if len(path) > depth:
+    #             new_key = '_'.join(path)
+    #             new_dataset[new_key] = cur_val
+    #         else:
+    #             if hasattr(cur_val, 'items'):
+    #                 for data_file, val in cur_val.items():
+    #                     path.append(data_file)
+    #                     _recurse_collapse(new_dataset, path, val, depth)
+    #             elif is_iterable(cur_val) and not hasattr(cur_val, 'upper'):
+    #                 for i, val in enumerate(cur_val):
+    #                     path.append(str(i))
+    #                     _recurse_collapse(new_dataset, path, val, depth)
+    #             else:
+    #                 raise TypeError('Cannot collapse value of type '
+    #                                 f'"{type(cur_val)}". '
+    #                                 f'Current key path: {path}')
+    #
+    #         if path:
+    #             path.pop()
+    #         return
+    #
+    #     new_dataset = self.__class__()
+    #     _recurse_collapse(new_dataset, [], self, depth)
+    #     return new_dataset
+    #
+    # def explode(self, *args: F) -> 'Dataset[_ModelOrDatasetT]':
+    #     # def _apply_arg(path: list[str], val: Any, arg: F) -> Any:
+    #     #     try:
+    #     #         return arg(val)
+    #     #     except Exception as e:
+    #     #         error_msg = (f'Error applying expression "{arg}" on path'
+    #     #                      f'"{path}": {type(e)}: {e}. Skipping this data file.')
+    #     #     print(error_msg)
+    #     #     return val
+    #     def _add_to_cur_val(new_cur_val: list | dict, key: str, val: Any):
+    #         match new_cur_val:
+    #             case dict():
+    #                 uniquely_add_item_to_mapping(key, val, new_cur_val)
+    #             case list():
+    #                 new_cur_val.append(val)
+    #
+    #     def _recurse_explode(
+    #         new_dataset: Dataset[_ModelOrDatasetT],
+    #         path: list[str],
+    #         cur_val: Any,
+    #         rest_args: tuple[F, ...],
+    #     ):
+    #         print(path)
+    #         if isinstance(cur_val, Mapping):
+    #             new_cur_val = {}
+    #             for key, val in cur_val.items():
+    #                 _add_to_cur_val(new_cur_val, key, val)
+    #         elif is_non_str_byte_iterable(cur_val):
+    #             new_cur_val = []
+    #         else:
+    #             raise TypeError('Cannot explode value at location '
+    #                             f'"{path}" of type "{type(cur_val)}".')
+    #
+    #         if len(rest_args) == 0:
+    #             new_key = '_'.join(path)
+    #             new_dataset[new_key] = cur_val
+    #         else:
+    #             arg = rest_args[0]
+    #             try:
+    #                 val_to_explode = arg(cur_val)
+    #             except Exception as e:
+    #                 error_msg = (f'Error applying expression "{arg}" on path'
+    #                              f'"{path}": {type(e)}: {e}. Skipping this data file.')
+    #                 print(error_msg)
+    #                 return
+    #
+    #             if hasattr(val_to_explode, 'items'):
+    #                 for key, val in val_to_explode.items():
+    #                     single_item_exploded_val = val_to_explode.__class__({key: val})
+    #
+    #                     path.append(key)
+    #                     _recurse_collapse(new_dataset, path, single_item_cur_val, rest_args[1:])
+    #                     cur_val
+    #             elif is_iterable(cur_val) and not hasattr(cur_val, 'upper'):
+    #                 for i, val in enumerate(cur_val):
+    #                     path.append(str(i))
+    #                     new_val = _apply_arg(path, val, arg)
+    #                     _recurse_collapse(new_dataset, path, new_val, rest_args[1:])
+    #             else:
+    #                 raise TypeError('Cannot collapse value of type '
+    #                                 f'"{type(cur_val)}". '
+    #                                 f'Current key path: {path}')
+    #
+    #         if path:
+    #             path.pop()
+    #         return
+    #
+    #     new_dataset = self.__class__()
+    #     _recurse_collapse(new_dataset, [], self, tuple(args))
+    #     return new_dataset
+
+    def explode(self, arg: F) -> 'Dataset[_ModelOrDatasetT]':  # noqa: C901
+        new_dataset = self.__class__()
+        for data_file, val in self.items():
+            try:
+                # cur_val = val
+                # for arg in args:
+
+                def _create_empty_iterable(iterable: Any) -> dict | list:
+                    if hasattr(iterable, 'items'):
+                        return {}
+                    elif is_non_str_byte_iterable(iterable):
+                        return []
+                    else:
+                        raise TypeError('Cannot explode value at location '
+                                        f'"{path}" of type "{type(iterable)}".')
+
+                def _add_to_iterable(iterable: list | dict, key_or_index: str | int, val: Any):
+                    match iterable:
+                        case dict():
+                            uniquely_add_item_to_mapping(str(key_or_index), val, iterable)
+                        case list():
+                            iterable.append(val)
+
+                def _get_all_keys_or_indices(iterable: Any) -> Iterable[str | int]:
+                    if hasattr(iterable, 'items'):
+                        return iterable.keys()
+                    elif is_non_str_byte_iterable(iterable):
+                        iter_len = len(iterable) if hasattr(iterable, '__len__') else sum(
+                            1 for _ in iterable)
+                        return range(iter_len)
+                    else:
+                        raise TypeError('Cannot explode value at location '
+                                        f'"{path}" of type "{type(iterable)}".')
+
+                def _traverse(path: list[str],
+                              cur_val: Any,
+                              val_to_explode: Any,
+                              explode_key_or_index: str | int) -> list | dict:
+                    new_cur_val = _create_empty_iterable(cur_val)
+                    for key_or_index in _get_all_keys_or_indices(cur_val):
+                        val = cur_val[key_or_index]
+                        if val is val_to_explode:
+                            _add_to_iterable(
+                                new_cur_val,
+                                # '_'.join((str(key_or_index), str(explode_key_or_index))),
+                                key_or_index,
+                                val_to_explode[explode_key_or_index])
+                            is_non_str_byte_iterable
+                        elif is_non_str_byte_iterable(val):
+                            path.append(str(key_or_index))
+                            _add_to_iterable(
+                                new_cur_val,
+                                key_or_index,
+                                _traverse(
+                                    path,
+                                    val,
+                                    val_to_explode,
+                                    explode_key_or_index=explode_key_or_index))
+                            path.pop()
+                        else:
+                            _add_to_iterable(new_cur_val, key_or_index, val)
+
+                    return new_cur_val
+                    # elif is_non_str_byte_iterable(cur_val):
+                    #     ...
+
+                val_to_explode = arg(val)
+
+                for explode_key_or_index in _get_all_keys_or_indices(val_to_explode):
+                    path = [data_file]
+                    new_dataset['_'.join(
+                        (str(data_file),
+                         str(explode_key_or_index)))] = _traverse(path,
+                                                                  val,
+                                                                  val_to_explode,
+                                                                  explode_key_or_index)
+
+            except Exception as e:
+                error_msg = (f'Error applying expression "{arg}" on data file '
+                             f'"{data_file}": {type(e)}: {e}. Skipping this data file.')
+                # cast(CanLog, self).log(error_msg)
+                print(error_msg)
+                raise ValueError(error_msg) from e
         return new_dataset
 
     def to_data(self) -> dict_t[str, Any]:
