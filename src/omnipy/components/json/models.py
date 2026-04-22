@@ -761,16 +761,17 @@ _all_json_model_classes: list[Type[Model]] = (
 
 def is_json_model_instance_hack(obj: Any) -> bool:
     """
-    Check if the given class is a JSON model class. Temporary solution
-    to identify JSON model classes for output formatting.
+    Check if the given object is an instance of a JSON model class.
+    Temporary solution to identify JSON model classes for output formatting.
 
     (Does not work for JsonCustomListModel and JsonCustomDictModel)
 
     Args:
-        cls: The class to check.
+        obj: The object to check.
 
     Returns:
-        True if the class is a JSON model class, False otherwise.
+        True if the object is an instance of a JSON model class, False
+        otherwise.
     """
 
     if is_model_instance(obj):
