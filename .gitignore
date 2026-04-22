@@ -135,8 +135,8 @@ dmypy.json
 /data
 /input
 
-# Recommended for libraries to not commit poetry.lock
-poetry.lock
+# Recommended for libraries to not commit uv.lock
+uv.lock
 
 # Documentation
 html
