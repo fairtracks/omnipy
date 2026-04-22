@@ -473,6 +473,10 @@ def test_output_config_fail_invalid_style() -> None:
         OutputConfig(style='invalid_style')
 
 
+def test_output_config_cleaned_style() -> None:
+    OutputConfig(style='ansi_dark')
+
+
 def test_output_config_fail_min_crop_width_smaller_than_min_panel_width() -> None:
     with pytest.raises(ValueError):
         OutputConfig(min_panel_width=10, min_crop_width=5)

@@ -3,6 +3,7 @@ from typing import Any
 import pygments.lexers
 import pygments.styles
 import pygments.util
+import rich.syntax
 
 from omnipy.shared.constants import (MAX_PANEL_NESTING_DEPTH,
                                      MAX_PANELS_HORIZONTALLY,
@@ -203,13 +204,14 @@ class OutputConfig:
         try:
             if style in AllColorStyles:
                 return style
+            elif style in rich.syntax.RICH_SYNTAX_THEMES:
+                return style
             elif pygments.styles.get_style_by_name(style):
                 return style
             else:
                 raise ValueError(f'Invalid color style: {style}')
         except pygments.util.ClassNotFound as exp:
-            raise ValueError(f'Color style not registered in Pygments: {style}. '
-                             f'This may be due to a network error.') from exp
+            raise ValueError(f'Invalid color style: {style}') from exp
 
     @pyd.root_validator
     def check_min_crop_width(cls, values: dict[str, Any]) -> dict[str, Any]:

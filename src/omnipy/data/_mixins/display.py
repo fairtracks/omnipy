@@ -364,7 +364,7 @@ class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
         debug: bool = False,
         ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
         system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
-        style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+        style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
         dark: DarkBackground.Literals = DarkBackground.AUTO,
         bg: bool = False,
         fonts: tuple[str,
@@ -402,7 +402,7 @@ class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
         debug: bool = False,
         ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
         system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
-        style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+        style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
         dark: DarkBackground.Literals = DarkBackground.AUTO,
         bg: bool = False,
         fonts: tuple[str,
@@ -440,7 +440,7 @@ class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
         debug: bool = False,
         ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
         system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
-        style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+        style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
         dark: DarkBackground.Literals = DarkBackground.AUTO,
         bg: bool = False,
         fonts: tuple[str,
@@ -505,7 +505,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             debug: bool = False,
             ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
-            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
             dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
             fonts: tuple[str, ...] = ('Menlo',
@@ -937,7 +937,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             debug: bool = False,
             ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
-            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
             dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
             fonts: tuple[str, ...] = ('Menlo',
@@ -1338,7 +1338,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             debug: bool = False,
             ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
-            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
             dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
             fonts: tuple[str, ...] = ('Menlo',
@@ -1745,7 +1745,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             debug: bool = False,
             ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
-            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
             dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
             fonts: tuple[str, ...] = ('Menlo',
@@ -2583,7 +2583,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             )
         assert config.dark in [False, True]
 
-        if config.style in RecommendedColorStyles:
+        if (config.style in RecommendedColorStyles
+                and config_kwargs.get('style') in [None, RecommendedColorStyles.AUTO]):
             config, config_kwargs = self._update_config_and_config_kwargs_from_initial_config_setup(
                 config,
                 config_kwargs,
@@ -3028,7 +3029,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             debug: bool = False,
             ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
             system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
-            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.ANSI_DARK,
+            style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
             dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
             fonts: tuple[str, ...] = ('Menlo',
