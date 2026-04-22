@@ -710,7 +710,7 @@ class Model(  # type: ignore[misc]
         self,
         new_content: object,
         reset_solution: ContextManager[None] | None = None,
-        take_snapshot_of_validated_content: bool = True,
+        lazy_snapshot_if_possible: bool = False,
     ) -> None:
 
         old_content_id = id(self.content)
@@ -723,7 +723,7 @@ class Model(  # type: ignore[misc]
             new_content=new_content,
             outer_reset_solution=reset_solution,
             post_validation_func=_set_new_content,
-            take_snapshot_of_validated_content=take_snapshot_of_validated_content,
+            lazy_snapshot_if_possible=lazy_snapshot_if_possible,
         )
 
     def _prepare_reset_solution_take_snapshot_if_needed(
@@ -783,7 +783,7 @@ class Model(  # type: ignore[misc]
         new_content: object,
         outer_reset_solution: ContextManager[None] | None = None,
         post_validation_func: Callable[[_RootT], None] | None = None,
-        take_snapshot_of_validated_content: bool = True,
+        lazy_snapshot_if_possible: bool = False,
     ) -> None:
         keep_alive_old_content = self.content  # To ensure old content ids are not reused
 
@@ -808,7 +808,7 @@ class Model(  # type: ignore[misc]
         del inner_reset_solution
 
         del new_content
-        if take_snapshot_of_validated_content:
+        if self.has_snapshot() or not lazy_snapshot_if_possible:
             self._take_snapshot_of_validated_content()
 
         del keep_alive_old_content
@@ -936,10 +936,7 @@ class Model(  # type: ignore[misc]
             yield
 
         self._validate_and_set_value(
-            value,
-            reset_solution=_reset_to_default(),
-            take_snapshot_of_validated_content=False,
-        )
+            value, reset_solution=_reset_to_default(), lazy_snapshot_if_possible=True)
 
     def from_data(self, data: Any) -> None:
         if self.content == self._get_default_value_from_model(self.full_type()):
