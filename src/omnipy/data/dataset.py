@@ -865,8 +865,8 @@ class Dataset(
     def from_data(self,
                   data: Mapping[str, Any] | Iterable[tuple[str, Any]],
                   update: bool = True) -> None:
-        def callback_func(model: Model | Dataset, content: Any):
-            model.from_data(content)
+        def callback_func(type_variant: Model | Dataset, content: Any):
+            type_variant.from_data(content)
 
         self._from_dict_with_callback(data, update, callback_func)
 
@@ -888,7 +888,11 @@ class Dataset(
             #       type_variant.from_data(content) instead of creating a
             #       new instance and then calling from_data() on it.
             #       Instance-level from_data() should however also be kept,
-            #       as it is useful in many cases.
+            #       as it is useful in many cases. Note: Classmethod
+            #       from_data() should still first create an empty instance
+            #       and then call instance-level from_data() on it, to avoid
+            #       issues with __init__ arguments (when e.g. 'self', 'value',
+            #       'data' is used as keys in the data).
 
             def validation_by_callback_func(
                 type_variant: 'type[Model | Dataset]',
