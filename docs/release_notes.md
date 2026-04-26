@@ -1,6 +1,13 @@
-## Omnipy v0.23.0
+## Omnipy v0.23.1
 
-_Release date: Apr 22, 2026_
+_Release date: Apr 26, 2026_
+
+Replaces the incorrectly versioned 0.23 release (should have been 0.23.0).
+
+
+## Omnipy v0.23
+
+_Release date: Yanked due to incorrect version format (0.23 instead of 0.23.0)_
 
 Omnipy v0.23.0 prioritizes under-the-hood improvements and refinement of
 existing functionality over providing major new features.
