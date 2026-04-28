@@ -133,8 +133,7 @@ def _parse_none_in_union(flattened_union_variant_types, value):
 def _parse_none_in_types(inner_union_types: tuple[TypeForm]) -> object:
     for type_ in inner_union_types:
         if is_model_subclass(type_):
-            from omnipy.data.model import Model
-            model = cast(type[Model], type_)
+            model = type_
             return model(parse_none_according_to_model(None, model))
         elif _supports_none(type_):
             return None

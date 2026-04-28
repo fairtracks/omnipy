@@ -894,7 +894,7 @@ class Model(  # type: ignore[misc]
         value = root_obj[ROOT_KEY]
         value = parse_none_according_to_model(value, root_model=cls)
 
-        config = cast(type[Model[_RootT]], cls).data_class_creator.config
+        config = cls.data_class_creator.config  # type: ignore[attr-defined]
         with hold_and_reset_prev_attrib_value(config.model,
                                               'dynamically_convert_elements_to_models'):
             config.model.dynamically_convert_elements_to_models = False
