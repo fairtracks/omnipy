@@ -14,6 +14,7 @@ Created: January 2026
 
 from pathlib import Path
 import sys
+import traceback
 
 from omnipy.util.docstr_macros import get_macros_from_env, process_content
 
@@ -74,7 +75,6 @@ def main():
                     modified_any = True
             except Exception as e:
                 print(f'Error processing {filepath}: {e}')
-                import traceback
                 traceback.print_exc()
                 sys.exit(1)
 

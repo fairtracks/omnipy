@@ -4,6 +4,7 @@ from typing import Any, cast, ClassVar, Generic, get_args, get_type_hints, Itera
 
 from typing_extensions import TypeVar
 
+from omnipy.shared.constants import AUTO_VALUE, RANDOM_PREFIX
 from omnipy.shared.typedefs import TypeForm
 from omnipy.util.helpers import all_type_variants, is_literal_type, is_package_editable
 
@@ -471,7 +472,6 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
     def random_choice(cls) -> LiteralInnerTypeT:
         """Select a random choice from all available enum values.
         """
-        from omnipy.shared.constants import AUTO_VALUE, RANDOM_PREFIX
         exclude_prefixes = [RANDOM_PREFIX, AUTO_VALUE]
         choice = ''
         while choice == '' or any(choice.startswith(_) for _ in exclude_prefixes):
@@ -490,6 +490,5 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
             True if the value is a valid random choice value for this enum,
             False otherwise.
         """
-        from omnipy.shared.constants import RANDOM_PREFIX
         return (isinstance(value, str) and cast(LiteralInnerTypeT, value) in cls
                 and value.startswith(RANDOM_PREFIX))

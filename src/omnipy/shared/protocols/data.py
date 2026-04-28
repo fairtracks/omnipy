@@ -75,7 +75,9 @@ class HasContent(Protocol[ContentT]):
 
 @runtime_checkable
 class IsModel(HasContent[_RootT], Protocol[_RootT]):
-    ...
+    @classmethod
+    def full_type(cls) -> type[_RootT]:
+        ...
 
 
 @runtime_checkable

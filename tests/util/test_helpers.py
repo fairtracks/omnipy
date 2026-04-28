@@ -4,8 +4,6 @@ from typing import Annotated, Any, ForwardRef, Generic, get_args, Iterator, Lite
 import pytest
 from typing_extensions import TypeVar
 
-from omnipy.data.dataset import Dataset
-from omnipy.data.model import Model
 from omnipy.util.helpers import (all_type_variants,
                                  called_from_omnipy_tests,
                                  ensure_non_str_byte_iterable,
@@ -17,10 +15,8 @@ from omnipy.util.helpers import (all_type_variants,
                                  has_items,
                                  is_iterable,
                                  is_literal_type,
-                                 is_non_omnipy_pydantic_model,
                                  is_non_str_byte_iterable,
                                  is_optional,
-                                 is_pure_pydantic_model,
                                  is_strict_subclass,
                                  is_type_specialization,
                                  is_union,
@@ -28,7 +24,6 @@ from omnipy.util.helpers import (all_type_variants,
                                  sorted_dict_hash,
                                  split_to_union_variants,
                                  transfer_generic_args_to_cls)
-import omnipy.util.pydantic as pyd
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -446,63 +441,6 @@ def test_is_strict_subclass() -> None:
     assert is_strict_subclass(Father, (Sister, Brother)) is False
     assert is_strict_subclass(Mother, (Mother, Father)) is False
     assert is_strict_subclass(Child, (Mother, Child)) is False
-
-
-def test_is_pydantic_model() -> None:
-    class PydanticModel(pyd.BaseModel):
-        ...
-
-    T = TypeVar('T')
-
-    class GenericPydanticModel(pyd.GenericModel, Generic[T]):
-        ...
-
-    class Mixin:
-        ...
-
-    class MultiInheritModel(pyd.BaseModel, Mixin):
-        ...
-
-    class PydanticModelSubclass(PydanticModel):
-        ...
-
-    class OmnipyModel(Model[int]):
-        ...
-
-    class OmnipyModelSubclass(Model[int]):
-        ...
-
-    class MultiInheritOmnipyAndPydanticModel(Model[int], pyd.BaseModel):
-        ...
-
-    class MultiInheritOmnipyAndGenericPydanticModel(Model[int], pyd.GenericModel, Generic[T]):
-        ...
-
-    assert is_pure_pydantic_model(PydanticModel())
-    assert not is_pure_pydantic_model(pyd.BaseModel())
-    assert not is_pure_pydantic_model(GenericPydanticModel())
-    assert not is_pure_pydantic_model(MultiInheritModel())
-    assert not is_pure_pydantic_model(PydanticModelSubclass())
-    assert not is_pure_pydantic_model(OmnipyModel())
-    assert not is_pure_pydantic_model(OmnipyModelSubclass())
-    assert not is_pure_pydantic_model(MultiInheritOmnipyAndPydanticModel())
-    assert not is_pure_pydantic_model(MultiInheritOmnipyAndGenericPydanticModel())
-    assert not is_pure_pydantic_model(Model[PydanticModel]())
-    assert not is_pure_pydantic_model(Dataset[Model[PydanticModel]]())
-    assert not is_pure_pydantic_model('model')
-
-    assert is_non_omnipy_pydantic_model(PydanticModel())
-    assert not is_non_omnipy_pydantic_model(pyd.BaseModel())
-    assert is_non_omnipy_pydantic_model(GenericPydanticModel())
-    assert is_non_omnipy_pydantic_model(MultiInheritModel())
-    assert is_non_omnipy_pydantic_model(PydanticModelSubclass())
-    assert not is_non_omnipy_pydantic_model(OmnipyModel())
-    assert not is_non_omnipy_pydantic_model(OmnipyModelSubclass())
-    assert not is_non_omnipy_pydantic_model(MultiInheritOmnipyAndPydanticModel())
-    assert not is_non_omnipy_pydantic_model(MultiInheritOmnipyAndGenericPydanticModel())
-    assert not is_non_omnipy_pydantic_model(Model[PydanticModel]())
-    assert not is_non_omnipy_pydantic_model(Dataset[Model[PydanticModel]]())
-    assert not is_non_omnipy_pydantic_model('model')
 
 
 def test_is_unreserved_identifier():

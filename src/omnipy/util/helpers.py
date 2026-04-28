@@ -295,21 +295,6 @@ def is_strict_subclass(
     return False
 
 
-def is_pure_pydantic_model(obj: object):
-    return type(obj).__bases__ == (pyd.BaseModel,)
-
-
-def is_non_omnipy_pydantic_model(obj: object):
-    from omnipy.data.dataset import Dataset
-    from omnipy.data.model import Model
-
-    mro = type(obj).__mro__
-    return mro[0] != pyd.BaseModel \
-        and (pyd.BaseModel in mro or pyd.GenericModel in mro) \
-        and Model not in mro \
-        and Dataset not in mro
-
-
 def is_unreserved_identifier(identifier: str) -> bool:
     return identifier.isidentifier() and not iskeyword(identifier) and not issoftkeyword(identifier)
 

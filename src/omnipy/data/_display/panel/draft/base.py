@@ -9,7 +9,7 @@ from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.layout.base import DimensionsAwarePanelLayoutMixin, Layout
 from omnipy.data._display.panel.base import DimensionsAwarePanel, FullyRenderedPanel, Panel
 from omnipy.data._display.panel.typedefs import ContentInvT, ContentT, FrameInvT, FrameT
-from omnipy.util import pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 
 @pyd.dataclass(

@@ -10,7 +10,7 @@ import tarfile
 from textwrap import dedent
 from typing import Any, Callable, cast, Generic, Iterator, overload
 
-from typing_extensions import override, Self, TypeVar
+from typing_extensions import override, Self, TypeIs, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._mixins.display import DatasetDisplayMixin
@@ -23,8 +23,6 @@ from omnipy.data._selector import (create_updated_mapping,
                                    select_keys)
 from omnipy.data.helpers import (build_own_module_and_global_namespace_for_forward_refs,
                                  cleanup_name_qualname_and_module)
-from omnipy.data.model import Model
-from omnipy.data.typechecks import is_dataset_subclass, is_model_instance, is_model_subclass
 from omnipy.shared.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
 from omnipy.shared.protocols.data import (IsHttpUrlDataset,
                                           IsMultiModelDataset,
@@ -41,32 +39,36 @@ from omnipy.util.helpers import (evaluate_any_forward_refs_if_possible,
                                  is_iterable,
                                  remove_forward_ref_notation,
                                  split_to_union_variants)
-from omnipy.util.pydantic import Undefined, UndefinedType, ValidationError
+from omnipy.util.pydantic import (lenient_isinstance,
+                                  lenient_issubclass,
+                                  Undefined,
+                                  UndefinedType,
+                                  ValidationError)
 import omnipy.util.pydantic as pyd
 
 if TYPE_CHECKING:
-    from omnipy.data._mimic_models import (Model_bool,
-                                           Model_bytes,
-                                           Model_Dataset,
-                                           Model_dict,
-                                           Model_float,
-                                           Model_int,
-                                           Model_list,
-                                           Model_set,
-                                           Model_str,
-                                           Model_tuple_pair,
-                                           Model_tuple_same_type)
-    from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
+    from omnipy.data._typing.mimic_models import (Model_bool,
+                                                  Model_bytes,
+                                                  Model_Dataset,
+                                                  Model_dict,
+                                                  Model_float,
+                                                  Model_int,
+                                                  Model_list,
+                                                  Model_set,
+                                                  Model_str,
+                                                  Model_tuple_pair,
+                                                  Model_tuple_same_type)
+    from omnipy.data._typing.typedefs import _KeyT, _ValT, _ValT2
+    from omnipy.data.model import Model
 
 _ModelOrDatasetT = TypeVar('_ModelOrDatasetT', bound='Model | Dataset')
 _OtherModelOrDatasetT = TypeVar('_OtherModelOrDatasetT', bound='Model | Dataset')
 _DatasetT = TypeVar('_DatasetT', bound='Dataset')
-_ModelT = TypeVar('_ModelT', bound=Model)
-_Model2T = TypeVar('_Model2T', bound=Model)
-_Model3T = TypeVar('_Model3T', bound=Model)
-_Model4T = TypeVar('_Model4T', bound=Model)
-_NewModelT = TypeVar('_NewModelT', bound=Model)
-_GeneralModelT = TypeVar('_GeneralModelT', bound=Model)
+_ModelT = TypeVar('_ModelT', bound='Model')
+_Model2T = TypeVar('_Model2T', bound='Model')
+_Model3T = TypeVar('_Model3T', bound='Model')
+_Model4T = TypeVar('_Model4T', bound='Model')
+_NewModelT = TypeVar('_NewModelT', bound='Model')
 
 # def orjson_dumps(v, *, default):
 #     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
@@ -177,6 +179,8 @@ class Dataset(
 
         if cls == Dataset:
             for type_variant in split_to_union_variants(orig_params):
+                from omnipy.data.model import is_model_subclass
+
                 if (not isinstance(type_variant,
                                    (TypeVar, str)) and not is_model_subclass(type_variant)
                         and not is_dataset_subclass(type_variant)):
@@ -203,6 +207,8 @@ class Dataset(
         data: Mapping[str, object] | UndefinedType = Undefined,
         **kwargs: object,
     ) -> None:
+        from omnipy.data.model import is_model_instance
+
         # TODO: Error message when forgetting parenthesis when creating Dataset should be improved.
         #       Unclear where this can be done, if anywhere? E.g.:
         #           a = Dataset[Model[int]]
@@ -700,6 +706,7 @@ class Dataset(
         prev_visited_classes: set[type] | None = None,
         **localns: Any,
     ) -> None:
+        from omnipy.data.model import is_model_subclass
         """
         Try to update ForwardRefs on fields based on this Model, globalns and localns.
         """
@@ -778,6 +785,8 @@ class Dataset(
         cls._clean_type_caches()
 
     def _validate_data_file(self, data_file: str) -> None:
+        from omnipy.data.model import is_model_instance
+
         val = self.data[data_file]
         if is_model_instance(val):
             self.data[data_file] = self._validate_value_for_data_file(data_file, val)
@@ -865,7 +874,7 @@ class Dataset(
     def from_data(self,
                   data: Mapping[str, Any] | Iterable[tuple[str, Any]],
                   update: bool = True) -> None:
-        def callback_func(type_variant: Model | Dataset, content: Any):
+        def callback_func(type_variant: 'Model | Dataset', content: Any):
             type_variant.from_data(content)
 
         self._from_dict_with_callback(data, update, callback_func)
@@ -1178,6 +1187,8 @@ class Dataset(
         return get_serializer_registry()
 
     def as_multi_model_dataset(self) -> 'IsMultiModelDataset[_ModelOrDatasetT]':
+        from omnipy.data.model import MultiModelDataset
+
         multi_model_dataset = MultiModelDataset[self.get_type()]()
         for data_file in self:
             multi_model_dataset.data[data_file] = self.data[data_file]
@@ -1191,64 +1202,15 @@ class Dataset(
             and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
 
     def __repr_args__(self):
+        from omnipy.data.model import is_model_instance
+
         return [(k, v.content) if is_model_instance(v) else (k, v) for k, v in self.data.items()]
 
 
-class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
-    """
-        Variant of Dataset that allows custom models to be set on individual data files
+def is_dataset_instance(__obj: object) -> 'TypeIs[Dataset]':
+    return lenient_isinstance(__obj, Dataset)
 
-        Note that the general model still needs to hold for all data files, in addition to any
-        custom models.
-    """
 
-    # Custom field models should really be a subtype of _GeneralModelT,
-    # however this is currently not checkable in the type system. Instead,
-    # we rely on the _validate method to ensure that the custom field
-    # models are valid.
-
-    _custom_field_models: dict[str, type[Model]] = pyd.PrivateAttr(default={})
-
-    def set_model(self, data_file: str, model: type[Model]) -> None:
-        try:
-            self._custom_field_models[data_file] = model
-            if data_file in self.data:
-                self._validate_data_file(data_file)
-            else:
-                self.data[data_file] = model()
-        except ValidationError:
-            del self._custom_field_models[data_file]
-            raise
-
-    def get_model(self, data_file: str) -> type[Model]:
-        if data_file in self._custom_field_models:
-            return self._custom_field_models[data_file]
-        else:
-            return self.get_type()
-
-    def from_data(self,
-                  data: Mapping[str, Any] | Iterable[tuple[str, Any]],
-                  update: bool = True) -> None:
-        super().from_data(data, update)
-        for data_file in self:
-            self._validate_data_file_according_to_custom_field_model(data_file)
-        self._force_full_validation()
-
-    def _validate_data_file(self, data_file: str) -> None:
-        self._validate_data_file_according_to_custom_field_model(data_file)
-        self._force_full_validation()
-
-    def _validate_data_file_according_to_custom_field_model(self, data_file: str):
-        if data_file in self._custom_field_models:
-            model = self._custom_field_models[data_file]
-            if not is_model_instance(model):
-                model = Model[model]
-            data_obj = self._to_data_if_model(self.data[data_file])
-            parsed_data = self._to_data_if_model(model(data_obj))
-            self.data[data_file] = parsed_data
-
-    @staticmethod
-    def _to_data_if_model(data_obj: Any):
-        if is_model_instance(data_obj):
-            data_obj = data_obj.to_data()
-        return data_obj
+@functools.cache
+def is_dataset_subclass(__cls: TypeForm) -> 'TypeIs[type[Dataset]]':
+    return lenient_issubclass(__cls, Dataset)

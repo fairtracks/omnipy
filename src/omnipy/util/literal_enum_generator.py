@@ -1,5 +1,6 @@
 from collections.abc import KeysView
 from enum import Enum
+import re
 from textwrap import TextWrapper
 from types import MappingProxyType
 from typing import Any, Mapping, Sequence
@@ -101,7 +102,6 @@ def _generate_attribute_name(value: Any, used_names: KeysView[str]) -> str:
     Returns:
         A valid Python attribute name
     """
-    import re
 
     if not isinstance(value, str):
         value = str(value)

@@ -34,7 +34,7 @@ from ..raw.models import (SplitLinesToColumnsByCommaModel,
                           SplitToLinesModel)
 
 if TYPE_CHECKING:
-    from omnipy.data._mimic_models import PlainModel
+    from omnipy.data._typing.mimic_models import PlainModel
 
 
 class IterRow(Mapping[str, JsonScalar]):

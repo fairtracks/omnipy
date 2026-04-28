@@ -15,8 +15,7 @@ from omnipy.components.tables.models import (ColumnWiseTableWithColNamesModel,
                                              RowWiseTableWithColNamesModel,
                                              TableOfPydanticRecordsModel,
                                              TsvTableModel)
-from omnipy.data.model import Model
-from omnipy.data.typechecks import is_model_instance
+from omnipy.data.model import is_model_instance, Model
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util.pydantic import ValidationError
 import omnipy.util.pydantic as pyd

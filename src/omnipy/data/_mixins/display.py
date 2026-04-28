@@ -24,7 +24,6 @@ from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.styles.dynamic_styles import resolve_and_fetch_style
 from omnipy.data.helpers import FailedData, PendingData
-from omnipy.data.typechecks import is_dataset_instance, is_model_instance
 from omnipy.hub.ui import (detect_dark_background,
                            detect_display_color_system,
                            get_terminal_prompt_height,
@@ -2469,7 +2468,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         /,
         **kwargs: object,
     ) -> DraftPanel:
-        from omnipy.data.dataset import Dataset
+        from omnipy.data.dataset import Dataset, is_dataset_instance
+        from omnipy.data.model import is_model_instance
 
         ui_type = self._extract_ui_type(**kwargs)
         config, config_kwargs, frame = self._initial_config_setup(
@@ -2935,6 +2935,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
 def _call_dataset_method_if_applicable(model_method: Callable[..., _RetT]):
     def wrapper(self, **kwargs) -> _RetT:
+        from omnipy.data.dataset import is_dataset_instance
+
         self_as_model = cast('Model', self)
         if is_dataset_instance(self_as_model.content):
             self_as_dataset = self_as_model.content

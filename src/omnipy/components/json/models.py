@@ -2,8 +2,7 @@ from typing import Any, cast, Generic, Mapping, overload, Sequence, Type, TypeAl
 
 from typing_extensions import TypeVar
 
-from omnipy.data.model import Model
-from omnipy.data.typechecks import is_model_instance
+from omnipy.data.model import is_model_instance, Model
 from omnipy.shared.protocols.builtins import IsBool, IsDict, IsFloat, IsInt, IsList, IsStr
 from omnipy.shared.protocols.content import (IsDictContent,
                                              IsDictOfDictsContent,
@@ -19,7 +18,11 @@ from .helpers import parse_str_as_json
 from .typedefs import JsonScalar
 
 if TYPE_CHECKING:
-    from omnipy.data._mimic_models import Model_bool, Model_float, Model_int, Model_str, PlainModel
+    from omnipy.data._typing.mimic_models import (Model_bool,
+                                                  Model_float,
+                                                  Model_int,
+                                                  Model_str,
+                                                  PlainModel)
 
 # # IsMapping[str, int]
 #

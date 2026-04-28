@@ -1,9 +1,9 @@
 from typing import Any, IO, Type
 
+from omnipy.data._typing.helpers import all_dataset_type_variants
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import TarFileSerializer
-from omnipy.data.typechecks import all_dataset_type_variants
 from omnipy.shared.protocols.data import IsDataset
 
 from .datasets import StrictBytesDataset, StrictStrDataset

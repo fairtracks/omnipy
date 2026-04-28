@@ -20,7 +20,6 @@ class ColumnPrettyPrinter(PrettyPrinter[list[JsonScalar]]):
         draft_panel: DraftPanel[object, AnyFrame],
         default: bool = False,
     ) -> bool:
-        from omnipy.components.tables.models import ColumnModel
         return isinstance(draft_panel.content, (ColumnModel, PrintableTable))
 
     @override

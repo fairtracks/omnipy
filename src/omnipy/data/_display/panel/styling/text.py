@@ -16,7 +16,7 @@ from omnipy.shared.enums.display import (DisplayColorSystem,
                                          HorizontalOverflowMode,
                                          SyntaxLanguageSpec,
                                          VerticalOverflowMode)
-from omnipy.util import pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 
 @pyd.dataclass(

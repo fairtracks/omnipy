@@ -1,4 +1,5 @@
 from collections import defaultdict, UserDict
+from copy import _deepcopy_atomic, _deepcopy_dispatch  # type: ignore[attr-defined]
 import gc
 import sys
 import traceback
@@ -129,7 +130,6 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
 
     @staticmethod
     def _is_atomic(obj: object) -> bool:
-        from copy import _deepcopy_atomic, _deepcopy_dispatch  # type: ignore[attr-defined]
         try:
             return type(obj) is tuple or _deepcopy_dispatch[type(obj)] is _deepcopy_atomic
         except KeyError:

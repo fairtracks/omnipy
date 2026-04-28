@@ -1,11 +1,15 @@
-from typing import Literal
+from typing import Generic, Literal
 
 import pytest
+from typing_extensions import TypeVar
 
-from omnipy import Model
-from omnipy.data.typechecks import (is_model_instance,
-                                    is_model_subclass,
-                                    obj_or_model_content_isinstance)
+from omnipy import Dataset, Model
+from omnipy.data.model import (is_model_instance,
+                               is_model_subclass,
+                               is_non_omnipy_pydantic_model,
+                               is_pure_pydantic_model,
+                               obj_or_model_content_isinstance)
+import omnipy.util.pydantic as pyd
 
 from .helpers.models import PydanticParentModel
 
@@ -84,7 +88,7 @@ def test_obj_or_model_content_isinstance_for_models() -> None:
 
 
 def test_all_model_type_variants() -> None:
-    from omnipy.data.typechecks import all_model_type_variants
+    from omnipy.data._typing.helpers import all_model_type_variants
 
     class MyModel(Model[Model[int | float] | Model[str] | list[int]]):
         ...
@@ -97,11 +101,68 @@ def test_all_model_type_variants() -> None:
 
 
 def test_all_dataset_type_variants() -> None:
+    from omnipy.data._typing.helpers import all_dataset_type_variants
     from omnipy.data.dataset import Dataset
-    from omnipy.data.typechecks import all_dataset_type_variants
 
     class MyDataset(Dataset[Model[Model[int] | float] | Model[str] | Dataset[Model[list[int]]]]):
         ...
 
     variants = all_dataset_type_variants(MyDataset)
     assert variants == (int, float, str, Dataset[Model[list[int]]])
+
+
+def test_is_pydantic_model() -> None:
+    class PydanticModel(pyd.BaseModel):
+        ...
+
+    T = TypeVar('T')
+
+    class GenericPydanticModel(pyd.GenericModel, Generic[T]):
+        ...
+
+    class Mixin:
+        ...
+
+    class MultiInheritModel(pyd.BaseModel, Mixin):
+        ...
+
+    class PydanticModelSubclass(PydanticModel):
+        ...
+
+    class OmnipyModel(Model[int]):
+        ...
+
+    class OmnipyModelSubclass(Model[int]):
+        ...
+
+    class MultiInheritOmnipyAndPydanticModel(Model[int], pyd.BaseModel):
+        ...
+
+    class MultiInheritOmnipyAndGenericPydanticModel(Model[int], pyd.GenericModel, Generic[T]):
+        ...
+
+    assert is_pure_pydantic_model(PydanticModel())
+    assert not is_pure_pydantic_model(pyd.BaseModel())
+    assert not is_pure_pydantic_model(GenericPydanticModel())
+    assert not is_pure_pydantic_model(MultiInheritModel())
+    assert not is_pure_pydantic_model(PydanticModelSubclass())
+    assert not is_pure_pydantic_model(OmnipyModel())
+    assert not is_pure_pydantic_model(OmnipyModelSubclass())
+    assert not is_pure_pydantic_model(MultiInheritOmnipyAndPydanticModel())
+    assert not is_pure_pydantic_model(MultiInheritOmnipyAndGenericPydanticModel())
+    assert not is_pure_pydantic_model(Model[PydanticModel]())
+    assert not is_pure_pydantic_model(Dataset[Model[PydanticModel]]())
+    assert not is_pure_pydantic_model('model')
+
+    assert is_non_omnipy_pydantic_model(PydanticModel())
+    assert not is_non_omnipy_pydantic_model(pyd.BaseModel())
+    assert is_non_omnipy_pydantic_model(GenericPydanticModel())
+    assert is_non_omnipy_pydantic_model(MultiInheritModel())
+    assert is_non_omnipy_pydantic_model(PydanticModelSubclass())
+    assert not is_non_omnipy_pydantic_model(OmnipyModel())
+    assert not is_non_omnipy_pydantic_model(OmnipyModelSubclass())
+    assert not is_non_omnipy_pydantic_model(MultiInheritOmnipyAndPydanticModel())
+    assert not is_non_omnipy_pydantic_model(MultiInheritOmnipyAndGenericPydanticModel())
+    assert not is_non_omnipy_pydantic_model(Model[PydanticModel]())
+    assert not is_non_omnipy_pydantic_model(Dataset[Model[PydanticModel]]())
+    assert not is_non_omnipy_pydantic_model('model')

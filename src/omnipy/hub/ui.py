@@ -1,3 +1,4 @@
+import builtins
 import os
 import sys
 from textwrap import dedent
@@ -5,7 +6,6 @@ from typing import cast
 
 import rich.console
 
-from omnipy.data.typechecks import is_model_instance
 from omnipy.shared.constants import DEFAULT_DARK_BACKGROUND
 from omnipy.shared.enums.display import DisplayColorSystem
 from omnipy.shared.enums.ui import (AutoDetectableUserInterfaceType,
@@ -173,12 +173,12 @@ def setup_displayhook_if_plain_terminal(ui_type: TerminalOutputUserInterfaceType
     """
     from omnipy.config import ConfigBase
     from omnipy.data.dataset import Dataset
+    from omnipy.data.model import is_model_instance
 
     def _omnipy_displayhook(obj: object) -> None:
         """
         Custom display hook for plain terminal environments.
         """
-        import builtins
 
         if obj is not None:
             if (is_model_instance(obj) or isinstance(obj, Dataset) or isinstance(obj, ConfigBase)):

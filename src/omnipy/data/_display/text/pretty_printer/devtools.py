@@ -15,7 +15,7 @@ from omnipy.data._display.text.pretty_printer.base import (ConstraintTighteningP
 from omnipy.data._display.text.pretty_printer.mixins import PythonStatsTighteningPrettyPrinter
 from omnipy.shared.constants import MAX_TERMINAL_SIZE
 from omnipy.shared.enums.display import PrettyPrinterLib
-from omnipy.util import pydantic as pyd
+import omnipy.util.pydantic as pyd
 
 
 class DevtoolsPrettyPrinter(

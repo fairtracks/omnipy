@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from copy import copy, deepcopy
 import functools
 import inspect
+from itertools import chain
 import json
 from types import GenericAlias, NoneType, UnionType
 from typing import (Annotated,
@@ -16,16 +17,18 @@ from typing import (Annotated,
                     get_origin,
                     Iterator,
                     Literal,
+                    Mapping,
+                    MutableSequence,
                     Optional,
                     overload,
                     Union)
 
-from typing_extensions import get_original_bases, override, Self, TypeVar
+from typing_extensions import get_original_bases, override, Self, TypeIs, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
-from omnipy.data._missing import parse_none_according_to_model
 from omnipy.data._mixins.display import ModelDisplayMixin
-from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
+from omnipy.data._typing.typedefs import _KeyT, _ValT, _ValT2
+from omnipy.data.dataset import Dataset, is_dataset_instance
 from omnipy.data.helpers import (build_own_module_and_global_namespace_for_forward_refs,
                                  cleanup_name_qualname_and_module,
                                  get_special_methods_info_dict,
@@ -33,11 +36,8 @@ from omnipy.data.helpers import (build_own_module_and_global_namespace_for_forwa
                                  ResetSolutionTuple,
                                  validate_cls_counts,
                                  YesNoMaybe)
-from omnipy.data.typechecks import (all_model_type_variants,
-                                    is_dataset_instance,
-                                    is_model_instance,
-                                    is_model_subclass)
 from omnipy.shared.constants import ROOT_KEY
+from omnipy.shared.exceptions import OmnipyNoneIsNotAllowedError
 from omnipy.shared.protocols.data import IsModel, IsSnapshotWrapper
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
@@ -54,11 +54,12 @@ from omnipy.util.helpers import (all_equals,
                                  get_calling_module_name,
                                  get_default_if_typevar,
                                  is_literal_type,
-                                 is_non_omnipy_pydantic_model,
                                  is_non_str_byte_iterable,
                                  is_optional,
                                  is_type_specialization,
-                                 remove_forward_ref_notation)
+                                 is_union,
+                                 remove_forward_ref_notation,
+                                 split_to_union_variants)
 from omnipy.util.pydantic import (is_none_type,
                                   lenient_isinstance,
                                   lenient_issubclass,
@@ -74,9 +75,6 @@ _RootT = TypeVar('_RootT')
 _ModelT = TypeVar('_ModelT', bound='Model')
 _DatasetT = TypeVar('_DatasetT', bound='Dataset')
 _OtherModelT = TypeVar('_OtherModelT', bound='Model')
-
-if TYPE_CHECKING:
-    from omnipy.data.dataset import Dataset
 
 # TODO: Refactor Dataset and Model using mixins (including below functions)
 
@@ -216,6 +214,8 @@ class Model(  # type: ignore[misc]
             cls,
             created_model: 'type[Model[_RootT]]',
     ) -> None:
+        from omnipy.data._typing.helpers import all_model_type_variants
+
         outer_types = all_model_type_variants(created_model, double_model_unions_as_variants=True)
 
         def _type_supports_method(_type: type | GenericAlias, _method_name: str) -> bool:
@@ -328,17 +328,17 @@ class Model(  # type: ignore[misc]
 
         # mypy currently does not support overloads of __new__()
 
-        from ._mimic_models import (Model_bool,
-                                    Model_bytes,
-                                    Model_Dataset,
-                                    Model_dict,
-                                    Model_float,
-                                    Model_int,
-                                    Model_list,
-                                    Model_set,
-                                    Model_str,
-                                    Model_tuple_pair,
-                                    Model_tuple_same_type)
+        from omnipy.data._typing.mimic_models import (Model_bool,
+                                                      Model_bytes,
+                                                      Model_Dataset,
+                                                      Model_dict,
+                                                      Model_float,
+                                                      Model_int,
+                                                      Model_list,
+                                                      Model_set,
+                                                      Model_str,
+                                                      Model_tuple_pair,
+                                                      Model_tuple_same_type)
 
         @overload
         def __new__(
@@ -779,7 +779,6 @@ class Model(  # type: ignore[misc]
             self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
                 *new_deepcopy_content_ids)
             # self.content = self.snapshot_holder.get_snapshot_deepcopy(self)
-            from copy import deepcopy
             self.content = deepcopy(self.snapshot)
 
         return setup_and_teardown_callback_context(
@@ -937,9 +936,6 @@ class Model(  # type: ignore[misc]
         return super().dict(by_alias=True)[ROOT_KEY]
 
     def _empty_from_data(self, value: object) -> None:
-
-        from contextlib import contextmanager
-
         @contextmanager
         def _reset_to_default(*args, **kwds):
             self.content = self._get_default_value_from_model(self.full_type())
@@ -1303,6 +1299,7 @@ class Model(  # type: ignore[misc]
         level_up: bool = False,
         raise_validation_errors: bool = False,
     ) -> 'Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] | Model[_ReturnT] | Model[_RootT] | _ReturnT':  # noqa: E501
+        from omnipy.data._typing.helpers import all_model_type_variants
 
         if level_up and not self.config.model.dynamically_convert_elements_to_models:
             ...
@@ -1467,3 +1464,169 @@ class Model(  # type: ignore[misc]
 
     def __repr_args__(self):
         return [(None, self.content)]
+
+
+def is_model_instance(__obj: object) -> 'TypeIs[Model]':
+    return lenient_isinstance(__obj, Model) \
+        and not is_none_type(__obj)  # Consequence of _ModelMetaclass hack
+
+
+@functools.cache
+def is_model_subclass(__cls: TypeForm) -> 'TypeIs[type[Model]]':
+    return lenient_issubclass(__cls, Model) \
+        and not is_none_type(__cls)  # Consequence of _ModelMetaclass hack
+
+
+def is_non_omnipy_pydantic_model(obj: object):
+    mro = type(obj).__mro__
+    return mro[0] != pyd.BaseModel \
+        and (pyd.BaseModel in mro or pyd.GenericModel in mro) \
+        and Model not in mro \
+        and Dataset not in mro
+
+
+## TODO: Remove parse_none_according_to_model after upgrade to pydantic v2
+
+_RootT = TypeVar('_RootT')
+
+
+# Partial workaround of https://github.com/pydantic/pydantic/issues/3836 and similar bugs,
+# together with hacks setting allow_none=True (_ModelMetaclass and _recursively_set_allow_none).
+# See series of relevant tests in test_model.py starting with  test_list_of_none_variants().
+def parse_none_according_to_model(value, root_model):  # IsModel
+    outer_type = root_model.outer_type(with_args=True)
+    plain_outer_type = root_model.outer_type(with_args=False)
+    outer_args = get_args(outer_type)
+
+    if is_model_subclass(outer_type):
+        return _parse_none_in_model(outer_type, value)
+
+    if root_model.is_nested_type():
+        inner_val_type = root_model.inner_type(with_args=True)
+
+        # Mutable sequences or variable tuples
+        if _outer_type_and_value_are_of_types(plain_outer_type, value, (MutableSequence, tuple)):
+            return _parse_none_in_mutable_sequence_or_tuple(plain_outer_type, inner_val_type, value)
+
+        # Mappings
+        if _outer_type_and_value_are_of_types(plain_outer_type, value, Mapping) and outer_args:
+            return _parse_none_in_mapping(plain_outer_type, outer_args, inner_val_type, value)
+
+        if lenient_isinstance(outer_type, TypeVar):
+            return _parse_none_in_typevar(inner_val_type)
+
+        if value is None:
+            raise OmnipyNoneIsNotAllowedError()
+
+    else:
+        union_variants = _split_outer_type_to_union_variants(outer_args)
+        flattened_union_variants = _flatten_two_level_tuple(union_variants)
+
+        if any(is_model_subclass(tp_) or _supports_none(tp_) for tp_ in flattened_union_variants):
+
+            # Fixed tuples
+            if _outer_type_and_value_are_of_types(plain_outer_type, value, tuple) and outer_args:
+                return _parse_none_in_fixed_tuple(plain_outer_type, union_variants, value)
+
+            # Unions
+            if is_union(plain_outer_type):
+                return _parse_none_in_union(flattened_union_variants, value)
+
+    return value
+
+
+def _parse_none_in_model(outer_type, value):
+    # Not exactly sure which is the best solution. Both seem to work. The latter option should be
+    # more general, but potentially slower
+    #
+    # return outer_type(value) if value is None else value
+
+    return outer_type(value) if type(value) is not outer_type else value
+
+
+def _split_outer_type_to_union_variants(outer_type_args):
+    return tuple(split_to_union_variants(_) for _ in outer_type_args)
+
+
+def _flatten_two_level_tuple(two_level_tuple):
+    return tuple(el for first_level_tuple in two_level_tuple for el in first_level_tuple)
+
+
+def _supports_none(type_: TypeForm) -> bool:
+    return is_none_type(type_) or is_optional(type_) or type_ in (object, Any)
+
+
+def _outer_type_and_value_are_of_types(plain_outer_type, value, *types):
+    return any(
+        lenient_issubclass(plain_outer_type, type_) and lenient_isinstance(value, type_)
+        for type_ in types)
+
+
+def _parse_none_in_mutable_sequence_or_tuple(plain_outer_type, inner_val_type, value):
+    inner_val_union_types = split_to_union_variants(inner_val_type)
+
+    if any(is_model_subclass(_) or _supports_none(_) for _ in inner_val_union_types):
+        return plain_outer_type(
+            _parse_none_in_types(inner_val_union_types) if val is None else val for val in value)
+    return value
+
+
+def _parse_none_in_mapping(plain_outer_type, outer_type_args, inner_val_type, value):
+    inner_val_union_types = split_to_union_variants(inner_val_type)
+
+    inner_key_type = outer_type_args[0] if lenient_issubclass(
+        plain_outer_type, Mapping) and outer_type_args else Undefined
+    inner_key_union_types = split_to_union_variants(inner_key_type)
+
+    if any(
+            is_model_subclass(_) or _supports_none(_)
+            for _ in chain(inner_key_union_types, inner_val_union_types)):
+        return plain_outer_type({
+            _parse_none_in_types(inner_key_union_types) if key is None else key:
+                _parse_none_in_types(inner_val_union_types) if val is None else val
+            for key, val in value.items()
+        })
+    return value
+
+
+def _parse_none_in_typevar(inner_val_type):
+    inner_val_union_types = split_to_union_variants(inner_val_type)
+
+    return _parse_none_in_types(inner_val_union_types)
+
+
+def _parse_none_in_fixed_tuple(plain_outer_type, tuple_of_union_variant_types, value):
+    return plain_outer_type(
+        _parse_none_in_types(tuple_of_union_variant_types[i]) if val is None else val
+        for i, val in enumerate(value))
+
+
+def _parse_none_in_union(flattened_union_variant_types, value):
+    if value is None:
+        return _parse_none_in_types(flattened_union_variant_types)
+    else:
+        return value
+
+
+def _parse_none_in_types(inner_union_types: tuple[TypeForm]) -> object:
+    for type_ in inner_union_types:
+        if is_model_subclass(type_):
+            model = type_
+            return model(parse_none_according_to_model(None, model))
+        elif _supports_none(type_):
+            return None
+    raise OmnipyNoneIsNotAllowedError()
+
+
+ClassOrTupleT = TypeVar('ClassOrTupleT')
+
+
+def obj_or_model_content_isinstance(
+    __obj: object,
+    __class_or_tuple: type[ClassOrTupleT] | tuple[type[ClassOrTupleT], ...],
+) -> TypeIs[ClassOrTupleT]:
+    return isinstance(__obj.content if is_model_instance(__obj) else __obj, __class_or_tuple)
+
+
+def is_pure_pydantic_model(obj: object):
+    return type(obj).__bases__ == (pyd.BaseModel,)

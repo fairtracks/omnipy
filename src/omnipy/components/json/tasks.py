@@ -3,8 +3,7 @@ from typing import cast
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
-from omnipy.data.model import Model
-from omnipy.data.typechecks import obj_or_model_content_isinstance
+from omnipy.data.model import Model, obj_or_model_content_isinstance
 
 from ._functions import flatten_outer_level_of_nested_record
 from .constants import ID_KEY

@@ -10,8 +10,8 @@ from omnipy.shared.protocols.config import (IsConfigBase,
                                             IsLayoutConfig,
                                             IsTextConfig)
 from omnipy.shared.protocols.data import AvailableDisplayDims, IsReactive
-from omnipy.util import pydantic as pyd
 from omnipy.util.publisher import DataPublisher
+import omnipy.util.pydantic as pyd
 
 ConfigBaseT = TypeVar('ConfigBaseT', bound=IsConfigBase)
 

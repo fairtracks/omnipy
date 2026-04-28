@@ -12,7 +12,7 @@ class PandasDataset(Dataset[PandasModel]):
 
 
 if TYPE_CHECKING:
-    from omnipy.data._mimic_models import Model_list
+    from omnipy.data._typing.mimic_models import Model_list
 
     class ListOfPandasDatasetsWithSameNumberOfFiles(Model_list[PandasDataset]):
         ...

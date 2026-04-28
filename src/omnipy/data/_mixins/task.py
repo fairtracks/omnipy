@@ -3,7 +3,6 @@ from typing import Any, cast, get_args
 from typing_extensions import Self
 
 from omnipy.data.helpers import FailedData, PendingData
-from omnipy.data.typechecks import is_model_subclass
 from omnipy.shared.exceptions import FailedDataError, PendingDataError
 from omnipy.shared.protocols.data import HasData, IsFailedData, IsPendingData
 from omnipy.shared.typedefs import TypeForm
@@ -15,6 +14,8 @@ class TaskDatasetMixin:
     @call_super_if_available(call_super_before_method=True)
     @classmethod
     def _prepare_params(cls, params: TypeForm) -> TypeForm:
+        from omnipy.data.model import is_model_subclass
+
         cleaned_params = cls._clean_type(params)
         if is_model_subclass(cleaned_params):
             return cleaned_params | PendingData | FailedData

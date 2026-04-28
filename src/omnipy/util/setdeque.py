@@ -2,7 +2,7 @@ from collections import deque
 from copy import copy
 import sys
 from types import NotImplementedType
-from typing import cast, Generic, Iterable, SupportsIndex, TypeVar
+from typing import cast, Generic, get_args, Iterable, SupportsIndex, TypeVar
 
 _ObjT = TypeVar('_ObjT', bound=object)
 
@@ -126,7 +126,6 @@ class SetDeque(deque, Generic[_ObjT]):
         return self
 
     def __repr__(self):
-        from typing import get_args
         arg_repr = ''
         if hasattr(self, '__orig_class__'):
             args = get_args(self.__orig_class__)  # pyright: ignore [reportAttributeAccessIssue]

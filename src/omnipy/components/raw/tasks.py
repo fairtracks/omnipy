@@ -10,7 +10,8 @@ from chardet import UniversalDetector
 from typing_extensions import TypeVar
 
 from omnipy.compute.task import TaskTemplate
-from omnipy.data.dataset import Dataset, Model
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 from omnipy.util.setdeque import SetDeque
 
 from .datasets import StrDataset

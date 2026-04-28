@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
     from typing_extensions import Self, TypeVar
 
-    from omnipy.data._typedefs import _KeyT, _ValT, _ValT2
+    from omnipy.data._typing.typedefs import _KeyT, _ValT, _ValT2
     from omnipy.data.dataset import _ModelOrDatasetT, Dataset
     from omnipy.data.model import Model
     from omnipy.shared.protocols.content import (IsBoolContent,

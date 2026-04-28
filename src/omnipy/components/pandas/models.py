@@ -2,8 +2,7 @@ from collections.abc import Iterable
 from io import StringIO
 from typing import Any
 
-from omnipy.data.model import Model
-from omnipy.data.typechecks import is_model_instance
+from omnipy.data.model import is_model_instance, Model
 from omnipy.shared.exceptions import ShouldNotOccurException
 from omnipy.shared.typing import TYPE_CHECKING
 

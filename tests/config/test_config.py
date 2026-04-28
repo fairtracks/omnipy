@@ -1,5 +1,5 @@
 from omnipy.config import ConfigBase
-from omnipy.data.typechecks import is_model_instance
+from omnipy.data.model import is_model_instance
 
 
 def test_config_as_model() -> None:

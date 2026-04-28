@@ -66,6 +66,7 @@ if not __all__:
                         ConfigRestoreOutputsOptions,
                         EngineChoice,
                         generate_literal_enum_code,
+                        MultiModelDataset,
                         OutputStorageProtocolOptions,
                         PersistOutputsOptions,
                         RestoreOutputsOptions,
@@ -80,7 +81,7 @@ if not __all__:
                                      LinearFlow,
                                      LinearFlowTemplate)
     from omnipy.compute.task import Task, TaskTemplate
-    from omnipy.data.dataset import Dataset, MultiModelDataset
+    from omnipy.data.dataset import Dataset
     from omnipy.data.model import Model
     from omnipy.data.param import (bind_adjust_dataset_func,
                                    bind_adjust_model_func,
