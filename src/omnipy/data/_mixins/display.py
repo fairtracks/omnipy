@@ -2797,9 +2797,14 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         if isinstance(model, PrintableTable):
             try:
                 column_wise_table = ColumnWiseTableWithColNamesModel(model)
-            except Exception as e:
-                print(f'Error validating data as a column-wise table, '
-                      f'defaulting to regular panel output: {e}')
+            except Exception:
+                pass
+
+            # TODO: Turn PrintableTable display hack error msg into log
+            #       message once Model/Dataset can log
+            # except Exception as e:
+            #     print(f'Error validating data as a column-wise table, '
+            #           f'defaulting to regular panel output: {str(e).splitlines()[0]}')
 
             else:
                 layout: Layout[DraftPanel] = Layout()
