@@ -2792,37 +2792,45 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                                                      PrintableTable)
 
         config = self._update_config_with_overflow_modes(config, 'text', **config_kwargs)
+        content = model
 
         if isinstance(model, PrintableTable):
-            layout: Layout[DraftPanel] = Layout()
+            try:
+                column_wise_table = ColumnWiseTableWithColNamesModel(model)
+            except Exception as e:
+                print(f'Error validating data as a column-wise table, '
+                      f'defaulting to regular panel output: {e}')
 
-            config = self._update_config(
-                config,
-                config_kwargs,
-                max_title_height=MaxTitleHeight.ONE,
-            )
-            number_config = self._update_config(
-                config,
-                config_kwargs,
-                syntax=SyntaxLanguageSpec.PYTHON,
-                justify='right',
-            )
+            else:
+                layout: Layout[DraftPanel] = Layout()
 
-            column_wise_table = ColumnWiseTableWithColNamesModel(model)
+                number_config = self._update_config(
+                    config,
+                    config_kwargs,
+                    syntax=SyntaxLanguageSpec.PYTHON,
+                    justify='right',
+                )
+                layout['#'] = DraftPanel(
+                    '\n'.join(str(i) for i in range(len(column_wise_table))),
+                    title='#',
+                    frame=Frame(
+                        Dimensions(len(str(len(column_wise_table))), None), fixed_width=True),
+                    config=number_config)
 
-            layout['#'] = DraftPanel(
-                '\n'.join(str(i) for i in range(len(column_wise_table))),
-                title='#',
-                frame=Frame(Dimensions(len(str(len(column_wise_table))), None), fixed_width=True),
-                config=number_config)
+                table_config = self._update_config(
+                    config,
+                    config_kwargs,
+                    max_title_height=MaxTitleHeight.ONE,
+                )
 
-            for i, column in enumerate(column_wise_table.col_names):
-                layout[column] = DraftPanel(
-                    ColumnModel(column_wise_table[column]), title=f'{i}. {column}', config=config)
+                for i, column in enumerate(column_wise_table.col_names):
+                    layout[column] = DraftPanel(
+                        ColumnModel(column_wise_table[column]),
+                        title=f'{i}. {column}',
+                        config=table_config,
+                    )
 
-            content = layout
-        else:
-            content = model
+                content = layout
 
         return DraftPanel(content, title=title, frame=frame, config=config)
 
