@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import cached_property
 from typing import cast, Generic, NamedTuple
 
@@ -11,6 +11,7 @@ from omnipy.data._display.panel.draft.base import (DimensionsAwareDraftPanel,
                                                    DraftPanel)
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.typedefs import ContentT, FrameInvT, FrameT
+from omnipy.shared.enums.display import PrettyPrinterLib
 from omnipy.util.helpers import first_key_in_mapping
 import omnipy.util.pydantic as pyd
 
@@ -58,6 +59,7 @@ def create_ellipsis_panel(panel: DraftPanel) -> DimensionsAwareDraftPanel:
         '' if panel.title else '…',
         title='…' if panel.title else None,
         frame=Frame(Dimensions(width=1, height=None), fixed_width=True),
+        config=replace(panel.config, printer=PrettyPrinterLib.AUTO),
     )
     return cast(DimensionsAwareDraftPanel, ellipsis_panel.render_next_stage())
 
