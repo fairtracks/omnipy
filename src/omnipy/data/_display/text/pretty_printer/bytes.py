@@ -19,10 +19,11 @@ class HexdumpPrettyPrinter(PrettyPrinter[str]):
         default: bool = False,
     ) -> bool:
 
-        content = draft_panel.content
+        if not default:
+            content = draft_panel.content
 
-        if is_model_instance(content):
-            return isinstance(content, BytesModel)
+            if is_model_instance(content):
+                return isinstance(content, BytesModel)
 
         return False
 
