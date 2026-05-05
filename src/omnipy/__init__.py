@@ -178,8 +178,12 @@ from omnipy.compute.flow import (DagFlow,
                                  LinearFlowTemplate)
 from omnipy.compute.task import Task, TaskTemplate
 from omnipy.data._display.panel.helpers import ForceAutodetect
-from omnipy.data.dataset import Dataset
-from omnipy.data.model import Model
+from omnipy.data.dataset import Dataset, is_dataset_instance, is_dataset_subclass
+from omnipy.data.model import (is_model_instance,
+                               is_model_subclass,
+                               is_non_omnipy_pydantic_model,
+                               is_pure_pydantic_model,
+                               Model)
 from omnipy.data.multi import MultiModelDataset
 from omnipy.data.param import (bind_adjust_dataset_func,
                                bind_adjust_model_func,
@@ -305,7 +309,13 @@ __all__ = [
     'TaskTemplate',
     'Dataset',
     'MultiModelDataset',
+    'is_dataset_instance',
+    'is_dataset_subclass',
     'Model',
+    'is_model_instance',
+    'is_model_subclass',
+    'is_non_omnipy_pydantic_model',
+    'is_pure_pydantic_model',
     'FlattenedIsaJsonDataset',
     'FlattenedIsaJsonModel',
     'IsaJsonModel',

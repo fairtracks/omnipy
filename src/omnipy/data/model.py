@@ -1,4 +1,4 @@
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, MutableSequence
 from contextlib import contextmanager
 from copy import copy, deepcopy
 import functools
@@ -17,8 +17,6 @@ from typing import (Annotated,
                     get_origin,
                     Iterator,
                     Literal,
-                    Mapping,
-                    MutableSequence,
                     Optional,
                     overload,
                     Union)
@@ -75,6 +73,7 @@ _RootT = TypeVar('_RootT')
 _ModelT = TypeVar('_ModelT', bound='Model')
 _DatasetT = TypeVar('_DatasetT', bound='Dataset')
 _OtherModelT = TypeVar('_OtherModelT', bound='Model')
+_ClassOrTupleT = TypeVar('_ClassOrTupleT')
 
 # TODO: Refactor Dataset and Model using mixins (including below functions)
 
@@ -1477,6 +1476,17 @@ def is_model_subclass(__cls: TypeForm) -> 'TypeIs[type[Model]]':
         and not is_none_type(__cls)  # Consequence of _ModelMetaclass hack
 
 
+def obj_or_model_content_isinstance(
+    __obj: object,
+    __class_or_tuple: type[_ClassOrTupleT] | tuple[type[_ClassOrTupleT], ...],
+) -> TypeIs[_ClassOrTupleT]:
+    return isinstance(__obj.content if is_model_instance(__obj) else __obj, __class_or_tuple)
+
+
+def is_pure_pydantic_model(obj: object):
+    return type(obj).__bases__ == (pyd.BaseModel,)
+
+
 def is_non_omnipy_pydantic_model(obj: object):
     mro = type(obj).__mro__
     return mro[0] != pyd.BaseModel \
@@ -1485,9 +1495,7 @@ def is_non_omnipy_pydantic_model(obj: object):
         and Dataset not in mro
 
 
-## TODO: Remove parse_none_according_to_model after upgrade to pydantic v2
-
-_RootT = TypeVar('_RootT')
+# TODO: Remove parse_none_according_to_model after upgrade to pydantic v2
 
 
 # Partial workaround of https://github.com/pydantic/pydantic/issues/3836 and similar bugs,
@@ -1616,17 +1624,3 @@ def _parse_none_in_types(inner_union_types: tuple[TypeForm]) -> object:
         elif _supports_none(type_):
             return None
     raise OmnipyNoneIsNotAllowedError()
-
-
-ClassOrTupleT = TypeVar('ClassOrTupleT')
-
-
-def obj_or_model_content_isinstance(
-    __obj: object,
-    __class_or_tuple: type[ClassOrTupleT] | tuple[type[ClassOrTupleT], ...],
-) -> TypeIs[ClassOrTupleT]:
-    return isinstance(__obj.content if is_model_instance(__obj) else __obj, __class_or_tuple)
-
-
-def is_pure_pydantic_model(obj: object):
-    return type(obj).__bases__ == (pyd.BaseModel,)
