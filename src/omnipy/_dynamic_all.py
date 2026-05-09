@@ -15,22 +15,28 @@ from omnipy.util.pydantic import lenient_isinstance, lenient_issubclass
 #       implementation is not yet decided, but the goal is to make the code the single source of
 #       truth for the exported elements of omnipy.
 
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__ + '/..'))
+
 __all__: list[str] = []
 
 _all_element_names: set[str] = set()
 
 _exclude_modules: set[str] = {
-    '_dynamic_all',
-    'components._frozen',  # Recursive frozen models crashes mypy v1.10 + wait for pydantic support
-    'components._fairtracks',
+    'omnipy._dynamic_all',
+    'omnipy.components._frozen',  # _frozen crashes mypy v1.10 + wait for pydantic support
+    'omnipy.components._fairtracks',
 }
 _exclude_attrs: set[str] = {
     'JobMixin',
     'JobTemplateMixin',
     'ListOfNestedStrModel',
     'SplitItemsToSubitemsModel',
+    'SplitItemsToSubitemsModelBase',
+    'SplitToItemsModelBase',
+    'JoinItemsModelBase',
+    'JoinSubitemsToItemsModelBase',
     'JoinSubitemsToItemsModel',
+    'JsonBaseDataset',
     'QueryParamsJoinerModel',
     'QueryParamsSplitterModel',
     'generate_literal_enum_code',
@@ -40,6 +46,7 @@ _exclude_attrs: set[str] = {
     'ListAsNestedDatasetModel',
     'ColumnWiseTableWithColNamesNoConvertModel',
     'RowWiseTableWithColNamesNoConvertModel',
+    'PydanticRecordModelBase',
     'ListOfNestedListsAndStrsModel',
     'ListOfPandasDatasetsWithSameNumberOfFiles',
     'get_auto_from_api_endpoint',
@@ -54,6 +61,7 @@ _exclude_attrs: set[str] = {
     'EnumeratedListModel',
     'RunStateLogMessages',
     'OutputMode',
+    'SyntaxLanguage',
 }
 
 _all_modules: dict[str, ModuleType] = {}
@@ -81,13 +89,18 @@ if not __all__:
                                      LinearFlow,
                                      LinearFlowTemplate)
     from omnipy.compute.task import Task, TaskTemplate
-    from omnipy.data.dataset import Dataset
-    from omnipy.data.model import Model
+    from omnipy.data.dataset import Dataset, is_dataset_instance, is_dataset_subclass
+    from omnipy.data.model import (is_model_instance,
+                                   is_model_subclass,
+                                   is_non_omnipy_pydantic_model,
+                                   is_pure_pydantic_model,
+                                   Model)
     from omnipy.data.param import (bind_adjust_dataset_func,
                                    bind_adjust_model_func,
                                    params_dataclass,
                                    ParamsBase)
     from omnipy.hub.runtime import runtime
+    from omnipy.util._placeholder import F, m, x
     from omnipy.util.contexts import print_exception
     from omnipy.util.helpers import recursive_module_import_new
 
@@ -121,6 +134,15 @@ if not __all__:
         'generate_literal_enum_code',
         'PydanticRecordModel',
         'setup_jupyter_ui',
+        'is_non_omnipy_pydantic_model',
+        'is_model_instance',
+        'is_pure_pydantic_model',
+        'is_dataset_instance',
+        'is_dataset_subclass',
+        'is_model_subclass',
+        'x',
+        'm',
+        'F',
     ]
     _all_element_names = set(__all__)
 
