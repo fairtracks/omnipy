@@ -1,5 +1,6 @@
 from io import IOBase
 import os
+from pathlib import Path
 from typing import Callable
 
 from typing_extensions import TypeVar
@@ -37,7 +38,7 @@ def split_dataset(
 
 @TaskTemplate()
 def import_directory(
-        directory: str,
+        directory: str | Path,
         exclude_prefixes: tuple[str, ...] = ('.', '_'),
         include_suffixes: tuple[str, ...] = (),
         dataset_cls: type[_DatasetT] = Dataset[Model[str]],  # type: ignore
