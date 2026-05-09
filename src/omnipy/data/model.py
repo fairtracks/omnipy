@@ -668,6 +668,8 @@ class Model(  # type: ignore[misc]
         cls.__annotations__[ROOT_KEY] = evaluate_any_forward_refs_if_possible(
             cls.__annotations__[ROOT_KEY], **globalns)
 
+        cls._clean_type_caches()
+
         cls._recursively_set_allow_none(cls._get_root_field())
 
         if get_original_bases(cls) == (Model,):
@@ -709,8 +711,6 @@ class Model(  # type: ignore[misc]
 
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
-
-        cls._clean_type_caches()
 
     def validate_content(self) -> None:
         self._validate_and_set_value(self.content)
