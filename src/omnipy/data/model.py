@@ -1078,12 +1078,15 @@ class Model(  # type: ignore[misc]
     def _special_method(  # noqa: C901
             self, name: str, info: MethodInfo, *args: object, **kwargs: object) -> object:
 
-        if info.state_changing and self.config.model.interactive:
+        if info.state_changing:
 
             def _call_special_method_and_return_self_if_inplace(*inner_args: object,
                                                                 **inner_kwargs: object) -> object:
                 return_val = self._call_special_method(name, *inner_args, **inner_kwargs)
 
+                # In-place operators should return self, which here includes the wrapping Model obj
+                # The following is to avoid _convert_to_model_if_reasonable() to be called below,
+                # which would otherwise create a new Model instance and return it
                 if id(return_val) == id(self.content):  # in-place operator, e.g. model += 1
                     return_val = self
 

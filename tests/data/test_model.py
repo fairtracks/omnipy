@@ -2703,6 +2703,13 @@ def test_mimic_simple_list_operator_with_auto_convert(
         'abc' + model  # type: ignore[operator]
 
 
+def test_mimic_inplace_operator_returns_self() -> None:
+    model = Model[list[int]]([123])
+    prev_model_id = id(model)
+    model += [234]
+    assert id(model) == prev_model_id
+
+
 def test_mimic_hash_method():
     hashable_model = Model[str]('Hello World!')
     assert hash(hashable_model) != 0
@@ -2750,8 +2757,6 @@ def test_mimic_sequence_convert_for_concat(
     runtime: Annotated[IsRuntime, pytest.fixture],
     skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ) -> None:
-    runtime.config.data.model.interactive = True
-
     # SetDeque is used as an example of non-builtin Sequence type. to_data() is needed (for now)
     # to allow model conversion to list/tuple.
 
