@@ -1,7 +1,6 @@
 from typing import Callable, cast
 
-from inflection import underscore
-
+from omnipy.util.helpers import generate_job_slug
 from omnipy.util.mixin import WITH_MIXINS_CLS_SUFFIX
 
 
@@ -33,19 +32,14 @@ class NameJobBaseMixin:
         return self._unique_name
 
     def _generate_unique_name(self) -> str | None:
-        from slugify import slugify
-
-        from omnipy.components.prefect.lazy_import import generate_slug
-
         if self._name is None:
             return None
 
-        class_name = self.__class__.__name__
-        if class_name.endswith(WITH_MIXINS_CLS_SUFFIX):
-            class_name = class_name[:-len(WITH_MIXINS_CLS_SUFFIX)]
+        job_cls_name = self.__class__.__name__
+        if job_cls_name.endswith(WITH_MIXINS_CLS_SUFFIX):
+            job_cls_name = job_cls_name[:-len(WITH_MIXINS_CLS_SUFFIX)]
 
-        class_name_snake_case = underscore(class_name)
-        return slugify(f'{class_name_snake_case}-{self._name}-{generate_slug(2)}')
+        return generate_job_slug(job_cls_name, self._name)
 
     def _regenerate_unique_name(self) -> None:
         self._unique_name = self._generate_unique_name()

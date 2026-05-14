@@ -6,9 +6,6 @@ import inspect
 from inspect import BoundArguments
 from typing import Any, Callable, Type
 
-from inflection import underscore
-from slugify import slugify
-
 from omnipy.config import ConfigBase
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
@@ -21,6 +18,7 @@ from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.typedefs import GeneralDecorator
 from omnipy.util.callable_decorator import callable_decorator_cls
+from omnipy.util.helpers import generate_job_slug
 
 
 class MockJobCreator(AbstractContextManager):
@@ -48,11 +46,7 @@ class MockTask:
         self.regenerate_unique_name()
 
     def regenerate_unique_name(self) -> None:
-        from omnipy.components.prefect.lazy_import import generate_slug
-
-        class_name_snake = underscore(self.__class__.__name__)
-        self.unique_name = slugify(  # noqa
-            f'{class_name_snake}-{underscore(self.name)}-{generate_slug(2)}')
+        self.unique_name = generate_job_slug(self.__class__.__name__, self.name)
 
     def __call__(self, *args: object, **kwargs: object) -> Any:
         return self._call_func(*args, **kwargs)

@@ -159,7 +159,7 @@ class SerializerFuncJobBaseMixin:
 
     def _job_name(self):
         self_as_job_base = cast(IsJobBase, self)
-        return '_'.join(self_as_job_base.unique_name.split('-')[:-2])
+        return '_'.join(self_as_job_base.unique_name.split('-'))
 
     def _generate_datetime_str(self):
         self_as_job = cast(IsJob, self)

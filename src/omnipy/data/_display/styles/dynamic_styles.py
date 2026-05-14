@@ -4,7 +4,6 @@ from pathlib import Path
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
-from inflection import dasherize, underscore
 import pygments.style
 import pygments.styles
 import pygments.util
@@ -87,6 +86,8 @@ def _fetch_base16_theme_and_create_dynamic_style_class(
 
 
 def _create_base_16_class_name_from_theme_key(base16_theme_name: str):
+    from inflection import underscore
+
     assert base16_theme_name.endswith(THEME_KEY_TINTED_BASE16_SUFFIX)
     base16_theme_name_stripped = base16_theme_name[:-len(THEME_KEY_TINTED_BASE16_SUFFIX)]
 
@@ -106,6 +107,8 @@ def __getattr__(attr: str) -> type[pygments.style.Style]:
     try:
         if attr.startswith(STYLE_CLS_NAME_TINTED_BASE16_PREFIX) and attr.endswith(
                 STYLE_CLS_NAME_SUFFIX):
+            from inflection import dasherize, underscore
+
             stripped_name = \
                 attr[len(STYLE_CLS_NAME_TINTED_BASE16_PREFIX):-len(STYLE_CLS_NAME_SUFFIX)]
 

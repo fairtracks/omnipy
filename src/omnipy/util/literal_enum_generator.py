@@ -5,8 +5,6 @@ from textwrap import TextWrapper
 from types import MappingProxyType
 from typing import Any, Mapping, Sequence
 
-import inflection
-
 from omnipy.util.helpers import is_unreserved_identifier
 from omnipy.util.literal_enum import LiteralEnum, LiteralEnumInnerTypes
 
@@ -102,6 +100,7 @@ def _generate_attribute_name(value: Any, used_names: KeysView[str]) -> str:
     Returns:
         A valid Python attribute name
     """
+    import inflection
 
     if not isinstance(value, str):
         value = str(value)
