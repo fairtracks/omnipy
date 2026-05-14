@@ -345,6 +345,11 @@ else:
 
 NestedListsOfStr: TypeAlias = str | ListOfNestedListsOfStrModel
 
+
+class NestedListsOfStrModel(Model[NestedListsOfStr]):
+    ...
+
+
 ListOfNestedListsOfStrModel.update_forward_refs()
 
 ListOfNestedPlainListsOfStr: TypeAlias = list['NestedPlainListsOfStr']
@@ -429,7 +434,7 @@ else:
         def _parse_data(
                 cls,
                 data: list[_NestedPlainListsOfStrT] | str) -> list[_NestedPlainListsOfStrT] | str:
-            str_parsed_data = Model[NestedListsOfStr](data).content
+            str_parsed_data = NestedListsOfStrModel(data).content
             return cls._split_data_according_to_delimiters(
                 str_parsed_data,  # type: ignore[return-value]
             )
@@ -484,7 +489,7 @@ else:
 
         @classmethod
         def _parse_data(cls, data: str | list[_NestedPlainListsOfStrT]) -> str:
-            str_parsed_data = Model[NestedListsOfStr](data).content
+            str_parsed_data = NestedListsOfStrModel(data).content
             return cls._join_data_according_to_delimiters(
                 cls._split_data_according_to_delimiters(str_parsed_data),  # type: ignore[arg-type]
             )

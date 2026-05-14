@@ -48,6 +48,7 @@ _exclude_attrs: set[str] = {
     'RowWiseTableWithColNamesNoConvertModel',
     'PydanticRecordModelBase',
     'ListOfNestedListsOfStrModel',
+    'NestedListsOfStrModel',
     'ListOfPandasDatasetsWithSameNumberOfFiles',
     'get_auto_from_api_endpoint',
     'GenericNestedDataset',
