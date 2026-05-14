@@ -28,7 +28,8 @@ from omnipy.hub.ui import (detect_dark_background,
                            detect_display_color_system,
                            get_terminal_prompt_height,
                            note_mime_bundle)
-from omnipy.shared.constants import (MAX_PANEL_NESTING_DEPTH,
+from omnipy.shared.constants import (MAX_MODEL_ARG_REPR_LEN,
+                                     MAX_PANEL_NESTING_DEPTH,
                                      MAX_PANELS_HORIZONTALLY,
                                      MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED,
                                      MIN_CROP_WIDTH,
@@ -2944,6 +2945,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             fixed_width=False,
             fixed_height=False,
         )
+
+    def __repr_str__(self, join_str: str) -> str:
+        repr_str = super().__repr_str__(join_str)  # type:ignore[misc]
+
+        if len(repr_str) > MAX_MODEL_ARG_REPR_LEN:
+            cut_splice_str = ' … '
+            end_cut_len = MAX_MODEL_ARG_REPR_LEN - len(cut_splice_str) // 2
+            repr_str = (
+                repr_str[:end_cut_len].rstrip() + cut_splice_str + repr_str[-end_cut_len:].lstrip())
+
+        return repr_str
 
 
 def _call_dataset_method_if_applicable(model_method: Callable[..., _RetT]):

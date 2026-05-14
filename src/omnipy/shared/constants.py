@@ -6,6 +6,7 @@ ROOT_KEY = '__root__'
 DATA_KEY = 'data'
 UNTITLED_KEY = '_untitled'
 ASYNC_LOAD_SLEEP_TIME = 0.05
+MAX_MODEL_ARG_REPR_LEN = 70
 
 # Data - Display
 
