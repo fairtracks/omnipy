@@ -1187,7 +1187,7 @@ class Dataset(
         return get_serializer_registry()
 
     def as_multi_model_dataset(self) -> 'IsMultiModelDataset[_ModelOrDatasetT]':
-        from omnipy.data.model import MultiModelDataset
+        from omnipy.data.multi import MultiModelDataset
 
         multi_model_dataset = MultiModelDataset[self.get_type()]()
         for data_file in self:

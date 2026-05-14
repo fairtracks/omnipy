@@ -1,6 +1,5 @@
 from typing_extensions import override
 
-from omnipy import SyntaxLanguageSpec
 from omnipy.components.raw.models import StrModel
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.draft.base import DraftPanel
@@ -8,7 +7,7 @@ from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.data._display.text.pretty_printer.base import PrettyPrinter
 from omnipy.data.model import is_model_instance
-from omnipy.shared.enums.display import PrettyPrinterLib
+from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
 
 class PlainTextPrettyPrinter(PrettyPrinter[str]):
