@@ -324,36 +324,35 @@ class JoinColumnsByCommaToLinesModel(_JoinByCommaParamsMixin, JoinSubitemsToItem
     )
 
 
-_NestedListsAndStrsWithModelsT = TypeVar(
-    '_NestedListsAndStrsWithModelsT', bound='NestedListsAndStrsWithModels', default='str')
+_NestedListsOfStrT = TypeVar('_NestedListsOfStrT', bound='NestedListsOfStr', default='str')
 
 if TYPE_CHECKING:
 
-    class ListOfNestedListsAndStrsModel(
-            PlainModel[list[_NestedListsAndStrsWithModelsT]],
-            IsListContent[_NestedListsAndStrsWithModelsT],
-            Generic[_NestedListsAndStrsWithModelsT],
+    class ListOfNestedListsOfStrModel(
+            PlainModel[list[_NestedListsOfStrT]],
+            IsListContent[_NestedListsOfStrT],
+            Generic[_NestedListsOfStrT],
     ):
         ...
 else:
 
-    class ListOfNestedListsAndStrsModel(
-            Model[list[_NestedListsAndStrsWithModelsT]],
-            Generic[_NestedListsAndStrsWithModelsT],
+    class ListOfNestedListsOfStrModel(
+            Model[list[_NestedListsOfStrT]],
+            Generic[_NestedListsOfStrT],
     ):
         ...
 
 
-NestedListsAndStrsWithModels: TypeAlias = str | ListOfNestedListsAndStrsModel
+NestedListsOfStr: TypeAlias = str | ListOfNestedListsOfStrModel
 
-ListOfNestedListsAndStrsModel.update_forward_refs()
+ListOfNestedListsOfStrModel.update_forward_refs()
 
-ListOfNestedListsAndStrsNoModels: TypeAlias = list['NestedListsAndStrsNoModels']
-NestedListsAndStrsNoModels: TypeAlias = str | ListOfNestedListsAndStrsNoModels
+ListOfNestedPlainListsOfStr: TypeAlias = list['NestedPlainListsOfStr']
+NestedPlainListsOfStr: TypeAlias = str | ListOfNestedPlainListsOfStr
 
-# Hack to support recursive types in Pydantic v1.10.x. Should not bee needed in Pydantic v2.
-_NestedListsAndStrsNoModelsT = TypeVar(
-    '_NestedListsAndStrsNoModelsT', default=str | list[NestedListsAndStrsNoModels])
+# Hack to support recursive types in Pydantic v1.10.x. Should not be needed in Pydantic v2.
+_NestedPlainListsOfStrT = TypeVar(
+    '_NestedPlainListsOfStrT', default=str | list[NestedPlainListsOfStr])
 
 
 class _NestedItemsParamsMixin:
@@ -363,9 +362,10 @@ class _NestedItemsParamsMixin:
 
     @classmethod
     def _split_data_according_to_delimiters(
-            cls,
-            data: NestedListsAndStrsWithModels,
-            level: int = 0) -> list[str] | ListOfNestedListsAndStrsNoModels:
+        cls,
+        data: NestedListsOfStr,
+        level: int = 0,
+    ) -> list[str] | ListOfNestedPlainListsOfStr:
 
         raw_data = data if isinstance(data, str) else data.content
 
@@ -395,7 +395,7 @@ class _NestedItemsParamsMixin:
                 cls._split_data_according_to_delimiters(item, level=next_level)
                 for item in split_data
             ]
-            return cast(ListOfNestedListsAndStrsNoModels, split_data_no_list_models)
+            return cast(ListOfNestedPlainListsOfStr, split_data_no_list_models)
         else:
             if num_delimiters == 0:
                 assert isinstance(data, str), \
@@ -411,9 +411,9 @@ class _NestedItemsParamsMixin:
 if TYPE_CHECKING:
 
     class _NestedSplitToItemsModel(
-            PlainModel[list[_NestedListsAndStrsNoModelsT]],
-            IsListContent[_NestedListsAndStrsNoModelsT],
-            Generic[_NestedListsAndStrsNoModelsT],
+            PlainModel[list[_NestedPlainListsOfStrT]],
+            IsListContent[_NestedPlainListsOfStrT],
+            Generic[_NestedPlainListsOfStrT],
             _NestedItemsParamsMixin,
     ):
         ...
@@ -421,15 +421,15 @@ if TYPE_CHECKING:
 else:
 
     class _NestedSplitToItemsModel(
-            Model[list[_NestedListsAndStrsNoModelsT] | str],
-            Generic[_NestedListsAndStrsNoModelsT],
+            Model[list[_NestedPlainListsOfStrT] | str],
+            Generic[_NestedPlainListsOfStrT],
             _NestedItemsParamsMixin,
     ):
         @classmethod
         def _parse_data(
-            cls, data: list[_NestedListsAndStrsNoModelsT] | str
-        ) -> list[_NestedListsAndStrsNoModelsT] | str:
-            str_parsed_data = Model[NestedListsAndStrsWithModels](data).content
+                cls,
+                data: list[_NestedPlainListsOfStrT] | str) -> list[_NestedPlainListsOfStrT] | str:
+            str_parsed_data = Model[NestedListsOfStr](data).content
             return cls._split_data_according_to_delimiters(
                 str_parsed_data,  # type: ignore[return-value]
             )
@@ -448,19 +448,19 @@ if TYPE_CHECKING:
     class _NestedJoinItemsModel(
             PlainModel[str],
             IsStrContent,
-            Generic[_NestedListsAndStrsNoModelsT],
+            Generic[_NestedPlainListsOfStrT],
             _NestedItemsParamsMixin,
     ):
         ...
 
 else:
 
-    class _NestedJoinItemsModel(Model[str | list[_NestedListsAndStrsNoModelsT]],
-                                Generic[_NestedListsAndStrsNoModelsT],
+    class _NestedJoinItemsModel(Model[str | list[_NestedPlainListsOfStrT]],
+                                Generic[_NestedPlainListsOfStrT],
                                 _NestedItemsParamsMixin):
         @classmethod
         def _join_data_according_to_delimiters(cls,
-                                               data: str | list[_NestedListsAndStrsNoModelsT],
+                                               data: str | list[_NestedPlainListsOfStrT],
                                                level: int = 0) -> str:
             if isinstance(data, str):
                 return data
@@ -471,7 +471,7 @@ else:
             if num_delimiters > next_level:
                 raw_data = [
                     cls._join_data_according_to_delimiters(
-                        cast(str | list[_NestedListsAndStrsNoModelsT], item), level=next_level)
+                        cast(str | list[_NestedPlainListsOfStrT], item), level=next_level)
                     for item in data
                 ]
             else:
@@ -483,8 +483,8 @@ else:
                 return cls.Params.delimiters[level].join(raw_data)
 
         @classmethod
-        def _parse_data(cls, data: str | list[_NestedListsAndStrsNoModelsT]) -> str:
-            str_parsed_data = Model[NestedListsAndStrsWithModels](data).content
+        def _parse_data(cls, data: str | list[_NestedPlainListsOfStrT]) -> str:
+            str_parsed_data = Model[NestedListsOfStr](data).content
             return cls._join_data_according_to_delimiters(
                 cls._split_data_according_to_delimiters(str_parsed_data),  # type: ignore[arg-type]
             )
