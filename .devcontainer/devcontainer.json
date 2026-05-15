@@ -3,7 +3,7 @@
   "image": "mcr.microsoft.com/devcontainers/python:3",
 
   // Installs OpenCode automatically on pod creation
-  "postCreateCommand": "curl -fsSL https://opencode.ai | bash",
+  "postCreateCommand": "curl -fsSL https://opencode.ai/install | bash",
 
   // Customizes the remote environment
   "customizations": {
