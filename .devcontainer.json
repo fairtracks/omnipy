@@ -1,0 +1,28 @@
+{
+  "name": "PyCharm Remote Dev",
+  "image": "mcr.microsoft.com/devcontainers/python:3",
+
+  // Installs OpenCode automatically on pod creation
+  "postCreateCommand": "curl -fsSL https://opencode.ai | bash",
+
+  // Customizes the remote environment
+  "customizations": {
+    "jetbrains": {
+      "plugins": [
+        "com.opencode.companion"
+      ]
+    }
+  },
+
+  // Tells Kubernetes how much power to give this pod
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb"
+  },
+
+  // Keeps your OpenCode server running in the background
+  "waitFor": "postCreateCommand",
+  "remoteEnv": {
+    "PYTHONUNBUFFERED": "1"
+  }
+}
