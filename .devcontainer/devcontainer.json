@@ -9,7 +9,7 @@
   "customizations": {
     "jetbrains": {
       "plugins": [
-        "com.opencode.companion"
+        "eu.devmoon.opencode-companion"
       ]
     }
   },
