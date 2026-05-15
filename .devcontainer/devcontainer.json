@@ -13,7 +13,7 @@
       ]
     }
   },
-
+  "mounts": ["source=${localWorkspaceFolderBasename}-home,target=/home/vscode,type=volume"],
   // Tells Kubernetes how much power to give this pod
   "hostRequirements": {
     "cpus": 4,
