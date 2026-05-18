@@ -9,7 +9,7 @@
     "source=${localWorkspaceFolderBasename}-home,target=/home/vscode,type=volume"
   ],
 
-  "postCreateCommand": "uv venv && . .venv/bin/activate && uv pip install -e .", ,
+  "postCreateCommand": "uv venv && . .venv/bin/activate && uv pip install -e .",
 
   "customizations": {
     "jetbrains": {
