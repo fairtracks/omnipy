@@ -1,6 +1,11 @@
 {
   "name": "PyCharm Remote Dev",
   "image": "mcr.microsoft.com/devcontainers/python:3",
+  "features": {
+    "ghcr.io/devcontainers-contrib/features/apt-get-packages:1": {
+        "packages": "emacs"
+    }
+  },
 
   // Installs OpenCode automatically on pod creation
   "postCreateCommand": "curl -fsSL https://opencode.ai/install | bash",
