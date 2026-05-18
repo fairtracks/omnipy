@@ -1,33 +1,28 @@
 {
-  "name": "PyCharm Remote Dev",
-  "image": "mcr.microsoft.com/devcontainers/python:3",
-  "features": {
-    "ghcr.io/devcontainers-contrib/features/apt-get-packages:1": {
-        "packages": "emacs"
-    }
-  },
+  "name": "Omnipy OpenCode Dev",
+  "image": "ghcr.io/sveinugu/sveinugu/devpod-opencode:latest",
 
-  // Installs OpenCode automatically on pod creation
-  "postCreateCommand": "curl -fsSL https://opencode.ai/install | bash",
+  "remoteUser": "vscode",
+  "userShell": "/usr/bin/zsh",
 
-  // Customizes the remote environment
+  "mounts": [
+    "source=${localWorkspaceFolderBasename}-home,target=/home/vscode,type=volume"
+  ],
+
+  "postCreateCommand": "uv venv && . .venv/bin/activate && uv pip install -e .", ,
+
   "customizations": {
     "jetbrains": {
-      "plugins": [
-        "eu.devmoon.opencode-companion"
-      ]
-    }
-  },
-  "mounts": ["source=${localWorkspaceFolderBasename}-home,target=/home/vscode,type=volume"],
-  // Tells Kubernetes how much power to give this pod
-  "hostRequirements": {
-    "cpus": 4,
-    "memory": "8gb"
-  },
+      "backend": "PyCharm",
+      "plugins": ["eu.devmoon.opencode-companion"],
+    },
 
-  // Keeps your OpenCode server running in the background
-  "waitFor": "postCreateCommand",
-  "remoteEnv": {
-    "PYTHONUNBUFFERED": "1"
+    "vscode": {
+      "extensions": ["ms-python.python"],
+      "settings": {
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+        "terminal.integrated.defaultProfile.linux": "zsh"
+      }
+    }
   }
 }
