@@ -1,6 +1,6 @@
 {
   "name": "Omnipy OpenCode Dev",
-  "image": "ghcr.io/sveinugu/sveinugu/devpod-opencode:latest",
+  "image": "ghcr.io/sveinugu/devpod-opencode:latest",
 
   "remoteUser": "vscode",
   "userShell": "/usr/bin/zsh",
