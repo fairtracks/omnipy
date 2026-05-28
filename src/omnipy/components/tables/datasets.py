@@ -4,8 +4,8 @@ from omnipy.data.dataset import Dataset
 import omnipy.util.pydantic as pyd
 
 from .models import (ColumnWiseTableWithColNamesAndIndexModel,
-                     ColumnWiseTableWithColNamesModel,
                      CsvTableModel,
+                     JsonScalarColumnWiseTableWithColNamesModel,
                      RowWiseTableFirstRowAsColNamesModel,
                      RowWiseTableModel,
                      RowWiseTableWithColNamesModel,
@@ -25,7 +25,7 @@ class TableDictOfDictsOfJsonScalarsDataset(Dataset[ColumnWiseTableWithColNamesAn
     ...
 
 
-class TableDictOfListsOfJsonScalarsDataset(Dataset[ColumnWiseTableWithColNamesModel]):
+class TableDictOfListsOfJsonScalarsDataset(Dataset[JsonScalarColumnWiseTableWithColNamesModel]):
     ...
 
 

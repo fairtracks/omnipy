@@ -7,7 +7,7 @@ from omnipy.shared.exceptions import ShouldNotOccurException
 from omnipy.shared.typing import TYPE_CHECKING
 
 from ..tables.models import (ColumnWiseTableWithColNamesAndIndexModel,
-                             ColumnWiseTableWithColNamesModel,
+                             JsonScalarColumnWiseTableWithColNamesModel,
                              PrintableTable,
                              RowWiseTableModel,
                              RowWiseTableWithColNamesModel)
@@ -19,7 +19,7 @@ __all__ = ['PandasModel']
 
 AnyJsonTableType = (
     RowWiseTableModel | RowWiseTableWithColNamesModel
-    | ColumnWiseTableWithColNamesAndIndexModel | ColumnWiseTableWithColNamesModel)
+    | ColumnWiseTableWithColNamesAndIndexModel | JsonScalarColumnWiseTableWithColNamesModel)
 
 
 class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], PrintableTable):

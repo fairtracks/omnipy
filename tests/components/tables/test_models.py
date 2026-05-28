@@ -9,6 +9,12 @@ from omnipy.components.tables.models import (ColumnWiseTableWithColNamesModel,
                                              CsvTableModel,
                                              CsvTableOfPydanticRecordsModel,
                                              IteratingPydanticRecordsModel,
+                                             JsonMaxLevel1ColumnModel,
+                                             JsonMaxLevel1ColumnWiseTableWithColNamesModel,
+                                             JsonMaxLevel2ColumnModel,
+                                             JsonMaxLevel2ColumnWiseTableWithColNamesModel,
+                                             JsonScalarColumnModel,
+                                             JsonScalarColumnWiseTableWithColNamesModel,
                                              PydanticRecordModel,
                                              RowWiseTableFirstRowAsColNamesModel,
                                              RowWiseTableModel,
@@ -21,8 +27,8 @@ from omnipy.util.pydantic import ValidationError
 import omnipy.util.pydantic as pyd
 
 from .cases.concat import ConcatCase, ConcatCaseReverse
-from .cases.raw.asserts import assert_row_iter
 from .cases.raw.table_data import column_wise_dict_of_lists_data
+from .helpers.protocols import AssertColumnWiseMappings, AssertRowIter
 
 # TODO: Add tests and logic to check that all columns have the same length
 #       in column-wise table models
@@ -45,7 +51,8 @@ def test_RowWise_table_without_col_names_model_empty() -> None:
     assert row_wise_table_without_col_names_model.to_data() == []
 
 
-def test_columnwise_and_RowWise_table_models_with_col_names() -> None:
+def test_columnwise_and_RowWise_table_models_with_col_names(
+        assert_column_wise_mappings: Annotated[AssertColumnWiseMappings, pytest.fixture]) -> None:
     row_wise_data = [
         {
             'a': '1', 'b': 2, 'c': True
@@ -66,15 +73,14 @@ def test_columnwise_and_RowWise_table_models_with_col_names() -> None:
     assert row_wise_model.to_data() == row_wise_data
     assert row_wise_model.col_names == ('a', 'b', 'c', 'd')
 
-    column_wise_model = ColumnWiseTableWithColNamesModel(column_wise_data)
-    assert column_wise_model.content == column_wise_data
+    column_wise_model = JsonScalarColumnWiseTableWithColNamesModel(column_wise_data)
+    assert_column_wise_mappings(column_wise_model, column_wise_data)
     assert column_wise_model.to_data() == column_wise_data
     assert column_wise_model.col_names == ('a', 'b', 'c', 'd')
 
-    converted_to_column_wise_model = ColumnWiseTableWithColNamesModel(row_wise_model)
-    assert converted_to_column_wise_model.content == column_wise_data
+    converted_to_column_wise_model = JsonScalarColumnWiseTableWithColNamesModel(row_wise_model)
+    assert_column_wise_mappings(converted_to_column_wise_model, column_wise_data)
     assert converted_to_column_wise_model.to_data() == column_wise_data
-    assert converted_to_column_wise_model == column_wise_model
     assert converted_to_column_wise_model.col_names == ('a', 'b', 'c', 'd')
 
     row_wise_data_with_none = [
@@ -98,12 +104,12 @@ def test_columnwise_and_RowWise_table_models_with_col_names_empty() -> None:
     assert row_wise_model.to_data() == []
     assert row_wise_model.col_names == ()
 
-    column_wise_model = ColumnWiseTableWithColNamesModel({})
+    column_wise_model = JsonScalarColumnWiseTableWithColNamesModel({})
     assert column_wise_model.content == {}
     assert column_wise_model.to_data() == {}
     assert column_wise_model.col_names == ()
 
-    converted_to_column_wise_model = ColumnWiseTableWithColNamesModel([])
+    converted_to_column_wise_model = JsonScalarColumnWiseTableWithColNamesModel([])
     assert converted_to_column_wise_model.content == {}
     assert converted_to_column_wise_model.to_data() == {}
     assert converted_to_column_wise_model == column_wise_model
@@ -121,11 +127,11 @@ def test_columnwise_and_RowWise_table_models_failure() -> None:
         RowWiseTableWithColNamesModel(1)
 
     with pytest.raises(ValidationError):
-        ColumnWiseTableWithColNamesModel(1)
+        JsonScalarColumnWiseTableWithColNamesModel(1)
 
 
-def test_columnwise_table_iter(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    column_wise_model = ColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data)
+def test_columnwise_table_iter(assert_row_iter: Annotated[AssertRowIter, pytest.fixture]) -> None:
+    column_wise_model = JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data)
 
     for i, row in enumerate(column_wise_model):
         assert_row_iter(i, row)
@@ -165,8 +171,11 @@ def test_columnwise_table_iter(runtime: Annotated[IsRuntime, pytest.fixture]) ->
     assert extracted_whole.to_data() == column_wise_dict_of_lists_data
 
 
-def test_columnwise_table_index(runtime: Annotated[IsRuntime, pytest.fixture],) -> None:
-    column_wise_model = ColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data)
+def test_columnwise_table_index(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_row_iter: Annotated[AssertRowIter, pytest.fixture],
+) -> None:
+    column_wise_model = JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data)
 
     assert len(column_wise_model) == 2
 
@@ -182,7 +191,7 @@ def test_columnwise_table_index(runtime: Annotated[IsRuntime, pytest.fixture],) 
     if not runtime.config.data.model.interactive:
         del column_wise_model[1]  # type: ignore
 
-    assert column_wise_model['a'] == ['1', '4']
+    assert column_wise_model['a'].to_data() == ['1', '4']
     column_wise_model['a'] = ['10', '40']
     assert column_wise_model[1]['a'] == '40'
 
@@ -291,7 +300,9 @@ def IteratingPersonModel() -> type[IteratingPydanticRecordsModel]:
         age: int
         deceased: bool = False
 
-    class IteratingPersonModel(IteratingPydanticRecordsModel[PersonRecord]):
+    class IteratingPersonModel(
+            IteratingPydanticRecordsModel[PersonRecord,
+                                          JsonScalarColumnWiseTableWithColNamesModel]):
         pass
 
     return IteratingPersonModel
@@ -651,16 +662,157 @@ def test_fail_table_of_records_model_with_optional_fields_incorrect_input(
 @pytest.mark.parametrize(
     'column_data', [[1, 2, 3], ['a', 'b', 'c'], [True, False, True], [1.0, 'abc', None]],
     ids=['integers', 'strings', 'booleans', 'mixed'])
-def test_column_model(column_data: list[object]) -> None:
-    from omnipy.components.tables.models import ColumnModel
-
-    col = ColumnModel(column_data)
+def test_json_scalar_column_model(column_data: list[object]) -> None:
+    col = JsonScalarColumnModel(column_data)
     assert col.content == column_data
     assert col.to_data() == column_data
 
 
-def test_fail_column_model_invalid_input() -> None:
-    from omnipy.components.tables.models import ColumnModel
-
+def test_fail_json_scalar_column_model_invalid_input() -> None:
     with pytest.raises(ValidationError):
-        ColumnModel([1 + 2j])  # complex numbers are not JsonScalar
+        JsonScalarColumnModel([1 + 2j])  # complex numbers are not JsonScalar
+
+
+def test_json_max_level1_column_model_accepts_scalars_dicts_and_lists() -> None:
+    data = [1, 'abc', None, {'a': 1, 'b': None}, [2, 'x', False]]
+    col = JsonMaxLevel1ColumnModel(data)
+
+    assert col.content == data
+    assert col.to_data() == data
+
+
+def test_json_max_level1_column_model_rejects_nested_list_in_dict() -> None:
+    with pytest.raises(ValidationError):
+        JsonMaxLevel1ColumnModel([{'a': [1, 2]}])
+
+
+def test_json_max_level2_column_model_accepts_level2_nested_values() -> None:
+    data = [
+        1,
+        ['x', {
+            'k': 2
+        }, [3, None]],
+        {
+            'a': 1,
+            'b': {
+                'k': 3
+            },
+            'c': ['y', False, None],
+        },
+    ]
+    col = JsonMaxLevel2ColumnModel(data)
+
+    assert col.content == data
+    assert col.to_data() == data
+
+
+def test_json_max_level2_column_model_rejects_level3_dict_nesting() -> None:
+    with pytest.raises(ValidationError):
+        JsonMaxLevel2ColumnModel([{'a': {'b': {'c': 1}}}])
+
+
+def test_json_scalar_column_wise_table_uses_scalar_column_model() -> None:
+    data = {
+        'a': [1, 2],
+        'b': ['x', None],
+    }
+
+    table = JsonScalarColumnWiseTableWithColNamesModel(data)
+
+    assert table.to_data() == data
+    assert table.col_names == ('a', 'b')
+    assert table['a'].to_data() == [1, 2]
+    assert table[0] == {'a': 1, 'b': 'x'}
+    assert table[1] == {'a': 2, 'b': None}
+    assert list(table) == [
+        {
+            'a': 1, 'b': 'x'
+        },
+        {
+            'a': 2, 'b': None
+        },
+    ]
+    assert (table + table).to_data() == {
+        'a': [1, 2, 1, 2],
+        'b': ['x', None, 'x', None],
+    }
+
+
+def test_json_max_level1_column_wise_table_iterates_rows_and_supports_addition() -> None:
+    cell_0_0 = 1
+    cell_0_1 = ['x', None]
+    cell_1_0 = {'k': 2}
+    cell_1_1 = 3
+    cell_2_0 = 4
+    cell_2_1 = [False]
+
+    data = {
+        'a': [cell_0_0, cell_1_0],
+        'b': [cell_0_1, cell_1_1],
+    }
+    other = {
+        'a': [cell_2_0],
+        'b': [cell_2_1],
+    }
+
+    table = JsonMaxLevel1ColumnWiseTableWithColNamesModel(data)
+    other_table = JsonMaxLevel1ColumnWiseTableWithColNamesModel(other)
+
+    assert table.to_data() == data
+    assert isinstance(table['a'], JsonMaxLevel1ColumnModel)
+    assert table[0] == {'a': cell_0_0, 'b': cell_0_1}
+    assert table[1] == {'a': cell_1_0, 'b': cell_1_1}
+    assert list(table) == [
+        {
+            'a': cell_0_0, 'b': cell_0_1
+        },
+        {
+            'a': cell_1_0, 'b': cell_1_1
+        },
+    ]
+    assert (table + other_table).to_data() == {
+        'a': [cell_0_0, cell_1_0, cell_2_0],
+        'b': [cell_0_1, cell_1_1, cell_2_1],
+    }
+
+
+def test_json_max_level2_column_wise_table_supports_row_access_iteration_and_addition() -> None:
+    cell_0_0 = 1
+    cell_0_1 = {'m': 1, 'n': {'p': 2}, 'o': ['u', None]}
+    cell_1_0 = ['x', {'k': 2}, [3]]
+    cell_1_1 = {'m': 2, 'n': {'p': 3}, 'o': ['v', False]}
+    cell_2_0 = None
+    cell_2_1 = {'m': 3, 'n': {'p': 4}, 'o': ['w', True]}
+
+    data = {
+        'a': [cell_0_0, cell_1_0],
+        'b': [cell_0_1, cell_1_1],
+    }
+    other = {
+        'a': [cell_2_0],
+        'b': [cell_2_1],
+    }
+
+    table = JsonMaxLevel2ColumnWiseTableWithColNamesModel(data)
+    other_table = JsonMaxLevel2ColumnWiseTableWithColNamesModel(other)
+
+    assert table.to_data() == data
+    assert isinstance(table['a'], JsonMaxLevel2ColumnModel)
+    expected_rows = [
+        {
+            'a': cell_0_0,
+            'b': cell_0_1,
+        },
+        {
+            'a': cell_1_0,
+            'b': cell_1_1,
+        },
+    ]
+
+    assert table[0] == expected_rows[0]
+    assert table[1] == expected_rows[1]
+    assert list(table) == expected_rows
+    assert (table + other_table).to_data() == {
+        'a': [cell_0_0, cell_1_0, cell_2_0],
+        'b': [cell_0_1, cell_1_1, cell_2_1],
+    }
