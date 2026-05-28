@@ -160,6 +160,26 @@ def test_init_models_as_input():
     assert tuple_of_ints_dataset.to_data() == {'x': (4, 2), 'y': (1, 4, 6)}
 
 
+def test_init_pure_pydantic_model_as_data_input() -> None:
+    class PydDataModel(pyd.BaseModel):
+        a: object
+        b: object
+
+    direct_dataset = Dataset[Model[int]](PydDataModel(a=4.5, b='5'))
+    wrapped_dataset = Dataset[Model[int]](Model[PydDataModel](PydDataModel(a=4.5, b='5')))
+
+    assert direct_dataset.to_data() == {'a': 4, 'b': 5}
+    assert wrapped_dataset.to_data() == {'a': 4, 'b': 5}
+
+
+def test_init_model_wrapped_mapping_as_data_input() -> None:
+    wrapped_mapping = Model[dict[str, object]]({'a': 4.5, 'b': '5'})
+
+    dataset = Dataset[Model[int]](wrapped_mapping)
+
+    assert dataset.to_data() == {'a': 4, 'b': 5}
+
+
 @pytest.mark.parametrize('dataset_cls, expects_str',
                          [
                              (Dataset[Model[float]], False),
