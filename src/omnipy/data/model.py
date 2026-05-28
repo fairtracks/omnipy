@@ -304,7 +304,8 @@ class Model(  # type: ignore[misc]
         if created_model is not cls:
             cleanup_name_qualname_and_module(cls, created_model, orig_model)
 
-        cls._prepare_cls_members_to_mimic_model(created_model)
+        if get_original_bases(created_model) == (Model,):
+            cls._prepare_cls_members_to_mimic_model(created_model)
 
         return created_model
 
