@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Annotated, Any, Callable
+from typing import Annotated, Any, Callable, cast
 
 import pytest
 import pytest_cases as pc
@@ -16,6 +16,7 @@ from omnipy.components.tables.models import (ColumnWiseTableWithColNamesModel,
                                              JsonScalarColumnModel,
                                              JsonScalarColumnWiseTableWithColNamesModel,
                                              PydanticRecordModel,
+                                             PydanticRecordModelBase,
                                              RowWiseTableFirstRowAsColNamesModel,
                                              RowWiseTableModel,
                                              RowWiseTableWithColNamesModel,
@@ -34,7 +35,7 @@ from .helpers.protocols import AssertColumnWiseMappings, AssertRowIter
 #       in column-wise table models
 
 
-def test_RowWise_table_without_col_names_model() -> None:
+def test_rowwise_table_without_col_names_model() -> None:
     row_wise_list_of_lists_data = [
         ['John', 'Doe', 30],
         ['Jane', 'Doe', 25],
@@ -45,13 +46,13 @@ def test_RowWise_table_without_col_names_model() -> None:
     assert row_wise_table_without_col_names_model.to_data() == row_wise_list_of_lists_data
 
 
-def test_RowWise_table_without_col_names_model_empty() -> None:
+def test_rowwise_table_without_col_names_model_empty() -> None:
     row_wise_table_without_col_names_model = RowWiseTableModel([])
     assert row_wise_table_without_col_names_model.content == []
     assert row_wise_table_without_col_names_model.to_data() == []
 
 
-def test_columnwise_and_RowWise_table_models_with_col_names(
+def test_columnwise_and_rowwise_table_models_with_col_names(
         assert_column_wise_mappings: Annotated[AssertColumnWiseMappings, pytest.fixture]) -> None:
     row_wise_data = [
         {
@@ -98,7 +99,7 @@ def test_columnwise_and_RowWise_table_models_with_col_names(
     assert converted_to_row_wise_model.col_names == ('a', 'b', 'c', 'd')
 
 
-def test_columnwise_and_RowWise_table_models_with_col_names_empty() -> None:
+def test_columnwise_and_rowwise_table_models_with_col_names_empty() -> None:
     row_wise_model = RowWiseTableWithColNamesModel([])
     assert row_wise_model.content == []
     assert row_wise_model.to_data() == []
@@ -122,7 +123,7 @@ def test_columnwise_and_RowWise_table_models_with_col_names_empty() -> None:
     assert converted_to_row_wise_model.col_names == ()
 
 
-def test_columnwise_and_RowWise_table_models_failure() -> None:
+def test_columnwise_and_rowwise_table_models_failure() -> None:
     with pytest.raises(ValidationError):
         RowWiseTableWithColNamesModel(1)
 
@@ -227,7 +228,7 @@ def test_columnwise_table_reverse_concatenate_add(case: ConcatCaseReverse) -> No
     assert concat_model.to_data() == case.expected_reverse
 
 
-def test_RowWise_table_first_row_as_col_names_model() -> None:
+def test_rowwise_table_first_row_as_col_names_model() -> None:
     row_wise_list_of_lists_data = [
         ['firstname', 'lastname'],
         ['John', 'Doe'],
@@ -250,7 +251,7 @@ def test_RowWise_table_first_row_as_col_names_model() -> None:
     assert row_wise_table_with_col_names_model.col_names == ('firstname', 'lastname')
 
 
-def test_RowWise_table_first_row_as_col_names_model_empty() -> None:
+def test_rowwise_table_first_row_as_col_names_model_empty() -> None:
     row_wise_table_with_col_names_model = RowWiseTableFirstRowAsColNamesModel([])
     assert row_wise_table_with_col_names_model.content == []
     assert row_wise_table_with_col_names_model.to_data() == []
@@ -341,6 +342,55 @@ def test_iterating_pydantic_record_model_column_wise_data(
     assert empty_persons.to_data() == {'firstname': [], 'lastname': [], 'age': []}
 
 
+def test_iterating_pydantic_record_model_header_info_tracks_output_type(
+        IteratingPersonModel: Annotated[type[IteratingPydanticRecordsModel],
+                                        pytest.fixture]) -> None:
+    header_info = cast(Any, IteratingPersonModel).header_info
+    assert header_info.data_with_col_names_type is JsonScalarColumnWiseTableWithColNamesModel
+
+
+def test_iterating_pydantic_record_model_model_instance_input_uses_content_type(
+        IteratingPersonModel: Annotated[type[IteratingPydanticRecordsModel],
+                                        pytest.fixture]) -> None:
+    source_data = JsonScalarColumnWiseTableWithColNamesModel(
+        firstname=['John', 'Jane'],
+        lastname=['Doe', 'Doe'],
+        age=['30', '25'],
+    )
+
+    persons = IteratingPersonModel(source_data)
+
+    assert isinstance(persons.content, JsonScalarColumnWiseTableWithColNamesModel)
+    assert persons.to_data() == {
+        'firstname': ['John', 'Jane'],
+        'lastname': ['Doe', 'Doe'],
+        'age': [30, 25],
+        'deceased': [False, False],
+    }
+
+
+def test_iterating_pydantic_record_model_row_wise_uses_declared_output_type() -> None:
+    class MaxLevel1PersonRecord(pyd.BaseModel):
+        firstname: str
+        age: int
+
+    class IteratingPersonMaxLevel1Model(
+            IteratingPydanticRecordsModel[MaxLevel1PersonRecord,
+                                          JsonMaxLevel1ColumnWiseTableWithColNamesModel]):
+        pass
+
+    persons = IteratingPersonMaxLevel1Model([
+        ['John', '30'],
+        ['Jane', '25'],
+    ])
+
+    assert isinstance(persons.content, JsonMaxLevel1ColumnWiseTableWithColNamesModel)
+    assert persons.to_data() == {
+        'firstname': ['John', 'Jane'],
+        'age': [30, 25],
+    }
+
+
 def test_iterating_pydantic_record_model_row_wise_data(
     # runtime: Annotated[IsRuntime, pytest.fixture],
     IteratingPersonModel: Annotated[type[IteratingPydanticRecordsModel], pytest.fixture]
@@ -394,6 +444,57 @@ def test_pydantic_record_model_optional() -> None:
     NameRecordOptionalLastNameModel(firstname='Tarzan', title='King of Apes')
     assert record.content == NameRecordOptionalLastName(firstname='Tarzan')
     assert record.to_data() == {'firstname': 'Tarzan', 'lastname': None}
+
+
+def test_pydantic_record_model_raises_type_error_for_unsupported_input_type() -> None:
+    class AnyRecord(pyd.BaseModel):
+        value: int
+
+    class AnyRecordModel(PydanticRecordModel[AnyRecord]):
+        pass
+
+    with pytest.raises(TypeError, match='Unsupported data type'):
+        AnyRecordModel._parse_data(123)  # type: ignore[arg-type]
+
+
+def test_pydantic_record_model_base_forwards_output_type_to_row_parser() -> None:
+    class AnyRecord(pyd.BaseModel):
+        value: int
+
+    class AnyRecordModel(PydanticRecordModelBase[
+            AnyRecord,
+            JsonScalarColumnWiseTableWithColNamesModel,
+            list[JsonScalar],
+    ]):
+        _seen_output_type: type[JsonScalarColumnWiseTableWithColNamesModel] | None = None
+
+        @classmethod
+        def _validate_record_model_with_col_names(
+            cls,
+            pyd_model: type[pyd.BaseModel],
+            data: ColumnWiseTableWithColNamesModel,
+            header_names: tuple[str, ...],
+        ) -> pyd.BaseModel | JsonScalarColumnWiseTableWithColNamesModel:
+            return cast(JsonScalarColumnWiseTableWithColNamesModel, data)
+
+        @classmethod
+        def _validate_record_model_without_col_names(
+            cls,
+            pyd_model: type[pyd.BaseModel],
+            data: list[JsonScalar],
+            output_type: type[ColumnWiseTableWithColNamesModel],
+            header_names: tuple[str, ...],
+        ) -> pyd.BaseModel | JsonScalarColumnWiseTableWithColNamesModel:
+            concrete_output_type = cast(type[JsonScalarColumnWiseTableWithColNamesModel],
+                                        output_type)
+            cls._seen_output_type = concrete_output_type
+            return concrete_output_type({'value': [int(cast(int | str, data[0]))]})
+
+    model_obj = AnyRecordModel(['3'])
+
+    assert AnyRecordModel._seen_output_type is JsonScalarColumnWiseTableWithColNamesModel
+    assert isinstance(model_obj.content, JsonScalarColumnWiseTableWithColNamesModel)
+    assert model_obj.to_data() == {'value': [3]}
 
 
 def test_pydantic_record_model_extra_fields_config() -> None:
@@ -473,7 +574,7 @@ def RowWiseRecordsTableOptionalLastModel() -> type[TableOfPydanticRecordsModel]:
 
 
 @pc.fixture
-def RowWise_data() -> Any:
+def rowwise_data() -> Any:
     return [
         {
             'firstname': 'John', 'lastname': 'Doe'
@@ -485,7 +586,7 @@ def RowWise_data() -> Any:
 
 
 @pc.fixture
-def RowWise_data_optional_last() -> Any:
+def rowwise_data_optional_last() -> Any:
     return [
         {
             'firstname': 'John', 'lastname': 'Doe', 'age': None
@@ -497,8 +598,8 @@ def RowWise_data_optional_last() -> Any:
 
 
 @pc.fixture
-def RowWise_records_assert(
-    RowWise_data: Annotated[Any,
+def rowwise_records_assert(
+    rowwise_data: Annotated[Any,
                             pc.fixture]) -> Callable[[RowWiseTableFirstRowAsColNamesModel], None]:
     def _assert_func(table: RowWiseTableFirstRowAsColNamesModel) -> None:
         assert len(table) == 2
@@ -509,124 +610,124 @@ def RowWise_records_assert(
             else:
                 assert isinstance(row, dict)
 
-        assert table.to_data() == RowWise_data
+        assert table.to_data() == rowwise_data
 
     return _assert_func
 
 
 @pc.fixture
-def RowWise_pyd_records_assert(
-        RowWise_data: Annotated[Any, pc.fixture]) -> Callable[[TableOfPydanticRecordsModel], None]:
+def rowwise_pyd_records_assert(
+        rowwise_data: Annotated[Any, pc.fixture]) -> Callable[[TableOfPydanticRecordsModel], None]:
     def _assert_func(table: TableOfPydanticRecordsModel) -> None:
         assert len(table) == 2
         assert isinstance(table[0], PydanticRecordModel)
         assert isinstance(table[1], PydanticRecordModel)
 
-        assert table.to_data() == RowWise_data
+        assert table.to_data() == rowwise_data
 
     return _assert_func
 
 
 @pc.fixture
-def RowWise_pyd_records_optional_last_assert(
-    RowWise_data_optional_last: Annotated[Any, pc.fixture]
+def rowwise_pyd_records_optional_last_assert(
+    rowwise_data_optional_last: Annotated[Any, pc.fixture]
 ) -> Callable[[TableOfPydanticRecordsModel], None]:
     def _assert_func(table: TableOfPydanticRecordsModel) -> None:
         assert len(table) == 2
         assert isinstance(table[0], PydanticRecordModel)
         assert isinstance(table[1], PydanticRecordModel)
 
-        assert table.to_data() == RowWise_data_optional_last
+        assert table.to_data() == rowwise_data_optional_last
 
     return _assert_func
 
 
-@pc.case(id='RowWise_from_tsv', tags=['tables'])
-def case_RowWise_from_tsv(
-    RowWise_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
+@pc.case(id='rowwise_from_tsv', tags=['tables'])
+def case_rowwise_from_tsv(
+    rowwise_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
                                       pytest.fixture],
 ) -> TableCase:
     return TableCase(
         model=TsvTableModel,
         data='firstname\tlastname\nJohn\tDoe\nJane\tDoe\n',
-        assert_func=RowWise_records_assert,
+        assert_func=rowwise_records_assert,
     )
 
 
-@pc.case(id='RowWise_from_csv', tags=['tables'])
-def case_RowWise_from_csv(
-    RowWise_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
+@pc.case(id='rowwise_from_csv', tags=['tables'])
+def case_rowwise_from_csv(
+    rowwise_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
                                       pytest.fixture],
 ) -> TableCase:
     return TableCase(
         model=CsvTableModel,
         data='firstname,lastname\nJohn,Doe\nJane,Doe\n',
-        assert_func=RowWise_records_assert,
+        assert_func=rowwise_records_assert,
     )
 
 
-@pc.case(id='RowWise_pyd_from_records', tags=['tables'])
-def case_RowWise_pyd_from_records(
+@pc.case(id='rowwise_pyd_from_records', tags=['tables'])
+def case_rowwise_pyd_from_records(
     RowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
-    RowWise_data: Annotated[Any, pytest.fixture],
-    RowWise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
+    rowwise_data: Annotated[Any, pytest.fixture],
+    rowwise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
                                           pytest.fixture],
 ) -> TableCase:
     return TableCase(
         model=RowWiseRecordsTableModel,
-        data=RowWise_data,
-        assert_func=RowWise_pyd_records_assert,
+        data=rowwise_data,
+        assert_func=rowwise_pyd_records_assert,
     )
 
 
-@pc.case(id='RowWise_pyd_from_list_of_lists_table', tags=['tables'])
-def case_RowWise_pyd_from_list_of_lists_table(
+@pc.case(id='rowwise_pyd_from_list_of_lists_table', tags=['tables'])
+def case_rowwise_pyd_from_list_of_lists_table(
     RowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
-    RowWise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
+    rowwise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
                                           pytest.fixture],
 ) -> TableCase:
     return TableCase(
         model=RowWiseRecordsTableModel,
         data=[['John', 'Doe'], ['Jane', 'Doe']],
-        assert_func=RowWise_pyd_records_assert)
+        assert_func=rowwise_pyd_records_assert)
 
 
-@pc.case(id='RowWise_pyd_from_tsv', tags=['tables'])
-def case_RowWise_pyd_from_tsv(
+@pc.case(id='rowwise_pyd_from_tsv', tags=['tables'])
+def case_rowwise_pyd_from_tsv(
     RowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
-    RowWise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
+    rowwise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
                                           pytest.fixture],
 ) -> TableCase:
     return TableCase(
         model=RowWiseRecordsTableModel,
         data='John\tDoe\nJane\tDoe\n',
-        assert_func=RowWise_pyd_records_assert)
+        assert_func=rowwise_pyd_records_assert)
 
 
-@pc.case(id='csv_RowWise_pyd_from_tsv', tags=['tables'])
-def case_RowWise_pyd_from_csv(
+@pc.case(id='csv_rowwise_pyd_from_tsv', tags=['tables'])
+def case_rowwise_pyd_from_csv(
     CsvRowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
-    RowWise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
+    rowwise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
                                           pytest.fixture],
 ) -> TableCase:
     return TableCase(
         model=CsvRowWiseRecordsTableModel,
         data='John,Doe\nJane,Doe\n',
-        assert_func=RowWise_pyd_records_assert)
+        assert_func=rowwise_pyd_records_assert)
 
 
-@pc.case(id='RowWise_pyd_from_tsv_optional_field_last', tags=['tables'])
-def case_RowWise_pyd_from_tsv_optional_last(
+@pc.case(id='rowwise_pyd_from_tsv_optional_field_last', tags=['tables'])
+def case_rowwise_pyd_from_tsv_optional_last(
     RowWiseRecordsTableOptionalLastModel: Annotated[type[TableOfPydanticRecordsModel],
                                                     pytest.fixture],
-    RowWise_pyd_records_optional_last_assert: Annotated[Callable[[TableOfPydanticRecordsModel],
+    rowwise_pyd_records_optional_last_assert: Annotated[Callable[[TableOfPydanticRecordsModel],
                                                                  None],
                                                         pytest.fixture],
 ) -> TableCase:
     return TableCase(
         model=RowWiseRecordsTableOptionalLastModel,
         data='John\tDoe\nJane\tDoe\t37',
-        assert_func=RowWise_pyd_records_optional_last_assert)
+        assert_func=rowwise_pyd_records_optional_last_assert)
 
 
 @pc.parametrize_with_cases('case', cases='.', has_tag='tables')

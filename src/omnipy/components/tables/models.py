@@ -6,7 +6,11 @@ from typing import Callable, cast, Generic, get_args, overload, Protocol, Sized,
 from typing_extensions import NamedTuple, override, TypeVar
 
 from omnipy.data.helpers import TypeVarStore
-from omnipy.data.model import is_model_instance, Model, ModelMetaclass
+from omnipy.data.model import (is_model_instance,
+                               is_pure_pydantic_model,
+                               Model,
+                               ModelMetaclass,
+                               prepare_value_for_validation_if_dataset_or_model)
 from omnipy.shared.protocols.content import (IsDictOfDictsContent,
                                              IsDictOfListsContent,
                                              IsListContent,
@@ -17,6 +21,7 @@ from omnipy.shared.protocols.data import HasContent
 from omnipy.shared.protocols.typing import IsLightSequenceNotStrBytes, IsMapping
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.helpers import first_key_in_mapping
+from omnipy.util.pydantic import ValidationError
 import omnipy.util.pydantic as pyd
 
 from ..general.models import Chain3
@@ -470,8 +475,9 @@ _DataWithoutColNamesModelT = TypeVar(
 _PydRecordT = TypeVar('_PydRecordT', bound=pyd.BaseModel)
 
 
-class _HeaderInfo(NamedTuple):
-    pydantic_model: type[pyd.BaseModel]
+class _HeaderInfo(NamedTuple, Generic[_PydBaseModelT, _DataWithoutColNamesModelT]):
+    pydantic_model: type[_PydBaseModelT]
+    data_with_col_names_type: type[_DataWithoutColNamesModelT]
     header_names: tuple[str, ...]
     num_required_fields: int
 
@@ -484,11 +490,13 @@ class PydanticRecordModelMetaclass(ModelMetaclass):
     @property
     def header_info(cls) -> _HeaderInfo:
         if cls._header_info is None:
-            type_var_store = get_args(cast(type[Model], cls).outer_type(with_args=True))[0]
+            type_args = get_args(cast(type[Model], cls).outer_type(with_args=True))
+            type_var_store = type_args[0]
             pydantic_model = get_args(type_var_store)[0]
             if hasattr(pydantic_model, '__pydantic_model__'):
                 pydantic_model = pydantic_model.__pydantic_model__
 
+            data_with_col_names_type = type_args[1]
             headers = pydantic_model.__fields__
 
             num_required_fields = -1
@@ -505,6 +513,7 @@ class PydanticRecordModelMetaclass(ModelMetaclass):
 
             cls._header_info = _HeaderInfo(
                 pydantic_model,
+                data_with_col_names_type,
                 tuple(headers.keys()),
                 num_required_fields,
             )
@@ -532,6 +541,7 @@ class PydanticRecordModelBase(
         cls,
         pyd_model: type[pyd.BaseModel],
         data: _DataWithoutColNamesModelT,
+        output_type: type[_DataWithColNamesModelT],
         header_names: tuple[str, ...],
     ) -> pyd.BaseModel | _DataWithColNamesModelT:
         ...
@@ -542,24 +552,32 @@ class PydanticRecordModelBase(
         cls,
         data: _DataWithColNamesModelT | _DataWithoutColNamesModelT,
     ) -> pyd.BaseModel | _DataWithColNamesModelT:
-        pyd_model, header_names, num_required_fields = cls.header_info
-        if isinstance(data, (dict, ColumnWiseTableWithColNamesModel)):
+        pyd_model, data_with_col_names_type, header_names, num_required_fields = cls.header_info
+        content = data.content if is_model_instance(data) else data
+        if isinstance(content, dict) or is_pure_pydantic_model(content):
             # cls._validate_and_set_value(data)
             return cls._validate_record_model_with_col_names(pyd_model, data, header_names)
             return pyd_model(**data)
 
-        if isinstance(data, (list, RowWiseTableModel)):
+        if isinstance(content, list):
             if isinstance(data, RowWiseTableModel):
-                num_data_cols = len(data.content[0]) if len(data.content) > 0 else 0
+                num_data_cols = len(content[0]) if len(content) > 0 else 0
             else:
-                num_data_cols = len(data)
+                num_data_cols = len(content)
 
             assert len(header_names) >= num_data_cols >= num_required_fields, \
                 (f'Incorrect number of data elements: '
                  f'{len(header_names)} >= {num_data_cols} >= {num_required_fields}')
 
-            return cls._validate_record_model_without_col_names(pyd_model, data, header_names)
+            return cls._validate_record_model_without_col_names(
+                pyd_model,
+                data,
+                data_with_col_names_type,
+                header_names,
+            )
             return pyd_model(**dict(zip(header_names, data)))
+        else:
+            raise TypeError(f'Unsupported data type: {type(data)}')
 
 
 if TYPE_CHECKING:
@@ -596,6 +614,7 @@ else:
             cls,
             pyd_model: type[pyd.BaseModel],
             data: list[JsonScalar],
+            data_type: type[_DataWithColNamesModelT],
             header_names: tuple[str, ...],
         ) -> pyd.BaseModel | dict[str, JsonScalar]:
             return pyd_model(**dict(zip(header_names, data)))
@@ -604,20 +623,23 @@ else:
 if TYPE_CHECKING:  # noqa: C901
 
     class IteratingPydanticRecordsModel(
-            Model[ColumnWiseTableWithColNamesModel],
-            Generic[_PydBaseModelT],
+            PlainModel[ColumnWiseTableModelT],  # IsDictOfListsContent[str, ColumnModelT, ItemT],
+            PrintableTable,
+            Generic[_PydBaseModelT, ColumnWiseTableModelT],
     ):
         ...
 
 else:
 
     class IteratingPydanticRecordsModel(
+            _ColumnWiseTableWithColNamesMixin,
             PydanticRecordModelBase[
                 _PydBaseModelT,
-                ColumnWiseTableWithColNamesModel,
+                ColumnWiseTableModelT,
                 RowWiseTableModel,
             ],
-            Generic[_PydBaseModelT],
+            PrintableTable,
+            Generic[_PydBaseModelT, ColumnWiseTableModelT],
     ):
         @classmethod
         def _validate_over_all_rows(
@@ -625,33 +647,61 @@ else:
             input_model: ColumnWiseTableWithColNamesModel | RowWiseTableModel,
             output_model: ColumnWiseTableWithColNamesModel,
             pyd_model: type[pyd.BaseModel],
-            to_row_dict_func: Callable[[list[JsonScalar]], dict[str, JsonScalar]] | None = None,
+            to_row_dict_func: Callable[[ColumnModelT], dict[str, JsonScalar]] | None = None,
         ):
+            new_cols = set()
+
             def _init_col(
-                    content: dict[str, list[JsonScalar]],
-                    pyd_model: type[pyd.BaseModel],
-                    key: str,
-                    col_len: int = len(input_model),
+                content: dict[str, ColumnModelT],
+                pyd_model: type[pyd.BaseModel],
+                key: str,
             ) -> None:
+                if key in new_cols:
+                    return
+
+                col_len: int = len(input_model)
+                # if key not in content:
                 content[key] = [pyd_model.__fields__[key].get_default()] * col_len
+                # else:
+                #     assert len(content[key]) == col_len, \
+                #         (f'Incorrect number of rows in {key} column: '
+                #          f'{len(content[key])} != {col_len}')
+                #     content[key] = [_ for _ in content[key]]
+
+                new_cols.add(key)
 
             content = output_model.content
+            # content = output_model
             for key, field in pyd_model.__fields__.items():
                 if field.required and key not in content:
                     _init_col(content, pyd_model, key)
 
             for i, row in enumerate(input_model):
-                values, _fields_set, error = pyd.validate_model(
-                    pyd_model,
-                    to_row_dict_func(row) if to_row_dict_func else row,
-                )
+                row_dict = to_row_dict_func(row) if to_row_dict_func else row
+                values, _fields_set, error = pyd.validate_model(pyd_model, row_dict)
                 if error:
                     raise error
-                for key, val in values.items():
+
+                for key, validated_val in values.items():
                     if key not in content:
                         _init_col(content, pyd_model, key)
 
-                    content[key][i] = val
+                    if key in new_cols:
+                        is_changed_val = True
+                    else:
+                        is_changed_val = row_dict[key] != validated_val
+                        # else:
+                        #     is_changed_val = True
+
+                    if is_changed_val:
+                        try:
+                            _, prepared_val = prepare_value_for_validation_if_dataset_or_model(
+                                validated_val)
+                            content[key][i] = prepared_val
+                        except (TypeError, AssertionError, ValueError, ValidationError):
+                            _init_col(content, pyd_model, key)
+                            content[key][i] = prepared_val
+            output_model.validate_content()
 
         @override
         @classmethod
@@ -670,9 +720,10 @@ else:
             cls,
             pyd_model: type[pyd.BaseModel],
             data: RowWiseTableModel,
+            data_type: type[_DataWithColNamesModelT],
             header_names: tuple[str, ...],
         ) -> pyd.BaseModel | ColumnWiseTableWithColNamesModel:
-            output = ColumnWiseTableWithColNamesModel()
+            output = data_type()
             cls._validate_over_all_rows(
                 input_model=data,
                 output_model=output,
