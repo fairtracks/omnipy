@@ -504,7 +504,7 @@ class Model(  # type: ignore[misc]
         if ROOT_KEY in super_kwargs:
             try:
                 dataset_or_model_as_input, value = \
-                    self._prepare_value_for_validation_if_dataset_or_model(super_kwargs[ROOT_KEY])
+                    prepare_value_for_validation_if_dataset_or_model(super_kwargs[ROOT_KEY])
             except Exception as exc:
                 val_exc = ValueError(f'Failed to prepare value for validation: {exc}')
                 raise ValidationError(
@@ -537,18 +537,6 @@ class Model(  # type: ignore[misc]
     def _secondary_validation_from_data(self, super_kwargs):
         super().__init__()
         self.from_data(super_kwargs[ROOT_KEY])
-
-    def _prepare_value_for_validation_if_dataset_or_model(
-        self,
-        value: object,
-    ) -> tuple[bool, object]:
-        if is_dataset_instance(value):
-            return True, value.to_data()
-        if is_model_instance(value):
-            return True, value.to_data()
-        elif is_non_omnipy_pydantic_model(value):
-            return True, cast(pyd.BaseModel, value).dict(by_alias=True)
-        return False, value
 
     def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
         ...
@@ -815,7 +803,7 @@ class Model(  # type: ignore[misc]
         self,
         value: object,
     ) -> _RootT:
-        _, value = self._prepare_value_for_validation_if_dataset_or_model(value)
+        _, value = prepare_value_for_validation_if_dataset_or_model(value)
 
         values, _, validation_error = pyd.validate_model(self.__class__, {ROOT_KEY: value})
         if validation_error:
@@ -1199,7 +1187,7 @@ class Model(  # type: ignore[misc]
 
             if name in ['__setitem__', '__setattr__']:
                 key, value = args
-                _, value = self._prepare_value_for_validation_if_dataset_or_model(value)
+                _, value = prepare_value_for_validation_if_dataset_or_model(value)
                 args = (key, value)
 
                 self_convert_args_if_failure = False
@@ -1474,6 +1462,16 @@ class Model(  # type: ignore[misc]
 
     def __repr_args__(self):
         return [(None, self.content)]
+
+
+def prepare_value_for_validation_if_dataset_or_model(value: object,) -> tuple[bool, object]:
+    if is_dataset_instance(value):
+        return True, value.to_data()
+    if is_model_instance(value):
+        return True, value.to_data()
+    elif is_non_omnipy_pydantic_model(value):
+        return True, cast(pyd.BaseModel, value).dict(by_alias=True)
+    return False, value
 
 
 def is_model_instance(__obj: object) -> 'TypeIs[Model]':
