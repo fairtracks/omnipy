@@ -1207,7 +1207,15 @@ class Model(  # type: ignore[misc]
             if name == '__hash__' and method is None:
                 raise TypeError(f'unhashable type: {self.__class__.__name__}')
 
-            return self._call_method_with_unconverted_args_first(method, *args, **kwargs)
+            if name in ['__setitem__', '__setattr__']:
+                key, value = args
+                _, value = self._prepare_value_for_validation_if_dataset_or_model(value)
+                args = (key, value)
+
+                self_convert_args_if_failure = False
+            else:
+                self_convert_args_if_failure = True
+            return self._call_method(method, self_convert_args_if_failure, *args, **kwargs)
 
     def _call_single_arg_method_with_model_converted_other_first(
         self,
@@ -1240,30 +1248,40 @@ class Model(  # type: ignore[misc]
         except TypeError:
             return NotImplemented
 
-    def _call_method_with_unconverted_args_first(
+    def _call_method(
         self,
         method: Callable,
+        self_convert_args_if_failure: bool,
         *args: object,
         **kwargs: object,
     ):
-        try:
-            with hold_and_reset_prev_attrib_value(
-                    self.config.model,
-                    'dynamically_convert_elements_to_models',
-            ):
-                self.config.model.dynamically_convert_elements_to_models = False
+        with hold_and_reset_prev_attrib_value(
+                self.config.model,
+                'dynamically_convert_elements_to_models',
+        ):
+            self.config.model.dynamically_convert_elements_to_models = False
+
+            try:
                 ret = method(*args, **kwargs)
-        except TypeError as type_exc:
-            try:
-                ret = self._call_method_with_model_converted_args(method, *args, **kwargs)
-            except ValidationError:
-                raise type_exc
-        if ret is NotImplemented:
-            try:
-                ret = self._call_method_with_model_converted_args(method, *args, **kwargs)
-            except ValidationError:
-                pass
-        return ret
+                # TODO: Do not call methods with model_converted_args where
+                #       it does not make sense, e.g. by adding a field
+                #       possibly_self_type_as_input in `MethodInfo`
+            except TypeError as type_exc:
+                if not self_convert_args_if_failure:
+                    raise
+                try:
+                    ret = self._call_method_with_model_converted_args(method, *args, **kwargs)
+                except ValidationError:
+                    raise type_exc
+
+            if ret is NotImplemented:
+                if self_convert_args_if_failure:
+                    try:
+                        ret = self._call_method_with_model_converted_args(method, *args, **kwargs)
+                    except ValidationError:
+                        pass
+
+            return ret
 
     def _call_method_with_model_converted_args(
         self,

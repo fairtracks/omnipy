@@ -5,6 +5,7 @@ from typing import Generic, Iterator
 from typing_extensions import TypeVar
 
 from omnipy.shared.protocols._collections_abc import IsDictItems, IsDictKeys, IsDictValues
+import omnipy.util.pydantic as pyd
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -95,3 +96,17 @@ class MyPath():
 
     def __truediv__(self, append_path: str) -> 'MyPath':
         return MyPath(f'{self._path}/{append_path}')
+
+
+class FloatHolder(pyd.BaseModel):
+    value: float = 0.0
+
+    class Config:
+        validate_assignment = True
+
+
+class FloatDictHolder(pyd.BaseModel):
+    value: dict[str, float] = {}
+
+    class Config:
+        validate_assignment = True

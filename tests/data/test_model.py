@@ -37,6 +37,7 @@ from omnipy.util.setdeque import SetDeque
 
 from ..helpers.functions import assert_model, assert_val
 from ..helpers.protocols import AssertModelOrValFunc
+from .cases.model_special_methods import ModelValueAssignmentSpec
 from .helpers.classes import MyDict, MyFloatObject, MyList, MyNumberBase, MyPath, MyStrKeyDict
 from .helpers.models import (CBA,
                              DefaultStrModel,
@@ -126,6 +127,36 @@ def test_init_converting_dataset_as_input() -> None:
     dataset_of_float_objs = Dataset[Model[MyFloatObjModel]](
         a=MyFloatObject(int_part=4, float_part=0.5))
     assert Model[dict[str, float]](dataset_of_float_objs).to_data() == {'a': 4.5}
+
+
+@pc.parametrize_with_cases(
+    'case',
+    cases='.cases.model_special_methods',
+)
+def test_mimic_setitem_converts_dataset_and_model_values_before_validation(
+        case: ModelValueAssignmentSpec) -> None:
+    container_model = case.setitem_target_factory()
+    container_model['a'] = case.value_factory()  # type: ignore[index]
+
+    assert container_model.to_data() == {'a': case.expected_value}
+
+    if case.forbidden_key is not None:
+        assert case.forbidden_key not in cast(dict[str, object], container_model.to_data()['a'])
+
+
+@pc.parametrize_with_cases(
+    'case',
+    cases='.cases.model_special_methods',
+)
+def test_mimic_setattr_converts_dataset_and_model_values_before_validation(
+        case: ModelValueAssignmentSpec) -> None:
+    holder_model = case.setattr_target_factory()
+    holder_model.value = case.value_factory()  # type: ignore[assignment]
+
+    assert holder_model.to_data() == {'value': case.expected_value}
+
+    if case.forbidden_key is not None:
+        assert case.forbidden_key not in cast(dict[str, object], holder_model.to_data()['value'])
 
 
 def test_error_init() -> None:
