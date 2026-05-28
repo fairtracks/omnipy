@@ -19,6 +19,7 @@ from omnipy.shared.exceptions import AssumedToBeImplementedException
 from omnipy.shared.protocols._typeshed import (ReadableBuffer,
                                                SupportsGetItem,
                                                SupportsKeysAndGetItem)
+from omnipy.shared.protocols.stdlib_ext import IsItemSequenceLike
 
 # Note: importing SupportsKeysAndGetItem from _typeshed instead of the
 #       local copy causes basedpyright to enter an infinite loop.
@@ -48,10 +49,10 @@ class IsHashable(Protocol):
 
 
 # class Sequence(Reversible[_T_co], Collection[_T_co]):
-class IsSequenceNotStrBytes(Reversible[_T_co], Collection[_T_co], Protocol[_T_co]):
+class IsItemSequence(Reversible[_T_co], Collection[_T_co], Protocol[_T_co]):
     """Protocol with the same interface as the abstract class `typing.Sequence`.
 
-    Note that with no custom handling, as is typically be done in a type
+    Note that with no custom handling, as is typically done in a type
     checker, the `string`, `bytes`, and `bytearray` types will not be
     considered Sequences by this protocol, due to differences in the
     `__contains__` method.
@@ -64,16 +65,16 @@ class IsSequenceNotStrBytes(Reversible[_T_co], Collection[_T_co], Protocol[_T_co
     @overload
     # @abstractmethod
     # def __getitem__(self, index: slice[int | None], /) -> Sequence[_T_co]:
-    def __getitem__(self, index: slice, /) -> IsSequenceNotStrBytes[_T_co]:
+    def __getitem__(self, index: slice, /) -> IsItemSequence[_T_co]:
         raise AssumedToBeImplementedException
 
-    def __getitem__(self, index: int | slice, /) -> _T_co | IsSequenceNotStrBytes[_T_co]:
+    def __getitem__(self, index: int | slice, /) -> _T_co | IsItemSequence[_T_co]:
         raise AssumedToBeImplementedException
 
     # Mixin methods
     # def index(self, value: Any, start: int = 0, stop: int = ..., /) -> int:
 
-    # Omnipy: start and stop removed to support range as IsSequenceNotStrBytes
+    # Omnipy: start and stop removed to support range as IsItemSequence
     def index(self, value: Any, /) -> int:
         """
         S.index(value, [start, [stop]]) -> integer -- return first index of value.
@@ -89,9 +90,6 @@ class IsSequenceNotStrBytes(Reversible[_T_co], Collection[_T_co], Protocol[_T_co
         """
         raise AssumedToBeImplementedException
 
-    def __contains__(self, value: object, /) -> bool:
-        raise AssumedToBeImplementedException
-
     def __iter__(self) -> Iterator[_T_co]:
         raise AssumedToBeImplementedException
 
@@ -100,7 +98,7 @@ class IsSequenceNotStrBytes(Reversible[_T_co], Collection[_T_co], Protocol[_T_co
 
 
 # class MutableSequence(Sequence[_T]):
-class IsMutableSequence(IsSequenceNotStrBytes[_T], Protocol[_T]):
+class IsMutableSequence(IsItemSequence[_T], Protocol[_T]):
     """Protocol with the same interface as the abstract class `typing.MutableSequence`.
     """
 
@@ -194,6 +192,11 @@ class IsMutableSequence(IsSequenceNotStrBytes[_T], Protocol[_T]):
 
     def __iadd__(self, values: Iterable[_T], /) -> Self:
         raise AssumedToBeImplementedException
+
+
+# Backward-compatible aliases kept during protocol rename migration.
+IsSequenceNotStrBytes = IsItemSequence
+IsLightSequenceNotStrBytes = IsItemSequenceLike
 
 
 # class AbstractSet(Collection[_T_co]):
