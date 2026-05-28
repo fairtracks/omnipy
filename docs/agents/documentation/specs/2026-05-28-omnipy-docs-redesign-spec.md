@@ -129,7 +129,8 @@ Docs should **not** pitch Omnipy as “nicer loops”; they should pitch Omnipy 
    - Tutorial 1: Continuous validation & rollback (interactive safety)
    - Tutorial 2: JSON → tables (nested → analysis-ready)
    - Tutorial 3: Batch processing with Dataset (no for-loops)
-   - Tutorial 4: Resilient API fetching (rate limits, retries)
+   - Tutorial 4: Resilient API fetching (retries/backoff, HTTP status handling, rate-limiting
+     session wiring; pagination planned/user-land loop)
    - Tutorial 5: Orchestrate with Prefect (scale-up path)
 3. **How-to guides** (goal-oriented, reference-lite)
    - Define Models
@@ -137,7 +138,7 @@ Docs should **not** pitch Omnipy as “nicer loops”; they should pitch Omnipy 
    - Conversions with `.to()`
    - Working with Datasets (hierarchies, blueprints)
    - Serialization & persistence (what exists today)
-   - Display/visualization (peek/full/browse/docs output)
+   - Display/visualization (peek/full/json/browse/_docs() output)
 4. **Feature overview** (short pages, each with “why + example + output”)
    - Continuous validation & type mimicking
    - Snapshots & rollbacks
@@ -151,7 +152,7 @@ Docs should **not** pitch Omnipy as “nicer loops”; they should pitch Omnipy 
    - Omnipy mental model (Model/Dataset/Task/Flow)
    - Positioning & comparisons (optional, careful tone)
 6. **Reference (non-API)**
-   - Configuration (runtime config variants, interactive mode)
+   - Configuration (runtime config variants, interactive flag)
    - Glossary
    - FAQ / Troubleshooting
 7. **Contributing**
@@ -186,7 +187,9 @@ In the first screenful, answer:
 
 1. **One-sentence value proposition** (missing middle):
    - “Typed dataflows for messy real-world data — continuous validation, safe interactive
-     manipulation, and one-line conversions from nested JSON to tables.”
+      manipulation, and one-line conversions from nested JSON to tables.”
+   - Guardrail note (required): caveat that deep JSON flattening works for many common patterns,
+     but has known limits; link to Tutorial 2 for current boundaries.
 2. **3-bullet “why you care”** (fast):
    - Keep data valid while you edit it (automatic rollback)
    - Convert complex formats declaratively (`.to(...)`)
@@ -198,6 +201,7 @@ In the first screenful, answer:
    - “Tutorials”
 5. **A small “Compare” strip** (one paragraph) addressing the devil’s advocate:
    - When `requests+pandas+pydantic` is enough vs when Omnipy pays off.
+   - Tone rule: factual and example-first; no dunking on alternatives.
 
 ### Output-formatting showcase (mandatory)
 
@@ -215,6 +219,8 @@ On the landing page, reserve a **small, non-themed** placeholder section:
 - “Visual metaphors and story mode (coming later)”
 - Link to a future page (or stub) explaining that the doc theme may adopt narrative characters and
   comic-style callouts in v2.
+- Strictness rule: keep this placeholder to 1–2 sentences, use strictly neutral language (no hero
+  names, no comic voice), and link to the future page stub.
 
 This satisfies the request to “suggest how the front page can be edited later” without actually
 introducing the superhero voice into v1.
@@ -225,6 +231,10 @@ introducing the superhero voice into v1.
 ### Tutorial design principles
 
 - Each tutorial should be runnable and end with a tangible artifact:
+  - Runnable definition: execute through `markdown-exec` during `mkdocs build` in CI to prevent
+    docs-to-code drift.
+  - Fallback rule: when `markdown-exec` cannot handle the example (e.g. async code), provide a
+    copy/paste-runnable example plus a clear “Try it in a notebook” callout.
   - a validated model instance,
   - a dataset mapping result,
   - a table, or
@@ -240,7 +250,7 @@ introducing the superhero voice into v1.
 
 1. **Tutorial: Interactive safety (continuous validation + rollback)**
    - Story: you’re exploring data in a notebook; you make a mistake; Omnipy saves state.
-   - Demonstrates: type mimicking, continuous validation, snapshots/rollbacks, interactive_mode.
+   - Demonstrates: type mimicking, continuous validation, snapshots/rollbacks, `interactive`.
    - Must show: error + rollback + continuing work without re-parsing.
 
 2. **Tutorial: Nested JSON → analysis-ready tables**
@@ -255,10 +265,13 @@ introducing the superhero voice into v1.
    - Must show: “one line replaces loop” while keeping type guarantees.
 
 4. **Tutorial: Resilient API retrieval**
-   - Story: rate limits + pagination + intermittent failures.
-   - Demonstrates: Remote component / retry semantics (as implemented), and how outputs become
-     typed Models/Datasets.
+   - Story: intermittent failures + retry/backoff + status handling under realistic API usage.
+   - Demonstrates: Remote component retry semantics as implemented today (`retry_attempts`,
+     `retry_http_statuses`, `retry_backoff_strategy`), and how to pass a rate-limiting session
+     (`RateLimitingClientSession`) while producing typed Models/Datasets.
    - Must show: configuration knobs and reproducible behavior.
+   - Pagination: explicitly out of current built-ins; document as either **Planned** or a
+     user-land loop pattern.
 
 5. **Tutorial: Scale-up path with Prefect (optional v1, can be v1.1)**
    - Story: you have a working interactive pipeline; now run at scale.
@@ -271,7 +284,8 @@ Use a consistent callout style (e.g. “Planned”) for roadmap items:
 
 - simpler converter registration API (roadmap blocker),
 - serializer rewrite (roadmap blocker),
-- improved table visualization (roadmap item).
+- improved table visualization (roadmap item),
+- built-in pagination ergonomics for Remote workflows (currently user-land).
 
 Rule: aspirational notes must include the label **Planned** and should not include API signatures
 unless they exist.
@@ -297,9 +311,16 @@ Each feature page should follow a consistent template to stay skimmable and avoi
 - Snapshots & rollback (interactive)
 - Declarative conversions (`.to()`)
 - Dataset batch processing + hierarchies
-- Visualization/display primitives (peek/full/browse/json)
+- Visualization/display primitives (peek/full/json/browse/_docs())
 - Components catalog (high-level)
 - Engines & orchestration (high-level, honest)
+
+Components catalog scope rule:
+
+- v1 catalog page lists only currently bundled components: **General, JSON, Nested, Raw, Remote,
+  Tables**.
+- Planned plugins/extensions (e.g. ISA, SeqCol, Pandas extraction path) must appear in a separate
+  section labeled **Planned**.
 
 
 ## 7. Superhero integration plan (v2+; not in v1)
@@ -337,6 +358,37 @@ documentation. The plan is to keep v1 neutral and optionally layer narrative ele
 - Create “Start here” + “10-minute Quickstart.”
 - Deliver Tutorials 1–3 (interactive safety, JSON→tables, Dataset batch).
 
+#### Phase 0 explicit deliverables (required)
+
+1. `docs/index.md` — New landing page
+   - Content: value proposition, 3-bullet why-care, one compelling code snippet, two CTAs,
+     compare strip.
+   - Minimum acceptance: includes an output-rendering example, includes the JSON-flattening
+     caveat with link to Tutorial 2, and includes a minimal non-themed v2 placeholder.
+2. `docs/start/install.md` — Installation guide
+   - Content: install instructions extracted/updated from existing readme material.
+   - Minimum acceptance: clean install path for a new user and link forward to Quickstart.
+3. `docs/start/quickstart.md` — 10-minute Quickstart tutorial
+   - Content: first end-to-end success path.
+   - Minimum acceptance: copy/paste-runnable path to a visible result and “what next” links.
+4. `docs/tutorials/01-interactive-safety.md` — Tutorial 1
+   - Content: continuous validation + rollback with `interactive` behavior.
+   - Minimum acceptance: shows an error, rollback, and continued work.
+5. `docs/tutorials/02-json-to-tables.md` — Tutorial 2
+   - Content: nested JSON to analysis-ready structures plus current limits.
+   - Minimum acceptance: before/after display output and explicit boundary notes.
+6. `docs/tutorials/03-dataset-batch.md` — Tutorial 3
+   - Content: Dataset mapping/batch semantics replacing explicit loops.
+   - Minimum acceptance: one transformation applied across a collection with typed guarantees.
+7. `mkdocs.yml` (update) — Phase 0 nav alignment
+   - Content: navigation reflects Phase 0 IA and links to new Start/Tutorial pages.
+   - Minimum acceptance: local build succeeds and nav paths resolve.
+8. Deferred explicitly in Phase 0:
+   - Tutorials 4–5,
+   - Feature overview pages,
+   - How-to guides,
+   - Learn pages.
+
 ### Phase 1 (complete the core story)
 
 - Add Feature overview pages using the template.
@@ -366,13 +418,18 @@ Based on current docs and roadmap framing, these areas appear under-documented f
 3. **Display/visualization**
    - `peek/full/json/browse` and `_docs()` output formatting; how to use effectively in notebooks.
 4. **Remote/API component**
-   - rate limiting, retries, pagination, and typed outputs.
+   - rate limiting, retries/backoff, status handling, and typed outputs.
+   - pagination must be documented as **Planned** or user-land loop guidance (not built-in).
 5. **Engines & orchestration**
    - local vs Prefect; what “engine” means for the user.
 6. **Serialization/persistence**
    - current state (honest), what formats are supported, and roadmap notes (serializer rewrite).
 7. **Configuration model**
-   - interactive mode, runtime config, and how config affects safety/behavior.
+   - `interactive` flag, runtime config, and how config affects safety/behavior.
+   - Correct access paths to document explicitly:
+     - `Model.config.model.interactive = False`
+     - `runtime.config.data.model.interactive = False`
+   - Existing docs using `interactive_mode` are incorrect and should be cleaned up.
 8. **Components catalog discoverability**
    - a user-facing index: what components exist and what problem each solves.
 
@@ -391,8 +448,8 @@ Based on current docs and roadmap framing, these areas appear under-documented f
   a polished guide; keep it either advanced or planned.
 - Serializer mapping is slated for rewrite → document current behavior conservatively and provide a
   “Known limitations” section.
-- Better table visualization is a must-have → emphasize current display capabilities, but reserve a
-  future section for improved interactive tables.
+- Better table visualization is a roadmap must-have, but if not yet shipped it must be labeled
+  **Planned** in docs while emphasizing current display capabilities.
 
 
 ## 11. Implementation notes for the doc overhaul (non-binding)
@@ -400,8 +457,12 @@ Based on current docs and roadmap framing, these areas appear under-documented f
 This spec does not prescribe implementation steps, but a few constraints matter for design:
 
 - MkDocs `nav` should be reorganized to match the IA.
-- Existing pages can be refactored/split; keep stable URLs where possible (or provide redirects if
-  supported).
+- IA/redirect constraint:
+  - MkDocs currently uses both hardcoded `nav:` and `literate-nav` (via `SUMMARY.md`), and no
+    redirects plugin is in use.
+  - Old pages should be preserved as thin redirect stubs.
+  - No redirect mechanism/plugin will be added as part of this redesign.
+  - Old URL compatibility is best-effort.
 - Prefer short pages with cross-links over long monoliths.
 
 
