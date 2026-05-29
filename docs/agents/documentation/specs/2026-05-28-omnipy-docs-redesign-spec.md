@@ -10,7 +10,8 @@ Date: 2026-05-28
   - practical/tutorial-driven,
   - convincing in <3 seconds,
   - useful for both **developers** and **convenience-oriented users** (e.g. researchers), and
-  - aligned with what Omnipy can do **today**, while clearly signposting “coming soon” items.
+  - aligned with what Omnipy can do **today**, while clearly signposting **Preview** and
+    **Planned** items.
 - Propose a new **information architecture (IA)** (site navigation and page ordering).
 - Specify a **front page** (landing page) structure that sells the “missing middle” value quickly.
 - Define a **tutorial program** (what tutorials exist, what each demonstrates, prerequisites, and
@@ -139,7 +140,7 @@ Instructor/Marvin/PydanticAI; instead, it complements them.
 1. **Two on-ramps:** “I want to try it now” vs “I want to understand it.”
 2. **Tutorial-first:** task-oriented pages before conceptual deep dives.
 3. **Feature pages are “how it helps + example + output + gotchas”**, not encyclopedic.
-4. **Roadmap-awareness:** “Now” vs “Next” sections where useful, clearly labeled.
+4. **Roadmap-awareness:** use **Now / Preview / Planned** labels consistently where useful.
 
 ### Proposed top-level navigation
 
@@ -157,7 +158,7 @@ Instructor/Marvin/PydanticAI; instead, it complements them.
    - Tutorial 4: Build a dataflow (Task → Flow → Engine)
    - Tutorial 5: Domain tabular formats (e.g. BED/GFF) via model specs
    - Tutorial 6: Resilient API fetching (retries/backoff, HTTP status handling, rate-limiting
-     session wiring; pagination planned/user-land loop)
+     session wiring; pagination **Planned**/user-land loop)
    - Tutorial 7: AI-safe boundaries (clean LLM outputs into typed Models + tables)
    - Tutorial 8: Orchestrate with Prefect (scale-up path)
 3. **How-to guides** (goal-oriented, reference-lite)
@@ -178,10 +179,10 @@ Instructor/Marvin/PydanticAI; instead, it complements them.
      - Modifiers (task/flow/job modifiers)
      - Engines (Local vs Prefect) and running flows
      - Mapping Tasks/Flows over Datasets (bridge patterns)
-   - **File & format parsing**
-     - Domain tabular formats (row-based parsing): solid
-     - Column-based tabular parsing/validation: **Maturing**
-     - Notes on planned format support (Excel/Parquet/Polars/etc.)
+    - **File & format parsing**
+      - Domain tabular formats (row-based parsing): **Now**
+      - Column-based tabular parsing/validation: **Preview**
+      - Notes on **Planned** format support (Excel/Parquet/Polars/etc.)
    - Serialization & persistence (what exists today)
 4. **Feature overview** (short pages, each with “why + example + output”)
    - Continuous validation & type mimicking
@@ -191,13 +192,13 @@ Instructor/Marvin/PydanticAI; instead, it complements them.
    - Dataflows: Tasks/Flows/Modifiers (architectural overview)
    - Components catalog (General/JSON/Remote/Tables/etc.)
    - Engines (local + Prefect integration)
-   - Tabular schemas: Omnipy vs Pandera (capabilities + limits; **Maturing**)
+   - Tabular schemas: Omnipy vs Pandera (capabilities + limits; **Preview**)
 5. **Learn (Background)**
    - Omnipy mental model (Model/Dataset/Task/Flow)
    - Parse, don’t validate (philosophy)
    - Python typing (shortened; link out)
    - Positioning & comparisons (optional, careful tone)
-   - Visual metaphors and story mode (planned)
+   - Visual metaphors and story mode (**Planned**)
 6. **Reference (non-API)**
    - Configuration (runtime config variants, interactive flag)
    - Glossary
@@ -322,7 +323,7 @@ introducing the superhero voice into v1.
    - Story: life science formats are custom and plentiful; you want a robust parsing language.
    - Demonstrates: domain-specific tabular parsing using Model specs + row-based parsing.
    - Must show: a minimal BED- or GFF-like example and a typed output that can be transformed.
-   - Performance note: acknowledge row-based parsing is solid but can be slightly slow.
+   - Performance note: acknowledge row-based parsing is **Now** but can be slightly slow.
 
 6. **Tutorial: Resilient API retrieval**
    - Story: intermittent failures + retry/backoff + status handling under realistic API usage.
@@ -388,9 +389,9 @@ Recommended (v1) feature pages (not all required for Phase 0):
 
 - Pydantic compatibility and Omnipy extensions (trust-builder)
 - ChainX: chained model transformations (recipe-driven)
-- Domain tabular parsing (row-based): solid
-- Column-based tabular parsing/validation: **Maturing**
-- Tabular schemas: Omnipy vs Pandera: **Maturing**
+- Domain tabular parsing (row-based): **Now**
+- Column-based tabular parsing/validation: **Preview**
+- Tabular schemas: Omnipy vs Pandera: **Preview**
 
 Components catalog scope rule:
 
@@ -430,7 +431,7 @@ Future narrative emphasis note:
 - Keep landing-page sections modular (distinct include blocks / partials) so a future commit can
   swap in “hero cards” without rewriting the entire page.
 - Create a single future-facing page stub in Learn:
-  - “Visual metaphors and story mode (planned)” linking to the roster documents.
+   - “Visual metaphors and story mode (**Planned**)” linking to the roster documents.
 
 
 ## 8. Priorities and phasing
@@ -464,9 +465,16 @@ Future narrative emphasis note:
    - Content: Dataset mapping/batch semantics replacing explicit loops.
    - Minimum acceptance: one transformation applied across a collection with typed guarantees.
 7. `mkdocs.yml` (update) — Phase 0 nav alignment
-   - Content: navigation reflects Phase 0 IA and links to new Start/Tutorial pages.
-   - Minimum acceptance: local build succeeds and nav paths resolve.
-8. Deferred explicitly in Phase 0:
+   - Content: wire the full IA with stub/placeholder pages for deferred sections (not just Phase 0
+     pages).
+   - Minimum acceptance: local build succeeds, nav paths resolve, and deferred sections have
+     placeholder targets.
+8. Tutorial execution enforcement in CI (Phase 0 requirement)
+   - Content: all tutorials must execute through `markdown-exec` during `mkdocs build` in CI.
+   - Fallback rule: async examples that cannot run through `markdown-exec` must be
+     copy/paste-runnable and include a clear notebook callout.
+   - Minimum acceptance: tutorial code execution is CI-verified via `mkdocs build`.
+9. Deferred explicitly in Phase 0:
    - Tutorials 4–8,
    - Feature overview pages,
    - How-to guides,
@@ -477,7 +485,7 @@ Future narrative emphasis note:
 - Add Feature overview pages using the template.
 - Add How-to guides for Models, `.to()`, Datasets, display.
 - Add Dataflows (Compute) docs: Tasks/Flows/Modifiers + local engine runnable path.
-- Add domain formats tutorial (BED/GFF) and file/format parsing guide.
+- Add Tutorial 5 (domain formats, BED/GFF) and file/format parsing guide.
 - Add Pydantic compatibility trust-builder page and ChainX/parametrized model recipes.
 - Add “Compare / When Omnipy vs alternatives” page (careful, factual tone).
 
@@ -486,8 +494,8 @@ Future narrative emphasis note:
 - Prefect tutorial and orchestration overview.
 - Components catalog expansion.
 - Troubleshooting/FAQ.
-- AI-safe boundaries tutorial and template-style guide (if not done in Phase 1).
-- Column-based tabular parsing/validation docs (**Maturing**) and a factual Omnipy vs Pandera page.
+- Add Tutorial 7 (AI-safe boundaries) and a template-style guide.
+- Column-based tabular parsing/validation docs (**Preview**) and a factual Omnipy vs Pandera page.
 
 ### Phase 3 (v2 doc experience)
 
@@ -527,7 +535,7 @@ Based on current docs and roadmap framing, these areas appear under-documented f
 10. **Domain-specific formats & tabular parsing**
    - BED/GFF style parsers as first-audience, ELIXIR-relevant examples.
 
-11. **Column-based tabular parsing/validation (Pandera-like)** — **Maturing**
+11. **Column-based tabular parsing/validation (Pandera-like)** — **Preview**
    - Clarify what exists, what is experimental, and what it enables (including transformation
      patterns that are awkward in pure “validation-only” libraries).
 
@@ -544,15 +552,15 @@ Based on current docs and roadmap framing, these areas appear under-documented f
 ### Documenting what exists vs what’s planned
 
 - **Now:** Document current public APIs and behaviors with runnable examples.
-- **Next (Planned):** Mention roadmap items only as “Planned” callouts and describe user value,
-  not speculative signatures.
-- **Maturing:** For features that exist and are useful but still under active refinement, label
-  them **Maturing** and include explicit scope and limits.
+- **Preview:** For features that are implemented and usable today but still under active
+  refinement, label them **Preview** and include explicit scope and limits.
+- **Planned:** Mention roadmap items only as “Planned” callouts and describe user value, not
+  speculative signatures.
 
 ### Roadmap-aware caution flags (from v1 roadmap)
 
 - Converter registration API is not yet final/user-friendly → avoid “how to extend conversions” as
-  a polished guide; keep it either advanced or planned.
+  a polished guide; keep it either advanced or **Planned**.
 - Serializer mapping is slated for rewrite → document current behavior conservatively and provide a
   “Known limitations” section.
 - Better table visualization is a roadmap must-have, but if not yet shipped it must be labeled
@@ -563,6 +571,14 @@ Pydantic v2 transition note:
 - Assume Pydantic v2 support is a target and in active progress. Docs should avoid locking into
   version-specific details that are likely to change during the transition.
 
+### Maturity label definitions
+
+> **Now** = stable, supported, runnable examples — APIs are settled  \
+> **Preview** = implemented and usable today, but still under active refinement — docs must state
+> scope/limits, APIs may shift  \
+> **Planned** = not yet implemented or publicly usable — describe user value only, no speculative
+> signatures
+
 
 ## 11. Implementation notes for the doc overhaul (non-binding)
 
@@ -572,8 +588,9 @@ This spec does not prescribe implementation steps, but a few constraints matter 
 - IA/redirect constraint:
   - MkDocs currently uses both hardcoded `nav:` and `literate-nav` (via `SUMMARY.md`), and no
     redirects plugin is in use.
-  - Old pages should be preserved as thin redirect stubs.
-  - No redirect mechanism/plugin will be added as part of this redesign.
+  - No HTTP redirects mechanism/plugin will be added as part of this redesign.
+  - Old moved pages should be preserved as manual notice stubs with text in the form:
+    “This page has moved to <new page>”, plus a direct link to the new page.
   - Old URL compatibility is best-effort.
 - Prefer short pages with cross-links over long monoliths.
 
