@@ -51,7 +51,8 @@ Omnipy models continuously validate data and type-mimic the wrapped Python type.
 Choose based on trade-offs, not environment:
 
 - `runtime.config.data.model.interactive = True`: snapshot + rollback robustness.
-- `runtime.config.data.model.interactive = False`: lower memory overhead, but less recoverability.
+- `runtime.config.data.model.interactive = False`: lower memory overhead and raw write speed, but
+  no rollback after validation errors.
 
 ```pycon exec="1" session="tutorial1" source="console"
 >>> runtime.config.data.model.interactive = False
@@ -63,6 +64,9 @@ Choose based on trade-offs, not environment:
 >>> fast_mode
 ```
 
+With `interactive=False`, Omnipy still raises a validation exception immediately, but the invalid
+value remains in the model state (`[10, 20, 30, 'VIP']`).
+
 ```pycon exec="1" session="tutorial1" result="console" html="true"
 >>> print(fast_mode._docs())
 ```
@@ -71,3 +75,12 @@ Choose based on trade-offs, not environment:
 
 - Continuous validation + type mimicking keep model edits safe.
 - Rollback behavior is controlled via `runtime.config.data.model.interactive`.
+
+## Common pitfalls
+
+- Assuming non-interactive mode is "strictly safer" because it still raises errors. It raises, but
+  it does not roll back invalid mutations.
+
+## Next steps
+
+- Continue with [Tutorial 2: Nested JSON to tables](02-json-to-tables.md).

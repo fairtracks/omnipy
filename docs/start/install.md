@@ -6,7 +6,17 @@ Install Omnipy in a Python environment and verify it is available.
 
 - Python **3.10–3.13**
 
-## Install with `uv`
+## Quick start install (`pip`)
+
+For a fast path to usage:
+
+```bash
+python -m pip install omnipy
+```
+
+## Development-style setup (`uv`)
+
+If you already use `uv` and virtual environments:
 
 ```bash
 uv venv

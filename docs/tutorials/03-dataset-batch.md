@@ -49,3 +49,18 @@ Start with Dataset + Model batch parsing, then apply transformations without exp
 ```
 
 You get batch behavior and hierarchy handling without writing explicit `for` loops.
+
+## What you learned
+
+- `Dataset[Model[int]](...)` parses and batches many values in one typed container.
+- `Dataset.do(...)` lets you apply per-item transforms without explicit loops.
+- Nested datasets can be transformed hierarchically while preserving structure.
+
+## Common pitfalls
+
+- Forgetting to convert values inside lambdas when needed. Use `int(value)` in mixed parsed inputs.
+
+## Next steps
+
+- Revisit [Tutorial 2: Nested JSON to tables](02-json-to-tables.md) and combine it with batch
+  transformations.

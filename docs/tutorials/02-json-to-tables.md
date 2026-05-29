@@ -74,4 +74,18 @@ Not supported in this conversion path:
 Flattening supports deeply nested structures where `pandas.json_normalize` often struggles, but it
 still has boundaries.
 
-See also: [Parse, don't validate](../learn/parse-dont-validate.md)
+See also: [Parse, don't validate](../parse_dont_validate.md)
+
+## What you learned
+
+- How to flatten nested JSON into related table datasets with `flatten_nested_json.run(...)`.
+- How to convert table-shaped results with `.to(PandasDataset)` and `.to(PandasModel)`.
+
+## Common pitfalls
+
+- Expecting one universal flat table for all nested inputs. Many payloads produce multiple related
+  tables (`items`, `items.meta`, `items.tags`, ...).
+
+## Next steps
+
+- Continue with [Tutorial 3: Dataset batch](03-dataset-batch.md).

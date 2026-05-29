@@ -4,6 +4,10 @@ site_description: Omnipy is a type-driven Python library for data conversion, pa
 repo_url: https://github.com/fairtracks/omnipy
 site_url: https://omnipy.readthedocs.io/
 
+exclude_docs: |
+  /agents/
+  /agents/**
+
 theme:
   name: material
   custom_dir: docs/overrides
@@ -58,60 +62,57 @@ nav:
       - '01. Interactive safety': tutorials/01-interactive-safety.md
       - '02. Nested JSON to tables': tutorials/02-json-to-tables.md
       - '03. Batch processing with Dataset': tutorials/03-dataset-batch.md
-      - '04. Build a dataflow (Task → Flow → Engine)': tutorials/04-compute-dataflow.md
-      - '05. Domain tabular formats (e.g. BED/GFF) via model specs': tutorials/05-domain-formats.md
-      - '06. Resilient API fetching': tutorials/06-resilient-api.md
-      - '07. AI-safe boundaries': tutorials/07-ai-boundaries.md
-      - '08. Orchestrate with Prefect (scale-up path)': tutorials/08-prefect-scale.md
-  - How-to guides:
+      - '04. Build a dataflow (Task → Flow → Engine) (stub)': tutorials/04-compute-dataflow.md
+      - '05. Domain tabular formats (stub)': tutorials/05-domain-formats.md
+      - '06. Resilient API fetching (stub)': tutorials/06-resilient-api.md
+      - '07. AI-safe boundaries (stub)': tutorials/07-ai-boundaries.md
+      - '08. Orchestrate with Prefect (stub)': tutorials/08-prefect-scale.md
+  - How-to Guides:
       - Models:
-          - Define Models: howto/models/define-models.md
-          - Parse strategies: howto/models/parse-strategies.md
-          - Conversions with .to(): howto/models/conversions.md
-          - Display and inspection: howto/models/display-inspection.md
-          - ChainX recipes: howto/models/chainx.md
-          - Parametrized models: howto/models/parametrized-models.md
-          - Complex models: howto/models/complex-models.md
+          - define-models: howto/models/define-models.md
+          - parse-strategies: howto/models/parse-strategies.md
+          - conversions: howto/models/conversions.md
+          - display-inspection: howto/models/display-inspection.md
+          - chainx: howto/models/chainx.md
+          - parametrized-models: howto/models/parametrized-models.md
+          - complex-models: howto/models/complex-models.md
       - Datasets:
-          - Dataset basics: howto/datasets/basics.md
-          - Hierarchies & blueprints: howto/datasets/hierarchies-blueprints.md
-          - Serialization & persistence: howto/datasets/serialization.md
-      - Dataflows (Compute):
-          - Tasks: howto/dataflows/tasks.md
-          - Flows: howto/dataflows/flows.md
-          - Running flows: howto/dataflows/running-flows.md
-          - Modifiers: howto/dataflows/modifiers.md
-          - Mapping Tasks/Flows over Datasets: howto/dataflows/mapping-over-datasets.md
-          - Engines overview: howto/dataflows/engines-overview.md
+          - basics: howto/datasets/basics.md
+          - hierarchies-blueprints: howto/datasets/hierarchies-blueprints.md
+          - serialization: howto/datasets/serialization.md
+      - Dataflows:
+          - tasks: howto/dataflows/tasks.md
+          - flows: howto/dataflows/flows.md
+          - running-flows: howto/dataflows/running-flows.md
+          - modifiers: howto/dataflows/modifiers.md
+          - mapping-over-datasets: howto/dataflows/mapping-over-datasets.md
+          - engines-overview: howto/dataflows/engines-overview.md
       - Components:
-          - Components catalog: howto/components/catalog.md
-          - JSON component: howto/components/json.md
-          - Tables component: howto/components/tables.md
-          - Remote component: howto/components/remote.md
-          - Domain formats component: howto/components/domain-formats.md
-  - Feature overview:
-      - Continuous validation & type mimicking: features/continuous-validation.md
-      - Snapshots & rollbacks: features/snapshots-rollbacks.md
-      - Declarative conversions (.to()): features/conversions.md
-      - Dataset batch + hierarchies: features/datasets.md
-      - 'Dataflows (Compute): Tasks/Flows/Modifiers': features/compute-dataflows.md
-      - Display & visualization: features/display.md
-      - Components catalog (General/JSON/Remote/Tables/etc.): features/components-catalog.md
-      - Engines (local + Prefect integration): features/engines.md
-      - 'Tabular schemas: Omnipy vs Pandera (Preview)': features/tabular-schemas-vs-pandera.md
+          - catalog: howto/components/catalog.md
+          - json: howto/components/json.md
+          - tables: howto/components/tables.md
+          - remote: howto/components/remote.md
+          - domain-formats: howto/components/domain-formats.md
+  - Feature Overview:
+      - continuous-validation: features/continuous-validation.md
+      - snapshots-rollbacks: features/snapshots-rollbacks.md
+      - declarative-conversions: features/conversions.md
+      - dataset-batch-hierarchies: features/datasets.md
+      - display-visualization: features/display.md
+      - components-catalog: features/components-catalog.md
+      - engines-orchestration: features/engines.md
   - Learn:
-      - Omnipy mental model (Model/Dataset/Task/Flow): learn/mental-model.md
-      - "Parse, don't validate": learn/parse-dont-validate.md
-      - Python typing: learn/python-typing.md
-      - Positioning & comparisons: learn/comparisons.md
-      - Visual metaphors and story mode (Planned): learn/visual-metaphors-story-mode.md
+      - mental-model: learn/mental-model.md
+      - parse-dont-validate: parse_dont_validate.md
+      - python-typing: python_typing.md
+      - comparisons: learn/comparisons.md
   - Reference:
-      - Configuration: reference/configuration.md
-      - Glossary: reference/glossary.md
-      - FAQ / Troubleshooting: reference/faq.md
+      - configuration: reference/configuration.md
+      - glossary: reference/glossary.md
+      - faq: reference/faq.md
   - Contributing:
-      - Contributing: contributing.md
-      - Documentation contribution: contributing/docs-guide.md
+      - contributing: contributing.md
+      - docs-guide: contributing/docs-guide.md
   - Release notes: release_notes.md
   - Code Reference: reference/
 

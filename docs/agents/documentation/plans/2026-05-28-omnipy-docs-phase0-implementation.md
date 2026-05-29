@@ -108,7 +108,7 @@ Expected: no unexpected modified tracked files. (Untracked files are OK, but sho
 
 When writing runnable examples later, include these 4 lines near the top of each tutorial’s session (so `markdown-exec` runs don’t create `outputs/`/`logs/`):
 
-```pycon exec="1" session="..."
+```python
 >>> from omnipy import runtime
 >>> runtime.config.root_log.log_to_stdout = False
 >>> runtime.config.root_log.log_to_stderr = False
@@ -546,7 +546,7 @@ and one‑line conversions from nested JSON to tables.
 
 ## One small example (with visible output)
 
-```pycon exec="1" session="landing" source="console"
+```python
 >>> from omnipy import Model, runtime
 >>> runtime.config.root_log.log_to_stdout = False
 >>> runtime.config.root_log.log_to_stderr = False
@@ -561,7 +561,7 @@ and one‑line conversions from nested JSON to tables.
 >>> ints
 ```
 
-```pycon exec="1" session="landing" result="console" html="true"
+```python
 >>> print(ints._docs())
 ```
 
@@ -682,7 +682,7 @@ Follow: [Install](install.md)
 
 ## 2) Parse messy input into a typed `Model`
 
-```pycon exec="1" session="quickstart" source="console"
+```python
 >>> from omnipy import Model, runtime
 >>> runtime.config.root_log.log_to_stdout = False
 >>> runtime.config.root_log.log_to_stderr = False
@@ -694,24 +694,24 @@ Follow: [Install](install.md)
 >>> ints
 ```
 
-```pycon exec="1" session="quickstart" result="console" html="true"
+```python
 >>> print(ints._docs())
 ```
 
 ## 3) Safe interactive edits (rollback on error)
 
-```pycon exec="1" session="quickstart" source="console"
+```python
 >>> try:
 ...     ints.append('oops')
 ... except Exception as err:
 ...     print(type(err).__name__)
 ```
 
-```pycon exec="1" session="quickstart" source="console"
+```python
 >>> ints
 ```
 
-```pycon exec="1" session="quickstart" result="console" html="true"
+```python
 >>> print(ints._docs())
 ```
 
@@ -719,7 +719,7 @@ Follow: [Install](install.md)
 
 This is **Preview**; the full story is in Tutorial 2.
 
-```pycon exec="1" session="quickstart" source="console"
+```python
 >>> from omnipy import JsonListOfDictsDataset, PandasDataset
 >>> nested = JsonListOfDictsDataset({'items': [
 ...   {'id': 'a', 'meta': {'x': 1, 'y': 2}},
@@ -728,22 +728,22 @@ This is **Preview**; the full story is in Tutorial 2.
 >>> nested
 ```
 
-```pycon exec="1" session="quickstart" result="console" html="true"
+```python
 >>> print(nested._docs())
 ```
 
-```pycon exec="1" session="quickstart" source="console"
+```python
 >>> pandas = nested.to(PandasDataset)
 >>> pandas
 ```
 
-```pycon exec="1" session="quickstart" result="console" html="true"
+```python
 >>> print(pandas._docs())
 ```
 
 ## 5) Batch processing with `Dataset` (no loops)
 
-```pycon exec="1" session="quickstart" source="console"
+```python
 >>> from omnipy import Dataset, TaskTemplate
 >>> @TaskTemplate(iterate_over_data_files=True)
 ... def inc(x: int) -> int:
@@ -808,7 +808,7 @@ After parsing, the Omnipy model also **type-mimics** the underlying Python type.
 
 ## Setup (silence logs + avoid output persistence)
 
-```pycon exec="1" session="t1" source="console"
+```python
 >>> from omnipy import Model, runtime
 >>> runtime.config.root_log.log_to_stdout = False
 >>> runtime.config.root_log.log_to_stderr = False
@@ -822,18 +822,18 @@ After parsing, the Omnipy model also **type-mimics** the underlying Python type.
 
 ## 1) Parse messy input (fun scenario: arcade ticket counts)
 
-```pycon exec="1" session="t1" source="console"
+```python
 >>> ticket_counts = Model[list[int]]((120, '135', 142.0))
 >>> ticket_counts
 ```
 
-```pycon exec="1" session="t1" result="console" html="true"
+```python
 >>> print(ticket_counts._docs())
 ```
 
 ## 2) Make a mistake (and recover automatically)
 
-```pycon exec="1" session="t1" source="console"
+```python
 >>> try:
 ...     ticket_counts.append('bonus')
 ... except Exception as err:
@@ -842,22 +842,22 @@ After parsing, the Omnipy model also **type-mimics** the underlying Python type.
 
 The model is still valid after the error:
 
-```pycon exec="1" session="t1" source="console"
+```python
 >>> ticket_counts
 ```
 
-```pycon exec="1" session="t1" result="console" html="true"
+```python
 >>> print(ticket_counts._docs())
 ```
 
 ## 3) Continue working without re-parsing
 
-```pycon exec="1" session="t1" source="console"
+```python
 >>> ticket_counts.append('150')
 >>> ticket_counts
 ```
 
-```pycon exec="1" session="t1" result="console" html="true"
+```python
 >>> print(ticket_counts._docs())
 ```
 
@@ -871,7 +871,7 @@ Interactive mode controls snapshot + rollback behavior:
 
 Both modes still raise validation errors immediately (**fail fast**).
 
-```pycon exec="1" session="t1" source="console"
+```python
 >>> runtime.config.data.model.interactive = False
 >>> ticket_counts_fast = Model[list[int]]([10, 20, 30])
 >>> try:
@@ -939,7 +939,7 @@ It also documents the current boundaries of automatic flattening.
 
 ## Setup (silence logs + avoid output persistence)
 
-```pycon exec="1" session="t2" source="console"
+```python
 >>> from omnipy import runtime
 >>> runtime.config.root_log.log_to_stdout = False
 >>> runtime.config.root_log.log_to_stderr = False
@@ -952,7 +952,7 @@ It also documents the current boundaries of automatic flattening.
 
 ## 1) Start with nested JSON
 
-```pycon exec="1" session="t2" source="console"
+```python
 >>> from omnipy import JsonListOfDictsDataset
 >>> nested = JsonListOfDictsDataset({
 ...   'items': [
@@ -963,13 +963,13 @@ It also documents the current boundaries of automatic flattening.
 >>> nested
 ```
 
-```pycon exec="1" session="t2" result="console" html="true"
+```python
 >>> print(nested._docs())
 ```
 
 ## 2) Flatten into related datasets
 
-```pycon exec="1" session="t2" source="console"
+```python
 >>> from omnipy.components.json.flows import flatten_nested_json
 >>> flat = flatten_nested_json.run(nested)
 >>> sorted(flat.to_data().keys())
@@ -984,11 +984,11 @@ The result is a JSON dataset with multiple related “tables”:
 Think of this output as a small **relational table set**. The relationships are encoded by dataset
 naming (`items`, `items.meta`, `items.tags`, etc.), which makes parent/child structure explicit.
 
-```pycon exec="1" session="t2" source="console"
+```python
 >>> flat
 ```
 
-```pycon exec="1" session="t2" result="console" html="true"
+```python
 >>> print(flat._docs())
 ```
 
@@ -996,19 +996,19 @@ naming (`items`, `items.meta`, `items.tags`, etc.), which makes parent/child str
 
 If a dataset is already table-shaped, convert it directly to `PandasDataset`:
 
-```pycon exec="1" session="t2" source="console"
+```python
 >>> from omnipy import PandasDataset
 >>> pandas = flat.to(PandasDataset)
 >>> pandas
 ```
 
-```pycon exec="1" session="t2" result="console" html="true"
+```python
 >>> print(pandas._docs())
 ```
 
 You can also convert a single table-shaped model to `PandasModel`:
 
-```pycon exec="1" session="t2" source="console"
+```python
 >>> from omnipy import JsonListOfDictsModel, PandasModel
 >>> one_table = JsonListOfDictsModel([{'id': 'a', 'x': 1}, {'id': 'b', 'x': 3}])
 >>> one_table_pd = one_table.to(PandasModel)
@@ -1090,7 +1090,7 @@ This tutorial starts with the primary batch operation in Omnipy: **batch parsing
 
 ## Setup (silence logs + avoid output persistence)
 
-```pycon exec="1" session="t3" source="console"
+```python
 >>> from omnipy import runtime
 >>> runtime.config.root_log.log_to_stdout = False
 >>> runtime.config.root_log.log_to_stderr = False
@@ -1103,13 +1103,13 @@ This tutorial starts with the primary batch operation in Omnipy: **batch parsing
 
 ## 1) Batch-parse many values at once (primary pattern)
 
-```pycon exec="1" session="t3" source="console"
+```python
 >>> from omnipy import Dataset, Model
 >>> numbers = Dataset[Model[int]]({'a': '1', 'b': 2.0, 'c': 10})
 >>> numbers
 ```
 
-```pycon exec="1" session="t3" result="console" html="true"
+```python
 >>> print(numbers._docs())
 ```
 
@@ -1119,7 +1119,7 @@ This tutorial starts with the primary batch operation in Omnipy: **batch parsing
 
 `TaskTemplate(iterate_over_data_files=True)` turns a per-item function into a dataset-mapping task.
 
-```pycon exec="1" session="t3" source="console"
+```python
 >>> from omnipy import TaskTemplate
 >>> @TaskTemplate(iterate_over_data_files=True)
 ... def inc(x: int) -> int:
@@ -1133,18 +1133,18 @@ This tutorial starts with the primary batch operation in Omnipy: **batch parsing
 Datasets can contain datasets. Here we apply the same task to each group without writing loops,
 using `Dataset.do(...)` as a convenient mapping helper.
 
-```pycon exec="1" session="t3" source="console"
+```python
 >>> Inner = Dataset[Model[int]]
 >>> Outer = Dataset[Inner]
 >>> grouped = Outer({'group1': {'a': 1, 'b': 2}, 'group2': {'a': 10}})
 >>> grouped
 ```
 
-```pycon exec="1" session="t3" result="console" html="true"
+```python
 >>> print(grouped._docs())
 ```
 
-```pycon exec="1" session="t3" source="console"
+```python
 >>> grouped_out = grouped.do(inc.run)
 >>> grouped_out.to_data()
 ```
